@@ -53,6 +53,63 @@ internal static class TextHitTesting
     }
 
     /// <summary>
+    /// True when <paramref name="index"/> is the high half of a surrogate pair (an emoji), which is
+    /// one character stored as two chars.
+    /// </summary>
+    public static bool IsSurrogatePairAt(string text, int index) =>
+        index >= 0 && index + 1 < text.Length && char.IsHighSurrogate(text[index]) && char.IsLowSurrogate(text[index + 1]);
+
+    /// <summary>
+    /// Returns the index in <paramref name="text"/> nearest <paramref name="cursorOffset"/>, an x offset in
+    /// drawn units from the start of the line. A surrogate pair is one character, so the result is never
+    /// between its halves.
+    /// </summary>
+    /// <param name="text">The line.</param>
+    /// <param name="cursorOffset">The x offset from the line's start, in drawn units.</param>
+    /// <param name="getAdvance">The unscaled advance of the characters from a start index for a length.</param>
+    /// <param name="fontScale">The text's effective font scale (<c>IText.FontScale</c>), which converts
+    /// unscaled advances to the drawn units <paramref name="cursorOffset"/> is in.</param>
+    public static int GetIndexInLine(string? text, float cursorOffset, Func<string, int, int, float> getAdvance, float fontScale)
+    {
+        text ??= string.Empty;
+        int index = text.Length;
+        float distanceMeasuredSoFar = 0;
+
+        for (int i = 0; i < text.Length;)
+        {
+            int characterLength = IsSurrogatePairAt(text, i) ? 2 : 1;
+            float advance = getAdvance(text, i, characterLength) * fontScale;
+
+            distanceMeasuredSoFar += advance;
+
+            // This should find which side of the character you're closest to, but for now it's good enough...
+            if (distanceMeasuredSoFar > cursorOffset)
+            {
+                float halfwayPoint = distanceMeasuredSoFar - (advance / 2.0f);
+                index = halfwayPoint > cursorOffset ? i : i + characterLength;
+                break;
+            }
+
+            i += characterLength;
+        }
+
+        return index;
+    }
+
+    /// <inheritdoc cref="GetIndexInLine(string?, float, Func{string, int, int, float}, float)"/>
+    /// <param name="getCharacterAdvance">The unscaled advance of one character; a surrogate pair sums its halves.</param>
+    public static int GetIndexInLine(string? text, float cursorOffset, Func<char, float> getCharacterAdvance, float fontScale) =>
+        GetIndexInLine(text, cursorOffset, (line, start, length) =>
+        {
+            float advance = 0;
+            for (int i = 0; i < length; i++)
+            {
+                advance += getCharacterAdvance(line[start + i]);
+            }
+            return advance;
+        }, fontScale);
+
+    /// <summary>
     /// Returns the index into the concatenation of <paramref name="lines"/> nearest a point given
     /// relative to the top-left of the first line, before horizontal alignment.
     /// </summary>

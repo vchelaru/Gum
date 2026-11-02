@@ -261,12 +261,44 @@ namespace GumRuntime
                         toReturn = TryCreateStrongTypeForElement(baseElement, fullInstantiation, genericType);
                     }
                     // If it has a base type, but we can't resolve it, it's an error.
-                    // We can still create something useful to avoid falling apart here:
-                    toReturn = toReturn ?? new GraphicalUiElement(new InvisibleRenderable());
+                    // We can still create something useful to avoid falling apart here, unless the editor wants
+                    // this component outlined (#7417): then leave the renderable empty so the factory is asked
+                    // for the base type (Container) and supplies the dotted outline.
+                    if (toReturn == null && !ShouldLeaveRenderableForOutline(elementSave))
+                    {
+                        toReturn = new GraphicalUiElement(new InvisibleRenderable());
+                    }
                 }
             }
 
             return toReturn;
+        }
+
+        // True when the editor draws outlines, a factory exists to supply one, and the component and every
+        // component it derives from has no instances of its own, ending at the standard Container (a
+        // StackPanel). A component with children of its own (directly or inherited) is not outlined.
+        private static bool ShouldLeaveRenderableForOutline(ElementSave elementSave)
+        {
+            if (!GraphicalUiElement.ShowLineRectangles || CustomCreateGraphicalComponentFunc == null)
+            {
+                return false;
+            }
+
+            ElementSave? current = elementSave;
+            // The depth cap guards against a base type cycle in a hand-edited project.
+            for (int depth = 0; depth < 100 && current != null; depth++)
+            {
+                if (current is StandardElementSave)
+                {
+                    return current.Name == "Container";
+                }
+                if (current.Instances.Count > 0)
+                {
+                    return false;
+                }
+                current = ObjectFinder.Self.GetBaseElement(current);
+            }
+            return false;
         }
 
         /// <summary>
@@ -383,11 +415,54 @@ namespace GumRuntime
             }
         }
 
-        // Nesting depth of ToGraphicalUiElement; only the outermost build stamps its owner. A plain static:
-        // all UI work runs on one thread.
+        // Nesting depth of ToGraphicalUiElement on this thread; only the outermost build stamps its owner. Per thread:
+        // builds on several threads must not corrupt each other's count, which would leave it non-zero for good.
+        [ThreadStatic]
         private static int _buildDepth;
 
+        // Elements whose build is in progress. An instance of one of these, met while building its own contents,
+        // would recurse until the stack overflows, which cannot be caught (#7468).
+        // Per thread, so another thread's build never makes a legitimate instance look circular.
+        [ThreadStatic]
+        private static HashSet<ElementSave>? _elementsBeingBuiltOfThread;
+
+        private static HashSet<ElementSave> _elementsBeingBuilt =>
+            _elementsBeingBuiltOfThread ??= new HashSet<ElementSave>();
+
+        /// <summary>
+        /// True, after reporting it, when <paramref name="instanceElement"/> is already being built higher up the
+        /// stack, so building another one for an instance would never end. The instance is skipped.
+        /// </summary>
+        internal static bool IsCircularInstance(ElementSave instanceElement, InstanceSave instance)
+        {
+            if (!_elementsBeingBuilt.Contains(instanceElement))
+            {
+                return false;
+            }
+
+            RaiseReferenceError($"Circular instance: {instance.ParentContainer?.Name}.{instance.Name} is an instance of " +
+                $"{instanceElement.Name}, which contains it. The instance was not created.");
+            return true;
+        }
+
         private static GraphicalUiElement ToGraphicalUiElementCore(ElementSave elementSave,
+            ISystemManagers systemManagers, bool addToManagers, string? genericType, bool isOutermostBuild)
+        {
+            bool addedToBeingBuilt = _elementsBeingBuilt.Add(elementSave);
+            try
+            {
+                return BuildElement(elementSave, systemManagers, addToManagers, genericType, isOutermostBuild);
+            }
+            finally
+            {
+                if (addedToBeingBuilt)
+                {
+                    _elementsBeingBuilt.Remove(elementSave);
+                }
+            }
+        }
+
+        private static GraphicalUiElement BuildElement(ElementSave elementSave,
             ISystemManagers systemManagers, bool addToManagers, string? genericType, bool isOutermostBuild)
         {
             GraphicalUiElement toReturn = CreateGueForElement(elementSave, genericType: genericType);
@@ -2170,8 +2245,9 @@ namespace GumRuntime
                 // re-assert their state. The root is included so a Forms-behavior component built
                 // directly (not as an instance in a parent) still gets its own FormsProperty
                 // defaults applied.
+                InitialFormsPropertiesNotifier?.Invoke(toReturn, true);
                 InitialStateAppliedNotifier?.Invoke(toReturn);
-                NotifyFormsControlsOfInitialStateApplied(toReturn);
+                NotifyFormsControlsOfInitialStateApplied(toReturn, toReturn);
             }
             finally
             {
@@ -2195,10 +2271,20 @@ namespace GumRuntime
         /// </summary>
         public static Action<GraphicalUiElement>? InitialStateAppliedNotifier;
 
-        private static void NotifyFormsControlsOfInitialStateApplied(GraphicalUiElement element)
+        /// <summary>
+        /// Invoked with an element that was just built (second argument true) and with each of
+        /// its own instances (false), so a hosting layer (like Gum.Forms) can apply the values the
+        /// project authored for a Forms control. A descendant owned by a nested element is not
+        /// passed: that element's own build already did, and doing it again would overwrite what
+        /// code set on the control since. Set by <c>FormsUtilities</c>.
+        /// </summary>
+        public static Action<GraphicalUiElement, bool>? InitialFormsPropertiesNotifier;
+
+        private static void NotifyFormsControlsOfInitialStateApplied(GraphicalUiElement builtElement, GraphicalUiElement element)
         {
             var notifier = InitialStateAppliedNotifier;
-            if (notifier == null) return;
+            var propertiesNotifier = InitialFormsPropertiesNotifier;
+            if (notifier == null && propertiesNotifier == null) return;
 
             if (element.Children != null)
             {
@@ -2206,8 +2292,12 @@ namespace GumRuntime
                 {
                     if (child is GraphicalUiElement gueChild)
                     {
-                        notifier(gueChild);
-                        NotifyFormsControlsOfInitialStateApplied(gueChild);
+                        if (gueChild.ElementGueContainingThis == builtElement)
+                        {
+                            propertiesNotifier?.Invoke(gueChild, false);
+                        }
+                        notifier?.Invoke(gueChild);
+                        NotifyFormsControlsOfInitialStateApplied(builtElement, gueChild);
                     }
                 }
             }

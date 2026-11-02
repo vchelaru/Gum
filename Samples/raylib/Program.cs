@@ -80,12 +80,15 @@ public class BasicShapes
 
         // Issue #3465: Gum core ships no shader loader, so the app registers a resolver that turns a
         // ContainerRuntime.SourceShaderFile (.fs path) into a Raylib_cs.Shader. raylib loads GLSL
-        // directly, so this is a one-liner — no runtime compiler needed (unlike the MonoGame side's
-        // ShadowDusk). With no resolver registered, SourceShaderFile is a graceful no-op. Wrapped in
-        // a lambda (not a bare method group) because Shader is a struct: the target-typed lambda
-        // body boxes it to the resolver's object? return, which a method-group conversion can't.
+        // directly, so this is a one-liner with no runtime compiler. Wrapped in a lambda (not a bare
+        // method group) because Shader is a struct: the target-typed lambda body boxes it to the
+        // resolver's object? return, which a method-group conversion can't.
         CustomSetPropertyOnRenderable.RenderTargetEffectResolver =
             path => RenderTargetShaderScreen.CompileEffectFromFile(path);
+
+        // The Gum.raylib.ShadowDusk package adds .fx and .slang files on top of that (#7053) and
+        // registers the defaults they declare. Other extensions, like .fs, still go to the resolver above.
+        GumUI.UseShadowDusk();
 
         // Enable gamepad + keyboard navigation for Forms controls (see
         // https://docs.flatredball.com/gum/code/events-and-interactivity/gamepad-support).

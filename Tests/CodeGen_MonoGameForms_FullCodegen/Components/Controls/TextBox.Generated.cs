@@ -13,7 +13,7 @@ namespace CodeGen_MonoGameForms_FullCodegen.Components.Controls;
 [global::Gum.DataTypes.GumElement("Controls/TextBox", FormsType = typeof(global::Gum.Forms.Controls.TextBox))]
 partial class TextBox : global::Gum.Forms.Controls.TextBox
 {
-    #if UNITY_5_3_OR_NEWER
+    #if UNITY_5_3_OR_NEWER && !GUM_NO_UNITY_ENGINE
     [UnityEngine.RuntimeInitializeOnLoadMethod(UnityEngine.RuntimeInitializeLoadType.SubsystemRegistration)]
     #else
     [System.Runtime.CompilerServices.ModuleInitializer]

@@ -387,7 +387,7 @@ public class HazardTemplateTests
             "Accent", "AccentHover", "AccentPressed", "Background", "Band", "Border",
             "BorderHover", "DisabledAccent", "DisabledBorder", "DisabledFill", "DisabledText",
             "Ink", "Muted", "Placeholder", "PressedFill", "PressedText", "Selection",
-            "Surface1", "Surface2", "Text", "TextBright"
+            "Surface1", "Surface2", "Text", "TextBright", "TextSelection"
         };
         string[] expectedTextStyles = { "Normal", "Strong" };
 

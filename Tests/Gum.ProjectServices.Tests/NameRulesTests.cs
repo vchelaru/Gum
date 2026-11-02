@@ -11,6 +11,72 @@ public class NameRulesTests
 {
     private readonly NameRules _rules = new NameRules();
 
+    #region C# identifiers from arbitrary text
+
+    [Theory]
+    [InlineData("MyGame", "MyGame")]
+    [InlineData("2DPlatformer", "_2DPlatformer")]
+    [InlineData("3D-Maze.Game", "_3D_Maze_Game")]
+    [InlineData("My Game", "My_Game")]
+    [InlineData("my-game", "my_game")]
+    [InlineData("Game.Client", "Game_Client")]
+    [InlineData("Caf\u00e9", "Caf\u00e9")]
+    [InlineData("\u6e38\u620f", "\u6e38\u620f")]
+    [InlineData("class", "@class")]
+    [InlineData("a+b", "a_b")]
+    [InlineData("-", "_")]
+    [InlineData("", "_")]
+    public void ToCSharpIdentifier_OnAnyText_ReturnsAnIdentifierThatCompiles(string name, string expected)
+    {
+        string identifier = NameRules.ToCSharpIdentifier(name);
+
+        identifier.ShouldBe(expected);
+    }
+
+    [Theory]
+    [InlineData("\U0001D49C")]
+    [InlineData("\U00020000")]
+    [InlineData("a\U00020000b")]
+    [InlineData("@class")]
+    [InlineData("@Score")]
+    public void ToCSharpIdentifier_OnAnAlreadyValidIdentifier_ReturnsItUnchanged(string name)
+    {
+        NameRules.ToCSharpIdentifier(name).ShouldBe(name);
+    }
+
+    [Fact]
+    public void ToCSharpIdentifier_OnSeededRandomText_NeverChangesAValidIdentifierAndIsIdempotent()
+    {
+        string[] pieces = { "a", "Z", "_", "7", "\U0001D49C", "\U00020000", "\u00e9", "\u6e38", " ", "-", ".", "+", "@", "class", "while" };
+        Random random = new Random(7133);
+        for (int index = 0; index < 2000; index++)
+        {
+            string name = string.Concat(Enumerable.Range(0, random.Next(1, 6)).Select(_ => pieces[random.Next(pieces.Length)]));
+            string result = NameRules.ToCSharpIdentifier(name);
+
+            NameRules.ToCSharpIdentifier(result).ShouldBe(result, $"idempotent for '{name}'");
+            bool isAlreadyIdentifier = new NameRules().IsValidCSharpName(name, out _, out _)
+                && name.EnumerateRunes().All(rune => char.IsLetterOrDigit(rune.ToString(), 0) || rune.Value == '_');
+            if (isAlreadyIdentifier)
+            {
+                result.ShouldBe(name, $"valid identifier '{name}' changed");
+            }
+        }
+    }
+
+    [Theory]
+    [InlineData("2DPlatformer")]
+    [InlineData("a b-c.d")]
+    [InlineData("\u00e9\u00e8")]
+    public void ToCSharpIdentifier_RunTwice_ChangesNothing(string name)
+    {
+        string once = NameRules.ToCSharpIdentifier(name);
+
+        NameRules.ToCSharpIdentifier(once).ShouldBe(once);
+    }
+
+    #endregion
+
     #region C# names
 
     [Theory]

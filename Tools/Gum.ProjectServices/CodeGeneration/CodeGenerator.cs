@@ -197,7 +197,7 @@ public class CodeGenerationContext
             }
             else
             {
-                string instanceNameInCode = _nameVerifier.ToCSharpName(Instance.Name);
+                string instanceNameInCode = _nameVerifier.ToCSharpMemberName(Instance.Name);
                 if (_isInstanceFormsObject == true)
                 {
                     string visualAccess = string.IsNullOrEmpty(ThisPrefix)
@@ -475,11 +475,13 @@ public class CodeGenerator
     /// <summary>
     /// Appends the attribute that runs a static registration method at startup. Unity compiles
     /// [ModuleInitializer] but never calls it, so Unity builds (which define UNITY_5_3_OR_NEWER)
-    /// get Unity's earliest startup hook instead. The same file works in both kinds of project.
+    /// get Unity's earliest startup hook instead. An assembly with Unity's "No Engine References" still
+    /// defines UNITY_5_3_OR_NEWER but cannot see UnityEngine, so it defines GUM_NO_UNITY_ENGINE to take the
+    /// [ModuleInitializer] branch. The same file works in all three kinds of project.
     /// </summary>
     private static void AppendStartupInitializerAttribute(StringBuilder builder, string tabs, string moduleInitializerAttribute)
     {
-        builder.AppendLine(tabs + "#if UNITY_5_3_OR_NEWER");
+        builder.AppendLine(tabs + "#if UNITY_5_3_OR_NEWER && !GUM_NO_UNITY_ENGINE");
         builder.AppendLine(tabs + "[UnityEngine.RuntimeInitializeOnLoadMethod(UnityEngine.RuntimeInitializeLoadType.SubsystemRegistration)]");
         builder.AppendLine(tabs + "#else");
         builder.AppendLine(tabs + moduleInitializerAttribute);
@@ -734,7 +736,7 @@ public class CodeGenerator
             if(projectSettings.AppendFolderToNamespace)
             {
                 var splitElementName = elementName.Replace("\\", "/").Split('/').ToArray();
-                var splitPrefix = splitElementName.Take(splitElementName.Length - 1).ToArray();
+                var splitPrefix = splitElementName.Take(splitElementName.Length - 1).Select(NameRules.ToCSharpIdentifier).ToArray();
                 var whatToAppend = string.Join(".", splitPrefix);
                 if (!string.IsNullOrEmpty(whatToAppend))
                 {
@@ -1054,6 +1056,54 @@ public class CodeGenerator
         return string.IsNullOrEmpty(gumFormsType) ? GetUnsupportedFormsBaseTypeMessage(element) : null;
     }
 
+    /// <summary>
+    /// Returns the message explaining why <paramref name="element"/>'s categories cannot be generated, or null
+    /// when they can. A category writes a nested enum named like it and a <c>&lt;Category&gt;State</c> property,
+    /// so neither may take the generated class's name (CS0542, which depends on the output library: the legacy
+    /// runtime classes end in <c>Runtime</c>) or repeat another category's enum or property name (CS0102).
+    /// Both are public API, so the element is reported instead of renamed the way instance and variable
+    /// members are. <see cref="CategoryNameCollisionErrorSource"/> reports it to <c>gumcli codegen</c>.
+    /// </summary>
+    public string? GetCategoryNameCollisionError(ElementSave element, CodeOutputProjectSettings projectSettings)
+    {
+        if (element is StandardElementSave || element.Categories.Count == 0)
+        {
+            return null;
+        }
+
+        CodeGenerationContext context = new CodeGenerationContext(_codeGenerationNameVerifier, element);
+        context.CodeOutputProjectSettings = projectSettings;
+        context.ResolvedSyntaxVersion = ResolveSyntaxVersion(projectSettings);
+        string? className = GetClassNameForType(element, GetVisualApiForElement(element), context);
+
+        Dictionary<string, string> declaredBy = new Dictionary<string, string>(StringComparer.Ordinal);
+        if (!string.IsNullOrEmpty(className))
+        {
+            declaredBy[className!.TrimStart('@')] = "the generated class of this element";
+        }
+
+        foreach (StateSaveCategory category in element.Categories)
+        {
+            string enumName = _codeGenerationNameVerifier.ToCSharpName(category.Name).TrimStart('@');
+            foreach ((string name, string description) in new[]
+            {
+                (enumName, $"the enum of category \"{category.Name}\""),
+                (enumName + "State", $"the state property of category \"{category.Name}\""),
+            })
+            {
+                if (declaredBy.TryGetValue(name, out string? existing))
+                {
+                    return $"Category \"{category.Name}\" generates {description} named \"{name}\", which is also the name of " +
+                        $"{existing}, so the generated code cannot compile. Rename the category or the element.";
+                }
+
+                declaredBy[name] = description;
+            }
+        }
+
+        return null;
+    }
+
     private static string GetUnsupportedFormsBaseTypeMessage(ElementSave element) =>
         $"Invalid inheritance - When using Forms codegen, {element.Name} must either inherit from Container, or must have Forms behaviors. It currently inherits from {element.BaseType}.";
 
@@ -1089,7 +1139,7 @@ public class CodeGenerator
             if (variable.IsCustomVariable)
             {
                 var type = variable.Type;
-                var name = _codeGenerationNameVerifier.ToCSharpName(variable.Name);
+                var name = _codeGenerationNameVerifier.ToCSharpMemberName(variable.Name);
                 // Backed by a field (rather than a bare auto-property) so the setter can raise a
                 // property-changed notification, matching every other generated/hand-written
                 // property - otherwise it never fires for a custom variable, whether it's set
@@ -1163,8 +1213,8 @@ public class CodeGenerator
 
         var bindingBehavior = GetBindingBehavior(container, sourceObject);
 
-        var name = _codeGenerationNameVerifier.ToCSharpName(exposedVariable.ExposedAsName!);
-        var instanceName = _codeGenerationNameVerifier.ToCSharpName(sourceObject);
+        var name = _codeGenerationNameVerifier.ToCSharpMemberName(exposedVariable.ExposedAsName!);
+        var instanceName = _codeGenerationNameVerifier.ToCSharpMemberName(sourceObject);
         var type = exposedVariable.Type;
 
         if(type == nameof(PositionUnitType))
@@ -1279,14 +1329,11 @@ public class CodeGenerator
                 }
 
                 // if there is no root variable, then this could be an orphan variable assignment which can happen if the user changes
-                // the type of an instance:
-                if(rootVariable == null)
+                // the type of an instance. Consumers skip the same variables (see GetIfExposedVariableResolves):
+                string? exposedVariableSkipReason = GetExposedVariableSkipReason(rootVariable, context.CodeOutputProjectSettings.OutputLibrary);
+                if (exposedVariableSkipReason != null)
                 {
-                    stringBuilder.AppendLine(context.Tabs + $"// Could not generate variable {exposedVariable} because it references a variable that doesn't exist");
-                }
-                else if (!GetIfRuntimeHasPropertyForVariable(rootVariable, context.CodeOutputProjectSettings.OutputLibrary))
-                {
-                    stringBuilder.AppendLine(context.Tabs + $"// Could not generate variable {exposedVariable} because the runtime type has no property for it");
+                    stringBuilder.AppendLine(context.Tabs + $"// Could not generate variable {exposedVariable} because {exposedVariableSkipReason}");
                 }
                 else //if (rootVariable != null)
                 {
@@ -1299,7 +1346,7 @@ public class CodeGenerator
                         type = GetRuntimePropertyTypeOverride(rootVariable.Name, context.CodeOutputProjectSettings.OutputLibrary) ?? type;
                     }
 
-                    string sourceObjectCSharpName = _codeGenerationNameVerifier.ToCSharpName(sourceObject);
+                    string sourceObjectCSharpName = _codeGenerationNameVerifier.ToCSharpMemberName(sourceObject);
                     string? sourceObjectCast = null;
                     string rootVariableCodeName = GetExposedRootVariableCodeName(rootVariable, foundInstance, context);
 
@@ -1364,6 +1411,14 @@ public class CodeGenerator
                         hasGetter = false;
                     }
 
+                    // A shader parameter is no property of the runtime: it is only reachable by name through
+                    // SetProperty, so the exposed property is write-only.
+                    bool isShaderParameter = !string.IsNullOrEmpty(rootVariable?.ShaderParameter);
+                    if (isShaderParameter)
+                    {
+                        hasGetter = false;
+                    }
+
                     // See if this is an exposed variable:
                     InstanceSave? instance = context.Instance;
                     ElementSave? instanceElement = null;
@@ -1398,6 +1453,10 @@ public class CodeGenerator
                     {
                         var rightSide = $"{sourceObjectCSharpName}.SetProperty(\"{exposedVariable.GetRootName()}\", value?.ToString())";
                         stringBuilder.AppendLine(ToTabs(tabCount) + $"set => {rightSide};");
+                    }
+                    else if (isShaderParameter)
+                    {
+                        stringBuilder.AppendLine(ToTabs(tabCount) + $"set => {sourceObjectCSharpName}.SetProperty(\"{exposedVariable.GetRootName()}\", value);");
                     }
                     else
                     {
@@ -1476,6 +1535,66 @@ public class CodeGenerator
                 return null;
         }
     }
+
+    /// <summary>
+    /// Returns why a container does not generate the property for an exposed variable whose root variable is
+    /// <paramref name="rootVariable"/>, or null when it does. The exposing instance's type may have changed
+    /// (Text to Container) since the variable was exposed; Gum keeps such variables, so this is not an error.
+    /// </summary>
+    private static string? GetExposedVariableSkipReason(VariableSave? rootVariable, OutputLibrary library)
+    {
+        if (rootVariable == null)
+        {
+            return "it references a variable that doesn't exist";
+        }
+        if (!GetIfRuntimeHasPropertyForVariable(rootVariable, library))
+        {
+            return "the runtime type has no property for it";
+        }
+        return null;
+    }
+
+    /// <summary>
+    /// Returns whether <paramref name="element"/> has a variable called <paramref name="name"/> that code can
+    /// assign. This is the consumer side of the filter the container applies when it generates an exposed
+    /// property (<see cref="GetExposedVariableSkipReason"/>): a variable exposed by the element is only there
+    /// when it still resolves to a variable of the exposing instance's current type, otherwise the property
+    /// was not generated and an assignment would not compile. Nothing is reported; the value stays in the
+    /// project in case the type change was accidental.
+    /// </summary>
+    private static bool GetIfExposedVariableResolves(RecursiveVariableFinder finder, ElementSave element, string name, OutputLibrary library)
+    {
+        VariableSave? found = finder.GetVariable(name);
+        if (found == null)
+        {
+            return false;
+        }
+
+        // The exposure can be on a base, and a derived element can also hold its own value under the exposed
+        // name, which is why the lookup is by the exposing element and not by what the finder returned.
+        ElementSave? exposingElement = null;
+        if (HasExposureNamed(element, name))
+        {
+            exposingElement = element;
+        }
+        else
+        {
+            foreach (ElementSave baseElement in ObjectFinder.Self.GetBaseElements(element))
+            {
+                if (HasExposureNamed(baseElement, name))
+                {
+                    exposingElement = baseElement;
+                    break;
+                }
+            }
+        }
+
+        return exposingElement == null ||
+            GetExposedVariableSkipReason(ObjectFinder.Self.GetRootVariable(name, exposingElement), library) == null;
+    }
+
+    private static bool HasExposureNamed(ElementSave element, string name) =>
+        element.DefaultState?.Variables.Any(item => item.ExposedAsName == name) == true;
 
     /// <summary>
     /// Returns false when the root variable is defined by a standard element whose runtime type has no
@@ -1617,7 +1736,7 @@ public class CodeGenerator
         
         // If this is private, it cannot override anything. Therefore, we'll mark the setter as protected:
         //stringBuilder.AppendLine($"{tabs}{accessString}{className} {instance.Name} {{ get; private set; }}");
-        context.StringBuilder.AppendLine($"{context.Tabs}{accessString}{className} {_codeGenerationNameVerifier.ToCSharpName(instance.Name)} {{ get; protected set; }}");
+        context.StringBuilder.AppendLine($"{context.Tabs}{accessString}{className} {_codeGenerationNameVerifier.ToCSharpMemberName(instance.Name)} {{ get; protected set; }}");
     }
     
     #endregion
@@ -1858,13 +1977,13 @@ public class CodeGenerator
                 if (context.ResolvedSyntaxVersion >= 1)
                 {
                     context.StringBuilder.AppendLine(
-                        $"{context.Tabs}{_codeGenerationNameVerifier.ToCSharpName(instance.Name)} = " +
+                        $"{context.Tabs}{_codeGenerationNameVerifier.ToCSharpMemberName(instance.Name)} = " +
                         $"global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<{classNameString}>(this.Visual,\"{instance.Name}\");");
                 }
                 else
                 {
                     context.StringBuilder.AppendLine(
-                        $"{context.Tabs}{_codeGenerationNameVerifier.ToCSharpName(instance.Name)} = " +
+                        $"{context.Tabs}{_codeGenerationNameVerifier.ToCSharpMemberName(instance.Name)} = " +
                         $"global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<{classNameString}>(this.Visual,\"{instance.Name}\");");
                 }
             }
@@ -1874,7 +1993,7 @@ public class CodeGenerator
                 if (className == null) return;
                 
                 context.StringBuilder.AppendLine(
-                    $"{context.Tabs}{_codeGenerationNameVerifier.ToCSharpName(instance.Name)} = this.Visual?.GetGraphicalUiElementByName(\"{instance.Name}\") as " +
+                    $"{context.Tabs}{_codeGenerationNameVerifier.ToCSharpMemberName(instance.Name)} = this.Visual?.GetGraphicalUiElementByName(\"{instance.Name}\") as " +
                     $"global::{GetGueDerivingNamespace(context.ResolvedSyntaxVersion, isSkia: false)}.{className};");
             }
         }
@@ -1884,7 +2003,7 @@ public class CodeGenerator
             if(isStandardElement)
             {
                 context.StringBuilder.AppendLine(
-                    $"{context.Tabs}{_codeGenerationNameVerifier.ToCSharpName(instance.Name)} = this.GetGraphicalUiElementByName(\"{instance.Name}\") as " +
+                    $"{context.Tabs}{_codeGenerationNameVerifier.ToCSharpMemberName(instance.Name)} = this.GetGraphicalUiElementByName(\"{instance.Name}\") as " +
                     $"global::{GetGueDerivingNamespace(context.ResolvedSyntaxVersion, isSkia: false)}.{GetClassNameForType(instance, context.VisualApi, context)};");
 
             }
@@ -1894,7 +2013,7 @@ public class CodeGenerator
                 if (className == null) return;
                 
                 context.StringBuilder.AppendLine(
-                    $"{context.Tabs}{_codeGenerationNameVerifier.ToCSharpName(instance.Name)} = this.GetGraphicalUiElementByName(\"{instance.Name}\") as " +
+                    $"{context.Tabs}{_codeGenerationNameVerifier.ToCSharpMemberName(instance.Name)} = this.GetGraphicalUiElementByName(\"{instance.Name}\") as " +
                     // do not prefix global::MonoGameGum... because this is a custom component
                     $"{className};");
             }
@@ -1913,7 +2032,7 @@ public class CodeGenerator
             return;
         }
         //////////////////////End Early Out///////////////////////////
-        var instanceName = _codeGenerationNameVerifier.ToCSharpName(instance.Name);
+        var instanceName = _codeGenerationNameVerifier.ToCSharpMemberName(instance.Name);
 
         var strippedType = instance.BaseType;
         if (strippedType.Contains("/"))
@@ -2231,6 +2350,7 @@ public class CodeGenerator
         { StandardFormsBehaviorNames.CheckBoxBehaviorName, "global::Gum.Forms.Controls.CheckBox" },
         { StandardFormsBehaviorNames.ColorPickerBehaviorName, "global::Gum.Forms.Controls.ColorPicker" },
         { StandardFormsBehaviorNames.ComboBoxBehaviorName, "global::Gum.Forms.Controls.ComboBox" },
+        { StandardFormsBehaviorNames.DialogBoxBehaviorName, "global::Gum.Forms.Controls.Games.DialogBox" },
         { StandardFormsBehaviorNames.ExpanderBehaviorName, "global::Gum.Forms.Controls.Expander" },
         { StandardFormsBehaviorNames.ItemsControlBehaviorName, "global::Gum.Forms.Controls.ItemsControl" },
         { StandardFormsBehaviorNames.LabelBehaviorName, "global::Gum.Forms.Controls.Label" },
@@ -2248,6 +2368,9 @@ public class CodeGenerator
         { StandardFormsBehaviorNames.SplitterBehaviorName, "global::Gum.Forms.Controls.Splitter" },
         { StandardFormsBehaviorNames.StackPanelBehaviorName, "global::Gum.Forms.Controls.StackPanel" },
         { StandardFormsBehaviorNames.TextBoxBehaviorName, "global::Gum.Forms.Controls.TextBox" },
+        { StandardFormsBehaviorNames.ToggleBehaviorName, "global::Gum.Forms.Controls.ToggleButton" },
+        { StandardFormsBehaviorNames.TooltipBehaviorName, "global::Gum.Forms.Controls.Tooltip" },
+        { StandardFormsBehaviorNames.UserControlBehaviorName, "global::Gum.Forms.Controls.UserControl" },
         { StandardFormsBehaviorNames.WindowBehaviorName, "global::Gum.Forms.Window" },
     };
 
@@ -3410,7 +3533,7 @@ public class CodeGenerator
         ////////////////////////////////////////////////////////////
 
         var container = context.Element;
-        var instanceNameInCode = _codeGenerationNameVerifier.ToCSharpName(instance.Name);
+        var instanceNameInCode = _codeGenerationNameVerifier.ToCSharpMemberName(instance.Name);
         //context.Instance, context.Element, context.StringBuilder, context.TabCount, context.CodeOutputProjectSettings;
 
         // Some history on this:
@@ -3474,7 +3597,7 @@ public class CodeGenerator
                 {
                     if (context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.GumForms)
                     {
-                        context.StringBuilder.AppendLine($"{context.Tabs}this.AddChild({_codeGenerationNameVerifier.ToCSharpName(instance.Name)});");
+                        context.StringBuilder.AppendLine($"{context.Tabs}this.AddChild({_codeGenerationNameVerifier.ToCSharpMemberName(instance.Name)});");
                     }
                     else if (UsesUnifiedGumRuntime(context.CodeOutputProjectSettings.OutputLibrary))
                     {
@@ -3484,11 +3607,11 @@ public class CodeGenerator
                         // could never take its else branch. The constructor now always assigns a
                         // contained object before this runs (see GenerateConstructors), so Children
                         // is guaranteed to be a real, writable collection here.
-                        context.StringBuilder.AppendLine($"{context.Tabs}this.Children.Add({_codeGenerationNameVerifier.ToCSharpName(instance.Name)});");
+                        context.StringBuilder.AppendLine($"{context.Tabs}this.Children.Add({_codeGenerationNameVerifier.ToCSharpMemberName(instance.Name)});");
                     }
                     else
                     {
-                        context.StringBuilder.AppendLine($"{context.Tabs}this.WhatThisContains.Add({_codeGenerationNameVerifier.ToCSharpName(instance.Name)});");
+                        context.StringBuilder.AppendLine($"{context.Tabs}this.WhatThisContains.Add({_codeGenerationNameVerifier.ToCSharpMemberName(instance.Name)});");
                     }
                 }
                 else
@@ -3501,7 +3624,7 @@ public class CodeGenerator
                     }
                     else
                     {
-                        context.StringBuilder.AppendLine($"{context.Tabs}this.Children.Add({_codeGenerationNameVerifier.ToCSharpName(instance.Name)});");
+                        context.StringBuilder.AppendLine($"{context.Tabs}this.Children.Add({_codeGenerationNameVerifier.ToCSharpMemberName(instance.Name)});");
                     }
                 }
             }
@@ -3946,8 +4069,8 @@ public class CodeGenerator
                         context.StringBuilder.AppendLine("// This hurts performance a little but it's needed because of an iOS MAUI bug where these do not behave the same as in Android");
                         if(context.Instance != null)
                         {
-                            context.StringBuilder.AppendLine(context.Tabs + _codeGenerationNameVerifier.ToCSharpName(context.Instance.Name) + ".ForceGumLayout();");
-                            context.StringBuilder.AppendLine(context.Tabs + _codeGenerationNameVerifier.ToCSharpName(context.Instance.Name) + ".UpdateDimensionsFromAutoSize();");
+                            context.StringBuilder.AppendLine(context.Tabs + _codeGenerationNameVerifier.ToCSharpMemberName(context.Instance.Name) + ".ForceGumLayout();");
+                            context.StringBuilder.AppendLine(context.Tabs + _codeGenerationNameVerifier.ToCSharpMemberName(context.Instance.Name) + ".UpdateDimensionsFromAutoSize();");
                         }
                     }
                 }
@@ -3979,6 +4102,13 @@ public class CodeGenerator
 
     #region Top Level Methods
 
+    /// <summary>
+    /// The contents of the element's <c>.Generated.cs</c> file: the <c>//Code for</c> header line followed by
+    /// <see cref="GetGeneratedCodeForElement"/>, with CRLF line endings throughout (see <see cref="GeneratedCodeText"/>).
+    /// </summary>
+    public string GetGeneratedFileText(ElementSave element, CodeOutputElementSettings elementSettings, CodeOutputProjectSettings projectSettings) =>
+        GeneratedCodeText.ToCrLf($"//Code for {element}\n{GetGeneratedCodeForElement(element, elementSettings, projectSettings)}");
+
     public string GetGeneratedCodeForElement(ElementSave element, CodeOutputElementSettings elementSettings, CodeOutputProjectSettings projectSettings)
     {
         AssertSupportedCombination(projectSettings);
@@ -3994,6 +4124,7 @@ public class CodeGenerator
         context.ElementSettings = elementSettings;
         context.ResolvedSyntaxVersion = ResolveSyntaxVersion(projectSettings);
         context.UseFileScopedNamespace = ResolveUseFileScopedNamespace(projectSettings);
+        using IDisposable memberNames = ReserveMemberNames(element, context);
 
         var stringBuilder = context.StringBuilder;
 
@@ -4214,6 +4345,63 @@ public class CodeGenerator
         return stringBuilder.ToString();
     }
 
+    // Methods the generator declares on every class it writes; an instance or variable of the same name would collide.
+    private static readonly string[] GeneratedMethodNames =
+    {
+        "CustomInitialize", "InitializeInstances", "InitializeInstancesFromVisual", "AssignParents",
+        "AssignGumReferences", "ApplyDefaultVariables", "ApplyLocalization", "ApplyState", "AfterFullCreation",
+        "ReactToVisualChanged", "ReactToGeneratedVisual", "RegisterRuntimeType",
+    };
+
+    private IDisposable ReserveMemberNames(ElementSave element, CodeGenerationContext context)
+    {
+        List<string> reserved = new List<string>(GeneratedMethodNames);
+        string? className = GetClassNameForType(element, context.VisualApi, context);
+        if (className != null)
+        {
+            reserved.Add(className);
+        }
+        foreach (StateSaveCategory category in element.Categories)
+        {
+            // The category's nested enum and its state property are both members of the class.
+            reserved.Add(_codeGenerationNameVerifier.ToCSharpName(category.Name));
+            reserved.Add(_codeGenerationNameVerifier.ToCSharpName(category.Name) + "State");
+        }
+        return _codeGenerationNameVerifier.ReserveMemberNames(reserved);
+    }
+
+    /// <summary>
+    /// A C# literal for <paramref name="value"/>. A value with a line break becomes a regular literal with
+    /// <c>\n</c> and <c>\r</c> escaped, because a raw line break inside a verbatim literal changes the
+    /// string's value whenever the file's line endings are converted (editor, git, <see cref="GeneratedCodeText"/>).
+    /// </summary>
+    internal static string ToStringLiteral(string value)
+    {
+        if (value.IndexOfAny(new[] { '\r', '\n', '\u0085', '\u2028', '\u2029' }) < 0)
+        {
+            return "@\"" + value.Replace("\"", "\"\"") + "\"";
+        }
+
+        StringBuilder literal = new StringBuilder(value.Length + 8);
+        literal.Append('"');
+        foreach (char c in value)
+        {
+            literal.Append(c switch
+            {
+                '\\' => "\\\\",
+                '"' => "\\\"",
+                '\r' => "\\r",
+                '\n' => "\\n",
+                '\u0085' => "\\u0085",
+                '\u2028' => "\\u2028",
+                '\u2029' => "\\u2029",
+                _ => c.ToString(),
+            });
+        }
+        literal.Append('"');
+        return literal.ToString();
+    }
+
     public string GetCodeForInstance(InstanceSave instance, ElementSave element, CodeOutputProjectSettings codeOutputProjectSettings)
     {
 
@@ -4221,6 +4409,7 @@ public class CodeGenerator
         context.Instance = instance;
         context.CodeOutputProjectSettings = codeOutputProjectSettings;
         context.ResolvedSyntaxVersion = ResolveSyntaxVersion(codeOutputProjectSettings);
+        using IDisposable memberNames = ReserveMemberNames(element, context);
         var stringBuilder = context.StringBuilder;
 
         FillWithInstanceDeclaration(context);
@@ -4279,7 +4468,7 @@ public class CodeGenerator
                 if (instanceVisualApi == VisualApi.Gum)
                 {
                     // todo - will need Forms too, but we'll do this for now:
-                    stringBuilder.AppendLine(ToTabs(tabCount) + $"{_codeGenerationNameVerifier.ToCSharpName(context.Instance.Name)}.Tag = {screenOrComponent}.Instances.Find(item => item.Name == \"{instance.Name}\");");
+                    stringBuilder.AppendLine(ToTabs(tabCount) + $"{_codeGenerationNameVerifier.ToCSharpMemberName(context.Instance.Name)}.Tag = {screenOrComponent}.Instances.Find(item => item.Name == \"{instance.Name}\");");
                 }
             }
         }
@@ -4352,7 +4541,7 @@ public class CodeGenerator
                 continue;
             }
 
-            var fieldName = _codeGenerationNameVerifier.ToCSharpName(animation.Name);
+            var fieldName = _codeGenerationNameVerifier.ToCSharpMemberName(animation.Name);
             context.StringBuilder.AppendLine(context.Tabs + $"public AnimationRuntime {fieldName} {{get; protected set;}}");
         }
 
@@ -4378,7 +4567,7 @@ public class CodeGenerator
                 continue;
             }
 
-            var fieldName = _codeGenerationNameVerifier.ToCSharpName(animation.Name);
+            var fieldName = _codeGenerationNameVerifier.ToCSharpMemberName(animation.Name);
             var animationName = animation.Name;
             context.StringBuilder.AppendLine(context.Tabs + $"{fieldName} = this.Visual.GetAnimation(\"{animationName}\");");
         }
@@ -4506,11 +4695,11 @@ public class CodeGenerator
                 {
                     if (item.BaseType.EndsWith("/SkiaSharpCanvasView"))
                     {
-                        stringBuilder.AppendLine(ToTabs(tabCount) + $"casted.{_codeGenerationNameVerifier.ToCSharpName(item.Name)}.InvalidateSurface();");
+                        stringBuilder.AppendLine(ToTabs(tabCount) + $"casted.{_codeGenerationNameVerifier.ToCSharpMemberName(item.Name)}.InvalidateSurface();");
                     }
                     else if (GetVisualApiForInstance(item, element) == VisualApi.Gum)
                     {
-                        stringBuilder.AppendLine(ToTabs(tabCount) + $"casted.{_codeGenerationNameVerifier.ToCSharpName(item.Name)}.EffectiveManagers?.InvalidateSurface();");
+                        stringBuilder.AppendLine(ToTabs(tabCount) + $"casted.{_codeGenerationNameVerifier.ToCSharpMemberName(item.Name)}.EffectiveManagers?.InvalidateSurface();");
                     }
                 }
                 if (element.BaseType?.EndsWith("/SkiaGumCanvasView") == true)
@@ -4929,8 +5118,8 @@ public class CodeGenerator
                         // it could be a leftover variable caused by having this object be of one type, using a variable
                         // specific to that type, then changing it to another type. Gum holds on to these varibles in case
                         // the type change was accidental, but it means we have to watch for these orphan variables when generating.
-                        var foundVariable = recursiveVariableFinder.GetVariable(item.Name);
-                        shouldInclude = foundVariable != null;
+                        shouldInclude = GetIfExposedVariableResolves(
+                            recursiveVariableFinder, baseElement!, item.Name, context.CodeOutputProjectSettings.OutputLibrary);
                     }
                     else
                     {
@@ -5046,7 +5235,7 @@ public class CodeGenerator
 
                 if (forceSetDirectlyOnInstance)
                 {
-                    return $"this.{_codeGenerationNameVerifier.ToCSharpName(context.Instance!.Name)}.{variableName} = {VariableValueToGumCodeValue(variable, context)};";
+                    return $"this.{_codeGenerationNameVerifier.ToCSharpMemberName(context.Instance!.Name)}.{variableName} = {VariableValueToGumCodeValue(variable, context)};";
                 }
                 else
                 {
@@ -5194,12 +5383,12 @@ public class CodeGenerator
 
                 if (isPolygon)
                 {
-                    context.StringBuilder.AppendLine(context.Tabs + $"this.{_codeGenerationNameVerifier.ToCSharpName(instance.Name)}.SetPoints(new System.Numerics.Vector2[]{{");
+                    context.StringBuilder.AppendLine(context.Tabs + $"this.{_codeGenerationNameVerifier.ToCSharpMemberName(instance.Name)}.SetPoints(new System.Numerics.Vector2[]{{");
                     context.TabCount++;
                     foreach (System.Numerics.Vector2 point in variable.ValueAsIList)
                     {
                         context.StringBuilder.AppendLine(context.Tabs + $"new System.Numerics.Vector2(" +
-                            $"{point.X.ToString(CultureInfo.InvariantCulture)}f, {point.Y.ToString(CultureInfo.InvariantCulture)}f),");
+                            $"{FloatToCode(point.X)}, {FloatToCode(point.Y)}),");
                     }
                     context.TabCount--;
                     context.StringBuilder.AppendLine(context.Tabs + "});");
@@ -5231,7 +5420,7 @@ public class CodeGenerator
     {
         if (value is float asFloat)
         {
-            return asFloat.ToString(CultureInfo.InvariantCulture) + "f";
+            return FloatToCode(asFloat);
         }
         else if (value is string asString)
         {
@@ -5271,7 +5460,7 @@ public class CodeGenerator
             }
             else
             {
-                return $"@\"{asString}\"";
+                return ToStringLiteral(asString);
             }
         }
         else if (value is bool asBool)
@@ -5317,6 +5506,14 @@ public class CodeGenerator
         }
     }
 
+    /// <summary>
+    /// A float literal; NaN and the infinities have no literal (NaNf does not compile), so they use the float constants.
+    /// </summary>
+    private static string FloatToCode(float value) =>
+        float.IsFinite(value)
+            ? value.ToString(CultureInfo.InvariantCulture) + "f"
+            : "float." + (float.IsNaN(value) ? "NaN" : value > 0 ? "PositiveInfinity" : "NegativeInfinity");
+
     private static string? ToInvariantString(object? value) =>
         value == null ? null : Convert.ToString(value, CultureInfo.InvariantCulture);
 
@@ -5327,7 +5524,7 @@ public class CodeGenerator
             // X and Y go to PixelX and PixelY
             if (rootName == "X" || rootName == "Y")
             {
-                return asFloat.ToString(CultureInfo.InvariantCulture) + "f";
+                return FloatToCode(asFloat);
             }
             else if (rootName == "CornerRadius")
             {
@@ -5395,7 +5592,7 @@ public class CodeGenerator
             }
             else
             {
-                return "\"" + asString.Replace("\n", "\\n").Replace("\"", "\\\"") + "\"";
+                return "\"" + asString.Replace("\n", "\\n").Replace("\r", "\\r").Replace("\"", "\\\"") + "\"";
             }
         }
         else if (value is bool asBool)
@@ -5540,7 +5737,7 @@ public class CodeGenerator
 
                 if (contextInstance != null)
                 {
-                    var standardizedParentName = _codeGenerationNameVerifier.ToCSharpName(parentName!);
+                    var standardizedParentName = _codeGenerationNameVerifier.ToCSharpMemberName(parentName!);
                     if (IsTabControl(parentInstance))
                     {
                         var stringBuilder = new StringBuilder();
@@ -5564,19 +5761,19 @@ public class CodeGenerator
 
                         stringBuilder.AppendLine($"{tabs}var tabItem = new {tabViewType}();");
                         stringBuilder.AppendLine($"{tabs}tabItem.{textProperty} = \"Tab Text\";");
-                        stringBuilder.AppendLine($"{tabs}tabItem.Content = {_codeGenerationNameVerifier.ToCSharpName(contextInstance.Name)};");
-                        stringBuilder.AppendLine($"{tabs}{_codeGenerationNameVerifier.ToCSharpName(parentInstance.Name)}.{tabItemsProperty}.Add(tabItem);");
+                        stringBuilder.AppendLine($"{tabs}tabItem.Content = {_codeGenerationNameVerifier.ToCSharpMemberName(contextInstance.Name)};");
+                        stringBuilder.AppendLine($"{tabs}{_codeGenerationNameVerifier.ToCSharpMemberName(parentInstance.Name)}.{tabItemsProperty}.Add(tabItem);");
                         tabs = tabs.Substring(4);
                         stringBuilder.AppendLine($"{tabs}}}");
                         return stringBuilder.ToString();
                     }
                     else if (hasContent)
                     {
-                        return $"{standardizedParentName}.Content = {_codeGenerationNameVerifier.ToCSharpName(contextInstance.Name)};";
+                        return $"{standardizedParentName}.Content = {_codeGenerationNameVerifier.ToCSharpMemberName(contextInstance.Name)};";
                     }
                     else
                     {
-                        return $"{standardizedParentName}.Children.Add({_codeGenerationNameVerifier.ToCSharpName(contextInstance.Name)});";
+                        return $"{standardizedParentName}.Children.Add({_codeGenerationNameVerifier.ToCSharpMemberName(contextInstance.Name)});";
                     }
                 }
 
@@ -5767,7 +5964,7 @@ public class CodeGenerator
             {
                 if(string.IsNullOrEmpty( variable.SourceObject))
                 {
-                    context.StringBuilder.AppendLine($"{context.Tabs}this.{_codeGenerationNameVerifier.ToCSharpName(variable.Name)} = {VariableValueToGumCodeValue(variable, context)};");
+                    context.StringBuilder.AppendLine($"{context.Tabs}this.{_codeGenerationNameVerifier.ToCSharpMemberName(variable.Name)} = {VariableValueToGumCodeValue(variable, context)};");
                 }
                 else
                 {
@@ -5822,7 +6019,7 @@ public class CodeGenerator
                 context.StringBuilder.AppendLine(context.Tabs + $"if({screenOrComponent}?.DefaultState != null);");
                 context.TabCount++;
                 context.StringBuilder.AppendLine(context.Tabs +
-                    $"GumRuntime.ElementSaveExtensions.ApplyVariableReferences({_codeGenerationNameVerifier.ToCSharpName(context.Instance.Name)}, {screenOrComponent}.DefaultState);");
+                    $"GumRuntime.ElementSaveExtensions.ApplyVariableReferences({_codeGenerationNameVerifier.ToCSharpMemberName(context.Instance.Name)}, {screenOrComponent}.DefaultState);");
                 context.TabCount--;
 
             }
@@ -5974,11 +6171,11 @@ public class CodeGenerator
             var ownerName = variable.Value as string;
             var owner = string.IsNullOrEmpty(ownerName)
                 ? "this"
-                : _codeGenerationNameVerifier.ToCSharpName(ownerName);
+                : _codeGenerationNameVerifier.ToCSharpMemberName(ownerName);
 
             if (context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.GumForms)
             {
-                var child = _codeGenerationNameVerifier.ToCSharpName(instance.Name);
+                var child = _codeGenerationNameVerifier.ToCSharpMemberName(instance.Name);
 
                 // Syntax version 3+ generated code imports Gum instead of MonoGameGum, so the
                 // legacy MonoGameGum.GraphicalUiElementExtensionMethods.AddChild(GraphicalUiElement,
@@ -6004,7 +6201,7 @@ public class CodeGenerator
             }
             else
             {
-                return $"{owner}.Children.Add({_codeGenerationNameVerifier.ToCSharpName(instance.Name)});";
+                return $"{owner}.Children.Add({_codeGenerationNameVerifier.ToCSharpMemberName(instance.Name)});";
             }
         }
         #endregion
@@ -6032,7 +6229,7 @@ public class CodeGenerator
                 return " ";
             }
 
-            var referenceInCode = "this." + _codeGenerationNameVerifier.ToCSharpName(referencedInstanceName);
+            var referenceInCode = "this." + _codeGenerationNameVerifier.ToCSharpMemberName(referencedInstanceName);
 
             // RenderTargetTextureSource is an IRenderableIpso. For GumForms a non-standard
             // instance's field is the Forms wrapper, so reach its underlying visual.
@@ -6044,6 +6241,22 @@ public class CodeGenerator
             }
 
             return $"{context.CodePrefixNoTabs}.{GetGumVariableName(variable, context)} = {referenceInCode};";
+        }
+        #endregion
+        #region Shader parameter value
+
+        // A saved shader parameter value (Holder.Outline_Thickness) is no property of the runtime, only a name
+        // SetProperty routes to the container's shader parameters, the same call the loader makes. Exposed
+        // parameters carry no value and never get here. An override of an exposed parameter carries the same
+        // marker but is a typed property of the instance, which the regular assignment writes.
+        else if (instance != null && IsShaderParameterVariable(variable) && !IsExposedOnInstance(instance, rootName))
+        {
+            string? valueInCode = VariableValueToGumCodeValue(variable, context);
+            if (valueInCode == null)
+            {
+                return " ";
+            }
+            return $"{context.CodePrefixNoTabs}.SetProperty(\"{rootName}\", {valueInCode});";
         }
         #endregion
         #region SourceShaderFile
@@ -6073,7 +6286,7 @@ public class CodeGenerator
             {
                 return " ";
             }
-            string verbatimText = "@\"" + shaderParametersText.Replace("\"", "\"\"") + "\"";
+            string verbatimText = ToStringLiteral(shaderParametersText);
             return $"{context.CodePrefixNoTabs}.SetProperty(\"ShaderParameters\", {verbatimText});";
         }
         #endregion
@@ -6240,6 +6453,12 @@ public class CodeGenerator
     }
 
 
+    private static bool IsExposedOnInstance(InstanceSave instance, string rootName) =>
+        ObjectFinder.Self.GetElementSave(instance)?.DefaultState?.GetVariableRecursive(rootName)?.ExposedAsName == rootName;
+
+    private static bool IsShaderParameterVariable(VariableSave variable) =>
+        ShaderParameterMarker.TryParse(variable.ShaderParameter, out _);
+
     private static VariableSave[] GetVariablesForValueAssignmentCode(InstanceSave instance, ElementSave currentElement, OutputLibrary outputLibrary)
     {
         var baseElement = Gum.Managers.ObjectFinder.Self.GetElementSave(instance.BaseType);
@@ -6279,8 +6498,10 @@ public class CodeGenerator
 
         if (shouldInclude)
         {
-            var foundVariable = baseRecursiveVariableFinder.GetVariable(item.GetRootName());
-            shouldInclude = foundVariable != null;
+            // A shader parameter value is declared by the container that saved it (its marker), not by the
+            // instance's type, so the type does not have it.
+            shouldInclude = IsShaderParameterVariable(item) ||
+                GetIfExposedVariableResolves(baseRecursiveVariableFinder, instanceBaseElement, item.GetRootName(), outputLibrary);
         }
 
         if (shouldInclude)
@@ -6346,7 +6567,7 @@ public class CodeGenerator
 
         string target = instance == null
             ? "this"
-            : "this." + _codeGenerationNameVerifier.ToCSharpName(instance.Name);
+            : "this." + _codeGenerationNameVerifier.ToCSharpMemberName(instance.Name);
 
         foreach (VariableSave declaration in GetFormsPropertyDeclarations(controlElement))
         {
@@ -6525,7 +6746,7 @@ public class CodeGenerator
             }
             else if (target == typeof(string))
             {
-                return "@\"" + Convert.ToString(value, CultureInfo.InvariantCulture)?.Replace("\"", "\"\"") + "\"";
+                return ToStringLiteral(Convert.ToString(value, CultureInfo.InvariantCulture) ?? string.Empty);
             }
             else if (target == typeof(int))
             {
@@ -6538,9 +6759,7 @@ public class CodeGenerator
             else if (target == typeof(float))
             {
                 float asFloat = Convert.ToSingle(value, CultureInfo.InvariantCulture);
-                return float.IsFinite(asFloat)
-                    ? asFloat.ToString(CultureInfo.InvariantCulture) + "f"
-                    : "float." + (float.IsNaN(asFloat) ? "NaN" : asFloat > 0 ? "PositiveInfinity" : "NegativeInfinity");
+                return FloatToCode(asFloat);
             }
             else if (target == typeof(double))
             {
@@ -6625,7 +6844,7 @@ public class CodeGenerator
 
             if (instanceComponentSettings?.LocalizeElement == true)
             {
-                stringBuilder.AppendLine(context.Tabs + $"{_codeGenerationNameVerifier.ToCSharpName(instance.Name)}.ApplyLocalization();");
+                stringBuilder.AppendLine(context.Tabs + $"{_codeGenerationNameVerifier.ToCSharpMemberName(instance.Name)}.ApplyLocalization();");
 
             }
         }
@@ -6712,7 +6931,7 @@ public class CodeGenerator
         {
             if (!string.IsNullOrEmpty(variable.ExposedAsName) && variable.SourceObject != null)
             {
-                var instanceName = _codeGenerationNameVerifier.ToCSharpName(variable.SourceObject);
+                var instanceName = _codeGenerationNameVerifier.ToCSharpMemberName(variable.SourceObject);
                 // make sure this instance is a XamForms object otherwise we don't need to set the binding
                 var isXamForms = (element.DefaultState.GetValueRecursive($"{instanceName}.IsXamarinFormsControl") as bool?) ?? false;
 

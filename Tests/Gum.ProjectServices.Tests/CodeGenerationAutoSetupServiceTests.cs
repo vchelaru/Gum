@@ -45,6 +45,29 @@ public class CodeGenerationAutoSetupServiceTests : IDisposable
         result.Settings!.RootNamespace.ShouldBe("My_Game_Project");
     }
 
+    [Theory]
+    [InlineData("2DPlatformer", "_2DPlatformer")]
+    [InlineData("My Game", "My_Game")]
+    [InlineData("my-game", "my_game")]
+    [InlineData("Space Shooter 2", "Space_Shooter_2")]
+    [InlineData("Game.Client", "Game_Client")]
+    [InlineData("3D-Maze.Game", "_3D_Maze_Game")]
+    [InlineData("Caf\u00e9", "Caf\u00e9")]
+    [InlineData("class", "@class")]
+    public void Run_CsprojNamedTheWayABeginnerNamesAGame_DerivesANamespaceTheGeneratedCodeCanUse(
+        string csprojName, string expectedNamespace)
+    {
+        File.WriteAllText(Path.Combine(_tempDirectory, csprojName + ".csproj"), "<Project Sdk=\"Microsoft.NET.Sdk\"></Project>");
+        string gumxPath = Path.Combine(_tempDirectory, "Content", "GumProject", "GumProject.gumx");
+        Directory.CreateDirectory(Path.GetDirectoryName(gumxPath)!);
+        File.WriteAllText(gumxPath, "");
+
+        AutoSetupResult result = _sut.Run(gumxPath);
+
+        result.Success.ShouldBeTrue();
+        result.Settings!.RootNamespace.ShouldBe(expectedNamespace);
+    }
+
     [Fact]
     public void Run_WhenCsprojHasNoRootNamespaceTag_UsesFilename()
     {

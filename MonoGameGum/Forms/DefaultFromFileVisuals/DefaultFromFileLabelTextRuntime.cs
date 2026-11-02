@@ -25,6 +25,7 @@ public class DefaultFromFileLabelTextRuntime : TextRuntime
         if (FormsControl == null)
         {
             FormsControlAsObject = new Label(this);
+            BehaviorFormsPropertyApplier.ApplyToCreatedControl(this);
         }
     }
 

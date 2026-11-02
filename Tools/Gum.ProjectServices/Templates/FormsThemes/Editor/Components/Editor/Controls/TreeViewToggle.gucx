@@ -10,6 +10,9 @@
     <Variable Type="DimensionUnitType" Name="HeightUnits" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
     </Variable>
+    <Variable Type="bool" Name="IconInstance.HasEvents" SetsValue="true">
+      <Value xsi:type="xsd:boolean">false</Value>
+    </Variable>
     <Variable Type="float" Name="IconInstance.Height" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
     </Variable>

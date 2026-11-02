@@ -97,6 +97,7 @@ public static class GumCoreServiceCollectionExtensions
         services.AddSingleton<ICopyPasteProjectProvider>(provider => provider.GetRequiredService<ProjectManager>());
         services.AddSingleton<IReferenceFinderProjectProvider>(provider => provider.GetRequiredService<ProjectManager>());
         services.AddSingleton<IRenameProjectProvider>(provider => provider.GetRequiredService<ProjectManager>());
+        services.AddSingleton<INewProjectLocationSettings>(provider => provider.GetRequiredService<ProjectManager>());
         services.AddSingleton<ICommandLineManager, CommandLineManager>();
         services.AddSingleton<IProjectState, ProjectState>();
 
@@ -123,6 +124,18 @@ public static class GumCoreServiceCollectionExtensions
         services.AddSingleton<IFormsThemeImporter, FormsThemeImporter>();
         services.AddSingleton<IDefaultFontBundler, DefaultFontBundler>();
         services.AddSingleton<GumFormsLogic>();
+        // The one implementation behind gumcli new, so the New Project dialog creates exactly what the CLI does.
+        services.AddSingleton<Gum.ProjectServices.IFormsThemeLocator>(
+            _ => Gum.ProjectServices.FormsThemeLocator.CreateDefault(AppContext.BaseDirectory, Directory.GetCurrentDirectory()));
+        services.AddSingleton<Gum.ProjectServices.IRestoreRunner, Gum.ProjectServices.DotnetRestoreRunner>();
+        services.AddSingleton<Gum.ProjectServices.IPackageAddRunner, Gum.ProjectServices.DotnetPackageAddRunner>();
+        services.AddSingleton<Gum.ProjectServices.IExistingCodeProjectDetector>(_ => new Gum.ProjectServices.ExistingCodeProjectDetector());
+        services.AddSingleton<Gum.ProjectServices.INewProjectService>(provider => new Gum.ProjectServices.NewProjectService(
+            provider.GetRequiredService<Gum.ProjectServices.IFormsThemeLocator>(),
+            provider.GetRequiredService<Gum.ProjectServices.IRestoreRunner>(),
+            provider.GetRequiredService<Gum.ProjectServices.IPackageAddRunner>(),
+            new[] { AppContext.BaseDirectory, Directory.GetCurrentDirectory() },
+            new Gum.ProjectServices.CodeGeneration.HeadlessCodegenRunner(Gum.Expressions.GumExpressionService.Initialize)));
         services.AddSingleton<INewProjectLogic, NewProjectLogic>();
         services.AddSingleton<Gum.Startup.IProjectOpenRequestRouter, Gum.Startup.ProjectOpenRequestRouter>();
         services.AddSingleton<FileLocations>();
@@ -244,6 +257,7 @@ public static class GumCoreServiceCollectionExtensions
         services.AddSingleton<IUnsavedChangesTracker, UnsavedChangesTracker>();
         services.AddSingleton<IProjectLoadFills, ProjectLoadFills>();
         services.AddSingleton<IProjectReferencedFiles>(_ => new ProjectReferencedFiles());
+        services.AddSingleton<IShaderIncludeMap>(_ => new ShaderIncludeMap());
         services.AddSingleton<FileChangeReactionLogic>();
         services.AddSingleton<ProjectCommands>();
         // ICopyPasteProjectCommands: narrow headless port (ADR-0005 Phase 3). Resolves to the same ProjectCommands singleton.

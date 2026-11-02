@@ -115,7 +115,14 @@ public class VariableGridEntry
     /// <summary>Desired sort order among sibling rows (lower sorts first). Defaults to <see cref="int.MaxValue"/> (unsorted/last).</summary>
     public int SortValue { get; set; } = int.MaxValue;
 
-    /// <summary>Whether the row's context menu should offer "Make Default" (false for the Name variable and reference-assigned rows).</summary>
+    /// <summary>
+    /// True for the BaseType row of a component or an instance: both need a base type, so clearing it
+    /// leaves a base-less element (an instance's row would also clear its owner's base type).
+    /// Screens legitimately have none, so their row is not covered.
+    /// </summary>
+    private readonly bool _isBaseTypeThatMustKeepAValue;
+
+    /// <summary>Whether the row's context menu should offer "Make Default" (false for the Name variable, reference-assigned rows, and the BaseType row of a component or instance).</summary>
     public bool SupportsMakeDefault { get; }
 
     /// <summary>Whether this row's value comes from a <c>VariableReferences</c> assignment rather than being authored directly.</summary>
@@ -145,6 +152,19 @@ public class VariableGridEntry
     /// into state.
     /// </summary>
     public Func<object?>? DefaultValueFallback { get; set; }
+
+    /// <summary>
+    /// Set when the row is a shader parameter variable (such as <c>Icon.Outline_Thickness</c>): the first write
+    /// gives the variable its type and marker, and a value still in the legacy <c>ShaderParameters</c> text counts
+    /// as this row's value until it is edited or made default. Null for every other row.
+    /// </summary>
+    public ShaderParameterVariableBinding? ShaderBinding { get; set; }
+
+    /// <summary>
+    /// The name the grid knows the row by when it is not <see cref="Name"/>: a shader parameter row keeps the
+    /// plain parameter name its label shows, as the text backed rows did.
+    /// </summary>
+    public string? GridName { get; set; }
 
     /// <summary>Named property overrides a view-side displayer should reflectively apply after creating its control (e.g. "IsEditable").</summary>
     public Dictionary<string, object> PropertiesToSetOnDisplayer { get; } = new();
@@ -184,7 +204,8 @@ public class VariableGridEntry
                 // this can never be default, and if it is that causes all kinds of weirdness in variable displays.
                 return false;
             }
-            return GetValueStrictlyOnSelectedState() == null;
+            return GetValueStrictlyOnSelectedState() == null
+                && !(_stateSave != null && ShaderBinding?.HasLegacyValue(_stateSave) == true);
         }
     }
 
@@ -349,7 +370,10 @@ public class VariableGridEntry
 
         IsAssignedByReference = isAssignedByReference;
 
-        SupportsMakeDefault = variableName != "Name" && !IsAssignedByReference;
+        _isBaseTypeThatMustKeepAValue = RootVariableName == "BaseType"
+            && (instanceSave != null || stateListCategoryContainer is ComponentSave);
+
+        SupportsMakeDefault = variableName != "Name" && !IsAssignedByReference && !_isBaseTypeThatMustKeepAValue;
 
         var alreadyHasSpaces = RootVariableName.Contains(' ');
         DisplayName = alreadyHasSpaces
@@ -657,6 +681,14 @@ public class VariableGridEntry
         {
             return GeneralResponse.UnsuccessfulResponse;
         }
+        if (ShaderBinding != null)
+        {
+            if (!ShaderBinding.TryCoerce(newValue, out object? coerced))
+            {
+                return GeneralResponse.UnsuccessfulResponse;
+            }
+            newValue = coerced;
+        }
         /////////////////End Early Out////////////////////////
 
         var stateSave = _selectedState.SelectedStateSave;
@@ -724,8 +756,10 @@ public class VariableGridEntry
                     var rootVariable = ObjectFinder.Self.GetRootVariable(Name, elementSave);
                     variableType = rootVariable?.Type;
                 }
+                variableType ??= ShaderBinding?.VariableType;
                 // ...set variable after getting it from base, or else we'd get the variable we just set...
                 stateSave.SetValue(Name, newValue, instanceSave, variableType);
+                ShaderBinding?.AfterWrite(stateSave, Name);
                 if (existingVariable?.ExposedAsName is { Length: > 0 } exposedAsName && variableDefinedInThisOrBase != null &&
                     stateSave.GetVariableSave(Name) is { } variable)
                 {
@@ -782,6 +816,13 @@ public class VariableGridEntry
 
     private bool CanSetValue(object? newValue)
     {
+        // The BaseType combo is editable, so select-all + Delete commits an empty value. Refusing
+        // it makes the cell revert to the previous value. Unknown names are still accepted.
+        if (_isBaseTypeThatMustKeepAValue && (newValue is null || string.IsNullOrWhiteSpace(newValue.ToString()) || newValue is "<None>"))
+        {
+            return false;
+        }
+
         if (RootVariableName == "Points")
         {
             var value = newValue as List<System.Numerics.Vector2>;
@@ -805,6 +846,12 @@ public class VariableGridEntry
     /// </summary>
     public void ResetToDefault()
     {
+        if (_isBaseTypeThatMustKeepAValue)
+        {
+            // Reached by a multi-select, where the wrapper does not read SupportsMakeDefault.
+            return;
+        }
+
         string variableName = Name;
 
         bool shouldReset = false;
@@ -926,6 +973,11 @@ public class VariableGridEntry
             {
                 ElementSaveExtensions.ApplyVariableReferences(selectedElement, state);
             }
+        }
+
+        if (shouldReset && state != null && ShaderBinding?.RemoveLegacyValue(state) == true)
+        {
+            wasChangeMade = true;
         }
 
         if (wasChangeMade)
@@ -1264,6 +1316,41 @@ public class VariableGridEntry
 
     #region Expose/Unexpose
 
+    private void ExposeVariable()
+    {
+        InstanceSave selectedInstance = _selectedState.SelectedInstance!;
+        if (ShaderBinding == null || ElementSave == null)
+        {
+            _exposeVariableService.HandleExposeVariableClick(selectedInstance, RootVariableName);
+            return;
+        }
+
+        // A shader parameter nobody has set is not saved, so exposing it is the first thing to name it: give it a
+        // placeholder to expose, and take that back when the prompt is cancelled. One lock keeps the placeholder and
+        // the exposure a single undo step.
+        StateSave defaultState = ElementSave.GetDefaultStateOrThrow();
+        using var undoLock = _undoManager.RequestLock();
+        VariableSave? placeholder = ShaderBinding.AddNamedPlaceholder(defaultState, Name);
+        // The service reports success without an attempt when it refuses (for example no selected element).
+        OptionallyAttemptedGeneralResponse<VariableSave> response = _exposeVariableService.HandleExposeVariableClick(selectedInstance, RootVariableName);
+        bool exposed = response.Succeeded && response.DidAttempt;
+        if (!exposed)
+        {
+            if (placeholder != null)
+            {
+                defaultState.Variables.Remove(placeholder);
+            }
+            return;
+        }
+
+        // The value the legacy text held belongs to the variable now that something names the parameter.
+        if (ShaderBinding.HasLegacyValue(defaultState))
+        {
+            defaultState.SetValue(Name, ShaderBinding.GetFallbackValue(defaultState), selectedInstance, ShaderBinding.VariableType);
+            ShaderBinding.AfterWrite(defaultState, Name);
+        }
+    }
+
     private void TryAddExposeVariableMenuOptions(List<VariableContextMenuAction> actions, InstanceSave? instance)
     {
         bool canExpose = false;
@@ -1301,8 +1388,7 @@ public class VariableGridEntry
         if (canExpose)
         {
             // Variable doesn't exist, so they can only expose it, not unexpose it.
-            actions.Add(new VariableContextMenuAction("Expose Variable", () =>
-                _exposeVariableService.HandleExposeVariableClick(_selectedState.SelectedInstance!, RootVariableName)));
+            actions.Add(new VariableContextMenuAction("Expose Variable", ExposeVariable));
         }
         if (canUnExpose)
         {

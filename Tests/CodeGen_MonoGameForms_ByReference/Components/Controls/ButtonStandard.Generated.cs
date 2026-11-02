@@ -12,7 +12,7 @@ namespace CodeGenProject.Components.Controls;
 [global::Gum.DataTypes.GumElement("Controls/ButtonStandard", FormsType = typeof(global::Gum.Forms.Controls.Button))]
 partial class ButtonStandard : global::Gum.Forms.Controls.Button
 {
-    #if UNITY_5_3_OR_NEWER
+    #if UNITY_5_3_OR_NEWER && !GUM_NO_UNITY_ENGINE
     [UnityEngine.RuntimeInitializeOnLoadMethod(UnityEngine.RuntimeInitializeLoadType.SubsystemRegistration)]
     #else
     [System.Runtime.CompilerServices.ModuleInitializer]

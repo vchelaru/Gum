@@ -13,7 +13,7 @@ namespace CodeGenProject.Components.Controls;
 [global::Gum.DataTypes.GumElement("Controls/CheckBox", FormsType = typeof(global::Gum.Forms.Controls.CheckBox))]
 partial class CheckBox : global::Gum.Forms.Controls.CheckBox
 {
-    #if UNITY_5_3_OR_NEWER
+    #if UNITY_5_3_OR_NEWER && !GUM_NO_UNITY_ENGINE
     [UnityEngine.RuntimeInitializeOnLoadMethod(UnityEngine.RuntimeInitializeLoadType.SubsystemRegistration)]
     #else
     [System.Runtime.CompilerServices.ModuleInitializer]

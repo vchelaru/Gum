@@ -21,7 +21,7 @@ namespace Gum.Cli.Tests;
 /// before they exist, builds them in the wrong order, or creates a second Forms control on one
 /// visual fails here rather than in a game. Gum Forms FullyInCode and legacy MonoGame FindByName.
 /// </summary>
-public class GeneratedFormsConstructionTests : BaseTestClass
+public partial class GeneratedFormsConstructionTests : BaseTestClass
 {
     [Fact]
     public void Constructor_EveryGeneratedFormsControl_DoesNotThrow()

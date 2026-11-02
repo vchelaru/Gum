@@ -111,21 +111,21 @@ public class VisualAuthoredPropertiesTests : BaseTestClass
     #region TextBox line mode and placeholder
 
     [Fact]
-    public void TextBoxAssign_VisualAuthoredMultiLineMode_StaysMulti()
+    public void TextBoxAssign_VisualAuthoredMultiLineMode_ControlPropertiesDecideLineMode()
     {
         TextBoxVisual visual = new(fullInstantiation: true, tryCreateFormsObject: false);
         visual.SetProperty("LineModeCategoryState", "Multi");
 
         TextBox textBox = new(visual);
 
-        // The Multi state top-aligns the text; the Single state would put it back to center.
-        visual.TextInstance.VerticalAlignment.ShouldBe(VerticalAlignment.Top);
+        // The control is single line, so the Single state centers the text again (#7325).
+        visual.TextInstance.VerticalAlignment.ShouldBe(VerticalAlignment.Center);
         textBox.TextWrapping.ShouldBe(TextWrapping.NoWrap);
         textBox.AcceptsReturn.ShouldBeFalse();
     }
 
     [Fact]
-    public void TextBoxSwap_NewVisualAuthoredMultiLineMode_DefaultControlKeepsMulti()
+    public void TextBoxSwap_NewVisualAuthoredMultiLineMode_DefaultControlGetsSingle()
     {
         TextBox textBox = new();
         TextBoxVisual newVisual = new(fullInstantiation: true, tryCreateFormsObject: false);
@@ -133,7 +133,7 @@ public class VisualAuthoredPropertiesTests : BaseTestClass
 
         textBox.Visual = newVisual;
 
-        newVisual.TextInstance.VerticalAlignment.ShouldBe(VerticalAlignment.Top);
+        newVisual.TextInstance.VerticalAlignment.ShouldBe(VerticalAlignment.Center);
     }
 
     [Fact]

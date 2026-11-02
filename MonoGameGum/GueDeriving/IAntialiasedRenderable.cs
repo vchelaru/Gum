@@ -22,5 +22,12 @@ public interface IAntialiasedRenderable
     /// 1 px stroke.
     /// </summary>
     bool IsAntialiased { get; set; }
+
+    /// <summary>
+    /// Fraction (0 to 1) of the stroke color's alpha to draw. The runtime sets it below 1 for a stroke
+    /// thinner than the 1 px anti-aliasing hairline, so the hairline carries the authored width as
+    /// coverage (issue #7350). Defaults to 1.
+    /// </summary>
+    float StrokeAlphaScale { get; set; }
 }
 #endif

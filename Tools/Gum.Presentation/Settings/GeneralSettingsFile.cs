@@ -23,6 +23,16 @@ namespace Gum.Settings
             set;
         }
 
+        /// <summary>
+        /// The parent of the project folder the last successfully created New Project used; the next
+        /// New Project dialog starts there. Null (absent from GeneralSettings.xml) means Documents.
+        /// </summary>
+        public string? LastNewProjectParent
+        {
+            get;
+            set;
+        }
+
         public bool ShowTextOutlines
         {
             get;

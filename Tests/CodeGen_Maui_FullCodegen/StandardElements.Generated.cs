@@ -16,7 +16,7 @@ namespace CodeGen_Maui_FullCodegen;
 
 internal static class StandardElementsCodeGenRegistration
 {
-    #if UNITY_5_3_OR_NEWER
+    #if UNITY_5_3_OR_NEWER && !GUM_NO_UNITY_ENGINE
     [UnityEngine.RuntimeInitializeOnLoadMethod(UnityEngine.RuntimeInitializeLoadType.SubsystemRegistration)]
     #else
     [ModuleInitializer]

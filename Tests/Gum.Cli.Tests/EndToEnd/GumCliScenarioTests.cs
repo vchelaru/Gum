@@ -180,17 +180,17 @@ public class GumCliScenarioTests : IDisposable
         all.ExitCode.ShouldBe(0, all.Transcript);
         File.ReadAllText(Path.Combine(gameFolder, "Components", "Controls", "ListBox.Generated.cs"))
             .ShouldContain("partial class ListBox : global::Gum.Forms.Controls.ListBox");
-        string keyboardScreen = Path.Combine(gameFolder, "Screens", "KeyboardScreenGum.Generated.cs");
-        File.ReadAllText(keyboardScreen).ShouldContain("partial class KeyboardScreenGum");
+        string demoScreen = Path.Combine(gameFolder, "Screens", "DemoScreenGum.Generated.cs");
+        File.ReadAllText(demoScreen).ShouldContain("partial class DemoScreenGum");
         // Nothing references the demo screen, so dropping it leaves the rest of the project valid.
-        File.WriteAllText(project, Regex.Replace(File.ReadAllText(project), """\s*<ScreenReference Name="KeyboardScreenGum" />""", ""));
+        File.WriteAllText(project, Regex.Replace(File.ReadAllText(project), """\s*<ScreenReference Name="DemoScreenGum" />""", ""));
 
         GumCliProcess pruned = Cli("codegen", project, "--prune");
 
         pruned.ExitCode.ShouldBe(0, pruned.Transcript);
-        File.Exists(keyboardScreen).ShouldBeFalse("--prune removes the generated file of an element the project no longer has");
-        File.Exists(Path.Combine(gameFolder, "Screens", "KeyboardScreenGum.cs")).ShouldBeTrue("custom code is only listed, never deleted");
-        pruned.StandardOutput.ShouldContain("KeyboardScreenGum.cs");
+        File.Exists(demoScreen).ShouldBeFalse("--prune removes the generated file of an element the project no longer has");
+        File.Exists(Path.Combine(gameFolder, "Screens", "DemoScreenGum.cs")).ShouldBeTrue("custom code is only listed, never deleted");
+        pruned.StandardOutput.ShouldContain("DemoScreenGum.cs");
         File.Exists(Path.Combine(gameFolder, "Components", "Controls", "ButtonStandard.Generated.cs")).ShouldBeTrue();
     }
 

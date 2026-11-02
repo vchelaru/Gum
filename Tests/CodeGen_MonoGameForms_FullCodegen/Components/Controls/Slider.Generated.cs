@@ -13,7 +13,7 @@ namespace CodeGen_MonoGameForms_FullCodegen.Components.Controls;
 [global::Gum.DataTypes.GumElement("Controls/Slider", FormsType = typeof(global::Gum.Forms.Controls.Slider))]
 partial class Slider : global::Gum.Forms.Controls.Slider
 {
-    #if UNITY_5_3_OR_NEWER
+    #if UNITY_5_3_OR_NEWER && !GUM_NO_UNITY_ENGINE
     [UnityEngine.RuntimeInitializeOnLoadMethod(UnityEngine.RuntimeInitializeLoadType.SubsystemRegistration)]
     #else
     [System.Runtime.CompilerServices.ModuleInitializer]

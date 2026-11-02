@@ -373,10 +373,42 @@ public class ArcRuntime : GraphicalUiElement
     // Issue #3454 — gradient surface, forwarded to the contained LineArc. The gradient START color
     // is not a standalone slot: per the #3009 model it mirrors the arc's primary Color, synced into
     // the renderable's Color1 in PreRender. Color2 below is the standalone second stop. The obsolete
-    // Color1 / Red1 / Green1 / Blue1 / Alpha1 shims that the Skia/Apos branch carries are
-    // intentionally NOT widened to raylib — gradient support never shipped on raylib arcs, so there
-    // is no legacy data to preserve, and the cross-platform guidance is that the narrower footprint
-    // wins for deprecated members (see the gum-cross-platform-unification skill).
+    // Color1 shim is intentionally NOT widened to raylib (code-only API; narrower footprint wins).
+    // Red1 / Green1 / Blue1 / Alpha1 below ARE present: they are Arc standard variables (#7302), so
+    // a loaded .gumx sets them, and without a runtime property they fell to reflection on the
+    // renderable and were lost. They alias the body color like the Skia/Apos branch.
+
+    /// <summary>Alias of <see cref="Red"/>: the Arc standard's gradient start channel (the gradient start is the body color).</summary>
+    [System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)]
+    public int Red1
+    {
+        get => Red;
+        set => Red = value;
+    }
+
+    /// <summary>Alias of <see cref="Green"/>. See <see cref="Red1"/>.</summary>
+    [System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)]
+    public int Green1
+    {
+        get => Green;
+        set => Green = value;
+    }
+
+    /// <summary>Alias of <see cref="Blue"/>. See <see cref="Red1"/>.</summary>
+    [System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)]
+    public int Blue1
+    {
+        get => Blue;
+        set => Blue = value;
+    }
+
+    /// <summary>Alias of <see cref="Alpha"/>. See <see cref="Red1"/>.</summary>
+    [System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)]
+    public int Alpha1
+    {
+        get => Alpha;
+        set => Alpha = value;
+    }
 
     /// <inheritdoc cref="LineArc.UseGradient"/>
     public bool UseGradient
@@ -521,6 +553,72 @@ public class ArcRuntime : GraphicalUiElement
         }
     }
 
+    /// <inheritdoc cref="LineArc.GradientX1Units"/>
+    public Gum.Converters.GeneralUnitType GradientX1Units
+    {
+        get => ContainedLineArc.GradientX1Units;
+        set
+        {
+            ContainedLineArc.GradientX1Units = value;
+            NotifyPropertyChanged();
+        }
+    }
+
+    /// <inheritdoc cref="LineArc.GradientY1Units"/>
+    public Gum.Converters.GeneralUnitType GradientY1Units
+    {
+        get => ContainedLineArc.GradientY1Units;
+        set
+        {
+            ContainedLineArc.GradientY1Units = value;
+            NotifyPropertyChanged();
+        }
+    }
+
+    /// <inheritdoc cref="LineArc.GradientX2Units"/>
+    public Gum.Converters.GeneralUnitType GradientX2Units
+    {
+        get => ContainedLineArc.GradientX2Units;
+        set
+        {
+            ContainedLineArc.GradientX2Units = value;
+            NotifyPropertyChanged();
+        }
+    }
+
+    /// <inheritdoc cref="LineArc.GradientY2Units"/>
+    public Gum.Converters.GeneralUnitType GradientY2Units
+    {
+        get => ContainedLineArc.GradientY2Units;
+        set
+        {
+            ContainedLineArc.GradientY2Units = value;
+            NotifyPropertyChanged();
+        }
+    }
+
+    /// <inheritdoc cref="LineArc.GradientInnerRadiusUnits"/>
+    public DimensionUnitType GradientInnerRadiusUnits
+    {
+        get => ContainedLineArc.GradientInnerRadiusUnits;
+        set
+        {
+            ContainedLineArc.GradientInnerRadiusUnits = value;
+            NotifyPropertyChanged();
+        }
+    }
+
+    /// <inheritdoc cref="LineArc.GradientOuterRadiusUnits"/>
+    public DimensionUnitType GradientOuterRadiusUnits
+    {
+        get => ContainedLineArc.GradientOuterRadiusUnits;
+        set
+        {
+            ContainedLineArc.GradientOuterRadiusUnits = value;
+            NotifyPropertyChanged();
+        }
+    }
+
     /// <summary>
     /// Initializes a new raylib <c>ArcRuntime</c>. Constructor defaults mirror the Skia/Apos
     /// branch so cross-backend sample code starts from the same baseline (Width = Height = 100,
@@ -554,15 +652,11 @@ public class ArcRuntime : GraphicalUiElement
 
             // Pre-seed dropshadow offset/blur so toggling HasDropshadow = true at runtime
             // produces a visible shadow without further setup — same default the Skia/Apos
-            // branch lands via the SkiaShapeRuntime/AposShapeRuntime constructor. Anisotropic
-            // seed (X = 0, Y = 3) is intentional; per-axis is deprecated but DropshadowBlur
-            // (scalar) can't express the asymmetry.
+            // branch lands via the SkiaShapeRuntime/AposShapeRuntime constructor. Blur is the tool's
+            // authored default (isotropic 3, #7299).
             DropshadowOffsetX = 0;
             DropshadowOffsetY = 3;
-#pragma warning disable CS0618
-            DropshadowBlurX = 0;
-            DropshadowBlurY = 3;
-#pragma warning restore CS0618
+            DropshadowBlur = 3;
         }
     }
 
@@ -968,13 +1062,8 @@ public class ArcRuntime
 
             DropshadowOffsetX = 0;
             DropshadowOffsetY = 3;
-            // Anisotropic seed (X = 0, Y = 3) is intentional — the arc's default shadow blurs
-            // only vertically. Per-axis is deprecated on the public surface but kept here for
-            // that default; DropshadowBlur (scalar) can't express the asymmetry.
-#pragma warning disable CS0618
-            DropshadowBlurX = 0;
-            DropshadowBlurY = 3;
-#pragma warning restore CS0618
+            // The tool's authored default: isotropic blur 3 (#7299).
+            DropshadowBlur = 3;
         }
     }
 

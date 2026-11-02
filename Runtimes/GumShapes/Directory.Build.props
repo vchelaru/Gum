@@ -59,8 +59,12 @@
 
       Bumped from 0.8.6 to 0.9.1 for issue #6797 (0.9.0 splits the shader into variants that
       compile lazily, so a cold WebGL page shows its first shape in ~5 s instead of ~35 s).
+
+      Bumped from 0.9.1 to 0.9.4 for issue #6026 (0.9.4 draws SVG shapes far wider than the viewBox
+      and keeps squashed drawings inside their box) and #6448 (iOS device precision; that fix
+      shipped in 0.8.7, so 0.9.1 already had it).
     -->
-    <AposShapesVersion>0.9.1</AposShapesVersion>
+    <AposShapesVersion>0.9.4</AposShapesVersion>
   </PropertyGroup>
 
   <!--

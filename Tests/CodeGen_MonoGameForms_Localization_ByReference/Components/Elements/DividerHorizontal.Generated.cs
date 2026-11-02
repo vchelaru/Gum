@@ -13,7 +13,7 @@ namespace CodeGen_MonoGameForms_Localization_ByReference.Components.Elements;
 [global::Gum.DataTypes.GumElement("Elements/DividerHorizontal")]
 partial class DividerHorizontal : global::Gum.Forms.Controls.FrameworkElement
 {
-    #if UNITY_5_3_OR_NEWER
+    #if UNITY_5_3_OR_NEWER && !GUM_NO_UNITY_ENGINE
     [UnityEngine.RuntimeInitializeOnLoadMethod(UnityEngine.RuntimeInitializeLoadType.SubsystemRegistration)]
     #else
     [System.Runtime.CompilerServices.ModuleInitializer]

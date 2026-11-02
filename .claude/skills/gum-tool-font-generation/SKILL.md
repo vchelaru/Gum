@@ -93,6 +93,8 @@ All font generation now routes through `HeadlessFontGenerationService`. There ar
 
 **Bulk (tool-only):** `CreateAllMissingFontFiles` scans the entire project on load or "regenerate fonts" and generates all missing font files in parallel.
 
+**BBCode runs.** The tool generates fonts for BBCode runs when the wireframe draws a Text: `ApplyFontVariables` resolves each run's font stack and calls `IFontManager.CreateFontIfNecessary`. The bulk collection (`FontReferenceCollector`, `CollectRequiredFonts`, `gumcli fonts`) replays the same stack model through the shared helper `BbCodeFontStacks` (`GumRuntime/BbCodeFontStacks.cs`), seeded from the Text's own font, over every state's Text value. A change to which tags affect the font goes in that helper so both paths change together.
+
 Both delegate to `HeadlessFontGenerationService`. Legacy `IRuntimeFontService`, `GenerateMissingFontsForReferencingElements`, and the embedded bmfont.exe in RenderingLibrary have been removed.
 
 **The two paths overlap at project load.** The bulk pass runs on background tasks while the wireframe resolves fonts synchronously on the UI thread. `HeadlessFontGenerationService.TryCreateFontFor` keeps one in-flight generation per target `.fnt` (`_inFlight`): an async caller joins it, a sync caller gets `FontFileStatus.Generating` (it cannot block, the in-flight continuations need the UI thread) and `GetOrCreateBakedFont` then returns null without caching or blacklisting. `FontCacheLogic` reloads wireframe content once the bulk pass reports it generated anything, so text that resolved mid-flight picks the files up.

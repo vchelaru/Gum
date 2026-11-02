@@ -30,6 +30,8 @@ public class DialogScenarioTests
 {
     private static readonly TimeSpan AsyncWork = TimeSpan.FromSeconds(60);
 
+    private const string NewProjectName = "NewlyCreated";
+
     private static IServiceProvider Services => TestAppBuilder.Services;
 
     #region New project
@@ -43,22 +45,23 @@ public class DialogScenarioTests
         tree.Dialogs.AnswerNext<NewProjectDialogViewModel>(dialog =>
         {
             dialog.IsIncludeFormsControls = false;
+            dialog.ProjectName = NewProjectName;
+            dialog.Location = tree.Project.ProjectFolder;
+            dialog.SelectedFileFormat = NewProjectDialogViewModel.XmlFormat;
             return true;
         });
-        tree.Dialogs.AnswerNextSaveFile(tree.Project.ProjectFilePath);
-        // The folder holds the project the harness started with.
-        tree.Dialogs.AnswerNextMessage(MessageDialogResult.Affirmative);
 
         tree.PickMainMenu("File", "New Project");
         tree.WaitUntil(() => tree.SelectedState.SelectedScreen?.Name == NewProjectLogic.StartingScreenName, AsyncWork, "the new project's starting screen");
 
-        tree.Dialogs.Messages.Single().ShouldContain("is not empty");
         GumProjectSave project = Services.GetRequiredService<IProjectManager>().GumProjectSave.ShouldNotBeNull();
         tree.SaveAll();
-        project.FullFileName.ShouldBe(tree.Project.ProjectFilePath);
+        string newProjectFolder = Path.Combine(tree.Project.ProjectFolder, NewProjectName);
+        project.FullFileName.ShouldBe(Path.Combine(newProjectFolder, NewProjectName + ".gumx"));
+        tree.Project.FollowProjectFile(project.FullFileName!);
         project.Screens.Select(screen => screen.Name).ShouldBe(new[] { NewProjectLogic.StartingScreenName });
         project.Components.ShouldBeEmpty();
-        File.Exists(Path.Combine(tree.Project.ProjectFolder, "Screens", NewProjectLogic.StartingScreenName + ".gusx")).ShouldBeTrue();
+        File.Exists(Path.Combine(newProjectFolder, "Screens", NewProjectLogic.StartingScreenName + ".gusx")).ShouldBeTrue();
         tree.ChildTexts(tree.RootNode("Screens")).ShouldBe(new[] { NewProjectLogic.StartingScreenName });
 
         tree.AssertOracles();

@@ -13,7 +13,7 @@ namespace CodeGen_MonoGameForms_Localization_ByReference.Components.Controls;
 [global::Gum.DataTypes.GumElement("Controls/ListBox", FormsType = typeof(global::Gum.Forms.Controls.ListBox))]
 partial class ListBox : global::Gum.Forms.Controls.ListBox
 {
-    #if UNITY_5_3_OR_NEWER
+    #if UNITY_5_3_OR_NEWER && !GUM_NO_UNITY_ENGINE
     [UnityEngine.RuntimeInitializeOnLoadMethod(UnityEngine.RuntimeInitializeLoadType.SubsystemRegistration)]
     #else
     [System.Runtime.CompilerServices.ModuleInitializer]

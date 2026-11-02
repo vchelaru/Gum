@@ -1,5 +1,6 @@
 using Gum.ProjectServices;
 using Gum.ProjectServices.CodeGeneration;
+using System.Xml.Linq;
 using Shouldly;
 
 namespace Gum.ProjectServices.Tests;
@@ -56,6 +57,63 @@ public class PlatformProjectScaffolderTests : IDisposable
         settings.OutputLibrary.ShouldBe(expectedLibrary);
         settings.RootNamespace.ShouldBe("MyGame");
         settings.CsprojPath.ShouldBe("../../MyGame.csproj");
+    }
+
+    [Theory]
+    [InlineData("My-Game.Client", "My_Game_Client")]
+    [InlineData("class", "@class")]
+    public void Create_WhenProjectNameIsNotAnIdentifier_ShouldUseAValidRootNamespaceEverywhere(
+        string projectName, string expectedNamespace)
+    {
+        string projectDirectory = Path.Combine(_tempDirectory, projectName);
+
+        PlatformProjectResult result = _sut.Create(projectDirectory, HostPlatform.MonoGame, includeFormsTemplate: false);
+
+        result.Success.ShouldBeTrue(result.ErrorMessage);
+        File.ReadAllText(result.CsprojPath).ShouldContain($"<RootNamespace>{expectedNamespace}</RootNamespace>");
+        File.ReadAllText(Path.Combine(projectDirectory, "Game1.cs")).ShouldContain($"namespace {expectedNamespace};");
+        CodeOutputProjectSettings? settings = new CodeOutputProjectSettingsManager(
+            new NullCodeGenLogger(),
+            new FixedProjectDirectoryProvider(Path.Combine(projectDirectory, "Content", "GumProject") + Path.DirectorySeparatorChar))
+            .TryLoadSettingsForProject();
+        settings!.RootNamespace.ShouldBe(expectedNamespace);
+    }
+
+    [Theory]
+    [InlineData(HostPlatform.MonoGame)]
+    [InlineData(HostPlatform.Kni)]
+    [InlineData(HostPlatform.KniSkia)]
+    [InlineData(HostPlatform.Raylib)]
+    [InlineData(HostPlatform.SilkNet)]
+    [InlineData(HostPlatform.Stride)]
+    public void Create_ShouldBuildAConsoleExeInDebugAndAWindowedExeInRelease(HostPlatform platform)
+    {
+        // A WinExe does not open a console window behind the game. Debug keeps Exe so console output shows.
+        string projectDirectory = Path.Combine(_tempDirectory, "MyGame");
+
+        PlatformProjectResult result = _sut.Create(projectDirectory, platform, includeFormsTemplate: true);
+
+        XDocument csproj = XDocument.Load(result.CsprojPath);
+        EvaluateOutputType(csproj, "Debug").ShouldBe("Exe");
+        EvaluateOutputType(csproj, "Release").ShouldBe("WinExe");
+    }
+
+    // Applies the OutputType elements in document order, honoring only the Release condition this template uses.
+    private static string? EvaluateOutputType(XDocument csproj, string configuration)
+    {
+        string? value = null;
+        foreach (XElement element in csproj.Descendants("OutputType"))
+        {
+            string? condition = element.Attribute("Condition")?.Value
+                ?? element.Parent?.Attribute("Condition")?.Value;
+            bool applies = condition == null
+                || condition.Replace(" ", "") == $"'$(Configuration)'=='{configuration}'";
+            if (applies)
+            {
+                value = element.Value;
+            }
+        }
+        return value;
     }
 
     [Fact]
@@ -136,6 +194,64 @@ public class PlatformProjectScaffolderTests : IDisposable
         Directory.Exists(projectDirectory).ShouldBeFalse();
     }
 
+    [Theory]
+    [InlineData(HostPlatform.MonoGame)]
+    [InlineData(HostPlatform.Kni)]
+    [InlineData(HostPlatform.KniSkia)]
+    [InlineData(HostPlatform.Raylib)]
+    [InlineData(HostPlatform.Stride)]
+    [InlineData(HostPlatform.SilkNet)]
+    public void Create_ShouldWriteASlnxListingOnlyTheGameProject(HostPlatform platform)
+    {
+        string projectDirectory = Path.Combine(_tempDirectory, "My.Game-1");
+
+        PlatformProjectResult result = _sut.Create(projectDirectory, platform, includeFormsTemplate: false);
+
+        result.Success.ShouldBeTrue(result.ErrorMessage);
+        string slnxPath = Path.Combine(projectDirectory, "My.Game-1.slnx");
+        File.Exists(slnxPath).ShouldBeTrue();
+        Directory.GetFiles(projectDirectory, "*.sln*").ShouldBe(new[] { slnxPath });
+
+        XElement solution = XDocument.Parse(File.ReadAllText(slnxPath)).Root!;
+        solution.Name.LocalName.ShouldBe("Solution");
+        XElement project = solution.Elements().ShouldHaveSingleItem();
+        project.Name.LocalName.ShouldBe("Project");
+        project.Attribute("Path")!.Value.ShouldBe("My.Game-1.csproj");
+        File.Exists(Path.Combine(projectDirectory, project.Attribute("Path")!.Value)).ShouldBeTrue();
+    }
+
+    [Fact]
+    public void Create_WhenSourceLinked_ShouldKeepTheRuntimeProjectOutOfTheSlnx()
+    {
+        string projectDirectory = Path.Combine(_tempDirectory, "MyGame");
+        string gumSource = CreateFakeGumSource("MonoGameGum/MonoGameGum.csproj");
+
+        PlatformProjectResult result = _sut.Create(
+            projectDirectory, HostPlatform.MonoGame, includeFormsTemplate: false, gumSourceDirectory: gumSource);
+
+        result.Success.ShouldBeTrue(result.ErrorMessage);
+        File.ReadAllText(result.CsprojPath).ShouldContain("<ProjectReference Include=");
+        XDocument.Parse(File.ReadAllText(Path.Combine(projectDirectory, "MyGame.slnx")))
+            .Root!.Elements().Select(element => element.Attribute("Path")!.Value)
+            .ShouldBe(new[] { "MyGame.csproj" });
+    }
+
+    [Fact]
+    public void Create_WhenSlnxAlreadyExists_ShouldFailLikeAnExistingCsprojAndWriteNothing()
+    {
+        string projectDirectory = Path.Combine(_tempDirectory, "MyGame");
+        Directory.CreateDirectory(projectDirectory);
+        string slnxPath = Path.Combine(projectDirectory, "MyGame.slnx");
+        File.WriteAllText(slnxPath, "original");
+
+        PlatformProjectResult result = _sut.Create(projectDirectory, HostPlatform.MonoGame, includeFormsTemplate: false);
+
+        result.Success.ShouldBeFalse();
+        result.ErrorMessage.ShouldContain("MyGame.slnx");
+        File.ReadAllText(slnxPath).ShouldBe("original");
+        Directory.GetFileSystemEntries(projectDirectory).ShouldBe(new[] { slnxPath });
+    }
+
     [Fact]
     public void Create_WhenCsprojAlreadyExists_ShouldFailAndLeaveItUntouched()
     {
@@ -207,6 +323,47 @@ public class PlatformProjectScaffolderTests : IDisposable
             .Detect(settings, gumFolder + Path.DirectorySeparatorChar);
         version.Source.ShouldBe(SyntaxVersionSource.ProjectReference);
         version.Version.ShouldBe(7);
+    }
+
+    [Fact]
+    public void Create_WithGumSourceInAFolderNeedingEscapes_ShouldStillDetectSyntaxVersionFromTheProjectReference()
+    {
+        if (OperatingSystem.IsWindows())
+        {
+            return;
+        }
+
+        string gumSource = Path.Combine(_tempDirectory, "R&D;100%41");
+        Directory.CreateDirectory(Path.Combine(gumSource, "MonoGameGum"));
+        File.WriteAllText(Path.Combine(gumSource, "MonoGameGum", "MonoGameGum.csproj"), "<Project />");
+        File.WriteAllText(
+            Path.Combine(gumSource, "MonoGameGum", "AssemblyAttributes.cs"),
+            "[assembly: GumSyntaxVersion(Version = 7)]");
+        string projectDirectory = Path.Combine(_tempDirectory, "work", "MyGame");
+
+        PlatformProjectResult result = _sut.Create(projectDirectory, HostPlatform.MonoGame, includeFormsTemplate: false, gumSource);
+
+        result.Success.ShouldBeTrue(result.ErrorMessage);
+        string gumFolder = Path.Combine(projectDirectory, "Content", "GumProject");
+        CodeOutputProjectSettings? settings = new CodeOutputProjectSettingsManager(
+            new NullCodeGenLogger(), new FixedProjectDirectoryProvider(gumFolder + Path.DirectorySeparatorChar))
+            .TryLoadSettingsForProject();
+        SyntaxVersionResult version = new SyntaxVersionDetectionService(new NullCodeGenLogger())
+            .Detect(settings!, gumFolder + Path.DirectorySeparatorChar);
+        version.Source.ShouldBe(SyntaxVersionSource.ProjectReference);
+        version.Version.ShouldBe(7);
+    }
+
+    [Fact]
+    public void Create_WhenProjectIsNamedProgram_ShouldFailWithoutWritingFiles()
+    {
+        string projectDirectory = Path.Combine(_tempDirectory, "Program");
+
+        PlatformProjectResult result = _sut.Create(projectDirectory, HostPlatform.Raylib, includeFormsTemplate: false);
+
+        result.Success.ShouldBeFalse();
+        result.ErrorMessage.ShouldContain("Program");
+        Directory.Exists(projectDirectory).ShouldBeFalse();
     }
 
     [Fact]

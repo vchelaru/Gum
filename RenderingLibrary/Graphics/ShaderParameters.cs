@@ -22,7 +22,7 @@ public enum ShaderParameterKind
 /// stored inline so setting a parameter every frame does not allocate. Create one with the
 /// <c>From*</c> methods.
 /// </summary>
-public readonly struct ShaderParameterValue
+public readonly struct ShaderParameterValue : System.IEquatable<ShaderParameterValue>
 {
     /// <summary>The scalar type shared by every component.</summary>
     public ShaderParameterKind Kind { get; }
@@ -89,6 +89,11 @@ public readonly struct ShaderParameterValue
     /// <summary>Creates a four component float vector, which is also how a color is passed.</summary>
     public static ShaderParameterValue FromVector4(float x, float y, float z, float w) =>
         new ShaderParameterValue(ShaderParameterKind.Float, 4, x, y, z, w);
+
+    /// <summary>Whether <paramref name="other"/> has the same kind, component count and components.</summary>
+    public bool Equals(ShaderParameterValue other) =>
+        Kind == other.Kind && Count == other.Count &&
+        X.Equals(other.X) && Y.Equals(other.Y) && Z.Equals(other.Z) && W.Equals(other.W);
 }
 
 /// <summary>
@@ -215,12 +220,11 @@ public class ShaderParameterCollection
 /// <summary>
 /// Remembers which parameter values Gum last wrote to one shared effect or shader, so the next
 /// container that draws with it can put back the ones it did not set itself. A backend that can read a
-/// parameter back (MonoGame, KNI) records its value from just before Gum first wrote it as the baseline,
-/// and that is what goes back; a name with no baseline (raylib cannot read one) goes back to zero. A value the
-/// application wrote to the effect directly before Gum's first write of that name is captured as the baseline.
-/// Values the application wrote to the effect directly are not in the history, so they are left alone, except
-/// that once Gum has written a name, a later container that does not set it restores the baseline even if the
-/// application wrote that name in between.
+/// parameter back (MonoGame, KNI) gives the history what the effect holds just before each Gum write
+/// (<see cref="ObserveLive"/>) and just after it (<see cref="RecordHeld"/>). The first value seen is the baseline
+/// that goes back; a name with no baseline (raylib cannot read one) goes back to zero. When the value seen before
+/// a write differs from the one Gum left, the application wrote that name in between, and its value becomes the
+/// new baseline. A name Gum never wrote is left alone.
 /// </summary>
 public sealed class ShaderParameterHistory
 {
@@ -229,6 +233,7 @@ public sealed class ShaderParameterHistory
 
     private readonly Dictionary<string, ShaderParameterValue> _applied = new Dictionary<string, ShaderParameterValue>();
     private readonly Dictionary<string, ShaderParameterValue> _baselines = new Dictionary<string, ShaderParameterValue>();
+    private readonly Dictionary<string, ShaderParameterValue> _held = new Dictionary<string, ShaderParameterValue>();
     private readonly List<KeyValuePair<string, ShaderParameterValue>> _stale = new List<KeyValuePair<string, ShaderParameterValue>>();
 
     /// <summary>The history for <paramref name="effect"/> (a MonoGame Effect or a raylib shader, boxed once per call site).</summary>
@@ -251,6 +256,30 @@ public sealed class ShaderParameterHistory
             _baselines[name] = value;
         }
     }
+
+    /// <summary>
+    /// Tells the history what the effect holds for <paramref name="name"/> right now, just before Gum writes it.
+    /// The first value seen becomes the baseline. After that, a value that differs from the one
+    /// <see cref="RecordHeld"/> saw means the application changed it since Gum's last write, so that value
+    /// replaces the baseline.
+    /// </summary>
+    public void ObserveLive(string name, ShaderParameterValue live)
+    {
+        if (!_baselines.ContainsKey(name))
+        {
+            SetBaseline(name, live);
+        }
+        else if (_held.TryGetValue(name, out ShaderParameterValue held) && !held.Equals(live))
+        {
+            _baselines[name] = live;
+        }
+    }
+
+    /// <summary>
+    /// Notes what the effect holds for <paramref name="name"/> just after Gum wrote it. Read back rather than taken
+    /// from what was written, because the effect may store it differently (an int truncates, a bool is 0 or 1).
+    /// </summary>
+    public void RecordHeld(string name, ShaderParameterValue held) => _held[name] = held;
 
     /// <summary>
     /// The value to put back on <paramref name="name"/> when a container does not set it: its baseline, or
@@ -279,4 +308,95 @@ public sealed class ShaderParameterHistory
         }
         return _stale;
     }
+}
+
+/// <summary>
+/// The value a shader declares for one uniform (<c>float Thickness = 1.0;</c>), for a backend that
+/// cannot read it back from the compiled shader (SkiaSharp and raylib). The values are in the layout
+/// ShadowDusk reports: array element after array element, each element's components in order.
+/// </summary>
+public sealed class ShaderUniformDefault
+{
+    /// <summary>The uniform's name in the shader.</summary>
+    public string Name { get; }
+
+    /// <summary>Float, Int or Bool (Bool stands for an unsigned or bool uniform).</summary>
+    public ShaderParameterKind Kind { get; }
+
+    /// <summary>Components per element, from 1 (a scalar) to 4.</summary>
+    public int ComponentCount { get; }
+
+    /// <summary>The array length, or 0 when the uniform is not an array.</summary>
+    public int ArrayLength { get; }
+
+    /// <summary>True for a matrix uniform, whose values are the matrix cells in row-major order.</summary>
+    public bool IsMatrix { get; }
+
+    /// <summary>The default, <see cref="ComponentCount"/> times the larger of 1 and <see cref="ArrayLength"/> values.</summary>
+    public float[] Values { get; }
+
+    /// <summary>Creates a declared default.</summary>
+    public ShaderUniformDefault(string name, ShaderParameterKind kind, int componentCount, int arrayLength, float[] values, bool isMatrix = false)
+    {
+        IsMatrix = isMatrix;
+        Name = name;
+        Kind = kind;
+        ComponentCount = componentCount;
+        ArrayLength = arrayLength;
+        Values = values;
+    }
+
+    /// <summary>
+    /// Creates a default from a converted shader's uniform type name (<c>float</c>, <c>vec3</c>, <c>ivec2</c>,
+    /// <c>uint</c>, <c>int2</c>, ...). Returns null when <paramref name="values"/> is null (no declared default).
+    /// </summary>
+    public static ShaderUniformDefault? FromTypeName(string name, string typeName, int arrayLength, System.Collections.Generic.IReadOnlyList<float>? values)
+    {
+        if (values == null)
+        {
+            return null;
+        }
+
+        ShaderParameterKind kind = ShaderParameterKind.Float;
+        if (typeName.StartsWith("uint", System.StringComparison.Ordinal) || typeName.StartsWith("uvec", System.StringComparison.Ordinal) ||
+            typeName.StartsWith("bool", System.StringComparison.Ordinal) || typeName.StartsWith("bvec", System.StringComparison.Ordinal))
+        {
+            kind = ShaderParameterKind.Bool;
+        }
+        else if (typeName.StartsWith("int", System.StringComparison.Ordinal) || typeName.StartsWith("ivec", System.StringComparison.Ordinal))
+        {
+            kind = ShaderParameterKind.Int;
+        }
+
+        char last = typeName[typeName.Length - 1];
+        bool isMatrix = typeName.StartsWith("mat", System.StringComparison.Ordinal) || typeName.Contains("x");
+        int components = last >= '2' && last <= '4' && !isMatrix ? last - '0' : 1;
+
+        float[] copy = new float[values.Count];
+        for (int i = 0; i < copy.Length; i++)
+        {
+            copy[i] = values[i];
+        }
+        return new ShaderUniformDefault(name, kind, components, arrayLength, copy, isMatrix);
+    }
+}
+
+/// <summary>The declared defaults of one shader, by uniform name.</summary>
+public sealed class ShaderUniformDefaults : IEnumerable<ShaderUniformDefault>
+{
+    private readonly Dictionary<string, ShaderUniformDefault> _defaults = new Dictionary<string, ShaderUniformDefault>();
+
+    /// <summary>The number of uniforms with a default.</summary>
+    public int Count => _defaults.Count;
+
+    /// <summary>Adds or replaces the default for its uniform.</summary>
+    public void Add(ShaderUniformDefault value) => _defaults[value.Name] = value;
+
+    /// <summary>Gets the default declared for <paramref name="name"/>.</summary>
+    public bool TryGetValue(string name, out ShaderUniformDefault? value) => _defaults.TryGetValue(name, out value);
+
+    /// <inheritdoc/>
+    public IEnumerator<ShaderUniformDefault> GetEnumerator() => _defaults.Values.GetEnumerator();
+
+    System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() => GetEnumerator();
 }

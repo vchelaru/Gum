@@ -247,12 +247,9 @@ public class AvaloniaEditorTabPlugin : EditorTabPluginBase, IRecipient<EditorCan
     internal bool IsCanvasContextMenuPending => _isContextMenuPending;
 
     /// <inheritdoc/>
-    protected override void OnUiBaseFontSizeChanged(double size) => _toolbar?.UpdateButtonSizes(size);
-
-    /// <inheritdoc/>
     // This head renders through KNI's SDL2/GL backend, so shaders compile to the OpenGL target.
     protected override Func<string, object?>? CreateRenderTargetShaderResolver() =>
-        RenderTargetShaderResolver.For(ShadowDusk.Core.PlatformTarget.OpenGL, ReportShaderError);
+        RenderTargetShaderResolver.For(ShadowDusk.Core.PlatformTarget.OpenGL, ReportShaderError, ShaderIncludes);
 
     /// <inheritdoc/>
     protected override bool IsContextMenuOpen => _contextMenu.IsOpen;

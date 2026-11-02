@@ -1,0 +1,40 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Gum.MonoGame.ShadowDusk on MonoGame WindowsDX: a real DirectX 11 device.
+    The tests are the one source file in ..\GumShadowDusk.Tests.Shared (#7053).
+  -->
+  <PropertyGroup>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+    <OutputType>Exe</OutputType>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+    <NoWarn>$(NoWarn);CS0618</NoWarn>
+    <UseWindowsForms>true</UseWindowsForms>
+    <DefineConstants>$(DefineConstants);WINDOWSDX</DefineConstants>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="coverlet.collector" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" VersionOverride="17.14.1" />
+    <PackageReference Include="Shouldly" />
+    <PackageReference Include="xunit.v3" VersionOverride="3.2.2" />
+    <PackageReference Include="xunit.runner.visualstudio" VersionOverride="3.1.5" />
+    <PackageReference Include="MonoGame.Framework.WindowsDX" VersionOverride="3.8.4.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\GumCommon\GumCommon.csproj" />
+    <ProjectReference Include="..\..\MonoGameGum\MonoGameGum.csproj" />
+    <ProjectReference Include="..\..\Runtimes\GumShadowDusk\MonoGameGum.ShadowDusk.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\GumShadowDusk.Tests.Shared\ShadowDuskDeviceTests.cs" Link="ShadowDuskDeviceTests.cs" />
+    <Using Include="Xunit" />
+  </ItemGroup>
+
+</Project>

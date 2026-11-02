@@ -63,12 +63,29 @@ Assert-Builds 'file every linking csproj removes with Compile Remove builds only
     'MonoGameGum/Input/KeyCombo.cs' `
     @('GumCommon/GumCommon.csproj')
 
+# fast-test.ps1 -ListOnly: a test class in a shared folder that test projects link in with
+# <Compile Include> runs in every project that includes it; Project:Class picks one.
+function Assert-FastTest([string]$name, [string]$request, [string[]]$expected) {
+    $output = @(& pwsh -NoProfile -File (Join-Path $PSScriptRoot 'fast-test.ps1') $request -ListOnly 6>&1 | ForEach-Object { "$_" })
+    $actual = @($output | Where-Object { $_ -match '^test\s+' } | ForEach-Object { (($_ -split '\s+')[1]) -replace '\\', '/' } | Sort-Object)
+    if (($actual -join '; ') -ceq (($expected | Sort-Object) -join '; ')) { Write-Host "pass  $name" }
+    else { Write-Host "FAIL  $name`n  expected: $(($expected | Sort-Object) -join '; ')`n  actual:   $($actual -join '; ')`n  output:`n    $($output -join "`n    ")"; $script:failures++ }
+}
+
+Assert-FastTest 'fast-test: class in a shared folder runs in every test project that links it' `
+    'TestAppDataFolderTests' `
+    @('Tests/Gum.Avalonia.Tests/Gum.Avalonia.Tests.csproj', 'Tests/Gum.Presentation.Tests/Gum.Presentation.Tests.csproj')
+
+Assert-FastTest 'fast-test: Project:Class picks one project for a linked class' `
+    'Gum.Presentation.Tests:TestAppDataFolderTests' `
+    @('Tests/Gum.Presentation.Tests/Gum.Presentation.Tests.csproj')
+
 # A branch is compared with the point it left Base, so files merged into Base since then are not
 # treated as changed. Runs verify.ps1 in a scratch repo where Base moved after the branch point.
 $scratch = Join-Path ([System.IO.Path]::GetTempPath()) "verify-tests-$PID"
 try {
     New-Item -ItemType Directory -Force -Path (Join-Path $scratch 'Tools'), (Join-Path $scratch 'A'), (Join-Path $scratch 'B') | Out-Null
-    Copy-Item (Join-Path $PSScriptRoot 'verify.ps1'), (Join-Path $PSScriptRoot 'Invoke-Dotnet.ps1'), (Join-Path $PSScriptRoot 'TestProjects.ps1') (Join-Path $scratch 'Tools')
+    Copy-Item (Join-Path $PSScriptRoot 'verify.ps1'), (Join-Path $PSScriptRoot 'Invoke-Dotnet.ps1'), (Join-Path $PSScriptRoot 'TestProjects.ps1'), (Join-Path $PSScriptRoot 'IncludeIndex.ps1') (Join-Path $scratch 'Tools')
     Set-Content (Join-Path $scratch 'A/A.csproj') '<Project />'
     Set-Content (Join-Path $scratch 'B/B.csproj') '<Project />'
     $git = { git -C $scratch -c user.name=t -c user.email=t@t -c core.autocrlf=false @args 2>&1 | Out-Null }

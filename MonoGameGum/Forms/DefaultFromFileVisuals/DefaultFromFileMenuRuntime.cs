@@ -22,6 +22,7 @@ internal class DefaultFromFileMenuRuntime : InteractiveGue
         if (FormsControl == null)
         {
             FormsControlAsObject = new Menu(this);
+            BehaviorFormsPropertyApplier.ApplyToCreatedControl(this);
         }
     }
 

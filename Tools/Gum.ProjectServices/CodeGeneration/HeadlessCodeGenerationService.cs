@@ -68,8 +68,7 @@ public class HeadlessCodeGenerationService : IHeadlessCodeGenerationService
         }
 
         // Generate the main code
-        string contents = _codeGenerator.GetGeneratedCodeForElement(element, elementSettings, projectSettings);
-        contents = $"//Code for {element}\r\n{contents}";
+        string contents = _codeGenerator.GetGeneratedFileText(element, elementSettings, projectSettings);
 
         if (!_fileWriter.TryWrite(generatedFileName.FullPath, contents))
         {

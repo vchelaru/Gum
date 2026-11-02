@@ -4,7 +4,7 @@
   <State>
     <Name>Default</Name>
     <Variable Type="float" Name="Background.CornerRadius" SetsValue="true">
-      <Value xsi:type="xsd:float">6</Value>
+      <Value xsi:type="xsd:float">4</Value>
     </Variable>
     <Variable Type="float" Name="Background.CustomRadiusBottomLeft" SetsValue="true">
       <Value xsi:type="xsd:float">24</Value>
@@ -40,13 +40,13 @@
       <Value xsi:type="xsd:string">DemoSettingsMenu</Value>
     </Variable>
     <Variable Type="int" Name="Background.StrokeBlue" SetsValue="true">
-      <Value xsi:type="xsd:int">20</Value>
+      <Value xsi:type="xsd:int">117</Value>
     </Variable>
     <Variable Type="int" Name="Background.StrokeGreen" SetsValue="true">
-      <Value xsi:type="xsd:int">28</Value>
+      <Value xsi:type="xsd:int">255</Value>
     </Variable>
     <Variable Type="int" Name="Background.StrokeRed" SetsValue="true">
-      <Value xsi:type="xsd:int">70</Value>
+      <Value xsi:type="xsd:int">232</Value>
     </Variable>
     <Variable Type="float" Name="Background.StrokeWidth" SetsValue="true">
       <Value xsi:type="xsd:float">1</Value>
@@ -441,6 +441,42 @@
     <Variable Type="PositionUnitType" Name="LabelInstance1.YUnits" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
     </Variable>
+    <Variable Type="string" Name="ListBoxItemInstance.ListItemDisplayText" SetsValue="true">
+      <Value xsi:type="xsd:string">1280 x 720</Value>
+    </Variable>
+    <Variable Type="string" Name="ListBoxItemInstance.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">ResolutionBox.InnerPanelInstance</Value>
+    </Variable>
+    <Variable Type="string" Name="ListBoxItemInstance1.ListItemDisplayText" SetsValue="true">
+      <Value xsi:type="xsd:string">1920 x 1080</Value>
+    </Variable>
+    <Variable Type="string" Name="ListBoxItemInstance1.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">ResolutionBox.InnerPanelInstance</Value>
+    </Variable>
+    <Variable Type="string" Name="ListBoxItemInstance2.ListItemDisplayText" SetsValue="true">
+      <Value xsi:type="xsd:string">2560 x 1440</Value>
+    </Variable>
+    <Variable Type="string" Name="ListBoxItemInstance2.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">ResolutionBox.InnerPanelInstance</Value>
+    </Variable>
+    <Variable Type="string" Name="ListBoxItemInstance3.ListItemDisplayText" SetsValue="true">
+      <Value xsi:type="xsd:string">Easy</Value>
+    </Variable>
+    <Variable Type="string" Name="ListBoxItemInstance3.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">ComboBoxInstance.ListBoxInstance.InnerPanelInstance</Value>
+    </Variable>
+    <Variable Type="string" Name="ListBoxItemInstance4.ListItemDisplayText" SetsValue="true">
+      <Value xsi:type="xsd:string">Normal</Value>
+    </Variable>
+    <Variable Type="string" Name="ListBoxItemInstance4.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">ComboBoxInstance.ListBoxInstance.InnerPanelInstance</Value>
+    </Variable>
+    <Variable Type="string" Name="ListBoxItemInstance5.ListItemDisplayText" SetsValue="true">
+      <Value xsi:type="xsd:string">Hard</Value>
+    </Variable>
+    <Variable Type="string" Name="ListBoxItemInstance5.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">ComboBoxInstance.ListBoxInstance.InnerPanelInstance</Value>
+    </Variable>
     <Variable Type="ChildrenLayout" Name="MarginContainer.ChildrenLayout" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
     </Variable>
@@ -800,7 +836,7 @@
       <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
       <Value>
         <string>FillColor = Components/ForestGlade/Styles.WindowBody.FillColor</string>
-        <string>StrokeColor = Components/ForestGlade/Styles.Bark.FillColor</string>
+        <string>StrokeColor = Components/ForestGlade/Styles.SunPale.FillColor</string>
       </Value>
     </VariableList>
     <VariableList xsi:type="VariableListSaveOfString">
@@ -875,5 +911,11 @@
   <Instance Name="DialogBoxInstance" BaseType="ForestGlade/Controls/DialogBox" />
   <Instance Name="WindowStandardInstance" BaseType="ForestGlade/Controls/Window" />
   <Instance Name="LabelInstance1" BaseType="ForestGlade/Controls/Label" />
+  <Instance Name="ListBoxItemInstance" BaseType="ForestGlade/Controls/ListBoxItem" />
+  <Instance Name="ListBoxItemInstance1" BaseType="ForestGlade/Controls/ListBoxItem" />
+  <Instance Name="ListBoxItemInstance2" BaseType="ForestGlade/Controls/ListBoxItem" />
+  <Instance Name="ListBoxItemInstance3" BaseType="ForestGlade/Controls/ListBoxItem" />
+  <Instance Name="ListBoxItemInstance4" BaseType="ForestGlade/Controls/ListBoxItem" />
+  <Instance Name="ListBoxItemInstance5" BaseType="ForestGlade/Controls/ListBoxItem" />
   <Behaviors />
 </ScreenSave>

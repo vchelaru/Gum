@@ -19,6 +19,8 @@ internal sealed class ScriptedDialogService : IDialogService
     private readonly List<string> _messages;
     private readonly Queue<List<string>?> _openFiles;
     private readonly Queue<string?> _saveFiles;
+    private readonly Queue<string?> _folders;
+    private readonly List<OpenFolderDialogOptions?> _folderRequests;
 
     public ScriptedDialogService()
     {
@@ -28,6 +30,8 @@ internal sealed class ScriptedDialogService : IDialogService
         _messages = new List<string>();
         _openFiles = new Queue<List<string>?>();
         _saveFiles = new Queue<string?>();
+        _folders = new Queue<string?>();
+        _folderRequests = new List<OpenFolderDialogOptions?>();
     }
 
     /// <summary>Every message the code under test showed, in order.</summary>
@@ -211,7 +215,16 @@ internal sealed class ScriptedDialogService : IDialogService
     public string? SaveFile(SaveFileDialogOptions? options = null) =>
         _saveFiles.Count > 0 ? _saveFiles.Dequeue() : throw new InvalidOperationException("No answer was queued for the save-file picker.");
 
+    /// <summary>Queues the folder the user picks in the next folder picker, or null for Cancel.</summary>
+    public void AnswerNextFolder(string? path) => _folders.Enqueue(path);
+
+    /// <summary>What each folder picker that opened was asked to show, in order.</summary>
+    public IReadOnlyList<OpenFolderDialogOptions?> FolderRequests => _folderRequests;
+
     /// <inheritdoc/>
-    public string? OpenFolder(OpenFolderDialogOptions? options = null) =>
-        throw new InvalidOperationException("Headless scenarios never open a folder picker.");
+    public string? OpenFolder(OpenFolderDialogOptions? options = null)
+    {
+        _folderRequests.Add(options);
+        return _folders.Count > 0 ? _folders.Dequeue() : throw new InvalidOperationException("No answer was queued for the folder picker.");
+    }
 }

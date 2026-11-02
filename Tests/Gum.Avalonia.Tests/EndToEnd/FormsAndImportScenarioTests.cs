@@ -43,24 +43,24 @@ public class FormsAndImportScenarioTests
             dialog.ThemeSelection.AvailableThemes.ShouldContain("Standard");
             dialog.IsIncludeFormsControls = true;
             dialog.IsIncludeDemoScreenGum = true;
+            dialog.ProjectName = "NewlyCreated";
+            dialog.Location = tree.Project.ProjectFolder;
+            dialog.SelectedFileFormat = NewProjectDialogViewModel.XmlFormat;
             return true;
         });
-        tree.Dialogs.AnswerNextSaveFile(tree.Project.ProjectFilePath);
-        // The folder holds the project the harness started with.
-        tree.Dialogs.AnswerNextMessage(MessageDialogResult.Affirmative);
 
         tree.PickMainMenu("File", "New Project");
         tree.WaitUntil(() => tree.SelectedState.SelectedScreen?.Name == NewProjectLogic.StartingScreenName, AsyncWork, "the new project's starting screen");
 
         GumProjectSave project = Services.GetRequiredService<IProjectManager>().GumProjectSave.ShouldNotBeNull();
-        new FilePath(project.FullFileName.ShouldNotBeNull()).ShouldBe(new FilePath(tree.Project.ProjectFilePath));
+        new FilePath(project.FullFileName.ShouldNotBeNull()).ShouldBe(new FilePath(Path.Combine(tree.Project.ProjectFolder, "NewlyCreated", "NewlyCreated.gumx")));
+        tree.Project.FollowProjectFile(project.FullFileName!);
         theme.Components.Select(component => component.Name).ShouldBeSubsetOf(project.Components.Select(component => component.Name));
-        project.Screens.Select(screen => screen.Name).ShouldContain("DemoScreenGum");
-        project.Screens.Select(screen => screen.Name).ShouldContain(NewProjectLogic.StartingScreenName);
+        project.Screens.Select(screen => screen.Name).ShouldBe(new[] { "DemoScreenGum", NewProjectLogic.StartingScreenName }, ignoreOrder: true);
         tree.SaveAll();
         foreach (ComponentSave component in project.Components)
         {
-            File.Exists(ElementFile(tree, "Components", component.Name, "gucx")).ShouldBeTrue($"{component.Name} was saved");
+            File.Exists(Path.Combine(tree.Project.ProjectFolder, "NewlyCreated", "Components", component.Name + ".gucx")).ShouldBeTrue($"{component.Name} was saved");
         }
         tree.RootNode("Components").Nodes.ShouldNotBeEmpty();
 
@@ -502,7 +502,7 @@ public class FormsAndImportScenarioTests
         project.Components.Single(component => component.Name == name);
 
     /// <summary>The project of a Forms theme as the test output stages it.</summary>
-    private static GumProjectSave StagedTheme(string name)
+    internal static GumProjectSave StagedTheme(string name)
     {
         string gumx = Path.Combine(AppContext.BaseDirectory, "Content", "FormsThemes", name, "GumProject.gumx");
         return GumProjectSave.Load(gumx, out _) ?? throw new InvalidOperationException($"The staged {name} theme did not load from {gumx}.");

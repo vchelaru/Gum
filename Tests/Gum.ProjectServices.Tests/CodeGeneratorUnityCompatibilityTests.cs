@@ -21,7 +21,7 @@ namespace Gum.ProjectServices.Tests;
 public class CodeGeneratorUnityCompatibilityTests : BaseTestClass
 {
     private const string StartupHookPrefix =
-        "#if UNITY_5_3_OR_NEWER";
+        "#if UNITY_5_3_OR_NEWER && !GUM_NO_UNITY_ENGINE";
     private const string UnityAttribute =
         "[UnityEngine.RuntimeInitializeOnLoadMethod(UnityEngine.RuntimeInitializeLoadType.SubsystemRegistration)]";
 
@@ -174,5 +174,36 @@ public class CodeGeneratorUnityCompatibilityTests : BaseTestClass
 
             languageVersionErrors.ShouldBeEmpty(string.Join(Environment.NewLine, languageVersionErrors));
         }
+    }
+
+    [Theory]
+    [InlineData(OutputLibrary.MonoGame)]
+    [InlineData(OutputLibrary.GumForms)]
+    public void GeneratedCode_WithGumNoUnityEngine_DoesNotReferenceUnityEngine(OutputLibrary outputLibrary)
+    {
+        string elementCode = GenerateHost(languageVersion: 9, outputLibrary);
+        string? fallbackCode = CreateCodeGenerator(languageVersion: 9)
+            .GenerateStandardElementsFallbackCode(Project, CreateSettings(outputLibrary));
+        fallbackCode.ShouldNotBeNull();
+
+        // An assembly with Unity's "No Engine References" still defines UNITY_5_3_OR_NEWER, so
+        // the generated attribute must also be guarded by GUM_NO_UNITY_ENGINE (#7046).
+        foreach (string code in new[] { elementCode, fallbackCode })
+        {
+            CountUnityEngineDiagnostics(code, "UNITY_5_3_OR_NEWER").ShouldBeGreaterThan(0, code);
+            CountUnityEngineDiagnostics(code, "UNITY_5_3_OR_NEWER", "GUM_NO_UNITY_ENGINE").ShouldBe(0, code);
+        }
+    }
+
+    private static int CountUnityEngineDiagnostics(string code, params string[] symbols)
+    {
+        CSharpParseOptions parseOptions = new CSharpParseOptions(LanguageVersion.CSharp9, preprocessorSymbols: symbols);
+        CSharpCompilation compilation = CSharpCompilation.Create(
+            "GeneratedWithoutUnityEngine",
+            new[] { CSharpSyntaxTree.ParseText(code, parseOptions) },
+            new[] { MetadataReference.CreateFromFile(typeof(object).Assembly.Location) },
+            new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
+
+        return compilation.GetDiagnostics().Count(d => d.GetMessage().Contains("UnityEngine"));
     }
 }

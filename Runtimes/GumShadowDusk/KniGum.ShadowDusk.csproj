@@ -1,0 +1,34 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<!--
+		Gum.KNI.ShadowDusk: the KNI build of the ShadowDusk shader package (see MonoGameGum.ShadowDusk.csproj).
+	-->
+	<PropertyGroup>
+		<PackageId>Gum.KNI.ShadowDusk</PackageId>
+		<DefineConstants>$(DefineConstants);KNI;XNALIKE</DefineConstants>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="nkast.Xna.Framework" Version="4.2.9001" PrivateAssets="All" />
+		<PackageReference Include="nkast.Xna.Framework.Content" Version="4.2.9001" PrivateAssets="All" />
+		<PackageReference Include="nkast.Xna.Framework.Graphics" Version="4.2.9001" PrivateAssets="All" />
+		<PackageReference Include="nkast.Xna.Framework.Audio" Version="4.2.9001" PrivateAssets="All" />
+		<PackageReference Include="nkast.Xna.Framework.Media" Version="4.2.9001" PrivateAssets="All" />
+		<PackageReference Include="nkast.Xna.Framework.Input" Version="4.2.9001" PrivateAssets="All" />
+		<PackageReference Include="nkast.Xna.Framework.Game" Version="4.2.9001" PrivateAssets="All" />
+		<PackageReference Include="nkast.Xna.Framework.Devices" Version="4.2.9001" PrivateAssets="All" />
+		<PackageReference Include="nkast.Xna.Framework.Storage" Version="4.2.9001" PrivateAssets="All" />
+		<PackageReference Include="nkast.Xna.Framework.XR" Version="4.2.9001" PrivateAssets="All" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\..\MonoGameGum\KniGum\KniGum.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<None Include="build\Gum.KNI.ShadowDusk.targets" Pack="true" PackagePath="buildTransitive\Gum.KNI.ShadowDusk.targets" Visible="false" />
+	</ItemGroup>
+
+	<Import Project="..\RuntimePackage.Analyzers.props" />
+
+</Project>

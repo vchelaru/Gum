@@ -1,10 +1,7 @@
-using System;
 using System.IO;
-using System.Linq;
+using EditorTabPlugin_XNA.Services;
 using Gum.Wireframe;
 using Microsoft.Xna.Framework.Graphics;
-using ShadowDusk.Compiler;
-using ShadowDusk.Compiler.Slang;
 using ShadowDusk.Core;
 
 namespace GumPreview;
@@ -30,35 +27,8 @@ internal static class PreviewShaderResolver
             throw new FileNotFoundException("Render-target shader file not found: " + absolutePath, absolutePath);
         }
 
-        EffectCompiler compiler = new EffectCompiler();
-        Result<CompiledShader, ShaderError[]> result = compiler.Compile(
-            ReadFxSource(absolutePath), new CompilerOptions { Target = PlatformTarget.OpenGL });
-        if (result.IsFailure)
-        {
-            throw new InvalidOperationException(
-                "ShadowDusk could not compile the render-target shader '" + absolutePath + "':\n" +
-                string.Join("\n", result.Error.Select(error => error.Message)));
-        }
-        return new Effect(graphicsDevice, result.Value.Data);
-    }
-
-    // Slang has no technique/pass concept, so a .slang file is converted to .fx text first.
-    private static string ReadFxSource(string absolutePath)
-    {
-        string sourceText = File.ReadAllText(absolutePath);
-        if (!string.Equals(Path.GetExtension(absolutePath), SlangFrontend.Extension, StringComparison.OrdinalIgnoreCase))
-        {
-            return sourceText;
-        }
-
-        Result<SlangFxConversion, ShaderError[]> conversion = SlangFrontend.ConvertToFx(
-            sourceText, new SlangConvertOptions { SourceName = absolutePath });
-        if (conversion.IsFailure)
-        {
-            throw new InvalidOperationException(
-                "ShadowDusk could not convert the Slang render-target shader '" + absolutePath + "':\n" +
-                string.Join("\n", conversion.Error.Select(error => error.Message)));
-        }
-        return conversion.Value.FxText;
+        // Compiled next to its path, which is what a relative #include in the shader resolves against.
+        byte[] bytecode = ShaderSourceCompiler.Compile(ShaderSourceCompiler.ReadFxSource(absolutePath), PlatformTarget.OpenGL, absolutePath);
+        return new Effect(graphicsDevice, bytecode);
     }
 }

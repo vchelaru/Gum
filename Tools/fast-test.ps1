@@ -40,6 +40,7 @@ $repo = Split-Path -Parent $PSScriptRoot
 Set-Location $repo
 . (Join-Path $PSScriptRoot 'Invoke-Dotnet.ps1')
 . (Join-Path $PSScriptRoot 'TestProjects.ps1')
+. (Join-Path $PSScriptRoot 'IncludeIndex.ps1')
 
 $requests = @($Tests | ForEach-Object { $_ -split ',' } | ForEach-Object { $_.Trim() } | Where-Object { $_ })
 
@@ -88,14 +89,20 @@ foreach ($line in (git grep --untracked -nIE $classPattern -- '*.cs')) {
     $file = $Matches.file
     $name = $Matches.name
     if ($name -notin $classNames) { continue }
-    $owner = $projectDirs | Where-Object { $file.StartsWith($_.Dir) } | Sort-Object { $_.Dir.Length } -Descending | Select-Object -First 1
-    if (-not $owner) { continue }
+    # The project whose directory holds the file, plus every test project that links it in with
+    # <Compile Include> (a shared test folder compiled into several projects), as verify.ps1 maps it.
+    $owners = @($projectDirs | Where-Object { $file.StartsWith($_.Dir) } | Sort-Object { $_.Dir.Length } -Descending | Select-Object -First 1 | ForEach-Object { $_.Project })
+    $linked = Find-IndirectProjects $file
+    $owners += @($linked.Keys | ForEach-Object { [System.IO.Path]::GetRelativePath($repo, $_) -replace '\\', '/' } | Where-Object { $_ -in $testProjects -and $_ -notin $owners })
+    if ($owners.Count -eq 0) { continue }
     $namespaceMatch = Select-String -Path (Join-Path $repo $file) -Pattern '^\s*namespace\s+([\w.]+)' -List
     $namespace = if ($namespaceMatch) { $namespaceMatch.Matches[0].Groups[1].Value } else { '' }
     if (-not $found.ContainsKey($name)) { $found[$name] = @() }
-    $existing = $found[$name] | Where-Object { $_.Project -eq $owner.Project -and $_.Namespace -eq $namespace }
-    if ($existing) { $existing.Files += $file }
-    else { $found[$name] += @{ Project = $owner.Project; Namespace = $namespace; Files = @($file) } }
+    foreach ($ownerProject in $owners) {
+        $existing = $found[$name] | Where-Object { $_.Project -eq $ownerProject -and $_.Namespace -eq $namespace }
+        if ($existing) { $existing.Files += $file }
+        else { $found[$name] += @{ Project = $ownerProject; Namespace = $namespace; Files = @($file) } }
+    }
 }
 Write-Host ("resolved      {0,4:N0}s  {1} request(s) against {2} test project(s)" -f $sw.Elapsed.TotalSeconds, $requests.Count, $testProjects.Count)
 

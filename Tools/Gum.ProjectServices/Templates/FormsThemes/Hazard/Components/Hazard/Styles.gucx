@@ -451,6 +451,24 @@
     <Variable Type="float" Name="TextBright.StrokeWidth" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
     </Variable>
+    <Variable Type="int" Name="TextSelection.FillBlue" SetsValue="true">
+      <Value xsi:type="xsd:int">6</Value>
+    </Variable>
+    <Variable Type="int" Name="TextSelection.FillGreen" SetsValue="true">
+      <Value xsi:type="xsd:int">88</Value>
+    </Variable>
+    <Variable Type="int" Name="TextSelection.FillRed" SetsValue="true">
+      <Value xsi:type="xsd:int">110</Value>
+    </Variable>
+    <Variable Type="bool" Name="TextSelection.IsFilled" SetsValue="true">
+      <Value xsi:type="xsd:boolean">true</Value>
+    </Variable>
+    <Variable Type="string" Name="TextSelection.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">Colors</Value>
+    </Variable>
+    <Variable Type="float" Name="TextSelection.StrokeWidth" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
     <Variable Type="ChildrenLayout" Name="TextStyles.ChildrenLayout" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
     </Variable>
@@ -508,6 +526,7 @@
   <Instance Name="AccentHover" BaseType="Rectangle" />
   <Instance Name="AccentPressed" BaseType="Rectangle" />
   <Instance Name="Selection" BaseType="Rectangle" />
+  <Instance Name="TextSelection" BaseType="Rectangle" />
   <Instance Name="PressedFill" BaseType="Rectangle" />
   <Instance Name="DisabledFill" BaseType="Rectangle" />
   <Instance Name="DisabledBorder" BaseType="Rectangle" />

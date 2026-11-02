@@ -1,3 +1,4 @@
+using Gum.Graphics.Animation;
 using Gum.Content.AnimationChain;
 using Gum.GueDeriving;
 using Gum.Wireframe;
@@ -79,6 +80,50 @@ public class SourceFileAchxAutoLoadTests : BaseTestClass
                 CustomSetPropertyOnRenderable.PropertyAssignmentError -= handler;
                 GraphicalUiElement.MissingFileBehavior = savedBehavior;
             }
+        });
+    }
+
+    [Fact]
+    public void SpriteRuntime_SourceFileChangedFromAchxToEmpty_DropsTheChains()
+    {
+        WithTempAchx(achxPath =>
+        {
+            SpriteRuntime sut = new();
+            sut.SourceFileName = achxPath;
+
+            sut.SourceFileName = "";
+
+            sut.AnimationChains.ShouldBeNull();
+        });
+    }
+
+    [Fact]
+    public void NineSliceRuntime_SourceFileChangedFromAchxToEmpty_DropsTheChains()
+    {
+        WithTempAchx(achxPath =>
+        {
+            NineSliceRuntime sut = new();
+            sut.SourceFileName = achxPath;
+
+            sut.SourceFileName = "";
+
+            sut.AnimationChains.ShouldBeNull();
+        });
+    }
+
+    [Fact]
+    public void SpriteRuntime_SourceFileChangedFromAchxToEmpty_KeepsChainsAssignedByCode()
+    {
+        WithTempAchx(achxPath =>
+        {
+            SpriteRuntime sut = new();
+            sut.SourceFileName = achxPath;
+            AnimationChainList fromCode = new AnimationChainList();
+            sut.AnimationChains = fromCode;
+
+            sut.SourceFileName = "";
+
+            sut.AnimationChains.ShouldBeSameAs(fromCode);
         });
     }
 

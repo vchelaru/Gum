@@ -1,0 +1,49 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Gum.KNI.ShadowDusk on KNI DesktopGL: a real OpenGL device.
+    The tests are the one source file in ..\GumShadowDusk.Tests.Shared (#7053).
+  -->
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+    <OutputType>Exe</OutputType>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+    <NoWarn>$(NoWarn);CS0618</NoWarn>
+
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="coverlet.collector" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" VersionOverride="17.14.1" />
+    <PackageReference Include="Shouldly" />
+    <PackageReference Include="xunit.v3" VersionOverride="3.2.2" />
+    <PackageReference Include="xunit.runner.visualstudio" VersionOverride="3.1.5" />
+    <PackageReference Include="nkast.Xna.Framework" VersionOverride="4.2.9001" />
+    <PackageReference Include="nkast.Xna.Framework.Content" VersionOverride="4.2.9001" />
+    <PackageReference Include="nkast.Xna.Framework.Graphics" VersionOverride="4.2.9001" />
+    <PackageReference Include="nkast.Xna.Framework.Audio" VersionOverride="4.2.9001" />
+    <PackageReference Include="nkast.Xna.Framework.Media" VersionOverride="4.2.9001" />
+    <PackageReference Include="nkast.Xna.Framework.Input" VersionOverride="4.2.9001" />
+    <PackageReference Include="nkast.Xna.Framework.Game" VersionOverride="4.2.9001" />
+    <PackageReference Include="nkast.Xna.Framework.Devices" VersionOverride="4.2.9001" />
+    <PackageReference Include="nkast.Xna.Framework.Storage" VersionOverride="4.2.9001" />
+    <PackageReference Include="nkast.Xna.Framework.XR" VersionOverride="4.2.9001" />
+    <PackageReference Include="nkast.Kni.Platform.SDL2.GL" VersionOverride="4.2.9001.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\GumCommon\GumCommon.csproj" />
+    <ProjectReference Include="..\..\MonoGameGum\KniGum\KniGum.csproj" />
+    <ProjectReference Include="..\..\Runtimes\GumShadowDusk\KniGum.ShadowDusk.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\GumShadowDusk.Tests.Shared\ShadowDuskDeviceTests.cs" Link="ShadowDuskDeviceTests.cs" />
+    <Using Include="Xunit" />
+  </ItemGroup>
+
+</Project>

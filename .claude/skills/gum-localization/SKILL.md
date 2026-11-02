@@ -69,6 +69,8 @@ The tool stores `LocalizationFiles` — a `List<string>` of project-relative pat
 
 **File watching:** `FileChangeReactionLogic.IsLocalizationFileThatShouldTriggerReload(changedFile, IEnumerable<FilePath> baseFiles)` returns true if the changed file matches any base path in the list OR any base's satellite (`{BaseName}.*.resx` in the same directory). A single-file overload is preserved as the inner loop body.
 
+**Runtime hot reload:** `GumHotReloadManager.ReloadLocalization` re-runs `ProjectLocalizationLoader.Load` (into a scratch service, so a bad file keeps the old database) when a listed file or the `LocalizationFiles` list changes; `ProjectLocalizationLoader.IsLocalizationFile` is the match rule. See `gum-runtime-hot-reload`.
+
 **Language dropdown:** After loading, `ILocalizationService.Languages` is populated. `ProjectPropertiesViewModel.LanguageName` (string) replaces the raw `LanguageIndex` int in the UI. The plugin syncs `LanguageName` ↔ `LanguageIndex` via `IFileCommands.LocalizationLoaded` event (fired at the end of every `LoadLocalizationFile()` call).
 
 **Variable grid refresh:** `LoadLocalizationFile()` calls `_guiCommands.RefreshVariables()` at the end, so the Text property displayer updates from plain textbox to localization combo box without requiring re-selection.

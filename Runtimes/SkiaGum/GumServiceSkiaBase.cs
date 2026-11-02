@@ -338,8 +338,12 @@ public abstract class GumServiceSkiaBase : IGumService
         _hotReloadManager = new GumHotReloadManager(
             applyProjectTextureFilter: ApplyProjectTextureFilter,
             loadAnimationsFromProvider: GumAnimationLoader.LoadAnimationsFromProvider,
-            disposeCachedAsset: path => LoaderManager.Self.Dispose(path));
+            disposeCachedAsset: path => LoaderManager.Self.Dispose(path))
+        {
+            LocalizationServiceProvider = () => CustomSetPropertyOnRenderable.LocalizationService
+        };
         _hotReloadManager.ReloadCompleted += () => HotReloadCompleted?.Invoke();
+        _hotReloadManager.ReloadFinished += result => HotReloadFinished?.Invoke(result);
         _hotReloadManager.Start(absoluteGumxSourcePath);
     }
 
@@ -363,6 +367,12 @@ public abstract class GumServiceSkiaBase : IGumService
     /// touched by the in-place patch.
     /// </summary>
     public event Action? HotReloadCompleted;
+
+    /// <summary>
+    /// Raised after every hot-reload attempt, successful or not, with the issues that reload had and
+    /// whether the running tree matches what a restart would show. See <see cref="HotReloadResult"/>.
+    /// </summary>
+    public event Action<HotReloadResult>? HotReloadFinished;
 
     #endregion
 

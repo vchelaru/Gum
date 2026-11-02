@@ -12,7 +12,7 @@ namespace CodeGen_MonoGameForms_Localization_ByReference.Components.Controls;
 [global::Gum.DataTypes.GumElement("Controls/MenuItem", FormsType = typeof(global::Gum.Forms.Controls.MenuItem))]
 partial class MenuItem : global::Gum.Forms.Controls.MenuItem
 {
-    #if UNITY_5_3_OR_NEWER
+    #if UNITY_5_3_OR_NEWER && !GUM_NO_UNITY_ENGINE
     [UnityEngine.RuntimeInitializeOnLoadMethod(UnityEngine.RuntimeInitializeLoadType.SubsystemRegistration)]
     #else
     [System.Runtime.CompilerServices.ModuleInitializer]

@@ -11,6 +11,7 @@
       "Tests\\Gum.RepoHygiene.Tests\\Gum.RepoHygiene.Tests.csproj",
       "Tests\\Gum.Analyzers.Tests\\Gum.Analyzers.Tests.csproj",
       "Tests\\SkiaGum.Tests\\SkiaGum.Tests.csproj",
+      "Tests\\SkiaGum.GpuTests\\SkiaGum.GpuTests.csproj",
       "Tests\\Gum.NetStandard.Tests\\Gum.NetStandard.Tests.csproj",
       "Tests\\SilkNetGum.Tests\\SilkNetGum.Tests.csproj",
       "Tests\\UnityGum.Tests\\UnityGum.Tests.csproj",
@@ -22,7 +23,10 @@
       "Tests\\Gum.ProjectServices.Raylib.Tests\\Gum.ProjectServices.Raylib.Tests.csproj",
       "Tests\\Gum.ProjectServices.MonoGame.Tests\\Gum.ProjectServices.MonoGame.Tests.csproj",
       "Tests\\MonoGameGum.IntegrationTests\\MonoGameGum.IntegrationTests.csproj",
-      "Tests\\MonoGameGum.Shapes.Tests\\MonoGameGum.Shapes.Tests.csproj"
+      "Tests\\MonoGameGum.Shapes.Tests\\MonoGameGum.Shapes.Tests.csproj",
+      "Tests\\GumShadowDusk.Tests.MonoGameWindowsDX\\GumShadowDusk.Tests.MonoGameWindowsDX.csproj",
+      "Tests\\GumShadowDusk.Tests.KniWindowsDX\\GumShadowDusk.Tests.KniWindowsDX.csproj",
+      "Tests\\GumShadowDusk.Tests.KniDesktopGL\\GumShadowDusk.Tests.KniDesktopGL.csproj"
     ]
   }
 }

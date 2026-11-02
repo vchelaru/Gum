@@ -10,6 +10,8 @@ Before using Gum, you should first verify that you can create a normal windowed 
 
 {% hint style="info" %}
 To skip these steps, run [`gumcli new MyGame -p silknet`](../../../../cli/new.md). It creates a Silk.NET project with Gum already added and a window that opens on Windows, macOS, and Linux.
+
+The Gum tool can create the same project: select **File** > **New Project**, check **Create C# project**, and pick Silk.NET as the platform. See [Creating a Project](../../../../gum-tool/setup/creating-a-project.md).
 {% endhint %}
 
 If you are starting a brand new Silk.NET project from scratch, you can follow these steps:

@@ -21,6 +21,7 @@ public class DefaultFromFilePasswordBoxRuntime : InteractiveGue
         if (FormsControl == null)
         {
             FormsControlAsObject = new PasswordBox(this);
+            BehaviorFormsPropertyApplier.ApplyToCreatedControl(this);
         }
     }
 

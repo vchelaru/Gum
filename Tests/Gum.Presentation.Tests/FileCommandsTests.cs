@@ -14,6 +14,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using ToolsUtilities;
 
 namespace Gum.Presentation.Tests;
@@ -71,6 +72,36 @@ public class FileCommandsTests : BaseTestClass
             Directory.Delete(_tempDirectory, recursive: true);
         }
         base.Dispose();
+    }
+
+    [Fact]
+    public async Task LoadProjectAsync_ResolvesARelativePathAgainstTheWorkingDirectory()
+    {
+        // The tool's FilePath would otherwise resolve it against the tool's own folder (#7134).
+        FileManager.RelativeDirectory = Path.Combine(Path.GetTempPath(), "SomeToolFolder") + Path.DirectorySeparatorChar;
+        FilePath? loaded = null;
+        _projectManager.Setup(p => p.LoadProjectAsync(It.IsAny<FilePath>()))
+            .Callback<FilePath>(f => loaded = f)
+            .Returns(Task.CompletedTask);
+        string relative = Path.Combine("Content", "GumProject", "GumProject.gumx");
+
+        await _fileCommands.LoadProjectAsync(relative);
+
+        loaded.ShouldBe(new FilePath(Path.GetFullPath(relative)));
+    }
+
+    [Fact]
+    public async Task LoadProjectAsync_LeavesAnAbsolutePathAlone()
+    {
+        FilePath? loaded = null;
+        _projectManager.Setup(p => p.LoadProjectAsync(It.IsAny<FilePath>()))
+            .Callback<FilePath>(f => loaded = f)
+            .Returns(Task.CompletedTask);
+        string absolute = Path.Combine(Path.GetTempPath(), "Some Game", "GumProject.gumx");
+
+        await _fileCommands.LoadProjectAsync(absolute);
+
+        loaded.ShouldBe(new FilePath(absolute));
     }
 
     [Fact]
@@ -270,6 +301,36 @@ public class FileCommandsTests : BaseTestClass
 
         string saved = File.ReadAllText(Path.Combine(_tempDirectory, "Components", "Button.gucx"));
         saved.IndexOf("Background.X", StringComparison.Ordinal).ShouldBeLessThan(saved.IndexOf("Sprite.X", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void BeginAutoSaveBatch_SavesAnElementEditedManyTimesOnce_WhenTheScopeEnds()
+    {
+        _tempDirectory = CreateTempDirectory();
+        _gumProject.FullFileName = Path.Combine(_tempDirectory, "MyProject.gumx");
+        _gumProject.ComponentReferences.Add(new ElementReference { Name = "Button", ElementType = ElementType.Component });
+        _projectManager.Setup(p => p.AutoSave).Returns(true);
+        bool isProjectNew = false;
+        _projectManager.Setup(p => p.AskUserForProjectNameIfNecessary(out isProjectNew)).Returns(true);
+        ComponentSave button = new() { Name = "Button", BaseType = "Container" };
+        button.States.Add(new StateSave { Name = "Default", ParentContainer = button });
+        string path = Path.Combine(_tempDirectory, "Components", "Button.gucx");
+
+        using (_fileCommands.BeginAutoSaveBatch())
+        {
+            for (int i = 0; i < 5; i++)
+            {
+                button.DefaultState!.SetValue($"Sprite{i}.X", 10f * i, "float");
+                _fileCommands.TryAutoSaveElement(button);
+            }
+
+            // Nothing is written while the scope is open, but the element is already marked unsaved.
+            File.Exists(path).ShouldBeFalse();
+            _unsavedChangesTracker.HasUnsavedChanges(button).ShouldBeTrue();
+        }
+
+        File.ReadAllText(path).ShouldContain("Sprite4.X");
+        _projectManager.Verify(p => p.AskUserForProjectNameIfNecessary(out isProjectNew), Times.Once);
     }
 
     [Fact]
