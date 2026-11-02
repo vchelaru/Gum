@@ -6,6 +6,7 @@ using Avalonia.Input.Platform;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
 using Gum.Avalonia.Dialogs;
+using Gum.Diagnostics;
 using Gum.Services.Dialogs;
 using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
@@ -58,6 +59,33 @@ public class DialogKeyboardTests
         PressCopy(window);
 
         ClipboardText(window).ShouldBe("Button");
+        window.Close();
+    }
+
+    [AvaloniaFact]
+    public void FreezeDiagnosticsPrompt_CopyGesture_CopiesTheMessageWithoutControlLabels()
+    {
+        FreezeDiagnosticsPromptViewModel viewModel = new FreezeDiagnosticsPromptViewModel
+        {
+            Message = "Gum froze.\nFiles are in:\nC:\\Gum\\Reported",
+        };
+        DialogWindow window = Open(viewModel);
+
+        PressCopy(window);
+
+        ClipboardText(window).ShouldBe("Gum froze.\nFiles are in:\nC:\\Gum\\Reported");
+        window.Close();
+    }
+
+    [AvaloniaFact]
+    public void DeleteDialog_CopyGesture_CopiesItsText()
+    {
+        DeleteOptionsDialogViewModel viewModel = new DeleteOptionsDialogViewModel { Title = "Delete?", Message = "Delete Button?" };
+        DialogWindow window = Open(viewModel);
+
+        PressCopy(window);
+
+        ClipboardText(window).ShouldNotBeNull().ShouldContain("Delete Button?");
         window.Close();
     }
 
