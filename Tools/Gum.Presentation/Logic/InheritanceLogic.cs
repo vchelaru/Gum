@@ -13,13 +13,16 @@ public class InheritanceLogic
     private readonly IFileCommands _fileCommands;
     private readonly IGuiCommands _guiCommands;
     private readonly IStandardElementsManagerGumTool _standardElementsManagerGumTool;
+    private readonly IBaseTypeVariablePruner _baseTypeVariablePruner;
 
     public InheritanceLogic(IFileCommands fileCommands, IGuiCommands guiCommands,
-        IStandardElementsManagerGumTool standardElementsManagerGumTool)
+        IStandardElementsManagerGumTool standardElementsManagerGumTool,
+        IBaseTypeVariablePruner baseTypeVariablePruner)
     {
         _fileCommands = fileCommands;
         _guiCommands = guiCommands;
         _standardElementsManagerGumTool = standardElementsManagerGumTool;
+        _baseTypeVariablePruner = baseTypeVariablePruner;
     }
 
     public void HandleInstanceAdded(ElementSave container, InstanceSave instance)
@@ -107,8 +110,15 @@ public class InheritanceLogic
         }
     }
 
+    /// <summary>
+    /// Reacts to the instance's base type having changed: removes the variables the new type cannot have from the
+    /// container (see <see cref="IBaseTypeVariablePruner"/>; undo restores them), then follows the type in the
+    /// elements inheriting from the container. The caller holds the undo lock of the edit.
+    /// </summary>
     public void HandleInstanceVariableBaseTypeSet(ElementSave container, InstanceSave instance)
     {
+        _baseTypeVariablePruner.PruneInstance(container, instance);
+
         var elementsInheritingFromContainer =
             ObjectFinder.Self.GetElementsInheritingFrom(container);
 
@@ -124,9 +134,16 @@ public class InheritanceLogic
         }
     }
 
+    /// <summary>
+    /// Reacts to the element's base type having changed: removes the variables the new type cannot have (see
+    /// <see cref="IBaseTypeVariablePruner"/>; undo restores them) and replaces the instances inherited from the old
+    /// base. The caller holds the undo lock of the edit.
+    /// </summary>
     public void HandleElementBaseType(ElementSave asElementSave)
     {
         string? newValue = asElementSave.BaseType;
+
+        _baseTypeVariablePruner.PruneElement(asElementSave);
 
         asElementSave.Instances.RemoveAll(item => item.DefinedByBase);
 

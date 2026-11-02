@@ -19,8 +19,8 @@ public partial class HeadlessErrorChecker
     public bool ReportsLeftoverInstanceVariables { get; init; }
 
     // "Ghost.Text" in an element with no instance Ghost (in itself or any base element) sets nothing. A warning, not an
-    // error: the tool leaves such variables behind (e.g. when an instance is deleted or its base type changes) and
-    // hides them, so the user cannot always remove them.
+    // error: the tool leaves such variables behind when an instance is deleted, and a project saved before the tool
+    // removed variables on a base type change still holds them. The tool hides them, so the user cannot always remove them.
     private List<ErrorResult> GetMissingInstanceVariableErrorsFor(ElementSave element)
     {
         List<ErrorResult> errors = new List<ErrorResult>();
@@ -52,13 +52,13 @@ public partial class HeadlessErrorChecker
 
 
     // "Label.NotAVariable" where Label's type has no NotAVariable sets nothing. A warning for the same reason as
-    // GUM0027: the tool leaves such variables behind (a renamed Standard variable, an instance whose type changed)
-    // and hides them. Tolerated, because the runtime or the tool deals with them by design:
+    // GUM0027: such variables exist in projects saved by an earlier Gum (a renamed Standard variable, an instance whose
+    // type changed before the tool removed them on a type change) and the tool hides them. Tolerated, because the runtime or the tool deals with them by design:
     //  - category selectors ("SizeCategoryState"): a selector for a category the type lacks is a no-op at runtime
     //    and the tool keeps it when the category is deleted;
     //  - Standard variables older tools wrote and current ones no longer define (see RemovedStandardVariableNames);
-    //  - variables of another Standard type: what the tool keeps when an instance's base type changes (Text to
-    //    Container keeps Text and FontSize), also through a variable the instance's component exposes;
+    //  - variables of another Standard type: what an earlier Gum kept when an instance's base type changed (Text to
+    //    Container kept Text and FontSize), also through a variable the instance's component exposes;
     //  - instances of a component with a Forms behavior: its Forms control receives variables (IsChecked,
     //    Orientation) that no variable list names.
     private List<ErrorResult> GetUnknownInstanceVariableErrorsFor(ElementSave element)

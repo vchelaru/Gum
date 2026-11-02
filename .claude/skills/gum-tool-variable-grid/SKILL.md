@@ -79,6 +79,10 @@ Landmine: the backing `_expansionStates` dictionary is **static** and keyed only
 
 A reference-driven row's "Set by Other.X" names its source as a link: `VariableReferenceLinkLogic` (headless) builds an `InstanceMember.DetailLink` for plain variable paths only, and `DataUiDisplayBase.RefreshHint` draws it. The same class builds `InstanceMember.DetailAction` (Unlink, drawn as the Delete icon via the head's `DataUiDisplayBase.DetailIconFactory`; only when the selected state's own list holds the line), which comments the line out through `ISetVariableLogic.PropertyValueChanged`; the view appends it to the first line of the text. Hit-test links with `CharacterHit.FirstCharacterIndex`, not `TextPosition` (which counts a character's right half as the next one). Landmine: a read-only row disables its content, hint included, and a disabled control gets no pointer events, so the click is handled on the displayer itself (`HandleHintPointerPressed`), not on the hint's `TextBlock`.
 
+### Leftover Variables
+
+`VariableSaveLogic.GetIfVariableIsActive` hides variables the element's or instance's type does not define. Since #7191 a base type change deletes them (`BaseTypeVariablePruner`), so only projects saved by an earlier Gum still hold hidden leftovers; keep the hiding for those.
+
 ### Hiding a Row
 
 A row is hidden by removing it from `category.Members`, not by a visibility flag — see `DataUiGridModel.RefreshDelegateBasedElementVisibility`. Row striping stays correct because removed rows no longer count toward `AlternationIndex`. Removal loses the row's position though, and that method re-adds with `Add` (appending), so anything that restores rows needs its own ordered snapshot: `MemberCategoryFilter` (`DataUi.Core/MemberCategoryFilter.cs`) does this for the Variables tab filter box, and `DataUiGridModel.ApplyMemberFilter` re-applies its predicate after every `SetCategories`.

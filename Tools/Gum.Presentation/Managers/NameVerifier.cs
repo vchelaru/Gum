@@ -242,7 +242,7 @@ public class NameVerifier : INameVerifier
             var existingVariable = elementSave != null ? GetVariableFromThisOrBase(elementSave, variableName) : null;
             // there's a variable but we shouldn't consider it
             // unless it's "Active" - inactive variables may be
-            // leftovers from a type change
+            // leftovers from a type change in a project saved by an earlier Gum
             // A state can hold its own copy of the edited variable, so match by name as well as by reference.
             var isVariableBeingEdited = variableSave != null && existingVariable != null &&
                 (existingVariable == variableSave || existingVariable.Name == variableSave.Name);

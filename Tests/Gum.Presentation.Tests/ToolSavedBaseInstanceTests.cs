@@ -42,7 +42,8 @@ public class ToolSavedBaseInstanceTests : BaseTestClass
         InheritanceLogic inheritanceLogic = new InheritanceLogic(
             new Mock<IFileCommands>().Object,
             new Mock<IGuiCommands>().Object,
-            new Mock<IStandardElementsManagerGumTool>().Object);
+            new Mock<IStandardElementsManagerGumTool>().Object,
+            new Mock<IBaseTypeVariablePruner>().Object);
 
         // The tool path when a user picks a Base Type in the dropdown.
         ComponentSave chosenBase = AddComponent(project, "ChosenBaseButton", "Container");

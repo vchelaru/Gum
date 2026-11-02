@@ -127,7 +127,7 @@ public class ExposeVariableService : IExposeVariableService
 
         // there's a variable but we shouldn't consider it
         // unless it's "Active" - inactive variables may be
-        // leftovers from a type change
+        // leftovers from a type change in a project saved by an earlier Gum
 
         using var undoLock = _undoManager.RequestLock();
         if (existingVariable != null)

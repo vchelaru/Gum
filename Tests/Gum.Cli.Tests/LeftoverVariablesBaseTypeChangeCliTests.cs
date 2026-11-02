@@ -10,8 +10,9 @@ using System.Text.RegularExpressions;
 namespace Gum.Cli.Tests;
 
 /// <summary>
-/// A project saved after base types changed (Text to Container) still holds the Text-only variables the
-/// tool keeps on purpose (<see cref="LeftoverVariablesProject"/>). Those leftovers must never be reported
+/// A project saved by an earlier Gum after base types changed (Text to Container) still holds the Text-only
+/// variables the tool then kept (<see cref="LeftoverVariablesProject"/>); the tool now prunes them on a type
+/// change, so only old projects have them. Those leftovers must never be reported
 /// as errors or warnings, must not block <c>check</c> or <c>codegen</c>, and must survive a save and reload.
 /// A new check that reports leftovers, or a save that drops them, turns these red.
 /// </summary>
