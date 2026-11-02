@@ -44,6 +44,8 @@ The Gum repository builds and uploads its NuGet packages through a GitHub Action
 
 Reference the existing versions on [nuget.org](https://www.nuget.org/packages/Gum.MonoGame/#versions-body-tab) when choosing the next version number.
 
+The workflow publishes through nuget.org Trusted Publishing, so there is no API key secret to expire. The trust is a policy on the `vchelaru` nuget.org account (owner `vchelaru`, repository `Gum`, workflow file `dotnet-nuget.yaml`, no environment). If the workflow file is renamed, update the policy.
+
 ## Gum Tool Release
 
 A tool release is several coordinated steps: generating the release notes, running the release build, and announcing it.
