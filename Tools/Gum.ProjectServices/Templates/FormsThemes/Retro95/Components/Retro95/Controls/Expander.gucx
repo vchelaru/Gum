@@ -284,6 +284,26 @@
       <Variable Type="int" Name="ArrowIndicator.Red" SetsValue="true">
         <Value xsi:type="xsd:int">0</Value>
       </Variable>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>TextInstance.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Color = Components/Retro95/Styles.Text.FillColor</string>
+        </Value>
+      </VariableList>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>ArrowIndicator.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Color = Components/Retro95/Styles.Text.FillColor</string>
+        </Value>
+      </VariableList>
     </State>
     <State>
       <Name>Expanded</Name>
@@ -311,6 +331,26 @@
       <Variable Type="int" Name="ArrowIndicator.Red" SetsValue="true">
         <Value xsi:type="xsd:int">0</Value>
       </Variable>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>TextInstance.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Color = Components/Retro95/Styles.Text.FillColor</string>
+        </Value>
+      </VariableList>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>ArrowIndicator.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Color = Components/Retro95/Styles.Text.FillColor</string>
+        </Value>
+      </VariableList>
     </State>
     <State>
       <Name>DisabledCollapsed</Name>
