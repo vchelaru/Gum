@@ -1559,8 +1559,8 @@ public class CodeGenerator
     /// assign. This is the consumer side of the filter the container applies when it generates an exposed
     /// property (<see cref="GetExposedVariableSkipReason"/>): a variable exposed by the element is only there
     /// when it still resolves to a variable of the exposing instance's current type, otherwise the property
-    /// was not generated and an assignment would not compile. Nothing is reported; the value stays in the
-    /// project in case the type change was accidental.
+    /// was not generated and an assignment would not compile. Nothing is reported: the tool removes such a variable when
+    /// the type changes, but a project saved by an earlier Gum still holds it.
     /// </summary>
     private static bool GetIfExposedVariableResolves(RecursiveVariableFinder finder, ElementSave element, string name, OutputLibrary library)
     {
@@ -5116,8 +5116,9 @@ public class CodeGenerator
                     {
                         // We want to make sure that the variable is defined in the base object. If it isn't, then
                         // it could be a leftover variable caused by having this object be of one type, using a variable
-                        // specific to that type, then changing it to another type. Gum holds on to these varibles in case
-                        // the type change was accidental, but it means we have to watch for these orphan variables when generating.
+                        // specific to that type, then changing it to another type. The tool removes these variables when the
+                        // type changes, but a project saved by an earlier Gum still holds them, so we have to watch for these
+                        // orphan variables when generating.
                         shouldInclude = GetIfExposedVariableResolves(
                             recursiveVariableFinder, baseElement!, item.Name, context.CodeOutputProjectSettings.OutputLibrary);
                     }

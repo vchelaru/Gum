@@ -81,6 +81,20 @@ Derived types get access to all of the exposed variables in the base type. For e
 
 <figure><img src="../../../.gitbook/assets/28_06 00 59.gif" alt=""><figcaption><p>Exposed variables are inherited</p></figcaption></figure>
 
+### Changing Base Type
+
+Changing the `Base Type` of an instance, or of a component or screen, removes the variables the new type does not have. For example, changing a Text instance to a Container removes its `Text` and `FontSize` values, in the default state and in every state category. Variables both types have, such as `Width`, keep their values.
+
+If the removed variable was exposed, the exposure goes too, and so do the values other components set for it. This is the same as un-exposing the variable.
+
+Components that inherit from the changed component keep their own values for the removed variables.
+
+Changing the `Base Type` back does not bring the removed values back, but undo does. Undo restores everything the change removed in one step.
+
+{% hint style="info" %}
+Available in December 2026, or now if building Gum from source.
+{% endhint %}
+
 ### Base Type vs States
 
 `Base Types` allow for the customization of a component, including the creation of many variants. Similarly, States also allow for the customization of a component in similar ways. When deciding between whether to use states or inheritance, keep the following in mind:
