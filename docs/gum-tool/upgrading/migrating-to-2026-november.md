@@ -681,11 +681,11 @@ rectangle.DropshadowBlur = 0;
 
 ### Default Font Is Liberation Sans
 
-On MonoGame, KNI and FNA, text that never sets a font now draws with Liberation Sans instead of Arial, so glyph shapes differ slightly, a few characters are 1 pixel wider or narrower, and text is about 1 pixel shorter; set an explicit font to keep a specific look.
+On MonoGame, KNI and FNA, text that never sets a font now draws with Liberation Sans instead of Arial. Glyph shapes differ slightly, a few characters are 1 pixel wider or narrower, and text is about 1 pixel shorter. Set an explicit font to keep a specific look.
 
 ### MonoGame Gradients Blend in Straight sRGB
 
-Gradients on MonoGame, KNI and FNA now blend in straight sRGB to match Skia and raylib, so mid-tones look darker than before, and there is no setting to restore the old look.
+Gradients on MonoGame, KNI and FNA now blend in straight sRGB to match Skia and raylib. Mid-tones look darker than before, and no setting restores the old look.
 
 ### Skia Packages Require SkiaSharp 4
 
