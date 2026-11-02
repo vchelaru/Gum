@@ -221,21 +221,6 @@ The properties on the default Forms visuals (`TextInstance`, `Background`, and s
 
 To find what still uses an old name, build with the bundled `Gum.Analyzers` package and look for `GUM001` and `CS0618`.
 
-## Interface Additions
-
-### ICursor and IGumService Gain Members
-
-These are additive. A class that implements `ICursor`, `IGumService` or `IRenderer` keeps compiling because every new member has a default implementation.
-
-* `ICursor` gains `FrameworkElementOver`, `FrameworkElementPushed`, `FrameworkElementRightPushed`, a read-only `TransformMatrix` (a `System.Numerics.Matrix3x2`), `VisualPushed`, `LastX`, `LastY` and `ClearInputValues()`.
-* `IGumService` gains `Keyboard`, `Update(double totalSeconds)`, `PopupRoot`, `ModalRoot`, `Gamepads`, `UseKeyboardDefaults()`, `UseGamepadDefaults()`, `RefreshStyles()`, `RefreshLocalization()`, `LocalizationService`, `LastLoadResult`, `ExportSnapshot(string, bool)`, `SynchronizationContext`, `UseSingleThreadedAsync()` and `Uninitialize()`. `IRenderer` gains `AddLayer()` and `RemoveLayer(Layer)`.
-
-Behavior changes to know about:
-
-* `IGumService.Default.Cursor` now returns the cursor Forms uses, including one installed with `FormsUtilities.SetCursor`. It used to be `null` under a custom cursor and always `null` in Skia-based hosts (Silk.NET, Stride, KNI Skia, Unity). `GumService.Default.Cursor` and `Keyboard` are unchanged.
-* `Update(double totalSeconds)` takes total seconds since startup, not the frame time. A value that is not a finite number counts as a zero-length frame. On KNI Skia it now sets `GumService.Default.GameTime` and skips input while the window is inactive, like `Update(GameTime)`.
-* `Uninitialize()` resets the clock on MonoGame, KNI, FNA and raylib, so the first `Update` after initializing again advances animations by zero.
-
 ## Missing Files and Load Errors
 
 Gum now fails loudly instead of drawing nothing in these cases. Fix the file or path. To keep the old silent behavior, set `ConsumeSilently` after Gum initializes. Gum then raises `PropertyAssignmentError` with the file name.
