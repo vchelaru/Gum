@@ -179,6 +179,10 @@ public sealed class MainWindow : Window, IRecipient<CloseMainWindowMessage>
         _drawsInTitleBar = drawsInTitleBar;
         if (drawsInTitleBar)
         {
+            if (OperatingSystem.IsWindows())
+            {
+                WindowsSystemMenuClose.KeepEnabled(this);
+            }
             ExtendClientAreaToDecorationsHint = true;
             ExtendClientAreaChromeHints = ExtendClientAreaChromeHints.PreferSystemChrome;
             this.Bind(ExtendClientAreaTitleBarHeightHintProperty, ScaledWithFont(TitleBarHeight));
