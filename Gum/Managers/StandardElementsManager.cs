@@ -743,8 +743,7 @@ public class StandardElementsManager
                 Name = "RaiseChildrenEventsOutsideOfBounds",
                 Category = "Behavior",
                 DetailText = "When true, children positioned outside this object's bounds (such as resize borders) still receive the cursor. Every child is checked even when the cursor is not over this object, which has a slight cost.",
-                // Shares the version 7 slot (ShaderParametersExpansion); version 7 has only shipped in prereleases.
-                MinimumGumxVersion = (int)GumProjectSave.GumxVersions.ShaderParametersExpansion
+                MinimumGumxVersion = (int)GumProjectSave.GumxVersions.RaiseChildrenEventsExpansion
             });
     }
 

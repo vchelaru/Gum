@@ -539,6 +539,12 @@ public class ProjectManagerTests : BaseTestClass
             o.Filter.Contains("*.gumx") && o.Filter.Contains("*.gumj"))), Times.Once);
     }
 
+    [Fact]
+    public void CreateBlankProject_StampsVersionEight()
+    {
+        _projectManager.CreateBlankProject().Version.ShouldBe(8);
+    }
+
     // Saves a minimal-but-loadable project to a fresh temp file and returns its path. Used by the
     // two tests below, which exercise ProjectManager.LoadProjectAsync(FilePath) end to end (real
     // GumProjectSave.Load, since it's a static method with no seam) rather than through the

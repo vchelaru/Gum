@@ -388,10 +388,11 @@ public class StandardElementBackfillVersionGateTests : BaseTestClass
     }
 
     [Fact]
-    public void Initialize_DoesNotInjectRaiseChildrenEventsOutsideOfBounds_IntoPreV7Container()
+    public void Initialize_DoesNotInjectRaiseChildrenEventsOutsideOfBounds_IntoV7Container()
     {
+        // Version 7 shipped in the November 2026 release without this variable, so a v7 project must not get it.
         GumProjectSave project = MakeProjectWithBareStandard(
-            "Container", (int)GumProjectSave.GumxVersions.FontCachePathHash, "Width", "Height", "Visible");
+            "Container", (int)GumProjectSave.GumxVersions.ShaderParametersExpansion, "Width", "Height", "Visible");
 
         StateSave defaultState = DefaultStateAfterInitialize(project, "Container");
 
@@ -399,10 +400,10 @@ public class StandardElementBackfillVersionGateTests : BaseTestClass
     }
 
     [Fact]
-    public void Initialize_InjectsRaiseChildrenEventsOutsideOfBounds_IntoV7Container()
+    public void Initialize_InjectsRaiseChildrenEventsOutsideOfBounds_IntoV8Container()
     {
         GumProjectSave project = MakeProjectWithBareStandard(
-            "Container", (int)GumProjectSave.GumxVersions.ShaderParametersExpansion, "Width", "Height", "Visible");
+            "Container", (int)GumProjectSave.GumxVersions.RaiseChildrenEventsExpansion, "Width", "Height", "Visible");
 
         StateSave defaultState = DefaultStateAfterInitialize(project, "Container");
 

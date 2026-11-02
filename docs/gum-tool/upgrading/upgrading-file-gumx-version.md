@@ -153,3 +153,19 @@ Version 7 uses the **same XML format** as Version 6. There is **no format conver
 {% hint style="info" %}
 New projects created with the 2026 November tool (or later) are stamped Version 7 automatically.
 {% endhint %}
+
+## Version 8
+
+**Required Gum Tool Version**: 2026 December (or later)
+
+This version unlocks the `Raise Children Events Outside Of Bounds` variable in the **Behavior** category of the standard elements that have children events. When it is true, children placed outside the object's bounds, such as the resize borders of a Window, still receive the cursor. The tool only shows and back-fills it for projects at version 8 or later.
+
+✅No manual changes are needed to your project beyond changing the version number.
+
+Version 8 uses the **same XML format** as Version 7. There is **no format conversion or Save All step**, you only change the `<Version>` number.
+
+❗Be sure that your entire team is using the new version of Gum (2026 December or later) before making this upgrade.
+
+{% hint style="info" %}
+Available in December 2026, or now if building Gum from source. New projects created with the 2026 December tool (or later) are stamped Version 8 automatically.
+{% endhint %}
