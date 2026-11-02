@@ -33,7 +33,7 @@ A standard element can be excluded from new/back-filled projects without any `Gu
 
 ## The three load-time behaviors
 
-`ProjectManager.LoadProject` (~line 201 and ~288 per recent research) compares the file's `Version` against `NativeVersion`:
+`ProjectManager.LoadProject` (~line 201 and ~288 per recent research) compares the file's `Version` against `NativeVersion` (items 1 and 3) and `AttributeVersion` (item 2):
 
 1. **File version > NativeVersion** → dialog: *"saved with a newer version of Gum... Please update Gum."* File is rejected.
 2. **File version < AttributeVersion** → Output-tab warning with an upgrade docs link (`https://docs.flatredball.com/gum/gum-tool/upgrading/upgrading-file-gumx-version`). File still opens and works.

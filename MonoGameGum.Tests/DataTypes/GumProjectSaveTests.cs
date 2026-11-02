@@ -614,7 +614,7 @@ public class GumProjectSaveTests : BaseTestClass
     }
 
     [Fact]
-    public void NativeVersion_MatchesShaderParametersExpansion()
+    public void NativeVersion_MatchesRaiseChildrenEventsExpansion()
     {
         // The v5 slot is reserved for the Sprite/NineSlice ColorOperation variable (#4880). Files
         // saved at v5 use the same XML format as v4; the bump only changes the rejection ceiling and
@@ -623,8 +623,10 @@ public class GumProjectSaveTests : BaseTestClass
         ((int)GumProjectSave.GumxVersions.ColorOperationExpansion).ShouldBe(5);
         ((int)GumProjectSave.GumxVersions.FontCachePathHash).ShouldBe(6);
         // The v7 slot (#6988) reserves the Container ShaderParameters variable for the back-fill gate.
-        GumProjectSave.NativeVersion.ShouldBe((int)GumProjectSave.GumxVersions.ShaderParametersExpansion);
         ((int)GumProjectSave.GumxVersions.ShaderParametersExpansion).ShouldBe(7);
+        // The v8 slot (#7412) reserves the RaiseChildrenEventsOutsideOfBounds variable; v7 had already shipped without it.
+        ((int)GumProjectSave.GumxVersions.RaiseChildrenEventsExpansion).ShouldBe(8);
+        GumProjectSave.NativeVersion.ShouldBe((int)GumProjectSave.GumxVersions.RaiseChildrenEventsExpansion);
     }
 
     [Fact]

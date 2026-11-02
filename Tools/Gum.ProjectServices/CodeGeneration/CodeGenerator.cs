@@ -1613,7 +1613,7 @@ public class CodeGenerator
             return false;
         }
 
-        if (rootVariable.Name == "HasEvents" || rootVariable.Name == "ExposeChildrenEvents")
+        if (rootVariable.Name == "HasEvents" || rootVariable.Name == "ExposeChildrenEvents" || rootVariable.Name == "RaiseChildrenEventsOutsideOfBounds")
         {
             // These live on InteractiveGue. Sprite derives from GraphicalUiElement in every runtime, and
             // the Gum runtimes' Circle and Rectangle do too (SkiaGum's shapes are InteractiveGue).
@@ -5660,6 +5660,7 @@ public class CodeGenerator
         if (
             rootVariableName == "ClipsChildren" ||
             rootVariableName == "ExposeChildrenEvents" ||
+            rootVariableName == "RaiseChildrenEventsOutsideOfBounds" ||
             rootVariableName == "FlipHorizontal" ||
             rootVariableName == "HasEvents" ||
 
@@ -6297,7 +6298,7 @@ public class CodeGenerator
         {
             return " ";
         }
-        else if (rootName == "HasEvents")
+        else if (rootName == "HasEvents" || rootName == "RaiseChildrenEventsOutsideOfBounds")
         {
             // if this is a MonoGame/Raylib project, do not return " ";
             if (!UsesUnifiedGumRuntime(context.CodeOutputProjectSettings.OutputLibrary))

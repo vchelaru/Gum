@@ -732,7 +732,18 @@ public class StandardElementsManager
                 Category = "Behavior", 
                 CanOnlyBeSetInDefaultState = true,
                 // We used to exclude ExposeChildrenEvents from instances, but there are plenty of situations where we want to modify this value on an instance-by-instance basis. It's similar to InputTransparent in Maui
-                //ExcludeFromInstances = true 
+                //ExcludeFromInstances = true
+            });
+        stateSave.Variables.Add(
+            new VariableSave
+            {
+                SetsValue = true,
+                Type = "bool",
+                Value = false,
+                Name = "RaiseChildrenEventsOutsideOfBounds",
+                Category = "Behavior",
+                DetailText = "When true, children positioned outside this object's bounds (such as resize borders) still receive the cursor. Every child is checked even when the cursor is not over this object, which has a slight cost.",
+                MinimumGumxVersion = (int)GumProjectSave.GumxVersions.RaiseChildrenEventsExpansion
             });
     }
 
