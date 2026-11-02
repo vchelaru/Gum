@@ -102,6 +102,7 @@ public partial class HeadlessErrorChecker
     // (DropshadowBlurX/Y became DropshadowBlur in #2950, the rest were dropped). Projects keep them and they do
     // nothing. This set is closed: a variable removed from a Standard element in the future needs no entry unless
     // shipped content still holds it.
+    // TODO: drop this list in June 2027, once projects written by those old tool versions are no longer expected.
     private static readonly HashSet<string> RemovedStandardVariableNames = new HashSet<string>(StringComparer.Ordinal)
     {
         "DropshadowBlurX", "DropshadowBlurY", "StrokeWidthUnits", "StrokeDashLength", "StrokeGapLength", "IsAntialiased", "IconColor"
