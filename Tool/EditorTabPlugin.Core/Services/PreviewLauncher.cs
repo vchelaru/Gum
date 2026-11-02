@@ -123,7 +123,8 @@ public class PreviewLauncher : IPreviewLauncher
         _selectionFilePath = Path.Combine(Path.GetTempPath(), $"GumPreviewSelection_{Guid.NewGuid():N}.txt");
 
         ProcessStartInfo startInfo = PreviewProcessStartInfoBuilder.Build(
-            resolved.Value.ExecutablePath, projectPathForLaunch, element.Name, _selectionFilePath, contentRootDirectory, Environment.ProcessId);
+            resolved.Value.ExecutablePath, projectPathForLaunch, element.Name, _selectionFilePath, contentRootDirectory, Environment.ProcessId,
+            logPath: Environment.GetEnvironmentVariable(PreviewProcessStartInfoBuilder.LogPathEnvironmentVariable));
 
         try
         {
