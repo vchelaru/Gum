@@ -4,6 +4,7 @@ using Gum.DataTypes.Variables;
 using Gum.Logic;
 using Gum.Managers;
 using Gum.Plugins;
+using Gum.ProjectServices;
 using Gum.Services;
 using Gum.Tests.Shared;
 using Gum.ToolStates;
@@ -286,5 +287,66 @@ public class BaseTypeChangePrunesVariablesTests : BaseTestClass
         ChangeInstanceBaseType(Component("Card"), "Caption", "Text");
 
         LeftoverVariablesProject.Snapshot(_project).ShouldBe(before);
+    }
+
+    // Deliberate (#7191): a base type change prunes only the edited element. Inheritors keep their own values as hidden
+    // leftovers and no check reports them. These pin that so nobody "fixes" it into a cascade.
+    private ComponentSave AddInheritorOfLabel()
+    {
+        ComponentSave fancy = new ComponentSave { Name = "FancyLabel", BaseType = "Label" };
+        fancy.States.Add(new StateSave { Name = "Default", ParentContainer = fancy });
+        fancy.DefaultState!.Variables.Add(new VariableSave { Name = "FontSize", Type = "int", Value = 99, SetsValue = true });
+        fancy.DefaultState!.Variables.Add(new VariableSave { Name = "Width", Type = "float", Value = 11f, SetsValue = true });
+        StateSaveCategory fancyLooks = new StateSaveCategory { Name = "Fancy" };
+        StateSave huge = new StateSave { Name = "Huge", ParentContainer = fancy };
+        huge.Variables.Add(new VariableSave { Name = "FontSize", Type = "int", Value = 120, SetsValue = true });
+        fancyLooks.States.Add(huge);
+        fancy.Categories.Add(fancyLooks);
+        _project.Components.Add(fancy);
+        _project.ComponentReferences.Add(new ElementReference { Name = "FancyLabel", ElementType = ElementType.Component });
+        return fancy;
+    }
+
+    [Fact]
+    public void ChangingElementBaseType_DoesNotPruneComponentsThatInheritFromIt()
+    {
+        ComponentSave label = Component("Label");
+        ComponentSave fancy = AddInheritorOfLabel();
+
+        ChangeElementBaseType(label, "Container");
+
+        Variable(label, "Default", "FontSize").ShouldBeNull();
+        Variable(fancy, "Default", "FontSize")!.Value.ShouldBe(99);
+        Variable(fancy, "Huge", "FontSize")!.Value.ShouldBe(120);
+        Variable(fancy, "Default", "Width")!.Value.ShouldBe(11f);
+    }
+
+    [Fact]
+    public void UndoAndRedo_OfElementBaseTypeChange_LeaveInheritorsUntouched()
+    {
+        ComponentSave label = Component("Label");
+        ComponentSave fancy = AddInheritorOfLabel();
+        ChangeElementBaseType(label, "Container");
+
+        _undoManager.PerformUndo();
+        Variable(fancy, "Default", "FontSize")!.Value.ShouldBe(99);
+        Variable(fancy, "Huge", "FontSize")!.Value.ShouldBe(120);
+
+        _undoManager.PerformRedo();
+        Variable(fancy, "Default", "FontSize")!.Value.ShouldBe(99);
+        Variable(fancy, "Huge", "FontSize")!.Value.ShouldBe(120);
+    }
+
+    [Fact]
+    public void ChangingElementBaseType_AddsNoErrorOrWarningForInheritors()
+    {
+        ComponentSave label = Component("Label");
+        ComponentSave fancy = AddInheritorOfLabel();
+        HeadlessErrorChecker checker = new HeadlessErrorChecker(new DefaultTypeResolver()) { ReportsLeftoverInstanceVariables = true };
+        List<string> before = checker.GetErrorsFor(fancy, _project).Select(e => e.Code + e.Message).ToList();
+
+        ChangeElementBaseType(label, "Container");
+
+        checker.GetErrorsFor(fancy, _project).Select(e => e.Code + e.Message).ToList().ShouldBe(before);
     }
 }

@@ -87,6 +87,8 @@ Changing the `Base Type` of an instance, or of a component or screen, removes th
 
 If the removed variable was exposed, the exposure goes too, and so do the values other components set for it. This is the same as un-exposing the variable.
 
+Components that inherit from the changed component keep their own values for the removed variables.
+
 Changing the `Base Type` back does not bring the removed values back, but undo does. Undo restores everything the change removed in one step.
 
 {% hint style="info" %}

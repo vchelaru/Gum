@@ -51,6 +51,8 @@ public class BaseTypeVariablePruner : IBaseTypeVariablePruner
     }
 
     /// <inheritdoc/>
+    /// <remarks>Deliberately does not touch elements that inherit from <paramref name="element"/>: their own values
+    /// stay as hidden leftovers and no check reports them (#7191). Pinned by BaseTypeChangePrunesVariablesTests.</remarks>
     public void PruneElement(ElementSave element)
     {
         foreach (StateSave state in element.AllStates)
