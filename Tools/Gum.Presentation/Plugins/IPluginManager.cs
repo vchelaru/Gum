@@ -89,6 +89,17 @@ public interface IPluginManager
     /// </summary>
     void VariableSetThroughReference(ElementSave? parentElement, InstanceSave? instance, string unqualifiedChangedMemberName,
         object? oldValue, bool isFullCommit = true);
+
+    /// <summary>
+    /// Opens a batch of <see cref="VariableSet"/> calls, as a multi-select edit makes (one per selected
+    /// instance). Plugins still hear every call, but those whose reaction covers the whole element
+    /// (the error check, code generation) wait for the scope's disposal, when each affected element
+    /// is announced once through the plugin base's VariableSetBatchCompleted event.
+    /// </summary>
+    IDisposable BeginVariableSetBatch();
+
+    /// <summary>True between <see cref="BeginVariableSetBatch"/> and the disposal of its scope.</summary>
+    bool IsInVariableSetBatch { get; }
     void VariableSelected(IStateContainer? container, VariableSave? variable);
     void VariableRemovedFromCategory(string variableName, StateSaveCategory category);
     void InstanceRename(ElementSave? element, InstanceSave instanceSave, string oldName);

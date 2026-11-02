@@ -167,4 +167,35 @@ public class MultiSelectCommitLogicTests : BaseTestClass
         _undoLockDisposals.ShouldBe(1);
         lockDisposalsBeforeRecord.ShouldBe(1);
     }
+
+    [Fact]
+    public void Attach_ShouldOpenOnePluginBatchAndOneSaveBatch_WhenCommitIsFull()
+    {
+        ScreenSave screen = CreateScreenWithTextInstances(instanceCount: 5);
+        MultiSelectInstanceMember multiSelect = CreateAttachedMultiSelect(screen, "Width");
+        int pluginBatchDisposals = 0;
+        int saveBatchDisposals = 0;
+        _mocker.GetMock<IPluginManager>().Setup(x => x.BeginVariableSetBatch()).Returns(new UndoLock(() => pluginBatchDisposals++));
+        _mocker.GetMock<IFileCommands>().Setup(x => x.BeginAutoSaveBatch()).Returns(new UndoLock(() => saveBatchDisposals++));
+
+        multiSelect.SetValue(30f, SetPropertyCommitType.Full);
+
+        // Element-wide work (error check, codegen, file save) ran once for five instances.
+        _mocker.GetMock<IPluginManager>().Verify(x => x.BeginVariableSetBatch(), Times.Once);
+        _mocker.GetMock<IFileCommands>().Verify(x => x.BeginAutoSaveBatch(), Times.Once);
+        pluginBatchDisposals.ShouldBe(1);
+        saveBatchDisposals.ShouldBe(1);
+    }
+
+    [Fact]
+    public void Attach_ShouldNotOpenBatches_WhenCommitIsIntermediate()
+    {
+        ScreenSave screen = CreateScreenWithTextInstances(instanceCount: 2);
+        MultiSelectInstanceMember multiSelect = CreateAttachedMultiSelect(screen, "Width");
+
+        multiSelect.SetValue(30f, SetPropertyCommitType.Intermediate);
+
+        _mocker.GetMock<IPluginManager>().Verify(x => x.BeginVariableSetBatch(), Times.Never);
+        _mocker.GetMock<IFileCommands>().Verify(x => x.BeginAutoSaveBatch(), Times.Never);
+    }
 }

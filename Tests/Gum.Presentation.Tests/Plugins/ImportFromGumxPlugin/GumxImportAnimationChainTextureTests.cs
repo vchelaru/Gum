@@ -269,6 +269,7 @@ public class GumxImportAnimationChainTextureTests : IDisposable
         public void TryAutoSaveCurrentObject() { }
         public void TryAutoSaveCurrentElement() { }
         public void TryAutoSaveElement(ElementSave elementSave) { }
+        public IDisposable BeginAutoSaveBatch() => throw new NotImplementedException();
         public void TryAutoSaveBehavior(BehaviorSave behavior) { }
         public void TryAutoSaveObject(object objectToSave) { }
         public Task NewProjectAsync() => Task.CompletedTask;
