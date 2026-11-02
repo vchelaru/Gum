@@ -50,11 +50,12 @@ A tool release is several coordinated steps: generating the release notes, runni
 
 ### 1. Generate the release notes
 
-Run the `/gum-monthly-release` skill in Claude Code from the Gum repository. It drafts the release notes from the PRs and commits since the previous release and asks for three inputs up front:
+Run the `/gum-monthly-release` skill in Claude Code from the Gum repository. It drafts the release notes from the PRs and commits since the previous release and asks for two inputs up front:
 
 * **Release tag**: following the pattern `Release_<Month>_<DD>_<YYYY>` (for example, `Release_May_31_2026`).
-* **Previous-release boundary**: the previous release tag or URL to diff the release branch against.
 * **Breaking-changes migration doc URL**: the [Upgrading](../gum-tool/upgrading/README.md) page for this release, or confirmation that there are no breaking changes.
+
+The notes always cover the previous full release (`Release_*`) through the release branch. A `PreRelease_*` tag is never the boundary, so the skill does not ask for one.
 
 The skill writes a draft to `temp/` and walks through any open questions with you. It only produces the notes draft. It does not bump versions, create the tag, or trigger the release workflow.
 
