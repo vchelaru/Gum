@@ -190,7 +190,48 @@ public class FileCommands : IFileCommands
         _unsavedChangesTracker.MarkUnsaved(elementSave);
         if (_projectManager.AutoSave)
         {
+            if (_deferredAutoSaves != null)
+            {
+                _deferredAutoSaves.Add(elementSave);
+                return;
+            }
             SaveElement(elementSave);
+        }
+    }
+
+    private HashSet<ElementSave>? _deferredAutoSaves;
+
+    public IDisposable BeginAutoSaveBatch()
+    {
+        if (_deferredAutoSaves != null)
+        {
+            // Nested: the outermost scope saves.
+            return new BatchScope(() => { });
+        }
+
+        _deferredAutoSaves = new HashSet<ElementSave>();
+        return new BatchScope(() =>
+        {
+            HashSet<ElementSave> pending = _deferredAutoSaves;
+            _deferredAutoSaves = null;
+            foreach (ElementSave element in pending)
+            {
+                TryAutoSaveElement(element);
+            }
+        });
+    }
+
+    private sealed class BatchScope : IDisposable
+    {
+        private Action? _onDispose;
+
+        public BatchScope(Action onDispose) => _onDispose = onDispose;
+
+        public void Dispose()
+        {
+            Action? onDispose = _onDispose;
+            _onDispose = null;
+            onDispose?.Invoke();
         }
     }
 

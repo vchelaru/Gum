@@ -1,3 +1,4 @@
+using Gum.Commands;
 using Gum.PropertyGridHelpers;
 using Gum.Undo;
 using System;
@@ -24,12 +25,17 @@ public class MultiSelectCommitLogic : IMultiSelectCommitLogic
 {
     private readonly IUndoManager _undoManager;
     private readonly ISetVariableLogic _setVariableLogic;
+    private readonly IPluginManager _pluginManager;
+    private readonly IFileCommands _fileCommands;
 
     /// <summary>Creates the logic over the undo manager and the set logic that decides refreshes.</summary>
-    public MultiSelectCommitLogic(IUndoManager undoManager, ISetVariableLogic setVariableLogic)
+    public MultiSelectCommitLogic(IUndoManager undoManager, ISetVariableLogic setVariableLogic,
+        IPluginManager pluginManager, IFileCommands fileCommands)
     {
         _undoManager = undoManager;
         _setVariableLogic = setVariableLogic;
+        _pluginManager = pluginManager;
+        _fileCommands = fileCommands;
     }
 
     /// <inheritdoc/>
@@ -41,6 +47,8 @@ public class MultiSelectCommitLogic : IMultiSelectCommitLogic
         }
 
         IDisposable? undoLock = null;
+        IDisposable? pluginBatch = null;
+        IDisposable? saveBatch = null;
 
         member.BeforeMultiSet += (args) =>
         {
@@ -48,11 +56,19 @@ public class MultiSelectCommitLogic : IMultiSelectCommitLogic
             if (args.CommitType == SetPropertyCommitType.Full)
             {
                 undoLock = _undoManager.RequestLock();
+                // Element-wide work (the error check, code generation, the file save) runs once for the
+                // batch, not once per selected instance.
+                pluginBatch = _pluginManager.BeginVariableSetBatch();
+                saveBatch = _fileCommands.BeginAutoSaveBatch();
             }
         };
 
         member.AfterMultiSet += (args) =>
         {
+            pluginBatch?.Dispose();
+            pluginBatch = null;
+            saveBatch?.Dispose();
+            saveBatch = null;
             undoLock?.Dispose();
             undoLock = null;
 

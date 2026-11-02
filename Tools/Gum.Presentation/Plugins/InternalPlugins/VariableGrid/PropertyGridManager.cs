@@ -182,7 +182,7 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
         _behaviorShowingLogic = new BehaviorShowingLogic(fileCommands, projectState);
         _variableCategoryCopyPasteService = new VariableCategoryCopyPasteService(_undoManager);
         _variableCategoryRowAdapter = new VariableCategoryRowAdapter();
-        _multiSelectCommitLogic = new MultiSelectCommitLogic(_undoManager, _setVariableLogic);
+        _multiSelectCommitLogic = new MultiSelectCommitLogic(_undoManager, _setVariableLogic, _pluginManager, _fileCommands);
         _compositeMemberLogic = new CompositeMemberLogic(_selectedState,
             _exposeVariableService,
             _undoManager,
