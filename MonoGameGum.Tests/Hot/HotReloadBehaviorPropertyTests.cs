@@ -63,11 +63,6 @@ public class HotReloadBehaviorPropertyTests : FileThemeInputTestBase
             }
             foreach (System.Xml.Linq.XElement property in root.Elements("FormsProperty"))
             {
-                // The ListBoxItem templates have no Disabled state, so a restart and a live edit differ (#7495).
-                if (behaviorName == "ListBoxItemBehavior" && (string)property.Attribute("Name")! == "IsEnabled")
-                {
-                    continue;
-                }
                 // ToolTip is a tooltip trigger, not a visual: it has no observable effect on the control's look.
                 yield return new Row { Behavior = behaviorName, Name = (string)property.Attribute("Name")!, Type = (string)property.Attribute("Type")! };
             }
