@@ -1,3 +1,4 @@
+using Gum.Diagnostics;
 using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
 using Gum.Localization;
@@ -415,6 +416,7 @@ public class FileCommands : IFileCommands
 
             if (shouldSave)
             {
+                using ToolLog.Scope saveLog = ToolLog.Begin("SaveElement", detail: elementSave.Name);
                 _pluginManager.BeforeSavingElementSave(elementSave);
                 // As a project save does, so an auto-save writes the bytes Save All would.
                 ElementCommands.SortStateVariables(elementSave);

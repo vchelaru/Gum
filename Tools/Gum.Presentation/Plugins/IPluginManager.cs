@@ -97,6 +97,9 @@ public interface IPluginManager
     /// is announced once through the plugin base's VariableSetBatchCompleted event.
     /// </summary>
     IDisposable BeginVariableSetBatch();
+
+    /// <summary>True between <see cref="BeginVariableSetBatch"/> and the disposal of its scope.</summary>
+    bool IsInVariableSetBatch { get; }
     void VariableSelected(IStateContainer? container, VariableSave? variable);
     void VariableRemovedFromCategory(string variableName, StateSaveCategory category);
     void InstanceRename(ElementSave? element, InstanceSave instanceSave, string oldName);

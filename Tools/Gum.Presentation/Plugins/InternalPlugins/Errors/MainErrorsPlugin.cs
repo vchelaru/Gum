@@ -1,3 +1,4 @@
+using Gum.Diagnostics;
 using CommunityToolkit.Mvvm.Messaging;
 using Gum.Commands;
 using Gum.DataTypes;
@@ -243,6 +244,7 @@ public class MainErrorsPlugin : CorePriorityPlugin
 
     private void UpdateErrorsForElement(ElementSave? element)
     {
+        using ToolLog.Scope log = ToolLog.Begin("UpdateErrorsForElement");
         _viewModel.Errors.Clear();
 
         // Nothing to check before a project is loaded.

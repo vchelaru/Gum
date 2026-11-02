@@ -1,4 +1,5 @@
-﻿using Gum.Commands;
+﻿using Gum.Diagnostics;
+using Gum.Commands;
 using Gum.Expressions;
 using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
@@ -507,7 +508,11 @@ public class VariableReferenceLogic : IVariableReferenceLogic
 
             if (newDirectValue != null)
             {
-                var failures = GetIndividualFailures(parentElement, leftSideInstance, newDirectValue, liveRoot);
+                List<(string, GeneralResponse)> failures;
+                using (ToolLog.Begin("GetIndividualFailures", count: newDirectValue.ValueAsIList?.Count ?? 0))
+                {
+                    failures = GetIndividualFailures(parentElement, leftSideInstance, newDirectValue, liveRoot);
+                }
 
                 if (failures.Count > 0)
                 {
@@ -538,7 +543,10 @@ public class VariableReferenceLogic : IVariableReferenceLogic
         {
             valuesBefore[variable.Name] = variable.Value;
         }
-        ElementSaveExtensions.ApplyVariableReferences(parentElement, stateSave, liveRoot, isFullCommit);
+        using (ToolLog.Begin("ApplyVariableReferences(state)", count: stateSave.Variables.Count))
+        {
+            ElementSaveExtensions.ApplyVariableReferences(parentElement, stateSave, liveRoot, isFullCommit);
+        }
 
         // Then evaluate any behavior-level ToolOnlyVariableReferences so design-time
         // wireframe preview reflects FormsProperty values (e.g. IsEnabled = false →
@@ -563,11 +571,17 @@ public class VariableReferenceLogic : IVariableReferenceLogic
                 changedNames.Add(variable.Name);
             }
         }
-        ApplyOtherStatesReading(parentElement, stateSave, changedNames, liveRoot, isFullCommit);
+        using (ToolLog.Begin("ApplyOtherStatesReading", count: changedNames.Count))
+        {
+            ApplyOtherStatesReading(parentElement, stateSave, changedNames, liveRoot, isFullCommit);
+        }
 
         if (unqualifiedMember == "VariableReferences")
         {
-            _guiCommands.RefreshVariableValues();
+            using (ToolLog.Begin("RefreshVariableValues"))
+            {
+                _guiCommands.RefreshVariableValues();
+            }
         }
 
         if (!isWide)
@@ -575,7 +589,10 @@ public class VariableReferenceLogic : IVariableReferenceLogic
             return;
         }
 
-        ApplyReferencesToElement(parentElement, trySave, isFullCommit);
+        using (ToolLog.Begin("ApplyReferencesToElement", count: parentElement.Instances.Count))
+        {
+            ApplyReferencesToElement(parentElement, trySave, isFullCommit);
+        }
 
         var newValue = stateSave.GetValueRecursive(qualifiedName);
 
@@ -592,7 +609,10 @@ public class VariableReferenceLogic : IVariableReferenceLogic
         // then we forcefully change the values here.
         if (didSetDeepReference)
         {
-            _wireframeCommands.Refresh(forceLayout: true);
+            using (ToolLog.Begin("WireframeRefresh(forceLayout)"))
+            {
+                _wireframeCommands.Refresh(forceLayout: true);
+            }
         }
     }
 
@@ -1073,7 +1093,10 @@ public class VariableReferenceLogic : IVariableReferenceLogic
 
         if (didChange)
         {
-            _guiCommands.RefreshVariables(force: true);
+            using (ToolLog.Begin("RefreshVariables(force) after line expansion"))
+            {
+                _guiCommands.RefreshVariables(force: true);
+            }
         }
     }
 

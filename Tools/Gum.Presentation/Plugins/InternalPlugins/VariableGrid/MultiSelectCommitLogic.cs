@@ -1,3 +1,4 @@
+using Gum.Diagnostics;
 using Gum.Commands;
 using Gum.PropertyGridHelpers;
 using Gum.Undo;
@@ -50,8 +51,10 @@ public class MultiSelectCommitLogic : IMultiSelectCommitLogic
         IDisposable? pluginBatch = null;
         IDisposable? saveBatch = null;
 
+        ToolLog.Scope commitLog = default;
         member.BeforeMultiSet += (args) =>
         {
+            commitLog = ToolLog.Begin("MultiSelectCommit", count: member.InstanceMembers.Count(), detail: args.CommitType.ToString());
             // Only lock for Full commits to avoid locking during intermediate changes (like dragging sliders)
             if (args.CommitType == SetPropertyCommitType.Full)
             {
@@ -71,6 +74,8 @@ public class MultiSelectCommitLogic : IMultiSelectCommitLogic
             saveBatch = null;
             undoLock?.Dispose();
             undoLock = null;
+            commitLog.Dispose();
+            commitLog = default;
 
             if (args.CommitType != SetPropertyCommitType.Full)
             {
@@ -78,7 +83,10 @@ public class MultiSelectCommitLogic : IMultiSelectCommitLogic
             }
 
             // Record undo after all values have been set
-            _undoManager.RecordUndo();
+            using (ToolLog.Begin("RecordUndo"))
+            {
+                _undoManager.RecordUndo();
+            }
 
             // Every row shares the root variable and the containing element, so the first row
             // decides whether the batch needs a tree/grid rebuild.

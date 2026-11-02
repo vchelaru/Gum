@@ -190,6 +190,11 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
                 finally
                 {
                     sw.Stop();
+                    // Only callbacks that took time: most of the hundreds of broadcasts per edit are free.
+                    if (ToolLog.IsEnabled && sw.ElapsedMilliseconds >= 1)
+                    {
+                        ToolLog.Write("plugin " + methodName, detail: plugin.FriendlyName + " " + sw.Elapsed.TotalMilliseconds.ToString("F1") + "ms");
+                    }
                     // Surface slow plugin callbacks (>50ms) so startup/load
                     // hot spots are visible without flooding output.
                     if (sw.ElapsedMilliseconds > 50)
@@ -365,6 +370,8 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
         CallMethodOnPlugin(plugin => plugin.CallVariableDelete(elementSave, variableName));
 
     private HashSet<ElementSave?>? _variableSetBatchElements;
+
+    public bool IsInVariableSetBatch => _variableSetBatchElements != null;
 
     public IDisposable BeginVariableSetBatch()
     {

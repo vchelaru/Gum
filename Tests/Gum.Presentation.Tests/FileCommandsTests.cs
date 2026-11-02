@@ -320,7 +320,7 @@ public class FileCommandsTests : BaseTestClass
         {
             for (int i = 0; i < 5; i++)
             {
-                button.DefaultState.SetValue($"Sprite{i}.X", 10f * i, "float");
+                button.DefaultState!.SetValue($"Sprite{i}.X", 10f * i, "float");
                 _fileCommands.TryAutoSaveElement(button);
             }
 
