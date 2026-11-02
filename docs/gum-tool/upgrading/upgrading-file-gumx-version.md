@@ -158,7 +158,7 @@ New projects created with the 2026 November tool (or later) are stamped Version 
 
 **Required Gum Tool Version**: 2026 December (or later)
 
-This version unlocks the `Raise Children Events Outside Of Bounds` variable in the **Behavior** category of the standard elements that have children events. When it is true, children placed outside the object's bounds, such as the resize borders of a Window, still receive the cursor. The tool only shows and back-fills it for projects at version 8 or later.
+This version unlocks the `Raise Children Events Outside Of Bounds` variable in the **Behavior** category of the standard elements that have children events. When it is true, children placed outside the object's bounds, such as the resize borders of a Window, still receive the cursor. The tool only back-fills it into the standard elements of projects at version 8 or later.
 
 ✅No manual changes are needed to your project beyond changing the version number.
 
