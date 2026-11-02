@@ -1,6 +1,8 @@
+using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using RenderingLibrary.Graphics;
 using System;
+using System.Collections.Generic;
 
 namespace Gum.Plugins.InternalPlugins.VariableGrid;
 
@@ -15,6 +17,8 @@ public sealed class ShaderParameterVariableBinding
 {
     private readonly ShaderParameterInfo _info;
     private readonly string _legacyTextVariableName;
+    private readonly int _componentIndex;
+    private readonly Func<int, string>? _getComponentVariableName;
 
     /// <param name="info">The parameter as the compiled shader declares it; must be a single value.</param>
     /// <param name="legacyTextVariableName">The instance qualified name of the <c>ShaderParameters</c> text variable.</param>
@@ -22,11 +26,33 @@ public sealed class ShaderParameterVariableBinding
     {
         _info = info;
         _legacyTextVariableName = legacyTextVariableName;
+        _componentIndex = -1;
         Marker = new ShaderParameterMarker(info.Name);
+    }
+
+    /// <summary>
+    /// Binds the row of one component of a float vector parameter. Each component is its own saved variable
+    /// (<c>Icon.Outline_Tint__X</c>), but the runtime needs the whole vector, so writing one component saves all of them.
+    /// </summary>
+    /// <param name="info">The parameter as the compiled shader declares it; a float with 2 to 4 components.</param>
+    /// <param name="legacyTextVariableName">The instance qualified name of the <c>ShaderParameters</c> text variable.</param>
+    /// <param name="componentIndex">The zero based component this row edits.</param>
+    /// <param name="getComponentVariableName">The instance qualified variable name of a component, given its index.</param>
+    public ShaderParameterVariableBinding(
+        ShaderParameterInfo info, string legacyTextVariableName, int componentIndex, Func<int, string> getComponentVariableName)
+    {
+        _info = info;
+        _legacyTextVariableName = legacyTextVariableName;
+        _componentIndex = componentIndex;
+        _getComponentVariableName = getComponentVariableName;
+        Marker = new ShaderParameterMarker(info.Name, componentIndex, info.Count);
     }
 
     /// <summary>The marker whose <c>Format()</c> is saved in <c>VariableSave.ShaderParameter</c>.</summary>
     public ShaderParameterMarker Marker { get; }
+
+    /// <summary>Whether this row edits one component of a vector parameter.</summary>
+    public bool IsComponent => _componentIndex >= 0;
 
     /// <summary>The Gum variable type name (<c>float</c>, <c>int</c> or <c>bool</c>).</summary>
     public string VariableType => _info.Kind switch
@@ -47,8 +73,86 @@ public sealed class ShaderParameterVariableBinding
     /// <summary>The value the row shows when nothing is saved: the legacy text entry, else the compiled default.</summary>
     public object? GetFallbackValue(StateSave state)
     {
-        object? legacy = GetLegacyValue(state);
-        return legacy ?? ShaderParameterRows.ToDisplayValue(_info.Kind, _info.DefaultValue.X);
+        object? legacy = GetLegacyValue(state, Math.Max(_componentIndex, 0));
+        return legacy ?? GetDefaultValue(Math.Max(_componentIndex, 0));
+    }
+
+    private object GetDefaultValue(int componentIndex) =>
+        ShaderParameterRows.ToDisplayValue(_info.Kind, ShaderParameterRows.GetComponent(_info.DefaultValue, componentIndex));
+
+    /// <summary>
+    /// Saves the components of this vector parameter that <paramref name="state"/> does not set yet, each with the value it
+    /// shows now (an inherited value, else the legacy text, else the compiled default), so the runtime gets a complete vector.
+    /// Call it before the legacy text entry is removed. A scalar binding does nothing.
+    /// </summary>
+    /// <param name="state">The state the components are saved on.</param>
+    /// <param name="instance">The instance that owns the shader.</param>
+    /// <param name="includeThisComponent">False when the row's own component was just written.</param>
+    /// <returns>The variables it wrote, with the value of each.</returns>
+    public List<(VariableSave Variable, object Value)> PinComponents(StateSave state, InstanceSave? instance, bool includeThisComponent)
+    {
+        List<(VariableSave Variable, object Value)> pinned = new List<(VariableSave Variable, object Value)>();
+        if (!IsComponent)
+        {
+            return pinned;
+        }
+
+        for (int i = 0; i < _info.Count; i++)
+        {
+            if (i == _componentIndex && !includeThisComponent)
+            {
+                continue;
+            }
+
+            string name = _getComponentVariableName!(i);
+            VariableSave? existing = state.GetVariableSave(name);
+            if (existing != null && existing.SetsValue && existing.Value != null)
+            {
+                continue;
+            }
+
+            object value = state.GetValueRecursive(name) ?? GetLegacyValue(state, i) ?? GetDefaultValue(i);
+            state.SetValue(name, value, instance, VariableType);
+            VariableSave written = state.GetVariableSave(name)!;
+            ShaderParameterMarker componentMarker = new ShaderParameterMarker(_info.Name, i, _info.Count);
+            written.ShaderParameter = componentMarker.Format();
+            pinned.Add((written, value));
+        }
+        return pinned;
+    }
+
+    /// <summary>
+    /// Removes the other components of this vector parameter from <paramref name="state"/>, as Make Default on one component
+    /// resets them all; a component that is exposed keeps its entry but loses its value. True when anything changed.
+    /// </summary>
+    public bool ResetOtherComponents(StateSave state)
+    {
+        bool changed = false;
+        if (!IsComponent)
+        {
+            return changed;
+        }
+
+        for (int i = 0; i < _info.Count; i++)
+        {
+            VariableSave? other = i == _componentIndex ? null : state.GetVariableSave(_getComponentVariableName!(i));
+            if (other == null)
+            {
+                continue;
+            }
+
+            if (string.IsNullOrEmpty(other.ExposedAsName))
+            {
+                state.Variables.Remove(other);
+            }
+            else
+            {
+                other.Value = null;
+                other.SetsValue = false;
+            }
+            changed = true;
+        }
+        return changed;
     }
 
     /// <summary>Converts an edited value to the CLR type of the row; false when it cannot be converted.</summary>
@@ -124,14 +228,14 @@ public sealed class ShaderParameterVariableBinding
         return true;
     }
 
-    private object? GetLegacyValue(StateSave state)
+    private object? GetLegacyValue(StateSave state, int componentIndex)
     {
         ShaderParameterCollection collection = ShaderParameterText.Parse(state.GetValueRecursive(_legacyTextVariableName) as string, null);
         if (!collection.TryGetValue(_info.Name, out ShaderParameterValue stored))
         {
             return null;
         }
-        return ShaderParameterRows.ToDisplayValue(_info.Kind, stored.X);
+        return ShaderParameterRows.ToDisplayValue(_info.Kind, ShaderParameterRows.GetComponent(stored, componentIndex));
     }
 
     private ShaderParameterCollection? GetLegacyCollection(StateSave state)
