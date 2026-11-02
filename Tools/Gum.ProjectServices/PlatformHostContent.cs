@@ -15,9 +15,12 @@ internal static class PlatformHostContent
     // after Gum's own Initialize. GraphicsDevice is the Game's property in the MonoGame and KNI Game1.
     private static readonly Dictionary<string, string> InitLineByPackage = new Dictionary<string, string>
     {
-        // Kept for the November stable; no table row adds it until then.
         ["Gum.Shapes.MonoGame"] = "Gum.Renderables.ShapeRenderer.Self.Initialize();",
         ["Gum.Shapes.KNI"] = "Gum.Renderables.ShapeRenderer.Self.Initialize();",
+        ["Gum.MonoGame.ShadowDusk"] = "GumService.Default.UseShadowDusk();",
+        ["Gum.KNI.ShadowDusk"] = "GumService.Default.UseShadowDusk();",
+        ["Gum.raylib.ShadowDusk"] = "GumService.Default.UseShadowDusk();",
+        ["Gum.SkiaSharp.ShadowDusk"] = "GumService.Default.UseShadowDusk();",
         ["KernSmith.MonoGameGum"] =
             "Gum.Wireframe.CustomSetPropertyOnRenderable.InMemoryFontCreator = new KernSmith.Gum.KernSmithFontCreator(GraphicsDevice);",
         ["KernSmith.KniGum"] =
