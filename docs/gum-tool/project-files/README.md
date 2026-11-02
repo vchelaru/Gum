@@ -287,7 +287,7 @@ A variable such as `Label.NotAVariable` sets a property on the instance `Label`,
 `gumcli check` does not report category selectors for categories the type no longer has, variables Standard elements used to have (such as `DropshadowBlurX`), or any variable on an instance of a component that has a Forms behavior, since its Forms control can receive variables that no variable list names.
 
 {% hint style="info" %}
-Available in December 2026, or now if building Gum from source.
+Available in November 2026, or now if building Gum from source.
 {% endhint %}
 
 ## Version Control (.gitignore)
