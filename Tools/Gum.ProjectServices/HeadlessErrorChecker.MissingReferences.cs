@@ -57,6 +57,8 @@ public partial class HeadlessErrorChecker
     //  - category selectors ("SizeCategoryState"): a selector for a category the type lacks is a no-op at runtime
     //    and the tool keeps it when the category is deleted;
     //  - Standard variables older tools wrote and current ones no longer define (see RemovedStandardVariableNames);
+    //  - variables of another Standard type: what the tool keeps when an instance's base type changes (Text to
+    //    Container keeps Text and FontSize), also through a variable the instance's component exposes;
     //  - instances of a component with a Forms behavior: its Forms control receives variables (IsChecked,
     //    Orientation) that no variable list names.
     private List<ErrorResult> GetUnknownInstanceVariableErrorsFor(ElementSave element)
@@ -124,12 +126,50 @@ public partial class HeadlessErrorChecker
         {
             return "removed Standard variable";
         }
+        if (IsDefinedByAStandardElement(ResolveExposedLeafName(instanceType, rootName)))
+        {
+            return "left over from another base type";
+        }
         if (SelfAndBaseElements(instanceType).Any(inChain => inChain.Behaviors.Count > 0))
         {
             return "Forms behavior";
         }
         return null;
     }
+
+    // Follows exposed variables ("CaptionText" exposing "Caption.Text") down to the final variable name ("Text").
+    private static string ResolveExposedLeafName(ElementSave element, string name)
+    {
+        // The depth cap stops a hand-edited file where two variables expose each other.
+        for (int depth = 0; depth < 16; depth++)
+        {
+            VariableSave? exposed = FindExposedVariable(element, name);
+            if (exposed == null || exposed.Name == name)
+            {
+                break;
+            }
+            name = exposed.Name;
+            int dot = name.IndexOf('.');
+            if (dot < 0)
+            {
+                break;
+            }
+            InstanceSave? instance = FindInstanceInInheritance(element, name.Substring(0, dot));
+            ElementSave? instanceType = instance == null ? null : ObjectFinder.Self.GetElementSave(instance.BaseType);
+            if (instanceType == null)
+            {
+                break;
+            }
+            element = instanceType;
+            name = name.Substring(dot + 1);
+        }
+        int lastDot = name.LastIndexOf('.');
+        return lastDot < 0 ? name : name.Substring(lastDot + 1);
+    }
+
+    private static bool IsDefinedByAStandardElement(string variableName) =>
+        StandardElementsManager.Self.DefaultStates?.Values
+            .Any(state => state.Variables.Any(variable => variable.Name == variableName)) == true;
 
     #endregion
 
