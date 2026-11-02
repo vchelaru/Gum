@@ -128,8 +128,8 @@ public class HeadProcessTests
     }
 
     // Taskbar tools that close windows (7+ Taskbar Tweaker's middle-click Close) post SC_CLOSE only
-    // when Close is enabled in the window's system menu, and Avalonia greys it for a window that draws
-    // into its title bar, again on every maximize and restore (#7499).
+    // when Close is enabled in the window's system menu. Avalonia releases before
+    // AvaloniaUI/Avalonia#21630 greyed it for a window that draws into its title bar (#7499).
     [SkippableFact]
     [System.Runtime.Versioning.SupportedOSPlatform("windows")]
     public async Task MainWindow_SystemMenuClose_StaysEnabledAndClosesTheWindow()
