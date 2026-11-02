@@ -260,6 +260,15 @@
     <Name>ExpanderCategory</Name>
     <State>
       <Name>Collapsed</Name>
+      <Variable Type="int" Name="ArrowIndicator.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="ArrowIndicator.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">250</Value>
+      </Variable>
+      <Variable Type="int" Name="ArrowIndicator.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">200</Value>
+      </Variable>
       <Variable Type="string" Name="ArrowIndicator.Text" SetsValue="true">
         <Value xsi:type="xsd:string">+</Value>
       </Variable>
@@ -273,15 +282,6 @@
         <Value xsi:type="xsd:int">250</Value>
       </Variable>
       <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
-        <Value xsi:type="xsd:int">200</Value>
-      </Variable>
-      <Variable Type="int" Name="ArrowIndicator.Blue" SetsValue="true">
-        <Value xsi:type="xsd:int">255</Value>
-      </Variable>
-      <Variable Type="int" Name="ArrowIndicator.Green" SetsValue="true">
-        <Value xsi:type="xsd:int">250</Value>
-      </Variable>
-      <Variable Type="int" Name="ArrowIndicator.Red" SetsValue="true">
         <Value xsi:type="xsd:int">200</Value>
       </Variable>
       <VariableList xsi:type="VariableListSaveOfString">
@@ -307,6 +307,15 @@
     </State>
     <State>
       <Name>Expanded</Name>
+      <Variable Type="int" Name="ArrowIndicator.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="ArrowIndicator.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">250</Value>
+      </Variable>
+      <Variable Type="int" Name="ArrowIndicator.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">200</Value>
+      </Variable>
       <Variable Type="string" Name="ArrowIndicator.Text" SetsValue="true">
         <Value xsi:type="xsd:string">-</Value>
       </Variable>
@@ -320,15 +329,6 @@
         <Value xsi:type="xsd:int">250</Value>
       </Variable>
       <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
-        <Value xsi:type="xsd:int">200</Value>
-      </Variable>
-      <Variable Type="int" Name="ArrowIndicator.Blue" SetsValue="true">
-        <Value xsi:type="xsd:int">255</Value>
-      </Variable>
-      <Variable Type="int" Name="ArrowIndicator.Green" SetsValue="true">
-        <Value xsi:type="xsd:int">250</Value>
-      </Variable>
-      <Variable Type="int" Name="ArrowIndicator.Red" SetsValue="true">
         <Value xsi:type="xsd:int">200</Value>
       </Variable>
       <VariableList xsi:type="VariableListSaveOfString">
