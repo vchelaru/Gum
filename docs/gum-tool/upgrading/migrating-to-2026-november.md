@@ -184,17 +184,6 @@ public string Name
 }
 ```
 
-### Code Generation Updates Legacy Using Statements
-
-Code generation now rewrites old namespaces in the **Project-wide Using Statements** and an element's **Using Statements** when it writes generated files, based on the project's [syntax version](syntax-versions.md):
-
-| Saved line | Generated line | From syntax version |
-|---|---|---|
-| `using MonoGameGum.GueDeriving;` or `using SkiaGum.GueDeriving;` | `using Gum.GueDeriving;` | 1 |
-| `using MonoGameGum;` | `using Gum;` | 3 |
-
-A rewritten line is dropped if the list already imports that namespace. Saved settings are unchanged. Regenerate your code, and edit the **Code** tab if you also want the old names gone from your settings.
-
 ### Obsolete Shims Are Removed No Earlier Than November 2027
 
 Unless a row says otherwise, each shim is a `CS0618` warning today, becomes `[Obsolete(error: true)]` no earlier than May 2027, and is removed no earlier than November 2027. Gum announces the actual release in that month's migration page.
@@ -274,12 +263,6 @@ GumUI.UseShadowDusk();
 ### Generated Visuals Throw When Their Element Is Not Loaded
 
 At [syntax version 7](syntax-versions.md), a generated MonoGame, raylib, or Silk.NET runtime class throws from its constructor when the loaded project has no element by its name. Before, it created an empty visual. This matters if you create generated visuals before loading the Gum project, such as in unit tests. Load the project first.
-
-### References That Cannot Be Applied Are Reported
-
-A reference whose result does not fit the variable on the left is now reported, and the variable keeps its value. This covers `NaN` or infinity into a `float` or `double`, and with `Gum.Expressions` a `bool` or text into a number, or a number outside the range of an `int`. `MinWidth`, `MaxWidth`, `MinHeight` and `MaxHeight` are the exception: `NaN` or infinity now means no limit.
-
-See [Casting and Type Considerations](../../code/styling/runtime-variable-references.md#casting-and-type-considerations).
 
 ## Layout
 
@@ -377,7 +360,7 @@ When the cursor moves straight from one `InteractiveGue` to another, `RollOff` n
 
 ### AnimationChainFinished Replaces AnimationChainCycled at the End of a Non-Looping Chain
 
-`AnimationChainCycled` is now raised only when a looping chain wraps around. A chain that does not loop raises the new `AnimationChainFinished` once at its end, when `Animate` becomes `false`. `SpriteRuntime`, `Sprite`, `NineSlice` and `AnimationChainLogic` all have it. A non-looping chain also stops on its first frame when it plays backward (negative `AnimationChainSpeed`), where before it held the frame and raised nothing.
+`AnimationChainCycled` is now raised only when a looping chain wraps around. A chain that does not loop raises the new `AnimationChainFinished` once at its end, when `Animate` becomes `false`. A non-looping chain also stops on its first frame when it plays backward (negative `AnimationChainSpeed`), where before it held the frame and raised nothing.
 
 If you subscribed to `AnimationChainCycled` on a non-looping chain, such as to remove a sprite after a death animation, subscribe to `AnimationChainFinished` instead.
 
@@ -403,33 +386,15 @@ See [Animation Chains](../../code/files-and-fonts/animation-chains.md#looping-an
 
 Setting `IsFocused` to `true` on a control that is not visible (it or a parent has `IsVisible` set to `false`) now leaves it `false`, the same as a disabled control. Show the control first, then focus it.
 
-❌ Old:
-
-```csharp
-// Initialize
-okButton.IsFocused = true;
-dialog.IsVisible = true;
-```
-
-✅ New:
-
-```csharp
-// Initialize
-dialog.IsVisible = true;
-okButton.IsFocused = true;
-```
-
 ### ListBox Left and Right No Longer Step a Vertical List
 
-When a `ListBox` has item-level focus (`DoListItemsHaveFocus` is `true`), the axis the list does not use now leaves the list, like the perpendicular axis of a `Slider`. Left and right no longer step a vertical list, and up and down no longer step a horizontal one. Focus moves as it does at top-level focus, honoring any `SpatialNavigationLeft`, `SpatialNavigationRight`, `SpatialNavigationUp` or `SpatialNavigationDown` on the `ListBox`, and `SelectedIndex` is kept. Arrow keys on the list's own axis, wrapping lists, and the `ComboBox` drop-down are unchanged.
+When a `ListBox` has item-level focus (`DoListItemsHaveFocus` is `true`), the axis the list does not use now leaves the list, like the perpendicular axis of a `Slider`. Left and right no longer step a vertical list, and up and down no longer step a horizontal one. Focus moves to the neighbor set by `SpatialNavigationLeft`, `SpatialNavigationRight`, `SpatialNavigationUp` or `SpatialNavigationDown` on the `ListBox`, and `SelectedIndex` is kept.
 
 ### raylib and Sokol Repeat Held Keys With Gum's Timing
 
 On raylib and Sokol, held navigation keys (arrows, Backspace, Delete) now repeat after `RepeatDelay` (500 ms) at `RepeatRate` (70 ms), as on the other runtimes, instead of using the operating system's repeat for `KeyTyped` and `KeysTyped`. Typed characters, including Enter in a multi-line `TextBox` on raylib, still use the operating system's repeat.
 
 On Windows and macOS, `Initialize` starts from the system keyboard settings (read once). On macOS they apply only after the user has changed them in System Settings. To use fixed values on every machine, set `RepeatDelay` and `RepeatRate` after `Initialize`.
-
-`IInputReceiverKeyboard` now declares `RepeatDelay` and `RepeatRate` as default members, so existing implementers keep compiling.
 
 ## Forms
 
@@ -453,20 +418,6 @@ New Forms controls added in the tool now get the same step sizes as controls cre
 | `ScrollViewer` | `SmallChange` | 1 | 10 |
 
 If you rely on a step size, set `SmallChange` or `LargeChange` in the **Behavior** category.
-
-### Step Sizes Survive a Visual Swap
-
-Assigning a new Visual to a `ScrollBar`, `ScrollViewer` or `Slider` no longer replaces `SmallChange` and `LargeChange`. A value set in code, authored on the Visual, or applied from a behavior is kept, and `LargeChange` on a `ScrollBar` and `ScrollViewer` has no default, so it follows the viewport until you assign it. A project from before this version still declares a `LargeChange` of 10 on its scroll controls, and that value now stays at 10. Set the step sizes you want after assigning the Visual. See [Properties Set by Forms Controls](../../code/styling/properties-set-by-forms-controls.md#scroll-step-sizes-survive-a-visual-swap).
-
-### ScrollBar Orientation Is a Behavior Property
-
-A ScrollBar instance now has an `Orientation` setting in the **Behavior** category, and `OrientationCategoryState` is hidden. Before, setting the orientation state in the tool changed the look but the control stayed vertical in your game.
-
-On load, Gum sets `Orientation` to `Horizontal` on any ScrollBar whose default state sets `OrientationCategoryState` to `Horizontal`. You do not need to save again. A project whose `ScrollBarBehavior` lacks the `Orientation` property is not migrated. Open the project in the tool and check that your horizontal bars show `Horizontal`. See [Behaviors](../gum-elements/behaviors/README.md#scrollbar-orientation).
-
-### Hot Reload Keeps Values Your Code Set
-
-A [hot reload](../../code/debugging/hot-reload.md) now applies only the variables the project changed. Before, it applied the whole default state of a component instance, so a `Width` your code set on a tool-authored `Button` went back to the component's value on every reload. If your game relied on a reload resetting a code-set value, set it again in `HotReloadCompleted` or change the variable in the Gum project.
 
 ## Rendering and Defaults
 
@@ -509,11 +460,7 @@ circle.FillColor = SkiaSharp.SKColors.Red;
 
 ### Raylib TTF Text Draws at Its FontSize
 
-On Raylib, text using a `.ttf` font without an `InMemoryFontCreator` such as KernSmith now draws with its em equal to `FontSize`, as on MonoGame and Skia. Before, Gum loaded these fonts at a fixed size of 24. Most `.ttf` text now draws larger, and text with a `FontSize` other than 24 changes size. KernSmith and `.fnt` text is unchanged. Run your game and lower `FontSize` where text is now too large.
-
-### Styled Text Reports Its Drawn Height
-
-Styled text that combines a [FontScale] or [FontSize] run with a `LineHeightMultiplier` other than 1 now reports its drawn height. On MonoGame, KNI, FNA and Raylib it gets shorter with a multiplier above 1 and taller below 1. On Skia, lines with a size run use the same spacing at any multiplier, a trailing newline adds its empty line to the height, and text without a size or font run measures exactly `LineHeightMultiplier` times its line height. Anything laid out around such text can shift.
+On Raylib, text using a `.ttf` font without an `InMemoryFontCreator` such as KernSmith now draws with its em equal to `FontSize`, as on MonoGame and Skia. Before, Gum loaded these fonts at a fixed size of 24. Most `.ttf` text now draws larger. Lower `FontSize` where it is too large.
 
 ### Skia Render Target Shaders Read SpriteTexture
 
@@ -570,4 +517,3 @@ If you define `GUM_NO_UNITY_ENGINE` (for an assembly with **No Engine References
 
 `KernSmith.MonoGameGum` no longer brings in `MonoGame.Framework.DesktopGL`. If your app got MonoGame only through this package, add the MonoGame package for your platform.
 
-`KernSmith.GumCommon` and `KernSmith.MonoGameGum` also add iOS and Android builds, which use the `StbTrueType` rasterizer by default. Pass a backend to `GumFontGenerator` to choose another. To include the mobile builds when building from source, pass `-p:IncludeIOS=true` or `-p:IncludeAndroid=true`.
