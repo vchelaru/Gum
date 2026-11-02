@@ -935,6 +935,17 @@ public class VariableReferenceLogicTests : BaseTestClass
         shownMessage.ShouldNotContain("divides by zero");
     }
 
+    [Fact]
+    public void DoVariableReferenceReaction_GuardedDivisorWithOtherFailure_KeepsGenericMessage()
+    {
+        string? shownMessage = ReactToLineAndGetShownMessage("Width = (Zero > 0 ? 5 / Zero : 1) + Missing", out VariableListSave<string> varList);
+
+        varList.Value[0].ShouldStartWith("//");
+        shownMessage.ShouldNotBeNull();
+        shownMessage.ShouldContain("cannot be evaluated");
+        shownMessage.ShouldNotContain("divides by zero");
+    }
+
     private string? ReactToLineAndGetShownMessage(string line, out VariableListSave<string> varList)
     {
         GumExpressionService.Initialize();
