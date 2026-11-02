@@ -1,6 +1,9 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using Gum;
+using Gum.Forms.Controls;
+using Gum.Forms;
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using Gum.Managers;
@@ -33,6 +36,8 @@ public class Game1 : Game
     private readonly string? _focusName;
     private readonly string? _typedText;
     private readonly bool _selectAll;
+    private readonly PreviewDebugLog? _debugLog;
+    private IInputReceiver? _loggedFocus;
 
     private readonly PreviewReloadPolicy _reloadPolicy = new PreviewReloadPolicy();
     private readonly PreviewCanvasSize _canvasSize = new PreviewCanvasSize();
@@ -40,6 +45,8 @@ public class Game1 : Game
     private DateTime _lastSelectionFileWriteTimeUtc;
     private double _secondsSinceLastSelectionPoll;
     private bool _isElementMissing;
+    private string? _loadError;
+    private readonly PreviewFailureLog _failureLog = new PreviewFailureLog();
     private bool _isRetinaBackingEnabled;
     private BackingScale _backingScale;
 
@@ -58,8 +65,10 @@ public class Game1 : Game
     /// <param name="focusName">A Forms control in the shown element to focus once it loads.</param>
     /// <param name="typedText">With <paramref name="focusName"/>, text typed into that text box.</param>
     public Game1(string gumxPath, string elementName, string? selectionFilePath, string? contentRootDirectory = null,
-        UnattendedPreviewRun? unattended = null, string? screenshotPath = null, string? focusName = null, string? typedText = null, bool selectAll = false)
+        UnattendedPreviewRun? unattended = null, string? screenshotPath = null, string? focusName = null, string? typedText = null, bool selectAll = false,
+        PreviewDebugLog? debugLog = null)
     {
+        _debugLog = debugLog;
         _focusName = focusName;
         _typedText = typedText;
         _selectAll = selectAll;
@@ -97,6 +106,57 @@ public class Game1 : Game
     }
 
     protected override void Initialize()
+    {
+        string? interactionError;
+        try
+        {
+            interactionError = LoadProject();
+        }
+        catch (Exception exception)
+        {
+            // A missing or malformed project. Unattended, that is a failed run; attended, the window
+            // stays up with the reason in its title, because the tool launches it with no console.
+            string message = PreviewFailureLog.LoadMessage(_gumxPath, exception);
+            _loadError = message;
+            _debugLog?.LogException("load", exception);
+            UnattendedExitCode = 1;
+            Window.Title = PreviewWindowTitle.ForLoadFailure(message);
+            if (_unattended != null)
+            {
+                FailUnattended(_unattended.TryFail(message.TrimEnd('.') + "."));
+            }
+            else
+            {
+                Console.Error.WriteLine($"GumPreview: {message}");
+            }
+            base.Initialize();
+            return;
+        }
+
+        if (_unattended != null)
+        {
+            if (_isElementMissing)
+            {
+                FailUnattended(_unattended.TryFail("the element to show was not found."));
+            }
+            else if (interactionError != null)
+            {
+                FailUnattended(_unattended.TryFail(interactionError));
+            }
+            else
+            {
+                _unattended.MarkLoaded();
+            }
+        }
+        else if (interactionError != null)
+        {
+            Console.Error.WriteLine($"GumPreview: {interactionError}");
+        }
+
+        base.Initialize();
+    }
+
+    private string? LoadProject()
     {
         KeepWindowOffScreen();
         GumService.Default.Initialize(this, _gumxPath);
@@ -144,37 +204,24 @@ public class Game1 : Game
         }
         ApplySiblingOrdering();
         ShowElement();
-        string? interactionError = ApplyInteraction();
-
-        if (_unattended != null)
-        {
-            if (_isElementMissing)
-            {
-                FailUnattended(_unattended.TryFail("the element to show was not found."));
-            }
-            else if (interactionError != null)
-            {
-                FailUnattended(_unattended.TryFail(interactionError));
-            }
-            else
-            {
-                _unattended.MarkLoaded();
-            }
-        }
-        else if (interactionError != null)
-        {
-            Console.Error.WriteLine($"GumPreview: {interactionError}");
-        }
-
-        base.Initialize();
+        return ApplyInteraction();
     }
 
     protected override void Update(GameTime gameTime)
     {
         KeepWindowOffScreen();
+        if (_loadError != null)
+        {
+            base.Update(gameTime);
+            return;
+        }
         UpdateBackingScale();
         ApplyCanvasSizeIfChanged(isWindowShown: true);
         RebuildAfterReloadIfNeeded();
+        if (_debugLog != null)
+        {
+            LogInput(_debugLog);
+        }
         GumService.Default.Update(gameTime);
         PollSelectionFile(gameTime);
         base.Update(gameTime);
@@ -182,6 +229,14 @@ public class Game1 : Game
 
     protected override void Draw(GameTime gameTime)
     {
+        if (_loadError != null)
+        {
+            // Nothing loaded to draw; a dark red window with the reason in its title.
+            GraphicsDevice.Clear(new Color(96, 16, 16));
+            base.Draw(gameTime);
+            return;
+        }
+
         if (_unattended != null && _unattended.TryClaimCapture())
         {
             FinishUnattended();
@@ -191,6 +246,39 @@ public class Game1 : Game
         GumService.Default.Draw();
         base.Draw(gameTime);
     }
+
+    // Only runs with --log. Focus is read before Update, so a focus change shows up the frame after
+    // the click or key that caused it; keys are the ones Update is about to forward to that control.
+    private void LogInput(PreviewDebugLog log)
+    {
+        IInputReceiver? focus = InteractiveGue.CurrentInputReceiver;
+        if (!ReferenceEquals(focus, _loggedFocus))
+        {
+            _loggedFocus = focus;
+            log.LogFocus(DescribeControl(focus));
+        }
+
+        Keyboard keyboard = GumService.Default.Keyboard;
+        IReadOnlyCollection<Microsoft.Xna.Framework.Input.Keys> typed = keyboard.KeysTyped;
+        if (typed.Count == 0)
+        {
+            return;
+        }
+
+        List<string> keys = new List<string>(typed.Count);
+        foreach (Microsoft.Xna.Framework.Input.Keys key in typed)
+        {
+            keys.Add(key.ToString());
+        }
+        if (keys.Count > 0)
+        {
+            string modifiers = $"{(keyboard.IsCtrlDown ? "Ctrl" : "")}{(keyboard.IsShiftDown ? "Shift" : "")}{(keyboard.IsAltDown ? "Alt" : "")}";
+            log.LogKeys(keys, modifiers.Length == 0 ? "none" : modifiers, DescribeControl(focus));
+        }
+    }
+
+    private static string? DescribeControl(IInputReceiver? receiver) =>
+        receiver == null ? null : $"{receiver.GetType().Name} '{(receiver as FrameworkElement)?.Visual?.Name}'";
 
     // Runs once at startup for --focus/--type; a later selection change shows a fresh element.
     private string? ApplyInteraction()
@@ -325,7 +413,8 @@ public class Game1 : Game
         ApplySiblingOrdering();
         if (selectionChanged)
         {
-            ShowElement();
+            // A throwing build must not escape Update; the last good frame stays, reported once.
+            _failureLog.TryRun(ShowElement, $"could not show '{_selection.ElementName}'", Console.Error, _debugLog);
         }
     }
 
@@ -449,6 +538,7 @@ public class Game1 : Game
             // next finished reload try again.
             _isElementMissing = true;
             UpdateWindowTitle(missingElement: true);
+            _debugLog?.LogException("rebuild after a reload", exception);
             Console.Error.WriteLine($"GumPreview: could not rebuild '{_selection.ElementName}' after a reload: {exception.Message}");
         }
     }
@@ -459,6 +549,7 @@ public class Game1 : Game
     {
         try
         {
+            _debugLog?.LogReload(result);
             _reloadPolicy.OnReloadFinished(result, PreviewReloadPolicy.IsStateSelected(_selection), _isElementMissing);
         }
         catch (Exception exception)

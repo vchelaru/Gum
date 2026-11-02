@@ -185,13 +185,13 @@ public class NewProjectPackageChannelDialogTests
     }
 
     [Fact]
-    public void PreviewAddsThePreviewPackages_AndLocalSourceLinksProjectsInstead()
+    public void StableAndPreview_BothAddTheRecommendedPackages()
     {
         string stable = Create().CommandLine;
         string preview = Create(vm => vm.IsPreviewChannelChecked = true).CommandLine;
 
-        stable.ShouldNotContain("Gum.Shapes.MonoGame");
-        preview.ShouldContain("Gum.Shapes.MonoGame");
+        stable.ShouldContain("package Gum.Shapes.MonoGame");
+        preview.ShouldContain("package Gum.Shapes.MonoGame");
     }
 
     #endregion

@@ -52,7 +52,11 @@ public class AvaloniaGuiCommands : IGuiCommands
     public void RefreshVariables(bool force = false) => _pluginManager.RefreshVariableView(force);
 
     /// <inheritdoc/>
-    public void RefreshVariableValues() => _lazyPropertyGridManager.Value.RefreshVariablesDataGridValues();
+    public void RefreshVariableValues()
+    {
+        using Gum.Diagnostics.ToolLog.Scope log = Gum.Diagnostics.ToolLog.Begin("RefreshVariableValues (grid)");
+        _lazyPropertyGridManager.Value.RefreshVariablesDataGridValues();
+    }
 
     /// <inheritdoc/>
     public void RefreshElementTreeView() => _pluginManager.RefreshElementTreeView();

@@ -127,7 +127,98 @@ public class HeadProcessTests
         run.Errors.ShouldContain("maximum Texture2D size of 8192");
     }
 
-    private static async Task<HeadRun> RunHead(params string[] arguments)
+    // Taskbar tools that close windows (7+ Taskbar Tweaker's middle-click Close) post SC_CLOSE only
+    // when Close is enabled in the window's system menu, and Avalonia greys it for a window that draws
+    // into its title bar, again on every maximize and restore (#7499).
+    [SkippableFact]
+    [System.Runtime.Versioning.SupportedOSPlatform("windows")]
+    public async Task MainWindow_SystemMenuClose_StaysEnabledAndClosesTheWindow()
+    {
+        Skip.IfNot(OperatingSystem.IsWindows(), "the system menu is Windows-only");
+        Skip.IfNot(CanRunTheHead, SkipReason);
+        using ScratchProject scratch = ScratchProject.Create();
+
+        // No --exit-after: an unattended run exits as soon as the project has loaded.
+        using Process process = Process.Start(HeadStartInfo(scratch.Project, "--user-data", scratch.UserData))!;
+        Task<string> output = process.StandardOutput.ReadToEndAsync();
+        Task<string> errors = process.StandardError.ReadToEndAsync();
+        try
+        {
+            IntPtr window = await WaitForEnabledMainWindow(process);
+            SystemMenu.IsCloseEnabled(window).ShouldBeTrue("Close should be enabled once the window opens");
+
+            SystemMenu.ShowWindow(window, SystemMenu.SW_MAXIMIZE);
+            SystemMenu.IsCloseEnabled(window).ShouldBeTrue("Close should stay enabled after a maximize");
+
+            SystemMenu.ShowWindow(window, SystemMenu.SW_RESTORE);
+            SystemMenu.IsCloseEnabled(window).ShouldBeTrue("Close should stay enabled after a restore");
+
+            SystemMenu.PostMessage(window, SystemMenu.WM_SYSCOMMAND, SystemMenu.SC_CLOSE, IntPtr.Zero);
+            using CancellationTokenSource timeout = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+            await process.WaitForExitAsync(timeout.Token);
+            process.ExitCode.ShouldBe(0, await errors);
+        }
+        finally
+        {
+            if (!process.HasExited)
+            {
+                process.Kill(entireProcessTree: true);
+            }
+            await output;
+        }
+    }
+
+    [System.Runtime.Versioning.SupportedOSPlatform("windows")]
+    private static async Task<IntPtr> WaitForEnabledMainWindow(Process process)
+    {
+        Stopwatch stopwatch = Stopwatch.StartNew();
+        while (stopwatch.Elapsed < TimeSpan.FromSeconds(90))
+        {
+            process.Refresh();
+            if (process.HasExited)
+            {
+                throw new InvalidOperationException($"The head exited with code {process.ExitCode} before its window opened.");
+            }
+            if (process.MainWindowHandle != IntPtr.Zero && SystemMenu.IsWindowEnabled(process.MainWindowHandle))
+            {
+                return process.MainWindowHandle;
+            }
+            await Task.Delay(250);
+        }
+        throw new TimeoutException("The head's main window did not open within 90 seconds.");
+    }
+
+    [System.Runtime.Versioning.SupportedOSPlatform("windows")]
+    private static class SystemMenu
+    {
+        public const int SW_MAXIMIZE = 3;
+        public const int SW_RESTORE = 9;
+        public const uint WM_SYSCOMMAND = 0x0112;
+        public static readonly IntPtr SC_CLOSE = 0xF060;
+        private const uint MF_BYCOMMAND = 0x0;
+        private const uint MF_GRAYED = 0x1;
+        private const uint MF_DISABLED = 0x2;
+
+        public static bool IsCloseEnabled(IntPtr window) =>
+            (GetMenuState(GetSystemMenu(window, false), (uint)SC_CLOSE, MF_BYCOMMAND) & (MF_GRAYED | MF_DISABLED)) == 0;
+
+        [System.Runtime.InteropServices.DllImport("user32.dll")]
+        public static extern bool ShowWindow(IntPtr window, int command);
+
+        [System.Runtime.InteropServices.DllImport("user32.dll")]
+        public static extern bool PostMessage(IntPtr window, uint message, IntPtr wParam, IntPtr lParam);
+
+        [System.Runtime.InteropServices.DllImport("user32.dll")]
+        public static extern bool IsWindowEnabled(IntPtr window);
+
+        [System.Runtime.InteropServices.DllImport("user32.dll")]
+        private static extern IntPtr GetSystemMenu(IntPtr window, bool revert);
+
+        [System.Runtime.InteropServices.DllImport("user32.dll")]
+        private static extern uint GetMenuState(IntPtr menu, uint id, uint flags);
+    }
+
+    private static ProcessStartInfo HeadStartInfo(params string[] arguments)
     {
         string configuration = new DirectoryInfo(AppContext.BaseDirectory.TrimEnd(Path.DirectorySeparatorChar)).Parent!.Name;
         // The apphost, not "dotnet Gum.dll": no console window per run, and it is what agents launch.
@@ -146,9 +237,13 @@ public class HeadProcessTests
         {
             startInfo.ArgumentList.Add(argument);
         }
+        return startInfo;
+    }
 
+    private static async Task<HeadRun> RunHead(params string[] arguments)
+    {
         Stopwatch stopwatch = Stopwatch.StartNew();
-        using Process process = Process.Start(startInfo)!;
+        using Process process = Process.Start(HeadStartInfo(arguments))!;
         Task<string> output = process.StandardOutput.ReadToEndAsync();
         Task<string> errors = process.StandardError.ReadToEndAsync();
         using CancellationTokenSource timeout = new CancellationTokenSource(TimeSpan.FromMinutes(3));

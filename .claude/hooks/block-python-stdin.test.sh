@@ -38,6 +38,7 @@ check $allowed "pip install" 'pip install -r requirements.txt'
 check $blocked "bare cat > file after cd" 'cd x && cat > /tmp/null 2>&1; node -v'
 check $blocked "bare cat > file at start" 'cat > out.txt'
 check $blocked "bare cat >> file" 'cd x; cat >> out.txt'
+check $blocked "bare cat > var path with stderr redirect, a < later in the command" 'cd x && cat > $TMP/fix.txt 2>/dev/null; sed -i \"64a <Compile Include=a />\" b.csproj'
 check $allowed "cat with heredoc" "cat > out.txt <<'EOF'\nhello\nEOF"
 check $allowed "cat file to file" 'cat a.txt > out.txt'
 check $allowed "piped into cat" 'echo hi | cat > out.txt'

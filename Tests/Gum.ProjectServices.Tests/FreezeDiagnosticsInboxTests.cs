@@ -33,6 +33,18 @@ public class FreezeDiagnosticsInboxTests : IDisposable
     }
 
     [Fact]
+    public void BeginSessionAndEndSessionCleanly_WhenAnotherProcessHoldsTheSentinel_DoNotThrow()
+    {
+        Directory.CreateDirectory(_directory);
+        using FileStream otherInstance = new FileStream(
+            Path.Combine(_directory, "session-running"), FileMode.Create, FileAccess.ReadWrite, FileShare.None);
+        FreezeDiagnosticsInbox inbox = new FreezeDiagnosticsInbox(_directory);
+
+        Should.NotThrow(() => inbox.BeginSession());
+        Should.NotThrow(() => inbox.EndSessionCleanly());
+    }
+
+    [Fact]
     public void BeginSession_AfterCleanExit_IsNotDirty()
     {
         FreezeDiagnosticsInbox inbox = new FreezeDiagnosticsInbox(_directory);

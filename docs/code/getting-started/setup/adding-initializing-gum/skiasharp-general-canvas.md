@@ -115,10 +115,6 @@ If linking to source instead of NuGet, add `<Gum Root>/Runtimes/SkiaGum.ShadowDu
 
 For loading, errors, and examples, see [Render Target Shaders on SkiaSharp](../../../standard-visuals/containerruntime.md#render-target-shaders-on-skiasharp).
 
-{% hint style="info" %}
-`Gum.SkiaSharp.ShadowDusk` is available in November 2026, or now if building Gum from source.
-{% endhint %}
-
 ## Adding Expression Support (Optional)
 
 If your Gum project uses arithmetic expressions in variable references (such as `Width = OtherInstance.Width + 20`), you can add the `Gum.Expressions` NuGet package for full expression evaluation at runtime. Without this package, simple variable references like `Width = OtherInstance.Width` still work.

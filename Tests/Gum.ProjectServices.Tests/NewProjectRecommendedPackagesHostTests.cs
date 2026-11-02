@@ -25,6 +25,8 @@ public class NewProjectRecommendedPackagesHostTests : NewProjectServiceTestBase
 
         host.Contains("GumExpressionService.Initialize()").ShouldBe(added.Contains("Gum.Expressions"));
         host.Contains("KernSmith.Gum.").ShouldBe(added.Any(package => package.StartsWith("KernSmith.")));
+        host.Contains("ShapeRenderer.Self.Initialize()").ShouldBe(added.Any(package => package.StartsWith("Gum.Shapes.")));
+        host.Contains("GumService.Default.UseShadowDusk();").ShouldBe(added.Any(package => package.EndsWith(".ShadowDusk")));
     }
 
     [Fact]

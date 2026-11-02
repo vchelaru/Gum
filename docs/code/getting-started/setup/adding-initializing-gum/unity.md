@@ -66,10 +66,6 @@ To stay on a specific Gum version, end the Gum URL with `#upm/v<version>` instea
 
 ## Input
 
-{% hint style="info" %}
-Available in November 2026, or now if building Gum from source.
-{% endhint %}
-
 The Input System package is optional. If your project uses it and **Edit > Project Settings > Player > Active Input Handling** is **Input System Package (New)** or **Both**, `GumInput` reads it for the mouse, touch, keyboard, and gamepads. If **Active Input Handling** is **Input Manager (Old)**, `GumInput` reads Unity's legacy `Input` class for the mouse, touch, and keyboard. Gamepads are not available with the legacy Input Manager.
 
 Mouse and touch work right away. To move between Forms controls with the keyboard or a gamepad, call `GumService.Default.UseKeyboardDefaults()` or `GumService.Default.UseGamepadDefaults()` in your script.
@@ -106,10 +102,6 @@ Unity does not run `[ModuleInitializer]` methods, so call the registration yours
 
 * Each generated element's `RegisterRuntimeType()` method.
 * `StandardElementsCodeGenRegistration.RegisterFallbackStandardElements()`, which the tool generates into your project's root namespace. It is `internal`, so call it from the same assembly. Without it, standard element states and categories assigned by generated code silently do nothing.
-
-{% hint style="info" %}
-Available in November 2026, or now if building Gum from source.
-{% endhint %}
 
 ## IL2CPP
 

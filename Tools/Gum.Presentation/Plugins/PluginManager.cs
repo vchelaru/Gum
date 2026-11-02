@@ -190,6 +190,11 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
                 finally
                 {
                     sw.Stop();
+                    // Only callbacks that took time: most of the hundreds of broadcasts per edit are free.
+                    if (ToolLog.IsEnabled && sw.ElapsedMilliseconds >= 1)
+                    {
+                        ToolLog.Write("plugin " + methodName, detail: plugin.FriendlyName + " " + sw.Elapsed.TotalMilliseconds.ToString("F1") + "ms");
+                    }
                     // Surface slow plugin callbacks (>50ms) so startup/load
                     // hot spots are visible without flooding output.
                     if (sw.ElapsedMilliseconds > 50)
@@ -364,9 +369,58 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
     public void VariableDelete(ElementSave? elementSave, string variableName) =>
         CallMethodOnPlugin(plugin => plugin.CallVariableDelete(elementSave, variableName));
 
+    private HashSet<ElementSave?>? _variableSetBatchElements;
+
+    public bool IsInVariableSetBatch => _variableSetBatchElements != null;
+
+    public IDisposable BeginVariableSetBatch()
+    {
+        if (_variableSetBatchElements != null)
+        {
+            // Nested: the outermost scope completes the batch.
+            return new VariableSetBatchScope(() => { });
+        }
+
+        _variableSetBatchElements = new HashSet<ElementSave?>();
+        SetVariableSetBatchOpen(true);
+        return new VariableSetBatchScope(() =>
+        {
+            HashSet<ElementSave?> elements = _variableSetBatchElements!;
+            _variableSetBatchElements = null;
+            SetVariableSetBatchOpen(false);
+            foreach (ElementSave? element in elements)
+            {
+                CallMethodOnPlugin(plugin => plugin.CallVariableSetBatchCompleted(element), "VariableSetBatchCompleted");
+            }
+        });
+    }
+
+    private void SetVariableSetBatchOpen(bool isOpen)
+    {
+        foreach (PluginBase plugin in Plugins ?? Enumerable.Empty<PluginBase>())
+        {
+            plugin.IsVariableSetBatchOpen = isOpen;
+        }
+    }
+
+    private sealed class VariableSetBatchScope : IDisposable
+    {
+        private Action? _onDispose;
+
+        public VariableSetBatchScope(Action onDispose) => _onDispose = onDispose;
+
+        public void Dispose()
+        {
+            Action? onDispose = _onDispose;
+            _onDispose = null;
+            onDispose?.Invoke();
+        }
+    }
+
     public void VariableSet(ElementSave? parentElement, InstanceSave? instance, string unqualifiedChangedMemberName, object? oldValue,
         bool isFullCommit = true)
     {
+        _variableSetBatchElements?.Add(parentElement);
         CallMethodOnPlugin(plugin => plugin.CallVariableSet(parentElement, instance, unqualifiedChangedMemberName, oldValue, isFullCommit));
         CallMethodOnPlugin(plugin => plugin.CallVariableSetLate(parentElement, instance, unqualifiedChangedMemberName, oldValue, isFullCommit), "VariableSet (Late)");
     }

@@ -324,10 +324,6 @@ If linking to source instead of NuGet, add the `ShadowDusk` project listed above
 
 For loading, errors, and examples, see [ContainerRuntime](../../../../standard-visuals/containerruntime.md#loading-shader-files-with-sourceshaderfile).
 
-{% hint style="info" %}
-Available in November 2026, or now if building Gum from source.
-{% endhint %}
-
 ### About Expression Support (Optional)
 
 If your Gum project uses arithmetic expressions in variable references (such as `Width = OtherInstance.Width + 20`), the `Gum.Expressions` package added above enables full expression evaluation at runtime. Without it, simple variable references like `Width = OtherInstance.Width` still work. It's typically used together with a Gum project that has variable references defined in the tool; see [Loading a Gum Project (.gumj/.gumx)](../../loading-a-gum-project-.gumx.md).

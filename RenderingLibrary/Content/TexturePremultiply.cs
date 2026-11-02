@@ -28,19 +28,5 @@ public static class TexturePremultiply
     /// (alpha 128 turns 255 into 128). Fully transparent texels become (0,0,0,0).
     /// </summary>
     /// <param name="rgba">Tightly packed RGBA bytes in any texel order.</param>
-    public static void PremultiplyRgba(Span<byte> rgba)
-    {
-        for (int i = 0; i + 3 < rgba.Length; i += 4)
-        {
-            int alpha = rgba[i + 3];
-            if (alpha == 255)
-            {
-                continue;
-            }
-
-            rgba[i] = (byte)((rgba[i] * alpha + 127) / 255);
-            rgba[i + 1] = (byte)((rgba[i + 1] * alpha + 127) / 255);
-            rgba[i + 2] = (byte)((rgba[i + 2] * alpha + 127) / 255);
-        }
-    }
+    public static void PremultiplyRgba(Span<byte> rgba) => RgbaPixels.Premultiply(rgba);
 }

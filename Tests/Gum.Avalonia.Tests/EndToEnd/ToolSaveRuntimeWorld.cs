@@ -31,6 +31,7 @@ internal sealed class ToolSaveRuntimeWorld : IDisposable
     private readonly GumHotReloadManager _manager;
     private readonly TextWriter _previousError;
     private readonly StringWriter _errors = new StringWriter();
+    private readonly Gum.ElementTypeRegistry _previousTypes;
     private GumProjectSave _runtimeProject;
 
     public ToolSaveRuntimeWorld(string gumxPath, string screenName)
@@ -38,6 +39,10 @@ internal sealed class ToolSaveRuntimeWorld : IDisposable
         GumxPath = gumxPath;
         ScreenName = screenName;
         _previousCreate = ElementSaveExtensions.CustomCreateGraphicalComponentFunc;
+        // Registered types win over the factory below, and other scenarios (the canvas ones) leave their own
+        // in the process-wide layer. The world starts from an empty layer and puts the process's back.
+        _previousTypes = Gum.ElementTypeRegistry.Base.Snapshot();
+        Gum.ElementTypeRegistry.Base.Clear();
         ElementSaveExtensions.CustomCreateGraphicalComponentFunc = (name, managers) => new RecordingRenderable();
         _previousError = Console.Error;
         Console.SetError(_errors);
@@ -174,6 +179,7 @@ internal sealed class ToolSaveRuntimeWorld : IDisposable
     {
         _manager.Stop();
         ElementSaveExtensions.CustomCreateGraphicalComponentFunc = _previousCreate;
+        Gum.ElementTypeRegistry.Base.Restore(_previousTypes);
         Console.SetError(_previousError);
     }
 }

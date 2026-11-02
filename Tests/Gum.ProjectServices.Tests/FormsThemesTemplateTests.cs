@@ -219,6 +219,23 @@ public class FormsThemesTemplateTests
         project.Components.Select(c => c.Name).ShouldNotContain(GetPrefix(templateFolder) + "Controls/Thumb");
     }
 
+    // ListBoxItem.UpdateState sets one of these five states by name. A template missing one leaves the
+    // item on whatever look it had before: a disabled item built disabled shows the default look, and
+    // one disabled later keeps its enabled look (#7495).
+    [Theory]
+    [MemberData(nameof(TemplateFolders))]
+    public void ListBoxItem_ShouldHaveEveryStateTheControlSets(string templateFolder)
+    {
+        StandardElementsManager.Self.Initialize();
+        GumProjectSave project = LoadTemplate(templateFolder);
+        ComponentSave listBoxItem = project.Components.Single(c => c.Name == $"{GetPrefix(templateFolder)}Controls/ListBoxItem");
+
+        StateSaveCategory category = listBoxItem.Categories.Single(c => c.Name == "ListBoxItemCategory");
+
+        category.States.Select(state => state.Name)
+            .ShouldBe(new[] { "Enabled", "Highlighted", "Selected", "Focused", "Disabled" }, ignoreOrder: true);
+    }
+
     private static GumProjectSave LoadTemplate(string templateFolder) =>
         new ProjectLoader().Load(Path.Combine(GetTemplateDir(templateFolder), "GumProject.gumx")).Project!;
 
