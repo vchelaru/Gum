@@ -8,9 +8,9 @@ Invoking coder agent to draft the monthly Gum release notes.
 
 # Ask first, don't guess
 
-This skill is a **collaboration**. The user has explicitly said: when anything is unclear at any point — categorization, intent of a sparse commit, whether a change cross-cuts Tool and Runtimes, which features deserve the spotlight — **stop and ask**. Do not invent user-impact descriptions from a one-line commit message. When the diff is genuinely ambiguous, surface the ambiguity rather than papering over it. The point of this skill is to save the user keystrokes, not to silently misrepresent the release.
+This skill is a **collaboration**, but scrutiny follows readership. Few people read release notes, and those who do read the spotlights and the breaking changes. Almost no one reads the individual items below them, so a month with hundreds of PRs gets no per-item review. Ask only about what readers see: which changes are spotlights, and which changes break users. Everything else gets a default and no question: a sparse or low-confidence item stays out of the curated bullets and keeps its line in What's Changed, near-duplicate bullets are merged, skipped or housekeeping PRs stay skipped, and categorization is your call. Do not invent user-impact descriptions from a one-line commit message.
 
-Anything you can't resolve mid-draft, capture in the `## Open Questions` block at the bottom of the markdown file. The user will work through that block with you after the file is generated.
+Put the few questions that matter in the `## Open Questions` block at the bottom of the markdown file. The user will work through that block with you after the file is generated.
 
 **Not for hotfixes.** This skill's fan-out is built for monthly-scale PR volume. A hotfix (emergency single-bug release) gets a short manual note instead — see "Hotfixes" in `docs/contributing/building-and-releasing-gum.md`.
 
