@@ -95,6 +95,34 @@ half4 main(float2 coord) {
         Math.Abs(withShader.Red - withShader.Blue).ShouldBeLessThan(20);
     }
 
+    // Characterization of the pre-#5909 input name: a hand-written effect that still declares
+    // `uniform shader inputImage` compiles, but the renderer only binds a child named
+    // "SpriteTexture", so Draw throws instead of drawing the container unshaded.
+    [Fact]
+    public void Draw_EffectDeclaringInputImage_Throws()
+    {
+        const string LegacySksl = @"
+uniform shader inputImage;
+half4 main(float2 coord) {
+    return inputImage.eval(coord);
+}
+";
+        using SKSurface surface = SKSurface.Create(new SKImageInfo(64, 64));
+        GumService.Default.Initialize(surface.Canvas, 64, 64);
+
+        SKRuntimeEffect effect = SKRuntimeEffect.CreateShader(LegacySksl, out string errors);
+        string.IsNullOrEmpty(errors).ShouldBeTrue(errors);
+        using SKRuntimeEffect disposableEffect = effect;
+
+        ContainerRuntime renderTarget = BuildRedRenderTarget();
+        renderTarget.RenderTargetEffect = effect;
+        GumService.Default.Root.Children.Add(renderTarget);
+
+        ArgumentOutOfRangeException thrown =
+            Should.Throw<ArgumentOutOfRangeException>(() => GumService.Default.Draw());
+        thrown.Message.ShouldContain("SpriteTexture");
+    }
+
     // Two containers share one compiled effect (as SourceShaderFile does through the cache) and each
     // sets its own value for the same uniform, so the value must be applied per container at the
     // composite, not stored on the effect.
