@@ -140,7 +140,7 @@ Work from the **combined bullet list the Step 3 subagents returned**, not the ra
 
 Sections, in order:
 
-1. **Breaking Changes** — one short sentence per change, naming what was removed/changed and its replacement (e.g. "X removed, replaced by Y"), plus a "See the upgrade guide for who's affected and how to fix it: <migration-doc-url>" line. Who's affected, why, and how to migrate are the doc's job, not the bullet's — do not restate them inline. Omit the section entirely if the user said no breaking changes this month.
+1. **Breaking Changes** — the "See the upgrade guide for who's affected and how to fix it: <migration-doc-url>" line, and nothing else by default. The migration doc owns every change, so the notes never summarize, group or list its entries. Add a bullet only for a change that is absolutely critical: it breaks essentially every user on upgrade, such as the tool being replaced or an executable renamed. When unsure, leave it out; zero bullets is the normal case. A bullet is one short sentence naming what changed and its replacement. Omit the section entirely if the user said no breaking changes this month.
 2. **Biggest Changes** — see Step 5.
 3. **Gum Tool** — anything affecting the Gum tool (the Avalonia head under `Tool/Gum.Avalonia`, `Tools/Gum.Presentation`, plugins, tool-side projects; `Gum/` is the frozen WPF head and rarely changes).
 4. **Gum Runtimes** — anything affecting shipped runtime libraries (`MonoGameGum`, `KniGum`, `FnaGum`, `SkiaGum`, `RaylibGum`, `GumCommon`'s runtime-facing pieces).
