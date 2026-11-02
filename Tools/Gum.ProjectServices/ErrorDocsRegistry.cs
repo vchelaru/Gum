@@ -28,6 +28,7 @@ public class ErrorDocsRegistry : IErrorDocsRegistry
             ["GUM0013"] = "gum-tool/gum-elements/general-properties/variable-references#circular-references-gum0013",
             ["GUM0014"] = "gum-tool/gum-elements/general-properties/base-type-inheritance#circular-base-types-gum0014",
             ["GUM0015"] = "gum-tool/gum-elements/general-properties/base-type-inheritance#component-with-no-base-type-gum0015",
+            ["GUM0016"] = "gum-tool/gum-elements/general-properties/base-type-inheritance#missing-base-instance-gum0016",
             ["GUM0018"] = "gum-tool/gum-elements/general-properties/base-type-inheritance#component-containing-itself-gum0018",
             ["GUM0019"] = "gum-tool/project-files#value-that-does-not-fit-its-type-gum0019",
             ["GUM0020"] = "gum-tool/project-files#duplicate-names-gum0020-gum0021-gum0022",

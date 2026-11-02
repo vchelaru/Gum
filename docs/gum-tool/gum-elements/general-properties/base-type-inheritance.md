@@ -113,6 +113,16 @@ To resolve it, open the component in the Gum tool and pick a `Base Type` (for ex
 Available in November 2026, or now if building Gum from source.
 {% endhint %}
 
+### Missing Base Instance (GUM0016)
+
+A screen or component that derives from another must list each of the base's instances with `<DefinedByBase>true</DefinedByBase>`. When a hand-written or out-of-date file leaves one out, Gum adds the instance in memory at load, so nothing breaks, but the file on disk is stale. `gumcli check` reports **GUM0016** as a warning naming the missing instance.
+
+To resolve it, add an `<Instance>` with that name and `<DefinedByBase>true</DefinedByBase>` to the file, or run `gumcli resave` to write it.
+
+{% hint style="info" %}
+Available in December 2026, or now if building Gum from source.
+{% endhint %}
+
 ### Component Containing Itself (GUM0018)
 
 A component cannot contain an instance of itself, directly or through the instances of other components (A contains B, B contains A). Such a component can never finish building. `gumcli check` reports **GUM0018** as an error on each element in the loop and names the path, for example `A -> B -> A`.
