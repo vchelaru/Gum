@@ -105,13 +105,7 @@ public class DragDropManager : IDragDropManager
     {
         get
         {
-            foreach (string extension in ImageFileExtensions.All)
-            {
-                yield return extension;
-            }
-            yield return "svg";
-            yield return "achx";
-            yield return "achj";
+            return ImageFileExtensions.AllSourceFileFormats;
         }
     }
 

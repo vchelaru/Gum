@@ -68,6 +68,29 @@ public class HotReloadGoneElementTests : BaseTestClass
     }
 
     [Fact]
+    public void ShownScreenDeleted_WhenTheHostOptsOut_PrintsNothingButStillReportsItInTheResult()
+    {
+        _world.Boot(new SweepSpec());
+        HotReloadResult? result = null;
+        _world.Manager.ReloadFinished += received => result = received;
+        GumHotReloadManager.PrintsShownElementGone = false;
+        try
+        {
+            SaveWithoutTheScreen();
+            _world.NotifyAndSettle(_world.Gumx);
+        }
+        finally
+        {
+            GumHotReloadManager.PrintsShownElementGone = true;
+        }
+
+        _errors.ShouldBeEmpty();
+        result.ShouldNotBeNull();
+        result.Issues.Any(issue => issue.Kind == HotReloadIssueKind.ShownElementGone).ShouldBeTrue();
+        result.MatchesRestart.ShouldBeFalse();
+    }
+
+    [Fact]
     public void ShownScreenStillGone_IsReportedOnceNotOnEveryLaterSave()
     {
         _world.Boot(new SweepSpec());

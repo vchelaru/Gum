@@ -107,6 +107,8 @@ FrameworkElement
 
 **No color shortcut on the control.** To change a button's color, either modify the state's variables on the Visual, or access the child runtime directly (`(listBox.Visual as ButtonVisual)?.Background.Color = ...`). There is no `Background` property on `Button`.
 
+**A control's constructor body runs after `ReactToVisualChanged`, so it must not overwrite a value a subclass set there.** The `Visual` is assigned in `FrameworkElement`'s constructor, and generated `partial class X : Slider` code runs `CustomInitialize` from `ReactToVisualChanged`. A derived constructor that assigns a default (`Slider.Initialize`, `ScrollBar`'s orientation, `RadioButton.GroupName`) guards it with a "was it set" flag (`IsMaximumSet`, `IsLargeChangeSet`, `hasAssignedOrientation`) or relies on the field's own default. Do not re-assign a property to the value its field already holds.
+
 **`ReactToVisualChanged` can fire before child references exist.** If `Visual` is reassigned at runtime, all `GetGraphicalUiElementByName` lookups re-run. Code that caches Visual children must refresh inside `ReactToVisualChanged`, not in the constructor.
 
 **`ParentFrameworkElement` walks the Visual parent chain**, skipping non-Forms Gue nodes, until it finds a Gue whose `FormsControlAsObject` is a `FrameworkElement`. It does not just return the direct parent.

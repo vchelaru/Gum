@@ -402,6 +402,106 @@ public class PreviewLauncherTests : IDisposable
     }
 
     [Fact]
+    public void ReactToElementRenamed_WhenTheShownElementIsRenamed_PushesTheNewName()
+    {
+        ScreenSave menu = new ScreenSave { Name = "MainMenu" };
+        PreviewLauncher launcher = LaunchShowing(menu, out RecordingPreviewStarter starter);
+
+        menu.Name = "MainMenu1234";
+        launcher.ReactToElementRenamed(menu);
+
+        PreviewSelectionMessage? pushed = LastPushed(starter);
+        DeleteSelectionFile(starter);
+        pushed.ShouldNotBeNull();
+        pushed.ElementName.ShouldBe("MainMenu1234");
+    }
+
+    [Fact]
+    public void ReactToElementRenamed_WhenTheShownElementMovesIntoAFolder_PushesThePath()
+    {
+        ComponentSave button = new ComponentSave { Name = "Button" };
+        PreviewLauncher launcher = LaunchShowing(button, out RecordingPreviewStarter starter);
+
+        button.Name = "Controls/Button";
+        launcher.ReactToElementRenamed(button);
+
+        PreviewSelectionMessage? pushed = LastPushed(starter);
+        DeleteSelectionFile(starter);
+        pushed.ShouldNotBeNull();
+        pushed.ElementName.ShouldBe("Controls/Button");
+    }
+
+    [Fact]
+    public void ReactToElementRenamed_WhenAnotherElementIsRenamed_PushesNothing()
+    {
+        ScreenSave menu = new ScreenSave { Name = "MainMenu" };
+        ScreenSave other = new ScreenSave { Name = "Other" };
+        PreviewLauncher launcher = LaunchShowing(menu, out RecordingPreviewStarter starter);
+
+        other.Name = "Other2";
+        launcher.ReactToElementRenamed(other);
+
+        PreviewSelectionMessage? pushed = LastPushed(starter);
+        DeleteSelectionFile(starter);
+        pushed.ShouldNotBeNull();
+        pushed.ElementName.ShouldBe("MainMenu");
+    }
+
+    [Fact]
+    public void ReactToElementRenamed_WhenNoPreviewIsRunning_DoesNothing()
+    {
+        CreateLauncher().ReactToElementRenamed(new ScreenSave { Name = "MainMenu" });
+
+        _outputManager.VerifyNoOtherCalls();
+    }
+
+    [Fact]
+    public void ReactToElementRenamed_WhenThePinnedElementIsRenamed_StaysPinnedAndPushesTheNewName()
+    {
+        ScreenSave menu = new ScreenSave { Name = "MainMenu" };
+        PreviewLauncher launcher = LaunchShowing(menu, out RecordingPreviewStarter starter);
+        launcher.Pin().ShouldBeTrue();
+
+        menu.Name = "MainMenu1234";
+        launcher.ReactToElementRenamed(menu);
+
+        PreviewSelectionMessage? pushed = LastPushed(starter);
+        DeleteSelectionFile(starter);
+        launcher.PinnedElement.ShouldBeSameAs(menu);
+        pushed.ShouldNotBeNull();
+        pushed.ElementName.ShouldBe("MainMenu1234");
+    }
+
+    [Fact]
+    public void ReactToProjectLoaded_WhenThePinnedElementExistsInTheNewProject_PinsTheNewObject()
+    {
+        ScreenSave oldMenu = new ScreenSave { Name = "MainMenu" };
+        PreviewLauncher launcher = LaunchShowing(oldMenu, out RecordingPreviewStarter starter);
+        launcher.Pin().ShouldBeTrue();
+        GumProjectSave reloaded = new GumProjectSave();
+        ScreenSave newMenu = new ScreenSave { Name = "MainMenu" };
+        reloaded.Screens.Add(newMenu);
+
+        launcher.ReactToProjectLoaded(reloaded);
+
+        DeleteSelectionFile(starter);
+        launcher.PinnedElement.ShouldBeSameAs(newMenu);
+    }
+
+    [Fact]
+    public void ReactToProjectLoaded_WhenThePinnedElementIsNotInTheNewProject_Unpins()
+    {
+        ScreenSave menu = new ScreenSave { Name = "MainMenu" };
+        PreviewLauncher launcher = LaunchShowing(menu, out RecordingPreviewStarter starter);
+        launcher.Pin().ShouldBeTrue();
+
+        launcher.ReactToProjectLoaded(new GumProjectSave());
+
+        DeleteSelectionFile(starter);
+        launcher.PinnedElement.ShouldBeNull();
+    }
+
+    [Fact]
     public void Close_WhenNoPreviewWasLaunched_DoesNothing()
     {
         PreviewLauncher launcher = CreateLauncher();

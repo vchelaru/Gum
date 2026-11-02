@@ -49,7 +49,7 @@ public class TextBox : TextBoxBase
     /// </summary>
     public virtual string? Text
     {
-        get => coreTextObject.RawText;
+        get => coreTextObject?.RawText;
         set
         {
             bool isChange = value != Text;
@@ -128,12 +128,17 @@ public class TextBox : TextBoxBase
     /// </summary>
     public virtual int? MaxLettersToShow
     {
-        get => coreTextObject.MaxLettersToShow;
+        get => coreTextObject != null ? coreTextObject.MaxLettersToShow : _pendingMaxLettersToShow;
         set
         {
-            if (value != MaxLettersToShow)
+            if (coreTextObject == null)
             {
-                coreTextObject.MaxLettersToShow = value;
+                // A component variable can be applied before the text child exists; it lands when the child does.
+                _pendingMaxLettersToShow = value;
+            }
+            else if (value != MaxLettersToShow)
+            {
+                if (coreTextObject != null) { coreTextObject.MaxLettersToShow = value; }
             }
         }
     }
@@ -144,13 +149,35 @@ public class TextBox : TextBoxBase
     /// </summary>
     public virtual int? MaxNumberOfLines
     {
-        get => coreTextObject.MaxNumberOfLines;
+        get => coreTextObject != null ? coreTextObject.MaxNumberOfLines : _pendingMaxNumberOfLines;
         set
         {
-            if (value != MaxNumberOfLines)
+            if (coreTextObject == null)
             {
-                coreTextObject.MaxNumberOfLines = value;
+                _pendingMaxNumberOfLines = value;
             }
+            else if (value != MaxNumberOfLines)
+            {
+                if (coreTextObject != null) { coreTextObject.MaxNumberOfLines = value; }
+            }
+        }
+    }
+
+    private int? _pendingMaxLettersToShow;
+    private int? _pendingMaxNumberOfLines;
+
+    /// <inheritdoc/>
+    protected override void OnCoreTextObjectAssigned()
+    {
+        if (_pendingMaxLettersToShow != null)
+        {
+            coreTextObject!.MaxLettersToShow = _pendingMaxLettersToShow;
+            _pendingMaxLettersToShow = null;
+        }
+        if (_pendingMaxNumberOfLines != null)
+        {
+            coreTextObject!.MaxNumberOfLines = _pendingMaxNumberOfLines;
+            _pendingMaxNumberOfLines = null;
         }
     }
 
@@ -414,10 +441,11 @@ public class TextBox : TextBoxBase
         // An edge of the selection inside a CRLF or an emoji takes the whole character, so no half is left behind.
         var (start, lengthToRemove) = GetWholeCharacterSelection(text, selectionStart, selectionLength);
         selectionStart = start;
+        // Cleared before the text changes so the shortened text does not clamp (and report) it a second time.
+        SelectionLength = 0;
         // Use SetTextFromUi because this is user-initiated editing
         SetTextFromUi(text.Remove(selectionStart, lengthToRemove));
         CaretIndex = selectionStart;
-        SelectionLength = 0;
     }
 
     #endregion
@@ -462,6 +490,7 @@ public class TextBox : TextBoxBase
     {
 
         CaretIndex = System.Math.Min(CaretIndex, value?.Length ?? 0);
+        ClearSelectionAfterTextChange(value?.Length ?? 0);
 
         TextChanged?.Invoke(this, EventArgs.Empty);
 

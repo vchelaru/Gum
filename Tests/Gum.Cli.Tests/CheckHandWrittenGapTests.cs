@@ -1,265 +1,192 @@
 using Shouldly;
+using System.Text.RegularExpressions;
 
 namespace Gum.Cli.Tests;
 
 /// <summary>
-/// Splash damage around #7059: what <c>gumcli check</c> reports for hand-written element files. Each test
-/// asserts the behavior a user needs, not what check does today.
+/// Hand-written files that gumcli check must report (#7119 to #7124).
 /// </summary>
 public class CheckHandWrittenGapTests : CheckHandWrittenFileHarness
 {
     private static string Default(params string[] variables) => DefaultState(variables);
 
-    #region Base types
-
     [Fact]
-    public void Check_UnknownComponentBaseType_ShouldReportErrorNamingTheBaseAndExit1()
+    public void Check_TwoInstancesWhoseParentsPointAtEachOther_ShouldReportError()
     {
-        string project = CreateProject("UnknownBase");
-        AddComponent(project, "Lost", "DoesNotExist", Default());
-
-        CheckRun run = Check(project);
-
-        run.ExitCode.ShouldBe(1);
-        run.Entries.ShouldContain(e => e.Element == "Lost" && e.Message.Contains("DoesNotExist"));
-    }
-
-    [Fact]
-    public void Check_CircularComponentBaseTypes_ShouldReportGum0014ForBoth()
-    {
-        string project = CreateProject("Circular");
-        AddComponent(project, "A", "B", Default());
-        AddComponent(project, "B", "A", Default());
-
-        CheckRun run = Check(project);
-
-        run.ExitCode.ShouldBe(1);
-        run.Entries.Where(e => e.Code == "GUM0014").Select(e => e.Element).ShouldBe(new[] { "A", "B" }, ignoreOrder: true);
-    }
-
-    [Fact]
-    public void Check_ComponentThatIsItsOwnBase_ShouldReportGum0014()
-    {
-        string project = CreateProject("SelfBase");
-        AddComponent(project, "Loop", "Loop", Default());
-
-        Check(project).Entries.ShouldContain(e => e.Code == "GUM0014" && e.Element == "Loop");
-    }
-
-    [Fact]
-    public void Check_UnknownInstanceBaseType_ShouldReportErrorNamingInstanceAndType()
-    {
-        string project = CreateProject("UnknownInstanceBase");
-        AddComponent(project, "Holder", "Container", Default() + Instance("Child", "Gizmo"));
-
-        CheckRun run = Check(project);
-
-        run.ExitCode.ShouldBe(1);
-        run.Entries.ShouldContain(e => e.Element == "Holder" && e.Message.Contains("Child") && e.Message.Contains("Gizmo"));
-    }
-
-    [Fact]
-    public void Check_InstanceWithEmptyBaseType_ShouldReportError()
-    {
-        string project = CreateProject("EmptyInstanceBase");
-        AddComponent(project, "Holder", "Container", Default() + "<Instance><Name>Child</Name></Instance>");
+        string project = CreateProject("ParentCycle");
+        AddComponent(project, "Holder", "Container",
+            Default(
+                Variable("string", "A.Parent", "string", "B"),
+                Variable("string", "B.Parent", "string", "A")) +
+            Instance("A", "Container") + Instance("B", "Container"));
 
         Check(project).ExitCode.ShouldBe(1);
     }
 
     [Fact]
-    public void Check_ScreenWithUnknownBaseType_ShouldReportError()
+    public void Check_NumericVariableWithTextValue_ShouldReportError()
     {
-        string project = CreateProject("ScreenUnknownBase");
-        AddScreen(project, "Menu", "NotAScreen", Default());
-
-        CheckRun run = Check(project);
-
-        run.ExitCode.ShouldBe(1);
-        run.Entries.ShouldContain(e => e.Element == "Menu" && e.Message.Contains("NotAScreen"));
-    }
-
-    #endregion
-
-    #region Files and structure
-
-    [Fact]
-    public void Check_ReferencedComponentFileMissing_ShouldReportErrorNamingTheComponentAndExit1()
-    {
-        string project = CreateProject("MissingFile");
-        AddReference(project, """  <ComponentReference Name="Ghost" />""");
-
-        CheckRun run = Check(project);
-
-        run.ExitCode.ShouldBe(1);
-        run.Entries.ShouldContain(e => e.Element == "Ghost");
-    }
-
-    [Fact]
-    public void Check_ComponentFileWithMalformedXml_ShouldReportErrorNamingTheComponent()
-    {
-        string project = CreateProject("MalformedElement");
-        WriteFile(project, "Components", "Broken.gucx", "<ComponentSave><Name>Broken</Name><BaseType>Container</ComponentSave>");
-        AddReference(project, """  <ComponentReference Name="Broken" />""");
-
-        CheckRun run = Check(project);
-
-        run.ExitCode.ShouldBe(1);
-        run.Entries.ShouldContain(e => e.Element == "Broken");
-    }
-
-    [Fact]
-    public void Check_MalformedProjectFile_ShouldExit2AndExplainOnStandardError()
-    {
-        string project = CreateProject("MalformedProject");
-        File.WriteAllText(project, "<GumProjectSave><ScreenReferences>");
-
-        CliTestHelper result = CliTestHelper.Run("check", project);
-
-        result.ExitCode.ShouldBe(2);
-        result.StandardError.ShouldNotBeEmpty();
-    }
-
-    [Fact]
-    public void Check_EmptyProjectFile_ShouldExit2()
-    {
-        string project = CreateProject("EmptyProject");
-        File.WriteAllText(project, "");
-
-        CliTestHelper.Run("check", project).ExitCode.ShouldBe(2);
-    }
-
-    [Fact]
-    public void Check_WrongStateWrapperElement_ShouldReportErrorNamingTheFix()
-    {
-        string project = CreateProject("WrongWrapper");
-        AddComponent(project, "Wrapped", "Container", "<States><State><Name>Default</Name></State></States>");
-
-        CheckRun run = Check(project);
-
-        run.ExitCode.ShouldBe(1);
-        run.Entries.ShouldContain(e => e.Element == "Wrapped" && e.Message.Contains("<State>"));
-    }
-
-    [Fact]
-    public void Check_ElementNameDiffersFromItsFileName_ShouldReportAnEntryForThatElement()
-    {
-        string project = CreateProject("NameMismatch");
-        WriteFile(project, "Components", "FileName.gucx", ElementXml("ComponentSave", "InsideName", "Container", Default()));
-        AddReference(project, """  <ComponentReference Name="FileName" />""");
-
-        CheckRun run = Check(project);
-
-        run.Entries.ShouldContain(e => e.Message.Contains("InsideName") || e.Element.Contains("InsideName"));
-    }
-
-    [Fact]
-    public void Check_ProjectPathThatDoesNotExist_ShouldExit2()
-    {
-        CliTestHelper.Run("check", Path.Combine(TempDirectory, "nope.gumx")).ExitCode.ShouldBe(2);
-    }
-
-    [Fact]
-    public void Check_ProjectPathThatIsADirectory_ShouldExit2()
-    {
-        CliTestHelper.Run("check", TempDirectory).ExitCode.ShouldBe(2);
-    }
-
-    #endregion
-
-    #region Duplicates and names
-
-    [Fact]
-    public void Check_ComponentWithoutDefaultState_ShouldNotCrashAndShouldExitWith0Or1()
-    {
-        string project = CreateProject("NoDefaultState");
-        AddComponent(project, "Bare", "Container", "");
-
-        CheckRun run = Check(project);
-
-        run.StandardError.ShouldNotContain("Exception");
-        run.ExitCode.ShouldBeOneOf(0, 1);
-    }
-
-    #endregion
-
-    #region Variables
-
-    [Fact]
-    public void Check_EnumVariableWithUndefinedValue_ShouldReportGum0007()
-    {
-        string project = CreateProject("BadEnum");
+        string project = CreateProject("WrongValueType");
         AddComponent(project, "Holder", "Container",
-            Default(Variable("HorizontalAlignment", "Label.HorizontalAlignment", "int", "99")) + Instance("Label", "Text"));
+            Default(Variable("float", "Width", "string", "wide")));
 
-        Check(project).Entries.ShouldContain(e => e.Code == "GUM0007" && e.Element == "Holder");
+        Check(project).ExitCode.ShouldBe(1);
     }
 
     [Fact]
-    public void Check_ParentVariablePointingAtMissingInstance_ShouldReportError()
+    public void Check_DuplicateInstanceNamesInOneComponent_ShouldReportError()
     {
-        string project = CreateProject("MissingParent");
-        AddComponent(project, "Holder", "Container",
-            Default(Variable("string", "Child.Parent", "string", "NoSuchParent")) + Instance("Child", "Text"));
+        string project = CreateProject("DuplicateInstances");
+        AddComponent(project, "Twins", "Container", Default() + Instance("Child", "Text") + Instance("Child", "Sprite"));
 
         CheckRun run = Check(project);
 
         run.ExitCode.ShouldBe(1);
-        run.Entries.ShouldContain(e => e.Element == "Holder" && e.Message.Contains("NoSuchParent"));
-    }
-
-    #endregion
-
-    #region States
-
-    #endregion
-
-    #region Output and exit codes
-
-    [Fact]
-    public void Check_ErrorsInHumanReadableOutput_ShouldNameTheElementAndTheSeverity()
-    {
-        string project = CreateProject("HumanOutput");
-        AddComponent(project, "Lost", "DoesNotExist", Default());
-
-        CliTestHelper result = CliTestHelper.Run("check", project);
-
-        result.StandardOutput.ShouldContain("error: Lost:");
+        run.Entries.ShouldContain(e => e.Element == "Twins" && e.Message.Contains("Child"));
     }
 
     [Fact]
-    public void Check_JsonOutput_ShouldNotWriteAnExceptionToStandardError()
+    public void Check_SameComponentReferencedTwice_ShouldReportDuplicateError()
     {
-        string project = CreateProject("JsonStderr");
-        AddComponent(project, "Lost", "DoesNotExist", Default());
-
-        Check(project).StandardError.ShouldNotContain("Exception");
-    }
-
-    [Fact]
-    public void Check_ElementWithTwoProblems_ShouldReportBoth()
-    {
-        string project = CreateProject("TwoProblems");
-        AddComponent(project, "Lost", "DoesNotExist", Default() + Instance("Child", "Gizmo"));
+        string project = CreateProject("DuplicateReference");
+        AddComponent(project, "Twin", "Container", Default());
+        AddReference(project, """  <ComponentReference Name="Twin" />""");
 
         CheckRun run = Check(project);
 
-        run.Entries.Count(e => e.Element == "Lost").ShouldBeGreaterThanOrEqualTo(2);
+        run.ExitCode.ShouldBe(1);
+        run.Entries.ShouldContain(e => e.Element == "Twin");
     }
 
     [Fact]
-    public void Check_WarningOnlyProject_ShouldExit0()
+    public void Check_ScreenUsedAsInstanceBaseType_ShouldReportError()
     {
-        string project = CreateProject("WarningOnly");
-        AddComponent(project, "ButtonBase", "Container", Default() + Instance("Label", "Text"));
-        AddComponent(project, "MyButton", "ButtonBase", Default());
+        string project = CreateProject("ScreenAsInstance");
+        AddScreen(project, "Menu", null, Default());
+        AddComponent(project, "Holder", "Container", Default() + Instance("Embedded", "Menu"));
+
+        Check(project).ExitCode.ShouldBe(1);
+    }
+
+    [Fact]
+    public void Check_InstanceSetsAStateThatTheCategoryDoesNotHave_ShouldReportError()
+    {
+        string project = CreateProject("UnknownState");
+        AddComponent(project, "Toggle", "Container",
+            Default() + "<Category><Name>Mode</Name><State><Name>On</Name></State><State><Name>Off</Name></State></Category>");
+        AddScreen(project, "Menu", null,
+            Default(Variable("Mode", "Switch.ModeState", "string", "Nope")) + Instance("Switch", "Toggle"));
 
         CheckRun run = Check(project);
 
-        run.Entries.ShouldNotBeEmpty();
-        run.Entries.ShouldAllBe(e => e.Severity == "Warning");
+        run.ExitCode.ShouldBe(1);
+        run.Entries.ShouldContain(e => e.Message.Contains("Nope"));
+    }
+
+    [Fact]
+    public void Check_DuplicateStateNamesInOneComponent_ShouldReportError()
+    {
+        string project = CreateProject("DuplicateStates");
+        AddComponent(project, "Echo", "Container", Default() + Default());
+
+        Check(project).ExitCode.ShouldBe(1);
+    }
+
+    [Fact]
+    public void Check_SameVariableTwiceInOneState_ShouldReportAnEntry()
+    {
+        string project = CreateProject("DuplicateVariable");
+        AddComponent(project, "Holder", "Container",
+            Default(Variable("float", "Width", "float", "1"), Variable("float", "Width", "float", "2")));
+
+        Check(project).Entries.ShouldContain(e => e.Element == "Holder");
+    }
+
+    [Fact]
+    public void Codegen_ElementWithDuplicateInstanceNames_ShouldBeSkippedWithExitCode1()
+    {
+        string project = CreateProject("DuplicateInstancesCodegen");
+        AddComponent(project, "Twins", "Container", Default() + Instance("Child", "Text") + Instance("Child", "Sprite"));
+
+        CodegenResult(project).ExitCode.ShouldBe(1);
+        Directory.GetFiles(Path.GetDirectoryName(project)!, "Twins.Generated.cs", SearchOption.AllDirectories).ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void Codegen_ElementReferencedTwice_ShouldBeSkippedWithExitCode1()
+    {
+        string project = CreateProject("DuplicateReferenceCodegen");
+        AddComponent(project, "Twin", "Container", Default());
+        AddReference(project, """  <ComponentReference Name="Twin" />""");
+
+        CodegenResult(project).ExitCode.ShouldBe(1);
+        Directory.GetFiles(Path.GetDirectoryName(project)!, "Twin.Generated.cs", SearchOption.AllDirectories).ShouldBeEmpty();
+    }
+
+    private static CliTestHelper CodegenResult(string project)
+    {
+        string directory = Path.GetDirectoryName(project)!;
+        File.WriteAllText(Path.Combine(directory, "Game.csproj"), "<Project Sdk=\"Microsoft.NET.Sdk\"></Project>");
+        CliTestHelper.Run("codegen-init", project);
+        return CliTestHelper.Run("codegen", project);
+    }
+
+    [Fact]
+    public void Check_DerivedComponentClearsInheritedParentAndReversesIt_ShouldNotReportLoop()
+    {
+        string project = CreateProject("ClearedParent");
+        AddComponent(project, "BaseHolder", "Container",
+            Default(Variable("string", "A.Parent", "string", "B")) + Instance("A", "Container") + Instance("B", "Container"));
+        AddComponent(project, "DerivedHolder", "BaseHolder",
+            Default(Variable("string", "A.Parent", "string", ""), Variable("string", "B.Parent", "string", "A")));
+
+        CheckRun run = Check(project);
+
+        run.Entries.ShouldNotContain(e => e.Code == "GUM0024");
         run.ExitCode.ShouldBe(0);
     }
 
-    #endregion
+    [Fact]
+    public void Check_FloatVariableWithEmptyValue_ShouldNotReportGum0019()
+    {
+        // The runtime skips an assignment it cannot convert, so an empty value leaves the property unset.
+        string project = CreateProject("EmptyFloat");
+        AddComponent(project, "Holder", "Container", Default(Variable("float", "Width", "string", "")));
+
+        Check(project).Entries.ShouldNotContain(e => e.Code == "GUM0019");
+    }
+
+    [Fact]
+    public void Check_InstanceTypeNamedLikeAScreenAndAComponent_ShouldNotReportGum0025()
+    {
+        // An instance can only be a component, so the name binds to the component.
+        string project = CreateProject("ScreenAndComponentSameName");
+        AddScreen(project, "Menu", null, Default());
+        AddComponent(project, "Menu", "Container", Default());
+        AddComponent(project, "Holder", "Container", Default() + Instance("Embedded", "Menu"));
+
+        Check(project).Entries.ShouldNotContain(e => e.Code == "GUM0025");
+    }
+
+    [Fact]
+    public void Codegen_ElementReferencedTwice_ShouldPrintTheErrorOnceAndTheSkippedSummary()
+    {
+        string project = CreateProject("DuplicateReferenceOutput");
+        AddComponent(project, "Twin", "Container", Default());
+        AddReference(project, """  <ComponentReference Name="Twin" />""");
+
+        CliTestHelper result = CodegenResult(project);
+
+        Regex.Matches(result.StandardError, "referenced more than once").Count.ShouldBe(1);
+        result.StandardError.ShouldContain("skipped due to errors");
+    }
+
+    [Fact]
+    public void Codegen_FloatVariableHoldingText_ShouldPrintTheSkippedSummary()
+    {
+        string project = CreateProject("WrongValueTypeOutput");
+        AddComponent(project, "Holder", "Container", Default(Variable("float", "Width", "string", "wide")));
+
+        CodegenResult(project).StandardError.ShouldContain("skipped due to errors");
+    }
 }

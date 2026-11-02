@@ -42,20 +42,29 @@ When any of these files change, Gum reloads the project in place: it diffs the n
 
 Children added at runtime by your game code are left untouched. Hot reload identifies "design-time" children by their `Tag` — when Gum creates a visual from an `InstanceSave`, it stores the `InstanceSave` in `Tag`. Anything without an `InstanceSave` `Tag` is treated as runtime-owned and skipped.
 
-When a reload is triggered, Gum automatically copies all `.fnt` and `.png` files from the source project's `FontCache/` directory to the bin-side `FontCache/` directory, and evicts cached fonts so they are reloaded from disk.
+Localization files are reloaded too. Hot reload reacts to the files in the project's `LocalizationFiles` (`.csv` or `.resx`, plus the `.resx` language files next to a listed one). When one changes, or the list itself changes in the project, Gum reads the files again, replaces the database of `GumService.Default.LocalizationService` and translates the text on screen again in the current language. Text set with `SetTextNoTranslate` is left alone. A file Gum cannot find is reported as `MissingFile`; one it cannot read (a malformed or empty file, or one the editor still has open) is tried once more after the debounce, then leaves the old translations in place and is reported as `ReloadFailed`. A game that has no `LocalizationService` is not affected.
+
+Animation chain files (`.achx`, `.achj`) are reloaded when a Sprite or NineSlice uses one as its `SourceFile`: Gum drops the cached chains, reads the file again and assigns it to every visual using it, except those whose chains your code replaced. A chain file no visual uses is ignored. The playing chain is found again by name, so reordering chains is fine. If the chain was renamed or deleted, the visual keeps its last frame and Gum reports a `ReloadFailed` issue (`MatchesRestart` is `false`), since a restart would show nothing. Chains your code assigned to the visual's `AnimationChains` after the file was assigned are left alone.
+
+When a reload is triggered, Gum automatically copies each changed `.fnt` and the texture pages it names from the source project to the same place in the bin-side folder (`FontCache/` for generated fonts, any folder for a `CustomFontFile`), and evicts cached fonts so they are reloaded from disk. Every `Text` then resolves its font again, so a font regenerated under the same name, or one that is written after the project was saved, shows on `Text` that is already on screen.
+
+### Renamed or Deleted Screens and Components
+
+Hot reload matches each screen or component your game is showing to the project by name. If you rename one, move it to another folder, or delete it in the tool, the running visual has nothing to match. It stays on screen as it was, and Gum reports it once to `PropertyAssignmentError` and the console, for example `Hot reload: the screen 'MainScreen' the game is showing is not in the project any more`. A component reads `the component 'Name'` instead. Edits to it, or to what replaced it, do not reach the game until you restart it. If you undo the rename, Gum matches it again and edits arrive.
+
+An instance of a deleted component inside a screen or another component is treated differently. The tool keeps the instance in the file, and a restarted game would not create it, so Gum removes the instance and its children from the running UI to match. It reports this once as well, for example `Hot reload: 'Card1' in 'Main' is a 'Card', which is not in the project any more`.
+
+An instance whose component was renamed, moved to another folder, or changed to another type is rebuilt, since its visual is made from the new component. The running tree is right, but code references and Forms handlers you held on the old visual are stale. Gum reports this once per pair of components in each reload, for example `Hot reload: 'Card1' in 'Main' is now a 'Card2' (was 'Card')`. The removal and the rebuild are also issues in the result of [`HotReloadFinished`](#reacting-to-a-reload). A custom runtime class you registered for a component name with `RegisterGueInstantiation` is not registered again for the new name, so an instance rebuilt after a rename keeps the old class until you restart.
 
 ### What Is Not Reloaded
 
 Hot reload is focused on Gum element definitions. The following are **not** automatically reloaded:
 
 * **Shader files** — When a file that a container's `SourceShaderFile` points at changes (any extension), the shader is compiled again and assigned to every container using it. The element tree is not rebuilt. A file the shader imports or includes is not tracked.
-* **Textures and images** — If you change a `.png` file, the cached texture is still used. Restart the game to pick up texture changes.
+* **Textures and images** — If you change a `.png` file that a Sprite or NineSlice shows, the cached texture is still used. Restart the game to pick up texture changes. This includes images that an animation chain file names for its frames. Gum reports the file as a `ReloadFailed` issue, so `MatchesRestart` is `false`, and lists it in every later result until the game restarts.
 * **Animation files** — `.ganx` animation definitions are not reloaded.
 * **Runtime state on existing instances** — A reload applies the variables the project changed and leaves the rest alone, so a value your code set (e.g., `Text` or `Width`) stays unless the project changed that variable. See [Preserving Runtime State](#preserving-runtime-state) below.
 
-### Renamed or Deleted Screens and Components
-
-Hot reload matches each screen or component your game is showing to the project by name. If you rename one, move it to another folder, or delete it in the tool, the running visual has nothing to match. It stays on screen as it was, and Gum reports it once to `PropertyAssignmentError` and the console, for example `Hot reload: the screen 'MainScreen' the game is showing is not in the project any more`. A component reads `the component 'Name'` instead. Edits to it, or to what replaced it, do not reach the game until you restart it. If you undo the rename, Gum matches it again and edits arrive.
 
 ### Known Limitation: Cleared Tags
 
@@ -90,7 +99,7 @@ When `EnableHotReload` is called, Gum creates a `FileSystemWatcher` on the direc
 Available in November 2026, or now if building Gum from source.
 {% endhint %}
 
-A variable the reload does not find changed keeps the value your code gave it. Changing a variable in the Gum tool, or the default of the component an instance is built from, applies the new value over a value your code set. A variable the control's current state also sets is applied again with the state, so a value your code set on it is reset.
+A variable the reload does not find changed keeps the value your code gave it. Changing a variable in the Gum tool, or the default of the component an instance is built from, applies the new value over a value your code set. A variable the control's current state also sets is applied again with the state, so a value your code set on it is reset. A state your code applied with `ApplyState` is not tracked: a value it set stays after the saved state stops setting that variable, is deleted or is renamed. To see the saved state exactly, create the element again from the reloaded project, which is what a restart does.
 
 A project file that cannot be read during a reload (half written or locked by the editor) leaves the running UI as it was, and the file name and reason are reported through `CustomSetPropertyOnRenderable.PropertyAssignmentError` and the console. Gum retries once after the debounce, and the next complete save reloads normally. An element file that was deleted while the project still lists it is reported and left out, and the rest reloads. A failure while applying a file that loaded is reported the same way and the next complete save reloads.
 
@@ -133,6 +142,55 @@ Common things to re-apply in a `HotReloadCompleted` handler:
 * Event handler subscriptions on buttons or other interactive elements, if they were attached to specific instances rather than registered through Forms.
 
 If your game has a single screen-level "apply current state to UI" method, calling it from `HotReloadCompleted` is usually the simplest approach.
+
+## Reacting to a Reload
+
+`HotReloadFinished` fires after every reload, including one that failed, and gives you a `HotReloadResult` listing what the reload could not do exactly. `HotReloadCompleted` still fires after a reload that was applied.
+
+```csharp
+// Initialize
+GumUI.HotReloadFinished += result =>
+{
+    if (result.IsClean)
+    {
+        return;
+    }
+
+    foreach (HotReloadIssue issue in result.Issues)
+    {
+        Console.WriteLine($"{issue.Kind}: {issue.Message}");
+    }
+
+    if (!result.MatchesRestart)
+    {
+        Console.WriteLine("The running UI differs from what a restart would show.");
+    }
+};
+```
+
+Every reload's result lists every issue that reload had, including one an earlier reload had too. Only the console output is once-only. A project that could not be read is retried once after the debounce, and only the final outcome raises the event. An exception thrown by a handler of `HotReloadCompleted` or `HotReloadFinished` is printed and does not stop the reload or the other handlers.
+
+| `HotReloadIssueKind`  | Meaning                                                                                             | `MatchesRestart` |
+| --------------------- | --------------------------------------------------------------------------------------------------- | ---------------- |
+| `MissingFile`         | The project lists a file that is not on disk. The reload went on without it.                        | `false`          |
+| `FontFailure`         | A changed font file could not be copied. It is tried again on the next reload.                      | `false`          |
+| `FontSourceChanged`   | A font source file (`.ttf` or `.otf`) changed. Fonts already generated from it keep the old glyphs until a restart. | `false`          |
+| `ReloadFailed`        | The project or a changed localization file could not be read, applying it threw, or a changed file cannot be applied while the game runs (a replaced image). The UI is unchanged or partly updated. | `false`          |
+| `ShownElementGone`    | The screen or component the game shows was renamed, moved or deleted. It stays on screen as it was. | `false`          |
+| `InstanceRemoved`     | An instance of a deleted component was removed, as a restart would.                                 | `true`           |
+| `InstanceRebuilt`     | An instance's component changed or was renamed, so its visual was rebuilt. References and handlers on it are stale. | `true` |
+| `ComponentBaseTypeChanged` | A screen or component changed its base type. Visuals already on screen keep what they inherited from the old base. | `false` |
+| `BaseElementMissing` | A screen or component derives from an element that is not in the project. Visuals already on screen keep what they inherited from it. | `false` |
+| `ExposedVariableChanged` | A component changed which variables it exposes. Instances already on screen keep the exposure they were built with. | `false` |
+| `StandardElementChanged` | The default state of a standard element changed. Instances already on screen keep their old values. | `false` |
+
+An issue that makes `MatchesRestart` `false` because the running tree is stale, such as `ShownElementGone` or `ComponentBaseTypeChanged`, is listed in every result until a restart or until an edit puts the definition back.
+
+`MatchesRestart` is `true` when the running tree equals what restarting the game with the same project would show. On the result it is `true` only if every issue's `MatchesRestart` is `true`, so a clean result matches. An issue with `MatchesRestart` set to `true` can still need attention from your code, for example `InstanceRebuilt`.
+
+{% hint style="info" %}
+Available in November 2026, or now if building Gum from source.
+{% endhint %}
 
 ## Disabling Hot Reload
 

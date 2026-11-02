@@ -123,4 +123,56 @@ public class FromFileTooltipTemplateTests : BaseTestClass
 
         FrameworkElement.DefaultFormsTemplates[typeof(Tooltip)].ShouldBeSameAs(_templateBefore);
     }
+
+    // What generated code for a default-implementation Tooltip component registers at module init.
+    private static VisualTemplate RegisterGeneratedStyleTooltipTemplate(Func<InteractiveGue> create)
+    {
+        VisualTemplate template = new VisualTemplate((_, createForms) =>
+        {
+            InteractiveGue visual = create();
+            if (createForms)
+            {
+                visual.FormsControlAsObject = new Tooltip(visual);
+            }
+            return visual;
+        });
+        FrameworkElement.DefaultFormsTemplates[typeof(Tooltip)] = template;
+        return template;
+    }
+
+    [Fact]
+    public void NewTooltip_WithAGeneratedStyleTemplateRegistered_UsesThatTemplateVisual()
+    {
+        InteractiveGue generatedVisual = new InteractiveGue();
+        RegisterGeneratedStyleTooltipTemplate(() => generatedVisual);
+
+        Tooltip tooltip = new Tooltip();
+
+        tooltip.Visual.ShouldBeSameAs(generatedVisual);
+    }
+
+    [Fact]
+    public void ToolTipProperty_WithAGeneratedStyleTemplateRegistered_CreatesTooltipFromThatTemplate()
+    {
+        int created = 0;
+        RegisterGeneratedStyleTooltipTemplate(() => { created++; return new InteractiveGue(); });
+        Button button = new Button();
+
+        button.ToolTip = "Hello";
+
+        created.ShouldBe(1);
+    }
+
+    [Fact]
+    public void Tooltip_WithAGeneratedStyleTemplateAndAProjectTooltipComponent_KeepsTheGeneratedTemplate()
+    {
+        VisualTemplate generated = RegisterGeneratedStyleTooltipTemplate(() => new InteractiveGue());
+        GumProjectSave project = new GumProjectSave();
+        AddTooltipComponent(project, "Controls/Tooltip");
+        ObjectFinder.Self.GumProjectSave = project;
+
+        FormsUtilities.RegisterFromFileFormRuntimeDefaults();
+
+        FrameworkElement.DefaultFormsTemplates[typeof(Tooltip)].ShouldBeSameAs(generated);
+    }
 }

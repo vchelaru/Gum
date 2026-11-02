@@ -110,7 +110,7 @@ A component file with an empty `<BaseType>` loads, but code generation then writ
 To resolve it, open the component in the Gum tool and pick a `Base Type` (for example `Container`) in the `Base Type` dropdown, or set `<BaseType>` in the component's `.gucx` file to `Container` or to the component it derives from.
 
 {% hint style="info" %}
-Available in December 2026, or now if building Gum from source.
+Available in November 2026, or now if building Gum from source.
 {% endhint %}
 
 ### Missing Base Instance (GUM0016)
@@ -121,4 +121,14 @@ To resolve it, add an `<Instance>` with that name and `<DefinedByBase>true</Defi
 
 {% hint style="info" %}
 Available in December 2026, or now if building Gum from source.
+{% endhint %}
+
+### Component Containing Itself (GUM0018)
+
+A component cannot contain an instance of itself, directly or through the instances of other components (A contains B, B contains A). Such a component can never finish building. `gumcli check` reports **GUM0018** as an error on each element in the loop and names the path, for example `A -> B -> A`.
+
+To resolve it, delete or change the type of one instance in the loop.
+
+{% hint style="info" %}
+Available in November 2026, or now if building Gum from source.
 {% endhint %}

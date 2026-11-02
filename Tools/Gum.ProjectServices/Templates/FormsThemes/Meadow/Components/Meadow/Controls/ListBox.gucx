@@ -293,11 +293,17 @@
     <Variable Type="ListBoxCategory" Name="ListBoxCategoryState" SetsValue="false" />
     <Variable Type="SizingCategory" Name="SizingCategoryState" SetsValue="false" />
     <Variable Type="State" Name="State" Category="States and Visibility" SetsValue="true" />
+    <Variable Type="float" Name="VerticalScrollBarInstance.Height" SetsValue="true">
+      <Value xsi:type="xsd:float">-4</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="VerticalScrollBarInstance.HeightUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">2</Value>
+    </Variable>
     <Variable Type="string" Name="VerticalScrollBarInstance.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">ClipAndScrollContainer</Value>
     </Variable>
     <Variable Type="bool" Name="VerticalScrollBarInstance.Visible" SetsValue="true">
-      <Value xsi:type="xsd:boolean">true</Value>
+      <Value xsi:type="xsd:boolean">false</Value>
     </Variable>
     <Variable Type="float" Name="VerticalScrollBarInstance.X" SetsValue="true">
       <Value xsi:type="xsd:float">-2</Value>

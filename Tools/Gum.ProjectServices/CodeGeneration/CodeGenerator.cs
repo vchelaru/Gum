@@ -1056,6 +1056,54 @@ public class CodeGenerator
         return string.IsNullOrEmpty(gumFormsType) ? GetUnsupportedFormsBaseTypeMessage(element) : null;
     }
 
+    /// <summary>
+    /// Returns the message explaining why <paramref name="element"/>'s categories cannot be generated, or null
+    /// when they can. A category writes a nested enum named like it and a <c>&lt;Category&gt;State</c> property,
+    /// so neither may take the generated class's name (CS0542, which depends on the output library: the legacy
+    /// runtime classes end in <c>Runtime</c>) or repeat another category's enum or property name (CS0102).
+    /// Both are public API, so the element is reported instead of renamed the way instance and variable
+    /// members are. <see cref="CategoryNameCollisionErrorSource"/> reports it to <c>gumcli codegen</c>.
+    /// </summary>
+    public string? GetCategoryNameCollisionError(ElementSave element, CodeOutputProjectSettings projectSettings)
+    {
+        if (element is StandardElementSave || element.Categories.Count == 0)
+        {
+            return null;
+        }
+
+        CodeGenerationContext context = new CodeGenerationContext(_codeGenerationNameVerifier, element);
+        context.CodeOutputProjectSettings = projectSettings;
+        context.ResolvedSyntaxVersion = ResolveSyntaxVersion(projectSettings);
+        string? className = GetClassNameForType(element, GetVisualApiForElement(element), context);
+
+        Dictionary<string, string> declaredBy = new Dictionary<string, string>(StringComparer.Ordinal);
+        if (!string.IsNullOrEmpty(className))
+        {
+            declaredBy[className!.TrimStart('@')] = "the generated class of this element";
+        }
+
+        foreach (StateSaveCategory category in element.Categories)
+        {
+            string enumName = _codeGenerationNameVerifier.ToCSharpName(category.Name).TrimStart('@');
+            foreach ((string name, string description) in new[]
+            {
+                (enumName, $"the enum of category \"{category.Name}\""),
+                (enumName + "State", $"the state property of category \"{category.Name}\""),
+            })
+            {
+                if (declaredBy.TryGetValue(name, out string? existing))
+                {
+                    return $"Category \"{category.Name}\" generates {description} named \"{name}\", which is also the name of " +
+                        $"{existing}, so the generated code cannot compile. Rename the category or the element.";
+                }
+
+                declaredBy[name] = description;
+            }
+        }
+
+        return null;
+    }
+
     private static string GetUnsupportedFormsBaseTypeMessage(ElementSave element) =>
         $"Invalid inheritance - When using Forms codegen, {element.Name} must either inherit from Container, or must have Forms behaviors. It currently inherits from {element.BaseType}.";
 
@@ -1281,14 +1329,11 @@ public class CodeGenerator
                 }
 
                 // if there is no root variable, then this could be an orphan variable assignment which can happen if the user changes
-                // the type of an instance:
-                if(rootVariable == null)
+                // the type of an instance. Consumers skip the same variables (see GetIfExposedVariableResolves):
+                string? exposedVariableSkipReason = GetExposedVariableSkipReason(rootVariable, context.CodeOutputProjectSettings.OutputLibrary);
+                if (exposedVariableSkipReason != null)
                 {
-                    stringBuilder.AppendLine(context.Tabs + $"// Could not generate variable {exposedVariable} because it references a variable that doesn't exist");
-                }
-                else if (!GetIfRuntimeHasPropertyForVariable(rootVariable, context.CodeOutputProjectSettings.OutputLibrary))
-                {
-                    stringBuilder.AppendLine(context.Tabs + $"// Could not generate variable {exposedVariable} because the runtime type has no property for it");
+                    stringBuilder.AppendLine(context.Tabs + $"// Could not generate variable {exposedVariable} because {exposedVariableSkipReason}");
                 }
                 else //if (rootVariable != null)
                 {
@@ -1490,6 +1535,66 @@ public class CodeGenerator
                 return null;
         }
     }
+
+    /// <summary>
+    /// Returns why a container does not generate the property for an exposed variable whose root variable is
+    /// <paramref name="rootVariable"/>, or null when it does. The exposing instance's type may have changed
+    /// (Text to Container) since the variable was exposed; Gum keeps such variables, so this is not an error.
+    /// </summary>
+    private static string? GetExposedVariableSkipReason(VariableSave? rootVariable, OutputLibrary library)
+    {
+        if (rootVariable == null)
+        {
+            return "it references a variable that doesn't exist";
+        }
+        if (!GetIfRuntimeHasPropertyForVariable(rootVariable, library))
+        {
+            return "the runtime type has no property for it";
+        }
+        return null;
+    }
+
+    /// <summary>
+    /// Returns whether <paramref name="element"/> has a variable called <paramref name="name"/> that code can
+    /// assign. This is the consumer side of the filter the container applies when it generates an exposed
+    /// property (<see cref="GetExposedVariableSkipReason"/>): a variable exposed by the element is only there
+    /// when it still resolves to a variable of the exposing instance's current type, otherwise the property
+    /// was not generated and an assignment would not compile. Nothing is reported; the value stays in the
+    /// project in case the type change was accidental.
+    /// </summary>
+    private static bool GetIfExposedVariableResolves(RecursiveVariableFinder finder, ElementSave element, string name, OutputLibrary library)
+    {
+        VariableSave? found = finder.GetVariable(name);
+        if (found == null)
+        {
+            return false;
+        }
+
+        // The exposure can be on a base, and a derived element can also hold its own value under the exposed
+        // name, which is why the lookup is by the exposing element and not by what the finder returned.
+        ElementSave? exposingElement = null;
+        if (HasExposureNamed(element, name))
+        {
+            exposingElement = element;
+        }
+        else
+        {
+            foreach (ElementSave baseElement in ObjectFinder.Self.GetBaseElements(element))
+            {
+                if (HasExposureNamed(baseElement, name))
+                {
+                    exposingElement = baseElement;
+                    break;
+                }
+            }
+        }
+
+        return exposingElement == null ||
+            GetExposedVariableSkipReason(ObjectFinder.Self.GetRootVariable(name, exposingElement), library) == null;
+    }
+
+    private static bool HasExposureNamed(ElementSave element, string name) =>
+        element.DefaultState?.Variables.Any(item => item.ExposedAsName == name) == true;
 
     /// <summary>
     /// Returns false when the root variable is defined by a standard element whose runtime type has no
@@ -2245,6 +2350,7 @@ public class CodeGenerator
         { StandardFormsBehaviorNames.CheckBoxBehaviorName, "global::Gum.Forms.Controls.CheckBox" },
         { StandardFormsBehaviorNames.ColorPickerBehaviorName, "global::Gum.Forms.Controls.ColorPicker" },
         { StandardFormsBehaviorNames.ComboBoxBehaviorName, "global::Gum.Forms.Controls.ComboBox" },
+        { StandardFormsBehaviorNames.DialogBoxBehaviorName, "global::Gum.Forms.Controls.Games.DialogBox" },
         { StandardFormsBehaviorNames.ExpanderBehaviorName, "global::Gum.Forms.Controls.Expander" },
         { StandardFormsBehaviorNames.ItemsControlBehaviorName, "global::Gum.Forms.Controls.ItemsControl" },
         { StandardFormsBehaviorNames.LabelBehaviorName, "global::Gum.Forms.Controls.Label" },
@@ -2262,6 +2368,9 @@ public class CodeGenerator
         { StandardFormsBehaviorNames.SplitterBehaviorName, "global::Gum.Forms.Controls.Splitter" },
         { StandardFormsBehaviorNames.StackPanelBehaviorName, "global::Gum.Forms.Controls.StackPanel" },
         { StandardFormsBehaviorNames.TextBoxBehaviorName, "global::Gum.Forms.Controls.TextBox" },
+        { StandardFormsBehaviorNames.ToggleBehaviorName, "global::Gum.Forms.Controls.ToggleButton" },
+        { StandardFormsBehaviorNames.TooltipBehaviorName, "global::Gum.Forms.Controls.Tooltip" },
+        { StandardFormsBehaviorNames.UserControlBehaviorName, "global::Gum.Forms.Controls.UserControl" },
         { StandardFormsBehaviorNames.WindowBehaviorName, "global::Gum.Forms.Window" },
     };
 
@@ -4254,6 +4363,8 @@ public class CodeGenerator
         }
         foreach (StateSaveCategory category in element.Categories)
         {
+            // The category's nested enum and its state property are both members of the class.
+            reserved.Add(_codeGenerationNameVerifier.ToCSharpName(category.Name));
             reserved.Add(_codeGenerationNameVerifier.ToCSharpName(category.Name) + "State");
         }
         return _codeGenerationNameVerifier.ReserveMemberNames(reserved);
@@ -5007,8 +5118,8 @@ public class CodeGenerator
                         // it could be a leftover variable caused by having this object be of one type, using a variable
                         // specific to that type, then changing it to another type. Gum holds on to these varibles in case
                         // the type change was accidental, but it means we have to watch for these orphan variables when generating.
-                        var foundVariable = recursiveVariableFinder.GetVariable(item.Name);
-                        shouldInclude = foundVariable != null;
+                        shouldInclude = GetIfExposedVariableResolves(
+                            recursiveVariableFinder, baseElement!, item.Name, context.CodeOutputProjectSettings.OutputLibrary);
                     }
                     else
                     {
@@ -6390,7 +6501,7 @@ public class CodeGenerator
             // A shader parameter value is declared by the container that saved it (its marker), not by the
             // instance's type, so the type does not have it.
             shouldInclude = IsShaderParameterVariable(item) ||
-                baseRecursiveVariableFinder.GetVariable(item.GetRootName()) != null;
+                GetIfExposedVariableResolves(baseRecursiveVariableFinder, instanceBaseElement, item.GetRootName(), outputLibrary);
         }
 
         if (shouldInclude)

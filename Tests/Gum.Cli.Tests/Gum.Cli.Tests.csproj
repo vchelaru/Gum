@@ -39,6 +39,7 @@
     <Compile Include="..\Shared\GraphicalUiElementStateAssert.cs" Link="Shared\GraphicalUiElementStateAssert.cs" />
     <Compile Include="..\Shared\ObjectFinderState.cs" Link="Shared\ObjectFinderState.cs" />
     <Compile Include="..\Shared\ObjectFinderStateAssert.cs" Link="Shared\ObjectFinderStateAssert.cs" />
+    <Compile Include="..\Shared\LeftoverVariablesProject.cs" Link="Shared\LeftoverVariablesProject.cs" />
     <None Include="..\..\THIRD-PARTY-NOTICES.txt" Link="THIRD-PARTY-NOTICES.txt" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 

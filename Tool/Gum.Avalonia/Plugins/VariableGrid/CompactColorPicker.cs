@@ -7,6 +7,7 @@ using Avalonia.Interactivity;
 using Avalonia.Layout;
 using Avalonia.Media;
 using AvaloniaDataUi.Controls;
+using Gum.Avalonia.Plugins.TreeView;
 
 namespace Gum.Avalonia.Plugins.VariableGrid;
 
@@ -37,6 +38,7 @@ public class CompactColorPicker : UserControl
             Components = ColorSpectrumComponents.SaturationValue,
             Height = 140,
         };
+        AvaloniaTreeIcons.FollowBaseFontSize(_spectrum, Layoutable.HeightProperty, 140);
         _spectrum.PropertyChanged += (_, e) =>
         {
             if (e.Property == ColorSpectrum.HsvColorProperty && !_isSyncing)
@@ -54,6 +56,7 @@ public class CompactColorPicker : UserControl
             Height = 14,
             Margin = new Thickness(0, 6, 0, 2),
         };
+        AvaloniaTreeIcons.FollowBaseFontSize(_hueSlider, Layoutable.HeightProperty, 14);
         _hueSlider.PropertyChanged += (_, e) =>
         {
             if (e.Property == ColorSlider.HsvColorProperty && !_isSyncing)
@@ -63,6 +66,7 @@ public class CompactColorPicker : UserControl
         };
 
         StackPanel panel = new StackPanel { Width = 200, Spacing = 2 };
+        AvaloniaTreeIcons.FollowBaseFontSize(panel, Layoutable.WidthProperty, 200);
         panel.Children.Add(_spectrum);
         panel.Children.Add(_hueSlider);
 
@@ -74,8 +78,12 @@ public class CompactColorPicker : UserControl
         }
 
         _originalSwatch = new Border { Width = 32, Height = 16, CornerRadius = new CornerRadius(2, 0, 0, 2) };
+        AvaloniaTreeIcons.FollowBaseFontSize(_originalSwatch, Layoutable.WidthProperty, 32);
+        AvaloniaTreeIcons.FollowBaseFontSize(_originalSwatch, Layoutable.HeightProperty, 16);
         ToolTip.SetTip(_originalSwatch, "Color when the picker opened");
         _currentSwatch = new Border { Width = 32, Height = 16, CornerRadius = new CornerRadius(0, 2, 2, 0) };
+        AvaloniaTreeIcons.FollowBaseFontSize(_currentSwatch, Layoutable.WidthProperty, 32);
+        AvaloniaTreeIcons.FollowBaseFontSize(_currentSwatch, Layoutable.HeightProperty, 16);
         ToolTip.SetTip(_currentSwatch, "Current color");
         StackPanel swatches = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 4, 0, 0) };
         swatches.Children.Add(_originalSwatch);
@@ -157,6 +165,7 @@ public class CompactColorPicker : UserControl
                 SetRgb(e.NewColor, isUserEdit: true);
             }
         };
+        AvaloniaTreeIcons.FollowBaseFontSize(slider, Layoutable.HeightProperty, 14);
         _channelSliders[channel] = slider;
 
         EditTrackingTextBox textBox = new EditTrackingTextBox
@@ -169,6 +178,9 @@ public class CompactColorPicker : UserControl
             VerticalContentAlignment = VerticalAlignment.Center,
             VerticalAlignment = VerticalAlignment.Center,
         };
+        AvaloniaTreeIcons.FollowBaseFontSize(textBox, Layoutable.WidthProperty, 40);
+        AvaloniaTreeIcons.FollowBaseFontSize(textBox, Layoutable.MinHeightProperty, 22);
+        AvaloniaTreeIcons.FollowBaseFontSize(textBox, Layoutable.HeightProperty, 22);
         textBox.AddHandler(KeyDownEvent, (_, e) =>
         {
             if (e.Key == Key.Enter)

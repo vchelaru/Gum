@@ -44,15 +44,19 @@ For example you can think of screens in a video game which might include a main 
 
 ## Creating a Project
 
-Before you work on your project, you must first create a new project. You can save this project anywhere on your computer, but it's best to save the project in an empty folder so that all of the project files don't get mixed in with existing files.
+Before you work on your project, you must first create a new project. Gum creates a new folder for the project, so you can pick any location on your computer.
 
 To create a project:
 
-1. Select File->New Project
-2. Un-check the Include Forms controls option - this tutorial assumes a completely empty project
-3. Select a new location somewhere on your machine for the new project. If you are using a library like MonoGame or raylib, you may want to save the project in a folder under your game project, such as a Content or Resources folder.
+1. Select File > New Project
+2. Enter a **Project name**, such as `MyProject`.
+3. Un-check the **Include Forms controls** option - this tutorial assumes a completely empty project.
+4. Set the **Location**. If you are using a library like MonoGame or raylib, you may want to create the project under your game project, such as in a Content or Resources folder.
+5. Click **OK**.
 
-Once your project has been saved you should see its name in Gum's title bar.
+See [Creating a Project](../../setup/creating-a-project.md) for the other options in the dialog.
+
+Once your project has been created you should see its name in Gum's title bar.
 
 <figure><img src="../../../.gitbook/assets/02_08 37 36.png" alt=""><figcaption><p>Gum Project Title</p></figcaption></figure>
 

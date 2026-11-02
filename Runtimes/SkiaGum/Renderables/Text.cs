@@ -2304,7 +2304,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
     /// <see cref="Blend"/> is set) so the two compose in one <c>canvas.SaveLayer</c>. Returns
     /// <c>null</c> when neither effect is active, leaving <see cref="Render"/>'s fast path
     /// unchanged. The caller owns the returned paint and must dispose it. The blur values are
-    /// divided by 3 to match the sigma convention <see cref="RenderableShapeBase"/> uses for Skia shapes.
+    /// converted to a sigma with <see cref="DropshadowBlur.GetSigma"/>, the same convention <see cref="RenderableShapeBase"/> uses for Skia shapes.
     /// </summary>
     internal SKPaint? GetRenderPaint()
     {
@@ -2320,8 +2320,8 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
             paint.ImageFilter = SKImageFilter.CreateDropShadow(
                 DropshadowOffsetX,
                 DropshadowOffsetY,
-                DropshadowBlurX / 3.0f,
-                DropshadowBlurY / 3.0f,
+                global::Gum.Wireframe.DropshadowBlur.GetSigma(DropshadowBlurX),
+                global::Gum.Wireframe.DropshadowBlur.GetSigma(DropshadowBlurY),
                 DropshadowColor);
         }
 

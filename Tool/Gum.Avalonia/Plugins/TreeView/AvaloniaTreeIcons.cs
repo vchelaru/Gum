@@ -6,6 +6,11 @@ using Avalonia.Controls.Shapes;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform;
+using Avalonia.Data;
+using Avalonia.Layout;
+using Avalonia.Styling;
+using FluentIcons.Avalonia;
+using Gum.Avalonia.Themes;
 using Gum.Managers;
 
 namespace Gum.Avalonia.Plugins.TreeView;
@@ -65,11 +70,49 @@ public static class AvaloniaTreeIcons
         return brush;
     }
 
+    /// <summary>
+    /// Sizes <paramref name="icon"/> as <paramref name="sizeAtDefaultZoom"/> pixels at the default base font
+    /// size and in proportion to it after, so the icon follows the tool's zoom like the text beside it.
+    /// </summary>
+    public static void FollowBaseFontSize(Control icon, double sizeAtDefaultZoom, bool widthOnly = false)
+    {
+        IObservable<object?> size = SizeObservable(icon, sizeAtDefaultZoom);
+        icon.Bind(Layoutable.WidthProperty, size);
+        if (widthOnly)
+        {
+            return;
+        }
+        icon.Bind(Layoutable.HeightProperty, size);
+        if (icon is FluentIcon)
+        {
+            icon.Bind(FluentIcon.FontSizeProperty, size);
+        }
+    }
+
+    /// <summary>
+    /// Sizes <paramref name="property"/> of <paramref name="control"/> (a font size, say) as
+    /// <paramref name="sizeAtDefaultZoom"/> at the default base font size and in proportion to it after.
+    /// </summary>
+    public static void FollowBaseFontSize(Control control, AvaloniaProperty<double> property, double sizeAtDefaultZoom) =>
+        control.Bind(property, SizeObservable(control, sizeAtDefaultZoom));
+
+    /// <summary>The current base font size as a multiple of the default, 1 at the default zoom.</summary>
+    public static double GetZoomScale(Control control) =>
+        control.TryFindResource(FrbThemeResources.BaseFontSizeKey, control.ActualThemeVariant, out object? value) && value is double baseSize
+            ? baseSize / FrbThemeResources.DefaultBaseFontSize
+            : 1;
+
+    private static IObservable<object?> SizeObservable(Control control, double sizeAtDefaultZoom) =>
+        control.GetResourceObservable(
+            FrbThemeResources.BaseFontSizeKey,
+            value => (object)((value is double baseSize ? baseSize : FrbThemeResources.DefaultBaseFontSize)
+                / FrbThemeResources.DefaultBaseFontSize * sizeAtDefaultZoom));
+
     /// <summary>A tinted icon for a file-name key (e.g. "Sprite_Instance.png"), or null if there is none.</summary>
     public static Control? CreateIcon(string key, double size) =>
         TreeIconCatalog.TryGetIndex(key, out int index) ? CreateIcon(index, size) : null;
 
-    /// <summary>A tinted icon for an icon index, or null if there is none.</summary>
+    /// <summary>A tinted icon for an icon index, or null if there is none. <paramref name="size"/> is its size at the default zoom.</summary>
     public static Control? CreateIcon(int imageIndex, double size)
     {
         if (GetBitmap(imageIndex) is not { } bitmap)
@@ -77,13 +120,15 @@ public static class AvaloniaTreeIcons
             return null;
         }
 
-        return new Rectangle
+        Rectangle icon = new Rectangle
         {
             Width = size,
             Height = size,
             Fill = GetBrush(imageIndex),
             OpacityMask = new ImageBrush(bitmap),
         };
+        FollowBaseFontSize(icon, size);
+        return icon;
     }
 
     private static Bitmap? LoadBitmap(TreeIconDefinition definition)

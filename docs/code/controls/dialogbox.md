@@ -83,6 +83,8 @@ dialogBox.AdvancePageInputPredicate = () =>
     GumService.Default.Keyboard.KeyPushed(Gum.Forms.Input.Keys.Z);
 ```
 
+Tab, the arrow keys, and the gamepad d-pad move focus off a focused `DialogBox` like any other control, so a game that keeps it focused for its own d-pad choices should handle those inputs first.
+
 ## Async Usage
 
 `ShowAsync` returns a `Task` that completes once all pages have been displayed

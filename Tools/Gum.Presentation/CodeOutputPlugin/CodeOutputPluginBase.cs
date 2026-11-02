@@ -254,6 +254,7 @@ public abstract class CodeOutputPluginBase : PluginBase
         this.VariableAdd += HandleVariableAdd;
         this.VariableSet += HandleVariableSet;
         this.VariableSetThroughReference += HandleVariableSetThroughReference;
+        this.VariableSetBatchCompleted += _ => HandleRefreshAndExport();
         this.VariableDelete += HandleVariableDelete;
         this.VariableExcluded += HandleVariableExcluded;
         this.AddAndRemoveVariablesForType += CustomVariableManager.HandleAddAndRemoveVariablesForType;
@@ -441,6 +442,12 @@ public abstract class CodeOutputPluginBase : PluginBase
         if (!IsProjectSettingsReadOnly)
         {
             _renameService.HandleVariableSet(element, instance, variableName, oldValue, codeOutputProjectSettings);
+        }
+
+        // Code generation covers the whole element, so a multi-select edit's batch runs it once, on completion.
+        if (IsVariableSetBatchOpen && isFullCommit)
+        {
+            return;
         }
 
         HandleRefreshAndExport(isFullCommit);

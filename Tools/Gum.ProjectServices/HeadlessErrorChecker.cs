@@ -1,4 +1,4 @@
-﻿using Gum.Bundle;
+using Gum.Bundle;
 using Gum.Content.AnimationChain;
 using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
@@ -18,7 +18,7 @@ using ToolsUtilities;
 namespace Gum.ProjectServices;
 
 /// <inheritdoc/>
-public class HeadlessErrorChecker : IHeadlessErrorChecker
+public partial class HeadlessErrorChecker : IHeadlessErrorChecker
 {
     private static readonly HashSet<string> KnownBaseTypes = new HashSet<string>
     {
@@ -95,6 +95,7 @@ public class HeadlessErrorChecker : IHeadlessErrorChecker
             errors.AddRange(GetProjectFileCaseMismatchErrors(project, caseMismatchPaths));
             errors.AddRange(GetFontRangeEntryErrors(project));
             errors.AddRange(GetMissingComponentBaseTypeErrors(project));
+            errors.AddRange(GetDuplicateReferenceErrors(project));
         }
         finally
         {
@@ -123,6 +124,7 @@ public class HeadlessErrorChecker : IHeadlessErrorChecker
             List<ErrorResult> errors = GetProjectFileCaseMismatchErrors(project, caseMismatchPaths);
             errors.AddRange(GetFontRangeEntryErrors(project));
             errors.AddRange(GetMissingComponentBaseTypeErrors(project));
+            errors.AddRange(GetDuplicateReferenceErrors(project));
             return errors;
         }
         finally
@@ -147,8 +149,17 @@ public class HeadlessErrorChecker : IHeadlessErrorChecker
         errors.AddRange(GetMissingExternalFileErrorsFor(element, project, caseMismatchPaths));
         errors.AddRange(GetMissingElementBaseTypeErrorFor(element));
         errors.AddRange(GetCircularBaseTypeErrorFor(element));
+        errors.AddRange(GetInstanceCycleErrorFor(element));
         errors.AddRange(GetMissingBaseTypeErrorsFor(element));
         errors.AddRange(GetParentErrorsFor(element));
+        errors.AddRange(GetValueTypeMismatchErrorsFor(element));
+        errors.AddRange(GetDuplicateNameErrorsFor(element));
+        errors.AddRange(GetParentCycleErrorsFor(element));
+        errors.AddRange(GetScreenAsTypeErrorsFor(element));
+        errors.AddRange(GetUnknownStateValueErrorsFor(element));
+        errors.AddRange(GetMissingInstanceVariableErrorsFor(element));
+        errors.AddRange(GetUnknownVariableTypeErrorsFor(element));
+        errors.AddRange(GetUnknownInstanceVariableErrorsFor(element));
         errors.AddRange(GetInvalidVariableTypeErrorsFor(element));
         errors.AddRange(GetInvalidEnumValueErrorsFor(element));
         errors.AddRange(GetAchxOriginErrorsFor(element, project));
@@ -610,7 +621,9 @@ public class HeadlessErrorChecker : IHeadlessErrorChecker
                 }
                 else if (variablePath.Length > 0 && !VariableExists(referencedElement, variablePath))
                 {
-                    problem = $"\"{variablePath}\" from {qualifiedElementName}, which has no such variable{GetSavedShaderNameHint(referencedElement, variablePath)}";
+                    string cause = DescribeBrokenExposedVariable(referencedElement, variablePath)
+                        ?? "has no such variable" + GetSavedShaderNameHint(referencedElement, variablePath);
+                    problem = $"\"{variablePath}\" from {qualifiedElementName}, which {cause}";
                 }
             }
             return " ";
@@ -625,7 +638,10 @@ public class HeadlessErrorChecker : IHeadlessErrorChecker
             string referencedName = ElementSaveExtensions.DecodeOwnerName(match.Value);
             if (!ReferenceKeywords.Contains(referencedName) && !VariableExists(owner, referencedName))
             {
-                return $"\"{referencedName}\", which {owner.Name} does not have{GetSavedShaderNameHint(owner, referencedName)}";
+                string? brokenCause = DescribeBrokenExposedVariable(owner, referencedName);
+                return brokenCause != null
+                    ? $"\"{referencedName}\", which {owner.Name} exposes as {brokenCause.Substring("exposes ".Length)}"
+                    : $"\"{referencedName}\", which {owner.Name} does not have{GetSavedShaderNameHint(owner, referencedName)}";
             }
         }
         return null;
@@ -638,9 +654,7 @@ public class HeadlessErrorChecker : IHeadlessErrorChecker
     /// </summary>
     private static bool VariableExists(ElementSave element, string variablePath)
     {
-        VariableSave? exposed = SelfAndBaseElements(element)
-            .Select(inChain => inChain.DefaultState?.Variables.FirstOrDefault(variable => variable.ExposedAsName == variablePath))
-            .FirstOrDefault(found => found != null);
+        VariableSave? exposed = FindExposedVariable(element, variablePath);
         if (exposed != null)
         {
             // An exposed variable is read through the instance variable it exposes. Only a dotted
@@ -701,6 +715,41 @@ public class HeadlessErrorChecker : IHeadlessErrorChecker
             return VariableExists(element, variablePath.Substring(0, variablePath.Length - "Color".Length) + "Red");
         }
         return false;
+    }
+
+    private static VariableSave? FindExposedVariable(ElementSave element, string exposedName) =>
+        SelfAndBaseElements(element)
+            .Select(inChain => inChain.DefaultState?.Variables.FirstOrDefault(variable => variable.ExposedAsName == exposedName))
+            .FirstOrDefault(found => found != null);
+
+    /// <summary>
+    /// When <paramref name="variablePath"/> is an exposed variable of <paramref name="element"/> that still exists
+    /// but reads an instance variable the instance's current type lacks (the usual result of changing an
+    /// instance's base type, which keeps the exposed variable), returns the cause, such as
+    /// <c>exposes Caption.Text, but Caption's type (Container) has no Text variable</c>; otherwise null.
+    /// </summary>
+    private static string? DescribeBrokenExposedVariable(ElementSave element, string variablePath)
+    {
+        VariableSave? exposed = FindExposedVariable(element, variablePath);
+        if (exposed == null || !exposed.Name.Contains('.'))
+        {
+            return null;
+        }
+        string target = exposed.Name;
+        int dot = target.IndexOf('.');
+        string instanceName = target.Substring(0, dot);
+        string instanceVariable = target.Substring(dot + 1);
+        InstanceSave? instance = FindInstanceInInheritance(element, instanceName);
+        if (instance == null)
+        {
+            return $"exposes {target}, but {element.Name} has no instance {instanceName}";
+        }
+        ElementSave? instanceType = ObjectFinder.Self.GetElementSave(instance.BaseType);
+        string? nested = instanceType == null ? null : DescribeBrokenExposedVariable(instanceType, instanceVariable);
+        string typeText = $"{instanceName}'s type ({instance.BaseType})";
+        return nested != null
+            ? $"exposes {target}, and {typeText} {nested}"
+            : $"exposes {target}, but {typeText} has no {instanceVariable} variable";
     }
 
     /// <summary>
@@ -1396,6 +1445,58 @@ public class HeadlessErrorChecker : IHeadlessErrorChecker
         }
 
         return errors;
+    }
+
+    // GUM0018: an element that contains an instance of itself, directly or through other elements' instances.
+    // Such an element can never finish building, so each element on the cycle gets the row and names the path.
+    private static List<ErrorResult> GetInstanceCycleErrorFor(ElementSave elementSave)
+    {
+        List<ErrorResult> errors = new List<ErrorResult>();
+        List<ElementSave>? path = FindInstanceCyclePath(elementSave, elementSave, new List<ElementSave> { elementSave }, new HashSet<ElementSave>());
+
+        if (path != null)
+        {
+            errors.Add(new ErrorResult
+            {
+                ElementName = elementSave.Name,
+                Code = "GUM0018",
+                Severity = ErrorSeverity.Error,
+                Message = $"{elementSave.Name} contains itself: {string.Join(" -> ", path.Select(item => item.Name))}. " +
+                    "Remove the instance that closes the loop; an element that instantiates itself can never finish building."
+            });
+        }
+
+        return errors;
+    }
+
+    private static List<ElementSave>? FindInstanceCyclePath(ElementSave target, ElementSave current, List<ElementSave> path, HashSet<ElementSave> visited)
+    {
+        foreach (InstanceSave instance in current.Instances)
+        {
+            ElementSave? instanceElement = ObjectFinder.Self.GetElementSave(instance.BaseType);
+            if (instanceElement == null)
+            {
+                continue;
+            }
+
+            if (instanceElement == target)
+            {
+                return new List<ElementSave>(path) { target };
+            }
+
+            if (visited.Add(instanceElement))
+            {
+                path.Add(instanceElement);
+                List<ElementSave>? found = FindInstanceCyclePath(target, instanceElement, path, visited);
+                if (found != null)
+                {
+                    return found;
+                }
+                path.RemoveAt(path.Count - 1);
+            }
+        }
+
+        return null;
     }
 
     #endregion

@@ -9,6 +9,7 @@ using Avalonia.Interactivity;
 using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
+using Gum.Avalonia.Plugins.TreeView;
 using AvaloniaDataUi.Controls;
 using Gum.Avalonia.Themes;
 using Gum.Controls.DataUi;
@@ -184,6 +185,7 @@ public class ColorDisplay : DataUiDisplayBase
     {
         _label = new TextBlock { VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(4, 0), TextTrimming = TextTrimming.CharacterEllipsis };
         _swatch = new Border { Height = 18, CornerRadius = new CornerRadius(2), BorderBrush = Brushes.Gray, BorderThickness = new Thickness(1) };
+        AvaloniaTreeIcons.FollowBaseFontSize(_swatch, Layoutable.HeightProperty, 18);
 
         _colorPicker = new CompactColorPicker();
         _colorPicker.ColorChanged += (_, color) => HandleColorPicked(color);
@@ -208,6 +210,7 @@ public class ColorDisplay : DataUiDisplayBase
         swatchButton.Classes.Add(GumChromeStyles.ValuePreviewButtonClass);
 
         _hexTextBox = new EditTrackingTextBox { Width = 68, VerticalAlignment = VerticalAlignment.Center };
+        AvaloniaTreeIcons.FollowBaseFontSize(_hexTextBox, Layoutable.WidthProperty, 68);
         ToolTip.SetTip(_hexTextBox, "Type or paste a hex color (RRGGBB or RRGGBBAA). Alpha is ignored.");
         _hexTextBox.AddHandler(KeyDownEvent, (_, e) =>
         {

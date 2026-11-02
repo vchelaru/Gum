@@ -75,7 +75,7 @@ public class ComboBoxDropDownEventsTests : BaseTestClass
         ComboBox comboBox = CreateComboBox();
         EventLog log = new(comboBox);
 
-        ComboBoxFollowSplashTests.PushOn(comboBox.Visual);
+        ComboBoxPopupFollowTests.PushOn(comboBox.Visual);
 
         comboBox.IsDropDownOpen.ShouldBeTrue();
         ShouldHaveRaised(log, opened: 1, closed: 0);
@@ -174,7 +174,7 @@ public class ComboBoxDropDownEventsTests : BaseTestClass
         comboBox.IsDropDownOpen = true;
         EventLog log = new(comboBox);
 
-        ComboBoxFollowSplashTests.PushOn(comboBox.ListBox.ListBoxItems[2].Visual);
+        ComboBoxPopupFollowTests.PushOn(comboBox.ListBox.ListBoxItems[2].Visual);
 
         comboBox.IsDropDownOpen.ShouldBeFalse();
         comboBox.SelectedIndex.ShouldBe(2);
@@ -234,7 +234,7 @@ public class ComboBoxDropDownEventsTests : BaseTestClass
         comboBox.IsDropDownOpen = true;
         EventLog log = new(comboBox);
 
-        ComboBoxFollowSplashTests.PushOn(null, frames: 2);
+        ComboBoxPopupFollowTests.PushOn(null, frames: 2);
 
         comboBox.IsDropDownOpen.ShouldBeFalse();
         ShouldHaveRaised(log, opened: 0, closed: 1);

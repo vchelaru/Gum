@@ -3,6 +3,7 @@
 #endif
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
+using Gum.Localization;
 using Gum.Managers;
 using Gum.Wireframe;
 using GumRuntime;
@@ -29,6 +30,13 @@ public interface IGumHotReloadManager
     /// Raised after a reload has been performed in response to a file change.
     /// </summary>
     event Action? ReloadCompleted;
+
+    /// <summary>
+    /// Raised after every reload attempt, successful or not, right after <see cref="ReloadCompleted"/>
+    /// when that is raised. The result lists every issue present in that reload, even one an earlier
+    /// reload already had; only the console output is once-only.
+    /// </summary>
+    event Action<HotReloadResult>? ReloadFinished;
 
     /// <summary>
     /// Starts watching the directory containing the specified .gumx project file for changes.
@@ -65,6 +73,13 @@ public interface IGumHotReloadManager
 /// </remarks>
 public class GumHotReloadManager : IGumHotReloadManager
 {
+    /// <summary>
+    /// Whether a reload that finds the shown screen gone from the project prints that. A host that
+    /// rebuilds what it shows after such a reload (GumPreview) sets this to false: the message says
+    /// the old UI stays, which is not true there. This only affects printing: the result still lists <see cref="HotReloadIssueKind.ShownElementGone"/> and <see cref="HotReloadResult.MatchesRestart"/> stays false.
+    /// </summary>
+    public static bool PrintsShownElementGone { get; set; } = true;
+
     private readonly Action<GumProjectSave> _applyProjectTextureFilter;
     private readonly Func<GumProjectSave, Gum.Bundle.IGumFileProvider, int> _loadAnimationsFromProvider;
     private readonly Action<string> _disposeCachedAsset;
@@ -81,11 +96,41 @@ public class GumHotReloadManager : IGumHotReloadManager
     private readonly object _pendingReloadLock = new object();
     // Consecutive reloads that failed to read the project; reset by any new file change.
     private int _failedAttempts;
-    // Problems the last reload reported (a visual whose element is gone). A problem is said once,
-    // not on every later save, and said again if it goes away and comes back; game thread only.
+    // Problems the last reload printed (a visual whose element is gone). A problem is printed once,
+    // not on every later save, and printed again if it goes away and comes back; game thread only.
+    // It never filters a reload's result, which lists every issue of that reload.
     private readonly HashSet<string> _reportedProblems = new HashSet<string>();
-    private readonly List<string> _changedFontFiles = new List<string>();
+    // The base type and exposed variables each element's visuals were built with, kept for an element
+    // whose definition has since changed. The diff re-points a visual at the new element, so without
+    // this the next reload would see no change and stop listing a tree that is still stale.
+    private readonly ReloadMemory _memory = new ReloadMemory();
+    private static readonly bool _isFileSystemCaseInsensitive =
+        System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Windows)
+        || System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.OSX);
+    // Most font files one reload copies; the rest wait for the next reload.
+    private const int MaxFontsPerReload = 500;
+    // Reloads in a row that only font files asked for, before the manager stops believing they are
+    // changes. A copy that raises events for the files it reads would otherwise reload forever.
+    private const int MaxFontOnlyReloads = 5;
+    private readonly HashSet<string> _changedFontFiles;
+    // Changed images the running game still shows the old copy of, keyed by standardized path. Listed in
+    // every later result until the manager is replaced; game thread only.
+    private readonly Dictionary<string, HotReloadIssue> _staleImages = new Dictionary<string, HotReloadIssue>();
+    // Consecutive tries at the files beside the project that could not be read (one the editor still had
+    // open); reset by any new file change; guarded by _pendingReloadLock.
+    private int _failedFileAttempts;
     private readonly object _fontFileLock = new object();
+    // Failed copies of a font since it last changed: the first is reported and retried, the second is dropped.
+    private readonly Dictionary<string, int> _fontCopyFailures;
+    // Set by the watcher thread (under _fontFileLock) when a file other than a font changed, so a reload
+    // with no such change and a font queue is known to have been asked for by fonts alone.
+    private bool _projectFileChangedSinceReload;
+    private bool _fontQueueContinues;
+    private int _fontOnlyReloads;
+    private bool _fontEventsIgnored;
+    private HotReloadIssue? _loopIssue;
+    // Font source files that changed and are waiting to be reported with the next result; game thread only.
+    private readonly List<HotReloadIssue> _sourceFontIssues = new List<HotReloadIssue>();
     // Changed files that are not project/element/font files. Each is checked against what the loaded
     // visuals reference once the debounce passes; guarded by _pendingReloadLock.
     private readonly HashSet<string> _changedOtherFiles = new HashSet<string>();
@@ -128,10 +173,23 @@ public class GumHotReloadManager : IGumHotReloadManager
         _loadAnimationsFromProvider = loadAnimationsFromProvider;
         _disposeCachedAsset = disposeCachedAsset;
         _utcNow = utcNow;
+        StringComparer comparer = _isFileSystemCaseInsensitive ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal;
+        _changedFontFiles = new HashSet<string>(comparer);
+        _fontCopyFailures = new Dictionary<string, int>(comparer);
     }
+
+    /// <summary>
+    /// Returns the localization service the game translates text with, or null when it has none. The
+    /// service is a host static (<c>CustomSetPropertyOnRenderable.LocalizationService</c>), so each host
+    /// supplies it; without it a changed localization file is not reloaded.
+    /// </summary>
+    public Func<ILocalizationService?>? LocalizationServiceProvider { get; set; }
 
     /// <inheritdoc/>
     public event Action? ReloadCompleted;
+
+    /// <inheritdoc/>
+    public event Action<HotReloadResult>? ReloadFinished;
 
     /// <inheritdoc/>
     public void Start(string absoluteGumxSourcePath)
@@ -195,10 +253,21 @@ public class GumHotReloadManager : IGumHotReloadManager
         if (otherFiles.Count > 0)
         {
             ReassignShaderFiles(rootList, otherFiles);
+            ReportChangedFontSources(otherFiles);
         }
         if (reload)
         {
-            PerformReload(rootList);
+            PerformReload(rootList, otherFiles);
+        }
+        else if (otherFiles.Count > 0)
+        {
+            PerformFileReload(rootList, otherFiles);
+        }
+        else if (_sourceFontIssues.Count > 0)
+        {
+            List<HotReloadIssue> issues = new List<HotReloadIssue>();
+            AddSourceFontIssues(issues);
+            RaiseIsolated(ReloadFinished, new HotReloadResult(issues), nameof(ReloadFinished));
         }
     }
 
@@ -206,16 +275,62 @@ public class GumHotReloadManager : IGumHotReloadManager
 
     // Called from the watcher's thread-pool thread; internal so tests can drive it without a
     // FileSystemWatcher.
-    internal void NotifyFileChanged(string fullPath)
+    internal void NotifyFileChanged(string fullPath) => NotifyFileChanged(fullPath, pageChanged: false);
+
+    // pageChanged: the font was queued because a page it names changed, so its own copy being current says nothing.
+    private void NotifyFileChanged(string fullPath, bool pageChanged)
     {
+        // The game's own build folder under the project folder holds copies; a change there is not an edit.
+        if (IsInsideNestedLoadFolder(fullPath))
+        {
+            return;
+        }
+
         string extension = Path.GetExtension(fullPath).ToLowerInvariant();
+        if (extension == ".png" && !IsCopyCurrent(fullPath))
+        {
+            // A font's page can be written after its .fnt; the font is loaded again to pick it up.
+            foreach (string fontFile in FontsThatNamePage(fullPath))
+            {
+                NotifyFileChanged(fontFile, pageChanged: true);
+            }
+        }
+
         if (IsWatchedExtension(extension))
         {
             if (extension == ".fnt")
             {
+                // macOS reports a copy as a change of the file it read, so a font the load folder
+                // already holds in this version is the manager's own copy, not an edit.
+                if (!pageChanged && IsCopyCurrent(fullPath))
+                {
+                    return;
+                }
+
+                // An editor saves through a hidden temp file (".!123!Font.fnt") and renames it.
+                string name = Path.GetFileName(fullPath);
+                if (name.StartsWith(".", StringComparison.Ordinal) || name.StartsWith("~", StringComparison.Ordinal))
+                {
+                    return;
+                }
+
                 lock (_fontFileLock)
                 {
+                    if (_fontEventsIgnored)
+                    {
+                        return;
+                    }
+
                     _changedFontFiles.Add(fullPath);
+                    _fontCopyFailures.Remove(fullPath);
+                }
+            }
+            else
+            {
+                lock (_fontFileLock)
+                {
+                    _projectFileChangedSinceReload = true;
+                    _fontEventsIgnored = false;
                 }
             }
 
@@ -235,8 +350,34 @@ public class GumHotReloadManager : IGumHotReloadManager
             {
                 _lastOtherChangeTime = now;
                 _changedOtherFiles.Add(fullPath);
+                _failedFileAttempts = 0;
             }
         }
+    }
+
+    // A .ttf or .otf is turned into a bitmap font by the generator, and which generated fonts came from
+    // it is not known here, so a change cannot be applied; the result says so.
+    private void ReportChangedFontSources(List<string> changedFiles)
+    {
+        foreach (string file in changedFiles)
+        {
+            string extension = Path.GetExtension(file).ToLowerInvariant();
+            if (extension is ".ttf" or ".otf")
+            {
+                _sourceFontIssues.Add(new HotReloadIssue(
+                    HotReloadIssueKind.FontSourceChanged,
+                    $"Font source file {Path.GetFileName(file)} changed. Fonts already generated from it keep the old glyphs; restart to apply."));
+            }
+        }
+    }
+
+    private void AddSourceFontIssues(List<HotReloadIssue> issues)
+    {
+        foreach (HotReloadIssue issue in _sourceFontIssues)
+        {
+            Report(issues, issue);
+        }
+        _sourceFontIssues.Clear();
     }
 
     // Re-assigns SourceShaderFile on every container using a changed file, so each looks its effect up
@@ -265,21 +406,8 @@ public class GumHotReloadManager : IGumHotReloadManager
                 continue;
             }
 
-            string? cacheKey = null;
-            try
+            if (!TryResolveReference(shaderFile, out string cacheKey, out string standardized) || !changed.Contains(standardized))
             {
-                cacheKey = ToolsUtilities.FileManager.IsRelative(shaderFile) && !ToolsUtilities.FileManager.IsUrl(shaderFile)
-                    ? ToolsUtilities.FileManager.RemoveDotDotSlash(ToolsUtilities.FileManager.RelativeDirectory + shaderFile)
-                    : shaderFile;
-                string standardized = ToolsUtilities.FileManager.Standardize(cacheKey, preserveCase: false, makeAbsolute: true);
-                if (!changed.Contains(standardized))
-                {
-                    continue;
-                }
-            }
-            catch (ArgumentException)
-            {
-                // An invalid path in a variable cannot be the file that changed.
                 continue;
             }
 
@@ -287,6 +415,27 @@ public class GumHotReloadManager : IGumHotReloadManager
             _disposeCachedAsset(cacheKey);
             _disposeCachedAsset(shaderFile);
             element.SetProperty("SourceShaderFile", shaderFile);
+        }
+    }
+
+    // The key the content cache stores a file reference under (a relative reference resolves against the
+    // game's content folder) and its standardized form for comparing with a changed file's path.
+    private static bool TryResolveReference(string reference, out string cacheKey, out string standardized)
+    {
+        cacheKey = reference;
+        standardized = "";
+        try
+        {
+            cacheKey = ToolsUtilities.FileManager.IsRelative(reference) && !ToolsUtilities.FileManager.IsUrl(reference)
+                ? ToolsUtilities.FileManager.RemoveDotDotSlash(ToolsUtilities.FileManager.RelativeDirectory + reference)
+                : reference;
+            standardized = ToolsUtilities.FileManager.Standardize(cacheKey, preserveCase: false, makeAbsolute: true);
+            return true;
+        }
+        catch (ArgumentException)
+        {
+            // An invalid path in a variable cannot be the file that changed.
+            return false;
         }
     }
 
@@ -316,20 +465,25 @@ public class GumHotReloadManager : IGumHotReloadManager
             or ".behx" or ".behj"
             or ".fnt";
 
-    // Returns a description of the fonts that could not be copied (a file the editor still has open),
-    // which stay queued for the next reload; null when every font copied.
-    private string? CopyAndUnloadChangedFonts()
+    // Returns a description of the fonts that could not be copied (a file the editor still has open); null
+    // when every font copied. A failed copy is tried once more by the next reload and then dropped, so a
+    // file that stays locked is reported once, not on every reload.
+    // fontsEvicted is true when a font was dropped from the cache, so Text that already holds it (or
+    // fell back to the default font while it was missing) has to resolve its font again.
+    private string? CopyAndUnloadChangedFonts(out bool fontsEvicted)
     {
+        fontsEvicted = false;
         List<string> changedFonts;
+        bool projectFileChanged;
+        bool continuation;
         lock (_fontFileLock)
         {
             changedFonts = new List<string>(_changedFontFiles);
             _changedFontFiles.Clear();
-        }
-
-        if (changedFonts.Count == 0)
-        {
-            return null;
+            projectFileChanged = _projectFileChangedSinceReload;
+            _projectFileChangedSinceReload = false;
+            continuation = _fontQueueContinues;
+            _fontQueueContinues = false;
         }
 
         var sourceDirectory = Path.GetDirectoryName(_projectSourcePath);
@@ -338,10 +492,32 @@ public class GumHotReloadManager : IGumHotReloadManager
             return null;
         }
 
-        var sourceFontCache = Path.Combine(sourceDirectory, "FontCache");
-        if (!Directory.Exists(sourceFontCache))
+        fontsEvicted |= DropVanishedFonts(changedFonts, sourceDirectory);
+        AddFontsChangedWithoutNotice(changedFonts, sourceDirectory);
+        if (changedFonts.Count == 0)
         {
+            _fontOnlyReloads = 0;
             return null;
+        }
+
+        if (!projectFileChanged && !continuation)
+        {
+            _fontOnlyReloads++;
+            if (_fontOnlyReloads > MaxFontOnlyReloads)
+            {
+                StopBelievingFontEvents();
+                return null;
+            }
+        }
+        else if (projectFileChanged)
+        {
+            _fontOnlyReloads = 0;
+        }
+
+        if (changedFonts.Count > MaxFontsPerReload)
+        {
+            RequeueFonts(changedFonts.Skip(MaxFontsPerReload));
+            changedFonts = changedFonts.Take(MaxFontsPerReload).ToList();
         }
 
         string? failures = null;
@@ -349,75 +525,495 @@ public class GumHotReloadManager : IGumHotReloadManager
         {
             try
             {
-                CopyAndUnloadFont(sourceFntPath, sourceFontCache);
+                fontsEvicted |= CopyAndUnloadFont(sourceFntPath, sourceDirectory);
+                lock (_fontFileLock)
+                {
+                    _fontCopyFailures.Remove(sourceFntPath);
+                }
             }
             catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
             {
+                bool firstFailure;
                 lock (_fontFileLock)
                 {
-                    _changedFontFiles.Add(sourceFntPath);
+                    firstFailure = !_fontCopyFailures.ContainsKey(sourceFntPath);
+                    _fontCopyFailures[sourceFntPath] = 1;
                 }
-                failures += $"\nCould not copy font file {sourceFntPath}: {exception.Message}";
+
+                if (firstFailure)
+                {
+                    RequeueFonts(new[] { sourceFntPath });
+                    failures += $"\nCould not copy font file {sourceFntPath}: {exception.Message}";
+                }
             }
         }
 
         return failures;
     }
 
-    private void CopyAndUnloadFont(string sourceFntPath, string sourceFontCache)
+    // A watcher drops events when its buffer overflows, so a font the load folder holds in another
+    // version than the project folder is also changed, whether or not a notification arrived.
+    private void AddFontsChangedWithoutNotice(List<string> changedFonts, string sourceDirectory)
     {
-        var destinationFontCache = Path.Combine(_binGumDirectory, "FontCache");
-        Directory.CreateDirectory(destinationFontCache);
-
-        var fileName = Path.GetFileName(sourceFntPath);
-
-        // Copy the .fnt file
-        var destinationFile = Path.Combine(destinationFontCache, fileName);
-        File.Copy(sourceFntPath, destinationFile, overwrite: true);
-
-        // Copy associated .png texture pages (same name prefix)
-        var baseName = Path.GetFileNameWithoutExtension(fileName);
-        var copiedPngs = new List<string>();
-        foreach (var pngFile in Directory.GetFiles(sourceFontCache, baseName + "*.png"))
+        if (IsSameFile(sourceDirectory, LoadFolder))
         {
-            var pngDestination = Path.Combine(destinationFontCache, Path.GetFileName(pngFile));
-            File.Copy(pngFile, pngDestination, overwrite: true);
-            copiedPngs.Add(pngDestination);
+            return;
+        }
+
+        StringComparer comparer = _isFileSystemCaseInsensitive ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal;
+        HashSet<string> queued = new HashSet<string>(changedFonts.Select(Path.GetFullPath), comparer);
+        foreach (string sourceFnt in EnumerateProjectFonts(sourceDirectory))
+        {
+            string destination = LoadFolderPathOf(sourceFnt, sourceDirectory);
+            if (!queued.Contains(Path.GetFullPath(sourceFnt)) && File.Exists(destination) && !IsCurrent(sourceFnt, destination))
+            {
+                changedFonts.Add(sourceFnt);
+            }
+        }
+    }
+
+    // Every .fnt under the project folder, except the ones in a build folder nested under it.
+    private IEnumerable<string> EnumerateProjectFonts(string sourceDirectory)
+    {
+        Stack<string> folders = new Stack<string>();
+        folders.Push(sourceDirectory);
+        while (folders.Count > 0)
+        {
+            string folder = folders.Pop();
+            if (IsInsideNestedLoadFolder(folder))
+            {
+                continue;
+            }
+
+            foreach (string subfolder in Directory.GetDirectories(folder))
+            {
+                folders.Push(subfolder);
+            }
+
+            foreach (string font in Directory.GetFiles(folder, "*.fnt"))
+            {
+                yield return font;
+            }
+        }
+    }
+
+    // A queued font whose file is gone and that the load folder never held (a temp file an editor saved
+    // through) is not a failure; it is dropped from the queue. One the load folder holds a copy of stays
+    // queued so the failed copy is reported, since the game still shows it. A font loaded from where it is
+    // (Preview) that is gone is dropped from the cache, as a restart would not find it. Returns whether
+    // a cached font was dropped.
+    private bool DropVanishedFonts(List<string> changedFonts, string sourceDirectory)
+    {
+        bool evicted = false;
+        for (int i = changedFonts.Count - 1; i >= 0; i--)
+        {
+            string font = changedFonts[i];
+            if (File.Exists(font))
+            {
+                continue;
+            }
+
+            string loaded = LoadFolderPathOf(font, sourceDirectory);
+            if (IsSameFile(font, loaded))
+            {
+                _disposeCachedAsset(ToolsUtilities.FileManager.Standardize(loaded, preserveCase: true, makeAbsolute: true));
+                evicted = true;
+                changedFonts.RemoveAt(i);
+            }
+            else if (!File.Exists(loaded))
+            {
+                changedFonts.RemoveAt(i);
+            }
+        }
+
+        return evicted;
+    }
+
+    // Puts fonts back and asks for a reload after the debounce to process them.
+    private void RequeueFonts(IEnumerable<string> fonts)
+    {
+        lock (_fontFileLock)
+        {
+            foreach (string font in fonts)
+            {
+                _changedFontFiles.Add(font);
+            }
+            _fontQueueContinues = true;
+        }
+
+        lock (_pendingReloadLock)
+        {
+            _lastChangeTime = _utcNow();
+            _pendingReload = true;
+        }
+    }
+
+    private void StopBelievingFontEvents()
+    {
+        _fontOnlyReloads = 0;
+        lock (_fontFileLock)
+        {
+            _fontEventsIgnored = true;
+            _fontCopyFailures.Clear();
+        }
+
+        _loopIssue = new HotReloadIssue(
+            HotReloadIssueKind.ReloadFailed,
+            "Hot reload stopped queueing font files: they kept changing with no change to the project, "
+            + "which usually means the game's own copy of them is being reported as an edit. A change to the project restarts it.");
+    }
+
+    private static bool IsSameFile(string first, string second)
+    {
+        StringComparison comparison = _isFileSystemCaseInsensitive ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
+        return string.Equals(
+            Path.GetFullPath(first).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar),
+            Path.GetFullPath(second).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar),
+            comparison);
+    }
+
+    // The destination holds this file as it is now: the same length and write time (copies keep the
+    // source's write time). A file that is its own destination (Preview) is never "current".
+    private static bool IsCurrent(string source, string destination)
+    {
+        try
+        {
+            if (IsSameFile(source, destination) || !File.Exists(destination))
+            {
+                return false;
+            }
+
+            return new FileInfo(source).Length == new FileInfo(destination).Length
+                && File.GetLastWriteTimeUtc(source) == File.GetLastWriteTimeUtc(destination);
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+        {
+            return false;
+        }
+    }
+
+    // Where the game loads a file of the project from: the same place relative to the load folder. A file
+    // outside the project folder, or already inside the load folder (a build folder under the project),
+    // has no such place, so it is loaded from where it is.
+    private string LoadFolderPathOf(string sourceFile, string sourceDirectory)
+    {
+        string relative = Path.GetRelativePath(sourceDirectory, sourceFile);
+        if (relative.StartsWith("..", StringComparison.Ordinal) || Path.IsPathRooted(relative) || IsInside(LoadFolder, sourceFile))
+        {
+            return sourceFile;
+        }
+
+        return Path.Combine(LoadFolder, relative);
+    }
+
+    private bool IsCopyCurrent(string sourceFile)
+    {
+        string? sourceDirectory = Path.GetDirectoryName(_projectSourcePath);
+        return !string.IsNullOrEmpty(sourceDirectory) && IsCurrent(sourceFile, LoadFolderPathOf(sourceFile, sourceDirectory));
+    }
+
+    private string LoadFolder => string.IsNullOrEmpty(_binGumDirectory) ? "." : _binGumDirectory;
+
+    // The game's load folder sits inside the project folder (a build folder under the project).
+    private bool IsInsideNestedLoadFolder(string path)
+    {
+        string? sourceDirectory = Path.GetDirectoryName(_projectSourcePath);
+        if (string.IsNullOrEmpty(sourceDirectory) || IsSameFile(sourceDirectory, LoadFolder))
+        {
+            return false;
+        }
+
+        return IsInside(sourceDirectory, LoadFolder) && IsInside(LoadFolder, path);
+    }
+
+    private static bool IsInside(string folder, string file)
+    {
+        string relative = Path.GetRelativePath(folder, file);
+        return !relative.StartsWith("..", StringComparison.Ordinal) && !Path.IsPathRooted(relative);
+    }
+
+    // A game that loads its content from the folder the tool saves into (Preview) has the file where
+    // the runtime reads it, so there is nothing to copy. The copy keeps the source's write time, which
+    // is how IsCurrent tells a copy that is up to date. Returns whether the file was copied.
+    private static bool CopyUnlessCurrent(string source, string destination)
+    {
+        if (IsSameFile(source, destination) || IsCurrent(source, destination))
+        {
+            return false;
+        }
+
+        Directory.CreateDirectory(Path.GetDirectoryName(destination)!);
+        File.Copy(source, destination, overwrite: true);
+        File.SetLastWriteTimeUtc(destination, File.GetLastWriteTimeUtc(source));
+        return true;
+    }
+
+    // The .fnt and its texture pages go to the load folder (a no-op where the game loads from the project
+    // folder) and are dropped from the cache under the path the game loads them by, wherever in the
+    // project the font lives (FontCache/ for generated fonts, anywhere for a CustomFontFile). Nothing is
+    // dropped when the load folder already holds every file as it is now, and a font loaded from where it
+    // is (Preview) is dropped, since the event itself is the change. Returns whether the font was dropped.
+    private bool CopyAndUnloadFont(string sourceFntPath, string sourceDirectory)
+    {
+        string destinationFile = LoadFolderPathOf(sourceFntPath, sourceDirectory);
+        bool loadedFromSource = IsSameFile(sourceFntPath, destinationFile);
+        bool changed = CopyUnlessCurrent(sourceFntPath, destinationFile) || loadedFromSource;
+
+        List<string> changedPages = new List<string>();
+        foreach (string pageFile in PagesOf(sourceFntPath))
+        {
+            string pageSource = Path.Combine(Path.GetDirectoryName(sourceFntPath)!, pageFile);
+            if (File.Exists(pageSource))
+            {
+                string pageDestination = LoadFolderPathOf(pageSource, sourceDirectory);
+                if (CopyUnlessCurrent(pageSource, pageDestination) || loadedFromSource)
+                {
+                    changedPages.Add(pageDestination);
+                }
+            }
+        }
+
+        if (!changed && changedPages.Count == 0)
+        {
+            return false;
         }
 
         // Unload the cached font so it gets reloaded from the new file
-        var absoluteFontPath = Path.Combine(destinationFontCache, fileName);
-        var standardizedFont = ToolsUtilities.FileManager.Standardize(absoluteFontPath, preserveCase: true, makeAbsolute: true);
-        _disposeCachedAsset(standardizedFont);
+        _disposeCachedAsset(ToolsUtilities.FileManager.Standardize(destinationFile, preserveCase: true, makeAbsolute: true));
 
         // Unload the cached texture pages so they get reloaded too
-        foreach (var pngPath in copiedPngs)
+        foreach (string pagePath in changedPages)
         {
-            var standardizedPng = ToolsUtilities.FileManager.Standardize(pngPath, preserveCase: true, makeAbsolute: true);
-            _disposeCachedAsset(standardizedPng);
+            _disposeCachedAsset(ToolsUtilities.FileManager.Standardize(pagePath, preserveCase: true, makeAbsolute: true));
         }
+
+        return true;
+    }
+
+    // The .fnt files next to a texture that name it as a page. Only a .fnt whose name starts the
+    // texture's name is read, which is how the generator names pages.
+    private static IEnumerable<string> FontsThatNamePage(string pagePath)
+    {
+        string? directory = Path.GetDirectoryName(pagePath);
+        if (directory == null || !Directory.Exists(directory))
+        {
+            return Array.Empty<string>();
+        }
+
+        string pageName = Path.GetFileName(pagePath);
+        string pageBaseName = Path.GetFileNameWithoutExtension(pagePath);
+        List<string> fonts = new List<string>();
+        try
+        {
+            foreach (string fontFile in Directory.GetFiles(directory, "*.fnt"))
+            {
+                if (pageBaseName.StartsWith(Path.GetFileNameWithoutExtension(fontFile), StringComparison.OrdinalIgnoreCase)
+                    && PagesOf(fontFile).Any(page => string.Equals(Path.GetFileName(page), pageName, StringComparison.OrdinalIgnoreCase)))
+                {
+                    fonts.Add(fontFile);
+                }
+            }
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+        {
+            // A folder that cannot be listed has no font to reload.
+        }
+
+        return fonts;
+    }
+
+    // The page files a .fnt names, plus the files next to it that share its name, which are the pages
+    // the font generator writes and cover a .fnt that cannot be read yet.
+    private static IEnumerable<string> PagesOf(string fntPath)
+    {
+        HashSet<string> pages = new HashSet<string>();
+        try
+        {
+            ParsedFontFile parsed = new ParsedFontFile(File.ReadAllText(fntPath));
+            foreach (string page in parsed.GetPagesAsArrayOfStrings.Where(page => !Path.IsPathRooted(page)))
+            {
+                pages.Add(page);
+            }
+        }
+        catch (Exception exception) when (exception is not OutOfMemoryException && exception is not IOException)
+        {
+            // Not a text/XML .fnt: the generator's naming below is all there is to go by.
+        }
+
+        string baseName = Path.GetFileNameWithoutExtension(fntPath);
+        foreach (string sibling in Directory.GetFiles(Path.GetDirectoryName(fntPath)!, baseName + "*.png"))
+        {
+            pages.Add(Path.GetFileName(sibling));
+        }
+
+        return pages;
     }
 
     // internal (not private) so tests can drive a reload deterministically without the
     // FileSystemWatcher + debounce. ApplyDiff is exposed for tests for the same reason.
-    internal void PerformReload(IEnumerable<GraphicalUiElement> roots)
+    internal void PerformReload(IEnumerable<GraphicalUiElement> roots, IReadOnlyCollection<string>? changedFiles = null)
     {
+        List<HotReloadIssue> issues = new List<HotReloadIssue>();
+        List<GraphicalUiElement> rootList = roots.ToList();
+        changedFiles ??= Array.Empty<string>();
+
+        // What the changed files are showing now; the reload may point visuals at other files.
+        List<ChangedReference> shownBefore = FindChangedReferences(rootList, changedFiles);
+
         // Materialize so we can iterate twice and so the caller's collection
         // is safe from us modifying it via the rebuild step.
-        var rootList = roots.ToList();
+        bool applied = TryReload(rootList, changedFiles, issues, out bool willRetry);
 
-        string? fontFailure = CopyAndUnloadChangedFonts();
-
-        // The whole project is read into a temporary first. A file caught half written, locked by the
-        // editor or unparsable leaves the running tree and ObjectFinder exactly as they were (#6978).
-        GumProjectSave? newProject = TryLoadProject(out string? loadFailure);
-        if (newProject == null)
+        // An attempt that is tried again says nothing: only the end of the chain is a result. The files
+        // that changed beside the project are looked at again with it.
+        if (willRetry)
         {
-            HandleFailedReload(loadFailure, fontFailure);
+            lock (_pendingReloadLock)
+            {
+                _lastOtherChangeTime = _utcNow();
+                _changedOtherFiles.UnionWith(changedFiles);
+            }
             return;
         }
 
+        if (applied)
+        {
+            ApplyChangedFiles(rootList, changedFiles, issues, shownBefore);
+        }
+        AddSourceFontIssues(issues);
+
+        RaiseResult(applied, issues);
+    }
+
+    // A change to files the project does not own (localization, animation chains, images) with no project save beside it. Raises a result only when something was applied or has to be reported.
+    internal void PerformFileReload(IEnumerable<GraphicalUiElement> roots, IReadOnlyCollection<string> changedFiles)
+    {
+        List<HotReloadIssue> issues = new List<HotReloadIssue>();
+        bool applied = false;
+        try
+        {
+            List<GraphicalUiElement> rootList = roots.ToList();
+            GumProjectSave? project = ObjectFinder.Self.GumProjectSave;
+            if (project != null)
+            {
+                // A file the editor still has open is tried once more after the debounce, as the project is.
+                bool lastTry;
+                lock (_pendingReloadLock)
+                {
+                    lastTry = _failedFileAttempts >= 1;
+                }
+
+                if (ReloadLocalization(project, null, changedFiles, issues, lastTry, out bool willRetry))
+                {
+                    RefreshLocalization(rootList);
+                    applied = true;
+                }
+
+                if (willRetry)
+                {
+                    lock (_pendingReloadLock)
+                    {
+                        _failedFileAttempts++;
+                        _lastOtherChangeTime = _utcNow();
+                        _changedOtherFiles.UnionWith(changedFiles);
+                    }
+                    return;
+                }
+            }
+
+            applied |= ApplyChangedFiles(rootList, changedFiles, issues);
+        }
+        catch (Exception exception) when (exception is not OutOfMemoryException)
+        {
+            // Update runs on the game's thread: a failure here must not end the game.
+            Report(issues, new HotReloadIssue(
+                HotReloadIssueKind.ReloadFailed,
+                $"Hot reload failed while applying the changed files: {exception.Message}\nThe UI may be partially updated; the next save reloads."));
+        }
+
+        AddSourceFontIssues(issues);
+        if (applied || issues.Count > 0)
+        {
+            RaiseResult(applied, issues);
+        }
+    }
+
+    private void RaiseResult(bool applied, List<HotReloadIssue> issues)
+    {
+        // A subscriber that throws must not break Update or keep the others from hearing.
+        if (applied)
+        {
+            RaiseIsolated(ReloadCompleted, nameof(ReloadCompleted));
+        }
+        // The stale images are still stale: a result that left them out would claim a match.
+        List<HotReloadIssue> reported = issues.Concat(_staleImages.Values.Where(stale => !issues.Contains(stale))).ToList();
+        RaiseIsolated(ReloadFinished, new HotReloadResult(reported), nameof(ReloadFinished));
+    }
+
+    private static void RaiseIsolated(Action? handlers, string eventName)
+    {
+        if (handlers == null)
+        {
+            return;
+        }
+
+        foreach (Delegate handler in handlers.GetInvocationList())
+        {
+            try
+            {
+                ((Action)handler)();
+            }
+            catch (Exception exception) when (exception is not OutOfMemoryException)
+            {
+                ReportError($"Hot reload: a {eventName} subscriber threw: {exception}");
+            }
+        }
+    }
+
+    private static void RaiseIsolated<T>(Action<T>? handlers, T argument, string eventName)
+    {
+        if (handlers == null)
+        {
+            return;
+        }
+
+        foreach (Delegate handler in handlers.GetInvocationList())
+        {
+            try
+            {
+                ((Action<T>)handler)(argument);
+            }
+            catch (Exception exception) when (exception is not OutOfMemoryException)
+            {
+                ReportError($"Hot reload: a {eventName} subscriber threw: {exception}");
+            }
+        }
+    }
+
+    // Returns whether the reload was applied; every issue the attempt had is added to issues.
+    // willRetry is true when the attempt failed and will be tried again after the debounce.
+    private bool TryReload(List<GraphicalUiElement> rootList, IReadOnlyCollection<string> changedFiles, List<HotReloadIssue> issues, out bool willRetry)
+    {
+        willRetry = false;
+        string? fontFailure = CopyAndUnloadChangedFonts(out bool fontsEvicted);
+        if (_loopIssue != null)
+        {
+            Report(issues, _loopIssue);
+            _loopIssue = null;
+        }
+
+        // The whole project is read into a temporary first. A file caught half written, locked by the
+        // editor or unparsable leaves the running tree and ObjectFinder exactly as they were (#6978).
+        GumProjectSave? newProject = TryLoadProject(issues, out string? loadFailure);
+        if (newProject == null)
+        {
+            willRetry = HandleFailedReload(loadFailure, fontFailure, issues);
+            return false;
+        }
+
         GumProjectSave? previousProject = ObjectFinder.Self.GumProjectSave;
+        List<HotReloadIssue> diffIssues = new List<HotReloadIssue>();
+        List<HotReloadIssue> localizationIssues = new List<HotReloadIssue>();
         try
         {
             newProject.Initialize();
@@ -437,7 +1033,20 @@ public class GumHotReloadManager : IGumHotReloadManager
                 string.IsNullOrEmpty(sourceDirectory) ? "." : sourceDirectory);
             _loadAnimationsFromProvider(newProject, animationProvider);
 
-            ApplyDiff(rootList, newProject, ISystemManagers.Default!, previousProject, _reportedProblems);
+            // The database is replaced before the diff so text the save changed translates against it.
+            bool localizationReloaded = ReloadLocalization(newProject, previousProject, changedFiles, localizationIssues, reportFailure: true, out _);
+
+            ApplyDiff(rootList, newProject, ISystemManagers.Default!, previousProject, _reportedProblems, diffIssues, _memory);
+
+            if (localizationReloaded)
+            {
+                RefreshLocalization(rootList);
+            }
+
+            if (fontsEvicted)
+            {
+                ReapplyFonts(rootList);
+            }
         }
         catch (Exception exception) when (exception is not OutOfMemoryException)
         {
@@ -446,24 +1055,395 @@ public class GumHotReloadManager : IGumHotReloadManager
             {
                 _applyProjectTextureFilter(previousProject);
             }
-            HandleFailedReload(
+
+            // What the walk found before it threw was not printed yet.
+            PrintIssues(diffIssues, printedProblems: null);
+            issues.AddRange(diffIssues);
+            issues.AddRange(localizationIssues);
+            willRetry = HandleFailedReload(
                 $"Hot reload failed while applying {_projectSourcePath}: {exception.Message}\nThe UI may be partially updated; the next complete save reloads.",
                 fontFailure,
+                issues,
                 uiUnchanged: false);
+            return false;
+        }
+
+        issues.AddRange(diffIssues);
+        issues.AddRange(localizationIssues);
+        if (fontFailure != null)
+        {
+            Report(issues, new HotReloadIssue(HotReloadIssueKind.FontFailure, fontFailure.Trim()));
+        }
+
+        return true;
+    }
+
+    // The diff only touches Text whose font variables changed. A font file that changed under the same
+    // name, or arrived after the project that asks for it, is a different font for Text whose variables
+    // did not, so every Text resolves its font from its properties again (a cache hit when its font was
+    // not evicted).
+    private static void ReapplyFonts(List<GraphicalUiElement> roots)
+    {
+        List<GraphicalUiElement> visited = new List<GraphicalUiElement>();
+        foreach (GraphicalUiElement root in roots)
+        {
+            CollectDescendants(root, visited);
+        }
+
+        foreach (GraphicalUiElement element in visited)
+        {
+            if (element.RenderableComponent is IText)
+            {
+                element.UpdateToFontValues();
+            }
+        }
+    }
+
+    private sealed class ChangedReference
+    {
+        public ChangedReference(GraphicalUiElement element, string sourceFile, string cacheKey, string standardized, string changedFile)
+        {
+            Element = element;
+            SourceFile = sourceFile;
+            CacheKey = cacheKey;
+            Standardized = standardized;
+            ChangedFile = changedFile;
+        }
+
+        public GraphicalUiElement Element { get; }
+        public string SourceFile { get; }
+        public string CacheKey { get; }
+        public string Standardized { get; }
+        public string ChangedFile { get; }
+        public bool IsAnimationChain => Path.GetExtension(SourceFile).ToLowerInvariant() is ".achx" or ".achj";
+
+        // False when code replaced the chains after the file was assigned; those are left alone.
+        public bool ChainsStillFromFile { get; set; } = true;
+    }
+
+    // The visuals whose SourceFile is one of the changed files.
+    private List<ChangedReference> FindChangedReferences(List<GraphicalUiElement> roots, IReadOnlyCollection<string> changedFiles)
+    {
+        List<ChangedReference> references = new List<ChangedReference>();
+        if (changedFiles.Count == 0)
+        {
+            return references;
+        }
+
+        Dictionary<string, string> changedByStandardizedPath = new Dictionary<string, string>();
+        foreach (string file in changedFiles)
+        {
+            foreach (string candidate in WithBinCounterpart(file))
+            {
+                try
+                {
+                    changedByStandardizedPath[ToolsUtilities.FileManager.Standardize(candidate, preserveCase: false, makeAbsolute: true)] = file;
+                }
+                catch (ArgumentException)
+                {
+                    // Not a path that can name a file a visual references.
+                }
+            }
+        }
+
+        List<GraphicalUiElement> visited = new List<GraphicalUiElement>();
+        foreach (GraphicalUiElement root in roots)
+        {
+            CollectDescendants(root, visited);
+        }
+
+        Dictionary<string, List<string>> chainTextures = new Dictionary<string, List<string>>();
+        foreach (GraphicalUiElement element in visited)
+        {
+            string? sourceFile = element.AssignedSourceFile;
+            if (sourceFile == null || !TryResolveReference(sourceFile, out string cacheKey, out string standardized))
+            {
+                continue;
+            }
+
+            if (changedByStandardizedPath.TryGetValue(standardized, out string? changedFile))
+            {
+                ChangedReference reference = new ChangedReference(element, sourceFile, cacheKey, standardized, changedFile);
+                if (reference.IsAnimationChain)
+                {
+                    object? cached = global::RenderingLibrary.Content.LoaderManager.Self.GetDisposable(cacheKey);
+                    object? inUse = (element.RenderableComponent as IAnimationChainRenderable)?.AnimationChainList;
+                    // Without a cache entry there is nothing to compare with: the file is taken as the source.
+                    reference.ChainsStillFromFile = cached == null || ReferenceEquals(cached, inUse);
+                }
+                references.Add(reference);
+            }
+            else if (Path.GetExtension(sourceFile).ToLowerInvariant() is ".achx" or ".achj")
+            {
+                // A chain file names its own frame images; replacing one of them is the same as replacing a SourceFile image.
+                if (!chainTextures.TryGetValue(cacheKey, out List<string>? textures))
+                {
+                    textures = ChainTexturePaths(cacheKey);
+                    chainTextures[cacheKey] = textures;
+                }
+                foreach (string texture in textures)
+                {
+                    if (changedByStandardizedPath.TryGetValue(texture, out string? changedTexture))
+                    {
+                        references.Add(new ChangedReference(element, changedTexture, texture, texture, changedTexture));
+                    }
+                }
+            }
+        }
+
+        return references;
+    }
+
+    // The standardized paths of the frame images a chain file names: relative to the file when it says so,
+    // else to the game's content folder, as the chain loader resolves them.
+    private static List<string> ChainTexturePaths(string chainFile)
+    {
+        List<string> paths = new List<string>();
+        try
+        {
+            Gum.Content.AnimationChain.AnimationChainListSave chains = Gum.Content.AnimationChain.AnimationChainListSave.FromFile(chainFile);
+            string directory = chains.FileRelativeTextures
+                ? (Path.GetDirectoryName(chainFile) ?? "")
+                : ToolsUtilities.FileManager.RelativeDirectory;
+            foreach (Gum.Content.AnimationChain.AnimationChainSave chain in chains.AnimationChains)
+            {
+                foreach (Gum.Content.AnimationChain.AnimationFrameSave frame in chain.Frames)
+                {
+                    if (!string.IsNullOrEmpty(frame.TextureName))
+                    {
+                        string path = Path.IsPathRooted(frame.TextureName) ? frame.TextureName : Path.Combine(directory, frame.TextureName);
+                        paths.Add(ToolsUtilities.FileManager.Standardize(path, preserveCase: false, makeAbsolute: true));
+                    }
+                }
+            }
+        }
+        catch (Exception exception) when (exception is not OutOfMemoryException)
+        {
+            // A chain file that cannot be read has no images to compare; reloading the file reports it.
+        }
+        return paths;
+    }
+
+    // Applies the files that changed beside the project to the visuals showing them. An animation chain
+    // file is evicted from the content cache and assigned again, so every Sprite and NineSlice playing it
+    // picks up the new frames. An image is not: a replaced image keeps its cached copy until a restart,
+    // which the result says. A file that no visual showed before this reload (one the same save just
+    // pointed a visual at) was loaded fresh by it and needs nothing: pass what FindChangedReferences found
+    // before the reload as shownBefore. Returns whether any visual was changed.
+    private bool ApplyChangedFiles(
+        List<GraphicalUiElement> roots, IReadOnlyCollection<string> changedFiles, List<HotReloadIssue> issues,
+        List<ChangedReference>? shownBefore = null)
+    {
+        HashSet<string>? shownBeforePaths = shownBefore == null
+            ? null
+            : new HashSet<string>(shownBefore.Select(reference => reference.Standardized));
+
+        bool applied = false;
+        HashSet<string> handled = new HashSet<string>();
+        foreach (ChangedReference reference in FindChangedReferences(roots, changedFiles))
+        {
+            if (shownBeforePaths != null && !shownBeforePaths.Contains(reference.Standardized))
+            {
+                continue;
+            }
+
+            if (reference.IsAnimationChain)
+            {
+                if (!reference.ChainsStillFromFile)
+                {
+                    // Code replaced the chains after the file was assigned; they are the game's now.
+                    continue;
+                }
+
+                if (handled.Add(reference.CacheKey))
+                {
+                    CopyToBin(reference.ChangedFile, issues);
+                    _disposeCachedAsset(reference.CacheKey);
+                }
+                try
+                {
+                    reference.Element.SetProperty("SourceFile", reference.SourceFile);
+                    applied = true;
+                    if ((reference.Element.RenderableComponent as IAnimationChainRenderable)?.IsNamedChainMissing == true)
+                    {
+                        // The renderable keeps the last frame it showed; only a restart clears it.
+                        Report(issues, new HotReloadIssue(
+                            HotReloadIssueKind.ReloadFailed,
+                            $"Hot reload: the animation chain the visual was playing is no longer in {reference.ChangedFile}. It keeps its last frame until the game restarts.",
+                            instanceName: reference.Element.Name));
+                    }
+                }
+                catch (Exception exception) when (exception is not OutOfMemoryException)
+                {
+                    Report(issues, new HotReloadIssue(
+                        HotReloadIssueKind.ReloadFailed,
+                        $"Hot reload could not load the changed animation file {reference.ChangedFile}: {exception.Message}"));
+                }
+            }
+            else if (handled.Add(reference.Standardized) && !_staleImages.ContainsKey(reference.Standardized))
+            {
+                // Listed in every later result too: the game keeps showing the old image until it restarts.
+                HotReloadIssue issue = new HotReloadIssue(
+                    HotReloadIssueKind.ReloadFailed,
+                    $"Hot reload cannot apply the changed file {reference.ChangedFile}: images stay cached until the game restarts.");
+                _staleImages[reference.Standardized] = issue;
+                Report(issues, issue);
+            }
+        }
+
+        return applied;
+    }
+
+    // The file and, when the game loads from a copy of the project (bin) apart from the source folder
+    // the editor writes to, the copy's path.
+    private IEnumerable<string> WithBinCounterpart(string sourceFile)
+    {
+        yield return sourceFile;
+        string? binFile = BinCounterpart(sourceFile);
+        if (binFile != null)
+        {
+            yield return binFile;
+        }
+    }
+
+    private string? BinCounterpart(string sourceFile)
+    {
+        string? sourceDirectory = Path.GetDirectoryName(_projectSourcePath);
+        if (string.IsNullOrEmpty(sourceDirectory) || string.IsNullOrEmpty(_binGumDirectory))
+        {
+            return null;
+        }
+
+        string relative = Path.GetRelativePath(sourceDirectory, sourceFile);
+        return relative.StartsWith("..", StringComparison.Ordinal) || Path.IsPathRooted(relative)
+            ? null
+            : Path.Combine(_binGumDirectory, relative);
+    }
+
+    private void CopyToBin(string sourceFile, List<HotReloadIssue> issues)
+    {
+        string? binFile = BinCounterpart(sourceFile);
+        if (binFile == null
+            || ToolsUtilities.FileManager.Standardize(binFile, preserveCase: false, makeAbsolute: true)
+                == ToolsUtilities.FileManager.Standardize(sourceFile, preserveCase: false, makeAbsolute: true))
+        {
             return;
         }
 
-        if (fontFailure != null)
+        try
         {
-            ReportError(fontFailure.Trim());
+            Directory.CreateDirectory(Path.GetDirectoryName(binFile)!);
+            File.Copy(sourceFile, binFile, overwrite: true);
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+        {
+            Report(issues, new HotReloadIssue(
+                HotReloadIssueKind.ReloadFailed,
+                $"Hot reload could not copy {sourceFile}: {exception.Message}"));
+        }
+    }
+
+    // Replaces the localization database when the project's list of files changed or one of the listed
+    // files (or a .resx satellite) changed on disk. Returns whether it did, so the caller translates the
+    // visuals again. The files load into a scratch service first: one that cannot be read leaves the
+    // game's database, and so its text, as it was.
+    // A file that cannot be read sets willRetry unless reportFailure is true, in which case it is reported.
+    private bool ReloadLocalization(
+        GumProjectSave project, GumProjectSave? previousProject, IReadOnlyCollection<string> changedFiles, List<HotReloadIssue> issues,
+        bool reportFailure, out bool willRetry)
+    {
+        willRetry = false;
+        ILocalizationService? service = LocalizationServiceProvider?.Invoke();
+        string? sourceDirectory = Path.GetDirectoryName(_projectSourcePath);
+        if (service == null || string.IsNullOrEmpty(sourceDirectory))
+        {
+            return false;
         }
 
-        ReloadCompleted?.Invoke();
+        bool listChanged = previousProject != null
+            && !previousProject.LocalizationFiles.SequenceEqual(project.LocalizationFiles);
+        bool fileChanged = changedFiles.Any(file => ProjectLocalizationLoader.IsLocalizationFile(project, sourceDirectory, file));
+        if (!listChanged && !fileChanged)
+        {
+            return false;
+        }
+
+        CapturedLocalization captured = new CapturedLocalization();
+        List<string> skipped = new List<string>();
+        try
+        {
+            ProjectLocalizationLoader.Load(project, sourceDirectory, captured, new ProjectLocalizationLoadOptions
+            {
+                OnSkipped = skipped.Add,
+                OnWarning = ReportError,
+            });
+        }
+        catch (Exception exception) when (exception is not OutOfMemoryException)
+        {
+            if (!reportFailure)
+            {
+                willRetry = true;
+                return false;
+            }
+
+            Report(issues, new HotReloadIssue(
+                HotReloadIssueKind.ReloadFailed,
+                $"Hot reload could not read the localization files: {exception.Message}\nText keeps its previous translations until the next save."));
+            return false;
+        }
+
+        service.Clear();
+        if (captured.Database != null)
+        {
+            service.AddDatabase(captured.Database, captured.Languages);
+        }
+
+        foreach (string message in skipped)
+        {
+            Report(issues, new HotReloadIssue(HotReloadIssueKind.MissingFile, "Hot reload left out a localization file. " + message));
+        }
+
+        return true;
+    }
+
+    private static void RefreshLocalization(List<GraphicalUiElement> roots)
+    {
+        foreach (GraphicalUiElement root in roots)
+        {
+            root.RefreshLocalization();
+            // A re-translated Text leaves its size to the next frame; a result is read before one.
+            root.UpdateLayout();
+        }
+    }
+
+    // Collects what a loader hands to ILocalizationService.AddDatabase.
+    private sealed class CapturedLocalization : ILocalizationService
+    {
+        public Dictionary<string, string[]>? Database { get; private set; }
+        public List<string> Languages { get; private set; } = new List<string>();
+
+        public int CurrentLanguage { get; set; }
+        IReadOnlyList<string> ILocalizationService.Languages => Languages;
+        public event Action? CurrentLanguageChanged { add { } remove { } }
+
+        public void AddDatabase(Dictionary<string, string[]> entryDictionary, List<string> headerList)
+        {
+            Database = entryDictionary;
+            Languages = headerList;
+        }
+
+        public void Clear()
+        {
+            Database = null;
+            Languages = new List<string>();
+        }
+
+        public string Translate(string stringId) => stringId;
     }
 
     // Returns null with a description when the project cannot be read. Files the project lists but that
     // are gone (a git checkout between branches) are reported and left out, so the rest still reloads.
-    private GumProjectSave? TryLoadProject(out string? failure)
+    private GumProjectSave? TryLoadProject(List<HotReloadIssue> issues, out string? failure)
     {
         failure = null;
         GumProjectSave? project;
@@ -488,17 +1468,36 @@ public class GumHotReloadManager : IGumHotReloadManager
             return null;
         }
 
+        _memory.MissingElements.Clear();
         if (result.MissingFiles?.Count > 0)
         {
-            ReportError("Hot reload left out missing file(s): " + string.Join(", ", result.MissingFiles));
+            foreach (string missingFile in result.MissingFiles)
+            {
+                _memory.MissingElements.Add(ElementNameOf(missingFile));
+            }
+            Report(issues, new HotReloadIssue(
+                HotReloadIssueKind.MissingFile,
+                "Hot reload left out missing file(s): " + string.Join(", ", result.MissingFiles)));
         }
 
         return project;
     }
 
+    // "<project>/Components/Widgets/Widget.gucx" is the element "Widgets/Widget".
+    private string ElementNameOf(string file)
+    {
+        string? directory = Path.GetDirectoryName(_projectSourcePath);
+        string relative = string.IsNullOrEmpty(directory) ? file : Path.GetRelativePath(directory, file);
+        string[] segments = relative.Replace('\\', '/').Split('/');
+        string name = string.Join("/", segments.Skip(1));
+        return Path.ChangeExtension(name, null);
+    }
+
     // A failed read is tried once more after the debounce, since the writer may still have had the file
     // open; a second failure is reported and waits for the next save.
-    private void HandleFailedReload(string? failure, string? fontFailure, bool uiUnchanged = true)
+    // Returns whether the attempt will be tried again.
+    private bool HandleFailedReload(
+        string? failure, string? fontFailure, List<HotReloadIssue> issues, bool uiUnchanged = true)
     {
         bool retry;
         lock (_pendingReloadLock)
@@ -512,11 +1511,21 @@ public class GumHotReloadManager : IGumHotReloadManager
             }
         }
 
-        if (!retry)
+        if (retry)
         {
-            string prefix = uiUnchanged ? "Hot reload skipped, the running UI is unchanged. " : "";
-            ReportError((prefix + failure + fontFailure).Trim());
+            return true;
         }
+
+        string prefix = uiUnchanged ? "Hot reload skipped, the running UI is unchanged. " : "";
+        Report(issues, new HotReloadIssue(HotReloadIssueKind.ReloadFailed, (prefix + failure + fontFailure).Trim()));
+        return false;
+    }
+
+    // Adds the issue to the reload's result and prints it.
+    private static void Report(List<HotReloadIssue> issues, HotReloadIssue issue)
+    {
+        issues.Add(issue);
+        ReportError(issue.Message);
     }
 
     private static void ReportError(string message)
@@ -549,12 +1558,12 @@ public class GumHotReloadManager : IGumHotReloadManager
     /// <c>ObjectFinder.Self.GumProjectSave</c> is <paramref name="newProject"/>; the previous project is
     /// restored when it returns, so the caller decides afterward which project the finder holds.
     /// </summary>
-    public static void ApplyDiff(
+    public static HotReloadResult ApplyDiff(
         IEnumerable<GraphicalUiElement> roots,
         GumProjectSave newProject,
         ISystemManagers systemManagers)
     {
-        ApplyDiff(roots, newProject, systemManagers, ObjectFinder.Self.GumProjectSave);
+        return ApplyDiff(roots, newProject, systemManagers, ObjectFinder.Self.GumProjectSave);
     }
 
     /// <summary>
@@ -564,22 +1573,27 @@ public class GumHotReloadManager : IGumHotReloadManager
     /// (null, or the same object as the new project) the comparison uses what the visuals still
     /// hold of the old project, and an element it cannot find an old version of is applied in full.
     /// </summary>
-    public static void ApplyDiff(
+    public static HotReloadResult ApplyDiff(
         IEnumerable<GraphicalUiElement> roots,
         GumProjectSave newProject,
         ISystemManagers systemManagers,
         GumProjectSave? oldProject)
     {
-        ApplyDiff(roots, newProject, systemManagers, oldProject, reportedProblems: null);
+        List<HotReloadIssue> issues = new List<HotReloadIssue>();
+        ApplyDiff(roots, newProject, systemManagers, oldProject, printedProblems: null, issues, memory: null);
+        return new HotReloadResult(issues);
     }
 
-    // reportedProblems is the manager's memory of what it already said; null reports every problem.
+    // printedProblems is the manager's memory of what it already printed; null prints every problem.
+    // It only decides what is printed: every issue of this walk lands in issues either way.
     private static void ApplyDiff(
         IEnumerable<GraphicalUiElement> roots,
         GumProjectSave newProject,
         ISystemManagers systemManagers,
         GumProjectSave? oldProject,
-        HashSet<string>? reportedProblems)
+        HashSet<string>? printedProblems,
+        List<HotReloadIssue> issues,
+        ReloadMemory? memory)
     {
         // References and base types resolve through ObjectFinder, so for this call it holds the new
         // project whatever it held before, and the caller's project is put back afterward.
@@ -587,7 +1601,7 @@ public class GumHotReloadManager : IGumHotReloadManager
         ObjectFinder.Self.GumProjectSave = newProject;
         try
         {
-            ApplyDiffToNewProject(roots, newProject, systemManagers, oldProject, reportedProblems);
+            ApplyDiffToNewProject(roots, newProject, systemManagers, oldProject, printedProblems, issues, memory);
         }
         finally
         {
@@ -600,7 +1614,9 @@ public class GumHotReloadManager : IGumHotReloadManager
         GumProjectSave newProject,
         ISystemManagers systemManagers,
         GumProjectSave? oldProject,
-        HashSet<string>? reportedProblems)
+        HashSet<string>? printedProblems,
+        List<HotReloadIssue> issues,
+        ReloadMemory? memory)
     {
         // A file the tool did not save together with the files that read it (a text-editor edit of one
         // swatch) leaves the readers holding the value they were saved with. A reference sets the final
@@ -616,7 +1632,7 @@ public class GumHotReloadManager : IGumHotReloadManager
 
         List<GraphicalUiElement> rootList = roots.ToList();
 
-        ReloadContext context = new ReloadContext(byName, oldProject, newProject, rootList);
+        ReloadContext context = new ReloadContext(byName, oldProject, newProject, rootList, issues, memory ?? new ReloadMemory());
 
         // The same three passes RefreshStyles runs, so a control keeps what it holds in code and the
         // state it is in: save before anything is re-applied, restore after everything is (#6855).
@@ -638,28 +1654,49 @@ public class GumHotReloadManager : IGumHotReloadManager
             root.ReapplyAppliedCategoryStatesRecursive();
         }
 
+        // A Forms property the reload edited or removed (Placeholder, AcceptsReturn) is a control property, not a
+        // visual variable, so it is written to the control here; a stale code-assigned record would win otherwise.
+        foreach (GraphicalUiElement root in rootList)
+        {
+            root.ReapplyChangedFormsPropertiesRecursive(name => context.OldByName.TryGetValue(name, out ElementSave? old) ? old : null);
+        }
+
         foreach (GraphicalUiElement root in rootList)
         {
             root.RestoreFormsRuntimePropertiesRecursive();
         }
 
-        ReportProblems(context.Problems, reportedProblems);
+        PrintIssues(issues, printedProblems);
     }
 
-    private static void ReportProblems(Dictionary<string, string> problems, HashSet<string>? reported)
+    // Printing is the only place that remembers what was already said: a shown element that stays gone
+    // is printed on the first reload and not on every later save, but it is an issue of each result.
+    private static void PrintIssues(List<HotReloadIssue> issues, HashSet<string>? printedProblems)
     {
-        foreach (KeyValuePair<string, string> problem in problems)
+        HashSet<string> current = new HashSet<string>();
+        foreach (HotReloadIssue issue in issues)
         {
-            if (reported == null || !reported.Contains(problem.Key))
+            if (issue.Kind == HotReloadIssueKind.ShownElementGone && !PrintsShownElementGone)
             {
-                ReportError(problem.Value);
+                continue;
+            }
+
+            string? key = issue.Persists ? issue.Kind + ":" + issue.ElementName : null;
+            if (key != null)
+            {
+                current.Add(key);
+            }
+
+            if (key == null || printedProblems == null || !printedProblems.Contains(key))
+            {
+                ReportError(issue.Message);
             }
         }
 
-        if (reported != null)
+        if (printedProblems != null)
         {
-            reported.Clear();
-            reported.UnionWith(problems.Keys);
+            printedProblems.Clear();
+            printedProblems.UnionWith(current);
         }
     }
 
@@ -729,7 +1766,16 @@ public class GumHotReloadManager : IGumHotReloadManager
             // component's defaults.
             foreach (GraphicalUiElement instance in ContainedAndChildren(element))
             {
-                if (instance.Tag is InstanceSave && instance.ElementSave is not StandardElementSave)
+                if (instance.Tag is not InstanceSave)
+                {
+                    continue;
+                }
+
+                if (instance.ElementSave is StandardElementSave builtFromStandard)
+                {
+                    ReportStandardChange(builtFromStandard, byName, context);
+                }
+                else
                 {
                     ApplyDiffRecursive(instance, byName, systemManagers, context);
                 }
@@ -760,10 +1806,12 @@ public class GumHotReloadManager : IGumHotReloadManager
             // Nothing in the new project says what this visual should become. There is no identity
             // across a rename or a move to another folder, so it stays as it is and the game is told.
             string kind = KindOf(goneElement);
-            context.Problems["gone:" + name] =
+            context.ReportOnce("gone:" + name, new HotReloadIssue(
+                HotReloadIssueKind.ShownElementGone,
                 $"Hot reload: the {kind} '{name}' the game is showing is not in the project any more " +
                 "(renamed, moved to another folder or deleted). It stays on screen as it was, and edits " +
-                $"to it, or to what replaced it, will not reach the game until you restart it.";
+                $"to it, or to what replaced it, will not reach the game until you restart it.",
+                elementName: name));
         }
 
         foreach (GraphicalUiElement child in element.Children.ToList())
@@ -793,8 +1841,18 @@ public class GumHotReloadManager : IGumHotReloadManager
 
         public HashSet<GraphicalUiElement> Recreated { get; } = new HashSet<GraphicalUiElement>();
 
-        // What this reload could not do, keyed so the same problem is not said twice.
-        public Dictionary<string, string> Problems { get; } = new Dictionary<string, string>();
+        // What this walk found, for the reload's result. The same problem is added once per walk.
+        private readonly List<HotReloadIssue> _issues;
+
+        // The project the visuals were built from, when the caller gave it.
+        public GumProjectSave? OldProject { get; }
+
+        // See the manager's _memory; a static ApplyDiff call gets a fresh one.
+        public ReloadMemory Memory { get; }
+
+        // Elements whose definition was already compared in this walk.
+        public HashSet<string> CheckedDefinitions { get; } = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        private readonly HashSet<string> _issueKeys = new HashSet<string>();
 
         public Dictionary<GraphicalUiElement, HashSet<string>> Applied { get; } =
             new Dictionary<GraphicalUiElement, HashSet<string>>();
@@ -803,8 +1861,13 @@ public class GumHotReloadManager : IGumHotReloadManager
             Dictionary<string, ElementSave> newByName,
             GumProjectSave? oldProject,
             GumProjectSave newProject,
-            List<GraphicalUiElement> roots)
+            List<GraphicalUiElement> roots,
+            List<HotReloadIssue> issues,
+            ReloadMemory memory)
         {
+            _issues = issues;
+            Memory = memory;
+            OldProject = oldProject;
             if (oldProject != null && !ReferenceEquals(oldProject, newProject))
             {
                 foreach (ElementSave element in oldProject.AllElements)
@@ -843,6 +1906,17 @@ public class GumHotReloadManager : IGumHotReloadManager
             foreach (GraphicalUiElement child in ContainedAndChildren(element))
             {
                 CollectOldElements(child, newByName, visited);
+            }
+        }
+
+        public void Report(HotReloadIssue issue) => _issues.Add(issue);
+
+        // Adds the issue unless this walk already added one with the same key.
+        public void ReportOnce(string key, HotReloadIssue issue)
+        {
+            if (_issueKeys.Add(key))
+            {
+                _issues.Add(issue);
             }
         }
 
@@ -895,6 +1969,7 @@ public class GumHotReloadManager : IGumHotReloadManager
             if (context.OldByName.TryGetValue(es.Name, out ElementSave? oldEs)
                 && !ReferenceEquals(oldEs, es))
             {
+                ReportDefinitionChanges(oldEs, es, context);
                 oldState = oldEs.DefaultState;
                 // Lower layers were applied first, so a variable this layer dropped falls back to
                 // what the layers below it say.
@@ -919,6 +1994,12 @@ public class GumHotReloadManager : IGumHotReloadManager
                 }
             }
 
+            if (es is not StandardElementSave && context.Memory.BuiltShapes.ContainsKey(es.Name))
+            {
+                // Edited back or not, the check compares with what the visuals were built from.
+                ReportDefinitionChanges(null, es, context);
+            }
+
             element.ApplyVariableReferences(state);
 
             if (es is not StandardElementSave)
@@ -936,6 +2017,166 @@ public class GumHotReloadManager : IGumHotReloadManager
         }
     }
 
+    /// <summary>What the manager remembers between reloads about definitions the diff cannot apply.</summary>
+    private sealed class ReloadMemory
+    {
+        // The base type and exposed variables each changed element's visuals were built with. The diff re-points a visual at the new element, so without this the next reload
+        // would see no change and stop listing a tree that is still stale.
+        public Dictionary<string, DefinitionShape> BuiltShapes { get; } = new Dictionary<string, DefinitionShape>();
+
+        // Elements whose file is missing in the reload being applied; the missing file is their one issue.
+        public HashSet<string> MissingElements { get; } = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+    }
+
+    /// <summary>What a reload cannot apply to visuals that already exist: the base type and exposed variables.</summary>
+    private sealed record DefinitionShape(string BaseType, string Exposed)
+    {
+        public static DefinitionShape Of(ElementSave element) => new DefinitionShape(
+            element.BaseType ?? "",
+            string.Join(";", (element.DefaultState?.Variables ?? new List<VariableSave>())
+                .Where(variable => !string.IsNullOrEmpty(variable.ExposedAsName))
+                .Select(variable => variable.Name + "=" + variable.ExposedAsName)
+                .OrderBy(entry => entry, StringComparer.Ordinal)));
+    }
+
+    // Visuals are built with the element's base type and exposed variables, and the diff does not
+    // rebuild them. The element is listed for as long as its definition differs from the one the
+    // visuals were built with, and dropped from the list when an edit puts it back. Any change of the
+    // base type counts, whatever the two bases contain: deciding that two bases are equivalent has
+    // missed real differences, and a needless report costs one reload on a rare edit.
+    private static void ReportDefinitionChanges(ElementSave? previous, ElementSave current, ReloadContext context)
+    {
+        if (!context.CheckedDefinitions.Add(current.Name))
+        {
+            return;
+        }
+
+        DefinitionShape now = DefinitionShape.Of(current);
+        bool wasListed = context.Memory.BuiltShapes.TryGetValue(current.Name, out DefinitionShape? kept);
+        DefinitionShape builtFrom = kept ?? (previous != null ? DefinitionShape.Of(previous) : now);
+
+        // A base that is missing now but that the visuals were built with (the old project had it).
+        bool baseGone = now.BaseType.Length > 0
+            && ObjectFinder.Self.GetElementSave(now.BaseType) == null
+            && (wasListed || context.OldByName.ContainsKey(now.BaseType));
+        bool baseChanged = builtFrom.BaseType != now.BaseType
+            && !IsPureRename(builtFrom.BaseType, now.BaseType, context);
+        bool exposedChanged = builtFrom.Exposed != now.Exposed;
+        if (!baseGone && !baseChanged && !exposedChanged)
+        {
+            context.Memory.BuiltShapes.Remove(current.Name);
+            return;
+        }
+
+        context.Memory.BuiltShapes[current.Name] = builtFrom;
+        if (context.Memory.MissingElements.Contains(current.Name))
+        {
+            // Emptied because its file is missing; the missing file is the one issue.
+            return;
+        }
+
+        if (baseGone)
+        {
+            context.ReportOnce("basegone:" + current.Name, new HotReloadIssue(
+                HotReloadIssueKind.BaseElementMissing,
+                $"Hot reload: '{current.Name}' derives from '{now.BaseType}', which is not in the project. " +
+                "What it inherited from it stays as it was until you restart.",
+                current.Name));
+        }
+        else if (baseChanged)
+        {
+            context.ReportOnce("base:" + current.Name, new HotReloadIssue(
+                HotReloadIssueKind.ComponentBaseTypeChanged,
+                $"Hot reload: '{current.Name}' changed its base type; edits to what it inherits do not reach " +
+                "the running UI until you restart.",
+                current.Name));
+        }
+        if (exposedChanged)
+        {
+            context.ReportOnce("exposed:" + current.Name, new HotReloadIssue(
+                HotReloadIssueKind.ExposedVariableChanged,
+                $"Hot reload: '{current.Name}' changed which variables it exposes; instances already on screen " +
+                "keep the exposure they were built with until you restart.",
+                current.Name));
+        }
+    }
+
+    // A base change from A to B is a pure rename, and the tree already equals a restart, when A is gone
+    // from the new project, B is new, and the old A and the new B serialize to the same text once
+    // each one's name is replaced by a placeholder. The serializer is the project's own, so no field
+    // can be forgotten. Anything else, including a missing old project, is a change.
+    private static bool IsPureRename(string oldBase, string newBase, ReloadContext context)
+    {
+        GumProjectSave? oldProject = context.OldProject;
+        if (oldBase.Length == 0 || newBase.Length == 0 || oldProject == null
+            || ReferenceEquals(oldProject, ObjectFinder.Self.GumProjectSave))
+        {
+            return false;
+        }
+
+        ElementSave? oldDefinition = oldProject.AllElements.FirstOrDefault(
+            element => string.Equals(element.Name, oldBase, StringComparison.OrdinalIgnoreCase));
+        ElementSave? newDefinition = ObjectFinder.Self.GetElementSave(newBase);
+        if (oldDefinition == null || newDefinition == null
+            || ObjectFinder.Self.GetElementSave(oldBase) != null
+            || oldProject.AllElements.Any(element => string.Equals(element.Name, newBase, StringComparison.OrdinalIgnoreCase)))
+        {
+            return false;
+        }
+
+        try
+        {
+            return NormalizedDefinition(oldDefinition, oldBase) == NormalizedDefinition(newDefinition, newBase);
+        }
+        catch (Exception exception) when (exception is not OutOfMemoryException)
+        {
+            return false;
+        }
+    }
+
+    // The element as the project serializes it, with its name, and every reference to it, replaced.
+    private static string NormalizedDefinition(ElementSave element, string name)
+    {
+        string text = Gum.DataTypes.Serialization.Json.GumJsonFileSerializer.SerializeElement(element);
+        string encodedName = System.Text.Json.JsonEncodedText.Encode(name).ToString();
+        return System.Text.RegularExpressions.Regex.Replace(
+            text,
+            "(?<![A-Za-z0-9_])" + System.Text.RegularExpressions.Regex.Escape(encodedName) + "(?![A-Za-z0-9_])",
+            "\u0001",
+            System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+    }
+
+    // A visual keeps the standard element it was built from, so comparing it with the new project's
+    // version of that element finds a default the file changed since.
+    private static void ReportStandardChange(
+        StandardElementSave builtFrom, Dictionary<string, ElementSave> byName, ReloadContext context)
+    {
+        if (!byName.TryGetValue(builtFrom.Name, out ElementSave? current)
+            || ReferenceEquals(current, builtFrom)
+            || !context.CheckedDefinitions.Add("standard:" + builtFrom.Name))
+        {
+            return;
+        }
+
+        Dictionary<string, object?> Defaults(ElementSave element) =>
+            (element.DefaultState?.Variables ?? new List<VariableSave>())
+                .Where(AppliesAValue)
+                .ToDictionary(variable => variable.Name, variable => variable.Value, StringComparer.Ordinal);
+
+        Dictionary<string, object?> before = Defaults(builtFrom);
+        Dictionary<string, object?> after = Defaults(current);
+        bool same = before.Count == after.Count
+            && before.All(entry => after.TryGetValue(entry.Key, out object? value) && ValuesMatch(entry.Value, value));
+        if (!same)
+        {
+            context.ReportOnce("standard:" + builtFrom.Name, new HotReloadIssue(
+                HotReloadIssueKind.StandardElementChanged,
+                $"Hot reload: the default of the standard element '{builtFrom.Name}' changed; instances already " +
+                "on screen keep their old values until you restart.",
+                builtFrom.Name));
+        }
+    }
+
     private static StateSave CreateChangedState(
         GraphicalUiElement element, StateSave state, StateSave oldState, ReloadContext context)
     {
@@ -950,6 +2191,10 @@ public class GumHotReloadManager : IGumHotReloadManager
 
         context.Applied.TryGetValue(element, out HashSet<string>? appliedToElement);
 
+        // The live value of a variable an old row wrote came from that row, not from the file, so the
+        // file's value (what a restart shows) is applied again whatever the old file held.
+        HashSet<string> oldRowTargets = GetRowTargets(oldState);
+
         StateSave changed = new StateSave { Name = state.Name, ParentContainer = state.ParentContainer };
         foreach (VariableSave variable in state.Variables)
         {
@@ -961,7 +2206,8 @@ public class GumHotReloadManager : IGumHotReloadManager
             // A reparent is cheap and keeps the tree right after instances were rebuilt or moved.
             bool applies = !oldByName.TryGetValue(variable.Name, out VariableSave? oldVariable)
                 || !ValuesMatch(oldVariable.Value, variable.Value)
-                || variable.GetRootName() == "Parent";
+                || variable.GetRootName() == "Parent"
+                || oldRowTargets.Contains(variable.Name);
 
             if (!applies)
             {
@@ -1065,21 +2311,63 @@ public class GumHotReloadManager : IGumHotReloadManager
                 continue;
             }
 
-            object? defaultValue = newState.GetValueRecursive(variable.Name);
-            if (defaultValue != null)
-            {
-                element.SetProperty(variable.Name, defaultValue);
+            ResetToDefault(element, newState, variable, context);
+        }
 
-                // Layers above this one may still set the variable; they apply it again.
-                GraphicalUiElement? owner = string.IsNullOrEmpty(variable.SourceObject)
-                    ? element
-                    : element.GetGraphicalUiElementByName(variable.SourceObject);
-                if (owner != null)
-                {
-                    context.RecordApplied(owner, variable);
-                }
+        // A variable an old row wrote and the old file never stored has no old value to compare, and
+        // the live value is the row's.
+        foreach (string target in GetRowTargets(oldState))
+        {
+            if (stillSet.Contains(target) || oldState.Variables.Any(v => AppliesAValue(v) && v.Name == target))
+            {
+                continue;
+            }
+
+            VariableSave variable = new VariableSave { Name = target };
+            if (variable.GetRootName() != "Parent" && !variable.IsState(oldEs))
+            {
+                ResetToDefault(element, newState, variable, context);
             }
         }
+    }
+
+    private static void ResetToDefault(
+        GraphicalUiElement element, StateSave newState, VariableSave variable, ReloadContext context)
+    {
+        object? defaultValue = newState.GetValueRecursive(variable.Name);
+        if (defaultValue != null)
+        {
+            element.SetProperty(variable.Name, defaultValue);
+
+            // Layers above this one may still set the variable; they apply it again.
+            GraphicalUiElement? owner = string.IsNullOrEmpty(variable.SourceObject)
+                ? element
+                : element.GetGraphicalUiElementByName(variable.SourceObject);
+            if (owner != null)
+            {
+                context.RecordApplied(owner, variable);
+            }
+        }
+    }
+
+    /// <summary>
+    /// The variables the rows of <paramref name="state"/> wrote when it was applied: every row outside a
+    /// loop, since a row in a loop is never evaluated and leaves the stored value (#6871).
+    /// </summary>
+    private static HashSet<string> GetRowTargets(StateSave state)
+    {
+        HashSet<string> targets = new HashSet<string>(StringComparer.Ordinal);
+        ElementSave? owner = state.ParentContainer;
+        if (owner == null || !state.VariableLists.Any(list => list.GetRootName() == "VariableReferences"))
+        {
+            return targets;
+        }
+
+        foreach (ReferenceRow row in VariableReferenceGraph.GetForState(owner, state).LoadOrderRows)
+        {
+            targets.Add(row.WrittenName);
+        }
+        return targets;
     }
 
     // Whether applying a state would set this variable. An empty Parent sets nothing either, since
@@ -1138,13 +2426,30 @@ public class GumHotReloadManager : IGumHotReloadManager
             newInstances.Where(i => i.Name != null).Select(i => i.Name!),
             StringComparer.OrdinalIgnoreCase);
 
+        void Forget(string name)
+        {
+            designTimeByName.Remove(name);
+            anyByName.Remove(name);
+        }
+
+        GraphicalUiElement? CreateAndTrack(InstanceSave instance)
+        {
+            GraphicalUiElement? created = CreateAndAttach(parent, instance, systemManagers);
+            if (created != null)
+            {
+                context.Recreated.Add(created);
+                designTimeByName[instance.Name!] = created;
+                anyByName[instance.Name!] = created;
+            }
+            return created;
+        }
+
         foreach (KeyValuePair<string, GraphicalUiElement> kvp in designTimeByName.ToList())
         {
             if (!newNames.Contains(kvp.Key))
             {
                 DetachAndRemove(kvp.Value);
-                designTimeByName.Remove(kvp.Key);
-                anyByName.Remove(kvp.Key);
+                Forget(kvp.Key);
             }
         }
 
@@ -1152,6 +2457,25 @@ public class GumHotReloadManager : IGumHotReloadManager
         {
             if (newInstance.Name == null)
             {
+                continue;
+            }
+
+            if (!string.IsNullOrEmpty(newInstance.BaseType)
+                && ObjectFinder.Self.GetElementSave(newInstance.BaseType) == null)
+            {
+                // The file keeps an instance of a component that was deleted, and a restart cannot
+                // build it. Without this the visual matches itself by its old element's name and stays.
+                if (designTimeByName.TryGetValue(newInstance.Name, out GraphicalUiElement? orphan))
+                {
+                    DetachAndRemove(orphan);
+                    Forget(newInstance.Name);
+                    context.Report(new HotReloadIssue(
+                        HotReloadIssueKind.InstanceRemoved,
+                        $"Hot reload: '{newInstance.Name}' in '{newEs.Name}' is a '{newInstance.BaseType}', " +
+                        "which is not in the project any more. It was removed from the running UI, as a restart would.",
+                        newEs.Name,
+                        newInstance.Name));
+                }
                 continue;
             }
 
@@ -1164,14 +2488,10 @@ public class GumHotReloadManager : IGumHotReloadManager
                 if (!string.Equals(existingBaseTypeName, newInstance.BaseType, StringComparison.Ordinal))
                 {
                     DetachAndRemove(existingChild);
-                    designTimeByName.Remove(newInstance.Name);
-                    anyByName.Remove(newInstance.Name);
-                    GraphicalUiElement? created = CreateAndAttach(parent, newInstance, systemManagers);
-                    if (created != null)
+                    Forget(newInstance.Name);
+                    if (CreateAndTrack(newInstance) != null)
                     {
-                        context.Recreated.Add(created);
-                        designTimeByName[newInstance.Name] = created;
-                        anyByName[newInstance.Name] = created;
+                        ReportRebuilt(context, newEs, newInstance, existingBaseTypeName);
                     }
                 }
                 else
@@ -1189,15 +2509,26 @@ public class GumHotReloadManager : IGumHotReloadManager
             }
             else
             {
-                GraphicalUiElement? created = CreateAndAttach(parent, newInstance, systemManagers);
-                if (created != null)
-                {
-                    context.Recreated.Add(created);
-                    designTimeByName[newInstance.Name] = created;
-                    anyByName[newInstance.Name] = created;
-                }
+                CreateAndTrack(newInstance);
             }
         }
+    }
+
+    // A component rename or a retype rebuilds the instance's visual. The tree is right, but code
+    // references and Forms handlers on the old visual are stale, so the game is told once per pair
+    // of components however many instances changed.
+    private static void ReportRebuilt(
+        ReloadContext context, ElementSave owner, InstanceSave instance, string? oldBaseType)
+    {
+        string was = string.IsNullOrEmpty(oldBaseType) ? "" : $" (was '{oldBaseType}')";
+        context.ReportOnce(
+            $"rebuilt:{oldBaseType}->{instance.BaseType}",
+            new HotReloadIssue(
+                HotReloadIssueKind.InstanceRebuilt,
+                $"Hot reload: '{instance.Name}' in '{owner.Name}' is now a '{instance.BaseType}'{was}. " +
+                "Its visual was rebuilt, so code references and Forms handlers on it are stale.",
+                owner.Name,
+                instance.Name));
     }
 
     // An instance with a Parent variable is in ContainedElements without being a direct child.
