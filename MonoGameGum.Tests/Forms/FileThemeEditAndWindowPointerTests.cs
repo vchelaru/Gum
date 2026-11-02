@@ -121,6 +121,31 @@ public class FileThemeEditAndWindowPointerTests : FileThemeInputTestBase
 
     [Theory]
     [MemberData(nameof(AllThemes))]
+    public void DragRightBorderOutsideBounds_Window_Resizes(string theme)
+    {
+        // The border pieces sit outside the window bounds, so the Window component must opt in to
+        // RaiseChildrenEventsOutsideOfBounds for them to receive the cursor (#7412).
+        Window window = PlaceWindow(theme);
+        window.Visual.RaiseChildrenEventsOutsideOfBounds.ShouldBeTrue(theme);
+        InteractiveGue border = window.Visual.Find<InteractiveGue>("BorderRightInstance")!;
+        float startWidth = window.Visual.AbsoluteWidth;
+        int x = (int)(window.Visual.AbsoluteRight + 3);
+        int y = CenterY(window.Visual);
+
+        Driver.MoveTo(x, y);
+        Driver.Step();
+        Driver.Cursor.VisualOver.ShouldBeSameAs(border, $"{theme} hit {Describe(Driver.Cursor.VisualOver)}");
+
+        Driver.SetButton(MouseButton.Primary, held: true);
+        Driver.MoveTo(x + 40, y);
+        Driver.MoveTo(x + 40, y);
+        Driver.SetButton(MouseButton.Primary, held: false);
+
+        window.Visual.AbsoluteWidth.ShouldBe(startWidth + 40, 1f, theme);
+    }
+
+    [Theory]
+    [MemberData(nameof(AllThemes))]
     public void Click_ButtonInsideWindow_RaisesClick(string theme)
     {
         Window window = PlaceWindow(theme);
