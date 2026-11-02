@@ -386,17 +386,19 @@ public class NewProjectHappyPathScenarioTests
             string Generate = $" && gumcli codegen \"{gumj}\"";
             dialog.CommandLine.ShouldBe(
                 $"gumcli new \"{gameFolder}\" --platform monogame --no-restore"
-                + Add("KernSmith.MonoGameGum") + Add("Gum.Expressions")
+                + Add("Gum.Shapes.MonoGame") + Add("KernSmith.MonoGameGum") + Add("Gum.MonoGame.ShadowDusk") + Add("Gum.Expressions")
                 + $" && dotnet restore \"{csproj}\"" + Generate);
             dialog.ChoosePlatform("raylib");
             dialog.CommandLine.ShouldBe(
                 $"gumcli new \"{gameFolder}\" --platform raylib --no-restore"
-                + Add("KernSmith.RaylibGum") + Add("Gum.Expressions") + $" && dotnet restore \"{csproj}\"" + Generate);
+                + Add("KernSmith.RaylibGum") + Add("Gum.raylib.ShadowDusk") + Add("Gum.Expressions")
+                + $" && dotnet restore \"{csproj}\"" + Generate);
 
             // Restore.
             dialog.SetChecked(NewProjectDialogText.RestorePackages, false);
             dialog.CommandLine.ShouldBe(
-                $"gumcli new \"{gameFolder}\" --platform raylib --no-restore" + Add("KernSmith.RaylibGum") + Add("Gum.Expressions"));
+                $"gumcli new \"{gameFolder}\" --platform raylib --no-restore"
+                + Add("KernSmith.RaylibGum") + Add("Gum.raylib.ShadowDusk") + Add("Gum.Expressions"));
             dialog.SetChecked(NewProjectDialogText.RestorePackages, true);
 
             // Recommended packages off: the plain command again.

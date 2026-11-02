@@ -289,7 +289,3 @@ if (button != null)
 ```
 
 `ToForms` returns `null` for elements that have no Forms control, such as a plain container or a screen. The non-generic `ToForms()` returns a `FrameworkElement?`, and `ToForms<T>()` returns `T?`, which is also `null` when the control is a different type. Like `ToGraphicalUiElement`, `ToForms` does not add the result to the root, so call `AddToRoot` when you want it displayed.
-
-{% hint style="info" %}
-Available in November 2026, or now if building Gum from source.
-{% endhint %}

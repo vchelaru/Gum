@@ -156,33 +156,18 @@ public class NewProjectPackageChannelTests : NewProjectServiceTestBase
 
     #region Lists
 
-    // nuget.org was checked on 2026-11-01: these ids are not published in any version. A package that does not resolve fails the
-    // new project's restore, so none may be listed.
-    private static readonly string[] NotPublished =
-    {
-        "Gum.MonoGame.ShadowDusk", "Gum.KNI.ShadowDusk", "Gum.raylib.ShadowDusk", "Gum.FNA.ShadowDusk",
-    };
-
-    [Theory]
-    [InlineData(HostPlatform.MonoGame, "Gum.Shapes.MonoGame,KernSmith.MonoGameGum,Gum.Expressions")]
-    [InlineData(HostPlatform.Kni, "Gum.Shapes.KNI,KernSmith.KniGum,Gum.Expressions")]
-    [InlineData(HostPlatform.Raylib, "KernSmith.RaylibGum,Gum.Expressions")]
-    [InlineData(HostPlatform.SilkNet, "Gum.Expressions,Gum.SkiaSharp.ShadowDusk")]
-    [InlineData(HostPlatform.Stride, "Gum.Expressions,Gum.SkiaSharp.ShadowDusk")]
-    [InlineData(HostPlatform.KniSkia, "")]
-    public void For_Preview_ListsThePackagesPublishedAsPreviews(HostPlatform platform, string expected)
-    {
-        string.Join(",", RecommendedPackages.For(platform, NewProjectPackageChannel.Preview)).ShouldBe(expected);
-    }
+    // A package that does not resolve fails the new project's restore, so none may be listed. There is no FNA platform, so its
+    // ShadowDusk package is never listed.
+    private static readonly string[] NotListed = { "Gum.FNA.ShadowDusk" };
 
     [Fact]
-    public void For_Preview_CarriesEveryStablePackage_AndNeverAnUnpublishedOne()
+    public void For_Preview_CarriesEveryStablePackage_AndNeverAnUnlistedOne()
     {
         foreach ((string name, HostPlatform platform) in Platforms)
         {
             IReadOnlyList<string> preview = RecommendedPackages.For(platform, NewProjectPackageChannel.Preview);
             RecommendedPackages.For(platform).ShouldBeSubsetOf(preview, name);
-            preview.Intersect(NotPublished).ShouldBeEmpty(name);
+            preview.Intersect(NotListed).ShouldBeEmpty(name);
         }
     }
 
@@ -231,17 +216,17 @@ public class NewProjectPackageListsTests
     }
 
     [Theory]
-    [InlineData(HostPlatform.MonoGame, NewProjectPackageChannel.Stable, "KernSmith.MonoGameGum,Gum.Expressions")]
-    [InlineData(HostPlatform.Kni, NewProjectPackageChannel.Stable, "KernSmith.KniGum,Gum.Expressions")]
-    [InlineData(HostPlatform.Raylib, NewProjectPackageChannel.Stable, "KernSmith.RaylibGum,Gum.Expressions")]
-    [InlineData(HostPlatform.SilkNet, NewProjectPackageChannel.Stable, "Gum.Expressions")]
-    [InlineData(HostPlatform.Stride, NewProjectPackageChannel.Stable, "Gum.Expressions")]
+    [InlineData(HostPlatform.MonoGame, NewProjectPackageChannel.Stable, "Gum.Shapes.MonoGame,KernSmith.MonoGameGum,Gum.MonoGame.ShadowDusk,Gum.Expressions")]
+    [InlineData(HostPlatform.Kni, NewProjectPackageChannel.Stable, "Gum.Shapes.KNI,KernSmith.KniGum,Gum.KNI.ShadowDusk,Gum.Expressions")]
+    [InlineData(HostPlatform.Raylib, NewProjectPackageChannel.Stable, "KernSmith.RaylibGum,Gum.raylib.ShadowDusk,Gum.Expressions")]
+    [InlineData(HostPlatform.SilkNet, NewProjectPackageChannel.Stable, "Gum.SkiaSharp.ShadowDusk,Gum.Expressions")]
+    [InlineData(HostPlatform.Stride, NewProjectPackageChannel.Stable, "Gum.SkiaSharp.ShadowDusk,Gum.Expressions")]
     [InlineData(HostPlatform.KniSkia, NewProjectPackageChannel.Stable, "")]
-    [InlineData(HostPlatform.MonoGame, NewProjectPackageChannel.Preview, "Gum.Shapes.MonoGame,KernSmith.MonoGameGum,Gum.Expressions")]
-    [InlineData(HostPlatform.Kni, NewProjectPackageChannel.Preview, "Gum.Shapes.KNI,KernSmith.KniGum,Gum.Expressions")]
-    [InlineData(HostPlatform.Raylib, NewProjectPackageChannel.Preview, "KernSmith.RaylibGum,Gum.Expressions")]
-    [InlineData(HostPlatform.SilkNet, NewProjectPackageChannel.Preview, "Gum.Expressions,Gum.SkiaSharp.ShadowDusk")]
-    [InlineData(HostPlatform.Stride, NewProjectPackageChannel.Preview, "Gum.Expressions,Gum.SkiaSharp.ShadowDusk")]
+    [InlineData(HostPlatform.MonoGame, NewProjectPackageChannel.Preview, "Gum.Shapes.MonoGame,KernSmith.MonoGameGum,Gum.MonoGame.ShadowDusk,Gum.Expressions")]
+    [InlineData(HostPlatform.Kni, NewProjectPackageChannel.Preview, "Gum.Shapes.KNI,KernSmith.KniGum,Gum.KNI.ShadowDusk,Gum.Expressions")]
+    [InlineData(HostPlatform.Raylib, NewProjectPackageChannel.Preview, "KernSmith.RaylibGum,Gum.raylib.ShadowDusk,Gum.Expressions")]
+    [InlineData(HostPlatform.SilkNet, NewProjectPackageChannel.Preview, "Gum.SkiaSharp.ShadowDusk,Gum.Expressions")]
+    [InlineData(HostPlatform.Stride, NewProjectPackageChannel.Preview, "Gum.SkiaSharp.ShadowDusk,Gum.Expressions")]
     [InlineData(HostPlatform.KniSkia, NewProjectPackageChannel.Preview, "")]
     public void For_PinsEveryPlatformAndChannelList(HostPlatform platform, NewProjectPackageChannel channel, string expected)
     {
@@ -249,11 +234,11 @@ public class NewProjectPackageListsTests
     }
 
     [Theory]
-    [InlineData(HostPlatform.MonoGame, "Gum.Shapes.MonoGame,KernSmith.MonoGameGum,Gum.Expressions")]
-    [InlineData(HostPlatform.Kni, "Gum.Shapes.KNI,KernSmith.KniGum,Gum.Expressions")]
-    [InlineData(HostPlatform.Raylib, "KernSmith.RaylibGum,Gum.Expressions")]
-    [InlineData(HostPlatform.SilkNet, "Gum.Expressions")]
-    [InlineData(HostPlatform.Stride, "Gum.Expressions")]
+    [InlineData(HostPlatform.MonoGame, "Gum.Shapes.MonoGame,KernSmith.MonoGameGum,Gum.MonoGame.ShadowDusk,Gum.Expressions")]
+    [InlineData(HostPlatform.Kni, "Gum.Shapes.KNI,KernSmith.KniGum,Gum.KNI.ShadowDusk,Gum.Expressions")]
+    [InlineData(HostPlatform.Raylib, "KernSmith.RaylibGum,Gum.raylib.ShadowDusk,Gum.Expressions")]
+    [InlineData(HostPlatform.SilkNet, "Gum.SkiaSharp.ShadowDusk,Gum.Expressions")]
+    [InlineData(HostPlatform.Stride, "Gum.SkiaSharp.ShadowDusk,Gum.Expressions")]
     [InlineData(HostPlatform.KniSkia, "")]
     public void ForSourceLinked_PinsEveryPlatformsAddOns(HostPlatform platform, string expected)
     {

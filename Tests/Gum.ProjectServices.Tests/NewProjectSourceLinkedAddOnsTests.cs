@@ -46,11 +46,11 @@ public class NewProjectSourceLinkedAddOnsTests : BaseTestClass
             .ToList();
 
     [Theory]
-    [InlineData(HostPlatform.MonoGame, "Gum.Shapes.MonoGame,KernSmith.MonoGameGum,Gum.Expressions")]
-    [InlineData(HostPlatform.Kni, "Gum.Shapes.KNI,KernSmith.KniGum,Gum.Expressions")]
-    [InlineData(HostPlatform.Raylib, "KernSmith.RaylibGum,Gum.Expressions")]
-    [InlineData(HostPlatform.SilkNet, "Gum.Expressions")]
-    [InlineData(HostPlatform.Stride, "Gum.Expressions")]
+    [InlineData(HostPlatform.MonoGame, "Gum.Shapes.MonoGame,KernSmith.MonoGameGum,Gum.MonoGame.ShadowDusk,Gum.Expressions")]
+    [InlineData(HostPlatform.Kni, "Gum.Shapes.KNI,KernSmith.KniGum,Gum.KNI.ShadowDusk,Gum.Expressions")]
+    [InlineData(HostPlatform.Raylib, "KernSmith.RaylibGum,Gum.raylib.ShadowDusk,Gum.Expressions")]
+    [InlineData(HostPlatform.SilkNet, "Gum.SkiaSharp.ShadowDusk,Gum.Expressions")]
+    [InlineData(HostPlatform.Stride, "Gum.SkiaSharp.ShadowDusk,Gum.Expressions")]
     [InlineData(HostPlatform.KniSkia, "")]
     public void ForSourceLinked_EachPlatform_ListsTheAddOnsTheCheckoutCanLink(HostPlatform platform, string expected)
     {
@@ -119,6 +119,7 @@ public class NewProjectSourceLinkedAddOnsTests : BaseTestClass
         host.ShouldContain("Gum.Renderables.ShapeRenderer.Self.Initialize();");
         host.ShouldContain("KernSmithFontCreator");
         host.ShouldContain("GumExpressionService.Initialize();");
+        host.ShouldContain("GumService.Default.UseShadowDusk();");
     }
 
     [Fact]
@@ -147,14 +148,14 @@ public class NewProjectSourceLinkedAddOnsTests : BaseTestClass
 
         result.Files.Success.ShouldBeTrue(result.Files.ErrorMessage);
         ReferencedProjects(result.Files.CsprojPath!).ShouldAllBe(path => File.Exists(path));
-        ReferencedProjects(result.Files.CsprojPath!).Count.ShouldBe(4);
+        ReferencedProjects(result.Files.CsprojPath!).Count.ShouldBe(RecommendedPackages.ForSourceLinked(HostPlatform.Kni).Count + 1);
     }
 
     [Fact]
     public void Create_AddOnsFromACheckoutWithSpacesAndSpecialCharacters_WritesWellFormedReferencesThatResolve()
     {
         string checkout = Path.Combine(_folder, "Gum Checkout 100%41 R&D");
-        foreach (string package in new[] { "Gum.Shapes.MonoGame", "KernSmith.MonoGameGum", "Gum.Expressions" })
+        foreach (string package in RecommendedPackages.ForSourceLinked(HostPlatform.MonoGame))
         {
             string project = Path.Combine(checkout, RecommendedPackages.GetSourceProject(package));
             Directory.CreateDirectory(Path.GetDirectoryName(project)!);
@@ -176,7 +177,7 @@ public class NewProjectSourceLinkedAddOnsTests : BaseTestClass
         }
 
         List<string> referenced = ReferencedProjects(Path.Combine(game, "Game.csproj"));
-        referenced.Count.ShouldBe(4);
+        referenced.Count.ShouldBe(RecommendedPackages.ForSourceLinked(HostPlatform.MonoGame).Count + 1);
         referenced.ShouldAllBe(path => File.Exists(path));
     }
 

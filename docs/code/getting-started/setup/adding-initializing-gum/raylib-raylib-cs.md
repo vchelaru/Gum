@@ -150,10 +150,6 @@ If linking to source instead of NuGet, add `<Gum Root>/Runtimes/RaylibGum.Shadow
 
 For loading, errors, and examples, see [ContainerRuntime](../../../standard-visuals/containerruntime.md#loading-shader-files-with-sourceshaderfile).
 
-{% hint style="info" %}
-`Gum.raylib.ShadowDusk` is available in November 2026, or now if building Gum from source.
-{% endhint %}
-
 ## Adding Expression Support (Optional)
 
 If your Gum project uses arithmetic expressions in variable references (such as `Width = OtherInstance.Width + 20`), you can add the `Gum.Expressions` NuGet package for full expression evaluation at runtime. Without this package, simple variable references like `Width = OtherInstance.Width` still work.

@@ -186,7 +186,7 @@ public class NewProjectRecommendedPackagesDialogTests
         });
 
         viewModel.CommandLine.ShouldContain("--source-linked --no-restore");
-        foreach (string package in new[] { "Gum.Shapes.MonoGame", "KernSmith.MonoGameGum", "Gum.Expressions" })
+        foreach (string package in RecommendedPackages.ForSourceLinked(HostPlatform.MonoGame))
         {
             string project = NewProjectDisplayPath.Normalize(Path.Combine(checkout, RecommendedPackages.GetSourceProject(package)));
             viewModel.CommandLine.ShouldContain($"dotnet add \"{Csproj}\" reference \"{project}\"");
@@ -234,7 +234,7 @@ public class NewProjectRecommendedPackagesDialogTests
 
         viewModel.CommandLine.ShouldBe(
             $"gumcli new \"{GameFolder}\" --platform monogame --no-restore"
-            + $" && {Add("KernSmith.MonoGameGum")} && {Add("Gum.Expressions")}"
+            + $" && {Add("Gum.Shapes.MonoGame")} && {Add("KernSmith.MonoGameGum")} && {Add("Gum.MonoGame.ShadowDusk")} && {Add("Gum.Expressions")}"
             + $" && dotnet restore \"{Csproj}\"");
     }
 
@@ -248,7 +248,7 @@ public class NewProjectRecommendedPackagesDialogTests
             vm.RunRestore = false;
         });
 
-        viewModel.CommandLine.ShouldBe($"gumcli new \"{GameFolder}\" --platform stride --no-restore && {Add("Gum.Expressions")}");
+        viewModel.CommandLine.ShouldBe($"gumcli new \"{GameFolder}\" --platform stride --no-restore && {Add("Gum.SkiaSharp.ShadowDusk")} && {Add("Gum.Expressions")}");
     }
 
     [Fact]

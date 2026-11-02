@@ -65,6 +65,8 @@ This step is finished when every open question in the draft is answered, the mig
 
 ### 2. Run the release
 
+Publish the stable NuGet packages for the same release before announcing it. New Project adds packages with a floating `Version="*"`, which resolves only stable versions, so `Tools/Gum.ProjectServices/RecommendedPackages.cs` may list a package only once it has a stable version on nuget.org.
+
 1. Create screenshots (and GIFs) for the highlighted features.
 2. Run the [Build and Release Gum Tool workflow](https://github.com/vchelaru/Gum/actions/workflows/build-and-release.yml) from the release branch with **Type** set to `test`. This builds every package into a hidden draft release. Download the build for your OS and run it.
 3. If the test build works, delete the test draft and run the workflow again from the release branch with **Type** set to `release`. It tags the commit it built and builds and attaches the native Avalonia packages for Windows, macOS, and Linux (`Gum-<rid>.zip`/`.tar.xz` with their `.sha256` files, see [Setup](../gum-tool/setup/README.md)); the WPF tool no longer ships, so a failed package build fails the release.
