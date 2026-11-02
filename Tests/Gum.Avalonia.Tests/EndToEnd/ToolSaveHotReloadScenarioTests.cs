@@ -322,4 +322,30 @@ public class ToolSaveHotReloadScenarioTests
         ((RecordingRenderable)world.Find("Card1")!.GetGraphicalUiElementByName("Title")!.RenderableComponent).Text.ShouldBe("Big!");
         world.ErrorOutput.ShouldBeEmpty();
     }
+
+    [AvaloniaFact]
+    public void TheWorldBuildsItsOwnRenderables_WhateverTheProcessRegisteredBefore_AndPutsThemBack()
+    {
+        // The canvas scenarios (which run on Linux under Xvfb) register a TextRuntime for "Text" in the
+        // process-wide layer and never remove it, so a world built after them used to get real Text.
+        Gum.ElementTypeRegistry before = Gum.ElementTypeRegistry.Base.Snapshot();
+        try
+        {
+            GumRuntime.ElementSaveExtensions.RegisterGueInstantiation(
+                "Text", () => new GraphicalUiElement(new global::RenderingLibrary.Graphics.InvisibleRenderable()));
+
+            using ProjectTreeHarness tree = new ProjectTreeHarness();
+            (ComponentSave card, ScreenSave main) = Build(tree);
+            using (ToolSaveRuntimeWorld world = new ToolSaveRuntimeWorld(tree.Project.ProjectFilePath, "Main"))
+            {
+                world.TextOf("Heading").ShouldBe("Hello");
+            }
+
+            Gum.ElementTypeRegistry.Base.ContainsName("Text").ShouldBeTrue("the world puts the process's registrations back");
+        }
+        finally
+        {
+            Gum.ElementTypeRegistry.Base.Restore(before);
+        }
+    }
 }
