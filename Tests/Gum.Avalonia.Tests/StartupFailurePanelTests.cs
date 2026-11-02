@@ -18,7 +18,7 @@ public class StartupFailurePanelTests
         StartupFailurePanel panel = new StartupFailurePanel(new InvalidOperationException("boom"), () => { }, _ => { });
 
         panel.Message.ShouldBeOfType<SelectableTextBlock>();
-        panel.Message.Text.ShouldContain("boom");
+        panel.Message.Text!.ShouldContain("boom");
         panel.Message.MaxWidth.ShouldBeLessThan(double.PositiveInfinity);
     }
 
