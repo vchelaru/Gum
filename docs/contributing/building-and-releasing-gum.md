@@ -58,6 +58,8 @@ Run the `/gum-monthly-release` skill in Claude Code from the Gum repository. It 
 
 The skill writes a draft to `temp/` and walks through any open questions with you. It only produces the notes draft. It does not bump versions, create the tag, or trigger the release workflow.
 
+This step is finished when every open question in the draft is answered, the migration page exists (or there are no breaking changes), and you have approved the notes. Do not run the `release` build in step 2, or publish NuGet packages for a monthly release, before then. The `test` build in step 2 can run while the notes are being worked on.
+
 ### 2. Run the release
 
 1. Create screenshots (and GIFs) for the highlighted features.
