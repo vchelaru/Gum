@@ -284,7 +284,7 @@ Available in November 2026, or now if building Gum from source.
 
 A variable such as `Label.NotAVariable` sets a property on the instance `Label`, so the instance's type must have it. When it does not, the value is ignored. `gumcli check` reports **GUM0029** as a warning and does not block code generation. The Gum tool can leave these variables behind, for example after an instance's type changes, so its Errors tab does not list GUM0029. To resolve it, delete the variable from the element file or fix its name.
 
-`gumcli check` does not report category selectors for categories the type no longer has, variables Standard elements used to have (such as `DropshadowBlurX`), or any variable on an instance of a component that has a Forms behavior, since its Forms control can receive variables that no variable list names.
+`gumcli check` does not report category selectors for categories the type no longer has, variables Standard elements used to have (such as `DropshadowBlurX`), variables of another Standard type left on an instance whose type changed (such as `Text` on a Container), or any variable on an instance of a component that has a Forms behavior, since its Forms control can receive variables that no variable list names.
 
 {% hint style="info" %}
 Available in November 2026, or now if building Gum from source.
