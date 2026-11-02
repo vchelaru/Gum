@@ -206,6 +206,7 @@ public class CodeOutputTabController
     /// is ignored - the commit that ends the drag refreshes and exports (issue #4946).</param>
     public void HandleRefreshAndExport(CodeOutputProjectSettings codeOutputProjectSettings, bool isFullCommit = true)
     {
+        using Gum.Diagnostics.ToolLog.Scope log = Gum.Diagnostics.ToolLog.Begin("CodeOutput HandleRefreshAndExport");
         if (!isFullCommit)
         {
             return;

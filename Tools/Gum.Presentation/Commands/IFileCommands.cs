@@ -53,6 +53,13 @@ public interface IFileCommands
 
     void TryAutoSaveElement(ElementSave? elementSave);
 
+    /// <summary>
+    /// Holds auto-saves until the returned scope is disposed, then saves each element that asked to
+    /// be saved once. A batch edit (a multi-select commit) would otherwise write the same file once
+    /// per instance.
+    /// </summary>
+    IDisposable BeginAutoSaveBatch();
+
     void TryAutoSaveBehavior(BehaviorSave behavior);
 
     void TryAutoSaveObject(object objectToSave);
