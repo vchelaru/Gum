@@ -65,6 +65,7 @@
     <Compile Include="..\..\Tool\GumPreview\UnattendedWindow.cs" Link="GumPreview\UnattendedWindow.cs" />
     <Compile Include="..\..\Tool\GumPreview\PreviewWindowTitle.cs" Link="GumPreview\PreviewWindowTitle.cs" />
     <Compile Include="..\..\Tool\GumPreview\PreviewFailureLog.cs" Link="GumPreview\PreviewFailureLog.cs" />
+    <Compile Include="..\..\Tool\GumPreview\PreviewDebugLog.cs" Link="GumPreview\PreviewDebugLog.cs" />
     <Compile Include="..\..\Tool\GumPreview\BackingScale.cs" Link="GumPreview\BackingScale.cs" />
     <Compile Include="..\..\Tool\GumPreview\PreviewReloadPolicy.cs" Link="GumPreview\PreviewReloadPolicy.cs" />
   </ItemGroup>
