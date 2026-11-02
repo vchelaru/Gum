@@ -182,7 +182,7 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
         _behaviorShowingLogic = new BehaviorShowingLogic(fileCommands, projectState);
         _variableCategoryCopyPasteService = new VariableCategoryCopyPasteService(_undoManager);
         _variableCategoryRowAdapter = new VariableCategoryRowAdapter();
-        _multiSelectCommitLogic = new MultiSelectCommitLogic(_undoManager, _setVariableLogic);
+        _multiSelectCommitLogic = new MultiSelectCommitLogic(_undoManager, _setVariableLogic, _pluginManager, _fileCommands);
         _compositeMemberLogic = new CompositeMemberLogic(_selectedState,
             _exposeVariableService,
             _undoManager,
@@ -672,8 +672,31 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
         }
     }
 
+    private bool _isValueRefreshDeferred;
+
+    /// <summary>
+    /// Runs the value refresh a multi-select batch postponed (see <see cref="RefreshVariablesDataGridValues"/>);
+    /// does nothing when none was asked for.
+    /// </summary>
+    internal void FlushDeferredValueRefresh()
+    {
+        if (_isValueRefreshDeferred)
+        {
+            _isValueRefreshDeferred = false;
+            RefreshVariablesDataGridValues();
+        }
+    }
+
     public void RefreshVariablesDataGridValues()
     {
+        // One per selected instance in a multi-select batch repeats the same refresh; the batch's
+        // completion does it once.
+        if (_pluginManager.IsInVariableSetBatch)
+        {
+            _isValueRefreshDeferred = true;
+            return;
+        }
+
         ObjectFinder.Self.EnableCache();
         try
         {

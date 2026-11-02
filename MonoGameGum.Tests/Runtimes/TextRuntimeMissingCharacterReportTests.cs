@@ -143,6 +143,46 @@ public class TextRuntimeMissingCharacterReportTests : BaseTestClass
         });
     }
 
+    // Issue #7293: a project load sets Text while layout is suspended, so the Text's own font is not
+    // loaded yet and only the default font is in use. Checking it would blame the file for a glyph the
+    // loaded font has.
+    [Fact]
+    public void Text_WhenFontLoadIsDeferredByLayoutSuspension_DoesNotReportAGlyphTheLoadedFontHas()
+    {
+        RunWithStubCreator(growth: false, messages =>
+        {
+            TextRuntime textRuntime = new();
+            textRuntime.Text = "A";
+            messages.Clear();
+            textRuntime.SuspendLayout(true);
+            textRuntime.Font = "ReportFontG";
+            textRuntime.Text = "\u25BC";
+            textRuntime.ResumeLayout(true);
+
+            messages.ShouldBeEmpty("because the loaded font has the glyph that draws");
+        }, "\u25BC");
+    }
+
+    [Fact]
+    public void Text_WhenFontLoadIsDeferredAndLoadedFontLacksGlyph_ReportsOnceAfterTheLoad()
+    {
+        RunWithStubCreator(growth: false, messages =>
+        {
+            TextRuntime textRuntime = new();
+            textRuntime.Text = "A";
+            messages.Clear();
+            textRuntime.SuspendLayout(true);
+            textRuntime.Font = "ReportFontH";
+            textRuntime.Text = "\u25BC";
+            messages.ShouldBeEmpty("because the font that draws is not known until the load");
+            textRuntime.ResumeLayout(true);
+
+            messages.ShouldHaveSingleItem();
+            messages[0].ShouldContain("U+25BC");
+            messages[0].ShouldContain("ReportFontH");
+        }, "");
+    }
+
     private static TextRuntime NewText(string fontName)
     {
         TextRuntime textRuntime = new();
@@ -150,7 +190,7 @@ public class TextRuntimeMissingCharacterReportTests : BaseTestClass
         return textRuntime;
     }
 
-    private static void RunWithStubCreator(bool growth, System.Action<List<string>> body)
+    private static void RunWithStubCreator(bool growth, System.Action<List<string>> body, string glyphs = "")
     {
         bool savedGrowth = TextRuntime.UseAutomaticFontGrowth;
         IInMemoryFontCreator? savedCreator = CustomSetPropertyOnRenderable.InMemoryFontCreator;
@@ -159,7 +199,7 @@ public class TextRuntimeMissingCharacterReportTests : BaseTestClass
         try
         {
             TextRuntime.UseAutomaticFontGrowth = growth;
-            CustomSetPropertyOnRenderable.InMemoryFontCreator = new StubFontCreator();
+            CustomSetPropertyOnRenderable.InMemoryFontCreator = new StubFontCreator(glyphs);
             CustomSetPropertyOnRenderable.PropertyAssignmentError += handler;
             body(messages);
         }
@@ -184,10 +224,19 @@ char id=66   x=10  y=0   width=10    height=10    xoffset=0     yoffset=0     xa
     // Knows only space, 'A' and 'B'; growth adds whatever is asked for.
     private sealed class StubFontCreator : IInMemoryFontCreator, IGrowableFontCreator
     {
+        private readonly string _glyphs;
+
+        public StubFontCreator(string glyphs) { _glyphs = glyphs; }
+
         public BitmapFont? TryCreateFont(BmfcSave bmfcSave)
         {
             BitmapFont font = new BitmapFont((Texture2D)null!, BaseFontData);
             font.SetFontPattern(256, 256);
+            // Only the font named ReportFontG has them; the default font does not.
+            foreach (char c in bmfcSave.FontName == "ReportFontG" ? _glyphs : "")
+            {
+                font.AddOrUpdateCharacter(new FontFileCharLine { Id = c, Width = 10, Height = 10, XAdvance = 10 }, 256, 256);
+            }
             return font;
         }
 

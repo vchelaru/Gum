@@ -21,6 +21,7 @@ public class DefaultFromFileTextBoxRuntime : InteractiveGue
         if (FormsControl == null)
         {
             FormsControlAsObject = new TextBox(this);
+            BehaviorFormsPropertyApplier.ApplyToCreatedControl(this);
         }
     }
 

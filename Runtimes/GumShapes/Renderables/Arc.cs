@@ -281,7 +281,7 @@ internal class Arc : RenderableShapeBase
 
         if (ShouldPaintGradient(forcedColor))
         {
-            Gradient gradient = base.GetGradient(absoluteLeft, absoluteTop);
+            Gradient gradient = base.GetGradient(absoluteLeft, absoluteTop, MathHelper.ToRadians(-absoluteRotation));
             if (stretch.HasValue)
             {
                 // Gradient points are read in the space before the view, so map the box-space points back.

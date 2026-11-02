@@ -15,6 +15,35 @@ set -euo pipefail
 
 fail() { echo "::error::$*" >&2; exit 1; }
 
+# A program killed by a signal exits 128+N; name the signal and the program so a crash with no
+# output (#7266) still says what happened. Takes the program label, the exit code and the seconds
+# the launch took. Does not change the exit behavior.
+report_exit() {
+  local label="$1" code="$2" seconds="$3"
+  echo "== $label exited $code after ${seconds}s"
+  if [ "$code" -gt 128 ]; then
+    echo "::error::$label was killed by signal $((code - 128)) (SIG$(kill -l "$code" 2>/dev/null || echo '?'))"
+  fi
+}
+
+# Plugin init lines from a log, so a crash during plugin loading shows how far it got.
+show_plugin_timing() {
+  grep -i 'plugin' "$1" 2>/dev/null | tail -n 5 || true
+}
+
+# On macOS a crash leaves a report in ~/Library/Logs/DiagnosticReports; copy the ones written since
+# the script started into the artifact folder. Runs on every failing exit.
+start_marker=$(mktemp)
+collect_crash_reports() {
+  local status=$?
+  if [ "$status" -ne 0 ] && [ "$(uname -s)" = "Darwin" ] && [ -n "${out:-}" ]; then
+    find "$HOME/Library/Logs/DiagnosticReports" -maxdepth 1 \( -name 'Gum*.ips' -o -name 'Gum*.crash' \) \
+      -newer "$start_marker" -exec cp {} "$out/" \; -exec echo "copied crash report {}" \; 2>/dev/null || true
+  fi
+  rm -f "$start_marker"
+}
+trap collect_crash_reports EXIT
+
 extract() {
   local rid="$1" dist="$2" dest="$3"
   rm -rf "$dest"
@@ -187,11 +216,14 @@ echo "== launch packaged Gum unattended"
 shot="$out/gum-$rid.png"
 rm -f "$shot"
 set +e
+launch_start=$SECONDS
 gui "$gum" "$gumx" --exit-after 120 --select DemoScreenGum --screenshot "$shot" \
   --user-data "$work/userdata" > "$out/gum-$rid.log" 2>&1
 code=$?
 set -e
 cat "$out/gum-$rid.log"
+report_exit Gum "$code" $((SECONDS - launch_start))
+if [ "$code" -ne 0 ]; then show_plugin_timing "$out/gum-$rid.log"; fi
 fail_on_crash_logs
 [ "$code" -eq 0 ] || fail "Gum exited $code"
 [ -s "$shot" ] || fail "Gum exited 0 but wrote no screenshot"
@@ -225,11 +257,13 @@ gumj="${gumx%.gumx}.gumj"
 preview_shot="$out/preview-$rid.png"
 rm -f "$preview_shot"
 set +e
+launch_start=$SECONDS
 gui "$preview" --project "$gumj" --element DemoScreenGum --exit-after 120 --screenshot "$preview_shot" \
   > "$out/preview-$rid.log" 2>&1
 code=$?
 set -e
 cat "$out/preview-$rid.log"
+report_exit GumPreview "$code" $((SECONDS - launch_start))
 [ "$code" -eq 0 ] || fail "GumPreview exited $code"
 [ -s "$preview_shot" ] || fail "GumPreview exited 0 but wrote no screenshot"
 echo "screenshot: $preview_shot"

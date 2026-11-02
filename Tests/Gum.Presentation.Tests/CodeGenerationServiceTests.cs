@@ -108,6 +108,37 @@ public class CodeGenerationServiceTests : BaseTestClass
     }
 
     [Fact]
+    public void GenerateCodeForElement_WritesGeneratedAndCustomFilesWithOneLineEnding()
+    {
+        string root = Path.Combine(Path.GetTempPath(), "GumCodeGenerationServiceTests_" + Guid.NewGuid().ToString("N")) + Path.DirectorySeparatorChar;
+        _retryService
+            .Setup(x => x.TryMultipleTimes(It.IsAny<Action>(), It.IsAny<int>()))
+            .Callback<Action, int>((action, _) => action());
+        ComponentSave component = CreateComponent();
+        CodeOutputProjectSettings settings = new() { CodeProjectRoot = root, OutputLibrary = OutputLibrary.MonoGame };
+        try
+        {
+            _codeGenerationService.GenerateCodeForElement(component, new CodeOutputElementSettings(), settings, showPopups: false);
+
+            string[] files = Directory.GetFiles(root, "*.cs", SearchOption.AllDirectories);
+            files.Length.ShouldBe(2);
+            foreach (string path in files)
+            {
+                string text = File.ReadAllText(path);
+                text.ShouldContain("\r\n", customMessage: path);
+                text.Replace("\r\n", string.Empty).ShouldNotContain("\n", customMessage: path);
+            }
+        }
+        finally
+        {
+            if (Directory.Exists(root))
+            {
+                Directory.Delete(root, recursive: true);
+            }
+        }
+    }
+
+    [Fact]
     public void GenerateCodeForAllElements_WhenAnElementCannotBeGenerated_DoesNotCountIt()
     {
         ComponentSave component = CreateBehaviorlessSpriteComponent();
@@ -130,6 +161,22 @@ public class CodeGenerationServiceTests : BaseTestClass
 
         _guiCommands.Verify(
             x => x.PrintOutput(It.Is<string>(m => m.Contains("MySprite") && m.Contains("must either inherit from Container"))),
+            Times.Once);
+        _retryService.Verify(x => x.TryMultipleTimes(It.IsAny<Action>(), It.IsAny<int>()), Times.Never);
+    }
+
+    [Fact]
+    public void GenerateCodeForElement_CategoryNamedLikeItsGumFormsClass_PrintsErrorAndWritesNothing()
+    {
+        // Gum Forms names the class "MyComponent", so the nested enum "MyComponent" is CS0542 (#7141).
+        ComponentSave component = CreateComponent();
+        component.Categories.Add(new StateSaveCategory { Name = "MyComponent" });
+
+        _codeGenerationService.GenerateCodeForElement(
+            component, new CodeOutputElementSettings(), CreateFormsSettings(), showPopups: false);
+
+        _guiCommands.Verify(
+            x => x.PrintOutput(It.Is<string>(m => m.Contains("Category \"MyComponent\" generates"))),
             Times.Once);
         _retryService.Verify(x => x.TryMultipleTimes(It.IsAny<Action>(), It.IsAny<int>()), Times.Never);
     }

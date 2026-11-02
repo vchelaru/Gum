@@ -25,11 +25,18 @@ public sealed class StartupFailureReporter
         _error = error;
     }
 
-    /// <summary>Creates a reporter that shows the failure in place of <paramref name="window"/>'s content.</summary>
+    /// <summary>
+    /// Creates a reporter that shows the failure in place of <paramref name="window"/>'s content,
+    /// with Copy and Close (closing the main window ends the application).
+    /// </summary>
     /// <param name="window">The main window.</param>
     /// <param name="error">Where the failure is written, normally stderr.</param>
-    public StartupFailureReporter(ContentControl window, TextWriter error)
-        : this(exception => window.Content = new StartupFailurePanel(exception), error)
+    public StartupFailureReporter(Window window, TextWriter error)
+        : this(exception => window.Content = new StartupFailurePanel(
+                exception,
+                window.Close,
+                text => _ = TopLevel.GetTopLevel(window)?.Clipboard?.SetTextAsync(text)),
+            error)
     {
     }
 

@@ -223,6 +223,24 @@ public class DataUiModelTests
     }
 
     [Fact]
+    public void SetMultipleCategoryLists_DoesNotOfferMakeDefault_WhenAWrappedMemberDoesNot()
+    {
+        MemberCategory firstCategory = new MemberCategory("Dimensions");
+        firstCategory.Members.Add(new InstanceMember(nameof(Target.Width), new Target()) { SupportsMakeDefault = false });
+        MemberCategory secondCategory = new MemberCategory("Dimensions");
+        secondCategory.Members.Add(new InstanceMember(nameof(Target.Width), new Target()));
+        DataUiGridModel grid = new DataUiGridModel();
+
+        grid.SetMultipleCategoryLists(new List<List<MemberCategory>>
+        {
+            new List<MemberCategory> { firstCategory },
+            new List<MemberCategory> { secondCategory },
+        });
+
+        grid.Categories[0].Members.Single().SupportsMakeDefault.ShouldBeFalse();
+    }
+
+    [Fact]
     public void Instance_ReflectsPublicPropertiesIntoAnUncategorizedCategory()
     {
         DataUiGridModel grid = new DataUiGridModel();

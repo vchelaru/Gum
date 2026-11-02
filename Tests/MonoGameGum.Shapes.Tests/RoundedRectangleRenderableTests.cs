@@ -252,17 +252,17 @@ public class RoundedRectangleRenderableTests
     [Fact]
     public void ComputeShadowDrawParameters_Filled_StandardBlur_ShrinksByBlurEachDimension()
     {
-        // Standard case (blur <= 2 * minHalf): minHalf = 30, blur = 10 <= 60. Each side pulls in
-        // blur/2 so the 50% line lands on the original edge (CSS box-shadow), i.e. each dimension
-        // shrinks by the full blur. aaSize = blur.
+        // Standard case (blur <= minHalf): minHalf = 30, blur = 10 <= 30. #7292: each side pulls in
+        // blur (was blur/2) so the 50% line lands on the original edge (CSS box-shadow), i.e. each
+        // dimension shrinks by twice the blur. aaSize = 2 * blur (was blur).
         RoundedRectangle sut = new() { IsFilled = true, DropshadowBlurX = 10f };
 
         (Vector2 size, int aaSize, float alphaScale) =
             sut.ComputeShadowDrawParameters(new Vector2(100, 60), effectiveShadowStrokeWidth: 0f, cameraZoom: 1f);
 
-        size.X.ShouldBe(90f);
-        size.Y.ShouldBe(50f);
-        aaSize.ShouldBe(10);
+        size.X.ShouldBe(80f);   // was 90
+        size.Y.ShouldBe(40f);   // was 50
+        aaSize.ShouldBe(20);    // was 10
         alphaScale.ShouldBe(1f);
     }
 
@@ -286,17 +286,18 @@ public class RoundedRectangleRenderableTests
     [Fact]
     public void ComputeShadowDrawParameters_StrokeOnly_BlurLessThanStroke_ShrinksByBlur()
     {
-        // blur < StrokeWidth: effectiveShadowStrokeWidth = StrokeWidth - blur = 10 - 4 = 6. The
-        // band centerline must stay on the body centerline, so each side pulls in
-        // (StrokeWidth - effShStroke)/2 = blur/2 = 2 → each dimension shrinks by the blur (4).
+        // 2 * blur < StrokeWidth (#7292; was blur < StrokeWidth): effectiveShadowStrokeWidth =
+        // StrokeWidth - 2 * blur = 10 - 8 = 2 (was 6). The band centerline must stay on the body
+        // centerline, so each side pulls in (StrokeWidth - effShStroke)/2 = blur = 4 (was 2) →
+        // each dimension shrinks by twice the blur (8; was 4).
         RoundedRectangle sut = new() { IsFilled = false, StrokeWidth = 10f, DropshadowBlurX = 4f };
 
         (Vector2 size, int aaSize, float alphaScale) =
-            sut.ComputeShadowDrawParameters(new Vector2(100, 60), effectiveShadowStrokeWidth: 6f, cameraZoom: 1f);
+            sut.ComputeShadowDrawParameters(new Vector2(100, 60), effectiveShadowStrokeWidth: 2f, cameraZoom: 1f);
 
-        size.X.ShouldBe(96f);
-        size.Y.ShouldBe(56f);
-        aaSize.ShouldBe(4);
+        size.X.ShouldBe(92f);   // was 96
+        size.Y.ShouldBe(52f);   // was 56
+        aaSize.ShouldBe(8);     // was 4
         alphaScale.ShouldBe(1f);
     }
 
@@ -316,8 +317,9 @@ public class RoundedRectangleRenderableTests
         // Anchored: shrink by StrokeWidth (minus the epsilon band), independent of blur.
         size.X.ShouldBe(100f - 10f + 0.01f, tolerance: 0.001f);
         size.Y.ShouldBe(60f - 10f + 0.01f, tolerance: 0.001f);
-        // Halo grows with blur.
-        aaSize.ShouldBe(200);
+        // Halo grows with blur. #7292: the clamped band ends blur past the body edge, so the ramp
+        // is blur + StrokeWidth / 2 = 205 (was blur = 200).
+        aaSize.ShouldBe(205);
     }
 
     [Fact]
@@ -328,7 +330,8 @@ public class RoundedRectangleRenderableTests
         (Vector2 _, int aaSize, float _) =
             sut.ComputeShadowDrawParameters(new Vector2(100, 60), effectiveShadowStrokeWidth: 0f, cameraZoom: 2f);
 
-        aaSize.ShouldBe(20);
+        // #7292: 2 * blur * zoom = 40 (was blur * zoom: 20).
+        aaSize.ShouldBe(40);
     }
 
     [Fact]

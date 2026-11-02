@@ -2,6 +2,8 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
+    <!-- WinExe in Release so no console window opens behind the game; Debug keeps Exe for console output. -->
+    <OutputType Condition="'$(Configuration)' == 'Release'">WinExe</OutputType>
     <TargetFramework>net8.0</TargetFramework>
     <RollForward>Major</RollForward>
     <RootNamespace>{{RootNamespace}}</RootNamespace>

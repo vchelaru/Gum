@@ -37,8 +37,9 @@ TextBox supports reading characters from the keyboard. It supports:
 * Backspace - removes a character at the index before the caret
 * Delete - removes a character at the caret index
 * Enter (if multi-line) - inserts the newline character (`'\n'`)
+* Emoji - an emoji counts as one character for the caret, Backspace, Delete, and clicking, even though it is stored as two `char` values in `Text`
 * Keyboard repeat - holding Backspace, Delete, or an arrow key repeats it after `RepeatDelay`, then every `RepeatRate`
-* CTRL X, C, and V for cut, copy, and paste
+* CTRL X, C, and V for cut, copy, and paste. If a selection edge falls inside an emoji, copy and cut take the whole emoji.
 
 Typed characters repeat at the OS-level repeat rate. For example, the following animation shows the TextBox responding to the Windows Key repeat rate. Navigation keys follow `RepeatDelay` and `RepeatRate` on the keyboard instead (see [Keyboard Support](../events-and-interactivity/keyboard-support.md#key-repeat)).
 
@@ -106,7 +107,9 @@ panel.AddChild(textBox);
 
 ## MaxLength
 
-The `MaxLength` property can be used to restrict the number of characters that can be entered into a `TextBox`. This limit applies to both user typing and pasting. If a user attempts to type more characters than allowed, the extra characters are ignored. If a user pastes a string that would exceed the limit, the string is truncated to fit.
+The `MaxLength` property can be used to restrict the number of characters that can be entered into a `TextBox`. This limit applies to both user typing and pasting. If a user attempts to type more characters than allowed, the extra characters are ignored. If a user pastes a string that would exceed the limit, the `TextBox` inserts the pasted text and cuts the result to `MaxLength` from the end, the same as typing. If the caret is in the middle of the text, the text after the caret is what gets cut.
+
+`MaxLength` counts UTF-16 `char` values, the same as `string.Length`, so an emoji counts as two. An emoji that would straddle the limit is dropped whole rather than split.
 
 The following code creates a `TextBox` with a `MaxLength` of 10:
 
@@ -323,6 +326,51 @@ mainPanel.AddChild(textBox);
 <figure><img src="../../.gitbook/assets/24_07 50 58.gif" alt=""><figcaption><p>Pressing enter applies binding</p></figcaption></figure>
 
 If every `TextBox` in a project should use `LostFocus` by default, it can be registered once instead of set on every individual binding. See [Default Update Triggers](../binding-viewmodels/advanced-binding-options.md#default-update-triggers).
+
+## EditCommitted and EditCancelled
+
+`EditCommitted` is raised when the user presses Enter and Enter ends the edit instead of adding a line break. For a `TextBox` that means `AcceptsReturn` is `false`. When `AcceptsReturn` is `true`, Enter adds a newline and `EditCommitted` is never raised. `EditCancelled` is raised when the user presses Escape.
+
+Both events are raised only for key presses on the focused `TextBox`. Setting `Text` in code, or text arriving from an on-screen keyboard, does not raise them. The `TextBox` keeps focus and keeps its text after either event, so the handler decides what happens next, such as restoring the previous text on cancel or moving focus on commit.
+
+```csharp
+// Initialize
+string originalText = "Player";
+var textBox = new TextBox();
+textBox.Text = originalText;
+textBox.AddToRoot();
+
+textBox.EditCommitted += (_, _) =>
+{
+    originalText = textBox.Text;
+    textBox.IsFocused = false;
+};
+
+textBox.EditCancelled += (_, _) =>
+{
+    textBox.Text = originalText;
+    textBox.IsFocused = false;
+};
+```
+
+Enter and Escape characters never delete selected text. Pressing either key with text selected leaves the selection and the text unchanged.
+
+If your game reacts to Escape or Enter itself, such as closing a menu on Escape, a focused `TextBox` still sees the same key press. Check `InteractiveGue.CurrentInputReceiver` first, and skip your own handling while it is not `null`:
+
+```csharp
+// Update
+if (InteractiveGue.CurrentInputReceiver == null &&
+    GumUI.Keyboard.KeyPushed(Gum.Forms.Input.Keys.Escape))
+{
+    CloseMenu();
+}
+```
+
+A `ScrollViewer` that contains a focused `TextBox` does not take focus on Escape. The `TextBox` raises `EditCancelled` instead.
+
+{% hint style="info" %}
+Available in November 2026, or now if building Gum from source.
+{% endhint %}
 
 ## Binding to Numeric Properties
 

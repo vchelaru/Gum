@@ -60,6 +60,8 @@ public class PasswordBox : TextBoxBase
         }
         set
         {
+            // The same value is not a change, so it keeps the selection like TextBox.Text does.
+            keepSelectionOnTextChange = value == Password;
             SecurePassword.Clear();
             if (value != null)
             {
@@ -68,7 +70,14 @@ public class PasswordBox : TextBoxBase
                     SecurePassword.AppendChar(character);
                 }
             }
-            CallMethodsInResponseToPasswordChanged();
+            try
+            {
+                CallMethodsInResponseToPasswordChanged();
+            }
+            finally
+            {
+                keepSelectionOnTextChange = false;
+            }
         }
     }
 
@@ -220,6 +229,7 @@ public class PasswordBox : TextBoxBase
         UpdateCaretPositionFromCaretIndex();
         OffsetTextToKeepCaretInView();
         UpdateDisplayedCharacters();
+        ClearSelectionAfterTextChange(SecurePassword.Length);
         UpdatePlaceholderVisibility();
         PasswordChanged?.Invoke(this, EventArgs.Empty);
         PushValueToViewModel(nameof(Password));
@@ -268,13 +278,14 @@ public class PasswordBox : TextBoxBase
 
     public void DeleteSelection()
     {
-        int lengthToRemove = selectionLength;
-        ExpandToWholeCharacters(Password, ref selectionStart, ref lengthToRemove);
+        var (start, lengthToRemove) = GetWholeCharacterSelection(Password, selectionStart, selectionLength);
+        selectionStart = start;
+        // Cleared before the text changes so the shortened text does not clamp (and report) it a second time.
+        SelectionLength = 0;
         RemoveRange(selectionStart, lengthToRemove);
         CallMethodsInResponseToPasswordChanged();
 
         CaretIndex = selectionStart;
-        SelectionLength = 0;
     }
 
     protected override void HandleDelete()

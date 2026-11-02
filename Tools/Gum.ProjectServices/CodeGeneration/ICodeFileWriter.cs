@@ -39,7 +39,7 @@ public class DirectCodeFileWriter : ICodeFileWriter
             {
                 System.IO.Directory.CreateDirectory(directory);
             }
-            System.IO.File.WriteAllText(filePath, contents);
+            System.IO.File.WriteAllText(filePath, GeneratedCodeText.ToCrLf(contents));
             return true;
         }
         catch (Exception e) when (e is System.IO.IOException || e is UnauthorizedAccessException)

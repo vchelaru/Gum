@@ -31,6 +31,13 @@ namespace Gum.Bundle;
 public class GumProjectDependencyWalker
 {
     /// <summary>
+    /// Maps a Text value to its translation in every language, so BBCode that lives only in a
+    /// translation has its fonts enumerated too (see <see cref="FontReferenceCollector.TranslationsOf"/>).
+    /// Null scans the raw values only.
+    /// </summary>
+    public Func<string, IEnumerable<string>>? FontTranslationsOf { get; set; }
+
+    /// <summary>
     /// Enumerates the files the given project depends on, partitioned by category.
     /// Missing files are reported via <see cref="WalkResult.MissingFiles"/> rather than thrown.
     /// </summary>
@@ -595,7 +602,7 @@ public class GumProjectDependencyWalker
         return rootVariable?.IsFile == true;
     }
 
-    private static void CollectFontCacheReferences(
+    private void CollectFontCacheReferences(
         GumProjectSave project,
         IEnumerable<ElementSave> elements,
         string projectRootDirectory,
@@ -617,7 +624,10 @@ public class GumProjectDependencyWalker
         }
 
         FontReferenceCollector collector = new FontReferenceCollector(
-            instance => ObjectFinder.Self.GetElementSave(instance));
+            instance => ObjectFinder.Self.GetElementSave(instance))
+        {
+            TranslationsOf = FontTranslationsOf
+        };
 
         Dictionary<string, BmfcSave> fonts = collector.Collect(project, elements);
 

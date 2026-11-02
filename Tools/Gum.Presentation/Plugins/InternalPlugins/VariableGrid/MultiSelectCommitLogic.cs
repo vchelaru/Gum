@@ -1,3 +1,5 @@
+using Gum.Diagnostics;
+using Gum.Commands;
 using Gum.PropertyGridHelpers;
 using Gum.Undo;
 using System;
@@ -24,12 +26,17 @@ public class MultiSelectCommitLogic : IMultiSelectCommitLogic
 {
     private readonly IUndoManager _undoManager;
     private readonly ISetVariableLogic _setVariableLogic;
+    private readonly IPluginManager _pluginManager;
+    private readonly IFileCommands _fileCommands;
 
     /// <summary>Creates the logic over the undo manager and the set logic that decides refreshes.</summary>
-    public MultiSelectCommitLogic(IUndoManager undoManager, ISetVariableLogic setVariableLogic)
+    public MultiSelectCommitLogic(IUndoManager undoManager, ISetVariableLogic setVariableLogic,
+        IPluginManager pluginManager, IFileCommands fileCommands)
     {
         _undoManager = undoManager;
         _setVariableLogic = setVariableLogic;
+        _pluginManager = pluginManager;
+        _fileCommands = fileCommands;
     }
 
     /// <inheritdoc/>
@@ -41,20 +48,34 @@ public class MultiSelectCommitLogic : IMultiSelectCommitLogic
         }
 
         IDisposable? undoLock = null;
+        IDisposable? pluginBatch = null;
+        IDisposable? saveBatch = null;
 
+        ToolLog.Scope commitLog = default;
         member.BeforeMultiSet += (args) =>
         {
+            commitLog = ToolLog.Begin("MultiSelectCommit", count: member.InstanceMembers.Count(), detail: args.CommitType.ToString());
             // Only lock for Full commits to avoid locking during intermediate changes (like dragging sliders)
             if (args.CommitType == SetPropertyCommitType.Full)
             {
                 undoLock = _undoManager.RequestLock();
+                // Element-wide work (the error check, code generation, the file save) runs once for the
+                // batch, not once per selected instance.
+                pluginBatch = _pluginManager.BeginVariableSetBatch();
+                saveBatch = _fileCommands.BeginAutoSaveBatch();
             }
         };
 
         member.AfterMultiSet += (args) =>
         {
+            pluginBatch?.Dispose();
+            pluginBatch = null;
+            saveBatch?.Dispose();
+            saveBatch = null;
             undoLock?.Dispose();
             undoLock = null;
+            commitLog.Dispose();
+            commitLog = default;
 
             if (args.CommitType != SetPropertyCommitType.Full)
             {
@@ -62,7 +83,10 @@ public class MultiSelectCommitLogic : IMultiSelectCommitLogic
             }
 
             // Record undo after all values have been set
-            _undoManager.RecordUndo();
+            using (ToolLog.Begin("RecordUndo"))
+            {
+                _undoManager.RecordUndo();
+            }
 
             // Every row shares the root variable and the containing element, so the first row
             // decides whether the batch needs a tree/grid rebuild.

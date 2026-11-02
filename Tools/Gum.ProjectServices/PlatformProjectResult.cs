@@ -14,6 +14,9 @@ public class PlatformProjectResult
     /// <summary>Gets the full path of the generated host .csproj.</summary>
     public string CsprojPath { get; init; } = "";
 
-    /// <summary>Gets the full path of the generated Gum project file (.gumj).</summary>
+    /// <summary>Gets the full path of the generated Gum project file (.gumj, or .gumx for the XML format).</summary>
     public string GumProjectPath { get; init; } = "";
+
+    /// <summary>The demo screen the host game shows, or <see langword="null"/> when there is none.</summary>
+    public DemoScreenInfo? DemoScreen { get; init; }
 }

@@ -9,8 +9,8 @@ using GumRuntime;
 using RenderingLibrary.Graphics;
 using System.Linq;
 namespace CodeGenProject.Components.Controls;
-[global::Gum.DataTypes.GumElement("Controls/UserControl")]
-partial class UserControl : global::Gum.Forms.Controls.FrameworkElement
+[global::Gum.DataTypes.GumElement("Controls/UserControl", FormsType = typeof(global::Gum.Forms.Controls.UserControl))]
+partial class UserControl : global::Gum.Forms.Controls.UserControl
 {
     #if UNITY_5_3_OR_NEWER && !GUM_NO_UNITY_ENGINE
     [UnityEngine.RuntimeInitializeOnLoadMethod(UnityEngine.RuntimeInitializeLoadType.SubsystemRegistration)]
@@ -28,6 +28,7 @@ partial class UserControl : global::Gum.Forms.Controls.FrameworkElement
             return visual;
         });
         global::Gum.Forms.Controls.FrameworkElement.DefaultFormsTemplates[typeof(UserControl)] = template;
+        global::Gum.Forms.Controls.FrameworkElement.DefaultFormsTemplates[typeof(global::Gum.Forms.Controls.UserControl)] = template;
         ElementSaveExtensions.RegisterGueInstantiation("Controls/UserControl", () => 
         {
             var gue = template.CreateContent(null, true) as InteractiveGue;

@@ -1,6 +1,9 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using Gum;
+using Gum.Forms.Controls;
+using Gum.Forms;
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using Gum.Managers;
@@ -23,8 +26,6 @@ namespace GumPreview;
 public class Game1 : Game
 {
     private const double SelectionPollIntervalSeconds = 0.25;
-    private const int FallbackCanvasWidth = 800;
-    private const int FallbackCanvasHeight = 600;
 
     private readonly GraphicsDeviceManager _graphics;
     private readonly string _gumxPath;
@@ -34,11 +35,18 @@ public class Game1 : Game
     private readonly string? _screenshotPath;
     private readonly string? _focusName;
     private readonly string? _typedText;
+    private readonly bool _selectAll;
+    private readonly PreviewDebugLog? _debugLog;
+    private IInputReceiver? _loggedFocus;
 
+    private readonly PreviewReloadPolicy _reloadPolicy = new PreviewReloadPolicy();
+    private readonly PreviewCanvasSize _canvasSize = new PreviewCanvasSize();
     private PreviewSelectionMessage _selection;
     private DateTime _lastSelectionFileWriteTimeUtc;
     private double _secondsSinceLastSelectionPoll;
     private bool _isElementMissing;
+    private string? _loadError;
+    private readonly PreviewFailureLog _failureLog = new PreviewFailureLog();
     private bool _isRetinaBackingEnabled;
     private BackingScale _backingScale;
 
@@ -57,10 +65,13 @@ public class Game1 : Game
     /// <param name="focusName">A Forms control in the shown element to focus once it loads.</param>
     /// <param name="typedText">With <paramref name="focusName"/>, text typed into that text box.</param>
     public Game1(string gumxPath, string elementName, string? selectionFilePath, string? contentRootDirectory = null,
-        UnattendedPreviewRun? unattended = null, string? screenshotPath = null, string? focusName = null, string? typedText = null)
+        UnattendedPreviewRun? unattended = null, string? screenshotPath = null, string? focusName = null, string? typedText = null, bool selectAll = false,
+        PreviewDebugLog? debugLog = null)
     {
+        _debugLog = debugLog;
         _focusName = focusName;
         _typedText = typedText;
+        _selectAll = selectAll;
         _gumxPath = gumxPath;
         _selection = new PreviewSelectionMessage(elementName);
         _selectionFilePath = selectionFilePath;
@@ -79,53 +90,48 @@ public class Game1 : Game
         IsMouseVisible = true;
         Window.AllowUserResizing = true;
         Window.ClientSizeChanged += HandleClientSizeChanged;
+        KeepWindowOffScreen();
         UpdateWindowTitle();
+    }
+
+    // MonoGame re-centers the window when the graphics settings apply, after the constructor, so
+    // the placement is repeated here and on every update.
+    private void KeepWindowOffScreen()
+    {
+        if (UnattendedWindow.StartPosition(isUnattended: _unattended != null) is (int x, int y)
+            && (Window.Position.X != x || Window.Position.Y != y))
+        {
+            Window.Position = new Point(x, y);
+        }
     }
 
     protected override void Initialize()
     {
-        GumService.Default.Initialize(this, _gumxPath);
-
-        // GumService.Initialize just set this to _gumxPath's own directory - override it back to the
-        // original project's directory when _gumxPath is actually a temporary converted copy
-        // elsewhere (issue #4748), so relative content (fonts, textures) still resolves correctly.
-        if (!string.IsNullOrEmpty(_contentRootDirectory))
+        string? interactionError;
+        try
         {
-            FileManager.RelativeDirectory = _contentRootDirectory;
+            interactionError = LoadProject();
         }
-
-        // Must come after GumService.Default.Initialize - ShapeRenderer.Initialize reads the
-        // initialized GumService/GraphicsDevice.
-        ShapeRenderer.Self.Initialize();
-
-        // Registered before the project's elements are built so a container's SourceShaderFile
-        // resolves as it loads.
-        PreviewShaderResolver.Register(GraphicsDevice);
-
-        // The window is sized for the backing scale on the first Update, once it is showing; a resize
-        // here is undone when MonoGame shows it.
-        _isRetinaBackingEnabled = MacRetinaBacking.TryEnable(Window.Handle);
-
-        GumService.Default.EnableHotReload(_gumxPath);
-        // A reload re-applies the default state over the whole tree, undoing the selected state.
-        GumService.Default.HotReloadCompleted += ApplySelectedState;
-
-        ApplyCanvasSizeFromProject();
-
-        // The tool writes the full selection (state, orderer) before launching; --element alone is
-        // the fallback for a launch with no selection file.
-        if (_selectionFilePath != null && File.Exists(_selectionFilePath))
+        catch (Exception exception)
         {
-            _lastSelectionFileWriteTimeUtc = File.GetLastWriteTimeUtc(_selectionFilePath);
-            PreviewSelectionMessage? initial = TryReadSelectionFile();
-            if (initial != null)
+            // A missing or malformed project. Unattended, that is a failed run; attended, the window
+            // stays up with the reason in its title, because the tool launches it with no console.
+            string message = PreviewFailureLog.LoadMessage(_gumxPath, exception);
+            _loadError = message;
+            _debugLog?.LogException("load", exception);
+            UnattendedExitCode = 1;
+            Window.Title = PreviewWindowTitle.ForLoadFailure(message);
+            if (_unattended != null)
             {
-                _selection = initial;
+                FailUnattended(_unattended.TryFail(message.TrimEnd('.') + "."));
             }
+            else
+            {
+                Console.Error.WriteLine($"GumPreview: {message}");
+            }
+            base.Initialize();
+            return;
         }
-        ApplySiblingOrdering();
-        ShowElement();
-        string? interactionError = ApplyInteraction();
 
         if (_unattended != null)
         {
@@ -150,9 +156,72 @@ public class Game1 : Game
         base.Initialize();
     }
 
+    private string? LoadProject()
+    {
+        KeepWindowOffScreen();
+        GumService.Default.Initialize(this, _gumxPath);
+
+        // GumService.Initialize just set this to _gumxPath's own directory - override it back to the
+        // original project's directory when _gumxPath is actually a temporary converted copy
+        // elsewhere (issue #4748), so relative content (fonts, textures) still resolves correctly.
+        if (!string.IsNullOrEmpty(_contentRootDirectory))
+        {
+            FileManager.RelativeDirectory = _contentRootDirectory;
+        }
+
+        // Must come after GumService.Default.Initialize - ShapeRenderer.Initialize reads the
+        // initialized GumService/GraphicsDevice.
+        ShapeRenderer.Self.Initialize();
+
+        // Tab, keyboard and gamepad navigation, so a UI's focus order can be tried (issue #7260).
+        PreviewInputDefaults.Enable(GumService.Default);
+
+        // Registered before the project's elements are built so a container's SourceShaderFile
+        // resolves as it loads.
+        PreviewShaderResolver.Register(GraphicsDevice);
+
+        // The window is sized for the backing scale on the first Update, once it is showing; a resize
+        // here is undone when MonoGame shows it.
+        _isRetinaBackingEnabled = MacRetinaBacking.TryEnable(Window.Handle);
+
+        // Preview rebuilds after such a reload, so "the old UI stays on screen" would be wrong.
+        GumHotReloadManager.PrintsShownElementGone = false;
+        GumService.Default.EnableHotReload(_gumxPath);
+        GumService.Default.HotReloadFinished += HandleHotReloadFinished;
+
+        ApplyCanvasSizeIfChanged(isWindowShown: false);
+
+        // The tool writes the full selection (state, orderer) before launching; --element alone is
+        // the fallback for a launch with no selection file.
+        if (_selectionFilePath != null && File.Exists(_selectionFilePath))
+        {
+            _lastSelectionFileWriteTimeUtc = File.GetLastWriteTimeUtc(_selectionFilePath);
+            PreviewSelectionMessage? initial = TryReadSelectionFile();
+            if (initial != null)
+            {
+                _selection = initial;
+            }
+        }
+        ApplySiblingOrdering();
+        ShowElement();
+        return ApplyInteraction();
+    }
+
     protected override void Update(GameTime gameTime)
     {
+        KeepWindowOffScreen();
+        if (_loadError != null)
+        {
+            base.Update(gameTime);
+            return;
+        }
         UpdateBackingScale();
+        ApplyCanvasSizeIfChanged(isWindowShown: true);
+        RebuildAfterReloadIfNeeded();
+        if (_debugLog != null)
+        {
+            LogInput(_debugLog);
+        }
         GumService.Default.Update(gameTime);
         PollSelectionFile(gameTime);
         base.Update(gameTime);
@@ -160,6 +229,14 @@ public class Game1 : Game
 
     protected override void Draw(GameTime gameTime)
     {
+        if (_loadError != null)
+        {
+            // Nothing loaded to draw; a dark red window with the reason in its title.
+            GraphicsDevice.Clear(new Color(96, 16, 16));
+            base.Draw(gameTime);
+            return;
+        }
+
         if (_unattended != null && _unattended.TryClaimCapture())
         {
             FinishUnattended();
@@ -169,6 +246,39 @@ public class Game1 : Game
         GumService.Default.Draw();
         base.Draw(gameTime);
     }
+
+    // Only runs with --log. Focus is read before Update, so a focus change shows up the frame after
+    // the click or key that caused it; keys are the ones Update is about to forward to that control.
+    private void LogInput(PreviewDebugLog log)
+    {
+        IInputReceiver? focus = InteractiveGue.CurrentInputReceiver;
+        if (!ReferenceEquals(focus, _loggedFocus))
+        {
+            _loggedFocus = focus;
+            log.LogFocus(DescribeControl(focus));
+        }
+
+        Keyboard keyboard = GumService.Default.Keyboard;
+        IReadOnlyCollection<Microsoft.Xna.Framework.Input.Keys> typed = keyboard.KeysTyped;
+        if (typed.Count == 0)
+        {
+            return;
+        }
+
+        List<string> keys = new List<string>(typed.Count);
+        foreach (Microsoft.Xna.Framework.Input.Keys key in typed)
+        {
+            keys.Add(key.ToString());
+        }
+        if (keys.Count > 0)
+        {
+            string modifiers = $"{(keyboard.IsCtrlDown ? "Ctrl" : "")}{(keyboard.IsShiftDown ? "Shift" : "")}{(keyboard.IsAltDown ? "Alt" : "")}";
+            log.LogKeys(keys, modifiers.Length == 0 ? "none" : modifiers, DescribeControl(focus));
+        }
+    }
+
+    private static string? DescribeControl(IInputReceiver? receiver) =>
+        receiver == null ? null : $"{receiver.GetType().Name} '{(receiver as FrameworkElement)?.Visual?.Name}'";
 
     // Runs once at startup for --focus/--type; a later selection change shows a fresh element.
     private string? ApplyInteraction()
@@ -181,7 +291,7 @@ public class Game1 : Game
         {
             if (root.ElementSave != null && root.ElementSave.Name == _selection.ElementName)
             {
-                return PreviewInteraction.Apply(root, _focusName, _typedText);
+                return PreviewInteraction.Apply(root, _focusName, _typedText, _selectAll);
             }
         }
         return null;
@@ -303,7 +413,8 @@ public class Game1 : Game
         ApplySiblingOrdering();
         if (selectionChanged)
         {
-            ShowElement();
+            // A throwing build must not escape Update; the last good frame stays, reported once.
+            _failureLog.TryRun(ShowElement, $"could not show '{_selection.ElementName}'", Console.Error, _debugLog);
         }
     }
 
@@ -316,18 +427,37 @@ public class Game1 : Game
 
     private void ActivateWindow() => SdlLibrary.TryRaiseWindow(Window.Handle);
 
-    private void ApplyCanvasSizeFromProject()
+    // The project's canvas size drives the window and the canvas at launch and again whenever the
+    // saved size changes. An unchanged size is left alone, so a window the user resized is kept until
+    // the saved size changes (#7167). Checked every frame: a reload swaps the project the finder holds,
+    // and the check is two integer compares.
+    private void ApplyCanvasSizeIfChanged(bool isWindowShown)
     {
-        GumProjectSave? project = ObjectFinder.Self.GumProjectSave;
-        int width = project != null && project.DefaultCanvasWidth > 0 ? project.DefaultCanvasWidth : FallbackCanvasWidth;
-        int height = project != null && project.DefaultCanvasHeight > 0 ? project.DefaultCanvasHeight : FallbackCanvasHeight;
+        if (!_canvasSize.TryTakeChange(ObjectFinder.Self.GumProjectSave, out int width, out int height))
+        {
+            return;
+        }
 
-        _graphics.PreferredBackBufferWidth = width;
-        _graphics.PreferredBackBufferHeight = height;
-        _graphics.ApplyChanges();
-
-        GraphicalUiElement.CanvasWidth = width;
-        GraphicalUiElement.CanvasHeight = height;
+        if (isWindowShown && _isRetinaBackingEnabled)
+        {
+            // A showing Retina window is sized in points, like a user resize or a change of display
+            // scale, and HandleClientSizeChanged then sets the back buffer. Asking MonoGame for the
+            // pixels as points would size it twice too large for a frame, and only the height of a
+            // showing window is held to the display, where a launching one is held on both axes.
+            if (SdlLibrary.TryGetUsableClientSize(Window.Handle, out int maxPointWidth, out int maxPointHeight))
+            {
+                (width, height) = PreviewCanvasSize.FitToDisplay(width, height, _backingScale.Factor, maxPointWidth, maxPointHeight);
+            }
+            (int pointWidth, int pointHeight) = _backingScale.ToPoints(width, height);
+            MacRetinaBacking.SetWindowSize(Window.Handle, pointWidth, pointHeight);
+        }
+        else
+        {
+            _graphics.PreferredBackBufferWidth = width;
+            _graphics.PreferredBackBufferHeight = height;
+            _graphics.ApplyChanges();
+        }
+        PreviewCanvasSize.ApplyToCanvas(GumService.Default.Root, width, height);
     }
 
     // Runs every frame: the window can move to a display with a different scale (a Retina laptop
@@ -371,53 +501,63 @@ public class Game1 : Game
             GraphicsDevice.PresentationParameters.BackBufferHeight = height;
             GraphicsDevice.Viewport = new Viewport(0, 0, width, height);
         }
-        GraphicalUiElement.CanvasWidth = GraphicsDevice.Viewport.Width;
-        GraphicalUiElement.CanvasHeight = GraphicsDevice.Viewport.Height;
+        PreviewCanvasSize.ApplyToCanvas(GumService.Default.Root, GraphicsDevice.Viewport.Width, GraphicsDevice.Viewport.Height);
     }
 
     private void ShowElement()
     {
-        GumService.Default.Root.Children.Clear();
-
-        ElementSave? element = ObjectFinder.Self.GetElementSave(_selection.ElementName);
-        if (element == null)
+        if (!PreviewElementPresenter.Show(_selection))
         {
-            Console.Error.WriteLine($"GumPreview: no screen or component named '{_selection.ElementName}' in {_gumxPath}.");
             UpdateWindowTitle(missingElement: true);
             _isElementMissing = true;
             return;
         }
 
         _isElementMissing = false;
-        element.ToGraphicalUiElement().AddToRoot();
-        ApplySelectedState();
         UpdateWindowTitle();
     }
 
-    // Puts the shown element in the state selected in the tool, on top of its default state - the
-    // same thing the tool's own canvas shows for a selected categorized state (issue #4856).
-    private void ApplySelectedState()
+    // A reload that left the tree different from what a restart would show (a renamed or deleted
+    // shown screen, a missing file, a failed read) is followed by a rebuild of the shown element from
+    // the project the reload loaded, so Preview ends up as a fresh launch would. It runs at the start
+    // of a frame, outside the reload's own callbacks.
+    private void RebuildAfterReloadIfNeeded()
     {
-        if (_selection.StateName == null)
+        if (!_reloadPolicy.TryTakePendingReload())
         {
             return;
         }
 
-        foreach (GraphicalUiElement root in GumService.Default.Root.Children)
+        try
         {
-            if (root.ElementSave != null && root.ElementSave.Name == _selection.ElementName)
-            {
-                StateSave? state = _selection.FindState(root.ElementSave);
-                if (state != null)
-                {
-                    root.ApplyState(state);
-                }
-            }
+            ShowElement();
+        }
+        catch (Exception exception)
+        {
+            // The root was cleared before the build threw. Treating the element as missing makes the
+            // next finished reload try again.
+            _isElementMissing = true;
+            UpdateWindowTitle(missingElement: true);
+            _debugLog?.LogException("rebuild after a reload", exception);
+            Console.Error.WriteLine($"GumPreview: could not rebuild '{_selection.ElementName}' after a reload: {exception.Message}");
+        }
+    }
+
+    // Raised from inside GumService.Update; only records the result, so nothing here can throw into
+    // the reload.
+    private void HandleHotReloadFinished(HotReloadResult result)
+    {
+        try
+        {
+            _debugLog?.LogReload(result);
+            _reloadPolicy.OnReloadFinished(result, PreviewReloadPolicy.IsStateSelected(_selection), _isElementMissing);
+        }
+        catch (Exception exception)
+        {
+            Console.Error.WriteLine($"GumPreview: could not handle a reload result: {exception.Message}");
         }
     }
 
     private void UpdateWindowTitle(bool missingElement = false) =>
-        Window.Title = missingElement
-            ? $"Gum Preview - element not found: {_selection.ElementName}"
-            : $"Gum Preview - {_selection.ElementName}";
+        Window.Title = PreviewWindowTitle.For(_selection.ElementName, missingElement);
 }

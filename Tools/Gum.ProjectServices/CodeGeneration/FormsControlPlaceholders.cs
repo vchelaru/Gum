@@ -21,9 +21,13 @@ namespace Gum.Forms.Controls
         public virtual string Text { get; set; } = string.Empty;
     }
 
-    public class CheckBox
+    public class ToggleButton
     {
         public string Text { get; set; } = string.Empty;
+    }
+
+    public class CheckBox : ToggleButton
+    {
     }
 
     public class ComboBox
@@ -67,9 +71,8 @@ namespace Gum.Forms.Controls
         public char PasswordChar { get; set; }
     }
 
-    public class RadioButton
+    public class RadioButton : ToggleButton
     {
-        public string Text { get; set; } = string.Empty;
     }
 
     public class TextBox : TextBoxBase

@@ -1,4 +1,5 @@
-﻿using Gum.Commands;
+﻿using Gum.Diagnostics;
+using Gum.Commands;
 using Gum.Expressions;
 using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
@@ -184,6 +185,13 @@ public class VariableReferenceLogic : IVariableReferenceLogic
                 return;
             }
 
+            if (DividesByZero(assignmentSyntax.Right, parentElement.GetDefaultStateOrThrow(), liveRoot))
+            {
+                failures.Add((line, GeneralResponse.UnsuccessfulWith(
+                    "The right side divides by zero. Check the divisor (the value after / or %), including variables that are currently 0")));
+                return;
+            }
+
             failures.Add((line, GeneralResponse.UnsuccessfulWith(
                 $"The right side cannot be evaluated, are you referencing a variable that doesn't exist or mixing variable types?")));
             return;
@@ -214,6 +222,47 @@ public class VariableReferenceLogic : IVariableReferenceLogic
         {
             failures.Add((line, typeMatchResponse));
         }
+    }
+
+    private static bool DividesByZero(SyntaxNode rightSide, StateSave state, GraphicalUiElement? liveRoot)
+    {
+        foreach (BinaryExpressionSyntax binary in rightSide.DescendantNodesAndSelf().OfType<BinaryExpressionSyntax>())
+        {
+            if (!binary.OperatorToken.IsKind(SyntaxKind.SlashToken) && !binary.OperatorToken.IsKind(SyntaxKind.PercentToken))
+            {
+                continue;
+            }
+
+            // A division inside a ternary arm may be guarded, so its failure is not evidence of the cause.
+            if (IsInsideConditionalArm(binary))
+            {
+                continue;
+            }
+
+            object? divisor = EvaluatedSyntax.FromSyntaxNode(binary.Right, state, liveRoot: liveRoot)?.Value;
+            if (divisor is sbyte or byte or short or ushort or int or uint or long or ulong or float or double or decimal
+                && Convert.ToDouble(divisor) == 0)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static bool IsInsideConditionalArm(SyntaxNode node)
+    {
+        SyntaxNode child = node;
+        while (child.Parent is { } parent)
+        {
+            if (parent is ConditionalExpressionSyntax conditional && child != conditional.Condition)
+            {
+                return true;
+            }
+            child = parent;
+        }
+
+        return false;
     }
 
     private static void CommentFailures(VariableListSave newDirectValue, List<(string, GeneralResponse)> failures)
@@ -488,13 +537,12 @@ public class VariableReferenceLogic : IVariableReferenceLogic
     public void DoVariableReferenceReaction(ElementSave parentElement, InstanceSave? leftSideInstance, string unqualifiedMember,
         StateSave stateSave, string qualifiedName, bool trySave, bool isFullCommit = true)
     {
-        // A tick of a drag changes only the dragged variable. The cascade runs once, on the full commit that
-        // ends the drag, so a tick costs nothing that grows with the project and the result is the one a
-        // typed edit gives. Every drag, scrub and slider ends with a full commit (#6888).
-        if (!isFullCommit && unqualifiedMember != "VariableReferences")
-        {
-            return;
-        }
+        // A tick of a drag applies only the references inside the current element (its own rows, the
+        // behavior's tool-only lines, its other states), so a followed value is live and the cost does not grow
+        // with the project. The part that reaches other elements, files or the whole canvas runs once, on the
+        // full commit that ends the drag, so the result is the one a typed edit gives. Every drag, scrub and
+        // slider ends with a full commit (#6888, #7438).
+        bool isWide = isFullCommit || unqualifiedMember == "VariableReferences";
 
         // The currently-rendered wireframe representation of parentElement, if any. Lets a right
         // side like "Root.AbsoluteWidth" resolve against the live, already-laid-out object - null
@@ -508,7 +556,11 @@ public class VariableReferenceLogic : IVariableReferenceLogic
 
             if (newDirectValue != null)
             {
-                var failures = GetIndividualFailures(parentElement, leftSideInstance, newDirectValue, liveRoot);
+                List<(string, GeneralResponse)> failures;
+                using (ToolLog.Begin("GetIndividualFailures", count: newDirectValue.ValueAsIList?.Count ?? 0))
+                {
+                    failures = GetIndividualFailures(parentElement, leftSideInstance, newDirectValue, liveRoot);
+                }
 
                 if (failures.Count > 0)
                 {
@@ -539,13 +591,24 @@ public class VariableReferenceLogic : IVariableReferenceLogic
         {
             valuesBefore[variable.Name] = variable.Value;
         }
-        ElementSaveExtensions.ApplyVariableReferences(parentElement, stateSave, liveRoot, isFullCommit);
+        using (ToolLog.Begin("ApplyVariableReferences(state)", count: stateSave.Variables.Count))
+        {
+            ElementSaveExtensions.ApplyVariableReferences(parentElement, stateSave, liveRoot, isFullCommit);
+        }
 
         // Then evaluate any behavior-level ToolOnlyVariableReferences so design-time
         // wireframe preview reflects FormsProperty values (e.g. IsEnabled = false →
         // ButtonCategoryState = "Disabled"). Tool-only by design — never invoked at
         // runtime, since the Forms control's own setter owns the visual at runtime.
-        BehaviorToolOnlyReferencesApplier.Apply(parentElement, stateSave);
+        if (isWide)
+        {
+            BehaviorToolOnlyReferencesApplier.Apply(parentElement, stateSave);
+        }
+        else
+        {
+            // A tick touches only the lines that read the dragged member, on the instance dragged.
+            BehaviorToolOnlyReferencesApplier.ApplyDrivenBy(parentElement, leftSideInstance, unqualifiedMember, stateSave);
+        }
 
         // A categorized state's rows read the same instances, so they follow too (#6886).
         HashSet<string> changedNames = new HashSet<string> { qualifiedName };
@@ -556,14 +619,28 @@ public class VariableReferenceLogic : IVariableReferenceLogic
                 changedNames.Add(variable.Name);
             }
         }
-        ApplyOtherStatesReading(parentElement, stateSave, changedNames, liveRoot, isFullCommit);
+        using (ToolLog.Begin("ApplyOtherStatesReading", count: changedNames.Count))
+        {
+            ApplyOtherStatesReading(parentElement, stateSave, changedNames, liveRoot, isFullCommit);
+        }
 
         if (unqualifiedMember == "VariableReferences")
         {
-            _guiCommands.RefreshVariableValues();
+            using (ToolLog.Begin("RefreshVariableValues"))
+            {
+                _guiCommands.RefreshVariableValues();
+            }
         }
 
-        ApplyReferencesToElement(parentElement, trySave, isFullCommit);
+        if (!isWide)
+        {
+            return;
+        }
+
+        using (ToolLog.Begin("ApplyReferencesToElement", count: parentElement.Instances.Count))
+        {
+            ApplyReferencesToElement(parentElement, trySave, isFullCommit);
+        }
 
         var newValue = stateSave.GetValueRecursive(qualifiedName);
 
@@ -580,7 +657,10 @@ public class VariableReferenceLogic : IVariableReferenceLogic
         // then we forcefully change the values here.
         if (didSetDeepReference)
         {
-            _wireframeCommands.Refresh(forceLayout: true);
+            using (ToolLog.Begin("WireframeRefresh(forceLayout)"))
+            {
+                _wireframeCommands.Refresh(forceLayout: true);
+            }
         }
     }
 
@@ -1061,7 +1141,10 @@ public class VariableReferenceLogic : IVariableReferenceLogic
 
         if (didChange)
         {
-            _guiCommands.RefreshVariables(force: true);
+            using (ToolLog.Begin("RefreshVariables(force) after line expansion"))
+            {
+                _guiCommands.RefreshVariables(force: true);
+            }
         }
     }
 

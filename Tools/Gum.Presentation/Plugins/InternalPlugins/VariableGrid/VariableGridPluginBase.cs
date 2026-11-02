@@ -62,6 +62,7 @@ public abstract class VariableGridPluginBase : PluginBase, IPriorityPlugin
         this.RefreshVariableView += HandleRefreshVariableView;
         this.AfterUndo += HandleAfterUndo;
         this.VariableSet += HandleVariableSet;
+        this.VariableSetBatchCompleted += _ => FlushDeferredRefresh();
         this.FocusVariableFilter += HandleFocusVariableFilter;
         this.BehaviorReferencesChanged += HandleBehaviorReferencesChanged;
         this.InstanceAdd += (element, _) => _variableReferenceLogic.ReapplySiblingDependentReferences(element);
@@ -109,6 +110,13 @@ public abstract class VariableGridPluginBase : PluginBase, IPriorityPlugin
         _propertyGridManager.RefreshVariablesDataGridValues();
     }
 
+    // A multi-select edit sets the variable once per selected instance. Each set asks for a grid
+    // rebuild, and a rebuild costs the same however many sets came before it, so the batch rebuilds
+    // once, when it completes.
+    private bool _isRefreshDeferred;
+    private bool _isDeferredRefreshForced;
+    private (ElementSave? Element, InstanceSave? Instance, string Name, object? OldValue)? _deferredVariableSet;
+
     private void HandleVariableSet(ElementSave? element, InstanceSave? instance, string strippedName, object? oldValue,
         bool isFullCommit)
     {
@@ -116,7 +124,44 @@ public abstract class VariableGridPluginBase : PluginBase, IPriorityPlugin
         {
             _variableReferenceLogic.ReapplySiblingDependentReferences(element);
         }
+
+        if (IsVariableSetBatchOpen && isFullCommit)
+        {
+            if (strippedName == "VariableReferences")
+            {
+                _isRefreshDeferred = true;
+                _isDeferredRefreshForced = true;
+            }
+            else
+            {
+                _deferredVariableSet = (element, instance, strippedName, oldValue);
+            }
+            return;
+        }
+
         _propertyGridManager.HandleVariableSet(element, instance, strippedName, oldValue, isFullCommit);
+    }
+
+    private void FlushDeferredRefresh()
+    {
+        bool isRefreshDeferred = _isRefreshDeferred;
+        bool isForced = _isDeferredRefreshForced;
+        var deferredSet = _deferredVariableSet;
+        _isRefreshDeferred = false;
+        _isDeferredRefreshForced = false;
+        _deferredVariableSet = null;
+
+        if (isRefreshDeferred)
+        {
+            // A rebuild also refreshes the values.
+            _propertyGridManager.RefreshEntireGrid(isForced);
+        }
+        else if (deferredSet is { } set)
+        {
+            _propertyGridManager.HandleVariableSet(set.Element, set.Instance, set.Name, set.OldValue, isFullCommit: true);
+        }
+
+        _propertyGridManager.FlushDeferredValueRefresh();
     }
 
     private void HandleElementDeleted(ElementSave save)
@@ -202,6 +247,13 @@ public abstract class VariableGridPluginBase : PluginBase, IPriorityPlugin
 
     private void HandleRefreshVariableView(bool force)
     {
+        if (IsVariableSetBatchOpen)
+        {
+            _isRefreshDeferred = true;
+            _isDeferredRefreshForced |= force;
+            return;
+        }
+
         _propertyGridManager.RefreshEntireGrid(force);
     }
 }

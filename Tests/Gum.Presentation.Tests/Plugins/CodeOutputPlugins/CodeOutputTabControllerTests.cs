@@ -392,6 +392,27 @@ public class CodeOutputTabControllerTests : BaseTestClass
     }
 
     [Fact]
+    public void RefreshCodeDisplay_CategoryNamedLikeItsGumFormsClass_ShowsErrorInsteadOfUncompilableClass()
+    {
+        GumProjectSave project = new();
+        ComponentSave component = new() { Name = "Mode" };
+        component.States.Add(new StateSave { Name = "Default", ParentContainer = component });
+        component.Categories.Add(new StateSaveCategory { Name = "Mode" });
+        project.Components.Add(component);
+        ObjectFinder.Self.GumProjectSave = project;
+        _selectedState.Setup(s => s.SelectedElement).Returns(component);
+        _tabSelectionState.Setup(t => t.IsSelected).Returns(true);
+        _view.SetupProperty(v => v.CodeOutputElementSettings,
+            new CodeOutputElementSettings { GenerationBehavior = GenerationBehavior.GenerateManually });
+        CodeOutputTabController controller = CreateController();
+
+        controller.RefreshCodeDisplay(new CodeOutputProjectSettings { OutputLibrary = OutputLibrary.GumForms });
+
+        _viewModel.Code.ShouldContain("Category \"Mode\" generates");
+        _viewModel.Code.ShouldNotContain("partial class");
+    }
+
+    [Fact]
     public void RefreshCodeDisplay_GenerationBehaviorNeverGenerate_ShowsDisabledMessage()
     {
         ScreenSave screen = new() { Name = "MyScreen" };

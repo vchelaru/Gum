@@ -26,6 +26,7 @@ using Gum.ViewModels;
 using WpfDataUi;
 using FluentIcons.Avalonia;
 using Gum.Avalonia.Themes;
+using Gum.Avalonia.Plugins.TreeView;
 
 namespace Gum.Avalonia.Plugins.VariableGrid;
 
@@ -96,6 +97,7 @@ public sealed class VariablesTabView : DockPanel, IVariablesTabView
             BorderThickness = new Thickness(0),
             Classes = { GumChromeStyles.IconButtonClass },
         };
+        AvaloniaTreeIcons.FollowBaseFontSize((Control)clearFilter.Content, 12);
         ToolTip.SetTip(clearFilter, "Clear filter");
         clearFilter.Bind(IsVisibleProperty, new Binding(nameof(MainControlViewModel.IsFilterWatermarkVisible)) { Converter = BoolConverters.Not });
         clearFilter.Click += (_, _) =>
@@ -112,6 +114,7 @@ public sealed class VariablesTabView : DockPanel, IVariablesTabView
         Grid.SetColumn(filterBox, 1);
         Grid filterRow = new Grid { Margin = new Thickness(2, 2, 2, 4), ColumnDefinitions = new ColumnDefinitions("Auto,*") };
         FluentIcon searchIcon = GumFluentIcons.Create(FluentIcons.Common.Icon.Search, 16);
+        AvaloniaTreeIcons.FollowBaseFontSize(searchIcon, 16);
         searchIcon.Margin = new Thickness(2, 0, 4, 0);
         searchIcon.VerticalAlignment = VerticalAlignment.Center;
         filterRow.Children.Add(searchIcon);
