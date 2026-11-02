@@ -25,6 +25,9 @@ public sealed class FreezeDiagnosticsInbox : IFreezeDiagnosticsInbox
     public string DirectoryPath { get; }
 
     /// <inheritdoc/>
+    public string ReportedDirectoryPath => Path.Combine(DirectoryPath, ReportedFolderName);
+
+    /// <inheritdoc/>
     public bool ArePromptsSuppressed => File.Exists(_suppressPath);
 
     /// <inheritdoc/>
@@ -55,7 +58,7 @@ public sealed class FreezeDiagnosticsInbox : IFreezeDiagnosticsInbox
     /// <inheritdoc/>
     public void MarkReported(IEnumerable<string> files)
     {
-        string reportedFolder = Path.Combine(DirectoryPath, ReportedFolderName);
+        string reportedFolder = ReportedDirectoryPath;
         Directory.CreateDirectory(reportedFolder);
         foreach (string file in files)
         {
