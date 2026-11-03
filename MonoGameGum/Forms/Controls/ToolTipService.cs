@@ -46,6 +46,14 @@ public static class ToolTipService
     public static TimeSpan BetweenShowDelay { get; set; } = TimeSpan.FromMilliseconds(100);
 
     /// <summary>
+    /// How often a tooltip whose content comes from a callback (see
+    /// <see cref="SetToolTip(InteractiveGue, Func{string?}?)"/>) asks the callback again while it is open.
+    /// Default <see cref="TimeSpan.Zero"/>, which is off: the callback runs only when the tooltip opens.
+    /// Zero or a negative value turns it off. An interval shorter than a frame refreshes once per frame.
+    /// </summary>
+    public static TimeSpan RefreshInterval { get; set; } = TimeSpan.Zero;
+
+    /// <summary>
     /// What a host has registered: the tooltip to show and, optionally, a callback that supplies its
     /// content each time it opens.
     /// </summary>
@@ -70,6 +78,7 @@ public static class ToolTipService
     private static object? _hoveredHost;
     private static double _hoverStartTimeSeconds;
     private static double _tooltipShownAtSeconds;
+    private static double _lastRefreshAtSeconds;
     private static double _lastTooltipClosedAtSeconds = double.NegativeInfinity;
     private static Tooltip? _currentOpenTooltip;
 
@@ -150,7 +159,9 @@ public static class ToolTipService
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="visual"/> is null.</exception>
     /// <remarks>
     /// The callback runs when the tooltip is about to open (after the initial delay) and again on every
-    /// later open, never while it is open or during the delay. Returning null opens nothing for that
+    /// later open, never during the delay. While the tooltip is open it runs again every
+    /// <see cref="RefreshInterval"/>, which is off by default. If a refresh returns null the tooltip
+    /// closes and the callback is not asked again until the cursor leaves the host and returns. Returning null opens nothing for that
     /// hover. The callback returns a string because <see cref="Tooltip.Content"/> only supports text
     /// today. If the callback throws, the exception
     /// propagates out of <c>GumService.Update</c> (a bug in the callback should be visible), nothing is
@@ -285,6 +296,11 @@ public static class ToolTipService
                 _currentOpenTooltip = null;
                 _lastTooltipClosedAtSeconds = gameTimeSeconds;
             }
+            else if (RefreshInterval > TimeSpan.Zero &&
+                     gameTimeSeconds - _lastRefreshAtSeconds >= RefreshInterval.TotalSeconds)
+            {
+                RefreshOpenTooltip(hovered, gameTimeSeconds);
+            }
             return;
         }
 
@@ -315,7 +331,39 @@ public static class ToolTipService
             tooltip.Show(cursor.XRespectingGumZoomAndBounds(), cursor.YRespectingGumZoomAndBounds());
             _currentOpenTooltip = tooltip;
             _tooltipShownAtSeconds = gameTimeSeconds;
+            _lastRefreshAtSeconds = gameTimeSeconds;
         }
+    }
+
+    /// <summary>
+    /// Asks the open tooltip's content callback for the current text. Null hides the tooltip, new text
+    /// replaces the old, and the same text does nothing.
+    /// </summary>
+    private static void RefreshOpenTooltip(object hovered, double gameTimeSeconds)
+    {
+        // Set before the call so a callback that throws is asked again after an interval, not every frame.
+        _lastRefreshAtSeconds = gameTimeSeconds;
+
+        if (!_registrations.TryGetValue(hovered, out Registration? registration) ||
+            registration.ContentProvider == null ||
+            registration.Tooltip != _currentOpenTooltip)
+        {
+            return;
+        }
+
+        string? content = registration.ContentProvider();
+        if (content == null)
+        {
+            (hovered as FrameworkElement)?.RaiseToolTipClosing();
+            _currentOpenTooltip!.Hide();
+            _currentOpenTooltip = null;
+            _lastTooltipClosedAtSeconds = gameTimeSeconds;
+            // Like a null on open: not asked again until the cursor leaves the host and returns.
+            _openDeclinedForThisHover = true;
+            return;
+        }
+
+        registration.Tooltip.RefreshContent(content);
     }
 
     /// <summary>
@@ -331,6 +379,7 @@ public static class ToolTipService
         _hoveredHost = null;
         _hoverStartTimeSeconds = 0;
         _tooltipShownAtSeconds = 0;
+        _lastRefreshAtSeconds = 0;
         _lastTooltipClosedAtSeconds = double.NegativeInfinity;
         _openDeclinedForThisHover = false;
     }
