@@ -53,6 +53,45 @@ If your code registers its own template for `Tooltip` in `FrameworkElement.Defau
 Available in October 2026, or now if building Gum from source.
 {% endhint %}
 
+## Tooltips on Plain Visuals
+
+`ToolTipService.SetToolTip` attaches a tooltip to a visual that is not part of a Forms control. It takes a `string` or a `Tooltip`, the same values as `FrameworkElement.ToolTip`, and passing `null` removes the tooltip. The delays, placement and events described on this page apply as they do for a Forms control.
+
+```csharp
+// Initialize
+var container = new ContainerRuntime();
+container.AddToRoot();
+container.Width = 100;
+container.Height = 100;
+
+ToolTipService.SetToolTip(container, "A plain container");
+```
+
+A visual shows a tooltip only when the cursor can hover it, which requires `HasEvents` to be `true`. `ContainerRuntime` has it on by default. `TextRuntime` and `NineSliceRuntime` do not, so set `HasEvents = true` on them. `SpriteRuntime`, `CircleRuntime` and `RectangleRuntime` take no cursor events, so put an icon inside a `ContainerRuntime` and register the container.
+
+When hosts are nested, the tooltip of the innermost host under the cursor shows. If a Forms control and its own `Visual` both have tooltips, the control's tooltip is used.
+
+## Content From a Callback
+
+To compute the text each time the tooltip opens, pass a `Func<string?>` to `SetToolTip`. Gum calls it just before the tooltip opens and again on each later open. If it returns `null`, no tooltip shows for that hover.
+
+```csharp
+// Initialize
+int coins = 0;
+var container = new ContainerRuntime();
+container.AddToRoot();
+container.Width = 100;
+container.Height = 100;
+
+ToolTipService.SetToolTip(container, () => $"Coins: {coins}");
+```
+
+The text does not change while the tooltip is open.
+
+{% hint style="info" %}
+Available in December 2026, or now if building Gum from source.
+{% endhint %}
+
 ## Tuning Delays with ToolTipService
 
 `ToolTipService` is a static class that controls global hover timing. Its three delays mirror WPF's defaults:
@@ -93,7 +132,7 @@ button.Click += (_, _) =>
     else
     {
         // Show near a specific screen position (in gum units):
-        tooltip.Show(cursorX: 50, cursorY: s00);
+        tooltip.Show(cursorX: 50, cursorY: 100);
     }
 };
 ```
