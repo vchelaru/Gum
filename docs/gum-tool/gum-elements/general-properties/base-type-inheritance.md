@@ -137,6 +137,16 @@ To resolve it, add an `<Instance>` with that name and `<DefinedByBase>true</Defi
 Available in December 2026, or now if building Gum from source.
 {% endhint %}
 
+### Unknown Base Type (GUM0030)
+
+A screen or component whose `<BaseType>` names an element the project does not have, such as a misspelled component or a component whose file was deleted, cannot inherit anything. Gum reports **GUM0030** as an error in the [Errors tab](../../editor-tab.md), and `gumcli check` reports it too.
+
+To resolve it, pick an existing `Base Type` in the `Base Type` dropdown, or correct `<BaseType>` in the element's file.
+
+{% hint style="info" %}
+Available in December 2026, or now if building Gum from source.
+{% endhint %}
+
 ### Component Containing Itself (GUM0018)
 
 A component cannot contain an instance of itself, directly or through the instances of other components (A contains B, B contains A). Such a component can never finish building. `gumcli check` reports **GUM0018** as an error on each element in the loop and names the path, for example `A -> B -> A`.
