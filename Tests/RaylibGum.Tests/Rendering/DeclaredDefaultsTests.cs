@@ -296,6 +296,95 @@ float4 MainPS(VertexShaderOutput input) : COLOR0
         }
     }
 
+    // The shipped Outline shader declares Thickness = 1 and has no IsSet companion, so an unset
+    // Thickness must draw a one pixel outline and an explicit 0 must draw none (#7037).
+    private static string OutlineSlang()
+    {
+        string? directory = AppContext.BaseDirectory;
+        while (directory != null && !File.Exists(Path.Combine(directory, "Gum", "Content", "Shaders", "Outline.slang")))
+        {
+            directory = Path.GetDirectoryName(directory);
+        }
+        directory.ShouldNotBeNull();
+        return File.ReadAllText(Path.Combine(directory, "Gum", "Content", "Shaders", "Outline.slang"));
+    }
+
+    // Alpha 1 and 2 pixels left of a 16 pixel square starting at x = 8.
+    private static (byte OnePixelOut, byte TwoPixelsOut) DrawOutlinedSquare(Shader shader, Action<ContainerRuntime> setParameters)
+    {
+        ContainerRuntime outer = new();
+        outer.Width = 32;
+        outer.Height = 32;
+        outer.IsRenderTarget = true;
+        ContainerRuntime inner = BuildInner(0);
+        inner.Children.Clear();
+#pragma warning disable CS0618
+        ColoredRectangleRuntime square = new();
+#pragma warning restore CS0618
+        square.X = 8;
+        square.Y = 8;
+        square.Width = 16;
+        square.Height = 16;
+        square.Color = new Color((byte)255, (byte)255, (byte)255, (byte)255);
+        inner.Children.Add(square);
+        inner.RenderTargetEffect = shader;
+        outer.Children.Add(inner);
+        Gum.GumService.Default.Root.Children.Add(outer);
+        Gum.GumService.Default.Root.UpdateLayout();
+        try
+        {
+            setParameters(inner);
+            DrawOnce();
+            RenderTexture2D baked = Renderer.Self.TryGetBakedRenderTargetFor(outer)!.Value;
+            return (RaylibPixelHarness.ReadPixel(baked, 7, 16).A, RaylibPixelHarness.ReadPixel(baked, 6, 16).A);
+        }
+        finally
+        {
+            Gum.GumService.Default.Root.Children.Clear();
+        }
+    }
+
+    private static void RunOutline(Action<ContainerRuntime> setParameters, Action<byte, byte> assert)
+    {
+        Shader shader = LoadConvertedShader(registerDefaults: true, OutlineSlang());
+        try
+        {
+            (byte onePixelOut, byte twoPixelsOut) = DrawOutlinedSquare(shader, setParameters);
+            assert(onePixelOut, twoPixelsOut);
+        }
+        finally
+        {
+            RaylibShaderDefaults.Remove(shader);
+            UnloadShader(shader);
+        }
+    }
+
+    [Fact]
+    public void Outline_WithNothingSet_DrawsAOnePixelOutline()
+    {
+        RunOutline(_ => { }, (onePixelOut, twoPixelsOut) =>
+        {
+            onePixelOut.ShouldBeGreaterThan((byte)200);
+            twoPixelsOut.ShouldBe((byte)0);
+        });
+    }
+
+    [Fact]
+    public void Outline_WithThicknessSetToZero_DrawsNoOutline()
+    {
+        RunOutline(inner => inner.SetShaderParameter("Thickness", 0f), (onePixelOut, _) => onePixelOut.ShouldBe((byte)0));
+    }
+
+    [Fact]
+    public void Outline_WithThicknessTwo_DrawsATwoPixelOutline()
+    {
+        RunOutline(inner => inner.SetShaderParameter("Thickness", 2f), (onePixelOut, twoPixelsOut) =>
+        {
+            onePixelOut.ShouldBeGreaterThan((byte)200);
+            twoPixelsOut.ShouldBeGreaterThan((byte)200);
+        });
+    }
+
     [Theory]
     [InlineData("float", ShaderParameterKind.Float, 1, false)]
     [InlineData("vec3", ShaderParameterKind.Float, 3, false)]

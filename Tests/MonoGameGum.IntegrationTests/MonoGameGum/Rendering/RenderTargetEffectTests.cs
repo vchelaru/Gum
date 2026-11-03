@@ -572,7 +572,7 @@ technique SpriteDrawing
         System.Collections.Generic.IReadOnlyList<ShaderParameterInfo> parameters = EffectShaderParameters.Read(outline);
 
         parameters.Select(parameter => parameter.Name).OrderBy(name => name)
-            .ShouldBe(new[] { "OutlineBlue", "OutlineGreen", "OutlineRed", "PixelSize", "TexelSize", "Thickness", "ThicknessIsSet" });
+            .ShouldBe(new[] { "OutlineBlue", "OutlineGreen", "OutlineRed", "PixelSize", "TexelSize", "Thickness" });
         ShaderParameterInfo thickness = parameters.Single(parameter => parameter.Name == "Thickness");
         thickness.Kind.ShouldBe(ShaderParameterKind.Float);
         thickness.Count.ShouldBe(1);
