@@ -95,6 +95,7 @@ public partial class HeadlessErrorChecker : IHeadlessErrorChecker
             errors.AddRange(GetProjectFileCaseMismatchErrors(project, caseMismatchPaths));
             errors.AddRange(GetFontRangeEntryErrors(project));
             errors.AddRange(GetMissingComponentBaseTypeErrors(project));
+            errors.AddRange(GetMissingBehaviorFileErrors(project, caseMismatchPaths));
             errors.AddRange(GetDuplicateReferenceErrors(project));
         }
         finally
@@ -124,6 +125,7 @@ public partial class HeadlessErrorChecker : IHeadlessErrorChecker
             List<ErrorResult> errors = GetProjectFileCaseMismatchErrors(project, caseMismatchPaths);
             errors.AddRange(GetFontRangeEntryErrors(project));
             errors.AddRange(GetMissingComponentBaseTypeErrors(project));
+            errors.AddRange(GetMissingBehaviorFileErrors(project, caseMismatchPaths));
             errors.AddRange(GetDuplicateReferenceErrors(project));
             return errors;
         }
@@ -1427,14 +1429,14 @@ public partial class HeadlessErrorChecker : IHeadlessErrorChecker
     }
 
     // GUM0015: a component with no BaseType loads fine, but codegen then writes a class with no base class.
-    // Screens and standards legitimately have none.
+    // Screens and standards legitimately have none. A component whose file is missing was never read (GUM0004 reports it), so its BaseType is unknown, not empty.
     // It is a project-level row, so the Errors tab lists it whichever element is selected.
     private static List<ErrorResult> GetMissingComponentBaseTypeErrors(GumProjectSave project)
     {
         List<ErrorResult> errors = new List<ErrorResult>();
         bool isJsonFormat = GumProjectSave.IsJsonFormat(project.FullFileName ?? "");
 
-        foreach (ComponentSave elementSave in project.Components.Where(component => string.IsNullOrWhiteSpace(component.BaseType)))
+        foreach (ComponentSave elementSave in project.Components.Where(component => !component.IsSourceFileMissing && string.IsNullOrWhiteSpace(component.BaseType)))
         {
             string fix = isJsonFormat
                 ? $"set \"BaseType\" in its .{GumProjectSave.ComponentJsonExtension} file"
