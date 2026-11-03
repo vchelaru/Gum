@@ -1395,6 +1395,7 @@ public partial class HeadlessErrorChecker : IHeadlessErrorChecker
                 errors.Add(new ErrorResult
                 {
                     ElementName = elementSave.Name,
+                    Code = "GUM0030",
                     Message = $"{elementSave.Name} has a base type of {elementSave.BaseType} which does not exist"
                 });
             }

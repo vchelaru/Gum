@@ -45,7 +45,7 @@ Each line follows the format: `<severity>: <element>: <message>`
     "element": "ButtonComponent",
     "message": "ButtonComponent has a base type of ButtonBase which does not exist",
     "severity": "Error",
-    "code": null
+    "code": "GUM0030"
   },
   {
     "element": "SliderComponent",
