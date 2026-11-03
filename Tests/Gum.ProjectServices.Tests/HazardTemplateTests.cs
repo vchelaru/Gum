@@ -73,7 +73,7 @@ public class HazardTemplateTests
         GumProjectSave formsTemplate = LoadFormsTemplate();
 
         hazard.Behaviors.Single(b => b.Name == "ButtonBehavior").DefaultImplementation
-            .ShouldBe("Hazard/Controls/Button");
+            .ShouldBe("Hazard/Button");
         formsTemplate.Behaviors.Single(b => b.Name == "ButtonBehavior").DefaultImplementation
             .ShouldBe("Controls/ButtonStandard");
     }
@@ -212,7 +212,7 @@ public class HazardTemplateTests
             // black/white contrast pair that must stay legible against any user-picked hue),
             // matching the code-only ColorPickerVisual, which hardcodes the same colors rather
             // than reading them from a theme's Colors class.
-            if (component.Name == "Hazard/Controls/ColorPicker")
+            if (component.Name == "Hazard/ColorPicker")
             {
                 continue;
             }

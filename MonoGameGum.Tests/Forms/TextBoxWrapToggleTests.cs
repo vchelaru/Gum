@@ -67,7 +67,7 @@ public class TextBoxWrapToggleTests : BaseTestClass
         GumProjectSave gumProject = GumProjectSave.Load(gumx, out _) ?? throw new InvalidOperationException(gumx);
         gumProject.Initialize();
         ObjectFinder.Self.GumProjectSave = gumProject;
-        string baseType = isTheme ? $"{project}/Controls/TextBox" : "Controls/TextBox";
+        string baseType = gumProject.Components.Single(item => item.Name.EndsWith("/TextBox")).Name;
 
         FormsUtilities.RegisterFromFileFormRuntimeDefaults();
         ScreenSave screen = new ScreenSave { Name = "WrapToggleScreen" };

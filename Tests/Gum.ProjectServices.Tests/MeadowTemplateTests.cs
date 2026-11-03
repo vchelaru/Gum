@@ -72,7 +72,7 @@ public class MeadowTemplateTests
         GumProjectSave formsTemplate = LoadFormsTemplate();
 
         meadow.Behaviors.Single(b => b.Name == "ButtonBehavior").DefaultImplementation
-            .ShouldBe("Meadow/Controls/Button");
+            .ShouldBe("Meadow/Button");
         formsTemplate.Behaviors.Single(b => b.Name == "ButtonBehavior").DefaultImplementation
             .ShouldBe("Controls/ButtonStandard");
     }
@@ -211,7 +211,7 @@ public class MeadowTemplateTests
             // black/white contrast pair that must stay legible against any user-picked hue),
             // matching the code-only ColorPickerVisual convention other themes follow - Meadow
             // does not restyle ColorPicker in its code-only theme either.
-            if (component.Name == "Meadow/Controls/ColorPicker")
+            if (component.Name == "Meadow/ColorPicker")
             {
                 continue;
             }

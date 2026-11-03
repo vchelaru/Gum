@@ -90,4 +90,29 @@ public class PreviewProcessStartInfoBuilderTests
 
         startInfo.ArgumentList.ShouldNotContain("--log");
     }
+
+    [Fact]
+    public void ResolveLogPath_DebugTool_PassesDefaultLogPath()
+    {
+        PreviewProcessStartInfoBuilder.ResolveLogPath(null, isDebugBuild: true).ShouldBe(PreviewProcessStartInfoBuilder.DefaultLogPath);
+    }
+
+    [Fact]
+    public void ResolveLogPath_ReleaseTool_PassesNoLogPath()
+    {
+        PreviewProcessStartInfoBuilder.ResolveLogPath(null, isDebugBuild: false).ShouldBeNull();
+    }
+
+    [Fact]
+    public void ResolveLogPath_EnvironmentVariable_OverridesInEitherBuild()
+    {
+        PreviewProcessStartInfoBuilder.ResolveLogPath("/x/mine.log", isDebugBuild: true).ShouldBe("/x/mine.log");
+        PreviewProcessStartInfoBuilder.ResolveLogPath("/x/mine.log", isDebugBuild: false).ShouldBe("/x/mine.log");
+    }
+
+    [Fact]
+    public void DefaultLogPath_MatchesPreviewsOwnDefault()
+    {
+        PreviewProcessStartInfoBuilder.DefaultLogPath.ShouldBe(global::GumPreview.PreviewDebugLog.DefaultPath);
+    }
 }

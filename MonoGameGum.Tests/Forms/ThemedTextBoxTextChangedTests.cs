@@ -39,7 +39,7 @@ public class ThemedTextBoxTextChangedTests : FileThemeInputTestBase
     private (InteractiveGue Visual, TextBox Box) Place(string theme, Action<TextBox>? configure = null)
     {
         GumProjectSave project = LoadTheme(theme);
-        string component = project.Components.Single(item => item.Name.EndsWith("Controls/TextBox")).Name;
+        string component = project.Components.Single(item => item.Name.EndsWith("/TextBox")).Name;
         ScreenSave screen = new ScreenSave { Name = "Screen" + project.Screens.Count };
         screen.States.Add(new StateSave { Name = "Default", ParentContainer = screen });
         screen.Instances.Add(new InstanceSave { Name = "Box", BaseType = component, ParentContainer = screen });

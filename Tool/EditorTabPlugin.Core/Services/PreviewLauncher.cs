@@ -24,6 +24,7 @@ public class PreviewLauncher : IPreviewLauncher
     private ExitWatch? _exitWatch;
     private string? _selectionFilePath;
     private bool _isConvertedGumxPreview;
+    private static bool _hasRotatedPreviewLog;
     private ElementSave? _shownElement;
     private ElementSave? _pinnedElement;
 
@@ -126,9 +127,19 @@ public class PreviewLauncher : IPreviewLauncher
 
         _selectionFilePath = Path.Combine(Path.GetTempPath(), $"GumPreviewSelection_{Guid.NewGuid():N}.txt");
 
+        string? logPath = PreviewProcessStartInfoBuilder.ResolveLogPath(
+            Environment.GetEnvironmentVariable(PreviewProcessStartInfoBuilder.LogPathEnvironmentVariable),
+            Gum.Diagnostics.DiagnosticLogFile.IsDebugBuild);
+        if (logPath != null && !_hasRotatedPreviewLog)
+        {
+            // Once per tool session: Preview is relaunched while the user works and appends to the same file.
+            _hasRotatedPreviewLog = true;
+            Gum.Diagnostics.DiagnosticLogFile.Rotate(logPath);
+        }
+
         ProcessStartInfo startInfo = PreviewProcessStartInfoBuilder.Build(
             resolved.Value.ExecutablePath, projectPathForLaunch, element.Name, _selectionFilePath, contentRootDirectory, Environment.ProcessId,
-            logPath: Environment.GetEnvironmentVariable(PreviewProcessStartInfoBuilder.LogPathEnvironmentVariable));
+            logPath: logPath);
 
         try
         {

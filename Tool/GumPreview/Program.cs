@@ -43,7 +43,15 @@ if (options.ExitAfterSeconds is double exitAfterSeconds)
     }, null, TimeSpan.FromSeconds(exitAfterSeconds), Timeout.InfiniteTimeSpan);
 }
 
-using PreviewDebugLog? debugLog = PreviewDebugLog.Open(options.LogPath);
+// A path given by the tool or the command line is appended to (the tool rotates once per session, and
+// Preview is relaunched during one); only Preview's own Debug default rotates.
+string? logPath = PreviewDebugLog.ResolvePath(options.LogPath);
+using PreviewDebugLog? debugLog = PreviewDebugLog.Open(logPath, rotate: options.LogPath == null);
+if (debugLog != null)
+{
+    debugLog.Write("config", PreviewDebugLog.DescribeProcess(logPath, args));
+    AppDomain.CurrentDomain.UnhandledException += (_, e) => debugLog.LogUnhandled(e.ExceptionObject);
+}
 using Game1 game = new Game1(options.ProjectPath!, options.ElementName!, options.SelectionFilePath, options.ContentRootDirectory,
     unattended, options.ScreenshotPath, options.FocusName, options.TypedText, options.SelectAll, debugLog);
 game.Run();

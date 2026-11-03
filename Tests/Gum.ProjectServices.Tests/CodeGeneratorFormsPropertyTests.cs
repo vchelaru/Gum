@@ -687,9 +687,9 @@ public class CodeGeneratorFormsPropertyTests : BaseTestClass
 
         ScreenSave screen = new ScreenSave { Name = "DemoScreen" };
         screen.States.Add(new StateSave { Name = "Default", ParentContainer = screen });
-        AddInstance(screen, "ScrollViewerInstance", "Meadow/Controls/ScrollViewer");
-        AddInstance(screen, "ScrollBarInstance", "Meadow/Controls/ScrollBar");
-        AddInstance(screen, "CheckInstance", "Meadow/Controls/CheckBox");
+        AddInstance(screen, "ScrollViewerInstance", "Meadow/ScrollViewer");
+        AddInstance(screen, "ScrollBarInstance", "Meadow/ScrollBar");
+        AddInstance(screen, "CheckInstance", "Meadow/CheckBox");
         Author(screen, "ScrollViewerInstance.LargeChange", "double", 25d);
         Author(screen, "ScrollViewerInstance.SmallChange", "double", 7d);
         Author(screen, "ScrollBarInstance.ToolTip", "string", "Drag me");

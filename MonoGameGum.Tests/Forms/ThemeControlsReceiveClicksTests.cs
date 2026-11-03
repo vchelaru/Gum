@@ -30,6 +30,12 @@ public class ThemeControlsReceiveClicksTests : BeginnerDriverTestBase
 {
     private static readonly string[] NoEventControls = { "Label", "StackPanel", "Panel", "UserControl" };
 
+    // Components that are not Forms controls: the Standard template keeps them in Elements/, themes beside the controls.
+    private static readonly string[] NonControlComponents =
+    {
+        "Styles", "CautionLines", "Divider", "DividerHorizontal", "DividerVertical", "Icon", "PercentBar", "PercentBarIcon", "VerticalLines"
+    };
+
     // Forms controls that only hold other controls; a control inside one is still a top-level click target.
     private static readonly string[] HoldingControls = { "Panel", "StackPanel", "UserControl", "Window", "DialogBox", "ScrollViewer", "Toast" };
 
@@ -77,7 +83,7 @@ public class ThemeControlsReceiveClicksTests : BeginnerDriverTestBase
         GumProjectSave project = LoadTheme(theme);
         List<string> controls = project.Components
             .Select(item => item.Name)
-            .Where(name => name.Contains("Controls/") && !NoEventControls.Any(skip => name.EndsWith("/" + skip)))
+            .Where(name => !NonControlComponents.Any(skip => name == skip || name.EndsWith("/" + skip)) && !NoEventControls.Any(skip => name.EndsWith("/" + skip)))
             .ToList();
         List<string> failures = new List<string>();
         int clicked = 0;
@@ -110,7 +116,7 @@ public class ThemeControlsReceiveClicksTests : BeginnerDriverTestBase
     public void ClickCenter_ScrollBarUpAndDownButtons_ReachTheButtons(string theme)
     {
         GumProjectSave project = LoadTheme(theme);
-        InteractiveGue scrollBar = PlaceAlone(project, ComponentNamed(project, "Controls/ScrollBar"));
+        InteractiveGue scrollBar = PlaceAlone(project, ComponentNamed(project, "/ScrollBar"));
         if (theme == "" || theme == "Editor")
         {
             return; // Not covered, unresolved: see the ListBox test below.
@@ -149,7 +155,7 @@ public class ThemeControlsReceiveClicksTests : BeginnerDriverTestBase
     public void DragTitleBar_Window_MovesTheWindow(string theme)
     {
         GumProjectSave project = LoadTheme(theme);
-        InteractiveGue window = PlaceAlone(project, ComponentNamed(project, "Controls/Window"));
+        InteractiveGue window = PlaceAlone(project, ComponentNamed(project, "/Window"));
         GraphicalUiElement titleBar = window.GetGraphicalUiElementByName("TitleBarInstance")!;
         float startX = window.AbsoluteLeft;
         int x = (int)(titleBar.AbsoluteLeft + titleBar.AbsoluteWidth / 2);
@@ -169,7 +175,7 @@ public class ThemeControlsReceiveClicksTests : BeginnerDriverTestBase
     public void ClickCenter_ListBoxScrollBarButtons_ScrollTheList(string theme)
     {
         GumProjectSave project = LoadTheme(theme);
-        InteractiveGue listVisual = PlaceAlone(project, ComponentNamed(project, "Controls/ListBox"));
+        InteractiveGue listVisual = PlaceAlone(project, ComponentNamed(project, "/ListBox"));
         ListBox listBox = (ListBox)listVisual.FormsControlAsObject!;
         listBox.Height = 200;
         listBox.Width = 250;

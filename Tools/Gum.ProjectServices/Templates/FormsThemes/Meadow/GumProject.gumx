@@ -57,37 +57,37 @@
   <ShowLocalizationInGum>true</ShowLocalizationInGum>
   <CurrentLanguageIndex>0</CurrentLanguageIndex>
   <ScreenReference Name="Meadow/DemoScreenGum" />
-  <ComponentReference Name="Meadow/Controls/Button" />
-  <ComponentReference Name="Meadow/Controls/ButtonIcon" />
-  <ComponentReference Name="Meadow/Controls/CheckBox" />
-  <ComponentReference Name="Meadow/Controls/ColorPicker" />
-  <ComponentReference Name="Meadow/Controls/ComboBox" />
-  <ComponentReference Name="Meadow/Controls/DialogBox" />
-  <ComponentReference Name="Meadow/Controls/Expander" />
-  <ComponentReference Name="Meadow/Controls/ItemsControl" />
-  <ComponentReference Name="Meadow/Controls/Label" />
-  <ComponentReference Name="Meadow/Controls/ListBox" />
-  <ComponentReference Name="Meadow/Controls/ListBoxItem" />
-  <ComponentReference Name="Meadow/Controls/Menu" />
-  <ComponentReference Name="Meadow/Controls/MenuItem" />
-  <ComponentReference Name="Meadow/Controls/Panel" />
-  <ComponentReference Name="Meadow/Controls/PasswordBox" />
-  <ComponentReference Name="Meadow/Controls/RadioButton" />
-  <ComponentReference Name="Meadow/Controls/ScrollBar" />
-  <ComponentReference Name="Meadow/Controls/ScrollBarThumb" />
-  <ComponentReference Name="Meadow/Controls/ScrollViewer" />
-  <ComponentReference Name="Meadow/Controls/Slider" />
-  <ComponentReference Name="Meadow/Controls/SliderThumb" />
-  <ComponentReference Name="Meadow/Controls/Splitter" />
-  <ComponentReference Name="Meadow/Controls/StackPanel" />
-  <ComponentReference Name="Meadow/Controls/TextBox" />
-  <ComponentReference Name="Meadow/Controls/Toast" />
-  <ComponentReference Name="Meadow/Controls/ToggleButton" />
-  <ComponentReference Name="Meadow/Controls/UserControl" />
-  <ComponentReference Name="Meadow/Controls/Window" />
-  <ComponentReference Name="Meadow/Elements/Divider" />
-  <ComponentReference Name="Meadow/Elements/Icon" />
+  <ComponentReference Name="Meadow/Button" />
+  <ComponentReference Name="Meadow/ButtonIcon" />
+  <ComponentReference Name="Meadow/CheckBox" />
+  <ComponentReference Name="Meadow/ColorPicker" />
+  <ComponentReference Name="Meadow/ComboBox" />
+  <ComponentReference Name="Meadow/DialogBox" />
+  <ComponentReference Name="Meadow/Divider" />
+  <ComponentReference Name="Meadow/Expander" />
+  <ComponentReference Name="Meadow/Icon" />
+  <ComponentReference Name="Meadow/ItemsControl" />
+  <ComponentReference Name="Meadow/Label" />
+  <ComponentReference Name="Meadow/ListBox" />
+  <ComponentReference Name="Meadow/ListBoxItem" />
+  <ComponentReference Name="Meadow/Menu" />
+  <ComponentReference Name="Meadow/MenuItem" />
+  <ComponentReference Name="Meadow/Panel" />
+  <ComponentReference Name="Meadow/PasswordBox" />
+  <ComponentReference Name="Meadow/RadioButton" />
+  <ComponentReference Name="Meadow/ScrollBar" />
+  <ComponentReference Name="Meadow/ScrollBarThumb" />
+  <ComponentReference Name="Meadow/ScrollViewer" />
+  <ComponentReference Name="Meadow/Slider" />
+  <ComponentReference Name="Meadow/SliderThumb" />
+  <ComponentReference Name="Meadow/Splitter" />
+  <ComponentReference Name="Meadow/StackPanel" />
   <ComponentReference Name="Meadow/Styles" />
+  <ComponentReference Name="Meadow/TextBox" />
+  <ComponentReference Name="Meadow/Toast" />
+  <ComponentReference Name="Meadow/ToggleButton" />
+  <ComponentReference Name="Meadow/UserControl" />
+  <ComponentReference Name="Meadow/Window" />
   <StandardElementReference Name="Circle" />
   <StandardElementReference Name="Component" />
   <StandardElementReference Name="Container" />
@@ -96,31 +96,31 @@
   <StandardElementReference Name="Rectangle" />
   <StandardElementReference Name="Sprite" />
   <StandardElementReference Name="Text" />
-  <BehaviorReference Name="ButtonBehavior" SourcePath="../../FormsBehaviors/ButtonBehavior.behx" DefaultImplementationOverride="Meadow/Controls/Button" />
-  <BehaviorReference Name="CheckBoxBehavior" SourcePath="../../FormsBehaviors/CheckBoxBehavior.behx" DefaultImplementationOverride="Meadow/Controls/CheckBox" />
-  <BehaviorReference Name="ColorPickerBehavior" SourcePath="../../FormsBehaviors/ColorPickerBehavior.behx" DefaultImplementationOverride="Meadow/Controls/ColorPicker" />
-  <BehaviorReference Name="ComboBoxBehavior" SourcePath="../../FormsBehaviors/ComboBoxBehavior.behx" DefaultImplementationOverride="Meadow/Controls/ComboBox" />
-  <BehaviorReference Name="DialogBoxBehavior" SourcePath="../../FormsBehaviors/DialogBoxBehavior.behx" DefaultImplementationOverride="Meadow/Controls/DialogBox" />
-  <BehaviorReference Name="ExpanderBehavior" SourcePath="../../FormsBehaviors/ExpanderBehavior.behx" DefaultImplementationOverride="Meadow/Controls/Expander" />
+  <BehaviorReference Name="ButtonBehavior" SourcePath="../../FormsBehaviors/ButtonBehavior.behx" DefaultImplementationOverride="Meadow/Button" />
+  <BehaviorReference Name="CheckBoxBehavior" SourcePath="../../FormsBehaviors/CheckBoxBehavior.behx" DefaultImplementationOverride="Meadow/CheckBox" />
+  <BehaviorReference Name="ColorPickerBehavior" SourcePath="../../FormsBehaviors/ColorPickerBehavior.behx" DefaultImplementationOverride="Meadow/ColorPicker" />
+  <BehaviorReference Name="ComboBoxBehavior" SourcePath="../../FormsBehaviors/ComboBoxBehavior.behx" DefaultImplementationOverride="Meadow/ComboBox" />
+  <BehaviorReference Name="DialogBoxBehavior" SourcePath="../../FormsBehaviors/DialogBoxBehavior.behx" DefaultImplementationOverride="Meadow/DialogBox" />
+  <BehaviorReference Name="ExpanderBehavior" SourcePath="../../FormsBehaviors/ExpanderBehavior.behx" DefaultImplementationOverride="Meadow/Expander" />
   <BehaviorReference Name="ItemsControlBehavior" SourcePath="../../FormsBehaviors/ItemsControlBehavior.behx" />
   <BehaviorReference Name="LabelBehavior" SourcePath="../../FormsBehaviors/LabelBehavior.behx" />
-  <BehaviorReference Name="ListBoxBehavior" SourcePath="../../FormsBehaviors/ListBoxBehavior.behx" DefaultImplementationOverride="Meadow/Controls/ListBox" />
-  <BehaviorReference Name="ListBoxItemBehavior" SourcePath="../../FormsBehaviors/ListBoxItemBehavior.behx" DefaultImplementationOverride="Meadow/Controls/ListBoxItem" />
-  <BehaviorReference Name="MenuBehavior" SourcePath="../../FormsBehaviors/MenuBehavior.behx" DefaultImplementationOverride="Meadow/Controls/Menu" />
-  <BehaviorReference Name="MenuItemBehavior" SourcePath="../../FormsBehaviors/MenuItemBehavior.behx" DefaultImplementationOverride="Meadow/Controls/MenuItem" />
+  <BehaviorReference Name="ListBoxBehavior" SourcePath="../../FormsBehaviors/ListBoxBehavior.behx" DefaultImplementationOverride="Meadow/ListBox" />
+  <BehaviorReference Name="ListBoxItemBehavior" SourcePath="../../FormsBehaviors/ListBoxItemBehavior.behx" DefaultImplementationOverride="Meadow/ListBoxItem" />
+  <BehaviorReference Name="MenuBehavior" SourcePath="../../FormsBehaviors/MenuBehavior.behx" DefaultImplementationOverride="Meadow/Menu" />
+  <BehaviorReference Name="MenuItemBehavior" SourcePath="../../FormsBehaviors/MenuItemBehavior.behx" DefaultImplementationOverride="Meadow/MenuItem" />
   <BehaviorReference Name="OnScreenKeyboardBehavior" SourcePath="../../FormsBehaviors/OnScreenKeyboardBehavior.behx" />
   <BehaviorReference Name="PanelBehavior" SourcePath="../../FormsBehaviors/PanelBehavior.behx" />
-  <BehaviorReference Name="PasswordBoxBehavior" SourcePath="../../FormsBehaviors/PasswordBoxBehavior.behx" DefaultImplementationOverride="Meadow/Controls/PasswordBox" />
-  <BehaviorReference Name="RadioButtonBehavior" SourcePath="../../FormsBehaviors/RadioButtonBehavior.behx" DefaultImplementationOverride="Meadow/Controls/RadioButton" />
-  <BehaviorReference Name="ScrollBarBehavior" SourcePath="../../FormsBehaviors/ScrollBarBehavior.behx" DefaultImplementationOverride="Meadow/Controls/ScrollBar" />
-  <BehaviorReference Name="ScrollViewerBehavior" SourcePath="../../FormsBehaviors/ScrollViewerBehavior.behx" DefaultImplementationOverride="Meadow/Controls/ScrollViewer" />
-  <BehaviorReference Name="SliderBehavior" SourcePath="../../FormsBehaviors/SliderBehavior.behx" DefaultImplementationOverride="Meadow/Controls/Slider" />
-  <BehaviorReference Name="SplitterBehavior" SourcePath="../../FormsBehaviors/SplitterBehavior.behx" DefaultImplementationOverride="Meadow/Controls/Splitter" />
+  <BehaviorReference Name="PasswordBoxBehavior" SourcePath="../../FormsBehaviors/PasswordBoxBehavior.behx" DefaultImplementationOverride="Meadow/PasswordBox" />
+  <BehaviorReference Name="RadioButtonBehavior" SourcePath="../../FormsBehaviors/RadioButtonBehavior.behx" DefaultImplementationOverride="Meadow/RadioButton" />
+  <BehaviorReference Name="ScrollBarBehavior" SourcePath="../../FormsBehaviors/ScrollBarBehavior.behx" DefaultImplementationOverride="Meadow/ScrollBar" />
+  <BehaviorReference Name="ScrollViewerBehavior" SourcePath="../../FormsBehaviors/ScrollViewerBehavior.behx" DefaultImplementationOverride="Meadow/ScrollViewer" />
+  <BehaviorReference Name="SliderBehavior" SourcePath="../../FormsBehaviors/SliderBehavior.behx" DefaultImplementationOverride="Meadow/Slider" />
+  <BehaviorReference Name="SplitterBehavior" SourcePath="../../FormsBehaviors/SplitterBehavior.behx" DefaultImplementationOverride="Meadow/Splitter" />
   <BehaviorReference Name="StackPanelBehavior" SourcePath="../../FormsBehaviors/StackPanelBehavior.behx" />
-  <BehaviorReference Name="TextBoxBehavior" SourcePath="../../FormsBehaviors/TextBoxBehavior.behx" DefaultImplementationOverride="Meadow/Controls/TextBox" />
-  <BehaviorReference Name="ToastBehavior" SourcePath="../../FormsBehaviors/ToastBehavior.behx" DefaultImplementationOverride="Meadow/Controls/Toast" />
-  <BehaviorReference Name="ToggleBehavior" SourcePath="../../FormsBehaviors/ToggleBehavior.behx" DefaultImplementationOverride="Meadow/Controls/ToggleButton" />
-  <BehaviorReference Name="UserControlBehavior" SourcePath="../../FormsBehaviors/UserControlBehavior.behx" DefaultImplementationOverride="Meadow/Controls/UserControl" />
+  <BehaviorReference Name="TextBoxBehavior" SourcePath="../../FormsBehaviors/TextBoxBehavior.behx" DefaultImplementationOverride="Meadow/TextBox" />
+  <BehaviorReference Name="ToastBehavior" SourcePath="../../FormsBehaviors/ToastBehavior.behx" DefaultImplementationOverride="Meadow/Toast" />
+  <BehaviorReference Name="ToggleBehavior" SourcePath="../../FormsBehaviors/ToggleBehavior.behx" DefaultImplementationOverride="Meadow/ToggleButton" />
+  <BehaviorReference Name="UserControlBehavior" SourcePath="../../FormsBehaviors/UserControlBehavior.behx" DefaultImplementationOverride="Meadow/UserControl" />
   <BehaviorReference Name="WindowBehavior" SourcePath="../../FormsBehaviors/WindowBehavior.behx" />
   <SinglePixelTextureTop xsi:nil="true" />
   <SinglePixelTextureLeft xsi:nil="true" />

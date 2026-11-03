@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Globalization;
+using System.IO;
 
 namespace Gum.Plugins.InternalPlugins.EditorTab.Services;
 
@@ -11,6 +12,17 @@ public static class PreviewProcessStartInfoBuilder
 {
     /// <summary>When set to a file path in the tool's environment, Preview is launched with <c>--log</c> pointing at it.</summary>
     public const string LogPathEnvironmentVariable = "GUM_PREVIEW_LOG";
+
+    /// <summary>The file a Debug tool has Preview log to: same as <c>PreviewDebugLog.DefaultPath</c> (pinned by a test).</summary>
+    public static string DefaultLogPath => Path.Combine(Path.GetTempPath(), "GumPreview", "preview.log");
+
+    /// <summary>
+    /// The log path to pass Preview: the environment variable's value if set, else <see cref="DefaultLogPath"/>
+    /// when the tool is a Debug build (the published Preview is a Release build, so it cannot decide this
+    /// itself), else null for no log.
+    /// </summary>
+    public static string? ResolveLogPath(string? environmentValue, bool isDebugBuild) =>
+        Gum.Diagnostics.DiagnosticLogFile.ResolvePath(environmentValue, DefaultLogPath, isDebugBuild);
 
     /// <summary>
     /// Builds the launch command. Arguments go through <see cref="ProcessStartInfo.ArgumentList"/>,

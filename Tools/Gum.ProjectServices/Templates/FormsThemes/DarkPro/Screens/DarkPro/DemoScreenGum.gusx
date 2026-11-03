@@ -816,43 +816,43 @@
   <Instance Name="MenuItems" BaseType="Container" />
   <Instance Name="TitleText" BaseType="Text" />
   <Instance Name="TitleText1" BaseType="Text" />
-  <Instance Name="DividerInstance" BaseType="DarkPro/Elements/Divider" />
-  <Instance Name="DividerInstance4" BaseType="DarkPro/Elements/Divider" />
-  <Instance Name="ResolutionLabel" BaseType="DarkPro/Controls/Label" />
-  <Instance Name="ResolutionBox" BaseType="DarkPro/Controls/ListBox" />
-  <Instance Name="DetectResolutionsButton" BaseType="DarkPro/Controls/Button" />
-  <Instance Name="FullScreenCheckbox" BaseType="DarkPro/Controls/CheckBox" />
-  <Instance Name="DividerInstance1" BaseType="DarkPro/Elements/Divider" />
-  <Instance Name="MusicLabel" BaseType="DarkPro/Controls/Label" />
-  <Instance Name="MusicSlider" BaseType="DarkPro/Controls/Slider" />
-  <Instance Name="SoundLabel" BaseType="DarkPro/Controls/Label" />
-  <Instance Name="SoundSlider" BaseType="DarkPro/Controls/Slider" />
-  <Instance Name="DividerInstance2" BaseType="DarkPro/Elements/Divider" />
-  <Instance Name="ControlLabel" BaseType="DarkPro/Controls/Label" />
-  <Instance Name="RadioButtonInstance" BaseType="DarkPro/Controls/RadioButton" />
-  <Instance Name="RadioButtonInstance1" BaseType="DarkPro/Controls/RadioButton" />
-  <Instance Name="RadioButtonInstance2" BaseType="DarkPro/Controls/RadioButton" />
-  <Instance Name="DividerInstance3" BaseType="DarkPro/Elements/Divider" />
-  <Instance Name="DifficultyLabel" BaseType="DarkPro/Controls/Label" />
+  <Instance Name="DividerInstance" BaseType="DarkPro/Divider" />
+  <Instance Name="DividerInstance4" BaseType="DarkPro/Divider" />
+  <Instance Name="ResolutionLabel" BaseType="DarkPro/Label" />
+  <Instance Name="ResolutionBox" BaseType="DarkPro/ListBox" />
+  <Instance Name="DetectResolutionsButton" BaseType="DarkPro/Button" />
+  <Instance Name="FullScreenCheckbox" BaseType="DarkPro/CheckBox" />
+  <Instance Name="DividerInstance1" BaseType="DarkPro/Divider" />
+  <Instance Name="MusicLabel" BaseType="DarkPro/Label" />
+  <Instance Name="MusicSlider" BaseType="DarkPro/Slider" />
+  <Instance Name="SoundLabel" BaseType="DarkPro/Label" />
+  <Instance Name="SoundSlider" BaseType="DarkPro/Slider" />
+  <Instance Name="DividerInstance2" BaseType="DarkPro/Divider" />
+  <Instance Name="ControlLabel" BaseType="DarkPro/Label" />
+  <Instance Name="RadioButtonInstance" BaseType="DarkPro/RadioButton" />
+  <Instance Name="RadioButtonInstance1" BaseType="DarkPro/RadioButton" />
+  <Instance Name="RadioButtonInstance2" BaseType="DarkPro/RadioButton" />
+  <Instance Name="DividerInstance3" BaseType="DarkPro/Divider" />
+  <Instance Name="DifficultyLabel" BaseType="DarkPro/Label" />
   <Instance Name="Background1" BaseType="Rectangle" />
-  <Instance Name="ComboBoxInstance" BaseType="DarkPro/Controls/ComboBox" />
+  <Instance Name="ComboBoxInstance" BaseType="DarkPro/ComboBox" />
   <Instance Name="ButtonContainer" BaseType="Container" />
-  <Instance Name="ButtonConfirmInstance" BaseType="DarkPro/Controls/Button" />
-  <Instance Name="ButtonDenyInstance" BaseType="DarkPro/Controls/Button" />
+  <Instance Name="ButtonConfirmInstance" BaseType="DarkPro/Button" />
+  <Instance Name="ButtonDenyInstance" BaseType="DarkPro/Button" />
   <Instance Name="DemoDialog" BaseType="Container" />
   <Instance Name="MarginContainer" BaseType="Container" />
-  <Instance Name="LabelInstance" BaseType="DarkPro/Controls/Label" />
-  <Instance Name="TextBoxInstance" BaseType="DarkPro/Controls/TextBox" />
-  <Instance Name="TextBoxInstance1" BaseType="DarkPro/Controls/PasswordBox" />
-  <Instance Name="MultiLineTextBox" BaseType="DarkPro/Controls/TextBox" />
-  <Instance Name="DialogBoxInstance" BaseType="DarkPro/Controls/DialogBox" />
-  <Instance Name="WindowStandardInstance" BaseType="DarkPro/Controls/Window" />
-  <Instance Name="LabelInstance1" BaseType="DarkPro/Controls/Label" />
-  <Instance Name="ListBoxItemInstance" BaseType="DarkPro/Controls/ListBoxItem" />
-  <Instance Name="ListBoxItemInstance1" BaseType="DarkPro/Controls/ListBoxItem" />
-  <Instance Name="ListBoxItemInstance2" BaseType="DarkPro/Controls/ListBoxItem" />
-  <Instance Name="ListBoxItemInstance3" BaseType="DarkPro/Controls/ListBoxItem" />
-  <Instance Name="ListBoxItemInstance4" BaseType="DarkPro/Controls/ListBoxItem" />
-  <Instance Name="ListBoxItemInstance5" BaseType="DarkPro/Controls/ListBoxItem" />
+  <Instance Name="LabelInstance" BaseType="DarkPro/Label" />
+  <Instance Name="TextBoxInstance" BaseType="DarkPro/TextBox" />
+  <Instance Name="TextBoxInstance1" BaseType="DarkPro/PasswordBox" />
+  <Instance Name="MultiLineTextBox" BaseType="DarkPro/TextBox" />
+  <Instance Name="DialogBoxInstance" BaseType="DarkPro/DialogBox" />
+  <Instance Name="WindowStandardInstance" BaseType="DarkPro/Window" />
+  <Instance Name="LabelInstance1" BaseType="DarkPro/Label" />
+  <Instance Name="ListBoxItemInstance" BaseType="DarkPro/ListBoxItem" />
+  <Instance Name="ListBoxItemInstance1" BaseType="DarkPro/ListBoxItem" />
+  <Instance Name="ListBoxItemInstance2" BaseType="DarkPro/ListBoxItem" />
+  <Instance Name="ListBoxItemInstance3" BaseType="DarkPro/ListBoxItem" />
+  <Instance Name="ListBoxItemInstance4" BaseType="DarkPro/ListBoxItem" />
+  <Instance Name="ListBoxItemInstance5" BaseType="DarkPro/ListBoxItem" />
   <Behaviors />
 </ScreenSave>

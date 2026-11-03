@@ -43,7 +43,7 @@ public class ThemedTextBoxInputTests : FileThemeInputTestBase
     private Placed Place(string theme, string control, Action<TextBoxBase>? configure = null, GumProjectSave? project = null)
     {
         project ??= LoadTheme(theme);
-        string component = project.Components.Single(item => item.Name.EndsWith("Controls/" + control)).Name;
+        string component = project.Components.Single(item => item.Name.EndsWith("/" + control)).Name;
         ScreenSave screen = new ScreenSave { Name = "Screen" + project.Screens.Count };
         screen.States.Add(new StateSave { Name = "Default", ParentContainer = screen });
         screen.Instances.Add(new InstanceSave { Name = "Box", BaseType = component, ParentContainer = screen });

@@ -86,7 +86,7 @@ public class FormsThemeCreationTests : IDisposable
         result.Success.ShouldBeTrue();
         result.LoadErrors.ShouldBeEmpty();
         GumProjectSave project = result.Project!;
-        project.Components.ShouldContain(item => item.Name == "Meadow/Controls/Label");
+        project.Components.ShouldContain(item => item.Name == "Meadow/Label");
         project.Behaviors.ShouldNotBeEmpty();
         project.Behaviors.ShouldAllBe(item => !item.IsSourceFileMissing);
         project.BehaviorReferences.ShouldAllBe(item => string.IsNullOrEmpty(item.SourcePath));
@@ -136,8 +136,8 @@ public class FormsThemeCreationTests : IDisposable
         GumProjectSave project = result.Project!;
         BehaviorSave behavior = project.Behaviors.Single(item => item.Name == StandardFormsBehaviorNames.MenuItemSubmenuPopupBehaviorName);
         behavior.IsSourceFileMissing.ShouldBeFalse();
-        behavior.DefaultImplementation.ShouldBe("Retro95/Controls/MenuItemSubmenuPopup");
-        ComponentSave component = project.Components.Single(item => item.Name == "Retro95/Controls/MenuItemSubmenuPopup");
+        behavior.DefaultImplementation.ShouldBe("Retro95/MenuItemSubmenuPopup");
+        ComponentSave component = project.Components.Single(item => item.Name == "Retro95/MenuItemSubmenuPopup");
         component.Behaviors.ShouldContain(item => item.BehaviorName == StandardFormsBehaviorNames.MenuItemSubmenuPopupBehaviorName);
     }
 
@@ -154,6 +154,6 @@ public class FormsThemeCreationTests : IDisposable
         Directory.GetFiles(_tempDirectory, "*.gucx", SearchOption.AllDirectories).ShouldBeEmpty();
         ProjectLoadResult result = new ProjectLoader().Load(projectPath);
         result.Success.ShouldBeTrue();
-        result.Project!.Components.ShouldContain(item => item.Name == "Meadow/Controls/Label");
+        result.Project!.Components.ShouldContain(item => item.Name == "Meadow/Label");
     }
 }

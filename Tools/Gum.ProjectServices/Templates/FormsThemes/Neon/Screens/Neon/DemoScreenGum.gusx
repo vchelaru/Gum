@@ -816,43 +816,43 @@
   <Instance Name="MenuItems" BaseType="Container" />
   <Instance Name="TitleText" BaseType="Text" />
   <Instance Name="TitleText1" BaseType="Text" />
-  <Instance Name="DividerInstance" BaseType="Neon/Elements/Divider" />
-  <Instance Name="DividerInstance4" BaseType="Neon/Elements/Divider" />
-  <Instance Name="ResolutionLabel" BaseType="Neon/Controls/Label" />
-  <Instance Name="ResolutionBox" BaseType="Neon/Controls/ListBox" />
-  <Instance Name="DetectResolutionsButton" BaseType="Neon/Controls/Button" />
-  <Instance Name="FullScreenCheckbox" BaseType="Neon/Controls/CheckBox" />
-  <Instance Name="DividerInstance1" BaseType="Neon/Elements/Divider" />
-  <Instance Name="MusicLabel" BaseType="Neon/Controls/Label" />
-  <Instance Name="MusicSlider" BaseType="Neon/Controls/Slider" />
-  <Instance Name="SoundLabel" BaseType="Neon/Controls/Label" />
-  <Instance Name="SoundSlider" BaseType="Neon/Controls/Slider" />
-  <Instance Name="DividerInstance2" BaseType="Neon/Elements/Divider" />
-  <Instance Name="ControlLabel" BaseType="Neon/Controls/Label" />
-  <Instance Name="RadioButtonInstance" BaseType="Neon/Controls/RadioButton" />
-  <Instance Name="RadioButtonInstance1" BaseType="Neon/Controls/RadioButton" />
-  <Instance Name="RadioButtonInstance2" BaseType="Neon/Controls/RadioButton" />
-  <Instance Name="DividerInstance3" BaseType="Neon/Elements/Divider" />
-  <Instance Name="DifficultyLabel" BaseType="Neon/Controls/Label" />
+  <Instance Name="DividerInstance" BaseType="Neon/Divider" />
+  <Instance Name="DividerInstance4" BaseType="Neon/Divider" />
+  <Instance Name="ResolutionLabel" BaseType="Neon/Label" />
+  <Instance Name="ResolutionBox" BaseType="Neon/ListBox" />
+  <Instance Name="DetectResolutionsButton" BaseType="Neon/Button" />
+  <Instance Name="FullScreenCheckbox" BaseType="Neon/CheckBox" />
+  <Instance Name="DividerInstance1" BaseType="Neon/Divider" />
+  <Instance Name="MusicLabel" BaseType="Neon/Label" />
+  <Instance Name="MusicSlider" BaseType="Neon/Slider" />
+  <Instance Name="SoundLabel" BaseType="Neon/Label" />
+  <Instance Name="SoundSlider" BaseType="Neon/Slider" />
+  <Instance Name="DividerInstance2" BaseType="Neon/Divider" />
+  <Instance Name="ControlLabel" BaseType="Neon/Label" />
+  <Instance Name="RadioButtonInstance" BaseType="Neon/RadioButton" />
+  <Instance Name="RadioButtonInstance1" BaseType="Neon/RadioButton" />
+  <Instance Name="RadioButtonInstance2" BaseType="Neon/RadioButton" />
+  <Instance Name="DividerInstance3" BaseType="Neon/Divider" />
+  <Instance Name="DifficultyLabel" BaseType="Neon/Label" />
   <Instance Name="Background1" BaseType="Rectangle" />
-  <Instance Name="ComboBoxInstance" BaseType="Neon/Controls/ComboBox" />
+  <Instance Name="ComboBoxInstance" BaseType="Neon/ComboBox" />
   <Instance Name="ButtonContainer" BaseType="Container" />
-  <Instance Name="ButtonConfirmInstance" BaseType="Neon/Controls/Button" />
-  <Instance Name="ButtonDenyInstance" BaseType="Neon/Controls/Button" />
+  <Instance Name="ButtonConfirmInstance" BaseType="Neon/Button" />
+  <Instance Name="ButtonDenyInstance" BaseType="Neon/Button" />
   <Instance Name="DemoDialog" BaseType="Container" />
   <Instance Name="MarginContainer" BaseType="Container" />
-  <Instance Name="LabelInstance" BaseType="Neon/Controls/Label" />
-  <Instance Name="TextBoxInstance" BaseType="Neon/Controls/TextBox" />
-  <Instance Name="TextBoxInstance1" BaseType="Neon/Controls/PasswordBox" />
-  <Instance Name="MultiLineTextBox" BaseType="Neon/Controls/TextBox" />
-  <Instance Name="DialogBoxInstance" BaseType="Neon/Controls/DialogBox" />
-  <Instance Name="WindowStandardInstance" BaseType="Neon/Controls/Window" />
-  <Instance Name="LabelInstance1" BaseType="Neon/Controls/Label" />
-  <Instance Name="ListBoxItemInstance" BaseType="Neon/Controls/ListBoxItem" />
-  <Instance Name="ListBoxItemInstance1" BaseType="Neon/Controls/ListBoxItem" />
-  <Instance Name="ListBoxItemInstance2" BaseType="Neon/Controls/ListBoxItem" />
-  <Instance Name="ListBoxItemInstance3" BaseType="Neon/Controls/ListBoxItem" />
-  <Instance Name="ListBoxItemInstance4" BaseType="Neon/Controls/ListBoxItem" />
-  <Instance Name="ListBoxItemInstance5" BaseType="Neon/Controls/ListBoxItem" />
+  <Instance Name="LabelInstance" BaseType="Neon/Label" />
+  <Instance Name="TextBoxInstance" BaseType="Neon/TextBox" />
+  <Instance Name="TextBoxInstance1" BaseType="Neon/PasswordBox" />
+  <Instance Name="MultiLineTextBox" BaseType="Neon/TextBox" />
+  <Instance Name="DialogBoxInstance" BaseType="Neon/DialogBox" />
+  <Instance Name="WindowStandardInstance" BaseType="Neon/Window" />
+  <Instance Name="LabelInstance1" BaseType="Neon/Label" />
+  <Instance Name="ListBoxItemInstance" BaseType="Neon/ListBoxItem" />
+  <Instance Name="ListBoxItemInstance1" BaseType="Neon/ListBoxItem" />
+  <Instance Name="ListBoxItemInstance2" BaseType="Neon/ListBoxItem" />
+  <Instance Name="ListBoxItemInstance3" BaseType="Neon/ListBoxItem" />
+  <Instance Name="ListBoxItemInstance4" BaseType="Neon/ListBoxItem" />
+  <Instance Name="ListBoxItemInstance5" BaseType="Neon/ListBoxItem" />
   <Behaviors />
 </ScreenSave>

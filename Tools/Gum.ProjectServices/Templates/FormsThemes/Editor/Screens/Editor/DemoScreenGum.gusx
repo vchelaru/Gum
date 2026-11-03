@@ -1286,61 +1286,61 @@
   <Instance Name="MenuItems" BaseType="Container" />
   <Instance Name="TitleText" BaseType="Text" />
   <Instance Name="TitleText1" BaseType="Text" />
-  <Instance Name="ButtonCloseInstance1" BaseType="Editor/Controls/ButtonClose" />
-  <Instance Name="DividerInstance" BaseType="Editor/Elements/DividerHorizontal" />
-  <Instance Name="DividerInstance4" BaseType="Editor/Elements/DividerHorizontal" />
-  <Instance Name="ResolutionLabel" BaseType="Editor/Controls/Label" />
-  <Instance Name="ResolutionBox" BaseType="Editor/Controls/ListBox" />
-  <Instance Name="DetectResolutionsButton" BaseType="Editor/Controls/Button" />
-  <Instance Name="FullScreenCheckbox" BaseType="Editor/Controls/CheckBox" />
-  <Instance Name="DividerInstance1" BaseType="Editor/Elements/DividerHorizontal" />
-  <Instance Name="MusicLabel" BaseType="Editor/Controls/Label" />
-  <Instance Name="MusicSlider" BaseType="Editor/Controls/Slider" />
-  <Instance Name="SoundLabel" BaseType="Editor/Controls/Label" />
-  <Instance Name="SoundSlider" BaseType="Editor/Controls/Slider" />
-  <Instance Name="DividerInstance2" BaseType="Editor/Elements/DividerHorizontal" />
-  <Instance Name="ControlLabel" BaseType="Editor/Controls/Label" />
-  <Instance Name="RadioButtonInstance" BaseType="Editor/Controls/RadioButton" />
-  <Instance Name="RadioButtonInstance1" BaseType="Editor/Controls/RadioButton" />
-  <Instance Name="RadioButtonInstance2" BaseType="Editor/Controls/RadioButton" />
-  <Instance Name="DividerInstance3" BaseType="Editor/Elements/DividerHorizontal" />
-  <Instance Name="DifficultyLabel" BaseType="Editor/Controls/Label" />
+  <Instance Name="ButtonCloseInstance1" BaseType="Editor/ButtonClose" />
+  <Instance Name="DividerInstance" BaseType="Editor/DividerHorizontal" />
+  <Instance Name="DividerInstance4" BaseType="Editor/DividerHorizontal" />
+  <Instance Name="ResolutionLabel" BaseType="Editor/Label" />
+  <Instance Name="ResolutionBox" BaseType="Editor/ListBox" />
+  <Instance Name="DetectResolutionsButton" BaseType="Editor/Button" />
+  <Instance Name="FullScreenCheckbox" BaseType="Editor/CheckBox" />
+  <Instance Name="DividerInstance1" BaseType="Editor/DividerHorizontal" />
+  <Instance Name="MusicLabel" BaseType="Editor/Label" />
+  <Instance Name="MusicSlider" BaseType="Editor/Slider" />
+  <Instance Name="SoundLabel" BaseType="Editor/Label" />
+  <Instance Name="SoundSlider" BaseType="Editor/Slider" />
+  <Instance Name="DividerInstance2" BaseType="Editor/DividerHorizontal" />
+  <Instance Name="ControlLabel" BaseType="Editor/Label" />
+  <Instance Name="RadioButtonInstance" BaseType="Editor/RadioButton" />
+  <Instance Name="RadioButtonInstance1" BaseType="Editor/RadioButton" />
+  <Instance Name="RadioButtonInstance2" BaseType="Editor/RadioButton" />
+  <Instance Name="DividerInstance3" BaseType="Editor/DividerHorizontal" />
+  <Instance Name="DifficultyLabel" BaseType="Editor/Label" />
   <Instance Name="Background1" BaseType="NineSlice" />
-  <Instance Name="ComboBoxInstance" BaseType="Editor/Controls/ComboBox" />
+  <Instance Name="ComboBoxInstance" BaseType="Editor/ComboBox" />
   <Instance Name="ButtonContainer" BaseType="Container" />
-  <Instance Name="ButtonConfirmInstance" BaseType="Editor/Controls/ButtonConfirm" />
-  <Instance Name="WindowOkButton" BaseType="Editor/Controls/ButtonConfirm" />
-  <Instance Name="ButtonDenyInstance" BaseType="Editor/Controls/ButtonDeny" />
+  <Instance Name="ButtonConfirmInstance" BaseType="Editor/ButtonConfirm" />
+  <Instance Name="WindowOkButton" BaseType="Editor/ButtonConfirm" />
+  <Instance Name="ButtonDenyInstance" BaseType="Editor/ButtonDeny" />
   <Instance Name="DemoDialog" BaseType="Container" />
   <Instance Name="MarginContainer" BaseType="Container" />
-  <Instance Name="LabelInstance" BaseType="Editor/Controls/Label" />
-  <Instance Name="TextBoxInstance" BaseType="Editor/Controls/TextBox" />
-  <Instance Name="TextBoxInstance1" BaseType="Editor/Controls/PasswordBox" />
-  <Instance Name="MultiLineTextBox" BaseType="Editor/Controls/TextBox" />
+  <Instance Name="LabelInstance" BaseType="Editor/Label" />
+  <Instance Name="TextBoxInstance" BaseType="Editor/TextBox" />
+  <Instance Name="TextBoxInstance1" BaseType="Editor/PasswordBox" />
+  <Instance Name="MultiLineTextBox" BaseType="Editor/TextBox" />
   <Instance Name="DemoHud" BaseType="NineSlice" />
   <Instance Name="TitleText2" BaseType="Text" />
   <Instance Name="MenuTitle2" BaseType="Container" />
-  <Instance Name="PercentBarInstance" BaseType="Editor/Elements/PercentBar" />
-  <Instance Name="HitpointsBar1" BaseType="Editor/Elements/PercentBar" />
-  <Instance Name="HitpointsBar2" BaseType="Editor/Elements/PercentBar" />
-  <Instance Name="HitpointsBar3" BaseType="Editor/Elements/PercentBar" />
-  <Instance Name="PercentBarInstance1" BaseType="Editor/Elements/PercentBar" />
-  <Instance Name="PercentBarInstance2" BaseType="Editor/Elements/PercentBar" />
-  <Instance Name="DividerInstance5" BaseType="Editor/Elements/DividerHorizontal" />
-  <Instance Name="ButtonCloseInstance2" BaseType="Editor/Controls/ButtonClose" />
-  <Instance Name="PercentBarInstance3" BaseType="Editor/Elements/PercentBar" />
-  <Instance Name="PercentBarInstance4" BaseType="Editor/Elements/PercentBar" />
-  <Instance Name="PercentBarInstance5" BaseType="Editor/Elements/PercentBarIcon" />
+  <Instance Name="PercentBarInstance" BaseType="Editor/PercentBar" />
+  <Instance Name="HitpointsBar1" BaseType="Editor/PercentBar" />
+  <Instance Name="HitpointsBar2" BaseType="Editor/PercentBar" />
+  <Instance Name="HitpointsBar3" BaseType="Editor/PercentBar" />
+  <Instance Name="PercentBarInstance1" BaseType="Editor/PercentBar" />
+  <Instance Name="PercentBarInstance2" BaseType="Editor/PercentBar" />
+  <Instance Name="DividerInstance5" BaseType="Editor/DividerHorizontal" />
+  <Instance Name="ButtonCloseInstance2" BaseType="Editor/ButtonClose" />
+  <Instance Name="PercentBarInstance3" BaseType="Editor/PercentBar" />
+  <Instance Name="PercentBarInstance4" BaseType="Editor/PercentBar" />
+  <Instance Name="PercentBarInstance5" BaseType="Editor/PercentBarIcon" />
   <Instance Name="ContainerInstance" BaseType="Container" />
-  <Instance Name="TreeViewInstance" BaseType="Editor/Controls/TreeView" />
-  <Instance Name="DialogBoxInstance" BaseType="Editor/Controls/DialogBox" />
-  <Instance Name="WindowStandardInstance" BaseType="Editor/Controls/Window" />
-  <Instance Name="LabelInstance1" BaseType="Editor/Controls/Label" />
-  <Instance Name="ListBoxItemInstance" BaseType="Editor/Controls/ListBoxItem" />
-  <Instance Name="ListBoxItemInstance1" BaseType="Editor/Controls/ListBoxItem" />
-  <Instance Name="ListBoxItemInstance2" BaseType="Editor/Controls/ListBoxItem" />
-  <Instance Name="ListBoxItemInstance3" BaseType="Editor/Controls/ListBoxItem" />
-  <Instance Name="ListBoxItemInstance4" BaseType="Editor/Controls/ListBoxItem" />
-  <Instance Name="ListBoxItemInstance5" BaseType="Editor/Controls/ListBoxItem" />
+  <Instance Name="TreeViewInstance" BaseType="Editor/TreeView" />
+  <Instance Name="DialogBoxInstance" BaseType="Editor/DialogBox" />
+  <Instance Name="WindowStandardInstance" BaseType="Editor/Window" />
+  <Instance Name="LabelInstance1" BaseType="Editor/Label" />
+  <Instance Name="ListBoxItemInstance" BaseType="Editor/ListBoxItem" />
+  <Instance Name="ListBoxItemInstance1" BaseType="Editor/ListBoxItem" />
+  <Instance Name="ListBoxItemInstance2" BaseType="Editor/ListBoxItem" />
+  <Instance Name="ListBoxItemInstance3" BaseType="Editor/ListBoxItem" />
+  <Instance Name="ListBoxItemInstance4" BaseType="Editor/ListBoxItem" />
+  <Instance Name="ListBoxItemInstance5" BaseType="Editor/ListBoxItem" />
   <Behaviors />
 </ScreenSave>
