@@ -136,6 +136,7 @@ public abstract class DataUiDisplayBase : UserControl, IDataUi
             e.PropertyName == nameof(WpfDataUi.DataTypes.InstanceMember.DetailText) ||
             e.PropertyName == nameof(WpfDataUi.DataTypes.InstanceMember.FirstGridLength) ||
             e.PropertyName == nameof(WpfDataUi.DataTypes.InstanceMember.IsSpaciousRow) ||
+            e.PropertyName == nameof(WpfDataUi.DataTypes.InstanceMember.IndentLevel) ||
             e.PropertyName == nameof(WpfDataUi.DataTypes.InstanceMember.WarningText) ||
             e.PropertyName == nameof(WpfDataUi.DataTypes.InstanceMember.ChipText) ||
             e.PropertyName == nameof(WpfDataUi.DataTypes.InstanceMember.ToggleText) ||
@@ -327,7 +328,7 @@ public abstract class DataUiDisplayBase : UserControl, IDataUi
         {
             _isRowStyled = true;
             bool isLight = ActualThemeVariant == Avalonia.Styling.ThemeVariant.Light;
-            Padding = new Thickness(10, 8, 10, 2);
+            Padding = new Thickness(10 + 20 * (InstanceMember?.IndentLevel ?? 0), 8, 10, 2);
             BorderThickness = new Thickness(0, 0, 0, 1);
             BorderBrush = new SolidColorBrush(Color.Parse(isLight ? "#E0E0E0" : "#303030"));
             // Applied once: validation colors set on a field later must not be reset by every refresh.

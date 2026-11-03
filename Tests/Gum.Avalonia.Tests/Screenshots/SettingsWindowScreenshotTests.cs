@@ -12,6 +12,9 @@ using System.Reflection;
 using Gum.Avalonia.Tests.EndToEnd;
 using Gum.Avalonia.Tests.Harness;
 using Gum.SettingsWindow;
+using Gum.DataTypes;
+using WpfDataUi.DataTypes;
+using Gum.Managers;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Gum.Avalonia.Tests.Screenshots;
@@ -148,6 +151,50 @@ public class SettingsWindowScreenshotTests
         EditSettings(window.Find<CodeGenerationSettingsPageView>(), settings => settings.CustomCodeFolder = string.Empty);
         ScrollToResolves(window);
         PrScreenshot.SaveWindowAtZoomLevels(window.Window, "settings-mark-generated-folder-disabled-" + theme);
+    });
+
+    [SkippableFact]
+    public void ProjectGeneral_Light() => PrScreenshot.Run(() =>
+    {
+        using ProjectTreeHarness tree = new ProjectTreeHarness();
+        SettingsDialogViewModel viewModel = TestAppBuilder.Services.GetRequiredService<SettingsDialogViewModel>();
+        using ScreenshotWindow window = PrScreenshot.ShowDialog(viewModel, ThemeVariant.Light);
+
+        viewModel.SelectPage(SettingsPageIds.ProjectGeneral);
+        PrScreenshot.SaveWindowAtZoomLevels(window.Window, "settings-project-general-light");
+    });
+
+    [SkippableFact]
+    public void ProjectGeneral_WithCustomBounds_Dark() => PrScreenshot.Run(() =>
+    {
+        using ProjectTreeHarness tree = new ProjectTreeHarness();
+        GumProjectSave project = ObjectFinder.Self.GumProjectSave!;
+        project.SinglePixelTextureFile = "Textures/Atlas.png";
+        project.SinglePixelTextureLeft = 8;
+        project.SinglePixelTextureTop = 16;
+        project.SinglePixelTextureRight = 24;
+        project.SinglePixelTextureBottom = 32;
+        SettingsDialogViewModel viewModel = TestAppBuilder.Services.GetRequiredService<SettingsDialogViewModel>();
+        using ScreenshotWindow window = PrScreenshot.ShowDialog(viewModel, ThemeVariant.Dark);
+
+        viewModel.SelectPage(SettingsPageIds.ProjectGeneral);
+        PrScreenshot.SaveWindowAtZoomLevels(window.Window, "settings-project-general-custom-bounds");
+
+        // The toggle and its four fields, which sit below the first screenful: collapse the sections above
+        // them (which also shows a collapsed section bar) and scroll to the end.
+        ProjectPropertiesPageView page = window.Find<ProjectPropertiesPageView>();
+        foreach (MemberCategory section in page.Grid.Categories.Take(2))
+        {
+            section.IsExpanded = false;
+        }
+        ScrollViewer scroller = page.GetVisualAncestors().OfType<ScrollViewer>().First();
+        for (int pass = 0; pass < 3; pass++)
+        {
+            Dispatcher.UIThread.RunJobs();
+            window.Window.UpdateLayout();
+            scroller.ScrollToEnd();
+        }
+        PrScreenshot.SaveWindowAtZoomLevels(window.Window, "settings-project-general-custom-bounds-scrolled");
     });
 
     private static void EditSettings(CodeGenerationSettingsPageView page, Action<CodeOutputProjectSettings> edit)

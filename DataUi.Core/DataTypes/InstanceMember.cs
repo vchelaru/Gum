@@ -386,6 +386,24 @@ namespace WpfDataUi.DataTypes
             }
         }
 
+        int indentLevel;
+        /// <summary>
+        /// How many steps a spacious row is indented, for a row that belongs to the one above it (the
+        /// fields a toggle reveals). Zero for every other row and grid.
+        /// </summary>
+        public int IndentLevel
+        {
+            get => indentLevel;
+            set
+            {
+                if (indentLevel != value)
+                {
+                    indentLevel = value;
+                    OnPropertyChanged(nameof(IndentLevel));
+                }
+            }
+        }
+
         bool isSpaciousRow;
         /// <summary>
         /// Opts the row into the roomier Settings look: padding and a divider around the row, taller fields,
