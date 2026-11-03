@@ -91,6 +91,44 @@ public partial class GraphicalUiElement
         UpdateLayoutIfRenderableMeasurementChanged(before);
     }
 
+    /// <summary>
+    /// Runs <paramref name="assign"/>, which changes this text's string, with the contained text measuring
+    /// unwrapped (or at <see cref="EffectiveMaxWidth"/>) when this is RelativeToChildren wide. Calls
+    /// <see cref="UpdateLayout()"/> only if the measured size changed, which also sets the renderable's
+    /// width. When it did not change, the renderable's previous width is put back, so a same-size text
+    /// keeps the width its last layout gave it.
+    /// </summary>
+    /// <param name="text">The contained text.</param>
+    /// <param name="state">Passed to <paramref name="assign"/>, so a static method can be used.</param>
+    /// <param name="assign">Assigns the string to the renderable.</param>
+    protected internal void AssignTextAndUpdateLayout<TState>(IText text, TState state, Action<TState> assign)
+    {
+        float widthBefore = text.WrappedTextWidth;
+        float heightBefore = text.WrappedTextHeight;
+        float? renderableWidthBefore = text.Width;
+        bool measuresUnwrapped = WidthUnits == DimensionUnitType.RelativeToChildren;
+
+        if (measuresUnwrapped)
+        {
+            // A null width measures the text with no line wrap, which is what this element sizes to.
+            text.Width = EffectiveMaxWidth;
+        }
+
+        assign(state);
+
+        // we want to update if the text's size actually changed (the letters it contains)
+        if (widthBefore != text.WrappedTextWidth || heightBefore != text.WrappedTextHeight)
+        {
+            UpdateLayout(ParentUpdateType.IfParentWidthHeightDependOnChildren | ParentUpdateType.IfParentStacks,
+                int.MaxValue / 2);
+        }
+        else if (measuresUnwrapped)
+        {
+            // No layout follows, and nothing else puts the renderable's laid-out width back.
+            text.Width = renderableWidthBefore;
+        }
+    }
+
     void UpdateLayoutIfRenderableMeasurementChanged(in RenderableMeasurement before)
     {
         if (DoesLayoutReadChangedMeasurement(before))
