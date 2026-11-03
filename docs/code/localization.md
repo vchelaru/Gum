@@ -462,6 +462,7 @@ To put a runtime value in a translated string, store the string with `string.For
 
 ```csharp
 // Initialize
+// T_PickupMessage in English: "{0} picked up {1} coins. Press {2} to continue."
 var label = new Label();
 label.AddToRoot();
 
