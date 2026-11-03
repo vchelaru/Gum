@@ -76,7 +76,7 @@ public class MainPropertiesWindowPluginTests
     {
         SettingsPage canvas = _registry.Pages.Single(page => page.Id == SettingsPageIds.Canvas);
 
-        canvas.SearchTerms.ShouldNotBeNull().Invoke().ShouldContain("Canvas Width");
+        canvas.SearchTerms.ShouldNotBeNull().Invoke().ShouldContain("Canvas width");
     }
 
     [Fact]

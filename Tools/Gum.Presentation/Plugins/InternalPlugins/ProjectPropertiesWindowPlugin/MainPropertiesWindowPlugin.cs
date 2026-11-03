@@ -87,7 +87,7 @@ class MainPropertiesWindowPlugin : CorePriorityPlugin
         {
             Activated = Reload,
             Keywords = new[] { "width", "height", "size", "guides", "outlines", "checker" },
-            SearchTerms = () => ProjectPropertiesGridPresenter.RowLabels(_viewModel, ProjectPropertiesSection.Canvas),
+            SearchTerms = () => new CanvasRows(_viewModel).SearchTerms(),
         });
         AddSettingsPage(new SettingsPage(
             SettingsPageIds.Localization, "Localization", SettingsSection.Project,

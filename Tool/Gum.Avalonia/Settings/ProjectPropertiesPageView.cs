@@ -3,8 +3,8 @@ using Gum.Plugins.PropertiesWindowPlugin;
 namespace Gum.Avalonia.Settings;
 
 /// <summary>
-/// One Project page of the Settings window (General, Canvas or Localization). General is built from rows
-/// (<see cref="ProjectGeneralRows"/>) like the Code generation page; Canvas and Localization are a
+/// One Project page of the Settings window (General, Canvas or Localization). General and Canvas are built from rows
+/// (<see cref="ProjectGeneralRows"/>, <see cref="CanvasRows"/>) like the Code generation page; Localization is a
 /// property grid over the settings of their <see cref="ProjectPropertiesPageViewModel"/>, laid out by the
 /// shared <see cref="ProjectPropertiesGridPresenter"/>.
 /// </summary>
@@ -25,6 +25,10 @@ public sealed class ProjectPropertiesPageView : SettingsRowsPageView
         if (page.Section == ProjectPropertiesSection.General)
         {
             Rows = new ProjectGeneralRows(page.Properties);
+        }
+        else if (page.Section == ProjectPropertiesSection.Canvas)
+        {
+            Rows = new CanvasRows(page.Properties);
         }
         else
         {
