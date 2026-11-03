@@ -52,7 +52,8 @@ public static class SettingsRows
     }
 
     /// <summary>A path row: a text field with browse and reveal buttons, for a file or (with <paramref name="isFolder"/>) a folder.</summary>
-    public static InstanceMember Path(string name, string label, string hint, Func<string?> get, Action<string> set, bool isFolder = false)
+    public static InstanceMember Path(string name, string label, string hint, Func<string?> get, Action<string> set,
+        bool isFolder = false, Func<string?>? revealRelativeTo = null)
     {
         InstanceMember member = Create(name, label, hint, typeof(string), () => get(), value => set((string?)value ?? string.Empty));
         member.PreferredDisplayer = typeof(StandardDisplayers.FileSelection);
@@ -60,7 +61,19 @@ public static class SettingsRows
         {
             member.PropertiesToSetOnDisplayer["IsFolderDialog"] = true;
         }
+        if (revealRelativeTo != null)
+        {
+            // The folder the value is relative to, when that is not the project folder; read on each reveal.
+            member.PropertiesToSetOnDisplayer["RevealRelativeTo"] = revealRelativeTo;
+        }
         return member;
+    }
+
+    /// <summary>Indents <paramref name="row"/> under the row above it, for the fields a toggle reveals.</summary>
+    public static InstanceMember Nested(InstanceMember row)
+    {
+        row.IndentLevel = 1;
+        return row;
     }
 
     /// <summary>A collapsible section bar over <paramref name="rows"/>.</summary>

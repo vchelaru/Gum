@@ -273,14 +273,40 @@ public class CodeOutputSettingsMembers
 
     private InstanceMember CreateCodeProjectRootMember()
     {
-        InstanceMember member = new InstanceMember("Code Project Root", this);
-        member.DetailText = "Folder holding your .csproj. Relative to the .gumx.";
+        InstanceMember member = SettingsRows.Path("Code Project Root", "Code Project Root",
+            "Folder holding your .csproj. Relative to the .gumx.", GetCodeProjectRootText, SetCodeProjectRoot, isFolder: true);
 
-        member.CustomSetPropertyEvent += (owner, args) =>
+        // Setup would save over an unreadable file, so it is not offered then.
+        _viewModel.NeedsSetup = !_viewModel.HasProjectSettingsLoadError
+            && _viewModel.ShouldShowSetup(ProjectSettings, HasClickedManualSetup);
+
+        return member;
+    }
+
+    private string? GetCodeProjectRootText()
+    {
+        string? projectRoot = ProjectSettings?.CodeProjectRoot;
+        if (string.IsNullOrEmpty(projectRoot))
         {
-            if (ProjectSettings != null)
+            return string.Empty;
+        }
+        else if (projectRoot == "./")
+        {
+            return _projectState.ProjectDirectory;
+        }
+        // Absolute file paths confuse people, so the root stays relative.
+        else
+        {
+            return projectRoot;
+        }
+    }
+
+    private void SetCodeProjectRoot(string value)
+    {
+        WriteProject(settings =>
+        {
             {
-                string valueToSet = (string?)args.Value ?? string.Empty;
+                string valueToSet = value;
                 bool needsAppendedSlash = !string.IsNullOrEmpty(valueToSet) &&
                     !valueToSet.EndsWith("\\") &&
                     !valueToSet.EndsWith("/");
@@ -301,37 +327,9 @@ public class CodeOutputSettingsMembers
                     }
                 }
 
-                ProjectSettings.CodeProjectRoot = valueToSet;
-
-                SettingsChanged?.Invoke(this, EventArgs.Empty);
+                settings.CodeProjectRoot = valueToSet;
             }
-        };
-
-        member.CustomGetEvent += (owner) =>
-        {
-            string? projectRoot = ProjectSettings?.CodeProjectRoot;
-            if (string.IsNullOrEmpty(projectRoot))
-            {
-                return string.Empty;
-            }
-            else if (projectRoot == "./")
-            {
-                return _projectState.ProjectDirectory;
-            }
-            // Absolute file paths confuse people, so the root stays relative.
-            else
-            {
-                return projectRoot;
-            }
-        };
-        member.CustomGetTypeEvent += (owner) => typeof(string);
-        UseFolderPicker(member);
-
-        // Setup would save over an unreadable file, so it is not offered then.
-        _viewModel.NeedsSetup = !_viewModel.HasProjectSettingsLoadError
-            && _viewModel.ShouldShowSetup(ProjectSettings, HasClickedManualSetup);
-
-        return member;
+        });
     }
 
     private const string MarkGeneratedFolderHint = "Adds an .editorconfig with generated_code = true to the generated folder.";
@@ -340,23 +338,11 @@ public class CodeOutputSettingsMembers
     // the hint says why; the rows are rebuilt when an edit changes that.
     private InstanceMember CreateMarkGeneratedFolderMember()
     {
-        InstanceMember member = new InstanceMember("Mark Generated Folder", this);
         _markUnavailableReason = GetMarkUnavailableReason();
-        member.DetailText = _markUnavailableReason ?? MarkGeneratedFolderHint;
-        member.ToggleText = "Write an .editorconfig";
+        InstanceMember member = ProjectToggle("Mark Generated Folder", _markUnavailableReason ?? MarkGeneratedFolderHint,
+            settings => settings.MarkGeneratedCodeFolder, (settings, value) => settings.MarkGeneratedCodeFolder = value,
+            toggleText: "Write an .editorconfig");
         member.IsReadOnly = _markUnavailableReason != null;
-
-        member.CustomSetPropertyEvent += (owner, args) =>
-        {
-            if (ProjectSettings != null)
-            {
-                ProjectSettings.MarkGeneratedCodeFolder = (bool)args.Value!;
-                SettingsChanged?.Invoke(this, EventArgs.Empty);
-            }
-        };
-
-        member.CustomGetEvent += (owner) => ProjectSettings?.MarkGeneratedCodeFolder ?? false;
-        member.CustomGetTypeEvent += (owner) => typeof(bool);
 
         return member;
     }
@@ -385,33 +371,22 @@ public class CodeOutputSettingsMembers
     private InstanceMember CreateCodeSubfolderMember(string label, string detail,
         Func<CodeOutputProjectSettings, string> get, Action<CodeOutputProjectSettings, string> set)
     {
-        InstanceMember member = new InstanceMember(label, this);
-        member.DetailText = detail;
-
-        member.CustomSetPropertyEvent += (owner, args) =>
-        {
-            if (ProjectSettings != null)
+        // The value is relative to the Code Project Root, not the project folder the picker resolves
+        // against by default; the root is read on each reveal so an edit of it is picked up.
+        return SettingsRows.Path(label, label, detail,
+            () => ProjectSettings == null ? null : get(ProjectSettings),
+            value => WriteProject(settings =>
             {
-                string valueToSet = ((string?)args.Value ?? string.Empty).Trim();
+                string valueToSet = value.Trim();
                 string? codeProjectRoot = GetAbsoluteCodeProjectRoot();
                 if (valueToSet.Length > 0 && !FileManager.IsRelative(valueToSet) && codeProjectRoot != null)
                 {
                     // Kept relative, like Code Project Root, so the .codsj works on every machine.
                     valueToSet = FileManager.MakeRelative(valueToSet, codeProjectRoot, preserveCase: true);
                 }
-                set(ProjectSettings, valueToSet);
-                SettingsChanged?.Invoke(this, EventArgs.Empty);
-            }
-        };
-
-        member.CustomGetEvent += (owner) => ProjectSettings == null ? null : get(ProjectSettings);
-        member.CustomGetTypeEvent += (owner) => typeof(string);
-        UseFolderPicker(member);
-        // The value is relative to the Code Project Root, not the project folder the picker
-        // resolves against by default. Read on each reveal so a root edit is picked up.
-        member.PropertiesToSetOnDisplayer["RevealRelativeTo"] = (Func<string?>)GetAbsoluteCodeProjectRoot;
-
-        return member;
+                set(settings, valueToSet);
+            }),
+            isFolder: true, revealRelativeTo: GetAbsoluteCodeProjectRoot);
     }
 
     // Null when no project or settings are loaded.
@@ -427,52 +402,40 @@ public class CodeOutputSettingsMembers
         return FileManager.IsRelative(codeProjectRoot) ? projectDirectory + codeProjectRoot : codeProjectRoot;
     }
 
-    // A text field plus a folder-browse button. The picked folder is absolute; the member's setter
-    // makes it relative.
-    private static void UseFolderPicker(InstanceMember member)
-    {
-        member.PreferredDisplayer = typeof(StandardDisplayers.FileSelection);
-        member.PropertiesToSetOnDisplayer["IsFolderDialog"] = true;
-    }
-
     private InstanceMember CreateGeneratedCodeFolderPrefixMember() => ProjectText(
         "Generated Code Folder Prefix", "Added before Screens and Components, in both folders.",
         settings => settings.GeneratedCodeFolderPrefix, (settings, value) => settings.GeneratedCodeFolderPrefix = value.Trim());
 
     private InstanceMember CreateOutputLibrarySelectionMember()
     {
-        InstanceMember member = new InstanceMember("Output Library", this);
-        member.DetailText = "Works on every runtime. The other options are legacy.";
-
-        member.CustomSetPropertyEvent += (owner, args) =>
-        {
-            if (ProjectSettings != null)
+        InstanceMember member = SettingsRows.Choice("Output Library", "Output Library",
+            "Works on every runtime. The other options are legacy.", typeof(string),
+            new object[]
             {
-                string? asString = (string?)args.Value;
-                if (!string.IsNullOrEmpty(asString))
-                {
-                    ProjectSettings.OutputLibrary = LibrariesByName[asString];
-                }
-
-                SettingsChanged?.Invoke(this, EventArgs.Empty);
-
-                RebuildRequested?.Invoke(this, EventArgs.Empty);
-            }
-        };
-
-        member.CustomGetEvent += (owner) =>
-            ProjectSettings != null && LibraryNames.TryGetValue(ProjectSettings.OutputLibrary, out string? name)
+                LibraryNames[OutputLibrary.GumForms],
+                LibraryNames[OutputLibrary.Skia],
+                LibraryNames[OutputLibrary.MonoGame],
+                LibraryNames[OutputLibrary.Raylib],
+                LibraryNames[OutputLibrary.Silk],
+            },
+            () => ProjectSettings != null && LibraryNames.TryGetValue(ProjectSettings.OutputLibrary, out string? name)
                 ? name
-                : string.Empty;
+                : string.Empty,
+            value =>
+            {
+                if (ProjectSettings != null)
+                {
+                    string? asString = (string?)value;
+                    if (!string.IsNullOrEmpty(asString))
+                    {
+                        ProjectSettings.OutputLibrary = LibrariesByName[asString];
+                    }
 
-        member.CustomOptions = new List<object>
-        {
-            LibraryNames[OutputLibrary.GumForms],
-            LibraryNames[OutputLibrary.Skia],
-            LibraryNames[OutputLibrary.MonoGame],
-            LibraryNames[OutputLibrary.Raylib],
-            LibraryNames[OutputLibrary.Silk],
-        };
+                    SettingsChanged?.Invoke(this, EventArgs.Empty);
+
+                    RebuildRequested?.Invoke(this, EventArgs.Empty);
+                }
+            });
 
         return member;
     }

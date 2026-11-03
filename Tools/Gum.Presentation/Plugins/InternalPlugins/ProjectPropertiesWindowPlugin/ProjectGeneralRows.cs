@@ -120,5 +120,5 @@ public sealed class ProjectGeneralRows : IRowsSettingsPage
 
     // A bound is a nullable int saved by the project; its row only exists while the bounds are on.
     private static InstanceMember Bound(string name, string label, string hint, Func<int?> get, Action<int?> set) =>
-        SettingsRows.Number(name, label, hint, () => get() ?? 0, value => set(value));
+        SettingsRows.Nested(SettingsRows.Number(name, label, hint, () => get() ?? 0, value => set(value)));
 }
