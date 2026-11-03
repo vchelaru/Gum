@@ -1,5 +1,6 @@
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Input;
 using Avalonia.Headless.XUnit;
 using Avalonia.Media;
 using Avalonia.VisualTree;
@@ -19,7 +20,7 @@ namespace Gum.Avalonia.Tests.EndToEnd;
 public class ColorPickerScenarioTests
 {
     // Pixels in from a control's edge, so a click lands inside it rather than on its border.
-    private const double Inset = 2;
+    private const double Inset = 1;
 
     [AvaloniaFact]
     [Trait("Feature", "DISP-016")]
@@ -85,7 +86,7 @@ public class ColorPickerScenarioTests
 
     [AvaloniaFact]
     [Trait("Feature", "DISP-016")]
-    public void ClickingTheHueBar_PicksTheHue_AtBothEndsAndInTheMiddle()
+    public void ClickingTheHueRing_PicksTheHue_AtTheTopAndBottom()
     {
         using ProjectTreeHarness tree = new ProjectTreeHarness();
         (VariableGridHarness grid, CompactColorPicker picker) = OpenPicker(tree);
@@ -93,15 +94,15 @@ public class ColorPickerScenarioTests
         Click(grid, Square(picker), 1.0, 0.0);
         ShouldBeNear(picker.Color, Color.FromRgb(255, 0, 0), tolerance: 8);
 
-        Click(grid, picker.HueSlider, 0.5, 0.5);
+        ClickRing(grid, picker, 180);
         picker.Spectrum.HsvColor.H.ShouldBe(180, tolerance: 3);
         ShouldBeNear(picker.Color, Color.FromRgb(0, 255, 255), tolerance: 12);
 
-        Click(grid, picker.HueSlider, 0.0, 0.5);
+        ClickRing(grid, picker, 0);
         picker.Spectrum.HsvColor.H.ShouldBe(0, tolerance: 3);
         ShouldBeNear(picker.Color, Color.FromRgb(255, 0, 0), tolerance: 12);
 
-        Click(grid, picker.HueSlider, 1.0, 0.5);
+        ClickRing(grid, picker, 359);
         double rightEnd = picker.Spectrum.HsvColor.H;
         (rightEnd >= 357 || rightEnd <= 3).ShouldBeTrue($"the right end is the red hue again, was {rightEnd}");
         ShouldBeNear(picker.Color, Color.FromRgb(255, 0, 0), tolerance: 12);
@@ -111,7 +112,7 @@ public class ColorPickerScenarioTests
     [Trait("Feature", "DISP-016")]
     [Trait("Feature", "EDIT-001")]
     [Trait("Feature", "EDIT-002")]
-    public void DraggingTheHueBar_SavesTheColorOnRelease_AndOneUndoRestoresIt()
+    public void DraggingTheHueRing_SavesTheColorOnRelease_AndOneUndoRestoresIt()
     {
         using ProjectTreeHarness tree = new ProjectTreeHarness();
         ComponentSave button = tree.Project.AddComponent("Button");
@@ -123,7 +124,7 @@ public class ColorPickerScenarioTests
         ProjectFileSnapshot start = tree.SnapshotFiles();
         CompactColorPicker picker = OpenPicker(grid);
 
-        grid.Input.Drag(PointIn(grid, picker.HueSlider, 0.0, 0.5), PointIn(grid, picker.HueSlider, 1.0 / 3.0, 0.5), steps: 6);
+        grid.Input.Drag(PointOnRing(grid, picker, 0), PointOnRing(grid, picker, 120), steps: 6);
 
         // A third of the way along is hue 120, pure green.
         picker.Spectrum.HsvColor.H.ShouldBe(120, tolerance: 8);
@@ -143,6 +144,80 @@ public class ColorPickerScenarioTests
         tree.SnapshotFiles().ShouldMatch(start, "one undo should undo the whole drag");
 
         tree.AssertOracles();
+    }
+
+    [AvaloniaFact]
+    [Trait("Feature", "DISP-016")]
+    [Trait("Feature", "EDIT-001")]
+    [Trait("Feature", "EDIT-002")]
+    public void TypingAnRrggbbAaHex_SavesRgb_LeavesAlphaAlone_AndOneUndoRestoresIt()
+    {
+        using ProjectTreeHarness tree = new ProjectTreeHarness();
+        (VariableGridHarness grid, CompactColorPicker picker) = OpenPicker(tree);
+        ProjectFileSnapshot start = tree.SnapshotFiles();
+
+        picker.HexTextBox.Text = "#1188CC80";
+        CloseFlyout(grid);
+
+        AssertStored(grid, tree, 17, 136, 204);
+        VariableGridHarness.StoredValue(grid.ReadSaved(Component(tree)), "Label.Alpha").ShouldBeNull();
+        tree.Undo();
+        tree.SnapshotFiles().ShouldMatch(start, "one undo should undo the whole hex edit");
+        tree.Redo();
+        AssertStored(grid, tree, 17, 136, 204);
+        tree.AssertOracles();
+    }
+
+    [AvaloniaFact]
+    [Trait("Feature", "DISP-016")]
+    [Trait("Feature", "EDIT-002")]
+    public async Task PastingAHex_SavesRgb_AndOneUndoRestoresIt()
+    {
+        using ProjectTreeHarness tree = new ProjectTreeHarness();
+        (VariableGridHarness grid, CompactColorPicker picker) = OpenPicker(tree);
+        ProjectFileSnapshot start = tree.SnapshotFiles();
+        await global::Avalonia.Input.Platform.ClipboardExtensions.SetTextAsync(
+            TopLevel.GetTopLevel(picker)!.Clipboard!, "#3D9BD6");
+
+        await picker.PasteAsync();
+        CloseFlyout(grid);
+
+        AssertStored(grid, tree, 61, 155, 214);
+        tree.Undo();
+        tree.SnapshotFiles().ShouldMatch(start, "one undo should undo the whole paste");
+        tree.AssertOracles();
+    }
+
+    [AvaloniaFact]
+    [Trait("Feature", "DISP-016")]
+    public void TypingAnInvalidHex_StoresNothing_AndTheFieldRevertsOnBlur()
+    {
+        using ProjectTreeHarness tree = new ProjectTreeHarness();
+        (VariableGridHarness grid, CompactColorPicker picker) = OpenPicker(tree);
+        ProjectFileSnapshot start = tree.SnapshotFiles();
+
+        picker.HexTextBox.Text = "#12G4";
+        picker.HexTextBox.RaiseEvent(new global::Avalonia.Interactivity.RoutedEventArgs(InputElement.LostFocusEvent));
+        CloseFlyout(grid);
+
+        VariableGridHarness.StoredValue(Component(tree), "Label.Red").ShouldBeNull();
+        picker.HexTextBox.Text.ShouldBe("#FFFFFF");
+        tree.SnapshotFiles().ShouldMatch(start, "an invalid hex should change nothing");
+    }
+
+    /// <summary>Runs what closing the real flyout runs; the headless flyout does not close on a click outside.</summary>
+    private static void CloseFlyout(VariableGridHarness grid)
+    {
+        grid.Editor<ColorDisplay>("Color").CommitPendingFull();
+        grid.Settle();
+    }
+
+    private static void AssertStored(VariableGridHarness grid, ProjectTreeHarness tree, int red, int green, int blue)
+    {
+        ComponentSave saved = grid.ReadSaved(Component(tree));
+        VariableGridHarness.StoredValue(saved, "Label.Red").ShouldBe(red);
+        VariableGridHarness.StoredValue(saved, "Label.Green").ShouldBe(green);
+        VariableGridHarness.StoredValue(saved, "Label.Blue").ShouldBe(blue);
     }
 
     private static (VariableGridHarness Grid, CompactColorPicker Picker) OpenPicker(ProjectTreeHarness tree)
@@ -168,6 +243,17 @@ public class ColorPickerScenarioTests
     /// <summary>The part of the spectrum that takes the pointer; the control itself is wider than the square it draws.</summary>
     private static Control Square(CompactColorPicker picker) =>
         picker.Spectrum.GetVisualDescendants().OfType<Control>().Single(control => control.Name == "PART_InputTarget");
+
+    /// <summary>The point on the middle of the hue ring at a hue, in window coordinates.</summary>
+    internal static Point PointOnRing(VariableGridHarness grid, CompactColorPicker picker, double hue)
+    {
+        grid.Input.Layout();
+        return picker.HueRing.TranslatePoint(picker.HueRing.ThumbCenterFor(hue), grid.Input.Window)
+            ?? throw new InvalidOperationException("The hue ring is not in the window.");
+    }
+
+    private static void ClickRing(VariableGridHarness grid, CompactColorPicker picker, double hue) =>
+        grid.Input.ClickAt(PointOnRing(grid, picker, hue));
 
     /// <summary>Clicks the point at the given fraction of the control's width and height, kept inside its edges.</summary>
     private static void Click(VariableGridHarness grid, Control control, double fractionX, double fractionY) =>

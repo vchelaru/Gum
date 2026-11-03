@@ -36,7 +36,7 @@ public class FixedSizesZoomTests
         CompactColorPicker picker = new CompactColorPicker();
         AssertFollowsZoom(picker, () => ColorPickerSizes(picker), expectedAtDefault: new List<double>
         {
-            200, 140, 14, 14, 14, 14, 40, 22, 22, 40, 22, 22, 40, 22, 22, 32, 16, 32, 16,
+            200, 107, 14, 14, 14, 40, 22, 22, 40, 22, 22, 40, 22, 22, 32, 16, 32, 16,
         });
     }
 
