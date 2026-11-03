@@ -55,11 +55,17 @@ public class LastProjectLoadMarkerTests : IDisposable
         string path = Path.Combine(_folder, "LoadingLastProject.txt");
         FileStream other = new FileStream(path, FileMode.Create, FileAccess.ReadWrite, FileShare.None);
         var marker = new LastProjectLoadMarker(() => _folder);
-        System.Threading.Tasks.Task.Run(() =>
+        // A dedicated thread that is running before the write starts: a thread-pool task can start later
+        // than the marker's whole retry window (3 attempts, 50 ms apart) on a loaded CI machine.
+        using System.Threading.ManualResetEventSlim releaserRunning = new System.Threading.ManualResetEventSlim();
+        System.Threading.Thread releaser = new System.Threading.Thread(() =>
         {
-            System.Threading.Thread.Sleep(60);
+            releaserRunning.Set();
+            System.Threading.Thread.Sleep(15);
             other.Dispose();
         });
+        releaser.Start();
+        releaserRunning.Wait();
 
         marker.MarkStarted("c:/projects/Game.gumx");
 
