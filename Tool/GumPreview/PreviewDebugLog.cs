@@ -49,10 +49,14 @@ public sealed class PreviewDebugLog : IDisposable
     /// <summary>The file Debug builds and <c>--log-default</c> write to: <c>GumPreview/preview.log</c> in the user's temp folder.</summary>
     public static string DefaultPath => Path.Combine(Path.GetTempPath(), "GumPreview", "preview.log");
 
-    private PreviewDebugLog(StreamWriter writer)
+    private PreviewDebugLog(StreamWriter writer, string path)
     {
         _writer = writer;
+        FilePath = path;
     }
+
+    /// <summary>The log file this instance writes to; frame captures go in its folder.</summary>
+    public string FilePath { get; }
 
     /// <summary>
     /// Opens (appends to) the log file at <paramref name="path"/>, creating its folder. Returns null
@@ -69,7 +73,7 @@ public sealed class PreviewDebugLog : IDisposable
         {
             // Shared read so the file can be read while Preview runs; AutoFlush flushes after every line.
             FileStream stream = DiagnosticLogFile.Open(path, rotate);
-            PreviewDebugLog log = new PreviewDebugLog(new StreamWriter(stream, new UTF8Encoding(false)) { AutoFlush = true });
+            PreviewDebugLog log = new PreviewDebugLog(new StreamWriter(stream, new UTF8Encoding(false)) { AutoFlush = true }, path);
             log.Write("log", "started");
             return log;
         }
@@ -117,6 +121,12 @@ public sealed class PreviewDebugLog : IDisposable
     /// <summary>Keys typed this frame and the modifiers held, as forwarded to the focused control.</summary>
     public void LogKeys(IEnumerable<string> keys, string modifiers, string? focusedControl) =>
         Write("key", $"{string.Join(",", keys)} modifiers={modifiers} focused={focusedControl ?? "(none)"}");
+
+    /// <summary>Keys let go this frame.</summary>
+    public void LogKeyUp(IEnumerable<string> keys) => Write("key-up", string.Join(",", keys));
+
+    /// <summary>A screenshot of the Preview window was saved because of <paramref name="reason"/>; compare it with the geometry lines around it.</summary>
+    public void LogFrame(string fileName, string reason) => Write("frame", $"{fileName} after {reason}");
 
     /// <summary>A mouse press, drag step or release at a window position.</summary>
     public void LogMouse(string kind, int x, int y) => Write("mouse", $"{kind} {x},{y}");

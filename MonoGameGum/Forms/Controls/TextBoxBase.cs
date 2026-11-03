@@ -2075,6 +2075,13 @@ public abstract class TextBoxBase :
             GraphicalUiElement r = _selectionInstances[i];
             lines.Add($"sel[{i}] vis={r.Visible} x={r.X:0.##} y={r.Y:0.##} w={r.Width:0.##} h={r.Height:0.##} "
                 + $"xu={r.XUnits} yu={r.YUnits} wu={r.WidthUnits} hu={r.HeightUnits} parent={r.Parent?.Name}");
+            // What layout computed, then what the renderable that is actually drawn holds: a mismatch
+            // means the layout results never reached the renderable.
+            string renderable = r.RenderableComponent is global::RenderingLibrary.Graphics.IRenderableIpso ipso
+                ? $"x={ipso.X:0.##} y={ipso.Y:0.##} w={ipso.Width:0.##} h={ipso.Height:0.##} vis={ipso.Visible} alpha={ipso.Alpha} z={ipso.Z:0.##} clips={ipso.ClipsChildren}"
+                : "(none)";
+            lines.Add($"sel[{i}] abs left={r.AbsoluteLeft:0.##} top={r.AbsoluteTop:0.##} w={r.GetAbsoluteWidth():0.##} h={r.GetAbsoluteHeight():0.##} "
+                + $"renderable {renderable} suspended={r.IsLayoutSuspended}");
         }
 
         int start = 0;
@@ -2116,6 +2123,13 @@ public abstract class TextBoxBase :
                 var parentToAddTo = selectionInstance.Parent;
                 var indexToAddTo = parentToAddTo.Children.IndexOf(selectionInstance) + 1;
                 parentToAddTo.Children.Insert(indexToAddTo, newSelection);
+                // The template can be cloned while the original is suspended (a hot reload applies a
+                // state with its instances suspended), and a clone inherits that: its X/Y/Width are
+                // then stored but never laid out, so the highlight is drawn with stale geometry (#7497).
+                if (newSelection.IsLayoutSuspended)
+                {
+                    newSelection.ResumeLayout();
+                }
             }
 
             foreach (var item in _selectionInstances)

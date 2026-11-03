@@ -148,6 +148,87 @@ public class AlwaysOnDebugLogTests : IDisposable
     }
 
     [Fact]
+    public void ObserveMouse_MoveWithNoButton_LogsRateLimitedMovesWithControlUnderCursor()
+    {
+        string path = Path.Combine(_folder, "preview.log");
+        long now = 1000;
+        using (PreviewDebugLog log = PreviewDebugLog.Open(path)!)
+        {
+            PreviewInputTracker tracker = new PreviewInputTracker(log, () => now);
+            tracker.ObserveMouse(1, 1, false, () => "Button 'Ok'");
+            now += 10;
+            tracker.ObserveMouse(2, 2, false);
+            now += 60;
+            tracker.ObserveMouse(3, 3, false);
+            tracker.ObserveMouse(3, 3, false);
+        }
+
+        string[] moves = File.ReadAllLines(path).Where(l => l.Contains(" mouse move ")).ToArray();
+        moves.Length.ShouldBe(2);
+        moves[0].ShouldEndWith("mouse move 1,1 over=Button 'Ok'");
+        moves[1].ShouldEndWith("mouse move 3,3 over=(none)");
+    }
+
+    [Fact]
+    public void LogKeyUp_WritesReleasedKeys()
+    {
+        string path = Path.Combine(_folder, "preview.log");
+        using (PreviewDebugLog log = PreviewDebugLog.Open(path)!)
+        {
+            log.LogKeyUp(new[] { "Up", "LeftShift" });
+        }
+
+        File.ReadAllText(path).ShouldContain(" key-up Up,LeftShift");
+    }
+
+    [Fact]
+    public void ObserveTextBox_InstancesChange_RequestsAFrame()
+    {
+        string path = Path.Combine(_folder, "preview.log");
+        System.Collections.Generic.List<string> reasons = new();
+        using (PreviewDebugLog log = PreviewDebugLog.Open(path)!)
+        {
+            PreviewInputTracker tracker = new PreviewInputTracker(log, requestFrame: reasons.Add);
+            tracker.ObserveTextBox(new TextBoxSnapshot("Input", "abc", true, 0, 0, 0, 1, 0));
+            tracker.ObserveTextBox(new TextBoxSnapshot("Input", "abc", true, 0, 0, 0, 1, 0));
+            tracker.ObserveTextBox(new TextBoxSnapshot("Input", "abc", true, 0, 1, 1, 2, 2));
+        }
+
+        reasons.ShouldBe(new[] { "selection-instances count=1", "selection-instances count=2" });
+    }
+
+    [Fact]
+    public void FrameCapture_RequestsAreRateLimitedNumberedAndPruned()
+    {
+        long now = 0;
+        Directory.CreateDirectory(_folder);
+        PreviewFrameCapture capture = new PreviewFrameCapture(_folder, () => now, keep: 3);
+
+        capture.Request("a").ShouldBeTrue();
+        capture.Request("b").ShouldBeTrue(); // still pending: just updates the reason
+        string first = capture.Claim(out string reason);
+        reason.ShouldBe("b");
+        Path.GetFileName(first).ShouldBe("preview-frame-0001.png");
+        capture.HasPending.ShouldBeFalse();
+
+        now += 100;
+        capture.Request("too soon").ShouldBeFalse();
+        now += 200;
+
+        for (int i = 0; i < 5; i++)
+        {
+            capture.Request("x").ShouldBeTrue();
+            File.WriteAllText(capture.Claim(out _), "png");
+            now += 300;
+        }
+
+        string[] files = Directory.GetFiles(_folder, "preview-frame-*.png").Select(Path.GetFileName).OrderBy(f => f).ToArray()!;
+        files.ShouldBe(new[] { "preview-frame-0004.png", "preview-frame-0005.png", "preview-frame-0006.png" });
+        new PreviewFrameCapture(_folder, () => now).Request("again");
+        Path.GetFileName(new PreviewFrameCapture(_folder, () => now).Claim(out _)).ShouldBe("preview-frame-0007.png");
+    }
+
+    [Fact]
     public void ObserveTextBox_SelectionChange_LogsGeometryLinesFromTheProvider()
     {
         string path = Path.Combine(_folder, "preview.log");

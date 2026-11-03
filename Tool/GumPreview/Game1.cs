@@ -38,6 +38,9 @@ public class Game1 : Game
     private readonly bool _selectAll;
     private readonly PreviewDebugLog? _debugLog;
     private IInputReceiver? _loggedFocus;
+    private PreviewFrameCapture? _frameCapture;
+    private static readonly Microsoft.Xna.Framework.Input.Keys[] AllKeys =
+        (Microsoft.Xna.Framework.Input.Keys[])Enum.GetValues(typeof(Microsoft.Xna.Framework.Input.Keys));
     private Action<string>? _logSelectionUpdate;
     private bool _logGeometryAfterReload;
     private PreviewInputTracker? _inputTracker;
@@ -254,6 +257,30 @@ public class Game1 : Game
         GraphicsDevice.Clear(Color.CornflowerBlue);
         GumService.Default.Draw();
         base.Draw(gameTime);
+        if (_frameCapture is { HasPending: true })
+        {
+            CaptureBackBuffer(_frameCapture);
+        }
+    }
+
+    // What is on the window right now, before it is presented: the log's "frame" lines point at these
+    // files so the picture can be compared with the geometry lines around it.
+    private void CaptureBackBuffer(PreviewFrameCapture capture)
+    {
+        string path = capture.Claim(out string reason);
+        try
+        {
+            int width = GraphicsDevice.PresentationParameters.BackBufferWidth;
+            int height = GraphicsDevice.PresentationParameters.BackBufferHeight;
+            Color[] pixels = new Color[width * height];
+            GraphicsDevice.GetBackBufferData(pixels);
+            WriteOpaquePng(pixels, width, height, path);
+            _debugLog?.LogFrame(Path.GetFileName(path), reason);
+        }
+        catch (Exception exception)
+        {
+            _debugLog?.LogException("frame capture", exception);
+        }
     }
 
     // Only runs with --log. Focus is read before Update, so a focus change shows up the frame after
@@ -280,15 +307,31 @@ public class Game1 : Game
         if (_logGeometryAfterReload && focus is TextBox reloadedBox)
         {
             _logGeometryAfterReload = false;
+            _frameCapture?.Request("reload");
             log.LogGeometry(DescribeControl(reloadedBox)!, reloadedBox.DescribeSelectionGeometry());
         }
 
-        _inputTracker ??= new PreviewInputTracker(log);
+        _frameCapture ??= new PreviewFrameCapture(Path.GetDirectoryName(log.FilePath) ?? ".", () => Environment.TickCount64);
+        _inputTracker ??= new PreviewInputTracker(log, requestFrame: reason => _frameCapture.Request(reason));
         Cursor cursor = GumService.Default.Cursor;
-        _inputTracker.ObserveMouse(cursor.X, cursor.Y, cursor.PrimaryDown);
+        _inputTracker.ObserveMouse(cursor.X, cursor.Y, cursor.PrimaryDown,
+            () => cursor.VisualOver == null ? null : $"{cursor.VisualOver.GetType().Name} '{cursor.VisualOver.Name}'");
         _inputTracker.ObserveTextBox(DescribeTextBox(focus as TextBox));
 
         Keyboard keyboard = GumService.Default.Keyboard;
+        List<string>? released = null;
+        foreach (Microsoft.Xna.Framework.Input.Keys key in AllKeys)
+        {
+            if (keyboard.KeyReleased(key))
+            {
+                (released ??= new List<string>()).Add(key.ToString());
+            }
+        }
+        if (released != null)
+        {
+            log.LogKeyUp(released);
+        }
+
         IReadOnlyCollection<Microsoft.Xna.Framework.Input.Keys> typed = keyboard.KeysTyped;
         if (typed.Count == 0)
         {
@@ -393,6 +436,11 @@ public class Game1 : Game
         // frame opaque, so the PNG is too.
         Color[] pixels = new Color[width * height];
         target.GetData(pixels);
+        WriteOpaquePng(pixels, width, height, path);
+    }
+
+    private void WriteOpaquePng(Color[] pixels, int width, int height, string path)
+    {
         for (int i = 0; i < pixels.Length; i++)
         {
             pixels[i].A = 255;

@@ -280,6 +280,37 @@ public class TextBoxWrapToggleReloadSelectionTests : FileThemeInputTestBase
         VisibleOnly(Describe(live)).ShouldBe(VisibleOnly(Describe(fresh)));
     }
 
+    /// <summary>
+    /// #7497, absolute rects: after a real layout pass the highlights a reloaded-from-Single box computed
+    /// (what is drawn) match a fresh Multi + Wrap load, not only the Y/Height properties.
+    /// </summary>
+    [Fact]
+    public void Reload_SingleLineToMultiLineWrap_AbsoluteRectsMatchAFreshLoadAfterLayout()
+    {
+        TextBox fresh = Build(LoadCopy("DarkPro", TextWrapping.Wrap, "Multi"), out GraphicalUiElement freshScreen);
+        TextBox live = Build(LoadCopy("DarkPro", null), out GraphicalUiElement screen);
+        GumProjectSave reloaded = LoadCopy("DarkPro", TextWrapping.Wrap, "Multi");
+        ObjectFinder.Self.GumProjectSave = reloaded;
+        GumHotReloadManager.ApplyDiff(new[] { screen }, reloaded, SystemManagers.Default);
+
+        foreach (TextBox box in new[] { fresh, live })
+        {
+            box.SelectionStart = 44;
+            box.SelectionLength = 30;
+            box.SelectionStart = 14;
+            box.SelectionLength = 60;
+        }
+        freshScreen.UpdateLayout();
+        screen.UpdateLayout();
+
+        static string Rects(TextBox box) =>
+            string.Join(",", box.Visual.GetGraphicalUiElementByName("ClipContainer")!.Children.OfType<GraphicalUiElement>()
+                .Where(c => c.Name == "SelectionInstance" && c.Visible)
+                .Select(r => $"{r.AbsoluteLeft:0.##},{r.AbsoluteTop:0.##},{r.GetAbsoluteWidth():0.##},{r.GetAbsoluteHeight():0.##}"));
+
+        Rects(live).ShouldBe(Rects(fresh), string.Join(" | ", live.DescribeSelectionGeometry().Where(l => l.StartsWith("sel"))));
+    }
+
     private static string VisibleOnly(string description) =>
         string.Join(",", description.Split(',').Where(part => part.StartsWith("v")));
 }
