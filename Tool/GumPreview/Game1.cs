@@ -1,3 +1,4 @@
+using Gum.ProjectServices.CodeGeneration;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -23,7 +24,7 @@ namespace GumPreview;
 /// and interactive (issue #4697). No codegen, no recompile - Forms controls work out of the box via
 /// <c>GumService.Initialize</c>'s from-file registration (see the gum-forms-behaviors skill).
 /// </summary>
-public class Game1 : Game
+public class Game1 : Game, IPreviewDefaultsTarget
 {
     private const double SelectionPollIntervalSeconds = 0.25;
 
@@ -87,10 +88,8 @@ public class Game1 : Game
         _backingScale = new BackingScale(1);
 
         _graphics = new GraphicsDeviceManager(this);
-        // Apos.Shapes (the shape fill/effect renderer behind RectangleRuntime/CircleRuntime/etc.)
-        // uses a Shader Model 4 effect, which requires HiDef - Reach cannot load it and shapes
-        // silently fail to draw.
-        _graphics.GraphicsProfile = GraphicsProfile.HiDef;
+        // The HiDef profile Apos.Shapes needs; the list lives in PreviewDefaults.
+        PreviewDefaults.Apply(this, PreviewDefaultPhase.Constructor);
         _graphics.PreparingDeviceSettings += PreviewDeviceSettings.PreserveBackBufferContents;
         Content.RootDirectory = "Content";
         IsMouseVisible = true;
@@ -99,6 +98,11 @@ public class Game1 : Game
         KeepWindowOffScreen();
         UpdateWindowTitle();
     }
+
+    void IPreviewDefaultsTarget.UseHiDefProfile() => _graphics.GraphicsProfile = GraphicsProfile.HiDef;
+    void IPreviewDefaultsTarget.InitializeShapes() => ShapeRenderer.Self.Initialize();
+    void IPreviewDefaultsTarget.UseKeyboardDefaults() => GumService.Default.UseKeyboardDefaults();
+    void IPreviewDefaultsTarget.UseGamepadDefaults() => GumService.Default.UseGamepadDefaults();
 
     // MonoGame re-centers the window when the graphics settings apply, after the constructor, so
     // the placement is repeated here and on every update.
@@ -175,12 +179,9 @@ public class Game1 : Game
             FileManager.RelativeDirectory = _contentRootDirectory;
         }
 
-        // Must come after GumService.Default.Initialize - ShapeRenderer.Initialize reads the
-        // initialized GumService/GraphicsDevice.
-        ShapeRenderer.Self.Initialize();
-
-        // Tab, keyboard and gamepad navigation, so a UI's focus order can be tried (issue #7260).
-        PreviewInputDefaults.Enable(GumService.Default);
+        // Shapes, tab/keyboard/gamepad navigation: everything in PreviewDefaults. Must come after
+        // GumService.Default.Initialize - ShapeRenderer.Initialize reads the initialized GumService/GraphicsDevice.
+        PreviewDefaults.Apply(this, PreviewDefaultPhase.AfterGumInitialize);
 
         // Registered before the project's elements are built so a container's SourceShaderFile
         // resolves as it loads.

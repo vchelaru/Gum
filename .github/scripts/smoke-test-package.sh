@@ -216,8 +216,10 @@ echo "== launch packaged Gum unattended"
 shot="$out/gum-$rid.png"
 rm -f "$shot"
 set +e
+# An upper bound, not a wait: Gum exits as soon as the project is drawn. osx-x64 runs under Rosetta on a
+# shared runner, where the canvas (XnaInitialized on Editor Tab Plugin) took 53 s to 113 s across runs, so 120 s flaked.
 launch_start=$SECONDS
-gui "$gum" "$gumx" --exit-after 120 --select DemoScreenGum --screenshot "$shot" \
+gui "$gum" "$gumx" --exit-after 240 --select DemoScreenGum --screenshot "$shot" \
   --user-data "$work/userdata" > "$out/gum-$rid.log" 2>&1
 code=$?
 set -e

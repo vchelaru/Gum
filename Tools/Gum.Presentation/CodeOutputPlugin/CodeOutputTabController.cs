@@ -1,4 +1,4 @@
-using CodeOutputPlugin.Manager;
+﻿using CodeOutputPlugin.Manager;
 using CodeOutputPlugin.ViewModels;
 using Gum.DataTypes;
 using Gum.Managers;
@@ -131,6 +131,20 @@ public class CodeOutputTabController
         }
         /////////////////////end early out/////////////////
 
+        RefreshGameSetup(codeOutputProjectSettings, _selectedState.SelectedElement);
+
+        if (_viewModel.WhatToView == WhatToView.GameSetup)
+        {
+            if (_viewModel.GameSetupCode != null)
+            {
+                _viewModel.Code = _viewModel.GameSetupCode;
+                return;
+            }
+
+            // The Game tab is hidden for this output library, so show the element again.
+            _viewModel.WhatToView = WhatToView.SelectedElement;
+        }
+
         // Defensive: never feed the generator an unsupported combination (e.g. a Raylib project whose
         // .codsj still carries FullyInCode). CoerceToSupportedCombination keeps the display path safe
         // regardless of how the settings reached this state.
@@ -196,6 +210,21 @@ public class CodeOutputTabController
         }
     }
 
+
+    /// Fills the Game tab's code (issue #7261): the code a game needs to load the project and
+    /// enable what the Preview enables, or null when the output library has none to show.
+    /// </summary>
+    private void RefreshGameSetup(CodeOutputProjectSettings codeOutputProjectSettings, ElementSave? selectedElement)
+    {
+        // Code generation not set up yet means no output library has been chosen.
+        OutputLibrary? library = string.IsNullOrEmpty(codeOutputProjectSettings.CodeProjectRoot)
+            ? null
+            : codeOutputProjectSettings.OutputLibrary;
+        string projectFileName = System.IO.Path.GetFileName(_projectState.GumProjectSave?.FullFileName ?? "GumProject.gumx");
+        string? screenName = selectedElement is ScreenSave ? selectedElement.Name : null;
+
+        _viewModel.GameSetupCode = GameSetupCode.Generate(library, projectFileName, screenName);
+    }
     /// <summary>
     /// Refreshes the display for the currently-selected element, then auto-regenerates its code file
     /// if the view's current element settings have <see cref="CodeOutputElementSettings.AutoGenerateOnChange"/> set.

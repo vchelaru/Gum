@@ -1,4 +1,4 @@
-# Code Tab
+﻿# Code Tab
 
 ## Introduction
 
@@ -35,6 +35,16 @@ If a Screen or Component is selected, then an entire class for the component is 
 * Properties for each category including switch statements assigning all properties for each state
 * A property for each instance in the Screen or Component
 * Initialization of all variables including variables on the instances if using full code generation
+
+## Game Tab
+
+Next to **Object** and **State** above the preview, the **Game** tab shows the code a game needs to load your project and turn on what the Preview turns on by default, such as shape drawing and keyboard and gamepad navigation. Select the text and copy it, or right-click it and choose **Copy**. If your game already works the Preview way, you do not need it. If your game behaves differently from the Preview, for example Tab does not move focus, the Game tab shows the lines that explain why.
+
+The Game tab shows MonoGame, KNI and FNA code, which is also what you see before code generation is set up. For other output libraries it explains that the Preview runs on MonoGame, and for the legacy libraries the tab is hidden. See [Adding and Initializing Gum](../../code/getting-started/setup/adding-initializing-gum/monogame-kni-fna/README.md) for what each line does.
+
+{% hint style="info" %}
+Available in December 2026, or now if building Gum from source.
+{% endhint %}
 
 ## Setting Up Code Generation
 

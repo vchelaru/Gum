@@ -150,6 +150,8 @@
 		<!-- The selection-file format shared with the tool side (PreviewLauncher), linked rather than
 		     referenced so this host stays free of the tool's plugin assemblies. -->
 		<Compile Include="..\..\Tools\Gum.Presentation\Diagnostics\DiagnosticLogFile.cs" Link="DiagnosticLogFile.cs" />
+		<!-- The list of defaults the Preview applies; the tool's Code tab generates its game-setup code from the same list. -->
+		<Compile Include="..\..\Tools\Gum.ProjectServices\CodeGeneration\PreviewDefaults.cs" Link="PreviewDefaults.cs" />
 		<Compile Include="..\EditorTabPlugin.Core\Services\PreviewSelectionMessage.cs" Link="PreviewSelectionMessage.cs" />
 		<Compile Include="..\EditorTabPlugin.Core\Services\PreviewSelectionFile.cs" Link="PreviewSelectionFile.cs" />
 		<Compile Include="..\EditorTabPlugin.Core\Services\ShaderSourceCompiler.cs" Link="ShaderSourceCompiler.cs" />

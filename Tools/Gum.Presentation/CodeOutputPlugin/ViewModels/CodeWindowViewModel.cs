@@ -12,7 +12,8 @@ namespace CodeOutputPlugin.ViewModels;
 public enum WhatToView
 {
     SelectedElement,
-    SelectedState
+    SelectedState,
+    GameSetup
 }
 
 #endregion
@@ -105,6 +106,19 @@ public class CodeWindowViewModel : ViewModel
         }
     }
 
+    [DependsOn(nameof(WhatToView))]
+    public bool IsGameSetupSelected
+    {
+        get => WhatToView == WhatToView.GameSetup;
+        set
+        {
+            if (value)
+            {
+                WhatToView = WhatToView.GameSetup;
+            }
+        }
+    }
+
     // This exists in case we want to bring it back in the future, but the UI for it is gone.
     public InheritanceLocation InheritanceLocation
     {
@@ -193,6 +207,19 @@ public class CodeWindowViewModel : ViewModel
         get => Get<string>();
         set => Set(value);
     }
+
+    /// <summary>
+    /// The game-setup code (what a game needs to load the project and enable what the Preview enables),
+    /// or null when the Game tab is hidden (issue #7261).
+    /// </summary>
+    public string? GameSetupCode
+    {
+        get => Get<string?>();
+        set => Set(value);
+    }
+
+    [DependsOn(nameof(GameSetupCode))]
+    public bool HasGameSetup => GameSetupCode != null;
 
     #endregion
 
