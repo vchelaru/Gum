@@ -311,6 +311,69 @@ public class TextBoxWrapToggleReloadSelectionTests : FileThemeInputTestBase
         Rects(live).ShouldBe(Rects(fresh), string.Join(" | ", live.DescribeSelectionGeometry().Where(l => l.StartsWith("sel"))));
     }
 
+    /// <summary>
+    /// #7497 round trip: whatever line-mode states a box goes through by reload, the caret and the visible
+    /// selection end up exactly where a box freshly loaded from the final file puts them. The general
+    /// condition: values taken from the visual when its state is applied (the selection template, the
+    /// authored Y offset) must be re-read after every state change, not only through the wrapping setters.
+    /// </summary>
+    [Theory]
+    // Not listed: a file that sets LineModeCategoryState=Multi next to NoWrap. A fresh load keeps that Multi
+    // state while a reload's TextWrapping setter puts the box in Single, so the two legitimately differ.
+    [InlineData("Wrap:Multi>NoWrap:")]
+    [InlineData("Wrap:Multi>NoWrap:Single")]
+    [InlineData("NoWrap:MultiNoWrap>Wrap:Multi")]
+    [InlineData("Wrap:Multi>NoWrap:MultiNoWrap>Wrap:Multi")]
+    public void Reload_LineModeRoundTrip_CaretAndSelectionMatchAFreshLoadOfTheFinalFile(string chain)
+    {
+        static (TextWrapping? Wrapping, string? Mode) Parse(string step)
+        {
+            string[] parts = step.Split(':');
+            return (parts[0].Length == 0 ? null : System.Enum.Parse<TextWrapping>(parts[0]), parts[1].Length == 0 ? null : parts[1]);
+        }
+        (TextWrapping? Wrapping, string? Mode)[] steps = chain.Split('>').Select(Parse).ToArray();
+        (TextWrapping? Wrapping, string? Mode) last = steps[^1];
+
+        TextBox fresh = Build(LoadCopy("DarkPro", last.Wrapping, last.Mode), out GraphicalUiElement freshScreen);
+        TextBox live = Build(LoadCopy("DarkPro", null), out GraphicalUiElement screen);
+        foreach ((TextWrapping? wrapping, string? mode) in steps)
+        {
+            GumProjectSave reloaded = LoadCopy("DarkPro", wrapping, mode);
+            ObjectFinder.Self.GumProjectSave = reloaded;
+            GumHotReloadManager.ApplyDiff(new[] { screen }, reloaded, SystemManagers.Default);
+        }
+
+        foreach (TextBox box in new[] { fresh, live })
+        {
+            box.CaretIndex = 3;
+            box.SelectionStart = 14;
+            box.SelectionLength = 60;
+        }
+        freshScreen.UpdateLayout();
+        screen.UpdateLayout();
+
+        static string Describe(TextBox box)
+        {
+            GraphicalUiElement caret = box.Visual.GetGraphicalUiElementByName("CaretInstance")!;
+            string selections = string.Join(";", box.Visual.GetGraphicalUiElementByName("ClipContainer")!.Children.OfType<GraphicalUiElement>()
+                .Where(c => c.Name == "SelectionInstance" && c.Visible)
+                .Select(r => $"{r.AbsoluteLeft:0.##},{r.AbsoluteTop:0.##},{r.GetAbsoluteWidth():0.##},{r.GetAbsoluteHeight():0.##} {r.YUnits}/{r.HeightUnits}"));
+            return $"caret {caret.AbsoluteLeft:0.##},{caret.AbsoluteTop:0.##},{caret.GetAbsoluteHeight():0.##} | {selections}";
+        }
+
+        static string Units(TextBox box)
+        {
+            GraphicalUiElement caret = box.Visual.GetGraphicalUiElementByName("CaretInstance")!;
+            GraphicalUiElement text = box.Visual.GetGraphicalUiElementByName("TextInstance")!;
+            string Prop(string name) => typeof(TextBoxBase).GetProperty(name, System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance)?.GetValue(box)?.ToString() ?? "?";
+            string Field(string name) => typeof(TextBoxBase).GetField(name, System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)?.GetValue(box)?.ToString() ?? "?";
+            string internals = $"VAO={Prop("VerticalAlignmentOffset")} coreH={Prop("CoreTextObjectHeight")} top={Prop("UnrotatedTextTop")} lineH={Prop("ScaledLineHeightInPixels")} wrappedH={(text.RenderableComponent as RenderingLibrary.Graphics.Text)?.WrappedTextHeight} textAbsBottom={text.GetAbsoluteBottom()} textAbsTop={text.GetAbsoluteTop()} textH={text.GetAbsoluteHeight()} resting={Field("_textRestingY")} ";
+            return internals + $"caret y={caret.Y} yu={caret.YUnits} yo={caret.YOrigin} parentH={caret.EffectiveParentGue?.AbsoluteHeight}; text y={text.Y} yu={text.YUnits} yo={text.YOrigin} h={text.Height} hu={text.HeightUnits} abs top={text.AbsoluteTop} va={(text.RenderableComponent as RenderingLibrary.Graphics.Text)?.VerticalAlignment}";
+        }
+
+        Describe(live).ShouldBe(Describe(fresh), "LIVE " + Units(live) + " || FRESH " + Units(fresh));
+    }
+
     private static string VisibleOnly(string description) =>
         string.Join(",", description.Split(',').Where(part => part.StartsWith("v")));
 }

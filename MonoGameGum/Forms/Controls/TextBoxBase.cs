@@ -85,6 +85,9 @@ public abstract class TextBoxBase :
     protected GraphicalUiElement? selectionInstance;
     float _selectionInstanceYOffset;
 
+    // The caret's Y as the visual authored it, which is where a single-line box keeps it.
+    float _caretSingleLineY;
+
     // Resting X of the text instance as set by the visual template. KeepCaretEdgeInsideParent
     // clamps textComponent.X to never exceed this value, so a horizontal scroll-left
     // (negative offset) applied during typing/overflow snaps back here when the content
@@ -633,6 +636,7 @@ public abstract class TextBoxBase :
         _textRestingX = this.textComponent.X;
         _textRestingY = this.textComponent.Y;
         caretComponent.X = 0;
+        _caretSingleLineY = caretComponent.Y;
     }
 
     /// <summary>Called once the text renderable exists, for values set before it did.</summary>
@@ -1643,6 +1647,9 @@ public abstract class TextBoxBase :
             var stringToMeasure = DisplayedText ?? "";
 
             SetXCaretPositionForLine(stringToMeasure, caretIndex);
+            // Only the multi-line placement writes the caret's Y; a box that was multi-line keeps that
+            // Y unless it is put back, which floats the caret above the text (#7497).
+            caretComponent.Y = _caretSingleLineY;
         }
         else
         {
