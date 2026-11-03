@@ -84,7 +84,7 @@ internal sealed class WindowsPreviewWindowActivator : IPreviewWindowActivator
     }
 
     /// <inheritdoc/>
-    public string Activate(IntPtr window)
+    public bool Activate(IntPtr window, out string detail)
     {
         bool wasIconic = IsIconic(window);
         bool showResult = wasIconic && ShowWindow(window, SW_RESTORE);
@@ -113,8 +113,10 @@ internal sealed class WindowsPreviewWindowActivator : IPreviewWindowActivator
                 }
             }
         }
-        IntPtr after = GetForegroundWindow();
-        return $"iconic={wasIconic}, ShowWindow={showResult}, SetForegroundWindow={setResult} (AttachThreadInput retry={attached}), " +
-            $"foreground now 0x{after.ToInt64():X} ({(after == window ? "preview" : "NOT the preview: refused")})";
+        detail = $"iconic={wasIconic}, ShowWindow={showResult}, SetForegroundWindow={setResult} (AttachThreadInput retry={attached})";
+        return setResult;
     }
+
+    /// <inheritdoc/>
+    IntPtr IPreviewWindowActivator.GetForegroundWindow() => GetForegroundWindow();
 }

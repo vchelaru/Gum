@@ -17,8 +17,12 @@ public interface IPreviewWindowActivator
     IntPtr FindWindow(int processId);
 
     /// <summary>
-    /// Restores <paramref name="window"/> if minimized and makes it the foreground window.
-    /// Returns a one-line description of what the OS did, for the diagnostic log.
+    /// Restores <paramref name="window"/> if minimized and asks the OS to make it the foreground
+    /// window. Returns whether the OS accepted the request; <paramref name="detail"/> describes
+    /// what it did, for the diagnostic log.
     /// </summary>
-    string Activate(IntPtr window);
+    bool Activate(IntPtr window, out string detail);
+
+    /// <summary>The current foreground window, or <see cref="IntPtr.Zero"/> while it is changing.</summary>
+    IntPtr GetForegroundWindow();
 }
