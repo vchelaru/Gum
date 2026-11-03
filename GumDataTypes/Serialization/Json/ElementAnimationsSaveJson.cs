@@ -14,16 +14,20 @@ namespace Gum.DataTypes.Serialization.Json;
 internal sealed class ElementAnimationsSaveJson
 {
     public string ElementName { get; set; } = "";
-    public List<AnimationSaveJson> Animations { get; set; } = new List<AnimationSaveJson>();
+    private List<AnimationSaveJson> _animations = new List<AnimationSaveJson>();
+    public List<AnimationSaveJson> Animations { get => _animations; set => _animations = value ?? throw JsonNullCollection.For(nameof(Animations)); }
 }
 
 internal sealed class AnimationSaveJson
 {
     public string Name { get; set; } = "";
     public bool Loops { get; set; }
-    public List<AnimatedStateSaveJson> States { get; set; } = new List<AnimatedStateSaveJson>();
-    public List<AnimationReferenceSaveJson> Animations { get; set; } = new List<AnimationReferenceSaveJson>();
-    public List<NamedEventSaveJson> Events { get; set; } = new List<NamedEventSaveJson>();
+    private List<AnimatedStateSaveJson> _states = new List<AnimatedStateSaveJson>();
+    public List<AnimatedStateSaveJson> States { get => _states; set => _states = value ?? throw JsonNullCollection.For(nameof(States)); }
+    private List<AnimationReferenceSaveJson> _animations = new List<AnimationReferenceSaveJson>();
+    public List<AnimationReferenceSaveJson> Animations { get => _animations; set => _animations = value ?? throw JsonNullCollection.For(nameof(Animations)); }
+    private List<NamedEventSaveJson> _events = new List<NamedEventSaveJson>();
+    public List<NamedEventSaveJson> Events { get => _events; set => _events = value ?? throw JsonNullCollection.For(nameof(Events)); }
 }
 
 internal sealed class AnimatedStateSaveJson

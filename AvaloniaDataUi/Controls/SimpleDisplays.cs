@@ -63,7 +63,7 @@ public class CheckBoxDisplay : DataUiDisplayBase
         if (_spaciousGrid == null)
         {
             // The same 4px inset the other spacious labels have, so the label column lines up.
-            _spaciousLabel = new TextBlock { Margin = new Thickness(4, 0, 0, 0), VerticalAlignment = VerticalAlignment.Center, TextWrapping = TextWrapping.Wrap };
+            _spaciousLabel = new TextBlock { Margin = new Thickness(4, 0, 8, 0), VerticalAlignment = VerticalAlignment.Center, TextWrapping = TextWrapping.Wrap };
             _spaciousGrid = new Grid
             {
                 ColumnDefinitions = new ColumnDefinitions("100,*"),

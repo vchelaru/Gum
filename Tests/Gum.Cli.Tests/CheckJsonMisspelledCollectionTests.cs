@@ -1,3 +1,4 @@
+using Gum.DataTypes;
 using Shouldly;
 
 namespace Gum.Cli.Tests;
@@ -53,5 +54,15 @@ public class CheckJsonMisspelledCollectionTests : CheckHandWrittenJsonFileHarnes
         CheckRun run = Check(project);
 
         run.Entries.ShouldContain(e => e.Message.Contains("\"name\"", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void Deserialize_JsonComponentWithInstanceInsteadOfInstances_ShouldLoseTheInstance()
+    {
+        string json = JElement("Holder", "Container", JDefault(), "\"Instance\":[" + JInstance("Label", "Text") + "]");
+
+        ComponentSave component = Gum.DataTypes.Serialization.Json.GumJsonFileSerializer.DeserializeElement<ComponentSave>(json);
+
+        component.Instances.Count.ShouldBe(0);
     }
 }

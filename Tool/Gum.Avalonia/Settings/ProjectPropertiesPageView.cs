@@ -1,41 +1,39 @@
-using Avalonia.Controls;
-using AvaloniaDataUi;
 using Gum.Plugins.PropertiesWindowPlugin;
 
 namespace Gum.Avalonia.Settings;
 
 /// <summary>
-/// One Project page of the Settings window (General, Canvas or Localization): a property grid over the
-/// settings of its <see cref="ProjectPropertiesPageViewModel"/>, laid out by the shared
-/// <see cref="ProjectPropertiesGridPresenter"/>.
+/// One Project page of the Settings window (General, Canvas or Localization). General and Canvas are built from rows
+/// (<see cref="ProjectGeneralRows"/>, <see cref="CanvasRows"/>) like the Code generation page; Localization is a
+/// property grid over the settings of their <see cref="ProjectPropertiesPageViewModel"/>, laid out by the
+/// shared <see cref="ProjectPropertiesGridPresenter"/>.
 /// </summary>
-public sealed class ProjectPropertiesPageView : DockPanel
+public sealed class ProjectPropertiesPageView : SettingsRowsPageView
 {
     private ProjectPropertiesGridPresenter? _presenter;
 
-    /// <summary>Builds the view.</summary>
-    public ProjectPropertiesPageView()
-    {
-        Grid = new DataUiGrid { HideLoneCategoryHeader = true };
-        Children.Add(Grid);
-
-        DataContextChanged += (_, _) => HandleDataContextChanged();
-    }
-
-    /// <summary>The property grid.</summary>
-    public DataUiGrid Grid { get; }
-
-    private void HandleDataContextChanged()
+    /// <inheritdoc/>
+    protected override void HandleDataContextChanged()
     {
         _presenter?.Bind(null);
-        if (DataContext is ProjectPropertiesPageViewModel page)
+        _presenter = null;
+        Rows = null;
+        if (DataContext is not ProjectPropertiesPageViewModel page)
         {
-            _presenter = new ProjectPropertiesGridPresenter(Grid, page.Section);
-            _presenter.Bind(page.Properties);
+            return;
+        }
+        if (page.Section == ProjectPropertiesSection.General)
+        {
+            Rows = new ProjectGeneralRows(page.Properties);
+        }
+        else if (page.Section == ProjectPropertiesSection.Canvas)
+        {
+            Rows = new CanvasRows(page.Properties);
         }
         else
         {
-            _presenter = null;
+            _presenter = new ProjectPropertiesGridPresenter(Grid, page.Section);
+            _presenter.Bind(page.Properties);
         }
     }
 }

@@ -1640,32 +1640,12 @@ public class TextRuntime : InteractiveGue
             // Skia's own SetProperty("Text", ...) dispatch (Runtimes/SkiaGum/CustomSetPropertyOnRenderable.cs)
             // parses BBCode lazily at render time rather than eagerly like the shared SetText helper below,
             // so it isn't safe to redirect here yet -- tracked as a separate follow-up on #3706.
-            var widthBefore = ContainedText.WrappedTextWidth;
-            var heightBefore = ContainedText.WrappedTextHeight;
-            if (this.WidthUnits == Gum.DataTypes.DimensionUnitType.RelativeToChildren)
+            AssignTextAndUpdateLayout(ContainedText, (runtime: this, value), static state =>
             {
-                if (this.EffectiveMaxWidth == null)
-                {
-                    // make it have no line wrap width before assignign the text:
-                    ContainedText.Width = null;
-                }
-                else
-                {
-                    ContainedText.Width = this.EffectiveMaxWidth;
-                }
-            }
-
-            // Use SetProperty so it goes through the BBCode-checking methods
-            this.SetProperty("Text", value);
-
-            NotifyPropertyChanged();
-            var shouldUpdate = widthBefore != ContainedText.WrappedTextWidth || heightBefore != ContainedText.WrappedTextHeight;
-            if (shouldUpdate)
-            {
-                UpdateLayout(
-                    Gum.Wireframe.GraphicalUiElement.ParentUpdateType.IfParentWidthHeightDependOnChildren |
-                    Gum.Wireframe.GraphicalUiElement.ParentUpdateType.IfParentStacks, int.MaxValue / 2);
-            }
+                // Use SetProperty so it goes through the BBCode-checking methods
+                state.runtime.SetProperty("Text", state.value);
+                state.runtime.NotifyPropertyChanged();
+            });
 #else
             CustomSetPropertyOnRenderableType.SetText(ContainedText, this, "Text", value);
             NotifyPropertyChanged();
@@ -1687,30 +1667,11 @@ public class TextRuntime : InteractiveGue
     {
 #if SKIA
         // See the Text setter above for why Skia stays on the SetProperty path for now.
-        var widthBefore = ContainedText.WrappedTextWidth;
-        var heightBefore = ContainedText.WrappedTextHeight;
-        if (this.WidthUnits == Gum.DataTypes.DimensionUnitType.RelativeToChildren)
+        AssignTextAndUpdateLayout(ContainedText, (runtime: this, value), static state =>
         {
-            if (this.EffectiveMaxWidth == null)
-            {
-                ContainedText.Width = null;
-            }
-            else
-            {
-                ContainedText.Width = this.EffectiveMaxWidth;
-            }
-        }
-
-        this.SetProperty("TextNoTranslate", value);
-
-        NotifyPropertyChanged(nameof(Text));
-        var shouldUpdate = widthBefore != ContainedText.WrappedTextWidth || heightBefore != ContainedText.WrappedTextHeight;
-        if (shouldUpdate)
-        {
-            UpdateLayout(
-                Gum.Wireframe.GraphicalUiElement.ParentUpdateType.IfParentWidthHeightDependOnChildren |
-                Gum.Wireframe.GraphicalUiElement.ParentUpdateType.IfParentStacks, int.MaxValue / 2);
-        }
+            state.runtime.SetProperty("TextNoTranslate", state.value);
+            state.runtime.NotifyPropertyChanged(nameof(Text));
+        });
 #else
         CustomSetPropertyOnRenderableType.SetText(ContainedText, this, "TextNoTranslate", value);
         NotifyPropertyChanged(nameof(Text));

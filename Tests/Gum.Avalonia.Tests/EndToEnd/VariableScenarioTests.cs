@@ -248,8 +248,8 @@ public class VariableScenarioTests
         picker = OpenPicker();
 
         // A third of the way along the hue bar is green (hue 120), at the square's full saturation and value.
-        Point from = PointInHueBar(grid, picker, across: 0.1);
-        Point to = PointInHueBar(grid, picker, across: 1.0 / 3);
+        Point from = ColorPickerScenarioTests.PointOnRing(grid, picker, 36);
+        Point to = ColorPickerScenarioTests.PointOnRing(grid, picker, 120);
         grid.Input.Drag(from, to);
 
         // The bar's thumb inset moves the hue a few degrees off 120.
@@ -272,12 +272,6 @@ public class VariableScenarioTests
         Control square = picker.Spectrum.GetVisualDescendants().OfType<global::Avalonia.Controls.Canvas>().First();
         Point origin = grid.Input.CenterOf(square) - new Point(square.Bounds.Width / 2, square.Bounds.Height / 2);
         return new Point(origin.X + square.Bounds.Width * across, origin.Y + square.Bounds.Height * down);
-    }
-
-    private static Point PointInHueBar(VariableGridHarness grid, CompactColorPicker picker, double across)
-    {
-        Point center = grid.Input.CenterOf(picker.HueSlider);
-        return new Point(center.X - picker.HueSlider.Bounds.Width / 2 + picker.HueSlider.Bounds.Width * across, center.Y);
     }
 
     #endregion

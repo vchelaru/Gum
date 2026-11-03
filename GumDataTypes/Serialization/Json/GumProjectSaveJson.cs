@@ -39,19 +39,26 @@ internal sealed class GumProjectSaveJson
     public bool SnapToGrid { get; set; }
     public int GridSize { get; set; }
     public bool RestrictFileNamesForAndroid { get; set; }
-    public List<GuideRectangle> Guides { get; set; } = new List<GuideRectangle>();
-    public List<string> FavoriteComponents { get; set; } = new List<string>();
+    private List<GuideRectangle> _guides = new List<GuideRectangle>();
+    public List<GuideRectangle> Guides { get => _guides; set => _guides = value ?? throw JsonNullCollection.For(nameof(Guides)); }
+    private List<string> _favoriteComponents = new List<string>();
+    public List<string> FavoriteComponents { get => _favoriteComponents; set => _favoriteComponents = value ?? throw JsonNullCollection.For(nameof(FavoriteComponents)); }
     /// <summary>Null (and so omitted) unless <c>gumcli pack --shake</c> trimmed elements.</summary>
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public List<string>? TrimmedElements { get; set; }
     public string ParentProjectRoot { get; set; } = "";
-    public List<string> LocalizationFiles { get; set; } = new List<string>();
+    private List<string> _localizationFiles = new List<string>();
+    public List<string> LocalizationFiles { get => _localizationFiles; set => _localizationFiles = value ?? throw JsonNullCollection.For(nameof(LocalizationFiles)); }
     public bool ShowLocalizationInGum { get; set; }
     public int CurrentLanguageIndex { get; set; }
-    public List<ElementReferenceJson> ScreenReferences { get; set; } = new List<ElementReferenceJson>();
-    public List<ElementReferenceJson> ComponentReferences { get; set; } = new List<ElementReferenceJson>();
-    public List<ElementReferenceJson> StandardElementReferences { get; set; } = new List<ElementReferenceJson>();
-    public List<BehaviorReferenceJson> BehaviorReferences { get; set; } = new List<BehaviorReferenceJson>();
+    private List<ElementReferenceJson> _screenReferences = new List<ElementReferenceJson>();
+    public List<ElementReferenceJson> ScreenReferences { get => _screenReferences; set => _screenReferences = value ?? throw JsonNullCollection.For(nameof(ScreenReferences)); }
+    private List<ElementReferenceJson> _componentReferences = new List<ElementReferenceJson>();
+    public List<ElementReferenceJson> ComponentReferences { get => _componentReferences; set => _componentReferences = value ?? throw JsonNullCollection.For(nameof(ComponentReferences)); }
+    private List<ElementReferenceJson> _standardElementReferences = new List<ElementReferenceJson>();
+    public List<ElementReferenceJson> StandardElementReferences { get => _standardElementReferences; set => _standardElementReferences = value ?? throw JsonNullCollection.For(nameof(StandardElementReferences)); }
+    private List<BehaviorReferenceJson> _behaviorReferences = new List<BehaviorReferenceJson>();
+    public List<BehaviorReferenceJson> BehaviorReferences { get => _behaviorReferences; set => _behaviorReferences = value ?? throw JsonNullCollection.For(nameof(BehaviorReferences)); }
     public string SinglePixelTextureFile { get; set; } = "";
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public int? SinglePixelTextureTop { get; set; }
@@ -61,7 +68,8 @@ internal sealed class GumProjectSaveJson
     public int? SinglePixelTextureRight { get; set; }
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public int? SinglePixelTextureBottom { get; set; }
-    public List<CustomPropertySaveJson> CustomProperties { get; set; } = new List<CustomPropertySaveJson>();
+    private List<CustomPropertySaveJson> _customProperties = new List<CustomPropertySaveJson>();
+    public List<CustomPropertySaveJson> CustomProperties { get => _customProperties; set => _customProperties = value ?? throw JsonNullCollection.For(nameof(CustomProperties)); }
 }
 
 internal static class GumProjectSaveJsonMapper

@@ -37,8 +37,10 @@ Entry point: `UpdateLayout(ParentUpdateType, int childrenUpdateDepth, XOrY?)`
 
 2. **Early out — suspended or invisible** — if layout is suspended
    (`mIsLayoutSuspended` or `IsAllLayoutSuspended`) OR the element is invisible
-   and not needed for parent update, call `MakeDirty()` and return. Invisible
-   elements also exit if parent is invisible (unless render target).
+   and not needed for parent update, call `MakeDirty()` and return. "Invisible" is
+   `IsHiddenWithinRenderTarget()`: the element or an ancestor below the nearest render target is not
+   visible. A render target (hidden or not) is never hidden, and its own `Visible` does not hide its
+   content, but elements hidden inside it are skipped like anywhere else (#7240).
 
 3. **Propagate to parent (originating call only)** — if `updateParent` AND
    `GetIfShouldCallUpdateOnParent()`, the *originating* call (the element that

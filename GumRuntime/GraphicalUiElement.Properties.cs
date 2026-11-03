@@ -127,7 +127,7 @@ public partial class GraphicalUiElement
                     InvalidateSubtreeCaches();
                 }
 
-                var absoluteVisible = AbsoluteVisible;
+                var absoluteVisible = !this.IsHiddenWithinRenderTarget();
                 // See if this has a parent that stacks children. If so, update its layout:
 
                 var didUpdate = false;

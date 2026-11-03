@@ -559,14 +559,12 @@ public class DisplayPropertiesScenarioTests
         tree.Dialogs.AnswerNextOpenFile(texture);
         properties.Input.Click(FileButton(properties.Row("SinglePixelTextureFile")));
         properties.Settle();
-        // Each bound starts null: its field is disabled until "Is Null" is cleared.
+        // The bounds start null: their fields exist only once "Use custom bounds" is on.
+        Should.Throw<InvalidOperationException>(() => properties.Member("SinglePixelTextureLeft"));
+        properties.ClickCheckBox("UseCustomBounds");
         foreach ((string bound, string value) in new[] { ("Left", "1"), ("Top", "2"), ("Right", "3"), ("Bottom", "4") })
         {
-            string name = "SinglePixelTexture" + bound;
-            properties.Editor<TextBoxDisplay>(name).TextBox.IsEffectivelyEnabled.ShouldBeFalse();
-            properties.Input.Click(properties.Editor<TextBoxDisplay>(name).GetVisualDescendants().OfType<CheckBox>().Single(box => box.Content as string == "Is Null"));
-            properties.Settle();
-            properties.TypeAndEnter(name, value);
+            properties.TypeAndEnter("SinglePixelTexture" + bound, value);
         }
         tree.WaitUntil(() => SavedProject(tree).SinglePixelTextureBottom == 4, AsyncWork, "the texture bounds to save");
 
