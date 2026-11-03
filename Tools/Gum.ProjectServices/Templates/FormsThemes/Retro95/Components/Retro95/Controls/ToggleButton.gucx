@@ -43,7 +43,6 @@
     <Variable Type="PositionUnitType" Name="BevelInstance.YUnits" SetsValue="true">
       <Value xsi:type="xsd:int">7</Value>
     </Variable>
-    <Variable Type="ToggleCategory" Name="ToggleCategoryState" SetsValue="false" />
     <Variable Type="float" Name="FocusRectInstance.Height" SetsValue="true">
       <Value xsi:type="xsd:float">-8</Value>
     </Variable>
@@ -141,6 +140,7 @@
     <Variable Type="PositionUnitType" Name="TextInstance.YUnits" SetsValue="true">
       <Value xsi:type="xsd:int">7</Value>
     </Variable>
+    <Variable Type="ToggleCategory" Name="ToggleCategoryState" SetsValue="false" />
     <Variable Type="float" Name="Width" SetsValue="true">
       <Value xsi:type="xsd:float">96</Value>
     </Variable>

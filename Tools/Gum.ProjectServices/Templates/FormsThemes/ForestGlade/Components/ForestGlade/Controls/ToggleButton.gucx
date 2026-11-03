@@ -67,7 +67,6 @@
     <Variable Type="PositionUnitType" Name="Border.YUnits" SetsValue="true">
       <Value xsi:type="xsd:int">7</Value>
     </Variable>
-    <Variable Type="ToggleCategory" Name="ToggleCategoryState" SetsValue="false" />
     <Variable Type="int" Name="Fill.Blue2" SetsValue="true">
       <Value xsi:type="xsd:int">46</Value>
     </Variable>
@@ -321,6 +320,7 @@
     <Variable Type="PositionUnitType" Name="TextInstance.YUnits" SetsValue="true">
       <Value xsi:type="xsd:int">7</Value>
     </Variable>
+    <Variable Type="ToggleCategory" Name="ToggleCategoryState" SetsValue="false" />
     <Variable Type="float" Name="Width" SetsValue="true">
       <Value xsi:type="xsd:float">120</Value>
     </Variable>

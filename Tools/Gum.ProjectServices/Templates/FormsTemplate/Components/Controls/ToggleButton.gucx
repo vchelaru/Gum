@@ -64,7 +64,6 @@
     <Variable Type="PositionUnitType" Name="Background.YUnits" SetsValue="true">
       <Value xsi:type="xsd:int">7</Value>
     </Variable>
-    <Variable Type="ToggleCategory" Name="ToggleCategoryState" SetsValue="false" />
     <Variable Type="float" Name="Height" SetsValue="true">
       <Value xsi:type="xsd:float">5</Value>
     </Variable>
@@ -141,6 +140,7 @@
     <Variable Type="PositionUnitType" Name="TextInstance.YUnits" SetsValue="true">
       <Value xsi:type="xsd:int">7</Value>
     </Variable>
+    <Variable Type="ToggleCategory" Name="ToggleCategoryState" SetsValue="false" />
     <Variable Type="float" Name="Width" SetsValue="true">
       <Value xsi:type="xsd:float">128</Value>
     </Variable>
