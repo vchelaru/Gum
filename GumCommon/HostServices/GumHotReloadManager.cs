@@ -191,6 +191,12 @@ public class GumHotReloadManager : IGumHotReloadManager
     /// <inheritdoc/>
     public event Action<HotReloadResult>? ReloadFinished;
 
+    /// <summary>
+    /// Raised for each variable a reload writes to a live visual (the ones the saved file changed),
+    /// before the reload finishes. For diagnostics such as Preview's log; handlers must not throw or do heavy work.
+    /// </summary>
+    public static event Action<GraphicalUiElement, VariableSave>? VariableApplied;
+
     /// <inheritdoc/>
     public void Start(string absoluteGumxSourcePath)
     {
@@ -1922,6 +1928,14 @@ public class GumHotReloadManager : IGumHotReloadManager
 
         public void RecordApplied(GraphicalUiElement element, VariableSave variable)
         {
+            try
+            {
+                VariableApplied?.Invoke(element, variable);
+            }
+            catch (Exception)
+            {
+                // A diagnostic subscriber must never break a reload.
+            }
             if (!Applied.TryGetValue(element, out HashSet<string>? names))
             {
                 names = new HashSet<string>(StringComparer.Ordinal);

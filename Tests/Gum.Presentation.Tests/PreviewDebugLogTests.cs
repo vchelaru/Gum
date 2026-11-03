@@ -182,7 +182,7 @@ public class PreviewDebugLogTests : IDisposable
             t.ObserveMouse(5, 5, true);
             t.ObserveMouse(9, 5, true);
             t.ObserveMouse(9, 5, false);
-        });
+        }).Where(l => !l.Contains(" mouse move ")).ToArray(); // cursor moves are logged since #7533; this test is about buttons
 
         lines.Length.ShouldBe(3);
         lines[0].ShouldEndWith("mouse down 5,5");

@@ -31,7 +31,7 @@ public class ListBoxSizingCategoryTests : BaseTestClass
     public void ComboBox_OpenWithFewItems_ShouldSizeDropDownToItems(string theme)
     {
         GumProjectSave project = LoadTheme(theme);
-        ComponentSave comboBoxSave = project.Components.Single(c => c.Name.EndsWith("Controls/ComboBox"));
+        ComponentSave comboBoxSave = project.Components.Single(c => c.Name.EndsWith("/ComboBox"));
         ComboBox comboBox = (ComboBox)((InteractiveGue)comboBoxSave.ToGraphicalUiElement()).FormsControlAsObject;
         comboBox.AddToRoot();
         comboBox.Items.Add("a");
@@ -52,7 +52,7 @@ public class ListBoxSizingCategoryTests : BaseTestClass
     public void ComboBox_ReopenAfterAddingItems_ShouldGrowDropDownUpToFixedHeight(string theme)
     {
         GumProjectSave project = LoadTheme(theme);
-        ComponentSave comboBoxSave = project.Components.Single(c => c.Name.EndsWith("Controls/ComboBox"));
+        ComponentSave comboBoxSave = project.Components.Single(c => c.Name.EndsWith("/ComboBox"));
         ComboBox comboBox = (ComboBox)((InteractiveGue)comboBoxSave.ToGraphicalUiElement()).FormsControlAsObject;
         comboBox.AddToRoot();
         comboBox.Items.Add("a");
@@ -104,7 +104,7 @@ public class ListBoxSizingCategoryTests : BaseTestClass
 
     private static GraphicalUiElement CreateListBox(GumProjectSave project, string sizingState, int itemCount, out ListBox listBox)
     {
-        ComponentSave listBoxSave = project.Components.Single(c => c.Name.EndsWith("Controls/ListBox"));
+        ComponentSave listBoxSave = project.Components.Single(c => c.Name.EndsWith("/ListBox"));
         GraphicalUiElement visual = listBoxSave.ToGraphicalUiElement();
         visual.SetProperty("SizingCategoryState", sizingState);
         listBox = (ListBox)((InteractiveGue)visual).FormsControlAsObject;

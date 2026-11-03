@@ -6,10 +6,14 @@ using System.Threading;
 namespace Gum.Diagnostics;
 
 /// <summary>
-/// Opt-in diagnostic log for diagnosing slow or frozen edits. Off (every call returns at once and
-/// allocates nothing) unless the GUM_TOOL_LOG environment variable names an absolute file path;
-/// the file is replaced on each run and every line is flushed as it is written, so a freeze
-/// leaves the log up to the stall. Lines look like
+/// Diagnostic log for diagnosing slow, frozen or failing edits. In a Debug build it is always on and
+/// writes to <see cref="DefaultPath"/>, <c>{temp folder}/Gum/tool.log</c> (Windows:
+/// <c>%TEMP%\Gum\tool.log</c>); a Release build is off. The GUM_TOOL_LOG environment variable, when it
+/// names an absolute file path, writes there instead in either build. Each run moves the previous file
+/// to <c>tool.previous.log</c> and starts a fresh one, and every line is flushed as it is written, so a
+/// freeze leaves the log up to the stall. Unhandled and reported exceptions are written with their
+/// stack (<see cref="WriteException"/>, called by the crash reporter). When off, every call returns at
+/// once and allocates nothing. Lines look like
 /// <c>   1234.5 t07 +   12.3ms  stage detail</c>: milliseconds since the first entry, thread id,
 /// stage duration. Pass counts through <c>count</c> rather than building a detail string; guard any
 /// string building with <see cref="IsEnabled"/>.
@@ -48,24 +52,37 @@ public static class ToolLog
         WriteLine(stage, count, detail, durationMilliseconds: -1);
     }
 
-    private static StreamWriter? Open()
+    /// <summary>The file Debug builds write to: <c>Gum/tool.log</c> in the user's temp folder.</summary>
+    public static string DefaultPath => Path.Combine(Path.GetTempPath(), "Gum", "tool.log");
+
+    /// <summary>Writes an exception with its stack, as an <c>error</c> line. Never throws.</summary>
+    public static void WriteException(string context, Exception exception)
     {
-        string? path = Environment.GetEnvironmentVariable(EnableVariable);
-        if (string.IsNullOrWhiteSpace(path) || !Path.IsPathRooted(path))
+        if (_writer == null)
+        {
+            return;
+        }
+        WriteLine("error", -1, context + ": " + exception, durationMilliseconds: -1);
+    }
+
+    private static StreamWriter? Open() =>
+        Open(Environment.GetEnvironmentVariable(EnableVariable), DiagnosticLogFile.IsDebugBuild, DefaultPath);
+
+    /// <summary>Opens the log at the resolved path, or returns null when off or unopenable. Internal so tests can choose the build configuration and path.</summary>
+    internal static StreamWriter? Open(string? environmentPath, bool isDebugBuild, string defaultPath)
+    {
+        // A relative GUM_TOOL_LOG is ignored (it would depend on the working directory).
+        string? explicitPath = !string.IsNullOrWhiteSpace(environmentPath) && Path.IsPathRooted(environmentPath) ? environmentPath : null;
+        string? path = DiagnosticLogFile.ResolvePath(explicitPath, defaultPath, isDebugBuild);
+        if (path == null)
         {
             return null;
         }
 
         try
         {
-            string? directory = Path.GetDirectoryName(path);
-            if (!string.IsNullOrEmpty(directory))
-            {
-                Directory.CreateDirectory(directory);
-            }
             // Shared read so the file can be tailed while the tool runs.
-            FileStream stream = new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.ReadWrite);
-            return new StreamWriter(stream) { AutoFlush = true };
+            return new StreamWriter(DiagnosticLogFile.Open(path)) { AutoFlush = true };
         }
         catch (Exception)
         {

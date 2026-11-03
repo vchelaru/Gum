@@ -234,7 +234,7 @@ public partial class GeneratedFormsConstructionTests : BaseTestClass
             object visual = template.GetType().GetMethod("CreateContent")!.Invoke(template, new object?[] { null, true })!;
 
             object formsControl = Get(visual, "FormsControlAsObject").ShouldNotBeNull();
-            Get(visual, "ElementSave.Name").ShouldBe("Retro95/Controls/MenuItemSubmenuPopup");
+            Get(visual, "ElementSave.Name").ShouldBe("Retro95/MenuItemSubmenuPopup");
             formsControl.ShouldBeAssignableTo(scrollViewerType);
             // Gum Forms output generates the control class; legacy MonoGame output generates the visual class.
             Type generatedType = outputLibrary == OutputLibrary.GumForms ? formsControl.GetType() : visual.GetType();

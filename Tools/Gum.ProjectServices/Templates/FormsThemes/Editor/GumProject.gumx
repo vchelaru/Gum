@@ -57,56 +57,56 @@
   <ShowLocalizationInGum>true</ShowLocalizationInGum>
   <CurrentLanguageIndex>0</CurrentLanguageIndex>
   <ScreenReference Name="Editor/DemoScreenGum" />
-  <ComponentReference Name="Editor/Controls/Button" />
-  <ComponentReference Name="Editor/Controls/ButtonClose" />
-  <ComponentReference Name="Editor/Controls/ButtonConfirm" />
-  <ComponentReference Name="Editor/Controls/ButtonDeny" />
-  <ComponentReference Name="Editor/Controls/ButtonIcon" />
-  <ComponentReference Name="Editor/Controls/ButtonStandardIcon" />
-  <ComponentReference Name="Editor/Controls/ButtonTab" />
-  <ComponentReference Name="Editor/Controls/CheckBox" />
-  <ComponentReference Name="Editor/Controls/ColorPicker" />
-  <ComponentReference Name="Editor/Controls/ComboBox" />
-  <ComponentReference Name="Editor/Controls/DialogBox" />
-  <ComponentReference Name="Editor/Controls/Expander" />
-  <ComponentReference Name="Editor/Controls/ItemsControl" />
-  <ComponentReference Name="Editor/Controls/Keyboard" />
-  <ComponentReference Name="Editor/Controls/KeyboardKey" />
-  <ComponentReference Name="Editor/Controls/Label" />
-  <ComponentReference Name="Editor/Controls/ListBox" />
-  <ComponentReference Name="Editor/Controls/ListBoxItem" />
-  <ComponentReference Name="Editor/Controls/Menu" />
-  <ComponentReference Name="Editor/Controls/MenuItem" />
-  <ComponentReference Name="Editor/Controls/MenuItemSubmenuPopup" />
-  <ComponentReference Name="Editor/Controls/Panel" />
-  <ComponentReference Name="Editor/Controls/PasswordBox" />
-  <ComponentReference Name="Editor/Controls/RadioButton" />
-  <ComponentReference Name="Editor/Controls/ScrollBar" />
-  <ComponentReference Name="Editor/Controls/ScrollBarButton" />
-  <ComponentReference Name="Editor/Controls/ScrollBarThumb" />
-  <ComponentReference Name="Editor/Controls/ScrollViewer" />
-  <ComponentReference Name="Editor/Controls/SettingsView" />
-  <ComponentReference Name="Editor/Controls/Slider" />
-  <ComponentReference Name="Editor/Controls/SliderThumb" />
-  <ComponentReference Name="Editor/Controls/Splitter" />
-  <ComponentReference Name="Editor/Controls/StackPanel" />
-  <ComponentReference Name="Editor/Controls/TextBox" />
-  <ComponentReference Name="Editor/Controls/Toast" />
-  <ComponentReference Name="Editor/Controls/ToggleButton" />
-  <ComponentReference Name="Editor/Controls/TreeView" />
-  <ComponentReference Name="Editor/Controls/TreeViewItem" />
-  <ComponentReference Name="Editor/Controls/TreeViewToggle" />
-  <ComponentReference Name="Editor/Controls/UserControl" />
-  <ComponentReference Name="Editor/Controls/Window" />
-  <ComponentReference Name="Editor/Elements/CautionLines" />
-  <ComponentReference Name="Editor/Elements/Divider" />
-  <ComponentReference Name="Editor/Elements/DividerHorizontal" />
-  <ComponentReference Name="Editor/Elements/DividerVertical" />
-  <ComponentReference Name="Editor/Elements/Icon" />
-  <ComponentReference Name="Editor/Elements/PercentBar" />
-  <ComponentReference Name="Editor/Elements/PercentBarIcon" />
-  <ComponentReference Name="Editor/Elements/VerticalLines" />
+  <ComponentReference Name="Editor/Button" />
+  <ComponentReference Name="Editor/ButtonClose" />
+  <ComponentReference Name="Editor/ButtonConfirm" />
+  <ComponentReference Name="Editor/ButtonDeny" />
+  <ComponentReference Name="Editor/ButtonIcon" />
+  <ComponentReference Name="Editor/ButtonStandardIcon" />
+  <ComponentReference Name="Editor/ButtonTab" />
+  <ComponentReference Name="Editor/CautionLines" />
+  <ComponentReference Name="Editor/CheckBox" />
+  <ComponentReference Name="Editor/ColorPicker" />
+  <ComponentReference Name="Editor/ComboBox" />
+  <ComponentReference Name="Editor/DialogBox" />
+  <ComponentReference Name="Editor/Divider" />
+  <ComponentReference Name="Editor/DividerHorizontal" />
+  <ComponentReference Name="Editor/DividerVertical" />
+  <ComponentReference Name="Editor/Expander" />
+  <ComponentReference Name="Editor/Icon" />
+  <ComponentReference Name="Editor/ItemsControl" />
+  <ComponentReference Name="Editor/Keyboard" />
+  <ComponentReference Name="Editor/KeyboardKey" />
+  <ComponentReference Name="Editor/Label" />
+  <ComponentReference Name="Editor/ListBox" />
+  <ComponentReference Name="Editor/ListBoxItem" />
+  <ComponentReference Name="Editor/Menu" />
+  <ComponentReference Name="Editor/MenuItem" />
+  <ComponentReference Name="Editor/MenuItemSubmenuPopup" />
+  <ComponentReference Name="Editor/Panel" />
+  <ComponentReference Name="Editor/PasswordBox" />
+  <ComponentReference Name="Editor/PercentBar" />
+  <ComponentReference Name="Editor/PercentBarIcon" />
+  <ComponentReference Name="Editor/RadioButton" />
+  <ComponentReference Name="Editor/ScrollBar" />
+  <ComponentReference Name="Editor/ScrollBarButton" />
+  <ComponentReference Name="Editor/ScrollBarThumb" />
+  <ComponentReference Name="Editor/ScrollViewer" />
+  <ComponentReference Name="Editor/SettingsView" />
+  <ComponentReference Name="Editor/Slider" />
+  <ComponentReference Name="Editor/SliderThumb" />
+  <ComponentReference Name="Editor/Splitter" />
+  <ComponentReference Name="Editor/StackPanel" />
   <ComponentReference Name="Editor/Styles" />
+  <ComponentReference Name="Editor/TextBox" />
+  <ComponentReference Name="Editor/Toast" />
+  <ComponentReference Name="Editor/ToggleButton" />
+  <ComponentReference Name="Editor/TreeView" />
+  <ComponentReference Name="Editor/TreeViewItem" />
+  <ComponentReference Name="Editor/TreeViewToggle" />
+  <ComponentReference Name="Editor/UserControl" />
+  <ComponentReference Name="Editor/VerticalLines" />
+  <ComponentReference Name="Editor/Window" />
   <StandardElementReference Name="Circle" />
   <StandardElementReference Name="Component" />
   <StandardElementReference Name="Container" />
@@ -115,40 +115,40 @@
   <StandardElementReference Name="Rectangle" />
   <StandardElementReference Name="Sprite" />
   <StandardElementReference Name="Text" />
-  <BehaviorReference Name="ButtonBehavior" SourcePath="../../FormsBehaviors/ButtonBehavior.behx" DefaultImplementationOverride="Editor/Controls/Button" />
-  <BehaviorReference Name="CheckBoxBehavior" SourcePath="../../FormsBehaviors/CheckBoxBehavior.behx" DefaultImplementationOverride="Editor/Controls/CheckBox" />
-  <BehaviorReference Name="ColorPickerBehavior" SourcePath="../../FormsBehaviors/ColorPickerBehavior.behx" DefaultImplementationOverride="Editor/Controls/ColorPicker" />
-  <BehaviorReference Name="ComboBoxBehavior" SourcePath="../../FormsBehaviors/ComboBoxBehavior.behx" DefaultImplementationOverride="Editor/Controls/ComboBox" />
-  <BehaviorReference Name="DialogBoxBehavior" SourcePath="../../FormsBehaviors/DialogBoxBehavior.behx" DefaultImplementationOverride="Editor/Controls/DialogBox" />
-  <BehaviorReference Name="ExpanderBehavior" SourcePath="../../FormsBehaviors/ExpanderBehavior.behx" DefaultImplementationOverride="Editor/Controls/Expander" />
+  <BehaviorReference Name="ButtonBehavior" SourcePath="../../FormsBehaviors/ButtonBehavior.behx" DefaultImplementationOverride="Editor/Button" />
+  <BehaviorReference Name="CheckBoxBehavior" SourcePath="../../FormsBehaviors/CheckBoxBehavior.behx" DefaultImplementationOverride="Editor/CheckBox" />
+  <BehaviorReference Name="ColorPickerBehavior" SourcePath="../../FormsBehaviors/ColorPickerBehavior.behx" DefaultImplementationOverride="Editor/ColorPicker" />
+  <BehaviorReference Name="ComboBoxBehavior" SourcePath="../../FormsBehaviors/ComboBoxBehavior.behx" DefaultImplementationOverride="Editor/ComboBox" />
+  <BehaviorReference Name="DialogBoxBehavior" SourcePath="../../FormsBehaviors/DialogBoxBehavior.behx" DefaultImplementationOverride="Editor/DialogBox" />
+  <BehaviorReference Name="ExpanderBehavior" SourcePath="../../FormsBehaviors/ExpanderBehavior.behx" DefaultImplementationOverride="Editor/Expander" />
   <BehaviorReference Name="InputDeviceSelectionItemBehavior" />
   <BehaviorReference Name="InputDeviceSelectorBehavior" />
   <BehaviorReference Name="ItemsControlBehavior" SourcePath="../../FormsBehaviors/ItemsControlBehavior.behx" />
-  <BehaviorReference Name="LabelBehavior" SourcePath="../../FormsBehaviors/LabelBehavior.behx" DefaultImplementationOverride="Editor/Controls/Label" />
-  <BehaviorReference Name="ListBoxBehavior" SourcePath="../../FormsBehaviors/ListBoxBehavior.behx" DefaultImplementationOverride="Editor/Controls/ListBox" />
-  <BehaviorReference Name="ListBoxItemBehavior" SourcePath="../../FormsBehaviors/ListBoxItemBehavior.behx" DefaultImplementationOverride="Editor/Controls/ListBoxItem" />
-  <BehaviorReference Name="MenuBehavior" SourcePath="../../FormsBehaviors/MenuBehavior.behx" DefaultImplementationOverride="Editor/Controls/Menu" />
-  <BehaviorReference Name="MenuItemBehavior" SourcePath="../../FormsBehaviors/MenuItemBehavior.behx" DefaultImplementationOverride="Editor/Controls/MenuItem" />
-  <BehaviorReference Name="MenuItemSubmenuPopupBehavior" SourcePath="../../FormsBehaviors/MenuItemSubmenuPopupBehavior.behx" DefaultImplementationOverride="Editor/Controls/MenuItemSubmenuPopup" />
+  <BehaviorReference Name="LabelBehavior" SourcePath="../../FormsBehaviors/LabelBehavior.behx" DefaultImplementationOverride="Editor/Label" />
+  <BehaviorReference Name="ListBoxBehavior" SourcePath="../../FormsBehaviors/ListBoxBehavior.behx" DefaultImplementationOverride="Editor/ListBox" />
+  <BehaviorReference Name="ListBoxItemBehavior" SourcePath="../../FormsBehaviors/ListBoxItemBehavior.behx" DefaultImplementationOverride="Editor/ListBoxItem" />
+  <BehaviorReference Name="MenuBehavior" SourcePath="../../FormsBehaviors/MenuBehavior.behx" DefaultImplementationOverride="Editor/Menu" />
+  <BehaviorReference Name="MenuItemBehavior" SourcePath="../../FormsBehaviors/MenuItemBehavior.behx" DefaultImplementationOverride="Editor/MenuItem" />
+  <BehaviorReference Name="MenuItemSubmenuPopupBehavior" SourcePath="../../FormsBehaviors/MenuItemSubmenuPopupBehavior.behx" DefaultImplementationOverride="Editor/MenuItemSubmenuPopup" />
   <BehaviorReference Name="OnScreenKeyboardBehavior" SourcePath="../../FormsBehaviors/OnScreenKeyboardBehavior.behx" />
   <BehaviorReference Name="PanelBehavior" SourcePath="../../FormsBehaviors/PanelBehavior.behx" />
-  <BehaviorReference Name="PasswordBoxBehavior" SourcePath="../../FormsBehaviors/PasswordBoxBehavior.behx" DefaultImplementationOverride="Editor/Controls/PasswordBox" />
+  <BehaviorReference Name="PasswordBoxBehavior" SourcePath="../../FormsBehaviors/PasswordBoxBehavior.behx" DefaultImplementationOverride="Editor/PasswordBox" />
   <BehaviorReference Name="PlayerJoinViewBehavior" />
   <BehaviorReference Name="PlayerJoinViewItemBehavior" />
-  <BehaviorReference Name="RadioButtonBehavior" SourcePath="../../FormsBehaviors/RadioButtonBehavior.behx" DefaultImplementationOverride="Editor/Controls/RadioButton" />
-  <BehaviorReference Name="ScrollBarBehavior" SourcePath="../../FormsBehaviors/ScrollBarBehavior.behx" DefaultImplementationOverride="Editor/Controls/ScrollBar" />
-  <BehaviorReference Name="ScrollViewerBehavior" SourcePath="../../FormsBehaviors/ScrollViewerBehavior.behx" DefaultImplementationOverride="Editor/Controls/ScrollViewer" />
+  <BehaviorReference Name="RadioButtonBehavior" SourcePath="../../FormsBehaviors/RadioButtonBehavior.behx" DefaultImplementationOverride="Editor/RadioButton" />
+  <BehaviorReference Name="ScrollBarBehavior" SourcePath="../../FormsBehaviors/ScrollBarBehavior.behx" DefaultImplementationOverride="Editor/ScrollBar" />
+  <BehaviorReference Name="ScrollViewerBehavior" SourcePath="../../FormsBehaviors/ScrollViewerBehavior.behx" DefaultImplementationOverride="Editor/ScrollViewer" />
   <BehaviorReference Name="SettingsViewBehavior" />
-  <BehaviorReference Name="SliderBehavior" SourcePath="../../FormsBehaviors/SliderBehavior.behx" DefaultImplementationOverride="Editor/Controls/Slider" />
-  <BehaviorReference Name="SplitterBehavior" SourcePath="../../FormsBehaviors/SplitterBehavior.behx" DefaultImplementationOverride="Editor/Controls/Splitter" />
+  <BehaviorReference Name="SliderBehavior" SourcePath="../../FormsBehaviors/SliderBehavior.behx" DefaultImplementationOverride="Editor/Slider" />
+  <BehaviorReference Name="SplitterBehavior" SourcePath="../../FormsBehaviors/SplitterBehavior.behx" DefaultImplementationOverride="Editor/Splitter" />
   <BehaviorReference Name="StackPanelBehavior" SourcePath="../../FormsBehaviors/StackPanelBehavior.behx" />
-  <BehaviorReference Name="TextBoxBehavior" SourcePath="../../FormsBehaviors/TextBoxBehavior.behx" DefaultImplementationOverride="Editor/Controls/TextBox" />
-  <BehaviorReference Name="ToastBehavior" SourcePath="../../FormsBehaviors/ToastBehavior.behx" DefaultImplementationOverride="Editor/Controls/Toast" />
-  <BehaviorReference Name="ToggleBehavior" SourcePath="../../FormsBehaviors/ToggleBehavior.behx" DefaultImplementationOverride="Editor/Controls/ToggleButton" />
+  <BehaviorReference Name="TextBoxBehavior" SourcePath="../../FormsBehaviors/TextBoxBehavior.behx" DefaultImplementationOverride="Editor/TextBox" />
+  <BehaviorReference Name="ToastBehavior" SourcePath="../../FormsBehaviors/ToastBehavior.behx" DefaultImplementationOverride="Editor/Toast" />
+  <BehaviorReference Name="ToggleBehavior" SourcePath="../../FormsBehaviors/ToggleBehavior.behx" DefaultImplementationOverride="Editor/ToggleButton" />
   <BehaviorReference Name="TreeViewBehavior" />
   <BehaviorReference Name="TreeViewItemBehavior" />
-  <BehaviorReference Name="UserControlBehavior" SourcePath="../../FormsBehaviors/UserControlBehavior.behx" DefaultImplementationOverride="Editor/Controls/UserControl" />
-  <BehaviorReference Name="WindowBehavior" SourcePath="../../FormsBehaviors/WindowBehavior.behx" DefaultImplementationOverride="Editor/Controls/Window" />
+  <BehaviorReference Name="UserControlBehavior" SourcePath="../../FormsBehaviors/UserControlBehavior.behx" DefaultImplementationOverride="Editor/UserControl" />
+  <BehaviorReference Name="WindowBehavior" SourcePath="../../FormsBehaviors/WindowBehavior.behx" DefaultImplementationOverride="Editor/Window" />
   <SinglePixelTextureTop xsi:nil="true" />
   <SinglePixelTextureLeft xsi:nil="true" />
   <SinglePixelTextureRight xsi:nil="true" />

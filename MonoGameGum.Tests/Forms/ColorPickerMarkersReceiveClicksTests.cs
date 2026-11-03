@@ -98,7 +98,7 @@ public class ColorPickerMarkersReceiveClicksTests : BeginnerDriverTestBase
     private ColorPicker LoadThemedPicker(string theme)
     {
         string themeFolder = theme.Length == 0 ? "FormsTemplate" : Path.Combine("FormsThemes", theme);
-        string baseType = theme.Length == 0 ? "Controls/ColorPickerStandard" : $"{theme}/Controls/ColorPicker";
+        string[] pickerSuffixes = { "/ColorPicker", "/ColorPickerStandard" };
         string gumx = Path.Combine(LocateRepoRoot(), "Tools", "Gum.ProjectServices", "Templates", themeFolder, "GumProject.gumx");
         StandardRuntimeRegistrations.Register();
         GumProjectSave project = GumProjectSave.Load(gumx, out _)!;
@@ -107,7 +107,7 @@ public class ColorPickerMarkersReceiveClicksTests : BeginnerDriverTestBase
         Gum.Forms.FormsUtilities.RegisterFromFileFormRuntimeDefaults();
         ScreenSave screen = new ScreenSave { Name = "PickerScreen" };
         screen.States.Add(new StateSave { Name = "Default", ParentContainer = screen });
-        screen.Instances.Add(new InstanceSave { Name = "Picker", BaseType = baseType, ParentContainer = screen });
+        screen.Instances.Add(new InstanceSave { Name = "Picker", BaseType = project.Components.Single(item => pickerSuffixes.Any(suffix => item.Name.EndsWith(suffix))).Name, ParentContainer = screen });
         project.Screens.Add(screen);
         project.Initialize();
         GraphicalUiElement screenVisual = screen.ToGraphicalUiElement();

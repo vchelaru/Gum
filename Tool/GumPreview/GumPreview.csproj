@@ -149,6 +149,7 @@
 	<ItemGroup>
 		<!-- The selection-file format shared with the tool side (PreviewLauncher), linked rather than
 		     referenced so this host stays free of the tool's plugin assemblies. -->
+		<Compile Include="..\..\Tools\Gum.Presentation\Diagnostics\DiagnosticLogFile.cs" Link="DiagnosticLogFile.cs" />
 		<Compile Include="..\EditorTabPlugin.Core\Services\PreviewSelectionMessage.cs" Link="PreviewSelectionMessage.cs" />
 		<Compile Include="..\EditorTabPlugin.Core\Services\PreviewSelectionFile.cs" Link="PreviewSelectionFile.cs" />
 		<Compile Include="..\EditorTabPlugin.Core\Services\ShaderSourceCompiler.cs" Link="ShaderSourceCompiler.cs" />

@@ -820,43 +820,43 @@
   <Instance Name="MenuItems" BaseType="Container" />
   <Instance Name="TitleText" BaseType="Text" />
   <Instance Name="TitleText1" BaseType="Text" />
-  <Instance Name="DividerInstance" BaseType="Bubblegum/Elements/Divider" />
-  <Instance Name="DividerInstance4" BaseType="Bubblegum/Elements/Divider" />
-  <Instance Name="ResolutionLabel" BaseType="Bubblegum/Controls/Label" />
-  <Instance Name="ResolutionBox" BaseType="Bubblegum/Controls/ListBox" />
-  <Instance Name="DetectResolutionsButton" BaseType="Bubblegum/Controls/Button" />
-  <Instance Name="FullScreenCheckbox" BaseType="Bubblegum/Controls/CheckBox" />
-  <Instance Name="DividerInstance1" BaseType="Bubblegum/Elements/Divider" />
-  <Instance Name="MusicLabel" BaseType="Bubblegum/Controls/Label" />
-  <Instance Name="MusicSlider" BaseType="Bubblegum/Controls/Slider" />
-  <Instance Name="SoundLabel" BaseType="Bubblegum/Controls/Label" />
-  <Instance Name="SoundSlider" BaseType="Bubblegum/Controls/Slider" />
-  <Instance Name="DividerInstance2" BaseType="Bubblegum/Elements/Divider" />
-  <Instance Name="ControlLabel" BaseType="Bubblegum/Controls/Label" />
-  <Instance Name="RadioButtonInstance" BaseType="Bubblegum/Controls/RadioButton" />
-  <Instance Name="RadioButtonInstance1" BaseType="Bubblegum/Controls/RadioButton" />
-  <Instance Name="RadioButtonInstance2" BaseType="Bubblegum/Controls/RadioButton" />
-  <Instance Name="DividerInstance3" BaseType="Bubblegum/Elements/Divider" />
-  <Instance Name="DifficultyLabel" BaseType="Bubblegum/Controls/Label" />
+  <Instance Name="DividerInstance" BaseType="Bubblegum/Divider" />
+  <Instance Name="DividerInstance4" BaseType="Bubblegum/Divider" />
+  <Instance Name="ResolutionLabel" BaseType="Bubblegum/Label" />
+  <Instance Name="ResolutionBox" BaseType="Bubblegum/ListBox" />
+  <Instance Name="DetectResolutionsButton" BaseType="Bubblegum/Button" />
+  <Instance Name="FullScreenCheckbox" BaseType="Bubblegum/CheckBox" />
+  <Instance Name="DividerInstance1" BaseType="Bubblegum/Divider" />
+  <Instance Name="MusicLabel" BaseType="Bubblegum/Label" />
+  <Instance Name="MusicSlider" BaseType="Bubblegum/Slider" />
+  <Instance Name="SoundLabel" BaseType="Bubblegum/Label" />
+  <Instance Name="SoundSlider" BaseType="Bubblegum/Slider" />
+  <Instance Name="DividerInstance2" BaseType="Bubblegum/Divider" />
+  <Instance Name="ControlLabel" BaseType="Bubblegum/Label" />
+  <Instance Name="RadioButtonInstance" BaseType="Bubblegum/RadioButton" />
+  <Instance Name="RadioButtonInstance1" BaseType="Bubblegum/RadioButton" />
+  <Instance Name="RadioButtonInstance2" BaseType="Bubblegum/RadioButton" />
+  <Instance Name="DividerInstance3" BaseType="Bubblegum/Divider" />
+  <Instance Name="DifficultyLabel" BaseType="Bubblegum/Label" />
   <Instance Name="Background1" BaseType="Rectangle" />
-  <Instance Name="ComboBoxInstance" BaseType="Bubblegum/Controls/ComboBox" />
+  <Instance Name="ComboBoxInstance" BaseType="Bubblegum/ComboBox" />
   <Instance Name="ButtonContainer" BaseType="Container" />
-  <Instance Name="ButtonConfirmInstance" BaseType="Bubblegum/Controls/Button" />
-  <Instance Name="ButtonDenyInstance" BaseType="Bubblegum/Controls/Button" />
+  <Instance Name="ButtonConfirmInstance" BaseType="Bubblegum/Button" />
+  <Instance Name="ButtonDenyInstance" BaseType="Bubblegum/Button" />
   <Instance Name="DemoDialog" BaseType="Container" />
   <Instance Name="MarginContainer" BaseType="Container" />
-  <Instance Name="LabelInstance" BaseType="Bubblegum/Controls/Label" />
-  <Instance Name="TextBoxInstance" BaseType="Bubblegum/Controls/TextBox" />
-  <Instance Name="TextBoxInstance1" BaseType="Bubblegum/Controls/PasswordBox" />
-  <Instance Name="MultiLineTextBox" BaseType="Bubblegum/Controls/TextBox" />
-  <Instance Name="DialogBoxInstance" BaseType="Bubblegum/Controls/DialogBox" />
-  <Instance Name="WindowStandardInstance" BaseType="Bubblegum/Controls/Window" />
-  <Instance Name="LabelInstance1" BaseType="Bubblegum/Controls/Label" />
-  <Instance Name="ListBoxItemInstance" BaseType="Bubblegum/Controls/ListBoxItem" />
-  <Instance Name="ListBoxItemInstance1" BaseType="Bubblegum/Controls/ListBoxItem" />
-  <Instance Name="ListBoxItemInstance2" BaseType="Bubblegum/Controls/ListBoxItem" />
-  <Instance Name="ListBoxItemInstance3" BaseType="Bubblegum/Controls/ListBoxItem" />
-  <Instance Name="ListBoxItemInstance4" BaseType="Bubblegum/Controls/ListBoxItem" />
-  <Instance Name="ListBoxItemInstance5" BaseType="Bubblegum/Controls/ListBoxItem" />
+  <Instance Name="LabelInstance" BaseType="Bubblegum/Label" />
+  <Instance Name="TextBoxInstance" BaseType="Bubblegum/TextBox" />
+  <Instance Name="TextBoxInstance1" BaseType="Bubblegum/PasswordBox" />
+  <Instance Name="MultiLineTextBox" BaseType="Bubblegum/TextBox" />
+  <Instance Name="DialogBoxInstance" BaseType="Bubblegum/DialogBox" />
+  <Instance Name="WindowStandardInstance" BaseType="Bubblegum/Window" />
+  <Instance Name="LabelInstance1" BaseType="Bubblegum/Label" />
+  <Instance Name="ListBoxItemInstance" BaseType="Bubblegum/ListBoxItem" />
+  <Instance Name="ListBoxItemInstance1" BaseType="Bubblegum/ListBoxItem" />
+  <Instance Name="ListBoxItemInstance2" BaseType="Bubblegum/ListBoxItem" />
+  <Instance Name="ListBoxItemInstance3" BaseType="Bubblegum/ListBoxItem" />
+  <Instance Name="ListBoxItemInstance4" BaseType="Bubblegum/ListBoxItem" />
+  <Instance Name="ListBoxItemInstance5" BaseType="Bubblegum/ListBoxItem" />
   <Behaviors />
 </ScreenSave>

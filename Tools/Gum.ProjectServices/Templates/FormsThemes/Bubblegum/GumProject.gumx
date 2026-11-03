@@ -57,37 +57,37 @@
   <ShowLocalizationInGum>true</ShowLocalizationInGum>
   <CurrentLanguageIndex>0</CurrentLanguageIndex>
   <ScreenReference Name="Bubblegum/DemoScreenGum" />
-  <ComponentReference Name="Bubblegum/Controls/Button" />
-  <ComponentReference Name="Bubblegum/Controls/ButtonIcon" />
-  <ComponentReference Name="Bubblegum/Controls/CheckBox" />
-  <ComponentReference Name="Bubblegum/Controls/ColorPicker" />
-  <ComponentReference Name="Bubblegum/Controls/ComboBox" />
-  <ComponentReference Name="Bubblegum/Controls/DialogBox" />
-  <ComponentReference Name="Bubblegum/Controls/Expander" />
-  <ComponentReference Name="Bubblegum/Controls/ItemsControl" />
-  <ComponentReference Name="Bubblegum/Controls/Label" />
-  <ComponentReference Name="Bubblegum/Controls/ListBox" />
-  <ComponentReference Name="Bubblegum/Controls/ListBoxItem" />
-  <ComponentReference Name="Bubblegum/Controls/Menu" />
-  <ComponentReference Name="Bubblegum/Controls/MenuItem" />
-  <ComponentReference Name="Bubblegum/Controls/Panel" />
-  <ComponentReference Name="Bubblegum/Controls/PasswordBox" />
-  <ComponentReference Name="Bubblegum/Controls/RadioButton" />
-  <ComponentReference Name="Bubblegum/Controls/ScrollBar" />
-  <ComponentReference Name="Bubblegum/Controls/ScrollBarThumb" />
-  <ComponentReference Name="Bubblegum/Controls/ScrollViewer" />
-  <ComponentReference Name="Bubblegum/Controls/Slider" />
-  <ComponentReference Name="Bubblegum/Controls/SliderThumb" />
-  <ComponentReference Name="Bubblegum/Controls/Splitter" />
-  <ComponentReference Name="Bubblegum/Controls/StackPanel" />
-  <ComponentReference Name="Bubblegum/Controls/TextBox" />
-  <ComponentReference Name="Bubblegum/Controls/Toast" />
-  <ComponentReference Name="Bubblegum/Controls/ToggleButton" />
-  <ComponentReference Name="Bubblegum/Controls/UserControl" />
-  <ComponentReference Name="Bubblegum/Controls/Window" />
-  <ComponentReference Name="Bubblegum/Elements/Divider" />
-  <ComponentReference Name="Bubblegum/Elements/Icon" />
+  <ComponentReference Name="Bubblegum/Button" />
+  <ComponentReference Name="Bubblegum/ButtonIcon" />
+  <ComponentReference Name="Bubblegum/CheckBox" />
+  <ComponentReference Name="Bubblegum/ColorPicker" />
+  <ComponentReference Name="Bubblegum/ComboBox" />
+  <ComponentReference Name="Bubblegum/DialogBox" />
+  <ComponentReference Name="Bubblegum/Divider" />
+  <ComponentReference Name="Bubblegum/Expander" />
+  <ComponentReference Name="Bubblegum/Icon" />
+  <ComponentReference Name="Bubblegum/ItemsControl" />
+  <ComponentReference Name="Bubblegum/Label" />
+  <ComponentReference Name="Bubblegum/ListBox" />
+  <ComponentReference Name="Bubblegum/ListBoxItem" />
+  <ComponentReference Name="Bubblegum/Menu" />
+  <ComponentReference Name="Bubblegum/MenuItem" />
+  <ComponentReference Name="Bubblegum/Panel" />
+  <ComponentReference Name="Bubblegum/PasswordBox" />
+  <ComponentReference Name="Bubblegum/RadioButton" />
+  <ComponentReference Name="Bubblegum/ScrollBar" />
+  <ComponentReference Name="Bubblegum/ScrollBarThumb" />
+  <ComponentReference Name="Bubblegum/ScrollViewer" />
+  <ComponentReference Name="Bubblegum/Slider" />
+  <ComponentReference Name="Bubblegum/SliderThumb" />
+  <ComponentReference Name="Bubblegum/Splitter" />
+  <ComponentReference Name="Bubblegum/StackPanel" />
   <ComponentReference Name="Bubblegum/Styles" />
+  <ComponentReference Name="Bubblegum/TextBox" />
+  <ComponentReference Name="Bubblegum/Toast" />
+  <ComponentReference Name="Bubblegum/ToggleButton" />
+  <ComponentReference Name="Bubblegum/UserControl" />
+  <ComponentReference Name="Bubblegum/Window" />
   <StandardElementReference Name="Circle" />
   <StandardElementReference Name="Component" />
   <StandardElementReference Name="Container" />
@@ -96,31 +96,31 @@
   <StandardElementReference Name="Rectangle" />
   <StandardElementReference Name="Sprite" />
   <StandardElementReference Name="Text" />
-  <BehaviorReference Name="ButtonBehavior" SourcePath="../../FormsBehaviors/ButtonBehavior.behx" DefaultImplementationOverride="Bubblegum/Controls/Button" />
-  <BehaviorReference Name="CheckBoxBehavior" SourcePath="../../FormsBehaviors/CheckBoxBehavior.behx" DefaultImplementationOverride="Bubblegum/Controls/CheckBox" />
-  <BehaviorReference Name="ColorPickerBehavior" SourcePath="../../FormsBehaviors/ColorPickerBehavior.behx" DefaultImplementationOverride="Bubblegum/Controls/ColorPicker" />
-  <BehaviorReference Name="ComboBoxBehavior" SourcePath="../../FormsBehaviors/ComboBoxBehavior.behx" DefaultImplementationOverride="Bubblegum/Controls/ComboBox" />
-  <BehaviorReference Name="DialogBoxBehavior" SourcePath="../../FormsBehaviors/DialogBoxBehavior.behx" DefaultImplementationOverride="Bubblegum/Controls/DialogBox" />
-  <BehaviorReference Name="ExpanderBehavior" SourcePath="../../FormsBehaviors/ExpanderBehavior.behx" DefaultImplementationOverride="Bubblegum/Controls/Expander" />
+  <BehaviorReference Name="ButtonBehavior" SourcePath="../../FormsBehaviors/ButtonBehavior.behx" DefaultImplementationOverride="Bubblegum/Button" />
+  <BehaviorReference Name="CheckBoxBehavior" SourcePath="../../FormsBehaviors/CheckBoxBehavior.behx" DefaultImplementationOverride="Bubblegum/CheckBox" />
+  <BehaviorReference Name="ColorPickerBehavior" SourcePath="../../FormsBehaviors/ColorPickerBehavior.behx" DefaultImplementationOverride="Bubblegum/ColorPicker" />
+  <BehaviorReference Name="ComboBoxBehavior" SourcePath="../../FormsBehaviors/ComboBoxBehavior.behx" DefaultImplementationOverride="Bubblegum/ComboBox" />
+  <BehaviorReference Name="DialogBoxBehavior" SourcePath="../../FormsBehaviors/DialogBoxBehavior.behx" DefaultImplementationOverride="Bubblegum/DialogBox" />
+  <BehaviorReference Name="ExpanderBehavior" SourcePath="../../FormsBehaviors/ExpanderBehavior.behx" DefaultImplementationOverride="Bubblegum/Expander" />
   <BehaviorReference Name="ItemsControlBehavior" SourcePath="../../FormsBehaviors/ItemsControlBehavior.behx" />
   <BehaviorReference Name="LabelBehavior" SourcePath="../../FormsBehaviors/LabelBehavior.behx" />
-  <BehaviorReference Name="ListBoxBehavior" SourcePath="../../FormsBehaviors/ListBoxBehavior.behx" DefaultImplementationOverride="Bubblegum/Controls/ListBox" />
-  <BehaviorReference Name="ListBoxItemBehavior" SourcePath="../../FormsBehaviors/ListBoxItemBehavior.behx" DefaultImplementationOverride="Bubblegum/Controls/ListBoxItem" />
-  <BehaviorReference Name="MenuBehavior" SourcePath="../../FormsBehaviors/MenuBehavior.behx" DefaultImplementationOverride="Bubblegum/Controls/Menu" />
-  <BehaviorReference Name="MenuItemBehavior" SourcePath="../../FormsBehaviors/MenuItemBehavior.behx" DefaultImplementationOverride="Bubblegum/Controls/MenuItem" />
+  <BehaviorReference Name="ListBoxBehavior" SourcePath="../../FormsBehaviors/ListBoxBehavior.behx" DefaultImplementationOverride="Bubblegum/ListBox" />
+  <BehaviorReference Name="ListBoxItemBehavior" SourcePath="../../FormsBehaviors/ListBoxItemBehavior.behx" DefaultImplementationOverride="Bubblegum/ListBoxItem" />
+  <BehaviorReference Name="MenuBehavior" SourcePath="../../FormsBehaviors/MenuBehavior.behx" DefaultImplementationOverride="Bubblegum/Menu" />
+  <BehaviorReference Name="MenuItemBehavior" SourcePath="../../FormsBehaviors/MenuItemBehavior.behx" DefaultImplementationOverride="Bubblegum/MenuItem" />
   <BehaviorReference Name="OnScreenKeyboardBehavior" SourcePath="../../FormsBehaviors/OnScreenKeyboardBehavior.behx" />
   <BehaviorReference Name="PanelBehavior" SourcePath="../../FormsBehaviors/PanelBehavior.behx" />
-  <BehaviorReference Name="PasswordBoxBehavior" SourcePath="../../FormsBehaviors/PasswordBoxBehavior.behx" DefaultImplementationOverride="Bubblegum/Controls/PasswordBox" />
-  <BehaviorReference Name="RadioButtonBehavior" SourcePath="../../FormsBehaviors/RadioButtonBehavior.behx" DefaultImplementationOverride="Bubblegum/Controls/RadioButton" />
-  <BehaviorReference Name="ScrollBarBehavior" SourcePath="../../FormsBehaviors/ScrollBarBehavior.behx" DefaultImplementationOverride="Bubblegum/Controls/ScrollBar" />
-  <BehaviorReference Name="ScrollViewerBehavior" SourcePath="../../FormsBehaviors/ScrollViewerBehavior.behx" DefaultImplementationOverride="Bubblegum/Controls/ScrollViewer" />
-  <BehaviorReference Name="SliderBehavior" SourcePath="../../FormsBehaviors/SliderBehavior.behx" DefaultImplementationOverride="Bubblegum/Controls/Slider" />
-  <BehaviorReference Name="SplitterBehavior" SourcePath="../../FormsBehaviors/SplitterBehavior.behx" DefaultImplementationOverride="Bubblegum/Controls/Splitter" />
+  <BehaviorReference Name="PasswordBoxBehavior" SourcePath="../../FormsBehaviors/PasswordBoxBehavior.behx" DefaultImplementationOverride="Bubblegum/PasswordBox" />
+  <BehaviorReference Name="RadioButtonBehavior" SourcePath="../../FormsBehaviors/RadioButtonBehavior.behx" DefaultImplementationOverride="Bubblegum/RadioButton" />
+  <BehaviorReference Name="ScrollBarBehavior" SourcePath="../../FormsBehaviors/ScrollBarBehavior.behx" DefaultImplementationOverride="Bubblegum/ScrollBar" />
+  <BehaviorReference Name="ScrollViewerBehavior" SourcePath="../../FormsBehaviors/ScrollViewerBehavior.behx" DefaultImplementationOverride="Bubblegum/ScrollViewer" />
+  <BehaviorReference Name="SliderBehavior" SourcePath="../../FormsBehaviors/SliderBehavior.behx" DefaultImplementationOverride="Bubblegum/Slider" />
+  <BehaviorReference Name="SplitterBehavior" SourcePath="../../FormsBehaviors/SplitterBehavior.behx" DefaultImplementationOverride="Bubblegum/Splitter" />
   <BehaviorReference Name="StackPanelBehavior" SourcePath="../../FormsBehaviors/StackPanelBehavior.behx" />
-  <BehaviorReference Name="TextBoxBehavior" SourcePath="../../FormsBehaviors/TextBoxBehavior.behx" DefaultImplementationOverride="Bubblegum/Controls/TextBox" />
-  <BehaviorReference Name="ToastBehavior" SourcePath="../../FormsBehaviors/ToastBehavior.behx" DefaultImplementationOverride="Bubblegum/Controls/Toast" />
-  <BehaviorReference Name="ToggleBehavior" SourcePath="../../FormsBehaviors/ToggleBehavior.behx" DefaultImplementationOverride="Bubblegum/Controls/ToggleButton" />
-  <BehaviorReference Name="UserControlBehavior" SourcePath="../../FormsBehaviors/UserControlBehavior.behx" DefaultImplementationOverride="Bubblegum/Controls/UserControl" />
+  <BehaviorReference Name="TextBoxBehavior" SourcePath="../../FormsBehaviors/TextBoxBehavior.behx" DefaultImplementationOverride="Bubblegum/TextBox" />
+  <BehaviorReference Name="ToastBehavior" SourcePath="../../FormsBehaviors/ToastBehavior.behx" DefaultImplementationOverride="Bubblegum/Toast" />
+  <BehaviorReference Name="ToggleBehavior" SourcePath="../../FormsBehaviors/ToggleBehavior.behx" DefaultImplementationOverride="Bubblegum/ToggleButton" />
+  <BehaviorReference Name="UserControlBehavior" SourcePath="../../FormsBehaviors/UserControlBehavior.behx" DefaultImplementationOverride="Bubblegum/UserControl" />
   <BehaviorReference Name="WindowBehavior" SourcePath="../../FormsBehaviors/WindowBehavior.behx" />
   <SinglePixelTextureTop xsi:nil="true" />
   <SinglePixelTextureLeft xsi:nil="true" />
