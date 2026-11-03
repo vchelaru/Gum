@@ -1,5 +1,6 @@
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Input;
 using Avalonia.Headless.XUnit;
 using Avalonia.Media;
 using Avalonia.VisualTree;
@@ -143,6 +144,80 @@ public class ColorPickerScenarioTests
         tree.SnapshotFiles().ShouldMatch(start, "one undo should undo the whole drag");
 
         tree.AssertOracles();
+    }
+
+    [AvaloniaFact]
+    [Trait("Feature", "DISP-016")]
+    [Trait("Feature", "EDIT-001")]
+    [Trait("Feature", "EDIT-002")]
+    public void TypingAnRrggbbAaHex_SavesRgb_LeavesAlphaAlone_AndOneUndoRestoresIt()
+    {
+        using ProjectTreeHarness tree = new ProjectTreeHarness();
+        (VariableGridHarness grid, CompactColorPicker picker) = OpenPicker(tree);
+        ProjectFileSnapshot start = tree.SnapshotFiles();
+
+        picker.HexTextBox.Text = "#1188CC80";
+        CloseFlyout(grid);
+
+        AssertStored(grid, tree, 17, 136, 204);
+        VariableGridHarness.StoredValue(grid.ReadSaved(Component(tree)), "Label.Alpha").ShouldBeNull();
+        tree.Undo();
+        tree.SnapshotFiles().ShouldMatch(start, "one undo should undo the whole hex edit");
+        tree.Redo();
+        AssertStored(grid, tree, 17, 136, 204);
+        tree.AssertOracles();
+    }
+
+    [AvaloniaFact]
+    [Trait("Feature", "DISP-016")]
+    [Trait("Feature", "EDIT-002")]
+    public async Task PastingAHex_SavesRgb_AndOneUndoRestoresIt()
+    {
+        using ProjectTreeHarness tree = new ProjectTreeHarness();
+        (VariableGridHarness grid, CompactColorPicker picker) = OpenPicker(tree);
+        ProjectFileSnapshot start = tree.SnapshotFiles();
+        await global::Avalonia.Input.Platform.ClipboardExtensions.SetTextAsync(
+            TopLevel.GetTopLevel(picker)!.Clipboard!, "#3D9BD6");
+
+        await picker.PasteAsync();
+        CloseFlyout(grid);
+
+        AssertStored(grid, tree, 61, 155, 214);
+        tree.Undo();
+        tree.SnapshotFiles().ShouldMatch(start, "one undo should undo the whole paste");
+        tree.AssertOracles();
+    }
+
+    [AvaloniaFact]
+    [Trait("Feature", "DISP-016")]
+    public void TypingAnInvalidHex_StoresNothing_AndTheFieldRevertsOnBlur()
+    {
+        using ProjectTreeHarness tree = new ProjectTreeHarness();
+        (VariableGridHarness grid, CompactColorPicker picker) = OpenPicker(tree);
+        ProjectFileSnapshot start = tree.SnapshotFiles();
+
+        picker.HexTextBox.Text = "#12G4";
+        picker.HexTextBox.RaiseEvent(new global::Avalonia.Interactivity.RoutedEventArgs(InputElement.LostFocusEvent));
+        CloseFlyout(grid);
+
+        VariableGridHarness.StoredValue(Component(tree), "Label.Red").ShouldBeNull();
+        picker.HexTextBox.Text.ShouldBe("#FFFFFF");
+        tree.SnapshotFiles().ShouldMatch(start, "an invalid hex should change nothing");
+    }
+
+    /// <summary>Runs what closing the real flyout runs; the headless flyout does not close on a click outside.</summary>
+    private static void CloseFlyout(VariableGridHarness grid)
+    {
+        grid.Editor<ColorDisplay>("Color").CommitPendingFull();
+        grid.Settle();
+    }
+
+    private static void AssertStored(VariableGridHarness grid, ProjectTreeHarness tree, int red, int green, int blue)
+    {
+        ComponentSave saved = grid.ReadSaved(Component(tree));
+        VariableGridHarness.StoredValue(saved, "Label.Red").ShouldBe(red);
+        VariableGridHarness.StoredValue(saved, "Label.Green").ShouldBe(green);
+        VariableGridHarness.StoredValue(saved, "Label.Blue").ShouldBe(blue);
     }
 
     private static (VariableGridHarness Grid, CompactColorPicker Picker) OpenPicker(ProjectTreeHarness tree)
