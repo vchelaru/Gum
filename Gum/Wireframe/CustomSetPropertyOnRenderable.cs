@@ -1075,22 +1075,14 @@ public partial class CustomSetPropertyOnRenderable
     // TrySetPropertyOnText below. Public so both call sites can reach it (#3706).
     public static void SetText(Text textRenderable, GraphicalUiElement graphicalUiElement, string propertyName, object? value)
     {
-        var widthBefore = textRenderable.WrappedTextWidth;
-        var heightBefore = textRenderable.WrappedTextHeight;
+        // Measures the new text unwrapped when RelativeToChildren, then lays out or restores the renderable's width.
+        graphicalUiElement.AssignTextAndUpdateLayout(textRenderable,
+            (textRenderable, graphicalUiElement, propertyName, value), AssignText);
+    }
 
-        if (graphicalUiElement.WidthUnits == DimensionUnitType.RelativeToChildren)
-        {
-            if (graphicalUiElement.EffectiveMaxWidth == null)
-            {
-                // make it have no line wrap width before assignign the text:
-                textRenderable.Width = null;
-            }
-            else
-            {
-                textRenderable.Width = graphicalUiElement.EffectiveMaxWidth;
-            }
-        }
-
+    private static void AssignText((Text textRenderable, GraphicalUiElement graphicalUiElement, string propertyName, object? value) state)
+    {
+        var (textRenderable, graphicalUiElement, propertyName, value) = state;
         var valueAsString = value as string;
 
         // Track the original (untranslated) value so RefreshLocalization can
@@ -1148,14 +1140,6 @@ public partial class CustomSetPropertyOnRenderable
             {
                 textRenderable.RawText = rawText;
             }
-        }
-        // we want to update if the text's size actually changed (the letters it contains)
-        var shouldUpdate = widthBefore != textRenderable.WrappedTextWidth || heightBefore != textRenderable.WrappedTextHeight;
-        if (shouldUpdate)
-        {
-            graphicalUiElement.UpdateLayout(
-                GraphicalUiElement.ParentUpdateType.IfParentWidthHeightDependOnChildren |
-                GraphicalUiElement.ParentUpdateType.IfParentStacks, int.MaxValue / 2);
         }
     }
 
