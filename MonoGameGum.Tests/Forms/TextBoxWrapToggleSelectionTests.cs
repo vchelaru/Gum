@@ -130,7 +130,7 @@ public class TextBoxWrapToggleReloadSelectionTests : FileThemeInputTestBase
     private const string LongText =
         "alpha beta gamma delta epsilon zeta eta theta iota kappa lambda mu nu xi omicron pi rho sigma tau upsilon phi chi psi omega";
 
-    private static GumProjectSave LoadCopy(string theme, TextWrapping? wrapping, string? lineMode = null)
+    private static GumProjectSave LoadCopy(string theme, TextWrapping? wrapping, string? lineMode = null, bool? acceptsReturn = null)
     {
         string gumx = System.IO.Path.Combine(RepoRoot(), "Tools", "Gum.ProjectServices", "Templates", "FormsThemes", theme, "GumProject.gumx");
         GumProjectSave project = GumProjectSave.Load(gumx, out _)!;
@@ -149,6 +149,10 @@ public class TextBoxWrapToggleReloadSelectionTests : FileThemeInputTestBase
         if (wrapping != null)
         {
             state.Variables.Add(new VariableSave { Name = "Ctl1.TextWrapping", Type = "TextWrapping", Value = wrapping.Value, SetsValue = true });
+        }
+        if (acceptsReturn != null)
+        {
+            state.Variables.Add(new VariableSave { Name = "Ctl1.AcceptsReturn", Type = "bool", Value = acceptsReturn.Value, SetsValue = true });
         }
         if (lineMode != null)
         {
@@ -314,31 +318,42 @@ public class TextBoxWrapToggleReloadSelectionTests : FileThemeInputTestBase
     /// <summary>
     /// #7497 round trip: whatever line-mode states a box goes through by reload, the caret and the visible
     /// selection end up exactly where a box freshly loaded from the final file puts them. The general
-    /// condition: values taken from the visual when its state is applied (the selection template, the
-    /// authored Y offset) must be re-read after every state change, not only through the wrapping setters.
+    /// condition (caret): a placement only one line mode writes leaves its value behind on the next mode.
+    /// General condition (state): a reload applies the Forms properties after the visual's variables, where a
+    /// fresh load applies them before, so a property setter that derives a state (NoWrap -> Single) beat the
+    /// file's explicit state (Multi) on reload but not on a restart. A step is "Wrapping:LineMode:Return".
     /// </summary>
     [Theory]
-    // Not listed: a file that sets LineModeCategoryState=Multi next to NoWrap. A fresh load keeps that Multi
-    // state while a reload's TextWrapping setter puts the box in Single, so the two legitimately differ.
-    [InlineData("Wrap:Multi>NoWrap:")]
-    [InlineData("Wrap:Multi>NoWrap:Single")]
-    [InlineData("NoWrap:MultiNoWrap>Wrap:Multi")]
-    [InlineData("Wrap:Multi>NoWrap:MultiNoWrap>Wrap:Multi")]
-    public void Reload_LineModeRoundTrip_CaretAndSelectionMatchAFreshLoadOfTheFinalFile(string chain)
+    [InlineData("DarkPro", "Wrap:Multi>NoWrap:")]
+    [InlineData("DarkPro", "Wrap:Multi>NoWrap:Single")]
+    [InlineData("DarkPro", "Wrap:Multi>NoWrap:Multi")]
+    [InlineData("DarkPro", "NoWrap:Multi>:")]
+    [InlineData("DarkPro", "NoWrap:MultiNoWrap>Wrap:Multi")]
+    [InlineData("DarkPro", "Wrap:Multi>NoWrap:MultiNoWrap>Wrap:Multi")]
+    [InlineData("DarkPro", ":Multi:Return>:Single:NoReturn")]
+    [InlineData("DarkPro", ":Single:NoReturn>:Multi:Return")]
+    [InlineData("DarkPro", "Wrap:Multi:Return>NoWrap:Multi:NoReturn")]
+    [InlineData("Meadow", "Wrap:Multi>NoWrap:")]
+    [InlineData("Meadow", "Wrap:Multi>NoWrap:Multi")]
+    [InlineData("Meadow", "NoWrap:MultiNoWrap>Wrap:Multi")]
+    [InlineData("Meadow", ":Multi:Return>:Single:NoReturn")]
+    public void Reload_LineModeRoundTrip_CaretAndSelectionMatchAFreshLoadOfTheFinalFile(string theme, string chain)
     {
-        static (TextWrapping? Wrapping, string? Mode) Parse(string step)
+        static (TextWrapping? Wrapping, string? Mode, bool? Return) Parse(string step)
         {
             string[] parts = step.Split(':');
-            return (parts[0].Length == 0 ? null : System.Enum.Parse<TextWrapping>(parts[0]), parts[1].Length == 0 ? null : parts[1]);
+            return (parts[0].Length == 0 ? null : System.Enum.Parse<TextWrapping>(parts[0]),
+                parts[1].Length == 0 ? null : parts[1],
+                parts.Length < 3 || parts[2].Length == 0 ? null : parts[2] == "Return");
         }
-        (TextWrapping? Wrapping, string? Mode)[] steps = chain.Split('>').Select(Parse).ToArray();
-        (TextWrapping? Wrapping, string? Mode) last = steps[^1];
+        (TextWrapping? Wrapping, string? Mode, bool? Return)[] steps = chain.Split('>').Select(Parse).ToArray();
+        (TextWrapping? Wrapping, string? Mode, bool? Return) last = steps[^1];
 
-        TextBox fresh = Build(LoadCopy("DarkPro", last.Wrapping, last.Mode), out GraphicalUiElement freshScreen);
-        TextBox live = Build(LoadCopy("DarkPro", null), out GraphicalUiElement screen);
-        foreach ((TextWrapping? wrapping, string? mode) in steps)
+        TextBox fresh = Build(LoadCopy(theme, last.Wrapping, last.Mode, last.Return), out GraphicalUiElement freshScreen);
+        TextBox live = Build(LoadCopy(theme, null), out GraphicalUiElement screen);
+        foreach ((TextWrapping? wrapping, string? mode, bool? acceptsReturn) in steps)
         {
-            GumProjectSave reloaded = LoadCopy("DarkPro", wrapping, mode);
+            GumProjectSave reloaded = LoadCopy(theme, wrapping, mode, acceptsReturn);
             ObjectFinder.Self.GumProjectSave = reloaded;
             GumHotReloadManager.ApplyDiff(new[] { screen }, reloaded, SystemManagers.Default);
         }

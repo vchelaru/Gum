@@ -2009,6 +2009,17 @@ public abstract class TextBoxBase :
     /// </list>
     /// Called whenever either property changes.
     /// </summary>
+    /// <summary>
+    /// Puts the box back in the line-mode state its wrapping and AcceptsReturn derive, for a hot reload that
+    /// removed the file's explicit state.
+    /// </summary>
+    internal void ReapplyDerivedLineMode()
+    {
+        UpdateStateForSingleOrMultiLine();
+        RefreshTemplateFromSelectionInstance();
+        ResetScrollForLineModeChange();
+    }
+
     private void UpdateStateForSingleOrMultiLine()
     {
         if( Visual.Categories.TryGetValue("LineModeCategory", out StateSaveCategory? category))

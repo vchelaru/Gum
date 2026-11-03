@@ -229,6 +229,7 @@ internal static class BehaviorFormsPropertyApplier
         ElementSave? oldContainer = newContainer == null ? null : oldElement(newContainer.Name) ?? newContainer;
 
         Type formsType = formsControl.GetType();
+        bool wroteAProperty = false;
         foreach (VariableSave declaration in EnumerateFormsPropertyDeclarations(newOwn, project))
         {
             if (string.IsNullOrEmpty(declaration.Name))
@@ -244,6 +245,49 @@ internal static class BehaviorFormsPropertyApplier
             }
 
             TrySet(formsControl, formsType, declaration.Name, newValue ?? declaration.Value);
+            wroteAProperty = true;
+        }
+
+        ReapplyAuthoredCategoryStates(formsControl, visual, oldContainer, oldOwn, newContainer, newOwn, wroteAProperty);
+    }
+
+    // A fresh load writes the Forms properties first and the visual's variables after, so a categorical state
+    // the file authors (LineModeCategoryState=Multi) wins over the state a property setter derived (NoWrap -> Single).
+    // The reload writes the properties last, which would let the setter win; this puts the file's state back, so the
+    // reload matches a restart. Only categories the Forms control does not drive itself (TextBoxCategory is its own).
+    // A category whose authored state was removed or changed by the reload is put back too, falling to the
+    // state the control derives when the file no longer authors one (what a fresh load of that file shows).
+    private static void ReapplyAuthoredCategoryStates(
+        FrameworkElement formsControl, GraphicalUiElement visual,
+        ElementSave? oldContainer, ElementSave oldOwn, ElementSave? newContainer, ElementSave newOwn, bool wroteAProperty)
+    {
+        foreach (StateSaveCategory category in newOwn.Categories)
+        {
+            if (category.Name.StartsWith("TextBox", StringComparison.Ordinal) || !category.Name.EndsWith("Category", StringComparison.Ordinal))
+            {
+                continue;
+            }
+            string variable = category.Name + "State";
+            string? authoredState = Effective(visual, newContainer, newOwn, variable) as string;
+            string? previousState = Effective(visual, oldContainer, oldOwn, variable) as string;
+            if (!wroteAProperty && authoredState == previousState)
+            {
+                continue;
+            }
+
+            // A fresh load writes a Forms property only when the file's value differs from the control's default,
+            // so a setter that derives the line mode (Wrap, AcceptsReturn) only beats the file's explicit state
+            // when a property is off its default; with both at their defaults the file's state stands.
+            bool settersDerivedTheState = formsControl is TextBoxBase { TextWrapping: not TextWrapping.NoWrap }
+                || formsControl is TextBoxBase { AcceptsReturn: true };
+            if (authoredState != null && !settersDerivedTheState && category.States.Any(state => state.Name == authoredState))
+            {
+                visual.SetProperty(variable, authoredState);
+            }
+            else if (formsControl is TextBoxBase textBox && category.Name == "LineModeCategory")
+            {
+                textBox.ReapplyDerivedLineMode();
+            }
         }
     }
 
