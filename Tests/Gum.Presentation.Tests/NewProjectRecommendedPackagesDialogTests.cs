@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -101,6 +101,15 @@ public class NewProjectRecommendedPackagesDialogTests
             GenerateCodeChoice = false,
         };
         configure?.Invoke(viewModel);
+        // The checks refresh runs on the thread pool and writes view-model properties when it finishes; wait for it so
+        // that write cannot race the test's reads (the property store is not thread-safe, so a read can come back empty).
+        System.Threading.Tasks.Task latest;
+        do
+        {
+            latest = viewModel.ChecksRefresh;
+            latest.GetAwaiter().GetResult();
+        }
+        while (!ReferenceEquals(latest, viewModel.ChecksRefresh));
         return viewModel;
     }
 
