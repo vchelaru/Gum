@@ -14,6 +14,33 @@ namespace Gum.Renderables;
 public abstract class GradientShapeRenderable : InvisibleRenderable
 {
     /// <summary>
+    /// Blend mode for the shape's fill and stroke passes (#3470, #3491, #7523). <c>null</c> (the default)
+    /// leaves raylib's ambient straight-alpha blend; a value wraps the passes in the batch-counted
+    /// <c>BeginBlendMode</c>/<c>EndBlendMode</c> pair (see <see cref="BeginBlend"/>), the same mapping
+    /// the Sprite / NineSlice blends use. The dropshadow is left out of the wrap: it composites
+    /// through its own path, and XNALIKE applies blend to the fill/stroke renderables only.
+    /// </summary>
+    public global::Gum.RenderingLibrary.Blend? Blend { get; set; }
+
+    /// <summary>Opens the <see cref="Blend"/> wrap when one is set; pair with <see cref="EndBlend"/>.</summary>
+    protected void BeginBlend()
+    {
+        if (Blend.HasValue)
+        {
+            global::RenderingLibrary.Graphics.Renderer.Self.BatchDrawCallCounter.BeginBlendMode(Blend.Value);
+        }
+    }
+
+    /// <summary>Closes the wrap opened by <see cref="BeginBlend"/>.</summary>
+    protected void EndBlend()
+    {
+        if (Blend.HasValue)
+        {
+            global::RenderingLibrary.Graphics.Renderer.Self.BatchDrawCallCounter.EndBlendMode();
+        }
+    }
+
+    /// <summary>
     /// X coordinate of the gradient axis start (linear) or radial gradient center, relative to the
     /// shape's top-left, in <see cref="GradientX1Units"/>. Default 0.
     /// </summary>

@@ -238,6 +238,21 @@ public class ArcRuntime : GraphicalUiElement
         }
     }
 
+    /// <summary>
+    /// Blend mode (#7523), matching the raylib <c>CircleRuntime.Blend</c> and the Skia/Apos
+    /// <c>ArcRuntime.Blend</c>: non-nullable, default <see cref="Gum.RenderingLibrary.Blend.Normal"/>.
+    /// Normal maps to a null renderable blend so <see cref="LineArc"/> skips the blend wrap.
+    /// </summary>
+    public Gum.RenderingLibrary.Blend Blend
+    {
+        get => ContainedLineArc.Blend ?? Gum.RenderingLibrary.Blend.Normal;
+        set
+        {
+            ContainedLineArc.Blend = value == Gum.RenderingLibrary.Blend.Normal ? null : value;
+            NotifyPropertyChanged();
+        }
+    }
+
     bool _hasDropshadow;
 
     /// <inheritdoc cref="LineArc.HasDropshadow"/>

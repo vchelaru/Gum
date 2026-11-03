@@ -45,16 +45,6 @@ public class LineRectangle : GradientShapeRenderable
     public Color Color { get; set; } = Color.White;
 
     /// <summary>
-    /// Blend mode applied to the fill and stroke passes. When set, <see cref="Render"/> wraps
-    /// those passes in <c>BeginBlendMode</c>/<c>EndBlendMode</c> (via the batch-counted wrappers),
-    /// which reproduce every <see cref="global::Gum.RenderingLibrary.Blend"/> value exactly
-    /// (issue #3470). <c>null</c> (the default) leaves raylib on its standard alpha blend. Mirrors
-    /// the <c>Blend</c> member on the raylib <c>Sprite</c> / <c>NineSlice</c> renderables
-    /// (issue #3458).
-    /// </summary>
-    public global::Gum.RenderingLibrary.Blend? Blend { get; set; }
-
-    /// <summary>
     /// When <c>true</c>, draws a filled rectangle using <see cref="Color"/> (or
     /// <see cref="FillColor"/> when set). Independent of the stroke pass — both fill and stroke
     /// may render in the same <see cref="Render"/> call.
@@ -389,10 +379,7 @@ public class LineRectangle : GradientShapeRenderable
         // and the hard-offset path already composites the shadow with the correct alpha. Mirrors
         // the raylib Sprite / NineSlice Blend wrap, using the batch-counted BeginBlendMode /
         // EndBlendMode so the draw-call counter stays accurate.
-        if (Blend.HasValue)
-        {
-            global::RenderingLibrary.Graphics.Renderer.Self.BatchDrawCallCounter.BeginBlendMode(Blend.Value);
-        }
+        BeginBlend();
 
         // Fill pass — runs when FillColor is set, or when IsFilled is true with no explicit
         // FillColor (legacy Color slot supplies the fill color). Mirrors Skia's two-slot
@@ -551,10 +538,7 @@ public class LineRectangle : GradientShapeRenderable
             }
         }
 
-        if (Blend.HasValue)
-        {
-            global::RenderingLibrary.Graphics.Renderer.Self.BatchDrawCallCounter.EndBlendMode();
-        }
+        EndBlend();
     }
 
     private void DrawDashedSegment(Vector2 a, Vector2 b, float dashLen, float gapLen, Color color)
