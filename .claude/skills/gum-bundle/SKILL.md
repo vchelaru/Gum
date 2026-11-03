@@ -22,4 +22,4 @@ A `.gumpkg` is one file holding a project's loose files. Code lives in `GumCommo
 
 - A new source file type needs three changes: the walker (to list it), `PackCommand` (to convert it), and each runtime's content loader (`RenderingLibrary/Content/ContentLoader.cs`, plus the Skia and Raylib loaders that have their own). Missing any one makes the packed project fail only at runtime.
 - Entries are keyed by original path, so one file used as two different things would need two entries under one key. The format has no way to do that today.
-- How animation chain files (`.achx`/`.achj`) are packed and loaded has not been traced here.
+- The walker already opens `.achx`/`.achj` files (`AnimationChainListSave.FromFile`) to list their frame textures, resolved the way the runtime resolves them. A chain's frame textures are packed along with it.
