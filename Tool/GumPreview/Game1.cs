@@ -604,7 +604,7 @@ public class Game1 : Game
     }
 
     private void LogAppliedVariable(GraphicalUiElement element, VariableSave variable) =>
-        _debugLog?.LogToolVariable(element.ElementSave?.Name ?? element.Name, variable.SourceObject, variable.GetRootName(), variable.Value);
+        _debugLog?.LogToolVariable(element.ElementSave?.Name ?? element.Name ?? "?", variable.SourceObject, variable.GetRootName(), variable.Value);
 
     private void UpdateWindowTitle(bool missingElement = false) =>
         Window.Title = PreviewWindowTitle.For(_selection.ElementName, missingElement);
