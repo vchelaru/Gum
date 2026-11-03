@@ -67,9 +67,13 @@ container.Height = 100;
 ToolTipService.SetToolTip(container, "A plain container");
 ```
 
-A visual shows a tooltip only when the cursor can hover it, which requires `HasEvents` to be `true`. `ContainerRuntime` has it on by default. `TextRuntime` and `NineSliceRuntime` do not, so set `HasEvents = true` on them. `SpriteRuntime`, `CircleRuntime` and `RectangleRuntime` take no cursor events, so put an icon inside a `ContainerRuntime` and register the container.
+A visual shows a tooltip when the cursor can hover it, which needs `HasEvents` to be `true`. `ContainerRuntime` has it on by default. For other visuals, set `HasEvents = true`, or put the visual inside a `ContainerRuntime` and register the container.
 
 When hosts are nested, the tooltip of the innermost host under the cursor shows. If a Forms control and its own `Visual` both have tooltips, the control's tooltip is used.
+
+{% hint style="info" %}
+Available in December 2026, or now if building Gum from source.
+{% endhint %}
 
 ## Content From a Callback
 
@@ -86,7 +90,7 @@ container.Height = 100;
 ToolTipService.SetToolTip(container, () => $"Coins: {coins}");
 ```
 
-The text does not change while the tooltip is open.
+Gum does not call the callback again while the tooltip is open.
 
 {% hint style="info" %}
 Available in December 2026, or now if building Gum from source.
