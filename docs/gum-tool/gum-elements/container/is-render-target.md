@@ -31,3 +31,13 @@ For a step-by-step tool walkthrough of rotating and scaling a clipped container,
 If you are managing a render target yourself in code instead of using `Is Render Target`, see [Render Targets](../../../code/rendering/render-targets.md) for the blend-mode setup needed to composite translucent content correctly on MonoGame and raylib.
 
 If your game draws its world before Gum and the world disappears when a container with `Is Render Target` is visible, see [The Scene Drawn Before Gum Disappears](../../../code/rendering/render-targets.md#the-scene-drawn-before-gum-disappears-monogame-kni-fna).
+
+## Shader Parameters
+
+Available in December 2026, or now if building Gum from source.
+
+When a container with `Is Render Target` has a `Source Shader File`, the **Variables** tab lists the parameters that shader declares, one row each, under `Rendering`. A parameter you have not changed shows the default the shader declares and saves nothing.
+
+A parameter with two to four decimal values (such as an offset, a size or a tint) is one row with a field for each value, labeled X, Y, Z and W. When the panel is too narrow for every field on one line, the fields continue on the next line. Typing in any field saves every value of that parameter in the selected state, and undo reverts them together. The set marker at the left of the row shows once for the whole parameter.
+
+Right-click the row and choose `Make Default` to clear all of the parameter's values at once, so it goes back to the shader's default.

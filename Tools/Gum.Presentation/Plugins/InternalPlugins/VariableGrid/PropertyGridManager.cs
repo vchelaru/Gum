@@ -1221,17 +1221,22 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
 
         Func<int, string> getComponentName = componentIndex => instance.Name + "." +
             ShaderVariableNaming.GetVariableName(shaderFile, parameter.Name, componentIndex, parameter.Count);
+        List<InstanceMember> components = new List<InstanceMember>();
         for (int i = 0; i < parameter.Count; i++)
         {
-            members.Add(CreateShaderParameterVariableMember(
+            components.Add(CreateShaderParameterVariableMember(
                 new ShaderParameterVariableBinding(parameter, legacyTextName, i, getComponentName),
-                getComponentName(i), ShaderParameterRows.GetComponentRowName(parameter, i), instance, element, stateSave, isReadOnly));
+                getComponentName(i), ShaderParameterRows.GetComponentRowName(parameter, i), instance, element, stateSave, isReadOnly,
+                displayName: ShaderParameterRows.GetComponentLabel(i)));
         }
+
+        // One row for the whole parameter; the components keep their own members for the fields inside it.
+        members.Add(ShaderVectorRow.Create(parameter.Name, components, _undoManager));
         return members;
     }
 
     private InstanceMember CreateShaderParameterVariableMember(ShaderParameterVariableBinding binding, string variableName,
-        string rowName, InstanceSave instance, ElementSave element, StateSave stateSave, bool isReadOnly)
+        string rowName, InstanceSave instance, ElementSave element, StateSave stateSave, bool isReadOnly, string? displayName = null)
     {
         VariableGridEntry entry = new VariableGridEntry(
             attributes: null,
@@ -1261,7 +1266,7 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
         {
             ShaderBinding = binding,
             GridName = rowName,
-            DisplayName = rowName,
+            DisplayName = displayName ?? rowName,
         };
         entry.DefaultValueFallback = () => binding.GetFallbackValue(stateSave);
 

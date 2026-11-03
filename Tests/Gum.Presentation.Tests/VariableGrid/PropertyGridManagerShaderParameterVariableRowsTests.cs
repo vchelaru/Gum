@@ -97,8 +97,11 @@ public class PropertyGridManagerShaderParameterVariableRowsTests : BaseTestClass
         return category;
     }
 
+    // A vector is one composite row; its components are the composite's channels.
     private static InstanceMember Row(MemberCategory category, string name) =>
-        category.Members.Single(member => member.Name == name);
+        category.Members
+            .Concat(category.Members.OfType<CompositeInstanceMember>().SelectMany(composite => composite.ChannelMembers))
+            .Single(member => member.Name == name);
 
     [Fact]
     public void BuildingTheRows_SavesNothing()
@@ -588,17 +591,110 @@ public class PropertyGridManagerShaderParameterVariableRowsTests : BaseTestClass
     private bool IsSaved(string name) => _component.DefaultState.Variables.Any(variable => variable.Name == name);
 
     [Fact]
-    public void VectorRows_KeepTheirLabels_AndBuildingThemSavesNothing()
+    public void AVector_IsOneCompositeRow_WithTheComponentsAsItsChannels_AndBuildingItSavesNothing()
     {
-        GivenTheEffectDeclares(Float("Thickness", 2f), Tint2());
+        GivenTheEffectDeclares(Float("Thickness", 2f), Tint4());
 
         MemberCategory category = BuildRows();
 
-        category.Members.Select(member => member.Name).ToArray().ShouldBe(new[] { "Thickness", "Tint X", "Tint Y" });
-        Row(category, "Tint X").Value.ShouldBe(0.5f);
-        Row(category, "Tint Y").Value.ShouldBe(0.25f);
-        Row(category, "Tint X").IsDefault.ShouldBeTrue();
+        category.Members.Select(member => member.Name).ToArray().ShouldBe(new[] { "Thickness", "Tint" });
+        CompositeInstanceMember row = category.Members.OfType<CompositeInstanceMember>().Single();
+        row.DisplayName.ShouldBe("Tint");
+        row.ChannelMembers.Select(channel => channel.Name).ToArray().ShouldBe(new[] { "Tint X", "Tint Y", "Tint Z", "Tint W" });
+        row.ChannelMembers.Select(channel => channel.DisplayName).ToArray().ShouldBe(new[] { "X", "Y", "Z", "W" });
+        row.ChannelMembers.Select(channel => channel.Value).ToArray().ShouldBe(new object?[] { 0.1f, 0.2f, 0.3f, 0.4f });
+        row.IsDefault.ShouldBeTrue();
         _component.DefaultState.Variables.Any(variable => variable.Name.Contains("Tint")).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void TheCompositeRow_IsSetAsSoonAsAnyComponentIsSaved_AndDefaultAgainAfterMakeDefault()
+    {
+        GivenTheEffectDeclares(Tint2());
+        MemberCategory category = BuildRows();
+        CompositeInstanceMember row = category.Members.OfType<CompositeInstanceMember>().Single();
+
+        Row(category, "Tint X").Value = 0.75f;
+
+        row.IsDefault.ShouldBeFalse();
+
+        MakeDefault(row);
+
+        row.IsDefault.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void ADefinitionWithOnlySomeComponentsSaved_ShowsAsSet_AndTheFirstEditSavesTheRest()
+    {
+        GivenTheEffectDeclares(Tint4());
+        _component.DefaultState.SetValue(TintX, 0.7f, _holder, "float");
+        _component.DefaultState.GetVariableSave(TintX)!.ShaderParameter = "Tint#0/4";
+        MemberCategory category = BuildRows();
+        CompositeInstanceMember row = category.Members.OfType<CompositeInstanceMember>().Single();
+
+        row.IsDefault.ShouldBeFalse();
+
+        Row(category, "Tint W").Value = 0.9f;
+
+        _component.DefaultState.GetVariableSave(TintX).ShouldNotBeNull().Value.ShouldBe(0.7f);
+        _component.DefaultState.GetVariableSave(TintY).ShouldNotBeNull().Value.ShouldBe(0.2f);
+        _component.DefaultState.GetVariableSave(TintZ).ShouldNotBeNull().Value.ShouldBe(0.3f);
+        _component.DefaultState.GetVariableSave(TintW).ShouldNotBeNull().Value.ShouldBe(0.9f);
+    }
+
+    [Fact]
+    public void EditingAComponentInACategoryState_SavesEveryComponentInThatState()
+    {
+        GivenTheEffectDeclares(Tint4());
+        StateSaveCategory stateCategory = new StateSaveCategory { Name = "Interaction" };
+        StateSave hover = new StateSave { Name = "Hover", ParentContainer = _component };
+        stateCategory.States.Add(hover);
+        _component.Categories.Add(stateCategory);
+        _mocker.GetMock<ISelectedState>().Setup(state => state.SelectedStateSave).Returns(hover);
+        MemberCategory rows = BuildRows();
+
+        Row(rows, "Tint Y").Value = 0.5f;
+
+        hover.GetVariableSave(TintX).ShouldNotBeNull("the whole parameter is written into the state being edited").Value.ShouldBe(0.1f);
+        hover.GetVariableSave(TintY).ShouldNotBeNull().Value.ShouldBe(0.5f);
+        hover.GetVariableSave(TintZ).ShouldNotBeNull().Value.ShouldBe(0.3f);
+        hover.GetVariableSave(TintW).ShouldNotBeNull().Value.ShouldBe(0.4f);
+    }
+
+    private static void MakeDefault(InstanceMember row) =>
+        row.ContextMenuEvents.Single(item => item.Key == "Make Default").Value.Invoke(row, EventArgs.Empty);
+
+    [Fact]
+    public void MakeDefaultOnTheCompositeRow_ClearsEveryComponent_AsOneUndoStep()
+    {
+        GivenTheEffectDeclares(Float("Thickness", 2f), Tint4());
+        UndoManager undoManager = UseRealUndoManager();
+        MemberCategory category = BuildRows();
+        undoManager.RecordState();
+        Row(category, "Tint X").Value = 0.75f;
+        undoManager.RecordUndo();
+
+        undoManager.RecordState();
+        MakeDefault(category.Members.OfType<CompositeInstanceMember>().Single());
+
+        IsSaved(TintX).ShouldBeFalse();
+        IsSaved(TintW).ShouldBeFalse();
+
+        undoManager.PerformUndo();
+
+        _component.DefaultState.GetVariableSave(TintX).ShouldNotBeNull("one undo restores the whole parameter").Value.ShouldBe(0.75f);
+        _component.DefaultState.GetVariableSave(TintW).ShouldNotBeNull().Value.ShouldBe(0.4f);
+    }
+
+    [Fact]
+    public void TheCompositeRow_OffersNoPerComponentExpose()
+    {
+        GivenTheEffectDeclares(Tint2());
+        MemberCategory category = BuildRows();
+
+        CompositeInstanceMember row = category.Members.OfType<CompositeInstanceMember>().Single();
+
+        row.ContextMenuEvents.Keys.ShouldNotContain(key => key.Contains("Expose"));
     }
 
     [Fact]
