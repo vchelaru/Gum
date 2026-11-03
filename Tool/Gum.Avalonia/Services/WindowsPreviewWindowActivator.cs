@@ -16,24 +16,105 @@ internal sealed class WindowsPreviewWindowActivator : IPreviewWindowActivator
 {
     private const int SW_RESTORE = 9;
 
+    private delegate bool EnumWindowsProc(IntPtr window, IntPtr parameter);
+
 #pragma warning disable RS0030 // Sanctioned per-OS P/Invoke file for the Avalonia head.
     [DllImport("user32.dll")]
     private static extern bool IsIconic(IntPtr window);
+
+    [DllImport("user32.dll")]
+    private static extern bool IsWindowVisible(IntPtr window);
 
     [DllImport("user32.dll")]
     private static extern bool ShowWindow(IntPtr window, int command);
 
     [DllImport("user32.dll")]
     private static extern bool SetForegroundWindow(IntPtr window);
+
+    [DllImport("user32.dll")]
+    private static extern IntPtr GetForegroundWindow();
+
+    [DllImport("user32.dll")]
+    private static extern bool EnumWindows(EnumWindowsProc callback, IntPtr parameter);
+
+    [DllImport("user32.dll")]
+    private static extern uint GetWindowThreadProcessId(IntPtr window, out uint processId);
+
+    [DllImport("user32.dll")]
+    private static extern int GetWindowTextLength(IntPtr window);
+
+    [DllImport("user32.dll")]
+    private static extern bool GetWindowRect(IntPtr window, out Rect rect);
+
+    [DllImport("user32.dll")]
+    private static extern bool AttachThreadInput(uint attachThread, uint attachToThread, bool attach);
+
+    [DllImport("kernel32.dll")]
+    private static extern uint GetCurrentThreadId();
 #pragma warning restore RS0030
 
-    /// <inheritdoc/>
-    public void Activate(IntPtr window)
+    private struct Rect
     {
-        if (IsIconic(window))
+        public int Left, Top, Right, Bottom;
+    }
+
+    /// <inheritdoc/>
+    public IntPtr FindWindow(int processId)
+    {
+        IntPtr best = IntPtr.Zero;
+        long bestScore = -1;
+        EnumWindows((window, _) =>
         {
-            ShowWindow(window, SW_RESTORE);
+            GetWindowThreadProcessId(window, out uint owner);
+            if (owner != (uint)processId || !IsWindowVisible(window))
+            {
+                return true;
+            }
+            long area = GetWindowRect(window, out Rect rect) ? (long)(rect.Right - rect.Left) * (rect.Bottom - rect.Top) : 0;
+            // A titled window beats any untitled one; the largest wins within each group.
+            long score = (GetWindowTextLength(window) > 0 ? 1L << 40 : 0) + area;
+            if (score > bestScore)
+            {
+                bestScore = score;
+                best = window;
+            }
+            return true;
+        }, IntPtr.Zero);
+        return best;
+    }
+
+    /// <inheritdoc/>
+    public string Activate(IntPtr window)
+    {
+        bool wasIconic = IsIconic(window);
+        bool showResult = wasIconic && ShowWindow(window, SW_RESTORE);
+        bool setResult = SetForegroundWindow(window);
+        bool attached = false;
+        if (!setResult)
+        {
+            // Windows' foreground lock refused it; sharing the foreground thread's input queue lifts it
+            // for the call.
+            IntPtr foreground = GetForegroundWindow();
+            uint foregroundThread = GetWindowThreadProcessId(foreground, out _);
+            uint thisThread = GetCurrentThreadId();
+            if (foregroundThread != 0 && foregroundThread != thisThread)
+            {
+                attached = AttachThreadInput(thisThread, foregroundThread, true);
+                try
+                {
+                    setResult = SetForegroundWindow(window);
+                }
+                finally
+                {
+                    if (attached)
+                    {
+                        AttachThreadInput(thisThread, foregroundThread, false);
+                    }
+                }
+            }
         }
-        SetForegroundWindow(window);
+        IntPtr after = GetForegroundWindow();
+        return $"iconic={wasIconic}, ShowWindow={showResult}, SetForegroundWindow={setResult} (AttachThreadInput retry={attached}), " +
+            $"foreground now 0x{after.ToInt64():X} ({(after == window ? "preview" : "NOT the preview: refused")})";
     }
 }

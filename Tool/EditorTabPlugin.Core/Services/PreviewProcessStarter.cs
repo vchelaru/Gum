@@ -242,15 +242,13 @@ public class PreviewProcessStarter : IPreviewProcessStarter
             try
             {
                 _process.Refresh();
-                IntPtr window = _process.MainWindowHandle;
-                if (window != IntPtr.Zero)
-                {
-                    _windowActivator.Activate(window);
-                }
+                PreviewWindowActivation.Activate(
+                    _windowActivator, _process.Id, _process.MainWindowHandle, line => Gum.Diagnostics.ToolLog.Write(line));
             }
-            catch (InvalidOperationException)
+            catch (Exception exception) when (exception is not OutOfMemoryException)
             {
-                // It exited between the check and the call.
+                // It exited between the check and the call, or the OS refused; neither fails a launch.
+                Gum.Diagnostics.ToolLog.Write($"Preview activate failed: {exception.Message}");
             }
         }
 
