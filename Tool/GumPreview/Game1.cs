@@ -262,7 +262,7 @@ public class Game1 : Game
         _inputTracker ??= new PreviewInputTracker(log);
         Cursor cursor = GumService.Default.Cursor;
         _inputTracker.ObserveMouse(cursor.X, cursor.Y, cursor.PrimaryDown);
-        _inputTracker.ObserveTextBox(DescribeTextBox(focus as TextBoxBase));
+        _inputTracker.ObserveTextBox(DescribeTextBox(focus as TextBox));
 
         Keyboard keyboard = GumService.Default.Keyboard;
         IReadOnlyCollection<Microsoft.Xna.Framework.Input.Keys> typed = keyboard.KeysTyped;
@@ -283,7 +283,7 @@ public class Game1 : Game
         }
     }
 
-    private static TextBoxSnapshot? DescribeTextBox(TextBoxBase? textBox)
+    private static TextBoxSnapshot? DescribeTextBox(TextBox? textBox)
     {
         if (textBox == null)
         {
