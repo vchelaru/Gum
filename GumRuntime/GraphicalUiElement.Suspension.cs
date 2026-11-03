@@ -119,7 +119,10 @@ public partial class GraphicalUiElement
         {
             if (!IsAllLayoutSuspended)
             {
-
+                // Descendants resumed one at a time would still be suspended while an ancestor lays them out, and
+                // each would then lay its parent out again as it resumed: rows squared for a list (#7239).
+                // Ending every suspension first lets the first layout cover the subtree and clear its dirty state.
+                ClearLayoutSuspensionRecursive();
                 ResumeLayoutUpdateIfDirtyRecursive();
             }
             else
