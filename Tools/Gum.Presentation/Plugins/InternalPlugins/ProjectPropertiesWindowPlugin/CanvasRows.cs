@@ -39,22 +39,22 @@ public sealed class CanvasRows : IRowsSettingsPage
         {
             SettingsRows.Section("Canvas size", new[]
             {
-                SettingsRows.Number(nameof(vm.CanvasWidth), "Canvas Width",
+                SettingsRows.Number(nameof(vm.CanvasWidth), "Canvas width",
                     "Width of the canvas that top-level elements are laid out against, in pixels.",
                     () => vm.CanvasWidth, value => vm.CanvasWidth = value),
-                SettingsRows.Number(nameof(vm.CanvasHeight), "Canvas Height",
+                SettingsRows.Number(nameof(vm.CanvasHeight), "Canvas height",
                     "Height of the canvas that top-level elements are laid out against, in pixels.",
                     () => vm.CanvasHeight, value => vm.CanvasHeight = value),
             }),
             SettingsRows.Section("Guides", new[]
             {
-                SettingsRows.Toggle(nameof(vm.ShowOutlines), "Show Outlines",
+                SettingsRows.Toggle(nameof(vm.ShowOutlines), "Show outlines",
                     "Draws an outline around containers and other invisible instances.",
                     () => vm.ShowOutlines, value => vm.ShowOutlines = value, toggleText: "Outline containers"),
-                SettingsRows.Toggle(nameof(vm.ShowCanvasOutline), "Show Canvas Outline",
+                SettingsRows.Toggle(nameof(vm.ShowCanvasOutline), "Show canvas outline",
                     "Draws the border of the canvas.",
                     () => vm.ShowCanvasOutline, value => vm.ShowCanvasOutline = value, toggleText: "Outline the canvas"),
-                SettingsRows.Toggle(nameof(vm.ShowCheckerBackground), "Show Checker Background",
+                SettingsRows.Toggle(nameof(vm.ShowCheckerBackground), "Show checker background",
                     "Draws a checkerboard behind the canvas so transparent areas show.",
                     () => vm.ShowCheckerBackground, value => vm.ShowCheckerBackground = value, toggleText: "Show checkerboard"),
             }),

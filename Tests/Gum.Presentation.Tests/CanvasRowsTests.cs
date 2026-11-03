@@ -44,8 +44,8 @@ public class CanvasRowsTests
     {
         string[] terms = _sut.SearchTerms().ToArray();
 
-        terms.ShouldContain("Canvas Width");
-        terms.ShouldContain("Show Checker Background");
+        terms.ShouldContain("Canvas width");
+        terms.ShouldContain("Show checker background");
         terms.Length.ShouldBe(10);
     }
 
