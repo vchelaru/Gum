@@ -38,4 +38,21 @@ public class TextRelativeToChildrenSetTextTests : BaseTestClass
 
         text.AbsoluteLeft.ShouldBe(left);
     }
+
+    [Fact]
+    public void Text_ShouldRestoreRenderableWidth_WhenAssignmentThrows()
+    {
+        Moq.Mock<Gum.Localization.ILocalizationService> localization = new();
+        localization.Setup(x => x.Translate("Boom")).Throws<System.InvalidOperationException>();
+        TextRuntime text = new();
+        text.WidthUnits = DimensionUnitType.RelativeToChildren;
+        text.Width = 4;
+        text.Text = "Mason";
+        float? renderableWidth = ((Text)text.RenderableComponent).Width;
+        Gum.Wireframe.CustomSetPropertyOnRenderable.LocalizationService = localization.Object;
+
+        Should.Throw<System.InvalidOperationException>(() => text.Text = "Boom");
+
+        ((Text)text.RenderableComponent).Width.ShouldBe(renderableWidth);
+    }
 }

@@ -71,4 +71,49 @@ public class TextRelativeToChildrenSetTextTests : BaseTestClass
 
         parent.AbsoluteWidth.ShouldBe(width);
     }
+
+    [Theory]
+    [InlineData("Mason", "Mason Mason Mason")]
+    [InlineData("Mason Mason Mason", "Mason")]
+    [InlineData("Mason", "[Color=Red]Mason Mason[/Color]")]
+    public void Text_ShouldResizeParentAndRaiseSizeChanged_WhenMeasuredSizeChanges(string first, string second)
+    {
+        ContainerRuntime parent = new();
+        parent.WidthUnits = DimensionUnitType.RelativeToChildren;
+        parent.Width = 0;
+        TextRuntime text = new();
+        text.WidthUnits = DimensionUnitType.RelativeToChildren;
+        text.Width = 4;
+        parent.AddChild(text);
+        text.Text = first;
+        float parentBefore = parent.AbsoluteWidth;
+        float textBefore = text.AbsoluteWidth;
+        int parentSizeChanges = 0;
+        parent.SizeChanged += (_, _) => parentSizeChanges++;
+
+        text.Text = second;
+
+        text.AbsoluteWidth.ShouldNotBe(textBefore);
+        (parent.AbsoluteWidth - parentBefore).ShouldBe(text.AbsoluteWidth - textBefore, 0.01f);
+        parentSizeChanges.ShouldBeGreaterThan(0);
+    }
+
+    [Fact]
+    public void Text_ShouldNotRaiseParentSizeChanged_WhenSetToSameString()
+    {
+        ContainerRuntime parent = new();
+        parent.WidthUnits = DimensionUnitType.RelativeToChildren;
+        parent.Width = 0;
+        TextRuntime text = new();
+        text.WidthUnits = DimensionUnitType.RelativeToChildren;
+        text.Width = 4;
+        parent.AddChild(text);
+        text.Text = "Mason";
+        int parentSizeChanges = 0;
+        parent.SizeChanged += (_, _) => parentSizeChanges++;
+
+        text.Text = "Mason";
+
+        parentSizeChanges.ShouldBe(0);
+    }
 }

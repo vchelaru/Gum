@@ -114,7 +114,19 @@ public partial class GraphicalUiElement
             text.Width = EffectiveMaxWidth;
         }
 
-        assign(state);
+        try
+        {
+            assign(state);
+        }
+        catch
+        {
+            // The text did not change, so neither did its laid-out width.
+            if (measuresUnwrapped)
+            {
+                text.Width = renderableWidthBefore;
+            }
+            throw;
+        }
 
         // we want to update if the text's size actually changed (the letters it contains)
         if (widthBefore != text.WrappedTextWidth || heightBefore != text.WrappedTextHeight)
