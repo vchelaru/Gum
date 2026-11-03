@@ -1432,16 +1432,20 @@ public partial class HeadlessErrorChecker : IHeadlessErrorChecker
     private static List<ErrorResult> GetMissingComponentBaseTypeErrors(GumProjectSave project)
     {
         List<ErrorResult> errors = new List<ErrorResult>();
+        bool isJsonFormat = GumProjectSave.IsJsonFormat(project.FullFileName ?? "");
 
         foreach (ComponentSave elementSave in project.Components.Where(component => string.IsNullOrWhiteSpace(component.BaseType)))
         {
+            string fix = isJsonFormat
+                ? $"set \"BaseType\" in its .{GumProjectSave.ComponentJsonExtension} file"
+                : $"set <BaseType> in its .{GumProjectSave.ComponentExtension} file";
             errors.Add(new ErrorResult
             {
                 ElementName = elementSave.Name,
                 Code = "GUM0015",
                 Severity = ErrorSeverity.Error,
                 Message = $"Component {elementSave.Name} has no BaseType, so generated code gives its class no base class. " +
-                    "In the Gum tool, pick a Base Type (for example Container) in the BaseType dropdown, or set <BaseType> in its .gucx file to Container or to the component it derives from."
+                    $"In the Gum tool, pick a Base Type (for example Container) in the BaseType dropdown, or {fix} to Container or to the component it derives from."
             });
         }
 
