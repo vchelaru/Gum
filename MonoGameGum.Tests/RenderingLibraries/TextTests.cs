@@ -470,6 +470,69 @@ char id=67 x=0 y=0 width={xadvance} height=13 xoffset=0 yoffset=4 xadvance={xadv
             "because a base run after a font-swap run must still be fully measured at the base size");
     }
 
+    // #7282: once oversampling pins the native font as MeasurementFont, a run with only a [Color] tag
+    // used to be measured with the larger display font, so it wrapped and sized in oversampled units.
+    // It must wrap and size exactly like the same text without the tag.
+    [Fact]
+    public void Wrap_WhenOversamplingActiveAndTextHasColorRun_MatchesPlainText()
+    {
+        const string sentence = "AA BB CC AA BB CC";
+
+        Text plain = CreateOversampledText(sentence, withColorRun: false);
+        Text colored = CreateOversampledText(sentence, withColorRun: true);
+
+        colored.WrappedText.Count.ShouldBe(plain.WrappedText.Count);
+        colored.WrappedTextWidth.ShouldBe(plain.WrappedTextWidth, tolerance: 0.001f);
+        colored.WrappedTextHeight.ShouldBe(plain.WrappedTextHeight, tolerance: 0.001f);
+    }
+
+    // Characterization: without oversampling, a [Color] run already matches plain text.
+    [Fact]
+    public void Wrap_WhenNotOversampledAndTextHasColorRun_MatchesPlainText()
+    {
+        const string sentence = "AA BB CC AA BB CC";
+
+        Text plain = CreateText(sentence, withColorRun: false, oversample: false);
+        Text colored = CreateText(sentence, withColorRun: true, oversample: false);
+
+        colored.WrappedText.Count.ShouldBe(plain.WrappedText.Count);
+        colored.WrappedTextWidth.ShouldBe(plain.WrappedTextWidth, tolerance: 0.001f);
+        colored.WrappedTextHeight.ShouldBe(plain.WrappedTextHeight, tolerance: 0.001f);
+    }
+
+    private static Text CreateOversampledText(string sentence, bool withColorRun) =>
+        CreateText(sentence, withColorRun, oversample: true);
+
+    private static Text CreateText(string sentence, bool withColorRun, bool oversample)
+    {
+        BitmapFont baseFont = new BitmapFont((Texture2D)null!, AbcFontData(xadvance: 10, lineHeight: 20));
+        baseFont.SetFontPattern(256, 256);
+
+        Text text = new Text();
+        text.BitmapFont = baseFont;
+        if (oversample)
+        {
+            BitmapFont oversampledFont = new BitmapFont((Texture2D)null!, AbcFontData(xadvance: 20, lineHeight: 40));
+            oversampledFont.SetFontPattern(256, 256);
+            text.SetOversampledDisplayFont(oversampledFont);
+            text.OversampleCompensationScale = 0.5f;
+        }
+        if (withColorRun)
+        {
+            // "BB" at index 3 gets a Color run, like [Color=Orange]BB[/Color].
+            text.InlineVariables.Add(new InlineVariable
+            {
+                VariableName = "Color",
+                Value = Microsoft.Xna.Framework.Color.Orange,
+                StartIndex = 3,
+                CharacterCount = 2
+            });
+        }
+        text.Width = 100;
+        text.RawText = sentence;
+        return text;
+    }
+
     // #3520 (the wrapping half): line wrapping must measure each inline run at its own size, not the
     // base size. A fixed-width line that fits "AA BB CC" at the base size must wrap once "BB" is
     // enlarged via a font-swap run (like [FontSize=40]) — otherwise the wrap packs all three words at

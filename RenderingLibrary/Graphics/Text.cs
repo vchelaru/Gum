@@ -1621,17 +1621,20 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
     /// from the base, so a tag on one run never carries into the next. Shared by the draw, the line advance and
     /// the measurement so the three agree. Returns true when the run has either tag (a size run).
     /// </summary>
-    private bool ResolveRunFont(List<InlineVariable> variables, BitmapFont? baseFont, out BitmapFont? runFont, out float runScale)
+    private bool ResolveRunFont(List<InlineVariable> variables, BitmapFont? baseFont, out BitmapFont? runFont, out float runScale, bool forMeasurement = false)
     {
         runFont = baseFont;
-        runScale = EffectiveFontScale;
+        runScale = forMeasurement ? MeasurementFontScale : EffectiveFontScale;
         bool isSizeRun = false;
         for (int variableIndex = 0; variableIndex < variables.Count; variableIndex++)
         {
             var variable = variables[variableIndex];
             if (variable.VariableName == nameof(FontScale))
             {
-                runScale = ComposeFontScale((float)variable.Value);
+                // Measuring against the pinned font leaves out the oversample compensation, as MeasurementFontScale does (#7282).
+                runScale = forMeasurement && mMeasurementFont != null
+                    ? (float)variable.Value * SystemManagers.GlobalFontScale
+                    : ComposeFontScale((float)variable.Value);
                 isSizeRun = true;
             }
             else if (variable.VariableName == nameof(BitmapFont))
@@ -1934,7 +1937,7 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
             {
                 lineHeightFactor = 0;
                 // Only reached from UpdatePreRenderDimensions, which requires mBitmapFont.
-                lineWidthInBaseUnits = mBitmapFont!.MeasureString(line);
+                lineWidthInBaseUnits = EffectiveMeasurementFont!.MeasureString(line);
             }
             else
             {
@@ -1942,7 +1945,7 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
             }
 
             maxWidth = System.Math.Max(maxWidth, lineWidthInBaseUnits);
-            totalHeight += TextLineHeight.Compute(LineHeightInPixels, 1, LineHeightMultiplier, lineHeightFactor);
+            totalHeight += TextLineHeight.Compute(EffectiveMeasurementFont?.LineHeightInPixels ?? LineHeightInPixels, 1, LineHeightMultiplier, lineHeightFactor);
 
             startOfLineIndex += line.Length;
         }
@@ -1978,7 +1981,10 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
     /// </remarks>
     private float MeasureStyledLineInBaseUnits(List<StyledSubstring> substrings, out float lineHeightFactor)
     {
-        var effectiveFontScale = EffectiveFontScale;
+        // Issue #7282: measure with the same font and scale as the plain path (the pinned measurement font
+        // while oversampled), so a text with only a [Color] run wraps and sizes like the same text without it.
+        var measurementFont = EffectiveMeasurementFont;
+        var effectiveFontScale = MeasurementFontScale;
 
         float maxRunScale = 0;
         float lineWidthAtScale = 0;
@@ -1986,14 +1992,14 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
         {
             var substring = substrings[substringIndex];
             // runFont is null when no font is loaded yet (see MeasureString); that run then measures as 0.
-            bool isSizeRun = ResolveRunFont(substring.Variables, mBitmapFont, out BitmapFont? runFont, out float runScale);
+            bool isSizeRun = ResolveRunFont(substring.Variables, measurementFont, out BitmapFont? runFont, out float runScale, forMeasurement: true);
             float runHeightScale = 0;
             if (isSizeRun)
             {
                 runHeightScale = runScale;
-                if (runFont != null && mBitmapFont != null && mBitmapFont.LineHeightInPixels > 0)
+                if (runFont != null && measurementFont != null && measurementFont.LineHeightInPixels > 0)
                 {
-                    runHeightScale = runScale * runFont.LineHeightInPixels / mBitmapFont.LineHeightInPixels;
+                    runHeightScale = runScale * runFont.LineHeightInPixels / measurementFont.LineHeightInPixels;
                 }
             }
             var measurementStyle = substringIndex == substrings.Count - 1
