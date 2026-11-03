@@ -51,8 +51,40 @@ public static class RaylibPixelHarness
         }
     }
 
-    // LoadImageFromTexture yields rows flipped relative to draw space, so (0,0) is read from the last row.
-    private static PixelGrid Read(RenderTexture2D target, int width, int height)
+    /// <summary>One pixel of a baked render texture in top-left-origin draw space (x right, y down).</summary>
+    public static Color ReadPixel(RenderTexture2D target, int x, int y)
+    {
+        Image image = LoadImageFromTexture(target.Texture);
+        try
+        {
+            return GetImageColor(image, x, target.Texture.Height - 1 - y);
+        }
+        finally
+        {
+            UnloadImage(image);
+        }
+    }
+
+    /// <summary>The pixel at (Width / 2, Height / 2) of the texture's rows as stored, without the vertical flip.</summary>
+    public static Color ReadRawCenter(RenderTexture2D target)
+    {
+        Image image = LoadImageFromTexture(target.Texture);
+        try
+        {
+            return GetImageColor(image, target.Texture.Width / 2, target.Texture.Height / 2);
+        }
+        finally
+        {
+            UnloadImage(image);
+        }
+    }
+
+    /// <summary>The center pixel in top-left-origin draw space.</summary>
+    public static Color ReadCenter(RenderTexture2D target) =>
+        ReadPixel(target, target.Texture.Width / 2, target.Texture.Height / 2);
+
+    /// <summary>Reads the top-left width x height of a baked render texture in draw space.</summary>
+    public static PixelGrid Read(RenderTexture2D target, int width, int height)
     {
         Image image = LoadImageFromTexture(target.Texture);
         try

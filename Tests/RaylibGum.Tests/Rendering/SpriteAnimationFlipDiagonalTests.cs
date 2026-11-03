@@ -1,3 +1,4 @@
+using RaylibGum.Tests.Helpers;
 using Gum.Graphics.Animation;
 using Gum.GueDeriving;
 using Gum.Renderables;
@@ -68,20 +69,6 @@ public class SpriteAnimationFlipDiagonalTests : BaseTestClass
         return Renderer.Self.TryGetBakedRenderTargetFor(container)!.Value;
     }
 
-    // A render texture is stored bottom-up in GL, so rows are flipped relative to draw space.
-    private static Color ReadPixel(RenderTexture2D renderTexture, int x, int y)
-    {
-        Image image = LoadImageFromTexture(renderTexture.Texture);
-        try
-        {
-            return GetImageColor(image, x, renderTexture.Texture.Height - 1 - y);
-        }
-        finally
-        {
-            UnloadImage(image);
-        }
-    }
-
     private static void ShouldBe(Color actual, Color expected)
     {
         (actual.R, actual.G, actual.B).ShouldBe((expected.R, expected.G, expected.B));
@@ -105,10 +92,10 @@ public class SpriteAnimationFlipDiagonalTests : BaseTestClass
 
         // The sprite covers x 10..30, y 10..30. A transpose fixes the top-left and bottom-right
         // corners and swaps the top-right and bottom-left ones.
-        ShouldBe(ReadPixel(target, 15, 15), PureRed);
-        ShouldBe(ReadPixel(target, 25, 15), PureBlue);
-        ShouldBe(ReadPixel(target, 15, 25), PureGreen);
-        ShouldBe(ReadPixel(target, 25, 25), PureWhite);
+        ShouldBe(RaylibPixelHarness.ReadPixel(target, 15, 15), PureRed);
+        ShouldBe(RaylibPixelHarness.ReadPixel(target, 25, 15), PureBlue);
+        ShouldBe(RaylibPixelHarness.ReadPixel(target, 15, 25), PureGreen);
+        ShouldBe(RaylibPixelHarness.ReadPixel(target, 25, 25), PureWhite);
 
         ClearRoot();
         UnloadTexture(texture);
@@ -127,8 +114,8 @@ public class SpriteAnimationFlipDiagonalTests : BaseTestClass
             BottomCoordinate = 1f,
         }, width: 20, height: 20);
 
-        ShouldBe(ReadPixel(target, 25, 15), PureGreen);
-        ShouldBe(ReadPixel(target, 15, 25), PureBlue);
+        ShouldBe(RaylibPixelHarness.ReadPixel(target, 25, 15), PureGreen);
+        ShouldBe(RaylibPixelHarness.ReadPixel(target, 15, 25), PureBlue);
 
         ClearRoot();
         UnloadTexture(texture);
@@ -149,11 +136,11 @@ public class SpriteAnimationFlipDiagonalTests : BaseTestClass
         }, width: 30, height: 10);
 
         // The sprite covers x 10..40, y 10..20 and its footprint does not change.
-        ShouldBe(ReadPixel(target, 15, 12), PureRed);
-        ShouldBe(ReadPixel(target, 35, 18), PureWhite);
-        ShouldBe(ReadPixel(target, 35, 12), PureBlue);
-        ShouldBe(ReadPixel(target, 15, 18), PureGreen);
-        ReadPixel(target, 25, 25).A.ShouldBe((byte)0);
+        ShouldBe(RaylibPixelHarness.ReadPixel(target, 15, 12), PureRed);
+        ShouldBe(RaylibPixelHarness.ReadPixel(target, 35, 18), PureWhite);
+        ShouldBe(RaylibPixelHarness.ReadPixel(target, 35, 12), PureBlue);
+        ShouldBe(RaylibPixelHarness.ReadPixel(target, 15, 18), PureGreen);
+        RaylibPixelHarness.ReadPixel(target, 25, 25).A.ShouldBe((byte)0);
 
         ClearRoot();
         UnloadTexture(texture);
@@ -176,10 +163,10 @@ public class SpriteAnimationFlipDiagonalTests : BaseTestClass
 
         // Flipping horizontally puts green, red / white, blue; transposing that gives
         // green, white / red, blue.
-        ShouldBe(ReadPixel(target, 15, 15), PureGreen);
-        ShouldBe(ReadPixel(target, 25, 15), PureWhite);
-        ShouldBe(ReadPixel(target, 15, 25), PureRed);
-        ShouldBe(ReadPixel(target, 25, 25), PureBlue);
+        ShouldBe(RaylibPixelHarness.ReadPixel(target, 15, 15), PureGreen);
+        ShouldBe(RaylibPixelHarness.ReadPixel(target, 25, 15), PureWhite);
+        ShouldBe(RaylibPixelHarness.ReadPixel(target, 15, 25), PureRed);
+        ShouldBe(RaylibPixelHarness.ReadPixel(target, 25, 25), PureBlue);
 
         ClearRoot();
         UnloadTexture(texture);
@@ -203,10 +190,10 @@ public class SpriteAnimationFlipDiagonalTests : BaseTestClass
         // y 20..40: its own right edge points up and its own bottom edge points right. The
         // transpose still fixes its own top-left (red, now bottom-left on screen) and bottom-right
         // (white, top-right) and swaps the other two.
-        ShouldBe(ReadPixel(target, 35, 35), PureRed);
-        ShouldBe(ReadPixel(target, 45, 25), PureWhite);
-        ShouldBe(ReadPixel(target, 35, 25), PureBlue);
-        ShouldBe(ReadPixel(target, 45, 35), PureGreen);
+        ShouldBe(RaylibPixelHarness.ReadPixel(target, 35, 35), PureRed);
+        ShouldBe(RaylibPixelHarness.ReadPixel(target, 45, 25), PureWhite);
+        ShouldBe(RaylibPixelHarness.ReadPixel(target, 35, 25), PureBlue);
+        ShouldBe(RaylibPixelHarness.ReadPixel(target, 45, 35), PureGreen);
 
         ClearRoot();
         UnloadTexture(texture);
@@ -228,11 +215,11 @@ public class SpriteAnimationFlipDiagonalTests : BaseTestClass
             FlipDiagonal = true,
         }, width: 40, height: 20, wrap: true);
 
-        ShouldBe(ReadPixel(target, 15, 12), PureRed);
-        ShouldBe(ReadPixel(target, 35, 12), PureBlue);
-        ShouldBe(ReadPixel(target, 15, 26), PureGreen);
-        ShouldBe(ReadPixel(target, 35, 26), PureWhite);
-        ReadPixel(target, 25, 35).A.ShouldBe((byte)0);
+        ShouldBe(RaylibPixelHarness.ReadPixel(target, 15, 12), PureRed);
+        ShouldBe(RaylibPixelHarness.ReadPixel(target, 35, 12), PureBlue);
+        ShouldBe(RaylibPixelHarness.ReadPixel(target, 15, 26), PureGreen);
+        ShouldBe(RaylibPixelHarness.ReadPixel(target, 35, 26), PureWhite);
+        RaylibPixelHarness.ReadPixel(target, 25, 35).A.ShouldBe((byte)0);
 
         ClearRoot();
         UnloadTexture(texture);
@@ -254,11 +241,11 @@ public class SpriteAnimationFlipDiagonalTests : BaseTestClass
             FlipDiagonal = true,
         }, width: 40, height: 20);
 
-        ShouldBe(ReadPixel(target, 15, 12), PureRed);
-        ShouldBe(ReadPixel(target, 35, 12), PureBlue);
-        ShouldBe(ReadPixel(target, 15, 26), PureGreen);
-        ShouldBe(ReadPixel(target, 35, 26), PureWhite);
-        ReadPixel(target, 25, 35).A.ShouldBe((byte)0);
+        ShouldBe(RaylibPixelHarness.ReadPixel(target, 15, 12), PureRed);
+        ShouldBe(RaylibPixelHarness.ReadPixel(target, 35, 12), PureBlue);
+        ShouldBe(RaylibPixelHarness.ReadPixel(target, 15, 26), PureGreen);
+        ShouldBe(RaylibPixelHarness.ReadPixel(target, 35, 26), PureWhite);
+        RaylibPixelHarness.ReadPixel(target, 25, 35).A.ShouldBe((byte)0);
 
         ClearRoot();
         UnloadTexture(texture);

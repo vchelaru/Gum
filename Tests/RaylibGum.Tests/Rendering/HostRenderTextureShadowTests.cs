@@ -1,3 +1,4 @@
+using RaylibGum.Tests.Helpers;
 using Gum.GueDeriving;
 using Raylib_cs;
 using Shouldly;
@@ -23,19 +24,6 @@ public class HostRenderTextureShadowTests : BaseTestClass
         box.IsFilled = true;
         box.FillColor = new Color(r, g, b, (byte)255);
         return box;
-    }
-
-    private static Color ReadPixel(RenderTexture2D renderTexture, int x, int y)
-    {
-        Image image = LoadImageFromTexture(renderTexture.Texture);
-        try
-        {
-            return GetImageColor(image, x, renderTexture.Texture.Height - 1 - y);
-        }
-        finally
-        {
-            UnloadImage(image);
-        }
     }
 
     private static (int First, int Second) CountDrawCallsFirstTwoFrames(bool insideHostTexture)
@@ -132,9 +120,9 @@ public class HostRenderTextureShadowTests : BaseTestClass
             EndTextureMode();
             EndDrawing();
 
-            ReadPixel(host, 25, 25).R.ShouldBeGreaterThan((byte)200);
-            ReadPixel(host, 25, 75).B.ShouldBeGreaterThan((byte)200);
-            ReadPixel(host, 75, 25).G.ShouldBeGreaterThan((byte)200);
+            RaylibPixelHarness.ReadPixel(host, 25, 25).R.ShouldBeGreaterThan((byte)200);
+            RaylibPixelHarness.ReadPixel(host, 25, 75).B.ShouldBeGreaterThan((byte)200);
+            RaylibPixelHarness.ReadPixel(host, 75, 25).G.ShouldBeGreaterThan((byte)200);
         }
         finally
         {

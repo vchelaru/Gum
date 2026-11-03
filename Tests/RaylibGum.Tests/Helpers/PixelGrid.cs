@@ -22,6 +22,9 @@ public class PixelGrid
         _pixels = pixels;
     }
 
+    /// <summary>The pixels in row-major order, top row first.</summary>
+    public Color[] Pixels => _pixels;
+
     public Color this[int x, int y] => _pixels[y * Width + x];
 
     /// <summary>Fails unless every channel of the pixel is within <paramref name="tolerance"/> of <paramref name="expected"/>.</summary>

@@ -1,3 +1,4 @@
+using RaylibGum.Tests.Helpers;
 using Gum.GueDeriving;
 using Gum.Wireframe;
 using Raylib_cs;
@@ -123,16 +124,7 @@ public class ArcMatchesCircleTests : BaseTestClass
         EndDrawing();
 
         RenderTexture2D rt = Renderer.Self.TryGetBakedRenderTargetFor(container)!.Value;
-        Image image = LoadImageFromTexture(rt.Texture);
-        Color[] result = new Color[CanvasSize * CanvasSize];
-        for (int y = 0; y < CanvasSize; y++)
-        {
-            for (int x = 0; x < CanvasSize; x++)
-            {
-                result[y * CanvasSize + x] = GetImageColor(image, x, rt.Texture.Height - 1 - y);
-            }
-        }
-        UnloadImage(image);
+        Color[] result = RaylibPixelHarness.Read(rt, CanvasSize, CanvasSize).Pixels;
         Gum.GumService.Default.Root.Children.Clear();
         return result;
     }

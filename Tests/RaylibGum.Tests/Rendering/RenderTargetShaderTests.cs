@@ -1,3 +1,4 @@
+using RaylibGum.Tests.Helpers;
 using Gum;
 using System;
 using System.IO;
@@ -49,23 +50,6 @@ void main()
         EndDrawing();
     }
 
-    // Reads a pixel in top-left-origin draw space. A render texture is stored bottom-up in GL, so
-    // the row index is flipped (same idiom as RenderTargetTests).
-    private static Color ReadRenderTargetCenter(RenderTexture2D renderTexture)
-    {
-        Image image = LoadImageFromTexture(renderTexture.Texture);
-        try
-        {
-            int x = renderTexture.Texture.Width / 2;
-            int y = renderTexture.Texture.Height / 2;
-            return GetImageColor(image, x, renderTexture.Texture.Height - 1 - y);
-        }
-        finally
-        {
-            UnloadImage(image);
-        }
-    }
-
     // Builds a solid-red inner render target nested inside a readable outer render target and
     // returns both. Sampling the outer's center reads whatever the inner composited into it.
     private static (ContainerRuntime outer, ContainerRuntime inner) BuildNestedRedRenderTarget()
@@ -107,14 +91,14 @@ void main()
         {
             // Control: no shader, the composited inner reads back clearly red.
             DrawOnce();
-            Color withoutShader = ReadRenderTargetCenter(Renderer.Self.TryGetBakedRenderTargetFor(outer)!.Value);
+            Color withoutShader = RaylibPixelHarness.ReadCenter(Renderer.Self.TryGetBakedRenderTargetFor(outer)!.Value);
             withoutShader.R.ShouldBeGreaterThan((byte)200);
             ((int)withoutShader.R - withoutShader.G).ShouldBeGreaterThan(80);
 
             // With the grayscale shader bound for the composite blit, the channels collapse.
             inner.RenderTargetEffect = grayscale;
             DrawOnce();
-            Color withShader = ReadRenderTargetCenter(Renderer.Self.TryGetBakedRenderTargetFor(outer)!.Value);
+            Color withShader = RaylibPixelHarness.ReadCenter(Renderer.Self.TryGetBakedRenderTargetFor(outer)!.Value);
             Math.Abs(withShader.R - withShader.G).ShouldBeLessThan(25);
             Math.Abs(withShader.R - withShader.B).ShouldBeLessThan(25);
         }
@@ -165,8 +149,8 @@ void main()
             DrawOnce();
 
             RenderTexture2D baked = Renderer.Self.TryGetBakedRenderTargetFor(outer)!.Value;
-            Math.Abs(ReadRenderTargetPixel(baked, 50, 50).R - 64).ShouldBeLessThan(12);
-            Math.Abs(ReadRenderTargetPixel(baked, 150, 50).R - 191).ShouldBeLessThan(12);
+            Math.Abs(RaylibPixelHarness.ReadPixel(baked, 50, 50).R - 64).ShouldBeLessThan(12);
+            Math.Abs(RaylibPixelHarness.ReadPixel(baked, 150, 50).R - 191).ShouldBeLessThan(12);
         }
         finally
         {
@@ -220,17 +204,17 @@ void main()
             RenderTexture2D baked = Renderer.Self.TryGetBakedRenderTargetFor(outer)!.Value;
 
             // Inside the square is still red.
-            Color inside = ReadRenderTargetPixel(baked, 24, 24);
+            Color inside = RaylibPixelHarness.ReadPixel(baked, 24, 24);
             inside.R.ShouldBeGreaterThan((byte)200);
             inside.B.ShouldBeLessThan((byte)60);
 
             // One and two pixels outside the left edge (the square starts at x = 12) are the blue
             // outline, three pixels out is not.
-            Color oneOut = ReadRenderTargetPixel(baked, 11, 24);
+            Color oneOut = RaylibPixelHarness.ReadPixel(baked, 11, 24);
             oneOut.B.ShouldBeGreaterThan((byte)200);
             oneOut.R.ShouldBeLessThan((byte)60);
-            ReadRenderTargetPixel(baked, 10, 24).B.ShouldBeGreaterThan((byte)200);
-            ReadRenderTargetPixel(baked, 9, 24).A.ShouldBe((byte)0);
+            RaylibPixelHarness.ReadPixel(baked, 10, 24).B.ShouldBeGreaterThan((byte)200);
+            RaylibPixelHarness.ReadPixel(baked, 9, 24).A.ShouldBe((byte)0);
         }
         finally
         {
@@ -282,18 +266,18 @@ void main()
             RenderTexture2D baked = Renderer.Self.TryGetBakedRenderTargetFor(outer)!.Value;
 
             // Inside the square is still red.
-            Color inside = ReadRenderTargetPixel(baked, 24, 24);
+            Color inside = RaylibPixelHarness.ReadPixel(baked, 24, 24);
             inside.R.ShouldBeGreaterThan((byte)200);
             inside.B.ShouldBeLessThan((byte)60);
 
             // One pixel outside the left edge (the square starts at x = 12), diagonal corner included,
             // is black; two pixels out is empty.
-            Color oneOut = ReadRenderTargetPixel(baked, 11, 24);
+            Color oneOut = RaylibPixelHarness.ReadPixel(baked, 11, 24);
             oneOut.A.ShouldBeGreaterThan((byte)200);
             oneOut.B.ShouldBeLessThan((byte)30);
             oneOut.R.ShouldBeLessThan((byte)30);
-            ReadRenderTargetPixel(baked, 11, 11).A.ShouldBeGreaterThan((byte)200);
-            ReadRenderTargetPixel(baked, 10, 24).A.ShouldBe((byte)0);
+            RaylibPixelHarness.ReadPixel(baked, 11, 11).A.ShouldBeGreaterThan((byte)200);
+            RaylibPixelHarness.ReadPixel(baked, 10, 24).A.ShouldBe((byte)0);
         }
         finally
         {
@@ -336,7 +320,7 @@ void main()
             DrawOnce();
 
             RenderTexture2D baked = Renderer.Self.TryGetBakedRenderTargetFor(outer)!.Value;
-            check((x, y) => ReadRenderTargetPixel(baked, x, y));
+            check((x, y) => RaylibPixelHarness.ReadPixel(baked, x, y));
         }
         finally
         {
@@ -470,7 +454,7 @@ void main()
             {
                 RenderTexture2D baked = Renderer.Self.TryGetBakedRenderTargetFor(outer)!.Value;
                 int width = 0;
-                for (int x = 11; x >= 0 && ReadRenderTargetPixel(baked, x, 24).A > 127; x--)
+                for (int x = 11; x >= 0 && RaylibPixelHarness.ReadPixel(baked, x, 24).A > 127; x--)
                 {
                     width++;
                 }
@@ -563,9 +547,9 @@ void main()
             }
 
             RenderTexture2D baked = Renderer.Self.TryGetBakedRenderTargetFor(outer)!.Value;
-            ReadRenderTargetPixel(baked, 0, 36).A.ShouldBe((byte)0);
-            ReadRenderTargetPixel(baked, 36, 0).A.ShouldBe((byte)0);
-            ReadRenderTargetPixel(baked, 23, 36).A.ShouldBeGreaterThan((byte)200);
+            RaylibPixelHarness.ReadPixel(baked, 0, 36).A.ShouldBe((byte)0);
+            RaylibPixelHarness.ReadPixel(baked, 36, 0).A.ShouldBe((byte)0);
+            RaylibPixelHarness.ReadPixel(baked, 23, 36).A.ShouldBeGreaterThan((byte)200);
         }
         finally
         {
@@ -592,19 +576,6 @@ void main()
         return inner;
     }
 
-    private static Color ReadRenderTargetPixel(RenderTexture2D renderTexture, int x, int y)
-    {
-        Image image = LoadImageFromTexture(renderTexture.Texture);
-        try
-        {
-            return GetImageColor(image, x, renderTexture.Texture.Height - 1 - y);
-        }
-        finally
-        {
-            UnloadImage(image);
-        }
-    }
-
     [Fact]
     public void Draw_SourceShaderFile_GraysTheCompositedPixels_WhenResolverRegistered()
     {
@@ -623,7 +594,7 @@ void main()
             inner.SourceShaderFile = shaderPath;
             DrawOnce();
 
-            Color center = ReadRenderTargetCenter(Renderer.Self.TryGetBakedRenderTargetFor(outer)!.Value);
+            Color center = RaylibPixelHarness.ReadCenter(Renderer.Self.TryGetBakedRenderTargetFor(outer)!.Value);
             Math.Abs(center.R - center.G).ShouldBeLessThan(25);
             Math.Abs(center.R - center.B).ShouldBeLessThan(25);
         }
@@ -667,7 +638,7 @@ void main()
         reportedError.ShouldContain("no shader resolver is registered");
         DrawOnce();
 
-        Color center = ReadRenderTargetCenter(Renderer.Self.TryGetBakedRenderTargetFor(outer)!.Value);
+        Color center = RaylibPixelHarness.ReadCenter(Renderer.Self.TryGetBakedRenderTargetFor(outer)!.Value);
         center.R.ShouldBeGreaterThan((byte)200);
         ((int)center.R - center.G).ShouldBeGreaterThan(80);
 
@@ -738,7 +709,7 @@ technique SpriteDrawing
             inner.SourceShaderFile = shaderPath;
             DrawOnce();
 
-            Color center = ReadRenderTargetCenter(Renderer.Self.TryGetBakedRenderTargetFor(outer)!.Value);
+            Color center = RaylibPixelHarness.ReadCenter(Renderer.Self.TryGetBakedRenderTargetFor(outer)!.Value);
             Math.Abs(center.R - center.G).ShouldBeLessThan(25);
             Math.Abs(center.R - center.B).ShouldBeLessThan(25);
             // Gray, not the black an unbound shader would draw.
@@ -865,7 +836,7 @@ technique SpriteDrawing
             Gum.GumService.Default.Root.UpdateLayout();
             DrawOnce();
 
-            Color center = ReadRenderTargetCenter(Renderer.Self.TryGetBakedRenderTargetFor(outer)!.Value);
+            Color center = RaylibPixelHarness.ReadCenter(Renderer.Self.TryGetBakedRenderTargetFor(outer)!.Value);
             Math.Abs(center.R - center.G).ShouldBeLessThan(25);
             Math.Abs(center.R - center.B).ShouldBeLessThan(25);
             center.R.ShouldBeGreaterThan((byte)40);

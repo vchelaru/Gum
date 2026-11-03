@@ -1,3 +1,4 @@
+using RaylibGum.Tests.Helpers;
 using Gum.GueDeriving;
 using Raylib_cs;
 using RenderingLibrary.Graphics;
@@ -19,19 +20,6 @@ namespace RaylibGum.Tests.Rendering;
 /// </summary>
 public class ShadowBlurRenderTargetRestoreTests : BaseTestClass
 {
-    private static Color ReadRenderTargetPixel(RenderTexture2D renderTexture, int x, int y)
-    {
-        Image image = LoadImageFromTexture(renderTexture.Texture);
-        try
-        {
-            return GetImageColor(image, x, renderTexture.Texture.Height - 1 - y);
-        }
-        finally
-        {
-            UnloadImage(image);
-        }
-    }
-
     [Fact]
     public void Draw_BlurredShadowInsideRenderTarget_BakesShadowAndLaterSiblingIntoContainerTexture()
     {
@@ -79,9 +67,9 @@ public class ShadowBlurRenderTargetRestoreTests : BaseTestClass
         RenderTexture2D renderTexture = Renderer.Self.TryGetBakedRenderTargetFor(container)!.Value;
 
         // Center of the shifted shadow region (shape is x:10-40,y:10-40; shadow shifted to y:50-80).
-        Color shadowRegion = ReadRenderTargetPixel(renderTexture, 25, 65);
+        Color shadowRegion = RaylibPixelHarness.ReadPixel(renderTexture, 25, 65);
         // Center of the sibling (x:60-90, y:60-90).
-        Color siblingRegion = ReadRenderTargetPixel(renderTexture, 75, 75);
+        Color siblingRegion = RaylibPixelHarness.ReadPixel(renderTexture, 75, 75);
 
         shadowRegion.A.ShouldBeGreaterThan((byte)50);
         siblingRegion.G.ShouldBeGreaterThan((byte)200);

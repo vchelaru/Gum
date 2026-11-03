@@ -1,4 +1,5 @@
-﻿using Gum.GueDeriving;
+﻿using RaylibGum.Tests.Helpers;
+using Gum.GueDeriving;
 using Gum.Managers;
 using Gum.RenderingLibrary;
 using Raylib_cs;
@@ -20,21 +21,6 @@ public class SpriteClampTests : BaseTestClass
         BeginDrawing();
         GumService.Default.Draw();
         EndDrawing();
-    }
-
-    // Reads a pixel in top-left-origin draw space. A render texture is stored bottom-up in GL, so
-    // LoadImageFromTexture yields an image whose rows are flipped relative to draw space.
-    private static Color ReadRenderTargetPixel(RenderTexture2D renderTexture, int x, int y)
-    {
-        Image image = LoadImageFromTexture(renderTexture.Texture);
-        try
-        {
-            return GetImageColor(image, x, renderTexture.Texture.Height - 1 - y);
-        }
-        finally
-        {
-            UnloadImage(image);
-        }
     }
 
     private static Texture2D CreateRedBlueTexture()
@@ -88,10 +74,10 @@ public class SpriteClampTests : BaseTestClass
         // Unflipped, the strip reads Red, Blue, Blue(clamp), Blue(clamp) left-to-right (see
         // Render_WrapFalse_OversizedSourceRectangle_ClampsToEdgeInsteadOfRepeating). Flipping the
         // whole rendered strip mirrors that order: Blue(clamp), Blue(clamp), Blue, Red.
-        Color leftClamped = ReadRenderTargetPixel(renderTexture, 5, 5);
-        Color midClamped = ReadRenderTargetPixel(renderTexture, 15, 5);
-        Color inBoundsBlue = ReadRenderTargetPixel(renderTexture, 25, 5);
-        Color inBoundsRed = ReadRenderTargetPixel(renderTexture, 35, 5);
+        Color leftClamped = RaylibPixelHarness.ReadPixel(renderTexture, 5, 5);
+        Color midClamped = RaylibPixelHarness.ReadPixel(renderTexture, 15, 5);
+        Color inBoundsBlue = RaylibPixelHarness.ReadPixel(renderTexture, 25, 5);
+        Color inBoundsRed = RaylibPixelHarness.ReadPixel(renderTexture, 35, 5);
 
         leftClamped.B.ShouldBeGreaterThan((byte)200);
         leftClamped.R.ShouldBeLessThan((byte)50);
@@ -147,10 +133,10 @@ public class SpriteClampTests : BaseTestClass
 
         RenderTexture2D renderTexture = Renderer.Self.TryGetBakedRenderTargetFor(container)!.Value;
 
-        Color inBoundsRed = ReadRenderTargetPixel(renderTexture, 5, 5);
-        Color inBoundsBlue = ReadRenderTargetPixel(renderTexture, 15, 5);
-        Color clampedNearEdge = ReadRenderTargetPixel(renderTexture, 25, 5);
-        Color clampedFarEdge = ReadRenderTargetPixel(renderTexture, 35, 5);
+        Color inBoundsRed = RaylibPixelHarness.ReadPixel(renderTexture, 5, 5);
+        Color inBoundsBlue = RaylibPixelHarness.ReadPixel(renderTexture, 15, 5);
+        Color clampedNearEdge = RaylibPixelHarness.ReadPixel(renderTexture, 25, 5);
+        Color clampedFarEdge = RaylibPixelHarness.ReadPixel(renderTexture, 35, 5);
 
         inBoundsRed.R.ShouldBeGreaterThan((byte)200);
         inBoundsRed.B.ShouldBeLessThan((byte)50);

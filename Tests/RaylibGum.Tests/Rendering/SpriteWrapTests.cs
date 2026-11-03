@@ -1,3 +1,4 @@
+using RaylibGum.Tests.Helpers;
 using Gum.GueDeriving;
 using Gum.Managers;
 using Gum.RenderingLibrary;
@@ -20,21 +21,6 @@ public class SpriteWrapTests : BaseTestClass
         BeginDrawing();
         GumService.Default.Draw();
         EndDrawing();
-    }
-
-    // Reads a pixel in top-left-origin draw space. A render texture is stored bottom-up in GL, so
-    // LoadImageFromTexture yields an image whose rows are flipped relative to draw space.
-    private static Color ReadRenderTargetPixel(RenderTexture2D renderTexture, int x, int y)
-    {
-        Image image = LoadImageFromTexture(renderTexture.Texture);
-        try
-        {
-            return GetImageColor(image, x, renderTexture.Texture.Height - 1 - y);
-        }
-        finally
-        {
-            UnloadImage(image);
-        }
     }
 
     [Fact]
@@ -80,10 +66,10 @@ public class SpriteWrapTests : BaseTestClass
 
         RenderTexture2D renderTexture = Renderer.Self.TryGetBakedRenderTargetFor(container)!.Value;
 
-        Color firstRed = ReadRenderTargetPixel(renderTexture, 5, 5);
-        Color firstBlue = ReadRenderTargetPixel(renderTexture, 15, 5);
-        Color secondRed = ReadRenderTargetPixel(renderTexture, 25, 5);
-        Color secondBlue = ReadRenderTargetPixel(renderTexture, 35, 5);
+        Color firstRed = RaylibPixelHarness.ReadPixel(renderTexture, 5, 5);
+        Color firstBlue = RaylibPixelHarness.ReadPixel(renderTexture, 15, 5);
+        Color secondRed = RaylibPixelHarness.ReadPixel(renderTexture, 25, 5);
+        Color secondBlue = RaylibPixelHarness.ReadPixel(renderTexture, 35, 5);
 
         firstRed.R.ShouldBeGreaterThan((byte)200);
         firstRed.B.ShouldBeLessThan((byte)50);

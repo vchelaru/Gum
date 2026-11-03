@@ -1,3 +1,4 @@
+using RaylibGum.Tests.Helpers;
 using System;
 using System.IO;
 using System.Linq;
@@ -92,19 +93,6 @@ float4 MainPS(VertexShaderOutput input) : COLOR0
         return inner;
     }
 
-    private static Color ReadPixel(RenderTexture2D renderTexture, int x, int y)
-    {
-        Image image = LoadImageFromTexture(renderTexture.Texture);
-        try
-        {
-            return GetImageColor(image, x, renderTexture.Texture.Height - 1 - y);
-        }
-        finally
-        {
-            UnloadImage(image);
-        }
-    }
-
     // Draws the inner containers (each at x = 32 * index) in order with the given setup, and returns
     // the center pixel of each.
     private static Color[] Draw(Shader shader, Action<ContainerRuntime[]> setParameters)
@@ -126,7 +114,7 @@ float4 MainPS(VertexShaderOutput input) : COLOR0
             setParameters(inners);
             DrawOnce();
             RenderTexture2D baked = Renderer.Self.TryGetBakedRenderTargetFor(outer)!.Value;
-            return new[] { ReadPixel(baked, 16, 16), ReadPixel(baked, 48, 16) };
+            return new[] { RaylibPixelHarness.ReadPixel(baked, 16, 16), RaylibPixelHarness.ReadPixel(baked, 48, 16) };
         }
         finally
         {
