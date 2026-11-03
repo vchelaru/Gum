@@ -304,11 +304,44 @@ public class CodeOutputTabController
         var element = _selectedState.SelectedElement;
         if (element != null && _view.CodeOutputElementSettings != null)
         {
+            bool debugOnlyChanged = _elementSettingsManager.LoadOrCreateSettingsFor(element).DebugOnly !=
+                _view.CodeOutputElementSettings.DebugOnly;
+
             _elementSettingsManager.WriteSettingsForElement(element, _view.CodeOutputElementSettings);
 
             RefreshCodeDisplay(codeOutputProjectSettings);
+
+            if (debugOnlyChanged)
+            {
+                RegenerateElementsAffectedByDebugOnly(element, codeOutputProjectSettings);
+            }
         }
         _codeOutputProjectSettingsManager.WriteSettingsForProject(codeOutputProjectSettings);
+    }
+
+    /// <summary>
+    /// Toggling Debug Only changes the generated code of the element and of every element that references it,
+    /// so each of those regenerates, under the same rule as any other codegen: only when its own setting is
+    /// auto-generate.
+    /// </summary>
+    private void RegenerateElementsAffectedByDebugOnly(ElementSave toggled, CodeOutputProjectSettings codeOutputProjectSettings)
+    {
+        GumProjectSave? project = _projectState.GumProjectSave;
+        if (project == null || _viewModel.HasProjectSettingsLoadError)
+        {
+            return;
+        }
+
+        foreach (ElementSave affected in new DebugOnlyElementLogic(_elementSettingsManager).GetElementsToRegenerate(toggled, project))
+        {
+            CodeOutputElementSettings settings = affected == toggled
+                ? _view.CodeOutputElementSettings!
+                : _elementSettingsManager.LoadOrCreateSettingsFor(affected);
+            if (settings.AutoGenerateOnChange)
+            {
+                GenerateCodeForElement(showPopups: false, affected, codeOutputProjectSettings, settings);
+            }
+        }
     }
 
     /// <summary>
