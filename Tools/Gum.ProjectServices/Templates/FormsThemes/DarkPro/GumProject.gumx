@@ -82,6 +82,7 @@
   <ComponentReference Name="DarkPro/Controls/StackPanel" />
   <ComponentReference Name="DarkPro/Controls/TextBox" />
   <ComponentReference Name="DarkPro/Controls/Toast" />
+  <ComponentReference Name="DarkPro/Controls/ToggleButton" />
   <ComponentReference Name="DarkPro/Controls/UserControl" />
   <ComponentReference Name="DarkPro/Controls/Window" />
   <ComponentReference Name="DarkPro/Elements/Divider" />
@@ -118,7 +119,7 @@
   <BehaviorReference Name="StackPanelBehavior" SourcePath="../../FormsBehaviors/StackPanelBehavior.behx" />
   <BehaviorReference Name="TextBoxBehavior" SourcePath="../../FormsBehaviors/TextBoxBehavior.behx" DefaultImplementationOverride="DarkPro/Controls/TextBox" />
   <BehaviorReference Name="ToastBehavior" SourcePath="../../FormsBehaviors/ToastBehavior.behx" DefaultImplementationOverride="DarkPro/Controls/Toast" />
-  <BehaviorReference Name="ToggleBehavior" SourcePath="../../FormsBehaviors/ToggleBehavior.behx" />
+  <BehaviorReference Name="ToggleBehavior" SourcePath="../../FormsBehaviors/ToggleBehavior.behx" DefaultImplementationOverride="DarkPro/Controls/ToggleButton" />
   <BehaviorReference Name="UserControlBehavior" SourcePath="../../FormsBehaviors/UserControlBehavior.behx" DefaultImplementationOverride="DarkPro/Controls/UserControl" />
   <BehaviorReference Name="WindowBehavior" SourcePath="../../FormsBehaviors/WindowBehavior.behx" />
   <SinglePixelTextureTop xsi:nil="true" />

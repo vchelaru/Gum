@@ -82,6 +82,7 @@
   <ComponentReference Name="Bubblegum/Controls/StackPanel" />
   <ComponentReference Name="Bubblegum/Controls/TextBox" />
   <ComponentReference Name="Bubblegum/Controls/Toast" />
+  <ComponentReference Name="Bubblegum/Controls/ToggleButton" />
   <ComponentReference Name="Bubblegum/Controls/UserControl" />
   <ComponentReference Name="Bubblegum/Controls/Window" />
   <ComponentReference Name="Bubblegum/Elements/Divider" />
@@ -118,7 +119,7 @@
   <BehaviorReference Name="StackPanelBehavior" SourcePath="../../FormsBehaviors/StackPanelBehavior.behx" />
   <BehaviorReference Name="TextBoxBehavior" SourcePath="../../FormsBehaviors/TextBoxBehavior.behx" DefaultImplementationOverride="Bubblegum/Controls/TextBox" />
   <BehaviorReference Name="ToastBehavior" SourcePath="../../FormsBehaviors/ToastBehavior.behx" DefaultImplementationOverride="Bubblegum/Controls/Toast" />
-  <BehaviorReference Name="ToggleBehavior" SourcePath="../../FormsBehaviors/ToggleBehavior.behx" />
+  <BehaviorReference Name="ToggleBehavior" SourcePath="../../FormsBehaviors/ToggleBehavior.behx" DefaultImplementationOverride="Bubblegum/Controls/ToggleButton" />
   <BehaviorReference Name="UserControlBehavior" SourcePath="../../FormsBehaviors/UserControlBehavior.behx" DefaultImplementationOverride="Bubblegum/Controls/UserControl" />
   <BehaviorReference Name="WindowBehavior" SourcePath="../../FormsBehaviors/WindowBehavior.behx" />
   <SinglePixelTextureTop xsi:nil="true" />

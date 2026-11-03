@@ -84,6 +84,7 @@
   <ComponentReference Name="Retro95/Controls/StackPanel" />
   <ComponentReference Name="Retro95/Controls/TextBox" />
   <ComponentReference Name="Retro95/Controls/Toast" />
+  <ComponentReference Name="Retro95/Controls/ToggleButton" />
   <ComponentReference Name="Retro95/Controls/UserControl" />
   <ComponentReference Name="Retro95/Controls/Window" />
   <ComponentReference Name="Retro95/Elements/Bevel" />
@@ -122,7 +123,7 @@
   <BehaviorReference Name="StackPanelBehavior" SourcePath="../../FormsBehaviors/StackPanelBehavior.behx" />
   <BehaviorReference Name="TextBoxBehavior" SourcePath="../../FormsBehaviors/TextBoxBehavior.behx" DefaultImplementationOverride="Retro95/Controls/TextBox" />
   <BehaviorReference Name="ToastBehavior" SourcePath="../../FormsBehaviors/ToastBehavior.behx" DefaultImplementationOverride="Retro95/Controls/Toast" />
-  <BehaviorReference Name="ToggleBehavior" SourcePath="../../FormsBehaviors/ToggleBehavior.behx" />
+  <BehaviorReference Name="ToggleBehavior" SourcePath="../../FormsBehaviors/ToggleBehavior.behx" DefaultImplementationOverride="Retro95/Controls/ToggleButton" />
   <BehaviorReference Name="UserControlBehavior" SourcePath="../../FormsBehaviors/UserControlBehavior.behx" DefaultImplementationOverride="Retro95/Controls/UserControl" />
   <BehaviorReference Name="WindowBehavior" SourcePath="../../FormsBehaviors/WindowBehavior.behx" />
   <SinglePixelTextureTop xsi:nil="true" />

@@ -90,6 +90,7 @@
   <ComponentReference Name="Controls/StackPanel" />
   <ComponentReference Name="Controls/TextBox" />
   <ComponentReference Name="Controls/Toast" />
+  <ComponentReference Name="Controls/ToggleButton" />
   <ComponentReference Name="Controls/TreeView" />
   <ComponentReference Name="Controls/TreeViewItem" />
   <ComponentReference Name="Controls/TreeViewToggle" />

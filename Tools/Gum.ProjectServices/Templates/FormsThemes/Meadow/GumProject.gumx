@@ -82,6 +82,7 @@
   <ComponentReference Name="Meadow/Controls/StackPanel" />
   <ComponentReference Name="Meadow/Controls/TextBox" />
   <ComponentReference Name="Meadow/Controls/Toast" />
+  <ComponentReference Name="Meadow/Controls/ToggleButton" />
   <ComponentReference Name="Meadow/Controls/UserControl" />
   <ComponentReference Name="Meadow/Controls/Window" />
   <ComponentReference Name="Meadow/Elements/Divider" />
@@ -118,7 +119,7 @@
   <BehaviorReference Name="StackPanelBehavior" SourcePath="../../FormsBehaviors/StackPanelBehavior.behx" />
   <BehaviorReference Name="TextBoxBehavior" SourcePath="../../FormsBehaviors/TextBoxBehavior.behx" DefaultImplementationOverride="Meadow/Controls/TextBox" />
   <BehaviorReference Name="ToastBehavior" SourcePath="../../FormsBehaviors/ToastBehavior.behx" DefaultImplementationOverride="Meadow/Controls/Toast" />
-  <BehaviorReference Name="ToggleBehavior" SourcePath="../../FormsBehaviors/ToggleBehavior.behx" />
+  <BehaviorReference Name="ToggleBehavior" SourcePath="../../FormsBehaviors/ToggleBehavior.behx" DefaultImplementationOverride="Meadow/Controls/ToggleButton" />
   <BehaviorReference Name="UserControlBehavior" SourcePath="../../FormsBehaviors/UserControlBehavior.behx" DefaultImplementationOverride="Meadow/Controls/UserControl" />
   <BehaviorReference Name="WindowBehavior" SourcePath="../../FormsBehaviors/WindowBehavior.behx" />
   <SinglePixelTextureTop xsi:nil="true" />

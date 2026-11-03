@@ -82,6 +82,7 @@
   <ComponentReference Name="Neon/Controls/StackPanel" />
   <ComponentReference Name="Neon/Controls/TextBox" />
   <ComponentReference Name="Neon/Controls/Toast" />
+  <ComponentReference Name="Neon/Controls/ToggleButton" />
   <ComponentReference Name="Neon/Controls/UserControl" />
   <ComponentReference Name="Neon/Controls/Window" />
   <ComponentReference Name="Neon/Elements/Divider" />
@@ -117,7 +118,7 @@
   <BehaviorReference Name="StackPanelBehavior" SourcePath="../../FormsBehaviors/StackPanelBehavior.behx" />
   <BehaviorReference Name="TextBoxBehavior" SourcePath="../../FormsBehaviors/TextBoxBehavior.behx" DefaultImplementationOverride="Neon/Controls/TextBox" />
   <BehaviorReference Name="ToastBehavior" SourcePath="../../FormsBehaviors/ToastBehavior.behx" DefaultImplementationOverride="Neon/Controls/Toast" />
-  <BehaviorReference Name="ToggleBehavior" SourcePath="../../FormsBehaviors/ToggleBehavior.behx" />
+  <BehaviorReference Name="ToggleBehavior" SourcePath="../../FormsBehaviors/ToggleBehavior.behx" DefaultImplementationOverride="Neon/Controls/ToggleButton" />
   <BehaviorReference Name="UserControlBehavior" SourcePath="../../FormsBehaviors/UserControlBehavior.behx" DefaultImplementationOverride="Neon/Controls/UserControl" />
   <BehaviorReference Name="WindowBehavior" SourcePath="../../FormsBehaviors/WindowBehavior.behx" />
   <SinglePixelTextureTop xsi:nil="true" />

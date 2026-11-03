@@ -207,6 +207,30 @@ public class FormsThemesTemplateTests
         }
     }
 
+    // A plain ToggleButton draws the theme's own toggle button, not the tree view chevron (#7255). The
+    // chevron stays in the themes that ship it, as a component that merely implements ToggleBehavior.
+    [Theory]
+    [MemberData(nameof(TemplateFolders))]
+    public void ToggleButton_ShouldBeToggleBehaviorsDefaultImplementation(string templateFolder)
+    {
+        StandardElementsManager.Self.Initialize();
+        GumProjectSave project = LoadTemplate(templateFolder);
+        string toggleName = GetPrefix(templateFolder) + "Controls/ToggleButton";
+
+        project.Components.Select(c => c.Name).ShouldContain(toggleName);
+        ComponentSave toggle = project.Components.Single(c => c.Name == toggleName);
+
+        toggle.Behaviors.Select(b => b.BehaviorName).ShouldBe(new[] { "ToggleBehavior" });
+        toggle.Categories.Single(c => c.Name == "ToggleCategory").States.Select(s => s.Name).ShouldBe(
+            new[]
+            {
+                "EnabledOff", "DisabledOff", "HighlightedOff", "PushedOff",
+                "EnabledOn", "DisabledOn", "HighlightedOn", "PushedOn"
+            },
+            ignoreOrder: true);
+        project.Behaviors.Single(b => b.Name == "ToggleBehavior").DefaultImplementation.ShouldBe(toggleName);
+    }
+
     // The shared Thumb component is gone from what Add Forms ships. Projects that already have one keep
     // it, since their own Slider and ScrollBar still reference it.
     [Theory]
