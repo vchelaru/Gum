@@ -268,6 +268,44 @@ public class PreviewLauncherTests : IDisposable
     }
 
     [Fact]
+    public void Launch_WhileThePreviewRuns_ActivatesItsWindow_InsteadOfStartingAgain()
+    {
+        GumProjectSave project = new GumProjectSave { FullFileName = "/MyGame/GumProject.gumj" };
+        _projectManager.SetupGet(p => p.GumProjectSave).Returns(project);
+        _selectedState.SetupGet(s => s.SelectedElement).Returns(new ScreenSave { Name = "MainMenu" });
+        RecordingPreviewStarter starter = new RecordingPreviewStarter("/Preview/GumPreview");
+        PreviewLauncher launcher = CreateLauncher();
+        launcher.ProcessStarter = starter;
+
+        launcher.Launch();
+        starter.ActivateCount.ShouldBe(0);
+        launcher.Launch();
+
+        starter.Started.Count.ShouldBe(1);
+        starter.ActivateCount.ShouldBe(1);
+        DeleteSelectionFile(starter);
+    }
+
+    [Fact]
+    public void Launch_WhenThePreviewHasExited_StartsANewOneWithoutActivating()
+    {
+        GumProjectSave project = new GumProjectSave { FullFileName = "/MyGame/GumProject.gumj" };
+        _projectManager.SetupGet(p => p.GumProjectSave).Returns(project);
+        _selectedState.SetupGet(s => s.SelectedElement).Returns(new ScreenSave { Name = "MainMenu" });
+        RecordingPreviewStarter starter = new RecordingPreviewStarter("/Preview/GumPreview");
+        PreviewLauncher launcher = CreateLauncher();
+        launcher.ProcessStarter = starter;
+
+        launcher.Launch();
+        starter.HasExited = true;
+        launcher.Launch();
+
+        starter.Started.Count.ShouldBe(2);
+        starter.ActivateCount.ShouldBe(0);
+        DeleteSelectionFile(starter);
+    }
+
+    [Fact]
     public void Pin_WhenNoPreviewIsRunning_DoesNotPin()
     {
         PreviewLauncher launcher = CreateLauncher();
@@ -536,6 +574,10 @@ public class PreviewLauncherTests : IDisposable
         public bool HasExited { get; set; }
 
         public int CloseCount { get; private set; }
+
+        public int ActivateCount { get; private set; }
+
+        public void Activate() => ActivateCount++;
 
         public void Close()
         {

@@ -30,6 +30,15 @@ public interface IPreviewProcess
     void Close();
 
     /// <summary>
+    /// Brings the preview's window to the foreground, restoring it if minimized. Called from the
+    /// tool, which holds the foreground right after the user clicks Preview. The default does
+    /// nothing, for stand-ins and for platforms with no way to foreground another process's window.
+    /// </summary>
+    void Activate()
+    {
+    }
+
+    /// <summary>
     /// Raised once, on any thread, when the preview exits by itself. A subscriber added after the
     /// exit is told immediately. The default does nothing, for stand-ins that never exit.
     /// </summary>
@@ -44,14 +53,20 @@ public interface IPreviewProcess
 public class PreviewProcessStarter : IPreviewProcessStarter
 {
     private readonly string _headBaseDirectory;
+    private readonly IPreviewWindowActivator? _windowActivator;
 
     /// <param name="headBaseDirectory">
     /// The running head's own base directory (<c>AppContext.BaseDirectory</c>), searched by
     /// <see cref="PreviewExecutableLocator"/>.
     /// </param>
-    public PreviewProcessStarter(string headBaseDirectory)
+    /// <param name="windowActivator">
+    /// Foregrounds the preview's window on platforms where the tool can; null leaves it to the
+    /// preview raising its own window.
+    /// </param>
+    public PreviewProcessStarter(string headBaseDirectory, IPreviewWindowActivator? windowActivator = null)
     {
         _headBaseDirectory = headBaseDirectory;
+        _windowActivator = windowActivator;
     }
 
     /// <inheritdoc/>
@@ -61,7 +76,7 @@ public class PreviewProcessStarter : IPreviewProcessStarter
     public IPreviewProcess? Start(ProcessStartInfo startInfo)
     {
         Process process = new Process { StartInfo = startInfo, EnableRaisingEvents = true };
-        StartedProcess started = new StartedProcess(process);
+        StartedProcess started = new StartedProcess(process, _windowActivator);
         try
         {
             if (!started.Begin())
@@ -85,6 +100,7 @@ public class PreviewProcessStarter : IPreviewProcessStarter
         private const int MaxErrorLineLength = 500;
 
         private readonly Process _process;
+        private readonly IPreviewWindowActivator? _windowActivator;
         private readonly object _lock = new object();
         private readonly Queue<string> _errorLines = new Queue<string>();
         private Action<PreviewProcessExit>? _exited;
@@ -92,9 +108,10 @@ public class PreviewProcessStarter : IPreviewProcessStarter
         private bool _closedByTool;
         private bool _disposed;
 
-        public StartedProcess(Process process)
+        public StartedProcess(Process process, IPreviewWindowActivator? windowActivator)
         {
             _process = process;
+            _windowActivator = windowActivator;
         }
 
         public bool HasExited
@@ -207,6 +224,34 @@ public class PreviewProcessStarter : IPreviewProcessStarter
             }
             handlers?.Invoke(exit);
             Dispose();
+        }
+
+        public void Activate()
+        {
+            if (_windowActivator == null)
+            {
+                return;
+            }
+            lock (_lock)
+            {
+                if (_disposed)
+                {
+                    return;
+                }
+            }
+            try
+            {
+                _process.Refresh();
+                IntPtr window = _process.MainWindowHandle;
+                if (window != IntPtr.Zero)
+                {
+                    _windowActivator.Activate(window);
+                }
+            }
+            catch (InvalidOperationException)
+            {
+                // It exited between the check and the call.
+            }
         }
 
         // Killed rather than asked to close: macOS and Linux have no main window handle to ask, and
