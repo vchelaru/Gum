@@ -860,43 +860,43 @@
   <Instance Name="MenuItems" BaseType="Container" />
   <Instance Name="TitleText" BaseType="Text" />
   <Instance Name="TitleText1" BaseType="Text" />
-  <Instance Name="DividerInstance" BaseType="Retro95/Elements/Divider" />
-  <Instance Name="DividerInstance4" BaseType="Retro95/Elements/Divider" />
-  <Instance Name="ResolutionLabel" BaseType="Retro95/Controls/Label" />
-  <Instance Name="ResolutionBox" BaseType="Retro95/Controls/ListBox" />
-  <Instance Name="DetectResolutionsButton" BaseType="Retro95/Controls/Button" />
-  <Instance Name="FullScreenCheckbox" BaseType="Retro95/Controls/CheckBox" />
-  <Instance Name="DividerInstance1" BaseType="Retro95/Elements/Divider" />
-  <Instance Name="MusicLabel" BaseType="Retro95/Controls/Label" />
-  <Instance Name="MusicSlider" BaseType="Retro95/Controls/Slider" />
-  <Instance Name="SoundLabel" BaseType="Retro95/Controls/Label" />
-  <Instance Name="SoundSlider" BaseType="Retro95/Controls/Slider" />
-  <Instance Name="DividerInstance2" BaseType="Retro95/Elements/Divider" />
-  <Instance Name="ControlLabel" BaseType="Retro95/Controls/Label" />
-  <Instance Name="RadioButtonInstance" BaseType="Retro95/Controls/RadioButton" />
-  <Instance Name="RadioButtonInstance1" BaseType="Retro95/Controls/RadioButton" />
-  <Instance Name="RadioButtonInstance2" BaseType="Retro95/Controls/RadioButton" />
-  <Instance Name="DividerInstance3" BaseType="Retro95/Elements/Divider" />
-  <Instance Name="DifficultyLabel" BaseType="Retro95/Controls/Label" />
+  <Instance Name="DividerInstance" BaseType="Retro95/Divider" />
+  <Instance Name="DividerInstance4" BaseType="Retro95/Divider" />
+  <Instance Name="ResolutionLabel" BaseType="Retro95/Label" />
+  <Instance Name="ResolutionBox" BaseType="Retro95/ListBox" />
+  <Instance Name="DetectResolutionsButton" BaseType="Retro95/Button" />
+  <Instance Name="FullScreenCheckbox" BaseType="Retro95/CheckBox" />
+  <Instance Name="DividerInstance1" BaseType="Retro95/Divider" />
+  <Instance Name="MusicLabel" BaseType="Retro95/Label" />
+  <Instance Name="MusicSlider" BaseType="Retro95/Slider" />
+  <Instance Name="SoundLabel" BaseType="Retro95/Label" />
+  <Instance Name="SoundSlider" BaseType="Retro95/Slider" />
+  <Instance Name="DividerInstance2" BaseType="Retro95/Divider" />
+  <Instance Name="ControlLabel" BaseType="Retro95/Label" />
+  <Instance Name="RadioButtonInstance" BaseType="Retro95/RadioButton" />
+  <Instance Name="RadioButtonInstance1" BaseType="Retro95/RadioButton" />
+  <Instance Name="RadioButtonInstance2" BaseType="Retro95/RadioButton" />
+  <Instance Name="DividerInstance3" BaseType="Retro95/Divider" />
+  <Instance Name="DifficultyLabel" BaseType="Retro95/Label" />
   <Instance Name="Background1" BaseType="Rectangle" />
-  <Instance Name="ComboBoxInstance" BaseType="Retro95/Controls/ComboBox" />
+  <Instance Name="ComboBoxInstance" BaseType="Retro95/ComboBox" />
   <Instance Name="ButtonContainer" BaseType="Container" />
-  <Instance Name="ButtonConfirmInstance" BaseType="Retro95/Controls/Button" />
-  <Instance Name="ButtonDenyInstance" BaseType="Retro95/Controls/Button" />
+  <Instance Name="ButtonConfirmInstance" BaseType="Retro95/Button" />
+  <Instance Name="ButtonDenyInstance" BaseType="Retro95/Button" />
   <Instance Name="DemoDialog" BaseType="Container" />
   <Instance Name="MarginContainer" BaseType="Container" />
-  <Instance Name="LabelInstance" BaseType="Retro95/Controls/Label" />
-  <Instance Name="TextBoxInstance" BaseType="Retro95/Controls/TextBox" />
-  <Instance Name="TextBoxInstance1" BaseType="Retro95/Controls/PasswordBox" />
-  <Instance Name="MultiLineTextBox" BaseType="Retro95/Controls/TextBox" />
-  <Instance Name="DialogBoxInstance" BaseType="Retro95/Controls/DialogBox" />
-  <Instance Name="WindowStandardInstance" BaseType="Retro95/Controls/Window" />
-  <Instance Name="LabelInstance1" BaseType="Retro95/Controls/Label" />
-  <Instance Name="ListBoxItemInstance" BaseType="Retro95/Controls/ListBoxItem" />
-  <Instance Name="ListBoxItemInstance1" BaseType="Retro95/Controls/ListBoxItem" />
-  <Instance Name="ListBoxItemInstance2" BaseType="Retro95/Controls/ListBoxItem" />
-  <Instance Name="ListBoxItemInstance3" BaseType="Retro95/Controls/ListBoxItem" />
-  <Instance Name="ListBoxItemInstance4" BaseType="Retro95/Controls/ListBoxItem" />
-  <Instance Name="ListBoxItemInstance5" BaseType="Retro95/Controls/ListBoxItem" />
+  <Instance Name="LabelInstance" BaseType="Retro95/Label" />
+  <Instance Name="TextBoxInstance" BaseType="Retro95/TextBox" />
+  <Instance Name="TextBoxInstance1" BaseType="Retro95/PasswordBox" />
+  <Instance Name="MultiLineTextBox" BaseType="Retro95/TextBox" />
+  <Instance Name="DialogBoxInstance" BaseType="Retro95/DialogBox" />
+  <Instance Name="WindowStandardInstance" BaseType="Retro95/Window" />
+  <Instance Name="LabelInstance1" BaseType="Retro95/Label" />
+  <Instance Name="ListBoxItemInstance" BaseType="Retro95/ListBoxItem" />
+  <Instance Name="ListBoxItemInstance1" BaseType="Retro95/ListBoxItem" />
+  <Instance Name="ListBoxItemInstance2" BaseType="Retro95/ListBoxItem" />
+  <Instance Name="ListBoxItemInstance3" BaseType="Retro95/ListBoxItem" />
+  <Instance Name="ListBoxItemInstance4" BaseType="Retro95/ListBoxItem" />
+  <Instance Name="ListBoxItemInstance5" BaseType="Retro95/ListBoxItem" />
   <Behaviors />
 </ScreenSave>

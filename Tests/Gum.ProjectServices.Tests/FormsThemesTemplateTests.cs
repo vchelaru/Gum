@@ -69,6 +69,34 @@ public class FormsThemesTemplateTests
             .ShouldBeEmpty();
     }
 
+    // #7361: components sit directly in Components/<Theme>/, with no Controls or Elements subfolder.
+    [Theory]
+    [MemberData(nameof(ThemeNames))]
+    public void Components_ShouldSitDirectlyInTheThemeFolder(string themeName)
+    {
+        StandardElementsManager.Self.Initialize();
+        string themeDir = Path.Combine(FindRepoRoot(),
+            "Tools", "Gum.ProjectServices", "Templates", "FormsThemes", themeName);
+        string componentsDir = Path.Combine(themeDir, "Components", themeName);
+
+        Directory.Exists(Path.Combine(componentsDir, "Controls")).ShouldBeFalse();
+        Directory.Exists(Path.Combine(componentsDir, "Elements")).ShouldBeFalse();
+        File.Exists(Path.Combine(componentsDir, "Button.gucx")).ShouldBeTrue();
+        File.Exists(Path.Combine(componentsDir, "Divider.gucx")).ShouldBeTrue();
+
+        ProjectLoadResult result = new ProjectLoader().Load(Path.Combine(themeDir, "GumProject.gumx"));
+        result.Success.ShouldBeTrue();
+        result.LoadErrors.ShouldBeEmpty();
+        result.Project!.Components.Select(component => component.Name)
+            .ShouldContain(themeName + "/Button");
+        result.Project.Components
+            .Where(component => component.Name.Count(character => character == '/') != 1)
+            .ShouldBeEmpty();
+        result.Project.Components
+            .Where(component => !File.Exists(Path.Combine(themeDir, "Components", component.Name + ".gucx")))
+            .ShouldBeEmpty();
+    }
+
     private static readonly string[] AllTemplateFolders =
     {
         "FormsTemplate",
@@ -175,10 +203,10 @@ public class FormsThemesTemplateTests
         GumProjectSave project = LoadTemplate(templateFolder);
 
         string prefix = GetPrefix(templateFolder);
-        string buttonName = prefix + (prefix.Length == 0 ? "Controls/ButtonStandard" : "Controls/Button");
+        string buttonName = prefix + (prefix.Length == 0 ? "Controls/ButtonStandard" : "Button");
 
         ComponentSave button = project.Components.Single(c => c.Name == buttonName);
-        ComponentSave thumb = project.Components.Single(c => c.Name == $"{prefix}Controls/{thumbName}");
+        ComponentSave thumb = project.Components.Single(c => c.Name == $"{InFolder(prefix, "Controls/")}{thumbName}");
 
         thumb.BaseType.ShouldBe(button.BaseType);
         thumb.Instances.Select(i => (i.Name, i.BaseType))
@@ -200,10 +228,10 @@ public class FormsThemesTemplateTests
 
         foreach (string controlName in new[] { "Slider", "ScrollBar" })
         {
-            ComponentSave control = project.Components.Single(c => c.Name == $"{prefix}Controls/{controlName}");
+            ComponentSave control = project.Components.Single(c => c.Name == $"{InFolder(prefix, "Controls/")}{controlName}");
 
             control.Instances.Single(i => i.Name == "ThumbInstance").BaseType
-                .ShouldBe($"{prefix}Controls/{controlName}Thumb");
+                .ShouldBe($"{InFolder(prefix, "Controls/")}{controlName}Thumb");
         }
     }
 
@@ -215,7 +243,7 @@ public class FormsThemesTemplateTests
     {
         StandardElementsManager.Self.Initialize();
         GumProjectSave project = LoadTemplate(templateFolder);
-        string toggleName = GetPrefix(templateFolder) + "Controls/ToggleButton";
+        string toggleName = InFolder(GetPrefix(templateFolder), "Controls/") + "ToggleButton";
 
         project.Components.Select(c => c.Name).ShouldContain(toggleName);
         ComponentSave toggle = project.Components.Single(c => c.Name == toggleName);
@@ -240,7 +268,7 @@ public class FormsThemesTemplateTests
         StandardElementsManager.Self.Initialize();
         GumProjectSave project = LoadTemplate(templateFolder);
 
-        project.Components.Select(c => c.Name).ShouldNotContain(GetPrefix(templateFolder) + "Controls/Thumb");
+        project.Components.Select(c => c.Name).ShouldNotContain(InFolder(GetPrefix(templateFolder), "Controls/") + "Thumb");
     }
 
     // ListBoxItem.UpdateState sets one of these five states by name. A template missing one leaves the
@@ -252,7 +280,7 @@ public class FormsThemesTemplateTests
     {
         StandardElementsManager.Self.Initialize();
         GumProjectSave project = LoadTemplate(templateFolder);
-        ComponentSave listBoxItem = project.Components.Single(c => c.Name == $"{GetPrefix(templateFolder)}Controls/ListBoxItem");
+        ComponentSave listBoxItem = project.Components.Single(c => c.Name == $"{InFolder(GetPrefix(templateFolder), "Controls/")}ListBoxItem");
 
         StateSaveCategory category = listBoxItem.Categories.Single(c => c.Name == "ListBoxItemCategory");
 
@@ -262,6 +290,10 @@ public class FormsThemesTemplateTests
 
     private static GumProjectSave LoadTemplate(string templateFolder) =>
         new ProjectLoader().Load(Path.Combine(GetTemplateDir(templateFolder), "GumProject.gumx")).Project!;
+
+    // The Standard template groups components in Controls/ and Elements/; themes put them directly in their folder (#7361).
+    private static string InFolder(string prefix, string standardFolder) =>
+        prefix.Length == 0 ? standardFolder : prefix;
 
     private static string GetPrefix(string templateFolder) =>
         templateFolder.StartsWith("FormsThemes/", StringComparison.Ordinal)
@@ -281,9 +313,9 @@ public class FormsThemesTemplateTests
         GumProjectSave project = new ProjectLoader()
             .Load(Path.Combine(GetTemplateDir(templateFolder), "GumProject.gumx")).Project!;
 
-        ComponentSave buttonIcon = project.Components.Single(c => c.Name == prefix + "Controls/ButtonIcon");
-        ComponentSave scrollBarButton = project.Components.Single(c => c.Name == prefix + "Controls/ScrollBarButton");
-        ComponentSave scrollBar = project.Components.Single(c => c.Name == prefix + "Controls/ScrollBar");
+        ComponentSave buttonIcon = project.Components.Single(c => c.Name == InFolder(prefix, "Controls/") + "ButtonIcon");
+        ComponentSave scrollBarButton = project.Components.Single(c => c.Name == InFolder(prefix, "Controls/") + "ScrollBarButton");
+        ComponentSave scrollBar = project.Components.Single(c => c.Name == InFolder(prefix, "Controls/") + "ScrollBar");
 
         scrollBarButton.BaseType.ShouldBe(buttonIcon.BaseType);
         scrollBarButton.Instances.Select(i => (i.Name, i.BaseType))
@@ -293,9 +325,9 @@ public class FormsThemesTemplateTests
         scrollBarButton.DefaultState!.Variables.Count.ShouldBe(buttonIcon.DefaultState!.Variables.Count);
 
         scrollBar.Instances.Single(i => i.Name == "UpButtonInstance").BaseType
-            .ShouldBe(prefix + "Controls/ScrollBarButton");
+            .ShouldBe(InFolder(prefix, "Controls/") + "ScrollBarButton");
         scrollBar.Instances.Single(i => i.Name == "DownButtonInstance").BaseType
-            .ShouldBe(prefix + "Controls/ScrollBarButton");
+            .ShouldBe(InFolder(prefix, "Controls/") + "ScrollBarButton");
     }
 
     // The submenu indicator is a fixed-size Icon showing Arrow2, not a '>' in a font (#6164, #6173). Only
@@ -310,11 +342,11 @@ public class FormsThemesTemplateTests
         GumProjectSave project = new ProjectLoader()
             .Load(Path.Combine(GetTemplateDir(templateFolder), "GumProject.gumx")).Project!;
 
-        ComponentSave menuItem = project.Components.Single(c => c.Name == prefix + "Controls/MenuItem");
+        ComponentSave menuItem = project.Components.Single(c => c.Name == InFolder(prefix, "Controls/") + "MenuItem");
         StateSave defaultState = menuItem.DefaultState!;
 
         menuItem.Instances.Single(i => i.Name == "SubmenuIndicatorInstance").BaseType
-            .ShouldBe(prefix + "Elements/Icon");
+            .ShouldBe(InFolder(prefix, "Elements/") + "Icon");
         defaultState.GetValue("SubmenuIndicatorInstance.IconCategoryState").ShouldBe("Arrow2");
         defaultState.GetValue("SubmenuIndicatorInstance.Width").ShouldBe(16f);
         defaultState.GetValue("SubmenuIndicatorInstance.Height").ShouldBe(16f);

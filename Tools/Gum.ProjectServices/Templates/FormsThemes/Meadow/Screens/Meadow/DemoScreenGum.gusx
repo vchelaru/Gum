@@ -820,43 +820,43 @@
   <Instance Name="MenuItems" BaseType="Container" />
   <Instance Name="TitleText" BaseType="Text" />
   <Instance Name="TitleText1" BaseType="Text" />
-  <Instance Name="DividerInstance" BaseType="Meadow/Elements/Divider" />
-  <Instance Name="DividerInstance4" BaseType="Meadow/Elements/Divider" />
-  <Instance Name="ResolutionLabel" BaseType="Meadow/Controls/Label" />
-  <Instance Name="ResolutionBox" BaseType="Meadow/Controls/ListBox" />
-  <Instance Name="DetectResolutionsButton" BaseType="Meadow/Controls/Button" />
-  <Instance Name="FullScreenCheckbox" BaseType="Meadow/Controls/CheckBox" />
-  <Instance Name="DividerInstance1" BaseType="Meadow/Elements/Divider" />
-  <Instance Name="MusicLabel" BaseType="Meadow/Controls/Label" />
-  <Instance Name="MusicSlider" BaseType="Meadow/Controls/Slider" />
-  <Instance Name="SoundLabel" BaseType="Meadow/Controls/Label" />
-  <Instance Name="SoundSlider" BaseType="Meadow/Controls/Slider" />
-  <Instance Name="DividerInstance2" BaseType="Meadow/Elements/Divider" />
-  <Instance Name="ControlLabel" BaseType="Meadow/Controls/Label" />
-  <Instance Name="RadioButtonInstance" BaseType="Meadow/Controls/RadioButton" />
-  <Instance Name="RadioButtonInstance1" BaseType="Meadow/Controls/RadioButton" />
-  <Instance Name="RadioButtonInstance2" BaseType="Meadow/Controls/RadioButton" />
-  <Instance Name="DividerInstance3" BaseType="Meadow/Elements/Divider" />
-  <Instance Name="DifficultyLabel" BaseType="Meadow/Controls/Label" />
+  <Instance Name="DividerInstance" BaseType="Meadow/Divider" />
+  <Instance Name="DividerInstance4" BaseType="Meadow/Divider" />
+  <Instance Name="ResolutionLabel" BaseType="Meadow/Label" />
+  <Instance Name="ResolutionBox" BaseType="Meadow/ListBox" />
+  <Instance Name="DetectResolutionsButton" BaseType="Meadow/Button" />
+  <Instance Name="FullScreenCheckbox" BaseType="Meadow/CheckBox" />
+  <Instance Name="DividerInstance1" BaseType="Meadow/Divider" />
+  <Instance Name="MusicLabel" BaseType="Meadow/Label" />
+  <Instance Name="MusicSlider" BaseType="Meadow/Slider" />
+  <Instance Name="SoundLabel" BaseType="Meadow/Label" />
+  <Instance Name="SoundSlider" BaseType="Meadow/Slider" />
+  <Instance Name="DividerInstance2" BaseType="Meadow/Divider" />
+  <Instance Name="ControlLabel" BaseType="Meadow/Label" />
+  <Instance Name="RadioButtonInstance" BaseType="Meadow/RadioButton" />
+  <Instance Name="RadioButtonInstance1" BaseType="Meadow/RadioButton" />
+  <Instance Name="RadioButtonInstance2" BaseType="Meadow/RadioButton" />
+  <Instance Name="DividerInstance3" BaseType="Meadow/Divider" />
+  <Instance Name="DifficultyLabel" BaseType="Meadow/Label" />
   <Instance Name="Background1" BaseType="Rectangle" />
-  <Instance Name="ComboBoxInstance" BaseType="Meadow/Controls/ComboBox" />
+  <Instance Name="ComboBoxInstance" BaseType="Meadow/ComboBox" />
   <Instance Name="ButtonContainer" BaseType="Container" />
-  <Instance Name="ButtonConfirmInstance" BaseType="Meadow/Controls/Button" />
-  <Instance Name="ButtonDenyInstance" BaseType="Meadow/Controls/Button" />
+  <Instance Name="ButtonConfirmInstance" BaseType="Meadow/Button" />
+  <Instance Name="ButtonDenyInstance" BaseType="Meadow/Button" />
   <Instance Name="DemoDialog" BaseType="Container" />
   <Instance Name="MarginContainer" BaseType="Container" />
-  <Instance Name="LabelInstance" BaseType="Meadow/Controls/Label" />
-  <Instance Name="TextBoxInstance" BaseType="Meadow/Controls/TextBox" />
-  <Instance Name="TextBoxInstance1" BaseType="Meadow/Controls/PasswordBox" />
-  <Instance Name="MultiLineTextBox" BaseType="Meadow/Controls/TextBox" />
-  <Instance Name="DialogBoxInstance" BaseType="Meadow/Controls/DialogBox" />
-  <Instance Name="WindowStandardInstance" BaseType="Meadow/Controls/Window" />
-  <Instance Name="LabelInstance1" BaseType="Meadow/Controls/Label" />
-  <Instance Name="ListBoxItemInstance" BaseType="Meadow/Controls/ListBoxItem" />
-  <Instance Name="ListBoxItemInstance1" BaseType="Meadow/Controls/ListBoxItem" />
-  <Instance Name="ListBoxItemInstance2" BaseType="Meadow/Controls/ListBoxItem" />
-  <Instance Name="ListBoxItemInstance3" BaseType="Meadow/Controls/ListBoxItem" />
-  <Instance Name="ListBoxItemInstance4" BaseType="Meadow/Controls/ListBoxItem" />
-  <Instance Name="ListBoxItemInstance5" BaseType="Meadow/Controls/ListBoxItem" />
+  <Instance Name="LabelInstance" BaseType="Meadow/Label" />
+  <Instance Name="TextBoxInstance" BaseType="Meadow/TextBox" />
+  <Instance Name="TextBoxInstance1" BaseType="Meadow/PasswordBox" />
+  <Instance Name="MultiLineTextBox" BaseType="Meadow/TextBox" />
+  <Instance Name="DialogBoxInstance" BaseType="Meadow/DialogBox" />
+  <Instance Name="WindowStandardInstance" BaseType="Meadow/Window" />
+  <Instance Name="LabelInstance1" BaseType="Meadow/Label" />
+  <Instance Name="ListBoxItemInstance" BaseType="Meadow/ListBoxItem" />
+  <Instance Name="ListBoxItemInstance1" BaseType="Meadow/ListBoxItem" />
+  <Instance Name="ListBoxItemInstance2" BaseType="Meadow/ListBoxItem" />
+  <Instance Name="ListBoxItemInstance3" BaseType="Meadow/ListBoxItem" />
+  <Instance Name="ListBoxItemInstance4" BaseType="Meadow/ListBoxItem" />
+  <Instance Name="ListBoxItemInstance5" BaseType="Meadow/ListBoxItem" />
   <Behaviors />
 </ScreenSave>

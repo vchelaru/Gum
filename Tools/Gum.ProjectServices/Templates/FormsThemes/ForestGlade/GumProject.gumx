@@ -57,37 +57,37 @@
   <ShowLocalizationInGum>true</ShowLocalizationInGum>
   <CurrentLanguageIndex>0</CurrentLanguageIndex>
   <ScreenReference Name="ForestGlade/DemoScreenGum" />
-  <ComponentReference Name="ForestGlade/Controls/Button" />
-  <ComponentReference Name="ForestGlade/Controls/ButtonIcon" />
-  <ComponentReference Name="ForestGlade/Controls/CheckBox" />
-  <ComponentReference Name="ForestGlade/Controls/ColorPicker" />
-  <ComponentReference Name="ForestGlade/Controls/ComboBox" />
-  <ComponentReference Name="ForestGlade/Controls/DialogBox" />
-  <ComponentReference Name="ForestGlade/Controls/Expander" />
-  <ComponentReference Name="ForestGlade/Controls/ItemsControl" />
-  <ComponentReference Name="ForestGlade/Controls/Label" />
-  <ComponentReference Name="ForestGlade/Controls/ListBox" />
-  <ComponentReference Name="ForestGlade/Controls/ListBoxItem" />
-  <ComponentReference Name="ForestGlade/Controls/Menu" />
-  <ComponentReference Name="ForestGlade/Controls/MenuItem" />
-  <ComponentReference Name="ForestGlade/Controls/Panel" />
-  <ComponentReference Name="ForestGlade/Controls/PasswordBox" />
-  <ComponentReference Name="ForestGlade/Controls/RadioButton" />
-  <ComponentReference Name="ForestGlade/Controls/ScrollBar" />
-  <ComponentReference Name="ForestGlade/Controls/ScrollBarThumb" />
-  <ComponentReference Name="ForestGlade/Controls/ScrollViewer" />
-  <ComponentReference Name="ForestGlade/Controls/Slider" />
-  <ComponentReference Name="ForestGlade/Controls/SliderThumb" />
-  <ComponentReference Name="ForestGlade/Controls/Splitter" />
-  <ComponentReference Name="ForestGlade/Controls/StackPanel" />
-  <ComponentReference Name="ForestGlade/Controls/TextBox" />
-  <ComponentReference Name="ForestGlade/Controls/Toast" />
-  <ComponentReference Name="ForestGlade/Controls/ToggleButton" />
-  <ComponentReference Name="ForestGlade/Controls/UserControl" />
-  <ComponentReference Name="ForestGlade/Controls/Window" />
-  <ComponentReference Name="ForestGlade/Elements/Divider" />
-  <ComponentReference Name="ForestGlade/Elements/TextInputChrome" />
+  <ComponentReference Name="ForestGlade/Button" />
+  <ComponentReference Name="ForestGlade/ButtonIcon" />
+  <ComponentReference Name="ForestGlade/CheckBox" />
+  <ComponentReference Name="ForestGlade/ColorPicker" />
+  <ComponentReference Name="ForestGlade/ComboBox" />
+  <ComponentReference Name="ForestGlade/DialogBox" />
+  <ComponentReference Name="ForestGlade/Divider" />
+  <ComponentReference Name="ForestGlade/Expander" />
+  <ComponentReference Name="ForestGlade/ItemsControl" />
+  <ComponentReference Name="ForestGlade/Label" />
+  <ComponentReference Name="ForestGlade/ListBox" />
+  <ComponentReference Name="ForestGlade/ListBoxItem" />
+  <ComponentReference Name="ForestGlade/Menu" />
+  <ComponentReference Name="ForestGlade/MenuItem" />
+  <ComponentReference Name="ForestGlade/Panel" />
+  <ComponentReference Name="ForestGlade/PasswordBox" />
+  <ComponentReference Name="ForestGlade/RadioButton" />
+  <ComponentReference Name="ForestGlade/ScrollBar" />
+  <ComponentReference Name="ForestGlade/ScrollBarThumb" />
+  <ComponentReference Name="ForestGlade/ScrollViewer" />
+  <ComponentReference Name="ForestGlade/Slider" />
+  <ComponentReference Name="ForestGlade/SliderThumb" />
+  <ComponentReference Name="ForestGlade/Splitter" />
+  <ComponentReference Name="ForestGlade/StackPanel" />
   <ComponentReference Name="ForestGlade/Styles" />
+  <ComponentReference Name="ForestGlade/TextBox" />
+  <ComponentReference Name="ForestGlade/TextInputChrome" />
+  <ComponentReference Name="ForestGlade/Toast" />
+  <ComponentReference Name="ForestGlade/ToggleButton" />
+  <ComponentReference Name="ForestGlade/UserControl" />
+  <ComponentReference Name="ForestGlade/Window" />
   <StandardElementReference Name="Circle" />
   <StandardElementReference Name="Component" />
   <StandardElementReference Name="Container" />
@@ -96,31 +96,31 @@
   <StandardElementReference Name="Rectangle" />
   <StandardElementReference Name="Sprite" />
   <StandardElementReference Name="Text" />
-  <BehaviorReference Name="ButtonBehavior" SourcePath="../../FormsBehaviors/ButtonBehavior.behx" DefaultImplementationOverride="ForestGlade/Controls/Button" />
-  <BehaviorReference Name="CheckBoxBehavior" SourcePath="../../FormsBehaviors/CheckBoxBehavior.behx" DefaultImplementationOverride="ForestGlade/Controls/CheckBox" />
-  <BehaviorReference Name="ColorPickerBehavior" SourcePath="../../FormsBehaviors/ColorPickerBehavior.behx" DefaultImplementationOverride="ForestGlade/Controls/ColorPicker" />
-  <BehaviorReference Name="ComboBoxBehavior" SourcePath="../../FormsBehaviors/ComboBoxBehavior.behx" DefaultImplementationOverride="ForestGlade/Controls/ComboBox" />
-  <BehaviorReference Name="DialogBoxBehavior" SourcePath="../../FormsBehaviors/DialogBoxBehavior.behx" DefaultImplementationOverride="ForestGlade/Controls/DialogBox" />
-  <BehaviorReference Name="ExpanderBehavior" SourcePath="../../FormsBehaviors/ExpanderBehavior.behx" DefaultImplementationOverride="ForestGlade/Controls/Expander" />
+  <BehaviorReference Name="ButtonBehavior" SourcePath="../../FormsBehaviors/ButtonBehavior.behx" DefaultImplementationOverride="ForestGlade/Button" />
+  <BehaviorReference Name="CheckBoxBehavior" SourcePath="../../FormsBehaviors/CheckBoxBehavior.behx" DefaultImplementationOverride="ForestGlade/CheckBox" />
+  <BehaviorReference Name="ColorPickerBehavior" SourcePath="../../FormsBehaviors/ColorPickerBehavior.behx" DefaultImplementationOverride="ForestGlade/ColorPicker" />
+  <BehaviorReference Name="ComboBoxBehavior" SourcePath="../../FormsBehaviors/ComboBoxBehavior.behx" DefaultImplementationOverride="ForestGlade/ComboBox" />
+  <BehaviorReference Name="DialogBoxBehavior" SourcePath="../../FormsBehaviors/DialogBoxBehavior.behx" DefaultImplementationOverride="ForestGlade/DialogBox" />
+  <BehaviorReference Name="ExpanderBehavior" SourcePath="../../FormsBehaviors/ExpanderBehavior.behx" DefaultImplementationOverride="ForestGlade/Expander" />
   <BehaviorReference Name="ItemsControlBehavior" SourcePath="../../FormsBehaviors/ItemsControlBehavior.behx" />
   <BehaviorReference Name="LabelBehavior" SourcePath="../../FormsBehaviors/LabelBehavior.behx" />
-  <BehaviorReference Name="ListBoxBehavior" SourcePath="../../FormsBehaviors/ListBoxBehavior.behx" DefaultImplementationOverride="ForestGlade/Controls/ListBox" />
-  <BehaviorReference Name="ListBoxItemBehavior" SourcePath="../../FormsBehaviors/ListBoxItemBehavior.behx" DefaultImplementationOverride="ForestGlade/Controls/ListBoxItem" />
-  <BehaviorReference Name="MenuBehavior" SourcePath="../../FormsBehaviors/MenuBehavior.behx" DefaultImplementationOverride="ForestGlade/Controls/Menu" />
-  <BehaviorReference Name="MenuItemBehavior" SourcePath="../../FormsBehaviors/MenuItemBehavior.behx" DefaultImplementationOverride="ForestGlade/Controls/MenuItem" />
+  <BehaviorReference Name="ListBoxBehavior" SourcePath="../../FormsBehaviors/ListBoxBehavior.behx" DefaultImplementationOverride="ForestGlade/ListBox" />
+  <BehaviorReference Name="ListBoxItemBehavior" SourcePath="../../FormsBehaviors/ListBoxItemBehavior.behx" DefaultImplementationOverride="ForestGlade/ListBoxItem" />
+  <BehaviorReference Name="MenuBehavior" SourcePath="../../FormsBehaviors/MenuBehavior.behx" DefaultImplementationOverride="ForestGlade/Menu" />
+  <BehaviorReference Name="MenuItemBehavior" SourcePath="../../FormsBehaviors/MenuItemBehavior.behx" DefaultImplementationOverride="ForestGlade/MenuItem" />
   <BehaviorReference Name="OnScreenKeyboardBehavior" SourcePath="../../FormsBehaviors/OnScreenKeyboardBehavior.behx" />
   <BehaviorReference Name="PanelBehavior" SourcePath="../../FormsBehaviors/PanelBehavior.behx" />
-  <BehaviorReference Name="PasswordBoxBehavior" SourcePath="../../FormsBehaviors/PasswordBoxBehavior.behx" DefaultImplementationOverride="ForestGlade/Controls/PasswordBox" />
-  <BehaviorReference Name="RadioButtonBehavior" SourcePath="../../FormsBehaviors/RadioButtonBehavior.behx" DefaultImplementationOverride="ForestGlade/Controls/RadioButton" />
-  <BehaviorReference Name="ScrollBarBehavior" SourcePath="../../FormsBehaviors/ScrollBarBehavior.behx" DefaultImplementationOverride="ForestGlade/Controls/ScrollBar" />
-  <BehaviorReference Name="ScrollViewerBehavior" SourcePath="../../FormsBehaviors/ScrollViewerBehavior.behx" DefaultImplementationOverride="ForestGlade/Controls/ScrollViewer" />
-  <BehaviorReference Name="SliderBehavior" SourcePath="../../FormsBehaviors/SliderBehavior.behx" DefaultImplementationOverride="ForestGlade/Controls/Slider" />
-  <BehaviorReference Name="SplitterBehavior" SourcePath="../../FormsBehaviors/SplitterBehavior.behx" DefaultImplementationOverride="ForestGlade/Controls/Splitter" />
+  <BehaviorReference Name="PasswordBoxBehavior" SourcePath="../../FormsBehaviors/PasswordBoxBehavior.behx" DefaultImplementationOverride="ForestGlade/PasswordBox" />
+  <BehaviorReference Name="RadioButtonBehavior" SourcePath="../../FormsBehaviors/RadioButtonBehavior.behx" DefaultImplementationOverride="ForestGlade/RadioButton" />
+  <BehaviorReference Name="ScrollBarBehavior" SourcePath="../../FormsBehaviors/ScrollBarBehavior.behx" DefaultImplementationOverride="ForestGlade/ScrollBar" />
+  <BehaviorReference Name="ScrollViewerBehavior" SourcePath="../../FormsBehaviors/ScrollViewerBehavior.behx" DefaultImplementationOverride="ForestGlade/ScrollViewer" />
+  <BehaviorReference Name="SliderBehavior" SourcePath="../../FormsBehaviors/SliderBehavior.behx" DefaultImplementationOverride="ForestGlade/Slider" />
+  <BehaviorReference Name="SplitterBehavior" SourcePath="../../FormsBehaviors/SplitterBehavior.behx" DefaultImplementationOverride="ForestGlade/Splitter" />
   <BehaviorReference Name="StackPanelBehavior" SourcePath="../../FormsBehaviors/StackPanelBehavior.behx" />
-  <BehaviorReference Name="TextBoxBehavior" SourcePath="../../FormsBehaviors/TextBoxBehavior.behx" DefaultImplementationOverride="ForestGlade/Controls/TextBox" />
-  <BehaviorReference Name="ToastBehavior" SourcePath="../../FormsBehaviors/ToastBehavior.behx" DefaultImplementationOverride="ForestGlade/Controls/Toast" />
-  <BehaviorReference Name="ToggleBehavior" SourcePath="../../FormsBehaviors/ToggleBehavior.behx" DefaultImplementationOverride="ForestGlade/Controls/ToggleButton" />
-  <BehaviorReference Name="UserControlBehavior" SourcePath="../../FormsBehaviors/UserControlBehavior.behx" DefaultImplementationOverride="ForestGlade/Controls/UserControl" />
+  <BehaviorReference Name="TextBoxBehavior" SourcePath="../../FormsBehaviors/TextBoxBehavior.behx" DefaultImplementationOverride="ForestGlade/TextBox" />
+  <BehaviorReference Name="ToastBehavior" SourcePath="../../FormsBehaviors/ToastBehavior.behx" DefaultImplementationOverride="ForestGlade/Toast" />
+  <BehaviorReference Name="ToggleBehavior" SourcePath="../../FormsBehaviors/ToggleBehavior.behx" DefaultImplementationOverride="ForestGlade/ToggleButton" />
+  <BehaviorReference Name="UserControlBehavior" SourcePath="../../FormsBehaviors/UserControlBehavior.behx" DefaultImplementationOverride="ForestGlade/UserControl" />
   <BehaviorReference Name="WindowBehavior" SourcePath="../../FormsBehaviors/WindowBehavior.behx" />
   <SinglePixelTextureTop xsi:nil="true" />
   <SinglePixelTextureLeft xsi:nil="true" />

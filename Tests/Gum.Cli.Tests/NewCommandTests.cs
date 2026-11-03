@@ -90,7 +90,7 @@ public class NewCommandTests : BaseTestClass
         CliTestHelper result = CliTestHelper.Run("new", filePath, "--theme", "meadow");
 
         result.ExitCode.ShouldBe(0);
-        File.Exists(Path.Combine(TempDirectory, "Components", "Meadow", "Controls", "Label.gucx")).ShouldBeTrue();
+        File.Exists(Path.Combine(TempDirectory, "Components", "Meadow", "Label.gucx")).ShouldBeTrue();
         File.Exists(Path.Combine(TempDirectory, "Behaviors", "ButtonBehavior.behx")).ShouldBeTrue();
     }
 

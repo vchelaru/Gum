@@ -51,7 +51,7 @@ public class TextBoxLineModeStateTests : BaseTestClass
         GumProjectSave gumProject = GumProjectSave.Load(gumx, out _) ?? throw new InvalidOperationException(gumx);
         gumProject.Initialize();
         ObjectFinder.Self.GumProjectSave = gumProject;
-        string baseType = isTheme ? $"{project}/Controls/{control}" : $"Controls/{control}";
+        string baseType = gumProject.Components.Single(item => item.Name.EndsWith("/" + control)).Name;
 
         if (selectionHeightOnlyInSingle)
         {

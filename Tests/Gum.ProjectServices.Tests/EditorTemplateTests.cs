@@ -40,7 +40,7 @@ public class EditorTemplateTests
     }
 
     private static ComponentSave GetControl(GumProjectSave project, string name) =>
-        project.Components.Single(c => c.Name == "Editor/Controls/" + name);
+        project.Components.Single(c => c.Name == "Editor/" + name);
 
     private static string? GetStyleReference(StateSave state, string instanceName, string lhs)
     {

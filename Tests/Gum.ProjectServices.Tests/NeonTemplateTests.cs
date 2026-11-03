@@ -72,7 +72,7 @@ public class NeonTemplateTests
         GumProjectSave formsTemplate = LoadFormsTemplate();
 
         neon.Behaviors.Single(b => b.Name == "ButtonBehavior").DefaultImplementation
-            .ShouldBe("Neon/Controls/Button");
+            .ShouldBe("Neon/Button");
         formsTemplate.Behaviors.Single(b => b.Name == "ButtonBehavior").DefaultImplementation
             .ShouldBe("Controls/ButtonStandard");
     }
@@ -211,7 +211,7 @@ public class NeonTemplateTests
             // black/white contrast pair that must stay legible against any user-picked hue),
             // matching the code-only ColorPickerVisual, which hardcodes the same colors rather
             // than reading them from a theme's Colors class.
-            if (component.Name == "Neon/Controls/ColorPicker")
+            if (component.Name == "Neon/ColorPicker")
             {
                 continue;
             }

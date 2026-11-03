@@ -44,7 +44,7 @@ public class ThemedTextBoxSelectionTests : BaseTestClass
         Gum.Forms.FormsUtilities.RegisterFromFileFormRuntimeDefaults();
         ScreenSave screen = new ScreenSave { Name = "SelectionScreen" };
         screen.States.Add(new StateSave { Name = "Default", ParentContainer = screen });
-        screen.Instances.Add(new InstanceSave { Name = "Box", BaseType = $"{theme}/Controls/{control}", ParentContainer = screen });
+        screen.Instances.Add(new InstanceSave { Name = "Box", BaseType = project.Components.Single(item => item.Name.EndsWith($"/{control}")).Name, ParentContainer = screen });
         project.Screens.Add(screen);
         project.Initialize();
         GraphicalUiElement screenVisual = screen.ToGraphicalUiElement();
@@ -94,7 +94,7 @@ public class ThemedTextBoxSelectionTests : BaseTestClass
         string gumx = Path.Combine(LocateRepoRoot(), "Tools", "Gum.ProjectServices", "Templates", themeFolder, "GumProject.gumx");
         GumProjectSave project = GumProjectSave.Load(gumx, out _)!;
         project.Initialize();
-        ComponentSave component = project.Components.Single(item => item.Name.EndsWith($"Controls/{control}"));
+        ComponentSave component = project.Components.Single(item => item.Name.EndsWith($"/{control}"));
 
         (double[] selectionColor, int alpha) = ResolveColor(project, component, "SelectionInstance");
         if (alpha < 255)

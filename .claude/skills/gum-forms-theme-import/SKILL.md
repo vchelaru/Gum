@@ -90,9 +90,10 @@ the project root (`GumDataTypes/ElementReference.cs` `Subfolder`; `Behaviors/` t
 So a theme can't be namespaced by nesting its whole tree one level deeper (e.g. under
 `<Theme>/Components/...`) — that path segment never resolves.
 
-Instead, prefix the theme name into every qualified `Name` itself, the same way `Controls/` and
-`Elements/` already subfolder within `Components/`: `Controls/Button` → `Bubblegum/Controls/Button`,
-landing on disk at `Components/Bubblegum/Controls/Button.gucx`. Apply this to every Component/Screen
+Instead, prefix the theme name into every qualified `Name` itself, with no `Controls/` or `Elements/`
+subfolder (components sit directly in the theme's folder): `Controls/Button` → `Bubblegum/Button`,
+landing on disk at `Components/Bubblegum/Button.gucx`. A theme already imported into a project is a
+snapshot and keeps the older `Bubblegum/Controls/Button` names; there is no migration. Apply this to every Component/Screen
 reference surface: `.gumx` `ComponentReference`/`ScreenReference` `Name` attributes, each file's own
 `<Name>` tag, `BaseType="..."` instance attributes, `VariableReferences` strings
 (`Components/Styles.X` → `Components/Bubblegum/Styles.X`), and a `.behx`'s

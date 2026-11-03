@@ -46,7 +46,7 @@ public class ThemeFocusIndicatorTests : BeginnerDriverTestBase
         List<string> failures = new List<string>();
         StringBuilder log = new StringBuilder();
 
-        foreach (string suffix in new[] { "Controls/CheckBox", "Controls/RadioButton" })
+        foreach (string suffix in new[] { "/CheckBox", "/RadioButton" })
         {
             string componentName = project.Components.Single(item => item.Name.EndsWith(suffix)).Name;
             GraphicalUiElement control = PlaceAlone(project, componentName, out ScreenSave screen, out GraphicalUiElement screenVisual);

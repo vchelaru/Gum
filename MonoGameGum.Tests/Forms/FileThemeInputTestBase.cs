@@ -110,18 +110,18 @@ public abstract class FileThemeInputTestBase : BeginnerDriverTestBase
 
     protected static string ComponentName(GumProjectSave project, string controlName)
     {
-        string name = project.Components.Any(item => item.Name.EndsWith("Controls/" + controlName))
+        string name = project.Components.Any(item => item.Name.EndsWith("/" + controlName))
             ? controlName
             : TemplateNames[controlName];
-        return project.Components.Single(item => item.Name.EndsWith("Controls/" + name)).Name;
+        return project.Components.Single(item => item.Name.EndsWith("/" + name)).Name;
     }
 
-    /// <summary>The component whose name ends in "/Controls/&lt;control&gt;" (FormsTemplate names some differently), or null.</summary>
+    /// <summary>The component whose name ends in "/&lt;control&gt;" (FormsTemplate names some differently), or null.</summary>
     protected static ComponentSave? Find(GumProjectSave project, params string[] names)
     {
         foreach (string name in names)
         {
-            ComponentSave? found = project.Components.FirstOrDefault(item => item.Name.EndsWith("Controls/" + name));
+            ComponentSave? found = project.Components.FirstOrDefault(item => item.Name.EndsWith("/" + name));
             if (found != null)
             {
                 return found;

@@ -46,6 +46,12 @@ public class ThemedToggleAndExtremeSizeTests : FileThemeInputTestBase
         return string.Join("|", parts);
     }
 
+    // Components that are not Forms controls: the Standard template keeps them in Elements/, themes beside the controls.
+    private static readonly string[] NonControlComponents =
+    {
+        "Styles", "CautionLines", "Divider", "DividerHorizontal", "DividerVertical", "Icon", "PercentBar", "PercentBarIcon", "VerticalLines"
+    };
+
     public static IEnumerable<object[]> CheckedThemes() =>
         AllThemes().Select(row => (string)row[0]).SelectMany(t => new[] { "CheckBox", "RadioButton" }.Select(c => new object[] { t, c }));
 
@@ -100,7 +106,7 @@ public class ThemedToggleAndExtremeSizeTests : FileThemeInputTestBase
     {
         GumProjectSave project = LoadTheme(theme);
         List<string> problems = new List<string>();
-        foreach (ComponentSave component in project.Components.Where(c => c.Name.Contains("Controls/")).ToList())
+        foreach (ComponentSave component in project.Components.Where(c => !NonControlComponents.Any(skip => c.Name == skip || c.Name.EndsWith("/" + skip))).ToList())
         {
             foreach ((float w, float h) in new[] { (0f, 0f), (-20f, -20f), (6000f, 4000f) })
             {

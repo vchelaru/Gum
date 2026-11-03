@@ -57,37 +57,37 @@
   <ShowLocalizationInGum>true</ShowLocalizationInGum>
   <CurrentLanguageIndex>0</CurrentLanguageIndex>
   <ScreenReference Name="DarkPro/DemoScreenGum" />
-  <ComponentReference Name="DarkPro/Controls/Button" />
-  <ComponentReference Name="DarkPro/Controls/ButtonIcon" />
-  <ComponentReference Name="DarkPro/Controls/CheckBox" />
-  <ComponentReference Name="DarkPro/Controls/ColorPicker" />
-  <ComponentReference Name="DarkPro/Controls/ComboBox" />
-  <ComponentReference Name="DarkPro/Controls/DialogBox" />
-  <ComponentReference Name="DarkPro/Controls/Expander" />
-  <ComponentReference Name="DarkPro/Controls/ItemsControl" />
-  <ComponentReference Name="DarkPro/Controls/Label" />
-  <ComponentReference Name="DarkPro/Controls/ListBox" />
-  <ComponentReference Name="DarkPro/Controls/ListBoxItem" />
-  <ComponentReference Name="DarkPro/Controls/Menu" />
-  <ComponentReference Name="DarkPro/Controls/MenuItem" />
-  <ComponentReference Name="DarkPro/Controls/Panel" />
-  <ComponentReference Name="DarkPro/Controls/PasswordBox" />
-  <ComponentReference Name="DarkPro/Controls/RadioButton" />
-  <ComponentReference Name="DarkPro/Controls/ScrollBar" />
-  <ComponentReference Name="DarkPro/Controls/ScrollBarThumb" />
-  <ComponentReference Name="DarkPro/Controls/ScrollViewer" />
-  <ComponentReference Name="DarkPro/Controls/Slider" />
-  <ComponentReference Name="DarkPro/Controls/SliderThumb" />
-  <ComponentReference Name="DarkPro/Controls/Splitter" />
-  <ComponentReference Name="DarkPro/Controls/StackPanel" />
-  <ComponentReference Name="DarkPro/Controls/TextBox" />
-  <ComponentReference Name="DarkPro/Controls/Toast" />
-  <ComponentReference Name="DarkPro/Controls/ToggleButton" />
-  <ComponentReference Name="DarkPro/Controls/UserControl" />
-  <ComponentReference Name="DarkPro/Controls/Window" />
-  <ComponentReference Name="DarkPro/Elements/Divider" />
-  <ComponentReference Name="DarkPro/Elements/Icon" />
+  <ComponentReference Name="DarkPro/Button" />
+  <ComponentReference Name="DarkPro/ButtonIcon" />
+  <ComponentReference Name="DarkPro/CheckBox" />
+  <ComponentReference Name="DarkPro/ColorPicker" />
+  <ComponentReference Name="DarkPro/ComboBox" />
+  <ComponentReference Name="DarkPro/DialogBox" />
+  <ComponentReference Name="DarkPro/Divider" />
+  <ComponentReference Name="DarkPro/Expander" />
+  <ComponentReference Name="DarkPro/Icon" />
+  <ComponentReference Name="DarkPro/ItemsControl" />
+  <ComponentReference Name="DarkPro/Label" />
+  <ComponentReference Name="DarkPro/ListBox" />
+  <ComponentReference Name="DarkPro/ListBoxItem" />
+  <ComponentReference Name="DarkPro/Menu" />
+  <ComponentReference Name="DarkPro/MenuItem" />
+  <ComponentReference Name="DarkPro/Panel" />
+  <ComponentReference Name="DarkPro/PasswordBox" />
+  <ComponentReference Name="DarkPro/RadioButton" />
+  <ComponentReference Name="DarkPro/ScrollBar" />
+  <ComponentReference Name="DarkPro/ScrollBarThumb" />
+  <ComponentReference Name="DarkPro/ScrollViewer" />
+  <ComponentReference Name="DarkPro/Slider" />
+  <ComponentReference Name="DarkPro/SliderThumb" />
+  <ComponentReference Name="DarkPro/Splitter" />
+  <ComponentReference Name="DarkPro/StackPanel" />
   <ComponentReference Name="DarkPro/Styles" />
+  <ComponentReference Name="DarkPro/TextBox" />
+  <ComponentReference Name="DarkPro/Toast" />
+  <ComponentReference Name="DarkPro/ToggleButton" />
+  <ComponentReference Name="DarkPro/UserControl" />
+  <ComponentReference Name="DarkPro/Window" />
   <StandardElementReference Name="Circle" />
   <StandardElementReference Name="Component" />
   <StandardElementReference Name="Container" />
@@ -96,31 +96,31 @@
   <StandardElementReference Name="Rectangle" />
   <StandardElementReference Name="Sprite" />
   <StandardElementReference Name="Text" />
-  <BehaviorReference Name="ButtonBehavior" SourcePath="../../FormsBehaviors/ButtonBehavior.behx" DefaultImplementationOverride="DarkPro/Controls/Button" />
-  <BehaviorReference Name="CheckBoxBehavior" SourcePath="../../FormsBehaviors/CheckBoxBehavior.behx" DefaultImplementationOverride="DarkPro/Controls/CheckBox" />
-  <BehaviorReference Name="ColorPickerBehavior" SourcePath="../../FormsBehaviors/ColorPickerBehavior.behx" DefaultImplementationOverride="DarkPro/Controls/ColorPicker" />
-  <BehaviorReference Name="ComboBoxBehavior" SourcePath="../../FormsBehaviors/ComboBoxBehavior.behx" DefaultImplementationOverride="DarkPro/Controls/ComboBox" />
-  <BehaviorReference Name="DialogBoxBehavior" SourcePath="../../FormsBehaviors/DialogBoxBehavior.behx" DefaultImplementationOverride="DarkPro/Controls/DialogBox" />
-  <BehaviorReference Name="ExpanderBehavior" SourcePath="../../FormsBehaviors/ExpanderBehavior.behx" DefaultImplementationOverride="DarkPro/Controls/Expander" />
+  <BehaviorReference Name="ButtonBehavior" SourcePath="../../FormsBehaviors/ButtonBehavior.behx" DefaultImplementationOverride="DarkPro/Button" />
+  <BehaviorReference Name="CheckBoxBehavior" SourcePath="../../FormsBehaviors/CheckBoxBehavior.behx" DefaultImplementationOverride="DarkPro/CheckBox" />
+  <BehaviorReference Name="ColorPickerBehavior" SourcePath="../../FormsBehaviors/ColorPickerBehavior.behx" DefaultImplementationOverride="DarkPro/ColorPicker" />
+  <BehaviorReference Name="ComboBoxBehavior" SourcePath="../../FormsBehaviors/ComboBoxBehavior.behx" DefaultImplementationOverride="DarkPro/ComboBox" />
+  <BehaviorReference Name="DialogBoxBehavior" SourcePath="../../FormsBehaviors/DialogBoxBehavior.behx" DefaultImplementationOverride="DarkPro/DialogBox" />
+  <BehaviorReference Name="ExpanderBehavior" SourcePath="../../FormsBehaviors/ExpanderBehavior.behx" DefaultImplementationOverride="DarkPro/Expander" />
   <BehaviorReference Name="ItemsControlBehavior" SourcePath="../../FormsBehaviors/ItemsControlBehavior.behx" />
   <BehaviorReference Name="LabelBehavior" SourcePath="../../FormsBehaviors/LabelBehavior.behx" />
-  <BehaviorReference Name="ListBoxBehavior" SourcePath="../../FormsBehaviors/ListBoxBehavior.behx" DefaultImplementationOverride="DarkPro/Controls/ListBox" />
-  <BehaviorReference Name="ListBoxItemBehavior" SourcePath="../../FormsBehaviors/ListBoxItemBehavior.behx" DefaultImplementationOverride="DarkPro/Controls/ListBoxItem" />
-  <BehaviorReference Name="MenuBehavior" SourcePath="../../FormsBehaviors/MenuBehavior.behx" DefaultImplementationOverride="DarkPro/Controls/Menu" />
-  <BehaviorReference Name="MenuItemBehavior" SourcePath="../../FormsBehaviors/MenuItemBehavior.behx" DefaultImplementationOverride="DarkPro/Controls/MenuItem" />
+  <BehaviorReference Name="ListBoxBehavior" SourcePath="../../FormsBehaviors/ListBoxBehavior.behx" DefaultImplementationOverride="DarkPro/ListBox" />
+  <BehaviorReference Name="ListBoxItemBehavior" SourcePath="../../FormsBehaviors/ListBoxItemBehavior.behx" DefaultImplementationOverride="DarkPro/ListBoxItem" />
+  <BehaviorReference Name="MenuBehavior" SourcePath="../../FormsBehaviors/MenuBehavior.behx" DefaultImplementationOverride="DarkPro/Menu" />
+  <BehaviorReference Name="MenuItemBehavior" SourcePath="../../FormsBehaviors/MenuItemBehavior.behx" DefaultImplementationOverride="DarkPro/MenuItem" />
   <BehaviorReference Name="OnScreenKeyboardBehavior" SourcePath="../../FormsBehaviors/OnScreenKeyboardBehavior.behx" />
   <BehaviorReference Name="PanelBehavior" SourcePath="../../FormsBehaviors/PanelBehavior.behx" />
-  <BehaviorReference Name="PasswordBoxBehavior" SourcePath="../../FormsBehaviors/PasswordBoxBehavior.behx" DefaultImplementationOverride="DarkPro/Controls/PasswordBox" />
-  <BehaviorReference Name="RadioButtonBehavior" SourcePath="../../FormsBehaviors/RadioButtonBehavior.behx" DefaultImplementationOverride="DarkPro/Controls/RadioButton" />
-  <BehaviorReference Name="ScrollBarBehavior" SourcePath="../../FormsBehaviors/ScrollBarBehavior.behx" DefaultImplementationOverride="DarkPro/Controls/ScrollBar" />
-  <BehaviorReference Name="ScrollViewerBehavior" SourcePath="../../FormsBehaviors/ScrollViewerBehavior.behx" DefaultImplementationOverride="DarkPro/Controls/ScrollViewer" />
-  <BehaviorReference Name="SliderBehavior" SourcePath="../../FormsBehaviors/SliderBehavior.behx" DefaultImplementationOverride="DarkPro/Controls/Slider" />
-  <BehaviorReference Name="SplitterBehavior" SourcePath="../../FormsBehaviors/SplitterBehavior.behx" DefaultImplementationOverride="DarkPro/Controls/Splitter" />
+  <BehaviorReference Name="PasswordBoxBehavior" SourcePath="../../FormsBehaviors/PasswordBoxBehavior.behx" DefaultImplementationOverride="DarkPro/PasswordBox" />
+  <BehaviorReference Name="RadioButtonBehavior" SourcePath="../../FormsBehaviors/RadioButtonBehavior.behx" DefaultImplementationOverride="DarkPro/RadioButton" />
+  <BehaviorReference Name="ScrollBarBehavior" SourcePath="../../FormsBehaviors/ScrollBarBehavior.behx" DefaultImplementationOverride="DarkPro/ScrollBar" />
+  <BehaviorReference Name="ScrollViewerBehavior" SourcePath="../../FormsBehaviors/ScrollViewerBehavior.behx" DefaultImplementationOverride="DarkPro/ScrollViewer" />
+  <BehaviorReference Name="SliderBehavior" SourcePath="../../FormsBehaviors/SliderBehavior.behx" DefaultImplementationOverride="DarkPro/Slider" />
+  <BehaviorReference Name="SplitterBehavior" SourcePath="../../FormsBehaviors/SplitterBehavior.behx" DefaultImplementationOverride="DarkPro/Splitter" />
   <BehaviorReference Name="StackPanelBehavior" SourcePath="../../FormsBehaviors/StackPanelBehavior.behx" />
-  <BehaviorReference Name="TextBoxBehavior" SourcePath="../../FormsBehaviors/TextBoxBehavior.behx" DefaultImplementationOverride="DarkPro/Controls/TextBox" />
-  <BehaviorReference Name="ToastBehavior" SourcePath="../../FormsBehaviors/ToastBehavior.behx" DefaultImplementationOverride="DarkPro/Controls/Toast" />
-  <BehaviorReference Name="ToggleBehavior" SourcePath="../../FormsBehaviors/ToggleBehavior.behx" DefaultImplementationOverride="DarkPro/Controls/ToggleButton" />
-  <BehaviorReference Name="UserControlBehavior" SourcePath="../../FormsBehaviors/UserControlBehavior.behx" DefaultImplementationOverride="DarkPro/Controls/UserControl" />
+  <BehaviorReference Name="TextBoxBehavior" SourcePath="../../FormsBehaviors/TextBoxBehavior.behx" DefaultImplementationOverride="DarkPro/TextBox" />
+  <BehaviorReference Name="ToastBehavior" SourcePath="../../FormsBehaviors/ToastBehavior.behx" DefaultImplementationOverride="DarkPro/Toast" />
+  <BehaviorReference Name="ToggleBehavior" SourcePath="../../FormsBehaviors/ToggleBehavior.behx" DefaultImplementationOverride="DarkPro/ToggleButton" />
+  <BehaviorReference Name="UserControlBehavior" SourcePath="../../FormsBehaviors/UserControlBehavior.behx" DefaultImplementationOverride="DarkPro/UserControl" />
   <BehaviorReference Name="WindowBehavior" SourcePath="../../FormsBehaviors/WindowBehavior.behx" />
   <SinglePixelTextureTop xsi:nil="true" />
   <SinglePixelTextureLeft xsi:nil="true" />
