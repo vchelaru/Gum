@@ -77,7 +77,7 @@ Most events are defined on `PluginBase` — subscribe in `StartUp()`. The full l
 - **Project**: `ProjectLoad`, `BeforeProjectSave`, `AfterProjectSave`
 - **Wireframe**: `WireframeRefreshed`, `BeforeRender`, `AfterRender`, `CameraChanged`
 
-**Query events** (plugins return values to intercept behavior): `TryHandleDelete`, `GetSelectedIpsos`, `VariableExcluded`, `GetDeleteStateResponse`, `CreateGraphicalUiElement`
+**Query events** (plugins return values to intercept behavior): `TryHandleDelete`, `GetSelectedIpsos`, `VariableExcluded`, `GetDeleteStateResponse`, `CreateGraphicalUiElement`, `GetTextureRegionsForFile` (named regions of a Source File for the Texture Coordinates tab; `PluginManager.GetTextureRegions` concatenates all plugins, and the tab caches per file)
 
 ## Visualization Plugins
 

@@ -15,6 +15,7 @@ using Gum.Services;
 using Gum.ToolStates;
 using Gum.Undo;
 using Gum.Wireframe;
+using ToolsUtilities;
 using InputLibrary;
 using Cursor = InputLibrary.Cursor;
 using Microsoft.Xna.Framework;
@@ -42,6 +43,13 @@ public enum RefreshType
     OnlyIfGrabbed
 }
 
+/// <summary>The pointer gesture that can apply a plugin-reported region as the texture rectangle.</summary>
+public enum RegionGesture
+{
+    Click,
+    DoubleClick
+}
+
 #endregion
 
 public class TextureCoordinateDisplayController : ITextureCoordinateDisplayController, IDisposable
@@ -59,6 +67,18 @@ public class TextureCoordinateDisplayController : ITextureCoordinateDisplayContr
     private readonly LineGridManager _lineGridManager;
     private readonly NineSliceGuideManager _nineSliceGuideManager;
     private readonly TextureOutlineManager _textureOutlineManager;
+    private readonly TextureRegionOverlayManager _regionOverlayManager;
+
+    /// <summary>The overlay that outlines plugin-reported regions; exposed so tests can see what it draws.</summary>
+    public TextureRegionOverlayManager RegionOverlay => _regionOverlayManager;
+    private readonly IPluginManager? _pluginManager;
+    private readonly Dictionary<string, IReadOnlyList<TextureRegion>> _regionCache = new Dictionary<string, IReadOnlyList<TextureRegion>>();
+    private TextureRegionSet _regionSet = TextureRegionSet.Empty;
+    private string? _regionSetKey;
+
+    // The one decision point for which gesture applies a plugin region. Double-click is the only choice
+    // for now; a user setting can make it Click later without touching the code below.
+    private readonly RegionGesture _regionApplyGesture = RegionGesture.DoubleClick;
     private readonly CanvasDisplayScale _displayScale = new CanvasDisplayScale();
 
     bool _isSnapToGridEnabled;
@@ -98,7 +118,8 @@ public class TextureCoordinateDisplayController : ITextureCoordinateDisplayContr
         IHotkeyManager hotkeyManager,
         CameraScrollBarBinder scrollBarLogic,
         IMessenger messenger,
-        IThemingService themingService)
+        IThemingService themingService,
+        IPluginManager? pluginManager = null)
     {
         _selectedState = selectedState;
         _undoManager = undoManager;
@@ -114,6 +135,8 @@ public class TextureCoordinateDisplayController : ITextureCoordinateDisplayContr
         _lineGridManager = new LineGridManager();
         _nineSliceGuideManager = new NineSliceGuideManager(_displayScale);
         _textureOutlineManager = new TextureOutlineManager(_displayScale);
+        _regionOverlayManager = new TextureRegionOverlayManager(_displayScale);
+        _pluginManager = pluginManager;
     }
 
     public IPluginTab CreateControl(ITextureCoordinateView view, object dataContext, IList<int> availableZoomLevels)
@@ -146,6 +169,7 @@ public class TextureCoordinateDisplayController : ITextureCoordinateDisplayContr
         _lineGridManager.Initialize(SystemManagers);
         _nineSliceGuideManager.Initialize(SystemManagers);
         _textureOutlineManager.Initialize(SystemManagers);
+        _regionOverlayManager.Initialize(SystemManagers);
 
         RefreshLineGrid();
 
@@ -179,6 +203,8 @@ public class TextureCoordinateDisplayController : ITextureCoordinateDisplayContr
     {
         _view.Canvas.ClampCameraToTexture();
         UpdateScrollBarsToTexture();
+        // The hovered region's name keeps a constant size on screen, so it follows the zoom.
+        _regionOverlayManager.Refresh();
         ZoomLevelChanged?.Invoke(_view.Canvas.ZoomValue);
     }
 
@@ -192,6 +218,18 @@ public class TextureCoordinateDisplayController : ITextureCoordinateDisplayContr
     {
         _cameraController.HandleMouseMove(e);
         SyncCameraPanning();
+        UpdateHoveredRegion(e.X, e.Y);
+    }
+
+    private void UpdateHoveredRegion(int screenX, int screenY)
+    {
+        if (_regionSet.IsEmpty)
+        {
+            return;
+        }
+
+        SystemManagers.Renderer.Camera.ScreenToWorld(screenX, screenY, out float worldX, out float worldY);
+        _regionOverlayManager.Hovered = _cameraController.IsPanning ? null : _regionSet.HitTest(worldX, worldY);
     }
 
     private void HandleMouseUp(GumMouseEventArgs e)
@@ -354,6 +392,88 @@ public class TextureCoordinateDisplayController : ITextureCoordinateDisplayContr
         _nineSliceGuideManager.Selector = _view.Canvas.RectangleSelector;
         _nineSliceGuideManager.CustomFrameWidth = customFrameTextureCoordinateWidth;
         _nineSliceGuideManager.Refresh();
+
+        RefreshRegions(textureToAssign);
+    }
+
+    /// <summary>
+    /// Forgets the regions plugins reported earlier, for when a source file changed on disk or a
+    /// project loaded, so the next refresh asks again.
+    /// </summary>
+    public void ClearRegionCache()
+    {
+        _regionCache.Clear();
+        _regionSetKey = null;
+    }
+
+    private void RefreshRegions(Texture2D? texture)
+    {
+        TextureRegionSet regions = TextureRegionSet.Empty;
+        string? sourceFile = _currentExposedSource == null && texture != null ? GetSourceFile() : null;
+
+        if (_pluginManager != null && texture != null && !string.IsNullOrEmpty(sourceFile))
+        {
+            FilePath file = new FilePath(sourceFile);
+            string key = $"{file.FullPath}|{texture.Width}x{texture.Height}";
+            if (key == _regionSetKey)
+            {
+                // Nothing the regions depend on changed; Refresh runs on every variable set.
+                UpdateCurrentRegionHighlight();
+                return;
+            }
+
+            if (!_regionCache.TryGetValue(file.FullPath, out IReadOnlyList<TextureRegion>? reported))
+            {
+                // PluginManager guards each plugin, so a buggy one cannot break the tab.
+                try
+                {
+                    reported = _pluginManager.GetTextureRegions(file);
+                }
+                catch (Exception)
+                {
+                    // Whatever asked the plugins failed; the tab works without regions.
+                    reported = new List<TextureRegion>();
+                }
+                _regionCache[file.FullPath] = reported;
+            }
+
+            regions = new TextureRegionSet(reported, texture.Width, texture.Height);
+            _regionSetKey = key;
+        }
+        else
+        {
+            _regionSetKey = null;
+        }
+
+        _regionOverlayManager.Regions = regions;
+        _regionSet = regions;
+        UpdateCurrentRegionHighlight();
+    }
+
+    private void UpdateCurrentRegionHighlight()
+    {
+        var selector = _view.Canvas.RectangleSelector;
+        _regionOverlayManager.Current = selector != null && selector.Visible
+            ? (MathFunctions.RoundToInt(selector.Left), MathFunctions.RoundToInt(selector.Top),
+               MathFunctions.RoundToInt(selector.Width), MathFunctions.RoundToInt(selector.Height))
+            : null;
+    }
+
+    private string? GetSourceFile()
+    {
+        var state = _selectedState.SelectedStateSave;
+        if (state == null)
+        {
+            return null;
+        }
+
+        string? instancePrefix = _selectedState.SelectedInstance?.Name;
+        if (!string.IsNullOrEmpty(instancePrefix))
+        {
+            instancePrefix += ".";
+        }
+
+        return new RecursiveVariableFinder(state).GetValue<string>($"{instancePrefix}SourceFile");
     }
 
     private Texture2D? GetTextureToAssign(out bool isNineslice, out float? customFrameTextureCoordinateWidth)
@@ -437,7 +557,13 @@ public class TextureCoordinateDisplayController : ITextureCoordinateDisplayContr
         _lineGridManager.Refresh();
     }
 
-    public void HandleRegionDoubleClicked(ImageRegionSelectionCore control)
+    public void HandleRegionDoubleClicked(ImageRegionSelectionCore control) =>
+        HandleRegionGesture(RegionGesture.DoubleClick, control);
+
+    // Every pointer gesture that can set the texture rectangle ends up here. A double-click inside a
+    // plugin region applies that region; a double-click anywhere else keeps making the default
+    // rectangle. Which gesture applies regions is decided only by _regionApplyGesture.
+    private void HandleRegionGesture(RegionGesture gesture, ImageRegionSelectionCore control)
     {
         if (_currentExposedSource != null) return;
 
@@ -449,6 +575,15 @@ public class TextureCoordinateDisplayController : ITextureCoordinateDisplayContr
             {
                 return;
             }
+        }
+
+        float worldX = control.XnaCursor.GetWorldX(control.SystemManagers);
+        float worldY = control.XnaCursor.GetWorldY(control.SystemManagers);
+        TextureRegion? region = gesture == _regionApplyGesture ? _regionSet.HitTest(worldX, worldY) : null;
+        if (region == null && gesture != RegionGesture.DoubleClick)
+        {
+            // The default rectangle stays a double-click gesture whatever applies regions.
+            return;
         }
 
         using var undoLock = _undoManager.RequestLock();
@@ -466,11 +601,9 @@ public class TextureCoordinateDisplayController : ITextureCoordinateDisplayContr
         {
             graphicalUiElement.TextureAddress = TextureAddress.Custom;
 
-            var cursorX = (int)control.XnaCursor.GetWorldX(control.SystemManagers);
-            var cursorY = (int)control.XnaCursor.GetWorldY(control.SystemManagers);
-
-
-            var selectionRect = GetOptimalSelectionRectangle(cursorX, cursorY, graphicalUiElement.TextureWidth, graphicalUiElement.TextureHeight);
+            var selectionRect = region is TextureRegion hit
+                ? new Rectangle(hit.X, hit.Y, hit.Width, hit.Height)
+                : GetOptimalSelectionRectangle((int)worldX, (int)worldY, graphicalUiElement.TextureWidth, graphicalUiElement.TextureHeight);
 
             graphicalUiElement.TextureLeft = selectionRect.X;
             graphicalUiElement.TextureTop = selectionRect.Y;
@@ -488,6 +621,7 @@ public class TextureCoordinateDisplayController : ITextureCoordinateDisplayContr
             _textureOutlineManager.Refresh();
 
             RefreshSelector(RefreshType.Force);
+            UpdateCurrentRegionHighlight();
 
             UpdateScrollBarsToTexture();
 
