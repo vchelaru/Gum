@@ -234,7 +234,7 @@ public partial class GraphicalUiElement
             element.isListedAsGloballyDeferred = false;
             // Layout left on a hidden element is resolved when it is shown, so only its font work runs here.
             bool hasWork = element.isFontDirty ||
-                (element.currentDirtyState != null && ((IVisible)element).AbsoluteVisible);
+                (element.currentDirtyState != null && !element.IsHiddenWithinRenderTarget());
             if (hasWork)
             {
                 int depth = 0;
@@ -345,7 +345,7 @@ public partial class GraphicalUiElement
 
     private bool IsHiddenForResume() =>
         !AreUpdatesAppliedWhenInvisible && mContainedObjectAsIVisible != null &&
-        ((IVisible)this).AbsoluteVisible == false && !IsRenderTarget && !this.IsInRenderTargetRecursively();
+        this.IsHiddenWithinRenderTarget();
 
     private void ResumeChildrenIfDirty(bool skipSuspendedChildren)
     {

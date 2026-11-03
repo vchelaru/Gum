@@ -455,3 +455,25 @@ label.SetTextNoTranslate("1,250 pts");
 {% hint style="info" %}
 `SetTextNoTranslate` is a method rather than a property because the underlying text component only stores the final string. A `TextNoTranslate` property getter would be misleading since there is no way to distinguish translated from untranslated text after assignment.
 {% endhint %}
+
+### Inserting Values into Translated Text
+
+To put a runtime value in a translated string, store the string with `string.Format` placeholders such as `{0}` and `{1}`. Translate the key, format the result, and assign it with `SetTextNoTranslate`. For example, `T_PickupMessage` in English might be `{0} picked up {1} coins. Press {2} to continue.`
+
+```csharp
+// Initialize
+// T_PickupMessage in English: "{0} picked up {1} coins. Press {2} to continue."
+var label = new Label();
+label.AddToRoot();
+
+void ApplyPickupMessage()
+{
+    var template = GumUI.LocalizationService.Translate("T_PickupMessage");
+    label.SetTextNoTranslate(string.Format(template, "Ana", 12, "Enter"));
+}
+
+ApplyPickupMessage();
+GumUI.LocalizationService.CurrentLanguageChanged += ApplyPickupMessage;
+```
+
+Text set through `SetTextNoTranslate` is not refreshed when the language changes, so the sample runs the method again on `CurrentLanguageChanged`. Each language can place the placeholders in any order, such as `{2}` before `{0}`. To show a literal brace, write `{{` or `}}` in the stored string.
