@@ -111,7 +111,7 @@ public class ThemedScrollBarThumbTravelTests : BaseTestClass
     private static Bar CreateListBoxBar(string theme)
     {
         GumProjectSave project = LoadTheme(theme);
-        ComponentSave listBoxSave = project.Components.Single(c => c.Name.EndsWith("Controls/ListBox"));
+        ComponentSave listBoxSave = project.Components.Single(c => c.Name.EndsWith("/ListBox"));
         GraphicalUiElement listBoxVisual = listBoxSave.ToGraphicalUiElement();
         ListBox listBox = (ListBox)((InteractiveGue)listBoxVisual).FormsControlAsObject;
         for (int i = 0; i < 100; i++)
