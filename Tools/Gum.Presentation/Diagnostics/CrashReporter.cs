@@ -130,6 +130,7 @@ public sealed class CrashReporter : ICrashReporter
     private string? TryWriteLog(string prefix, Exception exception, string source, bool ignoreCap)
     {
         Console.Error.WriteLine($"Unhandled exception ({source}): {exception}");
+        ToolLog.WriteException(source, exception);
         if (!ignoreCap && _logFilesWritten >= MaxLogFilesPerSession)
         {
             return null;

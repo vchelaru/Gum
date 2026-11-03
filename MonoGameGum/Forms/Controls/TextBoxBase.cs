@@ -85,6 +85,9 @@ public abstract class TextBoxBase :
     protected GraphicalUiElement? selectionInstance;
     float _selectionInstanceYOffset;
 
+    // The caret's Y as the visual authored it, which is where a single-line box keeps it.
+    float _caretSingleLineY;
+
     // Resting X of the text instance as set by the visual template. KeepCaretEdgeInsideParent
     // clamps textComponent.X to never exceed this value, so a horizontal scroll-left
     // (negative offset) applied during typing/overflow snaps back here when the content
@@ -633,6 +636,7 @@ public abstract class TextBoxBase :
         _textRestingX = this.textComponent.X;
         _textRestingY = this.textComponent.Y;
         caretComponent.X = 0;
+        _caretSingleLineY = caretComponent.Y;
     }
 
     /// <summary>Called once the text renderable exists, for values set before it did.</summary>
@@ -1643,6 +1647,9 @@ public abstract class TextBoxBase :
             var stringToMeasure = DisplayedText ?? "";
 
             SetXCaretPositionForLine(stringToMeasure, caretIndex);
+            // Only the multi-line placement writes the caret's Y; a box that was multi-line keeps that
+            // Y unless it is put back, which floats the caret above the text (#7497).
+            caretComponent.Y = _caretSingleLineY;
         }
         else
         {
@@ -2002,6 +2009,17 @@ public abstract class TextBoxBase :
     /// </list>
     /// Called whenever either property changes.
     /// </summary>
+    /// <summary>
+    /// Puts the box back in the line-mode state its wrapping and AcceptsReturn derive, for a hot reload that
+    /// removed the file's explicit state.
+    /// </summary>
+    internal void ReapplyDerivedLineMode()
+    {
+        UpdateStateForSingleOrMultiLine();
+        RefreshTemplateFromSelectionInstance();
+        ResetScrollForLineModeChange();
+    }
+
     private void UpdateStateForSingleOrMultiLine()
     {
         if( Visual.Categories.TryGetValue("LineModeCategory", out StateSaveCategory? category))
@@ -2052,10 +2070,60 @@ public abstract class TextBoxBase :
     List<SelectionPosition> selectionStartEnds = new List<SelectionPosition>();
 
     /// <summary>
+    /// Raised each time the selection visuals are recomputed, with the name of the member that asked for it.
+    /// A diagnostic hook (Preview's log); nothing in the control listens to it.
+    /// </summary>
+    public event Action<string>? SelectionVisualsUpdated;
+
+    /// <summary>
+    /// One compact line per piece of selection geometry, for diagnostics (Preview's log): each selection
+    /// instance, the wrapped text lines, the caret, the clip container and text scroll, and the cached
+    /// selection Y offset next to the template's current Y.
+    /// </summary>
+    public IReadOnlyList<string> DescribeSelectionGeometry()
+    {
+        List<string> lines = new List<string>();
+        if (selectionInstance == null || textComponent == null)
+        {
+            return lines;
+        }
+
+        for (int i = 0; i < _selectionInstances.Count; i++)
+        {
+            GraphicalUiElement r = _selectionInstances[i];
+            lines.Add($"sel[{i}] vis={r.Visible} x={r.X:0.##} y={r.Y:0.##} w={r.Width:0.##} h={r.Height:0.##} "
+                + $"xu={r.XUnits} yu={r.YUnits} wu={r.WidthUnits} hu={r.HeightUnits} parent={r.Parent?.Name}");
+            // What layout computed, then what the renderable that is actually drawn holds: a mismatch
+            // means the layout results never reached the renderable.
+            string renderable = r.RenderableComponent is global::RenderingLibrary.Graphics.IRenderableIpso ipso
+                ? $"x={ipso.X:0.##} y={ipso.Y:0.##} w={ipso.Width:0.##} h={ipso.Height:0.##} vis={ipso.Visible} alpha={ipso.Alpha} z={ipso.Z:0.##} clips={ipso.ClipsChildren}"
+                : "(none)";
+            lines.Add($"sel[{i}] abs left={r.AbsoluteLeft:0.##} top={r.AbsoluteTop:0.##} w={r.GetAbsoluteWidth():0.##} h={r.GetAbsoluteHeight():0.##} "
+                + $"renderable {renderable} suspended={r.IsLayoutSuspended}");
+        }
+
+        int start = 0;
+        for (int i = 0; i < coreTextObject.WrappedText.Count; i++)
+        {
+            int length = coreTextObject.WrappedText[i].Length;
+            lines.Add($"line[{i}] start={start} len={length} centerY={GetCenterOfYForLinePixelsFromSmall(i):0.##}");
+            start += length;
+        }
+
+        lines.Add($"caret x={caretComponent.X:0.##} y={caretComponent.Y:0.##} h={caretComponent.Height:0.##}");
+        GraphicalUiElement? clip = textComponent.Parent as GraphicalUiElement;
+        lines.Add($"clip w={clip?.GetAbsoluteWidth():0.##} h={clip?.GetAbsoluteHeight():0.##} "
+            + $"textScroll x={textComponent.X - _textRestingX:0.##} y={textComponent.Y - _textRestingY:0.##}");
+        lines.Add($"selectionYOffset cached={_selectionInstanceYOffset:0.##} templateY={selectionTemplate?.Y:0.##}");
+        return lines;
+    }
+
+    /// <summary>
     /// Updates the Selection visuals to match the current selection values.
     /// </summary>
-    protected void UpdateToSelection()
+    protected void UpdateToSelection([System.Runtime.CompilerServices.CallerMemberName] string? caller = null)
     {
+        SelectionVisualsUpdated?.Invoke(caller ?? "?");
         _placedTextAbsoluteRotation = textComponent.GetAbsoluteRotation();
 
         var displayedText = DisplayedText;
@@ -2073,6 +2141,13 @@ public abstract class TextBoxBase :
                 var parentToAddTo = selectionInstance.Parent;
                 var indexToAddTo = parentToAddTo.Children.IndexOf(selectionInstance) + 1;
                 parentToAddTo.Children.Insert(indexToAddTo, newSelection);
+                // The template can be cloned while the original is suspended (a hot reload applies a
+                // state with its instances suspended), and a clone inherits that: its X/Y/Width are
+                // then stored but never laid out, so the highlight is drawn with stale geometry (#7497).
+                if (newSelection.IsLayoutSuspended)
+                {
+                    newSelection.ResumeLayout();
+                }
             }
 
             foreach (var item in _selectionInstances)
