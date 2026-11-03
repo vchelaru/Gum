@@ -216,7 +216,9 @@ Accumulates into `currentDirtyState`:
 
 ### ResumeLayoutUpdateIfDirtyRecursive
 
-Called when layout is resumed after suspension. Walks the tree:
+Called when layout is resumed after suspension. `ResumeLayout(recursive: true)` first clears every descendant's
+suspension (`ClearLayoutSuspensionRecursive`), so the first layout covers the subtree; resuming them one at a time
+laid a parent out again per child (rows squared, #7239). Then it walks the tree:
 1. Clear `mIsLayoutSuspended`
 2. If `currentDirtyState != null`, call `UpdateLayout` with accumulated state
 3. Recurse into children
