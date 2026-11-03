@@ -74,10 +74,13 @@ public sealed class CodeOutputView : Grid, ICodeOutputTabHost
 
 
         Control gameSetup = CreateGameSetupSection(viewModel);
-        DockPanel preview = new DockPanel { ClipToBounds = true };
-        DockPanel.SetDock(previewHeader, Dock.Top);
+        // A Grid (not a DockPanel) so the code keeps a fixed minimum row and anything that does not fit
+        // is clipped at the bottom instead of drawn over its neighbor.
+        Grid preview = new Grid { ClipToBounds = true, RowDefinitions = new RowDefinitions("Auto,Auto,*") };
+        preview.RowDefinitions[2].MinHeight = 70;
+        Grid.SetRow(gameSetup, 1);
+        Grid.SetRow(_code, 2);
         preview.Children.Add(previewHeader);
-        DockPanel.SetDock(gameSetup, Dock.Top);
         preview.Children.Add(gameSetup);
         preview.Children.Add(_code);
 
@@ -291,7 +294,7 @@ public sealed class CodeOutputView : Grid, ICodeOutputTabHost
             IsReadOnly = true,
             AcceptsReturn = true,
             TextWrapping = TextWrapping.Wrap,
-            MaxHeight = 100,
+            MaxHeight = 90,
             FontFamily = new FontFamily("Cascadia Mono,Consolas,Menlo,DejaVu Sans Mono,monospace"),
         };
         ScrollViewer.SetVerticalScrollBarVisibility(code, ScrollBarVisibility.Auto);
@@ -301,7 +304,7 @@ public sealed class CodeOutputView : Grid, ICodeOutputTabHost
         StackPanel body = new StackPanel();
         body.Children.Add(header);
         body.Children.Add(code);
-        Border section = new Border { BorderBrush = Brushes.Gray, BorderThickness = new Thickness(0, 0, 0, 1), Child = body };
+        Border section = new Border { ClipToBounds = true, BorderBrush = Brushes.Gray, BorderThickness = new Thickness(0, 0, 0, 1), Child = body };
         section.Bind(IsVisibleProperty, new Binding(nameof(CodeWindowViewModel.HasGameSetup)));
         return section;
     }

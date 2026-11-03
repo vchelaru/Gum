@@ -199,13 +199,9 @@ public class CodeOutputTabController
     }
 
 
-    private bool _hasShownGameSetup;
-    private bool _hasCollapsedGameSetup;
-
-    /// <summary>
     /// Fills the game-setup section (issue #7261): the code a game needs to load the project and
-    /// enable what the Preview enables. It starts expanded, then collapses on the next refresh so it
-    /// does not take room from the code once it has been seen; the user's own toggling wins after that.
+    /// enable what the Preview enables. It starts collapsed (the view model default) so it
+    /// does not take room from the code in the short Code pane; the user expands it when needed.
     /// </summary>
     private void RefreshGameSetup(CodeOutputProjectSettings codeOutputProjectSettings, ElementSave? selectedElement)
     {
@@ -217,21 +213,6 @@ public class CodeOutputTabController
         string? screenName = selectedElement is ScreenSave ? selectedElement.Name : null;
 
         _viewModel.GameSetupCode = GameSetupCode.Generate(library, projectFileName, screenName);
-
-        if (_viewModel.GameSetupCode == null)
-        {
-            return;
-        }
-        if (!_hasShownGameSetup)
-        {
-            _hasShownGameSetup = true;
-            _viewModel.IsGameSetupExpanded = true;
-        }
-        else if (!_hasCollapsedGameSetup)
-        {
-            _hasCollapsedGameSetup = true;
-            _viewModel.IsGameSetupExpanded = false;
-        }
     }
     /// <summary>
     /// Refreshes the display for the currently-selected element, then auto-regenerates its code file
