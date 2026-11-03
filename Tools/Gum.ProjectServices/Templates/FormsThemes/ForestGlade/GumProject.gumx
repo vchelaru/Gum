@@ -82,6 +82,7 @@
   <ComponentReference Name="ForestGlade/Controls/StackPanel" />
   <ComponentReference Name="ForestGlade/Controls/TextBox" />
   <ComponentReference Name="ForestGlade/Controls/Toast" />
+  <ComponentReference Name="ForestGlade/Controls/ToggleButton" />
   <ComponentReference Name="ForestGlade/Controls/UserControl" />
   <ComponentReference Name="ForestGlade/Controls/Window" />
   <ComponentReference Name="ForestGlade/Elements/Divider" />
@@ -118,7 +119,7 @@
   <BehaviorReference Name="StackPanelBehavior" SourcePath="../../FormsBehaviors/StackPanelBehavior.behx" />
   <BehaviorReference Name="TextBoxBehavior" SourcePath="../../FormsBehaviors/TextBoxBehavior.behx" DefaultImplementationOverride="ForestGlade/Controls/TextBox" />
   <BehaviorReference Name="ToastBehavior" SourcePath="../../FormsBehaviors/ToastBehavior.behx" DefaultImplementationOverride="ForestGlade/Controls/Toast" />
-  <BehaviorReference Name="ToggleBehavior" SourcePath="../../FormsBehaviors/ToggleBehavior.behx" />
+  <BehaviorReference Name="ToggleBehavior" SourcePath="../../FormsBehaviors/ToggleBehavior.behx" DefaultImplementationOverride="ForestGlade/Controls/ToggleButton" />
   <BehaviorReference Name="UserControlBehavior" SourcePath="../../FormsBehaviors/UserControlBehavior.behx" DefaultImplementationOverride="ForestGlade/Controls/UserControl" />
   <BehaviorReference Name="WindowBehavior" SourcePath="../../FormsBehaviors/WindowBehavior.behx" />
   <SinglePixelTextureTop xsi:nil="true" />

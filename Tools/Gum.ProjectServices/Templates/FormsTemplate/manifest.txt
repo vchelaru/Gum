@@ -66,6 +66,7 @@ Components/Controls/TextBox.gucx
 Components/Controls/ScrollBarThumb.gucx
 Components/Controls/SliderThumb.gucx
 Components/Controls/Toast.gucx
+Components/Controls/ToggleButton.gucx
 Components/Controls/TreeView.gucx
 Components/Controls/TreeViewItem.gucx
 Components/Controls/TreeViewToggle.gucx

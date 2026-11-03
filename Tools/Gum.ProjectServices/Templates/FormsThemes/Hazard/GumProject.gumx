@@ -82,6 +82,7 @@
   <ComponentReference Name="Hazard/Controls/StackPanel" />
   <ComponentReference Name="Hazard/Controls/TextBox" />
   <ComponentReference Name="Hazard/Controls/Toast" />
+  <ComponentReference Name="Hazard/Controls/ToggleButton" />
   <ComponentReference Name="Hazard/Controls/UserControl" />
   <ComponentReference Name="Hazard/Controls/Window" />
   <ComponentReference Name="Hazard/Elements/Divider" />
@@ -118,7 +119,7 @@
   <BehaviorReference Name="StackPanelBehavior" SourcePath="../../FormsBehaviors/StackPanelBehavior.behx" />
   <BehaviorReference Name="TextBoxBehavior" SourcePath="../../FormsBehaviors/TextBoxBehavior.behx" DefaultImplementationOverride="Hazard/Controls/TextBox" />
   <BehaviorReference Name="ToastBehavior" SourcePath="../../FormsBehaviors/ToastBehavior.behx" DefaultImplementationOverride="Hazard/Controls/Toast" />
-  <BehaviorReference Name="ToggleBehavior" SourcePath="../../FormsBehaviors/ToggleBehavior.behx" />
+  <BehaviorReference Name="ToggleBehavior" SourcePath="../../FormsBehaviors/ToggleBehavior.behx" DefaultImplementationOverride="Hazard/Controls/ToggleButton" />
   <BehaviorReference Name="UserControlBehavior" SourcePath="../../FormsBehaviors/UserControlBehavior.behx" DefaultImplementationOverride="Hazard/Controls/UserControl" />
   <BehaviorReference Name="WindowBehavior" SourcePath="../../FormsBehaviors/WindowBehavior.behx" />
   <SinglePixelTextureTop xsi:nil="true" />
