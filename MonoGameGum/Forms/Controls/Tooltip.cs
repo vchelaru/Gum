@@ -23,6 +23,8 @@ public class Tooltip : FrameworkElement
 {
     private GraphicalUiElement? _textInstance;
     private object? _content;
+    private float _shownAtCursorX;
+    private float _shownAtCursorY;
 
     /// <summary>
     /// The content displayed in the tooltip. In v1 only <see cref="string"/> values are supported.
@@ -121,6 +123,8 @@ public class Tooltip : FrameworkElement
         Visual.Parent = null;
 
         // Place below-right of cursor, matching WPF default Bottom placement.
+        _shownAtCursorX = cursorX;
+        _shownAtCursorY = cursorY;
         Visual.X = cursorX + 12;
         Visual.Y = cursorY + 20;
 
@@ -134,6 +138,30 @@ public class Tooltip : FrameworkElement
 
         IsOpen = true;
         Opened?.Invoke(this, EventArgs.Empty);
+    }
+
+    /// <summary>
+    /// Replaces the text of an open tooltip and places it again from the cursor position it was shown at,
+    /// so it can grow or shrink with its content and still stay on screen. Does nothing when the text is
+    /// unchanged, so a refresh that found nothing new does no layout work.
+    /// </summary>
+    internal void RefreshContent(string content)
+    {
+        if (_content is string current && current == content)
+        {
+            return;
+        }
+
+        Content = content;
+
+#if !FRB
+        if (IsOpen && Visual != null)
+        {
+            Visual.X = _shownAtCursorX + 12;
+            Visual.Y = _shownAtCursorY + 20;
+            RepositionToKeepInScreen();
+        }
+#endif
     }
 
     /// <summary>

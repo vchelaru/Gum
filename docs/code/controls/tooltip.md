@@ -90,7 +90,14 @@ container.Height = 100;
 ToolTipService.SetToolTip(container, () => $"Coins: {coins}");
 ```
 
-Gum does not call the callback again while the tooltip is open.
+By default the callback does not run again while the tooltip is open. Set `ToolTipService.RefreshInterval` to call it again at that interval and update the text, for example for a live value:
+
+```csharp
+// Initialize
+ToolTipService.RefreshInterval = System.TimeSpan.FromSeconds(1);
+```
+
+If the text is unchanged nothing happens. A longer or shorter text resizes the tooltip, which stays where it opened. If the callback returns `null`, the tooltip closes and the callback is not called again until the cursor leaves the host and returns. A `string` tooltip is never refreshed. The default `TimeSpan.Zero` (or any negative value) turns refreshing off.
 
 {% hint style="info" %}
 Available in December 2026, or now if building Gum from source.
