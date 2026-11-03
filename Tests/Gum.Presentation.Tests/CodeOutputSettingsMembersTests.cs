@@ -60,7 +60,7 @@ public class CodeOutputSettingsMembersTests
         });
         categories[1].Members.Select(member => member.Name).ShouldBe(new[]
         {
-            "Generation Behavior", "Using Statements", "Namespace", "Generated File Name", "Localize Element",
+            "Generation Behavior", "Using Statements", "Namespace", "Generated File Name", "Localize Element", "Debug Only",
         });
     }
 
@@ -196,7 +196,7 @@ public class CodeOutputSettingsMembersTests
         category.Name.ShouldBe("Element Code Generation");
         category.Members.Select(member => member.Name).ShouldBe(new[]
         {
-            "Generation Behavior", "Using Statements", "Namespace", "Generated File Name", "Localize Element",
+            "Generation Behavior", "Using Statements", "Namespace", "Generated File Name", "Localize Element", "Debug Only",
         });
     }
 

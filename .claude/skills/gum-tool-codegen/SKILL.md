@@ -126,3 +126,5 @@ A Code tab settings edit is the other trigger: `CodeFileLocationWatcher` sends o
 | `Tools/Gum.Presentation/CodeOutputPlugin/Manager/CodeGenerationService.cs` | Generation orchestration (headless) |
 | `Tools/Gum.Presentation/CodeOutputPlugin/Manager/ParentSetLogic.cs` | Forms parent relationship handling (headless) |
 | `Tools/Gum.Presentation/CodeOutputPlugin/Manager/RenameService.cs` | Element rename to code rename (headless) |
+
+**Debug Only elements (#7200)** -- `CodeOutputElementSettings.DebugOnly` (omitted from the .codsj while false) wraps the whole `GetGeneratedCodeForElement` output in `#if DEBUG`, and `DebugOnlyElementLogic` (flag follows the BaseType chain) drives `GuardIfDebugOnly` around every per-instance emission site (declaration, creation, parenting, variables, exposed variables, states, localization) and a separate `#if DEBUG` using block. A new per-instance emission site must use the guard. Toggling regenerates `GetElementsToRegenerate` in `CodeOutputTabController`.

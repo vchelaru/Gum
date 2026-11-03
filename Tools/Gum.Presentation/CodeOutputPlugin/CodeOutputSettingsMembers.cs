@@ -194,6 +194,7 @@ public class CodeOutputSettingsMembers
         elementCategory.Members.Add(CreateNamespaceMember());
         elementCategory.Members.Add(CreateGeneratedFileNameMember());
         elementCategory.Members.Add(CreateLocalizeElementMember());
+        elementCategory.Members.Add(CreateDebugOnlyMember());
 
         _viewModel.CanGenerateCode =
             ElementSettings?.GenerationBehavior == GenerationBehavior.GenerateManually ||
@@ -738,6 +739,27 @@ public class CodeOutputSettingsMembers
         };
 
         member.CustomGetEvent += (owner) => ElementSettings?.LocalizeElement ?? false;
+        member.CustomGetTypeEvent += (owner) => typeof(bool);
+
+        return member;
+    }
+
+    private InstanceMember CreateDebugOnlyMember()
+    {
+        InstanceMember member = new InstanceMember("Debug Only", this);
+        member.DetailText = "Wraps this element's generated code in #if DEBUG so it is left out of release builds";
+
+        member.CustomSetPropertyEvent += (owner, args) =>
+        {
+            if (ElementSettings != null)
+            {
+                ElementSettings.DebugOnly = (bool)args.Value!;
+
+                SettingsChanged?.Invoke(this, EventArgs.Empty);
+            }
+        };
+
+        member.CustomGetEvent += (owner) => ElementSettings?.DebugOnly ?? false;
         member.CustomGetTypeEvent += (owner) => typeof(bool);
 
         return member;

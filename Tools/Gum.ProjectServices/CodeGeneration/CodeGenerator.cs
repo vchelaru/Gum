@@ -290,6 +290,7 @@ public class CodeGenerator
     private readonly ISyntaxVersionDetectionService? _syntaxVersionDetectionService;
     private readonly ICSharpVersionDetectionService? _cSharpVersionDetectionService;
     private readonly ICollapsedShapeCodeGenLogic _collapsedShapeLogic;
+    private readonly DebugOnlyElementLogic _debugOnlyLogic;
 
     /// <summary>
     /// The current project directory (folder containing the .gumx file). Read lazily from the
@@ -324,7 +325,11 @@ public class CodeGenerator
         _syntaxVersionDetectionService = syntaxVersionDetectionService;
         _cSharpVersionDetectionService = cSharpVersionDetectionService;
         _collapsedShapeLogic = new CollapsedShapeCodeGenLogic();
+        _debugOnlyLogic = new DebugOnlyElementLogic(elementSettingsManager);
     }
+
+    private DebugOnlyElementLogic.DebugGuard GuardIfDebugOnly(StringBuilder stringBuilder, InstanceSave? instance) =>
+        DebugOnlyElementLogic.Begin(stringBuilder, _debugOnlyLogic.IsInstanceDebugOnly(instance));
 
     /// <summary>
     /// Returns the namespace generated code should reference for runtime types
@@ -492,15 +497,25 @@ public class CodeGenerator
 
     private void GenerateUsingStatements(CodeGenerationContext context)
     {
+        HashSet<string> debugOnlyNamespaces = new HashSet<string>();
         IReadOnlyList<string> neededUsings = CollectUsingNamespaces(
             context.Element,
             context.ElementSettings,
             context.CodeOutputProjectSettings,
-            context.ResolvedSyntaxVersion);
+            context.ResolvedSyntaxVersion,
+            debugOnlyNamespaces);
 
         foreach (var neededUsing in neededUsings)
         {
             context.StringBuilder.AppendLine($"using {neededUsing};");
+        }
+
+        foreach (string debugOnlyUsing in debugOnlyNamespaces.OrderBy(item => item, StringComparer.InvariantCulture))
+        {
+            using (DebugOnlyElementLogic.Begin(context.StringBuilder, active: true))
+            {
+                context.StringBuilder.AppendLine($"using {debugOnlyUsing};");
+            }
         }
     }
 
@@ -514,7 +529,19 @@ public class CodeGenerator
         ElementSave element,
         CodeOutputElementSettings? elementSettings,
         CodeOutputProjectSettings projectSettings,
-        int resolvedSyntaxVersion)
+        int resolvedSyntaxVersion) =>
+        CollectUsingNamespaces(element, elementSettings, projectSettings, resolvedSyntaxVersion, new HashSet<string>());
+
+    /// <param name="debugOnlyNamespaces">
+    /// Receives the namespaces that only Debug Only elements (instances or the base type) provide. They are left out of
+    /// the returned list, since a <c>using</c> of a namespace that does not exist in a release build would not compile.
+    /// </param>
+    internal IReadOnlyList<string> CollectUsingNamespaces(
+        ElementSave element,
+        CodeOutputElementSettings? elementSettings,
+        CodeOutputProjectSettings projectSettings,
+        int resolvedSyntaxVersion,
+        HashSet<string> debugOnlyNamespaces)
     {
         // This code is used to automatially add needed using statements:
         // https://github.com/vchelaru/Gum/issues/598
@@ -545,7 +572,7 @@ public class CodeGenerator
 
                 if (!string.IsNullOrEmpty(elementNamespace))
                 {
-                    neededUsings.Add(elementNamespace);
+                    (_debugOnlyLogic.IsDebugOnly(instanceElement) ? debugOnlyNamespaces : neededUsings).Add(elementNamespace);
                 }
             }
         }
@@ -564,7 +591,7 @@ public class CodeGenerator
 
                 if (!string.IsNullOrEmpty(baseNamespace))
                 {
-                    neededUsings.Add(baseNamespace);
+                    (_debugOnlyLogic.IsDebugOnly(baseElement) ? debugOnlyNamespaces : neededUsings).Add(baseNamespace);
                 }
             }
         }
@@ -616,6 +643,9 @@ public class CodeGenerator
                 neededUsings.Add(itemCopy);
             }
         }
+
+        // A namespace some non-debug source also needs stays a plain using.
+        debugOnlyNamespaces.ExceptWith(neededUsings);
 
         // Invariant so every machine generates the same order; not ordinal, to keep the order
         // existing generated files were written in.
@@ -1178,8 +1208,11 @@ public class CodeGenerator
         {
             var instanceName = exposedVariable.SourceObject;
             context.Instance = context.Element.GetInstance(instanceName);
-            FillWithExposedVariable(exposedVariable, context);
-            context.StringBuilder.AppendLine();
+            using (GuardIfDebugOnly(context.StringBuilder, context.Instance))
+            {
+                FillWithExposedVariable(exposedVariable, context);
+                context.StringBuilder.AppendLine();
+            }
         }
 
         context.Instance = null;
@@ -1781,7 +1814,10 @@ public class CodeGenerator
             if (!instance.DefinedByBase)
             {
                 context.Instance = instance;
-                AddFindByNameAssignment(context);
+                using (GuardIfDebugOnly(context.StringBuilder, instance))
+                {
+                    AddFindByNameAssignment(context);
+                }
             }
         }
         context.Instance = null;
@@ -1896,13 +1932,16 @@ public class CodeGenerator
             {
                 context.Instance = instance;
 
-                if (isFullyInstantiatingInCode)
+                using (GuardIfDebugOnly(context.StringBuilder, instance))
                 {
-                    FillWithInstanceInstantiation(context);
-                }
-                else
-                {
-                    AddFindByNameAssignment(context);
+                    if (isFullyInstantiatingInCode)
+                    {
+                        FillWithInstanceInstantiation(context);
+                    }
+                    else
+                    {
+                        AddFindByNameAssignment(context);
+                    }
                 }
             }
             context.Instance = null;
@@ -3517,6 +3556,15 @@ public class CodeGenerator
 
     #region Parent
 
+    /// <summary>The instance <paramref name="instance"/> is parented to in <paramref name="container"/>, or null.</summary>
+    private static InstanceSave? GetParentInstance(ElementSave container, InstanceSave instance)
+    {
+        var parentVariable = new RecursiveVariableFinder(container.DefaultState!).GetVariable($"{instance.Name}.Parent");
+        return parentVariable?.Value is string parentValue
+            ? ObjectFinder.Self.GetInstanceRecursively(container, parentValue)
+            : null;
+    }
+
     private void FillWithParentAssignments(CodeGenerationContext context)
     {
         var instance = context.Instance;
@@ -3694,7 +3742,11 @@ public class CodeGenerator
                 continue;
             }
             context.Instance = instance;
-            FillWithParentAssignments(context);
+            using (DebugOnlyElementLogic.Begin(context.StringBuilder,
+                _debugOnlyLogic.IsInstanceDebugOnly(instance) || _debugOnlyLogic.IsInstanceDebugOnly(GetParentInstance(context.Element, instance))))
+            {
+                FillWithParentAssignments(context);
+            }
         }
         context.Instance = null;
 
@@ -4111,6 +4163,19 @@ public class CodeGenerator
 
     public string GetGeneratedCodeForElement(ElementSave element, CodeOutputElementSettings elementSettings, CodeOutputProjectSettings projectSettings)
     {
+        _debugOnlyLogic.ClearCache();
+        string code = GetGeneratedCodeForElementCore(element, elementSettings, projectSettings);
+
+        // A Debug Only element (or one that inherits from one) has its whole generated file left out of release builds.
+        if (_debugOnlyLogic.IsDebugOnly(element, elementSettings))
+        {
+            code = "#if DEBUG" + Environment.NewLine + code + "#endif" + Environment.NewLine;
+        }
+        return code;
+    }
+
+    private string GetGeneratedCodeForElementCore(ElementSave element, CodeOutputElementSettings elementSettings, CodeOutputProjectSettings projectSettings)
+    {
         AssertSupportedCombination(projectSettings);
 
         #region Initial Values
@@ -4182,7 +4247,10 @@ public class CodeGenerator
         foreach (var instance in element.Instances.Where(item => item.DefinedByBase == false))
         {
             context.Instance = instance;
-            FillWithInstanceDeclaration(context);
+            using (GuardIfDebugOnly(stringBuilder, instance))
+            {
+                FillWithInstanceDeclaration(context);
+            }
         }
 
         AddAbsoluteLayoutIfNecessary(element, context.TabCount, stringBuilder, projectSettings);
@@ -4404,7 +4472,7 @@ public class CodeGenerator
 
     public string GetCodeForInstance(InstanceSave instance, ElementSave element, CodeOutputProjectSettings codeOutputProjectSettings)
     {
-
+        _debugOnlyLogic.ClearCache();
         var context = new CodeGenerationContext(_codeGenerationNameVerifier, element);
         context.Instance = instance;
         context.CodeOutputProjectSettings = codeOutputProjectSettings;
@@ -4468,7 +4536,10 @@ public class CodeGenerator
                 if (instanceVisualApi == VisualApi.Gum)
                 {
                     // todo - will need Forms too, but we'll do this for now:
-                    stringBuilder.AppendLine(ToTabs(tabCount) + $"{_codeGenerationNameVerifier.ToCSharpMemberName(context.Instance.Name)}.Tag = {screenOrComponent}.Instances.Find(item => item.Name == \"{instance.Name}\");");
+                    using (GuardIfDebugOnly(stringBuilder, context.Instance))
+                    {
+                        stringBuilder.AppendLine(ToTabs(tabCount) + $"{_codeGenerationNameVerifier.ToCSharpMemberName(context.Instance.Name)}.Tag = {screenOrComponent}.Instances.Find(item => item.Name == \"{instance.Name}\");");
+                    }
                 }
             }
         }
@@ -4579,6 +4650,7 @@ public class CodeGenerator
 
     public string GetCodeForState(ElementSave container, StateSave stateSave, CodeOutputProjectSettings codeOutputProjectSettings)
     {
+        _debugOnlyLogic.ClearCache();
         var stringBuilder = new StringBuilder();
 
         var context = new CodeGenerationContext(_codeGenerationNameVerifier, container);
@@ -4982,6 +5054,7 @@ public class CodeGenerator
                 instance = context.Element.GetInstance(instanceName);
             }
             context.Instance = instance;
+            using var debugGuard = GuardIfDebugOnly(stringBuilder, instance);
 
             #region Determine visual API (Gum or Forms)
 
@@ -5971,7 +6044,10 @@ public class CodeGenerator
                 else
                 {
                     // assign it:
-                    context.StringBuilder.AppendLine($"{context.CodePrefix}.{_codeGenerationNameVerifier.ToCSharpName(variable.Name)} = {VariableValueToGumCodeValue(variable, context)};");
+                    using (GuardIfDebugOnly(context.StringBuilder, context.Element.GetInstance(variable.SourceObject)))
+                    {
+                        context.StringBuilder.AppendLine($"{context.CodePrefix}.{_codeGenerationNameVerifier.ToCSharpName(variable.Name)} = {VariableValueToGumCodeValue(variable, context)};");
+                    }
                 }
 
             }
@@ -6008,6 +6084,8 @@ public class CodeGenerator
         {
             context.Instance = instance;
 
+            using (GuardIfDebugOnly(context.StringBuilder, instance))
+            {
             FillWithNonParentVariableAssignments(context);
 
             TryGenerateApplyLocalizationForInstance(context, context.StringBuilder);
@@ -6024,6 +6102,7 @@ public class CodeGenerator
                     $"GumRuntime.ElementSaveExtensions.ApplyVariableReferences({_codeGenerationNameVerifier.ToCSharpMemberName(context.Instance.Name)}, {screenOrComponent}.DefaultState);");
                 context.TabCount--;
 
+            }
             }
 
             context.StringBuilder.AppendLine();
@@ -6882,7 +6961,10 @@ public class CodeGenerator
                     if (GetIsShouldBeLocalized(variable, context.Element.DefaultState!, _localizationService))
                     {
                         string assignment = GetLocalizedLine(variable, context);
-                        stringBuilder.AppendLine(ToTabs(tabCount) + assignment);
+                        using (GuardIfDebugOnly(stringBuilder, instance))
+                        {
+                            stringBuilder.AppendLine(ToTabs(tabCount) + assignment);
+                        }
                     }
                     //else if(!string.IsNullOrEmpty(instance.BaseType))
                     //{
@@ -6909,7 +6991,10 @@ public class CodeGenerator
             {
                 context.Instance = instance;
 
-                TryGenerateApplyLocalizationForInstance(context, stringBuilder);
+                using (GuardIfDebugOnly(stringBuilder, instance))
+                {
+                    TryGenerateApplyLocalizationForInstance(context, stringBuilder);
+                }
             }
 
 

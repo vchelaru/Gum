@@ -341,6 +341,28 @@ public class CodeGenScenarioTests
     }
 
     [AvaloniaFact]
+    public void DebugOnly_OnAComponent_WrapsItsFileAndTheScreensThatUseIt()
+    {
+        using CodeTabHarness code = new CodeTabHarness();
+        ComponentSave label = code.Project.AddComponent("Label");
+        ScreenSave menu = code.Project.AddScreen("Menu");
+        code.Project.AddInstance(menu, "Greeting", "Label");
+        code.Tree.SaveAll();
+        code.Select(label);
+        code.SetUpManualGeneration(instantiation: "Fully in Code");
+        code.ClickCheckBox("Debug Only");
+        code.ClickGenerate();
+        code.Select(menu);
+        code.ClickGenerate();
+
+        File.ReadAllText(code.CodeFile("Components/Label.Generated.cs")).ShouldContain("#if DEBUG");
+        File.ReadAllText(code.CodeFile("Screens/Menu.Generated.cs")).ShouldContain("#if DEBUG");
+        File.ReadAllText(Path.Combine(code.Project.ProjectFolder, "Components", "Label.codsj")).ShouldContain("\"DebugOnly\":true");
+
+        code.AssertOracles();
+    }
+
+    [AvaloniaFact]
     public void DuplicatingAComponent_CopiesItsCodeSettings_WithoutItsGeneratedFileName()
     {
         using CodeTabHarness code = new CodeTabHarness();

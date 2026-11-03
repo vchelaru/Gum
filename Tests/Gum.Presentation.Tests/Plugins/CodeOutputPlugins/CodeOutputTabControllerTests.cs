@@ -482,4 +482,101 @@ public class CodeOutputTabControllerTests : BaseTestClass
         _tabVisibility.Verify(t => t.Show(), Times.Never);
         _viewModel.Code.ShouldBe("// Select a Screen, Component, or Standard to see generated code");
     }
+
+    // Debug Only (#7200): toggling it regenerates the selected element and the elements that reference it.
+
+    private (ComponentSave widget, ScreenSave host, ScreenSave manualHost, CodeOutputProjectSettings settings) SetUpDebugOnlyProject(bool hostAuto, bool widgetAuto)
+    {
+        Directory.CreateDirectory(Path.Combine(_tempDirectory, "Components"));
+        Directory.CreateDirectory(Path.Combine(_tempDirectory, "Screens"));
+        GumProjectSave project = new();
+        ComponentSave widget = new() { Name = "Widget" };
+        widget.States.Add(new StateSave { Name = "Default", ParentContainer = widget });
+        project.Components.Add(widget);
+        ScreenSave host = CreateScreenWithDefaultState(project, "Host");
+        host.Instances.Add(new InstanceSave { Name = "W", BaseType = "Widget", ParentContainer = host });
+        ScreenSave manualHost = CreateScreenWithDefaultState(project, "ManualHost");
+        manualHost.Instances.Add(new InstanceSave { Name = "W", BaseType = "Widget", ParentContainer = manualHost });
+        CreateScreenWithDefaultState(project, "Unrelated");
+        ObjectFinder.Self.GumProjectSave = project;
+        _projectState.Setup(p => p.GumProjectSave).Returns(project);
+
+        GenerationBehavior auto = GenerationBehavior.GenerateAutomaticallyOnPropertyChange;
+        _elementSettingsManager.WriteSettingsForElement(host, new CodeOutputElementSettings { GenerationBehavior = hostAuto ? auto : GenerationBehavior.GenerateManually });
+        _elementSettingsManager.WriteSettingsForElement(manualHost, new CodeOutputElementSettings { GenerationBehavior = GenerationBehavior.GenerateManually });
+        _elementSettingsManager.WriteSettingsForElement(widget, new CodeOutputElementSettings { GenerationBehavior = widgetAuto ? auto : GenerationBehavior.GenerateManually });
+        _elementSettingsManager.WriteSettingsForElement(project.Screens[2], new CodeOutputElementSettings { GenerationBehavior = auto });
+
+        _selectedState.Setup(s => s.SelectedElement).Returns(widget);
+        _tabSelectionState.Setup(t => t.IsSelected).Returns(false);
+        CodeOutputProjectSettings settings = new()
+        {
+            CodeProjectRoot = _tempDirectory + Path.DirectorySeparatorChar,
+            RootNamespace = "MyGame",
+            OutputLibrary = OutputLibrary.MonoGame
+        };
+        return (widget, host, manualHost, settings);
+    }
+
+    private string GeneratedFile(string folder, string name) => Path.Combine(_tempDirectory, folder, name + "Runtime.Generated.cs");
+
+    [Fact]
+    public void HandleCodeOutputPropertyChanged_DebugOnlyToggled_RegeneratesSelectedAndReferencingElementsThatAreAuto()
+    {
+        (ComponentSave widget, _, _, CodeOutputProjectSettings settings) = SetUpDebugOnlyProject(hostAuto: true, widgetAuto: true);
+        _view.SetupProperty(v => v.CodeOutputElementSettings, new CodeOutputElementSettings
+        {
+            GenerationBehavior = GenerationBehavior.GenerateAutomaticallyOnPropertyChange,
+            DebugOnly = true
+        });
+        CodeOutputTabController controller = CreateController();
+
+        controller.HandleCodeOutputPropertyChanged(settings);
+
+        File.ReadAllText(GeneratedFile("Components", "Widget")).ShouldContain("#if DEBUG");
+        File.Exists(GeneratedFile("Screens", "Host")).ShouldBeTrue();
+        // A referencing element on manual generation, and one that references nothing, are left alone.
+        File.Exists(GeneratedFile("Screens", "ManualHost")).ShouldBeFalse();
+        File.Exists(GeneratedFile("Screens", "Unrelated")).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void HandleCodeOutputPropertyChanged_DebugOnlyToggledOnManualElement_DoesNotRegenerateAnything()
+    {
+        SetUpDebugOnlyProject(hostAuto: false, widgetAuto: false);
+        CodeOutputProjectSettings settings = new()
+        {
+            CodeProjectRoot = _tempDirectory + Path.DirectorySeparatorChar,
+            RootNamespace = "MyGame",
+            OutputLibrary = OutputLibrary.MonoGame
+        };
+        _view.SetupProperty(v => v.CodeOutputElementSettings, new CodeOutputElementSettings
+        {
+            GenerationBehavior = GenerationBehavior.GenerateManually,
+            DebugOnly = true
+        });
+        CodeOutputTabController controller = CreateController();
+
+        controller.HandleCodeOutputPropertyChanged(settings);
+
+        File.Exists(GeneratedFile("Components", "Widget")).ShouldBeFalse();
+        File.Exists(GeneratedFile("Screens", "Host")).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void HandleCodeOutputPropertyChanged_DebugOnlyUnchanged_RegeneratesNothing()
+    {
+        (_, _, _, CodeOutputProjectSettings settings) = SetUpDebugOnlyProject(hostAuto: true, widgetAuto: true);
+        _view.SetupProperty(v => v.CodeOutputElementSettings, new CodeOutputElementSettings
+        {
+            GenerationBehavior = GenerationBehavior.GenerateAutomaticallyOnPropertyChange,
+            Namespace = "Other"
+        });
+        CodeOutputTabController controller = CreateController();
+
+        controller.HandleCodeOutputPropertyChanged(settings);
+
+        File.Exists(GeneratedFile("Components", "Widget")).ShouldBeFalse();
+        File.Exists(GeneratedFile("Screens", "Host")).ShouldBeFalse();
+    }
 }
