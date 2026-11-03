@@ -19,10 +19,10 @@ public class TextWrappingSetTextLayoutTests : BaseTestClass
 
     public static IEnumerable<object[]> WrapCases()
     {
-        float?[] maxWidths = { 40, 80, 120 };
+        float[] maxWidths = { 40, 80, 120 };
         float[] offsets = { 0, 4 };
         VerticalAlignment[] yOrigins = { VerticalAlignment.Top, VerticalAlignment.Center, VerticalAlignment.Bottom };
-        foreach (float? max in maxWidths)
+        foreach (float max in maxWidths)
         {
             foreach (float offset in offsets)
             {
@@ -34,7 +34,7 @@ public class TextWrappingSetTextLayoutTests : BaseTestClass
         }
     }
 
-    static TextRuntime BuildCapped(float? maxWidth, float offset, VerticalAlignment yOrigin)
+    static TextRuntime BuildCapped(float maxWidth, float offset, VerticalAlignment yOrigin)
     {
         TextRuntime text = new();
         text.WidthUnits = DimensionUnitType.RelativeToChildren;
@@ -49,7 +49,7 @@ public class TextWrappingSetTextLayoutTests : BaseTestClass
 
     [Theory]
     [MemberData(nameof(WrapCases))]
-    public void Text_ShouldKeepWrappedLayout_WhenSetToSameString(float? maxWidth, float offset, VerticalAlignment yOrigin)
+    public void Text_ShouldKeepWrappedLayout_WhenSetToSameString(float maxWidth, float offset, VerticalAlignment yOrigin)
     {
         TextRuntime text = BuildCapped(maxWidth, offset, yOrigin);
         text.Text = LongText;
@@ -66,7 +66,7 @@ public class TextWrappingSetTextLayoutTests : BaseTestClass
 
     [Theory]
     [MemberData(nameof(WrapCases))]
-    public void Text_ShouldMatchFreshLayout_WhenSetShortThenLong(float? maxWidth, float offset, VerticalAlignment yOrigin)
+    public void Text_ShouldMatchFreshLayout_WhenSetShortThenLong(float maxWidth, float offset, VerticalAlignment yOrigin)
     {
         TextRuntime text = BuildCapped(maxWidth, offset, yOrigin);
         text.Text = "Hi";
@@ -105,13 +105,13 @@ public class TextWrappingSetTextLayoutTests : BaseTestClass
     {
         Label label = new();
         label.Text = "Mason";
-        float width = label.Visual.GetAbsoluteWidth();
-        float height = label.Visual.GetAbsoluteHeight();
+        float width = label.Visual.AbsoluteWidth;
+        float height = label.Visual.AbsoluteHeight;
 
         label.Text = "Mason";
 
-        label.Visual.GetAbsoluteWidth().ShouldBe(width);
-        label.Visual.GetAbsoluteHeight().ShouldBe(height);
+        label.Visual.AbsoluteWidth.ShouldBe(width);
+        label.Visual.AbsoluteHeight.ShouldBe(height);
     }
 
     [Fact]
@@ -132,10 +132,10 @@ public class TextWrappingSetTextLayoutTests : BaseTestClass
     {
         TextBox textBox = new();
         textBox.Text = "Mason";
-        float width = textBox.Visual.GetAbsoluteWidth();
+        float width = textBox.Visual.AbsoluteWidth;
 
         textBox.Text = "Mason";
 
-        textBox.Visual.GetAbsoluteWidth().ShouldBe(width);
+        textBox.Visual.AbsoluteWidth.ShouldBe(width);
     }
 }
