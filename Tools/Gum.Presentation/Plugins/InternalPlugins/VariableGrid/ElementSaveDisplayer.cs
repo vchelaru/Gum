@@ -128,7 +128,7 @@ public class ElementSaveDisplayer
         _wireframeObjectManager = wireframeObjectManager;
         _clipboardService = clipboardService;
         _projectState = projectState;
-        _shapeVariableVersionGate = new ShapeVariableVersionGate();
+        _shapeVariableVersionGate = new ShapeVariableVersionGate(_standardElementsManager);
     }
 
     private List<PropertyData> GetProperties(ElementSave? instanceOwner, InstanceSave? instanceSave, StateSave? stateSave)
