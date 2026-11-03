@@ -2052,10 +2052,53 @@ public abstract class TextBoxBase :
     List<SelectionPosition> selectionStartEnds = new List<SelectionPosition>();
 
     /// <summary>
+    /// Raised each time the selection visuals are recomputed, with the name of the member that asked for it.
+    /// A diagnostic hook (Preview's log); nothing in the control listens to it.
+    /// </summary>
+    public event Action<string>? SelectionVisualsUpdated;
+
+    /// <summary>
+    /// One compact line per piece of selection geometry, for diagnostics (Preview's log): each selection
+    /// instance, the wrapped text lines, the caret, the clip container and text scroll, and the cached
+    /// selection Y offset next to the template's current Y.
+    /// </summary>
+    public IReadOnlyList<string> DescribeSelectionGeometry()
+    {
+        List<string> lines = new List<string>();
+        if (selectionInstance == null || textComponent == null)
+        {
+            return lines;
+        }
+
+        for (int i = 0; i < _selectionInstances.Count; i++)
+        {
+            GraphicalUiElement r = _selectionInstances[i];
+            lines.Add($"sel[{i}] vis={r.Visible} x={r.X:0.##} y={r.Y:0.##} w={r.Width:0.##} h={r.Height:0.##} "
+                + $"xu={r.XUnits} yu={r.YUnits} wu={r.WidthUnits} hu={r.HeightUnits} parent={r.Parent?.Name}");
+        }
+
+        int start = 0;
+        for (int i = 0; i < coreTextObject.WrappedText.Count; i++)
+        {
+            int length = coreTextObject.WrappedText[i].Length;
+            lines.Add($"line[{i}] start={start} len={length} centerY={GetCenterOfYForLinePixelsFromSmall(i):0.##}");
+            start += length;
+        }
+
+        lines.Add($"caret x={caretComponent.X:0.##} y={caretComponent.Y:0.##} h={caretComponent.Height:0.##}");
+        GraphicalUiElement? clip = textComponent.Parent as GraphicalUiElement;
+        lines.Add($"clip w={clip?.GetAbsoluteWidth():0.##} h={clip?.GetAbsoluteHeight():0.##} "
+            + $"textScroll x={textComponent.X - _textRestingX:0.##} y={textComponent.Y - _textRestingY:0.##}");
+        lines.Add($"selectionYOffset cached={_selectionInstanceYOffset:0.##} templateY={selectionTemplate?.Y:0.##}");
+        return lines;
+    }
+
+    /// <summary>
     /// Updates the Selection visuals to match the current selection values.
     /// </summary>
-    protected void UpdateToSelection()
+    protected void UpdateToSelection([System.Runtime.CompilerServices.CallerMemberName] string? caller = null)
     {
+        SelectionVisualsUpdated?.Invoke(caller ?? "?");
         _placedTextAbsoluteRotation = textComponent.GetAbsoluteRotation();
 
         var displayedText = DisplayedText;

@@ -50,6 +50,25 @@ public class TextBoxWrapToggleSelectionTests : BaseTestClass
     }
 
     [Fact]
+    public void DescribeSelectionGeometry_AfterSelecting_ListsInstancesLinesCaretClipAndOffset()
+    {
+        TextBox box = Create(TextWrapping.Wrap);
+        System.Collections.Generic.List<string> callers = new();
+        box.SelectionVisualsUpdated += callers.Add;
+
+        Select(box);
+        System.Collections.Generic.IReadOnlyList<string> lines = box.DescribeSelectionGeometry();
+
+        lines.ShouldContain(l => l.StartsWith("sel[0] vis=True"));
+        lines.ShouldContain(l => l.StartsWith("line[0] start=0 len="));
+        lines.ShouldContain(l => l.StartsWith("caret x="));
+        lines.ShouldContain(l => l.StartsWith("clip w="));
+        lines.ShouldContain(l => l.StartsWith("selectionYOffset cached="));
+        callers.ShouldNotBeEmpty();
+        callers.ShouldAllBe(c => !string.IsNullOrEmpty(c) && c != "?");
+    }
+
+    [Fact]
     public void NoWrapToWrap_SelectionMadeAfterToggle_MatchesATextBoxCreatedWithWrap()
     {
         TextBox live = Create(TextWrapping.NoWrap);
@@ -111,7 +130,7 @@ public class TextBoxWrapToggleReloadSelectionTests : FileThemeInputTestBase
     private const string LongText =
         "alpha beta gamma delta epsilon zeta eta theta iota kappa lambda mu nu xi omicron pi rho sigma tau upsilon phi chi psi omega";
 
-    private static GumProjectSave LoadCopy(string theme, TextWrapping? wrapping)
+    private static GumProjectSave LoadCopy(string theme, TextWrapping? wrapping, string? lineMode = null)
     {
         string gumx = System.IO.Path.Combine(RepoRoot(), "Tools", "Gum.ProjectServices", "Templates", "FormsThemes", theme, "GumProject.gumx");
         GumProjectSave project = GumProjectSave.Load(gumx, out _)!;
@@ -130,6 +149,10 @@ public class TextBoxWrapToggleReloadSelectionTests : FileThemeInputTestBase
         if (wrapping != null)
         {
             state.Variables.Add(new VariableSave { Name = "Ctl1.TextWrapping", Type = "TextWrapping", Value = wrapping.Value, SetsValue = true });
+        }
+        if (lineMode != null)
+        {
+            state.Variables.Add(new VariableSave { Name = "Ctl1.LineModeCategoryState", Type = "LineModeCategory", Value = lineMode, SetsValue = true });
         }
         project.Screens.Add(screen);
         project.Initialize();
@@ -229,6 +252,32 @@ public class TextBoxWrapToggleReloadSelectionTests : FileThemeInputTestBase
         }
 
         VisibleOnly(Describe(live)).ShouldBe(VisibleOnly(expected));
+    }
+
+    /// <summary>
+    /// #7497: the tool saves a single-line box as Multi + Wrap; the selection made afterward (Shift+Up twice)
+    /// must be drawn as a freshly loaded Multi + Wrap box draws it.
+    /// </summary>
+    [Theory]
+    [InlineData(44, 30)]
+    [InlineData(14, 60)]
+    public void Reload_SingleLineToMultiLineWrap_SelectionMatchesAFreshLoad(int start, int length)
+    {
+        TextBox fresh = Build(LoadCopy("DarkPro", TextWrapping.Wrap, "Multi"), out _);
+        TextBox live = Build(LoadCopy("DarkPro", null), out GraphicalUiElement screen);
+        GumProjectSave reloaded = LoadCopy("DarkPro", TextWrapping.Wrap, "Multi");
+        ObjectFinder.Self.GumProjectSave = reloaded;
+        GumHotReloadManager.ApplyDiff(new[] { screen }, reloaded, SystemManagers.Default);
+
+        foreach (TextBox box in new[] { fresh, live })
+        {
+            box.SelectionStart = 44;
+            box.SelectionLength = 30;
+            box.SelectionStart = start;
+            box.SelectionLength = length;
+        }
+
+        VisibleOnly(Describe(live)).ShouldBe(VisibleOnly(Describe(fresh)));
     }
 
     private static string VisibleOnly(string description) =>

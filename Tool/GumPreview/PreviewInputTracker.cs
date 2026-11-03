@@ -2,7 +2,8 @@ namespace GumPreview;
 
 /// <summary>What <see cref="PreviewInputTracker"/> needs to know about the focused text box, as plain values.</summary>
 public readonly record struct TextBoxSnapshot(
-    string Name, string Text, bool Wrap, int SelectionStart, int SelectionLength, int CaretIndex, int InstanceCount, int VisibleInstanceCount);
+    string Name, string Text, bool Wrap, int SelectionStart, int SelectionLength, int CaretIndex, int InstanceCount, int VisibleInstanceCount,
+    System.Func<System.Collections.Generic.IReadOnlyList<string>>? Geometry = null);
 
 /// <summary>
 /// Turns per-frame samples of the mouse and the focused text box into log lines, writing only when
@@ -53,12 +54,14 @@ public sealed class PreviewInputTracker
         TextBoxSnapshot? previous = _last?.Name == current.Name ? _last : null;
         _last = current;
 
+        bool logged = false;
         if (previous == null
             || previous.Value.SelectionStart != current.SelectionStart
             || previous.Value.SelectionLength != current.SelectionLength
             || previous.Value.CaretIndex != current.CaretIndex)
         {
             _log.LogSelection(current.Name, current.SelectionStart, current.SelectionLength, current.CaretIndex);
+            logged = true;
         }
 
         if (previous == null
@@ -68,6 +71,12 @@ public sealed class PreviewInputTracker
             || previous.Value.VisibleInstanceCount != current.VisibleInstanceCount)
         {
             _log.LogSelectionInstances(current.Name, current.Wrap, current.Text.Length, current.InstanceCount, current.VisibleInstanceCount);
+            logged = true;
+        }
+
+        if (logged && current.Geometry != null)
+        {
+            _log.LogGeometry(current.Name, current.Geometry());
         }
     }
 }

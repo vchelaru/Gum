@@ -38,6 +38,8 @@ public class Game1 : Game
     private readonly bool _selectAll;
     private readonly PreviewDebugLog? _debugLog;
     private IInputReceiver? _loggedFocus;
+    private Action<string>? _logSelectionUpdate;
+    private bool _logGeometryAfterReload;
     private PreviewInputTracker? _inputTracker;
 
     private readonly PreviewReloadPolicy _reloadPolicy = new PreviewReloadPolicy();
@@ -261,8 +263,24 @@ public class Game1 : Game
         IInputReceiver? focus = InteractiveGue.CurrentInputReceiver;
         if (!ReferenceEquals(focus, _loggedFocus))
         {
+            if (_loggedFocus is TextBox previousBox)
+            {
+                previousBox.SelectionVisualsUpdated -= _logSelectionUpdate;
+            }
             _loggedFocus = focus;
             log.LogFocus(DescribeControl(focus));
+            if (focus is TextBox newBox)
+            {
+                string name = DescribeControl(newBox)!;
+                _logSelectionUpdate = caller => log.LogSelectionUpdate(name, caller);
+                newBox.SelectionVisualsUpdated += _logSelectionUpdate;
+            }
+        }
+
+        if (_logGeometryAfterReload && focus is TextBox reloadedBox)
+        {
+            _logGeometryAfterReload = false;
+            log.LogGeometry(DescribeControl(reloadedBox)!, reloadedBox.DescribeSelectionGeometry());
         }
 
         _inputTracker ??= new PreviewInputTracker(log);
@@ -315,7 +333,7 @@ public class Game1 : Game
             }
         }
         return new TextBoxSnapshot(DescribeControl(textBox)!, textBox.Text ?? "", textBox.TextWrapping == TextWrapping.Wrap,
-            textBox.SelectionStart, textBox.SelectionLength, textBox.CaretIndex, count, visible);
+            textBox.SelectionStart, textBox.SelectionLength, textBox.CaretIndex, count, visible, textBox.DescribeSelectionGeometry);
     }
 
     private static string? DescribeControl(IInputReceiver? receiver) =>
@@ -595,6 +613,7 @@ public class Game1 : Game
         try
         {
             _debugLog?.LogReload(result);
+            _logGeometryAfterReload = _debugLog != null;
             _reloadPolicy.OnReloadFinished(result, PreviewReloadPolicy.IsStateSelected(_selection), _isElementMissing);
         }
         catch (Exception exception)

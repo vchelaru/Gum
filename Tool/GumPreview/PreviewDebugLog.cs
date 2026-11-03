@@ -29,7 +29,10 @@ namespace GumPreview;
 /// <c>reload</c> (a finished hot reload and its issues); <c>focus</c>, <c>key</c>, <c>mouse</c> (input
 /// Preview received); <c>selection</c> (a text box's selection start/length/caret);
 /// <c>selection-instances</c> (how many highlight instances a text box has and how many are visible,
-/// written when text, wrap or those counts change); <c>error</c> (exception with stack). To follow a
+/// written when text, wrap or those counts change); <c>geometry</c> (after each of those and after each
+/// reload: one line per selection instance with x/y/w/h/units/parent, per wrapped line with start, length
+/// and Y, the caret, the clip size and text scroll, and the cached selection Y offset next to the
+/// template's); <c>selection-update</c> (the selection visuals were recomputed, and by which member); <c>error</c> (exception with stack). To follow a
 /// bug, read the <c>tool-var</c>/<c>tool-selection</c> lines for what the tool sent, then the
 /// <c>key</c>/<c>selection</c>/<c>selection-instances</c> lines for what Preview did with it.
 /// </para>
@@ -129,6 +132,18 @@ public sealed class PreviewDebugLog : IDisposable
     /// <summary>An exception, with where it happened.</summary>
     public void LogException(string context, Exception exception) =>
         Write("error", $"{context}: {exception}");
+
+    /// <summary>One <c>geometry</c> line per entry (selection instances, wrapped lines, caret, clip and scroll, cached Y offset) for a text box.</summary>
+    public void LogGeometry(string control, IEnumerable<string> lines)
+    {
+        foreach (string line in lines)
+        {
+            Write("geometry", $"{control} {line}");
+        }
+    }
+
+    /// <summary>The selection visuals of a text box were recomputed; <paramref name="caller"/> is the member that asked.</summary>
+    public void LogSelectionUpdate(string control, string caller) => Write("selection-update", $"{control} by {caller}");
 
     /// <summary>An unhandled exception object from <c>AppDomain.UnhandledException</c>, logged with its stack.</summary>
     public void LogUnhandled(object? exceptionObject) =>

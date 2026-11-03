@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Linq;
 using Gum.Diagnostics;
 using GumPreview;
 using Shouldly;
@@ -144,6 +145,37 @@ public class AlwaysOnDebugLogTests : IDisposable
         log.Dispose();
 
         Should.NotThrow(() => log.Write("test", "after dispose"));
+    }
+
+    [Fact]
+    public void ObserveTextBox_SelectionChange_LogsGeometryLinesFromTheProvider()
+    {
+        string path = Path.Combine(_folder, "preview.log");
+        using (PreviewDebugLog log = PreviewDebugLog.Open(path)!)
+        {
+            PreviewInputTracker tracker = new PreviewInputTracker(log);
+            TextBoxSnapshot Snapshot(int start) => new TextBoxSnapshot("Input", "abc", true, start, 1, start, 1, 1,
+                () => new[] { "sel[0] vis=True x=1 y=2 w=3 h=4", "selectionYOffset cached=0 templateY=0" });
+            tracker.ObserveTextBox(Snapshot(0));
+            tracker.ObserveTextBox(Snapshot(0));
+            tracker.ObserveTextBox(Snapshot(1));
+        }
+
+        string[] lines = File.ReadAllLines(path);
+        lines.Count(l => l.Contains(" geometry Input sel[0] vis=True x=1 y=2 w=3 h=4")).ShouldBe(2);
+        lines.Count(l => l.Contains(" geometry Input selectionYOffset cached=0")).ShouldBe(2);
+    }
+
+    [Fact]
+    public void LogSelectionUpdate_WritesControlAndCaller()
+    {
+        string path = Path.Combine(_folder, "preview.log");
+        using (PreviewDebugLog log = PreviewDebugLog.Open(path)!)
+        {
+            log.LogSelectionUpdate("TextBox 'Input'", "SelectionLength");
+        }
+
+        File.ReadAllText(path).ShouldContain(" selection-update TextBox 'Input' by SelectionLength");
     }
 
     [Fact]
