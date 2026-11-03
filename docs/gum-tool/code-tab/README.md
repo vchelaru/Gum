@@ -36,6 +36,16 @@ If a Screen or Component is selected, then an entire class for the component is 
 * A property for each instance in the Screen or Component
 * Initialization of all variables including variables on the instances if using full code generation
 
+## Game Setup
+
+Above the code preview, the **Game setup** section shows the code a game needs to load your project and turn on what the Preview turns on by default, such as shape drawing and keyboard and gamepad navigation. Click **Copy** to copy it. If your game already works the Preview way, you do not need it. If your game behaves differently from the Preview, for example Tab does not move focus, the section shows the lines that explain why.
+
+The section shows MonoGame, KNI and FNA code, which is also what you see before code generation is set up. For other output libraries it explains that the Preview runs on MonoGame, and for the legacy libraries it is hidden. See [Adding and Initializing Gum](../../code/getting-started/setup/adding-initializing-gum/monogame-kni-fna/README.md) for what each line does.
+
+{% hint style="info" %}
+Available in December 2026, or now if building Gum from source.
+{% endhint %}
+
 ## Setting Up Code Generation
 
 Code generation writes files into your game project, so back up the project or commit it to source control first.

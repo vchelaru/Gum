@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace GumPreview;
+namespace Gum.ProjectServices.CodeGeneration;
 
 /// <summary>When in a game's startup a default goes.</summary>
 public enum PreviewDefaultPhase

@@ -3,7 +3,7 @@ using Gum.Forms.Controls;
 using Gum.Input;
 using Gum.Wireframe;
 using MonoGameGum.Tests.Input;
-using GumPreview;
+
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 using Shouldly;
@@ -22,6 +22,13 @@ public class PreviewInputDefaultsTests : MonoGameGum.Tests.Forms.BeginnerDriverT
     {
         FormsUtilities._gamepads = _originalGamepads;
         base.Dispose();
+    }
+
+    // What the Preview turns on for navigation (the KeyboardDefaults and GamepadDefaults entries of PreviewDefaults).
+    private static void EnableInputDefaults()
+    {
+        Gum.GumService.Default.UseKeyboardDefaults();
+        Gum.GumService.Default.UseGamepadDefaults();
     }
 
     private Button[] AddButtons(int count)
@@ -54,7 +61,7 @@ public class PreviewInputDefaultsTests : MonoGameGum.Tests.Forms.BeginnerDriverT
     public void Enable_TabMovesFocusToTheNextControl()
     {
         FormsUtilities._gamepads = new[] { _pad };
-        PreviewInputDefaults.Enable(Gum.GumService.Default);
+        EnableInputDefaults();
         Button[] buttons = AddButtons(3);
         buttons[0].IsFocused = true;
 
@@ -67,7 +74,7 @@ public class PreviewInputDefaultsTests : MonoGameGum.Tests.Forms.BeginnerDriverT
     public void Enable_EnterClicksTheFocusedButton()
     {
         FormsUtilities._gamepads = new[] { _pad };
-        PreviewInputDefaults.Enable(Gum.GumService.Default);
+        EnableInputDefaults();
         Button[] buttons = AddButtons(2);
         int clicks = 0;
         buttons[0].Click += (_, _) => clicks++;
@@ -82,7 +89,7 @@ public class PreviewInputDefaultsTests : MonoGameGum.Tests.Forms.BeginnerDriverT
     public void Enable_GamepadDpadDownMovesFocus()
     {
         FormsUtilities._gamepads = new[] { _pad };
-        PreviewInputDefaults.Enable(Gum.GumService.Default);
+        EnableInputDefaults();
         Button[] buttons = AddButtons(3);
         buttons[0].IsFocused = true;
 
@@ -95,7 +102,7 @@ public class PreviewInputDefaultsTests : MonoGameGum.Tests.Forms.BeginnerDriverT
     public void Enable_GamepadAClicksTheFocusedButton()
     {
         FormsUtilities._gamepads = new[] { _pad };
-        PreviewInputDefaults.Enable(Gum.GumService.Default);
+        EnableInputDefaults();
         Button[] buttons = AddButtons(2);
         int clicks = 0;
         buttons[0].Click += (_, _) => clicks++;

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using Avalonia;
@@ -72,9 +72,13 @@ public sealed class CodeOutputView : Grid, ICodeOutputTabHost
         ScrollViewer.SetVerticalScrollBarVisibility(_code, ScrollBarVisibility.Auto);
         ScrollViewer.SetHorizontalScrollBarVisibility(_code, ScrollBarVisibility.Auto);
 
-        DockPanel preview = new DockPanel();
+
+        Control gameSetup = CreateGameSetupSection(viewModel);
+        DockPanel preview = new DockPanel { ClipToBounds = true };
         DockPanel.SetDock(previewHeader, Dock.Top);
         preview.Children.Add(previewHeader);
+        DockPanel.SetDock(gameSetup, Dock.Top);
+        preview.Children.Add(gameSetup);
         preview.Children.Add(_code);
 
         TextBlock settingsTitle = new TextBlock { VerticalAlignment = VerticalAlignment.Center };
@@ -240,6 +244,67 @@ public sealed class CodeOutputView : Grid, ICodeOutputTabHost
 
     /// <summary>The Generate scope's all-elements choice, for tests.</summary>
     internal ToggleButton AllInProjectToggle => _allInProjectToggle;
+
+    /// <summary>
+    /// The collapsible "Game setup" section above the code (issue #7261): the code a game needs to load
+    /// the project and enable what the Preview enables, with a Copy button. Hidden when the project's
+    /// output library has no setup to show.
+    /// </summary>
+    private Control CreateGameSetupSection(CodeWindowViewModel viewModel)
+    {
+        TextBlock chevron = new TextBlock { VerticalAlignment = VerticalAlignment.Center };
+        TextBlock title = new TextBlock { Text = "Game setup", VerticalAlignment = VerticalAlignment.Center };
+        StackPanel titleRow = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 6 };
+        titleRow.Children.Add(chevron);
+        titleRow.Children.Add(title);
+        Button toggle = new Button
+        {
+            Content = titleRow,
+            HorizontalAlignment = HorizontalAlignment.Stretch,
+            HorizontalContentAlignment = HorizontalAlignment.Left,
+            Background = Brushes.Transparent,
+            BorderThickness = new Thickness(0),
+        };
+        toggle.Click += (_, _) => viewModel.IsGameSetupExpanded = !viewModel.IsGameSetupExpanded;
+        chevron.Bind(TextBlock.TextProperty, new Binding(nameof(CodeWindowViewModel.IsGameSetupExpanded))
+        {
+            Converter = new FuncValueConverter<bool, string>(expanded => expanded ? "▾" : "▸"),
+        });
+
+        Button copy = new Button { Content = "Copy", Padding = new Thickness(4, 1), Margin = new Thickness(4, 0) };
+        copy.Click += (_, _) =>
+        {
+            if (viewModel.GameSetupCode is { } text && TopLevel.GetTopLevel(this)?.Clipboard is { } clipboard)
+            {
+                _ = clipboard.SetTextAsync(text);
+            }
+        };
+
+        Grid header = new Grid { ColumnDefinitions = new ColumnDefinitions("*,Auto") };
+        header.Children.Add(toggle);
+        Grid.SetColumn(copy, 1);
+        header.Children.Add(copy);
+
+        // Wrapped, so a long project path or explanation line is read rather than scrolled to.
+        TextBox code = new TextBox
+        {
+            IsReadOnly = true,
+            AcceptsReturn = true,
+            TextWrapping = TextWrapping.Wrap,
+            MaxHeight = 100,
+            FontFamily = new FontFamily("Cascadia Mono,Consolas,Menlo,DejaVu Sans Mono,monospace"),
+        };
+        ScrollViewer.SetVerticalScrollBarVisibility(code, ScrollBarVisibility.Auto);
+        code.Bind(TextBox.TextProperty, new Binding(nameof(CodeWindowViewModel.GameSetupCode)));
+        code.Bind(IsVisibleProperty, new Binding(nameof(CodeWindowViewModel.IsGameSetupExpanded)));
+
+        StackPanel body = new StackPanel();
+        body.Children.Add(header);
+        body.Children.Add(code);
+        Border section = new Border { BorderBrush = Brushes.Gray, BorderThickness = new Thickness(0, 0, 0, 1), Child = body };
+        section.Bind(IsVisibleProperty, new Binding(nameof(CodeWindowViewModel.HasGameSetup)));
+        return section;
+    }
 
     // The parse error, a note that fixing the file on disk is enough, and the one action that writes it.
     private static StackPanel CreateLoadErrorPanel(CodeWindowViewModel viewModel)

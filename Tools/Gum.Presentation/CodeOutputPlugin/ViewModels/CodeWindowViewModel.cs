@@ -194,6 +194,26 @@ public class CodeWindowViewModel : ViewModel
         set => Set(value);
     }
 
+    /// <summary>
+    /// The game-setup code (what a game needs to load the project and enable what the Preview enables),
+    /// or null when the section is hidden (issue #7261).
+    /// </summary>
+    public string? GameSetupCode
+    {
+        get => Get<string?>();
+        set => Set(value);
+    }
+
+    [DependsOn(nameof(GameSetupCode))]
+    public bool HasGameSetup => GameSetupCode != null;
+
+    /// <summary>Whether the game-setup section shows its code.</summary>
+    public bool IsGameSetupExpanded
+    {
+        get => Get<bool>();
+        set => Set(value);
+    }
+
     #endregion
 
     public CodeWindowViewModel(IProjectState projectState,

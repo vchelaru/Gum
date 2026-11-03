@@ -131,6 +131,8 @@ public class CodeOutputTabController
         }
         /////////////////////end early out/////////////////
 
+        RefreshGameSetup(codeOutputProjectSettings, _selectedState.SelectedElement);
+
         // Defensive: never feed the generator an unsupported combination (e.g. a Raylib project whose
         // .codsj still carries FullyInCode). CoerceToSupportedCombination keeps the display path safe
         // regardless of how the settings reached this state.
@@ -196,6 +198,41 @@ public class CodeOutputTabController
         }
     }
 
+
+    private bool _hasShownGameSetup;
+    private bool _hasCollapsedGameSetup;
+
+    /// <summary>
+    /// Fills the game-setup section (issue #7261): the code a game needs to load the project and
+    /// enable what the Preview enables. It starts expanded, then collapses on the next refresh so it
+    /// does not take room from the code once it has been seen; the user's own toggling wins after that.
+    /// </summary>
+    private void RefreshGameSetup(CodeOutputProjectSettings codeOutputProjectSettings, ElementSave? selectedElement)
+    {
+        // Code generation not set up yet means no output library has been chosen.
+        OutputLibrary? library = string.IsNullOrEmpty(codeOutputProjectSettings.CodeProjectRoot)
+            ? null
+            : codeOutputProjectSettings.OutputLibrary;
+        string projectFileName = System.IO.Path.GetFileName(_projectState.GumProjectSave?.FullFileName ?? "GumProject.gumx");
+        string? screenName = selectedElement is ScreenSave ? selectedElement.Name : null;
+
+        _viewModel.GameSetupCode = GameSetupCode.Generate(library, projectFileName, screenName);
+
+        if (_viewModel.GameSetupCode == null)
+        {
+            return;
+        }
+        if (!_hasShownGameSetup)
+        {
+            _hasShownGameSetup = true;
+            _viewModel.IsGameSetupExpanded = true;
+        }
+        else if (!_hasCollapsedGameSetup)
+        {
+            _hasCollapsedGameSetup = true;
+            _viewModel.IsGameSetupExpanded = false;
+        }
+    }
     /// <summary>
     /// Refreshes the display for the currently-selected element, then auto-regenerates its code file
     /// if the view's current element settings have <see cref="CodeOutputElementSettings.AutoGenerateOnChange"/> set.
