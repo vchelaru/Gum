@@ -51,4 +51,34 @@ public class ProjectPropertiesPageViewTests
         view.Grid.GetInstanceMember(nameof(ProjectPropertiesViewModel.TextureFilter)).ShouldNotBeNull();
         window.Close();
     }
+
+    [AvaloniaFact]
+    public void GeneralPage_CustomBoundsToggle_ShowsTheFourFieldsOnlyWhileOn()
+    {
+        GumProjectSave project = new GumProjectSave();
+        ProjectPropertiesViewModel properties = new ProjectPropertiesViewModel();
+        properties.SetFrom(project);
+        ProjectPropertiesPageView view = new ProjectPropertiesPageView
+        {
+            DataContext = new ProjectPropertiesPageViewModel(properties, ProjectPropertiesSection.General),
+        };
+        Window window = new Window { Content = view, Width = 500, Height = 600 };
+        window.Show();
+        window.UpdateLayout();
+        string left = nameof(ProjectPropertiesViewModel.SinglePixelTextureLeft);
+        view.Grid.GetInstanceMember(left).ShouldBeNull();
+
+        view.Grid.GetInstanceMember("UseCustomBounds")!.Value = true;
+        window.UpdateLayout();
+
+        view.Grid.GetInstanceMember(left).ShouldNotBeNull();
+        properties.SinglePixelTextureRight.ShouldBe(1);
+
+        view.Grid.GetInstanceMember("UseCustomBounds")!.Value = false;
+        window.UpdateLayout();
+
+        view.Grid.GetInstanceMember(left).ShouldBeNull();
+        properties.SinglePixelTextureRight.ShouldBeNull();
+        window.Close();
+    }
 }

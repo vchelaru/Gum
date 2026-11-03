@@ -1,4 +1,5 @@
 using System;
+using Gum.SettingsWindow;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -34,12 +35,6 @@ public class CodeOutputSettingsMembers
 
     private static readonly Dictionary<string, OutputLibrary> LibrariesByName =
         LibraryNames.ToDictionary(pair => pair.Value, pair => pair.Key);
-
-    /// <summary>
-    /// Width of the label column of the project rows: wide enough that every label stays on one line.
-    /// Set per member, so no other property grid changes.
-    /// </summary>
-    public const double ProjectLabelColumnWidth = 202;
 
     // The label each project row shows; the member name stays the stable key tests and callers use.
     private static readonly Dictionary<string, string> ProjectLabels = new Dictionary<string, string>
@@ -180,11 +175,10 @@ public class CodeOutputSettingsMembers
                 {
                     member.DisplayName = label;
                 }
-                member.FirstGridLength = ProjectLabelColumnWidth;
-                member.IsSpaciousRow = true;
             }
             MarkReadOnlyWhileSettingsAreUnreadable(section);
         }
+        SettingsRows.Finish(sections);
         return sections;
     }
 
@@ -253,6 +247,29 @@ public class CodeOutputSettingsMembers
     public void HandleProjectLoaded() => HasClickedManualSetup = false;
 
     #region Project-wide members
+
+    // The row kinds are SettingsRows'; these wrap the settings null check and the save notification every
+    // project row shares. The label is the name until BuildProjectSections applies ProjectLabels.
+    private void WriteProject(Action<CodeOutputProjectSettings> write)
+    {
+        if (ProjectSettings != null)
+        {
+            write(ProjectSettings);
+            SettingsChanged?.Invoke(this, EventArgs.Empty);
+        }
+    }
+
+    private InstanceMember ProjectText(string name, string hint,
+        Func<CodeOutputProjectSettings, string?> get, Action<CodeOutputProjectSettings, string> set) =>
+        SettingsRows.Text(name, name, hint,
+            () => ProjectSettings == null ? null : get(ProjectSettings),
+            value => WriteProject(settings => set(settings, value)));
+
+    private InstanceMember ProjectToggle(string name, string hint,
+        Func<CodeOutputProjectSettings, bool> get, Action<CodeOutputProjectSettings, bool> set, string? toggleText = null) =>
+        SettingsRows.Toggle(name, name, hint,
+            () => ProjectSettings != null && get(ProjectSettings),
+            value => WriteProject(settings => set(settings, value)), toggleText);
 
     private InstanceMember CreateCodeProjectRootMember()
     {
@@ -418,25 +435,9 @@ public class CodeOutputSettingsMembers
         member.PropertiesToSetOnDisplayer["IsFolderDialog"] = true;
     }
 
-    private InstanceMember CreateGeneratedCodeFolderPrefixMember()
-    {
-        InstanceMember member = new InstanceMember("Generated Code Folder Prefix", this);
-        member.DetailText = "Added before Screens and Components, in both folders.";
-
-        member.CustomSetPropertyEvent += (owner, args) =>
-        {
-            if (ProjectSettings != null)
-            {
-                ProjectSettings.GeneratedCodeFolderPrefix = ((string?)args.Value ?? string.Empty).Trim();
-                SettingsChanged?.Invoke(this, EventArgs.Empty);
-            }
-        };
-
-        member.CustomGetEvent += (owner) => ProjectSettings?.GeneratedCodeFolderPrefix;
-        member.CustomGetTypeEvent += (owner) => typeof(string);
-
-        return member;
-    }
+    private InstanceMember CreateGeneratedCodeFolderPrefixMember() => ProjectText(
+        "Generated Code Folder Prefix", "Added before Screens and Components, in both folders.",
+        settings => settings.GeneratedCodeFolderPrefix, (settings, value) => settings.GeneratedCodeFolderPrefix = value.Trim());
 
     private InstanceMember CreateOutputLibrarySelectionMember()
     {
@@ -497,83 +498,21 @@ public class CodeOutputSettingsMembers
         return member;
     }
 
-    private InstanceMember CreateRootNamespaceMember()
-    {
-        InstanceMember member = new InstanceMember("Root Namespace", this);
-        member.DetailText = "Both halves of a class share it, whatever folder they sit in.";
+    private InstanceMember CreateRootNamespaceMember() => ProjectText(
+        "Root Namespace", "Both halves of a class share it, whatever folder they sit in.",
+        settings => settings.RootNamespace, (settings, value) => settings.RootNamespace = value);
 
-        member.CustomSetPropertyEvent += (owner, args) =>
-        {
-            if (ProjectSettings != null)
-            {
-                ProjectSettings.RootNamespace = (string)args.Value!;
-                SettingsChanged?.Invoke(this, EventArgs.Empty);
-            }
-        };
+    private InstanceMember CreateAppendFolderToNamespaceMember() => ProjectToggle(
+        "Append Folder to Namespace", "Components/Menu → MyGame.Components.Menu",
+        settings => settings.AppendFolderToNamespace, (settings, value) => settings.AppendFolderToNamespace = value);
 
-        member.CustomGetEvent += (owner) => ProjectSettings?.RootNamespace;
-        member.CustomGetTypeEvent += (owner) => typeof(string);
+    private InstanceMember CreateDefaultScreenBaseMember() => ProjectText(
+        "Default Screen Base", "Base class for screens that don't set one.",
+        settings => settings.DefaultScreenBase, (settings, value) => settings.DefaultScreenBase = value);
 
-        return member;
-    }
-
-    private InstanceMember CreateAppendFolderToNamespaceMember()
-    {
-        InstanceMember member = new InstanceMember("Append Folder to Namespace", this);
-        member.DetailText = "Components/Menu → MyGame.Components.Menu";
-
-        member.CustomSetPropertyEvent += (owner, args) =>
-        {
-            if (ProjectSettings != null)
-            {
-                ProjectSettings.AppendFolderToNamespace = (bool)args.Value!;
-                SettingsChanged?.Invoke(this, EventArgs.Empty);
-            }
-        };
-
-        member.CustomGetEvent += (owner) => ProjectSettings?.AppendFolderToNamespace ?? false;
-        member.CustomGetTypeEvent += (owner) => typeof(bool);
-
-        return member;
-    }
-
-    private InstanceMember CreateDefaultScreenBaseMember()
-    {
-        InstanceMember member = new InstanceMember("Default Screen Base", this);
-        member.DetailText = "Base class for screens that don't set one.";
-        member.CustomSetPropertyEvent += (owner, args) =>
-        {
-            if (ProjectSettings != null)
-            {
-                ProjectSettings.DefaultScreenBase = (string)args.Value!;
-                SettingsChanged?.Invoke(this, EventArgs.Empty);
-            }
-        };
-
-        member.CustomGetEvent += (owner) => ProjectSettings?.DefaultScreenBase;
-        member.CustomGetTypeEvent += (owner) => typeof(string);
-
-        return member;
-    }
-
-    private InstanceMember CreateAdjustPixelValuesForDensityMember()
-    {
-        InstanceMember member = new InstanceMember("Adjust Pixel Values for Density", this);
-        member.DetailText = "Scales emitted pixel values by the display density";
-        member.CustomSetPropertyEvent += (owner, args) =>
-        {
-            if (ProjectSettings != null)
-            {
-                ProjectSettings.AdjustPixelValuesForDensity = (bool)args.Value!;
-                SettingsChanged?.Invoke(this, EventArgs.Empty);
-            }
-        };
-
-        member.CustomGetEvent += (owner) => ProjectSettings?.AdjustPixelValuesForDensity;
-        member.CustomGetTypeEvent += (owner) => typeof(bool);
-
-        return member;
-    }
+    private InstanceMember CreateAdjustPixelValuesForDensityMember() => ProjectToggle(
+        "Adjust Pixel Values for Density", "Scales emitted pixel values by the display density",
+        settings => settings.AdjustPixelValuesForDensity, (settings, value) => settings.AdjustPixelValuesForDensity = value);
 
     private InstanceMember CreateBaseTypesNotCodeGeneratedMember()
     {

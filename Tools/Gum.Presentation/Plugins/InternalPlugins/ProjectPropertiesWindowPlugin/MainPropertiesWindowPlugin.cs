@@ -79,7 +79,7 @@ class MainPropertiesWindowPlugin : CorePriorityPlugin
         {
             Activated = Reload,
             Keywords = new[] { "texture filter", "unit values", "android", "file names", "single pixel texture" },
-            SearchTerms = () => ProjectPropertiesGridPresenter.RowLabels(_viewModel, ProjectPropertiesSection.General),
+            SearchTerms = () => new ProjectGeneralRows(_viewModel).SearchTerms(),
         });
         AddSettingsPage(new SettingsPage(
             SettingsPageIds.Canvas, "Canvas", SettingsSection.Project,

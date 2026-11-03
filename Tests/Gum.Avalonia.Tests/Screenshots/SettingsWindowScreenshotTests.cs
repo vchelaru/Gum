@@ -12,6 +12,8 @@ using System.Reflection;
 using Gum.Avalonia.Tests.EndToEnd;
 using Gum.Avalonia.Tests.Harness;
 using Gum.SettingsWindow;
+using Gum.DataTypes;
+using Gum.Managers;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Gum.Avalonia.Tests.Screenshots;
@@ -148,6 +150,34 @@ public class SettingsWindowScreenshotTests
         EditSettings(window.Find<CodeGenerationSettingsPageView>(), settings => settings.CustomCodeFolder = string.Empty);
         ScrollToResolves(window);
         PrScreenshot.SaveWindowAtZoomLevels(window.Window, "settings-mark-generated-folder-disabled-" + theme);
+    });
+
+    [SkippableFact]
+    public void ProjectGeneral_Light() => PrScreenshot.Run(() =>
+    {
+        using ProjectTreeHarness tree = new ProjectTreeHarness();
+        SettingsDialogViewModel viewModel = TestAppBuilder.Services.GetRequiredService<SettingsDialogViewModel>();
+        using ScreenshotWindow window = PrScreenshot.ShowDialog(viewModel, ThemeVariant.Light);
+
+        viewModel.SelectPage(SettingsPageIds.ProjectGeneral);
+        PrScreenshot.SaveWindowAtZoomLevels(window.Window, "settings-project-general-light");
+    });
+
+    [SkippableFact]
+    public void ProjectGeneral_WithCustomBounds_Dark() => PrScreenshot.Run(() =>
+    {
+        using ProjectTreeHarness tree = new ProjectTreeHarness();
+        GumProjectSave project = ObjectFinder.Self.GumProjectSave!;
+        project.SinglePixelTextureFile = "Textures/Atlas.png";
+        project.SinglePixelTextureLeft = 8;
+        project.SinglePixelTextureTop = 16;
+        project.SinglePixelTextureRight = 24;
+        project.SinglePixelTextureBottom = 32;
+        SettingsDialogViewModel viewModel = TestAppBuilder.Services.GetRequiredService<SettingsDialogViewModel>();
+        using ScreenshotWindow window = PrScreenshot.ShowDialog(viewModel, ThemeVariant.Dark);
+
+        viewModel.SelectPage(SettingsPageIds.ProjectGeneral);
+        PrScreenshot.SaveWindowAtZoomLevels(window.Window, "settings-project-general-custom-bounds");
     });
 
     private static void EditSettings(CodeGenerationSettingsPageView page, Action<CodeOutputProjectSettings> edit)
