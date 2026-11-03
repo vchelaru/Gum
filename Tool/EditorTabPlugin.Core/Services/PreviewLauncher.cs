@@ -24,6 +24,7 @@ public class PreviewLauncher : IPreviewLauncher
     private ExitWatch? _exitWatch;
     private string? _selectionFilePath;
     private bool _isConvertedGumxPreview;
+    private string? _launchedProjectPath;
     private static bool _hasRotatedPreviewLog;
     private ElementSave? _shownElement;
     private ElementSave? _pinnedElement;
@@ -162,6 +163,7 @@ public class PreviewLauncher : IPreviewLauncher
         }
 
         _shownElement = element;
+        _launchedProjectPath = project.FullFileName;
         _outputManager.AddOutput($"Launched preview for {element.Name}.");
         WatchForExit(_process);
     }
@@ -320,9 +322,25 @@ public class PreviewLauncher : IPreviewLauncher
     /// <inheritdoc/>
     public void ReactToProjectLoaded(GumProjectSave project)
     {
+        // Preview is started against one project file and cannot switch, so it would keep showing
+        // the old project's elements (#7541). Close it, as the tool does when it exits. A reload of
+        // the same file stays: Preview hot-reloads that file itself. The loaded project is read from
+        // the project manager because a new project only gets its file name after this event.
+        if (IsRunning && !IsLaunchedProject(_projectManager.GumProjectSave))
+        {
+            Close();
+            return;
+        }
+
         _shownElement = FindSameNamed(project, _shownElement);
         SetPinned(FindSameNamed(project, _pinnedElement));
     }
+
+    private bool IsLaunchedProject(GumProjectSave? loaded) =>
+        loaded != null
+        && !string.IsNullOrEmpty(loaded.FullFileName)
+        && !string.IsNullOrEmpty(_launchedProjectPath)
+        && new FilePath(loaded.FullFileName) == new FilePath(_launchedProjectPath);
 
     private static ElementSave? FindSameNamed(GumProjectSave project, ElementSave? element) =>
         element == null

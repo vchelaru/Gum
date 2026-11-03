@@ -559,38 +559,4 @@ public class PreviewLauncherTests : IDisposable
 
         starter.CloseCount.ShouldBe(0);
     }
-
-    private sealed class RecordingPreviewStarter : IPreviewProcessStarter, IPreviewProcess
-    {
-        private readonly string _executablePath;
-
-        public RecordingPreviewStarter(string executablePath)
-        {
-            _executablePath = executablePath;
-        }
-
-        public List<ProcessStartInfo> Started { get; } = new List<ProcessStartInfo>();
-
-        public bool HasExited { get; set; }
-
-        public int CloseCount { get; private set; }
-
-        public int ActivateCount { get; private set; }
-
-        public void Activate() => ActivateCount++;
-
-        public void Close()
-        {
-            CloseCount++;
-            HasExited = true;
-        }
-
-        public ResolvedPreviewExecutable? Resolve() => new ResolvedPreviewExecutable(_executablePath, IsNativeAot: false);
-
-        public IPreviewProcess? Start(ProcessStartInfo startInfo)
-        {
-            Started.Add(startInfo);
-            return this;
-        }
-    }
 }
