@@ -7,14 +7,20 @@ using Gum;
 namespace GumPreview;
 
 /// <summary>
-/// Opt-in diagnostic log for Preview (<c>--log &lt;path&gt;</c>): timestamped lines in a file, never the
-/// console or the window, so a person or an agent can read what a live edit or an input did.
-/// Preview holds a null <see cref="PreviewDebugLog"/> when the option is absent, so an off log costs a
-/// null check and creates no file.
+/// Opt-in diagnostic log for Preview: timestamped lines in a file, never the console or the window,
+/// so a person or an agent can read what a live edit or an input did. Turn it on with
+/// <c>--log &lt;path&gt;</c>, or <c>--log-default</c> to write to <see cref="DefaultPath"/>, a fixed
+/// file (<c>{temp folder}/GumPreview/preview.log</c>) so an agent always knows where to read. Lines
+/// are appended and flushed as written, so the file is current while Preview runs or after a crash;
+/// each run starts with a <c>log started</c> line. Preview holds a null <see cref="PreviewDebugLog"/>
+/// when logging is off, so an off log costs a null check and creates no file.
 /// </summary>
 public sealed class PreviewDebugLog : IDisposable
 {
     private readonly StreamWriter _writer;
+
+    /// <summary>The file <c>--log-default</c> writes to: <c>GumPreview/preview.log</c> in the user's temp folder.</summary>
+    public static string DefaultPath => Path.Combine(Path.GetTempPath(), "GumPreview", "preview.log");
 
     private PreviewDebugLog(StreamWriter writer)
     {
@@ -39,7 +45,7 @@ public sealed class PreviewDebugLog : IDisposable
             {
                 Directory.CreateDirectory(directory);
             }
-            // Shared read so the file can be read while Preview runs; AutoFlush so a crash loses nothing.
+            // Shared read so the file can be read while Preview runs; AutoFlush flushes after every line.
             FileStream stream = new FileStream(path, FileMode.Append, FileAccess.Write, FileShare.ReadWrite);
             PreviewDebugLog log = new PreviewDebugLog(new StreamWriter(stream, new UTF8Encoding(false)) { AutoFlush = true });
             log.Write("log", "started");
@@ -84,6 +90,17 @@ public sealed class PreviewDebugLog : IDisposable
     /// <summary>Keys typed this frame and the modifiers held, as forwarded to the focused control.</summary>
     public void LogKeys(IEnumerable<string> keys, string modifiers, string? focusedControl) =>
         Write("key", $"{string.Join(",", keys)} modifiers={modifiers} focused={focusedControl ?? "(none)"}");
+
+    /// <summary>A mouse press, drag step or release at a window position.</summary>
+    public void LogMouse(string kind, int x, int y) => Write("mouse", $"{kind} {x},{y}");
+
+    /// <summary>A text box's selection: where it starts, how long it is, and where the caret is.</summary>
+    public void LogSelection(string control, int start, int length, int caret) =>
+        Write("selection", $"{control} start={start} length={length} caret={caret}");
+
+    /// <summary>How many selection highlight instances a text box has and how many are visible.</summary>
+    public void LogSelectionInstances(string control, bool wrap, int textLength, int count, int visible) =>
+        Write("selection-instances", $"{control} wrap={wrap} textLength={textLength} count={count} visible={visible}");
 
     /// <summary>An exception, with where it happened.</summary>
     public void LogException(string context, Exception exception) =>
