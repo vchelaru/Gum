@@ -237,6 +237,13 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
 
     #endregion
 
+    /// <summary>
+    /// Foregrounds the running preview's window when Preview is clicked again; null leaves it to
+    /// the preview raising its own window. Read while the base constructor runs, so an override
+    /// must not depend on its own fields.
+    /// </summary>
+    protected virtual IPreviewWindowActivator? PreviewWindowActivator => null;
+
     protected EditorTabPluginBase(
         ISelectedState selectedState,
         IProjectManager projectManager,
@@ -353,7 +360,7 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
             _projectManager,
             _outputManager,
             previewGumxProjectionService,
-            new PreviewProcessStarter(AppContext.BaseDirectory),
+            new PreviewProcessStarter(AppContext.BaseDirectory, PreviewWindowActivator),
             isSortByBatchKey: () => ReferenceEquals(Renderer.SiblingOrdering, BatchKeyGroupedOrderer.Instance));
 
         _editorViewModel = new EditorViewModel(

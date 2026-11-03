@@ -20,6 +20,10 @@ internal sealed class RecordingPreviewStarter : IPreviewProcessStarter, IPreview
 
     public int CloseCount { get; private set; }
 
+    public int ActivateCount { get; private set; }
+
+    public void Activate() => ActivateCount++;
+
     public void Close()
     {
         CloseCount++;

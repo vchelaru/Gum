@@ -97,6 +97,10 @@ public class PreviewLauncher : IPreviewLauncher
             // Re-clicking Preview is an explicit ask to bring the window forward, unlike a passive
             // tree-selection change (issue #4717 follow-up).
             PushSelection(PinnedElement ?? element, activate: true);
+            // The tool holds the foreground right after the click, so it can raise the window on
+            // Windows, where the preview's own raise is refused as a background process (#7542).
+            // Liveness only (IsRunning); which project the preview holds is not consulted.
+            _process?.Activate();
             return;
         }
 

@@ -26,6 +26,7 @@ using Gum.Managers;
 using Gum.Plugins;
 using Gum.Plugins.BaseClasses;
 using Gum.Plugins.InternalPlugins.EditorTab;
+using Gum.Plugins.InternalPlugins.EditorTab.Services;
 using Gum.Plugins.InternalPlugins.EditorTab.Views;
 using Gum.Plugins.InternalPlugins.VariableGrid;
 using Gum.Plugins.ScrollBarPlugin;
@@ -58,6 +59,12 @@ public class AvaloniaEditorTabPlugin : EditorTabPluginBase, IRecipient<EditorCan
     private readonly ContextMenu _contextMenu = new ContextMenu();
     private static readonly TimeSpan ContextMenuFrameWait = TimeSpan.FromMilliseconds(250);
     private bool _isContextMenuPending;
+
+    /// <inheritdoc/>
+    /// <remarks>Windows only; macOS and Linux have no such call without a new native dependency, so
+    /// there the preview raises its own window.</remarks>
+    protected override IPreviewWindowActivator? PreviewWindowActivator =>
+        OperatingSystem.IsWindows() ? new WindowsPreviewWindowActivator() : null;
 
     [ImportingConstructor]
     public AvaloniaEditorTabPlugin(
