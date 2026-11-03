@@ -58,8 +58,9 @@ public class ProjectLoader : IProjectLoader
                 project.Initialize();
                 StripRemovedVariables(project);
 
-                var elementLoadErrors = ParseElementLoadErrors(gumLoadResult.ErrorMessage);
-                var conflictErrors = DetectConflictMarkers(project, projectDirectory, GumProjectSave.IsJsonFormat(filePath));
+                bool isJsonFormat = GumProjectSave.IsJsonFormat(filePath);
+                var elementLoadErrors = ParseElementLoadErrors(gumLoadResult.ErrorMessage, isJsonFormat);
+                var conflictErrors = DetectConflictMarkers(project, projectDirectory, isJsonFormat);
 
                 // A conflicted element file is invalid XML, so it ALSO failed to deserialize and
                 // produced a cryptic "Malformed XML" entry via ParseElementLoadErrors. Drop those
@@ -73,7 +74,7 @@ public class ProjectLoader : IProjectLoader
                 result.LoadErrors.AddRange(
                     ConvertMissingFiles(gumLoadResult.MissingFiles, projectDirectory));
                 result.LoadErrors.AddRange(
-                    DetectSilentlyDroppedContent(project, projectDirectory));
+                    DetectSilentlyDroppedContent(project, projectDirectory, isJsonFormat));
                 result.LoadErrors.AddRange(
                     missingBaseInstances.Select(ToMissingBaseInstanceError));
             }
@@ -123,7 +124,7 @@ public class ProjectLoader : IProjectLoader
     /// The format from GumProjectSave is: "\nError loading Name:\nmessage"
     /// and name mismatches as: "\nThe project references an element named ..."
     /// </summary>
-    private static List<ErrorResult> ParseElementLoadErrors(string? errorMessage)
+    private static List<ErrorResult> ParseElementLoadErrors(string? errorMessage, bool isJsonFormat)
     {
         var errors = new List<ErrorResult>();
 
@@ -150,7 +151,7 @@ public class ProjectLoader : IProjectLoader
                 errors.Add(new ErrorResult
                 {
                     ElementName = elementName,
-                    Message = $"Malformed XML: {message}",
+                    Message = $"Malformed {(isJsonFormat ? "JSON" : "XML")}: {message}",
                     Severity = ErrorSeverity.Error
                 });
                 i += 2;
@@ -211,8 +212,13 @@ public class ProjectLoader : IProjectLoader
     /// with structurally wrong XML would load as empty elements with no error reported.
     /// </summary>
     private static List<ErrorResult> DetectSilentlyDroppedContent(
-        GumProjectSave project, string projectDirectory)
+        GumProjectSave project, string projectDirectory, bool isJsonFormat)
     {
+        if (isJsonFormat)
+        {
+            return JsonDroppedContentScanner.Scan(project, projectDirectory);
+        }
+
         var errors = new List<ErrorResult>();
 
         foreach (var component in project.Components)
