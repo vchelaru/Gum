@@ -8,7 +8,7 @@ Loads a Gum project and reports all errors, including malformed XML in element f
 
 ## Options
 
-- `<project.gumj>` — Path to the `.gumj` or `.gumx` project file
+- `<project.gumj>` — Path to the `.gumj` or `.gumx` project file. An element file (such as `.gucj` or `.gusx`) is rejected with exit code 2 and a message naming the project file. Available in December 2026, or now if building Gum from source.
 - `--json` — Output errors as a JSON array instead of human-readable text
 
 ## Examples

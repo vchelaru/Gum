@@ -5,6 +5,8 @@ using System.CommandLine.Invocation;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
+using Gum.DataTypes;
+using Gum.DataTypes.Behaviors;
 using Gum.Expressions;
 using Gum.ProjectServices;
 
@@ -54,6 +56,13 @@ public static class CheckCommand
     {
         var fullPath = Path.GetFullPath(projectPath);
 
+        string extension = Path.GetExtension(fullPath).TrimStart('.').ToLowerInvariant();
+        if (ElementFileExtensions.Contains(extension))
+        {
+            Console.Error.WriteLine(FormatElementFileMessage(fullPath));
+            return 2;
+        }
+
         IProjectLoader loader = new ProjectLoader();
         ProjectLoadResult loadResult = loader.Load(fullPath);
 
@@ -89,6 +98,32 @@ public static class CheckCommand
         }
 
         return allErrors.Any(e => e.Severity == ErrorSeverity.Error) ? 1 : 0;
+    }
+
+    private static readonly HashSet<string> ElementFileExtensions = new HashSet<string>
+    {
+        GumProjectSave.ScreenExtension, GumProjectSave.ScreenJsonExtension,
+        GumProjectSave.ComponentExtension, GumProjectSave.ComponentJsonExtension,
+        GumProjectSave.StandardExtension, GumProjectSave.StandardJsonExtension,
+        BehaviorReference.Extension, BehaviorReference.JsonExtension
+    };
+
+    private static string FormatElementFileMessage(string elementPath)
+    {
+        string message = $"{elementPath} is an element file, not a project file. Pass the project file (.gumx or .gumj).";
+
+        for (string? directory = Path.GetDirectoryName(elementPath); directory != null; directory = Path.GetDirectoryName(directory))
+        {
+            string? projectFile = Directory.EnumerateFiles(directory)
+                .FirstOrDefault(file => file.EndsWith("." + GumProjectSave.ProjectExtension, StringComparison.OrdinalIgnoreCase)
+                    || file.EndsWith("." + GumProjectSave.ProjectJsonExtension, StringComparison.OrdinalIgnoreCase));
+            if (projectFile != null)
+            {
+                return message + $" The project file is probably {projectFile}.";
+            }
+        }
+
+        return message;
     }
 
     private static void WriteJson(IReadOnlyList<ErrorResult> errors)
