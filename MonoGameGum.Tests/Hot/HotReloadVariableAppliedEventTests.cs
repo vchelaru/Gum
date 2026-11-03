@@ -72,4 +72,33 @@ public class HotReloadVariableAppliedEventTests : BaseTestClass
 
         applied.ShouldContain(("TestScreen|TestScreen", "Rect.Height", (object?)128f));
     }
+
+    [Fact]
+    public void Reload_ThrowingSubscriber_StillAppliesTheVariable()
+    {
+        GumProjectSave oldProject = Build(255f);
+        ObjectFinder.Self.GumProjectSave = oldProject;
+        GraphicalUiElement screen = oldProject.Screens.Single().ToGraphicalUiElement();
+        GumProjectSave newProject = Build(128f);
+        ObjectFinder.Self.GumProjectSave = newProject;
+        void Handler(GraphicalUiElement element, VariableSave variable)
+        {
+            if (element == screen)
+            {
+                throw new System.InvalidOperationException("subscriber failed");
+            }
+        }
+
+        GumHotReloadManager.VariableApplied += Handler;
+        try
+        {
+            GumHotReloadManager.ApplyDiff(new[] { screen }, newProject, SystemManagers.Default, oldProject);
+        }
+        finally
+        {
+            GumHotReloadManager.VariableApplied -= Handler;
+        }
+
+        screen.ContainedElements.Concat(screen.Children).First(c => c.Name == "Rect").Height.ShouldBe(128f);
+    }
 }

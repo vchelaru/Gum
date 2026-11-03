@@ -147,6 +147,47 @@ public class AlwaysOnDebugLogTests : IDisposable
     }
 
     [Fact]
+    public void Open_NoRotate_AppendsToExistingLog()
+    {
+        string path = Path.Combine(_folder, "preview.log");
+        Directory.CreateDirectory(_folder);
+        File.WriteAllText(path, "earlier launch\n");
+
+        using (PreviewDebugLog log = PreviewDebugLog.Open(path, rotate: false)!)
+        {
+            log.Write("test", "second launch");
+        }
+
+        string text = File.ReadAllText(path);
+        text.ShouldContain("earlier launch");
+        text.ShouldContain("second launch");
+        File.Exists(Path.Combine(_folder, "preview.previous.log")).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void DescribeProcess_NamesConfigLogPathAndArguments()
+    {
+        string text = PreviewDebugLog.DescribeProcess("/x/preview.log", new[] { "--project", "a.gumx" });
+
+        text.ShouldContain(DiagnosticLogFile.IsDebugBuild ? "config=Debug" : "config=Release");
+        text.ShouldContain("log=/x/preview.log");
+        text.ShouldContain("args=--project a.gumx");
+    }
+
+    [Fact]
+    public void ToolLogOpen_WriteWhileStillOpen_LineIsReadableFromFile()
+    {
+        string path = Path.Combine(_folder, "tool.log");
+
+        using System.IO.StreamWriter writer = ToolLog.Open(null, isDebugBuild: true, path)!;
+        writer.WriteLine("visible now");
+
+        using FileStream stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+        using StreamReader reader = new StreamReader(stream);
+        reader.ReadToEnd().ShouldContain("visible now");
+    }
+
+    [Fact]
     public void LogToolSelectionAndVariable_WriteExpectedFormat()
     {
         string path = Path.Combine(_folder, "preview.log");

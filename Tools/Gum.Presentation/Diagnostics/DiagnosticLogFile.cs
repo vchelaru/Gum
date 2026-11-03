@@ -41,28 +41,35 @@ public static class DiagnosticLogFile
     /// running process may hold it, in which case the file is appended to), and opens the log for
     /// writing with shared read. Throws on failure; callers catch, since a log must never stop the app.
     /// </summary>
-    public static FileStream Open(string path)
+    public static FileStream Open(string path, bool rotate = true)
     {
-        string? directory = Path.GetDirectoryName(path);
-        if (!string.IsNullOrEmpty(directory))
-        {
-            Directory.CreateDirectory(directory);
-        }
+        bool append = !rotate || !Rotate(path);
+        return new FileStream(path, append ? FileMode.Append : FileMode.Create, FileAccess.Write, FileShare.ReadWrite);
+    }
 
-        bool append = false;
+    /// <summary>
+    /// Creates the folder and moves an existing log to <see cref="PreviousPath"/>. Returns false when
+    /// the move failed (a process holds the file), so the caller should append instead. Never throws
+    /// for a bad path other than by returning false.
+    /// </summary>
+    public static bool Rotate(string path)
+    {
         try
         {
+            string? directory = Path.GetDirectoryName(path);
+            if (!string.IsNullOrEmpty(directory))
+            {
+                Directory.CreateDirectory(directory);
+            }
             if (File.Exists(path))
             {
                 File.Move(path, PreviousPath(path), overwrite: true);
             }
+            return true;
         }
         catch (Exception)
         {
-            // Held by another process, or the previous file is: keep writing to the same file.
-            append = true;
+            return false;
         }
-
-        return new FileStream(path, append ? FileMode.Append : FileMode.Create, FileAccess.Write, FileShare.ReadWrite);
     }
 }

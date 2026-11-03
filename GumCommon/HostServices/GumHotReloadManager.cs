@@ -1928,7 +1928,14 @@ public class GumHotReloadManager : IGumHotReloadManager
 
         public void RecordApplied(GraphicalUiElement element, VariableSave variable)
         {
-            VariableApplied?.Invoke(element, variable);
+            try
+            {
+                VariableApplied?.Invoke(element, variable);
+            }
+            catch (Exception)
+            {
+                // A diagnostic subscriber must never break a reload.
+            }
             if (!Applied.TryGetValue(element, out HashSet<string>? names))
             {
                 names = new HashSet<string>(StringComparer.Ordinal);

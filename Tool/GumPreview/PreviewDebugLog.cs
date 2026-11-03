@@ -11,7 +11,10 @@ namespace GumPreview;
 /// Diagnostic log for Preview: timestamped lines in a file, never the console or the window, so a
 /// person or an agent can read what a live edit or an input did.
 /// <para>
-/// WHERE: in a Debug build it is always on and writes to <see cref="DefaultPath"/>,
+/// WHERE: the published Preview the tool launches is a Release build, so the tool decides: a Debug
+/// tool passes <c>--log</c> with <see cref="DefaultPath"/> on every launch (the tool rotates the file once
+/// per session; Preview appends to a path it is given). A Preview built as Debug and run by hand also
+/// defaults to it, rotating. Either way the file is always on in Debug, at <see cref="DefaultPath"/>,
 /// <c>{temp folder}/GumPreview/preview.log</c> (Windows: <c>%TEMP%\GumPreview\preview.log</c>); a Release
 /// build is off. <c>--log &lt;path&gt;</c> (or <c>GUM_PREVIEW_LOG</c> via the tool) writes there instead, in
 /// either build; <c>--log-default</c> is accepted and means <see cref="DefaultPath"/>. Each run moves the
@@ -52,7 +55,7 @@ public sealed class PreviewDebugLog : IDisposable
     /// Opens (appends to) the log file at <paramref name="path"/>, creating its folder. Returns null
     /// when <paramref name="path"/> is null or the file cannot be opened, so logging never stops Preview.
     /// </summary>
-    public static PreviewDebugLog? Open(string? path)
+    public static PreviewDebugLog? Open(string? path, bool rotate = true)
     {
         if (path == null)
         {
@@ -62,7 +65,7 @@ public sealed class PreviewDebugLog : IDisposable
         try
         {
             // Shared read so the file can be read while Preview runs; AutoFlush flushes after every line.
-            FileStream stream = DiagnosticLogFile.Open(path);
+            FileStream stream = DiagnosticLogFile.Open(path, rotate);
             PreviewDebugLog log = new PreviewDebugLog(new StreamWriter(stream, new UTF8Encoding(false)) { AutoFlush = true });
             log.Write("log", "started");
             return log;
@@ -73,6 +76,11 @@ public sealed class PreviewDebugLog : IDisposable
             return null;
         }
     }
+
+    /// <summary>The first-line description of this process: build config, version, exe, args, log path. Makes a missing or surprising log explainable.</summary>
+    public static string DescribeProcess(string? logPath, string[] args) =>
+        $"config={(DiagnosticLogFile.IsDebugBuild ? "Debug" : "Release")} version={typeof(PreviewDebugLog).Assembly.GetName().Version} "
+        + $"exe={Environment.ProcessPath} pid={Environment.ProcessId} log={logPath} args={string.Join(" ", args)}";
 
     /// <summary>Appends <c>{local time} {category} {message}</c>.</summary>
     public void Write(string category, string message)
