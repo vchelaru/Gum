@@ -64,7 +64,7 @@ public class CodeGeneratorTextBasedFormsComponentTests : BaseTestClass
         GumProjectSave meadow = result.Project!;
         ObjectFinder.Self.GumProjectSave = meadow;
 
-        ComponentSave label = meadow.Components.Find(item => item.Name == "Meadow/Controls/Label")!;
+        ComponentSave label = meadow.Components.Find(item => item.Name == "Meadow/Label")!;
 
         return CreateCodeGenerator().GetGeneratedCodeForElement(
             label,
@@ -117,7 +117,7 @@ public class CodeGeneratorTextBasedFormsComponentTests : BaseTestClass
         InstanceSave instance = new InstanceSave
         {
             Name = "LabelInstance1",
-            BaseType = "Meadow/Controls/Label",
+            BaseType = "Meadow/Label",
             ParentContainer = element,
         };
         element.Instances.Add(instance);

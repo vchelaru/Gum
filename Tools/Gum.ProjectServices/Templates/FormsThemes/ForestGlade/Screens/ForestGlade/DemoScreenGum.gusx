@@ -879,43 +879,43 @@
   <Instance Name="MenuItems" BaseType="Container" />
   <Instance Name="TitleText" BaseType="Text" />
   <Instance Name="TitleText1" BaseType="Text" />
-  <Instance Name="DividerInstance" BaseType="ForestGlade/Elements/Divider" />
-  <Instance Name="DividerInstance4" BaseType="ForestGlade/Elements/Divider" />
-  <Instance Name="ResolutionLabel" BaseType="ForestGlade/Controls/Label" />
-  <Instance Name="ResolutionBox" BaseType="ForestGlade/Controls/ListBox" />
-  <Instance Name="DetectResolutionsButton" BaseType="ForestGlade/Controls/Button" />
-  <Instance Name="FullScreenCheckbox" BaseType="ForestGlade/Controls/CheckBox" />
-  <Instance Name="DividerInstance1" BaseType="ForestGlade/Elements/Divider" />
-  <Instance Name="MusicLabel" BaseType="ForestGlade/Controls/Label" />
-  <Instance Name="MusicSlider" BaseType="ForestGlade/Controls/Slider" />
-  <Instance Name="SoundLabel" BaseType="ForestGlade/Controls/Label" />
-  <Instance Name="SoundSlider" BaseType="ForestGlade/Controls/Slider" />
-  <Instance Name="DividerInstance2" BaseType="ForestGlade/Elements/Divider" />
-  <Instance Name="ControlLabel" BaseType="ForestGlade/Controls/Label" />
-  <Instance Name="RadioButtonInstance" BaseType="ForestGlade/Controls/RadioButton" />
-  <Instance Name="RadioButtonInstance1" BaseType="ForestGlade/Controls/RadioButton" />
-  <Instance Name="RadioButtonInstance2" BaseType="ForestGlade/Controls/RadioButton" />
-  <Instance Name="DividerInstance3" BaseType="ForestGlade/Elements/Divider" />
-  <Instance Name="DifficultyLabel" BaseType="ForestGlade/Controls/Label" />
+  <Instance Name="DividerInstance" BaseType="ForestGlade/Divider" />
+  <Instance Name="DividerInstance4" BaseType="ForestGlade/Divider" />
+  <Instance Name="ResolutionLabel" BaseType="ForestGlade/Label" />
+  <Instance Name="ResolutionBox" BaseType="ForestGlade/ListBox" />
+  <Instance Name="DetectResolutionsButton" BaseType="ForestGlade/Button" />
+  <Instance Name="FullScreenCheckbox" BaseType="ForestGlade/CheckBox" />
+  <Instance Name="DividerInstance1" BaseType="ForestGlade/Divider" />
+  <Instance Name="MusicLabel" BaseType="ForestGlade/Label" />
+  <Instance Name="MusicSlider" BaseType="ForestGlade/Slider" />
+  <Instance Name="SoundLabel" BaseType="ForestGlade/Label" />
+  <Instance Name="SoundSlider" BaseType="ForestGlade/Slider" />
+  <Instance Name="DividerInstance2" BaseType="ForestGlade/Divider" />
+  <Instance Name="ControlLabel" BaseType="ForestGlade/Label" />
+  <Instance Name="RadioButtonInstance" BaseType="ForestGlade/RadioButton" />
+  <Instance Name="RadioButtonInstance1" BaseType="ForestGlade/RadioButton" />
+  <Instance Name="RadioButtonInstance2" BaseType="ForestGlade/RadioButton" />
+  <Instance Name="DividerInstance3" BaseType="ForestGlade/Divider" />
+  <Instance Name="DifficultyLabel" BaseType="ForestGlade/Label" />
   <Instance Name="Background1" BaseType="Rectangle" />
-  <Instance Name="ComboBoxInstance" BaseType="ForestGlade/Controls/ComboBox" />
+  <Instance Name="ComboBoxInstance" BaseType="ForestGlade/ComboBox" />
   <Instance Name="ButtonContainer" BaseType="Container" />
-  <Instance Name="ButtonConfirmInstance" BaseType="ForestGlade/Controls/Button" />
-  <Instance Name="ButtonDenyInstance" BaseType="ForestGlade/Controls/Button" />
+  <Instance Name="ButtonConfirmInstance" BaseType="ForestGlade/Button" />
+  <Instance Name="ButtonDenyInstance" BaseType="ForestGlade/Button" />
   <Instance Name="DemoDialog" BaseType="Container" />
   <Instance Name="MarginContainer" BaseType="Container" />
-  <Instance Name="LabelInstance" BaseType="ForestGlade/Controls/Label" />
-  <Instance Name="TextBoxInstance" BaseType="ForestGlade/Controls/TextBox" />
-  <Instance Name="TextBoxInstance1" BaseType="ForestGlade/Controls/PasswordBox" />
-  <Instance Name="MultiLineTextBox" BaseType="ForestGlade/Controls/TextBox" />
-  <Instance Name="DialogBoxInstance" BaseType="ForestGlade/Controls/DialogBox" />
-  <Instance Name="WindowStandardInstance" BaseType="ForestGlade/Controls/Window" />
-  <Instance Name="LabelInstance1" BaseType="ForestGlade/Controls/Label" />
-  <Instance Name="ListBoxItemInstance" BaseType="ForestGlade/Controls/ListBoxItem" />
-  <Instance Name="ListBoxItemInstance1" BaseType="ForestGlade/Controls/ListBoxItem" />
-  <Instance Name="ListBoxItemInstance2" BaseType="ForestGlade/Controls/ListBoxItem" />
-  <Instance Name="ListBoxItemInstance3" BaseType="ForestGlade/Controls/ListBoxItem" />
-  <Instance Name="ListBoxItemInstance4" BaseType="ForestGlade/Controls/ListBoxItem" />
-  <Instance Name="ListBoxItemInstance5" BaseType="ForestGlade/Controls/ListBoxItem" />
+  <Instance Name="LabelInstance" BaseType="ForestGlade/Label" />
+  <Instance Name="TextBoxInstance" BaseType="ForestGlade/TextBox" />
+  <Instance Name="TextBoxInstance1" BaseType="ForestGlade/PasswordBox" />
+  <Instance Name="MultiLineTextBox" BaseType="ForestGlade/TextBox" />
+  <Instance Name="DialogBoxInstance" BaseType="ForestGlade/DialogBox" />
+  <Instance Name="WindowStandardInstance" BaseType="ForestGlade/Window" />
+  <Instance Name="LabelInstance1" BaseType="ForestGlade/Label" />
+  <Instance Name="ListBoxItemInstance" BaseType="ForestGlade/ListBoxItem" />
+  <Instance Name="ListBoxItemInstance1" BaseType="ForestGlade/ListBoxItem" />
+  <Instance Name="ListBoxItemInstance2" BaseType="ForestGlade/ListBoxItem" />
+  <Instance Name="ListBoxItemInstance3" BaseType="ForestGlade/ListBoxItem" />
+  <Instance Name="ListBoxItemInstance4" BaseType="ForestGlade/ListBoxItem" />
+  <Instance Name="ListBoxItemInstance5" BaseType="ForestGlade/ListBoxItem" />
   <Behaviors />
 </ScreenSave>

@@ -840,43 +840,43 @@
   <Instance Name="MenuItems" BaseType="Container" />
   <Instance Name="TitleText" BaseType="Text" />
   <Instance Name="TitleText1" BaseType="Text" />
-  <Instance Name="DividerInstance" BaseType="Hazard/Elements/Divider" />
-  <Instance Name="DividerInstance4" BaseType="Hazard/Elements/Divider" />
-  <Instance Name="ResolutionLabel" BaseType="Hazard/Controls/Label" />
-  <Instance Name="ResolutionBox" BaseType="Hazard/Controls/ListBox" />
-  <Instance Name="DetectResolutionsButton" BaseType="Hazard/Controls/Button" />
-  <Instance Name="FullScreenCheckbox" BaseType="Hazard/Controls/CheckBox" />
-  <Instance Name="DividerInstance1" BaseType="Hazard/Elements/Divider" />
-  <Instance Name="MusicLabel" BaseType="Hazard/Controls/Label" />
-  <Instance Name="MusicSlider" BaseType="Hazard/Controls/Slider" />
-  <Instance Name="SoundLabel" BaseType="Hazard/Controls/Label" />
-  <Instance Name="SoundSlider" BaseType="Hazard/Controls/Slider" />
-  <Instance Name="DividerInstance2" BaseType="Hazard/Elements/Divider" />
-  <Instance Name="ControlLabel" BaseType="Hazard/Controls/Label" />
-  <Instance Name="RadioButtonInstance" BaseType="Hazard/Controls/RadioButton" />
-  <Instance Name="RadioButtonInstance1" BaseType="Hazard/Controls/RadioButton" />
-  <Instance Name="RadioButtonInstance2" BaseType="Hazard/Controls/RadioButton" />
-  <Instance Name="DividerInstance3" BaseType="Hazard/Elements/Divider" />
-  <Instance Name="DifficultyLabel" BaseType="Hazard/Controls/Label" />
+  <Instance Name="DividerInstance" BaseType="Hazard/Divider" />
+  <Instance Name="DividerInstance4" BaseType="Hazard/Divider" />
+  <Instance Name="ResolutionLabel" BaseType="Hazard/Label" />
+  <Instance Name="ResolutionBox" BaseType="Hazard/ListBox" />
+  <Instance Name="DetectResolutionsButton" BaseType="Hazard/Button" />
+  <Instance Name="FullScreenCheckbox" BaseType="Hazard/CheckBox" />
+  <Instance Name="DividerInstance1" BaseType="Hazard/Divider" />
+  <Instance Name="MusicLabel" BaseType="Hazard/Label" />
+  <Instance Name="MusicSlider" BaseType="Hazard/Slider" />
+  <Instance Name="SoundLabel" BaseType="Hazard/Label" />
+  <Instance Name="SoundSlider" BaseType="Hazard/Slider" />
+  <Instance Name="DividerInstance2" BaseType="Hazard/Divider" />
+  <Instance Name="ControlLabel" BaseType="Hazard/Label" />
+  <Instance Name="RadioButtonInstance" BaseType="Hazard/RadioButton" />
+  <Instance Name="RadioButtonInstance1" BaseType="Hazard/RadioButton" />
+  <Instance Name="RadioButtonInstance2" BaseType="Hazard/RadioButton" />
+  <Instance Name="DividerInstance3" BaseType="Hazard/Divider" />
+  <Instance Name="DifficultyLabel" BaseType="Hazard/Label" />
   <Instance Name="Background1" BaseType="Rectangle" />
-  <Instance Name="ComboBoxInstance" BaseType="Hazard/Controls/ComboBox" />
+  <Instance Name="ComboBoxInstance" BaseType="Hazard/ComboBox" />
   <Instance Name="ButtonContainer" BaseType="Container" />
-  <Instance Name="ButtonConfirmInstance" BaseType="Hazard/Controls/Button" />
-  <Instance Name="ButtonDenyInstance" BaseType="Hazard/Controls/Button" />
+  <Instance Name="ButtonConfirmInstance" BaseType="Hazard/Button" />
+  <Instance Name="ButtonDenyInstance" BaseType="Hazard/Button" />
   <Instance Name="DemoDialog" BaseType="Container" />
   <Instance Name="MarginContainer" BaseType="Container" />
-  <Instance Name="LabelInstance" BaseType="Hazard/Controls/Label" />
-  <Instance Name="TextBoxInstance" BaseType="Hazard/Controls/TextBox" />
-  <Instance Name="TextBoxInstance1" BaseType="Hazard/Controls/PasswordBox" />
-  <Instance Name="MultiLineTextBox" BaseType="Hazard/Controls/TextBox" />
-  <Instance Name="DialogBoxInstance" BaseType="Hazard/Controls/DialogBox" />
-  <Instance Name="WindowStandardInstance" BaseType="Hazard/Controls/Window" />
-  <Instance Name="LabelInstance1" BaseType="Hazard/Controls/Label" />
-  <Instance Name="ListBoxItemInstance" BaseType="Hazard/Controls/ListBoxItem" />
-  <Instance Name="ListBoxItemInstance1" BaseType="Hazard/Controls/ListBoxItem" />
-  <Instance Name="ListBoxItemInstance2" BaseType="Hazard/Controls/ListBoxItem" />
-  <Instance Name="ListBoxItemInstance3" BaseType="Hazard/Controls/ListBoxItem" />
-  <Instance Name="ListBoxItemInstance4" BaseType="Hazard/Controls/ListBoxItem" />
-  <Instance Name="ListBoxItemInstance5" BaseType="Hazard/Controls/ListBoxItem" />
+  <Instance Name="LabelInstance" BaseType="Hazard/Label" />
+  <Instance Name="TextBoxInstance" BaseType="Hazard/TextBox" />
+  <Instance Name="TextBoxInstance1" BaseType="Hazard/PasswordBox" />
+  <Instance Name="MultiLineTextBox" BaseType="Hazard/TextBox" />
+  <Instance Name="DialogBoxInstance" BaseType="Hazard/DialogBox" />
+  <Instance Name="WindowStandardInstance" BaseType="Hazard/Window" />
+  <Instance Name="LabelInstance1" BaseType="Hazard/Label" />
+  <Instance Name="ListBoxItemInstance" BaseType="Hazard/ListBoxItem" />
+  <Instance Name="ListBoxItemInstance1" BaseType="Hazard/ListBoxItem" />
+  <Instance Name="ListBoxItemInstance2" BaseType="Hazard/ListBoxItem" />
+  <Instance Name="ListBoxItemInstance3" BaseType="Hazard/ListBoxItem" />
+  <Instance Name="ListBoxItemInstance4" BaseType="Hazard/ListBoxItem" />
+  <Instance Name="ListBoxItemInstance5" BaseType="Hazard/ListBoxItem" />
   <Behaviors />
 </ScreenSave>

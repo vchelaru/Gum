@@ -119,10 +119,10 @@ public class FormsAndImportScenarioTests
         tree.PickMainMenu("Content", "Add Forms Components");
         GumProjectSave project = WaitForTheImportsReload(tree);
 
-        project.Components.Select(component => component.Name).ShouldContain("Bubblegum/Controls/Button");
+        project.Components.Select(component => component.Name).ShouldContain("Bubblegum/Button");
         project.Screens.Select(screen => screen.Name).ShouldContain("Bubblegum/DemoScreenGum");
-        File.Exists(ElementFile(tree, "Components", "Bubblegum/Controls/Button", "gucj")).ShouldBeTrue();
-        File.Exists(ElementFile(tree, "Components", "Bubblegum/Controls/Button", "gucx")).ShouldBeFalse("a JSON project only loads .gucj");
+        File.Exists(ElementFile(tree, "Components", "Bubblegum/Button", "gucj")).ShouldBeTrue();
+        File.Exists(ElementFile(tree, "Components", "Bubblegum/Button", "gucx")).ShouldBeFalse("a JSON project only loads .gucj");
         File.Exists(ElementFile(tree, "Screens", "Bubblegum/DemoScreenGum", "gusj")).ShouldBeTrue();
         File.Exists(ElementFile(tree, "Behaviors", "ButtonBehavior", "behj")).ShouldBeTrue();
 
@@ -133,7 +133,7 @@ public class FormsAndImportScenarioTests
     public void AddForms_WhenAComponentWouldBeOverwritten_PickWhatToImport_ImportsOnlyThePickedItems()
     {
         using ProjectTreeHarness tree = new ProjectTreeHarness();
-        tree.Project.AddComponent("Neon/Controls/Button");
+        tree.Project.AddComponent("Neon/Button");
         tree.SaveAll();
         tree.Project.Project.FontRanges.Contains("10003").ShouldBeFalse();
         tree.Dialogs.AnswerNext<AddFormsViewModel>(dialog =>
@@ -149,10 +149,10 @@ public class FormsAndImportScenarioTests
             dialog.IsSourceEditable.ShouldBeFalse();
             dialog.RootNodes.Select(node => node.DisplayName).ShouldNotContain("Standards", "a non-default theme never touches the project's Standards");
             // The conflicting Button is marked and left unchecked; what the project lacks starts checked.
-            Leaf(dialog, "Neon/Controls/Button").StatusNote.ShouldNotBeNull().ShouldContain("differs");
-            Leaf(dialog, "Neon/Controls/Button").IsChecked.ShouldBe(false);
-            Leaf(dialog, "Neon/Controls/CheckBox").IsChecked.ShouldBe(true);
-            Leaf(dialog, "Neon/Controls/CheckBox").StatusNote.ShouldBeNull();
+            Leaf(dialog, "Neon/Button").StatusNote.ShouldNotBeNull().ShouldContain("differs");
+            Leaf(dialog, "Neon/Button").IsChecked.ShouldBe(false);
+            Leaf(dialog, "Neon/CheckBox").IsChecked.ShouldBe(true);
+            Leaf(dialog, "Neon/CheckBox").StatusNote.ShouldBeNull();
             dialog.StatusHint.ShouldNotBeNull();
             Leaf(dialog, "Neon/DemoScreenGum").IsChecked.ShouldBe(false, "the demo screen was not asked for in Add Forms");
             return true;
@@ -161,9 +161,9 @@ public class FormsAndImportScenarioTests
         tree.PickMainMenu("Content", "Add Forms Components");
         GumProjectSave project = WaitForTheImportsReload(tree);
 
-        project.Components.Select(component => component.Name).ShouldContain("Neon/Controls/CheckBox");
-        ComponentNamed(project, "Neon/Controls/Button").Instances.ShouldBeEmpty("the Button the user already had was not picked");
-        project.Components.Select(component => component.Name).ShouldContain("Neon/Controls/ListBox", "what the project lacked was preselected");
+        project.Components.Select(component => component.Name).ShouldContain("Neon/CheckBox");
+        ComponentNamed(project, "Neon/Button").Instances.ShouldBeEmpty("the Button the user already had was not picked");
+        project.Components.Select(component => component.Name).ShouldContain("Neon/ListBox", "what the project lacked was preselected");
         project.Screens.ShouldBeEmpty("the demo screen was not asked for");
         project.Behaviors.Select(behavior => behavior.Name).ShouldContain("CheckBoxBehavior");
         project.FontRanges.Contains("10003").ShouldBeTrue("the theme's prerequisites apply once the picked import goes through");
@@ -219,7 +219,7 @@ public class FormsAndImportScenarioTests
     public void AddForms_WhenThePickedImportIsCancelled_ChangesNothing()
     {
         using ProjectTreeHarness tree = new ProjectTreeHarness();
-        tree.Project.AddComponent("Neon/Controls/Button");
+        tree.Project.AddComponent("Neon/Button");
         tree.SaveAll();
         GumProjectSave openProject = tree.Project.Project;
         tree.Dialogs.AnswerNext<AddFormsViewModel>(dialog =>
@@ -241,7 +241,7 @@ public class FormsAndImportScenarioTests
 
         Services.GetRequiredService<IProjectManager>().GumProjectSave.ShouldBeSameAs(openProject);
         openProject.FontRanges.Contains("10003").ShouldBeFalse("cancelling must not leave the theme's font ranges behind");
-        openProject.Components.Select(component => component.Name).ShouldBe(new[] { "Neon/Controls/Button" });
+        openProject.Components.Select(component => component.Name).ShouldBe(new[] { "Neon/Button" });
     }
 
     #endregion
