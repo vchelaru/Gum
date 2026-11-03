@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json.Serialization;
@@ -34,12 +35,18 @@ internal sealed class ElementSaveJson
     public string Name { get; set; } = "";
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string? BaseType { get; set; }
-    public List<StateSaveJson> States { get; set; } = new List<StateSaveJson>();
-    public List<StateSaveCategoryJson> Categories { get; set; } = new List<StateSaveCategoryJson>();
-    public List<InstanceSaveJson> Instances { get; set; } = new List<InstanceSaveJson>();
-    public List<EventSaveJson> Events { get; set; } = new List<EventSaveJson>();
-    public List<ElementBehaviorReferenceJson> Behaviors { get; set; } = new List<ElementBehaviorReferenceJson>();
-    public List<string> VariablesHiddenFromInstances { get; set; } = new List<string>();
+    private List<StateSaveJson> _states = new List<StateSaveJson>();
+    public List<StateSaveJson> States { get => _states; set => _states = value ?? throw JsonNullCollection.For(nameof(States)); }
+    private List<StateSaveCategoryJson> _categories = new List<StateSaveCategoryJson>();
+    public List<StateSaveCategoryJson> Categories { get => _categories; set => _categories = value ?? throw JsonNullCollection.For(nameof(Categories)); }
+    private List<InstanceSaveJson> _instances = new List<InstanceSaveJson>();
+    public List<InstanceSaveJson> Instances { get => _instances; set => _instances = value ?? throw JsonNullCollection.For(nameof(Instances)); }
+    private List<EventSaveJson> _events = new List<EventSaveJson>();
+    public List<EventSaveJson> Events { get => _events; set => _events = value ?? throw JsonNullCollection.For(nameof(Events)); }
+    private List<ElementBehaviorReferenceJson> _behaviors = new List<ElementBehaviorReferenceJson>();
+    public List<ElementBehaviorReferenceJson> Behaviors { get => _behaviors; set => _behaviors = value ?? throw JsonNullCollection.For(nameof(Behaviors)); }
+    private List<string> _variablesHiddenFromInstances = new List<string>();
+    public List<string> VariablesHiddenFromInstances { get => _variablesHiddenFromInstances; set => _variablesHiddenFromInstances = value ?? throw JsonNullCollection.For(nameof(VariablesHiddenFromInstances)); }
 }
 
 internal static class ElementSaveJsonMapper
@@ -118,4 +125,14 @@ internal static class ElementBehaviorReferenceJsonMapper
             BehaviorName = dto.BehaviorName,
         };
     }
+}
+
+/// <summary>
+/// The error for a list property written as an explicit JSON <c>null</c>. Every list property of the JSON shapes
+/// throws this from its setter, so a hand-written file gets the property name instead of a LINQ argument message.
+/// </summary>
+internal static class JsonNullCollection
+{
+    public static ArgumentNullException For(string propertyName) =>
+        new ArgumentNullException(propertyName, $"\"{propertyName}\" is null. Write an empty list ([]) or leave the property out.");
 }

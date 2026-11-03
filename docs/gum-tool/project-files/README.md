@@ -290,6 +290,14 @@ A variable such as `Label.NotAVariable` sets a property on the instance `Label`,
 Available in November 2026, or now if building Gum from source.
 {% endhint %}
 
+## Behavior File Missing (GUM0031)
+
+The project file can list a behavior whose file is not on disk, for example after the file was renamed or deleted. The behavior then loads empty, so the requirements it places on components that use it are never checked. `gumcli check` reports **GUM0031** as a warning naming the behavior and the path it expected, and it does not block code generation. To resolve it, restore the file or delete the behavior from the project file.
+
+{% hint style="info" %}
+Available in December 2026, or now if building Gum from source.
+{% endhint %}
+
 ## Version Control (.gitignore)
 
 The following `.gitignore` entries are recommended for Gum projects:

@@ -1,4 +1,5 @@
 using Gum.DataTypes;
+using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
 using Gum.Managers;
 using System;
@@ -143,6 +144,40 @@ public partial class HeadlessErrorChecker
                     Message = $"{kind} {name} is referenced more than once in the project file, so it loads as two items with one name. Delete the extra reference."
                 });
             }
+        }
+
+        return errors;
+    }
+
+    #endregion
+
+    #region GUM0031 — Behavior file missing
+
+    // Project-level. A missing behavior file loads as an empty behavior, so the requirements of the behavior are never
+    // checked (GUM0001). A Warning: the project still loads and runs. A path GUM0008 already reported (the file exists
+    // under another case) is skipped, since "missing" would be wrong.
+    private static List<ErrorResult> GetMissingBehaviorFileErrors(GumProjectSave project, ISet<string> caseMismatchPaths)
+    {
+        List<ErrorResult> errors = new List<ErrorResult>();
+        bool isJsonFormat = GumProjectSave.IsJsonFormat(project.FullFileName ?? "");
+
+        foreach (BehaviorReference reference in project.BehaviorReferences)
+        {
+            BehaviorSave? behavior = project.Behaviors.FirstOrDefault(item => item.Name == reference.Name);
+            string relativePath = reference.GetRelativeFilePath(isJsonFormat);
+            if (behavior?.IsSourceFileMissing != true || caseMismatchPaths.Contains(relativePath))
+            {
+                continue;
+            }
+
+            errors.Add(new ErrorResult
+            {
+                ElementName = reference.Name,
+                Code = "GUM0031",
+                Severity = ErrorSeverity.Warning,
+                Message = $"The file for behavior \"{reference.Name}\" is missing. Gum expected it at \"{relativePath}\", so the behavior loads empty " +
+                    "and its requirements are not checked. Restore the file or delete the behavior reference from the project file."
+            });
         }
 
         return errors;
