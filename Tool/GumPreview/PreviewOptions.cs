@@ -16,7 +16,7 @@ public sealed class PreviewOptions
 {
     /// <summary>Usage text printed with <see cref="Error"/>.</summary>
     public const string Usage =
-        "Usage: GumPreview --project <path to .gumx/.gumj> --element <ScreenOrComponentName> [--selection-file <path>] [--content-root <path>] [--parent-pid <process id>] [--exit-after <seconds> [--screenshot <path.png>]] [--focus <InstanceName> [--type <text>] [--select-all]] [--log <path>]";
+        "Usage: GumPreview --project <path to .gumx/.gumj> --element <ScreenOrComponentName> [--selection-file <path>] [--content-root <path>] [--parent-pid <process id>] [--exit-after <seconds> [--screenshot <path.png>]] [--focus <InstanceName> [--type <text>] [--select-all]] [--log <path> | --log-default]";
 
     private static readonly HashSet<string> ValueFlags = new HashSet<string>
     {
@@ -61,7 +61,7 @@ public sealed class PreviewOptions
     /// <summary>With <see cref="FocusName"/>, selects all the text in that text box after any <see cref="TypedText"/>.</summary>
     public bool SelectAll { get; private set; }
 
-    /// <summary>The file Preview writes its diagnostic log to (<see cref="PreviewDebugLog"/>), or null when logging is off, the default.</summary>
+    /// <summary>The file Preview writes its diagnostic log to (<see cref="PreviewDebugLog"/>), or null when logging is off, the default. <c>--log-default</c> sets <see cref="PreviewDebugLog.DefaultPath"/>.</summary>
     public string? LogPath { get; private set; }
 
     /// <summary>Why the command line is unusable, or null when it is usable.</summary>
@@ -78,7 +78,7 @@ public sealed class PreviewOptions
             // A flag that takes a value but has none, or is followed by another flag, is an error
             // rather than ignored. Only a known flag counts as "another flag", so a value that
             // merely starts with dashes (--type "--help") is still a value.
-            bool hasValue = i + 1 < args.Count && !ValueFlags.Contains(args[i + 1]) && args[i + 1] != "--select-all";
+            bool hasValue = i + 1 < args.Count && !ValueFlags.Contains(args[i + 1]) && args[i + 1] != "--select-all" && args[i + 1] != "--log-default";
             if (ValueFlags.Contains(args[i]) && !hasValue)
             {
                 options.Error = $"{args[i]} needs a value.";
@@ -129,6 +129,10 @@ public sealed class PreviewOptions
                     options.Error = $"--log needs a valid file path, not '{logPath}'.";
                     return options;
                 }
+            }
+            else if (args[i] == "--log-default")
+            {
+                options.LogPath = PreviewDebugLog.DefaultPath;
             }
             else if (args[i] == "--select-all")
             {

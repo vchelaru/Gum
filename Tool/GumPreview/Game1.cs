@@ -38,6 +38,7 @@ public class Game1 : Game
     private readonly bool _selectAll;
     private readonly PreviewDebugLog? _debugLog;
     private IInputReceiver? _loggedFocus;
+    private PreviewInputTracker? _inputTracker;
 
     private readonly PreviewReloadPolicy _reloadPolicy = new PreviewReloadPolicy();
     private readonly PreviewCanvasSize _canvasSize = new PreviewCanvasSize();
@@ -258,6 +259,11 @@ public class Game1 : Game
             log.LogFocus(DescribeControl(focus));
         }
 
+        _inputTracker ??= new PreviewInputTracker(log);
+        Cursor cursor = GumService.Default.Cursor;
+        _inputTracker.ObserveMouse(cursor.X, cursor.Y, cursor.PrimaryDown);
+        _inputTracker.ObserveTextBox(DescribeTextBox(focus as TextBox));
+
         Keyboard keyboard = GumService.Default.Keyboard;
         IReadOnlyCollection<Microsoft.Xna.Framework.Input.Keys> typed = keyboard.KeysTyped;
         if (typed.Count == 0)
@@ -275,6 +281,35 @@ public class Game1 : Game
             string modifiers = $"{(keyboard.IsCtrlDown ? "Ctrl" : "")}{(keyboard.IsShiftDown ? "Shift" : "")}{(keyboard.IsAltDown ? "Alt" : "")}";
             log.LogKeys(keys, modifiers.Length == 0 ? "none" : modifiers, DescribeControl(focus));
         }
+    }
+
+    private static TextBoxSnapshot? DescribeTextBox(TextBox? textBox)
+    {
+        if (textBox == null)
+        {
+            return null;
+        }
+
+        // The highlight is a pool of clones of "SelectionInstance" that share its parent and name.
+        int count = 0;
+        int visible = 0;
+        GraphicalUiElement? original = textBox.Visual?.GetGraphicalUiElementByName("SelectionInstance");
+        if (original?.Parent != null)
+        {
+            foreach (GraphicalUiElement sibling in original.Parent.Children)
+            {
+                if (sibling.Name == original.Name)
+                {
+                    count++;
+                    if (sibling.Visible)
+                    {
+                        visible++;
+                    }
+                }
+            }
+        }
+        return new TextBoxSnapshot(DescribeControl(textBox)!, textBox.Text ?? "", textBox.TextWrapping == TextWrapping.Wrap,
+            textBox.SelectionStart, textBox.SelectionLength, textBox.CaretIndex, count, visible);
     }
 
     private static string? DescribeControl(IInputReceiver? receiver) =>
