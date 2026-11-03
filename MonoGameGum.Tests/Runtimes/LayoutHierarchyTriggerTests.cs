@@ -1499,6 +1499,9 @@ public class LayoutHierarchyTriggerTests : BaseTestClass
 
         renderTarget.Width = 300;
 
+        // Hidden inside a render target it is skipped like anywhere else (#7240); showing it resolves the layout.
+        child.Visible = true;
+
         child.AbsoluteWidth.ShouldBe(150);
     }
 

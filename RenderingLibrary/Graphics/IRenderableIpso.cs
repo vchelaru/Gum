@@ -101,6 +101,27 @@ public interface IRenderTargetTextureReferencer
 
 public static class IRenderableIpsoExtensions
 {
+    /// <summary>
+    /// Whether this or an ancestor below the nearest render target is not visible. A render target (this one
+    /// included) is laid out while hidden because something else may draw it, so a hidden render target does
+    /// not hide what it holds, but an element hidden inside one is hidden like it would be anywhere else.
+    /// </summary>
+    public static bool IsHiddenWithinRenderTarget(this IRenderableIpso ipso)
+    {
+        for (IRenderableIpso? current = ipso; current != null; current = current.Parent)
+        {
+            if (current.IsRenderTarget)
+            {
+                return false;
+            }
+            if (current is IVisible visible && !visible.Visible)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public static bool IsInRenderTargetRecursively(this IRenderableIpso ipso)
     {
         if(ipso.IsRenderTarget)
