@@ -272,6 +272,7 @@ public class LineArc : GradientShapeRenderable
                 segments, hasCaps, strokeColor.A);
         }
 
+        BeginBlend();
         bool dashed = StrokeDashLength > 0f && StrokeGapLength > 0f && SweepAngle != 0f;
         if (dashed)
         {
@@ -297,6 +298,7 @@ public class LineArc : GradientShapeRenderable
             DrawSolid(band, isCircle, innerRadius, outerRadius, startAngleDeg, endAngleDeg,
                 segments, hasCaps, strokeColor);
         }
+        EndBlend();
     }
 
     /// <summary>

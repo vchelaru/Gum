@@ -14,6 +14,50 @@ namespace RaylibGum.Tests.Runtimes;
 /// </summary>
 public class ArcRuntimeTests : BaseTestClass
 {
+    // #7523 - Blend parity with raylib CircleRuntime (non-nullable runtime, Normal maps to a null
+    // renderable Blend so Render skips the wrap).
+    [Fact]
+    public void Blend_DefaultsToNormal()
+    {
+        ArcRuntime sut = new();
+
+        sut.Blend.ShouldBe(Gum.RenderingLibrary.Blend.Normal);
+        ((LineArc)sut.RenderableComponent!).Blend.ShouldBeNull();
+    }
+
+    [Fact]
+    public void Blend_RoundTrips_AndPushesToContainedRenderable()
+    {
+        ArcRuntime sut = new();
+
+        sut.Blend = Gum.RenderingLibrary.Blend.MinAlpha;
+
+        sut.Blend.ShouldBe(Gum.RenderingLibrary.Blend.MinAlpha);
+        ((LineArc)sut.RenderableComponent!).Blend.ShouldBe(Gum.RenderingLibrary.Blend.MinAlpha);
+    }
+
+    [Fact]
+    public void Blend_Normal_ClearsContainedRenderableBlend()
+    {
+        ArcRuntime sut = new();
+        sut.Blend = Gum.RenderingLibrary.Blend.Additive;
+
+        sut.Blend = Gum.RenderingLibrary.Blend.Normal;
+
+        ((LineArc)sut.RenderableComponent!).Blend.ShouldBeNull();
+    }
+
+    [Fact]
+    public void SetProperty_Blend_AppliesToContainedRenderable()
+    {
+        ArcRuntime sut = new();
+
+        sut.SetProperty("Blend", Gum.RenderingLibrary.Blend.Additive);
+
+        sut.Blend.ShouldBe(Gum.RenderingLibrary.Blend.Additive);
+        ((LineArc)sut.RenderableComponent!).Blend.ShouldBe(Gum.RenderingLibrary.Blend.Additive);
+    }
+
     [Fact]
     public void Gradient_Surface_ForwardsToContainedRenderable()
     {

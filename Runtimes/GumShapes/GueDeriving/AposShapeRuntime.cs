@@ -942,6 +942,21 @@ public abstract class AposShapeRuntime : GraphicalUiElement
 
     bool _isAntialiased = true;
 
+    /// <summary>
+    /// Blend mode of the shape (#7522). Non-nullable with <see cref="Gum.RenderingLibrary.Blend.Normal"/>
+    /// as the default, matching <c>CircleRuntime.Blend</c> and the Skia shape runtimes, so the
+    /// alpha-mask blends (MinAlpha, ReplaceAlpha) are available from code on every Apos shape.
+    /// </summary>
+    public Gum.RenderingLibrary.Blend Blend
+    {
+        get => ContainedRenderable.Blend;
+        set
+        {
+            ContainedRenderable.Blend = value;
+            NotifyPropertyChanged();
+        }
+    }
+
     #endregion
 
 

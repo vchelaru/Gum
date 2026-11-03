@@ -143,17 +143,6 @@ public class LineCircle : GradientShapeRenderable
     /// rendering collapses anisotropic blur to <c>max(BlurX, BlurY)</c>.</remarks>
     public float DropshadowBlurY { get; set; }
 
-    /// <summary>
-    /// Issue #3491 — blend mode for the fill + stroke passes, matching the XNALIKE
-    /// <c>CircleRuntime.Blend</c>. <c>null</c> (the default) leaves raylib's ambient blend
-    /// untouched (straight alpha); a non-null value wraps both passes in the counted
-    /// <c>BatchDrawCallCounter.BeginBlendMode</c> / <c>EndBlendMode</c> pair, reusing the same
-    /// mapping the Sprite / NineSlice blends use (#3470). The dropshadow pre-pass is deliberately
-    /// left out of the wrap — it composites via its own render-to-texture path, and XNALIKE
-    /// applies blend to the fill/stroke renderables only, not the shadow.
-    /// </summary>
-    public global::Gum.RenderingLibrary.Blend? Blend { get; set; }
-
     /// <inheritdoc/>
     public override int Alpha
     {
@@ -396,10 +385,7 @@ public class LineCircle : GradientShapeRenderable
         // Issue #3491 — wrap the fill + stroke passes in the requested blend so a non-Normal
         // Blend (e.g. Additive) composites correctly, mirroring the #3470 Sprite/NineSlice pattern.
         // Left off the dropshadow above (it composites through its own render-to-texture path).
-        if (Blend.HasValue)
-        {
-            global::RenderingLibrary.Graphics.Renderer.Self.BatchDrawCallCounter.BeginBlendMode(Blend.Value);
-        }
+        BeginBlend();
 
         // Fill pass — runs when FillColor is set, or when IsFilled is true with no explicit
         // FillColor (legacy Color slot supplies the fill color). Mirrors Skia's two-slot
@@ -496,10 +482,7 @@ public class LineCircle : GradientShapeRenderable
             }
         }
 
-        if (Blend.HasValue)
-        {
-            global::RenderingLibrary.Graphics.Renderer.Self.BatchDrawCallCounter.EndBlendMode();
-        }
+        EndBlend();
     }
 
     /// <summary>
