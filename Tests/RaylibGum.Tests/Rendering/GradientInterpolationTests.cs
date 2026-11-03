@@ -1,3 +1,4 @@
+using RaylibGum.Tests.Helpers;
 using Gum.GueDeriving;
 using Gum.Renderables;
 using Gum.Wireframe;
@@ -249,16 +250,7 @@ public class GradientInterpolationTests : BaseTestClass
         EndDrawing();
 
         RenderTexture2D rt = Renderer.Self.TryGetBakedRenderTargetFor(container)!.Value;
-        Image image = LoadImageFromTexture(rt.Texture);
-        Color[] result = new Color[Size * Size];
-        for (int y = 0; y < Size; y++)
-        {
-            for (int x = 0; x < Size; x++)
-            {
-                result[(y * Size) + x] = GetImageColor(image, x, rt.Texture.Height - 1 - y);
-            }
-        }
-        UnloadImage(image);
+        Color[] result = RaylibPixelHarness.Read(rt, Size, Size).Pixels;
         Gum.GumService.Default.Root.Children.Clear();
         return result;
     }

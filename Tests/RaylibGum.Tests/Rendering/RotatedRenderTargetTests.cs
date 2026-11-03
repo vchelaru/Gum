@@ -1,3 +1,4 @@
+using RaylibGum.Tests.Helpers;
 using Gum.GueDeriving;
 using Gum.Wireframe;
 using Raylib_cs;
@@ -406,23 +407,7 @@ public class RotatedRenderTargetTests : BaseTestClass
         renderTexture.Texture.Width.ShouldBe(Size);
         renderTexture.Texture.Height.ShouldBe(Size);
 
-        Color[] pixels = new Color[Size * Size];
-        Image image = LoadImageFromTexture(renderTexture.Texture);
-        try
-        {
-            // A render texture is stored bottom-up in GL, so the image's rows are flipped.
-            for (int y = 0; y < Size; y++)
-            {
-                for (int x = 0; x < Size; x++)
-                {
-                    pixels[(y * Size) + x] = GetImageColor(image, x, Size - 1 - y);
-                }
-            }
-        }
-        finally
-        {
-            UnloadImage(image);
-        }
+        Color[] pixels = RaylibPixelHarness.Read(renderTexture, Size, Size).Pixels;
 
         GumService.Default.Root.Children.Clear();
         return pixels;

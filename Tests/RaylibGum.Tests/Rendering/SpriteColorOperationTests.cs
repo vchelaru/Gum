@@ -1,3 +1,4 @@
+using RaylibGum.Tests.Helpers;
 using Gum.DataTypes;
 using Gum.GueDeriving;
 using Raylib_cs;
@@ -24,19 +25,6 @@ public class SpriteColorOperationTests : BaseTestClass
         BeginDrawing();
         GumService.Default.Draw();
         EndDrawing();
-    }
-
-    private static Color ReadRenderTargetCenter(RenderTexture2D renderTexture)
-    {
-        Image image = LoadImageFromTexture(renderTexture.Texture);
-        try
-        {
-            return GetImageColor(image, renderTexture.Texture.Width / 2, renderTexture.Texture.Height / 2);
-        }
-        finally
-        {
-            UnloadImage(image);
-        }
     }
 
     // SpriteRuntime defaults WidthUnits/HeightUnits to PercentageOfSourceFile, so Width/Height must be
@@ -68,7 +56,7 @@ public class SpriteColorOperationTests : BaseTestClass
 
         DrawOnce();
 
-        Color center = ReadRenderTargetCenter(Renderer.Self.TryGetBakedRenderTargetFor(cell)!.Value);
+        Color center = RaylibPixelHarness.ReadRawCenter(Renderer.Self.TryGetBakedRenderTargetFor(cell)!.Value);
 
         GumService.Default.Root.Children.Clear();
         UnloadTexture(texture);

@@ -1,3 +1,4 @@
+using RaylibGum.Tests.Helpers;
 using Gum.GueDeriving;
 using Gum.RenderingLibrary;
 using Raylib_cs;
@@ -15,19 +16,6 @@ namespace RaylibGum.Tests.Rendering;
 /// </summary>
 public class CircleBlendRenderTests : BaseTestClass
 {
-    private static Color ReadRenderTargetCenter(RenderTexture2D renderTexture)
-    {
-        Image image = LoadImageFromTexture(renderTexture.Texture);
-        try
-        {
-            return GetImageColor(image, renderTexture.Texture.Width / 2, renderTexture.Texture.Height / 2);
-        }
-        finally
-        {
-            UnloadImage(image);
-        }
-    }
-
     [Fact]
     public void Draw_AdditiveBlendCircle_AddsFillColorOntoBackgroundInsteadOfOverwriting()
     {
@@ -65,7 +53,7 @@ public class CircleBlendRenderTests : BaseTestClass
         GumService.Default.Draw();
         EndDrawing();
 
-        Color center = ReadRenderTargetCenter(Renderer.Self.TryGetBakedRenderTargetFor(container)!.Value);
+        Color center = RaylibPixelHarness.ReadRawCenter(Renderer.Self.TryGetBakedRenderTargetFor(container)!.Value);
 
         GumService.Default.Root.Children.Clear();
 

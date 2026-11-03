@@ -1,3 +1,4 @@
+using RaylibGum.Tests.Helpers;
 using Gum.GueDeriving;
 using Raylib_cs;
 using RenderingLibrary.Graphics;
@@ -67,16 +68,7 @@ internal static class TextInkRender
         EndDrawing();
 
         RenderTexture2D rt = Renderer.Self.TryGetBakedRenderTargetFor(container)!.Value;
-        Image image = LoadImageFromTexture(rt.Texture);
-        Color[] result = new Color[CanvasWidth * CanvasHeight];
-        for (int y = 0; y < CanvasHeight; y++)
-        {
-            for (int x = 0; x < CanvasWidth; x++)
-            {
-                result[y * CanvasWidth + x] = GetImageColor(image, x, rt.Texture.Height - 1 - y);
-            }
-        }
-        UnloadImage(image);
+        Color[] result = RaylibPixelHarness.Read(rt, CanvasWidth, CanvasHeight).Pixels;
         Gum.GumService.Default.Root.Children.Remove(container);
         return result;
     }
