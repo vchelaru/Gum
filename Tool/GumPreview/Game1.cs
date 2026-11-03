@@ -189,6 +189,11 @@ public class Game1 : Game
         GumHotReloadManager.PrintsShownElementGone = false;
         GumService.Default.EnableHotReload(_gumxPath);
         GumService.Default.HotReloadFinished += HandleHotReloadFinished;
+        if (_debugLog != null)
+        {
+            // Every variable the tool saved that a reload applied, for the log; costs nothing when logging is off.
+            GumHotReloadManager.VariableApplied += LogAppliedVariable;
+        }
 
         ApplyCanvasSizeIfChanged(isWindowShown: false);
 
@@ -203,6 +208,7 @@ public class Game1 : Game
                 _selection = initial;
             }
         }
+        _debugLog?.LogToolSelection(_selection.ElementName, _selection.CategoryName, _selection.StateName);
         ApplySiblingOrdering();
         ShowElement();
         return ApplyInteraction();
@@ -445,6 +451,10 @@ public class Game1 : Game
 
         bool selectionChanged = !message.HasSameSelection(_selection);
         _selection = message;
+        if (selectionChanged)
+        {
+            _debugLog?.LogToolSelection(message.ElementName, message.CategoryName, message.StateName);
+        }
         ApplySiblingOrdering();
         if (selectionChanged)
         {
@@ -592,6 +602,9 @@ public class Game1 : Game
             Console.Error.WriteLine($"GumPreview: could not handle a reload result: {exception.Message}");
         }
     }
+
+    private void LogAppliedVariable(GraphicalUiElement element, VariableSave variable) =>
+        _debugLog?.LogToolVariable(element.ElementSave?.Name ?? element.Name, variable.SourceObject, variable.GetRootName(), variable.Value);
 
     private void UpdateWindowTitle(bool missingElement = false) =>
         Window.Title = PreviewWindowTitle.For(_selection.ElementName, missingElement);

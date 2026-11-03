@@ -43,7 +43,11 @@ if (options.ExitAfterSeconds is double exitAfterSeconds)
     }, null, TimeSpan.FromSeconds(exitAfterSeconds), Timeout.InfiniteTimeSpan);
 }
 
-using PreviewDebugLog? debugLog = PreviewDebugLog.Open(options.LogPath);
+using PreviewDebugLog? debugLog = PreviewDebugLog.Open(PreviewDebugLog.ResolvePath(options.LogPath));
+if (debugLog != null)
+{
+    AppDomain.CurrentDomain.UnhandledException += (_, e) => debugLog.LogUnhandled(e.ExceptionObject);
+}
 using Game1 game = new Game1(options.ProjectPath!, options.ElementName!, options.SelectionFilePath, options.ContentRootDirectory,
     unattended, options.ScreenshotPath, options.FocusName, options.TypedText, options.SelectAll, debugLog);
 game.Run();

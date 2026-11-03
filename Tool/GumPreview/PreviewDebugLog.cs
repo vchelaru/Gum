@@ -3,23 +3,44 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using Gum;
+using Gum.Diagnostics;
 
 namespace GumPreview;
 
 /// <summary>
-/// Opt-in diagnostic log for Preview: timestamped lines in a file, never the console or the window,
-/// so a person or an agent can read what a live edit or an input did. Turn it on with
-/// <c>--log &lt;path&gt;</c>, or <c>--log-default</c> to write to <see cref="DefaultPath"/>, a fixed
-/// file (<c>{temp folder}/GumPreview/preview.log</c>) so an agent always knows where to read. Lines
-/// are appended and flushed as written, so the file is current while Preview runs or after a crash;
-/// each run starts with a <c>log started</c> line. Preview holds a null <see cref="PreviewDebugLog"/>
-/// when logging is off, so an off log costs a null check and creates no file.
+/// Diagnostic log for Preview: timestamped lines in a file, never the console or the window, so a
+/// person or an agent can read what a live edit or an input did.
+/// <para>
+/// WHERE: in a Debug build it is always on and writes to <see cref="DefaultPath"/>,
+/// <c>{temp folder}/GumPreview/preview.log</c> (Windows: <c>%TEMP%\GumPreview\preview.log</c>); a Release
+/// build is off. <c>--log &lt;path&gt;</c> (or <c>GUM_PREVIEW_LOG</c> via the tool) writes there instead, in
+/// either build; <c>--log-default</c> is accepted and means <see cref="DefaultPath"/>. Each run moves the
+/// previous file to <c>preview.previous.log</c> and starts a fresh <c>preview.log</c>, flushed per line,
+/// so the file is current while Preview runs or after a crash. Unhandled exceptions are logged with
+/// their stack before the process ends.
+/// </para>
+/// <para>
+/// HOW TO READ IT: lines are <c>{HH:mm:ss.fff} {category} {message}</c>, oldest first. Categories:
+/// <c>log</c> (run start); <c>tool-selection</c> (the tool changed what Preview shows: element, state);
+/// <c>tool-var</c> (a variable the tool saved that hot reload applied: <c>Element/Instance Name=value</c>);
+/// <c>reload</c> (a finished hot reload and its issues); <c>focus</c>, <c>key</c>, <c>mouse</c> (input
+/// Preview received); <c>selection</c> (a text box's selection start/length/caret);
+/// <c>selection-instances</c> (how many highlight instances a text box has and how many are visible,
+/// written when text, wrap or those counts change); <c>error</c> (exception with stack). To follow a
+/// bug, read the <c>tool-var</c>/<c>tool-selection</c> lines for what the tool sent, then the
+/// <c>key</c>/<c>selection</c>/<c>selection-instances</c> lines for what Preview did with it.
+/// </para>
+/// Preview holds a null <see cref="PreviewDebugLog"/> when logging is off, so an off log costs a null check.
 /// </summary>
 public sealed class PreviewDebugLog : IDisposable
 {
     private readonly StreamWriter _writer;
 
-    /// <summary>The file <c>--log-default</c> writes to: <c>GumPreview/preview.log</c> in the user's temp folder.</summary>
+    /// <summary>The path Preview logs to: <paramref name="explicitPath"/> if given, else <see cref="DefaultPath"/> in a Debug build, else null (off).</summary>
+    public static string? ResolvePath(string? explicitPath, bool isDebugBuild = DiagnosticLogFile.IsDebugBuild) =>
+        DiagnosticLogFile.ResolvePath(explicitPath, DefaultPath, isDebugBuild);
+
+    /// <summary>The file Debug builds and <c>--log-default</c> write to: <c>GumPreview/preview.log</c> in the user's temp folder.</summary>
     public static string DefaultPath => Path.Combine(Path.GetTempPath(), "GumPreview", "preview.log");
 
     private PreviewDebugLog(StreamWriter writer)
@@ -40,20 +61,15 @@ public sealed class PreviewDebugLog : IDisposable
 
         try
         {
-            string? directory = Path.GetDirectoryName(path);
-            if (!string.IsNullOrEmpty(directory))
-            {
-                Directory.CreateDirectory(directory);
-            }
             // Shared read so the file can be read while Preview runs; AutoFlush flushes after every line.
-            FileStream stream = new FileStream(path, FileMode.Append, FileAccess.Write, FileShare.ReadWrite);
+            FileStream stream = DiagnosticLogFile.Open(path);
             PreviewDebugLog log = new PreviewDebugLog(new StreamWriter(stream, new UTF8Encoding(false)) { AutoFlush = true });
             log.Write("log", "started");
             return log;
         }
-        catch (Exception exception)
+        catch (Exception)
         {
-            Console.Error.WriteLine($"GumPreview: could not open the log {path}: {exception.Message}");
+            // No console output: a log that cannot open must not change anything else.
             return null;
         }
     }
@@ -68,7 +84,7 @@ public sealed class PreviewDebugLog : IDisposable
                 _writer.WriteLine($"{DateTime.Now:HH:mm:ss.fff} {category} {message}");
             }
         }
-        catch (Exception exception) when (exception is IOException or ObjectDisposedException)
+        catch (Exception)
         {
             // A full disk or a closed log must not take Preview down.
         }
@@ -106,5 +122,27 @@ public sealed class PreviewDebugLog : IDisposable
     public void LogException(string context, Exception exception) =>
         Write("error", $"{context}: {exception}");
 
-    public void Dispose() => _writer.Dispose();
+    /// <summary>An unhandled exception object from <c>AppDomain.UnhandledException</c>, logged with its stack.</summary>
+    public void LogUnhandled(object? exceptionObject) =>
+        Write("error", $"unhandled: {exceptionObject}");
+
+    /// <summary>A selection the tool sent: what Preview now shows.</summary>
+    public void LogToolSelection(string element, string? category, string? state) =>
+        Write("tool-selection", $"{element} category={category ?? "(none)"} state={state ?? "(default)"}");
+
+    /// <summary>A variable value the tool saved that hot reload applied to a live visual.</summary>
+    public void LogToolVariable(string element, string? instance, string variable, object? value) =>
+        Write("tool-var", $"{element}/{instance ?? "(root)"} {variable}={value ?? "(null)"}");
+
+    public void Dispose()
+    {
+        try
+        {
+            _writer.Dispose();
+        }
+        catch (Exception)
+        {
+            // Nothing to flush that matters more than the app closing.
+        }
+    }
 }
