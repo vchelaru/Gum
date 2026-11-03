@@ -380,9 +380,12 @@ public class CompactColorPicker : UserControl
     {
         TextBlock label = new TextBlock
         {
+            TextAlignment = TextAlignment.Left,
             Text = ChannelNames[channel],
             VerticalAlignment = VerticalAlignment.Center,
         };
+        // Wide enough for the widest letter at any zoom, so the label column never clips.
+        AvaloniaTreeIcons.FollowBaseFontSize(label, Layoutable.WidthProperty, 14);
 
         ColorSlider slider = new ColorSlider
         {
@@ -429,7 +432,7 @@ public class CompactColorPicker : UserControl
         textBox.EditCommitRequested += (_, _) => CommitChannelText(channel);
         _channelTextBoxes[channel] = textBox;
 
-        Grid row = new Grid { ColumnDefinitions = new ColumnDefinitions("12,*,Auto") };
+        Grid row = new Grid { ColumnDefinitions = new ColumnDefinitions("Auto,*,Auto") };
         Grid.SetColumn(slider, 1);
         Grid.SetColumn(textBox, 2);
         row.Children.Add(label);

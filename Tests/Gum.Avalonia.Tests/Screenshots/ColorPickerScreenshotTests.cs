@@ -68,6 +68,8 @@ public class ColorPickerScreenshotTests
             window.RequestedThemeVariant = theme;
             Dispatcher.UIThread.RunJobs();
             Button swatchButton = display.GetVisualDescendants().OfType<Button>().First();
+            swatchButton.BringIntoView();
+            ScreenshotWindow.Pump(window);
             swatchButton.Flyout!.ShowAt(swatchButton);
             ScreenshotWindow.Pump(window);
             display.ColorPicker.OriginalColor = color;
