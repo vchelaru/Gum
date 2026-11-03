@@ -244,6 +244,7 @@ For adding or updating XnaFiddle interactive links, see [xnafiddle.md](xnafiddle
 
 ## Code Sample Rules
 
+- **Values a sample reads from outside the code block get a comment showing what they contain.** That covers translation keys, content files, project assets and configuration, so the code block makes sense without reading the prose.
 - **Parallel samples share one design.** When a page shows the same task in two forms (code-only vs. a generated screen, MonoGame vs. raylib), a design change to one sample (where navigation lives, how the classes are split up) gets applied to the others in the same pass, or the page explains why they differ.
 
 - **One-time initialization goes first, never mid-sample** — put all startup/registration calls (e.g. `GumUI.UseKeyboardDefaults()`, `GumUI.UseGamepadDefaults()`, input-device registration, service configuration) at the **top** of the sample, right under the `// Initialize` comment where `GumUI` is set up — before the feature code. Readers copy a sample as one block, so a setup call buried between feature lines reads as part of the feature logic and is confusing. Group setup first, then the feature it enables. Bad: create the control, add items, *then* `UseKeyboardDefaults()`, then wire focus. Good: `UseKeyboardDefaults()` first, then create the control and wire focus.
