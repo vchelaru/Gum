@@ -12,7 +12,8 @@ namespace CodeOutputPlugin.ViewModels;
 public enum WhatToView
 {
     SelectedElement,
-    SelectedState
+    SelectedState,
+    GameSetup
 }
 
 #endregion
@@ -101,6 +102,19 @@ public class CodeWindowViewModel : ViewModel
             if (value)
             {
                 WhatToView = WhatToView.SelectedState;
+            }
+        }
+    }
+
+    [DependsOn(nameof(WhatToView))]
+    public bool IsGameSetupSelected
+    {
+        get => WhatToView == WhatToView.GameSetup;
+        set
+        {
+            if (value)
+            {
+                WhatToView = WhatToView.GameSetup;
             }
         }
     }
@@ -196,7 +210,7 @@ public class CodeWindowViewModel : ViewModel
 
     /// <summary>
     /// The game-setup code (what a game needs to load the project and enable what the Preview enables),
-    /// or null when the section is hidden (issue #7261).
+    /// or null when the Game tab is hidden (issue #7261).
     /// </summary>
     public string? GameSetupCode
     {
@@ -206,13 +220,6 @@ public class CodeWindowViewModel : ViewModel
 
     [DependsOn(nameof(GameSetupCode))]
     public bool HasGameSetup => GameSetupCode != null;
-
-    /// <summary>Whether the game-setup section shows its code.</summary>
-    public bool IsGameSetupExpanded
-    {
-        get => Get<bool>();
-        set => Set(value);
-    }
 
     #endregion
 

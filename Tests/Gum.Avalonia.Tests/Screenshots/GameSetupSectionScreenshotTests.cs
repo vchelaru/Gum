@@ -1,4 +1,5 @@
-using Avalonia.Styling;
+﻿using Avalonia.Styling;
+using CodeOutputPlugin.ViewModels;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
 using Gum.Avalonia.Canvas;
@@ -62,7 +63,7 @@ public class GameSetupSectionScreenshotTests
         return code;
     }
 
-    /// <summary>The section's default state: one collapsed header line.</summary>
+    /// <summary>The Object tab, which is also what the "before" side shows.</summary>
     [SkippableFact]
     public void CodeTabWithAScreen() => PrScreenshot.Run(() =>
     {
@@ -71,29 +72,41 @@ public class GameSetupSectionScreenshotTests
         PrScreenshot.SaveWindowAtZoomLevels(window, "code-tab-screen-dark");
     });
 
-    /// <summary>Expanded in the default short window and in a taller one.</summary>
+    /// <summary>The State tab, unchanged by the Game tab.</summary>
     [SkippableFact]
-    public void CodeTabWithTheSectionExpanded() => PrScreenshot.Run(() =>
+    public void CodeTabStateTab() => PrScreenshot.Run(() =>
     {
         using CodeTabHarness code = ScreenSelected(DefaultSettings, manualSetup: true);
         MainWindow window = ShowMainWindow(code, 760);
-        code.ViewModel.IsGameSetupExpanded = true;
+        code.ViewModel.WhatToView = WhatToView.SelectedState;
         Dispatcher.UIThread.RunJobs();
-        PrScreenshot.SaveWindowAtZoomLevels(window, "code-tab-screen-expanded-dark");
-
-        window.Height = 1000;
-        Dispatcher.UIThread.RunJobs();
-        PrScreenshot.SaveWindowAtZoomLevels(window, "code-tab-screen-expanded-tall-dark");
+        PrScreenshot.SaveWindowAtZoomLevels(window, "code-tab-state-dark");
     });
 
-    /// <summary>A Raylib project: the section is a note with no code.</summary>
+    /// <summary>The Game tab, in both themes.</summary>
+    [SkippableFact]
+    public void CodeTabGameTab() => PrScreenshot.Run(() =>
+    {
+        using CodeTabHarness code = ScreenSelected(DefaultSettings, manualSetup: true);
+        MainWindow window = ShowMainWindow(code, 760);
+        code.ViewModel.WhatToView = WhatToView.GameSetup;
+        Dispatcher.UIThread.RunJobs();
+        foreach (ThemeVariant theme in new[] { ThemeVariant.Dark, ThemeVariant.Light })
+        {
+            window.RequestedThemeVariant = theme;
+            Dispatcher.UIThread.RunJobs();
+            PrScreenshot.SaveWindowAtZoomLevels(window, $"code-tab-game-{theme.Key.ToString()!.ToLowerInvariant()}");
+        }
+    });
+
+    /// <summary>A Raylib project: the Game tab is a note with no code.</summary>
     [SkippableFact]
     public void CodeTabForARaylibProject() => PrScreenshot.Run(() =>
     {
         using CodeTabHarness code = ScreenSelected(RaylibSettings, manualSetup: false);
-        MainWindow window = ShowMainWindow(code, 900);
-        code.ViewModel.IsGameSetupExpanded = true;
+        MainWindow window = ShowMainWindow(code, 760);
+        code.ViewModel.WhatToView = WhatToView.GameSetup;
         Dispatcher.UIThread.RunJobs();
-        PrScreenshot.SaveWindowAtZoomLevels(window, "code-tab-raylib-note-dark");
+        PrScreenshot.SaveWindowAtZoomLevels(window, "code-tab-raylib-game-dark");
     });
 }

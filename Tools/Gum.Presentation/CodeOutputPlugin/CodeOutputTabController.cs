@@ -1,4 +1,4 @@
-using CodeOutputPlugin.Manager;
+﻿using CodeOutputPlugin.Manager;
 using CodeOutputPlugin.ViewModels;
 using Gum.DataTypes;
 using Gum.Managers;
@@ -133,6 +133,18 @@ public class CodeOutputTabController
 
         RefreshGameSetup(codeOutputProjectSettings, _selectedState.SelectedElement);
 
+        if (_viewModel.WhatToView == WhatToView.GameSetup)
+        {
+            if (_viewModel.GameSetupCode != null)
+            {
+                _viewModel.Code = _viewModel.GameSetupCode;
+                return;
+            }
+
+            // The Game tab is hidden for this output library, so show the element again.
+            _viewModel.WhatToView = WhatToView.SelectedElement;
+        }
+
         // Defensive: never feed the generator an unsupported combination (e.g. a Raylib project whose
         // .codsj still carries FullyInCode). CoerceToSupportedCombination keeps the display path safe
         // regardless of how the settings reached this state.
@@ -199,9 +211,8 @@ public class CodeOutputTabController
     }
 
 
-    /// Fills the game-setup section (issue #7261): the code a game needs to load the project and
-    /// enable what the Preview enables. It starts collapsed (the view model default) so it
-    /// does not take room from the code in the short Code pane; the user expands it when needed.
+    /// Fills the Game tab's code (issue #7261): the code a game needs to load the project and
+    /// enable what the Preview enables, or null when the output library has none to show.
     /// </summary>
     private void RefreshGameSetup(CodeOutputProjectSettings codeOutputProjectSettings, ElementSave? selectedElement)
     {

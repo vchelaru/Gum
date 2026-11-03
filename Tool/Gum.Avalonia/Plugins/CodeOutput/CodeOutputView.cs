@@ -57,6 +57,20 @@ public sealed class CodeOutputView : Grid, ICodeOutputTabHost
         _selectedObjectToggle = CreateToggle("Object", "Selected Object", nameof(CodeWindowViewModel.IsSelectedObjectSelected));
         previewChoice.Children.Add(_selectedObjectToggle);
         previewChoice.Children.Add(CreateToggle("State", "Selected State", nameof(CodeWindowViewModel.IsSelectedStateSelected)));
+        // The code a game needs to load the project and enable what the Preview enables; hidden for output libraries with no such code.
+        ToggleButton gameToggle = CreateToggle("Game", "Game setup matching the Preview", nameof(CodeWindowViewModel.IsGameSetupSelected));
+        gameToggle.Bind(IsVisibleProperty, new Binding(nameof(CodeWindowViewModel.HasGameSetup)));
+        previewChoice.Children.Add(gameToggle);
+        Button copyGame = new Button { Content = "Copy", Padding = new Thickness(4, 1), Margin = new Thickness(4, 0, 0, 0) };
+        copyGame.Bind(IsVisibleProperty, new Binding(nameof(CodeWindowViewModel.IsGameSetupSelected)));
+        copyGame.Click += (_, _) =>
+        {
+            if (viewModel.GameSetupCode is { } text && TopLevel.GetTopLevel(this)?.Clipboard is { } clipboard)
+            {
+                _ = clipboard.SetTextAsync(text);
+            }
+        };
+        previewChoice.Children.Add(copyGame);
         Grid.SetColumn(previewChoice, 1);
         previewHeader.Children.Add(previewChoice);
 
@@ -72,16 +86,9 @@ public sealed class CodeOutputView : Grid, ICodeOutputTabHost
         ScrollViewer.SetVerticalScrollBarVisibility(_code, ScrollBarVisibility.Auto);
         ScrollViewer.SetHorizontalScrollBarVisibility(_code, ScrollBarVisibility.Auto);
 
-
-        Control gameSetup = CreateGameSetupSection(viewModel);
-        // A Grid (not a DockPanel) so the code keeps a fixed minimum row and anything that does not fit
-        // is clipped at the bottom instead of drawn over its neighbor.
-        Grid preview = new Grid { ClipToBounds = true, RowDefinitions = new RowDefinitions("Auto,Auto,*") };
-        preview.RowDefinitions[2].MinHeight = 70;
-        Grid.SetRow(gameSetup, 1);
-        Grid.SetRow(_code, 2);
+        DockPanel preview = new DockPanel();
+        DockPanel.SetDock(previewHeader, Dock.Top);
         preview.Children.Add(previewHeader);
-        preview.Children.Add(gameSetup);
         preview.Children.Add(_code);
 
         TextBlock settingsTitle = new TextBlock { VerticalAlignment = VerticalAlignment.Center };
@@ -247,67 +254,6 @@ public sealed class CodeOutputView : Grid, ICodeOutputTabHost
 
     /// <summary>The Generate scope's all-elements choice, for tests.</summary>
     internal ToggleButton AllInProjectToggle => _allInProjectToggle;
-
-    /// <summary>
-    /// The collapsible "Game setup" section above the code (issue #7261): the code a game needs to load
-    /// the project and enable what the Preview enables, with a Copy button. Hidden when the project's
-    /// output library has no setup to show.
-    /// </summary>
-    private Control CreateGameSetupSection(CodeWindowViewModel viewModel)
-    {
-        TextBlock chevron = new TextBlock { VerticalAlignment = VerticalAlignment.Center };
-        TextBlock title = new TextBlock { Text = "Game setup", VerticalAlignment = VerticalAlignment.Center };
-        StackPanel titleRow = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 6 };
-        titleRow.Children.Add(chevron);
-        titleRow.Children.Add(title);
-        Button toggle = new Button
-        {
-            Content = titleRow,
-            HorizontalAlignment = HorizontalAlignment.Stretch,
-            HorizontalContentAlignment = HorizontalAlignment.Left,
-            Background = Brushes.Transparent,
-            BorderThickness = new Thickness(0),
-        };
-        toggle.Click += (_, _) => viewModel.IsGameSetupExpanded = !viewModel.IsGameSetupExpanded;
-        chevron.Bind(TextBlock.TextProperty, new Binding(nameof(CodeWindowViewModel.IsGameSetupExpanded))
-        {
-            Converter = new FuncValueConverter<bool, string>(expanded => expanded ? "▾" : "▸"),
-        });
-
-        Button copy = new Button { Content = "Copy", Padding = new Thickness(4, 1), Margin = new Thickness(4, 0) };
-        copy.Click += (_, _) =>
-        {
-            if (viewModel.GameSetupCode is { } text && TopLevel.GetTopLevel(this)?.Clipboard is { } clipboard)
-            {
-                _ = clipboard.SetTextAsync(text);
-            }
-        };
-
-        Grid header = new Grid { ColumnDefinitions = new ColumnDefinitions("*,Auto") };
-        header.Children.Add(toggle);
-        Grid.SetColumn(copy, 1);
-        header.Children.Add(copy);
-
-        // Wrapped, so a long project path or explanation line is read rather than scrolled to.
-        TextBox code = new TextBox
-        {
-            IsReadOnly = true,
-            AcceptsReturn = true,
-            TextWrapping = TextWrapping.Wrap,
-            MaxHeight = 90,
-            FontFamily = new FontFamily("Cascadia Mono,Consolas,Menlo,DejaVu Sans Mono,monospace"),
-        };
-        ScrollViewer.SetVerticalScrollBarVisibility(code, ScrollBarVisibility.Auto);
-        code.Bind(TextBox.TextProperty, new Binding(nameof(CodeWindowViewModel.GameSetupCode)));
-        code.Bind(IsVisibleProperty, new Binding(nameof(CodeWindowViewModel.IsGameSetupExpanded)));
-
-        StackPanel body = new StackPanel();
-        body.Children.Add(header);
-        body.Children.Add(code);
-        Border section = new Border { ClipToBounds = true, BorderBrush = Brushes.Gray, BorderThickness = new Thickness(0, 0, 0, 1), Child = body };
-        section.Bind(IsVisibleProperty, new Binding(nameof(CodeWindowViewModel.HasGameSetup)));
-        return section;
-    }
 
     // The parse error, a note that fixing the file on disk is enough, and the one action that writes it.
     private static StackPanel CreateLoadErrorPanel(CodeWindowViewModel viewModel)
