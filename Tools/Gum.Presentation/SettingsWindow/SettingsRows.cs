@@ -106,6 +106,38 @@ public static class SettingsRows
             .SelectMany(member => new[] { member.DisplayName, member.DetailText ?? string.Empty })
             .Where(term => term.Length > 0);
 
+    /// <summary>
+    /// Marks every row whose label or hint contains <paramref name="search"/> (ignoring case) and clears the
+    /// mark on the rest; a blank search clears all. A section holding a match is expanded, so a match is
+    /// never hidden in a collapsed section. Nothing is removed. Returns the number of rows marked.
+    /// </summary>
+    public static int MarkMatches(IEnumerable<MemberCategory> sections, string search)
+    {
+        string text = search.Trim();
+        int count = 0;
+        foreach (MemberCategory section in sections)
+        {
+            bool sectionHasMatch = false;
+            foreach (InstanceMember member in section.Members)
+            {
+                bool isMatch = text.Length > 0
+                    && (member.DisplayName.Contains(text, StringComparison.OrdinalIgnoreCase)
+                        || (member.DetailText ?? string.Empty).Contains(text, StringComparison.OrdinalIgnoreCase));
+                member.IsSearchMatch = isMatch;
+                sectionHasMatch |= isMatch;
+                if (isMatch)
+                {
+                    count++;
+                }
+            }
+            if (sectionHasMatch && !section.IsExpanded)
+            {
+                section.IsExpanded = true;
+            }
+        }
+        return count;
+    }
+
     private static InstanceMember Create(string name, string label, string hint, Type type, Func<object?> get, Action<object?> set)
     {
         InstanceMember member = new InstanceMember(name, instance: null);

@@ -1,4 +1,5 @@
 using Avalonia.Controls;
+using Avalonia.Headless;
 using Avalonia.Styling;
 using Gum.Avalonia.Dialogs;
 using Gum.Avalonia.Shell;
@@ -76,6 +77,55 @@ internal static class PrScreenshot
     /// pixels (an icon, a margin) does not follow the text, so a layout right at 100% can break at the
     /// other sizes; every tool UI screenshot goes through this rather than <see cref="SaveWindow"/> alone.
     /// </summary>
+    public static string SaveContactSheet(Window window, string name)
+    {
+        IAppScaleProvider scale = TestAppBuilder.Services.GetRequiredService<IAppScaleProvider>();
+        double originalSize = scale.BaseFontSize;
+        using IDisposable fontSizeFollower = AppWideWindowInput.FollowBaseFontSize(window, scale);
+        List<(double Size, global::Avalonia.Media.Imaging.WriteableBitmap Frame)> frames = new();
+        try
+        {
+            foreach (double size in ZoomLevels)
+            {
+                scale.BaseFontSize = size;
+                ScreenshotWindow.Pump(window);
+                frames.Add((size, window.CaptureRenderedFrame() ?? throw new InvalidOperationException("No frame.")));
+            }
+        }
+        finally
+        {
+            scale.BaseFontSize = originalSize;
+        }
+
+        int tileWidth = frames.Max(frame => frame.Frame.PixelSize.Width);
+        int tileHeight = frames.Max(frame => frame.Frame.PixelSize.Height);
+        const int labelHeight = 28;
+        using global::Avalonia.Media.Imaging.RenderTargetBitmap sheet = new(
+            new global::Avalonia.PixelSize(tileWidth * 2, (tileHeight + labelHeight) * 2));
+        using (global::Avalonia.Media.DrawingContext context = sheet.CreateDrawingContext())
+        {
+            context.FillRectangle(global::Avalonia.Media.Brushes.Gray, new global::Avalonia.Rect(0, 0, sheet.PixelSize.Width, sheet.PixelSize.Height));
+            for (int i = 0; i < frames.Count; i++)
+            {
+                double x = (i % 2) * tileWidth;
+                double y = (i / 2) * (tileHeight + labelHeight);
+                global::Avalonia.Media.FormattedText label = new($"zoom {frames[i].Size}", System.Globalization.CultureInfo.InvariantCulture,
+                    global::Avalonia.Media.FlowDirection.LeftToRight, global::Avalonia.Media.Typeface.Default, 18, global::Avalonia.Media.Brushes.White);
+                context.DrawText(label, new global::Avalonia.Point(x + 8, y + 3));
+                context.DrawImage(frames[i].Frame, new global::Avalonia.Rect(x, y + labelHeight, frames[i].Frame.PixelSize.Width, frames[i].Frame.PixelSize.Height));
+            }
+        }
+        foreach ((double _, global::Avalonia.Media.Imaging.WriteableBitmap frame) in frames)
+        {
+            frame.Dispose();
+        }
+        string folder = OutputDirectory ?? Path.Combine(Path.GetTempPath(), "GumScreenshots");
+        Directory.CreateDirectory(folder);
+        string path = Path.Combine(folder, name + ".png");
+        sheet.Save(path);
+        return path;
+    }
+
     public static IReadOnlyList<string> SaveWindowAtZoomLevels(Window window, string name)
     {
         IAppScaleProvider scale = TestAppBuilder.Services.GetRequiredService<IAppScaleProvider>();

@@ -66,8 +66,22 @@ public class SettingsWindowScreenshotTests
         window.Save("settings-project-canvas-light");
     });
 
+    [SkippableTheory]
+    [InlineData("Dark")]
+    [InlineData("Light")]
+    public void SearchMarksMatchingRows(string theme) => PrScreenshot.Run(() =>
+    {
+        using ProjectTreeHarness tree = new ProjectTreeHarness();
+        SettingsDialogViewModel viewModel = TestAppBuilder.Services.GetRequiredService<SettingsDialogViewModel>();
+        using ScreenshotWindow window = PrScreenshot.ShowDialog(viewModel, theme == "Dark" ? ThemeVariant.Dark : ThemeVariant.Light);
+
+        viewModel.SelectPage(SettingsPageIds.Canvas);
+        viewModel.SearchText = "show";
+        PrScreenshot.SaveContactSheet(window.Window, $"settings-search-marks-{theme.ToLowerInvariant()}");
+    });
+
     [SkippableFact]
-    public void CodeGeneration_Light() => PrScreenshot.Run(() =>
+    public void CodeGeneration_Light()=> PrScreenshot.Run(() =>
     {
         using ProjectTreeHarness tree = new ProjectTreeHarness();
         SettingsDialogViewModel viewModel = TestAppBuilder.Services.GetRequiredService<SettingsDialogViewModel>();
