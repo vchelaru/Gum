@@ -60,7 +60,7 @@ An instance whose component was renamed, moved to another folder, or changed to 
 
 Hot reload is focused on Gum element definitions. The following are **not** automatically reloaded:
 
-* **Shader files** — When a file that a container's `SourceShaderFile` points at changes (any extension), the shader is compiled again and assigned to every container using it. The element tree is not rebuilt. A file the shader imports or includes is not tracked.
+* **Shader files** — When a file that a container's `SourceShaderFile` points at changes (any extension), the shader is compiled again and assigned to every container using it. The element tree is not rebuilt. A file the shader `#include`s reloads it too, when the shader loads through `UseShadowDusk()` on MonoGame, KNI, FNA or Skia (raylib and Slang `import` are not tracked). Available in December 2026, or now if building Gum from source.
 * **Textures and images** — If you change a `.png` file that a Sprite or NineSlice shows, the cached texture is still used. Restart the game to pick up texture changes. This includes images that an animation chain file names for its frames. Gum reports the file as a `ReloadFailed` issue, so `MatchesRestart` is `false`, and lists it in every later result until the game restarts.
 * **Animation files** — `.ganx` animation definitions are not reloaded.
 * **Runtime state on existing instances** — A reload applies the variables the project changed and leaves the rest alone, so a value your code set (e.g., `Text` or `Width`) stays unless the project changed that variable. See [Preserving Runtime State](#preserving-runtime-state) below.

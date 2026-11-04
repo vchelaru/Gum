@@ -125,6 +125,33 @@ half4 main(float2 coord) {
         return bitmap.GetPixel(19, 19);
     }
 
+    [Fact]
+    public void SourceShaderFile_RecordsTheFilesTheShaderIncludes_ForHotReload()
+    {
+        string folder = Path.Combine(Path.GetTempPath(), "GumShadowDuskInclude_" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(folder);
+        try
+        {
+            string includePath = Path.Combine(folder, "gray.fxh");
+            File.WriteAllText(includePath, "float Gray(float3 c) { return dot(c, float3(0.299, 0.587, 0.114)); }");
+            string shaderPath = Path.Combine(folder, "effect.fx");
+            File.WriteAllText(shaderPath, GrayscaleFx
+                .Replace("float4 MainPS", "#include \"gray.fxh\"\nfloat4 MainPS")
+                .Replace("dot(color.rgb, float3(0.299, 0.587, 0.114))", "Gray(color.rgb)"));
+
+            SKColor center = DrawRedContainerWithShader(shaderPath);
+
+            center.Alpha.ShouldBe((byte)255);
+            ShaderIncludeTracker.GetIncludedFiles(shaderPath).ShouldContain(
+                ToolsUtilities.FileManager.Standardize(includePath, preserveCase: false, makeAbsolute: true));
+        }
+        finally
+        {
+            Directory.Delete(folder, recursive: true);
+            ShaderIncludeTracker.Clear();
+        }
+    }
+
     [Theory]
     [InlineData(".slang", GrayscaleSlang)]
     [InlineData(".fx", GrayscaleFx)]
