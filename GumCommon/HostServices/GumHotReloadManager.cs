@@ -412,7 +412,8 @@ public class GumHotReloadManager : IGumHotReloadManager
                 continue;
             }
 
-            if (!TryResolveReference(shaderFile, out string cacheKey, out string standardized) || !changed.Contains(standardized))
+            if (!TryResolveReference(shaderFile, out string cacheKey, out string standardized)
+                || !(changed.Contains(standardized) || ShaderIncludeTracker.Includes(standardized, changed)))
             {
                 continue;
             }

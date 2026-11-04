@@ -422,6 +422,24 @@ namespace WpfDataUi.DataTypes
             }
         }
 
+        bool isSearchMatch;
+        /// <summary>
+        /// True while the row is marked as a match of a search (the Settings window's search box). A spacious
+        /// row draws the mark; nothing is hidden.
+        /// </summary>
+        public bool IsSearchMatch
+        {
+            get => isSearchMatch;
+            set
+            {
+                if (isSearchMatch != value)
+                {
+                    isSearchMatch = value;
+                    OnPropertyChanged(nameof(IsSearchMatch));
+                }
+            }
+        }
+
         string? warningText;
         /// <summary>
         /// A caveat the user could get wrong by ignoring (a file move, an experimental mode), which a spacious

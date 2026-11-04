@@ -25,11 +25,25 @@ public class SettingsRowsPageView : DockPanel
     private IRowsSettingsPage? _rows;
     private bool _isListening;
 
+    /// <summary>
+    /// The Settings window's search text, set on the window and inherited by the page views inside it. A
+    /// page view marks the rows whose label or hint contains it; nothing is hidden.
+    /// </summary>
+    public static readonly AttachedProperty<string?> SearchTextProperty =
+        AvaloniaProperty.RegisterAttached<SettingsRowsPageView, Control, string?>("SearchText", null, inherits: true);
+
+    /// <summary>Gets the search text in effect for <paramref name="control"/>.</summary>
+    public static string? GetSearchText(Control control) => control.GetValue(SearchTextProperty);
+
+    /// <summary>Sets the search text for <paramref name="control"/> and the page views under it.</summary>
+    public static void SetSearchText(Control control, string? value) => control.SetValue(SearchTextProperty, value);
+
     /// <summary>Builds the view.</summary>
     public SettingsRowsPageView()
     {
         Grid = new DataUiGrid { HideLoneCategoryHeader = true, AlternatesRowBackgrounds = false };
         Children.Add(Grid);
+        this.GetObservable(SearchTextProperty).Subscribe(new AnonymousObserver<string?>(_ => MarkSearchMatches()));
 
         DataContextChanged += (_, _) => HandleDataContextChanged();
 
@@ -104,10 +118,14 @@ public class SettingsRowsPageView : DockPanel
         if (_rows != null)
         {
             Grid.SetCategories(_rows.BuildCategories());
+            MarkSearchMatches();
             ScaleLabelColumns();
             Dispatcher.UIThread.Post(SpaceSectionBars);
         }
     }
+
+    private void MarkSearchMatches() =>
+        SettingsRows.MarkMatches(Grid.Categories, GetSearchText(this) ?? string.Empty);
 
     // The section bars sit closer together in the shared grid; on these pages each one starts a new group.
     private void SpaceSectionBars()

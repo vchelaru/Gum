@@ -11,7 +11,7 @@ The list on the left has two sections:
 * **Application** pages apply to this machine, whatever project is open: **General**, **Appearance**, **Keyboard shortcuts**, and **Plugins**.
 * **Project** pages apply to the loaded project and are saved in its project file: **General**, **Canvas**, **Fonts**, **Localization**, and **Code generation**. The window lists only the Application pages while no project is loaded.
 
-The **Search** box above the list narrows the list to the pages that match the text you type.
+The **Search** box above the list narrows the list to the pages that match the text you type. On the selected page, the settings whose name or description match are highlighted; nothing is hidden. Highlighting is available on Canvas, Code generation, and the other pages built from rows of settings, and is available in December 2026, or now if building Gum from source.
 
 {% hint style="info" %}
 The Settings window is available in November 2026, or now if building Gum from source. Before then, these settings were spread across the Project Properties, Font Settings, Hotkeys, and Code tabs, and the Theming and Manage Plugins dialogs.
