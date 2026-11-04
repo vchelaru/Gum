@@ -251,6 +251,30 @@ public class ContainerShaderVariablesTests : BaseTestClass
         Has(sut, "Outline_Tint__X").ShouldBeFalse();
     }
 
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void SetProperty_TextVectorWithOnlyTheFirstComponentVariable_KeepsTheTextsOtherComponents(bool textFirst)
+    {
+        ContainerRuntime sut = new();
+        sut.SetProperty("SourceShaderFile", OutlineFile);
+
+        if (textFirst)
+        {
+            sut.SetProperty("ShaderParameters", "Tint=(0.5, 0.25)");
+        }
+        sut.SetProperty("Outline_Tint__X", 0.9f);
+        if (!textFirst)
+        {
+            sut.SetProperty("ShaderParameters", "Tint=(0.5, 0.25)");
+        }
+
+        ShaderParameterValue tint = Get(sut, "Tint");
+        tint.Count.ShouldBe(2);
+        tint.X.ShouldBe(0.9f);
+        tint.Y.ShouldBe(0.25f);
+    }
+
     [Fact]
     public void SetProperty_OverridingOneComponentOfACompleteVector_KeepsTheOtherComponents()
     {

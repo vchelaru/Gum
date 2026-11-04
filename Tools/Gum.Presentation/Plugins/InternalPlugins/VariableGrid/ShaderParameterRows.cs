@@ -48,7 +48,10 @@ public static class ShaderParameterRows
 
     /// <summary>The label of the row for one component of a vector parameter, such as <c>Tint X</c>.</summary>
     internal static string GetComponentRowName(ShaderParameterInfo info, int componentIndex) =>
-        info.Name + " " + ComponentNames[componentIndex];
+        info.Name + " " + GetComponentLabel(componentIndex);
+
+    /// <summary>The label of one component's field inside a vector's row: <c>X</c>, <c>Y</c>, <c>Z</c> or <c>W</c>.</summary>
+    internal static string GetComponentLabel(int componentIndex) => ComponentNames[componentIndex];
 
     /// <summary>Whether Gum fills the parameter in itself (the texel size and the &lt;Name&gt;IsSet markers), so there is nothing to set.</summary>
     internal static bool IsHiddenParameter(ShaderParameterInfo info) =>

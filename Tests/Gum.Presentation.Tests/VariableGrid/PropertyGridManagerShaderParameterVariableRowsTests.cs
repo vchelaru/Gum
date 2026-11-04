@@ -97,8 +97,11 @@ public class PropertyGridManagerShaderParameterVariableRowsTests : BaseTestClass
         return category;
     }
 
+    // A vector is one composite row; its components are the composite's channels.
     private static InstanceMember Row(MemberCategory category, string name) =>
-        category.Members.Single(member => member.Name == name);
+        category.Members
+            .Concat(category.Members.OfType<CompositeInstanceMember>().SelectMany(composite => composite.ChannelMembers))
+            .Single(member => member.Name == name);
 
     [Fact]
     public void BuildingTheRows_SavesNothing()
@@ -588,17 +591,99 @@ public class PropertyGridManagerShaderParameterVariableRowsTests : BaseTestClass
     private bool IsSaved(string name) => _component.DefaultState.Variables.Any(variable => variable.Name == name);
 
     [Fact]
-    public void VectorRows_KeepTheirLabels_AndBuildingThemSavesNothing()
+    public void AVector_IsOneCompositeRow_WithTheComponentsAsItsChannels_AndBuildingItSavesNothing()
     {
-        GivenTheEffectDeclares(Float("Thickness", 2f), Tint2());
+        GivenTheEffectDeclares(Float("Thickness", 2f), Tint4());
 
         MemberCategory category = BuildRows();
 
-        category.Members.Select(member => member.Name).ToArray().ShouldBe(new[] { "Thickness", "Tint X", "Tint Y" });
-        Row(category, "Tint X").Value.ShouldBe(0.5f);
-        Row(category, "Tint Y").Value.ShouldBe(0.25f);
-        Row(category, "Tint X").IsDefault.ShouldBeTrue();
+        category.Members.Select(member => member.Name).ToArray().ShouldBe(new[] { "Thickness", "Tint" });
+        CompositeInstanceMember row = category.Members.OfType<CompositeInstanceMember>().Single();
+        row.DisplayName.ShouldBe("Tint");
+        row.ChannelMembers.Select(channel => channel.Name).ToArray().ShouldBe(new[] { "Tint X", "Tint Y", "Tint Z", "Tint W" });
+        row.ChannelMembers.Select(channel => channel.DisplayName).ToArray().ShouldBe(new[] { "X", "Y", "Z", "W" });
+        row.ChannelMembers.Select(channel => channel.Value).ToArray().ShouldBe(new object?[] { 0.1f, 0.2f, 0.3f, 0.4f });
+        row.IsDefault.ShouldBeTrue();
         _component.DefaultState.Variables.Any(variable => variable.Name.Contains("Tint")).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void TheCompositeRow_IsSetAsSoonAsAnyComponentIsSaved_AndDefaultAgainAfterMakeDefault()
+    {
+        GivenTheEffectDeclares(Tint2());
+        MemberCategory category = BuildRows();
+        CompositeInstanceMember row = category.Members.OfType<CompositeInstanceMember>().Single();
+
+        Row(category, "Tint X").Value = 0.75f;
+
+        row.IsDefault.ShouldBeFalse();
+
+        MakeDefault(row);
+
+        row.IsDefault.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void ADefinitionWithOnlySomeComponentsSaved_ShowsAsSet_AndTheFirstEditSavesTheRest()
+    {
+        GivenTheEffectDeclares(Tint4());
+        _component.DefaultState.SetValue(TintX, 0.7f, _holder, "float");
+        _component.DefaultState.GetVariableSave(TintX)!.ShaderParameter = "Tint#0/4";
+        MemberCategory category = BuildRows();
+        CompositeInstanceMember row = category.Members.OfType<CompositeInstanceMember>().Single();
+
+        row.IsDefault.ShouldBeFalse();
+
+        Row(category, "Tint W").Value = 0.9f;
+
+        _component.DefaultState.GetVariableSave(TintX).ShouldNotBeNull().Value.ShouldBe(0.7f);
+        _component.DefaultState.GetVariableSave(TintY).ShouldNotBeNull().Value.ShouldBe(0.2f);
+        _component.DefaultState.GetVariableSave(TintZ).ShouldNotBeNull().Value.ShouldBe(0.3f);
+        _component.DefaultState.GetVariableSave(TintW).ShouldNotBeNull().Value.ShouldBe(0.9f);
+    }
+
+    [Fact]
+    public void EditingAComponentInACategoryState_SavesEveryComponentInThatState()
+    {
+        GivenTheEffectDeclares(Tint4());
+        StateSaveCategory stateCategory = new StateSaveCategory { Name = "Interaction" };
+        StateSave hover = new StateSave { Name = "Hover", ParentContainer = _component };
+        stateCategory.States.Add(hover);
+        _component.Categories.Add(stateCategory);
+        _mocker.GetMock<ISelectedState>().Setup(state => state.SelectedStateSave).Returns(hover);
+        MemberCategory rows = BuildRows();
+
+        Row(rows, "Tint Y").Value = 0.5f;
+
+        hover.GetVariableSave(TintX).ShouldNotBeNull("the whole parameter is written into the state being edited").Value.ShouldBe(0.1f);
+        hover.GetVariableSave(TintY).ShouldNotBeNull().Value.ShouldBe(0.5f);
+        hover.GetVariableSave(TintZ).ShouldNotBeNull().Value.ShouldBe(0.3f);
+        hover.GetVariableSave(TintW).ShouldNotBeNull().Value.ShouldBe(0.4f);
+    }
+
+    private static void MakeDefault(InstanceMember row) =>
+        row.ContextMenuEvents.Single(item => item.Key == "Make Default").Value.Invoke(row, EventArgs.Empty);
+
+    [Fact]
+    public void MakeDefaultOnTheCompositeRow_ClearsEveryComponent_AsOneUndoStep()
+    {
+        GivenTheEffectDeclares(Float("Thickness", 2f), Tint4());
+        UndoManager undoManager = UseRealUndoManager();
+        MemberCategory category = BuildRows();
+        undoManager.RecordState();
+        Row(category, "Tint X").Value = 0.75f;
+        undoManager.RecordUndo();
+
+        undoManager.RecordState();
+        MakeDefault(category.Members.OfType<CompositeInstanceMember>().Single());
+
+        IsSaved(TintX).ShouldBeFalse();
+        IsSaved(TintW).ShouldBeFalse();
+
+        undoManager.PerformUndo();
+
+        _component.DefaultState.GetVariableSave(TintX).ShouldNotBeNull("one undo restores the whole parameter").Value.ShouldBe(0.75f);
+        _component.DefaultState.GetVariableSave(TintW).ShouldNotBeNull().Value.ShouldBe(0.4f);
     }
 
     [Fact]
@@ -744,31 +829,46 @@ public class PropertyGridManagerShaderParameterVariableRowsTests : BaseTestClass
         _component.DefaultState.GetVariableSave(TintY).ShouldNotBeNull().Value.ShouldBe(0.25f);
     }
 
+    private void AnswerTheExposePrompt(string? baseName)
+    {
+        Mock<IDialogService> dialogService = _mocker.GetMock<IDialogService>();
+        dialogService
+            .Setup(d => d.Show(It.IsAny<Gum.Dialogs.ExposeColorDialogViewModel>()))
+            .Callback((Gum.Dialogs.ExposeColorDialogViewModel viewModel) => viewModel.BaseName = baseName ?? "")
+            .Returns(baseName != null);
+    }
+
+    private static void ExposeTheVector(MemberCategory category) =>
+        category.Members.OfType<CompositeInstanceMember>().Single().ContextMenuEvents["Expose Variable"].Invoke(null, EventArgs.Empty);
+
     [Fact]
-    public void ExposeOnOneComponent_ExposesIt_AndSavesTheWholeParameterWithValues()
+    public void ExposeOnTheCompositeRow_ExposesEveryComponentUnderOneBase_WithValues()
     {
         GivenTheEffectDeclares(Tint2());
-        UseRealExposeService(UseRealUndoManager(), answer: "TintX");
+        UseRealExposeService(UseRealUndoManager());
+        AnswerTheExposePrompt("Tint");
         MemberCategory category = BuildRows();
 
-        Expose(Row(category, "Tint X"));
+        ExposeTheVector(category);
 
         VariableSave x = _component.DefaultState.GetVariableSave(TintX).ShouldNotBeNull("exposing names the component");
-        x.ExposedAsName.ShouldBe("TintX");
+        x.ExposedAsName.ShouldBe("Tint__X");
         x.ShaderParameter.ShouldBe("Tint#0/2");
         x.Type.ShouldBe("float");
         x.Value.ShouldBe(0.5f, "the exposed component carries its value so the vector is complete");
-        VariableSave y = _component.DefaultState.GetVariableSave(TintY).ShouldNotBeNull("exposing pins the whole parameter");
+        VariableSave y = _component.DefaultState.GetVariableSave(TintY).ShouldNotBeNull();
+        y.ExposedAsName.ShouldBe("Tint__Y");
         y.Value.ShouldBe(0.25f);
-        y.ExposedAsName.ShouldBeNull();
+        _mocker.GetMock<IDialogService>().Verify(d => d.Show(It.IsAny<Gum.Dialogs.ExposeColorDialogViewModel>()), Times.Once);
     }
 
     [Fact]
-    public void ExposeOnOneComponent_ThenAnOuterElementSetsIt_TheVectorStaysComplete()
+    public void ExposeOnTheCompositeRow_ThenAnOuterElementSetsAComponent_TheVectorStaysComplete()
     {
         GivenTheEffectDeclares(Tint2());
-        UseRealExposeService(UseRealUndoManager(), answer: "TintX");
-        Expose(Row(BuildRows(), "Tint X"));
+        UseRealExposeService(UseRealUndoManager());
+        AnswerTheExposePrompt("Tint");
+        ExposeTheVector(BuildRows());
         ComponentSave reloaded = RoundTrip(_component);
         ScreenSave screen = new ScreenSave { Name = "MyScreen" };
         screen.States.Add(new StateSave { ParentContainer = screen });
@@ -778,35 +878,35 @@ public class PropertyGridManagerShaderParameterVariableRowsTests : BaseTestClass
         ObjectFinder.Self.GumProjectSave.Components.Add(reloaded);
         ObjectFinder.Self.GumProjectSave.Screens.Add(screen);
 
-        screen.DefaultState.SetValue("Comp1.TintX", 0.9f, user);
+        screen.DefaultState.SetValue("Comp1.Tint__X", 0.9f, user);
 
-        screen.DefaultState.GetValueRecursive("Comp1.TintX").ShouldBe(0.9f);
+        screen.DefaultState.GetValueRecursive("Comp1.Tint__X").ShouldBe(0.9f);
         reloaded.DefaultState.GetVariableSave(TintX).ShouldNotBeNull().Value.ShouldBe(0.5f);
         reloaded.DefaultState.GetVariableSave(TintY).ShouldNotBeNull().Value.ShouldBe(0.25f);
     }
 
     [Fact]
-    public void ExposeOnOneComponent_WhenThePromptIsCancelled_SavesNothing()
+    public void ExposeOnTheCompositeRow_WhenThePromptIsCancelled_SavesNothing()
     {
         GivenTheEffectDeclares(Tint2());
-        UseRealExposeService(UseRealUndoManager(), answer: null);
-        MemberCategory category = BuildRows();
+        UseRealExposeService(UseRealUndoManager());
+        AnswerTheExposePrompt(null);
 
-        Expose(Row(category, "Tint Y"));
+        ExposeTheVector(BuildRows());
 
         IsSaved(TintX).ShouldBeFalse();
         IsSaved(TintY).ShouldBeFalse();
     }
 
     [Fact]
-    public void ExposeOnOneComponent_WithALegacyValue_KeepsItAsTheComponentsValues()
+    public void ExposeOnTheCompositeRow_WithALegacyValue_KeepsItAsTheComponentsValues()
     {
         GivenTheEffectDeclares(Tint2());
         _component.DefaultState.SetValue("Holder.ShaderParameters", "Tint=(0.6, 0.9)");
-        UseRealExposeService(UseRealUndoManager(), answer: "TintX");
-        MemberCategory category = BuildRows();
+        UseRealExposeService(UseRealUndoManager());
+        AnswerTheExposePrompt("Tint");
 
-        Expose(Row(category, "Tint X"));
+        ExposeTheVector(BuildRows());
 
         _component.DefaultState.GetVariableSave(TintX).ShouldNotBeNull().Value.ShouldBe(0.6f);
         _component.DefaultState.GetVariableSave(TintY).ShouldNotBeNull().Value.ShouldBe(0.9f);
@@ -814,15 +914,16 @@ public class PropertyGridManagerShaderParameterVariableRowsTests : BaseTestClass
     }
 
     [Fact]
-    public void ExposeOnOneComponent_UndoAndRedo_RemoveAndRestoreTheWholeParameter()
+    public void ExposeOnTheCompositeRow_UndoAndRedo_RemoveAndRestoreTheWholeExposure()
     {
         GivenTheEffectDeclares(Tint2());
         UndoManager undoManager = UseRealUndoManager();
-        UseRealExposeService(undoManager, answer: "TintX");
+        UseRealExposeService(undoManager);
+        AnswerTheExposePrompt("Tint");
         MemberCategory category = BuildRows();
 
         undoManager.RecordState();
-        Expose(Row(category, "Tint X"));
+        ExposeTheVector(category);
         undoManager.PerformUndo();
 
         IsSaved(TintX).ShouldBeFalse();
@@ -830,24 +931,41 @@ public class PropertyGridManagerShaderParameterVariableRowsTests : BaseTestClass
 
         undoManager.PerformRedo();
 
-        _component.DefaultState.GetVariableSave(TintX).ShouldNotBeNull().ExposedAsName.ShouldBe("TintX");
-        _component.DefaultState.GetVariableSave(TintY).ShouldNotBeNull();
+        _component.DefaultState.GetVariableSave(TintX).ShouldNotBeNull().ExposedAsName.ShouldBe("Tint__X");
+        _component.DefaultState.GetVariableSave(TintY).ShouldNotBeNull().ExposedAsName.ShouldBe("Tint__Y");
     }
 
     [Fact]
-    public void MakeDefaultOnAnExposedComponent_KeepsTheExposureAndClearsTheValues()
+    public void AnExposedVector_OffersUnexpose_InsteadOfExpose_AndUnexposingClearsEveryComponent()
     {
         GivenTheEffectDeclares(Tint2());
-        UseRealExposeService(UseRealUndoManager(), answer: "TintX");
-        Expose(Row(BuildRows(), "Tint X"));
+        UseRealExposeService(UseRealUndoManager());
+        AnswerTheExposePrompt("Tint");
+        ExposeTheVector(BuildRows());
+        CompositeInstanceMember row = BuildRows().Members.OfType<CompositeInstanceMember>().Single();
+
+        row.ContextMenuEvents.Keys.ShouldNotContain("Expose Variable");
+        row.ContextMenuEvents["Un-expose Tint"].Invoke(row, EventArgs.Empty);
+
+        _component.DefaultState.GetVariableSave(TintX)?.ExposedAsName.ShouldBeNull();
+        _component.DefaultState.GetVariableSave(TintY)?.ExposedAsName.ShouldBeNull();
+    }
+
+    [Fact]
+    public void MakeDefaultOnAnExposedVector_KeepsTheExposuresAndClearsTheValues()
+    {
+        GivenTheEffectDeclares(Tint2());
+        UseRealExposeService(UseRealUndoManager());
+        AnswerTheExposePrompt("Tint");
+        ExposeTheVector(BuildRows());
         MemberCategory category = BuildRows();
 
-        Row(category, "Tint Y").IsDefault = true;
+        MakeDefault(category.Members.OfType<CompositeInstanceMember>().Single());
 
         VariableSave x = _component.DefaultState.GetVariableSave(TintX).ShouldNotBeNull("an exposure is never removed by Make Default");
-        x.ExposedAsName.ShouldBe("TintX");
+        x.ExposedAsName.ShouldBe("Tint__X");
         x.SetsValue.ShouldBeFalse();
-        IsSaved(TintY).ShouldBeFalse();
+        _component.DefaultState.GetVariableSave(TintY).ShouldNotBeNull().ExposedAsName.ShouldBe("Tint__Y");
     }
 
     #endregion

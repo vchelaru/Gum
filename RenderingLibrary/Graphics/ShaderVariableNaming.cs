@@ -159,6 +159,19 @@ public static class ShaderVariableNaming
     public static string GetVariableName(string? shaderFile, string parameter, int componentIndex, int componentCount) =>
         GetVariableName(shaderFile, new ShaderParameterMarker(parameter, componentIndex, componentCount));
 
+    /// <summary>The suffix that ends a component's variable name, such as <c>__Y</c> for index 1.</summary>
+    /// <param name="componentIndex">The zero based component, 0 for X up to 3 for W.</param>
+    /// <exception cref="ArgumentOutOfRangeException">The index is not 0 to 3.</exception>
+    public static string GetComponentSuffix(int componentIndex)
+    {
+        if (componentIndex < 0 || componentIndex >= ComponentLetters.Length)
+        {
+            throw new ArgumentOutOfRangeException(nameof(componentIndex));
+        }
+
+        return ComponentSeparator + ComponentLetters[componentIndex];
+    }
+
     /// <summary>
     /// The variable name for <paramref name="marker"/>. A caller that needs the name and the marker text
     /// builds the marker once and uses this and <see cref="ShaderParameterMarker.Format"/>.
