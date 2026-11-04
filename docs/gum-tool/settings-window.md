@@ -51,7 +51,9 @@ This page lists every shortcut and its key combination, such as **Duplicate: Ctr
 
 <figure><img src="../.gitbook/assets/25_08 00 04.png" alt=""><figcaption><p>Application > Plugins page</p></figcaption></figure>
 
-The page has two sections. **Installed plugins** has one row per plugin, with a checkbox to turn it on or off and a hint saying where it comes from. A chip beside the checkbox names its state: **Built-in** for a plugin that is part of Gum, **Required** for one Gum needs to run (its checkbox cannot be changed), **Failed** for one that crashed and was turned off (turning it on asks first), and **Not loaded** for a plugin found in the `Plugins` folder that this version of Gum cannot run, with the reason under it.
+The page has three sections. **Installed plugins** has one line per plugin you can turn off, with a checkbox to turn it on or off. A chip beside the checkbox names its state: **Built-in** for a plugin that is part of Gum, **Failed** for one that crashed and was turned off (turning it on asks first), and **Not loaded** for a plugin found in the `Plugins` folder that this version of Gum cannot run. A failed or not-loaded plugin also shows the reason under its line.
+
+**Gum internals** is collapsed. It lists the plugins Gum needs to run, marked **Required**; their checkboxes cannot be changed. Searching for one of them opens the section.
 
 **Folder scan** shows the `Plugins` folder Gum looked in and, under it, each file that holds plugins and whether it loaded. Click **Copy scan** to copy the full scan result so you can paste it into a bug report. To write your own plugin, see [Plugins](plugins/README.md).
 
