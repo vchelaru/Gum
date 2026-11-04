@@ -23,10 +23,11 @@ public static class SettingsRows
     public const double LabelColumnWidth = 202;
 
     /// <summary>A checkbox row; <paramref name="toggleText"/> is the text beside the box.</summary>
-    public static InstanceMember Toggle(string name, string label, string hint, Func<bool> get, Action<bool> set, string? toggleText = null)
+    public static InstanceMember Toggle(string name, string label, string? hint, Func<bool> get, Action<bool> set, string? toggleText = null, string? chip = null)
     {
         InstanceMember member = Create(name, label, hint, typeof(bool), () => get(), value => set(Convert.ToBoolean(value)));
         member.ToggleText = toggleText;
+        member.ChipText = chip;
         return member;
     }
 
@@ -95,7 +96,7 @@ public static class SettingsRows
     /// A read-only row: the value in a muted field, with an optional chip beside it (for example where the value
     /// came from). A link in the hint (<see cref="InstanceMember.DetailAction"/>) still works.
     /// </summary>
-    public static InstanceMember ReadOnly(string name, string label, string hint, Func<string?> get, string? chip = null)
+    public static InstanceMember ReadOnly(string name, string label, string? hint, Func<string?> get, string? chip = null)
     {
         InstanceMember member = Create(name, label, hint, typeof(string), () => get(), _ => { });
         member.IsReadOnly = true;
@@ -173,7 +174,7 @@ public static class SettingsRows
         return count;
     }
 
-    private static InstanceMember Create(string name, string label, string hint, Type type, Func<object?> get, Action<object?> set)
+    private static InstanceMember Create(string name, string label, string? hint, Type type, Func<object?> get, Action<object?> set)
     {
         InstanceMember member = new InstanceMember(name, instance: null);
         member.DisplayName = label;

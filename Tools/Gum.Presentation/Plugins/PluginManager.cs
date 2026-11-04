@@ -1439,9 +1439,17 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
         return ToPluginSummary(container);
     }
 
-    private static PluginSummary ToPluginSummary(PluginContainer container) =>
-        new(container.Name, container.ToString(), container.IsEnabled, !string.IsNullOrEmpty(container.FailureDetails), container,
-            CanBeDisabled: CanUserDisable(container.Plugin));
+    private static PluginSummary ToPluginSummary(PluginContainer container)
+    {
+        // A plugin shipped as its own .dll sits in the Plugins folder; the rest are part of Gum.
+        string location = container.Plugin.GetType().Assembly.Location;
+        bool isInPluginsFolder = !string.IsNullOrEmpty(location) &&
+            string.Equals(System.IO.Path.GetFileName(System.IO.Path.GetDirectoryName(location)), "Plugins", StringComparison.OrdinalIgnoreCase);
+        return new(container.Name, container.ToString(), container.IsEnabled, !string.IsNullOrEmpty(container.FailureDetails), container,
+            CanBeDisabled: CanUserDisable(container.Plugin),
+            SourceFile: string.IsNullOrEmpty(location) ? null : System.IO.Path.GetFileName(location),
+            IsBuiltIn: !isInPluginsFolder);
+    }
 
     internal static void AddInternalPlugins()
     {

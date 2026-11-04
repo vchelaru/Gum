@@ -352,29 +352,30 @@ public class DialogScenarioTests
         RecordingClipboardService clipboard = (RecordingClipboardService)Services.GetRequiredService<IClipboardService>();
         clipboard.Clear();
         List<string> stagedPlugins = Directory.GetDirectories(PluginManager.PluginFolder).Select(Path.GetFileName).Select(name => name + ".dll").ToList()!;
-        List<(string Text, bool? IsChecked)> rows = new List<(string, bool?)>();
-        string scan = "";
+        List<(string Name, object? Value)> rows = new List<(string, object?)>();
+        List<string> scanFiles = new List<string>();
         tree.Dialogs.AnswerNextSettingsPageInWindow<PluginsDialogViewModel>(SettingsPageIds.Plugins, (window, plugins) =>
         {
-            rows.AddRange(window.FindAll<global::Avalonia.Controls.CheckBox>().Select(box => (box.Content as string ?? "", box.IsChecked)));
-            window.Click(window.Find<global::Avalonia.Controls.TabItem>(tab => tab.Header as string == "Folder scan"));
-            scan = window.Find<global::Avalonia.Controls.TextBox>(box => box.IsReadOnly).Text ?? "";
-            window.Click(window.Find<global::Avalonia.Controls.Button>(button => button.Command == plugins.CopyDiagnosticsCommand));
+            List<WpfDataUi.DataTypes.InstanceMember> members = window.Find<Gum.Avalonia.Settings.SettingsRowsPageView>(_ => true)
+                .Grid.Categories.SelectMany(category => category.Members).ToList();
+            rows.AddRange(members.Where(member => member.Name.StartsWith("Plugin:")).Select(member => (member.Name, member.Value)));
+            scanFiles.AddRange(members.Where(member => member.Name.StartsWith("ScanFile:")).Select(member => member.DisplayName));
+            members.Single(member => member.Name == "PluginsFolder").DetailAction!.Navigate();
             window.Click(window.AffirmativeButton);
         });
 
         tree.PickMainMenu("Edit", "Settings...");
 
         rows.Count.ShouldBe(pluginManager.PluginContainers.Count, "every plugin the tool composed has a row");
-        rows.ShouldAllBe(row => row.IsChecked == true, "every plugin is running");
+        rows.ShouldAllBe(row => (bool)row.Value! == true, "every plugin is running");
         pluginManager.PluginContainers.Values.ShouldAllBe(container => container.FailureDetails == null);
         stagedPlugins.ShouldNotBeEmpty();
         foreach (string plugin in stagedPlugins)
         {
-            scan.ShouldContain("    " + plugin, customMessage: $"the scan lists {plugin} as holding plugins");
+            scanFiles.ShouldContain(plugin, customMessage: $"the scan lists {plugin} as holding plugins");
+            clipboard.LastText.ShouldContain("    " + plugin);
         }
-        scan.ShouldContain(" 0 failed to load, 0 refused)");
-        clipboard.LastText.ShouldBe(scan, "Copy puts the scan on the clipboard");
+        clipboard.LastText.ShouldContain(" 0 failed to load, 0 refused)", customMessage: "Copy scan puts the scan on the clipboard");
         tree.AssertOracles();
     }
 
@@ -391,18 +392,20 @@ public class DialogScenarioTests
         PluginHostFixture.PluginAssemblyWriter.WriteDerivingFrom(Path.Combine(folder, pluginName), pluginName,
             "Gum", "Gum.Plugins.BaseClasses", "PriorityPlugin", "Gum.Presentation");
         PluginScanReport? startupScan = pluginManager.PluginScanReport;
-        List<(string Text, bool? IsChecked, bool IsEnabled, string? ToolTip)> rows = new();
+        List<WpfDataUi.DataTypes.InstanceMember> rows = new();
         string scan = "";
+        RecordingClipboardService clipboard = (RecordingClipboardService)Services.GetRequiredService<IClipboardService>();
+        clipboard.Clear();
         try
         {
             pluginManager.PluginScanReport = pluginManager.ScanPluginFolder(folder, new List<System.ComponentModel.Composition.Primitives.ComposablePartCatalog>());
             using ProjectTreeHarness tree = new ProjectTreeHarness();
             tree.Dialogs.AnswerNextSettingsPageInWindow<PluginsDialogViewModel>(SettingsPageIds.Plugins, (window, _) =>
             {
-                rows.AddRange(window.FindAll<global::Avalonia.Controls.CheckBox>().Select(box =>
-                    (box.Content as string ?? "", box.IsChecked, box.IsEnabled, global::Avalonia.Controls.ToolTip.GetTip(box) as string)));
-                window.Click(window.Find<global::Avalonia.Controls.TabItem>(tab => tab.Header as string == "Folder scan"));
-                scan = window.Find<global::Avalonia.Controls.TextBox>(box => box.IsReadOnly).Text ?? "";
+                rows.AddRange(window.Find<Gum.Avalonia.Settings.SettingsRowsPageView>(_ => true)
+                    .Grid.Categories.SelectMany(category => category.Members));
+                rows.Single(member => member.Name == "PluginsFolder").DetailAction!.Navigate();
+                scan = clipboard.LastText ?? "";
                 window.Click(window.AffirmativeButton);
             });
 
@@ -415,12 +418,13 @@ public class DialogScenarioTests
             pluginManager.PluginScanReport = startupScan;
         }
 
-        (string Text, bool? IsChecked, bool IsEnabled, string? ToolTip) refused =
-            rows.Where(row => row.Text == pluginName + ".dll (not loaded)").ShouldHaveSingleItem();
-        refused.IsChecked.ShouldBe(false);
-        refused.IsEnabled.ShouldBeFalse("a refused plugin cannot be turned on");
-        refused.ToolTip.ShouldNotBeNull();
-        refused.ToolTip.ShouldContain("needs an Avalonia build");
+        WpfDataUi.DataTypes.InstanceMember refused =
+            rows.Where(row => row.Name == "Plugin:" + pluginName + ".dll").ShouldHaveSingleItem();
+        refused.Value.ShouldBe(false);
+        refused.ChipText.ShouldBe("Not loaded");
+        refused.IsReadOnly.ShouldBeTrue("a refused plugin cannot be turned on");
+        refused.WarningText.ShouldNotBeNull();
+        refused.WarningText.ShouldContain("needs an Avalonia build");
         scan.ShouldContain("1 refused)");
         scan.ShouldContain($"    {pluginName}.dll - ");
     }

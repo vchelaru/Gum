@@ -82,7 +82,7 @@ public class SettingsDialogViewModel : DialogViewModel
             new SettingsPage(SettingsPageIds.Plugins, "Plugins", SettingsSection.Application, plugins, PluginsOrder)
             {
                 Keywords = new[] { "enable", "disable", "Folder scan", "Copy Scan" },
-                SearchTerms = () => plugins.Plugins.Select(plugin => plugin.DisplayText),
+                SearchTerms = () => new PluginsRows(plugins).SearchTerms(),
             },
         };
         _allPages.AddRange(registry.Pages.Where(page => hasProject || page.Section == SettingsSection.Application));

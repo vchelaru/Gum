@@ -270,7 +270,7 @@ public class SettingsDialogViewModelTests
     [Fact]
     public void SearchText_FindsThePluginsPageByAPluginsName()
     {
-        _plugins.Add(new PluginSummary("MyCoolPlugin", "My Cool Plugin", IsEnabled: true, HasFailureDetails: false, PluginHandle: new object()));
+        _plugins.Add(new PluginSummary("My Cool Plugin", "My Cool Plugin", IsEnabled: true, HasFailureDetails: false, PluginHandle: new object()));
         SettingsDialogViewModel viewModel = CreateViewModel();
 
         viewModel.SearchText = "cool plugin";

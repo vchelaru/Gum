@@ -22,6 +22,9 @@ public class PluginsDialogViewModel : DialogViewModel
     /// </summary>
     public string Diagnostics { get; }
 
+    /// <summary>What the plugin-folder scan found, or null when plugins have not been loaded.</summary>
+    public PluginScanReport? ScanReport { get; }
+
     /// <summary>
     /// Puts <see cref="Diagnostics"/> on the clipboard. The point of the scan is to end up in a bug
     /// report, and selecting several screens of text by hand is a poor way to get it there.
@@ -52,6 +55,7 @@ public class PluginsDialogViewModel : DialogViewModel
             Plugins.Add(PluginItemViewModel.ForRefused(refused, pluginManager, dialogService));
         }
 
+        ScanReport = scanReport;
         Diagnostics = scanReport?.Describe()
             ?? "Plugins have not been loaded, so there is nothing to report.";
 
@@ -71,6 +75,32 @@ public class PluginItemViewModel : Mvvm.ViewModel
     private readonly RefusedPlugin? _refused;
 
     public string DisplayText => _refused != null ? $"{_refused.Name} (not loaded)" : summary.DisplayText;
+
+    /// <summary>The plugin's name alone, without the failure note <see cref="DisplayText"/> adds.</summary>
+    public string Name => summary.Name;
+
+    /// <summary>True for a plugin that was found but never loaded.</summary>
+    public bool IsNotLoaded => _refused != null;
+
+    /// <summary>Why a plugin that was found was not loaded; null for one that was.</summary>
+    public string? NotLoadedReason => _refused?.Reason;
+
+    /// <summary>True when the plugin crashed and was turned off.</summary>
+    public bool HasFailed => _refused == null && summary.HasFailureDetails;
+
+    /// <summary>The crash note (for example "Failed in StartUp"), or null.</summary>
+    public string? FailureDetails => !HasFailed ? null
+        : summary.DisplayText.StartsWith(summary.Name, StringComparison.Ordinal) ? summary.DisplayText.Substring(summary.Name.Length).Trim('(', ')', ' ')
+        : summary.DisplayText;
+
+    /// <summary>True for a running plugin the user cannot turn off.</summary>
+    public bool IsRequired => _refused == null && !summary.CanBeDisabled;
+
+    /// <summary>True for a plugin that is part of Gum itself rather than a .dll in the Plugins folder.</summary>
+    public bool IsBuiltIn => _refused == null && summary.IsBuiltIn;
+
+    /// <summary>The assembly file the plugin came from, or null when unknown.</summary>
+    public string? SourceFile => summary.SourceFile;
 
     /// <summary>
     /// Whether the checkbox is offered. A plugin the tool needs cannot be turned off, but one that
@@ -152,5 +182,7 @@ public class PluginItemViewModel : Mvvm.ViewModel
         NotifyPropertyChanged(nameof(DisplayText));
         NotifyPropertyChanged(nameof(CanToggle));
         NotifyPropertyChanged(nameof(ToolTip));
+        NotifyPropertyChanged(nameof(HasFailed));
+        NotifyPropertyChanged(nameof(FailureDetails));
     }
 }
