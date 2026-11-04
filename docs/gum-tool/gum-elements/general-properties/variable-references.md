@@ -508,7 +508,7 @@ Available in November 2026, or now if building Gum from source.
 
 ### Not Following Its Reference
 
-A reference can be valid but have no value right now. For example, `Width = 100 / Leader.Width` has no value while `Leader.Width` is `0`. The variable keeps its last value, and a second line appears under **Set by**, such as `Not following its reference right now: divides by zero, Leader.Width = 0`.
+A reference can be valid but have no value right now. For example, `Width = 100 / Leader.Width` has no value while `Leader.Width` is `0`. The variable keeps its last value, and a second line appears under **Set by**, such as `Not updating: Leader.Width is 0, so the reference can't divide by it.`.
 
 The line is a note, not an error: it does not appear in the Errors tab and does not stop you from editing anything. It goes away as soon as the right side has a value again, including when the variable it reads belongs to a different component and changed while this element was closed.
 

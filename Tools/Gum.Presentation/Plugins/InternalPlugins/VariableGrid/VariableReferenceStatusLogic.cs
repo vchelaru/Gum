@@ -16,8 +16,7 @@ namespace Gum.Plugins.InternalPlugins.VariableGrid;
 public interface IVariableReferenceStatusLogic
 {
     /// <summary>
-    /// Returns the note for the row <paramref name="variableName"/> (such as <c>Not following its reference right
-    /// now: divides by zero, Y = 0</c>), or null when its reference evaluates or it has none.
+    /// Returns the note for the row <paramref name="variableName"/> (such as <c>Not updating: Y is 0, so the reference can't divide by it.</c>), or null when its reference evaluates or it has none.
     /// </summary>
     /// <param name="variableName">The unqualified variable the row shows.</param>
     /// <param name="instance">The instance the row belongs to; null on an element-level row.</param>
@@ -29,7 +28,7 @@ public interface IVariableReferenceStatusLogic
 /// <inheritdoc/>
 public class VariableReferenceStatusLogic : IVariableReferenceStatusLogic
 {
-    private const string Prefix = "Not following its reference right now: ";
+    private const string Prefix = "Not updating: ";
 
     /// <inheritdoc/>
     public string? GetNote(string variableName, InstanceSave? instance, ElementSave owner, StateSave state)
@@ -74,7 +73,7 @@ public class VariableReferenceStatusLogic : IVariableReferenceStatusLogic
                 EvaluatedSyntax? evaluated = EvaluatedSyntax.FromSyntaxNode(assignment.Right, state);
                 if (evaluated != null && evaluated.EvaluatedType == null)
                 {
-                    return Prefix + VariableReferenceLogic.DescribeRightSideFailure(assignment.Right, state, null).NoteReason;
+                    return Prefix + VariableReferenceLogic.DescribeRightSideFailure(assignment.Right, state, null).NoteReason + ".";
                 }
             }
         }

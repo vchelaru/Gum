@@ -113,7 +113,7 @@ public class VariableReferenceStatusLogicTests : BaseTestClass
         SetSourceWidth(_source, 0f);
 
         _status.GetNote("Width", null, _reader, _reader.DefaultState!)
-            .ShouldBe("Not following its reference right now: divides by zero, Components/Source.Width = 0");
+            .ShouldBe("Not updating: Components/Source.Width is 0, so the reference can't divide by it.");
     }
 
     [Fact]
@@ -136,7 +136,7 @@ public class VariableReferenceStatusLogicTests : BaseTestClass
         SetRows(_reader.DefaultState!, "Inner", "Width = 100 / Other.Width");
 
         _status.GetNote("Width", _reader.GetInstance("Inner"), _reader, _reader.DefaultState!)
-            .ShouldBe("Not following its reference right now: divides by zero, Other.Width = 0");
+            .ShouldBe("Not updating: Other.Width is 0, so the reference can't divide by it.");
     }
 
     [Fact]

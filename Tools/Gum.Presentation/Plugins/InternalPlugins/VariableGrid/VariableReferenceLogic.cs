@@ -225,7 +225,7 @@ public class VariableReferenceLogic : IVariableReferenceLogic
             return new RightSideFailure(
                 "The right side reads a value that is computed from the layout (such as Index or AbsoluteWidth). " +
                 "Check that the instance exists in this element; Absolute* values also need the element to be displayed",
-                "it reads a value computed from the layout that is not available");
+                "it reads a value computed from the layout, which is not available");
         }
 
         SyntaxNode? zeroDivisor = FindZeroDivisor(right, state, liveRoot);
@@ -234,7 +234,7 @@ public class VariableReferenceLogic : IVariableReferenceLogic
             string divisor = EvaluatedSyntax.ConvertToSlashSyntax(zeroDivisor.ToString());
             return new RightSideFailure(
                 "The right side divides by zero. Check the divisor (the value after / or %), including variables that are currently 0",
-                zeroDivisor is LiteralExpressionSyntax ? "divides by zero" : $"divides by zero, {divisor} = 0");
+                zeroDivisor is LiteralExpressionSyntax ? "divides by zero" : $"{divisor} is 0, so the reference can't divide by it");
         }
 
         return new RightSideFailure(

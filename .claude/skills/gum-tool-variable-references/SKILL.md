@@ -129,7 +129,7 @@ Rows in a loop are skipped by the canvas and by `ApplyVariableReferences` and ke
 
 ## Row Note for a Reference With No Value
 
-A valid right side can have no value right now (`100 / Y` with `Y = 0`); the left variable keeps its last value. `VariableReferenceStatusLogic.GetNote` computes a "Not following its reference right now: ..." line from current values, and `ElementSaveDisplayer` appends it under "Set by" (no Errors-tab entry; it would flicker while `Y` is dragged). Reason wording comes from `VariableReferenceLogic.DescribeRightSideFailure`, shared with the edit-time dialog. Lines reading `Index`/Absolute* are skipped: they need the live canvas.
+A valid right side can have no value right now (`100 / Y` with `Y = 0`); the left variable keeps its last value. `VariableReferenceStatusLogic.GetNote` computes a "Not updating: ..." line from current values, and `ElementSaveDisplayer` appends it under "Set by" (no Errors-tab entry; it would flicker while `Y` is dragged). Reason wording comes from `VariableReferenceLogic.DescribeRightSideFailure`, shared with the edit-time dialog. Lines reading `Index`/Absolute* are skipped: they need the live canvas.
 
 ## Validation
 
