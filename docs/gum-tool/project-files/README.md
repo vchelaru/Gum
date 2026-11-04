@@ -280,16 +280,6 @@ Each variable stores the name of its type, such as `float`, `HorizontalAlignment
 Available in November 2026, or now if building Gum from source.
 {% endhint %}
 
-## Variable the Instance's Type Does Not Have (GUM0029)
-
-A variable such as `Label.NotAVariable` sets a property on the instance `Label`, so the instance's type must have it. When it does not, the value is ignored. `gumcli check` reports **GUM0029** as a warning and does not block code generation. Projects saved by an earlier version of Gum can hold these after an instance's type changed (the tool now removes them when the type changes), so the Errors tab does not list GUM0029. To resolve it, delete the variable from the element file or fix its name.
-
-`gumcli check` does not report category selectors for categories the type no longer has, variables Standard elements used to have (such as `DropshadowBlurX`), variables of another Standard type left on an instance whose type changed (such as `Text` on a Container), or any variable on an instance of a component that has a Forms behavior, since its Forms control can receive variables that no variable list names.
-
-{% hint style="info" %}
-Available in November 2026, or now if building Gum from source.
-{% endhint %}
-
 ## Behavior File Missing (GUM0031)
 
 The project file can list a behavior whose file is not on disk, for example after the file was renamed or deleted. The behavior then loads empty, so the requirements it places on components that use it are never checked. `gumcli check` reports **GUM0031** as a warning naming the behavior and the path it expected, and it does not block code generation. To resolve it, restore the file or delete the behavior from the project file.
