@@ -56,10 +56,58 @@ jobs:
       aot: ${{ steps.jobpaths.outputs.aot }}
       gencode: ${{ steps.jobpaths.outputs.gencode }}
     steps:
+      # The `fast-ci` label must never skip tests that can observe the change (#7589: a PR that edited
+      # Outline.slang carried the label, the Mesa stream with RaylibGum.Tests was skipped, and 8 Raylib
+      # tests went red on main unnoticed). Rule: anything the skipped Mesa streams (the `mesa-*` lines in
+      # .github/scripts/windows-test-groups.txt) can observe forces full scope, label or not. Derived from
+      # those projects' references: the Mesa test projects themselves and what they share, every runtime
+      # and host (Runtimes, MonoGameGum), the shared rendering/layout core, integrations and themes they
+      # load, shipped shader files wherever they live, and CI plumbing. Tool, Tools, Gum (editor), docs
+      # and the headless test projects stay eligible for fast scope.
+      - name: Paths the skipped Mesa streams can observe
+        if: github.event_name == 'pull_request'
+        id: mesa
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            mesa:
+              - '**/*.slang'
+              - '**/*.fx'
+              - 'Gum/Content/**'
+              - 'Runtimes/**'
+              - 'MonoGameGum/**'
+              - 'GumCommon/**'
+              - 'GumDataTypes/**'
+              - 'GumRuntime/**'
+              - 'RenderingLibrary/**'
+              - 'InputLibrary/**'
+              - 'Integrations/**'
+              - 'Themes/**'
+              - 'ToolsUtilities/**'
+              - 'Tools/Gum.ProjectServices*/**'
+              - 'Tests/MonoGameGum.IntegrationTests/**'
+              - 'Tests/MonoGameGum.Shapes.Tests/**'
+              - 'Tests/GumShadowDusk.Tests.*/**'
+              - 'Tests/SkiaGum.GpuTests/**'
+              - 'Tests/Gum.Cli.Tests/**'
+              - 'Tests/RaylibGum.Tests/**'
+              - 'Tests/Gum.ProjectServices.*.Tests/**'
+              - 'Tests/Gum.Automation/**'
+              - 'Tests/Shared/**'
+              - 'Tests/TestOrdering/**'
+              - 'Tests/CiTestProjects.slnf'
+              - 'GumCoreShared.projitems'
+              - '*.props'
+              - '*.targets'
+              - 'global.json'
+              - 'NuGet.config'
+              - '.github/**'
+
       - name: Scope (fast-ci label)
         id: scope
         shell: bash
         env:
+          FORCE_FULL: ${{ steps.mesa.outputs.mesa }}
           GH_TOKEN: ${{ github.token }}
           EVENT: ${{ github.event_name }}
           PR: ${{ github.event.pull_request.number }}
@@ -71,7 +119,14 @@ jobs:
               echo "Could not read the PR labels from the API; using the event payload."
               labels="$(echo "$PAYLOAD_LABELS" | tr ' ' '\n')"
             fi
-            if echo "$labels" | grep -qx 'fast-ci'; then scope=fast; fi
+            if echo "$labels" | grep -qx 'fast-ci'; then
+              if [ "$FORCE_FULL" = "true" ]; then
+                echo "fast-ci label ignored: the diff touches paths the Mesa streams observe (#7589)."
+                echo "fast-ci ignored (diff touches Mesa-observable paths)" >> "$GITHUB_STEP_SUMMARY"
+              else
+                scope=fast
+              fi
+            fi
           fi
           echo "scope=$scope" >> "$GITHUB_OUTPUT"
           echo "Scope: $scope"
