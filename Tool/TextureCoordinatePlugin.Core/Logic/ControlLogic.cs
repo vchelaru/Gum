@@ -331,6 +331,35 @@ public class TextureCoordinateDisplayController : ITextureCoordinateDisplayContr
             .FirstOrDefault(c => c.Name == _currentExposedSource.SourceObjectName) as GraphicalUiElement;
     }
 
+    // The variables of the selection that a variable reference sets (#7577). Such a coordinate is
+    // locked the way an unexposed one is: the reference owns the value, so the selector must not write it.
+    private HashSet<string> _referenceSetNames = new HashSet<string>();
+
+    private void RefreshReferenceSetNames()
+    {
+        _referenceSetNames = new HashSet<string>();
+
+        var element = _selectedState.SelectedElement;
+        var state = _selectedState.SelectedStateSave;
+        if (element == null || state == null) return;
+
+        var instance = _selectedState.SelectedInstance;
+        var owner = element;
+        var listName = "VariableReferences";
+        if (instance != null)
+        {
+            owner = ObjectFinder.Self.GetElementSave(instance) ?? element;
+            listName = instance.Name + "." + listName;
+        }
+
+        _referenceSetNames = new HashSet<string>(
+            ElementSaveDisplayer.GetVariablesSetThroughReferences(owner, state, listName).Keys);
+    }
+
+    /// <summary>Whether the selector may change the coordinate stored in <paramref name="variableName"/> (null when it is not exposed).</summary>
+    private bool IsEditable(string? variableName) =>
+        variableName != null && !_referenceSetNames.Contains(variableName);
+
     public void Refresh()
     {
         var textureToAssign = GetTextureToAssign(out bool showNineSliceGuides, out float? customFrameTextureCoordinateWidth);
@@ -342,19 +371,21 @@ public class TextureCoordinateDisplayController : ITextureCoordinateDisplayContr
 
         _view.Canvas.CurrentTexture = textureToAssign;
 
+        RefreshReferenceSetNames();
+
         if (_currentExposedSource != null)
         {
-            _view.Canvas.CanChangeX = _currentExposedSource.ExposedLeftName != null;
-            _view.Canvas.CanChangeY = _currentExposedSource.ExposedTopName != null;
-            _view.Canvas.CanChangeWidth = _currentExposedSource.ExposedWidthName != null;
-            _view.Canvas.CanChangeHeight = _currentExposedSource.ExposedHeightName != null;
+            _view.Canvas.CanChangeX = IsEditable(_currentExposedSource.ExposedLeftName);
+            _view.Canvas.CanChangeY = IsEditable(_currentExposedSource.ExposedTopName);
+            _view.Canvas.CanChangeWidth = IsEditable(_currentExposedSource.ExposedWidthName);
+            _view.Canvas.CanChangeHeight = IsEditable(_currentExposedSource.ExposedHeightName);
         }
         else
         {
-            _view.Canvas.CanChangeX = true;
-            _view.Canvas.CanChangeY = true;
-            _view.Canvas.CanChangeWidth = true;
-            _view.Canvas.CanChangeHeight = true;
+            _view.Canvas.CanChangeX = IsEditable("TextureLeft");
+            _view.Canvas.CanChangeY = IsEditable("TextureTop");
+            _view.Canvas.CanChangeWidth = IsEditable("TextureWidth");
+            _view.Canvas.CanChangeHeight = IsEditable("TextureHeight");
 
             var instance = _selectedState.SelectedInstance;
             if (instance != null)
@@ -585,6 +616,8 @@ public class TextureCoordinateDisplayController : ITextureCoordinateDisplayContr
     {
         if (_currentExposedSource != null) return;
 
+        RefreshReferenceSetNames();
+
         var doubleClickInstance = _selectedState.SelectedInstance;
         if (doubleClickInstance != null)
         {
@@ -630,15 +663,27 @@ public class TextureCoordinateDisplayController : ITextureCoordinateDisplayContr
                 ? new Rectangle(applied.X, applied.Y, applied.Width, applied.Height)
                 : GetOptimalSelectionRectangle((int)worldX, (int)worldY, graphicalUiElement.TextureWidth, graphicalUiElement.TextureHeight);
 
-            graphicalUiElement.TextureLeft = selectionRect.X;
-            graphicalUiElement.TextureTop = selectionRect.Y;
-            graphicalUiElement.TextureWidth = selectionRect.Width;
-            graphicalUiElement.TextureHeight = selectionRect.Height;
-
-            state.SetValue($"{instancePrefix}TextureLeft", selectionRect.X, "int");
-            state.SetValue($"{instancePrefix}TextureTop", selectionRect.Y, "int");
-            state.SetValue($"{instancePrefix}TextureWidth", selectionRect.Width, "int");
-            state.SetValue($"{instancePrefix}TextureHeight", selectionRect.Height, "int");
+            // A coordinate a reference sets keeps its value; the free ones take the region's.
+            if (IsEditable("TextureLeft"))
+            {
+                graphicalUiElement.TextureLeft = selectionRect.X;
+                state.SetValue($"{instancePrefix}TextureLeft", selectionRect.X, "int");
+            }
+            if (IsEditable("TextureTop"))
+            {
+                graphicalUiElement.TextureTop = selectionRect.Y;
+                state.SetValue($"{instancePrefix}TextureTop", selectionRect.Y, "int");
+            }
+            if (IsEditable("TextureWidth"))
+            {
+                graphicalUiElement.TextureWidth = selectionRect.Width;
+                state.SetValue($"{instancePrefix}TextureWidth", selectionRect.Width, "int");
+            }
+            if (IsEditable("TextureHeight"))
+            {
+                graphicalUiElement.TextureHeight = selectionRect.Height;
+                state.SetValue($"{instancePrefix}TextureHeight", selectionRect.Height, "int");
+            }
             state.SetValue($"{instancePrefix}TextureAddress",
                 Gum.Managers.TextureAddress.Custom, nameof(TextureAddress));
 
@@ -747,27 +792,39 @@ public class TextureCoordinateDisplayController : ITextureCoordinateDisplayContr
                     innerChild.TextureWidth = MathFunctions.RoundToInt(selector.Width);
                     innerChild.TextureHeight = MathFunctions.RoundToInt(selector.Height);
 
-                    if (_currentExposedSource.ExposedLeftName != null)
+                    if (IsEditable(_currentExposedSource.ExposedLeftName))
                         state.SetValue($"{instancePrefix}{_currentExposedSource.ExposedLeftName}", innerChild.TextureLeft, "int");
-                    if (_currentExposedSource.ExposedTopName != null)
+                    if (IsEditable(_currentExposedSource.ExposedTopName))
                         state.SetValue($"{instancePrefix}{_currentExposedSource.ExposedTopName}", innerChild.TextureTop, "int");
-                    if (_currentExposedSource.ExposedWidthName != null)
+                    if (IsEditable(_currentExposedSource.ExposedWidthName))
                         state.SetValue($"{instancePrefix}{_currentExposedSource.ExposedWidthName}", innerChild.TextureWidth, "int");
-                    if (_currentExposedSource.ExposedHeightName != null)
+                    if (IsEditable(_currentExposedSource.ExposedHeightName))
                         state.SetValue($"{instancePrefix}{_currentExposedSource.ExposedHeightName}", innerChild.TextureHeight, "int");
                 }
             }
             else
             {
-                graphicalUiElement.TextureLeft = MathFunctions.RoundToInt(selector.Left);
-                graphicalUiElement.TextureTop = MathFunctions.RoundToInt(selector.Top);
-                graphicalUiElement.TextureWidth = MathFunctions.RoundToInt(selector.Width);
-                graphicalUiElement.TextureHeight = MathFunctions.RoundToInt(selector.Height);
-
-                state.SetValue($"{instancePrefix}TextureLeft", graphicalUiElement.TextureLeft, "int");
-                state.SetValue($"{instancePrefix}TextureTop", graphicalUiElement.TextureTop, "int");
-                state.SetValue($"{instancePrefix}TextureWidth", graphicalUiElement.TextureWidth, "int");
-                state.SetValue($"{instancePrefix}TextureHeight", graphicalUiElement.TextureHeight, "int");
+                // A coordinate a reference sets is left alone, so the reference's value is never overwritten.
+                if (IsEditable("TextureLeft"))
+                {
+                    graphicalUiElement.TextureLeft = MathFunctions.RoundToInt(selector.Left);
+                    state.SetValue($"{instancePrefix}TextureLeft", graphicalUiElement.TextureLeft, "int");
+                }
+                if (IsEditable("TextureTop"))
+                {
+                    graphicalUiElement.TextureTop = MathFunctions.RoundToInt(selector.Top);
+                    state.SetValue($"{instancePrefix}TextureTop", graphicalUiElement.TextureTop, "int");
+                }
+                if (IsEditable("TextureWidth"))
+                {
+                    graphicalUiElement.TextureWidth = MathFunctions.RoundToInt(selector.Width);
+                    state.SetValue($"{instancePrefix}TextureWidth", graphicalUiElement.TextureWidth, "int");
+                }
+                if (IsEditable("TextureHeight"))
+                {
+                    graphicalUiElement.TextureHeight = MathFunctions.RoundToInt(selector.Height);
+                    state.SetValue($"{instancePrefix}TextureHeight", graphicalUiElement.TextureHeight, "int");
+                }
             }
 
             _guiCommands.RefreshVariableValues();
@@ -787,16 +844,16 @@ public class TextureCoordinateDisplayController : ITextureCoordinateDisplayContr
         {
             if (_currentExposedSource != null)
             {
-                if (_currentExposedSource.ExposedLeftName != null)
+                if (IsEditable(_currentExposedSource.ExposedLeftName))
                     _setVariableLogic.ReactToPropertyValueChanged(_currentExposedSource.ExposedLeftName, oldTextureLeftValue,
                         element, instance, state, refresh: false);
-                if (_currentExposedSource.ExposedTopName != null)
+                if (IsEditable(_currentExposedSource.ExposedTopName))
                     _setVariableLogic.ReactToPropertyValueChanged(_currentExposedSource.ExposedTopName, oldTextureTopValue,
                         element, instance, state, refresh: false);
-                if (_currentExposedSource.ExposedWidthName != null)
+                if (IsEditable(_currentExposedSource.ExposedWidthName))
                     _setVariableLogic.ReactToPropertyValueChanged(_currentExposedSource.ExposedWidthName, oldTextureWidthValue,
                         element, instance, state, refresh: false);
-                if (_currentExposedSource.ExposedHeightName != null)
+                if (IsEditable(_currentExposedSource.ExposedHeightName))
                     _setVariableLogic.ReactToPropertyValueChanged(_currentExposedSource.ExposedHeightName, oldTextureHeightValue,
                         element, instance, state, refresh: false);
             }

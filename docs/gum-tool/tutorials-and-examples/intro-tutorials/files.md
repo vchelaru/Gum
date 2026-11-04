@@ -58,3 +58,5 @@ We can display a portion of the Sprite rather than the entire file:
 4. Move the selected region to the desired location to adjust the sprite's texture coordinate values
 
 <figure><img src="../../../.gitbook/assets/02_09 21 54.gif" alt=""><figcaption><p>Texture coordinate values can be adjusted in the Texture Coordinates tab</p></figcaption></figure>
+
+A texture coordinate that a variable reference sets (such as `TextureLeft = Frame.X`) is locked in the Texture Coordinates tab, so you can still change the other coordinates while the reference keeps its value.
