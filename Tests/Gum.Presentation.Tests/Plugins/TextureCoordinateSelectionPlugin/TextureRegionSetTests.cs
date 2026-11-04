@@ -16,7 +16,7 @@ public class TextureRegionSetTests
     [Fact]
     public void HitTest_InsideARegion_ReturnsIt()
     {
-        TextureRegionSet set = Set(new TextureRegion("A", 10, 10, 20, 20));
+        TextureRegionSet set = Set(new TextureRegion("A", "A", 10, 10, 20, 20));
 
         set.HitTest(15, 15)!.Value.Name.ShouldBe("A");
     }
@@ -24,7 +24,7 @@ public class TextureRegionSetTests
     [Fact]
     public void HitTest_OwnsLeftAndTopEdges_ButNotRightAndBottom()
     {
-        TextureRegionSet set = Set(new TextureRegion("A", 10, 10, 20, 20));
+        TextureRegionSet set = Set(new TextureRegion("A", "A", 10, 10, 20, 20));
 
         set.HitTest(10, 10).ShouldNotBeNull();
         set.HitTest(29.9f, 29.9f).ShouldNotBeNull();
@@ -36,7 +36,7 @@ public class TextureRegionSetTests
     [Fact]
     public void HitTest_NeighborsSharingAnEdge_NeverBothMatch()
     {
-        TextureRegionSet set = Set(new TextureRegion("L", 0, 0, 16, 16), new TextureRegion("R", 16, 0, 16, 16));
+        TextureRegionSet set = Set(new TextureRegion("L", "L", 0, 0, 16, 16), new TextureRegion("R", "R", 16, 0, 16, 16));
 
         set.HitTest(15.9f, 5)!.Value.Name.ShouldBe("L");
         set.HitTest(16, 5)!.Value.Name.ShouldBe("R");
@@ -46,9 +46,9 @@ public class TextureRegionSetTests
     public void HitTest_OverlappingRegions_SmallestAreaWins_AndTiesGoToTheFirstReported()
     {
         TextureRegionSet set = Set(
-            new TextureRegion("Panel", 0, 0, 200, 150),
-            new TextureRegion("Icon", 60, 60, 20, 20),
-            new TextureRegion("Twin", 60, 60, 20, 20));
+            new TextureRegion("Panel", "Panel", 0, 0, 200, 150),
+            new TextureRegion("Icon", "Icon", 60, 60, 20, 20),
+            new TextureRegion("Twin", "Twin", 60, 60, 20, 20));
 
         set.HitTest(70, 70)!.Value.Name.ShouldBe("Icon");
         set.HitTest(150, 100)!.Value.Name.ShouldBe("Panel");
@@ -57,20 +57,20 @@ public class TextureRegionSetTests
     [Fact]
     public void HitTest_OutsideEveryRegion_ReturnsNull()
     {
-        Set(new TextureRegion("A", 10, 10, 20, 20)).HitTest(100, 100).ShouldBeNull();
+        Set(new TextureRegion("A", "A", 10, 10, 20, 20)).HitTest(100, 100).ShouldBeNull();
         TextureRegionSet.Empty.HitTest(0, 0).ShouldBeNull();
     }
 
     [Fact]
     public void ATinyRegion_IsStillHittable()
     {
-        Set(new TextureRegion("Dot", 40, 40, 1, 1)).HitTest(40.5f, 40.5f)!.Value.Name.ShouldBe("Dot");
+        Set(new TextureRegion("Dot", "Dot", 40, 40, 1, 1)).HitTest(40.5f, 40.5f)!.Value.Name.ShouldBe("Dot");
     }
 
     [Fact]
     public void RegionsWithNoArea_AreDropped()
     {
-        TextureRegionSet set = Set(new TextureRegion("W0", 0, 0, 0, 10), new TextureRegion("H0", 0, 0, 10, 0), new TextureRegion("Neg", 0, 0, -5, 5));
+        TextureRegionSet set = Set(new TextureRegion("W0", "W0", 0, 0, 0, 10), new TextureRegion("H0", "H0", 0, 0, 10, 0), new TextureRegion("Neg", "Neg", 0, 0, -5, 5));
 
         set.IsEmpty.ShouldBeTrue();
     }
@@ -78,15 +78,36 @@ public class TextureRegionSetTests
     [Fact]
     public void ARegionSticking_OutOfTheTexture_IsClampedToIt()
     {
-        TextureRegionSet set = Set(new TextureRegion("Edge", 240, -8, 40, 24));
+        TextureRegionSet set = Set(new TextureRegion("Edge", "Edge", 240, -8, 40, 24));
 
-        set.Regions.Single().ShouldBe(new TextureRegion("Edge", 240, 0, 16, 16));
+        set.Regions.Single().ShouldBe(new TextureRegion("Edge", "Edge", 240, 0, 16, 16));
+    }
+
+    [Fact]
+    public void TwoRegionsWithTheSameName_AreBothKept_AndHitTestReturnsTheOneUnderThePoint()
+    {
+        TextureRegionSet set = Set(
+            new TextureRegion("hero-1", "Hero", 0, 0, 16, 16),
+            new TextureRegion("hero-2", "Hero", 16, 0, 16, 16));
+
+        set.Regions.Count.ShouldBe(2);
+        set.HitTest(4, 4)!.Value.Key.ShouldBe("hero-1");
+        set.HitTest(20, 4)!.Value.Key.ShouldBe("hero-2");
+    }
+
+    [Fact]
+    public void Clamping_KeepsTheKeyAndName()
+    {
+        TextureRegionSet set = Set(new TextureRegion("k", "Edge", 240, -8, 40, 24));
+
+        set.Regions.Single().Key.ShouldBe("k");
+        set.Regions.Single().Name.ShouldBe("Edge");
     }
 
     [Fact]
     public void ARegionEntirelyOutsideTheTexture_IsIgnored()
     {
-        Set(new TextureRegion("Gone", 300, 300, 10, 10), new TextureRegion("Left", -20, 0, 10, 10)).IsEmpty.ShouldBeTrue();
+        Set(new TextureRegion("Gone", "Gone", 300, 300, 10, 10), new TextureRegion("Left", "Left", -20, 0, 10, 10)).IsEmpty.ShouldBeTrue();
     }
 }
 
@@ -109,8 +130,8 @@ public class PluginManagerTextureRegionsTests
     public void GetTextureRegions_ConcatenatesWhatEveryPluginReports()
     {
         PluginManager manager = CreateManager(
-            new RegionPlugin(new TextureRegion("A", 0, 0, 8, 8)),
-            new RegionPlugin(new TextureRegion("B", 8, 0, 8, 8)));
+            new RegionPlugin(new TextureRegion("A", "A", 0, 0, 8, 8)),
+            new RegionPlugin(new TextureRegion("B", "B", 8, 0, 8, 8)));
 
         manager.GetTextureRegions(new FilePath("Sheet.png")).Select(region => region.Name).ShouldBe(new[] { "A", "B" });
     }
@@ -128,7 +149,7 @@ public class PluginManagerTextureRegionsTests
     {
         PluginManager manager = CreateManager(
             new RegionPlugin(throws: true),
-            new RegionPlugin(new TextureRegion("Good", 0, 0, 8, 8)));
+            new RegionPlugin(new TextureRegion("Good", "Good", 0, 0, 8, 8)));
 
         manager.GetTextureRegions(new FilePath("Sheet.png")).Select(region => region.Name).ShouldBe(new[] { "Good" });
     }

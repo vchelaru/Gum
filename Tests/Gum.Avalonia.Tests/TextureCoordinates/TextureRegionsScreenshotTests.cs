@@ -38,7 +38,7 @@ public class TextureRegionsScreenshotTests
         SelectSheetSprite(tab);
         // The pointer over "Coin" (the overlay is told directly: the real window owns the pointer now).
         SaveInMainWindow(tab, "texture-regions-few", () =>
-            tab.Plugin.DisplayController.RegionOverlay.Hovered = new TextureRegion("Coin", 128, 12, 24, 24));
+            tab.Plugin.DisplayController.RegionOverlay.Hovered = new TextureRegion("Coin", "Coin", 128, 12, 24, 24));
     });
 
     [SkippableFact]
@@ -58,7 +58,7 @@ public class TextureRegionsScreenshotTests
         var crate = PixelSpriteSheet.Frames[6];
         SaveInMainWindow(tab, "texture-regions-pixel", () =>
         {
-            tab.Plugin.DisplayController.RegionOverlay.Hovered = new TextureRegion(crate.Name, crate.X, crate.Y, crate.Width, crate.Height);
+            tab.Plugin.DisplayController.RegionOverlay.Hovered = new TextureRegion(crate.Name, crate.Name, crate.X, crate.Y, crate.Width, crate.Height);
         }, PixelSpriteSheet.Width, PixelSpriteSheet.Height, 400);
     });
 
@@ -73,7 +73,7 @@ public class TextureRegionsScreenshotTests
         var current = sixty[12];
         SelectSheetSprite(tab, current.X, current.Y, current.Width, current.Height, sixty);
         SaveInMainWindow(tab, "texture-regions-sixty", () =>
-            tab.Plugin.DisplayController.RegionOverlay.Hovered = new TextureRegion(SampleSpriteSheet.Sixty()[27].Name, SampleSpriteSheet.Sixty()[27].X, SampleSpriteSheet.Sixty()[27].Y, SampleSpriteSheet.Sixty()[27].Width, SampleSpriteSheet.Sixty()[27].Height));
+            tab.Plugin.DisplayController.RegionOverlay.Hovered = new TextureRegion(SampleSpriteSheet.Sixty()[27].Name, SampleSpriteSheet.Sixty()[27].Name, SampleSpriteSheet.Sixty()[27].X, SampleSpriteSheet.Sixty()[27].Y, SampleSpriteSheet.Sixty()[27].Width, SampleSpriteSheet.Sixty()[27].Height));
     });
 
     internal static InstanceSave SelectSheetSprite(TextureCoordinateTabHarness tab, int left = 64, int top = 8, int width = 48, int height = 64, IReadOnlyList<(string Name, int X, int Y, int Width, int Height)>? sheet = null)

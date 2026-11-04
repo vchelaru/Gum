@@ -90,6 +90,33 @@ public class TextureRegionScenarioTests
     }
 
     [SkippableFact]
+    public void TwoRegionsWithTheSameName_AreBothDrawn_AndEachClickAppliesItsOwnRectangle()
+    {
+        OnTab(tab =>
+        {
+            SampleRegionPlugin plugin = new SampleRegionPlugin("Sheet.png", new[]
+            {
+                new TextureRegion("hero-a", "Hero", 128, 12, 24, 24),
+                new TextureRegion("hero-b", "Hero", 160, 40, 20, 30),
+            });
+            using IDisposable registration = Register(tab, plugin);
+            ComponentSave button = SelectSheetSprite(tab, TextureAddress.EntireTexture);
+
+            tab.Plugin.DisplayController.RegionOverlay.VisibleOutlineCount.ShouldBe(2, tab.Describe());
+
+            Click(tab, 140, 24);
+            Value(button, "Icon.TextureLeft").ShouldBe(128);
+            Value(button, "Icon.TextureWidth").ShouldBe(24);
+
+            Click(tab, 170, 50);
+            Value(button, "Icon.TextureLeft").ShouldBe(160);
+            Value(button, "Icon.TextureTop").ShouldBe(40);
+            Value(button, "Icon.TextureWidth").ShouldBe(20);
+            Value(button, "Icon.TextureHeight").ShouldBe(30);
+        });
+    }
+
+    [SkippableFact]
     public void WithNoRegionPlugin_ThereIsNoOverlay()
     {
         OnTab(tab =>
@@ -222,7 +249,7 @@ public class TextureRegionScenarioTests
             using IDisposable registration = Register(tab, plugin);
             SelectSheetSprite(tab);
             TextureRegionOverlayManager overlay = tab.Plugin.DisplayController.RegionOverlay;
-            TextureRegion door = new TextureRegion("Door", 96, 80, 48, 96);
+            TextureRegion door = new TextureRegion("Door", "Door", 96, 80, 48, 96);
             float? firstScale = null;
 
             foreach (int zoom in new[] { 100, 200, 400 })
@@ -256,7 +283,7 @@ public class TextureRegionScenarioTests
             tab.Frame();
             TextureRegionOverlayManager overlay = tab.Plugin.DisplayController.RegionOverlay;
             tab.Camera.Y = 0; // the top of the texture is the top of the view
-            TextureRegion hero = new TextureRegion("Hero_Idle", 8, 0, 48, 64);
+            TextureRegion hero = new TextureRegion("Hero_Idle", "Hero_Idle", 8, 0, 48, 64);
 
             overlay.Hovered = hero;
             overlay.Refresh();
@@ -292,8 +319,8 @@ public class TextureRegionScenarioTests
         {
             SampleRegionPlugin plugin = new SampleRegionPlugin("Sheet.png", new[]
             {
-                new TextureRegion("Panel", 0, 0, 200, 150),
-                new TextureRegion("Icon", 60, 60, 20, 20),
+                new TextureRegion("Panel", "Panel", 0, 0, 200, 150),
+                new TextureRegion("Icon", "Icon", 60, 60, 20, 20),
             });
             using IDisposable registration = Register(tab, plugin);
             ComponentSave button = SelectSheetSprite(tab);
@@ -332,7 +359,7 @@ public class TextureRegionScenarioTests
             List<TextureRegion> many = new List<TextureRegion>();
             for (int i = 0; i < 339; i++)
             {
-                many.Add(new TextureRegion($"Slice_{i}", i % 20 * 16, i / 20 * 10, 15, 9));
+                many.Add(new TextureRegion($"Slice_{i}", $"Slice_{i}", i % 20 * 16, i / 20 * 10, 15, 9));
             }
             SampleRegionPlugin plugin = new SampleRegionPlugin("Sheet.png", many);
             using IDisposable registration = Register(tab, plugin);
