@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Gum.Plugins.InternalPlugins.VariableGrid;
 using WpfDataUi;
 using WpfDataUi.DataTypes;
 
@@ -66,6 +67,27 @@ public static class SettingsRows
             // The folder the value is relative to, when that is not the project folder; read on each reveal.
             member.PropertiesToSetOnDisplayer["RevealRelativeTo"] = revealRelativeTo;
         }
+        return member;
+    }
+
+    /// <summary>
+    /// A color row: a swatch that opens the tool's color picker, plus a hex field. When
+    /// <paramref name="reset"/> is given the row also shows a reset button while <paramref name="isCustom"/>
+    /// says the color is not the default.
+    /// </summary>
+    public static InstanceMember Color(string name, string label, string hint, Func<System.Drawing.Color> get, Action<System.Drawing.Color> set,
+        Action? reset = null, Func<bool>? isCustom = null)
+    {
+        InstanceMember member = Create(name, label, hint, typeof(System.Drawing.Color), () => get(), value =>
+        {
+            if (value is System.Drawing.Color color)
+            {
+                set(color);
+            }
+        });
+        member.PreferredDisplayer = typeof(GumDisplayers.Color);
+        member.ResetAction = reset;
+        member.CanResetCheck = isCustom;
         return member;
     }
 

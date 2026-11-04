@@ -458,6 +458,18 @@ namespace WpfDataUi.DataTypes
             }
         }
 
+        /// <summary>
+        /// Puts this row back to its default. A displayer that supports it shows a reset button on the row
+        /// while <see cref="CanReset"/> is true and runs this when it is pressed. Null means the row has no reset.
+        /// </summary>
+        public Action? ResetAction { get; set; }
+
+        /// <summary>Says whether the row differs from its default; null means it always can be reset.</summary>
+        public Func<bool>? CanResetCheck { get; set; }
+
+        /// <summary>True when the row has a <see cref="ResetAction"/> and its value is not the default.</summary>
+        public bool CanReset => ResetAction != null && (CanResetCheck?.Invoke() ?? true);
+
         string? toggleText;
         /// <summary>The short caption beside a spacious toggle's box ("Write an .editorconfig"); the label column names the setting and <see cref="DetailText"/> goes under it. Null shows the box alone.</summary>
         public string? ToggleText

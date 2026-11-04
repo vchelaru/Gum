@@ -309,6 +309,13 @@ public class ComboBoxDisplay : DataUiDisplayBase
         _label = new TextBlock { Margin = new Thickness(4, 0, 0, 0), VerticalAlignment = VerticalAlignment.Center, TextWrapping = TextWrapping.Wrap };
         _comboBox = new WheelIgnoringComboBox { HorizontalAlignment = HorizontalAlignment.Stretch, VerticalAlignment = VerticalAlignment.Center };
         _comboBox.SelectionChanged += HandleSelectionChanged;
+        _comboBox.PropertyChanged += (_, e) =>
+        {
+            if (e.Property == TemplatedControl.FontSizeProperty)
+            {
+                FitNarrowWidth();
+            }
+        };
         _comboBox.LostFocus += (_, _) =>
         {
             if (IsEditable)
@@ -342,6 +349,25 @@ public class ComboBoxDisplay : DataUiDisplayBase
         get => _comboBox.IsEditable;
         set => _comboBox.IsEditable = value;
     }
+
+    /// <summary>
+    /// When above 0, the drop-down is this many ems wide (so it follows the zoom) and left aligned instead
+    /// of filling the row. Set through <see cref="InstanceMember.PropertiesToSetOnDisplayer"/>.
+    /// </summary>
+    public double NarrowWidthInEm
+    {
+        get => _narrowWidthInEm;
+        set
+        {
+            _narrowWidthInEm = value;
+            _comboBox.HorizontalAlignment = value > 0 ? HorizontalAlignment.Left : HorizontalAlignment.Stretch;
+            FitNarrowWidth();
+        }
+    }
+    private double _narrowWidthInEm;
+
+    private void FitNarrowWidth() =>
+        _comboBox.Width = _narrowWidthInEm > 0 ? _comboBox.FontSize * _narrowWidthInEm : double.NaN;
 
     /// <summary>The drop-down, for tests.</summary>
     internal ComboBox ComboBox => _comboBox;
