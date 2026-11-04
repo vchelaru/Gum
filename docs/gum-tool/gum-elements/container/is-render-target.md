@@ -41,3 +41,5 @@ When a container with `Is Render Target` has a `Source Shader File`, the **Varia
 A parameter with two to four decimal values (such as an offset, a size or a tint) is one row with a field for each value, labeled X, Y, Z and W. When the panel is too narrow for every field on one line, the fields continue on the next line. Typing in any field saves every value of that parameter in the selected state, and undo reverts them together. The set marker at the left of the row shows once for the whole parameter.
 
 Right-click the row and choose `Make Default` to clear all of the parameter's values at once, so it goes back to the shader's default.
+
+Choose `Expose Variable` to expose the whole parameter under one name. Gum asks for the name once, and the generated code gets one property for the parameter (a `Vector2`, `Vector3` or `Vector4` that you can only set). Choose `Un-expose` to remove it.
