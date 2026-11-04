@@ -742,7 +742,7 @@ public class StandardElementsManager
                 Value = false,
                 Name = "RaiseChildrenEventsOutsideOfBounds",
                 Category = "Behavior",
-                DetailText = "When true, children positioned outside this object's bounds (such as resize borders) still receive the cursor. Every child is checked even when the cursor is not over this object, which has a slight cost.",
+                DetailText = "Lets children outside this object's bounds, such as resize borders, receive the cursor.",
                 MinimumGumxVersion = (int)GumProjectSave.GumxVersions.RaiseChildrenEventsExpansion
             });
     }
