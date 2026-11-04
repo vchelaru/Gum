@@ -1198,19 +1198,152 @@ public class CodeGenerator
         }
     }
 
+    #region Exposed shader vectors
+
+    private sealed record ExposedShaderVector(string InstanceName, string BaseName, string ParameterName, List<VariableSave> Components);
+
+    /// <summary>
+    /// The float vector shader parameters <paramref name="element"/> exposes whole: every component of one instance's
+    /// parameter exposed as <c>&lt;Base&gt;__X</c> to <c>&lt;Base&gt;__W</c> under one base. The file keeps N ordinary exposed
+    /// floats (older tools and runtimes see those); code generation shows them as one vector property. A parameter with
+    /// a missing or differently named component stays N float properties.
+    /// </summary>
+    private static List<ExposedShaderVector> GetExposedShaderVectors(ElementSave element)
+    {
+        string[] letters = { "X", "Y", "Z", "W" };
+        List<ExposedShaderVector> vectors = new List<ExposedShaderVector>();
+        IEnumerable<IGrouping<(string?, string), VariableSave>> candidates = element.DefaultState!.Variables
+            .Where(item => !string.IsNullOrEmpty(item.ExposedAsName) && !string.IsNullOrEmpty(item.SourceObject) &&
+                ShaderParameterMarker.TryParse(item.ShaderParameter, out ShaderParameterMarker marker) && marker.IsComponent)
+            .GroupBy(item =>
+            {
+                ShaderParameterMarker.TryParse(item.ShaderParameter, out ShaderParameterMarker marker);
+                return ((string?)item.SourceObject, marker.Parameter);
+            });
+
+        foreach (IGrouping<(string?, string), VariableSave> group in candidates)
+        {
+            ShaderParameterMarker.TryParse(group.First().ShaderParameter, out ShaderParameterMarker first);
+            int count = first.ComponentCount;
+            List<VariableSave> ordered = new List<VariableSave>();
+            string? baseName = null;
+            for (int i = 0; i < count; i++)
+            {
+                VariableSave? component = group.FirstOrDefault(item =>
+                    ShaderParameterMarker.TryParse(item.ShaderParameter, out ShaderParameterMarker marker) &&
+                    marker.ComponentIndex == i && marker.ComponentCount == count);
+                string suffix = "__" + letters[i];
+                if (component == null || !component.ExposedAsName!.EndsWith(suffix, StringComparison.Ordinal))
+                {
+                    ordered.Clear();
+                    break;
+                }
+                string componentBase = component.ExposedAsName.Substring(0, component.ExposedAsName.Length - suffix.Length);
+                if (baseName != null && baseName != componentBase)
+                {
+                    ordered.Clear();
+                    break;
+                }
+                baseName = componentBase;
+                ordered.Add(component);
+            }
+
+            if (ordered.Count == count && baseName != null && baseName.Length > 0)
+            {
+                vectors.Add(new ExposedShaderVector(group.Key.Item1!, baseName, first.Parameter, ordered));
+            }
+        }
+        return vectors;
+    }
+
+    private static string GetVectorTypeName(int count) => "global::System.Numerics.Vector" + count;
+
+    private void FillWithExposedShaderVector(ExposedShaderVector vector, CodeGenerationContext context)
+    {
+        string instanceName = _codeGenerationNameVerifier.ToCSharpMemberName(vector.InstanceName);
+        string[] letters = { "X", "Y", "Z", "W" };
+        StringBuilder stringBuilder = context.StringBuilder;
+        int tabCount = context.TabCount;
+
+        // The runtime has no property of the parameter name, so the property goes through SetProperty and is write-only.
+        stringBuilder.AppendLine(ToTabs(tabCount) + $"public {GetVectorTypeName(vector.Components.Count)} {_codeGenerationNameVerifier.ToCSharpMemberName(vector.BaseName)}");
+        stringBuilder.AppendLine(ToTabs(tabCount) + "{");
+        stringBuilder.AppendLine(ToTabs(tabCount + 1) + "set");
+        stringBuilder.AppendLine(ToTabs(tabCount + 1) + "{");
+        for (int i = 0; i < vector.Components.Count; i++)
+        {
+            stringBuilder.AppendLine(ToTabs(tabCount + 2) +
+                $"{instanceName}.SetProperty(\"{vector.Components[i].GetRootName()}\", value.{letters[i]});");
+        }
+        stringBuilder.AppendLine(ToTabs(tabCount + 1) + "}");
+        stringBuilder.AppendLine(ToTabs(tabCount) + "}");
+    }
+
+    /// <summary>
+    /// Replaces the per-component assignments of an exposed vector on <paramref name="instance"/> with one vector
+    /// assignment (a component the container does not set takes the value the exposing element saved).
+    /// </summary>
+    private void FillWithExposedShaderVectorAssignments(List<VariableSave> variablesToAssignValues, InstanceSave instance, CodeGenerationContext context)
+    {
+        ElementSave? instanceElement = ObjectFinder.Self.GetElementSave(instance);
+        if (instanceElement == null)
+        {
+            return;
+        }
+
+        string instanceCodeName = _codeGenerationNameVerifier.ToCSharpMemberName(instance.Name);
+        foreach (ExposedShaderVector vector in GetExposedShaderVectors(instanceElement))
+        {
+            List<VariableSave?> assigned = vector.Components
+                .Select(component => variablesToAssignValues.FirstOrDefault(item => item.GetRootName() == component.ExposedAsName))
+                .ToList();
+            if (assigned.All(item => item == null))
+            {
+                continue;
+            }
+
+            List<string> values = new List<string>();
+            for (int i = 0; i < vector.Components.Count; i++)
+            {
+                float component = Convert.ToSingle(assigned[i]?.Value ?? vector.Components[i].Value ?? 0f, CultureInfo.InvariantCulture);
+                values.Add(component.ToString(CultureInfo.InvariantCulture) + "f");
+            }
+            context.StringBuilder.AppendLine(context.Tabs +
+                $"{instanceCodeName}.{_codeGenerationNameVerifier.ToCSharpMemberName(vector.BaseName)} = new {GetVectorTypeName(vector.Components.Count)}({string.Join(", ", values)});");
+            variablesToAssignValues.RemoveAll(item => assigned.Contains(item));
+        }
+    }
+
+    #endregion
+
     private void FillWithExposedVariables(CodeGenerationContext context)
     {
         var exposedVariables = context.Element.DefaultState!.Variables
             .Where(item => !string.IsNullOrEmpty(item.ExposedAsName))
             .ToArray();
+        List<ExposedShaderVector> exposedVectors = GetExposedShaderVectors(context.Element);
 
         foreach (var exposedVariable in exposedVariables)
         {
+            ExposedShaderVector? vector = exposedVectors.FirstOrDefault(item => item.Components.Contains(exposedVariable));
+            if (vector != null && vector.Components[0] != exposedVariable)
+            {
+                // The first component writes the whole vector property.
+                continue;
+            }
+
             var instanceName = exposedVariable.SourceObject;
             context.Instance = context.Element.GetInstance(instanceName);
             using (GuardIfDebugOnly(context.StringBuilder, context.Instance))
             {
-                FillWithExposedVariable(exposedVariable, context);
+                if (vector != null)
+                {
+                    FillWithExposedShaderVector(vector, context);
+                }
+                else
+                {
+                    FillWithExposedVariable(exposedVariable, context);
+                }
                 context.StringBuilder.AppendLine();
             }
         }
@@ -5969,6 +6102,9 @@ public class CodeGenerator
 
         // sometimes variables have to be processed in groups. For example, RGB values
         // have to be assigned all at once in a Color value in XamForms;
+        // An exposed vector shader parameter is one assignment of its vector property.
+        FillWithExposedShaderVectorAssignments(variablesToAssignValues, instance, context);
+
         ProcessVariableGroups(variablesToAssignValues, container.DefaultState!, visualApi, stringBuilder, context);
 
         foreach (var variable in variablesToAssignValues)

@@ -34,6 +34,29 @@ public class GumElementReachabilityTests
     }
 
     [Fact]
+    public void Compute_drops_excluded_elements_and_what_only_they_reach_but_keeps_shared_ones()
+    {
+        ScreenSave screen = TestProjectBuilder.BuildScreen("Game");
+        screen.Instances.Add(new InstanceSave { Name = "Hud1", BaseType = "Hud", ParentContainer = screen });
+        screen.Instances.Add(new InstanceSave { Name = "Dbg1", BaseType = "DebugPanel", ParentContainer = screen });
+        ComponentSave hud = TestProjectBuilder.BuildComponent("Hud");
+        hud.Instances.Add(new InstanceSave { Name = "Icon1", BaseType = "SharedIcon", ParentContainer = hud });
+        ComponentSave debugPanel = TestProjectBuilder.BuildComponent("DebugPanel");
+        debugPanel.Instances.Add(new InstanceSave { Name = "Icon1", BaseType = "SharedIcon", ParentContainer = debugPanel });
+        debugPanel.Instances.Add(new InstanceSave { Name = "Graph1", BaseType = "DebugGraph", ParentContainer = debugPanel });
+        ComponentSave sharedIcon = TestProjectBuilder.BuildComponent("SharedIcon");
+        ComponentSave debugGraph = TestProjectBuilder.BuildComponent("DebugGraph");
+        GumProjectSave project = TestProjectBuilder.BuildProject(
+            screens: new[] { screen }, components: new[] { hud, debugPanel, sharedIcon, debugGraph });
+
+        GumElementReachabilityResult result = new GumElementReachability().Compute(
+            project, extraRoots: new string[0], excludedElementNames: new[] { "DebugPanel" });
+
+        result.KeptElementNames.ShouldBe(new[] { "Game", "Hud", "SharedIcon" }, ignoreOrder: true);
+        result.TrimmedElementNames.ShouldBe(new[] { "DebugGraph", "DebugPanel" }, ignoreOrder: true);
+    }
+
+    [Fact]
     public void Compute_follows_extra_roots_base_types_and_cross_element_references()
     {
         ComponentSave card = TestProjectBuilder.BuildComponent("Card");

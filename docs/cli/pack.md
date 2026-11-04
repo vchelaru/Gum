@@ -20,6 +20,7 @@ The Gum WYSIWYG editor still saves loose files. `.gumpkg` is purely a packaging 
   - `external`: files referenced by the project but outside Core/FontCache, such as sprite source `.png` textures, `CustomFontFile` paths, and a `Font` value that points at a project-relative `.ttf` file rather than a system font family name (e.g. `Fonts/MyFont.ttf` vs. `Arial`)
 - `--premultiplied-alpha`: Store PNG textures with premultiplied alpha instead of straight alpha. Off by default. See [Textures](pack.md#textures).
 - `--shake`: Leave out every Screen and Component that nothing in the project reaches, along with the files only they use. Off by default. See [Leaving Out Unused Elements](pack.md#leaving-out-unused-elements).
+- `--skip-debug-only`: Leave out every Screen and Component marked Debug Only, along with the files only they use. Off by default. See [Leaving Out Debug Only Elements](pack.md#leaving-out-debug-only-elements).
 - `--keep <names>`: With `--shake`, element names to keep, comma-separated or repeated.
 - `--roots <file>`: With `--shake`, a text file of element names to keep, one per line. A line starting with `#` is a comment.
 - `--roots-assembly <dll>`: With `--shake`, your built game assembly. Pack keeps every element your game's code uses, as recorded by the Gum source generator.
@@ -161,6 +162,22 @@ In either case, add the element with `--keep`, `--roots`, or `--roots-assembly` 
 
 To rule out shaking while you track down a problem, pack without `--shake` or load the loose project files.
 
+## Leaving Out Debug Only Elements
+
+Elements marked [Debug Only](../gum-tool/code-tab/README.md#debug-only) in the Code tab are for development builds. `--skip-debug-only` leaves them out of the bundle, along with any component derived from one. Textures, fonts, and other files are bundled only when a remaining element uses them, so a file shared with an element that stays is kept.
+
+```
+gumcli pack GumProject/GumProject.gumj --skip-debug-only
+```
+
+{% hint style="info" %}
+Available in November 2026, or now if building Gum from source.
+{% endhint %}
+
+Pack does not look at your build configuration, so you decide per pack, for example by passing the option only from your release build script. It can be combined with `--shake`.
+
+If a Screen or Component that stays has an instance of a Debug Only element, or derives from one, pack stops with exit code 2 and names both elements. Mark the referencing element Debug Only too, or remove the instance.
+
 ## Loading a `.gumpkg` at runtime
 
 Pass the bundle to `Initialize` in place of the `.gumj`:
@@ -286,4 +303,4 @@ If your build also generates bitmap fonts, run [`gumcli fonts`](fonts.md) before
 |------|---------|
 | 0 | Bundle written successfully |
 | 1 | One or more dependency files were missing on disk |
-| 2 | Project failed to load, project file not found or unreadable, an invalid `--include` value was supplied, `--keep`, `--roots`, or `--roots-assembly` was used without `--shake`, a roots file or assembly was not found, or a kept name matches no element in the project |
+| 2 | Project failed to load, project file not found or unreadable, an invalid `--include` value was supplied, `--keep`, `--roots`, or `--roots-assembly` was used without `--shake`, a roots file or assembly was not found, a kept name matches no element in the project, or with `--skip-debug-only` an element that stays uses a Debug Only element |

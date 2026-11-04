@@ -193,7 +193,7 @@ void main()
         GumService.Default.Root.Children.Add(outer);
         GumService.Default.Root.UpdateLayout();
 
-        Shader outline = LoadShaderFromMemory(null, conversion.Value.FragmentShader);
+        Shader outline = LoadOutlineShader(conversion.Value);
         try
         {
             inner.RenderTargetEffect = outline;
@@ -218,7 +218,7 @@ void main()
         }
         finally
         {
-            UnloadShader(outline);
+            UnloadOutlineShader(outline);
             GumService.Default.Root.Children.Clear();
         }
     }
@@ -257,7 +257,7 @@ void main()
         Gum.GumService.Default.Root.Children.Add(outer);
         Gum.GumService.Default.Root.UpdateLayout();
 
-        Shader outline = LoadShaderFromMemory(null, conversion.Value.FragmentShader);
+        Shader outline = LoadOutlineShader(conversion.Value);
         try
         {
             inner.RenderTargetEffect = outline;
@@ -281,9 +281,34 @@ void main()
         }
         finally
         {
-            UnloadShader(outline);
+            UnloadOutlineShader(outline);
             Gum.GumService.Default.Root.Children.Clear();
         }
+    }
+
+    // Outline.slang declares Thickness = 1.0. GLSL carries no uniform values, so register the declared
+    // defaults the way the ShadowDusk loader does, or an unset Thickness reads zero.
+    private static Shader LoadOutlineShader(RaylibShader converted)
+    {
+        Shader shader = LoadShaderFromMemory(null, converted.FragmentShader);
+        ShaderUniformDefaults defaults = new ShaderUniformDefaults();
+        foreach (RaylibUniform uniform in converted.Uniforms)
+        {
+            ShaderUniformDefault? declared = ShaderUniformDefault.FromTypeName(
+                uniform.Name, uniform.GlslType, uniform.ArrayLength, uniform.DefaultValue);
+            if (declared != null)
+            {
+                defaults.Add(declared);
+            }
+        }
+        RaylibShaderDefaults.Set(shader, defaults);
+        return shader;
+    }
+
+    private static void UnloadOutlineShader(Shader shader)
+    {
+        RaylibShaderDefaults.Remove(shader);
+        UnloadShader(shader);
     }
 
     // Bakes a 24x24 red square at 12,12 in a 48x48 render target outlined by the shipped shader and
@@ -311,7 +336,7 @@ void main()
         Gum.GumService.Default.Root.Children.Add(outer);
         Gum.GumService.Default.Root.UpdateLayout();
 
-        Shader outline = LoadShaderFromMemory(null, conversion.Value.FragmentShader);
+        Shader outline = LoadOutlineShader(conversion.Value);
         global::RenderingLibrary.SystemManagers.Default.Renderer.Camera.Zoom = zoom;
         try
         {
@@ -325,7 +350,7 @@ void main()
         finally
         {
             global::RenderingLibrary.SystemManagers.Default.Renderer.Camera.Zoom = 1f;
-            UnloadShader(outline);
+            UnloadOutlineShader(outline);
             Gum.GumService.Default.Root.Children.Clear();
         }
     }
@@ -436,7 +461,7 @@ void main()
         (ContainerRuntime outerB, ContainerRuntime innerB) = Build(64);
         Gum.GumService.Default.Root.UpdateLayout();
 
-        Shader outline = LoadShaderFromMemory(null, conversion.Value.FragmentShader);
+        Shader outline = LoadOutlineShader(conversion.Value);
         try
         {
             innerA.RenderTargetEffect = outline;
@@ -465,7 +490,7 @@ void main()
         }
         finally
         {
-            UnloadShader(outline);
+            UnloadOutlineShader(outline);
             Gum.GumService.Default.Root.Children.Clear();
         }
     }
@@ -535,7 +560,7 @@ void main()
         Gum.GumService.Default.Root.Children.Add(outer);
         Gum.GumService.Default.Root.UpdateLayout();
 
-        Shader outline = LoadShaderFromMemory(null, conversion.Value.FragmentShader);
+        Shader outline = LoadOutlineShader(conversion.Value);
         try
         {
             inner.RenderTargetEffect = outline;
@@ -553,7 +578,7 @@ void main()
         }
         finally
         {
-            UnloadShader(outline);
+            UnloadOutlineShader(outline);
             Gum.GumService.Default.Root.Children.Clear();
         }
     }

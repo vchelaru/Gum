@@ -85,7 +85,9 @@ public class GumElementReachability
     /// </summary>
     /// <param name="project">The loaded project.</param>
     /// <param name="extraRoots">Names of elements to keep besides the Screens, such as those created only from code.</param>
-    public GumElementReachabilityResult Compute(GumProjectSave project, IEnumerable<string> extraRoots)
+    /// <param name="excludedElementNames">Names of elements that are never kept, nor walked through, such as Debug Only elements; null for none.</param>
+    public GumElementReachabilityResult Compute(GumProjectSave project, IEnumerable<string> extraRoots,
+        IReadOnlyCollection<string>? excludedElementNames = null)
     {
         if (project == null)
         {
@@ -104,11 +106,13 @@ public class GumElementReachability
             elementsByQualifiedName[ElementReference.GetQualifiedName(element, element.Name)] = element;
         }
 
+        HashSet<string>? excluded = excludedElementNames == null ? null
+            : new HashSet<string>(excludedElementNames, StringComparer.OrdinalIgnoreCase);
         HashSet<string> kept = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         Stack<ElementSave> pending = new Stack<ElementSave>();
         void Visit(ElementSave? element)
         {
-            if (element != null && kept.Add(element.Name))
+            if (element != null && !(excluded?.Contains(element.Name) ?? false) && kept.Add(element.Name))
             {
                 pending.Push(element);
             }
