@@ -111,7 +111,7 @@ Both delegate to `HeadlessFontGenerationService`. Legacy `IRuntimeFontService`, 
 | `Tools/Gum.Presentation/Services/Fonts/ToolFontGenerationCallbacks.cs` | Tool-specific callback implementation |
 | `RenderingLibrary/Graphics/Fonts/BmfcSave.cs` | Font data model, .bmfc serialization, cache file naming, range utilities |
 | `GumCommon/Bundle/FontReferenceCollector.cs` | Builds every `BmfcSave` a project needs from its variables |
-| `Tools/Gum.Presentation/Plugins/InternalPlugins/FontsPlugin/` | The Fonts settings page's `FontsViewModel` (ranges table plus generation settings), `FontsChangeLogic`, `FontsGridPresenter`; the plugin and `FontsView` are Avalonia-head only (`Tool/Gum.Avalonia/Plugins/Fonts/`, `Panels/FontsView.cs`), so the frozen WPF head has no Fonts settings page |
+| `Tools/Gum.Presentation/Plugins/InternalPlugins/FontsPlugin/` | The Fonts settings page's `FontsViewModel` (ranges table plus generation settings), `FontsChangeLogic`, and its rows in `SettingsWindow/FontsRows.cs`; the plugin and page view are Avalonia-head only (`Tool/Gum.Avalonia/Plugins/Fonts/`, `Settings/FontsSettingsPageView.cs`, `FontRangesDisplay.cs`), so the frozen WPF head has no Fonts settings page |
 | `Gum/Content/BmfcTemplate.bmfc` | Template with placeholders for bmfont.exe config |
 | `GumProjectFontGenerator/Program.cs` | Standalone CLI for batch font generation |
 

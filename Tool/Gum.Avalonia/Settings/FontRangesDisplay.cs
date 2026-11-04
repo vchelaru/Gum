@@ -1,119 +1,80 @@
 using Avalonia;
 using Avalonia.Controls;
-using Avalonia.Controls.Primitives;
-using Avalonia.Controls.Shapes;
 using Avalonia.Controls.Templates;
 using Avalonia.Data;
 using Avalonia.Data.Converters;
 using Avalonia.Input;
 using Avalonia.Layout;
 using Avalonia.Media;
-using AvaloniaDataUi;
+using AvaloniaDataUi.Controls;
 using Gum.Avalonia.Themes;
 using Gum.Plugins.FontsPlugin;
+using WpfDataUi;
+using WpfDataUi.DataTypes;
 
-namespace Gum.Avalonia.Panels;
+namespace Gum.Avalonia.Settings;
 
 /// <summary>
-/// The Fonts tab: a Character Ranges table (the project-wide default row, then one row per font) above
-/// a property grid of the generation settings, over the <see cref="FontsViewModel"/> the plugin hands
-/// to the tab manager. The grid rows are laid out by the shared <see cref="FontsGridPresenter"/>.
+/// The per-font character ranges of the Fonts page as one compact list: a header, one line per font (the
+/// project-wide default line first: font, ranges, remove) and an Add button, with a font's error or warning
+/// under its line only when it has one. A label-less row, shown for <see cref="Gum.Plugins.InternalPlugins.VariableGrid.GumDisplayers.FontRanges"/>;
+/// the member's value is the <see cref="FontsViewModel"/>.
 /// </summary>
-public sealed class FontsView : DockPanel
+public sealed class FontRangesDisplay : DataUiDisplayBase
 {
-    private readonly FontsGridPresenter _presenter;
+    private readonly StackPanel _body;
+    private readonly TextBlock _hint;
 
-    /// <summary>Builds the view.</summary>
-    public FontsView()
+    /// <summary>Builds the displayer.</summary>
+    public FontRangesDisplay()
     {
-        SettingsGrid = new DataUiGrid();
-        _presenter = new FontsGridPresenter(SettingsGrid);
+        _hint = CreateHintTextBlock();
+        _hint.Margin = new Thickness(0, 0, 4, 0);
 
-        Control ranges = BuildRangesSection();
-        SetDock(ranges, Dock.Top);
-        Children.Add(ranges);
-        Children.Add(SettingsGrid);
-
-        DataContextChanged += (_, _) => _presenter.Bind(DataContext as FontsViewModel);
-    }
-
-    /// <summary>The generation settings grid.</summary>
-    public DataUiGrid SettingsGrid { get; }
-
-    private Control BuildRangesSection()
-    {
-        StackPanel body = new StackPanel { Margin = new Thickness(8, 6, 8, 8), Spacing = 6 };
-
-        CheckBox characterFile = new CheckBox { Content = "Use Font Character File (.gumfcs)" };
-        characterFile.Bind(ToggleButton.IsCheckedProperty, new Binding(nameof(FontsViewModel.UseFontCharacterFile)) { Mode = BindingMode.TwoWay });
-        TextBlock characterFileHint = new TextBlock
-        {
-            Text = "If checked, the font ranges are extracted from the text in the .gumfcs file. If unchecked, your default font range below is used.",
-            TextWrapping = TextWrapping.Wrap,
-            Margin = new Thickness(26, 0, 0, 0),
-        }.WithThemeResource(TextBlock.ForegroundProperty, "Frb.Brushes.Foreground.Subtle");
-        body.Children.Add(new StackPanel { Children = { characterFile, characterFileHint } });
-
-        body.Children.Add(BuildTableHeader());
+        _body = new StackPanel { Spacing = 4 };
+        _body.Children.Add(_hint);
+        _body.Children.Add(BuildTableHeader());
 
         ItemsControl rows = new ItemsControl
         {
             ItemTemplate = new FuncDataTemplate<FontRangeEntryViewModel>((_, _) => BuildRow()),
         };
         rows.Bind(ItemsControl.ItemsSourceProperty, new Binding(nameof(FontsViewModel.Entries)));
-        body.Children.Add(rows);
+        _body.Children.Add(rows);
 
         Button add = new Button { Content = "Add Font Range", HorizontalAlignment = HorizontalAlignment.Left };
         add.Bind(Button.CommandProperty, new Binding(nameof(FontsViewModel.AddEntryCommand)));
-        body.Children.Add(add);
+        _body.Children.Add(add);
 
-        return BuildCategory("Character Ranges", body);
+        Content = _body;
     }
 
-    // The same strip the grid draws for each of its categories: a chevron and the name, over rows that
-    // a click on the strip shows or hides.
-    private static Control BuildCategory(string title, Control body)
+    /// <inheritdoc/>
+    public override void Refresh(bool forceRefreshEvenIfFocused = false)
     {
-        TextBlock name = new TextBlock
+        if (InstanceMember == null)
         {
-            Text = title,
-            FontWeight = FontWeight.Medium,
-            Margin = new Thickness(0, 4),
-            VerticalAlignment = VerticalAlignment.Center,
-        }.WithThemeResource(TextBlock.ForegroundProperty, "Frb.Brushes.ThemeContrast");
+            return;
+        }
 
-        RotateTransform rotation = new RotateTransform(90);
-        Path chevron = new Path
+        if (InstanceMember.Value is FontsViewModel viewModel && !ReferenceEquals(_body.DataContext, viewModel))
         {
-            Data = Geometry.Parse("M 0,0 L 4,4 L 0,8"),
-            StrokeThickness = 1.5,
-            Width = 9,
-            Height = 9,
-            Stretch = Stretch.Uniform,
-            Margin = new Thickness(6, 0, 8, 0),
-            VerticalAlignment = VerticalAlignment.Center,
-            RenderTransform = rotation,
-        };
-        chevron.Bind(Shape.StrokeProperty, name.GetObservable(TextBlock.ForegroundProperty));
-
-        Grid headerRow = new Grid { ColumnDefinitions = new ColumnDefinitions("Auto,*") };
-        headerRow.Children.Add(chevron);
-        Grid.SetColumn(name, 1);
-        headerRow.Children.Add(name);
-
-        Border header = new Border { Child = headerRow, Padding = new Thickness(0, 3) }
-            .WithThemeResource(Border.BackgroundProperty, "Frb.Brushes.Contrast01");
-        header.PointerReleased += (_, e) =>
-        {
-            if (e.InitialPressMouseButton == MouseButton.Left)
-            {
-                body.IsVisible = !body.IsVisible;
-                rotation.Angle = body.IsVisible ? 90 : 0;
-            }
-        };
-
-        return new StackPanel { Children = { header, body } };
+            _body.DataContext = viewModel;
+        }
+        RefreshHint(_hint);
     }
+
+    /// <inheritdoc/>
+    public override ApplyValueResult TryGetValueOnUi(out object? result)
+    {
+        result = _body.DataContext;
+        return ApplyValueResult.Success;
+    }
+
+    /// <inheritdoc/>
+    public override ApplyValueResult TrySetValueOnUi(object? value) => ApplyValueResult.Success;
+
+    private static ColumnDefinitions Columns() => new ColumnDefinitions("3*,4*,Auto");
 
     private static Control BuildTableHeader()
     {
@@ -128,8 +89,6 @@ public sealed class FontsView : DockPanel
         return header;
     }
 
-    private static ColumnDefinitions Columns() => new ColumnDefinitions("3*,4*,Auto");
-
     private static Control BuildRow()
     {
         Grid row = new Grid { ColumnDefinitions = Columns(), RowDefinitions = new RowDefinitions("Auto,Auto"), Margin = new Thickness(0, 2) };
@@ -140,21 +99,21 @@ public sealed class FontsView : DockPanel
         defaultLabel.Bind(Visual.IsVisibleProperty, new Binding(nameof(FontRangeEntryViewModel.IsDefault)));
         row.Children.Add(defaultLabel);
 
-        ComboBox family = new ComboBox { IsEditable = true, HorizontalAlignment = HorizontalAlignment.Stretch, Margin = new Thickness(0, 0, 4, 0) };
+        ComboBox family = new ComboBox { IsEditable = true, HorizontalAlignment = HorizontalAlignment.Stretch, Margin = new Thickness(0, 0, 4, 0), MinHeight = 26 };
         family.Bind(ComboBox.ItemsSourceProperty, new Binding($"{nameof(DataContext)}.{nameof(FontsViewModel.AvailableFonts)}")
         {
-            RelativeSource = new RelativeSource(RelativeSourceMode.FindAncestor) { AncestorType = typeof(FontsView) },
+            RelativeSource = new RelativeSource(RelativeSourceMode.FindAncestor) { AncestorType = typeof(ItemsControl) },
         });
         family.Bind(ComboBox.TextProperty, new Binding(nameof(FontRangeEntryViewModel.FontFamily))
         {
             Mode = BindingMode.TwoWay,
             UpdateSourceTrigger = UpdateSourceTrigger.LostFocus,
         });
-        family.Bind(Visual.IsVisibleProperty, new Binding(nameof(FontRangeEntryViewModel.IsDefault)) { Converter = global::Avalonia.Data.Converters.BoolConverters.Not });
+        family.Bind(Visual.IsVisibleProperty, new Binding(nameof(FontRangeEntryViewModel.IsDefault)) { Converter = BoolConverters.Not });
         CommitOnEnter(family);
         row.Children.Add(family);
 
-        TextBox ranges = new TextBox { HorizontalAlignment = HorizontalAlignment.Stretch };
+        TextBox ranges = new TextBox { HorizontalAlignment = HorizontalAlignment.Stretch, MinHeight = 26 };
         ranges.Bind(TextBox.TextProperty, new Binding(nameof(FontRangeEntryViewModel.Ranges))
         {
             Mode = BindingMode.TwoWay,
@@ -174,13 +133,13 @@ public sealed class FontsView : DockPanel
         ToolTip.SetTip(remove, "Remove this row");
         remove.Bind(Button.CommandProperty, new Binding($"{nameof(DataContext)}.{nameof(FontsViewModel.RemoveEntryCommand)}")
         {
-            RelativeSource = new RelativeSource(RelativeSourceMode.FindAncestor) { AncestorType = typeof(FontsView) },
+            RelativeSource = new RelativeSource(RelativeSourceMode.FindAncestor) { AncestorType = typeof(ItemsControl) },
         });
         remove.Bind(Button.CommandParameterProperty, new Binding());
         // The default row keeps an invisible button so its column lines up with the other rows.
         remove.Bind(Visual.OpacityProperty, new Binding(nameof(FontRangeEntryViewModel.IsDefault)) { Converter = new FuncValueConverter<bool, double>(isDefault => isDefault ? 0 : 1) });
-        remove.Bind(InputElement.IsHitTestVisibleProperty, new Binding(nameof(FontRangeEntryViewModel.IsDefault)) { Converter = global::Avalonia.Data.Converters.BoolConverters.Not });
-        remove.Bind(InputElement.FocusableProperty, new Binding(nameof(FontRangeEntryViewModel.IsDefault)) { Converter = global::Avalonia.Data.Converters.BoolConverters.Not });
+        remove.Bind(InputElement.IsHitTestVisibleProperty, new Binding(nameof(FontRangeEntryViewModel.IsDefault)) { Converter = BoolConverters.Not });
+        remove.Bind(InputElement.FocusableProperty, new Binding(nameof(FontRangeEntryViewModel.IsDefault)) { Converter = BoolConverters.Not });
         Grid.SetColumn(remove, 2);
         row.Children.Add(remove);
 

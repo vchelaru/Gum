@@ -37,7 +37,7 @@ public class SettingsPageViewRegistry
         Register<ThemingDialogViewModel>(() => new AppearanceSettingsPageView());
         Register<PluginsDialogViewModel>(() => new PluginsSettingsPageView());
         Register<ProjectPropertiesPageViewModel>(() => new ProjectPropertiesPageView());
-        Register<FontsViewModel>(() => new FontsView());
+        Register<FontsViewModel>(() => new FontsSettingsPageView());
         Register<HotkeyViewModel>(() => new HotkeyView());
         Register<CodeGenerationSettingsViewModel>(() => new CodeGenerationSettingsPageView());
     }
