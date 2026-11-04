@@ -5,6 +5,8 @@ using Avalonia.VisualTree;
 using Avalonia.Media;
 using Avalonia.Reactive;
 using Avalonia.Threading;
+using Gum.Avalonia.Plugins.VariableGrid;
+using Gum.Plugins.InternalPlugins.VariableGrid;
 using Gum.SettingsWindow;
 using System.Linq;
 using System;
@@ -42,6 +44,8 @@ public class SettingsRowsPageView : DockPanel
     public SettingsRowsPageView()
     {
         Grid = new DataUiGrid { HideLoneCategoryHeader = true, AlternatesRowBackgrounds = false };
+        // The color row kind (SettingsRows.Color) uses the tool's own color editor, as the Variables tab does.
+        Grid.Displayers.Register(typeof(GumDisplayers.Color), typeof(ColorDisplay));
         Children.Add(Grid);
         this.GetObservable(SearchTextProperty).Subscribe(new AnonymousObserver<string?>(_ => MarkSearchMatches()));
 

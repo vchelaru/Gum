@@ -34,7 +34,7 @@ public class SettingsPageViewRegistry
         _scrollsItself = new HashSet<Type>();
 
         Register<GeneralSettingsViewModel>(() => new GeneralSettingsView());
-        Register<ThemingDialogViewModel>(() => new ThemingDialogView());
+        Register<ThemingDialogViewModel>(() => new AppearanceSettingsPageView());
         // Reused as it is: its own tabs each scroll, so it is given the window's height to fill.
         Register<PluginsDialogViewModel>(() => WithDialogButtons(new PluginsDialogView()), scrollsItself: true);
         Register<ProjectPropertiesPageViewModel>(() => new ProjectPropertiesPageView());

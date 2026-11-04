@@ -74,8 +74,9 @@ public class SettingsDialogViewModel : DialogViewModel
                 Keywords = new[]
                 {
                     "Theme Mode", "theme", "dark", "light", "Accent Color", "Editor Background", "Checker Color",
-                    "Outline Color", "Guide Line Color", "Guide Text Color", "Reset All", "color",
+                    "Outline Color", "Guide Line Color", "Guide Text Color", "reset", "default", "color",
                 },
+                SearchTerms = () => new AppearanceRows(theming).SearchTerms(),
             },
             new SettingsPage(SettingsPageIds.Plugins, "Plugins", SettingsSection.Application, plugins, PluginsOrder)
             {
