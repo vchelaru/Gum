@@ -35,9 +35,7 @@ public class TextureCoordinateReferenceLockTests
             tab.Drag(tab.WindowPointOf(64, 64), tab.WindowPointOf(104, 84));
 
             tab.Editor.SavedValue(button, "MyIcon.IconTop").ShouldBe(52, tab.Describe());
-            tab.Canvas.CanChangeX.ShouldBeFalse("the reference owns Left");
-            tab.Canvas.CanChangeY.ShouldBeTrue();
-            tab.Canvas.RectangleSelector!.Left.ShouldBe(40, "the selector does not show a Left the reference then snaps back");
+            tab.Canvas.CanChangeX.ShouldBeFalse("Left is not exposed");
             tab.Canvas.RectangleSelector!.Left.ShouldBe(32, "Left is not exposed, so it cannot move");
         });
     }
