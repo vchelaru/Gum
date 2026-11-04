@@ -121,4 +121,45 @@ public class SettingsRowsTests
 
         SettingsRows.SearchTerms(new[] { section }).ToArray().ShouldBe(new[] { "Alpha", "first hint", "Beta", "second hint" });
     }
+
+    [Fact]
+    public void MarkMatches_MarksRowsWhoseLabelOrHintContainsTheSearch_IgnoringCase()
+    {
+        InstanceMember byLabel = SettingsRows.Toggle("A", "Auto save", "Writes files.", () => false, _ => { });
+        InstanceMember byHint = SettingsRows.Text("B", "Other", "Saves on a timer.", () => "", _ => { });
+        InstanceMember none = SettingsRows.Text("C", "Unrelated", "Nothing here.", () => "", _ => { });
+        MemberCategory section = SettingsRows.Section("S", new[] { byLabel, byHint, none });
+
+        int count = SettingsRows.MarkMatches(new[] { section }, "SAVE");
+
+        count.ShouldBe(2);
+        byLabel.IsSearchMatch.ShouldBeTrue();
+        byHint.IsSearchMatch.ShouldBeTrue();
+        none.IsSearchMatch.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void MarkMatches_BlankSearchClearsEveryMark_AndNeverHidesRows()
+    {
+        InstanceMember row = SettingsRows.Text("A", "Alpha", "hint", () => "", _ => { });
+        MemberCategory section = SettingsRows.Section("S", new[] { row });
+        SettingsRows.MarkMatches(new[] { section }, "alp");
+        row.IsSearchMatch.ShouldBeTrue();
+
+        SettingsRows.MarkMatches(new[] { section }, "  ");
+
+        row.IsSearchMatch.ShouldBeFalse();
+        section.Members.Count.ShouldBe(1);
+    }
+
+    [Fact]
+    public void MarkMatches_ExpandsACollapsedSectionThatHoldsAMatch()
+    {
+        InstanceMember row = SettingsRows.Text("A", "Alpha", "hint", () => "", _ => { });
+        MemberCategory collapsed = SettingsRows.Section("S", new[] { row }, isExpanded: false);
+
+        SettingsRows.MarkMatches(new[] { collapsed }, "alpha");
+
+        collapsed.IsExpanded.ShouldBeTrue();
+    }
 }

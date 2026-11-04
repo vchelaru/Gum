@@ -132,6 +132,11 @@ public abstract class DataUiDisplayBase : UserControl, IDataUi
             ApplyRowStyle();
         }
 
+        if (e.PropertyName == nameof(WpfDataUi.DataTypes.InstanceMember.IsSearchMatch))
+        {
+            ApplyRowStyle();
+        }
+
         if (e.PropertyName == nameof(WpfDataUi.DataTypes.InstanceMember.Value) ||
             e.PropertyName == nameof(WpfDataUi.DataTypes.InstanceMember.DetailText) ||
             e.PropertyName == nameof(WpfDataUi.DataTypes.InstanceMember.FirstGridLength) ||
@@ -331,6 +336,20 @@ public abstract class DataUiDisplayBase : UserControl, IDataUi
             Padding = new Thickness(10 + 20 * (InstanceMember?.IndentLevel ?? 0), 8, 10, 2);
             BorderThickness = new Thickness(0, 0, 0, 1);
             BorderBrush = new SolidColorBrush(Color.Parse(isLight ? "#E0E0E0" : "#303030"));
+            if (InstanceMember?.IsSearchMatch == true)
+            {
+                // A search match: an accent bar on the left and a faint accent wash, like a selected row.
+                Color accent = TryGetResource("SystemAccentColor", ActualThemeVariant, out object? resource) && resource is Color found
+                    ? found
+                    : Color.Parse("#0A84FF");
+                BorderThickness = new Thickness(3, 0, 0, 1);
+                BorderBrush = new SolidColorBrush(accent);
+                Background = new SolidColorBrush(Color.FromArgb(isLight ? (byte)0x26 : (byte)0x33, accent.R, accent.G, accent.B));
+            }
+            else
+            {
+                ClearValue(BackgroundProperty);
+            }
             // Applied once: validation colors set on a field later must not be reset by every refresh.
             foreach (Control control in _areFieldsStyled ? Enumerable.Empty<Control>() : global::Avalonia.LogicalTree.LogicalExtensions.GetLogicalDescendants(this).OfType<Control>())
             {

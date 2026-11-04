@@ -8,6 +8,8 @@ using Avalonia.VisualTree;
 using AvaloniaDataUi;
 using Gum.Avalonia.Dialogs;
 using Gum.Avalonia.Dialogs.Views;
+using Gum.Avalonia.Settings;
+using Gum.Avalonia.Tests.Harness;
 using Gum.Avalonia.Tests.EndToEnd;
 using Gum.SettingsWindow;
 using Microsoft.Extensions.DependencyInjection;
@@ -169,6 +171,31 @@ public class SettingsDialogViewTests
         Click(window, header);
 
         viewModel.SelectedPage!.Id.ShouldBe(SettingsPageIds.General);
+        window.Close();
+    }
+
+
+    [AvaloniaFact]
+    public void Search_OnARowsPage_MarksTheMatchingRows_AndHidesNothing()
+    {
+        using ProjectTreeHarness tree = new ProjectTreeHarness();
+        SettingsDialogViewModel viewModel = TestAppBuilder.Services.GetRequiredService<SettingsDialogViewModel>();
+        viewModel.SelectPage(SettingsPageIds.Canvas);
+        DialogWindow window = Open(viewModel);
+        SettingsRowsPageView page = window.GetVisualDescendants().OfType<SettingsRowsPageView>().First();
+        int rowCount = page.Grid.Categories.Sum(category => category.Members.Count);
+
+        viewModel.SearchText = "canvas width";
+        Layout(window);
+
+        viewModel.SelectedPage!.Id.ShouldBe(SettingsPageIds.Canvas, "the page stays selected while it has a match");
+        page.Grid.Categories.SelectMany(category => category.Members).Count().ShouldBe(rowCount);
+        page.Grid.Categories.SelectMany(category => category.Members).Where(row => row.IsSearchMatch)
+            .Select(row => row.DisplayName).ShouldBe(new[] { "Canvas width" });
+
+        viewModel.SearchText = "";
+        Layout(window);
+        page.Grid.Categories.SelectMany(category => category.Members).ShouldAllBe(row => !row.IsSearchMatch);
         window.Close();
     }
 
