@@ -533,17 +533,74 @@ public class VariableReferenceLogic : IVariableReferenceLogic
 
     #region Assignment Reactions
 
+    /// <summary>One edit whose state-wide reaction is waiting for the end of a batch.</summary>
+    private sealed record PendingEdit(InstanceSave? Instance, string UnqualifiedMember, string QualifiedName);
+
+    /// <summary>The deferred state-wide work for one state of one element.</summary>
+    private sealed class PendingReaction
+    {
+        public PendingReaction(ElementSave element, StateSave state, Dictionary<string, object?> valuesBefore)
+        {
+            Element = element;
+            State = state;
+            ValuesBefore = valuesBefore;
+        }
+
+        public ElementSave Element { get; }
+        public StateSave State { get; }
+        public Dictionary<string, object?> ValuesBefore { get; }
+        public bool TrySave { get; set; }
+        public List<PendingEdit> Edits { get; } = new List<PendingEdit>();
+    }
+
+    private List<PendingReaction>? _pendingReactions;
+    private int _batchDepth;
+
+    /// <inheritdoc/>
+    public IDisposable BeginReferenceBatch()
+    {
+        _batchDepth++;
+        _pendingReactions ??= new List<PendingReaction>();
+        return new BatchScope(this);
+    }
+
+    private sealed class BatchScope : IDisposable
+    {
+        private VariableReferenceLogic? _owner;
+
+        public BatchScope(VariableReferenceLogic owner) => _owner = owner;
+
+        public void Dispose()
+        {
+            VariableReferenceLogic? owner = _owner;
+            _owner = null;
+            owner?.EndBatch();
+        }
+    }
+
+    private void EndBatch()
+    {
+        _batchDepth--;
+        if (_batchDepth > 0)
+        {
+            return;
+        }
+
+        List<PendingReaction> pending = _pendingReactions ?? new List<PendingReaction>();
+        _pendingReactions = null;
+        foreach (PendingReaction reaction in pending)
+        {
+            using (ToolLog.Begin("ReferenceBatchReaction", count: reaction.Edits.Count))
+            {
+                RunStateWideReaction(reaction.Element, reaction.State, reaction.ValuesBefore, reaction.Edits,
+                    reaction.TrySave, isFullCommit: true);
+            }
+        }
+    }
 
     public void DoVariableReferenceReaction(ElementSave parentElement, InstanceSave? leftSideInstance, string unqualifiedMember,
         StateSave stateSave, string qualifiedName, bool trySave, bool isFullCommit = true)
     {
-        // A tick of a drag applies only the references inside the current element (its own rows, the
-        // behavior's tool-only lines, its other states), so a followed value is live and the cost does not grow
-        // with the project. The part that reaches other elements, files or the whole canvas runs once, on the
-        // full commit that ends the drag, so the result is the one a typed edit gives. Every drag, scrub and
-        // slider ends with a full commit (#6888, #7438).
-        bool isWide = isFullCommit || unqualifiedMember == "VariableReferences";
-
         // The currently-rendered wireframe representation of parentElement, if any. Lets a right
         // side like "Root.AbsoluteWidth" resolve against the live, already-laid-out object - null
         // when nothing is rendered for this element, in which case such identifiers stay
@@ -591,6 +648,49 @@ public class VariableReferenceLogic : IVariableReferenceLogic
         {
             valuesBefore[variable.Name] = variable.Value;
         }
+
+        PendingEdit edit = new PendingEdit(leftSideInstance, unqualifiedMember, qualifiedName);
+
+        // In a multi-select commit every selected instance would re-apply all references of the state (and
+        // cascade into the other elements) for a result that only the last edit settles, so it runs once when
+        // the batch ends (#7509). The edit itself is already in the state; only the reaction waits.
+        if (_batchDepth > 0 && isFullCommit && _pendingReactions != null)
+        {
+            PendingReaction? pending = _pendingReactions.FirstOrDefault(item => item.Element == parentElement && item.State == stateSave);
+            if (pending == null)
+            {
+                pending = new PendingReaction(parentElement, stateSave, valuesBefore);
+                _pendingReactions.Add(pending);
+            }
+            pending.TrySave |= trySave;
+            pending.Edits.Add(edit);
+            return;
+        }
+
+        RunStateWideReaction(parentElement, stateSave, valuesBefore, new[] { edit }, trySave, isFullCommit);
+    }
+
+    /// <summary>
+    /// The part of a reaction that covers the whole state and what reads it: re-applies the references of
+    /// <paramref name="stateSave"/>, the other states, and the elements that read this one. Runs once per edit,
+    /// or once per batch for every edit in <paramref name="edits"/>.
+    /// </summary>
+    private void RunStateWideReaction(ElementSave parentElement, StateSave stateSave, Dictionary<string, object?> valuesBefore,
+        IReadOnlyList<PendingEdit> edits, bool trySave, bool isFullCommit)
+    {
+        PendingEdit first = edits[0];
+        InstanceSave? leftSideInstance = first.Instance;
+        string unqualifiedMember = first.UnqualifiedMember;
+        bool containsReferencesEdit = edits.Any(item => item.UnqualifiedMember == "VariableReferences");
+        // A tick of a drag applies only the references inside the current element (its own rows, the
+        // behavior's tool-only lines, its other states), so a followed value is live and the cost does not grow
+        // with the project. The part that reaches other elements, files or the whole canvas runs once, on the
+        // full commit that ends the drag, so the result is the one a typed edit gives. Every drag, scrub and
+        // slider ends with a full commit (#6888, #7438).
+        bool isWide = isFullCommit || containsReferencesEdit;
+        var liveRoot = _wireframeObjectManager.GetRepresentation(parentElement);
+
+        // apply references on this element first, then apply the values to the other references:
         using (ToolLog.Begin("ApplyVariableReferences(state)", count: stateSave.Variables.Count))
         {
             ElementSaveExtensions.ApplyVariableReferences(parentElement, stateSave, liveRoot, isFullCommit);
@@ -611,7 +711,7 @@ public class VariableReferenceLogic : IVariableReferenceLogic
         }
 
         // A categorized state's rows read the same instances, so they follow too (#6886).
-        HashSet<string> changedNames = new HashSet<string> { qualifiedName };
+        HashSet<string> changedNames = new HashSet<string>(edits.Select(item => item.QualifiedName));
         foreach (VariableSave variable in stateSave.Variables)
         {
             if (!valuesBefore.TryGetValue(variable.Name, out object? oldValue) || !ElementSaveExtensions.ValueEquality(oldValue, variable.Value))
@@ -624,7 +724,7 @@ public class VariableReferenceLogic : IVariableReferenceLogic
             ApplyOtherStatesReading(parentElement, stateSave, changedNames, liveRoot, isFullCommit);
         }
 
-        if (unqualifiedMember == "VariableReferences")
+        if (containsReferencesEdit)
         {
             using (ToolLog.Begin("RefreshVariableValues"))
             {
@@ -642,13 +742,17 @@ public class VariableReferenceLogic : IVariableReferenceLogic
             ApplyReferencesToElement(parentElement, trySave, isFullCommit);
         }
 
-        var newValue = stateSave.GetValueRecursive(qualifiedName);
+        bool didSetDeepReference = false;
+        foreach (PendingEdit edit in edits)
+        {
+            var newValue = stateSave.GetValueRecursive(edit.QualifiedName);
 
-        // this could be a tunneled variable. If so, we may need to propagate the value to other instances one level deeper
-        var didSetDeepReference = DoVariableReferenceReactionOnInstanceVariableSet(parentElement, leftSideInstance, stateSave, unqualifiedMember, newValue);
+            // this could be a tunneled variable. If so, we may need to propagate the value to other instances one level deeper
+            didSetDeepReference |= DoVariableReferenceReactionOnInstanceVariableSet(parentElement, edit.Instance, stateSave, edit.UnqualifiedMember, newValue);
+        }
 
         // now force save it if it's a variable reference:
-        if (unqualifiedMember == "VariableReferences" && trySave)
+        if (containsReferencesEdit && trySave)
         {
             _fileCommands.TryAutoSaveElement(parentElement);
         }

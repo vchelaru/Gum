@@ -147,7 +147,8 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
         IClipboardService clipboardService,
         IStateEditingIndicatorService stateEditingIndicatorService,
         IVariableGridHead variableGridHead,
-        IBuiltInShaderFiles builtInShaderFiles)
+        IBuiltInShaderFiles builtInShaderFiles,
+        IVariableReferenceLogic variableReferenceLogic)
     {
         _builtInShaderFiles = builtInShaderFiles;
         _selectedState = selectedState;
@@ -183,7 +184,7 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
         _behaviorShowingLogic = new BehaviorShowingLogic(fileCommands, projectState);
         _variableCategoryCopyPasteService = new VariableCategoryCopyPasteService(_undoManager);
         _variableCategoryRowAdapter = new VariableCategoryRowAdapter();
-        _multiSelectCommitLogic = new MultiSelectCommitLogic(_undoManager, _setVariableLogic, _pluginManager, _fileCommands);
+        _multiSelectCommitLogic = new MultiSelectCommitLogic(_undoManager, _setVariableLogic, _pluginManager, _fileCommands, variableReferenceLogic);
         _shaderVectorRow = new ShaderVectorRow(_undoManager, _selectedState, _exposeVariableService, _dialogService, _nameVerifier);
         _compositeMemberLogic = new CompositeMemberLogic(_selectedState,
             _exposeVariableService,

@@ -146,6 +146,29 @@ public class MainErrorsPluginTests : BaseTestClass
     }
 
     /// <summary>
+    /// A multi-select edit re-applies references, firing a through-reference change on the selected element.
+    /// The check covers the whole element, so it runs once when the batch completes (#7509).
+    /// </summary>
+    [Fact]
+    public void VariableSetThroughReference_OnTheSelectedElementDuringABatch_ChecksOnceWhenTheBatchCompletes()
+    {
+        _selectedState.Setup(s => s.SelectedElement).Returns(_screen);
+        _plugin.IsVariableSetBatchOpen = true;
+
+        for (int i = 0; i < 5; i++)
+        {
+            _plugin.CallVariableSet(_screen, null, "Width", 0, isFullCommit: true);
+            _plugin.CallVariableSetThroughReference(_screen, null, "Total", 0, isFullCommit: true);
+        }
+        _errorChecker.Verify(c => c.GetErrorsFor(_screen, _project), Times.Never);
+
+        _plugin.IsVariableSetBatchOpen = false;
+        _plugin.CallVariableSetBatchCompleted(_screen);
+
+        _errorChecker.Verify(c => c.GetErrorsFor(_screen, _project), Times.Once);
+    }
+
+    /// <summary>
     /// A plain VariableSet (undo, a hotkey, a command) on an element that isn't selected checks that
     /// element right away, as it always has; only reference-propagated changes are deferred.
     /// </summary>
