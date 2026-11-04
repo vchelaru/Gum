@@ -2426,9 +2426,17 @@ public partial class CustomSetPropertyOnRenderable
 
         font = loaderManager.GetDisposable(fullFileName) as BitmapFont;
 
-        // Attempt to load from Embedded Resource
+        // Attempt to load from Embedded Resource, unless the project has its own font file for these
+        // properties (#7604): the embedded fonts are Latin-1 only, so they would hide a generated font
+        // that holds more glyphs. The disk load below picks the project's file up.
+#if KNI
+        // KNI may run in a browser without File.Exists, so the embedded font keeps precedence there.
+        bool projectHasFontFile = false;
+#else
+        bool projectHasFontFile = ToolsUtilities.FileManager.FileExists(fullFileName);
+#endif
 
-        if (fontName != null && font == null)
+        if (fontName != null && font == null && !projectHasFontFile)
         {
             font = GetFontDisposable(fontName);
         }
