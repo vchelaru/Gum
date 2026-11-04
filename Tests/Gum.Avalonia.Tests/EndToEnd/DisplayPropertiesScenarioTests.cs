@@ -477,7 +477,7 @@ public class DisplayPropertiesScenarioTests
         {
             using (GeneralSettingsPage general = new GeneralSettingsPage(tree))
             {
-                general.ClickCheckBox("Auto save");
+                general.ClickCheckBox("Save automatically");
                 general.ViewModel.AutoSave.ShouldBeFalse();
             }
             projectManager.AutoSave.ShouldBeFalse();
@@ -489,7 +489,7 @@ public class DisplayPropertiesScenarioTests
 
             using (GeneralSettingsPage general = new GeneralSettingsPage(tree))
             {
-                general.ClickCheckBox("Auto save");
+                general.ClickCheckBox("Save automatically");
             }
             projectManager.AutoSave.ShouldBeTrue();
             tree.Grid.TypeAndEnter("Width", "220");

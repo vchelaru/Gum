@@ -91,6 +91,19 @@ public static class SettingsRows
         return member;
     }
 
+    /// <summary>
+    /// A read-only row: the value in a muted field, with an optional chip beside it (for example where the value
+    /// came from). A link in the hint (<see cref="InstanceMember.DetailAction"/>) still works.
+    /// </summary>
+    public static InstanceMember ReadOnly(string name, string label, string hint, Func<string?> get, string? chip = null)
+    {
+        InstanceMember member = Create(name, label, hint, typeof(string), () => get(), _ => { });
+        member.IsReadOnly = true;
+        member.PreferredDisplayer = typeof(StandardDisplayers.ReadOnlyValueWithChip);
+        member.ChipText = chip;
+        return member;
+    }
+
     /// <summary>Indents <paramref name="row"/> under the row above it, for the fields a toggle reveals.</summary>
     public static InstanceMember Nested(InstanceMember row)
     {

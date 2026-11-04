@@ -23,9 +23,11 @@ The Settings window is available in November 2026, or now if building Gum from s
 
 <figure><img src="../.gitbook/assets/25_08 00 01.png" alt=""><figcaption><p>Application > General page</p></figcaption></figure>
 
-* **Auto save** saves the project whenever something changes.
-* **Standards palette** shows the standard types as a palette at the bottom of the Project tab instead of as a **Standard** folder.
-* **Open settings folder** opens the folder where Gum keeps its application settings.
+The page has three sections. **Saving** holds **Auto save**, which saves the project whenever something changes. **Project panel** holds **Standards palette**, which shows the standard types as a palette at the bottom of the Project tab instead of as a **Standard** folder. **Settings files** holds **Settings folder**, which shows where Gum keeps its application settings; click **Open folder** under it to open that folder.
+
+{% hint style="info" %}
+The grouped layout, hints under each setting, and highlighting of search matches on this page are available in December 2026, or now if building Gum from source. Before then the page was a plain list with an **Open settings folder** button.
+{% endhint %}
 
 ### Appearance
 

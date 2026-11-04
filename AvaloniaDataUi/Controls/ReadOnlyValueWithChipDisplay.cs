@@ -28,7 +28,7 @@ public class ReadOnlyValueWithChipDisplay : DataUiDisplayBase
     public ReadOnlyValueWithChipDisplay()
     {
         _label = new TextBlock { VerticalAlignment = VerticalAlignment.Center, TextWrapping = TextWrapping.Wrap, Padding = new Thickness(4, 0) };
-        _value = new TextBlock { VerticalAlignment = VerticalAlignment.Center, Opacity = 0.7 };
+        _value = new TextBlock { VerticalAlignment = VerticalAlignment.Center, Opacity = 0.7, TextTrimming = TextTrimming.CharacterEllipsis };
         _chipText = new TextBlock { Opacity = 0.7 };
         _chipText.Bind(TextBlock.FontSizeProperty, _chipText.GetResourceObservable("Frb.FontSize.Caption"));
         _chip = new Border
@@ -40,8 +40,9 @@ public class ReadOnlyValueWithChipDisplay : DataUiDisplayBase
             Background = new SolidColorBrush(Color.Parse("#40808080")),
             VerticalAlignment = VerticalAlignment.Center,
         };
-        StackPanel content = new StackPanel { Orientation = Orientation.Horizontal };
+        Grid content = new Grid { ColumnDefinitions = new ColumnDefinitions("*,Auto") };
         content.Children.Add(_value);
+        Grid.SetColumn(_chip, 1);
         content.Children.Add(_chip);
         _field = new Border
         {
@@ -88,6 +89,7 @@ public class ReadOnlyValueWithChipDisplay : DataUiDisplayBase
 
         _text = InstanceMember.Value?.ToString();
         _value.Text = _text;
+        ToolTip.SetTip(_value, _text);
         _label.Text = InstanceMember.DisplayName;
         _chipText.Text = InstanceMember.ChipText;
         _chip.IsVisible = !string.IsNullOrEmpty(InstanceMember.ChipText);
@@ -106,6 +108,7 @@ public class ReadOnlyValueWithChipDisplay : DataUiDisplayBase
     {
         _text = value?.ToString();
         _value.Text = _text;
+        ToolTip.SetTip(_value, _text);
         return ApplyValueResult.Success;
     }
 }
