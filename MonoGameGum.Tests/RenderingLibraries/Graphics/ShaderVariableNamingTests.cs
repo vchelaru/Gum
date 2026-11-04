@@ -10,6 +10,25 @@ namespace MonoGameGum.Tests.RenderingLibraries.Graphics;
 public class ShaderVariableNamingTests
 {
     [Theory]
+    [InlineData(0, "__X")]
+    [InlineData(1, "__Y")]
+    [InlineData(2, "__Z")]
+    [InlineData(3, "__W")]
+    public void GetComponentSuffix_ReturnsTheSuffixTheComponentNameEndsWith(int index, string expected)
+    {
+        ShaderVariableNaming.GetComponentSuffix(index).ShouldBe(expected);
+        ShaderVariableNaming.GetVariableName("Outline.fx", "Tint", index, componentCount: 4).ShouldEndWith(expected);
+    }
+
+    [Theory]
+    [InlineData(-1)]
+    [InlineData(4)]
+    public void GetComponentSuffix_OutsideZeroToThree_Throws(int index)
+    {
+        Should.Throw<ArgumentOutOfRangeException>(() => ShaderVariableNaming.GetComponentSuffix(index));
+    }
+
+    [Theory]
     [InlineData("Shaders/Outline.fx", "Outline")]
     [InlineData("Shaders\\Outline.fx", "Outline")]
     [InlineData("Outline.slang", "Outline")]

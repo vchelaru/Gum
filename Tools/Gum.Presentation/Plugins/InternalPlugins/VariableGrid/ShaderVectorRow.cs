@@ -9,6 +9,7 @@ using Gum.Undo;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using RenderingLibrary.Graphics;
 using ToolsUtilities;
 using WpfDataUi.DataTypes;
 
@@ -21,7 +22,7 @@ namespace Gum.Plugins.InternalPlugins.VariableGrid;
 /// </summary>
 public class ShaderVectorRow
 {
-    private static readonly string[] ExposureSuffixes = { "__X", "__Y", "__Z", "__W" };
+    private static readonly string[] ExposureSuffixes = Enumerable.Range(0, 4).Select(ShaderVariableNaming.GetComponentSuffix).ToArray();
 
     private readonly IUndoManager _undoManager;
     private readonly ISelectedState _selectedState;
