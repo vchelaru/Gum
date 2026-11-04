@@ -8,6 +8,7 @@ on:
       - 'Tools/verify*.ps1'
       - 'Tools/fast-test*.ps1'
       - 'Tools/TestProjects.ps1'
+      - 'Tools/Get-PublishablePackages*.ps1'
       - '.github/workflows/verify-script-tests.yaml'
 
 concurrency:
@@ -28,3 +29,6 @@ jobs:
       - name: Test fast-test.ps1 class resolution
         shell: pwsh
         run: ./Tools/fast-test-tests.ps1
+      - name: Test Get-PublishablePackages.ps1 hold
+        shell: pwsh
+        run: ./Tools/Get-PublishablePackages-tests.ps1
