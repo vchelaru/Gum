@@ -23,10 +23,11 @@ public static class SettingsRows
     public const double LabelColumnWidth = 202;
 
     /// <summary>A checkbox row; <paramref name="toggleText"/> is the text beside the box.</summary>
-    public static InstanceMember Toggle(string name, string label, string hint, Func<bool> get, Action<bool> set, string? toggleText = null)
+    public static InstanceMember Toggle(string name, string label, string hint, Func<bool> get, Action<bool> set, string? toggleText = null, string? chip = null)
     {
         InstanceMember member = Create(name, label, hint, typeof(bool), () => get(), value => set(Convert.ToBoolean(value)));
         member.ToggleText = toggleText;
+        member.ChipText = chip;
         return member;
     }
 

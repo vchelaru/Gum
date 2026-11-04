@@ -293,15 +293,38 @@ public class SettingsDialogViewTests
     }
 
     [AvaloniaFact]
-    public void PluginsPage_ScrollsItself_SoItsTitleStaysPut()
+    public void PluginsPage_IsRows_ScrollingWithThePage_AndOffersOneTogglePerPlugin()
     {
         SettingsDialogViewModel viewModel = TestAppBuilder.Services.GetRequiredService<SettingsDialogViewModel>();
         viewModel.SelectPage(SettingsPageIds.Plugins);
         DialogWindow window = Open(viewModel, maxHeight: 360);
 
+        SettingsRowsPageView page = window.GetVisualDescendants().OfType<SettingsRowsPageView>().Single();
         TextBlock title = window.GetVisualDescendants().OfType<TextBlock>().First(text => text.Text == "Plugins" && text.FontSize >= 16);
+        title.GetVisualAncestors().OfType<ScrollViewer>().ShouldNotBeEmpty("a rows page scrolls with its title, as the other rows pages do");
+        window.GetVisualDescendants().OfType<TabControl>().ShouldBeEmpty();
+        page.Grid.Categories.First().Members.ShouldNotBeEmpty();
+        page.Grid.Categories.First().Members.ShouldAllBe(row => row.PreferredDisplayer == null && row.Name.StartsWith("Plugin:"));
+        window.Close();
+    }
 
-        title.GetVisualAncestors().OfType<ScrollViewer>().ShouldBeEmpty("a page with its own scrolling gets the bounded height instead");
+    [AvaloniaFact]
+    public void Search_OnThePluginsPage_MarksThePluginsWhoseNameOrHintMatches()
+    {
+        SettingsDialogViewModel viewModel = TestAppBuilder.Services.GetRequiredService<SettingsDialogViewModel>();
+        viewModel.SelectPage(SettingsPageIds.Plugins);
+        DialogWindow window = Open(viewModel);
+        SettingsRowsPageView page = window.GetVisualDescendants().OfType<SettingsRowsPageView>().First();
+        string name = page.Grid.Categories.First().Members.First().DisplayName;
+
+        viewModel.SearchText = name;
+        Layout(window);
+
+        page.Grid.Categories.SelectMany(category => category.Members).Where(row => row.IsSearchMatch)
+            .Select(row => row.DisplayName).ShouldContain(name);
+        viewModel.SearchText = "";
+        Layout(window);
+        page.Grid.Categories.SelectMany(category => category.Members).ShouldAllBe(row => !row.IsSearchMatch);
         window.Close();
     }
 

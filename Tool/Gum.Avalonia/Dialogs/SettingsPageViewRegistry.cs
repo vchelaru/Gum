@@ -35,8 +35,7 @@ public class SettingsPageViewRegistry
 
         Register<GeneralSettingsViewModel>(() => new GeneralSettingsView());
         Register<ThemingDialogViewModel>(() => new AppearanceSettingsPageView());
-        // Reused as it is: its own tabs each scroll, so it is given the window's height to fill.
-        Register<PluginsDialogViewModel>(() => WithDialogButtons(new PluginsDialogView()), scrollsItself: true);
+        Register<PluginsDialogViewModel>(() => new PluginsSettingsPageView());
         Register<ProjectPropertiesPageViewModel>(() => new ProjectPropertiesPageView());
         Register<FontsViewModel>(() => new FontsView());
         Register<HotkeyViewModel>(() => new HotkeyView());
@@ -103,24 +102,5 @@ public class SettingsPageViewRegistry
             }
         }
         return null;
-    }
-
-    // A dialog view reused as a page: it sizes itself for a dialog window and puts its extra buttons
-    // on that window's button row, so drop the fixed width and place the buttons under the view.
-    private static Control WithDialogButtons(Control view)
-    {
-        view.Width = double.NaN;
-        view.HorizontalAlignment = HorizontalAlignment.Stretch;
-
-        DockPanel host = new DockPanel();
-        if (DialogWindow.GetAuxiliaryActions(view) is { } actions)
-        {
-            actions.HorizontalAlignment = HorizontalAlignment.Left;
-            actions.Margin = new Thickness(0, 8, 0, 0);
-            DockPanel.SetDock(actions, Dock.Bottom);
-            host.Children.Add(actions);
-        }
-        host.Children.Add(view);
-        return host;
     }
 }

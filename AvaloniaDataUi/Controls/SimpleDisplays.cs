@@ -42,6 +42,8 @@ public class CheckBoxDisplay : DataUiDisplayBase
     private readonly StackPanel _panel;
     private Grid? _spaciousGrid;
     private TextBlock? _spaciousLabel;
+    private TextBlock? _chipText;
+    private Border? _chip;
 
     /// <summary>Builds the displayer.</summary>
     public CheckBoxDisplay()
@@ -70,15 +72,33 @@ public class CheckBoxDisplay : DataUiDisplayBase
                 RowDefinitions = new RowDefinitions("Auto,Auto"),
             };
             _panel.Children.Clear();
-            Grid.SetColumn(_checkBox, 1);
+            // A small chip after the box (InstanceMember.ChipText) names a state, such as "Required".
+            _chipText = new TextBlock { Opacity = 0.7 };
+            _chipText.Bind(TextBlock.FontSizeProperty, _chipText.GetResourceObservable("Frb.FontSize.Caption"));
+            _chip = new Border
+            {
+                Child = _chipText,
+                CornerRadius = new CornerRadius(10),
+                Padding = new Thickness(8, 1),
+                Margin = new Thickness(6, 0, 0, 0),
+                Background = new SolidColorBrush(Color.Parse("#40808080")),
+                VerticalAlignment = VerticalAlignment.Center,
+                IsVisible = false,
+            };
+            StackPanel boxAndChip = new StackPanel { Orientation = Orientation.Horizontal };
+            boxAndChip.Children.Add(_checkBox);
+            boxAndChip.Children.Add(_chip);
+            Grid.SetColumn(boxAndChip, 1);
             Grid.SetRow(_hint, 1);
             Grid.SetColumnSpan(_hint, 2);
             _spaciousGrid.Children.Add(_spaciousLabel);
-            _spaciousGrid.Children.Add(_checkBox);
+            _spaciousGrid.Children.Add(boxAndChip);
             _spaciousGrid.Children.Add(_hint);
             _checkBox.Margin = new Thickness(0, 4, 0, 4);
             Content = _spaciousGrid;
         }
+        _chipText!.Text = InstanceMember?.ChipText;
+        _chip!.IsVisible = !string.IsNullOrEmpty(InstanceMember?.ChipText);
         DataUiRowLayout.ConfigureLabelColumn(_spaciousGrid.ColumnDefinitions[0], InstanceMember?.FirstGridLength ?? 100);
         _spaciousLabel!.Text = InstanceMember?.DisplayName;
         // The text goes through an access-key parser, where "_" marks the key and "__" is a literal underscore.
