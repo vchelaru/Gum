@@ -40,8 +40,8 @@ public class TextRuntimeEmbeddedFontPrecedenceTests : IDisposable
         text.IsBold = true;
 
         // The test assembly registers one stub font as both the embedded Arial 18 fonts and the default.
-        text.BitmapFont.ShouldNotBeSameAs(RenderingLibrary.Graphics.Text.DefaultBitmapFont);
-        text.BitmapFont!.FontFile.ShouldContain(fileName);
+        text.Typeface.ShouldNotBeSameAs(RenderingLibrary.Graphics.Text.DefaultBitmapFont);
+        text.Typeface!.FontFile!.ShouldContain(fileName);
     }
 
     [Fact]
@@ -53,7 +53,7 @@ public class TextRuntimeEmbeddedFontPrecedenceTests : IDisposable
         text.IsBold = true;
 
         // The test assembly registers one stub font as both the embedded Arial 18 fonts and the default.
-        text.BitmapFont.ShouldBeSameAs(RenderingLibrary.Graphics.Text.DefaultBitmapFont);
+        text.Typeface.ShouldBeSameAs(RenderingLibrary.Graphics.Text.DefaultBitmapFont);
     }
 
     private string WriteProjectFont(string baseName)
