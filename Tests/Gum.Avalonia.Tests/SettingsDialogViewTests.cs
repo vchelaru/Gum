@@ -41,7 +41,7 @@ public class SettingsDialogViewTests
 
         ListBox pages = window.GetVisualDescendants().OfType<ListBox>().First();
         pages.Items.OfType<SettingsNavigationEntry>().Select(entry => entry.Title).ShouldContain("General");
-        window.GetVisualDescendants().OfType<CheckBox>().Select(box => box.Content).ShouldContain("Auto save");
+        window.GetVisualDescendants().OfType<CheckBox>().Select(box => box.Content).ShouldContain("Save automatically");
         Button close = window.GetVisualDescendants().OfType<Button>().Single(button => button.Name == DialogWindow.AffirmativeButtonName);
         close.Content.ShouldBe("Close");
         window.GetVisualDescendants().OfType<Button>().Single(button => button.Name == DialogWindow.NegativeButtonName).IsVisible.ShouldBeFalse();
@@ -338,6 +338,23 @@ public class SettingsDialogViewTests
         window.Close();
     }
 
+
+    [AvaloniaFact]
+    public void Search_OnTheGeneralPage_MarksTheMatchingRowsByLabelOrHint()
+    {
+        SettingsDialogViewModel viewModel = TestAppBuilder.Services.GetRequiredService<SettingsDialogViewModel>();
+        viewModel.SelectPage(SettingsPageIds.General);
+        DialogWindow window = Open(viewModel);
+        SettingsRowsPageView page = window.GetVisualDescendants().OfType<SettingsRowsPageView>().First();
+
+        viewModel.SearchText = "project panel";
+        Layout(window);
+
+        page.Grid.Categories.SelectMany(category => category.Members).Where(row => row.IsSearchMatch)
+            .Select(row => row.DisplayName).ShouldBe(new[] { "Standards palette" });
+        viewModel.SearchText = "";
+        window.Close();
+    }
 
     [AvaloniaFact]
     public void Search_OnARowsPage_MarksTheMatchingRows_AndHidesNothing()

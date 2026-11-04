@@ -114,7 +114,7 @@ Gum generates bitmap fonts with KernSmith on every operating system. A project w
 
 ## Settings
 
-Gum keeps its settings, including the last project and the recent project list, in a per-user folder. Select **Help** > **Open Settings Folder...** (or **Open settings folder** on the **General** page of **Edit** > **Settings...**) to open it. On Windows the folder is `%APPDATA%\Gum`, the same folder the older WPF tool used, so your recent projects carry over when you upgrade.
+Gum keeps its settings, including the last project and the recent project list, in a per-user folder. Select **Help** > **Open Settings Folder...** (or **Open folder** on the **General** page of **Edit** > **Settings...**) to open it. On Windows the folder is `%APPDATA%\Gum`, the same folder the older WPF tool used, so your recent projects carry over when you upgrade.
 
 ## Older releases (the WPF tool)
 

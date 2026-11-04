@@ -67,7 +67,8 @@ public class SettingsDialogViewModel : DialogViewModel
         {
             new SettingsPage(SettingsPageIds.General, "General", SettingsSection.Application, general, GeneralOrder)
             {
-                Keywords = new[] { "Auto save", "autosave", "Standards palette", "Open settings folder", "settings folder" },
+                Keywords = new[] { "autosave", "Open settings folder" },
+                SearchTerms = () => new GeneralRows(general).SearchTerms(),
             },
             new SettingsPage(SettingsPageIds.Appearance, "Appearance", SettingsSection.Application, theming, AppearanceOrder)
             {
