@@ -29,7 +29,7 @@ public sealed class FontRangesDisplay : DataUiDisplayBase
     public FontRangesDisplay()
     {
         _hint = CreateHintTextBlock();
-        _hint.Margin = new Thickness(0, 0, 4, 4);
+        _hint.Margin = new Thickness(0, 0, 4, 0);
 
         _body = new StackPanel { Spacing = 4 };
         _body.Children.Add(_hint);
