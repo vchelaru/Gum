@@ -189,6 +189,21 @@ public class TextureRegionScenarioTests
     }
 
     [SkippableFact]
+    public void ADoubleClickInsideARegion_RaisesTextureRegionChosenOnce()
+    {
+        OnTab(tab =>
+        {
+            SampleRegionPlugin plugin = new SampleRegionPlugin("Sheet.png", SampleRegionPlugin.FromSheet(SampleSpriteSheet.Few));
+            using IDisposable registration = Register(tab, plugin);
+            SelectSheetSprite(tab, TextureAddress.EntireTexture);
+
+            DoubleClick(tab, 140, 24); // Coin
+
+            plugin.Chosen.Select(item => item.Region.Key).ShouldBe(new[] { "Coin" }, tab.Describe());
+        });
+    }
+
+    [SkippableFact]
     public void WithNoRegionPlugin_ThereIsNoOverlay()
     {
         OnTab(tab =>
