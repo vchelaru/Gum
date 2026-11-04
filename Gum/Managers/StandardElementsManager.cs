@@ -742,7 +742,7 @@ public class StandardElementsManager
                 Value = false,
                 Name = "RaiseChildrenEventsOutsideOfBounds",
                 Category = "Behavior",
-                DetailText = "Lets children outside this object's bounds, such as resize borders, receive the cursor.",
+                DetailText = "Lets children outside this object's bounds receive the cursor.",
                 MinimumGumxVersion = (int)GumProjectSave.GumxVersions.RaiseChildrenEventsExpansion
             });
     }
