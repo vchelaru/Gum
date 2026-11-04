@@ -41,7 +41,7 @@ public class ShaderParameterExposureCopyRenameScenarioTests
 
     private static void ShouldHoldTheParameters(ComponentSave element, string instanceName, bool exposed)
     {
-        VariableSave thickness = element.DefaultState.GetVariableSave($"{instanceName}.Outline_Thickness").ShouldNotBeNull();
+        VariableSave thickness = element.DefaultState!.GetVariableSave($"{instanceName}.Outline_Thickness").ShouldNotBeNull();
         thickness.Value.ShouldBe(3f);
         thickness.ShaderParameter.ShouldBe("Thickness");
         thickness.Type.ShouldBe("float");
@@ -49,7 +49,7 @@ public class ShaderParameterExposureCopyRenameScenarioTests
 
         foreach ((string letter, int index) in new[] { ("X", 0), ("Y", 1) })
         {
-            VariableSave component = element.DefaultState.GetVariableSave($"{instanceName}.Outline_Tint__{letter}").ShouldNotBeNull();
+            VariableSave component = element.DefaultState!.GetVariableSave($"{instanceName}.Outline_Tint__{letter}").ShouldNotBeNull();
             component.ShaderParameter.ShouldBe($"Tint#{index}/2");
             component.Type.ShouldBe("float");
             component.ExposedAsName.ShouldBe(exposed ? "Tint__" + letter : null);
@@ -69,7 +69,7 @@ public class ShaderParameterExposureCopyRenameScenarioTests
         ComponentSave card = Component(tree, "Card");
         card.Instances.Select(i => i.Name).ShouldBe(new[] { "Glow" });
         ShouldHoldTheParameters(card, "Glow", exposed: true);
-        card.DefaultState.Variables.Any(variable => variable.Name.StartsWith("Icon.")).ShouldBeFalse();
+        card.DefaultState!.Variables.Any(variable => variable.Name.StartsWith("Icon.")).ShouldBeFalse();
     }
 
     [AvaloniaFact]

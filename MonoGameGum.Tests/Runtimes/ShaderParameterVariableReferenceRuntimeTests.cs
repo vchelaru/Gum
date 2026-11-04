@@ -60,7 +60,7 @@ public class ShaderParameterVariableReferenceRuntimeTests : BaseTestClass
 
     private static ShaderParameterValue Get(ContainerRuntime container, string name)
     {
-        ShaderParameterCollection? parameters = ((IRenderTargetRenderable)container.RenderableComponent).ShaderParameters;
+        ShaderParameterCollection? parameters = ((IRenderTargetRenderable)container.RenderableComponent!).ShaderParameters;
         parameters.ShouldNotBeNull();
         parameters!.TryGetValue(name, out ShaderParameterValue value).ShouldBeTrue("expected parameter " + name);
         return value;

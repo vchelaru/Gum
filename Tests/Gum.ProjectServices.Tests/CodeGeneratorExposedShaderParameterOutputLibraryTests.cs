@@ -18,8 +18,8 @@ public class CodeGeneratorExposedShaderParameterOutputLibraryTests : BaseTestCla
     private static CodeGenerator CreateCodeGenerator()
     {
         Mock<INameVerifier> mockNameVerifier = new Mock<INameVerifier>();
-        string whyNotValid;
-        CommonValidationError error;
+        string whyNotValid = "";
+        CommonValidationError error = default!;
         mockNameVerifier
             .Setup(v => v.IsValidCSharpName(It.IsAny<string>(), out whyNotValid, out error))
             .Returns(true);
@@ -37,13 +37,13 @@ public class CodeGeneratorExposedShaderParameterOutputLibraryTests : BaseTestCla
         ComponentSave component = new ComponentSave { Name = "ShaderComponent", BaseType = "Container" };
         component.States.Add(new StateSave { Name = "Default", ParentContainer = component });
         component.Instances.Add(new InstanceSave { Name = "Holder", BaseType = "Container", ParentContainer = component });
-        component.DefaultState.SetValue("Holder.SourceShaderFile", "Shaders/Outline.slang");
+        component.DefaultState!.SetValue("Holder.SourceShaderFile", "Shaders/Outline.slang");
         if (vector)
         {
             string[] letters = { "X", "Y" };
             for (int i = 0; i < letters.Length; i++)
             {
-                component.DefaultState.Variables.Add(new VariableSave
+                component.DefaultState!.Variables.Add(new VariableSave
                 {
                     Name = "Holder.Outline_Tint__" + letters[i],
                     Type = "float",
@@ -55,7 +55,7 @@ public class CodeGeneratorExposedShaderParameterOutputLibraryTests : BaseTestCla
         }
         else
         {
-            component.DefaultState.Variables.Add(new VariableSave
+            component.DefaultState!.Variables.Add(new VariableSave
             {
                 Name = "Holder.Outline_Thickness",
                 Type = "float",
@@ -72,12 +72,12 @@ public class CodeGeneratorExposedShaderParameterOutputLibraryTests : BaseTestCla
         screen.Instances.Add(comp1);
         if (vector)
         {
-            screen.DefaultState.SetValue("Comp1.Tint__X", 0.9f, comp1, "float");
-            screen.DefaultState.SetValue("Comp1.Tint__Y", 0.1f, comp1, "float");
+            screen.DefaultState!.SetValue("Comp1.Tint__X", 0.9f, comp1, "float");
+            screen.DefaultState!.SetValue("Comp1.Tint__Y", 0.1f, comp1, "float");
         }
         else
         {
-            screen.DefaultState.SetValue("Comp1.OutlineThickness", 5f, comp1, "float");
+            screen.DefaultState!.SetValue("Comp1.OutlineThickness", 5f, comp1, "float");
         }
         project.Screens.Add(screen);
 
