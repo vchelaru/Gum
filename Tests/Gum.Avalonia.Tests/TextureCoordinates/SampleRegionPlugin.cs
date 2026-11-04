@@ -42,5 +42,5 @@ internal sealed class SampleRegionPlugin : PluginBase
     }
 
     public static IReadOnlyList<TextureRegion> FromSheet(IEnumerable<(string Name, int X, int Y, int Width, int Height)> sheet) =>
-        sheet.Select(item => new TextureRegion(item.Name, item.X, item.Y, item.Width, item.Height)).ToList();
+        sheet.Select(item => new TextureRegion(item.Name, item.Name, item.X, item.Y, item.Width, item.Height)).ToList();
 }

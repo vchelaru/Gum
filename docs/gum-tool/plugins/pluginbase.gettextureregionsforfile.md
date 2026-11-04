@@ -4,7 +4,7 @@
 
 The GetTextureRegionsForFile event lets a plugin tell the Texture Coordinates tab about named rectangles inside a Source File, such as the sprites of a sprite sheet or the slices of a PSD. The tab outlines every region reported for the selected object's Source File and shows a region's name while the cursor is over it. Clicking inside a region sets the object's Texture Address to Custom and its Texture Left, Top, Width and Height to that region, as one undo step, without moving the camera. Dragging does not apply a region. A double-click outside every region still creates the default rectangle.
 
-The event receives the Source File as a FilePath and returns a list of TextureRegion, or null (or an empty list) if the plugin does not know the file. Each TextureRegion has a Name and an X, Y, Width and Height in texture pixels.
+The event receives the Source File as a FilePath and returns a list of TextureRegion, or null (or an empty list) if the plugin does not know the file. Each TextureRegion has a Key, a Name, and an X, Y, Width and Height in texture pixels. The Key identifies the region within its file (a layer id, a frame id), so it must be unique among the regions a plugin reports for that file. The Name is what the tab shows under the cursor, and several regions may share one.
 
 Available in December 2026, or now if building Gum from source.
 
@@ -22,8 +22,8 @@ GetTextureRegionsForFile += file =>
 
     return new[]
     {
-        new TextureRegion("Hero", 0, 0, 48, 64),
-        new TextureRegion("Coin", 48, 0, 24, 24),
+        new TextureRegion("hero", "Hero", 0, 0, 48, 64),
+        new TextureRegion("coin", "Coin", 48, 0, 24, 24),
     };
 };
 ```
@@ -66,6 +66,7 @@ public class RegionsFromJsonPlugin : PluginBase
         foreach (JsonElement item in document.RootElement.EnumerateArray())
         {
             regions.Add(new TextureRegion(
+                item.GetProperty("id").GetString() ?? "",
                 item.GetProperty("name").GetString() ?? "",
                 item.GetProperty("x").GetInt32(),
                 item.GetProperty("y").GetInt32(),
@@ -81,8 +82,8 @@ The JSON file is an array with one entry per region:
 
 ```json
 [
-  { "name": "Hero", "x": 0, "y": 0, "width": 48, "height": 64 },
-  { "name": "Coin", "x": 48, "y": 0, "width": 24, "height": 24 }
+  { "id": "hero", "name": "Hero", "x": 0, "y": 0, "width": 48, "height": 64 },
+  { "id": "coin", "name": "Coin", "x": 48, "y": 0, "width": 24, "height": 24 }
 ]
 ```
 

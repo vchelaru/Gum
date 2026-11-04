@@ -29,7 +29,7 @@ public sealed class TextureRegionSet
                 continue;
             }
 
-            _regions.Add(new TextureRegion(region.Name, left, top, right - left, bottom - top));
+            _regions.Add(new TextureRegion(region.Key, region.Name, left, top, right - left, bottom - top));
         }
     }
 
