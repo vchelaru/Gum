@@ -12,6 +12,7 @@ using Moq;
 using Shouldly;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Gum.Presentation.Tests;
 
@@ -606,6 +607,98 @@ public class VariableReferenceLogicTests : BaseTestClass
             trySave: false);
 
         varList.Value[0].StartsWith("//").ShouldBeFalse();
+    }
+
+    private (ComponentSave element, StateSave state, InstanceSave icon) BuildShadedIconWithPixelSize(params string[] referenceLines)
+    {
+        GumExpressionService.Initialize();
+        ComponentSave element = new() { Name = "MyComp" };
+        StateSave defaultState = new() { Name = "Default", ParentContainer = element };
+        element.States.Add(defaultState);
+        InstanceSave icon = new() { Name = "Icon", BaseType = "Container", ParentContainer = element };
+        InstanceSave sprite = new() { Name = "Sprite", BaseType = "Container", ParentContainer = element };
+        element.Instances.Add(icon);
+        element.Instances.Add(sprite);
+
+        defaultState.Variables.Add(new VariableSave { Name = "PixelSize", Type = "float", Value = 4f, SetsValue = true });
+        defaultState.Variables.Add(new VariableSave { Name = "Sprite.Width", Type = "float", Value = 0f, SetsValue = true });
+        foreach (string name in new[] { "Outline_Thickness", "Outline_Tint__X", "Outline_Tint__Y" })
+        {
+            string marker = name == "Outline_Thickness" ? "Thickness" : "Tint#" + (name.EndsWith("X") ? "0/2" : "1/2");
+            defaultState.Variables.Add(new VariableSave
+            {
+                Name = "Icon." + name, Type = "float", SetsValue = false, ShaderParameter = marker
+            });
+        }
+
+        VariableListSave<string> iconRefs = new() { Type = "string", Name = "Icon.VariableReferences" };
+        VariableListSave<string> spriteRefs = new() { Type = "string", Name = "Sprite.VariableReferences" };
+        foreach (string line in referenceLines)
+        {
+            (line.StartsWith("Width") ? spriteRefs : iconRefs).Value.Add(line);
+        }
+        defaultState.VariableLists.Add(iconRefs);
+        defaultState.VariableLists.Add(spriteRefs);
+
+        StandardElementSave containerStandard = new() { Name = "Container" };
+        StateSave containerDefault = new() { Name = "Default", ParentContainer = containerStandard };
+        containerDefault.Variables.Add(new VariableSave { Name = "Width", Type = "float", Value = 0f, SetsValue = true });
+        containerStandard.States.Add(containerDefault);
+
+        GumProjectSave project = new();
+        project.StandardElements.Add(containerStandard);
+        project.Components.Add(element);
+        ObjectFinder.Self.GumProjectSave = project;
+        return (element, defaultState, icon);
+    }
+
+    [Fact]
+    public void DoVariableReferenceReaction_ShaderParameterOnLeftSide_WritesTheFollowedValueAndKeepsTheMarker()
+    {
+        (ComponentSave element, StateSave state, InstanceSave icon) = BuildShadedIconWithPixelSize("Outline_Thickness = PixelSize");
+
+        _sut.DoVariableReferenceReaction(element, icon, "VariableReferences", state, "Icon.VariableReferences", trySave: false);
+
+        VariableSave written = state.Variables.Single(v => v.Name == "Icon.Outline_Thickness");
+        written.Value.ShouldBe(4f);
+        written.ShaderParameter.ShouldBe("Thickness");
+    }
+
+    [Fact]
+    public void DoVariableReferenceReaction_OneComponentVariable_DrivesAnOrdinaryVariableAndAShaderParameter()
+    {
+        // The #7010 example: PixelSize drives the Sprite's size and the container's shader parameter.
+        (ComponentSave element, StateSave state, InstanceSave icon) = BuildShadedIconWithPixelSize(
+            "Outline_Thickness = PixelSize", "Width = PixelSize");
+
+        _sut.DoVariableReferenceReaction(element, icon, "VariableReferences", state, "Icon.VariableReferences", trySave: false);
+
+        state.GetValue("Sprite.Width").ShouldBe(4f);
+        state.GetValue("Icon.Outline_Thickness").ShouldBe(4f);
+    }
+
+    [Fact]
+    public void DoVariableReferenceReaction_ShaderVectorComponentsOnLeftSide_EachWriteTheirOwnComponent()
+    {
+        (ComponentSave element, StateSave state, InstanceSave icon) = BuildShadedIconWithPixelSize(
+            "Outline_Tint__X = PixelSize", "Outline_Tint__Y = PixelSize * 2");
+
+        _sut.DoVariableReferenceReaction(element, icon, "VariableReferences", state, "Icon.VariableReferences", trySave: false);
+
+        state.GetValue("Icon.Outline_Tint__X").ShouldBe(4f);
+        state.GetValue("Icon.Outline_Tint__Y").ShouldBe(8f);
+    }
+
+    [Fact]
+    public void DoVariableReferenceReaction_ShaderParameterOnLeftSide_FollowsTheSourceWhenItChanges()
+    {
+        (ComponentSave element, StateSave state, InstanceSave icon) = BuildShadedIconWithPixelSize("Outline_Thickness = PixelSize");
+        _sut.DoVariableReferenceReaction(element, icon, "VariableReferences", state, "Icon.VariableReferences", trySave: false);
+
+        state.SetValue("PixelSize", 11f, null, "float");
+        _sut.DoVariableReferenceReaction(element, null, "PixelSize", state, "PixelSize", trySave: false);
+
+        state.GetValue("Icon.Outline_Thickness").ShouldBe(11f);
     }
 
     [Fact]
