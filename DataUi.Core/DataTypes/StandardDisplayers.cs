@@ -23,6 +23,12 @@ public static class StandardDisplayers
     /// </summary>
     public sealed class ReadOnlyValueWithChip { private ReadOnlyValueWithChip() { } }
 
+    /// <summary>
+    /// A compact line: the label, then the member's <see cref="InstanceMember.ChipText"/> as a key chip, with no field.
+    /// For a list of keyboard shortcuts. Avalonia head only.
+    /// </summary>
+    public sealed class KeyChip { private KeyChip() { } }
+
     /// <summary>Multi-line text.</summary>
     public sealed class MultiLineTextBox { private MultiLineTextBox() { } }
 

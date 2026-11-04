@@ -139,11 +139,11 @@ public static class SettingsRows
     /// <summary>The label and hint of every row, which the Settings window's search matches.</summary>
     public static IEnumerable<string> SearchTerms(IEnumerable<MemberCategory> sections) =>
         sections.SelectMany(section => section.Members)
-            .SelectMany(member => new[] { member.DisplayName, member.DetailText ?? string.Empty })
+            .SelectMany(member => new[] { member.DisplayName, member.DetailText ?? string.Empty, member.ChipText ?? string.Empty })
             .Where(term => term.Length > 0);
 
     /// <summary>
-    /// Marks every row whose label or hint contains <paramref name="search"/> (ignoring case) and clears the
+    /// Marks every row whose label, hint or chip contains <paramref name="search"/> (ignoring case) and clears the
     /// mark on the rest; a blank search clears all. A section holding a match is expanded, so a match is
     /// never hidden in a collapsed section. Nothing is removed. Returns the number of rows marked.
     /// </summary>
@@ -158,7 +158,8 @@ public static class SettingsRows
             {
                 bool isMatch = text.Length > 0
                     && (member.DisplayName.Contains(text, StringComparison.OrdinalIgnoreCase)
-                        || (member.DetailText ?? string.Empty).Contains(text, StringComparison.OrdinalIgnoreCase));
+                        || (member.DetailText ?? string.Empty).Contains(text, StringComparison.OrdinalIgnoreCase)
+                        || (member.ChipText ?? string.Empty).Contains(text, StringComparison.OrdinalIgnoreCase));
                 member.IsSearchMatch = isMatch;
                 sectionHasMatch |= isMatch;
                 if (isMatch)
