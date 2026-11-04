@@ -1,14 +1,12 @@
 using System;
 using Avalonia;
 using Avalonia.Controls;
-using Avalonia.Controls.Templates;
 using Avalonia.Controls.Primitives;
 using Avalonia.Data;
 using Avalonia.Layout;
 using Avalonia.Media;
 using Gum.Managers;
 using Gum.Plugins.FileWatchPlugin;
-using Gum.Plugins.InternalPlugins.Hotkey.ViewModels;
 using Gum.Avalonia.Themes;
 
 namespace Gum.Avalonia.Panels;
@@ -53,28 +51,6 @@ public sealed class OutputView : DockPanel
             }
         };
         Children.Add(text);
-    }
-}
-
-/// <summary>
-/// The Keyboard shortcuts page: every hotkey and its binding as plain rows, which the Settings
-/// window scrolls with the rest of the page. Twin of the WPF <c>HotkeyView</c>.
-/// </summary>
-public sealed class HotkeyView : ItemsControl
-{
-    // An ItemsControl subclass gets no theme (styles match the exact type) and so draws nothing.
-    protected override Type StyleKeyOverride => typeof(ItemsControl);
-
-    /// <summary>Builds the view.</summary>
-    public HotkeyView()
-    {
-        this.Bind(ItemsSourceProperty, new Binding(nameof(HotkeyViewModel.Items)));
-        ItemTemplate = new FuncDataTemplate<HotkeyItemViewModel>((_, _) =>
-        {
-            TextBlock row = new TextBlock { Margin = new Thickness(0, 2) };
-            row.Bind(TextBlock.TextProperty, new Binding(nameof(HotkeyItemViewModel.Display)));
-            return row;
-        });
     }
 }
 

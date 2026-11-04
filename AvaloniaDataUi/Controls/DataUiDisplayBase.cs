@@ -315,6 +315,12 @@ public abstract class DataUiDisplayBase : UserControl, IDataUi
         return style;
     }
 
+    /// <summary>Space above a spacious row; a compact list row asks for less.</summary>
+    protected virtual double SpaciousTopPadding => 8;
+
+    /// <summary>Space below a spacious row.</summary>
+    protected virtual double SpaciousBottomPadding => 2;
+
     /// <summary>Whether the member opted into the spacious Settings look.</summary>
     protected bool IsSpacious => InstanceMember?.IsSpaciousRow == true;
 
@@ -333,7 +339,7 @@ public abstract class DataUiDisplayBase : UserControl, IDataUi
         {
             _isRowStyled = true;
             bool isLight = ActualThemeVariant == Avalonia.Styling.ThemeVariant.Light;
-            Padding = new Thickness(10 + 20 * (InstanceMember?.IndentLevel ?? 0), 8, 10, 2);
+            Padding = new Thickness(10 + 20 * (InstanceMember?.IndentLevel ?? 0), SpaciousTopPadding, 10, SpaciousBottomPadding);
             BorderThickness = new Thickness(0, 0, 0, 1);
             BorderBrush = new SolidColorBrush(Color.Parse(isLight ? "#E0E0E0" : "#303030"));
             if (InstanceMember?.IsSearchMatch == true)

@@ -288,7 +288,8 @@ public class SettingsDialogViewTests
         TextBlock title = window.GetVisualDescendants().OfType<TextBlock>().First(text => text.Text == "Keyboard shortcuts" && text.FontSize >= 16);
         ScrollViewer pageScroller = title.GetVisualAncestors().OfType<ScrollViewer>().First();
         pageScroller.Extent.Height.ShouldBeGreaterThan(pageScroller.Viewport.Height);
-        window.GetVisualDescendants().OfType<TextBlock>().Select(text => text.Text).ShouldContain(text => text != null && text.StartsWith("Undo: "));
+        window.GetVisualDescendants().OfType<TextBlock>().Select(text => text.Text).ShouldContain("Undo");
+        window.GetVisualDescendants().OfType<TextBlock>().Select(text => text.Text).ShouldContain(TestAppBuilder.Services.GetRequiredService<Gum.Managers.IKeyCombinationFormatter>().Format(TestAppBuilder.Services.GetRequiredService<Gum.Managers.IHotkeyManager>().Undo!));
         window.Close();
     }
 

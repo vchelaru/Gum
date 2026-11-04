@@ -47,6 +47,12 @@ The grouped layout, hints under each setting, and highlighting of search matches
 
 This page lists every shortcut and its key combination, such as **Duplicate: Ctrl+D** and **Undo: Ctrl+Z**. Pressing **Ctrl+/** opens the Settings window on this page. The page lists the shortcuts but does not change them.
 
+The shortcuts are grouped by area (**Editing**, **Navigation**, **Canvas keys**, **Nudge**, and **Camera**), one line per command with its keys in a chip beside it. Searching matches the command name or its keys, so searching for `Ctrl+Z` highlights **Undo**.
+
+{% hint style="info" %}
+The grouped one-line layout and highlighting of search matches on this page are available in December 2026, or now if building Gum from source. Before then the page was a plain list of lines such as **Undo: Ctrl+Z**.
+{% endhint %}
+
 ### Plugins
 
 <figure><img src="../.gitbook/assets/25_08 00 04.png" alt=""><figcaption><p>Application > Plugins page</p></figcaption></figure>
