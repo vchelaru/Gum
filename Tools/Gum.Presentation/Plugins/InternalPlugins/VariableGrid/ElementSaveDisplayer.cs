@@ -52,6 +52,7 @@ public class ElementSaveDisplayer
 
     private readonly SubtextLogic _subtextLogic;
     private readonly IVariableReferenceLinkLogic _referenceLinkLogic;
+    private readonly IVariableReferenceStatusLogic _referenceStatusLogic;
     private readonly ISelectedState _selectedState;
     private readonly IUndoManager _undoManager;
     private readonly TypeManager _typeManager;
@@ -107,8 +108,10 @@ public class ElementSaveDisplayer
         IWireframeObjectManager wireframeObjectManager,
         IClipboardService clipboardService,
         IProjectState projectState,
-        IVariableReferenceLinkLogic referenceLinkLogic)
+        IVariableReferenceLinkLogic referenceLinkLogic,
+        IVariableReferenceStatusLogic referenceStatusLogic)
     {
+        _referenceStatusLogic = referenceStatusLogic;
         _subtextLogic = subtextLogic;
         _referenceLinkLogic = referenceLinkLogic;
         _selectedState = selectedState;
@@ -840,6 +843,13 @@ public class ElementSaveDisplayer
             if (stateSave != null)
             {
                 entry.DetailAction = _referenceLinkLogic.GetUnlinkAction(propertyData.OriginalName, instance, instanceOwner, stateSave);
+
+                // The note is a second line under "Set by ...": the row keeps its last value (#7512).
+                string? note = _referenceStatusLogic.GetNote(propertyData.OriginalName, instance, instanceOwner, stateSave);
+                if (!string.IsNullOrEmpty(note))
+                {
+                    entry.DetailText = string.IsNullOrEmpty(entry.DetailText) ? note : entry.DetailText + "\n" + note;
+                }
             }
         }
 

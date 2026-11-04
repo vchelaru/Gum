@@ -213,7 +213,8 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
             _wireframeObjectManager,
             _clipboardService,
             _projectState,
-            new VariableReferenceLinkLogic(_selectedState, _objectFinder, _setVariableLogic));
+            new VariableReferenceLinkLogic(_selectedState, _objectFinder, _setVariableLogic),
+            new VariableReferenceStatusLogic());
     }
 
     // Normally plugins will initialize through the PluginManager. This needs to happen earlier (see where it's called for info)

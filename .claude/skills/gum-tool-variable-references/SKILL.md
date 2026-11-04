@@ -127,6 +127,10 @@ A typed edit also re-reads the rows of the element's other states (Highlighted, 
 
 Rows in a loop are skipped by the canvas and by `ApplyVariableReferences` and keep their stored values, so repeated applies change nothing. GUM0013 in `HeadlessErrorChecker` names the loop on each element holding a row in it (Errors tab, `gumcli check`), including loops across two elements' default states.
 
+## Row Note for a Reference With No Value
+
+A valid right side can have no value right now (`100 / Y` with `Y = 0`); the left variable keeps its last value. `VariableReferenceStatusLogic.GetNote` computes a "Not following its reference right now: ..." line from current values, and `ElementSaveDisplayer` appends it under "Set by" (no Errors-tab entry; it would flicker while `Y` is dragged). Reason wording comes from `VariableReferenceLogic.DescribeRightSideFailure`, shared with the edit-time dialog. Lines reading `Index`/Absolute* are skipped: they need the live canvas.
+
 ## Validation
 
 `GetIndividualFailures` checks each line for:
