@@ -356,7 +356,7 @@ public class ElementSaveDisplayer
     /// Red/Green/Blue, and only the channel rows exist in the grid - without expanding here the
     /// swatch stays editable and silently loses its value on the next apply (issue #4942).
     /// </summary>
-    private static Dictionary<string, string> GetVariablesSetThroughReferences(ElementSave elementSave, StateSave? currentState, string variableListName)
+    public static Dictionary<string, string> GetVariablesSetThroughReferences(ElementSave elementSave, StateSave? currentState, string variableListName)
     {
         Dictionary<string, string> variablesSetThroughReference = new Dictionary<string, string>();
 
