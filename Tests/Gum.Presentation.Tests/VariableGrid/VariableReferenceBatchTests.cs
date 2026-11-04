@@ -47,10 +47,13 @@ public class VariableReferenceBatchTests : BaseTestClass
     }
 
     /// <summary>A screen whose Total reads the sum of V0..V4, so every edit changes Total until the last one lands.</summary>
-    private ScreenSave BuildScreen(out StateSave state)
+    private ScreenSave BuildScreen(out StateSave state, string name = "BatchScreen", bool newProject = true)
     {
-        ObjectFinder.Self.GumProjectSave = new GumProjectSave();
-        ScreenSave screen = new ScreenSave { Name = "BatchScreen" };
+        if (newProject)
+        {
+            ObjectFinder.Self.GumProjectSave = new GumProjectSave();
+        }
+        ScreenSave screen = new ScreenSave { Name = name };
         state = new StateSave { Name = "Default", ParentContainer = screen };
         screen.States.Add(state);
         for (int i = 0; i < Count; i++)
@@ -119,6 +122,26 @@ public class VariableReferenceBatchTests : BaseTestClass
         }
 
         _fileCommands.Verify(x => x.TryAutoSaveElement(screen), Times.Once);
+    }
+
+    [Fact]
+    public void BeginReferenceBatch_SpanningTwoElements_AppliesEachElementOnce()
+    {
+        ScreenSave first = BuildScreen(out StateSave firstState, "FirstScreen");
+        ScreenSave second = BuildScreen(out StateSave secondState, "SecondScreen", newProject: false);
+
+        using (_sut.BeginReferenceBatch())
+        {
+            for (int i = 0; i < Count; i++)
+            {
+                SetAndReact(first, firstState, i, 10f);
+                SetAndReact(second, secondState, i, 20f);
+            }
+        }
+
+        firstState.GetValue("Total").ShouldBe(50f);
+        secondState.GetValue("Total").ShouldBe(100f);
+        _notifications.Count(item => item.Name == "Total").ShouldBe(2);
     }
 
     [Fact]

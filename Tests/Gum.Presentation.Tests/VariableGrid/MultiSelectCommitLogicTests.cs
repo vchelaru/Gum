@@ -210,6 +210,32 @@ public class MultiSelectCommitLogicTests : BaseTestClass
     }
 
     [Fact]
+    public void Attach_ShouldCloseEveryBatch_WhenAnInstanceSetThrows()
+    {
+        ScreenSave screen = CreateScreenWithTextInstances(instanceCount: 3);
+        MultiSelectInstanceMember multiSelect = CreateAttachedMultiSelect(screen, "Width");
+        int referenceBatchDisposals = 0;
+        int pluginBatchDisposals = 0;
+        int saveBatchDisposals = 0;
+        _mocker.GetMock<IVariableReferenceLogic>().Setup(x => x.BeginReferenceBatch()).Returns(new UndoLock(() => referenceBatchDisposals++));
+        _mocker.GetMock<IPluginManager>().Setup(x => x.BeginVariableSetBatch()).Returns(new UndoLock(() => pluginBatchDisposals++));
+        _mocker.GetMock<IFileCommands>().Setup(x => x.BeginAutoSaveBatch()).Returns(new UndoLock(() => saveBatchDisposals++));
+        int calls = 0;
+        _mocker.GetMock<ISetVariableLogic>()
+            .Setup(x => x.PropertyValueChanged(
+                It.IsAny<string>(), It.IsAny<object?>(), It.IsAny<InstanceSave>(), It.IsAny<StateSave>(),
+                It.IsAny<bool>(), It.IsAny<bool>(), It.IsAny<bool>(), It.IsAny<bool>()))
+            .Returns(() => ++calls == 2 ? throw new InvalidOperationException("boom") : GeneralResponse.SuccessfulResponse);
+
+        Should.Throw<InvalidOperationException>(() => multiSelect.SetValue(30f, SetPropertyCommitType.Full));
+
+        referenceBatchDisposals.ShouldBe(1);
+        pluginBatchDisposals.ShouldBe(1);
+        saveBatchDisposals.ShouldBe(1);
+        _undoLockDisposals.ShouldBe(1);
+    }
+
+    [Fact]
     public void Attach_ShouldNotOpenBatches_WhenCommitIsIntermediate()
     {
         ScreenSave screen = CreateScreenWithTextInstances(instanceCount: 2);
