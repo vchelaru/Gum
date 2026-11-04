@@ -3,37 +3,25 @@ using Gum.Plugins.PropertiesWindowPlugin;
 namespace Gum.Avalonia.Settings;
 
 /// <summary>
-/// One Project page of the Settings window (General, Canvas or Localization). General and Canvas are built from rows
-/// (<see cref="ProjectGeneralRows"/>, <see cref="CanvasRows"/>) like the Code generation page; Localization is a
-/// property grid over the settings of their <see cref="ProjectPropertiesPageViewModel"/>, laid out by the
-/// shared <see cref="ProjectPropertiesGridPresenter"/>.
+/// One Project page of the Settings window (General, Canvas or Localization), each built from rows
+/// (<see cref="ProjectGeneralRows"/>, <see cref="CanvasRows"/>, <see cref="LocalizationRows"/>) like the Code
+/// generation page, over the settings of their <see cref="ProjectPropertiesPageViewModel"/>.
 /// </summary>
 public sealed class ProjectPropertiesPageView : SettingsRowsPageView
 {
-    private ProjectPropertiesGridPresenter? _presenter;
-
     /// <inheritdoc/>
     protected override void HandleDataContextChanged()
     {
-        _presenter?.Bind(null);
-        _presenter = null;
         Rows = null;
         if (DataContext is not ProjectPropertiesPageViewModel page)
         {
             return;
         }
-        if (page.Section == ProjectPropertiesSection.General)
+        Rows = page.Section switch
         {
-            Rows = new ProjectGeneralRows(page.Properties);
-        }
-        else if (page.Section == ProjectPropertiesSection.Canvas)
-        {
-            Rows = new CanvasRows(page.Properties);
-        }
-        else
-        {
-            _presenter = new ProjectPropertiesGridPresenter(Grid, page.Section);
-            _presenter.Bind(page.Properties);
-        }
+            ProjectPropertiesSection.General => new ProjectGeneralRows(page.Properties),
+            ProjectPropertiesSection.Canvas => new CanvasRows(page.Properties),
+            _ => new LocalizationRows(page.Properties),
+        };
     }
 }

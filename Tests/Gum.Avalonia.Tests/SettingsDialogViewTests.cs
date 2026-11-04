@@ -400,6 +400,28 @@ public class SettingsDialogViewTests
     }
 
     [AvaloniaFact]
+    public void Search_OnTheLocalizationPage_MarksTheMatchingRowsByLabelOrHint()
+    {
+        using ProjectTreeHarness tree = new ProjectTreeHarness();
+        SettingsDialogViewModel viewModel = TestAppBuilder.Services.GetRequiredService<SettingsDialogViewModel>();
+        viewModel.SelectPage(SettingsPageIds.Localization);
+        DialogWindow window = Open(viewModel);
+        SettingsRowsPageView page = window.GetVisualDescendants().OfType<SettingsRowsPageView>().First();
+
+        viewModel.SearchText = "string id";
+        Layout(window);
+        page.Grid.Categories.SelectMany(category => category.Members).Where(row => row.IsSearchMatch)
+            .Select(row => row.DisplayName).ShouldBe(new[] { "Show Localization" });
+
+        viewModel.SearchText = "csv";
+        Layout(window);
+        page.Grid.Categories.SelectMany(category => category.Members).Where(row => row.IsSearchMatch)
+            .Select(row => row.DisplayName).ShouldBe(new[] { "Localization Files" });
+        viewModel.SearchText = "";
+        window.Close();
+    }
+
+    [AvaloniaFact]
     public void Search_OnARowsPage_MarksTheMatchingRows_AndHidesNothing()
     {
         using ProjectTreeHarness tree = new ProjectTreeHarness();

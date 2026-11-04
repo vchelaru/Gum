@@ -45,6 +45,8 @@ Screenshot needed: a side-by-side of the same scaled sprite rendered with **Poin
 
 The **Localization** page lists the project's localization files. Click **Add...** to add a CSV or RESX file. For more information see the [Localization page](localization.md).
 
+The page has two sections. **Files** holds the file list: one `.csv` with a column per language, or several `.resx` files. **Language** picks the language Gum shows text in, once the files define one, and **Show Localization** turns translations off so text shows its string ID instead.
+
 <figure><img src="../.gitbook/assets/25_08 00 08.png" alt=""><figcaption><p>Project > Localization page</p></figcaption></figure>
 
 ## Fonts
