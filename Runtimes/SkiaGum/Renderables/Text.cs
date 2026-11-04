@@ -571,14 +571,29 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
     /// No Raylib-style TextPositionRoundingMode (Floor/Ceiling) knob here -- away-from-zero is
     /// hardcoded and no one has reported spacing jitter needing it. Raylib-only is fine (#3708).
     /// </remarks>
-    internal (float X, float Y) GetSnappedOrigin(float x, float y)
+    internal (float X, float Y) GetSnappedOrigin(float x, float y) => GetSnappedOrigin(x, y, SKMatrix.Identity);
+
+    /// <summary>
+    /// Snaps in device pixels: the origin is mapped through <paramref name="canvasMatrix"/> (camera zoom, device
+    /// density), rounded, and mapped back, so the text lands on the same pixel grid as every other renderable. Rounding
+    /// the Gum-unit value instead moved text up to half a unit (a whole pixel at zoom 2) away from a nine-slice at the
+    /// same position (#7101).
+    /// </summary>
+    internal (float X, float Y) GetSnappedOrigin(float x, float y, SKMatrix canvasMatrix)
     {
         if (EffectiveTextRenderingPositionMode != TextRenderingPositionMode.SnapToPixel)
         {
             return (x, y);
         }
 
-        return (MathFunctions.RoundToInt(x), MathFunctions.RoundToInt(y));
+        if (!canvasMatrix.TryInvert(out SKMatrix inverse))
+        {
+            return (MathFunctions.RoundToInt(x), MathFunctions.RoundToInt(y));
+        }
+
+        SKPoint device = canvasMatrix.MapPoint(x, y);
+        SKPoint snapped = inverse.MapPoint(MathFunctions.RoundToInt(device.X), MathFunctions.RoundToInt(device.Y));
+        return (snapped.X, snapped.Y);
     }
 
     #region Dropshadow
@@ -1000,7 +1015,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
             SKPoint verticalOffset = rotationMatrix.MapVector(0, GetVerticalAlignmentOffset(textBlock));
             var absoluteX = this.GetAbsoluteX() + verticalOffset.X;
             var absoluteY = this.GetAbsoluteY() + verticalOffset.Y;
-            (absoluteX, absoluteY) = GetSnappedOrigin(absoluteX, absoluteY);
+            (absoluteX, absoluteY) = GetSnappedOrigin(absoluteX, absoluteY, canvas.TotalMatrix);
 
             SKMatrix translateMatrix = SKMatrix.CreateTranslation(absoluteX, absoluteY);
             // Continue to apply the previou matrix in case there is scaling

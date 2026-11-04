@@ -44,7 +44,8 @@ public class SpriteSeamTests
         int CellLeft = 1,
         SKColor? Border = null,
         bool FlipHorizontal = false,
-        bool FlipVertical = false);
+        bool FlipVertical = false,
+        SKFilterMode Filter = SKFilterMode.Nearest);
 
     SKBitmap Render(Layout layout)
     {
@@ -62,7 +63,7 @@ public class SpriteSeamTests
                 managers.Canvas = canvas;
                 managers.Renderer.ClearsCanvas = false;
                 managers.Renderer.Camera.Zoom = layout.Zoom;
-                RenderingLibrary.Graphics.Renderer.TextureFilter = SKFilterMode.Nearest;
+                RenderingLibrary.Graphics.Renderer.TextureFilter = layout.Filter;
 
                 int atlasSize = layout.CellSize + 2 * layout.CellLeft;
                 using var atlas = new SKBitmap(atlasSize, atlasSize);
@@ -217,6 +218,18 @@ public class SpriteSeamTests
         // One texel stretched over 10 gum units: 20 to 40 device pixels per texel.
         using SKBitmap pixels = Render(new Layout(containerX, 0.5f, zoom, Columns: 1, SpriteSize: 10, CellSize: 1, Border: Red));
         CountColor(pixels, Red).ShouldBe(0);
+    }
+
+    [Theory]
+    [InlineData(7f, 1f)]
+    [InlineData(6.5f, 2f)]
+    [InlineData(6.75f, 2f)]
+    [InlineData(6.25f, 3f)]
+    public void Draw_LinearFilterSprite_ShouldNeverSampleOutsideSourceRectangle(float containerX, float zoom)
+    {
+        // #7102: Linear filtering must not pull the red border texels in at the edge of the source rectangle.
+        using SKBitmap pixels = Render(new Layout(containerX, 2.5f, zoom, Border: Red, Filter: SKFilterMode.Linear));
+        CountColor(pixels, Red).ShouldBe(0, $"container X {containerX}, zoom {zoom}");
     }
 
     [Theory]
