@@ -99,9 +99,11 @@ public class NineSliceSeamTests
 
     [Theory]
     [MemberData(nameof(PositionCases))]
-    public void Draw_NineSliceAtFractionalPosition_ShouldHaveNoSeam(SKFilterMode filter, float zoom, float x, float y)
+    public void Draw_NineSliceAtFractionalPosition_ShouldHaveNoSeam(SKFilterMode filter, float zoom, float x, float y) =>
+        Draw_NineSliceAtFractionalPositionCore(filter, zoom, x, y, 20.5f);
+
+    void Draw_NineSliceAtFractionalPositionCore(SKFilterMode filter, float zoom, float x, float y, float width)
     {
-        const float width = 20.5f;
         const float height = 17.25f;
         using SKBitmap pixels = Render(zoom, x + width, y + height, filter, (managers, texture) =>
         {
@@ -171,19 +173,22 @@ public class NineSliceSeamTests
             float offset = (float)random.NextDouble();
             float childHeight = 6f + (float)random.NextDouble() * 3f;
             float spacing = i % 2 == 0 ? 0f : -(float)random.NextDouble();
+            float nineSliceWidth = 15f + (float)random.NextDouble() * 12f;
+            float stackWidth = 8f + (float)random.NextDouble() * 9f;
             SKFilterMode filter = i % 3 == 0 ? SKFilterMode.Linear : SKFilterMode.Nearest;
-            yield return new object[] { filter, zoom, x, y, offset, childHeight, spacing };
+            yield return new object[] { filter, zoom, x, y, offset, childHeight, spacing, nineSliceWidth, stackWidth };
         }
     }
 
     [Theory]
     [MemberData(nameof(AwkwardZoomCases))]
     public void Draw_AtAwkwardZoomsAndOffsets_ShouldHaveNoSeam(
-        SKFilterMode filter, float zoom, float x, float y, float offset, float childHeight, float spacing)
+        SKFilterMode filter, float zoom, float x, float y, float offset, float childHeight, float spacing,
+        float nineSliceWidth, float stackWidth)
     {
-        Draw_NineSliceAtFractionalPosition_ShouldHaveNoSeam(filter, zoom, x, y);
-        Draw_StackedChildrenAtFractionalOffset_ShouldHaveNoSeam(filter, zoom, offset, childHeight, spacing, useNineSlice: false);
-        Draw_StackedChildrenAtFractionalOffset_ShouldHaveNoSeam(filter, zoom, offset, childHeight, spacing, useNineSlice: true);
+        Draw_NineSliceAtFractionalPositionCore(filter, zoom, x, y, nineSliceWidth);
+        AssertStackedHaveNoSeam(filter, zoom, offset, childHeight, spacing, false, stackWidth);
+        AssertStackedHaveNoSeam(filter, zoom, offset, childHeight, spacing, true, stackWidth);
     }
 
     public static IEnumerable<object[]> StackedCases()
@@ -212,7 +217,11 @@ public class NineSliceSeamTests
     [Theory]
     [MemberData(nameof(StackedCases))]
     public void Draw_StackedChildrenAtFractionalOffset_ShouldHaveNoSeam(
-        SKFilterMode filter, float zoom, float offset, float childHeight, float spacing, bool useNineSlice)
+        SKFilterMode filter, float zoom, float offset, float childHeight, float spacing, bool useNineSlice) =>
+        AssertStackedHaveNoSeam(filter, zoom, offset, childHeight, spacing, useNineSlice, 12f);
+
+    void AssertStackedHaveNoSeam(
+        SKFilterMode filter, float zoom, float offset, float childHeight, float spacing, bool useNineSlice, float width)
     {
         // An outer and an inner container both sit at fractional offsets, so the children's absolute position is the
         // sum of two fractions.
@@ -220,7 +229,6 @@ public class NineSliceSeamTests
         float outerY = 1f + offset;
         float innerX = 1.5f + offset / 2;
         float innerY = 1.25f + offset / 3;
-        const float width = 12f;
         const int count = 4;
         float totalHeight = count * childHeight + (count - 1) * spacing;
         float x = outerX + innerX;
