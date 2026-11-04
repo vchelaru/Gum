@@ -213,8 +213,8 @@ public class ColorDisplay : DataUiDisplayBase
         // and the row is disabled.
         _swatchButton.Classes.Add(GumChromeStyles.ValuePreviewButtonClass);
 
-        _hexTextBox = new EditTrackingTextBox { Width = 68, VerticalAlignment = VerticalAlignment.Center };
-        AvaloniaTreeIcons.FollowBaseFontSize(_hexTextBox, Layoutable.WidthProperty, 68);
+        _hexTextBox = new EditTrackingTextBox { VerticalAlignment = VerticalAlignment.Center };
+        FitHexFieldToSixCharacters(_hexTextBox);
         ToolTip.SetTip(_hexTextBox, "Type or paste a hex color (RRGGBB or RRGGBBAA). Alpha is ignored.");
         _hexTextBox.AddHandler(KeyDownEvent, (_, e) =>
         {
@@ -251,6 +251,27 @@ public class ColorDisplay : DataUiDisplayBase
         panel.Children.Add(grid);
         panel.Children.Add(_hint);
         Content = panel;
+    }
+
+    // Six hex characters are about 4.4 em wide. The field's padding and border are fixed pixels, so the
+    // width is the text's em width (which follows the zoom) plus whatever padding the field has.
+    private static void FitHexFieldToSixCharacters(TextBox hexTextBox)
+    {
+        void Fit()
+        {
+            hexTextBox.Width = hexTextBox.FontSize * 4.5
+                + hexTextBox.Padding.Left + hexTextBox.Padding.Right
+                + hexTextBox.BorderThickness.Left + hexTextBox.BorderThickness.Right;
+        }
+        Fit();
+        hexTextBox.PropertyChanged += (_, e) =>
+        {
+            if (e.Property == TemplatedControl.FontSizeProperty || e.Property == TemplatedControl.PaddingProperty
+                || e.Property == TemplatedControl.BorderThicknessProperty)
+            {
+                Fit();
+            }
+        };
     }
 
     /// <summary>The hex field, for tests.</summary>

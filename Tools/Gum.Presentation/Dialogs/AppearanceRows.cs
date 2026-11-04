@@ -63,10 +63,10 @@ public sealed class AppearanceRows : IRowsSettingsPage
         {
             SettingsRows.Section("Theme", new[]
             {
-                SettingsRows.Choice(nameof(vm.Mode), "Theme mode",
+                NarrowChoice(SettingsRows.Choice(nameof(vm.Mode), "Theme mode",
                     "Light, dark, or whichever the operating system uses.",
                     typeof(ThemeMode), vm.ThemeModes.Cast<object>(),
-                    () => vm.Mode ?? ThemeMode.System, value => vm.Mode = (ThemeMode?)value),
+                    () => vm.Mode ?? ThemeMode.System, value => vm.Mode = (ThemeMode?)value)),
                 ColorRow(nameof(vm.AccentColor), "Accent color",
                     "Highlights selection, focus and buttons across the tool.",
                     () => vm.AccentColor, color => vm.AccentColor = color, () => vm.HasExplicitAccentColor),
@@ -96,6 +96,13 @@ public sealed class AppearanceRows : IRowsSettingsPage
         SettingsRows.Finish(sections);
         _members = sections.SelectMany(section => section.Members).ToList();
         return sections;
+    }
+
+    // A short list of choices is a short drop-down beside its label, not a bar across the page.
+    private static InstanceMember NarrowChoice(InstanceMember member)
+    {
+        member.PropertiesToSetOnDisplayer["NarrowWidthInEm"] = 14.0;
+        return member;
     }
 
     private InstanceMember ColorRow(string name, string label, string hint, Func<Color?> get, Action<Color?> set, Func<bool> isCustom) =>

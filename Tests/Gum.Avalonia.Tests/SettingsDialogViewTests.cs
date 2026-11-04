@@ -100,6 +100,91 @@ public class SettingsDialogViewTests
     }
 
     [AvaloniaFact]
+    public void AppearancePage_KeepsItsChoicesNarrow_AndLeftAlignedWithTheirLabels()
+    {
+        SettingsDialogViewModel viewModel = TestAppBuilder.Services.GetRequiredService<SettingsDialogViewModel>();
+        viewModel.SelectPage(SettingsPageIds.Appearance);
+        DialogWindow window = Open(viewModel);
+
+        ComboBox themeMode = window.GetVisualDescendants().OfType<ComboBox>().Single();
+        List<Gum.Avalonia.Plugins.VariableGrid.ColorDisplay> colorRows =
+            window.GetVisualDescendants().OfType<Gum.Avalonia.Plugins.VariableGrid.ColorDisplay>().ToList();
+        TextBlock accentLabel = window.GetVisualDescendants().OfType<TextBlock>().First(text => text.Text == "Accent color");
+
+        themeMode.Bounds.Width.ShouldBeLessThan(260, "the theme list is a short choice, not a full-width bar");
+        colorRows.ShouldNotBeEmpty();
+        double themeLeft = themeMode.TranslatePoint(new Point(0, 0), window)!.Value.X;
+        foreach (Gum.Avalonia.Plugins.VariableGrid.ColorDisplay row in colorRows)
+        {
+            double swatchLeft = row.Swatch.TranslatePoint(new Point(0, 0), window)!.Value.X;
+            row.Swatch.Bounds.Width.ShouldBeLessThan(260, "a color is a compact swatch, not a bar across the page");
+            swatchLeft.ShouldBe(themeLeft, 8, "every choice starts at the same left edge, beside its label");
+        }
+        double labelRight = accentLabel.TranslatePoint(new Point(accentLabel.Bounds.Width, 0), window)!.Value.X;
+        (themeLeft - labelRight).ShouldBeLessThan(40, "no big gap between a label and its choice");
+        window.Close();
+    }
+
+    [AvaloniaFact]
+    public void AppearancePage_ColorHexField_FitsSixHexCharactersAtEveryZoom()
+    {
+        Gum.Services.IAppScaleProvider scale = TestAppBuilder.Services.GetRequiredService<Gum.Services.IAppScaleProvider>();
+        double originalSize = scale.BaseFontSize;
+        SettingsDialogViewModel viewModel = TestAppBuilder.Services.GetRequiredService<SettingsDialogViewModel>();
+        viewModel.SelectPage(SettingsPageIds.Appearance);
+        DialogWindow window = Open(viewModel);
+        using IDisposable follower = Gum.Avalonia.Shell.AppWideWindowInput.FollowBaseFontSize(window, scale);
+        try
+        {
+            foreach (double zoom in new[] { 9d, 12d, 16d, 24d })
+            {
+                scale.BaseFontSize = zoom;
+                ScreenshotWindow.Pump(window);
+                foreach (Gum.Avalonia.Plugins.VariableGrid.ColorDisplay row in window.GetVisualDescendants().OfType<Gum.Avalonia.Plugins.VariableGrid.ColorDisplay>())
+                {
+                    TextBox hex = row.HexTextBox;
+                    global::Avalonia.Controls.Presenters.TextPresenter presenter = hex.GetVisualDescendants().OfType<global::Avalonia.Controls.Presenters.TextPresenter>().First();
+                    double widest = "0123456789ABCDEF".Select(digit => new global::Avalonia.Media.FormattedText(
+                            new string(digit, 6), System.Globalization.CultureInfo.InvariantCulture,
+                            global::Avalonia.Media.FlowDirection.LeftToRight,
+                            new global::Avalonia.Media.Typeface(hex.FontFamily, hex.FontStyle, hex.FontWeight),
+                            hex.FontSize, null).Width).Max();
+                    presenter.Bounds.Width.ShouldBeGreaterThanOrEqualTo(widest + 1,
+                        $"six hex characters fit the field at zoom {zoom}");
+                }
+            }
+        }
+        finally
+        {
+            scale.BaseFontSize = originalSize;
+            window.Close();
+        }
+    }
+
+    [AvaloniaFact]
+    public void AppearancePage_ResetButton_HasATooltip()
+    {
+        Gum.Dialogs.IThemingService theming = TestAppBuilder.Services.GetRequiredService<Gum.Dialogs.IThemingService>();
+        System.Drawing.Color? original = theming.GuideLine;
+        theming.GuideLine = System.Drawing.Color.FromArgb(255, 1, 2, 3);
+        try
+        {
+            SettingsDialogViewModel viewModel = TestAppBuilder.Services.GetRequiredService<SettingsDialogViewModel>();
+            viewModel.SelectPage(SettingsPageIds.Appearance);
+            DialogWindow window = Open(viewModel);
+
+            Button reset = window.GetVisualDescendants().OfType<Button>().Single(button => button.Content as string == "↺" && button.IsVisible);
+
+            ToolTip.GetTip(reset).ShouldBe("Reset to Default", "an icon-only button says what it does");
+            window.Close();
+        }
+        finally
+        {
+            theming.GuideLine = original;
+        }
+    }
+
+    [AvaloniaFact]
     public void Search_OnTheAppearancePage_MarksTheMatchingRowsByLabelOrHint()
     {
         SettingsDialogViewModel viewModel = TestAppBuilder.Services.GetRequiredService<SettingsDialogViewModel>();
