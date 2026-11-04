@@ -173,6 +173,10 @@ public class ColorDisplay : DataUiDisplayBase
     private readonly Border _swatch;
     private readonly EditTrackingTextBox _hexTextBox;
     private readonly CompactColorPicker _colorPicker;
+    private readonly Grid _grid;
+    private Button? _resetButton;
+    private readonly Button _swatchButton;
+    private bool _isSwatchSized;
     private readonly TextBlock _hint;
     private DrawingColor _current;
     private Type? _propertyType;
@@ -197,7 +201,7 @@ public class ColorDisplay : DataUiDisplayBase
         flyout.Opening += (_, _) => _colorPicker.OriginalColor = _colorPicker.Color;
         flyout.Closed += (_, _) => CommitPendingFull();
 
-        Button swatchButton = new Button
+        _swatchButton = new Button
         {
             Content = _swatch,
             Padding = new Thickness(1),
@@ -207,7 +211,7 @@ public class ColorDisplay : DataUiDisplayBase
         };
         // The swatch is the value, so it keeps its exact color when a reference drives the variable
         // and the row is disabled.
-        swatchButton.Classes.Add(GumChromeStyles.ValuePreviewButtonClass);
+        _swatchButton.Classes.Add(GumChromeStyles.ValuePreviewButtonClass);
 
         _hexTextBox = new EditTrackingTextBox { Width = 68, VerticalAlignment = VerticalAlignment.Center };
         AvaloniaTreeIcons.FollowBaseFontSize(_hexTextBox, Layoutable.WidthProperty, 68);
@@ -229,16 +233,18 @@ public class ColorDisplay : DataUiDisplayBase
 
         _hint = CreateHintTextBlock();
 
-        Grid grid = new Grid { ColumnDefinitions = new ColumnDefinitions("Auto,*,Auto"), Margin = new Thickness(0, 3) };
+
+        _grid = new Grid { ColumnDefinitions = new ColumnDefinitions("Auto,*,Auto,Auto"), Margin = new Thickness(0, 3) };
+        Grid grid = _grid;
         // The label's 100px plus its 4px margins, as before; the swatch keeps a floor of its own. The
         // floor leaves slack at the narrowest width because the hex column's "#" glyph is wider in
         // some platforms' fonts.
         DataUiRowLayout.ConfigureLabelColumn(grid.ColumnDefinitions[0], 108);
         DataUiRowLayout.ConfigureValueColumn(grid.ColumnDefinitions[1], 32);
-        Grid.SetColumn(swatchButton, 1);
+        Grid.SetColumn(_swatchButton, 1);
         Grid.SetColumn(hex, 2);
         grid.Children.Add(_label);
-        grid.Children.Add(swatchButton);
+        grid.Children.Add(_swatchButton);
         grid.Children.Add(hex);
 
         StackPanel panel = new StackPanel();
@@ -276,10 +282,65 @@ public class ColorDisplay : DataUiDisplayBase
         }
         RefreshIsEnabled();
         _label.Text = InstanceMember.DisplayName;
+        RefreshResetButton();
         RefreshHint(_hint);
         SuppressSettingProperty = false;
     }
 
+    // The reset button exists only for a row that has a reset, so the Variables tab's color rows carry no extra button.
+    private void RefreshResetButton()
+    {
+        if (_resetButton == null)
+        {
+            if (InstanceMember?.ResetAction == null)
+            {
+                return;
+            }
+            _resetButton = new Button { Classes = { GumChromeStyles.FlatButtonClass }, Content = "↺", VerticalAlignment = VerticalAlignment.Center, IsVisible = false };
+            ToolTip.SetTip(_resetButton, "Reset to Default");
+            _resetButton.Click += (_, _) => HandleResetClicked();
+            Grid.SetColumn(_resetButton, 3);
+            _grid.Children.Add(_resetButton);
+            // The row style is applied once, so a button added later gets the spacious button look here.
+            _resetButton.MinWidth = 28;
+            _resetButton.MinHeight = 26;
+            _resetButton.HorizontalContentAlignment = HorizontalAlignment.Center;
+            _resetButton.Margin = new Thickness(4, 0, 0, 0);
+        }
+        _resetButton.IsVisible = InstanceMember?.CanReset == true;
+    }
+
+
+    /// <inheritdoc/>
+    protected override void OnInstanceMemberChanged()
+    {
+        // The Variables tab keeps its own width; a Settings row sizes its label column from the member.
+        bool isSpacious = InstanceMember?.IsSpaciousRow == true;
+        DataUiRowLayout.ConfigureLabelColumn(_grid.ColumnDefinitions[0], isSpacious ? InstanceMember!.FirstGridLength : 108);
+        // A Settings row is a compact swatch beside its hex field, not a bar across the page.
+        _swatchButton.Classes.Set(GumChromeStyles.FlatButtonClass, isSpacious);
+        _swatchButton.HorizontalAlignment = isSpacious ? HorizontalAlignment.Left : HorizontalAlignment.Stretch;
+        if (isSpacious)
+        {
+            _grid.ColumnDefinitions[1].Width = GridLength.Auto;
+            _grid.ColumnDefinitions[1].MinWidth = 0;
+        }
+        if (isSpacious && !_isSwatchSized)
+        {
+            _isSwatchSized = true;
+            // The row style centers a button's content, which would shrink a stretching swatch to nothing.
+            AvaloniaTreeIcons.FollowBaseFontSize(_swatch, Layoutable.WidthProperty, 64);
+        }
+    }
+
+    private void HandleResetClicked()
+    {
+        if (InstanceMember?.ResetAction is { } reset)
+        {
+            reset();
+            InstanceMember.SimulateValueChanged();
+        }
+    }
     /// <inheritdoc/>
     public override ApplyValueResult TrySetValueOnUi(object? valueOnInstance)
     {

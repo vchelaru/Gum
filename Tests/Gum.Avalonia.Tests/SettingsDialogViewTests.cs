@@ -65,28 +65,57 @@ public class SettingsDialogViewTests
     }
 
     [AvaloniaFact]
-    public void AppearancePage_KeepsItsChoicesNarrow_AndLeftAlignedWithTheirLabels()
+    public void AppearancePage_ShowsEachColorAsARow_WithAResetOnlyWhileItIsCustom()
+    {
+        Gum.Dialogs.IThemingService theming = TestAppBuilder.Services.GetRequiredService<Gum.Dialogs.IThemingService>();
+        System.Drawing.Color? original = theming.GuideLine;
+        theming.GuideLine = null;
+        try
+        {
+            SettingsDialogViewModel viewModel = TestAppBuilder.Services.GetRequiredService<SettingsDialogViewModel>();
+            viewModel.SelectPage(SettingsPageIds.Appearance);
+            DialogWindow window = Open(viewModel);
+
+            window.GetVisualDescendants().OfType<Gum.Avalonia.Plugins.VariableGrid.ColorDisplay>().Count().ShouldBe(6);
+            List<Button> Resets() => window.GetVisualDescendants().OfType<Button>().Where(button => button.Content as string == "↺").ToList();
+            Resets().ShouldAllBe(button => !button.IsVisible, "nothing is custom, so nothing offers a reset");
+
+            theming.GuideLine = System.Drawing.Color.FromArgb(255, 1, 2, 3);
+            viewModel.SelectPage(SettingsPageIds.General);
+            viewModel.SelectPage(SettingsPageIds.Appearance);
+            Layout(window);
+            Resets().Count(button => button.IsVisible).ShouldBe(1);
+
+            Resets().Single(button => button.IsVisible).RaiseEvent(new global::Avalonia.Interactivity.RoutedEventArgs(Button.ClickEvent));
+            Layout(window);
+
+            theming.GuideLine.ShouldBeNull("reset puts the color back to its default");
+            Resets().ShouldAllBe(button => !button.IsVisible);
+            window.Close();
+        }
+        finally
+        {
+            theming.GuideLine = original;
+        }
+    }
+
+    [AvaloniaFact]
+    public void Search_OnTheAppearancePage_MarksTheMatchingRowsByLabelOrHint()
     {
         SettingsDialogViewModel viewModel = TestAppBuilder.Services.GetRequiredService<SettingsDialogViewModel>();
         viewModel.SelectPage(SettingsPageIds.Appearance);
         DialogWindow window = Open(viewModel);
+        SettingsRowsPageView page = window.GetVisualDescendants().OfType<SettingsRowsPageView>().First();
 
-        ComboBox themeMode = window.GetVisualDescendants().OfType<ComboBox>().Single();
-        List<ColorPicker> pickers = window.GetVisualDescendants().OfType<ColorPicker>().ToList();
-        TextBlock accentLabel = window.GetVisualDescendants().OfType<TextBlock>().First(text => text.Text == "Accent Color");
+        viewModel.SearchText = "checkerboard";
+        Layout(window);
 
-        themeMode.Bounds.Width.ShouldBeLessThan(260, "the theme list is a short choice, not a full-width bar");
-        pickers.ShouldNotBeEmpty();
-        double themeLeft = themeMode.TranslatePoint(new Point(0, 0), window)!.Value.X;
-        foreach (ColorPicker picker in pickers)
-        {
-            double pickerLeft = picker.TranslatePoint(new Point(0, 0), window)!.Value.X;
-            pickerLeft.ShouldBe(themeLeft, 1, "every choice starts at the same left edge, beside its label");
-        }
-        double labelRight = accentLabel.TranslatePoint(new Point(accentLabel.Bounds.Width, 0), window)!.Value.X;
-        (themeLeft - labelRight).ShouldBeLessThan(40, "no big gap between a label and its choice");
+        page.Grid.Categories.SelectMany(category => category.Members).Where(row => row.IsSearchMatch)
+            .Select(row => row.DisplayName).ShouldBe(new[] { "Editor background", "Checker color" });
+        viewModel.SearchText = "";
         window.Close();
     }
+
 
     [AvaloniaFact]
     public void ATallPage_ScrollsAsOne_WithTheTitleAndRows_WhileTheCloseButtonStaysPut()

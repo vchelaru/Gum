@@ -31,7 +31,13 @@ The Settings window is available in November 2026, or now if building Gum from s
 
 <figure><img src="../.gitbook/assets/25_08 00 02.png" alt=""><figcaption><p>Application > Appearance page</p></figcaption></figure>
 
-**Theme Mode** is **System**, **Light**, or **Dark**. The color pickers below it set the **Accent Color** and the Editor tab colors: **Editor Background**, **Checker Color**, **Outline Color**, **Guide Line Color**, and **Guide Text Color**. **Reset All** returns every color to its default.
+The page has three sections. **Theme** holds **Theme mode** (**System**, **Light**, or **Dark**) and **Accent color**. **Editor background** holds **Editor background** and **Checker color**. **Outlines and guides** holds **Outline color**, **Guide line color**, and **Guide text color**.
+
+Each color row has a swatch that opens a color picker and a field for typing a hex value. A color you have changed also shows a reset button at the end of its row, which returns just that color to its default.
+
+{% hint style="info" %}
+The grouped layout, hints under each setting, and highlighting of search matches on this page are available in December 2026, or now if building Gum from source. Before then the page had a single **Reset All** button.
+{% endhint %}
 
 ### Keyboard shortcuts
 
