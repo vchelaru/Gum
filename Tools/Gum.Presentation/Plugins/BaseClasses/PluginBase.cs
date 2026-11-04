@@ -385,6 +385,13 @@ public abstract class PluginBase : IPlugin
     /// </summary>
     public event Func<FilePath, IReadOnlyList<TextureRegion>?>? GetTextureRegionsForFile;
 
+    /// <summary>
+    /// Raised once after the user clicks a region in the Texture Coordinates tab and the region has been
+    /// applied to the selected object's texture variables. Carries the Source File and the region, so a
+    /// plugin can tell which one (by Key) was chosen. Not raised for drags, hovers, or clicks outside every region.
+    /// </summary>
+    public event Action<FilePath, TextureRegion>? TextureRegionChosen;
+
     // Vic says - why did we make these events? It adds lots of overhead, and I dont' think it helps in any way
     // Oct 6, 2021 - If we have an event, we can have the null check inside the plugin base, which makes
     // the plugin manager simpler. If we don't have an event with a null check in the plugin, then the check
@@ -670,6 +677,8 @@ public abstract class PluginBase : IPlugin
     public IRenderableIpso? CallCreateRenderableForType(string type) => CreateRenderableForType?.Invoke(type);
 
     public IReadOnlyList<TextureRegion>? CallGetTextureRegionsForFile(FilePath file) => GetTextureRegionsForFile?.Invoke(file);
+
+    public void CallTextureRegionChosen(FilePath file, TextureRegion region) => TextureRegionChosen?.Invoke(file, region);
 
     // Was internal - bumped to public because PluginBase moved to Gum.Presentation while its only
     // caller (PluginManager) stays in Gum.csproj; the two no longer share an assembly (issue #3950).

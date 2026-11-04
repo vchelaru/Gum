@@ -117,6 +117,78 @@ public class TextureRegionScenarioTests
     }
 
     [SkippableFact]
+    public void AClickInsideARegion_RaisesTextureRegionChosenOnce_AfterTheRegionIsApplied()
+    {
+        OnTab(tab =>
+        {
+            SampleRegionPlugin plugin = new SampleRegionPlugin("Sheet.png", SampleRegionPlugin.FromSheet(SampleSpriteSheet.Few));
+            using IDisposable registration = Register(tab, plugin);
+            ComponentSave button = SelectSheetSprite(tab, TextureAddress.EntireTexture);
+            int leftWhenRaised = -1;
+            plugin.TextureRegionChosen += (_, _) => leftWhenRaised = (int)Value(button, "Icon.TextureLeft")!;
+
+            Click(tab, 140, 24); // Coin
+
+            plugin.Chosen.Count.ShouldBe(1, tab.Describe());
+            plugin.Chosen[0].Region.Key.ShouldBe("Coin");
+            plugin.Chosen[0].Region.Name.ShouldBe("Coin");
+            plugin.Chosen[0].File.FileNameNoPath.ShouldBe("Sheet.png");
+            leftWhenRaised.ShouldBe(128, "raised after the rectangle was applied");
+        });
+    }
+
+    [SkippableFact]
+    public void TextureRegionChosen_CarriesTheKeyOfTheRegionClicked_WhenNamesRepeat()
+    {
+        OnTab(tab =>
+        {
+            SampleRegionPlugin plugin = new SampleRegionPlugin("Sheet.png", new[]
+            {
+                new TextureRegion("hero-a", "Hero", 128, 12, 24, 24),
+                new TextureRegion("hero-b", "Hero", 160, 40, 20, 30),
+            });
+            using IDisposable registration = Register(tab, plugin);
+            SelectSheetSprite(tab, TextureAddress.EntireTexture);
+
+            Click(tab, 170, 50);
+
+            plugin.Chosen.Select(item => item.Region.Key).ShouldBe(new[] { "hero-b" });
+        });
+    }
+
+    [SkippableFact]
+    public void AClickOutsideEveryRegion_DoesNotRaiseTextureRegionChosen()
+    {
+        OnTab(tab =>
+        {
+            SampleRegionPlugin plugin = new SampleRegionPlugin("Sheet.png", SampleRegionPlugin.FromSheet(SampleSpriteSheet.Few));
+            using IDisposable registration = Register(tab, plugin);
+            SelectSheetSprite(tab);
+
+            Click(tab, 300, 170);
+
+            plugin.Chosen.ShouldBeEmpty();
+        });
+    }
+
+    [SkippableFact]
+    public void ADragEndingInsideARegion_DoesNotRaiseTextureRegionChosen()
+    {
+        OnTab(tab =>
+        {
+            SampleRegionPlugin plugin = new SampleRegionPlugin("Sheet.png", SampleRegionPlugin.FromSheet(SampleSpriteSheet.Few));
+            using IDisposable registration = Register(tab, plugin);
+            SelectSheetSprite(tab);
+            tab.Frame();
+            tab.Frame();
+
+            tab.Drag(tab.WindowPointOf(300, 170), tab.WindowPointOf(140, 24));
+
+            plugin.Chosen.ShouldBeEmpty();
+        });
+    }
+
+    [SkippableFact]
     public void WithNoRegionPlugin_ThereIsNoOverlay()
     {
         OnTab(tab =>

@@ -612,6 +612,9 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
         return regions;
     }
 
+    public void TextureRegionChosen(FilePath file, TextureRegion region) =>
+        CallMethodOnPlugin(plugin => plugin.CallTextureRegionChosen(file, region), nameof(TextureRegionChosen));
+
     public DeleteResponse GetDeleteStateResponse(StateSave stateSave, IStateContainer element)
     {
         DeleteResponse response = new DeleteResponse();

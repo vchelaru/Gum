@@ -656,6 +656,11 @@ public class TextureCoordinateDisplayController : ITextureCoordinateDisplayContr
             //_guiCommands.RefreshVariableValues();
             _guiCommands.RefreshVariables();
 
+            string? chosenFile = GetSourceFile();
+            if (region is TextureRegion chosen && _pluginManager != null && !string.IsNullOrEmpty(chosenFile))
+            {
+                _pluginManager.TextureRegionChosen(new FilePath(chosenFile), chosen);
+            }
         }
     }
 

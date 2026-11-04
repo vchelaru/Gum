@@ -6,6 +6,8 @@ The GetTextureRegionsForFile event lets a plugin tell the Texture Coordinates ta
 
 The event receives the Source File as a FilePath and returns a list of TextureRegion, or null (or an empty list) if the plugin does not know the file. Each TextureRegion has a Key, a Name, and an X, Y, Width and Height in texture pixels. The Key identifies the region within its file (a layer id, a frame id), so it must be unique among the regions a plugin reports for that file. The Name is what the tab shows under the cursor, and several regions may share one.
 
+The TextureRegionChosen event, described at the end of this page, tells a plugin which region the user clicked.
+
 Available in December 2026, or now if building Gum from source.
 
 ## Code Example
@@ -51,6 +53,13 @@ public class RegionsFromJsonPlugin : PluginBase
     public override void StartUp()
     {
         GetTextureRegionsForFile += HandleGetTextureRegionsForFile;
+        TextureRegionChosen += HandleTextureRegionChosen;
+    }
+
+    private void HandleTextureRegionChosen(FilePath file, TextureRegion region)
+    {
+        // Runs after the region was applied to the object's Texture Left, Top, Width and Height.
+        Console.WriteLine($"Chose {region.Name} ({region.Key}) in {file.FileNameNoPath}");
     }
 
     private IReadOnlyList<TextureRegion>? HandleGetTextureRegionsForFile(FilePath file)
@@ -94,3 +103,7 @@ The JSON file is an array with one entry per region:
 * A region with no width or height is ignored. A region that extends past the texture is cut to the texture, and one entirely outside it is ignored.
 * Where regions overlap, the smallest region under the cursor is used.
 * A plugin that throws is disabled for the session, like any other plugin event, and the tab keeps working.
+
+## TextureRegionChosen
+
+PluginBase also has a `TextureRegionChosen` event of type `Action<FilePath, TextureRegion>`. It is raised once each time a click applies a region, after the object's Texture Address, Left, Top, Width and Height have been set. It carries the Source File and the region that was chosen, so a plugin can tell which one by its Key even when several regions share a Name. It is not raised for drags, for hovering, or for a click outside every region. The event cannot cancel or change the choice. A plugin that only needs the new rectangle can also watch the variable-set events, but those do not say which region it was.
