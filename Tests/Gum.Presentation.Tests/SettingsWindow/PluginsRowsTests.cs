@@ -44,14 +44,61 @@ public class PluginsRowsTests
         members.Select(member => member.DisplayName).ShouldBe(new[] { "Alpha", "Core", "Plugins folder", "A.dll" });
         foreach (InstanceMember member in members)
         {
-            member.DetailText.ShouldNotBeNullOrWhiteSpace();
             member.IsSpaciousRow.ShouldBeTrue();
             member.FirstGridLength.ShouldBe(SettingsRows.LabelColumnWidth);
         }
     }
 
     [Fact]
-    public void SearchTerms_IncludeEachPluginNameAndHint()
+    public void HealthyPluginRows_AreOneLine_WithNoHint()
+    {
+        PluginsRows rows = CreateRows(new PluginScanReport(@"C:\Gum\Plugins", true, new[]
+            {
+                new PluginFileScan("A.dll", PluginFileOutcome.Loaded, true, null),
+            }),
+            new PluginSummary("Alpha", "Alpha", true, false, new object(), SourceFile: "AlphaPlugin.dll"),
+            new PluginSummary("Core", "Core", true, false, new object(), CanBeDisabled: false, IsBuiltIn: true));
+
+        Row(rows, "Plugin:Alpha").DetailText.ShouldBeNull();
+        Row(rows, "Plugin:Core").DetailText.ShouldBeNull();
+        Row(rows, "ScanFile:A.dll").DetailText.ShouldBeNull();
+    }
+
+    [Fact]
+    public void RequiredPlugins_AreInACollapsedGumInternalsSection_ApartFromThePluginsAUserCanTurnOff()
+    {
+        PluginsRows rows = CreateRows(null,
+            new PluginSummary("Alpha", "Alpha", true, false, new object()),
+            new PluginSummary("Beta", "Beta", true, false, new object(), IsBuiltIn: true),
+            new PluginSummary("Core", "Core", true, false, new object(), CanBeDisabled: false, IsBuiltIn: true));
+
+        MemberCategory[] sections = rows.BuildCategories().ToArray();
+
+        sections.Select(section => section.Name).ShouldBe(new[] { "Installed plugins", "Gum internals", "Folder scan" });
+        sections[0].Members.Select(member => member.DisplayName).ShouldBe(new[] { "Alpha", "Beta" });
+        sections[0].IsExpanded.ShouldBeTrue();
+        sections[1].Members.Select(member => member.DisplayName).ShouldBe(new[] { "Core" });
+        sections[1].IsExpanded.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void Search_ByARequiredPluginsName_OpensGumInternals_AndMarksTheRow()
+    {
+        PluginsRows rows = CreateRows(null,
+            new PluginSummary("Alpha", "Alpha", true, false, new object()),
+            new PluginSummary("Core Thing", "Core Thing", true, false, new object(), CanBeDisabled: false));
+        MemberCategory[] sections = rows.BuildCategories().ToArray();
+
+        int marked = SettingsRows.MarkMatches(sections, "core thing");
+
+        marked.ShouldBe(1);
+        sections[1].IsExpanded.ShouldBeTrue();
+        sections[1].Members.Single().IsSearchMatch.ShouldBeTrue();
+        sections[0].Members.Single().IsSearchMatch.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void SearchTerms_IncludeEachPluginName()
     {
         PluginsRows rows = CreateRows(null,
             new PluginSummary("Alpha", "Alpha", true, false, new object(), SourceFile: "AlphaPlugin.dll"));
@@ -59,7 +106,6 @@ public class PluginsRowsTests
         string[] terms = rows.SearchTerms().ToArray();
 
         terms.ShouldContain("Alpha");
-        terms.ShouldContain("Loaded from AlphaPlugin.dll in the Plugins folder.");
         terms.ShouldContain("Plugins folder");
     }
 

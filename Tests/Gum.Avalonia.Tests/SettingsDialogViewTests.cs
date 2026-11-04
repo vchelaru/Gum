@@ -309,6 +309,26 @@ public class SettingsDialogViewTests
     }
 
     [AvaloniaFact]
+    public void Search_OnThePluginsPage_OpensGumInternals_WhenARequiredPluginMatches()
+    {
+        SettingsDialogViewModel viewModel = TestAppBuilder.Services.GetRequiredService<SettingsDialogViewModel>();
+        viewModel.SelectPage(SettingsPageIds.Plugins);
+        DialogWindow window = Open(viewModel);
+        SettingsRowsPageView page = window.GetVisualDescendants().OfType<SettingsRowsPageView>().First();
+        WpfDataUi.DataTypes.MemberCategory internals = page.Grid.Categories.Single(category => category.Name == "Gum internals");
+        internals.IsExpanded.ShouldBeFalse("Gum internals starts collapsed");
+        string name = internals.Members.First().DisplayName;
+
+        viewModel.SearchText = name;
+        Layout(window);
+
+        internals.IsExpanded.ShouldBeTrue();
+        internals.Members.Where(row => row.IsSearchMatch).Select(row => row.DisplayName).ShouldContain(name);
+        viewModel.SearchText = "";
+        window.Close();
+    }
+
+    [AvaloniaFact]
     public void Search_OnThePluginsPage_MarksThePluginsWhoseNameOrHintMatches()
     {
         SettingsDialogViewModel viewModel = TestAppBuilder.Services.GetRequiredService<SettingsDialogViewModel>();

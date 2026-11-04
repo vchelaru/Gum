@@ -66,6 +66,7 @@ public sealed class PluginsRows : IRowsSettingsPage
     {
         _rowsByPlugin.Clear();
         List<InstanceMember> pluginRows = new List<InstanceMember>();
+        List<InstanceMember> requiredRows = new List<InstanceMember>();
         foreach (PluginItemViewModel plugin in _viewModel.Plugins)
         {
             PluginItemViewModel item = plugin;
@@ -75,14 +76,21 @@ public sealed class PluginsRows : IRowsSettingsPage
             row.ToolTipText = item.ToolTip;
             row.WarningText = item.NotLoadedReason;
             _rowsByPlugin[item] = row;
-            pluginRows.Add(row);
+            (item.IsRequired ? requiredRows : pluginRows).Add(row);
         }
 
-        List<MemberCategory> sections = new List<MemberCategory>
+        // One compact line per plugin. The plugins Gum cannot run without are folded away, so the list a
+        // user can act on is short; a search that matches one opens the section.
+        List<MemberCategory> sections = new List<MemberCategory>();
+        if (pluginRows.Count > 0)
         {
-            SettingsRows.Section("Installed plugins", pluginRows),
-            SettingsRows.Section("Folder scan", BuildScanRows()),
-        };
+            sections.Add(SettingsRows.Section("Installed plugins", pluginRows));
+        }
+        if (requiredRows.Count > 0)
+        {
+            sections.Add(SettingsRows.Section("Gum internals", requiredRows, isExpanded: false));
+        }
+        sections.Add(SettingsRows.Section("Folder scan", BuildScanRows()));
         SettingsRows.Finish(sections);
         return sections;
     }
@@ -95,8 +103,8 @@ public sealed class PluginsRows : IRowsSettingsPage
         : plugin.IsBuiltIn ? "Built-in"
         : null;
 
-    /// <summary>The one-line hint under a plugin's toggle: what is wrong, or where the plugin comes from.</summary>
-    public static string HintFor(PluginItemViewModel plugin)
+    /// <summary>The hint under a plugin's toggle: what is wrong, or null for a healthy plugin so its row stays one line.</summary>
+    public static string? HintFor(PluginItemViewModel plugin)
     {
         if (plugin.IsNotLoaded)
         {
@@ -106,17 +114,7 @@ public sealed class PluginsRows : IRowsSettingsPage
         {
             return $"Crashed ({plugin.FailureDetails}) and was turned off. Turning it on asks first.";
         }
-        if (plugin.IsRequired)
-        {
-            return "Gum needs this plugin, so it cannot be turned off.";
-        }
-        if (plugin.IsBuiltIn)
-        {
-            return "Part of Gum.";
-        }
-        return string.IsNullOrEmpty(plugin.SourceFile)
-            ? "Loaded from the Plugins folder."
-            : $"Loaded from {plugin.SourceFile} in the Plugins folder.";
+        return null;
     }
 
     private List<InstanceMember> BuildScanRows()
@@ -137,7 +135,7 @@ public sealed class PluginsRows : IRowsSettingsPage
             {
                 bool failed = file.Outcome == PluginFileOutcome.LoadFailed;
                 rows.Add(SettingsRows.ReadOnly("ScanFile:" + file.FileName, file.FileName,
-                    failed ? (file.Detail ?? "Could not be loaded.") : "Holds one or more plugins.",
+                    failed ? (file.Detail ?? "Could not be loaded.") : null,
                     () => failed ? "Failed to load" : "Loaded"));
             }
         }
