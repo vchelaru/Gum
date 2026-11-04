@@ -153,6 +153,39 @@ public class NineSliceSeamTests
         ShouldBeSolidWhite(pixels, x * zoom, y * zoom, (x + width) * zoom, (y + height) * zoom, $"border scale 1.5, zoom {zoom}");
     }
 
+    // Zooms that never land on a tidy value: 1, 1.0712835, 1.142567, ... up to 3.85. The case count follows SweepScale
+    // (every step on CI, about a tenth locally). Offsets and sizes come from a fixed seed so a failure reproduces.
+    public static IEnumerable<object[]> AwkwardZoomCases()
+    {
+        const int steps = 41;
+        for (int i = 0; i < steps; i++)
+        {
+            if (!MonoGameGum.Tests.SweepScale.Includes(i))
+            {
+                continue;
+            }
+            var random = new Random(7102 + i);
+            float zoom = 1f + i * 0.0712835f;
+            float x = 2f + (float)random.NextDouble() * 4f;
+            float y = 1f + (float)random.NextDouble() * 4f;
+            float offset = (float)random.NextDouble();
+            float childHeight = 6f + (float)random.NextDouble() * 3f;
+            float spacing = i % 2 == 0 ? 0f : -(float)random.NextDouble();
+            SKFilterMode filter = i % 3 == 0 ? SKFilterMode.Linear : SKFilterMode.Nearest;
+            yield return new object[] { filter, zoom, x, y, offset, childHeight, spacing };
+        }
+    }
+
+    [Theory]
+    [MemberData(nameof(AwkwardZoomCases))]
+    public void Draw_AtAwkwardZoomsAndOffsets_ShouldHaveNoSeam(
+        SKFilterMode filter, float zoom, float x, float y, float offset, float childHeight, float spacing)
+    {
+        Draw_NineSliceAtFractionalPosition_ShouldHaveNoSeam(filter, zoom, x, y);
+        Draw_StackedChildrenAtFractionalOffset_ShouldHaveNoSeam(filter, zoom, offset, childHeight, spacing, useNineSlice: false);
+        Draw_StackedChildrenAtFractionalOffset_ShouldHaveNoSeam(filter, zoom, offset, childHeight, spacing, useNineSlice: true);
+    }
+
     public static IEnumerable<object[]> StackedCases()
     {
         foreach (SKFilterMode filter in new[] { SKFilterMode.Nearest, SKFilterMode.Linear })
