@@ -50,6 +50,7 @@ public class AvaloniaVariableGridHead : IVariableGridHead
     public void RegisterDisplayers(DisplayerRegistry registry)
     {
         registry.Register(typeof(GumDisplayers.Color), typeof(ColorDisplay));
+        registry.Register(typeof(GumDisplayers.FontRanges), typeof(Gum.Avalonia.Settings.FontRangesDisplay));
         registry.Register(typeof(GumDisplayers.CornerRadius), typeof(CornerRadiusDisplay));
         registry.Register(typeof(GumDisplayers.BorderScale), typeof(BorderScaleDisplay));
         registry.Register(typeof(GumDisplayers.ShaderVector), typeof(ShaderVectorDisplay));
