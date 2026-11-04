@@ -64,5 +64,9 @@ The row layout, state chips, and highlighting of search matches on this page are
 ## Project Pages
 
 * **General**, **Canvas**, and **Localization**: see [Project Settings](project-properties.md).
-* **Fonts**: see [Fonts](fonts.md).
+* **Fonts**: see [Fonts](fonts.md). The page has a **Character ranges** section (the font character file checkbox, then one line per font with its ranges and an **Add Font Range** button) and a **Generation** section with one row per setting, each with a one-line hint. Searching matches the row labels and hints.
+
+{% hint style="info" %}
+The Fonts page row layout is available in December 2026, or now if building Gum from source.
+{% endhint %}
 * **Code generation**: see the [Code tab](code-tab/README.md) section.

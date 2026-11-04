@@ -3,7 +3,7 @@ using Avalonia.Headless.XUnit;
 using Avalonia.VisualTree;
 using AvaloniaDataUi;
 using AvaloniaDataUi.Controls;
-using Gum.Avalonia.Panels;
+using Gum.Avalonia.Settings;
 using Gum.Avalonia.Shell;
 using Gum.Avalonia.Tests.Harness;
 using Gum.DataTypes;
@@ -159,6 +159,26 @@ public class FontsTabScenarioTests
         tree.AssertOracles();
     }
 
+    [AvaloniaFact]
+    [Trait("Feature", "PROP-015")]
+    public void Search_MarksTheRowsWhoseLabelOrHintMatches_AndOnlyThose()
+    {
+        using ProjectTreeHarness tree = new ProjectTreeHarness();
+        using FontsTab fonts = new FontsTab(tree);
+
+        SettingsRowsPageView.SetSearchText(fonts.View, "spacing");
+        fonts.Settle();
+
+        fonts.View.Grid.Categories.SelectMany(category => category.Members).Where(row => row.IsSearchMatch)
+            .Select(row => row.DisplayName).ShouldBe(new[] { "Font Spacing Horizontal", "Font Spacing Vertical" });
+
+        SettingsRowsPageView.SetSearchText(fonts.View, "gumfcs");
+        fonts.Settle();
+
+        fonts.View.Grid.Categories.SelectMany(category => category.Members).Where(row => row.IsSearchMatch)
+            .Select(row => row.DisplayName).ShouldBe(new[] { "Font character file" });
+    }
+
     private static GumProjectSave SavedProject(ProjectTreeHarness tree) =>
         GumProjectSave.Load(tree.Project.ProjectFilePath, out _) ?? throw new InvalidOperationException("The project file did not load.");
 
@@ -174,11 +194,11 @@ public class FontsTabScenarioTests
             // Opening the page fills it from the project.
             page.Activated!();
             ViewModel = (FontsViewModel)page.Content;
-            View = new FontsView { DataContext = ViewModel };
+            View = new FontsSettingsPageView { DataContext = ViewModel };
             Input = new HeadlessWindowDriver(View, width: 520, height: 900, framesFolderName: "GumFonts");
         }
 
-        public FontsView View { get; }
+        public FontsSettingsPageView View { get; }
 
         public FontsViewModel ViewModel { get; }
 
@@ -218,9 +238,9 @@ public class FontsTabScenarioTests
         public SingleDataUiContainer GridRow(string name)
         {
             Settle();
-            InstanceMember member = View.SettingsGrid.Categories.SelectMany(category => category.Members).FirstOrDefault(candidate => candidate.Name == name)
+            InstanceMember member = View.Grid.Categories.SelectMany(category => category.Members).FirstOrDefault(candidate => candidate.Name == name)
                 ?? throw new InvalidOperationException($"The Font Settings grid has no {name} row.");
-            SingleDataUiContainer row = View.SettingsGrid.LiveContainers.FirstOrDefault(candidate => candidate.Member == member)
+            SingleDataUiContainer row = View.Grid.LiveContainers.FirstOrDefault(candidate => candidate.Member == member)
                 ?? throw new InvalidOperationException($"The {name} row has no live editor.");
             row.BringIntoView();
             Settle();

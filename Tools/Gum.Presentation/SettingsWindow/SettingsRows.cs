@@ -105,6 +105,17 @@ public static class SettingsRows
         return member;
     }
 
+    /// <summary>
+    /// A row shown by the head's own displayer (<paramref name="displayer"/>, a <c>GumDisplayers</c> key), for a
+    /// page's compact list. The displayer reads <paramref name="get"/>; edits happen inside it.
+    /// </summary>
+    public static InstanceMember Custom(string name, string label, string? hint, Type displayer, Func<object?> get)
+    {
+        InstanceMember member = Create(name, label, hint, typeof(object), get, _ => { });
+        member.PreferredDisplayer = displayer;
+        return member;
+    }
+
     /// <summary>Indents <paramref name="row"/> under the row above it, for the fields a toggle reveals.</summary>
     public static InstanceMember Nested(InstanceMember row)
     {
