@@ -44,6 +44,7 @@ public class Game1 : Game, IPreviewDefaultsTarget
         (Microsoft.Xna.Framework.Input.Keys[])Enum.GetValues(typeof(Microsoft.Xna.Framework.Input.Keys));
     private Action<string>? _logSelectionUpdate;
     private bool _logGeometryAfterReload;
+    private string? _languageName;
     private PreviewInputTracker? _inputTracker;
 
     private readonly PreviewReloadPolicy _reloadPolicy = new PreviewReloadPolicy();
@@ -216,6 +217,7 @@ public class Game1 : Game, IPreviewDefaultsTarget
         }
         _debugLog?.LogToolSelection(_selection.ElementName, _selection.CategoryName, _selection.StateName);
         ApplySiblingOrdering();
+        _languageName = PreviewLanguage.Apply(ObjectFinder.Self.GumProjectSave, GumService.Default.LocalizationService);
         ShowElement();
         return ApplyInteraction();
     }
@@ -231,6 +233,7 @@ public class Game1 : Game, IPreviewDefaultsTarget
         UpdateBackingScale();
         ApplyCanvasSizeIfChanged(isWindowShown: true);
         RebuildAfterReloadIfNeeded();
+        SyncLanguage();
         if (_debugLog != null)
         {
             LogInput(_debugLog);
@@ -675,5 +678,17 @@ public class Game1 : Game, IPreviewDefaultsTarget
         _debugLog?.LogToolVariable(element.ElementSave?.Name ?? element.Name ?? "?", variable.SourceObject, variable.GetRootName(), variable.Value);
 
     private void UpdateWindowTitle(bool missingElement = false) =>
-        Window.Title = PreviewWindowTitle.For(_selection.ElementName, missingElement);
+        Window.Title = PreviewWindowTitle.For(_selection.ElementName, missingElement, _languageName);
+
+    // The tool's selected language is saved with the project, so a save that changes it reaches the
+    // Preview through the same hot reload as any other change; checked every frame, it is two compares.
+    private void SyncLanguage()
+    {
+        string? name = PreviewLanguage.Apply(ObjectFinder.Self.GumProjectSave, GumService.Default.LocalizationService);
+        if (name != _languageName)
+        {
+            _languageName = name;
+            UpdateWindowTitle(_isElementMissing);
+        }
+    }
 }
