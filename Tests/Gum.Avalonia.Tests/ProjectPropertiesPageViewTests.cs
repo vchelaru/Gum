@@ -107,4 +107,56 @@ public class ProjectPropertiesPageViewTests
         project.ShowCheckerBackground.ShouldBeFalse();
         window.Close();
     }
+
+    [AvaloniaFact]
+    public void LocalizationPage_IsBuiltFromRows_AndEditsReachTheProject()
+    {
+        GumProjectSave project = new GumProjectSave();
+        ProjectPropertiesViewModel properties = new ProjectPropertiesViewModel();
+        properties.SetFrom(project);
+        properties.AvailableLanguages = new[] { "English", "French" };
+        ProjectPropertiesPageView view = new ProjectPropertiesPageView
+        {
+            DataContext = new ProjectPropertiesPageViewModel(properties, ProjectPropertiesSection.Localization),
+        };
+        Window window = new Window { Content = view, Width = 500, Height = 600 };
+        window.Show();
+        window.UpdateLayout();
+
+        view.Grid.Categories.Select(category => category.Name).ShouldBe(new[] { "Files", "Language" });
+        view.Grid.Categories.SelectMany(category => category.Members).ShouldAllBe(member => !string.IsNullOrEmpty(member.DetailText) && member.IsSpaciousRow);
+        view.Grid.GetInstanceMember(nameof(ProjectPropertiesViewModel.CanvasWidth)).ShouldBeNull();
+
+        view.Grid.GetInstanceMember(nameof(ProjectPropertiesViewModel.LocalizationFiles))!.Value = new List<string> { "Strings.csv" };
+        view.Grid.GetInstanceMember(nameof(ProjectPropertiesViewModel.LanguageName))!.Value = "French";
+        view.Grid.GetInstanceMember(nameof(ProjectPropertiesViewModel.ShowLocalization))!.Value = false;
+        properties.ApplyToModelObjects();
+
+        project.LocalizationFiles.ShouldBe(new[] { "Strings.csv" });
+        properties.LanguageName.ShouldBe("French");
+        project.ShowLocalizationInGum.ShouldBeFalse();
+        window.Close();
+    }
+
+    [AvaloniaFact]
+    public void LocalizationPage_WhenLanguagesLoad_AddsTheLanguageRow()
+    {
+        ProjectPropertiesViewModel properties = new ProjectPropertiesViewModel();
+        properties.SetFrom(new GumProjectSave());
+        ProjectPropertiesPageView view = new ProjectPropertiesPageView
+        {
+            DataContext = new ProjectPropertiesPageViewModel(properties, ProjectPropertiesSection.Localization),
+        };
+        Window window = new Window { Content = view, Width = 500, Height = 600 };
+        window.Show();
+        window.UpdateLayout();
+        view.Grid.GetInstanceMember(nameof(ProjectPropertiesViewModel.LanguageName)).ShouldBeNull();
+
+        properties.AvailableLanguages = new[] { "English", "French" };
+        properties.NotifyReloaded();
+        window.UpdateLayout();
+
+        view.Grid.GetInstanceMember(nameof(ProjectPropertiesViewModel.LanguageName)).ShouldNotBeNull();
+        window.Close();
+    }
 }

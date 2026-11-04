@@ -95,7 +95,7 @@ class MainPropertiesWindowPlugin : CorePriorityPlugin
         {
             Activated = Reload,
             Keywords = new[] { "language", "csv", "resx", "translation" },
-            SearchTerms = () => ProjectPropertiesGridPresenter.RowLabels(_viewModel, ProjectPropertiesSection.Localization),
+            SearchTerms = () => new LocalizationRows(_viewModel).SearchTerms(),
         });
     }
 
