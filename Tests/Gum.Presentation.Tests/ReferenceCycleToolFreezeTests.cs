@@ -13,8 +13,10 @@ using Moq;
 using Shouldly;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
-using System.Threading.Tasks;
+using System.Runtime.ExceptionServices;
+using System.Threading;
 
 namespace Gum.Presentation.Tests;
 
@@ -25,6 +27,7 @@ namespace Gum.Presentation.Tests;
 public class ReferenceCycleToolFreezeTests : BaseTestClass
 {
     private const int GuardMilliseconds = 5000;
+    private const int StartMilliseconds = 30000;
     private readonly VariableReferenceLogic _logic;
 
     public ReferenceCycleToolFreezeTests()
@@ -52,14 +55,53 @@ public class ReferenceCycleToolFreezeTests : BaseTestClass
         base.Dispose();
     }
 
+    /// <summary>
+    /// Runs <paramref name="action"/> on its own thread, not the thread pool: the work takes well under a
+    /// millisecond, so a pool thread that is slow to arrive on a loaded runner must not read as a freeze.
+    /// The time limit counts from when the action starts running; a thread that never starts fails with
+    /// its own message.
+    /// </summary>
     private static void Guard(string scenario, string step, Action action)
     {
-        Task task = Task.Run(action);
-        if (!task.Wait(GuardMilliseconds))
+        Exception? failure = null;
+        long startedTicks = 0;
+        ManualResetEventSlim started = new ManualResetEventSlim();
+        Thread thread = new Thread(() =>
         {
-            Assert.Fail($"{scenario}: '{step}' did not finish in {GuardMilliseconds} ms (freeze)");
+            Interlocked.Exchange(ref startedTicks, Stopwatch.GetTimestamp());
+            started.Set();
+            try
+            {
+                action();
+            }
+            catch (Exception exception)
+            {
+                failure = exception;
+            }
+        })
+        { IsBackground = true, Name = "ReferenceCycleToolFreezeTests.Guard" };
+
+        Stopwatch total = Stopwatch.StartNew();
+        thread.Start();
+        bool didStart = started.Wait(StartMilliseconds);
+        bool didFinish = didStart && thread.Join(GuardMilliseconds);
+        if (!didFinish)
+        {
+            ThreadPool.GetAvailableThreads(out int availableWorkers, out _);
+            ThreadPool.GetMaxThreads(out int maxWorkers, out _);
+            string detail = $"total {total.ElapsedMilliseconds} ms, started={didStart}, " +
+                $"running {(didStart ? Stopwatch.GetElapsedTime(Interlocked.Read(ref startedTicks)).TotalMilliseconds : 0):F0} ms, " +
+                $"thread state {thread.ThreadState}, cpus {Environment.ProcessorCount}, " +
+                $"pool busy workers {maxWorkers - availableWorkers}, pool threads {ThreadPool.ThreadCount}, " +
+                $"pool queued {ThreadPool.PendingWorkItemCount}";
+            Assert.Fail(didStart
+                ? $"{scenario}: '{step}' did not finish in {GuardMilliseconds} ms (freeze); {detail}"
+                : $"{scenario}: '{step}' thread did not start in {StartMilliseconds} ms (machine stalled, not a freeze); {detail}");
         }
-        task.GetAwaiter().GetResult();
+        if (failure != null)
+        {
+            ExceptionDispatchInfo.Capture(failure).Throw();
+        }
     }
 
     private static void AddRows(StateSave state, string? instanceName, params string[] rows)
