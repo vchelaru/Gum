@@ -28,12 +28,16 @@ internal static class ShadowDuskEffectLoader
     public static SKRuntimeEffect Load(string path)
     {
         string source = File.ReadAllText(path);
-        SkslConvertOptions options = new SkslConvertOptions { SourceName = path };
+        ReportingIncludeResolver includes = new ReportingIncludeResolver(path);
+        SkslConvertOptions options = new SkslConvertOptions { SourceName = path, IncludeResolver = includes };
 
         bool isSlang = string.Equals(Path.GetExtension(path), ".slang", StringComparison.OrdinalIgnoreCase);
         var result = isSlang
             ? SkslConverter.ConvertSlang(source, options)
             : SkslConverter.Convert(source, options);
+
+        // Also when the conversion failed, so fixing an included file reloads the shader.
+        includes.Record();
 
         if (result.IsFailure)
         {

@@ -24,9 +24,14 @@ internal static class ShadowDuskEffectLoader
     {
         string fxSource = ReadFxSource(path);
 
+        // SourceFileName makes a relative #include resolve next to the shader.
+        ReportingIncludeResolver includes = new ReportingIncludeResolver(path);
         EffectCompiler compiler = new EffectCompiler();
         Result<CompiledShader, ShaderError[]> result = compiler.Compile(
-            fxSource, new CompilerOptions { Target = target });
+            fxSource,
+            new CompilerOptions { Target = target, SourceFileName = path, IncludeResolver = includes });
+        // Also when the compile failed, so fixing an included file reloads the shader.
+        includes.Record();
         if (result.IsFailure)
         {
             throw new InvalidOperationException(

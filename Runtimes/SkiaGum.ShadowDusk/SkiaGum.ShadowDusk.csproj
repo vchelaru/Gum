@@ -24,6 +24,10 @@
 		<ProjectReference Include="..\SkiaGum\SkiaGum.csproj" />
 	</ItemGroup>
 
+	<ItemGroup>
+		<Compile Include="..\GumShadowDusk\ReportingIncludeResolver.cs" Link="ReportingIncludeResolver.cs" />
+	</ItemGroup>
+
 	<Import Project="..\RuntimePackage.Analyzers.props" />
 
 	<!-- Collision guard for a consumer assembly named SkiaGum.ShadowDusk (see #4311). -->
