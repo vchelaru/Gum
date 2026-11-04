@@ -254,21 +254,30 @@ public class ColorDisplay : DataUiDisplayBase
         Content = panel;
     }
 
-    // Six hex characters are about 4.4 em wide. The field's padding and border are fixed pixels, so the
-    // minimum width is the text's em width (which follows the zoom) plus whatever padding the field has;
-    // the zoom-scaled Width alone drops below it at small zooms.
+    // The field's padding and border are fixed pixels while the text follows the zoom, so the zoom-scaled
+    // Width alone drops below six hex characters at small zooms. Glyph widths differ per platform font,
+    // so the minimum width is the measured width of six of the widest hex digit plus the field's own padding.
     private static void FitHexFieldToSixCharacters(TextBox hexTextBox)
     {
         void Fit()
         {
-            hexTextBox.MinWidth = hexTextBox.FontSize * 4.5
+            double widestSixDigits = 0;
+            foreach (char digit in "0123456789ABCDEF")
+            {
+                FormattedText text = new FormattedText(new string(digit, 6), System.Globalization.CultureInfo.InvariantCulture,
+                    FlowDirection.LeftToRight, new Typeface(hexTextBox.FontFamily, hexTextBox.FontStyle, hexTextBox.FontWeight),
+                    hexTextBox.FontSize, null);
+                widestSixDigits = Math.Max(widestSixDigits, text.Width);
+            }
+            hexTextBox.MinWidth = Math.Ceiling(widestSixDigits) + 2
                 + hexTextBox.Padding.Left + hexTextBox.Padding.Right
                 + hexTextBox.BorderThickness.Left + hexTextBox.BorderThickness.Right;
         }
         Fit();
         hexTextBox.PropertyChanged += (_, e) =>
         {
-            if (e.Property == TemplatedControl.FontSizeProperty || e.Property == TemplatedControl.PaddingProperty
+            if (e.Property == TemplatedControl.FontSizeProperty || e.Property == TemplatedControl.FontFamilyProperty
+                || e.Property == TemplatedControl.FontWeightProperty || e.Property == TemplatedControl.PaddingProperty
                 || e.Property == TemplatedControl.BorderThicknessProperty)
             {
                 Fit();
