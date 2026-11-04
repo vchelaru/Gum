@@ -190,6 +190,9 @@ public interface IPluginManager
     /// plugin that throws is disabled and contributes none). Empty when no plugin knows the file.
     /// </summary>
     IReadOnlyList<TextureRegion> GetTextureRegions(FilePath file);
+
+    /// <summary>Tells every plugin that the user chose <paramref name="region"/> of <paramref name="file"/> in the Texture Coordinates tab, after it was applied.</summary>
+    void TextureRegionChosen(FilePath file, TextureRegion region);
     void WireframeRefreshed();
     // Sealed to object (not System.Windows.Forms.TreeNode) per the WinForms/WPF interface-leak ratchet
     // (UiDecouplingRatchetTests) -- same pattern as ITabManager.AddControl.

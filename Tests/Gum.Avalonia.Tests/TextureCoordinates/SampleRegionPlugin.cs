@@ -30,7 +30,14 @@ internal sealed class SampleRegionPlugin : PluginBase
 
     public override string FriendlyName => "Sample region plugin";
 
-    public override void StartUp() => GetTextureRegionsForFile += HandleGetTextureRegions;
+    /// <summary>Every region the user chose, with the file it was chosen in, in order.</summary>
+    public List<(FilePath File, TextureRegion Region)> Chosen { get; } = new List<(FilePath File, TextureRegion Region)>();
+
+    public override void StartUp()
+    {
+        GetTextureRegionsForFile += HandleGetTextureRegions;
+        TextureRegionChosen += (file, region) => Chosen.Add((file, region));
+    }
 
     public override bool ShutDown(PluginShutDownReason shutDownReason) => true;
 

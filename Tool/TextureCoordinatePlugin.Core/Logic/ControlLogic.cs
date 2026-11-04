@@ -656,6 +656,13 @@ public class TextureCoordinateDisplayController : ITextureCoordinateDisplayContr
             //_guiCommands.RefreshVariableValues();
             _guiCommands.RefreshVariables();
 
+            string? chosenFile = GetSourceFile();
+            // The second click of a double-click applies the same region again; the first already told plugins.
+            bool secondClickOfDoubleClick = gesture == RegionGesture.Click && control.XnaCursor.PrimaryDoubleClick;
+            if (region is TextureRegion chosen && !secondClickOfDoubleClick && _pluginManager != null && !string.IsNullOrEmpty(chosenFile))
+            {
+                _pluginManager.TextureRegionChosen(new FilePath(chosenFile), chosen);
+            }
         }
     }
 
