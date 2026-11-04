@@ -1,4 +1,4 @@
-﻿# Code Tab
+# Code Tab
 
 ## Introduction
 
@@ -249,7 +249,7 @@ This controls when Gum generates code for a component.
 
 ### Debug Only
 
-Checking **Debug Only** for the selected screen or component wraps its generated file in `#if DEBUG`, so release builds leave it out. Every place another element refers to it (its instances, their variables, parenting and the matching `using`) is wrapped in `#if DEBUG` too. A component derived from a debug only component is treated the same way, since it cannot exist without its base.
+Checking **Debug Only** for the selected screen or component wraps its generated file in `#if DEBUG`, so release builds leave it out. Every place another element refers to it (its instances, their variables, parenting and the matching `using`) is wrapped in `#if DEBUG` too. A component derived from a debug only component is treated the same way, since it cannot exist without its base. To also leave these elements out of a `.gumpkg`, see [Leaving Out Debug Only Elements](../../cli/pack.md#leaving-out-debug-only-elements).
 
 Your own custom `.cs` file for the element is not wrapped. Gum regenerates the element and every element that refers to it when you change this setting, following each element's **Generation Behavior**.
 
