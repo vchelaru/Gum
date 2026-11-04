@@ -28,15 +28,17 @@ public class MultiSelectCommitLogic : IMultiSelectCommitLogic
     private readonly ISetVariableLogic _setVariableLogic;
     private readonly IPluginManager _pluginManager;
     private readonly IFileCommands _fileCommands;
+    private readonly IVariableReferenceLogic _variableReferenceLogic;
 
     /// <summary>Creates the logic over the undo manager and the set logic that decides refreshes.</summary>
     public MultiSelectCommitLogic(IUndoManager undoManager, ISetVariableLogic setVariableLogic,
-        IPluginManager pluginManager, IFileCommands fileCommands)
+        IPluginManager pluginManager, IFileCommands fileCommands, IVariableReferenceLogic variableReferenceLogic)
     {
         _undoManager = undoManager;
         _setVariableLogic = setVariableLogic;
         _pluginManager = pluginManager;
         _fileCommands = fileCommands;
+        _variableReferenceLogic = variableReferenceLogic;
     }
 
     /// <inheritdoc/>
@@ -50,6 +52,7 @@ public class MultiSelectCommitLogic : IMultiSelectCommitLogic
         IDisposable? undoLock = null;
         IDisposable? pluginBatch = null;
         IDisposable? saveBatch = null;
+        IDisposable? referenceBatch = null;
 
         ToolLog.Scope commitLog = default;
         member.BeforeMultiSet += (args) =>
@@ -63,11 +66,17 @@ public class MultiSelectCommitLogic : IMultiSelectCommitLogic
                 // batch, not once per selected instance.
                 pluginBatch = _pluginManager.BeginVariableSetBatch();
                 saveBatch = _fileCommands.BeginAutoSaveBatch();
+                // Re-applying the state's references is state-wide too, so it runs once after the last instance.
+                referenceBatch = _variableReferenceLogic.BeginReferenceBatch();
             }
         };
 
         member.AfterMultiSet += (args) =>
         {
+            // The reference reaction runs first, still inside the plugin and save batches, so what it changes
+            // is announced and saved once.
+            referenceBatch?.Dispose();
+            referenceBatch = null;
             pluginBatch?.Dispose();
             pluginBatch = null;
             saveBatch?.Dispose();

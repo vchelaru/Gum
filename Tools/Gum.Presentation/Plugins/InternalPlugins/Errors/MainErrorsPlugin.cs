@@ -190,6 +190,12 @@ public class MainErrorsPlugin : CorePriorityPlugin
 
         if (element == null || element == _selectedState.SelectedElement)
         {
+            // The batch's element was recorded by its VariableSet calls, so the check runs once when it completes.
+            if (IsVariableSetBatchOpen && element != null)
+            {
+                return;
+            }
+
             UpdateErrorsForElement(element);
             return;
         }

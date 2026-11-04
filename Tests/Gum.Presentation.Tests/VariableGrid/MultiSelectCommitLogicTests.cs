@@ -188,6 +188,28 @@ public class MultiSelectCommitLogicTests : BaseTestClass
     }
 
     [Fact]
+    public void Attach_ShouldOpenOneReferenceBatchAroundTheInstanceSets_WhenCommitIsFull()
+    {
+        ScreenSave screen = CreateScreenWithTextInstances(instanceCount: 5);
+        MultiSelectInstanceMember multiSelect = CreateAttachedMultiSelect(screen, "Width");
+        int referenceBatchDisposals = 0;
+        int disposalsWhenFirstInstanceWasSet = -1;
+        _mocker.GetMock<IVariableReferenceLogic>().Setup(x => x.BeginReferenceBatch()).Returns(new UndoLock(() => referenceBatchDisposals++));
+        _mocker.GetMock<ISetVariableLogic>()
+            .Setup(x => x.PropertyValueChanged(
+                It.IsAny<string>(), It.IsAny<object?>(), It.IsAny<InstanceSave>(), It.IsAny<StateSave>(),
+                It.IsAny<bool>(), It.IsAny<bool>(), It.IsAny<bool>(), It.IsAny<bool>()))
+            .Callback(() => disposalsWhenFirstInstanceWasSet = referenceBatchDisposals)
+            .Returns(GeneralResponse.SuccessfulResponse);
+
+        multiSelect.SetValue(30f, SetPropertyCommitType.Full);
+
+        _mocker.GetMock<IVariableReferenceLogic>().Verify(x => x.BeginReferenceBatch(), Times.Once);
+        disposalsWhenFirstInstanceWasSet.ShouldBe(0);
+        referenceBatchDisposals.ShouldBe(1);
+    }
+
+    [Fact]
     public void Attach_ShouldNotOpenBatches_WhenCommitIsIntermediate()
     {
         ScreenSave screen = CreateScreenWithTextInstances(instanceCount: 2);
