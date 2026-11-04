@@ -1190,7 +1190,7 @@ public class NewProjectDialogViewModel : DialogViewModel
             ExistingCodeProjectTip = NewProjectDialogText.WarningTip(hasGame1, projectFolder);
         }
 
-        IsTargetNotEmptyWarningVisible = _targetNotEmpty;
+        IsTargetNotEmptyWarningVisible = _targetNotEmpty && !IsRefused;
         TargetNotEmptyText = _targetNotEmpty
             ? NewProjectDialogText.TargetNotEmptyBody(projectFolder)
             : string.Empty;
