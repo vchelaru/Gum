@@ -98,7 +98,7 @@ public static class PackCommand
         return command;
     }
 
-    private sealed record ShakeOptions(bool Enabled, bool SkipDebugOnly,string[] RootFiles, string[] Keep, string[] RootAssemblies);
+    private sealed record ShakeOptions(bool Enabled, bool SkipDebugOnly, string[] RootFiles, string[] Keep, string[] RootAssemblies);
 
     private static int Execute(string projectPath, string? outputPath, string includeFlags, bool premultipliedAlpha,
         ShakeOptions shake)
