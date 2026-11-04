@@ -54,7 +54,9 @@ public class VariableReferenceLogic : IVariableReferenceLogic
         _wireframeObjectManager = wireframeObjectManager;
     }
 
-    public AssignmentExpressionSyntax? GetAssignmentSyntax(string item)
+    public AssignmentExpressionSyntax? GetAssignmentSyntax(string item) => ParseAssignment(item);
+
+    internal static AssignmentExpressionSyntax? ParseAssignment(string item)
     {
         item = EvaluatedSyntax.ConvertToCSharpSyntax(item);
 
@@ -175,25 +177,8 @@ public class VariableReferenceLogic : IVariableReferenceLogic
 
         if (evaluatedSyntax.EvaluatedType == null)
         {
-            if (assignmentSyntax.Right.DescendantNodesAndSelf()
-                .OfType<IdentifierNameSyntax>()
-                .Any(identifier => EvaluatedSyntax.IsLiveLayoutName(identifier.Identifier.Text)))
-            {
-                failures.Add((line, GeneralResponse.UnsuccessfulWith(
-                    "The right side reads a value that is computed from the layout (such as Index or AbsoluteWidth). " +
-                    "Check that the instance exists in this element; Absolute* values also need the element to be displayed")));
-                return;
-            }
-
-            if (DividesByZero(assignmentSyntax.Right, parentElement.GetDefaultStateOrThrow(), liveRoot))
-            {
-                failures.Add((line, GeneralResponse.UnsuccessfulWith(
-                    "The right side divides by zero. Check the divisor (the value after / or %), including variables that are currently 0")));
-                return;
-            }
-
             failures.Add((line, GeneralResponse.UnsuccessfulWith(
-                $"The right side cannot be evaluated, are you referencing a variable that doesn't exist or mixing variable types?")));
+                DescribeRightSideFailure(assignmentSyntax.Right, parentElement.GetDefaultStateOrThrow(), liveRoot).EditMessage)));
             return;
         }
 
@@ -224,7 +209,40 @@ public class VariableReferenceLogic : IVariableReferenceLogic
         }
     }
 
-    private static bool DividesByZero(SyntaxNode rightSide, StateSave state, GraphicalUiElement? liveRoot)
+    /// <summary>Why a right side has no value: the edit-time dialog's message and a short reason for the Variables tab note.</summary>
+    internal sealed record RightSideFailure(string EditMessage, string NoteReason);
+
+    /// <summary>
+    /// Explains why <paramref name="right"/> evaluated to nothing. The one source of the wording shared by the
+    /// edit-time dialog and the note on a row that stopped following its reference.
+    /// </summary>
+    internal static RightSideFailure DescribeRightSideFailure(SyntaxNode right, StateSave state, GraphicalUiElement? liveRoot)
+    {
+        if (right.DescendantNodesAndSelf()
+            .OfType<IdentifierNameSyntax>()
+            .Any(identifier => EvaluatedSyntax.IsLiveLayoutName(identifier.Identifier.Text)))
+        {
+            return new RightSideFailure(
+                "The right side reads a value that is computed from the layout (such as Index or AbsoluteWidth). " +
+                "Check that the instance exists in this element; Absolute* values also need the element to be displayed",
+                "it reads a value computed from the layout, which is not available");
+        }
+
+        SyntaxNode? zeroDivisor = FindZeroDivisor(right, state, liveRoot);
+        if (zeroDivisor != null)
+        {
+            string divisor = EvaluatedSyntax.ConvertToSlashSyntax(zeroDivisor.ToString());
+            return new RightSideFailure(
+                "The right side divides by zero. Check the divisor (the value after / or %), including variables that are currently 0",
+                zeroDivisor is LiteralExpressionSyntax ? "divides by zero" : $"{divisor} is 0, so the reference can't divide by it");
+        }
+
+        return new RightSideFailure(
+            "The right side cannot be evaluated, are you referencing a variable that doesn't exist or mixing variable types?",
+            "it cannot be evaluated (a variable it reads is missing, or the types do not mix)");
+    }
+
+    private static SyntaxNode? FindZeroDivisor(SyntaxNode rightSide, StateSave state, GraphicalUiElement? liveRoot)
     {
         foreach (BinaryExpressionSyntax binary in rightSide.DescendantNodesAndSelf().OfType<BinaryExpressionSyntax>())
         {
@@ -243,11 +261,11 @@ public class VariableReferenceLogic : IVariableReferenceLogic
             if (divisor is sbyte or byte or short or ushort or int or uint or long or ulong or float or double or decimal
                 && Convert.ToDouble(divisor) == 0)
             {
-                return true;
+                return binary.Right;
             }
         }
 
-        return false;
+        return null;
     }
 
     private static bool IsInsideConditionalArm(SyntaxNode node)

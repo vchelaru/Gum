@@ -213,7 +213,8 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
             _wireframeObjectManager,
             _clipboardService,
             _projectState,
-            new VariableReferenceLinkLogic(_selectedState, _objectFinder, _setVariableLogic));
+            new VariableReferenceLinkLogic(_selectedState, _objectFinder, _setVariableLogic),
+            new VariableReferenceStatusLogic());
     }
 
     // Normally plugins will initialize through the PluginManager. This needs to happen earlier (see where it's called for info)
@@ -1603,12 +1604,26 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
 
 
 
+    private static bool HasReferenceLines(ElementSave? element, InstanceSave? instance)
+    {
+        StateSave? state = element?.DefaultState;
+        string listName = instance == null ? "VariableReferences" : instance.Name + ".VariableReferences";
+        return state?.GetValueRecursive(listName) is System.Collections.IList { Count: > 0 };
+    }
+
     internal void HandleVariableSet(ElementSave? element, InstanceSave? instance, string strippedName, object? oldValue,
         bool isFullCommit)
     {
         if (strippedName == "VariableReferences")
         {
             // force refresh:
+            RefreshEntireGrid(force: true);
+        }
+        else if (isFullCommit && HasReferenceLines(element, instance))
+        {
+            // A reference row's note depends on the values it reads, so a commit on an element
+            // with references rebuilds the grid to recompute it (#7512). Only the full commit: a
+            // rebuild on a drag tick destroys the row being dragged.
             RefreshEntireGrid(force: true);
         }
         // Rebuilding the grid on an intermediate tick of a drag destroys the row being dragged,
