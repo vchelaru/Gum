@@ -33,9 +33,18 @@ public class ShaderVectorRowScreenshotTests : IDisposable
     public void VectorRows_NothingSaved() => PrScreenshot.Run(() => Capture("shader-vectors-default", edit: false));
 
     [SkippableFact]
+    public void VectorRows_MenuOnAnUnexposedRow() => PrScreenshot.Run(() => Capture("shader-vectors-menu", edit: true, menu: true));
+
+    [SkippableFact]
+    public void VectorRows_ExposedWithItsMenu() => PrScreenshot.Run(() => Capture("shader-vectors-exposed", edit: true, expose: true, menu: true));
+
+    [SkippableFact]
+    public void VectorRows_Exposed() => PrScreenshot.Run(() => Capture("shader-vectors-exposed-row", edit: true, expose: true));
+
+    [SkippableFact]
     public void VectorRows_SomeEdited() => PrScreenshot.Run(() => Capture("shader-vectors-edited", edit: true));
 
-    private static void Capture(string name, bool edit)
+    private static void Capture(string name, bool edit, bool expose = false, bool menu = false)
     {
         ShaderParameterReader.Reader = _ => new List<ShaderParameterInfo>
         {
@@ -59,6 +68,16 @@ public class ShaderVectorRowScreenshotTests : IDisposable
         {
             grid.Input.TypeAndEnter(grid.Editor<ShaderVectorDisplay>("Tint").Cells[1].TextBox, "0.5");
             grid.Input.TypeAndEnter(grid.Editor<ShaderVectorDisplay>("Offset").Cells[0].TextBox, "12");
+            grid.Settle();
+        }
+
+        if (expose)
+        {
+            grid.Project.Dialogs.AnswerNext<Gum.Dialogs.ExposeColorDialogViewModel>(_ => true);
+            grid.PickRowMenuItem("Tint", "Expose Variable");
+            ((WireframeObjectManager)TestAppBuilder.Services.GetRequiredService<IWireframeObjectManager>()).AllIpsos.Add(
+                new GraphicalUiElement(new InvisibleRenderable { RenderTargetEffect = new object() }) { Tag = box });
+            grid.GridManager.RefreshEntireGrid(force: true);
             grid.Settle();
         }
 
@@ -100,7 +119,17 @@ public class ShaderVectorRowScreenshotTests : IDisposable
                     Dispatcher.UIThread.RunJobs();
                     window.GetVisualDescendants().OfType<ShaderVectorDisplay>().First(row => row.InstanceMember!.Name == "Tint").BringIntoView();
                     Dispatcher.UIThread.RunJobs();
+                    if (menu)
+                    {
+                        TextBoxDisplay field = window.GetVisualDescendants().OfType<ShaderVectorDisplay>().First(row => row.InstanceMember!.Name == "Tint").Cells[1];
+                        field.ContextMenu!.Open(field);
+                        Dispatcher.UIThread.RunJobs();
+                    }
                     PrScreenshot.SaveWindow(window, $"{name}-{theme.Key.ToString()!.ToLowerInvariant()}-zoom-{size}");
+                    if (menu)
+                    {
+                        window.GetVisualDescendants().OfType<ShaderVectorDisplay>().First(row => row.InstanceMember!.Name == "Tint").Cells[1].ContextMenu!.Close();
+                    }
                 }
             }
         }

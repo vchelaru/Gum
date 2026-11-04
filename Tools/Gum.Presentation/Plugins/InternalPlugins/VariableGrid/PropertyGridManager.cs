@@ -99,6 +99,7 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
     public List<object> ObjectsSuppressingRefresh { get; private set; } = new List<object>();
 
     private readonly CompositeMemberLogic _compositeMemberLogic;
+    private readonly ShaderVectorRow _shaderVectorRow;
     private StateSaveCategoryDisplayer _stateSaveCategoryDisplayer;
     private BehaviorShowingLogic _behaviorShowingLogic;
     private readonly IVariableCategoryCopyPasteService _variableCategoryCopyPasteService;
@@ -183,6 +184,7 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
         _variableCategoryCopyPasteService = new VariableCategoryCopyPasteService(_undoManager);
         _variableCategoryRowAdapter = new VariableCategoryRowAdapter();
         _multiSelectCommitLogic = new MultiSelectCommitLogic(_undoManager, _setVariableLogic, _pluginManager, _fileCommands);
+        _shaderVectorRow = new ShaderVectorRow(_undoManager, _selectedState, _exposeVariableService, _dialogService, _nameVerifier);
         _compositeMemberLogic = new CompositeMemberLogic(_selectedState,
             _exposeVariableService,
             _undoManager,
@@ -1222,16 +1224,20 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
         Func<int, string> getComponentName = componentIndex => instance.Name + "." +
             ShaderVariableNaming.GetVariableName(shaderFile, parameter.Name, componentIndex, parameter.Count);
         List<InstanceMember> components = new List<InstanceMember>();
+        List<ShaderParameterVariableBinding> bindings = new List<ShaderParameterVariableBinding>();
+        List<string> rootNames = new List<string>();
         for (int i = 0; i < parameter.Count; i++)
         {
+            ShaderParameterVariableBinding binding = new ShaderParameterVariableBinding(parameter, legacyTextName, i, getComponentName);
+            bindings.Add(binding);
+            rootNames.Add(ShaderVariableNaming.GetVariableName(shaderFile, parameter.Name, i, parameter.Count));
             components.Add(CreateShaderParameterVariableMember(
-                new ShaderParameterVariableBinding(parameter, legacyTextName, i, getComponentName),
-                getComponentName(i), ShaderParameterRows.GetComponentRowName(parameter, i), instance, element, stateSave, isReadOnly,
+                binding, getComponentName(i), ShaderParameterRows.GetComponentRowName(parameter, i), instance, element, stateSave, isReadOnly,
                 displayName: ShaderParameterRows.GetComponentLabel(i)));
         }
 
         // One row for the whole parameter; the components keep their own members for the fields inside it.
-        members.Add(ShaderVectorRow.Create(parameter.Name, components, _undoManager));
+        members.Add(_shaderVectorRow.Create(parameter.Name, components, bindings, rootNames, instance));
         return members;
     }
 

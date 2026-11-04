@@ -113,12 +113,74 @@ public class ShaderVectorRowScenarioTests : IDisposable
         grid.Settle();
 
         headers.ShouldContain("Make Default");
-        headers.ShouldNotContain(header => header.Contains("Expose"));
+        headers.ShouldContain("Expose Variable");
         Saved(grid, "X").ShouldBeNull();
         Saved(grid, "Y").ShouldBeNull();
         Saved(grid, "W").ShouldBeNull();
         grid.ShowsSetMarker("Tint").ShouldBeFalse();
         Vector(grid).Cells[1].TextBox.Text.ShouldBe("0.2");
+    }
+
+    private static string?[] ExposedNames(VariableGridHarness grid) =>
+        new[] { "X", "Y", "Z", "W" }
+            .Select(suffix => grid.SelectedState.SelectedElement!.DefaultState.GetVariableSave(Tint + suffix)?.ExposedAsName)
+            .ToArray();
+
+    [AvaloniaFact]
+    public void ExposingTheVector_ExposesEveryComponentAfterOnePrompt_AsOneUndoStep()
+    {
+        using VariableGridHarness grid = new VariableGridHarness();
+        ShowAVectorParameter(grid);
+        grid.Project.Dialogs.AnswerNext<Gum.Dialogs.ExposeColorDialogViewModel>(_ => true);
+
+        grid.Input.RightClick(Vector(grid).Cells[1]);
+        grid.Input.PickContextMenuItem("Expose Variable");
+        grid.Settle();
+
+        string?[] exposed = ExposedNames(grid);
+        exposed.ShouldAllBe(name => !string.IsNullOrEmpty(name));
+        exposed.Select(name => name![^3..]).ToArray().ShouldBe(new[] { "__X", "__Y", "__Z", "__W" });
+        exposed.Select(name => name![..^3]).Distinct().Count().ShouldBe(1, "one base name for the whole vector");
+        Saved(grid, "Z").ShouldBe(0.3f, "the components carry their values");
+
+        grid.Undo();
+
+        ExposedNames(grid).ShouldAllBe(name => string.IsNullOrEmpty(name));
+    }
+
+    [AvaloniaFact]
+    public void CancellingTheExposePrompt_ChangesNothing()
+    {
+        using VariableGridHarness grid = new VariableGridHarness();
+        ShowAVectorParameter(grid);
+        grid.Project.Dialogs.AnswerNext<Gum.Dialogs.ExposeColorDialogViewModel>(_ => false);
+
+        grid.Input.RightClick(Vector(grid).Cells[0]);
+        grid.Input.PickContextMenuItem("Expose Variable");
+        grid.Settle();
+
+        ExposedNames(grid).ShouldAllBe(name => string.IsNullOrEmpty(name));
+        Saved(grid, "X").ShouldBeNull("nothing was pinned either");
+    }
+
+    [AvaloniaFact]
+    public void AnExposedVector_OffersUnexpose_AndUnexposingClearsEveryComponent()
+    {
+        using VariableGridHarness grid = new VariableGridHarness();
+        ShowAVectorParameter(grid);
+        grid.Project.Dialogs.AnswerNext<Gum.Dialogs.ExposeColorDialogViewModel>(_ => true);
+        grid.Input.RightClick(Vector(grid).Cells[0]);
+        grid.Input.PickContextMenuItem("Expose Variable");
+        grid.Settle();
+
+        grid.Input.RightClick(Vector(grid).Cells[2]);
+        List<string> headers = grid.Input.ContextMenuHeaders();
+        string unexpose = headers.First(header => header.StartsWith("Un-expose"));
+        grid.Input.PickContextMenuItem(unexpose);
+        grid.Settle();
+
+        headers.ShouldNotContain("Expose Variable");
+        ExposedNames(grid).ShouldAllBe(name => string.IsNullOrEmpty(name));
     }
 
     [AvaloniaFact]
