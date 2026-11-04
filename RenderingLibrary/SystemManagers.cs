@@ -367,6 +367,16 @@ public partial class SystemManagers : ISystemManagers
 
         Texture2D texture = Texture2D.FromStream(Renderer.GraphicsDevice, stream);
 
+        // The embedded PNGs are straight alpha and do not pass through ContentLoader, so a premultiplied
+        // pipeline has to convert them here (#7585). Straight alpha is left untouched, edge bleed included.
+        if (Renderer.UsePremultipliedAlpha && texture.Format == SurfaceFormat.Color)
+        {
+            var pixels = new Microsoft.Xna.Framework.Color[texture.Width * texture.Height];
+            texture.GetData(pixels);
+            TexturePremultiply.Premultiply(pixels);
+            texture.SetData(pixels);
+        }
+
         var resourceName = $"{AssemblyPrefix}.{embeddedTexture2dName}";
         Content.LoaderManager.Self.AddDisposable($"EmbeddedResource.{resourceName}", texture,
             // Mirrors LoadEmbeddedFont above: allows unit tests, and can avoid confusing errors

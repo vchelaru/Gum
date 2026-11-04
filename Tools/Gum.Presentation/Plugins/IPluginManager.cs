@@ -184,6 +184,12 @@ public interface IPluginManager
     void RefreshVariableView(bool force);
     void WireframePropertyChanged(string propertyName);
     IRenderableIpso? CreateRenderableForType(string type);
+
+    /// <summary>
+    /// The named regions every plugin reports for <paramref name="file"/> (concatenated in plugin order; a
+    /// plugin that throws is disabled and contributes none). Empty when no plugin knows the file.
+    /// </summary>
+    IReadOnlyList<TextureRegion> GetTextureRegions(FilePath file);
     void WireframeRefreshed();
     // Sealed to object (not System.Windows.Forms.TreeNode) per the WinForms/WPF interface-leak ratchet
     // (UiDecouplingRatchetTests) -- same pattern as ITabManager.AddControl.

@@ -376,6 +376,15 @@ public abstract class PluginBase : IPlugin
 
     public event Func<string, IRenderableIpso?>? CreateRenderableForType;
 
+    /// <summary>
+    /// Query event: a plugin that knows the named regions of a Source File (a sprite sheet, a PSD) returns
+    /// them, in texture pixels, and the Texture Coordinates tab outlines them and applies one on
+    /// double-click. The argument is the Source File as the project stores it; return null or empty when
+    /// the file is not one the plugin knows. Called when the selection or its Source File changes, and
+    /// the result is cached per file, so it should be cheap. Results from every plugin are concatenated.
+    /// </summary>
+    public event Func<FilePath, IReadOnlyList<TextureRegion>?>? GetTextureRegionsForFile;
+
     // Vic says - why did we make these events? It adds lots of overhead, and I dont' think it helps in any way
     // Oct 6, 2021 - If we have an event, we can have the null check inside the plugin base, which makes
     // the plugin manager simpler. If we don't have an event with a null check in the plugin, then the check
@@ -659,6 +668,8 @@ public abstract class PluginBase : IPlugin
     public StateSave? CallGetDefaultStateFor(string type) => GetDefaultStateForType?.Invoke(type);
 
     public IRenderableIpso? CallCreateRenderableForType(string type) => CreateRenderableForType?.Invoke(type);
+
+    public IReadOnlyList<TextureRegion>? CallGetTextureRegionsForFile(FilePath file) => GetTextureRegionsForFile?.Invoke(file);
 
     // Was internal - bumped to public because PluginBase moved to Gum.Presentation while its only
     // caller (PluginManager) stays in Gum.csproj; the two no longer share an assembly (issue #3950).

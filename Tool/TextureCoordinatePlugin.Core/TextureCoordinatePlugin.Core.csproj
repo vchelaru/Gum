@@ -34,6 +34,7 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\..\Tools\Gum.Presentation\Gum.Presentation.csproj" />
+		<ProjectReference Include="../EditorTabPlugin.Core/EditorTabPlugin.Core.csproj" />
 		<ProjectReference Include="..\..\MonoGameGum\KniGum\KniGum.csproj" />
 		<ProjectReference Include="..\..\FlatRedBall.SpecializedXnaControls\FlatRedBall.SpecializedXnaControls.csproj" />
 		<ProjectReference Include="..\..\XnaAndWinforms\XnaAndWinforms.csproj" />

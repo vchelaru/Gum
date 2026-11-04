@@ -34,6 +34,9 @@ public abstract class TextureCoordinatePluginBase : PluginBase, IRecipient<UiBas
     MainControlViewModel _viewModel;
     ExposedTextureCoordinateLogic _exposedCoordinateLogic;
 
+    /// <summary>The tab's display logic, exposed so tests can see what it draws.</summary>
+    public TextureCoordinateDisplayController DisplayController => _displayController;
+
     public override string FriendlyName
     {
         get
@@ -64,7 +67,8 @@ public abstract class TextureCoordinatePluginBase : PluginBase, IRecipient<UiBas
         IProjectManager projectManager,
         IFileWatchManager fileWatchManager,
         IMessenger messenger,
-        IThemingService themingService)
+        IThemingService themingService,
+        IPluginManager? pluginManager = null)
     {
         _selectedState = selectedState;
         _wireframeCommands = wireframeCommands;
@@ -80,7 +84,8 @@ public abstract class TextureCoordinatePluginBase : PluginBase, IRecipient<UiBas
             hotkeyManager,
             new CameraScrollBarBinder(new ScrollBarLogic()),
             messenger,
-            themingService);
+            themingService,
+            pluginManager);
 
         _viewModel = new (
             projectManager,
@@ -153,11 +158,14 @@ public abstract class TextureCoordinatePluginBase : PluginBase, IRecipient<UiBas
         this.WireframePropertyChanged += HandleWireframePropertyChanged;
 
         this.ProjectLoad += HandleProjectLoaded;
+        // A source file edited elsewhere may have new regions.
+        this.ReactToFileChanged += _ => _displayController.ClearRegionCache();
     }
 
     private void HandleProjectLoaded(GumProjectSave save)
     {
         _viewModel.LoadSettings();
+        _displayController.ClearRegionCache();
         _displayController.SetCheckerboardVisible(save.ShowCheckerBackground);
     }
 

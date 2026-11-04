@@ -29,7 +29,10 @@ public class SubtextLogic
         string? result = subtext;
         if (!string.IsNullOrEmpty(defaultVariable.DetailText))
         {
-            result += "\n" + defaultVariable.DetailText;
+            // No leading newline when nothing sits above the description, or the row shows a blank line first.
+            result = string.IsNullOrEmpty(result)
+                ? defaultVariable.DetailText
+                : result + "\n" + defaultVariable.DetailText;
         }
 
         string? categoryString = null;

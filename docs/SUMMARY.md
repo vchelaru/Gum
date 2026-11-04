@@ -149,6 +149,7 @@
   * [AddAndRemoveVariablesForType](gum-tool/plugins/pluginbase.addandremovevariablesfortype.md)
   * [AddMenuItem](gum-tool/plugins/pluginbase.addmenuitem.md)
   * [Export](gum-tool/plugins/pluginbase.export.md)
+  * [GetTextureRegionsForFile](gum-tool/plugins/pluginbase.gettextureregionsforfile.md)
   * [Setting Up Post Build Events](gum-tool/plugins/setting-up-post-build-events.md)
 * [Variables](gum-tool/variables/README.md)
   * [Add Variable](gum-tool/variables/add-variable.md)

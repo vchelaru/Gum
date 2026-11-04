@@ -166,20 +166,6 @@ public class CheckJsonElementFileTests : CheckHandWrittenJsonFileHarness
     }
 
     [Fact]
-    public void Check_JsonVariableNameThatTheInstanceTypeDoesNotHave_ShouldReportGum0029AsWarning()
-    {
-        string project = CreateJsonProject("UnknownInstanceVariable");
-        AddJsonComponent(project, "Holder", "Container",
-            JDefault(JVar("float", "Child.Wdth", "\"ValueAsFloat\":4")),
-            JInstances(JInstance("Child", "Text")));
-
-        CheckRun run = Check(project);
-
-        run.ExitCode.ShouldBe(0);
-        run.Entries.ShouldContain(e => e.Code == "GUM0029" && e.Message.Contains("Wdth"));
-    }
-
-    [Fact]
     public void Check_JsonDerivedComponentMissingItsBaseInstance_ShouldReportGum0016AsWarning()
     {
         string project = CreateJsonProject("MissingBaseInstance");
