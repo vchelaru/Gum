@@ -44,6 +44,17 @@ public class ShaderVectorRowScenarioTests : IDisposable
         grid.Settle();
         grid.Row("IsRenderTarget").GetVisualDescendants().OfType<CheckBox>().First().IsChecked = true;
         grid.Settle();
+
+        // Ticking Render Target makes the editor rebuild its scene, which drops the stand-in for the compiled
+        // shader until the rebuilt objects are compiled again. When the rebuild lands after the grid was built
+        // (seen on a cold Linux run), the shader rows are gone; recreate the objects as the editor does.
+        IWireframeObjectManager wireframe = TestAppBuilder.Services.GetRequiredService<IWireframeObjectManager>();
+        if ((wireframe.GetRepresentation(box)?.RenderableComponent as IRenderTargetRenderable)?.RenderTargetEffect == null)
+        {
+            AttachEffect(box);
+            grid.GridManager.RefreshEntireGrid(force: true);
+            grid.Settle();
+        }
         return box;
     }
 
@@ -65,7 +76,7 @@ public class ShaderVectorRowScenarioTests : IDisposable
         using VariableGridHarness grid = new VariableGridHarness();
         ShowAVectorParameter(grid);
 
-        grid.ShownMemberNames().ShouldContain("Tint");
+        grid.ShownMemberNames().ShouldContain("Tint", $"reader set: {ShaderParameterReader.Reader != null}");
         grid.ShownMemberNames().ShouldNotContain("Tint X");
         ShaderVectorDisplay row = Vector(grid);
         row.Cells.Count.ShouldBe(4);
