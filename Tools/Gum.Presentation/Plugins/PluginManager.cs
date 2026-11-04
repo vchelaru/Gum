@@ -593,6 +593,25 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
         return toReturn;
     }
 
+    public IReadOnlyList<TextureRegion> GetTextureRegions(FilePath file)
+    {
+        List<TextureRegion> regions = new List<TextureRegion>();
+
+        // A plugin that throws is reported and disabled by CallMethodOnPlugin; the others still answer.
+        CallMethodOnPlugin(
+            plugin =>
+            {
+                IReadOnlyList<TextureRegion>? pluginRegions = plugin.CallGetTextureRegionsForFile(file);
+                if (pluginRegions != null)
+                {
+                    regions.AddRange(pluginRegions);
+                }
+            },
+            nameof(GetTextureRegions));
+
+        return regions;
+    }
+
     public DeleteResponse GetDeleteStateResponse(StateSave stateSave, IStateContainer element)
     {
         DeleteResponse response = new DeleteResponse();

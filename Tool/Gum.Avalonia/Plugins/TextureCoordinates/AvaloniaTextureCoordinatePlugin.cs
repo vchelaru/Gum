@@ -5,6 +5,7 @@ using Gum.Commands;
 using Gum.Dialogs;
 using Gum.Logic.FileWatch;
 using Gum.Managers;
+using Gum.Plugins;
 using Gum.Plugins.BaseClasses;
 using Gum.Plugins.InternalPlugins.VariableGrid;
 using Gum.ToolStates;
@@ -37,9 +38,10 @@ public class AvaloniaTextureCoordinatePlugin : TextureCoordinatePluginBase
         IFileWatchManager fileWatchManager,
         IMessenger messenger,
         IThemingService themingService,
-        ICanvasRedrawScheduler canvasRedrawScheduler)
+        ICanvasRedrawScheduler canvasRedrawScheduler,
+        IPluginManager pluginManager)
         : base(selectedState, wireframeCommands, undoManager, guiCommands, fileCommands, setVariableLogic,
-            tabManager, hotkeyManager, projectManager, fileWatchManager, messenger, themingService)
+            tabManager, hotkeyManager, projectManager, fileWatchManager, messenger, themingService, pluginManager)
     {
         _canvasRedrawScheduler = canvasRedrawScheduler;
     }
