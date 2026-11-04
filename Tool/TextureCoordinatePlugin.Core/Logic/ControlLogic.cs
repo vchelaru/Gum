@@ -78,7 +78,7 @@ public class TextureCoordinateDisplayController : ITextureCoordinateDisplayContr
 
     // The one decision point for which gesture applies a plugin region. Double-click is the only choice
     // for now; a user setting can make it Click later without touching the code below.
-    private readonly RegionGesture _regionApplyGesture = RegionGesture.DoubleClick;
+    private readonly RegionGesture _regionApplyGesture = RegionGesture.Click;
     private readonly CanvasDisplayScale _displayScale = new CanvasDisplayScale();
 
     bool _isSnapToGridEnabled;
@@ -160,6 +160,8 @@ public class TextureCoordinateDisplayController : ITextureCoordinateDisplayContr
         //_guiCommands.AddWinformsControl(control, "Texture Coordinates", TabLocation.Right);
 
         var pluginTab = _tabManager.AddControl(_view.View, "Texture Coordinates", TabLocation.RightBottom);
+        innerControl.Click += (_, _) =>
+            HandleRegionGesture(RegionGesture.Click, innerControl);
         innerControl.DoubleClick += (_, _) =>
             HandleRegionDoubleClicked(innerControl);
 
@@ -565,6 +567,22 @@ public class TextureCoordinateDisplayController : ITextureCoordinateDisplayContr
     // rectangle. Which gesture applies regions is decided only by _regionApplyGesture.
     private void HandleRegionGesture(RegionGesture gesture, ImageRegionSelectionCore control)
     {
+        // The user clicked where they are looking: applying the rectangle must not move the camera.
+        _keepCameraWhileApplying = true;
+        try
+        {
+            ApplyRegionGesture(gesture, control);
+        }
+        finally
+        {
+            _keepCameraWhileApplying = false;
+        }
+    }
+
+    private bool _keepCameraWhileApplying;
+
+    private void ApplyRegionGesture(RegionGesture gesture, ImageRegionSelectionCore control)
+    {
         if (_currentExposedSource != null) return;
 
         var doubleClickInstance = _selectedState.SelectedInstance;
@@ -577,12 +595,19 @@ public class TextureCoordinateDisplayController : ITextureCoordinateDisplayContr
             }
         }
 
-        float worldX = control.XnaCursor.GetWorldX(control.SystemManagers);
-        float worldY = control.XnaCursor.GetWorldY(control.SystemManagers);
-        TextureRegion? region = gesture == _regionApplyGesture ? _regionSet.HitTest(worldX, worldY) : null;
+        float worldX = InputLibrary.CursorExtensionMethods.GetWorldX(control.XnaCursor, control.SystemManagers);
+        float worldY = InputLibrary.CursorExtensionMethods.GetWorldY(control.XnaCursor, control.SystemManagers);
+        TextureRegion? hit = _regionSet.HitTest(worldX, worldY);
+        TextureRegion? region = gesture == _regionApplyGesture ? hit : null;
         if (region == null && gesture != RegionGesture.DoubleClick)
         {
             // The default rectangle stays a double-click gesture whatever applies regions.
+            return;
+        }
+
+        if (region == null && hit != null)
+        {
+            // The click that started this double-click already applied the region under the cursor.
             return;
         }
 
@@ -601,8 +626,8 @@ public class TextureCoordinateDisplayController : ITextureCoordinateDisplayContr
         {
             graphicalUiElement.TextureAddress = TextureAddress.Custom;
 
-            var selectionRect = region is TextureRegion hit
-                ? new Rectangle(hit.X, hit.Y, hit.Width, hit.Height)
+            var selectionRect = region is TextureRegion applied
+                ? new Rectangle(applied.X, applied.Y, applied.Width, applied.Height)
                 : GetOptimalSelectionRectangle((int)worldX, (int)worldY, graphicalUiElement.TextureWidth, graphicalUiElement.TextureHeight);
 
             graphicalUiElement.TextureLeft = selectionRect.X;
@@ -909,6 +934,12 @@ public class TextureCoordinateDisplayController : ITextureCoordinateDisplayContr
 
     public void CenterCameraOnSelection()
     {
+        if (_keepCameraWhileApplying)
+        {
+            UpdateScrollBarsToTexture();
+            return;
+        }
+
         var camera = SystemManagers.Renderer.Camera;
         _view.InvokeWhenLoaded(() =>
         {

@@ -88,6 +88,12 @@ namespace InputLibrary
             }
         }
 
+        /// <summary>
+        /// True from the first drag-length movement after a primary push until the next push, so on the
+        /// release frame it tells a click apart from the end of a drag.
+        /// </summary>
+        public bool HasDraggedSincePrimaryPush => _hasDraggedSincePush;
+
         public bool PrimaryClick
         {
             get

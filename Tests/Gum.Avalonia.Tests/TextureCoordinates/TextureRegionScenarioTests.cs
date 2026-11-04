@@ -1,3 +1,4 @@
+using TextureCoordinateSelectionPlugin.Logic;
 using Avalonia;
 using Gum.DataTypes;
 using Gum.Managers;
@@ -101,7 +102,7 @@ public class TextureRegionScenarioTests
     }
 
     [SkippableFact]
-    public void ADoubleClickInsideARegion_SetsThatRegionAsOneUndoStep_AndOneUndoRestoresIt()
+    public void AClickInsideARegion_SetsThatRegionAsOneUndoStep_AndOneUndoRestoresIt()
     {
         OnTab(tab =>
         {
@@ -109,7 +110,7 @@ public class TextureRegionScenarioTests
             using IDisposable registration = Register(tab, plugin);
             ComponentSave button = SelectSheetSprite(tab, TextureAddress.EntireTexture);
 
-            DoubleClick(tab, 140, 24); // Coin: 128, 12, 24x24
+            Click(tab, 140, 24); // Coin: 128, 12, 24x24
 
             Value(button, "Icon.TextureAddress").ShouldBe(TextureAddress.Custom);
             Value(button, "Icon.TextureLeft").ShouldBe(128);
@@ -125,6 +126,144 @@ public class TextureRegionScenarioTests
             Value(button, "Icon.TextureTop").ShouldBe(8);
             Value(button, "Icon.TextureWidth").ShouldBe(16);
             Value(button, "Icon.TextureHeight").ShouldBe(16);
+        });
+    }
+
+    [SkippableFact]
+    public void AClickInsideARegion_DoesNotMoveTheCamera()
+    {
+        OnTab(tab =>
+        {
+            SampleRegionPlugin plugin = new SampleRegionPlugin("Sheet.png", SampleRegionPlugin.FromSheet(SampleSpriteSheet.Few));
+            using IDisposable registration = Register(tab, plugin);
+            SelectSheetSprite(tab, TextureAddress.EntireTexture);
+            tab.Frame();
+            tab.Frame();
+            float cameraX = tab.Camera.X;
+            float cameraY = tab.Camera.Y;
+
+            Click(tab, 140, 24);
+            tab.Frame();
+            tab.Frame();
+
+            tab.Camera.X.ShouldBe(cameraX);
+            tab.Camera.Y.ShouldBe(cameraY);
+        });
+    }
+
+    [SkippableFact]
+    public void AClickOutsideEveryRegion_ChangesNothing_AndDoesNotMoveTheCamera()
+    {
+        OnTab(tab =>
+        {
+            SampleRegionPlugin plugin = new SampleRegionPlugin("Sheet.png", SampleRegionPlugin.FromSheet(SampleSpriteSheet.Few));
+            using IDisposable registration = Register(tab, plugin);
+            ComponentSave button = SelectSheetSprite(tab);
+            tab.Frame();
+            tab.Frame();
+            float cameraX = tab.Camera.X;
+            float cameraY = tab.Camera.Y;
+
+            Click(tab, 300, 170); // nothing there
+
+            Value(button, "Icon.TextureLeft").ShouldBe(8, "the current rectangle is untouched");
+            tab.Camera.X.ShouldBe(cameraX);
+            tab.Camera.Y.ShouldBe(cameraY);
+        });
+    }
+
+    [SkippableFact]
+    public void ADoubleClickInsideARegion_KeepsTheRegion_AndDoesNotMoveTheCamera()
+    {
+        OnTab(tab =>
+        {
+            SampleRegionPlugin plugin = new SampleRegionPlugin("Sheet.png", SampleRegionPlugin.FromSheet(SampleSpriteSheet.Few));
+            using IDisposable registration = Register(tab, plugin);
+            ComponentSave button = SelectSheetSprite(tab, TextureAddress.EntireTexture);
+            tab.Frame();
+            tab.Frame();
+            float cameraX = tab.Camera.X;
+            float cameraY = tab.Camera.Y;
+
+            DoubleClick(tab, 140, 24); // Coin: 128, 12, 24x24
+
+            Value(button, "Icon.TextureLeft").ShouldBe(128);
+            Value(button, "Icon.TextureWidth").ShouldBe(24, "the click applied the region and the double-click leaves it");
+            tab.Camera.X.ShouldBe(cameraX);
+            tab.Camera.Y.ShouldBe(cameraY);
+        });
+    }
+
+    [SkippableFact]
+    public void AClickThatBecomesADrag_DoesNotApplyTheRegionUnderTheRelease()
+    {
+        OnTab(tab =>
+        {
+            SampleRegionPlugin plugin = new SampleRegionPlugin("Sheet.png", SampleRegionPlugin.FromSheet(SampleSpriteSheet.Few));
+            using IDisposable registration = Register(tab, plugin);
+            ComponentSave button = SelectSheetSprite(tab);
+            tab.Frame();
+            tab.Frame();
+
+            // A drag across empty space that ends inside Coin: a drag is not a click.
+            tab.Drag(tab.WindowPointOf(300, 170), tab.WindowPointOf(140, 24));
+
+            Value(button, "Icon.TextureLeft").ShouldNotBe(128, "the rectangle was not replaced by Coin");
+            Value(button, "Icon.TextureWidth").ShouldBe(16);
+        });
+    }
+
+    [SkippableFact]
+    public void TheHoverLabel_SitsAboveItsRegionWithAGap_AndTheSameSizeAtEveryZoom()
+    {
+        OnTab(tab =>
+        {
+            SampleRegionPlugin plugin = new SampleRegionPlugin("Sheet.png", SampleRegionPlugin.FromSheet(SampleSpriteSheet.Few));
+            using IDisposable registration = Register(tab, plugin);
+            SelectSheetSprite(tab);
+            TextureRegionOverlayManager overlay = tab.Plugin.DisplayController.RegionOverlay;
+            TextureRegion door = new TextureRegion("Door", 96, 80, 48, 96);
+            float? firstScale = null;
+
+            foreach (int zoom in new[] { 100, 200, 400 })
+            {
+                tab.ViewModel.SelectedZoomLevel = zoom;
+                tab.Frame();
+                tab.Frame();
+                overlay.Hovered = null;
+                overlay.Hovered = door;
+                overlay.Refresh();
+
+                var label = overlay.VisibleLabelPlacement!.Value;
+                float regionTop = (door.Y - tab.Camera.Y) * tab.Camera.Zoom;
+                label.Y.ShouldBeLessThan(regionTop, $"above the region at {zoom}%");
+                (regionTop - (label.Y + label.Height)).ShouldBeGreaterThan(0, $"a gap between text and region at {zoom}%");
+                firstScale ??= label.FontScale;
+                label.FontScale.ShouldBe(firstScale.Value, $"the label does not scale with the zoom ({zoom}%)");
+            }
+        });
+    }
+
+    [SkippableFact]
+    public void TheHoverLabel_FallsBelowItsRegion_WhenThereIsNoRoomAbove()
+    {
+        OnTab(tab =>
+        {
+            SampleRegionPlugin plugin = new SampleRegionPlugin("Sheet.png", SampleRegionPlugin.FromSheet(SampleSpriteSheet.Few));
+            using IDisposable registration = Register(tab, plugin);
+            SelectSheetSprite(tab);
+            tab.Frame();
+            tab.Frame();
+            TextureRegionOverlayManager overlay = tab.Plugin.DisplayController.RegionOverlay;
+            tab.Camera.Y = 0; // the top of the texture is the top of the view
+            TextureRegion hero = new TextureRegion("Hero_Idle", 8, 0, 48, 64);
+
+            overlay.Hovered = hero;
+            overlay.Refresh();
+
+            var label = overlay.VisibleLabelPlacement!.Value;
+            float regionBottom = (hero.Y + hero.Height - tab.Camera.Y) * tab.Camera.Zoom;
+            label.Y.ShouldBeGreaterThan(regionBottom, "below the region");
         });
     }
 
@@ -159,10 +298,10 @@ public class TextureRegionScenarioTests
             using IDisposable registration = Register(tab, plugin);
             ComponentSave button = SelectSheetSprite(tab);
 
-            DoubleClick(tab, 70, 70);
+            Click(tab, 70, 70);
             Value(button, "Icon.TextureWidth").ShouldBe(20, "the small region on top of the panel");
 
-            DoubleClick(tab, 150, 100);
+            Click(tab, 150, 100);
             Value(button, "Icon.TextureWidth").ShouldBe(200, $"the panel where the small region is not; outlines {tab.Plugin.DisplayController.RegionOverlay.VisibleOutlineCount} {tab.Describe()}");
         });
     }
@@ -180,7 +319,7 @@ public class TextureRegionScenarioTests
 
             tab.Tab.IsVisible.ShouldBeTrue(tab.Describe());
             tab.Plugin.DisplayController.RegionOverlay.VisibleOutlineCount.ShouldBe(SampleSpriteSheet.Few.Count);
-            DoubleClick(tab, 140, 24);
+            Click(tab, 140, 24);
             Value(button, "Icon.TextureLeft").ShouldBe(128);
         });
     }
@@ -256,6 +395,15 @@ public class TextureRegionScenarioTests
 
     // A double-click does not auto-save, so read the edited state itself.
     private static object? Value(ComponentSave owner, string name) => owner.DefaultState!.GetValue(name);
+
+    internal static void Click(TextureCoordinateTabHarness tab, float textureX, float textureY)
+    {
+        // The camera re-centers on a new selection a frame later; settle it before aiming.
+        tab.Frame();
+        tab.Frame();
+        Point point = tab.WindowPointOf(textureX, textureY);
+        tab.Drag(point, point);
+    }
 
     internal static void DoubleClick(TextureCoordinateTabHarness tab, float textureX, float textureY)
     {

@@ -28,22 +28,29 @@ internal static class SampleSpriteSheet
         ("Torch", 272, 80, 32, 64),
     };
 
-    /// <summary>Sixty equal tiles, the "many regions" case.</summary>
+    /// <summary>Sixty sprites of varying size, the "many regions" case.</summary>
     public static IReadOnlyList<(string Name, int X, int Y, int Width, int Height)> Sixty()
     {
-        List<(string, int, int, int, int)> tiles = new List<(string, int, int, int, int)>();
+        List<(string, int, int, int, int)> sprites = new List<(string, int, int, int, int)>();
         for (int row = 0; row < 6; row++)
         {
+            int x = 3;
             for (int column = 0; column < 10; column++)
             {
-                tiles.Add(($"Tile_{row * 10 + column:00}", column * 32, row * 32, 32, 32));
+                int width = 20 + (row * 7 + column * 5) % 10;
+                int height = 22 + (row + column * 3) % 8;
+                sprites.Add(($"Sprite_{row * 10 + column:00}", x, row * 32 + 1 + column % 3, width, height));
+                x += width + 3;
             }
         }
-        return tiles;
+        return sprites;
     }
 
     /// <summary>Writes the sheet: a dark background with a tinted block per <see cref="Few"/> region.</summary>
-    public static void Write(string path)
+    public static void Write(string path) => Write(path, Few);
+
+    /// <summary>Writes the sheet with a tinted block per region in <paramref name="regions"/>.</summary>
+    public static void Write(string path, IReadOnlyList<(string Name, int X, int Y, int Width, int Height)> regions)
     {
         byte[] pixels = new byte[Width * Height * 4];
         for (int y = 0; y < Height; y++)
@@ -55,9 +62,9 @@ internal static class SampleSpriteSheet
             }
         }
 
-        for (int i = 0; i < Few.Count; i++)
+        for (int i = 0; i < regions.Count; i++)
         {
-            var region = Few[i];
+            var region = regions[i];
             byte red = (byte)(90 + (i * 53) % 150);
             byte green = (byte)(80 + (i * 97) % 160);
             byte blue = (byte)(100 + (i * 29) % 140);

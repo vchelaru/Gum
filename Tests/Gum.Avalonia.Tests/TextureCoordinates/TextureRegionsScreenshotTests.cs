@@ -42,21 +42,44 @@ public class TextureRegionsScreenshotTests
     });
 
     [SkippableFact]
+    public void PixelSheet() => PrScreenshot.Run(() =>
+    {
+        Skip.IfNot(TextureCoordinateTabHarness.CanRun, TextureCoordinateTabHarness.SkipReason);
+        using TextureCoordinateTabHarness tab = new TextureCoordinateTabHarness();
+        using IDisposable registration = TextureRegionScenarioTests.Register(
+            tab, new SampleRegionPlugin("Sheet.png", SampleRegionPlugin.FromSheet(PixelSpriteSheet.Frames)));
+        ComponentSave button = tab.Project.AddComponent("Button");
+        PixelSpriteSheet.Write(Path.Combine(tab.Project.ProjectFolder, "Sheet.png"));
+        var glass = PixelSpriteSheet.Frames[7];
+        InstanceSave icon = tab.AddSprite(button, "Icon", "Sheet.png", glass.X, glass.Y, glass.Width, glass.Height);
+        // Zoom first, then select, so the resize handles are placed for the final zoom.
+        tab.ViewModel.SelectedZoomLevel = 400;
+        tab.Select(icon);
+        var crate = PixelSpriteSheet.Frames[6];
+        SaveInMainWindow(tab, "texture-regions-pixel", () =>
+        {
+            tab.Plugin.DisplayController.RegionOverlay.Hovered = new TextureRegion(crate.Name, crate.X, crate.Y, crate.Width, crate.Height);
+        }, PixelSpriteSheet.Width, PixelSpriteSheet.Height, 400);
+    });
+
+    [SkippableFact]
     public void SixtyRegions() => PrScreenshot.Run(() =>
     {
         Skip.IfNot(TextureCoordinateTabHarness.CanRun, TextureCoordinateTabHarness.SkipReason);
         using TextureCoordinateTabHarness tab = new TextureCoordinateTabHarness();
         using IDisposable registration = TextureRegionScenarioTests.Register(
             tab, new SampleRegionPlugin("Sheet.png", SampleRegionPlugin.FromSheet(SampleSpriteSheet.Sixty())));
-        SelectSheetSprite(tab, left: 64, top: 32, width: 32, height: 32);
+        var sixty = SampleSpriteSheet.Sixty();
+        var current = sixty[12];
+        SelectSheetSprite(tab, current.X, current.Y, current.Width, current.Height, sixty);
         SaveInMainWindow(tab, "texture-regions-sixty", () =>
-            tab.Plugin.DisplayController.RegionOverlay.Hovered = new TextureRegion("Tile_27", 224, 64, 32, 32));
+            tab.Plugin.DisplayController.RegionOverlay.Hovered = new TextureRegion(SampleSpriteSheet.Sixty()[27].Name, SampleSpriteSheet.Sixty()[27].X, SampleSpriteSheet.Sixty()[27].Y, SampleSpriteSheet.Sixty()[27].Width, SampleSpriteSheet.Sixty()[27].Height));
     });
 
-    internal static InstanceSave SelectSheetSprite(TextureCoordinateTabHarness tab, int left = 64, int top = 8, int width = 48, int height = 64)
+    internal static InstanceSave SelectSheetSprite(TextureCoordinateTabHarness tab, int left = 64, int top = 8, int width = 48, int height = 64, IReadOnlyList<(string Name, int X, int Y, int Width, int Height)>? sheet = null)
     {
         ComponentSave button = tab.Project.AddComponent("Button");
-        SampleSpriteSheet.Write(Path.Combine(tab.Project.ProjectFolder, "Sheet.png"));
+        SampleSpriteSheet.Write(Path.Combine(tab.Project.ProjectFolder, "Sheet.png"), sheet ?? SampleSpriteSheet.Few);
         // Hero_Run is the current rectangle unless told otherwise.
         InstanceSave icon = tab.AddSprite(button, "Icon", "Sheet.png", left, top, width, height);
         tab.Select(icon);
@@ -67,7 +90,7 @@ public class TextureRegionsScreenshotTests
     /// Shows the tab in the real main window (both themes, four zoom levels) as
     /// <paramref name="name"/>-&lt;theme&gt;-zoom-&lt;size&gt;.png.
     /// </summary>
-    internal static void SaveInMainWindow(TextureCoordinateTabHarness tab, string name, Action? beforeCapture = null)
+    internal static void SaveInMainWindow(TextureCoordinateTabHarness tab, string name, Action? beforeCapture = null, int sheetWidth = SampleSpriteSheet.Width, int sheetHeight = SampleSpriteSheet.Height, int zoomLevel = 200)
     {
         tab.Input.Window.Content = null;
         tab.Editor.Input.Window.Content = null;
@@ -89,11 +112,15 @@ public class TextureRegionsScreenshotTests
         foreach (ThemeVariant theme in new[] { ThemeVariant.Dark, ThemeVariant.Light })
         {
             window.RequestedThemeVariant = theme;
-            tab.ViewModel.SelectedZoomLevel = 200;
+            tab.ViewModel.SelectedZoomLevel = zoomLevel;
             Dispatcher.UIThread.RunJobs();
             tab.Frame();
-            tab.Camera.X = SampleSpriteSheet.Width / 2f - tab.Camera.ClientWidth / (2 * tab.Camera.Zoom);
-            tab.Camera.Y = SampleSpriteSheet.Height / 2f - tab.Camera.ClientHeight / (2 * tab.Camera.Zoom);
+            tab.Camera.X = sheetWidth / 2f - tab.Camera.ClientWidth / (2 * tab.Camera.Zoom);
+            tab.Camera.Y = sheetHeight / 2f - tab.Camera.ClientHeight / (2 * tab.Camera.Zoom);
+            tab.Frame();
+            // After the zoom is final so the hover label is sized for it.
+            beforeCapture?.Invoke();
+            tab.Plugin.DisplayController.RegionOverlay.Refresh();
             tab.Frame();
             PrScreenshot.SaveWindowAtZoomLevels(window, $"{name}-{theme.Key.ToString()!.ToLowerInvariant()}");
         }

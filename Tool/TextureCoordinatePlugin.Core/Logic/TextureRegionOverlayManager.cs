@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Gum.Managers;
 using Gum.Plugins;
 using Gum.Services;
 using RenderingLibrary;
@@ -23,9 +24,12 @@ public class TextureRegionOverlayManager : IVisualOverlayManager
 
     private readonly ICanvasDisplayScale _displayScale;
     private readonly List<LineRectangle> _outlines = new List<LineRectangle>();
+
+    // A dark line hugging the outside of each white outline, so it stays visible on light sprites and
+    // on the checkerboard alike.
+    private readonly List<LineRectangle> _underlays = new List<LineRectangle>();
     private SystemManagers? _systemManagers;
     private SolidRectangle? _tint;
-    private SolidRectangle? _labelBackground;
     private Text? _labelText;
 
     private TextureRegionSet _regions = TextureRegionSet.Empty;
@@ -97,6 +101,10 @@ public class TextureRegionOverlayManager : IVisualOverlayManager
     /// <summary>The hovered region's name while its label is drawn, or null.</summary>
     public string? VisibleLabel => _labelText?.Visible == true ? _labelText.RawText : null;
 
+    /// <summary>The label's top-left in screen pixels and its size on screen, while it is drawn, or null.</summary>
+    public (float X, float Y, float Height, float FontScale)? VisibleLabelPlacement =>
+        _labelText?.Visible == true ? (_labelText.X, _labelText.Y, _labelText.WrappedTextHeight, _labelText.FontScale) : null;
+
     public void Initialize(SystemManagers systemManagers)
     {
         _systemManagers = systemManagers;
@@ -106,19 +114,33 @@ public class TextureRegionOverlayManager : IVisualOverlayManager
         _tint.Visible = false;
         systemManagers.ShapeManager.Add(_tint);
 
-        _labelBackground = new SolidRectangle();
-        _labelBackground.Z = OutlineZ + 0.5f;
-        _labelBackground.Color = Color.FromArgb(217, 0, 0, 0);
-        _labelBackground.Visible = false;
-        systemManagers.ShapeManager.Add(_labelBackground);
+
+        // The editor's own tool font, drawn with its built-in outline like the ruler text, so the name
+        // reads on any background without a box behind it.
+        IToolFontService fonts = new ToolFontService();
+        try
+        {
+            fonts.Initialize();
+        }
+        catch (System.IO.IOException)
+        {
+            // No tool font beside the executable: the default font still draws the name.
+        }
 
         _labelText = new Text(systemManagers);
+        _labelText.BitmapFont = fonts.ToolFont;
         _labelText.RenderBoundary = false;
         _labelText.Width = null;
         _labelText.Z = OutlineZ + 0.6f;
         _labelText.Color = Color.White;
         _labelText.Visible = false;
-        systemManagers.TextManager.Add(_labelText);
+
+        // Screen space, like the ruler text: the same pixel size and crispness at every zoom.
+        Layer labelLayer = systemManagers.Renderer.AddLayer();
+        labelLayer.LayerCameraSettings = new LayerCameraSettings();
+        labelLayer.LayerCameraSettings.IsInScreenSpace = true;
+        labelLayer.Name = "Texture region label layer";
+        systemManagers.TextManager.Add(_labelText, labelLayer);
     }
 
     public void Refresh()
@@ -142,16 +164,35 @@ public class TextureRegionOverlayManager : IVisualOverlayManager
             outline.Visible = false;
             _systemManagers.ShapeManager.Add(outline);
             _outlines.Add(outline);
+
+            LineRectangle underlay = new LineRectangle(_systemManagers);
+            underlay.IsDotted = false;
+            underlay.Z = OutlineZ - 0.1f;
+            underlay.Visible = false;
+            _systemManagers.ShapeManager.Add(underlay);
+            _underlays.Add(underlay);
         }
 
+        // One screen pixel in texture units: how far the dark line sits outside the white one.
+        float outside = pixel / _systemManagers.Renderer.Camera.Zoom;
         for (int i = 0; i < _outlines.Count; i++)
         {
             LineRectangle outline = _outlines[i];
+            LineRectangle underlay = _underlays[i];
             if (i >= regions.Count)
             {
                 outline.Visible = false;
+                underlay.Visible = false;
                 continue;
             }
+
+            underlay.X = regions[i].X - outside;
+            underlay.Y = regions[i].Y - outside;
+            underlay.Width = regions[i].Width + 2 * outside;
+            underlay.Height = regions[i].Height + 2 * outside;
+            underlay.LinePixelWidth = regions[i] == _hovered ? pixel * 2 : pixel;
+            underlay.Color = Color.FromArgb(faint ? 170 : 215, 0, 0, 0);
+            underlay.Visible = true;
 
             TextureRegion region = regions[i];
             bool isCurrent = IsCurrent(region);
@@ -161,7 +202,7 @@ public class TextureRegionOverlayManager : IVisualOverlayManager
             outline.Width = region.Width;
             outline.Height = region.Height;
             outline.LinePixelWidth = isCurrent ? pixel * 2 : pixel;
-            outline.Color = Color.FromArgb(emphasized ? 242 : faint ? 102 : 178, 255, 255, 255);
+            outline.Color = Color.FromArgb(emphasized ? 255 : faint ? 215 : 240, 255, 255, 255);
             outline.Visible = true;
         }
 
@@ -206,30 +247,30 @@ public class TextureRegionOverlayManager : IVisualOverlayManager
 
     private void RefreshLabel()
     {
-        if (_labelText == null || _labelBackground == null || _systemManagers == null)
+        if (_labelText == null || _systemManagers == null)
         {
             return;
         }
 
         bool show = _hovered != null;
         _labelText.Visible = show;
-        _labelBackground.Visible = show;
         if (_hovered is not TextureRegion region)
         {
             return;
         }
 
-        // Constant on-screen size however far the canvas is zoomed.
-        float scale = _displayScale.DisplayScale / _systemManagers.Renderer.Camera.Zoom;
-        float inset = 2 * scale;
+        // The label layer is in screen space, so positions are screen pixels and the size never follows the zoom.
+        Camera camera = _systemManagers.Renderer.Camera;
+        float scale = _displayScale.DisplayScale;
+        float gap = 6 * scale;
         _labelText.RawText = region.Name;
-        // The default font is 18 px tall; the name is meant to read at about 11 px.
-        _labelText.FontScale = scale * 0.6f;
-        _labelText.X = region.X + inset + 3 * scale;
-        _labelText.Y = region.Y + inset + 1 * scale;
-        _labelBackground.X = region.X + inset;
-        _labelBackground.Y = region.Y + inset;
-        _labelBackground.Width = _labelText.WrappedTextWidth + 6 * scale;
-        _labelBackground.Height = _labelText.WrappedTextHeight + 2 * scale;
+        _labelText.FontScale = scale;
+        float left = (region.X - camera.X) * camera.Zoom;
+        float top = (region.Y - camera.Y) * camera.Zoom;
+        float bottom = top + region.Height * camera.Zoom;
+        float textHeight = _labelText.WrappedTextHeight;
+        _labelText.X = left;
+        // Above the region so the sprite stays visible; below it when there is no room above.
+        _labelText.Y = top - gap - textHeight >= 0 ? top - gap - textHeight : bottom + gap;
     }
 }
