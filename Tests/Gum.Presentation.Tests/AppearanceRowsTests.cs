@@ -97,6 +97,25 @@ public class AppearanceRowsTests
     }
 
     [Fact]
+    public void ResetAll_IsOnlyAvailableWhileAnyColorIsCustom_AndResetsEveryChangedColor()
+    {
+        (FakeThemingService service, ThemingDialogViewModel viewModel, AppearanceRows rows) = Create();
+        viewModel.HasAnyExplicitColor.ShouldBeFalse();
+
+        viewModel.AccentColor = Color.FromArgb(255, 1, 2, 3);
+        viewModel.GuideLineColor = Color.FromArgb(255, 4, 5, 6);
+        viewModel.HasAnyExplicitColor.ShouldBeTrue();
+
+        viewModel.ResetCommand.Execute(null);
+
+        service.Accent.ShouldBeNull();
+        service.GuideLine.ShouldBeNull();
+        viewModel.HasAnyExplicitColor.ShouldBeFalse();
+        rows.BuildCategories().SelectMany(section => section.Members).Where(member => member.ResetAction != null)
+            .ShouldAllBe(member => !member.CanReset);
+    }
+
+    [Fact]
     public void ResetOfOneColor_LeavesTheOthersAlone()
     {
         (FakeThemingService service, ThemingDialogViewModel viewModel, AppearanceRows rows) = Create();

@@ -100,6 +100,56 @@ public class SettingsDialogViewTests
     }
 
     [AvaloniaFact]
+    public void AppearancePage_ResetAll_IsDisabledAtDefaults_AndResetsEveryChangedColorAtOnce()
+    {
+        Gum.Dialogs.IThemingService theming = TestAppBuilder.Services.GetRequiredService<Gum.Dialogs.IThemingService>();
+        System.Drawing.Color? originalGuide = theming.GuideLine;
+        System.Drawing.Color? originalAccent = theming.Accent;
+        theming.GuideLine = null;
+        theming.Accent = null;
+        try
+        {
+            SettingsDialogViewModel viewModel = TestAppBuilder.Services.GetRequiredService<SettingsDialogViewModel>();
+            viewModel.SelectPage(SettingsPageIds.Appearance);
+            DialogWindow window = Open(viewModel);
+            Button ResetAll() => window.GetVisualDescendants().OfType<Button>().Single(button => button.Content as string == "Reset All");
+            List<Button> Resets() => window.GetVisualDescendants().OfType<Button>().Where(button => button.Content as string == "↺").ToList();
+            ResetAll().IsEnabled.ShouldBeFalse("no color differs from its default");
+
+            theming.GuideLine = System.Drawing.Color.FromArgb(255, 1, 2, 3);
+            theming.Accent = System.Drawing.Color.FromArgb(255, 4, 5, 6);
+            viewModel.SelectPage(SettingsPageIds.General);
+            viewModel.SelectPage(SettingsPageIds.Appearance);
+            Layout(window);
+            ResetAll().IsEnabled.ShouldBeTrue();
+            Resets().Count(button => button.IsVisible).ShouldBe(2);
+
+            // It sits below the last row, inside the page's width, and its label is not clipped.
+            Button resetAll = ResetAll();
+            global::Avalonia.Point buttonTop = resetAll.TranslatePoint(new global::Avalonia.Point(0, 0), window)!.Value;
+            double lastRowBottom = window.GetVisualDescendants().OfType<Gum.Avalonia.Plugins.VariableGrid.ColorDisplay>()
+                .Max(display => display.TranslatePoint(new global::Avalonia.Point(0, display.Bounds.Height), window)!.Value.Y);
+            buttonTop.Y.ShouldBeGreaterThan(lastRowBottom, "Reset All must not overlap the rows");
+            resetAll.Bounds.Width.ShouldBeGreaterThanOrEqualTo(resetAll.DesiredSize.Width);
+            (buttonTop.X + resetAll.Bounds.Width).ShouldBeLessThan(window.Bounds.Width);
+
+            ResetAll().RaiseEvent(new global::Avalonia.Interactivity.RoutedEventArgs(Button.ClickEvent));
+            Layout(window);
+
+            theming.GuideLine.ShouldBeNull();
+            theming.Accent.ShouldBeNull();
+            Resets().ShouldAllBe(button => !button.IsVisible);
+            ResetAll().IsEnabled.ShouldBeFalse();
+            window.Close();
+        }
+        finally
+        {
+            theming.GuideLine = originalGuide;
+            theming.Accent = originalAccent;
+        }
+    }
+
+    [AvaloniaFact]
     public void AppearancePage_KeepsItsChoicesNarrow_AndLeftAlignedWithTheirLabels()
     {
         SettingsDialogViewModel viewModel = TestAppBuilder.Services.GetRequiredService<SettingsDialogViewModel>();

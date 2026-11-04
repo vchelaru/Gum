@@ -33,10 +33,10 @@ The Settings window is available in November 2026, or now if building Gum from s
 
 The page has three sections. **Theme** holds **Theme mode** (**System**, **Light**, or **Dark**) and **Accent color**. **Editor background** holds **Editor background** and **Checker color**. **Outlines and guides** holds **Outline color**, **Guide line color**, and **Guide text color**.
 
-Each color row has a swatch that opens a color picker and a field for typing a hex value. A color you have changed also shows a reset button at the end of its row, which returns just that color to its default.
+Each color row has a swatch that opens a color picker and a field for typing a hex value. A color you have changed also shows a reset button at the end of its row, which returns just that color to its default. **Reset All** below the rows returns every changed color to its default, and is disabled while none differ.
 
 {% hint style="info" %}
-The grouped layout, hints under each setting, and highlighting of search matches on this page are available in December 2026, or now if building Gum from source. Before then the page had a single **Reset All** button.
+The grouped layout, hints under each setting, and highlighting of search matches on this page are available in December 2026, or now if building Gum from source. Before then the page had a single **Reset All** button and no per-color reset.
 {% endhint %}
 
 ### Keyboard shortcuts
