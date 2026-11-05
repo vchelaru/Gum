@@ -64,6 +64,12 @@ public class VariableCategoryCopyPasteUndoTests : BaseTestClass
         public void RemoveKeyframesPlaying(ElementSave element, string instanceName)
         {
         }
+
+        public bool CanRenameAnimation(ElementSave element, string toName) => true;
+
+        public void RenameAnimationReferences(ElementSave element, string fromName, string toName)
+        {
+        }
     }
 
     public VariableCategoryCopyPasteUndoTests()
