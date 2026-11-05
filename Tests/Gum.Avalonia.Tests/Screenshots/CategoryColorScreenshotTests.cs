@@ -1,4 +1,11 @@
+using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Headless;
+using Avalonia.Input;
+using Gum.Avalonia.Services;
+using Gum.Services;
+using Gum.Plugins.InternalPlugins.StatePlugin.ViewModels;
+using Shouldly;
 using Avalonia.Styling;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
@@ -98,11 +105,60 @@ public class CategoryColorScreenshotTests
             ScreenshotWindow.Pump(window);
             PrScreenshot.SaveWindowAtZoomLevels(window, $"animations-{theme.Key.ToString()!.ToLowerInvariant()}");
         }
+
+        // The States tab's right-click menu on a colored category, with the Color submenu open.
+        Reselect();
+        statesVm().Categories.Single(c => c.Title == "Size").IsExpanded = true;
+        TreeView treeView = window.GetVisualDescendants().OfType<AvaloniaStateTreeView>().Single().GetVisualDescendants().OfType<TreeView>().First();
+        ContextMenu menu = treeView.ContextMenu!;
+        IAppScaleProvider scale = TestAppBuilder.Services.GetRequiredService<IAppScaleProvider>();
+        using IDisposable follower = AppWideWindowInput.FollowBaseFontSize(window, scale);
+        double originalSize = scale.BaseFontSize;
+        try
+        {
+            foreach (ThemeVariant theme in new[] { ThemeVariant.Dark, ThemeVariant.Light })
+            {
+                window.RequestedThemeVariant = theme;
+                string themeName = theme.Key.ToString()!.ToLowerInvariant();
+                foreach (double zoom in PrScreenshot.ZoomLevels)
+                {
+                    scale.BaseFontSize = zoom;
+                    ScreenshotWindow.Pump(window);
+                    statesVm().Categories.Single(c => c.Title == "Layout").IsSelected = true;
+                    ScreenshotWindow.Pump(window);
+                    Control row = window.GetVisualDescendants().OfType<TreeViewItem>().First(t => (t.DataContext as StateTreeViewItem)?.Title == "Layout");
+                    Point at = row.TranslatePoint(new Point(row.Bounds.Width * 0.4, row.Bounds.Height / 2), window)!.Value;
+                    window.MouseMove(at);
+                    window.MouseDown(at, MouseButton.Right);
+                    window.MouseUp(at, MouseButton.Right);
+                    for (int i = 0; i < 100 && !menu.IsOpen; i++)
+                    {
+                        Thread.Sleep(20);
+                        ScreenshotWindow.Pump(window);
+                    }
+                    menu.IsOpen.ShouldBeTrue("The category right-click did not open the menu.");
+                    menu.Items.OfType<MenuItem>().Single(item => item.Header as string == "Color").IsSubMenuOpen = true;
+                    ScreenshotWindow.Pump(window);
+                    Thread.Sleep(100);
+                    PrScreenshot.SaveWindow(window, $"menu-{themeName}-zoom-{zoom}");
+                    menu.Close();
+                    ScreenshotWindow.Pump(window);
+                }
+            }
+        }
+        finally
+        {
+            scale.BaseFontSize = originalSize;
+        }
     });
 
-    /// <summary>Marks categories with colors. Empty on a tree that predates the feature.</summary>
+    /// <summary>Marks four of the five categories with colors; Misc stays uncolored.</summary>
     private static void ApplyColors(ComponentSave button)
     {
+        foreach ((string name, string color) in new[] { ("Size", "Indigo"), ("Look", "Magenta"), ("Visibility", "Teal"), ("Layout", "Brown") })
+        {
+            button.Categories.Single(category => category.Name == name).ColorName = color;
+        }
     }
 
     internal static ComponentSave BuildProject(ProjectTreeHarness tree)

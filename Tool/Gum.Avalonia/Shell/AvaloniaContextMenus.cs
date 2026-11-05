@@ -1,6 +1,9 @@
 using System;
 using System.Collections.Generic;
+using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Layout;
+using Avalonia.Media;
 using Avalonia.Input;
 using AvaloniaDataUi;
 using Gum.Avalonia.Plugins.TreeView;
@@ -72,13 +75,21 @@ public static class AvaloniaContextMenus
 
         MenuItem menuItem = new MenuItem
         {
-            Header = item.Text,
+            Header = item.ColorName == null ? item.Text : CreateColoredHeader(item.Text, item.ColorName),
             IsEnabled = item.IsEnabled,
             InputGesture = item.Shortcut?.ToKeyGesture(commandModifiers),
         };
         if (item.IconKey != null)
         {
             menuItem.Icon = CreateIcon(item.IconKey, iconSize);
+        }
+        else if (item.IsChecked)
+        {
+            menuItem.Icon = FollowZoom(GumFluentIcons.Create(FluentIcons.Common.Icon.Checkmark, iconSize), iconSize);
+        }
+        else if (item.IconColorName != null)
+        {
+            menuItem.Icon = CreateColorDot(item.IconColorName);
         }
         if (item.Action != null)
         {
@@ -89,6 +100,23 @@ public static class AvaloniaContextMenus
             menuItem.Items.Add(ToMenuItem(child, iconSize, commandModifiers));
         }
         return menuItem;
+    }
+
+    // A dot in a palette color (see CategoryColors), painted from the theme so it follows light and dark.
+    private static Border CreateColorDot(string colorName)
+    {
+        Border dot = new Border { CornerRadius = new CornerRadius(100), VerticalAlignment = VerticalAlignment.Center };
+        AvaloniaTreeIcons.FollowBaseFontSize(dot, 10);
+        CategoryColorBrushes.Apply(dot, Border.BackgroundProperty, colorName);
+        return dot;
+    }
+
+    private static StackPanel CreateColoredHeader(string text, string colorName)
+    {
+        StackPanel header = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 6 };
+        header.Children.Add(CreateColorDot(colorName));
+        header.Children.Add(new TextBlock { Text = text, VerticalAlignment = VerticalAlignment.Center });
+        return header;
     }
 
     // The States tree's category and state glyphs are Fluent System Icons, as in the WPF head; every
