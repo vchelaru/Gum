@@ -165,6 +165,9 @@
     <Variable Type="VerticalAlignment" Name="TextInstance.VerticalAlignment" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
     </Variable>
+    <Variable Type="float" Name="TextInstance.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
     <Variable Type="DimensionUnitType" Name="TextInstance.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
     </Variable>
