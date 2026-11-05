@@ -1,68 +1,48 @@
 using System;
-using System.IO;
-using System.Linq;
 using Microsoft.Xna.Framework.Graphics;
 using ShadowDusk.Compiler;
-using ShadowDusk.Compiler.Slang;
 using ShadowDusk.Core;
 
 namespace Gum;
 
 /// <summary>
-/// Compiles an <c>.fx</c> or <c>.slang</c> shader file with ShadowDusk into an <see cref="Effect"/>.
+/// Compiles a shader ShadowDusk recognizes from its content (an <c>.fx</c> effect or Slang) into an
+/// <see cref="Effect"/>. The file name plays no part in telling the formats apart.
 /// </summary>
 internal static class ShadowDuskEffectLoader
 {
-    public static bool CanLoad(string path)
-    {
-        string extension = Path.GetExtension(path);
-        return string.Equals(extension, ".fx", StringComparison.OrdinalIgnoreCase)
-            || string.Equals(extension, SlangFrontend.Extension, StringComparison.OrdinalIgnoreCase);
-    }
+    /// <summary>
+    /// Whether ShadowDusk reads <paramref name="text"/>. False means it is some other shader language, which a
+    /// resolver further down the chain may handle.
+    /// </summary>
+    public static bool CanLoad(string text, string name) => ShaderConverter.CanConvert(text, name);
 
-    public static Effect Load(GraphicsDevice graphicsDevice, string path, PlatformTarget target)
+    /// <summary>
+    /// Compiles <paramref name="text"/>, or returns null when ShadowDusk reports the input unsupported
+    /// (nothing was attempted). A real compile error throws.
+    /// </summary>
+    public static Effect? TryLoad(GraphicsDevice graphicsDevice, string name, string text, PlatformTarget target)
     {
-        string fxSource = ReadFxSource(path);
-
         // SourceFileName makes a relative #include resolve next to the shader.
-        ReportingIncludeResolver includes = new ReportingIncludeResolver(path);
-        EffectCompiler compiler = new EffectCompiler();
-        Result<CompiledShader, ShaderError[]> result = compiler.Compile(
-            fxSource,
-            new CompilerOptions { Target = target, SourceFileName = path, IncludeResolver = includes });
+        ReportingIncludeResolver includes = new ReportingIncludeResolver(name);
+        Result<CompiledShader, ShaderError[]> result = ShaderConverter.Compile(
+            new EffectCompiler(),
+            text,
+            new CompilerOptions { Target = target, SourceFileName = name, IncludeResolver = includes },
+            name);
         // Also when the compile failed, so fixing an included file reloads the shader.
         includes.Record();
         if (result.IsFailure)
         {
+            if (ShadowDuskInput.IsUnsupported(result.Error))
+            {
+                return null;
+            }
+
             throw new InvalidOperationException(
-                $"ShadowDusk could not compile '{path}':\n{FormatErrors(result.Error)}");
+                $"ShadowDusk could not compile '{name}':\n{ShadowDuskInput.FormatErrors(result.Error)}");
         }
 
         return new Effect(graphicsDevice, result.Value.Data);
     }
-
-    // Slang has no technique or pass concept, so a .slang file is converted to .fx text first; an .fx
-    // file is already ordinary effect source.
-    private static string ReadFxSource(string path)
-    {
-        string source = File.ReadAllText(path);
-        if (!string.Equals(Path.GetExtension(path), SlangFrontend.Extension, StringComparison.OrdinalIgnoreCase))
-        {
-            return source;
-        }
-
-        Result<SlangFxConversion, ShaderError[]> conversion = SlangFrontend.ConvertToFx(
-            source, new SlangConvertOptions { SourceName = path });
-        if (conversion.IsFailure)
-        {
-            throw new InvalidOperationException(
-                $"ShadowDusk could not convert the Slang shader '{path}':\n{FormatErrors(conversion.Error)}");
-        }
-
-        return conversion.Value.FxText;
-    }
-
-    private static string FormatErrors(ShaderError[] errors) =>
-        string.Join("\n", errors.Select(
-            error => $"{error.File}({error.Line},{error.Column}): {error.Code}: {error.Message}"));
 }

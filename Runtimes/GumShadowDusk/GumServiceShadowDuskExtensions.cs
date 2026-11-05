@@ -14,7 +14,7 @@ public static class GumServiceShadowDuskExtensions
     /// <summary>
     /// Lets <c>SourceShaderFile</c> point at an <c>.fx</c> or <c>.slang</c> file, which ShadowDusk compiles
     /// at runtime into an <see cref="Effect"/> on the service's <see cref="GraphicsDevice"/>, for the graphics
-    /// backend that device uses. Call once at startup. Other extensions keep loading through whatever resolver
+    /// backend that device uses. Call once at startup. A shader ShadowDusk does not read keeps loading through whatever resolver
     /// was registered before this call.
     /// </summary>
     /// <param name="gumService">The service whose graphics device the effects are created on. It does not
@@ -26,19 +26,23 @@ public static class GumServiceShadowDuskExtensions
             throw new ArgumentNullException(nameof(gumService));
         }
 
-        Func<string, object?>? previousResolver = CustomSetPropertyOnRenderable.RenderTargetEffectResolver;
+        Func<ShaderSource, object?>? previousResolver = CustomSetPropertyOnRenderable.RenderTargetEffectSourceResolver;
         PlatformTarget? target = null;
 
-        CustomSetPropertyOnRenderable.RenderTargetEffectResolver = path =>
+        // ShadowDusk goes first and decides from the content whether it reads the shader; an input it does not
+        // read (for example an .sksl or .glsl file) falls through to the resolver registered before this call.
+        CustomSetPropertyOnRenderable.RenderTargetEffectSourceResolver = source =>
         {
-            if (!ShadowDuskEffectLoader.CanLoad(path))
+            string text = source.ReadAllText();
+            if (!ShadowDuskEffectLoader.CanLoad(text, source.Name))
             {
-                return previousResolver?.Invoke(path);
+                return previousResolver?.Invoke(source);
             }
 
             GraphicsDevice graphicsDevice = GetGraphicsDevice(gumService);
             target ??= ShadowDuskTargetDetector.Detect(graphicsDevice);
-            return ShadowDuskEffectLoader.Load(graphicsDevice, path, target.Value);
+            return ShadowDuskEffectLoader.TryLoad(graphicsDevice, source.Name, text, target.Value)
+                ?? previousResolver?.Invoke(source);
         };
     }
 

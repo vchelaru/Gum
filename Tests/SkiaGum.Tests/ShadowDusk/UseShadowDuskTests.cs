@@ -226,4 +226,62 @@ half4 main(float2 coord) {
             File.Delete(path);
         }
     }
+
+    // #7104: ShadowDusk decides from the text, so the file name plays no part.
+    [Theory]
+    [InlineData(".shader", GrayscaleFx)]
+    [InlineData(".txt", GrayscaleSlang)]
+    [InlineData("", GrayscaleFx)]
+    public void SourceShaderFile_FxOrSlangUnderAnyName_GraysTheCompositedPixels(string extension, string source)
+    {
+        string path = WriteTempFile(extension, source);
+        try
+        {
+            SKColor center = DrawRedContainerWithShader(path);
+
+            Math.Abs(center.Red - center.Green).ShouldBeLessThan(20);
+            center.Red.ShouldBeGreaterThan((byte)40);
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
+    [Fact]
+    public void SourceResolver_ConvertsAStreamWithNoFileBehindIt()
+    {
+        ShaderSource source = new ShaderSource(
+            "bundle/shader", () => new MemoryStream(System.Text.Encoding.UTF8.GetBytes(GrayscaleFx)));
+
+        SKRuntimeEffect? effect = CustomSetPropertyOnRenderable.RenderTargetEffectSourceResolver!(source);
+
+        effect.ShouldNotBeNull();
+    }
+
+    [Fact]
+    public void SourceResolver_DeclinesToThePreviousResolver_WhenShadowDuskReportsTheInputUnsupported()
+    {
+        SKRuntimeEffect? sksl = SKRuntimeEffect.CreateShader(GrayscaleSksl, out string _);
+        sksl.ShouldNotBeNull();
+        CustomSetPropertyOnRenderable.RenderTargetEffectSourceResolver = _ => sksl;
+        GumService.Default.UseShadowDusk();
+        ShaderSource source = new ShaderSource(
+            "bundle/shader", () => new MemoryStream(System.Text.Encoding.UTF8.GetBytes(GrayscaleSksl)));
+
+        SKRuntimeEffect? effect = CustomSetPropertyOnRenderable.RenderTargetEffectSourceResolver!(source);
+
+        effect.ShouldBeSameAs(sksl);
+    }
+
+    [Fact]
+    public void SourceResolver_ThrowsRatherThanFallingThrough_WhenARecognizedShaderDoesNotCompile()
+    {
+        CustomSetPropertyOnRenderable.RenderTargetEffectSourceResolver = _ => throw new Xunit.Sdk.XunitException("fell through");
+        GumService.Default.UseShadowDusk();
+        ShaderSource source = new ShaderSource(
+            "broken", () => new MemoryStream(System.Text.Encoding.UTF8.GetBytes(GrayscaleFx.Replace("dot(", "notAFunction("))));
+
+        Should.Throw<InvalidOperationException>(() => CustomSetPropertyOnRenderable.RenderTargetEffectSourceResolver!(source));
+    }
 }

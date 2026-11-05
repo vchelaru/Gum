@@ -12,15 +12,15 @@ public static class GumServiceShadowDuskExtensions
 {
     /// <summary>
     /// Lets <c>SourceShaderFile</c> point at an <c>.fx</c> or <c>.slang</c> file. Call once at startup.
-    /// Other extensions, including <c>.sksl</c>, keep loading the way they did before this call.
+    /// A shader ShadowDusk does not read, including SkSL, keeps loading the way it did before this call.
     /// </summary>
     public static void UseShadowDusk(this GumServiceSkiaBase gumService)
     {
-        Func<string, SKRuntimeEffect?>? previousResolver = CustomSetPropertyOnRenderable.RenderTargetEffectResolver;
+        Func<ShaderSource, SKRuntimeEffect?>? previousResolver = CustomSetPropertyOnRenderable.RenderTargetEffectSourceResolver;
 
-        CustomSetPropertyOnRenderable.RenderTargetEffectResolver = path =>
-            ShadowDuskEffectLoader.CanLoad(path)
-                ? ShadowDuskEffectLoader.Load(path)
-                : previousResolver?.Invoke(path);
+        // ShadowDusk goes first and decides from the content whether it reads the shader. SkiaGum's default
+        // resolver throws for anything it does not recognize, so it can only run after ShadowDusk declines.
+        CustomSetPropertyOnRenderable.RenderTargetEffectSourceResolver = source =>
+            ShadowDuskEffectLoader.TryLoad(source) ?? previousResolver?.Invoke(source);
     }
 }

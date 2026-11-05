@@ -17,12 +17,13 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<!-- 0.22.1 reports the declared defaults on the raylib route (RaylibUniform.DefaultValue). -->
-		<PackageReference Include="ShadowDusk.Compiler" Version="0.22.1" />
+		<!-- 0.22.1 reports the declared defaults on the raylib route (RaylibUniform.DefaultValue); 0.25.0 adds ShaderConverter, which detects the format from the source text. -->
+		<PackageReference Include="ShadowDusk.Compiler" Version="0.25.0" />
 	</ItemGroup>
 
 	<ItemGroup>
 		<ProjectReference Include="..\RaylibGum\RaylibGum.csproj" />
+		<Compile Include="..\GumShadowDusk\ShadowDuskInput.cs" Link="ShadowDuskInput.cs" />
 	</ItemGroup>
 
 	<Import Project="..\RuntimePackage.Analyzers.props" />

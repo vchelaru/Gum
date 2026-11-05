@@ -13,8 +13,8 @@ public static class GumServiceShadowDuskExtensions
     /// Lets <c>SourceShaderFile</c> point at an <c>.fx</c> or <c>.slang</c> file, which ShadowDusk converts to a
     /// GLSL fragment shader at runtime. The defaults the shader declares (<c>float Thickness = 1.0;</c>) are
     /// registered too, so a container that does not set a parameter draws with its declared default. Call
-    /// once at startup, after the window exists. Other extensions keep loading through whatever resolver was
-    /// registered before this call.
+    /// once at startup, after the window exists. A shader ShadowDusk does not read keeps loading through
+    /// whatever resolver was registered before this call.
     /// </summary>
     public static void UseShadowDusk(this GumService gumService)
     {
@@ -24,12 +24,15 @@ public static class GumServiceShadowDuskExtensions
         }
 
         ShadowDuskShaderLoader loader = new ShadowDuskShaderLoader();
-        Func<string, object?>? previousResolver = CustomSetPropertyOnRenderable.RenderTargetEffectResolver;
+        Func<ShaderSource, object?>? previousResolver = CustomSetPropertyOnRenderable.RenderTargetEffectSourceResolver;
 
-        // A Shader is a struct, so the loader's result is boxed into the resolver's object? return.
-        CustomSetPropertyOnRenderable.RenderTargetEffectResolver = path =>
-            ShadowDuskShaderLoader.CanLoad(path)
-                ? loader.Load(path)
-                : previousResolver?.Invoke(path);
+        // ShadowDusk goes first and decides from the content whether it reads the shader; an input it does not
+        // read falls through to the resolver registered before this call. A Shader is a struct, so the
+        // loader's result is boxed into the resolver's object? return.
+        CustomSetPropertyOnRenderable.RenderTargetEffectSourceResolver = source =>
+        {
+            Raylib_cs.Shader? shader = loader.TryLoad(source);
+            return shader.HasValue ? (object)shader.Value : previousResolver?.Invoke(source);
+        };
     }
 }
