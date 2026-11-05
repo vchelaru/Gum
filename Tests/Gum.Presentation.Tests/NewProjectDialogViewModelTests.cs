@@ -857,7 +857,7 @@ public class NewProjectDialogViewModelTests
 
         viewModel.IsRefused.ShouldBeTrue();
         viewModel.RefusalText.ShouldBe("Project already exists: " + GumOnlyPath());
-        viewModel.IsTargetNotEmptyWarningVisible.ShouldBeTrue();
+        viewModel.IsTargetNotEmptyWarningVisible.ShouldBeFalse();
         viewModel.CanExecuteAffirmative().ShouldBeFalse();
     }
 
