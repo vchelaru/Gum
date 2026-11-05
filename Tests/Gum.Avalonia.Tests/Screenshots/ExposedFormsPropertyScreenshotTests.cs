@@ -27,11 +27,14 @@ public class ExposedFormsPropertyScreenshotTests
         button.Behaviors.Add(new ElementBehaviorReference { BehaviorName = "ButtonBehavior" });
         ComponentSave row = grid.Project.AddComponent("OptionsRow");
         InstanceSave inner = grid.Project.AddInstance(row, "ButtonInstance1", "Button");
-        StateSave rowDefault = row.DefaultState!;
+        grid.Select(inner);
+        StateSave rowDefault = grid.SelectedState.SelectedElement!.DefaultState!;
         rowDefault.Variables.Add(new VariableSave { Name = "ButtonInstance1.IsEnabled", Type = "bool", SetsValue = false, ExposedAsName = "IsEnabled" });
         rowDefault.Variables.Add(new VariableSave { Name = "ButtonInstance1.Width", Type = "float", SetsValue = false, ExposedAsName = "ButtonWidth" });
 
-        grid.Select(inner);
+        ElementSave live = grid.SelectedState.SelectedElement!;
+        grid.Select(live);
+        grid.Select(live.Instances.Single());
         grid.Input.TypeInto(grid.View.FilterTextBox, "e");
 
         foreach (ThemeVariant theme in new[] { ThemeVariant.Dark, ThemeVariant.Light })
