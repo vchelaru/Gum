@@ -77,6 +77,7 @@ public class StateReferencingInstanceMember : InstanceMember
         this.DetailText = _entry.DetailText;
         this.DetailLink = _entry.DetailLink;
         this.DetailAction = _entry.DetailAction;
+        this.MarkerColorName = _entry.CategoryColorName;
         this.ToolTipText = _entry.ToolTipText;
         this.SupportsMakeDefault = _entry.SupportsMakeDefault;
 
@@ -288,6 +289,7 @@ public class StateReferencingInstanceMember : InstanceMember
         this.DetailText = _entry.DetailText;
         this.DetailLink = _entry.DetailLink;
         this.DetailAction = _entry.DetailAction;
+        this.MarkerColorName = _entry.CategoryColorName;
         this.ToolTipText = _entry.ToolTipText;
         this.SupportsMakeDefault = _entry.SupportsMakeDefault;
 

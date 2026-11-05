@@ -262,6 +262,9 @@ public abstract class StateAnimationPluginBase : PluginBase, IAnimationUndoProvi
 
         this.CategoryRename += _controller.HandleCategoryRename;
 
+        // A category's color is drawn on the animation list and its keyframes, so rebuild them.
+        this.CategoryColorChange += _ => _controller.RefreshViewModel();
+
         // Deleting a whole category (and its states) doesn't fire the granular StateDelete event, so
         // recompute the view model afterward - otherwise a keyframe that referenced a state in the
         // deleted category keeps its non-error icon until the element is reselected (issue #3392).

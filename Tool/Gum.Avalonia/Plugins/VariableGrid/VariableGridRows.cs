@@ -5,6 +5,7 @@ using Avalonia.Data.Converters;
 using Avalonia.Layout;
 using AvaloniaDataUi;
 using FluentIcons.Avalonia;
+using Gum.Avalonia.Plugins.TreeView;
 using Gum.Avalonia.Themes;
 using WpfDataUi.DataTypes;
 
@@ -37,6 +38,21 @@ internal static class VariableGridRows
     // The WPF IconInline size: 1.25 times the base font.
     private static readonly IValueConverter IconSize = GumChromeStyles.ScaleFontSize(1.25);
 
+    // A thin bar at the row's left edge in the color of the first colored category that sets the variable.
+    // Its width is reserved on every row so labels stay aligned.
+    private static Control CreateCategoryBar()
+    {
+        Border bar = new Border { Margin = new Thickness(0, -1, 2, -1) };
+        Border fill = new Border { CornerRadius = new CornerRadius(1) };
+        bar.Child = fill;
+        AvaloniaTreeIcons.FollowBaseFontSize(bar, Layoutable.MinWidthProperty, 12);
+        AvaloniaTreeIcons.FollowBaseFontSize(fill, Layoutable.WidthProperty, 5);
+        fill.HorizontalAlignment = HorizontalAlignment.Left;
+        CategoryColorBrushes.Follow(bar, fill, Border.BackgroundProperty, nameof(InstanceMember.MarkerColorName),
+            context => (context as InstanceMember)?.MarkerColorName);
+        return bar;
+    }
+
     /// <summary>Frames <paramref name="editor"/>, a row of the grid whose DataContext is its member.</summary>
     public static Control Frame(Control editor)
     {
@@ -58,9 +74,11 @@ internal static class VariableGridRows
         }.WithThemeResource(Border.BorderBrushProperty, "Frb.Brushes.Contrast.Subtle");
 
         Border editorCell = new Border { Margin = new Thickness(0, 0, 6, 0), Child = editor };
-        Grid.SetColumn(editorCell, 1);
+        Grid.SetColumn(editorCell, 2);
 
-        Grid columns = new Grid { ColumnDefinitions = new ColumnDefinitions("Auto,*") };
+        Grid columns = new Grid { ColumnDefinitions = new ColumnDefinitions("Auto,Auto,*") };
+        columns.Children.Add(CreateCategoryBar());
+        Grid.SetColumn(markerCell, 1);
         columns.Children.Add(markerCell);
         columns.Children.Add(editorCell);
 

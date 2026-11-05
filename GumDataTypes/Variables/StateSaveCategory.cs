@@ -18,6 +18,18 @@ public class StateSaveCategory
         set;
     } = new List<StateSave>();
 
+    /// <summary>
+    /// The name of the palette color the tool marks this category with (for example "Indigo"), or null
+    /// for none. Editor-only: the runtime and code generation ignore it, and a name this build does not
+    /// know is kept as is so a newer tool's color survives a save.
+    /// </summary>
+    public string? ColorName
+    {
+        get;
+        set;
+    }
+
+    public bool ShouldSerializeColorName() => !string.IsNullOrEmpty(ColorName);
 
     public StateSaveCategory()
     {
@@ -34,6 +46,7 @@ public class StateSaveCategory
         var toReturn = new StateSaveCategory();
 
         toReturn.Name = this.Name;
+        toReturn.ColorName = this.ColorName;
 
         foreach(var state in this.States)
         {

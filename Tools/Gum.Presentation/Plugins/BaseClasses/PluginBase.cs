@@ -216,6 +216,8 @@ public abstract class PluginBase : IPlugin
     public event Action<StateSaveCategory, string>? CategoryRename;
     public event Action<StateSaveCategory>? CategoryAdd;
     public event Action<StateSaveCategory>? CategoryDelete;
+    /// <summary>Raised after a category's palette color was set or cleared.</summary>
+    public event Action<StateSaveCategory>? CategoryColorChange;
     public event Action<string, StateSaveCategory>? VariableRemovedFromCategory;
     public event Action<StateSaveCategory?>? ReactToStateSaveCategorySelected;
 
@@ -569,6 +571,8 @@ public abstract class PluginBase : IPlugin
     public void CallStateCategoryAdd(StateSaveCategory category) => CategoryAdd?.Invoke(category);
 
     public void CallStateCategoryDelete(StateSaveCategory category) => CategoryDelete?.Invoke(category);
+
+    public void CallStateCategoryColorChange(StateSaveCategory category) => CategoryColorChange?.Invoke(category);
 
     public void CallVariableRemovedFromCategory(string variableName, StateSaveCategory category) => VariableRemovedFromCategory?.Invoke(variableName, category);
 

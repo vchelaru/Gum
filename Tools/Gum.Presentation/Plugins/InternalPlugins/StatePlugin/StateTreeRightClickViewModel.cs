@@ -8,6 +8,7 @@ using Gum.Dialogs;
 using Gum.Input;
 using Gum.Logic;
 using Gum.Managers;
+using Gum.Plugins.InternalPlugins.StatePlugin;
 using Gum.Services.Dialogs;
 using Gum.ToolCommands;
 using Gum.ToolStates;
@@ -166,6 +167,7 @@ public class StateTreeRightClickViewModel
                 Text = "Rename Category",
                 Action = RenameCategoryClick
             });
+            items.Add(CreateColorMenuItem(_selectedState.SelectedStateCategorySave));
             items.Add(new ContextMenuItemViewModel
             {
                 Text = "Sort Alphabetically",
@@ -184,6 +186,38 @@ public class StateTreeRightClickViewModel
         }
 
         return items;
+    }
+
+    /// <summary>
+    /// The "Color" submenu of <paramref name="category"/>: one row per palette color with a check on the
+    /// current one, a separator, and "None". A color this build does not know checks nothing and shows
+    /// no dot; choosing a row replaces it.
+    /// </summary>
+    private ContextMenuItemViewModel CreateColorMenuItem(StateSaveCategory category)
+    {
+        string? current = CategoryColors.GetName(category);
+        ContextMenuItemViewModel colorItem = new ContextMenuItemViewModel
+        {
+            Text = "Color",
+            IconColorName = current,
+        };
+        foreach (string name in CategoryColors.Names)
+        {
+            colorItem.Children.Add(new ContextMenuItemViewModel
+            {
+                Text = name,
+                ColorName = name,
+                IsChecked = name == current,
+                Action = () => _editCommands.SetStateCategoryColor(category, name),
+            });
+        }
+        colorItem.Children.Add(new ContextMenuItemViewModel { IsSeparator = true });
+        colorItem.Children.Add(new ContextMenuItemViewModel
+        {
+            Text = "None",
+            Action = () => _editCommands.SetStateCategoryColor(category, null),
+        });
+        return colorItem;
     }
 
     private void AddMoveToCategoryItems(List<ContextMenuItemViewModel> items)

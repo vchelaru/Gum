@@ -127,6 +127,10 @@ public class StateTreeViewModel : ViewModel
             AddMissingItems(stateContainer, selectedState);
             FixNodeOrderInCategory(stateContainer);
             RefreshStateVmBackground(selectedState, objectFinder);
+            foreach (var categoryViewModel in Categories)
+            {
+                categoryViewModel.RefreshColor();
+            }
 
             ApplyExpanded(expandedNodes);
 

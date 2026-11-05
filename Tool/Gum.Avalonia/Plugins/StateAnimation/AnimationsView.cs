@@ -186,6 +186,23 @@ public sealed class AnimationsView : Grid
     {
         StackPanel row = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 6 };
 
+        // A thin bar in the color of the category of the animation's first state. It keeps its width when
+        // uncolored so names stay aligned. The outline keeps it visible on the selected row.
+        Border colorBar = new Border
+        {
+            CornerRadius = new CornerRadius(1),
+            Margin = new Thickness(0, 1),
+        }.WithThemeResource(Border.BorderBrushProperty, "Frb.Brushes.Foreground");
+        AvaloniaTreeIcons.FollowBaseFontSize(colorBar, Layoutable.WidthProperty, 6);
+        CategoryColorBrushes.Follow(row, nameof(AnimationViewModel.CategoryColorName),
+            context => (context as AnimationViewModel)?.CategoryColorName,
+            colorName =>
+            {
+                CategoryColorBrushes.Apply(colorBar, Border.BackgroundProperty, colorName);
+                colorBar.BorderThickness = new Thickness(Gum.Plugins.InternalPlugins.StatePlugin.CategoryColors.IsKnown(colorName) ? 1 : 0);
+            });
+        row.Children.Add(colorBar);
+
         ToggleButton loops = new ToggleButton { MinWidth = 26, Padding = new Thickness(4, 0), HorizontalContentAlignment = HorizontalAlignment.Center };
         AvaloniaTreeIcons.FollowBaseFontSize(loops, Layoutable.MinWidthProperty, 26);
         loops.Bind(ToggleButton.IsCheckedProperty, new Binding(nameof(AnimationViewModel.Loops)) { Mode = BindingMode.TwoWay });
@@ -263,6 +280,13 @@ public sealed class AnimationsView : Grid
     {
         StackPanel row = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 6, Background = Brushes.Transparent };
         row.Bind(Panel.BackgroundProperty, new Binding(nameof(AnimatedKeyframeViewModel.IsTimelineVisualHovered)) { Converter = HoverBackground });
+
+        // A dot in the color of the keyframe state's category, transparent when uncolored.
+        Border colorDot = new Border { CornerRadius = new CornerRadius(100), VerticalAlignment = VerticalAlignment.Center };
+        AvaloniaTreeIcons.FollowBaseFontSize(colorDot, 9);
+        CategoryColorBrushes.Follow(row, colorDot, Border.BackgroundProperty, nameof(AnimatedKeyframeViewModel.CategoryColorName),
+            context => (context as AnimatedKeyframeViewModel)?.CategoryColorName);
+        row.Children.Add(colorDot);
 
         TextBlock glyph = new TextBlock { MinWidth = 14, VerticalAlignment = VerticalAlignment.Center };
         AvaloniaTreeIcons.FollowBaseFontSize(glyph, Layoutable.MinWidthProperty, 14);

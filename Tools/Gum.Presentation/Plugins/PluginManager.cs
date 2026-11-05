@@ -360,6 +360,9 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
     public void CategoryDelete(StateSaveCategory category) =>
         CallMethodOnPlugin((plugin) => plugin.CallStateCategoryDelete(category));
 
+    public void CategoryColorChange(StateSaveCategory category) =>
+        CallMethodOnPlugin((plugin) => plugin.CallStateCategoryColorChange(category));
+
     public virtual void ReactToStateSaveCategorySelected(StateSaveCategory? category) =>
         CallMethodOnPlugin((plugin) => plugin.CallReactToStateSaveCategorySelected(category));
 
