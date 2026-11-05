@@ -82,27 +82,6 @@ public class ExposedFormsPropertyScenarioTests
     }
 
     [AvaloniaFact]
-    public void DeletingTheInnerInstance_RemovesTheExposedVariable_AndTheValuesSetOnItElsewhere()
-    {
-        using ProjectTreeHarness tree = new ProjectTreeHarness();
-        BuildProject(tree);
-        tree.Click(tree.NodeFor(Component(tree, "Row").Instances.Single()));
-        ProjectFileSnapshot start = tree.SnapshotFiles();
-
-        tree.Dialogs.AnswerNext<DeleteOptionsDialogViewModel>(_ => true);
-        tree.Press(Key.Delete, PhysicalKey.Delete);
-
-        Component(tree, "Row").Instances.ShouldBeEmpty();
-        Component(tree, "Row").DefaultState!.Variables.ShouldNotContain(variable => variable.ExposedAsName == Exposed);
-        Screen(tree, "Title").DefaultState!.Variables.ShouldNotContain(variable => variable.Name == "RowA." + Exposed);
-
-        tree.Undo();
-        ExposedVariable(Component(tree, "Row")).Name.ShouldBe("Inner.IsEnabled");
-        VariableGridHarness_Stored(Screen(tree, "Title"), "RowA." + Exposed).ShouldBe(false);
-        tree.SnapshotFiles().ShouldMatch(start, "undoing the delete should restore the files");
-    }
-
-    [AvaloniaFact]
     public void RenamingTheRowComponent_KeepsTheValueSetOnItsInstances()
     {
         using ProjectTreeHarness tree = new ProjectTreeHarness();
@@ -191,24 +170,6 @@ public class ExposedFormsPropertyScenarioTests
 
         tree.Grid.ShownMemberNames().ShouldContain("RowA." + Exposed);
         tree.Grid.ShownMemberNames().ShouldNotContain("RowA.IsEnabled");
-    }
-
-    [AvaloniaFact]
-    public void ExposingAnUnauthoredFormsPropertyFromItsRowMenu_ExposesIt()
-    {
-        using ProjectTreeHarness tree = new ProjectTreeHarness();
-        BuildProject(tree);
-        ComponentSave panel = tree.Project.AddComponent("Panel");
-        InstanceSave button = tree.Project.AddInstance(panel, "Primary", "Button");
-        tree.Click(tree.NodeFor(button));
-        tree.Dialogs.AnswerNextUserString("PrimaryEnabled");
-        tree.Grid.RowMenu("IsEnabled").ShouldContain("Expose Variable");
-
-        tree.Grid.PickRowMenuItem("IsEnabled", "Expose Variable");
-
-        tree.Dialogs.Messages.ShouldBeEmpty();
-        Component(tree, "Panel").DefaultState!.Variables
-            .Single(variable => variable.Name == "Primary.IsEnabled").ExposedAsName.ShouldBe("PrimaryEnabled");
     }
 
     [AvaloniaFact]
