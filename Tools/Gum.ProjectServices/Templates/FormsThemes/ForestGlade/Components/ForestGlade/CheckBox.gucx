@@ -351,10 +351,10 @@
       <Value xsi:type="xsd:int">7</Value>
     </Variable>
     <Variable Type="float" Name="Height" SetsValue="true">
-      <Value xsi:type="xsd:float">18</Value>
+      <Value xsi:type="xsd:float">-2</Value>
     </Variable>
     <Variable Type="DimensionUnitType" Name="HeightUnits" SetsValue="true">
-      <Value xsi:type="xsd:int">0</Value>
+      <Value xsi:type="xsd:int">4</Value>
     </Variable>
     <Variable Type="bool" Name="IsChecked" SetsValue="true">
       <Value xsi:type="xsd:boolean">false</Value>

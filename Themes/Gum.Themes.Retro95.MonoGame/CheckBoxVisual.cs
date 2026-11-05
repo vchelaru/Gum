@@ -42,8 +42,8 @@ public class CheckBoxVisual : BaseCheckBoxVisual
         // V3 default is Height=24 (sized for a 24×24 NineSlice box). Win95 boxes
         // are 13×13 — we shrink to 16 so vertically-stacked checkboxes / radios
         // sit at the tight cadence Win95 used, not the airy spacing of V3 default.
-        Height = 16;
-        HeightUnits = Gum.DataTypes.DimensionUnitType.Absolute;
+        Height = -2; // 16 minus the 18 px line of the 13 px theme font: one line is 16, wrapped lines grow it
+        HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
 
         TextInstance.X = BoxSize + BoxToLabelGap;
         TextInstance.Width = -(BoxSize + BoxToLabelGap);

@@ -704,13 +704,13 @@
           "Name": "Height",
           "Type": "float",
           "SetsValue": true,
-          "ValueAsFloat": 18
+          "ValueAsFloat": -2
         },
         {
           "Name": "HeightUnits",
           "Type": "DimensionUnitType",
           "SetsValue": true,
-          "ValueAsInt": 0
+          "ValueAsInt": 4
         },
         {
           "Name": "IsChecked",

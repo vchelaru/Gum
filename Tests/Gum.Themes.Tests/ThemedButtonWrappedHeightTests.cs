@@ -56,6 +56,16 @@ public class ThemedButtonWrappedHeightTests
                 yield return c;
             }
         }
+
+        foreach ((string name, Action configure, Action register, float height) in new (string, Action, Action, float)[]
+        {
+            ("ForestGlade", ForestGlade.ForestGladeTheme.ConfigureStyling, ForestGlade.ForestGladeTheme.RegisterVisuals, 24),
+            ("Retro95", Retro95.Retro95Theme.ConfigureStyling, Retro95.Retro95Theme.RegisterVisuals, 16),
+        })
+        {
+            yield return new object[] { name, "RadioButton", configure, register, height };
+            yield return new object[] { name, "CheckBox", configure, register, height };
+        }
     }
 
     [Theory]
@@ -129,10 +139,13 @@ public class ThemedButtonWrappedHeightTests
         extra.ShouldBeGreaterThan(0, label);
         visual.GetAbsoluteHeight().ShouldBe(oneLineHeight + extra, 0.01f, label);
 
+        // Radio and check box rows reserve 2 px less than the label line (16 for an 18 px line), so the
+        // label may poke out by 1 px at each end, as it always did on one line.
+        float slack = label.Contains("RadioButton") || label.Contains("CheckBox") ? 2f : 0.01f;
         float top = visual.AbsoluteTop;
         float bottom = top + visual.GetAbsoluteHeight();
-        textInstance.AbsoluteTop.ShouldBeGreaterThanOrEqualTo(top - 0.01f, $"{label}: text above the button");
-        (textInstance.AbsoluteTop + textInstance.GetAbsoluteHeight()).ShouldBeLessThanOrEqualTo(bottom + 0.01f, $"{label}: text below the button");
+        textInstance.AbsoluteTop.ShouldBeGreaterThanOrEqualTo(top - slack, $"{label}: text above the button");
+        (textInstance.AbsoluteTop + textInstance.GetAbsoluteHeight()).ShouldBeLessThanOrEqualTo(bottom + slack, $"{label}: text below the button");
 
         float textCenter = textInstance.AbsoluteTop + textInstance.GetAbsoluteHeight() / 2f;
         textCenter.ShouldBe((top + bottom) / 2f, 1f, $"{label}: text not vertically centered");
@@ -140,7 +153,13 @@ public class ThemedButtonWrappedHeightTests
 
     private static GraphicalUiElement CreateVisual(string kind, string text)
     {
-        FrameworkElement control = kind == "Button" ? new Button() : new ToggleButton();
+        FrameworkElement control = kind switch
+        {
+            "Button" => new Button(),
+            "ToggleButton" => new ToggleButton(),
+            "RadioButton" => new RadioButton(),
+            _ => new CheckBox(),
+        };
         GraphicalUiElement visual = control.Visual;
         ((Gum.GueDeriving.TextRuntime)visual.GetGraphicalUiElementByName("TextInstance")!).Text = text;
         visual.UpdateLayout();

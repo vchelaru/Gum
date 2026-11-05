@@ -38,8 +38,8 @@ public class RadioButtonVisual : BaseRadioButtonVisual
         FocusedIndicator.Parent = null;
 
         // Match the Win95 tight stack cadence (same rationale as CheckBoxVisual).
-        Height = 16;
-        HeightUnits = Gum.DataTypes.DimensionUnitType.Absolute;
+        Height = -2; // 16 minus the 18 px line of the 13 px theme font: one line is 16, wrapped lines grow it
+        HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
 
         TextInstance.X = OuterSize + BoxToLabelGap;
         TextInstance.Width = -(OuterSize + BoxToLabelGap);
