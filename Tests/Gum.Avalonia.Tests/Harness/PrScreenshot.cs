@@ -77,7 +77,7 @@ internal static class PrScreenshot
     /// pixels (an icon, a margin) does not follow the text, so a layout right at 100% can break at the
     /// other sizes; every tool UI screenshot goes through this rather than <see cref="SaveWindow"/> alone.
     /// </summary>
-    public static string SaveContactSheet(Window window, string name)
+    public static string SaveContactSheet(Window window, string name, Action<double>? prepare = null, Action? cleanup = null)
     {
         IAppScaleProvider scale = TestAppBuilder.Services.GetRequiredService<IAppScaleProvider>();
         double originalSize = scale.BaseFontSize;
@@ -89,7 +89,9 @@ internal static class PrScreenshot
             {
                 scale.BaseFontSize = size;
                 ScreenshotWindow.Pump(window);
+                prepare?.Invoke(size);
                 frames.Add((size, window.CaptureRenderedFrame() ?? throw new InvalidOperationException("No frame.")));
+                cleanup?.Invoke();
             }
         }
         finally

@@ -113,4 +113,6 @@
   <SolidColorBrush x:Key="Frb.CategoryColor.Green" Color="#35924F" />
   <SolidColorBrush x:Key="Frb.CategoryColor.Teal" Color="#12958F" />
   <SolidColorBrush x:Key="Frb.CategoryColor.Slate" Color="#74859D" />
+  <SolidColorBrush x:Key="Frb.CategoryColor.Orange" Color="#E8803A" />
+  <SolidColorBrush x:Key="Frb.CategoryColor.Sky" Color="#3FA9D6" />
 </ResourceDictionary>

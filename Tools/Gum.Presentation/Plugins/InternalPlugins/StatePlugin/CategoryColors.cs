@@ -18,6 +18,7 @@ public static class CategoryColors
     public static IReadOnlyList<string> Names { get; } = new[]
     {
         "Indigo", "Violet", "Magenta", "Rose", "Brown", "Green", "Teal", "Slate",
+        "Orange", "Sky",
     };
 
     /// <summary>The theme resource prefix; the full key is <see cref="ResourceKey"/>.</summary>

@@ -12,9 +12,9 @@ public class CategoryColorsTests
     private static StateSaveCategory Category(string name, string? color) => new StateSaveCategory { Name = name, ColorName = color };
 
     [Fact]
-    public void Names_AreTheEightPaletteColors()
+    public void Names_AreTheTenPaletteColors_NewOnesAppendedAfterTheOriginalEight()
     {
-        CategoryColors.Names.ShouldBe(new[] { "Indigo", "Violet", "Magenta", "Rose", "Brown", "Green", "Teal", "Slate" });
+        CategoryColors.Names.ShouldBe(new[] { "Indigo", "Violet", "Magenta", "Rose", "Brown", "Green", "Teal", "Slate", "Orange", "Sky" });
     }
 
     [Fact]

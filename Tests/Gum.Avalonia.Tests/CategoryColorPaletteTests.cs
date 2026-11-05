@@ -48,10 +48,17 @@ public class CategoryColorPaletteTests
     [InlineData("Light")]
     public void EveryPaletteName_HasABrushInTheTheme(string theme)
     {
+        CategoryColors.Names.Count.ShouldBe(10);
         foreach (string name in CategoryColors.Names)
         {
             ColorOf(name, theme);
         }
+    }
+
+    [Fact]
+    public void OriginalEightNames_KeepTheirPositions_SoSavedProjectsStillResolve()
+    {
+        CategoryColors.Names.Take(8).ShouldBe(new[] { "Indigo", "Violet", "Magenta", "Rose", "Brown", "Green", "Teal", "Slate" });
     }
 
     [AvaloniaTheory]

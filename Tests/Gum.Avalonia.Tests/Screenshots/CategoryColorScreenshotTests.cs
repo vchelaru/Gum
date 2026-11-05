@@ -152,6 +152,76 @@ public class CategoryColorScreenshotTests
         }
     });
 
+    /// <summary>
+    /// One contact sheet per theme (<c>palette-contact-dark.png</c>, <c>palette-contact-light.png</c>): a
+    /// component with one category per palette color, so the States tab shows every category mark, with the
+    /// Color submenu open; one tile per zoom level.
+    /// </summary>
+    [SkippableFact]
+    public void PaletteContactSheets() => PrScreenshot.Run(() =>
+    {
+        using ProjectTreeHarness tree = new ProjectTreeHarness();
+        ComponentSave palette = tree.Project.AddComponent("Palette");
+        foreach (string colorName in Gum.Plugins.InternalPlugins.StatePlugin.CategoryColors.Names)
+        {
+            StateSaveCategory category = tree.Project.AddCategory(palette, colorName + "Cat");
+            StateSave state = tree.Project.AddState(palette, category, "On");
+            state.SetValue("Width", 100f, "float");
+            category.ColorName = colorName;
+        }
+        tree.SaveAll();
+
+        tree.Input.Window.Content = null;
+        MainWindow window = TestAppBuilder.Services.GetRequiredService<MainWindow>();
+        window.MinHeight = 0;
+        window.Width = 1500;
+        window.Height = 1100;
+        window.Show();
+        foreach (AvaloniaGraphicsDeviceControl canvas in window.GetVisualDescendants().OfType<AvaloniaGraphicsDeviceControl>())
+        {
+            canvas.IsVisible = false;
+        }
+        Dispatcher.UIThread.RunJobs();
+        tree.SelectedState.SelectedElement = null;
+        ScreenshotWindow.Pump(window);
+        tree.SelectedState.SelectedElement = palette;
+        ScreenshotWindow.Pump(window);
+
+        StateTreeViewModel statesVm = (StateTreeViewModel)window.GetVisualDescendants().OfType<AvaloniaStateTreeView>().Single().DataContext!;
+        TreeView treeView = window.GetVisualDescendants().OfType<AvaloniaStateTreeView>().Single().GetVisualDescendants().OfType<TreeView>().First();
+        ContextMenu menu = treeView.ContextMenu!;
+        foreach (ThemeVariant theme in new[] { ThemeVariant.Dark, ThemeVariant.Light })
+        {
+            window.RequestedThemeVariant = theme;
+            ScreenshotWindow.Pump(window);
+            PrScreenshot.SaveContactSheet(window, $"palette-contact-{theme.Key.ToString()!.ToLowerInvariant()}",
+                prepare: _ =>
+                {
+                    statesVm.Categories.Single(c => c.Title == "TealCat").IsSelected = true;
+                    ScreenshotWindow.Pump(window);
+                    Control row = window.GetVisualDescendants().OfType<TreeViewItem>().First(t => (t.DataContext as StateTreeViewItem)?.Title == "TealCat");
+                    Point at = row.TranslatePoint(new Point(row.Bounds.Width * 0.4, row.Bounds.Height / 2), window)!.Value;
+                    window.MouseMove(at);
+                    window.MouseDown(at, MouseButton.Right);
+                    window.MouseUp(at, MouseButton.Right);
+                    for (int i = 0; i < 100 && !menu.IsOpen; i++)
+                    {
+                        Thread.Sleep(20);
+                        ScreenshotWindow.Pump(window);
+                    }
+                    menu.IsOpen.ShouldBeTrue("The category right-click did not open the menu.");
+                    menu.Items.OfType<MenuItem>().Single(item => item.Header as string == "Color").IsSubMenuOpen = true;
+                    ScreenshotWindow.Pump(window);
+                    Thread.Sleep(100);
+                },
+                cleanup: () =>
+                {
+                    menu.Close();
+                    ScreenshotWindow.Pump(window);
+                });
+        }
+    });
+
     /// <summary>Marks four of the five categories with colors; Misc stays uncolored.</summary>
     private static void ApplyColors(ComponentSave button)
     {
