@@ -3,6 +3,7 @@ using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
 using Gum.Logic;
+using Gum.Services;
 using Gum.Services.Dialogs;
 using Gum.ToolStates;
 using Gum.Undo;
@@ -26,6 +27,8 @@ public class DeleteLogic : IDeleteLogic
     private readonly IWireframeObjectManager _wireframeObjectManager;
     private readonly IDeleteProjectProvider _deleteProjectProvider;
     private readonly IReferenceFinder _referenceFinder;
+    // Lazy: the remover needs IPluginManager, which depends on this class.
+    private readonly Lazy<IInstanceOverrideRemover> _instanceOverrideRemover;
     // Lazy: UndoManager depends on RenameLogic, which depends on this class.
     private readonly Lazy<IUndoManager> _undoManager;
 
@@ -43,6 +46,7 @@ public class DeleteLogic : IDeleteLogic
         IWireframeObjectManager wireframeObjectManager,
         IDeleteProjectProvider deleteProjectProvider,
         IReferenceFinder referenceFinder,
+        Lazy<IInstanceOverrideRemover> instanceOverrideRemover,
         Lazy<IUndoManager> undoManager)
     {
         _selectedState = selectedState;
@@ -54,6 +58,7 @@ public class DeleteLogic : IDeleteLogic
         _wireframeObjectManager = wireframeObjectManager;
         _deleteProjectProvider = deleteProjectProvider;
         _referenceFinder = referenceFinder;
+        _instanceOverrideRemover = instanceOverrideRemover;
         _undoManager = undoManager;
     }
 
@@ -813,9 +818,34 @@ public class DeleteLogic : IDeleteLogic
 
     private void RemoveInstanceFromElement(InstanceSave instance, ElementSave element)
     {
+        RemoveValuesSetOnExposedVariablesOf(instance, element);
         element.Instances.Remove(instance);
         element.Events.RemoveAll(item => item.GetSourceObject() == instance.Name);
         RemoveReferencesToInstance(instance, element);
+    }
+
+    /// <summary>
+    /// Removing an instance removes the variables the element exposes from it, so the values other
+    /// elements set for those exposed names (RowA.Caption, a derived component's own value) would be
+    /// orphans. Removes them and records them for the delete's undo step. Must run before the
+    /// instance's exposed variables are removed.
+    /// </summary>
+    private void RemoveValuesSetOnExposedVariablesOf(InstanceSave instance, ElementSave element)
+    {
+        List<VariableChange> valuesToClear = new List<VariableChange>();
+        foreach (VariableSave exposed in element.DefaultState.Variables
+            .Where(v => v.SourceObject == instance.Name && !string.IsNullOrEmpty(v.ExposedAsName))
+            .ToList())
+        {
+            VariableChangeResponse? references =
+                _referenceFinder.GetReferencesToVariable(element, exposed.Name, exposed.ExposedAsName!);
+            if (references != null)
+            {
+                valuesToClear.AddRange(references.VariableChanges.Where(c => c.IsRemovableValue));
+            }
+        }
+
+        _instanceOverrideRemover.Value.RemoveAndRecordForUndo(valuesToClear);
     }
 
     public void RemoveReferencesToInstance(InstanceSave instanceToRemove, ElementSave elementToRemoveFrom)
