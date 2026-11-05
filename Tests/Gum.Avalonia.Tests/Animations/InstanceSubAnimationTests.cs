@@ -1,6 +1,7 @@
 using Avalonia.Controls;
 using Avalonia.Headless.XUnit;
 using Avalonia.VisualTree;
+using Gum.Avalonia.Tests.EndToEnd;
 using Gum.DataTypes;
 using Gum.StateAnimation.SaveClasses;
 using Shouldly;
@@ -165,6 +166,31 @@ public class InstanceSubAnimationTests
         AnimatedKeyframeViewModel sub = editor.ViewModel.Animations.Single().Keyframes.Single(keyframe => !string.IsNullOrEmpty(keyframe.AnimationName));
         sub.AnimationName.ShouldBe("IconInstance.Wink");
         sub.IsMissingReference.ShouldBeFalse();
+    }
+
+    // RED: undo restores the renamed animation in Icon but not the keyframe in Button that plays it
+    // (the rename edits Button's sidecar, which is outside Icon's undo history). See the linked issue.
+    [AvaloniaFact]
+    public void RenamingTheInstancesAnimation_ThenUndo_RestoresTheReferencingElementsKeyframe()
+    {
+        using AnimationEditorHarness editor = new AnimationEditorHarness();
+        (ComponentSave button, InstanceSave icon) = ButtonWithAnimatedIcon(editor);
+        AddIconBlink(editor, icon);
+        ComponentSave iconType = editor.Project.Components.Single(component => component.Name == "Icon");
+        editor.Select(iconType);
+        AnimationViewModel blink = editor.ViewModel.Animations.Single();
+        editor.Click(editor.RowFor(editor.AnimationList, blink));
+        ProjectFileSnapshot start = editor.StartScenario();
+
+        editor.Dialogs.AnswerNextUserString("Wink");
+        editor.ViewModel.AnimationRightClickItems.Single(item => item.Text == "Rename Animation").Action!();
+        editor.Layout();
+        editor.ReadSavedAnimations(button).ShouldNotBeNull().Animations.Single().Animations.Single().Name.ShouldBe("IconInstance.Wink");
+
+        editor.Undo();
+
+        editor.ReadSavedAnimations(iconType).ShouldNotBeNull().Animations.Single().Name.ShouldBe("Blink");
+        editor.SnapshotFiles().ShouldMatch(start, "undoing the rename in Icon should also restore the keyframe in Button that plays it");
     }
 
     /// <summary>
