@@ -4,6 +4,7 @@ using Avalonia.Headless.XUnit;
 using Avalonia.Media;
 using Avalonia.Styling;
 using Gum.Plugins.InternalPlugins.StatePlugin;
+using Gum.Plugins.InternalPlugins.VariableGrid;
 using Shouldly;
 
 namespace Gum.Avalonia.Tests;
@@ -15,13 +16,24 @@ namespace Gum.Avalonia.Tests;
 /// </summary>
 public class CategoryColorPaletteTests
 {
-    // Surfaces the dot, the row bar and the banner sit on, sampled from the real main window in each theme:
-    // a Variables category header ("Position"), an unselected States row, and the Variables "Dimensions" header.
-    private static readonly Dictionary<string, (Color Header, Color Row, Color DimensionsHeader)> Surfaces = new()
+    // The surfaces the dot, the row bar and the banner sit on, read from the theme and the Variables tab's own
+    // header colors: a States row is the theme's Surface01; a Variables category header is a translucent tint
+    // (CategorySortAndColorLogic) over it.
+    private static (Color Header, Color Row, Color DimensionsHeader) SurfacesOf(string theme)
     {
-        ["Dark"] = (Color.Parse("#232343"), Color.Parse("#282828"), Color.Parse("#233543")),
-        ["Light"] = (Color.Parse("#D8D8F8"), Color.Parse("#F7F7F7"), Color.Parse("#D8EAF8")),
-    };
+        Application.Current!.TryFindResource("Frb.Colors.Surface01", Variant(theme), out object? resource).ShouldBeTrue("Frb.Colors.Surface01");
+        Color row = (Color)resource!;
+        List<VariableCategoryDescriptor> categories = new CategorySortAndColorLogic().SortAndColorCategories(
+            new List<VariableCategoryDescriptor> { new VariableCategoryDescriptor("Position"), new VariableCategoryDescriptor("Dimensions") });
+        Color HeaderOver(string name)
+        {
+            System.Drawing.Color tint = categories.Single(category => category.Name == name).GetHeaderColor()!.Value;
+            double alpha = tint.A / 255.0;
+            byte Mix(byte under, byte over) => (byte)Math.Round(under * (1 - alpha) + over * alpha);
+            return Color.FromRgb(Mix(row.R, tint.R), Mix(row.G, tint.G), Mix(row.B, tint.B));
+        }
+        return (HeaderOver("Position"), row, HeaderOver("Dimensions"));
+    }
 
     private static ThemeVariant Variant(string theme) => theme == "Dark" ? ThemeVariant.Dark : ThemeVariant.Light;
 
@@ -47,7 +59,7 @@ public class CategoryColorPaletteTests
     [InlineData("Light")]
     public void EveryColor_HasAtLeast3To1Contrast_AgainstTheSurfacesItSitsOn(string theme)
     {
-        (Color header, Color row, Color dimensionsHeader) = Surfaces[theme];
+        (Color header, Color row, Color dimensionsHeader) = SurfacesOf(theme);
         foreach (string name in CategoryColors.Names)
         {
             Color color = ColorOf(name, theme);

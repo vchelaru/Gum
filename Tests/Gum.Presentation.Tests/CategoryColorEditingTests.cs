@@ -187,6 +187,16 @@ public class CategoryColorEditingTests : BaseTestClass
     }
 
     [Fact]
+    public void SetStateCategoryColor_WithAnEmptyName_IsNormalizedToUnset()
+    {
+        _category.ColorName = "Green";
+
+        _editCommands.SetStateCategoryColor(_category, "");
+
+        _category.ColorName.ShouldBeNull();
+    }
+
+    [Fact]
     public void SetStateCategoryColor_DoesNothing_WhenTheColorIsAlreadySet()
     {
         _category.ColorName = "Green";

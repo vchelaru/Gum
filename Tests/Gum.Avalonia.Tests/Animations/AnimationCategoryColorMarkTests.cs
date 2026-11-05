@@ -2,6 +2,7 @@ using Avalonia.Controls;
 using Avalonia.Headless.XUnit;
 using Avalonia.Media;
 using Gum.Avalonia.Plugins.StateAnimation;
+using Gum.DataTypes;
 using Gum.ToolStates;
 using Gum.Wireframe;
 using Moq;
@@ -43,5 +44,22 @@ public class AnimationCategoryColorMarkTests
         colored.Background.ShouldBeAssignableTo<ISolidColorBrush>();
         ((ISolidColorBrush)colored.Background!).Color.A.ShouldBe((byte)255);
         colored.Bounds.Width.ShouldBe(colored.Bounds.Height);
+    }
+
+    [AvaloniaFact]
+    public void ChangingACategoryColor_UpdatesTheAnimationAndItsKeyframes_ThroughThePluginEvent()
+    {
+        using AnimationEditorHarness editor = new AnimationEditorHarness();
+        ComponentSave button = editor.AddComponent("Button", "Looks", "Pressed", "Released");
+        editor.Select(button);
+        editor.AddAnimation("Walk");
+        editor.AddStateKeyframe("Looks/Pressed");
+        editor.ViewModel.Animations.Single().CategoryColorName.ShouldBeNull();
+
+        button.Categories[0].ColorName = "Teal";
+        editor.PluginManager.CategoryColorChange(button.Categories[0]);
+
+        editor.ViewModel.Animations.Single().CategoryColorName.ShouldBe("Teal");
+        editor.ViewModel.Animations.Single().Keyframes.Single().CategoryColorName.ShouldBe("Teal");
     }
 }
