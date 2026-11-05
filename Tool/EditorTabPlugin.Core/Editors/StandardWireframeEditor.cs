@@ -40,6 +40,7 @@ public class StandardWireframeEditor : WireframeEditor
     RotationInputHandler _rotationInputHandler;
     RotationHandleVisual _rotationHandleVisual;
     LockedSelectionVisual _lockedSelectionVisual;
+    HiddenSizeSelectionVisual _hiddenSizeSelectionVisual;
 
     List<GraphicalUiElement> selectedObjects =
         new List<GraphicalUiElement>();
@@ -128,6 +129,7 @@ public class StandardWireframeEditor : WireframeEditor
         _resizeHandlesVisual.ShowOrigin = true;
 
         _lockedSelectionVisual = new LockedSelectionVisual(_context, lineColor);
+        _hiddenSizeSelectionVisual = new HiddenSizeSelectionVisual(_context, lineColor, ObjectFinder.Self);
 
         _resizeInputHandler = new ResizeInputHandler(_context, _resizeHandlesVisual);
 
@@ -146,6 +148,7 @@ public class StandardWireframeEditor : WireframeEditor
         _visuals.Add(_resizeHandlesVisual);
         _visuals.Add(_rotationHandleVisual);
         _visuals.Add(_lockedSelectionVisual);
+        _visuals.Add(_hiddenSizeSelectionVisual);
         _visuals.Add(widthDimensionDisplay);
         _visuals.Add(heightDimensionDisplay);
     }
