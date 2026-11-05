@@ -271,7 +271,26 @@ public partial class CustomSetPropertyOnRenderable
     /// honors <see cref="GraphicalUiElement.MissingFileBehavior"/>, mirroring sprite source-file
     /// handling.
     /// </summary>
-    public static Func<string, object?>? RenderTargetEffectResolver { get; set; }
+    public static Func<string, object?>? RenderTargetEffectResolver
+    {
+        get => _renderTargetEffectResolvers.PathResolver;
+        set => _renderTargetEffectResolvers.PathResolver = value;
+    }
+
+    /// <summary>
+    /// The same resolver as <see cref="RenderTargetEffectResolver"/>, but handed a <see cref="ShaderSource"/> (the
+    /// logical name plus a way to open the bytes) instead of a path, so a shader served from a stream or a
+    /// <c>.gumpkg</c> bundle resolves like a loose file, and a resolver decides what it can load from the
+    /// content rather than the file name. Return null to decline. The last of the two properties assigned wins,
+    /// and each reads back as an adapter of the other.
+    /// </summary>
+    public static Func<global::Gum.ShaderSource, object?>? RenderTargetEffectSourceResolver
+    {
+        get => _renderTargetEffectResolvers.SourceResolver;
+        set => _renderTargetEffectResolvers.SourceResolver = value;
+    }
+
+    private static readonly global::Gum.ShaderResolverSlot<object> _renderTargetEffectResolvers = new global::Gum.ShaderResolverSlot<object>();
 
 #if RAYLIB
     private const string ShadowDuskPackageId = "Gum.raylib.ShadowDusk";
@@ -535,7 +554,7 @@ public partial class CustomSetPropertyOnRenderable
         // No resolver registered: a shader that cannot load fails like a missing file (#7053) rather than
         // silently rendering unshaded. The consumer registers a resolver (the ShadowDusk package for the
         // runtime, or their own, e.g. Raylib.LoadShader on raylib).
-        if (RenderTargetEffectResolver == null)
+        if (!_renderTargetEffectResolvers.HasResolver)
         {
             string noResolverMessage = ShaderResolverRequirement.BuildNoResolverMessage(value, graphicalUiElement.Tag, ShadowDuskPackageId);
             if (GraphicalUiElement.MissingFileBehavior == MissingFileBehavior.ThrowException)
@@ -573,7 +592,7 @@ public partial class CustomSetPropertyOnRenderable
         Exception? resolveException = null;
         try
         {
-            resolvedEffect = RenderTargetEffectResolver(value);
+            resolvedEffect = _renderTargetEffectResolvers.Resolve(global::Gum.ShaderSource.FromFile(value));
         }
         catch (Exception ex)
         {

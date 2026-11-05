@@ -1,6 +1,6 @@
 using System;
 using System.IO;
-using System.Linq;
+using ShadowDusk.Compiler;
 using RenderingLibrary.Graphics;
 using ShadowDusk.Compiler.Sksl;
 using SkiaGum.Content;
@@ -9,7 +9,7 @@ using SkiaSharp;
 namespace Gum;
 
 /// <summary>
-/// Converts an <c>.fx</c> or <c>.slang</c> shader file to SkSL with ShadowDusk and compiles it
+/// Converts a shader ShadowDusk recognizes from its content (an <c>.fx</c> effect or Slang) to SkSL with ShadowDusk and compiles it
 /// into an <see cref="SKRuntimeEffect"/>.
 /// </summary>
 internal static class ShadowDuskEffectLoader
@@ -18,32 +18,30 @@ internal static class ShadowDuskEffectLoader
     // shaders use, so one .fx or .slang file runs on both runtimes.
     private const string TextureName = "SpriteTexture";
 
-    public static bool CanLoad(string path)
+    /// <summary>
+    /// Converts <paramref name="source"/> to SkSL and compiles it, or returns null when ShadowDusk reports the
+    /// input unsupported (nothing was attempted). A real conversion error throws.
+    /// </summary>
+    public static SKRuntimeEffect? TryLoad(ShaderSource source)
     {
-        string extension = Path.GetExtension(path);
-        return string.Equals(extension, ".fx", StringComparison.OrdinalIgnoreCase)
-            || string.Equals(extension, ".slang", StringComparison.OrdinalIgnoreCase);
-    }
+        string text = source.ReadAllText();
+        ReportingIncludeResolver includes = new ReportingIncludeResolver(source.Name);
+        SkslConvertOptions options = new SkslConvertOptions { SourceName = source.Name, IncludeResolver = includes };
 
-    public static SKRuntimeEffect Load(string path)
-    {
-        string source = File.ReadAllText(path);
-        ReportingIncludeResolver includes = new ReportingIncludeResolver(path);
-        SkslConvertOptions options = new SkslConvertOptions { SourceName = path, IncludeResolver = includes };
-
-        bool isSlang = string.Equals(Path.GetExtension(path), ".slang", StringComparison.OrdinalIgnoreCase);
-        var result = isSlang
-            ? SkslConverter.ConvertSlang(source, options)
-            : SkslConverter.Convert(source, options);
+        var result = ShaderConverter.ConvertToSksl(text, options, source.Name);
 
         // Also when the conversion failed, so fixing an included file reloads the shader.
         includes.Record();
 
         if (result.IsFailure)
         {
-            string errors = string.Join("\n", result.Error.Select(
-                error => $"{error.File}({error.Line},{error.Column}): {error.Code}: {error.Message}"));
-            throw new InvalidOperationException($"ShadowDusk could not convert '{path}' to SkSL:\n{errors}");
+            if (ShadowDuskInput.IsUnsupported(result.Error))
+            {
+                return null;
+            }
+
+            throw new InvalidOperationException(
+                $"ShadowDusk could not convert '{source.Name}' to SkSL:\n{ShadowDuskInput.FormatErrors(result.Error)}");
         }
 
         SkslConversion conversion = result.Value;
@@ -52,13 +50,13 @@ internal static class ShadowDuskEffectLoader
         {
             string found = conversion.ChildShaders.Count == 0 ? "none" : string.Join(", ", conversion.ChildShaders);
             throw new NotSupportedException(
-                $"'{path}' must sample exactly one texture named {TextureName}, the container's image. Textures found: {found}.");
+                $"'{source.Name}' must sample exactly one texture named {TextureName}, the container's image. Textures found: {found}.");
         }
 
         SKRuntimeEffect? effect = SKRuntimeEffect.CreateShader(conversion.SkslText, out string compileErrors);
         if (effect == null)
         {
-            throw new InvalidOperationException($"The SkSL ShadowDusk produced for '{path}' did not compile:\n{compileErrors}");
+            throw new InvalidOperationException($"The SkSL ShadowDusk produced for '{source.Name}' did not compile:\n{compileErrors}");
         }
 
         RegisterDeclaredDefaults(effect, conversion);

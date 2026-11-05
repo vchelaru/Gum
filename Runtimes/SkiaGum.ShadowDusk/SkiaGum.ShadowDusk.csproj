@@ -17,7 +17,7 @@
 
 	<ItemGroup>
 		<!-- 0.21.0 added the .slang converters (SkslConverter.ConvertSlang); 0.22.0 adds the compiled effect's parameter defaults; 0.22.1 reports the declared defaults on the SkSL and raylib routes. -->
-		<PackageReference Include="ShadowDusk.Compiler" Version="0.22.1" />
+		<PackageReference Include="ShadowDusk.Compiler" Version="0.25.0" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -26,6 +26,7 @@
 
 	<ItemGroup>
 		<Compile Include="..\GumShadowDusk\ReportingIncludeResolver.cs" Link="ReportingIncludeResolver.cs" />
+		<Compile Include="..\GumShadowDusk\ShadowDuskInput.cs" Link="ShadowDuskInput.cs" />
 	</ItemGroup>
 
 	<Import Project="..\RuntimePackage.Analyzers.props" />

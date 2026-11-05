@@ -624,7 +624,7 @@ namespace Gum.Managers
 
         /// <summary>
         /// True when <paramref name="file"/> is a shader: a container's <c>SourceShaderFile</c> names it, in any
-        /// extension (ShadowDusk lists none and treats every extension but <c>.slang</c> as HLSL text), or it has
+        /// extension (ShadowDusk reads the text, not the extension), or it has
         /// one of the shader extensions the tool offers, which keeps an unreferenced <c>.slang</c>/<c>.fx</c> the
         /// canvas still caches from reloading everything (#7034). The variable's set is kept with the rest of the
         /// referenced files and forgotten with them.
