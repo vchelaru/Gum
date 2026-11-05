@@ -300,4 +300,28 @@ public class ExposedFormsPropertyScenarioTests
 
         title.DefaultState.Variables.ShouldNotContain(variable => variable.Name == "RowA.Caption");
     }
+
+    [AvaloniaFact]
+    public void ExposingAnUnauthoredFormsPropertyFromItsRowMenu_ExposesIt()
+    {
+        using ProjectTreeHarness tree = new ProjectTreeHarness();
+        BuildProject(tree);
+        ComponentSave panel = tree.Project.AddComponent("Panel");
+        InstanceSave button = tree.Project.AddInstance(panel, "Primary", "Button");
+        tree.Click(tree.NodeFor(button));
+        tree.SaveAll();
+        ProjectFileSnapshot start = tree.SnapshotFiles();
+        tree.Dialogs.AnswerNextUserString("PrimaryEnabled");
+        tree.Grid.RowMenu("IsEnabled").ShouldContain("Expose Variable");
+
+        tree.Grid.PickRowMenuItem("IsEnabled", "Expose Variable");
+
+        tree.Dialogs.Messages.ShouldBeEmpty();
+        panel.DefaultState!.Variables
+            .Single(variable => variable.Name == "Primary.IsEnabled").ExposedAsName.ShouldBe("PrimaryEnabled");
+
+        tree.Undo();
+        panel.DefaultState!.Variables.ShouldNotContain(variable => variable.Name == "Primary.IsEnabled");
+        tree.SnapshotFiles().ShouldMatch(start, "undoing the expose should restore the saved files");
+    }
 }
