@@ -1,6 +1,8 @@
 using Gum.DataTypes;
+using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
 using Gum.Managers;
+using Gum.Plugins.InternalPlugins.VariableGrid;
 using Gum.Wireframe;
 using Shouldly;
 using static Gum.Presentation.Tests.StateSelectionCanvasHarness;
@@ -112,6 +114,128 @@ public partial class StateSelectionCanvasPrecedenceTests
         }
 
         return screen;
+    }
+
+    #endregion
+}
+
+public partial class StateSelectionCanvasPrecedenceTests
+{
+    #region Exposure inherited from a base component
+
+    [Theory]
+    [InlineData(false, "Disabled")]
+    [InlineData(true, "Enabled")]
+    public void RefreshAll_InstanceOfDerivedComponentSetsInheritedExposedIsEnabled_InnerButtonShowsTheFormsDerivedLook(bool isEnabled, string expectedLook)
+    {
+        ScreenSave screen = BuildScreenWithRowInstance(exposeThroughWrapper: false, isEnabled);
+        AddDerivedRow(screen, exposedNameOverride: null);
+
+        RowButtonColor(Show(screen, screen.DefaultState!), wrapped: false).ShouldBe(ButtonColors[expectedLook]);
+    }
+
+    [Fact]
+    public void RefreshAll_DerivedComponentReexposesTheValueUnderItsOwnName_ItsNameWins()
+    {
+        ScreenSave screen = BuildScreenWithRowInstance(exposeThroughWrapper: false, isEnabled: true);
+        AddDerivedRow(screen, exposedNameOverride: "Active");
+        screen.DefaultState!.Variables.Add(new VariableSave { Name = "Row1.Active", Type = "bool", Value = false, SetsValue = true });
+
+        RowButtonColor(Show(screen, screen.DefaultState!), wrapped: false).ShouldBe(ButtonColors["Disabled"]);
+    }
+
+    /// <summary>Row1 becomes an instance of RowDerived, a component with no instances of its own that derives from Row.</summary>
+    private static void AddDerivedRow(ScreenSave screen, string? exposedNameOverride)
+    {
+        GumProjectSave project = ObjectFinder.Self.GumProjectSave!;
+        ComponentSave derived = new ComponentSave { Name = "RowDerived", BaseType = "Row" };
+        StateSave derivedDefault = new StateSave { Name = "Default", ParentContainer = derived };
+        derived.States.Add(derivedDefault);
+        // A derived component lists the instances its base defines, flagged DefinedByBase.
+        derived.Instances.Add(new InstanceSave { Name = "Play", BaseType = "Controls/ButtonStandard", DefinedByBase = true, ParentContainer = derived });
+        if (exposedNameOverride != null)
+        {
+            derivedDefault.Variables.Add(new VariableSave { Name = "Play.IsEnabled", Type = "bool", Value = true, SetsValue = true, ExposedAsName = exposedNameOverride });
+        }
+        project.Components.Add(derived);
+        screen.Instances.Single(item => item.Name == "Row1").BaseType = "RowDerived";
+    }
+
+    #endregion
+}
+
+public partial class StateSelectionCanvasPrecedenceTests
+{
+    #region Saved data and other controls
+
+    /// <summary>The canvas computes the nested button's look in memory; the files the tool saves are untouched by it.</summary>
+    [Fact]
+    public void RefreshAll_ComponentInstanceSetsExposedIsEnabled_SavedFilesAreByteIdenticalAfterTheCanvasApplies()
+    {
+        ScreenSave screen = BuildScreenWithRowInstance(exposeThroughWrapper: true, isEnabled: false);
+        ComponentSave outer = ObjectFinder.Self.GumProjectSave!.Components.Single(item => item.Name == "Outer");
+        ComponentSave row = ObjectFinder.Self.GumProjectSave!.Components.Single(item => item.Name == "Row");
+        string folder = Path.Combine(Path.GetTempPath(), "gum7641-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(folder);
+        try
+        {
+            string[] Save(string suffix)
+            {
+                screen.Save(Path.Combine(folder, "screen" + suffix + ".gusj"));
+                outer.Save(Path.Combine(folder, "outer" + suffix + ".gucj"));
+                row.Save(Path.Combine(folder, "row" + suffix + ".gucj"));
+                return new[] { "screen", "outer", "row" }
+                    .Select(name => File.ReadAllText(Path.Combine(folder, name + suffix + (name == "screen" ? ".gusj" : ".gucj"))))
+                    .ToArray();
+            }
+
+            string[] before = Save("A");
+            RowButtonColor(Show(screen, screen.DefaultState!), wrapped: true).ShouldBe(ButtonColors["Disabled"]);
+            string[] after = Save("B");
+
+            after.ShouldBe(before);
+        }
+        finally
+        {
+            Directory.Delete(folder, recursive: true);
+        }
+    }
+
+    /// <summary>A CheckBox whose behavior reads two Forms values: the one an instance supplies through exposure and a default.</summary>
+    [Fact]
+    public void GetValuesThroughExposedVariables_ExposedIsEnabledOnACheckBox_DrivesItsCategoryStateFromTheDeclaredDefaults()
+    {
+        BuildFullButton(defaultReference: true, materialized: true);
+        GumProjectSave project = ObjectFinder.Self.GumProjectSave!;
+        BehaviorSave behavior = new BehaviorSave { Name = "CheckBoxBehavior" };
+        behavior.FormsProperties.Add(new VariableSave { Type = "bool", Name = "IsEnabled", Value = true });
+        behavior.FormsProperties.Add(new VariableSave { Type = "bool", Name = "IsChecked", Value = false });
+        behavior.ToolOnlyVariableReferences.Add("CheckBoxCategoryState = IsEnabled ? (IsChecked ? \"EnabledOn\" : \"EnabledOff\") : (IsChecked ? \"DisabledOn\" : \"DisabledOff\")");
+        project.Behaviors.Add(behavior);
+
+        ComponentSave checkBox = new ComponentSave { Name = "Controls/CheckBox", BaseType = "Container" };
+        checkBox.States.Add(new StateSave { Name = "Default", ParentContainer = checkBox });
+        checkBox.Behaviors.Add(new ElementBehaviorReference { BehaviorName = "CheckBoxBehavior" });
+        project.Components.Add(checkBox);
+
+        ComponentSave row = new ComponentSave { Name = "SettingRow", BaseType = "Container" };
+        StateSave rowDefault = new StateSave { Name = "Default", ParentContainer = row };
+        row.States.Add(rowDefault);
+        row.Instances.Add(new InstanceSave { Name = "Box", BaseType = "Controls/CheckBox", ParentContainer = row });
+        rowDefault.Variables.Add(new VariableSave { Name = "Box.IsEnabled", Type = "bool", SetsValue = false, ExposedAsName = "IsEnabled" });
+        rowDefault.Variables.Add(new VariableSave { Name = "Box.IsChecked", Type = "bool", SetsValue = false, ExposedAsName = "IsChecked" });
+        project.Components.Add(row);
+
+        ScreenSave screen = new ScreenSave { Name = "Settings" };
+        StateSave screenDefault = new StateSave { Name = "Default", ParentContainer = screen };
+        screen.States.Add(screenDefault);
+        screen.Instances.Add(new InstanceSave { Name = "Setting1", BaseType = "SettingRow", ParentContainer = screen });
+        screenDefault.Variables.Add(new VariableSave { Name = "Setting1.IsEnabled", Type = "bool", Value = false, SetsValue = true });
+
+        StateSave result = BehaviorToolOnlyReferencesApplier.GetValuesThroughExposedVariables(screen, selectedState: null);
+
+        result.Variables.Single().Name.ShouldBe("Setting1.Box.CheckBoxCategoryState");
+        result.Variables.Single().Value.ShouldBe("DisabledOff");
     }
 
     #endregion

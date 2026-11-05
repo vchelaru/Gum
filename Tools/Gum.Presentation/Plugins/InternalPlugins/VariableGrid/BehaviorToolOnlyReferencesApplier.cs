@@ -176,6 +176,20 @@ public static class BehaviorToolOnlyReferencesApplier
             return;
         }
 
+        // An exposure a base component declares is visible through every component derived from it, and the
+        // derived component's own declaration of the same variable wins (derived first, first name kept).
+        List<VariableSave> exposures = new List<VariableSave>();
+        foreach (StateSave? chainState in new[] { componentDefault }.Concat(ObjectFinder.Self.GetBaseElements(component).Select(item => item.DefaultState)))
+        {
+            foreach (VariableSave candidate in chainState?.Variables.Where(item => !string.IsNullOrEmpty(item.ExposedAsName)) ?? Enumerable.Empty<VariableSave>())
+            {
+                if (!exposures.Any(item => item.Name == candidate.Name))
+                {
+                    exposures.Add(candidate);
+                }
+            }
+        }
+
         foreach (InstanceSave inner in component.Instances)
         {
             if (ObjectFinder.Self.GetElementSave(inner.BaseType) is not ComponentSave innerComponent)
@@ -184,7 +198,7 @@ public static class BehaviorToolOnlyReferencesApplier
             }
 
             StateSave innerState = new StateSave { Name = "Exposed", ParentContainer = innerComponent };
-            foreach (VariableSave exposure in componentDefault.Variables.Where(item => !string.IsNullOrEmpty(item.ExposedAsName) && item.SourceObject == inner.Name))
+            foreach (VariableSave exposure in exposures.Where(item => item.SourceObject == inner.Name))
             {
                 string suppliedName = suppliedPrefix.Length == 0 ? exposure.ExposedAsName! : $"{suppliedPrefix}.{exposure.ExposedAsName}";
                 VariableSave? supplied = suppliedValues.Variables.FirstOrDefault(item => item.Name == suppliedName && item.SetsValue && item.Value != null);
