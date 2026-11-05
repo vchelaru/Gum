@@ -54,6 +54,7 @@ public sealed class BenchGame : Game
     private int _gen0Start;
     private int _gen2Start;
     private bool _aborted;
+    private double _setupMs;
 
     public int ExitCode { get; private set; }
 
@@ -146,7 +147,9 @@ public sealed class BenchGame : Game
             SurfaceFormat.Color, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
 
         Log($"Build {_scenario.Id} {config} (scene {config.SceneSize}px)");
+        long buildStart = Stopwatch.GetTimestamp();
         _scenario.Build(_gum, config, _spriteTexture);
+        _setupMs = ToMs(Stopwatch.GetTimestamp() - buildStart);
 
         _frame = 0;
         _starts.Clear();
@@ -263,7 +266,8 @@ public sealed class BenchGame : Game
             GumDrawCallCount = renderer.RenderStateChangeStatistics.DrawCallCount,
             GumSpriteBatchBegins = renderer.SpriteRenderer.LastFrameDrawStates.Count(),
             GumShapeBatchBegins = renderer.RenderStateChangeStatistics.ShapeBatchBeginCount,
-            AllocKbPerFrame = allocBytes / 1024.0 / _options.MeasuredFrames,
+            AllocBytesPerFrame = (double)allocBytes / _options.MeasuredFrames,
+            SetupMs = _setupMs,
             Gen0Collections = gen0,
             Gen2Collections = gen2,
         };

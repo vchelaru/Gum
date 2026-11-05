@@ -10,5 +10,7 @@ public static class ScenarioRegistry
     {
         () => new PlainSpritesScenario(),
         () => new RenderTargetOutlineScenario(),
+        () => new RenderTargetNoShaderScenario(),
+        () => new CachedTargetsScenario(),
     };
 }
