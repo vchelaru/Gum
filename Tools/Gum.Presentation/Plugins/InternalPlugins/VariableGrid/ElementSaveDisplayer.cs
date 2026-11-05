@@ -601,6 +601,10 @@ public class ElementSaveDisplayer
                     entry.PreferredDisplayerKindOverride = VariableDisplayerKind.ListBox;
                 }
 
+                List<StateSaveCategory> settingCategories = _subtextLogic.GetCategoriesSettingVariable(variableList, variableList.Name, instanceOwner, instance);
+                entry.DetailText = SubtextLogic.AppendSetBy(entry.DetailText, settingCategories);
+                entry.CategoryColorName = _subtextLogic.GetCategoryColorName(variableList, variableList.Name, instanceOwner, instance);
+
                 if (instance == null && instanceOwner.VariablesHiddenFromInstances?.Contains(variableList.Name) == true)
                 {
                     var hiddenText = "Hidden from instances";

@@ -38,6 +38,7 @@
   </ItemGroup>
   <ItemGroup>
     <Using Include="Xunit" />
+    <None Include="VariableGrid/Fixtures/DarkProSlider.gucj" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
   <!--
     The end-to-end scenarios run the tool as it ships, so the test output gets the two folders the
