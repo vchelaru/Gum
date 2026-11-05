@@ -106,6 +106,33 @@ public class AnimationToolEditScenarioTests
         tree.ThrowIfCrashed();
     }
 
+    // RED: redo of "Create Component" does nothing when the element has an animation sidecar that the
+    // promotion changed. The same scenario without a sidecar redoes correctly. See the linked issue.
+    [AvaloniaFact]
+    public void PromotingAContainerToAComponent_AndRedoingIt_TakesTheMovedInstancesOutOfTheElementAgain()
+    {
+        using ProjectTreeHarness tree = new ProjectTreeHarness();
+        (ComponentSave button, InstanceSave icon) = ButtonPlayingItsIconsBlink(tree);
+        InstanceSave box = tree.Project.AddInstance(button, "Box", "Container");
+        tree.Click(tree.NodeFor(icon));
+        tree.Grid.PickComboItem("Parent", "Box");
+        ReloadAnimations(tree, button);
+        tree.Dialogs.AnswerNext<CreateComponentDialogViewModel>(dialog => { dialog.IsCheckboxChecked = true; return true; });
+        tree.RightClick(tree.NodeFor(box));
+        tree.PickMenu("Create Component");
+        Component(tree, "Button").Instances.Select(instance => instance.Name).ShouldBe(new[] { "Box" });
+        string animationsPromoted = File.ReadAllText(ButtonAnimations(tree));
+
+        tree.Click(tree.NodeFor(button));
+        tree.Undo();
+        Component(tree, "Button").Instances.Select(instance => instance.Name).ShouldBe(new[] { "IconInstance", "Box" });
+
+        tree.Redo();
+
+        Component(tree, "Button").Instances.Select(instance => instance.Name).ShouldBe(new[] { "Box" }, tree.OutputWritten);
+        File.ReadAllText(ButtonAnimations(tree)).ShouldBe(animationsPromoted);
+    }
+
     [AvaloniaFact]
     public void RenamingTheComponentAnInstanceIsOf_MovesItsSidecar_KeepsTheReferencingKeyframeValid_AndUndoRestoresTheFiles()
     {
