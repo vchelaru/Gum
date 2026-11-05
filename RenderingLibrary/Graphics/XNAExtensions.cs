@@ -89,10 +89,20 @@
                 return cached;
             }
 
-            var created = CreateXnaBlendState(value);
-            _xnaBlendStates.Remove(value);
-            _xnaBlendStates.Add(value, created);
-            return created;
+            // Remove then Add is not atomic and Add throws on a duplicate key, so a stale entry that
+            // several threads convert at once is replaced under a lock.
+            lock (_xnaBlendStates)
+            {
+                if (_xnaBlendStates.TryGetValue(value, out cached) && !cached.IsDisposed && IsSameBlend(value, cached))
+                {
+                    return cached;
+                }
+
+                var created = CreateXnaBlendState(value);
+                _xnaBlendStates.Remove(value);
+                _xnaBlendStates.Add(value, created);
+                return created;
+            }
         }
 
         private static bool IsSameBlend(Gum.BlendState value, Microsoft.Xna.Framework.Graphics.BlendState xna) =>

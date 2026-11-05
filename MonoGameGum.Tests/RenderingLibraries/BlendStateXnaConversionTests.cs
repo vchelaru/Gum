@@ -1,3 +1,4 @@
+using System.Linq;
 using RenderingLibrary.Graphics;
 using Shouldly;
 using Xunit;
@@ -70,5 +71,29 @@ public class BlendStateXnaConversionTests : BaseTestClass
 
         second.ShouldNotBeSameAs(first);
         second.IsDisposed.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void ToXNA_DoesNotThrow_WhenSeveralThreadsConvertTheSameStaleStateAtOnce()
+    {
+        // Probabilistic: the race is only possible when threads overlap, so many rounds run.
+        for (int round = 0; round < 300; round++)
+        {
+            Gum.BlendState custom = new Gum.BlendState
+            {
+                ColorSourceBlend = Gum.Blend.One,
+                ColorDestinationBlend = Gum.Blend.One,
+            };
+            custom.ToXNA().Dispose();
+
+            using System.Threading.Barrier start = new System.Threading.Barrier(8);
+            System.Threading.Tasks.Task[] tasks = Enumerable.Range(0, 8).Select(_ => System.Threading.Tasks.Task.Run(() =>
+            {
+                start.SignalAndWait();
+                custom.ToXNA();
+            })).ToArray();
+
+            Should.NotThrow(() => System.Threading.Tasks.Task.WaitAll(tasks));
+        }
     }
 }
