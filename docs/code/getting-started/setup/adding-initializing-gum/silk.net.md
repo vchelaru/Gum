@@ -110,8 +110,10 @@ SKCanvas canvas = surface.Canvas;
 // actually receives events.
 IInputContext inputContext = window.CreateInput();
 
-GumService.Default.Initialize(canvas, inputContext, "Content/GumProject/GumProject.gumj");
-GumService.Default.UseShadowDusk(); // Optional: .fx and .slang shader files
+GumService GumUI = GumService.Default;
+
+GumUI.Initialize(canvas, inputContext, "Content/GumProject/GumProject.gumj");
+GumUI.UseShadowDusk(); // Optional: .fx and .slang shader files
 GumExpressionService.Initialize(); // Optional: arithmetic expressions in variable references
 ```
 
@@ -120,7 +122,7 @@ Each frame, pump window events before updating and drawing Gum:
 ```csharp
 // Update
 window.DoEvents();
-GumService.Default.Update(totalSeconds);
+GumUI.Update(totalSeconds);
 ```
 
 {% hint style="warning" %}
@@ -143,12 +145,12 @@ Add the NuGet package:
 dotnet add package Gum.SkiaSharp.ShadowDusk
 ```
 
-Then call `UseShadowDusk` after `GumService.Default.Initialize`:
+Then call `UseShadowDusk` after `GumUI.Initialize`:
 
 ```csharp
 // Initialize
-GumService.Default.Initialize(canvas, inputContext, "Content/GumProject/GumProject.gumj");
-GumService.Default.UseShadowDusk();
+GumUI.Initialize(canvas, inputContext, "Content/GumProject/GumProject.gumj");
+GumUI.UseShadowDusk();
 ```
 
 If linking to source instead of NuGet, add `<Gum Root>/Runtimes/SkiaGum.ShadowDusk/SkiaGum.ShadowDusk.csproj` to your solution.
@@ -165,11 +167,11 @@ Add the NuGet package:
 dotnet add package Gum.Expressions
 ```
 
-Then call `GumExpressionService.Initialize()` after `GumService.Default.Initialize`. Expression support is typically used with a Gum project that has variable references defined in the tool:
+Then call `GumExpressionService.Initialize()` after `GumUI.Initialize`. Expression support is typically used with a Gum project that has variable references defined in the tool:
 
 ```csharp
 // Initialize
-GumService.Default.Initialize(canvas, inputContext, "Content/GumProject/GumProject.gumj");
+GumUI.Initialize(canvas, inputContext, "Content/GumProject/GumProject.gumj");
 GumExpressionService.Initialize();
 ```
 
@@ -183,7 +185,7 @@ Gum can be tested by adding a Button after Gum is initialized. To do so, add cod
 
 ```csharp
 // Initialize
-GumService.Default.Initialize(canvas, inputContext);
+GumUI.Initialize(canvas, inputContext);
 
 var button = new Button();
 button.AddToRoot();
