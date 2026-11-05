@@ -358,11 +358,26 @@ public class Game1 : Game, IPreviewDefaultsTarget
 
     private readonly int?[] _loggedGamepadState = new int?[4];
     private bool? _loggedWindowActive;
+    private readonly PreviewGamepadLog _gamepadLog = new PreviewGamepadLog();
+    private bool _loggedGamepadStartup;
 
     // Only runs with --log. Logs what the OS reports (raw MonoGame state) next to what Gum holds, so a
     // dead controller shows whether the device is undetected, the window is inactive, or Gum drops it.
+    // Runs from LogInput, i.e. BEFORE GumService.Update in the same frame: raw is this frame's OS state,
+    // Gum's pad holds the state committed by the previous frame's Update (ButtonPushed lasts one Update,
+    // so a push is still readable here on the next frame, never already consumed).
     private void LogGamepads(PreviewDebugLog log)
     {
+        if (!_loggedGamepadStartup)
+        {
+            _loggedGamepadStartup = true;
+            log.LogGamepad($"startup os={Environment.OSVersion} runtime={Environment.Version} "
+                + $"monogame={typeof(Microsoft.Xna.Framework.Game).Assembly.GetName().Version} "
+                + $"maxPads={Microsoft.Xna.Framework.Input.GamePad.MaximumGamePadCount} "
+                + $"SDL_JOYSTICK_ALLOW_BACKGROUND_EVENTS={Environment.GetEnvironmentVariable("SDL_JOYSTICK_ALLOW_BACKGROUND_EVENTS") ?? "(unset)"} "
+                + "order=LogGamepads reads before GumService.Update (gum state is one frame behind raw)");
+        }
+
         if (_loggedWindowActive != IsActive)
         {
             _loggedWindowActive = IsActive;
@@ -380,20 +395,85 @@ public class Game1 : Game, IPreviewDefaultsTarget
             {
                 _loggedGamepadState[i] = code;
                 log.LogGamepad($"pad {i} raw connected={rawConnected} gum connected={gumConnected}");
+                if (rawConnected)
+                {
+                    Microsoft.Xna.Framework.Input.GamePadCapabilities caps = Microsoft.Xna.Framework.Input.GamePad.GetCapabilities(i);
+                    log.LogGamepad($"pad {i} caps name='{caps.DisplayName}' id='{caps.Identifier}' type={caps.GamePadType} "
+                        + $"dpad(up={caps.HasDPadUpButton} down={caps.HasDPadDownButton} left={caps.HasDPadLeftButton} right={caps.HasDPadRightButton}) "
+                        + $"A={caps.HasAButton} leftStick={caps.HasLeftXThumbStick && caps.HasLeftYThumbStick} isConnected={caps.IsConnected}");
+                }
+            }
+
+            if (rawConnected)
+            {
+                // GamePadDeadZone.None so a stick the default dead zone swallows is still visible.
+                Microsoft.Xna.Framework.Input.GamePadState state =
+                    Microsoft.Xna.Framework.Input.GamePad.GetState(i, Microsoft.Xna.Framework.Input.GamePadDeadZone.None);
+                string? rawLine = _gamepadLog.Changed($"raw{i}", PreviewGamepadLog.FormatRaw(
+                    state.IsConnected, state.PacketNumber, PressedButtons(state),
+                    state.ThumbSticks.Left.X, state.ThumbSticks.Left.Y, state.ThumbSticks.Right.X, state.ThumbSticks.Right.Y,
+                    state.Triggers.Left, state.Triggers.Right));
+                if (rawLine != null)
+                {
+                    log.LogGamepad($"pad {i} raw {rawLine}");
+                }
             }
 
             if (pads[i] == null)
             {
                 continue;
             }
+
+            string? membership = _gamepadLog.Changed($"member{i}", FrameworkElement.GamePadsForUiControl.Contains(pads[i]).ToString());
+            if (membership != null)
+            {
+                log.LogGamepad($"pad {i} inGamePadsForUiControl={membership}");
+            }
+            string resting = PreviewGamepadLog.FormatGumButton(false, false, false, false);
             foreach (GamepadButton button in Enum.GetValues<GamepadButton>())
             {
-                if (pads[i].ButtonPushed(button))
+                bool pushed = pads[i].ButtonPushed(button);
+                string? gumLine = _gamepadLog.Changed($"gum{i}.{button}", PreviewGamepadLog.FormatGumButton(
+                    pads[i].ButtonDown(button), pushed, pads[i].ButtonReleased(button), pads[i].ButtonRepeatRate(button)));
+                // The all-false resting state is the starting value and not worth a line.
+                if (gumLine != null && gumLine != resting)
+                {
+                    log.LogGamepad($"pad {i} gum {button} {gumLine}");
+                }
+                if (pushed)
                 {
                     log.LogGamepad($"pad {i} pushed {button} focused={DescribeControl(InteractiveGue.CurrentInputReceiver) ?? "(none)"}");
                 }
             }
         }
+    }
+
+    private static List<string> PressedButtons(Microsoft.Xna.Framework.Input.GamePadState state)
+    {
+        List<string> pressed = new List<string>();
+        void Add(Microsoft.Xna.Framework.Input.ButtonState buttonState, string name)
+        {
+            if (buttonState == Microsoft.Xna.Framework.Input.ButtonState.Pressed)
+            {
+                pressed.Add(name);
+            }
+        }
+        Add(state.Buttons.A, "A");
+        Add(state.Buttons.B, "B");
+        Add(state.Buttons.X, "X");
+        Add(state.Buttons.Y, "Y");
+        Add(state.Buttons.LeftShoulder, "LeftShoulder");
+        Add(state.Buttons.RightShoulder, "RightShoulder");
+        Add(state.Buttons.Start, "Start");
+        Add(state.Buttons.Back, "Back");
+        Add(state.Buttons.BigButton, "BigButton");
+        Add(state.Buttons.LeftStick, "LeftStick");
+        Add(state.Buttons.RightStick, "RightStick");
+        Add(state.DPad.Up, "DPadUp");
+        Add(state.DPad.Down, "DPadDown");
+        Add(state.DPad.Left, "DPadLeft");
+        Add(state.DPad.Right, "DPadRight");
+        return pressed;
     }
 
     private static TextBoxSnapshot? DescribeTextBox(TextBox? textBox)
