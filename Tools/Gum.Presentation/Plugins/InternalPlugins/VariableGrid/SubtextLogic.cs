@@ -1,5 +1,6 @@
 ﻿using Gum.DataTypes.Variables;
 using Gum.DataTypes;
+using Gum.Logic;
 using Gum.Managers;
 using Gum.Plugins.InternalPlugins.StatePlugin;
 using System;
@@ -99,7 +100,7 @@ public class SubtextLogic
             var nameToSearchFor = instanceSave == null ? propertyName : instanceSave.Name + "." + propertyName;
             var nameInOwner = findNameInDefaultState(variableOwner.GetDefaultStateOrThrow(), nameToSearchFor);
 
-            foreach (var category in GetCategoriesIncludingInherited(variableOwner))
+            foreach (var category in InheritedCategories.GetCategories(variableOwner))
             {
                 // Any state counts, so a variable set only by Disabled still names the category.
                 if (category.States.Any(state => getNamesSetByState(state)
@@ -111,26 +112,6 @@ public class SubtextLogic
         }
 
         return result;
-    }
-
-    /// <summary>
-    /// The element's own categories followed by those of its base types, nearest base first. A category
-    /// whose name an earlier (more derived) element already defines is skipped, since the derived one replaces it.
-    /// </summary>
-    private static IEnumerable<StateSaveCategory> GetCategoriesIncludingInherited(ElementSave element)
-    {
-        HashSet<string> seenNames = new HashSet<string>();
-        IEnumerable<ElementSave> chain = new[] { element }.Concat(ObjectFinder.Self.GetBaseElements(element));
-        foreach (ElementSave chainElement in chain)
-        {
-            foreach (StateSaveCategory category in chainElement.Categories)
-            {
-                if (seenNames.Add(category.Name))
-                {
-                    yield return category;
-                }
-            }
-        }
     }
 
     /// <summary>

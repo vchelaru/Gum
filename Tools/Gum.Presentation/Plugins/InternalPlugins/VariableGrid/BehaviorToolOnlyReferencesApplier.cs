@@ -1,3 +1,4 @@
+using Gum.Logic;
 using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
@@ -287,7 +288,7 @@ public static class BehaviorToolOnlyReferencesApplier
 
     private static IEnumerable<StateSave> GetCategoryStates(ElementSave element, string categoryName)
     {
-        foreach (StateSaveCategory category in element.Categories.Concat(ObjectFinder.Self.GetBaseElements(element).SelectMany(item => item.Categories)))
+        foreach (StateSaveCategory category in InheritedCategories.GetCategories(element))
         {
             if (category.Name == categoryName)
             {
