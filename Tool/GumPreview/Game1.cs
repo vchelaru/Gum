@@ -322,6 +322,8 @@ public class Game1 : Game, IPreviewDefaultsTarget
             () => cursor.VisualOver == null ? null : $"{cursor.VisualOver.GetType().Name} '{cursor.VisualOver.Name}'");
         _inputTracker.ObserveTextBox(DescribeTextBox(focus as TextBox));
 
+        LogGamepads(log);
+
         Keyboard keyboard = GumService.Default.Keyboard;
         List<string>? released = null;
         foreach (Microsoft.Xna.Framework.Input.Keys key in AllKeys)
@@ -351,6 +353,46 @@ public class Game1 : Game, IPreviewDefaultsTarget
         {
             string modifiers = $"{(keyboard.IsCtrlDown ? "Ctrl" : "")}{(keyboard.IsShiftDown ? "Shift" : "")}{(keyboard.IsAltDown ? "Alt" : "")}";
             log.LogKeys(keys, modifiers.Length == 0 ? "none" : modifiers, DescribeControl(focus));
+        }
+    }
+
+    private readonly int?[] _loggedGamepadState = new int?[4];
+    private bool? _loggedWindowActive;
+
+    // Only runs with --log. Logs what the OS reports (raw MonoGame state) next to what Gum holds, so a
+    // dead controller shows whether the device is undetected, the window is inactive, or Gum drops it.
+    private void LogGamepads(PreviewDebugLog log)
+    {
+        if (_loggedWindowActive != IsActive)
+        {
+            _loggedWindowActive = IsActive;
+            log.LogGamepad($"window active={IsActive} navigationPads={FrameworkElement.GamePadsForUiControl.Count}");
+        }
+
+        Gum.Input.GamePad[] pads = GumService.Default.Gamepads;
+        for (int i = 0; i < pads.Length && i < _loggedGamepadState.Length; i++)
+        {
+            bool rawConnected = Microsoft.Xna.Framework.Input.GamePad.GetState(i).IsConnected;
+            bool gumConnected = pads[i]?.IsConnected == true;
+            // Logged on the first frame and whenever either side changes; encoded as raw*2+gum.
+            int code = (rawConnected ? 2 : 0) + (gumConnected ? 1 : 0);
+            if (_loggedGamepadState[i] != code)
+            {
+                _loggedGamepadState[i] = code;
+                log.LogGamepad($"pad {i} raw connected={rawConnected} gum connected={gumConnected}");
+            }
+
+            if (pads[i] == null)
+            {
+                continue;
+            }
+            foreach (GamepadButton button in Enum.GetValues<GamepadButton>())
+            {
+                if (pads[i].ButtonPushed(button))
+                {
+                    log.LogGamepad($"pad {i} pushed {button} focused={DescribeControl(InteractiveGue.CurrentInputReceiver) ?? "(none)"}");
+                }
+            }
         }
     }
 

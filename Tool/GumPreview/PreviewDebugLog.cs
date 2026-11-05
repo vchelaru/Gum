@@ -122,6 +122,9 @@ public sealed class PreviewDebugLog : IDisposable
     public void LogKeys(IEnumerable<string> keys, string modifiers, string? focusedControl) =>
         Write("key", $"{string.Join(",", keys)} modifiers={modifiers} focused={focusedControl ?? "(none)"}");
 
+    /// <summary>What the gamepads report: connection changes, buttons pushed, and whether the window is active (the OS may withhold controller input from an unfocused window).</summary>
+    public void LogGamepad(string message) => Write("gamepad", message);
+
     /// <summary>Keys let go this frame.</summary>
     public void LogKeyUp(IEnumerable<string> keys) => Write("key-up", string.Join(",", keys));
 
