@@ -2,6 +2,7 @@ using Avalonia.Headless.XUnit;
 using Avalonia.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using Gum.DataTypes;
+using Gum.Avalonia.Tests.VariableGrid;
 using Gum.Commands;
 using Gum.DataTypes.Variables;
 using Gum.Dialogs;
@@ -103,6 +104,132 @@ public class AnimationToolEditScenarioTests
         tree.Undo();
         File.ReadAllText(ButtonAnimations(tree)).ShouldBe(animationsBefore, "undoing the promotion should restore the keyframe");
 
+        tree.ThrowIfCrashed();
+    }
+
+    // The undo's own InstanceAdd / InstancesDelete notifications used to record a phantom edit when the
+    // sidecar had changed, which dropped the redo tail (#7627).
+    [AvaloniaFact]
+    public void PromotingAContainerToAComponent_AndRedoingIt_TakesTheMovedInstancesOutOfTheElementAgain()
+    {
+        using ProjectTreeHarness tree = new ProjectTreeHarness();
+        (ComponentSave button, InstanceSave icon) = ButtonPlayingItsIconsBlink(tree);
+        InstanceSave box = tree.Project.AddInstance(button, "Box", "Container");
+        tree.Click(tree.NodeFor(icon));
+        tree.Grid.PickComboItem("Parent", "Box");
+        ReloadAnimations(tree, button);
+        tree.Dialogs.AnswerNext<CreateComponentDialogViewModel>(dialog => { dialog.IsCheckboxChecked = true; return true; });
+        tree.RightClick(tree.NodeFor(box));
+        tree.PickMenu("Create Component");
+        Component(tree, "Button").Instances.Select(instance => instance.Name).ShouldBe(new[] { "Box" });
+        string animationsPromoted = File.ReadAllText(ButtonAnimations(tree));
+
+        tree.Click(tree.NodeFor(button));
+        tree.Undo();
+        Component(tree, "Button").Instances.Select(instance => instance.Name).ShouldBe(new[] { "IconInstance", "Box" });
+
+        tree.Redo();
+
+        Component(tree, "Button").Instances.Select(instance => instance.Name).ShouldBe(new[] { "Box" }, tree.OutputWritten);
+        File.ReadAllText(ButtonAnimations(tree)).ShouldBe(animationsPromoted);
+    }
+
+    [AvaloniaFact]
+    public void PromotingAContainerToAComponent_AndUndoingAndRedoingItTwice_KeepsTheRedoAvailable()
+    {
+        using ProjectTreeHarness tree = new ProjectTreeHarness();
+        (ComponentSave button, InstanceSave icon) = ButtonPlayingItsIconsBlink(tree);
+        InstanceSave box = tree.Project.AddInstance(button, "Box", "Container");
+        tree.Click(tree.NodeFor(icon));
+        tree.Grid.PickComboItem("Parent", "Box");
+        ReloadAnimations(tree, button);
+        string animationsBefore = File.ReadAllText(ButtonAnimations(tree));
+        tree.Dialogs.AnswerNext<CreateComponentDialogViewModel>(dialog => { dialog.IsCheckboxChecked = true; return true; });
+        tree.RightClick(tree.NodeFor(box));
+        tree.PickMenu("Create Component");
+        string animationsPromoted = File.ReadAllText(ButtonAnimations(tree));
+        tree.Click(tree.NodeFor(button));
+
+        for (int cycle = 0; cycle < 2; cycle++)
+        {
+            tree.Undo();
+            Component(tree, "Button").Instances.Select(instance => instance.Name).ShouldBe(new[] { "IconInstance", "Box" });
+            File.ReadAllText(ButtonAnimations(tree)).ShouldBe(animationsBefore);
+
+            tree.Redo();
+            Component(tree, "Button").Instances.Select(instance => instance.Name).ShouldBe(new[] { "Box" }, tree.OutputWritten);
+            File.ReadAllText(ButtonAnimations(tree)).ShouldBe(animationsPromoted);
+        }
+
+        tree.ThrowIfCrashed();
+    }
+
+    // Undo and redo of an edit that adds or removes instances notify plugins per instance; with a sidecar
+    // loaded none of them may record an edit of their own, or the redo is lost (#7627). The four tests
+    // below pin the edits that leave the sidecar alone.
+
+    [AvaloniaFact]
+    public void PromotingAContainerWithNoChildren_AndUndoingAndRedoingIt_KeepsTheSidecarAndTheRedo()
+    {
+        using ProjectTreeHarness tree = new ProjectTreeHarness();
+        (ComponentSave button, _) = ButtonPlayingItsIconsBlink(tree);
+        InstanceSave box = tree.Project.AddInstance(button, "Box", "Container");
+        tree.Click(tree.NodeFor(box));
+        string animationsBefore = File.ReadAllText(ButtonAnimations(tree));
+
+        tree.Dialogs.AnswerNext<CreateComponentDialogViewModel>(dialog => { dialog.IsCheckboxChecked = true; return true; });
+        tree.RightClick(tree.NodeFor(box));
+        tree.PickMenu("Create Component");
+        Component(tree, "Button").Instances.Single(instance => instance.Name == "Box").BaseType.ShouldBe("BoxComponent");
+
+        tree.Click(tree.NodeFor(button));
+        tree.Undo();
+        Component(tree, "Button").Instances.Single(instance => instance.Name == "Box").BaseType.ShouldBe("Container");
+
+        tree.Redo();
+        Component(tree, "Button").Instances.Single(instance => instance.Name == "Box").BaseType.ShouldBe("BoxComponent", tree.OutputWritten);
+        File.ReadAllText(ButtonAnimations(tree)).ShouldBe(animationsBefore);
+    }
+
+    [AvaloniaFact]
+    public void PastingAnInstance_UndoRemovesIt_AndRedoPastesItAgain()
+    {
+        using ProjectTreeHarness tree = new ProjectTreeHarness();
+        (ComponentSave button, InstanceSave icon) = ButtonPlayingItsIconsBlink(tree);
+        tree.Click(tree.NodeFor(icon));
+        tree.Press(Key.C, PhysicalKey.C, RawInputModifiers.Control);
+
+        EditThenUndoAndRedo(tree, "the paste", () => tree.Press(Key.V, PhysicalKey.V, RawInputModifiers.Control));
+
+        button.Instances.Count.ShouldBe(2);
+        tree.ThrowIfCrashed();
+    }
+
+    [AvaloniaFact]
+    public void DuplicatingAnInstance_UndoRemovesIt_AndRedoDuplicatesItAgain()
+    {
+        using ProjectTreeHarness tree = new ProjectTreeHarness();
+        (ComponentSave button, InstanceSave icon) = ButtonPlayingItsIconsBlink(tree);
+        tree.Click(tree.NodeFor(icon));
+
+        EditThenUndoAndRedo(tree, "the duplicate", () => tree.Press(Key.D, PhysicalKey.D, RawInputModifiers.Control));
+
+        button.Instances.Count.ShouldBe(2);
+        tree.ThrowIfCrashed();
+    }
+
+    [AvaloniaFact]
+    public void MovingAnInstanceToAnotherParent_AndUndoingAndRedoingIt_RestoresTheParentEachTime()
+    {
+        using ProjectTreeHarness tree = new ProjectTreeHarness();
+        (ComponentSave button, InstanceSave icon) = ButtonPlayingItsIconsBlink(tree);
+        tree.Project.AddInstance(button, "Box", "Container");
+        ReloadAnimations(tree, button);
+        tree.Click(tree.NodeFor(icon));
+
+        EditThenUndoAndRedo(tree, "the reparent", () => tree.Grid.PickComboItem("Parent", "Box"));
+
+        VariableGridHarness.StoredValue(Component(tree, "Button"), "IconInstance.Parent").ShouldBe("Box");
         tree.ThrowIfCrashed();
     }
 

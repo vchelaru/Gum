@@ -566,11 +566,15 @@ public class ElementUndoStrategy : IUndoStrategy
         // lock held, so no history entry is added.
         _variableReferenceLogic.Value.ReapplyReferences(toApplyTo, beforeRestore, otherSide);
 
-        CaptureBaseline();
-
         _raiseUndosChanged(UndoOperation.Undo);
 
         _messenger.Send(new AfterUndoMessage());
+
+        // After AfterUndo, not before: the animation plugin repaints its tab from the restored .ganx
+        // there, and the baseline reads the tab's live animations. A baseline taken first holds the
+        // pre-undo ones, so the InstanceAdd / InstancesDelete notifications below (the undo plugin
+        // answers each with RecordUndo) diffed them as an edit, appended it, and dropped the redo tail.
+        CaptureBaseline();
 
         _guiCommands.RefreshElementTreeView(toApplyTo);
 
