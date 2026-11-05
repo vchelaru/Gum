@@ -85,4 +85,23 @@ public class ExposedFormsPropertyScenarioTests
 
     private static object? VariableGridHarness_Stored(ElementSave element, string variableName) =>
         element.DefaultState!.Variables.FirstOrDefault(variable => variable.Name == variableName && variable.SetsValue)?.Value;
+
+    [AvaloniaFact]
+    public void DeletingTheInnerInstance_RemovesTheValuesSetElsewhereOnAnExposedPlainVariable()
+    {
+        using ProjectTreeHarness tree = new ProjectTreeHarness();
+        ComponentSave row = tree.Project.AddComponent("PlainRow");
+        InstanceSave label = tree.Project.AddInstance(row, "Label", "Text");
+        tree.Click(tree.NodeFor(row));
+        Services.GetRequiredService<IExposeVariableService>().ExposeVariable(label, "Text", "Caption").Succeeded.ShouldBeTrue();
+        ScreenSave title = tree.Project.AddScreen("PlainTitle");
+        InstanceSave rowA = tree.Project.AddInstance(title, "RowA", "PlainRow");
+        title.DefaultState!.SetValue("RowA.Caption", "Hi", rowA, "string");
+        tree.Click(tree.NodeFor(label));
+
+        tree.Dialogs.AnswerNext<DeleteOptionsDialogViewModel>(_ => true);
+        tree.Press(Key.Delete, PhysicalKey.Delete);
+
+        title.DefaultState.Variables.ShouldNotContain(variable => variable.Name == "RowA.Caption");
+    }
 }
