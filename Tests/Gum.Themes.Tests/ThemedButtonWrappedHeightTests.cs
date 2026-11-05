@@ -59,7 +59,7 @@ public class ThemedButtonWrappedHeightTests
         ["DarkPro"] = 19, // DM Mono 14
         ["ForestGlade"] = 20, // Nunito 14 Bold
         ["Hazard"] = 24, // Saira Condensed 15
-        ["Meadow"] = 24, // Baloo 2 15
+        ["Meadow"] = 24, // Baloo 2 15 SemiBold
         ["Neon"] = 15, // Share Tech Mono 13
         ["Retro95"] = 18, // Nunito 13
         ["Template"] = 19, // DM Mono 14
@@ -102,7 +102,7 @@ public class ThemedButtonWrappedHeightTests
         ["DarkPro"] = ("DarkPro", "Font14DMMono-Regular_ttf_1a87468f.fnt"),
         ["ForestGlade"] = ("ForestGlade", "Font14Nunito-Bold_ttf_be304f91_Bold.fnt"),
         ["Hazard"] = ("Hazard", "Font15SairaCondensed-Regular_ttf_6201a4b8.fnt"),
-        ["Meadow"] = ("Meadow", "Font15Baloo2-Bold_ttf_f4b22195_Bold.fnt"),
+        ["Meadow"] = ("Meadow", "Font15Baloo2-SemiBold_ttf_a93756f7.fnt"),
         ["Neon"] = ("Neon", "Font13ShareTechMono-Regular_ttf_64a05457.fnt"),
         ["Retro95"] = ("Retro95", "Font13Nunito-Regular_ttf_309444ee.fnt"),
         ["Template"] = ("DarkPro", "Font14DMMono-Regular_ttf_1a87468f.fnt"),
