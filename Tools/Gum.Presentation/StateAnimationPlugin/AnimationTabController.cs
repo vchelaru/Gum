@@ -540,7 +540,9 @@ public class AnimationTabController
                 variableName == nameof(AnimationViewModel.Length) ||
                 // Derived from the keyframes' validity and re-raised whenever the tab re-validates
                 // them (every selection), so treating it as an edit saves and re-checks per animation.
-                variableName == nameof(AnimationViewModel.HasBrokenKeyframe)
+                variableName == nameof(AnimationViewModel.HasBrokenKeyframe) ||
+                // The color of the first keyframe's category, re-raised with the same validation.
+                variableName == nameof(AnimationViewModel.CategoryColorName)
                 )
             {
                 shouldSave = false;
