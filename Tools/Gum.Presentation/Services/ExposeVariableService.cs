@@ -216,7 +216,7 @@ public class ExposeVariableService : IExposeVariableService
 
         return elementForInstance == null
             ? null
-            : FormsPropertyDeclarations.GetFor(elementForInstance).FirstOrDefault(item => item.Name == rootVariableName)?.Type;
+            : FormsBehaviorChain.GetFormsPropertyDeclarations(elementForInstance).FirstOrDefault(item => item.Name == rootVariableName)?.Type;
     }
 
     private GeneralResponse GetIfCanExpose(InstanceSave instanceSave, ElementSave? selectedElement, VariableSave? variableSave, string rootVariableName)

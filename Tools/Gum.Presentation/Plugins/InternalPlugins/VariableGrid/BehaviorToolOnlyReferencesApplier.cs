@@ -4,6 +4,7 @@ using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
 using Gum.Expressions;
 using Gum.Managers;
+using Gum.ProjectServices;
 using Gum.Wireframe;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -385,15 +386,12 @@ public static class BehaviorToolOnlyReferencesApplier
     /// </summary>
     private static IEnumerable<(string Left, string Right)> GetReferenceLines(ComponentSave component)
     {
-        foreach (ElementBehaviorReference reference in component.Behaviors)
+        // A component derived from a Forms control behaves as that control, so the base chain's behaviors count.
+        foreach (BehaviorSave behavior in FormsBehaviorChain.GetBehaviors(component))
         {
-            BehaviorSave? behavior = ObjectFinder.Self.GetBehavior(reference);
-            if (behavior != null)
+            foreach ((string left, string right) in GetReferenceLines(behavior))
             {
-                foreach ((string left, string right) in GetReferenceLines(behavior))
-                {
-                    yield return (left, right);
-                }
+                yield return (left, right);
             }
         }
     }
@@ -584,20 +582,11 @@ public static class BehaviorToolOnlyReferencesApplier
                 return componentValue;
             }
 
-            foreach (ElementBehaviorReference reference in component.Behaviors)
+            foreach (VariableSave declaration in FormsBehaviorChain.GetFormsPropertyDeclarations(component))
             {
-                BehaviorSave? behavior = ObjectFinder.Self.GetBehavior(reference);
-                if (behavior == null)
+                if (declaration.Name == lookupName)
                 {
-                    continue;
-                }
-
-                foreach (VariableSave declaration in behavior.FormsProperties)
-                {
-                    if (declaration.Name == lookupName)
-                    {
-                        return declaration.Value;
-                    }
+                    return declaration.Value;
                 }
             }
 

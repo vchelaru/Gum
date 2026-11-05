@@ -6786,7 +6786,7 @@ public class CodeGenerator
             ? "this"
             : "this." + _codeGenerationNameVerifier.ToCSharpMemberName(instance.Name);
 
-        foreach (VariableSave declaration in FormsPropertyDeclarations.GetFor(controlElement))
+        foreach (VariableSave declaration in FormsBehaviorChain.GetFormsPropertyDeclarations(controlElement))
         {
             VariableSave? authored = state.Variables.FirstOrDefault(item =>
                 item.Value != null &&
@@ -6831,7 +6831,7 @@ public class CodeGenerator
             controlElement == null ||
             controlElement is StandardElementSave ||
             GetIfNameIsVisualOrExposedVariable(controlElement, name) ||
-            !FormsPropertyDeclarations.GetFor(controlElement).Any(item => item.Name == name))
+            !FormsBehaviorChain.GetFormsPropertyDeclarations(controlElement).Any(item => item.Name == name))
         {
             return false;
         }
