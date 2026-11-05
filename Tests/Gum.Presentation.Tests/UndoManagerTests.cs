@@ -60,6 +60,18 @@ public class UndoManagerTests : BaseTestClass
         public void RemoveKeyframesPlaying(ElementSave element, string instanceName)
         {
         }
+
+        /// <summary>Names a rename may not give, standing in for another animation already using it.</summary>
+        public HashSet<string> TakenNames { get; } = new();
+
+        public List<(string From, string To)> ReferenceRenames { get; } = new();
+
+        public bool CanRenameAnimation(ElementSave element, string toName) => !TakenNames.Contains(toName);
+
+        public void RenameAnimationReferences(ElementSave element, string fromName, string toName)
+        {
+            ReferenceRenames.Add((fromName, toName));
+        }
     }
 
     public UndoManagerTests()
@@ -1293,6 +1305,126 @@ public class UndoManagerTests : BaseTestClass
         // Both halves revert from the one undo, keeping the keyframe and the state name in sync.
         component.Categories[0].States[0].Name.ShouldBe("Old");
         _animationUndoProvider.Store[component].Animations[0].States[0].StateName.ShouldBe("Category/Old");
+    }
+
+    [Fact]
+    public void PerformUndoAndRedo_OnAnAnimationRename_RenamesTheReferencesBackAndForward()
+    {
+        ComponentSave component = _selectedState.Object.SelectedComponent!;
+        _animationUndoProvider.Store[component] = AnimationsWithKeyframes("Blink", "Default");
+        _undoManager.RecordState();
+        using (_undoManager.RequestLock())
+        {
+            _animationUndoProvider.Store[component] = AnimationsWithKeyframes("Wink", "Default");
+            _undoManager.RecordAnimationRename("Blink", "Wink");
+        }
+
+        _undoManager.PerformUndo();
+        _animationUndoProvider.ReferenceRenames.ShouldBe(new[] { ("Wink", "Blink") });
+
+        _undoManager.PerformRedo();
+        _animationUndoProvider.ReferenceRenames.ShouldBe(new[] { ("Wink", "Blink"), ("Blink", "Wink") });
+    }
+
+    [Fact]
+    public void PerformUndo_OnSeveralAnimationRenamesInOneAction_RenamesBackInReverseOrder()
+    {
+        ComponentSave component = _selectedState.Object.SelectedComponent!;
+        _animationUndoProvider.Store[component] = AnimationsWithKeyframes("Blink", "Default");
+        _undoManager.RecordState();
+        using (_undoManager.RequestLock())
+        {
+            _animationUndoProvider.Store[component] = AnimationsWithKeyframes("Flash", "Default");
+            _undoManager.RecordAnimationRename("Blink", "Wink");
+            _undoManager.RecordAnimationRename("Wink", "Flash");
+        }
+
+        _undoManager.PerformUndo();
+
+        _animationUndoProvider.ReferenceRenames.ShouldBe(new[] { ("Flash", "Wink"), ("Wink", "Blink") });
+    }
+
+    [Fact]
+    public void PerformUndo_WhenAnotherAnimationUsesTheOldName_ChangesNothingAndKeepsTheActionForLater()
+    {
+        ComponentSave component = _selectedState.Object.SelectedComponent!;
+        _animationUndoProvider.Store[component] = AnimationsWithKeyframes("Blink", "Default");
+        _undoManager.RecordState();
+        using (_undoManager.RequestLock())
+        {
+            _animationUndoProvider.Store[component] = AnimationsWithKeyframes("Wink", "Default");
+            _undoManager.RecordAnimationRename("Blink", "Wink");
+        }
+        _animationUndoProvider.TakenNames.Add("Blink");
+
+        _undoManager.PerformUndo();
+
+        _animationUndoProvider.Store[component].Animations[0].Name.ShouldBe("Wink");
+        _animationUndoProvider.ReferenceRenames.ShouldBeEmpty();
+        _undoManager.CanUndo().ShouldBeTrue();
+
+        _animationUndoProvider.TakenNames.Clear();
+        _undoManager.PerformUndo();
+        _animationUndoProvider.Store[component].Animations[0].Name.ShouldBe("Blink");
+    }
+
+    [Fact]
+    public void PerformRedo_WhenAnotherAnimationUsesTheNewName_ChangesNothing()
+    {
+        ComponentSave component = _selectedState.Object.SelectedComponent!;
+        _animationUndoProvider.Store[component] = AnimationsWithKeyframes("Blink", "Default");
+        _undoManager.RecordState();
+        using (_undoManager.RequestLock())
+        {
+            _animationUndoProvider.Store[component] = AnimationsWithKeyframes("Wink", "Default");
+            _undoManager.RecordAnimationRename("Blink", "Wink");
+        }
+        _undoManager.PerformUndo();
+        _animationUndoProvider.ReferenceRenames.Clear();
+        _animationUndoProvider.TakenNames.Add("Wink");
+
+        _undoManager.PerformRedo();
+
+        _animationUndoProvider.Store[component].Animations[0].Name.ShouldBe("Blink");
+        _animationUndoProvider.ReferenceRenames.ShouldBeEmpty();
+        _undoManager.CanRedo().ShouldBeTrue();
+    }
+
+    [Fact]
+    public void RecordAnimationRename_WithoutALock_IsIgnored()
+    {
+        ComponentSave component = _selectedState.Object.SelectedComponent!;
+        _animationUndoProvider.Store[component] = AnimationsWithKeyframes("Blink", "Default");
+        _undoManager.RecordState();
+        _undoManager.RecordAnimationRename("Blink", "Wink");
+        using (_undoManager.RequestLock())
+        {
+            component.DefaultState.SetValue("X", 11f);
+        }
+
+        _undoManager.PerformUndo();
+
+        _animationUndoProvider.ReferenceRenames.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void RecordAnimationRename_WhenNoActionIsRecorded_DoesNotLeakIntoTheNextAction()
+    {
+        ComponentSave component = _selectedState.Object.SelectedComponent!;
+        _animationUndoProvider.Store[component] = AnimationsWithKeyframes("Blink", "Default");
+        _undoManager.RecordState();
+        using (_undoManager.RequestLock())
+        {
+            _undoManager.RecordAnimationRename("Blink", "Wink");
+        }
+        using (_undoManager.RequestLock())
+        {
+            component.DefaultState.SetValue("X", 11f);
+        }
+
+        _undoManager.PerformUndo();
+
+        _animationUndoProvider.ReferenceRenames.ShouldBeEmpty();
     }
 
     [Fact]

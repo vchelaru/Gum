@@ -1,6 +1,7 @@
 using Avalonia.Controls;
 using Avalonia.Headless.XUnit;
 using Avalonia.VisualTree;
+using Gum.Avalonia.Tests.EndToEnd;
 using Gum.DataTypes;
 using Gum.StateAnimation.SaveClasses;
 using Shouldly;
@@ -167,11 +168,34 @@ public class InstanceSubAnimationTests
         sub.IsMissingReference.ShouldBeFalse();
     }
 
+    [AvaloniaFact]
+    public void RenamingTheInstancesAnimation_ThenUndo_RestoresTheReferencingElementsKeyframe()
+    {
+        using AnimationEditorHarness editor = new AnimationEditorHarness();
+        (ComponentSave button, InstanceSave icon) = ButtonWithAnimatedIcon(editor);
+        AddIconBlink(editor, icon);
+        ComponentSave iconType = editor.Project.Components.Single(component => component.Name == "Icon");
+        editor.Select(iconType);
+        AnimationViewModel blink = editor.ViewModel.Animations.Single();
+        editor.Click(editor.RowFor(editor.AnimationList, blink));
+        ProjectFileSnapshot start = editor.StartScenario();
+
+        editor.Dialogs.AnswerNextUserString("Wink");
+        editor.ViewModel.AnimationRightClickItems.Single(item => item.Text == "Rename Animation").Action!();
+        editor.Layout();
+        editor.ReadSavedAnimations(button).ShouldNotBeNull().Animations.Single().Animations.Single().Name.ShouldBe("IconInstance.Wink");
+
+        editor.Undo();
+
+        editor.ReadSavedAnimations(iconType).ShouldNotBeNull().Animations.Single().Name.ShouldBe("Blink");
+        editor.SnapshotFiles().ShouldMatch(start, "undoing the rename in Icon should also restore the keyframe in Button that plays it");
+    }
+
     /// <summary>
     /// An Icon component whose Blink animation runs one second, and a Button holding an IconInstance
     /// of it; leaves Button selected with an empty Walk animation plus a Pressed keyframe at 0.
     /// </summary>
-    private static (ComponentSave Button, InstanceSave Icon) ButtonWithAnimatedIcon(AnimationEditorHarness editor)
+    internal static (ComponentSave Button, InstanceSave Icon) ButtonWithAnimatedIcon(AnimationEditorHarness editor)
     {
         ComponentSave iconType = editor.AddComponent("Icon", Category, "Dim", "Bright");
         editor.Select(iconType);
@@ -187,7 +211,7 @@ public class InstanceSubAnimationTests
         return (button, icon);
     }
 
-    private static AnimatedKeyframeViewModel AddIconBlink(AnimationEditorHarness editor, InstanceSave icon)
+    internal static AnimatedKeyframeViewModel AddIconBlink(AnimationEditorHarness editor, InstanceSave icon)
     {
         editor.Dialogs.AnswerNext<SubAnimationSelectionDialogViewModel>(dialog =>
         {

@@ -17,6 +17,12 @@ public class HistoryAction
     /// </summary>
     public List<CrossElementVariableChange>? CrossElementVariableChanges { get; set; }
 
+    /// <summary>
+    /// Animation renames this action made, whose references in other elements undo and redo re-point
+    /// by running the rename again. Null when this action has none.
+    /// </summary>
+    public List<CrossElementAnimationRename>? AnimationRenames { get; set; }
+
     public override string ToString()
     {
         return $"Undo:{UndoState}";

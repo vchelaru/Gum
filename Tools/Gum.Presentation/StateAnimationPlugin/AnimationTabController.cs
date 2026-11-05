@@ -307,6 +307,24 @@ public class AnimationTabController
         }
     }
 
+    /// <summary>Implements <c>IAnimationUndoProvider.CanRenameAnimation</c>.</summary>
+    public bool CanRenameAnimation(ElementSave element, string toName)
+    {
+        bool isTaken = GetCurrentAnimations(element)?.Animations.Any(animation => animation.Name == toName) == true;
+        if (isTaken)
+        {
+            _dialogService.ShowMessage(
+                $"Cannot undo or redo the animation rename because {element.Name} already has another animation named {toName}. Rename or remove that animation first.");
+        }
+        return !isTaken;
+    }
+
+    /// <summary>Implements <c>IAnimationUndoProvider.RenameAnimationReferences</c>.</summary>
+    public void RenameAnimationReferences(ElementSave element, string fromName, string toName)
+    {
+        _renameManager.RenameAnimationReferencesInOtherElements(element, fromName, toName);
+    }
+
     /// <summary>Wired to <c>PluginBase.StateRename</c>: propagates the rename into keyframe references, then repaints the tab.</summary>
     public void HandleStateRename(StateSave stateSave, string oldName)
     {

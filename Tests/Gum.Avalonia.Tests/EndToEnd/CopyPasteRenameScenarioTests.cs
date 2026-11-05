@@ -436,6 +436,83 @@ public class CopyPasteRenameScenarioTests
         tree.AssertOracles();
     }
 
+    [AvaloniaFact]
+    [Trait("Feature", "EDIT-001")]
+    public void RedoingAnInstanceRename_RenamesReferencesInOtherElementsAgain()
+    {
+        using ProjectTreeHarness tree = new ProjectTreeHarness();
+        ReferenceButtonBackgroundFromLabelAndPanel(tree);
+        ProjectFileSnapshot start = tree.SnapshotFiles();
+        tree.Dialogs.AnswerNextUserString("Bg");
+        tree.Dialogs.AnswerNextMessage(MessageDialogResult.Affirmative);
+        tree.Press(Key.F2, PhysicalKey.F2);
+        ProjectFileSnapshot renamed = tree.SnapshotFiles();
+
+        tree.Undo();
+        tree.Redo();
+        tree.SnapshotFiles().ShouldMatch(renamed, "redoing the rename should rename every reference again");
+        tree.Undo();
+        tree.SnapshotFiles().ShouldMatch(start, "undoing it a second time should restore them again");
+
+        tree.AssertOracles();
+    }
+
+    [AvaloniaFact]
+    [Trait("Feature", "EDIT-001")]
+    public void RedoingAComponentRename_RenamesReferencesInOtherElementsAgain()
+    {
+        using ProjectTreeHarness tree = new ProjectTreeHarness();
+        ReferenceButtonBackgroundFromLabelAndPanel(tree);
+        tree.Click(tree.NodeFor(Component(tree, "Button")));
+        ProjectFileSnapshot start = tree.SnapshotFiles();
+        tree.Dialogs.AnswerNext<RenameElementDialogViewModel>(dialog => { dialog.Value = "PrimaryButton"; return true; });
+        tree.Dialogs.AnswerNextMessage(MessageDialogResult.Affirmative);
+        tree.Press(Key.F2, PhysicalKey.F2);
+        ProjectFileSnapshot renamed = tree.SnapshotFiles();
+
+        tree.Undo();
+        tree.Redo();
+        ReferenceLines(Component(tree, "Panel")).ShouldBe(new[] { "Height = Components/PrimaryButton.Background.Width" });
+        tree.SnapshotFiles().ShouldMatch(renamed, "redoing the rename should rename every reference again");
+        tree.Undo();
+        tree.SnapshotFiles().ShouldMatch(start, "undoing it a second time should restore them again");
+
+        tree.AssertOracles();
+    }
+
+    [AvaloniaFact]
+    [Trait("Feature", "EDIT-001")]
+    public void RedoingAnExposedVariableRename_RenamesReferencesInOtherElementsAgain()
+    {
+        using ProjectTreeHarness tree = new ProjectTreeHarness();
+        tree.Project.AddComponent("Panel");
+        ComponentSave button = tree.Project.AddComponent("Button");
+        InstanceSave label = tree.Project.AddInstance(button, "Label", "Text");
+        tree.Click(tree.NodeFor(label));
+        VariableGridHarness grid = tree.Grid;
+        grid.TypeAndEnter("Width", "75");
+        tree.Dialogs.AnswerNextUserString("LabelWidth");
+        grid.PickRowMenuItem("Width", "Expose Variable");
+        tree.Click(tree.NodeFor(Component(tree, "Panel")));
+        grid.TypeLinesAndApply("VariableReferences", "Height = Components/Button.LabelWidth");
+        tree.Click(tree.NodeFor(Component(tree, "Button")));
+        ProjectFileSnapshot start = tree.SnapshotFiles();
+        VariableSave exposed = Component(tree, "Button").GetDefaultStateOrThrow().Variables.Single(variable => variable.ExposedAsName == "LabelWidth");
+        tree.Dialogs.AnswerNextUserString("TextWidth");
+        Services.GetRequiredService<Gum.Services.IEditVariableService>().ShowEditVariableWindow(exposed, Component(tree, "Button"));
+        ProjectFileSnapshot renamed = tree.SnapshotFiles();
+
+        tree.Undo();
+        tree.Redo();
+
+        ReferenceLines(Component(tree, "Panel")).ShouldBe(new[] { "Height = Components/Button.TextWidth" });
+        tree.SnapshotFiles().ShouldMatch(renamed, "redoing the rename should rename the reference again");
+        tree.Undo();
+        tree.SnapshotFiles().ShouldMatch(start, "undoing it a second time should restore the reference");
+
+        tree.AssertOracles();
+    }
+
     /// <summary>
     /// Button with Background (Width 75) and Label, whose Width references Background.Width; Panel's
     /// Height references Components/Button.Background.Width. Leaves Background selected.

@@ -65,6 +65,13 @@ public interface IUndoManager
 
     void RecordCrossElementVariableChanges(IEnumerable<CrossElementVariableChange> changes);
 
+    /// <summary>
+    /// Notes that the selected element's animation was renamed, so undoing the action recorded when the
+    /// held <see cref="RequestLock()"/> is released renames the other elements' keyframes that play it
+    /// back, and redo renames them forward again. Ignored when no lock is held.
+    /// </summary>
+    void RecordAnimationRename(string oldName, string newName);
+
     void PerformUndo();
 
     void PerformRedo();
