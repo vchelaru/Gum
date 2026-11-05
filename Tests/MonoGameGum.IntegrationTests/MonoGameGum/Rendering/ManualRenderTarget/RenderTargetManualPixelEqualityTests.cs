@@ -221,6 +221,36 @@ public class RenderTargetManualPixelEqualityTests : BaseTestClass
         return (pixels, bakes, cached);
     }
 
+    [Fact]
+    public void ManualContainersOnTwoLayers_EqualEveryFrameContainers()
+    {
+        using ManualRenderTargetScene scene = new();
+
+        Color[] everyFrame = RenderOnTwoLayers(scene, manual: false);
+        Color[] manual = RenderOnTwoLayers(scene, manual: true);
+
+        ManualRenderTargetScene.CountNonBlack(manual).ShouldBeGreaterThan(200);
+        ManualRenderTargetScene.ShouldBeIdentical(everyFrame, manual, "one container per layer");
+    }
+
+    private static Color[] RenderOnTwoLayers(ManualRenderTargetScene scene, bool manual)
+    {
+        Layer second = scene.Renderer.AddLayer();
+        ContainerRuntime first = scene.CreateContainer(10, 10, Color.Red, manual, withEffect: true);
+        ContainerRuntime other = scene.CreateContainer(40, 40, Color.Lime, manual, withEffect: false);
+        first.AddToManagers(scene.Managers, scene.Renderer.MainLayer);
+        other.AddToManagers(scene.Managers, second);
+        first.UpdateLayout();
+        other.UpdateLayout();
+        scene.DrawFrames(3);
+        Color[] pixels = scene.CaptureFrame();
+        first.RemoveFromManagers();
+        other.RemoveFromManagers();
+        scene.Renderer.RemoveLayer(second);
+        scene.DrawFrames(3);
+        return pixels;
+    }
+
     private static Color[] Render(ManualRenderTargetScene scene, bool manual, bool nested, bool withEffect)
     {
         ContainerRuntime container = scene.CreateContainer(20, 20, Color.Red, manual, withEffect);
