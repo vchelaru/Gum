@@ -365,10 +365,14 @@ public partial class WireframeObjectManager : IWireframeObjectManager
             {
                 rootGue.ApplyState(categoryState);
             }
+            rootGue.ApplyState(BehaviorToolOnlyReferencesApplier.GetValuesThroughExposedVariables(elementSave, selected));
             return;
         }
 
         rootGue.ApplyState(selected);
+        // An instance's Forms value reaches the control nested inside it through the component's exposed
+        // variable; the canvas object gets what that control's behavior derives, the saved data does not (#7641).
+        rootGue.ApplyState(BehaviorToolOnlyReferencesApplier.GetValuesThroughExposedVariables(elementSave, selected));
 
         // An instance's Forms values win over visual state values: a state of this element that sets an
         // instance's category state (or the Forms property it derives from) must not beat them (#6860).

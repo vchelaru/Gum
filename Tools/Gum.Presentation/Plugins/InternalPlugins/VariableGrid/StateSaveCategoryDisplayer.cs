@@ -9,8 +9,8 @@ namespace Gum.Plugins.InternalPlugins.VariableGrid;
 
 /// <summary>
 /// Relocated from Gum.csproj into headless Gum.Presentation (ADR-0005 Phase 3, part of #3860):
-/// builds the category-state "common members" row (one remove-button row per variable shared by
-/// every state in a category) and the (currently always-empty - see <see cref="GetCategoriesFor"/>)
+/// builds the category-state "common members" row (one remove-button row per variable set by
+/// any state in a category) and the (currently always-empty - see <see cref="GetCategoriesFor"/>)
 /// per-category behavior properties header. Returns <see cref="SyntheticCategoryDescriptor"/>
 /// (wrapping <see cref="SyntheticVariableRow"/>) instead of WpfDataUi's <c>MemberCategory</c>/
 /// <c>InstanceMember</c> - a WPF-side mapper materializes the real WPF types from these descriptors.
@@ -26,30 +26,33 @@ public class StateSaveCategoryDisplayer
 
     /// <summary>
     /// Builds the "common members" category for <paramref name="stateCategory"/> - one
-    /// <see cref="VariableDisplayerKind.RemoveButton"/> row per variable/variable-list shared by
-    /// every state in the category - or null when the category has none.
+    /// <see cref="VariableDisplayerKind.RemoveButton"/> row per variable/variable-list set by any
+    /// state in the category - or null when the category has none.
     /// </summary>
     public SyntheticCategoryDescriptor? BuildCommonMembersCategory(InstanceSave? instance, StateSaveCategory stateCategory)
     {
         List<string> commonMembers = new List<string>();
 
-        var firstState = stateCategory.States.FirstOrDefault();
-
-        if (firstState != null)
+        // Any state may set a variable the others do not (hand- or tool-authored files), so list the
+        // union in first-seen order; each name once.
+        foreach (var state in stateCategory.States)
         {
-            foreach (var variable in firstState.Variables)
+            foreach (var variable in state.Variables)
             {
                 bool canAdd = variable.ExcludeFromInstances == false || instance == null;
 
-                if (canAdd)
+                if (canAdd && !commonMembers.Contains(variable.Name))
                 {
                     commonMembers.Add(variable.Name);
                 }
             }
 
-            foreach (var variableList in firstState.VariableLists)
+            foreach (var variableList in state.VariableLists)
             {
-                commonMembers.Add(variableList.Name);
+                if (!commonMembers.Contains(variableList.Name))
+                {
+                    commonMembers.Add(variableList.Name);
+                }
             }
         }
 

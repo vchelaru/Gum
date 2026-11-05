@@ -661,8 +661,7 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
         }
         else
         {
-            var firstState = stateCategory.States[0];
-            var hasVariables = firstState.Variables.Any() || firstState.VariableLists.Any();
+            var hasVariables = stateCategory.States.Any(item => item.Variables.Any() || item.VariableLists.Any());
 
             if (!hasVariables)
             {

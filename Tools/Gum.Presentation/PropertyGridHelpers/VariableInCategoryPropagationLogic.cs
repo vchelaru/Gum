@@ -188,7 +188,9 @@ public class VariableInCategoryPropagationLogic : IVariableInCategoryPropagation
         string message =
             $"Are you sure you want to remove {variableName} from all states in {stateCategory.Name}? The following states will be impacted:\n";
 
-        foreach (var state in stateCategory.States)
+        foreach (var state in stateCategory.States.Where(item =>
+            item.Variables.Any(variable => variable.Name == variableName) ||
+            item.VariableLists.Any(variableList => variableList.Name == variableName)))
         {
             message += $"\n{state.Name}";
         }
