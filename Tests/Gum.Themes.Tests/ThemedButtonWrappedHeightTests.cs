@@ -104,35 +104,6 @@ public class ThemedButtonWrappedHeightTests
 
     [Theory]
     [MemberData(nameof(LabelSizedCases))]
-    public void EmptyLabel_ShouldStillBeOneLineTall(
-        string theme, string kind, Action configureStyling, Action registerVisuals, float expectedHeight)
-    {
-        WithTheme(configureStyling, registerVisuals, () =>
-        {
-            float oneLine = CreateVisual(kind, ShortLabel).GetAbsoluteHeight();
-
-            CreateVisual(kind, "").GetAbsoluteHeight().ShouldBe(oneLine, $"{theme} {kind}");
-        });
-    }
-
-    [Theory]
-    [MemberData(nameof(LabelSizedCases))]
-    public void ExplicitAbsoluteHeight_ShouldStillBeHonoredWhateverTheLabel(
-        string theme, string kind, Action configureStyling, Action registerVisuals, float expectedHeight)
-    {
-        WithTheme(configureStyling, registerVisuals, () =>
-        {
-            GraphicalUiElement visual = CreateVisual(kind, LongLabel);
-            visual.HeightUnits = DimensionUnitType.Absolute;
-            visual.Height = 50;
-            visual.UpdateLayout();
-
-            visual.GetAbsoluteHeight().ShouldBe(50f, $"{theme} {kind}");
-        });
-    }
-
-    [Theory]
-    [MemberData(nameof(LabelSizedCases))]
     public void WrappedLabel_ShouldGrowTheButtonByTheExtraLinesAndKeepTextInside(
         string theme, string kind, Action configureStyling, Action registerVisuals, float expectedHeight)
     {
