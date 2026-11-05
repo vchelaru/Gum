@@ -66,4 +66,59 @@ public class PreviewGamepadLogTests
         PreviewGamepadLog.FormatGumButton(true, true, false, true)
             .ShouldBe("down=True pushed=True released=False repeat=True");
     }
+
+    [Fact]
+    public void HeartbeatDue_FirstCallThenOncePerInterval()
+    {
+        PreviewGamepadLog log = new PreviewGamepadLog();
+
+        log.HeartbeatDue(1000).ShouldBeTrue();
+        log.HeartbeatDue(3000).ShouldBeFalse();
+        log.HeartbeatDue(6000).ShouldBeTrue();
+        log.HeartbeatDue(6001).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void FormatHeartbeat_ShowsActivePacketAndPressed()
+    {
+        PreviewGamepadLog.FormatHeartbeat(true, true, 7, new[] { "A" })
+            .ShouldBe("heartbeat active=True connected=True packet=7 pressed=[A]");
+    }
+
+    [Fact]
+    public void FormatJoystickCaps_ShowsIdentityAndCounts()
+    {
+        PreviewGamepadLog.FormatJoystickCaps(true, "Xbox", "abc", 11, 6, 1)
+            .ShouldBe("connected=True name='Xbox' id='abc' buttons=11 axes=6 hats=1");
+    }
+
+    [Fact]
+    public void FormatJoystickState_ListsOnlyPressedMovedAndActiveHats()
+    {
+        string text = PreviewGamepadLog.FormatJoystickState(true,
+            new[] { false, true, false, true }, new[] { 100, -20000, 0 }, new[] { "", "UR" });
+
+        text.ShouldBe("connected=True buttons=[1,3] axes=[1:-20000] hats=[1:UR]");
+    }
+
+    [Fact]
+    public void FormatXInput_Disconnected_IsOneWord()
+    {
+        PreviewGamepadLog.FormatXInput(false, 0, 0, 0, 0, 0, 0, 0, 0).ShouldBe("connected=False");
+    }
+
+    [Fact]
+    public void FormatXInput_NamesButtonsAndShowsOnlyMovedSticksAndTriggers()
+    {
+        string text = PreviewGamepadLog.FormatXInput(true, 9, 0x1002, 0, 200, 0, 0, 12000, -100);
+
+        text.ShouldBe("connected=True packet=9 pressed=[DPadDown,A] rightStick=12000,-100 rightTrigger=200");
+    }
+
+    [Fact]
+    public void InputLostHint_MentionsOtherAppsAndBluetooth()
+    {
+        PreviewGamepadLog.InputLostHint.ShouldContain("Steam");
+        PreviewGamepadLog.InputLostHint.ShouldContain("Bluetooth");
+    }
 }

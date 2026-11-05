@@ -63,5 +63,91 @@ public sealed class PreviewGamepadLog
     public static string FormatGumButton(bool down, bool pushed, bool released, bool repeat) =>
         $"down={down} pushed={pushed} released={released} repeat={repeat}";
 
+    private long _nextHeartbeatMs = long.MinValue;
+
+    /// <summary>
+    /// True on the first call and then once per <paramref name="intervalMs"/>, so a quiet log can be told
+    /// apart from a logger that stopped running.
+    /// </summary>
+    public bool HeartbeatDue(long nowMs, long intervalMs = 5000)
+    {
+        if (nowMs < _nextHeartbeatMs)
+        {
+            return false;
+        }
+        _nextHeartbeatMs = nowMs + intervalMs;
+        return true;
+    }
+
+    /// <summary>The periodic raw MonoGame line body: connection, packet, pressed buttons and window activity.</summary>
+    public static string FormatHeartbeat(bool windowActive, bool connected, int packetNumber, IReadOnlyList<string> pressed) =>
+        $"heartbeat active={windowActive} connected={connected} packet={packetNumber} pressed=[{string.Join(",", pressed)}]";
+
+    /// <summary>Capabilities of one SDL joystick slot (MonoGame's Joystick layer, below the GameController mapping).</summary>
+    public static string FormatJoystickCaps(bool connected, string? name, string? id, int buttonCount, int axisCount, int hatCount) =>
+        $"connected={connected} name='{name}' id='{id}' buttons={buttonCount} axes={axisCount} hats={hatCount}";
+
+    /// <summary>
+    /// One SDL joystick state: pressed button indices, axes away from rest (|value| above
+    /// <paramref name="axisDeadZone"/>, raw -32768..32767) and hats that are not centered.
+    /// </summary>
+    public static string FormatJoystickState(bool connected, IReadOnlyList<bool> buttons, IReadOnlyList<int> axes,
+        IReadOnlyList<string> hats, int axisDeadZone = 4096)
+    {
+        List<string> pressed = new();
+        for (int i = 0; i < buttons.Count; i++)
+        {
+            if (buttons[i]) pressed.Add(i.ToString(CultureInfo.InvariantCulture));
+        }
+        List<string> moved = new();
+        for (int i = 0; i < axes.Count; i++)
+        {
+            if (Math.Abs(axes[i]) > axisDeadZone) moved.Add($"{i}:{axes[i]}");
+        }
+        List<string> activeHats = new();
+        for (int i = 0; i < hats.Count; i++)
+        {
+            if (!string.IsNullOrEmpty(hats[i])) activeHats.Add($"{i}:{hats[i]}");
+        }
+        return $"connected={connected} buttons=[{string.Join(",", pressed)}] axes=[{string.Join(",", moved)}] hats=[{string.Join(",", activeHats)}]";
+    }
+
+    private static readonly (int Mask, string Name)[] XInputButtonNames =
+    {
+        (0x0001, "DPadUp"), (0x0002, "DPadDown"), (0x0004, "DPadLeft"), (0x0008, "DPadRight"),
+        (0x0010, "Start"), (0x0020, "Back"), (0x0040, "LeftStick"), (0x0080, "RightStick"),
+        (0x0100, "LeftShoulder"), (0x0200, "RightShoulder"), (0x1000, "A"), (0x2000, "B"), (0x4000, "X"), (0x8000, "Y"),
+    };
+
+    /// <summary>
+    /// One XInput (Windows OS layer, independent of SDL) state. Sticks use the raw -32768..32767 range and are
+    /// listed only above <paramref name="stickDeadZone"/>; triggers are raw 0..255 and listed when nonzero.
+    /// </summary>
+    public static string FormatXInput(bool connected, uint packetNumber, ushort buttonMask,
+        byte leftTrigger, byte rightTrigger, short leftX, short leftY, short rightX, short rightY, int stickDeadZone = 7849)
+    {
+        if (!connected)
+        {
+            return "connected=False";
+        }
+        List<string> pressed = new();
+        foreach ((int mask, string name) in XInputButtonNames)
+        {
+            if ((buttonMask & mask) != 0) pressed.Add(name);
+        }
+        List<string> parts = new() { "connected=True", $"packet={packetNumber}", $"pressed=[{string.Join(",", pressed)}]" };
+        if (Math.Abs((int)leftX) > stickDeadZone || Math.Abs((int)leftY) > stickDeadZone) parts.Add($"leftStick={leftX},{leftY}");
+        if (Math.Abs((int)rightX) > stickDeadZone || Math.Abs((int)rightY) > stickDeadZone) parts.Add($"rightStick={rightX},{rightY}");
+        if (leftTrigger > 0) parts.Add($"leftTrigger={leftTrigger}");
+        if (rightTrigger > 0) parts.Add($"rightTrigger={rightTrigger}");
+        return string.Join(" ", parts);
+    }
+
+    /// <summary>Plain-English checklist logged once at startup for when XInput also reports nothing.</summary>
+    public const string InputLostHint =
+        "hint if xinput also shows no presses: another app may be holding the pad (Steam with controller support, "
+        + "Xbox Game Bar, a game launcher or remapper such as DS4Windows or reWASD); close them and retry; "
+        + "a controller on Bluetooth may be in a different mode than over USB (try a USB cable or re-pair it).";
+
     private static string Round(float value) => Math.Round(value, 2).ToString("0.00", CultureInfo.InvariantCulture);
 }

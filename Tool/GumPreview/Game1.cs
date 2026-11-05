@@ -376,6 +376,7 @@ public class Game1 : Game, IPreviewDefaultsTarget
                 + $"maxPads={Microsoft.Xna.Framework.Input.GamePad.MaximumGamePadCount} "
                 + $"SDL_JOYSTICK_ALLOW_BACKGROUND_EVENTS={Environment.GetEnvironmentVariable("SDL_JOYSTICK_ALLOW_BACKGROUND_EVENTS") ?? "(unset)"} "
                 + "order=LogGamepads reads before GumService.Update (gum state is one frame behind raw)");
+            log.LogGamepad(PreviewGamepadLog.InputLostHint);
         }
 
         if (_loggedWindowActive != IsActive)
@@ -383,6 +384,10 @@ public class Game1 : Game, IPreviewDefaultsTarget
             _loggedWindowActive = IsActive;
             log.LogGamepad($"window active={IsActive} navigationPads={FrameworkElement.GamePadsForUiControl.Count}");
         }
+
+        // Every ~5 s the heartbeat re-states each layer, so "no change" is distinguishable from "not logging".
+        bool heartbeat = _gamepadLog.HeartbeatDue(Environment.TickCount64);
+        LogJoysticksAndXInput(log, heartbeat);
 
         Gum.Input.GamePad[] pads = GumService.Default.Gamepads;
         for (int i = 0; i < pads.Length && i < _loggedGamepadState.Length; i++)
@@ -417,6 +422,11 @@ public class Game1 : Game, IPreviewDefaultsTarget
                 {
                     log.LogGamepad($"pad {i} raw {rawLine}");
                 }
+                if (heartbeat)
+                {
+                    log.LogGamepad($"pad {i} raw " + PreviewGamepadLog.FormatHeartbeat(
+                        IsActive, state.IsConnected, state.PacketNumber, PressedButtons(state)));
+                }
             }
 
             if (pads[i] == null)
@@ -444,6 +454,69 @@ public class Game1 : Game, IPreviewDefaultsTarget
                 {
                     log.LogGamepad($"pad {i} pushed {button} focused={DescribeControl(InteractiveGue.CurrentInputReceiver) ?? "(none)"}");
                 }
+            }
+        }
+    }
+
+    // SDL's joystick layer (below the GameController mapping GamePad.GetState uses) and Windows XInput
+    // (independent of SDL): together they show where pad input is lost.
+    private void LogJoysticksAndXInput(PreviewDebugLog log, bool heartbeat)
+    {
+        string prefix = heartbeat ? "heartbeat " : "";
+        int last = -1;
+        try
+        {
+            last = Microsoft.Xna.Framework.Input.Joystick.LastConnectedIndex;
+        }
+        catch (Exception ex)
+        {
+            string? failed = _gamepadLog.Changed("joystick.error", ex.Message);
+            if (failed != null) log.LogGamepad($"joystick error {failed}");
+        }
+        if (heartbeat)
+        {
+            log.LogGamepad($"joystick heartbeat lastConnectedIndex={last} supported={Microsoft.Xna.Framework.Input.Joystick.IsSupported}");
+        }
+        for (int i = 0; i <= last; i++)
+        {
+            Microsoft.Xna.Framework.Input.JoystickCapabilities caps = Microsoft.Xna.Framework.Input.Joystick.GetCapabilities(i);
+            string? capsLine = _gamepadLog.Changed($"joycaps{i}", PreviewGamepadLog.FormatJoystickCaps(
+                caps.IsConnected, caps.DisplayName, caps.Identifier, caps.ButtonCount, caps.AxisCount, caps.HatCount));
+            if (capsLine != null) log.LogGamepad($"joystick {i} caps {capsLine}");
+            if (!caps.IsConnected) continue;
+
+            Microsoft.Xna.Framework.Input.JoystickState state = Microsoft.Xna.Framework.Input.Joystick.GetState(i);
+            List<bool> buttons = new();
+            foreach (Microsoft.Xna.Framework.Input.ButtonState b in state.Buttons)
+            {
+                buttons.Add(b == Microsoft.Xna.Framework.Input.ButtonState.Pressed);
+            }
+            List<string> hats = new();
+            foreach (Microsoft.Xna.Framework.Input.JoystickHat hat in state.Hats)
+            {
+                string h = (hat.Up == Microsoft.Xna.Framework.Input.ButtonState.Pressed ? "U" : "")
+                    + (hat.Down == Microsoft.Xna.Framework.Input.ButtonState.Pressed ? "D" : "")
+                    + (hat.Left == Microsoft.Xna.Framework.Input.ButtonState.Pressed ? "L" : "")
+                    + (hat.Right == Microsoft.Xna.Framework.Input.ButtonState.Pressed ? "R" : "");
+                hats.Add(h);
+            }
+            string text = PreviewGamepadLog.FormatJoystickState(state.IsConnected, buttons, state.Axes, hats);
+            string? line = _gamepadLog.Changed($"joystate{i}", text);
+            if (line != null || heartbeat) log.LogGamepad($"joystick {i} {prefix}state {text}");
+        }
+
+        for (int i = 0; i < 4; i++)
+        {
+            string? text = XInputProbe.Read(i);
+            if (text == null)
+            {
+                if (heartbeat && i == 0) log.LogGamepad($"xinput {prefix}unavailable lib={XInputProbe.Library}");
+                continue;
+            }
+            string? line = _gamepadLog.Changed($"xinput{i}", text);
+            if (line != null || (heartbeat && text != "connected=False"))
+            {
+                log.LogGamepad($"xinput {i} {prefix}{text}");
             }
         }
     }
