@@ -786,7 +786,7 @@ public abstract class TextBoxBase :
             {
                 var xChange = MainCursor.XChange / global::RenderingLibrary.ISystemManagers.Default.Renderer.Camera.Zoom;
 
-                var stringLength = MeasureStringScaled(DisplayedText ?? string.Empty, global::RenderingLibrary.Graphics.HorizontalMeasurementStyle.Full);
+                var stringLength = GetDrawnWidth(DisplayedText ?? string.Empty);
 
                 var minimumShift = System.Math.Min(
                     edgeToTextPadding,
@@ -850,13 +850,11 @@ public abstract class TextBoxBase :
             GetIndex));
     }
 
-    // The same scaled hit test as TextExtensions.GetCharacterIndexAtPosition, in TextHitTesting.GetIndexInLine.
-    // Per-character advance comes from IFormsText.GetCharacterAdvance, which each backend's concrete Text
-    // implements: the XNA-family Text (RenderingLibrary/Graphics/Text.cs) overrides it with an allocation-free
-    // BitmapFont.XAdvance lookup; other backends fall back to measuring a one-character string.
-    // See https://github.com/vchelaru/Gum/issues/3542.
+    // The same hit test as TextExtensions.GetCharacterIndexAtPosition, in TextHitTesting.GetIndexInLine.
+    // Per-character advance comes from IFormsText.GetDrawnCharacterAdvance: the XNA-family Text reads it
+    // allocation-free off the drawn BitmapFont (#3542); other backends measure a one-character string.
     private int GetIndex(float cursorOffset, string? textToUse) =>
-        TextHitTesting.GetIndexInLine(textToUse, cursorOffset, coreTextObject.GetCharacterAdvance, MeasurementFontScale);
+        TextHitTesting.GetIndexInLine(textToUse, cursorOffset, coreTextObject.GetDrawnCharacterAdvance);
 
     /// <summary>
     /// Handles special situations only like [LEFT, HOME, END, BACK (Backspace), RIGHT, UP, DOWN, DELETE, CTRL+C, CTRL+X, CTRL+V, CTRL+A]
@@ -1098,7 +1096,7 @@ public abstract class TextBoxBase :
             {
                 string line = lines[lineNumber];
                 string beforeCaret = line.Substring(0, System.Math.Min(relativeIndexOnLine, line.Length));
-                caretXOffset = MeasureStringScaled(beforeCaret, global::RenderingLibrary.Graphics.HorizontalMeasurementStyle.Full)
+                caretXOffset = GetDrawnWidth(beforeCaret)
                     + GetLineXOffsetForHorizontalAlignment(line);
             }
             var lineHeight = EffectiveLineHeightInPixels;
@@ -2252,13 +2250,13 @@ public abstract class TextBoxBase :
         else
         {
             var selectionPosition = new SelectionPosition();
-            var firstMeasure = MeasureStringScaled(substring, global::RenderingLibrary.Graphics.HorizontalMeasurementStyle.Full);
+            var firstMeasure = GetDrawnWidth(substring);
             substring = displayedText.Substring(0, selectionStart + selectionLength);
 
             selectionPosition.XStart = this.textComponent.X + firstMeasure;
             selectionPosition.Y = this.textComponent.Y;
             selectionPosition.Width = 1 +
-                MeasureStringScaled(substring, global::RenderingLibrary.Graphics.HorizontalMeasurementStyle.Full) - firstMeasure;
+                GetDrawnWidth(substring) - firstMeasure;
 
             selectionStartEnds.Add(selectionPosition);
         }
@@ -2487,24 +2485,15 @@ public abstract class TextBoxBase :
         indexIntoLine = System.Math.Min(indexIntoLine, stringToMeasure.Length);
         var substring = stringToMeasure.Substring(0, indexIntoLine);
 
-        // The unified MeasureString overload internally handles the no-font
-        // case (falling back to DefaultBitmapFont, or zero under TEST).
-        var measure = MeasureStringScaled(substring, global::RenderingLibrary.Graphics.HorizontalMeasurementStyle.Full);
+        // MeasureDrawnString handles the no-font case (falling back to
+        // DefaultBitmapFont, or zero under TEST).
+        var measure = GetDrawnWidth(substring);
         return measure + this.textComponent.X + GetLineXOffsetForHorizontalAlignment(stringToMeasure);
     }
 
-    public float GetLineXOffsetForHorizontalAlignment(string stringToMeasure)
-    {
-        if (coreTextObject.HorizontalAlignment == global::RenderingLibrary.Graphics.HorizontalAlignment.Left)
-            return 0;
-
-        float measuredLineWidth = MeasureStringScaled(stringToMeasure);
-        float textComponentWidth = textComponent.AbsoluteWidth;
-        float gapBetweenTextAndEdge = textComponentWidth - measuredLineWidth;
-        if (coreTextObject.HorizontalAlignment == global::RenderingLibrary.Graphics.HorizontalAlignment.Center)
-            gapBetweenTextAndEdge /= 2.0f;
-        return gapBetweenTextAndEdge;
-    }
+    public float GetLineXOffsetForHorizontalAlignment(string stringToMeasure) =>
+        TextHitTesting.GetHorizontalAlignmentOffset(coreTextObject.HorizontalAlignment, textComponent.AbsoluteWidth,
+            coreTextObject.MeasureDrawnString(stringToMeasure, global::RenderingLibrary.Graphics.HorizontalMeasurementStyle.TrimRight));
 
     float CoreTextObjectHeight =>
         coreTextObject.GetAbsoluteBottom() - coreTextObject.GetAbsoluteTop();
@@ -2654,9 +2643,10 @@ public abstract class TextBoxBase :
         || unit == global::Gum.Converters.GeneralUnitType.PixelsFromLarge
         || unit == global::Gum.Converters.GeneralUnitType.Percentage;
 
-    // The scale from the font's own pixels (MeasureString, GetCharacterAdvance, LineHeightInPixels) to
-    // drawn units: IWrappedText.WordWrapFontScale, the effective FontScale except while oversampling pins
-    // a separate measurement font that layout is measured with. Same scale as TextExtensions.GetCharacterIndexAtPosition.
+    // The scale from the font's own pixels (LineHeightInPixels, DescenderHeight) to drawn units:
+    // IWrappedText.WordWrapFontScale, the effective FontScale except while oversampling pins a separate
+    // measurement font, whose line height the drawn lines step by (#6814). Positions within a line come
+    // from IFormsText.MeasureDrawnString and GetDrawnCharacterAdvance instead (#7675).
     private float MeasurementFontScale => coreTextObject.WordWrapFontScale;
 
     // The full per-line vertical step used by the renderer:
@@ -2679,15 +2669,9 @@ public abstract class TextBoxBase :
     private float ScaledLineHeightInPixels =>
         coreTextObject.LineHeightInPixels * MeasurementFontScale;
 
-    // Text.MeasureString returns the raw glyph-pixel width (it explicitly
-    // ignores FontScale). Caret X, selection X, hit-testing, and centering
-    // padding all live in screen space, so they must multiply by FontScale
-    // to line up with the actual rendered glyphs.
-    private float MeasureStringScaled(string value) =>
-        coreTextObject.MeasureString(value) * MeasurementFontScale;
-
-    private float MeasureStringScaled(string value, global::RenderingLibrary.Graphics.HorizontalMeasurementStyle style) =>
-        coreTextObject.MeasureString(value, style) * MeasurementFontScale;
+    // The drawn width of value through its last character's advance: where a caret after it is drawn.
+    private float GetDrawnWidth(string value) =>
+        coreTextObject.MeasureDrawnString(value, global::RenderingLibrary.Graphics.HorizontalMeasurementStyle.Full);
 
     private float GetCenterOfYForLinePixelsFromSmall(int lineNumber)
     {
