@@ -210,8 +210,12 @@ public partial class GraphicalUiElement
             }
             // No property holds the value, so keep it where a reference reads it from. Without this a
             // keyframe's X = OffsetX (#7645) would never see an OffsetX set on a plain element, since no
-            // row of the element's own default state reads it.
-            RecordReferenceInput(propertyName, value);
+            // row of the element's own default state reads it. Only a variable the element declares is kept,
+            // so a misspelled name is not stored.
+            if (ElementSave?.DefaultState?.GetVariableRecursive(propertyName) != null)
+            {
+                RecordReferenceInput(propertyName, value);
+            }
             return false;
         }
 
@@ -570,7 +574,8 @@ public partial class GraphicalUiElement
 
     // Variables that have no property on the visual (a component's custom variables) are not held
     // anywhere on the live object, so the last value reported for each is kept here. Read only when the
-    // object cannot be asked, and only for names some row reads.
+    // object cannot be asked, and only for names some row reads. Holds the names a row of the default state reads
+    // that were reported, and the custom variables the element declares (a keyframe's rows read those).
     private Dictionary<string, object?>? _referenceInputs;
 
     // Keeps the value of a variable some row reads. For an instance-qualified name the instance holds it.

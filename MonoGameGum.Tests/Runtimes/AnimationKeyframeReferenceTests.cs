@@ -216,6 +216,50 @@ public class AnimationKeyframeReferenceWithoutExpressionsTests : BaseTestClass
         gue.X.ShouldBe(40f);
         reports.Count.ShouldBe(1);
     }
+
+    [Fact]
+    public void SetProperty_NameTheElementDoesNotDeclare_IsNotStoredAndReportsNothing()
+    {
+        ComponentSave element = KeyframeReferenceHelper.CreateElement();
+        GraphicalUiElement gue = element.ToGraphicalUiElement();
+        List<string> reports = new List<string>();
+        void Handler(string message) => reports.Add(message);
+        CustomSetPropertyOnRenderable.PropertyAssignmentError += Handler;
+        try
+        {
+            gue.SetProperty("OfsetX", 10f);
+            gue.SetProperty("OffsetX", 10f);
+        }
+        finally
+        {
+            CustomSetPropertyOnRenderable.PropertyAssignmentError -= Handler;
+        }
+
+        System.Reflection.FieldInfo field = typeof(GraphicalUiElement).GetField("_referenceInputs",
+            System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!;
+        Dictionary<string, object?> stored = (Dictionary<string, object?>)field.GetValue(gue)!;
+        stored.ContainsKey("OfsetX").ShouldBeFalse();
+        stored.ContainsKey("OffsetX").ShouldBeTrue();
+        reports.Count.ShouldBe(0);
+    }
+
+    [Fact]
+    public void PlayAnimation_ThenAnimateSelf_ResolvesTheKeyframeReferences()
+    {
+        ComponentSave element = KeyframeReferenceHelper.CreateElement();
+        AnimationRuntime animation = KeyframeReferenceHelper.CreateAnimation(element,
+            startRow: "X = OffsetX", startStoredX: 0f, endRow: "X = OffsetEnd", endStoredX: 200f);
+        animation.Name = "Slide";
+        GraphicalUiElement gue = element.ToGraphicalUiElement();
+        gue.Animations = new List<AnimationRuntime> { animation };
+        gue.SetProperty("OffsetX", 10f);
+        gue.SetProperty("OffsetEnd", 110f);
+
+        gue.PlayAnimation("Slide");
+        gue.AnimateSelf(0.5);
+
+        gue.X.ShouldBe(60f);
+    }
 }
 
 /// <summary>Arithmetic in a keyframe row needs the optional Gum.Expressions package.</summary>
