@@ -104,8 +104,15 @@ public class SubtextLogicInheritedCategoriesTests : BaseTestClass
     [Fact]
     public void GetCategoriesSettingVariable_InstanceDeclaredInDerivedComponent_NamesCategoryOfItsBase()
     {
-ComponentSave grand = CreateComponent("Grand");        StateSaveCategory category = AddCategory(grand, "Size", "Indigo", "A", "B");        SetFloat(category.States[1], "Track.Width");        ComponentSave middle = CreateComponent("Middle", "Grand");        InstanceSave track = new InstanceSave { Name = "Track", BaseType = "Rectangle", ParentContainer = middle };        middle.Instances.Add(track);        VariableSave width = new VariableSave { Name = "Width", Type = "float", Value = 1f };        Names(_sut.GetCategoriesSettingVariable(width, "Width", middle, track)).ShouldBe(new[] { "Size" });
-        Names(_sut.GetCategoriesSettingVariable(width, "Width", derived, baseTrack)).ShouldBe(new[] { "Size" });
+        ComponentSave grand = CreateComponent("Grand");
+        StateSaveCategory category = AddCategory(grand, "Size", "Indigo", "A", "B");
+        SetFloat(category.States[1], "Track.Width");
+        ComponentSave middle = CreateComponent("Middle", "Grand");
+        InstanceSave track = new InstanceSave { Name = "Track", BaseType = "Rectangle", ParentContainer = middle };
+        middle.Instances.Add(track);
+        VariableSave width = new VariableSave { Name = "Width", Type = "float", Value = 1f };
+
+        Names(_sut.GetCategoriesSettingVariable(width, "Width", middle, track)).ShouldBe(new[] { "Size" });
     }
 
     [Fact]
