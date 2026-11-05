@@ -126,6 +126,8 @@ public class FontReferenceCollectorNestedStateTests : IDisposable
         // The default state's conditional reference sets the exposed size per branch (12 and 30); a state
         // that only moves the instance sees the component's own size (18), which the default walk never emits.
         ScreenSave screen = BuildScreenWithButton(out ComponentSave button);
+        // Only Label, so the component's own size is not also reported by an unrelated Text.
+        button.Instances.RemoveAll(item => item.Name != "Label");
         ExposeFontSize(button, "TextSize");
         button.DefaultState.Variables.Find(v => v.Name == "Label.FontSize")!.SetsValue = false;
         screen.DefaultState.Variables.Add(new VariableSave { SetsValue = true, Name = "IsBig", Type = "bool", Value = false });
