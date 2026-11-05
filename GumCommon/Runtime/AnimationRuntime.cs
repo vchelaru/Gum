@@ -237,7 +237,17 @@ public class AnimationRuntime
 
     public StateSave GetStateToSet(double animationTime, ElementSave element, bool defaultIfNull = false)
     {
-        StateSave stateToSet = GetStateToSetFromStateKeyframes(animationTime, element, defaultIfNull);
+        return GetStateToSet(animationTime, element, null, defaultIfNull);
+    }
+
+    /// <summary>
+    /// The state the animation sets at the time. The reference rows of the keyframe states are
+    /// evaluated against <paramref name="liveRoot"/>, the live element, before interpolating; null
+    /// leaves the stored values (the tool's preview, which re-evaluates references itself).
+    /// </summary>
+    internal StateSave GetStateToSet(double animationTime, ElementSave element, GraphicalUiElement? liveRoot, bool defaultIfNull = false)
+    {
+        StateSave stateToSet = GetStateToSetFromStateKeyframes(animationTime, element, defaultIfNull, null, liveRoot);
 
         CombineStateFromAnimations(animationTime, element, null, stateToSet);
 
@@ -251,7 +261,36 @@ public class AnimationRuntime
         return stateToSet;
     }
 
-    private StateSave GetStateToSetFromStateKeyframes(double animationTime, ElementSave? element, bool defaultIfNull, GraphicalUiElement? graphicalUiElement = null)
+    // True when the state has a variable-reference list with at least one row. Compares names in place
+    // because this runs for every keyframe state on every tick.
+    private static bool HasReferenceRows(StateSave state)
+    {
+        List<VariableListSave> lists = state.VariableLists;
+        for (int i = 0; i < lists.Count; i++)
+        {
+            string name = lists[i].Name;
+            if ((name == "VariableReferences" || name.EndsWith(".VariableReferences", StringComparison.Ordinal))
+                && lists[i].ValueAsIList.Count > 0)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    // A keyframe state's reference rows are evaluated against the live element, so the keyframe holds
+    // what the element reads now (an OffsetX the game set) rather than a number stored when it was authored.
+    // A state without rows, or no live element to read (the tool previews without one), comes back as is.
+    private static StateSave? ResolveReferences(StateSave? state, ElementSave element, GraphicalUiElement? liveRoot)
+    {
+        if (state == null || liveRoot == null || !HasReferenceRows(state))
+        {
+            return state;
+        }
+        return liveRoot.ResolveKeyframeReferences(element, state);
+    }
+
+    private StateSave GetStateToSetFromStateKeyframes(double animationTime, ElementSave? element, bool defaultIfNull, GraphicalUiElement? graphicalUiElement = null, GraphicalUiElement? liveRoot = null)
     {
         //var stateKeyframes = this.Keyframes.Where(item => !string.IsNullOrEmpty(item.StateName) || item.CachedCumulativeState != null);
 
@@ -288,17 +327,17 @@ public class AnimationRuntime
             {
                 if (keyframeBefore == null && keyframeAfter != null)
                 {
-                    stateForTrack = GetStateFromCategorizedName(keyframeAfter.StateName, element);
+                    stateForTrack = ResolveReferences(GetStateFromCategorizedName(keyframeAfter.StateName, element), element, liveRoot);
                 }
                 else if (keyframeBefore != null && keyframeAfter == null)
                 {
-                    stateForTrack = GetStateFromCategorizedName(keyframeBefore.StateName, element);
+                    stateForTrack = ResolveReferences(GetStateFromCategorizedName(keyframeBefore.StateName, element), element, liveRoot);
                 }
                 else if (keyframeBefore != null && keyframeAfter != null)
                 {
                     double linearRatio = GetLinearRatio(animationTime, keyframeBefore, keyframeAfter);
-                    var stateBefore = GetStateFromCategorizedName(keyframeBefore.StateName, element);
-                    var stateAfter = GetStateFromCategorizedName(keyframeAfter.StateName, element);
+                    var stateBefore = ResolveReferences(GetStateFromCategorizedName(keyframeBefore.StateName, element), element, liveRoot);
+                    var stateAfter = ResolveReferences(GetStateFromCategorizedName(keyframeAfter.StateName, element), element, liveRoot);
 
                     if (stateBefore != null && stateAfter != null)
                     {
@@ -514,7 +553,7 @@ public class AnimationRuntime
         bool shouldFirstKeyframeBeDefaultState = false;
         if(graphicalUiElement.ElementSave != null)
         {
-            var state = GetStateToSet(secondsFromBeginning, graphicalUiElement.ElementSave, shouldFirstKeyframeBeDefaultState);
+            var state = GetStateToSet(secondsFromBeginning, graphicalUiElement.ElementSave, graphicalUiElement, shouldFirstKeyframeBeDefaultState);
             graphicalUiElement.ApplyState(state);
         }
         else

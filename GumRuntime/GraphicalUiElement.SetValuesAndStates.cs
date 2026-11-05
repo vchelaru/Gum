@@ -204,7 +204,15 @@ public partial class GraphicalUiElement
         var propertyInfo = this.GetType().GetProperty(propertyName);
         if (propertyInfo == null)
         {
-            return TrySetCustomVariableOnFormsControl(propertyName, value);
+            if (TrySetCustomVariableOnFormsControl(propertyName, value))
+            {
+                return true;
+            }
+            // No property holds the value, so keep it where a reference reads it from. Without this a
+            // keyframe's X = OffsetX (#7645) would never see an OffsetX set on a plain element, since no
+            // row of the element's own default state reads it.
+            RecordReferenceInput(propertyName, value);
+            return false;
         }
 
         if (propertyInfo.DeclaringType == typeof(GraphicalUiElement))
@@ -629,7 +637,7 @@ public partial class GraphicalUiElement
         return false;
     }
 
-    private static bool WrittenByAny(List<ReferenceRow> rows, string name)
+    private static bool WrittenByAny(IReadOnlyList<ReferenceRow> rows, string name)
     {
         for (int i = 0; i < rows.Count; i++)
         {
@@ -643,7 +651,7 @@ public partial class GraphicalUiElement
 
     // Puts the live value of every input the rows read into the state they evaluate against. The changed
     // variables are already there, and a result of one of the rows is computed in order, so neither is read.
-    private void AddLiveInputs(List<ReferenceRow> rows, DataTypes.Variables.StateSave state)
+    private void AddLiveInputs(IReadOnlyList<ReferenceRow> rows, DataTypes.Variables.StateSave state)
     {
         for (int i = 0; i < rows.Count; i++)
         {
@@ -661,6 +669,58 @@ public partial class GraphicalUiElement
                 }
             }
         }
+    }
+
+    /// <summary>
+    /// A copy of the animation keyframe state with each of its variable-reference rows evaluated against
+    /// this element's live values (#7645), so a keyframe's <c>X = OffsetX</c> is the offset the element holds
+    /// now. The state itself is not changed, since it is shared by every element playing the animation.
+    /// A row that cannot be evaluated (unknown name, a type that does not fit, an expression without
+    /// Gum.Expressions) leaves the variable at its stored value and is reported once, like any other row.
+    /// </summary>
+    internal DataTypes.Variables.StateSave ResolveKeyframeReferences(ElementSave element, DataTypes.Variables.StateSave keyframeState)
+    {
+        VariableReferenceGraph graph = VariableReferenceGraph.GetForState(element, keyframeState);
+        if (!graph.HasRows)
+        {
+            return keyframeState;
+        }
+
+        DataTypes.Variables.StateSave resolved = keyframeState.Clone();
+
+        // Rows read the keyframe's own variables first, then what this element holds now. The evaluation
+        // state shares the variables of the copy, so a result lands in the copy; a result for a variable
+        // the keyframe does not store is added to the copy below.
+        DataTypes.Variables.StateSave evaluationState = new DataTypes.Variables.StateSave
+        {
+            Name = "KeyframeReferences",
+            ParentContainer = element
+        };
+        evaluationState.Variables.AddRange(resolved.Variables);
+        IReadOnlyList<ReferenceRow> rows = graph.LoadOrderRows;
+        AddLiveInputs(rows, evaluationState);
+
+        for (int i = 0; i < rows.Count; i++)
+        {
+            ReferenceRow row = rows[i];
+            ElementSaveExtensions.ApplyVariableReferencesOnSpecificOwner(row.Instance, row.Line, evaluationState, this, propagateNull: false);
+
+            DataTypes.Variables.VariableSave? result = null;
+            for (int j = 0; j < evaluationState.Variables.Count; j++)
+            {
+                if (evaluationState.Variables[j].Name == row.WrittenName)
+                {
+                    result = evaluationState.Variables[j];
+                    break;
+                }
+            }
+            if (result != null && result.Value != null && !StateHasVariable(resolved, row.WrittenName))
+            {
+                resolved.Variables.Add(result);
+            }
+        }
+
+        return resolved;
     }
 
     /// <summary>
