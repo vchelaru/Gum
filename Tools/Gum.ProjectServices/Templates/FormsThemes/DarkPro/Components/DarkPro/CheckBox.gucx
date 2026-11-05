@@ -426,6 +426,15 @@
       <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
       </Variable>
+      <Variable Type="int" Name="InnerCheck.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">204</Value>
+      </Variable>
+      <Variable Type="int" Name="InnerCheck.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">122</Value>
+      </Variable>
+      <Variable Type="int" Name="InnerCheck.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">0</Value>
+      </Variable>
       <Variable Type="bool" Name="InnerCheck.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
       </Variable>
@@ -468,6 +477,16 @@
           <string>FillColor = Components/DarkPro/Styles.Surface1.FillColor</string>
         </Value>
       </VariableList>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>InnerCheck.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Color = Components/DarkPro/Styles.Accent.FillColor</string>
+        </Value>
+      </VariableList>
     </State>
     <State>
       <Name>HighlightedOff</Name>
@@ -494,6 +513,15 @@
       </Variable>
       <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
+      <Variable Type="int" Name="InnerCheck.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">204</Value>
+      </Variable>
+      <Variable Type="int" Name="InnerCheck.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">122</Value>
+      </Variable>
+      <Variable Type="int" Name="InnerCheck.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">0</Value>
       </Variable>
       <Variable Type="bool" Name="InnerCheck.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
@@ -537,6 +565,16 @@
           <string>FillColor = Components/DarkPro/Styles.Surface2.FillColor</string>
         </Value>
       </VariableList>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>InnerCheck.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Color = Components/DarkPro/Styles.Accent.FillColor</string>
+        </Value>
+      </VariableList>
     </State>
     <State>
       <Name>FocusedOff</Name>
@@ -563,6 +601,15 @@
       </Variable>
       <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">true</Value>
+      </Variable>
+      <Variable Type="int" Name="InnerCheck.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">204</Value>
+      </Variable>
+      <Variable Type="int" Name="InnerCheck.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">122</Value>
+      </Variable>
+      <Variable Type="int" Name="InnerCheck.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">0</Value>
       </Variable>
       <Variable Type="bool" Name="InnerCheck.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
@@ -606,6 +653,16 @@
           <string>FillColor = Components/DarkPro/Styles.Surface1.FillColor</string>
         </Value>
       </VariableList>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>InnerCheck.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Color = Components/DarkPro/Styles.Accent.FillColor</string>
+        </Value>
+      </VariableList>
     </State>
     <State>
       <Name>HighlightedFocusedOff</Name>
@@ -632,6 +689,15 @@
       </Variable>
       <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">true</Value>
+      </Variable>
+      <Variable Type="int" Name="InnerCheck.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">204</Value>
+      </Variable>
+      <Variable Type="int" Name="InnerCheck.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">122</Value>
+      </Variable>
+      <Variable Type="int" Name="InnerCheck.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">0</Value>
       </Variable>
       <Variable Type="bool" Name="InnerCheck.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
@@ -675,6 +741,16 @@
           <string>FillColor = Components/DarkPro/Styles.Surface2.FillColor</string>
         </Value>
       </VariableList>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>InnerCheck.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Color = Components/DarkPro/Styles.Accent.FillColor</string>
+        </Value>
+      </VariableList>
     </State>
     <State>
       <Name>PushedOff</Name>
@@ -701,6 +777,15 @@
       </Variable>
       <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
+      <Variable Type="int" Name="InnerCheck.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">204</Value>
+      </Variable>
+      <Variable Type="int" Name="InnerCheck.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">122</Value>
+      </Variable>
+      <Variable Type="int" Name="InnerCheck.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">0</Value>
       </Variable>
       <Variable Type="bool" Name="InnerCheck.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
@@ -744,6 +829,16 @@
           <string>FillColor = Components/DarkPro/Styles.PressedFill.FillColor</string>
         </Value>
       </VariableList>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>InnerCheck.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Color = Components/DarkPro/Styles.Accent.FillColor</string>
+        </Value>
+      </VariableList>
     </State>
     <State>
       <Name>DisabledOff</Name>
@@ -770,6 +865,15 @@
       </Variable>
       <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
+      <Variable Type="int" Name="InnerCheck.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">204</Value>
+      </Variable>
+      <Variable Type="int" Name="InnerCheck.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">122</Value>
+      </Variable>
+      <Variable Type="int" Name="InnerCheck.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">0</Value>
       </Variable>
       <Variable Type="bool" Name="InnerCheck.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
@@ -811,6 +915,16 @@
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
           <string>FillColor = Components/DarkPro/Styles.DisabledFill.FillColor</string>
+        </Value>
+      </VariableList>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>InnerCheck.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Color = Components/DarkPro/Styles.Accent.FillColor</string>
         </Value>
       </VariableList>
     </State>
@@ -840,6 +954,15 @@
       <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">true</Value>
       </Variable>
+      <Variable Type="int" Name="InnerCheck.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">204</Value>
+      </Variable>
+      <Variable Type="int" Name="InnerCheck.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">122</Value>
+      </Variable>
+      <Variable Type="int" Name="InnerCheck.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">0</Value>
+      </Variable>
       <Variable Type="bool" Name="InnerCheck.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
       </Variable>
@@ -880,6 +1003,16 @@
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
           <string>FillColor = Components/DarkPro/Styles.DisabledFill.FillColor</string>
+        </Value>
+      </VariableList>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>InnerCheck.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Color = Components/DarkPro/Styles.Accent.FillColor</string>
         </Value>
       </VariableList>
     </State>
@@ -1525,6 +1658,15 @@
       <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
       </Variable>
+      <Variable Type="int" Name="InnerCheck.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">204</Value>
+      </Variable>
+      <Variable Type="int" Name="InnerCheck.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">122</Value>
+      </Variable>
+      <Variable Type="int" Name="InnerCheck.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">0</Value>
+      </Variable>
       <Variable Type="bool" Name="InnerCheck.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
       </Variable>
@@ -1567,6 +1709,16 @@
           <string>FillColor = Components/DarkPro/Styles.Surface1.FillColor</string>
         </Value>
       </VariableList>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>InnerCheck.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Color = Components/DarkPro/Styles.Accent.FillColor</string>
+        </Value>
+      </VariableList>
     </State>
     <State>
       <Name>HighlightedIndeterminate</Name>
@@ -1593,6 +1745,15 @@
       </Variable>
       <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
+      <Variable Type="int" Name="InnerCheck.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">204</Value>
+      </Variable>
+      <Variable Type="int" Name="InnerCheck.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">122</Value>
+      </Variable>
+      <Variable Type="int" Name="InnerCheck.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">0</Value>
       </Variable>
       <Variable Type="bool" Name="InnerCheck.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
@@ -1636,6 +1797,16 @@
           <string>FillColor = Components/DarkPro/Styles.Surface2.FillColor</string>
         </Value>
       </VariableList>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>InnerCheck.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Color = Components/DarkPro/Styles.Accent.FillColor</string>
+        </Value>
+      </VariableList>
     </State>
     <State>
       <Name>FocusedIndeterminate</Name>
@@ -1662,6 +1833,15 @@
       </Variable>
       <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">true</Value>
+      </Variable>
+      <Variable Type="int" Name="InnerCheck.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">204</Value>
+      </Variable>
+      <Variable Type="int" Name="InnerCheck.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">122</Value>
+      </Variable>
+      <Variable Type="int" Name="InnerCheck.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">0</Value>
       </Variable>
       <Variable Type="bool" Name="InnerCheck.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
@@ -1705,6 +1885,16 @@
           <string>FillColor = Components/DarkPro/Styles.Surface1.FillColor</string>
         </Value>
       </VariableList>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>InnerCheck.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Color = Components/DarkPro/Styles.Accent.FillColor</string>
+        </Value>
+      </VariableList>
     </State>
     <State>
       <Name>HighlightedFocusedIndeterminate</Name>
@@ -1731,6 +1921,15 @@
       </Variable>
       <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">true</Value>
+      </Variable>
+      <Variable Type="int" Name="InnerCheck.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">204</Value>
+      </Variable>
+      <Variable Type="int" Name="InnerCheck.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">122</Value>
+      </Variable>
+      <Variable Type="int" Name="InnerCheck.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">0</Value>
       </Variable>
       <Variable Type="bool" Name="InnerCheck.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
@@ -1774,6 +1973,16 @@
           <string>FillColor = Components/DarkPro/Styles.Surface2.FillColor</string>
         </Value>
       </VariableList>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>InnerCheck.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Color = Components/DarkPro/Styles.Accent.FillColor</string>
+        </Value>
+      </VariableList>
     </State>
     <State>
       <Name>PushedIndeterminate</Name>
@@ -1800,6 +2009,15 @@
       </Variable>
       <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
+      <Variable Type="int" Name="InnerCheck.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">204</Value>
+      </Variable>
+      <Variable Type="int" Name="InnerCheck.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">122</Value>
+      </Variable>
+      <Variable Type="int" Name="InnerCheck.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">0</Value>
       </Variable>
       <Variable Type="bool" Name="InnerCheck.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
@@ -1843,6 +2061,16 @@
           <string>FillColor = Components/DarkPro/Styles.PressedFill.FillColor</string>
         </Value>
       </VariableList>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>InnerCheck.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Color = Components/DarkPro/Styles.Accent.FillColor</string>
+        </Value>
+      </VariableList>
     </State>
     <State>
       <Name>DisabledIndeterminate</Name>
@@ -1869,6 +2097,15 @@
       </Variable>
       <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
+      <Variable Type="int" Name="InnerCheck.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">204</Value>
+      </Variable>
+      <Variable Type="int" Name="InnerCheck.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">122</Value>
+      </Variable>
+      <Variable Type="int" Name="InnerCheck.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">0</Value>
       </Variable>
       <Variable Type="bool" Name="InnerCheck.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
@@ -1910,6 +2147,16 @@
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
           <string>FillColor = Components/DarkPro/Styles.DisabledFill.FillColor</string>
+        </Value>
+      </VariableList>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>InnerCheck.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Color = Components/DarkPro/Styles.Accent.FillColor</string>
         </Value>
       </VariableList>
     </State>
@@ -1939,6 +2186,15 @@
       <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">true</Value>
       </Variable>
+      <Variable Type="int" Name="InnerCheck.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">204</Value>
+      </Variable>
+      <Variable Type="int" Name="InnerCheck.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">122</Value>
+      </Variable>
+      <Variable Type="int" Name="InnerCheck.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">0</Value>
+      </Variable>
       <Variable Type="bool" Name="InnerCheck.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
       </Variable>
@@ -1979,6 +2235,16 @@
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
           <string>FillColor = Components/DarkPro/Styles.DisabledFill.FillColor</string>
+        </Value>
+      </VariableList>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>InnerCheck.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Color = Components/DarkPro/Styles.Accent.FillColor</string>
         </Value>
       </VariableList>
     </State>

@@ -227,7 +227,25 @@
       <Variable Type="int" Name="Background.Alpha2" SetsValue="true">
         <Value xsi:type="xsd:int">0</Value>
       </Variable>
+      <Variable Type="int" Name="Background.Blue2" SetsValue="true">
+        <Value xsi:type="xsd:int">0</Value>
+      </Variable>
       <Variable Type="int" Name="Background.FillAlpha" SetsValue="true">
+        <Value xsi:type="xsd:int">0</Value>
+      </Variable>
+      <Variable Type="int" Name="Background.FillBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">0</Value>
+      </Variable>
+      <Variable Type="int" Name="Background.FillGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">0</Value>
+      </Variable>
+      <Variable Type="int" Name="Background.FillRed" SetsValue="true">
+        <Value xsi:type="xsd:int">0</Value>
+      </Variable>
+      <Variable Type="int" Name="Background.Green2" SetsValue="true">
+        <Value xsi:type="xsd:int">0</Value>
+      </Variable>
+      <Variable Type="int" Name="Background.Red2" SetsValue="true">
         <Value xsi:type="xsd:int">0</Value>
       </Variable>
       <Variable Type="bool" Name="SelectionStripe.Visible" SetsValue="true">
@@ -365,7 +383,25 @@
       <Variable Type="int" Name="Background.Alpha2" SetsValue="true">
         <Value xsi:type="xsd:int">0</Value>
       </Variable>
+      <Variable Type="int" Name="Background.Blue2" SetsValue="true">
+        <Value xsi:type="xsd:int">0</Value>
+      </Variable>
       <Variable Type="int" Name="Background.FillAlpha" SetsValue="true">
+        <Value xsi:type="xsd:int">0</Value>
+      </Variable>
+      <Variable Type="int" Name="Background.FillBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">0</Value>
+      </Variable>
+      <Variable Type="int" Name="Background.FillGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">0</Value>
+      </Variable>
+      <Variable Type="int" Name="Background.FillRed" SetsValue="true">
+        <Value xsi:type="xsd:int">0</Value>
+      </Variable>
+      <Variable Type="int" Name="Background.Green2" SetsValue="true">
+        <Value xsi:type="xsd:int">0</Value>
+      </Variable>
+      <Variable Type="int" Name="Background.Red2" SetsValue="true">
         <Value xsi:type="xsd:int">0</Value>
       </Variable>
       <Variable Type="bool" Name="SelectionStripe.Visible" SetsValue="true">

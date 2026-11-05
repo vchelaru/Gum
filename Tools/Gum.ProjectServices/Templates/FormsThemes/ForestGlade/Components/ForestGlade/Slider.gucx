@@ -168,6 +168,24 @@
       <Variable Type="bool" Name="ThumbInstance.ShowFocusRect" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
       </Variable>
+      <Variable Type="int" Name="TrackFill.Blue2" SetsValue="true">
+        <Value xsi:type="xsd:int">117</Value>
+      </Variable>
+      <Variable Type="int" Name="TrackFill.FillBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">59</Value>
+      </Variable>
+      <Variable Type="int" Name="TrackFill.FillGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">178</Value>
+      </Variable>
+      <Variable Type="int" Name="TrackFill.FillRed" SetsValue="true">
+        <Value xsi:type="xsd:int">8</Value>
+      </Variable>
+      <Variable Type="int" Name="TrackFill.Green2" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="TrackFill.Red2" SetsValue="true">
+        <Value xsi:type="xsd:int">232</Value>
+      </Variable>
     </State>
     <State>
       <Name>Highlighted</Name>
@@ -176,6 +194,24 @@
       </Variable>
       <Variable Type="bool" Name="ThumbInstance.ShowFocusRect" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
+      <Variable Type="int" Name="TrackFill.Blue2" SetsValue="true">
+        <Value xsi:type="xsd:int">117</Value>
+      </Variable>
+      <Variable Type="int" Name="TrackFill.FillBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">59</Value>
+      </Variable>
+      <Variable Type="int" Name="TrackFill.FillGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">178</Value>
+      </Variable>
+      <Variable Type="int" Name="TrackFill.FillRed" SetsValue="true">
+        <Value xsi:type="xsd:int">8</Value>
+      </Variable>
+      <Variable Type="int" Name="TrackFill.Green2" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="TrackFill.Red2" SetsValue="true">
+        <Value xsi:type="xsd:int">232</Value>
       </Variable>
     </State>
     <State>
@@ -186,6 +222,24 @@
       <Variable Type="bool" Name="ThumbInstance.ShowFocusRect" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
       </Variable>
+      <Variable Type="int" Name="TrackFill.Blue2" SetsValue="true">
+        <Value xsi:type="xsd:int">117</Value>
+      </Variable>
+      <Variable Type="int" Name="TrackFill.FillBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">59</Value>
+      </Variable>
+      <Variable Type="int" Name="TrackFill.FillGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">178</Value>
+      </Variable>
+      <Variable Type="int" Name="TrackFill.FillRed" SetsValue="true">
+        <Value xsi:type="xsd:int">8</Value>
+      </Variable>
+      <Variable Type="int" Name="TrackFill.Green2" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="TrackFill.Red2" SetsValue="true">
+        <Value xsi:type="xsd:int">232</Value>
+      </Variable>
     </State>
     <State>
       <Name>Focused</Name>
@@ -195,6 +249,24 @@
       <Variable Type="bool" Name="ThumbInstance.ShowFocusRect" SetsValue="true">
         <Value xsi:type="xsd:boolean">true</Value>
       </Variable>
+      <Variable Type="int" Name="TrackFill.Blue2" SetsValue="true">
+        <Value xsi:type="xsd:int">117</Value>
+      </Variable>
+      <Variable Type="int" Name="TrackFill.FillBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">59</Value>
+      </Variable>
+      <Variable Type="int" Name="TrackFill.FillGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">178</Value>
+      </Variable>
+      <Variable Type="int" Name="TrackFill.FillRed" SetsValue="true">
+        <Value xsi:type="xsd:int">8</Value>
+      </Variable>
+      <Variable Type="int" Name="TrackFill.Green2" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="TrackFill.Red2" SetsValue="true">
+        <Value xsi:type="xsd:int">232</Value>
+      </Variable>
     </State>
     <State>
       <Name>HighlightedFocused</Name>
@@ -203,6 +275,24 @@
       </Variable>
       <Variable Type="bool" Name="ThumbInstance.ShowFocusRect" SetsValue="true">
         <Value xsi:type="xsd:boolean">true</Value>
+      </Variable>
+      <Variable Type="int" Name="TrackFill.Blue2" SetsValue="true">
+        <Value xsi:type="xsd:int">117</Value>
+      </Variable>
+      <Variable Type="int" Name="TrackFill.FillBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">59</Value>
+      </Variable>
+      <Variable Type="int" Name="TrackFill.FillGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">178</Value>
+      </Variable>
+      <Variable Type="int" Name="TrackFill.FillRed" SetsValue="true">
+        <Value xsi:type="xsd:int">8</Value>
+      </Variable>
+      <Variable Type="int" Name="TrackFill.Green2" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="TrackFill.Red2" SetsValue="true">
+        <Value xsi:type="xsd:int">232</Value>
       </Variable>
     </State>
     <State>

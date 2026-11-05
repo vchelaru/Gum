@@ -41,3 +41,6 @@ VariableGridHarness.StoredValue(button, "Label.X").ShouldBe(42f);
   the selection a click would make while it is open.
 - Assert what a combo shows with `ComboText`. `SelectedItem?.ToString().ShouldBe(...)` skips the
   assertion when nothing is selected, and an editable combo (Font, Parent) shows its text, not an item.
+- Data added to the element after the last selection is not shown: selecting the same element,
+  instance or state again does not rebuild the grid. Select something else (the element) first, then
+  the target.

@@ -475,6 +475,15 @@
       <Variable Type="int" Name="BoxFill.FillRed" SetsValue="true">
         <Value xsi:type="xsd:int">3</Value>
       </Variable>
+      <Variable Type="int" Name="CheckGlyph.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">31</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckGlyph.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">63</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckGlyph.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">5</Value>
+      </Variable>
       <Variable Type="bool" Name="CheckGlyph.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
       </Variable>
@@ -516,6 +525,15 @@
       </Variable>
       <Variable Type="int" Name="BoxFill.FillRed" SetsValue="true">
         <Value xsi:type="xsd:int">3</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckGlyph.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">31</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckGlyph.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">63</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckGlyph.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">5</Value>
       </Variable>
       <Variable Type="bool" Name="CheckGlyph.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
@@ -559,6 +577,15 @@
       <Variable Type="int" Name="BoxFill.FillRed" SetsValue="true">
         <Value xsi:type="xsd:int">3</Value>
       </Variable>
+      <Variable Type="int" Name="CheckGlyph.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">31</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckGlyph.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">63</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckGlyph.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">5</Value>
+      </Variable>
       <Variable Type="bool" Name="CheckGlyph.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
       </Variable>
@@ -600,6 +627,15 @@
       </Variable>
       <Variable Type="int" Name="BoxFill.FillRed" SetsValue="true">
         <Value xsi:type="xsd:int">3</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckGlyph.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">31</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckGlyph.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">63</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckGlyph.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">5</Value>
       </Variable>
       <Variable Type="bool" Name="CheckGlyph.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
@@ -643,6 +679,15 @@
       <Variable Type="int" Name="BoxFill.FillRed" SetsValue="true">
         <Value xsi:type="xsd:int">3</Value>
       </Variable>
+      <Variable Type="int" Name="CheckGlyph.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">31</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckGlyph.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">63</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckGlyph.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">5</Value>
+      </Variable>
       <Variable Type="bool" Name="CheckGlyph.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
       </Variable>
@@ -685,6 +730,15 @@
       <Variable Type="int" Name="BoxFill.FillRed" SetsValue="true">
         <Value xsi:type="xsd:int">8</Value>
       </Variable>
+      <Variable Type="int" Name="CheckGlyph.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">31</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckGlyph.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">63</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckGlyph.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">5</Value>
+      </Variable>
       <Variable Type="bool" Name="CheckGlyph.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
       </Variable>
@@ -726,6 +780,15 @@
       </Variable>
       <Variable Type="int" Name="BoxFill.FillRed" SetsValue="true">
         <Value xsi:type="xsd:int">8</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckGlyph.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">31</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckGlyph.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">63</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckGlyph.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">5</Value>
       </Variable>
       <Variable Type="bool" Name="CheckGlyph.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
@@ -1126,6 +1189,15 @@
       <Variable Type="int" Name="BoxFill.FillRed" SetsValue="true">
         <Value xsi:type="xsd:int">3</Value>
       </Variable>
+      <Variable Type="int" Name="CheckGlyph.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">31</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckGlyph.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">63</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckGlyph.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">5</Value>
+      </Variable>
       <Variable Type="bool" Name="CheckGlyph.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
       </Variable>
@@ -1167,6 +1239,15 @@
       </Variable>
       <Variable Type="int" Name="BoxFill.FillRed" SetsValue="true">
         <Value xsi:type="xsd:int">3</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckGlyph.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">31</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckGlyph.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">63</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckGlyph.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">5</Value>
       </Variable>
       <Variable Type="bool" Name="CheckGlyph.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
@@ -1210,6 +1291,15 @@
       <Variable Type="int" Name="BoxFill.FillRed" SetsValue="true">
         <Value xsi:type="xsd:int">3</Value>
       </Variable>
+      <Variable Type="int" Name="CheckGlyph.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">31</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckGlyph.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">63</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckGlyph.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">5</Value>
+      </Variable>
       <Variable Type="bool" Name="CheckGlyph.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
       </Variable>
@@ -1251,6 +1341,15 @@
       </Variable>
       <Variable Type="int" Name="BoxFill.FillRed" SetsValue="true">
         <Value xsi:type="xsd:int">3</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckGlyph.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">31</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckGlyph.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">63</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckGlyph.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">5</Value>
       </Variable>
       <Variable Type="bool" Name="CheckGlyph.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
@@ -1294,6 +1393,15 @@
       <Variable Type="int" Name="BoxFill.FillRed" SetsValue="true">
         <Value xsi:type="xsd:int">3</Value>
       </Variable>
+      <Variable Type="int" Name="CheckGlyph.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">31</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckGlyph.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">63</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckGlyph.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">5</Value>
+      </Variable>
       <Variable Type="bool" Name="CheckGlyph.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
       </Variable>
@@ -1336,6 +1444,15 @@
       <Variable Type="int" Name="BoxFill.FillRed" SetsValue="true">
         <Value xsi:type="xsd:int">8</Value>
       </Variable>
+      <Variable Type="int" Name="CheckGlyph.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">31</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckGlyph.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">63</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckGlyph.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">5</Value>
+      </Variable>
       <Variable Type="bool" Name="CheckGlyph.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
       </Variable>
@@ -1377,6 +1494,15 @@
       </Variable>
       <Variable Type="int" Name="BoxFill.FillRed" SetsValue="true">
         <Value xsi:type="xsd:int">8</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckGlyph.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">31</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckGlyph.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">63</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckGlyph.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">5</Value>
       </Variable>
       <Variable Type="bool" Name="CheckGlyph.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>

@@ -261,8 +261,26 @@
       <Variable Type="bool" Name="FocusRing.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
       </Variable>
+      <Variable Type="int" Name="InnerDot.FillBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">117</Value>
+      </Variable>
+      <Variable Type="int" Name="InnerDot.FillGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="InnerDot.FillRed" SetsValue="true">
+        <Value xsi:type="xsd:int">232</Value>
+      </Variable>
       <Variable Type="bool" Name="InnerDot.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
+      <Variable Type="int" Name="OuterCircle.FillBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">32</Value>
+      </Variable>
+      <Variable Type="int" Name="OuterCircle.FillGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">28</Value>
+      </Variable>
+      <Variable Type="int" Name="OuterCircle.FillRed" SetsValue="true">
+        <Value xsi:type="xsd:int">3</Value>
       </Variable>
       <Variable Type="int" Name="OuterCircle.StrokeAlpha" SetsValue="true">
         <Value xsi:type="xsd:int">76</Value>
@@ -291,8 +309,26 @@
       <Variable Type="bool" Name="FocusRing.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
       </Variable>
+      <Variable Type="int" Name="InnerDot.FillBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">117</Value>
+      </Variable>
+      <Variable Type="int" Name="InnerDot.FillGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="InnerDot.FillRed" SetsValue="true">
+        <Value xsi:type="xsd:int">232</Value>
+      </Variable>
       <Variable Type="bool" Name="InnerDot.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
+      <Variable Type="int" Name="OuterCircle.FillBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">32</Value>
+      </Variable>
+      <Variable Type="int" Name="OuterCircle.FillGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">28</Value>
+      </Variable>
+      <Variable Type="int" Name="OuterCircle.FillRed" SetsValue="true">
+        <Value xsi:type="xsd:int">3</Value>
       </Variable>
       <Variable Type="int" Name="OuterCircle.StrokeAlpha" SetsValue="true">
         <Value xsi:type="xsd:int">140</Value>
@@ -321,8 +357,26 @@
       <Variable Type="bool" Name="FocusRing.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">true</Value>
       </Variable>
+      <Variable Type="int" Name="InnerDot.FillBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">117</Value>
+      </Variable>
+      <Variable Type="int" Name="InnerDot.FillGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="InnerDot.FillRed" SetsValue="true">
+        <Value xsi:type="xsd:int">232</Value>
+      </Variable>
       <Variable Type="bool" Name="InnerDot.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
+      <Variable Type="int" Name="OuterCircle.FillBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">32</Value>
+      </Variable>
+      <Variable Type="int" Name="OuterCircle.FillGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">28</Value>
+      </Variable>
+      <Variable Type="int" Name="OuterCircle.FillRed" SetsValue="true">
+        <Value xsi:type="xsd:int">3</Value>
       </Variable>
       <Variable Type="int" Name="OuterCircle.StrokeAlpha" SetsValue="true">
         <Value xsi:type="xsd:int">255</Value>
@@ -351,8 +405,26 @@
       <Variable Type="bool" Name="FocusRing.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">true</Value>
       </Variable>
+      <Variable Type="int" Name="InnerDot.FillBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">117</Value>
+      </Variable>
+      <Variable Type="int" Name="InnerDot.FillGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="InnerDot.FillRed" SetsValue="true">
+        <Value xsi:type="xsd:int">232</Value>
+      </Variable>
       <Variable Type="bool" Name="InnerDot.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
+      <Variable Type="int" Name="OuterCircle.FillBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">32</Value>
+      </Variable>
+      <Variable Type="int" Name="OuterCircle.FillGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">28</Value>
+      </Variable>
+      <Variable Type="int" Name="OuterCircle.FillRed" SetsValue="true">
+        <Value xsi:type="xsd:int">3</Value>
       </Variable>
       <Variable Type="int" Name="OuterCircle.StrokeAlpha" SetsValue="true">
         <Value xsi:type="xsd:int">255</Value>
@@ -381,8 +453,26 @@
       <Variable Type="bool" Name="FocusRing.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
       </Variable>
+      <Variable Type="int" Name="InnerDot.FillBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">117</Value>
+      </Variable>
+      <Variable Type="int" Name="InnerDot.FillGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="InnerDot.FillRed" SetsValue="true">
+        <Value xsi:type="xsd:int">232</Value>
+      </Variable>
       <Variable Type="bool" Name="InnerDot.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
+      <Variable Type="int" Name="OuterCircle.FillBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">32</Value>
+      </Variable>
+      <Variable Type="int" Name="OuterCircle.FillGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">28</Value>
+      </Variable>
+      <Variable Type="int" Name="OuterCircle.FillRed" SetsValue="true">
+        <Value xsi:type="xsd:int">3</Value>
       </Variable>
       <Variable Type="int" Name="OuterCircle.StrokeAlpha" SetsValue="true">
         <Value xsi:type="xsd:int">255</Value>
@@ -410,6 +500,15 @@
       <Name>DisabledOff</Name>
       <Variable Type="bool" Name="FocusRing.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
+      <Variable Type="int" Name="InnerDot.FillBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">117</Value>
+      </Variable>
+      <Variable Type="int" Name="InnerDot.FillGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="InnerDot.FillRed" SetsValue="true">
+        <Value xsi:type="xsd:int">232</Value>
       </Variable>
       <Variable Type="bool" Name="InnerDot.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
@@ -449,6 +548,15 @@
       <Name>DisabledFocusedOff</Name>
       <Variable Type="bool" Name="FocusRing.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">true</Value>
+      </Variable>
+      <Variable Type="int" Name="InnerDot.FillBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">117</Value>
+      </Variable>
+      <Variable Type="int" Name="InnerDot.FillGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="InnerDot.FillRed" SetsValue="true">
+        <Value xsi:type="xsd:int">232</Value>
       </Variable>
       <Variable Type="bool" Name="InnerDot.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
@@ -501,6 +609,15 @@
       <Variable Type="bool" Name="InnerDot.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">true</Value>
       </Variable>
+      <Variable Type="int" Name="OuterCircle.FillBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">32</Value>
+      </Variable>
+      <Variable Type="int" Name="OuterCircle.FillGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">28</Value>
+      </Variable>
+      <Variable Type="int" Name="OuterCircle.FillRed" SetsValue="true">
+        <Value xsi:type="xsd:int">3</Value>
+      </Variable>
       <Variable Type="int" Name="OuterCircle.StrokeAlpha" SetsValue="true">
         <Value xsi:type="xsd:int">255</Value>
       </Variable>
@@ -539,6 +656,15 @@
       </Variable>
       <Variable Type="bool" Name="InnerDot.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">true</Value>
+      </Variable>
+      <Variable Type="int" Name="OuterCircle.FillBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">32</Value>
+      </Variable>
+      <Variable Type="int" Name="OuterCircle.FillGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">28</Value>
+      </Variable>
+      <Variable Type="int" Name="OuterCircle.FillRed" SetsValue="true">
+        <Value xsi:type="xsd:int">3</Value>
       </Variable>
       <Variable Type="int" Name="OuterCircle.StrokeAlpha" SetsValue="true">
         <Value xsi:type="xsd:int">255</Value>
@@ -579,6 +705,15 @@
       <Variable Type="bool" Name="InnerDot.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">true</Value>
       </Variable>
+      <Variable Type="int" Name="OuterCircle.FillBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">32</Value>
+      </Variable>
+      <Variable Type="int" Name="OuterCircle.FillGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">28</Value>
+      </Variable>
+      <Variable Type="int" Name="OuterCircle.FillRed" SetsValue="true">
+        <Value xsi:type="xsd:int">3</Value>
+      </Variable>
       <Variable Type="int" Name="OuterCircle.StrokeAlpha" SetsValue="true">
         <Value xsi:type="xsd:int">255</Value>
       </Variable>
@@ -617,6 +752,15 @@
       </Variable>
       <Variable Type="bool" Name="InnerDot.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">true</Value>
+      </Variable>
+      <Variable Type="int" Name="OuterCircle.FillBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">32</Value>
+      </Variable>
+      <Variable Type="int" Name="OuterCircle.FillGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">28</Value>
+      </Variable>
+      <Variable Type="int" Name="OuterCircle.FillRed" SetsValue="true">
+        <Value xsi:type="xsd:int">3</Value>
       </Variable>
       <Variable Type="int" Name="OuterCircle.StrokeAlpha" SetsValue="true">
         <Value xsi:type="xsd:int">255</Value>
@@ -657,6 +801,15 @@
       <Variable Type="bool" Name="InnerDot.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">true</Value>
       </Variable>
+      <Variable Type="int" Name="OuterCircle.FillBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">32</Value>
+      </Variable>
+      <Variable Type="int" Name="OuterCircle.FillGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">28</Value>
+      </Variable>
+      <Variable Type="int" Name="OuterCircle.FillRed" SetsValue="true">
+        <Value xsi:type="xsd:int">3</Value>
+      </Variable>
       <Variable Type="int" Name="OuterCircle.StrokeAlpha" SetsValue="true">
         <Value xsi:type="xsd:int">255</Value>
       </Variable>
@@ -683,6 +836,15 @@
       <Name>DisabledOn</Name>
       <Variable Type="bool" Name="FocusRing.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
+      <Variable Type="int" Name="InnerDot.FillBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">117</Value>
+      </Variable>
+      <Variable Type="int" Name="InnerDot.FillGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="InnerDot.FillRed" SetsValue="true">
+        <Value xsi:type="xsd:int">232</Value>
       </Variable>
       <Variable Type="bool" Name="InnerDot.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
@@ -722,6 +884,15 @@
       <Name>DisabledFocusedOn</Name>
       <Variable Type="bool" Name="FocusRing.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">true</Value>
+      </Variable>
+      <Variable Type="int" Name="InnerDot.FillBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">117</Value>
+      </Variable>
+      <Variable Type="int" Name="InnerDot.FillGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="InnerDot.FillRed" SetsValue="true">
+        <Value xsi:type="xsd:int">232</Value>
       </Variable>
       <Variable Type="bool" Name="InnerDot.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>

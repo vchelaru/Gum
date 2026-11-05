@@ -143,6 +143,35 @@
       <Variable Type="ButtonCategory" Name="ThumbInstance.ButtonCategoryState" SetsValue="true">
         <Value xsi:type="xsd:string">Enabled</Value>
       </Variable>
+      <Variable Type="int" Name="TrackBackground.FillBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">48</Value>
+      </Variable>
+      <Variable Type="int" Name="TrackBackground.FillGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">45</Value>
+      </Variable>
+      <Variable Type="int" Name="TrackBackground.FillRed" SetsValue="true">
+        <Value xsi:type="xsd:int">45</Value>
+      </Variable>
+      <Variable Type="int" Name="TrackBackground.StrokeBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">60</Value>
+      </Variable>
+      <Variable Type="int" Name="TrackBackground.StrokeGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">60</Value>
+      </Variable>
+      <Variable Type="int" Name="TrackBackground.StrokeRed" SetsValue="true">
+        <Value xsi:type="xsd:int">60</Value>
+      </Variable>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>TrackBackground.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>FillColor = Components/DarkPro/Styles.Surface2.FillColor</string>
+          <string>StrokeColor = Components/DarkPro/Styles.Border.FillColor</string>
+        </Value>
+      </VariableList>
     </State>
     <State>
       <Name>Disabled</Name>
@@ -219,24 +248,140 @@
       <Variable Type="ButtonCategory" Name="ThumbInstance.ButtonCategoryState" SetsValue="true">
         <Value xsi:type="xsd:string">Focused</Value>
       </Variable>
+      <Variable Type="int" Name="TrackBackground.FillBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">48</Value>
+      </Variable>
+      <Variable Type="int" Name="TrackBackground.FillGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">45</Value>
+      </Variable>
+      <Variable Type="int" Name="TrackBackground.FillRed" SetsValue="true">
+        <Value xsi:type="xsd:int">45</Value>
+      </Variable>
+      <Variable Type="int" Name="TrackBackground.StrokeBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">60</Value>
+      </Variable>
+      <Variable Type="int" Name="TrackBackground.StrokeGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">60</Value>
+      </Variable>
+      <Variable Type="int" Name="TrackBackground.StrokeRed" SetsValue="true">
+        <Value xsi:type="xsd:int">60</Value>
+      </Variable>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>TrackBackground.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>FillColor = Components/DarkPro/Styles.Surface2.FillColor</string>
+          <string>StrokeColor = Components/DarkPro/Styles.Border.FillColor</string>
+        </Value>
+      </VariableList>
     </State>
     <State>
       <Name>Highlighted</Name>
       <Variable Type="string" Name="ThumbInstance.ButtonCategoryState" SetsValue="true">
         <Value xsi:type="xsd:string">Highlighted</Value>
       </Variable>
+      <Variable Type="int" Name="TrackBackground.FillBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">48</Value>
+      </Variable>
+      <Variable Type="int" Name="TrackBackground.FillGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">45</Value>
+      </Variable>
+      <Variable Type="int" Name="TrackBackground.FillRed" SetsValue="true">
+        <Value xsi:type="xsd:int">45</Value>
+      </Variable>
+      <Variable Type="int" Name="TrackBackground.StrokeBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">60</Value>
+      </Variable>
+      <Variable Type="int" Name="TrackBackground.StrokeGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">60</Value>
+      </Variable>
+      <Variable Type="int" Name="TrackBackground.StrokeRed" SetsValue="true">
+        <Value xsi:type="xsd:int">60</Value>
+      </Variable>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>TrackBackground.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>FillColor = Components/DarkPro/Styles.Surface2.FillColor</string>
+          <string>StrokeColor = Components/DarkPro/Styles.Border.FillColor</string>
+        </Value>
+      </VariableList>
     </State>
     <State>
       <Name>HighlightedFocused</Name>
       <Variable Type="ButtonCategory" Name="ThumbInstance.ButtonCategoryState" SetsValue="true">
         <Value xsi:type="xsd:string">HighlightedFocused</Value>
       </Variable>
+      <Variable Type="int" Name="TrackBackground.FillBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">48</Value>
+      </Variable>
+      <Variable Type="int" Name="TrackBackground.FillGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">45</Value>
+      </Variable>
+      <Variable Type="int" Name="TrackBackground.FillRed" SetsValue="true">
+        <Value xsi:type="xsd:int">45</Value>
+      </Variable>
+      <Variable Type="int" Name="TrackBackground.StrokeBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">60</Value>
+      </Variable>
+      <Variable Type="int" Name="TrackBackground.StrokeGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">60</Value>
+      </Variable>
+      <Variable Type="int" Name="TrackBackground.StrokeRed" SetsValue="true">
+        <Value xsi:type="xsd:int">60</Value>
+      </Variable>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>TrackBackground.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>FillColor = Components/DarkPro/Styles.Surface2.FillColor</string>
+          <string>StrokeColor = Components/DarkPro/Styles.Border.FillColor</string>
+        </Value>
+      </VariableList>
     </State>
     <State>
       <Name>Pushed</Name>
       <Variable Type="ButtonCategory" Name="ThumbInstance.ButtonCategoryState" SetsValue="true">
         <Value xsi:type="xsd:string">Pushed</Value>
       </Variable>
+      <Variable Type="int" Name="TrackBackground.FillBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">48</Value>
+      </Variable>
+      <Variable Type="int" Name="TrackBackground.FillGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">45</Value>
+      </Variable>
+      <Variable Type="int" Name="TrackBackground.FillRed" SetsValue="true">
+        <Value xsi:type="xsd:int">45</Value>
+      </Variable>
+      <Variable Type="int" Name="TrackBackground.StrokeBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">60</Value>
+      </Variable>
+      <Variable Type="int" Name="TrackBackground.StrokeGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">60</Value>
+      </Variable>
+      <Variable Type="int" Name="TrackBackground.StrokeRed" SetsValue="true">
+        <Value xsi:type="xsd:int">60</Value>
+      </Variable>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>TrackBackground.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>FillColor = Components/DarkPro/Styles.Surface2.FillColor</string>
+          <string>StrokeColor = Components/DarkPro/Styles.Border.FillColor</string>
+        </Value>
+      </VariableList>
     </State>
   </Category>
   <Instance Name="TrackInstance" BaseType="Container" />
