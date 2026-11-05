@@ -533,6 +533,24 @@ namespace WpfDataUi.DataTypes
             }
         }
 
+        /// <summary>
+        /// The name of a palette color the row marks itself with (a bar at its left edge), or null for none.
+        /// The grid knows only the name; the head maps it to its theme's color.
+        /// </summary>
+        public string? MarkerColorName
+        {
+            get => markerColorName;
+            set
+            {
+                if (markerColorName != value)
+                {
+                    markerColorName = value;
+                    OnPropertyChanged(nameof(MarkerColorName));
+                }
+            }
+        }
+        string? markerColorName;
+
         string? toolTipText;
         public string? ToolTipText
         {

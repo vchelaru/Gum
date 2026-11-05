@@ -182,9 +182,22 @@ public sealed class AnimationsView : Grid
         return CreateColumn(title, add, animations);
     }
 
-    private static Control CreateAnimationRow()
+    // The category color dot shared by the animation list and the keyframe list.
+    private static Border CreateColorDot(Control host, string notifyPropertyName, Func<object?, string?> read)
+    {
+        Border dot = new Border { CornerRadius = new CornerRadius(100), VerticalAlignment = VerticalAlignment.Center };
+        AvaloniaTreeIcons.FollowBaseFontSize(dot, 9);
+        CategoryColorBrushes.Follow(host, dot, Border.BackgroundProperty, notifyPropertyName, read);
+        return dot;
+    }
+
+    internal static Control CreateAnimationRow()
     {
         StackPanel row = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 6 };
+
+        // A dot in the color of the category of the animation's first state; its space is kept when uncolored.
+        row.Children.Add(CreateColorDot(row, nameof(AnimationViewModel.CategoryColorName),
+            context => (context as AnimationViewModel)?.CategoryColorName));
 
         ToggleButton loops = new ToggleButton { MinWidth = 26, Padding = new Thickness(4, 0), HorizontalContentAlignment = HorizontalAlignment.Center };
         AvaloniaTreeIcons.FollowBaseFontSize(loops, Layoutable.MinWidthProperty, 26);
@@ -263,6 +276,10 @@ public sealed class AnimationsView : Grid
     {
         StackPanel row = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 6, Background = Brushes.Transparent };
         row.Bind(Panel.BackgroundProperty, new Binding(nameof(AnimatedKeyframeViewModel.IsTimelineVisualHovered)) { Converter = HoverBackground });
+
+        // A dot in the color of the keyframe state's category, transparent when uncolored.
+        row.Children.Add(CreateColorDot(row, nameof(AnimatedKeyframeViewModel.CategoryColorName),
+            context => (context as AnimatedKeyframeViewModel)?.CategoryColorName));
 
         TextBlock glyph = new TextBlock { MinWidth = 14, VerticalAlignment = VerticalAlignment.Center };
         AvaloniaTreeIcons.FollowBaseFontSize(glyph, Layoutable.MinWidthProperty, 14);

@@ -1,6 +1,7 @@
 ﻿using Gum.DataTypes.Variables;
 using Gum.DataTypes;
 using Gum.Managers;
+using Gum.Plugins.InternalPlugins.StatePlugin;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -35,18 +36,39 @@ public class SubtextLogic
                 : result + "\n" + defaultVariable.DetailText;
         }
 
-        string? categoryString = null;
+        List<StateSaveCategory> settingCategories = GetCategoriesSettingVariable(defaultVariable, propertyName, elementSave, instanceSave);
+
+        if(settingCategories.Count > 0)
+        {
+            if(!string.IsNullOrEmpty(result))
+            {
+                result += "\n";
+            }
+            result += "Set by " + string.Join(", ", settingCategories.Select(category => category.Name));
+        }
+
+        return result;
+    }
+
+    /// <summary>
+    /// The categories, in category order, whose first state sets the variable: the ones the row's
+    /// "Set by X, Y" line names. Parameters are as for <see cref="GetDefaultSubtext"/>.
+    /// </summary>
+    public List<StateSaveCategory> GetCategoriesSettingVariable(VariableSave defaultVariable,
+        string propertyName,
+        ElementSave elementSave,
+        InstanceSave? instanceSave)
+    {
+        List<StateSaveCategory> result = new List<StateSaveCategory>();
         var variableOwner = instanceSave == null ? elementSave : instanceSave.ParentContainer;
 
         var topLevelVariableName = instanceSave == null ? defaultVariable.Name
             : $"{instanceSave.Name}.{defaultVariable.Name}";
 
-
         if(variableOwner != null)
         {
             var nameToSearchFor = instanceSave == null ? propertyName : instanceSave.Name + "." + propertyName;
             var variableInOwner = variableOwner.GetDefaultStateOrThrow().GetVariableSave(nameToSearchFor);
-
 
             foreach (var category in variableOwner.Categories)
             {
@@ -58,14 +80,7 @@ public class SubtextLogic
                     {
                         if(variable.Name == variableInOwner?.Name || variable.Name == topLevelVariableName)
                         {
-                            if(categoryString == null)
-                            {
-                                categoryString = $"Set by {category.Name}";
-                            }
-                            else
-                            {
-                                categoryString += $", {category.Name}";
-                            }
+                            result.Add(category);
                             break;
                         }
                     }
@@ -73,17 +88,18 @@ public class SubtextLogic
             }
         }
 
-        if(categoryString != null)
-        {
-            if(!string.IsNullOrEmpty(result))
-            {
-                result += "\n";
-            }
-            result += categoryString;
-        }
-
         return result;
     }
+
+    /// <summary>
+    /// The palette name of the first colored category, in category order, that sets the variable, or
+    /// null when none does. The row's left-edge bar uses it.
+    /// </summary>
+    public string? GetCategoryColorName(VariableSave defaultVariable,
+        string propertyName,
+        ElementSave elementSave,
+        InstanceSave? instanceSave) =>
+        CategoryColors.GetFirstName(GetCategoriesSettingVariable(defaultVariable, propertyName, elementSave, instanceSave));
 
 
     Dictionary<string, Func<StateSave, string, string>> GetSubtextCalls = new()

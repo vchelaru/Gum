@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json.Serialization;
 using Gum.DataTypes.Variables;
 
 namespace Gum.DataTypes.Serialization.Json;
@@ -18,6 +19,8 @@ internal sealed class StateSaveJson
 internal sealed class StateSaveCategoryJson
 {
     public string Name { get; set; } = "";
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
+    public string? ColorName { get; set; }
     private List<StateSaveJson> _states = new List<StateSaveJson>();
     public List<StateSaveJson> States { get => _states; set => _states = value ?? throw JsonNullCollection.For(nameof(States)); }
 }
@@ -47,13 +50,14 @@ internal static class StateSaveJsonMapper
         return new StateSaveCategoryJson
         {
             Name = source.Name,
+            ColorName = string.IsNullOrEmpty(source.ColorName) ? null : source.ColorName,
             States = source.States.Select(ToJson).ToList(),
         };
     }
 
     public static StateSaveCategory FromJson(StateSaveCategoryJson dto)
     {
-        StateSaveCategory result = new StateSaveCategory { Name = dto.Name };
+        StateSaveCategory result = new StateSaveCategory { Name = dto.Name, ColorName = dto.ColorName };
         result.States = dto.States.Select(FromJson).ToList();
         return result;
     }

@@ -2,7 +2,8 @@ using System.Drawing;
 
 namespace Gum.Services;
 
-public record StateEditingIndicatorInfo(bool HasStateInformation, string? StateInformation, Color StateBackground);
+/// <param name="CategoryColorName">The palette name of the edited state's category when it has a color, else null; a head draws the banner in that color's theme variant instead of <paramref name="StateBackground"/>.</param>
+public record StateEditingIndicatorInfo(bool HasStateInformation, string? StateInformation, Color StateBackground, string? CategoryColorName = null);
 
 /// <summary>
 /// Computes the "Editing state X" / "Displaying custom (animated) state" banner shown above the

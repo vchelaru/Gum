@@ -1,3 +1,4 @@
+using Gum.Avalonia.Controls;
 using Gum.Avalonia.Shell;
 using System;
 using System.Collections.Specialized;
@@ -58,12 +59,7 @@ public sealed class VariablesTabView : DockPanel, IVariablesTabView
         _variablesGrid.RowPairs = VariableGridRows.Pairs;
         _variablesGrid.AlternatesRowBackgrounds = false;
 
-        Border stateBanner = new Border { Padding = new Thickness(6, 3) };
-        stateBanner.Bind(Border.BackgroundProperty, new Binding(nameof(MainControlViewModel.StateBackground)) { Converter = DrawingColorToBrushConverter.Instance });
-        stateBanner.Bind(IsVisibleProperty, new Binding(nameof(MainControlViewModel.HasStateInformation)));
-        TextBlock stateText = new TextBlock { Foreground = Brushes.Black };
-        stateText.Bind(TextBlock.TextProperty, new Binding(nameof(MainControlViewModel.StateInformation)));
-        stateBanner.Child = stateText;
+        StateEditingIndicatorBar stateBanner = new StateEditingIndicatorBar();
 
         TextBlock errors = new TextBlock { Foreground = Brushes.OrangeRed, TextWrapping = TextWrapping.Wrap, Margin = new Thickness(4, 2) };
         errors.Bind(TextBlock.TextProperty, new Binding(nameof(MainControlViewModel.ErrorInformation)));

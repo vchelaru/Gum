@@ -88,7 +88,8 @@ public class ElementSaveDisplayer
         string? DisplayName = null,
         string? ToolTipText = null,
         Dictionary<string, object>? PropertiesToSetOnDisplayer = null,
-        string? ReferenceSource = null);
+        string? ReferenceSource = null,
+        string? CategoryColorName = null);
 
     #endregion
 
@@ -824,6 +825,7 @@ public class ElementSaveDisplayer
         }
 
         entry.ToolTipText = propertyData.ToolTipText;
+        entry.CategoryColorName = propertyData.CategoryColorName;
 
         if (propertyData.PropertiesToSetOnDisplayer != null)
         {
@@ -1166,7 +1168,8 @@ public class ElementSaveDisplayer
             }
 
             return new PropertyData(name, type, customAttributes, typeConverter, category, forceReadOnly, isAssignedByReference, propertySubtext,
-                ToolTipText: defaultVariable.ToolTipText, ReferenceSource: referenceSource);
+                ToolTipText: defaultVariable.ToolTipText, ReferenceSource: referenceSource,
+                CategoryColorName: _subtextLogic.GetCategoryColorName(defaultVariable, name, elementSave, instanceSave));
         }
         return null;
     }

@@ -66,6 +66,7 @@ public interface IPluginManager
     void CategoryRename(StateSaveCategory category, string oldName);
     void CategoryAdd(StateSaveCategory category);
     void CategoryDelete(StateSaveCategory category);
+    void CategoryColorChange(StateSaveCategory category);
     DeleteResponse GetDeleteStateCategoryResponse(StateSaveCategory stateSaveCategory, IStateContainer element);
     DeleteResponse GetDeleteStateResponse(StateSave stateSave, IStateContainer element);
     void ReactToStateSaveCategorySelected(StateSaveCategory? category);

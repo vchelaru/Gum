@@ -235,6 +235,24 @@ public class EditCommands : IEditCommands
 
     #region Category
 
+    public void SetStateCategoryColor(StateSaveCategory category, string? colorName)
+    {
+        string? newColorName = string.IsNullOrEmpty(colorName) ? null : colorName;
+        if (category.ColorName == newColorName)
+        {
+            return;
+        }
+
+        using var undoLock = _undoManager.RequestLock();
+
+        category.ColorName = newColorName;
+
+        _pluginManager.CategoryColorChange(category);
+        _guiCommands.RefreshStateTreeView();
+        _guiCommands.RefreshVariables(force: true);
+        _fileCommands.TryAutoSaveCurrentObject();
+    }
+
     public void MoveToCategory(string categoryNameToMoveTo, StateSave stateToMove, IStateContainer stateContainer)
     {
         var newCategory = stateContainer.Categories

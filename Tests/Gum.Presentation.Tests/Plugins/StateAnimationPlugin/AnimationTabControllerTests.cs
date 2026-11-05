@@ -168,6 +168,46 @@ public class AnimationTabControllerTests
         dataSavedCount.ShouldBe(0);
     }
 
+    /// <summary>
+    /// A property that only drives how the tab looks is not an edit: it must never save the .ganx, take an undo
+    /// step or request an error check, or every selection would do all three per animation (#7592, #7591).
+    /// </summary>
+    [Theory]
+    [InlineData(typeof(AnimationViewModel), nameof(AnimationViewModel.HasBrokenKeyframe))]
+    [InlineData(typeof(AnimationViewModel), nameof(AnimationViewModel.CategoryColorName))]
+    [InlineData(typeof(AnimationViewModel), nameof(AnimationViewModel.Length))]
+    [InlineData(typeof(AnimationViewModel), nameof(AnimationViewModel.SelectedKeyframe))]
+    [InlineData(typeof(AnimatedKeyframeViewModel), nameof(AnimatedKeyframeViewModel.CategoryColorName))]
+    [InlineData(typeof(AnimatedKeyframeViewModel), nameof(AnimatedKeyframeViewModel.HasValidState))]
+    [InlineData(typeof(AnimatedKeyframeViewModel), nameof(AnimatedKeyframeViewModel.IsTimelineVisualHovered))]
+    public void HandleDataChange_ADisplayOnlyProperty_NeverSavesOrRequestsACheck(Type senderType, string propertyName)
+    {
+        Mock<ISelectedState> selectedState = new Mock<ISelectedState>();
+        Mock<IAnimationCollectionViewModelManager> collectionManager = new Mock<IAnimationCollectionViewModelManager>();
+        AnimationTabController controller = new AnimationTabController(
+            selectedState.Object,
+            Mock.Of<IUndoManager>(),
+            Mock.Of<IGuiCommands>(),
+            Mock.Of<IDialogService>(),
+            Mock.Of<IProjectState>(),
+            collectionManager.Object,
+            Mock.Of<IRenameManager>(),
+            Mock.Of<IDuplicateService>(),
+            Mock.Of<IAnimationFilePathService>(),
+            () => CreateViewModel(selectedState.Object, Mock.Of<IUiTimer>()));
+        controller.CreateInitialViewModel();
+        object sender = senderType == typeof(AnimationViewModel)
+            ? new AnimationViewModel(selectedState.Object, Mock.Of<IWireframeObjectManager>())
+            : new AnimatedKeyframeViewModel();
+        int dataSavedCount = 0;
+        controller.DataSaved += () => dataSavedCount++;
+
+        controller.HandleDataChange(sender, new System.ComponentModel.PropertyChangedEventArgs(propertyName));
+
+        collectionManager.Verify(manager => manager.Save(It.IsAny<ElementAnimationsViewModel>()), Times.Never);
+        dataSavedCount.ShouldBe(0);
+    }
+
     [Fact]
     public void RemoveKeyframesPlaying_ElementNotInTheTab_DropsItsKeyframesFromItsFile()
     {

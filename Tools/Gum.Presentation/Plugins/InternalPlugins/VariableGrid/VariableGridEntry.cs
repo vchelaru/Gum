@@ -112,6 +112,9 @@ public class VariableGridEntry
     /// <summary>Tooltip text shown for the row.</summary>
     public string? ToolTipText { get; set; }
 
+    /// <summary>The palette name of the first colored category that sets this variable, or null; the row draws a bar in its color.</summary>
+    public string? CategoryColorName { get; set; }
+
     /// <summary>Desired sort order among sibling rows (lower sorts first). Defaults to <see cref="int.MaxValue"/> (unsorted/last).</summary>
     public int SortValue { get; set; } = int.MaxValue;
 

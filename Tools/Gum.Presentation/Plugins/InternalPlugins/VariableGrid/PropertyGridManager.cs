@@ -643,6 +643,7 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
         VariableViewModel.HasStateInformation = info.HasStateInformation;
         VariableViewModel.StateInformation = info.StateInformation;
         VariableViewModel.StateBackground = info.StateBackground;
+        VariableViewModel.StateCategoryColorName = info.CategoryColorName;
     }
 
     private void RefreshCategoryNotification(StateSaveCategory? stateCategory, StateSave? state)

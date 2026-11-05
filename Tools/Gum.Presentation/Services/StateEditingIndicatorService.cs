@@ -1,4 +1,5 @@
 using System.Drawing;
+using Gum.Plugins.InternalPlugins.StatePlugin;
 using Gum.ToolStates;
 
 namespace Gum.Services;
@@ -30,6 +31,6 @@ public class StateEditingIndicatorService : IStateEditingIndicatorService
         var category = _selectedState.SelectedStateCategorySave;
         var stateName = category != null ? $"{category.Name}/{state.Name}" : state.Name;
 
-        return new StateEditingIndicatorInfo(true, $"Editing state {stateName}", Color.Yellow);
+        return new StateEditingIndicatorInfo(true, $"Editing state {stateName}", Color.Yellow, CategoryColors.GetName(category));
     }
 }

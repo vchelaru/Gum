@@ -24,4 +24,16 @@ public class ContextMenuItemViewModel
     /// WPF icon element - this assembly must not reference WPF (ADR-0005).
     /// </summary>
     public string? IconKey { get; set; }
+
+    /// <summary>
+    /// Name of a palette color (see <see cref="Gum.Plugins.InternalPlugins.StatePlugin.CategoryColors"/>)
+    /// drawn as a dot in the icon column, or null for none. Each head maps the name to its theme's color.
+    /// </summary>
+    public string? IconColorName { get; set; }
+
+    /// <summary>Name of a palette color drawn as a dot just before the item's text, or null for none.</summary>
+    public string? ColorName { get; set; }
+
+    /// <summary>Whether a check mark shows in the icon column, marking the current choice of a group of items.</summary>
+    public bool IsChecked { get; set; }
 }

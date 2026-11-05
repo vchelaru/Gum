@@ -63,6 +63,13 @@ public interface IEditCommands
     void MoveToCategory(string categoryNameToMoveTo, StateSave stateToMove, IStateContainer stateContainer);
 
     /// <summary>
+    /// Marks <paramref name="category"/> with the palette color <paramref name="colorName"/> (null or empty
+    /// for none) as one undo step, then notifies plugins, refreshes the tree and Variables tab, and saves.
+    /// Does nothing when the color is already that one.
+    /// </summary>
+    void SetStateCategoryColor(StateSaveCategory category, string? colorName);
+
+    /// <summary>
     /// Validates behavior dependencies and plugin hooks, then shows a Yes/No
     /// confirmation before deleting the category. See the IEditCommands summary
     /// for why categories use this pattern instead of <see cref="DeleteSelection"/>.
