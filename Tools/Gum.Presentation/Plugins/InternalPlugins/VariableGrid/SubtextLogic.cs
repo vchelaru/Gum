@@ -1,5 +1,6 @@
 ﻿using Gum.DataTypes.Variables;
 using Gum.DataTypes;
+using Gum.Logic;
 using Gum.Managers;
 using Gum.Plugins.InternalPlugins.StatePlugin;
 using System;
@@ -99,7 +100,7 @@ public class SubtextLogic
             var nameToSearchFor = instanceSave == null ? propertyName : instanceSave.Name + "." + propertyName;
             var nameInOwner = findNameInDefaultState(variableOwner.GetDefaultStateOrThrow(), nameToSearchFor);
 
-            foreach (var category in variableOwner.Categories)
+            foreach (var category in InheritedCategories.GetCategories(variableOwner))
             {
                 // Any state counts, so a variable set only by Disabled still names the category.
                 if (category.States.Any(state => getNamesSetByState(state)
