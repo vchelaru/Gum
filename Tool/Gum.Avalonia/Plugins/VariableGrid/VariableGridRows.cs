@@ -77,10 +77,11 @@ internal static class VariableGridRows
         Grid.SetColumn(editorCell, 2);
 
         Grid columns = new Grid { ColumnDefinitions = new ColumnDefinitions("Auto,Auto,*") };
-        columns.Children.Add(CreateCategoryBar());
         Grid.SetColumn(markerCell, 1);
+        // The marker cell stays the first child (a test and the head read it so); the bar is column 0 by position.
         columns.Children.Add(markerCell);
         columns.Children.Add(editorCell);
+        columns.Children.Add(CreateCategoryBar());
 
         return new Border
         {
