@@ -104,6 +104,26 @@ public class CategoryVariablesScenarioTests
     }
 
     [AvaloniaFact]
+    public void NoVariablesNotice_IsHidden_WhenOnlyALaterStateSetsVariables_AndShownWhenNoStateDoes()
+    {
+        using VariableGridHarness grid = new VariableGridHarness();
+        ComponentSave slider = grid.Project.AddComponent("Slider");
+        grid.Project.AddInstance(slider, "Thumb", "Text");
+        StateSaveCategory category = grid.Project.AddCategory(slider, "SliderCategory");
+        grid.Project.AddState(slider, category, "Empty");
+        StateSave later = grid.Project.AddState(slider, category, "Later");
+
+        SelectCategory(grid, slider, category);
+        grid.ViewModel.HasCategoryNotification.ShouldBeTrue();
+
+        later.SetValue("Thumb.Red", 5, "int");
+        grid.Select(slider);
+        SelectCategory(grid, slider, category);
+
+        grid.ViewModel.HasCategoryNotification.ShouldBeFalse();
+    }
+
+    [AvaloniaFact]
     public void TrashCan_OnAListVariable_RemovesItFromTheStatesThatSetIt()
     {
         using VariableGridHarness grid = new VariableGridHarness();
