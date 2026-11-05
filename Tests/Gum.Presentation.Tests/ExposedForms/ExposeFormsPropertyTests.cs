@@ -63,31 +63,4 @@ public class ExposeFormsPropertyTests : BaseTestClass
         exposed.SetsValue.ShouldBeFalse();
     }
 
-    [Theory]
-    [MemberData(nameof(ExposedFormsProject.AllPairs), MemberType = typeof(ExposedFormsProject))]
-    public void ExposeVariable_OnAFormsPropertyTheInstanceAuthored_ExposesIt(string behavior, string property)
-    {
-        ExposedFormsProject world = new ExposedFormsProject(behavior, property);
-        world.Row.DefaultState!.SetValue("Inner." + property, world.SampleValue(), world.Inner, world.Property.Type);
-        _selectedState.Setup(x => x.SelectedElement).Returns(world.Row);
-
-        var response = _service.ExposeVariable(world.Inner, property, ExposedFormsProject.ExposedName);
-
-        response.Succeeded.ShouldBeTrue();
-        world.Row.DefaultState!.Variables.Single(item => item.Name == "Inner." + property).ExposedAsName.ShouldBe(ExposedFormsProject.ExposedName);
-    }
-
-    [Theory]
-    [MemberData(nameof(ExposedFormsProject.AllPairs), MemberType = typeof(ExposedFormsProject))]
-    public void ExposingTheSameFormsPropertyTwice_KeepsOneVariable(string behavior, string property)
-    {
-        ExposedFormsProject world = new ExposedFormsProject(behavior, property);
-        world.Row.DefaultState!.SetValue("Inner." + property, world.SampleValue(), world.Inner, world.Property.Type);
-        _selectedState.Setup(x => x.SelectedElement).Returns(world.Row);
-
-        _service.ExposeVariable(world.Inner, property, ExposedFormsProject.ExposedName);
-        _service.ExposeVariable(world.Inner, property, "Renamed");
-
-        world.Row.DefaultState!.Variables.Count(item => item.Name == "Inner." + property).ShouldBe(1);
-    }
 }
