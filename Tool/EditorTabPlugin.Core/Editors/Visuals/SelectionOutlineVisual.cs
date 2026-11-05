@@ -41,9 +41,11 @@ public class SelectionOutlineVisual : EditorVisualBase
 
     public override void Update()
     {
-        if (!Visible || Context.SelectedObjects.Count == 0) return;
+        if (Context.SelectedObjects.Count == 0) return;
 
-        UpdateOutlineBounds(Context.SelectedObjects.First());
+        // Re-evaluated every frame so it follows the component when its hidden variables change
+        // (or the instance is locked or unlocked) while the instance stays selected.
+        UpdateToSelection(Context.SelectedObjects);
     }
 
     public override void UpdateToSelection(ICollection<GraphicalUiElement> selectedObjects)
