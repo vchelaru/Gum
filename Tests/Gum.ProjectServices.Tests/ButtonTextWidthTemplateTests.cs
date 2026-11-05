@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using Gum.Managers;
@@ -63,6 +64,38 @@ public class ButtonTextWidthTemplateTests
         float widthValue = Convert.ToSingle(width!.Value);
         widthValue.ShouldBeLessThanOrEqualTo(0, componentName);
         widthValue.ShouldBeGreaterThanOrEqualTo(MostNegativeAllowedWidth, componentName);
+    }
+
+    public static IEnumerable<object[]> CheckedInSampleButtonFiles() => new[]
+    {
+        "Samples/FnaGum/FnaSample/Content/GumProject/Components/Controls",
+        "Samples/GameUiSamples/Content/GumProject/Components/Controls",
+        "Samples/GameUiSamplesSkia/Content/GumProject/Components/Controls",
+        "Samples/GumFormsSample/MonoGameGumFormsSample/Content/FormsGumProject/Components/Controls",
+        "Samples/MVVM/Content/GumProject/Components/Controls",
+    }
+    .SelectMany(dir => new[] { "ButtonStandard.gucx", "ButtonConfirm.gucx", "ButtonDeny.gucx" }.Select(file => $"{dir}/{file}"))
+    .Concat(new[]
+    {
+        "Samples/MultiGumServiceSample/MultiGumServiceSample/Content/Editor/Components/DarkPro/Controls/Button.gucj",
+        "Samples/MultiGumServiceSample/MultiGumServiceSample/Content/Game/Components/ForestGlade/Controls/Button.gucj",
+    })
+    .Select(path => new object[] { path });
+
+    // Checked-in copies of the button templates (not the Tools templates) carry the same rule.
+    [Theory]
+    [MemberData(nameof(CheckedInSampleButtonFiles))]
+    public void CheckedInSampleCopy_TextInstance_ShouldHaveZeroOrSlightlyNegativeWidth(string relativePath)
+    {
+        string text = File.ReadAllText(Path.Combine(FindRepoRoot(), relativePath));
+        Match width = relativePath.EndsWith(".gucj", StringComparison.Ordinal)
+            ? Regex.Match(text, @"""Name"": ""TextInstance\.Width"",[^}]*?""ValueAsFloat"": (-?[0-9.]+)")
+            : Regex.Match(text, @"<Name>TextInstance\.Width</Name>\s*<Value[^>]*>(-?[0-9.]+)<");
+
+        width.Success.ShouldBeTrue($"{relativePath} must set TextInstance.Width; unset falls back to 100");
+        float value = float.Parse(width.Groups[1].Value, System.Globalization.CultureInfo.InvariantCulture);
+        value.ShouldBeLessThanOrEqualTo(0, relativePath);
+        value.ShouldBeGreaterThanOrEqualTo(MostNegativeAllowedWidth, relativePath);
     }
 
     private static string FindRepoRoot()
