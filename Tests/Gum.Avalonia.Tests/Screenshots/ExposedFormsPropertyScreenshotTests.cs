@@ -27,7 +27,7 @@ public class ExposedFormsPropertyScreenshotTests
         button.Behaviors.Add(new ElementBehaviorReference { BehaviorName = "ButtonBehavior" });
         ComponentSave row = grid.Project.AddComponent("OptionsRow");
         InstanceSave inner = grid.Project.AddInstance(row, "ButtonInstance1", "Button");
-        StateSave rowDefault = row.DefaultState;
+        StateSave rowDefault = row.DefaultState!;
         rowDefault.Variables.Add(new VariableSave { Name = "ButtonInstance1.IsEnabled", Type = "bool", SetsValue = false, ExposedAsName = "IsEnabled" });
         rowDefault.Variables.Add(new VariableSave { Name = "ButtonInstance1.Width", Type = "float", SetsValue = false, ExposedAsName = "ButtonWidth" });
 

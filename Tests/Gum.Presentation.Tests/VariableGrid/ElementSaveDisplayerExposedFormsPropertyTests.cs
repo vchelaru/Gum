@@ -78,7 +78,7 @@ public class ElementSaveDisplayerExposedFormsPropertyTests : BaseTestClass
     }
 
     private VariableGridEntry GetRow(string name) =>
-        _displayer.GetCategories(_row, _button, _row.DefaultState, null)
+        _displayer.GetCategories(_row, _button, _row.DefaultState!, null)
             .SelectMany(category => category.Members)
             .Single(member => member.Name == name);
 
@@ -97,7 +97,7 @@ public class ElementSaveDisplayerExposedFormsPropertyTests : BaseTestClass
     [Fact]
     public void FormsProperty_NotExposed_ShowsNoExposedSubtext()
     {
-        _row.DefaultState.Variables.RemoveAll(item => item.ExposedAsName == "IsEnabled");
+        _row.DefaultState!.Variables.RemoveAll(item => item.ExposedAsName == "IsEnabled");
 
         (GetRow("ButtonInstance1.IsEnabled").DetailText ?? "").ShouldNotContain("Exposed");
     }
@@ -105,7 +105,7 @@ public class ElementSaveDisplayerExposedFormsPropertyTests : BaseTestClass
     [Fact]
     public void ExposedFormsProperty_OnInnerInstance_ShowsRenamedExposure()
     {
-        _row.DefaultState.Variables.Single(item => item.ExposedAsName == "IsEnabled").ExposedAsName = "RowEnabled";
+        _row.DefaultState!.Variables.Single(item => item.ExposedAsName == "IsEnabled").ExposedAsName = "RowEnabled";
 
         (GetRow("ButtonInstance1.IsEnabled").DetailText ?? "").ShouldContain("Exposed as RowEnabled");
     }
