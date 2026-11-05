@@ -247,12 +247,18 @@ public class NewStateInCategoryVariableTests : BaseTestClass
         AddFloat(second, "B", 20f);
         category.States.Add(first);
         category.States.Add(second);
-        _selectedState.SetupGet(x => x.SelectedStateCategorySave).Returns(category);
+        // The selected category differs from the target; propagation must go to the target.
+        StateSaveCategory otherCategory = new() { Name = "Other" };
+        StateSave bystander = new() { Name = "Bystander", ParentContainer = component };
+        otherCategory.States.Add(bystander);
+        component.Categories.Add(otherCategory);
+        _selectedState.SetupGet(x => x.SelectedStateCategorySave).Returns(otherCategory);
 
         _editCommands.MoveToCategory("Cat", moving, component);
 
         moving.GetVariableSave("A").ShouldNotBeNull();
         moving.GetVariableSave("B").ShouldNotBeNull();
+        bystander.Variables.ShouldBeEmpty();
         _undoManager.Verify(x => x.RequestLock(), Times.Once);
     }
 }
