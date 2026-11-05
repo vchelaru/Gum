@@ -48,10 +48,41 @@ public class CategoryColorPaletteTests
     [InlineData("Light")]
     public void EveryPaletteName_HasABrushInTheTheme(string theme)
     {
+        CategoryColors.Names.Count.ShouldBe(12);
         foreach (string name in CategoryColors.Names)
         {
             ColorOf(name, theme);
         }
+    }
+
+    [Fact]
+    public void Names_AreInRainbowOrder()
+    {
+        CategoryColors.Names.ShouldBe(new[] { "Indigo", "Violet", "Magenta", "Pink", "Rose", "Orange", "Brown", "Green", "Mint", "Teal", "Sky", "Slate" });
+    }
+
+    // Saved projects store the name, so each original name must keep its color.
+    [AvaloniaTheory]
+    [InlineData("Dark", "Indigo", "#6F7DF0")]
+    [InlineData("Dark", "Violet", "#A06AE0")]
+    [InlineData("Dark", "Magenta", "#CE57C6")]
+    [InlineData("Dark", "Rose", "#E0577F")]
+    [InlineData("Dark", "Brown", "#A8744A")]
+    [InlineData("Dark", "Green", "#35924F")]
+    [InlineData("Dark", "Teal", "#12958F")]
+    [InlineData("Dark", "Slate", "#74859D")]
+    [InlineData("Light", "Indigo", "#6A6AE8")]
+    [InlineData("Light", "Violet", "#9C57D2")]
+    [InlineData("Light", "Magenta", "#B84DB0")]
+    [InlineData("Light", "Rose", "#CC4A6C")]
+    [InlineData("Light", "Brown", "#9E6B40")]
+    [InlineData("Light", "Green", "#4F8222")]
+    [InlineData("Light", "Teal", "#0F8781")]
+    [InlineData("Light", "Slate", "#6A7A90")]
+    public void OriginalNames_KeepTheirColors(string theme, string name, string hex)
+    {
+        CategoryColors.IsKnown(name).ShouldBeTrue();
+        ColorOf(name, theme).ShouldBe(Color.Parse(hex));
     }
 
     [AvaloniaTheory]
