@@ -34,8 +34,10 @@ public class InheritedExposureScreenshotTests
         ComponentSave derived = grid.Project.AddComponent("DerivedRow");
         derived.BaseType = "BaseRow";
 
+        InstanceSave inherited = new InstanceSave { Name = "ButtonInstance1", BaseType = "Button", DefinedByBase = true, ParentContainer = derived };
+        derived.Instances.Add(inherited);
         grid.Select(derived);
-        grid.Select(inner);
+        grid.Select(inherited);
         grid.Input.TypeInto(grid.View.FilterTextBox, "e");
 
         foreach (ThemeVariant theme in new[] { ThemeVariant.Dark, ThemeVariant.Light })
