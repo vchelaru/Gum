@@ -280,16 +280,15 @@ public class ElementSaveDisplayer
         {
             if (instanceOwner != null)
             {
-                var exposedVariablesOnThisInstance = instanceOwner.GetDefaultStateOrThrow().Variables
-                    .Where(item => !string.IsNullOrEmpty(item.ExposedAsName) && item.SourceObject == instanceSave.Name);
-                foreach (var variable in exposedVariablesOnThisInstance)
+                // Includes exposures declared on the owner's base types, most derived first (#7650).
+                foreach (var variable in ExposedVariableLookup.GetExposures(instanceOwner, instanceSave))
                 {
                     var definingVariable = GetVariableFromThisOrBase(effectiveElementSave, variable.GetRootName()) ??
                         ObjectFinder.Self.GetRootVariable(variable.Name, instanceOwner);
                     if (definingVariable != null)
                     {
-                        // The Where above keeps only variables with an ExposedAsName.
-                        exposedVariables.Add(definingVariable.Name, variable.ExposedAsName!);
+                        // GetExposures keeps only variables with an ExposedAsName; derived comes first and wins.
+                        exposedVariables.TryAdd(definingVariable.Name, variable.ExposedAsName!);
                     }
                 }
             }
@@ -703,10 +702,7 @@ public class ElementSaveDisplayer
 
                 string? exposedAsName = instance == null
                     ? null
-                    : instanceOwner.GetDefaultStateOrThrow().Variables
-                        .FirstOrDefault(item => !string.IsNullOrEmpty(item.ExposedAsName) &&
-                            item.SourceObject == instance.Name &&
-                            item.GetRootName() == formsProperty.Name)?.ExposedAsName;
+                    : ExposedVariableLookup.GetExposure(instanceOwner, instance, formsProperty.Name)?.ExposedAsName;
 
                 if (existing != null)
                 {

@@ -2,6 +2,7 @@ using Gum.Commands;
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using Gum.Dialogs;
+using Gum.Logic;
 using Gum.Managers;
 using Gum.Services;
 using Gum.Services.Dialogs;
@@ -409,9 +410,17 @@ public class CompositeMemberLogic
 
     private VariableSave? GetChannelVariable(string channelRootName, ElementSave element, InstanceSave? instance)
     {
-        return instance != null
-            ? element.GetDefaultStateOrThrow().GetVariableSave($"{instance.Name}.{channelRootName}")
-            : element.GetDefaultStateOrThrow().GetVariableSave(channelRootName);
+        // An exposure declared on a base type counts for the derived element too (#7650).
+        if (instance != null)
+        {
+            return ExposedVariableLookup.GetExposure(element, instance, channelRootName)
+                ?? element.GetDefaultStateOrThrow().GetVariableSave($"{instance.Name}.{channelRootName}");
+        }
+
+        return new[] { element }.Concat(ObjectFinder.Self.GetBaseElements(element))
+            .Select(chainElement => chainElement.DefaultState?.GetVariableSave(channelRootName))
+            .FirstOrDefault(variable => !string.IsNullOrEmpty(variable?.ExposedAsName))
+            ?? element.GetDefaultStateOrThrow().GetVariableSave(channelRootName);
     }
 
     /// <summary>

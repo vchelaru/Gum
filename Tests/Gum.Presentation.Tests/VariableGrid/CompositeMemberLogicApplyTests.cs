@@ -140,6 +140,22 @@ public class CompositeMemberLogicApplyTests : BaseTestClass
     }
 
     [Fact]
+    public void Apply_ShouldSetExposedSubtext_WhenChannelsExposedByBaseOfInstanceOwner()
+    {
+        InstanceSave instance = SetUpInstanceForExpose(out ComponentSave container);
+        ExposeChannelsOnInstance(container, instance);
+        ComponentSave derived = new() { Name = "DerivedContainer", BaseType = container.Name };
+        derived.States.Add(new StateSave { Name = "Default", ParentContainer = derived });
+        _project.Components.Add(derived);
+
+        CompositeInstanceMember composite = BuildInstanceComposite(derived, instance);
+
+        composite.DetailText.ShouldNotBeNull();
+        composite.DetailText.ShouldContain("MyRed");
+        composite.DetailText.ShouldContain("MyBlue");
+    }
+
+    [Fact]
     public void Apply_ShouldNotSetExposedSubtext_WhenNotExposed()
     {
         ComponentSave component = MakeColorComponent();
