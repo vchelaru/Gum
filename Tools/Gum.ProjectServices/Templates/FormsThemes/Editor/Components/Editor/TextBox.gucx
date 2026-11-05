@@ -600,6 +600,15 @@
       <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
       </Variable>
+      <Variable Type="int" Name="Outline.StrokeBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">150</Value>
+      </Variable>
+      <Variable Type="int" Name="Outline.StrokeGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">150</Value>
+      </Variable>
+      <Variable Type="int" Name="Outline.StrokeRed" SetsValue="true">
+        <Value xsi:type="xsd:int">150</Value>
+      </Variable>
       <Variable Type="bool" Name="Outline.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
       </Variable>
@@ -651,6 +660,16 @@
           <string>Color = Components/Editor/Styles.TextPrimary.FillColor</string>
         </Value>
       </VariableList>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>Outline.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>StrokeColor = Components/Editor/Styles.BorderHover.FillColor</string>
+        </Value>
+      </VariableList>
     </State>
     <State>
       <Name>Disabled</Name>
@@ -665,6 +684,15 @@
       </Variable>
       <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
+      <Variable Type="int" Name="Outline.StrokeBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">150</Value>
+      </Variable>
+      <Variable Type="int" Name="Outline.StrokeGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">150</Value>
+      </Variable>
+      <Variable Type="int" Name="Outline.StrokeRed" SetsValue="true">
+        <Value xsi:type="xsd:int">150</Value>
       </Variable>
       <Variable Type="bool" Name="Outline.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
@@ -715,6 +743,16 @@
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
           <string>Color = Components/Editor/Styles.Gray.FillColor</string>
+        </Value>
+      </VariableList>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>Outline.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>StrokeColor = Components/Editor/Styles.BorderHover.FillColor</string>
         </Value>
       </VariableList>
     </State>

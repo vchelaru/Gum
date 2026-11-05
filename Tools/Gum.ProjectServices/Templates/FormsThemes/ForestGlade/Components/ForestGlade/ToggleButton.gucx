@@ -519,14 +519,26 @@
       <Variable Type="int" Name="Fill.Blue2" SetsValue="true">
         <Value xsi:type="xsd:int">48</Value>
       </Variable>
+      <Variable Type="int" Name="Fill.DropshadowAlpha" SetsValue="true">
+        <Value xsi:type="xsd:int">200</Value>
+      </Variable>
+      <Variable Type="int" Name="Fill.DropshadowBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">30</Value>
+      </Variable>
       <Variable Type="float" Name="Fill.DropshadowBlurX" SetsValue="true">
         <Value xsi:type="xsd:float">0</Value>
       </Variable>
       <Variable Type="float" Name="Fill.DropshadowBlurY" SetsValue="true">
         <Value xsi:type="xsd:float">0</Value>
       </Variable>
+      <Variable Type="int" Name="Fill.DropshadowGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">60</Value>
+      </Variable>
       <Variable Type="float" Name="Fill.DropshadowOffsetY" SetsValue="true">
         <Value xsi:type="xsd:float">0</Value>
+      </Variable>
+      <Variable Type="int" Name="Fill.DropshadowRed" SetsValue="true">
+        <Value xsi:type="xsd:int">0</Value>
       </Variable>
       <Variable Type="int" Name="Fill.FillBlue" SetsValue="true">
         <Value xsi:type="xsd:int">56</Value>
@@ -576,14 +588,26 @@
       <Variable Type="int" Name="Fill.Blue2" SetsValue="true">
         <Value xsi:type="xsd:int">48</Value>
       </Variable>
+      <Variable Type="int" Name="Fill.DropshadowAlpha" SetsValue="true">
+        <Value xsi:type="xsd:int">200</Value>
+      </Variable>
+      <Variable Type="int" Name="Fill.DropshadowBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">30</Value>
+      </Variable>
       <Variable Type="float" Name="Fill.DropshadowBlurX" SetsValue="true">
         <Value xsi:type="xsd:float">0</Value>
       </Variable>
       <Variable Type="float" Name="Fill.DropshadowBlurY" SetsValue="true">
         <Value xsi:type="xsd:float">0</Value>
       </Variable>
+      <Variable Type="int" Name="Fill.DropshadowGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">60</Value>
+      </Variable>
       <Variable Type="float" Name="Fill.DropshadowOffsetY" SetsValue="true">
         <Value xsi:type="xsd:float">0</Value>
+      </Variable>
+      <Variable Type="int" Name="Fill.DropshadowRed" SetsValue="true">
+        <Value xsi:type="xsd:int">0</Value>
       </Variable>
       <Variable Type="int" Name="Fill.FillBlue" SetsValue="true">
         <Value xsi:type="xsd:int">56</Value>

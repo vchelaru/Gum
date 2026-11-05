@@ -1,5 +1,6 @@
 ﻿using Gum.DataTypes.Variables;
 using Gum.DataTypes;
+using Gum.Logic;
 using Gum.Managers;
 using Gum.Plugins.InternalPlugins.StatePlugin;
 using System;
@@ -36,54 +37,76 @@ public class SubtextLogic
                 : result + "\n" + defaultVariable.DetailText;
         }
 
-        List<StateSaveCategory> settingCategories = GetCategoriesSettingVariable(defaultVariable, propertyName, elementSave, instanceSave);
+        return AppendSetBy(result, GetCategoriesSettingVariable(defaultVariable, propertyName, elementSave, instanceSave));
+    }
 
+    /// <summary>Adds the "Set by X, Y" line to <paramref name="text"/> when any category sets the variable.</summary>
+    public static string? AppendSetBy(string? text, List<StateSaveCategory> settingCategories)
+    {
         if(settingCategories.Count > 0)
         {
-            if(!string.IsNullOrEmpty(result))
+            if(!string.IsNullOrEmpty(text))
             {
-                result += "\n";
+                text += "\n";
             }
-            result += "Set by " + string.Join(", ", settingCategories.Select(category => category.Name));
+            text += "Set by " + string.Join(", ", settingCategories.Select(category => category.Name));
         }
 
-        return result;
+        return text;
     }
 
     /// <summary>
-    /// The categories, in category order, whose first state sets the variable: the ones the row's
-    /// "Set by X, Y" line names. Parameters are as for <see cref="GetDefaultSubtext"/>.
+    /// The categories, in category order, in which any state sets the variable: the ones the row's
+    /// "Set by X, Y" line names. Parameters are as for <see cref="GetDefaultSubtext(VariableSave, string?, string, ElementSave, InstanceSave?)"/>.
     /// </summary>
     public List<StateSaveCategory> GetCategoriesSettingVariable(VariableSave defaultVariable,
         string propertyName,
         ElementSave elementSave,
         InstanceSave? instanceSave)
     {
+        return GetCategoriesSetting(defaultVariable.Name, propertyName, elementSave, instanceSave,
+            (defaultState, name) => defaultState.GetVariableSave(name)?.Name,
+            state => state.Variables.Select(variable => variable.Name));
+    }
+
+    /// <summary>
+    /// <see cref="GetCategoriesSettingVariable(VariableSave, string, ElementSave, InstanceSave?)"/> for a list variable.
+    /// </summary>
+    public List<StateSaveCategory> GetCategoriesSettingVariable(VariableListSave defaultVariable,
+        string propertyName,
+        ElementSave elementSave,
+        InstanceSave? instanceSave)
+    {
+        return GetCategoriesSetting(defaultVariable.Name, propertyName, elementSave, instanceSave,
+            (defaultState, name) => defaultState.GetVariableListSave(name)?.Name,
+            state => state.VariableLists.Select(list => list.Name));
+    }
+
+    private static List<StateSaveCategory> GetCategoriesSetting(string defaultVariableName,
+        string propertyName,
+        ElementSave elementSave,
+        InstanceSave? instanceSave,
+        Func<StateSave, string, string?> findNameInDefaultState,
+        Func<StateSave, IEnumerable<string>> getNamesSetByState)
+    {
         List<StateSaveCategory> result = new List<StateSaveCategory>();
         var variableOwner = instanceSave == null ? elementSave : instanceSave.ParentContainer;
 
-        var topLevelVariableName = instanceSave == null ? defaultVariable.Name
-            : $"{instanceSave.Name}.{defaultVariable.Name}";
-
         if(variableOwner != null)
         {
+            var topLevelVariableName = instanceSave == null ? defaultVariableName
+                : $"{instanceSave.Name}.{defaultVariableName}";
+            // The lookup is keyed by the (possibly instance-qualified, possibly exposed) name the row shows.
             var nameToSearchFor = instanceSave == null ? propertyName : instanceSave.Name + "." + propertyName;
-            var variableInOwner = variableOwner.GetDefaultStateOrThrow().GetVariableSave(nameToSearchFor);
+            var nameInOwner = findNameInDefaultState(variableOwner.GetDefaultStateOrThrow(), nameToSearchFor);
 
-            foreach (var category in variableOwner.Categories)
+            foreach (var category in InheritedCategories.GetCategories(variableOwner))
             {
-                if(category.States.Count > 0)
+                // Any state counts, so a variable set only by Disabled still names the category.
+                if (category.States.Any(state => getNamesSetByState(state)
+                    .Any(name => name == nameInOwner || name == topLevelVariableName)))
                 {
-                    var firstState = category.States[0];
-
-                    foreach(var variable in firstState.Variables)
-                    {
-                        if(variable.Name == variableInOwner?.Name || variable.Name == topLevelVariableName)
-                        {
-                            result.Add(category);
-                            break;
-                        }
-                    }
+                    result.Add(category);
                 }
             }
         }
@@ -96,6 +119,13 @@ public class SubtextLogic
     /// null when none does. The row's left-edge bar uses it.
     /// </summary>
     public string? GetCategoryColorName(VariableSave defaultVariable,
+        string propertyName,
+        ElementSave elementSave,
+        InstanceSave? instanceSave) =>
+        CategoryColors.GetFirstName(GetCategoriesSettingVariable(defaultVariable, propertyName, elementSave, instanceSave));
+
+    /// <summary><see cref="GetCategoryColorName(VariableSave, string, ElementSave, InstanceSave?)"/> for a list variable.</summary>
+    public string? GetCategoryColorName(VariableListSave defaultVariable,
         string propertyName,
         ElementSave elementSave,
         InstanceSave? instanceSave) =>

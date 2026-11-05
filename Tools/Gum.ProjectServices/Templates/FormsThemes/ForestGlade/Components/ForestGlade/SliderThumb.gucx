@@ -230,6 +230,9 @@
       <Variable Type="bool" Name="BevelInstance.UseGradient" SetsValue="true">
         <Value xsi:type="xsd:boolean">true</Value>
       </Variable>
+      <Variable Type="bool" Name="FocusRectInstance.Visible" ExposedAsName="ShowFocusRect" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
     </State>
     <State>
       <Name>Highlighted</Name>
@@ -275,6 +278,9 @@
       <Variable Type="bool" Name="BevelInstance.UseGradient" SetsValue="true">
         <Value xsi:type="xsd:boolean">true</Value>
       </Variable>
+      <Variable Type="bool" Name="FocusRectInstance.Visible" ExposedAsName="ShowFocusRect" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
     </State>
     <State>
       <Name>Pushed</Name>
@@ -319,6 +325,9 @@
       </Variable>
       <Variable Type="bool" Name="BevelInstance.UseGradient" SetsValue="true">
         <Value xsi:type="xsd:boolean">true</Value>
+      </Variable>
+      <Variable Type="bool" Name="FocusRectInstance.Visible" ExposedAsName="ShowFocusRect" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
       </Variable>
     </State>
     <State>
@@ -419,6 +428,15 @@
     </State>
     <State>
       <Name>Disabled</Name>
+      <Variable Type="int" Name="BevelInstance.Blue2" SetsValue="true">
+        <Value xsi:type="xsd:int">46</Value>
+      </Variable>
+      <Variable Type="float" Name="BevelInstance.DropshadowBlurX" SetsValue="true">
+        <Value xsi:type="xsd:float">22</Value>
+      </Variable>
+      <Variable Type="float" Name="BevelInstance.DropshadowBlurY" SetsValue="true">
+        <Value xsi:type="xsd:float">22</Value>
+      </Variable>
       <Variable Type="int" Name="BevelInstance.FillBlue" SetsValue="true">
         <Value xsi:type="xsd:int">56</Value>
       </Variable>
@@ -428,8 +446,14 @@
       <Variable Type="int" Name="BevelInstance.FillRed" SetsValue="true">
         <Value xsi:type="xsd:int">44</Value>
       </Variable>
+      <Variable Type="int" Name="BevelInstance.Green2" SetsValue="true">
+        <Value xsi:type="xsd:int">140</Value>
+      </Variable>
       <Variable Type="bool" Name="BevelInstance.HasDropshadow" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
+      <Variable Type="int" Name="BevelInstance.Red2" SetsValue="true">
+        <Value xsi:type="xsd:int">0</Value>
       </Variable>
       <Variable Type="int" Name="BevelInstance.StrokeAlpha" SetsValue="true">
         <Value xsi:type="xsd:int">26</Value>
@@ -452,6 +476,15 @@
     </State>
     <State>
       <Name>DisabledFocused</Name>
+      <Variable Type="int" Name="BevelInstance.Blue2" SetsValue="true">
+        <Value xsi:type="xsd:int">46</Value>
+      </Variable>
+      <Variable Type="float" Name="BevelInstance.DropshadowBlurX" SetsValue="true">
+        <Value xsi:type="xsd:float">22</Value>
+      </Variable>
+      <Variable Type="float" Name="BevelInstance.DropshadowBlurY" SetsValue="true">
+        <Value xsi:type="xsd:float">22</Value>
+      </Variable>
       <Variable Type="int" Name="BevelInstance.FillBlue" SetsValue="true">
         <Value xsi:type="xsd:int">56</Value>
       </Variable>
@@ -461,8 +494,14 @@
       <Variable Type="int" Name="BevelInstance.FillRed" SetsValue="true">
         <Value xsi:type="xsd:int">44</Value>
       </Variable>
+      <Variable Type="int" Name="BevelInstance.Green2" SetsValue="true">
+        <Value xsi:type="xsd:int">140</Value>
+      </Variable>
       <Variable Type="bool" Name="BevelInstance.HasDropshadow" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
+      <Variable Type="int" Name="BevelInstance.Red2" SetsValue="true">
+        <Value xsi:type="xsd:int">0</Value>
       </Variable>
       <Variable Type="int" Name="BevelInstance.StrokeAlpha" SetsValue="true">
         <Value xsi:type="xsd:int">26</Value>

@@ -321,7 +321,49 @@
       <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
       </Variable>
+      <Variable Type="int" Name="Outline.StrokeBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="Outline.StrokeGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="Outline.StrokeRed" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
       <Variable Type="bool" Name="Outline.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">180</Value>
+      </Variable>
+      <Variable IsFile="true" Type="string" Name="TextInstance.CustomFontFile" SetsValue="true">
+        <Value xsi:type="xsd:string"></Value>
+      </Variable>
+      <Variable IsFont="true" Type="string" Name="TextInstance.Font" SetsValue="true">
+        <Value xsi:type="xsd:string">Fonts/LiberationSans-Regular.ttf</Value>
+      </Variable>
+      <Variable Type="float" Name="TextInstance.FontScale" SetsValue="true">
+        <Value xsi:type="xsd:float">1</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.FontSize" SetsValue="true">
+        <Value xsi:type="xsd:int">15</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">180</Value>
+      </Variable>
+      <Variable Type="bool" Name="TextInstance.IsBold" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
+      <Variable Type="bool" Name="TextInstance.IsItalic" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
+      <Variable Type="float" Name="TextInstance.LineHeightMultiplier" SetsValue="true">
+        <Value xsi:type="xsd:float">1</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">180</Value>
+      </Variable>
+      <Variable Type="bool" Name="TextInstance.UseCustomFont" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
       </Variable>
       <VariableList xsi:type="VariableListSaveOfString">
@@ -332,6 +374,34 @@
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
           <string>Color = Components/Editor/Styles.DarkGray.FillColor</string>
+        </Value>
+      </VariableList>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>TextInstance.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Color = Components/Editor/Styles.TextPrimary.FillColor</string>
+          <string>Font = Components/Editor/Styles.Normal.Font</string>
+          <string>FontSize = Components/Editor/Styles.Normal.FontSize</string>
+          <string>IsBold = Components/Editor/Styles.Normal.IsBold</string>
+          <string>IsItalic = Components/Editor/Styles.Normal.IsItalic</string>
+          <string>UseCustomFont = Components/Editor/Styles.Normal.UseCustomFont</string>
+          <string>CustomFontFile = Components/Editor/Styles.Normal.CustomFontFile</string>
+          <string>FontScale = Components/Editor/Styles.Normal.FontScale</string>
+          <string>LineHeightMultiplier = Components/Editor/Styles.Normal.LineHeightMultiplier</string>
+        </Value>
+      </VariableList>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>Outline.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>StrokeColor = Components/Editor/Styles.White.FillColor</string>
         </Value>
       </VariableList>
     </State>
@@ -364,6 +434,39 @@
       <Variable Type="bool" Name="Outline.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">true</Value>
       </Variable>
+      <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">180</Value>
+      </Variable>
+      <Variable IsFile="true" Type="string" Name="TextInstance.CustomFontFile" SetsValue="true">
+        <Value xsi:type="xsd:string"></Value>
+      </Variable>
+      <Variable IsFont="true" Type="string" Name="TextInstance.Font" SetsValue="true">
+        <Value xsi:type="xsd:string">Fonts/LiberationSans-Regular.ttf</Value>
+      </Variable>
+      <Variable Type="float" Name="TextInstance.FontScale" SetsValue="true">
+        <Value xsi:type="xsd:float">1</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.FontSize" SetsValue="true">
+        <Value xsi:type="xsd:int">15</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">180</Value>
+      </Variable>
+      <Variable Type="bool" Name="TextInstance.IsBold" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
+      <Variable Type="bool" Name="TextInstance.IsItalic" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
+      <Variable Type="float" Name="TextInstance.LineHeightMultiplier" SetsValue="true">
+        <Value xsi:type="xsd:float">1</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">180</Value>
+      </Variable>
+      <Variable Type="bool" Name="TextInstance.UseCustomFont" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
       <VariableList xsi:type="VariableListSaveOfString">
         <Type>string</Type>
         <Name>Background.VariableReferences</Name>
@@ -380,6 +483,24 @@
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
           <string>StrokeColor = Components/Editor/Styles.White.FillColor</string>
+        </Value>
+      </VariableList>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>TextInstance.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Color = Components/Editor/Styles.TextPrimary.FillColor</string>
+          <string>Font = Components/Editor/Styles.Normal.Font</string>
+          <string>FontSize = Components/Editor/Styles.Normal.FontSize</string>
+          <string>IsBold = Components/Editor/Styles.Normal.IsBold</string>
+          <string>IsItalic = Components/Editor/Styles.Normal.IsItalic</string>
+          <string>UseCustomFont = Components/Editor/Styles.Normal.UseCustomFont</string>
+          <string>CustomFontFile = Components/Editor/Styles.Normal.CustomFontFile</string>
+          <string>FontScale = Components/Editor/Styles.Normal.FontScale</string>
+          <string>LineHeightMultiplier = Components/Editor/Styles.Normal.LineHeightMultiplier</string>
         </Value>
       </VariableList>
     </State>
@@ -400,7 +521,49 @@
       <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
       </Variable>
+      <Variable Type="int" Name="Outline.StrokeBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="Outline.StrokeGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="Outline.StrokeRed" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
       <Variable Type="bool" Name="Outline.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">180</Value>
+      </Variable>
+      <Variable IsFile="true" Type="string" Name="TextInstance.CustomFontFile" SetsValue="true">
+        <Value xsi:type="xsd:string"></Value>
+      </Variable>
+      <Variable IsFont="true" Type="string" Name="TextInstance.Font" SetsValue="true">
+        <Value xsi:type="xsd:string">Fonts/LiberationSans-Regular.ttf</Value>
+      </Variable>
+      <Variable Type="float" Name="TextInstance.FontScale" SetsValue="true">
+        <Value xsi:type="xsd:float">1</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.FontSize" SetsValue="true">
+        <Value xsi:type="xsd:int">15</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">180</Value>
+      </Variable>
+      <Variable Type="bool" Name="TextInstance.IsBold" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
+      <Variable Type="bool" Name="TextInstance.IsItalic" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
+      <Variable Type="float" Name="TextInstance.LineHeightMultiplier" SetsValue="true">
+        <Value xsi:type="xsd:float">1</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">180</Value>
+      </Variable>
+      <Variable Type="bool" Name="TextInstance.UseCustomFont" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
       </Variable>
       <VariableList xsi:type="VariableListSaveOfString">
@@ -411,6 +574,34 @@
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
           <string>Color = Components/Editor/Styles.Selection.FillColor</string>
+        </Value>
+      </VariableList>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>Outline.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>StrokeColor = Components/Editor/Styles.White.FillColor</string>
+        </Value>
+      </VariableList>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>TextInstance.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Color = Components/Editor/Styles.TextPrimary.FillColor</string>
+          <string>Font = Components/Editor/Styles.Normal.Font</string>
+          <string>FontSize = Components/Editor/Styles.Normal.FontSize</string>
+          <string>IsBold = Components/Editor/Styles.Normal.IsBold</string>
+          <string>IsItalic = Components/Editor/Styles.Normal.IsItalic</string>
+          <string>UseCustomFont = Components/Editor/Styles.Normal.UseCustomFont</string>
+          <string>CustomFontFile = Components/Editor/Styles.Normal.CustomFontFile</string>
+          <string>FontScale = Components/Editor/Styles.Normal.FontScale</string>
+          <string>LineHeightMultiplier = Components/Editor/Styles.Normal.LineHeightMultiplier</string>
         </Value>
       </VariableList>
     </State>
@@ -431,7 +622,49 @@
       <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">true</Value>
       </Variable>
+      <Variable Type="int" Name="Outline.StrokeBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="Outline.StrokeGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="Outline.StrokeRed" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
       <Variable Type="bool" Name="Outline.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">180</Value>
+      </Variable>
+      <Variable IsFile="true" Type="string" Name="TextInstance.CustomFontFile" SetsValue="true">
+        <Value xsi:type="xsd:string"></Value>
+      </Variable>
+      <Variable IsFont="true" Type="string" Name="TextInstance.Font" SetsValue="true">
+        <Value xsi:type="xsd:string">Fonts/LiberationSans-Regular.ttf</Value>
+      </Variable>
+      <Variable Type="float" Name="TextInstance.FontScale" SetsValue="true">
+        <Value xsi:type="xsd:float">1</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.FontSize" SetsValue="true">
+        <Value xsi:type="xsd:int">15</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">180</Value>
+      </Variable>
+      <Variable Type="bool" Name="TextInstance.IsBold" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
+      <Variable Type="bool" Name="TextInstance.IsItalic" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
+      <Variable Type="float" Name="TextInstance.LineHeightMultiplier" SetsValue="true">
+        <Value xsi:type="xsd:float">1</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">180</Value>
+      </Variable>
+      <Variable Type="bool" Name="TextInstance.UseCustomFont" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
       </Variable>
       <VariableList xsi:type="VariableListSaveOfString">
@@ -442,6 +675,34 @@
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
           <string>Color = Components/Editor/Styles.DarkGray.FillColor</string>
+        </Value>
+      </VariableList>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>TextInstance.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Color = Components/Editor/Styles.TextPrimary.FillColor</string>
+          <string>Font = Components/Editor/Styles.Normal.Font</string>
+          <string>FontSize = Components/Editor/Styles.Normal.FontSize</string>
+          <string>IsBold = Components/Editor/Styles.Normal.IsBold</string>
+          <string>IsItalic = Components/Editor/Styles.Normal.IsItalic</string>
+          <string>UseCustomFont = Components/Editor/Styles.Normal.UseCustomFont</string>
+          <string>CustomFontFile = Components/Editor/Styles.Normal.CustomFontFile</string>
+          <string>FontScale = Components/Editor/Styles.Normal.FontScale</string>
+          <string>LineHeightMultiplier = Components/Editor/Styles.Normal.LineHeightMultiplier</string>
+        </Value>
+      </VariableList>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>Outline.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>StrokeColor = Components/Editor/Styles.White.FillColor</string>
         </Value>
       </VariableList>
     </State>
@@ -462,17 +723,50 @@
       <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
       </Variable>
+      <Variable Type="int" Name="Outline.StrokeBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="Outline.StrokeGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="Outline.StrokeRed" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
       <Variable Type="bool" Name="Outline.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
       </Variable>
       <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
         <Value xsi:type="xsd:int">130</Value>
       </Variable>
+      <Variable IsFile="true" Type="string" Name="TextInstance.CustomFontFile" SetsValue="true">
+        <Value xsi:type="xsd:string"></Value>
+      </Variable>
+      <Variable IsFont="true" Type="string" Name="TextInstance.Font" SetsValue="true">
+        <Value xsi:type="xsd:string">Fonts/LiberationSans-Regular.ttf</Value>
+      </Variable>
+      <Variable Type="float" Name="TextInstance.FontScale" SetsValue="true">
+        <Value xsi:type="xsd:float">1</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.FontSize" SetsValue="true">
+        <Value xsi:type="xsd:int">15</Value>
+      </Variable>
       <Variable Type="int" Name="TextInstance.Green" SetsValue="true">
         <Value xsi:type="xsd:int">130</Value>
       </Variable>
+      <Variable Type="bool" Name="TextInstance.IsBold" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
+      <Variable Type="bool" Name="TextInstance.IsItalic" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
+      <Variable Type="float" Name="TextInstance.LineHeightMultiplier" SetsValue="true">
+        <Value xsi:type="xsd:float">1</Value>
+      </Variable>
       <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
         <Value xsi:type="xsd:int">130</Value>
+      </Variable>
+      <Variable Type="bool" Name="TextInstance.UseCustomFont" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
       </Variable>
       <VariableList xsi:type="VariableListSaveOfString">
         <Type>string</Type>
@@ -492,6 +786,16 @@
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
           <string>Color = Components/Editor/Styles.Gray.FillColor</string>
+        </Value>
+      </VariableList>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>Outline.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>StrokeColor = Components/Editor/Styles.White.FillColor</string>
         </Value>
       </VariableList>
     </State>

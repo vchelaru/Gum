@@ -110,6 +110,9 @@ internal class ExposedFormsProject
         };
     }
 
+    public static ElementWithState Level(ElementSave element, string? instanceName = null) =>
+        new ElementWithState(element) { InstanceName = instanceName };
+
     private static IReadOnlyList<BehaviorSave> LoadBehaviors()
     {
         string directory = Path.Combine(FindRepoRoot(), "Tools", "Gum.ProjectServices", "Templates", "FormsBehaviors");
