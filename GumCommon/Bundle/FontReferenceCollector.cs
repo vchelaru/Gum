@@ -145,9 +145,18 @@ public class FontReferenceCollector
                 continue;
             }
 
-            foreach (BmfcSave bmfcSaveInner in CollectAllBmfcSavesFor(instance, _resolveInstanceElement(instance), state, project, spacingHorizontal, spacingVertical))
+            ElementSave? instanceElement = _resolveInstanceElement(instance);
+            foreach (BmfcSave bmfcSaveInner in CollectAllBmfcSavesFor(instance, instanceElement, state, project, spacingHorizontal, spacingVertical))
             {
                 bitmapFonts[bmfcSaveInner.FontCacheFileName] = bmfcSaveInner;
+            }
+
+            // A non-default state reaches a nested Text only through what it sets on this instance
+            // that the component passes down; walking every Text of every nested component again for a
+            // state that moves or hides the instance is the cost of selecting a large screen (#7623).
+            if (!isDefaultState && !StateMayChangeNestedFonts(element, state, instance, instanceElement))
+            {
+                continue;
             }
 
             // Direct read on the instance only finds font properties set on this element
@@ -157,6 +166,87 @@ public class FontReferenceCollector
             CollectFontsFromNestedTextInstancesAllBranches(element, state, instance,
                 bitmapFonts, project, spacingHorizontal, spacingVertical);
         }
+    }
+
+    /// <summary>
+    /// Whether <paramref name="state"/> can change a font inside <paramref name="component"/>, the
+    /// element <paramref name="instance"/> is an instance of. The nested lookup (<see cref="RecursiveVariableFinder"/>)
+    /// reads the outer state only through <c>Instance.Name</c> for a name the component exposes, or a
+    /// categorized state assigned to the instance or to the element itself, and a conditional
+    /// <c>VariableReferences</c> row on the instance enumerates its branches. A state setting none of
+    /// those resolves every nested Text as the default state does, which is always collected.
+    /// </summary>
+    private bool StateMayChangeNestedFonts(ElementSave element, StateSave state, InstanceSave instance, ElementSave? component)
+    {
+        if (component == null)
+        {
+            return false;
+        }
+
+        if (state.VariableLists.Any(vl => vl.SourceObject == instance.Name))
+        {
+            return true;
+        }
+
+        // The default state's references are applied around its own walk and rolled back, so a state that
+        // does not repeat them sees the component's own values for what they set, which only this walk collects.
+        if (element.DefaultState != null && element.DefaultState.VariableLists.Any(vl =>
+                vl.ValueAsIList is { Count: > 0 } && (vl.SourceObject == instance.Name || string.IsNullOrEmpty(vl.SourceObject))))
+        {
+            return true;
+        }
+
+        HashSet<string>? exposedNames = null;
+        foreach (VariableSave variable in state.Variables)
+        {
+            bool onInstance = variable.SourceObject == instance.Name;
+            if (!onInstance && !string.IsNullOrEmpty(variable.SourceObject))
+            {
+                continue;
+            }
+
+            string rootName = variable.GetRootName();
+            if (rootName.EndsWith("State", StringComparison.Ordinal))
+            {
+                return true;
+            }
+
+            if (onInstance)
+            {
+                exposedNames ??= GetExposedNames(component);
+                if (exposedNames.Contains(rootName))
+                {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    /// <summary>The names <paramref name="component"/> and the components it derives from expose to their instances.</summary>
+    private static HashSet<string> GetExposedNames(ElementSave component)
+    {
+        HashSet<string> names = new HashSet<string>(StringComparer.Ordinal);
+        HashSet<ElementSave> visited = new HashSet<ElementSave>();
+        for (ElementSave? current = component; current != null && visited.Add(current);
+            current = ObjectFinder.Self.GetBaseElement(current))
+        {
+            if (current.DefaultState == null)
+            {
+                continue;
+            }
+
+            foreach (VariableSave variable in current.DefaultState.Variables)
+            {
+                if (!string.IsNullOrEmpty(variable.ExposedAsName))
+                {
+                    names.Add(variable.ExposedAsName);
+                }
+            }
+        }
+
+        return names;
     }
 
     /// <summary>
