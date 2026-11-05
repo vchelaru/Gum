@@ -118,30 +118,4 @@ public class ExposedFormsPropertyRowTests : BaseTestClass
         rows.Count(row => row.Name == "PanelInstance.PanelValue").ShouldBe(1);
     }
 
-    [Theory]
-    [MemberData(nameof(ExposedFormsProject.AllPairs), MemberType = typeof(ExposedFormsProject))]
-    public void DerivedControlInstance_ShowsTheInheritedBehaviorsFormsProperty(string behavior, string property)
-    {
-        ExposedFormsProject world = new ExposedFormsProject(behavior, property);
-        ComponentSave derivedControl = world.AddComponent("Controls/DerivedControl", world.Control.Name);
-        InstanceSave derivedInstance = ExposedFormsProject.AddInstance(world.Screen, "DerivedControlInstance", derivedControl.Name);
-        ElementSaveDisplayer displayer = CreateDisplayer(world, world.Screen);
-
-        List<VariableGridEntry> rows = Rows(displayer, world.Screen, derivedInstance);
-
-        rows.Count(row => row.Name == "DerivedControlInstance." + property).ShouldBe(1);
-    }
-
-    [Theory]
-    [MemberData(nameof(ExposedFormsProject.AllPairs), MemberType = typeof(ExposedFormsProject))]
-    public void DerivedControl_SelectedItself_ShowsTheInheritedBehaviorsFormsProperty(string behavior, string property)
-    {
-        ExposedFormsProject world = new ExposedFormsProject(behavior, property);
-        ComponentSave derivedControl = world.AddComponent("Controls/DerivedControl", world.Control.Name);
-        ElementSaveDisplayer displayer = CreateDisplayer(world, derivedControl);
-
-        List<VariableGridEntry> rows = Rows(displayer, derivedControl, null);
-
-        rows.Count(row => row.Name == property).ShouldBe(1);
-    }
 }

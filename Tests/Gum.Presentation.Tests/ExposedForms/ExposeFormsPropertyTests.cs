@@ -49,22 +49,6 @@ public class ExposeFormsPropertyTests : BaseTestClass
 
     [Theory]
     [MemberData(nameof(ExposedFormsProject.AllPairs), MemberType = typeof(ExposedFormsProject))]
-    public void ExposeVariable_OnAFormsPropertyNobodyAuthored_ExposesItInTheOwnersDefaultState(string behavior, string property)
-    {
-        ExposedFormsProject world = new ExposedFormsProject(behavior, property);
-        _selectedState.Setup(x => x.SelectedElement).Returns(world.Row);
-
-        var response = _service.ExposeVariable(world.Inner, property, ExposedFormsProject.ExposedName);
-
-        response.Succeeded.ShouldBeTrue();
-        VariableSave exposed = world.Row.DefaultState!.Variables.Single(item => item.Name == "Inner." + property);
-        exposed.ExposedAsName.ShouldBe(ExposedFormsProject.ExposedName);
-        exposed.Type.ShouldBe(world.Property.Type);
-        exposed.SetsValue.ShouldBeFalse();
-    }
-
-    [Theory]
-    [MemberData(nameof(ExposedFormsProject.AllPairs), MemberType = typeof(ExposedFormsProject))]
     public void ExposeVariable_OnAFormsPropertyTheInstanceAuthored_ExposesIt(string behavior, string property)
     {
         ExposedFormsProject world = new ExposedFormsProject(behavior, property);

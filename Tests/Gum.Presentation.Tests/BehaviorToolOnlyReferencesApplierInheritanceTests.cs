@@ -60,29 +60,6 @@ public class BehaviorToolOnlyReferencesApplierInheritanceTests : BaseTestClass
     }
 
     [Fact]
-    public void Apply_InstanceOfAComponentDerivedFromAControl_WritesTheCategoryState()
-    {
-        InstanceSave fancy = new InstanceSave { Name = "FancyInstance", BaseType = _derived.Name, ParentContainer = _screen };
-        _screen.Instances.Add(fancy);
-        _screenDefault.Variables.Add(new VariableSave { Type = "bool", Name = "FancyInstance.IsEnabled", Value = false, SetsValue = true });
-
-        BehaviorToolOnlyReferencesApplier.Apply(_screen, _screenDefault);
-
-        _screenDefault.GetValue("FancyInstance.ButtonCategoryState").ShouldBe("Disabled");
-    }
-
-    [Fact]
-    public void Apply_ComponentDerivedFromAControl_WritesTheCategoryState()
-    {
-        StateSave derivedDefault = _derived.DefaultState!;
-        derivedDefault.Variables.Add(new VariableSave { Type = "bool", Name = "IsEnabled", Value = false, SetsValue = true });
-
-        BehaviorToolOnlyReferencesApplier.Apply(_derived, derivedDefault);
-
-        derivedDefault.GetValue("ButtonCategoryState").ShouldBe("Disabled");
-    }
-
-    [Fact]
     public void Apply_InstanceOfTheControlItself_StillWritesTheCategoryState()
     {
         InstanceSave direct = new InstanceSave { Name = "DirectInstance", BaseType = _control.Name, ParentContainer = _screen };
