@@ -49,7 +49,7 @@ public class ExposedFormsPropertyResolutionTests : BaseTestClass
         world.ExposeProperty();
         object value = world.SampleValue();
         world.Row.DefaultState!.SetValue("Inner." + property, value, world.Inner, world.Property.Type);
-        world.Row.DefaultState.GetVariableSave("Inner." + property)!.ExposedAsName.ShouldBe(ExposedFormsProject.ExposedName);
+        world.Row.DefaultState!.GetVariableSave("Inner." + property)!.ExposedAsName.ShouldBe(ExposedFormsProject.ExposedName);
 
         List<ElementWithState> stack = new() { ExposedFormsProject.Level(world.Screen), ExposedFormsProject.Level(world.Row, "RowInstance") };
 
