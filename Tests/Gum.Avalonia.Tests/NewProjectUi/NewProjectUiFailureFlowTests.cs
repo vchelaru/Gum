@@ -153,7 +153,8 @@ public class NewProjectUiFailureFlowTests
         fixture.Dialog.NameBox.IsEffectivelyEnabled.ShouldBeTrue("the form is editable again");
         fixture.IsShown(NewProjectUiText.RefusedHeading).ShouldBeTrue("the files just written now exist, so creating again would be refused");
         fixture.IsShownStartingWith("Project already exists").ShouldBeTrue();
-        fixture.IsShown(NewProjectUiText.TargetNotEmptyHeading).ShouldBeTrue();
+        fixture.IsShown(NewProjectUiText.TargetNotEmptyHeading).ShouldBeFalse(
+    "the not-empty warning is hidden while refusal is shown");
         fixture.Dialog.OkButton.IsEffectivelyEnabled.ShouldBeFalse();
 
         fixture.Dialog.TypeName("Game2");
