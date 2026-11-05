@@ -1,3 +1,4 @@
+using System.Linq;
 using Gum.GueDeriving;
 using Microsoft.Xna.Framework;
 using RenderingLibrary;
@@ -192,6 +193,46 @@ public class RenderTargetManualPixelEqualityTests : BaseTestClass
         ManualRenderTargetScene.ShouldBeIdentical(everyFrame, manual, "sprite reading a manual container");
         bakes.ShouldBe(1);
         cached.ShouldBeTrue("read through the sprite every frame");
+    }
+
+    [Fact]
+    public void SpriteReadingAManualContainerWithAnEffect_ShowsThePostEffectImage_UnlikeAnEveryFrameSource()
+    {
+        using ManualRenderTargetScene scene = new();
+
+        Color[] everyFrame = RenderEffectSourceView(scene, manual: false);
+        Color[] manual = RenderEffectSourceView(scene, manual: true);
+
+        // The outline color only exists in the post-effect image. An every-frame source hands the sprite its
+        // unshaded target; a manual one has only the cached post-effect image to hand over.
+        CountOutlineColored(everyFrame).ShouldBe(0);
+        CountOutlineColored(manual).ShouldBeGreaterThan(20);
+    }
+
+    private static int CountOutlineColored(Color[] pixels) =>
+        pixels.Count(pixel => pixel.R == 255 && pixel.G == 217 && pixel.B == 26);
+
+    private static Color[] RenderEffectSourceView(ManualRenderTargetScene scene, bool manual)
+    {
+        ContainerRuntime source = scene.CreateContainer(0, 0, Color.Red, manual, withEffect: true);
+        source.Visible = false;
+        scene.Add(source);
+
+        SpriteRuntime viewer = new();
+        viewer.X = 90;
+        viewer.Y = 90;
+        viewer.Width = 40;
+        viewer.Height = 40;
+        viewer.RenderTargetTextureSource = source;
+        viewer.AddToManagers(scene.Managers, null);
+        viewer.UpdateLayout();
+
+        scene.DrawFrames(4);
+        Color[] pixels = scene.CaptureFrame();
+        viewer.RemoveFromManagers();
+        source.RemoveFromManagers();
+        scene.DrawFrames(3);
+        return pixels;
     }
 
     private static (Color[] Pixels, int Bakes, bool Cached) RenderSpriteView(ManualRenderTargetScene scene, bool manual)

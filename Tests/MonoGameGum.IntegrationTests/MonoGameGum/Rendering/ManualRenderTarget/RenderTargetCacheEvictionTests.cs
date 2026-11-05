@@ -167,6 +167,52 @@ public class RenderTargetCacheEvictionTests : BaseTestClass
         (scene.BakeCount - bakes).ShouldBe(1);
     }
 
+    [Theory]
+    [InlineData(100f)]
+    [InlineData(150f)]
+    [InlineData(300f)]
+    public void ManualContainerClippedAwayInsideAnEveryFrameAncestor_NeitherBakesNorKeepsATarget(float innerX)
+    {
+        using ManualRenderTargetScene scene = new();
+        ContainerRuntime ancestor = scene.CreateContainer(0, 0, Color.Red, manual: false, withEffect: false, width: 160, height: 160);
+        ContainerRuntime clipper = new() { Width = 80, Height = 80, ClipsChildren = true };
+        ContainerRuntime inner = scene.CreateContainer(0, 0, Color.Lime, manual: true, withEffect: false, width: 40, height: 40);
+        scene.Add(ancestor);
+        scene.Add(clipper, ancestor);
+        scene.Add(inner, clipper);
+        inner.X = innerX;
+        inner.UpdateLayout();
+        scene.DrawFrames(3);
+        int before = scene.BakeCount;
+
+        scene.DrawFrames(10);
+
+        (scene.BakeCount - before).ShouldBe(10, "only the ancestor bakes");
+        scene.HasCached(inner).ShouldBeFalse("it is never drawn, so the sweep released it");
+        scene.Renderer.AllocatedRenderTargetCount.ShouldBe(1, "just the ancestor's target");
+    }
+
+    [Fact]
+    public void ManualContainerVisibleInsideAClipInsideAnEveryFrameAncestor_BakesOnceAndStaysCached()
+    {
+        using ManualRenderTargetScene scene = new();
+        ContainerRuntime ancestor = scene.CreateContainer(0, 0, Color.Red, manual: false, withEffect: false, width: 160, height: 160);
+        ContainerRuntime clipper = new() { Width = 80, Height = 80, ClipsChildren = true };
+        ContainerRuntime inner = scene.CreateContainer(0, 0, Color.Lime, manual: true, withEffect: false, width: 40, height: 40);
+        scene.Add(ancestor);
+        scene.Add(clipper, ancestor);
+        scene.Add(inner, clipper);
+        inner.X = 20;
+        inner.UpdateLayout();
+        scene.DrawFrames(3);
+        int before = scene.BakeCount;
+
+        scene.DrawFrames(10);
+
+        (scene.BakeCount - before).ShouldBe(10, "only the ancestor re-bakes");
+        scene.HasCached(inner).ShouldBeTrue();
+    }
+
     [Fact]
     public void CacheTargets_AreReleased_WhenTheSceneEmpties()
     {

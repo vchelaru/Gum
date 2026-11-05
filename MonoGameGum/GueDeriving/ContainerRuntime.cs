@@ -77,6 +77,10 @@ public class ContainerRuntime : InteractiveGue
     /// until <see cref="RefreshRenderTarget"/> is called. A Manual container also re-bakes by itself on its first draw,
     /// after it was not drawn for a frame (the cache is released), and when its pixel size or the camera zoom changes.
     /// Changing a child, the effect, or the shader parameters does not re-bake; call <see cref="RefreshRenderTarget"/>.
+    /// A <see cref="SpriteRuntime.RenderTargetTextureSource"/> pointing at a Manual container shows the cached image, which
+    /// already has <see cref="RenderTargetEffect"/> applied (an EveryFrame source gives the sprite its unshaded target).
+    /// Only the layered draw paths bake a Manual container; the GumBatch immediate and deferred paths draw nothing for
+    /// one unless a layered draw cached it.
     /// Only has an effect when <see cref="IsRenderTarget"/> is true.
     /// </summary>
     public RenderTargetRefreshMode RenderTargetRefreshMode

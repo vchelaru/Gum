@@ -98,6 +98,10 @@ public enum RenderTargetRefreshMode
     /// <summary>
     /// Bake once, keep the result, and draw it as a plain sprite until the container is told to refresh,
     /// changes size, the camera zoom changes, or the cache is released because the container was not drawn for a frame.
+    /// A <c>Sprite.RenderTargetTextureSource</c> that points at a manual container shows the cached image, which already
+    /// has the container's effect applied (an every-frame source hands over its unshaded target). Only the layered
+    /// draw paths bake a manual container; the GumBatch immediate and deferred paths draw nothing for one unless a
+    /// layered draw cached it, and render targets nested in <c>GumBatch.Draw</c> are not supported there at all.
     /// </summary>
     Manual,
 }

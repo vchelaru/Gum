@@ -1,6 +1,7 @@
 using System.Linq;
 using Gum.GueDeriving;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
 using Shouldly;
@@ -296,6 +297,14 @@ public class RenderTargetManualRefreshTests : BaseTestClass
         Color[] pixels = scene.CaptureFrame();
 
         scene.PixelAt(pixels, 28, 28).G.ShouldBe((byte)255);
+    }
+
+    [Theory]
+    [InlineData(GraphicsProfile.Reach, 2048)]
+    [InlineData(GraphicsProfile.HiDef, 4096)]
+    public void TargetSizeLimit_FollowsTheGraphicsProfile(GraphicsProfile profile, int expected)
+    {
+        Renderer.GetMaxManualRenderTargetSize(profile).ShouldBe(expected);
     }
 
     [Fact]

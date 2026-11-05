@@ -1126,6 +1126,11 @@ public class Renderer : IRenderer
     // container keeps today's every-frame behavior, which only bakes the part inside the camera.
     private const int MaxManualRenderTargetSize = 8192;
 
+    // The largest side a texture is guaranteed to have on the profile (XNA's documented limits), never above
+    // MaxManualRenderTargetSize. A bigger container takes the every-frame path.
+    internal static int GetMaxManualRenderTargetSize(GraphicsProfile profile) =>
+        profile == GraphicsProfile.Reach ? 2048 : System.Math.Min(4096, MaxManualRenderTargetSize);
+
     private static IRenderTargetRenderable? GetRenderTargetRenderable(IRenderableIpso renderable) =>
         (renderable as IRenderTargetRenderable)
         ?? ((renderable as Gum.Wireframe.GraphicalUiElement)?.RenderableComponent as IRenderTargetRenderable);
@@ -1143,7 +1148,8 @@ public class Renderer : IRenderer
         float zoom = Camera.Zoom;
         int width = Math.MathFunctions.RoundToInt((renderable.GetAbsoluteRight() - renderable.GetAbsoluteLeft()) * zoom);
         int height = Math.MathFunctions.RoundToInt((renderable.GetAbsoluteBottom() - renderable.GetAbsoluteTop()) * zoom);
-        if (width > MaxManualRenderTargetSize || height > MaxManualRenderTargetSize)
+        int maxSize = GetMaxManualRenderTargetSize(InitializedGraphicsDevice.GraphicsProfile);
+        if (width > maxSize || height > maxSize)
         {
             return false;
         }
@@ -1167,6 +1173,39 @@ public class Renderer : IRenderer
             && renderable.GetAbsoluteBottom() > Camera.AbsoluteTop;
     }
 
+    // Whether the draw list of the enclosing render-target bake leaves this renderable out: a clipping container
+    // between it and that render target does not overlap its bounds. Mirrors the
+    // orderer's off-screen cull in world space; a turned container is never judged culled.
+    private static bool IsClippedAwayInsideAncestorBake(IRenderableIpso renderable)
+    {
+        if (!CameraScissorExtensions.CullOffscreenWhenClipped || renderable.IsRenderTargetTurned())
+        {
+            return false;
+        }
+
+        float left = renderable.GetAbsoluteLeft();
+        float right = renderable.GetAbsoluteRight();
+        float top = renderable.GetAbsoluteTop();
+        float bottom = renderable.GetAbsoluteBottom();
+
+        for (IRenderableIpso? ancestor = renderable.Parent; ancestor != null; ancestor = ancestor.Parent)
+        {
+            if (ancestor.IsRenderTarget)
+            {
+                return false;
+            }
+
+            if (ancestor.ClipsChildren
+                && (right <= ancestor.GetAbsoluteLeft() || left >= ancestor.GetAbsoluteRight()
+                    || bottom <= ancestor.GetAbsoluteTop() || top >= ancestor.GetAbsoluteBottom()))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     private CachedRenderTargetImage? GetValidManualImage(in ManualBakePlan plan) =>
         renderTargetService.GetValidImage(plan.Owner, plan.Width, plan.Height, plan.Zoom, plan.RefreshVersion);
 
@@ -1183,7 +1222,14 @@ public class Renderer : IRenderer
 
         bool nested = _preRenderRenderTargetDepth > 0;
         EnsureReferencedRenderTargetsCollected();
-        if (nested || _referencedRenderTargetOwners.Contains(plan.Owner))
+        bool referenced = _referencedRenderTargetOwners.Contains(plan.Owner);
+        if (nested && !referenced && IsClippedAwayInsideAncestorBake(renderable))
+        {
+            // The ancestor's bake never draws it, so baking would only build a target the sweep then releases.
+            return;
+        }
+
+        if (nested || referenced)
         {
             BakeManualContainer(renderable, plan);
         }
@@ -2498,7 +2544,7 @@ class RenderTargetService : RenderTargetServiceBase<RenderTarget2D>
     public CachedRenderTargetImage? GetValidImage(IRenderableIpso owner, int width, int height, float zoom, int refreshVersion)
     {
         if (_images.TryGetValue(owner, out CachedRenderTargetImage? image)
-            && !image.Texture.IsDisposed
+            && !image.Texture.IsDisposed && !image.Texture.IsContentLost
             && image.Texture.Width == width && image.Texture.Height == height
             && image.Zoom == zoom && image.RefreshVersion == refreshVersion)
         {
