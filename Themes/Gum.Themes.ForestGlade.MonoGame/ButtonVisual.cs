@@ -41,6 +41,7 @@ public class ButtonVisual : BaseButtonVisual
         // the text-shadow's font fields. Otherwise the shadow's first bake
         // would hit TextRuntime's Arial-18 default and throw.
         TextInstance.ApplyState(Gum.Forms.DefaultVisuals.V3.Styling.ActiveStyle.Text.Normal);
+        ForestGladeLabelLineProbe.AddTo(this, TextInstance);
         TextInstance.Color = ForestGladeStyling.ActiveStyle.Colors.Text;
 
         _chrome = new ForestGladeButtonChrome(this, TextInstance);

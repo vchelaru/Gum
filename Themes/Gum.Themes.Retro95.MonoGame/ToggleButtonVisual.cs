@@ -43,6 +43,7 @@ public class ToggleButtonVisual : BaseToggleButtonVisual
         AddChild(TextInstance);
         TextInstance.ApplyState(Gum.Forms.DefaultVisuals.V3.Styling.ActiveStyle.Text.Normal);
         TextInstance.Color = Retro95Styling.ActiveStyle.Colors.Text;
+        Retro95LabelLineProbe.AddTo(this, TextInstance);
 
         WireStates();
     }

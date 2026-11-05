@@ -38,6 +38,7 @@ public class ToggleButtonVisual : BaseToggleButtonVisual
         // ApplyState BEFORE constructing the chrome so the text-shadow's
         // seeded font is the theme's font, not TextRuntime's Arial-18 default.
         TextInstance.ApplyState(Gum.Forms.DefaultVisuals.V3.Styling.ActiveStyle.Text.Normal);
+        ForestGladeLabelLineProbe.AddTo(this, TextInstance);
 
         _chrome = new ForestGladeButtonChrome(this, TextInstance);
 
