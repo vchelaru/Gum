@@ -115,6 +115,39 @@ public class PreviewGamepadLogTests
         text.ShouldBe("connected=True packet=9 pressed=[DPadDown,A] rightStick=12000,-100 rightTrigger=200");
     }
 
+    [Theory]
+    [InlineData(null, "all", true, true, false)]
+    [InlineData("", "all", true, true, false)]
+    [InlineData("all", "all", true, true, false)]
+    [InlineData("none", "none", false, false, false)]
+    [InlineData("joystick", "joystick", true, false, false)]
+    [InlineData("xinput", "xinput", false, true, false)]
+    [InlineData("fix", "fix", true, true, true)]
+    [InlineData("  XInput ", "xinput", false, true, false)]
+    public void ParseProbes_KnownValue_SelectsLayers(string? value, string active, bool joystick, bool xinput, bool fix)
+    {
+        PreviewGamepadLog.GamepadProbes probes = PreviewGamepadLog.ParseProbes(value);
+
+        probes.Active.ShouldBe(active);
+        probes.Joystick.ShouldBe(joystick);
+        probes.XInput.ShouldBe(xinput);
+        probes.Fix.ShouldBe(fix);
+        probes.Warning.ShouldBeNull();
+    }
+
+    [Fact]
+    public void ParseProbes_UnknownValue_FallsBackToAllAndWarns()
+    {
+        PreviewGamepadLog.GamepadProbes probes = PreviewGamepadLog.ParseProbes("joystik");
+
+        probes.Active.ShouldBe("all");
+        probes.Joystick.ShouldBeTrue();
+        probes.XInput.ShouldBeTrue();
+        probes.Fix.ShouldBeFalse();
+        probes.Warning.ShouldNotBeNull();
+        probes.Warning!.ShouldContain("joystik");
+    }
+
     [Fact]
     public void InputLostHint_MentionsOtherAppsAndBluetooth()
     {

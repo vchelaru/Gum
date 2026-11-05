@@ -149,5 +149,30 @@ public sealed class PreviewGamepadLog
         + "Xbox Game Bar, a game launcher or remapper such as DS4Windows or reWASD); close them and retry; "
         + "a controller on Bluetooth may be in a different mode than over USB (try a USB cable or re-pair it).";
 
+    /// <summary>Name of the environment variable that picks which probe layers <c>--log</c> runs.</summary>
+    public const string ProbesEnvironmentVariable = "GUM_PREVIEW_GAMEPAD_PROBES";
+
+    /// <summary>Which diagnostic layers run next to the always-on raw MonoGame and Gum lines.</summary>
+    public sealed record GamepadProbes(string Active, bool Joystick, bool XInput, bool Fix, string? Warning);
+
+    /// <summary>
+    /// Parses <see cref="ProbesEnvironmentVariable"/>: <c>none</c> (raw and Gum lines only), <c>joystick</c>,
+    /// <c>xinput</c>, <c>all</c> (default when unset) or <c>fix</c> (all, plus the experimental SDL background-events
+    /// hint). An unknown value falls back to <c>all</c> with a warning.
+    /// </summary>
+    public static GamepadProbes ParseProbes(string? value)
+    {
+        string v = value?.Trim().ToLowerInvariant() ?? "";
+        return v switch
+        {
+            "" or "all" => new GamepadProbes("all", true, true, false, null),
+            "none" => new GamepadProbes("none", false, false, false, null),
+            "joystick" => new GamepadProbes("joystick", true, false, false, null),
+            "xinput" => new GamepadProbes("xinput", false, true, false, null),
+            "fix" => new GamepadProbes("fix", true, true, true, null),
+            _ => new GamepadProbes("all", true, true, false, $"unknown value '{value}' (use none|joystick|xinput|all|fix), using all"),
+        };
+    }
+
     private static string Round(float value) => Math.Round(value, 2).ToString("0.00", CultureInfo.InvariantCulture);
 }

@@ -53,6 +53,23 @@ internal static class SdlLibrary
         }
     }
 
+    /// <summary>Sets an SDL hint (SDL_SetHint). Returns false when SDL could not be loaded or refused the hint.</summary>
+    public static bool TrySetHint(string name, string value)
+    {
+        try
+        {
+            return SDL_SetHint(name, value) != 0;
+        }
+        catch (DllNotFoundException)
+        {
+            return false;
+        }
+        catch (EntryPointNotFoundException)
+        {
+            return false;
+        }
+    }
+
     /// <summary>
     /// The room, in window points, a window on its current display has for its content: the display's
     /// usable area (no menu bar or dock) less the window's own borders. False when SDL can't say.
@@ -111,6 +128,9 @@ internal static class SdlLibrary
 
     [DllImport(ImportName, CallingConvention = CallingConvention.Cdecl)]
     private static extern void SDL_RaiseWindow(IntPtr window);
+
+    [DllImport(ImportName, CallingConvention = CallingConvention.Cdecl)]
+    private static extern int SDL_SetHint([MarshalAs(UnmanagedType.LPUTF8Str)] string name, [MarshalAs(UnmanagedType.LPUTF8Str)] string value);
 
     [DllImport(ImportName, CallingConvention = CallingConvention.Cdecl)]
     private static extern int SDL_GetWindowDisplayIndex(IntPtr window);

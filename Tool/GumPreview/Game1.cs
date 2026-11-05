@@ -360,6 +360,8 @@ public class Game1 : Game, IPreviewDefaultsTarget
     private bool? _loggedWindowActive;
     private readonly PreviewGamepadLog _gamepadLog = new PreviewGamepadLog();
     private bool _loggedGamepadStartup;
+    private readonly PreviewGamepadLog.GamepadProbes _gamepadProbes =
+        PreviewGamepadLog.ParseProbes(Environment.GetEnvironmentVariable(PreviewGamepadLog.ProbesEnvironmentVariable));
 
     // Only runs with --log. Logs what the OS reports (raw MonoGame state) next to what Gum holds, so a
     // dead controller shows whether the device is undetected, the window is inactive, or Gum drops it.
@@ -376,6 +378,14 @@ public class Game1 : Game, IPreviewDefaultsTarget
                 + $"maxPads={Microsoft.Xna.Framework.Input.GamePad.MaximumGamePadCount} "
                 + $"SDL_JOYSTICK_ALLOW_BACKGROUND_EVENTS={Environment.GetEnvironmentVariable("SDL_JOYSTICK_ALLOW_BACKGROUND_EVENTS") ?? "(unset)"} "
                 + "order=LogGamepads reads before GumService.Update (gum state is one frame behind raw)");
+            log.LogGamepad($"probes {PreviewGamepadLog.ProbesEnvironmentVariable}={_gamepadProbes.Active}"
+                + (_gamepadProbes.Warning != null ? $" WARNING {_gamepadProbes.Warning}" : "")
+                + $" (joystick={_gamepadProbes.Joystick} xinput={_gamepadProbes.XInput} fix={_gamepadProbes.Fix})");
+            if (_gamepadProbes.Fix)
+            {
+                bool set = SdlLibrary.TrySetHint("SDL_JOYSTICK_ALLOW_BACKGROUND_EVENTS", "1");
+                log.LogGamepad($"fix SDL_JOYSTICK_ALLOW_BACKGROUND_EVENTS=1 set={set}");
+            }
             log.LogGamepad(PreviewGamepadLog.InputLostHint);
         }
 
@@ -387,7 +397,10 @@ public class Game1 : Game, IPreviewDefaultsTarget
 
         // Every ~5 s the heartbeat re-states each layer, so "no change" is distinguishable from "not logging".
         bool heartbeat = _gamepadLog.HeartbeatDue(Environment.TickCount64);
-        LogJoysticksAndXInput(log, heartbeat);
+        if (_gamepadProbes.Joystick || _gamepadProbes.XInput)
+        {
+            LogJoysticksAndXInput(log, heartbeat);
+        }
 
         Gum.Input.GamePad[] pads = GumService.Default.Gamepads;
         for (int i = 0; i < pads.Length && i < _loggedGamepadState.Length; i++)
@@ -466,14 +479,17 @@ public class Game1 : Game, IPreviewDefaultsTarget
         int last = -1;
         try
         {
-            last = Microsoft.Xna.Framework.Input.Joystick.LastConnectedIndex;
+            if (_gamepadProbes.Joystick)
+            {
+                last = Microsoft.Xna.Framework.Input.Joystick.LastConnectedIndex;
+            }
         }
         catch (Exception ex)
         {
             string? failed = _gamepadLog.Changed("joystick.error", ex.Message);
             if (failed != null) log.LogGamepad($"joystick error {failed}");
         }
-        if (heartbeat)
+        if (heartbeat && _gamepadProbes.Joystick)
         {
             log.LogGamepad($"joystick heartbeat lastConnectedIndex={last} supported={Microsoft.Xna.Framework.Input.Joystick.IsSupported}");
         }
@@ -505,7 +521,7 @@ public class Game1 : Game, IPreviewDefaultsTarget
             if (line != null || heartbeat) log.LogGamepad($"joystick {i} {prefix}state {text}");
         }
 
-        for (int i = 0; i < 4; i++)
+        for (int i = 0; i < 4 && _gamepadProbes.XInput; i++)
         {
             string? text = XInputProbe.Read(i);
             if (text == null)
