@@ -66,6 +66,10 @@ button.Click += (_, _) =>
 
 <figure><img src="../../.gitbook/assets/13_08 53 05.gif" alt=""><figcaption><p>Button responding to clicks by incrementing clickCount</p></figcaption></figure>
 
+## Button Height
+
+A button whose `HeightUnits` is `RelativeToChildren` grows with a label that wraps onto more lines, and with an empty `Text` it shrinks to its `Height` (the padding around the label). Set an explicit `Height` and `HeightUnits` of `Absolute` on an icon-only button.
+
 ## Clicking Programmatically
 
 Clicking can be performed programmatically by calling `PerformClick`. The following example shows how to click a button when the Enter key is pressed. The Click handler updates the button text with the current time:

@@ -104,6 +104,38 @@ public class ThemedButtonWrappedHeightTests
 
     [Theory]
     [MemberData(nameof(LabelSizedCases))]
+    public void EmptyLabel_ShouldCollapseToTheHeightPadding(
+        string theme, string kind, Action configureStyling, Action registerVisuals, float expectedHeight)
+    {
+        WithTheme(configureStyling, registerVisuals, () =>
+        {
+            GraphicalUiElement visual = CreateVisual(kind, "");
+
+            // GumPreview with the real font measures exactly Height (12 and 6); the headless font adds up to 2.
+            float oneLine = CreateVisual(kind, ShortLabel).GetAbsoluteHeight();
+            visual.GetAbsoluteHeight().ShouldBeLessThanOrEqualTo(visual.Height + 2, $"{theme} {kind}");
+            visual.GetAbsoluteHeight().ShouldBeLessThan(oneLine - 10, $"{theme} {kind}");
+        });
+    }
+
+    [Theory]
+    [MemberData(nameof(LabelSizedCases))]
+    public void ExplicitAbsoluteHeight_ShouldStillBeHonoredWhateverTheLabel(
+        string theme, string kind, Action configureStyling, Action registerVisuals, float expectedHeight)
+    {
+        WithTheme(configureStyling, registerVisuals, () =>
+        {
+            GraphicalUiElement visual = CreateVisual(kind, LongLabel);
+            visual.HeightUnits = DimensionUnitType.Absolute;
+            visual.Height = 50;
+            visual.UpdateLayout();
+
+            visual.GetAbsoluteHeight().ShouldBe(50f, $"{theme} {kind}");
+        });
+    }
+
+    [Theory]
+    [MemberData(nameof(LabelSizedCases))]
     public void WrappedLabel_ShouldGrowTheButtonByTheExtraLinesAndKeepTextInside(
         string theme, string kind, Action configureStyling, Action registerVisuals, float expectedHeight)
     {
