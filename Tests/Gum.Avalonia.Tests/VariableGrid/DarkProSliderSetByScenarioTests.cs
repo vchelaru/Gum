@@ -14,7 +14,7 @@ namespace Gum.Avalonia.Tests.VariableGrid;
 /// </summary>
 public class DarkProSliderSetByScenarioTests
 {
-    private static ComponentSave LoadSlider(VariableGridHarness grid)
+    internal static ComponentSave LoadSlider(VariableGridHarness grid)
     {
         string json = File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "VariableGrid", "Fixtures", "DarkProSlider.gucj"));
         ComponentSave loaded = GumJsonFileSerializer.DeserializeElement<ComponentSave>(json);
@@ -27,7 +27,7 @@ public class DarkProSliderSetByScenarioTests
         return slider;
     }
 
-    private static void Show(VariableGridHarness grid, ComponentSave slider, InstanceSave? instance)
+    internal static void Show(VariableGridHarness grid, ComponentSave slider, InstanceSave? instance)
     {
         // Selecting the same target again does not rebuild the grid, so leave the element first.
         grid.Select((ElementSave)grid.Project.Project.Components.First(c => c != slider));
@@ -54,6 +54,7 @@ public class DarkProSliderSetByScenarioTests
         // FillBlue etc. fold into one color row, whose detail text names the category.
         InstanceMember fillColor = grid.Member("FillColor");
         fillColor.DetailText.ShouldNotBeNull().ShouldContain("Set by SliderCategory");
+        fillColor.MarkerColorName.ShouldBe("Indigo");
     }
 
     [AvaloniaFact]
