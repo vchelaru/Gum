@@ -313,7 +313,7 @@ internal static class KeyframeReferenceHelper
         GumProjectSave project = new GumProjectSave();
         project.Components.Add(element);
         StandardElementSave container = new StandardElementSave { Name = "Container" };
-        container.States.Add(StandardElementsManager.Self.GetDefaultStateFor("Container"));
+        container.States.Add(StandardElementsManager.Self.GetDefaultStateFor("Container")!);
         container.DefaultState!.ParentContainer = container;
         project.StandardElements.Add(container);
         ObjectFinder.Self.GumProjectSave = project;
