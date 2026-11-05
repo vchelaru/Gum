@@ -72,6 +72,45 @@ public interface IRenderTargetRenderable
     /// Null until the first parameter is set, so containers without one pay nothing.
     /// </summary>
     ShaderParameterCollection? ShaderParameters { get; set; }
+
+    /// <summary>
+    /// How often the container re-renders its children into its render target. The default,
+    /// <see cref="RenderTargetRefreshMode.EveryFrame"/>, re-bakes every frame.
+    /// </summary>
+    RenderTargetRefreshMode RenderTargetRefreshMode { get; set; }
+
+    /// <summary>
+    /// Incremented by <see cref="RenderTargetRenderableExtensions.RefreshRenderTarget"/>. A
+    /// <see cref="RenderTargetRefreshMode.Manual"/> container re-bakes when its cached image was baked at an
+    /// older value.
+    /// </summary>
+    int RenderTargetRefreshVersion { get; set; }
+}
+
+/// <summary>
+/// How often a render-target container re-renders its children into its render target.
+/// </summary>
+public enum RenderTargetRefreshMode
+{
+    /// <summary>Re-bake and re-composite every frame. Always correct, costs a render-target round trip per container per frame.</summary>
+    EveryFrame,
+
+    /// <summary>
+    /// Bake once, keep the result, and draw it as a plain sprite until the container is told to refresh,
+    /// changes size, the camera zoom changes, or the cache is released because the container was not drawn for a frame.
+    /// A <c>Sprite.RenderTargetTextureSource</c> that points at a manual container shows the cached image, which already
+    /// has the container's effect applied (an every-frame source hands over its unshaded target). Only the layered
+    /// draw paths bake a manual container; the GumBatch immediate and deferred paths draw nothing for one unless a
+    /// layered draw cached it, and render targets nested in <c>GumBatch.Draw</c> are not supported there at all.
+    /// </summary>
+    Manual,
+}
+
+public static class RenderTargetRenderableExtensions
+{
+    /// <summary>Makes a <see cref="RenderTargetRefreshMode.Manual"/> container re-bake the next time it is drawn.</summary>
+    public static void RefreshRenderTarget(this IRenderTargetRenderable renderable) =>
+        renderable.RenderTargetRefreshVersion++;
 }
 
 /// <summary>

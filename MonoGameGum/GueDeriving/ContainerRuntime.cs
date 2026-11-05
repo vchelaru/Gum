@@ -69,6 +69,43 @@ public class ContainerRuntime : InteractiveGue
             }
         }
     }
+
+    /// <summary>
+    /// How often this render-target container re-renders its children. <see cref="RenderTargetRefreshMode.EveryFrame"/>
+    /// (the default) re-bakes every frame. <see cref="RenderTargetRefreshMode.Manual"/> bakes the children once, applies
+    /// <see cref="RenderTargetEffect"/> once into the cached result, and then draws that result as a plain sprite
+    /// until <see cref="RefreshRenderTarget"/> is called. A Manual container also re-bakes by itself on its first draw,
+    /// after it was not drawn for a frame (the cache is released), and when its pixel size or the camera zoom changes.
+    /// Changing a child, the effect, or the shader parameters does not re-bake; call <see cref="RefreshRenderTarget"/>.
+    /// A <see cref="SpriteRuntime.RenderTargetTextureSource"/> pointing at a Manual container shows the cached image, which
+    /// already has <see cref="RenderTargetEffect"/> applied (an EveryFrame source gives the sprite its unshaded target).
+    /// Only the layered draw paths bake a Manual container; the GumBatch immediate and deferred paths draw nothing for
+    /// one unless a layered draw cached it.
+    /// Only has an effect when <see cref="IsRenderTarget"/> is true.
+    /// </summary>
+    public RenderTargetRefreshMode RenderTargetRefreshMode
+    {
+        get => (RenderableComponent as InvisibleRenderable)?.RenderTargetRefreshMode ?? RenderTargetRefreshMode.EveryFrame;
+        set
+        {
+            if (RenderableComponent is InvisibleRenderable invisibleRenderable)
+            {
+                invisibleRenderable.RenderTargetRefreshMode = value;
+            }
+        }
+    }
+
+    /// <summary>
+    /// Makes a <see cref="RenderTargetRefreshMode.Manual"/> container re-bake the next time it is drawn. Has no
+    /// effect in <see cref="RenderTargetRefreshMode.EveryFrame"/> mode, which re-bakes anyway.
+    /// </summary>
+    public void RefreshRenderTarget()
+    {
+        if (RenderableComponent is InvisibleRenderable invisibleRenderable)
+        {
+            invisibleRenderable.RefreshRenderTarget();
+        }
+    }
 #elif RAYLIB
     /// <summary>
     /// An optional GLSL <see cref="global::Raylib_cs.Shader"/> applied when this container is drawn
