@@ -159,7 +159,7 @@ public class CompositeMemberLogicApplyTests : BaseTestClass
     public void Apply_ShouldSetExposedSubtext_WhenChannelsExposedByBaseOfElement()
     {
         ComponentSave component = MakeColorComponent();
-        component.DefaultState.GetVariableSave("Red")!.ExposedAsName = "MyColorRed";
+        component.DefaultState!.GetVariableSave("Red")!.ExposedAsName = "MyColorRed";
         ComponentSave derived = new() { Name = "DerivedColored", BaseType = component.Name };
         derived.States.Add(new StateSave { Name = "Default", ParentContainer = derived });
         _project.Components.Add(derived);
