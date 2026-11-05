@@ -77,11 +77,43 @@ public class NewProjectDemoScreenHostTests : IDisposable
         host.ShouldNotContain("new Button()");
         host.ShouldNotContain("Clicked at");
         host.ShouldContain("ObjectFinder.Self.GetElementSave(\"DemoScreenGum\")");
-        host.ShouldContain(".ToGraphicalUiElement(GumService.Default.SystemManagers, addToManagers: false)");
+        host.ShouldContain(".ToGraphicalUiElement(");
+        host.ShouldContain(".SystemManagers, addToManagers: false)");
         host.ShouldContain(".AddToRoot()");
         host.ShouldContain("using Gum.Managers;");
         host.ShouldContain("using GumRuntime;");
         // The core overload (systemManagers, addToManagers) exists on every runtime, stable and source; the no-argument one is MonoGameGum only.
+    }
+
+    // The host's own Gum handle: GumUI where Game1 declares it, gumUI where Program.cs declares that local, GumService.Default where neither exists (#7671).
+    [Theory]
+    [InlineData(HostPlatform.MonoGame, "GumUI")]
+    [InlineData(HostPlatform.Kni, "GumUI")]
+    [InlineData(HostPlatform.Raylib, "gumUI")]
+    [InlineData(HostPlatform.SilkNet, "gumUI")]
+    [InlineData(HostPlatform.Stride, "GumService.Default")]
+    public void Host_UsesItsOwnGumHandleForGeneratedLines(HostPlatform platform, string receiver)
+    {
+        (NewProjectService service, ResolvedNewProject resolved, NewProjectFilesResult files) = Create(platform, packages: true);
+
+        service.UpdateHost(resolved, files, packagesAdded: true, screenCodeGenerated: false);
+
+        string host = ReadHost(platform);
+        host.ShouldContain($"{receiver}.UseShadowDusk();");
+        host.ShouldContain($".ToGraphicalUiElement({receiver}.SystemManagers, addToManagers: false)");
+        if (receiver != "GumService.Default")
+        {
+            host.ShouldNotContain("GumService.Default.UseShadowDusk");
+            host.ShouldNotContain("ToGraphicalUiElement(GumService.Default");
+        }
+    }
+
+    [Fact]
+    public void Host_KniSkia_UsesGumUiForTheScreenLine()
+    {
+        Create(HostPlatform.KniSkia);
+
+        ReadHost(HostPlatform.KniSkia).ShouldContain(".ToGraphicalUiElement(GumUI.SystemManagers, addToManagers: false)");
     }
 
     [Theory]
@@ -232,7 +264,7 @@ public class NewProjectDemoScreenHostTests : IDisposable
         string host = ReadHost(platform);
         foreach (string package in resolved.RecommendedPackages)
         {
-            host.ShouldContain(PlatformHostContent.GetInitLines(new[] { package }).Single(), customMessage: package);
+            host.ShouldContain(PlatformHostContent.GetInitLines(new[] { package }, PlatformHostContent.GetGumReceiver(platform)).Single(), customMessage: package);
         }
     }
 

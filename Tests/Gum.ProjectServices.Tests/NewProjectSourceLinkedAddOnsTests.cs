@@ -119,7 +119,7 @@ public class NewProjectSourceLinkedAddOnsTests : BaseTestClass
         host.ShouldContain("Gum.Renderables.ShapeRenderer.Self.Initialize();");
         host.ShouldContain("KernSmithFontCreator");
         host.ShouldContain("GumExpressionService.Initialize();");
-        host.ShouldContain("GumService.Default.UseShadowDusk();");
+        host.ShouldContain("GumUI.UseShadowDusk();");
     }
 
     [Fact]

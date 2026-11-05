@@ -17,10 +17,10 @@ internal static class PlatformHostContent
     {
         ["Gum.Shapes.MonoGame"] = "Gum.Renderables.ShapeRenderer.Self.Initialize();",
         ["Gum.Shapes.KNI"] = "Gum.Renderables.ShapeRenderer.Self.Initialize();",
-        ["Gum.MonoGame.ShadowDusk"] = "GumService.Default.UseShadowDusk();",
-        ["Gum.KNI.ShadowDusk"] = "GumService.Default.UseShadowDusk();",
-        ["Gum.raylib.ShadowDusk"] = "GumService.Default.UseShadowDusk();",
-        ["Gum.SkiaSharp.ShadowDusk"] = "GumService.Default.UseShadowDusk();",
+        ["Gum.MonoGame.ShadowDusk"] = "{gum}.UseShadowDusk();",
+        ["Gum.KNI.ShadowDusk"] = "{gum}.UseShadowDusk();",
+        ["Gum.raylib.ShadowDusk"] = "{gum}.UseShadowDusk();",
+        ["Gum.SkiaSharp.ShadowDusk"] = "{gum}.UseShadowDusk();",
         ["KernSmith.MonoGameGum"] =
             "Gum.Wireframe.CustomSetPropertyOnRenderable.InMemoryFontCreator = new KernSmith.Gum.KernSmithFontCreator(GraphicsDevice);",
         ["KernSmith.KniGum"] =
@@ -30,8 +30,16 @@ internal static class PlatformHostContent
         ["Gum.Expressions"] = "Gum.Expressions.GumExpressionService.Initialize();",
     };
 
-    internal static IReadOnlyList<string> GetInitLines(IReadOnlyList<string> addedPackages) =>
-        addedPackages.Where(InitLineByPackage.ContainsKey).Select(package => InitLineByPackage[package]).Distinct().ToList();
+    /// <summary>How the scaffolded host refers to Gum: the <c>GumUI</c> property in Game1, the <c>gumUI</c> local in the raylib and Silk.NET Program.cs, and <c>GumService.Default</c> where the host declares neither (Stride).</summary>
+    internal static string GetGumReceiver(HostPlatform platform) => platform switch
+    {
+        HostPlatform.Raylib or HostPlatform.SilkNet => "gumUI",
+        HostPlatform.Stride => "GumService.Default",
+        _ => "GumUI"
+    };
+
+    internal static IReadOnlyList<string> GetInitLines(IReadOnlyList<string> addedPackages, string gum = "GumService.Default") =>
+        addedPackages.Where(InitLineByPackage.ContainsKey).Select(package => InitLineByPackage[package].Replace("{gum}", gum)).Distinct().ToList();
 
     internal static IReadOnlyList<string> GetUsings(DemoScreenInfo? screen, bool generated)
     {
@@ -45,7 +53,7 @@ internal static class PlatformHostContent
             : new[] { "using Gum.Managers;", "using GumRuntime;" };
     }
 
-    internal static IReadOnlyList<string> GetScreenLines(DemoScreenInfo? screen, bool generated)
+    internal static IReadOnlyList<string> GetScreenLines(DemoScreenInfo? screen, bool generated, string gum = "GumService.Default")
     {
         if (screen == null)
         {
@@ -70,7 +78,7 @@ internal static class PlatformHostContent
         {
             "// Shows the project's demo screen, loaded from the Gum project at runtime. To create screens as classes instead,",
             "// generate code for them in the Gum tool, then add them here with: new MyScreen().AddToRoot();",
-            $"ObjectFinder.Self.GetElementSave(\"{screen.Name}\")!.ToGraphicalUiElement(GumService.Default.SystemManagers, addToManagers: false).AddToRoot();"
+            $"ObjectFinder.Self.GetElementSave(\"{screen.Name}\")!.ToGraphicalUiElement({gum}.SystemManagers, addToManagers: false).AddToRoot();"
         };
     }
 
