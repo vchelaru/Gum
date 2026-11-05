@@ -319,6 +319,7 @@ public class AnimationRenameUndoTests
         using AnimationEditorHarness editor = new AnimationEditorHarness();
         Scenario scenario = RenameBlinkToWink(editor);
         editor.Undo();
+        PlayedAnimations(editor, scenario.Button).ShouldBe(new[] { "IconInstance.Blink" });
         editor.Redo();
         ProjectFileSnapshot afterRedo = editor.SnapshotFiles();
 

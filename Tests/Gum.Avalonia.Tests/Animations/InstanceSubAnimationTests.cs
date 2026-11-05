@@ -168,8 +168,6 @@ public class InstanceSubAnimationTests
         sub.IsMissingReference.ShouldBeFalse();
     }
 
-    // RED: undo restores the renamed animation in Icon but not the keyframe in Button that plays it
-    // (the rename edits Button's sidecar, which is outside Icon's undo history). See the linked issue.
     [AvaloniaFact]
     public void RenamingTheInstancesAnimation_ThenUndo_RestoresTheReferencingElementsKeyframe()
     {
