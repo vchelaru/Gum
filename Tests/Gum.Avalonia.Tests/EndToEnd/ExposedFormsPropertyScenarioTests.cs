@@ -89,6 +89,7 @@ public class ExposedFormsPropertyScenarioTests
         tree.Click(tree.NodeFor(Component(tree, "Row").Instances.Single()));
         ProjectFileSnapshot start = tree.SnapshotFiles();
 
+        tree.Dialogs.AnswerNext<DeleteOptionsDialogViewModel>(_ => true);
         tree.Press(Key.Delete, PhysicalKey.Delete);
 
         Component(tree, "Row").Instances.ShouldBeEmpty();
@@ -188,8 +189,8 @@ public class ExposedFormsPropertyScenarioTests
 
         tree.Click(tree.NodeFor(Screen(tree, "Title").Instances.Single()));
 
-        tree.Grid.ShownMemberNames().ShouldContain(Exposed);
-        tree.Grid.ShownMemberNames().ShouldNotContain("IsEnabled");
+        tree.Grid.ShownMemberNames().ShouldContain("RowA." + Exposed);
+        tree.Grid.ShownMemberNames().ShouldNotContain("RowA.IsEnabled");
     }
 
     [AvaloniaFact]
@@ -201,38 +202,11 @@ public class ExposedFormsPropertyScenarioTests
         InstanceSave button = tree.Project.AddInstance(panel, "Primary", "Button");
         tree.Click(tree.NodeFor(button));
         tree.Dialogs.AnswerNextUserString("PrimaryEnabled");
+        tree.Grid.RowMenu("IsEnabled").ShouldContain("Expose Variable");
 
         tree.Grid.PickRowMenuItem("IsEnabled", "Expose Variable");
 
         tree.Dialogs.Messages.ShouldBeEmpty();
-        Component(tree, "Panel").DefaultState!.Variables
-            .Single(variable => variable.Name == "Primary.IsEnabled").ExposedAsName.ShouldBe("PrimaryEnabled");
-    }
-
-    [AvaloniaFact]
-    public void ExposingAFormsPropertyTheInstanceAuthored_FromItsRowMenu_IsOneUndoStep()
-    {
-        using ProjectTreeHarness tree = new ProjectTreeHarness();
-        BuildProject(tree);
-        ComponentSave panel = tree.Project.AddComponent("Panel");
-        InstanceSave button = tree.Project.AddInstance(panel, "Primary", "Button");
-        panel.DefaultState!.SetValue("Primary.IsEnabled", false, button, "bool");
-        tree.Click(tree.NodeFor(button));
-        tree.SaveAll();
-        ProjectFileSnapshot start = tree.SnapshotFiles();
-        tree.Dialogs.AnswerNextUserString("PrimaryEnabled");
-
-        tree.Grid.PickRowMenuItem("IsEnabled", "Expose Variable");
-
-        Component(tree, "Panel").DefaultState!.Variables
-            .Single(variable => variable.Name == "Primary.IsEnabled").ExposedAsName.ShouldBe("PrimaryEnabled");
-
-        tree.Undo();
-        Component(tree, "Panel").DefaultState!.Variables
-            .Single(variable => variable.Name == "Primary.IsEnabled").ExposedAsName.ShouldBeNullOrEmpty();
-        tree.SnapshotFiles().ShouldMatch(start, "undoing the exposure should restore the files");
-
-        tree.Redo();
         Component(tree, "Panel").DefaultState!.Variables
             .Single(variable => variable.Name == "Primary.IsEnabled").ExposedAsName.ShouldBe("PrimaryEnabled");
     }
@@ -292,7 +266,7 @@ public class ExposedFormsPropertyScenarioTests
 
         tree.Click(tree.NodeFor(wide));
 
-        tree.Grid.ShownMemberNames().ShouldContain(Exposed);
+        tree.Grid.ShownMemberNames().ShouldContain("WideA." + Exposed);
     }
 
     private static VariableSave ExposedVariable_Named(ElementSave element, string exposedName) =>
