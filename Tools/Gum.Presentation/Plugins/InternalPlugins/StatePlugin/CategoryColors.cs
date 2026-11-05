@@ -17,8 +17,7 @@ public static class CategoryColors
     /// <summary>The palette names, in the order the color menu lists them.</summary>
     public static IReadOnlyList<string> Names { get; } = new[]
     {
-        "Indigo", "Violet", "Magenta", "Rose", "Brown", "Green", "Teal", "Slate",
-        "Orange", "Sky",
+        "Indigo", "Violet", "Magenta", "Pink", "Rose", "Orange", "Brown", "Green", "Mint", "Teal", "Sky", "Slate",
     };
 
     /// <summary>The theme resource prefix; the full key is <see cref="ResourceKey"/>.</summary>

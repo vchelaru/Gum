@@ -108,9 +108,11 @@
   <SolidColorBrush x:Key="Frb.CategoryColor.Indigo" Color="#6F7DF0" />
   <SolidColorBrush x:Key="Frb.CategoryColor.Violet" Color="#A06AE0" />
   <SolidColorBrush x:Key="Frb.CategoryColor.Magenta" Color="#CE57C6" />
+  <SolidColorBrush x:Key="Frb.CategoryColor.Pink" Color="#F08AC0" />
   <SolidColorBrush x:Key="Frb.CategoryColor.Rose" Color="#E0577F" />
   <SolidColorBrush x:Key="Frb.CategoryColor.Brown" Color="#A8744A" />
   <SolidColorBrush x:Key="Frb.CategoryColor.Green" Color="#35924F" />
+  <SolidColorBrush x:Key="Frb.CategoryColor.Mint" Color="#4CC99A" />
   <SolidColorBrush x:Key="Frb.CategoryColor.Teal" Color="#12958F" />
   <SolidColorBrush x:Key="Frb.CategoryColor.Slate" Color="#74859D" />
   <SolidColorBrush x:Key="Frb.CategoryColor.Orange" Color="#E8803A" />

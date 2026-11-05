@@ -175,7 +175,7 @@ public class CategoryColorScreenshotTests
         MainWindow window = TestAppBuilder.Services.GetRequiredService<MainWindow>();
         window.MinHeight = 0;
         window.Width = 1500;
-        window.Height = 1100;
+        window.Height = 1400;
         window.Show();
         foreach (AvaloniaGraphicsDeviceControl canvas in window.GetVisualDescendants().OfType<AvaloniaGraphicsDeviceControl>())
         {
@@ -197,9 +197,9 @@ public class CategoryColorScreenshotTests
             PrScreenshot.SaveContactSheet(window, $"palette-contact-{theme.Key.ToString()!.ToLowerInvariant()}",
                 prepare: _ =>
                 {
-                    statesVm.Categories.Single(c => c.Title == "TealCat").IsSelected = true;
+                    statesVm.Categories.Single(c => c.Title == "IndigoCat").IsSelected = true;
                     ScreenshotWindow.Pump(window);
-                    Control row = window.GetVisualDescendants().OfType<TreeViewItem>().First(t => (t.DataContext as StateTreeViewItem)?.Title == "TealCat");
+                    Control row = window.GetVisualDescendants().OfType<TreeViewItem>().First(t => (t.DataContext as StateTreeViewItem)?.Title == "IndigoCat");
                     Point at = row.TranslatePoint(new Point(row.Bounds.Width * 0.4, row.Bounds.Height / 2), window)!.Value;
                     window.MouseMove(at);
                     window.MouseDown(at, MouseButton.Right);

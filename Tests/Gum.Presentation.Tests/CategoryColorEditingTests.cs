@@ -82,14 +82,14 @@ public class CategoryColorEditingTests : BaseTestClass
         viewModel.GetMenuItems().Single(item => item.Text == "Color");
 
     [Fact]
-    public void CategoryMenu_HasAColorSubmenu_WithTenColorsASeparatorAndNone()
+    public void CategoryMenu_HasAColorSubmenu_WithTwelveColorsASeparatorAndNone()
     {
         ContextMenuItemViewModel color = ColorMenu(CreateMenuViewModel(Mock.Of<IEditCommands>()));
 
         color.Children.Select(child => child.Text).ShouldBe(
-            new[] { "Indigo", "Violet", "Magenta", "Rose", "Brown", "Green", "Teal", "Slate", "Orange", "Sky", "", "None" });
-        color.Children[10].IsSeparator.ShouldBeTrue();
-        color.Children.Take(10).Select(child => child.ColorName).ShouldBe(CategoryColors.Names);
+            new[] { "Indigo", "Violet", "Magenta", "Pink", "Rose", "Orange", "Brown", "Green", "Mint", "Teal", "Sky", "Slate", "", "None" });
+        color.Children[12].IsSeparator.ShouldBeTrue();
+        color.Children.Take(12).Select(child => child.ColorName).ShouldBe(CategoryColors.Names);
     }
 
     [Fact]
