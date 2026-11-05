@@ -3,6 +3,7 @@ using Gum.DataTypes;
 using Gum.Services.Dialogs;
 using Gum.StateAnimation.SaveClasses;
 using Shouldly;
+using StateAnimationPlugin.ViewModels;
 
 namespace Gum.Avalonia.Tests.Animations;
 
@@ -35,6 +36,35 @@ public class JsonProjectTests
         editor.Select(button);
         editor.ViewModel.Animations.Single().Keyframes.Count.ShouldBe(2);
         editor.ViewModel.Animations.Single().Loops.ShouldBeTrue();
+    }
+
+    [AvaloniaFact]
+    public void InAJsonProject_RenamingAnInstance_FollowsIntoTheSubAnimationKeyframe_AndSavesAJsonSidecar()
+    {
+        using AnimationEditorHarness editor = new AnimationEditorHarness(jsonProject: true);
+        ComponentSave iconType = editor.AddComponent("Icon", Category, "Dim", "Bright");
+        editor.Select(iconType);
+        editor.AddAnimation("Blink");
+        editor.AddStateKeyframe($"{Category}/Dim");
+        ComponentSave button = editor.AddComponent("Button", Category, "Pressed");
+        InstanceSave icon = editor.AddInstance(button, "IconInstance", iconType);
+        editor.Select(button);
+        editor.AddAnimation("Walk");
+        editor.Dialogs.AnswerNext<SubAnimationSelectionDialogViewModel>(dialog =>
+        {
+            dialog.SelectedContainer = dialog.AnimationContainers!.Single(container => container.InstanceSave == icon);
+            dialog.SelectedAnimation = dialog.Animations.Single(animation => animation.Name == "Blink");
+            return true;
+        });
+        editor.PickAddKeyframe("Sub-Animation");
+
+        icon.Name = "Glyph";
+        editor.PluginManager.InstanceRename(button, icon, "IconInstance");
+        editor.Layout();
+
+        editor.ThrowIfPluginFailed();
+        editor.AnimationFilePath(button).ShouldEndWith(".ganj");
+        editor.ReadSavedAnimations(button).ShouldNotBeNull().Animations.Single().Animations.Single().Name.ShouldBe("Glyph.Blink");
     }
 
     [AvaloniaFact]

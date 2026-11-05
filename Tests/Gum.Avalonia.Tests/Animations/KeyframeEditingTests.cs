@@ -222,6 +222,30 @@ public class KeyframeEditingTests
     }
 
     [AvaloniaFact]
+    public void EditingAgain_AfterAnUndo_SavesToTheRestoredAnimations()
+    {
+        // An undo reloads the tab from the restored file, replacing every view model; the next edit
+        // must still be saved.
+        using AnimationEditorHarness editor = new AnimationEditorHarness();
+        ComponentSave button = editor.AddComponent("Button", Category, "Pressed", "Released");
+        editor.Select(button);
+        editor.AddAnimation("Walk");
+        editor.AddStateKeyframe($"{Category}/Pressed");
+        editor.StartScenario();
+        editor.AddStateKeyframe($"{Category}/Released");
+
+        editor.Undo();
+        editor.AddStateKeyframe($"{Category}/Released");
+
+        editor.ViewModel.Animations.Single().Keyframes.Select(keyframe => keyframe.StateName)
+            .ShouldBe(new[] { $"{Category}/Pressed", $"{Category}/Released" });
+        editor.ReadSavedAnimations(button).ShouldNotBeNull().Animations.Single().States.Select(keyframe => keyframe.StateName)
+            .ShouldBe(new[] { $"{Category}/Pressed", $"{Category}/Released" });
+
+        editor.AssertOracles();
+    }
+
+    [AvaloniaFact]
     public void PasteWithNothingCopied_DoesNothing()
     {
         using AnimationEditorHarness editor = new AnimationEditorHarness();
