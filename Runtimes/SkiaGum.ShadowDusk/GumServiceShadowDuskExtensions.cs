@@ -20,7 +20,17 @@ public static class GumServiceShadowDuskExtensions
 
         // ShadowDusk goes first and decides from the content whether it reads the shader. SkiaGum's default
         // resolver throws for anything it does not recognize, so it can only run after ShadowDusk declines.
+        // A source that cannot be read cannot be decided about either, so the previous resolver gets it.
         CustomSetPropertyOnRenderable.RenderTargetEffectSourceResolver = source =>
-            ShadowDuskEffectLoader.TryLoad(source) ?? previousResolver?.Invoke(source);
+        {
+            try
+            {
+                return ShadowDuskEffectLoader.TryLoad(source) ?? previousResolver?.Invoke(source);
+            }
+            catch (System.IO.IOException) when (previousResolver != null)
+            {
+                return previousResolver(source);
+            }
+        };
     }
 }

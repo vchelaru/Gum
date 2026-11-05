@@ -31,7 +31,16 @@ public static class GumServiceShadowDuskExtensions
         // loader's result is boxed into the resolver's object? return.
         CustomSetPropertyOnRenderable.RenderTargetEffectSourceResolver = source =>
         {
-            Raylib_cs.Shader? shader = loader.TryLoad(source);
+            Raylib_cs.Shader? shader;
+            try
+            {
+                shader = loader.TryLoad(source);
+            }
+            catch (System.IO.IOException) when (previousResolver != null)
+            {
+                return previousResolver(source);
+            }
+
             return shader.HasValue ? (object)shader.Value : previousResolver?.Invoke(source);
         };
     }

@@ -300,4 +300,19 @@ half4 main(float2 coord) {
 
         CustomSetPropertyOnRenderable.RenderTargetEffectSourceResolver!(source).ShouldBeSameAs(sksl);
     }
+
+    // ShadowDusk cannot decide about bytes it cannot read, so the previous resolver (which may report or
+    // handle the missing file its own way) gets the source, as it did when the check was by extension.
+    [Fact]
+    public void SourceResolver_UnreadableSource_GoesToThePreviousResolver()
+    {
+        SKRuntimeEffect? sksl = SKRuntimeEffect.CreateShader(GrayscaleSksl, out string _);
+        sksl.ShouldNotBeNull();
+        CustomSetPropertyOnRenderable.RenderTargetEffectSourceResolver = _ => sksl;
+        GumService.Default.UseShadowDusk();
+        ShaderSource source = ShaderSource.FromFile(
+            Path.Combine(Path.GetTempPath(), "GumMissing_" + Guid.NewGuid().ToString("N") + ".custom"));
+
+        CustomSetPropertyOnRenderable.RenderTargetEffectSourceResolver!(source).ShouldBeSameAs(sksl);
+    }
 }

@@ -33,7 +33,17 @@ public static class GumServiceShadowDuskExtensions
         // read (for example an .sksl or .glsl file) falls through to the resolver registered before this call.
         CustomSetPropertyOnRenderable.RenderTargetEffectSourceResolver = source =>
         {
-            string text = source.ReadAllText();
+            // ShadowDusk cannot decide about bytes it cannot read; the previous resolver gets the source.
+            string text;
+            try
+            {
+                text = source.ReadAllText();
+            }
+            catch (System.IO.IOException) when (previousResolver != null)
+            {
+                return previousResolver(source);
+            }
+
             if (!ShadowDuskEffectLoader.CanLoad(text, source.Name))
             {
                 return previousResolver?.Invoke(source);
