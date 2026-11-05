@@ -505,7 +505,7 @@ public partial class AnimationViewModel : ViewModel
 
     public void SetStateAtTime(double animationTime, ElementSave element, bool defaultIfNull)
     {
-        var stateToSet = _cachedAnimationRuntime?.GetStateToSet(animationTime, element, defaultIfNull);
+        var stateToSet = _cachedAnimationRuntime?.GetStateToSet(animationTime, element, _wireframeObjectManager.RootGue, defaultIfNull);
 
         if(stateToSet != null)
         {
