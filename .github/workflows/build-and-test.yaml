@@ -290,7 +290,7 @@ jobs:
       # Windows already runs it in Build-and-Test, so it is not repeated here.
       - name: Gum.Presentation.Tests (shared logic on every OS)
         if: runner.os != 'Windows'
-        run: dotnet test Tests/Gum.Presentation.Tests/Gum.Presentation.Tests.csproj --configuration Release --logger "trx" --results-directory "TestResults"
+        run: dotnet test Tests/Gum.Presentation.Tests/Gum.Presentation.Tests.csproj --configuration Release --logger "trx" --results-directory "TestResults" --blame-hang --blame-hang-timeout 5m --blame-hang-dump-type none
       # Save byte-parity (ProjectSaveParityTests) must hold on every OS; Windows runs it in the main
       # test job, so only macOS and Linux run it here.
       - name: Gum.ProjectServices.Tests (save parity on every OS)
