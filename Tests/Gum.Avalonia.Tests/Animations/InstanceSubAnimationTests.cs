@@ -197,7 +197,7 @@ public class InstanceSubAnimationTests
     /// An Icon component whose Blink animation runs one second, and a Button holding an IconInstance
     /// of it; leaves Button selected with an empty Walk animation plus a Pressed keyframe at 0.
     /// </summary>
-    private static (ComponentSave Button, InstanceSave Icon) ButtonWithAnimatedIcon(AnimationEditorHarness editor)
+    internal static (ComponentSave Button, InstanceSave Icon) ButtonWithAnimatedIcon(AnimationEditorHarness editor)
     {
         ComponentSave iconType = editor.AddComponent("Icon", Category, "Dim", "Bright");
         editor.Select(iconType);
@@ -213,7 +213,7 @@ public class InstanceSubAnimationTests
         return (button, icon);
     }
 
-    private static AnimatedKeyframeViewModel AddIconBlink(AnimationEditorHarness editor, InstanceSave icon)
+    internal static AnimatedKeyframeViewModel AddIconBlink(AnimationEditorHarness editor, InstanceSave icon)
     {
         editor.Dialogs.AnswerNext<SubAnimationSelectionDialogViewModel>(dialog =>
         {
