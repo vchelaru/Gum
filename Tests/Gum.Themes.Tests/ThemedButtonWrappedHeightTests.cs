@@ -111,7 +111,7 @@ public class ThemedButtonWrappedHeightTests
             visual.UpdateLayout();
 
             visual.HeightUnits.ShouldBe(DimensionUnitType.Absolute, theme);
-            visual.GetAbsoluteHeight().ShouldBe(expectedHeight, theme);
+            visual.AbsoluteHeight.ShouldBe(expectedHeight, theme);
         });
     }
     [Theory]
