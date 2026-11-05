@@ -154,7 +154,7 @@ public class FontReferenceCollector
             // A non-default state reaches a nested Text only through what it sets on this instance
             // that the component passes down; walking every Text of every nested component again for a
             // state that moves or hides the instance is the cost of selecting a large screen (#7623).
-            if (!isDefaultState && !StateMayChangeNestedFonts(state, instance, instanceElement))
+            if (!isDefaultState && !StateMayChangeNestedFonts(element, state, instance, instanceElement))
             {
                 continue;
             }
@@ -176,7 +176,7 @@ public class FontReferenceCollector
     /// <c>VariableReferences</c> row on the instance enumerates its branches. A state setting none of
     /// those resolves every nested Text as the default state does, which is always collected.
     /// </summary>
-    private bool StateMayChangeNestedFonts(StateSave state, InstanceSave instance, ElementSave? component)
+    private bool StateMayChangeNestedFonts(ElementSave element, StateSave state, InstanceSave instance, ElementSave? component)
     {
         if (component == null)
         {
@@ -184,6 +184,14 @@ public class FontReferenceCollector
         }
 
         if (state.VariableLists.Any(vl => vl.SourceObject == instance.Name))
+        {
+            return true;
+        }
+
+        // The default state's references are applied around its own walk and rolled back, so a state that
+        // does not repeat them sees the component's own values for what they set, which only this walk collects.
+        if (element.DefaultState != null && element.DefaultState.VariableLists.Any(vl =>
+                vl.ValueAsIList is { Count: > 0 } && (vl.SourceObject == instance.Name || string.IsNullOrEmpty(vl.SourceObject))))
         {
             return true;
         }

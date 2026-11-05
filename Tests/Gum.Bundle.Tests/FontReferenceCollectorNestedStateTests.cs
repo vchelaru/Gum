@@ -120,6 +120,83 @@ public class FontReferenceCollectorNestedStateTests : IDisposable
         (resolveCallsWithTenStates - resolveCallsWithoutStates).ShouldBeLessThanOrEqualTo(10 * 4);
     }
 
+    [Fact]
+    public void Collect_keeps_the_raw_component_font_when_the_default_state_references_a_font_and_another_state_only_moves_the_instance()
+    {
+        // The default state's conditional reference sets the exposed size per branch (12 and 30); a state
+        // that only moves the instance sees the component's own size (18), which the default walk never emits.
+        ScreenSave screen = BuildScreenWithButton(out ComponentSave button);
+        ExposeFontSize(button, "TextSize");
+        button.DefaultState.Variables.Find(v => v.Name == "Label.FontSize")!.SetsValue = false;
+        screen.DefaultState.Variables.Add(new VariableSave { SetsValue = true, Name = "IsBig", Type = "bool", Value = false });
+        VariableListSave<string> references = new VariableListSave<string> { Name = "StartButton.VariableReferences", Type = "string" };
+        references.ValueAsIList.Add("TextSize = IsBig ? 30 : 12");
+        screen.DefaultState.VariableLists.Add(references);
+        AddState(screen, "Layout", "Moved", ("StartButton.X", 10f, "float"));
+
+        Dictionary<string, BmfcSave> fonts = Collect(button, screen, out _);
+
+        fonts.Keys.ShouldBe(new[] { PlainKey(DefaultSize), PlainKey(12), PlainKey(30) }, ignoreOrder: true);
+    }
+
+    [Fact]
+    public void Collect_finds_a_font_set_through_an_alias_exposed_at_both_levels_of_nesting()
+    {
+        ScreenSave screen = BuildScreenWithTwoLevels(outerAlias: "TextSize", out ComponentSave[] components);
+        AddState(screen, "Layout", "Big", ("Panel.TextSize", 30, "int"));
+
+        Dictionary<string, BmfcSave> fonts = Collect(components, screen, out _);
+
+        fonts.Keys.ShouldBe(new[] { PlainKey(DefaultSize), PlainKey(30) }, ignoreOrder: true);
+    }
+
+    [Fact]
+    public void Collect_ignores_a_value_set_under_the_name_the_outer_component_exposes_it_as_when_it_is_not_the_inner_name()
+    {
+        ScreenSave screen = BuildScreenWithTwoLevels(outerAlias: "Other", out ComponentSave[] components);
+        AddState(screen, "Layout", "Big", ("Panel.Other", 30, "int"));
+
+        Dictionary<string, BmfcSave> fonts = Collect(components, screen, out _);
+
+        fonts.Keys.ShouldBe(new[] { PlainKey(DefaultSize) });
+    }
+
+    [Fact]
+    public void Collect_ignores_a_leftover_value_for_a_variable_only_the_inner_component_exposes()
+    {
+        // Intended difference from before #7623: Panel sets TextSize, which Button exposes but Panel does
+        // not. The tool cannot show or remove such a variable, so a font it names is no longer reported.
+        ScreenSave screen = BuildScreenWithTwoLevels(outerAlias: null, out ComponentSave[] components);
+        AddState(screen, "Layout", "Big", ("Panel.TextSize", 31, "int"));
+
+        Dictionary<string, BmfcSave> fonts = Collect(components, screen, out _);
+
+        fonts.Keys.ShouldBe(new[] { PlainKey(DefaultSize) });
+    }
+
+    /// <summary>A Panel containing a Button whose Label's size is exposed as TextSize; Panel re-exposes it as <paramref name="outerAlias"/> (not at all when null).</summary>
+    private static ScreenSave BuildScreenWithTwoLevels(string? outerAlias, out ComponentSave[] components)
+    {
+        ComponentSave button = TestProjectBuilder.BuildComponent("Button");
+        button.Instances.Add(new InstanceSave { Name = "Label", BaseType = "Text", ParentContainer = button });
+        ExposeFontSize(button, "TextSize");
+
+        ComponentSave panel = TestProjectBuilder.BuildComponent("Panel");
+        panel.Instances.Add(new InstanceSave { Name = "Inner", BaseType = "Button", ParentContainer = panel });
+        if (outerAlias != null)
+        {
+            panel.DefaultState.Variables.Add(new VariableSave
+            {
+                Name = "Inner.TextSize", Type = "int", Value = DefaultSize, SetsValue = false, ExposedAsName = outerAlias
+            });
+        }
+
+        ScreenSave screen = TestProjectBuilder.BuildScreen("MainMenu");
+        screen.Instances.Add(new InstanceSave { Name = "Panel", BaseType = "Panel", ParentContainer = screen });
+        components = new[] { button, panel };
+        return screen;
+    }
+
     private static ScreenSave BuildScreenWithButton(out ComponentSave button)
     {
         button = TestProjectBuilder.BuildComponent("Button");
@@ -164,7 +241,10 @@ public class FontReferenceCollectorNestedStateTests : IDisposable
     private static string PlainKey(int size) =>
         BmfcSave.GetFontCacheFileNameFor(size, Font, 0, true, false, false, null);
 
-    private static Dictionary<string, BmfcSave> Collect(ComponentSave button, ScreenSave screen, out int resolveCalls)
+    private static Dictionary<string, BmfcSave> Collect(ComponentSave button, ScreenSave screen, out int resolveCalls) =>
+        Collect(new[] { button }, screen, out resolveCalls);
+
+    private static Dictionary<string, BmfcSave> Collect(ComponentSave[] components, ScreenSave screen, out int resolveCalls)
     {
         StandardElementSave text = TestProjectBuilder.BuildStandard("Text");
         text.DefaultState.Variables.Add(new VariableSave { SetsValue = true, Name = "Font", Type = "string", Value = Font });
@@ -177,7 +257,7 @@ public class FontReferenceCollectorNestedStateTests : IDisposable
         text.Categories.Add(styleCategory);
 
         GumProjectSave project = TestProjectBuilder.BuildProject(
-            screens: new List<ScreenSave> { screen }, components: new List<ComponentSave> { button }, standards: new[] { text });
+            screens: new List<ScreenSave> { screen }, components: new List<ComponentSave>(components), standards: new[] { text });
         ObjectFinder.Self.GumProjectSave = project;
 
         int calls = 0;
