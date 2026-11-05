@@ -17,4 +17,12 @@ public interface IRenameManager
     void HandleRename(StateSaveCategory category, string oldName, ElementAnimationsViewModel viewModel);
     void HandleRename(AnimationViewModel animationViewModel, string oldAnimationName,
         IEnumerable<AnimationViewModel> animations, ElementSave element);
+
+    /// <summary>
+    /// Rewrites the keyframes of every other element that plays <paramref name="element"/>'s animation
+    /// <paramref name="oldAnimationName"/> through an instance of it, to play
+    /// <paramref name="newAnimationName"/>, saving each changed sidecar. Enumerates the references
+    /// that exist now, so it serves a rename, its undo and its redo alike.
+    /// </summary>
+    void RenameAnimationReferencesInOtherElements(ElementSave element, string oldAnimationName, string newAnimationName);
 }

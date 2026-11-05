@@ -25,4 +25,10 @@ public class AnimationUndoProviderRelay : IAnimationUndoProvider, IAnimationUndo
 
     public void RemoveKeyframesPlaying(ElementSave element, string instanceName)
         => _provider?.RemoveKeyframesPlaying(element, instanceName);
+
+    public bool CanRenameAnimation(ElementSave element, string toName)
+        => _provider?.CanRenameAnimation(element, toName) ?? true;
+
+    public void RenameAnimationReferences(ElementSave element, string fromName, string toName)
+        => _provider?.RenameAnimationReferences(element, fromName, toName);
 }
