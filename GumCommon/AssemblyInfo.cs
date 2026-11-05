@@ -10,6 +10,8 @@ using System.Runtime.CompilerServices;
 // Gum.Expressions shares the int-range guard (ElementSaveExtensions.IsInIntRange) with its CastTo.
 [assembly: InternalsVisibleTo("GumExpressions")]
 [assembly: InternalsVisibleTo("Gum.ProjectServices")]
+// The tool preview resolves a keyframe state's variable references (AnimationRuntime.GetStateToSet with a live root).
+[assembly: InternalsVisibleTo("Gum.Presentation")]
 [assembly: InternalsVisibleTo("MonoGameGum.IntegrationTests")]
 // Moq builds proxies for IGumService, whose internal Context member is overridden by the proxy.
 [assembly: InternalsVisibleTo("DynamicProxyGenAssembly2")]
