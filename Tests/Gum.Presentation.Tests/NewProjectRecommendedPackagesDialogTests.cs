@@ -140,8 +140,8 @@ public class NewProjectRecommendedPackagesDialogTests
     public void IsRecommendedPackagesVisible_RaisesWhenTheCodeProjectIsToggled()
     {
         NewProjectDialogViewModel viewModel = Create();
-        List<string?> raised = new List<string?>();
-        viewModel.PropertyChanged += (_, e) => raised.Add(e.PropertyName);
+        System.Collections.Concurrent.ConcurrentQueue<string?> raised = new System.Collections.Concurrent.ConcurrentQueue<string?>();
+        viewModel.PropertyChanged += (_, e) => raised.Enqueue(e.PropertyName);
 
         viewModel.IncludeCodeProject = true;
 

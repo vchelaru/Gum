@@ -200,8 +200,8 @@ public class NewProjectDemoScreenDialogTests
     public void IsGenerateCodeEnabled_RaisesWhenFormsAreToggled()
     {
         NewProjectDialogViewModel viewModel = Create();
-        List<string?> raised = new List<string?>();
-        viewModel.PropertyChanged += (_, e) => raised.Add(e.PropertyName);
+        System.Collections.Concurrent.ConcurrentQueue<string?> raised = new System.Collections.Concurrent.ConcurrentQueue<string?>();
+        viewModel.PropertyChanged += (_, e) => raised.Enqueue(e.PropertyName);
 
         viewModel.IsIncludeFormsControls = false;
 
