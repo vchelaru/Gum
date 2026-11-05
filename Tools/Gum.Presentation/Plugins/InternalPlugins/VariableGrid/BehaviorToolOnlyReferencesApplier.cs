@@ -132,6 +132,99 @@ public static class BehaviorToolOnlyReferencesApplier
     }
 
     /// <summary>
+    /// What the behaviors of buttons (and other Forms controls) nested inside <paramref name="element"/>'s component
+    /// instances derive from a Forms value the element's instance sets through an exposed variable (#7641):
+    /// <c>OptionsRow1.IsEnabled = false</c>, with OptionsRow exposing its button's IsEnabled, gives
+    /// <c>OptionsRow1.ButtonInstance1.ButtonCategoryState = Disabled</c>. Follows the exposure at every level of
+    /// nesting. The result is for the in-memory canvas only; it is never merged into saved data. The values are read
+    /// from the element's Default state with <paramref name="selectedState"/> on top.
+    /// </summary>
+    public static StateSave GetValuesThroughExposedVariables(ElementSave element, StateSave? selectedState)
+    {
+        StateSave result = new StateSave { Name = "FormsExposed", ParentContainer = element };
+        StateSave? defaultState = element.DefaultState;
+        if (defaultState == null)
+        {
+            return result;
+        }
+
+        StateSave effective = defaultState.Clone();
+        effective.ParentContainer = element;
+        if (selectedState != null && selectedState != defaultState)
+        {
+            effective.MergeIntoThis(selectedState);
+        }
+
+        foreach (InstanceSave instance in element.Instances)
+        {
+            if (ObjectFinder.Self.GetElementSave(instance.BaseType) is ComponentSave component)
+            {
+                CollectValuesThroughExposedVariables(effective, instance.Name, component, instance.Name, result, depth: 0);
+            }
+        }
+
+        return result;
+    }
+
+    /// <param name="suppliedValues">Holds the values the owner of <paramref name="component"/>'s instance sets, by exposed name behind <paramref name="suppliedPrefix"/>.</param>
+    private static void CollectValuesThroughExposedVariables(StateSave suppliedValues, string suppliedPrefix, ComponentSave component,
+        string outputPrefix, StateSave result, int depth)
+    {
+        StateSave? componentDefault = component.DefaultState;
+        if (componentDefault == null || depth > 16)
+        {
+            return;
+        }
+
+        foreach (InstanceSave inner in component.Instances)
+        {
+            if (ObjectFinder.Self.GetElementSave(inner.BaseType) is not ComponentSave innerComponent)
+            {
+                continue;
+            }
+
+            StateSave innerState = new StateSave { Name = "Exposed", ParentContainer = innerComponent };
+            foreach (VariableSave exposure in componentDefault.Variables.Where(item => !string.IsNullOrEmpty(item.ExposedAsName) && item.SourceObject == inner.Name))
+            {
+                string suppliedName = suppliedPrefix.Length == 0 ? exposure.ExposedAsName! : $"{suppliedPrefix}.{exposure.ExposedAsName}";
+                VariableSave? supplied = suppliedValues.Variables.FirstOrDefault(item => item.Name == suppliedName && item.SetsValue && item.Value != null);
+                if (supplied != null)
+                {
+                    innerState.Variables.Add(new VariableSave { Name = exposure.GetRootName(), Type = supplied.Type, Value = supplied.Value, SetsValue = true });
+                }
+            }
+
+            if (innerState.Variables.Count == 0)
+            {
+                continue;
+            }
+
+            Func<string, object?> fallback = BuildFormsPropertyDefaultsFallback(innerComponent, instance: null);
+            foreach ((string left, string right) in GetReferenceLines(innerComponent))
+            {
+                if (!ReadIdentifiers(right).Any(identifier => innerState.Variables.Any(item => item.Name == identifier)))
+                {
+                    continue;
+                }
+
+                EvaluatedLine? line = EvaluateLine(left, right, instance: null, innerState, fallback);
+                if (line != null)
+                {
+                    result.Variables.Add(new VariableSave
+                    {
+                        Name = $"{outputPrefix}.{inner.Name}.{left}",
+                        Type = ResolveLeftSideType(left, instance: null, innerState) ?? "string",
+                        Value = line.Value,
+                        SetsValue = true
+                    });
+                }
+            }
+
+            CollectValuesThroughExposedVariables(innerState, "", innerComponent, $"{outputPrefix}.{inner.Name}", result, depth + 1);
+        }
+    }
+
+    /// <summary>
     /// The category states a running game has applied on top of <paramref name="element"/>'s Default values:
     /// each category-state reference line of its behaviors (<c>ButtonCategoryState = IsEnabled ? ...</c>)
     /// evaluated against the Default state, with unset Forms values at their declared defaults. The
