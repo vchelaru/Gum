@@ -284,4 +284,20 @@ half4 main(float2 coord) {
 
         Should.Throw<InvalidOperationException>(() => CustomSetPropertyOnRenderable.RenderTargetEffectSourceResolver!(source));
     }
+
+    private const string GlslText = "#version 330\nin vec2 fragTexCoord;\nout vec4 finalColor;\nvoid main() { finalColor = vec4(1.0); }\n";
+
+    // An extension-based check would send this to ShadowDusk because of the .fx name and fail.
+    [Fact]
+    public void SourceResolver_GlslUnderAnFxName_FallsThroughToThePreviousResolver()
+    {
+        SKRuntimeEffect? sksl = SKRuntimeEffect.CreateShader(GrayscaleSksl, out string _);
+        sksl.ShouldNotBeNull();
+        CustomSetPropertyOnRenderable.RenderTargetEffectSourceResolver = _ => sksl;
+        GumService.Default.UseShadowDusk();
+        ShaderSource source = new ShaderSource(
+            "shader.fx", () => new MemoryStream(System.Text.Encoding.UTF8.GetBytes(GlslText)));
+
+        CustomSetPropertyOnRenderable.RenderTargetEffectSourceResolver!(source).ShouldBeSameAs(sksl);
+    }
 }

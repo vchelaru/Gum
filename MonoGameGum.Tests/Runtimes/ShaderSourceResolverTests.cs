@@ -136,4 +136,28 @@ public class ShaderSourceResolverTests : BaseTestClass
 
         CustomSetPropertyOnRenderable.RenderTargetEffectSourceResolver.ShouldBeNull();
     }
+
+    [Fact]
+    public void PathResolverAssignedAfterSourceResolver_Wins()
+    {
+        CustomSetPropertyOnRenderable.RenderTargetEffectSourceResolver = _ => "source";
+        CustomSetPropertyOnRenderable.RenderTargetEffectResolver = _ => "path";
+        ContainerRuntime container = CreateContainer();
+
+        container.SourceShaderFile = "Shaders/Outline.fx";
+
+        GetEffect(container).ShouldBe("path");
+    }
+
+    [Fact]
+    public void SourceResolverAssignedAfterPathResolver_Wins()
+    {
+        CustomSetPropertyOnRenderable.RenderTargetEffectResolver = _ => "path";
+        CustomSetPropertyOnRenderable.RenderTargetEffectSourceResolver = _ => "source";
+        ContainerRuntime container = CreateContainer();
+
+        container.SourceShaderFile = "Shaders/Outline.fx";
+
+        GetEffect(container).ShouldBe("source");
+    }
 }
