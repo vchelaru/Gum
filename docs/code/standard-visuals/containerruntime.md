@@ -121,7 +121,7 @@ To instead display a container's render target as a regular Sprite (so it can be
 
 #### Loading Shader Files With SourceShaderFile
 
-Setting `SourceShaderFile` to an `.fx` or `.slang` path makes Gum compile the shader at runtime and assign the result to the container. Gum loads no shader files by itself. A shader resolver must handle the file, and the optional ShadowDusk package for your runtime provides one:
+Setting `SourceShaderFile` to a shader file (for example `.fx` or `.slang`) makes Gum compile the shader at runtime and assign the result to the container. ShadowDusk detects the format from the file's contents, not its extension. Gum loads no shader files by itself. A shader resolver must handle the file, and the optional ShadowDusk package for your runtime provides one:
 
 | Runtime | Package |
 |---|---|
