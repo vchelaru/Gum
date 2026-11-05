@@ -188,6 +188,7 @@ public class ExposeFormsPropertyTests : BaseTestClass
         var response = _service.ExposeVariable(world.Inner, "Value", "Nope");
 
         response.DidAttempt.ShouldBeFalse();
+        _dialogService.Verify(x => x.ShowMessage("This variable cannot be exposed.", It.IsAny<string?>(), It.IsAny<MessageDialogStyle?>()), Times.Once);
         world.Row.DefaultState!.Variables.ShouldBeEmpty();
     }
 

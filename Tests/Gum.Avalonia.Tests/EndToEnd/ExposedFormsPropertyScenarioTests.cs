@@ -309,6 +309,8 @@ public class ExposedFormsPropertyScenarioTests
         ComponentSave panel = tree.Project.AddComponent("Panel");
         InstanceSave button = tree.Project.AddInstance(panel, "Primary", "Button");
         tree.Click(tree.NodeFor(button));
+        tree.SaveAll();
+        ProjectFileSnapshot start = tree.SnapshotFiles();
         tree.Dialogs.AnswerNextUserString("PrimaryEnabled");
         tree.Grid.RowMenu("IsEnabled").ShouldContain("Expose Variable");
 
@@ -317,5 +319,9 @@ public class ExposedFormsPropertyScenarioTests
         tree.Dialogs.Messages.ShouldBeEmpty();
         panel.DefaultState!.Variables
             .Single(variable => variable.Name == "Primary.IsEnabled").ExposedAsName.ShouldBe("PrimaryEnabled");
+
+        tree.Undo();
+        panel.DefaultState!.Variables.ShouldNotContain(variable => variable.Name == "Primary.IsEnabled");
+        tree.SnapshotFiles().ShouldMatch(start, "undoing the expose should restore the saved files");
     }
 }
