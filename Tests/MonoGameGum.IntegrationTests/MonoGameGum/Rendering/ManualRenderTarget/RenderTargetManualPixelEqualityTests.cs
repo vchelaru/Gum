@@ -181,10 +181,22 @@ public class RenderTargetManualPixelEqualityTests : BaseTestClass
     }
 
     [Fact]
-    public void SpriteReferencingAManualContainer_ShowsTheCachedImage_AndKeepsItAlive()
+    public void SpriteReferencingAManualContainer_ShowsTheSamePixelsAsAnEveryFrameSource_AndKeepsItAlive()
     {
         using ManualRenderTargetScene scene = new();
-        ContainerRuntime source = scene.CreateContainer(0, 0, Color.Red, manual: true, withEffect: false);
+
+        (Color[] everyFrame, _, _) = RenderSpriteView(scene, manual: false);
+        (Color[] manual, int bakes, bool cached) = RenderSpriteView(scene, manual: true);
+
+        ManualRenderTargetScene.CountNonBlack(manual).ShouldBeGreaterThan(20);
+        ManualRenderTargetScene.ShouldBeIdentical(everyFrame, manual, "sprite reading a manual container");
+        bakes.ShouldBe(1);
+        cached.ShouldBeTrue("read through the sprite every frame");
+    }
+
+    private static (Color[] Pixels, int Bakes, bool Cached) RenderSpriteView(ManualRenderTargetScene scene, bool manual)
+    {
+        ContainerRuntime source = scene.CreateContainer(0, 0, Color.Red, manual, withEffect: false);
         source.Visible = false;
         scene.Add(source);
 
@@ -200,10 +212,13 @@ public class RenderTargetManualPixelEqualityTests : BaseTestClass
         int before = scene.BakeCount;
         scene.DrawFrames(6);
         Color[] pixels = scene.CaptureFrame();
+        int bakes = scene.BakeCount - before;
+        bool cached = scene.HasCached(source);
 
-        (scene.BakeCount - before).ShouldBe(1);
-        scene.HasCached(source).ShouldBeTrue("drawn through the sprite every frame");
-        scene.PixelAt(pixels, 100, 100).R.ShouldBe((byte)255);
+        viewer.RemoveFromManagers();
+        source.RemoveFromManagers();
+        scene.DrawFrames(3);
+        return (pixels, bakes, cached);
     }
 
     private static Color[] Render(ManualRenderTargetScene scene, bool manual, bool nested, bool withEffect)

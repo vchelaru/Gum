@@ -45,9 +45,9 @@ internal sealed class ManualRenderTargetScene : SharedGameLease
     protected override void OnDispose()
     {
         _capture?.Dispose();
-        Renderer.Camera.Zoom = 1;
         if (Gum.GumService.Default.IsInitialized)
         {
+            Renderer.Camera.Zoom = 1;
             Gum.GumService.Default.Uninitialize();
         }
     }

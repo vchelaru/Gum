@@ -87,6 +87,10 @@ public class Renderer : IRenderer
     // Set in Initialize; the renderer cannot draw before that.
 
     private RenderTargetService renderTargetService = null!;
+    private readonly ScratchRenderTargetPool _scratchRenderTargets = new();
+    // How many render-target containers PreRender is inside of; a manual container inside one is baked by its
+    // own PreRender walk (post-order) because the ancestor bake draws it.
+    private int _preRenderRenderTargetDepth;
     private bool _renderTargetSweepCompletedForHostFrame;
     private bool _allLayersPreRenderedForHostFrame;
     private bool _referencedRenderTargetsCollectedForHostFrame;
@@ -468,6 +472,9 @@ public class Renderer : IRenderer
 
     public void Uninitialize()
     {
+        renderTargetService?.DisposeAll();
+        _scratchRenderTargets.DisposeAll();
+
         mSinglePixelTexture?.Dispose();
         mSinglePixelTexture = null!;
 
@@ -575,6 +582,7 @@ public class Renderer : IRenderer
         }
 
         renderTargetService.ClearUnusedRenderTargetsLastFrame();
+        _scratchRenderTargets.ClearUnusedLastFrame();
         _renderTargetSweepCompletedForHostFrame = true;
     }
 
@@ -743,7 +751,7 @@ public class Renderer : IRenderer
     /// For integration tests — how many render targets this renderer holds in total (container caches plus
     /// the scratch targets a manual-mode refresh renders through).
     /// </summary>
-    internal int AllocatedRenderTargetCount => renderTargetService.CachedCount;
+    internal int AllocatedRenderTargetCount => renderTargetService.CachedCount + _scratchRenderTargets.Count;
 
     public void Draw(SystemManagers managers, Layer layer)
     {
@@ -846,8 +854,6 @@ public class Renderer : IRenderer
         }
 
 
-        spriteRenderer.BeginSpriteBatch(mRenderStateVariables, layer, BeginType.Push, mCamera, null);
-
         layer.SortRenderables();
 
         // Build phase: flatten the (already Z-sorted) layer into a sequence of DrawCommands.
@@ -856,7 +862,13 @@ public class Renderer : IRenderer
         // by itself it produces byte-identical output via HierarchicalOrderer (the default).
         // The render-target bake shares the same build-then-submit shape via SubmitBake; the
         // recursive Render/Draw helpers below remain only for the GumBatch immediate-mode path.
+        // The list is built before the SpriteBatch begins so a manual-mode container the list
+        // draws can be baked first; a bake changes the render target, which cannot happen once
+        // the batch has begun.
         SiblingOrdering.BuildDrawList(layer, _scratchCommands, mCamera);
+        BakeManualContainersInDrawList(_scratchCommands);
+
+        spriteRenderer.BeginSpriteBatch(mRenderStateVariables, layer, BeginType.Push, mCamera, null);
         Submit(_scratchCommands, managers, layer);
 
         _batchOrchestrator.FlushAndReset(managers);
@@ -1050,11 +1062,17 @@ public class Renderer : IRenderer
 
                 renderable.PreRender();
 
+                if (shouldBakeRenderTarget && TryGetManualBakePlan(renderable, out ManualBakePlan plan))
+                {
+                    PreRenderManualContainer(renderable, plan);
+                    continue;
+                }
+
                 // Some Gum objects, like GraphicalUiElements, may not have children if the object hasn't
                 // yet been assigned a visual. Just skip over it...
                 if ((renderable.Visible || shouldBakeRenderTarget) && renderable.Children != null)
                 {
-                    PreRender(renderable.Children);
+                    PreRenderChildren(renderable);
                 }
                 if (shouldBakeRenderTarget)
                 {
@@ -1062,6 +1080,143 @@ public class Renderer : IRenderer
                 }
             }
         }
+    }
+
+    private void PreRenderChildren(IRenderableIpso container)
+    {
+        if (!container.IsRenderTarget)
+        {
+            PreRender(container.Children);
+            return;
+        }
+
+        _preRenderRenderTargetDepth++;
+        try
+        {
+            PreRender(container.Children);
+        }
+        finally
+        {
+            _preRenderRenderTargetDepth--;
+        }
+    }
+
+    /// <summary>What a manual-mode container needs this frame: the whole-bounds pixel size, zoom and refresh version.</summary>
+    private readonly struct ManualBakePlan
+    {
+        public ManualBakePlan(IRenderTargetRenderable settings, IRenderableIpso owner, int width, int height, float zoom)
+        {
+            Settings = settings;
+            Owner = owner;
+            Width = width;
+            Height = height;
+            Zoom = zoom;
+        }
+
+        public IRenderTargetRenderable Settings { get; }
+        public IRenderableIpso Owner { get; }
+        public int Width { get; }
+        public int Height { get; }
+        public float Zoom { get; }
+        public int RefreshVersion => Settings.RenderTargetRefreshVersion;
+        public bool HasArea => Width > 0 && Height > 0;
+    }
+
+    // Past this a whole-bounds cache is not attempted (a texture this large fails on many devices), and the
+    // container keeps today's every-frame behavior, which only bakes the part inside the camera.
+    private const int MaxManualRenderTargetSize = 8192;
+
+    private static IRenderTargetRenderable? GetRenderTargetRenderable(IRenderableIpso renderable) =>
+        (renderable as IRenderTargetRenderable)
+        ?? ((renderable as Gum.Wireframe.GraphicalUiElement)?.RenderableComponent as IRenderTargetRenderable);
+
+    // True when the container is in manual mode and small enough to cache whole.
+    private bool TryGetManualBakePlan(IRenderableIpso renderable, out ManualBakePlan plan)
+    {
+        plan = default;
+        IRenderTargetRenderable? settings = GetRenderTargetRenderable(renderable);
+        if (settings == null || settings.RenderTargetRefreshMode != RenderTargetRefreshMode.Manual)
+        {
+            return false;
+        }
+
+        float zoom = Camera.Zoom;
+        int width = Math.MathFunctions.RoundToInt((renderable.GetAbsoluteRight() - renderable.GetAbsoluteLeft()) * zoom);
+        int height = Math.MathFunctions.RoundToInt((renderable.GetAbsoluteBottom() - renderable.GetAbsoluteTop()) * zoom);
+        if (width > MaxManualRenderTargetSize || height > MaxManualRenderTargetSize)
+        {
+            return false;
+        }
+
+        plan = new ManualBakePlan(settings, ResolveRenderTargetCacheOwner(renderable), width, height, zoom);
+        return true;
+    }
+
+    // A container outside the camera is not drawn, so it is not baked and its cache is released. A turned
+    // container's rectangle is not on the screen axes, so it always counts as on camera.
+    private bool IsOnCamera(IRenderableIpso renderable)
+    {
+        if (renderable.IsRenderTargetTurned())
+        {
+            return true;
+        }
+
+        return renderable.GetAbsoluteLeft() < Camera.AbsoluteRight
+            && renderable.GetAbsoluteRight() > Camera.AbsoluteLeft
+            && renderable.GetAbsoluteTop() < Camera.AbsoluteBottom
+            && renderable.GetAbsoluteBottom() > Camera.AbsoluteTop;
+    }
+
+    private CachedRenderTargetImage? GetValidManualImage(in ManualBakePlan plan) =>
+        renderTargetService.GetValidImage(plan.Owner, plan.Width, plan.Height, plan.Zoom, plan.RefreshVersion);
+
+    // PreRender of a manual container. A valid cache skips the whole subtree (its children are not drawn
+    // this frame). A container the main pass will draw is baked when that pass's draw list is built, because
+    // only then is it known to be drawn (not clipped away); one drawn inside an ancestor's bake, or read by a
+    // Sprite.RenderTargetTextureSource, is baked here, post-order like every other nested bake.
+    private void PreRenderManualContainer(IRenderableIpso renderable, in ManualBakePlan plan)
+    {
+        if (!plan.HasArea || GetValidManualImage(plan) != null)
+        {
+            return;
+        }
+
+        bool nested = _preRenderRenderTargetDepth > 0;
+        EnsureReferencedRenderTargetsCollected();
+        if (nested || _referencedRenderTargetOwners.Contains(plan.Owner))
+        {
+            BakeManualContainer(renderable, plan);
+        }
+    }
+
+    private void BakeManualContainersInDrawList(List<DrawCommand> commands)
+    {
+        int count = commands.Count;
+        for (int i = 0; i < count; i++)
+        {
+            DrawCommand command = commands[i];
+            IRenderableIpso target = command.Target;
+            if (command.Kind != DrawCommandKind.DrawRenderable || !target.IsRenderTarget)
+            {
+                continue;
+            }
+
+            if (TryGetManualBakePlan(target, out ManualBakePlan plan)
+                && plan.HasArea && IsOnCamera(target) && GetValidManualImage(plan) == null)
+            {
+                BakeManualContainer(target, plan);
+            }
+        }
+    }
+
+    private void BakeManualContainer(IRenderableIpso renderable, in ManualBakePlan plan)
+    {
+        if (renderable.Children != null)
+        {
+            PreRenderChildren(renderable);
+        }
+
+        RenderToManualRenderTarget(renderable, plan, OwnManagers);
     }
 
     private void EnsureReferencedRenderTargetsCollected()
@@ -1124,6 +1279,19 @@ public class Renderer : IRenderer
     /// </summary>
     public RenderTarget2D? TryGetBakedRenderTargetFor(IRenderableIpso container)
     {
+        // A manual container's cached image is the post-effect result, and a sprite reading it counts as drawing it.
+        if (TryGetManualBakePlan(container, out ManualBakePlan plan))
+        {
+            CachedRenderTargetImage? image = plan.HasArea ? GetValidManualImage(plan) : null;
+            if (image == null)
+            {
+                return null;
+            }
+
+            renderTargetService.MarkUsed(plan.Owner);
+            return image.Texture;
+        }
+
         return renderTargetService.GetExistingRenderTarget(ResolveRenderTargetCacheOwner(container));
     }
 
@@ -1253,18 +1421,6 @@ public class Renderer : IRenderer
 
     private void RenderToRenderTarget(IRenderableIpso renderable, SystemManagers systemManagers)
     {
-
-
-        Texture? oldRenderTarget = GetBoundRenderTarget();
-        var oldCameraWidth = Camera.ClientWidth;
-        var oldCameraHeight = Camera.ClientHeight;
-        var oldCameraClientLeft = Camera.ClientLeft;
-        var oldCameraClientTop = Camera.ClientTop;
-
-        var oldCameraX = Camera.X;
-        var oldCameraY = Camera.Y;
-        var oldViewport = InitializedGraphicsDevice.Viewport;
-
         // Cache key must match what TryGetBakedRenderTargetFor resolves for a
         // RenderTargetTextureSource reference (#3451) — always the contained renderable, not the
         // GraphicalUiElement wrapper a nested container is walked as (#816). Unresolved, a nested
@@ -1276,79 +1432,148 @@ public class Renderer : IRenderer
 
         if(renderTarget != null)
         {
+            BakeSubtreeInto(renderable, systemManagers, renderTarget, clampToCamera: true, effectSource: null);
+        }
+    }
+
+    /// <summary>
+    /// Bakes a <see cref="RenderTargetRefreshMode.Manual"/> container into its cached image: the whole
+    /// bounds, not clamped to the camera, so the image stays complete when the container scrolls or the
+    /// camera moves. With a render-target effect the children go into a pooled scratch target first and the
+    /// effect is applied once while writing the final image; without one the children bake straight into it.
+    /// </summary>
+    private void RenderToManualRenderTarget(IRenderableIpso renderable, in ManualBakePlan plan, SystemManagers systemManagers)
+    {
+        bool needsStencil = SubtreeRequiresStencil(renderable);
+        Effect? effect = plan.Settings.RenderTargetEffect as Effect;
+
+        // With an effect the final image needs no stencil: only the children draw through it.
+        RenderTarget2D? image = renderTargetService.AcquireImageTarget(
+            InitializedGraphicsDevice, plan.Owner, plan.Width, plan.Height, needsStencil && effect == null);
+        if (image == null)
+        {
+            return;
+        }
+
+        if (effect == null)
+        {
+            BakeSubtreeInto(renderable, systemManagers, image, clampToCamera: false, effectSource: null);
+        }
+        else
+        {
+            RenderTarget2D scratch = _scratchRenderTargets.Get(InitializedGraphicsDevice, plan.Width, plan.Height, needsStencil);
+            BakeSubtreeInto(renderable, systemManagers, scratch, clampToCamera: false, effectSource: null);
+            BakeSubtreeInto(renderable, systemManagers, image, clampToCamera: false, effectSource: scratch);
+        }
+
+        renderTargetService.CommitImage(plan.Owner, image, plan.Zoom, plan.RefreshVersion);
+    }
+
+    /// <summary>
+    /// Binds <paramref name="renderTarget"/>, rebases the camera onto the container, and draws into it either the
+    /// container's subtree or, with <paramref name="effectSource"/>, that already baked texture through the
+    /// container's render-target effect. The previous target and camera are restored afterwards.
+    /// </summary>
+    private void BakeSubtreeInto(IRenderableIpso renderable, SystemManagers systemManagers, RenderTarget2D renderTarget,
+        bool clampToCamera, RenderTarget2D? effectSource)
+    {
+        Texture? oldRenderTarget = GetBoundRenderTarget();
+        var oldCameraWidth = Camera.ClientWidth;
+        var oldCameraHeight = Camera.ClientHeight;
+        var oldCameraClientLeft = Camera.ClientLeft;
+        var oldCameraClientTop = Camera.ClientTop;
+
+        var oldCameraX = Camera.X;
+        var oldCameraY = Camera.Y;
+        var oldViewport = InitializedGraphicsDevice.Viewport;
+
+        if (effectSource == null)
+        {
             RenderTargetBakeCount++;
+        }
 
-            // The target restored after the bake is the one currently bound: a user render target,
-            // or the back buffer when none is.
-            TryReportDiscardingRestoreTarget(
-                oldRenderTarget is RenderTarget2D boundTarget
-                    ? boundTarget.RenderTargetUsage
-                    : InitializedGraphicsDevice.PresentationParameters.RenderTargetUsage);
+        // The target restored after the bake is the one currently bound: a user render target,
+        // or the back buffer when none is.
+        TryReportDiscardingRestoreTarget(
+            oldRenderTarget is RenderTarget2D boundTarget
+                ? boundTarget.RenderTargetUsage
+                : InitializedGraphicsDevice.PresentationParameters.RenderTargetUsage);
 
-            InitializedGraphicsDevice.SetRenderTarget(renderTarget);
+        InitializedGraphicsDevice.SetRenderTarget(renderTarget);
 
-            InitializedGraphicsDevice.Clear(Microsoft.Xna.Framework.Color.Transparent);
+        InitializedGraphicsDevice.Clear(Microsoft.Xna.Framework.Color.Transparent);
 
-            var oldX = renderable.GetAbsoluteLeft();
-            var oldY = renderable.GetAbsoluteTop();
+        var oldX = renderable.GetAbsoluteLeft();
+        var oldY = renderable.GetAbsoluteTop();
 
-            var cameraLeft = Camera.AbsoluteLeft;
-            var cameraTop = Camera.AbsoluteTop;
-            
-
-            Camera.ClientWidth = (int)renderTarget.Width;
-            Camera.ClientHeight = (int)renderTarget.Height;
-            Camera.ClientLeft = 0;
-            Camera.ClientTop = 0;
-
-            // A turned container bakes its whole rectangle, so its target is never clamped to the
-            // camera (see GetRenderTargetBounds).
-            bool isTurned = renderable.IsRenderTargetTurned();
-            var left = isTurned ? oldX : System.Math.Max(cameraLeft, oldX);
-            var top = isTurned ? oldY : System.Math.Max(cameraTop, oldY);
-
-            Camera.X = left;
-            Camera.Y = top;
-            if(Camera.CameraCenterOnScreen == CameraCenterOnScreen.Center)
-            {
-                Camera.X += (renderTarget.Width / 2.0f)/Camera.Zoom;
-                Camera.Y += (renderTarget.Height / 2.0f) / Camera.Zoom;
-            }
-
-            // Internally the sprite rendering system snaps to the pixel, so we need to do the same thing:
-
-            var effectivePixelOffsetX = Camera.PixelPerfectOffsetX;
-            var effectivePixelOffsetY = Camera.PixelPerfectOffsetY;
-
-            // CurrentZoom only becomes meaningful once a SpriteBatch has begun, but the bake runs
-            // in PreRender — before the frame's first BeginSpriteBatch. Fall back to the camera's
-            // own zoom so the snap below doesn't divide by zero and push Camera.X/Y to NaN, which
-            // then propagates into every world->screen scissor computed inside the bake.
-            var snapZoom = CurrentZoom > 0 ? CurrentZoom : Camera.Zoom;
-
-            Camera.X = Math.MathFunctions.RoundToInt(Camera.X * snapZoom) / snapZoom + effectivePixelOffsetX / snapZoom;
-            Camera.Y = Math.MathFunctions.RoundToInt(Camera.Y * snapZoom) / snapZoom + effectivePixelOffsetY / snapZoom;
+        var cameraLeft = Camera.AbsoluteLeft;
+        var cameraTop = Camera.AbsoluteTop;
 
 
-            gumBatch = gumBatch ?? new GumBatch(OwnManagers);
+        Camera.ClientWidth = (int)renderTarget.Width;
+        Camera.ClientHeight = (int)renderTarget.Height;
+        Camera.ClientLeft = 0;
+        Camera.ClientTop = 0;
+
+        // A turned container bakes its whole rectangle, so its target is never clamped to the
+        // camera (see GetRenderTargetBounds).
+        bool isTurned = renderable.IsRenderTargetTurned();
+        var left = isTurned || !clampToCamera ? oldX : System.Math.Max(cameraLeft, oldX);
+        var top = isTurned || !clampToCamera ? oldY : System.Math.Max(cameraTop, oldY);
+
+        Camera.X = left;
+        Camera.Y = top;
+        if(Camera.CameraCenterOnScreen == CameraCenterOnScreen.Center)
+        {
+            Camera.X += (renderTarget.Width / 2.0f)/Camera.Zoom;
+            Camera.Y += (renderTarget.Height / 2.0f) / Camera.Zoom;
+        }
+
+        // Internally the sprite rendering system snaps to the pixel, so we need to do the same thing:
+
+        var effectivePixelOffsetX = Camera.PixelPerfectOffsetX;
+        var effectivePixelOffsetY = Camera.PixelPerfectOffsetY;
+
+        // CurrentZoom only becomes meaningful once a SpriteBatch has begun, but the bake runs
+        // in PreRender — before the frame's first BeginSpriteBatch. Fall back to the camera's
+        // own zoom so the snap below doesn't divide by zero and push Camera.X/Y to NaN, which
+        // then propagates into every world->screen scissor computed inside the bake.
+        var snapZoom = CurrentZoom > 0 ? CurrentZoom : Camera.Zoom;
+
+        Camera.X = Math.MathFunctions.RoundToInt(Camera.X * snapZoom) / snapZoom + effectivePixelOffsetX / snapZoom;
+        Camera.Y = Math.MathFunctions.RoundToInt(Camera.Y * snapZoom) / snapZoom + effectivePixelOffsetY / snapZoom;
 
 
-            // Children draw turned by the container's absolute rotation; turning them back about the
-            // container's origin bakes them upright, and DrawRenderTargetToScreen turns the whole
-            // image (#6602). Gum rotation is counterclockwise, which is CreateRotationZ(-angle) on a
-            // Y-down screen, so undoing it is +angle.
-            var absoluteRotation = renderable.GetAbsoluteRotation();
-            Microsoft.Xna.Framework.Matrix? undoRotation = null;
-            if (absoluteRotation != 0)
-            {
-                undoRotation =
-                    Microsoft.Xna.Framework.Matrix.CreateTranslation(-oldX, -oldY, 0) *
-                    Microsoft.Xna.Framework.Matrix.CreateRotationZ(Microsoft.Xna.Framework.MathHelper.ToRadians(absoluteRotation)) *
-                    Microsoft.Xna.Framework.Matrix.CreateTranslation(oldX, oldY, 0);
-            }
-            gumBatch.Begin(undoRotation);
+        gumBatch = gumBatch ?? new GumBatch(OwnManagers);
 
 
+        // Children draw turned by the container's absolute rotation; turning them back about the
+        // container's origin bakes them upright, and DrawRenderTargetToScreen turns the whole
+        // image (#6602). Gum rotation is counterclockwise, which is CreateRotationZ(-angle) on a
+        // Y-down screen, so undoing it is +angle. The effect pass draws one upright image, so it
+        // takes no turn.
+        var absoluteRotation = renderable.GetAbsoluteRotation();
+        Microsoft.Xna.Framework.Matrix? undoRotation = null;
+        if (absoluteRotation != 0 && effectSource == null)
+        {
+            undoRotation =
+                Microsoft.Xna.Framework.Matrix.CreateTranslation(-oldX, -oldY, 0) *
+                Microsoft.Xna.Framework.Matrix.CreateRotationZ(Microsoft.Xna.Framework.MathHelper.ToRadians(absoluteRotation)) *
+                Microsoft.Xna.Framework.Matrix.CreateTranslation(oldX, oldY, 0);
+        }
+        gumBatch.Begin(undoRotation);
+
+        if (effectSource != null)
+        {
+            // The image lands at the camera's origin, which is the container's snapped top-left. A premultiplied
+            // blend over the transparent clear leaves the effect's output unchanged.
+            IRenderTargetRenderable? effectOwner = GetRenderTargetRenderable(renderable);
+            BlitRenderTarget(renderable, effectOwner, effectSource, new Rectangle(0, 0, effectSource.Width, effectSource.Height),
+                Camera.AbsoluteLeft, Camera.AbsoluteTop, alpha: 255, rotation: 0,
+                effectOwner?.RenderTargetEffect as Effect, BlendState.AlphaBlend, systemManagers, _layers[0]);
+        }
+        else
+        {
             //gumBatch.Draw(renderable);
             //systemManagers.Renderer.Draw(renderable);
             // Children with the default (unconfigured) blend would otherwise resolve to
@@ -1364,28 +1589,26 @@ public class Renderer : IRenderer
             SubmitBake(renderable, systemManagers, _layers[0]);
             _bakedContainer = null;
             _isBakingRenderTarget = false;
-
-            gumBatch.End();
-            InitializedGraphicsDevice.SetRenderTarget(oldRenderTarget as RenderTarget2D);
-
-            Camera.ClientWidth = oldCameraWidth;
-            Camera.ClientHeight = oldCameraHeight;
-            Camera.X = oldCameraX;
-            Camera.Y = oldCameraY;
-            Camera.ClientLeft = oldCameraClientLeft;
-            Camera.ClientTop = oldCameraClientTop;
-
-            InitializedGraphicsDevice.Viewport = oldViewport;
-
-            // Uncomment this to test saving...
-            //if (!System.IO.File.Exists("Output.png"))
-            //{
-            //    using var stream = System.IO.File.OpenWrite("Output.png");
-            //    renderTarget.SaveAsPng(stream, renderTarget.Width, renderTarget.Height);
-            //}
-
         }
 
+        gumBatch.End();
+        InitializedGraphicsDevice.SetRenderTarget(oldRenderTarget as RenderTarget2D);
+
+        Camera.ClientWidth = oldCameraWidth;
+        Camera.ClientHeight = oldCameraHeight;
+        Camera.X = oldCameraX;
+        Camera.Y = oldCameraY;
+        Camera.ClientLeft = oldCameraClientLeft;
+        Camera.ClientTop = oldCameraClientTop;
+
+        InitializedGraphicsDevice.Viewport = oldViewport;
+
+        // Uncomment this to test saving...
+        //if (!System.IO.File.Exists("Output.png"))
+        //{
+        //    using var stream = System.IO.File.OpenWrite("Output.png");
+        //    renderTarget.SaveAsPng(stream, renderTarget.Width, renderTarget.Height);
+        //}
     }
 
     /// <summary>
@@ -1466,14 +1689,7 @@ public class Renderer : IRenderer
 
             if (renderable.IsRenderTarget)
             {
-                // Resolved cache key — see the matching comment in RenderToRenderTarget (#3451).
-                var renderTarget = renderTargetService.GetRenderTargetFor(
-                    InitializedGraphicsDevice, ResolveRenderTargetCacheOwner(renderable), Camera);
-
-                if(renderTarget != null)
-                {
-                    DrawRenderTargetToScreen(renderable, renderTarget, managers, layer);
-                }
+                DrawRenderTargetContainer(renderable, managers, layer);
             }
             else
             {
@@ -1543,13 +1759,90 @@ public class Renderer : IRenderer
     }
 
     /// <summary>
+    /// Draws a render-target container for the main pass (or the legacy immediate walk). An every-frame
+    /// container blits the target its bake just refreshed, through its effect if it has one. A manual
+    /// container draws its cached image as a plain sprite and marks itself used, which is what keeps the
+    /// cache alive; a container with no valid cache draws nothing.
+    /// </summary>
+    private void DrawRenderTargetContainer(IRenderableIpso renderable, SystemManagers managers, Layer layer)
+    {
+        if (TryGetManualBakePlan(renderable, out ManualBakePlan plan))
+        {
+            // Inside an ancestor's bake the camera is that ancestor's region, which already decides what is drawn.
+            if (plan.HasArea && (_isBakingRenderTarget || IsOnCamera(renderable)))
+            {
+                CachedRenderTargetImage? image = GetValidManualImage(plan);
+                if (image != null)
+                {
+                    renderTargetService.MarkUsed(plan.Owner);
+                    DrawCachedRenderTarget(renderable, image, plan, managers, layer);
+                }
+            }
+
+            return;
+        }
+
+        // Resolved cache key — see the matching comment in RenderToRenderTarget (#3451).
+        var renderTarget = renderTargetService.GetRenderTargetFor(
+            InitializedGraphicsDevice, ResolveRenderTargetCacheOwner(renderable), Camera);
+
+        if (renderTarget != null)
+        {
+            DrawRenderTargetToScreen(renderable, renderTarget, managers, layer);
+        }
+    }
+
+    /// <summary>
     /// Blits a render-target container's cached texture to the screen. When the container has a
     /// <see cref="RenderableBase.RenderTargetEffect"/>, that shader is bound for this single
     /// draw so it post-processes the whole container; otherwise the texture is drawn normally.
     /// </summary>
     private void DrawRenderTargetToScreen(IRenderableIpso renderable, RenderTarget2D renderTarget, SystemManagers managers, Layer layer)
     {
-        var renderableAlpha = renderable.Alpha;
+        // The bake is upright and unclamped for a turned container, so the blit turns it by the
+        // container's absolute rotation about its origin (#6602). Inside a parent's bake the parent's
+        // undo matrix takes its share back off.
+        bool isTurned = renderable.IsRenderTargetTurned();
+        float x = isTurned ? renderable.GetAbsoluteX() : System.Math.Max(renderable.GetAbsoluteX(), Camera.AbsoluteLeft);
+        float y = isTurned ? renderable.GetAbsoluteY() : System.Math.Max(renderable.GetAbsoluteY(), Camera.AbsoluteTop);
+
+        // The main-pass walk yields the contained renderable for a top-level render target, but the
+        // GraphicalUiElement wrapper for a nested one. The effect slot lives on the shared
+        // IRenderTargetRenderable interface (implemented by the runtime's RenderableBase containers
+        // AND the editor's LineRectangle containers), so read it directly off the renderable, or off
+        // the wrapper's contained RenderableComponent.
+        IRenderTargetRenderable? effectOwner = GetRenderTargetRenderable(renderable);
+
+        // The blit must composite with a premultiplied blend since the target's contents are
+        // premultiplied by construction (see CreateRenderTargetCompositeTint). Only the container's own
+        // default (unconfigured) blend and Additive are swapped, see GetRenderTargetCompositeBlendState.
+        BlendState? compositeBlendState = GetRenderTargetCompositeBlendState(mRenderStateVariables.BlendState);
+
+        BlitRenderTarget(renderable, effectOwner, renderTarget, null, x, y,
+            renderable.Alpha, renderable.GetAbsoluteRotation(),
+            effectOwner?.RenderTargetEffect as Effect, compositeBlendState, managers, layer);
+    }
+
+    /// <summary>
+    /// Draws a manual container's cached image as a plain sprite: no effect (it is already in the image), at the
+    /// container's whole-bounds origin, so a moved container just draws where it now is.
+    /// </summary>
+    private void DrawCachedRenderTarget(IRenderableIpso renderable, CachedRenderTargetImage image, in ManualBakePlan plan,
+        SystemManagers managers, Layer layer)
+    {
+        BlendState? compositeBlendState = GetRenderTargetCompositeBlendState(mRenderStateVariables.BlendState);
+
+        BlitRenderTarget(renderable, plan.Settings, image.Texture, image.SourceRectangle,
+            renderable.GetAbsoluteX(), renderable.GetAbsoluteY(),
+            renderable.Alpha, renderable.GetAbsoluteRotation(),
+            renderTargetEffect: null, compositeBlendState, managers, layer);
+    }
+
+    private void BlitRenderTarget(IRenderableIpso renderable, IRenderTargetRenderable? effectOwner, RenderTarget2D renderTarget,
+        Rectangle? sourceRectangle, float x, float y, int alpha, float rotation, Effect? renderTargetEffect,
+        BlendState? compositeBlendState, SystemManagers managers, Layer layer)
+    {
+        var renderableAlpha = alpha;
         renderableAlpha = System.Math.Min(255, renderableAlpha);
         renderableAlpha = System.Math.Max(0, renderableAlpha);
 
@@ -1560,33 +1853,14 @@ public class Renderer : IRenderer
         // directly.
         var color = CreateRenderTargetCompositeTint(renderableAlpha);
 
-        // The bake is upright and unclamped for a turned container, so the blit turns it by the
-        // container's absolute rotation about its origin (#6602). Inside a parent's bake the parent's
-        // undo matrix takes its share back off.
-        bool isTurned = renderable.IsRenderTargetTurned();
-        float rotation = renderable.GetAbsoluteRotation();
-        renderTargetRenderableSprite.X = isTurned ? renderable.GetAbsoluteX() : System.Math.Max(renderable.GetAbsoluteX(), Camera.AbsoluteLeft);
-        renderTargetRenderableSprite.Y = isTurned ? renderable.GetAbsoluteY() : System.Math.Max(renderable.GetAbsoluteY(), Camera.AbsoluteTop);
-        renderTargetRenderableSprite.Width = renderTarget.Width / Camera.Zoom;
-        renderTargetRenderableSprite.Height = renderTarget.Height / Camera.Zoom;
-
-        // The main-pass walk yields the contained renderable for a top-level render target, but the
-        // GraphicalUiElement wrapper for a nested one. The effect slot lives on the shared
-        // IRenderTargetRenderable interface (implemented by the runtime's RenderableBase containers
-        // AND the editor's LineRectangle containers), so read it directly off the renderable, or off
-        // the wrapper's contained RenderableComponent.
-        IRenderTargetRenderable? effectOwner = (renderable as IRenderTargetRenderable)
-            ?? ((renderable as Gum.Wireframe.GraphicalUiElement)?.RenderableComponent as IRenderTargetRenderable);
-        var renderTargetEffect = effectOwner?.RenderTargetEffect as Effect;
-
-        // The blit must composite with a premultiplied blend since the target's contents are
-        // premultiplied by construction (see the `color` comment above). Only the container's own
-        // default (unconfigured) blend and Additive are swapped, see GetRenderTargetCompositeBlendState.
-        BlendState? compositeBlendState = GetRenderTargetCompositeBlendState(mRenderStateVariables.BlendState);
+        renderTargetRenderableSprite.X = x;
+        renderTargetRenderableSprite.Y = y;
+        renderTargetRenderableSprite.Width = (sourceRectangle?.Width ?? renderTarget.Width) / Camera.Zoom;
+        renderTargetRenderableSprite.Height = (sourceRectangle?.Height ?? renderTarget.Height) / Camera.Zoom;
 
         if (renderTargetEffect == null && compositeBlendState == null)
         {
-            Sprite.Render(managers, spriteRenderer, renderTargetRenderableSprite, renderTarget, color, rotationInDegrees: rotation, objectCausingRendering: renderable);
+            Sprite.Render(managers, spriteRenderer, renderTargetRenderableSprite, renderTarget, color, sourceRectangle, rotationInDegrees: rotation, objectCausingRendering: renderable);
         }
         else
         {
@@ -1615,7 +1889,7 @@ public class Renderer : IRenderer
             }
 
             spriteRenderer.BeginSpriteBatch(mRenderStateVariables, layer, BeginType.Begin, mCamera, renderable, effectOverride: renderTargetEffect);
-            Sprite.Render(managers, spriteRenderer, renderTargetRenderableSprite, renderTarget, color, rotationInDegrees: rotation, objectCausingRendering: renderable);
+            Sprite.Render(managers, spriteRenderer, renderTargetRenderableSprite, renderTarget, color, sourceRectangle, rotationInDegrees: rotation, objectCausingRendering: renderable);
 
             mRenderStateVariables.BlendState = previousBlendState;
             spriteRenderer.BeginSpriteBatch(mRenderStateVariables, layer, BeginType.Begin, mCamera, renderable);
@@ -1774,14 +2048,7 @@ public class Renderer : IRenderer
         {
             // Main pass: draw the cached texture baked by the prerender phase. We never
             // call SetRenderTarget here — that only happens in PreRender / RenderToRenderTarget.
-            // Resolved cache key — see the matching comment in RenderToRenderTarget (#3451).
-            var renderTarget = renderTargetService.GetRenderTargetFor(
-                InitializedGraphicsDevice, ResolveRenderTargetCacheOwner(renderable), Camera);
-
-            if (renderTarget != null)
-            {
-                DrawRenderTargetToScreen(renderable, renderTarget, managers, layer);
-            }
+            DrawRenderTargetContainer(renderable, managers, layer);
         }
         else
         {
@@ -2187,23 +2454,156 @@ class RenderTargetService : RenderTargetServiceBase<RenderTarget2D>
         // non-positive size (off-camera / degenerate), which the callers treat as "render nothing".
         var bounds = camera.GetRenderTargetBounds(renderable);
 
-        RenderTarget2D? existing = TryGetExisting(renderable);
+        // A container that left manual mode drops its cached image; the target is rebuilt for the
+        // camera-clamped size this path bakes at.
+        if (_images.Count > 0 && _images.ContainsKey(renderable))
+        {
+            Remove(renderable);
+        }
+
+        return GetOrCreate(graphicsDevice, renderable, bounds.Width, bounds.Height, needsStencil, markUsed: true);
+    }
+
+    private RenderTarget2D? GetOrCreate(GraphicsDevice graphicsDevice, IRenderableIpso owner, int width, int height, bool needsStencil, bool markUsed)
+    {
+        RenderTarget2D? existing = TryGetExisting(owner);
         bool existingHasStencil = existing is { IsDisposed: false, DepthStencilFormat: not DepthFormat.None };
         if (needsStencil && existing != null && !existingHasStencil)
         {
-            Remove(renderable);
+            Remove(owner);
         }
 
         _graphicsDeviceForCreate = graphicsDevice;
         _stencilForCreate = needsStencil || existingHasStencil;
         try
         {
-            return GetFor(renderable, bounds.Width, bounds.Height);
+            return GetFor(owner, width, height, markUsed);
         }
         finally
         {
             _graphicsDeviceForCreate = null;
         }
+    }
+
+    // Cached results of manual-mode containers, by owner. The target itself lives in the base class's
+    // dictionary, so the frame-boundary sweep releases it; OnReleased drops the matching entry.
+    private readonly Dictionary<IRenderableIpso, CachedRenderTargetImage> _images = new();
+
+    protected override void OnReleased(IRenderableIpso owner) => _images.Remove(owner);
+
+    /// <summary>
+    /// The cached image for <paramref name="owner"/> if it was baked at exactly this size, zoom and refresh
+    /// version; null when it has to be baked. Does not mark the owner used.
+    /// </summary>
+    public CachedRenderTargetImage? GetValidImage(IRenderableIpso owner, int width, int height, float zoom, int refreshVersion)
+    {
+        if (_images.TryGetValue(owner, out CachedRenderTargetImage? image)
+            && !image.Texture.IsDisposed
+            && image.Texture.Width == width && image.Texture.Height == height
+            && image.Zoom == zoom && image.RefreshVersion == refreshVersion)
+        {
+            return image;
+        }
+
+        return null;
+    }
+
+    /// <summary>
+    /// The target a manual-mode bake renders its final image into, sized to the container's whole bounds.
+    /// Neither this nor <see cref="CommitImage"/> marks the owner used: only drawing it does.
+    /// </summary>
+    public RenderTarget2D? AcquireImageTarget(GraphicsDevice graphicsDevice, IRenderableIpso owner, int width, int height, bool needsStencil)
+    {
+        return GetOrCreate(graphicsDevice, owner, width, height, needsStencil, markUsed: false);
+    }
+
+    public void CommitImage(IRenderableIpso owner, RenderTarget2D target, float zoom, int refreshVersion)
+    {
+        _images[owner] = new CachedRenderTargetImage(target, new Rectangle(0, 0, target.Width, target.Height), zoom, refreshVersion);
+    }
+}
+
+/// <summary>
+/// The cached result of a manual-mode render-target container: a texture and the rectangle of it that holds the
+/// image. Today the rectangle is always the whole target; keeping both lets a later pass place cached images in an
+/// atlas or in a region of a user-supplied target without changing how they are drawn.
+/// </summary>
+internal sealed class CachedRenderTargetImage
+{
+    public CachedRenderTargetImage(RenderTarget2D texture, Rectangle sourceRectangle, float zoom, int refreshVersion)
+    {
+        Texture = texture;
+        SourceRectangle = sourceRectangle;
+        Zoom = zoom;
+        RefreshVersion = refreshVersion;
+    }
+
+    public RenderTarget2D Texture { get; }
+    public Rectangle SourceRectangle { get; }
+
+    /// <summary>Camera zoom the image was baked at.</summary>
+    public float Zoom { get; }
+
+    /// <summary>The container's refresh version the image was baked at.</summary>
+    public int RefreshVersion { get; }
+}
+
+/// <summary>
+/// Render targets a manual-mode refresh renders through before the container's effect writes the final image,
+/// shared by exact size and released by the frame-boundary sweep when a frame did not use them.
+/// </summary>
+internal sealed class ScratchRenderTargetPool
+{
+    private readonly Dictionary<(int Width, int Height, bool Stencil), RenderTarget2D> _targets = new();
+    private readonly HashSet<(int Width, int Height, bool Stencil)> _usedThisFrame = new();
+    private readonly List<(int Width, int Height, bool Stencil)> _keysToRemove = new();
+
+    public int Count => _targets.Count;
+
+    public RenderTarget2D Get(GraphicsDevice graphicsDevice, int width, int height, bool needsStencil)
+    {
+        var key = (width, height, needsStencil);
+        _usedThisFrame.Add(key);
+        if (_targets.TryGetValue(key, out RenderTarget2D? existing) && !existing.IsDisposed)
+        {
+            return existing;
+        }
+
+        RenderTarget2D created = new(graphicsDevice, width, height, false, SurfaceFormat.Color,
+            needsStencil ? DepthFormat.Depth24Stencil8 : DepthFormat.None);
+        _targets[key] = created;
+        return created;
+    }
+
+    public void ClearUnusedLastFrame()
+    {
+        _keysToRemove.Clear();
+        foreach (var key in _targets.Keys)
+        {
+            if (!_usedThisFrame.Contains(key))
+            {
+                _keysToRemove.Add(key);
+            }
+        }
+
+        foreach (var key in _keysToRemove)
+        {
+            _targets[key].Dispose();
+            _targets.Remove(key);
+        }
+
+        _usedThisFrame.Clear();
+    }
+
+    public void DisposeAll()
+    {
+        foreach (RenderTarget2D target in _targets.Values)
+        {
+            target.Dispose();
+        }
+
+        _targets.Clear();
+        _usedThisFrame.Clear();
     }
 }
 
