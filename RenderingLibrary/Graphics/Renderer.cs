@@ -1208,17 +1208,42 @@ public class Renderer : IRenderer
     // upright space, not in the world (#6618).
     private IRenderableIpso? _bakedContainer;
 
+    // Holds the one binding GetBoundRenderTarget reads into, so asking which target is bound does
+    // not allocate an array per bake (#7619).
+    private RenderTargetBinding[]? _boundTargetScratch;
+
+    /// <summary>
+    /// The first render target currently bound to the device, or null when the back buffer is.
+    /// </summary>
+    private Texture? GetBoundRenderTarget()
+    {
+        GraphicsDevice device = InitializedGraphicsDevice;
+#if MONOGAME
+        // GetRenderTargets() returns a new array on every call. The overload that fills a caller's
+        // array needs one of the exact length, so only the common single-target case uses it.
+        int targetCount = device.RenderTargetCount;
+        if (targetCount == 0)
+        {
+            return null;
+        }
+
+        if (targetCount == 1)
+        {
+            RenderTargetBinding[] scratch = _boundTargetScratch ??= new RenderTargetBinding[1];
+            device.GetRenderTargets(scratch);
+            Texture? bound = scratch[0].RenderTarget;
+            scratch[0] = default;
+            return bound;
+        }
+#endif
+        return device.GetRenderTargets().FirstOrDefault().RenderTarget;
+    }
+
     private void RenderToRenderTarget(IRenderableIpso renderable, SystemManagers systemManagers)
     {
 
 
-        Texture? oldRenderTarget = null;
-
-        // RenderTargetCount isn't supported in raw XNA or KNI
-        //if (GraphicsDevice.RenderTargetCount > 0)
-        //{
-            oldRenderTarget = InitializedGraphicsDevice.GetRenderTargets().FirstOrDefault().RenderTarget;
-        //}
+        Texture? oldRenderTarget = GetBoundRenderTarget();
         var oldCameraWidth = Camera.ClientWidth;
         var oldCameraHeight = Camera.ClientHeight;
         var oldCameraClientLeft = Camera.ClientLeft;
