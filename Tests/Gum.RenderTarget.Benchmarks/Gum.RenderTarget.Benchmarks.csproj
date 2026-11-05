@@ -1,0 +1,35 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    Manual render-cost benchmark for sprites wrapped in render-target containers with a shader effect
+    A console app on MonoGame DesktopGL linked to Gum source. Not a test project and not in any
+    solution. Build it in Release and run the built binary directly (command line options are in
+    BenchOptions.cs). It writes results.csv, results.md, frames.csv, log.txt and screenshots to its
+    output folder. Add a scenario by implementing IBenchScenario and adding a line to ScenarioRegistry.
+  -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <RollForward>Major</RollForward>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <IsPackable>false</IsPackable>
+    <RootNamespace>Gum.RenderTarget.Benchmarks</RootNamespace>
+    <TieredPGO>true</TieredPGO>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.4.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\GumCommon\GumCommon.csproj" />
+    <ProjectReference Include="..\..\MonoGameGum\MonoGameGum.csproj" />
+    <!-- GumService.UseShadowDusk(): compiles the .slang at runtime, the same path a game uses. -->
+    <ProjectReference Include="..\..\Runtimes\GumShadowDusk\MonoGameGum.ShadowDusk.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- The shipped Outline shader, linked so the benchmark runs exactly what users get. -->
+    <None Include="..\..\Gum\Content\Shaders\Outline.slang" Link="Content\Outline.slang" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>
