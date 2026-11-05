@@ -42,6 +42,28 @@ public static class ExposedVariableLookup
         return result;
     }
 
+    /// <summary>
+    /// Every variable of <paramref name="owner"/> and its base types that exposes an instance variable,
+    /// most derived first; a variable exposed again by a derived element is returned once.
+    /// </summary>
+    public static List<VariableSave> GetExposures(ElementSave owner)
+    {
+        List<VariableSave> result = new List<VariableSave>();
+        HashSet<string> seenNames = new HashSet<string>();
+        foreach (ElementSave chainElement in new[] { owner }.Concat(ObjectFinder.Self.GetBaseElements(owner)))
+        {
+            foreach (VariableSave variable in chainElement.DefaultState?.Variables ?? new List<VariableSave>())
+            {
+                if (!string.IsNullOrEmpty(variable.ExposedAsName) &&
+                    !string.IsNullOrEmpty(variable.SourceObject) &&
+                    seenNames.Add(variable.Name))
+                {
+                    result.Add(variable);
+                }
+            }
+        }
+        return result;
+    }
     /// <summary>The exposure of one variable of <paramref name="instance"/> by root name, or null.</summary>
     public static VariableSave? GetExposure(ElementSave owner, InstanceSave instance, string rootName) =>
         GetExposures(owner, instance).FirstOrDefault(item => item.GetRootName() == rootName);

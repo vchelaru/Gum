@@ -385,9 +385,10 @@ public class ElementSaveDisplayer
         }
 
         HashSet<InstanceSave> instancesWithExposedVariables = new HashSet<InstanceSave>();
-        foreach (var variable in elementSave.GetDefaultStateOrThrow().Variables)
+        // Exposures declared on base types count too (#7650).
+        foreach (var variable in ExposedVariableLookup.GetExposures(elementSave))
         {
-            if (!string.IsNullOrEmpty(variable.SourceObject) && !string.IsNullOrEmpty(variable.ExposedAsName))
+            if (!string.IsNullOrEmpty(variable.SourceObject))
             {
                 var instance = elementSave.GetInstance(variable.SourceObject);
                 if (instance != null)

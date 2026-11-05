@@ -124,4 +124,21 @@ public class ElementSaveDisplayerInheritedExposureTests : BaseTestClass
 
         ExposedVariableLookup.GetExposure(_derived, _inner, "Width")!.ExposedAsName.ShouldBe("DerivedWidth");
     }
+
+    [Fact]
+    public void BaseExposedVariable_SetByReferenceOnInstance_IsReportedOnDerivedComponent()
+    {
+        VariableListSave<string> references = new VariableListSave<string> { Type = "string", Name = "Inner.VariableReferences" };
+        references.Value.Add("Width = Other.Width");
+        _base.DefaultState!.VariableLists.Add(references);
+        _derived.Instances.Add(new InstanceSave
+        {
+            Name = "Inner", BaseType = "Controls/Button", DefinedByBase = true, ParentContainer = _derived,
+        });
+
+        Dictionary<string, string> setByReference = ElementSaveDisplayer.GetVariablesSetThroughReferences(
+            _derived, _derived.DefaultState, "VariableReferences");
+
+        setByReference.GetValueOrDefault("Inner.Width").ShouldBe("Other.Width");
+    }
 }
