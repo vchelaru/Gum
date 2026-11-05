@@ -704,8 +704,16 @@ public class ElementSaveDisplayer
                     }
                 }
 
+                string? exposedAsName = instance == null
+                    ? null
+                    : instanceOwner.GetDefaultStateOrThrow().Variables
+                        .FirstOrDefault(item => !string.IsNullOrEmpty(item.ExposedAsName) &&
+                            item.SourceObject == instance.Name &&
+                            item.GetRootName() == formsProperty.Name)?.ExposedAsName;
+
                 if (existing != null)
                 {
+                    AppendExposedAsText(existing, exposedAsName);
                     if (sourceCategory == behaviorCategory)
                     {
                         continue;
@@ -770,9 +778,31 @@ public class ElementSaveDisplayer
                     entry.DetailText = formsProperty.Description;
                 }
 
+                AppendExposedAsText(entry, exposedAsName);
+
                 behaviorCategory.Members.Add(entry);
             }
         }
+    }
+
+    /// <summary>
+    /// A Forms property row is not built from a default-state variable, so the exposed-variable pass in
+    /// FillPropertyList never reaches it; this adds the same "Exposed as X" line to it (#7641).
+    /// </summary>
+    private static void AppendExposedAsText(VariableGridEntry entry, string? exposedAsName)
+    {
+        if (string.IsNullOrEmpty(exposedAsName))
+        {
+            return;
+        }
+
+        string text = "Exposed as " + exposedAsName;
+        if (entry.DetailText?.Contains(text) == true)
+        {
+            return;
+        }
+
+        entry.DetailText = string.IsNullOrEmpty(entry.DetailText) ? text : entry.DetailText + "\n" + text;
     }
 
     private VariableGridEntry? CreateEntryFromPropertyData(ElementSave? instanceOwner, InstanceSave? instance,
