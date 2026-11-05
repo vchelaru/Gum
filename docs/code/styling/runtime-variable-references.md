@@ -76,6 +76,25 @@ References to another component, such as a shared `Styles` component, do not upd
 Available in November 2026, or now if building Gum from source.
 {% endhint %}
 
+## References in Animation Keyframes
+
+A state used as an animation keyframe can hold a variable reference. Gum evaluates the reference against the component every time the animation updates, then interpolates between the evaluated values of the two surrounding keyframes. This lets code offset an animation without editing it.
+
+For example, a component has a custom `float` variable named `OffsetX`. Its `Hidden` state sets `X` to `0` and its `Shown` state sets `X` to `200`, and both states have the reference `X = OffsetX`. Both keyframes then resolve to the current `OffsetX`, so the animation lands wherever `OffsetX` says.
+
+```csharp
+// Initialize
+component.SetProperty("OffsetX", 50f);
+component.PlayAnimation("Show");
+```
+
+Changing `OffsetX` while the animation plays takes effect on the next update.
+
+* A keyframe variable with a stored value and no reference behaves as it always has. A keyframe can mix both.
+* A plain reference such as `X = OffsetX` works without extra packages. Arithmetic such as `X = 100 + OffsetX` needs [Gum.Expressions](#expression-support-optional).
+* A reference that cannot be evaluated leaves the variable at its stored value and is reported once, like any other broken reference.
+* Only the keyframe states of the animation that is playing on the component are resolved. Animations of child instances are not.
+
 ## Refreshing Live Visuals After Style Changes
 
 If your UI is already on screen and you change style values, you can push those changes to live visuals without re-creating controls. After calling `ApplyAllVariableReferences`, call `RefreshStyles` to re-apply all default state values and Forms visual states recursively.
