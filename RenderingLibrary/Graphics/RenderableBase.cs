@@ -23,6 +23,12 @@ public abstract class RenderableBase : IVisible, IRenderableIpso,
     public ShaderParameterCollection? ShaderParameters { get; set; }
 
     /// <inheritdoc/>
+    public RenderTargetRefreshMode RenderTargetRefreshMode { get; set; }
+
+    /// <inheritdoc/>
+    public int RenderTargetRefreshVersion { get; set; }
+
+    /// <inheritdoc/>
     public bool AbsoluteVisible => ((IVisible)this).GetAbsoluteVisible();
     /// <inheritdoc/>
     IVisible? IVisible.Parent { get { return Parent as IVisible; } }

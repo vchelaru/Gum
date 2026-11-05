@@ -733,6 +733,18 @@ public class Renderer : IRenderer
         return renderTargetService.HasCachedRenderTarget(owner);
     }
 
+    /// <summary>
+    /// For integration tests — how many container bakes (children rendered into a container's target) this
+    /// renderer has run. The extra shader pass of a manual-mode refresh is part of the same bake.
+    /// </summary>
+    internal int RenderTargetBakeCount { get; private set; }
+
+    /// <summary>
+    /// For integration tests — how many render targets this renderer holds in total (container caches plus
+    /// the scratch targets a manual-mode refresh renders through).
+    /// </summary>
+    internal int AllocatedRenderTargetCount => renderTargetService.CachedCount;
+
     public void Draw(SystemManagers managers, Layer layer)
     {
         // So that 2 controls don't render at the same time.
@@ -1264,6 +1276,8 @@ public class Renderer : IRenderer
 
         if(renderTarget != null)
         {
+            RenderTargetBakeCount++;
+
             // The target restored after the bake is the one currently bound: a user render target,
             // or the back buffer when none is.
             TryReportDiscardingRestoreTarget(
