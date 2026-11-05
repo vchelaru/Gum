@@ -293,12 +293,13 @@ public class PlatformProjectScaffolder : IPlatformProjectScaffolder
         bool isXnaGame = NewProjectLayout.WritesGame1(platform);
         string programFolder = isXnaGame ? "Xna" : platformFolder;
 
+        string gum = PlatformHostContent.GetGumReceiver(platform);
         string Fill(string folder, string fileName)
         {
             string text = ReadTemplate(folder, fileName, projectName, rootNamespace, gumProjectFileName);
             text = PlatformHostContent.Expand(text, "{{HostUsings}}", PlatformHostContent.GetUsings(demoScreen, screenCodeGenerated));
-            text = PlatformHostContent.Expand(text, "{{InitLines}}", PlatformHostContent.GetInitLines(addedPackages));
-            return PlatformHostContent.Expand(text, "{{ScreenLines}}", PlatformHostContent.GetScreenLines(demoScreen, screenCodeGenerated));
+            text = PlatformHostContent.Expand(text, "{{InitLines}}", PlatformHostContent.GetInitLines(addedPackages, gum));
+            return PlatformHostContent.Expand(text, "{{ScreenLines}}", PlatformHostContent.GetScreenLines(demoScreen, screenCodeGenerated, gum));
         }
 
         File.WriteAllText(Path.Combine(directory, NewProjectLayout.ProgramFileName), Fill(programFolder, "Program.cs.template"));
