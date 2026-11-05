@@ -117,13 +117,13 @@
           "Name": "Height",
           "Type": "float",
           "SetsValue": true,
-          "ValueAsFloat": -2
+          "ValueAsFloat": 18
         },
         {
           "Name": "HeightUnits",
           "Type": "DimensionUnitType",
           "SetsValue": true,
-          "ValueAsInt": 4
+          "ValueAsInt": 0
         },
         {
           "Name": "InnerDot.FillBlue",

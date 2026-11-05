@@ -43,11 +43,6 @@ public class CheckBoxVisual : BaseCheckBoxVisual
         CheckBoxBackground.Parent = null;
         FocusedIndicator.Parent = null;
 
-        // V3 is a fixed 24; 4 plus the 20 px line of the 14 px theme font keeps one line at 24 and
-        // lets wrapped lines grow it.
-        Height = 4;
-        HeightUnits = DimensionUnitType.RelativeToChildren;
-
         TextInstance.Width = -(BoxSize + BoxToLabelGap);
 
         _focusRing = CreateFocusRing();

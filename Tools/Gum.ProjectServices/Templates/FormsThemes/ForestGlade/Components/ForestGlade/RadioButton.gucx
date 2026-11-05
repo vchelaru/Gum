@@ -59,10 +59,10 @@
       <Value xsi:type="xsd:int">7</Value>
     </Variable>
     <Variable Type="float" Name="Height" SetsValue="true">
-      <Value xsi:type="xsd:float">-2</Value>
+      <Value xsi:type="xsd:float">18</Value>
     </Variable>
     <Variable Type="DimensionUnitType" Name="HeightUnits" SetsValue="true">
-      <Value xsi:type="xsd:int">4</Value>
+      <Value xsi:type="xsd:int">0</Value>
     </Variable>
     <Variable Type="int" Name="InnerDot.FillBlue" SetsValue="true">
       <Value xsi:type="xsd:int">117</Value>
