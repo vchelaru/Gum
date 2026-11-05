@@ -18,4 +18,14 @@ internal static class AnimationFixtures
         animations.Animations.Add(animation);
         animations.Save(path);
     }
+
+    /// <summary>Writes an animation file at <paramref name="path"/> with one animation that plays <paramref name="referencedAnimation"/> (<c>Instance.Animation</c>) at time 0.</summary>
+    public static void WriteSubAnimation(string path, string animationName, string referencedAnimation)
+    {
+        ElementAnimationsSave animations = new ElementAnimationsSave();
+        AnimationSave animation = new AnimationSave { Name = animationName };
+        animation.Animations.Add(new AnimationReferenceSave { Name = referencedAnimation, Time = 0 });
+        animations.Animations.Add(animation);
+        animations.Save(path);
+    }
 }

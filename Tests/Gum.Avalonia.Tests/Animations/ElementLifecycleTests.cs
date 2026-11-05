@@ -39,6 +39,44 @@ public class ElementLifecycleTests
     }
 
     [AvaloniaFact]
+    public void EditingAfterRenamingTheElement_SavesToTheRenamedSidecar_NotTheOldOne()
+    {
+        using AnimationEditorHarness editor = new AnimationEditorHarness();
+        ComponentSave button = editor.AddComponent("Button", Category, "Pressed", "Released");
+        editor.Select(button);
+        editor.AddAnimation("Walk");
+        editor.AddStateKeyframe($"{Category}/Pressed");
+        string oldPath = editor.AnimationFilePath(button);
+        button.Name = "PushButton";
+        editor.PluginManager.ElementRename(button, "Button");
+        editor.Layout();
+
+        editor.AddStateKeyframe($"{Category}/Released");
+
+        File.Exists(oldPath).ShouldBeFalse("the old sidecar must not come back");
+        editor.ReadSavedAnimations(button).ShouldNotBeNull().Animations.Single().States.Count.ShouldBe(2);
+    }
+
+    [AvaloniaFact]
+    public void EditingTheCopyOfADuplicatedElement_SavesToTheCopy_AndLeavesTheOriginalAlone()
+    {
+        using AnimationEditorHarness editor = new AnimationEditorHarness();
+        ComponentSave button = editor.AddComponent("Button", Category, "Pressed", "Released");
+        editor.Select(button);
+        editor.AddAnimation("Walk");
+        editor.AddStateKeyframe($"{Category}/Pressed");
+        ComponentSave copy = editor.AddComponent("ButtonCopy", Category, "Pressed", "Released");
+        editor.PluginManager.ElementDuplicate(button, copy);
+        editor.Select(copy);
+        editor.Click(editor.RowFor(editor.AnimationList, editor.ViewModel.Animations.Single()));
+
+        editor.AddStateKeyframe($"{Category}/Released");
+
+        editor.ReadSavedAnimations(copy).ShouldNotBeNull().Animations.Single().States.Count.ShouldBe(2);
+        editor.ReadSavedAnimations(button).ShouldNotBeNull().Animations.Single().States.Count.ShouldBe(1);
+    }
+
+    [AvaloniaFact]
     public void RenamingAnUnselectedElement_MovesItsSidecar()
     {
         using AnimationEditorHarness editor = new AnimationEditorHarness();
