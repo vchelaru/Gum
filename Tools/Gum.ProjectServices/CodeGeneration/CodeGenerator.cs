@@ -6786,7 +6786,7 @@ public class CodeGenerator
             ? "this"
             : "this." + _codeGenerationNameVerifier.ToCSharpMemberName(instance.Name);
 
-        foreach (VariableSave declaration in GetFormsPropertyDeclarations(controlElement))
+        foreach (VariableSave declaration in FormsPropertyDeclarations.GetFor(controlElement))
         {
             VariableSave? authored = state.Variables.FirstOrDefault(item =>
                 item.Value != null &&
@@ -6831,7 +6831,7 @@ public class CodeGenerator
             controlElement == null ||
             controlElement is StandardElementSave ||
             GetIfNameIsVisualOrExposedVariable(controlElement, name) ||
-            !GetFormsPropertyDeclarations(controlElement).Any(item => item.Name == name))
+            !FormsPropertyDeclarations.GetFor(controlElement).Any(item => item.Name == name))
         {
             return false;
         }
@@ -6899,39 +6899,6 @@ public class CodeGenerator
 
         // No Forms behavior: GetInheritance derives such a class from FrameworkElement.
         return typeof(Gum.Forms.Controls.FrameworkElement);
-    }
-
-    /// <summary>
-    /// The FormsProperty declarations of every behavior on <paramref name="element"/> and its base chain, in the
-    /// order the runtime applier visits them, the nearest element winning a repeated name.
-    /// </summary>
-    private static IEnumerable<VariableSave> GetFormsPropertyDeclarations(ElementSave element)
-    {
-        HashSet<string> seen = new HashSet<string>(StringComparer.Ordinal);
-        HashSet<ElementSave> visited = new HashSet<ElementSave>();
-        ElementSave? current = element;
-
-        while (current != null && visited.Add(current))
-        {
-            foreach (ElementBehaviorReference reference in current.Behaviors)
-            {
-                BehaviorSave? behavior = ObjectFinder.Self.GetBehavior(reference);
-                if (behavior == null)
-                {
-                    continue;
-                }
-
-                foreach (VariableSave declaration in behavior.FormsProperties)
-                {
-                    if (!string.IsNullOrEmpty(declaration.Name) && seen.Add(declaration.Name))
-                    {
-                        yield return declaration;
-                    }
-                }
-            }
-
-            current = ObjectFinder.Self.GetBaseElement(current);
-        }
     }
 
     /// <summary>

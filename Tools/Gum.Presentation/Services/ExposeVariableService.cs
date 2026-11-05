@@ -10,6 +10,7 @@ using System.Linq;
 using Gum.Commands;
 using Gum.Services.Dialogs;
 using Gum.Undo;
+using Gum.ProjectServices;
 using ToolsUtilities;
 
 namespace Gum.Services;
@@ -149,14 +150,13 @@ public class ExposeVariableService : IExposeVariableService
             StateSave stateToExposeOn = elementSave.GetDefaultStateOrThrow();
 
             // GetIfCanExpose only succeeds for an instance in an element.
-            var variableInDefault = ObjectFinder.Self.GetRootVariable(fullVariableName, instanceSave.ParentContainer!);
+            string? variableType = GetUnauthoredVariableType(instanceSave, rootVariableName, instanceSave.ParentContainer!);
 
-            if (variableInDefault == null)
+            if (variableType == null)
             {
                 throw new Exception($"Error getting root variable for {fullVariableName} in {instanceSave.ParentContainer}");
             }
 
-            string variableType = variableInDefault.Type;
             stateToExposeOn.SetValue(fullVariableName, null, instanceSave, variableType);
 
             // SetValue just added the variable.
@@ -197,6 +197,28 @@ public class ExposeVariableService : IExposeVariableService
         return stateToPullFrom.GetVariableRecursive(variable);
     }
 
+    /// <summary>
+    /// The type of a variable nobody has set on <paramref name="instanceSave"/>, found on its base type, through the
+    /// variable's root, or as a Forms property one of its behaviors declares. Null when none define it.
+    /// </summary>
+    private static string? GetUnauthoredVariableType(InstanceSave instanceSave, string rootVariableName, ElementSave parentContainer)
+    {
+        // An instance of a missing type has no base variables.
+        ElementSave? elementForInstance = ObjectFinder.Self.GetElementSave(instanceSave.BaseType);
+
+        VariableSave? variable = elementForInstance?.GetDefaultStateOrThrow().GetVariableSave(rootVariableName)
+            ?? ObjectFinder.Self.GetRootVariable(instanceSave.Name + "." + rootVariableName, parentContainer);
+
+        if (variable != null)
+        {
+            return variable.Type;
+        }
+
+        return elementForInstance == null
+            ? null
+            : FormsPropertyDeclarations.GetFor(elementForInstance).FirstOrDefault(item => item.Name == rootVariableName)?.Type;
+    }
+
     private GeneralResponse GetIfCanExpose(InstanceSave instanceSave, ElementSave? selectedElement, VariableSave? variableSave, string rootVariableName)
     {
         if (instanceSave == null)
@@ -213,20 +235,7 @@ public class ExposeVariableService : IExposeVariableService
         if (variableSave == null)
         {
             // This variable hasn't been assigned yet.  Let's make a new variable with a null value
-
-            string variableName = instanceSave.Name + "." + rootVariableName;
-            string rawVariableName = rootVariableName;
-
-            // An instance of a missing type has no base variables.
-            ElementSave? elementForInstance = ObjectFinder.Self.GetElementSave(instanceSave.BaseType);
-            var variableInDefault = elementForInstance?.GetDefaultStateOrThrow().GetVariableSave(rawVariableName);
-
-            if(variableInDefault == null)
-            {
-                variableInDefault = ObjectFinder.Self.GetRootVariable(variableName, parentContainer);
-            }
-
-            if (variableInDefault == null)
+            if (GetUnauthoredVariableType(instanceSave, rootVariableName, parentContainer) == null)
             {
                 return GeneralResponse.UnsuccessfulWith("This variable cannot be exposed.");
             }
