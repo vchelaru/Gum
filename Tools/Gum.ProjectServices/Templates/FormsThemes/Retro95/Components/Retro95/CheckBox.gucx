@@ -335,6 +335,15 @@
       <Variable Type="int" Name="BevelInstance.FillRed" SetsValue="true">
         <Value xsi:type="xsd:int">255</Value>
       </Variable>
+      <Variable Type="int" Name="CheckGlyph.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">0</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckGlyph.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">0</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckGlyph.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">0</Value>
+      </Variable>
       <Variable Type="bool" Name="CheckGlyph.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
       </Variable>
@@ -366,6 +375,16 @@
       <VariableList xsi:type="VariableListSaveOfString">
         <Type>string</Type>
         <Name>TextInstance.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Color = Components/Retro95/Styles.Text.FillColor</string>
+        </Value>
+      </VariableList>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>CheckGlyph.VariableReferences</Name>
         <Category>References</Category>
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
@@ -385,6 +404,15 @@
       <Variable Type="int" Name="BevelInstance.FillRed" SetsValue="true">
         <Value xsi:type="xsd:int">255</Value>
       </Variable>
+      <Variable Type="int" Name="CheckGlyph.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">0</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckGlyph.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">0</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckGlyph.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">0</Value>
+      </Variable>
       <Variable Type="bool" Name="CheckGlyph.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
       </Variable>
@@ -416,6 +444,16 @@
       <VariableList xsi:type="VariableListSaveOfString">
         <Type>string</Type>
         <Name>TextInstance.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Color = Components/Retro95/Styles.Text.FillColor</string>
+        </Value>
+      </VariableList>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>CheckGlyph.VariableReferences</Name>
         <Category>References</Category>
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
@@ -435,6 +473,15 @@
       <Variable Type="int" Name="BevelInstance.FillRed" SetsValue="true">
         <Value xsi:type="xsd:int">255</Value>
       </Variable>
+      <Variable Type="int" Name="CheckGlyph.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">0</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckGlyph.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">0</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckGlyph.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">0</Value>
+      </Variable>
       <Variable Type="bool" Name="CheckGlyph.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
       </Variable>
@@ -466,6 +513,16 @@
       <VariableList xsi:type="VariableListSaveOfString">
         <Type>string</Type>
         <Name>TextInstance.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Color = Components/Retro95/Styles.Text.FillColor</string>
+        </Value>
+      </VariableList>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>CheckGlyph.VariableReferences</Name>
         <Category>References</Category>
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
@@ -485,6 +542,15 @@
       <Variable Type="int" Name="BevelInstance.FillRed" SetsValue="true">
         <Value xsi:type="xsd:int">255</Value>
       </Variable>
+      <Variable Type="int" Name="CheckGlyph.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">0</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckGlyph.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">0</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckGlyph.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">0</Value>
+      </Variable>
       <Variable Type="bool" Name="CheckGlyph.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
       </Variable>
@@ -516,6 +582,16 @@
       <VariableList xsi:type="VariableListSaveOfString">
         <Type>string</Type>
         <Name>TextInstance.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Color = Components/Retro95/Styles.Text.FillColor</string>
+        </Value>
+      </VariableList>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>CheckGlyph.VariableReferences</Name>
         <Category>References</Category>
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
@@ -535,6 +611,15 @@
       <Variable Type="int" Name="BevelInstance.FillRed" SetsValue="true">
         <Value xsi:type="xsd:int">255</Value>
       </Variable>
+      <Variable Type="int" Name="CheckGlyph.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">0</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckGlyph.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">0</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckGlyph.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">0</Value>
+      </Variable>
       <Variable Type="bool" Name="CheckGlyph.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
       </Variable>
@@ -573,6 +658,16 @@
           <string>Color = Components/Retro95/Styles.Text.FillColor</string>
         </Value>
       </VariableList>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>CheckGlyph.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Color = Components/Retro95/Styles.Text.FillColor</string>
+        </Value>
+      </VariableList>
     </State>
     <State>
       <Name>DisabledOff</Name>
@@ -584,6 +679,15 @@
       </Variable>
       <Variable Type="int" Name="BevelInstance.FillRed" SetsValue="true">
         <Value xsi:type="xsd:int">192</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckGlyph.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">0</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckGlyph.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">0</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckGlyph.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">0</Value>
       </Variable>
       <Variable Type="bool" Name="CheckGlyph.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
@@ -623,6 +727,16 @@
           <string>Color = Components/Retro95/Styles.DisabledText.FillColor</string>
         </Value>
       </VariableList>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>CheckGlyph.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Color = Components/Retro95/Styles.Text.FillColor</string>
+        </Value>
+      </VariableList>
     </State>
     <State>
       <Name>DisabledFocusedOff</Name>
@@ -634,6 +748,15 @@
       </Variable>
       <Variable Type="int" Name="BevelInstance.FillRed" SetsValue="true">
         <Value xsi:type="xsd:int">192</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckGlyph.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">0</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckGlyph.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">0</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckGlyph.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">0</Value>
       </Variable>
       <Variable Type="bool" Name="CheckGlyph.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
@@ -671,6 +794,16 @@
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
           <string>Color = Components/Retro95/Styles.DisabledText.FillColor</string>
+        </Value>
+      </VariableList>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>CheckGlyph.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Color = Components/Retro95/Styles.Text.FillColor</string>
         </Value>
       </VariableList>
     </State>
@@ -1168,6 +1301,15 @@
       <Variable Type="int" Name="BevelInstance.FillRed" SetsValue="true">
         <Value xsi:type="xsd:int">255</Value>
       </Variable>
+      <Variable Type="int" Name="CheckGlyph.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">0</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckGlyph.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">0</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckGlyph.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">0</Value>
+      </Variable>
       <Variable Type="bool" Name="CheckGlyph.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
       </Variable>
@@ -1199,6 +1341,16 @@
       <VariableList xsi:type="VariableListSaveOfString">
         <Type>string</Type>
         <Name>TextInstance.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Color = Components/Retro95/Styles.Text.FillColor</string>
+        </Value>
+      </VariableList>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>CheckGlyph.VariableReferences</Name>
         <Category>References</Category>
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
@@ -1218,6 +1370,15 @@
       <Variable Type="int" Name="BevelInstance.FillRed" SetsValue="true">
         <Value xsi:type="xsd:int">255</Value>
       </Variable>
+      <Variable Type="int" Name="CheckGlyph.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">0</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckGlyph.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">0</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckGlyph.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">0</Value>
+      </Variable>
       <Variable Type="bool" Name="CheckGlyph.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
       </Variable>
@@ -1249,6 +1410,16 @@
       <VariableList xsi:type="VariableListSaveOfString">
         <Type>string</Type>
         <Name>TextInstance.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Color = Components/Retro95/Styles.Text.FillColor</string>
+        </Value>
+      </VariableList>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>CheckGlyph.VariableReferences</Name>
         <Category>References</Category>
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
@@ -1268,6 +1439,15 @@
       <Variable Type="int" Name="BevelInstance.FillRed" SetsValue="true">
         <Value xsi:type="xsd:int">255</Value>
       </Variable>
+      <Variable Type="int" Name="CheckGlyph.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">0</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckGlyph.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">0</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckGlyph.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">0</Value>
+      </Variable>
       <Variable Type="bool" Name="CheckGlyph.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
       </Variable>
@@ -1299,6 +1479,16 @@
       <VariableList xsi:type="VariableListSaveOfString">
         <Type>string</Type>
         <Name>TextInstance.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Color = Components/Retro95/Styles.Text.FillColor</string>
+        </Value>
+      </VariableList>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>CheckGlyph.VariableReferences</Name>
         <Category>References</Category>
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
@@ -1318,6 +1508,15 @@
       <Variable Type="int" Name="BevelInstance.FillRed" SetsValue="true">
         <Value xsi:type="xsd:int">255</Value>
       </Variable>
+      <Variable Type="int" Name="CheckGlyph.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">0</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckGlyph.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">0</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckGlyph.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">0</Value>
+      </Variable>
       <Variable Type="bool" Name="CheckGlyph.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
       </Variable>
@@ -1349,6 +1548,16 @@
       <VariableList xsi:type="VariableListSaveOfString">
         <Type>string</Type>
         <Name>TextInstance.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Color = Components/Retro95/Styles.Text.FillColor</string>
+        </Value>
+      </VariableList>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>CheckGlyph.VariableReferences</Name>
         <Category>References</Category>
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
@@ -1368,6 +1577,15 @@
       <Variable Type="int" Name="BevelInstance.FillRed" SetsValue="true">
         <Value xsi:type="xsd:int">255</Value>
       </Variable>
+      <Variable Type="int" Name="CheckGlyph.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">0</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckGlyph.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">0</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckGlyph.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">0</Value>
+      </Variable>
       <Variable Type="bool" Name="CheckGlyph.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
       </Variable>
@@ -1406,6 +1624,16 @@
           <string>Color = Components/Retro95/Styles.Text.FillColor</string>
         </Value>
       </VariableList>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>CheckGlyph.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Color = Components/Retro95/Styles.Text.FillColor</string>
+        </Value>
+      </VariableList>
     </State>
     <State>
       <Name>DisabledIndeterminate</Name>
@@ -1417,6 +1645,15 @@
       </Variable>
       <Variable Type="int" Name="BevelInstance.FillRed" SetsValue="true">
         <Value xsi:type="xsd:int">192</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckGlyph.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">0</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckGlyph.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">0</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckGlyph.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">0</Value>
       </Variable>
       <Variable Type="bool" Name="CheckGlyph.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
@@ -1454,6 +1691,16 @@
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
           <string>Color = Components/Retro95/Styles.DisabledText.FillColor</string>
+        </Value>
+      </VariableList>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>CheckGlyph.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Color = Components/Retro95/Styles.Text.FillColor</string>
         </Value>
       </VariableList>
     </State>
@@ -1468,6 +1715,15 @@
       <Variable Type="int" Name="BevelInstance.FillRed" SetsValue="true">
         <Value xsi:type="xsd:int">192</Value>
       </Variable>
+      <Variable Type="int" Name="CheckGlyph.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">0</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckGlyph.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">0</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckGlyph.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">0</Value>
+      </Variable>
       <Variable Type="bool" Name="CheckGlyph.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
       </Variable>
@@ -1504,6 +1760,16 @@
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
           <string>Color = Components/Retro95/Styles.DisabledText.FillColor</string>
+        </Value>
+      </VariableList>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>CheckGlyph.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Color = Components/Retro95/Styles.Text.FillColor</string>
         </Value>
       </VariableList>
     </State>
