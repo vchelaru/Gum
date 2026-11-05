@@ -45,25 +45,29 @@ public class ThemedButtonWrappedHeightTests
         }
     }
 
-    // Themes whose button is sized by its label, with the chrome padding and the real line height of
-    // the theme's font (the headless tests have no theme font, so the one-line sum is pinned here).
-    public static IEnumerable<object[]> LabelSizedCases()
+    // Every theme's button is sized by its label: chrome padding (the Height) plus the one text line.
+    // The headless tests have no theme font, so the one-line sum is pinned with the real line height
+    // of each theme's default font (lineHeight in the theme's FontCache .fnt).
+    public static IEnumerable<object[]> LabelSizedCases() => Cases();
+
+    private static readonly Dictionary<string, float> RealLineHeights = new()
     {
-        foreach (object[] c in Cases())
-        {
-            if ((string)c[0] is "ForestGlade" or "Retro95")
-            {
-                yield return c;
-            }
-        }
-    }
+        ["Bubblegum"] = 20, // Nunito 14
+        ["DarkPro"] = 19, // DM Mono 14
+        ["ForestGlade"] = 20, // Nunito 14 Bold
+        ["Hazard"] = 24, // Saira Condensed 15
+        ["Meadow"] = 24, // Baloo 2 15
+        ["Neon"] = 15, // Share Tech Mono 13
+        ["Retro95"] = 18, // Nunito 13
+        ["Template"] = 19, // DM Mono 14
+    };
 
     [Theory]
     [MemberData(nameof(LabelSizedCases))]
     public void LabelSizedButton_ChromePaddingPlusRealLineHeight_ShouldBeTheOldFixedHeight(
         string theme, string kind, Action configureStyling, Action registerVisuals, float expectedHeight)
     {
-        float realLineHeight = theme == "ForestGlade" ? 20 : 18; // Nunito 14 Bold / Nunito 13, measured in GumPreview
+        float realLineHeight = RealLineHeights[theme];
         WithTheme(configureStyling, registerVisuals, () =>
         {
             GraphicalUiElement visual = CreateVisual(kind, ShortLabel);
@@ -73,24 +77,8 @@ public class ThemedButtonWrappedHeightTests
         });
     }
 
-    [Theory]
-    [MemberData(nameof(FixedHeightCases))]
-    public void OneLineLabel_ShouldKeepTheThemesFixedHeight(
-        string theme, string kind, Action configureStyling, Action registerVisuals, float expectedHeight)
-    {
-        WithTheme(configureStyling, registerVisuals, () =>
-        {
-            GraphicalUiElement visual = CreateVisual(kind, ShortLabel);
-
-            visual.GetAbsoluteHeight().ShouldBe(expectedHeight, $"{theme} {kind}");
-        });
-    }
-
-    public static IEnumerable<object[]> FixedHeightCases() =>
-        Cases().Where(c => (string)c[0] is not ("ForestGlade" or "Retro95"));
-
     [Fact]
-    public void TemplateVariantsButton_OneLineLabel_ShouldKeepTheFixedHeight()
+    public void TemplateVariantsButton_ChromePaddingPlusRealLineHeight_ShouldBeTheOldFixedHeight()
     {
         WithTheme(Template.TemplateTheme.ConfigureStyling, Template.TemplateTheme.RegisterVisuals, () =>
         {
@@ -98,10 +86,34 @@ public class ThemedButtonWrappedHeightTests
             visual.TextInstance.Text = ShortLabel;
             visual.UpdateLayout();
 
-            visual.GetAbsoluteHeight().ShouldBe(32f);
+            visual.HeightUnits.ShouldBe(DimensionUnitType.RelativeToChildren);
+            (visual.Height + RealLineHeights["Template"]).ShouldBe(32f);
         });
     }
 
+    [Theory]
+    [InlineData("Bubblegum", 36f)]
+    [InlineData("Hazard", 32f)]
+    [InlineData("Meadow", 36f)]
+    [InlineData("Template", 32f)]
+    public void Thumb_ShouldKeepItsFixedHeight(string theme, float expectedHeight)
+    {
+        (Action configure, Action register) = theme switch
+        {
+            "Bubblegum" => ((Action)Bubblegum.BubblegumTheme.ConfigureStyling, (Action)Bubblegum.BubblegumTheme.RegisterVisuals),
+            "Hazard" => (Hazard.HazardTheme.ConfigureStyling, Hazard.HazardTheme.RegisterVisuals),
+            "Meadow" => (Meadow.MeadowTheme.ConfigureStyling, Meadow.MeadowTheme.RegisterVisuals),
+            _ => (Template.TemplateTheme.ConfigureStyling, Template.TemplateTheme.RegisterVisuals),
+        };
+        WithTheme(configure, register, () =>
+        {
+            GraphicalUiElement visual = new Thumb().Visual;
+            visual.UpdateLayout();
+
+            visual.HeightUnits.ShouldBe(DimensionUnitType.Absolute, theme);
+            visual.GetAbsoluteHeight().ShouldBe(expectedHeight, theme);
+        });
+    }
     [Theory]
     [MemberData(nameof(LabelSizedCases))]
     public void EmptyLabel_ShouldCollapseToTheHeightPadding(
@@ -111,7 +123,7 @@ public class ThemedButtonWrappedHeightTests
         {
             GraphicalUiElement visual = CreateVisual(kind, "");
 
-            // GumPreview with the real font measures exactly Height (12 and 6); the headless font adds up to 2.
+            // With the real font the label collapses to exactly Height; the headless font adds up to 2.
             float oneLine = CreateVisual(kind, ShortLabel).GetAbsoluteHeight();
             visual.GetAbsoluteHeight().ShouldBeLessThanOrEqualTo(visual.Height + 2, $"{theme} {kind}");
             visual.GetAbsoluteHeight().ShouldBeLessThan(oneLine - 10, $"{theme} {kind}");
