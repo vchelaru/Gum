@@ -184,6 +184,18 @@
       <Variable Type="int" Name="Body.FillRed" SetsValue="true">
         <Value xsi:type="xsd:int">13</Value>
       </Variable>
+      <Variable Type="bool" Name="Body.HasDropshadow" SetsValue="true">
+        <Value xsi:type="xsd:boolean">true</Value>
+      </Variable>
+      <Variable Type="int" Name="Body.StrokeBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="Body.StrokeGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">229</Value>
+      </Variable>
+      <Variable Type="int" Name="Body.StrokeRed" SetsValue="true">
+        <Value xsi:type="xsd:int">0</Value>
+      </Variable>
       <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
       </Variable>
@@ -195,6 +207,7 @@
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
           <string>FillColor = Components/Neon/Styles.Surface1.FillColor</string>
+          <string>StrokeColor = Components/Neon/Styles.Accent.FillColor</string>
         </Value>
       </VariableList>
     </State>
@@ -209,6 +222,18 @@
       <Variable Type="int" Name="Body.FillRed" SetsValue="true">
         <Value xsi:type="xsd:int">13</Value>
       </Variable>
+      <Variable Type="bool" Name="Body.HasDropshadow" SetsValue="true">
+        <Value xsi:type="xsd:boolean">true</Value>
+      </Variable>
+      <Variable Type="int" Name="Body.StrokeBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="Body.StrokeGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">229</Value>
+      </Variable>
+      <Variable Type="int" Name="Body.StrokeRed" SetsValue="true">
+        <Value xsi:type="xsd:int">0</Value>
+      </Variable>
       <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
       </Variable>
@@ -220,6 +245,7 @@
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
           <string>FillColor = Components/Neon/Styles.Surface1.FillColor</string>
+          <string>StrokeColor = Components/Neon/Styles.Accent.FillColor</string>
         </Value>
       </VariableList>
     </State>
@@ -234,6 +260,18 @@
       <Variable Type="int" Name="Body.FillRed" SetsValue="true">
         <Value xsi:type="xsd:int">19</Value>
       </Variable>
+      <Variable Type="bool" Name="Body.HasDropshadow" SetsValue="true">
+        <Value xsi:type="xsd:boolean">true</Value>
+      </Variable>
+      <Variable Type="int" Name="Body.StrokeBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="Body.StrokeGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">229</Value>
+      </Variable>
+      <Variable Type="int" Name="Body.StrokeRed" SetsValue="true">
+        <Value xsi:type="xsd:int">0</Value>
+      </Variable>
       <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
       </Variable>
@@ -245,6 +283,7 @@
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
           <string>FillColor = Components/Neon/Styles.Surface2.FillColor</string>
+          <string>StrokeColor = Components/Neon/Styles.Accent.FillColor</string>
         </Value>
       </VariableList>
     </State>
@@ -259,6 +298,18 @@
       <Variable Type="int" Name="Body.FillRed" SetsValue="true">
         <Value xsi:type="xsd:int">13</Value>
       </Variable>
+      <Variable Type="bool" Name="Body.HasDropshadow" SetsValue="true">
+        <Value xsi:type="xsd:boolean">true</Value>
+      </Variable>
+      <Variable Type="int" Name="Body.StrokeBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="Body.StrokeGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">229</Value>
+      </Variable>
+      <Variable Type="int" Name="Body.StrokeRed" SetsValue="true">
+        <Value xsi:type="xsd:int">0</Value>
+      </Variable>
       <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">true</Value>
       </Variable>
@@ -270,6 +321,7 @@
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
           <string>FillColor = Components/Neon/Styles.Surface1.FillColor</string>
+          <string>StrokeColor = Components/Neon/Styles.Accent.FillColor</string>
         </Value>
       </VariableList>
     </State>
@@ -284,6 +336,18 @@
       <Variable Type="int" Name="Body.FillRed" SetsValue="true">
         <Value xsi:type="xsd:int">13</Value>
       </Variable>
+      <Variable Type="bool" Name="Body.HasDropshadow" SetsValue="true">
+        <Value xsi:type="xsd:boolean">true</Value>
+      </Variable>
+      <Variable Type="int" Name="Body.StrokeBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="Body.StrokeGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">229</Value>
+      </Variable>
+      <Variable Type="int" Name="Body.StrokeRed" SetsValue="true">
+        <Value xsi:type="xsd:int">0</Value>
+      </Variable>
       <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">true</Value>
       </Variable>
@@ -295,6 +359,7 @@
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
           <string>FillColor = Components/Neon/Styles.Surface1.FillColor</string>
+          <string>StrokeColor = Components/Neon/Styles.Accent.FillColor</string>
         </Value>
       </VariableList>
     </State>

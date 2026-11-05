@@ -288,6 +288,21 @@
     </State>
     <State>
       <Name>Disabled</Name>
+      <Variable Type="int" Name="Background.DropshadowAlpha" SetsValue="true">
+        <Value xsi:type="xsd:int">160</Value>
+      </Variable>
+      <Variable Type="int" Name="Background.DropshadowBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="float" Name="Background.DropshadowBlur" SetsValue="true">
+        <Value xsi:type="xsd:float">32</Value>
+      </Variable>
+      <Variable Type="int" Name="Background.DropshadowGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">229</Value>
+      </Variable>
+      <Variable Type="int" Name="Background.DropshadowRed" SetsValue="true">
+        <Value xsi:type="xsd:int">0</Value>
+      </Variable>
       <Variable Type="int" Name="Background.FillBlue" SetsValue="true">
         <Value xsi:type="xsd:int">18</Value>
       </Variable>
@@ -641,6 +656,21 @@
     </State>
     <State>
       <Name>DisabledFocused</Name>
+      <Variable Type="int" Name="Background.DropshadowAlpha" SetsValue="true">
+        <Value xsi:type="xsd:int">160</Value>
+      </Variable>
+      <Variable Type="int" Name="Background.DropshadowBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="float" Name="Background.DropshadowBlur" SetsValue="true">
+        <Value xsi:type="xsd:float">32</Value>
+      </Variable>
+      <Variable Type="int" Name="Background.DropshadowGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">229</Value>
+      </Variable>
+      <Variable Type="int" Name="Background.DropshadowRed" SetsValue="true">
+        <Value xsi:type="xsd:int">0</Value>
+      </Variable>
       <Variable Type="int" Name="Background.FillBlue" SetsValue="true">
         <Value xsi:type="xsd:int">18</Value>
       </Variable>

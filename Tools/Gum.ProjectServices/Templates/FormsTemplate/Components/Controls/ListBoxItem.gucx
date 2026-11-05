@@ -266,11 +266,35 @@
       <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
         <Value xsi:type="xsd:int">255</Value>
       </Variable>
+      <Variable IsFile="true" Type="string" Name="TextInstance.CustomFontFile" SetsValue="true">
+        <Value xsi:type="xsd:string"></Value>
+      </Variable>
+      <Variable IsFont="true" Type="string" Name="TextInstance.Font" SetsValue="true">
+        <Value xsi:type="xsd:string">Fonts/LiberationSans-Regular.ttf</Value>
+      </Variable>
+      <Variable Type="float" Name="TextInstance.FontScale" SetsValue="true">
+        <Value xsi:type="xsd:float">1</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.FontSize" SetsValue="true">
+        <Value xsi:type="xsd:int">14</Value>
+      </Variable>
       <Variable Type="int" Name="TextInstance.Green" SetsValue="true">
         <Value xsi:type="xsd:int">255</Value>
       </Variable>
+      <Variable Type="bool" Name="TextInstance.IsBold" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
+      <Variable Type="bool" Name="TextInstance.IsItalic" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
+      <Variable Type="float" Name="TextInstance.LineHeightMultiplier" SetsValue="true">
+        <Value xsi:type="xsd:float">1</Value>
+      </Variable>
       <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
         <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="bool" Name="TextInstance.UseCustomFont" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
       </Variable>
       <VariableList xsi:type="VariableListSaveOfString">
         <Type>string</Type>
@@ -280,6 +304,24 @@
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
           <string>Color = Components/Styles.DarkGray.FillColor</string>
+        </Value>
+      </VariableList>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>TextInstance.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Color = Components/Styles.White.FillColor</string>
+          <string>Font = Components/Styles.Normal.Font</string>
+          <string>FontSize = Components/Styles.Normal.FontSize</string>
+          <string>IsBold = Components/Styles.Normal.IsBold</string>
+          <string>IsItalic = Components/Styles.Normal.IsItalic</string>
+          <string>UseCustomFont = Components/Styles.Normal.UseCustomFont</string>
+          <string>CustomFontFile = Components/Styles.Normal.CustomFontFile</string>
+          <string>FontScale = Components/Styles.Normal.FontScale</string>
+          <string>LineHeightMultiplier = Components/Styles.Normal.LineHeightMultiplier</string>
         </Value>
       </VariableList>
     </State>
@@ -303,11 +345,35 @@
       <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
         <Value xsi:type="xsd:int">255</Value>
       </Variable>
+      <Variable IsFile="true" Type="string" Name="TextInstance.CustomFontFile" SetsValue="true">
+        <Value xsi:type="xsd:string"></Value>
+      </Variable>
+      <Variable IsFont="true" Type="string" Name="TextInstance.Font" SetsValue="true">
+        <Value xsi:type="xsd:string">Fonts/LiberationSans-Regular.ttf</Value>
+      </Variable>
+      <Variable Type="float" Name="TextInstance.FontScale" SetsValue="true">
+        <Value xsi:type="xsd:float">1</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.FontSize" SetsValue="true">
+        <Value xsi:type="xsd:int">14</Value>
+      </Variable>
       <Variable Type="int" Name="TextInstance.Green" SetsValue="true">
         <Value xsi:type="xsd:int">255</Value>
       </Variable>
+      <Variable Type="bool" Name="TextInstance.IsBold" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
+      <Variable Type="bool" Name="TextInstance.IsItalic" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
+      <Variable Type="float" Name="TextInstance.LineHeightMultiplier" SetsValue="true">
+        <Value xsi:type="xsd:float">1</Value>
+      </Variable>
       <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
         <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="bool" Name="TextInstance.UseCustomFont" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
       </Variable>
       <VariableList xsi:type="VariableListSaveOfString">
         <Type>string</Type>
@@ -317,6 +383,24 @@
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
           <string>Color = Components/Styles.Accent.FillColor</string>
+        </Value>
+      </VariableList>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>TextInstance.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Color = Components/Styles.White.FillColor</string>
+          <string>Font = Components/Styles.Normal.Font</string>
+          <string>FontSize = Components/Styles.Normal.FontSize</string>
+          <string>IsBold = Components/Styles.Normal.IsBold</string>
+          <string>IsItalic = Components/Styles.Normal.IsItalic</string>
+          <string>UseCustomFont = Components/Styles.Normal.UseCustomFont</string>
+          <string>CustomFontFile = Components/Styles.Normal.CustomFontFile</string>
+          <string>FontScale = Components/Styles.Normal.FontScale</string>
+          <string>LineHeightMultiplier = Components/Styles.Normal.LineHeightMultiplier</string>
         </Value>
       </VariableList>
     </State>
@@ -340,11 +424,35 @@
       <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
         <Value xsi:type="xsd:int">16</Value>
       </Variable>
+      <Variable IsFile="true" Type="string" Name="TextInstance.CustomFontFile" SetsValue="true">
+        <Value xsi:type="xsd:string"></Value>
+      </Variable>
+      <Variable IsFont="true" Type="string" Name="TextInstance.Font" SetsValue="true">
+        <Value xsi:type="xsd:string">Fonts/LiberationSans-Regular.ttf</Value>
+      </Variable>
+      <Variable Type="float" Name="TextInstance.FontScale" SetsValue="true">
+        <Value xsi:type="xsd:float">1</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.FontSize" SetsValue="true">
+        <Value xsi:type="xsd:int">14</Value>
+      </Variable>
       <Variable Type="int" Name="TextInstance.Green" SetsValue="true">
         <Value xsi:type="xsd:int">16</Value>
       </Variable>
+      <Variable Type="bool" Name="TextInstance.IsBold" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
+      <Variable Type="bool" Name="TextInstance.IsItalic" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
+      <Variable Type="float" Name="TextInstance.LineHeightMultiplier" SetsValue="true">
+        <Value xsi:type="xsd:float">1</Value>
+      </Variable>
       <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
         <Value xsi:type="xsd:int">16</Value>
+      </Variable>
+      <Variable Type="bool" Name="TextInstance.UseCustomFont" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
       </Variable>
       <VariableList xsi:type="VariableListSaveOfString">
         <Type>string</Type>
@@ -377,11 +485,35 @@
       <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
         <Value xsi:type="xsd:int">255</Value>
       </Variable>
+      <Variable IsFile="true" Type="string" Name="TextInstance.CustomFontFile" SetsValue="true">
+        <Value xsi:type="xsd:string"></Value>
+      </Variable>
+      <Variable IsFont="true" Type="string" Name="TextInstance.Font" SetsValue="true">
+        <Value xsi:type="xsd:string">Fonts/LiberationSans-Regular.ttf</Value>
+      </Variable>
+      <Variable Type="float" Name="TextInstance.FontScale" SetsValue="true">
+        <Value xsi:type="xsd:float">1</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.FontSize" SetsValue="true">
+        <Value xsi:type="xsd:int">14</Value>
+      </Variable>
       <Variable Type="int" Name="TextInstance.Green" SetsValue="true">
         <Value xsi:type="xsd:int">255</Value>
       </Variable>
+      <Variable Type="bool" Name="TextInstance.IsBold" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
+      <Variable Type="bool" Name="TextInstance.IsItalic" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
+      <Variable Type="float" Name="TextInstance.LineHeightMultiplier" SetsValue="true">
+        <Value xsi:type="xsd:float">1</Value>
+      </Variable>
       <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
         <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="bool" Name="TextInstance.UseCustomFont" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
       </Variable>
       <VariableList xsi:type="VariableListSaveOfString">
         <Type>string</Type>
@@ -391,6 +523,24 @@
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
           <string>Color = Components/Styles.DarkGray.FillColor</string>
+        </Value>
+      </VariableList>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>TextInstance.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Color = Components/Styles.White.FillColor</string>
+          <string>Font = Components/Styles.Normal.Font</string>
+          <string>FontSize = Components/Styles.Normal.FontSize</string>
+          <string>IsBold = Components/Styles.Normal.IsBold</string>
+          <string>IsItalic = Components/Styles.Normal.IsItalic</string>
+          <string>UseCustomFont = Components/Styles.Normal.UseCustomFont</string>
+          <string>CustomFontFile = Components/Styles.Normal.CustomFontFile</string>
+          <string>FontScale = Components/Styles.Normal.FontScale</string>
+          <string>LineHeightMultiplier = Components/Styles.Normal.LineHeightMultiplier</string>
         </Value>
       </VariableList>
     </State>
@@ -414,11 +564,35 @@
       <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
         <Value xsi:type="xsd:int">130</Value>
       </Variable>
+      <Variable IsFile="true" Type="string" Name="TextInstance.CustomFontFile" SetsValue="true">
+        <Value xsi:type="xsd:string"></Value>
+      </Variable>
+      <Variable IsFont="true" Type="string" Name="TextInstance.Font" SetsValue="true">
+        <Value xsi:type="xsd:string">Fonts/LiberationSans-Regular.ttf</Value>
+      </Variable>
+      <Variable Type="float" Name="TextInstance.FontScale" SetsValue="true">
+        <Value xsi:type="xsd:float">1</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.FontSize" SetsValue="true">
+        <Value xsi:type="xsd:int">14</Value>
+      </Variable>
       <Variable Type="int" Name="TextInstance.Green" SetsValue="true">
         <Value xsi:type="xsd:int">130</Value>
       </Variable>
+      <Variable Type="bool" Name="TextInstance.IsBold" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
+      <Variable Type="bool" Name="TextInstance.IsItalic" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
+      <Variable Type="float" Name="TextInstance.LineHeightMultiplier" SetsValue="true">
+        <Value xsi:type="xsd:float">1</Value>
+      </Variable>
       <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
         <Value xsi:type="xsd:int">130</Value>
+      </Variable>
+      <Variable Type="bool" Name="TextInstance.UseCustomFont" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
       </Variable>
       <VariableList xsi:type="VariableListSaveOfString">
         <Type>string</Type>
