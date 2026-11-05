@@ -85,12 +85,12 @@ public class NewProjectDemoScreenHostTests : IDisposable
         // The core overload (systemManagers, addToManagers) exists on every runtime, stable and source; the no-argument one is MonoGameGum only.
     }
 
-    // The host's own Gum handle: GumUI where Game1 declares it, gumUI where Program.cs declares that local, GumService.Default where neither exists (#7671).
+    // The host's own Gum handle: GumUI where Game1 declares it, GumUI where Program.cs declares that local, GumService.Default where neither exists (#7671).
     [Theory]
     [InlineData(HostPlatform.MonoGame, "GumUI")]
     [InlineData(HostPlatform.Kni, "GumUI")]
-    [InlineData(HostPlatform.Raylib, "gumUI")]
-    [InlineData(HostPlatform.SilkNet, "gumUI")]
+    [InlineData(HostPlatform.Raylib, "GumUI")]
+    [InlineData(HostPlatform.SilkNet, "GumUI")]
     [InlineData(HostPlatform.Stride, "GumService.Default")]
     public void Host_UsesItsOwnGumHandleForGeneratedLines(HostPlatform platform, string receiver)
     {
@@ -99,8 +99,8 @@ public class NewProjectDemoScreenHostTests : IDisposable
         service.UpdateHost(resolved, files, packagesAdded: true, screenCodeGenerated: false);
 
         string host = ReadHost(platform);
-        host.ShouldContain($"{receiver}.UseShadowDusk();");
-        host.ShouldContain($".ToGraphicalUiElement({receiver}.SystemManagers, addToManagers: false)");
+        host.ShouldContain($"{receiver}.UseShadowDusk();", Case.Sensitive);
+        host.ShouldContain($".ToGraphicalUiElement({receiver}.SystemManagers, addToManagers: false)", Case.Sensitive);
         if (receiver != "GumService.Default")
         {
             host.ShouldNotContain("GumService.Default.UseShadowDusk");

@@ -30,10 +30,10 @@ internal static class PlatformHostContent
         ["Gum.Expressions"] = "Gum.Expressions.GumExpressionService.Initialize();",
     };
 
-    /// <summary>How the scaffolded host refers to Gum: the <c>GumUI</c> property in Game1, the <c>gumUI</c> local in the raylib and Silk.NET Program.cs, and <c>GumService.Default</c> where the host declares neither (Stride).</summary>
+    /// <summary>How the scaffolded host refers to Gum: the <c>GumUI</c> property in Game1, the <c>GumUI</c> local in the raylib and Silk.NET Program.cs, and <c>GumService.Default</c> where the host declares neither (Stride).</summary>
     internal static string GetGumReceiver(HostPlatform platform) => platform switch
     {
-        HostPlatform.Raylib or HostPlatform.SilkNet => "gumUI",
+        HostPlatform.Raylib or HostPlatform.SilkNet => "GumUI",
         HostPlatform.Stride => "GumService.Default",
         _ => "GumUI"
     };

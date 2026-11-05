@@ -13,19 +13,19 @@ Raylib.SetTargetFPS(60);
 GraphicalUiElement.CanvasWidth = screenWidth;
 GraphicalUiElement.CanvasHeight = screenHeight;
 
-GumService gumUI = GumService.Default;
+GumService GumUI = GumService.Default;
 
-gumUI.Initialize("Content/GumProject/{{GumProjectFile}}");
+GumUI.Initialize("Content/GumProject/{{GumProjectFile}}");
 {{InitLines}}
 {{ScreenLines}}
 
 while (!Raylib.WindowShouldClose())
 {
-    gumUI.Update(Raylib.GetTime());
+    GumUI.Update(Raylib.GetTime());
 
     Raylib.BeginDrawing();
     Raylib.ClearBackground(Raylib_cs.Color.SkyBlue);
-    gumUI.Draw();
+    GumUI.Draw();
     Raylib.EndDrawing();
 }
 

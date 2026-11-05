@@ -45,9 +45,9 @@ void CreateSurface(Vector2D<int> size)
 
 CreateSurface(window.FramebufferSize);
 
-GumService gumUI = GumService.Default;
+GumService GumUI = GumService.Default;
 
-gumUI.Initialize(surface!.Canvas, window.CreateInput(), "Content/GumProject/{{GumProjectFile}}");
+GumUI.Initialize(surface!.Canvas, window.CreateInput(), "Content/GumProject/{{GumProjectFile}}");
 {{InitLines}}
 {{ScreenLines}}
 
@@ -66,15 +66,15 @@ while (!window.IsClosing)
         wasResized = false;
         Vector2D<int> size = window.FramebufferSize;
         CreateSurface(size);
-        gumUI.SystemManagers.Canvas = surface!.Canvas;
-        gumUI.HandleResize(size.X, size.Y);
+        GumUI.SystemManagers.Canvas = surface!.Canvas;
+        GumUI.HandleResize(size.X, size.Y);
     }
 
-    gumUI.Update(clock.Elapsed.TotalSeconds);
+    GumUI.Update(clock.Elapsed.TotalSeconds);
 
     grContext.ResetContext();
     surface!.Canvas.Clear(SKColors.CornflowerBlue);
-    gumUI.Draw();
+    GumUI.Draw();
     surface.Canvas.Flush();
 
     window.GLContext!.SwapBuffers();
