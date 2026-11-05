@@ -63,9 +63,13 @@ public abstract class RenderTargetServiceBase<TRenderTarget>
     /// default framebuffer, and clear the whole screen — issue #3475). Class-backed backends
     /// (MonoGame's <c>RenderTarget2D</c>) get a real null and are unaffected.</para>
     /// </summary>
-    public TRenderTarget? GetFor(IRenderableIpso owner, int width, int height)
+    public TRenderTarget? GetFor(IRenderableIpso owner, int width, int height, bool markUsed = true)
     {
-        _usedThisFrame.Add(owner);
+        if (markUsed)
+        {
+            _usedThisFrame.Add(owner);
+        }
+
         if (width <= 0 || height <= 0)
         {
             return default;
@@ -77,6 +81,7 @@ public abstract class RenderTargetServiceBase<TRenderTarget>
             {
                 Destroy(existing);
                 _renderTargets.Remove(owner);
+                OnReleased(owner);
             }
             else
             {
@@ -98,6 +103,24 @@ public abstract class RenderTargetServiceBase<TRenderTarget>
         return _renderTargets.ContainsKey(owner);
     }
 
+    /// <summary>How many owners currently hold a cached render target. Intended for tests and diagnostics.</summary>
+    public int CachedCount => _renderTargets.Count;
+
+    /// <summary>
+    /// Marks the owner as used this frame without touching its target, so the next
+    /// <see cref="ClearUnusedRenderTargetsLastFrame"/> keeps it. A cached image that is drawn but never
+    /// re-baked is kept alive through this.
+    /// </summary>
+    public void MarkUsed(IRenderableIpso owner)
+    {
+        _usedThisFrame.Add(owner);
+    }
+
+    /// <summary>Called after the owner's target was destroyed and forgotten, for any reason.</summary>
+    protected virtual void OnReleased(IRenderableIpso owner)
+    {
+    }
+
     /// <summary>Destroys and forgets the owner's cached render target, if any.</summary>
     public void Remove(IRenderableIpso owner)
     {
@@ -105,6 +128,7 @@ public abstract class RenderTargetServiceBase<TRenderTarget>
         {
             Destroy(existing);
             _renderTargets.Remove(owner);
+            OnReleased(owner);
         }
     }
 
@@ -139,6 +163,7 @@ public abstract class RenderTargetServiceBase<TRenderTarget>
         {
             Destroy(_renderTargets[key]);
             _renderTargets.Remove(key);
+            OnReleased(key);
         }
         _usedThisFrame.Clear();
     }
@@ -149,6 +174,10 @@ public abstract class RenderTargetServiceBase<TRenderTarget>
         foreach (TRenderTarget renderTarget in _renderTargets.Values)
         {
             Destroy(renderTarget);
+        }
+        foreach (IRenderableIpso owner in _renderTargets.Keys)
+        {
+            OnReleased(owner);
         }
         _renderTargets.Clear();
         _usedThisFrame.Clear();

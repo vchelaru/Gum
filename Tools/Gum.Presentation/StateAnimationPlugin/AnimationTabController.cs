@@ -537,7 +537,10 @@ public class AnimationTabController
             // can this happen? I don't see anything on the view model
             if (variableName == "SelectedState" ||
                 variableName == nameof(AnimationViewModel.SelectedKeyframe) ||
-                variableName == nameof(AnimationViewModel.Length)
+                variableName == nameof(AnimationViewModel.Length) ||
+                // Derived from the keyframes' validity and re-raised whenever the tab re-validates
+                // them (every selection), so treating it as an edit saves and re-checks per animation.
+                variableName == nameof(AnimationViewModel.HasBrokenKeyframe)
                 )
             {
                 shouldSave = false;

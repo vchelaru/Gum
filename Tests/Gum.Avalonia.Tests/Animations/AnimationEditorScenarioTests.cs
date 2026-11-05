@@ -3,6 +3,7 @@ using Avalonia.Controls;
 using Avalonia.Headless.XUnit;
 using Avalonia.Input;
 using Avalonia.VisualTree;
+using Gum.Avalonia.Tests.EndToEnd;
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using Gum.Logic;
@@ -362,6 +363,32 @@ public class AnimationEditorScenarioTests
         keyframe.IsMissingReference.ShouldBeFalse();
         walk.HasBrokenKeyframe.ShouldBeFalse();
         editor.ReadSavedAnimations(component).ShouldNotBeNull().Animations.Single().States.Single().StateName.ShouldBe($"{Category}/Released");
+    }
+
+    [AvaloniaFact]
+    public void PickingAnotherState_InTheDetailCombo_Saves_AndUndoAndRedoRestoreIt()
+    {
+        using AnimationEditorHarness editor = new AnimationEditorHarness();
+        ComponentSave component = editor.AddComponent("Button", Category, "Pressed", "Released");
+        editor.Select(component);
+        editor.AddAnimation("Walk");
+        AnimatedKeyframeViewModel keyframe = editor.AddStateKeyframe($"{Category}/Pressed");
+        ProjectFileSnapshot start = editor.StartScenario();
+
+        editor.DetailCombos[0].SelectedItem = $"{Category}/Released";
+        editor.Layout();
+
+        editor.ReadSavedAnimations(component).ShouldNotBeNull().Animations.Single().States.Single().StateName.ShouldBe($"{Category}/Released");
+        ProjectFileSnapshot picked = editor.SnapshotFiles();
+
+        editor.Undo();
+        editor.SnapshotFiles().ShouldMatch(start, "undoing the pick should restore the keyframe's state");
+        editor.ViewModel.Animations.Single().Keyframes.Single().StateName.ShouldBe($"{Category}/Pressed");
+
+        editor.Redo();
+        editor.SnapshotFiles().ShouldMatch(picked, "redoing the pick should apply it again");
+
+        editor.AssertOracles();
     }
 
     [AvaloniaFact]

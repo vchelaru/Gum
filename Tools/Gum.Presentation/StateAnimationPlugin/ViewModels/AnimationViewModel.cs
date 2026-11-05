@@ -379,8 +379,12 @@ public partial class AnimationViewModel : ViewModel
                     RefreshCumulativeStates(_selectedState.SelectedElement);
                 }
                 break;
-            case nameof(AnimatedKeyframeViewModel.HasValidState):
             case nameof(AnimatedKeyframeViewModel.AnimationName):
+                // An edit (an instance rename follows into the reference), so it reaches
+                // FramePropertyChanged below and is saved; it used to be saved only through the
+                // HasBrokenKeyframe notification it also raised.
+                break;
+            case nameof(AnimatedKeyframeViewModel.HasValidState):
             case nameof(AnimatedKeyframeViewModel.IsMissingReference):
                 NotifyPropertyChanged(nameof(HasBrokenKeyframe));
                 return;
