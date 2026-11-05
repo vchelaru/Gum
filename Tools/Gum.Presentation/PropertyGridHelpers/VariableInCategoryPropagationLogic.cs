@@ -45,6 +45,34 @@ public class VariableInCategoryPropagationLogic : IVariableInCategoryPropagation
         PropagateVariablesInCategory(memberName, element, categoryToPropagate.States);
     }
 
+    public void PropagateAllVariablesInCategory(ElementSave? element, StateSaveCategory? category)
+    {
+        if (element == null || category == null)
+        {
+            return;
+        }
+
+        // Tools and hand-edited files leave variables set in only some states, so take the union
+        // of every state's names, not just the first state's.
+        HashSet<string> names = new HashSet<string>();
+        foreach (StateSave state in category.States)
+        {
+            foreach (VariableSave variable in state.Variables)
+            {
+                names.Add(variable.Name);
+            }
+            foreach (VariableListSave variableList in state.VariableLists)
+            {
+                names.Add(variableList.Name);
+            }
+        }
+
+        foreach (string name in names)
+        {
+            PropagateVariablesInCategory(name, element, category.States);
+        }
+    }
+
     public void PropagateVariablesInCategory(string memberName, ElementSave? element, List<StateSave> states)
     {
         /////////////////////Early Out//////////////////////////

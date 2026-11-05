@@ -290,27 +290,10 @@ public class EditCommands : IEditCommands
         _guiCommands.RefreshStateTreeView();
         _selectedState.SelectedStateSave = stateToMove;
 
-        // make sure to propagate all variables in this new state and
-        // also move all existing variables to the new state (use the first)
+        // Propagate the moved state's variables to its new siblings, and every sibling's variables to it.
         if (stateContainer is ElementSave element)
         {
-            foreach (var variable in stateToMove.Variables)
-            {
-                _variableInCategoryPropagationLogic.PropagateVariablesInCategory(variable.Name,
-                    element, _selectedState.SelectedStateCategorySave);
-            }
-
-
-            // newCategory holds stateToMove now, so it has a first state.
-            var firstState = newCategory.States[0];
-            if (firstState != stateToMove)
-            {
-                foreach (var variable in firstState.Variables)
-                {
-                    _variableInCategoryPropagationLogic.PropagateVariablesInCategory(variable.Name,
-                        element, _selectedState.SelectedStateCategorySave);
-                }
-            }
+            _variableInCategoryPropagationLogic.PropagateAllVariablesInCategory(element, newCategory);
         }
 
         _pluginManager.StateMovedToCategory(stateToMove, newCategory, oldCategory);
