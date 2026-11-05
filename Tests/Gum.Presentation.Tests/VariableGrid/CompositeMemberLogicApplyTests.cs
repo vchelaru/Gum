@@ -156,6 +156,26 @@ public class CompositeMemberLogicApplyTests : BaseTestClass
     }
 
     [Fact]
+    public void Apply_ShouldSetExposedSubtext_WhenChannelsExposedByBaseOfElement()
+    {
+        ComponentSave component = MakeColorComponent();
+        component.DefaultState.GetVariableSave("Red")!.ExposedAsName = "MyColorRed";
+        ComponentSave derived = new() { Name = "DerivedColored", BaseType = component.Name };
+        derived.States.Add(new StateSave { Name = "Default", ParentContainer = derived });
+        _project.Components.Add(derived);
+
+        MemberCategory category = CategoryWith(
+            new InstanceMember("Red", null!),
+            new InstanceMember("Green", null!),
+            new InstanceMember("Blue", null!));
+
+        _logic.Apply(new List<MemberCategory> { category }, derived, instance: null);
+
+        CompositeInstanceMember composite = (CompositeInstanceMember)category.Members.Single();
+        composite.DetailText.ShouldNotBeNull();
+        composite.DetailText.ShouldContain("MyColorRed");
+    }
+    [Fact]
     public void Apply_ShouldNotSetExposedSubtext_WhenNotExposed()
     {
         ComponentSave component = MakeColorComponent();

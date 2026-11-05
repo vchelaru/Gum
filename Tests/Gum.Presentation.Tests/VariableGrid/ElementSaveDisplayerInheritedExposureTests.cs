@@ -141,4 +141,18 @@ public class ElementSaveDisplayerInheritedExposureTests : BaseTestClass
 
         setByReference.GetValueOrDefault("Inner.Width").ShouldBe("Other.Width");
     }
+
+    [Fact]
+    public void DerivedExposure_OfBehaviorFormsProperty_WinsOverBaseExposure()
+    {
+        _derived.DefaultState!.Variables.Add(new VariableSave
+        {
+            Name = "Inner.IsEnabled", Type = "bool", SetsValue = false, ExposedAsName = "DerivedEnabled",
+        });
+
+        string detail = GetRow(_derived, "Inner.IsEnabled").DetailText ?? "";
+
+        detail.ShouldContain("Exposed as DerivedEnabled");
+        detail.ShouldNotContain("InnerEnabled");
+    }
 }

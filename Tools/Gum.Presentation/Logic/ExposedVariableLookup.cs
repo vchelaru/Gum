@@ -13,40 +13,12 @@ namespace Gum.Logic;
 public static class ExposedVariableLookup
 {
     /// <summary>
-    /// Default-state variables of <paramref name="owner"/> and its base types that expose a variable of
-    /// <paramref name="instance"/> (<see cref="VariableSave.ExposedAsName"/> set). When several elements in the
-    /// chain expose the same variable, only the most derived one is returned.
+    /// Default-state variables of <paramref name="owner"/> and its base types that expose an instance variable
+    /// (<see cref="VariableSave.ExposedAsName"/> set), most derived first; when several elements in the chain
+    /// expose the same variable, only the most derived one is returned. With <paramref name="instance"/> set,
+    /// only that instance's variables are returned.
     /// </summary>
-    public static List<VariableSave> GetExposures(ElementSave owner, InstanceSave instance)
-    {
-        List<VariableSave> result = new List<VariableSave>();
-        HashSet<string> seenNames = new HashSet<string>();
-        IEnumerable<ElementSave> chain = new[] { owner }.Concat(ObjectFinder.Self.GetBaseElements(owner));
-        foreach (ElementSave chainElement in chain)
-        {
-            StateSave? defaultState = chainElement.DefaultState;
-            if (defaultState == null)
-            {
-                continue;
-            }
-            foreach (VariableSave variable in defaultState.Variables)
-            {
-                if (!string.IsNullOrEmpty(variable.ExposedAsName) &&
-                    variable.SourceObject == instance.Name &&
-                    seenNames.Add(variable.Name))
-                {
-                    result.Add(variable);
-                }
-            }
-        }
-        return result;
-    }
-
-    /// <summary>
-    /// Every variable of <paramref name="owner"/> and its base types that exposes an instance variable,
-    /// most derived first; a variable exposed again by a derived element is returned once.
-    /// </summary>
-    public static List<VariableSave> GetExposures(ElementSave owner)
+    public static List<VariableSave> GetExposures(ElementSave owner, InstanceSave? instance = null)
     {
         List<VariableSave> result = new List<VariableSave>();
         HashSet<string> seenNames = new HashSet<string>();
@@ -54,9 +26,10 @@ public static class ExposedVariableLookup
         {
             foreach (VariableSave variable in chainElement.DefaultState?.Variables ?? new List<VariableSave>())
             {
-                if (!string.IsNullOrEmpty(variable.ExposedAsName) &&
-                    !string.IsNullOrEmpty(variable.SourceObject) &&
-                    seenNames.Add(variable.Name))
+                bool matchesInstance = instance == null
+                    ? !string.IsNullOrEmpty(variable.SourceObject)
+                    : variable.SourceObject == instance.Name;
+                if (!string.IsNullOrEmpty(variable.ExposedAsName) && matchesInstance && seenNames.Add(variable.Name))
                 {
                     result.Add(variable);
                 }
