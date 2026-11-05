@@ -5,6 +5,7 @@ using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
 using Gum.Managers;
+using Gum.ProjectServices;
 using Gum.Wireframe;
 using GumRuntime;
 using Microsoft.CodeAnalysis;
@@ -970,7 +971,7 @@ public class VariableReferenceLogic : IVariableReferenceLogic
         Dictionary<ComponentSave, ISet<string>> stale = new Dictionary<ComponentSave, ISet<string>>();
         foreach (ComponentSave component in project.Components)
         {
-            if (component.Behaviors.Any(item => item.BehaviorName == behavior.Name))
+            if (FormsBehaviorChain.GetBehaviors(component).Any(item => item.Name == behavior.Name))
             {
                 HashSet<string> removed = new HashSet<string>(previousNames);
                 removed.ExceptWith(BehaviorToolOnlyReferencesApplier.GetDrivenVariableNames(component));

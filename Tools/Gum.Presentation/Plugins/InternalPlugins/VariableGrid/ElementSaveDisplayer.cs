@@ -6,6 +6,7 @@ using Gum.DataTypes.Variables;
 using Gum.DataTypes;
 using Gum.ToolStates;
 using Gum.Managers;
+using Gum.ProjectServices;
 using Gum.PropertyGridHelpers.Converters;
 using Gum.Plugins;
 using Gum.Logic;
@@ -638,13 +639,7 @@ public class ElementSaveDisplayer
         StateSaveCategory? stateSaveCategory,
         List<VariableCategoryDescriptor> categories)
     {
-        if (elementWithBehaviors?.Behaviors == null || elementWithBehaviors.Behaviors.Count == 0)
-        {
-            return;
-        }
-
-        var allBehaviors = ObjectFinder.Self.GumProjectSave?.Behaviors;
-        if (allBehaviors == null)
+        if (elementWithBehaviors == null)
         {
             return;
         }
@@ -652,17 +647,15 @@ public class ElementSaveDisplayer
         const string categoryName = "Behavior";
         VariableCategoryDescriptor? behaviorCategory = null;
 
-        foreach (var behaviorRef in elementWithBehaviors.Behaviors)
-        {
-            var behavior = allBehaviors.FirstOrDefault(b => b.Name == behaviorRef.BehaviorName);
-            if (behavior == null)
-            {
-                continue;
-            }
+        // The behaviors of the element's whole base chain: a component derived from a Forms control
+        // shows the control's rows (the nearest declaration of a name wins).
+        HashSet<string> seenProperties = new HashSet<string>(StringComparer.Ordinal);
 
+        foreach (BehaviorSave behavior in FormsBehaviorChain.GetBehaviors(elementWithBehaviors))
+        {
             foreach (var formsProperty in behavior.FormsProperties)
             {
-                if (string.IsNullOrEmpty(formsProperty.Name))
+                if (string.IsNullOrEmpty(formsProperty.Name) || !seenProperties.Add(formsProperty.Name))
                 {
                     // Can occur when a project is at the legacy (v1) gumx format and the
                     // .behx uses the v2 compact attribute form for FormsProperty entries —
