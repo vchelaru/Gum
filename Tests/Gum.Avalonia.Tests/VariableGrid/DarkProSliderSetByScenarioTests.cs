@@ -14,7 +14,7 @@ namespace Gum.Avalonia.Tests.VariableGrid;
 /// </summary>
 public class DarkProSliderSetByScenarioTests
 {
-    private static ComponentSave LoadSlider(VariableGridHarness grid)
+    internal static ComponentSave LoadSlider(VariableGridHarness grid)
     {
         string json = File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "VariableGrid", "Fixtures", "DarkProSlider.gucj"));
         ComponentSave loaded = GumJsonFileSerializer.DeserializeElement<ComponentSave>(json);
