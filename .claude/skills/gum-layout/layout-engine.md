@@ -49,8 +49,10 @@ Children are bucketed for update ordering:
 
 ## Layout Suspension
 
-For bulk changes (loading screens, batch property sets), suspend layout to
-avoid O(n^2) recalculations:
+Without suspension every property assignment lays out immediately, because Gum cannot know when a
+run of assignments ends (see "Layout Runs on Every Assignment" in **gum-property-assignment**). For
+bulk changes (loading screens, batch property sets), the caller declares the batch by suspending
+layout to avoid O(n^2) recalculations:
 
 ```csharp
 GraphicalUiElement.IsAllLayoutSuspended = true;  // global, thread-static

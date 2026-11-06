@@ -49,7 +49,7 @@ Six properties combine into a deterministic filename in `FontCache/`:
 
 Examples: `FontCache/Font18Arial.fnt`, `FontCache/Font24Times_New_Roman_o1_Bold.fnt`. A font file adds `_ttf` and, in a project at `Version` 6 or later, a path hash after it; see `gum-tool-font-generation`.
 
-`BmfcSave.GetFontCacheFileNameFor()` produces this name. Every property setter on TextRuntime (Font, FontSize, etc.) calls `UpdateToFontValues()`, which regenerates the filename and attempts to load.
+`BmfcSave.GetFontCacheFileNameFor()` produces this name. Every property setter on TextRuntime (Font, FontSize, etc.) calls `UpdateToFontValues()`, which regenerates the filename and attempts to load. The load happens at assignment, before layout, because layout measures the text from the loaded font; see "Layout Runs on Every Assignment" in **gum-property-assignment**.
 
 **Key gotcha:** Unless an `IInMemoryFontCreator` or `IRuntimeFontService` is registered, the `.fnt` file must already exist in `FontCache/`. Users often set `FontSize = 24` expecting it to work, but silently get `DefaultBitmapFont` because `Font24Arial.fnt` was never generated. There is no error or warning — the text just renders in the default font. A font that was missing is remembered as unresolvable (`_knownUnresolvableFontKeys` in `GetOrCreateBakedFont`) only while its file is still missing; the mark is dropped when the file appears.
 

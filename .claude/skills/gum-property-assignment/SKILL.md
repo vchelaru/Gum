@@ -82,6 +82,14 @@ result, at the cost of tolerated redundant recomputation (e.g. re-deriving a fon
 
 ---
 
+## Layout Runs on Every Assignment
+
+Gum cannot tell when a run of assignments ends (an object initializer, `a.Font = ...; a.FontSize = ...;`, a state apply), so each setter finishes with its layout already done. Layout results are stored values: `AbsoluteWidth` returns the width the last layout wrote to the renderable ([GraphicalUiElement.Properties.cs](../../../GumRuntime/GraphicalUiElement.Properties.cs) `IPositionedSizedObject.Width`), and X/Y, a parent's size and a stacked sibling's position are stored the same way. Reads are plain field reads with no flush hook, so code may read any of them after any single assignment and must see a correct value.
+
+Fonts are part of this. Text measure (`WrappedTextWidth`, `WrappedTextHeight`, `DescenderHeight`) reads the loaded `BitmapFont`, so a font setter loads the font before it lays out (`LoadFontFromProperties`). Only a caller-declared batch (`SuspendLayout`, or `IsAllLayoutSuspended` during load) defers the font and the layout. Do not propose building the font or running layout "later" (next layout, next draw, first read): that leaves stored layout results stale for the element, its parent and its siblings.
+
+---
+
 ## Font Deferred-Loading System
 
 Loading a `.fnt` file is expensive. A text element has ~6 font-related properties (Font,
