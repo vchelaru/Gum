@@ -245,6 +245,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GumShadowDusk.Tests.KniDesk
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SkiaGum.GpuTests", "Tests\SkiaGum.GpuTests\SkiaGum.GpuTests.csproj", "{DD588871-6755-454F-A620-122B104A74EA}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataUi.Core", "DataUi.Core\DataUi.Core.csproj", "{518DC1D8-5DAB-4ACE-8560-4B1FDD35B014}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -2274,6 +2276,24 @@ Global
 		{DD588871-6755-454F-A620-122B104A74EA}.Release|x64.Build.0 = Release|Any CPU
 		{DD588871-6755-454F-A620-122B104A74EA}.Release|x86.ActiveCfg = Release|Any CPU
 		{DD588871-6755-454F-A620-122B104A74EA}.Release|x86.Build.0 = Release|Any CPU
+		{518DC1D8-5DAB-4ACE-8560-4B1FDD35B014}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{518DC1D8-5DAB-4ACE-8560-4B1FDD35B014}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{518DC1D8-5DAB-4ACE-8560-4B1FDD35B014}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{518DC1D8-5DAB-4ACE-8560-4B1FDD35B014}.Debug|x64.Build.0 = Debug|Any CPU
+		{518DC1D8-5DAB-4ACE-8560-4B1FDD35B014}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{518DC1D8-5DAB-4ACE-8560-4B1FDD35B014}.Debug|x86.Build.0 = Debug|Any CPU
+		{518DC1D8-5DAB-4ACE-8560-4B1FDD35B014}.Release_No_Diagnostics|Any CPU.ActiveCfg = Debug|Any CPU
+		{518DC1D8-5DAB-4ACE-8560-4B1FDD35B014}.Release_No_Diagnostics|Any CPU.Build.0 = Debug|Any CPU
+		{518DC1D8-5DAB-4ACE-8560-4B1FDD35B014}.Release_No_Diagnostics|x64.ActiveCfg = Debug|Any CPU
+		{518DC1D8-5DAB-4ACE-8560-4B1FDD35B014}.Release_No_Diagnostics|x64.Build.0 = Debug|Any CPU
+		{518DC1D8-5DAB-4ACE-8560-4B1FDD35B014}.Release_No_Diagnostics|x86.ActiveCfg = Debug|Any CPU
+		{518DC1D8-5DAB-4ACE-8560-4B1FDD35B014}.Release_No_Diagnostics|x86.Build.0 = Debug|Any CPU
+		{518DC1D8-5DAB-4ACE-8560-4B1FDD35B014}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{518DC1D8-5DAB-4ACE-8560-4B1FDD35B014}.Release|Any CPU.Build.0 = Release|Any CPU
+		{518DC1D8-5DAB-4ACE-8560-4B1FDD35B014}.Release|x64.ActiveCfg = Release|Any CPU
+		{518DC1D8-5DAB-4ACE-8560-4B1FDD35B014}.Release|x64.Build.0 = Release|Any CPU
+		{518DC1D8-5DAB-4ACE-8560-4B1FDD35B014}.Release|x86.ActiveCfg = Release|Any CPU
+		{518DC1D8-5DAB-4ACE-8560-4B1FDD35B014}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
