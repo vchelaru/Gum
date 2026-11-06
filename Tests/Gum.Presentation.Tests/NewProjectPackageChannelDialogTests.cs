@@ -38,12 +38,11 @@ public class NewProjectPackageChannelDialogTests
         NewProjectDialogViewModel viewModel = new NewProjectDialogViewModel(
             new ThemeSelectionViewModel(_formsFileService.Object, _projectState.Object),
             _service.Object, new Mock<IExistingCodeProjectDetector>().Object, new Mock<IDialogService>().Object,
-            new Mock<INewProjectLocationSettings>().Object)
+            new Mock<INewProjectLocationSettings>().Object, runChecksInline: true)
         {
             ProjectName = "MyGame",
             Location = Folder,
             IncludeCodeProject = true,
-            RunChecksInline = true,
         };
         configure?.Invoke(viewModel);
         return viewModel;

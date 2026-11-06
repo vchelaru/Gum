@@ -89,14 +89,13 @@ public class NewProjectDemoScreenDialogTests
         NewProjectDialogViewModel viewModel = new NewProjectDialogViewModel(
             new ThemeSelectionViewModel(_formsFileService.Object, new Mock<IProjectState>().Object),
             _service.Object, new Mock<IExistingCodeProjectDetector>().Object, new Mock<IDialogService>().Object,
-            new Mock<INewProjectLocationSettings>().Object)
+            new Mock<INewProjectLocationSettings>().Object, runChecksInline: true)
         {
             ProjectName = "MyGame",
             Location = Folder,
             IncludeCodeProject = true,
             IsIncludeDemoScreenGum = true,
             IncludeRecommendedPackages = false,
-            RunChecksInline = true,
         };
         configure?.Invoke(viewModel);
         return viewModel;
@@ -210,7 +209,7 @@ public class NewProjectDemoScreenDialogTests
     }
 
     [Fact]
-    public void Checks_RunOnCallingThread_WhenRunChecksInlineIsSet()
+    public void Checks_RunOnCallingThread_WhenRunChecksInlineIsRequested()
     {
         // A pool-thread continuation would mutate the view model concurrently with the caller (#7710).
         int checkThreadId = -1;
@@ -220,7 +219,7 @@ public class NewProjectDemoScreenDialogTests
         NewProjectDialogViewModel viewModel = new NewProjectDialogViewModel(
             new ThemeSelectionViewModel(_formsFileService.Object, new Mock<IProjectState>().Object),
             _service.Object, detector.Object, new Mock<IDialogService>().Object,
-            new Mock<INewProjectLocationSettings>().Object) { RunChecksInline = true };
+            new Mock<INewProjectLocationSettings>().Object, runChecksInline: true);
 
         viewModel.ProjectName = "Other";
 
