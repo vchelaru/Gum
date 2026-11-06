@@ -14,7 +14,10 @@ public static class BestEffortFile
     private const int DelayMilliseconds = 50;
 
     /// <summary>Runs <paramref name="action"/>; returns false if it still failed after the retries.</summary>
-    public static bool TryRun(Action action)
+    public static bool TryRun(Action action) => TryRun(action, () => Thread.Sleep(DelayMilliseconds));
+
+    /// <summary>Runs <paramref name="action"/>, calling <paramref name="waitBeforeRetry"/> between attempts instead of sleeping.</summary>
+    public static bool TryRun(Action action, Action waitBeforeRetry)
     {
         for (int attempt = 1; ; attempt++)
         {
@@ -31,7 +34,7 @@ public static class BestEffortFile
                     return false;
                 }
 
-                Thread.Sleep(DelayMilliseconds);
+                waitBeforeRetry();
             }
         }
     }
