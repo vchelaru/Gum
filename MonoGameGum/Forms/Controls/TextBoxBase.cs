@@ -899,31 +899,15 @@ public abstract class TextBoxBase :
                 }
                 else if (caretIndex > 0)
                 {
-                    int? letterToMoveToFromCtrl = null;
-                    if (isCtrlDown)
-                    {
-                        // Both WPF (and visual Studio) Move to the beginning of the
-                        // current word. Discord works differently but we're going to 
-                        // match WPF behavior. For example:
-                        // 12 34
-                        // If the cursor is at 4, pressing left moves the cursor
-                        // before the 3 but after the space.
-                        letterToMoveToFromCtrl = GetCtrlBeforeTarget(StepLeft(CaretStepText, caretIndex));
-                        if (letterToMoveToFromCtrl != null)
-                        {
-
-                            if (letterToMoveToFromCtrl == StepLeft(CaretStepText, caretIndex))
-                            {
-                                letterToMoveToFromCtrl = null;
-                            }
-                        }
-                        else
-                        {
-                            letterToMoveToFromCtrl = 0;
-                        }
-                    }
-
-                    caretIndex = letterToMoveToFromCtrl ?? StepLeft(CaretStepText, caretIndex);
+                    // Both WPF (and visual Studio) Move to the beginning of the
+                    // current word. Discord works differently but we're going to
+                    // match WPF behavior. For example:
+                    // 12 34
+                    // If the cursor is at 4, pressing left moves the cursor
+                    // before the 3 but after the space.
+                    caretIndex = isCtrlDown
+                        ? GetPreviousWordStart(caretIndex)
+                        : StepLeft(CaretStepText, caretIndex);
                 }
                 break;
             case Keys.Home:
@@ -969,39 +953,10 @@ public abstract class TextBoxBase :
                 }
                 else if (caretIndex < (DisplayedText?.Length ?? 0))
                 {
-                    int? letterToMoveToFromCtrl = null;
-
-                    if (isCtrlDown)
-                    {
-                        letterToMoveToFromCtrl = GetSpaceIndexAfter(StepRight(CaretStepText, caretIndex));
-                        if (letterToMoveToFromCtrl != null)
-                        {
-
-                            // match Visual Studio behavior, and go after the last space
-                            if (letterToMoveToFromCtrl != StepRight(CaretStepText, caretIndex))
-                            {
-                                // Past the whole run of whitespace, onto the start of the next word.
-                                int end = DisplayedText?.Length ?? 0;
-                                int next = letterToMoveToFromCtrl.Value;
-                                while (next < end && char.IsWhiteSpace(DisplayedText![next]))
-                                {
-                                    next++;
-                                }
-                                letterToMoveToFromCtrl = next;
-                            }
-                            else
-                            {
-                                letterToMoveToFromCtrl = null;
-                            }
-                        }
-                        else
-                        {
-                            letterToMoveToFromCtrl = DisplayedText?.Length ?? 0;
-                        }
-                    }
-
-                    caretIndex = letterToMoveToFromCtrl ?? StepRight(CaretStepText, caretIndex);
-
+                    // Ctrl matches Visual Studio: go to the start of the next word.
+                    caretIndex = isCtrlDown
+                        ? GetNextWordStart(caretIndex)
+                        : StepRight(CaretStepText, caretIndex);
                 }
                 break;
             case Keys.Up:
@@ -2756,104 +2711,38 @@ public abstract class TextBoxBase :
 
     #region Utilities
 
-    // The word helpers take and return indexes into Text, but scan the text with "\r\n" collapsed to "\n"
-    // so a CRLF behaves as the single whitespace character the wrapped text treats it as.
-    private string? NormalizedDisplayedText => DisplayedText?.Replace("\r\n", "\n");
-
-    // The two helpers below take and return indexes into the normalized text (see above).
-    protected int? GetCtrlBeforeTarget(int index)
+    // Ctrl+Right target: skip the rest of the current word, then the whole run of whitespace, so the
+    // caret lands on the start of the next word (or the end of the text).
+    private int GetNextWordStart(int index)
     {
-        var afterRemovingSpaces = GetNonSpaceIndexAtOrBefore(TextToWrappedIndex(DisplayedText, index));
-
-        if (afterRemovingSpaces != null)
+        string text = DisplayedText ?? string.Empty;
+        int next = System.Math.Min(index, text.Length);
+        while (next < text.Length && !char.IsWhiteSpace(text[next]))
         {
-            var nextSpace = GetSpaceIndexAtOrBefore(afterRemovingSpaces.Value);
-
-            if (nextSpace != null)
-            {
-                return WrappedToTextIndex(DisplayedText, nextSpace.Value + 1);
-            }
+            next++;
         }
-
-        return null;
+        while (next < text.Length && char.IsWhiteSpace(text[next]))
+        {
+            next++;
+        }
+        return next;
     }
 
-    int? GetNonSpaceIndexAtOrBefore(int index)
+    // Ctrl+Left and Ctrl+Backspace target: skip the whitespace before index, then the word before it,
+    // so the caret lands on the start of the word (or the start of the text).
+    protected int GetPreviousWordStart(int index)
     {
-        // first get non-space index at or before:
-        var text = NormalizedDisplayedText;
-        if (text != null)
+        string text = DisplayedText ?? string.Empty;
+        int previous = System.Math.Min(index, text.Length);
+        while (previous > 0 && char.IsWhiteSpace(text[previous - 1]))
         {
-            index = System.Math.Min(index, text.Length - 1);
-            for (int i = index; i > 0; i--)
-            {
-                var isNotSpace = !Char.IsWhiteSpace(text[i]);
-
-                if (isNotSpace)
-                {
-                    return i;
-                }
-            }
+            previous--;
         }
-
-        return null;
-
-    }
-
-    int? GetSpaceIndexAtOrBefore(int index)
-    {
-        var text = NormalizedDisplayedText;
-        if (text != null)
+        while (previous > 0 && !char.IsWhiteSpace(text[previous - 1]))
         {
-            for (int i = index - 1; i > 0; i--)
-            {
-                var isSpace = Char.IsWhiteSpace(text[i]);
-
-                if (isSpace)
-                {
-                    return i;
-                }
-            }
+            previous--;
         }
-
-        return null;
-    }
-
-    protected int? GetSpaceIndexBefore(int index)
-    {
-        if (DisplayedText != null)
-        {
-            for (int i = index - 1; i > 0; i--)
-            {
-                var isSpace = Char.IsWhiteSpace(DisplayedText[i]);
-
-                if (isSpace)
-                {
-                    return i;
-                }
-            }
-        }
-
-        return null;
-    }
-
-    protected int? GetSpaceIndexAfter(int index)
-    {
-        var text = NormalizedDisplayedText;
-        if (text != null)
-        {
-            for (int i = TextToWrappedIndex(DisplayedText, index); i < text.Length; i++)
-            {
-                var isSpace = Char.IsWhiteSpace(text[i]);
-
-                if (isSpace)
-                {
-                    return WrappedToTextIndex(DisplayedText, i);
-                }
-            }
-        }
-
-        return null;
+        return previous;
     }
 
 
