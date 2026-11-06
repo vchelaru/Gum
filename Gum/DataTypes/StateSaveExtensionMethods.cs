@@ -1250,76 +1250,56 @@ public static class StateSaveExtensionMethods
 
     }
 
-    private static object? SubtractValue(VariableSave firstVariable, VariableSave secondVariable)
+    private static object? SubtractValue(VariableSave minuend, VariableSave subtrahend)
     {
-        if (firstVariable.Value == null || secondVariable.Value == null)
+        if (minuend.Value == null || subtrahend.Value == null)
         {
-            return secondVariable.Value;
+            return subtrahend.Value;
         }
-        else if (firstVariable.Value is float && secondVariable.Value is float)
+        else if (minuend.Value is float && subtrahend.Value is float)
         {
-            float firstFloat = (float)firstVariable.Value;
-            float secondFloat = (float)secondVariable.Value;
-
-            return firstFloat - secondFloat;
+            return (float)minuend.Value - (float)subtrahend.Value;
         }
-        else if (firstVariable.Value is double && secondVariable.Value is double)
+        else if (minuend.Value is double && subtrahend.Value is double)
         {
-            double firstDouble = (double)firstVariable.Value;
-            double secondDouble = (double)secondVariable.Value;
-
-            return firstDouble - secondDouble;
+            return (double)minuend.Value - (double)subtrahend.Value;
         }
-
-        else if (firstVariable.Value is int)
+        else if (minuend.Value is int)
         {
-            int firstInt = (int)firstVariable.Value;
-            int secondInt = (int)secondVariable.Value;
-
-            return firstInt - secondInt;
+            return (int)minuend.Value - (int)subtrahend.Value;
         }
         else
         {
-            return secondVariable.Value;
+            // Values that can't be subtracted (bool, string, enums) keep the value being subtracted from.
+            // Returning the subtrahend would, in a relative animation (end - start), yield the start value.
+            return minuend.Value;
         }
-
     }
 
-
-
-    private static object? AddValue(VariableSave firstVariable, VariableSave secondVariable)
+    private static object? AddValue(VariableSave augend, VariableSave addend)
     {
-        if (firstVariable.Value == null || secondVariable.Value == null)
+        if (augend.Value == null || addend.Value == null)
         {
-            return secondVariable.Value;
+            return addend.Value;
         }
-        else if (firstVariable.Value is float && secondVariable.Value is float)
+        else if (augend.Value is float && addend.Value is float)
         {
-            float firstFloat = (float)firstVariable.Value;
-            float secondFloat = (float)secondVariable.Value;
-
-            return firstFloat + secondFloat;
+            return (float)augend.Value + (float)addend.Value;
         }
-        else if (firstVariable.Value is double && secondVariable.Value is double)
+        else if (augend.Value is double && addend.Value is double)
         {
-            double firstDouble = (double)firstVariable.Value;
-            double secondDouble = (double)secondVariable.Value;
-
-            return firstDouble + secondDouble;
+            return (double)augend.Value + (double)addend.Value;
         }
-
-        else if (firstVariable.Value is int)
+        else if (augend.Value is int)
         {
-            int firstInt = (int)firstVariable.Value;
-            int secondInt = (int)secondVariable.Value;
-
-            return firstInt + secondInt;
+            return (int)augend.Value + (int)addend.Value;
         }
         else
         {
-            return secondVariable.Value;
+            // Non-numeric values can't be added; the addend (for relative animations, the end-start
+            // difference, which holds the end value) wins.
+            return addend.Value;
         }
-
     }
 
     /// <summary>
