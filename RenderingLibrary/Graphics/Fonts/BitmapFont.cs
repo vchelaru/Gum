@@ -1067,10 +1067,16 @@ public class BitmapFont : IDisposable
             // If rotated, need free floating positions since sprite positions will likely not line up with pixels
             rotationDegrees != 0;
 
+        // Glyphs drawn at a whole number of screen pixels per source pixel (oversampled text, #6814) have
+        // whole-pixel offsets from the block, so they snap like unscaled text. Snapping each glyph's
+        // scaled position on its own lets float noise round glyphs of one line to different pixels (#7683).
+        bool glyphsAtWholeScreenScale = zoom * scaleX >= 1 && zoom * scaleY >= 1 &&
+            SpriteRenderer.IsNearWholeNumber(zoom * scaleX) && SpriteRenderer.IsNearWholeNumber(zoom * scaleY);
+
         if (!isFreeFloating)
         {
-            // If scaled up/down, don't use free floating
-            isFreeFloating = scaleX != 1;
+            // Any other scale up/down uses free floating
+            isFreeFloating = scaleX != 1 && !glyphsAtWholeScreenScale;
         }
         float finalRotation;
         if (isFreeFloating)
@@ -1154,6 +1160,12 @@ public class BitmapFont : IDisposable
                         if (effectiveTextRenderingMode == TextRenderingPositionMode.SnapToPixel)
                         {
                             lineOffset = firstLetterDestinationX - firstLetterDestinationXInt;
+                            if (scaleX != 1)
+                            {
+                                // The line start is a fraction of a screen pixel (centered or right-aligned
+                                // text), not of a world unit.
+                                lineOffset = firstLetterDestinationX - MathFunctions.RoundToInt(firstLetterDestinationX * zoom) / zoom;
+                            }
                         }
                     }
 
