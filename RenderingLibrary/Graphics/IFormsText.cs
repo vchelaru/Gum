@@ -88,27 +88,19 @@ namespace RenderingLibrary.Graphics
         float GetDrawnCharacterAdvance(char character) => GetCharacterAdvance(character) * WordWrapFontScale;
 
         /// <summary>
-        /// The distance between consecutive drawn lines, in the units the Text is positioned in: the wrapped
-        /// height over the line count, so it follows what the Text lays out (the measurement font and the
-        /// <see cref="LineHeightMultiplier"/>) rather than the display font, which differs while font
-        /// oversampling draws from a larger font than layout measures with (#7705). Every vertical position
-        /// across lines comes from this: caret, click, selection rows, Up/Down and scrolling.
+        /// The distance from the top of the first drawn line to the top of line <paramref name="lineIndex"/>
+        /// (<c>WrappedText.Count</c> gives the drawn height), in the units the Text is positioned in. A Text
+        /// returns where it draws each line (its measurement font and <see cref="LineHeightMultiplier"/>, and a
+        /// taller line where a size run makes it so) rather than the display font, which differs while font
+        /// oversampling draws from a larger font than layout measures with (#7705). Every vertical position across
+        /// lines comes from this: caret, click, selection rows, Up/Down and scrolling.
         /// </summary>
-        float DrawnLineStep
-        {
-            get
-            {
-                int lineCount = WrappedText.Count;
-                return lineCount > 0
-                    ? WrappedTextHeight / lineCount
-                    : LineHeightInPixels * WordWrapFontScale * LineHeightMultiplier;
-            }
-        }
+        float GetDrawnLineTop(int lineIndex) => lineIndex * LineHeightInPixels * WordWrapFontScale * LineHeightMultiplier;
 
         /// <summary>
-        /// The height of one drawn glyph row: <see cref="DrawnLineStep"/> without the
-        /// <see cref="LineHeightMultiplier"/>, which only spaces lines apart.
+        /// The height of one drawn glyph row, without the <see cref="LineHeightMultiplier"/> (which only
+        /// spaces lines apart): the right size for "half a line" offsets onto the ink.
         /// </summary>
-        float DrawnGlyphRowHeight => LineHeightMultiplier > 0 ? DrawnLineStep / LineHeightMultiplier : DrawnLineStep;
+        float DrawnGlyphRowHeight => LineHeightInPixels * WordWrapFontScale;
     }
 }

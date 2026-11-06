@@ -260,6 +260,47 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
 
     private float EffectiveFontScale => ComposeFontScale(mFontScale);
 
+    // The step between plain lines as DrawTextLines draws them: the pinned measurement font while oversampling.
+    private float PlainDrawnLineStep =>
+        (EffectiveMeasurementFont?.LineHeightInPixels ?? LineHeightInPixels) * MeasurementFontScale * LineHeightMultiplier;
+
+    /// <inheritdoc cref="IFormsText.GetDrawnLineTop"/>
+    /// <remarks>
+    /// With inline variables each line steps as <see cref="DrawWithInlineVariables"/> advances (a size run makes
+    /// its line taller); without them every line steps by the plain line height.
+    /// </remarks>
+    public float GetDrawnLineTop(int lineIndex)
+    {
+        if (InlineVariables.Count == 0 || DrawnFont == null)
+        {
+            return lineIndex * PlainDrawnLineStep;
+        }
+
+        var font = DrawnFont;
+        float top = 0;
+        int startOfLineIndex = 0;
+        for (int i = 0; i < lineIndex; i++)
+        {
+            if (i >= WrappedText.Count)
+            {
+                top += font.EffectiveLineHeight(EffectiveFontScale, LineHeightMultiplier);
+                continue;
+            }
+
+            var line = WrappedText[i];
+            var substrings = GetCachedStyledSubstrings(i, startOfLineIndex, line);
+            top += substrings.Count == 0
+                ? font.EffectiveLineHeight(EffectiveFontScale, LineHeightMultiplier)
+                : ComputeStyledLineHeight(font, substrings, out _);
+            startOfLineIndex += line.Length;
+        }
+        return top;
+    }
+
+    /// <inheritdoc cref="IFormsText.DrawnGlyphRowHeight"/>
+    public float DrawnGlyphRowHeight =>
+        (EffectiveMeasurementFont?.LineHeightInPixels ?? LineHeightInPixels) * MeasurementFontScale;
+
     /// <summary>
     /// The scale this text draws at without <see cref="OversampleCompensationScale"/>:
     /// <see cref="FontScale"/> composed with <see cref="SystemManagers.GlobalFontScale"/>. Oversampling
