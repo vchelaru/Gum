@@ -86,5 +86,21 @@ namespace RenderingLibrary.Graphics
         /// See <see cref="MeasureDrawnString"/>.
         /// </summary>
         float GetDrawnCharacterAdvance(char character) => GetCharacterAdvance(character) * WordWrapFontScale;
+
+        /// <summary>
+        /// The distance from the top of the first drawn line to the top of line <paramref name="lineIndex"/>
+        /// (<c>WrappedText.Count</c> gives the drawn height), in the units the Text is positioned in. A Text
+        /// returns where it draws each line (its measurement font and <see cref="LineHeightMultiplier"/>, and a
+        /// taller line where a size run makes it so) rather than the display font, which differs while font
+        /// oversampling draws from a larger font than layout measures with (#7705). Every vertical position across
+        /// lines comes from this: caret, click, selection rows, Up/Down and scrolling.
+        /// </summary>
+        float GetDrawnLineTop(int lineIndex) => lineIndex * LineHeightInPixels * WordWrapFontScale * LineHeightMultiplier;
+
+        /// <summary>
+        /// The height of one drawn glyph row, without the <see cref="LineHeightMultiplier"/> (which only
+        /// spaces lines apart): the right size for "half a line" offsets onto the ink.
+        /// </summary>
+        float DrawnGlyphRowHeight => LineHeightInPixels * WordWrapFontScale;
     }
 }
