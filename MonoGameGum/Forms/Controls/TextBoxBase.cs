@@ -2183,6 +2183,12 @@ public abstract class TextBoxBase :
                 // (selection drifts down by _selectionInstanceYOffset pixels per update).
                 selection.Y = selectionStartEnds[i].Y + _selectionInstanceYOffset;
                 selection.Width = selectionStartEnds[i].Width;
+                // A multi-line highlight covers one line, so an absolute height (the default visual's
+                // 20 fits only the default font) follows the font. A relative height is left alone.
+                if (!IsSingleLineMode && selection.HeightUnits == global::Gum.DataTypes.DimensionUnitType.Absolute)
+                {
+                    selection.Height = ScaledLineHeightInPixels;
+                }
                 selection.Visible = true;
                 if (textComponent.Rotation != 0)
                 {
@@ -2291,6 +2297,19 @@ public abstract class TextBoxBase :
     private enum LayoutAxis { Horizontal, Vertical }
 
     protected void OffsetTextToKeepCaretInView()
+    {
+        float oldX = textComponent.X;
+        float oldY = textComponent.Y;
+        ScrollTextToKeepCaretInView();
+
+        // The highlight is placed from the text's position, so a scroll leaves it behind (#7686).
+        if ((textComponent.X != oldX || textComponent.Y != oldY) && selectionLength > 0)
+        {
+            UpdateToSelection();
+        }
+    }
+
+    private void ScrollTextToKeepCaretInView()
     {
         // Horizontal scrolling fires whenever wrapping is off — that covers both
         // single-line (NoWrap + !AcceptsReturn) and "MultiNoWrap" (NoWrap + AcceptsReturn),
