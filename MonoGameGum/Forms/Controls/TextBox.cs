@@ -349,7 +349,7 @@ public class TextBox : TextBoxBase
         }
     }
 
-    protected override void HandleDelete()
+    protected override void HandleDelete(bool isCtrlDown = false)
     {
         if (selectionLength > 0)
         {
@@ -360,7 +360,7 @@ public class TextBox : TextBoxBase
         {
             // Use SetTextFromUi because this is user-initiated editing
             // A caret inside a CRLF or an emoji (a programmatic CaretIndex) removes the whole character.
-            var (whereToRemoveFrom, lengthToRemove) = GetDeleteRange(text, caretIndex);
+            var (whereToRemoveFrom, lengthToRemove) = GetDeleteRange(text, caretIndex, isCtrlDown);
             caretIndex = whereToRemoveFrom;
             SetTextFromUi(text.Remove(whereToRemoveFrom, lengthToRemove));
             RefreshCaretAfterEdit();

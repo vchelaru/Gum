@@ -288,11 +288,15 @@ public class PasswordBox : TextBoxBase
         CaretIndex = selectionStart;
     }
 
-    protected override void HandleDelete()
+    protected override void HandleDelete(bool isCtrlDown = false)
     {
-        if (caretIndex < SecurePassword.Length && selectionLength == 0)
+        if (selectionLength > 0)
         {
-            var (whereToRemoveFrom, lengthToRemove) = GetDeleteRange(Password, caretIndex);
+            DeleteSelection();
+        }
+        else if (caretIndex < SecurePassword.Length)
+        {
+            var (whereToRemoveFrom, lengthToRemove) = GetDeleteRange(Password, caretIndex, isCtrlDown);
             caretIndex = whereToRemoveFrom;
             RemoveRange(whereToRemoveFrom, lengthToRemove);
 

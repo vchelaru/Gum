@@ -970,7 +970,7 @@ public abstract class TextBoxBase :
                 {
                     if (caretIndex < (DisplayedText?.Length ?? 0) || selectionLength > 0)
                     {
-                        HandleDelete();
+                        HandleDelete(isCtrlDown);
                     }
                 }
                 break;
@@ -1148,7 +1148,7 @@ public abstract class TextBoxBase :
 
     public abstract void HandleBackspace(bool isCtrlDown = false);
 
-    protected abstract void HandleDelete();
+    protected abstract void HandleDelete(bool isCtrlDown = false);
 
     public abstract void HandleCharEntered(char character);
 
@@ -1488,6 +1488,13 @@ public abstract class TextBoxBase :
     {
         int start = IsInsideCharacter(text, caretIndex) ? caretIndex - 1 : caretIndex;
         return (start, StepRight(text, start) - start);
+    }
+
+    // Delete removes one character; Ctrl+Delete removes up to the start of the next word, the Ctrl+Right target.
+    internal (int Start, int Length) GetDeleteRange(string? text, int caretIndex, bool isCtrlDown)
+    {
+        var (start, length) = GetDeleteRange(text, caretIndex);
+        return isCtrlDown ? (start, GetNextWordStart(start) - start) : (start, length);
     }
 
     // Widens a selection so neither edge is between the halves of a character.
