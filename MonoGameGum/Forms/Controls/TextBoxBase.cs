@@ -173,6 +173,8 @@ public abstract class TextBoxBase :
         get => caretIndex; 
         set
         {
+            // Like SelectionStart and SelectionLength, the caret stays within the text.
+            value = System.Math.Clamp(value, 0, DisplayedText?.Length ?? 0);
             bool valueChanged = value != caretIndex;
 
             caretIndex = value;
