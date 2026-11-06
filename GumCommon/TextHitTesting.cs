@@ -53,6 +53,23 @@ internal static class TextHitTesting
     }
 
     /// <summary>
+    /// The distance from the left of a Text's box to the start of a line drawn <paramref name="lineWidth"/>
+    /// wide: centered lines split the leftover width, right-aligned lines take all of it.
+    /// </summary>
+    public static float GetHorizontalAlignmentOffset(HorizontalAlignment horizontalAlignment, float boxWidth, float lineWidth)
+    {
+        switch (horizontalAlignment)
+        {
+            case HorizontalAlignment.Center:
+                return (boxWidth - lineWidth) / 2.0f;
+            case HorizontalAlignment.Right:
+                return boxWidth - lineWidth;
+            default:
+                return 0;
+        }
+    }
+
+    /// <summary>
     /// True when <paramref name="index"/> is the high half of a surrogate pair (an emoji), which is
     /// one character stored as two chars.
     /// </summary>
@@ -66,10 +83,8 @@ internal static class TextHitTesting
     /// </summary>
     /// <param name="text">The line.</param>
     /// <param name="cursorOffset">The x offset from the line's start, in drawn units.</param>
-    /// <param name="getAdvance">The unscaled advance of the characters from a start index for a length.</param>
-    /// <param name="fontScale">The text's effective font scale (<c>IText.FontScale</c>), which converts
-    /// unscaled advances to the drawn units <paramref name="cursorOffset"/> is in.</param>
-    public static int GetIndexInLine(string? text, float cursorOffset, Func<string, int, int, float> getAdvance, float fontScale)
+    /// <param name="getAdvance">The drawn advance of the characters from a start index for a length.</param>
+    public static int GetIndexInLine(string? text, float cursorOffset, Func<string, int, int, float> getAdvance)
     {
         text ??= string.Empty;
         int index = text.Length;
@@ -78,7 +93,7 @@ internal static class TextHitTesting
         for (int i = 0; i < text.Length;)
         {
             int characterLength = IsSurrogatePairAt(text, i) ? 2 : 1;
-            float advance = getAdvance(text, i, characterLength) * fontScale;
+            float advance = getAdvance(text, i, characterLength);
 
             distanceMeasuredSoFar += advance;
 
@@ -96,9 +111,11 @@ internal static class TextHitTesting
         return index;
     }
 
-    /// <inheritdoc cref="GetIndexInLine(string?, float, Func{string, int, int, float}, float)"/>
-    /// <param name="getCharacterAdvance">The unscaled advance of one character; a surrogate pair sums its halves.</param>
-    public static int GetIndexInLine(string? text, float cursorOffset, Func<char, float> getCharacterAdvance, float fontScale) =>
+    /// <inheritdoc cref="GetIndexInLine(string?, float, Func{string, int, int, float})"/>
+    /// <param name="text">The line.</param>
+    /// <param name="cursorOffset">The x offset from the line's start, in drawn units.</param>
+    /// <param name="getCharacterAdvance">The drawn advance of one character; a surrogate pair sums its halves.</param>
+    public static int GetIndexInLine(string? text, float cursorOffset, Func<char, float> getCharacterAdvance) =>
         GetIndexInLine(text, cursorOffset, (line, start, length) =>
         {
             float advance = 0;
@@ -107,7 +124,7 @@ internal static class TextHitTesting
                 advance += getCharacterAdvance(line[start + i]);
             }
             return advance;
-        }, fontScale);
+        });
 
     /// <summary>
     /// Returns the index into the concatenation of <paramref name="lines"/> nearest a point given

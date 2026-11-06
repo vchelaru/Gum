@@ -1128,6 +1128,21 @@ public class Text : IVisible, IRenderableIpso,
         return MeasureBlankedText(measurementFont, whatToMeasure, measurementFont.BaseSize, 0).X;
     }
 
+    // Plain lines are drawn from the display font at EffectiveFontScale (DrawPlainLine), so a position
+    // within a line is measured the same way, never with the pinned measurement font (#7675). The style
+    // is ignored, as in MeasureString: DrawPlainLine aligns a line on the same untrimmed measurement.
+
+    /// <inheritdoc/>
+    public float MeasureDrawnString(string value, HorizontalMeasurementStyle style)
+    {
+        Font drawnFont = Font;
+        return MeasureBlankedText(drawnFont, value, drawnFont.BaseSize * EffectiveFontScale, 0).X;
+    }
+
+    /// <inheritdoc/>
+    public float GetDrawnCharacterAdvance(char character) =>
+        MeasureDrawnString(character.ToString(), HorizontalMeasurementStyle.Full);
+
     public virtual void PreRender()
     {
         OnPreRender?.Invoke();

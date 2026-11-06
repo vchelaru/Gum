@@ -235,6 +235,9 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
 
     BitmapFont? EffectiveMeasurementFont => mMeasurementFont ?? mBitmapFont;
 
+    // The font glyphs are drawn from: while oversampling, the display font, not the pinned measurement font.
+    BitmapFont? DrawnFont => mBitmapFont ?? DefaultBitmapFont;
+
     /// <summary>
     /// Runs once per frame during this Text's <see cref="IRenderable.PreRender"/>, before texture
     /// regeneration. Used by <c>TextRuntime</c> (XNALIKE) to automatically re-rasterize at the
@@ -1076,6 +1079,31 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
         return bitmapFontToUse.GetCharacterInfo(character)?.XAdvance ?? 0;
     }
 
+    // Glyphs are drawn from the display font at EffectiveFontScale, so a position within a line is that
+    // font's whole-pixel advances times that scale, never the pinned measurement font's (#6814, #7675).
+
+    /// <inheritdoc/>
+    public float MeasureDrawnString(string whatToMeasure, HorizontalMeasurementStyle style)
+    {
+        BitmapFont? drawnFont = DrawnFont;
+        if (drawnFont == null)
+        {
+            return MeasureString(whatToMeasure, style) * EffectiveFontScale;
+        }
+        return drawnFont.MeasureString(whatToMeasure, style) * EffectiveFontScale;
+    }
+
+    /// <inheritdoc/>
+    public float GetDrawnCharacterAdvance(char character)
+    {
+        BitmapFont? drawnFont = DrawnFont;
+        if (drawnFont == null)
+        {
+            return MeasureString(character.ToString()) * EffectiveFontScale;
+        }
+        return (drawnFont.GetCharacterInfo(character)?.XAdvance ?? 0) * EffectiveFontScale;
+    }
+
     // made public so that objects that need to position based off of the texture can force call this
     public void TryUpdateTextureToRender()
     {
@@ -1095,11 +1123,7 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
     {
         if (!mIsTextureCreationSuppressed && TextRenderingMode == TextRenderingMode.RenderTarget)
         {
-            BitmapFont? fontToUse = mBitmapFont;
-            if (mBitmapFont == null)
-            {
-                fontToUse = DefaultBitmapFont;
-            }
+            BitmapFont? fontToUse = DrawnFont;
 
 
             if (fontToUse != null)
@@ -1271,11 +1295,7 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
     static List<int> widths = new List<int>();
     private void RenderCharacterByCharacter(SpriteRenderer spriteRenderer)
     {
-        BitmapFont? fontToUse = mBitmapFont;
-        if (mBitmapFont == null)
-        {
-            fontToUse = DefaultBitmapFont;
-        }
+        BitmapFont? fontToUse = DrawnFont;
 
 
         if (fontToUse != null)

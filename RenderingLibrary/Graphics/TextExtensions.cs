@@ -32,7 +32,7 @@ namespace RenderingLibrary.Graphics;
 public static class TextExtensions
 {
     /// <summary>
-    /// Returns the index into <see cref="IWrappedText.WrappedText"/> (its lines concatenated) of the
+    /// Returns the index into <see cref="Text.WrappedText"/> (its lines concatenated) of the
     /// character nearest the screen point, measured in drawn units so it follows FontScale.
     /// </summary>
     /// <param name="textInstance">The text to hit test.</param>
@@ -42,8 +42,9 @@ public static class TextExtensions
     {
         TextHitTesting.UnrotatePoint(textInstance, ref screenX, ref screenY);
 
-        float fontScale = GetMeasurementFontScale(textInstance);
-        var lineHeight = textInstance.LineHeightInPixels * fontScale * textInstance.LineHeightMultiplier;
+        IFormsText formsText = textInstance;
+        // Lines step by the measured line height, as they are drawn (#6814).
+        var lineHeight = textInstance.LineHeightInPixels * formsText.WordWrapFontScale * textInstance.LineHeightMultiplier;
         var topOfText = textInstance.GetAbsoluteTop() + TextHitTesting.GetVerticalAlignmentOffset(
             textInstance.VerticalAlignment, textInstance.EffectiveHeight, textInstance.WrappedTextHeight);
 
@@ -52,41 +53,23 @@ public static class TextExtensions
             screenX - textInstance.GetAbsoluteLeft(),
             screenY - topOfText,
             lineHeight,
-            lineText => GetLineXOffsetForHorizontalAlignment(textInstance, lineText, fontScale),
-            (cursorOffset, lineText) => GetIndex(textInstance, cursorOffset, lineText, fontScale));
+            lineText => TextHitTesting.GetHorizontalAlignmentOffset(textInstance.HorizontalAlignment, textInstance.EffectiveWidth,
+                formsText.MeasureDrawnString(lineText, HorizontalMeasurementStyle.TrimRight)),
+            (cursorOffset, lineText) => GetIndex(formsText, cursorOffset, lineText));
     }
 
-    // The scale from MeasureString/GetCharacterAdvance units (the font's own pixels) to drawn units.
-    // IWrappedText.WordWrapFontScale is that scale: the effective FontScale, except while oversampling pins
-    // a separate measurement font, where layout (and so the drawn box) ignores the compensation scale.
-    private static float GetMeasurementFontScale(Text textInstance) =>
-        ((IWrappedText)textInstance).WordWrapFontScale;
-
-    static float GetLineXOffsetForHorizontalAlignment(Text textInstance, string stringToMeasure, float fontScale)
-    {
-        if (textInstance.HorizontalAlignment == global::RenderingLibrary.Graphics.HorizontalAlignment.Left)
-            return 0;
-
-        float measuredLineWidth = textInstance.MeasureString(stringToMeasure) * fontScale;
-        float textComponentWidth = textInstance.EffectiveWidth;
-        float gapBetweenTextAndEdge = textComponentWidth - measuredLineWidth;
-        if (textInstance.HorizontalAlignment == global::RenderingLibrary.Graphics.HorizontalAlignment.Center)
-            gapBetweenTextAndEdge /= 2.0f;
-        return gapBetweenTextAndEdge;
-    }
-
-    private static int GetIndex(Text textInstance, float cursorOffset, string? textToUse, float fontScale)
+    private static int GetIndex(IFormsText textInstance, float cursorOffset, string? textToUse)
     {
 #if RAYLIB
-        // Raylib has no per-character advance, so a character's advance is the growth of the measured prefix.
+        // Raylib has no per-character advance, so a character's advance is the growth of the drawn prefix.
         return TextHitTesting.GetIndexInLine(
             textToUse,
             cursorOffset,
             (line, start, length) =>
-                textInstance.MeasureString(line.Substring(0, start + length)) - textInstance.MeasureString(line.Substring(0, start)),
-            fontScale);
+                textInstance.MeasureDrawnString(line.Substring(0, start + length), HorizontalMeasurementStyle.Full)
+                - textInstance.MeasureDrawnString(line.Substring(0, start), HorizontalMeasurementStyle.Full));
 #else
-        return TextHitTesting.GetIndexInLine(textToUse, cursorOffset, ((IFormsText)textInstance).GetCharacterAdvance, fontScale);
+        return TextHitTesting.GetIndexInLine(textToUse, cursorOffset, textInstance.GetDrawnCharacterAdvance);
 #endif
     }
 
