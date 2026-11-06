@@ -93,7 +93,7 @@ public class NewProjectRecommendedPackagesDialogTests
     {
         NewProjectDialogViewModel viewModel = new NewProjectDialogViewModel(
             new ThemeSelectionViewModel(_formsFileService.Object, _projectState.Object),
-            _service.Object, _detector.Object, new Mock<IDialogService>().Object, new Mock<INewProjectLocationSettings>().Object)
+            _service.Object, _detector.Object, new Mock<IDialogService>().Object, new Mock<INewProjectLocationSettings>().Object, runChecksInline: true)
         {
             ProjectName = "MyGame",
             Location = Folder,
