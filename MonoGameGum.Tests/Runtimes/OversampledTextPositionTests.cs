@@ -117,7 +117,7 @@ public class OversampledTextPositionTests : BaseTestClass
             .Single(child => child.Name == "SelectionInstance" && child.Visible);
 
         (selection.GetAbsoluteLeft() - contained.GetAbsoluteLeft()).ShouldBe(10 * drawnAdvance * compensation, tolerance: 0.001f);
-        selection.GetAbsoluteWidth().ShouldBe(20 * drawnAdvance * compensation, tolerance: 0.001f);
+        selection.AbsoluteWidth.ShouldBe(20 * drawnAdvance * compensation, tolerance: 0.001f);
     }
 
     [Fact]
