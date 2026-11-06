@@ -43,6 +43,8 @@ public partial class ElementTreeViewManager
 
         var typeNames = gumProject.StandardElements
             .Where(standard => standard.Name != "Component")
+            .Where(standard => gumProject.SupportedStandardTypes.Count == 0 ||
+                gumProject.SupportedStandardTypes.Contains(standard.Name))
             .Select(standard => standard.Name)
             .ToList();
 

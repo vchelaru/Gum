@@ -31,6 +31,32 @@ public class ElementTreeViewManagerAddChildMenuTests : BaseTestClass
     }
 
     [Fact]
+    public void GetAvailableStandardInstanceTypes_ProjectWithSupportedTypes_ReturnsOnlyThose()
+    {
+        GumProjectSave project = new GumProjectSave();
+        project.StandardElements.Add(new StandardElementSave { Name = "Container" });
+        project.StandardElements.Add(new StandardElementSave { Name = "Rectangle" });
+        project.StandardElements.Add(new StandardElementSave { Name = "Sprite" });
+        project.SupportedStandardTypes.Add("Sprite");
+
+        var result = ElementTreeViewManager.GetAvailableStandardInstanceTypes(project);
+
+        result.ShouldBe(new[] { "Sprite" });
+    }
+
+    [Fact]
+    public void GetAvailableStandardInstanceTypes_EmptySupportedTypes_ReturnsEveryType()
+    {
+        GumProjectSave project = new GumProjectSave();
+        project.StandardElements.Add(new StandardElementSave { Name = "Container" });
+        project.StandardElements.Add(new StandardElementSave { Name = "Sprite" });
+
+        var result = ElementTreeViewManager.GetAvailableStandardInstanceTypes(project);
+
+        result.Count.ShouldBe(2);
+    }
+
+    [Fact]
     public void GetAvailableStandardInstanceTypes_ExcludesComponent()
     {
         GumProjectSave project = new GumProjectSave();

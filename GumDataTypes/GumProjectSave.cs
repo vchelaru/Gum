@@ -81,6 +81,26 @@ public class CustomCanvasSize
 }
 
 /// <summary>
+/// Whether a <see cref="VariableRule"/> shows or hides the variables its pattern matches.
+/// </summary>
+public enum VariableRuleAction
+{
+    Show,
+    Hide
+}
+
+/// <summary>
+/// One entry of <see cref="GumProjectSave.VariableRules"/>. The pattern is a variable name
+/// (<c>X</c>) or a standard type and variable name (<c>Sprite.X</c>); <c>*</c> matches any run of characters.
+/// </summary>
+public class VariableRule
+{
+    public string Pattern { get; set; } = string.Empty;
+
+    public VariableRuleAction Action { get; set; }
+}
+
+/// <summary>
 /// The character ranges baked for one font family, or for every family without an entry of its own
 /// when <see cref="FontFamily"/> is null or empty. See <see cref="GumProjectSave.FontRangeEntries"/>.
 /// </summary>
@@ -475,6 +495,27 @@ public class GumProjectSave
 
     public List<string> FavoriteComponents { get; set; } = new List<string>();
     public bool ShouldSerializeFavoriteComponents() => FavoriteComponents.Count > 0;
+
+    /// <summary>
+    /// The standard element types the target engine supports. Empty means every type. The tool offers
+    /// only these when adding an instance; instances of other types already in a file still load.
+    /// </summary>
+    public List<string> SupportedStandardTypes { get; set; } = new List<string>();
+    public bool ShouldSerializeSupportedStandardTypes() => SupportedStandardTypes.Count > 0;
+
+    /// <summary>
+    /// When true, a standard variable no rule shows is hidden in the Variables tab. Hidden variables keep
+    /// their stored values.
+    /// </summary>
+    public bool HideVariablesByDefault { get; set; }
+    public bool ShouldSerializeHideVariablesByDefault() => HideVariablesByDefault;
+
+    /// <summary>
+    /// Ordered show/hide rules for standard variables; the last rule matching a variable wins,
+    /// and <see cref="HideVariablesByDefault"/> decides when none matches.
+    /// </summary>
+    public List<VariableRule> VariableRules { get; set; } = new List<VariableRule>();
+    public bool ShouldSerializeVariableRules() => VariableRules.Count > 0;
 
     /// <summary>
     /// Names of the Screens and Components <c>gumcli pack --shake</c> left out of a bundle because

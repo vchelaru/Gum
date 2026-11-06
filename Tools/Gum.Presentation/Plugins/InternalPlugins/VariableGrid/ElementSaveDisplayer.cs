@@ -72,6 +72,7 @@ public class ElementSaveDisplayer
     private readonly IClipboardService _clipboardService;
     private readonly IProjectState _projectState;
     private readonly ShapeVariableVersionGate _shapeVariableVersionGate;
+    private readonly ProjectVariableRuleMatcher _projectVariableRuleMatcher = new ProjectVariableRuleMatcher();
 
     #endregion
 
@@ -1051,6 +1052,46 @@ public class ElementSaveDisplayer
         }
     }
 
+    // Variables the tool itself needs; the project's variable rules never hide them.
+    private static readonly HashSet<string> RuleExemptVariableNames = new HashSet<string>
+    {
+        "Name", "BaseType", "Parent", "Locked", "DefaultChildContainer", "State",
+    };
+
+    private bool GetIfHiddenByProjectRules(ElementSave elementSave, InstanceSave? instanceSave, VariableSave defaultVariable)
+    {
+        GumProjectSave? project = ObjectFinder.Self.GumProjectSave;
+        if (project == null || (!project.HideVariablesByDefault && project.VariableRules.Count == 0))
+        {
+            return false;
+        }
+
+        string rootName = defaultVariable.GetRootName();
+        if (defaultVariable.IsCustomVariable ||
+            RuleExemptVariableNames.Contains(rootName) ||
+            defaultVariable.IsState(elementSave, out _, out _))
+        {
+            return false;
+        }
+
+        StandardElementSave? rootStandard;
+        if (instanceSave != null)
+        {
+            rootStandard = ObjectFinder.Self.GetRootStandardElementSave(instanceSave);
+        }
+        else if (!string.IsNullOrEmpty(defaultVariable.SourceObject) &&
+            elementSave.GetInstance(defaultVariable.SourceObject) is InstanceSave sourceInstance)
+        {
+            rootStandard = ObjectFinder.Self.GetRootStandardElementSave(sourceInstance);
+        }
+        else
+        {
+            rootStandard = ObjectFinder.Self.GetRootStandardElementSave(elementSave);
+        }
+
+        return _projectVariableRuleMatcher.IsHidden(project, rootStandard?.Name, rootName);
+    }
+
     private PropertyData? CreatePropertyData(ElementSave elementSave, InstanceSave? instanceSave,
         AmountToDisplay amountToDisplay, VariableSave defaultVariable, bool forceReadOnly, bool isAssignedByReference, string? subtext, HashSet<string> addedNames, string? referenceSource = null)
     {
@@ -1089,6 +1130,11 @@ public class ElementSaveDisplayer
                     shouldInclude = false;
                 }
             }
+        }
+
+        if (shouldInclude && GetIfHiddenByProjectRules(elementSave, instanceSave, defaultVariable))
+        {
+            shouldInclude = false;
         }
 
         if (shouldInclude && instanceSave != null)
