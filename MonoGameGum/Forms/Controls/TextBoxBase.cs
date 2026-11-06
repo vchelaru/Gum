@@ -2316,29 +2316,29 @@ public abstract class TextBoxBase :
     }
 
     /// <summary>
-    /// After a vertical scroll, prevents the bottom of the (possibly shorter,
-    /// post-delete) text from leaving an empty band at the bottom of the
-    /// container while <see cref="textComponent"/>'s Y is still negative.
-    /// Mirrors how the single-line horizontal branch self-corrects when the
-    /// caret moves back toward the start.
+    /// Keeps the vertical scroll between the text's resting place (scrolled all the way up) and the
+    /// point where the last line's bottom meets the container's bottom, so neither the post-delete
+    /// shorter text leaves an empty band at the bottom nor a caret near the top leaves the text
+    /// shifted down from where it rests. Mirrors how the single-line horizontal branch self-corrects.
     /// </summary>
     private void ClampVerticalScrollToContent()
     {
-        if (this.textComponent.Y >= 0)
-        {
-            return;
-        }
+        float scroll = this.textComponent.Y - _textRestingY;
 
         // textComponent.AbsoluteHeight reflects layout-computed size, which
         // in Multi state is bounded by the parent (HeightUnits=RelativeToParent).
-        // For the clamp we want the actual content height — line count × line
-        // height — so we don't over-clamp and undo a legitimate scroll.
+        // For the clamp we want the actual content height (line count x line
+        // height) so we don't over-clamp and undo a legitimate scroll.
         var lineCount = coreTextObject.WrappedText?.Count ?? 0;
         float contentHeight = lineCount * EffectiveLineHeightInPixels;
         float containerHeight = caretComponent.EffectiveParentGue?.AbsoluteHeight ?? 0;
-        float maxScrollUp = System.Math.Max(0f, contentHeight - containerHeight);
-        float clamped = System.Math.Max(this.textComponent.Y, -maxScrollUp);
-        float delta = clamped - this.textComponent.Y;
+        // The text rests below the container's top by the visual's inset (the V3 text sits 2 units
+        // down), and that inset is part of how far the content reaches into the container.
+        float containerTop = caretComponent.EffectiveParentGue?.GetAbsoluteTop() ?? 0;
+        float restingInset = this.textComponent.GetAbsoluteTop() - scroll - containerTop;
+        float maxScrollUp = System.Math.Max(0f, contentHeight + restingInset - containerHeight);
+        float clamped = System.Math.Clamp(scroll, -maxScrollUp, 0f);
+        float delta = clamped - scroll;
 
         if (delta != 0f)
         {
@@ -2346,7 +2346,6 @@ public abstract class TextBoxBase :
             this.caretComponent.Y += delta;
         }
     }
-
     /// <summary>
     /// Shifts <see cref="textComponent"/> and <see cref="caretComponent"/> along
     /// <paramref name="axis"/> so the caret stays just inside the parent's bounds
