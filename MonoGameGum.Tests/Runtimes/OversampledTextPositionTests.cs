@@ -255,9 +255,33 @@ public class OversampledTextPositionTests : BaseTestClass
         drawn[firstRunGlyphs].ScreenBottom.ShouldBe(drawn[0].ScreenBottom, 0.001, "both runs share a baseline");
     }
 
+    // Only glyphs drawn at exactly one screen pixel per atlas pixel snap as a block. Any other scale keeps drawing
+    // each glyph on its own, which is what FreeFloating does, so the two must match draw for draw.
+    [Theory]
+    [InlineData(3, 1.005f / 3, HorizontalAlignment.Left)]
+    [InlineData(3, 0.335f, HorizontalAlignment.Center)]
+    [InlineData(5, 1.005f / 5, HorizontalAlignment.Right)]
+    [InlineData(1, 2f, HorizontalAlignment.Center)]
+    [InlineData(1, 2f, HorizontalAlignment.Right)]
+    [InlineData(1, 3f, HorizontalAlignment.Center)]
+    [InlineData(1, 3f, HorizontalAlignment.Right)]
+    [InlineData(2, 1.5f, HorizontalAlignment.Center)]
+    public void DrawTextLines_AtAScaleThatIsNotOneAtlasPixelPerScreenPixel_DrawsEachGlyphOnItsOwn(
+        int zoom, float scale, HorizontalAlignment alignment)
+    {
+        List<string> lines = new() { "Statistics Window", "Second line of text" };
+        foreach (float origin in new[] { 10f, 10.5f, 10.17f, 10.33f })
+        {
+            List<DrawnGlyph> snapMode = DrawOversampled(lines, zoom, origin, alignment, scale, TextRenderingPositionMode.SnapToPixel);
+            List<DrawnGlyph> freeFloating = DrawOversampled(lines, zoom, origin, alignment, scale, TextRenderingPositionMode.FreeFloating);
+            snapMode.ShouldBe(freeFloating, $"origin {origin}");
+        }
+    }
+
     // Draws through the real BitmapFont.DrawTextLines and SpriteRenderer.Draw at an oversampled scale, recording
     // each glyph in screen pixels.
-    static List<DrawnGlyph> DrawOversampled(List<string> lines, int zoom, float originWorld, HorizontalAlignment alignment)
+    static List<DrawnGlyph> DrawOversampled(List<string> lines, int zoom, float originWorld, HorizontalAlignment alignment,
+        float? scaleOverride = null, TextRenderingPositionMode? mode = null)
     {
         BitmapFont font = CreateVariedGlyphFont();
         SpriteRenderer spriteRenderer = new() { CurrentZoom = zoom };
@@ -272,9 +296,10 @@ public class OversampledTextPositionTests : BaseTestClass
 
         List<int> widths = new();
         font.GetRequiredWidthAndHeight(lines, out int requiredWidth, out int _, widths);
-        float scale = 12f / (12f * zoom);
+        float scale = scaleOverride ?? 12f / (12f * zoom);
         font.DrawTextLines(lines, alignment, objectRequestingChange: new object(), requiredWidth, widths, spriteRenderer,
-            System.Drawing.Color.White, originWorld, originWorld, scaleX: scale, scaleY: scale);
+            System.Drawing.Color.White, originWorld, originWorld, scaleX: scale, scaleY: scale,
+            overrideTextRenderingPositionMode: mode);
         return drawn;
     }
 
