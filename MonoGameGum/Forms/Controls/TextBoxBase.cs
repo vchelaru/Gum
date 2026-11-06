@@ -2684,25 +2684,15 @@ public abstract class TextBoxBase :
     // from IFormsText.MeasureDrawnString and GetDrawnCharacterAdvance instead (#7675).
     private float MeasurementFontScale => coreTextObject.WordWrapFontScale;
 
-    // The full per-line vertical step used by the renderer:
-    // rawLineHeight × FontScale × LineHeightMultiplier. Used for inter-line
-    // stepping (hit-testing, arrow-key vertical movement, content-height
-    // clamps, and the line-to-line component of caret/selection positioning).
-    // IText is fully qualified here (and below) because this file compiles
-    // under multiple backends: under XNALIKE the using directives include
-    // RenderingLibrary.Graphics, but under the #else branch (Raylib/Sokol)
-    // they do not — so the unqualified IText would not resolve.
-    private float EffectiveLineHeightInPixels =>
-        coreTextObject.LineHeightInPixels
-        * MeasurementFontScale
-        * coreTextObject.LineHeightMultiplier;
+    // The full per-line vertical step the Text draws with, used for inter-line stepping (hit-testing,
+    // arrow-key vertical movement, content-height clamps, and the line-to-line component of
+    // caret/selection positioning). See IFormsText.DrawnLineStep (#7705).
+    private float EffectiveLineHeightInPixels => coreTextObject.DrawnLineStep;
 
-    // The height of one rendered glyph row (rawLineHeight × FontScale), with
-    // no LineHeightMultiplier. This is the right value for "half a line"
-    // offsets that map to the actual ink — e.g. the caret on line 0, whose
-    // position must NOT change when only the multiplier changes.
-    private float ScaledLineHeightInPixels =>
-        coreTextObject.LineHeightInPixels * MeasurementFontScale;
+    // The height of one rendered glyph row, with no LineHeightMultiplier. This is the right value for
+    // "half a line" offsets that map to the actual ink, e.g. the caret on line 0, whose position must
+    // NOT change when only the multiplier changes.
+    private float ScaledLineHeightInPixels => coreTextObject.DrawnGlyphRowHeight;
 
     // The drawn width of value through its last character's advance: where a caret after it is drawn.
     private float GetDrawnWidth(string value) =>

@@ -44,7 +44,7 @@ public static class TextExtensions
 
         IFormsText formsText = textInstance;
         // Lines step by the measured line height, as they are drawn (#6814).
-        var lineHeight = textInstance.LineHeightInPixels * formsText.WordWrapFontScale * textInstance.LineHeightMultiplier;
+        var lineHeight = formsText.DrawnLineStep;
         var topOfText = textInstance.GetAbsoluteTop() + TextHitTesting.GetVerticalAlignmentOffset(
             textInstance.VerticalAlignment, textInstance.EffectiveHeight, textInstance.WrappedTextHeight);
 
