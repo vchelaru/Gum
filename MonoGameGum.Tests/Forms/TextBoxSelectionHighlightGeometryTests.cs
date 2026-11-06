@@ -52,7 +52,7 @@ public class TextBoxSelectionHighlightGeometryTests : BeginnerDriverTestBase
         Highlights(textBox).Count.ShouldBe(2);
         foreach (GraphicalUiElement h in Highlights(textBox))
         {
-            h.GetAbsoluteHeight().ShouldBe(pitch, tolerance: 1f);
+            h.AbsoluteHeight.ShouldBe(pitch, tolerance: 1f);
         }
     }
 
@@ -64,7 +64,7 @@ public class TextBoxSelectionHighlightGeometryTests : BeginnerDriverTestBase
         textBox.SelectionLength = 5;
         Driver.Step(1);
         float expected = Core(textBox).MeasureDrawnString("hello", HorizontalMeasurementStyle.Full);
-        Highlights(textBox).Single().GetAbsoluteWidth().ShouldBe(expected, tolerance: 0.01f);
+        Highlights(textBox).Single().AbsoluteWidth.ShouldBe(expected, tolerance: 0.01f);
     }
 
     [Fact]
@@ -78,7 +78,7 @@ public class TextBoxSelectionHighlightGeometryTests : BeginnerDriverTestBase
         GraphicalUiElement h = Highlights(textBox).Single();
         float textLeft = V(textBox).TextInstance.AbsoluteLeft;
         h.AbsoluteLeft.ShouldBe(textLeft, tolerance: 1.5f);
-        (h.AbsoluteLeft + h.GetAbsoluteWidth()).ShouldBe(V(textBox).CaretInstance.AbsoluteLeft, tolerance: 2f);
+        (h.AbsoluteLeft + h.AbsoluteWidth).ShouldBe(V(textBox).CaretInstance.AbsoluteLeft, tolerance: 2f);
     }
 
     [Fact]
@@ -90,7 +90,7 @@ public class TextBoxSelectionHighlightGeometryTests : BeginnerDriverTestBase
         Driver.Step(2);
         Text core = Core(textBox);
         float textBottom = V(textBox).TextInstance.AbsoluteTop + core.WrappedTextHeight;
-        float clipBottom = V(textBox).ClipContainer.AbsoluteTop + V(textBox).ClipContainer.GetAbsoluteHeight();
+        float clipBottom = V(textBox).ClipContainer.AbsoluteTop + V(textBox).ClipContainer.AbsoluteHeight;
         textBottom.ShouldBeLessThanOrEqualTo(clipBottom + 0.5f);
     }
 
