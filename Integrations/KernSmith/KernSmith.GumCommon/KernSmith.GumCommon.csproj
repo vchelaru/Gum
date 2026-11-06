@@ -41,9 +41,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="KernSmith" Version="0.24.0" />
-    <PackageReference Include="KernSmith.Rasterizers.FreeType" Version="0.24.0" Condition="!$(TargetFramework.Contains('ios')) AND !$(TargetFramework.Contains('android'))" />
-    <PackageReference Include="KernSmith.Rasterizers.StbTrueType" Version="0.24.0" Condition="$(TargetFramework.Contains('ios')) OR $(TargetFramework.Contains('android'))" />
+    <PackageReference Include="KernSmith" Version="0.27.0" />
+    <PackageReference Include="KernSmith.Rasterizers.FreeType" Version="0.27.0" Condition="!$(TargetFramework.Contains('ios')) AND !$(TargetFramework.Contains('android'))" />
+    <PackageReference Include="KernSmith.Rasterizers.StbTrueType" Version="0.27.0" Condition="$(TargetFramework.Contains('ios')) OR $(TargetFramework.Contains('android'))" />
   </ItemGroup>
 
   <ItemGroup>
