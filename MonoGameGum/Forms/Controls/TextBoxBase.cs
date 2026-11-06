@@ -1064,6 +1064,13 @@ public abstract class TextBoxBase :
         }
 
 
+        // Without Shift, Home and End collapse a selection even when the caret is already at the
+        // line's edge, like Left and Right do.
+        if (oldIndex == caretIndex && !isShiftDown && key is Keys.Home or Keys.End && selectionLength != 0)
+        {
+            SelectionLength = 0;
+        }
+
         if (oldIndex != caretIndex)
         {
             UpdateToCaretChanged(oldIndex, caretIndex, isShiftDown);
