@@ -133,19 +133,23 @@ internal static class TextHitTesting
     /// <param name="lines">The wrapped lines, as drawn.</param>
     /// <param name="cursorXOffset">The point's x offset from the text's left edge.</param>
     /// <param name="cursorYOffset">The point's y offset from the top of the first line.</param>
-    /// <param name="lineHeight">The distance between the tops of consecutive lines.</param>
+    /// <param name="getLineTop">The distance from the top of the first line to the top of a line.</param>
     /// <param name="getLineXOffset">The horizontal alignment offset of a line.</param>
     /// <param name="getIndexInLine">The index in a line nearest an x offset from the line's start.</param>
     public static int GetIndexInWrappedLines(
         List<string> lines,
         float cursorXOffset,
         float cursorYOffset,
-        float lineHeight,
+        Func<int, float> getLineTop,
         Func<string, float> getLineXOffset,
         Func<float, string, int> getIndexInLine)
     {
         int index = 0;
-        int lineOn = System.Math.Max(0, System.Math.Min((int)(cursorYOffset / lineHeight), lines.Count - 1));
+        int lineOn = 0;
+        while (lineOn < lines.Count - 1 && getLineTop(lineOn + 1) <= cursorYOffset)
+        {
+            lineOn++;
+        }
 
         if (lineOn < lines.Count)
         {

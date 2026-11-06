@@ -842,14 +842,13 @@ public abstract class TextBoxBase :
             return GetIndex(cursorOffset - GetLineXOffsetForHorizontalAlignment(DisplayedText ?? string.Empty), DisplayedText);
         }
 
-        var lineHeight = EffectiveLineHeightInPixels;
         var topOfText = this.textComponent.GetAbsoluteTop() + VerticalAlignmentOffset;
 
         return WrappedToTextIndex(DisplayedText, TextHitTesting.GetIndexInWrappedLines(
             coreTextObject.WrappedText,
             cursorOffset,
             screenY - topOfText,
-            lineHeight,
+            coreTextObject.GetDrawnLineTop,
             GetLineXOffsetForHorizontalAlignment,
             GetIndex));
     }
@@ -1117,12 +1116,13 @@ public abstract class TextBoxBase :
                 caretXOffset = GetDrawnWidth(beforeCaret)
                     + GetLineXOffsetForHorizontalAlignment(line);
             }
-            var lineHeight = EffectiveLineHeightInPixels;
+            float targetTop = coreTextObject.GetDrawnLineTop(targetLine);
+            float targetMiddle = (targetTop + coreTextObject.GetDrawnLineTop(targetLine + 1)) / 2.0f;
             CaretIndex = WrappedToTextIndex(DisplayedText, TextHitTesting.GetIndexInWrappedLines(
                 lines,
                 caretXOffset,
-                (targetLine + 0.5f) * lineHeight,
-                lineHeight,
+                targetMiddle,
+                coreTextObject.GetDrawnLineTop,
                 GetLineXOffsetForHorizontalAlignment,
                 GetIndex));
         }
@@ -2349,7 +2349,7 @@ public abstract class TextBoxBase :
         // For the clamp we want the actual content height (line count x line
         // height) so we don't over-clamp and undo a legitimate scroll.
         var lineCount = coreTextObject.WrappedText?.Count ?? 0;
-        float contentHeight = lineCount * EffectiveLineHeightInPixels;
+        float contentHeight = coreTextObject.GetDrawnLineTop(lineCount);
         float containerHeight = caretComponent.EffectiveParentGue?.AbsoluteHeight ?? 0;
         // The text rests below the container's top by the visual's inset (the V3 text sits 2 units
         // down), and that inset is part of how far the content reaches into the container.
@@ -2548,7 +2548,7 @@ public abstract class TextBoxBase :
     {
         var adjusted = centerOfLineY;
         // Half the *rendered glyph row* height, not the full inter-line step. The multiplier only
-        // inflates the spacing between lines, so using EffectiveLineHeightInPixels here would push
+        // inflates the spacing between lines, so using the drawn line step here would push
         // the edge a multiplier-worth away from the actual glyph row. The target is taken to be
         // about one glyph row tall, so its top (or bottom) edge sits on the row's edge.
         if (target.YOrigin == global::RenderingLibrary.Graphics.VerticalAlignment.Top)
@@ -2684,25 +2684,10 @@ public abstract class TextBoxBase :
     // from IFormsText.MeasureDrawnString and GetDrawnCharacterAdvance instead (#7675).
     private float MeasurementFontScale => coreTextObject.WordWrapFontScale;
 
-    // The full per-line vertical step used by the renderer:
-    // rawLineHeight × FontScale × LineHeightMultiplier. Used for inter-line
-    // stepping (hit-testing, arrow-key vertical movement, content-height
-    // clamps, and the line-to-line component of caret/selection positioning).
-    // IText is fully qualified here (and below) because this file compiles
-    // under multiple backends: under XNALIKE the using directives include
-    // RenderingLibrary.Graphics, but under the #else branch (Raylib/Sokol)
-    // they do not — so the unqualified IText would not resolve.
-    private float EffectiveLineHeightInPixels =>
-        coreTextObject.LineHeightInPixels
-        * MeasurementFontScale
-        * coreTextObject.LineHeightMultiplier;
-
-    // The height of one rendered glyph row (rawLineHeight × FontScale), with
-    // no LineHeightMultiplier. This is the right value for "half a line"
-    // offsets that map to the actual ink — e.g. the caret on line 0, whose
-    // position must NOT change when only the multiplier changes.
-    private float ScaledLineHeightInPixels =>
-        coreTextObject.LineHeightInPixels * MeasurementFontScale;
+    // The height of one rendered glyph row, with no LineHeightMultiplier. This is the right value for
+    // "half a line" offsets that map to the actual ink, e.g. the caret on line 0, whose position must
+    // NOT change when only the multiplier changes.
+    private float ScaledLineHeightInPixels => coreTextObject.DrawnGlyphRowHeight;
 
     // The drawn width of value through its last character's advance: where a caret after it is drawn.
     private float GetDrawnWidth(string value) =>
@@ -2710,12 +2695,11 @@ public abstract class TextBoxBase :
 
     private float GetCenterOfYForLinePixelsFromSmall(int lineNumber)
     {
-        var lineHeight = EffectiveLineHeightInPixels;
         var glyphHalfHeight = ScaledLineHeightInPixels / 2.0f;
 
-        // The glyph top of line N is the drawn block's top plus N*lineHeight; its center is that
-        // plus glyphHalfHeight.
-        float offset = VerticalAlignmentOffset + lineNumber * lineHeight + glyphHalfHeight;
+        // The glyph top of line N is the drawn block's top plus the drawn top of line N (#7705); its
+        // center is that plus glyphHalfHeight.
+        float offset = VerticalAlignmentOffset + coreTextObject.GetDrawnLineTop(lineNumber) + glyphHalfHeight;
         var caretY = UnrotatedTextTop + offset;
         return caretY;
     }

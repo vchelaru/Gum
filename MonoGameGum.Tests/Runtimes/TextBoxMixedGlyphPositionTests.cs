@@ -24,7 +24,7 @@ public class TextBoxMixedGlyphPositionTests : BaseTestClass
     internal const string Content = "iWm mWi imW Wi";
     const float Compensation = 18f / 32.4f;
 
-    static readonly Dictionary<char, int> MeasuredAdvances = new() { ['i'] = 6, ['W'] = 17, ['m'] = 14, [' '] = 5 };
+    internal static readonly Dictionary<char, int> MeasuredAdvances = new() { ['i'] = 6, ['W'] = 17, ['m'] = 14, [' '] = 5 };
     static readonly Dictionary<char, int> DrawnAdvances = new() { ['i'] = 10, ['W'] = 30, ['m'] = 24, [' '] = 9 };
 
     public static IEnumerable<object[]> Cases()
@@ -129,7 +129,7 @@ public class TextBoxMixedGlyphPositionTests : BaseTestClass
     }
 
     // A font whose glyphs advance a whole number of pixels, as a rasterizer gives at one size.
-    static BitmapFont CreateFont(Dictionary<char, int> advances)
+    internal static BitmapFont CreateFont(Dictionary<char, int> advances)
     {
         int lineHeight = advances['W'];
         string chars = string.Concat(advances.OrderBy(pair => pair.Key).Select(pair =>

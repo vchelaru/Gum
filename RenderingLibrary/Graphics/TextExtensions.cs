@@ -43,8 +43,6 @@ public static class TextExtensions
         TextHitTesting.UnrotatePoint(textInstance, ref screenX, ref screenY);
 
         IFormsText formsText = textInstance;
-        // Lines step by the measured line height, as they are drawn (#6814).
-        var lineHeight = textInstance.LineHeightInPixels * formsText.WordWrapFontScale * textInstance.LineHeightMultiplier;
         var topOfText = textInstance.GetAbsoluteTop() + TextHitTesting.GetVerticalAlignmentOffset(
             textInstance.VerticalAlignment, textInstance.EffectiveHeight, textInstance.WrappedTextHeight);
 
@@ -52,7 +50,7 @@ public static class TextExtensions
             textInstance.WrappedText,
             screenX - textInstance.GetAbsoluteLeft(),
             screenY - topOfText,
-            lineHeight,
+            formsText.GetDrawnLineTop,
             lineText => TextHitTesting.GetHorizontalAlignmentOffset(textInstance.HorizontalAlignment, textInstance.EffectiveWidth,
                 formsText.MeasureDrawnString(lineText, HorizontalMeasurementStyle.TrimRight)),
             (cursorOffset, lineText) => GetIndex(formsText, cursorOffset, lineText));
