@@ -117,8 +117,7 @@ public class OversampledTextPositionTests : BaseTestClass
             .Single(child => child.Name == "SelectionInstance" && child.Visible);
 
         (selection.GetAbsoluteLeft() - contained.GetAbsoluteLeft()).ShouldBe(10 * drawnAdvance * compensation, tolerance: 0.001f);
-        // A single-line selection is drawn one unit wider than the characters it covers.
-        selection.GetAbsoluteWidth().ShouldBe(20 * drawnAdvance * compensation + 1, tolerance: 0.001f);
+        selection.GetAbsoluteWidth().ShouldBe(20 * drawnAdvance * compensation, tolerance: 0.001f);
     }
 
     [Fact]

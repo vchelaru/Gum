@@ -839,7 +839,7 @@ public abstract class TextBoxBase :
 
         if (IsRenderedAsSingleLine)
         {
-            return GetIndex(cursorOffset, DisplayedText);
+            return GetIndex(cursorOffset - GetLineXOffsetForHorizontalAlignment(DisplayedText ?? string.Empty), DisplayedText);
         }
 
         var lineHeight = EffectiveLineHeightInPixels;
@@ -2207,7 +2207,6 @@ public abstract class TextBoxBase :
     private void UpdateSelectionStartEnds(string displayedText, GraphicalUiElement selectionInstance)
     {
         selectionStartEnds.Clear();
-        var substring = displayedText.Substring(0, selectionStart);
 
         if (!IsRenderedAsSingleLine)
         {
@@ -2267,14 +2266,14 @@ public abstract class TextBoxBase :
         }
         else
         {
+            // The same placement the caret uses, so both ends honor the horizontal alignment.
             var selectionPosition = new SelectionPosition();
-            var firstMeasure = GetDrawnWidth(substring);
-            substring = displayedText.Substring(0, selectionStart + selectionLength);
+            float startX = GetXCaretPositionForLineRelativeToTextParent(displayedText, selectionStart);
+            float endX = GetXCaretPositionForLineRelativeToTextParent(displayedText, selectionStart + selectionLength);
 
-            selectionPosition.XStart = this.textComponent.X + firstMeasure;
+            selectionPosition.XStart = startX;
             selectionPosition.Y = this.textComponent.Y;
-            selectionPosition.Width = 1 +
-                GetDrawnWidth(substring) - firstMeasure;
+            selectionPosition.Width = endX - startX;
 
             selectionStartEnds.Add(selectionPosition);
         }
