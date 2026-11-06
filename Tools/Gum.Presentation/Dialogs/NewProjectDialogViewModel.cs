@@ -1339,9 +1339,15 @@ public class NewProjectDialogViewModel : DialogViewModel
         ChecksRefresh = RefreshChecksAsync(version, BuildRequest(), ResolvedFolder.ParentFolder, EffectiveName);
     }
 
+    /// <summary>Runs the folder checks on the calling thread. For tests, whose synchronization context resumes awaits on pool threads (#7710).</summary>
+    public bool RunChecksInline { get; set; }
+
     private async Task RefreshChecksAsync(int version, NewProjectRequest request, string folder, string name)
     {
-        (string? existing, bool notEmpty, bool exists, string? refusal) = await Task.Run(() =>
+        // In the app the checks run on the pool and the continuation returns to the UI thread. Without a UI thread
+        // (tests) the continuation resumes on a pool thread and would mutate this view model concurrently with the
+        // caller, so RunChecksInline runs the checks on the calling thread instead.
+        Func<(string?, bool, bool, string?)> runChecks = () =>
         {
             string? existingProject = null;
             bool targetNotEmpty = false;
@@ -1370,7 +1376,11 @@ public class NewProjectDialogViewModel : DialogViewModel
                 // A location that cannot be read has nothing to warn about.
             }
             return (existingProject, targetNotEmpty, targetExists, refused);
-        });
+        };
+
+        (string? existing, bool notEmpty, bool exists, string? refusal) = RunChecksInline
+            ? runChecks()
+            : await Task.Run(runChecks);
 
         if (version != Volatile.Read(ref _refreshVersion))
         {

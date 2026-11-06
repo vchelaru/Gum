@@ -43,6 +43,7 @@ public class NewProjectPackageChannelDialogTests
             ProjectName = "MyGame",
             Location = Folder,
             IncludeCodeProject = true,
+            RunChecksInline = true,
         };
         configure?.Invoke(viewModel);
         return viewModel;

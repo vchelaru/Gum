@@ -96,6 +96,7 @@ public class NewProjectDemoScreenDialogTests
             IncludeCodeProject = true,
             IsIncludeDemoScreenGum = true,
             IncludeRecommendedPackages = false,
+            RunChecksInline = true,
         };
         configure?.Invoke(viewModel);
         return viewModel;
@@ -206,6 +207,25 @@ public class NewProjectDemoScreenDialogTests
         viewModel.IsIncludeFormsControls = false;
 
         raised.ShouldContain(nameof(NewProjectDialogViewModel.IsGenerateCodeEnabled));
+    }
+
+    [Fact]
+    public void Checks_RunOnCallingThread_WhenRunChecksInlineIsSet()
+    {
+        // A pool-thread continuation would mutate the view model concurrently with the caller (#7710).
+        int checkThreadId = -1;
+        Mock<IExistingCodeProjectDetector> detector = new();
+        detector.Setup(d => d.TargetExists(It.IsAny<string>(), It.IsAny<string>()))
+            .Callback(() => checkThreadId = Environment.CurrentManagedThreadId);
+        NewProjectDialogViewModel viewModel = new NewProjectDialogViewModel(
+            new ThemeSelectionViewModel(_formsFileService.Object, new Mock<IProjectState>().Object),
+            _service.Object, detector.Object, new Mock<IDialogService>().Object,
+            new Mock<INewProjectLocationSettings>().Object) { RunChecksInline = true };
+
+        viewModel.ProjectName = "Other";
+
+        viewModel.ChecksRefresh.IsCompleted.ShouldBeTrue();
+        checkThreadId.ShouldBe(Environment.CurrentManagedThreadId);
     }
 
     [Fact]
