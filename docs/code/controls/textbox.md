@@ -36,6 +36,7 @@ TextBox supports reading characters from the keyboard. It supports:
 * Regular character typing - inserts a character the the caret position (`CaretIndex`)
 * Backspace - removes a character at the index before the caret
 * Delete - removes a character at the caret index
+* CTRL+Backspace and CTRL+Delete - remove from the caret to the start of the previous or next word
 * Enter (if multi-line) - inserts the newline character (`'\n'`)
 * Emoji - an emoji counts as one character for the caret, Backspace, Delete, and clicking, even though it is stored as two `char` values in `Text`
 * Keyboard repeat - holding Backspace, Delete, or an arrow key repeats it after `RepeatDelay`, then every `RepeatRate`
