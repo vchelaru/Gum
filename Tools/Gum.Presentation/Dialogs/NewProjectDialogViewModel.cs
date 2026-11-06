@@ -106,12 +106,25 @@ public class NewProjectDialogViewModel : DialogViewModel
         IExistingCodeProjectDetector detector,
         IDialogService dialogService,
         INewProjectLocationSettings locationSettings)
+        : this(themeSelection, service, detector, dialogService, locationSettings, runChecksInline: false)
+    {
+    }
+
+    /// <summary>Test seam: with runChecksInline the folder checks run on the calling thread from the first refresh, because a test synchronization context would resume them on a pool thread and mutate this view model concurrently with the test (#7710).</summary>
+    internal NewProjectDialogViewModel(
+        ThemeSelectionViewModel themeSelection,
+        INewProjectService service,
+        IExistingCodeProjectDetector detector,
+        IDialogService dialogService,
+        INewProjectLocationSettings locationSettings,
+        bool runChecksInline)
     {
         ThemeSelection = themeSelection;
         _service = service;
         _detector = detector;
         _dialogService = dialogService;
         _locationSettings = locationSettings;
+        _runChecksInline = runChecksInline;
 
         Platforms = NewProjectPlatforms.MainNames
             .Select(entry => new NewProjectPlatformOption(entry.Name, GetPlatformLabel(entry.Name)))
@@ -1339,9 +1352,14 @@ public class NewProjectDialogViewModel : DialogViewModel
         ChecksRefresh = RefreshChecksAsync(version, BuildRequest(), ResolvedFolder.ParentFolder, EffectiveName);
     }
 
+    private readonly bool _runChecksInline;
+
     private async Task RefreshChecksAsync(int version, NewProjectRequest request, string folder, string name)
     {
-        (string? existing, bool notEmpty, bool exists, string? refusal) = await Task.Run(() =>
+        // In the app the checks run on the pool and the continuation returns to the UI thread. Without a UI thread
+        // (tests) the continuation resumes on a pool thread and would mutate this view model concurrently with the
+        // caller, so runChecksInline runs the checks on the calling thread instead.
+        Func<(string?, bool, bool, string?)> runChecks = () =>
         {
             string? existingProject = null;
             bool targetNotEmpty = false;
@@ -1370,7 +1388,11 @@ public class NewProjectDialogViewModel : DialogViewModel
                 // A location that cannot be read has nothing to warn about.
             }
             return (existingProject, targetNotEmpty, targetExists, refused);
-        });
+        };
+
+        (string? existing, bool notEmpty, bool exists, string? refusal) = _runChecksInline
+            ? runChecks()
+            : await Task.Run(runChecks);
 
         if (version != Volatile.Read(ref _refreshVersion))
         {
