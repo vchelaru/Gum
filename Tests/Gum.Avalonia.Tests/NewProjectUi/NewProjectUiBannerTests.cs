@@ -182,7 +182,7 @@ public class NewProjectUiBannerTests
     [InlineData("name")]
     [InlineData("location")]
     [InlineData("codeProject")]
-    public void FixingTheInput_ClearsTheRefusal_AndTheNotEmptyWarning_AndBringsOkBack(string fix)
+    public void FixingTheInput_ClearsTheRefusal_AndBringsOkBack(string fix)
     {
         using NewProjectUiFixture fixture = new NewProjectUiFixture();
         File.WriteAllText(Path.Combine(fixture.MakeFolder("Out", "Game"), "Game.gumj"), "keep me");
