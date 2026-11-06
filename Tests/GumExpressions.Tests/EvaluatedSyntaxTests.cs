@@ -863,6 +863,106 @@ public class EvaluatedSyntaxTests : BaseTestClass
 
     #endregion
 
+    #region Numeric sign
+
+    [Fact]
+    public void FromSyntaxNode_LeadingMinusLiteralPlusVariable_Evaluates()
+    {
+        StateSave state = BuildState(("OffsetY", 10f, "float"));
+
+        Evaluate("-150 + OffsetY", state).Value.ShouldBe(-140f);
+    }
+
+    [Fact]
+    public void FromSyntaxNode_NegatedInt_ReturnsInt()
+    {
+        Evaluate("-5", BuildState()).Value.ShouldBe(-5);
+    }
+
+    [Fact]
+    public void FromSyntaxNode_NegatedFloatLiteral_ReturnsFloat()
+    {
+        Evaluate("-1.5f", BuildState()).Value.ShouldBe(-1.5f);
+    }
+
+    [Fact]
+    public void FromSyntaxNode_NegatedDoubleLiteral_ReturnsDouble()
+    {
+        Evaluate("-2.5", BuildState()).Value.ShouldBe(-2.5);
+    }
+
+    [Fact]
+    public void FromSyntaxNode_NegatedReferencedValue_Negates()
+    {
+        StateSave state = BuildState(("Other.X", 7f, "float"));
+
+        Evaluate("-Other.X", state).Value.ShouldBe(-7f);
+    }
+
+    [Fact]
+    public void FromSyntaxNode_NegatedParenthesizedSum_Negates()
+    {
+        StateSave state = BuildState(("OffsetY", 4, "int"));
+
+        Evaluate("-(OffsetY + 1)", state).Value.ShouldBe(-5);
+    }
+
+    [Fact]
+    public void FromSyntaxNode_SubtractNegatedReference_Adds()
+    {
+        StateSave state = BuildState(("OffsetY", 4f, "float"));
+
+        Evaluate("5 - -OffsetY", state).Value.ShouldBe(9f);
+    }
+
+    [Fact]
+    public void FromSyntaxNode_DoubleNegation_ReturnsOriginal()
+    {
+        StateSave state = BuildState(("OffsetY", 4f, "float"));
+
+        Evaluate("- -OffsetY", state).Value.ShouldBe(4f);
+    }
+
+    [Fact]
+    public void FromSyntaxNode_UnaryPlusOnReferencedValue_ReturnsValue()
+    {
+        StateSave state = BuildState(("OffsetY", 4f, "float"));
+
+        Evaluate("+OffsetY", state).Value.ShouldBe(4f);
+    }
+
+    [Fact]
+    public void FromSyntaxNode_MinusOnUnresolvedReference_ReturnsNullValue()
+    {
+        Evaluate("-Missing.X", BuildState())?.Value.ShouldBeNull();
+    }
+
+    [Fact]
+    public void FromSyntaxNode_MinusOnString_ReturnsNullValue()
+    {
+        StateSave state = BuildState(("Instance.Text", "Hi", "string"));
+
+        Evaluate("-Instance.Text", state)?.Value.ShouldBeNull();
+    }
+
+    [Fact]
+    public void FromSyntaxNode_MinusOnBool_ReturnsNullValue()
+    {
+        StateSave state = BuildState(("Instance.Visible", true, "bool"));
+
+        Evaluate("-Instance.Visible", state)?.Value.ShouldBeNull();
+    }
+
+    [Fact]
+    public void FromSyntaxNode_UnsupportedPrefixOperator_ReturnsNullValue()
+    {
+        StateSave state = BuildState(("OffsetY", 4, "int"));
+
+        Evaluate("~OffsetY", state)?.Value.ShouldBeNull();
+    }
+
+    #endregion
+
     #region NullAndMissing
 
     [Fact]
