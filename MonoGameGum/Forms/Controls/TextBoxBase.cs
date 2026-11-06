@@ -979,7 +979,14 @@ public abstract class TextBoxBase :
                             // match Visual Studio behavior, and go after the last space
                             if (letterToMoveToFromCtrl != StepRight(CaretStepText, caretIndex))
                             {
-                                letterToMoveToFromCtrl = StepRight(CaretStepText, letterToMoveToFromCtrl.Value);
+                                // Past the whole run of whitespace, onto the start of the next word.
+                                int end = DisplayedText?.Length ?? 0;
+                                int next = letterToMoveToFromCtrl.Value;
+                                while (next < end && char.IsWhiteSpace(DisplayedText![next]))
+                                {
+                                    next++;
+                                }
+                                letterToMoveToFromCtrl = next;
                             }
                             else
                             {
