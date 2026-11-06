@@ -173,6 +173,8 @@ public abstract class TextBoxBase :
         get => caretIndex; 
         set
         {
+            // Like SelectionStart and SelectionLength, the caret stays within the text.
+            value = System.Math.Clamp(value, 0, DisplayedText?.Length ?? 0);
             bool valueChanged = value != caretIndex;
 
             caretIndex = value;
@@ -777,6 +779,8 @@ public abstract class TextBoxBase :
 
                 var maxIndex = System.Math.Max(currentIndex, indexPushed.Value);
 
+                // The caret follows the dragged end, so Shift+arrows then move that end.
+                CaretIndex = currentIndex;
                 SetSelectionRange(minIndex, maxIndex - minIndex);
             }
         }
@@ -835,7 +839,7 @@ public abstract class TextBoxBase :
 
         if (IsRenderedAsSingleLine)
         {
-            return GetIndex(cursorOffset, DisplayedText);
+            return GetIndex(cursorOffset - GetLineXOffsetForHorizontalAlignment(DisplayedText ?? string.Empty), DisplayedText);
         }
 
         var lineHeight = EffectiveLineHeightInPixels;
@@ -977,7 +981,14 @@ public abstract class TextBoxBase :
                             // match Visual Studio behavior, and go after the last space
                             if (letterToMoveToFromCtrl != StepRight(CaretStepText, caretIndex))
                             {
-                                letterToMoveToFromCtrl = StepRight(CaretStepText, letterToMoveToFromCtrl.Value);
+                                // Past the whole run of whitespace, onto the start of the next word.
+                                int end = DisplayedText?.Length ?? 0;
+                                int next = letterToMoveToFromCtrl.Value;
+                                while (next < end && char.IsWhiteSpace(DisplayedText![next]))
+                                {
+                                    next++;
+                                }
+                                letterToMoveToFromCtrl = next;
                             }
                             else
                             {
@@ -1054,6 +1065,13 @@ public abstract class TextBoxBase :
                 break;
         }
 
+
+        // Without Shift, Home and End collapse a selection even when the caret is already at the
+        // line's edge, like Left and Right do.
+        if (oldIndex == caretIndex && !isShiftDown && key is Keys.Home or Keys.End && selectionLength != 0)
+        {
+            SelectionLength = 0;
+        }
 
         if (oldIndex != caretIndex)
         {
@@ -2165,6 +2183,12 @@ public abstract class TextBoxBase :
                 // (selection drifts down by _selectionInstanceYOffset pixels per update).
                 selection.Y = selectionStartEnds[i].Y + _selectionInstanceYOffset;
                 selection.Width = selectionStartEnds[i].Width;
+                // A multi-line highlight covers one line, so an absolute height (the default visual's
+                // 20 fits only the default font) follows the font. A relative height is left alone.
+                if (!IsSingleLineMode && selection.HeightUnits == global::Gum.DataTypes.DimensionUnitType.Absolute)
+                {
+                    selection.Height = ScaledLineHeightInPixels;
+                }
                 selection.Visible = true;
                 if (textComponent.Rotation != 0)
                 {
@@ -2189,7 +2213,6 @@ public abstract class TextBoxBase :
     private void UpdateSelectionStartEnds(string displayedText, GraphicalUiElement selectionInstance)
     {
         selectionStartEnds.Clear();
-        var substring = displayedText.Substring(0, selectionStart);
 
         if (!IsRenderedAsSingleLine)
         {
@@ -2249,14 +2272,14 @@ public abstract class TextBoxBase :
         }
         else
         {
+            // The same placement the caret uses, so both ends honor the horizontal alignment.
             var selectionPosition = new SelectionPosition();
-            var firstMeasure = GetDrawnWidth(substring);
-            substring = displayedText.Substring(0, selectionStart + selectionLength);
+            float startX = GetXCaretPositionForLineRelativeToTextParent(displayedText, selectionStart);
+            float endX = GetXCaretPositionForLineRelativeToTextParent(displayedText, selectionStart + selectionLength);
 
-            selectionPosition.XStart = this.textComponent.X + firstMeasure;
+            selectionPosition.XStart = startX;
             selectionPosition.Y = this.textComponent.Y;
-            selectionPosition.Width = 1 +
-                GetDrawnWidth(substring) - firstMeasure;
+            selectionPosition.Width = endX - startX;
 
             selectionStartEnds.Add(selectionPosition);
         }
@@ -2274,6 +2297,19 @@ public abstract class TextBoxBase :
     private enum LayoutAxis { Horizontal, Vertical }
 
     protected void OffsetTextToKeepCaretInView()
+    {
+        float oldX = textComponent.X;
+        float oldY = textComponent.Y;
+        ScrollTextToKeepCaretInView();
+
+        // The highlight is placed from the text's position, so a scroll leaves it behind (#7686).
+        if ((textComponent.X != oldX || textComponent.Y != oldY) && selectionLength > 0)
+        {
+            UpdateToSelection();
+        }
+    }
+
+    private void ScrollTextToKeepCaretInView()
     {
         // Horizontal scrolling fires whenever wrapping is off — that covers both
         // single-line (NoWrap + !AcceptsReturn) and "MultiNoWrap" (NoWrap + AcceptsReturn),
@@ -2299,29 +2335,29 @@ public abstract class TextBoxBase :
     }
 
     /// <summary>
-    /// After a vertical scroll, prevents the bottom of the (possibly shorter,
-    /// post-delete) text from leaving an empty band at the bottom of the
-    /// container while <see cref="textComponent"/>'s Y is still negative.
-    /// Mirrors how the single-line horizontal branch self-corrects when the
-    /// caret moves back toward the start.
+    /// Keeps the vertical scroll between the text's resting place (scrolled all the way up) and the
+    /// point where the last line's bottom meets the container's bottom, so neither the post-delete
+    /// shorter text leaves an empty band at the bottom nor a caret near the top leaves the text
+    /// shifted down from where it rests. Mirrors how the single-line horizontal branch self-corrects.
     /// </summary>
     private void ClampVerticalScrollToContent()
     {
-        if (this.textComponent.Y >= 0)
-        {
-            return;
-        }
+        float scroll = this.textComponent.Y - _textRestingY;
 
         // textComponent.AbsoluteHeight reflects layout-computed size, which
         // in Multi state is bounded by the parent (HeightUnits=RelativeToParent).
-        // For the clamp we want the actual content height — line count × line
-        // height — so we don't over-clamp and undo a legitimate scroll.
+        // For the clamp we want the actual content height (line count x line
+        // height) so we don't over-clamp and undo a legitimate scroll.
         var lineCount = coreTextObject.WrappedText?.Count ?? 0;
         float contentHeight = lineCount * EffectiveLineHeightInPixels;
         float containerHeight = caretComponent.EffectiveParentGue?.AbsoluteHeight ?? 0;
-        float maxScrollUp = System.Math.Max(0f, contentHeight - containerHeight);
-        float clamped = System.Math.Max(this.textComponent.Y, -maxScrollUp);
-        float delta = clamped - this.textComponent.Y;
+        // The text rests below the container's top by the visual's inset (the V3 text sits 2 units
+        // down), and that inset is part of how far the content reaches into the container.
+        float containerTop = caretComponent.EffectiveParentGue?.GetAbsoluteTop() ?? 0;
+        float restingInset = this.textComponent.GetAbsoluteTop() - scroll - containerTop;
+        float maxScrollUp = System.Math.Max(0f, contentHeight + restingInset - containerHeight);
+        float clamped = System.Math.Clamp(scroll, -maxScrollUp, 0f);
+        float delta = clamped - scroll;
 
         if (delta != 0f)
         {
@@ -2329,7 +2365,6 @@ public abstract class TextBoxBase :
             this.caretComponent.Y += delta;
         }
     }
-
     /// <summary>
     /// Shifts <see cref="textComponent"/> and <see cref="caretComponent"/> along
     /// <paramref name="axis"/> so the caret stays just inside the parent's bounds
