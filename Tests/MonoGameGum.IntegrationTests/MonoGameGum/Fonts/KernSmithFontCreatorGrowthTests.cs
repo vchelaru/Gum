@@ -113,6 +113,71 @@ public class KernSmithFontCreatorGrowthTests : BaseTestClass
     }
 
     [Fact]
+    public void TryAddGlyphs_OnAnOutlineFont_AddsTheSameGlyphAFullGenerationDraws()
+    {
+        using MinimalGame game = new();
+        game.RunOneFrame();
+        KernSmithFontCreator creator = new(game.GraphicsDevice);
+
+        BmfcSave Make(string ranges)
+        {
+            BmfcSave save = BuildBmfcSave(ranges);
+            save.OutlineThickness = 2;
+            return save;
+        }
+
+        BitmapFont? grown = creator.TryCreateFont(Make("65"));
+        creator.TryAddGlyphs(grown!, Make("65"), "B").ShouldNotBeNull();
+        BitmapFont? full = creator.TryCreateFont(Make("65-66"));
+
+        BitmapCharacterInfo grownB = grown!.GetCharacterInfo('B');
+        BitmapCharacterInfo fullB = full!.GetCharacterInfo('B');
+        (grownB.PixelRight - grownB.PixelLeft).ShouldBe(fullB.PixelRight - fullB.PixelLeft, "because the outline widens the glyph's cell");
+        (grownB.PixelBottom - grownB.PixelTop).ShouldBe(fullB.PixelBottom - fullB.PixelTop);
+        grownB.XOffsetInPixels.ShouldBe(fullB.XOffsetInPixels);
+        ReadGlyphPixels(grown, grownB).ShouldBe(ReadGlyphPixels(full, fullB), "because a grown outline glyph keeps its outline in the alpha channel");
+    }
+
+    [Fact]
+    public void TryAddGlyphs_OnAPlainFont_AddsTheSameGlyphAFullGenerationDraws()
+    {
+        using MinimalGame game = new();
+        game.RunOneFrame();
+        KernSmithFontCreator creator = new(game.GraphicsDevice);
+
+        BitmapFont? grown = creator.TryCreateFont(BuildBmfcSave(ranges: "65"));
+        creator.TryAddGlyphs(grown!, BuildBmfcSave(ranges: "65"), "B").ShouldNotBeNull();
+        BitmapFont? full = creator.TryCreateFont(BuildBmfcSave(ranges: "65-66"));
+
+        BitmapCharacterInfo grownB = grown!.GetCharacterInfo('B');
+        BitmapCharacterInfo fullB = full!.GetCharacterInfo('B');
+        (grownB.PixelRight - grownB.PixelLeft).ShouldBe(fullB.PixelRight - fullB.PixelLeft);
+        (grownB.PixelBottom - grownB.PixelTop).ShouldBe(fullB.PixelBottom - fullB.PixelTop);
+        grownB.XOffsetInPixels.ShouldBe(fullB.XOffsetInPixels);
+        grownB.XAdvance.ShouldBe(fullB.XAdvance);
+
+        Color[] grownPixels = ReadGlyphPixels(grown, grownB);
+        Color[] fullPixels = ReadGlyphPixels(full, fullB);
+        grownPixels.ShouldBe(fullPixels, "because a plain font's grown glyph is white with coverage alpha, as in a full generation");
+    }
+
+    private static Color[] ReadGlyphPixels(BitmapFont font, BitmapCharacterInfo info)
+    {
+        Texture2D page = font.Textures[0];
+        Color[] all = new Color[page.Width * page.Height];
+        page.GetData(all);
+        List<Color> glyph = new();
+        for (int y = info.PixelTop; y < info.PixelBottom; y++)
+        {
+            for (int x = info.PixelLeft; x < info.PixelRight; x++)
+            {
+                glyph.Add(all[y * page.Width + x]);
+            }
+        }
+        return glyph.ToArray();
+    }
+
+    [Fact]
     public void TryAddGlyphs_WhenAtlasGrows_ReallocatesTextureAndKeepsExistingGlyphPixelPositions()
     {
         using MinimalGame game = new();

@@ -61,9 +61,41 @@ public static class GumFontGenerator
     {
         GuardBrowserBackend(backend);
         FontGeneratorOptions options = BuildOptionsWithBackend(bmfcSave, backend);
-        return string.IsNullOrEmpty(bmfcSave.FontFile)
-            ? BmFont.GenerateFromSystem(bmfcSave.FontName, options)
-            : BmFont.Generate(ReadFontFileBytes(bmfcSave.FontFile!), options);
+        if (string.IsNullOrEmpty(bmfcSave.FontFile))
+        {
+            return BmFont.GenerateFromSystem(bmfcSave.FontName, options);
+        }
+
+        // The resolved path is the face's identity for KernSmith's FaceCache (a no-op while the cache is
+        // off). When the cache already holds the face, KernSmith ignores the bytes, so skip reading them.
+        string facePath = ResolveFontFilePath(bmfcSave.FontFile!);
+        byte[]? fontBytes = FaceCache.Contains(facePath) ? null : ReadFontFileBytes(bmfcSave.FontFile!);
+        return BmFont.Generate(fontBytes, options, faceCacheKey: facePath);
+    }
+
+    static GumFontGenerator()
+    {
+        FaceCache.Enabled = _useFaceCache;
+    }
+
+    private static bool _useFaceCache = true;
+
+    /// <summary>
+    /// Whether generation reuses each font's parsed face and loaded rasterizer across calls (KernSmith's
+    /// <c>FaceCache</c>). On by default: these libraries are used by games, which build many fonts from a
+    /// few faces and do not change a font file while running. Set to false before generating if the host
+    /// replaces font files while it runs (an editor); turning it off also clears the cache. The Gum tool
+    /// does not use this class, so the cache is never on there. A setting that applies to the whole process,
+    /// because KernSmith's cache does.
+    /// </summary>
+    public static bool UseFaceCache
+    {
+        get => _useFaceCache;
+        set
+        {
+            _useFaceCache = value;
+            FaceCache.Enabled = value;
+        }
     }
 
     /// <summary>
@@ -195,6 +227,9 @@ public static class GumFontGenerator
         return ReadFontFileBytes(bmfcSave.FontFile!);
     }
 
+    private static string ResolveFontFilePath(string fontFile) =>
+        FileManager.IsRelative(fontFile) ? FileManager.MakeAbsolute(fontFile) : fontFile;
+
     /// <summary>
     /// Reads a font file through <see cref="FileManager.GetStreamForFile"/> instead of handing its
     /// path to KernSmith, so a font that only exists behind a host stream hook — a <c>.ttf</c>
@@ -205,7 +240,7 @@ public static class GumFontGenerator
     /// </summary>
     public static byte[] ReadFontFileBytes(string fontFile)
     {
-        string fullPath = FileManager.IsRelative(fontFile) ? FileManager.MakeAbsolute(fontFile) : fontFile;
+        string fullPath = ResolveFontFilePath(fontFile);
 
         try
         {
