@@ -25,6 +25,71 @@ public class TextBoxCtrlArrowWhitespaceTests : BaseTestClass
         textBox.HandleKeyDown(Keys.Right, false, false, true);
         textBox.CaretIndex.ShouldBe(6);
     }
+
+    // Ctrl+Right moves to the start of the next word (the end of the text if none): skip the rest of
+    // the current word, then the whole whitespace run. Ctrl+Left mirrors it: skip whitespace back, then
+    // the word back to its start. Each string holds the expected caret for caret index 0..length.
+    [Theory]
+    [InlineData("", "0", "0")]
+    [InlineData("foo   bar", "6,6,6,6,6,6,9,9,9,9", "0,0,0,0,0,0,0,6,6,6")]
+    [InlineData("  foo", "2,2,5,5,5,5", "0,0,0,2,2,2")]
+    [InlineData("foo  ", "5,5,5,5,5,5", "0,0,0,0,0,0")]
+    [InlineData("   ", "3,3,3,3", "0,0,0,0")]
+    [InlineData("a b", "2,2,3,3", "0,0,0,2")]
+    [InlineData("ab\n\ncd", "4,4,4,4,6,6,6", "0,0,0,0,0,4,4")]
+    [InlineData("a\t\tb", "3,3,3,4,4", "0,0,0,0,3")]
+    public void CtrlArrows_FromEveryCaretIndex_LandOnWordBoundaries(string text, string rightExpected, string leftExpected)
+    {
+        int[] right = rightExpected.Split(',').Select(int.Parse).ToArray();
+        int[] left = leftExpected.Split(',').Select(int.Parse).ToArray();
+        for (int caret = 0; caret <= text.Length; caret++)
+        {
+            Move(text, caret, Keys.Right).ShouldBe(right[caret], "Ctrl+Right from " + caret);
+            Move(text, caret, Keys.Left).ShouldBe(left[caret], "Ctrl+Left from " + caret);
+        }
+    }
+
+    [Theory]
+    [InlineData(3, 3, 3)]
+    [InlineData(5, 5, 1)]
+    public void CtrlShiftRight_InRepeatedSpaces_SelectsToTheNextWordStart(int caret, int selectionStart, int selectionLength)
+    {
+        TextBox textBox = Create("foo   bar", caret);
+        textBox.HandleKeyDown(Keys.Right, true, false, true);
+        textBox.SelectionStart.ShouldBe(selectionStart);
+        textBox.SelectionLength.ShouldBe(selectionLength);
+    }
+
+    [Theory]
+    [InlineData("foo   bar", 6, "bar", 0)]
+    [InlineData("foo   bar", 5, " bar", 0)]
+    [InlineData("  foo", 5, "  ", 2)]
+    [InlineData("a b", 3, "a ", 2)]
+    public void CtrlBackspace_RemovesBackToTheWordStart(string text, int caret, string expectedText, int expectedCaret)
+    {
+        TextBox textBox = Create(text, caret);
+        textBox.HandleBackspace(isCtrlDown: true);
+        textBox.Text.ShouldBe(expectedText);
+        textBox.CaretIndex.ShouldBe(expectedCaret);
+    }
+
+    static TextBox Create(string text, int caret)
+    {
+        TextBox textBox = new();
+        textBox.Width = 300;
+        textBox.AcceptsReturn = true;
+        textBox.Text = text;
+        textBox.IsFocused = true;
+        textBox.CaretIndex = caret;
+        return textBox;
+    }
+
+    static int Move(string text, int caret, Keys key)
+    {
+        TextBox textBox = Create(text, caret);
+        textBox.HandleKeyDown(key, false, false, true);
+        return textBox.CaretIndex;
+    }
 }
 
 public class TextBoxCaretIndexRangeTests : BaseTestClass
