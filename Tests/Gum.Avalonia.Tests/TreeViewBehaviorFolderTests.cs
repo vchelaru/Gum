@@ -33,6 +33,44 @@ public class TreeViewBehaviorFolderTests
     }
 
     [AvaloniaFact]
+    public void ApplyElementKindVisibility_ProjectDisablesComponentsAndBehaviors_RemovesTheirRootFolders()
+    {
+        using ToolProjectFixture fixture = new ToolProjectFixture("GumTreeElementKindTests");
+        ElementTreeViewManager treeViewManager = Services.GetRequiredService<ElementTreeViewManager>();
+        treeViewManager.RefreshUi();
+        fixture.Project.DisableComponents = true;
+        fixture.Project.DisableBehaviors = true;
+
+        treeViewManager.ApplyElementKindVisibility();
+
+        treeViewManager.RootTreeNodes.ShouldNotContain(treeViewManager.RootComponentsTreeNode);
+        treeViewManager.RootTreeNodes.ShouldNotContain(treeViewManager.RootBehaviorsTreeNode);
+        treeViewManager.RootTreeNodes.ShouldContain(treeViewManager.RootScreensTreeNode);
+    }
+
+    [AvaloniaFact]
+    public void ApplyElementKindVisibility_ProjectReenablesComponentsAndBehaviors_RestoresRootFoldersInOrder()
+    {
+        using ToolProjectFixture fixture = new ToolProjectFixture("GumTreeElementKindTests");
+        ElementTreeViewManager treeViewManager = Services.GetRequiredService<ElementTreeViewManager>();
+        treeViewManager.RefreshUi();
+        fixture.Project.DisableComponents = true;
+        fixture.Project.DisableBehaviors = true;
+        treeViewManager.ApplyElementKindVisibility();
+        fixture.Project.DisableComponents = false;
+        fixture.Project.DisableBehaviors = false;
+
+        treeViewManager.ApplyElementKindVisibility();
+
+        List<object> roots = treeViewManager.RootTreeNodes.Cast<object>().ToList();
+        int screensIndex = roots.IndexOf(treeViewManager.RootScreensTreeNode);
+        int componentsIndex = roots.IndexOf(treeViewManager.RootComponentsTreeNode);
+        int behaviorsIndex = roots.IndexOf(treeViewManager.RootBehaviorsTreeNode);
+        componentsIndex.ShouldBe(screensIndex + 1);
+        behaviorsIndex.ShouldBe(roots.Count - 1);
+    }
+
+    [AvaloniaFact]
     public void RefreshUi_BehaviorInSubfolderRemovedFromProject_RemovesItsNode()
     {
         using ToolProjectFixture fixture = new ToolProjectFixture("GumTreeBehaviorFolderTests");

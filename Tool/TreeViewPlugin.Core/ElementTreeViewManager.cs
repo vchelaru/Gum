@@ -465,6 +465,41 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
     }
 
     /// <summary>
+    /// Removes or restores the Components and Behaviors root folders to match the project's
+    /// <see cref="GumProjectSave.DisableComponents"/> and <see cref="GumProjectSave.DisableBehaviors"/>.
+    /// Call whenever a project loads.
+    /// </summary>
+    public void ApplyElementKindVisibility()
+    {
+        GumProjectSave? project = _projectState.GumProjectSave;
+
+        // Screens come first, so Components goes right after them; Behaviors goes last.
+        SetRootFolderVisible(mComponentsTreeNode, project?.DisableComponents != true, afterNode: mScreensTreeNode);
+        SetRootFolderVisible(mBehaviorsTreeNode, project?.DisableBehaviors != true, afterNode: null);
+    }
+
+    private void SetRootFolderVisible(ITreeNodeMutable? rootNode, bool shouldBeVisible, ITreeNodeMutable? afterNode)
+    {
+        if (rootNode == null)
+        {
+            return;
+        }
+
+        GumTreeNode node = (GumTreeNode)rootNode;
+        bool isInTree = View.Nodes.Contains(node);
+
+        if (!shouldBeVisible && isInTree)
+        {
+            View.Nodes.Remove(node);
+        }
+        else if (shouldBeVisible && !isInTree)
+        {
+            int insertIndex = afterNode == null ? View.Nodes.Count : View.Nodes.IndexOf((GumTreeNode)afterNode) + 1;
+            View.Nodes.Insert(insertIndex, node);
+        }
+    }
+
+    /// <summary>
     /// Highlights the palette chip matching the selected element when it is a standard (so the chip
     /// being edited via "Edit defaults..." is visibly indicated), or clears the highlight otherwise.
     /// </summary>

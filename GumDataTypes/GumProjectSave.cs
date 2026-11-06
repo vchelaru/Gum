@@ -504,6 +504,19 @@ public class GumProjectSave
     public bool ShouldSerializeSupportedStandardTypes() => SupportedStandardTypes.Count > 0;
 
     /// <summary>
+    /// When true, the tool hides Components: the tree folder and every way to add one. Components already
+    /// in a file still load.
+    /// </summary>
+    public bool DisableComponents { get; set; }
+    public bool ShouldSerializeDisableComponents() => DisableComponents;
+
+    /// <summary>
+    /// When true, the tool hides Behaviors the same way <see cref="DisableComponents"/> hides Components.
+    /// </summary>
+    public bool DisableBehaviors { get; set; }
+    public bool ShouldSerializeDisableBehaviors() => DisableBehaviors;
+
+    /// <summary>
     /// When true, a standard variable no rule shows is hidden in the Variables tab. Hidden variables keep
     /// their stored values.
     /// </summary>
