@@ -35,7 +35,7 @@ public class TextBoxMultiLineGlyphPositionTests : BaseTestClass
     public static IEnumerable<object[]> HorizontalCases() => BuildCases(new[] { 1f, 1.8f, 3f, 5f });
 
     // Which row a line is drawn on.
-    public static IEnumerable<object[]> RowCases() => BuildCases(new[] { 1f });
+    public static IEnumerable<object[]> RowCases() => BuildCases(new[] { 1f, 1.8f, 3f, 5f });
 
     static IEnumerable<object[]> BuildCases(float[] zooms)
     {
@@ -55,7 +55,7 @@ public class TextBoxMultiLineGlyphPositionTests : BaseTestClass
         }
     }
 
-    public static IEnumerable<object[]> ScrollCases() => new[] { 1f }.SelectMany(zoom => new[]
+    public static IEnumerable<object[]> ScrollCases() => new[] { 1f, 1.8f, 3f, 5f }.SelectMany(zoom => new[]
     {
         new object[] { zoom, HorizontalAlignment.Left },
         new object[] { zoom, HorizontalAlignment.Center },
