@@ -9,7 +9,9 @@ Gum renders text using **BitmapFont** — a `.fnt` descriptor file plus one or m
 
 For crisp text under camera/layer zoom, see `docs/code/files-and-fonts/font-oversampling.md` — `TextRuntime.UseFontOversampling` rebuilds the font bigger automatically when zoom changes; unrelated to the three loading paths below.
 
-While oversampled, a Text draws from the bigger display font at `IText.FontScale` but measures layout with the pinned native font (`MeasurementFont`) at `IWrappedText.WordWrapFontScale`, and the two fonts' whole-pixel advances add up to different widths. Layout (wrapping, sizing) uses `MeasureString`. A position within a line (a caret, a selection, a click, a line's alignment offset) uses `IFormsText.MeasureDrawnString` or `GetDrawnCharacterAdvance`, never `MeasureString` times a scale (#7675). Never fit the drawn glyphs to the measured width: the exact inverse raster ratio keeps each atlas pixel on one screen pixel (#6814).
+## Oversampled text positions
+
+While oversampled, a Text draws from the bigger display font but lays out with the pinned native font, and the two fonts' whole-pixel advances add up to different widths. Layout (wrapping, sizing) uses `MeasureString`; a position within a line (caret, selection, click, alignment offset) uses `IFormsText.MeasureDrawnString` or `GetDrawnCharacterAdvance`. Never fit the drawn glyphs to the measured width: the exact inverse raster ratio keeps each atlas pixel on one screen pixel.
 
 ## `.fnt` encodings
 
