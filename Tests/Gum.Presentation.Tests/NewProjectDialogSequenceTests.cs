@@ -146,7 +146,7 @@ public class NewProjectDialogSequenceTests
     }
 
     [Fact]
-    public async Task Back_AfterAFailedRestore_ShowsTheRefusalAndTheNotEmptyWarning_AndDisablesOk()
+    public async Task Back_AfterAFailedRestore_ShowsTheRefusalWithoutTheNotEmptyWarning_AndDisablesOk()
     {
         NewProjectDialogViewModel viewModel = await CreateWithFailedRestoreAndFilesOnDisk();
 
@@ -154,7 +154,7 @@ public class NewProjectDialogSequenceTests
         await viewModel.ChecksRefresh;
 
         viewModel.RefusalText.ShouldNotBeEmpty();
-        viewModel.IsTargetNotEmptyWarningVisible.ShouldBeTrue();
+        viewModel.IsTargetNotEmptyWarningVisible.ShouldBeFalse();
         viewModel.CanExecuteAffirmative().ShouldBeFalse();
     }
 

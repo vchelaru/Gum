@@ -182,7 +182,7 @@ public class NewProjectUiBannerTests
     [InlineData("name")]
     [InlineData("location")]
     [InlineData("codeProject")]
-    public void FixingTheInput_ClearsTheRefusal_AndTheNotEmptyWarning_AndBringsOkBack(string fix)
+    public void FixingTheInput_ClearsTheRefusal_AndBringsOkBack(string fix)
     {
         using NewProjectUiFixture fixture = new NewProjectUiFixture();
         File.WriteAllText(Path.Combine(fixture.MakeFolder("Out", "Game"), "Game.gumj"), "keep me");
@@ -190,8 +190,8 @@ public class NewProjectUiBannerTests
         fixture.Dialog.TypeName("Game");
         fixture.Settle();
         IsRefusalBannerShown(fixture).ShouldBeTrue();
-        IsNotEmptyBannerShown(fixture).ShouldBeTrue("the folder holds the project file");
-
+        IsNotEmptyBannerShown(fixture).ShouldBeFalse(
+            "the not-empty warning is hidden while refusal is shown");
         switch (fix)
         {
             case "name":
@@ -243,11 +243,11 @@ public class NewProjectUiBannerTests
     }
 
     [AvaloniaFact]
-    public void TheRefusalAndTheTwoAmberWarnings_CanShowTogether_WithoutHidingEachOther()
+    public void WhenRefusalIsShown_ItHidesTheNotEmptyWarning()
     {
         using NewProjectUiFixture fixture = new NewProjectUiFixture();
         File.WriteAllText(Path.Combine(fixture.Location, "Other.csproj"), "<Project />");
-        
+
         string target = fixture.MakeFolder("Out", "Game");
         File.WriteAllText(Path.Combine(target, "Game.csproj"), "keep me");
 
@@ -257,7 +257,8 @@ public class NewProjectUiBannerTests
         fixture.Settle();
 
         IsExistingCodeProjectBannerShown(fixture).ShouldBeTrue();
-        IsNotEmptyBannerShown(fixture).ShouldBeTrue();
+        IsNotEmptyBannerShown(fixture).ShouldBeFalse(
+            "the not-empty warning is hidden while refusal is shown");
         IsRefusalBannerShown(fixture).ShouldBeTrue();
         fixture.Dialog.OkButton.IsEffectivelyEnabled.ShouldBeFalse();
     }

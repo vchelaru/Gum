@@ -45,7 +45,8 @@ internal sealed class NewProjectUiFixture : IDisposable
         _scale = services.GetRequiredService<IAppScaleProvider>();
         _originalFontSize = _scale.BaseFontSize;
 
-        IExistingCodeProjectDetector checksDetector = detector ?? services.GetRequiredService<IExistingCodeProjectDetector>();
+        IExistingCodeProjectDetector checksDetector = detector
+            ?? new RootBoundedExistingCodeProjectDetector(services.GetRequiredService<IExistingCodeProjectDetector>(), Root);
         TimeSpan? slow = SlowExistingCodeProjectDetector.DelayFromEnvironment();
         if (slow != null && checksDetector is not SlowExistingCodeProjectDetector)
         {
