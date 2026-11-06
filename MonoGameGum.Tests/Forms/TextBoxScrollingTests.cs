@@ -52,7 +52,7 @@ public class TextBoxScrollingTests : BaseTestClass
         GraphicalUiElement clip = V(textBox).ClipContainer;
         float caretX = V(textBox).CaretInstance.AbsoluteLeft;
         caretX.ShouldBeGreaterThanOrEqualTo(clip.AbsoluteLeft - 0.5f);
-        caretX.ShouldBeLessThanOrEqualTo(clip.AbsoluteLeft + clip.GetAbsoluteWidth() + 0.5f);
+        caretX.ShouldBeLessThanOrEqualTo(clip.AbsoluteLeft + clip.AbsoluteWidth + 0.5f);
     }
 
     [Fact]
@@ -157,7 +157,7 @@ public class TextBoxScrollingTests : BaseTestClass
             textBox.HandleKeyDown(Keys.Down, false, false, false);
             GraphicalUiElement caret = V(textBox).CaretInstance;
             caret.AbsoluteTop.ShouldBeGreaterThanOrEqualTo(clip.AbsoluteTop - 1f);
-            (caret.AbsoluteTop + caret.GetAbsoluteHeight()).ShouldBeLessThanOrEqualTo(clip.AbsoluteTop + clip.GetAbsoluteHeight() + 1f);
+            (caret.AbsoluteTop + caret.AbsoluteHeight).ShouldBeLessThanOrEqualTo(clip.AbsoluteTop + clip.AbsoluteHeight + 1f);
         }
     }
 
@@ -186,7 +186,7 @@ public class TextBoxScrollingTests : BaseTestClass
         TextRuntime textInstance = V(textBox).TextInstance;
         textInstance.HorizontalAlignment = alignment;
         Text core = (Text)textInstance.RenderableComponent!;
-        float boxWidth = textInstance.GetAbsoluteWidth();
+        float boxWidth = textInstance.AbsoluteWidth;
         int lineStart = 0;
 
         foreach (string line in lines)
@@ -223,7 +223,7 @@ public class TextBoxScrollingTests : BaseTestClass
         for (int row = 0; row < lines.Length; row++)
         {
             float y = textInstance.AbsoluteTop + (row + 0.5f) * lineHeight;
-            float farRight = textInstance.AbsoluteLeft + textInstance.GetAbsoluteWidth() + 50;
+            float farRight = textInstance.AbsoluteLeft + textInstance.AbsoluteWidth + 50;
 
             textBox.GetCaretIndexAtPosition(farRight, y).ShouldBe(lineStart + lines[row].Length, "row " + row);
             lineStart += lines[row].Length + 1;
