@@ -124,7 +124,7 @@ public class SpriteRenderer
     internal float CurrentZoom
     {
         get;
-        private set;
+        set;
     }
 
     /// <summary>
@@ -713,7 +713,7 @@ public class SpriteRenderer
         }
 #endif
 
-        if (!Renderer.UseCustomEffectRendering && Renderer.UseBasicEffectRendering && basicEffect.FogEnabled)
+        if (!Renderer.UseCustomEffectRendering && Renderer.UseBasicEffectRendering && basicEffect?.FogEnabled == true)
         {
             basicEffect.FogColor = new Microsoft.Xna.Framework.Vector3(color.R/255f, color.G/255f, color.B/255f);
         }
@@ -727,12 +727,12 @@ public class SpriteRenderer
 
 
         // don't attempt to do adjustments unless the scale is integer scale
-        var isIntegerScale = System.Math.Abs(MathFunctions.RoundToInt(CurrentZoom) - CurrentZoom) < .01f;
+        var isIntegerScale = IsNearWholeNumber(CurrentZoom);
 
         if (!isIntegerScale && scale.X == scale.Y)
         {
             var zoomScale = CurrentZoom * scale.X;
-            isIntegerScale = System.Math.Abs(MathFunctions.RoundToInt(zoomScale) - zoomScale) < .01f;
+            isIntegerScale = IsNearWholeNumber(zoomScale);
         }
 
         var isRotationNearZero = radiansFromPerfectRotation < errorToTolerate;
@@ -853,8 +853,27 @@ public class SpriteRenderer
             position.Y = y;
         }
 
+        if (DrawObserver != null)
+        {
+            DrawObserver(position, scale, sourceRectangle);
+            return;
+        }
+
         mSpriteBatch.Draw(textureToUse, position, sourceRectangle, color, rotation, origin, scale, effects, depth, objectRequestingChange);
     }
+
+    /// <summary>
+    /// Whether a scale is close enough to a whole number that sprites drawn at it can have their sizes
+    /// snapped to screen pixels without visible distortion.
+    /// </summary>
+    internal static bool IsNearWholeNumber(float value) =>
+        System.Math.Abs(MathFunctions.RoundToInt(value) - value) < .01f;
+
+    /// <summary>
+    /// Tests set this to receive the final (snapped) position, scale and source rectangle of each sprite
+    /// draw instead of sending it to the SpriteBatch, which needs a GraphicsDevice.
+    /// </summary>
+    internal Action<Vector2, Vector2, Rectangle?>? DrawObserver { get; set; }
 
 
     internal void ClearPerformanceRecordingVariables()

@@ -6,6 +6,7 @@ using Microsoft.Xna.Framework.Graphics;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
 using Shouldly;
+using System.Collections.Generic;
 using System.Linq;
 using Xunit;
 using Text = RenderingLibrary.Graphics.Text;
@@ -142,6 +143,203 @@ public class OversampledTextPositionTests : BaseTestClass
             textBox.GetCaretIndexAtPosition(start + advance * 0.75f, y)
                 .ShouldBe(character + 1, $"right quarter of character {character}");
         }
+    }
+
+    // Issue #7683: oversampled text draws each atlas pixel as one screen pixel (scale * zoom == 1), so every glyph
+    // must land at the block's snapped origin plus its whole-pixel atlas offset. Before the fix a block on an
+    // exact half screen pixel at zoom 3 or 5 let each glyph round to either side on its own float noise.
+    public static IEnumerable<object[]> OversampledBlockCases()
+    {
+        foreach (int zoom in new[] { 2, 3, 4, 5 })
+        {
+            foreach (double originInScreenPixels in new[] { 30.0, 31.0, 31.5, 30.5, 52.5, 30.25, 31.4, 30.75 })
+            {
+                foreach (HorizontalAlignment alignment in new[] { HorizontalAlignment.Left, HorizontalAlignment.Center, HorizontalAlignment.Right })
+                {
+                    yield return new object[] { zoom, originInScreenPixels, alignment };
+                }
+            }
+        }
+    }
+
+    [Theory]
+    [MemberData(nameof(OversampledBlockCases))]
+    public void DrawTextLines_WhileOversampled_PlacesEveryGlyphAtTheSameWholePixelOffsetFromTheBlock(
+        int zoom, double originInScreenPixels, HorizontalAlignment alignment)
+    {
+        List<string> lines = new() { "Statistics Window", "Second line of text" };
+        List<DrawnGlyph> drawn = DrawOversampled(lines, zoom, (float)(originInScreenPixels / zoom), alignment);
+
+        // The first glyph of each line anchors the line; the rest must keep their atlas distance from it.
+        int glyphIndex = 0;
+        double previousLineBottom = double.NaN;
+        for (int lineIndex = 0; lineIndex < lines.Count; lineIndex++)
+        {
+            string line = lines[lineIndex];
+            int firstOfLine = glyphIndex;
+            DrawnGlyph first = drawn[firstOfLine];
+            int penAtlasX = 0;
+            for (int charIndex = 0; charIndex < line.Length; charIndex++, glyphIndex++)
+            {
+                DrawnGlyph glyph = drawn[glyphIndex];
+                char c = line[charIndex];
+                int expectedFromFirstLeft = penAtlasX + StubXOffset(c) - StubXOffset(line[0]);
+
+                glyph.ScreenWidth.ShouldBe(StubWidth(c), 0.001, $"width of '{c}' in line {lineIndex}");
+                glyph.ScreenHeight.ShouldBe(StubHeight(c), 0.001, $"height of '{c}' in line {lineIndex}");
+                (glyph.ScreenLeft - first.ScreenLeft).ShouldBe(expectedFromFirstLeft, 0.001,
+                    $"'{c}' (index {charIndex}) of line {lineIndex} at zoom {zoom}, origin {originInScreenPixels}, {alignment}");
+                // All glyphs of the stub font share one baseline, so their bottoms are on one screen row.
+                glyph.ScreenBottom.ShouldBe(first.ScreenBottom, 0.001,
+                    $"bottom of '{c}' (index {charIndex}) of line {lineIndex} at zoom {zoom}, origin {originInScreenPixels}, {alignment}");
+                penAtlasX += StubAdvance(c);
+            }
+
+            if (!double.IsNaN(previousLineBottom))
+            {
+                (first.ScreenBottom - previousLineBottom).ShouldBe(StubLineHeight, 0.001,
+                    $"line {lineIndex} sits one atlas line below the previous one");
+            }
+            previousLineBottom = first.ScreenBottom;
+        }
+    }
+
+    // Styled (BBCode) text draws each run with its own DrawTextLines call, starting where the previous run's
+    // width ended, so the second run's origin carries float noise relative to the first.
+    [Theory]
+    [MemberData(nameof(OversampledBlockCases))]
+    public void DrawTextLines_WhileOversampled_KeepsASecondRunStartedAtTheFirstRunsWidthOnTheSameGrid(
+        int zoom, double originInScreenPixels, HorizontalAlignment alignment)
+    {
+        const string firstRun = "Statistics ";
+        const string secondRun = "Window";
+        float originWorld = (float)(originInScreenPixels / zoom);
+        BitmapFont font = CreateVariedGlyphFont();
+        SpriteRenderer spriteRenderer = new() { CurrentZoom = zoom };
+        List<DrawnGlyph> drawn = new();
+        spriteRenderer.DrawObserver = (position, scale, source) =>
+        {
+            System.Drawing.Rectangle sourceRectangle = source!.Value;
+            drawn.Add(new DrawnGlyph(position.X * zoom, position.Y * zoom,
+                sourceRectangle.Width * scale.X * zoom, sourceRectangle.Height * scale.Y * zoom));
+        };
+        float scale = 1f / zoom;
+
+        List<int> firstWidths = new();
+        List<string> firstLines = new() { firstRun };
+        font.GetRequiredWidthAndHeight(firstLines, out int firstRequiredWidth, out int _, firstWidths);
+        var firstRect = font.DrawTextLines(firstLines, alignment, new object(), firstRequiredWidth, firstWidths,
+            spriteRenderer, System.Drawing.Color.White, originWorld, originWorld, scaleX: scale, scaleY: scale);
+
+        List<int> secondWidths = new();
+        List<string> secondLines = new() { secondRun };
+        font.GetRequiredWidthAndHeight(secondLines, out int secondRequiredWidth, out int _, secondWidths);
+        font.DrawTextLines(secondLines, alignment, new object(), secondRequiredWidth, secondWidths,
+            spriteRenderer, System.Drawing.Color.White, originWorld + firstRect.Width, originWorld,
+            scaleX: scale, scaleY: scale, shiftForOutline: false);
+
+        int firstRunGlyphs = firstRun.Length;
+        int penAtlasX = 0;
+        foreach (char c in firstRun)
+        {
+            penAtlasX += StubAdvance(c);
+        }
+        double expectedGap = penAtlasX + StubXOffset(secondRun[0]) - StubXOffset(firstRun[0]);
+        // Alignment moves each run by its own fraction; only a left-aligned pair is expected to line up.
+        if (alignment == HorizontalAlignment.Left)
+        {
+            (drawn[firstRunGlyphs].ScreenLeft - drawn[0].ScreenLeft).ShouldBe(expectedGap, 0.001,
+                $"second run at zoom {zoom}, origin {originInScreenPixels}");
+        }
+        drawn[firstRunGlyphs].ScreenBottom.ShouldBe(drawn[0].ScreenBottom, 0.001, "both runs share a baseline");
+    }
+
+    // Only glyphs drawn at exactly one screen pixel per atlas pixel snap as a block. Any other scale keeps drawing
+    // each glyph on its own, which is what FreeFloating does, so the two must match draw for draw.
+    [Theory]
+    [InlineData(3, 1.005f / 3, HorizontalAlignment.Left)]
+    [InlineData(3, 0.335f, HorizontalAlignment.Center)]
+    [InlineData(5, 1.005f / 5, HorizontalAlignment.Right)]
+    [InlineData(1, 2f, HorizontalAlignment.Center)]
+    [InlineData(1, 2f, HorizontalAlignment.Right)]
+    [InlineData(1, 3f, HorizontalAlignment.Center)]
+    [InlineData(1, 3f, HorizontalAlignment.Right)]
+    [InlineData(2, 1.5f, HorizontalAlignment.Center)]
+    public void DrawTextLines_AtAScaleThatIsNotOneAtlasPixelPerScreenPixel_DrawsEachGlyphOnItsOwn(
+        int zoom, float scale, HorizontalAlignment alignment)
+    {
+        List<string> lines = new() { "Statistics Window", "Second line of text" };
+        foreach (float origin in new[] { 10f, 10.5f, 10.17f, 10.33f })
+        {
+            List<DrawnGlyph> snapMode = DrawOversampled(lines, zoom, origin, alignment, scale, TextRenderingPositionMode.SnapToPixel);
+            List<DrawnGlyph> freeFloating = DrawOversampled(lines, zoom, origin, alignment, scale, TextRenderingPositionMode.FreeFloating);
+            snapMode.ShouldBe(freeFloating, $"origin {origin}");
+        }
+    }
+
+    // Draws through the real BitmapFont.DrawTextLines and SpriteRenderer.Draw at an oversampled scale, recording
+    // each glyph in screen pixels.
+    static List<DrawnGlyph> DrawOversampled(List<string> lines, int zoom, float originWorld, HorizontalAlignment alignment,
+        float? scaleOverride = null, TextRenderingPositionMode? mode = null)
+    {
+        BitmapFont font = CreateVariedGlyphFont();
+        SpriteRenderer spriteRenderer = new() { CurrentZoom = zoom };
+        List<DrawnGlyph> drawn = new();
+        spriteRenderer.DrawObserver = (position, scale, source) =>
+        {
+            System.Drawing.Rectangle sourceRectangle = source!.Value;
+            drawn.Add(new DrawnGlyph(
+                position.X * zoom, position.Y * zoom,
+                sourceRectangle.Width * scale.X * zoom, sourceRectangle.Height * scale.Y * zoom));
+        };
+
+        List<int> widths = new();
+        font.GetRequiredWidthAndHeight(lines, out int requiredWidth, out int _, widths);
+        float scale = scaleOverride ?? 12f / (12f * zoom);
+        font.DrawTextLines(lines, alignment, objectRequestingChange: new object(), requiredWidth, widths, spriteRenderer,
+            System.Drawing.Color.White, originWorld, originWorld, scaleX: scale, scaleY: scale,
+            overrideTextRenderingPositionMode: mode);
+        return drawn;
+    }
+
+    record struct DrawnGlyph(double ScreenLeft, double ScreenTop, double ScreenWidth, double ScreenHeight)
+    {
+        public double ScreenBottom => ScreenTop + ScreenHeight;
+    }
+
+    // Glyph metrics vary per character, like a real font, but every glyph ends on the same baseline row.
+    const int StubLineHeight = 44;
+    const int StubBaseline = 34;
+    static int StubWidth(char c) => 5 + c % 20;
+    static int StubHeight(char c) => 6 + c % 17;
+    static int StubXOffset(char c) => c % 7;
+    static int StubAdvance(char c) => 14 + c % 9;
+
+    static BitmapFont CreateVariedGlyphFont()
+    {
+        System.Text.StringBuilder builder = new();
+        builder.AppendLine("info face=\"Stub\" size=-12 bold=0 italic=0 charset=\"\" unicode=1 stretchH=100 smooth=1 aa=1 padding=0,0,0,0 spacing=1,1 outline=0");
+        builder.AppendLine($"common lineHeight={StubLineHeight} base={StubBaseline} scaleW=512 scaleH=512 pages=1 packed=0 alphaChnl=0 redChnl=4 greenChnl=4 blueChnl=4");
+        builder.AppendLine("page id=0 file=\"x.png\"");
+        List<char> distinct = new();
+        for (char c = ' '; c <= '~'; c++)
+        {
+            distinct.Add(c);
+        }
+        builder.AppendLine($"chars count={distinct.Count}");
+        int x = 0;
+        foreach (char c in distinct)
+        {
+            builder.AppendLine(
+                $"char id={(int)c} x={x} y=0 width={StubWidth(c)} height={StubHeight(c)} xoffset={StubXOffset(c)} " +
+                $"yoffset={StubBaseline - StubHeight(c)} xadvance={StubAdvance(c)} page=0 chnl=15");
+            x += 24;
+        }
+
+        Texture2D placeholderTexture = (Texture2D)System.Runtime.CompilerServices.RuntimeHelpers.GetUninitializedObject(typeof(Texture2D));
+        BitmapFont font = new BitmapFont(placeholderTexture, builder.ToString());
+        font.SetFontPattern(512, 512);
+        return font;
     }
 
     // A text made before any font exists, even a default one, has nothing to draw, so it is 0 wide.
