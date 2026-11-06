@@ -38,11 +38,6 @@ public class TextBoxMixedGlyphPositionTests : BaseTestClass
         }
     }
 
-    // The oversampled center and right cells of click and selection are red (see the linked issue) and
-    // live on the red-test branch, so they are left out here.
-    public static IEnumerable<object[]> ClickAndSelectionCases() =>
-        Cases().Where(row => !((bool)row[0] && (HorizontalAlignment)row[1] != HorizontalAlignment.Left));
-
     // The pen position before the character at index, in screen pixels from the drawn text's left.
     internal static float Pen(string text, int index, bool oversampled)
     {
@@ -68,7 +63,7 @@ public class TextBoxMixedGlyphPositionTests : BaseTestClass
     }
 
     [Theory]
-    [MemberData(nameof(ClickAndSelectionCases))]
+    [MemberData(nameof(Cases))]
     public void Click_MixedGlyphs_ReturnsTheCharacterDrawnAtThePoint(bool oversampled, HorizontalAlignment alignment)
     {
         (TextBox textBox, Text contained) = Create(oversampled, alignment);
@@ -85,7 +80,7 @@ public class TextBoxMixedGlyphPositionTests : BaseTestClass
     }
 
     [Theory]
-    [MemberData(nameof(ClickAndSelectionCases))]
+    [MemberData(nameof(Cases))]
     public void Selection_MixedGlyphs_StartsAtTheDrawnPenPosition(bool oversampled, HorizontalAlignment alignment)
     {
         (TextBox textBox, Text contained) = Create(oversampled, alignment);
