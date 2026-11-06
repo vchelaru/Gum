@@ -779,6 +779,8 @@ public abstract class TextBoxBase :
 
                 var maxIndex = System.Math.Max(currentIndex, indexPushed.Value);
 
+                // The caret follows the dragged end, so Shift+arrows then move that end.
+                CaretIndex = currentIndex;
                 SetSelectionRange(minIndex, maxIndex - minIndex);
             }
         }
