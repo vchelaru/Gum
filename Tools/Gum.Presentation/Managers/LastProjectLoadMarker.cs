@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Threading;
 using Gum.Diagnostics;
 using ToolsUtilities;
 
@@ -14,6 +15,7 @@ public class LastProjectLoadMarker : ILastProjectLoadMarker
     private const string MarkerFileName = "LoadingLastProject.txt";
 
     private readonly Func<string> _folder;
+    private readonly Action _waitBeforeRetry;
 
     /// <summary>Uses the per-user settings folder, read at each call so a <c>--user-data</c> override applies.</summary>
     public LastProjectLoadMarker() : this(() => FileManager.UserApplicationDataForThisApplication)
@@ -21,9 +23,15 @@ public class LastProjectLoadMarker : ILastProjectLoadMarker
     }
 
     /// <summary>Uses the folder <paramref name="folder"/> returns.</summary>
-    public LastProjectLoadMarker(Func<string> folder)
+    public LastProjectLoadMarker(Func<string> folder) : this(folder, () => Thread.Sleep(50))
+    {
+    }
+
+    /// <summary>Calls <paramref name="waitBeforeRetry"/> between attempts to write a held marker, so tests control the timing.</summary>
+    public LastProjectLoadMarker(Func<string> folder, Action waitBeforeRetry)
     {
         _folder = folder;
+        _waitBeforeRetry = waitBeforeRetry;
     }
 
     private string MarkerPath => Path.Combine(_folder(), MarkerFileName);
@@ -49,7 +57,7 @@ public class LastProjectLoadMarker : ILastProjectLoadMarker
         {
             Directory.CreateDirectory(Path.GetDirectoryName(path)!);
             File.WriteAllText(path, projectPath);
-        });
+        }, _waitBeforeRetry);
     }
 
     /// <inheritdoc/>
