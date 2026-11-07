@@ -48,6 +48,7 @@ public class ResizeHandlesVisual : EditorVisualBase, IResizeHandlesVisual
     {
         if (!Visible || Context.SelectedObjects.Count == 0) return;
 
+        _resizeHandles.SetAvailableAxes(Context.IsWidthChangeEnabled, Context.IsHeightChangeEnabled);
         _resizeHandles.SetValuesFrom(Context.SelectedObjects);
         _resizeHandles.UpdateHandleSizes();
     }
@@ -67,6 +68,7 @@ public class ResizeHandlesVisual : EditorVisualBase, IResizeHandlesVisual
         }
 
         Visible = true;
+        _resizeHandles.SetAvailableAxes(Context.IsWidthChangeEnabled, Context.IsHeightChangeEnabled);
         _resizeHandles.SetValuesFrom(selectedObjects);
         _resizeHandles.UpdateHandleSizes();
     }

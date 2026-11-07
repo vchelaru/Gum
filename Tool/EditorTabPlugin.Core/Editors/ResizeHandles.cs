@@ -1,4 +1,4 @@
-﻿using Gum.Services;
+using Gum.Services;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -42,6 +42,10 @@ namespace Gum.Wireframe
         readonly ResizeHandleLayout _layout;
 
         const float WidthAtNoZoom = ResizeHandleLayout.HandleSize;
+
+        bool _visible = true;
+        bool _widthEnabled = true;
+        bool _heightEnabled = true;
 
         #endregion
 
@@ -91,15 +95,12 @@ namespace Gum.Wireframe
         {
             get
             {
-                return mHandles[0].Visible;
+                return _visible;
             }
             set
             {
-                for (int i = 0; i < mHandles.Length; i++)
-                {
-                    mHandles[i].Visible = value;
-                    mInnerHandles[i].Visible = value;
-                }
+                _visible = value;
+                ApplyHandleVisibility();
 
                 _originDisplaysVisible = value;
                 foreach (var display in _originDisplays)
@@ -160,11 +161,37 @@ namespace Gum.Wireframe
             _originDisplays.Clear();
         }
 
+        /// <summary>
+        /// Limits the drawn and hit-tested handles to those that can resize along an enabled axis
+        /// (see <see cref="ResizeHandleLayout.IsSideAvailable"/>).
+        /// </summary>
+        public void SetAvailableAxes(bool widthEnabled, bool heightEnabled)
+        {
+            _widthEnabled = widthEnabled;
+            _heightEnabled = heightEnabled;
+            ApplyHandleVisibility();
+        }
+
+        private void ApplyHandleVisibility()
+        {
+            for (int i = 0; i < mHandles.Length; i++)
+            {
+                bool isShown = _visible && IsAvailable(i);
+                mHandles[i].Visible = isShown;
+                mInnerHandles[i].Visible = isShown;
+            }
+        }
+
+        private bool IsAvailable(int handleIndex)
+        {
+            return ResizeHandleLayout.IsSideAvailable((ResizeSide)handleIndex, _widthEnabled, _heightEnabled);
+        }
+
         public ResizeSide GetSideOver(float x, float y)
         {
             for (int i = 0; i < this.mHandles.Length; i++)
             {
-                if (mHandles[i].HasCursorOver(x, y))
+                if (IsAvailable(i) && mHandles[i].HasCursorOver(x, y))
                 {
                     return (ResizeSide)i;
                 }
