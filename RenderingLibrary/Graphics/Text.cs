@@ -283,14 +283,14 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
         {
             if (i >= WrappedText.Count)
             {
-                top += font.EffectiveLineHeight(EffectiveFontScale, LineHeightMultiplier);
+                top += font.EffectiveLineHeight(EffectiveFontScale, DrawLineHeightMultiplier);
                 continue;
             }
 
             var line = WrappedText[i];
             var substrings = GetCachedStyledSubstrings(i, startOfLineIndex, line);
             top += substrings.Count == 0
-                ? font.EffectiveLineHeight(EffectiveFontScale, LineHeightMultiplier)
+                ? font.EffectiveLineHeight(EffectiveFontScale, DrawLineHeightMultiplier)
                 : ComputeStyledLineHeight(font, substrings, out _);
             startOfLineIndex += line.Length;
         }
@@ -1332,6 +1332,12 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
         size = new Vector2(WrappedTextWidth + 2 * padding, WrappedTextHeight + 2 * padding);
     }
 
+    /// <summary>
+    /// Test-only access to the character-by-character draw, so unit tests can record where every glyph lands
+    /// (through <c>SpriteRenderer.DrawObserver</c>) without a render pass.
+    /// </summary>
+    internal void DrawCharacterByCharacterForTests(SpriteRenderer spriteRenderer) => RenderCharacterByCharacter(spriteRenderer);
+
     // todo: reduce allocs by using a static here (static is prob okay since it can't be multithreaded)
     static List<int> widths = new List<int>();
     private void RenderCharacterByCharacter(SpriteRenderer spriteRenderer)
@@ -1462,7 +1468,7 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
                     EffectiveFontScale, lettersLeft, OverrideTextRenderingPositionMode, lineHeightMultiplier: LineHeightMultiplier,
                     overlapDirection: OverlapDirection);
 
-                startOfLine += fontToUse.EffectiveLineHeight(EffectiveFontScale, LineHeightMultiplier) * yAxis;
+                startOfLine += fontToUse.EffectiveLineHeight(EffectiveFontScale, DrawLineHeightMultiplier) * yAxis;
                 maxLettersToShow -= lineOfText.Length;
             }
             else
@@ -1658,7 +1664,8 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
     /// </summary>
     public float ComputeStyledLineHeight(BitmapFont fontToUse, List<StyledSubstring> substrings, out float maxBaseline)
     {
-        var multipliedBaseHeight = fontToUse.EffectiveLineHeight(EffectiveFontScale, LineHeightMultiplier);
+        var multipliedBaseHeight = fontToUse.EffectiveLineHeight(EffectiveFontScale, DrawLineHeightMultiplier);
+        float oversampledRatio = OversampledLineHeightRatio;
         float tallestSizeRunHeight = 0;
 
         maxBaseline = EffectiveFontScale * fontToUse.BaselineY;
@@ -1668,7 +1675,10 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
             if (ResolveRunFont(substring.Variables, fontToUse, out BitmapFont? runFont, out float runScale))
             {
                 BitmapFont font = runFont ?? fontToUse;
-                tallestSizeRunHeight = System.Math.Max(tallestSizeRunHeight, font.EffectiveLineHeight(runScale, 1));
+                // A run in the display font gets the same display-to-native correction as the base line; a run in
+                // another font has no pinned counterpart to correct against.
+                float runHeight = font.EffectiveLineHeight(runScale, 1) * (ReferenceEquals(font, fontToUse) ? oversampledRatio : 1);
+                tallestSizeRunHeight = System.Math.Max(tallestSizeRunHeight, runHeight);
                 maxBaseline = System.Math.Max(maxBaseline, runScale * font.BaselineY);
             }
         }
@@ -1764,13 +1774,29 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
                 return LineHeightMultiplier;
             }
 
+            return LineHeightMultiplier * OversampledLineHeightRatio;
+        }
+    }
+
+    // The pinned measurement font's line height over the display font's, both at the scale they draw at: 1 when
+    // the text isn't oversampling. Multiplying a display-font line height by it gives the line height layout
+    // measures with, so lines step the same whether the text has inline runs or not (#6814, #7733).
+    private float OversampledLineHeightRatio
+    {
+        get
+        {
+            if (mMeasurementFont == null || mBitmapFont == null)
+            {
+                return 1;
+            }
+
             float drawnLineHeight = mBitmapFont.LineHeightInPixels * EffectiveFontScale;
             if (drawnLineHeight <= 0)
             {
-                return LineHeightMultiplier;
+                return 1;
             }
 
-            return LineHeightMultiplier * mMeasurementFont.LineHeightInPixels * MeasurementFontScale / drawnLineHeight;
+            return mMeasurementFont.LineHeightInPixels * MeasurementFontScale / drawnLineHeight;
         }
     }
 
