@@ -70,6 +70,47 @@ public class TreeViewBehaviorFolderTests
         behaviorsIndex.ShouldBe(roots.Count - 1);
     }
 
+    [AvaloniaTheory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void ElementKindVisibilityAndStandardsPalette_Combined_KeepRootFolderOrder(bool usePalette)
+    {
+        using ToolProjectFixture fixture = new ToolProjectFixture("GumTreeElementKindTests");
+        IProjectManager projectManager = Services.GetRequiredService<IProjectManager>();
+        bool? originalPalette = projectManager.UseStandardsPalette;
+        try
+        {
+            projectManager.UseStandardsPalette = usePalette;
+            ElementTreeViewManager treeViewManager = Services.GetRequiredService<ElementTreeViewManager>();
+            treeViewManager.RefreshUi();
+            fixture.Project.DisableComponents = true;
+            fixture.Project.DisableBehaviors = true;
+            treeViewManager.ApplyElementKindVisibility();
+            treeViewManager.ApplyStandardsPaletteMode();
+            fixture.Project.DisableComponents = false;
+            fixture.Project.DisableBehaviors = false;
+            treeViewManager.ApplyElementKindVisibility();
+            treeViewManager.ApplyStandardsPaletteMode();
+
+            List<object> roots = treeViewManager.RootTreeNodes.Cast<object>().ToList();
+            List<object> expected = new List<object>
+            {
+                treeViewManager.RootScreensTreeNode,
+                treeViewManager.RootComponentsTreeNode,
+            };
+            if (!usePalette)
+            {
+                expected.Add(treeViewManager.RootStandardElementsTreeNode);
+            }
+            expected.Add(treeViewManager.RootBehaviorsTreeNode);
+            roots.ShouldBe(expected);
+        }
+        finally
+        {
+            projectManager.UseStandardsPalette = originalPalette;
+        }
+    }
+
     [AvaloniaFact]
     public void RefreshUi_BehaviorInSubfolderRemovedFromProject_RemovesItsNode()
     {

@@ -89,6 +89,14 @@ public class MainHtmlToGumPlugin : PluginBase
 
     private async void HandleImportHtml()
     {
+        // Imported HTML becomes arbitrary standard types and components.
+        GumProjectSave? project = _projectState.GumProjectSave;
+        if (project != null && (project.DisableComponents || project.SupportedStandardTypes.Count > 0))
+        {
+            _dialogService.ShowMessage("This project restricts the object types it supports, so HTML cannot be imported.");
+            return;
+        }
+
         if (_projectState.NeedsToSaveProject)
         {
             _dialogService.ShowMessage("Save the Gum project before importing HTML.");

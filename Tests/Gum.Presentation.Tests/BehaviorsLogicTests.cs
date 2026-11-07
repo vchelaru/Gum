@@ -41,7 +41,23 @@ public class BehaviorsLogicTests : BaseTestClass
 
         _logic = new BehaviorsLogic(
             _selectedState.Object, _elementCommands.Object, _undoManager.Object, _pluginManager.Object,
-            _guiCommands.Object, _fileCommands.Object, _viewModel, _tab.Object);
+            _guiCommands.Object, _fileCommands.Object, _viewModel, _tab.Object, _projectRestrictions.Object);
+    }
+
+    private readonly Mock<Gum.Managers.IProjectRestrictions> _projectRestrictions = new();
+
+    [Fact]
+    public void HandleElementSelected_ComponentSelected_HidesTab_WhenProjectDisablesBehaviors()
+    {
+        ComponentSave component = new ComponentSave { Name = "Button" };
+        _selectedState.Setup(x => x.SelectedComponent).Returns(component);
+        _selectedState.Setup(x => x.SelectedInstance).Returns((InstanceSave?)null);
+        _projectRestrictions.Setup(x => x.AreBehaviorsDisabled).Returns(true);
+
+        _logic.HandleElementSelected(component);
+
+        _tab.Verify(x => x.Show(), Times.Never);
+        _tab.Verify(x => x.Hide(), Times.Once);
     }
 
     [Fact]
