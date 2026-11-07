@@ -34,7 +34,8 @@ public class MainPropertiesWindowPluginTests
             _projectState.Object,
             Mock.Of<IPluginManager>(),
             Mock.Of<IProjectManager>(),
-            new LocalizationService())
+            new LocalizationService(),
+            Mock.Of<IProjectRestrictions>())
         {
             FileCommands = Mock.Of<IFileCommands>(),
             Menu = _menu,

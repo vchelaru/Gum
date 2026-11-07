@@ -122,6 +122,15 @@ public class ProjectPropertiesViewModel : ViewModel
         set => Set(value);
     }
 
+    /// <summary>
+    /// The project's engine profile (.gumengine) as saved: a path relative to the project file, forward slashes, empty for none.
+    /// </summary>
+    public string EngineProfile
+    {
+        get => Get<string>() ?? string.Empty;
+        set => Set(value ?? string.Empty);
+    }
+
     public int? SinglePixelTextureTop
     {
         get => Get<int?>();
@@ -201,6 +210,8 @@ public class ProjectPropertiesViewModel : ViewModel
             LanguageIndex = gumProject.CurrentLanguageIndex;
             ShowLocalization = gumProject.ShowLocalizationInGum;
 
+            EngineProfile = gumProject.EngineProfile;
+
             SinglePixelTextureFile = gumProject.SinglePixelTextureFile;
             SinglePixelTextureLeft = gumProject.SinglePixelTextureLeft;
             SinglePixelTextureRight = gumProject.SinglePixelTextureRight;
@@ -237,6 +248,8 @@ public class ProjectPropertiesViewModel : ViewModel
         this.gumProject.LocalizationFiles = new List<string>(LocalizationFiles);
         this.gumProject.CurrentLanguageIndex = LanguageIndex;
         this.gumProject.ShowLocalizationInGum = ShowLocalization;
+
+        this.gumProject.EngineProfile = EngineProfile;
 
         this.gumProject.SinglePixelTextureFile = SinglePixelTextureFile;
         this.gumProject.SinglePixelTextureTop = SinglePixelTextureTop;

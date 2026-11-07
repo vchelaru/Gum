@@ -4,6 +4,7 @@ using Gum.DataTypes;
 using Gum.Plugins.PropertiesWindowPlugin;
 using Shouldly;
 using WpfDataUi.DataTypes;
+using WpfDataUi.Controls;
 
 namespace Gum.Presentation.Tests;
 
@@ -40,6 +41,48 @@ public class ProjectGeneralRowsTests
 
     private InstanceMember? Member(string name) =>
         _sut.BuildCategories().SelectMany(category => category.Members).FirstOrDefault(member => member.Name == name);
+
+    [Fact]
+    public void EngineProfileRow_IsAPathRowFilteredToGumengineFiles()
+    {
+        InstanceMember row = Member(nameof(ProjectPropertiesViewModel.EngineProfile))!;
+
+        row.PreferredDisplayer.ShouldBe(typeof(StandardDisplayers.FileSelection));
+        row.PropertiesToSetOnDisplayer["Filter"].ShouldBe("Engine Profile|*.gumengine|All Files|*.*");
+    }
+
+    [Fact]
+    public void EngineProfileRow_ReadsAndWritesTheViewModel()
+    {
+        _project.EngineProfile = "A.gumengine";
+        _viewModel.SetFrom(_project);
+        InstanceMember row = Member(nameof(ProjectPropertiesViewModel.EngineProfile))!;
+
+        row.Value.ShouldBe("A.gumengine");
+        row.Value = "B.gumengine";
+
+        _viewModel.EngineProfile.ShouldBe("B.gumengine");
+    }
+
+    [Fact]
+    public void EngineProfileRow_ClearLink_EmptiesTheProfile_AndRebuildsTheRows()
+    {
+        _project.EngineProfile = "A.gumengine";
+        _viewModel.SetFrom(_project);
+        int rebuilds = 0;
+        _sut.Reloaded += () => rebuilds++;
+
+        Member(nameof(ProjectPropertiesViewModel.EngineProfile))!.DetailAction!.Navigate();
+
+        _viewModel.EngineProfile.ShouldBe(string.Empty);
+        rebuilds.ShouldBe(1);
+    }
+
+    [Fact]
+    public void EngineProfileRow_IsFoundBySearch()
+    {
+        _sut.SearchTerms().ShouldContain(term => term.Contains("Engine profile"));
+    }
 
     [Fact]
     public void UseCustomBounds_WithAllFourNull_IsOff()
@@ -143,7 +186,7 @@ public class ProjectGeneralRowsTests
 
         List<MemberCategory> sections = _sut.BuildCategories();
 
-        sections.Select(section => section.Name).ShouldBe(new[] { "Rendering", "Values and names", "Single pixel texture" });
+        sections.Select(section => section.Name).ShouldBe(new[] { "Rendering", "Values and names", "Single pixel texture", "Engine" });
         sections.SelectMany(section => section.Members).ShouldAllBe(member => !string.IsNullOrEmpty(member.DetailText));
         sections.SelectMany(section => section.Members).ShouldAllBe(member => member.IsSpaciousRow);
     }
