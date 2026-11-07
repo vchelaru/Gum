@@ -1004,6 +1004,7 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
                     }
 
                     _wireframeObjectManager.RootGue?.ApplyVariableReferences(state);
+                    _wireframeObjectManager.ResetRestrictedVariables();
                     //gue.ApplyVariableReferences(_selectedState.SelectedStateSave);
 
                     handledByDirectSet = didPush && !disposedFile;
