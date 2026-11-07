@@ -12,6 +12,8 @@ The Settings window is available in November 2026, or now if building Gum from s
 
 <figure><img src="../.gitbook/assets/25_08 00 05.png" alt=""><figcaption><p>Project > General page</p></figcaption></figure>
 
+The **Engine profile** row in the **Engine** section limits which element types and variables the project uses. See [Engine Profiles](engine-profiles.md).
+
 ## Canvas
 
 The **Canvas** page sets the size of the canvas and which guides the Editor tab draws.

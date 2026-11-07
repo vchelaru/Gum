@@ -143,6 +143,7 @@
   * [Content](gum-tool/menu/content.md)
 * [Settings Window](gum-tool/settings-window.md)
   * [Project Settings](gum-tool/project-properties.md)
+    * [Engine Profiles](gum-tool/engine-profiles.md)
   * [Fonts](gum-tool/fonts.md)
 * [Project Files](gum-tool/project-files/README.md)
 * [Plugins](gum-tool/plugins/README.md)
