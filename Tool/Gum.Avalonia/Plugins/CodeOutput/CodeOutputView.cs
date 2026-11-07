@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using Avalonia;
@@ -320,9 +320,10 @@ public class MainCodeOutputPlugin : CodeOutputPluginBase
         IRetryService retryService,
         IMessenger messenger,
         IFileCommands fileCommands,
-        IDispatcher dispatcher)
+        IDispatcher dispatcher,
+        IProjectRestrictions projectRestrictions)
         : base(guiCommands, dialogService, nameVerifier, localizationService, projectState, typeManager,
-            outputManager, selectedState, retryService, messenger, fileCommands, dispatcher)
+            outputManager, selectedState, retryService, messenger, fileCommands, dispatcher, projectRestrictions)
     {
     }
 

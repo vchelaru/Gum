@@ -97,6 +97,8 @@ A Code tab settings edit is the other trigger: `CodeFileLocationWatcher` sends o
 
 **VariableExclusionLogic** -- Certain variables are excluded depending on OutputLibrary (e.g., Alpha excluded for XamarinForms). The plugin hooks into the `VariableExcluded` query event to apply this.
 
+**Engine profile variables are not generated (#7724)** -- A variable the project's engine profile hides is dormant, like one that does nothing: kept in the file, not shown, not generated, no warning. `CodeGenerator` takes an optional `IVariableRestrictions` (the tool passes `IProjectRestrictions`; `HeadlessCodegenRunner` loads the profile with `EngineProfileLoader` and passes `EngineProfileVariableRestrictions`, warning on stderr when the file is unusable). The check is `GetIfHiddenByEngineProfile`, applied in the instance/state pass, the element's own variables, and `Parent` (a hidden Parent attaches the instance as if it had none). It uses the Variables tab's rule through `VariableRestrictionsExtensions.IsVariableHidden`: custom and state variables and Name/BaseType/Locked/DefaultChildContainer/State are exempt. The profile types live in `Tools/Gum.ProjectServices/EngineProfiles`. Instance types outside `SupportedStandardTypes` are still generated.
+
 **Tool plugin auto-regeneration** -- `MainCodeOutputPlugin` listens to nearly every edit event (variable set, instance add/delete, state changes, etc.) and auto-regenerates if the element's `GenerationBehavior` is `GenerateAutomaticallyOnPropertyChange`.
 
 **RequestCodeGenerationMessage** -- External systems (like FlatRedBall editor integration) can trigger codegen via this CommunityToolkit.Mvvm message.

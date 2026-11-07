@@ -183,11 +183,20 @@ public class HeadlessCodegenRunner : IHeadlessCodegenRunner
             }
         }
 
+        // A variable the project's engine profile hides is dormant, so it is not generated. An unusable
+        // profile file means unrestricted, with one warning.
+        EngineProfileLoadResult profileResult = new EngineProfileLoader().Load(project.FullFileName, project.EngineProfile);
+        if (profileResult.Warning != null)
+        {
+            error.WriteLine($"warning: {profileResult.Warning}");
+        }
+
         var codeGenerator = new CodeGenerator(
             codeGenNameVerifier, localizationService, elementSettingsManager, projectDirectoryProvider,
             typeStringResolver: null,
             syntaxVersionDetectionService: syntaxVersionDetectionService,
-            cSharpVersionDetectionService: new CSharpVersionDetectionService());
+            cSharpVersionDetectionService: new CSharpVersionDetectionService(),
+            variableRestrictions: new EngineProfileVariableRestrictions(profileResult.Profile));
 
         var customCodeGenerator = new CustomCodeGenerator(codeGenerator, codeGenNameVerifier);
         var fileLocationsService = new CodeGenerationFileLocationsService(

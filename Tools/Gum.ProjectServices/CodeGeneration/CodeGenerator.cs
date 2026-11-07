@@ -289,6 +289,7 @@ public class CodeGenerator
     private readonly IProjectDirectoryProvider _projectDirectoryProvider;
     private readonly ISyntaxVersionDetectionService? _syntaxVersionDetectionService;
     private readonly ICSharpVersionDetectionService? _cSharpVersionDetectionService;
+    private readonly IVariableRestrictions? _variableRestrictions;
     private readonly ICollapsedShapeCodeGenLogic _collapsedShapeLogic;
     private readonly DebugOnlyElementLogic _debugOnlyLogic;
 
@@ -315,8 +316,10 @@ public class CodeGenerator
         CodeOutputElementSettingsManager elementSettingsManager, IProjectDirectoryProvider projectDirectoryProvider,
         ITypeStringResolver? typeStringResolver = null,
         ISyntaxVersionDetectionService? syntaxVersionDetectionService = null,
-        ICSharpVersionDetectionService? cSharpVersionDetectionService = null)
+        ICSharpVersionDetectionService? cSharpVersionDetectionService = null,
+        IVariableRestrictions? variableRestrictions = null)
     {
+        _variableRestrictions = variableRestrictions;
         _codeGenerationNameVerifier = codeGenerationNameVerifier;
         _localizationService = localizationService;
         _elementSettingsManager = elementSettingsManager;
@@ -3748,7 +3751,8 @@ public class CodeGenerator
         var parentInstance = parentValue != null
             ? ObjectFinder.Self.GetInstanceRecursively(container, parentValue)
             : (InstanceSave?)null;
-        var hasParent = parentInstance != null;
+        // A Parent the engine profile hides is dormant, so the instance is attached as if it had none.
+        var hasParent = parentInstance != null && !GetIfHiddenByEngineProfile(container, instance, parentVariable!);
         //container.GetInstance(parentValue) != null;
 
         if (hasParent)
@@ -5233,7 +5237,7 @@ public class CodeGenerator
 
                 List<VariableSave> variablesForThisInstance = group
                     .Where(item => GetIfVariableShouldBeIncludedForInstance(
-                        instance, item, baseRecursiveVariableFinder, baseElement, controlElement, context.CodeOutputProjectSettings.OutputLibrary))
+                        instance, item, baseRecursiveVariableFinder, baseElement, controlElement, context.Element, context.CodeOutputProjectSettings.OutputLibrary))
                     .ToList();
 
 
@@ -5359,6 +5363,11 @@ public class CodeGenerator
                     }
 
                     if (GetIfFormsPropertyIsAssignedOnControl(element, rootName, context.CodeOutputProjectSettings.OutputLibrary))
+                    {
+                        shouldInclude = false;
+                    }
+
+                    if (GetIfHiddenByEngineProfile(element, null, item))
                     {
                         shouldInclude = false;
                     }
@@ -6676,7 +6685,7 @@ public class CodeGenerator
     private static bool IsShaderParameterVariable(VariableSave variable) =>
         ShaderParameterMarker.TryParse(variable.ShaderParameter, out _);
 
-    private static VariableSave[] GetVariablesForValueAssignmentCode(InstanceSave instance, ElementSave currentElement, OutputLibrary outputLibrary)
+    private VariableSave[] GetVariablesForValueAssignmentCode(InstanceSave instance, ElementSave currentElement, OutputLibrary outputLibrary)
     {
         var baseElement = Gum.Managers.ObjectFinder.Self.GetElementSave(instance.BaseType);
         if (baseElement == null)
@@ -6696,7 +6705,7 @@ public class CodeGenerator
                 var variablesToConsider = defaultState.Variables
                     .Where(item =>
                     {
-                        return GetIfVariableShouldBeIncludedForInstance(instance, item, baseRecursiveVariableFinder, baseElement!, baseElement!, outputLibrary);
+                        return GetIfVariableShouldBeIncludedForInstance(instance, item, baseRecursiveVariableFinder, baseElement!, baseElement!, currentElement, outputLibrary);
                     })
                     .ToArray();
                 return variablesToConsider;
@@ -6705,7 +6714,7 @@ public class CodeGenerator
         return new VariableSave[0];
     }
 
-    private static bool GetIfVariableShouldBeIncludedForInstance(InstanceSave? instance, VariableSave item, RecursiveVariableFinder baseRecursiveVariableFinder, ElementSave instanceBaseElement, ElementSave formsControlElement, OutputLibrary outputLibrary)
+    private bool GetIfVariableShouldBeIncludedForInstance(InstanceSave? instance, VariableSave item, RecursiveVariableFinder baseRecursiveVariableFinder, ElementSave instanceBaseElement, ElementSave formsControlElement, ElementSave container, OutputLibrary outputLibrary)
     {
         var shouldInclude =
                                 item.Value != null &&
@@ -6743,8 +6752,20 @@ public class CodeGenerator
             shouldInclude = !GetIfFormsPropertyIsAssignedOnControl(formsControlElement, item.GetRootName(), outputLibrary);
         }
 
+        if (shouldInclude)
+        {
+            shouldInclude = !GetIfHiddenByEngineProfile(container, instance, item);
+        }
+
         return shouldInclude;
     }
+
+    /// <summary>
+    /// True when the project's engine profile hides the variable. A hidden variable is dormant (kept in the file,
+    /// not shown, not generated), so codegen skips it the way the Variables tab does not show it.
+    /// </summary>
+    private bool GetIfHiddenByEngineProfile(ElementSave container, InstanceSave? instance, VariableSave variable) =>
+        _variableRestrictions?.IsVariableHidden(container, instance, variable) == true;
 
     #region Behavior FormsProperty assignments
 
