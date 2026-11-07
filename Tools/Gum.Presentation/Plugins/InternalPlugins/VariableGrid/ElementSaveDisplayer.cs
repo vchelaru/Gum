@@ -72,7 +72,7 @@ public class ElementSaveDisplayer
     private readonly IClipboardService _clipboardService;
     private readonly IProjectState _projectState;
     private readonly ShapeVariableVersionGate _shapeVariableVersionGate;
-    private readonly ProjectVariableRuleMatcher _projectVariableRuleMatcher = new ProjectVariableRuleMatcher();
+    private readonly IProjectRestrictions _projectRestrictions;
 
     #endregion
 
@@ -112,8 +112,10 @@ public class ElementSaveDisplayer
         IClipboardService clipboardService,
         IProjectState projectState,
         IVariableReferenceLinkLogic referenceLinkLogic,
-        IVariableReferenceStatusLogic referenceStatusLogic)
+        IVariableReferenceStatusLogic referenceStatusLogic,
+        IProjectRestrictions projectRestrictions)
     {
+        _projectRestrictions = projectRestrictions;
         _referenceStatusLogic = referenceStatusLogic;
         _subtextLogic = subtextLogic;
         _referenceLinkLogic = referenceLinkLogic;
@@ -538,6 +540,16 @@ public class ElementSaveDisplayer
 
             bool shouldInclude = GetIfShouldInclude(variableList, instanceOwner, instance)
                 && !variableList.IsHiddenInPropertyGrid;
+
+            if (shouldInclude)
+            {
+                string listRootName = variableList.Name.Contains('.')
+                    ? variableList.Name.Substring(variableList.Name.LastIndexOf('.') + 1)
+                    : variableList.Name;
+                shouldInclude = instance != null
+                    ? !_projectRestrictions.IsVariableHidden(instance, listRootName)
+                    : !_projectRestrictions.IsVariableHidden(instanceOwner, listRootName);
+            }
 
             if (shouldInclude && instance != null && instanceElementSave != null)
             {
@@ -1052,23 +1064,10 @@ public class ElementSaveDisplayer
         }
     }
 
-    // Variables the tool itself needs; the project's variable rules never hide them.
-    private static readonly HashSet<string> RuleExemptVariableNames = new HashSet<string>
-    {
-        "Name", "BaseType", "Parent", "Locked", "DefaultChildContainer", "State",
-    };
-
     private bool GetIfHiddenByProjectRules(ElementSave elementSave, InstanceSave? instanceSave, VariableSave defaultVariable)
     {
-        GumProjectSave? project = ObjectFinder.Self.GumProjectSave;
-        if (project == null || (!project.HideVariablesByDefault && project.VariableRules.Count == 0))
-        {
-            return false;
-        }
-
         string rootName = defaultVariable.GetRootName();
         if (defaultVariable.IsCustomVariable ||
-            RuleExemptVariableNames.Contains(rootName) ||
             defaultVariable.IsState(elementSave, out _, out _))
         {
             return false;
@@ -1089,7 +1088,7 @@ public class ElementSaveDisplayer
             rootStandard = ObjectFinder.Self.GetRootStandardElementSave(elementSave);
         }
 
-        return _projectVariableRuleMatcher.IsHidden(project, rootStandard?.Name, rootName);
+        return _projectRestrictions.IsVariableHidden(rootStandard?.Name, rootName);
     }
 
     private PropertyData? CreatePropertyData(ElementSave elementSave, InstanceSave? instanceSave,

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Gum.DataTypes;
 using Gum.Managers;
@@ -43,6 +44,12 @@ public class AddInstanceDialogViewModel : GetUserStringDialogBaseViewModel
         _nameVerifier = nameVerifier;
         _addInstanceLogic = addInstanceLogic;
         _setVariableLogic = setVariableLogic;
+
+        List<string>? supportedTypes = ObjectFinder.Self.GumProjectSave?.SupportedStandardTypes;
+        if (supportedTypes != null && supportedTypes.Count > 0 && !supportedTypes.Contains(TypeToCreate))
+        {
+            TypeToCreate = supportedTypes[0];
+        }
     }
 
     public override void OnAffirmative()

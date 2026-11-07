@@ -23,6 +23,7 @@ public class AddInstanceLogic : IAddInstanceLogic
     private readonly ISetVariableLogic _setVariableLogic;
     private readonly IAddDestinationTracker _addDestinationTracker;
     private readonly IWireframeObjectManager _wireframeObjectManager;
+    private readonly IProjectRestrictions _projectRestrictions;
 
     public AddInstanceLogic(ISelectedState selectedState,
         IElementCommands elementCommands,
@@ -31,8 +32,10 @@ public class AddInstanceLogic : IAddInstanceLogic
         IUndoManager undoManager,
         ISetVariableLogic setVariableLogic,
         IAddDestinationTracker addDestinationTracker,
-        IWireframeObjectManager wireframeObjectManager)
+        IWireframeObjectManager wireframeObjectManager,
+        IProjectRestrictions projectRestrictions)
     {
+        _projectRestrictions = projectRestrictions;
         _wireframeObjectManager = wireframeObjectManager;
         _selectedState = selectedState;
         _elementCommands = elementCommands;
@@ -85,6 +88,20 @@ public class AddInstanceLogic : IAddInstanceLogic
         return newInstance;
     }
 
+    /// <inheritdoc/>
+    public string? GetRestrictionMessage(ElementSave elementToAdd, bool asChild)
+    {
+        if (_projectRestrictions.IsInstanceTypeBlocked(elementToAdd))
+        {
+            return $"The project does not support {elementToAdd.Name} objects";
+        }
+        if (asChild && _projectRestrictions.IsHierarchyBlockedFor(elementToAdd))
+        {
+            return $"The project does not support parenting {elementToAdd.Name} objects";
+        }
+        return null;
+    }
+
     private string? GetErrorMessage(ElementSave elementToAdd, object? container)
     {
         ElementSave? target = container switch
@@ -93,6 +110,11 @@ public class AddInstanceLogic : IAddInstanceLogic
             ElementSave element => element,
             _ => null,
         };
+
+        if (GetRestrictionMessage(elementToAdd, container is InstanceSave) is { } restrictionMessage)
+        {
+            return restrictionMessage;
+        }
 
         if (container is BehaviorSave)
         {

@@ -59,6 +59,7 @@ public class ProjectVariableRulesGridTests : BaseTestClass
             .Returns(new List<Attribute>());
 
         _mocker.Use<IVariableSaveLogic>(_mocker.CreateInstance<VariableSaveLogic>());
+        _mocker.Use<IProjectRestrictions>(new ProjectRestrictions());
 
         _mocker.GetMock<IProjectState>()
             .Setup(x => x.GumProjectSave)
@@ -102,9 +103,21 @@ public class ProjectVariableRulesGridTests : BaseTestClass
     }
 
     [Fact]
-    public void GetCategories_ShouldKeepStructuralVariables_WhenDefaultIsHide()
+    public void GetCategories_ShouldHideParentAndVariableReferences_WhenDefaultIsHide()
     {
         RestrictToSpritePositionAndTexture();
+
+        List<string> names = GetInstanceRootNames("Sprite", out _);
+
+        names.ShouldNotContain("Parent");
+        names.ShouldNotContain("VariableReferences");
+    }
+
+    [Fact]
+    public void GetCategories_ShouldKeepParent_WhenRulesShowIt()
+    {
+        RestrictToSpritePositionAndTexture();
+        _project.VariableRules.Add(new VariableRule { Pattern = "Parent", Action = VariableRuleAction.Show });
 
         List<string> names = GetInstanceRootNames("Sprite", out _);
 

@@ -48,6 +48,7 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
     private readonly ISetVariableLogic _setVariableLogic;
     private readonly ReferencedFileChoices _referencedFileChoices;
     private readonly IBuiltInShaderFiles _builtInShaderFiles;
+    private readonly Gum.Managers.IProjectRestrictions _projectRestrictions;
     private readonly IDialogService _dialogService;
     private readonly LocalizationService _localizationService;
     private readonly ITabManager _tabManager;
@@ -148,8 +149,10 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
         IStateEditingIndicatorService stateEditingIndicatorService,
         IVariableGridHead variableGridHead,
         IBuiltInShaderFiles builtInShaderFiles,
-        IVariableReferenceLogic variableReferenceLogic)
+        IVariableReferenceLogic variableReferenceLogic,
+        IProjectRestrictions projectRestrictions)
     {
+        _projectRestrictions = projectRestrictions;
         _builtInShaderFiles = builtInShaderFiles;
         _selectedState = selectedState;
         _exposeVariableService = exposeVariableService;
@@ -214,7 +217,8 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
             _clipboardService,
             _projectState,
             new VariableReferenceLinkLogic(_selectedState, _objectFinder, _setVariableLogic),
-            new VariableReferenceStatusLogic());
+            new VariableReferenceStatusLogic(),
+            _projectRestrictions);
     }
 
     // Normally plugins will initialize through the PluginManager. This needs to happen earlier (see where it's called for info)

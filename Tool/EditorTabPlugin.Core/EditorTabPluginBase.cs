@@ -132,6 +132,7 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
     internal SelectionManager CanvasSelectionManager => _selectionManager;
 
     private readonly IElementCommands _elementCommands;
+    private readonly IAddInstanceLogic _addInstanceLogic;
     private readonly INameVerifier _nameVerifier;
     private readonly SinglePixelTextureService _singlePixelTextureService;
     private readonly IFileDropTargetFilter _fileDropTargetFilter;
@@ -274,6 +275,7 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
         INameVerifier nameVerifier)
     {
         _nameVerifier = nameVerifier;
+        _addInstanceLogic = addInstanceLogic;
         _selectedState = selectedState;
         _undoManager = undoManager;
         _projectManager = projectManager;
@@ -1356,7 +1358,14 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
             return;
         }
 
-        string nameToAdd = _nameVerifier.MakeValidInstanceName(
+        ElementSave? typeToAdd = ObjectFinder.Self.GetElementSave(baseType);
+        if (typeToAdd != null && _addInstanceLogic.GetRestrictionMessage(typeToAdd, asChild: false) is { } restrictionMessage)
+        {
+            _dialogService.ShowMessage(restrictionMessage);
+            return;
+        }
+
+        string nameToAdd =_nameVerifier.MakeValidInstanceName(
             FileManager.RemovePath(FileManager.RemoveExtension(fileName)), baseType + "Instance", element);
 
         InstanceSave? instance =
