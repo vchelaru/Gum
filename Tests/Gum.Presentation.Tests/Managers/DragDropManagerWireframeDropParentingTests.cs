@@ -161,7 +161,7 @@ public class DragDropManagerWireframeDropParentingTests : BaseTestClass
         _dragDropManager.OnNodeObjectDroppedInWireframe(BuildDraggedComponent(), instanceUnderCursor: container);
 
         screen.Instances.ShouldContain(item => item.Name == "NewInstance");
-        (screen.DefaultState.GetValue("NewInstance.Parent") as string).ShouldBeNull();
+        (screen.DefaultState!.GetValue("NewInstance.Parent") as string).ShouldBeNull();
     }
 
     [Fact]

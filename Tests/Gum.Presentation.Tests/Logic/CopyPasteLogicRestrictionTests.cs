@@ -92,6 +92,6 @@ public class CopyPasteLogicRestrictionTests : BaseTestClass
         _copyPasteLogic.OnPaste(CopyType.InstanceOrElement);
 
         InstanceSave pasted = _component.Instances.Single(i => i != _container && i != _copied);
-        _component.DefaultState.GetValue($"{pasted.Name}.Parent").ShouldBeNull();
+        _component.DefaultState!.GetValue($"{pasted.Name}.Parent").ShouldBeNull();
     }
 }
