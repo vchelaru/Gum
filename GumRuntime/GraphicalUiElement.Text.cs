@@ -153,12 +153,14 @@ public partial class GraphicalUiElement
     //   2. ResumeLayoutUpdateIfDirtyRecursive, which clears mIsLayoutSuspended on each element
     //      before calling this, so the guard passes for that element but not yet for its children
     //      (they are handled when recursion reaches them).
-    public void UpdateFontRecursive()
+    // This element's own deferred font load, without its descendants.
+    private void LoadFontIfDirty()
     {
+        FontCheckCount++;
         if (this.mContainedObjectAsIpso is IText asIText && isFontDirty)
         {
             // Don't load the font if this element is still individually suspended; it will
-            // be loaded when ResumeLayoutUpdateIfDirtyRecursive clears the flag for this node.
+            // be loaded when the resume walk clears the flag for this node.
             if (!this.IsLayoutSuspended)
             {
                 // Cleared first so the layout the load may run doesn't load the font again.
@@ -166,6 +168,11 @@ public partial class GraphicalUiElement
                 LoadFontFromProperties(asIText);
             }
         }
+    }
+
+    public void UpdateFontRecursive()
+    {
+        LoadFontIfDirty();
 
         if (this.Children != null)
         {

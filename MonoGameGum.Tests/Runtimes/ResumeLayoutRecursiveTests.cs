@@ -94,6 +94,71 @@ public class ResumeLayoutRecursiveTests : BaseTestClass
         calls.ShouldBeLessThanOrEqualTo(2 * CountElements(parent));
     }
 
+    private static ContainerRuntime MakeChain(int depth)
+    {
+        ContainerRuntime root = new();
+        root.WidthUnits = DimensionUnitType.Absolute;
+        root.Width = 800;
+        root.HeightUnits = DimensionUnitType.Absolute;
+        root.Height = 600;
+
+        ContainerRuntime parent = root;
+        for (int i = 0; i < depth; i++)
+        {
+            ContainerRuntime level = new();
+            level.WidthUnits = DimensionUnitType.RelativeToChildren;
+            level.Width = 0;
+            level.HeightUnits = DimensionUnitType.RelativeToChildren;
+            level.Height = 0;
+            parent.Children.Add(level);
+
+            TextRuntime text = new();
+            text.Text = "Text";
+            level.Children.Add(text);
+
+            parent = level;
+        }
+
+        root.UpdateLayout();
+        return root;
+    }
+
+    [Theory]
+    [InlineData(5)]
+    [InlineData(40)]
+    public void ResumeRecursive_ShouldCheckEachElementFontAboutOnce(int depth)
+    {
+        ContainerRuntime root = MakeChain(depth);
+        int elements = CountElements(root);
+
+        int before = GraphicalUiElement.FontCheckCount;
+        root.SuspendLayout(recursive: true);
+        root.ResumeLayout(recursive: true);
+        int checks = GraphicalUiElement.FontCheckCount - before;
+
+        // 46 and 1761 for depths 5 and 40 before #7732: each element was checked once per ancestor.
+        checks.ShouldBeLessThanOrEqualTo(2 * elements);
+    }
+
+    [Fact]
+    public void ResumeRecursive_ShouldLoadDirtyDescendantFontsBeforeLayingOutParent()
+    {
+        ContainerRuntime root = MakeChain(3);
+        GraphicalUiElement level = root.Children[0];
+        TextRuntime text = (TextRuntime)level.Children[0];
+
+        root.SuspendLayout(recursive: true);
+        text.FontSize = 40;
+        text.IsFontDirty.ShouldBeTrue();
+
+        int calls = Count(() => root.ResumeLayout(recursive: true));
+
+        text.IsFontDirty.ShouldBeFalse();
+        // Pinned on main before the change: the font loads first, so the sized parents lay out once each
+        // rather than again when the font arrives.
+        calls.ShouldBeLessThanOrEqualTo(CountElements(root));
+    }
+
     [Theory]
     [InlineData(10)]
     [InlineData(40)]

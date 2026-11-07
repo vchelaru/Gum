@@ -193,6 +193,9 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     public static int UpdateLayoutCallCount;
     public static int ChildrenUpdatingParentLayoutCalls;
 
+    // Elements checked for a deferred font load. Tests read it to prove a recursive resume checks each element once (#7732).
+    internal static int FontCheckCount;
+
     // This used to be true until Jan 26, 2024, but it's
     // confusing for new users. Let's keep this off and document
     // how to use it (eventually).
