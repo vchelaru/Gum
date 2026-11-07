@@ -56,7 +56,28 @@ public class RightClickViewModelTests : BaseTestClass
             _setVariableLogic.Object,
             _circularReferenceManager.Object,
             _favoriteComponentManager.Object,
-            _hotkeyManager.Object);
+            _hotkeyManager.Object,
+            _projectRestrictions.Object);
+    }
+
+    private readonly Mock<IProjectRestrictions> _projectRestrictions = new Mock<IProjectRestrictions>();
+
+    [Fact]
+    public void GetMenuItems_ShouldOmitAddChild_WhenHierarchyIsUnsupported()
+    {
+        ComponentSave element = CreateElementWithInstances("InstanceA");
+        _selectedState.Setup(x => x.SelectedInstance).Returns(element.Instances[0]);
+        _selectedState.Setup(x => x.SelectedElement).Returns(element);
+        _objectFinder.Object.GumProjectSave = new GumProjectSave();
+        foreach (string typeName in new[] { "Circle", "ColoredRectangle", "Container", "NineSlice", "Polygon", "Rectangle", "Sprite", "Text" })
+        {
+            _objectFinder.Object.GumProjectSave.StandardElements.Add(new StandardElementSave { Name = typeName });
+        }
+        _projectRestrictions.Setup(x => x.IsHierarchyBlockedFor(It.IsAny<ElementSave>())).Returns(true);
+
+        List<ContextMenuItemViewModel> result = _sut.GetMenuItems();
+
+        result.ShouldNotContain(item => item.Text.StartsWith("Add child object to"));
     }
 
     [Fact]

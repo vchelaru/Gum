@@ -43,5 +43,11 @@ public interface IWireframeObjectManager
 
     void Activity();
 
+    /// <summary>
+    /// Puts the variables the project's rules hide back to their defaults on the canvas objects, after a
+    /// push that may have written them (a state applied by the animation preview, evaluated references).
+    /// </summary>
+    void ResetRestrictedVariables();
+
     void ApplyLocalization(GraphicalUiElement gue, string? forcedId = null);
 }

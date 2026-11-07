@@ -19,6 +19,8 @@ public class FileWatchLogic
     private readonly IProjectManager _projectManager;
     private readonly IRefreshCoalescer _rootDirectoryRefreshCoalescer;
 
+    private readonly IProjectRestrictions? _projectRestrictions;
+
     public bool Enabled => _fileWatchManager.Enabled;
 
     public FileWatchLogic(
@@ -26,8 +28,10 @@ public class FileWatchLogic
         IGuiCommands guiCommands,
         IProjectState projectState,
         IProjectManager projectManager,
-        IDispatcher dispatcher)
+        IDispatcher dispatcher,
+        IProjectRestrictions? projectRestrictions = null)
     {
+        _projectRestrictions = projectRestrictions;
         _fileWatchManager = fileWatchManager;
         _guiCommands = guiCommands;
         _projectState = projectState;
@@ -149,6 +153,14 @@ public class FileWatchLogic
             {
                 directories.Add(fontCharacterDirectory);
             }
+        }
+
+        // The engine profile may live outside the project folder. A folder that does not exist is left
+        // out, since the manager would create it.
+        if (_projectRestrictions?.ProfileFilePath?.GetDirectoryContainingThis() is { } profileDirectory &&
+            System.IO.Directory.Exists(profileDirectory.FullPath))
+        {
+            directories.Add(profileDirectory);
         }
 
         // The project directory goes in last, so folders added before it are still nested under it.

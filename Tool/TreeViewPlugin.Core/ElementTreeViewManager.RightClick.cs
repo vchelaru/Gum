@@ -34,7 +34,7 @@ public partial class ElementTreeViewManager
     /// would crash when instantiated (#4499). "Component" is excluded because it's a StandardElementSave
     /// used internally for default-value lookups, not a type meant to be instantiated directly.
     /// </summary>
-    internal static List<string> GetAvailableStandardInstanceTypes(GumProjectSave? gumProject)
+    internal static List<string> GetAvailableStandardInstanceTypes(GumProjectSave? gumProject, IProjectRestrictions projectRestrictions)
     {
         if (gumProject == null)
         {
@@ -43,6 +43,7 @@ public partial class ElementTreeViewManager
 
         var typeNames = gumProject.StandardElements
             .Where(standard => standard.Name != "Component")
+            .Where(standard => !projectRestrictions.IsStandardTypeBlocked(standard.Name))
             .Select(standard => standard.Name)
             .ToList();
 
@@ -260,7 +261,8 @@ public partial class ElementTreeViewManager
                 // "Create Component" promotes a single instance into a new component (the instance's
                 // children become the component's children). Multi-instance promotion isn't supported
                 // yet, so only offer it when exactly one instance is selected.
-                if (containerElement != null && _selectedState.SelectedInstances.Count() == 1)
+                if (containerElement != null && _selectedState.SelectedInstances.Count() == 1 &&
+                    !_projectRestrictions.AreComponentsDisabled)
                 {
                     AddSeparator();
 
@@ -290,10 +292,13 @@ public partial class ElementTreeViewManager
                 {
                     AddSeparator();
 
-                    AddCreateInstanceMenuItems($"Add child object to '{_selectedState.SelectedInstance.Name}'", containerElement);
+                    if (!_projectRestrictions.IsHierarchyBlocked)
+                    {
+                        AddCreateInstanceMenuItems($"Add child object to '{_selectedState.SelectedInstance.Name}'", containerElement);
 
-                    AddMenuItem($"Add parent object to '{_selectedState.SelectedInstance.Name}'",
-                        () => _dialogService.Show<AddInstanceDialogViewModel>(x => x.IsAddingAsParentToSelectedInstance = true));
+                        AddMenuItem($"Add parent object to '{_selectedState.SelectedInstance.Name}'",
+                            () => _dialogService.Show<AddInstanceDialogViewModel>(x => x.IsAddingAsParentToSelectedInstance = true));
+                    }
 
                     if (!string.IsNullOrEmpty(containerElement?.BaseType))
                     {
@@ -475,6 +480,7 @@ public partial class ElementTreeViewManager
         var favoritedComponents = _favoriteComponentManager.GetFilteredFavoritedComponentsFor(
             parent,
             _circularReferenceManager);
+        favoritedComponents.RemoveAll(_projectRestrictions.IsInstanceTypeBlocked);
         if (favoritedComponents.Count > 0)
         {
             foreach (var component in favoritedComponents)
@@ -493,7 +499,7 @@ public partial class ElementTreeViewManager
             parentMenuItem.Children.Add(new ContextMenuItemViewModel { IsSeparator = true });
         }
 
-        foreach (var type in GetAvailableStandardInstanceTypes(_projectState.GumProjectSave))
+        foreach (var type in GetAvailableStandardInstanceTypes(_projectState.GumProjectSave, _projectRestrictions))
         {
             var menuItem = new ContextMenuItemViewModel
             {
@@ -517,7 +523,7 @@ public partial class ElementTreeViewManager
         var parentMenuItem = new ContextMenuItemViewModel { Text = itemText };
         _contextMenuItems.Add(parentMenuItem);
 
-        foreach (var type in GetAvailableStandardInstanceTypes(_projectState.GumProjectSave))
+        foreach (var type in GetAvailableStandardInstanceTypes(_projectState.GumProjectSave, _projectRestrictions))
         {
             var menuItem = new ContextMenuItemViewModel
             {

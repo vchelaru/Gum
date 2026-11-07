@@ -54,6 +54,7 @@ public partial class WireframeObjectManager : IWireframeObjectManager
     private LocalizationService _localizationService;
     private readonly IPluginManager _pluginManager;
     private readonly IProjectState _projectState;
+    private readonly IRestrictedVariableResetter? _restrictedVariableResetter;
 
     public WireframeObjectManager(IFontManager fontManager,
         ISelectedState selectedState,
@@ -61,8 +62,10 @@ public partial class WireframeObjectManager : IWireframeObjectManager
         IGuiCommands guiCommands,
         LocalizationService localizationService,
         IPluginManager pluginManager,
-        IProjectState projectState)
+        IProjectState projectState,
+        IRestrictedVariableResetter? restrictedVariableResetter = null)
     {
+        _restrictedVariableResetter = restrictedVariableResetter;
         _fontManager = fontManager;
         _selectedState = selectedState;
         _dialogService = dialogService;
@@ -100,6 +103,9 @@ public partial class WireframeObjectManager : IWireframeObjectManager
     #endregion
 
     #region Activity
+
+    /// <inheritdoc/>
+    public void ResetRestrictedVariables() => _restrictedVariableResetter?.Reset(RootGue);
 
     public void Activity()
     {
@@ -197,6 +203,7 @@ public partial class WireframeObjectManager : IWireframeObjectManager
                         if(RootGue != null)
                         {
                             ApplySelectedStateAfterCreation(RootGue, elementSave);
+                            _restrictedVariableResetter?.Reset(RootGue);
 
                             AddAllIpsos(RootGue);
                         }
@@ -234,6 +241,7 @@ public partial class WireframeObjectManager : IWireframeObjectManager
                     if (stateForReferences != null)
                     {
                         ApplyReferencesInDependencyOrder(elementSave, RootGue, stateForReferences, GetStatesOnTopOfDefault(elementSave));
+                        _restrictedVariableResetter?.Reset(RootGue);
                     }
 
                     gueManager.Add(RootGue);

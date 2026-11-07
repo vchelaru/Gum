@@ -48,6 +48,8 @@ public class StandardWireframeEditor : WireframeEditor
     DimensionDisplayVisual widthDimensionDisplay;
     DimensionDisplayVisual heightDimensionDisplay;
 
+
+    private readonly EditHandleRestrictions _editHandleRestrictions;
     private readonly IElementCommands _elementCommands;
     private readonly IWireframeObjectManager _wireframeObjectManager;
     private readonly IVariableInCategoryPropagationLogic _variableInCategoryPropagationLogic;
@@ -100,7 +102,8 @@ public class StandardWireframeEditor : WireframeEditor
         IGumCursorState cursor,
         IToolFontService toolFontService,
         IPluginManager pluginManager,
-        ICanvasDisplayScale displayScale)
+        ICanvasDisplayScale displayScale,
+        IProjectRestrictions projectRestrictions)
         : base(
               hotkeyManager,
               selectionManager,
@@ -121,6 +124,7 @@ public class StandardWireframeEditor : WireframeEditor
               pluginManager,
               displayScale)
     {
+        _editHandleRestrictions = new EditHandleRestrictions(projectRestrictions);
         _elementCommands = elementCommands;
         _wireframeObjectManager = wireframeObjectManager;
         _variableInCategoryPropagationLogic = variableInCategoryPropagationLogic;
@@ -202,6 +206,11 @@ public class StandardWireframeEditor : WireframeEditor
                 rfv = new RecursiveVariableFinder(selectedStateSave);
             }
         }
+
+        _editHandleRestrictions.Apply(_context, tag);
+        _resizeHandlesVisual.ShowOrigin = _editHandleRestrictions.GetShouldShowOrigin(tag);
+        _resizeHandlesVisual.ShowXOffsetLine = _editHandleRestrictions.GetShouldShowXOffsetLine(tag);
+        _resizeHandlesVisual.ShowYOffsetLine = _editHandleRestrictions.GetShouldShowYOffsetLine(tag);
 
         var variableReferences = rfv?.GetVariableList("VariableReferences");
 

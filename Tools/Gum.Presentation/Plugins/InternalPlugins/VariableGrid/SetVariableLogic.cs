@@ -75,6 +75,7 @@ public class SetVariableLogic : ISetVariableLogic
 
 
     private readonly IVariableReferenceLogic _variableReferenceLogic;
+    private readonly IProjectRestrictions _projectRestrictions;
     private readonly ICircularReferenceManager _circularReferenceManager;
     private readonly IFontManager _fontManager;
     private readonly IFileCommands _fileCommands;
@@ -114,8 +115,10 @@ public class SetVariableLogic : ISetVariableLogic
         IWireframeObjectManager wireframeObjectManager,
         IProjectState projectState,
         IProjectManager projectManager,
-        IOutputManager outputManager)
+        IOutputManager outputManager,
+        IProjectRestrictions projectRestrictions)
     {
+        _projectRestrictions = projectRestrictions;
         _selectedState = selectedState;
         _nameVerifier = nameVerifier;
         _renameLogic = renameLogic;
@@ -418,6 +421,26 @@ public class SetVariableLogic : ISetVariableLogic
 
         if (rootVariableName == "BaseType")
         {
+            // The base picker is an editable box, so a typed name can name a type the project does not support.
+            string? newBaseType = instance != null ? instance.BaseType : (instanceContainer as ElementSave)?.BaseType;
+            if (!string.IsNullOrEmpty(newBaseType) &&
+                ObjectFinder.Self.GetElementSave(newBaseType) is { } newBaseElement &&
+                _projectRestrictions.IsInstanceTypeBlocked(newBaseElement))
+            {
+                _dialogService.ShowMessage($"The project does not support {newBaseType} objects.");
+                string? previousBaseType = (string?)oldValue;
+                if (instance != null)
+                {
+                    instance.BaseType = previousBaseType ?? string.Empty;
+                }
+                else if (instanceContainer is ElementSave blockedElement)
+                {
+                    blockedElement.BaseType = string.IsNullOrEmpty(previousBaseType) ? null : previousBaseType;
+                }
+                _guiCommands.RefreshVariables(force: true);
+                return;
+            }
+
             if (instance != null)
             {
                 var parentElement = instanceContainer as ElementSave;

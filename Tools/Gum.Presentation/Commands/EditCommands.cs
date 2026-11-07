@@ -44,6 +44,7 @@ public class EditCommands : IEditCommands
     private readonly IProjectState _projectState;
     private readonly IStandardElementsManagerGumTool _standardElementsManagerGumTool;
     private readonly IReferenceFinder _referenceFinder;
+    private readonly IProjectRestrictions _projectRestrictions;
     private readonly BehaviorRenamer _behaviorRenamer;
 
     public EditCommands(ISelectedState selectedState,
@@ -60,8 +61,10 @@ public class EditCommands : IEditCommands
         IProjectManager projectManager,
         IProjectState projectState,
         IStandardElementsManagerGumTool standardElementsManagerGumTool,
-        IReferenceFinder referenceFinder)
+        IReferenceFinder referenceFinder,
+        IProjectRestrictions projectRestrictions)
     {
+        _projectRestrictions = projectRestrictions;
         _selectedState = selectedState;
         _nameVerifier = nameVerifier;
         _renameLogic = renameLogic;
@@ -465,6 +468,11 @@ public class EditCommands : IEditCommands
         {
             return;
         }
+        if (_projectRestrictions.AreBehaviorsDisabled)
+        {
+            _dialogService.ShowMessage("This project does not support behaviors");
+            return;
+        }
 
         string message = "Enter new behavior name:";
         string title = "Add behavior";
@@ -519,7 +527,11 @@ public class EditCommands : IEditCommands
     /// <inheritdoc/>
     public void ShowAddComponentDialog()
     {
-        if (EnsureProjectSaved("adding a component"))
+        if (_projectRestrictions.AreComponentsDisabled)
+        {
+            _dialogService.ShowMessage("This project does not support components");
+        }
+        else if (EnsureProjectSaved("adding a component"))
         {
             _dialogService.Show<AddComponentDialogViewModel>();
         }
@@ -545,6 +557,10 @@ public class EditCommands : IEditCommands
         else if (element is StandardElementSave)
         {
             _dialogService.ShowMessage("Standard Elements cannot be duplicated");
+        }
+        else if (element is ComponentSave && _projectRestrictions.AreComponentsDisabled)
+        {
+            _dialogService.ShowMessage("This project does not support components");
         }
         else if (element is ScreenSave elementAsScreen)
         {
@@ -623,6 +639,11 @@ public class EditCommands : IEditCommands
         InstanceSave? instance = _selectedState.SelectedInstance;
         if (instance == null || _selectedState.SelectedElement == null)
         {
+            return;
+        }
+        if (_projectRestrictions.AreComponentsDisabled)
+        {
+            _dialogService.ShowMessage("This project does not support components");
             return;
         }
 

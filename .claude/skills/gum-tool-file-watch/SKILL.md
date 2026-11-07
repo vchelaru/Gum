@@ -95,6 +95,7 @@ The ignore list (`FileWatchIgnoreList`) is time-based by default. A save path th
 | `behx`, `behj` | Reload behavior definition, then re-apply its tool-only references to implementing components and elements holding their instances (see below) |
 | `csv`, `resx` | Reload localization file (RESX also matches satellites via `IsLocalizationFileThatShouldTriggerReload`) |
 | `ProjectCodeSettings.codsj` | Handled by the code output plugin's `ReactToFileChanged` (`CodeOutputPluginBase.HandleFileChanged`): reload only, never regenerate or migrate; an unreadable file keeps the current settings and makes the Code tab read-only until a readable version arrives or the user resets it |
+| The project's engine profile (`.gumengine`, `GumProjectSave.EngineProfile`) | `IProjectRestrictions.Reload()` (the profile folder is a watch root even outside the project folder), then the tree refreshes via its `Changed` event and the canvas and Variables tab refresh; a missing or broken file leaves the project unrestricted with an Output warning |
 
 ## Debug UI Panel
 

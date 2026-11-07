@@ -66,7 +66,8 @@ public class SelectionOutlineVisualTests : BaseTestClass
             Mock.Of<IGumCursorState>(),
             Mock.Of<IToolFontService>(),
             Mock.Of<IPluginManager>(),
-            new CanvasDisplayScale());
+            new CanvasDisplayScale(),
+            TestProjectRestrictions.Create());
     }
 
     public override void Dispose()

@@ -226,6 +226,7 @@ internal class MainTreeViewPlugin : PluginBase, IPriorityPlugin, IRecipient<Appl
 
         // Repopulate the Standards chip palette for the newly-loaded project's standard types.
         _elementTreeViewManager.ApplyStandardsPaletteMode();
+        _elementTreeViewManager.ApplyElementKindVisibility();
     }
 
     private void HandleElementAdd(ElementSave save)

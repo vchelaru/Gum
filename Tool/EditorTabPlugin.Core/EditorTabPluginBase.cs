@@ -132,6 +132,9 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
     internal SelectionManager CanvasSelectionManager => _selectionManager;
 
     private readonly IElementCommands _elementCommands;
+    private readonly IAddInstanceLogic _addInstanceLogic;
+    // The app-wide service, resolved here instead of widening every head's constructor.
+    private readonly IProjectRestrictions _projectRestrictions = Locator.GetRequiredService<IProjectRestrictions>();
     private readonly INameVerifier _nameVerifier;
     private readonly SinglePixelTextureService _singlePixelTextureService;
     private readonly IFileDropTargetFilter _fileDropTargetFilter;
@@ -274,6 +277,7 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
         INameVerifier nameVerifier)
     {
         _nameVerifier = nameVerifier;
+        _addInstanceLogic = addInstanceLogic;
         _selectedState = selectedState;
         _undoManager = undoManager;
         _projectManager = projectManager;
@@ -307,7 +311,8 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
             _selectedState,
             _circularReferenceManager,
             _favoriteComponentManager,
-            _hotkeyManager
+            _hotkeyManager,
+            _projectRestrictions
             );
 
         _layerService = new Services.LayerService();
@@ -332,7 +337,8 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
             _toolFontService,
             _pluginManager,
             _projectManager,
-            _canvasDisplayScale);
+            _canvasDisplayScale,
+            _projectRestrictions);
 
         _selectionManager = new SelectionManager(
             _selectedState,
@@ -999,6 +1005,7 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
                     }
 
                     _wireframeObjectManager.RootGue?.ApplyVariableReferences(state);
+                    _wireframeObjectManager.ResetRestrictedVariables();
                     //gue.ApplyVariableReferences(_selectedState.SelectedStateSave);
 
                     handledByDirectSet = didPush && !disposedFile;
@@ -1356,7 +1363,14 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
             return;
         }
 
-        string nameToAdd = _nameVerifier.MakeValidInstanceName(
+        ElementSave? typeToAdd = ObjectFinder.Self.GetElementSave(baseType);
+        if (typeToAdd != null && _addInstanceLogic.GetRestrictionMessage(typeToAdd, asChild: false) is { } restrictionMessage)
+        {
+            _dialogService.ShowMessage(restrictionMessage);
+            return;
+        }
+
+        string nameToAdd =_nameVerifier.MakeValidInstanceName(
             FileManager.RemovePath(FileManager.RemoveExtension(fileName)), baseType + "Instance", element);
 
         InstanceSave? instance =

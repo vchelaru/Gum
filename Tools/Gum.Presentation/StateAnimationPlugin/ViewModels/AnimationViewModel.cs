@@ -519,6 +519,7 @@ public partial class AnimationViewModel : ViewModel
             _selectedState.SelectedStateSave = null;
             // The preview already evaluated the references into stateToSet.
             VariableReferenceGraph.RunWithoutReevaluation(() => _wireframeObjectManager.RootGue?.ApplyState(stateToSet));
+            _wireframeObjectManager.ResetRestrictedVariables();
         }
     }
 

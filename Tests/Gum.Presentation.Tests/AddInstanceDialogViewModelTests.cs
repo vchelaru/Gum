@@ -7,6 +7,7 @@ using Gum.Logic;
 using Gum.ToolStates;
 using Gum.Undo;
 using Moq;
+using Shouldly;
 
 namespace Gum.Presentation.Tests;
 
@@ -35,7 +36,26 @@ public class AddInstanceDialogViewModelTests : BaseTestClass
             _nameVerifier.Object,
             _addInstanceLogic.Object,
             _setVariableLogic.Object,
-            new Mock<IUndoManager>().Object);
+            new Mock<IUndoManager>().Object,
+            TestProjectRestrictions.Create());
+    }
+
+    [Fact]
+    public void TypeToCreate_ShouldBeFirstSupportedType_WhenProjectRestrictsTypes()
+    {
+        ObjectFinder.Self.GumProjectSave = new GumProjectSave();
+        EngineProfile profile = new EngineProfile();
+        profile.SupportedStandardTypes.Add("Sprite");
+
+        AddInstanceDialogViewModel restricted = new AddInstanceDialogViewModel(
+            _selectedState.Object,
+            _nameVerifier.Object,
+            _addInstanceLogic.Object,
+            _setVariableLogic.Object,
+            new Mock<IUndoManager>().Object,
+            TestProjectRestrictions.Create(profile));
+
+        restricted.TypeToCreate.ShouldBe("Sprite");
     }
 
     [Fact]

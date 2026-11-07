@@ -477,6 +477,14 @@ public class GumProjectSave
     public bool ShouldSerializeFavoriteComponents() => FavoriteComponents.Count > 0;
 
     /// <summary>
+    /// Path, relative to the project file's folder and with forward slashes, of the engine profile
+    /// (<c>.gumengine</c>) that says what the target engine supports. Empty means the project is unrestricted.
+    /// The tool reads the profile through <c>IProjectRestrictions</c>; this class only stores the reference.
+    /// </summary>
+    public string EngineProfile { get; set; } = string.Empty;
+    public bool ShouldSerializeEngineProfile() => !string.IsNullOrEmpty(EngineProfile);
+
+    /// <summary>
     /// Names of the Screens and Components <c>gumcli pack --shake</c> left out of a bundle because
     /// nothing reached them. Lets the runtime tell a trimmed element from a misspelled one. Empty
     /// for every project the tool saves.

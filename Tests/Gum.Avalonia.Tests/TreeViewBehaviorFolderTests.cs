@@ -33,6 +33,108 @@ public class TreeViewBehaviorFolderTests
     }
 
     [AvaloniaFact]
+    public void ApplyElementKindVisibility_ProjectDisablesComponentsAndBehaviors_RemovesTheirRootFolders()
+    {
+        using ToolProjectFixture fixture = new ToolProjectFixture("GumTreeElementKindTests");
+        using EngineProfileScope scope = new EngineProfileScope(Services);
+        EngineProfile profile = scope.Profile;
+        ElementTreeViewManager treeViewManager = Services.GetRequiredService<ElementTreeViewManager>();
+        treeViewManager.RefreshUi();
+        profile.DisableComponents = true;
+        profile.DisableBehaviors = true;
+
+        treeViewManager.ApplyElementKindVisibility();
+
+        treeViewManager.RootTreeNodes.ShouldNotContain(treeViewManager.RootComponentsTreeNode);
+        treeViewManager.RootTreeNodes.ShouldNotContain(treeViewManager.RootBehaviorsTreeNode);
+        treeViewManager.RootTreeNodes.ShouldContain(treeViewManager.RootScreensTreeNode);
+    }
+
+    [AvaloniaFact]
+    public void Reload_ProfileNowDisablesComponentsAndBehaviors_RemovesTheirRootFolders()
+    {
+        using ToolProjectFixture fixture = new ToolProjectFixture("GumTreeElementKindTests");
+        using EngineProfileScope scope = new EngineProfileScope(Services);
+        ElementTreeViewManager treeViewManager = Services.GetRequiredService<ElementTreeViewManager>();
+        treeViewManager.RefreshUi();
+        treeViewManager.RootTreeNodes.ShouldContain(treeViewManager.RootComponentsTreeNode);
+        scope.Profile.DisableComponents = true;
+        scope.Profile.DisableBehaviors = true;
+
+        Services.GetRequiredService<IProjectRestrictions>().Reload();
+
+        treeViewManager.RootTreeNodes.ShouldNotContain(treeViewManager.RootComponentsTreeNode);
+        treeViewManager.RootTreeNodes.ShouldNotContain(treeViewManager.RootBehaviorsTreeNode);
+    }
+
+    [AvaloniaFact]
+    public void ApplyElementKindVisibility_ProjectReenablesComponentsAndBehaviors_RestoresRootFoldersInOrder()
+    {
+        using ToolProjectFixture fixture = new ToolProjectFixture("GumTreeElementKindTests");
+        using EngineProfileScope scope = new EngineProfileScope(Services);
+        EngineProfile profile = scope.Profile;
+        ElementTreeViewManager treeViewManager = Services.GetRequiredService<ElementTreeViewManager>();
+        treeViewManager.RefreshUi();
+        profile.DisableComponents = true;
+        profile.DisableBehaviors = true;
+        treeViewManager.ApplyElementKindVisibility();
+        profile.DisableComponents = false;
+        profile.DisableBehaviors = false;
+
+        treeViewManager.ApplyElementKindVisibility();
+
+        List<object> roots = treeViewManager.RootTreeNodes.Cast<object>().ToList();
+        int screensIndex = roots.IndexOf(treeViewManager.RootScreensTreeNode);
+        int componentsIndex = roots.IndexOf(treeViewManager.RootComponentsTreeNode);
+        int behaviorsIndex = roots.IndexOf(treeViewManager.RootBehaviorsTreeNode);
+        componentsIndex.ShouldBe(screensIndex + 1);
+        behaviorsIndex.ShouldBe(roots.Count - 1);
+    }
+
+    [AvaloniaTheory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void ElementKindVisibilityAndStandardsPalette_Combined_KeepRootFolderOrder(bool usePalette)
+    {
+        using ToolProjectFixture fixture = new ToolProjectFixture("GumTreeElementKindTests");
+        using EngineProfileScope scope = new EngineProfileScope(Services);
+        EngineProfile profile = scope.Profile;
+        IProjectManager projectManager = Services.GetRequiredService<IProjectManager>();
+        bool? originalPalette = projectManager.UseStandardsPalette;
+        try
+        {
+            projectManager.UseStandardsPalette = usePalette;
+            ElementTreeViewManager treeViewManager = Services.GetRequiredService<ElementTreeViewManager>();
+            treeViewManager.RefreshUi();
+            profile.DisableComponents = true;
+            profile.DisableBehaviors = true;
+            treeViewManager.ApplyElementKindVisibility();
+            treeViewManager.ApplyStandardsPaletteMode();
+            profile.DisableComponents = false;
+            profile.DisableBehaviors = false;
+            treeViewManager.ApplyElementKindVisibility();
+            treeViewManager.ApplyStandardsPaletteMode();
+
+            List<object> roots = treeViewManager.RootTreeNodes.Cast<object>().ToList();
+            List<object> expected = new List<object>
+            {
+                treeViewManager.RootScreensTreeNode,
+                treeViewManager.RootComponentsTreeNode,
+            };
+            if (!usePalette)
+            {
+                expected.Add(treeViewManager.RootStandardElementsTreeNode);
+            }
+            expected.Add(treeViewManager.RootBehaviorsTreeNode);
+            roots.ShouldBe(expected);
+        }
+        finally
+        {
+            projectManager.UseStandardsPalette = originalPalette;
+        }
+    }
+
+    [AvaloniaFact]
     public void RefreshUi_BehaviorInSubfolderRemovedFromProject_RemovesItsNode()
     {
         using ToolProjectFixture fixture = new ToolProjectFixture("GumTreeBehaviorFolderTests");

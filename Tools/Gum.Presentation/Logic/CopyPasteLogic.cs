@@ -103,6 +103,7 @@ public class CopyPasteLogic : ICopyPasteLogic
     private readonly IRenameLogic _renameLogic;
     private readonly IOutputManager _outputManager;
     private readonly IMovedInstanceReferenceDropper _movedInstanceReferenceDropper;
+    private readonly IProjectRestrictions _projectRestrictions;
 
     // The screen or component the last cut took, which the next paste on a folder moves. Null when
     // the last copy or cut was anything else, or the cut element was already moved.
@@ -132,9 +133,11 @@ public class CopyPasteLogic : ICopyPasteLogic
         ICircularReferenceManager circularReferenceManager,
         IRenameLogic renameLogic,
         IOutputManager outputManager,
-        IMovedInstanceReferenceDropper movedInstanceReferenceDropper
+        IMovedInstanceReferenceDropper movedInstanceReferenceDropper,
+        IProjectRestrictions projectRestrictions
         )
     {
+        _projectRestrictions = projectRestrictions;
         _movedInstanceReferenceDropper = movedInstanceReferenceDropper;
         _renameLogic = renameLogic;
         _outputManager = outputManager;
@@ -691,6 +694,14 @@ public class CopyPasteLogic : ICopyPasteLogic
             _dialogService.ShowMessage($"Cannot paste {circularInstance.Name} ({circularInstance.BaseType}) into {targetElement.Name} because it would create a circular reference");
             return new List<InstanceSave>();
         }
+        InstanceSave? blockedInstance = instancesToCopy.FirstOrDefault(instance =>
+            ObjectFinder.Self.GetElementSave(instance.BaseType) is { } typeToPaste &&
+            _projectRestrictions.IsInstanceTypeBlocked(typeToPaste));
+        if (blockedInstance != null)
+        {
+            _dialogService.ShowMessage($"The project does not support {blockedInstance.BaseType} objects, so {blockedInstance.Name} cannot be pasted");
+            return new List<InstanceSave>();
+        }
         ///////////////////////End Early Out/////////////////////
 
         var selectedState = forcedSelectedState ?? _selectedState;
@@ -1067,7 +1078,7 @@ public class CopyPasteLogic : ICopyPasteLogic
                         }
                     }
 
-                    if(!string.IsNullOrEmpty(newParentName))
+                    if(!string.IsNullOrEmpty(newParentName) && !_projectRestrictions.IsVariableHidden(newInstance, "Parent"))
                     {
                         targetState.SetValue($"{newInstance.Name}.Parent", newParentName, "string");
                     }

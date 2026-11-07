@@ -56,7 +56,8 @@ public class PropertyGridManagerRefreshGuardTests : BaseTestClass
             Mock.Of<IStateEditingIndicatorService>(),
             Mock.Of<IVariableGridHead>(),
             Mock.Of<IBuiltInShaderFiles>(),
-            Mock.Of<IVariableReferenceLogic>());
+            Mock.Of<IVariableReferenceLogic>(),
+            Mock.Of<Gum.Managers.IProjectRestrictions>());
         Should.Throw<InvalidOperationException>(() => sut.RefreshEntireGrid());
 
         // The second refresh may fail further in (the view was never created), which is not what is

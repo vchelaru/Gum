@@ -20,6 +20,7 @@ public class MainBehaviorsPlugin : CorePriorityPlugin
     private readonly IUndoManager _undoManager;
     private readonly IProjectManager _projectManager;
     private readonly IPluginManager _pluginManager;
+    private readonly IProjectRestrictions _projectRestrictions;
 
     private BehaviorsViewModel _viewModel = null!;
     private BehaviorsLogic _behaviorsLogic = null!;
@@ -30,8 +31,10 @@ public class MainBehaviorsPlugin : CorePriorityPlugin
         IElementCommands elementCommands,
         IUndoManager undoManager,
         IProjectManager projectManager,
-        IPluginManager pluginManager)
+        IPluginManager pluginManager,
+        IProjectRestrictions projectRestrictions)
     {
+        _projectRestrictions = projectRestrictions;
         _selectedState = selectedState;
         _elementCommands = elementCommands;
         _undoManager = undoManager;
@@ -49,7 +52,7 @@ public class MainBehaviorsPlugin : CorePriorityPlugin
 
         _behaviorsLogic = new BehaviorsLogic(
             _selectedState, _elementCommands, _undoManager, _pluginManager,
-            _guiCommands, _fileCommands, _viewModel, behaviorsTab);
+            _guiCommands, _fileCommands, _viewModel, behaviorsTab, _projectRestrictions);
 
         _viewModel.ApplyChangedValues += _behaviorsLogic.HandleApplyBehaviorChanges;
 

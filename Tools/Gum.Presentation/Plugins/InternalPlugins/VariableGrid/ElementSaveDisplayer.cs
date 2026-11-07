@@ -72,6 +72,7 @@ public class ElementSaveDisplayer
     private readonly IClipboardService _clipboardService;
     private readonly IProjectState _projectState;
     private readonly ShapeVariableVersionGate _shapeVariableVersionGate;
+    private readonly IProjectRestrictions _projectRestrictions;
 
     #endregion
 
@@ -111,8 +112,10 @@ public class ElementSaveDisplayer
         IClipboardService clipboardService,
         IProjectState projectState,
         IVariableReferenceLinkLogic referenceLinkLogic,
-        IVariableReferenceStatusLogic referenceStatusLogic)
+        IVariableReferenceStatusLogic referenceStatusLogic,
+        IProjectRestrictions projectRestrictions)
     {
+        _projectRestrictions = projectRestrictions;
         _referenceStatusLogic = referenceStatusLogic;
         _subtextLogic = subtextLogic;
         _referenceLinkLogic = referenceLinkLogic;
@@ -537,6 +540,16 @@ public class ElementSaveDisplayer
 
             bool shouldInclude = GetIfShouldInclude(variableList, instanceOwner, instance)
                 && !variableList.IsHiddenInPropertyGrid;
+
+            if (shouldInclude)
+            {
+                string listRootName = variableList.Name.Contains('.')
+                    ? variableList.Name.Substring(variableList.Name.LastIndexOf('.') + 1)
+                    : variableList.Name;
+                shouldInclude = instance != null
+                    ? !_projectRestrictions.IsVariableHidden(instance, listRootName)
+                    : !_projectRestrictions.IsVariableHidden(instanceOwner, listRootName);
+            }
 
             if (shouldInclude && instance != null && instanceElementSave != null)
             {
@@ -1051,6 +1064,33 @@ public class ElementSaveDisplayer
         }
     }
 
+    private bool GetIfHiddenByProjectRules(ElementSave elementSave, InstanceSave? instanceSave, VariableSave defaultVariable)
+    {
+        string rootName = defaultVariable.GetRootName();
+        if (defaultVariable.IsCustomVariable ||
+            defaultVariable.IsState(elementSave, out _, out _))
+        {
+            return false;
+        }
+
+        StandardElementSave? rootStandard;
+        if (instanceSave != null)
+        {
+            rootStandard = ObjectFinder.Self.GetRootStandardElementSave(instanceSave);
+        }
+        else if (!string.IsNullOrEmpty(defaultVariable.SourceObject) &&
+            elementSave.GetInstance(defaultVariable.SourceObject) is InstanceSave sourceInstance)
+        {
+            rootStandard = ObjectFinder.Self.GetRootStandardElementSave(sourceInstance);
+        }
+        else
+        {
+            rootStandard = ObjectFinder.Self.GetRootStandardElementSave(elementSave);
+        }
+
+        return _projectRestrictions.IsVariableHidden(rootStandard?.Name, rootName);
+    }
+
     private PropertyData? CreatePropertyData(ElementSave elementSave, InstanceSave? instanceSave,
         AmountToDisplay amountToDisplay, VariableSave defaultVariable, bool forceReadOnly, bool isAssignedByReference, string? subtext, HashSet<string> addedNames, string? referenceSource = null)
     {
@@ -1089,6 +1129,11 @@ public class ElementSaveDisplayer
                     shouldInclude = false;
                 }
             }
+        }
+
+        if (shouldInclude && GetIfHiddenByProjectRules(elementSave, instanceSave, defaultVariable))
+        {
+            shouldInclude = false;
         }
 
         if (shouldInclude && instanceSave != null)
@@ -1243,7 +1288,7 @@ public class ElementSaveDisplayer
 
         if (!isExcluded)
         {
-            var baseTypeConverter = new AvailableBaseTypeConverter(instanceOwner, instance, _projectState);
+            var baseTypeConverter = new AvailableBaseTypeConverter(instanceOwner, instance, _projectState, _projectRestrictions);
             // We may want to support Screens inheriting from other Screens in the future, but for now we won't allow it
             // "IsEditable" is a literal (rather than nameof(WpfDataUi.Controls.ComboBoxDisplay.IsEditable))
             // since this headless project must never reference WpfDataUi; the WPF ComboBoxDisplay

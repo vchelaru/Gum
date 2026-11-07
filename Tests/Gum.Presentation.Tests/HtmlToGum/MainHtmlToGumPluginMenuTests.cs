@@ -120,7 +120,8 @@ public class MainHtmlToGumPluginMenuTests
             Mock.Of<IFileCommands>(),
             Mock.Of<ISelectedState>(),
             Mock.Of<IDialogService>(),
-            Mock.Of<IGuiCommands>())
+            Mock.Of<IGuiCommands>(),
+            TestProjectRestrictions.Create())
         {
             Menu = menu,
         };

@@ -34,6 +34,7 @@ namespace Gum.Managers
         private readonly IUnsavedChangesTracker _unsavedChangesTracker;
         private readonly IVariableReferenceLogic _variableReferenceLogic;
         private readonly IUndoManager _undoManager;
+        private readonly IProjectRestrictions? _projectRestrictions;
 
         /// <summary>
         /// Names of the elements reloaded while a <see cref="DeferDependentUpdates"/> scope is open;
@@ -77,8 +78,10 @@ namespace Gum.Managers
             IVariableReferenceLogic variableReferenceLogic,
             IUndoManager undoManager,
             IProjectReferencedFiles? referencedFiles = null,
-            IShaderIncludeMap? shaderIncludes = null)
+            IShaderIncludeMap? shaderIncludes = null,
+            IProjectRestrictions? projectRestrictions = null)
         {
+            _projectRestrictions = projectRestrictions;
             _referencedFiles = referencedFiles ?? new ProjectReferencedFiles();
             _shaderIncludes = shaderIncludes ?? new ShaderIncludeMap();
             _variableReferenceLogic = variableReferenceLogic;
@@ -231,6 +234,10 @@ namespace Gum.Managers
             {
                 ReactToLocalizationFileChanged(file);
             }
+            else if(IsEngineProfile(file))
+            {
+                ReactToEngineProfileChanged();
+            }
             else if(IsShaderFile(file) || _shaderIncludes.IsIncluded(file))
             {
                 ReactToShaderFileChanged(file);
@@ -259,6 +266,10 @@ namespace Gum.Managers
             {
                 ReactToElementSaveDeleted(file);
             }
+            else if (IsEngineProfile(file))
+            {
+                ReactToEngineProfileChanged();
+            }
             else if (IsShaderFile(file) || _shaderIncludes.IsIncluded(file))
             {
                 // The refresh makes the canvas look the shader up again; a missing file is reported
@@ -270,6 +281,20 @@ namespace Gum.Managers
                 // The rebuilt canvas reports the missing file the way it does when the file is picked.
                 ReactToReferencedFileChanged(file);
             }
+        }
+
+        /// <summary>
+        /// True when <paramref name="file"/> is the engine profile the loaded project references.
+        /// </summary>
+        public bool IsEngineProfile(FilePath file) =>
+            _projectRestrictions?.ProfileFilePath is { } profilePath && profilePath == file;
+
+        // Re-reads the profile (a deleted or broken one makes the project unrestricted with a warning); the
+        // restrictions' Changed event refreshes the tree, and the canvas and Variables tab refresh here.
+        private void ReactToEngineProfileChanged()
+        {
+            _projectRestrictions?.Reload();
+            RefreshCanvasAndVariables();
         }
 
         /// <summary>

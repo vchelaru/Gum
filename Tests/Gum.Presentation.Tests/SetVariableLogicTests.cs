@@ -401,6 +401,26 @@ public class SetVariableLogicTests : BaseTestClass
     }
 
     [Fact]
+    public void ReactToPropertyValueChanged_ShouldRevertBaseType_WhenProjectDoesNotSupportTheType()
+    {
+        GumProjectSave project = new GumProjectSave();
+        StandardElementSave text = new StandardElementSave { Name = "Text" };
+        text.States.Add(new StateSave { Name = "Default", ParentContainer = text });
+        project.StandardElements.Add(text);
+        ObjectFinder.Self.GumProjectSave = project;
+        ComponentSave container = new ComponentSave { Name = "Owner" };
+        StateSave state = new StateSave { Name = "Default", ParentContainer = container };
+        container.States.Add(state);
+        InstanceSave instance = new InstanceSave { Name = "Thing", BaseType = "Text", ParentContainer = container };
+        container.Instances.Add(instance);
+        mocker.GetMock<IProjectRestrictions>().Setup(x => x.IsInstanceTypeBlocked(text)).Returns(true);
+
+        _setVariableLogic.ReactToPropertyValueChanged("BaseType", "Sprite", container, instance, state, refresh: false);
+
+        instance.BaseType.ShouldBe("Sprite");
+    }
+
+    [Fact]
     public void ReactToPropertyValueChanged_ShouldSetTextureAddressToCustom_WhenSourceFileExtensionIsAchx()
     {
         ComponentSave container = new ComponentSave();

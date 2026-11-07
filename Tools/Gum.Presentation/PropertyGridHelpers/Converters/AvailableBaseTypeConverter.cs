@@ -13,6 +13,7 @@ namespace Gum.PropertyGridHelpers.Converters
         InstanceSave? instance;
         private StandardValuesCollection standardValues;
         private readonly IProjectState _projectState;
+        private readonly IProjectRestrictions _projectRestrictions;
 
         public override bool GetStandardValuesSupported(ITypeDescriptorContext? context)
         {
@@ -24,8 +25,9 @@ namespace Gum.PropertyGridHelpers.Converters
             return true;
         }
 
-        public AvailableBaseTypeConverter(ElementSave? instanceOwner, InstanceSave? instance, IProjectState projectState) : base()
+        public AvailableBaseTypeConverter(ElementSave? instanceOwner, InstanceSave? instance, IProjectState projectState, IProjectRestrictions projectRestrictions) : base()
         {
+            _projectRestrictions = projectRestrictions;
             this.elementViewing = instanceOwner;
             this.instance = instance;
             _projectState = projectState;
@@ -67,7 +69,7 @@ namespace Gum.PropertyGridHelpers.Converters
                 foreach (var standard in gumProject.StandardElements)
                 {
                     // Component is a special base type but we don't actually want to inherit from component.
-                    if (standard.Name != "Component")
+                    if (standard.Name != "Component" && !_projectRestrictions.IsStandardTypeBlocked(standard.Name))
                     {
                         values.Add(standard.Name);
                     }
@@ -75,6 +77,11 @@ namespace Gum.PropertyGridHelpers.Converters
 
                 foreach (ComponentSave componentSave in gumProject.Components)
                 {
+                    if (_projectRestrictions.AreComponentsDisabled)
+                    {
+                        break;
+                    }
+
                     //var shouldShow = element == null || element.IsOfType(componentSave.Name) == false || element.Name == instance?.BaseType;
                     var shouldShow = effectiveElement == null || effectiveElement.Name != componentSave.Name || effectiveElement.Name == instance?.BaseType;
 

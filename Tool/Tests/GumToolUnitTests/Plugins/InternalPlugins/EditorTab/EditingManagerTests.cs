@@ -34,7 +34,8 @@ public class EditingManagerTests : BaseTestClass
             _selectedState.Object,
             _circularReferenceManager.Object,
             _favoriteComponentManager.Object,
-            Mock.Of<IHotkeyManager>());
+            Mock.Of<IHotkeyManager>(),
+            Mock.Of<Gum.Managers.IProjectRestrictions>());
     }
 
     [Fact]

@@ -48,7 +48,8 @@ public class FileWatchManagerTests : IDisposable
         FilePath projectDirectory,
         IDispatcher? dispatcher = null,
         ICrashReporter? crashReporter = null,
-        IFileSystemWatcherFactory? watcherFactory = null)
+        IFileSystemWatcherFactory? watcherFactory = null,
+        IProjectRestrictions? projectRestrictions = null)
     {
         guiCommandsMock = new Mock<IGuiCommands>();
         pluginManagerMock = new Mock<IPluginManager>();
@@ -73,7 +74,8 @@ public class FileWatchManagerTests : IDisposable
             new Mock<Gum.Services.Dialogs.IDialogService>().Object,
             new UnsavedChangesTracker(),
             new Mock<Gum.Plugins.InternalPlugins.VariableGrid.IVariableReferenceLogic>().Object,
-            new Mock<Gum.Undo.IUndoManager>().Object);
+            new Mock<Gum.Undo.IUndoManager>().Object,
+            projectRestrictions: projectRestrictions);
 
         return new FileWatchManager(
             guiCommandsMock.Object,
@@ -282,6 +284,33 @@ public class FileWatchManagerTests : IDisposable
 
         PollUntil(() => sut.ChangedFilesWaitingForFlush.Contains(renamedFile)).ShouldBeTrue(
             "a rename onto ProjectCodeSettings.codsj should be queued like an in-place save");
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void EnableWithDirectories_ShouldQueueTheEngineProfile_ForAnInPlaceEditOrAnAtomicSave(bool atomicSave)
+    {
+        FilePath watchedDirectory = new FilePath(_tempDirectory + "/");
+        FilePath profile = new FilePath(Path.Combine(_tempDirectory, "Engine.gumengine"));
+        File.WriteAllText(profile.FullPath, "{}");
+        Mock<IProjectRestrictions> restrictions = new Mock<IProjectRestrictions>();
+        restrictions.Setup(r => r.ProfileFilePath).Returns(profile);
+        FileWatchManager sut = BuildSut(out _, out _, out _, watchedDirectory, projectRestrictions: restrictions.Object);
+        sut.EnableWithDirectories(new HashSet<FilePath> { watchedDirectory });
+
+        if (atomicSave)
+        {
+            string tempName = profile.FullPath + ".tmp";
+            File.WriteAllText(tempName, """{ "disableComponents": true }""");
+            File.Move(tempName, profile.FullPath, overwrite: true);
+        }
+        else
+        {
+            File.WriteAllText(profile.FullPath, """{ "disableComponents": true }""");
+        }
+
+        PollUntil(() => sut.ChangedFilesWaitingForFlush.Contains(profile)).ShouldBeTrue();
     }
 
     [Fact]
