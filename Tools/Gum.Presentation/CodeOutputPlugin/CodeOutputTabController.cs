@@ -1,4 +1,4 @@
-﻿using CodeOutputPlugin.Manager;
+using CodeOutputPlugin.Manager;
 using CodeOutputPlugin.ViewModels;
 using Gum.DataTypes;
 using Gum.Managers;
@@ -173,6 +173,10 @@ public class CodeOutputTabController
                         {
                             string code = _codeGenerator.GetCodeForInstance(instance, selectedElement, codeOutputProjectSettings);
                             _viewModel.Code = code;
+                        }
+                        else if (selectedElement is not StandardElementSave && _codeGenerator.IsElementBlockedByEngineProfile(selectedElement))
+                        {
+                            _viewModel.Code = "// not generated: the project's engine profile does not support this element's type";
                         }
                         else if (selectedElement is not StandardElementSave)
                         {

@@ -4,7 +4,7 @@ using System;
 using System.IO;
 using Xunit;
 
-namespace Gum.Presentation.Tests.Managers;
+namespace Gum.ProjectServices.Tests;
 
 /// <summary>
 /// Reading the .gumengine a project references: parsing, path resolution, and falling back to an
