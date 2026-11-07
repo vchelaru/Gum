@@ -620,9 +620,76 @@ public class OrphanCodeFileScanServiceTests : BaseTestClass
         CreateService().Scan(project, projectSettings).Orphans.ShouldBeEmpty();
     }
 
+    [Fact]
+    public void Scan_ShouldFlagBlockedComponentFiles_LikeADeletedComponent()
+    {
+        GumProjectSave project = Project;
+        ComponentSave hero = CreateComponent("Hero");
+        hero.BaseType = "Sprite";
+        project.Components.Add(hero);
+        CodeOutputProjectSettings projectSettings = CreateProjectSettings();
+        WriteGeneratedFile("Components/Hero.Generated.cs", "Hero");
+        WriteFile("Components/Hero.cs", "partial class Hero { }");
+
+        IReadOnlyList<OrphanCodeFile> orphans =
+            CreateService(Supporting("Container")).Scan(project, projectSettings).Orphans;
+
+        orphans.Select(item => item.FilePath.FileNameNoPath).OrderBy(name => name)
+            .ShouldBe(new[] { "Hero.cs", "Hero.Generated.cs" }.OrderBy(name => name));
+        orphans.Single(item => item.Kind == OrphanCodeFileKind.Generated).ElementName.ShouldBe("Hero");
+    }
+
+    [Fact]
+    public void Scan_ShouldFlagFilesOfComponentDerivedFromBlockedComponent()
+    {
+        GumProjectSave project = Project;
+        ComponentSave hero = CreateComponent("Hero");
+        hero.BaseType = "Sprite";
+        ComponentSave superHero = CreateComponent("SuperHero");
+        superHero.BaseType = "Hero";
+        project.Components.Add(hero);
+        project.Components.Add(superHero);
+        CodeOutputProjectSettings projectSettings = CreateProjectSettings();
+        WriteGeneratedFile("Components/SuperHero.Generated.cs", "SuperHero");
+
+        IReadOnlyList<OrphanCodeFile> orphans =
+            CreateService(Supporting("Container")).Scan(project, projectSettings).Orphans;
+
+        orphans.Select(item => item.FilePath.FileNameNoPath).ShouldBe(new[] { "SuperHero.Generated.cs" });
+    }
+
+    [Fact]
+    public void Scan_ShouldKeepSupportedComponentFiles_WhenAProfileBlocksOtherTypes()
+    {
+        GumProjectSave project = Project;
+        project.Components.Add(CreateComponent("Panel"));
+        CodeOutputProjectSettings projectSettings = CreateProjectSettings();
+        WriteGeneratedFile("Components/Panel.Generated.cs", "Panel");
+        WriteFile("Components/Panel.cs", "partial class Panel { }");
+
+        CreateService(Supporting("Container")).Scan(project, projectSettings).Orphans.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void Scan_ShouldKeepAllComponentFiles_WhenThereIsNoEngineProfile()
+    {
+        GumProjectSave project = Project;
+        ComponentSave hero = CreateComponent("Hero");
+        hero.BaseType = "Sprite";
+        project.Components.Add(hero);
+        CodeOutputProjectSettings projectSettings = CreateProjectSettings();
+        WriteGeneratedFile("Components/Hero.Generated.cs", "Hero");
+        WriteFile("Components/Hero.cs", "partial class Hero { }");
+
+        CreateService().Scan(project, projectSettings).Orphans.ShouldBeEmpty();
+    }
+
     #region Helpers
 
-    private OrphanCodeFileScanService CreateService()
+    private static IVariableRestrictions Supporting(params string[] standardTypes) =>
+        new EngineProfileVariableRestrictions(new EngineProfile { SupportedStandardTypes = standardTypes.ToList() });
+
+    private OrphanCodeFileScanService CreateService(IVariableRestrictions? restrictions = null)
     {
         ObjectFinder.Self.GumProjectSave = Project;
 
@@ -639,7 +706,8 @@ public class OrphanCodeFileScanServiceTests : BaseTestClass
             new CodeOutputElementSettingsManager(directoryProvider);
         LocalizationService localizationService = new LocalizationService();
         CodeGenerator codeGenerator = new CodeGenerator(
-            codeGenNameVerifier, localizationService, elementSettingsManager, directoryProvider);
+            codeGenNameVerifier, localizationService, elementSettingsManager, directoryProvider,
+            variableRestrictions: restrictions);
         CodeGenerationFileLocationsService fileLocationsService = new CodeGenerationFileLocationsService(
             codeGenerator, codeGenNameVerifier, directoryProvider);
 
