@@ -110,6 +110,7 @@ public static class GumCoreServiceCollectionExtensions
         services.AddSingleton<IProjectRestrictions, ProjectRestrictions>();
         services.AddSingleton<IRestrictedVariableResetter, RestrictedVariableResetter>();
         services.AddSingleton<ICopyPasteLogic, CopyPasteLogic>();
+        services.AddSingleton<IElementDuplicateRestrictions, ElementDuplicateRestrictions>();
         services.AddSingleton<IDeleteLogic, DeleteLogic>();
         services.AddSingleton<IGumProjectRepairLogic, GumProjectRepairLogic>();
         services.AddSingleton<ISkiaShapeStandardsLogic, SkiaShapeStandardsLogic>();

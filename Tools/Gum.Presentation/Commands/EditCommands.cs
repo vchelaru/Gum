@@ -45,6 +45,7 @@ public class EditCommands : IEditCommands
     private readonly IStandardElementsManagerGumTool _standardElementsManagerGumTool;
     private readonly IReferenceFinder _referenceFinder;
     private readonly IProjectRestrictions _projectRestrictions;
+    private readonly IElementDuplicateRestrictions _elementDuplicateRestrictions;
     private readonly BehaviorRenamer _behaviorRenamer;
 
     public EditCommands(ISelectedState selectedState,
@@ -62,9 +63,11 @@ public class EditCommands : IEditCommands
         IProjectState projectState,
         IStandardElementsManagerGumTool standardElementsManagerGumTool,
         IReferenceFinder referenceFinder,
-        IProjectRestrictions projectRestrictions)
+        IProjectRestrictions projectRestrictions,
+        IElementDuplicateRestrictions elementDuplicateRestrictions)
     {
         _projectRestrictions = projectRestrictions;
+        _elementDuplicateRestrictions = elementDuplicateRestrictions;
         _selectedState = selectedState;
         _nameVerifier = nameVerifier;
         _renameLogic = renameLogic;
@@ -562,6 +565,10 @@ public class EditCommands : IEditCommands
         {
             _dialogService.ShowMessage("This project does not support components");
         }
+        else if (_elementDuplicateRestrictions.GetRefusalMessage(element) is { } refusal)
+        {
+            _dialogService.ShowMessage(refusal);
+        }
         else if (element is ScreenSave elementAsScreen)
         {
             string message = "Enter new Screen name:";
@@ -582,6 +589,7 @@ public class EditCommands : IEditCommands
             {
                 var newScreen = elementAsScreen.Clone();
                 newScreen.Name = name;
+                _elementDuplicateRestrictions.RemoveUnsupportedParents(newScreen);
                 newScreen.Initialize(null);
                 _standardElementsManagerGumTool.FixCustomTypeConverters(newScreen);
 
@@ -622,6 +630,7 @@ public class EditCommands : IEditCommands
                     folder += "/";
                 }
                 newComponent.Name = folder + name;
+                _elementDuplicateRestrictions.RemoveUnsupportedParents(newComponent);
                 newComponent.Initialize(null);
                 _standardElementsManagerGumTool.FixCustomTypeConverters(newComponent);
 
