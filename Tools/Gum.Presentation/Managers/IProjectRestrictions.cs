@@ -27,6 +27,11 @@ public interface IProjectRestrictions
     bool IsVariableHidden(ElementSave element, string variableRootName);
 
     /// <summary>
+    /// True when the rules hide every one of the variables for the element's root standard type.
+    /// </summary>
+    bool IsEveryVariableHidden(ElementSave element, params string[] variableRootNames);
+
+    /// <summary>
     /// True when the project does not allow adding an instance of the element: an unlisted standard
     /// type, or any component while components are disabled.
     /// </summary>

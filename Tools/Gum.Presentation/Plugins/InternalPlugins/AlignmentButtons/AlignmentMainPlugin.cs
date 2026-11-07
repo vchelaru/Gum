@@ -18,12 +18,14 @@ namespace Gum.Plugins.AlignmentButtons
     {
         private readonly ISelectedState _selectedState;
         private readonly AlignmentViewModel _viewModel;
+        private readonly IProjectRestrictions _projectRestrictions;
 
         private AlignmentTabVisibilityCoordinator _coordinator = null!;
 
         [ImportingConstructor]
-        public AlignmentMainPlugin(ISelectedState selectedState, AlignmentViewModel viewModel)
+        public AlignmentMainPlugin(ISelectedState selectedState, AlignmentViewModel viewModel, IProjectRestrictions projectRestrictions)
         {
+            _projectRestrictions = projectRestrictions;
             _selectedState = selectedState;
             _viewModel = viewModel;
         }
@@ -33,7 +35,7 @@ namespace Gum.Plugins.AlignmentButtons
             AssignEvents();
             // Each head resolves the view model to its own view (TabViewRegistry).
             IPluginTab tab = _tabManager.AddControl(_viewModel, "Alignment");
-            _coordinator = new AlignmentTabVisibilityCoordinator(_selectedState, tab);
+            _coordinator = new AlignmentTabVisibilityCoordinator(_selectedState, tab, _projectRestrictions);
             Refresh();
         }
 

@@ -908,6 +908,7 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
         // plugin dependency even though PluginManager is not a PluginBase.
         batch.AddExportedValue<IPluginEnablementStore>(Locator.GetRequiredService<IPluginEnablementStore>());
         batch.AddExportedValue<ISelectedState>(Locator.GetRequiredService<ISelectedState>());
+        batch.AddExportedValue<IProjectRestrictions>(Locator.GetRequiredService<IProjectRestrictions>());
         batch.AddExportedValue<IElementCommands>(Locator.GetRequiredService<IElementCommands>());
         batch.AddExportedValue<IUndoManager>(Locator.GetRequiredService<IUndoManager>());
         batch.AddExportedValue<ISelectionHistory>(Locator.GetRequiredService<ISelectionHistory>());

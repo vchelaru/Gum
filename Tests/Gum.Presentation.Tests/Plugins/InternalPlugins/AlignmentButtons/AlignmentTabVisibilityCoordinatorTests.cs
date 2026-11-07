@@ -15,7 +15,7 @@ public class AlignmentTabVisibilityCoordinatorTests : BaseTestClass
     {
         var selectedState = new Mock<ISelectedState>();
         var tab = new Mock<IPluginTab>();
-        var coordinator = new AlignmentTabVisibilityCoordinator(selectedState.Object, tab.Object);
+        var coordinator = new AlignmentTabVisibilityCoordinator(selectedState.Object, tab.Object, Mock.Of<Gum.Managers.IProjectRestrictions>());
 
         coordinator.Refresh();
 
@@ -32,7 +32,28 @@ public class AlignmentTabVisibilityCoordinatorTests : BaseTestClass
         selectedState.Setup(s => s.SelectedScreen).Returns(screen);
         selectedState.Setup(s => s.SelectedStateSave).Returns(new StateSave());
         var tab = new Mock<IPluginTab>();
-        var coordinator = new AlignmentTabVisibilityCoordinator(selectedState.Object, tab.Object);
+        var coordinator = new AlignmentTabVisibilityCoordinator(selectedState.Object, tab.Object, Mock.Of<Gum.Managers.IProjectRestrictions>());
+
+        coordinator.Refresh();
+
+        tab.Verify(t => t.Hide(), Times.Once);
+        tab.Verify(t => t.Show(), Times.Never);
+    }
+
+    [Fact]
+    public void Refresh_HidesTab_WhenTheProjectHidesAnOrigin()
+    {
+        ComponentSave component = new ComponentSave();
+        InstanceSave instance = new InstanceSave();
+        Mock<ISelectedState> selectedState = new Mock<ISelectedState>();
+        selectedState.Setup(s => s.SelectedElement).Returns(component);
+        selectedState.Setup(s => s.SelectedStateSave).Returns(new StateSave());
+        selectedState.Setup(s => s.SelectedInstance).Returns(instance);
+        Mock<IPluginTab> tab = new Mock<IPluginTab>();
+        Mock<Gum.Managers.IProjectRestrictions> restrictions = new Mock<Gum.Managers.IProjectRestrictions>();
+        restrictions.Setup(r => r.IsVariableHidden(instance, "XOrigin")).Returns(true);
+        AlignmentTabVisibilityCoordinator coordinator =
+            new AlignmentTabVisibilityCoordinator(selectedState.Object, tab.Object, restrictions.Object);
 
         coordinator.Refresh();
 
@@ -54,7 +75,7 @@ public class AlignmentTabVisibilityCoordinatorTests : BaseTestClass
         selectedState.Setup(s => s.SelectedStateSave).Returns(new StateSave());
         selectedState.Setup(s => s.SelectedInstance).Returns(instance);
         var tab = new Mock<IPluginTab>();
-        var coordinator = new AlignmentTabVisibilityCoordinator(selectedState.Object, tab.Object);
+        var coordinator = new AlignmentTabVisibilityCoordinator(selectedState.Object, tab.Object, Mock.Of<Gum.Managers.IProjectRestrictions>());
 
         coordinator.Refresh();
 

@@ -48,6 +48,10 @@ public class ProjectRestrictions : IProjectRestrictions
         IsVariableHidden(ObjectFinder.Self.GetRootStandardElementSave(element)?.Name, variableRootName);
 
     /// <inheritdoc/>
+    public bool IsEveryVariableHidden(ElementSave element, params string[] variableRootNames) =>
+        variableRootNames.All(name => IsVariableHidden(element, name));
+
+    /// <inheritdoc/>
     public bool IsInstanceTypeBlocked(ElementSave elementToAdd)
     {
         if (elementToAdd is StandardElementSave)

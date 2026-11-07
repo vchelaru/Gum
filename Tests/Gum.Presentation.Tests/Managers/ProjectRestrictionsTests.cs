@@ -70,6 +70,16 @@ public class ProjectRestrictionsTests : BaseTestClass
     }
 
     [Fact]
+    public void IsEveryVariableHidden_ShouldBeTrue_OnlyWhenAllAreHidden()
+    {
+        RestrictToSprite();
+        StandardElementSave sprite = _project.StandardElements.First(item => item.Name == "Sprite");
+
+        _sut.IsEveryVariableHidden(sprite, "TextureLeft", "Rotation").ShouldBeTrue();
+        _sut.IsEveryVariableHidden(sprite, "X", "Rotation").ShouldBeFalse();
+    }
+
+    [Fact]
     public void IsVariableHidden_ShouldNeverHideExemptNames()
     {
         RestrictToSprite();

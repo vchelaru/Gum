@@ -48,6 +48,8 @@ public class StandardWireframeEditor : WireframeEditor
     DimensionDisplayVisual widthDimensionDisplay;
     DimensionDisplayVisual heightDimensionDisplay;
 
+    // Stateless (reads the loaded project), so the editor creates it instead of widening its constructor.
+    private readonly EditHandleRestrictions _editHandleRestrictions = new EditHandleRestrictions(new ProjectRestrictions());
     private readonly IElementCommands _elementCommands;
     private readonly IWireframeObjectManager _wireframeObjectManager;
     private readonly IVariableInCategoryPropagationLogic _variableInCategoryPropagationLogic;
@@ -202,6 +204,9 @@ public class StandardWireframeEditor : WireframeEditor
                 rfv = new RecursiveVariableFinder(selectedStateSave);
             }
         }
+
+        _editHandleRestrictions.Apply(_context, tag);
+        _resizeHandlesVisual.ShowOrigin = _editHandleRestrictions.GetShouldShowOrigin(tag);
 
         var variableReferences = rfv?.GetVariableList("VariableReferences");
 
