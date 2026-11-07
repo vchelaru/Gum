@@ -61,7 +61,9 @@ public class ResizeHandlesVisual : EditorVisualBase, IResizeHandlesVisual
             return;
         }
 
-        if (Context.IsSelectionLocked() || (!Context.IsWidthChangeEnabled && !Context.IsHeightChangeEnabled))
+        // With no resizable axis the handles hide themselves; the visual stays up only for the origin marker.
+        bool hasNothingToShow = !Context.IsWidthChangeEnabled && !Context.IsHeightChangeEnabled && !ShowOrigin;
+        if (Context.IsSelectionLocked() || hasNothingToShow)
         {
             Visible = false;
             return;

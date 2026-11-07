@@ -38,6 +38,7 @@ namespace Gum.Wireframe
         Color _color;
         readonly ICanvasDisplayScale _displayScale;
         bool _originDisplaysVisible = true;
+        bool _showOrigin;
 
         readonly ResizeHandleLayout _layout;
 
@@ -103,17 +104,30 @@ namespace Gum.Wireframe
                 ApplyHandleVisibility();
 
                 _originDisplaysVisible = value;
-                foreach (var display in _originDisplays)
-                {
-                    display.Visible = value && ShowOrigin;
-                }
+                ApplyOriginVisibility();
             }
         }
 
+        /// <summary>
+        /// Whether the origin marker draws while the handles are visible. Independent of which
+        /// resize handles are available.
+        /// </summary>
         public bool ShowOrigin
         {
-            get;
-            set;
+            get => _showOrigin;
+            set
+            {
+                _showOrigin = value;
+                ApplyOriginVisibility();
+            }
+        }
+
+        private void ApplyOriginVisibility()
+        {
+            foreach (OriginDisplay display in _originDisplays)
+            {
+                display.Visible = _originDisplaysVisible && _showOrigin;
+            }
         }
 
         #endregion
@@ -227,6 +241,7 @@ namespace Gum.Wireframe
                 AdjustOriginDisplayCount(0);
             }
 
+            ApplyOriginVisibility();
             UpdateToProperties();
         }
 
@@ -290,6 +305,8 @@ namespace Gum.Wireframe
                 }
             }
 
+            // UpdateTo turns the origin lines on; reapply the handles' own origin visibility.
+            ApplyOriginVisibility();
             UpdateToProperties();
         }
 
