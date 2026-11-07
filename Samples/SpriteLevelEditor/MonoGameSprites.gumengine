@@ -1,0 +1,12 @@
+{
+  "supportedStandardTypes": [ "Sprite" ],
+  "hideVariablesByDefault": true,
+  "variableRules": [
+    { "pattern": "Sprite.X", "action": "Show" },
+    { "pattern": "Sprite.Y", "action": "Show" },
+    { "pattern": "Sprite.Width", "action": "Show" },
+    { "pattern": "Sprite.SourceFile", "action": "Show" }
+  ],
+  "disableComponents": true,
+  "disableBehaviors": true
+}
