@@ -1,10 +1,14 @@
 using Avalonia.Controls;
 using Avalonia.Styling;
+using Avalonia.Threading;
+using Avalonia.VisualTree;
+using Gum.Avalonia.Settings;
 using Gum.Avalonia.Tests.EndToEnd;
 using Gum.Avalonia.Tests.Harness;
 using Gum.Plugins.PropertiesWindowPlugin;
 using Gum.SettingsWindow;
 using Microsoft.Extensions.DependencyInjection;
+using System.Linq;
 
 namespace Gum.Avalonia.Tests.Screenshots;
 
@@ -55,7 +59,18 @@ public class EngineProfileSettingsScreenshotTests
         // Tall enough that the whole page shows at the largest zoom.
         window.Window.SizeToContent = SizeToContent.Manual;
         window.Window.MaxHeight = double.PositiveInfinity;
-        window.Window.Height = 1100;
-        PrScreenshot.SaveWindowAtZoomLevels(window.Window, name);
+        window.Window.Height = 760;
+        // A zoom change resets the scroll, so scroll to the Engine section again at each zoom level.
+        ProjectPropertiesPageView page = window.Find<ProjectPropertiesPageView>();
+        ScrollViewer scroller = page.GetVisualAncestors().OfType<ScrollViewer>().First();
+        PrScreenshot.SaveContactSheet(window.Window, name, _ =>
+        {
+            for (int pass = 0; pass < 3; pass++)
+            {
+                Dispatcher.UIThread.RunJobs();
+                window.Window.UpdateLayout();
+                scroller.ScrollToEnd();
+            }
+        });
     }
 }
