@@ -1,9 +1,8 @@
 using Gum.Managers;
-using Gum.Plugins.InternalPlugins.VariableGrid;
 using Shouldly;
 using Xunit;
 
-namespace Gum.Presentation.Tests.Plugins.InternalPlugins.VariableGrid;
+namespace Gum.ProjectServices.Tests;
 
 /// <summary>
 /// A project's ordered show/hide rules decide which standard variables its target engine supports (#7720).

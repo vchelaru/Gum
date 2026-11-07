@@ -263,6 +263,11 @@ public class DragDropManager : IDragDropManager
         {
             return;
         }
+        if (_projectRestrictions.AreBehaviorsDisabled)
+        {
+            _dialogService.ShowMessage("This project does not support behaviors");
+            return;
+        }
         var alreadyHasBehavior = targetComponent.Behaviors.Any(item => item.BehaviorName == behavior.Name);
 
         if(alreadyHasBehavior)
@@ -389,6 +394,12 @@ public class DragDropManager : IDragDropManager
 
     private void HandleDroppingInstanceOnBehaviorSave(InstanceSave draggedAsInstanceSave, BehaviorSave asBehaviorSave)
     {
+        if (_projectRestrictions.AreBehaviorsDisabled)
+        {
+            _dialogService.ShowMessage("This project does not support behaviors");
+            return;
+        }
+
         // Capture the pre-change state for undo (bypasses the undo lock held by OnNodeSortingDropped).
         _undoManager.RecordBehaviorState(asBehaviorSave);
 
@@ -627,11 +638,22 @@ public class DragDropManager : IDragDropManager
         if(draggedObject is BehaviorSave behavior)
         {
             // behaviors cannot be added to screens currently:
-            return targetElement is ComponentSave;
+            return targetElement is ComponentSave && !_projectRestrictions.AreBehaviorsDisabled;
+        }
+
+        if (targetBehavior != null && _projectRestrictions.AreBehaviorsDisabled)
+        {
+            return false;
         }
 
         if(draggedObject is ElementSave draggedElement)
         {
+            if ((targetElement != null || targetBehavior != null) &&
+                _projectRestrictions.IsInstanceTypeBlocked(draggedElement))
+            {
+                return false;
+            }
+
             if(targetElement != null)
             {
                 return _circularReferenceManager.CanTypeBeAddedToElement(
@@ -668,6 +690,12 @@ public class DragDropManager : IDragDropManager
                 }
                 else
                 {
+                    if (ObjectFinder.Self.GetElementSave(draggedInstance.BaseType) is { } draggedType &&
+                        _projectRestrictions.IsInstanceTypeBlocked(draggedType))
+                    {
+                        return false;
+                    }
+
                     // do circular reference checks:
                     return _circularReferenceManager.CanTypeBeAddedToElement(
                         targetElement, draggedInstance.BaseType);

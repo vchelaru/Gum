@@ -54,7 +54,8 @@ internal class MainOrphanCodeFilePlugin : PluginBase
         IMessenger messenger,
         IDispatcher dispatcher,
         IGuiCommands guiCommands,
-        IRetryService retryService)
+        IRetryService retryService,
+        IProjectRestrictions projectRestrictions)
     {
         _projectState = projectState;
         _messenger = messenger;
@@ -66,7 +67,8 @@ internal class MainOrphanCodeFilePlugin : PluginBase
         var elementSettingsManager = new CodeOutputElementSettingsManager(projectDirectoryProvider);
         ICodeGenLogger logger = new ToolCodeGenLogger(outputManager);
         var codeGenerator = new CodeGenerator(
-            codeGenerationNameVerifier, localizationService, elementSettingsManager, projectDirectoryProvider);
+            codeGenerationNameVerifier, localizationService, elementSettingsManager, projectDirectoryProvider,
+            variableRestrictions: projectRestrictions);
         var fileLocationsService = new CodeGenerationFileLocationsService(
             codeGenerator, codeGenerationNameVerifier, projectDirectoryProvider);
 

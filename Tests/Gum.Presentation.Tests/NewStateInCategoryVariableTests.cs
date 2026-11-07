@@ -67,7 +67,8 @@ public class NewStateInCategoryVariableTests : BaseTestClass
             new Mock<IProjectState>().Object,
             new Mock<IStandardElementsManagerGumTool>().Object,
             new Mock<IReferenceFinder>().Object,
-            new Mock<Gum.Managers.IProjectRestrictions>().Object);
+            new Mock<Gum.Managers.IProjectRestrictions>().Object,
+            new Mock<Gum.Logic.IElementDuplicateRestrictions>().Object);
 
         ObjectFinder.Self.GumProjectSave = new GumProjectSave();
         StandardElementSave sprite = new() { Name = "Sprite" };

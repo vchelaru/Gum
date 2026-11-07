@@ -149,7 +149,7 @@ public class CodeOutputPluginSettingsReloadTests : BaseTestClass
             IFileCommands fileCommands,
             IDispatcher dispatcher)
             : base(guiCommands, dialogService, nameVerifier, localizationService, projectState, typeManager,
-                outputManager, selectedState, retryService, messenger, fileCommands, dispatcher)
+                outputManager, selectedState, retryService, messenger, fileCommands, dispatcher, new Mock<IProjectRestrictions>().Object)
         {
         }
 
