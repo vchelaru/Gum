@@ -27,7 +27,7 @@ public class ProjectRestrictionsCodeGenerationTests : BaseTestClass
         Directory.CreateDirectory(_folder);
         File.WriteAllText(
             Path.Combine(_folder, "Engine.gumengine"),
-            """{ "variableRules": [ { "pattern": "Sprite.Rotation", "action": "Hide" } ] }""");
+            """{ "supportedStandardTypes": [ "Sprite", "Container" ], "variableRules": [ { "pattern": "Sprite.Rotation", "action": "Hide" } ] }""");
 
         _project = new GumProjectSave
         {
@@ -94,4 +94,18 @@ public class ProjectRestrictionsCodeGenerationTests : BaseTestClass
         withRestrictions.ShouldNotContain("Rotation");
         withRestrictions.ShouldContain("SpriteInstance.X = 10f;");
     }
-}
+
+    [Fact]
+    public void Generate_InstanceOfUnsupportedStandardType_IsSkipped()
+    {
+        ScreenSave screen = CreateScreenWithSprite();
+        screen.Instances.Add(new InstanceSave { Name = "TextInstance", BaseType = "Text", ParentContainer = screen });
+        screen.DefaultState!.Variables.Add(new VariableSave { Name = "TextInstance.X", Value = 3f, SetsValue = true, Type = "float" });
+
+        string withoutRestrictions = Generate(null, screen);
+        string withRestrictions = Generate(_restrictions, screen);
+
+        withoutRestrictions.ShouldContain("TextInstance");
+        withRestrictions.ShouldNotContain("TextInstance");
+        withRestrictions.ShouldContain("SpriteInstance.X = 10f;");
+    }}

@@ -14,6 +14,12 @@ public interface IVariableRestrictions
     /// exemptions as the Variables tab. A null type matches only unqualified rules.
     /// </summary>
     bool IsVariableHidden(string? standardTypeName, string variableRootName);
+
+    /// <summary>
+    /// True when the project does not allow a standard type name: the supported list is not empty and does not
+    /// contain it.
+    /// </summary>
+    bool IsStandardTypeBlocked(string standardTypeName);
 }
 
 /// <summary>
@@ -51,6 +57,25 @@ public static class VariableRestrictionsExtensions
 
         return restrictions.IsVariableHidden(rootStandard?.Name, variable.GetRootName());
     }
+
+    /// <summary>
+    /// True when <paramref name="element"/> is built on a standard type the project does not support, directly or
+    /// through its base types. Such an element is dormant: its instances and its own class are not generated.
+    /// </summary>
+    public static bool IsElementBlocked(this IVariableRestrictions restrictions, ElementSave element)
+    {
+        StandardElementSave? rootStandard = ObjectFinder.Self.GetRootStandardElementSave(element);
+        return rootStandard != null && restrictions.IsStandardTypeBlocked(rootStandard.Name);
+    }
+
+    /// <summary>
+    /// True when the type of <paramref name="instance"/> is blocked, directly or through a component's base types.
+    /// </summary>
+    public static bool IsInstanceBlocked(this IVariableRestrictions restrictions, InstanceSave instance)
+    {
+        ElementSave? instanceElement = ObjectFinder.Self.GetElementSave(instance);
+        return instanceElement != null && restrictions.IsElementBlocked(instanceElement);
+    }
 }
 
 /// <summary>
@@ -71,4 +96,8 @@ public class EngineProfileVariableRestrictions : IVariableRestrictions
     /// <inheritdoc/>
     public bool IsVariableHidden(string? standardTypeName, string variableRootName) =>
         _matcher.IsHiddenByProfile(_profile, standardTypeName, variableRootName);
+
+    /// <inheritdoc/>
+    public bool IsStandardTypeBlocked(string standardTypeName) =>
+        _profile.SupportedStandardTypes.Count > 0 && !_profile.SupportedStandardTypes.Contains(standardTypeName);
 }

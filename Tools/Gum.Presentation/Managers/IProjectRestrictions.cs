@@ -34,11 +34,6 @@ public interface IProjectRestrictions : IVariableRestrictions
     bool IsInstanceTypeBlocked(ElementSave elementToAdd);
 
     /// <summary>
-    /// True when the project does not allow a standard type name (for example a base type the user typed).
-    /// </summary>
-    bool IsStandardTypeBlocked(string standardTypeName);
-
-    /// <summary>
     /// True when the project disables components.
     /// </summary>
     bool AreComponentsDisabled { get; }

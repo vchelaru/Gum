@@ -227,4 +227,98 @@ public class CodeGeneratorEngineProfileTests : BaseTestClass
         code.ShouldContain("SpriteRotation");
         code.ShouldNotContain("SpriteInstance.X = 10f;");
     }
-}
+
+    private static IVariableRestrictions Supporting(params string[] standardTypes) =>
+        new EngineProfileVariableRestrictions(new EngineProfile { SupportedStandardTypes = standardTypes.ToList() });
+
+    [Fact]
+    public void Generate_BlockedInstanceType_SkipsTheInstanceEverywhere()
+    {
+        ScreenSave screen = CreateScreenWithSprite();
+
+        string code = Generate(CreateCodeGenerator(Supporting("Container")), screen);
+
+        code.ShouldNotContain("SpriteInstance");
+        code.ShouldContain("Holder");
+    }
+
+    [Fact]
+    public void Generate_EmptySupportedList_IsIdenticalToNoRestrictions()
+    {
+        ScreenSave screen = CreateScreenWithSprite();
+
+        string withoutProfile = Generate(CreateCodeGenerator(), screen);
+        string withEmptyList = Generate(CreateCodeGenerator(Supporting()), screen);
+
+        withEmptyList.ShouldBe(withoutProfile);
+    }
+
+    [Fact]
+    public void Generate_InstanceOfComponentDerivedFromBlockedType_IsSkipped()
+    {
+        DeclareSpriteVariables();
+        ComponentSave hero = new ComponentSave { Name = "Hero", BaseType = "Sprite" };
+        hero.States.Add(new StateSave { Name = "Default", ParentContainer = hero });
+        ComponentSave superHero = new ComponentSave { Name = "SuperHero", BaseType = "Hero" };
+        superHero.States.Add(new StateSave { Name = "Default", ParentContainer = superHero });
+        ComponentSave panel = new ComponentSave { Name = "Panel", BaseType = "Container" };
+        panel.States.Add(new StateSave { Name = "Default", ParentContainer = panel });
+        Project.Components.Add(hero);
+        Project.Components.Add(superHero);
+        Project.Components.Add(panel);
+        ScreenSave screen = new ScreenSave { Name = "MainScreen" };
+        screen.States.Add(new StateSave { Name = "Default", ParentContainer = screen });
+        screen.Instances.Add(new InstanceSave { Name = "HeroInstance", BaseType = "Hero", ParentContainer = screen });
+        screen.Instances.Add(new InstanceSave { Name = "SuperHeroInstance", BaseType = "SuperHero", ParentContainer = screen });
+        screen.Instances.Add(new InstanceSave { Name = "PanelInstance", BaseType = "Panel", ParentContainer = screen });
+        Project.Screens.Add(screen);
+        ObjectFinder.Self.GumProjectSave = Project;
+        CodeGenerator generator = CreateCodeGenerator(Supporting("Container"));
+
+        string code = Generate(generator, screen);
+
+        code.ShouldNotContain("HeroInstance");
+        code.ShouldNotContain("SuperHeroInstance");
+        code.ShouldContain("PanelInstance");
+        generator.IsElementBlockedByEngineProfile(hero).ShouldBeTrue();
+        generator.IsElementBlockedByEngineProfile(superHero).ShouldBeTrue();
+        generator.IsElementBlockedByEngineProfile(panel).ShouldBeFalse();
+        generator.IsElementBlockedByEngineProfile(screen).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void Generate_ChildOfSkippedInstance_IsAttachedWithoutTheSkippedParent()
+    {
+        ScreenSave screen = CreateScreenWithSprite();
+        StateSave state = screen.DefaultState!;
+        StateSave containerState = Project.StandardElements.First(item => item.Name == "Text").DefaultState!;
+        AddVariable(containerState, "Parent", "", "string");
+        AddVariable(containerState, "X", 0f, "float");
+        screen.Instances.Add(new InstanceSave { Name = "TextChild", BaseType = "Text", ParentContainer = screen });
+        AddVariable(state, "TextChild.Parent", "SpriteInstance", "string");
+        AddVariable(state, "TextChild.X", 7f, "float");
+
+        string code = Generate(CreateCodeGenerator(Supporting("Container", "Text")), screen);
+
+        code.ShouldNotContain("SpriteInstance");
+        code.ShouldContain("this.Children.Add(TextChild);");
+        code.ShouldContain("TextChild.X = 7f;");
+    }
+
+    [Fact]
+    public void Generate_ExposedAndStateVariablesOnSkippedInstance_AreSkipped()
+    {
+        ScreenSave screen = CreateScreenWithSprite();
+        screen.DefaultState!.Variables.First(item => item.Name == "SpriteInstance.Rotation").ExposedAsName = "SpriteRotation";
+        StateSaveCategory category = new StateSaveCategory { Name = "Mode" };
+        StateSave highlighted = new StateSave { Name = "Highlighted", ParentContainer = screen };
+        AddVariable(highlighted, "SpriteInstance.X", 99f, "float");
+        category.States.Add(highlighted);
+        screen.Categories.Add(category);
+
+        string code = Generate(CreateCodeGenerator(Supporting("Container")), screen);
+
+        code.ShouldNotContain("SpriteRotation");
+        code.ShouldNotContain("SpriteInstance");
+        code.ShouldNotContain("99f");
+    }}

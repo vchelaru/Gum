@@ -565,7 +565,7 @@ public class CodeGenerator
             neededUsings.Add(GetGueDerivingNamespace(resolvedSyntaxVersion, isSkia: true));
         }
 
-        foreach (var instance in element.Instances)
+        foreach (var instance in element.Instances.Where(item => !IsInstanceBlockedByEngineProfile(item)))
         {
             var instanceElement = ObjectFinder.Self.GetElementSave(instance);
 
@@ -1322,7 +1322,7 @@ public class CodeGenerator
     private void FillWithExposedVariables(CodeGenerationContext context)
     {
         var exposedVariables = context.Element.DefaultState!.Variables
-            .Where(item => !string.IsNullOrEmpty(item.ExposedAsName))
+            .Where(item => !string.IsNullOrEmpty(item.ExposedAsName) && !IsVariableSourceBlockedByEngineProfile(context.Element, item))
             .ToArray();
         List<ExposedShaderVector> exposedVectors = GetExposedShaderVectors(context.Element);
 
@@ -1945,7 +1945,7 @@ public class CodeGenerator
         {
             context.StringBuilder.AppendLine(context.Tabs + "base.InitializeInstancesFromVisual();");
         }
-        foreach (InstanceSave instance in context.Element.Instances)
+        foreach (InstanceSave instance in context.Element.Instances.Where(item => !IsInstanceBlockedByEngineProfile(item)))
         {
             if (!instance.DefinedByBase)
             {
@@ -2062,7 +2062,7 @@ public class CodeGenerator
             TryInstantiateForms(context, onlyIfRequestedInConstructor: true);
         }
 
-        foreach (var instance in context.Element.Instances)
+        foreach (var instance in context.Element.Instances.Where(item => !IsInstanceBlockedByEngineProfile(item)))
         {
             if (!instance.DefinedByBase)
             {
@@ -3752,7 +3752,8 @@ public class CodeGenerator
             ? ObjectFinder.Self.GetInstanceRecursively(container, parentValue)
             : (InstanceSave?)null;
         // A Parent the engine profile hides is dormant, so the instance is attached as if it had none.
-        var hasParent = parentInstance != null && !GetIfHiddenByEngineProfile(container, instance, parentVariable!);
+        var hasParent = parentInstance != null && !GetIfHiddenByEngineProfile(container, instance, parentVariable!) &&
+            !IsInstanceBlockedByEngineProfile(parentInstance);
         //container.GetInstance(parentValue) != null;
 
         if (hasParent)
@@ -3869,7 +3870,7 @@ public class CodeGenerator
             context.StringBuilder.AppendLine(context.Tabs + "// Intentionally do not call base.AssignParents so that this class can determine the addition of order");
         }
 
-        foreach (var instance in context.Element.Instances)
+        foreach (var instance in context.Element.Instances.Where(item => !IsInstanceBlockedByEngineProfile(item)))
         {
             // base.AssignParents already parented a base child; it is assigned again only when this
             // level moves it to a different parent.
@@ -4381,7 +4382,7 @@ public class CodeGenerator
 
         #region Instances
 
-        foreach (var instance in element.Instances.Where(item => item.DefinedByBase == false))
+        foreach (var instance in element.Instances.Where(item => item.DefinedByBase == false && !IsInstanceBlockedByEngineProfile(item)))
         {
             context.Instance = instance;
             using (GuardIfDebugOnly(stringBuilder, instance))
@@ -4611,6 +4612,10 @@ public class CodeGenerator
     {
         _debugOnlyLogic.ClearCache();
         var context = new CodeGenerationContext(_codeGenerationNameVerifier, element);
+        if (IsInstanceBlockedByEngineProfile(instance))
+        {
+            return string.Empty;
+        }
         context.Instance = instance;
         context.CodeOutputProjectSettings = codeOutputProjectSettings;
         context.ResolvedSyntaxVersion = ResolveSyntaxVersion(codeOutputProjectSettings);
@@ -5189,6 +5194,12 @@ public class CodeGenerator
             if (instanceName != null)
             {
                 instance = context.Element.GetInstance(instanceName);
+            }
+
+            // Variables assigned on an instance the engine profile does not support are dormant with it.
+            if (IsInstanceBlockedByEngineProfile(instance))
+            {
+                continue;
             }
             context.Instance = instance;
             using var debugGuard = GuardIfDebugOnly(stringBuilder, instance);
@@ -6180,7 +6191,7 @@ public class CodeGenerator
 
         foreach (var variable in context.Element.DefaultState!.Variables)
         {
-            if (variable.IsCustomVariable)
+            if (variable.IsCustomVariable && !IsVariableSourceBlockedByEngineProfile(context.Element, variable))
             {
                 if(string.IsNullOrEmpty( variable.SourceObject))
                 {
@@ -6225,7 +6236,7 @@ public class CodeGenerator
             }
         }
 
-        foreach (var instance in context.Element.Instances)
+        foreach (var instance in context.Element.Instances.Where(item => !IsInstanceBlockedByEngineProfile(item)))
         {
             context.Instance = instance;
 
@@ -6767,6 +6778,20 @@ public class CodeGenerator
     private bool GetIfHiddenByEngineProfile(ElementSave container, InstanceSave? instance, VariableSave variable) =>
         _variableRestrictions?.IsVariableHidden(container, instance, variable) == true;
 
+    /// <summary>
+    /// True when the project's engine profile does not support the element's standard type, directly or through its
+    /// base types. Such an element is dormant, so no code is generated for it and its instances are skipped.
+    /// </summary>
+    public bool IsElementBlockedByEngineProfile(ElementSave element) =>
+        _variableRestrictions?.IsElementBlocked(element) == true;
+
+    private bool IsInstanceBlockedByEngineProfile(InstanceSave? instance) =>
+        instance != null && _variableRestrictions?.IsInstanceBlocked(instance) == true;
+
+    /// <summary>The instance a variable is assigned on, when the engine profile blocks that instance's type.</summary>
+    private bool IsVariableSourceBlockedByEngineProfile(ElementSave container, VariableSave variable) =>
+        !string.IsNullOrEmpty(variable.SourceObject) && IsInstanceBlockedByEngineProfile(container.GetInstance(variable.SourceObject));
+
     #region Behavior FormsProperty assignments
 
     /// <summary>
@@ -7111,7 +7136,7 @@ public class CodeGenerator
             // Why don't we call base.ApplyLocalization?
             //stringBuilder.AppendLine(ToTabs(tabCount) + "base.ApplyLocalization();");
 
-            foreach (var instance in element.Instances)
+            foreach (var instance in element.Instances.Where(item => !IsInstanceBlockedByEngineProfile(item)))
             {
                 context.Instance = instance;
 
