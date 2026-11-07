@@ -62,6 +62,16 @@ public class SpriteLevelEditorSampleTests : BaseTestClass
         }
     }
 
+    [Fact]
+    public void Project_ShipsTheFontItsTextStandardNames_AndItsCachedFont()
+    {
+        string folder = Path.GetDirectoryName(_project.FullFileName)!;
+        StandardElementSave text = _project.StandardElements.Single(standard => standard.Name == "Text");
+        string fontFile = (string)text.DefaultState.Variables.Single(variable => variable.Name == "Font").Value!;
+
+        File.Exists(Path.Combine(folder, fontFile)).ShouldBeTrue(fontFile);
+        Directory.GetFiles(Path.Combine(folder, "FontCache"), "*.fnt").ShouldNotBeEmpty();
+    }
     private static string FindRepoRoot()
     {
         string current = AppContext.BaseDirectory;
