@@ -52,6 +52,19 @@ public class EditHandleRestrictionsTests : BaseTestClass
     }
 
     [Fact]
+    public void GetShouldShowOffsetLine_ShouldFollowOnlyItsOwnAxisVariable()
+    {
+        _sut.GetShouldShowXOffsetLine(_instance).ShouldBeTrue();
+        _sut.GetShouldShowYOffsetLine(_instance).ShouldBeTrue();
+
+        _restrictions.Setup(x => x.IsVariableHidden(_instance, "X")).Returns(true);
+        _restrictions.Setup(x => x.IsVariableHidden(_instance, "XOrigin")).Returns(true);
+
+        _sut.GetShouldShowXOffsetLine(_instance).ShouldBeFalse();
+        _sut.GetShouldShowYOffsetLine(_instance).ShouldBeTrue();
+    }
+
+    [Fact]
     public void GetShouldShowOrigin_ShouldBeFalse_OnlyWhenBothOriginsAreHidden()
     {
         _sut.GetShouldShowOrigin(_instance).ShouldBeTrue();

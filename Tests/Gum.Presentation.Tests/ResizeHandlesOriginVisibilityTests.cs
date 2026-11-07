@@ -101,7 +101,82 @@ public class ResizeHandlesOriginVisibilityTests : BaseTestClass
         IsOriginVisible(layer).ShouldBeFalse();
     }
 
+    [Fact]
+    public void UpdateToSelection_OriginHiddenButXAndYShown_DrawsOffsetLinesWithoutMarker()
+    {
+        Layer layer;
+        Select(width: true, height: true, showOrigin: false, locked: false, showXLine: true, showYLine: true, out layer);
+
+        IsOriginVisible(layer).ShouldBeFalse();
+        IsLineVisible(layer, "Origin X Line").ShouldBeTrue();
+        IsLineVisible(layer, "Origin Y Line").ShouldBeTrue();
+        IsLineVisible(layer, "Origin Top Connector").ShouldBeTrue();
+        IsLineVisible(layer, "Origin Left Connector").ShouldBeTrue();
+    }
+
+    [Fact]
+    public void UpdateToSelection_XHiddenYShown_DrawsOnlyYLineAndItsConnector()
+    {
+        Layer layer;
+        Select(width: true, height: true, showOrigin: true, locked: false, showXLine: false, showYLine: true, out layer);
+
+        IsLineVisible(layer, "Origin X Line").ShouldBeFalse();
+        IsLineVisible(layer, "Origin Top Connector").ShouldBeFalse();
+        IsLineVisible(layer, "Origin Y Line").ShouldBeTrue();
+        IsLineVisible(layer, "Origin Left Connector").ShouldBeTrue();
+        IsOriginVisible(layer).ShouldBeTrue();
+    }
+
+    [Fact]
+    public void UpdateToSelection_YHiddenXShown_DrawsOnlyXLineAndItsConnector()
+    {
+        Layer layer;
+        Select(width: true, height: true, showOrigin: true, locked: false, showXLine: true, showYLine: false, out layer);
+
+        IsLineVisible(layer, "Origin X Line").ShouldBeTrue();
+        IsLineVisible(layer, "Origin Top Connector").ShouldBeTrue();
+        IsLineVisible(layer, "Origin Y Line").ShouldBeFalse();
+        IsLineVisible(layer, "Origin Left Connector").ShouldBeFalse();
+    }
+
+    [Fact]
+    public void UpdateToSelection_XAndYHiddenOriginShown_DrawsMarkerOnly()
+    {
+        Layer layer;
+        Select(width: true, height: true, showOrigin: true, locked: false, showXLine: false, showYLine: false, out layer);
+
+        IsOriginVisible(layer).ShouldBeTrue();
+        IsLineVisible(layer, "Origin X Line").ShouldBeFalse();
+        IsLineVisible(layer, "Origin Y Line").ShouldBeFalse();
+        IsLineVisible(layer, "Origin Top Connector").ShouldBeFalse();
+        IsLineVisible(layer, "Origin Left Connector").ShouldBeFalse();
+    }
+
+    [Fact]
+    public void UpdateToSelection_OnlyOffsetLinesShown_VisualStaysUp()
+    {
+        Layer layer;
+        Select(width: false, height: false, showOrigin: false, locked: false, showXLine: true, showYLine: false, out layer);
+
+        IsLineVisible(layer, "Origin X Line").ShouldBeTrue();
+    }
+
+    [Fact]
+    public void UpdateToSelection_Locked_HidesOffsetLines()
+    {
+        Layer layer;
+        Select(width: true, height: true, showOrigin: true, locked: true, showXLine: true, showYLine: true, out layer);
+
+        IsLineVisible(layer, "Origin X Line").ShouldBeFalse();
+        IsLineVisible(layer, "Origin Y Line").ShouldBeFalse();
+    }
+
     private ResizeHandlesVisual Select(bool width, bool height, bool showOrigin, bool locked, out Layer layer)
+    {
+        return Select(width, height, showOrigin, locked, showXLine: true, showYLine: true, out layer);
+    }
+
+    private ResizeHandlesVisual Select(bool width, bool height, bool showOrigin, bool locked, bool showXLine, bool showYLine, out Layer layer)
     {
         Mock<ISelectedState> selectedState = new Mock<ISelectedState>();
         selectedState.SetupGet(item => item.SelectedInstance)
@@ -113,6 +188,8 @@ public class ResizeHandlesOriginVisibilityTests : BaseTestClass
 
         ResizeHandlesVisual visual = new ResizeHandlesVisual(context, System.Drawing.Color.White);
         visual.ShowOrigin = showOrigin;
+        visual.ShowXOffsetLine = showXLine;
+        visual.ShowYOffsetLine = showYLine;
 
         GraphicalUiElement element = new GraphicalUiElement();
         context.SelectedObjects.Add(element);
@@ -122,10 +199,12 @@ public class ResizeHandlesOriginVisibilityTests : BaseTestClass
 
     private static bool IsOriginVisible(Layer layer)
     {
-        List<Line> originLines = layer.Renderables.OfType<Line>()
-            .Where(line => line.Name == "Origin X Line" || line.Name == "Origin Y Line")
-            .ToList();
-        return originLines.Any(line => line.Visible);
+        return IsLineVisible(layer, "Resize Handle X Line 1") || IsLineVisible(layer, "Resize Handle X Line 2");
+    }
+
+    private static bool IsLineVisible(Layer layer, string name)
+    {
+        return layer.Renderables.OfType<Line>().Any(line => line.Name == name && line.Visible);
     }
 
     private static int VisibleHandleRectangleCount(Layer layer)

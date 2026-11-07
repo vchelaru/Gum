@@ -55,6 +55,17 @@ public class EditHandleRestrictions
     public bool GetShouldShowOrigin(object? selectedTag) =>
         !(IsHidden(selectedTag, "XOrigin") && IsHidden(selectedTag, "YOrigin"));
 
+    /// <summary>
+    /// False when the rules hide X for the selected object. The red offset line and its dotted connector follow X only,
+    /// independent of the origin variables and of whether X is locked.
+    /// </summary>
+    public bool GetShouldShowXOffsetLine(object? selectedTag) => !IsHidden(selectedTag, "X");
+
+    /// <summary>
+    /// False when the rules hide Y for the selected object. The green offset line and its dotted connector follow Y only.
+    /// </summary>
+    public bool GetShouldShowYOffsetLine(object? selectedTag) => !IsHidden(selectedTag, "Y");
+
     private bool IsHidden(object? selectedTag, string variableRootName) => selectedTag switch
     {
         InstanceSave instance => _projectRestrictions.IsVariableHidden(instance, variableRootName),

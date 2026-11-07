@@ -32,6 +32,24 @@ public class ResizeHandlesVisual : EditorVisualBase, IResizeHandlesVisual
         set => _resizeHandles.ShowOrigin = value;
     }
 
+    /// <summary>
+    /// Whether the red X offset line (parent origin to the object's X) and its dotted connector draw.
+    /// </summary>
+    public bool ShowXOffsetLine
+    {
+        get => _resizeHandles.ShowXOffsetLine;
+        set => _resizeHandles.ShowXOffsetLine = value;
+    }
+
+    /// <summary>
+    /// Whether the green Y offset line (parent origin to the object's Y) and its dotted connector draw.
+    /// </summary>
+    public bool ShowYOffsetLine
+    {
+        get => _resizeHandles.ShowYOffsetLine;
+        set => _resizeHandles.ShowYOffsetLine = value;
+    }
+
     public ResizeHandlesVisual(EditorContext context, Color lineColor) : base(context)
     {
         _resizeHandles = new ResizeHandles(OverlayLayer, lineColor, context.DisplayScale);
@@ -61,8 +79,9 @@ public class ResizeHandlesVisual : EditorVisualBase, IResizeHandlesVisual
             return;
         }
 
-        // With no resizable axis the handles hide themselves; the visual stays up only for the origin marker.
-        bool hasNothingToShow = !Context.IsWidthChangeEnabled && !Context.IsHeightChangeEnabled && !ShowOrigin;
+        // With no resizable axis the handles hide themselves; the visual stays up only for the origin marker and offset lines.
+        bool hasNothingToShow = !Context.IsWidthChangeEnabled && !Context.IsHeightChangeEnabled
+            && !ShowOrigin && !ShowXOffsetLine && !ShowYOffsetLine;
         if (Context.IsSelectionLocked() || hasNothingToShow)
         {
             Visible = false;

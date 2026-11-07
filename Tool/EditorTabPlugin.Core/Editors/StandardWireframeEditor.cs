@@ -209,6 +209,8 @@ public class StandardWireframeEditor : WireframeEditor
 
         _editHandleRestrictions.Apply(_context, tag);
         _resizeHandlesVisual.ShowOrigin = _editHandleRestrictions.GetShouldShowOrigin(tag);
+        _resizeHandlesVisual.ShowXOffsetLine = _editHandleRestrictions.GetShouldShowXOffsetLine(tag);
+        _resizeHandlesVisual.ShowYOffsetLine = _editHandleRestrictions.GetShouldShowYOffsetLine(tag);
 
         var variableReferences = rfv?.GetVariableList("VariableReferences");
 

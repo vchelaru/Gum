@@ -39,6 +39,8 @@ namespace Gum.Wireframe
         readonly ICanvasDisplayScale _displayScale;
         bool _originDisplaysVisible = true;
         bool _showOrigin;
+        bool _showXOffsetLine = true;
+        bool _showYOffsetLine = true;
 
         readonly ResizeHandleLayout _layout;
 
@@ -122,12 +124,46 @@ namespace Gum.Wireframe
             }
         }
 
+        /// <summary>
+        /// Whether the red X offset line and its dotted connector draw while the handles are visible.
+        /// </summary>
+        public bool ShowXOffsetLine
+        {
+            get => _showXOffsetLine;
+            set
+            {
+                _showXOffsetLine = value;
+                ApplyOriginVisibility();
+            }
+        }
+
+        /// <summary>
+        /// Whether the green Y offset line and its dotted connector draw while the handles are visible.
+        /// </summary>
+        public bool ShowYOffsetLine
+        {
+            get => _showYOffsetLine;
+            set
+            {
+                _showYOffsetLine = value;
+                ApplyOriginVisibility();
+            }
+        }
+
         private void ApplyOriginVisibility()
         {
             foreach (OriginDisplay display in _originDisplays)
             {
-                display.Visible = _originDisplaysVisible && _showOrigin;
+                ApplyOriginVisibility(display);
             }
+        }
+
+        private void ApplyOriginVisibility(OriginDisplay display)
+        {
+            display.ShowOriginMarker = _showOrigin;
+            display.ShowXOffsetLine = _showXOffsetLine;
+            display.ShowYOffsetLine = _showYOffsetLine;
+            display.Visible = _originDisplaysVisible;
         }
 
         #endregion
@@ -340,7 +376,7 @@ namespace Gum.Wireframe
             {
                 var display = new OriginDisplay(_layer, _displayScale);
                 display.SetColor(_color);
-                display.Visible = _originDisplaysVisible && ShowOrigin;
+                ApplyOriginVisibility(display);
                 _originDisplays.Add(display);
             }
         }
