@@ -262,7 +262,8 @@ public partial class ElementTreeViewManager
                 // "Create Component" promotes a single instance into a new component (the instance's
                 // children become the component's children). Multi-instance promotion isn't supported
                 // yet, so only offer it when exactly one instance is selected.
-                if (containerElement != null && _selectedState.SelectedInstances.Count() == 1)
+                if (containerElement != null && _selectedState.SelectedInstances.Count() == 1 &&
+                    !_projectRestrictions.AreComponentsDisabled)
                 {
                     AddSeparator();
 
@@ -292,10 +293,13 @@ public partial class ElementTreeViewManager
                 {
                     AddSeparator();
 
-                    AddCreateInstanceMenuItems($"Add child object to '{_selectedState.SelectedInstance.Name}'", containerElement);
+                    if (!_projectRestrictions.IsHierarchyBlocked)
+                    {
+                        AddCreateInstanceMenuItems($"Add child object to '{_selectedState.SelectedInstance.Name}'", containerElement);
 
-                    AddMenuItem($"Add parent object to '{_selectedState.SelectedInstance.Name}'",
-                        () => _dialogService.Show<AddInstanceDialogViewModel>(x => x.IsAddingAsParentToSelectedInstance = true));
+                        AddMenuItem($"Add parent object to '{_selectedState.SelectedInstance.Name}'",
+                            () => _dialogService.Show<AddInstanceDialogViewModel>(x => x.IsAddingAsParentToSelectedInstance = true));
+                    }
 
                     if (!string.IsNullOrEmpty(containerElement?.BaseType))
                     {
@@ -477,6 +481,7 @@ public partial class ElementTreeViewManager
         var favoritedComponents = _favoriteComponentManager.GetFilteredFavoritedComponentsFor(
             parent,
             _circularReferenceManager);
+        favoritedComponents.RemoveAll(_projectRestrictions.IsInstanceTypeBlocked);
         if (favoritedComponents.Count > 0)
         {
             foreach (var component in favoritedComponents)

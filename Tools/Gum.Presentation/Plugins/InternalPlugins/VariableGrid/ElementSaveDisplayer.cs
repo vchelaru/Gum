@@ -1288,7 +1288,7 @@ public class ElementSaveDisplayer
 
         if (!isExcluded)
         {
-            var baseTypeConverter = new AvailableBaseTypeConverter(instanceOwner, instance, _projectState);
+            var baseTypeConverter = new AvailableBaseTypeConverter(instanceOwner, instance, _projectState, _projectRestrictions);
             // We may want to support Screens inheriting from other Screens in the future, but for now we won't allow it
             // "IsEditable" is a literal (rather than nameof(WpfDataUi.Controls.ComboBoxDisplay.IsEditable))
             // since this headless project must never reference WpfDataUi; the WPF ComboBoxDisplay

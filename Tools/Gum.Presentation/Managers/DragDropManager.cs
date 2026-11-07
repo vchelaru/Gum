@@ -53,6 +53,7 @@ public class DragDropManager : IDragDropManager
     private readonly IProjectManager _projectManager;
     private readonly IProjectState _projectState;
     private readonly IPathCaseSensitivity _pathCaseSensitivity;
+    private readonly IProjectRestrictions _projectRestrictions;
 
     #endregion
 
@@ -75,8 +76,10 @@ public class DragDropManager : IDragDropManager
         IReorderLogic reorderLogic,
         IProjectManager projectManager,
         IProjectState projectState,
-        IPathCaseSensitivity pathCaseSensitivity)
+        IPathCaseSensitivity pathCaseSensitivity,
+        IProjectRestrictions projectRestrictions)
     {
+        _projectRestrictions = projectRestrictions;
         _pathCaseSensitivity = pathCaseSensitivity;
         _addInstanceLogic = addInstanceLogic;
         _circularReferenceManager = circularReferenceManager;
@@ -425,6 +428,14 @@ public class DragDropManager : IDragDropManager
         {
             // drag+drop on the container, so detach:
             parentName = null;
+        }
+
+        if (parentInstance != null &&
+            _projectRestrictions.IsVariableHidden(dragDroppedInstance, "Parent") &&
+            !ParentVariableAlreadyMatches(targetElementSave, dragDroppedInstance, parentName))
+        {
+            _dialogService.ShowMessage($"The project does not support parenting, so {dragDroppedInstance.Name} cannot become a child of {parentInstance.Name}");
+            return;
         }
 
         // No-op when dropping an instance on a parent it already has. For
@@ -940,7 +951,8 @@ public class DragDropManager : IDragDropManager
             // different, unselected instance (or missing every instance) keeps the old top-level
             // append behavior even though something happens to be selected.
             InstanceSave? selectedInstance = _selectedState.SelectedInstance;
-            InstanceSave? parentInstance = selectedInstance != null && instanceUnderCursor == selectedInstance
+            InstanceSave? parentInstance = selectedInstance != null && instanceUnderCursor == selectedInstance &&
+                !_projectRestrictions.IsHierarchyBlockedFor(draggedAsElementSave)
                 ? selectedInstance
                 : null;
 

@@ -182,6 +182,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
     private readonly ICopyPasteLogic _copyPasteLogic;
     private readonly IMessenger _messenger;
     private readonly IAddDestinationTracker _addDestinationTracker;
+    private readonly IProjectRestrictions _projectRestrictions;
     private readonly IDeleteLogic _deleteLogic;
     private readonly IUndoManager _undoManager;
     private readonly IWireframeObjectManager _wireframeObjectManager;
@@ -224,8 +225,10 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         IClipboardService clipboardService,
         IElementTreeViewFactory viewFactory,
         IAddInstanceLogic addInstanceLogic,
-        IAddDestinationTracker addDestinationTracker)
+        IAddDestinationTracker addDestinationTracker,
+        IProjectRestrictions projectRestrictions)
     {
+        _projectRestrictions = projectRestrictions;
         _fileSystemRevealService = fileSystemRevealService;
         _selectedState = selectedState;
         _editCommands = editCommands;
@@ -895,7 +898,15 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
 
     bool ShouldShow(ScreenSave screen) => string.IsNullOrEmpty(filterText) || screen.Name.ToLower().Contains(filterText.ToLower());
     bool ShouldShow(ComponentSave component) => string.IsNullOrEmpty(filterText) || component.Name.ToLower().Contains(filterText.ToLower());
-    bool ShouldShow(StandardElementSave standardElementSave) => string.IsNullOrEmpty(filterText) || standardElementSave.Name.ToLower().Contains(filterText.ToLower());
+    bool ShouldShow(StandardElementSave standardElementSave)
+    {
+        List<string>? supportedTypes = _projectState.GumProjectSave?.SupportedStandardTypes;
+        if (supportedTypes != null && supportedTypes.Count > 0 && !supportedTypes.Contains(standardElementSave.Name))
+        {
+            return false;
+        }
+        return string.IsNullOrEmpty(filterText) || standardElementSave.Name.ToLower().Contains(filterText.ToLower());
+    }
     bool ShouldShow(BehaviorSave behavior) => string.IsNullOrEmpty(filterText) || behavior.Name?.ToLower().Contains(filterText.ToLower()) == true;
 
     private void AddAndRemoveScreensComponentsStandardsAndBehaviors()
