@@ -1,34 +1,134 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Gum.DataTypes;
 using Gum.Plugins.InternalPlugins.VariableGrid;
+using ToolsUtilities;
 
 namespace Gum.Managers;
 
 /// <inheritdoc cref="IProjectRestrictions"/>
 public class ProjectRestrictions : IProjectRestrictions
 {
-    // Variables the tool itself needs; the project's variable rules never hide them.
+    // Variables the tool itself needs; the profile's variable rules never hide them.
     private static readonly HashSet<string> RuleExemptVariableNames = new HashSet<string>
     {
         "Name", "BaseType", "Locked", "DefaultChildContainer", "State",
     };
 
     private readonly ProjectVariableRuleMatcher _matcher = new ProjectVariableRuleMatcher();
+    private readonly IEngineProfileLoader _loader;
+    private readonly IOutputManager _outputManager;
 
-    private static GumProjectSave? Project => ObjectFinder.Self.GumProjectSave;
+    // The profile the cache was built for; a different project, reference or file name reloads it.
+    private GumProjectSave? _cachedProject;
+    private string? _cachedReference;
+    private string? _cachedProjectFileName;
+    private readonly EngineProfile _unrestricted = new EngineProfile();
+    private EngineProfile _cachedProfile = new EngineProfile();
+    private FilePath? _cachedFilePath;
+
+    private EngineProfile? _inMemoryProfile;
+
+    public ProjectRestrictions(IEngineProfileLoader loader, IOutputManager outputManager)
+    {
+        _loader = loader;
+        _outputManager = outputManager;
+    }
 
     /// <inheritdoc/>
-    public bool AreComponentsDisabled => Project?.DisableComponents == true;
+    public event EventHandler? Changed;
+
+    private EngineProfile Profile
+    {
+        get
+        {
+            if (_inMemoryProfile != null)
+            {
+                return _inMemoryProfile;
+            }
+
+            GumProjectSave? project = ObjectFinder.Self.GumProjectSave;
+            if (project == null)
+            {
+                return _unrestricted;
+            }
+
+            if (!ReferenceEquals(project, _cachedProject) ||
+                project.EngineProfile != _cachedReference ||
+                project.FullFileName != _cachedProjectFileName)
+            {
+                LoadFor(project);
+            }
+            return _cachedProfile;
+        }
+    }
+
+    private void LoadFor(GumProjectSave project)
+    {
+        EngineProfileLoadResult result = _loader.Load(project.FullFileName, project.EngineProfile);
+        _cachedProject = project;
+        _cachedReference = project.EngineProfile;
+        _cachedProjectFileName = project.FullFileName;
+        _cachedProfile = result.Profile;
+        _cachedFilePath = result.FilePath;
+        if (result.Warning != null)
+        {
+            _outputManager.AddOutput(result.Warning);
+        }
+    }
+
+    /// <summary>
+    /// Replaces the profile the project's reference resolves to with <paramref name="profile"/>, without touching
+    /// disk. Pass null to go back to the project's own reference.
+    /// </summary>
+    public void UseProfile(EngineProfile? profile)
+    {
+        _inMemoryProfile = profile;
+    }
 
     /// <inheritdoc/>
-    public bool AreBehaviorsDisabled => Project?.DisableBehaviors == true;
+    public FilePath? ProfileFilePath
+    {
+        get
+        {
+            _ = Profile;
+            return _cachedFilePath;
+        }
+    }
+
+    /// <inheritdoc/>
+    public void Reload()
+    {
+        _cachedProject = null;
+        _ = Profile;
+        Changed?.Invoke(this, EventArgs.Empty);
+    }
+
+    /// <inheritdoc/>
+    public bool AreComponentsDisabled => Profile.DisableComponents;
+
+    /// <inheritdoc/>
+    public bool AreBehaviorsDisabled => Profile.DisableBehaviors;
+
+    /// <inheritdoc/>
+    public IReadOnlyList<string> SupportedStandardTypes => Profile.SupportedStandardTypes;
+
+    /// <inheritdoc/>
+    public bool HasVariableRules
+    {
+        get
+        {
+            EngineProfile profile = Profile;
+            return profile.HideVariablesByDefault || profile.VariableRules.Count > 0;
+        }
+    }
 
     /// <inheritdoc/>
     public bool IsVariableHidden(string? standardTypeName, string variableRootName)
     {
-        GumProjectSave? project = Project;
-        if (project == null || (!project.HideVariablesByDefault && project.VariableRules.Count == 0))
+        EngineProfile profile = Profile;
+        if (!profile.HideVariablesByDefault && profile.VariableRules.Count == 0)
         {
             return false;
         }
@@ -36,7 +136,7 @@ public class ProjectRestrictions : IProjectRestrictions
         {
             return false;
         }
-        return _matcher.IsHidden(project, standardTypeName, variableRootName);
+        return _matcher.IsHidden(profile, standardTypeName, variableRootName);
     }
 
     /// <inheritdoc/>
@@ -68,8 +168,8 @@ public class ProjectRestrictions : IProjectRestrictions
     /// <inheritdoc/>
     public bool IsStandardTypeBlocked(string standardTypeName)
     {
-        List<string>? supported = Project?.SupportedStandardTypes;
-        return supported != null && supported.Count > 0 && !supported.Contains(standardTypeName);
+        List<string> supported = Profile.SupportedStandardTypes;
+        return supported.Count > 0 && !supported.Contains(standardTypeName);
     }
 
     /// <inheritdoc/>
@@ -80,13 +180,14 @@ public class ProjectRestrictions : IProjectRestrictions
     {
         get
         {
-            GumProjectSave? project = Project;
+            GumProjectSave? project = ObjectFinder.Self.GumProjectSave;
             if (project == null)
             {
                 return false;
             }
-            List<string> typeNames = project.SupportedStandardTypes.Count > 0
-                ? project.SupportedStandardTypes
+            List<string> supported = Profile.SupportedStandardTypes;
+            List<string> typeNames = supported.Count > 0
+                ? supported
                 : project.StandardElements.Select(item => item.Name).ToList();
             return typeNames.Count > 0 && typeNames.All(name => IsVariableHidden(name, "Parent"));
         }

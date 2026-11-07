@@ -1,4 +1,4 @@
-using Gum.DataTypes;
+using Gum.Managers;
 using Gum.Plugins.InternalPlugins.VariableGrid;
 using Shouldly;
 using Xunit;
@@ -12,9 +12,9 @@ public class ProjectVariableRuleMatcherTests : BaseTestClass
 {
     private readonly ProjectVariableRuleMatcher _matcher = new ProjectVariableRuleMatcher();
 
-    private static GumProjectSave CreateProject(bool hideByDefault, params (string Pattern, VariableRuleAction Action)[] rules)
+    private static EngineProfile CreateProject(bool hideByDefault, params (string Pattern, VariableRuleAction Action)[] rules)
     {
-        GumProjectSave project = new GumProjectSave { HideVariablesByDefault = hideByDefault };
+        EngineProfile project = new EngineProfile { HideVariablesByDefault = hideByDefault };
         foreach ((string pattern, VariableRuleAction action) in rules)
         {
             project.VariableRules.Add(new VariableRule { Pattern = pattern, Action = action });
@@ -25,7 +25,7 @@ public class ProjectVariableRuleMatcherTests : BaseTestClass
     [Fact]
     public void IsHidden_ShouldBeFalse_WhenProjectHasNoRules()
     {
-        GumProjectSave project = CreateProject(hideByDefault: false);
+        EngineProfile project = CreateProject(hideByDefault: false);
 
         _matcher.IsHidden(project, "Sprite", "Rotation").ShouldBeFalse();
     }
@@ -33,7 +33,7 @@ public class ProjectVariableRuleMatcherTests : BaseTestClass
     [Fact]
     public void IsHidden_ShouldHideEverythingExceptAllowedNames_WhenDefaultIsHide()
     {
-        GumProjectSave project = CreateProject(
+        EngineProfile project = CreateProject(
             hideByDefault: true,
             ("Sprite.X", VariableRuleAction.Show),
             ("Sprite.Y", VariableRuleAction.Show));
@@ -46,7 +46,7 @@ public class ProjectVariableRuleMatcherTests : BaseTestClass
     [Fact]
     public void IsHidden_ShouldNotApplyQualifiedRuleToOtherTypes()
     {
-        GumProjectSave project = CreateProject(
+        EngineProfile project = CreateProject(
             hideByDefault: true,
             ("Sprite.X", VariableRuleAction.Show));
 
@@ -56,7 +56,7 @@ public class ProjectVariableRuleMatcherTests : BaseTestClass
     [Fact]
     public void IsHidden_ShouldApplyUnqualifiedRuleToEveryType()
     {
-        GumProjectSave project = CreateProject(
+        EngineProfile project = CreateProject(
             hideByDefault: true,
             ("X", VariableRuleAction.Show));
 
@@ -68,7 +68,7 @@ public class ProjectVariableRuleMatcherTests : BaseTestClass
     [Fact]
     public void IsHidden_ShouldLetTheLastMatchingRuleWin()
     {
-        GumProjectSave project = CreateProject(
+        EngineProfile project = CreateProject(
             hideByDefault: false,
             ("Sprite.*", VariableRuleAction.Hide),
             ("Sprite.X", VariableRuleAction.Show));
@@ -86,7 +86,7 @@ public class ProjectVariableRuleMatcherTests : BaseTestClass
     [InlineData("*", "Anything", true)]
     public void IsHidden_ShouldSupportWildcards(string pattern, string variableName, bool expectedHidden)
     {
-        GumProjectSave project = CreateProject(
+        EngineProfile project = CreateProject(
             hideByDefault: false,
             (pattern, VariableRuleAction.Hide));
 

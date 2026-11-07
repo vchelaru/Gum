@@ -12,10 +12,12 @@ namespace Gum.Presentation.Tests.Managers;
 public class ProjectRestrictionsTests : BaseTestClass
 {
     private readonly GumProjectSave _project;
-    private readonly ProjectRestrictions _sut = new ProjectRestrictions();
+    private readonly EngineProfile _profile = new EngineProfile();
+    private readonly ProjectRestrictions _sut;
 
     public ProjectRestrictionsTests()
     {
+        _sut = TestProjectRestrictions.Create(_profile);
         _project = new GumProjectSave { Version = GumProjectSave.NativeVersion };
         StandardElementsManager.Self.PopulateProjectWithDefaultStandards(_project);
         ObjectFinder.Self.GumProjectSave = _project;
@@ -23,11 +25,11 @@ public class ProjectRestrictionsTests : BaseTestClass
 
     private void RestrictToSprite()
     {
-        _project.HideVariablesByDefault = true;
-        _project.VariableRules.Add(new VariableRule { Pattern = "Sprite.X", Action = VariableRuleAction.Show });
-        _project.SupportedStandardTypes.Add("Sprite");
-        _project.DisableComponents = true;
-        _project.DisableBehaviors = true;
+        _profile.HideVariablesByDefault = true;
+        _profile.VariableRules.Add(new VariableRule { Pattern = "Sprite.X", Action = VariableRuleAction.Show });
+        _profile.SupportedStandardTypes.Add("Sprite");
+        _profile.DisableComponents = true;
+        _profile.DisableBehaviors = true;
     }
 
     [Fact]
@@ -64,7 +66,7 @@ public class ProjectRestrictionsTests : BaseTestClass
 
         _sut.IsHierarchyBlocked.ShouldBeTrue();
 
-        _project.VariableRules.Add(new VariableRule { Pattern = "Sprite.Parent", Action = VariableRuleAction.Show });
+        _profile.VariableRules.Add(new VariableRule { Pattern = "Sprite.Parent", Action = VariableRuleAction.Show });
 
         _sut.IsHierarchyBlocked.ShouldBeFalse();
     }

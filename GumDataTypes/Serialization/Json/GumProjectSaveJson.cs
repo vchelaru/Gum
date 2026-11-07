@@ -47,6 +47,9 @@ internal sealed class GumProjectSaveJson
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public List<string>? TrimmedElements { get; set; }
     public string ParentProjectRoot { get; set; } = "";
+    /// <summary>Null (and so omitted) unless the project references an engine profile.</summary>
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
+    public string? EngineProfile { get; set; }
     private List<string> _localizationFiles = new List<string>();
     public List<string> LocalizationFiles { get => _localizationFiles; set => _localizationFiles = value ?? throw JsonNullCollection.For(nameof(LocalizationFiles)); }
     public bool ShowLocalizationInGum { get; set; }
@@ -103,6 +106,7 @@ internal static class GumProjectSaveJsonMapper
             FavoriteComponents = new List<string>(source.FavoriteComponents),
             TrimmedElements = source.TrimmedElements.Count > 0 ? new List<string>(source.TrimmedElements) : null,
             ParentProjectRoot = source.ParentProjectRoot,
+            EngineProfile = source.ShouldSerializeEngineProfile() ? source.EngineProfile : null,
             LocalizationFiles = new List<string>(source.LocalizationFiles),
             ShowLocalizationInGum = source.ShowLocalizationInGum,
             CurrentLanguageIndex = source.CurrentLanguageIndex,
@@ -147,6 +151,7 @@ internal static class GumProjectSaveJsonMapper
             FavoriteComponents = new List<string>(dto.FavoriteComponents),
             TrimmedElements = dto.TrimmedElements != null ? new List<string>(dto.TrimmedElements) : new List<string>(),
             ParentProjectRoot = dto.ParentProjectRoot,
+            EngineProfile = dto.EngineProfile ?? string.Empty,
             ShowLocalizationInGum = dto.ShowLocalizationInGum,
             CurrentLanguageIndex = dto.CurrentLanguageIndex,
             SinglePixelTextureFile = dto.SinglePixelTextureFile,

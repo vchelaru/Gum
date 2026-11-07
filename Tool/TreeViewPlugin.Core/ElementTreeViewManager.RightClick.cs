@@ -34,7 +34,7 @@ public partial class ElementTreeViewManager
     /// would crash when instantiated (#4499). "Component" is excluded because it's a StandardElementSave
     /// used internally for default-value lookups, not a type meant to be instantiated directly.
     /// </summary>
-    internal static List<string> GetAvailableStandardInstanceTypes(GumProjectSave? gumProject)
+    internal static List<string> GetAvailableStandardInstanceTypes(GumProjectSave? gumProject, IProjectRestrictions projectRestrictions)
     {
         if (gumProject == null)
         {
@@ -43,8 +43,7 @@ public partial class ElementTreeViewManager
 
         var typeNames = gumProject.StandardElements
             .Where(standard => standard.Name != "Component")
-            .Where(standard => gumProject.SupportedStandardTypes.Count == 0 ||
-                gumProject.SupportedStandardTypes.Contains(standard.Name))
+            .Where(standard => !projectRestrictions.IsStandardTypeBlocked(standard.Name))
             .Select(standard => standard.Name)
             .ToList();
 
@@ -500,7 +499,7 @@ public partial class ElementTreeViewManager
             parentMenuItem.Children.Add(new ContextMenuItemViewModel { IsSeparator = true });
         }
 
-        foreach (var type in GetAvailableStandardInstanceTypes(_projectState.GumProjectSave))
+        foreach (var type in GetAvailableStandardInstanceTypes(_projectState.GumProjectSave, _projectRestrictions))
         {
             var menuItem = new ContextMenuItemViewModel
             {
@@ -524,7 +523,7 @@ public partial class ElementTreeViewManager
         var parentMenuItem = new ContextMenuItemViewModel { Text = itemText };
         _contextMenuItems.Add(parentMenuItem);
 
-        foreach (var type in GetAvailableStandardInstanceTypes(_projectState.GumProjectSave))
+        foreach (var type in GetAvailableStandardInstanceTypes(_projectState.GumProjectSave, _projectRestrictions))
         {
             var menuItem = new ContextMenuItemViewModel
             {

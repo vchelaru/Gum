@@ -133,8 +133,8 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
 
     private readonly IElementCommands _elementCommands;
     private readonly IAddInstanceLogic _addInstanceLogic;
-    // Stateless (reads the loaded project), so the plugin base creates it instead of widening every head's constructor.
-    private readonly IProjectRestrictions _projectRestrictions = new ProjectRestrictions();
+    // The app-wide service, resolved here instead of widening every head's constructor.
+    private readonly IProjectRestrictions _projectRestrictions = Locator.GetRequiredService<IProjectRestrictions>();
     private readonly INameVerifier _nameVerifier;
     private readonly SinglePixelTextureService _singlePixelTextureService;
     private readonly IFileDropTargetFilter _fileDropTargetFilter;
@@ -337,7 +337,8 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
             _toolFontService,
             _pluginManager,
             _projectManager,
-            _canvasDisplayScale);
+            _canvasDisplayScale,
+            _projectRestrictions);
 
         _selectionManager = new SelectionManager(
             _selectedState,

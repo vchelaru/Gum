@@ -26,6 +26,7 @@ public class ProjectVariableRulesGridTests : BaseTestClass
     private readonly AutoMocker _mocker = new();
     private readonly ElementSaveDisplayer _displayer;
     private readonly GumProjectSave _project;
+    private readonly EngineProfile _profile = new EngineProfile();
     private readonly ScreenSave _screen;
     private readonly StateSave _screenDefaultState;
 
@@ -59,7 +60,7 @@ public class ProjectVariableRulesGridTests : BaseTestClass
             .Returns(new List<Attribute>());
 
         _mocker.Use<IVariableSaveLogic>(_mocker.CreateInstance<VariableSaveLogic>());
-        _mocker.Use<IProjectRestrictions>(new ProjectRestrictions());
+        _mocker.Use<IProjectRestrictions>(TestProjectRestrictions.Create(_profile));
 
         _mocker.GetMock<IProjectState>()
             .Setup(x => x.GumProjectSave)
@@ -70,10 +71,10 @@ public class ProjectVariableRulesGridTests : BaseTestClass
 
     private void RestrictToSpritePositionAndTexture()
     {
-        _project.HideVariablesByDefault = true;
-        _project.VariableRules.Add(new VariableRule { Pattern = "Sprite.X", Action = VariableRuleAction.Show });
-        _project.VariableRules.Add(new VariableRule { Pattern = "Sprite.Y", Action = VariableRuleAction.Show });
-        _project.VariableRules.Add(new VariableRule { Pattern = "Sprite.SourceFile", Action = VariableRuleAction.Show });
+        _profile.HideVariablesByDefault = true;
+        _profile.VariableRules.Add(new VariableRule { Pattern = "Sprite.X", Action = VariableRuleAction.Show });
+        _profile.VariableRules.Add(new VariableRule { Pattern = "Sprite.Y", Action = VariableRuleAction.Show });
+        _profile.VariableRules.Add(new VariableRule { Pattern = "Sprite.SourceFile", Action = VariableRuleAction.Show });
     }
 
     private List<string> GetInstanceRootNames(string baseType, out InstanceSave instance)
@@ -117,7 +118,7 @@ public class ProjectVariableRulesGridTests : BaseTestClass
     public void GetCategories_ShouldKeepParent_WhenRulesShowIt()
     {
         RestrictToSpritePositionAndTexture();
-        _project.VariableRules.Add(new VariableRule { Pattern = "Parent", Action = VariableRuleAction.Show });
+        _profile.VariableRules.Add(new VariableRule { Pattern = "Parent", Action = VariableRuleAction.Show });
 
         List<string> names = GetInstanceRootNames("Sprite", out _);
 

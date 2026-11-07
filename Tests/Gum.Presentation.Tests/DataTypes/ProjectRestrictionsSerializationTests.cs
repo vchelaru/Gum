@@ -7,38 +7,34 @@ using Xunit;
 namespace Gum.Presentation.Tests.DataTypes;
 
 /// <summary>
-/// The project-level type and variable restrictions round-trip through the .gumx and add nothing to
-/// a project that does not use them (#7720).
+/// The project's engine profile reference round-trips through .gumx and .gumj and adds nothing to
+/// a project that does not use it (#7720).
 /// </summary>
 public class ProjectRestrictionsSerializationTests : BaseTestClass
 {
-    private static string SaveToTempFolder(GumProjectSave project, out string folder)
+    private static string SaveToTempFolder(GumProjectSave project, string fileName, out string folder)
     {
         folder = Path.Combine(Path.GetTempPath(), "gum-restrictions-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(folder);
-        string path = Path.Combine(folder, "Test.gumx");
+        string path = Path.Combine(folder, fileName);
         project.Save(path, saveElements: false);
         return path;
     }
 
-    [Fact]
-    public void Save_ShouldRoundTripRestrictions()
+    [Theory]
+    [InlineData("Test.gumx")]
+    [InlineData("Test.gumj")]
+    public void Save_ShouldRoundTripEngineProfile(string fileName)
     {
         GumProjectSave project = new GumProjectSave { Version = GumProjectSave.NativeVersion };
-        project.SupportedStandardTypes.Add("Sprite");
-        project.HideVariablesByDefault = true;
-        project.VariableRules.Add(new VariableRule { Pattern = "Sprite.X", Action = VariableRuleAction.Show });
-        string path = SaveToTempFolder(project, out string folder);
+        project.EngineProfile = "../../engine/MonoGameSprites.gumengine";
+        string path = SaveToTempFolder(project, fileName, out string folder);
 
         try
         {
             GumProjectSave loaded = GumProjectSave.Load(path);
 
-            loaded.SupportedStandardTypes.ShouldBe(new[] { "Sprite" });
-            loaded.HideVariablesByDefault.ShouldBeTrue();
-            loaded.VariableRules.Count.ShouldBe(1);
-            loaded.VariableRules[0].Pattern.ShouldBe("Sprite.X");
-            loaded.VariableRules[0].Action.ShouldBe(VariableRuleAction.Show);
+            loaded.EngineProfile.ShouldBe("../../engine/MonoGameSprites.gumengine");
         }
         finally
         {
@@ -46,19 +42,20 @@ public class ProjectRestrictionsSerializationTests : BaseTestClass
         }
     }
 
-    [Fact]
-    public void Save_ShouldNotWriteRestrictionElements_WhenUnused()
+    [Theory]
+    [InlineData("Test.gumx")]
+    [InlineData("Test.gumj")]
+    public void Save_ShouldNotWriteEngineProfile_WhenEmpty(string fileName)
     {
         GumProjectSave project = new GumProjectSave { Version = GumProjectSave.NativeVersion };
-        string path = SaveToTempFolder(project, out string folder);
+        string path = SaveToTempFolder(project, fileName, out string folder);
 
         try
         {
-            string xml = File.ReadAllText(path);
+            string text = File.ReadAllText(path);
 
-            xml.ShouldNotContain("SupportedStandardTypes");
-            xml.ShouldNotContain("HideVariablesByDefault");
-            xml.ShouldNotContain("VariableRules");
+            text.ShouldNotContain("EngineProfile");
+            GumProjectSave.Load(path).EngineProfile.ShouldBe(string.Empty);
         }
         finally
         {

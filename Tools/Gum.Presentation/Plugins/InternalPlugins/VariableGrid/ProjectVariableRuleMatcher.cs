@@ -1,19 +1,19 @@
-using Gum.DataTypes;
+using Gum.Managers;
 
 namespace Gum.Plugins.InternalPlugins.VariableGrid;
 
 /// <summary>
-/// Decides whether a project's <see cref="GumProjectSave.VariableRules"/> hide a standard variable. The
-/// last rule whose pattern matches wins; with no match <see cref="GumProjectSave.HideVariablesByDefault"/> decides.
+/// Decides whether an engine profile's <see cref="EngineProfile.VariableRules"/> hide a standard variable. The
+/// last rule whose pattern matches wins; with no match <see cref="EngineProfile.HideVariablesByDefault"/> decides.
 /// </summary>
 internal class ProjectVariableRuleMatcher
 {
-    public bool IsHidden(GumProjectSave project, string? standardTypeName, string variableRootName)
+    public bool IsHidden(EngineProfile profile, string? standardTypeName, string variableRootName)
     {
-        bool hidden = project.HideVariablesByDefault;
+        bool hidden = profile.HideVariablesByDefault;
         string qualifiedName = standardTypeName + "." + variableRootName;
 
-        foreach (VariableRule rule in project.VariableRules)
+        foreach (VariableRule rule in profile.VariableRules)
         {
             string textToMatch = rule.Pattern.Contains('.') ? qualifiedName : variableRootName;
             if (standardTypeName == null && rule.Pattern.Contains('.'))

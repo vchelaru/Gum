@@ -229,6 +229,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         IProjectRestrictions projectRestrictions)
     {
         _projectRestrictions = projectRestrictions;
+        _projectRestrictions.Changed += (_, _) => HandleRestrictionsChanged();
         _fileSystemRevealService = fileSystemRevealService;
         _selectedState = selectedState;
         _editCommands = editCommands;
@@ -467,18 +468,28 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         }
     }
 
+    // The engine profile was re-read from disk: refilter the tree and rebuild the palette and root folders.
+    private void HandleRestrictionsChanged()
+    {
+        if (_view == null)
+        {
+            return;
+        }
+        RefreshUi();
+        ApplyStandardsPaletteMode();
+        ApplyElementKindVisibility();
+    }
+
     /// <summary>
-    /// Removes or restores the Components and Behaviors root folders to match the project's
-    /// <see cref="GumProjectSave.DisableComponents"/> and <see cref="GumProjectSave.DisableBehaviors"/>.
+    /// Removes or restores the Components and Behaviors root folders to match the project's engine profile
+    /// (<see cref="IProjectRestrictions.AreComponentsDisabled"/>, <see cref="IProjectRestrictions.AreBehaviorsDisabled"/>).
     /// Call whenever a project loads.
     /// </summary>
     public void ApplyElementKindVisibility()
     {
-        GumProjectSave? project = _projectState.GumProjectSave;
-
         // Screens come first, so Components goes right after them; Behaviors goes last.
-        SetRootFolderVisible(mComponentsTreeNode, project?.DisableComponents != true, afterNode: mScreensTreeNode);
-        SetRootFolderVisible(mBehaviorsTreeNode, project?.DisableBehaviors != true, afterNode: null);
+        SetRootFolderVisible(mComponentsTreeNode, !_projectRestrictions.AreComponentsDisabled, afterNode: mScreensTreeNode);
+        SetRootFolderVisible(mBehaviorsTreeNode, !_projectRestrictions.AreBehaviorsDisabled, afterNode: null);
     }
 
     private void SetRootFolderVisible(ITreeNodeMutable? rootNode, bool shouldBeVisible, ITreeNodeMutable? afterNode)
@@ -514,7 +525,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
 
     private void RefreshStandardsPaletteChips()
     {
-        var typeNames = GetAvailableStandardInstanceTypes(_projectState.GumProjectSave);
+        var typeNames = GetAvailableStandardInstanceTypes(_projectState.GumProjectSave, _projectRestrictions);
 
         View.RefreshStandardsPaletteChips(typeNames);
     }
@@ -900,8 +911,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
     bool ShouldShow(ComponentSave component) => string.IsNullOrEmpty(filterText) || component.Name.ToLower().Contains(filterText.ToLower());
     bool ShouldShow(StandardElementSave standardElementSave)
     {
-        List<string>? supportedTypes = _projectState.GumProjectSave?.SupportedStandardTypes;
-        if (supportedTypes != null && supportedTypes.Count > 0 && !supportedTypes.Contains(standardElementSave.Name))
+        if (_projectRestrictions.IsStandardTypeBlocked(standardElementSave.Name))
         {
             return false;
         }

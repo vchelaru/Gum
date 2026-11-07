@@ -36,10 +36,12 @@ public class TreeViewBehaviorFolderTests
     public void ApplyElementKindVisibility_ProjectDisablesComponentsAndBehaviors_RemovesTheirRootFolders()
     {
         using ToolProjectFixture fixture = new ToolProjectFixture("GumTreeElementKindTests");
+        using EngineProfileScope scope = new EngineProfileScope(Services);
+        EngineProfile profile = scope.Profile;
         ElementTreeViewManager treeViewManager = Services.GetRequiredService<ElementTreeViewManager>();
         treeViewManager.RefreshUi();
-        fixture.Project.DisableComponents = true;
-        fixture.Project.DisableBehaviors = true;
+        profile.DisableComponents = true;
+        profile.DisableBehaviors = true;
 
         treeViewManager.ApplyElementKindVisibility();
 
@@ -49,16 +51,35 @@ public class TreeViewBehaviorFolderTests
     }
 
     [AvaloniaFact]
+    public void Reload_ProfileNowDisablesComponentsAndBehaviors_RemovesTheirRootFolders()
+    {
+        using ToolProjectFixture fixture = new ToolProjectFixture("GumTreeElementKindTests");
+        using EngineProfileScope scope = new EngineProfileScope(Services);
+        ElementTreeViewManager treeViewManager = Services.GetRequiredService<ElementTreeViewManager>();
+        treeViewManager.RefreshUi();
+        treeViewManager.RootTreeNodes.ShouldContain(treeViewManager.RootComponentsTreeNode);
+        scope.Profile.DisableComponents = true;
+        scope.Profile.DisableBehaviors = true;
+
+        Services.GetRequiredService<IProjectRestrictions>().Reload();
+
+        treeViewManager.RootTreeNodes.ShouldNotContain(treeViewManager.RootComponentsTreeNode);
+        treeViewManager.RootTreeNodes.ShouldNotContain(treeViewManager.RootBehaviorsTreeNode);
+    }
+
+    [AvaloniaFact]
     public void ApplyElementKindVisibility_ProjectReenablesComponentsAndBehaviors_RestoresRootFoldersInOrder()
     {
         using ToolProjectFixture fixture = new ToolProjectFixture("GumTreeElementKindTests");
+        using EngineProfileScope scope = new EngineProfileScope(Services);
+        EngineProfile profile = scope.Profile;
         ElementTreeViewManager treeViewManager = Services.GetRequiredService<ElementTreeViewManager>();
         treeViewManager.RefreshUi();
-        fixture.Project.DisableComponents = true;
-        fixture.Project.DisableBehaviors = true;
+        profile.DisableComponents = true;
+        profile.DisableBehaviors = true;
         treeViewManager.ApplyElementKindVisibility();
-        fixture.Project.DisableComponents = false;
-        fixture.Project.DisableBehaviors = false;
+        profile.DisableComponents = false;
+        profile.DisableBehaviors = false;
 
         treeViewManager.ApplyElementKindVisibility();
 
@@ -76,6 +97,8 @@ public class TreeViewBehaviorFolderTests
     public void ElementKindVisibilityAndStandardsPalette_Combined_KeepRootFolderOrder(bool usePalette)
     {
         using ToolProjectFixture fixture = new ToolProjectFixture("GumTreeElementKindTests");
+        using EngineProfileScope scope = new EngineProfileScope(Services);
+        EngineProfile profile = scope.Profile;
         IProjectManager projectManager = Services.GetRequiredService<IProjectManager>();
         bool? originalPalette = projectManager.UseStandardsPalette;
         try
@@ -83,12 +106,12 @@ public class TreeViewBehaviorFolderTests
             projectManager.UseStandardsPalette = usePalette;
             ElementTreeViewManager treeViewManager = Services.GetRequiredService<ElementTreeViewManager>();
             treeViewManager.RefreshUi();
-            fixture.Project.DisableComponents = true;
-            fixture.Project.DisableBehaviors = true;
+            profile.DisableComponents = true;
+            profile.DisableBehaviors = true;
             treeViewManager.ApplyElementKindVisibility();
             treeViewManager.ApplyStandardsPaletteMode();
-            fixture.Project.DisableComponents = false;
-            fixture.Project.DisableBehaviors = false;
+            profile.DisableComponents = false;
+            profile.DisableBehaviors = false;
             treeViewManager.ApplyElementKindVisibility();
             treeViewManager.ApplyStandardsPaletteMode();
 

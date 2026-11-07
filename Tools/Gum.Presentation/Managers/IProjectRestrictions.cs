@@ -1,12 +1,14 @@
+using System;
+using System.Collections.Generic;
 using Gum.DataTypes;
+using ToolsUtilities;
 
 namespace Gum.Managers;
 
 /// <summary>
-/// Answers what the loaded project's restrictions (<see cref="GumProjectSave.SupportedStandardTypes"/>,
-/// <see cref="GumProjectSave.VariableRules"/>, <see cref="GumProjectSave.DisableComponents"/>,
-/// <see cref="GumProjectSave.DisableBehaviors"/>) take away from the tool. Every query is false
-/// when the project has no restrictions. Hierarchy is the Parent variable: it is unsupported when the rules hide it.
+/// Answers what the loaded project's engine profile (<see cref="GumProjectSave.EngineProfile"/>) takes away
+/// from the tool. This is the only reader of the profile. Every query is false when the project
+/// references none. Hierarchy is the Parent variable: it is unsupported when the rules hide it.
 /// </summary>
 public interface IProjectRestrictions
 {
@@ -61,4 +63,29 @@ public interface IProjectRestrictions
     /// True when Parent is hidden for every standard type the project allows, so nothing can have a child.
     /// </summary>
     bool IsHierarchyBlocked { get; }
+
+    /// <summary>
+    /// The standard types the profile supports; empty means every type.
+    /// </summary>
+    IReadOnlyList<string> SupportedStandardTypes { get; }
+
+    /// <summary>
+    /// True when the profile hides variables by default or has any variable rule.
+    /// </summary>
+    bool HasVariableRules { get; }
+
+    /// <summary>
+    /// The resolved engine profile file of the loaded project, or null when it has none.
+    /// </summary>
+    FilePath? ProfileFilePath { get; }
+
+    /// <summary>
+    /// Re-reads the engine profile from disk and raises <see cref="Changed"/>.
+    /// </summary>
+    void Reload();
+
+    /// <summary>
+    /// Raised after <see cref="Reload"/>, so surfaces built from the restrictions can refresh.
+    /// </summary>
+    event EventHandler? Changed;
 }

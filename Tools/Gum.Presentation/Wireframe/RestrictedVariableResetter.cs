@@ -22,8 +22,7 @@ public class RestrictedVariableResetter : IRestrictedVariableResetter
     /// <inheritdoc/>
     public void Reset(GraphicalUiElement? root)
     {
-        GumProjectSave? project = ObjectFinder.Self.GumProjectSave;
-        if (root == null || project == null || (!project.HideVariablesByDefault && project.VariableRules.Count == 0))
+        if (root == null || ObjectFinder.Self.GumProjectSave == null || !_projectRestrictions.HasVariableRules)
         {
             return;
         }

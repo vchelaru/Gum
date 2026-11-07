@@ -56,7 +56,7 @@ public abstract class TextureCoordinatePluginBase : PluginBase, IRecipient<UiBas
     protected abstract ITextureCoordinateView CreateView();
 
     // Stateless (reads the loaded project), so the base creates it instead of widening every head's constructor.
-    private readonly IProjectRestrictions _projectRestrictions = new ProjectRestrictions();
+    private readonly IProjectRestrictions _projectRestrictions = Locator.GetRequiredService<IProjectRestrictions>();
 
     protected TextureCoordinatePluginBase(
         ISelectedState selectedState,

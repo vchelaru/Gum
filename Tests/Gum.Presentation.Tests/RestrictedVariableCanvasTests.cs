@@ -32,16 +32,18 @@ public class RestrictedVariableCanvasTests : BaseTestClass
         base.Dispose();
     }
 
-    private static GumProjectSave BuildSpriteProject(bool withRules)
+    private readonly EngineProfile _profile = new EngineProfile();
+
+    private GumProjectSave BuildSpriteProject(bool withRules)
     {
         GumProjectSave project = BuildProject();
         project.StandardElements.Add(BuildStandard("Sprite"));
         if (withRules)
         {
-            project.HideVariablesByDefault = true;
+            _profile.HideVariablesByDefault = true;
             foreach (string pattern in new[] { "Sprite.X", "Sprite.Y", "Sprite.SourceFile" })
             {
-                project.VariableRules.Add(new VariableRule { Pattern = pattern, Action = VariableRuleAction.Show });
+                _profile.VariableRules.Add(new VariableRule { Pattern = pattern, Action = VariableRuleAction.Show });
             }
         }
         return project;
@@ -68,8 +70,8 @@ public class RestrictedVariableCanvasTests : BaseTestClass
         return screen;
     }
 
-    private static CanvasSession StartSession(ElementSave element, bool withRules) =>
-        new CanvasSession(element, element.DefaultState, withRules ? new RestrictedVariableResetter(new ProjectRestrictions()) : null);
+    private CanvasSession StartSession(ElementSave element, bool withRules) =>
+        new CanvasSession(element, element.DefaultState, withRules ? new RestrictedVariableResetter(TestProjectRestrictions.Create(_profile)) : null);
 
     [Fact]
     public void RefreshAll_RuleHidesRotation_InstanceDrawsWithDefaultRotationAndKeepsShownVariables()

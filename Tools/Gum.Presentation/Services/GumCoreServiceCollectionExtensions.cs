@@ -106,6 +106,7 @@ public static class GumCoreServiceCollectionExtensions
         services.AddSingleton<IFavoriteComponentManager, FavoriteComponentManager>();
         services.AddSingleton<IAddDestinationTracker, AddDestinationTracker>();
         services.AddSingleton<IAddInstanceLogic, AddInstanceLogic>();
+        services.AddSingleton<IEngineProfileLoader, EngineProfileLoader>();
         services.AddSingleton<IProjectRestrictions, ProjectRestrictions>();
         services.AddSingleton<IRestrictedVariableResetter, RestrictedVariableResetter>();
         services.AddSingleton<ICopyPasteLogic, CopyPasteLogic>();

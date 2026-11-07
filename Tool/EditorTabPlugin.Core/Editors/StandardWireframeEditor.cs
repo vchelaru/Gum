@@ -48,8 +48,8 @@ public class StandardWireframeEditor : WireframeEditor
     DimensionDisplayVisual widthDimensionDisplay;
     DimensionDisplayVisual heightDimensionDisplay;
 
-    // Stateless (reads the loaded project), so the editor creates it instead of widening its constructor.
-    private readonly EditHandleRestrictions _editHandleRestrictions = new EditHandleRestrictions(new ProjectRestrictions());
+
+    private readonly EditHandleRestrictions _editHandleRestrictions;
     private readonly IElementCommands _elementCommands;
     private readonly IWireframeObjectManager _wireframeObjectManager;
     private readonly IVariableInCategoryPropagationLogic _variableInCategoryPropagationLogic;
@@ -102,7 +102,8 @@ public class StandardWireframeEditor : WireframeEditor
         IGumCursorState cursor,
         IToolFontService toolFontService,
         IPluginManager pluginManager,
-        ICanvasDisplayScale displayScale)
+        ICanvasDisplayScale displayScale,
+        IProjectRestrictions projectRestrictions)
         : base(
               hotkeyManager,
               selectionManager,
@@ -123,6 +124,7 @@ public class StandardWireframeEditor : WireframeEditor
               pluginManager,
               displayScale)
     {
+        _editHandleRestrictions = new EditHandleRestrictions(projectRestrictions);
         _elementCommands = elementCommands;
         _wireframeObjectManager = wireframeObjectManager;
         _variableInCategoryPropagationLogic = variableInCategoryPropagationLogic;
