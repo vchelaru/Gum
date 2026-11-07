@@ -96,4 +96,21 @@ public class HeadlessCodeGenerationBlockedElementTests : BaseTestClass
         HasGeneratedFile("SuperHero").ShouldBeFalse();
         Directory.GetFiles(_tempDirectory, "Hero*.cs", SearchOption.AllDirectories).ShouldBeEmpty();
     }
+
+    [Fact]
+    public void GenerateCodeForElements_DisableComponents_WritesNoComponentFilesButStillWritesScreens()
+    {
+        ScreenSave screen = new ScreenSave { Name = "MainScreen" };
+        screen.States.Add(new StateSave { Name = "Default", ParentContainer = screen });
+        Project.Screens.Add(screen);
+
+        CodeGenerationRunResult result = Run(new EngineProfileVariableRestrictions(
+            new EngineProfile { DisableComponents = true }));
+
+        result.GeneratedCount.ShouldBe(1);
+        HasGeneratedFile("MainScreen").ShouldBeTrue();
+        HasGeneratedFile("Panel").ShouldBeFalse();
+        HasGeneratedFile("Hero").ShouldBeFalse();
+        Directory.GetFiles(_tempDirectory, "Panel*.cs", SearchOption.AllDirectories).ShouldBeEmpty();
+    }
 }

@@ -77,6 +77,11 @@ public class CodeGenerationContext
     public int ResolvedSyntaxVersion { get; set; }
 
     /// <summary>
+    /// True when the project's engine profile disables behaviors, so a component's behaviors produce no output.
+    /// </summary>
+    public bool BehaviorsDisabled { get; set; }
+
+    /// <summary>
     /// Whether the game project's C# version supports file-scoped namespaces (C# 10+). When false
     /// (e.g. Unity, which compiles with C# 9) generated files use a block namespace instead.
     /// </summary>
@@ -799,7 +804,7 @@ public class CodeGenerator
 
         if (context.CodeOutputProjectSettings.InheritanceLocation == InheritanceLocation.InGeneratedCode)
         {
-            var inheritance = GetInheritance(context.Element, context.CodeOutputProjectSettings, context.ResolvedSyntaxVersion, _codeGenerationNameVerifier);
+            var inheritance = GetInheritance(context.Element, context.CodeOutputProjectSettings, context.ResolvedSyntaxVersion, _codeGenerationNameVerifier, context.BehaviorsDisabled);
             header += " : " + inheritance;
         }
 
@@ -807,7 +812,7 @@ public class CodeGenerator
         {
             // The Forms type this class registers as the default visual for, so game code that creates that
             // control (new Button()) roots this element too.
-            string? formsType = GetDefaultFormsTemplateType(context.Element);
+            string? formsType = GetDefaultFormsTemplateType(context.Element, context.BehaviorsDisabled);
             string formsTypeArgument = formsType == null ? "" : $", FormsType = typeof({formsType})";
             context.StringBuilder.AppendLine(context.Tabs + $"[global::Gum.DataTypes.GumElement(\"{context.Element.Name}\"{formsTypeArgument})]");
         }
@@ -927,7 +932,7 @@ public class CodeGenerator
         return className;
     }
 
-    public static string? GetInheritance(ElementSave element, CodeOutputProjectSettings projectSettings, int resolvedSyntaxVersion = 0, CodeGenerationNameVerifier? nameVerifier = null)
+    public static string? GetInheritance(ElementSave element, CodeOutputProjectSettings projectSettings, int resolvedSyntaxVersion = 0, CodeGenerationNameVerifier? nameVerifier = null, bool behaviorsDisabled = false)
     {
         string? inheritance = null;
         if (element is ScreenSave)
@@ -968,7 +973,7 @@ public class CodeGenerator
         {
             if (projectSettings.OutputLibrary == OutputLibrary.GumForms)
             {
-                GetGumFormsTypeFromBehaviors(element, out string? gumFormsType, out _);
+                GetFormsTypeFromBehaviors(element, behaviorsDisabled, out string? gumFormsType, out _);
 
                 if (string.IsNullOrEmpty(gumFormsType))
                 {
@@ -1075,7 +1080,7 @@ public class CodeGenerator
     /// into the generated class when it is missing, and <see cref="FormsCodegenBaseTypeErrorSource"/>
     /// reports it so codegen skips the element instead.
     /// </summary>
-    public static string? GetUnsupportedFormsBaseTypeError(ElementSave element, CodeOutputProjectSettings projectSettings)
+    public static string? GetUnsupportedFormsBaseTypeError(ElementSave element, CodeOutputProjectSettings projectSettings, bool behaviorsDisabled = false)
     {
         if (projectSettings.OutputLibrary != OutputLibrary.GumForms ||
             element is ScreenSave ||
@@ -1085,7 +1090,7 @@ public class CodeGenerator
             return null;
         }
 
-        GetGumFormsTypeFromBehaviors(element, out string? gumFormsType, out _);
+        GetFormsTypeFromBehaviors(element, behaviorsDisabled, out string? gumFormsType, out _);
         return string.IsNullOrEmpty(gumFormsType) ? GetUnsupportedFormsBaseTypeMessage(element) : null;
     }
 
@@ -1104,7 +1109,7 @@ public class CodeGenerator
             return null;
         }
 
-        CodeGenerationContext context = new CodeGenerationContext(_codeGenerationNameVerifier, element);
+        CodeGenerationContext context = new CodeGenerationContext(_codeGenerationNameVerifier, element) { BehaviorsDisabled = AreBehaviorsDisabledByEngineProfile };
         context.CodeOutputProjectSettings = projectSettings;
         context.ResolvedSyntaxVersion = ResolveSyntaxVersion(projectSettings);
         string? className = GetClassNameForType(element, GetVisualApiForElement(element), context);
@@ -1827,7 +1832,7 @@ public class CodeGenerator
             return null;
         }
 
-        GetGumFormsTypeFromBehaviors(element, out string? formsType, out _);
+        GetFormsTypeFromBehaviors(element, AreBehaviorsDisabledByEngineProfile, out string? formsType, out _);
         if(formsType == null)
         {
             return null;
@@ -2103,7 +2108,7 @@ public class CodeGenerator
     {
         if (UsesUnifiedGumRuntime(context.CodeOutputProjectSettings.OutputLibrary))
         {
-            GetGumFormsTypeFromBehaviors(context.Element, out string? gumFormsType, out _);
+            GetFormsTypeFromBehaviors(context.Element, context.BehaviorsDisabled, out string? gumFormsType, out _);
             if (gumFormsType != null)
             {
                 // A Forms control constructed on a generated visual (new Button() through
@@ -2383,7 +2388,7 @@ public class CodeGenerator
                 $"global::Gum.Forms.Controls.FrameworkElement.DefaultFormsTemplates" +
                 $"[typeof({className})] = template;");
 
-            string? formsType = GetDefaultFormsTemplateType(context.Element);
+            string? formsType = GetDefaultFormsTemplateType(context.Element, context.BehaviorsDisabled);
             if (formsType != null)
             {
                 builder.AppendLine(context.Tabs +
@@ -2429,7 +2434,7 @@ public class CodeGenerator
 
             builder.AppendLine(context.Tabs + $"GumRuntime.ElementSaveExtensions.RegisterGueInstantiationType(\"{context.Element.Name}\", typeof({className}));");
 
-            string? formsType = GetDefaultFormsTemplateType(context.Element);
+            string? formsType = GetDefaultFormsTemplateType(context.Element, context.BehaviorsDisabled);
             if (formsType != null)
             {
                 // DefaultFormsComponents is obsolete and reflects the constructor (not trim-safe), so
@@ -2462,6 +2467,18 @@ public class CodeGenerator
 
     #region Gum Forms (MonoGame)
 
+    private static void GetFormsTypeFromBehaviors(ElementSave element, bool behaviorsDisabled, out string? formsType, out ElementBehaviorReference? behavior)
+    {
+        if (behaviorsDisabled)
+        {
+            formsType = null;
+            behavior = null;
+            return;
+        }
+
+        GetGumFormsTypeFromBehaviors(element, out formsType, out behavior);
+    }
+
     internal static void GetGumFormsTypeFromBehaviors(ElementSave element, out string? formsType, out ElementBehaviorReference? behavior)
     {
         formsType = null;
@@ -2484,9 +2501,9 @@ public class CodeGenerator
 
     // The Forms type an element registers itself as the default template for: the type its behavior maps to,
     // when the element is that behavior's default implementation. Null when it registers nothing.
-    private static string? GetDefaultFormsTemplateType(ElementSave element)
+    private static string? GetDefaultFormsTemplateType(ElementSave element, bool behaviorsDisabled)
     {
-        GetGumFormsTypeFromBehaviors(element, out string? formsType, out ElementBehaviorReference? behaviorReference);
+        GetFormsTypeFromBehaviors(element, behaviorsDisabled, out string? formsType, out ElementBehaviorReference? behaviorReference);
         if (formsType == null || BehaviorsWithoutDefaultFormsTemplate.Contains(behaviorReference!.BehaviorName!))
         {
             return null;
@@ -2503,7 +2520,7 @@ public class CodeGenerator
         {
             return false;
         }
-        GetGumFormsTypeFromBehaviors(context.Element, out _, out ElementBehaviorReference? behaviorReference);
+        GetFormsTypeFromBehaviors(context.Element, context.BehaviorsDisabled, out _, out ElementBehaviorReference? behaviorReference);
         if (behaviorReference?.BehaviorName != StandardFormsBehaviorNames.MenuItemSubmenuPopupBehaviorName)
         {
             return false;
@@ -2553,7 +2570,7 @@ public class CodeGenerator
     {
         if (!UsesUnifiedGumRuntime(context.CodeOutputProjectSettings.OutputLibrary)) return;
 
-        GetGumFormsTypeFromBehaviors(context.Element, out string? gumFormsType, out _);
+        GetFormsTypeFromBehaviors(context.Element, context.BehaviorsDisabled, out string? gumFormsType, out _);
 
         if (gumFormsType == null) return;
 
@@ -4017,7 +4034,7 @@ public class CodeGenerator
             if (UsesUnifiedGumRuntime(projectSettings.OutputLibrary) &&
                 projectSettings.ObjectInstantiationType == ObjectInstantiationType.FindByName)
             {
-                GetGumFormsTypeFromBehaviors(element, out string? findByNameFormsType, out _);
+                GetFormsTypeFromBehaviors(element, AreBehaviorsDisabledByEngineProfile, out string? findByNameFormsType, out _);
                 if (findByNameFormsType != null)
                 {
                     stringBuilder.AppendLine(context.Tabs + $"{TryCreateFormsObjectField} = tryCreateFormsObject;");
@@ -4321,7 +4338,7 @@ public class CodeGenerator
         AdjustPixelValuesForDensity = projectSettings.AdjustPixelValuesForDensity;
         VisualApi visualApi = GetVisualApiForElement(element);
 
-        var context = new CodeGenerationContext(_codeGenerationNameVerifier, element);
+        var context = new CodeGenerationContext(_codeGenerationNameVerifier, element) { BehaviorsDisabled = AreBehaviorsDisabledByEngineProfile };
         context.TabCount = 0;
         context.CodeOutputProjectSettings = projectSettings;
         context.ElementSettings = elementSettings;
@@ -4611,7 +4628,7 @@ public class CodeGenerator
     public string GetCodeForInstance(InstanceSave instance, ElementSave element, CodeOutputProjectSettings codeOutputProjectSettings)
     {
         _debugOnlyLogic.ClearCache();
-        var context = new CodeGenerationContext(_codeGenerationNameVerifier, element);
+        var context = new CodeGenerationContext(_codeGenerationNameVerifier, element) { BehaviorsDisabled = AreBehaviorsDisabledByEngineProfile };
         if (IsInstanceBlockedByEngineProfile(instance))
         {
             return string.Empty;
@@ -4795,7 +4812,7 @@ public class CodeGenerator
         _debugOnlyLogic.ClearCache();
         var stringBuilder = new StringBuilder();
 
-        var context = new CodeGenerationContext(_codeGenerationNameVerifier, container);
+        var context = new CodeGenerationContext(_codeGenerationNameVerifier, container) { BehaviorsDisabled = AreBehaviorsDisabledByEngineProfile };
         context.CodeOutputProjectSettings = codeOutputProjectSettings;
         context.ResolvedSyntaxVersion = ResolveSyntaxVersion(codeOutputProjectSettings);
 
@@ -4885,7 +4902,7 @@ public class CodeGenerator
                 tabCount++;
                 stringBuilder.AppendLine(ToTabs(tabCount) + $"var casted = bindable as {containerClassName};");
                 stringBuilder.AppendLine(ToTabs(tabCount) + $"var value = ({enumDeclarator})newValue;");
-                CodeGenerationContext context = new CodeGenerationContext(_codeGenerationNameVerifier, element);
+                CodeGenerationContext context = new CodeGenerationContext(_codeGenerationNameVerifier, element) { BehaviorsDisabled = AreBehaviorsDisabledByEngineProfile };
                 context.ThisPrefix = "casted";
                 context.TabCount = tabCount;
                 context.CodeOutputProjectSettings = codeProjectSettings;
@@ -4952,7 +4969,7 @@ public class CodeGenerator
                 stringBuilder.AppendLine(ToTabs(tabCount) + "{");
                 tabCount++;
                 stringBuilder.AppendLine(ToTabs(tabCount) + $"_{categoryFieldName}State = value;");
-                CodeGenerationContext context = new CodeGenerationContext(_codeGenerationNameVerifier, element);
+                CodeGenerationContext context = new CodeGenerationContext(_codeGenerationNameVerifier, element) { BehaviorsDisabled = AreBehaviorsDisabledByEngineProfile };
                 context.TabCount = tabCount;
                 context.CodeOutputProjectSettings = codeProjectSettings;
                 context.ResolvedSyntaxVersion = resolvedSyntaxVersion;
@@ -5559,7 +5576,7 @@ public class CodeGenerator
 
             if(instanceElement != null)
             {
-                GetGumFormsTypeFromBehaviors(instanceElement, out formsType, out _);
+                GetFormsTypeFromBehaviors(instanceElement, context.BehaviorsDisabled, out formsType, out _);
             }
 
             // special case for now, need to handle this in a more generalized manner:
@@ -5670,7 +5687,7 @@ public class CodeGenerator
                         string containerClassName = "VariableState";
                         if (categoryContainer != null)
                         {
-                            var context = new CodeGenerationContext(_codeGenerationNameVerifier, categoryContainer);
+                            var context = new CodeGenerationContext(_codeGenerationNameVerifier, categoryContainer) { BehaviorsDisabled = AreBehaviorsDisabledByEngineProfile };
                             context.CodeOutputProjectSettings = settings;
 
                             // We're going to make it easier for the user by getting the fully-qualified type name for their component:
@@ -6785,6 +6802,11 @@ public class CodeGenerator
     public bool IsElementBlockedByEngineProfile(ElementSave element) =>
         _variableRestrictions?.IsElementBlocked(element) == true;
 
+    /// <summary>
+    /// True when the project's engine profile disables behaviors.
+    /// </summary>
+    public bool AreBehaviorsDisabledByEngineProfile => _variableRestrictions?.AreBehaviorsDisabled == true;
+
     private bool IsInstanceBlockedByEngineProfile(InstanceSave? instance) =>
         instance != null && _variableRestrictions?.IsInstanceBlocked(instance) == true;
 
@@ -6809,6 +6831,7 @@ public class CodeGenerator
     private void FillWithFormsPropertyAssignments(CodeGenerationContext context, StringBuilder stringBuilder, InstanceSave? instance, StateSave state)
     {
         if (context.CodeOutputProjectSettings.OutputLibrary != OutputLibrary.GumForms ||
+            context.BehaviorsDisabled ||
             ObjectFinder.Self.GumProjectSave == null)
         {
             return;
@@ -6822,7 +6845,7 @@ public class CodeGenerator
             return;
         }
 
-        Type? controlType = GetFormsControlType(controlElement);
+        Type? controlType = GetFormsControlType(controlElement, AreBehaviorsDisabledByEngineProfile);
         if (controlType == null)
         {
             return;
@@ -6870,9 +6893,10 @@ public class CodeGenerator
     /// that authors such a name in its own default state makes it a variable of the component, which is why
     /// "the base element has the variable" cannot decide this.
     /// </summary>
-    private static bool GetIfFormsPropertyIsAssignedOnControl(ElementSave? controlElement, string name, OutputLibrary outputLibrary)
+    private bool GetIfFormsPropertyIsAssignedOnControl(ElementSave? controlElement, string name, OutputLibrary outputLibrary)
     {
         if (outputLibrary != OutputLibrary.GumForms ||
+            AreBehaviorsDisabledByEngineProfile ||
             ObjectFinder.Self.GumProjectSave == null ||
             controlElement == null ||
             controlElement is StandardElementSave ||
@@ -6882,7 +6906,7 @@ public class CodeGenerator
             return false;
         }
 
-        Type? controlType = GetFormsControlType(controlElement);
+        Type? controlType = GetFormsControlType(controlElement, AreBehaviorsDisabledByEngineProfile);
         return controlType != null && FindWritableProperty(controlType, name) != null;
     }
 
@@ -6927,14 +6951,14 @@ public class CodeGenerator
     /// element in its base chain with a Forms behavior, else FrameworkElement. The controls live in
     /// GumCommon; Gum.ProjectServices' own placeholder types (FormsControlPlaceholders.cs) are not them.
     /// </summary>
-    private static Type? GetFormsControlType(ElementSave element)
+    private static Type? GetFormsControlType(ElementSave element, bool behaviorsDisabled)
     {
         HashSet<ElementSave> visited = new HashSet<ElementSave>();
         ElementSave? current = element;
 
         while (current != null && visited.Add(current))
         {
-            GetGumFormsTypeFromBehaviors(current, out string? formsType, out _);
+            GetFormsTypeFromBehaviors(current, behaviorsDisabled, out string? formsType, out _);
             if (formsType != null)
             {
                 return typeof(Gum.Forms.Controls.FrameworkElement).Assembly.GetType(formsType.Replace("global::", string.Empty));
@@ -7090,7 +7114,7 @@ public class CodeGenerator
             stringBuilder.AppendLine(ToTabs(tabCount) + line);
             stringBuilder.AppendLine(ToTabs(tabCount) + "{");
             tabCount++;
-            var context = new CodeGenerationContext(_codeGenerationNameVerifier, element);
+            var context = new CodeGenerationContext(_codeGenerationNameVerifier, element) { BehaviorsDisabled = AreBehaviorsDisabledByEngineProfile };
             context.TabCount = tabCount;
             // Assigns on the instance itself (e.g. LabelInstance.Text), never through .Visual, because Forms
             // controls expose Text directly and Visual is typed InteractiveGue. This needs the non-Forms prefix,
@@ -7157,7 +7181,7 @@ public class CodeGenerator
 
     private void FillWithVariableBinding(ElementSave element, StringBuilder stringBuilder, int tabCount)
     {
-        var context = new CodeGenerationContext(_codeGenerationNameVerifier, element);
+        var context = new CodeGenerationContext(_codeGenerationNameVerifier, element) { BehaviorsDisabled = AreBehaviorsDisabledByEngineProfile };
         context.StringBuilder = stringBuilder;
         context.TabCount = tabCount;
 

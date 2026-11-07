@@ -684,6 +684,24 @@ public class OrphanCodeFileScanServiceTests : BaseTestClass
         CreateService().Scan(project, projectSettings).Orphans.ShouldBeEmpty();
     }
 
+    [Fact]
+    public void Scan_ShouldFlagEveryComponentFile_WhenComponentsAreDisabled()
+    {
+        GumProjectSave project = Project;
+        project.Components.Add(CreateComponent("Panel"));
+        CodeOutputProjectSettings projectSettings = CreateProjectSettings();
+        WriteGeneratedFile("Components/Panel.Generated.cs", "Panel");
+        WriteFile("Components/Panel.cs", "partial class Panel { }");
+        IVariableRestrictions disabled = new EngineProfileVariableRestrictions(new EngineProfile { DisableComponents = true });
+
+        IReadOnlyList<OrphanCodeFile> orphans = CreateService(disabled).Scan(project, projectSettings).Orphans;
+        IReadOnlyList<OrphanCodeFile> orphansWithoutProfile = CreateService().Scan(project, projectSettings).Orphans;
+
+        orphans.Select(item => item.FilePath.FileNameNoPath).OrderBy(name => name)
+            .ShouldBe(new[] { "Panel.cs", "Panel.Generated.cs" }.OrderBy(name => name));
+        orphansWithoutProfile.ShouldBeEmpty();
+    }
+
     #region Helpers
 
     private static IVariableRestrictions Supporting(params string[] standardTypes) =>

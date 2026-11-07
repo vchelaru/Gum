@@ -1,3 +1,4 @@
+using Gum.DataTypes.Behaviors;
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using Gum.Localization;
@@ -321,4 +322,127 @@ public class CodeGeneratorEngineProfileTests : BaseTestClass
         code.ShouldNotContain("SpriteRotation");
         code.ShouldNotContain("SpriteInstance");
         code.ShouldNotContain("99f");
-    }}
+    }
+
+    private static IVariableRestrictions Disabling(bool components = false, bool behaviors = false) =>
+        new EngineProfileVariableRestrictions(new EngineProfile { DisableComponents = components, DisableBehaviors = behaviors });
+
+    /// <summary>
+    /// A screen with a Panel component instance (PanelInstance) that holds a Text (TextChild), plus a
+    /// standard Container (Holder) that holds a Text (HolderChild).
+    /// </summary>
+    private ScreenSave CreateScreenWithComponentInstance(out ComponentSave panel)
+    {
+        DeclareSpriteVariables();
+        StateSave textState = Project.StandardElements.First(item => item.Name == "Text").DefaultState!;
+        AddVariable(textState, "Parent", "", "string");
+        AddVariable(textState, "X", 0f, "float");
+        panel = new ComponentSave { Name = "Panel", BaseType = "Container" };
+        panel.States.Add(new StateSave { Name = "Default", ParentContainer = panel });
+        Project.Components.Add(panel);
+        ScreenSave screen = new ScreenSave { Name = "MainScreen" };
+        StateSave state = new StateSave { Name = "Default", ParentContainer = screen };
+        screen.States.Add(state);
+        screen.Instances.Add(new InstanceSave { Name = "Holder", BaseType = "Container", ParentContainer = screen });
+        screen.Instances.Add(new InstanceSave { Name = "PanelInstance", BaseType = "Panel", ParentContainer = screen });
+        screen.Instances.Add(new InstanceSave { Name = "TextChild", BaseType = "Text", ParentContainer = screen });
+        screen.Instances.Add(new InstanceSave { Name = "HolderChild", BaseType = "Text", ParentContainer = screen });
+        AddVariable(state, "TextChild.Parent", "PanelInstance", "string");
+        AddVariable(state, "TextChild.X", 7f, "float");
+        AddVariable(state, "HolderChild.Parent", "Holder", "string");
+        AddVariable(state, "PanelInstance.X", 5f, "float");
+        Project.Screens.Add(screen);
+        ObjectFinder.Self.GumProjectSave = Project;
+        return screen;
+    }
+
+    [Fact]
+    public void Generate_DisableComponents_SkipsComponentInstancesAndReattachesTheirChildren()
+    {
+        ScreenSave screen = CreateScreenWithComponentInstance(out ComponentSave panel);
+        CodeGenerator generator = CreateCodeGenerator(Disabling(components: true));
+
+        string code = Generate(generator, screen);
+
+        code.ShouldNotContain("PanelInstance");
+        code.ShouldContain("Holder");
+        code.ShouldContain("this.Children.Add(TextChild);");
+        code.ShouldContain("TextChild.X = 7f;");
+        code.ShouldContain("Holder.Children.Add(HolderChild);");
+        generator.IsElementBlockedByEngineProfile(panel).ShouldBeTrue();
+        generator.IsElementBlockedByEngineProfile(screen).ShouldBeFalse();
+        generator.IsElementBlockedByEngineProfile(Project.StandardElements.First(item => item.Name == "Container")).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void Generate_DisableComponents_SkipsExposedAndStateVariablesOnComponentInstance()
+    {
+        ScreenSave screen = CreateScreenWithComponentInstance(out _);
+        screen.DefaultState!.Variables.First(item => item.Name == "PanelInstance.X").ExposedAsName = "PanelX";
+        StateSaveCategory category = new StateSaveCategory { Name = "Mode" };
+        StateSave highlighted = new StateSave { Name = "Highlighted", ParentContainer = screen };
+        AddVariable(highlighted, "PanelInstance.X", 99f, "float");
+        category.States.Add(highlighted);
+        screen.Categories.Add(category);
+
+        string code = Generate(CreateCodeGenerator(Disabling(components: true)), screen);
+
+        code.ShouldNotContain("PanelX");
+        code.ShouldNotContain("PanelInstance");
+        code.ShouldNotContain("99f");
+    }
+
+    [Fact]
+    public void Generate_ComponentSwitchesOff_IsIdenticalToNoRestrictions()
+    {
+        ScreenSave screen = CreateScreenWithComponentInstance(out ComponentSave panel);
+
+        string withoutProfile = Generate(CreateCodeGenerator(), screen);
+        string withSwitchesOff = Generate(CreateCodeGenerator(Disabling()), screen);
+        string panelWithoutProfile = Generate(CreateCodeGenerator(), panel);
+        string panelWithSwitchesOff = Generate(CreateCodeGenerator(Disabling()), panel);
+
+        withSwitchesOff.ShouldBe(withoutProfile);
+        panelWithSwitchesOff.ShouldBe(panelWithoutProfile);
+        withoutProfile.ShouldContain("PanelInstance");
+    }
+
+    private ComponentSave CreateButtonComponent()
+    {
+        ComponentSave button = new ComponentSave { Name = "MyButton", BaseType = "Container" };
+        button.States.Add(new StateSave { Name = "Default", ParentContainer = button });
+        button.Behaviors.Add(new ElementBehaviorReference { BehaviorName = "ButtonBehavior" });
+        Project.Components.Add(button);
+        ObjectFinder.Self.GumProjectSave = Project;
+        return button;
+    }
+
+    private static string GenerateForms(CodeGenerator generator, ElementSave element) =>
+        generator.GetGeneratedCodeForElement(element, elementSettings: null!, new CodeOutputProjectSettings
+        {
+            OutputLibrary = OutputLibrary.GumForms,
+            RootNamespace = "MyGame",
+        });
+
+    [Fact]
+    public void Generate_DisableBehaviors_DerivesComponentFromFrameworkElementWithoutBehaviorOutput()
+    {
+        ComponentSave button = CreateButtonComponent();
+
+        string withBehaviors = GenerateForms(CreateCodeGenerator(Disabling()), button);
+        string withoutBehaviors = GenerateForms(CreateCodeGenerator(Disabling(behaviors: true)), button);
+
+        withBehaviors.ShouldContain("global::Gum.Forms.Controls.Button");
+        withoutBehaviors.ShouldNotContain("Controls.Button");
+        withoutBehaviors.ShouldContain("global::Gum.Forms.Controls.FrameworkElement");
+    }
+
+    [Fact]
+    public void Generate_BehaviorSwitchOff_IsIdenticalToNoRestrictions()
+    {
+        ComponentSave button = CreateButtonComponent();
+
+        GenerateForms(CreateCodeGenerator(Disabling()), button)
+            .ShouldBe(GenerateForms(CreateCodeGenerator(), button));
+    }
+}

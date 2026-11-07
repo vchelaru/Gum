@@ -13,16 +13,22 @@ namespace Gum.ProjectServices.CodeGeneration;
 public class FormsCodegenBaseTypeErrorSource : IAdditionalErrorSource
 {
     private readonly CodeOutputProjectSettings _projectSettings;
+    private readonly bool _behaviorsDisabled;
 
-    public FormsCodegenBaseTypeErrorSource(CodeOutputProjectSettings projectSettings)
+    /// <summary>
+    /// Creates the source. <paramref name="behaviorsDisabled"/> is true when the engine profile disables
+    /// behaviors, so no component has a Forms behavior.
+    /// </summary>
+    public FormsCodegenBaseTypeErrorSource(CodeOutputProjectSettings projectSettings, bool behaviorsDisabled = false)
     {
         _projectSettings = projectSettings;
+        _behaviorsDisabled = behaviorsDisabled;
     }
 
     /// <inheritdoc/>
     public IEnumerable<ErrorResult> GetErrors(ElementSave element, GumProjectSave project)
     {
-        string? message = CodeGenerator.GetUnsupportedFormsBaseTypeError(element, _projectSettings);
+        string? message = CodeGenerator.GetUnsupportedFormsBaseTypeError(element, _projectSettings, _behaviorsDisabled);
         if (message != null)
         {
             yield return new ErrorResult

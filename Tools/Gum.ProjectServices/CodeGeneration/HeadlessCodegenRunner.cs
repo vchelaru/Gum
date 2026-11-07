@@ -214,7 +214,7 @@ public class HeadlessCodegenRunner : IHeadlessCodegenRunner
         IHeadlessErrorChecker errorChecker = new HeadlessErrorChecker(
             typeResolver, new IAdditionalErrorSource[]
             {
-                new FormsCodegenBaseTypeErrorSource(projectSettings),
+                new FormsCodegenBaseTypeErrorSource(projectSettings, codeGenerator.AreBehaviorsDisabledByEngineProfile),
                 new CategoryNameCollisionErrorSource(codeGenerator, projectSettings),
             });
 
