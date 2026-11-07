@@ -130,4 +130,28 @@ public class ProjectRestrictionsEngineProfileTests : BaseTestClass
         _sut.ProfileFilePath.ShouldNotBeNull();
         _sut.ProfileFilePath!.FileNameNoPath.ShouldBe("Engine.gumengine");
     }
+
+    [Fact]
+    public void IsElementBlocked_ShouldBlockComponentsAndTheirInstances_OnlyWhileComponentsAreDisabled()
+    {
+        ComponentSave panel = new ComponentSave { Name = "Panel", BaseType = "Container" };
+        _project.Components.Add(panel);
+        InstanceSave panelInstance = new InstanceSave { Name = "PanelInstance", BaseType = "Panel" };
+        ScreenSave screen = new ScreenSave { Name = "MainScreen" };
+        screen.Instances.Add(panelInstance);
+        panelInstance.ParentContainer = screen;
+        _project.Screens.Add(screen);
+        File.WriteAllText(_profilePath, """{ "disableComponents": true }""");
+        _project.EngineProfile = "Engine.gumengine";
+
+        _sut.IsElementBlocked(panel).ShouldBeTrue();
+        _sut.IsInstanceBlocked(panelInstance).ShouldBeTrue();
+        _sut.IsElementBlocked(screen).ShouldBeFalse();
+
+        File.WriteAllText(_profilePath, """{ "disableComponents": false }""");
+        _sut.Reload();
+
+        _sut.IsElementBlocked(panel).ShouldBeFalse();
+        _sut.IsInstanceBlocked(panelInstance).ShouldBeFalse();
+    }
 }

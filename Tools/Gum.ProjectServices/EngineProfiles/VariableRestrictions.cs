@@ -20,6 +20,16 @@ public interface IVariableRestrictions
     /// contain it.
     /// </summary>
     bool IsStandardTypeBlocked(string standardTypeName);
+
+    /// <summary>
+    /// True when the project disables components: every component and every instance of one is dormant.
+    /// </summary>
+    bool AreComponentsDisabled { get; }
+
+    /// <summary>
+    /// True when the project disables behaviors: output derived from a component's behaviors is dormant.
+    /// </summary>
+    bool AreBehaviorsDisabled { get; }
 }
 
 /// <summary>
@@ -59,11 +69,17 @@ public static class VariableRestrictionsExtensions
     }
 
     /// <summary>
-    /// True when <paramref name="element"/> is built on a standard type the project does not support, directly or
-    /// through its base types. Such an element is dormant: its instances and its own class are not generated.
+    /// True when <paramref name="element"/> is a component while components are disabled, or is built on a
+    /// standard type the project does not support, directly or through its base types. Such an element is
+    /// dormant: its instances and its own class are not generated.
     /// </summary>
     public static bool IsElementBlocked(this IVariableRestrictions restrictions, ElementSave element)
     {
+        if (element is ComponentSave && restrictions.AreComponentsDisabled)
+        {
+            return true;
+        }
+
         StandardElementSave? rootStandard = ObjectFinder.Self.GetRootStandardElementSave(element);
         return rootStandard != null && restrictions.IsStandardTypeBlocked(rootStandard.Name);
     }
@@ -96,6 +112,12 @@ public class EngineProfileVariableRestrictions : IVariableRestrictions
     /// <inheritdoc/>
     public bool IsVariableHidden(string? standardTypeName, string variableRootName) =>
         _matcher.IsHiddenByProfile(_profile, standardTypeName, variableRootName);
+
+    /// <inheritdoc/>
+    public bool AreComponentsDisabled => _profile.DisableComponents;
+
+    /// <inheritdoc/>
+    public bool AreBehaviorsDisabled => _profile.DisableBehaviors;
 
     /// <inheritdoc/>
     public bool IsStandardTypeBlocked(string standardTypeName) =>

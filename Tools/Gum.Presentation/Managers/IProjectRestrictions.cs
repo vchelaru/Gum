@@ -34,16 +34,6 @@ public interface IProjectRestrictions : IVariableRestrictions
     bool IsInstanceTypeBlocked(ElementSave elementToAdd);
 
     /// <summary>
-    /// True when the project disables components.
-    /// </summary>
-    bool AreComponentsDisabled { get; }
-
-    /// <summary>
-    /// True when the project disables behaviors.
-    /// </summary>
-    bool AreBehaviorsDisabled { get; }
-
-    /// <summary>
     /// True when instances of the element cannot have a parent because the rules hide Parent for its type.
     /// </summary>
     bool IsHierarchyBlockedFor(ElementSave element);

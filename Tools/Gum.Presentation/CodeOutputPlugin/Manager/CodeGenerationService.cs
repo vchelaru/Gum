@@ -121,7 +121,7 @@ public class CodeGenerationService
 
         // Same checks gumcli codegen runs (FormsCodegenBaseTypeErrorSource, CategoryNameCollisionErrorSource):
         // without the first the error sentence is written into the file as the class's base type.
-        string? baseTypeError = CodeGenerator.GetUnsupportedFormsBaseTypeError(selectedElement, codeOutputProjectSettings) ??
+        string? baseTypeError = CodeGenerator.GetUnsupportedFormsBaseTypeError(selectedElement, codeOutputProjectSettings, _codeGenerator.AreBehaviorsDisabledByEngineProfile) ??
             _codeGenerator.GetCategoryNameCollisionError(selectedElement, codeOutputProjectSettings);
         if (baseTypeError != null)
         {
