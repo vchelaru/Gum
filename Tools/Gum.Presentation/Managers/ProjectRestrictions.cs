@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Gum.DataTypes;
-using Gum.Plugins.InternalPlugins.VariableGrid;
 using ToolsUtilities;
 
 namespace Gum.Managers;
@@ -10,12 +9,6 @@ namespace Gum.Managers;
 /// <inheritdoc cref="IProjectRestrictions"/>
 public class ProjectRestrictions : IProjectRestrictions
 {
-    // Variables the tool itself needs; the profile's variable rules never hide them.
-    private static readonly HashSet<string> RuleExemptVariableNames = new HashSet<string>
-    {
-        "Name", "BaseType", "Locked", "DefaultChildContainer", "State",
-    };
-
     private readonly ProjectVariableRuleMatcher _matcher = new ProjectVariableRuleMatcher();
     private readonly IEngineProfileLoader _loader;
     private readonly IOutputManager _outputManager;
@@ -127,16 +120,7 @@ public class ProjectRestrictions : IProjectRestrictions
     /// <inheritdoc/>
     public bool IsVariableHidden(string? standardTypeName, string variableRootName)
     {
-        EngineProfile profile = Profile;
-        if (!profile.HideVariablesByDefault && profile.VariableRules.Count == 0)
-        {
-            return false;
-        }
-        if (RuleExemptVariableNames.Contains(variableRootName))
-        {
-            return false;
-        }
-        return _matcher.IsHidden(profile, standardTypeName, variableRootName);
+        return _matcher.IsHiddenByProfile(Profile, standardTypeName, variableRootName);
     }
 
     /// <inheritdoc/>

@@ -1064,32 +1064,8 @@ public class ElementSaveDisplayer
         }
     }
 
-    private bool GetIfHiddenByProjectRules(ElementSave elementSave, InstanceSave? instanceSave, VariableSave defaultVariable)
-    {
-        string rootName = defaultVariable.GetRootName();
-        if (defaultVariable.IsCustomVariable ||
-            defaultVariable.IsState(elementSave, out _, out _))
-        {
-            return false;
-        }
-
-        StandardElementSave? rootStandard;
-        if (instanceSave != null)
-        {
-            rootStandard = ObjectFinder.Self.GetRootStandardElementSave(instanceSave);
-        }
-        else if (!string.IsNullOrEmpty(defaultVariable.SourceObject) &&
-            elementSave.GetInstance(defaultVariable.SourceObject) is InstanceSave sourceInstance)
-        {
-            rootStandard = ObjectFinder.Self.GetRootStandardElementSave(sourceInstance);
-        }
-        else
-        {
-            rootStandard = ObjectFinder.Self.GetRootStandardElementSave(elementSave);
-        }
-
-        return _projectRestrictions.IsVariableHidden(rootStandard?.Name, rootName);
-    }
+    private bool GetIfHiddenByProjectRules(ElementSave elementSave, InstanceSave? instanceSave, VariableSave defaultVariable) =>
+        _projectRestrictions.IsVariableHidden(elementSave, instanceSave, defaultVariable);
 
     private PropertyData? CreatePropertyData(ElementSave elementSave, InstanceSave? instanceSave,
         AmountToDisplay amountToDisplay, VariableSave defaultVariable, bool forceReadOnly, bool isAssignedByReference, string? subtext, HashSet<string> addedNames, string? referenceSource = null)

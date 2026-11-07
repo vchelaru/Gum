@@ -10,14 +10,8 @@ namespace Gum.Managers;
 /// from the tool. This is the only reader of the profile. Every query is false when the project
 /// references none. Hierarchy is the Parent variable: it is unsupported when the rules hide it.
 /// </summary>
-public interface IProjectRestrictions
+public interface IProjectRestrictions : IVariableRestrictions
 {
-    /// <summary>
-    /// True when the project's variable rules hide the variable for the standard type, using the same
-    /// exemptions as the Variables tab. A null type matches only unqualified rules.
-    /// </summary>
-    bool IsVariableHidden(string? standardTypeName, string variableRootName);
-
     /// <summary>
     /// True when the rules hide the variable for the instance's root standard type.
     /// </summary>
