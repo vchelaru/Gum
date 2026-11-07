@@ -304,7 +304,8 @@ public partial class ElementTreeViewManager
                     {
                         var containerBase = ObjectFinder.Self.GetElementSave(containerElement.BaseType);
 
-                        if (containerBase is ScreenSave || containerBase is ComponentSave)
+                        if ((containerBase is ScreenSave || containerBase is ComponentSave) &&
+                            CanMoveToBase(_selectedState.SelectedInstances, containerElement!))
                         {
                             AddMenuItem($"Add {_selectedState.SelectedInstance.Name} to base {containerBase}",
                                 () => HandleMoveToBase(_selectedState.SelectedInstances, containerElement, containerBase));
@@ -434,7 +435,10 @@ public partial class ElementTreeViewManager
             else if (SelectedNode.IsTopComponentContainerTreeNode() || SelectedNode.IsComponentsFolderTreeNode())
             {
                 AddMenuItem("Add Component", _editCommands.ShowAddComponentDialog);
-                AddMenuItem("Import Components", HandleImportComponents);
+                if (!_projectRestrictions.AreComponentsDisabled)
+                {
+                    AddMenuItem("Import Components", HandleImportComponents);
+                }
                 AddMenuItem("Add Folder", HandleAddFolder);
                 AddMenuItem("View in explorer", HandleViewInExplorer);
 
@@ -460,7 +464,10 @@ public partial class ElementTreeViewManager
             else if (SelectedNode.IsTopBehaviorTreeNode())
             {
                 AddMenuItem("Add Behavior", HandleAddBehavior);
-                AddMenuItem("Import Behavior", HandleImportBehavior);
+                if (!_projectRestrictions.AreBehaviorsDisabled)
+                {
+                    AddMenuItem("Import Behavior", HandleImportBehavior);
+                }
                 AddMenuItem("View in explorer", HandleViewInExplorer);
 
             }
@@ -570,6 +577,31 @@ public partial class ElementTreeViewManager
 
             AddMenuItem(text, () => _copyPasteLogic.OnPaste(CopyType.InstanceOrElement, TopOrRecursive.Top));
         }
+    }
+
+    /// <summary>
+    /// False when moving the instances into the base would create an instance of a type the project
+    /// does not support, or would drop the Parent of an instance whose type has no hierarchy.
+    /// </summary>
+    private bool CanMoveToBase(IEnumerable<InstanceSave> instances, ElementSave derivedElement)
+    {
+        foreach (InstanceSave instance in instances)
+        {
+            if (ObjectFinder.Self.GetElementSave(instance.BaseType) is not { } instanceType)
+            {
+                continue;
+            }
+            if (_projectRestrictions.IsInstanceTypeBlocked(instanceType))
+            {
+                return false;
+            }
+            bool hasParent = !string.IsNullOrEmpty(derivedElement.DefaultState?.GetValue($"{instance.Name}.Parent") as string);
+            if (hasParent && _projectRestrictions.IsHierarchyBlockedFor(instanceType))
+            {
+                return false;
+            }
+        }
+        return true;
     }
 
     private void HandleMoveToBase(IEnumerable<InstanceSave> instances, ElementSave derivedElement, ElementSave baseElement)

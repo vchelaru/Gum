@@ -26,8 +26,11 @@ public class ImportLogic : IImportLogic
     private readonly IStandardElementsManagerGumTool _standardElementsManagerGumTool;
     private readonly IScreenImportService _screenImportService;
 
-    public ImportLogic(ISelectedState selectedState, IGuiCommands guiCommands, IFileCommands fileCommands, IDialogService dialogService, IProjectManager projectManager, IPluginManager pluginManager, IStandardElementsManagerGumTool standardElementsManagerGumTool, IScreenImportService screenImportService)
+    private readonly IProjectRestrictions _projectRestrictions;
+
+    public ImportLogic(ISelectedState selectedState, IGuiCommands guiCommands, IFileCommands fileCommands, IDialogService dialogService, IProjectManager projectManager, IPluginManager pluginManager, IStandardElementsManagerGumTool standardElementsManagerGumTool, IScreenImportService screenImportService, IProjectRestrictions projectRestrictions)
     {
+        _projectRestrictions = projectRestrictions;
         _selectedState = selectedState;
         _guiCommands = guiCommands;
         _fileCommands = fileCommands;
@@ -67,6 +70,11 @@ public class ImportLogic : IImportLogic
 
     public ComponentSave? ImportComponent(FilePath filePath, string? desiredDirectory = null, bool saveProject = true)
     {
+        if (RefuseWhenComponentsDisabled())
+        {
+            return null;
+        }
+
         bool shouldAdd = DetermineIfShouldAdd(ref filePath, ref desiredDirectory, "Components");
         if (!shouldAdd) { return null; }
 
@@ -76,6 +84,11 @@ public class ImportLogic : IImportLogic
 
     public ComponentSave? ImportComponent(ComponentSave componentSave, bool saveProject = true)
     {
+        if (RefuseWhenComponentsDisabled())
+        {
+            return null;
+        }
+
         if (ObjectFinder.Self.GetElementSave(componentSave.Name) != null)
         {
             _dialogService.ShowMessage($"This project already contains a component named {componentSave.Name}");
@@ -96,6 +109,16 @@ public class ImportLogic : IImportLogic
 
         DoAfterImportLogic(saveProject, componentSave);
         return componentSave;
+    }
+
+    private bool RefuseWhenComponentsDisabled()
+    {
+        if (!_projectRestrictions.AreComponentsDisabled)
+        {
+            return false;
+        }
+        _dialogService.ShowMessage("This project does not support components");
+        return true;
     }
 
     private void DoAfterImportLogic(bool saveProject, ElementSave elementSave)
@@ -173,6 +196,12 @@ public class ImportLogic : IImportLogic
 
     public BehaviorSave? ImportBehavior(FilePath filePath, string? desiredDirectory = null, bool saveProject = false)
     {
+        if (_projectRestrictions.AreBehaviorsDisabled)
+        {
+            _dialogService.ShowMessage("This project does not support behaviors");
+            return null;
+        }
+
         var shouldAdd = true;
 
         if (desiredDirectory == null)
