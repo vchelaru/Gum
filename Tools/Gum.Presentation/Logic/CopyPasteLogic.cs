@@ -104,6 +104,7 @@ public class CopyPasteLogic : ICopyPasteLogic
     private readonly IOutputManager _outputManager;
     private readonly IMovedInstanceReferenceDropper _movedInstanceReferenceDropper;
     private readonly IProjectRestrictions _projectRestrictions;
+    private readonly IElementDuplicateRestrictions _elementDuplicateRestrictions;
 
     // The screen or component the last cut took, which the next paste on a folder moves. Null when
     // the last copy or cut was anything else, or the cut element was already moved.
@@ -134,10 +135,12 @@ public class CopyPasteLogic : ICopyPasteLogic
         IRenameLogic renameLogic,
         IOutputManager outputManager,
         IMovedInstanceReferenceDropper movedInstanceReferenceDropper,
-        IProjectRestrictions projectRestrictions
+        IProjectRestrictions projectRestrictions,
+        IElementDuplicateRestrictions elementDuplicateRestrictions
         )
     {
         _projectRestrictions = projectRestrictions;
+        _elementDuplicateRestrictions = elementDuplicateRestrictions;
         _movedInstanceReferenceDropper = movedInstanceReferenceDropper;
         _renameLogic = renameLogic;
         _outputManager = outputManager;
@@ -1268,6 +1271,13 @@ public class CopyPasteLogic : ICopyPasteLogic
         {
             return;
         }
+
+        if (_elementDuplicateRestrictions.GetRefusalMessage(toAdd) is { } refusal)
+        {
+            _dialogService.ShowMessage(refusal);
+            return;
+        }
+        _elementDuplicateRestrictions.RemoveUnsupportedParents(toAdd);
 
         if (GetSelectedSubfolderFor(toAdd) is { } path)
         {
