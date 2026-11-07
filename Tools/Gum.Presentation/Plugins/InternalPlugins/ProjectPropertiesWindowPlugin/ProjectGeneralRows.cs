@@ -15,7 +15,7 @@ public sealed class ProjectGeneralRows : IRowsSettingsPage
     public static readonly (int Left, int Top, int Right, int Bottom) DefaultBounds = (0, 0, 1, 1);
 
     private readonly ProjectPropertiesViewModel _viewModel;
-    private event Action? BoundsToggled;
+    private event Action? RowsChanged;
 
     /// <summary>Creates the rows over <paramref name="viewModel"/>.</summary>
     public ProjectGeneralRows(ProjectPropertiesViewModel viewModel)
@@ -26,8 +26,8 @@ public sealed class ProjectGeneralRows : IRowsSettingsPage
     /// <inheritdoc/>
     public event Action? Reloaded
     {
-        add { _viewModel.Reloaded += value; BoundsToggled += value; }
-        remove { _viewModel.Reloaded -= value; BoundsToggled -= value; }
+        add { _viewModel.Reloaded += value; RowsChanged += value; }
+        remove { _viewModel.Reloaded -= value; RowsChanged -= value; }
     }
 
     /// <summary>
@@ -61,8 +61,17 @@ public sealed class ProjectGeneralRows : IRowsSettingsPage
                 _viewModel.SinglePixelTextureBottom = null;
             }
             // The four fields exist only while the toggle is on.
-            BoundsToggled?.Invoke();
+            RowsChanged?.Invoke();
         }
+    }
+
+    /// <summary>The picker filter of the Engine profile row.</summary>
+    public const string EngineProfileFilter = "Engine Profile|*.gumengine|All Files|*.*";
+
+    private void ClearEngineProfile()
+    {
+        _viewModel.EngineProfile = string.Empty;
+        RowsChanged?.Invoke();
     }
 
     /// <summary>The label and hint of every row, which the Settings window's search matches.</summary>
@@ -94,6 +103,12 @@ public sealed class ProjectGeneralRows : IRowsSettingsPage
                 () => vm.SinglePixelTextureBottom, value => vm.SinglePixelTextureBottom = value));
         }
 
+        InstanceMember engineProfile = SettingsRows.Path(nameof(vm.EngineProfile), "Engine profile",
+            "A .gumengine file limiting the types and variables this project offers. Empty allows everything.",
+            () => vm.EngineProfile, value => vm.EngineProfile = value);
+        engineProfile.PropertiesToSetOnDisplayer["Filter"] = EngineProfileFilter;
+        engineProfile.DetailAction = new DetailTextLink("Clear", ClearEngineProfile);
+
         List<MemberCategory> sections = new List<MemberCategory>
         {
             SettingsRows.Section("Rendering", new[]
@@ -113,6 +128,7 @@ public sealed class ProjectGeneralRows : IRowsSettingsPage
                     () => vm.RestrictFileNamesForAndroid, value => vm.RestrictFileNamesForAndroid = value, toggleText: "Android-safe names only"),
             }),
             SettingsRows.Section("Single pixel texture", texture),
+            SettingsRows.Section("Engine", new[] { engineProfile }),
         };
         SettingsRows.Finish(sections);
         return sections;

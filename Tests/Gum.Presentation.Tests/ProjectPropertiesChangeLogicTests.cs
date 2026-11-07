@@ -27,6 +27,8 @@ public class ProjectPropertiesChangeLogicTests
     private readonly Mock<IWireframeCommands> _wireframeCommands = new();
     private readonly Mock<IPluginManager> _pluginManager = new();
     private readonly Mock<ILocalizationService> _localizationService = new();
+    private readonly Mock<IProjectRestrictions> _projectRestrictions = new();
+    private readonly Mock<IGuiCommands> _guiCommands = new();
     private readonly ProjectPropertiesChangeLogic _logic;
 
     public ProjectPropertiesChangeLogicTests()
@@ -38,7 +40,9 @@ public class ProjectPropertiesChangeLogicTests
             _fileCommands.Object,
             _wireframeCommands.Object,
             _pluginManager.Object,
-            _localizationService.Object);
+            _localizationService.Object,
+            _projectRestrictions.Object,
+            _guiCommands.Object);
     }
 
     [Fact]
@@ -151,6 +155,100 @@ public class ProjectPropertiesChangeLogicTests
         _wireframeCommands.Verify(w => w.Refresh(It.IsAny<bool>(), It.IsAny<bool>()), Times.Never);
     }
 
+    [Fact]
+    public void HandlePropertyChanged_EngineProfile_AbsolutePathInsideTheProject_BecomesRelativeWithForwardSlashes()
+    {
+        ProjectPropertiesViewModel viewModel = MakeViewModel();
+        _projectState.Setup(p => p.ProjectDirectory).Returns("/MyProject/");
+        viewModel.EngineProfile = "/MyProject/Engines/MonoGame.gumengine";
+
+        _logic.HandlePropertyChanged(viewModel, nameof(viewModel.EngineProfile));
+
+        viewModel.EngineProfile.ShouldBe("Engines/MonoGame.gumengine");
+    }
+
+    [Fact]
+    public void HandlePropertyChanged_EngineProfile_AbsolutePathOutsideTheProject_GetsDotDotSegments()
+    {
+        ProjectPropertiesViewModel viewModel = MakeViewModel();
+        _projectState.Setup(p => p.ProjectDirectory).Returns("/Games/MyProject/");
+        viewModel.EngineProfile = "/Engines/MonoGame.gumengine";
+
+        _logic.HandlePropertyChanged(viewModel, nameof(viewModel.EngineProfile));
+
+        viewModel.EngineProfile.ShouldBe("../../Engines/MonoGame.gumengine");
+    }
+
+    [Fact]
+    public void HandlePropertyChanged_EngineProfile_RelativePathWithBackslashes_UsesForwardSlashes()
+    {
+        ProjectPropertiesViewModel viewModel = MakeViewModel();
+        _projectState.Setup(p => p.ProjectDirectory).Returns("/MyProject/");
+        viewModel.EngineProfile = "..\\Engines\\MonoGame.gumengine";
+
+        _logic.HandlePropertyChanged(viewModel, nameof(viewModel.EngineProfile));
+
+        viewModel.EngineProfile.ShouldBe("../Engines/MonoGame.gumengine");
+    }
+
+    [Fact]
+    public void HandlePropertyChanged_EngineProfile_KeepsAbsolutePath_WhenProjectIsUnsaved()
+    {
+        ProjectPropertiesViewModel viewModel = MakeViewModel();
+        _projectState.Setup(p => p.ProjectDirectory).Returns((string?)null);
+        viewModel.EngineProfile = "/Elsewhere/MonoGame.gumengine";
+
+        _logic.HandlePropertyChanged(viewModel, nameof(viewModel.EngineProfile));
+
+        viewModel.EngineProfile.ShouldBe("/Elsewhere/MonoGame.gumengine");
+    }
+
+    [Fact]
+    public void HandlePropertyChanged_EngineProfile_AppliesTheProfileAndSavesTheProject()
+    {
+        GumProjectSave project = new GumProjectSave();
+        ProjectPropertiesViewModel viewModel = new ProjectPropertiesViewModel();
+        viewModel.SetFrom(project);
+        _projectState.Setup(p => p.ProjectDirectory).Returns("/MyProject/");
+        List<string> calls = new List<string>();
+        _projectRestrictions.Setup(r => r.Reload()).Callback(() => calls.Add("reload " + project.EngineProfile));
+        _wireframeObjectManager.Setup(w => w.RefreshAll(true, true)).Callback<bool, bool>((_, _) => calls.Add("canvas"));
+        _guiCommands.Setup(g => g.RefreshVariables(true)).Callback<bool>(_ => calls.Add("variables"));
+        _fileCommands.Setup(f => f.TryAutoSaveProject(It.IsAny<bool>())).Callback<bool>(_ => calls.Add("save"));
+        viewModel.EngineProfile = "Engines/MonoGame.gumengine";
+
+        _logic.HandlePropertyChanged(viewModel, nameof(viewModel.EngineProfile));
+
+        project.EngineProfile.ShouldBe("Engines/MonoGame.gumengine");
+        calls.ShouldBe(new[] { "reload Engines/MonoGame.gumengine", "canvas", "variables", "save" });
+    }
+
+    [Fact]
+    public void HandlePropertyChanged_EngineProfile_Cleared_ReloadsTheUnrestrictedProject()
+    {
+        GumProjectSave project = new GumProjectSave { EngineProfile = "Old.gumengine" };
+        ProjectPropertiesViewModel viewModel = new ProjectPropertiesViewModel();
+        viewModel.SetFrom(project);
+        viewModel.EngineProfile = "";
+
+        _logic.HandlePropertyChanged(viewModel, nameof(viewModel.EngineProfile));
+
+        project.EngineProfile.ShouldBe("");
+        _projectRestrictions.Verify(r => r.Reload(), Times.Once);
+    }
+
+    [Fact]
+    public void HandlePropertyChanged_EngineProfile_AbsolutePath_ReloadsOnlyOnceItIsRelative()
+    {
+        ProjectPropertiesViewModel viewModel = MakeViewModel();
+        _projectState.Setup(p => p.ProjectDirectory).Returns("/MyProject/");
+        viewModel.PropertyChanged += (_, e) => _logic.HandlePropertyChanged(viewModel, e.PropertyName);
+
+        viewModel.EngineProfile = "/MyProject/MonoGame.gumengine";
+
+        viewModel.EngineProfile.ShouldBe("MonoGame.gumengine");
+        _projectRestrictions.Verify(r => r.Reload(), Times.Once);
+    }
     private static ProjectPropertiesViewModel MakeViewModel()
     {
         ProjectPropertiesViewModel viewModel = new();
