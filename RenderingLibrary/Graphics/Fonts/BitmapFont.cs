@@ -1043,7 +1043,7 @@ public class BitmapFont : IDisposable
         float yOffsetRoundedToZoom = MathFunctions.RoundFloat(yOffset, scaleY);
 
         // Custom effect already does premultiply alpha on the shader so we skip that in this case
-        if (!Renderer.UseCustomEffectRendering && Renderer.NormalBlendState == BlendState.AlphaBlend)
+        if (Renderer.ShouldPremultiplyColor(objectRequestingChange))
         {
             // this is premultiplied, so premulitply the color value
             float multiple = color.A / 255.0f;

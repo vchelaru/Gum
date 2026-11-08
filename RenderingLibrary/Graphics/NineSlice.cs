@@ -1023,6 +1023,10 @@ public class NineSlice : SpriteBatchRenderableBase,
         // Add draws untinted and then adds Color in a second pass, matching Sprite.Render.
         bool isAdd = sprite.ColorOperation == ColorOperation.Add;
 
+#if NET8_0_OR_GREATER
+        sprite.ColorPremultiplyOwner = this;
+#endif
+
         Sprite.Render(managers, spriteRenderer, sprite, texture,
             isAdd ? Color.FromArgb(color.A, 255, 255, 255) : color,
             sourceRectangle, flipVertical, rotation, treat0AsFullDimensions:false);

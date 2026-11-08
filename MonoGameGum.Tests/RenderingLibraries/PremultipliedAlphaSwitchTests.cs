@@ -1,5 +1,6 @@
 using Gum.Wireframe;
 using BlendState = Gum.BlendState;
+using RenderingLibrary;
 using RenderingLibrary.Graphics;
 using RenderingLibrary.Graphics.Fonts;
 using Shouldly;
@@ -85,6 +86,53 @@ public class PremultipliedAlphaSwitchTests : BaseTestClass
         Renderer.UsePremultipliedAlpha = false;
 
         CustomSetPropertyOnRenderable.InMemoryFontCreator.ShouldBeOfType<PlainFontCreator>();
+    }
+
+    [Fact]
+    public void ShouldPremultiplyColor_ShouldBeTrue_ForRenderableThatDoesNotOptOut_OnPremultipliedPipeline()
+    {
+        Renderer.UsePremultipliedAlpha = true;
+
+        Renderer.ShouldPremultiplyColor(new DefaultRenderable()).ShouldBeTrue();
+        Renderer.ShouldPremultiplyColor(new Sprite(null)).ShouldBeTrue();
+    }
+
+    [Fact]
+    public void ShouldPremultiplyColor_ShouldBeFalse_ForRenderableThatOptsOut_OnPremultipliedPipeline()
+    {
+        Renderer.UsePremultipliedAlpha = true;
+
+        Renderer.ShouldPremultiplyColor(new OptOutRenderable()).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void ShouldPremultiplyColor_ShouldBeFalse_OnStraightAlphaPipeline()
+    {
+        Renderer.UsePremultipliedAlpha = false;
+
+        Renderer.ShouldPremultiplyColor(new DefaultRenderable()).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void ShouldPremultiplyColor_ShouldBeTrue_ForNonRenderableOwner_OnPremultipliedPipeline()
+    {
+        Renderer.UsePremultipliedAlpha = true;
+
+        Renderer.ShouldPremultiplyColor(new object()).ShouldBeTrue();
+        Renderer.ShouldPremultiplyColor(null).ShouldBeTrue();
+    }
+
+    private class DefaultRenderable : IRenderable
+    {
+        public BlendState? BlendState => null;
+        public bool Wrap => false;
+        public void Render(ISystemManagers managers) { }
+        public void PreRender() { }
+    }
+
+    private sealed class OptOutRenderable : DefaultRenderable, IRenderable
+    {
+        bool IRenderable.SkipColorPremultiply => true;
     }
 
     private class PlainFontCreator : IInMemoryFontCreator
