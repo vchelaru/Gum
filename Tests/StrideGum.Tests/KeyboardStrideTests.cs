@@ -4,136 +4,96 @@ using Shouldly;
 using Stride.Core.Collections;
 using Stride.Input;
 using System.Collections.Generic;
+using System.Linq;
 using GumKeys = Gum.Forms.Input.Keys;
 using StrideKeys = Stride.Input.Keys;
 
 namespace StrideGum.Tests;
 
 /// <summary>
-/// Unit tests for the Stride keyboard: the GumKeys->Stride Keys translation table, held-key repeat
-/// timing, and TextInputEvent-driven typed-text buffering. Unlike Silk (which only exposes a live
+/// Unit tests for the Stride keyboard: held-key repeat timing and TextInputEvent-driven typed-text
+/// buffering. The cases every polled keyboard shares live in
+/// <see cref="SkiaHostTests.PolledKeyboardTestsBase"/>. Unlike Silk (which only exposes a live
 /// down-poll and derives push/release edges itself), Stride's <see cref="IKeyboardDevice"/> already
-/// reports per-frame Pressed/Released/Down sets directly, so the mock supplies those three sets per
-/// simulated frame instead of a single continuous down-state.
+/// reports per-frame Pressed/Released/Down sets directly, so the rig supplies those three sets,
+/// derived from the held keys, for each simulated frame.
 /// </summary>
-public class KeyboardStrideTests
+public class KeyboardStrideTests : SkiaHostTests.PolledKeyboardTestsBase
 {
-    private static (Keyboard keyboard, Mock<IKeyboardDevice> device) CreateAttachedKeyboard()
+    private sealed class StrideKeyboardRig : SkiaHostTests.IHostKeyboardRig
     {
-        var device = new Mock<IKeyboardDevice>();
-        SetFrameState(device);
-        var keyboard = new Keyboard(device.Object, new InputManager());
-        return (keyboard, device);
+        private readonly Mock<IKeyboardDevice> _device = new();
+        private HashSet<StrideKeys> _held = new();
+        private bool _changedThisFrame;
+
+        public StrideKeyboardRig()
+        {
+            Publish(new HashSet<StrideKeys>(), new HashSet<StrideKeys>(), _held);
+            Keyboard = new Keyboard(_device.Object, new InputManager());
+        }
+
+        public PolledKeyboard Keyboard { get; }
+
+        public void SetHeld(params GumKeys[] keys)
+        {
+            var next = new HashSet<StrideKeys>(keys.Select(ToStride));
+            Publish(
+                pressed: new HashSet<StrideKeys>(next.Where(k => !_held.Contains(k))),
+                released: new HashSet<StrideKeys>(_held.Where(k => !next.Contains(k))),
+                down: next);
+            _held = next;
+            _changedThisFrame = true;
+        }
+
+        public void BeginFrame()
+        {
+            if (_changedThisFrame)
+            {
+                _changedThisFrame = false;
+                return;
+            }
+
+            // Stride reports a key as pressed or released only for the frame it changed.
+            Publish(new HashSet<StrideKeys>(), new HashSet<StrideKeys>(), _held);
+        }
+
+        public void TypeText(string text)
+        {
+            foreach (char character in text)
+            {
+                ((IInputEventListener<TextInputEvent>)Keyboard).ProcessEvent(
+                    new TextInputEvent { Text = character.ToString(), Type = TextInputEventType.Input });
+            }
+        }
+
+        private void Publish(HashSet<StrideKeys> pressed, HashSet<StrideKeys> released, HashSet<StrideKeys> down)
+        {
+            _device.SetupGet(d => d.PressedKeys).Returns(new ReadOnlySet<StrideKeys>(pressed));
+            _device.SetupGet(d => d.ReleasedKeys).Returns(new ReadOnlySet<StrideKeys>(released));
+            _device.SetupGet(d => d.DownKeys).Returns(new ReadOnlySet<StrideKeys>(down));
+        }
+
+        private static StrideKeys ToStride(GumKeys key) => key switch
+        {
+            GumKeys.A => StrideKeys.A,
+            GumKeys.Left => StrideKeys.Left,
+            GumKeys.Right => StrideKeys.Right,
+            GumKeys.Space => StrideKeys.Space,
+            _ => throw new System.NotSupportedException(key.ToString()),
+        };
     }
 
-    private static void SetFrameState(
-        Mock<IKeyboardDevice> device,
-        IEnumerable<StrideKeys>? pressed = null,
-        IEnumerable<StrideKeys>? released = null,
-        IEnumerable<StrideKeys>? down = null)
-    {
-        device.SetupGet(d => d.PressedKeys).Returns(new ReadOnlySet<StrideKeys>(new HashSet<StrideKeys>(pressed ?? new StrideKeys[0])));
-        device.SetupGet(d => d.ReleasedKeys).Returns(new ReadOnlySet<StrideKeys>(new HashSet<StrideKeys>(released ?? new StrideKeys[0])));
-        device.SetupGet(d => d.DownKeys).Returns(new ReadOnlySet<StrideKeys>(new HashSet<StrideKeys>(down ?? new StrideKeys[0])));
-    }
-
-    [Fact]
-    public void Activity_TranslatesStrideKeyToGumKey_ForDownState()
-    {
-        (Keyboard keyboard, Mock<IKeyboardDevice> device) = CreateAttachedKeyboard();
-        SetFrameState(device, down: new[] { StrideKeys.Left });
-
-        keyboard.Activity(0);
-
-        keyboard.KeyDown(GumKeys.Left).ShouldBeTrue();
-        keyboard.KeyDown(GumKeys.Right).ShouldBeFalse();
-    }
-
-    [Fact]
-    public void GetStringTyped_ReturnsCharactersFromTextInputEvents()
-    {
-        (Keyboard keyboard, _) = CreateAttachedKeyboard();
-
-        ((IInputEventListener<TextInputEvent>)keyboard).ProcessEvent(new TextInputEvent { Text = "h", Type = TextInputEventType.Input });
-        ((IInputEventListener<TextInputEvent>)keyboard).ProcessEvent(new TextInputEvent { Text = "i", Type = TextInputEventType.Input });
-        keyboard.Activity(0);
-
-        keyboard.GetStringTyped().ShouldBe("hi");
-    }
+    protected override SkiaHostTests.IHostKeyboardRig CreateRig() => new StrideKeyboardRig();
 
     [Fact]
     public void GetStringTyped_IgnoresCompositionEvents()
     {
-        (Keyboard keyboard, _) = CreateAttachedKeyboard();
+        var rig = (StrideKeyboardRig)CreateRig();
 
-        ((IInputEventListener<TextInputEvent>)keyboard).ProcessEvent(new TextInputEvent { Text = "IME draft", Type = TextInputEventType.Composition });
-        keyboard.Activity(0);
+        ((IInputEventListener<TextInputEvent>)rig.Keyboard).ProcessEvent(new TextInputEvent { Text = "IME draft", Type = TextInputEventType.Composition });
+        rig.Keyboard.Activity(0);
 
-        keyboard.GetStringTyped().ShouldBe("");
-    }
-
-    [Fact]
-    public void KeyTyped_DoesNotRepeatBeforeRepeatDelayElapses()
-    {
-        (Keyboard keyboard, Mock<IKeyboardDevice> device) = CreateAttachedKeyboard();
-        SetFrameState(device, pressed: new[] { StrideKeys.A }, down: new[] { StrideKeys.A });
-
-        keyboard.Activity(0);
-        keyboard.KeyTyped(GumKeys.A).ShouldBeTrue(); // initial push
-
-        SetFrameState(device, down: new[] { StrideKeys.A });
-        keyboard.Activity(keyboard.RepeatDelay.TotalSeconds - 0.01);
-        keyboard.KeyTyped(GumKeys.A).ShouldBeFalse();
-    }
-
-    [Fact]
-    public void KeyTyped_RepeatsAtRepeatRateAfterRepeatDelayElapses()
-    {
-        (Keyboard keyboard, Mock<IKeyboardDevice> device) = CreateAttachedKeyboard();
-        SetFrameState(device, pressed: new[] { StrideKeys.A }, down: new[] { StrideKeys.A });
-
-        keyboard.Activity(0);
-        keyboard.KeyTyped(GumKeys.A).ShouldBeTrue(); // initial push
-
-        SetFrameState(device, down: new[] { StrideKeys.A });
-        keyboard.Activity(keyboard.RepeatDelay.TotalSeconds);
-        keyboard.KeyTyped(GumKeys.A).ShouldBeTrue(); // first repeat
-
-        keyboard.Activity(keyboard.RepeatDelay.TotalSeconds + keyboard.RepeatRate.TotalSeconds - 0.01);
-        keyboard.KeyTyped(GumKeys.A).ShouldBeFalse(); // too soon for the next repeat
-
-        keyboard.Activity(keyboard.RepeatDelay.TotalSeconds + keyboard.RepeatRate.TotalSeconds);
-        keyboard.KeyTyped(GumKeys.A).ShouldBeTrue(); // second repeat
-    }
-
-    [Fact]
-    public void KeyPushed_IsTrueOnlyOnTheFrameOfInitialPress()
-    {
-        (Keyboard keyboard, Mock<IKeyboardDevice> device) = CreateAttachedKeyboard();
-        SetFrameState(device, pressed: new[] { StrideKeys.A }, down: new[] { StrideKeys.A });
-
-        keyboard.Activity(0);
-        keyboard.KeyPushed(GumKeys.A).ShouldBeTrue();
-
-        // Still held on the next frame -- Stride no longer reports it in PressedKeys.
-        SetFrameState(device, down: new[] { StrideKeys.A });
-        keyboard.Activity(1);
-        keyboard.KeyPushed(GumKeys.A).ShouldBeFalse();
-        keyboard.KeyDown(GumKeys.A).ShouldBeTrue();
-    }
-
-    [Fact]
-    public void KeyReleased_IsTrueOnTheFrameOfRelease()
-    {
-        (Keyboard keyboard, Mock<IKeyboardDevice> device) = CreateAttachedKeyboard();
-        SetFrameState(device, pressed: new[] { StrideKeys.Space }, down: new[] { StrideKeys.Space });
-        keyboard.Activity(0);
-
-        SetFrameState(device, released: new[] { StrideKeys.Space });
-        keyboard.Activity(1);
-
-        keyboard.KeyReleased(GumKeys.Space).ShouldBeTrue();
-        keyboard.KeyDown(GumKeys.Space).ShouldBeFalse();
+        rig.Keyboard.GetStringTyped().ShouldBe("");
     }
 
     [Fact]

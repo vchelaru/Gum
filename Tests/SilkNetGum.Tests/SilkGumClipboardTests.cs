@@ -10,8 +10,15 @@ namespace SilkNetGum.Tests;
 /// Unit tests for <see cref="SilkGumClipboard"/>, which bridges Gum's <c>IGumClipboard</c> to
 /// Silk.NET.Input's <see cref="IKeyboard.ClipboardText"/>.
 /// </summary>
-public class SilkGumClipboardTests
+public class SilkGumClipboardTests : SkiaHostTests.ClipboardTestsBase
 {
+    protected override Gum.Forms.Controls.IGumClipboard CreateClipboard()
+    {
+        var device = new Mock<IKeyboard>();
+        device.SetupProperty(k => k.ClipboardText, "");
+        return new SilkGumClipboard(CreateInputContext(device.Object));
+    }
+
     private static IInputContext CreateInputContext(IKeyboard? keyboard)
     {
         var context = new Mock<IInputContext>();
