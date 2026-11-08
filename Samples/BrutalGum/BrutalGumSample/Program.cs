@@ -4,11 +4,13 @@
 //
 //   BrutalGumSample                      opens a window
 //   BrutalGumSample --screenshots <dir>  hidden window, saves one PNG per screen into <dir>, then exits
+//   BrutalGumSample --hidden --exit-after 5   presents to a hidden window for 5 seconds, then exits
 using Brutal.GlfwApi;
 using Brutal.Numerics;
 using Brutal.VulkanApi;
 using Brutal.VulkanApi.Abstractions;
 using Gum;
+using GumSamples;
 using Gum.Forms.Controls;
 using Gum.Wireframe;
 using RenderingLibrary;
@@ -18,8 +20,8 @@ using SkiaSharp;
 using System.Diagnostics;
 using System.Text;
 
-const int Width = 1280;
-const int Height = 720;
+const int Width = 1400;
+const int Height = 900;
 
 string? screenshotDirectory = null;
 int screenshotIndex = Array.IndexOf(args, "--screenshots");
@@ -28,23 +30,14 @@ if (screenshotIndex >= 0 && screenshotIndex + 1 < args.Length)
     screenshotDirectory = args[screenshotIndex + 1];
 }
 bool presenting = screenshotDirectory == null;
+// --hidden keeps the window invisible and --exit-after <seconds> closes it, for runs with nobody watching.
+bool hidden = args.Contains("--hidden");
+int exitIndex = Array.IndexOf(args, "--exit-after");
+double exitAfterSeconds = exitIndex >= 0 && exitIndex + 1 < args.Length ? double.Parse(args[exitIndex + 1]) : 0;
 
-(string Name, Func<FrameworkElement> Create)[] screens =
-[
-    ("NineSlice", () => new SilkNetGum.Screens.NineSliceScreen()),
-    ("Sprites", () => new SilkNetGum.Screens.SpriteScreen()),
-    ("Svg", () => new SilkNetGum.Screens.SvgScreen()),
-    ("Text", () => new SilkNetGum.Screens.TextScreen()),
-    ("Circles", () => new SilkNetGum.Screens.CirclesScreen()),
-    ("Rectangles", () => new SilkNetGum.Screens.RectanglesScreen()),
-    ("Arcs", () => new SilkNetGum.Screens.ArcsScreen()),
-    ("Polygons", () => new SilkNetGum.Screens.PolygonsScreen()),
-    ("Render Target", () => new SilkNetGum.Screens.RenderTargetScreen()),
-    ("RT Shader", () => new SilkNetGum.Screens.RenderTargetShaderScreen()),
-    ("Forms", () => new GumSamples.Screens.FormsScreen()),
-    ("Zoom", () => new SilkNetGum.Screens.ZoomScreen()),
-    ("Layer Camera", () => new SilkNetGum.Screens.LayerCameraSettingsScreen()),
-];
+// The Gum project and shaders load relative to the working directory, so run from the build output whatever the caller's folder is.
+Directory.SetCurrentDirectory(AppContext.BaseDirectory);
+
 
 if (!Glfw.Init())
 {
@@ -56,7 +49,7 @@ try
     // BRUTAL has no renderer, so the window needs no graphics API of its own.
     Glfw.WindowHint(GlfwWindowHint.ClientApi, Glfw.Constants.GLFW_NO_API);
     Glfw.WindowHint(GlfwWindowHint.Resizable, Glfw.Constants.GLFW_FALSE);
-    Glfw.WindowHint(GlfwWindowHint.Visible, presenting ? Glfw.Constants.GLFW_TRUE : Glfw.Constants.GLFW_FALSE);
+    Glfw.WindowHint(GlfwWindowHint.Visible, presenting && !hidden ? Glfw.Constants.GLFW_TRUE : Glfw.Constants.GLFW_FALSE);
     using GlfwWindow window = Glfw.CreateWindow(new GlfwWindow.CreateInfo { Title = "Gum.Brutal sample", Size = new int2(Width, Height) });
 
     HashSet<string> instanceExtensions = new HashSet<string>();
@@ -147,45 +140,18 @@ try
     FrameworkElement.GamePadsForUiControl.Clear();
     FrameworkElement.GamePadsForUiControl.AddRange(gum.Gamepads);
 
-    StackPanel navStrip = new StackPanel();
-    navStrip.Orientation = Orientation.Horizontal;
-    navStrip.Spacing = 4;
-    navStrip.Visual.X = 4;
-    navStrip.Visual.Y = 4;
-    navStrip.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
-    navStrip.Width = -8;
-    navStrip.Visual.WrapsChildren = true;
-    navStrip.AddToRoot();
-
-    FrameworkElement? currentScreen = null;
-    void LoadScreen(int index)
-    {
-        currentScreen?.RemoveFromRoot();
-        SystemManagers.Default.Renderer.Camera.Zoom = 1f;
-        SystemManagers.Default.Renderer.Camera.X = 0f;
-        SystemManagers.Default.Renderer.Camera.Y = 0f;
-        currentScreen = screens[index].Create();
-        currentScreen.Visual.YOrigin = RenderingLibrary.Graphics.VerticalAlignment.Top;
-        currentScreen.Visual.YUnits = Gum.Converters.GeneralUnitType.PixelsFromSmall;
-        currentScreen.Visual.Y = navStrip.Visual.AbsoluteHeight + 8;
-        currentScreen.Visual.Height = -(navStrip.Visual.AbsoluteHeight + 8);
-        currentScreen.AddToRoot();
-    }
-
-    for (int i = 0; i < screens.Length; i++)
-    {
-        int captured = i;
-        Button button = new Button { Text = screens[i].Name };
-        button.Click += (_, _) => LoadScreen(captured);
-        navStrip.AddChild(button);
-    }
-    LoadScreen(0);
+    GumGallery gallery = new GumGallery();
+    gallery.Build();
 
     Stopwatch clock = Stopwatch.StartNew();
 
+    double previousSeconds = 0;
     void RenderFrame()
     {
-        gum.Update(clock.Elapsed.TotalSeconds);
+        double now = clock.Elapsed.TotalSeconds;
+        gum.Update(now);
+        gallery.Tick(now - previousSeconds);
+        previousSeconds = now;
 
         target.Begin();
         target.Canvas.Clear(new SKColor(32, 32, 40));
@@ -196,9 +162,9 @@ try
     if (screenshotDirectory != null)
     {
         Directory.CreateDirectory(screenshotDirectory);
-        for (int i = 0; i < screens.Length; i++)
+        for (int i = 0; i < gallery.ScreenCount; i++)
         {
-            LoadScreen(i);
+            gallery.LoadScreen(i);
             for (int frame = 0; frame < 6; frame++)
             {
                 Glfw.PollEvents();
@@ -209,7 +175,7 @@ try
             byte[] rgba = PixelReadback.ReadRegion(
                 instance.VkHandle, physicalDevice.VkHandle, device.VkHandle, queue.VkHandle, (uint)queueFamily,
                 target.VkImage, 0, 0, Width, Height);
-            string path = Path.Combine(screenshotDirectory, $"brutal-{i + 1}-{screens[i].Name}.png");
+            string path = Path.Combine(screenshotDirectory, $"brutal-{i + 1}.png");
             using SKBitmap bitmap = new SKBitmap(new SKImageInfo(Width, Height, SKColorType.Rgba8888, SKAlphaType.Unpremul));
             System.Runtime.InteropServices.Marshal.Copy(rgba, 0, bitmap.GetPixels(), rgba.Length);
             using SKData png = SKImage.FromBitmap(bitmap).Encode(SKEncodedImageFormat.Png, 100);
@@ -222,14 +188,14 @@ try
 
     window.OnKey += (_, key, _, action, _) =>
     {
-        if (action == GlfwKeyAction.Press && key >= GlfwKey.Number1 && key < GlfwKey.Number1 + Math.Min(9, screens.Length))
+        if (action == GlfwKeyAction.Press && key >= GlfwKey.Number1 && key < GlfwKey.Number1 + Math.Min(9, gallery.ScreenCount))
         {
-            LoadScreen(key - GlfwKey.Number1);
+            gallery.LoadScreen(key - GlfwKey.Number1);
         }
     };
 
     using Presenter presenter = new Presenter(instance, physicalDevice, device, queue, queueFamily, surface, window, target);
-    while (!window.ShouldClose)
+    while (!window.ShouldClose && (exitAfterSeconds <= 0 || clock.Elapsed.TotalSeconds < exitAfterSeconds))
     {
         Glfw.PollEvents();
         RenderFrame();

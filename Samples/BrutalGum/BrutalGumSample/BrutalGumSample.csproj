@@ -32,6 +32,7 @@
 		<Compile Include="..\..\MonoGameGumInCode\MonoGameGumInCode\Screens\CirclesScreen.cs" Link="Screens\CirclesScreen.cs" />
 		<Compile Include="..\..\MonoGameGumInCode\MonoGameGumInCode\Screens\RectanglesScreen.cs" Link="Screens\RectanglesScreen.cs" />
 		<Compile Include="..\..\MonoGameGumInCode\MonoGameGumInCode\Screens\SpriteScreen.cs" Link="Screens\SpriteScreen.cs" />
+		<Compile Include="../../Shared/GumGallery.cs" Link="GumGallery.cs" />
 		<Compile Include="..\..\SilkNetGum\SilkNetGumSample\Screens\ArcsScreen.cs" Link="Screens\ArcsScreen.cs" />
 		<Compile Include="..\..\SilkNetGum\SilkNetGumSample\Screens\PolygonsScreen.cs" Link="Screens\PolygonsScreen.cs" />
 		<Compile Include="..\..\SilkNetGum\SilkNetGumSample\Screens\NineSliceScreen.cs" Link="Screens\NineSliceScreen.cs" />

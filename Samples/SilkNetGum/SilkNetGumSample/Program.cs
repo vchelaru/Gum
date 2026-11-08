@@ -15,6 +15,7 @@ using Gum.GueDeriving;
 using RenderingLibrary.Graphics;
 using Gum;
 using SilkNetGum.Screens;
+using GumSamples;
 using GumSamples.Screens;
 using Gum.Managers;
 using GumRuntime;
@@ -45,10 +46,7 @@ unsafe class Program
     // renderable-level rendering questions. Flip to true when you need the minimal repro back.
     const bool ShowMinimalTextRepro = false;
 
-    static GraphicalUiElement? currentGumxScreen;
-    static FrameworkElement? currentCodeScreen;
-    static int currentScreenIndex;
-    static StackPanel navStrip = null!;
+    static readonly GumGallery gallery = new GumGallery();
     static SKPaint sKPaint;
     static SKCanvas canvas;
     static SKSurface? surface;
@@ -68,44 +66,6 @@ unsafe class Program
     // watching the live window. Not wired into any CI path; local-only verification tool.
     static readonly string? screenshotPath = Environment.GetEnvironmentVariable("GUM_SCREENSHOT_PATH");
     static readonly string screenshotScreenName = Environment.GetEnvironmentVariable("GUM_SCREENSHOT_SCREEN") ?? "Text";
-
-    // Code-only screens appended after every screen from the gumx, allowing the
-    // sample to exercise runtime features (like the unified NineSliceRuntime) that
-    // are not yet authored as Gum screens.
-    private static readonly Func<FrameworkElement>[] codeScreenFactories =
-    {
-        () => new SilkNetGum.Screens.NineSliceScreen(),
-        () => new SilkNetGum.Screens.SpriteScreen(),
-        () => new SilkNetGum.Screens.SvgScreen(),
-        () => new SilkNetGum.Screens.TextScreen(),
-        () => new SilkNetGum.Screens.CirclesScreen(),
-        () => new SilkNetGum.Screens.RectanglesScreen(),
-        () => new SilkNetGum.Screens.ArcsScreen(),
-        () => new SilkNetGum.Screens.PolygonsScreen(),
-        () => new SilkNetGum.Screens.RenderTargetScreen(),
-        () => new SilkNetGum.Screens.RenderTargetShaderScreen(),
-        () => new GumSamples.Screens.FormsScreen(),
-        () => new SilkNetGum.Screens.ZoomScreen(),
-        () => new SilkNetGum.Screens.LayerCameraSettingsScreen(),
-    };
-
-    // Parallel to codeScreenFactories, used as nav-strip button labels.
-    private static readonly string[] codeScreenNames =
-    {
-        "NineSlice",
-        "Sprite",
-        "Svg",
-        "Text",
-        "Circles",
-        "Rectangles",
-        "Arcs",
-        "Polygons",
-        "Render Target",
-        "RT Shader",
-        "Forms",
-        "Zoom",
-        "Layer Camera",
-    };
 
     private static void InitializeGum(SKCanvas canvas, IInputContext inputContext)
     {
@@ -140,17 +100,7 @@ unsafe class Program
             return;
         }
 
-        BuildNavStrip();
-
-        if (screenshotPath != null)
-        {
-            var gumxScreens = ObjectFinder.Self.GumProjectSave!.Screens;
-            int codeIndex = Array.IndexOf(codeScreenNames, screenshotScreenName);
-            LoadScreen(codeIndex >= 0 ? gumxScreens.Count + codeIndex : 0);
-            return;
-        }
-
-        LoadScreen(0);
+        gallery.Build(screenshotPath != null ? screenshotScreenName : null);
     }
 
     // Bare single-text diagnostic page (gated by ShowMinimalTextRepro). No nav / screens / container /
@@ -171,108 +121,6 @@ unsafe class Program
         reproOutline.Y = 100;
         reproOutline.OutlineThickness = 4;
         reproOutline.AddToRoot();
-    }
-
-    // Mirrors MonoGameGumInCode's Game1.BuildNavStrip -- a horizontal strip of buttons, one per
-    // screen, pinned to the top-left. Unlike MonoGameGumInCode's generic ShowScreen<T>, this sample
-    // mixes two screen kinds (.gumx-authored GraphicalUiElement screens and code-only
-    // FrameworkElement screens), so each button just calls LoadScreen(index) with its own captured
-    // index instead of a generic factory.
-    private static void BuildNavStrip()
-    {
-        navStrip = new StackPanel();
-        navStrip.Orientation = Orientation.Horizontal;
-        navStrip.Spacing = 4;
-        navStrip.Visual.X = 4;
-        navStrip.Visual.Y = 4;
-        navStrip.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
-        navStrip.Width = 0;
-        navStrip.Visual.WrapsChildren = true;
-        navStrip.AddToRoot();
-
-        var gumxScreens = ObjectFinder.Self.GumProjectSave!.Screens;
-
-        for (int i = 0; i < gumxScreens.Count; i++)
-        {
-            int capturedIndex = i;
-            AddNavButton(gumxScreens[i].Name, () => LoadScreen(capturedIndex));
-        }
-
-        for (int i = 0; i < codeScreenFactories.Length; i++)
-        {
-            int capturedIndex = gumxScreens.Count + i;
-            AddNavButton(codeScreenNames[i], () => LoadScreen(capturedIndex));
-        }
-    }
-
-    private static void AddNavButton(string text, Action onClick)
-    {
-        var button = new Gum.Forms.Controls.Button();
-        button.Text = text;
-        button.Click += (_, _) => onClick();
-        navStrip.AddChild(button);
-    }
-
-    private static void LoadScreen(int index)
-    {
-        var gumxScreens = ObjectFinder.Self.GumProjectSave!.Screens;
-        int total = gumxScreens.Count + codeScreenFactories.Length;
-        if (total == 0) return;
-
-        currentScreenIndex = ((index % total) + total) % total;
-
-        // Attach via AddToRoot (children of GumService.Default.Root) instead of
-        // AddToManagers — that way GumService.Default.Update walks the screen and
-        // its descendants, which is what advances AnimationChain playback on the
-        // SpriteScreen's animated bear row.
-        currentGumxScreen?.RemoveFromRoot();
-        currentGumxScreen = null;
-        currentCodeScreen?.RemoveFromRoot();
-        currentCodeScreen = null;
-
-        // ZoomScreen and LayerCameraSettingsScreen both drive the shared main Camera directly
-        // (issues #4330, #4367) -- reset it here so leaving either screen zoomed/panned never leaks
-        // into whichever screen is shown next.
-        SystemManagers.Default.Renderer.Camera.Zoom = 1f;
-        SystemManagers.Default.Renderer.Camera.X = 0f;
-        SystemManagers.Default.Renderer.Camera.Y = 0f;
-
-        if (currentScreenIndex < gumxScreens.Count)
-        {
-            currentGumxScreen = gumxScreens[currentScreenIndex].ToGraphicalUiElement(SystemManagers.Default, addToManagers: false);
-            currentGumxScreen.AddToRoot();
-            currentGumxScreen.YOrigin = VerticalAlignment.Top;
-            currentGumxScreen.YUnits = Gum.Converters.GeneralUnitType.PixelsFromSmall;
-            ResizeCurrentGumxScreen();
-        }
-        else
-        {
-            // Code screens are FrameworkElement and Dock(Fill) themselves, so their visual
-            // fills the canvas without an explicit size assignment here -- only the top-offset
-            // and height-shrink need to be applied on top of that.
-            currentCodeScreen = codeScreenFactories[currentScreenIndex - gumxScreens.Count]();
-            currentCodeScreen.Visual.YOrigin = VerticalAlignment.Top;
-            currentCodeScreen.Visual.YUnits = Gum.Converters.GeneralUnitType.PixelsFromSmall;
-            currentCodeScreen.Visual.Y = navStrip.Visual.AbsoluteHeight;
-            currentCodeScreen.Visual.Height = -navStrip.Visual.AbsoluteHeight;
-            currentCodeScreen.AddToRoot();
-        }
-    }
-
-    // The loaded .gumx screen's Width/Height are plain pixel values (not RelativeToParent), so they
-    // don't track GraphicalUiElement.CanvasWidth/Height automatically -- unlike code screens, which
-    // Dock(Fill) themselves via relative units. Without re-applying this on every resize (not just
-    // the initial LoadScreen), the screen keeps its original size while the root re-lays-out against
-    // the new canvas size, shifting canvas-edge-anchored elements (e.g. bottom-docked) out of place
-    // (#3657).
-    private static void ResizeCurrentGumxScreen()
-    {
-        if (currentGumxScreen == null) return;
-
-        float navStripHeight = navStrip.Visual.AbsoluteHeight;
-        currentGumxScreen.Width = GraphicalUiElement.CanvasWidth;
-        currentGumxScreen.Height = GraphicalUiElement.CanvasHeight - navStripHeight;
-        currentGumxScreen.Y = navStripHeight;
     }
 
     private static void Draw()
@@ -551,7 +399,7 @@ unsafe class Program
                     gl.Viewport(0, 0, (uint)newSize.X, (uint)newSize.Y);
                     RecreateSurface(newSize.X, newSize.Y);
                     GumUI.HandleResize(newSize.X, newSize.Y);
-                    ResizeCurrentGumxScreen();
+                    gallery.ResizeCurrentGumxScreen();
                 }
 
                 // Per-frame Update drives AnimateSelf (and any other Forms
@@ -560,7 +408,7 @@ unsafe class Program
                 double currentTotalSeconds = totalTime.Elapsed.TotalSeconds;
                 GumUI.Update(currentTotalSeconds);
 
-                (currentCodeScreen as TextScreen)?.Tick(currentTotalSeconds - previousTotalSeconds);
+                gallery.Tick(currentTotalSeconds - previousTotalSeconds);
                 previousTotalSeconds = currentTotalSeconds;
 
 
