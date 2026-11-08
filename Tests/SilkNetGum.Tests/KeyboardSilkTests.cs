@@ -1,6 +1,5 @@
 using Gum.Input;
 using Moq;
-using Shouldly;
 using Silk.NET.Input;
 using System.Collections.Generic;
 using GumKeys = Gum.Forms.Input.Keys;
@@ -8,120 +7,57 @@ using GumKeys = Gum.Forms.Input.Keys;
 namespace SilkNetGum.Tests;
 
 /// <summary>
-/// Unit tests for the Silk keyboard: the GumKeys->Silk Key translation table, frame-over-frame
-/// push/release edge detection, and KeyChar-driven typed-text buffering. Edge/translation tests
-/// drive the <c>IsKeyPressed</c> seam via <see cref="TestableKeyboard"/> so no live Silk device is
-/// needed; the typed-text test raises the real <see cref="IKeyboard.KeyChar"/> event through Moq.
+/// Unit tests for the Silk keyboard: down state translated from <see cref="IKeyboard.IsKeyPressed"/>,
+/// frame-over-frame push/release edge detection, and KeyChar-driven typed-text buffering. The cases
+/// live in <see cref="SkiaHostTests.PolledKeyboardTestsBase"/>; this class supplies a keyboard over a
+/// mocked Silk device (a poll of the down state, and the real <see cref="IKeyboard.KeyChar"/> event).
 /// </summary>
-public class KeyboardSilkTests
+public class KeyboardSilkTests : SkiaHostTests.PolledKeyboardTestsBase
 {
-    /// <summary>Exposes the protected <c>IsKeyPressed</c> seam so tests set the polled down-state.</summary>
-    private sealed class TestableKeyboard : Keyboard
+    private sealed class SilkKeyboardRig : SkiaHostTests.IHostKeyboardRig
     {
-        public readonly HashSet<Key> PressedKeys = new();
-        protected override bool IsKeyPressed(Key key) => PressedKeys.Contains(key);
+        private readonly Mock<IKeyboard> _device = new();
+        private readonly HashSet<Key> _held = new();
+
+        public SilkKeyboardRig()
+        {
+            _device.Setup(k => k.IsKeyPressed(It.IsAny<Key>())).Returns((Key key) => _held.Contains(key));
+            Keyboard = new Keyboard(_device.Object);
+        }
+
+        public PolledKeyboard Keyboard { get; }
+
+        public void SetHeld(params GumKeys[] keys)
+        {
+            _held.Clear();
+            foreach (GumKeys key in keys)
+            {
+                _held.Add(ToSilk(key));
+            }
+        }
+
+        public void BeginFrame()
+        {
+            // Silk only exposes the live down state; there are no per-frame sets to drop.
+        }
+
+        public void TypeText(string text)
+        {
+            foreach (char character in text)
+            {
+                _device.Raise(k => k.KeyChar += null, _device.Object, character);
+            }
+        }
+
+        private static Key ToSilk(GumKeys key) => key switch
+        {
+            GumKeys.A => Key.A,
+            GumKeys.Left => Key.Left,
+            GumKeys.Right => Key.Right,
+            GumKeys.Space => Key.Space,
+            _ => throw new System.NotSupportedException(key.ToString()),
+        };
     }
 
-    [Fact]
-    public void Activity_TranslatesSilkKeyToGumKey_ForDownState()
-    {
-        var keyboard = new TestableKeyboard();
-        keyboard.PressedKeys.Add(Key.Left);
-
-        keyboard.Activity(0);
-
-        keyboard.KeyDown(GumKeys.Left).ShouldBeTrue();
-        keyboard.KeyDown(GumKeys.Right).ShouldBeFalse();
-    }
-
-    [Fact]
-    public void GetStringTyped_ReturnsCharactersFromKeyCharEvent()
-    {
-        var device = new Mock<IKeyboard>();
-        var keyboard = new Keyboard(device.Object);
-
-        device.Raise(k => k.KeyChar += null, device.Object, 'h');
-        device.Raise(k => k.KeyChar += null, device.Object, 'i');
-        keyboard.Activity(0);
-
-        keyboard.GetStringTyped().ShouldBe("hi");
-    }
-
-    [Fact]
-    public void KeyTyped_DoesNotRepeatBeforeRepeatDelayElapses()
-    {
-        var keyboard = new TestableKeyboard();
-        keyboard.PressedKeys.Add(Key.A);
-
-        keyboard.Activity(0);
-        keyboard.KeyTyped(GumKeys.A).ShouldBeTrue(); // initial push
-
-        keyboard.Activity(keyboard.RepeatDelay.TotalSeconds - 0.01);
-        keyboard.KeyTyped(GumKeys.A).ShouldBeFalse();
-    }
-
-    [Fact]
-    public void KeyTyped_RepeatsAtRepeatRateAfterRepeatDelayElapses()
-    {
-        var keyboard = new TestableKeyboard();
-        keyboard.PressedKeys.Add(Key.A);
-
-        keyboard.Activity(0);
-        keyboard.KeyTyped(GumKeys.A).ShouldBeTrue(); // initial push
-
-        keyboard.Activity(keyboard.RepeatDelay.TotalSeconds);
-        keyboard.KeyTyped(GumKeys.A).ShouldBeTrue(); // first repeat
-
-        keyboard.Activity(keyboard.RepeatDelay.TotalSeconds + keyboard.RepeatRate.TotalSeconds - 0.01);
-        keyboard.KeyTyped(GumKeys.A).ShouldBeFalse(); // too soon for the next repeat
-
-        keyboard.Activity(keyboard.RepeatDelay.TotalSeconds + keyboard.RepeatRate.TotalSeconds);
-        keyboard.KeyTyped(GumKeys.A).ShouldBeTrue(); // second repeat
-    }
-
-    [Fact]
-    public void KeyTyped_ResetsRepeatTimingAfterKeyIsReleasedAndPressedAgain()
-    {
-        var keyboard = new TestableKeyboard();
-        keyboard.PressedKeys.Add(Key.A);
-        keyboard.Activity(0);
-        keyboard.Activity(keyboard.RepeatDelay.TotalSeconds); // would repeat if still held
-
-        keyboard.PressedKeys.Remove(Key.A);
-        keyboard.Activity(keyboard.RepeatDelay.TotalSeconds + 0.01);
-
-        keyboard.PressedKeys.Add(Key.A);
-        keyboard.Activity(keyboard.RepeatDelay.TotalSeconds + 0.02);
-
-        keyboard.KeyTyped(GumKeys.A).ShouldBeTrue(); // fresh push, not a stale repeat
-    }
-
-    [Fact]
-    public void KeyPushed_IsTrueOnlyOnTheFrameOfInitialPress()
-    {
-        var keyboard = new TestableKeyboard();
-        keyboard.PressedKeys.Add(Key.A);
-
-        keyboard.Activity(0);
-        keyboard.KeyPushed(GumKeys.A).ShouldBeTrue();
-
-        // Still held on the next frame -> no longer a fresh push.
-        keyboard.Activity(1);
-        keyboard.KeyPushed(GumKeys.A).ShouldBeFalse();
-        keyboard.KeyDown(GumKeys.A).ShouldBeTrue();
-    }
-
-    [Fact]
-    public void KeyReleased_IsTrueOnTheFrameAfterRelease()
-    {
-        var keyboard = new TestableKeyboard();
-        keyboard.PressedKeys.Add(Key.Space);
-        keyboard.Activity(0);
-
-        keyboard.PressedKeys.Remove(Key.Space);
-        keyboard.Activity(1);
-
-        keyboard.KeyReleased(GumKeys.Space).ShouldBeTrue();
-        keyboard.KeyDown(GumKeys.Space).ShouldBeFalse();
-    }
+    protected override SkiaHostTests.IHostKeyboardRig CreateRig() => new SilkKeyboardRig();
 }
