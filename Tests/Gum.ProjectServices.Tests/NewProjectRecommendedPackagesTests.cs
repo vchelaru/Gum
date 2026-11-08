@@ -189,7 +189,10 @@ public class NewProjectRecommendedPackagesTests : BaseTestClass
 
         NewProjectResult result = await service.ExecuteAsync(Request("monogame", restore: false), null, CancellationToken.None);
 
-        result.PackageAdd!.Status.ShouldBe(RestoreStatus.Succeeded, result.PackageAdd.OutputTail);
+        AddPackagesResult add = result.PackageAdd!;
+        add.Status.ShouldBe(
+            RestoreStatus.Succeeded,
+            $"package '{add.FailedPackage}', exit code {add.ExitCode?.ToString() ?? "none"}, error '{add.ErrorMessage}', output:\n{add.OutputTail}");
         string csproj = File.ReadAllText(result.Files.CsprojPath!);
         foreach (string package in RecommendedPackages.For(HostPlatform.MonoGame))
         {

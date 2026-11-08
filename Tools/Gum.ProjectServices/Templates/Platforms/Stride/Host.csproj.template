@@ -4,9 +4,9 @@
     <OutputType>Exe</OutputType>
     <!-- WinExe in Release so no console window opens behind the game; Debug keeps Exe for console output. -->
     <OutputType Condition="'$(Configuration)' == 'Release'">WinExe</OutputType>
-    <!-- Plain net10.0 renders with Skia on the CPU. net10.0-windows7.0 selects Gum.Stride's Direct3D11
-         GPU path, which needs ANGLE native libraries that are not installed by default. -->
-    <TargetFramework>net10.0</TargetFramework>
+    <!-- Gum.Stride renders on the GPU only. Stride's Windows default is Direct3D11, which Gum.Stride
+         supports (with Direct3D12) only from net10.0-windows7.0; plain net10.0 supports Vulkan only. -->
+    <TargetFramework>net10.0-windows7.0</TargetFramework>
     <RootNamespace>{{RootNamespace}}</RootNamespace>
     <NuGetAuditMode>direct</NuGetAuditMode>
   </PropertyGroup>

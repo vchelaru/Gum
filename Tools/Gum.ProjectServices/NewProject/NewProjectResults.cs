@@ -208,6 +208,9 @@ public class AddPackagesResult
     /// <summary>The last lines <c>dotnet add</c> printed for the failed package.</summary>
     public string OutputTail { get; init; } = "";
 
+    /// <summary>The exit code of the failed <c>dotnet add</c>, when it ran to the end.</summary>
+    public int? ExitCode { get; init; }
+
     /// <summary>The reason the process could not be started.</summary>
     public string ErrorMessage { get; init; } = "";
 }
