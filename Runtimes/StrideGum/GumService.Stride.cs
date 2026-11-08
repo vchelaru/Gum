@@ -111,15 +111,7 @@ public partial class GumService : GumServiceSkiaInteractiveBase, IGumService
     public void Initialize(Game game, string? gumProjectFile = null, bool registerSceneRenderer = true)
     {
         var backBuffer = game.GraphicsDevice.Presenter.BackBuffer;
-        GraphicsDevice graphicsDevice = game.GraphicsDevice;
-        _gpuTarget?.Dispose();
-        _gpuTarget = new SkiaTargetHolder<IStrideSkiaTarget>(
-            (width, height) => StrideGpuTargetFactory.Create(graphicsDevice, width, height),
-            canvas => SystemManagers.Default.Canvas = canvas,
-            HandleResize);
-        _gpuTarget.Create(backBuffer.Width, backBuffer.Height);
-
-        InitializeCore(_gpuTarget.Canvas!, game.Input, _gpuTarget.Width, _gpuTarget.Height, gumProjectFile);
+        InitializeGpu(game.GraphicsDevice, backBuffer.Width, backBuffer.Height, game.Input, gumProjectFile);
 
         if (registerSceneRenderer)
         {
@@ -131,6 +123,23 @@ public partial class GumService : GumServiceSkiaInteractiveBase, IGumService
         }
 
         _clock.Start();
+    }
+
+    /// <summary>
+    /// Creates the GPU target for <paramref name="graphicsDevice"/> and initializes Gum against its
+    /// canvas: everything <see cref="Initialize(Game, string?, bool)"/> does short of registering the
+    /// scene renderer, so the StrideGum GPU smoke tests can run it on a window-less device.
+    /// </summary>
+    internal void InitializeGpu(GraphicsDevice graphicsDevice, int width, int height, InputManager inputManager, string? gumProjectFile)
+    {
+        _gpuTarget?.Dispose();
+        _gpuTarget = new SkiaTargetHolder<IStrideSkiaTarget>(
+            (w, h) => StrideGpuTargetFactory.Create(graphicsDevice, w, h),
+            canvas => SystemManagers.Default.Canvas = canvas,
+            HandleResize);
+        _gpuTarget.Create(width, height);
+
+        InitializeCore(_gpuTarget.Canvas!, inputManager, _gpuTarget.Width, _gpuTarget.Height, gumProjectFile);
     }
 
     /// <summary>
@@ -176,10 +185,16 @@ public partial class GumService : GumServiceSkiaInteractiveBase, IGumService
     /// frame. Not part of the public API -- see the class remarks for why Update/Draw aren't
     /// separately exposed to Stride callers the way they are on every other Gum runtime.
     /// </summary>
-    internal void DrawStrideFrame(RenderDrawContext drawContext)
+    internal void DrawStrideFrame(RenderDrawContext drawContext) =>
+        DrawStrideFrame(drawContext.CommandList.RenderTarget, drawContext.GraphicsContext);
+
+    /// <summary>
+    /// The body of the per-frame draw, over the bound render target and graphics context instead of a
+    /// <see cref="RenderDrawContext"/> (which only a running <c>Game</c> can build), so a window-less
+    /// test can drive the same code.
+    /// </summary>
+    internal void DrawStrideFrame(Texture backBuffer, GraphicsContext graphicsContext)
     {
-        var commandList = drawContext.CommandList;
-        var backBuffer = commandList.RenderTarget;
         if (_gpuTarget == null) return;
 
         _gpuTarget.EnsureSize(backBuffer.Width, backBuffer.Height);
@@ -189,7 +204,7 @@ public partial class GumService : GumServiceSkiaInteractiveBase, IGumService
         Draw();
         // Flushes Skia's GPU work and composites the target onto the backbuffer via its own
         // SpriteBatch.
-        _gpuTarget.Target!.End(drawContext.GraphicsContext);
+        _gpuTarget.Target!.End(graphicsContext);
     }
 
     internal void DisposeStrideResources()

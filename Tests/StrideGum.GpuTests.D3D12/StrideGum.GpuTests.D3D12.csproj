@@ -1,0 +1,36 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Window-less GPU smoke test for Gum.Stride on Direct3D 12 (WARP where there is no hardware adapter).
+       Fails, never skips, when no device can be created. A separate project per graphics API because
+       StrideGraphicsApi picks which Stride.Graphics.dll a project loads. The test source is shared with
+       StrideGum.GpuTests.D3D11. Filter to a test class by name. -->
+  <PropertyGroup>
+    <TargetFramework>net10.0-windows7.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+    <NoWarn>$(NoWarn);CA1416</NoWarn>
+    <!-- Selects the Direct3D12 build of Stride.Graphics.dll instead of the Windows default (Direct3D11). -->
+    <StrideGraphicsApi>Direct3D12</StrideGraphicsApi>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="Shouldly" />
+    <PackageReference Include="xunit" />
+    <PackageReference Include="xunit.runner.visualstudio" />
+    <!-- The SkiaGameRendering.Stride.* packages pin 4.153.1 exactly. -->
+    <PackageReference Include="SkiaSharp" VersionOverride="4.153.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Runtimes\StrideGum\StrideGum.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\StrideGum.GpuTests.Shared\*.cs" LinkBase="Shared" />
+  </ItemGroup>
+
+</Project>
