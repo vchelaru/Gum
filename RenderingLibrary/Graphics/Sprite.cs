@@ -40,6 +40,16 @@ public class Sprite : SpriteBatchRenderableBase,
 
     public AnimationChainLogic AnimationLogic { get; private set; } = new AnimationChainLogic();
 
+#if NET8_0_OR_GREATER
+    /// <summary>
+    /// The renderable this sprite is drawn on behalf of (a <see cref="NineSlice"/> draws its pieces
+    /// as sprites), so the piece follows the owner's <see cref="IRenderable.SkipColorPremultiply"/>.
+    /// </summary>
+    internal IRenderable? ColorPremultiplyOwner { get; set; }
+
+    bool IRenderable.SkipColorPremultiply => ColorPremultiplyOwner?.SkipColorPremultiply ?? false;
+#endif
+
     public int CurrentFrameIndex
     {
         get => AnimationLogic.CurrentFrameIndex;
@@ -928,7 +938,7 @@ public class Sprite : SpriteBatchRenderableBase,
         var modifiedColor = color;
 
         // Custom effect already does premultiply alpha on the shader so we skip that in this case
-        if (!Renderer.UseCustomEffectRendering && Renderer.NormalBlendState == BlendState.AlphaBlend)
+        if (Renderer.ShouldPremultiplyColor(objectCausingRendering))
         {
             // we are using premult textures, so we need to premult the color:
             var alphaRatio = color.A / 255.0f;

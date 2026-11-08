@@ -2148,13 +2148,33 @@ public class Renderer : IRenderer
         }
     }
 
+    // Whether Sprite.Render and BitmapFont.DrawTextLines scale a color's RGB by its alpha before
+    // drawing: on a premultiplied pipeline without a custom effect, unless the renderable being
+    // drawn opts out through IRenderable.SkipColorPremultiply (not available before .NET 8).
+    internal static bool ShouldPremultiplyColor(object? renderable)
+    {
+        if (UseCustomEffectRendering || NormalBlendState != BlendState.AlphaBlend)
+        {
+            return false;
+        }
+
+#if NET8_0_OR_GREATER
+        if (renderable is IRenderable { SkipColorPremultiply: true })
+        {
+            return false;
+        }
+#endif
+
+        return true;
+    }
+
     // The tint DrawRenderTargetToScreen hands to Sprite.Render. It must reach the blit premultiplied
     // exactly once. On a premultiplied pipeline without a custom effect, Sprite.Render premultiplies
     // the tint itself, so passing an already-premultiplied one scaled color by alpha twice (a 50%
     // container drew its content at 25%). Elsewhere Sprite.Render passes the tint through, so it is
     // premultiplied here.
     public static System.Drawing.Color CreateRenderTargetCompositeTint(int alpha) =>
-        !UseCustomEffectRendering && NormalBlendState == BlendState.AlphaBlend
+        ShouldPremultiplyColor(null)
             ? System.Drawing.Color.FromArgb(alpha, 255, 255, 255)
             : System.Drawing.Color.FromArgb(alpha, alpha, alpha, alpha);
 

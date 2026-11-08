@@ -141,6 +141,45 @@ public class PremultipliedNineSliceRenderTests : BaseTestClass
         }
     }
 
+    [Fact]
+    public void NineSlice_OptingOutOfColorPremultiply_DrawsHalfAlphaCenterBrighter()
+    {
+        XnaColor[] normal = RenderNineSliceHalfAlpha(optOut: false);
+        XnaColor[] optedOut = RenderNineSliceHalfAlpha(optOut: true);
+
+        Layout layout = GetLayout(Sizing.Stretched);
+        (int x, int y) = CellCenter(layout, 1, 1);
+
+        // The opaque center (200, 100, 50) at half alpha: the normal draw scales the vertex color by
+        // the alpha, so the opted-out one (color passed as set) reaches a clearly brighter red.
+        optedOut[(y * Width) + x].R.ShouldBeGreaterThan((byte)(normal[(y * Width) + x].R + 40));
+    }
+
+    private sealed class OptOutNineSlice : NineSlice, IRenderable
+    {
+        bool IRenderable.SkipColorPremultiply => true;
+    }
+
+    private static XnaColor[] RenderNineSliceHalfAlpha(bool optOut)
+    {
+        Layout layout = GetLayout(Sizing.Stretched);
+        return Render(true, 9, 9, BuildTexels(), texture =>
+        {
+            NineSliceRuntime nineSlice = new(fullInstantiation: false);
+            nineSlice.SetContainedObject(optOut ? new OptOutNineSlice() : new NineSlice());
+            nineSlice.Texture = texture;
+            nineSlice.WidthUnits = DimensionUnitType.Absolute;
+            nineSlice.HeightUnits = DimensionUnitType.Absolute;
+            nineSlice.Width = layout.Width;
+            nineSlice.Height = layout.Height;
+            nineSlice.X = layout.X;
+            nineSlice.Y = layout.Y;
+            nineSlice.BorderScale = layout.BorderScale;
+            nineSlice.Alpha = HalfAlphaValue;
+            return nineSlice;
+        });
+    }
+
     private static (int X, int Y) CellCenter(Layout layout, int column, int row)
     {
         float left = column == 0 ? layout.X : column == 1 ? layout.X + layout.Border : layout.X + layout.Width - layout.Border;
