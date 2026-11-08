@@ -1,7 +1,6 @@
 #nullable enable
 using System;
 using System.IO;
-using System.Runtime.InteropServices;
 using SkiaGameRendering;
 using SkiaSharp;
 using UnityEngine;
@@ -10,10 +9,10 @@ namespace Gum.Unity
 {
     /// <summary>
     /// Initializes <see cref="GumService.Default"/> and draws it every frame into a texture the size of
-    /// the screen. Gum draws on the GPU through SkiaGameRendering's <see cref="SkiaRenderTarget2D"/>
-    /// wherever SkiaGameRendering supports the graphics device; otherwise it draws into a CPU raster surface
-    /// that is uploaded to a <see cref="Texture2D"/> each frame. Either way <see cref="Texture"/> has Unity's
-    /// orientation (row 0 at the bottom). Add <see cref="GumInput"/> next to it for mouse and keyboard.
+    /// the screen. Gum draws on the GPU through SkiaGameRendering's <see cref="SkiaRenderTarget2D"/>, and only
+    /// there: on a graphics API SkiaGameRendering doesn't support (WebGL, for example) this component logs an
+    /// error and disables itself. <see cref="Texture"/> has Unity's orientation (row 0 at the bottom). Add
+    /// <see cref="GumInput"/> next to it for mouse and keyboard.
     ///
     /// Gum is initialized in <c>Awake</c>, so other scripts can build UI from <c>Start</c> on:
     /// <c>new Button().AddToRoot()</c>, or elements from the loaded project.
@@ -27,14 +26,7 @@ namespace Gum.Unity
         [Tooltip("Draws Gum over the whole screen in OnGUI. Turn off to show Texture yourself (a RawImage or a material).")]
         [SerializeField] bool _drawToScreen = true;
 
-        [Tooltip("Uses the CPU fallback even where the GPU path is available.")]
-        [SerializeField] bool _forceCpu;
-
-        SkiaRenderTarget2D? _gpuTarget;
-        bool _gpuUnavailable;
-        SKSurface? _cpuSurface;
-        Texture2D? _cpuTexture;
-        byte[]? _cpuFlipBuffer;
+        SkiaRenderTarget2D? _target;
 
         /// <summary>The project file loaded on <c>Awake</c>, relative to StreamingAssets. Empty for none.</summary>
         public string ProjectFile
@@ -50,34 +42,31 @@ namespace Gum.Unity
             set => _drawToScreen = value;
         }
 
-        /// <summary>Uses the CPU fallback even where the GPU path is available. Read in <c>Awake</c>.</summary>
-        public bool ForceCpu
-        {
-            get => _forceCpu;
-            set => _forceCpu = value;
-        }
-
-        /// <summary>True when Gum draws on the GPU through SkiaGameRendering, false on the CPU fallback.</summary>
-        public bool IsUsingGpu => _gpuTarget != null;
-
         /// <summary>The width in pixels of the canvas Gum draws into.</summary>
         public int CanvasPixelWidth { get; private set; }
 
         /// <summary>The height in pixels of the canvas Gum draws into.</summary>
         public int CanvasPixelHeight { get; private set; }
 
-        /// <summary>
-        /// What Gum drew this frame, alpha-premultiplied, with row 0 at the bottom: a
-        /// <see cref="RenderTexture"/> on the GPU path, a <see cref="Texture2D"/> on the CPU fallback.
-        /// </summary>
-        public Texture? Texture => _gpuTarget != null ? _gpuTarget.Texture : _cpuTexture;
+        /// <summary>What Gum drew this frame, alpha-premultiplied, with row 0 at the bottom. Null when the component disabled itself in <c>Awake</c>.</summary>
+        public RenderTexture? Texture => _target?.Texture;
 
         void Awake()
         {
             int width = Mathf.Max(1, Screen.width);
             int height = Mathf.Max(1, Screen.height);
 
-            CreateTarget(width, height);
+            try
+            {
+                CreateTarget(width, height);
+            }
+            catch (NotSupportedException exception)
+            {
+                // SkiaGameRendering is GPU only. There is no CPU path to fall back to, so say so and stop.
+                Debug.LogError($"Gum: SkiaGameRendering does not support the graphics API {SystemInfo.graphicsDeviceType}, so Gum cannot draw. {exception.Message}", this);
+                enabled = false;
+                return;
+            }
 
             string? projectPath = null;
             if (!string.IsNullOrEmpty(_projectFile))
@@ -86,19 +75,12 @@ namespace Gum.Unity
                 projectPath = Path.Combine(Application.streamingAssetsPath, _projectFile);
             }
 
+            // The canvas records only between Begin and End, so Initialize gets a canvas that is
+            // replaced every frame in LateUpdate.
             GumService gum = GumService.Default;
-            if (_gpuTarget != null)
-            {
-                // The GPU canvas records only between Begin and End, so Initialize gets a canvas that
-                // is replaced every frame in LateUpdate.
-                _gpuTarget.Begin();
-                gum.Initialize(_gpuTarget.Canvas, width, height, projectPath);
-                _gpuTarget.End();
-            }
-            else
-            {
-                gum.Initialize(_cpuSurface!.Canvas, width, height, projectPath);
-            }
+            _target!.Begin();
+            gum.Initialize(_target.Canvas, width, height, projectPath);
+            _target.End();
 
             gum.UseClipboard(new GumUnityClipboard());
         }
@@ -126,34 +108,22 @@ namespace Gum.Unity
         void LateUpdate()
         {
             GumService gum = GumService.Default;
-            if (!gum.IsInitialized)
+            if (!gum.IsInitialized || _target == null)
             {
                 return;
             }
 
-            if (_gpuTarget != null)
-            {
-                _gpuTarget.Begin();
-                SKCanvas canvas = _gpuTarget.Canvas;
-                gum.SystemManagers.Canvas = canvas;
-                canvas.Clear(SKColors.Transparent);
-                gum.Draw();
-                _gpuTarget.End();
-            }
-            else if (_cpuSurface != null && _cpuTexture != null)
-            {
-                SKCanvas canvas = _cpuSurface.Canvas;
-                gum.SystemManagers.Canvas = canvas;
-                canvas.Clear(SKColors.Transparent);
-                gum.Draw();
-                canvas.Flush();
-                UploadCpuSurface();
-            }
+            _target.Begin();
+            SKCanvas canvas = _target.Canvas;
+            gum.SystemManagers.Canvas = canvas;
+            canvas.Clear(SKColors.Transparent);
+            gum.Draw();
+            _target.End();
         }
 
         void OnGUI()
         {
-            Texture? texture = Texture;
+            RenderTexture? texture = Texture;
             if (!_drawToScreen || texture == null || Event.current.type != EventType.Repaint)
             {
                 return;
@@ -176,72 +146,15 @@ namespace Gum.Unity
 
         void CreateTarget(int width, int height)
         {
+            _target = new SkiaRenderTarget2D(width, height);
             CanvasPixelWidth = width;
             CanvasPixelHeight = height;
-
-            // SkiaGameRendering decides which graphics devices it supports and throws for the rest, so the
-            // GPU path is simply tried. The failure is remembered so a resize doesn't throw and warn again.
-            if (!_forceCpu && !_gpuUnavailable)
-            {
-                try
-                {
-                    _gpuTarget = new SkiaRenderTarget2D(width, height);
-                    return;
-                }
-                catch (Exception exception)
-                {
-                    _gpuUnavailable = true;
-                    Debug.LogWarning($"Gum: SkiaGameRendering could not create a GPU target, using the CPU fallback. {exception.Message}");
-                }
-            }
-
-            _cpuSurface = SKSurface.Create(new SKImageInfo(width, height, SKColorType.Rgba8888, SKAlphaType.Premul));
-            // Skia's premultiplied pixels are already sRGB-encoded. This texture is drawn by IMGUI,
-            // which expects gamma output even in a Linear project, so sampling must not decode them.
-            _cpuTexture = new Texture2D(width, height, TextureFormat.RGBA32, mipChain: false, linear: true)
-            {
-                name = "Gum",
-                wrapMode = TextureWrapMode.Clamp,
-                filterMode = FilterMode.Point,
-            };
-            _cpuFlipBuffer = new byte[width * height * 4];
-            if (GumService.Default.IsInitialized)
-            {
-                GumService.Default.SystemManagers.Canvas = _cpuSurface.Canvas;
-            }
-        }
-
-        // Skia's row 0 is the top row and Unity's is the bottom, so rows are copied in reverse.
-        void UploadCpuSurface()
-        {
-            using (SKPixmap pixmap = _cpuSurface!.PeekPixels())
-            {
-                IntPtr pixels = pixmap.GetPixels();
-                int rowBytes = pixmap.RowBytes;
-                int packedRowBytes = CanvasPixelWidth * 4;
-                for (int row = 0; row < CanvasPixelHeight; row++)
-                {
-                    IntPtr source = pixels + row * rowBytes;
-                    int destinationOffset = (CanvasPixelHeight - 1 - row) * packedRowBytes;
-                    Marshal.Copy(source, _cpuFlipBuffer!, destinationOffset, packedRowBytes);
-                }
-            }
-            _cpuTexture!.LoadRawTextureData(_cpuFlipBuffer!);
-            _cpuTexture.Apply(updateMipmaps: false);
         }
 
         void DisposeTarget()
         {
-            _gpuTarget?.Dispose();
-            _gpuTarget = null;
-            _cpuSurface?.Dispose();
-            _cpuSurface = null;
-            if (_cpuTexture != null)
-            {
-                Destroy(_cpuTexture);
-                _cpuTexture = null;
-            }
-            _cpuFlipBuffer = null;
+            _target?.Dispose();
+            _target = null;
         }
     }
 }

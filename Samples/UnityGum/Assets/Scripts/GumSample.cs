@@ -16,7 +16,6 @@ using UnityEngine;
 /// Forms controls built in code. Created on scene load, so the scene itself stays empty. Run
 /// Unity/build-unity-package.ps1 once before opening the project; it fills the Gum package's Plugins/.
 ///
-/// --force-cpu uses the CPU fallback even on Direct3D 11.
 /// --smoke-test runs without GumInput, pushes a click onto the button itself, and after a few frames
 /// checks that the click reached the button and that the loaded screen's blue rectangle was drawn. It
 /// writes the result to --smoke-result (default smoke-result.txt next to the player), and the screen to --smoke-screenshot if given, and quits with 0
@@ -45,7 +44,6 @@ public sealed class GumSample : MonoBehaviour
         host.SetActive(false);
         var renderer = host.AddComponent<GumRenderer>();
         renderer.ProjectFile = ProjectFile;
-        renderer.ForceCpu = Array.IndexOf(args, "--force-cpu") >= 0;
         if (!smokeTest)
         {
             host.AddComponent<GumInput>();
@@ -154,7 +152,6 @@ public sealed class GumSample : MonoBehaviour
         string result =
             $"result: {(pass ? "PASSED" : "FAILED")}\n" +
             $"graphicsDevice: {SystemInfo.graphicsDeviceType}\n" +
-            $"renderPath: {(_renderer.IsUsingGpu ? "GPU (SkiaGameRendering)" : "CPU fallback")}\n" +
             $"scriptingBackend: {(Application.isEditor ? "Editor" : ScriptingBackend())}\n" +
             $"canvas: {width}x{height}\n" +
             $"clicks: {_clickCount}, label: {_label.Text}\n" +
@@ -174,16 +171,12 @@ public sealed class GumSample : MonoBehaviour
     // row 0 is its bottom row.
     Color32 ReadPixel(int x, int y)
     {
-        Texture texture = _renderer.Texture;
+        RenderTexture texture = _renderer.Texture;
         int row = texture.height - 1 - y;
-        if (texture is Texture2D texture2D)
-        {
-            return texture2D.GetPixel(x, row);
-        }
 
         var readback = new Texture2D(texture.width, texture.height, TextureFormat.RGBA32, false);
         RenderTexture previous = RenderTexture.active;
-        RenderTexture.active = (RenderTexture)texture;
+        RenderTexture.active = texture;
         readback.ReadPixels(new Rect(0, 0, texture.width, texture.height), 0, 0);
         RenderTexture.active = previous;
         Color32 pixel = readback.GetPixel(x, row);

@@ -90,7 +90,7 @@ If you add the components from code, add them to an inactive GameObject, set `Pr
 
 ## Rendering
 
-Gum draws on the GPU through SkiaGameRendering on every graphics API it supports, including Direct3D 11 and Metal. On any other API, Gum draws on the CPU and uploads a texture each frame, and the console logs a warning explaining why. `GumRenderer.Texture` holds the result either way. Turn off `GumRenderer.DrawToScreen` to display the texture yourself.
+Gum draws on the GPU through SkiaGameRendering on every graphics API it supports, including Direct3D 11 and Metal. On any other API, such as WebGL, `GumRenderer` logs an error and disables itself; there is no CPU fallback. `GumRenderer.Texture` holds the result. Turn off `GumRenderer.DrawToScreen` to display the texture yourself.
 
 ## Generated Code in an Assembly With No Engine References
 
