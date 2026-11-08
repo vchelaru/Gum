@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection.Metadata;
@@ -57,25 +58,7 @@ public class SyntaxVersionDetectionService : ISyntaxVersionDetectionService
     // Published NuGet package IDs of the Gum runtimes. Runtime project and dll names follow a rule
     // instead (see IsRuntimeName), but package IDs do not: add-on packages such as Gum.Expressions and
     // Gum.Shapes.MonoGame share the "Gum." prefix, and FindRuntimePackageVersion needs the runtime's.
-    private static readonly string[] GumPackageNames =
-    {
-        "Gum.MonoGame",
-        "Gum.KNI",
-        "Gum.FNA",
-        "Gum.SkiaSharp",
-        "Gum.raylib",
-        "Gum.sokol",
-        "Gum.SilkNet",
-        "Gum.Stride",
-        "Gum.KniSkia",
-        "Gum.SkiaSharp.Standalone",
-        "Gum.SkiaSharp.Maui",
-        "Gum.SkiaSharp.ShadowDusk",
-        "Gum.MonoGame.ShadowDusk",
-        "Gum.KNI.ShadowDusk",
-        "Gum.FNA.ShadowDusk",
-        "Gum.raylib.ShadowDusk"
-    };
+    private static readonly IReadOnlyList<string> GumPackageNames = HostPlatformInfo.PackageIds;
 
     // The subset of the runtimes above that shipped before the namespace unification. Only these can
     // be an old build whose version is unreadable; every other runtime started on the current conventions.
