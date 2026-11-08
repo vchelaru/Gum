@@ -1,0 +1,60 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<OutputType>Exe</OutputType>
+		<!-- Must differ from the referenced Runtimes/BrutalGum project's assembly name ("BrutalGum"). -->
+		<AssemblyName>BrutalGumSample</AssemblyName>
+		<TargetFramework>net10.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+		<!-- SKIA gates the #elif SKIA branch in the screens shared with MonoGameGumInCode. -->
+		<DefineConstants>$(DefineConstants);SKIA</DefineConstants>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Ahwoo.Brutal.Glfw" Version="2026.10.5" />
+		<PackageReference Include="Ahwoo.Brutal.Vulkan" Version="2026.10.3" />
+		<PackageReference Include="Ahwoo.Brutal.Vulkan.Abstractions" Version="2026.10.3" />
+		<PackageReference Include="Ahwoo.Brutal.ShaderC" Version="2026.10.3" />
+		<PackageReference Include="SkiaGameRendering.Brutal" Version="0.21.0" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\..\..\Runtimes\BrutalGum\BrutalGum.csproj" />
+		<ProjectReference Include="..\..\..\Runtimes\SkiaGum.ShadowDusk\SkiaGum.ShadowDusk.csproj" />
+	</ItemGroup>
+
+	<!-- The same gallery screens SilkNetGumSample shows, linked so they cannot drift. -->
+	<ItemGroup>
+		<Compile Include="..\..\MonoGameGumInCode\MonoGameGumInCode\Screens\FormsScreen.cs" Link="Screens\FormsScreen.cs" />
+		<Compile Include="..\..\MonoGameGumInCode\MonoGameGumInCode\Screens\TextScreen.cs" Link="Screens\TextScreen.cs" />
+		<Compile Include="..\..\MonoGameGumInCode\MonoGameGumInCode\Screens\CirclesScreen.cs" Link="Screens\CirclesScreen.cs" />
+		<Compile Include="..\..\MonoGameGumInCode\MonoGameGumInCode\Screens\RectanglesScreen.cs" Link="Screens\RectanglesScreen.cs" />
+		<Compile Include="..\..\MonoGameGumInCode\MonoGameGumInCode\Screens\SpriteScreen.cs" Link="Screens\SpriteScreen.cs" />
+		<Compile Include="../../Shared/GumGallery.cs" Link="GumGallery.cs" />
+		<Compile Include="..\..\SilkNetGum\SilkNetGumSample\Screens\ArcsScreen.cs" Link="Screens\ArcsScreen.cs" />
+		<Compile Include="..\..\SilkNetGum\SilkNetGumSample\Screens\PolygonsScreen.cs" Link="Screens\PolygonsScreen.cs" />
+		<Compile Include="..\..\SilkNetGum\SilkNetGumSample\Screens\NineSliceScreen.cs" Link="Screens\NineSliceScreen.cs" />
+		<Compile Include="..\..\MonoGameGumInCode\MonoGameGumInCode\Screens\SvgScreen.cs" Link="Screens\SvgScreen.cs" />
+		<Compile Include="..\..\MonoGameGumInCode\MonoGameGumInCode\Screens\RenderTargetScreen.cs" Link="Screens\RenderTargetScreen.cs" />
+		<Compile Include="..\..\MonoGameGumInCode\MonoGameGumInCode\Screens\RenderTargetShaderScreen.cs" Link="Screens\RenderTargetShaderScreen.cs" />
+		<Compile Include="..\..\MonoGameGumInCode\MonoGameGumInCode\Screens\ZoomScreen.cs" Link="Screens\ZoomScreen.cs" />
+		<Compile Include="..\..\MonoGameGumInCode\MonoGameGumInCode\Screens\LayerCameraSettingsScreen.cs" Link="Screens\LayerCameraSettingsScreen.cs" />
+	</ItemGroup>
+
+	<!-- The Gum project and textures SilkNetGumSample loads. -->
+	<ItemGroup>
+		<None Include="..\..\SilkNetGum\SilkNetGumSample\Content\GumProject\**\*.*" Link="Content\GumProject\%(RecursiveDir)%(Filename)%(Extension)">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<!-- Shader files for RenderTargetShaderScreen, the same ones SilkNetGumSample copies. -->
+		<None Include="..\..\SilkNetGum\SilkNetGumSample\resources\**\*.*" Link="resources\%(RecursiveDir)%(Filename)%(Extension)">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="..\..\..\Gum\Content\Shaders\Outline.slang" Link="Content\GumProject\resources\Outline.slang">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+	</ItemGroup>
+
+</Project>

@@ -541,7 +541,7 @@ public class NewCommandTests : BaseTestClass
 
         result.ExitCode.ShouldBe(2);
         result.StandardError.Trim().ShouldEndWith(
-            "Unknown platform 'nope'. Valid values are: monogame, kni, kniskia, raylib, stride, silknet.");
+            "Unknown platform 'nope'. Valid values are: monogame, kni, kniskia, raylib, stride, silknet, brutal.");
     }
 
     [Fact]

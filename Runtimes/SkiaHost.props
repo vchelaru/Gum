@@ -2,7 +2,7 @@
   <!--
     Compile symbols shared by SkiaGum and the hosts built on it. SKIA selects the Skia render
     aliases (Texture2D=SKBitmap, Color=SKColor) in the shared source. A host sets
-    GumSkiaHostSymbol (SILK, STRIDE, UNITY) before importing this to add the symbol that selects
+    GumSkiaHostSymbol (SILK, STRIDE, UNITY, BRUTAL) before importing this to add the symbol that selects
     its own input host; SkiaGum leaves it empty.
   -->
   <PropertyGroup>

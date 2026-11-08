@@ -930,6 +930,12 @@ jobs:
         if: runner.os != 'Windows' && steps.plan.outputs.active == 'true' && (github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true')
         run: dotnet test "Tests/StrideGum.Tests" --configuration Release --no-build --logger "trx" --results-directory "TestResults"
 
+      # BrutalGum.Tests is the Gum.Brutal runtime (SkiaGum renderer + BRUTAL GLFW input host). Gum logic
+      # against an in-memory test canvas and a fake window, so it runs headless.
+      - name: BrutalGum.Tests
+        if: runner.os != 'Windows' && steps.plan.outputs.active == 'true' && (github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true')
+        run: dotnet test "Tests/BrutalGum.Tests" --configuration Release --no-build --logger "trx" --results-directory "TestResults"
+
       # SkiaGum-backed SVG export service (gumcli svg / tool File ▸ Export). Drives
       # SkiaGumSvgExportService end-to-end via SKSvgCanvas — CPU-only, fully headless
       # like SkiaGum.Tests above, so it blocks on failure too. #3259

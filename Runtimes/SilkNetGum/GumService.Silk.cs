@@ -90,8 +90,20 @@ public partial class GumService : GumServiceSkiaInteractiveBase, IGumService
         InitializeWithDevices(canvas, width, height, gumProjectFile, () =>
         {
             _inputContext = inputContext;
-            Clipboard = new SilkGumClipboard(inputContext);
+            Clipboard = CreateClipboard(inputContext);
         });
     }
+
+    // The first keyboard's ClipboardText is the OS clipboard on every desktop Silk backend; with no
+    // keyboard attached, get returns null and set does nothing.
+    internal static IGumClipboard CreateClipboard(IInputContext inputContext) => new DelegateClipboard(
+        () => inputContext.Keyboards.Count > 0 ? inputContext.Keyboards[0].ClipboardText : null,
+        text =>
+        {
+            if (inputContext.Keyboards.Count > 0)
+            {
+                inputContext.Keyboards[0].ClipboardText = text;
+            }
+        });
 }
 #endif

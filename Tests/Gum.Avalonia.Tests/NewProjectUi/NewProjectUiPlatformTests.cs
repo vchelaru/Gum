@@ -36,13 +36,13 @@ public class NewProjectUiPlatformTests
     }
 
     [AvaloniaFact]
-    public void PlatformDropDown_ListsTheSixPlatformsInOrder_AndStartsOnMonoGame()
+    public void PlatformDropDown_ListsTheSevenPlatformsInOrder_AndStartsOnMonoGame()
     {
         using NewProjectUiFixture fixture = new NewProjectUiFixture();
         fixture.Dialog.SetChecked(NewProjectUiText.CreateCodeProject, true);
 
-        fixture.Dialog.PlatformBox.ItemCount.ShouldBe(6);
-        fixture.ViewModel.Platforms.Select(option => option.Name).ShouldBe(new[] { "monogame", "kni", "kniskia", "raylib", "stride", "silknet" });
+        fixture.Dialog.PlatformBox.ItemCount.ShouldBe(7);
+        fixture.ViewModel.Platforms.Select(option => option.Name).ShouldBe(new[] { "monogame", "kni", "kniskia", "raylib", "stride", "silknet", "brutal" });
         fixture.Dialog.PlatformBox.SelectedValue.ShouldBe("monogame");
         fixture.Dialog.PlatformBox.IsEffectivelyVisible.ShouldBeTrue();
     }

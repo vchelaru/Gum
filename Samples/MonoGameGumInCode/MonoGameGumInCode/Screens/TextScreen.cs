@@ -219,7 +219,7 @@ internal class TextScreen : FrameworkElement
     private const string TypewriterParagraph =
         "This paragraph types itself out one letter at a time. Press any key to start the reveal over from the beginning.";
     private const double TypewriterLettersPerSecond = 18;
-    private TextRuntime _typewriterText;
+    private TextRuntime _typewriterText = null!;
     private double _typewriterElapsedSeconds;
 
     /// <summary>
@@ -228,7 +228,7 @@ internal class TextScreen : FrameworkElement
     /// </summary>
     public void Tick(double elapsedSeconds)
     {
-        if (FormsUtilities.Keyboard.KeysTyped.Any())
+        if (FormsUtilities.Keyboard?.KeysTyped.Any() == true)
         {
             _typewriterElapsedSeconds = 0;
         }

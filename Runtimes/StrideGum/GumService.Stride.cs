@@ -175,7 +175,7 @@ public partial class GumService : GumServiceSkiaInteractiveBase, IGumService
         InitializeWithDevices(canvas, width, height, gumProjectFile, () =>
         {
             _inputManager = inputManager;
-            Clipboard = new StrideGumClipboard();
+            Clipboard = new global::Gum.Clipboard.MonoGameGumClipboard();
         });
     }
 

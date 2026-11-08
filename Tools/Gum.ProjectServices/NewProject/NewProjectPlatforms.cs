@@ -20,7 +20,8 @@ public static class NewProjectPlatforms
         ("raylib", HostPlatform.Raylib),
         ("stride", HostPlatform.Stride),
         ("silknet", HostPlatform.SilkNet),
-        ("silk.net", HostPlatform.SilkNet)
+        ("silk.net", HostPlatform.SilkNet),
+        ("brutal", HostPlatform.Brutal)
     };
 
     /// <summary>One name per platform, in display order.</summary>

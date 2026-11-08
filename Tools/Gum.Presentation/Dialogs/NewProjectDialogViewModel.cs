@@ -48,6 +48,7 @@ public class NewProjectDialogViewModel : DialogViewModel
         ["stride"] = NewProjectDialogText.StridePlatformNote,
         [KniSkiaPlatform] = NewProjectDialogText.KniSkiaPlatformNote,
         ["silknet"] = NewProjectDialogText.SilkNetPlatformNote,
+        ["brutal"] = NewProjectDialogText.BrutalPlatformNote,
     };
 
     private readonly INewProjectService _service;
@@ -1419,6 +1420,7 @@ public class NewProjectDialogViewModel : DialogViewModel
         "raylib" => "raylib",
         "stride" => "Stride (Windows only)",
         "silknet" => "Silk.NET",
+        "brutal" => "BRUTAL",
         _ => name,
     };
 }

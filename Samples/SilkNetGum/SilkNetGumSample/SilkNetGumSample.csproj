@@ -68,6 +68,8 @@
 	  <Compile Include="..\..\MonoGameGumInCode\MonoGameGumInCode\Screens\LayerCameraSettingsScreen.cs" Link="Screens\LayerCameraSettingsScreen.cs" />
 	  <!-- Sprite gallery shared from MonoGameGumInCode, gated #if SKIA (#6054). -->
 	  <Compile Include="..\..\MonoGameGumInCode\MonoGameGumInCode\Screens\SpriteScreen.cs" Link="Screens\SpriteScreen.cs" />
+	  <!-- Tab bar and screen switching shared with BrutalGumSample. -->
+	  <Compile Include="../../Shared/GumGallery.cs" Link="GumGallery.cs" />
 	  <!-- SVG gallery shared from MonoGameGumInCode, gated #if SKIA (#4506). Deliberately NOT
 	       linked into Samples/raylib/GumTest.csproj — raylib has no SVG support (#4505). -->
 	  <Compile Include="..\..\MonoGameGumInCode\MonoGameGumInCode\Screens\SvgScreen.cs" Link="Screens\SvgScreen.cs" />

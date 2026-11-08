@@ -22,6 +22,7 @@ headless Tests/SilkNetGum.Tests
 headless Tests/KniSkiaGum.Tests
 headless Tests/UnityGum.Tests
 headless Tests/StrideGum.Tests
+headless Tests/BrutalGum.Tests
 # Gum.Stride drawing on a window-less Stride device (WARP, the software D3D adapter, so every runner has one); one project per graphics API.
 headless Tests/StrideGum.GpuTests.D3D11
 headless Tests/StrideGum.GpuTests.D3D12

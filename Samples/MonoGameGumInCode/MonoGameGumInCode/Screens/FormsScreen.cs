@@ -85,7 +85,7 @@ internal class FormsScreen : FrameworkElement
         comboBox.Y = gap;
         for (int i = 0; i < 10; i++)
         {
-            comboBox.Items.Add("Item " + i);
+            comboBox.Items?.Add("Item " + i);
         }
         stackPanel.AddChild(comboBox);
 

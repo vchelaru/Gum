@@ -70,6 +70,7 @@ public static class NewProjectDialogText
     public const string StridePlatformNote = "Runs on Windows only; renders with Skia on the GPU.";
     public const string KniSkiaPlatformNote = "Gum.KniSkia is not on NuGet yet, so the local Gum source is required.";
     public const string SilkNetPlatformNote = "Needs a graphics driver with OpenGL 3.3.";
+    public const string BrutalPlatformNote = "Windows and Linux; needs a Vulkan 1.3 driver. Draws into a Vulkan image that your renderer samples.";
 
     public const string NoDemoCommandNote = "gumcli new has no option to leave out DemoScreenGum yet.";
     public const string ExtensionPicksFormatNote = "The extension in the path picks the file format.";

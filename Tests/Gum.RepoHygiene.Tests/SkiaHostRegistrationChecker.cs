@@ -135,6 +135,11 @@ internal static class SkiaHostRegistrationChecker
             // The product is "Silk.NET" (with a dot), so its page is silk.net.md, not silknet.md.
             return ("silk.net.md", "Silk.NET");
         }
+        if (host == "BrutalGum")
+        {
+            // BRUTAL is an all-caps product name, not a word.
+            return ("brutal.md", "BRUTAL");
+        }
         string stem = host.EndsWith("Gum") ? host.Substring(0, host.Length - 3) : host;
         return (stem.ToLowerInvariant() + ".md", stem);
     }
