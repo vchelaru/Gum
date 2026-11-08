@@ -22,6 +22,9 @@ headless Tests/SilkNetGum.Tests
 headless Tests/KniSkiaGum.Tests
 headless Tests/UnityGum.Tests
 headless Tests/StrideGum.Tests
+# Gum.Stride drawing on a window-less Stride device (WARP, the software D3D adapter, so every runner has one); one project per graphics API.
+headless Tests/StrideGum.GpuTests.D3D11
+headless Tests/StrideGum.GpuTests.D3D12
 headless Tests/Gum.ProjectServices.SkiaGum.Tests
 # Real DirectX 11 devices on a window that is never shown; skips itself where the runner has no DirectX 11 adapter.
 headless Tests/GumShadowDusk.Tests.MonoGameWindowsDX
