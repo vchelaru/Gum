@@ -10,7 +10,7 @@ namespace UnityGum.Tests;
 
 /// <summary>
 /// Assembly-wide bootstrap. Initializes the Unity <see cref="GumService"/> once against the shared
-/// in-memory raster <see cref="SKSurface"/>, the same canvas the Unity package's CPU fallback draws into.
+/// in-memory raster <see cref="SKSurface"/>. Tests have no GPU; the package itself draws only on the GPU.
 /// </summary>
 public class TestAssemblyInitialize : SkiaHostTestFramework
 {
