@@ -87,12 +87,11 @@ public partial class GumService : GumServiceSkiaInteractiveBase, IGumService
     /// <param name="gumProjectFile">An optional .gumx project file to load.</param>
     public void Initialize(SKCanvas canvas, IInputContext inputContext, int width, int height, string? gumProjectFile = null)
     {
-        // Stored before base.Initialize, which calls FormsUtilities.InitializeDefaults, which
-        // dispatches back to this instance's CreateCursor/CreateKeyboard overrides above.
-        _inputContext = inputContext;
-        Clipboard = new SilkGumClipboard(inputContext);
-
-        base.Initialize(canvas, width, height, gumProjectFile);
+        InitializeWithDevices(canvas, width, height, gumProjectFile, () =>
+        {
+            _inputContext = inputContext;
+            Clipboard = new SilkGumClipboard(inputContext);
+        });
     }
 }
 #endif

@@ -164,12 +164,11 @@ public partial class GumService : GumServiceSkiaInteractiveBase, IGumService
     /// </summary>
     internal void InitializeCore(SKCanvas canvas, InputManager inputManager, int width, int height, string? gumProjectFile)
     {
-        // Stored before base.Initialize, which calls FormsUtilities.InitializeDefaults, which
-        // dispatches back to this instance's CreateCursor/CreateKeyboard overrides above.
-        _inputManager = inputManager;
-        Clipboard = new StrideGumClipboard();
-
-        base.Initialize(canvas, width, height, gumProjectFile);
+        InitializeWithDevices(canvas, width, height, gumProjectFile, () =>
+        {
+            _inputManager = inputManager;
+            Clipboard = new StrideGumClipboard();
+        });
     }
 
     private void RecreateSurface(int width, int height)

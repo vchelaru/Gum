@@ -209,16 +209,12 @@ public partial class GumService : GumServiceSkiaInteractiveBase, IGumService
         XnaGame? game, XnaGameWindow? window, SKCanvas? canvas, int width, int height, string? gumProjectFile,
         DefaultVisualsVersion visualsVersion = DefaultVisualsVersion.Newest)
     {
-        // Before any state changes, so an unsupported version leaves the service uninitialized.
-        ResolveVisualsVersion(visualsVersion);
-
-        // Stored before InitializeCore, which calls FormsUtilities.InitializeDefaults, which
-        // dispatches back to this instance's CreateCursor/CreateKeyboard overrides above.
-        _game = game;
-        _window = window;
-        Clipboard = new global::Gum.Clipboard.MonoGameGumClipboard();
-
-        InitializeCore(canvas, width, height, gumProjectFile, visualsVersion);
+        InitializeWithDevices(canvas, width, height, gumProjectFile, () =>
+        {
+            _game = game;
+            _window = window;
+            Clipboard = new global::Gum.Clipboard.MonoGameGumClipboard();
+        }, visualsVersion);
 
         return string.IsNullOrEmpty(gumProjectFile) ? null : ObjectFinder.Self.GumProjectSave;
     }

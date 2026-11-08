@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using SkiaSharp;
 using Gum.Forms;
 using Gum.Wireframe;
 using RenderingLibrary;
@@ -10,11 +12,36 @@ namespace Gum;
 /// input pump to <see cref="GumServiceSkiaBase"/>, which stays render-only for the WPF, MAUI and
 /// bring-your-own-canvas hosts. A host derives from this, imports <c>Runtimes/SkiaInputHost.props</c>
 /// (which adds the typed Default, Cursor and Keyboard accessors and owns the cursor and keyboard),
-/// implements its <c>CreateHostCursor</c> and <c>CreateHostKeyboard</c> partial methods, and overrides
+/// implements its <c>CreateHostCursor</c> and <c>CreateHostKeyboard</c> partial methods, initializes
+/// through <see cref="InitializeWithDevices"/> (which attaches its devices before they are read), and overrides
 /// <see cref="IGumService.ApplyGamePadState"/>.
 /// </summary>
 public abstract class GumServiceSkiaInteractiveBase : GumServiceSkiaBase
 {
+    /// <summary>
+    /// The Initialize body for a host that reads input devices. <paramref name="attachDevices"/> is
+    /// required and runs before the cursor and keyboard are created, so a host stores the devices it
+    /// was given (and assigns <see cref="GumServiceSkiaBase.Clipboard"/>) there and cannot get the
+    /// order wrong. Its <c>CreateHostCursor</c> and <c>CreateHostKeyboard</c> then read that state.
+    /// </summary>
+    /// <param name="canvas">The canvas to draw into, or null to supply it on the first draw.</param>
+    /// <param name="width">The width to use for the root container and canvas coordinate space.</param>
+    /// <param name="height">The height to use for the root container and canvas coordinate space.</param>
+    /// <param name="gumProjectFile">An optional .gumx project file to load.</param>
+    /// <param name="attachDevices">Stores the host's device state and assigns the clipboard.</param>
+    /// <param name="visualsVersion">The default Forms visuals to register.</param>
+    protected void InitializeWithDevices(
+        SKCanvas? canvas, int width, int height, string? gumProjectFile, Action attachDevices,
+        DefaultVisualsVersion visualsVersion = DefaultVisualsVersion.Newest)
+    {
+        if (attachDevices == null)
+        {
+            throw new ArgumentNullException(nameof(attachDevices));
+        }
+
+        InitializeCore(canvas, width, height, gumProjectFile, visualsVersion, attachDevices);
+    }
+
     /// <summary>
     /// Per-frame tick. Call once per frame, before <see cref="GumServiceSkiaBase.Draw()"/>, with total
     /// elapsed seconds since startup. Runs the base's deferred-queue and animation tick, then pumps
