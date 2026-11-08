@@ -55,8 +55,11 @@ touched, never by a dedicated sweep.
 | 4 | Engine-surface lifetime | Stride creates and recreates its SGR render target on resize and drives a clock. KniSkia gets the same from a sample's `SkiaRenderTarget2D`. Unity does its own. Once the CPU paths are gone, what remains duplicated across hosts (resize, per-frame Begin/Update/Draw/End) is the shared piece to extract. |
 | 5 | Gamepad mapping | `GamePadDriver` in Silk, Stride and KNI differs only by the device read and the Y-axis flip. Low value: the field mapping is the work. |
 | 6 | csproj boilerplate | Long repeated comments and a per-package collision-guard targets file. Cosmetic. |
+| 7 | Canvas capture and target holder | Every host that owns an SGR target creates it, swaps `SystemManagers.Canvas` when the target is recreated on resize, and captures the canvas, which is readable only between `Begin` and `End` (Stride does a throwaway `Begin`/`EndWithoutDrawing`). Unity and Stride each do this; a shared holder would serve the next engine. |
+| 8 | SGR facade per engine | The three Stride SGR packages declare identical type names with no shared interface, so StrideGum carries extern aliases plus a wrapper per package (about 150 lines). An interface or facade in SGR would remove them. Work in the SGR repo. |
+| 9 | Off-screen GPU smoke helper | No host can render a few frames off-screen to check pixels; Stride is "built, not run". Unity has a player `--smoke-test`. A helper that renders N frames and reads pixels would make GPU hosts verifiable. |
 
-Order of value, as of the last review: 1, 2 and 4 first; 3 next; 5 and 6 only if touched anyway.
+Order of value, as of the last review: 1, 2, 4 and 7 first; 9 and 3 next; 8 when SGR can take it; 5 and 6 only if touched anyway.
 
 ## Current hosts
 
@@ -67,8 +70,9 @@ Order of value, as of the last review: 1, 2 and 4 first; 3 next; 5 and 6 only if
 | `UnityGum` | SGR Unity package | Push model: the host pushes input each frame (`GumRenderer`, `GumInput`). Experimental, Unity 6+. |
 | `SilkNetGum` | Its own GL `GRContext` | See "Silk.NET" below. |
 
-The CPU paths that `StrideGum` and `UnityGum` once carried are being removed; do not model a new host on
-them if they are still in the tree.
+`StrideGum` and `UnityGum` no longer have a CPU path. An unsupported graphics API throws a
+`NotSupportedException` that names it; plain `net10.0` Stride supports Vulkan only. Stride has been built
+but not run on a GPU; Unity's player smoke test passes on D3D11.
 
 ### Silk.NET
 
@@ -100,5 +104,9 @@ same change.
 ## Log
 
 - 2026-11-08: Document created after a review of the Silk, Stride, KniSkia and Unity hosts and the SGR repo.
-  Recorded the GPU-only rule and the candidates above. Stride and Unity CPU-path removal started in separate
-  PRs.
+  Recorded the GPU-only rule and the candidates above.
+- 2026-11-08: Removed the CPU path from `UnityGum` (#7738) and `StrideGum` (#7739). Stride now uses SGR
+  0.20.0-beta for D3D11, D3D12 and Vulkan; the `gumcli new` Stride template targets `net10.0-windows7.0`.
+  Duplication removed: both CPU surface-and-upload paths. Added candidates 7 to 9 from the Stride and Unity
+  agents' reports. A macOS CI failure in `NewProjectRecommendedPackagesTests` (real `dotnet add package`,
+  empty output) passed on the next commit; the test now reports the exit code and error when it recurs.
