@@ -12,8 +12,8 @@ internal static class SkiaHostRegistrationChecker
 
     private const string DocsFolder = "docs/code/getting-started/setup/adding-initializing-gum";
 
-    // KniSkiaGum is the Skia renderer inside a KNI app and has no page of its own; it is documented
-    // under the KNI pages. Every other host needs a docs page, card, SUMMARY entry and README row.
+    // KniSkiaGum currently has no docs page, card, SUMMARY entry or README row (a known docs gap), so it is
+    // exempt until they are written; remove it from this set then. Every other host needs all four.
     private static readonly HashSet<string> DocsExempt = new() { "KniSkiaGum" };
 
     public static IReadOnlyList<string> DiscoverHosts(string repoRoot)
@@ -132,6 +132,7 @@ internal static class SkiaHostRegistrationChecker
     {
         if (host == "SilkNetGum")
         {
+            // The product is "Silk.NET" (with a dot), so its page is silk.net.md, not silknet.md.
             return ("silk.net.md", "Silk.NET");
         }
         string stem = host.EndsWith("Gum") ? host.Substring(0, host.Length - 3) : host;
