@@ -9,8 +9,37 @@ namespace UnityGum.Tests;
 /// The pushed cursor reads nothing itself: the Unity host sets its state each frame and
 /// <c>Activity</c> latches it.
 /// </summary>
-public class CursorUnityTests
+public class CursorUnityTests : SkiaHostTests.CursorTestsBase
 {
+    private sealed class UnityCursorRig : SkiaHostTests.IHostCursorRig
+    {
+        private readonly Cursor _cursor = new Cursor();
+        private float _x;
+        private float _y;
+        private bool _leftDown;
+
+        public Gum.Wireframe.ICursor Cursor => _cursor;
+
+        public void SetPosition(int x, int y)
+        {
+            _x = x;
+            _y = y;
+            Push();
+        }
+
+        public void SetPrimaryDown(bool isDown)
+        {
+            _leftDown = isDown;
+            Push();
+        }
+
+        public void Scroll(int notches) => _cursor.AddScrollNotches(notches);
+
+        private void Push() => _cursor.SetMouseState(_x, _y, leftDown: _leftDown, middleDown: false, rightDown: false);
+    }
+
+    protected override SkiaHostTests.IHostCursorRig CreateRig() => new UnityCursorRig();
+
     [Fact]
     public void Activity_ReadsPushedMouseState()
     {
