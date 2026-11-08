@@ -19,21 +19,24 @@ public abstract class ClipboardTestsBase
     {
         IGumClipboard clipboard = CreateClipboard();
 
-        clipboard.SetText("round trip text");
+        string text = "round trip " + Guid.NewGuid();
+        clipboard.SetText(text);
 
-        clipboard.GetText(null).ShouldBe("round trip text");
+        clipboard.GetText(null).ShouldBe(text);
     }
 
     [Fact]
     public void GetText_IgnoresCallback_WhenClipboardResolvesSynchronously()
     {
         IGumClipboard clipboard = CreateClipboard();
-        clipboard.SetText("synchronous");
+        clipboard.SetText("stale sentinel");
+        string expected = "synchronous " + Guid.NewGuid();
+        clipboard.SetText(expected);
         bool callbackInvoked = false;
 
         string? result = clipboard.GetText(() => callbackInvoked = true);
 
-        result.ShouldBe("synchronous");
+        result.ShouldBe(expected);
         callbackInvoked.ShouldBeFalse();
     }
 }
