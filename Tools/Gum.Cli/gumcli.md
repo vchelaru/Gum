@@ -17,7 +17,7 @@ There are two modes:
 |---|---|---|
 | `path` | `GumProject` | Where to create the project. A name creates `<name>/<name>.gumj`; a path ending in `.gumj` or `.gumx` is used as is. With `--platform` it names the project folder instead. |
 | `--template`, `-t` | `forms` | `forms` (all Forms controls, behaviors and assets) or `empty` (standard elements only). |
-| `--platform`, `-p` | none | `monogame`, `kni`, `kniskia` (KNI drawn by Skia), `raylib`, `stride` (Windows only) or `silknet`. Creates a full game project (not just a Gum project) that references Gum through NuGet, with the Gum project inside it. Leave it out for just a Gum project. |
+| `--platform`, `-p` | none | `monogame`, `kni`, `kniskia` (KNI drawn by Skia), `raylib`, `stride` (Windows only), `silknet` or `brutal` (Windows and Linux, Vulkan 1.3). Creates a full game project (not just a Gum project) that references Gum through NuGet, with the Gum project inside it. Leave it out for just a Gum project. |
 | `--no-restore` | off | With `--platform`, skip the `dotnet restore` that runs after creation. |
 | `--source-linked` | off | With `--platform`, reference the platform's runtime project in the Gum checkout instead of the NuGet package. The checkout is the one this gumcli was built from, or the one the current folder is in. For testing local Gum changes. |
 
@@ -39,6 +39,7 @@ gumcli new MyGame -p kniskia              # KNI DesktopGL, Gum drawn by Skia
 gumcli new MyGame -p raylib               # raylib-cs
 gumcli new MyGame -p stride               # Stride 3D, Windows only
 gumcli new MyGame -p silknet              # Silk.NET, Windows/macOS/Linux
+gumcli new MyGame -p brutal               # BRUTAL, Windows and Linux (Vulkan 1.3)
 gumcli new MyGame -p monogame -t empty    # no Forms controls in the Gum project
 gumcli new MyGame -p monogame --no-restore
 ```
@@ -55,7 +56,7 @@ MyGame/
     ProjectCodeSettings.codsj    already points at MyGame.csproj
 ```
 
-KNI is the same. raylib, Stride and Silk.NET have no `Game1.cs`; everything is in `Program.cs`. The Stride project uses Stride's Windows host package, so it runs only on Windows, and it renders with Skia on the GPU. The project targets `net10.0-windows7.0`, which Direct3D11 and Direct3D12 require.
+KNI is the same. raylib, Stride, Silk.NET and BRUTAL have no `Game1.cs`; everything is in `Program.cs`. The Stride project uses Stride's Windows host package, so it runs only on Windows, and it renders with Skia on the GPU. The project targets `net10.0-windows7.0`, which Direct3D11 and Direct3D12 require.
 
 Then run it with `dotnet run --project MyGame/MyGame.csproj`. Add screens in the Gum tool by opening `MyGame/Content/GumProject/GumProject.gumj`, and generate code with `gumcli codegen`.
 

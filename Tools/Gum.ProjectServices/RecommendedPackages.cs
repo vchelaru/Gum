@@ -37,6 +37,8 @@ public static class RecommendedPackages
         HostPlatform.SilkNet => new[] { "Gum.SkiaSharp.ShadowDusk", Expressions },
         // stride.md: no Shapes (Skia-based).
         HostPlatform.Stride => new[] { "Gum.SkiaSharp.ShadowDusk", Expressions },
+        // brutal.md: no Shapes (Skia-based). The BRUTAL packages are already in the host template.
+        HostPlatform.Brutal => new[] { "Gum.SkiaSharp.ShadowDusk", Expressions },
         // No setup page; the platform is always source-linked, where NuGet add-ons would pull in a second Gum.
         HostPlatform.KniSkia => Array.Empty<string>(),
         _ => Array.Empty<string>()
