@@ -9,7 +9,7 @@ SGR is a separate repo at `../SkiaGameRendering` (`vchelaru/SkiaGameRendering`, 
 
 ## Hard rule: GPU only
 
-SGR never uses CPU rasterization or CPU readback, for any backend or failure. When a backend can't run somewhere, the options are to fix it in SGR, narrow the supported range, or hold the release. A Gum host never adds a CPU `SKSurface` plus upload path for an engine. The existing CPU paths (`_skSurface` in `Runtimes/StrideGum/GumService.Stride.cs`, `_cpuSurface` in `Unity/com.vchelaru.gum/Runtime/GumRenderer.cs`) are not a template to copy.
+SGR never uses CPU rasterization or CPU readback, for any backend or failure. When a backend can't run somewhere, the options are to fix it in SGR, narrow the supported range, or hold the release. A Gum host never adds a CPU `SKSurface` plus upload path for an engine. No Gum Skia host has a CPU path; an unsupported graphics API throws `NotSupportedException` naming it (`Runtimes/StrideGum/Gpu/StrideGpuBackend.cs`, `GumRenderer` in the Unity package).
 
 ## What it offers
 
@@ -25,5 +25,6 @@ Two draw types per engine: `SkiaRenderTarget2D` (`Begin()`, `Canvas`, `End()`, f
 
 - A new engine host starts by finding its row in SGR's table. If the row is missing, the work is an SGR adapter first, not a Gum fallback.
 - SkiaSharp is one version across SGR and every Skia-family Gum project (`eng/Versions.props` there, `Runtimes/SkiaPackages.props` here). `SkiaGameRendering.Stride.D3D11` pins it exactly. Bump order is in [gum-cross-platform-unification](../gum-cross-platform-unification/SKILL.md).
-- A Stride SGR package ships only its own target framework (D3D11 is `net10.0-windows7.0`), so a host that wants all three APIs references them per target framework.
+- The three Stride SGR packages declare identical type names, so `Runtimes/StrideGum` separates them with extern aliases and one wrapper per package (`Gpu/`). D3D11 and D3D12 exist only in `net10.0-windows7.0`; plain `net10.0` gets Vulkan only.
+- SGR's `Begin()` clears the canvas each frame on D3D11, D3D12 and Vulkan, and the canvas is readable only between `Begin` and `End`.
 - Check what SGR supports now rather than trusting a Gum csproj or comment about it; the Stride and Unity hosts' comments about which backends have a GPU path can lag SGR.
