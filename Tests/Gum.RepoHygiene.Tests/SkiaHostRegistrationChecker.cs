@@ -12,8 +12,8 @@ internal static class SkiaHostRegistrationChecker
 
     private const string DocsFolder = "docs/code/getting-started/setup/adding-initializing-gum";
 
-    // KniSkiaGum currently has no docs page, card, SUMMARY entry or README row (a known docs gap), so it is
-    // exempt until they are written; remove it from this set then. Every other host needs all four.
+    // KniSkiaGum is deliberately kept out of the docs for now (no page, card, SUMMARY entry or README row), so it
+    // is exempt; remove it from this set when its docs are written. Every other host needs all four.
     private static readonly HashSet<string> DocsExempt = new() { "KniSkiaGum" };
 
     public static IReadOnlyList<string> DiscoverHosts(string repoRoot)
