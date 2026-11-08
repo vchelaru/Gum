@@ -2,10 +2,10 @@
 
 	<!--
 		Gum.Stride: a first-class Stride input host runtime that renders through SkiaGum, modeled
-		directly on SilkNetGum (issue #4600). Stride can host an SKCanvas: a CPU Skia surface
-		blitted into the composited frame each frame, see GumService.Initialize/GumSceneRenderer.
-		So this is cheap the same way SilkNetGum is: only an input adapter over Stride.Input, not a
-		from-scratch renderer (see ADR 0014-clarify-engine-scope-cost-to-integrate-not-owns-ui).
+		directly on SilkNetGum (issue #4600). Stride hosts an SKCanvas drawn on the GPU by
+		SkiaGameRendering (D3D11, D3D12 or Vulkan, see GumService.Initialize/GumSceneRenderer); there
+		is no CPU path. So this is cheap the same way SilkNetGum is: only an input adapter over
+		Stride.Input, not a from-scratch renderer (see ADR 0014-clarify-engine-scope-cost-to-integrate-not-owns-ui).
 
 		It ProjectReferences SkiaGum.csproj for the render/Forms source and GumServiceSkiaBase, the
 		same as SilkNetGum. What stays file-linked locally is only the input host half SkiaGum omits
@@ -28,16 +28,13 @@
 		     Stride.Engine) only ship net10.0(+platform)-targeted builds. A net10.0 project
 		     referencing the net8.0 GumCommon/SkiaGum is fine (same modern .NET family, no
 		     netstandard-style compat gap).
-		     Two TFMs (#4617): SkiaGameRendering.Stride.D3D11 (the zero-copy GPU path) only ships
-		     net10.0-windows7.0, so it's referenced only under that TFM below; non-Windows/other-API
-		     consumers still get a net10.0 build with the CPU raster-and-upload path. Clearing the
+		     Two TFMs (#4617): SkiaGameRendering.Stride.D3D11 and .D3D12 only ship
+		     net10.0-windows7.0, so they are referenced only under that TFM below; the plain net10.0
+		     build (Linux/macOS) supports Vulkan only (SkiaGameRendering.Stride.VK). Clearing the
 		     singular TargetFramework the import above set is required: the SDK only multi-targets off
 		     TargetFrameworks when TargetFramework is empty. -->
 		<TargetFramework></TargetFramework>
 		<TargetFrameworks>net10.0;net10.0-windows7.0</TargetFrameworks>
-		<!-- GumService.Stride.cs's texture upload does an unsafe pointer read off the Skia surface's
-		     pixel buffer (SKPixmap.GetPixels()). -->
-		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 	</PropertyGroup>
 
 	<PropertyGroup>
@@ -46,14 +43,14 @@
 
 	<Import Project="..\SkiaHost.props" />
 
-	<!-- Selects the zero-copy GPU path's source in GumService.Stride.cs (#4617), gated to the TFM
-	     that actually references SkiaGameRendering.Stride.D3D11 above. -->
+	<!-- Compiles the D3D11 and D3D12 targets under Gpu/, gated to the TFM that references those
+	     SkiaGameRendering packages below. -->
 	<PropertyGroup Condition="'$(TargetFramework)'=='net10.0-windows7.0'">
-		<DefineConstants>$(DefineConstants);STRIDE_GPU_ANGLE</DefineConstants>
+		<DefineConstants>$(DefineConstants);STRIDE_GPU_WINDOWS</DefineConstants>
 		<!-- TargetPlatformIdentifier/Version/SupportedOSPlatformVersion all correctly resolve to
 		     Windows/7.0 for this inner build (verified via -getProperty), which per CA1416's own docs
 		     should suppress it; the analyzer still fires on every windows7.0-only API (Keys,
-		     SkiaStrideRenderTarget2D) here, a known limitation with multi-targeted (TargetFrameworks,
+		     SkiaGameRendering's render targets) here, a known limitation with multi-targeted (TargetFrameworks,
 		     not TargetFramework) projects mixing a platform-neutral and a platform-specific TFM. Not
 		     an actual platform risk: this whole TFM only builds/ships for Windows. -->
 		<NoWarn>$(NoWarn);CA1416</NoWarn>
@@ -67,8 +64,8 @@
 	<!-- ===== Input host half (the stack SkiaGum omits because it is render-only) ===== -->
 	<Import Project="..\SkiaInputHost.props" />
 
-	<!-- SkiaSharp 4.153.1 is pinned in SkiaPackages.props because SkiaGameRendering.Stride.D3D11 (below,
-	     windows7.0 only) pins it exactly, and NuGet flags anything lower as a downgrade. -->
+	<!-- SkiaSharp 4.153.1 is pinned in SkiaPackages.props because the SkiaGameRendering.Stride.*
+	     packages (below) pin it exactly, and NuGet flags anything lower as a downgrade. -->
 	<Import Project="..\SkiaPackages.props" />
 
 	<ItemGroup>
@@ -81,13 +78,34 @@
 		<PackageReference Include="TextCopy" Version="6.2.1" />
 	</ItemGroup>
 
-	<!-- Zero-copy GPU path for the D3D11 backend (#4617): Skia renders straight into the Stride
-	     Texture via ANGLE, no CPU rasterize-and-upload. Only ships net10.0-windows7.0, so it's scoped
-	     to that TFM; net10.0 consumers (Linux/macOS, or Windows on Vulkan/D3D12) keep the CPU
-	     SKSurface path below unconditionally. -->
-	<ItemGroup Condition="'$(TargetFramework)'=='net10.0-windows7.0'">
-		<PackageReference Include="SkiaGameRendering.Stride.D3D11" Version="0.18.0-beta" />
+	<!-- GPU rendering through SkiaGameRendering, one package per Stride graphics API; Skia draws
+	     straight into a Stride Texture, no CPU rasterize-and-upload. D3D11 and D3D12 only ship
+	     net10.0-windows7.0, so they are scoped to that TFM; Vulkan ships net10.0 and goes to both.
+	     0.20.0-beta is the latest published and pins SkiaSharp [4.153.1], matching SkiaPackages.props. -->
+	<ItemGroup>
+		<PackageReference Include="SkiaGameRendering.Stride.VK" Version="0.20.0-beta" />
 	</ItemGroup>
+	<ItemGroup Condition="'$(TargetFramework)'=='net10.0-windows7.0'">
+		<PackageReference Include="SkiaGameRendering.Stride.D3D11" Version="0.20.0-beta" />
+		<PackageReference Include="SkiaGameRendering.Stride.D3D12" Version="0.20.0-beta" />
+	</ItemGroup>
+
+	<!-- All three packages declare the same SkiaGameRendering.SkiaRenderTarget2D (and SkiaRenderer,
+	     ...) with no shared interface, so each gets an extern alias; Gpu/Stride*Target.cs wraps each
+	     behind IStrideSkiaTarget. -->
+	<Target Name="AliasSkiaGameRenderingStride" BeforeTargets="FindReferenceAssembliesForReferences;ResolveReferences">
+		<ItemGroup>
+			<ReferencePath Condition="'%(FileName)' == 'SkiaGameRendering.Stride.D3D11'">
+				<Aliases>SgrD3D11</Aliases>
+			</ReferencePath>
+			<ReferencePath Condition="'%(FileName)' == 'SkiaGameRendering.Stride.D3D12'">
+				<Aliases>SgrD3D12</Aliases>
+			</ReferencePath>
+			<ReferencePath Condition="'%(FileName)' == 'SkiaGameRendering.Stride.VK'">
+				<Aliases>SgrVulkan</Aliases>
+			</ReferencePath>
+		</ItemGroup>
+	</Target>
 
 	<ItemGroup>
 		<ProjectReference Include="..\..\GumCommon\GumCommon.csproj" />
