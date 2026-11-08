@@ -26,5 +26,6 @@ Two draw types per engine: `SkiaRenderTarget2D` (`Begin()`, `Canvas`, `End()`, f
 - A new engine host starts by finding its row in SGR's table. If the row is missing, the work is an SGR adapter first, not a Gum fallback.
 - SkiaSharp is one version across SGR and every Skia-family Gum project (`eng/Versions.props` there, `Runtimes/SkiaPackages.props` here). `SkiaGameRendering.Stride.D3D11` pins it exactly. Bump order is in [gum-cross-platform-unification](../gum-cross-platform-unification/SKILL.md).
 - The three Stride SGR packages declare identical type names, so `Runtimes/StrideGum` separates them with extern aliases and one wrapper per package (`Gpu/`). D3D11 and D3D12 exist only in `net10.0-windows7.0`; plain `net10.0` gets Vulkan only.
+- A host that owns an SGR target uses `Runtimes/SkiaGum/Helpers/SkiaTargetHolder.cs`: implement `ISkiaHostTarget` on a wrapper around the engine's `SkiaRenderTarget2D` and pass a create delegate. Do not write a fresh create/resize/canvas-capture block.
 - SGR's `Begin()` clears the canvas each frame on D3D11, D3D12 and Vulkan, and the canvas is readable only between `Begin` and `End`.
 - Check what SGR supports now rather than trusting a Gum csproj or comment about it; the Stride and Unity hosts' comments about which backends have a GPU path can lag SGR.
