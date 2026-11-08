@@ -18,10 +18,7 @@ public class PlatformProjectScaffolder : IPlatformProjectScaffolder
 
     // Each is the assembly name of a Gum runtime package. A host project with the same name writes a
     // same-named DLL over the runtime's copy in bin/ and fails at runtime with no build warning.
-    private static readonly string[] ReservedProjectNames =
-    {
-        "GumCommon", "MonoGameGum", "KniGum", "FnaGum", "RaylibGum", "SkiaGum", "SilkNetGum", "StrideGum", "KniSkiaGum"
-    };
+    private static readonly IReadOnlyList<string> ReservedProjectNames = HostPlatformInfo.ReservedAssemblyNames;
 
     private static readonly Regex ValidProjectName = new Regex("^[A-Za-z_][A-Za-z0-9_.-]*$");
     private static readonly Regex PackageReferenceInclude = new Regex("<PackageReference\\s+Include=\"([^\"]+)\"");
@@ -254,16 +251,11 @@ public class PlatformProjectScaffolder : IPlatformProjectScaffolder
     }
 
     // Each platform's Gum package, and the location of that package's project inside a Gum checkout.
-    private static (string PackageName, string RuntimeProjectPath) GetGumRuntime(HostPlatform platform) => platform switch
+    private static (string PackageName, string RuntimeProjectPath) GetGumRuntime(HostPlatform platform)
     {
-        HostPlatform.MonoGame => ("Gum.MonoGame", Path.Combine("MonoGameGum", "MonoGameGum.csproj")),
-        HostPlatform.Kni => ("Gum.KNI", Path.Combine("MonoGameGum", "KniGum", "KniGum.csproj")),
-        HostPlatform.Raylib => ("Gum.raylib", Path.Combine("Runtimes", "RaylibGum", "RaylibGum.csproj")),
-        HostPlatform.Stride => ("Gum.Stride", Path.Combine("Runtimes", "StrideGum", "StrideGum.csproj")),
-        HostPlatform.SilkNet => ("Gum.SilkNet", Path.Combine("Runtimes", "SilkNetGum", "SilkNetGum.csproj")),
-        HostPlatform.KniSkia => ("Gum.KniSkia", Path.Combine("Runtimes", "KniSkiaGum", "KniSkiaGum.csproj")),
-        _ => throw new ArgumentOutOfRangeException(nameof(platform), platform, null)
-    };
+        HostPlatformInfo info = HostPlatformInfo.For(platform);
+        return (info.PackageId!, info.ProjectPath);
+    }
 
     private static void WriteHostFiles(
         string directory, string csprojPath, string projectName, HostPlatform platform, string gumReference, string gumProjectFileName)
