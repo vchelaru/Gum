@@ -95,6 +95,109 @@ public class SkiaHostRegistrationTests : IDisposable
     }
 
     [Fact]
+    public void CommentedOutWorkflowStep_IsReportedAsMissing()
+    {
+        BuildFakeRepo("FooGum", commentedWorkflowStepOnly: true);
+
+        Single().ShouldContain("no test step");
+    }
+
+    [Fact]
+    public void MissingWorkflowStep_ForSilkNetGum_DoesNotTellYouToCopyItself()
+    {
+        BuildFakeRepo("SilkNetGum", inWorkflow: false);
+
+        string message = Single();
+
+        message.ShouldNotContain("copy the SilkNetGum.Tests step");
+        message.ShouldContain("copy the StrideGum.Tests step");
+    }
+
+    [Fact]
+    public void MissingDocsPage_NamesFileAndFolder()
+    {
+        BuildFakeRepo("FooGum", docsPage: false);
+
+        string message = Single();
+
+        message.ShouldContain("docs/code/getting-started/setup/adding-initializing-gum/foo.md");
+        message.ShouldContain("Add");
+    }
+
+    [Fact]
+    public void MissingDocsCard_NamesReadme()
+    {
+        BuildFakeRepo("FooGum", docsCard: false);
+
+        string message = Single();
+
+        message.ShouldContain("adding-initializing-gum/README.md");
+        message.ShouldContain("foo.md");
+    }
+
+    [Fact]
+    public void MissingSummaryEntry_NamesSummary()
+    {
+        BuildFakeRepo("FooGum", summaryEntry: false);
+
+        string message = Single();
+
+        message.ShouldContain("docs/SUMMARY.md");
+        message.ShouldContain("adding-initializing-gum/foo.md");
+    }
+
+    [Fact]
+    public void MissingRootReadmeRow_NamesReadme()
+    {
+        BuildFakeRepo("FooGum", readmeRow: false);
+
+        string message = Single();
+
+        message.ShouldContain("README.md");
+        message.ShouldContain("| Foo |");
+    }
+
+    [Fact]
+    public void MissingSample_NamesDirectory()
+    {
+        BuildFakeRepo("FooGum", sample: false);
+
+        Single().ShouldContain("Samples/FooGum");
+    }
+
+    [Fact]
+    public void MissingWindowsTestGroup_NamesGroupsFile()
+    {
+        BuildFakeRepo("FooGum", testGroup: false);
+
+        string message = Single();
+
+        message.ShouldContain(".github/scripts/windows-test-groups.txt");
+        message.ShouldContain("Tests/FooGum.Tests");
+    }
+
+    [Fact]
+    public void KniSkiaGum_NeedsNoDocsPageCardSummaryOrReadmeRow()
+    {
+        // KniSkiaGum is documented under the KNI pages, so it is exempt from the four docs expectations.
+        BuildFakeRepo("KniSkiaGum", docsPage: false, docsCard: false, summaryEntry: false, readmeRow: false);
+
+        SkiaHostRegistrationChecker.Check(_root).ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void SilkNetGum_UsesTheDottedDocsPageAndDisplayName()
+    {
+        BuildFakeRepo("SilkNetGum", docsPage: false, docsCard: false, summaryEntry: false, readmeRow: false);
+
+        IReadOnlyList<string> problems = SkiaHostRegistrationChecker.Check(_root);
+
+        problems.Count.ShouldBe(4);
+        problems[0].ShouldContain("silk.net.md");
+        problems[3].ShouldContain("| Silk.NET |");
+    }
+
+    [Fact]
     public void MissingTestProject_NamesHostAndBase()
     {
         BuildFakeRepo("FooGum", testProject: false);
@@ -144,8 +247,36 @@ public class SkiaHostRegistrationTests : IDisposable
         bool inSlnf = true,
         bool inWorkflow = true,
         bool testProject = true,
-        bool testsCommonReference = true)
+        bool testsCommonReference = true,
+        bool docsPage = true,
+        bool docsCard = true,
+        bool summaryEntry = true,
+        bool readmeRow = true,
+        bool sample = true,
+        bool testGroup = true,
+        bool commentedWorkflowStepOnly = false)
     {
+        // A fake host "FooGum" gets the conventional docs page "foo.md" and display name "Foo".
+        string stem = host.EndsWith("Gum") ? host.Substring(0, host.Length - 3) : host;
+        string page = stem.ToLowerInvariant() + ".md";
+        if (host == "SilkNetGum")
+        {
+            stem = "Silk.NET";
+            page = "silk.net.md";
+        }
+        string folder = "docs/code/getting-started/setup/adding-initializing-gum";
+        if (docsPage)
+        {
+            Write($"{folder}/{page}", "# page");
+        }
+        Write($"{folder}/README.md", docsCard ? $"<tr><td>{stem}</td><td><a href=\"{page}\">{page}</a></td></tr>" : "cards");
+        Write("docs/SUMMARY.md", summaryEntry ? $"      * [{stem}](code/getting-started/setup/adding-initializing-gum/{page})\n" : "summary\n");
+        Write("README.md", readmeRow ? $"| {stem} | pkg | Built-in |\n" : "table\n");
+        if (sample)
+        {
+            Write($"Samples/{host}/readme.txt", "sample");
+        }
+        Write(".github/scripts/windows-test-groups.txt", testGroup ? $"headless Tests/{host}.Tests\n" : "# groups\n");
         WriteHostCsproj(host, "SkiaHost.props");
         Write("AllLibraries.sln", inAllLibraries
             ? $"Project(\"{{FAE04EC0}}\") = \"{host}\", \"Runtimes\\{host}\\{host}.csproj\", \"{{1}}\"\r\n"
@@ -154,9 +285,10 @@ public class SkiaHostRegistrationTests : IDisposable
         Write("Tests/CiTestProjects.slnf", inSlnf
             ? $"\"Tests\\\\{host}.Tests\\\\{host}.Tests.csproj\","
             : "{}");
-        Write(".github/workflows/build-and-test.yaml", inWorkflow
-            ? $"        run: dotnet test \"Tests/{host}.Tests\" --configuration Release --no-build\n"
-            : "steps:\n");
+        string step = $"dotnet test \"Tests/{host}.Tests\" --configuration Release --no-build\n";
+        Write(".github/workflows/build-and-test.yaml", commentedWorkflowStepOnly
+            ? $"        # run: {step}"
+            : inWorkflow ? $"        run: {step}" : "steps:\n");
         if (testProject)
         {
             Write($"Tests/{host}.Tests/{host}.Tests.csproj", testsCommonReference
