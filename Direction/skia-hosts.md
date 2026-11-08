@@ -49,7 +49,9 @@ touched, never by a dedicated sweep.
 
 | # | Candidate | What a new host repeats today |
 |---|---|---|
-| 1 | Scaffold for host registration | **Check done (#7743); no scaffold.** A new host is still registered by hand in four places (`AllLibraries.sln`, `Tests/CiTestProjects.slnf`, a step in `.github/workflows/build-and-test.yaml`, a test project derived from `Tests/SkiaHost.TestsCommon`), but `SkiaHostRegistrationTests` in `Tests/Gum.RepoHygiene.Tests` now finds every host by convention and fails with a numbered list of what to add where. It does not cover Windows' `.github/scripts/windows-test-groups.txt`, which has its own check. A script that performs the four edits is still open. |
+| 1 | Scaffold for host registration | **Check done (#7743); no scaffold.** A new host is still registered by hand in four places (`AllLibraries.sln`, `Tests/CiTestProjects.slnf`, a step in `.github/workflows/build-and-test.yaml`, a test project derived from `Tests/SkiaHost.TestsCommon`), but `SkiaHostRegistrationTests` in `Tests/Gum.RepoHygiene.Tests` now finds every host by convention and fails with a numbered list of what to add where. Extended (#7747) to also check the docs page, its card, the `docs/SUMMARY.md` entry, the root README row, `Samples/<Host>`, and the `windows-test-groups.txt` line; `KniSkiaGum` is deliberately exempt from the four docs checks. A script that performs the edits is still open. |
+| 10 | Shared host contract tests | **Done (#7749).** `Tests/SkiaHost.TestsCommon` has `GumServiceContractTestsBase`, `InputSubscriptionTestsBase`, `CursorTestsBase` and `GamePadDriverTestsBase`; a host supplies a small rig (`IHostInputRig`, `IHostCursorRig`, `IHostGamePadRig`) and a thin derived class per base. Verified by mutation in all four hosts. Not shared: the clipboard round trip and the Silk/Stride keyboard tests (about 270 similar lines). |
+| 11 | One platform identity table | **Done (#7748).** `Tools/Gum.ProjectServices/HostPlatformInfo.cs` feeds `ReservedProjectNames`, `GetGumRuntime` and `GumPackageNames`; `HostPlatformInfoDriftTests` fails if a `Runtimes/<X>Gum` host or packable runtime is missing from it. Fixed: UnityGum and 11 other runtime assembly names were not reserved, so a new project with that name could overwrite the runtime DLL. |
 | 2 | Init-order hook | **Done (#7741).** The base owns the order: a host calls `GumServiceSkiaInteractiveBase.InitializeWithDevices(..., attachDevices)` and assigns its device fields and `Clipboard` inside the callback. Remaining gap: the inherited public `Initialize(SKCanvas, int, int, ...)` on Silk and Stride still skips the callback, so calling it directly gives null devices. |
 | 3 | Key translation helper | **Done (#7744).** `GumCommon/Input/TablePolledKeyboard<TDeviceKey>` takes a Gum-key table and one device query; Silk and Stride use it. The ~100-entry tables stay (they are the data), so the line savings are small. The value is `KeyTableCoverage` in `Tests/SkiaHost.TestsCommon`, which names every `Keys` value a host neither maps nor lists as intentionally unmapped. KniSkia (direct cast) and Unity (push model) do not use it. |
 | 4 | Engine-surface lifetime | **Done with 7 (#7745).** See `SkiaTargetHolder` under 7. The KniSkiaGum samples' `Game1.cs` still manage their own `SkiaRenderTarget2D` and do not resize; they were not converted. |
@@ -59,7 +61,7 @@ touched, never by a dedicated sweep.
 | 8 | SGR facade per engine | The three Stride SGR packages declare identical type names with no shared interface, so StrideGum carries extern aliases plus a wrapper per package (about 150 lines). An interface or facade in SGR would remove them. Work in the SGR repo. |
 | 9 | Off-screen GPU smoke helper | No host can render a few frames off-screen to check pixels; Stride is "built, not run". Unity has a player `--smoke-test`. A helper that renders N frames and reads pixels would make GPU hosts verifiable. |
 
-Still open, in order of value: 9 (off-screen GPU smoke helper), the registration script (rest of 1), 8 when SGR can take it, then 5 and 6 only if touched anyway.
+Still open, in order of value: 9 (off-screen GPU smoke helper), the registration script (rest of 1), sharing the clipboard and keyboard tests (rest of 10), 15 copies of `GumSyntaxVersion` via one linked file, a `DisconnectGamePad` helper on the interactive base, 8 when SGR can take it, then 5 and 6 only if touched anyway. Stride and Unity ignore resize cursors (`ApplyHostCustomCursor` exists only in Silk and KniSkia); it is optional and the device enums differ, so there is no shared mapping. Not worth doing: building the key table from enum names, generating the collision-guard targets, trimming csproj comments.
 
 ## Current hosts
 
@@ -120,3 +122,7 @@ same change.
   lines of key-table plumbing per host. The Unity sample's smoke test passed on D3D11 at 640x360 and after a
   resize to 800x450; Stride is covered by builds and unit tests only. This goes beyond one improvement per
   host on purpose; the rule still applies once an engine is being added.
+- 2026-11-08: A second review found more shared work; landed #7747 (wider registration check), #7748 (identity
+  table plus the UnityGum reserved-name fix) and #7749 (shared contract test bases, about 500 lines of host
+  tests now supplied as small rigs). Their own mutation checks and verifiers found no weakened coverage.
+  KniSkiaGum is deliberately kept out of the docs for now.
