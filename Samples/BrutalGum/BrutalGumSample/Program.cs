@@ -1,6 +1,6 @@
 // A gallery of Gum screens drawn by Gum.Brutal into a SkiaGameRendering Vulkan image, which a BRUTAL
 // renderer (see Presenter.cs) samples on a full-screen triangle every frame. The screens are the same
-// ones SilkNetGumSample shows. Click the buttons along the top (or press 1..7) to switch screens.
+// ones SilkNetGumSample shows. Click the buttons along the top (or press 1..9) to switch screens.
 //
 //   BrutalGumSample                      opens a window
 //   BrutalGumSample --screenshots <dir>  hidden window, saves one PNG per screen into <dir>, then exits
@@ -31,13 +31,19 @@ bool presenting = screenshotDirectory == null;
 
 (string Name, Func<FrameworkElement> Create)[] screens =
 [
+    ("NineSlice", () => new SilkNetGum.Screens.NineSliceScreen()),
     ("Sprites", () => new SilkNetGum.Screens.SpriteScreen()),
+    ("Svg", () => new SilkNetGum.Screens.SvgScreen()),
     ("Text", () => new SilkNetGum.Screens.TextScreen()),
     ("Circles", () => new SilkNetGum.Screens.CirclesScreen()),
     ("Rectangles", () => new SilkNetGum.Screens.RectanglesScreen()),
     ("Arcs", () => new SilkNetGum.Screens.ArcsScreen()),
     ("Polygons", () => new SilkNetGum.Screens.PolygonsScreen()),
+    ("Render Target", () => new SilkNetGum.Screens.RenderTargetScreen()),
+    ("RT Shader", () => new SilkNetGum.Screens.RenderTargetShaderScreen()),
     ("Forms", () => new GumSamples.Screens.FormsScreen()),
+    ("Zoom", () => new SilkNetGum.Screens.ZoomScreen()),
+    ("Layer Camera", () => new SilkNetGum.Screens.LayerCameraSettingsScreen()),
 ];
 
 if (!Glfw.Init())
@@ -134,6 +140,8 @@ try
 
     GumService gum = GumService.Default;
     gum.Initialize(window, Width, Height, "Content/GumProject/GumProject.gumx");
+    // Turns an RT Shader screen .sksl path into a compiled effect, then lets .fx and .slang files work too.
+    SkiaGum.CustomSetPropertyOnRenderable.RenderTargetEffectResolver = SilkNetGum.Screens.RenderTargetShaderScreen.CompileEffectFromFile;
     gum.UseShadowDusk();
     gum.UseKeyboardDefaults();
     FrameworkElement.GamePadsForUiControl.Clear();
@@ -144,17 +152,23 @@ try
     navStrip.Spacing = 4;
     navStrip.Visual.X = 4;
     navStrip.Visual.Y = 4;
+    navStrip.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
+    navStrip.Width = -8;
+    navStrip.Visual.WrapsChildren = true;
     navStrip.AddToRoot();
 
     FrameworkElement? currentScreen = null;
     void LoadScreen(int index)
     {
         currentScreen?.RemoveFromRoot();
+        SystemManagers.Default.Renderer.Camera.Zoom = 1f;
+        SystemManagers.Default.Renderer.Camera.X = 0f;
+        SystemManagers.Default.Renderer.Camera.Y = 0f;
         currentScreen = screens[index].Create();
         currentScreen.Visual.YOrigin = RenderingLibrary.Graphics.VerticalAlignment.Top;
         currentScreen.Visual.YUnits = Gum.Converters.GeneralUnitType.PixelsFromSmall;
-        currentScreen.Visual.Y = 48;
-        currentScreen.Visual.Height = -48;
+        currentScreen.Visual.Y = navStrip.Visual.AbsoluteHeight + 8;
+        currentScreen.Visual.Height = -(navStrip.Visual.AbsoluteHeight + 8);
         currentScreen.AddToRoot();
     }
 
@@ -208,7 +222,7 @@ try
 
     window.OnKey += (_, key, _, action, _) =>
     {
-        if (action == GlfwKeyAction.Press && key >= GlfwKey.Number1 && key < GlfwKey.Number1 + screens.Length)
+        if (action == GlfwKeyAction.Press && key >= GlfwKey.Number1 && key < GlfwKey.Number1 + Math.Min(9, screens.Length))
         {
             LoadScreen(key - GlfwKey.Number1);
         }
