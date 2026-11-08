@@ -924,7 +924,8 @@ jobs:
         run: dotnet test "Tests/UnityGum.Tests" --configuration Release --no-build --logger "trx" --results-directory "TestResults"
 
       # StrideGum.Tests is the Gum.Stride runtime (SkiaGum renderer + Stride.Input host). It tests the
-      # net10.0 build: CPU raster SKSurface and mocked Stride input, no D3D11 device, so it runs headless.
+      # net10.0 build: Gum logic against an in-memory test canvas (Stride itself renders on the GPU
+      # only), backend selection and mocked Stride input, no GPU device, so it runs headless.
       - name: StrideGum.Tests
         if: runner.os != 'Windows' && steps.plan.outputs.active == 'true' && (github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true')
         run: dotnet test "Tests/StrideGum.Tests" --configuration Release --no-build --logger "trx" --results-directory "TestResults"

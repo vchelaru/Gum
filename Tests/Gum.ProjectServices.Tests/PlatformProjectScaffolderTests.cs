@@ -117,16 +117,16 @@ public class PlatformProjectScaffolderTests : IDisposable
     }
 
     [Fact]
-    public void Create_Stride_ShouldTargetPlainNet10SoTheCpuRenderPathRuns()
+    public void Create_Stride_ShouldTargetWindowsSoTheDefaultDirect3D11GpuPathRuns()
     {
-        // The net10.0-windows7.0 target selects Gum.Stride's ANGLE GPU path, which needs native ANGLE
-        // libraries that do not load on a clean machine.
+        // Gum.Stride has no CPU path. Direct3D11 and Direct3D12 exist only in its net10.0-windows7.0
+        // build; the plain net10.0 build supports Vulkan only.
         string projectDirectory = Path.Combine(_tempDirectory, "MyGame");
 
         PlatformProjectResult result = _sut.Create(projectDirectory, HostPlatform.Stride, includeFormsTemplate: true);
 
         string csproj = File.ReadAllText(result.CsprojPath);
-        csproj.ShouldContain("<TargetFramework>net10.0</TargetFramework>");
+        csproj.ShouldContain("<TargetFramework>net10.0-windows7.0</TargetFramework>");
     }
 
     [Fact]
