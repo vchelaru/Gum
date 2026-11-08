@@ -2,6 +2,7 @@
 using System;
 using System.IO;
 using SkiaGameRendering;
+using SkiaGum.Helpers;
 using SkiaSharp;
 using UnityEngine;
 
@@ -26,7 +27,7 @@ namespace Gum.Unity
         [Tooltip("Draws Gum over the whole screen in OnGUI. Turn off to show Texture yourself (a RawImage or a material).")]
         [SerializeField] bool _drawToScreen = true;
 
-        SkiaRenderTarget2D? _target;
+        SkiaTargetHolder<UnityTarget>? _target;
 
         /// <summary>The project file loaded on <c>Awake</c>, relative to StreamingAssets. Empty for none.</summary>
         public string ProjectFile
@@ -49,12 +50,18 @@ namespace Gum.Unity
         public int CanvasPixelHeight { get; private set; }
 
         /// <summary>What Gum drew this frame, alpha-premultiplied, with row 0 at the bottom. Null when the component disabled itself in <c>Awake</c>.</summary>
-        public RenderTexture? Texture => _target?.Texture;
+        public RenderTexture? Texture => _target?.Target?.Texture;
 
         void Awake()
         {
             int width = Mathf.Max(1, Screen.width);
             int height = Mathf.Max(1, Screen.height);
+
+            GumService gum = GumService.Default;
+            _target = new SkiaTargetHolder<UnityTarget>(
+                (w, h) => new UnityTarget(new SkiaRenderTarget2D(w, h)),
+                canvas => gum.SystemManagers.Canvas = canvas,
+                gum.HandleResize);
 
             try
             {
@@ -77,10 +84,9 @@ namespace Gum.Unity
 
             // The canvas records only between Begin and End, so Initialize gets a canvas that is
             // replaced every frame in LateUpdate.
-            GumService gum = GumService.Default;
-            _target!.Begin();
-            gum.Initialize(_target.Canvas, width, height, projectPath);
-            _target.End();
+            _target.Target!.Begin();
+            gum.Initialize(_target.Canvas!, width, height, projectPath);
+            _target.Target.End();
 
             gum.UseClipboard(new GumUnityClipboard());
         }
@@ -95,11 +101,10 @@ namespace Gum.Unity
 
             int width = Mathf.Max(1, Screen.width);
             int height = Mathf.Max(1, Screen.height);
-            if (width != CanvasPixelWidth || height != CanvasPixelHeight)
+            if (_target != null && _target.EnsureSize(width, height))
             {
-                DisposeTarget();
-                CreateTarget(width, height);
-                gum.HandleResize(width, height);
+                CanvasPixelWidth = width;
+                CanvasPixelHeight = height;
             }
 
             gum.Update(Time.unscaledTimeAsDouble);
@@ -113,12 +118,14 @@ namespace Gum.Unity
                 return;
             }
 
-            _target.Begin();
-            SKCanvas canvas = _target.Canvas;
-            gum.SystemManagers.Canvas = canvas;
+            SKCanvas? canvas = _target.BeginFrame();
+            if (canvas == null)
+            {
+                return;
+            }
             canvas.Clear(SKColors.Transparent);
             gum.Draw();
-            _target.End();
+            _target.Target!.End();
         }
 
         void OnGUI()
@@ -146,7 +153,7 @@ namespace Gum.Unity
 
         void CreateTarget(int width, int height)
         {
-            _target = new SkiaRenderTarget2D(width, height);
+            _target!.Create(width, height);
             CanvasPixelWidth = width;
             CanvasPixelHeight = height;
         }
@@ -154,7 +161,21 @@ namespace Gum.Unity
         void DisposeTarget()
         {
             _target?.Dispose();
-            _target = null;
+        }
+
+        // SkiaRenderTarget2D has no End-without-drawing; ending a pass here only flushes into the texture.
+        sealed class UnityTarget : ISkiaHostTarget
+        {
+            readonly SkiaRenderTarget2D _inner;
+
+            public UnityTarget(SkiaRenderTarget2D inner) => _inner = inner;
+
+            public SKCanvas Canvas => _inner.Canvas;
+            public RenderTexture Texture => _inner.Texture;
+            public void Begin() => _inner.Begin();
+            public void End() => _inner.End();
+            public void EndWithoutDrawing() => _inner.End();
+            public void Dispose() => _inner.Dispose();
         }
     }
 }

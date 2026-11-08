@@ -1,9 +1,8 @@
 #if STRIDE
 #nullable enable
 
-using SkiaSharp;
+using SkiaGum.Helpers;
 using Stride.Graphics;
-using System;
 
 namespace Gum;
 
@@ -12,17 +11,9 @@ namespace Gum;
 /// packages each declare a type with the same full name and no shared interface, so each is wrapped
 /// behind an extern alias (the three <c>Stride*Target</c> classes) and Gum talks to this.
 /// </summary>
-internal interface IStrideSkiaTarget : IDisposable
+internal interface IStrideSkiaTarget : ISkiaHostTarget
 {
-    /// <summary>The Skia canvas. Only readable between <see cref="Begin"/> and an End call.</summary>
-    SKCanvas Canvas { get; }
-
-    /// <summary>Starts a pass and clears the target to transparent.</summary>
-    void Begin();
-
     /// <summary>Ends the pass and composites the target onto the render target bound on the context.</summary>
     void End(GraphicsContext graphicsContext);
-
-    void EndWithoutDrawing();
 }
 #endif

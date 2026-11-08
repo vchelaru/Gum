@@ -9,6 +9,7 @@ using Gum.Forms.Controls;
 using Gum.Input;
 using Gum.Wireframe;
 using RenderingLibrary;
+using SkiaGum.Helpers;
 using SkiaSharp;
 using Stride.Core.Mathematics;
 using Stride.Engine;
@@ -35,7 +36,6 @@ namespace Gum;
 public partial class GumService : GumServiceSkiaInteractiveBase, IGumService
 {
     private InputManager? _inputManager;
-    private GraphicsDevice? _graphicsDevice;
 
     // Gum renders on the GPU through SkiaGameRendering: _gpuTarget is a SkiaRenderTarget2D from the
     // package matching the running graphics API (D3D11, D3D12 or Vulkan), which Skia draws into
@@ -44,15 +44,10 @@ public partial class GumService : GumServiceSkiaInteractiveBase, IGumService
     // Root is usable immediately after Initialize returns, matching every other runtime's
     // Initialize-then-build-UI pattern, rather than deferring setup until Stride's own
     // SceneRendererBase.InitializeCore fires.
-    private IStrideSkiaTarget? _gpuTarget;
-    // The canvas SystemManagers.Default.Canvas is pointed at. Stable across frames even though the
-    // target's own Canvas getter is only accessible while a Begin/End pass is open: RecreateSurface
-    // captures it once via a throwaway Begin/EndWithoutDrawing, since the underlying SKSurface (and
-    // therefore its Canvas) is allocated once in the target's constructor and does not change
-    // between passes.
-    private SKCanvas? _canvas;
-    private int _surfaceWidth;
-    private int _surfaceHeight;
+    // The holder also captures the canvas once via a throwaway Begin/EndWithoutDrawing: the target's
+    // underlying SKSurface (and so its Canvas) is allocated once in the target's constructor and does
+    // not change between passes.
+    private SkiaTargetHolder<IStrideSkiaTarget>? _gpuTarget;
 
     private readonly Stopwatch _clock = new();
 
@@ -115,12 +110,16 @@ public partial class GumService : GumServiceSkiaInteractiveBase, IGumService
     /// </param>
     public void Initialize(Game game, string? gumProjectFile = null, bool registerSceneRenderer = true)
     {
-        _graphicsDevice = game.GraphicsDevice;
-
         var backBuffer = game.GraphicsDevice.Presenter.BackBuffer;
-        RecreateSurface(backBuffer.Width, backBuffer.Height);
+        GraphicsDevice graphicsDevice = game.GraphicsDevice;
+        _gpuTarget?.Dispose();
+        _gpuTarget = new SkiaTargetHolder<IStrideSkiaTarget>(
+            (width, height) => StrideGpuTargetFactory.Create(graphicsDevice, width, height),
+            canvas => SystemManagers.Default.Canvas = canvas,
+            HandleResize);
+        _gpuTarget.Create(backBuffer.Width, backBuffer.Height);
 
-        InitializeCore(_canvas!, game.Input, _surfaceWidth, _surfaceHeight, gumProjectFile);
+        InitializeCore(_gpuTarget.Canvas!, game.Input, _gpuTarget.Width, _gpuTarget.Height, gumProjectFile);
 
         if (registerSceneRenderer)
         {
@@ -171,24 +170,6 @@ public partial class GumService : GumServiceSkiaInteractiveBase, IGumService
         });
     }
 
-    private void RecreateSurface(int width, int height)
-    {
-        if (width <= 0 || height <= 0 || _graphicsDevice == null) return;
-
-        _surfaceWidth = width;
-        _surfaceHeight = height;
-
-        _gpuTarget?.Dispose();
-        _gpuTarget = StrideGpuTargetFactory.Create(_graphicsDevice, width, height);
-
-        // The target's Canvas only reads while a pass is open; capture the reference once here (see
-        // the _canvas remarks for why it stays valid after End) rather than reopening a pass on
-        // every SystemManagers.Default.Canvas read.
-        _gpuTarget.Begin();
-        _canvas = _gpuTarget.Canvas;
-        _gpuTarget.EndWithoutDrawing();
-    }
-
     /// <summary>
     /// Called once per frame by the internal <see cref="GumSceneRenderer"/>: handles backbuffer
     /// resize, ticks Update, and renders Gum into the GPU target, which composites itself into the
@@ -199,27 +180,21 @@ public partial class GumService : GumServiceSkiaInteractiveBase, IGumService
     {
         var commandList = drawContext.CommandList;
         var backBuffer = commandList.RenderTarget;
-        if (backBuffer.Width != _surfaceWidth || backBuffer.Height != _surfaceHeight)
-        {
-            RecreateSurface(backBuffer.Width, backBuffer.Height);
-            SystemManagers.Default.Canvas = _canvas!;
-            HandleResize(_surfaceWidth, _surfaceHeight);
-        }
+        if (_gpuTarget == null) return;
 
-        if (_canvas == null || _gpuTarget == null) return;
+        _gpuTarget.EnsureSize(backBuffer.Width, backBuffer.Height);
+        if (_gpuTarget.BeginFrame() == null) return;
 
-        _gpuTarget.Begin();
         Update(_clock.Elapsed.TotalSeconds);
         Draw();
         // Flushes Skia's GPU work and composites the target onto the backbuffer via its own
         // SpriteBatch.
-        _gpuTarget.End(drawContext.GraphicsContext);
+        _gpuTarget.Target!.End(drawContext.GraphicsContext);
     }
 
     internal void DisposeStrideResources()
     {
         _gpuTarget?.Dispose();
-        _gpuTarget = null;
     }
 }
 
