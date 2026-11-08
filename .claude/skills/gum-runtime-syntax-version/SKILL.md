@@ -30,6 +30,8 @@ A runtime project or dll is recognized by name: `<Engine>Gum` or `<Engine>Gum.<H
 
 When none of the three finds a version, the fallback depends on which runtimes the csproj references. Only the runtimes that existed before unification (`LegacyEraRuntimeNames` / `LegacyEraPackageNames`: MonoGame, KNI, FNA, Skia and the SkiaGum.Maui/.Wpf hosts) fall back to 0, because an old build lacks the attribute. Anything else (Stride, Silk.NET, raylib, a new runtime, or no Gum reference) resolves to `SyntaxVersionDetectionService.LatestSyntaxVersion`, the stamp on GumCommon.
 
+**The stamp must stay in each runtime's own `AssemblyAttributes.cs`.** Step 1 reads that file by path and never follows linked files or props, so moving the attribute into a shared linked file makes a `ProjectReference` to that runtime fall back to the legacy-era version.
+
 **GumCommon is not on the detection scan list** — stamping it is for assembly-metadata consistency, not for codegen detection.
 
 **A detection or stamp change can change the version a `Tests/CodeGen_*` harness resolves**, which makes its checked-in output stale. `Detect_CodeGenHarnessProject_MatchesTheVersionItsOutputWasGeneratedAt` pins each harness; when it fails, regenerate (see `gum-tool-codegen`) and update the pin.
