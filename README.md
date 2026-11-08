@@ -91,6 +91,7 @@ Gum's runtimes are published to NuGet. Install the package for your platform. Al
 | Maui | [![NuGet](https://img.shields.io/nuget/v/Gum.SkiaSharp.Maui?label=Gum.SkiaSharp.Maui)](https://www.nuget.org/packages/Gum.SkiaSharp.Maui) | Built-in |
 | Silk.NET | [![NuGet](https://img.shields.io/nuget/v/Gum.SilkNet?label=Gum.SilkNet)](https://www.nuget.org/packages/Gum.SilkNet) | Built-in |
 | Stride | [![NuGet](https://img.shields.io/nuget/v/Gum.Stride?label=Gum.Stride)](https://www.nuget.org/packages/Gum.Stride) | Built-in |
+| Brutal | [![NuGet](https://img.shields.io/nuget/v/Gum.Brutal?label=Gum.Brutal)](https://www.nuget.org/packages/Gum.Brutal) | Built-in |
 | Unity *(experimental)* | Unity Package Manager git URL `https://github.com/vchelaru/Gum.git#upm`, plus SkiaGameRendering ([setup](https://docs.flatredball.com/gum/code/getting-started/setup/adding-initializing-gum/unity)) | Built-in |
 | FNA | [![NuGet](https://img.shields.io/nuget/v/Gum.FNA?label=Gum.FNA)](https://www.nuget.org/packages/Gum.FNA) | — *(not supported)* |
 
@@ -105,6 +106,6 @@ Use these to build Gum into your own runtime or renderer.
 | Library | NuGet |
 |---|---|
 | GumCommon: layout, `GraphicalUiElement`, and Forms logic, with no rendering or input of its own | [![NuGet](https://img.shields.io/nuget/v/FlatRedBall.GumCommon?label=FlatRedBall.GumCommon)](https://www.nuget.org/packages/FlatRedBall.GumCommon) |
-| SkiaSharp: the Skia renderer that Maui, Silk.NET, Stride, and Unity build on | [![NuGet](https://img.shields.io/nuget/v/Gum.SkiaSharp?label=Gum.SkiaSharp)](https://www.nuget.org/packages/Gum.SkiaSharp) |
+| SkiaSharp: the Skia renderer that Maui, Silk.NET, Stride, BRUTAL, and Unity build on | [![NuGet](https://img.shields.io/nuget/v/Gum.SkiaSharp?label=Gum.SkiaSharp)](https://www.nuget.org/packages/Gum.SkiaSharp) |
 
 Gum produces general-purpose XML, so it can be used in virtually any C# environment. Beyond the packages listed above, integrations also exist for environments such as FlatRedBall, Meadow, WPF, and Avalonia. For integration details, or for using GumCommon to integrate with your own runtime, see the main documentation: https://docs.flatredball.com/gum/
