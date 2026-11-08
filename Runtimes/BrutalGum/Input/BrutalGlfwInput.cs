@@ -11,7 +11,9 @@ namespace Gum.Input;
 internal sealed class BrutalGlfwInput : IBrutalInput
 {
     private readonly GlfwWindow _window;
-    private readonly Dictionary<GlfwStandardCursor, GlfwCursor> _cursors = new();
+    // Standard cursors are created once per process and shared by every input, so a repeated Initialize
+    // does not create (and leak) a new set; GLFW destroys the remaining ones at terminate.
+    private static readonly Dictionary<GlfwStandardCursor, GlfwCursor> _cursors = new();
     private Action<double>? _scrolled;
     private Action<uint>? _charTyped;
 

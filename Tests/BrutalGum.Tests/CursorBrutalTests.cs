@@ -1,7 +1,10 @@
 using Brutal.GlfwApi;
+using Gum;
 using Gum.Input;
 using Gum.Wireframe;
 using Shouldly;
+using SkiaHostTests;
+using SkiaSharp;
 
 namespace BrutalGum.Tests;
 
@@ -90,5 +93,74 @@ public class CursorBrutalTests : SkiaHostTests.CursorTestsBase
 
         cursor.PrimaryDown.ShouldBeFalse();
         cursor.LastInputDevice.ShouldBe(InputDevice.TouchScreen);
+    }
+
+    [Theory]
+    [InlineData(GlfwMouseButton.Left, true, false, false)]
+    [InlineData(GlfwMouseButton.Middle, false, true, false)]
+    [InlineData(GlfwMouseButton.Right, false, false, true)]
+    public void Activity_HeldButton_SetsOnlyTheMatchingDownFlag(GlfwMouseButton held, bool primary, bool middle, bool secondary)
+    {
+        FakeBrutalInput input = new();
+        input.HeldButtons.Add(held);
+        Gum.Input.Cursor cursor = new();
+        cursor.AttachBrutalInput(input);
+
+        cursor.Activity(0);
+
+        cursor.PrimaryDown.ShouldBe(primary);
+        cursor.MiddleDown.ShouldBe(middle);
+        cursor.SecondaryDown.ShouldBe(secondary);
+    }
+
+    [Fact]
+    public void Activity_NoButtonHeld_SetsNoDownFlag()
+    {
+        FakeBrutalInput input = new();
+        Gum.Input.Cursor cursor = new();
+        cursor.AttachBrutalInput(input);
+
+        cursor.Activity(0);
+
+        cursor.PrimaryDown.ShouldBeFalse();
+        cursor.MiddleDown.ShouldBeFalse();
+        cursor.SecondaryDown.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void Activity_ReportsWindowPosition()
+    {
+        FakeBrutalInput input = new() { CursorX = 37.9, CursorY = 52.2 };
+        Gum.Input.Cursor cursor = new();
+        cursor.AttachBrutalInput(input);
+
+        cursor.Activity(0);
+
+        cursor.X.ShouldBe(37);
+        cursor.Y.ShouldBe(52);
+    }
+
+    [Fact]
+    public void Initialize_Twice_DisposesThePreviousCursor()
+    {
+        FakeBrutalInput input = new();
+        try
+        {
+            SKSurface first = SKSurface.Create(new SKImageInfo(64, 64));
+            GumService.Default.Initialize(first.Canvas, input, 64, 64);
+            input.ScrolledSubscribers.ShouldBe(1);
+
+            SKSurface second = SKSurface.Create(new SKImageInfo(64, 64));
+            GumService.Default.Initialize(second.Canvas, input, 64, 64);
+
+            input.ScrolledSubscribers.ShouldBe(1);
+        }
+        finally
+        {
+            GumService.Default.Uninitialize();
+            SKSurface surface = SKSurface.Create(new SKImageInfo(SkiaHostTestFramework.CanvasWidth, SkiaHostTestFramework.CanvasHeight));
+            GumService.Default.Initialize(surface.Canvas, new FakeBrutalInput(), SkiaHostTestFramework.CanvasWidth, SkiaHostTestFramework.CanvasHeight);
+            SkiaHostTestBase.CaptureRenderableBaseline();
+        }
     }
 }
