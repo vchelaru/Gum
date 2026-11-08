@@ -484,6 +484,7 @@ public class NewProjectService : INewProjectService
                     Status = result.Status,
                     FailedPackage = package,
                     OutputTail = result.OutputTail,
+                    ExitCode = result.ExitCode,
                     ErrorMessage = result.ErrorMessage
                 };
             }
