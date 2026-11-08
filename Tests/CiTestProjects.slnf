@@ -16,6 +16,7 @@
       "Tests\\SilkNetGum.Tests\\SilkNetGum.Tests.csproj",
       "Tests\\UnityGum.Tests\\UnityGum.Tests.csproj",
       "Tests\\StrideGum.Tests\\StrideGum.Tests.csproj",
+      "Tests\\BrutalGum.Tests\\BrutalGum.Tests.csproj",
       "Tests\\StrideGum.GpuTests.D3D11\\StrideGum.GpuTests.D3D11.csproj",
       "Tests\\StrideGum.GpuTests.D3D12\\StrideGum.GpuTests.D3D12.csproj",
       "Tests\\KniSkiaGum.Tests\\KniSkiaGum.Tests.csproj",

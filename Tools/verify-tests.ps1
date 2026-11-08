@@ -51,7 +51,7 @@ Assert-Plan 'file in the Avalonia head builds Gum.slnx, not the head csproj' `
 
 Assert-Builds 'file linked by a csproj and by a .props another .props imports builds every project that sees it' `
     'MonoGameGum/Input/CursorExtensions.cs' `
-    @('MonoGameGum/KniGum/KniGum.csproj', 'MonoGameGum/MonoGameGum.csproj','Runtimes/KniSkiaGum/KniSkiaGum.csproj', 'Runtimes/RaylibGum/RaylibGum.csproj',
+    @('MonoGameGum/KniGum/KniGum.csproj', 'MonoGameGum/MonoGameGum.csproj','Runtimes/BrutalGum/BrutalGum.csproj', 'Runtimes/KniSkiaGum/KniSkiaGum.csproj', 'Runtimes/RaylibGum/RaylibGum.csproj',
       'Runtimes/SilkNetGum/SilkNetGum.csproj', 'Runtimes/StrideGum/StrideGum.csproj',
       'Runtimes/UnityGum/UnityGum.csproj')
 

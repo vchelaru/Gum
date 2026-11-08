@@ -1,0 +1,35 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <!-- net10.0 to match the other Skia host tests (the Skia Forms render path is clean on net10.0). -->
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="coverlet.collector" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="Moq" />
+    <PackageReference Include="Shouldly" />
+    <PackageReference Include="xunit" />
+    <PackageReference Include="xunit.runner.visualstudio" />
+    <!-- SKSurface for the in-memory raster canvas; BRUTAL GLFW enums (GlfwKey and friends) for the fake window. -->
+    <PackageReference Include="SkiaSharp" VersionOverride="4.153.1" />
+    <PackageReference Include="Ahwoo.Brutal.Glfw" VersionOverride="2026.10.5" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Runtimes\BrutalGum\BrutalGum.csproj" />
+    <ProjectReference Include="..\SkiaHost.TestsCommon\SkiaHost.TestsCommon.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
+
+</Project>
