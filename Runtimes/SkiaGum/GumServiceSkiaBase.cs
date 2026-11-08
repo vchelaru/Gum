@@ -483,13 +483,24 @@ public abstract class GumServiceSkiaBase : IGumService
     /// <param name="gumProjectFile">An optional .gumx project file to load.</param>
     /// <param name="visualsVersion">The default Forms visuals to register. See <see cref="ResolveVisualsVersion"/>.</param>
     /// <exception cref="NotSupportedException"><paramref name="visualsVersion"/> is not supported on Skia.</exception>
+    /// <param name="attachHostDevices">
+    /// Runs after the version check passes and previous input is disposed, and before
+    /// <see cref="FormsUtilities.InitializeDefaults"/> calls back into <see cref="IGumService.CreateCursor"/>
+    /// and <see cref="IGumService.CreateKeyboard"/>. A host stores its device state and assigns
+    /// <see cref="Clipboard"/> here, so it cannot get that order wrong.
+    /// </param>
     protected void InitializeCore(
         SKCanvas? canvas, int width, int height, string? gumProjectFile,
-        DefaultVisualsVersion visualsVersion = DefaultVisualsVersion.Newest)
+        DefaultVisualsVersion visualsVersion = DefaultVisualsVersion.Newest,
+        Action? attachHostDevices = null)
     {
+        // Before any state changes, so an unsupported version leaves the service uninitialized.
+        DefaultVisualsVersion resolvedVisualsVersion = ResolveVisualsVersion(visualsVersion);
+
         // Input from a previous Initialize that was not followed by Uninitialize.
         DisposeOwnedInput();
-        DefaultVisualsVersion resolvedVisualsVersion = ResolveVisualsVersion(visualsVersion);
+
+        attachHostDevices?.Invoke();
 
         // SkiaGum relies on ModuleInitializer instead of explicitly registering
         // runtimes.
