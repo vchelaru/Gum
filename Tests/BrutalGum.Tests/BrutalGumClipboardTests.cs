@@ -1,4 +1,4 @@
-using Gum.Input;
+using Gum;
 using Shouldly;
 
 namespace BrutalGum.Tests;
@@ -6,14 +6,14 @@ namespace BrutalGum.Tests;
 public class BrutalGumClipboardTests : SkiaHostTests.ClipboardTestsBase
 {
     protected override Gum.Forms.Controls.IGumClipboard CreateClipboard() =>
-        new BrutalGumClipboard(new FakeBrutalInput());
+        GumService.CreateClipboard(new FakeBrutalInput());
 
     [Fact]
     public void SetText_WritesToInputClipboard()
     {
         FakeBrutalInput input = new();
 
-        new BrutalGumClipboard(input).SetText("copied");
+        GumService.CreateClipboard(input).SetText("copied");
 
         input.ClipboardText.ShouldBe("copied");
     }
@@ -23,6 +23,6 @@ public class BrutalGumClipboardTests : SkiaHostTests.ClipboardTestsBase
     {
         FakeBrutalInput input = new() { ClipboardText = "hello" };
 
-        new BrutalGumClipboard(input).GetText(null).ShouldBe("hello");
+        GumService.CreateClipboard(input).GetText(null).ShouldBe("hello");
     }
 }

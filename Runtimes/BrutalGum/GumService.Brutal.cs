@@ -93,8 +93,12 @@ public partial class GumService : GumServiceSkiaInteractiveBase, IGumService
         InitializeWithDevices(canvas, width, height, gumProjectFile, () =>
         {
             _input = input;
-            Clipboard = new BrutalGumClipboard(input);
+            Clipboard = CreateClipboard(input);
         });
     }
+
+    // GLFW's clipboard reads and writes the OS clipboard synchronously.
+    internal static IGumClipboard CreateClipboard(IBrutalInput input) =>
+        new DelegateClipboard(() => input.ClipboardText, text => input.ClipboardText = text);
 }
 #endif
