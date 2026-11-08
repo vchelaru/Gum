@@ -50,7 +50,7 @@ touched, never by a dedicated sweep.
 | # | Candidate | What a new host repeats today |
 |---|---|---|
 | 1 | Scaffold for host registration | A new host is registered by hand in four places: `AllLibraries.sln`, `Tests/CiTestProjects.slnf`, a step in `.github/workflows/build-and-test.yaml`, and a test project derived from `Tests/SkiaHost.TestsCommon`. Missing one fails CI late. |
-| 2 | Init-order hook | Silk, Stride and KniSkia each document "set device fields before `base.Initialize`, which calls back into `CreateHostCursor`/`CreateHostKeyboard`". A forgotten order gives a null device with no error. A `protected virtual` attach hook called by the base would remove the trap. |
+| 2 | Init-order hook | **Done (#7741).** The base owns the order: a host calls `GumServiceSkiaInteractiveBase.InitializeWithDevices(..., attachDevices)` and assigns its device fields and `Clipboard` inside the callback. Remaining gap: the inherited public `Initialize(SKCanvas, int, int, ...)` on Silk and Stride still skips the callback, so calling it directly gives null devices. |
 | 3 | Key translation helper | Silk and Stride each hand-write about 105 entries mapping Gum keys to engine keys. KNI avoids it because Gum's `Keys` has the same names and values as XNA's. A small generic table-backed `PolledKeyboard` plus a test that flags unmapped keys would shrink a new host. |
 | 4 | Engine-surface lifetime | Stride creates and recreates its SGR render target on resize and drives a clock. KniSkia gets the same from a sample's `SkiaRenderTarget2D`. Unity does its own. Once the CPU paths are gone, what remains duplicated across hosts (resize, per-frame Begin/Update/Draw/End) is the shared piece to extract. |
 | 5 | Gamepad mapping | `GamePadDriver` in Silk, Stride and KNI differs only by the device read and the Y-axis flip. Low value: the field mapping is the work. |
@@ -59,7 +59,7 @@ touched, never by a dedicated sweep.
 | 8 | SGR facade per engine | The three Stride SGR packages declare identical type names with no shared interface, so StrideGum carries extern aliases plus a wrapper per package (about 150 lines). An interface or facade in SGR would remove them. Work in the SGR repo. |
 | 9 | Off-screen GPU smoke helper | No host can render a few frames off-screen to check pixels; Stride is "built, not run". Unity has a player `--smoke-test`. A helper that renders N frames and reads pixels would make GPU hosts verifiable. |
 
-Order of value, as of the last review: 1, 2, 4 and 7 first; 9 and 3 next; 8 when SGR can take it; 5 and 6 only if touched anyway.
+Order of value, as of the last review: 1, 4 and 7 first; 9 and 3 next; 8 when SGR can take it; 5 and 6 only if touched anyway.
 
 ## Current hosts
 
@@ -110,3 +110,7 @@ same change.
   Duplication removed: both CPU surface-and-upload paths. Added candidates 7 to 9 from the Stride and Unity
   agents' reports. A macOS CI failure in `NewProjectRecommendedPackagesTests` (real `dotnet add package`,
   empty output) passed on the next commit; the test now reports the exit code and error when it recurs.
+- 2026-11-08: Candidate 2 landed (#7741): `InitializeWithDevices` in the shared base owns the
+  "assign devices, then `InitializeDefaults`" order for Silk, Stride and KniSkia. Duplication removed: three
+  "store fields, assign clipboard, call base" blocks and KniSkia's separate early visuals-version call. The
+  base now checks the visuals version before disposing old input.
