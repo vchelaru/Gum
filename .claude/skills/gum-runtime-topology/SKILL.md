@@ -58,6 +58,8 @@ Consequence for themes: a rounded/shadowed theme's visual code (`new RectangleRu
 
 ## Adding a Skia-based host
 
+A host's canvas comes from SkiaGameRendering, GPU only; see [skia-game-rendering](../skia-game-rendering/SKILL.md) before choosing how a new engine gets one. Never add a CPU surface path.
+
 Model it on `Runtimes/KniSkiaGum` or `Runtimes/SilkNetGum`: reference `GumCommon` and `SkiaGum`, set `GumSkiaHostSymbol` and import `Runtimes/SkiaHost.props`, `SkiaInputHost.props` and `SkiaPackages.props`, and derive `GumService` from `GumServiceSkiaInteractiveBase`. The host writes only its device translation: a `Cursor.<Host>.cs` partial (`GetMouseState`, optionally `ApplyHostCustomCursor`), a `Keyboard` deriving from `GumCommon/Input/PolledKeyboard.cs`, the `CreateHostCursor`/`CreateHostKeyboard` partial methods on its `GumService`, and a gamepad driver that fills `GamePadSnapshot`. The shared `GumService.SkiaHost.cs` owns what those create, so `Uninitialize` and a second `Initialize` dispose them; a device event subscription made when they are created registers its unsubscribe with `OnDispose` (`PolledKeyboard`, and `Cursor` in `Cursor.SkiaHost.cs`), or the old keyboard keeps receiving text from the engine's window. For GPU rendering, draw into a SkiaGameRendering canvas and pass it to `GumServiceSkiaBase.Draw(SKCanvas)` each frame (see `StrideGum`, `Samples/KniSkiaGum`).
 
 - ⚠ **A host must not define `KNI`, `XNALIKE` or `MONOGAME`.** Those symbols switch the shared `Cursor.cs` to XNA types, which cannot compile next to SkiaGum. Alias the engine's types inside the host's own files instead.
