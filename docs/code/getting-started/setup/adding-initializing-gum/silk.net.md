@@ -17,7 +17,8 @@ Modify csproj:
 ```xml
 <PackageReference Include="Gum.SilkNet" Version="*" />
 <PackageReference Include="Silk.NET.Windowing.Sdl" Version="2.21.0" /> <!-- Creates the window and its OpenGL context -->
-<PackageReference Include="Silk.NET.Input.Sdl" Version="2.21.0" /> <!-- Required for window.CreateInput() -->
+<PackageReference Include="Silk.NET.Input.Sdl" Version="2.21.0" /> <!-- Required for the input Gum creates from the window -->
+<PackageReference Include="Silk.NET.OpenGL" Version="2.21.0" /> <!-- For your own gl.Clear each frame -->
 <PackageReference Include="Gum.SkiaSharp.ShadowDusk" Version="*" /> <!-- Optional: .fx and .slang shader files -->
 <PackageReference Include="Gum.Expressions" Version="*" /> <!-- Optional: arithmetic expressions in variable references -->
 ```
@@ -27,12 +28,13 @@ Or add through command line:
 ```bash
 dotnet add package Gum.SilkNet
 dotnet add package Silk.NET.Windowing.Sdl --version 2.21.0   # Creates the window and its OpenGL context
-dotnet add package Silk.NET.Input.Sdl --version 2.21.0       # Required for window.CreateInput()
+dotnet add package Silk.NET.Input.Sdl --version 2.21.0       # Required for the input Gum creates from the window
+dotnet add package Silk.NET.OpenGL --version 2.21.0          # For your own gl.Clear each frame
 dotnet add package Gum.SkiaSharp.ShadowDusk                  # Optional: .fx and .slang shader files
 dotnet add package Gum.Expressions                           # Optional: arithmetic expressions in variable references
 ```
 
-`Gum.SilkNet` renders through SkiaSharp and adds real Forms input (mouse, keyboard, focus) via `Silk.NET.Input`. Your project still owns window creation and the render loop; Gum takes an `SKCanvas` and an `IInputContext` you hand it. Keep the Silk.NET packages on the same version as each other.
+`Gum.SilkNet` renders through SkiaSharp and adds real Forms input (mouse, keyboard, focus) via `Silk.NET.Input`. Your project owns window creation and the render loop; Gum takes the `IWindow` and creates the SkiaSharp surface, the input context, and resize handling itself. Keep the Silk.NET packages on the same version as each other.
 
 {% hint style="info" %}
 `Gum.SkiaSharp.ShadowDusk` is available in November 2026, or now if building Gum from source.
@@ -82,57 +84,56 @@ To create a project that already references Gum source, run [`gumcli new MyGame 
 
 ## Initializing Gum
 
-Gum requires SkiaSharp to render in Silk.NET, and `Silk.NET.Windowing` to create the window and OpenGL context that SkiaSharp draws into. A complete `Program.cs` is long (window creation, the SkiaSharp surface, resizing, the render loop), so only the Gum-specific code is shown below. To get a complete, working `Program.cs`, run [`gumcli new MyGame -p silknet`](../../../../cli/new.md) and read the file it creates. It runs on Windows, macOS, and Linux.
-
-Create the window and input context using `Silk.NET.Windowing.Window.Create`, then hand Gum the resulting `SKCanvas` and `IInputContext`:
+Create the window with `Silk.NET.Windowing.Window.Create`, then hand it to `GumService.Default.Initialize`. Gum creates the input context and the SkiaSharp surface over the window's framebuffer, follows window resizes, and registers gamepads with Forms controls. To get a complete, working `Program.cs`, run [`gumcli new MyGame -p silknet`](../../../../cli/new.md) and read the file it creates. It runs on Windows, macOS, and Linux.
 
 ```csharp
 // Initialize
 using Silk.NET.Windowing;
 using Silk.NET.Windowing.Sdl;
-using Silk.NET.Input;
-using SkiaSharp;
 using Gum;
 
 // Silk.NET.Windowing.Sdl must create and own the window (via window.Initialize()) for
-// Silk.NET.Input to ever receive events. Set the render backend, GraphicsAPI, and window
-// options, then create and initialize the window before anything else.
+// Silk.NET.Input to ever receive events. Set the GraphicsAPI and window options,
+// then create and initialize the window before initializing Gum.
 SdlWindowing.Use();
 
 Silk.NET.Windowing.IWindow window = Silk.NET.Windowing.Window.Create(options);
 window.Initialize();
-
-// Create the SkiaSharp GL surface/canvas from the window's GL context (grContext, grGlInterface,
-// and renderTarget setup omitted here -- see the Program.cs from gumcli new -p silknet).
-SKCanvas canvas = surface.Canvas;
-
-// Only after window.Initialize() has run does CreateInput() build an IInputContext that
-// actually receives events.
-IInputContext inputContext = window.CreateInput();
+Silk.NET.OpenGL.GL gl = Silk.NET.OpenGL.GL.GetApi(window);
 
 GumService GumUI = GumService.Default;
 
-GumUI.Initialize(canvas, inputContext, "Content/GumProject/GumProject.gumj");
+GumUI.Initialize(window, "Content/GumProject/GumProject.gumj");
 GumUI.UseShadowDusk(); // Optional: .fx and .slang shader files
 GumExpressionService.Initialize(); // Optional: arithmetic expressions in variable references
 ```
 
-Each frame, pump window events before updating and drawing Gum:
+Each frame, pump window events, update Gum, clear, draw Gum, and swap buffers:
 
 ```csharp
 // Update
 window.DoEvents();
 GumUI.Update(totalSeconds);
+
+// Draw
+gl.ClearColor(0.39f, 0.58f, 0.93f, 1f);
+gl.Clear(Silk.NET.OpenGL.ClearBufferMask.ColorBufferBit);
+GumUI.Draw();
+window.GLContext!.SwapBuffers();
 ```
 
-{% hint style="warning" %}
-The `IInputContext` you pass to `Initialize` must come from a window that `Silk.NET.Windowing` created and initialized itself — `Window.Create(options)` followed by `window.Initialize()`, then `window.CreateInput()`. Building an `IInputContext` by wrapping a window you created another way (for example via `SdlWindowing.CreateFrom(existingHandle)`) skips the normal event-subscription path. The resulting `IInputContext` looks valid, but it silently never receives events — no exception is thrown, and clicks, key presses, and typed text simply do nothing.
+{% hint style="info" %}
+`Initialize(window, ...)` is available in December 2026, or now if building Gum from source. Before it, `Initialize` took an `SKCanvas` and an `IInputContext`. See [Migrating to 2026 December](../../../../gum-tool/upgrading/migrating-to-2026-december.md).
 {% endhint %}
 
 {% hint style="warning" %}
-If `window.CreateInput()` throws `NotSupportedException: Couldn't find a suitable input platform for this view`, your project is missing the `Silk.NET.Input.Sdl` package listed in [Adding Gum NuGet package](#adding-gum-nuget-package). `Silk.NET.Windowing.Sdl` only creates the window; `CreateInput()` finds its backend by scanning loaded assemblies for a matching `IInputPlatform`, and the SDL implementation lives in the separate `Silk.NET.Input.Sdl` package. Match its version to your other Silk.NET packages.
+The window must come from `Window.Create(options)` followed by `window.Initialize()`. Wrapping a window created another way (for example via `SdlWindowing.CreateFrom(existingHandle)`) skips the normal event subscription. The input looks valid, but clicks, key presses, and typed text silently do nothing.
+{% endhint %}
 
-Once the packages are right, call `CreateInput()` immediately after `window.Initialize()` as shown above. Don't defer it to the window's `Load` event, that event only fires from inside `window.Run()`'s internal loop, and Gum's setup drives its own loop manually via `window.DoEvents()` (see below) rather than calling `window.Run()`.
+{% hint style="warning" %}
+If `Initialize` throws `NotSupportedException: Couldn't find a suitable input platform for this view`, your project is missing the `Silk.NET.Input.Sdl` package listed in [Adding Gum NuGet package](#adding-gum-nuget-package). `Silk.NET.Windowing.Sdl` only creates the window, and the SDL input backend lives in the separate `Silk.NET.Input.Sdl` package. Match its version to your other Silk.NET packages.
+
+Call `Initialize` right after `window.Initialize()`. Don't defer it to the window's `Load` event, which only fires from inside `window.Run()`. Gum's setup drives its own loop with `window.DoEvents()` instead.
 {% endhint %}
 
 ## Adding Shader Support (Optional)
@@ -149,7 +150,7 @@ Then call `UseShadowDusk` after `GumUI.Initialize`:
 
 ```csharp
 // Initialize
-GumUI.Initialize(canvas, inputContext, "Content/GumProject/GumProject.gumj");
+GumUI.Initialize(window, "Content/GumProject/GumProject.gumj");
 GumUI.UseShadowDusk();
 ```
 
@@ -171,7 +172,7 @@ Then call `GumExpressionService.Initialize()` after `GumUI.Initialize`. Expressi
 
 ```csharp
 // Initialize
-GumUI.Initialize(canvas, inputContext, "Content/GumProject/GumProject.gumj");
+GumUI.Initialize(window, "Content/GumProject/GumProject.gumj");
 GumExpressionService.Initialize();
 ```
 
@@ -185,7 +186,7 @@ Gum can be tested by adding a Button after Gum is initialized. To do so, add cod
 
 ```csharp
 // Initialize
-GumUI.Initialize(canvas, inputContext);
+GumUI.Initialize(window);
 
 var button = new Button();
 button.AddToRoot();

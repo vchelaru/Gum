@@ -1,6 +1,6 @@
 using Silk.NET.OpenGLES;
 using Silk.NET.SDL;
-using Silk.NET.Input;
+using Gum.Forms.Input;
 using Silk.NET.Maths;
 using Silk.NET.Windowing;
 using Silk.NET.Windowing.Sdl;
@@ -8,7 +8,6 @@ using SkiaSharp;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using Gum;
-using Gum.Wireframe;
 using Gum.Themes.Bubblegum;
 using Gum.Themes.DarkPro;
 using Gum.Themes.Editor;
@@ -57,18 +56,12 @@ unsafe class Program
     private static ShowcaseScreen? currentScreen;
     private static Func<ShowcaseScreen> currentScreenFactory = () => new AllControlsScreen();
 
-    private static int windowWidth = 1400;
-    private static int windowHeight = 900;
-
     private static GumService GumUI => GumService.Default;
 
-    private static void InitializeGum(SKCanvas canvas, IInputContext inputContext)
+    private static void InitializeGum()
     {
-        GumUI.Initialize(canvas, inputContext);
+        GumUI.Initialize(window);
         GumUI.UseKeyboardDefaults();
-
-        GraphicalUiElement.CanvasWidth = windowWidth;
-        GraphicalUiElement.CanvasHeight = windowHeight;
 
         // Each theme's parameterless Apply() installs its visuals as the defaults. Editor has no
         // named background color, so a sensible dark surround is used, matching the MonoGame/raylib
@@ -89,45 +82,42 @@ unsafe class Program
         ApplyTheme(0);
         RebuildScreen();
 
-        WireKeyboard(inputContext);
     }
 
-    private static void WireKeyboard(IInputContext inputContext)
+    private static void HandleKeys()
     {
-        if (inputContext.Keyboards.Count == 0)
+        Gum.Input.Keyboard keyboard = GumUI.Keyboard;
+
+        if (keyboard.KeyPushed(Keys.Escape))
         {
+            running = false;
             return;
         }
 
-        var keyboard = inputContext.Keyboards[0];
-        keyboard.KeyDown += (_, key, _) =>
+        if (keyboard.KeyPushed(Keys.F1))
         {
-            if (key == Key.Escape)
-            {
-                running = false;
-                return;
-            }
+            SwitchScreen(() => new AllControlsScreen());
+            return;
+        }
 
-            if (key == Key.F1)
-            {
-                SwitchScreen(() => new AllControlsScreen());
-                return;
-            }
+        if (keyboard.KeyPushed(Keys.F2))
+        {
+            SwitchScreen(() => new ScreenshotScreen());
+            return;
+        }
 
-            if (key == Key.F2)
-            {
-                SwitchScreen(() => new ScreenshotScreen());
-                return;
-            }
-
-            int themeIndex = key - Key.Number1;
-            if (themeIndex >= 0 && themeIndex < themes.Length && themeIndex != currentThemeIndex)
-            {
-                ApplyTheme(themeIndex);
-                RebuildScreen();
-            }
-        };
+        int themeIndex = Array.FindIndex(NumberKeys, key => keyboard.KeyPushed(key));
+        if (themeIndex >= 0 && themeIndex < themes.Length && themeIndex != currentThemeIndex)
+        {
+            ApplyTheme(themeIndex);
+            RebuildScreen();
+        }
     }
+
+    private static readonly Keys[] NumberKeys =
+    {
+        Keys.D1, Keys.D2, Keys.D3, Keys.D4, Keys.D5, Keys.D6, Keys.D7, Keys.D8,
+    };
 
     private static void ApplyTheme(int index)
     {
@@ -148,21 +138,12 @@ unsafe class Program
         currentScreen.Build();
     }
 
-    private static void Draw()
-    {
-        GumUI.Draw();
-    }
-
     static unsafe void Main(string[] args)
     {
         // ANGLE via D3D11, matching SilkNetGumSample's Windows default.
         Environment.SetEnvironmentVariable("ANGLE_DEFAULT_PLATFORM", "d3d11");
 
         sdl = Silk.NET.SDL.SdlProvider.SDL.Value;
-
-        SKSurface? surface = null;
-        GRBackendRenderTarget? renderTarget = null;
-        SKCanvas canvas = null!;
 
         try
         {
@@ -176,7 +157,7 @@ unsafe class Program
 
             var options = WindowOptions.Default;
             options.API = api;
-            options.Size = new Vector2D<int>(windowWidth, windowHeight);
+            options.Size = new Vector2D<int>(1400, 900);
             options.Title = "Gum Theme Showcase (Skia/SilkNet)";
             options.WindowState = WindowState.Normal;
             options.WindowBorder = WindowBorder.Resizable;
@@ -195,36 +176,9 @@ unsafe class Program
 
             gl = GL.GetApi(window);
 
-            using var grGlInterface = GRGlInterface.Create(name => (nint)sdl.GLGetProcAddress(name));
-            grGlInterface.Validate();
-            using var grContext = GRContext.CreateGl(grGlInterface);
+            InitializeGum();
 
-            void RecreateSurface(int width, int height)
-            {
-                surface?.Dispose();
-                renderTarget?.Dispose();
-
-                renderTarget = new GRBackendRenderTarget(width, height, 0, 8, new GRGlFramebufferInfo(0, 0x8058));
-                surface = SKSurface.Create(grContext, renderTarget, GRSurfaceOrigin.BottomLeft, SKColorType.Rgba8888);
-                canvas = surface.Canvas;
-
-                if (GumUI.IsInitialized)
-                {
-                    GumUI.SystemManagers.Canvas = canvas;
-                }
-            }
-
-            RecreateSurface(windowWidth, windowHeight);
-
-            var inputContext = window.CreateInput();
-
-            InitializeGum(canvas, inputContext);
-
-            gl.Viewport(0, 0, (uint)windowWidth, (uint)windowHeight);
-
-            Vector2D<int>? pendingResize = null;
             window.Closing += () => running = false;
-            window.Resize += newSize => pendingResize = newSize;
 
             Stopwatch totalTime = new Stopwatch();
             totalTime.Start();
@@ -233,34 +187,20 @@ unsafe class Program
             {
                 window.DoEvents();
 
-                if (pendingResize.HasValue)
-                {
-                    var newSize = pendingResize.Value;
-                    pendingResize = null;
-
-                    gl.Viewport(0, 0, (uint)newSize.X, (uint)newSize.Y);
-                    RecreateSurface(newSize.X, newSize.Y);
-                    GumUI.HandleResize(newSize.X, newSize.Y);
-                }
+                HandleKeys();
 
                 GumUI.Update(totalTime.Elapsed.TotalSeconds);
 
                 gl.ClearColor(clearColor.Red / 255f, clearColor.Green / 255f, clearColor.Blue / 255f, 1.0f);
                 gl.Clear((uint)GLEnum.ColorBufferBit);
 
-                grContext.ResetContext();
-
-                Draw();
-                canvas.Flush();
+                GumUI.Draw();
 
                 window.GLContext!.SwapBuffers();
             }
         }
         finally
         {
-            canvas?.Dispose();
-            surface?.Dispose();
-            renderTarget?.Dispose();
             window?.Dispose();
             sdl?.Quit();
         }

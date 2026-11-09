@@ -17,3 +17,32 @@ In a multi-line `TextBox`, the selection highlight's `Height` is now set to the 
 You are affected if you set a deliberately different absolute height on the selection instance of a multi-line `TextBox`. To keep control of the height, set the selection instance's `HeightUnits` to a unit other than `Absolute`. A thin fixed-height highlight, such as an underline, cannot be done with this property and needs a different approach.
 
 See [Properties Set by Forms Controls](../../code/styling/properties-set-by-forms-controls.md) for everything the control writes to its Visual.
+
+## Silk.NET
+
+### Initialize Takes the Window
+
+`GumService.Default.Initialize` for Silk.NET now takes the `IWindow`, and Gum owns the SkiaSharp surface, the input context, and resize handling. `Draw()` resets Skia's GL state and flushes itself.
+
+❌ Old:
+
+```csharp
+GumUI.Initialize(surface.Canvas, window.CreateInput(), "Content/GumProject/GumProject.gumj");
+// ... on resize: recreate surface, GumUI.SystemManagers.Canvas = ..., GumUI.HandleResize(...)
+// ... each frame:
+grContext.ResetContext();
+GumUI.Draw();
+surface.Canvas.Flush();
+```
+
+✅ New:
+
+```csharp
+GumUI.Initialize(window, "Content/GumProject/GumProject.gumj");
+// ... each frame:
+GumUI.Draw();
+```
+
+Delete your `GRGlInterface`, `GRContext`, `GRBackendRenderTarget`, and `SKSurface` setup, your `window.Resize` handling, the `FrameworkElement.GamePadsForUiControl` wiring, and the manual `GraphicalUiElement.CanvasWidth`/`CanvasHeight` assignment. Your game still clears the framebuffer before `Draw()` and calls `window.GLContext.SwapBuffers()` after it. The overloads taking an `SKCanvas` remain for headless use, but then you own the surface.
+
+See [Silk.NET setup](../../code/getting-started/setup/adding-initializing-gum/silk.net.md).
