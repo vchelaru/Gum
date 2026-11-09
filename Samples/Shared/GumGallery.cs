@@ -72,8 +72,27 @@ internal sealed class GumGallery
         LoadScreen(codeIndex >= 0 ? ObjectFinder.Self.GumProjectSave!.Screens.Count + codeIndex : 0);
     }
 
-    /// <summary>Ticks whatever the current screen animates by hand, with the seconds since the last tick.</summary>
-    public void Tick(double elapsedSeconds) => (_currentCodeScreen as TextScreen)?.Tick(elapsedSeconds);
+    /// <summary>
+    /// Ticks whatever the current screen animates by hand, with the seconds since the last tick, and keeps the
+    /// screen below the tab bar, whose height changes when a resize makes its buttons wrap.
+    /// </summary>
+    public void Tick(double elapsedSeconds)
+    {
+        (_currentCodeScreen as TextScreen)?.Tick(elapsedSeconds);
+        FitBelowNavStrip(_currentGumxScreen ?? _currentCodeScreen?.Visual);
+    }
+
+    private void FitBelowNavStrip(GraphicalUiElement? screen)
+    {
+        if (screen == null) return;
+
+        float navStripHeight = _navStrip.Visual.AbsoluteHeight;
+        if (screen.Y != navStripHeight)
+        {
+            screen.Y = navStripHeight;
+            screen.Height = -navStripHeight;
+        }
+    }
 
     // A horizontal strip of buttons, one per screen, pinned to the top-left. The gallery mixes two screen
     // kinds (.gumx-authored GraphicalUiElement screens and code-only FrameworkElement screens), so each
