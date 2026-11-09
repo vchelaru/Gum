@@ -233,13 +233,17 @@ Add the NuGet package:
 dotnet add package Gum.Expressions
 ```
 
-Then call `GumExpressionService.Initialize()` at startup:
+Then call `UseExpressions` at startup:
 
 ```csharp
 // Initialize
 var project = GumUI.Initialize(this, "GumProject/GumProject.gumj");
-GumExpressionService.Initialize();
+GumUI.UseExpressions();
 ```
+
+{% hint style="info" %}
+Available in preview NuGet packages (use a `-preview` version), or now if building Gum from source.
+{% endhint %}
 
 {% hint style="info" %}
 The `Gum.Expressions` package uses Microsoft Roslyn for expression parsing, which adds approximately 10 MB to your build output. If your variable references only use simple assignments between variables of the same type (no arithmetic), you do not need this package. See [Casting and Type Considerations](#casting-and-type-considerations).
@@ -247,7 +251,7 @@ The `Gum.Expressions` package uses Microsoft Roslyn for expression parsing, whic
 
 The same `Gum.Expressions` package also enables runtime evaluation of arithmetic (including modulo `%`), conditional (ternary), comparison (`==`, `!=`, `<`, `>`, `<=`, `>=`), and logical (`&&`, `||`, `!`) operators, plus math functions such as `Sin`, `Max`, and `Clamp`, in variable references. Position among siblings (`Index`) and the `Absolute` variables (such as `AbsoluteWidth`) also need the package. See the [Variable References](../../gum-tool/gum-elements/general-properties/variable-references.md) page for the full list of supported syntax.
 
-Live updates within a component work without the package for plain references such as `Y = Progress`. Rows with expressions need `GumExpressionService.Initialize()` to update live.
+Live updates within a component work without the package for plain references such as `Y = Progress`. Rows with expressions need `UseExpressions()` to update live.
 
 A reference which reads `global::Localization.CurrentLanguage` re-evaluates on live visuals when `CurrentLanguage` changes, so a row such as `Width = global::Localization.CurrentLanguage == 2 ? 220 : 160` follows a language switch without extra code. See [Localization](../localization.md) for switching languages.
 
@@ -274,7 +278,7 @@ The error tells you to add `Gum.Expressions` when it converts that pair: `int`, 
 
 ### With Gum.Expressions
 
-After you call `GumExpressionService.Initialize()`, Gum evaluates the right side of every reference, plain ones included, and converts the result to the type of the variable on the left. The same conversion applies when you call `ApplyAllVariableReferences`.
+After you call `UseExpressions()`, Gum evaluates the right side of every reference, plain ones included, and converts the result to the type of the variable on the left. The same conversion applies when you call `ApplyAllVariableReferences`.
 
 | Right side result | Left side variable | What happens |
 | --- | --- | --- |
