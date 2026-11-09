@@ -69,15 +69,15 @@ internal static class SampleSupport
         }
     }
 
-    public static GumGallery CreateGallery(GumService gum, GlfwWindow window, SampleArgs args)
+    public static GumGallery CreateGallery(GumService GumUI, GlfwWindow window, SampleArgs args)
     {
         // Turns an RT Shader screen .sksl path into a compiled effect, then lets .fx and .slang files work too.
         SkiaGum.CustomSetPropertyOnRenderable.RenderTargetEffectResolver = SilkNetGum.Screens.RenderTargetShaderScreen.CompileEffectFromFile;
-        gum.UseShadowDusk();
-        gum.UseKeyboardDefaults();
+        GumUI.UseShadowDusk();
+        GumUI.UseKeyboardDefaults();
         FrameworkElement.GamePadsForUiControl.Clear();
-        FrameworkElement.GamePadsForUiControl.AddRange(gum.Gamepads);
-        gum.ClearColor = new SKColor(32, 32, 40);
+        FrameworkElement.GamePadsForUiControl.AddRange(GumUI.Gamepads);
+        GumUI.ClearColor = new SKColor(32, 32, 40);
 
         GumGallery gallery = new GumGallery();
         gallery.Build();

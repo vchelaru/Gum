@@ -29,9 +29,9 @@ try
     window.MakeContextCurrent();
     Glfw.SwapInterval(1);
 
-    GumService gum = GumService.Default;
-    gum.Initialize(window, "Content/GumProject/GumProject.gumx");
-    GumGallery gallery = SampleSupport.CreateGallery(gum, window, sample);
+    GumService GumUI = GumService.Default;
+    GumUI.Initialize(window, "Content/GumProject/GumProject.gumx");
+    GumGallery gallery = SampleSupport.CreateGallery(GumUI, window, sample);
 
     Stopwatch clock = Stopwatch.StartNew();
     double previousSeconds = 0;
@@ -40,10 +40,10 @@ try
     {
         Glfw.PollEvents();
         double now = clock.Elapsed.TotalSeconds;
-        gum.Update(now);
+        GumUI.Update(now);
         gallery.Tick(now - previousSeconds);
         previousSeconds = now;
-        gum.Draw();
+        GumUI.Draw();
 
         if (sample.ExitAfterSeconds > 0 && now >= sample.ExitAfterSeconds)
         {

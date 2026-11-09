@@ -91,9 +91,9 @@ try
     using Device deviceScope = device;
     Queue queue = device.GetQueue(queueFamily, 0);
 
-    GumService gum = GumService.Default;
-    gum.Initialize(window, instance, physicalDevice, device, queue, queueFamily, surface, "Content/GumProject/GumProject.gumx");
-    GumGallery gallery = SampleSupport.CreateGallery(gum, window, sample);
+    GumService GumUI = GumService.Default;
+    GumUI.Initialize(window, instance, physicalDevice, device, queue, queueFamily, surface, "Content/GumProject/GumProject.gumx");
+    GumGallery gallery = SampleSupport.CreateGallery(GumUI, window, sample);
 
     Stopwatch clock = Stopwatch.StartNew();
     double previousSeconds = 0;
@@ -102,10 +102,10 @@ try
     {
         Glfw.PollEvents();
         double now = clock.Elapsed.TotalSeconds;
-        gum.Update(now);
+        GumUI.Update(now);
         gallery.Tick(now - previousSeconds);
         previousSeconds = now;
-        gum.Draw();
+        GumUI.Draw();
 
         if (sample.ExitAfterSeconds > 0 && now >= sample.ExitAfterSeconds)
         {
@@ -115,7 +115,7 @@ try
                 device.WaitIdle();
                 long[]? presented = (long[]?)typeof(GumService)
                     .GetProperty("LastPresentedForTest", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)!
-                    .GetValue(gum);
+                    .GetValue(GumUI);
                 if (presented != null)
                 {
                     int width = (int)presented[2], height = (int)presented[3];
@@ -142,7 +142,7 @@ try
     }
 
     device.WaitIdle();
-    gum.Uninitialize();
+    GumUI.Uninitialize();
     instance.DestroySurfaceKHR(surface, null);
 }
 finally
