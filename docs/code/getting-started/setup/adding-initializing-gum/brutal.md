@@ -210,12 +210,12 @@ Add the NuGet package:
 dotnet add package Gum.Expressions
 ```
 
-Then call `GumExpressionService.Initialize()` after `GumUI.Initialize`:
+Then call `UseExpressions` after `GumUI.Initialize`:
 
 ```csharp
 // Initialize
 GumUI.Initialize(window, "Content/GumProject/GumProject.gumj");
-Gum.Expressions.GumExpressionService.Initialize();
+GumUI.UseExpressions();
 ```
 
 If linking to source instead of NuGet, add `<Gum Root>/Runtimes/GumExpressions/GumExpressions.csproj` to your solution.
@@ -263,7 +263,7 @@ Glfw.SwapInterval(1);
 GumService GumUI = GumService.Default;
 GumUI.Initialize(window, "Content/GumProject/GumProject.gumj");
 GumUI.UseShadowDusk(); // Optional: .fx and .slang shader files (Gum.SkiaSharp.ShadowDusk)
-Gum.Expressions.GumExpressionService.Initialize(); // Optional: arithmetic expressions in variable references (Gum.Expressions)
+GumUI.UseExpressions(); // Optional: arithmetic expressions in variable references (Gum.Expressions)
 GumUI.UseKeyboardDefaults();
 GumUI.UseGamepadDefaults();
 
@@ -369,7 +369,7 @@ Queue queue = device.GetQueue(queueFamily, 0);
 GumService GumUI = GumService.Default;
 GumUI.Initialize(window, instance, physicalDevice, device, queue, queueFamily, surface, "Content/GumProject/GumProject.gumj");
 GumUI.UseShadowDusk(); // Optional: .fx and .slang shader files (Gum.SkiaSharp.ShadowDusk)
-Gum.Expressions.GumExpressionService.Initialize(); // Optional: arithmetic expressions in variable references (Gum.Expressions)
+GumUI.UseExpressions(); // Optional: arithmetic expressions in variable references (Gum.Expressions)
 GumUI.UseKeyboardDefaults();
 GumUI.UseGamepadDefaults();
 

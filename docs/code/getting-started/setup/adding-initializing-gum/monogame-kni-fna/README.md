@@ -204,10 +204,11 @@ using KernSmith.Rasterizers.StbTrueType;
 RuntimeHelpers.RunClassConstructor(typeof(StbTrueTypeRasterizer).TypeHandle);
 ```
 
-Then pass the backend explicitly when creating the font creator:
+Then pass the backend explicitly:
 
 ```csharp
-new KernSmith.Gum.KernSmithFontCreator(GraphicsDevice, KernSmith.RasterizerBackend.StbTrueType);
+// Initialize
+GumUI.UseKernSmith(KernSmith.RasterizerBackend.StbTrueType);
 ```
 {% endhint %}
 
@@ -246,11 +247,10 @@ public class Game1 : Core
         base.Initialize();
 
         GumUI.Initialize(Core.GraphicsDevice);
-        Gum.Renderables.ShapeRenderer.Self.Initialize(); // Recommended, optional: shape fill/gradient/shadow
-        Gum.Wireframe.CustomSetPropertyOnRenderable.InMemoryFontCreator =
-            new KernSmith.Gum.KernSmithFontCreator(Core.GraphicsDevice); // Recommended, optional: dynamic fonts
+        GumUI.UseShapes(); // Recommended, optional: shape fill/gradient/shadow
+        GumUI.UseKernSmith(); // Recommended, optional: dynamic fonts
         GumUI.UseShadowDusk(); // Optional: .fx and .slang shader files
-        Gum.Expressions.GumExpressionService.Initialize(); // Optional: arithmetic expressions in variable references
+        GumUI.UseExpressions(); // Optional: arithmetic expressions in variable references
         GumUI.UseKeyboardDefaults();
         GumUI.UseGamepadDefaults();
 
@@ -275,6 +275,10 @@ public class Game1 : Core
 ## Adding Gum to Game
 
 The following is a complete `Game1` class. Lines marked **Optional** match the packages above, so delete the lines for any package you skipped.
+
+{% hint style="info" %}
+Available in preview NuGet packages (use a `-preview` version), or now if building Gum from source.
+{% endhint %}
 
 {% hint style="info" %}
 This example uses retained mode rendering. For immediate mode rendering, see the [Setup for GumBatch](../../setup-for-gumbatch.md) page.
@@ -305,11 +309,10 @@ public class Game1 : Game
     protected override void Initialize()
     {
         GumUI.Initialize(this, "GumProject/GumProject.gumj");
-        Gum.Renderables.ShapeRenderer.Self.Initialize(); // Recommended, optional: shape fill/gradient/shadow
-        Gum.Wireframe.CustomSetPropertyOnRenderable.InMemoryFontCreator =
-            new KernSmith.Gum.KernSmithFontCreator(GraphicsDevice); // Recommended, optional: dynamic fonts
+        GumUI.UseShapes(); // Recommended, optional: shape fill/gradient/shadow
+        GumUI.UseKernSmith(); // Recommended, optional: dynamic fonts
         GumUI.UseShadowDusk(); // Optional: .fx and .slang shader files
-        Gum.Expressions.GumExpressionService.Initialize(); // Optional: arithmetic expressions in variable references
+        GumUI.UseExpressions(); // Optional: arithmetic expressions in variable references
         GumUI.UseKeyboardDefaults();
         GumUI.UseGamepadDefaults();
 

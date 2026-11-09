@@ -125,12 +125,16 @@ Add the NuGet package:
 dotnet add package Gum.Expressions
 ```
 
-Then call `GumExpressionService.Initialize()` after `GumUI.Initialize`. Expression support is typically used with a Gum project that has variable references defined in the tool:
+Then call `UseExpressions` after `GumUI.Initialize`. Expression support is typically used with a Gum project that has variable references defined in the tool:
+
+{% hint style="info" %}
+Available in preview NuGet packages (use a `-preview` version), or now if building Gum from source.
+{% endhint %}
 
 ```csharp
 // Initialize
 GumUI.Initialize(canvas, width, height, "Content/GumProject/GumProject.gumj");
-GumExpressionService.Initialize();
+GumUI.UseExpressions();
 ```
 
 If linking to source instead of NuGet, add `<Gum Root>/Runtimes/GumExpressions/GumExpressions.csproj` to your solution.

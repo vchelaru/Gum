@@ -134,12 +134,15 @@ Just as `Styling.ActiveStyle.Colors` controls the colors of every control create
 
 Set the `Font`, `FontSize`, `IsBold`, or `IsItalic` values on a state to change it. The following code relies on KernSmith for dynamic font creation. For more information on dynamic fonts and information on using KernSmith, see the [Font Strategies](../../files-and-fonts/font-strategies.md#dynamic-kernsmith-generation) page.
 
+{% hint style="info" %}
+Available in preview NuGet packages (use a `-preview` version), or now if building Gum from source.
+{% endhint %}
+
 ```csharp
 // initialize
 GumUI.Initialize(this);
 
-CustomSetPropertyOnRenderable.InMemoryFontCreator =
-    new KernSmithFontCreator(GraphicsDevice);
+GumUI.UseKernSmith();
 
 var textStyling = Gum.Forms.DefaultVisuals.V3.Styling.ActiveStyle.Text;
 var normalState = textStyling.Normal;

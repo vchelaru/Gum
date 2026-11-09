@@ -108,7 +108,7 @@ Add the NuGet package:
 dotnet add package Gum.Expressions
 ```
 
-Then call `Gum.Expressions.GumExpressionService.Initialize()` after `GumUI.Initialize`, as shown in [Initializing Gum](#initializing-gum). Expression support is typically used with a Gum project that has variable references defined in the tool.
+Then call `UseExpressions()` after `GumUI.Initialize`, as shown in [Initializing Gum](#initializing-gum). Expression support is typically used with a Gum project that has variable references defined in the tool.
 
 If linking to source instead of NuGet, add `<Gum Root>/Runtimes/GumExpressions/GumExpressions.csproj` to your solution.
 
@@ -153,7 +153,7 @@ GumService GumUI = GumService.Default;
 
 GumUI.Initialize(window, "Content/GumProject/GumProject.gumj");
 GumUI.UseShadowDusk(); // Optional: .fx and .slang shader files
-Gum.Expressions.GumExpressionService.Initialize(); // Optional: arithmetic expressions in variable references
+GumUI.UseExpressions(); // Optional: arithmetic expressions in variable references
 GumUI.UseKeyboardDefaults();
 GumUI.UseGamepadDefaults();
 
