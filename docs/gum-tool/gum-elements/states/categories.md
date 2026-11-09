@@ -101,6 +101,10 @@ Variables can be removed from states, but this removal must be done at the categ
 
 This will remove the assignment of the variable from all states in the category.
 
+## GUM0002: Variable Reference Conflicts With Explicit Set
+
+Gum reports this warning when a variable has an explicit value that disagrees with the value a `VariableReferences` row would set. The warning text names both values.
+
 ## GUM0003: Category State Sets Its Own Category Selector
 
 A category's selector variable (e.g. `TextBoxCategoryState` for the `TextBoxCategory` category) chooses which state in that category is active. When a state *inside* the category sets that same selector, the result is circular: applying the state re-drives the whole category, which re-applies a (possibly different) state and discards the original state's authored values. Gum surfaces this with warning code **GUM0003**.
