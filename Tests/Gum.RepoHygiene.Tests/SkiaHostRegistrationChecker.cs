@@ -8,7 +8,11 @@ namespace Gum.RepoHygiene.Tests;
 /// </summary>
 internal static class SkiaHostRegistrationChecker
 {
-    private static readonly Regex HostImport = new(@"Import\s+Project\s*=\s*""[^""]*Skia(Input)?Host\.props""", RegexOptions.IgnoreCase);
+    private static readonly Regex HostImport = new(@"Import\s+Project\s*=\s*""[^""]*(Skia(Input)?|Brutal)Host\.props""", RegexOptions.IgnoreCase);
+
+    // A package built from another host's source and tested by its tests (Gum.Brutal.Vulkan twins Gum.Brutal): it only has
+    // to be in AllLibraries.sln, and shares the other's test project, sample and docs page.
+    private static readonly HashSet<string> SharedSourceVariants = new() { "BrutalGum.Vulkan" };
 
     private const string DocsFolder = "docs/code/getting-started/setup/adding-initializing-gum";
 
@@ -53,6 +57,16 @@ internal static class SkiaHostRegistrationChecker
         {
             string tests = host + ".Tests";
             string hostEntry = $"Runtimes\\{host}\\{host}.csproj";
+
+            if (SharedSourceVariants.Contains(host))
+            {
+                if (!allLibraries.Contains(hostEntry))
+                {
+                    missing.Add($"Skia host {host} is not in AllLibraries.sln. Add {hostEntry} to AllLibraries.sln.");
+                }
+                continue;
+            }
+
             string testEntry = $"Tests\\{tests}\\{tests}.csproj";
 
             if (!allLibraries.Contains(hostEntry) || !allLibraries.Contains(testEntry))

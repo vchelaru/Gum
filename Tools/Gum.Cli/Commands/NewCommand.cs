@@ -44,7 +44,7 @@ public static class NewCommand
             description: "Create a full, runnable game project for a platform (not just a Gum project), referencing Gum " +
                          "through NuGet, with the Gum project inside it at Content/GumProject and code generation already " +
                          "configured. <path> then names the project folder. Omit this option to create only a Gum project. " +
-                         $"Accepted values: {NewProjectPlatforms.ValidNames}. 'stride' runs on Windows only; 'brutal' runs on Windows and Linux with Vulkan 1.3; 'kniskia' is KNI drawing Gum through Skia.");
+                         $"Accepted values: {NewProjectPlatforms.ValidNames}. 'stride' runs on Windows only; 'brutal' runs on Windows and Linux with OpenGL 3.3; 'kniskia' is KNI drawing Gum through Skia.");
 
         var noRestoreOption = new Option<bool>(
             "--no-restore",

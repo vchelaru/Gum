@@ -1,90 +1,28 @@
 using Brutal.GlfwApi;
-using Brutal.Numerics;
-using Brutal.VulkanApi;
-using Brutal.VulkanApi.Abstractions;
 using Gum;
 {{HostUsings}}
-using SkiaGameRendering;
-using SkiaGameRendering.Core.VK;
-using SkiaSharp;
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 
-const int Width = 800;
-const int Height = 450;
+Glfw.Init();
+Glfw.WindowHint(GlfwWindowHint.ContextVersionMajor, 3);
+Glfw.WindowHint(GlfwWindowHint.ContextVersionMinor, 3);
+Glfw.WindowHint(GlfwWindowHint.OpenGlProfile, 0x32001 /* GLFW_OPENGL_CORE_PROFILE */);
+using GlfwWindow window = Glfw.CreateWindow(new GlfwWindow.CreateInfo { Title = "{{ProjectName}}", Size = new Brutal.Numerics.int2(800, 450) });
+window.MakeContextCurrent();
+Glfw.SwapInterval(1);
 
-if (!Glfw.Init())
-{
-    throw new InvalidOperationException("Failed to initialize GLFW.");
-}
-
-try
-{
-    // BRUTAL has no renderer, so the window needs no graphics API of its own.
-    Glfw.WindowHint(GlfwWindowHint.ClientApi, 0);
-    using GlfwWindow window = Glfw.CreateWindow(new GlfwWindow.CreateInfo { Title = "{{ProjectName}}", Size = new int2(Width, Height) });
-
-    // A Vulkan 1.3 device, as in BRUTAL's own samples.
-    HashSet<string> instanceExtensions = new HashSet<string>();
-    VulkanHelpers.AddPlatformRequiredExtensions(instanceExtensions);
-    using Instance instance = Vulkan.CreateInstance(new Instance.CreateInfo
-    {
-        AppInfo = new VkApplicationInfo { ApiVersion = (int)VulkanHelpers.Api.VERSION_1_3 },
-        Flags = VulkanHelpers.GetPlatformRequiredInstanceCreateFlags(),
-        EnabledExtensions = instanceExtensions,
-        EnabledLayers = [],
-    });
-    PhysicalDevice physicalDevice = instance.PhysicalDevices[0];
-    int family = physicalDevice.GetFirstQueueFamilyWithFlag(VkQueueFlags.GraphicsBit);
-    HashSet<string> deviceExtensions = new HashSet<string>();
-    VulkanHelpers.AddMandatoryIfSupportedDeviceExtensions(deviceExtensions, physicalDevice);
-    float priority = 1.0f;
-    VkPhysicalDeviceVulkan13Features features13 = new VkPhysicalDeviceVulkan13Features { DynamicRendering = true };
-    Device device;
-    unsafe
-    {
-        device = physicalDevice.CreateDevice(new DeviceEx.CreateInfo
-        {
-            Extensions = deviceExtensions,
-            QueueCreateInfos = [new VkDeviceQueueCreateInfo { QueueFamilyIndex = family, QueueCount = 1, QueuePriorities = &priority }],
-            Next = &features13,
-        });
-    }
-    using Device deviceScope = device;
-    Queue queue = device.GetQueue(family, 0);
-
-    // Skia draws into a Vulkan image. Sample target.VkImage in your own renderer to put it on screen.
-    using SkiaVulkanContext context = new SkiaVulkanContext(
-        instance.VkHandle, physicalDevice.VkHandle, device.VkHandle, queue.VkHandle, (uint)family);
-    using SkiaRenderTarget2D target = new SkiaRenderTarget2D(context, Width, Height);
-
-    GumService GumUI = GumService.Default;
-
-    GumUI.Initialize(window, Width, Height, "Content/GumProject/{{GumProjectFile}}");
+GumService GumUI = GumService.Default;
+GumUI.Initialize(window, "Content/GumProject/{{GumProjectFile}}");
 {{InitLines}}
 {{ScreenLines}}
 
-    Stopwatch clock = Stopwatch.StartNew();
-
-    while (!window.ShouldClose)
-    {
-        Glfw.PollEvents();
-
-        GumUI.Update(clock.Elapsed.TotalSeconds);
-
-        target.Begin();
-        target.Canvas.Clear(SKColors.CornflowerBlue);
-        GumUI.Draw(target.Canvas);
-        target.End();
-
-        // target.VkImage now holds the frame, in SHADER_READ_ONLY_OPTIMAL. Create a VkImageView over it
-        // and sample it in your own renderer here.
-    }
-
-    device.WaitIdle();
-}
-finally
+Stopwatch clock = Stopwatch.StartNew();
+while (!window.ShouldClose)
 {
-    Glfw.Terminate();
+    Glfw.PollEvents();
+    GumUI.Update(clock.Elapsed.TotalSeconds);
+    GumUI.Draw();
+    window.SwapBuffers();
 }
+
+Glfw.Terminate();
