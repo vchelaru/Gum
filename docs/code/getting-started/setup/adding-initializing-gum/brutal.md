@@ -33,15 +33,21 @@ dotnet add package Gum.Brutal
 
 Add only one of them:
 
+{% tabs %}
+{% tab title="Vulkan" %}
 ```bash
 dotnet add package SkiaGameRendering.Brutal
 ```
+{% endtab %}
 
+{% tab title="OpenGL" %}
 ```bash
 dotnet add package SkiaGameRendering.Brutal.OGL
 ```
+{% endtab %}
+{% endtabs %}
 
-Both packages work on Windows and Linux, and both draw through the same `GumService.Draw(SKCanvas)` call, so everything after creating the render target is identical.
+Both packages work on Windows and Linux, and Gum draws the same way with either: you pass the target's canvas to `GumService.Draw(SKCanvas)`.
 
 {% hint style="warning" %}
 Do not name your project `BrutalGum`, that is the assembly name inside the `Gum.Brutal` package. A same-named project produces a same-named output DLL that silently overwrites the runtime's copy in your `bin` folder. Gum's build catches this for you: if your `AssemblyName` collides, the build fails with an error telling you to change it.
