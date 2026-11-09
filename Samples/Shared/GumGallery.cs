@@ -57,6 +57,8 @@ internal sealed class GumGallery
 #endif
     };
 
+    private static GumService GumUI => GumService.Default;
+
     private GraphicalUiElement? _currentGumxScreen;
     private FrameworkElement? _currentCodeScreen;
     private int _currentScreenIndex;
@@ -191,12 +193,12 @@ internal sealed class GumGallery
         AddFitModeRadio("Zoom", isChecked: true, () =>
         {
             FitModeChanging?.Invoke();
-            GumService.Default.EnableZoomToWindow();
+            GumUI.EnableZoomToWindow();
         });
         AddFitModeRadio("Expand", isChecked: false, () =>
         {
             FitModeChanging?.Invoke();
-            GumService.Default.EnableExpandToWindow();
+            GumUI.EnableExpandToWindow();
         });
     }
 
