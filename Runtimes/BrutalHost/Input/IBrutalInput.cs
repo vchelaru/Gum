@@ -16,6 +16,18 @@ internal interface IBrutalInput
     /// <inheritdoc cref="CursorX"/>
     double CursorY { get; }
 
+    /// <summary>Window size in screen coordinates, the space <see cref="CursorX"/> is in.</summary>
+    int WindowWidth { get; }
+
+    /// <inheritdoc cref="WindowWidth"/>
+    int WindowHeight { get; }
+
+    /// <summary>Framebuffer size in pixels, which is Gum's canvas size. Larger than the window on a high-DPI display.</summary>
+    int FramebufferWidth { get; }
+
+    /// <inheritdoc cref="FramebufferWidth"/>
+    int FramebufferHeight { get; }
+
     bool IsMouseButtonDown(GlfwMouseButton button);
 
     bool IsKeyDown(GlfwKey key);

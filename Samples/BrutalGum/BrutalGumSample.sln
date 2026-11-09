@@ -5,13 +5,17 @@ VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BrutalGumSample", "BrutalGumSample\BrutalGumSample.csproj", "{5B906D59-31A8-48D4-BD70-E19E73670B0A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BrutalGum", "..\..\Runtimes\BrutalGum\BrutalGum.csproj", "{829613C1-755A-4D4B-BDE3-020F8D7B87D3}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BrutalGum.OGL", "..\..\Runtimes\BrutalGum.OGL\BrutalGum.OGL.csproj", "{829613C1-755A-4D4B-BDE3-020F8D7B87D3}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GumCommon", "..\..\GumCommon\GumCommon.csproj", "{3B39DB6A-E482-40AF-8C1C-2F47B8DA5900}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SkiaGum", "..\..\Runtimes\SkiaGum\SkiaGum.csproj", "{F7FFF8AB-226A-462C-9B15-EEA7199B8E3A}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SkiaGum.ShadowDusk", "..\..\Runtimes\SkiaGum.ShadowDusk\SkiaGum.ShadowDusk.csproj", "{0CCE6000-31AD-46DE-B028-4A1031E111FF}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BrutalGumSampleOgl", "BrutalGumSampleOgl\BrutalGumSampleOgl.csproj", "{6FD64564-0B7E-44C7-AC20-642002600CA3}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BrutalGum.Vulkan", "..\..\Runtimes\BrutalGum.Vulkan\BrutalGum.Vulkan.csproj", "{A4E39CDC-335A-4672-9D49-D60BD05F2810}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -83,6 +87,30 @@ Global
 		{0CCE6000-31AD-46DE-B028-4A1031E111FF}.Release|x64.Build.0 = Release|Any CPU
 		{0CCE6000-31AD-46DE-B028-4A1031E111FF}.Release|x86.ActiveCfg = Release|Any CPU
 		{0CCE6000-31AD-46DE-B028-4A1031E111FF}.Release|x86.Build.0 = Release|Any CPU
+		{6FD64564-0B7E-44C7-AC20-642002600CA3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6FD64564-0B7E-44C7-AC20-642002600CA3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6FD64564-0B7E-44C7-AC20-642002600CA3}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{6FD64564-0B7E-44C7-AC20-642002600CA3}.Debug|x64.Build.0 = Debug|Any CPU
+		{6FD64564-0B7E-44C7-AC20-642002600CA3}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{6FD64564-0B7E-44C7-AC20-642002600CA3}.Debug|x86.Build.0 = Debug|Any CPU
+		{6FD64564-0B7E-44C7-AC20-642002600CA3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6FD64564-0B7E-44C7-AC20-642002600CA3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6FD64564-0B7E-44C7-AC20-642002600CA3}.Release|x64.ActiveCfg = Release|Any CPU
+		{6FD64564-0B7E-44C7-AC20-642002600CA3}.Release|x64.Build.0 = Release|Any CPU
+		{6FD64564-0B7E-44C7-AC20-642002600CA3}.Release|x86.ActiveCfg = Release|Any CPU
+		{6FD64564-0B7E-44C7-AC20-642002600CA3}.Release|x86.Build.0 = Release|Any CPU
+		{A4E39CDC-335A-4672-9D49-D60BD05F2810}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A4E39CDC-335A-4672-9D49-D60BD05F2810}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A4E39CDC-335A-4672-9D49-D60BD05F2810}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{A4E39CDC-335A-4672-9D49-D60BD05F2810}.Debug|x64.Build.0 = Debug|Any CPU
+		{A4E39CDC-335A-4672-9D49-D60BD05F2810}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{A4E39CDC-335A-4672-9D49-D60BD05F2810}.Debug|x86.Build.0 = Debug|Any CPU
+		{A4E39CDC-335A-4672-9D49-D60BD05F2810}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A4E39CDC-335A-4672-9D49-D60BD05F2810}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A4E39CDC-335A-4672-9D49-D60BD05F2810}.Release|x64.ActiveCfg = Release|Any CPU
+		{A4E39CDC-335A-4672-9D49-D60BD05F2810}.Release|x64.Build.0 = Release|Any CPU
+		{A4E39CDC-335A-4672-9D49-D60BD05F2810}.Release|x86.ActiveCfg = Release|Any CPU
+		{A4E39CDC-335A-4672-9D49-D60BD05F2810}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

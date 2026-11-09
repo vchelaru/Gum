@@ -8,7 +8,11 @@ namespace Gum.RepoHygiene.Tests;
 /// </summary>
 internal static class SkiaHostRegistrationChecker
 {
-    private static readonly Regex HostImport = new(@"Import\s+Project\s*=\s*""[^""]*Skia(Input)?Host\.props""", RegexOptions.IgnoreCase);
+    private static readonly Regex HostImport = new(@"Import\s+Project\s*=\s*""[^""]*(Skia(Input)?|Brutal)Host\.props""", RegexOptions.IgnoreCase);
+
+    // A package built from another host's source and tested by its tests (Gum.Brutal.Vulkan twins Gum.Brutal.OGL): it only has
+    // to be in AllLibraries.sln, and shares the other's test project, sample and docs page.
+    private static readonly HashSet<string> SharedSourceVariants = new() { "BrutalGum.Vulkan" };
 
     private const string DocsFolder = "docs/code/getting-started/setup/adding-initializing-gum";
 
@@ -53,6 +57,16 @@ internal static class SkiaHostRegistrationChecker
         {
             string tests = host + ".Tests";
             string hostEntry = $"Runtimes\\{host}\\{host}.csproj";
+
+            if (SharedSourceVariants.Contains(host))
+            {
+                if (!allLibraries.Contains(hostEntry))
+                {
+                    missing.Add($"Skia host {host} is not in AllLibraries.sln. Add {hostEntry} to AllLibraries.sln.");
+                }
+                continue;
+            }
+
             string testEntry = $"Tests\\{tests}\\{tests}.csproj";
 
             if (!allLibraries.Contains(hostEntry) || !allLibraries.Contains(testEntry))
@@ -77,9 +91,11 @@ internal static class SkiaHostRegistrationChecker
                 missing.Add($"Skia host {host} is missing from .github/scripts/windows-test-groups.txt (the Windows CI script fails fast without it). Add a line \"headless Tests/{tests}\" to it.");
             }
 
-            if (!Directory.Exists(Path.Combine(repoRoot, "Samples", host)))
+            // BrutalGum.OGL and BrutalGum.Vulkan share Samples/BrutalGum.
+            string sampleFolder = host.EndsWith(".OGL") ? host.Substring(0, host.Length - ".OGL".Length) : host;
+            if (!Directory.Exists(Path.Combine(repoRoot, "Samples", sampleFolder)))
             {
-                missing.Add($"Skia host {host} has no sample. Add Samples/{host} (copy Samples/SilkNetGum).");
+                missing.Add($"Skia host {host} has no sample. Add Samples/{sampleFolder} (copy Samples/SilkNetGum).");
             }
 
             if (!DocsExempt.Contains(host))
@@ -135,7 +151,7 @@ internal static class SkiaHostRegistrationChecker
             // The product is "Silk.NET" (with a dot), so its page is silk.net.md, not silknet.md.
             return ("silk.net.md", "Silk.NET");
         }
-        if (host == "BrutalGum")
+        if (host == "BrutalGum.OGL")
         {
             // BRUTAL is an all-caps product name, not a word.
             return ("brutal.md", "BRUTAL");

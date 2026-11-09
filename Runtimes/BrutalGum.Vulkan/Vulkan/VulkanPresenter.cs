@@ -1,35 +1,33 @@
-// The BRUTAL renderer for the sample: a swapchain and a pipeline that samples the Gum Vulkan image
-// (SkiaRenderTarget2D.VkImage) on a full-screen triangle. Modeled on BRUTAL's samples/Demo/DemoVulkan.cs
-// (swapchain, acquire, present) and SkiaGameRendering's Sample.Brutal.Quad (sampling the Skia image).
-// The window cannot be resized, so the swapchain is never rebuilt.
+#nullable enable
+
 using Brutal.ShaderCApi;
 using Brutal.VulkanApi;
 using Brutal.VulkanApi.Abstractions;
-using SkiaGameRendering;
-using Brutal.GlfwApi;
+using System;
+using System.Linq;
 
-internal sealed unsafe class Presenter : IDisposable
+namespace Gum;
+
+/// <summary>
+/// Shows Gum's Vulkan image on the window: a swapchain over the game's surface and a pipeline that samples the
+/// image on a full-screen triangle. Modeled on BRUTAL's samples/Demo/DemoVulkan.cs (swapchain, acquire,
+/// present). The shaders, sampler and command objects live as long as the presenter; the swapchain, its views,
+/// the descriptor set and the pipeline are rebuilt by <see cref="Configure"/> whenever the framebuffer size or
+/// the source image changes. The game owns the surface and device and they are never destroyed here.
+/// </summary>
+internal sealed unsafe class VulkanPresenter : IDisposable
 {
-    private readonly Instance _instance;
+    private readonly PhysicalDevice _physicalDevice;
     private readonly Device _device;
     private readonly Queue _queue;
     private readonly VkSurfaceKHR _surface;
-    private readonly VkSwapchainKHR _swapchain;
-    private readonly VkImage[] _images;
-    private readonly VkImageView[] _imageViews;
-    private readonly VkExtent2D _extent;
-    private readonly VkImageView _sourceView;
     private readonly VkSampler _sampler;
     private readonly VkDescriptorSetLayout _setLayout;
-    private readonly VkDescriptorPool _pool;
-    private readonly VkDescriptorSet[] _sets = new VkDescriptorSet[1];
     private readonly ShaderStages _stages;
     private readonly VkPipelineLayout _pipelineLayout;
-    private readonly VkPipeline _pipeline;
     private readonly VkCommandPool _commandPool;
     private readonly CommandBuffer _commandBuffer;
     private readonly VkSemaphore _imageAvailable;
-    private readonly VkSemaphore[] _renderFinished;
     private readonly VkFence _frameFence;
     private readonly VkImageSubresourceRange _colorRange = new VkImageSubresourceRange
     {
@@ -38,92 +36,25 @@ internal sealed unsafe class Presenter : IDisposable
         LayerCount = 1,
     };
 
-    public Presenter(
-        Instance instance, PhysicalDevice physicalDevice, Device device, Queue queue, int queueFamily,
-        VkSurfaceKHR surface, GlfwWindow window, SkiaRenderTarget2D source)
+    // Rebuilt by Configure.
+    private bool _configured;
+    private VkSwapchainKHR _swapchain;
+    private VkImage[] _images = Array.Empty<VkImage>();
+    private VkImageView[] _imageViews = Array.Empty<VkImageView>();
+    private VkSemaphore[] _renderFinished = Array.Empty<VkSemaphore>();
+    private VkExtent2D _extent;
+    private VkImageView _sourceView;
+    private VkDescriptorPool _pool;
+    private readonly VkDescriptorSet[] _sets = new VkDescriptorSet[1];
+    private VkPipeline _pipeline;
+
+    public VulkanPresenter(PhysicalDevice physicalDevice, Device device, Queue queue, int queueFamily, VkSurfaceKHR surface)
     {
-        _instance = instance;
+        _physicalDevice = physicalDevice;
         _device = device;
         _queue = queue;
         _surface = surface;
 
-        // Swapchain: one image view per swapchain image.
-        var capabilities = physicalDevice.GetSurfaceCapabilitiesKHR(surface);
-        _extent = capabilities.CurrentExtent;
-        if (_extent.Width == -1 && _extent.Height == -1)
-        {
-            _extent = new VkExtent2D(
-                Math.Clamp(window.FramebufferSize.X, capabilities.MinImageExtent.Width, capabilities.MaxImageExtent.Width),
-                Math.Clamp(window.FramebufferSize.Y, capabilities.MinImageExtent.Height, capabilities.MaxImageExtent.Height));
-        }
-
-        var imageCount = Math.Max(capabilities.MinImageCount, 2);
-        if (capabilities.MaxImageCount > 0)
-        {
-            imageCount = Math.Min(imageCount, capabilities.MaxImageCount);
-        }
-
-        VkCompositeAlphaFlagsKHR[] alphaModes =
-        [
-            VkCompositeAlphaFlagsKHR.OpaqueBitKHR,
-            VkCompositeAlphaFlagsKHR.PreMultipliedBitKHR,
-            VkCompositeAlphaFlagsKHR.PostMultipliedBitKHR,
-            VkCompositeAlphaFlagsKHR.InheritBitKHR,
-        ];
-        var compositeAlpha = alphaModes.First(mode => (capabilities.SupportedCompositeAlpha & mode) != 0);
-
-        // Gum's image holds sRGB bytes in a UNORM format. Writing them to a UNORM swapchain as they are
-        // keeps the colors right; an sRGB swapchain would encode them a second time.
-        var surfaceFormats = new VkSurfaceFormatKHR[physicalDevice.GetSurfaceFormatsKHR_Count(surface)];
-        physicalDevice.GetSurfaceFormatsKHR_Write(surface, surfaceFormats);
-        var surfaceFormat = surfaceFormats[0];
-        foreach (var candidate in surfaceFormats)
-        {
-            if (candidate.Format is VkFormat.B8G8R8A8UNorm or VkFormat.R8G8B8A8UNorm)
-            {
-                surfaceFormat = candidate;
-                break;
-            }
-        }
-
-        _swapchain = device.CreateSwapchainKHR(
-            new VkSwapchainCreateInfoKHR
-            {
-                Surface = surface,
-                MinImageCount = imageCount,
-                ImageFormat = surfaceFormat.Format,
-                ImageColorSpace = surfaceFormat.ColorSpace,
-                ImageExtent = _extent,
-                ImageArrayLayers = 1,
-                ImageUsage = VkImageUsageFlags.ColorAttachmentBit,
-                ImageSharingMode = VkSharingMode.Exclusive,
-                PreTransform = capabilities.CurrentTransform,
-                CompositeAlpha = compositeAlpha,
-                PresentMode = VkPresentModeKHR.FifoKHR,
-                Clipped = true,
-            },
-            null);
-
-        _images = new VkImage[device.GetSwapchainImagesKHR_Count(_swapchain)];
-        device.GetSwapchainImagesKHR_Write(_swapchain, _images);
-        _imageViews = new VkImageView[_images.Length];
-        for (int i = 0; i < _images.Length; i++)
-        {
-            _imageViews[i] = device.CreateImageView(
-                new VkImageViewCreateInfo
-                {
-                    Image = _images[i], ViewType = VkImageViewType._2D, Format = surfaceFormat.Format, SubresourceRange = _colorRange,
-                },
-                null);
-        }
-
-        // The Gum image, as a combined image sampler in descriptor set 0.
-        _sourceView = device.CreateImageView(
-            new VkImageViewCreateInfo
-            {
-                Image = new VkImage((nint)source.VkImage), ViewType = VkImageViewType._2D, Format = (VkFormat)source.VkFormat, SubresourceRange = _colorRange,
-            },
-            null);
         _sampler = device.CreateSampler(
             new VkSamplerCreateInfo
             {
@@ -137,14 +68,7 @@ internal sealed unsafe class Presenter : IDisposable
             Binding = 0, DescriptorType = VkDescriptorType.CombinedImageSampler, DescriptorCount = 1, StageFlags = VkShaderStageFlags.FragmentBit,
         };
         _setLayout = device.CreateDescriptorSetLayout(new VkDescriptorSetLayoutCreateInfo { BindingCount = 1, Bindings = &binding }, null);
-        var poolSize = new VkDescriptorPoolSize { Type = VkDescriptorType.CombinedImageSampler, DescriptorCount = 1 };
-        _pool = device.CreateDescriptorPool(new VkDescriptorPoolCreateInfo { MaxSets = 1, PoolSizeCount = 1, PoolSizes = &poolSize }, null);
-        var setLayoutLocal = _setLayout;
-        device.AllocateDescriptorSets(new VkDescriptorSetAllocateInfo { DescriptorPool = _pool, DescriptorSetCount = 1, SetLayouts = &setLayoutLocal }, _sets);
-        var imageInfo = new VkDescriptorImageInfo { Sampler = _sampler, ImageView = _sourceView, ImageLayout = VkImageLayout.ShaderReadOnlyOptimal };
-        device.UpdateDescriptorSets(
-            [new VkWriteDescriptorSet { DstSet = _sets[0], DstBinding = 0, DescriptorCount = 1, DescriptorType = VkDescriptorType.CombinedImageSampler, ImageInfo = &imageInfo }],
-            []);
+        _pipelineLayout = device.CreatePipelineLayout([_setLayout], [], null);
 
         // Shaders: one triangle that covers the screen, sampling Gum's image.
         using var compiler = ShaderC.CreateCompiler();
@@ -174,14 +98,116 @@ internal sealed unsafe class Presenter : IDisposable
                 """u8, ShaderKind.FragmentShader)),
         ], null);
 
+        _commandPool = device.CreateCommandPool(new VkCommandPoolCreateInfo { QueueFamilyIndex = queueFamily, Flags = VkCommandPoolCreateFlags.ResetCommandBufferBit }, null);
+        _commandBuffer = device.AllocateCommandBuffer(new VkCommandBufferAllocateInfo { CommandPool = _commandPool, Level = VkCommandBufferLevel.Primary });
+        _imageAvailable = device.CreateSemaphore(new VkSemaphoreCreateInfo(), null);
+        _frameFence = device.CreateFence(VkFenceCreateFlags.SignaledBit, null);
+    }
+
+    /// <summary>
+    /// (Re)builds everything that depends on the window size or on Gum's image: the swapchain at
+    /// <paramref name="width"/> by <paramref name="height"/> (the surface's current extent wins when it has one),
+    /// and the descriptor that samples <paramref name="source"/>.
+    /// </summary>
+    public void Configure(int width, int height, VkImage source, VkFormat sourceFormat)
+    {
+        _device.WaitIdle();
+        DestroySizeDependent();
+
+        var capabilities = _physicalDevice.GetSurfaceCapabilitiesKHR(_surface);
+        _extent = capabilities.CurrentExtent;
+        if (_extent.Width == -1 && _extent.Height == -1)
+        {
+            _extent = new VkExtent2D(
+                Math.Clamp(width, capabilities.MinImageExtent.Width, capabilities.MaxImageExtent.Width),
+                Math.Clamp(height, capabilities.MinImageExtent.Height, capabilities.MaxImageExtent.Height));
+        }
+
+        var imageCount = Math.Max(capabilities.MinImageCount, 2);
+        if (capabilities.MaxImageCount > 0)
+        {
+            imageCount = Math.Min(imageCount, capabilities.MaxImageCount);
+        }
+
+        VkCompositeAlphaFlagsKHR[] alphaModes =
+        [
+            VkCompositeAlphaFlagsKHR.OpaqueBitKHR,
+            VkCompositeAlphaFlagsKHR.PreMultipliedBitKHR,
+            VkCompositeAlphaFlagsKHR.PostMultipliedBitKHR,
+            VkCompositeAlphaFlagsKHR.InheritBitKHR,
+        ];
+        var compositeAlpha = alphaModes.First(mode => (capabilities.SupportedCompositeAlpha & mode) != 0);
+
+        // Gum's image holds sRGB bytes in a UNORM format. Writing them to a UNORM swapchain as they are
+        // keeps the colors right; an sRGB swapchain would encode them a second time.
+        var surfaceFormats = new VkSurfaceFormatKHR[_physicalDevice.GetSurfaceFormatsKHR_Count(_surface)];
+        _physicalDevice.GetSurfaceFormatsKHR_Write(_surface, surfaceFormats);
+        var surfaceFormat = surfaceFormats[0];
+        foreach (var candidate in surfaceFormats)
+        {
+            if (candidate.Format is VkFormat.B8G8R8A8UNorm or VkFormat.R8G8B8A8UNorm)
+            {
+                surfaceFormat = candidate;
+                break;
+            }
+        }
+
+        _swapchain = _device.CreateSwapchainKHR(
+            new VkSwapchainCreateInfoKHR
+            {
+                Surface = _surface,
+                MinImageCount = imageCount,
+                ImageFormat = surfaceFormat.Format,
+                ImageColorSpace = surfaceFormat.ColorSpace,
+                ImageExtent = _extent,
+                ImageArrayLayers = 1,
+                // TransferSrc lets a test read the presented pixels back; it costs nothing when unused.
+                ImageUsage = VkImageUsageFlags.ColorAttachmentBit
+                    | ((capabilities.SupportedUsageFlags & VkImageUsageFlags.TransferSrcBit) != 0 ? VkImageUsageFlags.TransferSrcBit : 0),
+                ImageSharingMode = VkSharingMode.Exclusive,
+                PreTransform = capabilities.CurrentTransform,
+                CompositeAlpha = compositeAlpha,
+                PresentMode = VkPresentModeKHR.FifoKHR,
+                Clipped = true,
+            },
+            null);
+
+        SwapchainFormat = surfaceFormat.Format;
+        LastPresentedImage = null;
+        _images = new VkImage[_device.GetSwapchainImagesKHR_Count(_swapchain)];
+        _device.GetSwapchainImagesKHR_Write(_swapchain, _images);
+        _imageViews = new VkImageView[_images.Length];
+        for (int i = 0; i < _images.Length; i++)
+        {
+            _imageViews[i] = _device.CreateImageView(
+                new VkImageViewCreateInfo
+                {
+                    Image = _images[i], ViewType = VkImageViewType._2D, Format = surfaceFormat.Format, SubresourceRange = _colorRange,
+                },
+                null);
+        }
+        _renderFinished = _images.Select(_ => _device.CreateSemaphore(new VkSemaphoreCreateInfo(), null)).ToArray();
+
+        // The Gum image, as a combined image sampler in descriptor set 0.
+        _sourceView = _device.CreateImageView(
+            new VkImageViewCreateInfo { Image = source, ViewType = VkImageViewType._2D, Format = sourceFormat, SubresourceRange = _colorRange },
+            null);
+        var poolSize = new VkDescriptorPoolSize { Type = VkDescriptorType.CombinedImageSampler, DescriptorCount = 1 };
+        _pool = _device.CreateDescriptorPool(new VkDescriptorPoolCreateInfo { MaxSets = 1, PoolSizeCount = 1, PoolSizes = &poolSize }, null);
+        var setLayoutLocal = _setLayout;
+        _device.AllocateDescriptorSets(new VkDescriptorSetAllocateInfo { DescriptorPool = _pool, DescriptorSetCount = 1, SetLayouts = &setLayoutLocal }, _sets);
+        var imageInfo = new VkDescriptorImageInfo { Sampler = _sampler, ImageView = _sourceView, ImageLayout = VkImageLayout.ShaderReadOnlyOptimal };
+        _device.UpdateDescriptorSets(
+            [new VkWriteDescriptorSet { DstSet = _sets[0], DstBinding = 0, DescriptorCount = 1, DescriptorType = VkDescriptorType.CombinedImageSampler, ImageInfo = &imageInfo }],
+            []);
+
         var vertexInput = new VertexInput(0, 0);
         var viewport = new VkViewport { Width = _extent.Width, Height = _extent.Height, MaxDepth = 1 };
         var scissor = new VkRect2D(_extent);
         var viewportState = new VkPipelineViewportStateCreateInfo { ViewportCount = 1, Viewports = &viewport, ScissorCount = 1, Scissors = &scissor };
         var format = surfaceFormat.Format;
         var rendering = new VkPipelineRenderingCreateInfo { ColorAttachmentCount = 1, ColorAttachmentFormats = &format };
-        _pipelineLayout = device.CreatePipelineLayout([_setLayout], [], null);
-        _pipeline = device.CreateGraphicsPipeline(VkPipelineCache.NullHandle, new VkGraphicsPipelineCreateInfo
+        _pipeline = _device.CreateGraphicsPipeline(VkPipelineCache.NullHandle, new VkGraphicsPipelineCreateInfo
         {
             Next = &rendering,
             StageCount = _stages.Count,
@@ -195,16 +221,17 @@ internal sealed unsafe class Presenter : IDisposable
             Layout = _pipelineLayout,
         }, null);
 
-        _commandPool = device.CreateCommandPool(new VkCommandPoolCreateInfo { QueueFamilyIndex = queueFamily, Flags = VkCommandPoolCreateFlags.ResetCommandBufferBit }, null);
-        _commandBuffer = device.AllocateCommandBuffer(new VkCommandBufferAllocateInfo { CommandPool = _commandPool, Level = VkCommandBufferLevel.Primary });
-        _imageAvailable = device.CreateSemaphore(new VkSemaphoreCreateInfo(), null);
-        _renderFinished = _images.Select(_ => device.CreateSemaphore(new VkSemaphoreCreateInfo(), null)).ToArray();
-        _frameFence = device.CreateFence(VkFenceCreateFlags.SignaledBit, null);
+        _configured = true;
     }
 
     /// <summary>Draws the Gum image to the next swapchain image and presents it.</summary>
     public void Present()
     {
+        if (!_configured)
+        {
+            return;
+        }
+
         _device.WaitForFence(_frameFence, -1);
         _device.ResetFences([_frameFence]);
 
@@ -241,7 +268,17 @@ internal sealed unsafe class Presenter : IDisposable
         {
             WaitSemaphoreCount = 1, WaitSemaphores = &signal, SwapchainCount = 1, Swapchains = &swapchain, ImageIndices = &imageIndex,
         });
+        LastPresentedImage = image;
     }
+
+    /// <summary>The swapchain image last handed to the presentation engine (PRESENT_SRC_KHR), for test readback.</summary>
+    public VkImage? LastPresentedImage { get; private set; }
+
+    /// <summary>The swapchain's size in pixels.</summary>
+    public (int Width, int Height) SwapchainSize => (_extent.Width, _extent.Height);
+
+    /// <summary>The swapchain's pixel format.</summary>
+    public VkFormat SwapchainFormat { get; private set; }
 
     private void Transition(
         VkImage image, VkImageLayout from, VkImageLayout to,
@@ -256,28 +293,39 @@ internal sealed unsafe class Presenter : IDisposable
             },
         ]);
 
-    public void Dispose()
+    // Callers wait for the device to be idle first.
+    private void DestroySizeDependent()
     {
-        _device.WaitIdle();
-        _device.DestroyFence(_frameFence, null);
-        _device.DestroySemaphore(_imageAvailable, null);
+        if (!_configured)
+        {
+            return;
+        }
+
+        _configured = false;
+        _device.DestroyPipeline(_pipeline, null);
+        _device.DestroyDescriptorPool(_pool, null);
+        _device.DestroyImageView(_sourceView, null);
         foreach (var semaphore in _renderFinished)
         {
             _device.DestroySemaphore(semaphore, null);
         }
-        _device.DestroyCommandPool(_commandPool, null);
-        _device.DestroyPipeline(_pipeline, null);
-        _device.DestroyPipelineLayout(_pipelineLayout, null);
-        _stages.Dispose();
-        _device.DestroyDescriptorPool(_pool, null);
-        _device.DestroyDescriptorSetLayout(_setLayout, null);
-        _device.DestroySampler(_sampler, null);
-        _device.DestroyImageView(_sourceView, null);
         foreach (var view in _imageViews)
         {
             _device.DestroyImageView(view, null);
         }
         _device.DestroySwapchainKHR(_swapchain, null);
-        _instance.DestroySurfaceKHR(_surface, null);
+    }
+
+    public void Dispose()
+    {
+        _device.WaitIdle();
+        DestroySizeDependent();
+        _device.DestroyFence(_frameFence, null);
+        _device.DestroySemaphore(_imageAvailable, null);
+        _device.DestroyCommandPool(_commandPool, null);
+        _device.DestroyPipelineLayout(_pipelineLayout, null);
+        _stages.Dispose();
+        _device.DestroyDescriptorSetLayout(_setLayout, null);
+        _device.DestroySampler(_sampler, null);
     }
 }

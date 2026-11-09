@@ -17,7 +17,7 @@ There are two modes:
 |---|---|---|
 | `path` | `GumProject` | Where to create the project. A name creates `<name>/<name>.gumj`; a path ending in `.gumj` or `.gumx` is used as is. With `--platform` it names the project folder instead. |
 | `--template`, `-t` | `forms` | `forms` (all Forms controls, behaviors and assets) or `empty` (standard elements only). |
-| `--platform`, `-p` | none | `monogame`, `kni`, `kniskia` (KNI drawn by Skia), `raylib`, `stride` (Windows only), `silknet` or `brutal` (Windows and Linux, Vulkan 1.3). Creates a full game project (not just a Gum project) that references Gum through NuGet, with the Gum project inside it. Leave it out for just a Gum project. |
+| `--platform`, `-p` | none | `monogame`, `kni`, `kniskia` (KNI drawn by Skia), `raylib`, `stride` (Windows only), `silknet` or `brutal` (Windows and Linux, OpenGL 3.3). Creates a full game project (not just a Gum project) that references Gum through NuGet, with the Gum project inside it. Leave it out for just a Gum project. |
 | `--no-restore` | off | With `--platform`, skip the `dotnet restore` that runs after creation. |
 | `--source-linked` | off | With `--platform`, reference the platform's runtime project in the Gum checkout instead of the NuGet package. The checkout is the one this gumcli was built from, or the one the current folder is in. For testing local Gum changes. |
 
@@ -39,7 +39,7 @@ gumcli new MyGame -p kniskia              # KNI DesktopGL, Gum drawn by Skia
 gumcli new MyGame -p raylib               # raylib-cs
 gumcli new MyGame -p stride               # Stride 3D, Windows only
 gumcli new MyGame -p silknet              # Silk.NET, Windows/macOS/Linux
-gumcli new MyGame -p brutal               # BRUTAL, Windows and Linux (Vulkan 1.3)
+gumcli new MyGame -p brutal               # BRUTAL, Windows and Linux (OpenGL 3.3)
 gumcli new MyGame -p monogame -t empty    # no Forms controls in the Gum project
 gumcli new MyGame -p monogame --no-restore
 ```

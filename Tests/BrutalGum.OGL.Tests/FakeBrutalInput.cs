@@ -10,6 +10,10 @@ internal sealed class FakeBrutalInput : IBrutalInput
 {
     public double CursorX { get; set; }
     public double CursorY { get; set; }
+    public int WindowWidth { get; set; } = 800;
+    public int WindowHeight { get; set; } = 600;
+    public int FramebufferWidth { get; set; } = 800;
+    public int FramebufferHeight { get; set; } = 600;
     public HashSet<GlfwMouseButton> HeldButtons { get; } = new();
     public HashSet<GlfwKey> HeldKeys { get; } = new();
     public string? ClipboardText { get; set; } = "";

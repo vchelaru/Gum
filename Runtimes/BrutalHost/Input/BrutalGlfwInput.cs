@@ -26,6 +26,14 @@ internal sealed class BrutalGlfwInput : IBrutalInput
 
     public double CursorY => _window.CursorPos.Y;
 
+    public int WindowWidth => _window.Size.X;
+
+    public int WindowHeight => _window.Size.Y;
+
+    public int FramebufferWidth => _window.FramebufferSize.X;
+
+    public int FramebufferHeight => _window.FramebufferSize.Y;
+
     public bool IsMouseButtonDown(GlfwMouseButton button) => _window.GetMouseButton(button) == GlfwButtonAction.Press;
 
     // GetKey reports Press for a held key; Repeat is only delivered to key callbacks.

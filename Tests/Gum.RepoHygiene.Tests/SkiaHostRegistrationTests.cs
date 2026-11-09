@@ -31,7 +31,7 @@ public class SkiaHostRegistrationTests : IDisposable
     {
         IReadOnlyList<string> hosts = SkiaHostRegistrationChecker.DiscoverHosts(RepoPaths.RepoRoot);
 
-        hosts.ShouldBe(new[] { "BrutalGum", "KniSkiaGum", "SilkNetGum", "StrideGum", "UnityGum" }, ignoreOrder: true);
+        hosts.ShouldBe(new[] { "BrutalGum.OGL", "BrutalGum.Vulkan", "KniSkiaGum", "SilkNetGum", "StrideGum", "UnityGum" }, ignoreOrder: true);
     }
 
     [Fact]

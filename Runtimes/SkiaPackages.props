@@ -1,7 +1,7 @@
 <Project>
   <!--
     The Skia package set every Skia-family runtime compiles SkiaGum's renderable source against:
-    SkiaGum, SilkNetGum, StrideGum and BrutalGum (UnityGum gets them through its SkiaGum reference). Those
+    SkiaGum, SilkNetGum, StrideGum and BrutalGum.OGL and BrutalGum.Vulkan (UnityGum gets them through its SkiaGum reference). Those
     projects share the same source files, so a version that differs between them changes the
     behavior of the shared Text.cs and friends with no compile error. Bump versions here only.
   -->

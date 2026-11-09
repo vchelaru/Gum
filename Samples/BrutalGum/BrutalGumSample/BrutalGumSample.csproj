@@ -2,7 +2,7 @@
 
 	<PropertyGroup>
 		<OutputType>Exe</OutputType>
-		<!-- Must differ from the referenced Runtimes/BrutalGum project's assembly name ("BrutalGum"). -->
+		<!-- Must differ from the referenced Runtimes/BrutalGum.Vulkan project's assembly name ("BrutalGum.Vulkan"). -->
 		<AssemblyName>BrutalGumSample</AssemblyName>
 		<TargetFramework>net10.0</TargetFramework>
 		<ImplicitUsings>enable</ImplicitUsings>
@@ -16,12 +16,10 @@
 		<PackageReference Include="Ahwoo.Brutal.Glfw" Version="2026.10.5" />
 		<PackageReference Include="Ahwoo.Brutal.Vulkan" Version="2026.10.3" />
 		<PackageReference Include="Ahwoo.Brutal.Vulkan.Abstractions" Version="2026.10.3" />
-		<PackageReference Include="Ahwoo.Brutal.ShaderC" Version="2026.10.3" />
-		<PackageReference Include="SkiaGameRendering.Brutal" Version="0.21.0" />
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\..\..\Runtimes\BrutalGum\BrutalGum.csproj" />
+		<ProjectReference Include="..\..\..\Runtimes/BrutalGum.Vulkan/BrutalGum.Vulkan.csproj" />
 		<ProjectReference Include="..\..\..\Runtimes\SkiaGum.ShadowDusk\SkiaGum.ShadowDusk.csproj" />
 	</ItemGroup>
 
@@ -33,6 +31,7 @@
 		<Compile Include="..\..\MonoGameGumInCode\MonoGameGumInCode\Screens\RectanglesScreen.cs" Link="Screens\RectanglesScreen.cs" />
 		<Compile Include="..\..\MonoGameGumInCode\MonoGameGumInCode\Screens\SpriteScreen.cs" Link="Screens\SpriteScreen.cs" />
 		<Compile Include="../../Shared/GumGallery.cs" Link="GumGallery.cs" />
+		<Compile Include="../BrutalSampleSupport.cs" Link="BrutalSampleSupport.cs" />
 		<Compile Include="..\..\SilkNetGum\SilkNetGumSample\Screens\ArcsScreen.cs" Link="Screens\ArcsScreen.cs" />
 		<Compile Include="..\..\SilkNetGum\SilkNetGumSample\Screens\PolygonsScreen.cs" Link="Screens\PolygonsScreen.cs" />
 		<Compile Include="..\..\SilkNetGum\SilkNetGumSample\Screens\NineSliceScreen.cs" Link="Screens\NineSliceScreen.cs" />

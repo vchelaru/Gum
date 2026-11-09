@@ -1,0 +1,15 @@
+<Project>
+  <!--
+    The source Gum.Brutal.OGL (OpenGL) and Gum.Brutal.Vulkan compile in common: the BRUTAL GLFW input host,
+    GumService's init/update/draw flow over an IBrutalGpuBackend, and the assembly attributes. Each package
+    adds its own backend (Gl/ or Vulkan/) and references only its own SkiaGameRendering package, because
+    SkiaGameRendering.Brutal.OGL and SkiaGameRendering.Brutal both declare SkiaGameRendering.SkiaRenderTarget2D.
+  -->
+  <Import Project="$(MSBuildThisFileDirectory)SkiaHost.props" />
+  <Import Project="$(MSBuildThisFileDirectory)SkiaInputHost.props" />
+  <Import Project="$(MSBuildThisFileDirectory)SkiaPackages.props" />
+
+  <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)BrutalHost\**\*.cs" Link="BrutalHost\%(RecursiveDir)%(Filename)%(Extension)" />
+  </ItemGroup>
+</Project>

@@ -91,7 +91,7 @@ Gum's runtimes are published to NuGet. Install the package for your platform. Al
 | Maui | [![NuGet](https://img.shields.io/nuget/v/Gum.SkiaSharp.Maui?label=Gum.SkiaSharp.Maui)](https://www.nuget.org/packages/Gum.SkiaSharp.Maui) | Built-in |
 | Silk.NET | [![NuGet](https://img.shields.io/nuget/v/Gum.SilkNet?label=Gum.SilkNet)](https://www.nuget.org/packages/Gum.SilkNet) | Built-in |
 | Stride | [![NuGet](https://img.shields.io/nuget/v/Gum.Stride?label=Gum.Stride)](https://www.nuget.org/packages/Gum.Stride) | Built-in |
-| BRUTAL | [![NuGet](https://img.shields.io/nuget/v/Gum.Brutal?label=Gum.Brutal)](https://www.nuget.org/packages/Gum.Brutal) | Built-in |
+| BRUTAL | [![NuGet](https://img.shields.io/nuget/v/Gum.Brutal.OGL?label=Gum.Brutal.OGL)](https://www.nuget.org/packages/Gum.Brutal.OGL) [![NuGet](https://img.shields.io/nuget/v/Gum.Brutal.Vulkan?label=Gum.Brutal.Vulkan)](https://www.nuget.org/packages/Gum.Brutal.Vulkan) | Built-in |
 | Unity *(experimental)* | Unity Package Manager git URL `https://github.com/vchelaru/Gum.git#upm`, plus SkiaGameRendering ([setup](https://docs.flatredball.com/gum/code/getting-started/setup/adding-initializing-gum/unity)) | Built-in |
 | FNA | [![NuGet](https://img.shields.io/nuget/v/Gum.FNA?label=Gum.FNA)](https://www.nuget.org/packages/Gum.FNA) | — *(not supported)* |
 

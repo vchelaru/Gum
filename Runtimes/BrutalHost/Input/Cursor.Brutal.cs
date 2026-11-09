@@ -27,8 +27,9 @@ public partial class Cursor
 
         if (_input != null)
         {
-            state.X = (int)_input.CursorX;
-            state.Y = (int)_input.CursorY;
+            // Gum's canvas is the framebuffer; GLFW reports the cursor in window coordinates.
+            state.X = (int)BrutalScale.WindowToFramebuffer(_input.CursorX, _input.WindowWidth, _input.FramebufferWidth);
+            state.Y = (int)BrutalScale.WindowToFramebuffer(_input.CursorY, _input.WindowHeight, _input.FramebufferHeight);
             state.LeftButton = ToState(GlfwMouseButton.Left);
             state.MiddleButton = ToState(GlfwMouseButton.Middle);
             state.RightButton = ToState(GlfwMouseButton.Right);
