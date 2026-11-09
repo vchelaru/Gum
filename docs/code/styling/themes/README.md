@@ -14,7 +14,7 @@ Here are six of Gum's built-in themes, each rendering the same sample settings p
 
 ## Introduction
 
-A **theme** is a per-backend NuGet package that restyles every default Gum Forms control with a single call. After calling `GumService.Default.Initialize(...)`, calling `<Name>Theme.Apply` swaps the default visuals for the theme's visuals — every `Button`, `TextBox`, `CheckBox`, `ComboBox`, etc. created afterward renders in that theme's style.
+A **theme** is a per-backend NuGet package that restyles every default Gum Forms control with a single call. After calling `GumUI.Initialize(...)`, calling `<Name>Theme.Apply` swaps the default visuals for the theme's visuals — every `Button`, `TextBox`, `CheckBox`, `ComboBox`, etc. created afterward renders in that theme's style.
 
 Themes ship one NuGet per rendering backend (for example `Gum.Themes.DarkPro.MonoGame`, `Gum.Themes.DarkPro.Kni`, `Gum.Themes.DarkPro.Raylib`, and `Gum.Themes.DarkPro.SilkNet`) so each package only carries the assets and references it needs.
 
@@ -31,7 +31,7 @@ using Gum.Themes.DarkPro;
 
 protected override void Initialize()
 {
-    GumService.Default.Initialize(this, DefaultVisualsVersion.Newest);
+    GumUI.Initialize(this, DefaultVisualsVersion.Newest);
 
     DarkProTheme.Apply();
 

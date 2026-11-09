@@ -4,13 +4,13 @@
 
 CanvasHeight is a static property which tells the Gum layout engine the size of the canvas. This is used for layouts on GraphicalUiElements which have no parent.
 
-CanvasWidth and CanvasHeight are automatically assigned when calling GumService.Default.Initialize to match the GraphicsDevice.Viewport.Width and GraphicsDevice.Viewport.Height, respectively.
+CanvasWidth and CanvasHeight are automatically assigned when calling GumUI.Initialize to match the GraphicsDevice.Viewport.Width and GraphicsDevice.Viewport.Height, respectively.
 
 Changing these values automatically updates the following Root containers:
 
-* GumService.Default.Root
-* GumService.Default.PopupRoot
-* GumService.Default.ModalRoot
+* GumUI.Root
+* GumUI.PopupRoot
+* GumUI.ModalRoot
 
 ## Common Usage
 

@@ -96,7 +96,7 @@ Glfw.WindowHint(GlfwWindowHint.OpenGlProfile, 0x32001 /* GLFW_OPENGL_CORE_PROFIL
 GlfwWindow window = Glfw.CreateWindow(new GlfwWindow.CreateInfo { Title = "My Game", Size = new Brutal.Numerics.int2(800, 450) });
 window.MakeContextCurrent();
 
-GumService.Default.Initialize(window);
+GumUI.Initialize(window);
 ```
 {% endtab %}
 
@@ -108,10 +108,10 @@ using Brutal.GlfwApi;
 using Gum;
 
 // Initialize
-GumService.Default.Initialize(window, instance, physicalDevice, device, queue, queueFamily, surface);
+GumUI.Initialize(window, instance, physicalDevice, device, queue, queueFamily, surface);
 ```
 
-Gum never destroys the objects you pass. Destroy them after `GumService.Default.Uninitialize()`. For a complete setup of the window, instance, surface and device, see the BRUTAL Vulkan sample at `Samples/BrutalGum/BrutalGumSample` in the Gum repository.
+Gum never destroys the objects you pass. Destroy them after `GumUI.Uninitialize()`. For a complete setup of the window, instance, surface and device, see the BRUTAL Vulkan sample at `Samples/BrutalGum/BrutalGumSample` in the Gum repository.
 {% endtab %}
 {% endtabs %}
 
@@ -119,7 +119,7 @@ To load a Gum project (a `.gumj` file) at the same time, pass its path as the la
 
 ```csharp
 // Initialize
-GumService.Default.Initialize(window, "Content/GumProject/GumProject.gumj");
+GumUI.Initialize(window, "Content/GumProject/GumProject.gumj");
 ```
 
 You can add controls as soon as `Initialize` returns.
@@ -134,8 +134,8 @@ Call `Update` once per frame after `Glfw.PollEvents`, then `Draw`:
 // Update and Draw
 Glfw.PollEvents();
 double gameTime = clock.Elapsed.TotalSeconds;
-GumService.Default.Update(gameTime);
-GumService.Default.Draw();
+GumUI.Update(gameTime);
+GumUI.Draw();
 window.SwapBuffers();
 ```
 
@@ -147,8 +147,8 @@ window.SwapBuffers();
 // Update and Draw
 Glfw.PollEvents();
 double gameTime = clock.Elapsed.TotalSeconds;
-GumService.Default.Update(gameTime);
-GumService.Default.Draw();
+GumUI.Update(gameTime);
+GumUI.Draw();
 ```
 
 `Draw` presents the frame to the window itself.
@@ -162,12 +162,12 @@ Gum's canvas is the window's framebuffer. When the window is resized, `Draw` rec
 If your game already has its own Vulkan renderer, turn presenting off and sample Gum's image yourself. Do this right after `Initialize`, before the first `Draw`. The surface passed to `Initialize` is then not used and may be `default`:
 
 ```csharp
-GumService.Default.Initialize(window, instance, physicalDevice, device, queue, queueFamily, default);
-GumService.Default.PresentToWindow = false;
+GumUI.Initialize(window, instance, physicalDevice, device, queue, queueFamily, default);
+GumUI.PresentToWindow = false;
 
 // After each Draw:
-VkImage image = GumService.Default.RenderTargetImage!.Value;
-VkFormat format = GumService.Default.RenderTargetFormat!.Value;
+VkImage image = GumUI.RenderTargetImage!.Value;
+VkFormat format = GumUI.RenderTargetFormat!.Value;
 ```
 
 Things to know:
@@ -188,12 +188,12 @@ Add the NuGet package:
 dotnet add package Gum.SkiaSharp.ShadowDusk
 ```
 
-Then call `UseShadowDusk` after `GumService.Default.Initialize`:
+Then call `UseShadowDusk` after `GumUI.Initialize`:
 
 ```csharp
 // Initialize
-GumService.Default.Initialize(window, "Content/GumProject/GumProject.gumj");
-GumService.Default.UseShadowDusk();
+GumUI.Initialize(window, "Content/GumProject/GumProject.gumj");
+GumUI.UseShadowDusk();
 ```
 
 If linking to source instead of NuGet, add `<Gum Root>/Runtimes/SkiaGum.ShadowDusk/SkiaGum.ShadowDusk.csproj` to your solution.
@@ -210,11 +210,11 @@ Add the NuGet package:
 dotnet add package Gum.Expressions
 ```
 
-Then call `GumExpressionService.Initialize()` after `GumService.Default.Initialize`:
+Then call `GumExpressionService.Initialize()` after `GumUI.Initialize`:
 
 ```csharp
 // Initialize
-GumService.Default.Initialize(window, "Content/GumProject/GumProject.gumj");
+GumUI.Initialize(window, "Content/GumProject/GumProject.gumj");
 Gum.Expressions.GumExpressionService.Initialize();
 ```
 
@@ -228,7 +228,7 @@ Gum can be tested by adding a Button after Gum is initialized. To do so, add cod
 
 ```csharp
 // Initialize
-GumService.Default.Initialize(window);
+GumUI.Initialize(window);
 
 var button = new Button();
 button.AddToRoot();

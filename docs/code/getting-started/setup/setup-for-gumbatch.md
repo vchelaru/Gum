@@ -55,6 +55,7 @@ public class Game1 : Game
     private GraphicsDeviceManager _graphics;
     BitmapFont font;
     GumBatch gumBatch;
+    GumService GumUI => GumService.Default;
 
     public Game1()
     {
@@ -65,7 +66,7 @@ public class Game1 : Game
 
     protected override void Initialize()
     {
-        GumService.Default.Initialize(this);
+        GumUI.Initialize(this);
 
         CustomSetPropertyOnRenderable.InMemoryFontCreator =
             new KernSmithFontCreator(GraphicsDevice);

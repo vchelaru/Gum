@@ -37,7 +37,7 @@ In the case of the SourceFile assignment, the SpriteRuntime loads the Texture2D 
 
 Whenever a file is assigned on a runtime object, Gum looks for the file in the `ToolsUtilities.FileManager.RelativeDirectory` directory. This directory defaults to your game's Content folder.
 
-If you call `GumService.Default.Initialize` and pass a .gumj file, then RelativeDirectory is set to the directory containing the Gum project.
+If you call `GumUI.Initialize` and pass a .gumj file, then RelativeDirectory is set to the directory containing the Gum project.
 
 If your Gum project (.gumj) is located in the Content folder, RelativeDirectory is set to "Content/".
 
@@ -175,7 +175,7 @@ public class CustomContentLoader : RenderingLibrary.Content.IContentLoader
 }
 ```
 
-`LoaderManager.Self.ContentLoader` already holds your backend's default loader, which Gum installs during `GumService.Default.Initialize`. Read that property and pass it to your own loader, then assign your loader back to the same property. Do this after `Initialize` and before any content loads. If you install earlier, `ContentLoader` is still `null` and your wrapper has nothing to fall back to.
+`LoaderManager.Self.ContentLoader` already holds your backend's default loader, which Gum installs during `GumUI.Initialize`. Read that property and pass it to your own loader, then assign your loader back to the same property. Do this after `Initialize` and before any content loads. If you install earlier, `ContentLoader` is still `null` and your wrapper has nothing to fall back to.
 
 ```csharp
 // Initialize
