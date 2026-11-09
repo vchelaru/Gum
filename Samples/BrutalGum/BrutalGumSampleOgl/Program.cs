@@ -1,4 +1,4 @@
-// A gallery of Gum screens (the same ones SilkNetGumSample shows) drawn by Gum.Brutal on OpenGL 3.3.
+// A gallery of Gum screens (the same ones SilkNetGumSample shows) drawn by Gum.Brutal.OGL on OpenGL 3.3.
 // Gum owns Skia and the render target; the game only creates the window and calls Initialize, Update, Draw.
 //
 //   BrutalGumSampleOgl                                   opens a resizable window
@@ -24,7 +24,7 @@ try
     Glfw.WindowHint(GlfwWindowHint.ContextVersionMinor, 3);
     Glfw.WindowHint(GlfwWindowHint.OpenGlProfile, 0x32001 /* GLFW_OPENGL_CORE_PROFILE */);
     SampleSupport.ApplyWindowHints(sample);
-    using GlfwWindow window = Glfw.CreateWindow(new GlfwWindow.CreateInfo { Title = "Gum.Brutal OpenGL sample", Size = new int2(1400, 900) });
+    using GlfwWindow window = Glfw.CreateWindow(new GlfwWindow.CreateInfo { Title = "Gum.Brutal.OGL sample", Size = new int2(1400, 900) });
     SampleSupport.PlaceWindow(window, sample);
     window.MakeContextCurrent();
     Glfw.SwapInterval(1);

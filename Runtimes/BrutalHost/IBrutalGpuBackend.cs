@@ -13,7 +13,7 @@ internal interface IBrutalTarget : ISkiaHostTarget
 }
 
 /// <summary>
-/// What differs between Gum.Brutal (OpenGL) and Gum.Brutal.Vulkan: owning the SkiaGameRendering context,
+/// What differs between Gum.Brutal.OGL (OpenGL) and Gum.Brutal.Vulkan: owning the SkiaGameRendering context,
 /// creating targets over it, and putting a finished target on the window. Tests supply a fake.
 /// </summary>
 internal interface IBrutalGpuBackend : System.IDisposable
