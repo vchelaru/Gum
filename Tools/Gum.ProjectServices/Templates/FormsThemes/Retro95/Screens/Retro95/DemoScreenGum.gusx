@@ -727,7 +727,7 @@
       <Value xsi:type="xsd:string">Fonts/Nunito-Bold.ttf</Value>
     </Variable>
     <Variable Type="int" Name="TitleText.FontSize" SetsValue="true">
-      <Value xsi:type="xsd:int">14</Value>
+      <Value xsi:type="xsd:int">13</Value>
     </Variable>
     <Variable Type="int" Name="TitleText.Green" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
@@ -763,7 +763,7 @@
       <Value xsi:type="xsd:string">Fonts/Nunito-Bold.ttf</Value>
     </Variable>
     <Variable Type="int" Name="TitleText1.FontSize" SetsValue="true">
-      <Value xsi:type="xsd:int">14</Value>
+      <Value xsi:type="xsd:int">13</Value>
     </Variable>
     <Variable Type="int" Name="TitleText1.Green" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
