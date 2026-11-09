@@ -299,7 +299,8 @@ public sealed class GumAutomationHost
         surface.Canvas.Clear(SkiaSharp.SKColors.Black);
         try
         {
-            GumService.Default.Draw(surface.Canvas);
+            managers.Canvas = surface.Canvas;
+            managers.Draw();
         }
         finally
         {

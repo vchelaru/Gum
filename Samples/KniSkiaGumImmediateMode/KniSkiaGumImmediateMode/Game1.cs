@@ -42,12 +42,13 @@ public class Game1 : Game
 
     protected override void Initialize()
     {
-        // The graphics device exists once the base Initialize has run.
-        base.Initialize();
-
         // GumService initialization sets up SystemManagers, Forms input, and everything needed for
         // retained-mode controls. We use it for the nav strip; the example screens use GumBatch in Draw.
         GumUI.Initialize(this);
+
+        GumUI.UseKeyboardDefaults();
+
+        GumUI.UseGamepadDefaults();
 
         _gumBatch = new GumBatch();
 
@@ -58,6 +59,8 @@ public class Game1 : Game
 
         BuildNavStrip();
         ShowScreen(new DrawStringScreen());
+
+        base.Initialize();
     }
 
     private void BuildNavStrip()

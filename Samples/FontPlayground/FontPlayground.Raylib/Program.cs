@@ -31,7 +31,10 @@ public static class Program
         InitWindow(screenWidth, screenHeight, "Gum raylib - Dynamic Font Playground");
 
         GumUI.Initialize();
+
         GumUI.UseKeyboardDefaults();
+
+        GumUI.UseGamepadDefaults();
 
         // KernSmith generates a font for any (family, size, style) on demand — this single line is
         // the only platform-specific difference from the MonoGame host's KernSmithFontCreator.

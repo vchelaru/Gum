@@ -40,8 +40,11 @@ public class Game1 : Game
         // MonoGame sample.
         GumUI.Initialize(this, "Content/GumProject/GameUiSamplesGumProject.gumx");
 
-        // This allows the keyboard to control the game (tabbing)
         GumUI.UseKeyboardDefaults();
+
+        GumUI.UseGamepadDefaults();
+
+        // This allows the keyboard to control the game (tabbing)
         FrameworkElement.TabKeyCombos.Add(new KeyCombo { PushedKey = Gum.Forms.Input.Keys.Down });
         FrameworkElement.TabReverseKeyCombos.Add(new KeyCombo { PushedKey = Gum.Forms.Input.Keys.Up });
 

@@ -97,6 +97,7 @@ using Stride.CommunityToolkit.Rendering.Compositing;
 using Stride.Engine;
 
 using Game game = new Game();
+GumService GumUI = GumService.Default;
 
 game.Run(start: Start);
 
@@ -105,8 +106,6 @@ void Start(Scene rootScene)
     // Stride draws through a GraphicsCompositor and a camera, so both must exist before Gum initializes.
     game.AddGraphicsCompositor().AddCleanUIStage();
     game.Add2DCamera();
-
-    GumService GumUI = GumService.Default;
 
     GumUI.Initialize(game, "Content/GumProject/GumProject.gumj");
     GumUI.UseShadowDusk(); // Optional: .fx and .slang shader files
@@ -128,7 +127,7 @@ You can add controls as soon as `Initialize` returns. The project path is option
 
 ```csharp
 // Initialize
-GumService.Default.Initialize(game, registerSceneRenderer: false);
+GumUI.Initialize(game, registerSceneRenderer: false);
 game.AddSceneRenderer(new GumSceneRenderer());
 ```
 

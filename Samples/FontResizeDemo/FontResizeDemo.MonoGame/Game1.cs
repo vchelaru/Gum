@@ -47,6 +47,10 @@ public class Game1 : Game
 
         GumUI.Initialize(this);
 
+        GumUI.UseKeyboardDefaults();
+
+        GumUI.UseGamepadDefaults();
+
         // KernSmith builds fonts in memory, at whatever size oversampling asks for -- no .fnt
         // files are shipped with this sample.
         CustomSetPropertyOnRenderable.InMemoryFontCreator =
