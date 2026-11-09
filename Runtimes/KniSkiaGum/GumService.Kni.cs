@@ -81,7 +81,7 @@ public partial class GumService : GumServiceSkiaInteractiveBase, IGumService, Ba
 
     /// <summary>
     /// Initializes Gum for a KNI desktop game, optionally loading a Gum project. The size comes from the
-    /// game's graphics device, so call this from <c>Game.Initialize</c> (after <c>base.Initialize()</c>)
+    /// game's graphics device, so call this from <c>Game.Initialize</c>
     /// or later and build the first screen right away. <see cref="Draw()"/> creates and resizes the
     /// Skia render target itself, and the service releases it when the game exits.
     /// </summary>

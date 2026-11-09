@@ -38,10 +38,11 @@ public class Game1 : Game
 
     protected override void Initialize()
     {
-        // The graphics device exists once the base Initialize has run.
-        base.Initialize();
-
         GumUI.Initialize(this);
+
+        GumUI.UseKeyboardDefaults();
+
+        GumUI.UseGamepadDefaults();
 
         AddText("CustomFontText", "Content/Fonts/CustomFont.ttf", "I use CustomFont", 0);
         AddText("SuperMorningText", "Content/Fonts/Super Morning.ttf", "I use Super Morning", 30);
@@ -57,6 +58,8 @@ public class Game1 : Game
         };
 
         _gumBatch = new GumBatch();
+
+        base.Initialize();
     }
 
     private void AddText(string name, string fontFile, string text, float yPosition)

@@ -63,6 +63,10 @@ namespace MonoGameGumInCode
         {
             GumUI.Initialize(this);
 
+            GumUI.UseKeyboardDefaults();
+
+            GumUI.UseGamepadDefaults();
+
             // Required for Apos.Shapes-backed shape fill/effects (see the shapes doc). Must come
             // after GumUI.Initialize — ShapeRenderer.Initialize reads the initialized
             // GumService/GraphicsDevice.

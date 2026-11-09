@@ -38,17 +38,20 @@ public class Game1 : Game
 
     protected override void Initialize()
     {
-        // The graphics device exists once the base Initialize has run.
-        base.Initialize();
-
         // Skia reads the project from disk. The csproj copies Content/GumProject to the output.
         GumUI.Initialize(this, "Content/GumProject/GumProject.gumx");
+
+        GumUI.UseKeyboardDefaults();
+
+        GumUI.UseGamepadDefaults();
 
         _mainMenu = new MainMenuFullGeneration
         {
             Name = "MainMenu"
         };
         _mainMenu.AddToRoot();
+
+        base.Initialize();
     }
 
     protected override void Update(GameTime gameTime)

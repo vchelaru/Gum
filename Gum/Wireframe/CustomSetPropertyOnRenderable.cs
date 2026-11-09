@@ -1094,21 +1094,26 @@ public partial class CustomSetPropertyOnRenderable
     // TrySetPropertyOnText below. Public so both call sites can reach it (#3706).
     public static void SetText(Text textRenderable, GraphicalUiElement graphicalUiElement, string propertyName, object? value)
     {
+        // Setting the string a tagged text already shows changes nothing, so skip the parse and the
+        // measure-and-wrap below, matching how Text.RawText ignores an equal plain string (#7779).
+        if (value is string markup && markup.Contains("[") && IsBbCodeAlreadyParsed(textRenderable, graphicalUiElement, markup))
+        {
+            TrackLocalizationKey(graphicalUiElement, propertyName, markup);
+            return;
+        }
+
         // Measures the new text unwrapped when RelativeToChildren, then lays out or restores the renderable's width.
         graphicalUiElement.AssignTextAndUpdateLayout(textRenderable,
             (textRenderable, graphicalUiElement, propertyName, value), AssignText);
     }
 
-    private static void AssignText((Text textRenderable, GraphicalUiElement graphicalUiElement, string propertyName, object? value) state)
+    // Track the original (untranslated) value so RefreshLocalization can
+    // re-translate this element if CurrentLanguage changes later.
+    // - "Text" with an active LocalizationService stores the raw input.
+    // - "TextNoTranslate" always clears any previously-stored key so user
+    //   input or explicitly-untranslated values aren't re-translated later.
+    private static void TrackLocalizationKey(GraphicalUiElement graphicalUiElement, string propertyName, string? valueAsString)
     {
-        var (textRenderable, graphicalUiElement, propertyName, value) = state;
-        var valueAsString = value as string;
-
-        // Track the original (untranslated) value so RefreshLocalization can
-        // re-translate this element if CurrentLanguage changes later.
-        // - "Text" with an active LocalizationService stores the raw input.
-        // - "TextNoTranslate" always clears any previously-stored key so user
-        //   input or explicitly-untranslated values aren't re-translated later.
         if (propertyName == "TextNoTranslate")
         {
             _localizationKeys.Remove(graphicalUiElement);
@@ -1121,6 +1126,129 @@ public partial class CustomSetPropertyOnRenderable
         {
             _localizationKeys.Remove(graphicalUiElement);
         }
+    }
+
+    // What the last SetBbCodeText read besides the markup's tags: the stripped text it produced and the base
+    // font and dropshadow values it seeded the per-run fonts from. Width is not here: the Text re-wraps itself
+    // when its width changes, and a font change re-parses in ReactToFontValueChange.
+    private sealed class BbCodeParseRecord
+    {
+        public string? Markup;
+        public string? StrippedText;
+        public HashSet<string> KnownTagsSnapshot = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        public string? FontName;
+        public float FontSize;
+        public int OutlineThickness;
+        public bool UseFontSmoothing;
+        public bool IsItalic;
+        public bool IsBold;
+        public bool UseCustomFont;
+        public bool HasDropshadow;
+        public float DropshadowOffsetX;
+        public float DropshadowOffsetY;
+        public float DropshadowBlur;
+        public int DropshadowRed;
+        public int DropshadowGreen;
+        public int DropshadowBlue;
+        public int DropshadowAlpha;
+    }
+
+    private static readonly ConditionalWeakTable<Text, BbCodeParseRecord> _bbCodeParseRecords = new();
+
+    // Compares (and, when write is true, copies) the owner values SetBbCodeText reads. True when any differed.
+    private static bool UpdateRecordFromOwner(BbCodeParseRecord record, GraphicalUiElement graphicalUiElement, bool write)
+    {
+#if FRB
+        var textRuntime = graphicalUiElement;
+#else
+        var textRuntime = graphicalUiElement as Gum.GueDeriving.TextRuntime;
+#endif
+        if (textRuntime == null)
+        {
+            return false;
+        }
+
+        string? fontName = textRuntime.UseCustomFont ? textRuntime.CustomFontFile : textRuntime.Font;
+#if FRB
+        bool hasDropshadow = false;
+        float dsX = 0, dsY = 0, dsBlur = 0;
+        int dsR = 0, dsG = 0, dsB = 0, dsA = 0;
+#else
+        bool hasDropshadow = textRuntime.HasDropshadow;
+        float dsX = textRuntime.DropshadowOffsetX, dsY = textRuntime.DropshadowOffsetY, dsBlur = textRuntime.DropshadowBlur;
+        int dsR = textRuntime.DropshadowRed, dsG = textRuntime.DropshadowGreen, dsB = textRuntime.DropshadowBlue, dsA = textRuntime.DropshadowAlpha;
+#endif
+        bool differs =
+            record.FontName != fontName ||
+            record.FontSize != textRuntime.FontSize ||
+            record.OutlineThickness != textRuntime.OutlineThickness ||
+            record.UseFontSmoothing != textRuntime.UseFontSmoothing ||
+            record.IsItalic != textRuntime.IsItalic ||
+            record.IsBold != textRuntime.IsBold ||
+            record.UseCustomFont != textRuntime.UseCustomFont ||
+            record.HasDropshadow != hasDropshadow ||
+            record.DropshadowOffsetX != dsX || record.DropshadowOffsetY != dsY || record.DropshadowBlur != dsBlur ||
+            record.DropshadowRed != dsR || record.DropshadowGreen != dsG ||
+            record.DropshadowBlue != dsB || record.DropshadowAlpha != dsA;
+
+        if (write)
+        {
+            record.FontName = fontName;
+            record.FontSize = textRuntime.FontSize;
+            record.OutlineThickness = textRuntime.OutlineThickness;
+            record.UseFontSmoothing = textRuntime.UseFontSmoothing;
+            record.IsItalic = textRuntime.IsItalic;
+            record.IsBold = textRuntime.IsBold;
+            record.UseCustomFont = textRuntime.UseCustomFont;
+            record.HasDropshadow = hasDropshadow;
+            record.DropshadowOffsetX = dsX;
+            record.DropshadowOffsetY = dsY;
+            record.DropshadowBlur = dsBlur;
+            record.DropshadowRed = dsR;
+            record.DropshadowGreen = dsG;
+            record.DropshadowBlue = dsB;
+            record.DropshadowAlpha = dsA;
+        }
+        return differs;
+    }
+
+    // True when parsing this markup again would rebuild exactly what the text already holds.
+    private static bool IsBbCodeAlreadyParsed(Text textRenderable, GraphicalUiElement graphicalUiElement, string markup)
+    {
+        if (!_bbCodeParseRecords.TryGetValue(textRenderable, out BbCodeParseRecord? record) ||
+            record.Markup != markup ||
+            textRenderable.StoredMarkupText != markup ||
+            textRenderable.RawText != record.StrippedText ||
+            !record.KnownTagsSnapshot.SetEquals(Tags))
+        {
+            return false;
+        }
+
+        // [state=Name] expands from the element's states, which can change without the string changing.
+        if (markup.IndexOf("[state", StringComparison.OrdinalIgnoreCase) >= 0)
+        {
+            return false;
+        }
+
+        return !UpdateRecordFromOwner(record, graphicalUiElement, write: false);
+    }
+
+    private static void RememberBbCodeParse(Text asText, GraphicalUiElement graphicalUiElement, string bbcode)
+    {
+        BbCodeParseRecord record = _bbCodeParseRecords.GetValue(asText, static _ => new BbCodeParseRecord());
+        record.Markup = bbcode;
+        record.StrippedText = asText.RawText;
+        record.KnownTagsSnapshot.Clear();
+        record.KnownTagsSnapshot.UnionWith(Tags);
+        UpdateRecordFromOwner(record, graphicalUiElement, write: true);
+    }
+
+    private static void AssignText((Text textRenderable, GraphicalUiElement graphicalUiElement, string propertyName, object? value) state)
+    {
+        var (textRenderable, graphicalUiElement, propertyName, value) = state;
+        var valueAsString = value as string;
+
+        TrackLocalizationKey(graphicalUiElement, propertyName, valueAsString);
 
         textRenderable.InlineVariables.Clear();
 #if !FRB
@@ -1978,6 +2106,8 @@ public partial class CustomSetPropertyOnRenderable
         // unconditionally (the text must wrap whether or not per-run fonts were resolved).
         asText.UpdateWrappedText();
         asText.UpdatePreRenderDimensions();
+
+        RememberBbCodeParse(asText, graphicalUiElement, bbcode);
     }
 
     /// <summary>

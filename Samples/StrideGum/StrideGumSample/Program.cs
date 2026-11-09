@@ -19,6 +19,10 @@ void Start(Scene rootScene)
     game.AddGraphicsCompositor().AddCleanUIStage();
     GumUI.Initialize(game);
 
+    GumUI.UseKeyboardDefaults();
+
+    GumUI.UseGamepadDefaults();
+
     BuildDemoUi();
 
     game.Add3DCamera().Add3DCameraController();

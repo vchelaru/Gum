@@ -93,6 +93,7 @@ public sealed class GumSample : MonoBehaviour
         textBox.Placeholder = "Type here";
         panel.AddChild(textBox);
 
+        // The GumRenderer component initializes Gum (Unity has no Game class), so there is no GumUI.Initialize here.
         GumUI.UseKeyboardDefaults();
         GumUI.UseGamepadDefaults();
         // Gamepad navigation moves focus from the focused control, so start with one.

@@ -454,7 +454,7 @@ public abstract class GumServiceSkiaBase : IGumService
     /// </summary>
     /// <param name="canvas">The SkiaSharp canvas Gum should render to.</param>
     /// <param name="gumProjectFile">An optional .gumx project file to load.</param>
-    public void Initialize(SKCanvas canvas, string? gumProjectFile = null)
+    protected internal void Initialize(SKCanvas canvas, string? gumProjectFile = null)
     {
         var bounds = canvas.DeviceClipBounds;
         Initialize(canvas, bounds.Width, bounds.Height, gumProjectFile);
@@ -468,7 +468,7 @@ public abstract class GumServiceSkiaBase : IGumService
     /// <param name="width">The width to use for the root container and canvas coordinate space.</param>
     /// <param name="height">The height to use for the root container and canvas coordinate space.</param>
     /// <param name="gumProjectFile">An optional .gumx project file to load.</param>
-    public void Initialize(SKCanvas canvas, int width, int height, string? gumProjectFile = null) =>
+    protected internal void Initialize(SKCanvas canvas, int width, int height, string? gumProjectFile = null) =>
         InitializeCore(canvas, width, height, gumProjectFile);
 
     /// <summary>
@@ -606,7 +606,7 @@ public abstract class GumServiceSkiaBase : IGumService
     /// Marks GumService as initialized without requiring a canvas.
     /// Intended for use in unit tests only.
     /// </summary>
-    public void InitializeForTesting()
+    internal void InitializeForTesting()
     {
         IsInitialized = true;
         FormsRefreshStylesHooks.Install();
@@ -721,7 +721,7 @@ public abstract class GumServiceSkiaBase : IGumService
     /// </summary>
     /// <param name="width">The new canvas width.</param>
     /// <param name="height">The new canvas height.</param>
-    public void HandleResize(int width, int height)
+    protected internal void HandleResize(int width, int height)
     {
         _hostWindowSize = (width, height);
         SetCameraClientSize(width, height);
@@ -764,7 +764,7 @@ public abstract class GumServiceSkiaBase : IGumService
     /// canvas can call this from there.
     /// </summary>
     /// <param name="canvas">The canvas to draw into this frame.</param>
-    public void Draw(SKCanvas canvas)
+    protected internal void Draw(SKCanvas canvas)
     {
         SystemManagers.Default.Canvas = canvas;
         SystemManagers.Default.Draw();

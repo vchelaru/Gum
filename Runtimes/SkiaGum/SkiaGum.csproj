@@ -178,7 +178,24 @@
 
 	<ItemGroup>
 		<InternalsVisibleTo Include="SkiaGum.Tests" />
+		<InternalsVisibleTo Include="Gum.NetStandard.Tests" />
+		<!-- Interactive hosts and their tests: SkiaTargetHolder, ISkiaHostTarget and the canvas-based
+		     Initialize/HandleResize/Draw are host plumbing, not game API (#7788). Gum.Unity is the Unity
+		     package's own assembly (GumRenderer). -->
+		<InternalsVisibleTo Include="SilkNetGum" />
+		<InternalsVisibleTo Include="SilkNetGum.Tests" />
 		<InternalsVisibleTo Include="KniSkiaGum" />
+		<InternalsVisibleTo Include="KniSkiaGum.Tests" />
+		<InternalsVisibleTo Include="StrideGum" />
+		<InternalsVisibleTo Include="StrideGum.Tests" />
+		<InternalsVisibleTo Include="StrideGum.GpuTests.D3D11" />
+		<InternalsVisibleTo Include="StrideGum.GpuTests.D3D12" />
+		<InternalsVisibleTo Include="BrutalGum.OGL" />
+		<InternalsVisibleTo Include="BrutalGum.Vulkan" />
+		<InternalsVisibleTo Include="BrutalGum.OGL.Tests" />
+		<InternalsVisibleTo Include="UnityGum" />
+		<InternalsVisibleTo Include="UnityGum.Tests" />
+		<InternalsVisibleTo Include="Gum.Unity" />
 	</ItemGroup>
 
 	<Import Project="..\RuntimePackage.Analyzers.props" />

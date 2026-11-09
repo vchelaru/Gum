@@ -41,6 +41,12 @@ namespace FnaSample
 
             GumUI.Initialize(this, "GumProject/GumProject.gumx");
 
+            GumUI.UseKeyboardDefaults();
+
+            GumUI.UseGamepadDefaults();
+
+            GumUI.UseShadowDusk();
+
             IsMouseVisible = true;
 
             Root = new MainScreenRuntime();

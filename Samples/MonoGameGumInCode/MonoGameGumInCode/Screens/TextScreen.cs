@@ -101,9 +101,8 @@ internal class TextScreen : FrameworkElement
             "[Font=Courier New]a different font[/Font] runs, all styled inline in one Text.";
         container.Children.Add(bbcode);
 
-        // [State=Name] BBCode tag (MonoGame/raylib only -- SkiaGum has its own separate
-        // CustomSetPropertyOnRenderable.cs without this feature yet, so this section is excluded on
-        // Skia). The state is defined in code via AddStates (no Gum project needed) with a Color +
+        // [State=Name] BBCode tag. Gated #if !SKIA: the Skia BBCode parser has no [State=] support and
+        // prints the tag literally. The state is defined in code via AddStates (no Gum project needed) with a Color +
         // IsBold pair; only variables already wired for per-run application (like these two) apply to
         // the wrapped substring -- a state can hold anything, including layout properties like
         // X/Width, but those are silently skipped rather than applied to the whole element.

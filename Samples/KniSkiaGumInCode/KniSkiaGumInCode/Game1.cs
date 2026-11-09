@@ -49,10 +49,11 @@ public class Game1 : Game
         // was run from.
         Directory.SetCurrentDirectory(AppContext.BaseDirectory);
 
-        // The graphics device exists once the base Initialize has run.
-        base.Initialize();
-
         GumUI.Initialize(this);
+
+        GumUI.UseKeyboardDefaults();
+
+        GumUI.UseGamepadDefaults();
 
         // The shared screens load their textures relative to the Gum project folder, as in SilkNetGum.
         ToolsUtilities.FileManager.RelativeDirectory = "Content/GumProject/";
@@ -66,14 +67,14 @@ public class Game1 : Game
         // resolver above keeps handling .sksl files.
         GumUI.UseShadowDusk();
 
-        GumUI.UseKeyboardDefaults();
-
         // Demo the auto-fit helpers. Flip via the Zoom/Expand buttons in the nav strip.
         GumUI.EnableZoomToWindow();
 
         BuildNavStrip();
 
         ShowScreen<FormsScreen>();
+
+        base.Initialize();
     }
 
     private void BuildNavStrip()

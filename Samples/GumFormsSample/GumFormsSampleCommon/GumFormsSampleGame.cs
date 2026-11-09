@@ -37,6 +37,11 @@ namespace GumFormsSample
             _spriteBatch = new SpriteBatch(GraphicsDevice);
 
             GumUI.Initialize(this, "FormsGumProject/GumProject.gumx");
+
+            GumUI.UseKeyboardDefaults();
+
+            GumUI.UseGamepadDefaults();
+
             // temporary until this is pulled from .gumx
             RenderingLibrary.Graphics.Text.IsMidWordLineBreakEnabled = true;
             GumUI.Cursor.TransformMatrix = Matrix.CreateScale(1 / _config.Scale);
