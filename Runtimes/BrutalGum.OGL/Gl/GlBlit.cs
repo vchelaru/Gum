@@ -15,7 +15,7 @@ internal sealed unsafe class GlBlit : IDisposable
     private const int GL_BLEND = 0x0BE2, GL_DEPTH_TEST = 0x0B71, GL_SCISSOR_TEST = 0x0C11, GL_CULL_FACE = 0x0B44, GL_STENCIL_TEST = 0x0B90;
     private const int GL_ONE = 1, GL_ONE_MINUS_SRC_ALPHA = 0x0303, GL_FUNC_ADD = 0x8006;
     private const int GL_CURRENT_PROGRAM = 0x8B8D, GL_VERTEX_ARRAY_BINDING = 0x85B5, GL_TEXTURE_BINDING_2D = 0x8069, GL_ACTIVE_TEXTURE = 0x84E0;
-    private const int GL_VIEWPORT = 0x0BA2, GL_COLOR_WRITEMASK = 0x0C23;
+    private const int GL_VIEWPORT = 0x0BA2, GL_COLOR_WRITEMASK = 0x0C23, GL_FRAMEBUFFER_BINDING = 0x8CA6;
     private const int GL_BLEND_SRC_RGB = 0x80C9, GL_BLEND_DST_RGB = 0x80C8, GL_BLEND_SRC_ALPHA = 0x80CB, GL_BLEND_DST_ALPHA = 0x80CA;
     private const int GL_BLEND_EQUATION_RGB = 0x8009, GL_BLEND_EQUATION_ALPHA = 0x883D;
     private const int GL_COMPILE_STATUS = 0x8B81, GL_LINK_STATUS = 0x8B82;
@@ -179,6 +179,7 @@ internal sealed unsafe class GlBlit : IDisposable
     /// </summary>
     public void ToDefaultFramebuffer(int width, int height)
     {
+        int framebuffer = GetInt(GL_FRAMEBUFFER_BINDING);
         int program = GetInt(GL_CURRENT_PROGRAM);
         int vao = GetInt(GL_VERTEX_ARRAY_BINDING);
         int activeTexture = GetInt(GL_ACTIVE_TEXTURE);
@@ -210,6 +211,7 @@ internal sealed unsafe class GlBlit : IDisposable
         _bindTexture(GL_TEXTURE_2D, _texture);
         _drawArrays(GL_TRIANGLES, 0, 3);
 
+        _bindFramebuffer(GL_FRAMEBUFFER, framebuffer);
         _bindTexture(GL_TEXTURE_2D, texture);
         _activeTexture(activeTexture);
         _bindVertexArray(vao);

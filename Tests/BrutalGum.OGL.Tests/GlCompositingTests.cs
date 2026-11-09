@@ -13,7 +13,7 @@ namespace BrutalGum.Tests;
 
 /// <summary>
 /// Gum composites over whatever the game already drew: a real hidden OpenGL window, the game clears the default
-/// framebuffer, then Gum draws. Needs a GL 3.3 core context; without one the tests return without asserting.
+/// framebuffer, then Gum draws. Needs a GL 3.3 core context; without one the tests skip, or fail when GUM_REQUIRE_GL=1 (the CI Mesa streams).
 /// </summary>
 public unsafe class GlCompositingTests : BaseTestClass
 {
@@ -24,50 +24,63 @@ public unsafe class GlCompositingTests : BaseTestClass
     [UnmanagedFunctionPointer(CallingConvention.Winapi)] private delegate void ClearFn(int mask);
     [UnmanagedFunctionPointer(CallingConvention.Winapi)] private delegate void BindFramebufferFn(int target, int id);
     [UnmanagedFunctionPointer(CallingConvention.Winapi)] private delegate void ReadPixelsFn(int x, int y, int w, int h, int format, int type, byte* data);
+    [UnmanagedFunctionPointer(CallingConvention.Winapi)] private delegate void GenFramebuffersFn(int n, out int ids);
+    [UnmanagedFunctionPointer(CallingConvention.Winapi)] private delegate void GetIntegervFn(int pname, int* values);
 
     private static IntPtr GetProc(string name) => Glfw.GetProcAddress(Encoding.ASCII.GetBytes(name + "\0"));
 
     private static T Load<T>(string name) where T : Delegate => Marshal.GetDelegateForFunctionPointer<T>(GetProc(name));
 
-    /// <summary>Runs the body with Gum initialized on a hidden GL window, or returns false when no GL context could be made.</summary>
-    private static bool WithWindow(Action<GlfwWindow> body)
+    /// <summary>Runs the body with Gum initialized on a hidden GL window. Without a GL 3.3 core context the test skips, or fails when GUM_REQUIRE_GL=1.</summary>
+    private static void WithWindow(Action<GlfwWindow> body)
     {
         GlfwWindow? window = null;
+        string? noContext = null;
         try
         {
             if (!Glfw.Init())
             {
-                return false;
+                noContext = "Glfw.Init failed";
             }
-            Glfw.WindowHint(GlfwWindowHint.ContextVersionMajor, 3);
-            Glfw.WindowHint(GlfwWindowHint.ContextVersionMinor, 3);
-            Glfw.WindowHint(GlfwWindowHint.OpenGlProfile, 0x32001);
-            Glfw.WindowHint(GlfwWindowHint.Visible, Glfw.Constants.GLFW_FALSE);
-            window = Glfw.CreateWindow(new GlfwWindow.CreateInfo { Title = "GlCompositingTests", Size = new int2(Size, Size) });
-            window.MakeContextCurrent();
+            else
+            {
+                Glfw.WindowHint(GlfwWindowHint.ContextVersionMajor, 3);
+                Glfw.WindowHint(GlfwWindowHint.ContextVersionMinor, 3);
+                Glfw.WindowHint(GlfwWindowHint.OpenGlProfile, 0x32001);
+                Glfw.WindowHint(GlfwWindowHint.Visible, Glfw.Constants.GLFW_FALSE);
+                window = Glfw.CreateWindow(new GlfwWindow.CreateInfo { Title = "GlCompositingTests", Size = new int2(Size, Size) });
+                window.MakeContextCurrent();
+            }
         }
-        catch (Exception)
+        catch (Exception e)
         {
             window?.Dispose();
-            return false;
+            noContext = "no GL 3.3 core context: " + e.Message;
+        }
+        if (noContext != null)
+        {
+            if (Environment.GetEnvironmentVariable("GUM_REQUIRE_GL") == "1")
+            {
+                throw new InvalidOperationException(noContext + " (GUM_REQUIRE_GL=1)");
+            }
+            Skip.If(true, noContext);
         }
 
         GumService.Default.Uninitialize();
         try
         {
-            GumService.Default.Initialize(window);
+            GumService.Default.Initialize(window!);
             body(window);
         }
         finally
         {
             GumService.Default.Uninitialize();
-            window.Dispose();
+            window!.Dispose();
             SKSurface surface = SKSurface.Create(new SKImageInfo(SkiaHostTestFramework.CanvasWidth, SkiaHostTestFramework.CanvasHeight));
             GumService.Default.Initialize(surface.Canvas, TestAssemblyInitialize.Input, SkiaHostTestFramework.CanvasWidth, SkiaHostTestFramework.CanvasHeight);
             SkiaHostTestBase.CaptureRenderableBaseline();
             Gum.Forms.Controls.FrameworkElement.KeyboardsForUiControl.Clear();
         }
-        return true;
     }
 
     private static void GameClear(float r, float g, float b)
@@ -88,10 +101,10 @@ public unsafe class GlCompositingTests : BaseTestClass
         return (pixel[0], pixel[1], pixel[2], pixel[3]);
     }
 
-    [Fact]
+    [SkippableFact]
     public void Draw_WithAnEmptyScene_KeepsWhatTheGameDrew()
     {
-        bool ran = WithWindow(window =>
+        WithWindow(window =>
         {
             GameClear(0f, 0f, 1f);
 
@@ -100,13 +113,12 @@ public unsafe class GlCompositingTests : BaseTestClass
 
             PixelAt(10, 10).ShouldBe(((byte)0, (byte)0, (byte)255, (byte)255));
         });
-        _ = ran;
     }
 
-    [Fact]
+    [SkippableFact]
     public void Draw_WithAHalfTransparentElement_BlendsOverWhatTheGameDrew()
     {
-        bool ran = WithWindow(window =>
+        WithWindow(window =>
         {
             GameClear(0f, 0f, 1f);
             ColoredRectangleRuntime rectangle = new() { X = 0, Y = 0, Width = Size, Height = Size, Color = new SKColor(255, 0, 0, 128) };
@@ -122,13 +134,12 @@ public unsafe class GlCompositingTests : BaseTestClass
             b.ShouldBeInRange((byte)119, (byte)135);
             a.ShouldBe((byte)255);
         });
-        _ = ran;
     }
 
-    [Fact]
+    [SkippableFact]
     public void Draw_AnElementAtTheTopOfTheCanvas_AppearsAtTheTopOfTheWindow()
     {
-        bool ran = WithWindow(window =>
+        WithWindow(window =>
         {
             GameClear(0f, 0f, 1f);
             ColoredRectangleRuntime rectangle = new() { X = 0, Y = 0, Width = Size, Height = Size / 2, Color = SKColors.Red };
@@ -141,6 +152,23 @@ public unsafe class GlCompositingTests : BaseTestClass
             PixelAt(10, Size - 10).ShouldBe(((byte)255, (byte)0, (byte)0, (byte)255));
             PixelAt(10, 10).ShouldBe(((byte)0, (byte)0, (byte)255, (byte)255));
         });
-        _ = ran;
+    }
+
+    [SkippableFact]
+    public void Draw_LeavesTheFramebufferBindingTheGameHad()
+    {
+        WithWindow(window =>
+        {
+            const int GL_FRAMEBUFFER_BINDING = 0x8CA6;
+            Load<GenFramebuffersFn>("glGenFramebuffers")(1, out int gameFramebuffer);
+            Load<BindFramebufferFn>("glBindFramebuffer")(GL_FRAMEBUFFER, gameFramebuffer);
+            GumService.Default.Update(0.016);
+
+            GumService.Default.Draw();
+
+            int binding;
+            Load<GetIntegervFn>("glGetIntegerv")(GL_FRAMEBUFFER_BINDING, &binding);
+            binding.ShouldBe(gameFramebuffer);
+        });
     }
 }

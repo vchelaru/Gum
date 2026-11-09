@@ -91,6 +91,8 @@ jobs:
               - 'Tests/SkiaGum.GpuTests/**'
               - 'Tests/Gum.Cli.Tests/**'
               - 'Tests/RaylibGum.Tests/**'
+              - 'Tests/BrutalGum.OGL.Tests/**'
+              - 'Tests/SkiaHost.TestsCommon/**'
               - 'Tests/Gum.ProjectServices.*.Tests/**'
               - 'Tests/Gum.Automation/**'
               - 'Tests/Shared/**'
@@ -931,7 +933,8 @@ jobs:
         run: dotnet test "Tests/StrideGum.Tests" --configuration Release --no-build --logger "trx" --results-directory "TestResults"
 
       # BrutalGum.OGL.Tests is the Gum.Brutal.OGL runtime (SkiaGum renderer + BRUTAL GLFW input host). Gum logic
-      # against an in-memory test canvas and a fake window, so it runs headless.
+      # against an in-memory test canvas and a fake window, so it runs headless. Its GL compositing tests skip here (no GL
+      # driver); the Windows Mesa stream (mesa-2) runs them for real with GUM_REQUIRE_GL=1.
       - name: BrutalGum.OGL.Tests
         if: runner.os != 'Windows' && steps.plan.outputs.active == 'true' && (github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true')
         run: dotnet test "Tests/BrutalGum.OGL.Tests" --configuration Release --no-build --logger "trx" --results-directory "TestResults"
@@ -967,6 +970,7 @@ jobs:
         with:
           dest-dirs: |
             Tests/RaylibGum.Tests/bin/Release/net8.0
+            Tests/BrutalGum.OGL.Tests/bin/Release/net10.0
             Tests/Gum.ProjectServices.Raylib.Tests/bin/Release/net10.0
             Tests/Gum.Cli.Tests/bin/Release/net10.0
             Tests/MonoGameGum.IntegrationTests/bin/Release/net8.0
