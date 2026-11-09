@@ -132,6 +132,26 @@ public class ManagedRenderTargetTests : BaseTestClass
     }
 
     [Fact]
+    public void Draw_ThroughGumServiceSkiaBaseReference_RunsTheKniSkiaOverride()
+    {
+        try
+        {
+            Reinitialize();
+            AddRedSquare();
+            GumServiceSkiaBase baseReference = GumService.Default;
+
+            baseReference.Draw();
+
+            _created.Count.ShouldBe(1);
+            _created[0].PresentCount.ShouldBe(1);
+        }
+        finally
+        {
+            RestoreSharedService();
+        }
+    }
+
+    [Fact]
     public void Draw_AtTheSameSize_ReusesTheTarget()
     {
         try

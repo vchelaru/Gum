@@ -325,7 +325,7 @@ public partial class GumService : GumServiceSkiaInteractiveBase, IGumService
     /// Initialized with a canvas (an internal test path), this draws into that canvas instead, as the
     /// base does.
     /// </remarks>
-    public new void Draw()
+    public override void Draw()
     {
         XnaGraphicsDevice? graphicsDevice = _game?.GraphicsDevice ?? _graphicsDevice;
         if (!_managesTarget || (graphicsDevice == null && TargetFactoryOverride == null))
