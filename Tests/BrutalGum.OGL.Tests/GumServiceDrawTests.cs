@@ -25,7 +25,7 @@ public class GumServiceDrawTests : BaseTestClass
         {
             GumService.Default.Uninitialize();
             SKSurface surface = SKSurface.Create(new SKImageInfo(SkiaHostTestFramework.CanvasWidth, SkiaHostTestFramework.CanvasHeight));
-            GumService.Default.Initialize(surface.Canvas, new FakeBrutalInput(), SkiaHostTestFramework.CanvasWidth, SkiaHostTestFramework.CanvasHeight);
+            GumService.Default.Initialize(surface.Canvas, TestAssemblyInitialize.Input, SkiaHostTestFramework.CanvasWidth, SkiaHostTestFramework.CanvasHeight);
             SkiaHostTestBase.CaptureRenderableBaseline();
             Gum.Forms.Controls.FrameworkElement.KeyboardsForUiControl.Clear();
         }

@@ -39,10 +39,10 @@ public class NewProjectRecommendedPackagesTests : BaseTestClass
         return new NewProjectService(locator, _restore, packageAdd ?? _packageAdd, new[] { _checkout });
     }
 
-    private NewProjectRequest Request(string platform, bool packages = true, bool restore = true, bool sourceLinked = false) =>
+    private NewProjectRequest Request(string platform, bool packages = true, bool restore = true, bool sourceLinked = false, string? folderSuffix = null) =>
         new NewProjectRequest
         {
-            Path = Path.Combine(_folder, "Game_" + platform),
+            Path = Path.Combine(_folder, "Game_" + platform + folderSuffix),
             Platform = platform,
             Template = "empty",
             Restore = restore,
@@ -190,9 +190,20 @@ public class NewProjectRecommendedPackagesTests : BaseTestClass
         NewProjectResult result = await service.ExecuteAsync(Request("monogame", restore: false), null, CancellationToken.None);
 
         AddPackagesResult add = result.PackageAdd!;
+        // The macOS CI runner SIGKILLed the dotnet child once (exit 137, no output, ~180 ms in) while main stayed green.
+        // Cause unproven (runner-side kill suspected), so retry once in a fresh folder and report both attempts.
+        const int sigkillExitCode = 137;
+        string firstAttempt = "";
+        if (add.Status == RestoreStatus.Failed && add.ExitCode == sigkillExitCode)
+        {
+            firstAttempt = $"first attempt: package '{add.FailedPackage}' killed (exit {sigkillExitCode}); ";
+            NewProjectRequest retry = Request("monogame", restore: false, folderSuffix: "_retry");
+            result = await service.ExecuteAsync(retry, null, CancellationToken.None);
+            add = result.PackageAdd!;
+        }
         add.Status.ShouldBe(
             RestoreStatus.Succeeded,
-            $"package '{add.FailedPackage}', exit code {add.ExitCode?.ToString() ?? "none"}, error '{add.ErrorMessage}', output:\n{add.OutputTail}");
+            $"{firstAttempt}package '{add.FailedPackage}', exit code {add.ExitCode?.ToString() ?? "none"}, error '{add.ErrorMessage}', output:\n{add.OutputTail}");
         string csproj = File.ReadAllText(result.Files.CsprojPath!);
         foreach (string package in RecommendedPackages.For(HostPlatform.MonoGame))
         {

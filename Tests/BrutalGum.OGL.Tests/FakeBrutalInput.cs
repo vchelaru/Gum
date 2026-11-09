@@ -34,10 +34,47 @@ internal sealed class FakeBrutalInput : IBrutalInput
 
     public void SetCursorShape(GlfwStandardCursor shape) => LastCursorShape = shape;
 
-    // The fake window never has a gamepad.
-    public bool TryReadGamepad(int index, byte[] buttons, float[] axes) => false;
+    /// <summary>Gamepads present on the fake window, by index; none by default.</summary>
+    public Dictionary<int, FakeGamepadReading> Gamepads { get; } = new();
+
+    public bool TryReadGamepad(int index, byte[] buttons, float[] axes)
+    {
+        if (!Gamepads.TryGetValue(index, out FakeGamepadReading? reading))
+        {
+            return false;
+        }
+        reading.Buttons.CopyTo(buttons, 0);
+        reading.Axes.CopyTo(axes, 0);
+        return true;
+    }
 
     public void RaiseScroll(double notches) => _scrolled?.Invoke(notches);
 
     public void RaiseChar(uint codepoint) => _charTyped?.Invoke(codepoint);
+}
+
+/// <summary>One gamepad's reading in GLFW's layout, with triggers at rest (-1) and sticks centered.</summary>
+internal sealed class FakeGamepadReading
+{
+    public byte[] Buttons { get; } = new byte[GamePadDriver.ButtonCount];
+    public float[] Axes { get; } = CreateRestingAxes();
+
+    public void Hold(GlfwGamepadButton button) => Buttons[(int)button] = 1;
+
+    public void Release(GlfwGamepadButton button) => Buttons[(int)button] = 0;
+
+    /// <summary>Sets the left stick in GLFW's convention (positive Y is down).</summary>
+    public void SetLeftStick(float x, float y)
+    {
+        Axes[(int)GlfwGamepadAxis.LeftX] = x;
+        Axes[(int)GlfwGamepadAxis.LeftY] = y;
+    }
+
+    private static float[] CreateRestingAxes()
+    {
+        float[] axes = new float[GamePadDriver.AxisCount];
+        axes[(int)GlfwGamepadAxis.LeftTrigger] = -1f;
+        axes[(int)GlfwGamepadAxis.RightTrigger] = -1f;
+        return axes;
+    }
 }
