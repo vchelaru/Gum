@@ -290,8 +290,8 @@ public class PlatformProjectScaffolder : IPlatformProjectScaffolder
         {
             string text = ReadTemplate(folder, fileName, projectName, rootNamespace, gumProjectFileName)
                 .Replace("{{GumProjectFolder}}", PlatformHostContent.GetGumProjectFolder(platform));
-            text = PlatformHostContent.Expand(text, "{{WindowLines}}", PlatformHostContent.GetWindowLines(platform));
-            text = PlatformHostContent.Expand(text, "{{HostUsings}}", PlatformHostContent.GetUsings(demoScreen, screenCodeGenerated));
+            text = PlatformHostContent.Expand(text, "{{WindowLines}}", PlatformHostContent.GetWindowLines(platform, addedPackages));
+            text = PlatformHostContent.Expand(text, "{{HostUsings}}", PlatformHostContent.GetUsings(demoScreen, screenCodeGenerated, addedPackages));
             text = PlatformHostContent.Expand(text, "{{InitLines}}", PlatformHostContent.GetInitLines(addedPackages, gum));
             return PlatformHostContent.Expand(text, "{{ScreenLines}}", PlatformHostContent.GetScreenLines(demoScreen, screenCodeGenerated, gum));
         }

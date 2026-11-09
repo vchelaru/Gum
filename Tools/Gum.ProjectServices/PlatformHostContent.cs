@@ -37,9 +37,22 @@ internal static class PlatformHostContent
     internal static string GetGumProjectFolder(HostPlatform platform) =>
         platform == HostPlatform.KniSkia ? "Content/GumProject/" : "GumProject/";
 
-    /// <summary>Extra Game1 constructor lines. The Skia host resizes its render target with the window, so it opts in to a resizable one.</summary>
-    internal static IReadOnlyList<string> GetWindowLines(HostPlatform platform) =>
-        platform == HostPlatform.KniSkia ? new[] { "Window.AllowUserResizing = true;" } : Array.Empty<string>();
+    /// <summary>Extra Game1 constructor lines. The Skia host resizes its render target with the window, so it opts in to a resizable one; the Shapes package needs the HiDef graphics profile.</summary>
+    internal static IReadOnlyList<string> GetWindowLines(HostPlatform platform, IReadOnlyList<string> addedPackages)
+    {
+        List<string> lines = new List<string>();
+        if (platform == HostPlatform.KniSkia)
+        {
+            lines.Add("Window.AllowUserResizing = true;");
+        }
+
+        if (AddsShapes(addedPackages))
+        {
+            lines.Add("_graphics.GraphicsProfile = GraphicsProfile.HiDef;");
+        }
+
+        return lines;
+    }
 
     internal static IReadOnlyList<string> GetInitLines(IReadOnlyList<string> addedPackages, string gum = "GumService.Default")
     {
@@ -47,17 +60,27 @@ internal static class PlatformHostContent
         return AddOnCallOrder.Where(calls.Contains).Select(call => $"{gum}.{call}();").ToList();
     }
 
-    internal static IReadOnlyList<string> GetUsings(DemoScreenInfo? screen, bool generated)
+    internal static IReadOnlyList<string> GetUsings(DemoScreenInfo? screen, bool generated, IReadOnlyList<string> addedPackages)
     {
-        if (screen == null)
+        List<string> usings = new List<string>();
+        if (screen != null)
         {
-            return Array.Empty<string>();
+            usings.AddRange(generated
+                ? new[] { "using Gum.Forms.Controls;", $"using {screen.Namespace};" }
+                : new[] { "using Gum.Managers;", "using GumRuntime;" });
         }
 
-        return generated
-            ? new[] { "using Gum.Forms.Controls;", $"using {screen.Namespace};" }
-            : new[] { "using Gum.Managers;", "using GumRuntime;" };
+        if (AddsShapes(addedPackages))
+        {
+            usings.Add("using Microsoft.Xna.Framework.Graphics;");
+        }
+
+        return usings;
     }
+
+    // Apos.Shapes uses a Shader Model 4 effect, which needs the HiDef profile (PreviewDefaults has the same line); KNI's UseShapes throws without it (#7812).
+    private static bool AddsShapes(IReadOnlyList<string> addedPackages) =>
+        addedPackages.Any(package => CallByPackage.TryGetValue(package, out string? call) && call == "UseShapes");
 
     internal static IReadOnlyList<string> GetScreenLines(DemoScreenInfo? screen, bool generated, string gum = "GumService.Default")
     {
