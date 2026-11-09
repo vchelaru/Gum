@@ -65,13 +65,15 @@ public class NewProjectUiPackageChannelTests
         fixture.Dialog.ToggleLabeled(NewProjectUiText.Stable).IsEffectivelyEnabled.ShouldBeTrue();
     }
 
-    [AvaloniaFact]
-    public void KniSkia_ChecksPreview_AndDisablesStable()
+    [AvaloniaTheory]
+    [InlineData("kniskia")]
+    [InlineData("brutal")]
+    public void APlatformWithNoStablePackage_ChecksPreview_AndDisablesStable(string platform)
     {
         using NewProjectUiFixture fixture = new NewProjectUiFixture();
         fixture.Dialog.SetChecked(NewProjectUiText.CreateCodeProject, true);
 
-        fixture.Dialog.ChoosePlatform("kniskia");
+        fixture.Dialog.ChoosePlatform(platform);
 
         fixture.Dialog.ToggleLabeled(NewProjectUiText.Preview).IsChecked.ShouldBe(true);
         fixture.Dialog.ToggleLabeled(NewProjectUiText.Preview).IsEffectivelyEnabled.ShouldBeTrue();

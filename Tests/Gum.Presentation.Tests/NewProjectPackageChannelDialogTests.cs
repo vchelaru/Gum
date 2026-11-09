@@ -125,12 +125,14 @@ public class NewProjectPackageChannelDialogTests
         viewModel.CommandLine.ShouldNotContain("--source-linked");
     }
 
-    [Fact]
-    public void KniSkia_HasNoStablePackage_SoStableIsDisabledAndPreviewApplies_ThenTheChoiceComesBack()
+    [Theory]
+    [InlineData("kniskia")]
+    [InlineData("brutal")]
+    public void APlatformWithNoStablePackage_DisablesStableAndPreviewApplies_ThenTheChoiceComesBack(string platform)
     {
         NewProjectDialogViewModel viewModel = Create();
 
-        viewModel.PlatformName = "kniskia";
+        viewModel.PlatformName = platform;
 
         viewModel.IsStableChannelEnabled.ShouldBeFalse();
         viewModel.IsPreviewChannelEnabled.ShouldBeTrue();

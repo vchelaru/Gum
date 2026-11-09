@@ -390,6 +390,29 @@ public class NewCommandTests : BaseTestClass
     }
 
     [Fact]
+    public void New_WithBrutalPlatformOnTheStableChannel_ShouldReturnExitCode2NamingTheFix()
+    {
+        string projectDir = Path.Combine(TempDirectory, "MyGame");
+
+        CliTestHelper result = CliTestHelper.Run("new", projectDir, "-p", "brutal", "--no-restore");
+
+        result.ExitCode.ShouldBe(2);
+        result.StandardError.ShouldContain("no stable Gum package yet: pass --preview, or --source-linked");
+        Directory.Exists(projectDir).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void New_WithBrutalPlatformAndPreview_ShouldReferenceThePrereleasePackage()
+    {
+        string projectDir = Path.Combine(TempDirectory, "MyGame");
+
+        CliTestHelper result = CliTestHelper.Run("new", projectDir, "-p", "brutal", "--preview", "--no-restore");
+
+        result.ExitCode.ShouldBe(0, result.StandardError);
+        File.ReadAllText(Path.Combine(projectDir, "MyGame.csproj")).ShouldContain("<PackageReference Include=\"Gum.Brutal.OGL\" Version=\"*-*\"");
+    }
+
+    [Fact]
     public void New_WithUnknownPlatform_ShouldReturnExitCode2NamingValidValues()
     {
         string projectDir = Path.Combine(TempDirectory, "MyGame");

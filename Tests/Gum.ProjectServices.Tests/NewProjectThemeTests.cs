@@ -22,7 +22,7 @@ public class NewProjectThemeTests : NewProjectServiceTestBase
             string name = Platforms.ElementAt(i % Platforms.Count()).Name;
             string folderName = $"{theme}_{name}";
             string label = $"theme={theme} platform={name}";
-            NewProjectResult result = await Run(Request(name, folderName, theme: theme, sourceLinked: name == "kniskia"));
+            NewProjectResult result = await Run(Request(name, folderName, theme: theme, channel: WorkingChannel(name)));
 
             result.Files.Success.ShouldBeTrue(label + " " + result.Files.ErrorMessage);
             string gumFolder = Path.Combine(Game(folderName), "Content", "GumProject");

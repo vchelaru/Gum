@@ -186,6 +186,22 @@ public class NewProjectDialogViewModelTests
     }
 
     [Fact]
+    public void Brutal_OffersPreviewAndLocalSource_ButNotStable_WithANote()
+    {
+        NewProjectDialogViewModel viewModel = Create(vm =>
+        {
+            vm.IncludeCodeProject = true;
+            vm.PlatformName = "brutal";
+        });
+
+        viewModel.IsPreview.ShouldBeTrue();
+        viewModel.IsStableChannelEnabled.ShouldBeFalse();
+        viewModel.IsPreviewChannelEnabled.ShouldBeTrue();
+        viewModel.PlatformNote.ShouldContain("Gum.Brutal has no stable release yet, so Stable is unavailable.");
+        viewModel.CommandLine.ShouldContain("--preview");
+    }
+
+    [Fact]
     public void KniSkia_OffersPreviewAndLocalSource_ButNotStable_WithANote()
     {
         NewProjectDialogViewModel viewModel = Create(vm =>

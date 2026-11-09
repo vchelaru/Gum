@@ -16,11 +16,11 @@ public class NewProjectRecommendedPackagesHostTests : NewProjectServiceTestBase
             return; // Always source-linked, which refuses packages (#7328), and it has none to add anyway.
         }
 
-        NewProjectResult result = await Run(Request(platformName, packages: true));
+        NewProjectResult result = await Run(Request(platformName, packages: true, channel: WorkingChannel(platformName)));
 
         result.Files.Success.ShouldBeTrue(result.Files.ErrorMessage);
         string host = File.ReadAllText(Path.Combine(Game(), NewProjectLayout.WritesGame1(platform) ? "Game1.cs" : "Program.cs"));
-        IReadOnlyList<string> added = RecommendedPackages.For(platform);
+        IReadOnlyList<string> added = RecommendedPackages.For(platform, WorkingChannel(platformName));
         _calls.Where(call => call.StartsWith("add ")).Select(call => call.Substring(4)).ShouldBe(added);
 
         host.Contains(".UseExpressions();").ShouldBe(added.Contains("Gum.Expressions"));

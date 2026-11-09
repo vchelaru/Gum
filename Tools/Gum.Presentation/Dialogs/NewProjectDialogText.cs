@@ -70,7 +70,7 @@ public static class NewProjectDialogText
     public const string StridePlatformNote = "Runs on Windows only; renders with Skia on the GPU.";
     public const string KniSkiaPlatformNote = "Gum.KniSkia has no stable release yet, so Stable is unavailable.";
     public const string SilkNetPlatformNote = "Needs a graphics driver with OpenGL 3.3.";
-    public const string BrutalPlatformNote = "Windows and Linux; needs an OpenGL 3.3 driver. Gum draws with Skia and shows the frame in your GLFW window.";
+    public const string BrutalPlatformNote = "Windows and Linux; needs an OpenGL 3.3 driver. Gum draws with Skia and shows the frame in your GLFW window. Gum.Brutal has no stable release yet, so Stable is unavailable.";
 
     public const string NoDemoCommandNote = "gumcli new has no option to leave out DemoScreenGum yet.";
     public const string ExtensionPicksFormatNote = "The extension in the path picks the file format.";
