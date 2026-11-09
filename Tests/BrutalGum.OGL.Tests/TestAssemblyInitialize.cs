@@ -14,10 +14,13 @@ namespace BrutalGum.Tests;
 /// </summary>
 public class TestAssemblyInitialize : SkiaHostTestFramework
 {
+    /// <summary>The fake window the shared test service reads, for tests that script a gamepad.</summary>
+    internal static FakeBrutalInput Input { get; } = new();
+
     public TestAssemblyInitialize(IMessageSink messageSink) : base(messageSink)
     {
     }
 
     protected override void InitializeGum(SKCanvas canvas) =>
-        GumService.Default.Initialize(canvas, new FakeBrutalInput(), CanvasWidth, CanvasHeight);
+        GumService.Default.Initialize(canvas, Input, CanvasWidth, CanvasHeight);
 }
