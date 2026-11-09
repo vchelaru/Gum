@@ -1001,12 +1001,12 @@ public class ObjectFinder : IObjectFinder
     private List<string> CollectReferencedFilesViaWalker(ElementSave? scopeElement, Gum.Bundle.GumBundleInclusion inclusion)
     {
         List<string> result = new List<string>();
-        if (GumProjectSave == null)
+        // Referenced files resolve relative to the project file; a project without one (new and unsaved) has none to report.
+        if (GumProjectSave == null || string.IsNullOrEmpty(GumProjectSave.FullFileName))
         {
             return result;
         }
 
-        // Referenced files resolve relative to the project file, so this is only called for a project on disk.
         string gumProjectDirectory = FileManager.GetDirectory(GumProjectSave.FullFileName!);
 
         Gum.Bundle.GumProjectDependencyWalker walker = new Gum.Bundle.GumProjectDependencyWalker();
