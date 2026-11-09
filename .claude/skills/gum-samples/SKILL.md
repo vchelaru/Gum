@@ -57,10 +57,6 @@ raylib and Skia render shapes natively. MonoGame's shape rendering comes from th
 
 `Samples/SkiaGumWpfSample/` and `Samples/MauiSkiaGum/` aren't feature samples — they demo Gum embedded inside a host UI framework (WPF, MAUI) that already has its own native controls. There, Gum is typically the visualization/canvas layer, not a Forms-control replacement for the host's own buttons/text boxes — see `GumSKElement`/`SkiaGumCanvasView` (`Runtimes/SkiaGum.Wpf/`, `Runtimes/SkiaGum.Maui/`), each owning its own `SystemManagers` so one host app can embed multiple independent Gum canvases. Don't add a Forms-control (Button, TextBox) demo here just because Forms exist on this backend.
 
-## Docs coverage lags SilkNetGum
-
-`docs/code/layout/resizing-the-game-window.md` documents window-resize handling with `{% tabs %}` per backend but has no Silk.NET tab yet (only MonoGame/raylib-flavored guidance exists). When fixing or documenting Silk.NET resize behavior, add its tab there too instead of leaving the doc MonoGame/raylib-only.
-
 ## Verification is human-driven
 
 These samples exist for visual confirmation. Samples wired to the automation driver (`MonoGameGumInCode` through `Tests/Gum.Automation`; the KNI Skia samples through `Tests/Gum.Automation.KniSkia`, which compiles the same sources with `KNISKIA`) can also run off-screen with `--gum-automation Automation/smoke.ndjson --gum-automation-hide` (Debug only); controls a script targets need a `Name`. After adding a screen, build the sample and tell the user to run it and eyeball the new screen. Behavioral correctness still gets a unit test in the matching `Tests/*` project (see [[tdd]]) — the sample is the visual complement, not a replacement.
