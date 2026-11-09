@@ -52,6 +52,28 @@ public class SampleInitBlockTests
         offenders.ShouldBeEmpty();
     }
 
+
+    // Primary samples of runtimes that have a ShadowDusk package show UseShadowDusk like MonoGame does.
+    private static readonly string[] ShadowDuskSamples =
+    {
+        "Samples/MonoGameGumInCode/MonoGameGumInCode/Game1.cs",
+        "Samples/KniGumInCode/KniGumInCodeCommon/KniGumInCodeGame.cs",
+        "Samples/FnaGum/FnaSample/Game1.cs",
+        "Samples/KniSkiaGumInCode/KniSkiaGumInCode/Game1.cs",
+        "Samples/raylib/Program.cs",
+    };
+
+    private static readonly Regex ShadowDuskCall = new(@"\bGumUI\s*\.\s*UseShadowDusk\s*\(", RegexOptions.Compiled);
+
+    [Fact]
+    public void PrimarySamplesOfRuntimesWithShadowDusk_CallUseShadowDusk()
+    {
+        List<string> offenders = ShadowDuskSamples
+            .Where(path => !Code(File.ReadAllText(Path.Combine(RepoPaths.RepoRoot, path))).Any(l => ShadowDuskCall.IsMatch(l)))
+            .ToList();
+
+        offenders.ShouldBeEmpty();
+    }
     [Fact]
     public void Allowlist_OnlyNamesFilesThatExist()
     {

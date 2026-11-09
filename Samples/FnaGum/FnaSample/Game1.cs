@@ -45,6 +45,8 @@ namespace FnaSample
 
             GumUI.UseGamepadDefaults();
 
+            GumUI.UseShadowDusk();
+
             IsMouseVisible = true;
 
             Root = new MainScreenRuntime();

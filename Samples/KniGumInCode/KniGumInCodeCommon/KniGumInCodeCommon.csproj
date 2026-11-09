@@ -38,6 +38,7 @@
   <ItemGroup>
 	<ProjectReference Include="..\..\..\GumCommon\GumCommon.csproj" />
 	<ProjectReference Include="..\..\..\MonoGameGum\KniGum\KniGum.csproj" />
+	<ProjectReference Include="..\..\..\Runtimes\GumShadowDusk\KniGum.ShadowDusk.csproj" />
   </ItemGroup>
 
 </Project>
