@@ -25,6 +25,7 @@ public class NewProjectLayout
 
     /// <summary>The game class file of the platforms that run a <c>Game1</c>.</summary>
     public const string Game1FileName = "Game1.cs";
+    public const string PresenterFileName = "Presenter.cs";
 
     /// <summary>The folder of generated bitmap fonts; the Forms template does not create it, so it is not in <see cref="GumFolders"/>.</summary>
     public const string FontCacheFolderName = "FontCache";
@@ -92,6 +93,11 @@ public class NewProjectLayout
         if (WritesGame1(platform))
         {
             hostFiles.Add(Game1FileName);
+        }
+
+        if (platform == HostPlatform.Brutal)
+        {
+            hostFiles.Add(PresenterFileName);
         }
 
         return new NewProjectLayout(

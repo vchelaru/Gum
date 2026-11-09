@@ -130,6 +130,42 @@ public class PlatformProjectScaffolderTests : IDisposable
     }
 
     [Fact]
+    public void Create_Brutal_FrameLoopShouldPresentAfterEndingTheTarget()
+    {
+        // The reported bug: the loop drew into the Skia image and then only had a comment, so the window stayed white.
+        string projectDirectory = Path.Combine(_tempDirectory, "MyGame");
+
+        _sut.Create(projectDirectory, HostPlatform.Brutal, includeFormsTemplate: true);
+
+        string program = File.ReadAllText(Path.Combine(projectDirectory, "Program.cs"));
+        string afterEnd = program.Substring(program.LastIndexOf("target.End();", StringComparison.Ordinal));
+        string loopRest = afterEnd.Substring(0, afterEnd.IndexOf('}'));
+        string code = string.Join("\n", loopRest.Split('\n').Where(line => !line.TrimStart().StartsWith("//")));
+        code.ShouldContain(".Present();");
+    }
+
+    [Fact]
+    public void Create_Brutal_ShouldPresentTheGumImageThroughAPresenter()
+    {
+        // BRUTAL has no renderer, so a project that only draws into the Skia image shows a blank window.
+        string projectDirectory = Path.Combine(_tempDirectory, "MyGame");
+
+        PlatformProjectResult result = _sut.Create(projectDirectory, HostPlatform.Brutal, includeFormsTemplate: true);
+
+        string csproj = File.ReadAllText(result.CsprojPath);
+        csproj.ShouldContain("<PackageReference Include=\"Ahwoo.Brutal.ShaderC\"");
+        string presenter = File.ReadAllText(Path.Combine(projectDirectory, "Presenter.cs"));
+        presenter.ShouldContain("namespace MyGame;");
+        presenter.ShouldContain("class Presenter");
+        presenter.ShouldNotContain("{{");
+        string program = File.ReadAllText(Path.Combine(projectDirectory, "Program.cs"));
+        program.ShouldContain("Glfw.CreateWindowSurface");
+        program.ShouldContain("new Presenter(");
+        program.ShouldContain("presenter.Present()");
+        program.ShouldNotContain("{{");
+    }
+
+    [Fact]
     public void Create_SilkNet_ShouldReferenceSdlWindowingAndInputButNoAngleNatives()
     {
         // Desktop OpenGL needs no ANGLE natives, so the project restores and runs on Windows, macOS and

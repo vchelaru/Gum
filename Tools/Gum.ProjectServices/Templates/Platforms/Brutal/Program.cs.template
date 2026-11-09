@@ -4,15 +4,20 @@ using Brutal.VulkanApi;
 using Brutal.VulkanApi.Abstractions;
 using Gum;
 {{HostUsings}}
+using {{RootNamespace}};
 using SkiaGameRendering;
 using SkiaGameRendering.Core.VK;
 using SkiaSharp;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 
 const int Width = 800;
 const int Height = 450;
+
+// The Gum project loads relative to the working directory, so run from the build output whatever the caller's folder is.
+Directory.SetCurrentDirectory(AppContext.BaseDirectory);
 
 if (!Glfw.Init())
 {
@@ -22,12 +27,23 @@ if (!Glfw.Init())
 try
 {
     // BRUTAL has no renderer, so the window needs no graphics API of its own.
-    Glfw.WindowHint(GlfwWindowHint.ClientApi, 0);
+    Glfw.WindowHint(GlfwWindowHint.ClientApi, Glfw.Constants.GLFW_NO_API);
+    // The Presenter builds its swapchain once, so the window keeps its size.
+    Glfw.WindowHint(GlfwWindowHint.Resizable, Glfw.Constants.GLFW_FALSE);
     using GlfwWindow window = Glfw.CreateWindow(new GlfwWindow.CreateInfo { Title = "{{ProjectName}}", Size = new int2(Width, Height) });
 
-    // A Vulkan 1.3 device, as in BRUTAL's own samples.
+    // A Vulkan 1.3 instance that can present to the window.
     HashSet<string> instanceExtensions = new HashSet<string>();
     VulkanHelpers.AddPlatformRequiredExtensions(instanceExtensions);
+    unsafe
+    {
+        var glfwExtensions = Glfw.GetRequiredInstanceExtensions(out var count);
+        for (int i = 0; i < count; i++)
+        {
+            instanceExtensions.Add(Brutal.Strings.Utf8.GetString(glfwExtensions[i]));
+        }
+    }
+
     using Instance instance = Vulkan.CreateInstance(new Instance.CreateInfo
     {
         AppInfo = new VkApplicationInfo { ApiVersion = (int)VulkanHelpers.Api.VERSION_1_3 },
@@ -35,9 +51,35 @@ try
         EnabledExtensions = instanceExtensions,
         EnabledLayers = [],
     });
-    PhysicalDevice physicalDevice = instance.PhysicalDevices[0];
-    int family = physicalDevice.GetFirstQueueFamilyWithFlag(VkQueueFlags.GraphicsBit);
+
+    if (Glfw.CreateWindowSurface(instance.VkHandle, window, out var surfaceHandle) != (int)VkResult.Success)
+    {
+        throw new InvalidOperationException("Failed to create a Vulkan surface for the window.");
+    }
+    VkSurfaceKHR surface = new VkSurfaceKHR((nint)surfaceHandle);
+
+    // One queue draws and presents, so find a device with a queue family that can do both.
+    PhysicalDevice? physicalDevice = null;
+    int family = -1;
+    foreach (PhysicalDevice candidate in instance.PhysicalDevices)
+    {
+        var families = new VkQueueFamilyProperties[candidate.GetQueueFamilyProperties_Count()];
+        candidate.GetQueueFamilyProperties_Write(families);
+        for (int i = 0; i < families.Length && physicalDevice is null; i++)
+        {
+            if ((families[i].QueueFlags & VkQueueFlags.GraphicsBit) != 0 && candidate.GetSurfaceSupportKHR(i, surface))
+            {
+                (physicalDevice, family) = (candidate, i);
+            }
+        }
+    }
+    if (physicalDevice is null)
+    {
+        throw new InvalidOperationException("No Vulkan device has a graphics queue family that can present to the window.");
+    }
+
     HashSet<string> deviceExtensions = new HashSet<string>();
+    VulkanHelpers.AddSwapchainExtensions(deviceExtensions);
     VulkanHelpers.AddMandatoryIfSupportedDeviceExtensions(deviceExtensions, physicalDevice);
     float priority = 1.0f;
     VkPhysicalDeviceVulkan13Features features13 = new VkPhysicalDeviceVulkan13Features { DynamicRendering = true };
@@ -54,7 +96,7 @@ try
     using Device deviceScope = device;
     Queue queue = device.GetQueue(family, 0);
 
-    // Skia draws into a Vulkan image. Sample target.VkImage in your own renderer to put it on screen.
+    // Skia draws into a Vulkan image. The window size is the target size, so cursor positions match Gum.
     using SkiaVulkanContext context = new SkiaVulkanContext(
         instance.VkHandle, physicalDevice.VkHandle, device.VkHandle, queue.VkHandle, (uint)family);
     using SkiaRenderTarget2D target = new SkiaRenderTarget2D(context, Width, Height);
@@ -65,9 +107,16 @@ try
 {{InitLines}}
 {{ScreenLines}}
 
+    // Puts target.VkImage on the window every frame (see Presenter.cs).
+    using Presenter presenter = new Presenter(instance, physicalDevice, device, queue, family, surface, window, target);
+
+    // --exit-after <seconds> closes the window by itself, for runs with nobody watching.
+    int exitIndex = Array.IndexOf(args, "--exit-after");
+    double exitAfterSeconds = exitIndex >= 0 && exitIndex + 1 < args.Length ? double.Parse(args[exitIndex + 1]) : 0;
+
     Stopwatch clock = Stopwatch.StartNew();
 
-    while (!window.ShouldClose)
+    while (!window.ShouldClose && (exitAfterSeconds <= 0 || clock.Elapsed.TotalSeconds < exitAfterSeconds))
     {
         Glfw.PollEvents();
 
@@ -78,8 +127,7 @@ try
         GumUI.Draw(target.Canvas);
         target.End();
 
-        // target.VkImage now holds the frame, in SHADER_READ_ONLY_OPTIMAL. Create a VkImageView over it
-        // and sample it in your own renderer here.
+        presenter.Present();
     }
 
     device.WaitIdle();

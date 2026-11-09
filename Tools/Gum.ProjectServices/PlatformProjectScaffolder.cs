@@ -296,6 +296,14 @@ public class PlatformProjectScaffolder : IPlatformProjectScaffolder
 
         File.WriteAllText(Path.Combine(directory, NewProjectLayout.ProgramFileName), Fill(programFolder, "Program.cs.template"));
 
+        // BRUTAL has no renderer, so the project carries the code that puts Gum's Vulkan image on the window.
+        if (platform == HostPlatform.Brutal)
+        {
+            File.WriteAllText(
+                Path.Combine(directory, NewProjectLayout.PresenterFileName),
+                ReadTemplate(platformFolder, "Presenter.cs.template", projectName, rootNamespace, gumProjectFileName));
+        }
+
         if (isXnaGame)
         {
             string gameFolder = platform == HostPlatform.KniSkia ? platformFolder : "Xna";

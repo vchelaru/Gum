@@ -16,6 +16,7 @@
     <PackageReference Include="Ahwoo.Brutal.Glfw" Version="2026.10.5" />
     <PackageReference Include="Ahwoo.Brutal.Vulkan" Version="2026.10.3" />
     <PackageReference Include="Ahwoo.Brutal.Vulkan.Abstractions" Version="2026.10.3" />
+    <PackageReference Include="Ahwoo.Brutal.ShaderC" Version="2026.10.3" />
     <PackageReference Include="SkiaGameRendering.Brutal" Version="0.21.0" />
   </ItemGroup>
 
