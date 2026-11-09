@@ -85,13 +85,13 @@ public class NewProjectDemoScreenHostTests : IDisposable
         // The core overload (systemManagers, addToManagers) exists on every runtime, stable and source; the no-argument one is MonoGameGum only.
     }
 
-    // The host's own Gum handle: GumUI where Game1 declares it, GumUI where Program.cs declares that local, GumService.Default where neither exists (#7671).
+    // The host's own Gum handle: GumUI on every platform (#7671, #7788).
     [Theory]
     [InlineData(HostPlatform.MonoGame, "GumUI")]
     [InlineData(HostPlatform.Kni, "GumUI")]
     [InlineData(HostPlatform.Raylib, "GumUI")]
     [InlineData(HostPlatform.SilkNet, "GumUI")]
-    [InlineData(HostPlatform.Stride, "GumService.Default")]
+    [InlineData(HostPlatform.Stride, "GumUI")]
     public void Host_UsesItsOwnGumHandleForGeneratedLines(HostPlatform platform, string receiver)
     {
         (NewProjectService service, ResolvedNewProject resolved, NewProjectFilesResult files) = Create(platform, packages: true);
@@ -101,11 +101,8 @@ public class NewProjectDemoScreenHostTests : IDisposable
         string host = ReadHost(platform);
         host.ShouldContain($"{receiver}.UseShadowDusk();", Case.Sensitive);
         host.ShouldContain($".ToGraphicalUiElement({receiver}.SystemManagers, addToManagers: false)", Case.Sensitive);
-        if (receiver != "GumService.Default")
-        {
-            host.ShouldNotContain("GumService.Default.UseShadowDusk");
-            host.ShouldNotContain("ToGraphicalUiElement(GumService.Default");
-        }
+        host.ShouldNotContain("GumService.Default.UseShadowDusk");
+        host.ShouldNotContain("ToGraphicalUiElement(GumService.Default");
     }
 
     [Fact]
@@ -426,6 +423,56 @@ public class NewProjectDemoScreenHostTests : IDisposable
         // Everything the screen references is generated too, and the other screens/components are not required.
         Directory.GetFiles(Path.Combine(_tempDirectory, "RealGame"), "*.Generated.cs", SearchOption.AllDirectories)
             .Length.ShouldBeGreaterThan(1);
+    }
+
+    // Every platform's generated host has the same Gum block (MonoGame is the reference): the GumUI alias, Initialize, the
+    // add-on and Use... calls once each in one order, then Update and Draw, with no implementation type in game code.
+    [Theory]
+    [InlineData(HostPlatform.MonoGame, false)]
+    [InlineData(HostPlatform.MonoGame, true)]
+    [InlineData(HostPlatform.Kni, false)]
+    [InlineData(HostPlatform.Kni, true)]
+    [InlineData(HostPlatform.KniSkia, false)]
+    [InlineData(HostPlatform.KniSkia, true)]
+    [InlineData(HostPlatform.Raylib, false)]
+    [InlineData(HostPlatform.Raylib, true)]
+    [InlineData(HostPlatform.SilkNet, false)]
+    [InlineData(HostPlatform.SilkNet, true)]
+    [InlineData(HostPlatform.Stride, false)]
+    [InlineData(HostPlatform.Stride, true)]
+    [InlineData(HostPlatform.Brutal, false)]
+    [InlineData(HostPlatform.Brutal, true)]
+    public void Host_HasTheSameGumInitBlockOnEveryPlatform(HostPlatform platform, bool packages)
+    {
+        (NewProjectService service, ResolvedNewProject resolved, NewProjectFilesResult files) = Create(platform, packages: packages);
+        if (packages)
+        {
+            service.UpdateHost(resolved, files, packagesAdded: true, screenCodeGenerated: false);
+        }
+
+        string host = ReadHost(platform);
+
+        Regex.Matches(host, @"GumService GumUI (=>|=) GumService\.Default;").Count.ShouldBe(1, "the GumUI alias");
+        Regex.Matches(host, @"GumService\.Default").Count.ShouldBe(1, "GumService.Default only in the alias");
+        foreach (string forbidden in new[] { @"\bSK[A-Z]\w*", "SkiaSharp", @"\bGR[A-Z]\w*", @"GumUI\.ClearColor", @"\.ClearColor\s*=", "CanvasWidth", "CanvasHeight", "GamePadsForUiControl" })
+        {
+            Regex.IsMatch(host, forbidden).ShouldBeFalse($"'{forbidden}' in game code");
+        }
+
+        List<string> expected = new() { "Initialize" };
+        if (packages && RecommendedPackages.For(platform).Any(package => package.Contains("ShadowDusk")))
+        {
+            expected.Add("UseShadowDusk");
+        }
+        expected.AddRange(new[] { "UseKeyboardDefaults", "UseGamepadDefaults" });
+        if (platform != HostPlatform.Stride)
+        {
+            // Stride drives Update and Draw itself, so its host calls neither.
+            expected.AddRange(new[] { "Update", "Draw" });
+        }
+        List<string> actual = Regex.Matches(host, @"GumUI\.(Initialize|Use\w+|Update|Draw)\(")
+            .Select(match => match.Groups[1].Value).ToList();
+        actual.ShouldBe(expected, string.Join(", ", actual));
     }
 
     #endregion

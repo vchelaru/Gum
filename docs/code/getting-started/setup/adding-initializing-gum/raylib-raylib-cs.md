@@ -60,7 +60,6 @@ Gum can be added to a Program class with a few lines of code. Projects are encou
 Add code to your Program class to Initialize, Update, and Draw Gum as shown in the following code block:
 
 <pre class="language-csharp"><code class="lang-csharp"><strong>using Gum.Forms.Controls;
-</strong><strong>using Gum.Wireframe;
 </strong><strong>using Gum;
 </strong>using Raylib_cs;
 namespace raylibExample1;
@@ -79,11 +78,9 @@ public class Program
         Raylib.InitWindow(screenWidth, screenHeight, "Gum Sample");
 <strong>        Raylib.SetTargetFPS(60);
 </strong>
-<strong>        // This tells Gum to use the entire screen
-</strong><strong>        GraphicalUiElement.CanvasWidth = screenWidth;
-</strong><strong>        GraphicalUiElement.CanvasHeight = screenHeight;
-</strong>
 <strong>        GumUI.Initialize();
+</strong><strong>        GumUI.UseKeyboardDefaults();
+</strong><strong>        GumUI.UseGamepadDefaults();
 </strong>
         while (!Raylib.WindowShouldClose())
         {

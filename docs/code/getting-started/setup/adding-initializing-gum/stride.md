@@ -106,9 +106,13 @@ void Start(Scene rootScene)
     game.AddGraphicsCompositor().AddCleanUIStage();
     game.Add2DCamera();
 
-    GumService.Default.Initialize(game, "Content/GumProject/GumProject.gumj");
-    GumService.Default.UseShadowDusk(); // Optional: .fx and .slang shader files
+    GumService GumUI = GumService.Default;
+
+    GumUI.Initialize(game, "Content/GumProject/GumProject.gumj");
+    GumUI.UseShadowDusk(); // Optional: .fx and .slang shader files
     Gum.Expressions.GumExpressionService.Initialize(); // Optional: arithmetic expressions in variable references
+    GumUI.UseKeyboardDefaults();
+    GumUI.UseGamepadDefaults();
 }
 ```
 
