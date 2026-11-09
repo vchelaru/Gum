@@ -58,6 +58,14 @@ internal sealed class VulkanBackend : IBrutalGpuBackend
     /// <summary>When false, <see cref="Present"/> leaves the image for the game's own renderer.</summary>
     public bool PresentToWindow { get; set; } = true;
 
+    /// <summary>The swapchain image last presented, its format and size, or null; for a test that reads the window's pixels back.</summary>
+    public (VkImage Image, VkFormat Format, int Width, int Height)? LastPresented =>
+        _presenter?.LastPresentedImage is VkImage image
+            ? (image, _presenter.SwapchainFormat, _presenter.SwapchainSize.Width, _presenter.SwapchainSize.Height)
+            : null;
+
+    public void WaitForGpu() => _device.WaitIdle();
+
     public IBrutalTarget CreateTarget(int width, int height) => new VulkanTarget(_context, width, height);
 
     public void Present(IBrutalTarget target, int width, int height)

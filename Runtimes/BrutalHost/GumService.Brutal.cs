@@ -94,6 +94,12 @@ public partial class GumService : GumServiceSkiaInteractiveBase, IGumService
             return;
         }
 
+        if (width != _targetHolder.Width || height != _targetHolder.Height)
+        {
+            // The previous frame may still be sampling the target that is about to be freed.
+            _backend.WaitForGpu();
+        }
+
         _targetHolder.EnsureSize(width, height);
         SKCanvas? canvas = _targetHolder.BeginFrame();
         IBrutalTarget? target = _targetHolder.Target;

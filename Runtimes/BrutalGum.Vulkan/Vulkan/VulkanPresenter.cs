@@ -161,7 +161,9 @@ internal sealed unsafe class VulkanPresenter : IDisposable
                 ImageColorSpace = surfaceFormat.ColorSpace,
                 ImageExtent = _extent,
                 ImageArrayLayers = 1,
-                ImageUsage = VkImageUsageFlags.ColorAttachmentBit,
+                // TransferSrc lets a test read the presented pixels back; it costs nothing when unused.
+                ImageUsage = VkImageUsageFlags.ColorAttachmentBit
+                    | ((capabilities.SupportedUsageFlags & VkImageUsageFlags.TransferSrcBit) != 0 ? VkImageUsageFlags.TransferSrcBit : 0),
                 ImageSharingMode = VkSharingMode.Exclusive,
                 PreTransform = capabilities.CurrentTransform,
                 CompositeAlpha = compositeAlpha,
@@ -170,6 +172,8 @@ internal sealed unsafe class VulkanPresenter : IDisposable
             },
             null);
 
+        SwapchainFormat = surfaceFormat.Format;
+        LastPresentedImage = null;
         _images = new VkImage[_device.GetSwapchainImagesKHR_Count(_swapchain)];
         _device.GetSwapchainImagesKHR_Write(_swapchain, _images);
         _imageViews = new VkImageView[_images.Length];
@@ -264,7 +268,17 @@ internal sealed unsafe class VulkanPresenter : IDisposable
         {
             WaitSemaphoreCount = 1, WaitSemaphores = &signal, SwapchainCount = 1, Swapchains = &swapchain, ImageIndices = &imageIndex,
         });
+        LastPresentedImage = image;
     }
+
+    /// <summary>The swapchain image last handed to the presentation engine (PRESENT_SRC_KHR), for test readback.</summary>
+    public VkImage? LastPresentedImage { get; private set; }
+
+    /// <summary>The swapchain's size in pixels.</summary>
+    public (int Width, int Height) SwapchainSize => (_extent.Width, _extent.Height);
+
+    /// <summary>The swapchain's pixel format.</summary>
+    public VkFormat SwapchainFormat { get; private set; }
 
     private void Transition(
         VkImage image, VkImageLayout from, VkImageLayout to,

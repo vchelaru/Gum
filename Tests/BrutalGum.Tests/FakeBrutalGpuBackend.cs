@@ -17,6 +17,10 @@ internal sealed class FakeBrutalGpuBackend : IBrutalGpuBackend
         return target;
     }
 
+    public int WaitForGpuCount { get; private set; }
+
+    public void WaitForGpu() => WaitForGpuCount++;
+
     public void Present(IBrutalTarget target, int width, int height) => Presents.Add(((FakeBrutalTarget)target, width, height));
 
     public void Dispose() => Disposed = true;

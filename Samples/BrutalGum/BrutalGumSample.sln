@@ -13,6 +13,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SkiaGum", "..\..\Runtimes\S
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SkiaGum.ShadowDusk", "..\..\Runtimes\SkiaGum.ShadowDusk\SkiaGum.ShadowDusk.csproj", "{0CCE6000-31AD-46DE-B028-4A1031E111FF}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BrutalGumSampleOgl", "BrutalGumSampleOgl\BrutalGumSampleOgl.csproj", "{6FD64564-0B7E-44C7-AC20-642002600CA3}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BrutalGum.Vulkan", "..\..\Runtimes\BrutalGum.Vulkan\BrutalGum.Vulkan.csproj", "{A4E39CDC-335A-4672-9D49-D60BD05F2810}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -83,6 +87,30 @@ Global
 		{0CCE6000-31AD-46DE-B028-4A1031E111FF}.Release|x64.Build.0 = Release|Any CPU
 		{0CCE6000-31AD-46DE-B028-4A1031E111FF}.Release|x86.ActiveCfg = Release|Any CPU
 		{0CCE6000-31AD-46DE-B028-4A1031E111FF}.Release|x86.Build.0 = Release|Any CPU
+		{6FD64564-0B7E-44C7-AC20-642002600CA3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6FD64564-0B7E-44C7-AC20-642002600CA3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6FD64564-0B7E-44C7-AC20-642002600CA3}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{6FD64564-0B7E-44C7-AC20-642002600CA3}.Debug|x64.Build.0 = Debug|Any CPU
+		{6FD64564-0B7E-44C7-AC20-642002600CA3}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{6FD64564-0B7E-44C7-AC20-642002600CA3}.Debug|x86.Build.0 = Debug|Any CPU
+		{6FD64564-0B7E-44C7-AC20-642002600CA3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6FD64564-0B7E-44C7-AC20-642002600CA3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6FD64564-0B7E-44C7-AC20-642002600CA3}.Release|x64.ActiveCfg = Release|Any CPU
+		{6FD64564-0B7E-44C7-AC20-642002600CA3}.Release|x64.Build.0 = Release|Any CPU
+		{6FD64564-0B7E-44C7-AC20-642002600CA3}.Release|x86.ActiveCfg = Release|Any CPU
+		{6FD64564-0B7E-44C7-AC20-642002600CA3}.Release|x86.Build.0 = Release|Any CPU
+		{A4E39CDC-335A-4672-9D49-D60BD05F2810}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A4E39CDC-335A-4672-9D49-D60BD05F2810}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A4E39CDC-335A-4672-9D49-D60BD05F2810}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{A4E39CDC-335A-4672-9D49-D60BD05F2810}.Debug|x64.Build.0 = Debug|Any CPU
+		{A4E39CDC-335A-4672-9D49-D60BD05F2810}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{A4E39CDC-335A-4672-9D49-D60BD05F2810}.Debug|x86.Build.0 = Debug|Any CPU
+		{A4E39CDC-335A-4672-9D49-D60BD05F2810}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A4E39CDC-335A-4672-9D49-D60BD05F2810}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A4E39CDC-335A-4672-9D49-D60BD05F2810}.Release|x64.ActiveCfg = Release|Any CPU
+		{A4E39CDC-335A-4672-9D49-D60BD05F2810}.Release|x64.Build.0 = Release|Any CPU
+		{A4E39CDC-335A-4672-9D49-D60BD05F2810}.Release|x86.ActiveCfg = Release|Any CPU
+		{A4E39CDC-335A-4672-9D49-D60BD05F2810}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

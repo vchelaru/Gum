@@ -18,7 +18,7 @@ static class PixelReadback
     public static byte[] ReadPixel(IntPtr instance, IntPtr physical, IntPtr device, IntPtr queue, uint family, ulong imageHandle, int x, int y, uint oldLayout = 5) =>
         ReadRegion(instance, physical, device, queue, family, imageHandle, x, y, 1, 1, oldLayout);
 
-    /// <summary>Copies a w x h region to a host buffer and returns tightly packed top-down RGBA. oldLayout is 5 (SHADER_READ_ONLY_OPTIMAL) or 2 (COLOR_ATTACHMENT_OPTIMAL).</summary>
+    /// <summary>Copies a w x h region to a host buffer and returns tightly packed top-down RGBA. oldLayout is 5 (SHADER_READ_ONLY_OPTIMAL), 2 (COLOR_ATTACHMENT_OPTIMAL) or 1000001002 (PRESENT_SRC_KHR).</summary>
     public static unsafe byte[] ReadRegion(IntPtr instance, IntPtr physical, IntPtr device, IntPtr queue, uint family, ulong imageHandle, int x, int y, int w, int h, uint oldLayout = 5)
     {
         var image = (IntPtr)(long)imageHandle;
@@ -51,12 +51,12 @@ static class PixelReadback
         var barrier = new VkImageMemoryBarrier
         {
             sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,
-            srcAccessMask = oldLayout == 2 ? 0x100u /* COLOR_ATTACHMENT_WRITE */ : 0x20u /* SHADER_READ */, dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT,
+            srcAccessMask = oldLayout == 1000001002 ? 0u : oldLayout == 2 ? 0x100u /* COLOR_ATTACHMENT_WRITE */ : 0x20u /* SHADER_READ */, dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT,
             oldLayout = oldLayout, newLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
             srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED, dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED, image = image,
             subresourceRange = new VkImageSubresourceRange { aspectMask = VK_IMAGE_ASPECT_COLOR_BIT, levelCount = 1, layerCount = 1 },
         };
-        vkCmdPipelineBarrier(cb, oldLayout == 2 ? 0x400u /* COLOR_ATTACHMENT_OUTPUT */ : 0x80u /* FRAGMENT_SHADER */, VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, IntPtr.Zero, 0, IntPtr.Zero, 1, &barrier);
+        vkCmdPipelineBarrier(cb, oldLayout == 1000001002 ? 0x2000u /* BOTTOM_OF_PIPE */ : oldLayout == 2 ? 0x400u /* COLOR_ATTACHMENT_OUTPUT */ : 0x80u /* FRAGMENT_SHADER */, VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, IntPtr.Zero, 0, IntPtr.Zero, 1, &barrier);
         var region = new VkBufferImageCopy
         {
             imageSubresource = new VkImageSubresourceLayers { aspectMask = VK_IMAGE_ASPECT_COLOR_BIT, layerCount = 1 },

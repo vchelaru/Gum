@@ -21,6 +21,9 @@ internal interface IBrutalGpuBackend : System.IDisposable
     /// <summary>Creates a render target of the given size on the backend's context.</summary>
     IBrutalTarget CreateTarget(int width, int height);
 
+    /// <summary>Blocks until the GPU has finished every frame already submitted. Called before the current target is replaced, so its memory is not freed while a presented frame still samples it.</summary>
+    void WaitForGpu();
+
     /// <summary>Shows <paramref name="target"/>, which has just ended its pass, on the window.</summary>
     void Present(IBrutalTarget target, int width, int height);
 }

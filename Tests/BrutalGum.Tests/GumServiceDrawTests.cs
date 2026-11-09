@@ -82,6 +82,8 @@ public class GumServiceDrawTests : BaseTestClass
             backend.Presents[^1].ShouldBe((backend.Targets[1], 640, 360));
             GraphicalUiElement.CanvasWidth.ShouldBe(640);
             GraphicalUiElement.CanvasHeight.ShouldBe(360);
+            // The old target is freed only after the GPU finished the frame that was sampling it.
+            backend.WaitForGpuCount.ShouldBe(1);
         });
     }
 
@@ -97,6 +99,7 @@ public class GumServiceDrawTests : BaseTestClass
 
             backend.Targets.Count.ShouldBe(1);
             backend.Presents.Count.ShouldBe(2);
+            backend.WaitForGpuCount.ShouldBe(0);
         });
     }
 

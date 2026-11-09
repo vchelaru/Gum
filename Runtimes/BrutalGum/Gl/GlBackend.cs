@@ -55,5 +55,8 @@ internal sealed class GlBackend : IBrutalGpuBackend
     public void Present(IBrutalTarget target, int width, int height) =>
         ((GlTarget)target).BlitToDefaultFramebuffer(width, height);
 
+    // glBlitFramebuffer reads the texture synchronously from the driver's point of view; nothing to wait for.
+    public void WaitForGpu() { }
+
     public void Dispose() => _context.Dispose();
 }

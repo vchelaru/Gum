@@ -60,6 +60,13 @@ public partial class GumService
     /// </summary>
     public VkImage? RenderTargetImage => (_targetHolder?.Target as VulkanTarget)?.Image;
 
+    // Read by reflection from the sample's --capture mode, which proves a frame reached the window by reading
+    // the swapchain image back: { handle, VkFormat, width, height }, or null before the first present.
+    internal long[]? LastPresentedForTest =>
+        VulkanBackend?.LastPresented is { } presented
+            ? new long[] { (long)(nint)presented.Image.VkHandle, (long)presented.Format, presented.Width, presented.Height }
+            : null;
+
     /// <summary>The format of <see cref="RenderTargetImage"/>.</summary>
     public VkFormat? RenderTargetFormat => (_targetHolder?.Target as VulkanTarget)?.Format;
 }

@@ -1,68 +1,41 @@
-// A gallery of Gum screens drawn by Gum.Brutal into a SkiaGameRendering Vulkan image, which a BRUTAL
-// renderer (see Presenter.cs) samples on a full-screen triangle every frame. The screens are the same
-// ones SilkNetGumSample shows. Click the buttons along the top (or press 1..9) to switch screens.
+// A gallery of Gum screens (the same ones SilkNetGumSample shows) drawn by Gum.Brutal.Vulkan.
+// The game creates the window and its Vulkan device and hands them to GumService.Initialize; Gum owns Skia, the
+// render target and the swapchain that presents it, so the loop is only PollEvents, Update, Draw.
 //
-//   BrutalGumSample                      opens a window
-//   BrutalGumSample --screenshots <dir>  hidden window, saves one PNG per screen into <dir>, then exits
-//   BrutalGumSample --hidden --exit-after 5   presents to a hidden window for 5 seconds, then exits
+//   BrutalGumSample                                 opens a resizable window
+//   BrutalGumSample --hidden --exit-after 5         same, invisible, closes after 5 seconds
+//   add --capture <png>     saves the presented swapchain image (the window's pixels) before exiting
+//   add --resize 900x500    resizes the window once, halfway through the run
 using Brutal.GlfwApi;
 using Brutal.Numerics;
 using Brutal.VulkanApi;
 using Brutal.VulkanApi.Abstractions;
 using Gum;
 using GumSamples;
-using Gum.Forms.Controls;
-using Gum.Wireframe;
-using RenderingLibrary;
-using SkiaGameRendering;
-using SkiaGameRendering.Core.VK;
-using SkiaSharp;
 using System.Diagnostics;
-using System.Text;
 
-const int Width = 1400;
-const int Height = 900;
+SampleArgs sample = new SampleArgs(args);
 
-string? screenshotDirectory = null;
-int screenshotIndex = Array.IndexOf(args, "--screenshots");
-if (screenshotIndex >= 0 && screenshotIndex + 1 < args.Length)
-{
-    screenshotDirectory = args[screenshotIndex + 1];
-}
-bool presenting = screenshotDirectory == null;
-// --hidden keeps the window invisible and --exit-after <seconds> closes it, for runs with nobody watching.
-bool hidden = args.Contains("--hidden");
-int exitIndex = Array.IndexOf(args, "--exit-after");
-double exitAfterSeconds = exitIndex >= 0 && exitIndex + 1 < args.Length ? double.Parse(args[exitIndex + 1]) : 0;
-
-// The Gum project and shaders load relative to the working directory, so run from the build output whatever the caller's folder is.
+// The Gum project loads relative to the working directory, so run from the build output whatever the caller's folder is.
 Directory.SetCurrentDirectory(AppContext.BaseDirectory);
 
-
-if (!Glfw.Init())
-{
-    throw new InvalidOperationException("Failed to initialize GLFW.");
-}
-
+Glfw.Init();
 try
 {
-    // BRUTAL has no renderer, so the window needs no graphics API of its own.
+    // Vulkan draws to the window itself, so GLFW creates no graphics API context.
     Glfw.WindowHint(GlfwWindowHint.ClientApi, Glfw.Constants.GLFW_NO_API);
-    Glfw.WindowHint(GlfwWindowHint.Resizable, Glfw.Constants.GLFW_FALSE);
-    Glfw.WindowHint(GlfwWindowHint.Visible, presenting && !hidden ? Glfw.Constants.GLFW_TRUE : Glfw.Constants.GLFW_FALSE);
-    using GlfwWindow window = Glfw.CreateWindow(new GlfwWindow.CreateInfo { Title = "Gum.Brutal sample", Size = new int2(Width, Height) });
+    SampleSupport.ApplyWindowHints(sample);
+    using GlfwWindow window = Glfw.CreateWindow(new GlfwWindow.CreateInfo { Title = "Gum.Brutal.Vulkan sample", Size = new int2(1400, 900) });
+    SampleSupport.PlaceWindow(window, sample);
 
     HashSet<string> instanceExtensions = new HashSet<string>();
     VulkanHelpers.AddPlatformRequiredExtensions(instanceExtensions);
-    if (presenting)
+    unsafe
     {
-        unsafe
+        var glfwExtensions = Glfw.GetRequiredInstanceExtensions(out var count);
+        for (int i = 0; i < count; i++)
         {
-            var glfwExtensions = Glfw.GetRequiredInstanceExtensions(out var count);
-            for (int i = 0; i < count; i++)
-            {
-                instanceExtensions.Add(Brutal.Strings.Utf8.GetString(glfwExtensions[i]));
-            }
+            instanceExtensions.Add(Brutal.Strings.Utf8.GetString(glfwExtensions[i]));
         }
     }
 
@@ -74,15 +47,11 @@ try
         EnabledLayers = [],
     });
 
-    VkSurfaceKHR surface = default;
-    if (presenting)
+    if (Glfw.CreateWindowSurface(instance.VkHandle, window, out var surfaceHandle) != (int)VkResult.Success)
     {
-        if (Glfw.CreateWindowSurface(instance.VkHandle, window, out var surfaceHandle) != (int)VkResult.Success)
-        {
-            throw new InvalidOperationException("Failed to create a Vulkan surface for the window.");
-        }
-        surface = new VkSurfaceKHR((nint)surfaceHandle);
+        throw new InvalidOperationException("Failed to create a Vulkan surface for the window.");
     }
+    VkSurfaceKHR surface = new VkSurfaceKHR((nint)surfaceHandle);
 
     // One queue draws and presents, so find a device with a queue family that can do both.
     PhysicalDevice? physicalDevice = null;
@@ -93,8 +62,7 @@ try
         candidate.GetQueueFamilyProperties_Write(families);
         for (int i = 0; i < families.Length && physicalDevice is null; i++)
         {
-            bool canPresent = !presenting || candidate.GetSurfaceSupportKHR(i, surface);
-            if ((families[i].QueueFlags & VkQueueFlags.GraphicsBit) != 0 && canPresent)
+            if ((families[i].QueueFlags & VkQueueFlags.GraphicsBit) != 0 && candidate.GetSurfaceSupportKHR(i, surface))
             {
                 (physicalDevice, queueFamily) = (candidate, i);
             }
@@ -102,14 +70,11 @@ try
     }
     if (physicalDevice is null)
     {
-        throw new InvalidOperationException("No Vulkan device has a graphics queue family" + (presenting ? " that can present to the window." : "."));
+        throw new InvalidOperationException("No Vulkan device has a graphics queue family that can present to the window.");
     }
 
     HashSet<string> deviceExtensions = new HashSet<string>();
-    if (presenting)
-    {
-        VulkanHelpers.AddSwapchainExtensions(deviceExtensions);
-    }
+    VulkanHelpers.AddSwapchainExtensions(deviceExtensions);
     VulkanHelpers.AddMandatoryIfSupportedDeviceExtensions(deviceExtensions, physicalDevice);
     float priority = 1.0f;
     VkPhysicalDeviceVulkan13Features features13 = new VkPhysicalDeviceVulkan13Features { DynamicRendering = true };
@@ -126,84 +91,59 @@ try
     using Device deviceScope = device;
     Queue queue = device.GetQueue(queueFamily, 0);
 
-    // Skia draws into this Vulkan image. The window size is the target size, so cursor positions match Gum.
-    using SkiaVulkanContext context = new SkiaVulkanContext(
-        instance.VkHandle, physicalDevice.VkHandle, device.VkHandle, queue.VkHandle, (uint)queueFamily);
-    using SkiaRenderTarget2D target = new SkiaRenderTarget2D(context, Width, Height);
-
     GumService gum = GumService.Default;
-    gum.Initialize(window, Width, Height, "Content/GumProject/GumProject.gumx");
-    // Turns an RT Shader screen .sksl path into a compiled effect, then lets .fx and .slang files work too.
-    SkiaGum.CustomSetPropertyOnRenderable.RenderTargetEffectResolver = SilkNetGum.Screens.RenderTargetShaderScreen.CompileEffectFromFile;
-    gum.UseShadowDusk();
-    gum.UseKeyboardDefaults();
-    FrameworkElement.GamePadsForUiControl.Clear();
-    FrameworkElement.GamePadsForUiControl.AddRange(gum.Gamepads);
-
-    GumGallery gallery = new GumGallery();
-    gallery.Build();
+    gum.Initialize(window, instance, physicalDevice, device, queue, queueFamily, surface, "Content/GumProject/GumProject.gumx");
+    GumGallery gallery = SampleSupport.CreateGallery(gum, window, sample);
 
     Stopwatch clock = Stopwatch.StartNew();
-
     double previousSeconds = 0;
-    void RenderFrame()
+    bool resized = false;
+    while (!window.ShouldClose)
     {
+        Glfw.PollEvents();
         double now = clock.Elapsed.TotalSeconds;
         gum.Update(now);
         gallery.Tick(now - previousSeconds);
         previousSeconds = now;
+        gum.Draw();
 
-        target.Begin();
-        target.Canvas.Clear(new SKColor(32, 32, 40));
-        gum.Draw(target.Canvas);
-        target.End();
-    }
-
-    if (screenshotDirectory != null)
-    {
-        Directory.CreateDirectory(screenshotDirectory);
-        for (int i = 0; i < gallery.ScreenCount; i++)
+        if (sample.ExitAfterSeconds > 0 && now >= sample.ExitAfterSeconds)
         {
-            gallery.LoadScreen(i);
-            for (int frame = 0; frame < 6; frame++)
+            if (sample.CapturePath != null)
             {
-                Glfw.PollEvents();
-                RenderFrame();
+                // Test only: proves the frame reached the window by reading the presented swapchain image back.
+                device.WaitIdle();
+                long[]? presented = (long[]?)typeof(GumService)
+                    .GetProperty("LastPresentedForTest", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)!
+                    .GetValue(gum);
+                if (presented != null)
+                {
+                    int width = (int)presented[2], height = (int)presented[3];
+                    byte[] pixels = PixelReadback.ReadRegion(
+                        instance.VkHandle, physicalDevice.VkHandle, device.VkHandle, queue.VkHandle, (uint)queueFamily,
+                        (ulong)presented[0], 0, 0, width, height, 1000001002);
+                    if (presented[1] == (long)VkFormat.B8G8R8A8UNorm)
+                    {
+                        for (int i = 0; i < pixels.Length; i += 4)
+                        {
+                            (pixels[i], pixels[i + 2]) = (pixels[i + 2], pixels[i]);
+                        }
+                    }
+                    SampleSupport.SavePng(pixels, width, height, sample.CapturePath);
+                }
             }
-            device.WaitIdle();
-
-            byte[] rgba = PixelReadback.ReadRegion(
-                instance.VkHandle, physicalDevice.VkHandle, device.VkHandle, queue.VkHandle, (uint)queueFamily,
-                target.VkImage, 0, 0, Width, Height);
-            string path = Path.Combine(screenshotDirectory, $"brutal-{i + 1}.png");
-            using SKBitmap bitmap = new SKBitmap(new SKImageInfo(Width, Height, SKColorType.Rgba8888, SKAlphaType.Unpremul));
-            System.Runtime.InteropServices.Marshal.Copy(rgba, 0, bitmap.GetPixels(), rgba.Length);
-            using SKData png = SKImage.FromBitmap(bitmap).Encode(SKEncodedImageFormat.Png, 100);
-            File.WriteAllBytes(path, png.ToArray());
-            Console.WriteLine(path);
+            window.ShouldClose = true;
         }
-        device.WaitIdle();
-        return 0;
-    }
-
-    window.OnKey += (_, key, _, action, _) =>
-    {
-        if (action == GlfwKeyAction.Press && key >= GlfwKey.Number1 && key < GlfwKey.Number1 + Math.Min(9, gallery.ScreenCount))
+        else if (sample.Resize is { } size && !resized && sample.ExitAfterSeconds > 0 && now >= sample.ExitAfterSeconds / 2)
         {
-            gallery.LoadScreen(key - GlfwKey.Number1);
+            window.Size = new int2(size.Width, size.Height);
+            resized = true;
         }
-    };
-
-    using Presenter presenter = new Presenter(instance, physicalDevice, device, queue, queueFamily, surface, window, target);
-    while (!window.ShouldClose && (exitAfterSeconds <= 0 || clock.Elapsed.TotalSeconds < exitAfterSeconds))
-    {
-        Glfw.PollEvents();
-        RenderFrame();
-        presenter.Present();
     }
 
     device.WaitIdle();
-    return 0;
+    gum.Uninitialize();
+    instance.DestroySurfaceKHR(surface, null);
 }
 finally
 {
