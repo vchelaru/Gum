@@ -168,7 +168,11 @@ namespace Microsoft.Xna.Framework
         public PresentationParameters PresentationParameters { get; } = new PresentationParameters();
         public void Clear(Color color) { }
     }
-    public class GraphicsDeviceManager { public GraphicsDeviceManager(Game game) { } }
+    public class GraphicsDeviceManager
+    {
+        public GraphicsDeviceManager(Game game) { }
+        public Graphics.GraphicsProfile GraphicsProfile { get; set; }
+    }
     public class Game : System.IDisposable
     {
         public ContentManager Content { get; } = new ContentManager();
@@ -182,6 +186,10 @@ namespace Microsoft.Xna.Framework
         public void Run() { }
         public void Dispose() { }
     }
+}
+namespace Microsoft.Xna.Framework.Graphics
+{
+    public enum GraphicsProfile { Reach, HiDef }
 }
 namespace Gum
 {
