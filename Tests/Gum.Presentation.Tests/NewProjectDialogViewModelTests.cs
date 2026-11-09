@@ -197,7 +197,7 @@ public class NewProjectDialogViewModelTests
         viewModel.IsPreview.ShouldBeTrue();
         viewModel.IsStableChannelEnabled.ShouldBeFalse();
         viewModel.IsPreviewChannelEnabled.ShouldBeTrue();
-        viewModel.PlatformNote.ShouldContain("Gum.Brutal has no stable release yet, so Stable is unavailable.");
+        viewModel.PlatformNote.ShouldContain("Gum.Brutal.OGL has no stable release yet, so Stable is unavailable.");
         viewModel.CommandLine.ShouldContain("--preview");
     }
 
