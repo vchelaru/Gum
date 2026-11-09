@@ -33,6 +33,6 @@ public class InputSubscriptionTests : InputSubscriptionTestsBase
     protected override void RestoreSharedService()
     {
         GumService.Default.Uninitialize();
-        InitializeService(new FakeBrutalInput());
+        InitializeService(TestAssemblyInitialize.Input);
     }
 }
