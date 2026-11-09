@@ -16,7 +16,8 @@ public static class GumServiceShadowDuskExtensions
     /// once at startup, after the window exists. A shader ShadowDusk does not read keeps loading through
     /// whatever resolver was registered before this call.
     /// </summary>
-    public static void UseShadowDusk(this GumService gumService)
+    /// <returns><paramref name="gumService"/>, so calls chain.</returns>
+    public static T UseShadowDusk<T>(this T gumService) where T : GumService
     {
         if (gumService == null)
         {
@@ -43,5 +44,7 @@ public static class GumServiceShadowDuskExtensions
 
             return shader.HasValue ? (object)shader.Value : previousResolver?.Invoke(source);
         };
+
+        return gumService;
     }
 }

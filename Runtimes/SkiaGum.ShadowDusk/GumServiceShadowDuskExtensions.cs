@@ -14,7 +14,8 @@ public static class GumServiceShadowDuskExtensions
     /// Lets <c>SourceShaderFile</c> point at an <c>.fx</c> or <c>.slang</c> file. Call once at startup.
     /// A shader ShadowDusk does not read, including SkSL, keeps loading the way it did before this call.
     /// </summary>
-    public static void UseShadowDusk(this GumServiceSkiaBase gumService)
+    /// <returns><paramref name="gumService"/>, so calls chain.</returns>
+    public static T UseShadowDusk<T>(this T gumService) where T : GumServiceSkiaBase
     {
         Func<ShaderSource, SKRuntimeEffect?>? previousResolver = CustomSetPropertyOnRenderable.RenderTargetEffectSourceResolver;
 
@@ -32,5 +33,7 @@ public static class GumServiceShadowDuskExtensions
                 return previousResolver(source);
             }
         };
+
+        return gumService;
     }
 }

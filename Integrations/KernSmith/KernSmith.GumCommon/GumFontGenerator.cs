@@ -185,7 +185,7 @@ public static class GumFontGenerator
     /// (every iOS release build, and browser-wasm), which leaves the backend unregistered. Running
     /// its static constructor registers it. Done whenever the resolved backend is StbTrueType,
     /// whether the caller passed it or the platform defaulted to it. Same call as
-    /// <c>ThemePlatform.SelectBackend</c> makes for browser-wasm. A no-op when the package is not
+    /// <see cref="SelectBackend"/> makes for browser-wasm. A no-op when the package is not
     /// referenced, so KernSmith reports the missing backend itself.
     /// </summary>
     private static void EnsureStbTrueTypeIsRegistered()
@@ -195,6 +195,34 @@ public static class GumFontGenerator
         {
             ForceStaticConstructor(rasterizerType);
         }
+    }
+
+    /// <summary>
+    /// The backend a font creator should use when its caller passes none. FreeType (the default, null
+    /// here) is native code and cannot run on browser-wasm (#4564), so there StbTrueType (the sole
+    /// pure-C# backend) is selected and its static constructor forced, because KernSmith's reflection-based
+    /// backend discovery is trimmed away under wasm/AOT publish. Used by <c>UseKernSmith()</c> and the themes.
+    /// </summary>
+    /// <returns>
+    /// <see cref="RasterizerBackend.StbTrueType"/> on browser-wasm when the package is referenced;
+    /// otherwise null, which keeps the FreeType default and, on browser-wasm without the package, the
+    /// actionable <see cref="PlatformNotSupportedException"/> from <see cref="Generate"/>.
+    /// </returns>
+    public static RasterizerBackend? SelectBackend()
+    {
+        if (!IsBrowserPlatform())
+        {
+            return null;
+        }
+
+        Type? stbType = ResolveStbTrueTypeRasterizerType();
+        if (stbType == null)
+        {
+            return null;
+        }
+
+        ForceStaticConstructor(stbType);
+        return RasterizerBackend.StbTrueType;
     }
 
     /// <summary>
