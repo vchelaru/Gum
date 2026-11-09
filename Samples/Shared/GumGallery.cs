@@ -1,3 +1,5 @@
+#nullable enable
+using Gum;
 using Gum.Forms.Controls;
 using Gum.Managers;
 using Gum.Wireframe;
@@ -5,54 +7,62 @@ using GumRuntime;
 using GumSamples.Screens;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
-using SilkNetGum.Screens;
 using System;
+#if RAYLIB
+using Examples.Shapes;
+#elif SKIA
+using SilkNetGum.Screens;
+#else
+using MonoGameGumInCode.Screens;
+#endif
 
 namespace GumSamples;
 
 /// <summary>
-/// The tab bar and screen switching of the Skia gallery samples (SilkNetGumSample, BrutalGumSample). It has
-/// no windowing or rendering code, so each host links this file and only adds its own window, input and
-/// presentation. The screens are the files both samples link from MonoGameGumInCode and SilkNetGumSample,
-/// compiled with the SKIA symbol.
+/// The tab bar and screen switching shared by every gallery sample (MonoGameGumInCode, KniSkiaGumInCode, the
+/// raylib gallery, SilkNetGumSample, BrutalGumSample). It has no windowing or rendering code, so each host
+/// links this file and only adds its own window, input and presentation. The screens are the files the hosts
+/// link from MonoGameGumInCode, compiled with their own backend symbol (RAYLIB, SKIA or neither), so a
+/// screen that is missing on a backend is missing from that backend's list only.
 /// </summary>
 internal sealed class GumGallery
 {
-    // Code-only screens appended after every screen from the gumx, allowing the sample to exercise runtime
-    // features (like the unified NineSliceRuntime) that are not yet authored as Gum screens.
-    private static readonly Func<FrameworkElement>[] codeScreenFactories =
+    // Code-only screens appended after every screen from the gumx (hosts with no gumx have none), allowing
+    // the samples to exercise runtime features that are not yet authored as Gum screens. The names are the
+    // nav-strip button labels.
+    private static readonly (string Name, Func<FrameworkElement> Create)[] codeScreens =
     {
-        () => new SilkNetGum.Screens.NineSliceScreen(),
-        () => new SilkNetGum.Screens.SpriteScreen(),
-        () => new SilkNetGum.Screens.SvgScreen(),
-        () => new SilkNetGum.Screens.TextScreen(),
-        () => new SilkNetGum.Screens.CirclesScreen(),
-        () => new SilkNetGum.Screens.RectanglesScreen(),
-        () => new SilkNetGum.Screens.ArcsScreen(),
-        () => new SilkNetGum.Screens.PolygonsScreen(),
-        () => new SilkNetGum.Screens.RenderTargetScreen(),
-        () => new SilkNetGum.Screens.RenderTargetShaderScreen(),
-        () => new GumSamples.Screens.FormsScreen(),
-        () => new SilkNetGum.Screens.ZoomScreen(),
-        () => new SilkNetGum.Screens.LayerCameraSettingsScreen(),
-    };
-
-    // Parallel to codeScreenFactories, used as nav-strip button labels.
-    private static readonly string[] codeScreenNames =
-    {
-        "NineSlice",
-        "Sprite",
-        "Svg",
-        "Text",
-        "Circles",
-        "Rectangles",
-        "Arcs",
-        "Polygons",
-        "Render Target",
-        "RT Shader",
-        "Forms",
-        "Zoom",
-        "Layer Camera",
+        ("Forms", () => new FormsScreen()),
+#if !SKIA && !RAYLIB
+        ("Standards", () => new StandardsScreen()),
+#endif
+        ("Circles", () => new CirclesScreen()),
+        ("Rectangles", () => new RectanglesScreen()),
+        ("Arcs", () => new ArcsScreen()),
+        ("Polygons", () => new PolygonsScreen()),
+#if !SKIA && !RAYLIB
+        ("Gradients", () => new GradientScreen()),
+#endif
+        ("Text", () => new TextScreen()),
+#if !SKIA && !RAYLIB
+        ("Mixed", () => new MixedScreen()),
+        ("Invisible", () => new InvisibleScreen()),
+#endif
+        ("NineSlice", () => new NineSliceScreen()),
+        ("Sprite", () => new SpriteScreen()),
+#if !RAYLIB
+        ("Svg", () => new SvgScreen()),
+#endif
+#if !SKIA && !RAYLIB
+        ("Clip", () => new ClippingScreen()),
+#endif
+        ("Render Target", () => new RenderTargetScreen()),
+        ("RT Shader", () => new RenderTargetShaderScreen()),
+        ("Zoom", () => new ZoomScreen()),
+        ("Layer Camera", () => new LayerCameraSettingsScreen()),
+#if !SKIA && !RAYLIB
+        ("Draw Call Stress", () => new DrawCallStressScreen()),
+#endif
     };
 
     private GraphicalUiElement? _currentGumxScreen;
@@ -60,16 +70,55 @@ internal sealed class GumGallery
     private int _currentScreenIndex;
     private StackPanel _navStrip = null!;
 
+    /// <summary>The screen shown by <see cref="LoadScreen"/> if it is a code screen, otherwise null.</summary>
+    public FrameworkElement? CurrentCodeScreen => _currentCodeScreen;
+
+    /// <summary>
+    /// Raised before the Zoom or Expand radio applies its fit mode, so a host that offers its own fit mode
+    /// (like raylib's manual camera) can switch it off.
+    /// </summary>
+    public event Action? FitModeChanging;
+
+    private static int GumxScreenCount => ObjectFinder.Self.GumProjectSave?.Screens.Count ?? 0;
+
     /// <summary>The number of screens in the gallery: the gumx project's screens, then the code screens.</summary>
-    public int ScreenCount => ObjectFinder.Self.GumProjectSave!.Screens.Count + codeScreenFactories.Length;
+    public int ScreenCount => GumxScreenCount + codeScreens.Length;
 
     /// <summary>Builds the tab bar, then shows the code screen named <paramref name="initialCodeScreenName"/>, or the first screen.</summary>
     public void Build(string? initialCodeScreenName = null)
     {
         BuildNavStrip();
 
-        int codeIndex = initialCodeScreenName == null ? -1 : Array.IndexOf(codeScreenNames, initialCodeScreenName);
-        LoadScreen(codeIndex >= 0 ? ObjectFinder.Self.GumProjectSave!.Screens.Count + codeIndex : 0);
+        int codeIndex = IndexOfCodeScreen(initialCodeScreenName);
+        LoadScreen(codeIndex >= 0 ? GumxScreenCount + codeIndex : 0);
+    }
+
+    /// <summary>Shows the code screen named <paramref name="name"/>, returning false if the gallery has none by that name.</summary>
+    public bool TryShowCodeScreen(string name)
+    {
+        int codeIndex = IndexOfCodeScreen(name);
+        if (codeIndex < 0)
+        {
+            return false;
+        }
+
+        LoadScreen(GumxScreenCount + codeIndex);
+        return true;
+    }
+
+    /// <summary>
+    /// Adds a radio to the fit-mode group at the end of the tab bar. <see cref="Build"/> already adds Zoom and
+    /// Expand; a host calls this after it for any mode of its own.
+    /// </summary>
+    public void AddFitModeRadio(string text, bool isChecked, Action onChecked)
+    {
+        RadioButton radio = new RadioButton();
+        radio.Name = "FitMode" + text.Replace(" ", "");
+        radio.GroupName = "FitMode";
+        radio.Text = text;
+        radio.IsChecked = isChecked;
+        radio.Checked += (_, _) => onChecked();
+        _navStrip.AddChild(radio);
     }
 
     /// <summary>
@@ -78,8 +127,30 @@ internal sealed class GumGallery
     /// </summary>
     public void Tick(double elapsedSeconds)
     {
+        // FrameworkElement.Activity() is FRB-only, so screens that animate get a host-driven per-frame Tick.
         (_currentCodeScreen as TextScreen)?.Tick(elapsedSeconds);
+#if !SKIA && !RAYLIB
+        (_currentCodeScreen as DrawCallStressScreen)?.Tick(elapsedSeconds);
+#endif
         FitBelowNavStrip(_currentGumxScreen ?? _currentCodeScreen?.Visual);
+    }
+
+    private static int IndexOfCodeScreen(string? name)
+    {
+        if (name == null)
+        {
+            return -1;
+        }
+
+        for (int i = 0; i < codeScreens.Length; i++)
+        {
+            if (codeScreens[i].Name == name)
+            {
+                return i;
+            }
+        }
+
+        return -1;
     }
 
     private void FitBelowNavStrip(GraphicalUiElement? screen)
@@ -106,27 +177,42 @@ internal sealed class GumGallery
         _navStrip.Visual.Y = 4;
         _navStrip.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
         _navStrip.Width = 0;
+        _navStrip.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+        _navStrip.Height = 0;
         _navStrip.Visual.WrapsChildren = true;
         _navStrip.AddToRoot();
 
-        var gumxScreens = ObjectFinder.Self.GumProjectSave!.Screens;
+        int gumxCount = GumxScreenCount;
 
-        for (int i = 0; i < gumxScreens.Count; i++)
+        for (int i = 0; i < gumxCount; i++)
         {
             int capturedIndex = i;
-            AddNavButton(gumxScreens[i].Name, () => LoadScreen(capturedIndex));
+            AddNavButton(ObjectFinder.Self.GumProjectSave!.Screens[i].Name, () => LoadScreen(capturedIndex));
         }
 
-        for (int i = 0; i < codeScreenFactories.Length; i++)
+        for (int i = 0; i < codeScreens.Length; i++)
         {
-            int capturedIndex = gumxScreens.Count + i;
-            AddNavButton(codeScreenNames[i], () => LoadScreen(capturedIndex));
+            int capturedIndex = gumxCount + i;
+            AddNavButton(codeScreens[i].Name, () => LoadScreen(capturedIndex));
         }
+
+        AddFitModeRadio("Zoom", isChecked: true, () =>
+        {
+            FitModeChanging?.Invoke();
+            GumService.Default.EnableZoomToWindow();
+        });
+        AddFitModeRadio("Expand", isChecked: false, () =>
+        {
+            FitModeChanging?.Invoke();
+            GumService.Default.EnableExpandToWindow();
+        });
     }
 
     private void AddNavButton(string text, Action onClick)
     {
-        var button = new Gum.Forms.Controls.Button();
+        Button button = new Button();
+        // Named so automation scripts can target it, e.g. NavForms or NavRenderTarget.
+        button.Name = "Nav" + text.Replace(" ", "");
         button.Text = text;
         button.Click += (_, _) => onClick();
         _navStrip.AddChild(button);
@@ -135,8 +221,8 @@ internal sealed class GumGallery
     /// <summary>Shows the screen at <paramref name="index"/>, wrapping around at either end.</summary>
     public void LoadScreen(int index)
     {
-        var gumxScreens = ObjectFinder.Self.GumProjectSave!.Screens;
-        int total = gumxScreens.Count + codeScreenFactories.Length;
+        int gumxCount = GumxScreenCount;
+        int total = gumxCount + codeScreens.Length;
         if (total == 0) return;
 
         _currentScreenIndex = ((index % total) + total) % total;
@@ -156,9 +242,10 @@ internal sealed class GumGallery
         SystemManagers.Default.Renderer.Camera.X = 0f;
         SystemManagers.Default.Renderer.Camera.Y = 0f;
 
-        if (_currentScreenIndex < gumxScreens.Count)
+        if (_currentScreenIndex < gumxCount)
         {
-            _currentGumxScreen = gumxScreens[_currentScreenIndex].ToGraphicalUiElement(SystemManagers.Default, addToManagers: false);
+            _currentGumxScreen = ObjectFinder.Self.GumProjectSave!.Screens[_currentScreenIndex]
+                .ToGraphicalUiElement(SystemManagers.Default, addToManagers: false);
             _currentGumxScreen.AddToRoot();
             // Fill the root below the tab bar. Relative sizes follow the canvas when the window resizes.
             _currentGumxScreen.YOrigin = VerticalAlignment.Top;
@@ -174,7 +261,7 @@ internal sealed class GumGallery
             // Code screens are FrameworkElement and Dock(Fill) themselves, so their visual fills the
             // canvas without an explicit size assignment here -- only the top-offset and height-shrink
             // need to be applied on top of that.
-            _currentCodeScreen = codeScreenFactories[_currentScreenIndex - gumxScreens.Count]();
+            _currentCodeScreen = codeScreens[_currentScreenIndex - gumxCount].Create();
             _currentCodeScreen.Visual.YOrigin = VerticalAlignment.Top;
             _currentCodeScreen.Visual.YUnits = Gum.Converters.GeneralUnitType.PixelsFromSmall;
             _currentCodeScreen.Visual.Y = _navStrip.Visual.AbsoluteHeight;

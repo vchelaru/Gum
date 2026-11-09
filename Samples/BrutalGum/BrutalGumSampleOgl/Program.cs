@@ -38,6 +38,9 @@ try
     GumUI.UseKeyboardDefaults();
     GumUI.UseGamepadDefaults();
 
+    // Demo the auto-fit helpers. Flip via the Zoom/Expand radios in the nav strip.
+    GumUI.EnableZoomToWindow();
+
     GumGallery gallery = new GumGallery();
     gallery.Build();
     gallery.LoadScreen(Math.Clamp(sample.Screen, 0, gallery.ScreenCount - 1)); // --screen, for unattended runs

@@ -47,10 +47,13 @@ namespace FnaSample
 
             GumUI.UseShadowDusk();
 
+            // Scales the whole canvas to fit the window.
+            GumUI.EnableZoomToWindow();
+
             IsMouseVisible = true;
 
             Root = new MainScreenRuntime();
-            Root.AddToManagers();
+            Root.AddToRoot();
 
             //var rectangle = new RectangleRuntime();
 
@@ -66,7 +69,7 @@ namespace FnaSample
 
         protected override void Update(GameTime gameTime)
         {
-            GumUI.Update(this, gameTime, Root);
+            GumUI.Update(gameTime);
 
             base.Update(gameTime);
         }

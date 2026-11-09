@@ -132,6 +132,9 @@ unsafe class Program
             GumUI.UseKeyboardDefaults();
             GumUI.UseGamepadDefaults();
 
+            // Demo the auto-fit helpers. Flip via the Zoom/Expand radios in the nav strip.
+            GumUI.EnableZoomToWindow();
+
             gallery.Build();
 
             // GumService.Update wants total elapsed seconds since startup.
