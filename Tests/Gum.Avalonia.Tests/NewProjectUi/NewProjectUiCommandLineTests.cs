@@ -28,6 +28,7 @@ public class NewProjectUiCommandLineTests
         string? platform = null;
         bool noRestore = false;
         bool sourceLinked = false;
+        bool preview = false;
         for (int i = 2; i < tokens.Count; i++)
         {
             switch (tokens[i])
@@ -44,12 +45,15 @@ public class NewProjectUiCommandLineTests
                 case "--no-restore":
                     noRestore = true;
                     break;
+                case "--preview":
+                    preview = true;
+                    break;
                 case "--source-linked":
                     sourceLinked = true;
                     break;
             }
         }
-        return new NewProjectRequest { Path = path, Template = template, Theme = theme, Platform = platform, SourceLinked = sourceLinked, Restore = !noRestore };
+        return new NewProjectRequest { Path = path, Template = template, Theme = theme, Platform = platform, PackageChannel = sourceLinked ? NewProjectPackageChannel.LocalSource : preview ? NewProjectPackageChannel.Preview : NewProjectPackageChannel.Stable, Restore = !noRestore };
     }
 
     private static string? ClipboardAfterCopy(NewProjectUiFixture fixture)
@@ -227,7 +231,7 @@ public class NewProjectUiCommandLineTests
     }
 
     [AvaloniaFact]
-    public void SourceLinked_AppearsForATickedLocalSource_AndForKniSkia_ButNeverForAGumOnlyProject()
+    public void SourceLinked_AppearsForATickedLocalSource_AndPreviewForKniSkia_ButNeverForAGumOnlyProject()
     {
         using NewProjectUiFixture fixture = new NewProjectUiFixture();
         fixture.Dialog.SetChecked(NewProjectUiText.CreateCodeProject, true);
@@ -241,7 +245,7 @@ public class NewProjectUiCommandLineTests
         fixture.Dialog.CommandLine.ShouldBe($"gumcli new \"{Game(fixture)}\" --platform kni");
 
         fixture.Dialog.ChoosePlatform("kniskia");
-        fixture.Dialog.CommandLine.ShouldBe($"gumcli new \"{Game(fixture)}\" --platform kniskia --source-linked");
+        fixture.Dialog.CommandLine.ShouldBe($"gumcli new \"{Game(fixture)}\" --platform kniskia --preview");
 
         // A tick left behind does not leak into a Gum-only command.
         fixture.Dialog.ChoosePlatform("kni");

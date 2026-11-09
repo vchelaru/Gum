@@ -126,23 +126,34 @@ public class NewProjectPackageChannelDialogTests
     }
 
     [Fact]
-    public void KniSkia_ForcesLocalSource_AndDisablesTheOtherTwo_ThenTheChoiceComesBack()
+    public void KniSkia_HasNoStablePackage_SoStableIsDisabledAndPreviewApplies_ThenTheChoiceComesBack()
     {
-        NewProjectDialogViewModel viewModel = Create(vm => vm.IsPreviewChannelChecked = true);
+        NewProjectDialogViewModel viewModel = Create();
+
+        viewModel.PlatformName = "kniskia";
+
+        viewModel.IsStableChannelEnabled.ShouldBeFalse();
+        viewModel.IsPreviewChannelEnabled.ShouldBeTrue();
+        viewModel.PackageChannel.ShouldBe(NewProjectPackageChannel.Preview);
+        viewModel.IsPreviewChannelChecked.ShouldBeTrue();
+        viewModel.IsStableChannelChecked.ShouldBeFalse();
+        viewModel.IsPreviewWarningVisible.ShouldBeTrue();
+
+        viewModel.PlatformName = "monogame";
+
+        viewModel.PackageChannel.ShouldBe(NewProjectPackageChannel.Stable);
+        viewModel.IsStableChannelEnabled.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void KniSkia_KeepsLocalSourceWhenItIsPicked()
+    {
+        NewProjectDialogViewModel viewModel = Create(vm => vm.IsLocalSourceChannelChecked = true);
 
         viewModel.PlatformName = "kniskia";
 
         viewModel.PackageChannel.ShouldBe(NewProjectPackageChannel.LocalSource);
-        viewModel.IsLocalSourceChannelChecked.ShouldBeTrue();
-        viewModel.IsPreviewChannelChecked.ShouldBeFalse();
-        viewModel.IsPreviewChannelEnabled.ShouldBeFalse();
-        viewModel.IsStableChannelEnabled.ShouldBeFalse();
-        viewModel.IsPreviewWarningVisible.ShouldBeFalse();
-
-        viewModel.PlatformName = "monogame";
-
-        viewModel.PackageChannel.ShouldBe(NewProjectPackageChannel.Preview);
-        viewModel.IsPreviewChannelEnabled.ShouldBeTrue();
+        viewModel.IsSourceLinkedEnabled.ShouldBeTrue();
     }
 
     [Fact]
