@@ -98,6 +98,41 @@ public class PlatformProjectScaffolderTests : IDisposable
         EvaluateOutputType(csproj, "Release").ShouldBe("WinExe");
     }
 
+    [Fact]
+    public void Create_ForKniSkia_WritesAGame1WhoseOnlyGumCallsAreInitializeUpdateAndDraw()
+    {
+        // Same shape as the MonoGame host: the service owns the Skia render target, its resizing and its disposal.
+        string projectDirectory = Path.Combine(_tempDirectory, "MyGame");
+
+        _sut.Create(projectDirectory, HostPlatform.KniSkia, includeFormsTemplate: true);
+
+        string game1 = File.ReadAllText(Path.Combine(projectDirectory, "Game1.cs"));
+        game1.ShouldNotContain("SkiaRenderTarget2D");
+        game1.ShouldNotContain("SkiaRenderer");
+        game1.ShouldNotContain("SkiaGameRendering");
+        game1.ShouldNotContain("SkiaSharp");
+        game1.ShouldNotContain("SKCanvas");
+        game1.ShouldNotContain("HandleResize");
+        game1.ShouldNotContain("UnloadContent");
+        game1.ShouldNotContain(".Begin()");
+        game1.ShouldNotContain(".End()");
+        game1.ShouldContain("GumUI.Draw();");
+        game1.ShouldContain("GumUI.Update(gameTime);");
+        game1.ShouldContain("Window.AllowUserResizing = true;");
+    }
+
+    [Fact]
+    public void Create_ForKniSkia_ReadsTheGumProjectFromTheContentFolderOnDisk()
+    {
+        // Skia reads the project from disk instead of through the content pipeline, so the path starts at Content.
+        string projectDirectory = Path.Combine(_tempDirectory, "MyGame");
+
+        PlatformProjectResult result = _sut.Create(projectDirectory, HostPlatform.KniSkia, includeFormsTemplate: true);
+
+        result.Success.ShouldBeTrue(result.ErrorMessage);
+        File.ReadAllText(Path.Combine(projectDirectory, "Game1.cs")).ShouldContain("\"Content/GumProject/");
+    }
+
     // Applies the OutputType elements in document order, honoring only the Release condition this template uses.
     private static string? EvaluateOutputType(XDocument csproj, string configuration)
     {

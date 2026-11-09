@@ -23,9 +23,9 @@
     <PackageReference Include="SkiaSharp" VersionOverride="4.153.1" />
     <!-- KNI's device state structs (KeyboardState, MouseState, GamePadState), built directly by the
          tests. No platform package: nothing here creates a Game or a window. -->
-    <PackageReference Include="nkast.Xna.Framework" VersionOverride="4.2.9001" />
-    <PackageReference Include="nkast.Xna.Framework.Input" VersionOverride="4.2.9001" />
-    <PackageReference Include="nkast.Xna.Framework.Game" VersionOverride="4.2.9001" />
+    <PackageReference Include="nkast.Xna.Framework" VersionOverride="4.3.9001" />
+    <PackageReference Include="nkast.Xna.Framework.Input" VersionOverride="4.3.9001" />
+    <PackageReference Include="nkast.Xna.Framework.Game" VersionOverride="4.3.9001" />
   </ItemGroup>
 
   <ItemGroup>
