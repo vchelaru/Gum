@@ -111,6 +111,10 @@ For more information, see the [Runtime Variable References](../../../styling/run
 
 The following is a complete `Program.cs` that opens a window, initializes Gum, shows a button and runs the game loop. Lines marked Optional need the extra packages described above.
 
+{% hint style="info" %}
+Available in preview NuGet packages (use a `-preview` version), or now if building Gum from source.
+{% endhint %}
+
 ```csharp
 using Gum;
 using Gum.Forms.Controls;
