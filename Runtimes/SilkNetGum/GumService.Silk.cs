@@ -38,7 +38,7 @@ public partial class GumService : GumServiceSkiaInteractiveBase, IGumService
     /// <summary>
     /// Initializes Gum for a Silk.NET window, optionally loading a Gum project. Creates the input
     /// context, the Skia GPU context and the surface over the window's framebuffer,
-    /// and follows window resizes. Call after <c>window.Initialize()</c>, then <c>UseGamepadDefaults()</c> to register the gamepads with Forms controls.
+    /// and follows window resizes. Call after <c>window.Initialize()</c>.
     /// </summary>
     /// <remarks>
     /// The window must be created by <c>Silk.NET.Windowing</c> (<c>Window.Create</c>), not wrapped from a
