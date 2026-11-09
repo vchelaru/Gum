@@ -134,7 +134,7 @@ public partial class GumService : GumServiceSkiaInteractiveBase, IGumService
     /// Draws Gum into the window's framebuffer. Resets Skia's cached GL state first (the game may have
     /// used GL since the last frame), then flushes. The game clears before and swaps buffers after.
     /// </summary>
-    public new void Draw()
+    public override void Draw()
     {
         _grContext?.ResetContext();
         base.Draw();
