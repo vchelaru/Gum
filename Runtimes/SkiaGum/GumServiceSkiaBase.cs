@@ -263,17 +263,30 @@ public abstract class GumServiceSkiaBase : IGumService
     /// <c>Initialize</c>) as one of <see cref="FrameworkElement.KeyboardsForUiControl"/>, so Forms
     /// controls respond to it by default without the host having to wire that up manually.
     /// </summary>
-    public void UseKeyboardDefaults() =>
-        FrameworkElement.KeyboardsForUiControl.Add(
-            FormsUtilities.Keyboard ?? throw new InvalidOperationException(
-                "UseKeyboardDefaults was called with no keyboard. Initialize Gum before calling it."));
+    public void UseKeyboardDefaults()
+    {
+        var keyboard = FormsUtilities.Keyboard ?? throw new InvalidOperationException(
+            "UseKeyboardDefaults was called with no keyboard. Initialize Gum before calling it.");
+        if (!FrameworkElement.KeyboardsForUiControl.Contains(keyboard))
+        {
+            FrameworkElement.KeyboardsForUiControl.Add(keyboard);
+        }
+    }
 
     /// <summary>
     /// Registers this service's <see cref="Gamepads"/> as <see cref="FrameworkElement.GamePadsForUiControl"/>,
     /// so Forms controls respond to gamepad input by default without the host having to wire that up manually.
     /// </summary>
-    public void UseGamepadDefaults() =>
-        FrameworkElement.GamePadsForUiControl.AddRange(Gamepads);
+    public void UseGamepadDefaults()
+    {
+        foreach (var gamepad in Gamepads)
+        {
+            if (!FrameworkElement.GamePadsForUiControl.Contains(gamepad))
+            {
+                FrameworkElement.GamePadsForUiControl.Add(gamepad);
+            }
+        }
+    }
 
     IRenderable IGumService.CreateSpriteRenderable() => new Sprite();
 

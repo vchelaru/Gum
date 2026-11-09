@@ -224,9 +224,12 @@ namespace RenderingLibrary
         /// <exception cref="System.InvalidOperationException">There is no keyboard, because Gum has not been initialized.</exception>
         void UseKeyboardDefaults()
         {
-            FrameworkElement.KeyboardsForUiControl.Add(
-                Keyboard ?? throw new System.InvalidOperationException(
-                    "UseKeyboardDefaults was called with no keyboard. Initialize Gum before calling it."));
+            var keyboard = Keyboard ?? throw new System.InvalidOperationException(
+                "UseKeyboardDefaults was called with no keyboard. Initialize Gum before calling it.");
+            if (!FrameworkElement.KeyboardsForUiControl.Contains(keyboard))
+            {
+                FrameworkElement.KeyboardsForUiControl.Add(keyboard);
+            }
         }
 
         /// <summary>
@@ -235,7 +238,13 @@ namespace RenderingLibrary
         /// </summary>
         void UseGamepadDefaults()
         {
-            FrameworkElement.GamePadsForUiControl.AddRange(Gamepads);
+            foreach (var gamepad in Gamepads)
+            {
+                if (!FrameworkElement.GamePadsForUiControl.Contains(gamepad))
+                {
+                    FrameworkElement.GamePadsForUiControl.Add(gamepad);
+                }
+            }
         }
 
         /// <summary>
