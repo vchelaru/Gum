@@ -117,7 +117,7 @@ public class NewProjectEdgeCaseTests : BaseTestClass
         errors.ShouldBeEmpty(string.Join(Environment.NewLine, errors));
     }
 
-    // Small stand-ins for the Xna/KNI, Gum and Skia types the Game1/Program templates use.
+    // Small stand-ins for the Xna/KNI and Gum types the Game1/Program templates use.
     private const string XnaStubs = @"
 namespace Microsoft.Xna.Framework
 {
@@ -130,7 +130,6 @@ namespace Microsoft.Xna.Framework
     {
         public PresentationParameters PresentationParameters { get; } = new PresentationParameters();
         public void Clear(Color color) { }
-        public void SetRenderTarget(object target) { }
     }
     public class GraphicsDeviceManager { public GraphicsDeviceManager(Game game) { } }
     public class Game : System.IDisposable
@@ -147,32 +146,6 @@ namespace Microsoft.Xna.Framework
         public void Dispose() { }
     }
 }
-namespace SkiaSharp
-{
-    public struct SKColor { }
-    public static class SKColors { public static SKColor Transparent; }
-    public class SKCanvas { public void Clear(SKColor color) { } }
-}
-namespace SkiaGameRendering
-{
-    public class SkiaTexture { public int Width { get; set; } public int Height { get; set; } }
-    public class SkiaRenderTarget2D : System.IDisposable
-    {
-        public SkiaRenderTarget2D(Microsoft.Xna.Framework.GraphicsDevice device, int width, int height) { }
-        public SkiaTexture Texture { get; } = new SkiaTexture();
-        public SkiaSharp.SKCanvas Canvas { get; } = new SkiaSharp.SKCanvas();
-        public void Begin() { }
-        public void End() { }
-        public void Dispose() { }
-    }
-    public static class SkiaRenderer
-    {
-        public static bool IsInitialized { get; }
-        public static bool IsReady { get; }
-        public static void Initialize(Microsoft.Xna.Framework.GraphicsDevice device) { }
-        public static void Dispose() { }
-    }
-}
 namespace Gum
 {
     public class GumService
@@ -181,8 +154,6 @@ namespace Gum
         public void Initialize(Microsoft.Xna.Framework.Game game, string project) { }
         public void Update(Microsoft.Xna.Framework.GameTime gameTime) { }
         public void Draw() { }
-        public void Draw(SkiaSharp.SKCanvas canvas) { }
-        public void HandleResize(int width, int height) { }
     }
 }
 namespace Gum.Forms.Controls
