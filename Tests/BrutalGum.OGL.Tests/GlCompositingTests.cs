@@ -31,8 +31,36 @@ public unsafe class GlCompositingTests : BaseTestClass
 
     private static T Load<T>(string name) where T : Delegate => Marshal.GetDelegateForFunctionPointer<T>(GetProc(name));
 
-    /// <summary>Runs the body with Gum initialized on a hidden GL window. Without a GL 3.3 core context the test skips, or fails when GUM_REQUIRE_GL=1.</summary>
+    private static readonly TimeSpan Watchdog = TimeSpan.FromSeconds(60);
+
+    /// <summary>
+    /// Runs the body with Gum initialized on a hidden GL window. Only Windows creates the window (GLFW on macOS needs the
+    /// process main thread and Linux CI has no display, where touching GLFW can hang), so elsewhere the test skips. On Windows,
+    /// no GL 3.3 core context skips, or fails when GUM_REQUIRE_GL=1. The work runs on its own thread with a watchdog so a
+    /// stuck driver fails the test instead of hanging the job.
+    /// </summary>
     private static void WithWindow(Action<GlfwWindow> body)
+    {
+        Skip.IfNot(OperatingSystem.IsWindows(), "the GL window tests run on Windows only (macOS GLFW needs the main thread; Linux CI has no display)");
+
+        Exception? failure = null;
+        Thread worker = new Thread(() =>
+        {
+            try { WithWindowOnThisThread(body); }
+            catch (Exception e) { failure = e; }
+        }) { IsBackground = true };
+        worker.Start();
+        if (!worker.Join(Watchdog))
+        {
+            throw new TimeoutException($"The GL test did not finish within {Watchdog.TotalSeconds} seconds.");
+        }
+        if (failure != null)
+        {
+            System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(failure).Throw();
+        }
+    }
+
+    private static void WithWindowOnThisThread(Action<GlfwWindow> body)
     {
         GlfwWindow? window = null;
         string? noContext = null;
