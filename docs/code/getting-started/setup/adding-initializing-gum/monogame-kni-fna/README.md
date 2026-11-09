@@ -260,7 +260,7 @@ public class Game1 : Core
 
     protected override void Update(GameTime gameTime)
     {
-<strong>        GumUI.Activity(gameTime);
+<strong>        GumUI.Update(gameTime);
 </strong>        base.Update(gameTime);
     }
 
