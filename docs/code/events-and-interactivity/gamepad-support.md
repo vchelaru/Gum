@@ -72,7 +72,7 @@ private void HandleClick(object sender, EventArgs args)
     if(args is InputEventArgs inputEventArgs &&
         inputEventArgs.InputDevice is Gum.Input.GamePad gamePad)
     {
-        var index = Array.IndexOf(GumService.Default.Gamepads, gamePad);
+        var index = Array.IndexOf(GumUI.Gamepads, gamePad);
         TextInstance.Text = $"Clicked with gamepad index {index} at {DateTime.Now}";
     }
 }

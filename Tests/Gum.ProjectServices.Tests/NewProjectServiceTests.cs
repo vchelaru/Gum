@@ -131,7 +131,8 @@ public class NewProjectServiceTests : BaseTestClass
         NewProjectValidation validation = CreateService().Validate(
             new NewProjectRequest { Path = Path.Combine(_folder, "Game"), Platform = "kniskia" });
 
-        validation.Error!.Message.ShouldContain("--source-linked");
+        validation.Error!.Message.ShouldContain("--preview");
+        validation.Error.Message.ShouldContain("--source-linked");
         validation.Error.Message.ShouldContain("Gum checkout");
     }
 
@@ -148,7 +149,7 @@ public class NewProjectServiceTests : BaseTestClass
     [InlineData("forms", null, "fna", false, NewProjectErrorKind.FnaNotSupported)]
     [InlineData("forms", null, "amiga", false, NewProjectErrorKind.UnknownPlatform)]
     [InlineData("forms", null, null, true, NewProjectErrorKind.SourceLinkedNeedsPlatform)]
-    [InlineData("forms", null, "kniskia", false, NewProjectErrorKind.KniSkiaNeedsSourceLinked)]
+    [InlineData("forms", null, "kniskia", false, NewProjectErrorKind.NoStablePackage)]
     [InlineData("bogus", null, null, false, NewProjectErrorKind.UnknownTemplate)]
     [InlineData("empty", "Meadow", null, false, NewProjectErrorKind.ThemeNeedsFormsTemplate)]
     [InlineData("forms", "NoSuchTheme", null, false, NewProjectErrorKind.UnknownTheme)]

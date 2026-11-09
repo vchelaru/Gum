@@ -249,13 +249,15 @@ public class NewProjectDialogViewModel : DialogViewModel
     }
 
     /// <summary>
-    /// The Gum packages the code project uses: always Local Gum source for KNI with Skia (its package is not on NuGet),
-    /// Stable when Local Gum source is picked but no checkout is available, otherwise the pick.
+    /// The Gum packages the code project uses: the pick, except that Local Gum source without a checkout falls back to Stable,
+    /// and Stable falls to Preview for a platform with no stable package (KNI with Skia).
     /// </summary>
     public NewProjectPackageChannel PackageChannel =>
-        IsSourceLinkedForced || (PackageChannelChoice == NewProjectPackageChannel.LocalSource && _service.IsSourceLinkedAvailable)
+        PackageChannelChoice == NewProjectPackageChannel.LocalSource && _service.IsSourceLinkedAvailable
             ? NewProjectPackageChannel.LocalSource
-            : PackageChannelChoice == NewProjectPackageChannel.Preview ? NewProjectPackageChannel.Preview : NewProjectPackageChannel.Stable;
+            : PackageChannelChoice == NewProjectPackageChannel.Preview || !PlatformHasStablePackage
+                ? NewProjectPackageChannel.Preview
+                : NewProjectPackageChannel.Stable;
 
     /// <summary>Whether the code project references the Gum checkout; see <see cref="PackageChannel"/>.</summary>
     public bool SourceLinked
@@ -438,17 +440,18 @@ public class NewProjectDialogViewModel : DialogViewModel
             : RecommendedPackageIds.Select(id => NewProjectDisplayPath.Normalize(Path.Combine(checkout, RecommendedPackages.GetSourceProject(id)))).ToList();
     }
 
-    /// <summary>Whether the platform forces source-linked on.</summary>
-    public bool IsSourceLinkedForced => IncludeCodeProject && PlatformName == KniSkiaPlatform;
+    /// <summary>False when the chosen platform's Gum package has only preview versions, so Stable cannot restore it.</summary>
+    private bool PlatformHasStablePackage =>
+        !NewProjectPlatforms.TryParse(PlatformName, out HostPlatform platform) || NewProjectPlatforms.HasStablePackage(platform);
 
-    /// <summary>Whether the Local Gum source radio can be picked: only when this tool was built from the source, and not already forced.</summary>
-    public bool IsSourceLinkedEnabled => IncludeCodeProject && !IsSourceLinkedForced && _service.IsSourceLinkedAvailable;
+    /// <summary>Whether the Local Gum source radio can be picked: only when this tool was built from the source.</summary>
+    public bool IsSourceLinkedEnabled => IncludeCodeProject && _service.IsSourceLinkedAvailable;
 
-    /// <summary>Whether the Stable radio can be picked: not when the platform forces Local Gum source.</summary>
-    public bool IsStableChannelEnabled => IncludeCodeProject && !IsSourceLinkedForced;
+    /// <summary>Whether the Stable radio can be picked: not when the platform has no stable package.</summary>
+    public bool IsStableChannelEnabled => IncludeCodeProject && PlatformHasStablePackage;
 
-    /// <summary>Whether the Preview radio can be picked: not when the platform forces Local Gum source.</summary>
-    public bool IsPreviewChannelEnabled => IncludeCodeProject && !IsSourceLinkedForced;
+    /// <summary>Whether the Preview radio can be picked: whenever there is a code project.</summary>
+    public bool IsPreviewChannelEnabled => IncludeCodeProject;
 
     /// <summary>The warning-colored note under the platform dropdown, or empty.</summary>
     public string PlatformNote
@@ -998,7 +1001,6 @@ public class NewProjectDialogViewModel : DialogViewModel
                 NotifyPropertyChanged(nameof(SourceLinkedChoice));
                 NotifyPropertyChanged(nameof(SourceLinked));
                 NotifyPropertyChanged(nameof(PackageChannel));
-                NotifyPropertyChanged(nameof(IsSourceLinkedForced));
                 NotifyPropertyChanged(nameof(IsSourceLinkedEnabled));
                 NotifyPropertyChanged(nameof(IsPreview));
                 NotifyPropertyChanged(nameof(IsPreviewWarningVisible));

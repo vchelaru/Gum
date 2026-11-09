@@ -14,9 +14,9 @@ This page covers how Gum reacts to the game window's resolution and how to handl
 // Initialize
 protected override void Initialize()
 {
-    GumService.Default.Initialize(this);
+    GumUI.Initialize(this);
 
-    GumService.Default.EnableZoomToWindow();
+    GumUI.EnableZoomToWindow();
 }
 ```
 
@@ -28,9 +28,9 @@ protected override void Initialize()
 // Initialize
 protected override void Initialize()
 {
-    GumService.Default.Initialize(this);
+    GumUI.Initialize(this);
 
-    GumService.Default.EnableExpandToWindow();
+    GumUI.EnableExpandToWindow();
 }
 ```
 
@@ -42,14 +42,14 @@ Both methods accept an optional `defaultZoom` multiplier applied at the referenc
 
 ```csharp
 // Initialize
-GumService.Default.EnableZoomToWindow(defaultZoom: 2f);
+GumUI.EnableZoomToWindow(defaultZoom: 2f);
 ```
 
 The same parameter works for `EnableExpandToWindow` — useful if you author UI at a smaller virtual resolution and want it drawn larger:
 
 ```csharp
 // Initialize
-GumService.Default.EnableExpandToWindow(defaultZoom: 2f);
+GumUI.EnableExpandToWindow(defaultZoom: 2f);
 ```
 
 ### `WindowZoomMode`
@@ -60,21 +60,21 @@ The default is `HeightDominant` (window height drives the zoom):
 
 ```csharp
 // Initialize
-GumService.Default.EnableZoomToWindow(WindowZoomMode.HeightDominant);
+GumUI.EnableZoomToWindow(WindowZoomMode.HeightDominant);
 ```
 
 Pass `WidthDominant` to drive the zoom from window width instead:
 
 ```csharp
 // Initialize
-GumService.Default.EnableZoomToWindow(WindowZoomMode.WidthDominant);
+GumUI.EnableZoomToWindow(WindowZoomMode.WidthDominant);
 ```
 
 Both parameters can be combined:
 
 ```csharp
 // Initialize
-GumService.Default.EnableZoomToWindow(WindowZoomMode.WidthDominant, defaultZoom: 1.5f);
+GumUI.EnableZoomToWindow(WindowZoomMode.WidthDominant, defaultZoom: 1.5f);
 ```
 
 ### What Happens Without the Helpers
@@ -93,7 +93,7 @@ By default Gum uses `GraphicsDevice.Viewport` to set its internal resolution on 
 {
     GraphicsDeviceManager _graphics;
 
-    GumService GumUi => GumService.Default;
+    GumService GumUI => GumService.Default;
 
     public Game1()
     {
@@ -111,7 +111,7 @@ By default Gum uses `GraphicsDevice.Viewport` to set its internal resolution on 
     protected override void Initialize()
     {
 <strong>        // Internally this will initialize using the viewport values
-</strong><strong>        GumUi.Initialize(this);
+</strong><strong>        GumUI.Initialize(this);
 </strong>        ...
 </code></pre>
 
@@ -191,7 +191,7 @@ As with the expand example, `Root.UpdateLayout()` is only needed if your game lo
 
 ### Silk.NET
 
-`GumService.Default.Initialize(window)` subscribes to the window's resize event. At the next `Update`, Gum recreates its SkiaSharp surface at the new framebuffer size, calls `HandleResize`, and lays out again, so elements using relative units (`RelativeToParent`, `Dock(Fill)`, etc.) reposition automatically. There is nothing to wire up in your game loop.
+`GumUI.Initialize(window)` subscribes to the window's resize event. At the next `Update`, Gum recreates its SkiaSharp surface at the new framebuffer size, calls `HandleResize`, and lays out again, so elements using relative units (`RelativeToParent`, `Dock(Fill)`, etc.) reposition automatically. There is nothing to wire up in your game loop.
 
 Gum applies the resize in `Update` and not inside the event because dragging a window border runs a nested "live resize" message loop, where the GL context is not safe to touch.
 

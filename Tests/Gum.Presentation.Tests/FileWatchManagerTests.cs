@@ -27,7 +27,7 @@ namespace Gum.Presentation.Tests;
 /// pipeline - mocking FileSystemWatcher itself would test nothing. Polls with a generous
 /// timeout rather than a fixed sleep to absorb OS event-delivery jitter.
 /// </summary>
-public class FileWatchManagerTests : IDisposable
+public class FileWatchManagerTests : BaseTestClass
 {
     private readonly string _tempDirectory;
 
@@ -37,9 +37,10 @@ public class FileWatchManagerTests : IDisposable
         Directory.CreateDirectory(_tempDirectory);
     }
 
-    public void Dispose()
+    public override void Dispose()
     {
         try { Directory.Delete(_tempDirectory, recursive: true); } catch { /* best-effort */ }
+        base.Dispose();
     }
 
     private static FileWatchManager BuildSut(

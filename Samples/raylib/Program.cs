@@ -63,9 +63,6 @@ public class BasicShapes
         const int screenWidth = 1400;
         int screenHeight = OperatingSystem.IsMacOS() ? 780 : 900;
 
-        GumUI.CanvasWidth = screenWidth;
-        GumUI.CanvasHeight = screenHeight;
-
         // 4x MSAA enables framebuffer-level antialiasing — raylib has no per-shape AA, so
         // this is the only path to smooth circle/ring edges. Must be set BEFORE InitWindow
         // (raylib only consults config flags at GL context creation).

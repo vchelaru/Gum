@@ -378,24 +378,26 @@ public class NewProjectDialogSequenceTests
     }
 
     [Fact]
-    public void KniSkiaForcesSourceLinked_ButItDoesNotTickTheBoxForOtherPlatforms()
+    public void KniSkiaUsesPreview_ButTheStableChoiceComesBackForOtherPlatforms()
     {
         NewProjectDialogViewModel viewModel = Create(vm =>
         {
             vm.IncludeCodeProject = true;
             vm.PlatformName = "kniskia";
         });
-        viewModel.CommandLine.ShouldContain("--source-linked");
+        viewModel.CommandLine.ShouldContain("--preview");
+        viewModel.CommandLine.ShouldNotContain("--source-linked");
 
         viewModel.PlatformName = "monogame";
 
         viewModel.SourceLinked.ShouldBeFalse();
-        viewModel.SourceLinkedChoice.ShouldBeFalse();
+        viewModel.IsStableChannelChecked.ShouldBeTrue();
+        viewModel.CommandLine.ShouldNotContain("--preview");
         viewModel.CommandLine.ShouldNotContain("--source-linked");
     }
 
     [Fact]
-    public void KniSkia_WithoutACheckout_ClearsTheMessage_WhenTheCodeProjectIsUnticked()
+    public void KniSkia_WithoutACheckout_HasNoMessage_AndUntickingTheCodeProjectDropsThePlatformOptions()
     {
         _service.Setup(x => x.IsSourceLinkedAvailable).Returns(false);
         NewProjectDialogViewModel viewModel = Create(vm =>
@@ -403,12 +405,13 @@ public class NewProjectDialogSequenceTests
             vm.IncludeCodeProject = true;
             vm.PlatformName = "kniskia";
         });
-        viewModel.ValidationMessage.ShouldNotBeEmpty();
+        viewModel.ValidationMessage.ShouldBeEmpty();
+        viewModel.CommandLine.ShouldContain("--preview");
 
         viewModel.IncludeCodeProject = false;
 
         viewModel.ValidationMessage.ShouldBeEmpty();
-        viewModel.CommandLine.ShouldNotContain("--source-linked");
+        viewModel.CommandLine.ShouldNotContain("--preview");
         viewModel.CommandLine.ShouldNotContain("--platform");
     }
 
@@ -533,7 +536,7 @@ public class NewProjectDialogSequenceTests
 
     #region The command against the request
 
-    private record ParsedCommand(string Path, string? Platform, string? Template, string? Theme, bool SourceLinked, bool NoRestore);
+    private record ParsedCommand(string Path, string? Platform, string? Template, string? Theme, bool SourceLinked, bool NoRestore, bool Preview);
 
     private static ParsedCommand Parse(string command)
     {
@@ -546,6 +549,7 @@ public class NewProjectDialogSequenceTests
         string? theme = null;
         bool sourceLinked = false;
         bool noRestore = false;
+        bool preview = false;
         for (int i = 0; i < words.Length; i++)
         {
             switch (words[i])
@@ -555,10 +559,11 @@ public class NewProjectDialogSequenceTests
                 case "--theme": theme = words[++i]; break;
                 case "--source-linked": sourceLinked = true; break;
                 case "--no-restore": noRestore = true; break;
+                case "--preview": preview = true; break;
                 default: throw new InvalidOperationException("Unknown option " + words[i]);
             }
         }
-        return new ParsedCommand(path, platform, template, theme, sourceLinked, noRestore);
+        return new ParsedCommand(path, platform, template, theme, sourceLinked, noRestore, preview);
     }
 
     [Fact]
@@ -613,6 +618,7 @@ public class NewProjectDialogSequenceTests
             sent.Template.ShouldBe(command.Template ?? "forms", label);
             sent.Theme.ShouldBe(forms ? command.Theme ?? "Standard" : null, label);
             sent.SourceLinked.ShouldBe(command.SourceLinked, label);
+            (sent.PackageChannel == NewProjectPackageChannel.Preview).ShouldBe(command.Preview, label);
             if (code)
             {
                 sent.Restore.ShouldBe(!command.NoRestore, label);

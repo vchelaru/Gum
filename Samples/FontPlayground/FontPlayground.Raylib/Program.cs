@@ -24,9 +24,6 @@ public static class Program
         const int screenWidth = 1024;
         const int screenHeight = 768;
 
-        GumUI.CanvasWidth = screenWidth;
-        GumUI.CanvasHeight = screenHeight;
-
         SetConfigFlags(ConfigFlags.Msaa4xHint | ConfigFlags.ResizableWindow);
         InitWindow(screenWidth, screenHeight, "Gum raylib - Dynamic Font Playground");
 

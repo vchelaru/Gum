@@ -23,7 +23,7 @@ To initialize a GumBatch, you must:
 * Add the KernSmith NuGet package for your runtime
 * Declare a GumBatch at class scope
 * Initialize the Gum SystemManagers
-* Assign a `KernSmithFontCreator` so fonts can be generated on demand
+* Call `GumUI.UseKernSmith()` so fonts can be generated on demand
 * Create a `BitmapFont` for whatever font/size you want to draw
 * Draw with GumBatch in your Draw
 
@@ -41,9 +41,12 @@ Add the `KernSmith.KniGum` NuGet package to your project.
 
 The rest of the setup is identical on both runtimes — they share the same `MonoGameGum` API. The following shows a simple Game1.cs file which renders Gum Text using KernSmith:
 
+{% hint style="info" %}
+Available in preview NuGet packages (use a `-preview` version), or now if building Gum from source.
+{% endhint %}
+
 ```csharp
 using Gum.Wireframe;
-using KernSmith.Gum;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Gum;
@@ -55,6 +58,7 @@ public class Game1 : Game
     private GraphicsDeviceManager _graphics;
     BitmapFont font;
     GumBatch gumBatch;
+    GumService GumUI => GumService.Default;
 
     public Game1()
     {
@@ -65,10 +69,9 @@ public class Game1 : Game
 
     protected override void Initialize()
     {
-        GumService.Default.Initialize(this);
+        GumUI.Initialize(this);
 
-        CustomSetPropertyOnRenderable.InMemoryFontCreator =
-            new KernSmithFontCreator(GraphicsDevice);
+        GumUI.UseKernSmith();
 
         gumBatch = new GumBatch();
 

@@ -129,7 +129,7 @@ partial class Screen1
     {
         ButtonStandardInstance.Click += (_, _) =>
         {
-            GumService.Default.Root.Children.Clear();
+            GumUI.Root.Children.Clear();
             var screen = new Screen2();
             screen.AddToRoot();
         };
@@ -148,7 +148,7 @@ partial class Screen1
     {
 +       ButtonStandardInstance.Click += (_, _) =>
 +       {
-+           GumService.Default.Root.Children.Clear();
++           GumUI.Root.Children.Clear();
 +           var screen = new Screen2();
 +           screen.AddToRoot();
 +       };
@@ -169,7 +169,7 @@ partial class Screen2
     {
         ButtonStandardInstance.Click += (_, _) =>
         {
-            GumService.Default.Root.Children.Clear();
+            GumUI.Root.Children.Clear();
             var screen = new Screen1();
             screen.AddToRoot();
         };
@@ -187,7 +187,7 @@ partial class Screen2
     {
 <strong>+       ButtonStandardInstance.Click += (_, _) =>
 </strong>+       {
-+           GumService.Default.Root.Children.Clear();
++           GumUI.Root.Children.Clear();
 +           var screen = new Screen1();
 +           screen.AddToRoot();
 +       };
@@ -209,7 +209,7 @@ Each screen clears the root (removing everything under it) when its button is cl
 
 This tutorial assumes that a Gum screen is always displayed.
 
-Games can also completely remove Gum screens altogether. To do this, do not create a new screen after calling `GumService.Default.Root.Children.Clear()`.
+Games can also completely remove Gum screens altogether. To do this, do not create a new screen after calling `GumUI.Root.Children.Clear()`.
 
 ## Conclusion
 

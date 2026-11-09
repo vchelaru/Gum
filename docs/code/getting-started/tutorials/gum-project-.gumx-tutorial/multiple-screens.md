@@ -106,7 +106,7 @@ partial class Screen1Runtime : Gum.Wireframe.GraphicalUiElement
     {
         this.GetFrameworkElementByName<Button>("ButtonStandardInstance").Click += (_, _) =>
         {
-            GumService.Default.Root.Children.Clear();
+            GumUI.Root.Children.Clear();
             var screen = ObjectFinder.Self.GumProjectSave.Screens.Find(
                 item => item.Name == "Screen2");
             var screenRuntime = screen.ToGraphicalUiElement();
@@ -123,7 +123,7 @@ partial class Screen2Runtime : Gum.Wireframe.GraphicalUiElement
     {
         this.GetFrameworkElementByName<Button>("ButtonStandardInstance").Click += (_, _) =>
         {
-            GumService.Default.Root.Children.Clear();
+            GumUI.Root.Children.Clear();
             var screen = ObjectFinder.Self.GumProjectSave.Screens.Find(
                 item => item.Name == "Screen1");
             var screenRuntime = screen.ToGraphicalUiElement();
@@ -134,7 +134,7 @@ partial class Screen2Runtime : Gum.Wireframe.GraphicalUiElement
 }
 ```
 
-Each screen removes everything under the root with `GumService.Default.Root.Children.Clear()` when its button is clicked, then creates the next screen and adds it with `AddToRoot()`.
+Each screen removes everything under the root with `GumUI.Root.Children.Clear()` when its button is clicked, then creates the next screen and adds it with `AddToRoot()`.
 
 {% hint style="info" %}
 `Root.Children.Clear()` removes everything under Root. If other top-level content should stay (a HUD, for example), call `RemoveFromRoot()` on the screen instead, which removes only that screen. `PopupRoot` and `ModalRoot` are not affected by either.
@@ -146,7 +146,7 @@ Each screen removes everything under the root with `GumService.Default.Root.Chil
 
 This tutorial assumes that a Gum screen is always displayed.
 
-Games can also completely remove Gum screens altogether. To do this, do not create a new screen after calling `GumService.Default.Root.Children.Clear()`.
+Games can also completely remove Gum screens altogether. To do this, do not create a new screen after calling `GumUI.Root.Children.Clear()`.
 
 ### Conclusion
 
