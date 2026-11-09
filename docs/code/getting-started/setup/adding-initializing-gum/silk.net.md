@@ -84,47 +84,65 @@ To create a project that already references Gum source, run [`gumcli new MyGame 
 
 ## Initializing Gum
 
-Create the window with `Silk.NET.Windowing.Window.Create`, then hand it to `GumService.Default.Initialize`. Gum creates the input context and the SkiaSharp surface over the window's framebuffer, follows window resizes, and registers gamepads with Forms controls. To get a complete, working `Program.cs`, run [`gumcli new MyGame -p silknet`](../../../../cli/new.md) and read the file it creates. It runs on Windows, macOS, and Linux.
+Gum takes the window you create, then creates the input context and the SkiaSharp surface over the window's framebuffer, follows window resizes, and registers gamepads with Forms controls. The following is a complete `Program.cs`. It runs on Windows, macOS, and Linux. Lines marked **Optional** match the optional packages above, so delete the lines for any package you skipped.
+
+{% hint style="info" %}
+Available in preview NuGet packages (use a `-preview` version), or now if building Gum from source.
+{% endhint %}
 
 ```csharp
 // Initialize
+using System.Diagnostics;
+using Gum;
+using Silk.NET.Maths;
+using Silk.NET.OpenGL;
 using Silk.NET.Windowing;
 using Silk.NET.Windowing.Sdl;
-using Gum;
 
-// Silk.NET.Windowing.Sdl must create and own the window (via window.Initialize()) for
-// Silk.NET.Input to ever receive events. Set the GraphicsAPI and window options,
-// then create and initialize the window before initializing Gum.
+// Silk.NET.Input only receives events from a window that Silk.NET.Windowing.Sdl created and initialized itself.
 SdlWindowing.Use();
 
-Silk.NET.Windowing.IWindow window = Silk.NET.Windowing.Window.Create(options);
+WindowOptions options = WindowOptions.Default;
+// Desktop OpenGL 3.3 core is available on Windows, macOS and Linux without extra native libraries.
+options.API = new GraphicsAPI(ContextAPI.OpenGL, ContextProfile.Core, ContextFlags.ForwardCompatible, new APIVersion(3, 3));
+options.Size = new Vector2D<int>(800, 450);
+options.Title = "My Game";
+options.VSync = true;
+options.PreferredDepthBufferBits = 24;
+options.PreferredStencilBufferBits = 8;
+
+IWindow window = Window.Create(options);
 window.Initialize();
-Silk.NET.OpenGL.GL gl = Silk.NET.OpenGL.GL.GetApi(window);
+
+GL gl = GL.GetApi(window);
 
 GumService GumUI = GumService.Default;
 
 GumUI.Initialize(window, "Content/GumProject/GumProject.gumj");
 GumUI.UseShadowDusk(); // Optional: .fx and .slang shader files
-GumExpressionService.Initialize(); // Optional: arithmetic expressions in variable references
+Gum.Expressions.GumExpressionService.Initialize(); // Optional: arithmetic expressions in variable references
+
+Stopwatch clock = Stopwatch.StartNew();
+
+while (!window.IsClosing)
+{
+    window.DoEvents();
+
+    // Update
+    GumUI.Update(clock.Elapsed.TotalSeconds);
+
+    // Draw
+    gl.ClearColor(0.39f, 0.58f, 0.93f, 1f);
+    gl.Clear(ClearBufferMask.ColorBufferBit);
+    GumUI.Draw();
+
+    window.GLContext!.SwapBuffers();
+}
+
+window.Dispose();
 ```
 
-Each frame, pump window events, update Gum, clear, draw Gum, and swap buffers:
-
-```csharp
-// Update
-window.DoEvents();
-GumUI.Update(totalSeconds);
-
-// Draw
-gl.ClearColor(0.39f, 0.58f, 0.93f, 1f);
-gl.Clear(Silk.NET.OpenGL.ClearBufferMask.ColorBufferBit);
-GumUI.Draw();
-window.GLContext!.SwapBuffers();
-```
-
-{% hint style="info" %}
-`Initialize(window, ...)` is available in December 2026, or now if building Gum from source. Before it, `Initialize` took an `SKCanvas` and an `IInputContext`. See [Migrating to 2026 December](../../../../gum-tool/upgrading/migrating-to-2026-december.md).
-{% endhint %}
+To get the same file with a Gum project already set up, run [`gumcli new MyGame -p silknet`](../../../../cli/new.md).
 
 {% hint style="warning" %}
 The window must come from `Window.Create(options)` followed by `window.Initialize()`. Wrapping a window created another way (for example via `SdlWindowing.CreateFrom(existingHandle)`) skips the normal event subscription. The input looks valid, but clicks, key presses, and typed text silently do nothing.
