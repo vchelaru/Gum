@@ -75,7 +75,7 @@ The Gum project uses the `forms` template unless you pass `-t empty`. `ProjectCo
 {% endhint %}
 
 {% hint style="warning" %}
-`kniskia` creates a KNI game that draws Gum through Skia. Preview `Gum.KniSkia` packages are published for testing and the stable version ships in December 2026, but for now `kniskia` always needs `--source-linked` and a Gum checkout; without it the command is refused.
+`kniskia` creates a KNI game that draws Gum through Skia, with the same `Game1` shape as `kni` (see [KNI with Skia](../code/getting-started/setup/adding-initializing-gum/kni-skia.md)). Preview `Gum.KniSkia` packages are published for testing and the stable version ships in December 2026, but for now `kniskia` always needs `--source-linked` and a Gum checkout; without it the command is refused.
 {% endhint %}
 
 ## Linking to Gum Source

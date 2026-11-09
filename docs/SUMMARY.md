@@ -208,6 +208,7 @@
         * [Visual Studio Code and Linking Source](code/getting-started/setup/adding-initializing-gum/monogame-kni-fna/visual-studio-code-and-linking-source.md)
       * [.NET MAUI](code/getting-started/setup/adding-initializing-gum/.net-maui.md)
       * [raylib (raylib-cs)](code/getting-started/setup/adding-initializing-gum/raylib-raylib-cs.md)
+      * [KNI with Skia](code/getting-started/setup/adding-initializing-gum/kni-skia.md)
       * [Silk.NET](code/getting-started/setup/adding-initializing-gum/silk.net.md)
       * [SkiaSharp (General Canvas)](code/getting-started/setup/adding-initializing-gum/skiasharp-general-canvas.md)
       * [BRUTAL](code/getting-started/setup/adding-initializing-gum/brutal.md)
