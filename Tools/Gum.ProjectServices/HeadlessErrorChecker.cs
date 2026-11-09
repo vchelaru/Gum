@@ -329,7 +329,7 @@ public partial class HeadlessErrorChecker : IHeadlessErrorChecker
             Severity = ErrorSeverity.Warning,
             Message = $"{localState.Name}: \"{qualifiedLeft}\" is set explicitly to {FormatValue(materialized.Value)}, " +
                 $"but the active VariableReference would set it to {FormatValue(evaluated)}. " +
-                "The explicit value will win; remove the local override or change the reference to resolve the conflict.",
+                "The two values conflict, and which one applies depends on where it is read. Remove the local override or change the reference so they agree.",
             ReferenceConflict = new VariableReferenceConflict(
                 element, localState, qualifiedLeft, instanceName, materialized.Value, evaluated, referenceLine)
         });

@@ -103,7 +103,7 @@ This will remove the assignment of the variable from all states in the category.
 
 ## GUM0002: Variable Reference Conflicts With Explicit Set
 
-When a categorized state's `VariableReferences` row implies a value for a variable, and a parent element also has an explicit local value for the same variable, the explicit local value wins at lookup time. The reference is silently ineffective. Gum surfaces this with warning code **GUM0002**.
+When a categorized state's `VariableReferences` row implies a value for a variable, and a parent element also has an explicit local value for the same variable, the two values conflict. Which one applies depends on where it is read, so the result can differ between the tool and a running game. Gum surfaces this with warning code **GUM0002**.
 
 ### Example
 
@@ -112,7 +112,7 @@ When a categorized state's `VariableReferences` row implies a value for a variab
 - `TextInstance.TextCategoryState = "Title"` (the Title state on the inherited Label includes a VariableReference that resolves `FontSize` to e.g. 28).
 - `TextInstance.FontSize = 14` (a plain explicit override).
 
-These conflict. At lookup time, Gum walks the local explicit value first and returns 14. Changing `TextCategoryState` between values appears to do nothing for `FontSize` because the local override always wins.
+These conflict. In the tool, changing `TextCategoryState` between values can appear to do nothing for `FontSize`, because the local override of 14 is found first. A running game may show the reference's value instead.
 
 ### How it got there
 
@@ -123,7 +123,7 @@ Most commonly: the author set `FontSize` interactively via a reference that has 
 Decide which value you want and remove the other:
 
 - To let the state's reference drive `FontSize`, delete the local explicit `TextInstance.FontSize` from the parent element's state.
-- To keep the local explicit value, change or remove the reference inside the categorized state — or pick a `TextCategoryState` whose effective value matches what you want.
+- To keep the local explicit value, change or remove the reference inside the categorized state, or pick a `TextCategoryState` whose effective value matches what you want.
 
 ### Detection scope
 
