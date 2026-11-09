@@ -62,6 +62,7 @@ unsafe class Program
     {
         GumUI.Initialize(window);
         GumUI.UseKeyboardDefaults();
+        GumUI.UseGamepadDefaults();
 
         // Each theme's parameterless Apply() installs its visuals as the defaults. Editor has no
         // named background color, so a sensible dark surround is used, matching the MonoGame/raylib
