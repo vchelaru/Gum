@@ -179,20 +179,51 @@ public class GamepadFormsTests : BaseTestClass
         first.IsFocused.ShouldBeFalse();
         second.IsFocused.ShouldBeTrue();
     }
+    private static (Button Top, Button Middle, Button Bottom) AddThreeButtonsFocusMiddle()
+    {
+        StackPanel panel = new();
+        panel.AddToRoot();
+        Button top = new();
+        Button middle = new();
+        Button bottom = new();
+        panel.AddChild(top);
+        panel.AddChild(middle);
+        panel.AddChild(bottom);
+        middle.IsFocused = true;
+        return (top, middle, bottom);
+    }
 
     [Fact]
-    public void UseGamepadDefaults_LeftStickDown_MovesFocusToNextControl()
+    public void UseGamepadDefaults_LeftStickDown_MovesFocusToControlBelow()
     {
         GumService.Default.UseGamepadDefaults();
-        (Button first, Button second) = AddTwoButtons();
+        (Button top, Button middle, Button bottom) = AddThreeButtonsFocusMiddle();
         FakeGamepadReading pad = Connect();
         Frame();
 
+        // GLFW's positive Y is down.
         pad.SetLeftStick(0f, 1f);
         Frame();
 
-        first.IsFocused.ShouldBeFalse();
-        second.IsFocused.ShouldBeTrue();
+        bottom.IsFocused.ShouldBeTrue();
+        top.IsFocused.ShouldBeFalse();
+        middle.IsFocused.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void UseGamepadDefaults_LeftStickUp_MovesFocusToControlAbove()
+    {
+        GumService.Default.UseGamepadDefaults();
+        (Button top, Button middle, Button bottom) = AddThreeButtonsFocusMiddle();
+        FakeGamepadReading pad = Connect();
+        Frame();
+
+        pad.SetLeftStick(0f, -1f);
+        Frame();
+
+        top.IsFocused.ShouldBeTrue();
+        middle.IsFocused.ShouldBeFalse();
+        bottom.IsFocused.ShouldBeFalse();
     }
 
     [Fact]
