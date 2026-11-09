@@ -64,6 +64,10 @@ public class KniGumFromFileGame : Game
         {
             GumUI.Initialize(this, "GumProject.gumx");
 
+            GumUI.UseKeyboardDefaults();
+
+            GumUI.UseGamepadDefaults();
+
             ShowScreen("StartScreen");
             InitializeStartScreen();
 

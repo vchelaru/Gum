@@ -76,7 +76,7 @@ The Unity package is experimental. It supports Windows x64 and macOS.
 
 ## Adding Gum to Your Game
 
-Gum requires a few lines of code to get started. The host application skeleton differs by platform: MonoGame uses a `Game` subclass whose `Initialize`/`Update`/`Draw` methods the framework calls for you, Raylib uses a `Program.Main` with a game loop you own, Silk.NET uses a `Program.Main` that creates its own window and hands Gum an `SKCanvas`/`IInputContext` pair, and Unity uses a `MonoBehaviour` on a GameObject. The Gum calls themselves follow the same shape on every backend: initialize once, then update and draw each frame. Unity is the exception: the `GumRenderer` and `GumInput` components initialize, update, and draw Gum for you.
+Gum requires a few lines of code to get started. The host application skeleton differs by platform: MonoGame uses a `Game` subclass whose `Initialize`/`Update`/`Draw` methods the framework calls for you, Raylib uses a `Program.Main` with a game loop you own, Silk.NET uses a `Program.Main` that creates its own window and gives it to Gum, and Unity uses a `MonoBehaviour` on a GameObject. The Gum calls themselves follow the same shape on every backend: initialize once, then update and draw each frame. Unity is the exception: the `GumRenderer` and `GumInput` components initialize, update, and draw Gum for you.
 
 A simplified host with the required calls would look like the following code:
 
@@ -234,7 +234,7 @@ The Unity package is experimental. It supports Windows x64 and macOS.
 
 ## Adding Gum to Your Game
 
-Gum requires a few lines of code to get started. The host application skeleton differs by platform: MonoGame uses a `Game` subclass whose `Initialize`/`Update`/`Draw` methods the framework calls for you, Raylib uses a `Program.Main` with a game loop you own, Silk.NET uses a `Program.Main` that creates its own window and hands Gum an `SKCanvas`/`IInputContext` pair, and Unity uses a `MonoBehaviour` on a GameObject. The Gum calls themselves follow the same shape on every backend: initialize once, then update and draw each frame. Unity is the exception: the `GumRenderer` and `GumInput` components initialize, update, and draw Gum for you.
+Gum requires a few lines of code to get started. The host application skeleton differs by platform: MonoGame uses a `Game` subclass whose `Initialize`/`Update`/`Draw` methods the framework calls for you, Raylib uses a `Program.Main` with a game loop you own, Silk.NET uses a `Program.Main` that creates its own window and gives it to Gum, and Unity uses a `MonoBehaviour` on a GameObject. The Gum calls themselves follow the same shape on every backend: initialize once, then update and draw each frame. Unity is the exception: the `GumRenderer` and `GumInput` components initialize, update, and draw Gum for you.
 
 A simplified host with the required calls would look like the following code:
 
@@ -336,15 +336,13 @@ public class Program
 {% endtab %}
 
 {% tab title="Silk.NET" %}
-A full Silk.NET project requires more setup than fits cleanly in a tutorial snippet (window creation, GL/ANGLE backend selection, wiring the SkiaSharp surface) — see the [Silk.NET setup page](../../setup/adding-initializing-gum/silk.net.md) for that detail and a link to a working sample. Once the window, `SKCanvas`, and `IInputContext` exist, the Gum-specific calls are the same shape as MonoGame/Raylib:
+The Silk.NET host takes the window and creates its own Skia surface and input, so the Gum-specific calls are the same shape as MonoGame/Raylib. See the [Silk.NET setup page](../../setup/adding-initializing-gum/silk.net.md) for the full setup and a link to a working sample:
 
 ```csharp
 using Gum;
 using Gum.Forms;
 using Gum.Forms.Controls;
 using Silk.NET.Windowing;
-using Silk.NET.Input;
-using SkiaSharp;
 
 namespace MyGumProject;
 
@@ -357,14 +355,8 @@ public class Program
         Silk.NET.Windowing.Sdl.SdlWindowing.Use();
 
         IWindow window = Window.Create(WindowOptions.Default);
-        window.Initialize();
 
-        // SkiaSharp GL surface/canvas creation is omitted here for brevity -- see the
-        // Silk.NET setup page and sample for the full ANGLE/backend setup.
-        SKCanvas canvas = CreateSkiaCanvas(window);
-        IInputContext inputContext = window.CreateInput();
-
-        GumUI.Initialize(canvas, inputContext);
+        GumUI.Initialize(window);
 
         var mainPanel = new StackPanel();
         mainPanel.AddToRoot();
@@ -376,10 +368,8 @@ public class Program
             window.DoEvents();
 
             GumUI.Update(totalTime.Elapsed.TotalSeconds);
-
-            canvas.Clear(SKColors.CornflowerBlue);
+            // Clear the frame and present it (SwapBuffers) yourself. See the sample for the full call.
             GumUI.Draw();
-            // Present the frame (SwapBuffers) -- see the sample for the full call.
         }
     }
 }

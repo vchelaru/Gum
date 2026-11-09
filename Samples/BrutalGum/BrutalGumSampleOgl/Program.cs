@@ -9,7 +9,6 @@ using Brutal.GlfwApi;
 using Brutal.Numerics;
 using Gum;
 using GumSamples;
-using SkiaSharp;
 using System.Diagnostics;
 using System.Text;
 
@@ -38,7 +37,6 @@ try
     GumUI.UseShadowDusk();
     GumUI.UseKeyboardDefaults();
     GumUI.UseGamepadDefaults();
-    GumUI.ClearColor = new SKColor(100, 149, 237);
 
     GumGallery gallery = new GumGallery();
     gallery.Build();
@@ -54,6 +52,7 @@ try
         GumUI.Update(gameTime);
         gallery.Tick(gameTime - previousSeconds);
         previousSeconds = gameTime;
+        GlClear.ToColor(GetProc, 100 / 255f, 149 / 255f, 237 / 255f); // the game's own background; Gum draws over it
         GumUI.Draw();
 
         if (sample.ExitAfterSeconds > 0 && gameTime >= sample.ExitAfterSeconds)

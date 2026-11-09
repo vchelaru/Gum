@@ -65,19 +65,21 @@ public class NewProjectUiPackageChannelTests
         fixture.Dialog.ToggleLabeled(NewProjectUiText.Stable).IsEffectivelyEnabled.ShouldBeTrue();
     }
 
-    [AvaloniaFact]
-    public void KniSkia_ChecksLocalGumSource_AndDisablesStableAndPreview()
+    [AvaloniaTheory]
+    [InlineData("kniskia")]
+    [InlineData("brutal")]
+    public void APlatformWithNoStablePackage_ChecksPreview_AndDisablesStable(string platform)
     {
         using NewProjectUiFixture fixture = new NewProjectUiFixture();
         fixture.Dialog.SetChecked(NewProjectUiText.CreateCodeProject, true);
-        fixture.Dialog.SetChecked(NewProjectUiText.Preview, true);
 
-        fixture.Dialog.ChoosePlatform("kniskia");
+        fixture.Dialog.ChoosePlatform(platform);
 
-        fixture.Dialog.ToggleLabeled(NewProjectUiText.UseLocalSource).IsChecked.ShouldBe(true);
-        fixture.Dialog.ToggleLabeled(NewProjectUiText.Preview).IsEffectivelyEnabled.ShouldBeFalse();
+        fixture.Dialog.ToggleLabeled(NewProjectUiText.Preview).IsChecked.ShouldBe(true);
+        fixture.Dialog.ToggleLabeled(NewProjectUiText.Preview).IsEffectivelyEnabled.ShouldBeTrue();
+        fixture.Dialog.ToggleLabeled(NewProjectUiText.UseLocalSource).IsEffectivelyEnabled.ShouldBeTrue();
         fixture.Dialog.ToggleLabeled(NewProjectUiText.Stable).IsEffectivelyEnabled.ShouldBeFalse();
         fixture.Settle();
-        fixture.IsShown(NewProjectUiText.PreviewWarning).ShouldBeFalse();
+        fixture.IsShown(NewProjectUiText.PreviewWarning).ShouldBeTrue();
     }
 }

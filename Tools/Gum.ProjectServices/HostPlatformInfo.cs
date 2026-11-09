@@ -12,7 +12,8 @@ namespace Gum.ProjectServices;
 /// <param name="PackageId">The NuGet package id, or null for a runtime that is not packed (Unity).</param>
 /// <param name="ProjectPath">The runtime's csproj inside a Gum checkout, relative to its root.</param>
 /// <param name="Platform">The scaffolded host that uses this runtime, or null when no host targets it directly.</param>
-internal sealed record HostPlatformInfo(string AssemblyName, string? PackageId, string ProjectPath, HostPlatform? Platform = null)
+/// <param name="HasStablePackage">False while the package has only prerelease versions on NuGet, so a Stable project cannot restore it.</param>
+internal sealed record HostPlatformInfo(string AssemblyName, string? PackageId, string ProjectPath, HostPlatform? Platform = null, bool HasStablePackage = true)
 {
     /// <summary>
     /// Every Gum runtime. The order is the order <c>SyntaxVersionDetectionService</c> tries packages in.
@@ -28,9 +29,9 @@ internal sealed record HostPlatformInfo(string AssemblyName, string? PackageId, 
         new HostPlatformInfo("SokolGum", "Gum.sokol", Path.Combine("Runtimes", "SokolGum", "SokolGum.csproj")),
         new HostPlatformInfo("SilkNetGum", "Gum.SilkNet", Path.Combine("Runtimes", "SilkNetGum", "SilkNetGum.csproj"), HostPlatform.SilkNet),
         new HostPlatformInfo("StrideGum", "Gum.Stride", Path.Combine("Runtimes", "StrideGum", "StrideGum.csproj"), HostPlatform.Stride),
-        new HostPlatformInfo("BrutalGum.OGL", "Gum.Brutal.OGL", Path.Combine("Runtimes", "BrutalGum.OGL", "BrutalGum.OGL.csproj"), HostPlatform.Brutal),
-        new HostPlatformInfo("BrutalGum.Vulkan", "Gum.Brutal.Vulkan", Path.Combine("Runtimes", "BrutalGum.Vulkan", "BrutalGum.Vulkan.csproj")),
-        new HostPlatformInfo("KniSkiaGum", "Gum.KniSkia", Path.Combine("Runtimes", "KniSkiaGum", "KniSkiaGum.csproj"), HostPlatform.KniSkia),
+        new HostPlatformInfo("BrutalGum.OGL", "Gum.Brutal.OGL", Path.Combine("Runtimes", "BrutalGum.OGL", "BrutalGum.OGL.csproj"), HostPlatform.Brutal, HasStablePackage: false),
+        new HostPlatformInfo("BrutalGum.Vulkan", "Gum.Brutal.Vulkan", Path.Combine("Runtimes", "BrutalGum.Vulkan", "BrutalGum.Vulkan.csproj"), HasStablePackage: false),
+        new HostPlatformInfo("KniSkiaGum", "Gum.KniSkia", Path.Combine("Runtimes", "KniSkiaGum", "KniSkiaGum.csproj"), HostPlatform.KniSkia, HasStablePackage: false),
         new HostPlatformInfo("SkiaGum.Standalone", "Gum.SkiaSharp.Standalone", Path.Combine("Runtimes", "SkiaGum.Standalone", "SkiaGum.Standalone.csproj")),
         new HostPlatformInfo("SkiaGum.Maui", "Gum.SkiaSharp.Maui", Path.Combine("Runtimes", "SkiaGum.Maui", "SkiaGum.Maui.csproj")),
         new HostPlatformInfo("SkiaGum.ShadowDusk", "Gum.SkiaSharp.ShadowDusk", Path.Combine("Runtimes", "SkiaGum.ShadowDusk", "SkiaGum.ShadowDusk.csproj")),

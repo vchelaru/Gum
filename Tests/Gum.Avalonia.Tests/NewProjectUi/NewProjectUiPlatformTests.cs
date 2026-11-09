@@ -70,18 +70,11 @@ public class NewProjectUiPlatformTests
         }
 
         ToggleButton localSource = fixture.Dialog.ToggleLabeled(NewProjectUiText.UseLocalSource);
-        if (platform == "kniskia")
-        {
-            localSource.IsChecked.ShouldBe(true, "KNI with Skia always links the source");
-            localSource.IsEffectivelyEnabled.ShouldBeFalse("and the box cannot be changed");
-            fixture.Dialog.CommandLine.ShouldContain("--source-linked");
-        }
-        else
-        {
-            localSource.IsChecked.ShouldBe(false);
-            localSource.IsEffectivelyEnabled.ShouldBeTrue();
-            fixture.Dialog.CommandLine.ShouldNotContain("--source-linked");
-        }
+        localSource.IsChecked.ShouldBe(false);
+        localSource.IsEffectivelyEnabled.ShouldBeTrue();
+        fixture.Dialog.CommandLine.ShouldNotContain("--source-linked");
+        // KNI with Skia has no stable package, so its project uses the preview one.
+        fixture.Dialog.CommandLine.Contains("--preview").ShouldBe(platform == "kniskia");
         fixture.Dialog.OkButton.IsEffectivelyEnabled.ShouldBeTrue();
     }
 
@@ -117,18 +110,12 @@ public class NewProjectUiPlatformTests
         }
         mainFiles.ShouldBe(new[] { "Content/GumProject/GumProject.gumj" });
         string reference = File.ReadAllText(csproj);
-        if (platform == "kniskia")
-        {
-            reference.ShouldContain("ProjectReference", Case.Sensitive, "KNI with Skia links the Gum source");
-        }
-        else
-        {
-            reference.ShouldContain("PackageReference", Case.Sensitive, "the other platforms use the NuGet package");
-        }
+        reference.ShouldContain("PackageReference", Case.Sensitive, "every platform uses the NuGet package");
+        reference.Contains("Version=\"*-*\"").ShouldBe(platform == "kniskia", "only KNI with Skia has no stable package");
     }
 
     [AvaloniaFact]
-    public void KniSkiaWithNoGumCheckout_ShowsWhyOkIsOff_AndKniBringsOkBack()
+    public void KniSkiaWithNoGumCheckout_StillAllowsOk_WithPreview()
     {
         Mock<INewProjectService> service = new Mock<INewProjectService>();
         service.Setup(x => x.IsSourceLinkedAvailable).Returns(false);
@@ -140,17 +127,17 @@ public class NewProjectUiPlatformTests
         fixture.Dialog.ChoosePlatform("kniskia");
         fixture.Settle();
 
-        fixture.Dialog.ToggleLabeled(NewProjectUiText.UseLocalSource).IsChecked.ShouldBe(true);
-        fixture.IsShown(NewProjectUiText.NeedsLocalSource).ShouldBeTrue("the dialog says why OK is off");
+        fixture.Dialog.ToggleLabeled(NewProjectUiText.UseLocalSource).IsChecked.ShouldBe(false);
+        fixture.Dialog.ToggleLabeled(NewProjectUiText.Preview).IsChecked.ShouldBe(true);
+        fixture.IsShown(NewProjectUiText.NeedsLocalSource).ShouldBeFalse();
         fixture.IsShown(NewProjectUiText.KniSkiaPlatformNote).ShouldBeTrue();
-        fixture.Dialog.OkButton.IsEffectivelyEnabled.ShouldBeFalse();
+        fixture.Dialog.OkButton.IsEffectivelyEnabled.ShouldBeTrue();
 
         fixture.Dialog.ChoosePlatform("kni");
         fixture.Settle();
 
-        fixture.IsShown(NewProjectUiText.NeedsLocalSource).ShouldBeFalse();
         fixture.Dialog.OkButton.IsEffectivelyEnabled.ShouldBeTrue();
-        fixture.Dialog.ToggleLabeled(NewProjectUiText.UseLocalSource).IsChecked.ShouldBe(false, "the forced tick does not stay behind");
+        fixture.Dialog.ToggleLabeled(NewProjectUiText.Stable).IsChecked.ShouldBe(true, "the preview fallback does not stay behind");
     }
 
     [AvaloniaFact]

@@ -73,6 +73,10 @@ namespace MonoGameGumFromFile
 
             GumUI.Initialize(this, "GumProject.gumx");
 
+            GumUI.UseKeyboardDefaults();
+
+            GumUI.UseGamepadDefaults();
+
 
             // This allows you to resize:
             Window.AllowUserResizing = true;

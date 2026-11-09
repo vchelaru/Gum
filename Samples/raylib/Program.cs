@@ -63,9 +63,6 @@ public class BasicShapes
         const int screenWidth = 1400;
         int screenHeight = OperatingSystem.IsMacOS() ? 780 : 900;
 
-        GumUI.CanvasWidth = screenWidth;
-        GumUI.CanvasHeight = screenHeight;
-
         // 4x MSAA enables framebuffer-level antialiasing — raylib has no per-shape AA, so
         // this is the only path to smooth circle/ring edges. Must be set BEFORE InitWindow
         // (raylib only consults config flags at GL context creation).
@@ -76,7 +73,11 @@ public class BasicShapes
 
         GumUI.Initialize();
 
-        CustomSetPropertyOnRenderable.InMemoryFontCreator = new KernSmithRaylibFontCreator();
+        GumUI.UseKeyboardDefaults();
+
+        GumUI.UseGamepadDefaults();
+
+        GumUI.UseKernSmith();
 
         // Issue #3465: Gum core ships no shader loader, so the app registers a resolver that turns a
         // ContainerRuntime.SourceShaderFile (.fs path) into a Raylib_cs.Shader. raylib loads GLSL
@@ -89,17 +90,6 @@ public class BasicShapes
         // The Gum.raylib.ShadowDusk package adds .fx and .slang files on top of that (#7053) and
         // registers the defaults they declare. Other extensions, like .fs, still go to the resolver above.
         GumUI.UseShadowDusk();
-
-        // Enable gamepad + keyboard navigation for Forms controls (see
-        // https://docs.flatredball.com/gum/code/events-and-interactivity/gamepad-support).
-        // GumUI.Update reads the connected controller into these gamepads each frame; the
-        // D-pad / left stick then move focus between controls and A activates the focused
-        // control. UseKeyboardDefaults registers the keyboard so Tab / Shift+Tab navigate the
-        // same way. The starting control is given focus in FormsControlsScreen's constructor.
-        FrameworkElement.GamePadsForUiControl.Clear();
-        FrameworkElement.GamePadsForUiControl.AddRange(GumUI.Gamepads);
-
-        GumUI.UseKeyboardDefaults();
 
         // Demo the auto-fit helpers — flip via the Zoom/Expand radio buttons in the nav strip.
         GumUI.EnableZoomToWindow();

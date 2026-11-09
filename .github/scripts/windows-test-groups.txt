@@ -22,7 +22,6 @@ headless Tests/SilkNetGum.Tests
 headless Tests/KniSkiaGum.Tests
 headless Tests/UnityGum.Tests
 headless Tests/StrideGum.Tests
-headless Tests/BrutalGum.OGL.Tests
 # Gum.Stride drawing on a window-less Stride device (WARP, the software D3D adapter, so every runner has one); one project per graphics API.
 headless Tests/StrideGum.GpuTests.D3D11
 headless Tests/StrideGum.GpuTests.D3D12
@@ -40,5 +39,7 @@ mesa-1 Tests/SkiaGum.GpuTests 10 --logger "console;verbosity=detailed"
 
 mesa-2 Tests/Gum.Cli.Tests
 mesa-2 Tests/RaylibGum.Tests 10
+# Real hidden GL 3.3 window (GlCompositingTests); GUM_REQUIRE_GL=1 in test-concurrent.sh makes "no context" a failure here.
+mesa-2 Tests/BrutalGum.OGL.Tests 10
 mesa-2 Tests/Gum.ProjectServices.Raylib.Tests 10
 mesa-2 Tests/Gum.ProjectServices.MonoGame.Tests 10

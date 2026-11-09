@@ -80,7 +80,7 @@ assign `AdvancePageInputPredicate`:
 
 ```csharp
 dialogBox.AdvancePageInputPredicate = () =>
-    GumService.Default.Keyboard.KeyPushed(Gum.Forms.Input.Keys.Z);
+    GumUI.Keyboard.KeyPushed(Gum.Forms.Input.Keys.Z);
 ```
 
 Tab, the arrow keys, and the gamepad d-pad move focus off a focused `DialogBox` like any other control, so a game that keeps it focused for its own d-pad choices should handle those inputs first.
@@ -107,7 +107,7 @@ async Task RunDialog()
 > The one-line opt-in is:
 >
 > ```csharp
-> GumService.Default.UseSingleThreadedAsync();
+> GumUI.UseSingleThreadedAsync();
 > ```
 >
 > Call once after `Initialize`. See [async Programming](../async-programming.md)

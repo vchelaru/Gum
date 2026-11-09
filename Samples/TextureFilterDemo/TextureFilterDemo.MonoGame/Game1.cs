@@ -37,7 +37,12 @@ public class Game1 : Game
     protected override void Initialize()
     {
         GumUI.Initialize(this);
-        CustomSetPropertyOnRenderable.InMemoryFontCreator = new KernSmithFontCreator(GraphicsDevice);
+
+        GumUI.UseKeyboardDefaults();
+
+        GumUI.UseGamepadDefaults();
+
+        GumUI.UseKernSmith();
 
         var pointLayer = SystemManagers.Default.Renderer.AddLayer();
         pointLayer.Name = "Texture Filter - Point";

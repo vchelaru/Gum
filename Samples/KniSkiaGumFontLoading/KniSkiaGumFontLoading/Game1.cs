@@ -23,6 +23,7 @@ public class Game1 : Game
     private readonly Gum.Automation.GumAutomationHost? _automation;
 #endif
     private TextRuntime _immediateText = null!;
+    private GumBatch _gumBatch = null!;
 
     public Game1()
     {
@@ -37,10 +38,11 @@ public class Game1 : Game
 
     protected override void Initialize()
     {
-        // The graphics device exists once the base Initialize has run.
-        base.Initialize();
-
         GumUI.Initialize(this);
+
+        GumUI.UseKeyboardDefaults();
+
+        GumUI.UseGamepadDefaults();
 
         AddText("CustomFontText", "Content/Fonts/CustomFont.ttf", "I use CustomFont", 0);
         AddText("SuperMorningText", "Content/Fonts/Super Morning.ttf", "I use Super Morning", 30);
@@ -55,14 +57,9 @@ public class Game1 : Game
             Y = 120
         };
 
-        // Drawn on top of Gum's own draw, inside the same Skia pass.
-        GumUI.AfterDraw += _ =>
-        {
-            Renderer renderer = SystemManagers.Default.Renderer;
-            renderer.Begin();
-            renderer.Draw(_immediateText);
-            renderer.End();
-        };
+        _gumBatch = new GumBatch();
+
+        base.Initialize();
     }
 
     private void AddText(string name, string fontFile, string text, float yPosition)
@@ -92,6 +89,12 @@ public class Game1 : Game
     {
         GraphicsDevice.Clear(Color.CornflowerBlue);
         GumUI.Draw();
+
+        // Immediate mode, drawn after Gum so it lands on top.
+        _gumBatch.Begin();
+        _gumBatch.Draw(_immediateText);
+        _gumBatch.End();
+
         base.Draw(gameTime);
     }
 

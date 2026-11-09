@@ -22,6 +22,8 @@ public class Game1 : Game
     protected override void Initialize()
     {
         GumUI.Initialize(this, "{{GumProjectFolder}}{{GumProjectFile}}");
+        GumUI.UseKeyboardDefaults();
+        GumUI.UseGamepadDefaults();
         {{InitLines}}
         {{ScreenLines}}
 

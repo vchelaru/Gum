@@ -25,7 +25,8 @@ public class NewProjectOptionCombinationTests : NewProjectServiceTestBase
             {
                 continue;
             }
-            if (platform == "kniskia" && !sourceLinked)
+            // The default channel is Stable, which is refused for a platform with no stable package (NoStablePackage tests).
+            if (platform != null && !sourceLinked && !NewProjectPlatforms.HasStablePackage(Platforms.Single(entry => entry.Name == platform).Platform))
             {
                 continue;
             }

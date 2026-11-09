@@ -101,7 +101,7 @@ public class Game1 : Game, IPreviewDefaultsTarget
     }
 
     void IPreviewDefaultsTarget.UseHiDefProfile() => _graphics.GraphicsProfile = GraphicsProfile.HiDef;
-    void IPreviewDefaultsTarget.InitializeShapes() => ShapeRenderer.Self.Initialize();
+    void IPreviewDefaultsTarget.InitializeShapes() => GumService.Default.UseShapes();
     void IPreviewDefaultsTarget.UseKeyboardDefaults() => GumService.Default.UseKeyboardDefaults();
     void IPreviewDefaultsTarget.UseGamepadDefaults() => GumService.Default.UseGamepadDefaults();
 

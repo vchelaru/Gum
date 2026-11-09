@@ -46,19 +46,28 @@ public abstract class NewProjectServiceTestBase : IDisposable
 
     protected NewProjectRequest Request(
         string? platform, string name = "Game", string template = "forms", string? theme = null, bool sourceLinked = false,
-        bool restore = false, bool packages = false, bool generate = false, bool xml = false) =>
+        bool restore = false, bool packages = false, bool generate = false, bool xml = false, NewProjectPackageChannel? channel = null) =>
         new NewProjectRequest
         {
             Path = Path.Combine(_folder, name),
             Platform = platform,
             Template = template,
             Theme = theme,
-            SourceLinked = sourceLinked,
+            PackageChannel = channel ?? (sourceLinked ? NewProjectPackageChannel.LocalSource : NewProjectPackageChannel.Stable),
             Restore = restore,
             IncludeRecommendedPackages = packages,
             GenerateCode = generate,
             UseXmlFormat = xml,
         };
+
+    /// <summary>
+    /// A channel the platform accepts: Local Gum source for KNI with Skia (what these tests have always used for it), Preview for a
+    /// platform with no stable Gum package (Stable is refused for it), otherwise Stable.
+    /// </summary>
+    protected static NewProjectPackageChannel WorkingChannel(string platform) =>
+        platform == "kniskia" ? NewProjectPackageChannel.LocalSource
+        : NewProjectPlatforms.TryParse(platform, out HostPlatform parsed) && !NewProjectPlatforms.HasStablePackage(parsed) ? NewProjectPackageChannel.Preview
+        : NewProjectPackageChannel.Stable;
 
     protected Task<NewProjectResult> Run(NewProjectRequest request, CancellationToken token = default) =>
         CreateService().ExecuteAsync(request, null, token);

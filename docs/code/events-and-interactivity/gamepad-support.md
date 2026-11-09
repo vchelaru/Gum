@@ -72,7 +72,7 @@ private void HandleClick(object sender, EventArgs args)
     if(args is InputEventArgs inputEventArgs &&
         inputEventArgs.InputDevice is Gum.Input.GamePad gamePad)
     {
-        var index = Array.IndexOf(GumService.Default.Gamepads, gamePad);
+        var index = Array.IndexOf(GumUI.Gamepads, gamePad);
         TextInstance.Text = $"Clicked with gamepad index {index} at {DateTime.Now}";
     }
 }
@@ -124,8 +124,7 @@ tallContent.Height = 1000;
 scrollViewer.AddChild(tallContent);
 scrollViewer.AddToRoot();
 
-FrameworkElement.GamePadsForUiControl.Clear();
-FrameworkElement.GamePadsForUiControl.AddRange(GumUI.Gamepads);
+GumUI.UseGamepadDefaults();
 scrollViewer.IsFocused = true;
 ```
 
@@ -151,8 +150,7 @@ listBox.AddToRoot();
 listBox.SelectionChanged += (_, args) =>
     TextInstance.Text = $"Selected: {listBox.SelectedObject}";
 
-FrameworkElement.GamePadsForUiControl.Clear();
-FrameworkElement.GamePadsForUiControl.AddRange(GumUI.Gamepads);
+GumUI.UseGamepadDefaults();
 listBox.IsFocused = true;
 ```
 [Try on XnaFiddle.NET](https://xnafiddle.net/#snippet=H4sIAAAAAAAACqVSYUtCMRT9LvgfLqMPSvJSKwLFwDRNCBRTIhjEdBddPTfZ9tIS_3v3zZQ0yKB92e69595zdrZVNgPAOq6dzFgFvE2wEDJKK69ErD6Q0uxNWIiV8zdmCTXQuID7TZTLV7n-qkSPSvop1cvF4rfsHarJ1FO6dFk8BA-JxVGJ2KOm8GLwPkcXNdUMtVNGp-U0FdVHzsSJxx9j_zGg43HmorqUOc66c09oKHGW_x1RPoo4P4q42EdQbWD6xvjgJdfBazHCeOt0et74nJ6ip9TKq-IuHuAydZeznkXnIJmfSbPQQEQTMcO5kOANjKdCTxAcxjhORXC26z_k3-p62GIboVfCaQ1yzwUQduLyULvmesU10NqTccLZphFlBVb7s1B2Ry-0rwP7OrC1LIlcGPt6GyM9mo_aFPeEdC1jh6phtLcmjhoxChv0_Q1Pd-qnonP0L4adgCEj3N7DUMc4cXSvWvj2VZbNrLOZT_A5IeIQAwAA)
@@ -185,8 +183,7 @@ label.AddToRoot();
 slider.ValueChanged += (_, _) =>
     label.Text = $"Value: {slider.Value}";
 
-FrameworkElement.GamePadsForUiControl.Clear();
-FrameworkElement.GamePadsForUiControl.AddRange(GumUI.Gamepads);
+GumUI.UseGamepadDefaults();
 slider.IsFocused = true;
 ```
 [Try on XnaFiddle.NET](https://xnafiddle.net/#snippet=H4sIAAAAAAAACo2SUWvCMBDH3wW_w1H2oExCHduL0oHUKcKEoXVjUJC4HjMsTSRJp5v43XeN4oJP9qn3-9_d_67XfbMBEE3suCqjHjhTYccToYQTXIpfJBx9cwNWigINJKBwC3MftNr9XB05exOFW5N6F8cXcEGtLClkwYbc8exng5YNRYnKCq1quUZssLJaVg7_y6c0RVmVVBv0nPLdCXZDq1cuKyT4ELB5yaVM11x91ko3UAZFkemZ1s6vkKt6QclXKE_7PdfvXvOUvRO_j89hhjtH5CaPvG0P9uEUhzw6Z14ahXnHyQq4TaC17MCyDcljrva5AnquNzr4xiPDS9xq8_Ukkb6sY2OKX3hhR9osRKqVM1qyVCI_nu26fBp_Vg_ZouMtJj5nQznB3SdU8FFZWiPxv08_ajYOzcYfiDE4m1gCAAA)

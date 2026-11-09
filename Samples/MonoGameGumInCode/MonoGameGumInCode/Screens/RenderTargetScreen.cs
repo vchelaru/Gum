@@ -33,10 +33,7 @@ namespace MonoGameGumInCode.Screens;
 /// One shared file (linked into Samples/raylib/GumTest.csproj and
 /// Samples/SilkNetGum/SilkNetGumSample/SilkNetGumSample.csproj via &lt;Compile Include ... Link&gt;),
 /// like TextScreen. Only genuinely backend-specific bits differ, gated `#if RAYLIB` / `#elif SKIA` /
-/// `#else`: the Color alias and namespace above, and one cell Skia still can't express — a blurred
-/// dropshadow in a render target (Skia's dropshadow blur API differs). That one is `#if !SKIA` and
-/// simply absent on the Skia screen; the remaining seven cells, additive group blend included
-/// (ContainerRuntime.Blend unblocked for Skia in #3989), render on all three backends.
+/// `#else`: the Color alias and namespace above. Every cell renders on all three backends.
 /// </summary>
 internal class RenderTargetScreen : FrameworkElement
 {
@@ -62,9 +59,7 @@ internal class RenderTargetScreen : FrameworkElement
         root.AddChild(BuildCell("Overflow clipped", BuildOverflow()));
         root.AddChild(BuildCell("ClipsChildren inside RT", BuildClipsChildrenInside()));
         root.AddChild(BuildCell("Sprite shows RT texture", BuildSpriteFromRenderTarget()));
-#if !SKIA
         root.AddChild(BuildCell("Blurred shadow in RT", BuildBlurredShadowInRenderTarget()));
-#endif
     }
 
     // Portable color construction across the three backends' Color aliases (XNA / Raylib_cs / SKColor
@@ -360,14 +355,11 @@ internal class RenderTargetScreen : FrameworkElement
         return row;
     }
 
-#if !SKIA
     // Issue #3464 (raylib-only bug, mirrored here for gallery parity/comparison — MonoGame's
     // dropshadow is an Apos.Shapes shader pass, not an offscreen render-to-texture blur, so it never
     // had the nested-render-target clobber raylib had). A blurred dropshadow inside a render-target
     // container, plus a sibling drawn after it, should look identical to the raylib cell: a soft
     // shadow offset down-right of the blue rectangle, and a red sibling rectangle below-right of it.
-    // Skia omits this cell — its dropshadow-blur API differs (DropshadowBlurX/Y, not the singular
-    // DropshadowBlur used here); a Skia dropshadow-in-RT demo is future work (see #3989).
     private static GraphicalUiElement BuildBlurredShadowInRenderTarget()
     {
         var holder = BuildFrame(150, 110);
@@ -396,5 +388,4 @@ internal class RenderTargetScreen : FrameworkElement
         holder.AddChild(group);
         return holder;
     }
-#endif
 }

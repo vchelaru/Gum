@@ -22,13 +22,13 @@ Gum has one package per graphics API. Add only one of them:
 Add the Gum.Brutal.OGL NuGet package ([https://www.nuget.org/packages/Gum.Brutal.OGL](https://www.nuget.org/packages/Gum.Brutal.OGL)). Modify csproj:
 
 ```xml
-<PackageReference Include="Gum.Brutal.OGL" Version="*" />
+<PackageReference Include="Gum.Brutal.OGL" Version="*-*" />
 ```
 
 Or add through command line:
 
 ```bash
-dotnet add package Gum.Brutal.OGL
+dotnet add package Gum.Brutal.OGL --prerelease
 ```
 {% endtab %}
 
@@ -36,13 +36,13 @@ dotnet add package Gum.Brutal.OGL
 Add the Gum.Brutal.Vulkan NuGet package ([https://www.nuget.org/packages/Gum.Brutal.Vulkan](https://www.nuget.org/packages/Gum.Brutal.Vulkan)). Modify csproj:
 
 ```xml
-<PackageReference Include="Gum.Brutal.Vulkan" Version="*" />
+<PackageReference Include="Gum.Brutal.Vulkan" Version="*-*" />
 ```
 
 Or add through command line:
 
 ```bash
-dotnet add package Gum.Brutal.Vulkan
+dotnet add package Gum.Brutal.Vulkan --prerelease
 ```
 {% endtab %}
 {% endtabs %}
@@ -96,7 +96,7 @@ Glfw.WindowHint(GlfwWindowHint.OpenGlProfile, 0x32001 /* GLFW_OPENGL_CORE_PROFIL
 GlfwWindow window = Glfw.CreateWindow(new GlfwWindow.CreateInfo { Title = "My Game", Size = new Brutal.Numerics.int2(800, 450) });
 window.MakeContextCurrent();
 
-GumService.Default.Initialize(window);
+GumUI.Initialize(window);
 ```
 {% endtab %}
 
@@ -108,10 +108,10 @@ using Brutal.GlfwApi;
 using Gum;
 
 // Initialize
-GumService.Default.Initialize(window, instance, physicalDevice, device, queue, queueFamily, surface);
+GumUI.Initialize(window, instance, physicalDevice, device, queue, queueFamily, surface);
 ```
 
-Gum never destroys the objects you pass. Destroy them after `GumService.Default.Uninitialize()`. For a complete setup of the window, instance, surface and device, see the BRUTAL Vulkan sample at `Samples/BrutalGum/BrutalGumSample` in the Gum repository.
+Gum never destroys the objects you pass. Destroy them after `GumUI.Uninitialize()`. For a complete setup of the window, instance, surface and device, see the BRUTAL Vulkan sample at `Samples/BrutalGum/BrutalGumSample` in the Gum repository.
 {% endtab %}
 {% endtabs %}
 
@@ -119,7 +119,7 @@ To load a Gum project (a `.gumj` file) at the same time, pass its path as the la
 
 ```csharp
 // Initialize
-GumService.Default.Initialize(window, "Content/GumProject/GumProject.gumj");
+GumUI.Initialize(window, "Content/GumProject/GumProject.gumj");
 ```
 
 You can add controls as soon as `Initialize` returns.
@@ -134,12 +134,12 @@ Call `Update` once per frame after `Glfw.PollEvents`, then `Draw`:
 // Update and Draw
 Glfw.PollEvents();
 double gameTime = clock.Elapsed.TotalSeconds;
-GumService.Default.Update(gameTime);
-GumService.Default.Draw();
+GumUI.Update(gameTime);
+GumUI.Draw();
 window.SwapBuffers();
 ```
 
-`Draw` blits Gum's frame to the window's default framebuffer, so call `SwapBuffers` after it. Skia leaves the OpenGL program, vertex array, buffers, viewport, scissor, blend and depth state as it used them, so set your own again if you draw after Gum.
+`Draw` composites Gum's frame over the window's default framebuffer, so call `SwapBuffers` after it. Skia leaves the OpenGL program, vertex array, buffers, viewport, scissor, blend and depth state as it used them, so set your own again if you draw after Gum.
 {% endtab %}
 
 {% tab title="Vulkan" %}
@@ -147,27 +147,27 @@ window.SwapBuffers();
 // Update and Draw
 Glfw.PollEvents();
 double gameTime = clock.Elapsed.TotalSeconds;
-GumService.Default.Update(gameTime);
-GumService.Default.Draw();
+GumUI.Update(gameTime);
+GumUI.Draw();
 ```
 
 `Draw` presents the frame to the window itself.
 {% endtab %}
 {% endtabs %}
 
-Gum's canvas is the window's framebuffer. When the window is resized, `Draw` recreates the render target at the new size and lays out your controls for it. Mouse positions are scaled from window coordinates to framebuffer pixels, so high-DPI displays line up. To change the color behind your controls, set `GumService.Default.ClearColor` (transparent by default, which shows black).
+Gum's canvas is the window's framebuffer. When the window is resized, `Draw` recreates the render target at the new size and lays out your controls for it. Mouse positions are scaled from window coordinates to framebuffer pixels, so high-DPI displays line up. Gum draws over whatever your game already drew to the framebuffer (OpenGL), so clear or draw your background before calling `Draw`.
 
 ### Using Your Own Renderer (Vulkan)
 
 If your game already has its own Vulkan renderer, turn presenting off and sample Gum's image yourself. Do this right after `Initialize`, before the first `Draw`. The surface passed to `Initialize` is then not used and may be `default`:
 
 ```csharp
-GumService.Default.Initialize(window, instance, physicalDevice, device, queue, queueFamily, default);
-GumService.Default.PresentToWindow = false;
+GumUI.Initialize(window, instance, physicalDevice, device, queue, queueFamily, default);
+GumUI.PresentToWindow = false;
 
 // After each Draw:
-VkImage image = GumService.Default.RenderTargetImage!.Value;
-VkFormat format = GumService.Default.RenderTargetFormat!.Value;
+VkImage image = GumUI.RenderTargetImage!.Value;
+VkFormat format = GumUI.RenderTargetFormat!.Value;
 ```
 
 Things to know:
@@ -188,12 +188,12 @@ Add the NuGet package:
 dotnet add package Gum.SkiaSharp.ShadowDusk
 ```
 
-Then call `UseShadowDusk` after `GumService.Default.Initialize`:
+Then call `UseShadowDusk` after `GumUI.Initialize`:
 
 ```csharp
 // Initialize
-GumService.Default.Initialize(window, "Content/GumProject/GumProject.gumj");
-GumService.Default.UseShadowDusk();
+GumUI.Initialize(window, "Content/GumProject/GumProject.gumj");
+GumUI.UseShadowDusk();
 ```
 
 If linking to source instead of NuGet, add `<Gum Root>/Runtimes/SkiaGum.ShadowDusk/SkiaGum.ShadowDusk.csproj` to your solution.
@@ -210,12 +210,12 @@ Add the NuGet package:
 dotnet add package Gum.Expressions
 ```
 
-Then call `GumExpressionService.Initialize()` after `GumService.Default.Initialize`:
+Then call `UseExpressions` after `GumUI.Initialize`:
 
 ```csharp
 // Initialize
-GumService.Default.Initialize(window, "Content/GumProject/GumProject.gumj");
-Gum.Expressions.GumExpressionService.Initialize();
+GumUI.Initialize(window, "Content/GumProject/GumProject.gumj");
+GumUI.UseExpressions();
 ```
 
 If linking to source instead of NuGet, add `<Gum Root>/Runtimes/GumExpressions/GumExpressions.csproj` to your solution.
@@ -228,7 +228,7 @@ Gum can be tested by adding a Button after Gum is initialized. To do so, add cod
 
 ```csharp
 // Initialize
-GumService.Default.Initialize(window);
+GumUI.Initialize(window);
 
 var button = new Button();
 button.AddToRoot();
@@ -263,7 +263,9 @@ Glfw.SwapInterval(1);
 GumService GumUI = GumService.Default;
 GumUI.Initialize(window, "Content/GumProject/GumProject.gumj");
 GumUI.UseShadowDusk(); // Optional: .fx and .slang shader files (Gum.SkiaSharp.ShadowDusk)
-Gum.Expressions.GumExpressionService.Initialize(); // Optional: arithmetic expressions in variable references (Gum.Expressions)
+GumUI.UseExpressions(); // Optional: arithmetic expressions in variable references (Gum.Expressions)
+GumUI.UseKeyboardDefaults();
+GumUI.UseGamepadDefaults();
 
 var button = new Button();
 button.AddToRoot();
@@ -367,7 +369,9 @@ Queue queue = device.GetQueue(queueFamily, 0);
 GumService GumUI = GumService.Default;
 GumUI.Initialize(window, instance, physicalDevice, device, queue, queueFamily, surface, "Content/GumProject/GumProject.gumj");
 GumUI.UseShadowDusk(); // Optional: .fx and .slang shader files (Gum.SkiaSharp.ShadowDusk)
-Gum.Expressions.GumExpressionService.Initialize(); // Optional: arithmetic expressions in variable references (Gum.Expressions)
+GumUI.UseExpressions(); // Optional: arithmetic expressions in variable references (Gum.Expressions)
+GumUI.UseKeyboardDefaults();
+GumUI.UseGamepadDefaults();
 
 var button = new Button();
 button.AddToRoot();

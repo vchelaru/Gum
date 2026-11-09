@@ -9,7 +9,7 @@ namespace SkiaGum.Helpers;
 /// and per graphics API and share no interface, and Gum references none of them, so each host adapts
 /// its own type to this. There is deliberately no CPU/raster implementation: Skia hosts draw on the GPU.
 /// </summary>
-public interface ISkiaHostTarget : IDisposable
+internal interface ISkiaHostTarget : IDisposable
 {
     /// <summary>The Skia canvas. Only readable between <see cref="Begin"/> and an End call.</summary>
     SKCanvas Canvas { get; }
@@ -27,7 +27,7 @@ public interface ISkiaHostTarget : IDisposable
 /// that presents the target, which differs per engine, on <see cref="Target"/>).
 /// </summary>
 /// <typeparam name="TTarget">The host's target type, so the host can reach its own members.</typeparam>
-public sealed class SkiaTargetHolder<TTarget> : IDisposable where TTarget : class, ISkiaHostTarget
+internal sealed class SkiaTargetHolder<TTarget> : IDisposable where TTarget : class, ISkiaHostTarget
 {
     private readonly Func<int, int, TTarget> _create;
     private readonly Action<SKCanvas> _applyCanvas;

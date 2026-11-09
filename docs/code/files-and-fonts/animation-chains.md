@@ -129,13 +129,13 @@ Texture loading works the same as anywhere else in Gum — see [File Loading](fi
 
 ## Playback
 
-Once `AnimationChains` is populated, set `CurrentChainName` to the chain you want to play and set `Animate` to `true`. Setting it to a different chain starts that chain from the beginning; setting it to the chain already playing changes nothing. From there, the chain advances on its own — every call to `GumService.Default.Update` drives the animation for the entire visual tree, so you don't need to advance frames yourself.
+Once `AnimationChains` is populated, set `CurrentChainName` to the chain you want to play and set `Animate` to `true`. Setting it to a different chain starts that chain from the beginning; setting it to the chain already playing changes nothing. From there, the chain advances on its own — every call to `GumUI.Update` drives the animation for the entire visual tree, so you don't need to advance frames yourself.
 
 {% hint style="warning" %}
 Screenshot/GIF needed: an animated GIF showing a `SpriteRuntime` playing back an `.achx` chain frame-by-frame.
 {% endhint %}
 
-If you need lower-level control — for example, driving animation outside of `GumService.Default.Update` — see the [AnimateSelf](../gum-code-reference/graphicaluielement/animateself.md) page.
+If you need lower-level control — for example, driving animation outside of `GumUI.Update` — see the [AnimateSelf](../gum-code-reference/graphicaluielement/animateself.md) page.
 
 ### PingPong and Reverse
 

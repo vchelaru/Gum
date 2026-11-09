@@ -41,13 +41,16 @@ public class Game1 : Game
 
     protected override void Initialize()
     {
-        // The graphics device exists once the base Initialize has run.
-        base.Initialize();
-
         // Skia reads the project from disk. The csproj copies KniGumFromFileContent to Content/.
         GumUI.Initialize(this, "Content/GumProject.gumx");
 
+        GumUI.UseKeyboardDefaults();
+
+        GumUI.UseGamepadDefaults();
+
         ShowScreen("StartScreen");
+
+        base.Initialize();
     }
 
     #region Swap Screens

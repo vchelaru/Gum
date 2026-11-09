@@ -36,12 +36,15 @@ public class Game1 : Game
 
     protected override void Initialize()
     {
-        // The graphics device exists once the base Initialize has run.
-        base.Initialize();
-
         GumUI.Initialize(this);
+
         GumUI.UseKeyboardDefaults();
+
+        GumUI.UseGamepadDefaults();
+
         BuildUi();
+
+        base.Initialize();
     }
 
     protected override void Update(GameTime gameTime)

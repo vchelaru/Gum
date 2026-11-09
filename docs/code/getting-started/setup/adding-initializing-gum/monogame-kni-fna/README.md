@@ -172,109 +172,6 @@ There's no shape support or KernSmith source project wired up for FNA yet; skip 
 
 If using Visual Studio Code, see the [Visual Studio Code and Linking Source](visual-studio-code-and-linking-source.md) page.
 
-## Adding Gum to Game
-
-Gum can be added to a Game/Core class with a few lines of code. Projects are encouraged to create a local GumService property called GumUI for convenience.
-
-The code below also wires up shape support, dynamic fonts (KernSmith), shader file support, and expression support, matching the NuGet packages above. If you skipped a package above, delete its matching line(s) here too.
-
-{% hint style="info" %}
-The code in this example assumes that you are using retained mode rendering. If you are interested in immediate mode rendering, see the [Setup for GumBatch](../../setup-for-gumbatch.md) page.
-{% endhint %}
-
-{% tabs %}
-{% tab title="Game Class" %}
-Add code to your Game class to Initialize, Update, and Draw Gum as shown in the following code block:
-
-<pre class="language-csharp"><code class="lang-csharp">using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
-<strong>using Gum;
-</strong><strong>using Gum.Forms;
-</strong><strong>using Gum.Forms.Controls;
-</strong>
-namespace MonoGameGum1;
-
-public class Game1 : Game
-{
-    private GraphicsDeviceManager _graphics;
-    private SpriteBatch _spriteBatch;
-
-<strong>    GumService GumUI => GumService.Default;
-</strong>
-    public Game1()
-    {
-        _graphics = new GraphicsDeviceManager(this);
-        Content.RootDirectory = "Content";
-        IsMouseVisible = true;
-    }
-
-    protected override void Initialize()
-    {
-<strong>        GumUI.Initialize(this);
-</strong><strong>        Gum.Renderables.ShapeRenderer.Self.Initialize(); // Recommended, optional: shape fill/gradient/shadow
-</strong><strong>        Gum.Wireframe.CustomSetPropertyOnRenderable.InMemoryFontCreator =
-</strong><strong>            new KernSmith.Gum.KernSmithFontCreator(GraphicsDevice); // Recommended, optional: dynamic fonts
-</strong><strong>        GumUI.UseShadowDusk(); // Optional: .fx and .slang shader files
-</strong><strong>        Gum.Expressions.GumExpressionService.Initialize(); // Optional: arithmetic expressions in variable references
-</strong>        base.Initialize();
-    }
-
-    protected override void Update(GameTime gameTime)
-    {
-<strong>        GumUI.Update(gameTime);
-</strong>        base.Update(gameTime);
-    }
-
-    protected override void Draw(GameTime gameTime)
-    {
-        GraphicsDevice.Clear(Color.CornflowerBlue);
-<strong>        GumUI.Draw();
-</strong>        base.Draw(gameTime);
-    }
-}
-</code></pre>
-{% endtab %}
-
-{% tab title="Core (Nez)" %}
-Next, add code to your Core-inheriting class to Initialize, Update, and Draw Gum as shown in the following code block:
-
-<pre class="language-csharp"><code class="lang-csharp"><strong>using Gum;
-</strong><strong>using Gum.Forms;
-</strong>
-public class Game1 : Core
-{
-    GumService GumUI => GumService.Default;    
-    protected override void Initialize()
-    {
-        base.Initialize();
-
-<strong>        GumUI.Initialize(Core.GraphicsDevice);
-</strong><strong>        Gum.Renderables.ShapeRenderer.Self.Initialize(); // Recommended, optional: shape fill/gradient/shadow
-</strong><strong>        Gum.Wireframe.CustomSetPropertyOnRenderable.InMemoryFontCreator =
-</strong><strong>            new KernSmith.Gum.KernSmithFontCreator(Core.GraphicsDevice); // Recommended, optional: dynamic fonts
-</strong><strong>        GumUI.UseShadowDusk(); // Optional: .fx and .slang shader files
-</strong><strong>        Gum.Expressions.GumExpressionService.Initialize(); // Optional: arithmetic expressions in variable references
-</strong>        
-        Scene = new BasicScene();
-    }
-
-    protected override void Update(GameTime gameTime)
-    {
-<strong>        GumUI.Update(gameTime);
-</strong>        base.Update(gameTime);
-    }
-
-    protected override void Draw(GameTime gameTime)
-    {
-        base.Draw(gameTime);
-        // Add GumUI.Draw after base.Draw or else graphics won't show up
-<strong>        GumUI.Draw();
-</strong>    }
-}
-</code></pre>
-{% endtab %}
-{% endtabs %}
-
 ### About Shape Support (Recommended)
 
 Gum's `Circle` and `Rectangle` elements have a **fill** and an **outline (stroke)**. On MonoGame, KNI, and FNA, an outlined `Circle` or `Rectangle` renders out of the box: `StrokeColor`, `StrokeWidth`, `StrokeWidthUnits`, and the geometry properties (`Width`, `Height`, `Radius`, `CornerRadius`) all work with no extra package. `Rectangle`'s fill also renders out of the box, at square corners.
@@ -307,10 +204,11 @@ using KernSmith.Rasterizers.StbTrueType;
 RuntimeHelpers.RunClassConstructor(typeof(StbTrueTypeRasterizer).TypeHandle);
 ```
 
-Then pass the backend explicitly when creating the font creator:
+Then pass the backend explicitly:
 
 ```csharp
-new KernSmith.Gum.KernSmithFontCreator(GraphicsDevice, KernSmith.RasterizerBackend.StbTrueType);
+// Initialize
+GumUI.UseKernSmith(KernSmith.RasterizerBackend.StbTrueType);
 ```
 {% endhint %}
 
@@ -332,29 +230,117 @@ If linking to source instead of NuGet, add `<Gum Root>/Runtimes/GumExpressions/G
 
 For more information, see the [Runtime Variable References](../../../../styling/runtime-variable-references.md) page.
 
-## Adding a Button (Testing the Setup)
+## Nez (Core)
 
-Gum can be tested by adding a Button after Gum is initialized. To do so, add code to create a `Button` as shown in the following block of code after Gum is initialized:
+If your game derives from Nez's `Core` instead of `Game`, use this class instead of the `Game1` in the next section.
 
-<pre class="language-csharp"><code class="lang-csharp">protected override void Initialize()
+```csharp
+using Gum;
+using Gum.Forms;
+
+public class Game1 : Core
 {
-    base.Initialize();
+    GumService GumUI => GumService.Default;
 
-    GumUI.Initialize(Core.GraphicsDevice);
+    protected override void Initialize()
+    {
+        base.Initialize();
 
-<strong>    var button = new Button();
-</strong><strong>    button.AddToRoot();
-</strong><strong>    button.Click += (_,_) =>
-</strong><strong>        button.Text = "Clicked at\n" + DateTime.Now;
-</strong>    
-    // additional code omitted
-</code></pre>
+        GumUI.Initialize(Core.GraphicsDevice);
+        GumUI.UseShapes(); // Recommended, optional: shape fill/gradient/shadow
+        GumUI.UseKernSmith(); // Recommended, optional: dynamic fonts
+        GumUI.UseShadowDusk(); // Optional: .fx and .slang shader files
+        GumUI.UseExpressions(); // Optional: arithmetic expressions in variable references
+        GumUI.UseKeyboardDefaults();
+        GumUI.UseGamepadDefaults();
 
-[Try on XnaFiddle.NET](https://xnafiddle.net/#snippet=H4sIAAAAAAAAA6tW8ix2L81VsiopKk3VUcrMyyzJTMzJrEpVslIqSyxSSCotKcnPU7BVyEstV3ACczQ0rWPyIOJ6jikpIflB-fklyILOOZnJ2QoxpQYGRk62ChrxOvGaCrYgrrErXE1IakUJ0FSwIiOwhtQUhcSSmJg8iBBUu4JLYklqSGZuqp5ffrm1Ui0AnK-bSK8AAAA)
+        Scene = new BasicScene();
+    }
 
-<figure><img src="../../../../../.gitbook/assets/13_06 56 07.gif" alt=""><figcaption></figcaption></figure>
+    protected override void Update(GameTime gameTime)
+    {
+        GumUI.Update(gameTime);
+        base.Update(gameTime);
+    }
 
-If everything is initialized correctly, you should see a clickable button at the top-left of the screen. Keep in mind that this is simply a test to make sure Gum is working properly. You may want to delete this button once you begin working on your game.
+    protected override void Draw(GameTime gameTime)
+    {
+        base.Draw(gameTime);
+        // Add GumUI.Draw after base.Draw or else graphics won't show up
+        GumUI.Draw();
+    }
+}
+```
+
+## Adding Gum to Game
+
+The following is a complete `Game1` class. Lines marked **Optional** match the packages above, so delete the lines for any package you skipped.
+
+{% hint style="info" %}
+Available in preview NuGet packages (use a `-preview` version), or now if building Gum from source.
+{% endhint %}
+
+{% hint style="info" %}
+This example uses retained mode rendering. For immediate mode rendering, see the [Setup for GumBatch](../../setup-for-gumbatch.md) page.
+{% endhint %}
+
+```csharp
+namespace MonoGameGum1;
+
+// The usings are inside the namespace so a project named like one of these types (Game, Button) still finds them.
+using Gum;
+using Gum.Forms.Controls;
+using Gum.Wireframe;
+using Microsoft.Xna.Framework;
+
+public class Game1 : Game
+{
+    private GraphicsDeviceManager _graphics;
+
+    GumService GumUI => GumService.Default;
+
+    public Game1()
+    {
+        _graphics = new GraphicsDeviceManager(this);
+        Content.RootDirectory = "Content";
+        IsMouseVisible = true;
+    }
+
+    protected override void Initialize()
+    {
+        GumUI.Initialize(this, "GumProject/GumProject.gumj");
+        GumUI.UseShapes(); // Recommended, optional: shape fill/gradient/shadow
+        GumUI.UseKernSmith(); // Recommended, optional: dynamic fonts
+        GumUI.UseShadowDusk(); // Optional: .fx and .slang shader files
+        GumUI.UseExpressions(); // Optional: arithmetic expressions in variable references
+        GumUI.UseKeyboardDefaults();
+        GumUI.UseGamepadDefaults();
+
+        var button = new Button();
+        button.AddToRoot();
+        button.Width = 200;
+        button.Anchor(Anchor.Center);
+        button.Click += (_, _) => button.Text = $"Clicked\n{System.DateTime.Now}";
+
+        base.Initialize();
+    }
+
+    protected override void Update(GameTime gameTime)
+    {
+        GumUI.Update(gameTime);
+        base.Update(gameTime);
+    }
+
+    protected override void Draw(GameTime gameTime)
+    {
+        GraphicsDevice.Clear(Color.CornflowerBlue);
+        GumUI.Draw();
+        base.Draw(gameTime);
+    }
+}
+```
+
+The button in the center of the window confirms Gum works. Delete it once you start building your game.
 
 ## Troubleshooting
 

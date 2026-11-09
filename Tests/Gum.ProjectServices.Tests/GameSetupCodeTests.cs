@@ -40,7 +40,7 @@ public class GameSetupCodeTests
         string text = GameSetupCode.Generate(null, "My.gumx", null).ShouldNotBeNull();
 
         text.IndexOf("GraphicsProfile.HiDef").ShouldBeLessThan(text.IndexOf("GumUI.Initialize"));
-        text.IndexOf("GumUI.Initialize").ShouldBeLessThan(text.IndexOf("ShapeRenderer"));
+        text.IndexOf("GumUI.Initialize").ShouldBeLessThan(text.IndexOf("UseShapes"));
     }
 
     [Fact]

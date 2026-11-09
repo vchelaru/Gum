@@ -264,10 +264,10 @@ public class NewProjectService : INewProjectService
                     $"Unknown platform '{request.Platform}'. Valid values are: {NewProjectPlatforms.ValidNames}.");
             }
 
-            if (parsed == HostPlatform.KniSkia && request.PackageChannel != NewProjectPackageChannel.LocalSource)
+            if (request.PackageChannel == NewProjectPackageChannel.Stable && !NewProjectPlatforms.HasStablePackage(parsed))
             {
-                return new NewProjectError(NewProjectErrorKind.KniSkiaNeedsSourceLinked,
-                    "KNI with Skia (kniskia) is not published to NuGet, so it has to be linked from source: pass --source-linked (needs a Gum checkout), not --preview.");
+                return new NewProjectError(NewProjectErrorKind.NoStablePackage,
+                    $"The {request.Platform} platform has no stable Gum package yet: pass --preview, or --source-linked (needs a Gum checkout).");
             }
 
             platform = parsed;

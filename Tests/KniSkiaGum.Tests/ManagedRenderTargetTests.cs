@@ -1,6 +1,7 @@
 using Gum;
 using Gum.GueDeriving;
 using Gum.Wireframe;
+using RenderingLibrary.Graphics;
 using Shouldly;
 using SkiaSharp;
 using XnaGameTime = Microsoft.Xna.Framework.GameTime;
@@ -44,7 +45,13 @@ public class ManagedRenderTargetTests : BaseTestClass
             _canvas.Clear(SKColors.Transparent);
         }
 
-        public void End() => PresentCount++;
+        public List<SKColor> PresentedPixels { get; } = new();
+
+        public void End()
+        {
+            PresentCount++;
+            PresentedPixels.Add(_bitmap.GetPixel(25, 25));
+        }
 
         public void EndWithoutDrawing()
         {
@@ -236,37 +243,51 @@ public class ManagedRenderTargetTests : BaseTestClass
     }
 
     [Fact]
-    public void BeforeDrawAndAfterDraw_RunInsideThePass_AroundGumsOwnDraw()
+    public void GumBatch_BeforeAndAfterDraw_EachPassIsPresentedInCallOrder_OnTheSameTarget()
     {
         try
         {
             Reinitialize();
             AddRedSquare();
-            List<string> order = new();
-            SKCanvas? beforeCanvas = null;
-            GumService.Default.BeforeDraw += canvas =>
-            {
-                beforeCanvas = canvas;
-                order.Add("before presented=" + _created[0].PresentCount);
-                // Under Gum's own draw: the red square covers this pixel afterward.
-                using SKPaint paint = new SKPaint { Color = SKColors.Blue };
-                canvas.DrawRect(0, 0, 100, 100, paint);
-            };
-            GumService.Default.AfterDraw += canvas =>
-            {
-                order.Add("after presented=" + _created[0].PresentCount);
-                using SKPaint paint = new SKPaint { Color = SKColors.Green };
-                canvas.DrawRect(60, 60, 10, 10, paint);
-            };
+            RectangleRuntime green = CreateSquare(SKColors.Green);
+            RectangleRuntime blue = CreateSquare(SKColors.Blue);
+            GumBatch gumBatch = new GumBatch();
 
+            gumBatch.Begin();
+            gumBatch.Draw(green);
+            gumBatch.End();
             GumService.Default.Draw();
+            gumBatch.Begin();
+            gumBatch.Draw(blue);
+            gumBatch.End();
 
-            order.ShouldBe(new[] { "before presented=0", "after presented=0" });
-            beforeCanvas.ShouldBeSameAs(_created[0].Canvas);
-            _created[0].PixelAt(25, 25).Red.ShouldBe((byte)255);
-            _created[0].PixelAt(75, 75).Blue.ShouldBe((byte)255);
-            _created[0].PixelAt(65, 65).Green.ShouldBeGreaterThan((byte)100);
-            _created[0].PresentCount.ShouldBe(1);
+            _created.Count.ShouldBe(1);
+            _created[0].PresentCount.ShouldBe(3);
+            _created[0].PresentedPixels.Select(pixel => pixel.ToString()).ShouldBe(
+                new[] { SKColors.Green, SKColors.Red, SKColors.Blue }.Select(color => color.ToString()));
+        }
+        finally
+        {
+            RestoreSharedService();
+        }
+    }
+
+    [Fact]
+    public void GumBatch_BeginWithACanvas_DoesNotOpenAFrameOnTheTarget()
+    {
+        try
+        {
+            Reinitialize();
+            using SKBitmap bitmap = new SKBitmap(64, 64);
+            using SKCanvas canvas = new SKCanvas(bitmap);
+            GumBatch gumBatch = new GumBatch();
+
+            gumBatch.Begin(canvas);
+            gumBatch.Draw(CreateSquare(SKColors.Green));
+            gumBatch.End();
+
+            _created.ShouldBeEmpty();
+            bitmap.GetPixel(25, 25).ShouldBe(SKColors.Green);
         }
         finally
         {
@@ -280,12 +301,55 @@ public class ManagedRenderTargetTests : BaseTestClass
         try
         {
             Reinitialize();
-            GumService.Default.AfterDraw += _ => throw new InvalidOperationException("boom");
+            GraphicalUiElement thrower = new GraphicalUiElement(new ThrowingShape());
+            GumService.Default.Root.AddChild(thrower);
 
             Should.Throw<InvalidOperationException>(() => GumService.Default.Draw());
 
             _created[0].PresentCount.ShouldBe(0);
             _created[0].AbortCount.ShouldBe(1);
+        }
+        finally
+        {
+            RestoreSharedService();
+        }
+    }
+
+    private class ThrowingShape : SkiaGum.Renderables.RenderableShapeBase
+    {
+        public override void DrawBound(SKRect boundingRect, SKCanvas canvas, float absoluteRotation) =>
+            throw new InvalidOperationException("boom");
+    }
+
+    private static RectangleRuntime CreateSquare(SKColor color)
+    {
+        RectangleRuntime rectangle = new RectangleRuntime();
+        rectangle.Width = 50;
+        rectangle.Height = 50;
+        rectangle.IsFilled = true;
+        rectangle.FillColor = color;
+        return rectangle;
+    }
+
+    [Fact]
+    public void Draw_WhileAGumBatchPassIsOpen_ThrowsNamingEnd_AndTheNextFrameRecovers()
+    {
+        try
+        {
+            Reinitialize();
+            AddRedSquare();
+            GumBatch gumBatch = new GumBatch();
+            gumBatch.Begin();
+
+            InvalidOperationException exception = Should.Throw<InvalidOperationException>(() => GumService.Default.Draw());
+
+            exception.Message.ShouldContain("GumBatch.End");
+            _created[0].PresentCount.ShouldBe(0);
+
+            GumService.Default.Draw();
+
+            _created[0].PresentCount.ShouldBe(1);
+            _created[0].PresentedPixels[0].ShouldBe(SKColors.Red);
         }
         finally
         {

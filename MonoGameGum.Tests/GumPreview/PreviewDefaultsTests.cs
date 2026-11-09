@@ -36,9 +36,9 @@ public class PreviewDefaultsTests
     }
 
     [Fact]
-    public void All_ContainsShapesKeyboardAndGamepad()
+    public void All_ContainsKeyboardGamepadAndShapes()
     {
         PreviewDefaults.All.Select(item => item.Id)
-            .ShouldBe(new[] { "HiDefProfile", "Shapes", "KeyboardDefaults", "GamepadDefaults" });
+            .ShouldBe(new[] { "HiDefProfile", "KeyboardDefaults", "GamepadDefaults", "Shapes" });
     }
 }

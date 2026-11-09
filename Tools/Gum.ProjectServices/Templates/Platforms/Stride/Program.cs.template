@@ -15,7 +15,11 @@ void Start(Scene rootScene)
     game.AddGraphicsCompositor().AddCleanUIStage();
     game.Add2DCamera();
 
-    GumService.Default.Initialize(game, "Content/GumProject/{{GumProjectFile}}");
+    GumService GumUI = GumService.Default;
+
+    GumUI.Initialize(game, "Content/GumProject/{{GumProjectFile}}");
+    GumUI.UseKeyboardDefaults();
+    GumUI.UseGamepadDefaults();
     {{InitLines}}
     {{ScreenLines}}
 

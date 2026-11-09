@@ -208,7 +208,7 @@ public partial class GumService : GumServiceSkiaInteractiveBase, IGumService
     /// or typed text (see #3652).
     /// </param>
     /// <param name="gumProjectFile">An optional .gumx project file to load.</param>
-    public void Initialize(SKCanvas canvas, IInputContext inputContext, string? gumProjectFile = null)
+    internal void Initialize(SKCanvas canvas, IInputContext inputContext, string? gumProjectFile = null)
     {
         var bounds = canvas.DeviceClipBounds;
         Initialize(canvas, inputContext, bounds.Width, bounds.Height, gumProjectFile);
@@ -226,7 +226,7 @@ public partial class GumService : GumServiceSkiaInteractiveBase, IGumService
     /// <param name="width">The width to use for the root container and canvas coordinate space.</param>
     /// <param name="height">The height to use for the root container and canvas coordinate space.</param>
     /// <param name="gumProjectFile">An optional .gumx project file to load.</param>
-    public void Initialize(SKCanvas canvas, IInputContext inputContext, int width, int height, string? gumProjectFile = null) =>
+    internal void Initialize(SKCanvas canvas, IInputContext inputContext, int width, int height, string? gumProjectFile = null) =>
         Initialize(canvas, inputContext, width, height, gumProjectFile, DefaultVisualsVersion.Newest);
 
     private void Initialize(

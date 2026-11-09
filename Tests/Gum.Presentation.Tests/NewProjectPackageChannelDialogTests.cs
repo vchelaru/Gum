@@ -125,24 +125,37 @@ public class NewProjectPackageChannelDialogTests
         viewModel.CommandLine.ShouldNotContain("--source-linked");
     }
 
-    [Fact]
-    public void KniSkia_ForcesLocalSource_AndDisablesTheOtherTwo_ThenTheChoiceComesBack()
+    [Theory]
+    [InlineData("kniskia")]
+    [InlineData("brutal")]
+    public void APlatformWithNoStablePackage_DisablesStableAndPreviewApplies_ThenTheChoiceComesBack(string platform)
     {
-        NewProjectDialogViewModel viewModel = Create(vm => vm.IsPreviewChannelChecked = true);
+        NewProjectDialogViewModel viewModel = Create();
+
+        viewModel.PlatformName = platform;
+
+        viewModel.IsStableChannelEnabled.ShouldBeFalse();
+        viewModel.IsPreviewChannelEnabled.ShouldBeTrue();
+        viewModel.PackageChannel.ShouldBe(NewProjectPackageChannel.Preview);
+        viewModel.IsPreviewChannelChecked.ShouldBeTrue();
+        viewModel.IsStableChannelChecked.ShouldBeFalse();
+        viewModel.IsPreviewWarningVisible.ShouldBeTrue();
+
+        viewModel.PlatformName = "monogame";
+
+        viewModel.PackageChannel.ShouldBe(NewProjectPackageChannel.Stable);
+        viewModel.IsStableChannelEnabled.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void KniSkia_KeepsLocalSourceWhenItIsPicked()
+    {
+        NewProjectDialogViewModel viewModel = Create(vm => vm.IsLocalSourceChannelChecked = true);
 
         viewModel.PlatformName = "kniskia";
 
         viewModel.PackageChannel.ShouldBe(NewProjectPackageChannel.LocalSource);
-        viewModel.IsLocalSourceChannelChecked.ShouldBeTrue();
-        viewModel.IsPreviewChannelChecked.ShouldBeFalse();
-        viewModel.IsPreviewChannelEnabled.ShouldBeFalse();
-        viewModel.IsStableChannelEnabled.ShouldBeFalse();
-        viewModel.IsPreviewWarningVisible.ShouldBeFalse();
-
-        viewModel.PlatformName = "monogame";
-
-        viewModel.PackageChannel.ShouldBe(NewProjectPackageChannel.Preview);
-        viewModel.IsPreviewChannelEnabled.ShouldBeTrue();
+        viewModel.IsSourceLinkedEnabled.ShouldBeTrue();
     }
 
     [Fact]

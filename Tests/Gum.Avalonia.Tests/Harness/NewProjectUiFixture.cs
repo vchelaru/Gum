@@ -248,7 +248,7 @@ internal sealed class NewProjectUiFixture : IDisposable
             "path: " + viewModel.GumProjectPath,
             "platformNote: " + viewModel.PlatformNote,
             "validation: " + viewModel.ValidationMessage,
-            "sourceLinked: " + viewModel.SourceLinked + "/" + viewModel.IsSourceLinkedForced + "/" + viewModel.IsSourceLinkedEnabled,
+            "sourceLinked: " + viewModel.SourceLinked + "/" + viewModel.IsSourceLinkedEnabled,
         };
         foreach (NewProjectLayoutNode root in viewModel.FolderTree)
         {

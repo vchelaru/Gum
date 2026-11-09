@@ -89,7 +89,8 @@ public class NewProjectDialogViewModelTests
     [InlineData("kni", true, true, true, "--platform kni --source-linked")]
     [InlineData("kni", false, true, false, "--platform kni --no-restore")]
     [InlineData("monogame", true, false, false, "--platform monogame --template empty --source-linked --no-restore")]
-    [InlineData("kniskia", false, true, true, "--platform kniskia --source-linked")]
+    [InlineData("kniskia", false, true, true, "--platform kniskia --preview")]
+    [InlineData("kniskia", true, true, true, "--platform kniskia --source-linked")]
     public void CommandLine_WithACodeProject_OrdersTheOptions(
         string platform, bool sourceLinked, bool forms, bool restore, string expectedOptions)
     {
@@ -185,7 +186,23 @@ public class NewProjectDialogViewModelTests
     }
 
     [Fact]
-    public void SourceLinked_IsForcedOnAndLocked_ForKniSkia()
+    public void Brutal_OffersPreviewAndLocalSource_ButNotStable_WithANote()
+    {
+        NewProjectDialogViewModel viewModel = Create(vm =>
+        {
+            vm.IncludeCodeProject = true;
+            vm.PlatformName = "brutal";
+        });
+
+        viewModel.IsPreview.ShouldBeTrue();
+        viewModel.IsStableChannelEnabled.ShouldBeFalse();
+        viewModel.IsPreviewChannelEnabled.ShouldBeTrue();
+        viewModel.PlatformNote.ShouldContain("Gum.Brutal.OGL has no stable release yet, so Stable is unavailable.");
+        viewModel.CommandLine.ShouldContain("--preview");
+    }
+
+    [Fact]
+    public void KniSkia_OffersPreviewAndLocalSource_ButNotStable_WithANote()
     {
         NewProjectDialogViewModel viewModel = Create(vm =>
         {
@@ -193,9 +210,12 @@ public class NewProjectDialogViewModelTests
             vm.PlatformName = "kniskia";
         });
 
-        viewModel.SourceLinked.ShouldBeTrue();
-        viewModel.IsSourceLinkedEnabled.ShouldBeFalse();
-        viewModel.PlatformNote.ShouldBe("Gum.KniSkia is not on NuGet yet, so the local Gum source is required.");
+        viewModel.SourceLinked.ShouldBeFalse();
+        viewModel.IsPreview.ShouldBeTrue();
+        viewModel.IsSourceLinkedEnabled.ShouldBeTrue();
+        viewModel.IsPreviewChannelEnabled.ShouldBeTrue();
+        viewModel.IsStableChannelEnabled.ShouldBeFalse();
+        viewModel.PlatformNote.ShouldBe("Gum.KniSkia has no stable release yet, so Stable is unavailable.");
     }
 
     [Fact]
@@ -214,7 +234,7 @@ public class NewProjectDialogViewModelTests
     }
 
     [Fact]
-    public void KniSkia_WithoutAGumCheckout_ExplainsWhyOkIsOff()
+    public void KniSkia_WithoutAGumCheckout_StillAllowsOk_WithPreview()
     {
         _service.Setup(x => x.IsSourceLinkedAvailable).Returns(false);
 
@@ -224,8 +244,8 @@ public class NewProjectDialogViewModelTests
             vm.PlatformName = "kniskia";
         });
 
-        viewModel.ValidationMessage.ShouldBe("Local Gum source needs the Gum source code on this computer, and none was found.");
-        viewModel.CanExecuteAffirmative().ShouldBeFalse();
+        viewModel.ValidationMessage.ShouldBeEmpty();
+        viewModel.CanExecuteAffirmative().ShouldBeTrue();
     }
 
     [Fact]

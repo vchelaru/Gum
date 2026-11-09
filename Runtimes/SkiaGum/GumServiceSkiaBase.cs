@@ -258,22 +258,39 @@ public abstract class GumServiceSkiaBase : IGumService
     /// </summary>
     public Gum.Input.GamePad[] Gamepads => FormsUtilities.Gamepads;
 
-    /// <summary>
-    /// Registers this service's keyboard (created via <see cref="IGumService.CreateKeyboard"/> during
-    /// <c>Initialize</c>) as one of <see cref="FrameworkElement.KeyboardsForUiControl"/>, so Forms
-    /// controls respond to it by default without the host having to wire that up manually.
-    /// </summary>
-    public void UseKeyboardDefaults() =>
-        FrameworkElement.KeyboardsForUiControl.Add(
-            FormsUtilities.Keyboard ?? throw new InvalidOperationException(
-                "UseKeyboardDefaults was called with no keyboard. Initialize Gum before calling it."));
+    // The Use... members are extension methods (GumServiceSkiaExtensions), not instance members, so each
+    // returns the host's own concrete GumService and the calls chain; an instance member declared here
+    // could only return this base type. They reach these explicit implementations through IGumService.
 
     /// <summary>
-    /// Registers this service's <see cref="Gamepads"/> as <see cref="FrameworkElement.GamePadsForUiControl"/>,
-    /// so Forms controls respond to gamepad input by default without the host having to wire that up manually.
+    /// Registers this service's keyboard (created via <see cref="IGumService.CreateKeyboard"/> during
+    /// <c>Initialize</c>) as one of <see cref="FrameworkElement.KeyboardsForUiControl"/>.
     /// </summary>
-    public void UseGamepadDefaults() =>
-        FrameworkElement.GamePadsForUiControl.AddRange(Gamepads);
+    IGumService IGumService.UseKeyboardDefaults()
+    {
+        var keyboard = FormsUtilities.Keyboard ?? throw new InvalidOperationException(
+            "UseKeyboardDefaults was called with no keyboard. Initialize Gum before calling it.");
+        if (!FrameworkElement.KeyboardsForUiControl.Contains(keyboard))
+        {
+            FrameworkElement.KeyboardsForUiControl.Add(keyboard);
+        }
+        return this;
+    }
+
+    /// <summary>
+    /// Registers this service's <see cref="Gamepads"/> as <see cref="FrameworkElement.GamePadsForUiControl"/>.
+    /// </summary>
+    IGumService IGumService.UseGamepadDefaults()
+    {
+        foreach (var gamepad in Gamepads)
+        {
+            if (!FrameworkElement.GamePadsForUiControl.Contains(gamepad))
+            {
+                FrameworkElement.GamePadsForUiControl.Add(gamepad);
+            }
+        }
+        return this;
+    }
 
     IRenderable IGumService.CreateSpriteRenderable() => new Sprite();
 
@@ -423,7 +440,7 @@ public abstract class GumServiceSkiaBase : IGumService
 
     /// <summary>
     /// The active single-threaded synchronization context, or <c>null</c> if
-    /// <see cref="UseSingleThreadedAsync"/> has not been called.
+    /// <c>UseSingleThreadedAsync</c> has not been called.
     /// </summary>
     public Gum.Async.SingleThreadSynchronizationContext? SynchronizationContext => _syncContext;
 
@@ -431,17 +448,21 @@ public abstract class GumServiceSkiaBase : IGumService
     /// Installs a <see cref="Gum.Async.SingleThreadSynchronizationContext"/> on the calling
     /// thread so that <c>await</c> continuations (including
     /// <c>await dialogBox.ShowAsync(...)</c>) resume on the host's primary thread. Call once,
-    /// after <c>Initialize</c>. Subsequent calls are no-ops.
+    /// after <c>Initialize</c>. Subsequent calls are no-ops. Called through
+    /// <c>GumServiceSkiaExtensions.UseSingleThreadedAsync</c>.
     /// </summary>
     /// <remarks>
     /// Off by default. Skip this call if you've already installed your own
     /// <see cref="System.Threading.SynchronizationContext"/> — installing two would
     /// route continuations through the wrong queue.
     /// </remarks>
-    public void UseSingleThreadedAsync()
+    IGumService IGumService.UseSingleThreadedAsync()
     {
-        if (_syncContext != null) return;
-        _syncContext = new Gum.Async.SingleThreadSynchronizationContext();
+        if (_syncContext == null)
+        {
+            _syncContext = new Gum.Async.SingleThreadSynchronizationContext();
+        }
+        return this;
     }
 
     #endregion
@@ -454,7 +475,7 @@ public abstract class GumServiceSkiaBase : IGumService
     /// </summary>
     /// <param name="canvas">The SkiaSharp canvas Gum should render to.</param>
     /// <param name="gumProjectFile">An optional .gumx project file to load.</param>
-    public void Initialize(SKCanvas canvas, string? gumProjectFile = null)
+    protected internal void Initialize(SKCanvas canvas, string? gumProjectFile = null)
     {
         var bounds = canvas.DeviceClipBounds;
         Initialize(canvas, bounds.Width, bounds.Height, gumProjectFile);
@@ -468,7 +489,7 @@ public abstract class GumServiceSkiaBase : IGumService
     /// <param name="width">The width to use for the root container and canvas coordinate space.</param>
     /// <param name="height">The height to use for the root container and canvas coordinate space.</param>
     /// <param name="gumProjectFile">An optional .gumx project file to load.</param>
-    public void Initialize(SKCanvas canvas, int width, int height, string? gumProjectFile = null) =>
+    protected internal void Initialize(SKCanvas canvas, int width, int height, string? gumProjectFile = null) =>
         InitializeCore(canvas, width, height, gumProjectFile);
 
     /// <summary>
@@ -606,7 +627,7 @@ public abstract class GumServiceSkiaBase : IGumService
     /// Marks GumService as initialized without requiring a canvas.
     /// Intended for use in unit tests only.
     /// </summary>
-    public void InitializeForTesting()
+    internal void InitializeForTesting()
     {
         IsInitialized = true;
         FormsRefreshStylesHooks.Install();
@@ -721,7 +742,7 @@ public abstract class GumServiceSkiaBase : IGumService
     /// </summary>
     /// <param name="width">The new canvas width.</param>
     /// <param name="height">The new canvas height.</param>
-    public void HandleResize(int width, int height)
+    protected internal void HandleResize(int width, int height)
     {
         _hostWindowSize = (width, height);
         SetCameraClientSize(width, height);
@@ -764,7 +785,7 @@ public abstract class GumServiceSkiaBase : IGumService
     /// canvas can call this from there.
     /// </summary>
     /// <param name="canvas">The canvas to draw into this frame.</param>
-    public void Draw(SKCanvas canvas)
+    protected internal void Draw(SKCanvas canvas)
     {
         SystemManagers.Default.Canvas = canvas;
         SystemManagers.Default.Draw();

@@ -15,10 +15,4 @@ public class BrutalMathTests
     {
         BrutalScale.WindowToFramebuffer(value, window, framebuffer).ShouldBe(expected);
     }
-
-    [Fact]
-    public void FlippedDestination_ReversesY_SoTheTopDownTextureShowsUpright()
-    {
-        GlBlitMath.FlippedDestination(1400, 900).ShouldBe((0, 900, 1400, 0));
-    }
 }

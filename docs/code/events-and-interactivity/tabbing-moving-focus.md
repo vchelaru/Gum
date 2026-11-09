@@ -252,7 +252,7 @@ Available in November 2026, or now if building Gum from source.
 
 ## Modal Tab Trapping
 
-When you show an element modally by adding it to `GumService.Default.ModalRoot`, tab focus is confined to the controls inside that modal element. Tabbing forward past the last focusable control wraps back to the first, and Shift+Tabbing before the first control wraps to the last. Focus never escapes to the controls behind the modal under the regular `Root`.
+When you show an element modally by adding it to `GumUI.ModalRoot`, tab focus is confined to the controls inside that modal element. Tabbing forward past the last focusable control wraps back to the first, and Shift+Tabbing before the first control wraps to the last. Focus never escapes to the controls behind the modal under the regular `Root`.
 
 This is the keyboard and gamepad counterpart to the input blocking already described for modal popups — see [ModalRoot and PopupRoot](../gum-code-reference/gumservice-gumui/modalroot-and-popuproot.md). A modal captures all interaction until it is dismissed: mouse input is routed only to the top-most modal element, and tab focus is trapped within it.
 

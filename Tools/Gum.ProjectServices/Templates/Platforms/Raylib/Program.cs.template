@@ -1,5 +1,4 @@
 using Gum;
-using Gum.Wireframe;
 {{HostUsings}}
 using Raylib_cs;
 
@@ -9,13 +8,11 @@ const int screenHeight = 450;
 Raylib.InitWindow(screenWidth, screenHeight, "{{ProjectName}}");
 Raylib.SetTargetFPS(60);
 
-// This tells Gum to use the entire screen
-GraphicalUiElement.CanvasWidth = screenWidth;
-GraphicalUiElement.CanvasHeight = screenHeight;
-
 GumService GumUI = GumService.Default;
 
 GumUI.Initialize("Content/GumProject/{{GumProjectFile}}");
+GumUI.UseKeyboardDefaults();
+GumUI.UseGamepadDefaults();
 {{InitLines}}
 {{ScreenLines}}
 

@@ -11,7 +11,7 @@ public class NewProjectPlatformCsprojTests : NewProjectServiceTestBase
     [MemberData(nameof(PlatformNames), MemberType = typeof(NewProjectServiceTestBase))]
     public async Task Execute_EveryPlatform_ProducesAWellFormedCsprojWithOneGumReference(string platform)
     {
-        NewProjectResult result = await Run(Request(platform, sourceLinked: platform == "kniskia"));
+        NewProjectResult result = await Run(Request(platform, channel: WorkingChannel(platform)));
 
         result.Files.Success.ShouldBeTrue(result.Files.ErrorMessage);
         XDocument document = XDocument.Load(result.Files.CsprojPath!);

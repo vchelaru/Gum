@@ -161,7 +161,7 @@
 		<ProjectReference Include="..\..\MonoGameGum\MonoGameGum.csproj" />
 		<!-- Apos.Shapes-backed shape rendering (filled/rounded/shadowed Circle, Rectangle, Arc,
 		     Polygon) - RectangleRuntime and friends render nothing without this (see Game1's
-		     ShapeRenderer.Self.Initialize() call and the gum-samples skill's MonoGame host-init note). -->
+		     UseShapes() call and the gum-samples skill's MonoGame host-init note). -->
 		<ProjectReference Include="..\..\Runtimes\GumShapes\MonoGameGumShapes.csproj" />
 	</ItemGroup>
 

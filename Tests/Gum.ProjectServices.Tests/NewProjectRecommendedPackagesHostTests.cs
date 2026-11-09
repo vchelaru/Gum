@@ -16,17 +16,47 @@ public class NewProjectRecommendedPackagesHostTests : NewProjectServiceTestBase
             return; // Always source-linked, which refuses packages (#7328), and it has none to add anyway.
         }
 
-        NewProjectResult result = await Run(Request(platformName, packages: true));
+        NewProjectResult result = await Run(Request(platformName, packages: true, channel: WorkingChannel(platformName)));
 
         result.Files.Success.ShouldBeTrue(result.Files.ErrorMessage);
         string host = File.ReadAllText(Path.Combine(Game(), NewProjectLayout.WritesGame1(platform) ? "Game1.cs" : "Program.cs"));
-        IReadOnlyList<string> added = RecommendedPackages.For(platform);
+        IReadOnlyList<string> added = RecommendedPackages.For(platform, WorkingChannel(platformName));
         _calls.Where(call => call.StartsWith("add ")).Select(call => call.Substring(4)).ShouldBe(added);
 
-        host.Contains("GumExpressionService.Initialize()").ShouldBe(added.Contains("Gum.Expressions"));
-        host.Contains("KernSmith.Gum.").ShouldBe(added.Any(package => package.StartsWith("KernSmith.")));
-        host.Contains("ShapeRenderer.Self.Initialize()").ShouldBe(added.Any(package => package.StartsWith("Gum.Shapes.")));
+        host.Contains(".UseExpressions();").ShouldBe(added.Contains("Gum.Expressions"));
+        host.Contains(".UseKernSmith();").ShouldBe(added.Any(package => package.StartsWith("KernSmith.")));
+        host.Contains(".UseShapes();").ShouldBe(added.Any(package => package.StartsWith("Gum.Shapes.")));
         host.Contains(".UseShadowDusk();").ShouldBe(added.Any(package => package.EndsWith(".ShadowDusk")));
+    }
+
+    // Apos.Shapes needs the HiDef graphics profile; on KNI UseShapes throws "Reach profile does not support 32 bit indices" without it (#7812).
+    [Theory]
+    [MemberData(nameof(PlatformNames), MemberType = typeof(NewProjectServiceTestBase))]
+    public async Task Execute_WithRecommendedPackages_SetsTheHiDefProfileExactlyWhenTheShapesPackageIsAdded(string platformName)
+    {
+        HostPlatform platform = NewProjectPlatforms.MainNames.First(entry => entry.Name == platformName).Platform;
+        if (platform == HostPlatform.KniSkia)
+        {
+            return; // Always source-linked, which refuses packages (#7328), and it has none to add anyway.
+        }
+
+        NewProjectResult result = await Run(Request(platformName, packages: true, channel: WorkingChannel(platformName)));
+
+        result.Files.Success.ShouldBeTrue(result.Files.ErrorMessage);
+        string host = File.ReadAllText(Path.Combine(Game(), NewProjectLayout.WritesGame1(platform) ? "Game1.cs" : "Program.cs"));
+        bool addsShapes = RecommendedPackages.For(platform, WorkingChannel(platformName)).Any(package => package.StartsWith("Gum.Shapes."));
+
+        host.Contains("_graphics.GraphicsProfile = GraphicsProfile.HiDef;").ShouldBe(addsShapes);
+        host.Contains("using Microsoft.Xna.Framework.Graphics;").ShouldBe(addsShapes);
+    }
+
+    [Fact]
+    public async Task Execute_WithoutRecommendedPackages_LeavesTheGraphicsProfileAlone()
+    {
+        NewProjectResult result = await Run(Request("kni", packages: false));
+
+        result.Files.Success.ShouldBeTrue(result.Files.ErrorMessage);
+        File.ReadAllText(Path.Combine(Game(), "Game1.cs")).ShouldNotContain("GraphicsProfile");
     }
 
     [Fact]
@@ -38,7 +68,7 @@ public class NewProjectRecommendedPackagesHostTests : NewProjectServiceTestBase
             Request("monogame", packages: true, restore: true), null, CancellationToken.None);
 
         result.Restore!.Status.ShouldBe(RestoreStatus.Failed);
-        File.ReadAllText(Path.Combine(Game(), "Game1.cs")).ShouldContain("GumExpressionService.Initialize()");
+        File.ReadAllText(Path.Combine(Game(), "Game1.cs")).ShouldContain("UseExpressions()");
         File.Exists(Path.Combine(Game(), "Game.csproj")).ShouldBeTrue();
     }
 
@@ -51,7 +81,7 @@ public class NewProjectRecommendedPackagesHostTests : NewProjectServiceTestBase
 
         result.Codegen!.Success.ShouldBeFalse();
         string host = File.ReadAllText(Path.Combine(Game(), "Game1.cs"));
-        host.ShouldContain("GumExpressionService.Initialize()");
+        host.ShouldContain("UseExpressions()");
         host.ShouldContain("ObjectFinder.Self.GetElementSave(\"DemoScreenGum\")");
         host.ShouldNotContain("new DemoScreenGum()");
     }

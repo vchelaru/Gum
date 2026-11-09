@@ -65,14 +65,14 @@ public static class Program
         const int screenWidth = 1400;
         const int screenHeight = 900;
 
-        GumUI.CanvasWidth = screenWidth;
-        GumUI.CanvasHeight = screenHeight;
-
         SetConfigFlags(ConfigFlags.Msaa4xHint | ConfigFlags.ResizableWindow);
         InitWindow(screenWidth, screenHeight, "Gum raylib - Themes Showcase");
 
         GumUI.Initialize();
+
         GumUI.UseKeyboardDefaults();
+
+        GumUI.UseGamepadDefaults();
 
         // Each theme's parameterless Apply() wires KernSmith for in-memory font generation and
         // installs that theme's visuals as the defaults. Editor has no named background color, so a

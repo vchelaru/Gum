@@ -105,7 +105,7 @@ public class NewProjectDialogServiceConsistencyTests : IDisposable
             (resolved.GumSourceDirectory != null).ShouldBe(code && viewModel.SourceLinked, label);
             resolved.PackageChannel.ShouldBe(code ? viewModel.PackageChannel : NewProjectPackageChannel.Stable, label);
             resolved.UsesPrerelease.ShouldBe(code && viewModel.IsPreview, label);
-            if (code && channel == NewProjectPackageChannel.Preview && platform != "kniskia")
+            if (code && channel == NewProjectPackageChannel.Preview)
             {
                 resolved.PackageChannel.ShouldBe(NewProjectPackageChannel.Preview, label);
                 viewModel.CommandLine.ShouldContain("--preview", Case.Sensitive, label);

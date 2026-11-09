@@ -331,6 +331,10 @@ public class ShapeRenderer
     public void Initialize(GraphicsDevice graphicsDevice, ContentManager contentManager) =>
         InitializeInternal(graphicsDevice);
 
+    // GumService.UseShapes(): the device of the service that asked, not whichever SystemManagers is current.
+    internal void InitializeFor(GraphicsDevice graphicsDevice) =>
+        InitializeInternal(graphicsDevice);
+
     // Issue #6434 — Apos.Shapes chooses which of its embedded shaders to load (OpenGL, DX11, ...) by
     // reading MonoGame's internal Shader.Profile through reflection. Nothing in code names that
     // property, so a trimmed build (Release iOS) removes it, Apos falls back to the DirectX shader and
