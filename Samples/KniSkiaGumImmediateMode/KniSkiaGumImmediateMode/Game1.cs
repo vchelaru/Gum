@@ -3,6 +3,7 @@ using Gum.Forms.Controls;
 using Gum.Wireframe;
 using KniSkiaGumImmediateMode.Screens;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
@@ -20,6 +21,7 @@ public class Game1 : Game
     GumService GumUI => GumService.Default;
 
     private readonly GraphicsDeviceManager _graphics;
+    private SpriteBatch _spriteBatch = null!;
     private GumBatch _gumBatch = null!;
 
     private StackPanel _navStrip = null!;
@@ -50,11 +52,8 @@ public class Game1 : Game
         GumUI.Initialize(this);
 
         _gumBatch = new GumBatch();
+        _spriteBatch = new SpriteBatch(GraphicsDevice);
 
-        // The current example screen does its immediate-mode draws first, then Gum renders the
-        // retained-mode nav strip on top, so the buttons stay visible no matter what the screen drew.
-        // GumService.Initialize turns off the Renderer's ClearsCanvas, so Gum's draw does not wipe them.
-        GumUI.BeforeDraw += canvas => _currentScreen?.Draw(_gumBatch, canvas);
 
         BuildNavStrip();
         ShowScreen(new DrawStringScreen());
@@ -91,7 +90,7 @@ public class Game1 : Game
     {
         _currentScreen?.Dispose();
         _currentScreen = screen;
-        _currentScreen.Initialize();
+        _currentScreen.Initialize(GraphicsDevice);
     }
 
     protected override void Update(GameTime gameTime)
@@ -128,7 +127,14 @@ public class Game1 : Game
     protected override void Draw(GameTime gameTime)
     {
         GraphicsDevice.Clear(Color.CornflowerBlue);
+
+        // The current example screen does its immediate-mode draws first...
+        _currentScreen?.Draw(_gumBatch, _spriteBatch);
+
+        // ...then GumUI.Draw() renders the retained-mode nav strip on top, so the buttons stay
+        // visible no matter what the screen drew.
         GumUI.Draw();
+
         base.Draw(gameTime);
     }
 

@@ -178,6 +178,7 @@
 
 	<ItemGroup>
 		<InternalsVisibleTo Include="SkiaGum.Tests" />
+		<InternalsVisibleTo Include="KniSkiaGum" />
 	</ItemGroup>
 
 	<Import Project="..\RuntimePackage.Analyzers.props" />

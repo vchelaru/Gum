@@ -54,9 +54,34 @@ public class GumBatch
             throw new InvalidOperationException("Begin has already been called. You must call End before calling Begin again.");
         }
 
-        systemManagers.Renderer.Begin(matrix, mode);
+        // A host that owns the frame (KNI Skia) opens it here, so this works before or after the
+        // service's Draw. A canvas passed to Begin skips it.
+        bool openedHostFrame = !beginWithExplicitCanvas
+            && ReferenceEquals(systemManagers, SystemManagers.Default)
+            && FrameHost?.TryBeginFrame() == true;
+        try
+        {
+            systemManagers.Renderer.Begin(matrix, mode);
+        }
+        catch
+        {
+            if (openedHostFrame)
+            {
+                FrameHost!.EndFrame(present: false);
+            }
+            throw;
+        }
+        hostFrameOpened = openedHostFrame;
         State = GumBatchState.BeginCalled;
     }
+
+    /// <summary>
+    /// Set by a host that owns the Skia frame for as long as it is initialized.
+    /// </summary>
+    internal static IGumBatchFrameHost? FrameHost { get; set; }
+
+    bool hostFrameOpened;
+    bool beginWithExplicitCanvas;
 
     /// <summary>
     /// Starts drawing on <paramref name="canvas"/> for this cycle only: <see cref="End"/> restores
@@ -71,6 +96,7 @@ public class GumBatch
 
         SKCanvas? previousCanvas = systemManagers.CanvasOrNull;
         systemManagers.Canvas = canvas;
+        beginWithExplicitCanvas = true;
         try
         {
             Begin(matrix, mode);
@@ -79,6 +105,10 @@ public class GumBatch
         {
             systemManagers.CanvasOrNull = previousCanvas;
             throw;
+        }
+        finally
+        {
+            beginWithExplicitCanvas = false;
         }
         canvasToRestore = previousCanvas;
         restoreCanvasAtEnd = true;
@@ -124,12 +154,19 @@ public class GumBatch
         }
         State = GumBatchState.NotRendering;
 
+        bool presentHostFrame = false;
         try
         {
             systemManagers.Renderer.End();
+            presentHostFrame = true;
         }
         finally
         {
+            if (hostFrameOpened)
+            {
+                hostFrameOpened = false;
+                FrameHost?.EndFrame(presentHostFrame);
+            }
             if (restoreCanvasAtEnd)
             {
                 systemManagers.CanvasOrNull = canvasToRestore;

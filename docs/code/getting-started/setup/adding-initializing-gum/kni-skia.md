@@ -100,6 +100,28 @@ public class Game1 : Game
 
 Skia reads the Gum project from disk instead of through the content pipeline, so the path starts at `Content` and the project files must be copied to the output folder. To get the same class with a Gum project already set up, run [`gumcli new MyGame -p kniskia --source-linked`](../../../../cli/new.md).
 
+## Drawing Before or After Gum
+
+Available in December 2026, or now if building Gum from source.
+
+Call `GumBatch.Begin`, `Draw`, and `End` in your `Draw` method, before or after `GumUI.Draw()`. Each `Begin`/`End` pair is its own pass and appears in the order you call it, so you can mix it with your own `SpriteBatch` drawing:
+
+```csharp
+protected override void Draw(GameTime gameTime)
+{
+    GraphicsDevice.Clear(Color.CornflowerBlue);
+
+    _gumBatch.Begin();
+    _gumBatch.Draw(_background);
+    _gumBatch.End();
+
+    GumUI.Draw();
+    base.Draw(gameTime);
+}
+```
+
+See [GumBatch setup](../setup-for-gumbatch.md) for more on `GumBatch`.
+
 ## Adding a Button (Testing the Setup)
 
 Gum can be tested by adding a Button after Gum is initialized:
