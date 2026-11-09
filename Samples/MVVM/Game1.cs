@@ -12,7 +12,7 @@ namespace MonoGameAndGum
 {
     public class Game1 : Game
     {
-        MonoGameGum.GumService GumUI => MonoGameGum.GumService.Default;
+        Gum.GumService GumUI => Gum.GumService.Default;
 
         private GraphicsDeviceManager _graphics;
         private SpriteBatch _spriteBatch;
