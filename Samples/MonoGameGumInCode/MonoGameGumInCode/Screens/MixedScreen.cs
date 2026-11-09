@@ -1,11 +1,31 @@
 using Gum.Forms.Controls;
 using Gum.GueDeriving;
 using Gum.Wireframe;
-using Microsoft.Xna.Framework;
+#if RAYLIB
+using Color = Raylib_cs.Color;
+#elif SKIA
+using Color = SkiaSharp.SKColor;
+#else
+using Color = Microsoft.Xna.Framework.Color;
+#endif
 
+#if RAYLIB
+namespace Examples.Shapes;
+#elif SKIA
+namespace SilkNetGum.Screens;
+#else
 namespace MonoGameGumInCode.Screens;
+#endif
+
 internal class MixedScreen : FrameworkElement
 {
+#if RAYLIB
+    // raylib loads loose files from the output folder.
+    private const string ContentPrefix = "resources\\";
+#else
+    private const string ContentPrefix = "";
+#endif
+
     public MixedScreen() : base(new ContainerRuntime())
     {
         Dock(Gum.Wireframe.Dock.Fill);
@@ -25,7 +45,7 @@ internal class MixedScreen : FrameworkElement
         filledRectangleInstance.Y = 10;
         filledRectangleInstance.Width = 120;
         filledRectangleInstance.Height = 24;
-        filledRectangleInstance.FillColor = Color.White;
+        filledRectangleInstance.FillColor = new Color(255, 255, 255, 255);
         filledRectangleInstance.IsFilled = true;
         container.Children.Add(filledRectangleInstance);
 
@@ -37,7 +57,7 @@ internal class MixedScreen : FrameworkElement
         lineRectangle.Width = 120;
         lineRectangle.Height = 24;
         lineRectangle.StrokeWidth = 5;
-        lineRectangle.StrokeColor = Color.Purple;
+        lineRectangle.StrokeColor = new Color(128, 0, 128, 255);
         container.Children.Add(lineRectangle);
 
         AddText(container, "This is a sprite:");
@@ -45,7 +65,7 @@ internal class MixedScreen : FrameworkElement
         var sprite = new SpriteRuntime();
         sprite.X = 10;
         sprite.Y = 10;
-        sprite.SourceFileName = "BearTexture.png";
+        sprite.SourceFileName = ContentPrefix + "BearTexture.png";
         container.Children.Add(sprite);
 
         AddText(container, "This is a NineSlice:");
@@ -53,17 +73,20 @@ internal class MixedScreen : FrameworkElement
         var nineSlice = new NineSliceRuntime();
         nineSlice.X = 10;
         nineSlice.Y = 10;
-        nineSlice.SourceFileName = "Frame.png";
+        nineSlice.SourceFileName = ContentPrefix + "Frame.png";
         nineSlice.Width = 256;
         nineSlice.Height = 48;
         container.Children.Add(nineSlice);
 
+#if !RAYLIB && !SKIA
+        // The .fnt font ships only with the MonoGame content project.
         var customText = new TextRuntime();
         customText.Width = 300;
         customText.UseCustomFont = true;
         customText.CustomFontFile = "WhitePeaberryOutline/WhitePeaberryOutline.fnt";
         customText.Text = "Hello, I am using a custom font.\nPretty cool huh?";
         container.Children.Add(customText);
+#endif
 
         var layoutCountBefore = GraphicalUiElement.UpdateLayoutCallCount;
 
@@ -89,7 +112,7 @@ internal class MixedScreen : FrameworkElement
             stackingContainer.Children.Add(rectangle);
             rectangle.Width = 7;
             rectangle.Height = 7;
-            rectangle.FillColor = Color.White;
+            rectangle.FillColor = new Color(255, 255, 255, 255);
             rectangle.IsFilled = true;
         }
 
@@ -104,7 +127,7 @@ internal class MixedScreen : FrameworkElement
         polygon.Name = "PolygonRuntime";
         polygon.X = 10;
         polygon.Y = 10;
-        polygon.Color = Color.Red;
+        polygon.Color = new Color(255, 0, 0, 255);
 
         // width/heights are used for layout
         polygon.StrokeDashLength = 2f;
@@ -121,11 +144,13 @@ internal class MixedScreen : FrameworkElement
         polygon.Height = 8;
         container.Children.Add(polygon);
 
+#if !RAYLIB
+        // raylib has no LineRuntime.
         AddText(container, "These are dashed lines (round cap, butt cap):");
         var dashedLineRounded = new LineRuntime();
         dashedLineRounded.IsFilled = false;
         dashedLineRounded.IsRounded = true;
-        dashedLineRounded.Color = Color.Yellow;
+        dashedLineRounded.Color = new Color(255, 255, 0, 255);
         dashedLineRounded.StrokeWidth = 6;
         dashedLineRounded.StrokeDashLength = 12;
         dashedLineRounded.StrokeGapLength = 6;
@@ -138,7 +163,7 @@ internal class MixedScreen : FrameworkElement
         var dashedLineButt = new LineRuntime();
         dashedLineButt.IsFilled = false;
         dashedLineButt.IsRounded = false;
-        dashedLineButt.Color = Color.Cyan;
+        dashedLineButt.Color = new Color(0, 255, 255, 255);
         dashedLineButt.StrokeWidth = 6;
         dashedLineButt.StrokeDashLength = 12;
         dashedLineButt.StrokeGapLength = 6;
@@ -147,6 +172,7 @@ internal class MixedScreen : FrameworkElement
         dashedLineButt.Width = 150;
         dashedLineButt.Height = 40;
         container.Children.Add(dashedLineButt);
+#endif
     }
 
     internal static void AddText(ContainerRuntime container, string text)

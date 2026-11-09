@@ -33,29 +33,21 @@ internal sealed class GumGallery
     private static readonly (string Name, Func<FrameworkElement> Create)[] codeScreens =
     {
         ("Forms", () => new FormsScreen()),
-#if !SKIA && !RAYLIB
         ("Standards", () => new StandardsScreen()),
-#endif
         ("Circles", () => new CirclesScreen()),
         ("Rectangles", () => new RectanglesScreen()),
         ("Arcs", () => new ArcsScreen()),
         ("Polygons", () => new PolygonsScreen()),
-#if !SKIA && !RAYLIB
         ("Gradients", () => new GradientScreen()),
-#endif
         ("Text", () => new TextScreen()),
-#if !SKIA && !RAYLIB
         ("Mixed", () => new MixedScreen()),
         ("Invisible", () => new InvisibleScreen()),
-#endif
         ("NineSlice", () => new NineSliceScreen()),
         ("Sprite", () => new SpriteScreen()),
 #if !RAYLIB
         ("Svg", () => new SvgScreen()),
 #endif
-#if !SKIA && !RAYLIB
         ("Clip", () => new ClippingScreen()),
-#endif
         ("Render Target", () => new RenderTargetScreen()),
         ("RT Shader", () => new RenderTargetShaderScreen()),
         ("Zoom", () => new ZoomScreen()),
