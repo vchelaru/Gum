@@ -368,7 +368,7 @@ public class Program
             window.DoEvents();
 
             GumUI.Update(totalTime.Elapsed.TotalSeconds);
-            // Clear the frame and present it (SwapBuffers) yourself -- see the sample for the full call.
+            // Clear the frame and present it (SwapBuffers) yourself. See the sample for the full call.
             GumUI.Draw();
         }
     }

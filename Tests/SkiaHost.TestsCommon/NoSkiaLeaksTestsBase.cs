@@ -10,11 +10,14 @@ namespace SkiaHostTests;
 /// <c>GumUI.Initialize(...)</c>, <c>Update</c>, <c>Draw()</c> and the <c>Use...</c> methods, and the canvas
 /// plumbing stays internal to the host (#7788). A host's test project derives from this class and supplies
 /// nothing, except a host that deliberately keeps a member public lists it in <see cref="AllowedLeaks"/>.
+/// Not covered: protected members (a game does not see them unless it subclasses the service), and
+/// public types other than the service itself and its nested types.
 /// </summary>
 public abstract class NoSkiaLeaksTestsBase
 {
     /// <summary>
-    /// Members (as <c>Name</c>) this host keeps public on purpose. Each entry needs a reason in the
+    /// Members this host keeps public on purpose, as <c>DeclaringType.Member</c> for a property or event or
+    /// <c>DeclaringType.Method(ParameterType,...)</c> for a method. Each entry needs a reason in the
     /// derived class; the list shrinks as the members are replaced.
     /// </summary>
     protected virtual IReadOnlyCollection<string> AllowedLeaks => Array.Empty<string>();
@@ -28,7 +31,7 @@ public abstract class NoSkiaLeaksTestsBase
         foreach (MemberInfo member in serviceType.GetMembers(
             BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static | BindingFlags.FlattenHierarchy))
         {
-            if (AllowedLeaks.Contains(PropertyOrEventName(member)))
+            if (AllowedLeaks.Contains(Signature(member)))
             {
                 continue;
             }
@@ -59,17 +62,26 @@ public abstract class NoSkiaLeaksTestsBase
         leaks.ShouldBeEmpty(string.Join(Environment.NewLine, leaks));
     }
 
-    // An accessor (add_BeforeDraw, get_ClearColor) is allowed by its event or property name.
-    private static string PropertyOrEventName(MemberInfo member)
+    // "DeclaringType.Member" for a property or event (its accessors included), and
+    // "DeclaringType.Method(ParameterType,...)" for a method, so an allowed entry exempts exactly one member.
+    private static string Signature(MemberInfo member)
     {
-        foreach (string prefix in new[] { "add_", "remove_", "get_", "set_" })
+        string owner = member.DeclaringType!.Name;
+        if (member is MethodInfo method)
         {
-            if (member is MethodInfo && member.Name.StartsWith(prefix, StringComparison.Ordinal))
+            if (method.IsSpecialName)
             {
-                return member.Name.Substring(prefix.Length);
+                foreach (string prefix in new[] { "add_", "remove_", "get_", "set_" })
+                {
+                    if (method.Name.StartsWith(prefix, StringComparison.Ordinal))
+                    {
+                        return $"{owner}.{method.Name.Substring(prefix.Length)}";
+                    }
+                }
             }
+            return $"{owner}.{method.Name}({string.Join(",", method.GetParameters().Select(p => p.ParameterType.Name))})";
         }
-        return member.Name;
+        return $"{owner}.{member.Name}";
     }
 
     private static bool IsSkiaType(Type type)

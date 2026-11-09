@@ -178,6 +178,7 @@
 
 	<ItemGroup>
 		<InternalsVisibleTo Include="SkiaGum.Tests" />
+		<InternalsVisibleTo Include="Gum.NetStandard.Tests" />
 		<!-- Interactive hosts and their tests: SkiaTargetHolder, ISkiaHostTarget and the canvas-based
 		     Initialize/HandleResize/Draw are host plumbing, not game API (#7788). Gum.Unity is the Unity
 		     package's own assembly (GumRenderer). -->

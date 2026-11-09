@@ -7,5 +7,5 @@ namespace BrutalGum.Tests;
 public class NoSkiaLeaksTests : SkiaHostTests.NoSkiaLeaksTestsBase
 {
     // ClearColor is an SKColor; a separate change replaces it with a Skia-free type. Delete this entry then.
-    protected override IReadOnlyCollection<string> AllowedLeaks => new[] { "ClearColor" };
+    protected override IReadOnlyCollection<string> AllowedLeaks => new[] { "GumService.ClearColor" };
 }
