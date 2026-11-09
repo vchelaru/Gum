@@ -30,13 +30,8 @@ internal static class PlatformHostContent
         ["Gum.Expressions"] = "Gum.Expressions.GumExpressionService.Initialize();",
     };
 
-    /// <summary>How the scaffolded host refers to Gum: the <c>GumUI</c> property in Game1, the <c>GumUI</c> local in the raylib and Silk.NET Program.cs, and <c>GumService.Default</c> where the host declares neither (Stride).</summary>
-    internal static string GetGumReceiver(HostPlatform platform) => platform switch
-    {
-        HostPlatform.Raylib or HostPlatform.SilkNet or HostPlatform.Brutal => "GumUI",
-        HostPlatform.Stride => "GumService.Default",
-        _ => "GumUI"
-    };
+    /// <summary>How the scaffolded host refers to Gum: the <c>GumUI</c> alias every template declares.</summary>
+    internal static string GetGumReceiver(HostPlatform platform) => "GumUI";
 
     /// <summary>The folder the Game1 template loads the Gum project from. Skia reads it from disk instead of through the content pipeline, so the path starts at Content.</summary>
     internal static string GetGumProjectFolder(HostPlatform platform) =>

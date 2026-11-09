@@ -264,6 +264,8 @@ GumService GumUI = GumService.Default;
 GumUI.Initialize(window, "Content/GumProject/GumProject.gumj");
 GumUI.UseShadowDusk(); // Optional: .fx and .slang shader files (Gum.SkiaSharp.ShadowDusk)
 Gum.Expressions.GumExpressionService.Initialize(); // Optional: arithmetic expressions in variable references (Gum.Expressions)
+GumUI.UseKeyboardDefaults();
+GumUI.UseGamepadDefaults();
 
 var button = new Button();
 button.AddToRoot();
@@ -368,6 +370,8 @@ GumService GumUI = GumService.Default;
 GumUI.Initialize(window, instance, physicalDevice, device, queue, queueFamily, surface, "Content/GumProject/GumProject.gumj");
 GumUI.UseShadowDusk(); // Optional: .fx and .slang shader files (Gum.SkiaSharp.ShadowDusk)
 Gum.Expressions.GumExpressionService.Initialize(); // Optional: arithmetic expressions in variable references (Gum.Expressions)
+GumUI.UseKeyboardDefaults();
+GumUI.UseGamepadDefaults();
 
 var button = new Button();
 button.AddToRoot();

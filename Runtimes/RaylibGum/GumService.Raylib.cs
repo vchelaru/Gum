@@ -141,6 +141,13 @@ public partial class GumService
             // silently no-ops if the delegate is still null, so the roots would never
             // be added to MainLayer.Renderables and would not draw.
             this.SystemManagers.Initialize();
+
+            // Like XNA's SystemManagers.Initialize, size the canvas from the window, unless the game already did.
+            if (GraphicalUiElement.CanvasWidth <= 0 && GraphicalUiElement.CanvasHeight <= 0 && Raylib.IsWindowReady())
+            {
+                (GraphicalUiElement.CanvasWidth, GraphicalUiElement.CanvasHeight) = GetWindowSize();
+            }
+
             FormsUtilities.InitializeDefaults(systemManagers: this.SystemManagers,
                 defaultVisualsVersion: defaultVisualsVersion);
 

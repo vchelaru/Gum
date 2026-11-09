@@ -218,6 +218,8 @@ public class Game1 : Game
 </strong><strong>            new KernSmith.Gum.KernSmithFontCreator(GraphicsDevice); // Recommended, optional: dynamic fonts
 </strong><strong>        GumUI.UseShadowDusk(); // Optional: .fx and .slang shader files
 </strong><strong>        Gum.Expressions.GumExpressionService.Initialize(); // Optional: arithmetic expressions in variable references
+</strong><strong>        GumUI.UseKeyboardDefaults();
+</strong><strong>        GumUI.UseGamepadDefaults();
 </strong>        base.Initialize();
     }
 

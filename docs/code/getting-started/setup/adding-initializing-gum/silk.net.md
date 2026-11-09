@@ -119,9 +119,10 @@ GL gl = GL.GetApi(window);
 GumService GumUI = GumService.Default;
 
 GumUI.Initialize(window, "Content/GumProject/GumProject.gumj");
-GumUI.UseGamepadDefaults();
 GumUI.UseShadowDusk(); // Optional: .fx and .slang shader files
 Gum.Expressions.GumExpressionService.Initialize(); // Optional: arithmetic expressions in variable references
+GumUI.UseKeyboardDefaults();
+GumUI.UseGamepadDefaults();
 
 Stopwatch clock = Stopwatch.StartNew();
 

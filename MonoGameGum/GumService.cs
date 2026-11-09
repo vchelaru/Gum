@@ -438,14 +438,23 @@ public partial class GumService : IGumService
     /// <exception cref="System.InvalidOperationException">Gum has not been initialized, so there is no keyboard.</exception>
     public void UseKeyboardDefaults()
     {
-        Gum.Forms.Controls.FrameworkElement.KeyboardsForUiControl.Add(
-            FormsUtilities.Keyboard ?? throw new System.InvalidOperationException(
-                "UseKeyboardDefaults was called with no keyboard. Initialize Gum before calling it."));
+        var keyboard = FormsUtilities.Keyboard ?? throw new System.InvalidOperationException(
+            "UseKeyboardDefaults was called with no keyboard. Initialize Gum before calling it.");
+        if (!Gum.Forms.Controls.FrameworkElement.KeyboardsForUiControl.Contains(keyboard))
+        {
+            Gum.Forms.Controls.FrameworkElement.KeyboardsForUiControl.Add(keyboard);
+        }
     }
 
     public void UseGamepadDefaults()
     {
-        Gum.Forms.Controls.FrameworkElement.GamePadsForUiControl.AddRange(Gamepads);
+        foreach (var gamepad in Gamepads)
+        {
+            if (!Gum.Forms.Controls.FrameworkElement.GamePadsForUiControl.Contains(gamepad))
+            {
+                Gum.Forms.Controls.FrameworkElement.GamePadsForUiControl.Add(gamepad);
+            }
+        }
     }
 
     // Off by default; opt in via UseSingleThreadedAsync. Formerly #if !FRB-guarded, but GumService
