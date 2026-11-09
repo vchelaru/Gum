@@ -38,6 +38,14 @@ internal static class PlatformHostContent
         _ => "GumUI"
     };
 
+    /// <summary>The folder the Game1 template loads the Gum project from. Skia reads it from disk instead of through the content pipeline, so the path starts at Content.</summary>
+    internal static string GetGumProjectFolder(HostPlatform platform) =>
+        platform == HostPlatform.KniSkia ? "Content/GumProject/" : "GumProject/";
+
+    /// <summary>Extra Game1 constructor lines. The Skia host resizes its render target with the window, so it opts in to a resizable one.</summary>
+    internal static IReadOnlyList<string> GetWindowLines(HostPlatform platform) =>
+        platform == HostPlatform.KniSkia ? new[] { "Window.AllowUserResizing = true;" } : Array.Empty<string>();
+
     internal static IReadOnlyList<string> GetInitLines(IReadOnlyList<string> addedPackages, string gum = "GumService.Default") =>
         addedPackages.Where(InitLineByPackage.ContainsKey).Select(package => InitLineByPackage[package].Replace("{gum}", gum)).Distinct().ToList();
 

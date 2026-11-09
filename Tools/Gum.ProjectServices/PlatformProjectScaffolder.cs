@@ -280,15 +280,17 @@ public class PlatformProjectScaffolder : IPlatformProjectScaffolder
         DemoScreenInfo? demoScreen, bool screenCodeGenerated, IReadOnlyList<string> addedPackages)
     {
         string platformFolder = platform.ToString();
-        // The XNA-style hosts share Program.cs and run a Game1. KNI Skia draws through a Skia canvas,
-        // so it has its own Game1.
+        // The XNA-style hosts (KNI Skia included, since its service owns the Skia target) share Program.cs
+        // and Game1.cs.
         bool isXnaGame = NewProjectLayout.WritesGame1(platform);
         string programFolder = isXnaGame ? "Xna" : platformFolder;
 
         string gum = PlatformHostContent.GetGumReceiver(platform);
         string Fill(string folder, string fileName)
         {
-            string text = ReadTemplate(folder, fileName, projectName, rootNamespace, gumProjectFileName);
+            string text = ReadTemplate(folder, fileName, projectName, rootNamespace, gumProjectFileName)
+                .Replace("{{GumProjectFolder}}", PlatformHostContent.GetGumProjectFolder(platform));
+            text = PlatformHostContent.Expand(text, "{{WindowLines}}", PlatformHostContent.GetWindowLines(platform));
             text = PlatformHostContent.Expand(text, "{{HostUsings}}", PlatformHostContent.GetUsings(demoScreen, screenCodeGenerated));
             text = PlatformHostContent.Expand(text, "{{InitLines}}", PlatformHostContent.GetInitLines(addedPackages, gum));
             return PlatformHostContent.Expand(text, "{{ScreenLines}}", PlatformHostContent.GetScreenLines(demoScreen, screenCodeGenerated, gum));
@@ -298,8 +300,7 @@ public class PlatformProjectScaffolder : IPlatformProjectScaffolder
 
         if (isXnaGame)
         {
-            string gameFolder = platform == HostPlatform.KniSkia ? platformFolder : "Xna";
-            File.WriteAllText(Path.Combine(directory, NewProjectLayout.Game1FileName), Fill(gameFolder, "Game1.cs.template"));
+            File.WriteAllText(Path.Combine(directory, NewProjectLayout.Game1FileName), Fill("Xna", "Game1.cs.template"));
         }
     }
 

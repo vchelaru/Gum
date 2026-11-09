@@ -54,6 +54,34 @@ public abstract class GumServiceSkiaInteractiveBase : GumServiceSkiaBase
         FormsUtilities.Update(totalSeconds, Root);
     }
 
+    private readonly List<GraphicalUiElement> _singleRootList = new();
+
+    /// <summary>
+    /// The per-frame tick for a single root other than <see cref="GumServiceSkiaBase.Root"/>, such as a
+    /// container drawn on a custom layer. Same as <see cref="Update(double, IEnumerable{GraphicalUiElement})"/>
+    /// with one root.
+    /// </summary>
+    /// <param name="totalSeconds">Total elapsed time in seconds since startup.</param>
+    /// <param name="root">The root to animate and pump Forms input for.</param>
+    public void Update(double totalSeconds, GraphicalUiElement root)
+    {
+        _singleRootList.Clear();
+        _singleRootList.Add(root);
+        Update(totalSeconds, _singleRootList);
+    }
+
+    /// <summary>
+    /// The per-frame tick for an explicit set of roots, for layered or popup UI that is not a child of
+    /// <see cref="GumServiceSkiaBase.Root"/>: animates each root and pumps Forms input (cursor, keyboard,
+    /// gamepad, control events) for them. Only the roots passed are updated, so include
+    /// <see cref="GumServiceSkiaBase.Root"/> when it should be. Call it at most once per frame, instead of
+    /// <see cref="Update(double)"/>.
+    /// </summary>
+    /// <param name="totalSeconds">Total elapsed time in seconds since startup.</param>
+    /// <param name="roots">The roots to animate and pump Forms input for.</param>
+    public void Update(double totalSeconds, IEnumerable<GraphicalUiElement> roots) =>
+        UpdateRoots(totalSeconds, roots);
+
     /// <summary>
     /// The per-frame tick for an explicit set of roots, for a host whose engine passes its own time
     /// type: the frame work of <see cref="GumServiceSkiaBase.Update(double)"/> on

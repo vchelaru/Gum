@@ -5,22 +5,19 @@ using Gum.GueDeriving;
 using Gum.Wireframe;
 using RenderingLibrary.Graphics;
 using Microsoft.Xna.Framework;
-using SkiaGameRendering;
 using SkiaSharp;
 
 namespace KniSkiaGumSample;
 
 /// <summary>
-/// A KNI desktop game whose UI is Gum drawn by Skia. SkiaGameRendering gives a <see cref="SkiaRenderTarget2D"/>:
-/// a KNI texture with an SKCanvas. Gum draws into that canvas, then the target is composited onto the
-/// back buffer. Gum initializes from the game, like MonoGameGum, so the first screen is built in
-/// <see cref="Initialize"/>; the canvas arrives with the first <c>Draw</c>. Mouse, keyboard and gamepad
-/// reach Gum through KNI, with no Apos.Shapes involved.
+/// A KNI desktop game whose UI is Gum drawn by Skia. The game class is the MonoGameGum one: Gum initializes
+/// from the game, so the first screen is built in <see cref="Initialize"/>, and <c>Update</c> and <c>Draw</c>
+/// are one call each. The GumService owns the Skia render target and composites it onto the back buffer.
+/// Mouse, keyboard and gamepad reach Gum through KNI, with no Apos.Shapes involved.
 /// </summary>
 public class Game1 : Game
 {
     private readonly GraphicsDeviceManager _graphics;
-    private SkiaRenderTarget2D? _canvas;
     private int _clicks;
     private Label? _sizeLabel;
 
@@ -59,49 +56,9 @@ public class Game1 : Game
 
     protected override void Draw(GameTime gameTime)
     {
-        // SkiaRenderer attaches to the GraphicsDevice once KNI has created it.
-        if (!SkiaRenderer.IsInitialized && SkiaRenderer.IsReady)
-        {
-            SkiaRenderer.Initialize(GraphicsDevice);
-        }
-
-        GraphicsDevice.SetRenderTarget(null);
-        GraphicsDevice.Clear(new Color(30, 34, 40));
-
-        if (SkiaRenderer.IsInitialized)
-        {
-            DrawGum();
-        }
-
+        GraphicsDevice.Clear(Color.CornflowerBlue);
+        GumService.Default.Draw();
         base.Draw(gameTime);
-    }
-
-    private void DrawGum()
-    {
-        int width = GraphicsDevice.PresentationParameters.BackBufferWidth;
-        int height = GraphicsDevice.PresentationParameters.BackBufferHeight;
-
-        // A SkiaRenderTarget2D has a fixed size, so a resized window needs a new one.
-        bool resized = _canvas == null || _canvas.Texture.Width != width || _canvas.Texture.Height != height;
-        if (resized)
-        {
-            _canvas?.Dispose();
-            _canvas = new SkiaRenderTarget2D(GraphicsDevice, width, height);
-        }
-
-        _canvas!.Begin();
-        SKCanvas canvas = _canvas.Canvas;
-        canvas.Clear(SKColors.Transparent);
-
-        if (resized)
-        {
-            GumService.Default.HandleResize(width, height);
-        }
-
-        GumService.Default.Draw(canvas);
-
-        // Composites the target onto the back buffer at the origin, at native size.
-        _canvas.End();
     }
 
     private void BuildUi()
@@ -183,13 +140,5 @@ public class Game1 : Game
             listBox.Items!.Add($"Item {i}");
         }
         panel.AddChild(listBox);
-    }
-
-    protected override void UnloadContent()
-    {
-        _canvas?.Dispose();
-        _canvas = null;
-        SkiaRenderer.Dispose();
-        base.UnloadContent();
     }
 }
