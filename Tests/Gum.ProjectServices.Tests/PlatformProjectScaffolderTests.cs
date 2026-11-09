@@ -130,6 +130,32 @@ public class PlatformProjectScaffolderTests : IDisposable
     }
 
     [Fact]
+    public void Create_Brutal_ShouldCallGumInitializeUpdateAndDrawOnceAndNeverTouchSkia()
+    {
+        // Gum owns the Skia context, target, resize and presenting; the game is a window and three calls.
+        string projectDirectory = Path.Combine(_tempDirectory, "MyGame");
+
+        PlatformProjectResult result = _sut.Create(projectDirectory, HostPlatform.Brutal, includeFormsTemplate: true);
+
+        string program = File.ReadAllText(Path.Combine(projectDirectory, "Program.cs"));
+        System.Text.RegularExpressions.Regex.Matches(program, @"\.Initialize\(").Count.ShouldBe(1);
+        System.Text.RegularExpressions.Regex.Matches(program, @"\.Update\(").Count.ShouldBe(1);
+        System.Text.RegularExpressions.Regex.Matches(program, @"\.Draw\(\)").Count.ShouldBe(1);
+        program.ShouldNotContain("SkiaRenderTarget2D");
+        program.ShouldNotContain("SkiaGlContext");
+        program.ShouldNotContain("SkiaVulkanContext");
+        program.ShouldNotContain("Begin()");
+        program.ShouldNotContain("Presenter");
+        File.Exists(Path.Combine(projectDirectory, "Presenter.cs")).ShouldBeFalse();
+        program.Split('\n').Length.ShouldBeLessThan(45);
+
+        string csproj = File.ReadAllText(result.CsprojPath);
+        csproj.ShouldNotContain("ShaderC");
+        csproj.ShouldNotContain("SkiaGameRendering");
+        csproj.ShouldNotContain("Brutal.Vulkan");
+    }
+
+    [Fact]
     public void Create_SilkNet_ShouldReferenceSdlWindowingAndInputButNoAngleNatives()
     {
         // Desktop OpenGL needs no ANGLE natives, so the project restores and runs on Windows, macOS and

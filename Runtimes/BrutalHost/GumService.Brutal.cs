@@ -78,7 +78,8 @@ public partial class GumService : GumServiceSkiaInteractiveBase, IGumService
     /// size changed since the last call, the target is recreated at the new size first. Does nothing while
     /// the framebuffer is empty (a minimized window).
     /// </summary>
-    public override void Draw()
+    // Hides GumServiceSkiaBase.Draw(). Switch to override once that method is virtual (Gum PR 7764).
+    public new void Draw()
     {
         if (_targetHolder == null || _backend == null || _input == null)
         {
