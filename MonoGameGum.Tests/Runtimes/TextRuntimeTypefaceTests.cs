@@ -6,8 +6,7 @@ using Xunit;
 
 namespace MonoGameGum.Tests.Runtimes;
 
-// Issue #7787: setting Typeface to null after Text was set leaves a stale measured size.
-// Intentionally red on this branch until the #7787 fix lands; the branch is not merged.
+// Issue #7787: setting Typeface to null after Text was set must re-measure like a fresh text.
 public class TextRuntimeTypefaceTests : BaseTestClass
 {
     const string Plain = "Hi there and a long tail of words to wrap around nicely.";

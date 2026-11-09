@@ -6,7 +6,7 @@ using Xunit;
 
 namespace SkiaGum.Tests.GueDeriving;
 
-// Issue #7787 (Skia counterpart). Intentionally red on this branch if the stale size reproduces; the branch is not merged.
+// Issue #7787 (Skia counterpart): a null Typeface re-measures like a fresh text.
 public class TextRuntimeTypefaceTests : BaseTestClass
 {
     const string Plain = "Hi there and a long tail of words to wrap around nicely.";

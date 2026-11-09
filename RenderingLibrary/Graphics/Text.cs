@@ -1987,6 +1987,13 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
                 ? requiredHeight
                 : (int)(requiredHeight * LineHeightMultiplier + .5f);
         }
+        else
+        {
+            // No font: forget sizes measured against a font that is gone, so this text reports
+            // what a text that never had one does (#7787).
+            mPreRenderWidth = null;
+            mPreRenderHeight = null;
+        }
     }
 
     /// <summary>
