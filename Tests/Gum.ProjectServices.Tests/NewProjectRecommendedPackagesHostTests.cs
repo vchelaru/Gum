@@ -29,6 +29,36 @@ public class NewProjectRecommendedPackagesHostTests : NewProjectServiceTestBase
         host.Contains(".UseShadowDusk();").ShouldBe(added.Any(package => package.EndsWith(".ShadowDusk")));
     }
 
+    // Apos.Shapes needs the HiDef graphics profile; on KNI UseShapes throws "Reach profile does not support 32 bit indices" without it (#7812).
+    [Theory]
+    [MemberData(nameof(PlatformNames), MemberType = typeof(NewProjectServiceTestBase))]
+    public async Task Execute_WithRecommendedPackages_SetsTheHiDefProfileExactlyWhenTheShapesPackageIsAdded(string platformName)
+    {
+        HostPlatform platform = NewProjectPlatforms.MainNames.First(entry => entry.Name == platformName).Platform;
+        if (platform == HostPlatform.KniSkia)
+        {
+            return; // Always source-linked, which refuses packages (#7328), and it has none to add anyway.
+        }
+
+        NewProjectResult result = await Run(Request(platformName, packages: true, channel: WorkingChannel(platformName)));
+
+        result.Files.Success.ShouldBeTrue(result.Files.ErrorMessage);
+        string host = File.ReadAllText(Path.Combine(Game(), NewProjectLayout.WritesGame1(platform) ? "Game1.cs" : "Program.cs"));
+        bool addsShapes = RecommendedPackages.For(platform, WorkingChannel(platformName)).Any(package => package.StartsWith("Gum.Shapes."));
+
+        host.Contains("_graphics.GraphicsProfile = GraphicsProfile.HiDef;").ShouldBe(addsShapes);
+        host.Contains("using Microsoft.Xna.Framework.Graphics;").ShouldBe(addsShapes);
+    }
+
+    [Fact]
+    public async Task Execute_WithoutRecommendedPackages_LeavesTheGraphicsProfileAlone()
+    {
+        NewProjectResult result = await Run(Request("kni", packages: false));
+
+        result.Files.Success.ShouldBeTrue(result.Files.ErrorMessage);
+        File.ReadAllText(Path.Combine(Game(), "Game1.cs")).ShouldNotContain("GraphicsProfile");
+    }
+
     [Fact]
     public async Task Execute_WhenRestoreFailsAfterThePackagesWereAdded_TheHostStillInitializesThem()
     {
