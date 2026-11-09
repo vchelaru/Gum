@@ -3,7 +3,7 @@ using SkiaHostTests;
 using SkiaSharp;
 using Xunit.Abstractions;
 
-[assembly: Xunit.TestFramework("BrutalGum.Tests.TestAssemblyInitialize", "BrutalGum.Tests")]
+[assembly: Xunit.TestFramework("BrutalGum.Tests.TestAssemblyInitialize", "BrutalGum.OGL.Tests")]
 [assembly: CollectionBehavior(DisableTestParallelization = true)]
 
 namespace BrutalGum.Tests;

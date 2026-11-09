@@ -153,6 +153,7 @@ public class PlatformProjectScaffolderTests : IDisposable
         program.ShouldContain("GumUI.Update(gameTime);");
 
         string csproj = File.ReadAllText(result.CsprojPath);
+        csproj.ShouldContain("<PackageReference Include=\"Gum.Brutal.OGL\"");
         csproj.ShouldNotContain("ShaderC");
         csproj.ShouldNotContain("SkiaGameRendering");
         csproj.ShouldNotContain("Brutal.Vulkan");

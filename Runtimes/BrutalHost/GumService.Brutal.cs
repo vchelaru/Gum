@@ -1,4 +1,4 @@
-// BRUTAL's GumService, a subclass of GumServiceSkiaInteractiveBase, shared by Gum.Brutal (OpenGL) and
+// BRUTAL's GumService, a subclass of GumServiceSkiaInteractiveBase, shared by Gum.Brutal.OGL (OpenGL) and
 // Gum.Brutal.Vulkan. The game calls Initialize once, Update and Draw every frame, and never touches
 // Skia: GumService owns the SkiaGameRendering context and render target, recreates the target when the
 // framebuffer size changes, and puts the frame on the window (the per-package IBrutalGpuBackend).

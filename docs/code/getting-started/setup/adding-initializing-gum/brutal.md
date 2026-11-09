@@ -12,23 +12,23 @@ Available in preview NuGet packages (use a `-preview` version), or now if buildi
 
 Gum has one package per graphics API. Add only one of them:
 
-| Graphics API | Package |
-| --- | --- |
-| OpenGL 3.3 | `Gum.Brutal` |
-| Vulkan 1.3 | `Gum.Brutal.Vulkan` |
+| Graphics API | Gum package | SkiaGameRendering package (pulled in for you) |
+| --- | --- | --- |
+| OpenGL 3.3 | `Gum.Brutal.OGL` | `SkiaGameRendering.Brutal.OGL` |
+| Vulkan 1.3 | `Gum.Brutal.Vulkan` | `SkiaGameRendering.Brutal` |
 
 {% tabs %}
 {% tab title="OpenGL" %}
-Add the Gum.Brutal NuGet package ([https://www.nuget.org/packages/Gum.Brutal](https://www.nuget.org/packages/Gum.Brutal)). Modify csproj:
+Add the Gum.Brutal.OGL NuGet package ([https://www.nuget.org/packages/Gum.Brutal.OGL](https://www.nuget.org/packages/Gum.Brutal.OGL)). Modify csproj:
 
 ```xml
-<PackageReference Include="Gum.Brutal" Version="*" />
+<PackageReference Include="Gum.Brutal.OGL" Version="*" />
 ```
 
 Or add through command line:
 
 ```bash
-dotnet add package Gum.Brutal
+dotnet add package Gum.Brutal.OGL
 ```
 {% endtab %}
 
@@ -65,7 +65,7 @@ If you have already added the Gum NuGet package to your project, remove it.
 
 Add the following project to your solution:
 
-* \<Gum Root>/Runtimes/BrutalGum/BrutalGum.csproj for OpenGL
+* \<Gum Root>/Runtimes/BrutalGum.OGL/BrutalGum.OGL.csproj for OpenGL
 * \<Gum Root>/Runtimes/BrutalGum.Vulkan/BrutalGum.Vulkan.csproj for Vulkan
 
 The project already references `GumCommon` and `SkiaGum` itself, so you do not need to add either separately.
@@ -73,7 +73,7 @@ The project already references `GumCommon` and `SkiaGum` itself, so you do not n
 Next, add it as a project reference in your game project. Your project might look like this depending on the location of the Gum repository relative to your game project:
 
 ```xml
-<ProjectReference Include="..\Gum\Runtimes\BrutalGum\BrutalGum.csproj" />
+<ProjectReference Include="..\Gum\Runtimes\BrutalGum.OGL\BrutalGum.OGL.csproj" />
 ```
 
 ## Initializing Gum

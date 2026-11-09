@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
 	<!--
-		Gum.Brutal: an input host over BRUTAL's GLFW window (Ahwoo.Brutal.Glfw) that renders through
+		Gum.Brutal.OGL: an input host over BRUTAL's GLFW window (Ahwoo.Brutal.Glfw) that renders through
 		SkiaGum into an OpenGL 3.3 texture (SkiaGameRendering.Brutal.OGL) and blits it to the window.
 		The game calls GumService.Default.Initialize(window), Update and Draw and never touches Skia.
 		Gum.Brutal.Vulkan (Runtimes/BrutalGum.Vulkan) is the Vulkan twin built from the same shared
@@ -10,7 +10,7 @@
 	<Import Project="..\RuntimePackage.props" />
 
 	<PropertyGroup>
-		<PackageId>Gum.Brutal</PackageId>
+		<PackageId>Gum.Brutal.OGL</PackageId>
 		<Version>2026.11.1</Version>
 		<NoWarn>1591</NoWarn>
 		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
@@ -38,9 +38,9 @@
 
 	<Import Project="..\RuntimePackage.Analyzers.props" />
 
-	<!-- Guards against a consumer whose AssemblyName collides with BrutalGum. See #4311. -->
+	<!-- Guards against a consumer whose AssemblyName collides with BrutalGum.OGL. See #4311. -->
 	<ItemGroup>
-		<None Include="build\Gum.Brutal.targets" Pack="true" PackagePath="buildTransitive\Gum.Brutal.targets" Visible="false" />
+		<None Include="build\Gum.Brutal.OGL.targets" Pack="true" PackagePath="buildTransitive\Gum.Brutal.OGL.targets" Visible="false" />
 	</ItemGroup>
 
 </Project>

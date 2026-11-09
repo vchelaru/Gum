@@ -2,7 +2,7 @@
 
 	<PropertyGroup>
 		<OutputType>Exe</OutputType>
-		<!-- Must differ from the referenced Runtimes/BrutalGum project's assembly name ("BrutalGum"). -->
+		<!-- Must differ from the referenced Runtimes/BrutalGum.OGL project's assembly name ("BrutalGum.OGL"). -->
 		<AssemblyName>BrutalGumSampleOgl</AssemblyName>
 		<TargetFramework>net10.0</TargetFramework>
 		<ImplicitUsings>enable</ImplicitUsings>
@@ -18,7 +18,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\..\..\Runtimes\BrutalGum\BrutalGum.csproj" />
+		<ProjectReference Include="..\..\..\Runtimes\BrutalGum.OGL\BrutalGum.OGL.csproj" />
 		<ProjectReference Include="..\..\..\Runtimes\SkiaGum.ShadowDusk\SkiaGum.ShadowDusk.csproj" />
 	</ItemGroup>
 

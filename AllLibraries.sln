@@ -251,11 +251,11 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StrideGum.GpuTests.D3D11", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StrideGum.GpuTests.D3D12", "Tests\StrideGum.GpuTests.D3D12\StrideGum.GpuTests.D3D12.csproj", "{ACB64CCF-ACE2-4AF8-9170-9D18D39F37E8}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BrutalGum", "Runtimes\BrutalGum\BrutalGum.csproj", "{F72F5A3E-2C03-47A1-84BE-DBD0B38F1431}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BrutalGum.OGL", "Runtimes\BrutalGum.OGL\BrutalGum.OGL.csproj", "{F72F5A3E-2C03-47A1-84BE-DBD0B38F1431}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BrutalGum.Vulkan", "Runtimes\BrutalGum.Vulkan\BrutalGum.Vulkan.csproj", "{574A8E80-4BE3-45F4-82C8-A2076420542B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BrutalGum.Tests", "Tests\BrutalGum.Tests\BrutalGum.Tests.csproj", "{95FE82AA-8850-4F2E-8715-961A108CED49}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BrutalGum.OGL.Tests", "Tests\BrutalGum.OGL.Tests\BrutalGum.OGL.Tests.csproj", "{95FE82AA-8850-4F2E-8715-961A108CED49}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

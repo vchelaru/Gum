@@ -37,7 +37,7 @@ using System.Runtime.CompilerServices;
 // The Skia input hosts source-link MonoGameGum/Input/CursorExtensions.cs, whose GetEventFailureReason
 // reads the cursor walk's cached subtree state (GraphicalUiElement._subtreeEventsState).
 [assembly: InternalsVisibleTo("KniSkiaGum")]
-[assembly: InternalsVisibleTo("BrutalGum")]
+[assembly: InternalsVisibleTo("BrutalGum.OGL")]
 [assembly: InternalsVisibleTo("BrutalGum.Vulkan")]
 [assembly: InternalsVisibleTo("SilkNetGum")]
 [assembly: InternalsVisibleTo("StrideGum")]

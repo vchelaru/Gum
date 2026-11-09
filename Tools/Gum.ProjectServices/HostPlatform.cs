@@ -25,6 +25,6 @@ public enum HostPlatform
     /// </summary>
     KniSkia,
 
-    /// <summary>BRUTAL (GLFW and Vulkan bindings, Windows and Linux) drawing Gum through Skia on OpenGL 3.3, referencing the <c>Gum.Brutal</c> package. The Vulkan twin, <c>Gum.Brutal.Vulkan</c>, is a sample path with no scaffolder platform.</summary>
+    /// <summary>BRUTAL (GLFW and Vulkan bindings, Windows and Linux) drawing Gum through Skia on OpenGL 3.3, referencing the <c>Gum.Brutal.OGL</c> package. The Vulkan twin, <c>Gum.Brutal.Vulkan</c>, is a sample path with no scaffolder platform.</summary>
     Brutal
 }

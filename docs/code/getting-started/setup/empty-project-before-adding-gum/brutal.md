@@ -2,7 +2,7 @@
 
 ## Introduction
 
-Gum can be used in [BRUTAL](https://github.com/ahwootech/BRUTAL) projects by importing Gum's `Gum.Brutal` NuGet package (OpenGL) or `Gum.Brutal.Vulkan` (Vulkan). Both render through SkiaSharp and read input from the GLFW window that BRUTAL's `Ahwoo.Brutal.Glfw` package creates. Gum creates and owns the Skia render target and puts the frame on your window, so you only create the window and, for Vulkan, the Vulkan device.
+Gum can be used in [BRUTAL](https://github.com/ahwootech/BRUTAL) projects by importing Gum's `Gum.Brutal.OGL` NuGet package (OpenGL) or `Gum.Brutal.Vulkan` (Vulkan). Both render through SkiaSharp and read input from the GLFW window that BRUTAL's `Ahwoo.Brutal.Glfw` package creates. Gum creates and owns the Skia render target and puts the frame on your window, so you only create the window and, for Vulkan, the Vulkan device.
 
 ## Creating a New Project
 

@@ -24,7 +24,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Runtimes\BrutalGum\BrutalGum.csproj" />
+    <ProjectReference Include="..\..\Runtimes\BrutalGum.OGL\BrutalGum.OGL.csproj" />
     <ProjectReference Include="..\SkiaHost.TestsCommon\SkiaHost.TestsCommon.csproj" />
   </ItemGroup>
 
