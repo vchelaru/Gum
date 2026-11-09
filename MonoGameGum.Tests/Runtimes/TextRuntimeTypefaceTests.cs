@@ -7,13 +7,12 @@ using Xunit;
 namespace MonoGameGum.Tests.Runtimes;
 
 // Issue #7787: setting Typeface to null after Text was set leaves a stale measured size.
-// The Skip reason names the issue; remove it with the fix.
+// Intentionally red on this branch until the #7787 fix lands; the branch is not merged.
 public class TextRuntimeTypefaceTests : BaseTestClass
 {
     const string Plain = "Hi there and a long tail of words to wrap around nicely.";
     const string Tagged = "Hi [Color=Red]red[/Color] [FontSize=40]big[/FontSize] and a long tail of words to wrap around nicely.";
     const string Other = "Something else entirely, also long enough to wrap around a bit.";
-    const string KnownRed = "Issue #7787: Typeface = null leaves a stale measured size";
 
     static TextRuntime Make()
     {
@@ -45,7 +44,7 @@ public class TextRuntimeTypefaceTests : BaseTestClass
         return r;
     }
 
-    [Theory(Skip = KnownRed)]
+    [Theory]
     [InlineData(Plain)]
     [InlineData(Tagged)]
     [InlineData("")]
@@ -57,7 +56,7 @@ public class TextRuntimeTypefaceTests : BaseTestClass
         r.AbsoluteWidth.ShouldBe(fresh.AbsoluteWidth);
     }
 
-    [Theory(Skip = KnownRed)]
+    [Theory]
     [InlineData(Plain)]
     [InlineData(Tagged)]
     [InlineData("")]
@@ -83,7 +82,7 @@ public class TextRuntimeTypefaceTests : BaseTestClass
         r.AbsoluteWidth.ShouldBe(fresh.AbsoluteWidth);
     }
 
-    [Theory(Skip = KnownRed)]
+    [Theory]
     [InlineData(Plain)]
     [InlineData(Tagged)]
     public void Typeface_SetNullAfterText_DifferentString_MatchesFresh(string text)
