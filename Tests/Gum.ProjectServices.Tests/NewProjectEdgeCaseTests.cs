@@ -154,6 +154,8 @@ namespace Gum
         public void Initialize(Microsoft.Xna.Framework.Game game, string project) { }
         public void Update(Microsoft.Xna.Framework.GameTime gameTime) { }
         public void Draw() { }
+        public void UseKeyboardDefaults() { }
+        public void UseGamepadDefaults() { }
     }
 }
 namespace Gum.Forms.Controls
