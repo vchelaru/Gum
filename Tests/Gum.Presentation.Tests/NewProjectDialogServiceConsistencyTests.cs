@@ -54,7 +54,7 @@ public class NewProjectDialogServiceConsistencyTests : IDisposable
         NewProjectDialogViewModel viewModel = new NewProjectDialogViewModel(
             new ThemeSelectionViewModel(_formsFileService.Object, _projectState.Object),
             _service, new Mock<IExistingCodeProjectDetector>().Object, new Mock<IDialogService>().Object,
-            new Mock<INewProjectLocationSettings>().Object)
+            new Mock<INewProjectLocationSettings>().Object, runChecksInline: true)
         {
             ProjectName = "Game",
             Location = _folder,

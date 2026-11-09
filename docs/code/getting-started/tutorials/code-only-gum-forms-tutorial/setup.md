@@ -178,6 +178,164 @@ public class Program
 {% endtab %}
 
 {% tab title="Silk.NET" %}
+A full Silk.NET project also needs window creation and a GL backend choice, so see the [Silk.NET setup page](../../setup/adding-initializing-gum/silk.net.md) for that detail and a link to a working sample. Once the window exists, the Gum-specific calls are the same shape as MonoGame/Raylib:
+
+```csharp
+using Gum;
+using Gum.Forms;
+using Gum.Forms.Controls;
+using Silk.NET.Windowing;
+
+namespace MyGumProject;
+
+public class Program
+{
+    static GumService GumUI => GumService.Default;
+
+    public static void Main()
+    {
+        Silk.NET.Windowing.Sdl.SdlWindowing.Use();
+
+        IWindow window = Window.Create(WindowOptions.Default);
+        window.Initialize();
+        Silk.NET.OpenGL.GL gl = Silk.NET.OpenGL.GL.GetApi(window);
+
+        GumUI.Initialize(window);
+
+        var mainPanel = new StackPanel();
+        mainPanel.AddToRoot();
+
+        var totalTime = System.Diagnostics.Stopwatch.StartNew();
+
+        while (!window.IsClosing)
+        {
+            window.DoEvents();
+
+            GumUI.Update(totalTime.Elapsed.TotalSeconds);
+
+            gl.ClearColor(0.39f, 0.58f, 0.93f, 1f);
+            gl.Clear(Silk.NET.OpenGL.ClearBufferMask.ColorBufferBit);
+            GumUI.Draw();
+            window.GLContext!.SwapBuffers();
+        }
+    }
+}
+```
+{% endtab %}
+
+{% tab title="Unity" %}
+Install the SkiaGameRendering and Gum packages through the Unity Package Manager. Gum requires Unity 6 or newer. For the full steps see the [Unity setup page](../../setup/adding-initializing-gum/unity.md).
+
+{% hint style="warning" %}
+The Unity package is experimental. It supports Windows x64 and macOS.
+{% endhint %}
+{% endtab %}
+{% endtabs %}
+
+## Adding Gum to Your Game
+
+Gum requires a few lines of code to get started. The host application skeleton differs by platform: MonoGame uses a `Game` subclass whose `Initialize`/`Update`/`Draw` methods the framework calls for you, Raylib uses a `Program.Main` with a game loop you own, Silk.NET uses a `Program.Main` that creates its own window and hands Gum an `SKCanvas`/`IInputContext` pair, and Unity uses a `MonoBehaviour` on a GameObject. The Gum calls themselves follow the same shape on every backend: initialize once, then update and draw each frame. Unity is the exception: the `GumRenderer` and `GumInput` components initialize, update, and draw Gum for you.
+
+A simplified host with the required calls would look like the following code:
+
+{% tabs %}
+{% tab title="MonoGame" %}
+```csharp
+using Microsoft.Xna.Framework;
+using Gum;
+using Gum.Forms;
+using Gum.Forms.Controls;
+
+namespace MyGumProject;
+
+public class Game1 : Game
+{
+    private GraphicsDeviceManager _graphics;
+
+    GumService GumUI => GumService.Default;
+
+    public Game1()
+    {
+        _graphics = new GraphicsDeviceManager(this);
+        Content.RootDirectory = "Content";
+        IsMouseVisible = true;
+    }
+
+    protected override void Initialize()
+    {
+        GumUI.Initialize(this);
+
+        var mainPanel = new StackPanel();
+        mainPanel.AddToRoot();
+
+        base.Initialize();
+    }
+
+    protected override void Update(GameTime gameTime)
+    {
+        GumUI.Update(gameTime);
+        base.Update(gameTime);
+    }
+
+    protected override void Draw(GameTime gameTime)
+    {
+        GraphicsDevice.Clear(Color.CornflowerBlue);
+        GumUI.Draw();
+        base.Draw(gameTime);
+    }
+}
+```
+{% endtab %}
+
+{% tab title="Raylib" %}
+```csharp
+using Gum;
+using Gum.Forms;
+using Gum.Forms.Controls;
+using Raylib_cs;
+
+namespace MyGumProject;
+
+public class Program
+{
+    static GumService GumUI => GumService.Default;
+
+    // STAThread is required if you deploy using NativeAOT on Windows - See https://github.com/raylib-cs/raylib-cs/issues/301
+    [STAThread]
+    public static void Main()
+    {
+        const int screenWidth = 800;
+        const int screenHeight = 450;
+
+        Raylib.InitWindow(screenWidth, screenHeight, "Gum Sample");
+        Raylib.SetTargetFPS(60);
+
+        // This tells Gum to use the entire screen
+        GumUI.CanvasWidth = screenWidth;
+        GumUI.CanvasHeight = screenHeight;
+
+        GumUI.Initialize();
+
+        var mainPanel = new StackPanel();
+        mainPanel.AddToRoot();
+
+        while (!Raylib.WindowShouldClose())
+        {
+            // Update game/UI state first, then render it.
+            GumUI.Update(Raylib.GetTime());
+
+            Raylib.BeginDrawing();
+            Raylib.ClearBackground(Raylib_cs.Color.SkyBlue);
+            GumUI.Draw();
+            Raylib.EndDrawing();
+        }
+        Raylib.CloseWindow();
+    }
+}
+```
+{% endtab %}
+
+{% tab title="Silk.NET" %}
 A full Silk.NET project requires more setup than fits cleanly in a tutorial snippet (window creation, GL/ANGLE backend selection, wiring the SkiaSharp surface) — see the [Silk.NET setup page](../../setup/adding-initializing-gum/silk.net.md) for that detail and a link to a working sample. Once the window, `SKCanvas`, and `IInputContext` exist, the Gum-specific calls are the same shape as MonoGame/Raylib:
 
 ```csharp

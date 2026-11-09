@@ -210,9 +210,37 @@ public class PlatformProjectScaffolderTests : IDisposable
         csproj.ShouldNotContain("-windows");
         string program = File.ReadAllText(Path.Combine(projectDirectory, "Program.cs"));
         program.ShouldContain("MyGame");
-        // GetProcAddress throws for the optional GL functions Skia probes for, and FramebufferResize never fires.
-        program.ShouldContain("TryGetProcAddress");
-        program.ShouldContain("window.Resize");
+    }
+
+    [Fact]
+    public void Create_SilkNet_ProgramShouldHaveTheShapeOfAMonoGameGame()
+    {
+        // One Initialize, one Update, one Draw. Skia, the GL interface, the surface, resize handling and
+        // the flush all live inside GumService, the way MonoGame's Game1 never sees a SpriteBatch for Gum.
+        string projectDirectory = Path.Combine(_tempDirectory, "MyGame");
+
+        _sut.Create(projectDirectory, HostPlatform.SilkNet, includeFormsTemplate: true);
+
+        string program = File.ReadAllText(Path.Combine(projectDirectory, "Program.cs"));
+        foreach (string skiaType in new[] { "SKSurface", "SKCanvas", "GRContext", "GRGlInterface", "GRBackendRenderTarget", "SkiaSharp", "Flush", "ResetContext", "window.Resize", "HandleResize" })
+        {
+            program.ShouldNotContain(skiaType);
+        }
+        program.ShouldContain("GumUI.Initialize(window,");
+        program.ShouldContain("GumUI.Draw();");
+        program.ShouldNotContain("GumUI.Draw(canvas");
+    }
+
+    [Fact]
+    public void Create_SilkNet_ProgramShouldNameTheSecondsValueGameTimeSoSharedDocSnippetsCompile()
+    {
+        string projectDirectory = Path.Combine(_tempDirectory, "MyGame");
+
+        _sut.Create(projectDirectory, HostPlatform.SilkNet, includeFormsTemplate: true);
+
+        string program = File.ReadAllText(Path.Combine(projectDirectory, "Program.cs"));
+        program.ShouldContain("double gameTime = clock.Elapsed.TotalSeconds;");
+        program.ShouldContain("GumUI.Update(gameTime);");
     }
 
     [Fact]

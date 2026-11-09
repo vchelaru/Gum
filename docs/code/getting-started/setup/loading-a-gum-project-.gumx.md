@@ -217,7 +217,7 @@ public static void Main()
 {% tab title="Silk.NET" %}
 ```csharp
 // Initialize
-GumService.Default.Initialize(canvas, inputContext, "Content/GumProject/GumProject.gumj");
+GumService.Default.Initialize(window, "Content/GumProject/GumProject.gumj");
 
 // This assumes that your project has at least 1 screen
 if (ObjectFinder.Self.GumProjectSave.Screens.Count == 0)
@@ -231,7 +231,7 @@ var screen = ObjectFinder.Self.GumProjectSave.Screens[0]
 screen.AddToRoot();
 ```
 
-See the [Silk.NET setup page](adding-initializing-gum/silk.net.md) for where `canvas` and `inputContext` come from — window/GL/Skia surface setup is elided here since it's the same regardless of whether you load a `.gumj` project.
+See the [Silk.NET setup page](adding-initializing-gum/silk.net.md) for how to create `window`.
 {% endtab %}
 
 {% tab title=".NET MAUI" %}

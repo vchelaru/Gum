@@ -2,11 +2,10 @@ using System;
 using System.Diagnostics;
 using Gum;
 {{HostUsings}}
-using Silk.NET.Input;
 using Silk.NET.Maths;
+using Silk.NET.OpenGL;
 using Silk.NET.Windowing;
 using Silk.NET.Windowing.Sdl;
-using SkiaSharp;
 
 
 // Silk.NET.Input only receives events from a window that Silk.NET.Windowing.Sdl created and initialized itself.
@@ -24,36 +23,13 @@ options.PreferredStencilBufferBits = 8;
 IWindow window = Window.Create(options);
 window.Initialize();
 
-// Skia asks for optional OpenGL functions that a driver may not have, and GetProcAddress throws for those.
-// TryGetProcAddress returns false instead, which Skia treats as "not supported".
-using GRGlInterface glInterface = GRGlInterface.Create(
-    name => window.GLContext!.TryGetProcAddress(name, out nint address) ? address : 0);
-using GRContext grContext = GRContext.CreateGl(glInterface);
-
-GRBackendRenderTarget? renderTarget = null;
-SKSurface? surface = null;
-
-// Skia draws into a surface that wraps the window's framebuffer, so the surface must match its size.
-void CreateSurface(Vector2D<int> size)
-{
-    surface?.Dispose();
-    renderTarget?.Dispose();
-
-    renderTarget = new GRBackendRenderTarget(size.X, size.Y, 0, 8, new GRGlFramebufferInfo(0, 0x8058));
-    surface = SKSurface.Create(grContext, renderTarget, GRSurfaceOrigin.BottomLeft, SKColorType.Rgba8888);
-}
-
-CreateSurface(window.FramebufferSize);
+GL gl = GL.GetApi(window);
 
 GumService GumUI = GumService.Default;
 
-GumUI.Initialize(surface!.Canvas, window.CreateInput(), "Content/GumProject/{{GumProjectFile}}");
+GumUI.Initialize(window, "Content/GumProject/{{GumProjectFile}}");
 {{InitLines}}
 {{ScreenLines}}
-
-// The resize is applied once per frame instead of inside the event, where the GL context may not be current.
-bool wasResized = false;
-window.Resize += _ => wasResized = true;
 
 Stopwatch clock = Stopwatch.StartNew();
 
@@ -61,25 +37,15 @@ while (!window.IsClosing)
 {
     window.DoEvents();
 
-    if (wasResized)
-    {
-        wasResized = false;
-        Vector2D<int> size = window.FramebufferSize;
-        CreateSurface(size);
-        GumUI.SystemManagers.Canvas = surface!.Canvas;
-        GumUI.HandleResize(size.X, size.Y);
-    }
+    double gameTime = clock.Elapsed.TotalSeconds;
+    GumUI.Update(gameTime);
 
-    GumUI.Update(clock.Elapsed.TotalSeconds);
+    gl.ClearColor(0.39f, 0.58f, 0.93f, 1f);
+    gl.Clear(ClearBufferMask.ColorBufferBit);
 
-    grContext.ResetContext();
-    surface!.Canvas.Clear(SKColors.CornflowerBlue);
     GumUI.Draw();
-    surface.Canvas.Flush();
 
     window.GLContext!.SwapBuffers();
 }
 
-surface?.Dispose();
-renderTarget?.Dispose();
 window.Dispose();
