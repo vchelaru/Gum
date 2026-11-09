@@ -21,6 +21,8 @@ namespace FontResizeDemo.MonoGame;
 /// </summary>
 public class Game1 : Game
 {
+    GumService GumUI => GumService.Default;
+
     private const int DefaultWidth = 1024;
     private const int DefaultHeight = 768;
 
@@ -43,7 +45,7 @@ public class Game1 : Game
     {
         Window.AllowUserResizing = true;
 
-        GumService.Default.Initialize(this);
+        GumUI.Initialize(this);
 
         // KernSmith builds fonts in memory, at whatever size oversampling asks for -- no .fnt
         // files are shipped with this sample.
@@ -57,7 +59,7 @@ public class Game1 : Game
 
         // Reference resolution is the window size at this call (DefaultWidth x DefaultHeight).
         // Height drives the zoom by default (WindowZoomMode.HeightDominant).
-        GumService.Default.EnableZoomToWindow();
+        GumUI.EnableZoomToWindow();
 
         BuildUi();
 
@@ -66,7 +68,7 @@ public class Game1 : Game
 
     private void BuildUi()
     {
-        InteractiveGue root = GumService.Default.Root;
+        InteractiveGue root = GumUI.Root;
 
         TextRuntime previewText = new TextRuntime();
         previewText.Font = "Arial";
@@ -154,7 +156,7 @@ public class Game1 : Game
             Exit();
         }
 
-        GumService.Default.Update(gameTime);
+        GumUI.Update(gameTime);
 
         float zoom = SystemManagers.Default.Renderer.Camera.Zoom;
 
@@ -197,7 +199,7 @@ public class Game1 : Game
     {
         GraphicsDevice.Clear(new Color(30, 30, 46));
 
-        GumService.Default.Draw();
+        GumUI.Draw();
 
         // TEMPORARY diagnostics (remove once the o/m stretching artifact is root-caused): a full-frame
         // screenshot (so the artifact can be inspected in context, at whatever zoom/resize state the

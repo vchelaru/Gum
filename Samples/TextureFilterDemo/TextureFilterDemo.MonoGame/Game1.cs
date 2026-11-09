@@ -21,6 +21,8 @@ namespace TextureFilterDemo.MonoGame;
 /// </summary>
 public class Game1 : Game
 {
+    GumService GumUI => GumService.Default;
+
     private readonly GraphicsDeviceManager _graphics;
 
     public Game1()
@@ -34,7 +36,7 @@ public class Game1 : Game
 
     protected override void Initialize()
     {
-        GumService.Default.Initialize(this);
+        GumUI.Initialize(this);
         CustomSetPropertyOnRenderable.InMemoryFontCreator = new KernSmithFontCreator(GraphicsDevice);
 
         var pointLayer = SystemManagers.Default.Renderer.AddLayer();
@@ -64,14 +66,14 @@ public class Game1 : Game
 
     protected override void Update(GameTime gameTime)
     {
-        GumService.Default.Update(gameTime);
+        GumUI.Update(gameTime);
         base.Update(gameTime);
     }
 
     protected override void Draw(GameTime gameTime)
     {
         GraphicsDevice.Clear(Color.CornflowerBlue);
-        GumService.Default.Draw();
+        GumUI.Draw();
         base.Draw(gameTime);
     }
 }

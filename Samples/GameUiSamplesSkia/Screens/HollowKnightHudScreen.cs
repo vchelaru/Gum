@@ -17,6 +17,8 @@ namespace GameUiSamples.Screens;
 
 partial class HollowKnightHudScreen : IUpdateScreen
 {
+    GumService GumUI => GumService.Default;
+
     const int MaxHealth = 6;
 
     int currentHealth;
@@ -43,7 +45,7 @@ partial class HollowKnightHudScreen : IUpdateScreen
 
         this.ExitButton.Click += (_, _) =>
         {
-            GumService.Default.Root.Children.Clear();
+            GumUI.Root.Children.Clear();
             var mainMenu = new MainMenu();
             mainMenu.AddToRoot();
         };

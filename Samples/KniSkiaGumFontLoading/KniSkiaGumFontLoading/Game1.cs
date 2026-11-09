@@ -12,6 +12,8 @@ namespace KniSkiaGumFontLoading;
 /// </summary>
 public class Game1 : Game
 {
+    GumService GumUI => GumService.Default;
+
     private readonly GraphicsDeviceManager _graphics;
     private readonly List<TextRuntime> _texts = new List<TextRuntime>();
 
@@ -38,7 +40,7 @@ public class Game1 : Game
         // The graphics device exists once the base Initialize has run.
         base.Initialize();
 
-        GumService.Default.Initialize(this);
+        GumUI.Initialize(this);
 
         AddText("CustomFontText", "Content/Fonts/CustomFont.ttf", "I use CustomFont", 0);
         AddText("SuperMorningText", "Content/Fonts/Super Morning.ttf", "I use Super Morning", 30);
@@ -54,7 +56,7 @@ public class Game1 : Game
         };
 
         // Drawn on top of Gum's own draw, inside the same Skia pass.
-        GumService.Default.AfterDraw += _ =>
+        GumUI.AfterDraw += _ =>
         {
             Renderer renderer = SystemManagers.Default.Renderer;
             renderer.Begin();
@@ -82,14 +84,14 @@ public class Game1 : Game
 #if DEBUG
         _automation?.BeforeUpdate();
 #endif
-        GumService.Default.Update(gameTime);
+        GumUI.Update(gameTime);
         base.Update(gameTime);
     }
 
     protected override void Draw(GameTime gameTime)
     {
         GraphicsDevice.Clear(Color.CornflowerBlue);
-        GumService.Default.Draw();
+        GumUI.Draw();
         base.Draw(gameTime);
     }
 

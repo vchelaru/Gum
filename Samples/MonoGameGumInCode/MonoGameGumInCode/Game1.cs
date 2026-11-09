@@ -14,6 +14,8 @@ namespace MonoGameGumInCode
 {
     public class Game1 : Game
     {
+        GumService GumUI => GumService.Default;
+
         private GraphicsDeviceManager _graphics;
         private SpriteBatch _spriteBatch;
 
@@ -59,10 +61,10 @@ namespace MonoGameGumInCode
 
         protected override void Initialize()
         {
-            GumService.Default.Initialize(this);
+            GumUI.Initialize(this);
 
             // Required for Apos.Shapes-backed shape fill/effects (see the shapes doc). Must come
-            // after GumService.Default.Initialize — ShapeRenderer.Initialize reads the initialized
+            // after GumUI.Initialize — ShapeRenderer.Initialize reads the initialized
             // GumService/GraphicsDevice.
             ShapeRenderer.Self.Initialize();
 
@@ -73,10 +75,10 @@ namespace MonoGameGumInCode
             // compiles a ContainerRuntime.SourceShaderFile (.fx or .slang path) at runtime (#3206, #7053).
             // With no resolver registered, a SourceShaderFile fails like a missing file
             // (call UseShadowDusk() before building any screen that uses one).
-            GumService.Default.UseShadowDusk();
+            GumUI.UseShadowDusk();
 
             // Demo the auto-fit helpers — flip via the Zoom/Expand buttons in the nav strip.
-            GumService.Default.EnableZoomToWindow();
+            GumUI.EnableZoomToWindow();
 
             BuildNavStrip();
 
@@ -118,8 +120,8 @@ namespace MonoGameGumInCode
             AddNavButton("Layer Camera", () => ShowScreen<LayerCameraSettingsScreen>());
             AddNavButton("Draw Call Stress", () => ShowScreen<DrawCallStressScreen>());
 
-            AddFitModeRadio("Zoom", isChecked: true, () => GumService.Default.EnableZoomToWindow());
-            AddFitModeRadio("Expand", isChecked: false, () => GumService.Default.EnableExpandToWindow());
+            AddFitModeRadio("Zoom", isChecked: true, () => GumUI.EnableZoomToWindow());
+            AddFitModeRadio("Expand", isChecked: false, () => GumUI.EnableExpandToWindow());
         }
 
         private void AddFitModeRadio(string text, bool isChecked, System.Action onChecked)
@@ -183,7 +185,7 @@ namespace MonoGameGumInCode
             if (!isAutomated && (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape)))
                 Exit();
 
-            GumService.Default.Update(gameTime);
+            GumUI.Update(gameTime);
 
             // FrameworkElement.Activity() is FRB-only and unavailable here, so screens that animate
             // (e.g. TextScreen's typewriter reveal, #3701) get a host-driven per-frame Tick instead.
@@ -211,7 +213,7 @@ namespace MonoGameGumInCode
         {
             GraphicsDevice.Clear(Color.CornflowerBlue);
 
-            GumService.Default.Draw();
+            GumUI.Draw();
 
             base.Draw(gameTime);
         }

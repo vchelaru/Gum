@@ -18,6 +18,8 @@ namespace KniSkiaGumFromFile;
 /// </summary>
 public class Game1 : Game
 {
+    GumService GumUI => GumService.Default;
+
     private const int StartWidth = 800;
     private const int StartHeight = 600;
 
@@ -43,7 +45,7 @@ public class Game1 : Game
         base.Initialize();
 
         // Skia reads the project from disk. The csproj copies KniGumFromFileContent to Content/.
-        GumService.Default.Initialize(this, "Content/GumProject.gumx");
+        GumUI.Initialize(this, "Content/GumProject.gumx");
 
         ShowScreen("StartScreen");
     }
@@ -209,7 +211,7 @@ public class Game1 : Game
 
         if (_currentScreenGue != null)
         {
-            GumService.Default.Update(gameTime, _currentScreenGue);
+            GumUI.Update(gameTime, _currentScreenGue);
         }
 
         DoSwapScreenLogic();
@@ -321,7 +323,7 @@ public class Game1 : Game
     protected override void Draw(GameTime gameTime)
     {
         GraphicsDevice.Clear(Color.CornflowerBlue);
-        GumService.Default.Draw();
+        GumUI.Draw();
         base.Draw(gameTime);
     }
 }
