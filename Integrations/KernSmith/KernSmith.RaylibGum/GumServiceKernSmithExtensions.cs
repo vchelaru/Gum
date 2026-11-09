@@ -18,7 +18,8 @@ public static class GumServiceKernSmithExtensions
     /// </summary>
     /// <param name="gumService">The service to enable KernSmith for.</param>
     /// <param name="backend">
-    /// Optional rasterizer backend override. When null, the default (FreeType) is used.
+    /// Optional rasterizer backend override. When null, FreeType is used, except on browser-wasm where
+    /// StbTrueType is selected.
     /// </param>
     /// <returns><paramref name="gumService"/>, so calls chain.</returns>
     public static T UseKernSmith<T>(this T gumService, RasterizerBackend? backend = null) where T : GumService
@@ -28,7 +29,7 @@ public static class GumServiceKernSmithExtensions
             throw new ArgumentNullException(nameof(gumService));
         }
 
-        CustomSetPropertyOnRenderable.InMemoryFontCreator = new KernSmithRaylibFontCreator(backend);
+        CustomSetPropertyOnRenderable.InMemoryFontCreator = new KernSmithRaylibFontCreator(backend ?? GumFontGenerator.SelectBackend());
         return gumService;
     }
 }

@@ -23,6 +23,8 @@ public class Game1 : Game
     {
         GumUI.Initialize(this, "{{GumProjectFolder}}{{GumProjectFile}}");
         {{InitLines}}
+        GumUI.UseKeyboardDefaults();
+        GumUI.UseGamepadDefaults();
         {{ScreenLines}}
 
         base.Initialize();

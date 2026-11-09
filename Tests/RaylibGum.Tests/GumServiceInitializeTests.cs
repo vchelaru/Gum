@@ -237,4 +237,50 @@ public class GumServiceInitializeTests
             try { System.IO.Directory.Delete(projectDirectory, recursive: true); } catch { /* best-effort */ }
         }
     }
+
+    [Fact]
+    public void Initialize_WithNoCanvasSize_ShouldUseTheWindowSize()
+    {
+        // A game's Initialize is the only call that sizes the canvas on MonoGame; raylib does the same, so a
+        // host never assigns CanvasWidth/CanvasHeight itself.
+        Gum.GumService.Default.Uninitialize();
+        ((bool)Raylib_cs.Raylib.IsWindowReady()).ShouldBeTrue();
+        GraphicalUiElement.CanvasWidth = 0;
+        GraphicalUiElement.CanvasHeight = 0;
+
+        try
+        {
+            Gum.GumService.Default.Initialize(DefaultVisualsVersion.V3);
+
+            GraphicalUiElement.CanvasWidth.ShouldBe((float)Raylib_cs.Raylib.GetRenderWidth());
+            GraphicalUiElement.CanvasHeight.ShouldBe((float)Raylib_cs.Raylib.GetRenderHeight());
+        }
+        finally
+        {
+            Gum.GumService.Default.Uninitialize();
+            TestAssemblyInitialize.ApplyDefaultTestState();
+        }
+    }
+
+    [Fact]
+    public void Initialize_WithACanvasSizeAlreadySet_ShouldKeepIt()
+    {
+        // Games written before Initialize read the window size set the canvas themselves; that stays honored.
+        Gum.GumService.Default.Uninitialize();
+        GraphicalUiElement.CanvasWidth = 321;
+        GraphicalUiElement.CanvasHeight = 123;
+
+        try
+        {
+            Gum.GumService.Default.Initialize(DefaultVisualsVersion.V3);
+
+            GraphicalUiElement.CanvasWidth.ShouldBe(321f);
+            GraphicalUiElement.CanvasHeight.ShouldBe(123f);
+        }
+        finally
+        {
+            Gum.GumService.Default.Uninitialize();
+            TestAssemblyInitialize.ApplyDefaultTestState();
+        }
+    }
 }

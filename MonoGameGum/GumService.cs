@@ -439,9 +439,12 @@ public partial class GumService : IGumService
     /// <exception cref="System.InvalidOperationException">Gum has not been initialized, so there is no keyboard.</exception>
     public GumService UseKeyboardDefaults()
     {
-        Gum.Forms.Controls.FrameworkElement.KeyboardsForUiControl.Add(
-            FormsUtilities.Keyboard ?? throw new System.InvalidOperationException(
-                "UseKeyboardDefaults was called with no keyboard. Initialize Gum before calling it."));
+        var keyboard = FormsUtilities.Keyboard ?? throw new System.InvalidOperationException(
+            "UseKeyboardDefaults was called with no keyboard. Initialize Gum before calling it.");
+        if (!Gum.Forms.Controls.FrameworkElement.KeyboardsForUiControl.Contains(keyboard))
+        {
+            Gum.Forms.Controls.FrameworkElement.KeyboardsForUiControl.Add(keyboard);
+        }
         return this;
     }
 
@@ -452,7 +455,13 @@ public partial class GumService : IGumService
     /// <returns>This service, so calls chain.</returns>
     public GumService UseGamepadDefaults()
     {
-        Gum.Forms.Controls.FrameworkElement.GamePadsForUiControl.AddRange(Gamepads);
+        foreach (var gamepad in Gamepads)
+        {
+            if (!Gum.Forms.Controls.FrameworkElement.GamePadsForUiControl.Contains(gamepad))
+            {
+                Gum.Forms.Controls.FrameworkElement.GamePadsForUiControl.Add(gamepad);
+            }
+        }
         return this;
     }
 

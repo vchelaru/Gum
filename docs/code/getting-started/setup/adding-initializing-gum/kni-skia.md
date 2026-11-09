@@ -81,6 +81,8 @@ public class Game1 : Game
         GumUI.UseGamepadDefaults(); // Optional: gamepad moves focus in Forms controls
         GumUI.UseShadowDusk(); // Optional: .fx and .slang shader files
         Gum.Expressions.GumExpressionService.Initialize(); // Optional: arithmetic expressions in variable references
+        GumUI.UseKeyboardDefaults();
+        GumUI.UseGamepadDefaults();
 
         base.Initialize();
     }

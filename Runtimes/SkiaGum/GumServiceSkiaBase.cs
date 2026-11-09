@@ -268,9 +268,12 @@ public abstract class GumServiceSkiaBase : IGumService
     /// </summary>
     IGumService IGumService.UseKeyboardDefaults()
     {
-        FrameworkElement.KeyboardsForUiControl.Add(
-            FormsUtilities.Keyboard ?? throw new InvalidOperationException(
-                "UseKeyboardDefaults was called with no keyboard. Initialize Gum before calling it."));
+        var keyboard = FormsUtilities.Keyboard ?? throw new InvalidOperationException(
+            "UseKeyboardDefaults was called with no keyboard. Initialize Gum before calling it.");
+        if (!FrameworkElement.KeyboardsForUiControl.Contains(keyboard))
+        {
+            FrameworkElement.KeyboardsForUiControl.Add(keyboard);
+        }
         return this;
     }
 
@@ -279,7 +282,13 @@ public abstract class GumServiceSkiaBase : IGumService
     /// </summary>
     IGumService IGumService.UseGamepadDefaults()
     {
-        FrameworkElement.GamePadsForUiControl.AddRange(Gamepads);
+        foreach (var gamepad in Gamepads)
+        {
+            if (!FrameworkElement.GamePadsForUiControl.Contains(gamepad))
+            {
+                FrameworkElement.GamePadsForUiControl.Add(gamepad);
+            }
+        }
         return this;
     }
 

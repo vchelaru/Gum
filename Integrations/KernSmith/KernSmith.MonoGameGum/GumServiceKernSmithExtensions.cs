@@ -18,8 +18,8 @@ public static class GumServiceKernSmithExtensions
     /// </summary>
     /// <param name="gumService">The initialized service whose graphics device creates the font textures.</param>
     /// <param name="backend">
-    /// Optional rasterizer backend override. When null, the default (FreeType) is used. Pass
-    /// <c>RasterizerBackend.StbTrueType</c> where native libraries are unavailable, for example Blazor WASM.
+    /// Optional rasterizer backend override. When null, FreeType is used, except on browser-wasm where
+    /// StbTrueType is selected (the <c>KernSmith.Rasterizers.StbTrueType</c> package must be referenced).
     /// </param>
     /// <returns><paramref name="gumService"/>, so calls chain.</returns>
     /// <exception cref="InvalidOperationException">The service has not been initialized, so it has no graphics device.</exception>
@@ -36,7 +36,8 @@ public static class GumServiceKernSmithExtensions
                 "UseKernSmith was called before the GumService was initialized, so it has no graphics device. Call Initialize first.");
         }
 
-        CustomSetPropertyOnRenderable.InMemoryFontCreator = new KernSmithFontCreator(gumService.Renderer.GraphicsDevice, backend);
+        CustomSetPropertyOnRenderable.InMemoryFontCreator = new KernSmithFontCreator(
+            gumService.Renderer.GraphicsDevice, backend ?? GumFontGenerator.SelectBackend());
         return gumService;
     }
 }
