@@ -406,9 +406,9 @@ public class NewProjectHappyPathScenarioTests
             dialog.CommandLine.ShouldBe($"gumcli new \"{gameFolder}\" --platform raylib" + Generate);
             dialog.SetChecked(NewProjectDialogText.RecommendedPackages, true);
 
-            // Local Gum source: KNI with Skia always links it.
+            // KNI with Skia has no stable package, so the command uses the preview one.
             dialog.ChoosePlatform("kniskia");
-            dialog.CommandLine.ShouldBe($"gumcli new \"{gameFolder}\" --platform kniskia --source-linked" + Generate);
+            dialog.CommandLine.ShouldBe($"gumcli new \"{gameFolder}\" --platform kniskia --preview" + Generate);
 
             dialog.ClickCancel();
         });

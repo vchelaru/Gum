@@ -39,7 +39,7 @@ public static class RecommendedPackages
         HostPlatform.Stride => new[] { "Gum.SkiaSharp.ShadowDusk", Expressions },
         // brutal.md: no Shapes (Skia-based). The BRUTAL window package is already in the host template.
         HostPlatform.Brutal => new[] { "Gum.SkiaSharp.ShadowDusk", Expressions },
-        // No setup page; the platform is always source-linked, where NuGet add-ons would pull in a second Gum.
+        // No setup page lists add-ons for it, and a source-linked project would pull in a second Gum from NuGet ones.
         HostPlatform.KniSkia => Array.Empty<string>(),
         _ => Array.Empty<string>()
     };

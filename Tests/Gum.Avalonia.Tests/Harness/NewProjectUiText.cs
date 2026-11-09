@@ -25,7 +25,7 @@ internal static class NewProjectUiText
     public const string RefusedHeading = "Project already exists";
 
     public const string StridePlatformNote = "Runs on Windows only; renders with Skia on the GPU.";
-    public const string KniSkiaPlatformNote = "Gum.KniSkia is not on NuGet yet, so the local Gum source is required.";
+    public const string KniSkiaPlatformNote = "Gum.KniSkia has no stable release yet, so Stable is unavailable.";
     public const string SilkNetPlatformNote = "Needs a graphics driver with OpenGL 3.3.";
     public const string NoXmlWithCodeProjectNote = "gumcli new has no option for the .gumx format with a code project yet.";
 

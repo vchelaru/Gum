@@ -68,7 +68,7 @@ public static class NewProjectDialogText
     public static string TargetNotEmptyBody(string fullPath) => $"{fullPath} already has files. Files with the same names may be overwritten.";
 
     public const string StridePlatformNote = "Runs on Windows only; renders with Skia on the GPU.";
-    public const string KniSkiaPlatformNote = "Gum.KniSkia is not on NuGet yet, so the local Gum source is required.";
+    public const string KniSkiaPlatformNote = "Gum.KniSkia has no stable release yet, so Stable is unavailable.";
     public const string SilkNetPlatformNote = "Needs a graphics driver with OpenGL 3.3.";
     public const string BrutalPlatformNote = "Windows and Linux; needs an OpenGL 3.3 driver. Gum draws with Skia and shows the frame in your GLFW window.";
 

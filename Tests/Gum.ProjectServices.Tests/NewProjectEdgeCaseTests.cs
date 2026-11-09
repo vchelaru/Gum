@@ -57,7 +57,7 @@ public class NewProjectEdgeCaseTests : BaseTestClass
         new NewProjectRequest
         {
             Path = path, Platform = platform, Template = "empty", Restore = false,
-            // KNI with Skia is not on NuGet, so it is always source-linked.
+            // KNI with Skia has no stable NuGet package, so this helper source-links it.
             SourceLinked = platform == "kniskia"
         };
 

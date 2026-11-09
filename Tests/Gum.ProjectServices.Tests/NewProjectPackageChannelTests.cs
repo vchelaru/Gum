@@ -47,11 +47,6 @@ public class NewProjectPackageChannelTests : NewProjectServiceTestBase
     [MemberData(nameof(PlatformNames))]
     public async Task Preview_WritesAPrereleaseAwareGumReference(string platform)
     {
-        if (platform == "kniskia")
-        {
-            return; // Always local source; see Preview_WithKniSkia_IsRefused.
-        }
-
         NewProjectResult result = await Run(ChannelRequest(platform, NewProjectPackageChannel.Preview));
 
         result.Files.Success.ShouldBeTrue(result.Files.ErrorMessage);
@@ -60,13 +55,22 @@ public class NewProjectPackageChannelTests : NewProjectServiceTestBase
         csproj.ShouldNotContain("Version=\"*\"");
     }
 
+    [Fact]
+    public async Task Preview_WithKniSkia_ReferencesTheGumKniSkiaPackage()
+    {
+        NewProjectResult result = await Run(ChannelRequest("kniskia", NewProjectPackageChannel.Preview));
+
+        result.Files.Success.ShouldBeTrue(result.Files.ErrorMessage);
+        Csproj().ShouldContain("<PackageReference Include=\"Gum.KniSkia\" Version=\"*-*\"");
+    }
+
     [Theory]
     [MemberData(nameof(PlatformNames))]
     public async Task Stable_KeepsTheFloatingGumReference(string platform)
     {
         if (platform == "kniskia")
         {
-            return;
+            return; // No stable package exists; see Stable_WithKniSkia_IsRefusedSayingThereIsNoStablePackage.
         }
 
         NewProjectResult result = await Run(ChannelRequest(platform, NewProjectPackageChannel.Stable));
@@ -144,12 +148,23 @@ public class NewProjectPackageChannelTests : NewProjectServiceTestBase
     }
 
     [Fact]
-    public void Preview_WithKniSkia_IsRefusedSayingSourceLinkedIsTheWay()
+    public void Stable_WithKniSkia_IsRefusedSayingThereIsNoStablePackage()
+    {
+        NewProjectValidation validation = CreateService().Validate(ChannelRequest("kniskia", NewProjectPackageChannel.Stable));
+
+        validation.Error!.Kind.ShouldBe(NewProjectErrorKind.NoStablePackage);
+        validation.Error.Message.ShouldContain("no stable");
+        validation.Error.Message.ShouldContain("--preview");
+        validation.Error.Message.ShouldContain("--source-linked");
+    }
+
+    [Fact]
+    public void Preview_WithKniSkia_IsAccepted()
     {
         NewProjectValidation validation = CreateService().Validate(ChannelRequest("kniskia", NewProjectPackageChannel.Preview));
 
-        validation.Error!.Kind.ShouldBe(NewProjectErrorKind.KniSkiaNeedsSourceLinked);
-        validation.Error.Message.ShouldContain("--source-linked");
+        validation.Error.ShouldBeNull();
+        validation.Resolved!.UsesPrerelease.ShouldBeTrue();
     }
 
     #endregion
