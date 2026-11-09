@@ -32,7 +32,7 @@ using Gum.Themes.Editor;
 
 protected override void Initialize()
 {
-    GumService.Default.Initialize(this, DefaultVisualsVersion.Newest);
+    GumUI.Initialize(this, DefaultVisualsVersion.Newest);
 
     EditorTheme.Apply(GraphicsDevice);
 

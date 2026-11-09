@@ -55,7 +55,7 @@ Next, add RaylibGum as a project reference in your game project. Your project mi
 
 ## Adding Dynamic Fonts (Optional)
 
-By default, Gum uses pre-built bitmap font (.fnt) files for text rendering. The `KernSmith.RaylibGum` package added above enables dynamic in-memory font generation, which lets you set `Font`, `FontSize`, `IsBold`, `IsItalic`, `OutlineThickness`, and `UseFontSmoothing` on any `TextRuntime` without needing .fnt/.png files on disk. Assign `RaylibGum.Renderables.CustomSetPropertyOnRenderable.InMemoryFontCreator` a `new KernSmith.Gum.KernSmithRaylibFontCreator()` after `GumUI.Initialize`, as shown in [Full Program](#full-program).
+By default, Gum uses pre-built bitmap font (.fnt) files for text rendering. The `KernSmith.RaylibGum` package added above enables dynamic in-memory font generation, which lets you set `Font`, `FontSize`, `IsBold`, `IsItalic`, `OutlineThickness`, and `UseFontSmoothing` on any `TextRuntime` without needing .fnt/.png files on disk. Call `GumUI.UseKernSmith()` after `GumUI.Initialize`, as shown in [Full Program](#full-program).
 
 {% hint style="info" %}
 For shipping games, you should register custom .ttf fonts rather than relying on system fonts. For more information, see the [Fonts](../../../standard-visuals/textruntime/fonts.md) page.
@@ -76,8 +76,8 @@ RuntimeHelpers.RunClassConstructor(typeof(StbTrueTypeRasterizer).TypeHandle);
 Then pass the backend explicitly:
 
 ```csharp
-CustomSetPropertyOnRenderable.InMemoryFontCreator =
-    new KernSmithRaylibFontCreator(KernSmith.RasterizerBackend.StbTrueType);
+// Initialize
+GumUI.UseKernSmith(KernSmith.RasterizerBackend.StbTrueType);
 ```
 {% endhint %}
 
@@ -101,7 +101,7 @@ Add the NuGet package:
 dotnet add package Gum.Expressions
 ```
 
-Then call `Gum.Expressions.GumExpressionService.Initialize()` after `GumUI.Initialize`, as shown in [Full Program](#full-program). Expression support is typically used with a Gum project that has variable references defined in the tool.
+Then call `UseExpressions()` after `GumUI.Initialize`, as shown in [Full Program](#full-program). Expression support is typically used with a Gum project that has variable references defined in the tool.
 
 If linking to source instead of NuGet, add `<Gum Root>/Runtimes/GumExpressions/GumExpressions.csproj` to your solution.
 
@@ -130,9 +130,9 @@ Raylib.SetTargetFPS(60);
 GumService GumUI = GumService.Default;
 
 GumUI.Initialize("Content/GumProject/GumProject.gumj");
-RaylibGum.Renderables.CustomSetPropertyOnRenderable.InMemoryFontCreator = new KernSmith.Gum.KernSmithRaylibFontCreator(); // Recommended, optional: dynamic fonts
+GumUI.UseKernSmith(); // Recommended, optional: dynamic fonts
 GumUI.UseShadowDusk(); // Optional: .fx and .slang shader files
-Gum.Expressions.GumExpressionService.Initialize(); // Optional: arithmetic expressions in variable references
+GumUI.UseExpressions(); // Optional: arithmetic expressions in variable references
 GumUI.UseKeyboardDefaults();
 GumUI.UseGamepadDefaults();
 

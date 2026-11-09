@@ -14,7 +14,7 @@ The cursor can be accessed through GumService.
 
 ```csharp
 // Initialize
-var cursor = GumService.Default.Cursor;
+var cursor = GumUI.Cursor;
 ```
 
 GumService.Default.Cursor was introduced in March 2025. For legacy projects on older versions of Gum, the cursor can be accessed through the now-deprecated FormsUtilities class:
@@ -43,7 +43,7 @@ The following code shows how to check if the user is over Gum UI.
 
 ```csharp
 // Update
-var cursor = GumService.Default.Cursor;
+var cursor = GumUI.Cursor;
 var isOverUi = cursor.WindowOver != null;
 
 if(isOverUi == false)
@@ -74,7 +74,7 @@ For example, consider a game which allows the user to purchase items. The user c
 
 ```csharp
 // Update
-var cursor = GumService.Default.Cursor;
+var cursor = GumUI.Cursor;
 
 // A PrimaryClick means the cursor was released...
 // and the WindowOver can be checked if it is over the area 

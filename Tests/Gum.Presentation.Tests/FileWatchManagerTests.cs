@@ -14,6 +14,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using ToolsUtilities;
 using Xunit;
@@ -26,7 +27,7 @@ namespace Gum.Presentation.Tests;
 /// pipeline - mocking FileSystemWatcher itself would test nothing. Polls with a generous
 /// timeout rather than a fixed sleep to absorb OS event-delivery jitter.
 /// </summary>
-public class FileWatchManagerTests : IDisposable
+public class FileWatchManagerTests : BaseTestClass
 {
     private readonly string _tempDirectory;
 
@@ -36,9 +37,10 @@ public class FileWatchManagerTests : IDisposable
         Directory.CreateDirectory(_tempDirectory);
     }
 
-    public void Dispose()
+    public override void Dispose()
     {
         try { Directory.Delete(_tempDirectory, recursive: true); } catch { /* best-effort */ }
+        base.Dispose();
     }
 
     private static FileWatchManager BuildSut(
@@ -286,6 +288,27 @@ public class FileWatchManagerTests : IDisposable
             "a rename onto ProjectCodeSettings.codsj should be queued like an in-place save");
     }
 
+    /// <summary>Records every raw OS event the real watcher raises, so a missing queue entry can be told
+    /// apart from an event the OS never delivered.</summary>
+    private sealed class RecordingWatcherFactory : IFileSystemWatcherFactory
+    {
+        public ConcurrentQueue<string> Events { get; } = new();
+        private readonly System.Diagnostics.Stopwatch _clock = System.Diagnostics.Stopwatch.StartNew();
+
+        public FileSystemWatcher Create()
+        {
+            FileSystemWatcher watcher = new FileSystemWatcher();
+            watcher.Created += (_, e) => Record("Created", e.FullPath);
+            watcher.Changed += (_, e) => Record("Changed", e.FullPath);
+            watcher.Deleted += (_, e) => Record("Deleted", e.FullPath);
+            watcher.Renamed += (_, e) => Record("Renamed", e.OldFullPath + " -> " + e.FullPath);
+            watcher.Error += (_, e) => Record("Error", e.GetException().Message);
+            return watcher;
+        }
+
+        private void Record(string kind, string detail) => Events.Enqueue($"{_clock.ElapsedMilliseconds}ms {kind} {detail}");
+    }
+
     [Theory]
     [InlineData(false)]
     [InlineData(true)]
@@ -296,9 +319,13 @@ public class FileWatchManagerTests : IDisposable
         File.WriteAllText(profile.FullPath, "{}");
         Mock<IProjectRestrictions> restrictions = new Mock<IProjectRestrictions>();
         restrictions.Setup(r => r.ProfileFilePath).Returns(profile);
-        FileWatchManager sut = BuildSut(out _, out _, out _, watchedDirectory, projectRestrictions: restrictions.Object);
+        RecordingWatcherFactory watcherFactory = new RecordingWatcherFactory();
+        FileWatchManager sut = BuildSut(
+            out Mock<IGuiCommands> guiCommandsMock, out _, out _, watchedDirectory,
+            watcherFactory: watcherFactory, projectRestrictions: restrictions.Object);
         sut.EnableWithDirectories(new HashSet<FilePath> { watchedDirectory });
 
+        System.Diagnostics.Stopwatch elapsed = System.Diagnostics.Stopwatch.StartNew();
         if (atomicSave)
         {
             string tempName = profile.FullPath + ".tmp";
@@ -310,7 +337,16 @@ public class FileWatchManagerTests : IDisposable
             File.WriteAllText(profile.FullPath, """{ "disableComponents": true }""");
         }
 
-        PollUntil(() => sut.ChangedFilesWaitingForFlush.Contains(profile)).ShouldBeTrue();
+        bool queued = PollUntil(() => sut.ChangedFilesWaitingForFlush.Contains(profile));
+
+        // Built only on failure: says whether the OS delivered the event (raw events) or the manager dropped
+        // it (queue and Output lines), so the next flake explains itself.
+        if (!queued) Assert.Fail(
+            $"engine profile not queued after {elapsed.ElapsedMilliseconds}ms (atomicSave: {atomicSave}, watching: "
+            + $"{string.Join(", ", sut.CurrentFilePathsWatching)}). Raw watcher events: "
+            + $"[{string.Join(" | ", watcherFactory.Events)}]. Queue: "
+            + $"[{string.Join(", ", sut.ChangedFilesWaitingForFlush)}]. Output: "
+            + $"[{string.Join(" | ", guiCommandsMock.Invocations.Where(i => i.Method.Name == nameof(IGuiCommands.PrintOutput)).Select(i => i.Arguments[0]))}]");
     }
 
     [Fact]

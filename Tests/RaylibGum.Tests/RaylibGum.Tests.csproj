@@ -40,6 +40,8 @@
     <!-- Referenced so the in-memory font creator can be exercised end-to-end (KernSmith atlas
          generation -> raylib Texture2D upload -> Raylib_cs.Font). -->
     <ProjectReference Include="..\..\Integrations\KernSmith\KernSmith.RaylibGum\KernSmith.RaylibGum.csproj" />
+    <!-- The Gum.Expressions package: GumService.UseExpressions() (#7765). -->
+    <ProjectReference Include="..\..\Runtimes\GumExpressions\GumExpressions.csproj" />
   </ItemGroup>
 
   <ItemGroup>

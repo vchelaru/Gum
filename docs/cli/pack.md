@@ -184,7 +184,7 @@ Pass the bundle to `Initialize` in place of the `.gumj`:
 
 ```csharp
 // Initialize
-GumService.Default.Initialize(graphics, gumProjectFile: "GumProject.gumpkg");
+GumUI.Initialize(graphics, gumProjectFile: "GumProject.gumpkg");
 ```
 
 The extension you pass decides how Gum loads the project. A path ending in `.gumj` (or `.gumx`) reads loose files, and a path ending in `.gumpkg` serves every element, texture, and font read from inside the bundle. Gum does not look for a sibling file of the other kind, so a `.gumpkg` sitting next to your loose project is ignored unless you pass its path to `Initialize`.

@@ -110,6 +110,10 @@ For more detail, see the documentation on `GumService.Initialize` in your IDE.
 
 Stride draws through a `GraphicsCompositor`, and Gum draws as part of that pipeline, so create the compositor before calling `Initialize`. Stride also renders the scene through a camera, so add one or the window stays empty. The following is a complete `Program.cs` that also shows a button. Lines marked **Optional** match the optional packages above, so delete the lines for any package you skipped.
 
+{% hint style="info" %}
+Available in preview NuGet packages (use a `-preview` version), or now if building Gum from source.
+{% endhint %}
+
 ```csharp
 using Gum;
 using Gum.Forms.Controls;
@@ -132,7 +136,7 @@ void Start(Scene rootScene)
 
     GumUI.Initialize(game, "Content/GumProject/GumProject.gumj");
     GumUI.UseShadowDusk(); // Optional: .fx and .slang shader files
-    Gum.Expressions.GumExpressionService.Initialize(); // Optional: arithmetic expressions in variable references
+    GumUI.UseExpressions(); // Optional: arithmetic expressions in variable references
     GumUI.UseKeyboardDefaults();
     GumUI.UseGamepadDefaults();
 

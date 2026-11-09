@@ -116,7 +116,7 @@ If you keep your Gum project outside `wwwroot` and want to include it via a wild
 ```
 
 {% hint style="warning" %}
-The Gum project files must end up under `wwwroot` in the published output. Files placed anywhere else are not served by the WebAssembly host and `GumService.Default.Initialize` will fail to load the `.gumj`.
+The Gum project files must end up under `wwwroot` in the published output. Files placed anywhere else are not served by the WebAssembly host and `GumUI.Initialize` will fail to load the `.gumj`.
 {% endhint %}
 {% endtab %}
 
@@ -217,7 +217,7 @@ public static void Main()
 {% tab title="Silk.NET" %}
 ```csharp
 // Initialize
-GumService.Default.Initialize(window, "Content/GumProject/GumProject.gumj");
+GumUI.Initialize(window, "Content/GumProject/GumProject.gumj");
 
 // This assumes that your project has at least 1 screen
 if (ObjectFinder.Self.GumProjectSave.Screens.Count == 0)

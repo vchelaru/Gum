@@ -28,8 +28,8 @@ Call `UseSingleThreadedAsync` once, after `Initialize`:
 ```csharp
 protected override void Initialize()
 {
-    GumService.Default.Initialize(this);
-    GumService.Default.UseSingleThreadedAsync(); // ← this is all you need
+    GumUI.Initialize(this);
+    GumUI.UseSingleThreadedAsync(); // ← this is all you need
     base.Initialize();
 }
 ```
@@ -52,7 +52,7 @@ A service that did not call `UseSingleThreadedAsync` (for example because you in
 
 If you copied `SingleThreadSynchronizationContext` into your own project from an older version of this guide and pump `Update()` yourself, that still works — do **not** also call `UseSingleThreadedAsync`. The two installs would conflict.
 
-If you want to take ownership of the context for advanced reasons (custom queueing, screen-change `Clear()` calls, etc.), you can access the installed instance via `GumService.Default.SynchronizationContext` after calling `UseSingleThreadedAsync`.
+If you want to take ownership of the context for advanced reasons (custom queueing, screen-change `Clear()` calls, etc.), you can access the installed instance via `GumUI.SynchronizationContext` after calling `UseSingleThreadedAsync`.
 
 ## Platform Coverage
 

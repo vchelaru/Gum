@@ -79,7 +79,7 @@ public class Game1 : Game
     {
         GumUI.Initialize(this, "Content/GumProject/GumProject.gumj");
         GumUI.UseShadowDusk(); // Optional: .fx and .slang shader files
-        Gum.Expressions.GumExpressionService.Initialize(); // Optional: arithmetic expressions in variable references
+        GumUI.UseExpressions(); // Optional: arithmetic expressions in variable references
         GumUI.UseKeyboardDefaults();
         GumUI.UseGamepadDefaults();
 

@@ -28,19 +28,19 @@ The strategies are:
 
 KernSmith is an in-memory font generator for MonoGame, KNI, FNA, and Raylib. Install the NuGet package for your runtime and KernSmith generates font atlases at runtime so you can freely change font properties without managing files on disk.
 
+{% hint style="info" %}
+Available in preview NuGet packages (use a `-preview` version), or now if building Gum from source.
+{% endhint %}
+
 {% tabs %}
 {% tab title="MonoGame" %}
 1. Add the `KernSmith.MonoGameGum` NuGet package to your project.
-2. Assign the `InMemoryFontCreator` after initializing Gum:
+2. Call `UseKernSmith()` after initializing Gum:
 
 ```csharp
-using Gum.Wireframe;
-
 // Initialize
-GumService.Default.Initialize(this);
-
-CustomSetPropertyOnRenderable.InMemoryFontCreator =
-    new KernSmithFontCreator(GraphicsDevice);
+GumUI.Initialize(this);
+GumUI.UseKernSmith();
 ```
 
 Once this is set up, font properties work automatically. Setting `Font`, `FontSize`, `IsBold`, `IsItalic`, `OutlineThickness`, `UseFontSmoothing`, and baked drop shadow (`HasDropshadow` plus the dropshadow fields) on a `TextRuntime` generates the needed font in memory without any font files on disk:
@@ -60,16 +60,12 @@ Any combination of font properties can be used and the font is created on demand
 
 {% tab title="KNI" %}
 1. Add the `KernSmith.KniGum` NuGet package to your project.
-2. Assign the `InMemoryFontCreator` after initializing Gum:
+2. Call `UseKernSmith()` after initializing Gum:
 
 ```csharp
-using Gum.Wireframe;
-
 // Initialize
-GumService.Default.Initialize(this);
-
-CustomSetPropertyOnRenderable.InMemoryFontCreator =
-    new KernSmithFontCreator(GraphicsDevice);
+GumUI.Initialize(this);
+GumUI.UseKernSmith();
 ```
 
 Once this is set up, font properties work automatically:
@@ -87,16 +83,12 @@ text.AddToRoot();
 
 {% tab title="Raylib" %}
 1. Add the `KernSmith.RaylibGum` NuGet package to your project.
-2. Assign the `InMemoryFontCreator` after initializing Gum:
+2. Call `UseKernSmith()` after initializing Gum:
 
 ```csharp
-using RaylibGum.Renderables;
-
 // Initialize
-GumService.Default.Initialize();
-
-CustomSetPropertyOnRenderable.InMemoryFontCreator =
-    new KernSmithRaylibFontCreator();
+GumUI.Initialize();
+GumUI.UseKernSmith();
 ```
 
 Once this is set up, font properties work automatically — the same `TextRuntime` fields as MonoGame/KNI, including baked drop shadow. See [TextRuntime Fonts — Baked drop shadow](../standard-visuals/textruntime/fonts.md#baked-drop-shadow).
@@ -114,16 +106,12 @@ text.AddToRoot();
 
 {% tab title="FNA" %}
 1. Add the `KernSmith.FnaGum` NuGet package to your project.
-2. Assign the `InMemoryFontCreator` after initializing Gum:
+2. Call `UseKernSmith()` after initializing Gum:
 
 ```csharp
-using Gum.Wireframe;
-
 // Initialize
-GumService.Default.Initialize(this);
-
-CustomSetPropertyOnRenderable.InMemoryFontCreator =
-    new KernSmithFontCreator(GraphicsDevice);
+GumUI.Initialize(this);
+GumUI.UseKernSmith();
 ```
 
 Once this is set up, font properties work automatically:
@@ -313,7 +301,7 @@ Both `AddFontRange` and `AddCharacters` are static and apply to every `BmfcSave`
 
 ## Dynamic Generation on SkiaGum
 
-SkiaGum is its own thing, and Silk.NET (`Gum.SilkNet`) shares this exact same font path since it renders through SkiaGum. Neither uses KernSmith — SkiaSharp rasterizes glyphs directly, so dynamic font generation works out of the box. No NuGet package to install, no `InMemoryFontCreator` to assign.
+SkiaGum is its own thing, and Silk.NET (`Gum.SilkNet`) shares this exact same font path since it renders through SkiaGum. Neither uses KernSmith. SkiaSharp rasterizes glyphs directly, so dynamic font generation works out of the box. No NuGet package to install, no `UseKernSmith()` call.
 
 ### System Fonts
 

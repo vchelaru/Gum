@@ -82,17 +82,11 @@ Whether you are using code-only or the Gum tool, add the following line of code 
 ```csharp
 // Initialize
 GumUI.Initialize(...);
-Gum.Renderables.ShapeRenderer.Self.Initialize();
+GumUI.UseShapes();
 ```
 
-`ShapeRenderer` lives in the `Gum.Renderables` namespace. The line above spells the namespace out so it can be pasted as-is. If you prefer, add `using Gum.Renderables;` to the file and call `ShapeRenderer.Self.Initialize();` instead.
-
 {% hint style="info" %}
-**As of November 2026:** `ShapeRenderer` lives in `Gum.Renderables`. Earlier releases used `MonoGameAndGum.Renderables`, which still compiles with a warning. If you are building Gum from source before the November 2026 release, use the new namespace now. See [Migrating to 2026 November](../../gum-tool/upgrading/migrating-to-2026-november.md#shapes-package-types-moved-to-gum.renderables-and-gum.content).
-{% endhint %}
-
-{% hint style="info" %}
-**December 2025 and earlier** used a different signature that took the graphics device and content manager: `ShapeRenderer.Self.Initialize(GraphicsDevice, Content);`. From January 2026 on, the parameterless `Initialize()` is the form to use.
+Available in preview NuGet packages (use a `-preview` version), or now if building Gum from source.
 {% endhint %}
 {% endtab %}
 
@@ -130,8 +124,7 @@ public class Game1 : Game
     protected override void Initialize()
     {
         GumUI.Initialize(this);
-        // Initialize shape renderer after GumUI:
-        Gum.Renderables.ShapeRenderer.Self.Initialize();
+        GumUI.UseShapes(); // Initialize shape renderer after GumUI
 
         var circle = new CircleRuntime();
         circle.AddToRoot();
