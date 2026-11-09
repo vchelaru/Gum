@@ -376,12 +376,17 @@ char id=67 x=0 y=0 width={xadvance} height=13 xoffset=0 yoffset=4 xadvance={xadv
         text.RawText = "AB AB";
         text.WrappedText.Count.ShouldBe(1); // guard: the scenario really is single-line
 
-        AllocationResult result = AllocationMeasurer.Measure(
+        // MeasureMinimum: an early-in-process run on a loaded CI runner (Windows runs several test
+        // streams concurrently) can leak a one-shot runtime allocation into a single window (CI saw
+        // 6216 bytes, not a multiple of the 500 iterations, so not a per-call allocation). A genuine
+        // regression allocates on every attempt and still fails.
+        AllocationResult result = AllocationMeasurer.MeasureMinimum(
             () => text.UpdateWrappedText(),
+            attempts: 3,
             warmupIterations: 50,
             measuredIterations: 500);
 
-        result.TotalBytes.ShouldBe(0);
+        result.TotalBytes.ShouldBe(0, $"best of 3 attempts allocated {result.BytesPerIteration} bytes/iteration over {result.Iterations} iterations");
     }
 
     // A genuine wrap should allocate only its output line strings; the tokenizer scratch and per-word
