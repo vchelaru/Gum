@@ -751,7 +751,7 @@ public abstract class GumServiceSkiaBase : IGumService
     /// <summary>
     /// Draws Gum into the canvas it was initialized with.
     /// </summary>
-    public void Draw()
+    public virtual void Draw()
     {
         SystemManagers.Default.Draw();
     }
@@ -759,13 +759,15 @@ public abstract class GumServiceSkiaBase : IGumService
     /// <summary>
     /// Draws Gum into <paramref name="canvas"/> and keeps drawing into it on later <see cref="Draw()"/>
     /// calls. For a host whose canvas is only readable inside a render pass, such as a
-    /// SkiaGameRendering target: pass the pass's canvas each frame.
+    /// SkiaGameRendering target: pass the pass's canvas each frame. It draws directly and never goes
+    /// through <see cref="Draw()"/>, so a host that overrides <see cref="Draw()"/> to manage its own
+    /// canvas can call this from there.
     /// </summary>
     /// <param name="canvas">The canvas to draw into this frame.</param>
     public void Draw(SKCanvas canvas)
     {
         SystemManagers.Default.Canvas = canvas;
-        Draw();
+        SystemManagers.Default.Draw();
     }
 
     private double _previousTotalSeconds;
