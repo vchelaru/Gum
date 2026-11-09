@@ -3,7 +3,6 @@ using Gum.ProjectServices.Screenshot;
 using Gum.Wireframe;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Gum.Renderables;
 using MonoGameGum;
 using RenderingLibrary;
 using System;
