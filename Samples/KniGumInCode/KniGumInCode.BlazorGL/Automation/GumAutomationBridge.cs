@@ -20,6 +20,8 @@ namespace KniGumInCode.Automation;
 /// </summary>
 public static class GumAutomationBridge
 {
+    static GumService GumUI => GumService.Default;
+
     // The assembly name of the BlazorGL head (AssemblyName in the csproj). DotNet.invokeMethod
     // needs it to find the [JSInvokable] method below.
     const string AssemblyName = "KniGumInCode";
@@ -95,7 +97,7 @@ public static class GumAutomationBridge
         {
             case "ready":
                 // The game is created on the first frame, so the Gum roots exist a moment later.
-                return GumService.Default.Root != null && _game.GraphicsDevice != null;
+                return GumUI.Root != null && _game.GraphicsDevice != null;
             case "find":
                 return Describe(Require(args));
             case "bounds":
@@ -130,8 +132,7 @@ public static class GumAutomationBridge
     static GraphicalUiElement Find(string path)
     {
         string[] segments = path.Split('.');
-        GumService gum = GumService.Default;
-        foreach (GraphicalUiElement root in new GraphicalUiElement[] { gum.Root, gum.PopupRoot, gum.ModalRoot })
+        foreach (GraphicalUiElement root in new GraphicalUiElement[] { GumUI.Root, GumUI.PopupRoot, GumUI.ModalRoot })
         {
             GraphicalUiElement current = root;
             foreach (string segment in segments)

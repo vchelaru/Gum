@@ -11,6 +11,8 @@ namespace KniSkiaGumCodeGeneration;
 /// </summary>
 public class Game1 : Game
 {
+    GumService GumUI => GumService.Default;
+
     private readonly GraphicsDeviceManager _graphics;
 
 #if DEBUG
@@ -40,7 +42,7 @@ public class Game1 : Game
         base.Initialize();
 
         // Skia reads the project from disk. The csproj copies Content/GumProject to the output.
-        GumService.Default.Initialize(this, "Content/GumProject/GumProject.gumx");
+        GumUI.Initialize(this, "Content/GumProject/GumProject.gumx");
 
         _mainMenu = new MainMenuFullGeneration
         {
@@ -54,20 +56,20 @@ public class Game1 : Game
 #if DEBUG
         _automation?.BeforeUpdate();
 #endif
-        GumService.Default.Update(gameTime);
+        GumUI.Update(gameTime);
         base.Update(gameTime);
     }
 
     protected override void Draw(GameTime gameTime)
     {
         GraphicsDevice.Clear(Color.CornflowerBlue);
-        GumService.Default.Draw();
+        GumUI.Draw();
         base.Draw(gameTime);
     }
 
     protected override void UnloadContent()
     {
-        GumService.Default.Root.Children.Clear();
+        GumUI.Root.Children.Clear();
         _mainMenu = null;
         base.UnloadContent();
     }

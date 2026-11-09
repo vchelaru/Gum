@@ -18,6 +18,8 @@ namespace FontPlayground.MonoGame;
 /// </summary>
 public class Game1 : Game
 {
+    GumService GumUI => GumService.Default;
+
     private readonly GraphicsDeviceManager _graphics;
 
     // Issue #4317 manual-test rig: mouse wheel zooms the shared camera, magnifying both preview texts
@@ -61,14 +63,14 @@ public class Game1 : Game
 
     protected override void Initialize()
     {
-        GumService.Default.Initialize(this);
+        GumUI.Initialize(this);
 
         // Wire up KernSmith so any TextRuntime can get a font for any (family, size, style)
         // without a .fnt file on disk. This is what makes the live preview re-render work.
         CustomSetPropertyOnRenderable.InMemoryFontCreator =
             new KernSmithFontCreator(GraphicsDevice);
 
-        FontPlaygroundScreen.Build(GumService.Default.Root);
+        FontPlaygroundScreen.Build(GumUI.Root);
 
         BuildFractionalFontSizeDemo();
         BuildZoomOversamplingDemo();
@@ -132,7 +134,7 @@ public class Game1 : Game
         _plainZoomPreviewText.Green = 255;
         _plainZoomPreviewText.Blue = 255;
         _plainZoomPreviewText.Alpha = 255;
-        GumService.Default.Root.Children.Add(_plainZoomPreviewText);
+        GumUI.Root.Children.Add(_plainZoomPreviewText);
 
         _oversampledZoomPreviewText = new TextRuntime();
         _oversampledZoomPreviewText.Text = "Scroll to zoom (auto-crisp)";
@@ -143,7 +145,7 @@ public class Game1 : Game
         _oversampledZoomPreviewText.Green = 255;
         _oversampledZoomPreviewText.Blue = 255;
         _oversampledZoomPreviewText.Alpha = 255;
-        GumService.Default.Root.Children.Add(_oversampledZoomPreviewText);
+        GumUI.Root.Children.Add(_oversampledZoomPreviewText);
 
         _previousScrollWheelValue = Mouse.GetState().ScrollWheelValue;
     }
@@ -158,7 +160,7 @@ public class Game1 : Game
 
         UpdateZoomOversamplingDemo();
 
-        GumService.Default.Update(gameTime);
+        GumUI.Update(gameTime);
 
         base.Update(gameTime);
     }
@@ -195,7 +197,7 @@ public class Game1 : Game
     {
         GraphicsDevice.Clear(new Color(30, 30, 46));
 
-        GumService.Default.Draw();
+        GumUI.Draw();
 
         base.Draw(gameTime);
     }

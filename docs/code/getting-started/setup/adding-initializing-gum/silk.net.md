@@ -84,7 +84,7 @@ To create a project that already references Gum source, run [`gumcli new MyGame 
 
 ## Initializing Gum
 
-Gum takes the window you create, then creates the input context and the SkiaSharp surface over the window's framebuffer, follows window resizes, and registers gamepads with Forms controls. The following is a complete `Program.cs`. It runs on Windows, macOS, and Linux. Lines marked **Optional** match the optional packages above, so delete the lines for any package you skipped.
+Gum takes the window you create, then creates the input context and the SkiaSharp surface over the window's framebuffer, and follows window resizes. The following is a complete `Program.cs`. It runs on Windows, macOS, and Linux. Lines marked **Optional** match the optional packages above, so delete the lines for any package you skipped.
 
 {% hint style="info" %}
 Available in preview NuGet packages (use a `-preview` version), or now if building Gum from source.
@@ -119,6 +119,7 @@ GL gl = GL.GetApi(window);
 GumService GumUI = GumService.Default;
 
 GumUI.Initialize(window, "Content/GumProject/GumProject.gumj");
+GumUI.UseGamepadDefaults();
 GumUI.UseShadowDusk(); // Optional: .fx and .slang shader files
 Gum.Expressions.GumExpressionService.Initialize(); // Optional: arithmetic expressions in variable references
 

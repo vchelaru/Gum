@@ -25,6 +25,8 @@ public sealed class GumSample : MonoBehaviour
 {
     const string ProjectFile = "GumProject/GumProject.gumx";
 
+    GumService GumUI => GumService.Default;
+
     GumRenderer _renderer;
     Button _button;
     Label _label;
@@ -91,8 +93,8 @@ public sealed class GumSample : MonoBehaviour
         textBox.Placeholder = "Type here";
         panel.AddChild(textBox);
 
-        GumService.Default.UseKeyboardDefaults();
-        GumService.Default.UseGamepadDefaults();
+        GumUI.UseKeyboardDefaults();
+        GumUI.UseGamepadDefaults();
         // Gamepad navigation moves focus from the focused control, so start with one.
         _button.IsFocused = true;
     }
@@ -110,7 +112,7 @@ public sealed class GumSample : MonoBehaviour
         float x = _button.Visual.AbsoluteLeft + _button.Visual.AbsoluteWidth / 2;
         float y = _button.Visual.AbsoluteTop + _button.Visual.AbsoluteHeight / 2;
         bool down = _frame == 3;
-        GumService.Default.Cursor.SetMouseState(x, y, leftDown: down, middleDown: false, rightDown: false);
+        GumUI.Cursor.SetMouseState(x, y, leftDown: down, middleDown: false, rightDown: false);
 
         if (_frame == (int.TryParse(ArgumentAfter("--smoke-frames"), out int frames) ? frames : 60))
         {

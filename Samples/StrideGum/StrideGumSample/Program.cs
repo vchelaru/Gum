@@ -6,6 +6,7 @@ using Stride.CommunityToolkit.Rendering.Compositing;
 using Stride.Engine;
 
 using var game = new Game();
+GumService GumUI = GumService.Default;
 
 game.Run(start: Start);
 
@@ -16,7 +17,7 @@ void Start(Scene rootScene)
     // here on Stride ticks Gum's Update/Draw every frame -- unlike every other Gum runtime,
     // there is nothing for this sample to call per frame.
     game.AddGraphicsCompositor().AddCleanUIStage();
-    GumService.Default.Initialize(game);
+    GumUI.Initialize(game);
 
     BuildDemoUi();
 

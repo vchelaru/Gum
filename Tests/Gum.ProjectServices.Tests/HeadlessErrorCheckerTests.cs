@@ -664,8 +664,8 @@ public class HeadlessErrorCheckerTests : BaseTestClass
     public void GetErrorsFor_ShouldReportGum0002_WhenLocalVariableReferenceDisagreesWithMaterializedScalar()
     {
         // A state has BOTH a VariableReferences row that resolves X=100 AND an
-        // explicit scalar X=14. The local explicit value wins at lookup time, so the
-        // reference is silently ineffective — the author probably didn't realize.
+        // explicit scalar X=14. The two values conflict, so which one applies depends
+        // on where it is read — the author probably didn't realize.
         ComponentSave component = new ComponentSave { Name = "BadComponent", BaseType = "Container" };
         StateSave state = new StateSave { Name = "Default", ParentContainer = component };
         component.States.Add(state);
@@ -702,6 +702,25 @@ public class HeadlessErrorCheckerTests : BaseTestClass
         error.ElementName.ShouldBe("BadComponent");
         error.Severity.ShouldBe(ErrorSeverity.Warning);
         error.Message.ShouldContain("X");
+    }
+
+    [Fact]
+    public void GetErrorsFor_ShouldNotClaimExplicitValueWins_WhenReportingGum0002()
+    {
+        ComponentSave component = new ComponentSave { Name = "WordingComponent", BaseType = "Container" };
+        StateSave state = new StateSave { Name = "Default", ParentContainer = component };
+        component.States.Add(state);
+        state.Variables.Add(new VariableSave { Name = "SourceX", Type = "float", Value = 100f, SetsValue = true });
+        state.Variables.Add(new VariableSave { Name = "X", Type = "float", Value = 14f, SetsValue = true });
+        VariableListSave<string> refs = new VariableListSave<string> { Name = "VariableReferences", Type = "string" };
+        refs.Value.Add("X = SourceX");
+        state.VariableLists.Add(refs);
+        Project.Components.Add(component);
+
+        string message = _sut.GetErrorsFor(component, Project).ShouldHaveSingleItem().Message;
+
+        message.ShouldContain("The two values conflict");
+        message.ShouldNotContain("will win");
     }
 
     [Fact]

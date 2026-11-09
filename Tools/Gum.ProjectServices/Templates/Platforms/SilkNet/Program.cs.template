@@ -28,6 +28,7 @@ GL gl = GL.GetApi(window);
 GumService GumUI = GumService.Default;
 
 GumUI.Initialize(window, "Content/GumProject/{{GumProjectFile}}");
+GumUI.UseGamepadDefaults();
 {{InitLines}}
 {{ScreenLines}}
 

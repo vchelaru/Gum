@@ -28,6 +28,8 @@ namespace RaylibGumThemesShowcase;
 /// </summary>
 public static class Program
 {
+    static GumService GumUI => GumService.Default;
+
     private sealed class ThemeOption
     {
         public string Name { get; }
@@ -63,14 +65,14 @@ public static class Program
         const int screenWidth = 1400;
         const int screenHeight = 900;
 
-        GumService.Default.CanvasWidth = screenWidth;
-        GumService.Default.CanvasHeight = screenHeight;
+        GumUI.CanvasWidth = screenWidth;
+        GumUI.CanvasHeight = screenHeight;
 
         SetConfigFlags(ConfigFlags.Msaa4xHint | ConfigFlags.ResizableWindow);
         InitWindow(screenWidth, screenHeight, "Gum raylib - Themes Showcase");
 
-        GumService.Default.Initialize();
-        GumService.Default.UseKeyboardDefaults();
+        GumUI.Initialize();
+        GumUI.UseKeyboardDefaults();
 
         // Each theme's parameterless Apply() wires KernSmith for in-memory font generation and
         // installs that theme's visuals as the defaults. Editor has no named background color, so a
@@ -118,12 +120,12 @@ public static class Program
         {
             HandleInput();
 
-            GumService.Default.Update(GetTime());
+            GumUI.Update(GetTime());
 
             BeginDrawing();
             ClearBackground(_clearColor);
 
-            GumService.Default.Draw();
+            GumUI.Draw();
 
             EndDrawing();
         }
