@@ -1135,6 +1135,7 @@ public partial class CustomSetPropertyOnRenderable
     {
         public string? Markup;
         public string? StrippedText;
+        public HashSet<string> KnownTagsSnapshot = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         public string? FontName;
         public float FontSize;
         public int OutlineThickness;
@@ -1217,7 +1218,8 @@ public partial class CustomSetPropertyOnRenderable
         if (!_bbCodeParseRecords.TryGetValue(textRenderable, out BbCodeParseRecord? record) ||
             record.Markup != markup ||
             textRenderable.StoredMarkupText != markup ||
-            textRenderable.RawText != record.StrippedText)
+            textRenderable.RawText != record.StrippedText ||
+            !record.KnownTagsSnapshot.SetEquals(Tags))
         {
             return false;
         }
@@ -1236,6 +1238,8 @@ public partial class CustomSetPropertyOnRenderable
         BbCodeParseRecord record = _bbCodeParseRecords.GetValue(asText, static _ => new BbCodeParseRecord());
         record.Markup = bbcode;
         record.StrippedText = asText.RawText;
+        record.KnownTagsSnapshot.Clear();
+        record.KnownTagsSnapshot.UnionWith(Tags);
         UpdateRecordFromOwner(record, graphicalUiElement, write: true);
     }
 

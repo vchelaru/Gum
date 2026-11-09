@@ -3,6 +3,7 @@ using Gum.GueDeriving;
 using Gum.Localization;
 using Gum.Wireframe;
 using RenderingLibrary.Graphics;
+using RenderingLibrary.Graphics.Fonts;
 using Shouldly;
 using System;
 using System.Collections.Generic;
@@ -578,4 +579,157 @@ public class TextRuntimeBbCodeSameStringSetTests : BaseTestClass
 
     #endregion
 
+
+    #region Same string after anything that could make the parse stale (matches a fresh text)
+
+    const string Styled = "Hi [Color=Red]red[/Color] [FontSize=40]big[/FontSize] [FontScale=2]sc[/FontScale] [IsBold=true]b[/IsBold] and a long tail of words to wrap around nicely.";
+
+    static TextRuntime MakeAt200(string? text, float width = 200)
+    {
+        TextRuntime r = new();
+        r.WidthUnits = DimensionUnitType.Absolute; r.Width = width;
+        r.HeightUnits = DimensionUnitType.RelativeToChildren; r.Height = 0;
+        r.Text = text;
+        r.UpdateLayout();
+        return r;
+    }
+
+    static string DeepSnap(TextRuntime r)
+    {
+        Text t = (Text)r.RenderableComponent!;
+        var runs = t.InlineVariables.Select(v => v.VariableName + "@" + v.StartIndex + "x" + v.CharacterCount + "=" +
+            (v.Value is BitmapFont bf ? "bf" + bf.LineHeightInPixels : v.Value));
+        return t.RawText + "|" + string.Join("/", t.WrappedText) + "|" + string.Join(",", runs) + "|" +
+            t.ParsedBbCodeTags?.Count + "|" + r.AbsoluteWidth + "x" + r.AbsoluteHeight + "|" + t.Color + "|" +
+            t.BitmapFont?.LineHeightInPixels;
+    }
+
+    public static IEnumerable<object[]> StaleMutations()
+    {
+        yield return M("FontSize", r => r.FontSize = 33);
+        yield return M("Font", r => { r.Font = "Arial"; });
+        yield return M("OutlineThickness", r => r.OutlineThickness = 2);
+        yield return M("IsItalic", r => r.IsItalic = true);
+        yield return M("IsBold", r => r.IsBold = true);
+        yield return M("UseFontSmoothing", r => r.UseFontSmoothing = false);
+        yield return M("UseCustomFont", r => { r.UseCustomFont = true; r.CustomFontFile = "Fonts/Foo.fnt"; });
+        yield return M("Width", r => r.Width = 90);
+        yield return M("WidthUnitsRel", r => { r.WidthUnits = DimensionUnitType.RelativeToChildren; r.Width = 0; });
+        yield return M("Height", r => { r.HeightUnits = DimensionUnitType.Absolute; r.Height = 12; });
+        yield return M("MaxLettersToShow", r => r.MaxLettersToShow = 5);
+        yield return M("MaxNumberOfLines", r => r.MaxNumberOfLines = 1);
+        yield return M("FontScale", r => r.FontScale = 2f);
+        yield return M("LineHeightMultiplier", r => r.LineHeightMultiplier = 2f);
+        yield return M("Color", r => r.Color = Microsoft.Xna.Framework.Color.Blue);
+        yield return M("RedGreenBlue", r => { r.Red = 10; r.Green = 20; r.Blue = 30; });
+        yield return M("HAlign", r => r.HorizontalAlignment = RenderingLibrary.Graphics.HorizontalAlignment.Right);
+        yield return M("Dropshadow", r => { r.HasDropshadow = true; r.DropshadowOffsetX = 3; });
+        yield return M("DropshadowColor", r => { r.HasDropshadow = true; r.DropshadowRed = 5; r.DropshadowAlpha = 100; });
+        yield return M("OverflowVertical", r => r.TextOverflowVerticalMode = TextOverflowVerticalMode.TruncateLine);
+        yield return M("WidthPercentOfParentChange", r => { });
+    }
+    static object[] M(string n, Action<TextRuntime> a) => new object[] { n, a };
+
+    [Theory]
+    [MemberData(nameof(StaleMutations))]
+    public void SameStringAfterMutation_MatchesFresh(string name, Action<TextRuntime> mutate)
+    {
+        TextRuntime r = MakeAt200(Styled);
+        mutate(r);
+        r.Text = Styled;
+        r.UpdateLayout();
+
+        TextRuntime fresh = MakeAt200(null);
+        mutate(fresh);
+        fresh.Text = Styled;
+        fresh.UpdateLayout();
+
+        DeepSnap(r).ShouldBe(DeepSnap(fresh), name);
+    }
+
+    [Fact]
+    public void ParentWidthChange_ThenSameString()
+    {
+        ContainerRuntime Build(out TextRuntime t, bool first)
+        {
+            ContainerRuntime c = new(); c.Width = 300; c.WidthUnits = DimensionUnitType.Absolute; c.Height = 100;
+            t = new TextRuntime(); t.WidthUnits = DimensionUnitType.PercentageOfParent; t.Width = 100;
+            t.HeightUnits = DimensionUnitType.RelativeToChildren; t.Height = 0;
+            c.AddChild(t);
+            if (first) { t.Text = Styled; c.UpdateLayout(); }
+            return c;
+        }
+        var c1 = Build(out var t1, true);
+        c1.Width = 80; t1.Text = Styled; c1.UpdateLayout();
+        var c2 = Build(out var t2, false);
+        c2.Width = 80; t2.Text = Styled; c2.UpdateLayout();
+        DeepSnap(t1).ShouldBe(DeepSnap(t2));
+    }
+
+    [Fact]
+    public void KnownTagAddedLater_ThenSameString()
+    {
+        const string v = "a [Zork]x[/Zork] b";
+        TextRuntime r = MakeAt200(v);
+        BbCodeParser.KnownTags.Add("Zork");
+        try
+        {
+            r.Text = v; r.UpdateLayout();
+            TextRuntime fresh = MakeAt200(null);
+            fresh.Text = v; fresh.UpdateLayout();
+            DeepSnap(r).ShouldBe(DeepSnap(fresh));
+        }
+        finally { BbCodeParser.KnownTags.Remove("Zork"); }
+    }
+
+    [Fact]
+    public void StateTag_SameString_Reparses()
+    {
+        const string v = "a [state=Foo]x[/state] b";
+        TextRuntime r = MakeAt200(v);
+        r.Text = v; r.UpdateLayout();
+        TextRuntime fresh = MakeAt200(null);
+        fresh.Text = v; fresh.UpdateLayout();
+        DeepSnap(r).ShouldBe(DeepSnap(fresh));
+    }
+
+    [Fact]
+    public void GlyphTag_SameString()
+    {
+        const string v = "a [Glyph=65]x b [Color=Red]c[/Color]";
+        TextRuntime r = MakeAt200(v);
+        r.Text = v; r.UpdateLayout();
+        TextRuntime fresh = MakeAt200(null);
+        fresh.Text = v; fresh.UpdateLayout();
+        DeepSnap(r).ShouldBe(DeepSnap(fresh));
+    }
+
+    [Fact]
+    public void TextRenderableWrappedBehindBack_WidthViaRenderable()
+    {
+        TextRuntime r = MakeAt200(Styled);
+        Text t = (Text)r.RenderableComponent!;
+        t.Width = 50;
+        r.Text = Styled; r.UpdateLayout();
+        TextRuntime fresh = MakeAt200(null);
+        ((Text)fresh.RenderableComponent!).Width = 50;
+        fresh.Text = Styled; fresh.UpdateLayout();
+        DeepSnap(r).ShouldBe(DeepSnap(fresh));
+    }
+
+    [Fact]
+    public void BitmapFontSwappedToOtherFont_ThenSameString()
+    {
+        TextRuntime donor = MakeAt200("x"); donor.FontSize = 60; donor.Text = "x"; donor.UpdateLayout();
+        var other = ((Text)donor.RenderableComponent!).BitmapFont;
+        TextRuntime r = MakeAt200(Styled);
+        ((Text)r.RenderableComponent!).BitmapFont = other;
+        r.Text = Styled; r.UpdateLayout();
+        TextRuntime fresh = MakeAt200(null);
+        ((Text)fresh.RenderableComponent!).BitmapFont = other;
+        fresh.Text = Styled; fresh.UpdateLayout();
+        DeepSnap(r).ShouldBe(DeepSnap(fresh));
+    }
+
+    #endregion
 }
