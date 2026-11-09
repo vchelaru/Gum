@@ -77,6 +77,8 @@ public class Game1 : Game
     protected override void Initialize()
     {
         GumUI.Initialize(this, "Content/GumProject/GumProject.gumj");
+        GumUI.UseKeyboardDefaults(); // Optional: Tab and arrow keys move focus in Forms controls
+        GumUI.UseGamepadDefaults(); // Optional: gamepad moves focus in Forms controls
         GumUI.UseShadowDusk(); // Optional: .fx and .slang shader files
         Gum.Expressions.GumExpressionService.Initialize(); // Optional: arithmetic expressions in variable references
 

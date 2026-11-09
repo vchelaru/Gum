@@ -30,6 +30,10 @@ namespace MonoGameAndGum
         {
             GumUI.Initialize(this, "GumProject/GumProject.gumx");
 
+            GumUI.UseKeyboardDefaults();
+
+            GumUI.UseGamepadDefaults();
+
             //var screen = ObjectFinder.Self.GumProjectSave.Screens.First();
             //Root = screen.ToGraphicalUiElement(SystemManagers.Default, addToManagers:true);
             var screen = new MainMenuRuntime();

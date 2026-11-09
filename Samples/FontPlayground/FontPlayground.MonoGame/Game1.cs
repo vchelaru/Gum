@@ -65,6 +65,10 @@ public class Game1 : Game
     {
         GumUI.Initialize(this);
 
+        GumUI.UseKeyboardDefaults();
+
+        GumUI.UseGamepadDefaults();
+
         // Wire up KernSmith so any TextRuntime can get a font for any (family, size, style)
         // without a .fnt file on disk. This is what makes the live preview re-render work.
         CustomSetPropertyOnRenderable.InMemoryFontCreator =

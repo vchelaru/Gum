@@ -84,6 +84,8 @@ public class Program
 </strong><strong>        GraphicalUiElement.CanvasHeight = screenHeight;
 </strong>
 <strong>        GumUI.Initialize();
+</strong><strong>        GumUI.UseKeyboardDefaults(); // Optional: Tab and arrow keys move focus in Forms controls
+</strong><strong>        GumUI.UseGamepadDefaults(); // Optional: gamepad moves focus in Forms controls
 </strong>
         while (!Raylib.WindowShouldClose())
         {

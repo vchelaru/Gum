@@ -37,6 +37,11 @@ public class Game1 : Game
     protected override void Initialize()
     {
         GumUI.Initialize(this);
+
+        GumUI.UseKeyboardDefaults();
+
+        GumUI.UseGamepadDefaults();
+
         CustomSetPropertyOnRenderable.InMemoryFontCreator = new KernSmithFontCreator(GraphicsDevice);
 
         var pointLayer = SystemManagers.Default.Renderer.AddLayer();

@@ -91,7 +91,10 @@ public class Game1 : Game
             }
         };
         GumUI.Initialize(this);
+
         GumUI.UseKeyboardDefaults();
+
+        GumUI.UseGamepadDefaults();
 
         // Press 1-7 to swap themes, or 0 to revert to stock/un-themed V3 defaults; the active
         // screen is rebuilt so its controls pick up the newly-installed default templates.
