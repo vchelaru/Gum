@@ -121,23 +121,15 @@ public class GumServiceDrawTests : BaseTestClass
     }
 
     [Fact]
-    public void Draw_ClearsTheTargetToTheClearColor()
+    public void Draw_WithAnEmptyScene_LeavesTheTargetTransparent()
     {
         FakeBrutalInput input = new() { FramebufferWidth = 64, FramebufferHeight = 64 };
 
         WithBackend(input, backend =>
         {
-            GumService.Default.ClearColor = new SKColor(255, 0, 0);
-            try
-            {
-                GumService.Default.Draw();
+            GumService.Default.Draw();
 
-                backend.Targets[0].PixelAt(10, 10).ShouldBe(new SKColor(255, 0, 0));
-            }
-            finally
-            {
-                GumService.Default.ClearColor = SKColors.Transparent;
-            }
+            backend.Targets[0].PixelAt(10, 10).Alpha.ShouldBe((byte)0);
         });
     }
 

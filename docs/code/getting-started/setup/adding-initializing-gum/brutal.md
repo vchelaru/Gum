@@ -139,7 +139,7 @@ GumService.Default.Draw();
 window.SwapBuffers();
 ```
 
-`Draw` blits Gum's frame to the window's default framebuffer, so call `SwapBuffers` after it. Skia leaves the OpenGL program, vertex array, buffers, viewport, scissor, blend and depth state as it used them, so set your own again if you draw after Gum.
+`Draw` composites Gum's frame over the window's default framebuffer, so call `SwapBuffers` after it. Skia leaves the OpenGL program, vertex array, buffers, viewport, scissor, blend and depth state as it used them, so set your own again if you draw after Gum.
 {% endtab %}
 
 {% tab title="Vulkan" %}
@@ -155,7 +155,7 @@ GumService.Default.Draw();
 {% endtab %}
 {% endtabs %}
 
-Gum's canvas is the window's framebuffer. When the window is resized, `Draw` recreates the render target at the new size and lays out your controls for it. Mouse positions are scaled from window coordinates to framebuffer pixels, so high-DPI displays line up. To change the color behind your controls, set `GumService.Default.ClearColor` (transparent by default, which shows black).
+Gum's canvas is the window's framebuffer. When the window is resized, `Draw` recreates the render target at the new size and lays out your controls for it. Mouse positions are scaled from window coordinates to framebuffer pixels, so high-DPI displays line up. Gum draws over whatever your game already drew to the framebuffer (OpenGL), so clear or draw your background before calling `Draw`.
 
 ### Using Your Own Renderer (Vulkan)
 

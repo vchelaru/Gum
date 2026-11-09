@@ -12,7 +12,6 @@ using Brutal.VulkanApi;
 using Brutal.VulkanApi.Abstractions;
 using Gum;
 using GumSamples;
-using SkiaSharp;
 using System.Diagnostics;
 
 SampleArgs sample = new SampleArgs(args);
@@ -100,7 +99,6 @@ try
     GumUI.UseShadowDusk();
     GumUI.UseKeyboardDefaults();
     GumUI.UseGamepadDefaults();
-    GumUI.ClearColor = new SKColor(100, 149, 237);
 
     GumGallery gallery = new GumGallery();
     gallery.Build();

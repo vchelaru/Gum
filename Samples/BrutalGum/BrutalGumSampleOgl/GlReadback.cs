@@ -29,3 +29,22 @@ static unsafe class GlReadback
         return topDown;
     }
 }
+
+/// <summary>The game's own background: clears the window's default framebuffer before Gum draws over it.</summary>
+static class GlClear
+{
+    const int GL_FRAMEBUFFER = 0x8D40;
+    const int GL_COLOR_BUFFER_BIT = 0x4000;
+
+    [UnmanagedFunctionPointer(CallingConvention.Winapi)] delegate void BindFramebuffer(int target, int id);
+    [UnmanagedFunctionPointer(CallingConvention.Winapi)] delegate void ClearColor(float r, float g, float b, float a);
+    [UnmanagedFunctionPointer(CallingConvention.Winapi)] delegate void Clear(int mask);
+
+    public static void ToColor(Func<string, IntPtr> getProc, float r, float g, float b)
+    {
+        T Load<T>(string name) where T : Delegate => Marshal.GetDelegateForFunctionPointer<T>(getProc(name));
+        Load<BindFramebuffer>("glBindFramebuffer")(GL_FRAMEBUFFER, 0);
+        Load<ClearColor>("glClearColor")(r, g, b, 1f);
+        Load<Clear>("glClear")(GL_COLOR_BUFFER_BIT);
+    }
+}
