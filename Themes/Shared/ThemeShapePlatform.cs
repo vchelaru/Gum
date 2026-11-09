@@ -1,6 +1,4 @@
-#if !RAYLIB && !SKIA
-using Gum.Renderables;
-#endif
+using System;
 
 namespace Gum.Themes;
 
@@ -17,18 +15,19 @@ internal static class ThemeShapePlatform
     /// Initializes the Apos.Shapes <c>ShapeRenderer</c> on the XNA-like backends (MonoGame/KNI),
     /// where the shape runtimes require it. No-op on raylib and Skia/SilkNet, which both render
     /// <c>RectangleRuntime</c> / <c>CircleRuntime</c> natively (no Apos.Shapes <c>ShapeRenderer</c>
-    /// involved -- #3671). Guards against double-initialization so a host that already set shapes
-    /// up (or another theme) stays safe.
+    /// involved -- #3671). Calls <c>UseShapes()</c>, which does nothing when shapes are already
+    /// set up, so a host that did it (or another theme) stays safe.
     /// </summary>
     public static void InitializeShapeRenderer()
     {
 #if RAYLIB || SKIA
         // No-op -- see summary above.
 #else
-        if (!ShapeRenderer.Self.IsInitialized)
-        {
-            ShapeRenderer.Self.Initialize();
-        }
+        // UseShapes does nothing when shapes are already set up, so a host that did it (or another theme) stays safe.
+        GumService service = global::RenderingLibrary.IGumService.Default as GumService
+            ?? throw new InvalidOperationException(
+                "Gum must be initialized (GumService.Initialize) before applying a theme.");
+        service.UseShapes();
 #endif
     }
 }

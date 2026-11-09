@@ -67,19 +67,19 @@ namespace MonoGameGumInCode
 
             GumUI.UseGamepadDefaults();
 
-            // Required for Apos.Shapes-backed shape fill/effects (see the shapes doc). Must come
-            // after GumUI.Initialize — ShapeRenderer.Initialize reads the initialized
-            // GumService/GraphicsDevice.
-            ShapeRenderer.Self.Initialize();
-
-            CustomSetPropertyOnRenderable.InMemoryFontCreator =
-                new KernSmithFontCreator(GraphicsDevice);
-
             // Gum core ships no shader loader. The Gum.MonoGame.ShadowDusk package registers one that
             // compiles a ContainerRuntime.SourceShaderFile (.fx or .slang path) at runtime (#3206, #7053).
             // With no resolver registered, a SourceShaderFile fails like a missing file
             // (call UseShadowDusk() before building any screen that uses one).
             GumUI.UseShadowDusk();
+
+            // Required for Apos.Shapes-backed shape fill/effects (see the shapes doc). Must come
+            // after GumUI.Initialize, which gives it the graphics device.
+            GumUI.UseShapes();
+
+            // Wire up KernSmith so any TextRuntime can get a font for any (family, size, style)
+            // without a .fnt file on disk.
+            GumUI.UseKernSmith();
 
             // Demo the auto-fit helpers — flip via the Zoom/Expand buttons in the nav strip.
             GumUI.EnableZoomToWindow();

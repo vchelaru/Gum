@@ -54,8 +54,8 @@ public class Game1 : Game
         _editorProject = _editorUi.Initialize(this, "Editor/Editor.gumj")!;
 
         // Needed for shapes (rounded rectangles, circles). It takes the GraphicsDevice from the
-        // current service, so it runs after Initialize. One call serves both services.
-        ShapeRenderer.Self.Initialize();
+        // service it is called on, so it runs after Initialize. One call serves both services.
+        _gameUi.UseShapes();
 
         _gameUi.SystemManagers.Renderer.Camera.X = InitialGameCameraX;
 

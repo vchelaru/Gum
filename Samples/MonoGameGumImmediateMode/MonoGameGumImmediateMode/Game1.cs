@@ -60,8 +60,7 @@ namespace MonoGameGumImmediateMode
 
             // Wire up KernSmith so any TextRuntime or DrawString call can get a
             // font for any (family, size, style) without a .fnt file on disk.
-            CustomSetPropertyOnRenderable.InMemoryFontCreator =
-                new KernSmithFontCreator(GraphicsDevice);
+            GumUI.UseKernSmith();
 
             _gumBatch = new GumBatch();
             _spriteBatch = new SpriteBatch(GraphicsDevice);

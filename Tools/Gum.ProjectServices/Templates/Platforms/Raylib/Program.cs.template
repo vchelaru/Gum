@@ -11,9 +11,9 @@ Raylib.SetTargetFPS(60);
 GumService GumUI = GumService.Default;
 
 GumUI.Initialize("Content/GumProject/{{GumProjectFile}}");
-{{InitLines}}
 GumUI.UseKeyboardDefaults();
 GumUI.UseGamepadDefaults();
+{{InitLines}}
 {{ScreenLines}}
 
 while (!Raylib.WindowShouldClose())

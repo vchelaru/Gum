@@ -42,11 +42,7 @@ public static class PreviewDefaults
             "Apos.Shapes uses a Shader Model 4 effect, which needs the HiDef graphics profile; shapes silently do not draw otherwise.",
             PreviewDefaultPhase.Constructor,
             new[] { "_graphics.GraphicsProfile = GraphicsProfile.HiDef;" }),
-        new("Shapes",
-            "Enables the shape renderer (fills, gradients, rounded corners, shadows) behind Rectangle, Circle, Arc and Polygon.",
-            PreviewDefaultPhase.AfterGumInitialize,
-            new[] { "Gum.Renderables.ShapeRenderer.Self.Initialize();" }),
-        new("KeyboardDefaults",
+       new("KeyboardDefaults",
             "Tab and Shift+Tab move focus; arrow keys, Enter and Space operate the focused control.",
             PreviewDefaultPhase.AfterGumInitialize,
             new[] { "GumUI.UseKeyboardDefaults();" }),
@@ -54,6 +50,10 @@ public static class PreviewDefaults
             "D-pad and A move focus and activate the focused control.",
             PreviewDefaultPhase.AfterGumInitialize,
             new[] { "GumUI.UseGamepadDefaults();" }),
+        new("Shapes",
+            "Enables the shape renderer (fills, gradients, rounded corners, shadows) behind Rectangle, Circle, Arc and Polygon.",
+            PreviewDefaultPhase.AfterGumInitialize,
+            new[] { "GumUI.UseShapes();" }),
     };
 
     /// <summary>Applies the defaults of one phase, in list order.</summary>

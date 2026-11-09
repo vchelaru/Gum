@@ -86,10 +86,7 @@ public class MonoGameScreenshotService : IScreenshotService
                 // Circle/rounded-rectangle rendering is Apos.Shapes-backed. Without this, those
                 // shapes silently fall back to the renderable's construction defaults (transparent
                 // fill, 1px white stroke) instead of the element's actual state - see #4403.
-                if (!ShapeRenderer.Self.IsInitialized)
-                {
-                    ShapeRenderer.Self.Initialize();
-                }
+                gumService.UseShapes();
 
                 gumService.CanvasWidth = width;
                 gumService.CanvasHeight = height;

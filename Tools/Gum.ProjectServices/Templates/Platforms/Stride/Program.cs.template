@@ -18,9 +18,9 @@ void Start(Scene rootScene)
     GumService GumUI = GumService.Default;
 
     GumUI.Initialize(game, "Content/GumProject/{{GumProjectFile}}");
-    {{InitLines}}
     GumUI.UseKeyboardDefaults();
     GumUI.UseGamepadDefaults();
+    {{InitLines}}
     {{ScreenLines}}
 
 }
