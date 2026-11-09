@@ -12,6 +12,8 @@ Docs are for people who want to get something done and will not read more than t
 
 **For every sentence, section and screenshot, ask: is this absolutely critical for getting the task done? If not, cut it.** Detail the tool, a warning message or the code already shows is not critical.
 
+**XML doc comments in the C# runtimes are docs too, with the same readers.** Say what the member does and its one precondition; do not add advice about other members.
+
 ## Before You Write and Before You Commit
 
 1. **Before writing prose:** read the page you are editing and one or two sibling pages in the same folder, and match their sentence length and voice.
