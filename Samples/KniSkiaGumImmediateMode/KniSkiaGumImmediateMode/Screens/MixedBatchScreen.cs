@@ -31,6 +31,8 @@ public class MixedBatchScreen : IImmediateModeScreen
         _gumRectangle.Height = 80;
         _gumRectangle.IsFilled = true;
         _gumRectangle.FillColor = SKColors.DarkGreen;
+        _gumRectangle.StrokeWidth = 0;
+        _gumRectangle.IsAntialiased = false;
         _gumRectangle.X = 60;
         _gumRectangle.Y = 120;
 

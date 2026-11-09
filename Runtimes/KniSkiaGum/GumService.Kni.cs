@@ -316,6 +316,14 @@ public partial class GumService : GumServiceSkiaInteractiveBase, IGumService, Ba
     /// </remarks>
     public override void Draw()
     {
+        if (_frameOpen)
+        {
+            // Recover for the next frame instead of drawing nothing.
+            CloseFrame(present: false);
+            throw new InvalidOperationException(
+                "GumService.Draw() was called while a GumBatch pass was open: call GumBatch.End before Draw.");
+        }
+
         if (!TryOpenFrame(out SKCanvas? _))
         {
             if (!_managesTarget || !HasGraphicsDevice())
@@ -383,6 +391,11 @@ public partial class GumService : GumServiceSkiaInteractiveBase, IGumService, Ba
 
     private void CloseFrame(bool present)
     {
+        if (!_frameOpen)
+        {
+            return;
+        }
+
         _frameOpen = false;
         if (present)
         {

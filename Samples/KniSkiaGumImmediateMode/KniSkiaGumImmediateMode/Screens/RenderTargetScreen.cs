@@ -52,6 +52,8 @@ public class RenderTargetScreen : IImmediateModeScreen
         gameBackground.Height = GameHeight;
         gameBackground.IsFilled = true;
         gameBackground.FillColor = new SKColor(40, 110, 60);
+        gameBackground.StrokeWidth = 0;
+        gameBackground.IsAntialiased = false;
 
         Button gameButton = new Button();
         gameButton.Text = "Game Button";

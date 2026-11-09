@@ -332,6 +332,32 @@ public class ManagedRenderTargetTests : BaseTestClass
     }
 
     [Fact]
+    public void Draw_WhileAGumBatchPassIsOpen_ThrowsNamingEnd_AndTheNextFrameRecovers()
+    {
+        try
+        {
+            Reinitialize();
+            AddRedSquare();
+            GumBatch gumBatch = new GumBatch();
+            gumBatch.Begin();
+
+            InvalidOperationException exception = Should.Throw<InvalidOperationException>(() => GumService.Default.Draw());
+
+            exception.Message.ShouldContain("GumBatch.End");
+            _created[0].PresentCount.ShouldBe(0);
+
+            GumService.Default.Draw();
+
+            _created[0].PresentCount.ShouldBe(1);
+            _created[0].PresentedPixels[0].ShouldBe(SKColors.Red);
+        }
+        finally
+        {
+            RestoreSharedService();
+        }
+    }
+
+    [Fact]
     public void Uninitialize_DisposesTheTarget()
     {
         try

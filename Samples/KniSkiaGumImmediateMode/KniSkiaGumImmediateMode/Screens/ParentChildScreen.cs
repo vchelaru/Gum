@@ -21,6 +21,8 @@ public class ParentChildScreen : IImmediateModeScreen
         _buttonRectangle.Height = 48;
         _buttonRectangle.IsFilled = true;
         _buttonRectangle.FillColor = SKColors.DarkBlue;
+        _buttonRectangle.StrokeWidth = 0;
+        _buttonRectangle.IsAntialiased = false;
         _buttonRectangle.X = 60;
         _buttonRectangle.Y = 120;
 
