@@ -76,7 +76,7 @@ The Unity package is experimental. It supports Windows x64 and macOS.
 
 ## Adding Gum to Your Game
 
-Gum requires a few lines of code to get started. The host application skeleton differs by platform: MonoGame uses a `Game` subclass whose `Initialize`/`Update`/`Draw` methods the framework calls for you, Raylib uses a `Program.Main` with a game loop you own, Silk.NET uses a `Program.Main` that creates its own window and hands Gum an `SKCanvas`/`IInputContext` pair, and Unity uses a `MonoBehaviour` on a GameObject. The Gum calls themselves follow the same shape on every backend: initialize once, then update and draw each frame. Unity is the exception: the `GumRenderer` and `GumInput` components initialize, update, and draw Gum for you.
+Gum requires a few lines of code to get started. The host application skeleton differs by platform: MonoGame uses a `Game` subclass whose `Initialize`/`Update`/`Draw` methods the framework calls for you, Raylib uses a `Program.Main` with a game loop you own, Silk.NET uses a `Program.Main` that creates its own window and gives it to Gum, and Unity uses a `MonoBehaviour` on a GameObject. The Gum calls themselves follow the same shape on every backend: initialize once, then update and draw each frame. Unity is the exception: the `GumRenderer` and `GumInput` components initialize, update, and draw Gum for you.
 
 A simplified host with the required calls would look like the following code:
 
@@ -234,7 +234,7 @@ The Unity package is experimental. It supports Windows x64 and macOS.
 
 ## Adding Gum to Your Game
 
-Gum requires a few lines of code to get started. The host application skeleton differs by platform: MonoGame uses a `Game` subclass whose `Initialize`/`Update`/`Draw` methods the framework calls for you, Raylib uses a `Program.Main` with a game loop you own, Silk.NET uses a `Program.Main` that creates its own window and hands Gum an `SKCanvas`/`IInputContext` pair, and Unity uses a `MonoBehaviour` on a GameObject. The Gum calls themselves follow the same shape on every backend: initialize once, then update and draw each frame. Unity is the exception: the `GumRenderer` and `GumInput` components initialize, update, and draw Gum for you.
+Gum requires a few lines of code to get started. The host application skeleton differs by platform: MonoGame uses a `Game` subclass whose `Initialize`/`Update`/`Draw` methods the framework calls for you, Raylib uses a `Program.Main` with a game loop you own, Silk.NET uses a `Program.Main` that creates its own window and gives it to Gum, and Unity uses a `MonoBehaviour` on a GameObject. The Gum calls themselves follow the same shape on every backend: initialize once, then update and draw each frame. Unity is the exception: the `GumRenderer` and `GumInput` components initialize, update, and draw Gum for you.
 
 A simplified host with the required calls would look like the following code:
 

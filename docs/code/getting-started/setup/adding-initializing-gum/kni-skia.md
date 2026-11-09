@@ -50,15 +50,16 @@ To create a project that already references Gum source, run [`gumcli new MyGame 
 
 ## Initializing Gum
 
-The following is a complete `Game1` class. Lines marked **Optional** match the optional packages above, so delete the lines for any package you skipped. `Window.AllowUserResizing` is optional too: the render target follows the window when it is resized.
+The following is a complete `Game1` class that also shows a button. Lines marked **Optional** match the optional packages above, so delete the lines for any package you skipped. `Window.AllowUserResizing` is optional too: the render target follows the window when it is resized.
 
 ```csharp
-using Gum;
-using Gum.Forms;
-using Gum.Forms.Controls;
-using Microsoft.Xna.Framework;
-
 namespace MyGame;
+
+// The usings are inside the namespace so a project named like one of these types (Game, Button) still finds them.
+using Gum;
+using Gum.Forms.Controls;
+using Gum.Wireframe;
+using Microsoft.Xna.Framework;
 
 public class Game1 : Game
 {
@@ -77,12 +78,16 @@ public class Game1 : Game
     protected override void Initialize()
     {
         GumUI.Initialize(this, "Content/GumProject/GumProject.gumj");
-        GumUI.UseKeyboardDefaults(); // Optional: Tab and arrow keys move focus in Forms controls
-        GumUI.UseGamepadDefaults(); // Optional: gamepad moves focus in Forms controls
         GumUI.UseShadowDusk(); // Optional: .fx and .slang shader files
         Gum.Expressions.GumExpressionService.Initialize(); // Optional: arithmetic expressions in variable references
         GumUI.UseKeyboardDefaults();
         GumUI.UseGamepadDefaults();
+
+        var button = new Button();
+        button.AddToRoot();
+        button.Width = 200;
+        button.Anchor(Anchor.Center);
+        button.Click += (_, _) => button.Text = $"Clicked\n{System.DateTime.Now}";
 
         base.Initialize();
     }
@@ -103,41 +108,6 @@ public class Game1 : Game
 ```
 
 Skia reads the Gum project from disk instead of through the content pipeline, so the path starts at `Content` and the project files must be copied to the output folder. To get the same class with a Gum project already set up, run [`gumcli new MyGame -p kniskia --source-linked`](../../../../cli/new.md).
-
-## Drawing Before or After Gum
-
-Available in December 2026, or now if building Gum from source.
-
-Call `GumBatch.Begin`, `Draw`, and `End` in your `Draw` method, before or after `GumUI.Draw()`. Each `Begin`/`End` pair is its own pass and appears in the order you call it, so you can mix it with your own `SpriteBatch` drawing:
-
-```csharp
-protected override void Draw(GameTime gameTime)
-{
-    GraphicsDevice.Clear(Color.CornflowerBlue);
-
-    _gumBatch.Begin();
-    _gumBatch.Draw(_background);
-    _gumBatch.End();
-
-    GumUI.Draw();
-    base.Draw(gameTime);
-}
-```
-
-See [GumBatch setup](../setup-for-gumbatch.md) for more on `GumBatch`.
-
-## Adding a Button (Testing the Setup)
-
-Gum can be tested by adding a Button after Gum is initialized:
-
-```csharp
-// Initialize
-var button = new Button();
-button.AddToRoot();
-button.Width = 200;
-button.Anchor(Gum.Wireframe.Anchor.Center);
-button.Click += (_, _) => button.Text = $"Clicked\n{System.DateTime.Now}";
-```
 
 For a working project, see the Gum KNI with Skia sample:
 

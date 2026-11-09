@@ -82,18 +82,51 @@ Next, add project references in your game project for the pieces you use. Your p
 
 To create a project that already references Gum source, run [`gumcli new MyGame -p silknet --source-linked`](../../../../cli/new.md#linking-to-gum-source).
 
+## Adding Shader Support (Optional)
+
+`Gum.SkiaSharp.ShadowDusk` lets a render target container's `SourceShaderFile` point at an `.fx` or `.slang` shader file, so one shader file can be shared with MonoGame. Without this package, `SourceShaderFile` loads `.sksl` files only.
+
+Add the NuGet package:
+
+```bash
+dotnet add package Gum.SkiaSharp.ShadowDusk
+```
+
+Then call `GumUI.UseShadowDusk()` after `GumUI.Initialize`, as shown in [Initializing Gum](#initializing-gum).
+
+If linking to source instead of NuGet, add `<Gum Root>/Runtimes/SkiaGum.ShadowDusk/SkiaGum.ShadowDusk.csproj` to your solution.
+
+For more information, see [Render Target Shaders on SkiaSharp](../../../standard-visuals/containerruntime.md#render-target-shaders-on-skiasharp).
+
+## Adding Expression Support (Optional)
+
+If your Gum project uses arithmetic expressions in variable references (such as `Width = OtherInstance.Width + 20`), you can add the `Gum.Expressions` NuGet package for full expression evaluation at runtime. Without this package, simple variable references like `Width = OtherInstance.Width` still work.
+
+Add the NuGet package:
+
+```bash
+dotnet add package Gum.Expressions
+```
+
+Then call `Gum.Expressions.GumExpressionService.Initialize()` after `GumUI.Initialize`, as shown in [Initializing Gum](#initializing-gum). Expression support is typically used with a Gum project that has variable references defined in the tool.
+
+If linking to source instead of NuGet, add `<Gum Root>/Runtimes/GumExpressions/GumExpressions.csproj` to your solution.
+
+For more information, see the [Runtime Variable References](../../../styling/runtime-variable-references.md) page.
+
 ## Initializing Gum
 
-Gum takes the window you create, then creates the input context and the SkiaSharp surface over the window's framebuffer, and follows window resizes. The following is a complete `Program.cs`. It runs on Windows, macOS, and Linux. Lines marked **Optional** match the optional packages above, so delete the lines for any package you skipped.
+Gum takes the window you create, then creates the input context and the SkiaSharp surface over the window's framebuffer, and follows window resizes. The following is a complete `Program.cs` that also shows a button. It runs on Windows, macOS, and Linux. Lines marked **Optional** match the optional packages above, so delete the lines for any package you skipped.
 
 {% hint style="info" %}
 Available in preview NuGet packages (use a `-preview` version), or now if building Gum from source.
 {% endhint %}
 
 ```csharp
-// Initialize
 using System.Diagnostics;
 using Gum;
+using Gum.Forms.Controls;
+using Gum.Wireframe;
 using Silk.NET.Maths;
 using Silk.NET.OpenGL;
 using Silk.NET.Windowing;
@@ -124,19 +157,24 @@ Gum.Expressions.GumExpressionService.Initialize(); // Optional: arithmetic expre
 GumUI.UseKeyboardDefaults();
 GumUI.UseGamepadDefaults();
 
+var button = new Button();
+button.AddToRoot();
+button.Width = 200;
+button.Anchor(Anchor.Center);
+button.Click += (_, _) => button.Text = $"Clicked\n{System.DateTime.Now}";
+
 Stopwatch clock = Stopwatch.StartNew();
 
 while (!window.IsClosing)
 {
     window.DoEvents();
 
-    // Update
     double gameTime = clock.Elapsed.TotalSeconds;
     GumUI.Update(gameTime);
 
-    // Draw
     gl.ClearColor(0.39f, 0.58f, 0.93f, 1f);
     gl.Clear(ClearBufferMask.ColorBufferBit);
+
     GumUI.Draw();
 
     window.GLContext!.SwapBuffers();
@@ -156,65 +194,6 @@ If `Initialize` throws `NotSupportedException: Couldn't find a suitable input pl
 
 Call `Initialize` right after `window.Initialize()`. Don't defer it to the window's `Load` event, which only fires from inside `window.Run()`. Gum's setup drives its own loop with `window.DoEvents()` instead.
 {% endhint %}
-
-## Adding Shader Support (Optional)
-
-`Gum.SkiaSharp.ShadowDusk` lets a render target container's `SourceShaderFile` point at an `.fx` or `.slang` shader file, so one shader file can be shared with MonoGame. Without this package, `SourceShaderFile` loads `.sksl` files only.
-
-Add the NuGet package:
-
-```bash
-dotnet add package Gum.SkiaSharp.ShadowDusk
-```
-
-Then call `UseShadowDusk` after `GumUI.Initialize`:
-
-```csharp
-// Initialize
-GumUI.Initialize(window, "Content/GumProject/GumProject.gumj");
-GumUI.UseShadowDusk();
-```
-
-If linking to source instead of NuGet, add `<Gum Root>/Runtimes/SkiaGum.ShadowDusk/SkiaGum.ShadowDusk.csproj` to your solution.
-
-For more information, see [Render Target Shaders on SkiaSharp](../../../standard-visuals/containerruntime.md#render-target-shaders-on-skiasharp).
-
-## Adding Expression Support (Optional)
-
-If your Gum project uses arithmetic expressions in variable references (such as `Width = OtherInstance.Width + 20`), you can add the `Gum.Expressions` NuGet package for full expression evaluation at runtime. Without this package, simple variable references like `Width = OtherInstance.Width` still work.
-
-Add the NuGet package:
-
-```bash
-dotnet add package Gum.Expressions
-```
-
-Then call `GumExpressionService.Initialize()` after `GumUI.Initialize`. Expression support is typically used with a Gum project that has variable references defined in the tool:
-
-```csharp
-// Initialize
-GumUI.Initialize(window, "Content/GumProject/GumProject.gumj");
-GumExpressionService.Initialize();
-```
-
-If linking to source instead of NuGet, add `<Gum Root>/Runtimes/GumExpressions/GumExpressions.csproj` to your solution.
-
-For more information, see the [Runtime Variable References](../../../styling/runtime-variable-references.md) page.
-
-## Adding a Button (Testing the Setup)
-
-Gum can be tested by adding a Button after Gum is initialized. To do so, add code to create a `Button` as shown in the following block of code after Gum is initialized:
-
-```csharp
-// Initialize
-GumUI.Initialize(window);
-
-var button = new Button();
-button.AddToRoot();
-button.Width = 200;
-button.Anchor(Anchor.Center);
-button.Click += (_, _) => button.Text = $"Clicked\n{System.DateTime.Now}";
-```
 
 {% hint style="info" %}
 If your file also has `using Silk.NET.Input;`, the compiler reports `Button` as ambiguous because Silk.NET defines its own `Button`. Add `using Button = Gum.Forms.Controls.Button;` to pick the Gum control.
