@@ -32,11 +32,7 @@ namespace MonoGameGumInCode.Screens;
 // color would need a second alias for no real benefit given how few colors overlap across all
 // three backends' palettes.
 //
-// Every row runs on every backend except Blend (additive), which stays gated #if !SKIA -- Blend
-// isn't just visually absent on Skia, the property doesn't exist at all on the SKIA branch of
-// CircleRuntime, so calling it is a compile error there, not a no-op.
-//
-// Two other known backend gaps are left ungated on purpose, so the mismatch is visible instead of
+// Known backend gaps are left ungated on purpose, so the mismatch is visible instead of
 // hidden:
 //   - Antialiasing: raylib has no per-shape AA (framebuffer MSAA only, via
 //     SetConfigFlags(Msaa4xHint) in Program.Main), so toggling IsAntialiased there renders
@@ -87,12 +83,9 @@ internal class CirclesScreen : FrameworkElement
         right.Children.Add(BuildSection("Hairline bleed (#2834)", BuildHairlineBleedRow()));
         right.Children.Add(BuildSection("Inscribed", BuildInscribedRow()));
         right.Children.Add(BuildSection("Non-square aspect", BuildNonSquareRow()));
-#if !SKIA
         right.Children.Add(BuildSection("Blend (additive #3491)", BuildBlendRow()));
-#endif
     }
 
-#if !SKIA
     // Issue #3491 — three filled RGB circles overlapping on a black frame, each with
     // Blend = Additive. Additive keeps the destination and adds the source, so the pairwise
     // overlaps read yellow (R+G) / cyan (G+B) / magenta (R+B) and the center reads white.
@@ -130,7 +123,6 @@ internal class CirclesScreen : FrameworkElement
 
         return frame;
     }
-#endif
 
     static ContainerRuntime BuildColumn()
     {

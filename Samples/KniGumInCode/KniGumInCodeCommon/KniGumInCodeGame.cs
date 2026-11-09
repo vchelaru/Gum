@@ -41,6 +41,8 @@ public class KniGumInCodeGame : Game
 
         GumUI.UseKeyboardDefaults();
 
+        GumUI.UseGamepadDefaults();
+
         // uncomment one of these to create a layout. Only have one uncommented or else UI overlaps
         CreateMixedLayout();
         //CreateTextLayout();

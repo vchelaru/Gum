@@ -97,6 +97,7 @@ using Stride.CommunityToolkit.Rendering.Compositing;
 using Stride.Engine;
 
 using Game game = new Game();
+GumService GumUI = GumService.Default;
 
 game.Run(start: Start);
 
@@ -106,8 +107,10 @@ void Start(Scene rootScene)
     game.AddGraphicsCompositor().AddCleanUIStage();
     game.Add2DCamera();
 
-    GumService.Default.Initialize(game, "Content/GumProject/GumProject.gumj");
-    GumService.Default.UseShadowDusk(); // Optional: .fx and .slang shader files
+    GumUI.Initialize(game, "Content/GumProject/GumProject.gumj");
+    GumUI.UseKeyboardDefaults(); // Optional: Tab and arrow keys move focus in Forms controls
+    GumUI.UseGamepadDefaults(); // Optional: gamepad moves focus in Forms controls
+    GumUI.UseShadowDusk(); // Optional: .fx and .slang shader files
     Gum.Expressions.GumExpressionService.Initialize(); // Optional: arithmetic expressions in variable references
 }
 ```
@@ -124,7 +127,7 @@ You can add controls as soon as `Initialize` returns. The project path is option
 
 ```csharp
 // Initialize
-GumService.Default.Initialize(game, registerSceneRenderer: false);
+GumUI.Initialize(game, registerSceneRenderer: false);
 game.AddSceneRenderer(new GumSceneRenderer());
 ```
 

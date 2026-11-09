@@ -45,6 +45,7 @@ public class GumExample : MonoBehaviour
     {
         // Optional: move between Forms controls with the keyboard (see Input below).
         Gum.GumService.Default.UseKeyboardDefaults();
+        Gum.GumService.Default.UseGamepadDefaults(); // Optional: move between Forms controls with a gamepad
 
         var button = new Button();
         button.Text = "Click me";
