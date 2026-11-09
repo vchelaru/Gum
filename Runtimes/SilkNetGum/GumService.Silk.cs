@@ -16,6 +16,8 @@ using Gum.Wireframe;
 using RenderingLibrary;
 using SkiaSharp;
 using Silk.NET.Input;
+using Silk.NET.Maths;
+using Silk.NET.Windowing;
 using System;
 
 namespace Gum;
@@ -23,6 +25,134 @@ namespace Gum;
 public partial class GumService : GumServiceSkiaInteractiveBase, IGumService
 {
     private IInputContext? _inputContext;
+
+    // Owned by Initialize(IWindow, ...): the Skia GPU context and the surface wrapping the window's framebuffer.
+    private IWindow? _window;
+    private GRGlInterface? _glInterface;
+    private GRContext? _grContext;
+    private GRBackendRenderTarget? _renderTarget;
+    private SKSurface? _surface;
+    private FramebufferResizeTracker? _resizeTracker;
+    private Action<Vector2D<int>>? _resizeHandler;
+
+    /// <summary>
+    /// Initializes Gum for a Silk.NET window, optionally loading a Gum project. Creates the input
+    /// context, the Skia GPU context and the surface over the window's framebuffer, follows window
+    /// resizes, and registers the gamepads with Forms controls. Call after <c>window.Initialize()</c>.
+    /// </summary>
+    /// <remarks>
+    /// The window must be created by <c>Silk.NET.Windowing</c> (<c>Window.Create</c>), not wrapped from a
+    /// native handle with <c>SdlWindowing.CreateFrom</c>: a wrapped window never delivers input events
+    /// (see #3652). The game keeps its own clear and <c>window.GLContext.SwapBuffers()</c> around
+    /// <see cref="Update"/> and <see cref="Draw()"/>.
+    /// </remarks>
+    /// <param name="window">An initialized window with an OpenGL or OpenGL ES context.</param>
+    /// <param name="gumProjectFile">An optional .gumx project file to load.</param>
+    public void Initialize(IWindow window, string? gumProjectFile = null)
+    {
+        if (window == null)
+        {
+            throw new ArgumentNullException(nameof(window));
+        }
+        if (window.GLContext == null)
+        {
+            throw new InvalidOperationException(
+                "The window has no OpenGL context. Call window.Initialize() first, with an OpenGL or OpenGL ES API in the window options.");
+        }
+
+        ReleaseWindowResources();
+        _window = window;
+
+        // Skia asks for optional OpenGL functions that a driver may not have, and GetProcAddress throws for those.
+        // TryGetProcAddress returns false instead, which Skia treats as "not supported".
+        _glInterface = GRGlInterface.Create(
+            name => window.GLContext!.TryGetProcAddress(name, out nint address) ? address : 0);
+        _grContext = GRContext.CreateGl(_glInterface);
+
+        Vector2D<int> size = window.FramebufferSize;
+        CreateSurface(size.X, size.Y);
+
+        Initialize(_surface!.Canvas, window.CreateInput(), size.X, size.Y, gumProjectFile);
+
+        FrameworkElement.GamePadsForUiControl.Clear();
+        UseGamepadDefaults();
+
+        FramebufferResizeTracker tracker = new FramebufferResizeTracker(
+            () => (window.FramebufferSize.X, window.FramebufferSize.Y), size.X, size.Y);
+        _resizeTracker = tracker;
+        _resizeHandler = _ => tracker.Request();
+        window.Resize += _resizeHandler;
+    }
+
+    // The surface declares its own logical size, separate from the GL viewport. With a BottomLeft origin
+    // (GL framebuffers are bottom-up) Skia uses that height to flip rows, so a stale size shifts everything
+    // drawn by the size delta (#3657). It is recreated on every resize.
+    private void CreateSurface(int width, int height)
+    {
+        _surface?.Dispose();
+        _renderTarget?.Dispose();
+
+        _renderTarget = new GRBackendRenderTarget(width, height, 0, 8, new GRGlFramebufferInfo(0, 0x8058)); // 0x8058 = GL_RGBA8
+        _surface = SKSurface.Create(_grContext, _renderTarget, GRSurfaceOrigin.BottomLeft, SKColorType.Rgba8888);
+    }
+
+    /// <summary>
+    /// The per-frame tick. Applies a window resize that happened since the last frame (recreating the
+    /// surface and re-laying out), then updates Gum.
+    /// </summary>
+    /// <param name="totalSeconds">Total elapsed time in seconds since startup.</param>
+    public override void Update(double totalSeconds)
+    {
+        // Applied here and not in the resize event: dragging a border on Windows runs a nested message loop
+        // that raises the event while the GL context is not safe to touch (#3657).
+        if (_resizeTracker != null && _resizeTracker.TryConsume(out int width, out int height))
+        {
+            CreateSurface(width, height);
+            // SystemManagers.Canvas is read at draw time; the old canvas was just disposed with its surface.
+            SystemManagers.Default.Canvas = _surface!.Canvas;
+            HandleResize(width, height);
+        }
+
+        base.Update(totalSeconds);
+    }
+
+    /// <summary>
+    /// Draws Gum into the window's framebuffer. Resets Skia's cached GL state first (the game may have
+    /// used GL since the last frame), then flushes. The game clears before and swaps buffers after.
+    /// </summary>
+    public new void Draw()
+    {
+        _grContext?.ResetContext();
+        base.Draw();
+        _surface?.Canvas.Flush();
+    }
+
+    /// <inheritdoc/>
+    public override void Uninitialize()
+    {
+        base.Uninitialize();
+        ReleaseWindowResources();
+    }
+
+    private void ReleaseWindowResources()
+    {
+        if (_window != null && _resizeHandler != null)
+        {
+            _window.Resize -= _resizeHandler;
+        }
+        _resizeHandler = null;
+        _resizeTracker = null;
+        _window = null;
+
+        _surface?.Dispose();
+        _renderTarget?.Dispose();
+        _grContext?.Dispose();
+        _glInterface?.Dispose();
+        _surface = null;
+        _renderTarget = null;
+        _grContext = null;
+        _glInterface = null;
+    }
 
     private partial Cursor CreateHostCursor()
     {

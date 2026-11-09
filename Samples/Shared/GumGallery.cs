@@ -141,9 +141,14 @@ internal sealed class GumGallery
         {
             _currentGumxScreen = gumxScreens[_currentScreenIndex].ToGraphicalUiElement(SystemManagers.Default, addToManagers: false);
             _currentGumxScreen.AddToRoot();
+            // Fill the root below the tab bar. Relative sizes follow the canvas when the window resizes.
             _currentGumxScreen.YOrigin = VerticalAlignment.Top;
             _currentGumxScreen.YUnits = Gum.Converters.GeneralUnitType.PixelsFromSmall;
-            ResizeCurrentGumxScreen();
+            _currentGumxScreen.Y = _navStrip.Visual.AbsoluteHeight;
+            _currentGumxScreen.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
+            _currentGumxScreen.Width = 0;
+            _currentGumxScreen.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
+            _currentGumxScreen.Height = -_navStrip.Visual.AbsoluteHeight;
         }
         else
         {
@@ -157,20 +162,5 @@ internal sealed class GumGallery
             _currentCodeScreen.Visual.Height = -_navStrip.Visual.AbsoluteHeight;
             _currentCodeScreen.AddToRoot();
         }
-    }
-
-    /// <summary>
-    /// Re-applies the loaded .gumx screen's size after a resize. Its Width/Height are plain pixel values
-    /// (not RelativeToParent), so they do not track GraphicalUiElement.CanvasWidth/Height automatically,
-    /// unlike code screens, which Dock(Fill) themselves (#3657).
-    /// </summary>
-    public void ResizeCurrentGumxScreen()
-    {
-        if (_currentGumxScreen == null) return;
-
-        float navStripHeight = _navStrip.Visual.AbsoluteHeight;
-        _currentGumxScreen.Width = GraphicalUiElement.CanvasWidth;
-        _currentGumxScreen.Height = GraphicalUiElement.CanvasHeight - navStripHeight;
-        _currentGumxScreen.Y = navStripHeight;
     }
 }
