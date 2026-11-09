@@ -12,6 +12,8 @@ namespace RenderingLibrary.Graphics;
 /// is passed to Begin, which applies until End. It never clears the canvas, but a full-scene Draw does when
 /// <see cref="Renderer.ClearsCanvas"/> is true (the Renderer's default; GumService.Initialize turns
 /// it off), so draw with GumBatch after Draw in a frame; GumBatch drawing before such a Draw is wiped.
+/// On KNI Skia the service owns the render target, so each Begin/End pair outside Draw is its own pass,
+/// composited onto the back buffer in call order, before or after the service's Draw.
 /// </summary>
 public class GumBatch
 {

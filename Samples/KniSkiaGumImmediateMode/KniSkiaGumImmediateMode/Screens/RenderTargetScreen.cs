@@ -118,6 +118,8 @@ public class RenderTargetScreen : IImmediateModeScreen
         gumBatch.Draw(_inGameContainerForRenderTarget);
         gumBatch.End();
         _graphicsDevice.SetRenderTarget(null);
+        // Returning to the back buffer discards its contents on KNI, so clear it again.
+        _graphicsDevice.Clear(Color.CornflowerBlue);
 
         // Center the scaled-up render target horizontally, below the menu.
         float blitWidth = GameWidth * BlitScale;
