@@ -88,6 +88,10 @@
 	  <None Include="..\..\..\Gum\Content\Shaders\Outline.slang" Link="resources\Outline.slang">
 	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	  </None>
+	  <!-- The grayscale, blur and sepia Slang shaders MonoGameGumInCode runs; ShadowDusk converts them to SkSL. -->
+	  <None Include="..\..\MonoGameGumInCode\MonoGameGumInCode\Content\*.slang" Link="resources\%(Filename)%(Extension)">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </None>
 	  <None Update="libEGL.dll">
 	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	  </None>

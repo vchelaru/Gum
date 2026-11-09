@@ -54,6 +54,9 @@
 		<None Include="..\..\..\Gum\Content\Shaders\Outline.slang" Link="Content\GumProject\resources\Outline.slang">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
+		<None Include="..\..\MonoGameGumInCode\MonoGameGumInCode\Content\*.slang" Link="Content\GumProject\resources\%(Filename)%(Extension)">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
 	</ItemGroup>
 
 </Project>

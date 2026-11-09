@@ -65,6 +65,7 @@
 		<None Include="..\..\SilkNetGum\SilkNetGumSample\resources\**\*.*" LinkBase="resources" CopyToOutputDirectory="PreserveNewest" />
 		<!-- The one Outline.slang that MonoGameGumInCode, raylib and the Skia samples all run. -->
 		<None Include="..\..\..\Gum\Content\Shaders\Outline.slang" Link="resources\Outline.slang" CopyToOutputDirectory="PreserveNewest" />
+		<None Include="..\..\MonoGameGumInCode\MonoGameGumInCode\Content\*.slang" Link="resources\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
 	</ItemGroup>
 
 	<!-- In-process automation (scripted Gum input, NDJSON runner, off-screen window). Debug only, so it
