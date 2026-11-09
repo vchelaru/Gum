@@ -48,28 +48,6 @@ Then add project references in your game project. Your project might look like t
 
 To create a project that already references Gum source, run [`gumcli new MyGame -p kniskia --source-linked`](../../../../cli/new.md#linking-to-gum-source).
 
-## Drawing Before or After Gum
-
-Available in December 2026, or now if building Gum from source.
-
-Call `GumBatch.Begin`, `Draw`, and `End` in your `Draw` method, before or after `GumUI.Draw()`. Each `Begin`/`End` pair is its own pass and appears in the order you call it, so you can mix it with your own `SpriteBatch` drawing:
-
-```csharp
-protected override void Draw(GameTime gameTime)
-{
-    GraphicsDevice.Clear(Color.CornflowerBlue);
-
-    _gumBatch.Begin();
-    _gumBatch.Draw(_background);
-    _gumBatch.End();
-
-    GumUI.Draw();
-    base.Draw(gameTime);
-}
-```
-
-See [GumBatch setup](../setup-for-gumbatch.md) for more on `GumBatch`.
-
 ## Initializing Gum
 
 The following is a complete `Game1` class that also shows a button. Lines marked **Optional** match the optional packages above, so delete the lines for any package you skipped. `Window.AllowUserResizing` is optional too: the render target follows the window when it is resized.
