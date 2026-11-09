@@ -189,7 +189,8 @@ unsafe class Program
 
                 HandleKeys();
 
-                GumUI.Update(totalTime.Elapsed.TotalSeconds);
+                double gameTime = totalTime.Elapsed.TotalSeconds;
+                GumUI.Update(gameTime);
 
                 gl.ClearColor(clearColor.Red / 255f, clearColor.Green / 255f, clearColor.Blue / 255f, 1.0f);
                 gl.Clear((uint)GLEnum.ColorBufferBit);

@@ -48,7 +48,18 @@ public partial class GumService : GumServiceSkiaInteractiveBase, IGumService
     /// </remarks>
     /// <param name="window">An initialized window with an OpenGL or OpenGL ES context.</param>
     /// <param name="gumProjectFile">An optional .gumx project file to load.</param>
-    public void Initialize(IWindow window, string? gumProjectFile = null)
+    public void Initialize(IWindow window, string? gumProjectFile = null) =>
+        Initialize(window, DefaultVisualsVersion.Newest, gumProjectFile);
+
+    /// <summary>
+    /// Initializes Gum for a Silk.NET window with the given default Forms visuals, optionally loading a
+    /// Gum project. See <see cref="Initialize(IWindow, string?)"/> for what it sets up.
+    /// </summary>
+    /// <param name="window">An initialized window with an OpenGL or OpenGL ES context.</param>
+    /// <param name="visualsVersion">The default Forms visuals to register. Skia supports V3 only.</param>
+    /// <param name="gumProjectFile">An optional .gumx project file to load.</param>
+    /// <exception cref="NotSupportedException"><paramref name="visualsVersion"/> is not supported on Skia.</exception>
+    public void Initialize(IWindow window, DefaultVisualsVersion visualsVersion, string? gumProjectFile = null)
     {
         if (window == null)
         {
@@ -59,6 +70,9 @@ public partial class GumService : GumServiceSkiaInteractiveBase, IGumService
             throw new InvalidOperationException(
                 "The window has no OpenGL context. Call window.Initialize() first, with an OpenGL or OpenGL ES API in the window options.");
         }
+
+        // Before any window resource is created, so an unsupported version leaves the service untouched.
+        ResolveVisualsVersion(visualsVersion);
 
         ReleaseWindowResources();
         _window = window;
@@ -72,7 +86,7 @@ public partial class GumService : GumServiceSkiaInteractiveBase, IGumService
         Vector2D<int> size = window.FramebufferSize;
         CreateSurface(size.X, size.Y);
 
-        Initialize(_surface!.Canvas, window.CreateInput(), size.X, size.Y, gumProjectFile);
+        Initialize(_surface!.Canvas, window.CreateInput(), size.X, size.Y, gumProjectFile, visualsVersion);
 
         FrameworkElement.GamePadsForUiControl.Clear();
         UseGamepadDefaults();
@@ -215,13 +229,18 @@ public partial class GumService : GumServiceSkiaInteractiveBase, IGumService
     /// <param name="width">The width to use for the root container and canvas coordinate space.</param>
     /// <param name="height">The height to use for the root container and canvas coordinate space.</param>
     /// <param name="gumProjectFile">An optional .gumx project file to load.</param>
-    public void Initialize(SKCanvas canvas, IInputContext inputContext, int width, int height, string? gumProjectFile = null)
+    public void Initialize(SKCanvas canvas, IInputContext inputContext, int width, int height, string? gumProjectFile = null) =>
+        Initialize(canvas, inputContext, width, height, gumProjectFile, DefaultVisualsVersion.Newest);
+
+    private void Initialize(
+        SKCanvas canvas, IInputContext inputContext, int width, int height, string? gumProjectFile,
+        DefaultVisualsVersion visualsVersion)
     {
         InitializeWithDevices(canvas, width, height, gumProjectFile, () =>
         {
             _inputContext = inputContext;
             Clipboard = CreateClipboard(inputContext);
-        });
+        }, visualsVersion);
     }
 
     // The first keyboard's ClipboardText is the OS clipboard on every desktop Silk backend; with no

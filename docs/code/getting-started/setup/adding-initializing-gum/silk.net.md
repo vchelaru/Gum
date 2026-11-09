@@ -129,7 +129,8 @@ while (!window.IsClosing)
     window.DoEvents();
 
     // Update
-    GumUI.Update(clock.Elapsed.TotalSeconds);
+    double gameTime = clock.Elapsed.TotalSeconds;
+    GumUI.Update(gameTime);
 
     // Draw
     gl.ClearColor(0.39f, 0.58f, 0.93f, 1f);

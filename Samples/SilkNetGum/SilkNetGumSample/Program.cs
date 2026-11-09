@@ -154,11 +154,11 @@ unsafe class Program
                     break;
                 }
 
-                double currentTotalSeconds = totalTime.Elapsed.TotalSeconds;
-                GumUI.Update(currentTotalSeconds);
+                double gameTime = totalTime.Elapsed.TotalSeconds;
+                GumUI.Update(gameTime);
 
-                gallery.Tick(currentTotalSeconds - previousTotalSeconds);
-                previousTotalSeconds = currentTotalSeconds;
+                gallery.Tick(gameTime - previousTotalSeconds);
+                previousTotalSeconds = gameTime;
 
                 // Matches MonoGameGumInCode's GraphicsDevice.Clear(Color.CornflowerBlue) (RGB 100, 149, 237).
                 gl.ClearColor(100f / 255f, 149f / 255f, 237f / 255f, 1.0f);

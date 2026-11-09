@@ -167,6 +167,18 @@ public class PlatformProjectScaffolderTests : IDisposable
     }
 
     [Fact]
+    public void Create_SilkNet_ProgramShouldNameTheSecondsValueGameTimeSoSharedDocSnippetsCompile()
+    {
+        string projectDirectory = Path.Combine(_tempDirectory, "MyGame");
+
+        _sut.Create(projectDirectory, HostPlatform.SilkNet, includeFormsTemplate: true);
+
+        string program = File.ReadAllText(Path.Combine(projectDirectory, "Program.cs"));
+        program.ShouldContain("double gameTime = clock.Elapsed.TotalSeconds;");
+        program.ShouldContain("GumUI.Update(gameTime);");
+    }
+
+    [Fact]
     public void Create_SilkNet_ShouldPinSdlNativeLibraryWithValidMacSignature()
     {
         // Ultz.Native.SDL 2.30.1, which Silk.NET.Windowing.Sdl 2.21.0 resolves on its own, ships a macOS
