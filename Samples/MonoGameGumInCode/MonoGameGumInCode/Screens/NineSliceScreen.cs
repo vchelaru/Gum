@@ -3,11 +3,29 @@ using Gum.Forms.Controls;
 using Gum.Graphics.Animation;
 using Gum.GueDeriving;
 using Gum.Wireframe;
-using Microsoft.Xna.Framework;
 
+#if RAYLIB
+namespace Examples.Shapes;
+#elif SKIA
+namespace SilkNetGum.Screens;
+#else
 namespace MonoGameGumInCode.Screens;
+#endif
+
+// One file shared by MonoGameGumInCode, Samples/raylib, SilkNetGumSample, BrutalGumSample and
+// KniSkiaGumInCode (linked into the others), so the same screen can be opened side by side and a
+// backend rendering bug is not confused with sample drift. The only per-backend differences are
+// the namespace and the content path prefix. Colors are set through Red/Green/Blue so no
+// per-backend Color type is needed.
 internal class NineSliceScreen : FrameworkElement
 {
+#if RAYLIB
+    // raylib loads loose files from the output folder.
+    private const string ContentPrefix = "resources\\";
+#else
+    private const string ContentPrefix = "";
+#endif
+
     public NineSliceScreen() : base(new ContainerRuntime())
     {
         Dock(Gum.Wireframe.Dock.Fill);
@@ -33,7 +51,7 @@ internal class NineSliceScreen : FrameworkElement
         foreach (var size in new[] { 32, 64, 96 })
         {
             var ns = new NineSliceRuntime();
-            ns.SourceFileName = "Frame.png";
+            ns.SourceFileName = ContentPrefix + "Frame.png";
             ns.Width = size;
             ns.Height = size;
             sizesRow.AddChild(ns);
@@ -42,7 +60,7 @@ internal class NineSliceScreen : FrameworkElement
         // Custom texture address (carve a frame out of FrameSheet.png).
         AddLabel(container, "TextureAddress.Custom (carving from FrameSheet.png):");
         var custom = new NineSliceRuntime();
-        custom.SourceFileName = "FrameSheet.png";
+        custom.SourceFileName = ContentPrefix + "FrameSheet.png";
         custom.TextureAddress = Gum.Managers.TextureAddress.Custom;
         custom.TextureLeft = 438;
         custom.TextureTop = 231;
@@ -55,13 +73,15 @@ internal class NineSliceScreen : FrameworkElement
         // Color tinting demo.
         AddLabel(container, "Color tinting:");
         var tintRow = AddRow(container);
-        foreach (var tint in new[] { Color.White, Color.Red, Color.LightGreen, Color.CornflowerBlue })
+        foreach (var (red, green, blue) in new[] { (255, 255, 255), (255, 0, 0), (144, 238, 144), (100, 149, 237) })
         {
             var ns = new NineSliceRuntime();
-            ns.SourceFileName = "SquareFrame.png";
+            ns.SourceFileName = ContentPrefix + "SquareFrame.png";
             ns.Width = 56;
             ns.Height = 56;
-            ns.Color = tint;
+            ns.Red = red;
+            ns.Green = green;
+            ns.Blue = blue;
             tintRow.AddChild(ns);
         }
 
@@ -74,12 +94,14 @@ internal class NineSliceScreen : FrameworkElement
         foreach (var useAdd in new[] { false, true })
         {
             var ns = new NineSliceRuntime();
-            ns.SourceFileName = "SquareFrame.png";
+            ns.SourceFileName = ContentPrefix + "SquareFrame.png";
             ns.Width = 56;
             ns.Height = 56;
             if (useAdd)
             {
-                ns.Color = Color.White;
+                ns.Red = 255;
+                ns.Green = 255;
+                ns.Blue = 255;
                 ns.ColorOperation = RenderingLibrary.Graphics.ColorOperation.Add;
             }
             addPropertyRow.AddChild(ns);
@@ -92,8 +114,10 @@ internal class NineSliceScreen : FrameworkElement
         // Add tint. Mirrors the raylib/SilkNetGum NineSliceScreen's identical row.
         AddLabel(container, "Add color operation (normal frame, white-silhouette Add frame):");
         var addRow = AddRow(container);
-        var squareFrameTexture = RenderingLibrary.Content.LoaderManager.Self.LoadContent<Microsoft.Xna.Framework.Graphics.Texture2D>("SquareFrame.png");
-        foreach (var addTint in new Microsoft.Xna.Framework.Color?[] { null, Color.White })
+        var squareFrameSource = new NineSliceRuntime();
+        squareFrameSource.SourceFileName = ContentPrefix + "SquareFrame.png";
+        var squareFrameTexture = squareFrameSource.Texture;
+        foreach (bool hasAddTint in new[] { false, true })
         {
             var ns = new NineSliceRuntime();
             ns.Width = 56;
@@ -101,12 +125,12 @@ internal class NineSliceScreen : FrameworkElement
 
             var chain = new AnimationChain { Name = "AddDemo" };
             var frame = new AnimationFrame { FrameLength = 1.0f, Texture = squareFrameTexture };
-            if (addTint.HasValue)
+            if (hasAddTint)
             {
                 frame.ColorOperation = AnimationFrameColorOperation.Add;
-                frame.Red = addTint.Value.R;
-                frame.Green = addTint.Value.G;
-                frame.Blue = addTint.Value.B;
+                frame.Red = 255;
+                frame.Green = 255;
+                frame.Blue = 255;
             }
             chain.Add(frame);
 
@@ -122,12 +146,12 @@ internal class NineSliceScreen : FrameworkElement
         AddLabel(container, "IsTilingMiddleSections (left: stretched, right: tiled):");
         var tilingRow = AddRow(container);
         var stretched = new NineSliceRuntime();
-        stretched.SourceFileName = "TilingFrame.png";
+        stretched.SourceFileName = ContentPrefix + "TilingFrame.png";
         stretched.Width = 220;
         stretched.Height = 56;
         tilingRow.AddChild(stretched);
         var tiled = new NineSliceRuntime();
-        tiled.SourceFileName = "TilingFrame.png";
+        tiled.SourceFileName = ContentPrefix + "TilingFrame.png";
         tiled.Width = 220;
         tiled.Height = 56;
         tiled.IsTilingMiddleSections = true;
@@ -140,7 +164,7 @@ internal class NineSliceScreen : FrameworkElement
         foreach (var frameWidth in new float?[] { null, 8f, 24f })
         {
             var ns = new NineSliceRuntime();
-            ns.SourceFileName = "SquareFrame.png";
+            ns.SourceFileName = ContentPrefix + "SquareFrame.png";
             ns.Width = 100;
             ns.Height = 100;
             ns.CustomFrameTextureCoordinateWidth = frameWidth;
@@ -156,7 +180,7 @@ internal class NineSliceScreen : FrameworkElement
         borderRotRow.HeightUnits = Gum.DataTypes.DimensionUnitType.Absolute;
 
         var rotScale1 = new NineSliceRuntime();
-        rotScale1.SourceFileName = "Frame.png";
+        rotScale1.SourceFileName = ContentPrefix + "Frame.png";
         rotScale1.Width = 120;
         rotScale1.Height = 80;
         rotScale1.BorderScale = 1f;
@@ -165,7 +189,7 @@ internal class NineSliceScreen : FrameworkElement
         borderRotRow.AddChild(rotScale1);
 
         var rotScale8 = new NineSliceRuntime();
-        rotScale8.SourceFileName = "Frame.png";
+        rotScale8.SourceFileName = ContentPrefix + "Frame.png";
         rotScale8.Width = 120;
         rotScale8.Height = 80;
         rotScale8.BorderScale = 8f;
@@ -196,7 +220,7 @@ internal class NineSliceScreen : FrameworkElement
         // elsewhere on this screen. Inside ToAnimationChainList, FileRelativeTextures
         // resolves the per-frame texture references (tile_0064.png / tile_0065.png)
         // from the same directory as the .achx.
-        AnimationChainListSave save = AnimationChainListSave.FromFile("AnimatedFrame1.achx");
+        AnimationChainListSave save = AnimationChainListSave.FromFile(ContentPrefix + "AnimatedFrame1.achx");
         return save.ToAnimationChainList();
     }
 

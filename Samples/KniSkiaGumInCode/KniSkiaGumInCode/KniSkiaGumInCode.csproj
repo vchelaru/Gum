@@ -56,7 +56,7 @@
 		<Compile Include="..\..\MonoGameGumInCode\MonoGameGumInCode\Screens\LayerCameraSettingsScreen.cs" Link="Screens\LayerCameraSettingsScreen.cs" />
 		<Compile Include="..\..\SilkNetGum\SilkNetGumSample\Screens\ArcsScreen.cs" Link="Screens\ArcsScreen.cs" />
 		<Compile Include="..\..\SilkNetGum\SilkNetGumSample\Screens\PolygonsScreen.cs" Link="Screens\PolygonsScreen.cs" />
-		<Compile Include="..\..\SilkNetGum\SilkNetGumSample\Screens\NineSliceScreen.cs" Link="Screens\NineSliceScreen.cs" />
+		<Compile Include="..\..\MonoGameGumInCode\MonoGameGumInCode\Screens\NineSliceScreen.cs" Link="Screens\NineSliceScreen.cs" />
 		<Compile Include="..\..\Shared\GumGallery.cs" Link="GumGallery.cs" />
 	</ItemGroup>
 

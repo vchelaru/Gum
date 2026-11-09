@@ -34,6 +34,7 @@
     <Compile Include="..\MonoGameGumInCode\MonoGameGumInCode\Screens\LayerCameraSettingsScreen.cs" Link="Screens\LayerCameraSettingsScreen.cs" />
     <Compile Include="..\MonoGameGumInCode\MonoGameGumInCode\Screens\SpriteScreen.cs" Link="Screens\SpriteScreen.cs" />
     <Compile Include="..\MonoGameGumInCode\MonoGameGumInCode\Screens\FormsScreen.cs" Link="Screens\FormsScreen.cs" />
+    <Compile Include="..\MonoGameGumInCode\MonoGameGumInCode\Screens\NineSliceScreen.cs" Link="Screens\NineSliceScreen.cs" />
     <Compile Include="..\Shared\GumGallery.cs" Link="GumGallery.cs" />
   </ItemGroup>
 
