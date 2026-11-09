@@ -1,6 +1,8 @@
 using Gum;
 using Gum.Forms;
 using Gum.Forms.Controls;
+using Gum.Wireframe;
+using RenderingLibrary;
 using Silk.NET.Input;
 using SkiaSharp;
 using System.Collections.Generic;
@@ -19,6 +21,22 @@ public class InitializeWindowVisualsVersionTests : BaseTestClass
 {
     // V3 is the only DefaultVisualsVersion left (V1 and V2 were removed), so an undefined value stands in for "not V3".
     private const DefaultVisualsVersion UnsupportedVersion = (DefaultVisualsVersion)99;
+
+    // A test here initializes a throwaway GumService, which takes over IGumService.Default, SystemManagers.Default
+    // and the Forms cursor/keyboard. Put the bootstrap's back, or the next class sees the throwaway.
+    private readonly IGumService? _originalService = IGumService.Default;
+    private readonly SystemManagers _originalManagers = SystemManagers.Default;
+    private readonly Gum.Wireframe.ICursor? _originalCursor = FormsUtilities.Cursor;
+    private readonly IInputReceiverKeyboard? _originalKeyboard = FormsUtilities.Keyboard;
+
+    public override void Dispose()
+    {
+        base.Dispose();
+        IGumService.Default = _originalService;
+        SystemManagers.Default = _originalManagers;
+        if (_originalCursor != null) FormsUtilities.SetCursor(_originalCursor);
+        if (_originalKeyboard != null) FormsUtilities.SetKeyboard(_originalKeyboard);
+    }
 
     private static Mock<IWindow> CreateWindow()
     {
