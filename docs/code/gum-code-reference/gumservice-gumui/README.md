@@ -16,6 +16,14 @@ GumService GumUI => GumService.Default;
 
 `IGumService` is the interface for code that should work on several runtimes, and for projects that expect to migrate between them. Both are supported.
 
+## Update and Draw
+
+Samples on other pages call `GumUI.Update(gameTime)` and `GumUI.Draw()` as written for MonoGame, KNI, and FNA. The per-frame calls differ on other runtimes:
+
+* Raylib takes the elapsed seconds as a `double`: `GumUI.Update(Raylib.GetTime())`.
+* Silk.NET, BRUTAL, and general SkiaSharp hosts take `Update(double totalSeconds)`.
+* Stride and Unity call `Update` and `Draw` for you, so skip both. See the [Stride](../../getting-started/setup/adding-initializing-gum/stride.md) and [Unity](../../getting-started/setup/adding-initializing-gum/unity.md) setup pages.
+
 ## Initialize
 
 `Initialize` is called in all Gum projects. This method performs the following:

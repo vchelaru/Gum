@@ -84,7 +84,7 @@ Both loading paths go through `LoaderManager`, so an `.achx` loaded from the sam
 
 No `.achx` file is required to play back an animation chain. `AnimationChainList`, `AnimationChain`, and `AnimationFrame` are plain classes with public constructors — you can build a chain entirely in code, with no XML file and no `AnimationChainListSave` involved. This is useful for procedurally generated animations, for splitting a single loaded texture into frames without authoring an `.achx`, or for generating chains from data at runtime.
 
-The most common reason to build a chain by hand is splitting one sprite sheet texture into a grid of equal-sized frames. The following example builds a 4-frame walk cycle from a single row of a sprite sheet:
+The most common reason to build a chain by hand is splitting one sprite sheet texture into a grid of equal-sized frames. The following example is for MonoGame, KNI, and FNA, where the texture type is `Texture2D`. It builds a 4-frame walk cycle from a single row of a sprite sheet:
 
 ```csharp
 // Initialize

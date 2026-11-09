@@ -4,6 +4,10 @@ Gum's render loop is driven by an internal camera (`SystemManagers.Default.Rende
 
 The `Draw` method on `GumService` has platform-specific overloads that accept the platform's native per-frame camera type, copy the relevant fields onto Gum's internal camera, and then draw under it. This is the supported path for "render Gum under my own camera."
 
+{% hint style="info" %}
+The sample on this page is for raylib, the only runtime with a `Draw(Camera2D)` overload.
+{% endhint %}
+
 ## raylib: `Draw(Camera2D)`
 
 On raylib, `GumService.Draw` accepts a raylib `Camera2D`:

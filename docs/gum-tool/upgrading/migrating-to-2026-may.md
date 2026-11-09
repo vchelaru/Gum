@@ -514,7 +514,7 @@ The legacy `ColoredCircleRuntime` and `RoundedRectangleRuntime` are **unchanged*
 
 `FrameworkElement` and the rest of the Forms control infrastructure now live in `GumCommon` so any GumCommon consumer can use Forms directly, independent of the rendering backend. To make that compile cross-platform, a handful of Forms APIs that previously surfaced MonoGame-specific input types have been widened to platform-neutral abstractions in `Gum.Input` and `Gum.Forms.Input`.
 
-Most user code is unaffected. The common path (reading `GumService.Keyboard` / `GumService.GamePads` and calling members on them) keeps working unchanged, and a new `XnaKeyboardExtensions` lets XNA `Keys` keep flowing into `IInputReceiverKeyboard.KeyDown(...)` and friends without a cast. The breaking changes below only affect code that handles Forms control events, builds `KeyCombo` values, or stores the `FrameworkElement.KeyboardsForUiControl` / `GamePadsForUiControl` collections in strongly-typed local variables.
+Most user code is unaffected. The common path (reading `GumService.Keyboard` / `GumService.Gamepads` and calling members on them) keeps working unchanged, and a new `XnaKeyboardExtensions` lets XNA `Keys` keep flowing into `IInputReceiverKeyboard.KeyDown(...)` and friends without a cast. The breaking changes below only affect code that handles Forms control events, builds `KeyCombo` values, or stores the `FrameworkElement.KeyboardsForUiControl` / `GamePadsForUiControl` collections in strongly-typed local variables.
 
 | API | Before (MonoGame) | After |
 | --- | --- | --- |
@@ -526,7 +526,7 @@ Most user code is unaffected. The common path (reading `GumService.Keyboard` / `
 | `KeyEventArgs.Key` | XNA `Keys` | `Gum.Forms.Input.Keys` |
 | `ListBox` selection modifier keys (`ToggleSelectionModifierKey`, etc.) | XNA `Keys` | `Gum.Forms.Input.Keys` |
 
-The `MonoGameGum.Input.GamePad` **class** itself is unchanged; `GumService.GamePads` still returns instances of it, and they still expose `XnaGamePad`, `Capabilities`, etc. Only the static type of the `FrameworkElement.GamePadsForUiControl` list element changed.
+The `MonoGameGum.Input.GamePad` **class** itself is unchanged; `GumService.Gamepads` still returns instances of it, and they still expose `XnaGamePad`, `Capabilities`, etc. Only the static type of the `FrameworkElement.GamePadsForUiControl` list element changed.
 
 #### `ControllerButtonPushed` event handlers
 
