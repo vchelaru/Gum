@@ -221,21 +221,25 @@ namespace RenderingLibrary
         /// Registers the default keyboard so Forms controls respond to it. The default adds
         /// <see cref="Keyboard"/> to <see cref="FrameworkElement.KeyboardsForUiControl"/>.
         /// </summary>
+        /// <returns>This service, so calls chain.</returns>
         /// <exception cref="System.InvalidOperationException">There is no keyboard, because Gum has not been initialized.</exception>
-        void UseKeyboardDefaults()
+        IGumService UseKeyboardDefaults()
         {
             FrameworkElement.KeyboardsForUiControl.Add(
                 Keyboard ?? throw new System.InvalidOperationException(
                     "UseKeyboardDefaults was called with no keyboard. Initialize Gum before calling it."));
+            return this;
         }
 
         /// <summary>
         /// Registers <see cref="Gamepads"/> so Forms controls respond to them. The default adds every
         /// gamepad to <see cref="FrameworkElement.GamePadsForUiControl"/>.
         /// </summary>
-        void UseGamepadDefaults()
+        /// <returns>This service, so calls chain.</returns>
+        IGumService UseGamepadDefaults()
         {
             FrameworkElement.GamePadsForUiControl.AddRange(Gamepads);
+            return this;
         }
 
         /// <summary>
@@ -304,7 +308,8 @@ namespace RenderingLibrary
         /// resume on the game's main thread, inside <see cref="Update(double)"/>. Call once, after
         /// <c>Initialize</c>. Skip it when you have installed your own context. The default does nothing.
         /// </summary>
-        void UseSingleThreadedAsync() { }
+        /// <returns>This service, so calls chain.</returns>
+        IGumService UseSingleThreadedAsync() => this;
 
         /// <summary>
         /// Tears the service down so <c>Initialize</c> can be called again: clears the roots, Forms state,

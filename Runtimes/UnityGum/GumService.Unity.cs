@@ -32,5 +32,10 @@ public partial class GumService : GumServiceSkiaInteractiveBase, IGumService
     /// Sets the clipboard TextBox copy and paste use. The Unity package passes one backed by
     /// <c>GUIUtility.systemCopyBuffer</c>.
     /// </summary>
-    public void UseClipboard(IGumClipboard clipboard) => Clipboard = clipboard;
+    /// <returns>This service, so calls chain.</returns>
+    public GumService UseClipboard(IGumClipboard clipboard)
+    {
+        Clipboard = clipboard;
+        return this;
+    }
 }

@@ -19,7 +19,8 @@ public static class GumServiceShadowDuskExtensions
     /// </summary>
     /// <param name="gumService">The service whose graphics device the effects are created on. It does not
     /// need to be initialized yet; the device is read when the first shader loads.</param>
-    public static void UseShadowDusk(this GumService gumService)
+    /// <returns><paramref name="gumService"/>, so calls chain.</returns>
+    public static T UseShadowDusk<T>(this T gumService) where T : GumService
     {
         if (gumService == null)
         {
@@ -54,6 +55,8 @@ public static class GumServiceShadowDuskExtensions
             return ShadowDuskEffectLoader.TryLoad(graphicsDevice, source.Name, text, target.Value)
                 ?? previousResolver?.Invoke(source);
         };
+
+        return gumService;
     }
 
     private static GraphicsDevice GetGraphicsDevice(GumService gumService)
