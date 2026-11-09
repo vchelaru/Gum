@@ -1,5 +1,9 @@
 using Gum;
 using Gum.Forms;
+using Gum.Forms.Controls;
+using Silk.NET.Input;
+using SkiaSharp;
+using System.Collections.Generic;
 using Moq;
 using Shouldly;
 using Silk.NET.Core.Contexts;
@@ -46,5 +50,36 @@ public class InitializeWindowVisualsVersionTests : BaseTestClass
         Should.Throw<InvalidOperationException>(
             () => new GumService().Initialize(window.Object, DefaultVisualsVersion.V3))
             .Message.ShouldBe("reached window");
+    }
+
+    [Fact]
+    public void Initialize_DoesNotRegisterGamepadsUntilUseGamepadDefaults()
+    {
+        // The window overload needs a real GL context and a real window for CreateInput (an extension method),
+        // so it cannot run headless. It ends in this overload; the window overload no longer adds anything.
+        Mock<IInputContext> input = new Mock<IInputContext>();
+        input.SetupGet(c => c.Keyboards).Returns(new List<IKeyboard> { new Mock<IKeyboard>().Object });
+        Mock<IMouse> mouse = new Mock<IMouse>();
+        mouse.SetupGet(m => m.ScrollWheels).Returns(new List<ScrollWheel>());
+        input.SetupGet(c => c.Mice).Returns(new List<IMouse> { mouse.Object });
+        input.SetupGet(c => c.Gamepads).Returns(new List<IGamepad>());
+        GumService service = new GumService();
+        FrameworkElement.GamePadsForUiControl.Clear();
+
+        try
+        {
+            using SKSurface surface = SKSurface.Create(new SKImageInfo(800, 600));
+            service.Initialize(surface.Canvas, input.Object, 800, 600);
+
+            FrameworkElement.GamePadsForUiControl.ShouldBeEmpty();
+
+            service.UseGamepadDefaults();
+
+            FrameworkElement.GamePadsForUiControl.ShouldBe(service.Gamepads);
+        }
+        finally
+        {
+            FrameworkElement.GamePadsForUiControl.Clear();
+        }
     }
 }

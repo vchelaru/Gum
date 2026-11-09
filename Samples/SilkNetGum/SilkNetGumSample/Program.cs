@@ -130,6 +130,7 @@ unsafe class Program
 
             // Registers GumUI.Keyboard for Tab / Shift+Tab focus traversal between Forms controls.
             GumUI.UseKeyboardDefaults();
+            GumUI.UseGamepadDefaults();
 
             gallery.Build();
 
