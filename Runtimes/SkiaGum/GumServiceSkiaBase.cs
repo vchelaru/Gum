@@ -258,12 +258,15 @@ public abstract class GumServiceSkiaBase : IGumService
     /// </summary>
     public Gum.Input.GamePad[] Gamepads => FormsUtilities.Gamepads;
 
+    // The Use... members are extension methods (GumServiceSkiaExtensions), not instance members, so each
+    // returns the host's own concrete GumService and the calls chain; an instance member declared here
+    // could only return this base type. They reach these explicit implementations through IGumService.
+
     /// <summary>
     /// Registers this service's keyboard (created via <see cref="IGumService.CreateKeyboard"/> during
-    /// <c>Initialize</c>) as one of <see cref="FrameworkElement.KeyboardsForUiControl"/>, so Forms
-    /// controls respond to it by default without the host having to wire that up manually.
+    /// <c>Initialize</c>) as one of <see cref="FrameworkElement.KeyboardsForUiControl"/>.
     /// </summary>
-    public void UseKeyboardDefaults()
+    IGumService IGumService.UseKeyboardDefaults()
     {
         var keyboard = FormsUtilities.Keyboard ?? throw new InvalidOperationException(
             "UseKeyboardDefaults was called with no keyboard. Initialize Gum before calling it.");
@@ -271,13 +274,13 @@ public abstract class GumServiceSkiaBase : IGumService
         {
             FrameworkElement.KeyboardsForUiControl.Add(keyboard);
         }
+        return this;
     }
 
     /// <summary>
-    /// Registers this service's <see cref="Gamepads"/> as <see cref="FrameworkElement.GamePadsForUiControl"/>,
-    /// so Forms controls respond to gamepad input by default without the host having to wire that up manually.
+    /// Registers this service's <see cref="Gamepads"/> as <see cref="FrameworkElement.GamePadsForUiControl"/>.
     /// </summary>
-    public void UseGamepadDefaults()
+    IGumService IGumService.UseGamepadDefaults()
     {
         foreach (var gamepad in Gamepads)
         {
@@ -286,6 +289,7 @@ public abstract class GumServiceSkiaBase : IGumService
                 FrameworkElement.GamePadsForUiControl.Add(gamepad);
             }
         }
+        return this;
     }
 
     IRenderable IGumService.CreateSpriteRenderable() => new Sprite();
@@ -436,7 +440,7 @@ public abstract class GumServiceSkiaBase : IGumService
 
     /// <summary>
     /// The active single-threaded synchronization context, or <c>null</c> if
-    /// <see cref="UseSingleThreadedAsync"/> has not been called.
+    /// <c>UseSingleThreadedAsync</c> has not been called.
     /// </summary>
     public Gum.Async.SingleThreadSynchronizationContext? SynchronizationContext => _syncContext;
 
@@ -444,17 +448,21 @@ public abstract class GumServiceSkiaBase : IGumService
     /// Installs a <see cref="Gum.Async.SingleThreadSynchronizationContext"/> on the calling
     /// thread so that <c>await</c> continuations (including
     /// <c>await dialogBox.ShowAsync(...)</c>) resume on the host's primary thread. Call once,
-    /// after <c>Initialize</c>. Subsequent calls are no-ops.
+    /// after <c>Initialize</c>. Subsequent calls are no-ops. Called through
+    /// <c>GumServiceSkiaExtensions.UseSingleThreadedAsync</c>.
     /// </summary>
     /// <remarks>
     /// Off by default. Skip this call if you've already installed your own
     /// <see cref="System.Threading.SynchronizationContext"/> — installing two would
     /// route continuations through the wrong queue.
     /// </remarks>
-    public void UseSingleThreadedAsync()
+    IGumService IGumService.UseSingleThreadedAsync()
     {
-        if (_syncContext != null) return;
-        _syncContext = new Gum.Async.SingleThreadSynchronizationContext();
+        if (_syncContext == null)
+        {
+            _syncContext = new Gum.Async.SingleThreadSynchronizationContext();
+        }
+        return this;
     }
 
     #endregion

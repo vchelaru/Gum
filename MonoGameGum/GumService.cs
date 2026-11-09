@@ -435,8 +435,9 @@ public partial class GumService : IGumService
     /// Registers the default keyboard in <see cref="Gum.Forms.Controls.FrameworkElement.KeyboardsForUiControl"/>
     /// so Forms controls respond to it.
     /// </summary>
+    /// <returns>This service, so calls chain: <c>GumUI.UseKeyboardDefaults().UseGamepadDefaults()</c>.</returns>
     /// <exception cref="System.InvalidOperationException">Gum has not been initialized, so there is no keyboard.</exception>
-    public void UseKeyboardDefaults()
+    public GumService UseKeyboardDefaults()
     {
         var keyboard = FormsUtilities.Keyboard ?? throw new System.InvalidOperationException(
             "UseKeyboardDefaults was called with no keyboard. Initialize Gum before calling it.");
@@ -444,9 +445,15 @@ public partial class GumService : IGumService
         {
             Gum.Forms.Controls.FrameworkElement.KeyboardsForUiControl.Add(keyboard);
         }
+        return this;
     }
 
-    public void UseGamepadDefaults()
+    /// <summary>
+    /// Registers <see cref="Gamepads"/> as <see cref="Gum.Forms.Controls.FrameworkElement.GamePadsForUiControl"/>
+    /// so Forms controls respond to gamepad input.
+    /// </summary>
+    /// <returns>This service, so calls chain.</returns>
+    public GumService UseGamepadDefaults()
     {
         foreach (var gamepad in Gamepads)
         {
@@ -455,7 +462,16 @@ public partial class GumService : IGumService
                 Gum.Forms.Controls.FrameworkElement.GamePadsForUiControl.Add(gamepad);
             }
         }
+        return this;
     }
+
+    // The interface members return IGumService; these forward to the concrete ones so a call through
+    // IGumService does exactly what a call on the service does.
+    IGumService IGumService.UseKeyboardDefaults() => UseKeyboardDefaults();
+
+    IGumService IGumService.UseGamepadDefaults() => UseGamepadDefaults();
+
+    IGumService IGumService.UseSingleThreadedAsync() => UseSingleThreadedAsync();
 
     // Off by default; opt in via UseSingleThreadedAsync. Formerly #if !FRB-guarded, but GumService
     // is not compiled into FRB (it is absent from GumCoreShared.projitems), so the guard was
@@ -479,10 +495,14 @@ public partial class GumService : IGumService
     /// <see cref="System.Threading.SynchronizationContext"/> — installing two would
     /// route continuations through the wrong queue.
     /// </remarks>
-    public void UseSingleThreadedAsync()
+    /// <returns>This service, so calls chain.</returns>
+    public GumService UseSingleThreadedAsync()
     {
-        if (_syncContext != null) return;
-        _syncContext = new Gum.Async.SingleThreadSynchronizationContext();
+        if (_syncContext == null)
+        {
+            _syncContext = new Gum.Async.SingleThreadSynchronizationContext();
+        }
+        return this;
     }
 
     // What a framework entry point (Update, Draw) sets for the length of the call and then puts back:
