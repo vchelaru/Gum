@@ -9,14 +9,12 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
-using SkiaGameRendering;
-using SkiaSharp;
 
 namespace KniSkiaGumFromFile;
 
 /// <summary>
-/// The KNI Skia version of KniGumFromFile: loads GumProject.gumx and shows its screens, drawn by SkiaGum
-/// into a SkiaGameRendering <see cref="SkiaRenderTarget2D"/>. Press 1 to 8 to switch screens.
+/// The KNI Skia version of KniGumFromFile: loads GumProject.gumx and shows its screens, drawn by SkiaGum.
+/// Press 1 to 8 to switch screens.
 /// </summary>
 public class Game1 : Game
 {
@@ -24,7 +22,6 @@ public class Game1 : Game
     private const int StartHeight = 600;
 
     private readonly GraphicsDeviceManager _graphics;
-    private SkiaRenderTarget2D? _canvas;
 
     private ScreenSave? _currentGumScreenSave;
     private GraphicalUiElement? _currentScreenGue;
@@ -323,59 +320,8 @@ public class Game1 : Game
 
     protected override void Draw(GameTime gameTime)
     {
-        // SkiaRenderer attaches to the GraphicsDevice once KNI has created it.
-        if (!SkiaRenderer.IsInitialized && SkiaRenderer.IsReady)
-        {
-            SkiaRenderer.Initialize(GraphicsDevice);
-        }
-
-        GraphicsDevice.SetRenderTarget(null);
         GraphicsDevice.Clear(Color.CornflowerBlue);
-
-        if (SkiaRenderer.IsInitialized)
-        {
-            DrawGum();
-        }
-
+        GumService.Default.Draw();
         base.Draw(gameTime);
-    }
-
-    private void DrawGum()
-    {
-        int width = GraphicsDevice.PresentationParameters.BackBufferWidth;
-        int height = GraphicsDevice.PresentationParameters.BackBufferHeight;
-
-        // A SkiaRenderTarget2D has a fixed size, so a resized window needs a new one.
-        bool hadCanvas = _canvas != null;
-        bool resized = _canvas == null || _canvas.Texture.Width != width || _canvas.Texture.Height != height;
-        if (resized)
-        {
-            _canvas?.Dispose();
-            _canvas = new SkiaRenderTarget2D(GraphicsDevice, width, height);
-        }
-
-        _canvas!.Begin();
-        SKCanvas canvas = _canvas.Canvas;
-        canvas.Clear(SKColors.Transparent);
-
-        if (hadCanvas && resized)
-        {
-            GumService.Default.HandleResize(width, height);
-            // The screen is not under GumService.Default.Root, so it lays itself out again.
-            _currentScreenGue?.UpdateLayout();
-        }
-
-        GumService.Default.Draw(canvas);
-
-        // Composites the target onto the back buffer at the origin, at native size.
-        _canvas.End();
-    }
-
-    protected override void UnloadContent()
-    {
-        _canvas?.Dispose();
-        _canvas = null;
-        SkiaRenderer.Dispose();
-        base.UnloadContent();
     }
 }
