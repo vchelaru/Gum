@@ -46,3 +46,75 @@ GumUI.Draw();
 Add `GumUI.UseGamepadDefaults();` after `Initialize`. Delete your `GRGlInterface`, `GRContext`, `GRBackendRenderTarget`, and `SKSurface` setup, your `window.Resize` handling, the `FrameworkElement.GamePadsForUiControl` wiring, and the manual `GraphicalUiElement.CanvasWidth`/`CanvasHeight` assignment. Your game still clears the framebuffer before `Draw()` and calls `window.GLContext.SwapBuffers()` after it. The overloads taking an `SKCanvas` are no longer public on Silk.NET, so create the host from the window as shown here.
 
 See [Silk.NET setup](../../code/getting-started/setup/adding-initializing-gum/silk.net.md).
+
+## KNI with Skia
+
+### Initialize and Draw Take No Canvas
+
+`GumService.Default.Initialize(this)` and `Draw()` take no canvas. Gum owns the Skia render target, resizes it with the back buffer, and composites it onto the back buffer in `Draw()`. The `Initialize` overloads taking an `SKCanvas` or a fixed width and height are removed.
+
+❌ Old:
+
+```csharp
+// Initialize
+base.Initialize();
+GumService.Default.Initialize(this);
+// ... in Draw: create or resize a SkiaRenderTarget2D, then
+_canvas.Begin();
+GumService.Default.HandleResize(width, height); // only after a resize
+GumService.Default.Draw(_canvas.Canvas);
+_canvas.End();
+```
+
+✅ New:
+
+```csharp
+// Initialize
+GumUI.Initialize(this);
+base.Initialize();
+
+// Draw
+GraphicsDevice.Clear(Color.CornflowerBlue);
+GumUI.Draw();
+```
+
+Delete your `SkiaRenderTarget2D`, your `SkiaRenderer.Initialize` call, and your resize code. Clear the back buffer yourself before `Draw()`, since Gum draws over it.
+
+If you draw with `GumBatch`, call `Begin` and `End` in your `Draw` method before or after `GumUI.Draw()`, with no canvas. Leave no `GumBatch` pass open when `GumUI.Draw()` runs, or it throws.
+
+See [KNI with Skia setup](../../code/getting-started/setup/adding-initializing-gum/kni-skia.md).
+
+## BRUTAL
+
+### Package and Initialize
+
+The preview package `Gum.Brutal` is replaced by `Gum.Brutal.OGL` (OpenGL) and `Gum.Brutal.Vulkan`. Reference one of them. `Initialize` takes the window (OpenGL) or the window plus your Vulkan objects, and Gum owns the Skia context and render target.
+
+❌ Old:
+
+```csharp
+GumService.Default.Initialize(window, 800, 450, "Content/GumProject/GumProject.gumj");
+// ... each frame: your own SkiaRenderTarget2D, then
+GumService.Default.Draw(target.Canvas);
+```
+
+✅ New (OpenGL):
+
+```csharp
+GumUI.Initialize(window, "Content/GumProject/GumProject.gumj");
+// ... each frame:
+GumUI.Draw();
+window.SwapBuffers();
+```
+
+Delete your Skia context and render target. For Vulkan, the `Initialize` arguments are in the setup page. `Draw()` composites over whatever you drew to the framebuffer first, so clear it yourself before `Draw()`.
+
+See [BRUTAL setup](../../code/getting-started/setup/adding-initializing-gum/brutal.md).
+
+## Stride
+
+### Direct3D Needs net10.0-windows7.0
+
+The CPU fallback is removed. A project that uses Direct3D11 or Direct3D12 must target `net10.0-windows7.0`; on plain `net10.0` only Vulkan works and `Initialize` throws a `NotSupportedException`. Change `TargetFramework` to `net10.0-windows7.0`.
+
+See [Stride setup](../../code/getting-started/setup/adding-initializing-gum/stride.md#skia-render-path).
