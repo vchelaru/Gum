@@ -38,6 +38,7 @@ using System.Runtime.CompilerServices;
 // reads the cursor walk's cached subtree state (GraphicalUiElement._subtreeEventsState).
 [assembly: InternalsVisibleTo("KniSkiaGum")]
 [assembly: InternalsVisibleTo("BrutalGum")]
+[assembly: InternalsVisibleTo("BrutalGum.Vulkan")]
 [assembly: InternalsVisibleTo("SilkNetGum")]
 [assembly: InternalsVisibleTo("StrideGum")]
 [assembly: InternalsVisibleTo("UnityGum")]

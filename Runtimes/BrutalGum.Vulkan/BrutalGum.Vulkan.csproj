@@ -1,0 +1,50 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<!--
+		Gum.Brutal.Vulkan: the Vulkan twin of Gum.Brutal. Same GumService flow (Initialize, Update, Draw), but
+		the game hands Gum its Vulkan objects and Gum draws into a SkiaGameRendering.Brutal Vulkan image and
+		presents it with its own swapchain. A game with its own renderer can turn presenting off and sample
+		GumService.RenderTargetImage instead. References SkiaGameRendering.Brutal only; never reference
+		Gum.Brutal in the same project, both declare GumService.
+	-->
+	<Import Project="..\RuntimePackage.props" />
+
+	<PropertyGroup>
+		<PackageId>Gum.Brutal.Vulkan</PackageId>
+		<AssemblyName>BrutalGum.Vulkan</AssemblyName>
+		<RootNamespace>BrutalGum</RootNamespace>
+		<Version>2026.11.1</Version>
+		<NoWarn>1591</NoWarn>
+		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+		<TargetFramework>net10.0</TargetFramework>
+		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+	</PropertyGroup>
+
+	<PropertyGroup>
+		<GumSkiaHostSymbol>BRUTAL;BRUTAL_VULKAN</GumSkiaHostSymbol>
+	</PropertyGroup>
+
+	<Import Project="..\BrutalHost.props" />
+
+	<ItemGroup>
+		<PackageReference Include="Ahwoo.Brutal.Glfw" Version="2026.10.5" />
+		<PackageReference Include="Ahwoo.Brutal.Vulkan" Version="2026.10.3" />
+		<PackageReference Include="Ahwoo.Brutal.Vulkan.Abstractions" Version="2026.10.3" />
+		<PackageReference Include="Ahwoo.Brutal.ShaderC" Version="2026.10.3" />
+		<!-- Skia on Vulkan. Never reference SkiaGameRendering.Brutal.OGL here: both declare SkiaRenderTarget2D. -->
+		<PackageReference Include="SkiaGameRendering.Brutal" Version="0.22.0" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\..\GumCommon\GumCommon.csproj" />
+		<ProjectReference Include="..\SkiaGum\SkiaGum.csproj" />
+	</ItemGroup>
+
+	<Import Project="..\RuntimePackage.Analyzers.props" />
+
+	<!-- Guards against a consumer whose AssemblyName collides with BrutalGum.Vulkan. See #4311. -->
+	<ItemGroup>
+		<None Include="build\Gum.Brutal.Vulkan.targets" Pack="true" PackagePath="buildTransitive\Gum.Brutal.Vulkan.targets" Visible="false" />
+	</ItemGroup>
+
+</Project>

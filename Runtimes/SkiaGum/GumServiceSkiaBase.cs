@@ -751,7 +751,7 @@ public abstract class GumServiceSkiaBase : IGumService
     /// <summary>
     /// Draws Gum into the canvas it was initialized with.
     /// </summary>
-    public void Draw()
+    public virtual void Draw()
     {
         SystemManagers.Default.Draw();
     }

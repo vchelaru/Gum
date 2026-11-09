@@ -2,10 +2,10 @@
 
 	<!--
 		Gum.Brutal: an input host over BRUTAL's GLFW window (Ahwoo.Brutal.Glfw) that renders through
-		SkiaGum. BRUTAL ships Vulkan and GLFW bindings and no renderer, so Gum draws into the canvas of a
-		SkiaGameRendering.Brutal SkiaRenderTarget2D that the game owns, and the game samples that Vulkan
-		image in its own renderer. This package therefore references neither SkiaGameRendering nor
-		Vulkan: the game passes the canvas to GumService.Draw(SKCanvas) each frame.
+		SkiaGum into an OpenGL 3.3 texture (SkiaGameRendering.Brutal.OGL) and blits it to the window.
+		The game calls GumService.Default.Initialize(window), Update and Draw and never touches Skia.
+		Gum.Brutal.Vulkan (Runtimes/BrutalGum.Vulkan) is the Vulkan twin built from the same shared
+		source (BrutalHost.props).
 	-->
 	<Import Project="..\RuntimePackage.props" />
 
@@ -23,13 +23,12 @@
 		<GumSkiaHostSymbol>BRUTAL</GumSkiaHostSymbol>
 	</PropertyGroup>
 
-	<Import Project="..\SkiaHost.props" />
-	<Import Project="..\SkiaInputHost.props" />
-	<Import Project="..\SkiaPackages.props" />
+	<Import Project="..\BrutalHost.props" />
 
 	<ItemGroup>
-		<!-- Windowing and input. GLFW is the window BRUTAL's own Vulkan demos use. -->
 		<PackageReference Include="Ahwoo.Brutal.Glfw" Version="2026.10.5" />
+		<!-- Skia on OpenGL. Never reference SkiaGameRendering.Brutal (Vulkan) here: both declare SkiaRenderTarget2D. -->
+		<PackageReference Include="SkiaGameRendering.Brutal.OGL" Version="0.22.0" />
 	</ItemGroup>
 
 	<ItemGroup>
