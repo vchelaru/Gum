@@ -9,6 +9,7 @@ using Brutal.GlfwApi;
 using Brutal.Numerics;
 using Gum;
 using GumSamples;
+using SkiaSharp;
 using System.Diagnostics;
 using System.Text;
 
@@ -30,8 +31,18 @@ try
     Glfw.SwapInterval(1);
 
     GumService GumUI = GumService.Default;
+
     GumUI.Initialize(window, "Content/GumProject/GumProject.gumx");
-    GumGallery gallery = SampleSupport.CreateGallery(GumUI, window, sample);
+    SkiaGum.CustomSetPropertyOnRenderable.RenderTargetEffectResolver =
+        SilkNetGum.Screens.RenderTargetShaderScreen.CompileEffectFromFile;
+    GumUI.UseShadowDusk();
+    GumUI.UseKeyboardDefaults();
+    GumUI.UseGamepadDefaults();
+    GumUI.ClearColor = new SKColor(100, 149, 237);
+
+    GumGallery gallery = new GumGallery();
+    gallery.Build();
+    gallery.LoadScreen(Math.Clamp(sample.Screen, 0, gallery.ScreenCount - 1)); // --screen, for unattended runs
 
     Stopwatch clock = Stopwatch.StartNew();
     double previousSeconds = 0;

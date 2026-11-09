@@ -1,9 +1,6 @@
-// Plumbing both BRUTAL samples (OpenGL and Vulkan) share, so each Program.cs is only window setup plus
-// GumService.Initialize / Update / Draw. Nothing here is Gum API a game needs.
+// Plumbing both BRUTAL samples (OpenGL and Vulkan) share: command line, window hints and the PNG capture.
+// No Gum calls live here; every Gum call a game needs is in each Program.cs.
 using Brutal.GlfwApi;
-using Gum;
-using Gum.Forms.Controls;
-using GumSamples;
 using SkiaSharp;
 
 /// <summary>
@@ -45,10 +42,6 @@ internal sealed class SampleArgs
 
 internal static class SampleSupport
 {
-    /// <summary>
-    /// Sets up the shared gallery (the same screens SilkNetGumSample shows) after GumService.Initialize. Click the
-    /// buttons along the top, or press 1..9, to switch screens.
-    /// </summary>
     /// <summary>The window hints every sample shares: resizable, and visible unless a run is --hidden.</summary>
     public static void ApplyWindowHints(SampleArgs args)
     {
@@ -67,30 +60,6 @@ internal static class SampleSupport
         {
             window.Position = new Brutal.Numerics.int2(-20000, -20000);
         }
-    }
-
-    public static GumGallery CreateGallery(GumService GumUI, GlfwWindow window, SampleArgs args)
-    {
-        // Turns an RT Shader screen .sksl path into a compiled effect, then lets .fx and .slang files work too.
-        SkiaGum.CustomSetPropertyOnRenderable.RenderTargetEffectResolver = SilkNetGum.Screens.RenderTargetShaderScreen.CompileEffectFromFile;
-        GumUI.UseShadowDusk();
-        GumUI.UseKeyboardDefaults();
-        FrameworkElement.GamePadsForUiControl.Clear();
-        FrameworkElement.GamePadsForUiControl.AddRange(GumUI.Gamepads);
-        GumUI.ClearColor = new SKColor(32, 32, 40);
-
-        GumGallery gallery = new GumGallery();
-        gallery.Build();
-        gallery.LoadScreen(Math.Clamp(args.Screen, 0, gallery.ScreenCount - 1));
-
-        window.OnKey += (_, key, _, action, _) =>
-        {
-            if (action == GlfwKeyAction.Press && key >= GlfwKey.Number1 && key < GlfwKey.Number1 + Math.Min(9, gallery.ScreenCount))
-            {
-                gallery.LoadScreen(key - GlfwKey.Number1);
-            }
-        };
-        return gallery;
     }
 
     public static void SavePng(byte[] rgba, int width, int height, string path)
