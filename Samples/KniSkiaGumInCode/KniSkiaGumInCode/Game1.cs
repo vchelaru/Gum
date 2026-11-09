@@ -14,6 +14,8 @@ namespace KniSkiaGumInCode;
 /// </summary>
 public class Game1 : Game
 {
+    GumService GumUI => GumService.Default;
+
     private readonly GraphicsDeviceManager _graphics;
 
 #if DEBUG
@@ -50,7 +52,7 @@ public class Game1 : Game
         // The graphics device exists once the base Initialize has run.
         base.Initialize();
 
-        GumService.Default.Initialize(this);
+        GumUI.Initialize(this);
 
         // The shared screens load their textures relative to the Gum project folder, as in SilkNetGum.
         ToolsUtilities.FileManager.RelativeDirectory = "Content/GumProject/";
@@ -62,12 +64,12 @@ public class Game1 : Game
 
         // Adds .fx and .slang files to SourceShaderFile (ShadowDusk converts them to SkSL); the .sksl
         // resolver above keeps handling .sksl files.
-        GumService.Default.UseShadowDusk();
+        GumUI.UseShadowDusk();
 
-        GumService.Default.UseKeyboardDefaults();
+        GumUI.UseKeyboardDefaults();
 
         // Demo the auto-fit helpers. Flip via the Zoom/Expand buttons in the nav strip.
-        GumService.Default.EnableZoomToWindow();
+        GumUI.EnableZoomToWindow();
 
         BuildNavStrip();
 
@@ -100,8 +102,8 @@ public class Game1 : Game
         AddNavButton("Zoom", () => ShowScreen<ZoomScreen>());
         AddNavButton("Layer Camera", () => ShowScreen<LayerCameraSettingsScreen>());
 
-        AddFitModeRadio("Zoom", isChecked: true, () => GumService.Default.EnableZoomToWindow());
-        AddFitModeRadio("Expand", isChecked: false, () => GumService.Default.EnableExpandToWindow());
+        AddFitModeRadio("Zoom", isChecked: true, () => GumUI.EnableZoomToWindow());
+        AddFitModeRadio("Expand", isChecked: false, () => GumUI.EnableExpandToWindow());
     }
 
     private void AddFitModeRadio(string text, bool isChecked, Action onChecked)
@@ -159,7 +161,7 @@ public class Game1 : Game
             Exit();
         }
 
-        GumService.Default.Update(gameTime);
+        GumUI.Update(gameTime);
 
         // FrameworkElement.Activity() is FRB-only, so screens that animate get a host-driven Tick.
         (_currentScreen as TextScreen)?.Tick(gameTime.ElapsedGameTime.TotalSeconds);
@@ -170,7 +172,7 @@ public class Game1 : Game
     protected override void Draw(GameTime gameTime)
     {
         GraphicsDevice.Clear(Color.CornflowerBlue);
-        GumService.Default.Draw();
+        GumUI.Draw();
         base.Draw(gameTime);
     }
 }

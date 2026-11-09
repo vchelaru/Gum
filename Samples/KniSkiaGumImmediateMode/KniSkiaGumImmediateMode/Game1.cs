@@ -17,6 +17,8 @@ namespace KniSkiaGumImmediateMode;
 /// </summary>
 public class Game1 : Game
 {
+    GumService GumUI => GumService.Default;
+
     private readonly GraphicsDeviceManager _graphics;
     private GumBatch _gumBatch = null!;
 
@@ -24,7 +26,7 @@ public class Game1 : Game
     private IImmediateModeScreen? _currentScreen;
 
     // Reused each frame so Root and the current screen's AdditionalUpdateRoots go through a
-    // single GumService.Default.Update call - see IImmediateModeScreen.AdditionalUpdateRoots
+    // single GumUI.Update call - see IImmediateModeScreen.AdditionalUpdateRoots
     // for why calling Update more than once per frame silently breaks push/click.
     private readonly List<GraphicalUiElement> _updateRoots = new List<GraphicalUiElement>();
 
@@ -45,14 +47,14 @@ public class Game1 : Game
 
         // GumService initialization sets up SystemManagers, Forms input, and everything needed for
         // retained-mode controls. We use it for the nav strip; the example screens use GumBatch in Draw.
-        GumService.Default.Initialize(this);
+        GumUI.Initialize(this);
 
         _gumBatch = new GumBatch();
 
         // The current example screen does its immediate-mode draws first, then Gum renders the
         // retained-mode nav strip on top, so the buttons stay visible no matter what the screen drew.
         // GumService.Initialize turns off the Renderer's ClearsCanvas, so Gum's draw does not wipe them.
-        GumService.Default.BeforeDraw += canvas => _currentScreen?.Draw(_gumBatch, canvas);
+        GumUI.BeforeDraw += canvas => _currentScreen?.Draw(_gumBatch, canvas);
 
         BuildNavStrip();
         ShowScreen(new DrawStringScreen());
@@ -100,11 +102,11 @@ public class Game1 : Game
             Exit();
         }
 
-        // Mirrors the Root canvas-fit that GumService.Default.Update(gameTime) would otherwise
+        // Mirrors the Root canvas-fit that GumUI.Update(gameTime) would otherwise
         // perform before delegating to the roots overload below - needed here because Root and
         // the current screen's extra interactive roots must go through that overload together,
         // in one call (see IImmediateModeScreen.AdditionalUpdateRoots).
-        GraphicalUiElement root = GumService.Default.Root;
+        GraphicalUiElement root = GumUI.Root;
         root.X = 0;
         root.Y = 0;
         root.WidthUnits = Gum.DataTypes.DimensionUnitType.Absolute;
@@ -118,7 +120,7 @@ public class Game1 : Game
         {
             _updateRoots.AddRange(_currentScreen.AdditionalUpdateRoots);
         }
-        GumService.Default.Update(gameTime, _updateRoots);
+        GumUI.Update(gameTime, _updateRoots);
 
         base.Update(gameTime);
     }
@@ -126,7 +128,7 @@ public class Game1 : Game
     protected override void Draw(GameTime gameTime)
     {
         GraphicsDevice.Clear(Color.CornflowerBlue);
-        GumService.Default.Draw();
+        GumUI.Draw();
         base.Draw(gameTime);
     }
 

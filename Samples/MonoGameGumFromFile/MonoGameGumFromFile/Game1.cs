@@ -25,6 +25,8 @@ namespace MonoGameGumFromFile
 {
     public class Game1 : Game
     {
+        GumService GumUI => GumService.Default;
+
         #region Fields/Properties
 
         private GraphicsDeviceManager _graphics;
@@ -69,7 +71,7 @@ namespace MonoGameGumFromFile
         {
             synchronizationContext = new SingleThreadSynchronizationContext();
 
-            GumService.Default.Initialize(this, "GumProject.gumx");
+            GumUI.Initialize(this, "GumProject.gumx");
 
 
             // This allows you to resize:
@@ -241,7 +243,7 @@ namespace MonoGameGumFromFile
 
         private void RemoveScreenAndLayers()
         {
-            GumService.Default.Root.Children.Clear();
+            GumUI.Root.Children.Clear();
             var layers = SystemManagers.Default.Renderer.Layers;
             while (layers.Count > 1)
             {
@@ -291,7 +293,7 @@ namespace MonoGameGumFromFile
         {
             var newScreenElement = ObjectFinder.Self.GumProjectSave.Screens.FirstOrDefault(item => item.Name == screenName);
 
-            var isAlreadyShown = GumService.Default.Root.Children.Any(item => item.Tag == newScreenElement);
+            var isAlreadyShown = GumUI.Root.Children.Any(item => item.Tag == newScreenElement);
 
             return isAlreadyShown;
         }
@@ -306,7 +308,7 @@ namespace MonoGameGumFromFile
 
             if (!isAlreadyShown)
             {
-                GumService.Default.Root.Children.Clear();
+                GumUI.Root.Children.Clear();
 
                 var layers = SystemManagers.Default.Renderer.Layers;
                 while(layers.Count > 1)
@@ -344,9 +346,9 @@ namespace MonoGameGumFromFile
         MouseState lastMouseState;
         protected override void Update(GameTime gameTime)
         {
-            GumService.Default.Update(gameTime);
+            GumUI.Update(gameTime);
 
-            GumService.Default.Root.AnimateSelf(gameTime.ElapsedGameTime.TotalSeconds);
+            GumUI.Root.AnimateSelf(gameTime.ElapsedGameTime.TotalSeconds);
 
 
             synchronizationContext.Update();
@@ -369,7 +371,7 @@ namespace MonoGameGumFromFile
                 DoOffsetLayerScreenLogic(mouseState);
             }
 
-            foreach(var item in GumService.Default.Root.Children)
+            foreach(var item in GumUI.Root.Children)
             {
                 (item as MvvmScreenRuntime)?.CustomActivity();
             }
@@ -421,13 +423,13 @@ namespace MonoGameGumFromFile
                 GraphicalUiElement.CanvasHeight = 600 / camera.Zoom;
 
                 // need to update the layout in response to the canvas size changing:
-                GumService.Default.Root.UpdateLayout();
+                GumUI.Root.UpdateLayout();
             }
         }
 
         private void HandleMousePush(MouseState mouseState)
         {
-            var itemOver = GetItemOver(mouseState.X, mouseState.Y, GumService.Default.Root);
+            var itemOver = GetItemOver(mouseState.X, mouseState.Y, GumUI.Root);
 
             if(itemOver is TextRuntime textRuntime && itemOver?.Tag is InstanceSave instanceSave && instanceSave.Name == "ToggleFontSizes")
             {

@@ -17,6 +17,8 @@ namespace KniSkiaGumSample;
 /// </summary>
 public class Game1 : Game
 {
+    GumService GumUI => GumService.Default;
+
     private readonly GraphicsDeviceManager _graphics;
     private int _clicks;
     private Label? _sizeLabel;
@@ -37,14 +39,14 @@ public class Game1 : Game
         // The graphics device exists once the base Initialize has run.
         base.Initialize();
 
-        GumService.Default.Initialize(this);
-        GumService.Default.UseKeyboardDefaults();
+        GumUI.Initialize(this);
+        GumUI.UseKeyboardDefaults();
         BuildUi();
     }
 
     protected override void Update(GameTime gameTime)
     {
-        GumService.Default.Update(gameTime);
+        GumUI.Update(gameTime);
 
         // Gum's canvas size should always equal the back buffer size, including after a resize.
         _sizeLabel!.Text =
@@ -57,7 +59,7 @@ public class Game1 : Game
     protected override void Draw(GameTime gameTime)
     {
         GraphicsDevice.Clear(Color.CornflowerBlue);
-        GumService.Default.Draw();
+        GumUI.Draw();
         base.Draw(gameTime);
     }
 
@@ -73,7 +75,7 @@ public class Game1 : Game
         outline.IsFilled = false;
         outline.StrokeWidth = 4;
         outline.StrokeColor = SKColors.Red;
-        GumService.Default.Root.AddChild(outline);
+        GumUI.Root.AddChild(outline);
 
         Button bottomRight = new Button();
         bottomRight.Text = "Bottom right";

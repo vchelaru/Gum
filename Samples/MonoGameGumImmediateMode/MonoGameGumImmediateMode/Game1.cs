@@ -24,6 +24,8 @@ namespace MonoGameGumImmediateMode
     /// </summary>
     public class Game1 : Game
     {
+        GumService GumUI => GumService.Default;
+
         private GraphicsDeviceManager _graphics;
         private SpriteBatch _spriteBatch;
         private GumBatch _gumBatch;
@@ -32,7 +34,7 @@ namespace MonoGameGumImmediateMode
         private IImmediateModeScreen _currentScreen;
 
         // Reused each frame so Root and the current screen's AdditionalUpdateRoots go through a
-        // single GumService.Default.Update call - see IImmediateModeScreen.AdditionalUpdateRoots
+        // single GumUI.Update call - see IImmediateModeScreen.AdditionalUpdateRoots
         // for why calling Update more than once per frame silently breaks push/click.
         private readonly List<GraphicalUiElement> _updateRoots = new List<GraphicalUiElement>();
 
@@ -50,7 +52,7 @@ namespace MonoGameGumImmediateMode
             // GumService initialization sets up SystemManagers, Forms input, and
             // everything needed for retained-mode controls. We use it for the nav
             // strip; the example screens themselves use GumBatch in Draw.
-            GumService.Default.Initialize(this);
+            GumUI.Initialize(this);
 
             // Wire up KernSmith so any TextRuntime or DrawString call can get a
             // font for any (family, size, style) without a .fnt file on disk.
@@ -108,11 +110,11 @@ namespace MonoGameGumImmediateMode
                 Exit();
             }
 
-            // Mirrors the Root canvas-fit that GumService.Default.Update(gameTime) would otherwise
+            // Mirrors the Root canvas-fit that GumUI.Update(gameTime) would otherwise
             // perform before delegating to the roots overload below - needed here because Root and
             // the current screen's extra interactive roots must go through that overload together,
             // in one call (see IImmediateModeScreen.AdditionalUpdateRoots).
-            var root = GumService.Default.Root;
+            var root = GumUI.Root;
             root.X = 0;
             root.Y = 0;
             root.WidthUnits = Gum.DataTypes.DimensionUnitType.Absolute;
@@ -126,7 +128,7 @@ namespace MonoGameGumImmediateMode
             {
                 _updateRoots.AddRange(_currentScreen.AdditionalUpdateRoots);
             }
-            GumService.Default.Update(gameTime, _updateRoots);
+            GumUI.Update(gameTime, _updateRoots);
 
             base.Update(gameTime);
         }
@@ -138,9 +140,9 @@ namespace MonoGameGumImmediateMode
             // The current example screen does its immediate-mode draws first…
             _currentScreen?.Draw(_gumBatch, _spriteBatch);
 
-            // …then GumService.Default.Draw() renders the retained-mode nav strip
+            // …then GumUI.Draw() renders the retained-mode nav strip
             // on top, so the buttons stay visible no matter what the screen drew.
-            GumService.Default.Draw();
+            GumUI.Draw();
 
             base.Draw(gameTime);
         }

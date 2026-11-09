@@ -17,34 +17,36 @@ namespace FontPlayground.Raylib;
 /// </summary>
 public static class Program
 {
+    static GumService GumUI => GumService.Default;
+
     public static void Main()
     {
         const int screenWidth = 1024;
         const int screenHeight = 768;
 
-        GumService.Default.CanvasWidth = screenWidth;
-        GumService.Default.CanvasHeight = screenHeight;
+        GumUI.CanvasWidth = screenWidth;
+        GumUI.CanvasHeight = screenHeight;
 
         SetConfigFlags(ConfigFlags.Msaa4xHint | ConfigFlags.ResizableWindow);
         InitWindow(screenWidth, screenHeight, "Gum raylib - Dynamic Font Playground");
 
-        GumService.Default.Initialize();
-        GumService.Default.UseKeyboardDefaults();
+        GumUI.Initialize();
+        GumUI.UseKeyboardDefaults();
 
         // KernSmith generates a font for any (family, size, style) on demand — this single line is
         // the only platform-specific difference from the MonoGame host's KernSmithFontCreator.
         CustomSetPropertyOnRenderable.InMemoryFontCreator = new KernSmithRaylibFontCreator();
 
-        FontPlaygroundScreen.Build(GumService.Default.Root);
+        FontPlaygroundScreen.Build(GumUI.Root);
 
         while (!WindowShouldClose())
         {
-            GumService.Default.Update(GetTime());
+            GumUI.Update(GetTime());
 
             BeginDrawing();
             ClearBackground(new Color(30, 30, 46, 255));
 
-            GumService.Default.Draw();
+            GumUI.Draw();
 
             EndDrawing();
         }
