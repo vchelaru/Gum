@@ -20,12 +20,8 @@ on:
         type: boolean
       version_suffix:
         description: |
-          Version after the date; the workflow prepends today's UTC date (yyyy.M.d).
-          Stable release:  1                -> 2026.4.23.1
-          Pre-release:     1-preview.1      -> 2026.4.23.1-preview.1
-          Leave empty to use the version currently in each .csproj file.
-          The Unity package needs three-part SemVer, so 2026.4.23.1-preview.1 becomes
-          2026.4.23-preview.1.1 there. Empty publishes Unity as <today>-preview.<run number>.
+          Release: 1
+          Preview: 1-preview.1
         required: false
         default: ''
         type: string
