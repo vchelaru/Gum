@@ -1,9 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
 	<!--
-		Gum.KniSkia: a KNI desktop host that renders Gum through SkiaGum. The caller owns the Skia
-		canvas (typically a SkiaGameRendering SkiaRenderTarget2D) and passes its SKCanvas to
-		GumService.Initialize; this project reads KNI's mouse, keyboard and gamepad. It is the fourth
+		Gum.KniSkia: a KNI desktop host that renders Gum through SkiaGum. GumService owns the Skia
+		render target (a SkiaGameRendering SkiaRenderTarget2D) and draws and composites it in Draw();
+		this project reads KNI's mouse, keyboard and gamepad. It is the fourth
 		interactive Skia host, modeled on SilkNetGum: it references SkiaGum for the render and Forms
 		source, and imports SkiaInputHost.props for the shared cursor and GumService halves.
 
@@ -29,12 +29,15 @@
 	<Import Project="..\SkiaPackages.props" />
 
 	<ItemGroup>
-		<!-- Same KNI version as KniGum. Compile-time only: the game brings its own KNI platform package. -->
-		<PackageReference Include="nkast.Xna.Framework" Version="4.2.9001" PrivateAssets="All" />
-		<PackageReference Include="nkast.Xna.Framework.Graphics" Version="4.2.9001" PrivateAssets="All" />
-		<PackageReference Include="nkast.Xna.Framework.Input" Version="4.2.9001" PrivateAssets="All" />
-		<PackageReference Include="nkast.Xna.Framework.Game" Version="4.2.9001" PrivateAssets="All" />
+		<!-- Same KNI version as the samples and the SkiaGameRendering.Kni.DesktopGL package below, which pins it. Compile-time only: the game brings its own KNI platform package. -->
+		<PackageReference Include="nkast.Xna.Framework" Version="4.3.9001" PrivateAssets="All" />
+		<PackageReference Include="nkast.Xna.Framework.Graphics" Version="4.3.9001" PrivateAssets="All" />
+		<PackageReference Include="nkast.Xna.Framework.Input" Version="4.3.9001" PrivateAssets="All" />
+		<PackageReference Include="nkast.Xna.Framework.Game" Version="4.3.9001" PrivateAssets="All" />
 		<PackageReference Include="TextCopy" Version="6.2.1" />
+		<!-- The render target GumService owns. DesktopGL is the supported KNI platform; the package flows
+		     to the game, which therefore references no SkiaGameRendering package itself. -->
+		<PackageReference Include="SkiaGameRendering.Kni.DesktopGL" Version="0.19.0" />
 	</ItemGroup>
 
 	<ItemGroup>
