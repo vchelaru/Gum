@@ -18,18 +18,18 @@ GumBatch draws only what you pass it. In some cases controls may create addition
 Core.GumBatch.Begin();
 Core.GumBatch.Draw(YourCustomObjects);
 // Now draw the popup root so popups show up
-Core.GumBatch.Draw(GumService.Default.PopupRoot);
+Core.GumBatch.Draw(GumUI.PopupRoot);
 Core.GumBatch.End();
 ```
 {% endhint %}
 
 ### Relationship with the Camera
 
-GumBatch draws through the same `Camera` as the rest of Gum, the one at `GumService.Default.Renderer.Camera`. It does **not** ignore the camera: the camera's `Zoom`, `Position` (`X` and `Y`), and `CameraCenterOnScreen` all apply to everything you draw between `Begin` and `End`. So if you zoom the camera to handle a window resize (see [Resolution and Resizing the Game Window](../layout/resizing-the-game-window.md)), your GumBatch output zooms along with the rest of your UI.
+GumBatch draws through the same `Camera` as the rest of Gum, the one at `GumUI.Renderer.Camera`. It does **not** ignore the camera: the camera's `Zoom`, `Position` (`X` and `Y`), and `CameraCenterOnScreen` all apply to everything you draw between `Begin` and `End`. So if you zoom the camera to handle a window resize (see [Resolution and Resizing the Game Window](../layout/resizing-the-game-window.md)), your GumBatch output zooms along with the rest of your UI.
 
 `Begin` also refreshes the camera's client dimensions from the current `GraphicsDevice.Viewport` on every call, so GumBatch always matches the live viewport size.
 
-On SkiaSharp runtimes, `Begin` does not change the camera size. The size comes from the width and height you pass to `GumService.Default.Initialize` and `GumService.Default.HandleResize`.
+On SkiaSharp runtimes, `Begin` does not change the camera size. The size comes from the width and height you pass to `GumUI.Initialize` and `GumUI.HandleResize`.
 
 `Begin` accepts an optional transform: `Begin(Matrix)`. This matrix **composes on top of** the camera transform rather than replacing it. The effective transform is your matrix multiplied with the camera's view.
 

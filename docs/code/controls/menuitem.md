@@ -50,7 +50,7 @@ The following code shows how to explicitly set IsSelected to true based on keybo
 
 ```csharp
 // Update
-var keyboard = GumService.Default.Keyboard;
+var keyboard = GumUI.Keyboard;
 
 if(keyboard.IsAltDown)
 {

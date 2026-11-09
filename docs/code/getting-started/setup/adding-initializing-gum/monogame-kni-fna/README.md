@@ -229,6 +229,49 @@ If linking to source instead of NuGet, add `<Gum Root>/Runtimes/GumExpressions/G
 
 For more information, see the [Runtime Variable References](../../../../styling/runtime-variable-references.md) page.
 
+## Nez (Core)
+
+If your game derives from Nez's `Core` instead of `Game`, use this class instead of the `Game1` in the next section.
+
+```csharp
+using Gum;
+using Gum.Forms;
+
+public class Game1 : Core
+{
+    GumService GumUI => GumService.Default;
+
+    protected override void Initialize()
+    {
+        base.Initialize();
+
+        GumUI.Initialize(Core.GraphicsDevice);
+        Gum.Renderables.ShapeRenderer.Self.Initialize(); // Recommended, optional: shape fill/gradient/shadow
+        Gum.Wireframe.CustomSetPropertyOnRenderable.InMemoryFontCreator =
+            new KernSmith.Gum.KernSmithFontCreator(Core.GraphicsDevice); // Recommended, optional: dynamic fonts
+        GumUI.UseShadowDusk(); // Optional: .fx and .slang shader files
+        Gum.Expressions.GumExpressionService.Initialize(); // Optional: arithmetic expressions in variable references
+        GumUI.UseKeyboardDefaults();
+        GumUI.UseGamepadDefaults();
+
+        Scene = new BasicScene();
+    }
+
+    protected override void Update(GameTime gameTime)
+    {
+        GumUI.Update(gameTime);
+        base.Update(gameTime);
+    }
+
+    protected override void Draw(GameTime gameTime)
+    {
+        base.Draw(gameTime);
+        // Add GumUI.Draw after base.Draw or else graphics won't show up
+        GumUI.Draw();
+    }
+}
+```
+
 ## Adding Gum to Game
 
 The following is a complete `Game1` class. Lines marked **Optional** match the packages above, so delete the lines for any package you skipped.
@@ -237,8 +280,6 @@ The following is a complete `Game1` class. Lines marked **Optional** match the p
 This example uses retained mode rendering. For immediate mode rendering, see the [Setup for GumBatch](../../setup-for-gumbatch.md) page.
 {% endhint %}
 
-{% tabs %}
-{% tab title="Game Class" %}
 ```csharp
 namespace MonoGameGum1;
 
@@ -295,49 +336,6 @@ public class Game1 : Game
     }
 }
 ```
-{% endtab %}
-
-{% tab title="Core (Nez)" %}
-```csharp
-using Gum;
-using Gum.Forms;
-
-public class Game1 : Core
-{
-    GumService GumUI => GumService.Default;
-
-    protected override void Initialize()
-    {
-        base.Initialize();
-
-        GumUI.Initialize(Core.GraphicsDevice);
-        Gum.Renderables.ShapeRenderer.Self.Initialize(); // Recommended, optional: shape fill/gradient/shadow
-        Gum.Wireframe.CustomSetPropertyOnRenderable.InMemoryFontCreator =
-            new KernSmith.Gum.KernSmithFontCreator(Core.GraphicsDevice); // Recommended, optional: dynamic fonts
-        GumUI.UseShadowDusk(); // Optional: .fx and .slang shader files
-        Gum.Expressions.GumExpressionService.Initialize(); // Optional: arithmetic expressions in variable references
-        GumUI.UseKeyboardDefaults();
-        GumUI.UseGamepadDefaults();
-
-        Scene = new BasicScene();
-    }
-
-    protected override void Update(GameTime gameTime)
-    {
-        GumUI.Update(gameTime);
-        base.Update(gameTime);
-    }
-
-    protected override void Draw(GameTime gameTime)
-    {
-        base.Draw(gameTime);
-        // Add GumUI.Draw after base.Draw or else graphics won't show up
-        GumUI.Draw();
-    }
-}
-```
-{% endtab %}
-{% endtabs %}
 
 The button in the center of the window confirms Gum works. Delete it once you start building your game.
 

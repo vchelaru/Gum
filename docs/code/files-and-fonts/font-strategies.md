@@ -37,7 +37,7 @@ KernSmith is an in-memory font generator for MonoGame, KNI, FNA, and Raylib. Ins
 using Gum.Wireframe;
 
 // Initialize
-GumService.Default.Initialize(this);
+GumUI.Initialize(this);
 
 CustomSetPropertyOnRenderable.InMemoryFontCreator =
     new KernSmithFontCreator(GraphicsDevice);
@@ -66,7 +66,7 @@ Any combination of font properties can be used and the font is created on demand
 using Gum.Wireframe;
 
 // Initialize
-GumService.Default.Initialize(this);
+GumUI.Initialize(this);
 
 CustomSetPropertyOnRenderable.InMemoryFontCreator =
     new KernSmithFontCreator(GraphicsDevice);
@@ -93,7 +93,7 @@ text.AddToRoot();
 using RaylibGum.Renderables;
 
 // Initialize
-GumService.Default.Initialize();
+GumUI.Initialize();
 
 CustomSetPropertyOnRenderable.InMemoryFontCreator =
     new KernSmithRaylibFontCreator();
@@ -120,7 +120,7 @@ text.AddToRoot();
 using Gum.Wireframe;
 
 // Initialize
-GumService.Default.Initialize(this);
+GumUI.Initialize(this);
 
 CustomSetPropertyOnRenderable.InMemoryFontCreator =
     new KernSmithFontCreator(GraphicsDevice);

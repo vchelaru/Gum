@@ -114,7 +114,7 @@ styles.DefaultState.SetValue("Primary.Blue", 255);
 ObjectFinder.Self.GumProjectSave.ApplyAllVariableReferences();
 
 // Push updated values to all live visuals
-GumService.Default.RefreshStyles();
+GumUI.RefreshStyles();
 ```
 
 You can also target a specific subtree if you know which part of the UI changed:
@@ -124,7 +124,7 @@ You can also target a specific subtree if you know which part of the UI changed:
 ObjectFinder.Self.GumProjectSave.ApplyAllVariableReferences();
 
 // Only refresh visuals under a specific element
-GumService.Default.RefreshStyles(myScreenGue);
+GumUI.RefreshStyles(myScreenGue);
 ```
 
 `RefreshStyles` re-applies default state values on every element in the tree and then re-applies the current Forms categorical state (such as Highlighted or Disabled) on each Forms control. This means controls retain their current interaction and runtime state while picking up the new style values.

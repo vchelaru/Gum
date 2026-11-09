@@ -39,8 +39,8 @@ for(int i = 0; i &#x3C; 10; i++)
 
 <strong>    button.Click += (_, _) =>
 </strong><strong>    {
-</strong><strong>        var buttonIndex = GumUi.Root.Children.IndexOf(button.Visual);
-</strong><strong>        GumUi.Root.Children.Move(buttonIndex, GumUi.Root.Children.Count - 1);
+</strong><strong>        var buttonIndex = GumUI.Root.Children.IndexOf(button.Visual);
+</strong><strong>        GumUI.Root.Children.Move(buttonIndex, GumUI.Root.Children.Count - 1);
 </strong><strong>    };
 </strong>}
 </code></pre>
@@ -57,7 +57,7 @@ A typical Gum project includes the following draw and update calls:
 
 <pre class="language-csharp"><code class="lang-csharp">protected override void Update(GameTime gameTime)
 {
-<strong>    GumUi.Update(gameTime);
+<strong>    GumUI.Update(gameTime);
 </strong>
     base.Update(gameTime);
 }
@@ -66,7 +66,7 @@ protected override void Draw(GameTime gameTime)
 {
     GraphicsDevice.Clear(Color.CornflowerBlue);
 
-<strong>    GumUi.Draw();
+<strong>    GumUI.Draw();
 </strong>
     base.Draw(gameTime);
 }
@@ -83,7 +83,7 @@ public class Game1 : Game
     SpriteBatch _spriteBatch;
     GumBatch _gumBatch;
 
-    GumService GumUi => GumService.Default;
+    GumService GumUI => GumService.Default;
 
     ContainerRuntime _belowEverythingContainer;
     ContainerRuntime _aboveEverythingContainer;
@@ -99,7 +99,7 @@ public class Game1 : Game
 
     protected override void Initialize()
     {
-        GumService.Default.Initialize(this);
+        GumUI.Initialize(this);
         _spriteBatch = new SpriteBatch(this.GraphicsDevice);
         _gumLogoTexture = Texture2D.FromFile(GraphicsDevice, "Content/GumLogo.png");
         _gumBatch  = new GumBatch();
@@ -128,10 +128,10 @@ public class Game1 : Game
         itemsToUpdate.Clear();
 
         itemsToUpdate.Add(_belowEverythingContainer);
-        itemsToUpdate.Add(GumUi.Root);
+        itemsToUpdate.Add(GumUI.Root);
         itemsToUpdate.Add(_aboveEverythingContainer);
 
-        GumUi.Update(gameTime, itemsToUpdate);
+        GumUI.Update(gameTime, itemsToUpdate);
 
         base.Update(gameTime);
     }
@@ -148,7 +148,7 @@ public class Game1 : Game
         _spriteBatch.Draw(_gumLogoTexture, Vector2.Zero, Color.White);
         _spriteBatch.End();
 
-        GumUi.Draw();
+        GumUI.Draw();
 
         _gumBatch.Begin();
         _gumBatch.Draw(_aboveEverythingContainer);

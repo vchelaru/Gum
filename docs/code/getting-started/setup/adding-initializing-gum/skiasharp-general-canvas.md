@@ -60,7 +60,7 @@ Next, add SkiaGum as a project reference in your game project. Your project migh
 `GumService` for this page's setup is available in `Gum.SkiaSharp` starting September 2026, or now if building Gum from source. Before that, WPF and MAUI hosts still get their own copy of the same type through their dedicated packages (see [WPF](wpf.md) / [.NET MAUI](.net-maui.md)); this page's setup did not have one until now.
 {% endhint %}
 
-`Gum.SkiaSharp` includes a render-only `GumService`, the same `Initialize`/`Update`/`Draw`/`HandleResize` API shape used by the dedicated Silk.NET host (see [Silk.NET](silk.net.md)), just without input. Call `GumService.Default.Initialize` once you have an `SKCanvas`, passing a `.gumj` project path only if you're loading one (omit it for a code-only setup):
+`Gum.SkiaSharp` includes a render-only `GumService`, the same `Initialize`/`Update`/`Draw`/`HandleResize` API shape used by the dedicated Silk.NET host (see [Silk.NET](silk.net.md)), just without input. Call `GumUI.Initialize` once you have an `SKCanvas`, passing a `.gumj` project path only if you're loading one (omit it for a code-only setup):
 
 ```csharp
 // Initialize
@@ -68,29 +68,29 @@ using Gum;
 using SkiaSharp;
 
 var bounds = canvas.DeviceClipBounds;
-GumService.Default.Initialize(canvas, bounds.Width, bounds.Height, "Content/GumProject/GumProject.gumj");
+GumUI.Initialize(canvas, bounds.Width, bounds.Height, "Content/GumProject/GumProject.gumj");
 ```
 
 Each frame, update and then draw:
 
 ```csharp
 // Update
-GumService.Default.Update(totalSecondsSinceStart);
+GumUI.Update(totalSecondsSinceStart);
 ```
 
 ```csharp
 // Draw
-GumService.Default.Draw();
+GumUI.Draw();
 ```
 
 Whenever your canvas is resized, tell Gum so layout re-runs against the new size:
 
 ```csharp
-GumService.Default.HandleResize(newWidth, newHeight);
+GumUI.HandleResize(newWidth, newHeight);
 ```
 
 {% hint style="info" %}
-Gum does not clear the canvas for you, so your own draw code is expected to clear or paint the background before calling `GumService.Default.Draw()`.
+Gum does not clear the canvas for you, so your own draw code is expected to clear or paint the background before calling `GumUI.Draw()`.
 {% endhint %}
 
 ## Adding Shader Support (Optional)
@@ -103,12 +103,12 @@ Add the NuGet package:
 dotnet add package Gum.SkiaSharp.ShadowDusk
 ```
 
-Then call `UseShadowDusk` after `GumService.Default.Initialize`:
+Then call `UseShadowDusk` after `GumUI.Initialize`:
 
 ```csharp
 // Initialize
-GumService.Default.Initialize(canvas, width, height, "Content/GumProject/GumProject.gumj");
-GumService.Default.UseShadowDusk();
+GumUI.Initialize(canvas, width, height, "Content/GumProject/GumProject.gumj");
+GumUI.UseShadowDusk();
 ```
 
 If linking to source instead of NuGet, add `<Gum Root>/Runtimes/SkiaGum.ShadowDusk/SkiaGum.ShadowDusk.csproj` to your solution.
@@ -125,11 +125,11 @@ Add the NuGet package:
 dotnet add package Gum.Expressions
 ```
 
-Then call `GumExpressionService.Initialize()` after `GumService.Default.Initialize`. Expression support is typically used with a Gum project that has variable references defined in the tool:
+Then call `GumExpressionService.Initialize()` after `GumUI.Initialize`. Expression support is typically used with a Gum project that has variable references defined in the tool:
 
 ```csharp
 // Initialize
-GumService.Default.Initialize(canvas, width, height, "Content/GumProject/GumProject.gumj");
+GumUI.Initialize(canvas, width, height, "Content/GumProject/GumProject.gumj");
 GumExpressionService.Initialize();
 ```
 
@@ -143,7 +143,7 @@ Gum can be tested by adding a couple of renderables after Gum is initialized:
 
 ```csharp
 // Initialize
-GumService.Default.Initialize(canvas, width, height);
+GumUI.Initialize(canvas, width, height);
 
 var circle = new ColoredCircleRuntime();
 circle.Color = SKColors.Red;

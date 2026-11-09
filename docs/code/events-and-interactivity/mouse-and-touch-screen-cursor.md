@@ -209,7 +209,7 @@ Only the `HasCursorOver(ICursor)` path applies `HitTestTransformMatrix`, and thi
 
 ### Combining Root with additional interactive roots
 
-The `HasCursorOver` check above is a raw bounds test — fine for reacting to a click yourself, but it does not run hover, push, click, or drag for Forms controls (`Button`, `Window`, etc.) inside `gameUi`. Those only run through `GumService.Default.Update(gameTime, roots)`. If `gameUi` is not part of `Root` but still needs real Forms interactivity, pass it alongside `Root` in the same call:
+The `HasCursorOver` check above is a raw bounds test — fine for reacting to a click yourself, but it does not run hover, push, click, or drag for Forms controls (`Button`, `Window`, etc.) inside `gameUi`. Those only run through `GumUI.Update(gameTime, roots)`. If `gameUi` is not part of `Root` but still needs real Forms interactivity, pass it alongside `Root` in the same call:
 
 ```csharp
 var roots = new List<GraphicalUiElement> { GumUI.Root, gameUi };
