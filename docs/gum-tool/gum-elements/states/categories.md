@@ -101,39 +101,6 @@ Variables can be removed from states, but this removal must be done at the categ
 
 This will remove the assignment of the variable from all states in the category.
 
-## GUM0002: Variable Reference Conflicts With Explicit Set
-
-When a categorized state's `VariableReferences` row implies a value for a variable, and a parent element also has an explicit local value for the same variable, the two values conflict. Which one applies depends on where it is read, so the result can differ between the tool and a running game. Gum surfaces this with warning code **GUM0002**.
-
-### Example
-
-`UpgradeButton` derives from `Button`. The author sets two things on `UpgradeButton.DefaultState`:
-
-- `TextInstance.TextCategoryState = "Title"` (the Title state on the inherited Label includes a VariableReference that resolves `FontSize` to e.g. 28).
-- `TextInstance.FontSize = 14` (a plain explicit override).
-
-These conflict. In the tool, changing `TextCategoryState` between values can appear to do nothing for `FontSize`, because the local override of 14 is found first. A running game may show the reference's value instead.
-
-### How it got there
-
-Most commonly: the author set `FontSize` interactively via a reference that has since been undone or changed, leaving the materialized scalar behind as an orphan. Hand edits and AI-authored XML can also produce this shape.
-
-### Fixing it
-
-Decide which value you want and remove the other:
-
-- To let the state's reference drive `FontSize`, delete the local explicit `TextInstance.FontSize` from the parent element's state.
-- To keep the local explicit value, change or remove the reference inside the categorized state, or pick a `TextCategoryState` whose effective value matches what you want.
-
-### Detection scope
-
-The check fires for two cases, on every state of every Screen and Component:
-
-- A `VariableReferences` row authored on the same state as a conflicting explicit scalar.
-- A `VariableReferences` row inherited via an active categorized-state assignment on an instance (the `UpgradeButton` shape).
-
-`StandardElements` are skipped — their references commonly evaluate to default values whose missing materialization is the correct on-disk state, not a conflict.
-
 ## GUM0003: Category State Sets Its Own Category Selector
 
 A category's selector variable (e.g. `TextBoxCategoryState` for the `TextBoxCategory` category) chooses which state in that category is active. When a state *inside* the category sets that same selector, the result is circular: applying the state re-drives the whole category, which re-applies a (possibly different) state and discards the original state's authored values. Gum surfaces this with warning code **GUM0003**.
