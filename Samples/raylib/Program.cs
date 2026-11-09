@@ -77,7 +77,7 @@ public class BasicShapes
 
         GumUI.UseGamepadDefaults();
 
-        CustomSetPropertyOnRenderable.InMemoryFontCreator = new KernSmithRaylibFontCreator();
+        GumUI.UseKernSmith();
 
         // Issue #3465: Gum core ships no shader loader, so the app registers a resolver that turns a
         // ContainerRuntime.SourceShaderFile (.fs path) into a Raylib_cs.Shader. raylib loads GLSL

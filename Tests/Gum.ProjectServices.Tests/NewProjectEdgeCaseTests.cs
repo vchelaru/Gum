@@ -53,10 +53,10 @@ public class NewProjectEdgeCaseTests : BaseTestClass
             : gumSourceSearchDirectories);
     }
 
-    private static NewProjectRequest Request(string path, string? platform = null) =>
+    private static NewProjectRequest Request(string path, string? platform = null, bool packages = false) =>
         new NewProjectRequest
         {
-            Path = path, Platform = platform, Template = "empty", Restore = false,
+            Path = path, Platform = platform, Template = "empty", Restore = false, IncludeRecommendedPackages = packages,
             // KNI with Skia has no stable NuGet package, so this helper source-links it.
             SourceLinked = platform == "kniskia"
         };
@@ -117,6 +117,43 @@ public class NewProjectEdgeCaseTests : BaseTestClass
         errors.ShouldBeEmpty(string.Join(Environment.NewLine, errors));
     }
 
+    [Theory]
+    [InlineData("monogame")]
+    [InlineData("kni")]
+    public async Task UpdateHost_WithTheAddOnPackages_GeneratesCodeThatCompiles(string platform)
+    {
+        NewProjectService service = CreateService();
+        NewProjectRequest request = Request(Path.Combine(_folder, "WithAddOns"), platform, packages: true);
+        NewProjectValidation validation = service.Validate(request);
+        validation.Error.ShouldBeNull(validation.Error?.Message);
+        NewProjectFilesResult files = await service.CreateFilesAsync(validation.Resolved!, CancellationToken.None);
+        service.UpdateHost(validation.Resolved!, files, packagesAdded: true, screenCodeGenerated: false);
+
+        string game = File.ReadAllText(Path.Combine(_folder, "WithAddOns", "Game1.cs"));
+        foreach (string call in new[] { "UseShadowDusk", "UseShapes", "UseKernSmith", "UseExpressions" })
+        {
+            game.ShouldContain(call + "();");
+        }
+
+        CSharpCompilation compilation = CSharpCompilation.Create(
+            "Host",
+            new[]
+            {
+                CSharpSyntaxTree.ParseText(XnaStubs),
+                CSharpSyntaxTree.ParseText(game),
+                CSharpSyntaxTree.ParseText(File.ReadAllText(Path.Combine(_folder, "WithAddOns", "Program.cs")))
+            },
+            ((string)AppContext.GetData("TRUSTED_PLATFORM_ASSEMBLIES")!).Split(Path.PathSeparator)
+                .Select(path => MetadataReference.CreateFromFile(path)),
+            new CSharpCompilationOptions(OutputKind.ConsoleApplication, nullableContextOptions: NullableContextOptions.Disable));
+        List<string> errors = compilation.GetDiagnostics()
+            .Where(diagnostic => diagnostic.Severity == DiagnosticSeverity.Error)
+            .Select(diagnostic => diagnostic.ToString())
+            .ToList();
+
+        errors.ShouldBeEmpty(string.Join(Environment.NewLine, errors));
+    }
+
     // Small stand-ins for the Xna/KNI and Gum types the Game1/Program templates use.
     private const string XnaStubs = @"
 namespace Microsoft.Xna.Framework
@@ -154,8 +191,16 @@ namespace Gum
         public void Initialize(Microsoft.Xna.Framework.Game game, string project) { }
         public void Update(Microsoft.Xna.Framework.GameTime gameTime) { }
         public void Draw() { }
-        public void UseKeyboardDefaults() { }
-        public void UseGamepadDefaults() { }
+        public GumService UseKeyboardDefaults() => this;
+        public GumService UseGamepadDefaults() => this;
+    }
+    // Non-generic, so they win over the real generic extensions this test project can also see.
+    public static class GumServiceAddOnStubs
+    {
+        public static GumService UseShadowDusk(this GumService service) => service;
+        public static GumService UseShapes(this GumService service) => service;
+        public static GumService UseKernSmith(this GumService service) => service;
+        public static GumService UseExpressions(this GumService service) => service;
     }
 }
 namespace Gum.Forms.Controls

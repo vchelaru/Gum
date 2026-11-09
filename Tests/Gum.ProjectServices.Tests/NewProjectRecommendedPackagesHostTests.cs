@@ -23,9 +23,9 @@ public class NewProjectRecommendedPackagesHostTests : NewProjectServiceTestBase
         IReadOnlyList<string> added = RecommendedPackages.For(platform);
         _calls.Where(call => call.StartsWith("add ")).Select(call => call.Substring(4)).ShouldBe(added);
 
-        host.Contains("GumExpressionService.Initialize()").ShouldBe(added.Contains("Gum.Expressions"));
-        host.Contains("KernSmith.Gum.").ShouldBe(added.Any(package => package.StartsWith("KernSmith.")));
-        host.Contains("ShapeRenderer.Self.Initialize()").ShouldBe(added.Any(package => package.StartsWith("Gum.Shapes.")));
+        host.Contains(".UseExpressions();").ShouldBe(added.Contains("Gum.Expressions"));
+        host.Contains(".UseKernSmith();").ShouldBe(added.Any(package => package.StartsWith("KernSmith.")));
+        host.Contains(".UseShapes();").ShouldBe(added.Any(package => package.StartsWith("Gum.Shapes.")));
         host.Contains(".UseShadowDusk();").ShouldBe(added.Any(package => package.EndsWith(".ShadowDusk")));
     }
 
@@ -38,7 +38,7 @@ public class NewProjectRecommendedPackagesHostTests : NewProjectServiceTestBase
             Request("monogame", packages: true, restore: true), null, CancellationToken.None);
 
         result.Restore!.Status.ShouldBe(RestoreStatus.Failed);
-        File.ReadAllText(Path.Combine(Game(), "Game1.cs")).ShouldContain("GumExpressionService.Initialize()");
+        File.ReadAllText(Path.Combine(Game(), "Game1.cs")).ShouldContain("UseExpressions()");
         File.Exists(Path.Combine(Game(), "Game.csproj")).ShouldBeTrue();
     }
 
@@ -51,7 +51,7 @@ public class NewProjectRecommendedPackagesHostTests : NewProjectServiceTestBase
 
         result.Codegen!.Success.ShouldBeFalse();
         string host = File.ReadAllText(Path.Combine(Game(), "Game1.cs"));
-        host.ShouldContain("GumExpressionService.Initialize()");
+        host.ShouldContain("UseExpressions()");
         host.ShouldContain("ObjectFinder.Self.GetElementSave(\"DemoScreenGum\")");
         host.ShouldNotContain("new DemoScreenGum()");
     }

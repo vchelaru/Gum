@@ -11,24 +11,24 @@ namespace Gum.ProjectServices;
 /// </summary>
 internal static class PlatformHostContent
 {
-    // Each line is the one the setup docs (docs/code/getting-started/setup/adding-initializing-gum) give for the package,
-    // after Gum's own Initialize. GraphicsDevice is the Game's property in the MonoGame and KNI Game1.
-    private static readonly Dictionary<string, string> InitLineByPackage = new Dictionary<string, string>
+    // The add-on call each package needs after Gum's own Initialize (the setup docs list the same). The calls are extension
+    // methods on the service, so none needs the platform's types, and GetInitLines emits them in AddOnCallOrder.
+    private static readonly Dictionary<string, string> CallByPackage = new Dictionary<string, string>
     {
-        ["Gum.Shapes.MonoGame"] = "Gum.Renderables.ShapeRenderer.Self.Initialize();",
-        ["Gum.Shapes.KNI"] = "Gum.Renderables.ShapeRenderer.Self.Initialize();",
-        ["Gum.MonoGame.ShadowDusk"] = "{gum}.UseShadowDusk();",
-        ["Gum.KNI.ShadowDusk"] = "{gum}.UseShadowDusk();",
-        ["Gum.raylib.ShadowDusk"] = "{gum}.UseShadowDusk();",
-        ["Gum.SkiaSharp.ShadowDusk"] = "{gum}.UseShadowDusk();",
-        ["KernSmith.MonoGameGum"] =
-            "Gum.Wireframe.CustomSetPropertyOnRenderable.InMemoryFontCreator = new KernSmith.Gum.KernSmithFontCreator(GraphicsDevice);",
-        ["KernSmith.KniGum"] =
-            "Gum.Wireframe.CustomSetPropertyOnRenderable.InMemoryFontCreator = new KernSmith.Gum.KernSmithFontCreator(GraphicsDevice);",
-        ["KernSmith.RaylibGum"] =
-            "RaylibGum.Renderables.CustomSetPropertyOnRenderable.InMemoryFontCreator = new KernSmith.Gum.KernSmithRaylibFontCreator();",
-        ["Gum.Expressions"] = "Gum.Expressions.GumExpressionService.Initialize();",
+        ["Gum.Shapes.MonoGame"] = "UseShapes",
+        ["Gum.Shapes.KNI"] = "UseShapes",
+        ["Gum.MonoGame.ShadowDusk"] = "UseShadowDusk",
+        ["Gum.KNI.ShadowDusk"] = "UseShadowDusk",
+        ["Gum.raylib.ShadowDusk"] = "UseShadowDusk",
+        ["Gum.SkiaSharp.ShadowDusk"] = "UseShadowDusk",
+        ["KernSmith.MonoGameGum"] = "UseKernSmith",
+        ["KernSmith.KniGum"] = "UseKernSmith",
+        ["KernSmith.RaylibGum"] = "UseKernSmith",
+        ["Gum.Expressions"] = "UseExpressions",
     };
+
+    // The one order every platform's host (and the samples) call the add-ons in, after UseKeyboardDefaults and UseGamepadDefaults.
+    private static readonly string[] AddOnCallOrder = { "UseShadowDusk", "UseShapes", "UseKernSmith", "UseExpressions" };
 
     /// <summary>How the scaffolded host refers to Gum: the <c>GumUI</c> alias every template declares.</summary>
     internal static string GetGumReceiver(HostPlatform platform) => "GumUI";
@@ -41,8 +41,11 @@ internal static class PlatformHostContent
     internal static IReadOnlyList<string> GetWindowLines(HostPlatform platform) =>
         platform == HostPlatform.KniSkia ? new[] { "Window.AllowUserResizing = true;" } : Array.Empty<string>();
 
-    internal static IReadOnlyList<string> GetInitLines(IReadOnlyList<string> addedPackages, string gum = "GumService.Default") =>
-        addedPackages.Where(InitLineByPackage.ContainsKey).Select(package => InitLineByPackage[package].Replace("{gum}", gum)).Distinct().ToList();
+    internal static IReadOnlyList<string> GetInitLines(IReadOnlyList<string> addedPackages, string gum = "GumService.Default")
+    {
+        HashSet<string> calls = new HashSet<string>(addedPackages.Where(CallByPackage.ContainsKey).Select(package => CallByPackage[package]));
+        return AddOnCallOrder.Where(calls.Contains).Select(call => $"{gum}.{call}();").ToList();
+    }
 
     internal static IReadOnlyList<string> GetUsings(DemoScreenInfo? screen, bool generated)
     {

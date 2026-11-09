@@ -28,9 +28,9 @@ GL gl = GL.GetApi(window);
 GumService GumUI = GumService.Default;
 
 GumUI.Initialize(window, "Content/GumProject/{{GumProjectFile}}");
-{{InitLines}}
 GumUI.UseKeyboardDefaults();
 GumUI.UseGamepadDefaults();
+{{InitLines}}
 {{ScreenLines}}
 
 Stopwatch clock = Stopwatch.StartNew();

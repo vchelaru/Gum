@@ -53,8 +53,8 @@ public class Game1 : Game
 
         // KernSmith builds fonts in memory, at whatever size oversampling asks for -- no .fnt
         // files are shipped with this sample.
-        CustomSetPropertyOnRenderable.InMemoryFontCreator =
-            new KernSmithFontCreator(GraphicsDevice);
+        GumUI.UseKernSmith();
+
         TextRuntime.UseFontOversampling = true;
         // The default 1px regenerate threshold is a much bigger fraction of this demo's small 14px
         // preview than it would be of a large FontSize -- 0 means "regenerate on any change" so the

@@ -42,7 +42,7 @@ public class Game1 : Game
 
         GumUI.UseGamepadDefaults();
 
-        CustomSetPropertyOnRenderable.InMemoryFontCreator = new KernSmithFontCreator(GraphicsDevice);
+        GumUI.UseKernSmith();
 
         var pointLayer = SystemManagers.Default.Renderer.AddLayer();
         pointLayer.Name = "Texture Filter - Point";

@@ -116,9 +116,9 @@ public class NewProjectSourceLinkedAddOnsTests : BaseTestClass
 
         result.Files.Success.ShouldBeTrue(result.Files.ErrorMessage);
         string host = File.ReadAllText(Path.Combine(game, "Game1.cs"));
-        host.ShouldContain("Gum.Renderables.ShapeRenderer.Self.Initialize();");
-        host.ShouldContain("KernSmithFontCreator");
-        host.ShouldContain("GumExpressionService.Initialize();");
+        host.ShouldContain("GumUI.UseShapes();");
+        host.ShouldContain("GumUI.UseKernSmith();");
+        host.ShouldContain("GumUI.UseExpressions();");
         host.ShouldContain("GumUI.UseShadowDusk();");
     }
 

@@ -195,21 +195,21 @@ public class NewProjectDemoScreenHostTests : IDisposable
     [Theory]
     [InlineData(HostPlatform.MonoGame, new[]
     {
-        "Gum.Wireframe.CustomSetPropertyOnRenderable.InMemoryFontCreator = new KernSmith.Gum.KernSmithFontCreator(GraphicsDevice);",
-        "Gum.Expressions.GumExpressionService.Initialize();"
+        "GumUI.UseKernSmith();",
+        "GumUI.UseExpressions();"
     })]
     [InlineData(HostPlatform.Kni, new[]
     {
-        "Gum.Wireframe.CustomSetPropertyOnRenderable.InMemoryFontCreator = new KernSmith.Gum.KernSmithFontCreator(GraphicsDevice);",
-        "Gum.Expressions.GumExpressionService.Initialize();"
+        "GumUI.UseKernSmith();",
+        "GumUI.UseExpressions();"
     })]
     [InlineData(HostPlatform.Raylib, new[]
     {
-        "RaylibGum.Renderables.CustomSetPropertyOnRenderable.InMemoryFontCreator = new KernSmith.Gum.KernSmithRaylibFontCreator();",
-        "Gum.Expressions.GumExpressionService.Initialize();"
+        "GumUI.UseKernSmith();",
+        "GumUI.UseExpressions();"
     })]
-    [InlineData(HostPlatform.SilkNet, new[] { "Gum.Expressions.GumExpressionService.Initialize();" })]
-    [InlineData(HostPlatform.Stride, new[] { "Gum.Expressions.GumExpressionService.Initialize();" })]
+    [InlineData(HostPlatform.SilkNet, new[] { "GumUI.UseExpressions();" })]
+    [InlineData(HostPlatform.Stride, new[] { "GumUI.UseExpressions();" })]
     public void UpdateHost_AfterThePackagesAreAdded_InitializesEachOfThem(HostPlatform platform, string[] expectedLines)
     {
         (NewProjectService service, ResolvedNewProject resolved, NewProjectFilesResult files) = Create(platform, packages: true);
@@ -270,7 +270,7 @@ public class NewProjectDemoScreenHostTests : IDisposable
     {
         Create(HostPlatform.MonoGame, packages: true);
 
-        ReadHost(HostPlatform.MonoGame).ShouldNotContain("GumExpressionService");
+        ReadHost(HostPlatform.MonoGame).ShouldNotContain("UseExpressions");
     }
 
     #region Service steps
@@ -295,7 +295,7 @@ public class NewProjectDemoScreenHostTests : IDisposable
 
         string host = ReadHost(HostPlatform.MonoGame);
         host.ShouldContain("new DemoScreenGum().AddToRoot();");
-        host.ShouldContain("GumExpressionService.Initialize();");
+        host.ShouldContain("GumUI.UseExpressions();");
     }
 
     [Fact]
@@ -459,12 +459,30 @@ public class NewProjectDemoScreenHostTests : IDisposable
             Regex.IsMatch(host, forbidden).ShouldBeFalse($"'{forbidden}' in game code");
         }
 
-        List<string> expected = new() { "Initialize" };
-        if (packages && RecommendedPackages.For(platform).Any(package => package.Contains("ShadowDusk")))
+        // The old static add-on setup is never emitted, with or without the packages.
+        foreach (string oldStatic in new[] { "ShapeRenderer", "InMemoryFontCreator", "GumExpressionService" })
+        {
+            host.ShouldNotContain(oldStatic);
+        }
+
+        List<string> expected = new() { "Initialize", "UseKeyboardDefaults", "UseGamepadDefaults" };
+        IReadOnlyList<string> added = packages ? RecommendedPackages.For(platform) : Array.Empty<string>();
+        if (added.Any(package => package.Contains("ShadowDusk")))
         {
             expected.Add("UseShadowDusk");
         }
-        expected.AddRange(new[] { "UseKeyboardDefaults", "UseGamepadDefaults" });
+        if (added.Any(package => package.StartsWith("Gum.Shapes.")))
+        {
+            expected.Add("UseShapes");
+        }
+        if (added.Any(package => package.StartsWith("KernSmith.")))
+        {
+            expected.Add("UseKernSmith");
+        }
+        if (added.Contains("Gum.Expressions"))
+        {
+            expected.Add("UseExpressions");
+        }
         if (platform != HostPlatform.Stride)
         {
             // Stride drives Update and Draw itself, so its host calls neither.
