@@ -10,16 +10,22 @@ The easiest way to add Gum to your project is to use the NuGet package. Open you
 
 Add the Gum.Stride NuGet package ([https://www.nuget.org/packages/Gum.Stride](https://www.nuget.org/packages/Gum.Stride))
 
+The block below includes the base package and two add-ons marked **optional**: shader file support and arithmetic expression support. If you don't need an add-on, skip its line here and delete the matching line from the initialization code in [Initializing Gum](#initializing-gum) below.
+
 Modify csproj:
 
 ```xml
 <PackageReference Include="Gum.Stride" Version="*" />
+<PackageReference Include="Gum.SkiaSharp.ShadowDusk" Version="*" /> <!-- Optional: .fx and .slang shader files -->
+<PackageReference Include="Gum.Expressions" Version="*" /> <!-- Optional: arithmetic expressions in variable references -->
 ```
 
 Or add through command line:
 
 ```bash
 dotnet add package Gum.Stride
+dotnet add package Gum.SkiaSharp.ShadowDusk # Optional: .fx and .slang shader files
+dotnet add package Gum.Expressions          # Optional: arithmetic expressions in variable references
 ```
 
 `Gum.Stride` renders through SkiaSharp and adds real Forms input (mouse, keyboard, gamepad, focus) through `Stride.Input`. Stride owns the window and the render pipeline, and Gum draws into the frame Stride composites.
@@ -62,21 +68,27 @@ To add source, first clone the Gum repository: [https://github.com/vchelaru/Gum]
 
 If you have already added the Gum NuGet package to your project, remove it.
 
-Add the following project to your solution:
+As with the NuGet packages above, the shader and expression projects are marked **optional**; skip a project if you don't need it, and delete its matching line from the initialization code in [Initializing Gum](#initializing-gum).
+
+Add the following projects to your solution:
 
 * \<Gum Root>/Runtimes/StrideGum/StrideGum.csproj
+* \<Gum Root>/Runtimes/SkiaGum.ShadowDusk/SkiaGum.ShadowDusk.csproj, **Optional:** .fx and .slang shader files
+* \<Gum Root>/Runtimes/GumExpressions/GumExpressions.csproj, **Optional:** arithmetic expressions in variable references
 
 `StrideGum.csproj` already references `GumCommon` and `SkiaGum` itself, so you do not need to add either separately.
 
-Next, add StrideGum as a project reference in your game project. Your project might look like this depending on the location of the Gum repository relative to your game project:
+Next, add project references in your game project for the pieces you use. Your project might look like this depending on the location of the Gum repository relative to your game project:
 
 ```xml
 <ProjectReference Include="..\Gum\Runtimes\StrideGum\StrideGum.csproj" />
+<ProjectReference Include="..\Gum\Runtimes\SkiaGum.ShadowDusk\SkiaGum.ShadowDusk.csproj" />
+<ProjectReference Include="..\Gum\Runtimes\GumExpressions\GumExpressions.csproj" />
 ```
 
 ## Initializing Gum
 
-Stride draws through a `GraphicsCompositor`, and Gum draws as part of that pipeline, so create the compositor before calling `Initialize`. Stride also renders the scene through a camera, so add one or the window stays empty:
+Stride draws through a `GraphicsCompositor`, and Gum draws as part of that pipeline, so create the compositor before calling `Initialize`. Stride also renders the scene through a camera, so add one or the window stays empty. The following is a complete `Program.cs`. Lines marked **Optional** match the optional packages above, so delete the lines for any package you skipped.
 
 ```csharp
 using Gum;
@@ -84,15 +96,19 @@ using Stride.CommunityToolkit.Engine;
 using Stride.CommunityToolkit.Rendering.Compositing;
 using Stride.Engine;
 
-using var game = new Game();
+using Game game = new Game();
 
 game.Run(start: Start);
 
 void Start(Scene rootScene)
 {
+    // Stride draws through a GraphicsCompositor and a camera, so both must exist before Gum initializes.
     game.AddGraphicsCompositor().AddCleanUIStage();
     game.Add2DCamera();
-    GumService.Default.Initialize(game);
+
+    GumService.Default.Initialize(game, "Content/GumProject/GumProject.gumj");
+    GumService.Default.UseShadowDusk(); // Optional: .fx and .slang shader files
+    Gum.Expressions.GumExpressionService.Initialize(); // Optional: arithmetic expressions in variable references
 }
 ```
 
@@ -100,14 +116,7 @@ void Start(Scene rootScene)
 
 `Initialize` adds Gum's scene renderer to the compositor, and Stride runs Gum's update and draw every frame from there. Stride is the one runtime where you never call `Update` and `Draw` yourself, so the per-frame calls the other setup pages show have no equivalent here.
 
-You can add controls as soon as `Initialize` returns.
-
-To load a Gum project (a `.gumj` file) at the same time, pass its path:
-
-```csharp
-// Initialize
-GumService.Default.Initialize(game, "Content/GumProject/GumProject.gumj");
-```
+You can add controls as soon as `Initialize` returns. The project path is optional: call `Initialize(game)` alone to build the UI in code. To get the same file with a Gum project already set up, run [`gumcli new MyGame -p stride`](../../../../cli/new.md).
 
 ### Placing the Scene Renderer Yourself (Optional)
 
@@ -121,58 +130,20 @@ game.AddSceneRenderer(new GumSceneRenderer());
 
 For more detail, see the documentation on `GumService.Initialize` in your IDE.
 
-## Adding Shader Support (Optional)
+## About Shader Support (Optional)
 
-`Gum.SkiaSharp.ShadowDusk` lets a render target container's `SourceShaderFile` point at an `.fx` or `.slang` shader file.
+`Gum.SkiaSharp.ShadowDusk` lets a render target container's `SourceShaderFile` point at an `.fx` or `.slang` shader file. For loading, errors, and examples, see [Render Target Shaders on SkiaSharp](../../../standard-visuals/containerruntime.md#render-target-shaders-on-skiasharp).
 
-Add the NuGet package:
+## About Expression Support (Optional)
 
-```bash
-dotnet add package Gum.SkiaSharp.ShadowDusk
-```
-
-Then call `UseShadowDusk` after `GumService.Default.Initialize`:
-
-```csharp
-// Initialize
-GumService.Default.Initialize(game, "Content/GumProject/GumProject.gumj");
-GumService.Default.UseShadowDusk();
-```
-
-If linking to source instead of NuGet, add `<Gum Root>/Runtimes/SkiaGum.ShadowDusk/SkiaGum.ShadowDusk.csproj` to your solution.
-
-For loading, errors, and examples, see [Render Target Shaders on SkiaSharp](../../../standard-visuals/containerruntime.md#render-target-shaders-on-skiasharp).
-
-## Adding Expression Support (Optional)
-
-If your Gum project uses arithmetic expressions in variable references (such as `Width = OtherInstance.Width + 20`), you can add the `Gum.Expressions` NuGet package for full expression evaluation at runtime. Without this package, simple variable references like `Width = OtherInstance.Width` still work.
-
-Add the NuGet package:
-
-```bash
-dotnet add package Gum.Expressions
-```
-
-Then call `GumExpressionService.Initialize()` after `GumService.Default.Initialize`. Expression support is typically used with a Gum project that has variable references defined in the tool:
-
-```csharp
-// Initialize
-GumService.Default.Initialize(game, "Content/GumProject/GumProject.gumj");
-Gum.Expressions.GumExpressionService.Initialize();
-```
-
-If linking to source instead of NuGet, add `<Gum Root>/Runtimes/GumExpressions/GumExpressions.csproj` to your solution.
-
-For more information, see the [Runtime Variable References](../../../styling/runtime-variable-references.md) page.
+If your Gum project uses arithmetic expressions in variable references (such as `Width = OtherInstance.Width + 20`), `Gum.Expressions` provides full expression evaluation at runtime. Without it, simple variable references like `Width = OtherInstance.Width` still work. For more information, see the [Runtime Variable References](../../../styling/runtime-variable-references.md) page.
 
 ## Adding a Button (Testing the Setup)
 
-Gum can be tested by adding a Button after Gum is initialized. To do so, add code to create a `Button` as shown in the following block of code after Gum is initialized:
+Gum can be tested by adding a Button after Gum is initialized. To do so, add code to create a `Button` as shown in the following block of code after the `Initialize` call in `Start`:
 
 ```csharp
 // Initialize
-GumService.Default.Initialize(game);
-
 var button = new Button();
 button.AddToRoot();
 button.Width = 200;
