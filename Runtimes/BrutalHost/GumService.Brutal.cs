@@ -68,12 +68,6 @@ public partial class GumService : GumServiceSkiaInteractiveBase, IGumService
     }
 
     /// <summary>
-    /// The color the frame is cleared to before Gum draws. Transparent by default, which shows black on
-    /// the window. Set it before <see cref="Draw"/>.
-    /// </summary>
-    public SKColor ClearColor { get; set; } = SKColors.Transparent;
-
-    /// <summary>
     /// Draws Gum into the render target Gum created and puts the frame on the window. If the framebuffer
     /// size changed since the last call, the target is recreated at the new size first. Does nothing while
     /// the framebuffer is empty (a minimized window).
@@ -108,7 +102,8 @@ public partial class GumService : GumServiceSkiaInteractiveBase, IGumService
             return;
         }
 
-        canvas.Clear(ClearColor);
+        // Transparent, so the frame composites over whatever the game already drew.
+        canvas.Clear(SKColors.Transparent);
         base.Draw();
         target.End();
         _backend.Present(target, _targetHolder.Width, _targetHolder.Height);

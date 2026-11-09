@@ -8,7 +8,7 @@ using System.Text;
 
 namespace Gum;
 
-/// <summary><see cref="IBrutalTarget"/> over a SkiaGameRendering.Brutal.OGL render target and the blit that shows it.</summary>
+/// <summary><see cref="IBrutalTarget"/> over a SkiaGameRendering.Brutal.OGL render target and the alpha-blended draw that shows it.</summary>
 internal sealed class GlTarget : IBrutalTarget
 {
     private readonly SkiaRenderTarget2D _target;
@@ -28,7 +28,7 @@ internal sealed class GlTarget : IBrutalTarget
 
     public void EndWithoutDrawing() => _target.End();
 
-    public void BlitToDefaultFramebuffer(int width, int height) => _blit.ToDefaultFramebuffer(width, height, width, height);
+    public void BlitToDefaultFramebuffer(int width, int height) => _blit.ToDefaultFramebuffer(width, height);
 
     public void Dispose()
     {
@@ -55,7 +55,7 @@ internal sealed class GlBackend : IBrutalGpuBackend
     public void Present(IBrutalTarget target, int width, int height) =>
         ((GlTarget)target).BlitToDefaultFramebuffer(width, height);
 
-    // glBlitFramebuffer reads the texture synchronously from the driver's point of view; nothing to wait for.
+    // The draw reads the texture in GL command order; nothing to wait for.
     public void WaitForGpu() { }
 
     public void Dispose() => _context.Dispose();

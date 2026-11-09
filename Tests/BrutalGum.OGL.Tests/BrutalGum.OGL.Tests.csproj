@@ -5,6 +5,7 @@
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
@@ -16,6 +17,7 @@
     <PackageReference Include="Microsoft.NET.Test.Sdk" />
     <PackageReference Include="Moq" />
     <PackageReference Include="Shouldly" />
+    <PackageReference Include="Xunit.SkippableFact" />
     <PackageReference Include="xunit" />
     <PackageReference Include="xunit.runner.visualstudio" />
     <!-- SKSurface for the in-memory raster canvas; BRUTAL GLFW enums (GlfwKey and friends) for the fake window. -->
