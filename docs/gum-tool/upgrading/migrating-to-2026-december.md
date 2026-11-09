@@ -43,6 +43,6 @@ GumUI.Initialize(window, "Content/GumProject/GumProject.gumj");
 GumUI.Draw();
 ```
 
-Call `GumUI.UseGamepadDefaults()` after `Initialize` so Forms controls respond to gamepads, as in MonoGame. Delete your `GRGlInterface`, `GRContext`, `GRBackendRenderTarget`, and `SKSurface` setup, your `window.Resize` handling, the `FrameworkElement.GamePadsForUiControl` wiring, and the manual `GraphicalUiElement.CanvasWidth`/`CanvasHeight` assignment. Your game still clears the framebuffer before `Draw()` and calls `window.GLContext.SwapBuffers()` after it. The overloads taking an `SKCanvas` remain for headless use, but then you own the surface.
+Add `GumUI.UseGamepadDefaults();` after `Initialize`. Delete your `GRGlInterface`, `GRContext`, `GRBackendRenderTarget`, and `SKSurface` setup, your `window.Resize` handling, the `FrameworkElement.GamePadsForUiControl` wiring, and the manual `GraphicalUiElement.CanvasWidth`/`CanvasHeight` assignment. Your game still clears the framebuffer before `Draw()` and calls `window.GLContext.SwapBuffers()` after it. The overloads taking an `SKCanvas` remain for headless use, but then you own the surface.
 
 See [Silk.NET setup](../../code/getting-started/setup/adding-initializing-gum/silk.net.md).
