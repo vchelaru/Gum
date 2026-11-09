@@ -64,13 +64,22 @@ public class NewProjectPackageChannelTests : NewProjectServiceTestBase
         Csproj().ShouldContain("<PackageReference Include=\"Gum.KniSkia\" Version=\"*-*\"");
     }
 
+    [Fact]
+    public async Task Preview_WithBrutal_ReferencesTheGumBrutalPackage()
+    {
+        NewProjectResult result = await Run(ChannelRequest("brutal", NewProjectPackageChannel.Preview));
+
+        result.Files.Success.ShouldBeTrue(result.Files.ErrorMessage);
+        Csproj().ShouldContain("<PackageReference Include=\"Gum.Brutal.OGL\" Version=\"*-*\"");
+    }
+
     [Theory]
     [MemberData(nameof(PlatformNames))]
     public async Task Stable_KeepsTheFloatingGumReference(string platform)
     {
-        if (platform == "kniskia")
+        if (NewProjectPlatforms.TryParse(platform, out HostPlatform parsed) && !NewProjectPlatforms.HasStablePackage(parsed))
         {
-            return; // No stable package exists; see Stable_WithKniSkia_IsRefusedSayingThereIsNoStablePackage.
+            return; // No stable package exists; see Stable_WithAPlatformWithNoStablePackage_IsRefusedSayingThereIsNoStablePackage.
         }
 
         NewProjectResult result = await Run(ChannelRequest(platform, NewProjectPackageChannel.Stable));
@@ -147,10 +156,12 @@ public class NewProjectPackageChannelTests : NewProjectServiceTestBase
         validation.Error.Message.ShouldContain("--platform");
     }
 
-    [Fact]
-    public void Stable_WithKniSkia_IsRefusedSayingThereIsNoStablePackage()
+    [Theory]
+    [InlineData("kniskia")]
+    [InlineData("brutal")]
+    public void Stable_WithAPlatformWithNoStablePackage_IsRefusedSayingThereIsNoStablePackage(string platform)
     {
-        NewProjectValidation validation = CreateService().Validate(ChannelRequest("kniskia", NewProjectPackageChannel.Stable));
+        NewProjectValidation validation = CreateService().Validate(ChannelRequest(platform, NewProjectPackageChannel.Stable));
 
         validation.Error!.Kind.ShouldBe(NewProjectErrorKind.NoStablePackage);
         validation.Error.Message.ShouldContain("no stable");
@@ -158,13 +169,26 @@ public class NewProjectPackageChannelTests : NewProjectServiceTestBase
         validation.Error.Message.ShouldContain("--source-linked");
     }
 
-    [Fact]
-    public void Preview_WithKniSkia_IsAccepted()
+    [Theory]
+    [InlineData("kniskia")]
+    [InlineData("brutal")]
+    public void Preview_WithAPlatformWithNoStablePackage_IsAccepted(string platform)
     {
-        NewProjectValidation validation = CreateService().Validate(ChannelRequest("kniskia", NewProjectPackageChannel.Preview));
+        NewProjectValidation validation = CreateService().Validate(ChannelRequest(platform, NewProjectPackageChannel.Preview));
 
         validation.Error.ShouldBeNull();
         validation.Resolved!.UsesPrerelease.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void StableIsRefusedForExactlyThePlatformsFlaggedWithNoStablePackage()
+    {
+        foreach ((string name, HostPlatform platform) in NewProjectPlatforms.MainNames)
+        {
+            NewProjectValidation validation = CreateService().Validate(ChannelRequest(name, NewProjectPackageChannel.Stable));
+
+            (validation.Error?.Kind == NewProjectErrorKind.NoStablePackage).ShouldBe(!NewProjectPlatforms.HasStablePackage(platform), name);
+        }
     }
 
     #endregion

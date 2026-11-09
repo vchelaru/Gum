@@ -75,6 +75,15 @@ public class NewProjectDialogScreenshotTests
     [SkippableTheory]
     [InlineData("dark")]
     [InlineData("light")]
+    public void CodeProjectBrutal(string theme) => Capture("code-project-brutal", theme, (viewModel, _) =>
+    {
+        viewModel.IncludeCodeProject = true;
+        viewModel.PlatformName = "brutal";
+    });
+
+    [SkippableTheory]
+    [InlineData("dark")]
+    [InlineData("light")]
     public void CodeProjectSilkNet(string theme) => Capture("code-project-silknet", theme, (viewModel, _) =>
     {
         viewModel.IncludeCodeProject = true;

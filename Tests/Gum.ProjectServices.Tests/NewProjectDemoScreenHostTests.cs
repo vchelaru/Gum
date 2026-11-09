@@ -51,7 +51,8 @@ public class NewProjectDemoScreenHostTests : IDisposable
             IncludeRecommendedPackages = packages,
             GenerateCode = generate,
             Restore = false,
-            SourceLinked = platform == HostPlatform.KniSkia,
+            PackageChannel = platform == HostPlatform.KniSkia ? NewProjectPackageChannel.LocalSource
+                : NewProjectPlatforms.HasStablePackage(platform) ? NewProjectPackageChannel.Stable : NewProjectPackageChannel.Preview,
         });
         validation.Error.ShouldBeNull(validation.Error?.Message);
         NewProjectFilesResult files = service.CreateFilesAsync(validation.Resolved!, CancellationToken.None).GetAwaiter().GetResult();

@@ -60,7 +60,7 @@ public class NewProjectServiceTests : BaseTestClass
     {
         NewProjectService service = CreateService();
 
-        foreach ((string name, HostPlatform _) in NewProjectPlatforms.MainNames)
+        foreach ((string name, HostPlatform platform) in NewProjectPlatforms.MainNames)
         {
             foreach (bool xml in new[] { false, true })
             {
@@ -71,7 +71,7 @@ public class NewProjectServiceTests : BaseTestClass
                 NewProjectResult result = await service.ExecuteAsync(new NewProjectRequest
                 {
                     Path = game, Platform = name, Template = "empty", UseXmlFormat = xml, Restore = false,
-                    SourceLinked = name == "kniskia"
+                    PackageChannel = name == "kniskia" ? NewProjectPackageChannel.LocalSource : NewProjectPlatforms.HasStablePackage(platform) ? NewProjectPackageChannel.Stable : NewProjectPackageChannel.Preview
                 }, null, CancellationToken.None);
 
                 result.Files.Success.ShouldBeTrue($"{name}: {result.Files.ErrorMessage}");
@@ -150,6 +150,7 @@ public class NewProjectServiceTests : BaseTestClass
     [InlineData("forms", null, "amiga", false, NewProjectErrorKind.UnknownPlatform)]
     [InlineData("forms", null, null, true, NewProjectErrorKind.SourceLinkedNeedsPlatform)]
     [InlineData("forms", null, "kniskia", false, NewProjectErrorKind.NoStablePackage)]
+    [InlineData("forms", null, "brutal", false, NewProjectErrorKind.NoStablePackage)]
     [InlineData("bogus", null, null, false, NewProjectErrorKind.UnknownTemplate)]
     [InlineData("empty", "Meadow", null, false, NewProjectErrorKind.ThemeNeedsFormsTemplate)]
     [InlineData("forms", "NoSuchTheme", null, false, NewProjectErrorKind.UnknownTheme)]
@@ -653,7 +654,7 @@ public class NewProjectServiceTests : BaseTestClass
                 Path = Path.Combine(_folder, "P" + name.Replace('.', '_')),
                 Platform = name,
                 Template = "empty",
-                SourceLinked = platform == HostPlatform.KniSkia
+                PackageChannel = platform == HostPlatform.KniSkia ? NewProjectPackageChannel.LocalSource : NewProjectPlatforms.HasStablePackage(platform) ? NewProjectPackageChannel.Stable : NewProjectPackageChannel.Preview
             });
 
             validation.IsValid.ShouldBeTrue($"{name}: {validation.Error?.Message}");

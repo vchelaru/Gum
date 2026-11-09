@@ -25,7 +25,7 @@ public class NewProjectNameValidationTests : NewProjectServiceTestBase
             string path = Path.Combine(_folder, platformName, name);
             NewProjectResult result = await CreateService().ExecuteAsync(new NewProjectRequest
             {
-                Path = path, Platform = platformName, Restore = false, Template = "empty", SourceLinked = platformName == "kniskia"
+                Path = path, Platform = platformName, Restore = false, Template = "empty", PackageChannel = WorkingChannel(platformName)
             }, null, CancellationToken.None);
 
             result.Files.Success.ShouldBeTrue($"{platformName} {name}: {result.Files.ErrorMessage}");
