@@ -22,13 +22,13 @@ Gum has one package per graphics API. Add only one of them:
 Add the Gum.Brutal.OGL NuGet package ([https://www.nuget.org/packages/Gum.Brutal.OGL](https://www.nuget.org/packages/Gum.Brutal.OGL)). Modify csproj:
 
 ```xml
-<PackageReference Include="Gum.Brutal.OGL" Version="*" />
+<PackageReference Include="Gum.Brutal.OGL" Version="*-*" />
 ```
 
 Or add through command line:
 
 ```bash
-dotnet add package Gum.Brutal.OGL
+dotnet add package Gum.Brutal.OGL --prerelease
 ```
 {% endtab %}
 
@@ -36,13 +36,13 @@ dotnet add package Gum.Brutal.OGL
 Add the Gum.Brutal.Vulkan NuGet package ([https://www.nuget.org/packages/Gum.Brutal.Vulkan](https://www.nuget.org/packages/Gum.Brutal.Vulkan)). Modify csproj:
 
 ```xml
-<PackageReference Include="Gum.Brutal.Vulkan" Version="*" />
+<PackageReference Include="Gum.Brutal.Vulkan" Version="*-*" />
 ```
 
 Or add through command line:
 
 ```bash
-dotnet add package Gum.Brutal.Vulkan
+dotnet add package Gum.Brutal.Vulkan --prerelease
 ```
 {% endtab %}
 {% endtabs %}
