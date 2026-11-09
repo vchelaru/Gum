@@ -23,6 +23,7 @@ public class Game1 : Game
     private readonly Gum.Automation.GumAutomationHost? _automation;
 #endif
     private TextRuntime _immediateText = null!;
+    private GumBatch _gumBatch = null!;
 
     public Game1()
     {
@@ -56,14 +57,7 @@ public class Game1 : Game
             Y = 120
         };
 
-        // Drawn on top of Gum's own draw, inside the same Skia pass.
-        GumUI.AfterDraw += _ =>
-        {
-            Renderer renderer = SystemManagers.Default.Renderer;
-            renderer.Begin();
-            renderer.Draw(_immediateText);
-            renderer.End();
-        };
+        _gumBatch = new GumBatch();
 
         base.Initialize();
     }
@@ -95,6 +89,12 @@ public class Game1 : Game
     {
         GraphicsDevice.Clear(Color.CornflowerBlue);
         GumUI.Draw();
+
+        // Immediate mode, drawn after Gum so it lands on top.
+        _gumBatch.Begin();
+        _gumBatch.Draw(_immediateText);
+        _gumBatch.End();
+
         base.Draw(gameTime);
     }
 

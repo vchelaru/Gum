@@ -22,6 +22,7 @@ using Gum.Input;
 using Gum.Managers;
 using Gum.Wireframe;
 using RenderingLibrary;
+using BatchGraphics = global::RenderingLibrary.Graphics;
 using SkiaGum.Helpers;
 using SkiaSharp;
 using XnaGame = Microsoft.Xna.Framework.Game;
@@ -32,7 +33,7 @@ using ICursor = Gum.Wireframe.ICursor;
 
 namespace Gum;
 
-public partial class GumService : GumServiceSkiaInteractiveBase, IGumService
+public partial class GumService : GumServiceSkiaInteractiveBase, IGumService, BatchGraphics.IGumBatchFrameHost
 {
     private XnaGameWindow? _window;
     private XnaGame? _game;
@@ -180,6 +181,7 @@ public partial class GumService : GumServiceSkiaInteractiveBase, IGumService
             // No canvas means the service owns the render target. A test that hands in a canvas keeps
             // drawing into it.
             _managesTarget = canvas == null;
+            BatchGraphics.GumBatch.FrameHost = _managesTarget ? this : null;
             if (game != null)
             {
                 game.Exiting += OnGameExiting;
@@ -298,19 +300,6 @@ public partial class GumService : GumServiceSkiaInteractiveBase, IGumService
     #region Draw
 
     /// <summary>
-    /// Raised inside <see cref="Draw()"/> after the target is cleared and before Gum draws, with the
-    /// canvas for this frame. For immediate-mode drawing (a <c>GumBatch</c>) that belongs under the
-    /// retained-mode controls. Only raised when the service owns the render target.
-    /// </summary>
-    public event Action<SKCanvas>? BeforeDraw;
-
-    /// <summary>
-    /// Raised inside <see cref="Draw()"/> after Gum has drawn and before the target is composited, with
-    /// the canvas for this frame. Only raised when the service owns the render target.
-    /// </summary>
-    public event Action<SKCanvas>? AfterDraw;
-
-    /// <summary>
     /// Creates the render target. Replaced in tests, which have no graphics device.
     /// </summary>
     internal Func<int, int, IKniSkiaTarget>? TargetFactoryOverride { get; set; }
@@ -327,11 +316,51 @@ public partial class GumService : GumServiceSkiaInteractiveBase, IGumService
     /// </remarks>
     public override void Draw()
     {
-        XnaGraphicsDevice? graphicsDevice = _game?.GraphicsDevice ?? _graphicsDevice;
-        if (!_managesTarget || (graphicsDevice == null && TargetFactoryOverride == null))
+        if (_frameOpen)
+        {
+            // Recover for the next frame instead of drawing nothing.
+            CloseFrame(present: false);
+            throw new InvalidOperationException(
+                "GumService.Draw() was called while a GumBatch pass was open: call GumBatch.End before Draw.");
+        }
+
+        if (!TryOpenFrame(out SKCanvas? _))
+        {
+            if (!_managesTarget || !HasGraphicsDevice())
+            {
+                base.Draw();
+            }
+            return;
+        }
+
+        try
         {
             base.Draw();
-            return;
+        }
+        catch
+        {
+            CloseFrame(present: false);
+            throw;
+        }
+
+        // Composites the target onto the back buffer at the origin, at native size.
+        CloseFrame(present: true);
+    }
+
+    private bool _frameOpen;
+
+    private bool HasGraphicsDevice() =>
+        (_game?.GraphicsDevice ?? _graphicsDevice) != null || TargetFactoryOverride != null;
+
+    // Creates or resizes the target and begins a pass on it. False when the service does not own the
+    // target, a pass is already open, or the window has no size (minimized).
+    private bool TryOpenFrame(out SKCanvas? frameCanvas)
+    {
+        frameCanvas = null;
+        XnaGraphicsDevice? graphicsDevice = _game?.GraphicsDevice ?? _graphicsDevice;
+        if (!_managesTarget || _frameOpen || (graphicsDevice == null && TargetFactoryOverride == null))
+        {
+            return false;
         }
 
         (int width, int height) = GetWindowSize();
@@ -347,7 +376,7 @@ public partial class GumService : GumServiceSkiaInteractiveBase, IGumService
             // The first target matches the size Gum was initialized with, so there is nothing to re-layout.
             if (!_targetHolder.Create(width, height))
             {
-                return;
+                return false;
             }
         }
         else
@@ -355,27 +384,33 @@ public partial class GumService : GumServiceSkiaInteractiveBase, IGumService
             _targetHolder.EnsureSize(width, height);
         }
 
-        SKCanvas? frameCanvas = _targetHolder.BeginFrame();
-        if (frameCanvas == null)
+        frameCanvas = _targetHolder.BeginFrame();
+        _frameOpen = frameCanvas != null;
+        return _frameOpen;
+    }
+
+    private void CloseFrame(bool present)
+    {
+        if (!_frameOpen)
         {
             return;
         }
 
-        try
+        _frameOpen = false;
+        if (present)
         {
-            BeforeDraw?.Invoke(frameCanvas);
-            base.Draw();
-            AfterDraw?.Invoke(frameCanvas);
+            _targetHolder!.Target!.End();
         }
-        catch
+        else
         {
-            _targetHolder.Target!.EndWithoutDrawing();
-            throw;
+            _targetHolder!.Target!.EndWithoutDrawing();
         }
-
-        // Composites the target onto the back buffer at the origin, at native size.
-        _targetHolder.Target!.End();
     }
+
+    // GumBatch.Begin/End outside Draw: each cycle is its own pass, composited in call order.
+    bool BatchGraphics.IGumBatchFrameHost.TryBeginFrame() => TryOpenFrame(out SKCanvas? _);
+
+    void BatchGraphics.IGumBatchFrameHost.EndFrame(bool present) => CloseFrame(present);
 
     private void OnGameExiting(object? sender, EventArgs e) => ReleaseRenderTarget();
 
@@ -409,9 +444,7 @@ public partial class GumService : GumServiceSkiaInteractiveBase, IGumService
         ReleaseRenderTarget();
         ReleaseGame();
         _managesTarget = false;
-        // Handlers belong to the screens of the session that ended.
-        BeforeDraw = null;
-        AfterDraw = null;
+        BatchGraphics.GumBatch.FrameHost = null;
         GameTime = null;
         _game = null;
         _graphicsDevice = null;
