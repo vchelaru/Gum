@@ -39,13 +39,13 @@ try
     while (!window.ShouldClose)
     {
         Glfw.PollEvents();
-        double now = clock.Elapsed.TotalSeconds;
-        GumUI.Update(now);
-        gallery.Tick(now - previousSeconds);
-        previousSeconds = now;
+        double gameTime = clock.Elapsed.TotalSeconds;
+        GumUI.Update(gameTime);
+        gallery.Tick(gameTime - previousSeconds);
+        previousSeconds = gameTime;
         GumUI.Draw();
 
-        if (sample.ExitAfterSeconds > 0 && now >= sample.ExitAfterSeconds)
+        if (sample.ExitAfterSeconds > 0 && gameTime >= sample.ExitAfterSeconds)
         {
             if (sample.CapturePath != null)
             {
@@ -54,7 +54,7 @@ try
             }
             window.ShouldClose = true;
         }
-        else if (sample.Resize is { } size && !resized && sample.ExitAfterSeconds > 0 && now >= sample.ExitAfterSeconds / 2)
+        else if (sample.Resize is { } size && !resized && sample.ExitAfterSeconds > 0 && gameTime >= sample.ExitAfterSeconds / 2)
         {
             window.Size = new int2(size.Width, size.Height);
             resized = true;

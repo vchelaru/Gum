@@ -118,7 +118,9 @@ public partial class GumService : GumServiceSkiaInteractiveBase, IGumService
     /// <summary>
     /// Initializes Gum with the GPU backend that owns Skia, at the window's framebuffer size.
     /// </summary>
-    internal void Initialize(IBrutalInput input, IBrutalGpuBackend backend, string? gumProjectFile = null)
+    internal void Initialize(
+        IBrutalInput input, IBrutalGpuBackend backend, string? gumProjectFile = null,
+        DefaultVisualsVersion visualsVersion = DefaultVisualsVersion.Newest)
     {
         _targetHolder?.Dispose();
         _backend?.Dispose();
@@ -132,7 +134,9 @@ public partial class GumService : GumServiceSkiaInteractiveBase, IGumService
 
         // With a zero-size framebuffer (minimized at startup) there is no canvas yet; the first Draw at a
         // real size creates the target.
-        InitializeWithDevices(_targetHolder.Canvas, Math.Max(1, _targetHolder.Width), Math.Max(1, _targetHolder.Height), gumProjectFile, () => AttachInput(input));
+        InitializeWithDevices(
+            _targetHolder.Canvas, Math.Max(1, _targetHolder.Width), Math.Max(1, _targetHolder.Height), gumProjectFile,
+            () => AttachInput(input), visualsVersion);
     }
 
     /// <summary>

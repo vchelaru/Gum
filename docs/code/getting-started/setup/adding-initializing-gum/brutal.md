@@ -133,7 +133,8 @@ Call `Update` once per frame after `Glfw.PollEvents`, then `Draw`:
 ```csharp
 // Update and Draw
 Glfw.PollEvents();
-GumService.Default.Update(clock.Elapsed.TotalSeconds);
+double gameTime = clock.Elapsed.TotalSeconds;
+GumService.Default.Update(gameTime);
 GumService.Default.Draw();
 window.SwapBuffers();
 ```
@@ -145,7 +146,8 @@ window.SwapBuffers();
 ```csharp
 // Update and Draw
 Glfw.PollEvents();
-GumService.Default.Update(clock.Elapsed.TotalSeconds);
+double gameTime = clock.Elapsed.TotalSeconds;
+GumService.Default.Update(gameTime);
 GumService.Default.Draw();
 ```
 
@@ -273,7 +275,8 @@ Stopwatch clock = Stopwatch.StartNew();
 while (!window.ShouldClose)
 {
     Glfw.PollEvents();
-    GumUI.Update(clock.Elapsed.TotalSeconds);
+    double gameTime = clock.Elapsed.TotalSeconds;
+    GumUI.Update(gameTime);
     GumUI.Draw();
     window.SwapBuffers();
 }
@@ -376,7 +379,8 @@ Stopwatch clock = Stopwatch.StartNew();
 while (!window.ShouldClose)
 {
     Glfw.PollEvents();
-    GumUI.Update(clock.Elapsed.TotalSeconds);
+    double gameTime = clock.Elapsed.TotalSeconds;
+    GumUI.Update(gameTime);
     GumUI.Draw();
 }
 

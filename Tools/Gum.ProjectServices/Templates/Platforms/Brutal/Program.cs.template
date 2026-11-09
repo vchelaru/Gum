@@ -20,7 +20,8 @@ Stopwatch clock = Stopwatch.StartNew();
 while (!window.ShouldClose)
 {
     Glfw.PollEvents();
-    GumUI.Update(clock.Elapsed.TotalSeconds);
+    double gameTime = clock.Elapsed.TotalSeconds;
+    GumUI.Update(gameTime);
     GumUI.Draw();
     window.SwapBuffers();
 }

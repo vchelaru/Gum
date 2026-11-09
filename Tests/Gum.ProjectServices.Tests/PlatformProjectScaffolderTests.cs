@@ -148,6 +148,9 @@ public class PlatformProjectScaffolderTests : IDisposable
         program.ShouldNotContain("Presenter");
         File.Exists(Path.Combine(projectDirectory, "Presenter.cs")).ShouldBeFalse();
         program.Split('\n').Length.ShouldBeLessThan(45);
+        // Matches the shared docs samples: the per-frame value is gameTime, in seconds.
+        program.ShouldContain("double gameTime = clock.Elapsed.TotalSeconds;");
+        program.ShouldContain("GumUI.Update(gameTime);");
 
         string csproj = File.ReadAllText(result.CsprojPath);
         csproj.ShouldNotContain("ShaderC");

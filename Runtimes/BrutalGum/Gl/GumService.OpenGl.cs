@@ -2,6 +2,8 @@
 #nullable enable
 
 using Brutal.GlfwApi;
+using Gum.Forms;
+using System;
 using Gum.Input;
 
 namespace Gum;
@@ -19,5 +21,15 @@ public partial class GumService
     /// <param name="gumProjectFile">An optional .gumx or .gumj project file to load.</param>
     public void Initialize(GlfwWindow window, string? gumProjectFile = null) =>
         Initialize(new BrutalGlfwInput(window), new GlBackend(), gumProjectFile);
+
+    /// <summary>
+    /// Initializes Gum like <see cref="Initialize(GlfwWindow, string?)"/> with an explicit set of default Forms visuals.
+    /// Skia supports <see cref="DefaultVisualsVersion.V3"/> only; any other value throws <see cref="NotSupportedException"/>.
+    /// </summary>
+    /// <param name="window">The GLFW window, with its OpenGL context current on this thread.</param>
+    /// <param name="visualsVersion">The default Forms visuals to register.</param>
+    /// <param name="gumProjectFile">An optional .gumx or .gumj project file to load.</param>
+    public void Initialize(GlfwWindow window, DefaultVisualsVersion visualsVersion, string? gumProjectFile = null) =>
+        Initialize(new BrutalGlfwInput(window), new GlBackend(), gumProjectFile, visualsVersion);
 }
 #endif
