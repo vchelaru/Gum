@@ -168,11 +168,11 @@ public class AnimationRuntime
                     break;
                 }
             }
-            return foundCategory == null ? null : FindStateByName(foundCategory.States, stateName);
+            return foundCategory == null ? null : foundCategory.States.FindByName(stateName);
         }
         else
         {
-            return FindStateByName(element.States, categorizedName);
+            return element.States.FindByName(categorizedName);
         }
     }
 
@@ -187,7 +187,7 @@ public class AnimationRuntime
         {
             if(graphicalUiElement.Categories.TryGetValue(category, out var foundCategory))
             {
-                return FindStateByName(foundCategory.States, stateName);
+                return foundCategory.States.FindByName(stateName);
             }
         }
         else
@@ -220,19 +220,6 @@ public class AnimationRuntime
             ? categorizedName.Substring(firstSlash + 1, secondSlash - firstSlash - 1)
             : categorizedName.Substring(firstSlash + 1);
         return true;
-    }
-
-    // FirstOrDefault(item => item.Name == name) over a state list without the closure allocation.
-    private static StateSave? FindStateByName(List<StateSave> states, string name)
-    {
-        for (int i = 0; i < states.Count; i++)
-        {
-            if (states[i].Name == name)
-            {
-                return states[i];
-            }
-        }
-        return null;
     }
 
     public StateSave GetStateToSet(double animationTime, ElementSave element, bool defaultIfNull = false)

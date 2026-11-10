@@ -244,8 +244,8 @@ public class FormsInputAllocationTests : BaseTestClass
 
     [Theory]
     [InlineData("HoverButtonStill", 100)]
-    [InlineData("HoverButtonEnterExit", 450)]
-    [InlineData("PressReleaseButton", 700)]
+    [InlineData("HoverButtonEnterExit", 160)]
+    [InlineData("PressReleaseButton", 160)]
     [InlineData("ScrollListBox", 400)]
     [InlineData("TypeAndDeleteInTextBox", 28000)]
     [InlineData("OpenCloseComboBox", 38000)]

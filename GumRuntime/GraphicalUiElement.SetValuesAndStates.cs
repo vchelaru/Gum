@@ -410,7 +410,7 @@ public partial class GraphicalUiElement
             foreach (KeyValuePair<string, string> applied in container._appliedCategoryStates)
             {
                 StateSave? state = container.mCategories.TryGetValue(applied.Key, out StateSaveCategory? category)
-                    ? category.States.FirstOrDefault(item => item.Name == applied.Value)
+                    ? category.States.FindByName(applied.Value)
                     : null;
                 if (state != null)
                 {
@@ -1163,27 +1163,14 @@ public partial class GraphicalUiElement
                 {
                     var valueAsString = (string)value;
 
-                    string nameWithoutState = propertyName.Substring(0, propertyName.Length - "State".Length);
-
-                    if (string.IsNullOrEmpty(nameWithoutState))
+                    if (TryGetCategoryByPrefix(propertyName, propertyNameLength - "State".Length,
+                        out string? categoryName, out StateSaveCategory? category))
                     {
-                        // This is an uncategorized state
-                        if (mStates.ContainsKey(valueAsString))
-                        {
-                            ApplyState(mStates[valueAsString]);
-                            toReturn = true;
-                        }
-                    }
-                    else if (mCategories.ContainsKey(nameWithoutState))
-                    {
-
-                        var category = mCategories[nameWithoutState];
-
-                        var state = category.States.FirstOrDefault(item => item.Name == valueAsString);
+                        var state = category.States.FindByName(valueAsString);
                         if (state != null)
                         {
                             ApplyState(state);
-                            RecordAppliedCategoryState(nameWithoutState, valueAsString);
+                            RecordAppliedCategoryState(categoryName, valueAsString);
                             toReturn = true;
                         }
                     }
@@ -1229,7 +1216,7 @@ public partial class GraphicalUiElement
         {
             var category = mCategories[categoryName];
 
-            var state = category.States.FirstOrDefault(item => item.Name == stateName);
+            var state = category.States.FindByName(stateName);
             if (state != null)
             {
                 ApplyState(state);
@@ -1268,7 +1255,7 @@ public partial class GraphicalUiElement
         // Technically categories could have same-named states.
         foreach (var category in mCategories.Values)
         {
-            var foundState = category.States.FirstOrDefault(item => item.Name == name);
+            var foundState = category.States.FindByName(name);
 
             if (foundState != null)
             {
@@ -1283,7 +1270,7 @@ public partial class GraphicalUiElement
         {
             var category = mCategories[categoryName];
 
-            var state = category.States.FirstOrDefault(item => item.Name == stateName);
+            var state = category.States.FindByName(stateName);
 
             if (state != null)
             {
@@ -1291,6 +1278,28 @@ public partial class GraphicalUiElement
                 RecordAppliedCategoryState(categoryName, stateName);
             }
         }
+    }
+
+    // Finds the category whose key equals the first prefixLength characters of text, the same match
+    // as mCategories.TryGetValue(text.Substring(0, prefixLength)) without building that string.
+    // Forms sets "<Category>State" on every hover and press, so the Substring was a per-change allocation.
+    private bool TryGetCategoryByPrefix(string text, int prefixLength,
+        [System.Diagnostics.CodeAnalysis.NotNullWhen(true)] out string? categoryName,
+        [System.Diagnostics.CodeAnalysis.NotNullWhen(true)] out StateSaveCategory? category)
+    {
+        foreach (KeyValuePair<string, StateSaveCategory> pair in mCategories)
+        {
+            string key = pair.Key;
+            if (key.Length == prefixLength && string.CompareOrdinal(key, 0, text, 0, prefixLength) == 0)
+            {
+                categoryName = key;
+                category = pair.Value;
+                return true;
+            }
+        }
+        categoryName = null;
+        category = null;
+        return false;
     }
 
     private void RecordAppliedCategoryState(string categoryName, string stateName)
@@ -1347,99 +1356,7 @@ public partial class GraphicalUiElement
             }
             else
             {
-                bool didSuspend = false;
-                // Also check this.IsLayoutSuspended: a state's own Variables can include a category-state
-                // assignment (e.g. "ButtonCategoryState" = "Highlighted"), which TrySetValueOnThis resolves
-                // by calling ApplyState AGAIN on this same instance, nested inside this loop. Without this
-                // check, that nested call would see IsAllLayoutSuspended still false, suspend/resume on its
-                // own, and its ResumeLayout would prematurely clear mIsLayoutSuspended -- and flush any
-                // deferred font load -- before THIS (outer) call finishes applying its own remaining
-                // variables (#4567). Skipping suspend/resume when already suspended lets the nested call's
-                // variables apply under the outer suspension, so only the outermost ApplyState flushes.
-                if (GraphicalUiElement.IsAllLayoutSuspended == false && this.IsLayoutSuspended == false)
-                {
-                    didSuspend = true;
-                    this.SuspendLayout(true);
-                }
-
-                // SuspendLayout(true) suspended this element and every descendant. If a variable throws
-                // (a custom setter, an event handler), none of them may stay suspended: every later
-                // UpdateLayout early-outs for a suspended element, so it would never lay out again.
-                bool appliedAllVariables = false;
-                try
-                {
-                    var variablesWithoutStatesOnParent =
-                        state.Variables.Where(item =>
-                        {
-                            if (item.SetsValue)
-                            {
-                                // We can set the variable if it's not setting a state (to prevent recursive setting).
-                                // Update May 4, 2023 - But if you have a base element that defines a state, and the derived
-                                // element sets that state, then we want to allow it.  But should we just allow all states?
-                                // Or should we check if it's defined by the base...
-                                //return (item.IsState(state.ParentContainer) == false ||
-                                //    // If it is setting a state we'll allow it if it's on a child.
-                                //    !string.IsNullOrEmpty(item.SourceObject));
-                                // let's test this out:
-                                return true;
-
-                            }
-                            return false;
-                        }).ToArray();
-
-
-                    var parentSettingVariables =
-                        variablesWithoutStatesOnParent
-                            .Where(item => item.GetRootName() == "Parent")
-                            .OrderBy(item => GetOrderedIndexForParentVariable(item))
-                            .ToArray();
-
-                    var nonParentSettingVariables =
-                        variablesWithoutStatesOnParent
-                            .Except(parentSettingVariables)
-                            // Even though we removed state-setting variables on the parent, we still allow setting
-                            // states on the contained objects
-                            .OrderBy(item => state.ParentContainer == null || !item.IsState(state.ParentContainer))
-                            .ToArray();
-
-                    var variablesToConsider =
-                        parentSettingVariables.Concat(nonParentSettingVariables)
-                        .ToArray();
-
-                    int variableCount = variablesToConsider.Length;
-                    for (int i = 0; i < variableCount; i++)
-                    {
-                        var variable = variablesToConsider[i];
-                        if (variable.SetsValue && variable.Value != null)
-                        {
-                            this.SetProperty(variable.Name, variable.Value);
-                        }
-                    }
-
-                    foreach (var variableList in state.VariableLists)
-                    {
-                        this.SetProperty(variableList.Name, variableList.ValueAsIList);
-                    }
-
-                    appliedAllVariables = true;
-                }
-                finally
-                {
-                    if (didSuspend)
-                    {
-                        if (appliedAllVariables)
-                        {
-                            this.ResumeLayout(true);
-                        }
-                        else
-                        {
-                            // Lift the suspension without flushing: the flush would run layout (and the same
-                            // throwing setter) while the original exception is unwinding. The dirty state is
-                            // kept, so the next layout of these elements catches up.
-                            this.ClearLayoutSuspensionRecursive();
-                        }
-                    }
-                }
+                ApplyStateVariables(state);
             }
 
         }
@@ -1454,6 +1371,105 @@ public partial class GraphicalUiElement
             FlushPendingReferenceChanges();
         }
 
+    }
+
+    // Kept out of ApplyState so the closure capturing state is allocated only on this path; a state
+    // with an Apply delegate (every Forms control's default visual) then allocates nothing.
+    private void ApplyStateVariables(DataTypes.Variables.StateSave state)
+    {
+        bool didSuspend = false;
+        // Also check this.IsLayoutSuspended: a state's own Variables can include a category-state
+        // assignment (e.g. "ButtonCategoryState" = "Highlighted"), which TrySetValueOnThis resolves
+        // by calling ApplyState AGAIN on this same instance, nested inside this loop. Without this
+        // check, that nested call would see IsAllLayoutSuspended still false, suspend/resume on its
+        // own, and its ResumeLayout would prematurely clear mIsLayoutSuspended -- and flush any
+        // deferred font load -- before THIS (outer) call finishes applying its own remaining
+        // variables (#4567). Skipping suspend/resume when already suspended lets the nested call's
+        // variables apply under the outer suspension, so only the outermost ApplyState flushes.
+        if (GraphicalUiElement.IsAllLayoutSuspended == false && this.IsLayoutSuspended == false)
+        {
+            didSuspend = true;
+            this.SuspendLayout(true);
+        }
+
+        // SuspendLayout(true) suspended this element and every descendant. If a variable throws
+        // (a custom setter, an event handler), none of them may stay suspended: every later
+        // UpdateLayout early-outs for a suspended element, so it would never lay out again.
+        bool appliedAllVariables = false;
+        try
+        {
+            var variablesWithoutStatesOnParent =
+                state.Variables.Where(item =>
+                {
+                    if (item.SetsValue)
+                    {
+                        // We can set the variable if it's not setting a state (to prevent recursive setting).
+                        // Update May 4, 2023 - But if you have a base element that defines a state, and the derived
+                        // element sets that state, then we want to allow it.  But should we just allow all states?
+                        // Or should we check if it's defined by the base...
+                        //return (item.IsState(state.ParentContainer) == false ||
+                        //    // If it is setting a state we'll allow it if it's on a child.
+                        //    !string.IsNullOrEmpty(item.SourceObject));
+                        // let's test this out:
+                        return true;
+
+                    }
+                    return false;
+                }).ToArray();
+
+
+            var parentSettingVariables =
+                variablesWithoutStatesOnParent
+                    .Where(item => item.GetRootName() == "Parent")
+                    .OrderBy(item => GetOrderedIndexForParentVariable(item))
+                    .ToArray();
+
+            var nonParentSettingVariables =
+                variablesWithoutStatesOnParent
+                    .Except(parentSettingVariables)
+                    // Even though we removed state-setting variables on the parent, we still allow setting
+                    // states on the contained objects
+                    .OrderBy(item => state.ParentContainer == null || !item.IsState(state.ParentContainer))
+                    .ToArray();
+
+            var variablesToConsider =
+                parentSettingVariables.Concat(nonParentSettingVariables)
+                .ToArray();
+
+            int variableCount = variablesToConsider.Length;
+            for (int i = 0; i < variableCount; i++)
+            {
+                var variable = variablesToConsider[i];
+                if (variable.SetsValue && variable.Value != null)
+                {
+                    this.SetProperty(variable.Name, variable.Value);
+                }
+            }
+
+            foreach (var variableList in state.VariableLists)
+            {
+                this.SetProperty(variableList.Name, variableList.ValueAsIList);
+            }
+
+            appliedAllVariables = true;
+        }
+        finally
+        {
+            if (didSuspend)
+            {
+                if (appliedAllVariables)
+                {
+                    this.ResumeLayout(true);
+                }
+                else
+                {
+                    // Lift the suspension without flushing: the flush would run layout (and the same
+                    // throwing setter) while the original exception is unwinding. The dirty state is
+                    // kept, so the next layout of these elements catches up.
+                    this.ClearLayoutSuspensionRecursive();
+                }
+            }
+        }
     }
 
     public void ApplyState(List<DataTypes.Variables.VariableSaveValues> variableSaveValues)
