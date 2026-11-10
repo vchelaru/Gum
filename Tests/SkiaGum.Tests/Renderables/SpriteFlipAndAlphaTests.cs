@@ -116,6 +116,46 @@ public class SpriteFlipAndAlphaTests
         pixels.GetPixel(25, 25).ShouldBe(SKColors.Lime);
     }
 
+    [Theory]
+    [InlineData(true, false, true)]
+    [InlineData(true, true, false)]
+    [InlineData(false, false, false)]
+    public void Render_ParentFlipHorizontal_MirrorsTheChildSprite(bool parentFlip, bool childFlip, bool expectMirrored)
+    {
+        // MonoGame combines a sprite's FlipHorizontal with its parents' (GetAbsoluteFlipHorizontal).
+        using SKBitmap texture = CreateQuadrantTexture();
+        using SKSurface surface = SKSurface.Create(new SKImageInfo(64, 64));
+        GumService.Default.Initialize(surface.Canvas, 64, 64);
+
+        ContainerRuntime container = new()
+        {
+            X = 10,
+            Y = 10,
+            Width = 20,
+            Height = 20,
+            WidthUnits = Gum.DataTypes.DimensionUnitType.Absolute,
+            HeightUnits = Gum.DataTypes.DimensionUnitType.Absolute,
+        };
+        container.FlipHorizontal = parentFlip;
+        SpriteRuntime sprite = new()
+        {
+            Texture = texture,
+            Width = 20,
+            Height = 20,
+            WidthUnits = Gum.DataTypes.DimensionUnitType.Absolute,
+            HeightUnits = Gum.DataTypes.DimensionUnitType.Absolute,
+        };
+        sprite.FlipHorizontal = childFlip;
+        container.Children.Add(sprite);
+        GumService.Default.Root.Children.Add(container);
+        GumService.Default.Draw();
+
+        using SKImage image = surface.Snapshot();
+        using SKBitmap pixels = SKBitmap.FromImage(image);
+        pixels.GetPixel(15, 15).ShouldBe(expectMirrored ? SKColors.Lime : SKColors.Red);
+        pixels.GetPixel(25, 15).ShouldBe(expectMirrored ? SKColors.Red : SKColors.Lime);
+    }
+
     [Fact]
     public void Render_FlipHorizontalWithWrap_MirrorsTheRepeatedTexture()
     {

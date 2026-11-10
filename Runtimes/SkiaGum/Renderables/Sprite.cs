@@ -451,7 +451,8 @@ public class Sprite : RenderableShapeBase, IAspectRatio, ITextureCoordinate, IAn
                 Math.Max(effective.Top, effective.Bottom));
         }
 
-        bool isFlippedHorizontal = FlipHorizontal != isSourceSwappedHorizontal;
+        // Horizontal flips also combine with every parent's, as on MonoGame; vertical ones do not.
+        bool isFlippedHorizontal = global::RenderingLibrary.IPositionedSizedObjectExtensionMethods.GetAbsoluteFlipHorizontal(this) != isSourceSwappedHorizontal;
         bool isFlippedVertical = FlipVertical != isSourceSwappedVertical;
 
         // Saved and restored by hand: an SKAutoCanvasRestore would allocate on every unflipped draw.
