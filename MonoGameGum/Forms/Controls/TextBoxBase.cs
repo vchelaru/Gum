@@ -2488,9 +2488,17 @@ public abstract class TextBoxBase :
         return measure + this.textComponent.X + GetLineXOffsetForHorizontalAlignment(stringToMeasure);
     }
 
-    public float GetLineXOffsetForHorizontalAlignment(string stringToMeasure) =>
-        TextHitTesting.GetHorizontalAlignmentOffset(coreTextObject.HorizontalAlignment, textComponent.AbsoluteWidth,
+    public float GetLineXOffsetForHorizontalAlignment(string stringToMeasure)
+    {
+        // A left-aligned line starts at the left edge whatever its width, so it is not measured (#7863).
+        if (!TextHitTesting.PlacesLineByWidth(coreTextObject.HorizontalAlignment))
+        {
+            return 0;
+        }
+
+        return TextHitTesting.GetHorizontalAlignmentOffset(coreTextObject.HorizontalAlignment, textComponent.AbsoluteWidth,
             coreTextObject.MeasureDrawnString(stringToMeasure, global::RenderingLibrary.Graphics.HorizontalMeasurementStyle.TrimRight));
+    }
 
     float CoreTextObjectHeight =>
         coreTextObject.GetAbsoluteBottom() - coreTextObject.GetAbsoluteTop();

@@ -134,8 +134,72 @@ public abstract class PolledKeyboard : IInputReceiverKeyboard, IDisposable
         System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.OSX);
 #endif
 
+    // Returns one reused sequence: enumerate it once, right away, and do not keep it past the next read.
     /// <inheritdoc/>
-    IEnumerable<GumKeys> IInputReceiverKeyboard.KeysTyped => SupportedKeys.Where(KeyTyped);
+    IEnumerable<GumKeys> IInputReceiverKeyboard.KeysTyped => _keysTyped ??= new KeysTypedSequence(this);
+
+    private KeysTypedSequence? _keysTyped;
+
+    /// <summary>
+    /// The keys typed this frame, in <see cref="SupportedKeys"/> order, as one object this keyboard keeps instead
+    /// of a new delegate and iterator per read (#7863): every focused control reads it every frame. It is its own
+    /// enumerator, so a read that is still being enumerated hands the next one a fresh enumerator instead, and
+    /// a <see cref="SupportedKeys"/> that is not a list also gets one, since walking it allocates anyway.
+    /// </summary>
+    private sealed class KeysTypedSequence : IEnumerable<GumKeys>, IEnumerator<GumKeys>
+    {
+        private readonly PolledKeyboard _keyboard;
+        private IReadOnlyList<GumKeys>? _keys;
+        private int _index;
+        private bool _inUse;
+
+        public KeysTypedSequence(PolledKeyboard keyboard)
+        {
+            _keyboard = keyboard;
+        }
+
+        public GumKeys Current { get; private set; }
+
+        object System.Collections.IEnumerator.Current => Current;
+
+        public IEnumerator<GumKeys> GetEnumerator()
+        {
+            if (_inUse || !(_keyboard.SupportedKeys is IReadOnlyList<GumKeys> keys))
+            {
+                return _keyboard.SupportedKeys.Where(_keyboard.KeyTyped).GetEnumerator();
+            }
+
+            _inUse = true;
+            _keys = keys;
+            _index = -1;
+            return this;
+        }
+
+        System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() => GetEnumerator();
+
+        public bool MoveNext()
+        {
+            IReadOnlyList<GumKeys>? keys = _keys;
+            while (keys != null && ++_index < keys.Count)
+            {
+                if (_keyboard.KeyTyped(keys[_index]))
+                {
+                    Current = keys[_index];
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        public void Reset() => _index = -1;
+
+        public void Dispose()
+        {
+            _inUse = false;
+            _keys = null;
+        }
+    }
 
     /// <inheritdoc/>
     public virtual bool KeyDown(GumKeys key) => _currentDown.Contains(key);

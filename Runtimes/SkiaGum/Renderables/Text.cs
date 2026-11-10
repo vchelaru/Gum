@@ -538,11 +538,9 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
     {
         get
         {
-            var textBlock = new TextBlock();
-            textBlock.AddText("My", GetRawMeasurementStyle());
-            return textBlock.Lines.Count > 0
-                ? (int)MathF.Ceiling(textBlock.Lines[0].Height)
-                : (int)MathF.Ceiling(FontSize);
+            // One probe per distinct font, kept with the font line metrics (#7863): the TextBox asks for this on
+            // every caret and selection update, and it depends only on the font.
+            return GetRawLineHeight(GetRawMeasurementFontKey(), FontSize);
         }
     }
 
@@ -1988,6 +1986,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
     private sealed class FontLineMetricsCache
     {
         public readonly Dictionary<FontLineMetricsKey, FontLineMetrics> Entries = new();
+        public readonly Dictionary<FontLineMetricsKey, int> RawLineHeights = new();
         public int RegistrationVersion;
     }
 
@@ -2015,6 +2014,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
             if (cache.RegistrationVersion != version)
             {
                 cache.Entries.Clear();
+                cache.RawLineHeights.Clear();
                 cache.RegistrationVersion = version;
             }
 
@@ -2030,6 +2030,53 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
             }
             cache.Entries[key] = metrics;
             return metrics;
+        }
+    }
+
+    /// <summary>
+    /// The height of a plain line of the font in <paramref name="key"/>, in whole pixels, as <see cref="LineHeightInPixels"/>
+    /// reports it: a probe of "My" at the default line height, ceiled, or <paramref name="fallbackSize"/> when the
+    /// probe lays out no line. Probed once per font; the entries go with the other font metrics.
+    /// </summary>
+    private static int GetRawLineHeight(FontLineMetricsKey key, float fallbackSize)
+    {
+        FontLineMetricsCache cache = _fontLineMetricsCaches.GetValue(FontMapper.Default, static _ => new FontLineMetricsCache());
+        lock (cache)
+        {
+            int version = Content.Fonts.GumFontMapper.RegistrationVersion;
+            if (cache.RegistrationVersion != version)
+            {
+                cache.Entries.Clear();
+                cache.RawLineHeights.Clear();
+                cache.RegistrationVersion = version;
+            }
+
+            if (cache.RawLineHeights.TryGetValue(key, out int cached))
+            {
+                return cached;
+            }
+
+            var probe = new TextBlock();
+            probe.AddText("My", new Style()
+            {
+                FontFamily = key.Family,
+                FontSize = key.Size,
+                FontWeight = key.Weight,
+                FontItalic = key.Italic,
+            });
+            if (probe.Lines.Count == 0)
+            {
+                // The fallback depends on the Text's FontSize rather than the font, so it is never stored.
+                return (int)MathF.Ceiling(fallbackSize);
+            }
+
+            int height = (int)MathF.Ceiling(probe.Lines[0].Height);
+            if (cache.RawLineHeights.Count >= MaxCachedFontLineMetrics)
+            {
+                cache.RawLineHeights.Clear();
+            }
+            cache.RawLineHeights[key] = height;
+            return height;
         }
     }
 
@@ -2719,17 +2766,16 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
     /// and <see cref="LineHeightInPixels"/> return raw glyph-pixel values that callers (e.g.
     /// <c>TextBoxBase</c>) scale by those factors themselves.
     /// </summary>
-    private Style GetRawMeasurementStyle()
-    {
-        return new Style()
-        {
-            FontFamily = EffectiveFontFamily,
-            FontSize = FontSize * (float)GlobalTextScale,
-            TextColor = this.Color,
-            FontItalic = this.IsItalic,
-            FontWeight = (int)(400 * BoldWeight),
-        };
-    }
+    private FontLineMetricsKey GetRawMeasurementFontKey() =>
+        new FontLineMetricsKey(EffectiveFontFamily, FontSize * (float)GlobalTextScale, (int)(400 * BoldWeight), this.IsItalic);
+
+    // The block and style every MeasureString call lays its text out into, one pair per thread (#7863). Each call
+    // clears the block and sets every style value it uses, so a call never sees an earlier one's text or font, and
+    // no Text holds a block of its own. A text longer than MaxScratchMeasureLength gets a block of its own, so the
+    // shared one never keeps buffers sized for a long text.
+    [ThreadStatic] private static TextBlock? _scratchMeasureBlock;
+    [ThreadStatic] private static Style? _scratchMeasureStyle;
+    private const int MaxScratchMeasureLength = 512;
 
     /// <inheritdoc/>
     public float MeasureString(string text)
@@ -2739,8 +2785,26 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
             return 0;
         }
 
-        var textBlock = new TextBlock();
-        textBlock.AddText(text, GetRawMeasurementStyle());
+        bool useScratch = text.Length <= MaxScratchMeasureLength;
+        FontLineMetricsKey font = GetRawMeasurementFontKey();
+        Style style = useScratch ? (_scratchMeasureStyle ??= new Style()) : new Style();
+        style.FontFamily = font.Family;
+        style.FontSize = font.Size;
+        style.TextColor = this.Color;
+        style.FontItalic = font.Italic;
+        style.FontWeight = font.Weight;
+
+        TextBlock textBlock;
+        if (useScratch)
+        {
+            textBlock = _scratchMeasureBlock ??= new TextBlock();
+            textBlock.Clear();
+        }
+        else
+        {
+            textBlock = new TextBlock();
+        }
+        textBlock.AddText(text, style);
         return textBlock.MeasuredWidth;
     }
 
