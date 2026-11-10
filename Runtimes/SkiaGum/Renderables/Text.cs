@@ -351,7 +351,36 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
             return fullWrapped;
         }
 
-        var revealed = new List<string>();
+        var lengths = new List<int>();
+        FillVisibleLineLengths(lengths);
+        var revealed = new List<string>(lengths.Count);
+        for (int i = 0; i < lengths.Count; i++)
+        {
+            string line = fullWrapped[i];
+            revealed.Add(lengths[i] == line.Length ? line : line.Substring(0, lengths[i]));
+        }
+
+        return revealed;
+    }
+
+    /// <summary>
+    /// How many chars of each wrapped line <see cref="MaxLettersToShow"/> reveals, one entry per revealed line, so the
+    /// reveal can slice the styled runs without building the truncated lines (<see cref="GetVisibleWrappedText"/>
+    /// builds them from the same lengths).
+    /// </summary>
+    private void FillVisibleLineLengths(List<int> lengths)
+    {
+        lengths.Clear();
+        List<string> fullWrapped = WrappedText;
+        if (MaxLettersToShow == null)
+        {
+            foreach (string wrappedLine in fullWrapped)
+            {
+                lengths.Add(wrappedLine.Length);
+            }
+            return;
+        }
+
         int remaining = MaxLettersToShow.Value;
         foreach (var line in fullWrapped)
         {
@@ -362,7 +391,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
 
             if (line.Length <= remaining)
             {
-                revealed.Add(line);
+                lengths.Add(line.Length);
                 remaining -= line.Length;
             }
             else
@@ -372,12 +401,10 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
                 {
                     remaining++;
                 }
-                revealed.Add(line.Substring(0, remaining));
+                lengths.Add(remaining);
                 remaining = 0;
             }
         }
-
-        return revealed;
     }
 
     /// <inheritdoc/>
@@ -1181,11 +1208,14 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
 
     /// <summary>
     /// The tags found in the markup text, with indexes into <see cref="_layoutText"/>. Null when the text has no
-    /// markup. Replaced, never mutated, each time the text is parsed. Read by <c>TextRuntime.GetTagAtIndex</c>.
+    /// markup. Cleared and refilled each time the text is parsed, so read it, do not keep it. Read by <c>TextRuntime.GetTagAtIndex</c>.
     /// </summary>
     internal List<FoundTag>? ParsedBbCodeTags { get; private set; }
     private List<InlineVariable> _inlineVariables = new();
-    private readonly StyledSubstringSplitter _styledSubstringSplitter = new();
+
+    // Reused by every change of the text or the reveal; null until the first one that needs it (#7846).
+    private TextMarkupBuffers? _markupBuffers;
+    private TextMarkupBuffers MarkupBuffers => _markupBuffers ??= new TextMarkupBuffers();
 
     // The subset of BbCodeParser.KnownTags SkiaGum honors. Most map onto a RichTextKit Style override;
     // "custom" (issue #3692) instead produces one single-character InlineVariable per letter, resolved
@@ -1294,16 +1324,24 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
             return BuildTextBlockFromRuns(new List<StyledTextRun> { new StyledTextRun(textToRender ?? string.Empty, GetStyle()) }, forcedWidth);
         }
 
-        List<StyledTextRun> runs = GetStyledRuns();
+        TextMarkupBuffers buffers = MarkupBuffers;
+        List<StyledTextRun> runs = buffers.Runs;
+        FillStyledRuns(runs);
+        TextBlock block;
         if (!FitsRunsPerLine)
         {
-            return BuildTextBlockFromRuns(runs, forcedWidth);
+            block = BuildTextBlockFromRuns(runs, forcedWidth);
+        }
+        else
+        {
+            // The first layout only supplies the line breaks, so it is laid out into a block this Text keeps and
+            // clears for the next change instead of a new one (#7818).
+            _lineBreakLayout = BuildTextBlockFromRuns(runs, forcedWidth, _lineBreakLayout);
+            block = BuildTextBlockFromRuns(FitRunsToLines(runs, _lineBreakLayout, buffers.FittedRuns, buffers.LineRuns), forcedWidth);
         }
 
-        // The first layout only supplies the line breaks, so it is laid out into a block this Text keeps and
-        // clears for the next change instead of a new one (#7818).
-        _lineBreakLayout = BuildTextBlockFromRuns(runs, forcedWidth, _lineBreakLayout);
-        return BuildTextBlockFromRuns(FitRunsToLines(runs, _lineBreakLayout), forcedWidth);
+        buffers.ReleaseBlockRuns();
+        return block;
     }
 
     // The block GetTextBlock lays the runs out into to find the line breaks FitRunsToLines fits to. Never painted.
@@ -1543,7 +1581,10 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
             _cachedPicture = null;
             _cachedPictureBlock = null;
         }
-        _revealBlock = BuildTextBlockFromRuns(GetVisibleStyledRuns(fullBlock), this.Width, _revealBlock);
+        TextMarkupBuffers buffers = MarkupBuffers;
+        FillVisibleStyledRuns(fullBlock, buffers.VisibleRuns, buffers.VisibleSourceRuns, buffers.VisibleFittedRuns);
+        _revealBlock = BuildTextBlockFromRuns(buffers.VisibleRuns, this.Width, _revealBlock);
+        buffers.ReleaseVisibleRuns();
         _revealBlockSource = fullBlock;
         _revealBlockLetters = MaxLettersToShow.Value;
         return _revealBlock;
@@ -1725,28 +1766,38 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
     internal List<StyledTextRun> GetStyledRuns()
     {
         var runs = new List<StyledTextRun>();
+        FillStyledRuns(runs);
+        return runs;
+    }
+
+    /// <summary><see cref="GetStyledRuns"/> into a list the caller owns and reuses, which is cleared first.</summary>
+    internal void FillStyledRuns(List<StyledTextRun> runs)
+    {
+        runs.Clear();
 
         if (!_hasMarkup || string.IsNullOrEmpty(_layoutText))
         {
             runs.Add(new StyledTextRun(_layoutText ?? string.Empty, GetStyle()));
-            return runs;
+            return;
         }
 
-        var substrings = _styledSubstringSplitter.GetStyledSubstrings(0, _layoutText, _inlineVariables);
+        TextMarkupBuffers buffers = MarkupBuffers;
+        List<StyledSubstring> substrings = buffers.Substrings;
+        buffers.Splitter.GetStyledSubstringsReusing(0, _layoutText, _inlineVariables, substrings);
         if (substrings.Count == 0)
         {
             runs.Add(new StyledTextRun(_layoutText, GetStyle()));
-            return runs;
+            return;
         }
 
-        foreach (var substring in substrings)
+        for (int i = 0; i < substrings.Count; i++)
         {
+            StyledSubstring substring = substrings[i];
             var (style, text, letter, isHeightRun) = BuildRunStyle(substring.Substring, substring.Variables);
             runs.Add(new StyledTextRun(text, style, letter, isHeightRun));
         }
 
         AttachLineBreaksToPrecedingRun(runs);
-        return runs;
     }
 
     /// <summary>
@@ -1792,20 +1843,35 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
     /// the cached block when null.</param>
     internal List<StyledTextRun> GetVisibleStyledRuns(TextBlock? fullBlock = null)
     {
-        List<string> visibleLines = GetVisibleWrappedText();
-        List<StyledTextRun> fullRuns = GetStyledRuns();
+        var result = new List<StyledTextRun>();
+        FillVisibleStyledRuns(fullBlock, result, new List<StyledTextRun>(), new List<StyledTextRun>());
+        return result;
+    }
+
+    /// <summary><see cref="GetVisibleStyledRuns"/> into <paramref name="result"/>, which is cleared first, with the two lists the runs
+    /// are built and fit in passed in so a reveal that advances every frame builds no list.</summary>
+    private void FillVisibleStyledRuns(TextBlock? fullBlock, List<StyledTextRun> result, List<StyledTextRun> sourceRuns, List<StyledTextRun> fittedRuns)
+    {
+        TextMarkupBuffers buffers = MarkupBuffers;
+        List<string> fullWrapped = WrappedText;
+        List<int> visibleLengths = buffers.VisibleLineLengths;
+        FillVisibleLineLengths(visibleLengths);
+        FillStyledRuns(sourceRuns);
+        List<StyledTextRun> fullRuns = sourceRuns;
         if (FitsRunsPerLine)
         {
-            fullRuns = FitRunsToLines(fullRuns, fullBlock ?? GetCachedTextBlock());
+            fullRuns = FitRunsToLines(sourceRuns, fullBlock ?? GetCachedTextBlock(), fittedRuns, buffers.LineRuns);
         }
-        var result = new List<StyledTextRun>();
+        result.Clear();
 
         int runIndex = 0;
         int runOffset = 0;
 
-        for (int lineIndex = 0; lineIndex < visibleLines.Count; lineIndex++)
+        for (int lineIndex = 0; lineIndex < visibleLengths.Count; lineIndex++)
         {
-            int remaining = CountCodePoints(visibleLines[lineIndex]);
+            string wrappedLine = fullWrapped[lineIndex];
+            int visibleLength = visibleLengths[lineIndex];
+            int remaining = CountCodePoints(wrappedLine, visibleLength);
             Style? lineStyle = null;
             while (remaining > 0 && runIndex < fullRuns.Count)
             {
@@ -1840,15 +1906,13 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
             }
 
             // A line ending in a hard break already carries its '\n'; a second one would add an empty line (#6484).
-            if (lineIndex < visibleLines.Count - 1 && !visibleLines[lineIndex].EndsWith('\n'))
+            if (lineIndex < visibleLengths.Count - 1 && !(visibleLength > 0 && wrappedLine[visibleLength - 1] == '\n'))
             {
                 // The break sizes the line it ends (see AttachLineBreaksToPrecedingRun), so it takes that line's style.
                 Style breakStyle = lineStyle ?? (runIndex < fullRuns.Count ? fullRuns[runIndex].Style : GetStyle());
                 result.Add(new StyledTextRun("\n", breakStyle));
             }
         }
-
-        return result;
     }
 
     /// <summary>
@@ -2007,10 +2071,14 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
     private static int CodePointLength(string text, int index) =>
         char.IsHighSurrogate(text[index]) && index + 1 < text.Length ? 2 : 1;
 
-    private static int CountCodePoints(string text)
+    private static int CountCodePoints(string text) => CountCodePoints(text, text.Length);
+
+    /// <summary>The code points in the first <paramref name="length"/> chars of <paramref name="text"/>, counted as the whole
+    /// text would count them (a high surrogate at the end of the prefix takes the char after it).</summary>
+    private static int CountCodePoints(string text, int length)
     {
         int count = 0;
-        for (int i = 0; i < text.Length; i += CodePointLength(text, i))
+        for (int i = 0; i < length; i += CodePointLength(text, i))
         {
             count++;
         }
@@ -2026,7 +2094,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
     /// fits each line: its tallest font is set to the line's height, and every other run on the line is lowered
     /// until it reaches no higher and no lower than that one.
     /// </summary>
-    private List<StyledTextRun> FitRunsToLines(List<StyledTextRun> runs, TextBlock layout)
+    private List<StyledTextRun> FitRunsToLines(List<StyledTextRun> runs, TextBlock layout, List<StyledTextRun> result, List<StyledTextRun> lineRuns)
     {
         IReadOnlyList<TextLine> lines = layout.Lines;
         if (lines.Count < 1)
@@ -2040,8 +2108,8 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
             return runs;
         }
 
-        var result = new List<StyledTextRun>(runs.Count + lines.Count);
-        var lineRuns = new List<StyledTextRun>();
+        result.Clear();
+        lineRuns.Clear();
         int lineIndex = 0;
         int lineEnd = lines[0].Start + lines[0].Length;
         int position = 0;
@@ -2330,17 +2398,21 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
         // mirroring the MonoGame/Raylib SetBbCodeText path. Parsing and stripping from the same
         // normalized string keeps InlineVariable indexes aligned with the layout text.
         var normalized = withGlyphs.Replace("\r\n", "\n");
-        var tags = BbCodeParser.Parse(normalized, SupportedTags);
+        TextMarkupBuffers buffers = MarkupBuffers;
+        List<FoundTag> tags = buffers.Tags;
+        BbCodeParser.Parse(normalized, SupportedTags, tags, buffers.ActiveTags);
         ParsedBbCodeTags = tags;
         if (tags.Count == 0)
         {
             _hasMarkup = false;
             _layoutText = BlankControlCharacters(normalized);
+            buffers.ReleaseParse();
             return;
         }
 
         _hasMarkup = true;
-        _layoutText = BlankControlCharacters(BbCodeParser.RemoveTags(normalized, tags));
+        _layoutText = BlankControlCharacters(BbCodeParser.RemoveTags(normalized, tags, ref buffers.SortScratch, buffers.Builder));
+        buffers.ReleaseParse();
         BuildInlineVariables(tags);
         foreach (InlineVariable variable in _inlineVariables)
         {
@@ -2364,8 +2436,11 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
             var argument = tag.Open.Argument;
             string variableName;
             object? value;
+            InlineVariable slot = MarkupBuffers.GetInlineVariable(_inlineVariables.Count);
+            object? existing = slot.Value;
 
-            switch (tag.Name.ToLowerInvariant())
+            // Every tag that was parsed is in SupportedTags, which holds the lower-case names.
+            switch (SupportedTags.TryGetValue(tag.Name, out string? lowerCaseName) ? lowerCaseName : tag.Name.ToLowerInvariant())
             {
                 case "font":
                     variableName = "Font";
@@ -2375,45 +2450,46 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
                     break;
                 case "color":
                     variableName = "Color";
-                    value = ParseColor(argument);
+                    System.Drawing.Color? parsedColor = ParseColor(argument);
+                    value = parsedColor.HasValue ? Box(existing, parsedColor.Value) : null;
                     break;
                 case "red":
                     variableName = "Red";
-                    value = byte.TryParse(argument, out var red) ? red : (byte?)null;
+                    value = byte.TryParse(argument, out var red) ? Box(existing, red) : null;
                     break;
                 case "green":
                     variableName = "Green";
-                    value = byte.TryParse(argument, out var green) ? green : (byte?)null;
+                    value = byte.TryParse(argument, out var green) ? Box(existing, green) : null;
                     break;
                 case "blue":
                     variableName = "Blue";
-                    value = byte.TryParse(argument, out var blue) ? blue : (byte?)null;
+                    value = byte.TryParse(argument, out var blue) ? Box(existing, blue) : null;
                     break;
                 case "fontsize":
                     variableName = "FontSize";
                     value = float.TryParse(argument, NumberStyles.Float, CultureInfo.InvariantCulture, out var size)
-                        ? size
-                        : (float?)null;
+                        ? Box(existing, size)
+                        : null;
                     break;
                 case "fontscale":
                     variableName = "FontScale";
                     value = float.TryParse(argument, NumberStyles.Float, CultureInfo.InvariantCulture, out var scale)
-                        ? scale
-                        : (float?)null;
+                        ? Box(existing, scale)
+                        : null;
                     break;
                 case "isbold":
                     variableName = "IsBold";
-                    value = bool.TryParse(argument, out var bold) ? bold : (bool?)null;
+                    value = bool.TryParse(argument, out var bold) ? Box(existing, bold) : null;
                     break;
                 case "isitalic":
                     variableName = "IsItalic";
-                    value = bool.TryParse(argument, out var italic) ? italic : (bool?)null;
+                    value = bool.TryParse(argument, out var italic) ? Box(existing, italic) : null;
                     break;
                 case "outlinethickness":
                     variableName = "OutlineThickness";
                     value = int.TryParse(argument, NumberStyles.Integer, CultureInfo.InvariantCulture, out var outlineThickness)
-                        ? outlineThickness
-                        : (int?)null;
+                        ? Box(existing, outlineThickness)
+                        : null;
                     break;
                 case "custom":
                     // A [Custom=Name] callback applies per letter (issue #3692), so -- unlike every other
@@ -2435,18 +2511,17 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
                                 letterLength = char.IsHighSurrogate(taggedSubstring[i])
                                     && i + 1 < taggedSubstring.Length
                                     && char.IsLowSurrogate(taggedSubstring[i + 1]) ? 2 : 1;
-                                _inlineVariables.Add(new InlineVariable
+                                InlineVariable letterVariable = MarkupBuffers.GetInlineVariable(_inlineVariables.Count);
+                                letterVariable.VariableName = "Custom";
+                                letterVariable.StartIndex = startStripped + i;
+                                letterVariable.CharacterCount = letterLength;
+                                letterVariable.Value = new ParameterizedLetterCustomizationCall
                                 {
-                                    VariableName = "Custom",
-                                    StartIndex = startStripped + i,
-                                    CharacterCount = letterLength,
-                                    Value = new ParameterizedLetterCustomizationCall
-                                    {
-                                        FunctionName = argument,
-                                        CharacterIndex = startStripped + i,
-                                        TextBlock = taggedSubstring,
-                                    },
-                                });
+                                    FunctionName = argument,
+                                    CharacterIndex = startStripped + i,
+                                    TextBlock = taggedSubstring,
+                                };
+                                _inlineVariables.Add(letterVariable);
                             }
                         }
                     }
@@ -2460,15 +2535,20 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
                 continue;
             }
 
-            _inlineVariables.Add(new InlineVariable
-            {
-                VariableName = variableName,
-                StartIndex = tag.Open.StartStrippedIndex,
-                CharacterCount = tag.Close.StartStrippedIndex - tag.Open.StartStrippedIndex,
-                Value = value,
-            });
+            slot.VariableName = variableName;
+            slot.StartIndex = tag.Open.StartStrippedIndex;
+            slot.CharacterCount = tag.Close.StartStrippedIndex - tag.Open.StartStrippedIndex;
+            slot.Value = value;
+            _inlineVariables.Add(slot);
         }
     }
+
+    /// <summary>
+    /// <paramref name="value"/> as an object, which is <paramref name="existing"/> itself when it already boxes an equal value,
+    /// so a variable parsed again with the same value (a tag whose text did not change) boxes nothing.
+    /// </summary>
+    private static object Box<T>(object? existing, T value) where T : struct =>
+        existing is T current && EqualityComparer<T>.Default.Equals(current, value) ? existing : value;
 
     /// <summary>
     /// Parses a <c>[Color=..]</c> argument, honoring both a hex form (<c>0xAARRGGBB</c>) and a named
@@ -2695,7 +2775,24 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
         newInstance._hasActiveRenderPaint = false;
         // MemberwiseClone shares the list reference; give the clone its own copy so re-parsing markup
         // on one instance (via RawText) doesn't mutate the other's inline-styling runs (issue #3679).
-        newInstance._inlineVariables = new List<InlineVariable>(_inlineVariables);
+        // The variables themselves are reused by the next parse of the source, so the clone gets copies, with
+        // its own buffers and its own list of tags.
+        newInstance._markupBuffers = null;
+        newInstance._inlineVariables = new List<InlineVariable>(_inlineVariables.Count);
+        foreach (InlineVariable variable in _inlineVariables)
+        {
+            newInstance._inlineVariables.Add(new InlineVariable
+            {
+                VariableName = variable.VariableName,
+                StartIndex = variable.StartIndex,
+                CharacterCount = variable.CharacterCount,
+                Value = variable.Value,
+            });
+        }
+        if (ParsedBbCodeTags != null)
+        {
+            newInstance.ParsedBbCodeTags = new List<FoundTag>(ParsedBbCodeTags);
+        }
         // A Dictionary is not safe to share between Texts that may be built on different threads.
         newInstance._styleCache = new Dictionary<StyleKey, Style>();
 

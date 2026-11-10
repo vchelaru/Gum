@@ -124,7 +124,7 @@ public static class BbCodeParser
         "link",
     };
 
-    private struct Tag
+    internal struct Tag
     {
         public bool IsOpening;
         public int StartIndex;
@@ -253,13 +253,31 @@ public static class BbCodeParser
     public static List<FoundTag> Parse(string text, HashSet<string> availableTags)
     {
         var results = new List<FoundTag>();
+        Parse(text, availableTags, results, null);
+        return results;
+    }
+
+    /// <summary>
+    /// <see cref="Parse(string, HashSet{string})"/> into a list the caller keeps and clears for the next text, with
+    /// the stack of open tags passed in too, so a text parsed on every change allocates neither list (#7846).
+    /// </summary>
+    internal static void Parse(string text, HashSet<string> availableTags, List<FoundTag> results, List<Tag>? activeTags)
+    {
+        results.Clear();
         if (availableTags.Count == 0 || string.IsNullOrWhiteSpace(text))
         {
-            return results;
+            return;
         }
 
         var index = 0;
-        var activeTags = new List<Tag>();
+        if (activeTags == null)
+        {
+            activeTags = new List<Tag>();
+        }
+        else
+        {
+            activeTags.Clear();
+        }
 
         while (index < text.Length)
         {
@@ -349,8 +367,6 @@ public static class BbCodeParser
             }
             results[j + 1] = found;
         }
-
-        return results;
     }
 
     private static int CountMatchedTagLettersBefore(List<FoundTag> matchedTags, int index)
@@ -506,9 +522,22 @@ public static class BbCodeParser
 
     public static string RemoveTags(string text, List<FoundTag> tags)
     {
+        TagInfo[]? sortScratch = null;
+        return RemoveTags(text, tags, ref sortScratch, null);
+    }
+
+    /// <summary>
+    /// <see cref="RemoveTags(string, List{FoundTag})"/> with the sort array and the string builder passed in, so a text
+    /// parsed on every change allocates only the resulting string (#7846). <paramref name="sortScratch"/> is replaced
+    /// when it is too small; <paramref name="builder"/> is cleared and refilled.
+    /// </summary>
+    internal static string RemoveTags(string text, List<FoundTag> tags, ref TagInfo[]? sortScratch, StringBuilder? builder)
+    {
         // Sorted stably by stripped index, the order OrderBy gave, without its per-call buffers (#7818).
-        var sorted = new TagInfo[tags.Count * 2];
-        for (int i = 0; i < sorted.Length; i++)
+        int sortedCount = tags.Count * 2;
+        TagInfo[] sorted = sortScratch != null && sortScratch.Length >= sortedCount ? sortScratch : new TagInfo[sortedCount];
+        sortScratch = sorted;
+        for (int i = 0; i < sortedCount; i++)
         {
             TagInfo tag = i % 2 == 0 ? tags[i / 2].Open : tags[i / 2].Close;
             int j = i - 1;
@@ -520,11 +549,21 @@ public static class BbCodeParser
             sorted[j + 1] = tag;
         }
 
-        var stringBuilder = new StringBuilder(text);
-
-        foreach (var tag in sorted)
+        StringBuilder stringBuilder;
+        if (builder == null)
         {
-            stringBuilder.Remove(tag.StartStrippedIndex, tag.Count);
+            stringBuilder = new StringBuilder(text);
+        }
+        else
+        {
+            stringBuilder = builder;
+            stringBuilder.Clear();
+            stringBuilder.Append(text);
+        }
+
+        for (int i = 0; i < sortedCount; i++)
+        {
+            stringBuilder.Remove(sorted[i].StartStrippedIndex, sorted[i].Count);
         }
 
         return stringBuilder.ToString();
