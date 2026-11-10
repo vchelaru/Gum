@@ -6,6 +6,7 @@ using Gum.Expressions;
 using Gum.Managers;
 using Gum.ProjectServices;
 using Gum.Wireframe;
+using GumRuntime;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -419,6 +420,20 @@ public static class BehaviorToolOnlyReferencesApplier
         }
     }
 
+    /// <summary>SPIKE #6408: true when a behavior line of any instance in <paramref name="element"/> matches <paramref name="pattern"/>.</summary>
+    public static bool AnyInstanceLineMatches(ElementSave element, System.Text.RegularExpressions.Regex pattern)
+    {
+        foreach (InstanceSave instance in element.Instances)
+        {
+            if (ObjectFinder.Self.GetElementSave(instance.BaseType) is ComponentSave component &&
+                GetReferenceLines(component).Any(line => pattern.IsMatch(line.Right)))
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
     /// <summary>The (unqualified) variables the active reference lines of <paramref name="behavior"/> write.</summary>
     public static ISet<string> GetDrivenVariableNames(BehaviorSave behavior) =>
         new HashSet<string>(GetReferenceLines(behavior).Select(line => line.Left));
@@ -506,6 +521,14 @@ public static class BehaviorToolOnlyReferencesApplier
     {
         if (instance != null)
         {
+            // SPIKE #6408: FindAncestor<BehaviorName>() -> name of the nearest ancestor instance with that behavior.
+            string? withAncestors = ResolveFindAncestor(right, instance, stateSave);
+            if (withAncestors == null)
+            {
+                return null;
+            }
+            right = ElementSaveExtensions.ResolveOwnerPrefix(
+                withAncestors, instance.Name, ElementSaveExtensions.GetReferencableInstanceNames(instance.ParentContainer));
             right = QualifyBareIdentifiersWithInstance(right, instance.Name);
         }
 
@@ -534,6 +557,95 @@ public static class BehaviorToolOnlyReferencesApplier
         }
 
         return new EvaluatedLine { EffectiveLeft = effectiveLeft, Value = evaluated.Value!, IsResting = isResting };
+    }
+
+    // Group 1: a string literal (left untouched). Group 2: the behavior name of a FindAncestor<Name>() call, with
+    // or without the owner prefix. A behavior name must be an identifier; anything else never matches, so the
+    // line is left as written and evaluates to nothing.
+    private static readonly System.Text.RegularExpressions.Regex FindAncestorCall =
+        new System.Text.RegularExpressions.Regex(@"(""(?:[^""\\]|\\.)*"")|@?FindAncestor\s*<\s*(\w+)\s*>\s*\(\s*\)");
+
+    /// <summary>
+    /// SPIKE #6408. Replaces each <c>FindAncestor&lt;Behavior&gt;()</c> with the name of the nearest ancestor
+    /// instance (walking <c>Parent</c> strings) whose component, or a base component, has that behavior.
+    /// Null when any call finds no ancestor.
+    /// </summary>
+    private static string? ResolveFindAncestor(string right, InstanceSave instance, StateSave stateSave)
+    {
+        if (!FindAncestorCall.IsMatch(right))
+        {
+            return right;
+        }
+
+        bool allFound = true;
+        string result = FindAncestorCall.Replace(right, match =>
+        {
+            if (match.Groups[1].Success)
+            {
+                return match.Value; // a string literal
+            }
+
+            string? name = FindAncestorWithBehavior(instance, stateSave, match.Groups[2].Value);
+            if (name == null)
+            {
+                allFound = false;
+                return match.Value;
+            }
+            return name;
+        });
+        return allFound ? result : null;
+    }
+
+    private static string? FindAncestorWithBehavior(InstanceSave instance, StateSave stateSave, string behaviorName)
+    {
+        ElementSave? container = instance.ParentContainer ?? stateSave.ParentContainer;
+        if (container == null)
+        {
+            return null;
+        }
+
+        RecursiveVariableFinder finder = new RecursiveVariableFinder(stateSave);
+        InstanceSave current = instance;
+        HashSet<string> visited = new HashSet<string>();
+        while (visited.Add(current.Name))
+        {
+            string? parent = finder.GetValue(current.Name + ".Parent") as string;
+            if (string.IsNullOrEmpty(parent))
+            {
+                return null;
+            }
+
+            // "TabControl1.TabStripInstance": the first segment is the instance in this element.
+            string ownerName = parent.Contains('.') ? parent.Substring(0, parent.IndexOf('.')) : parent;
+            // The owner may be declared by a base element of the container (a derived component or screen).
+            InstanceSave? owner = null;
+            foreach (ElementSave element in ObjectFinder.Self.GetBaseElements(container).Prepend(container))
+            {
+                owner = element.Instances.FirstOrDefault(item => item.Name == ownerName);
+                if (owner != null)
+                {
+                    break;
+                }
+            }
+            if (owner == null)
+            {
+                return null;
+            }
+
+            ElementSave? ownerElement = ObjectFinder.Self.GetElementSave(owner.BaseType);
+            if (ownerElement != null)
+            {
+                List<ElementSave> chain = new List<ElementSave>(ObjectFinder.Self.GetBaseElements(ownerElement)) { ownerElement };
+                if (chain.Any(item => item.Behaviors.Any(reference => reference.BehaviorName == behaviorName)))
+                {
+                    return owner.Name;
+                }
+            }
+
+            current = owner;
+        }
+
+        return null;
     }
 
     private static string? ResolveLeftSideType(string qualifiedLeftName, InstanceSave? instance, StateSave stateSave)
@@ -570,8 +682,21 @@ public static class BehaviorToolOnlyReferencesApplier
     {
         string? instancePrefix = instance != null ? instance.Name + "." : null;
         StateSave? componentDefaultState = instance != null ? component.DefaultState : null;
+        ElementSave? container = instance?.ParentContainer;
         return name =>
         {
+            // SPIKE #6408: "OtherInstance.Prop" - the declared default of ANOTHER instance's Forms property.
+            if (container != null && instancePrefix != null && !name.StartsWith(instancePrefix) && name.Contains('.'))
+            {
+                string otherName = name.Substring(0, name.IndexOf('.'));
+                string otherProp = name.Substring(name.IndexOf('.') + 1);
+                InstanceSave? other = container.Instances.FirstOrDefault(item => item.Name == otherName);
+                if (ObjectFinder.Self.GetElementSave(other?.BaseType) is ComponentSave otherComponent)
+                {
+                    return BuildFormsPropertyDefaultsFallback(otherComponent, other)(otherName + "." + otherProp);
+                }
+            }
+
             string lookupName = instancePrefix != null && name.StartsWith(instancePrefix)
                 ? name.Substring(instancePrefix.Length)
                 : name;
