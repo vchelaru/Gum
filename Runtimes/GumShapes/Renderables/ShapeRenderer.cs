@@ -355,8 +355,13 @@ public class ShapeRenderer
         // From Apos.Shapes 0.10.0 the constructor's warmup leaves out ellipses, paths (SVG strokes),
         // clips (SVG clip-path) and ramps, which 0.9.4's covered, so name them (#7808). Draws that
         // need less reuse this compiled version.
+#if APOS_MONOGAME
         _sb = new ShapeBatch(graphicsDevice, (Effect?)null, warmup: false);
         _sb.Warmup(ShapeFeatures.EllipsesAndPaths | ShapeFeatures.Clips | ShapeFeatures.Ramps);
+#else
+        // Discriminator for the macOS publish smoke-test hang (#7842): KNI back on the plain constructor.
+        _sb = new ShapeBatch(graphicsDevice, (Effect?)null);
+#endif
         // Issue #7307: Apos.Shapes interpolates gradients in Oklab by default, which brightens the
         // mid-tones and mixes premultiplied alpha. Skia and raylib interpolate the straight sRGB channels.
         _sb.ColorSpace = ColorSpace.Rgb;
