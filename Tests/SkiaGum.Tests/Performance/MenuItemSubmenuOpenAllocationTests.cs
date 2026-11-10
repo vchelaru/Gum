@@ -1,4 +1,3 @@
-using System.Diagnostics.Tracing;
 using Gum;
 using Gum.Forms;
 using Gum.Forms.Controls;
@@ -17,6 +16,9 @@ namespace SkiaGum.Tests.Performance;
 /// </summary>
 public class MenuItemSubmenuOpenAllocationTests : BaseTestClass
 {
+    // Open + frame + close + frame. Rebuilding the popup each open cost 274 KB (supplied rows) and 454 KB (generated rows).
+    private const int CycleLimitBytes = 30000;
+
     private readonly ITestOutputHelper _output;
     private readonly SkiaSceneHost _host = new SkiaSceneHost();
     private readonly FrameCursor _cursor = new FrameCursor();
@@ -113,85 +115,7 @@ public class MenuItemSubmenuOpenAllocationTests : BaseTestClass
 
         everOpen.ShouldBeTrue();
         file.IsPopupVisible.ShouldBeFalse();
-    }
-
-    // Temporary: GC AllocationTick type histogram of the same cycle, written to a file.
-    [Theory]
-    [InlineData(false)]
-    [InlineData(true)]
-    public void Probe_AllocationTickHistogram(bool generatedRows)
-    {
-        MenuItem file = CreateMenu(generatedRows);
-        for (int i = 0; i < 20; i++)
-        {
-            file.IsSelected = true;
-            RunFrame();
-            file.IsSelected = false;
-            RunFrame();
-        }
-
-        using TickListener listener = new TickListener();
-        Thread.Sleep(300);
-        long start = GC.GetAllocatedBytesForCurrentThread();
-        for (int i = 0; i < 300; i++)
-        {
-            file.IsSelected = true;
-            RunFrame();
-            file.IsSelected = false;
-            RunFrame();
-        }
-        long total = GC.GetAllocatedBytesForCurrentThread() - start;
-        Thread.Sleep(1500);
-
-        string path = "/private/tmp/claude-504/-Users-vicpersonal-Documents-GitHub-Gum/8607e98d-9464-4c63-8b85-6abfc0ac2a58/scratchpad/7864-ticks-" +
-            (generatedRows ? "generated" : "supplied") + ".txt";
-        File.WriteAllText(path, $"total bytes/cycle {total / 300}\n" + listener.Report());
-    }
-
-    private sealed class TickListener : EventListener
-    {
-        private readonly Dictionary<string, long> _bytes = new();
-        private readonly object _lock = new();
-
-        protected override void OnEventSourceCreated(EventSource source)
-        {
-            if (source.Name == "Microsoft-Windows-DotNETRuntime")
-            {
-                EnableEvents(source, EventLevel.Verbose, (EventKeywords)0x1);
-            }
-        }
-
-        protected override void OnEventWritten(EventWrittenEventArgs e)
-        {
-            if (e.EventName == null || !e.EventName.StartsWith("GCAllocationTick"))
-            {
-                return;
-            }
-            string? type = null;
-            long amount = 0;
-            for (int i = 0; i < e.PayloadNames!.Count; i++)
-            {
-                if (e.PayloadNames[i] == "TypeName")
-                {
-                    type = e.Payload![i] as string;
-                }
-                else if (e.PayloadNames[i] == "AllocationAmount64")
-                {
-                    amount = Convert.ToInt64(e.Payload![i]);
-                }
-            }
-            lock (_lock)
-            {
-                _bytes[type ?? "?"] = _bytes.GetValueOrDefault(type ?? "?") + amount;
-            }
-        }
-
-        public string Report()
-        {
-            lock (_lock)
-            {
-                return string.Join("\n", _bytes.OrderByDescending(p => p.Value).Take(40).Select(p => $"{p.Value,12:N0}  {p.Key}"));
-            }
-        }
+        // The submenu opened and closed every cycle; reusing its popup and rows leaves only state changes to allocate.
+        result.BytesPerIteration.ShouldBeLessThanOrEqualTo(CycleLimitBytes);
     }
 }
