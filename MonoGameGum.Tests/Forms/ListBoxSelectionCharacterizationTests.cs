@@ -88,7 +88,7 @@ public class ListBoxSelectionCharacterizationTests : BaseTestClass
     }
 
     [Fact]
-    public void Binding_SelectedIndex_SetInCodeAndInsertBeforeSelection_DoNotPush()
+    public void Binding_SelectedIndex_SetInCodeAndInsertBeforeSelection_Push()
     {
         ListBox listBox = CreateListBox("A", "B", "C");
         SelectionViewModel viewModel = new();
@@ -98,10 +98,9 @@ public class ListBoxSelectionCharacterizationTests : BaseTestClass
 
         listBox.Items!.Insert(0, "Z");
 
-        // Pins today's behavior: neither the SelectedIndex setter nor an Insert pushes SelectedIndex
-        // to the view model. Only a row's IsSelected change and removals push it.
+        // Both the SelectedIndex setter and the Insert that shifts the selection push it (#7849).
         listBox.SelectedIndex.ShouldBe(2);
-        viewModel.SelectedIndex.ShouldBe(0);
+        viewModel.SelectedIndex.ShouldBe(2);
     }
 
     #endregion

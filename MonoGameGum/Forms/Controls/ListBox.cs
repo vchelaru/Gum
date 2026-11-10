@@ -320,8 +320,6 @@ public class ListBox : ItemsControl, IInputReceiver
             // same as GetListBoxItemForData's other callers. This still guarantees only ONE row
             // ends up selected, never every row sharing the value (issue #3509).
             SelectSingleRowAndScrollIntoView(value != null ? GetListBoxItemForData(value) : null);
-
-            PushValueToViewModel();
         }
     }
 
@@ -358,7 +356,7 @@ public class ListBox : ItemsControl, IInputReceiver
     /// <summary>
     /// Makes <paramref name="row"/> the only selected row (or clears the selection when null) and
     /// scrolls it into view, queuing the scroll if the list box is not visible. Shared by the
-    /// SelectedIndex and SelectedObject setters so both scroll identically.
+    /// SelectedIndex and SelectedObject setters so both scroll and push to the view model identically.
     /// </summary>
     private void SelectSingleRowAndScrollIntoView(ListBoxItem? row)
     {
@@ -380,6 +378,29 @@ public class ListBox : ItemsControl, IInputReceiver
         else
         {
             _pendingScrollRow = null;
+        }
+
+        PushValueToViewModel(nameof(SelectedObject));
+        PushSelectedIndexIfChanged();
+    }
+
+    // The SelectedIndex last reported through PropertyChanged. SelectedIndex has no backing field: it
+    // follows the selected row's position, which Items edits (Insert, Remove, Move) shift without any
+    // selection change, so every path that can move it compares against this instead (#7849).
+    int _lastPushedSelectedIndex = -1;
+
+    /// <summary>
+    /// Raises PropertyChanged for SelectedIndex when its value differs from the last one raised, so a
+    /// binding sees every change exactly once, whatever caused it.
+    /// </summary>
+    private void PushSelectedIndexIfChanged()
+    {
+        int selectedIndex = SelectedIndex;
+        if (selectedIndex != _lastPushedSelectedIndex)
+        {
+            // Assigned before raising, so a handler that changes the selection again pushes its own value.
+            _lastPushedSelectedIndex = selectedIndex;
+            PushValueToViewModel(nameof(SelectedIndex));
         }
     }
 
@@ -635,7 +656,7 @@ public class ListBox : ItemsControl, IInputReceiver
         }
 
         PushValueToViewModel(nameof(SelectedObject));
-        PushValueToViewModel(nameof(SelectedIndex));
+        PushSelectedIndexIfChanged();
     }
 
 
@@ -922,7 +943,7 @@ public class ListBox : ItemsControl, IInputReceiver
         }
 
         PushValueToViewModel(nameof(SelectedObject));
-        PushValueToViewModel(nameof(SelectedIndex));
+        PushSelectedIndexIfChanged();
     }
 
     private void HandleItemFocused(object? sender, EventArgs e)
@@ -1335,7 +1356,7 @@ public class ListBox : ItemsControl, IInputReceiver
         {
             SelectionChanged?.Invoke(this, selectionChangedArgs);
             PushValueToViewModel(nameof(SelectedObject));
-            PushValueToViewModel(nameof(SelectedIndex));
+            PushSelectedIndexIfChanged();
         }
     }
 
@@ -1373,7 +1394,6 @@ public class ListBox : ItemsControl, IInputReceiver
             RebuildSelectedItemsCollectionFromRows();
 
             PushValueToViewModel(nameof(SelectedObject));
-            PushValueToViewModel(nameof(SelectedIndex));
         }
         else if (e.Action == NotifyCollectionChangedAction.Reset)
         {
@@ -1391,8 +1411,11 @@ public class ListBox : ItemsControl, IInputReceiver
             }
 
             PushValueToViewModel(nameof(SelectedObject));
-            PushValueToViewModel(nameof(SelectedIndex));
         }
+
+        // Any Items edit can move the selected row (an Insert or Move above it shifts it without a
+        // selection change), so check SelectedIndex after every action (#7849).
+        PushSelectedIndexIfChanged();
     }
 
     protected override void HandleCollectionItemMoved(int oldIndex, int newIndex)
@@ -1520,7 +1543,7 @@ public class ListBox : ItemsControl, IInputReceiver
         SelectionChanged?.Invoke(this, args);
 
         PushValueToViewModel(nameof(SelectedObject));
-        PushValueToViewModel(nameof(SelectedIndex));
+        PushSelectedIndexIfChanged();
     }
 
     protected override void HandleCollectionReset()
