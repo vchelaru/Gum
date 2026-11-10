@@ -696,6 +696,19 @@ public class DialogBoxTests : BaseTestClass
     }
 
     [Fact]
+    public void Show_WhenVisualWasAddedToManagersOnCustomLayerFirst_ShouldDrawDialogTextOnce()
+    {
+        List<IRenderableIpso> registered = RecordLayerRegistrations();
+        var (dialogBox, visual) = CreateDialogBox();
+        visual.AddToManagers(SystemManagers.Default, new Layer());
+
+        dialogBox.Show("hello");
+
+        // The visual's renderable is on the user's layer; Show must not also draw it through Root.
+        CountDrawsOfDialogText(registered, visual).ShouldBe(1);
+    }
+
+    [Fact]
     public void Show_TwoDialogsInSameManagedContainer_ShouldRegisterNeitherAsTopLevel()
     {
         List<IRenderableIpso> registered = RecordLayerRegistrations();
