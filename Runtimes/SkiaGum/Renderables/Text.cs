@@ -1313,6 +1313,8 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
     /// and the <see cref="MaxLettersToShow"/> reveal path (<see cref="GetPaintTextBlock"/>) so both honor
     /// per-run BBCode styling (issue #3679) and the <c>[Custom]</c> glyph-offset callback (issue #3692).
     /// </summary>
+    /// <param name="runs">The styled runs, one <c>AddText</c> each.</param>
+    /// <param name="forcedWidth">The wrap width. When null, this Text's <see cref="Width"/> is used.</param>
     /// <param name="reuse">A block to clear and lay out into instead of a new one. RichTextKit keeps its buffers
     /// across <c>Clear</c>, so a block rebuilt every change allocates far less than a new block.</param>
     private TextBlock BuildTextBlockFromRuns(List<StyledTextRun> runs, float? forcedWidth, TextBlock? reuse = null)
