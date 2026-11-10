@@ -42,6 +42,12 @@ public class DialogPageTask
     public string? Page { get; set; }
     public Func<Task>? Task { get; set; }
 
+    /// <summary>
+    /// True for a page piece already translated and split when Show was called, which is shown as-is.
+    /// False for a key or literal that is translated when the page is shown.
+    /// </summary>
+    internal bool IsTranslated { get; set; }
+
     public static implicit operator DialogPageTask(string page) => 
         new DialogPageTask { Page = page };
 
@@ -222,10 +228,7 @@ public class DialogBox : FrameworkElement, IInputReceiver
             {
                 // Each entry is a caller-supplied page break, but if the entry
                 // itself overflows the visual's height it gets split further.
-                foreach (var split in ConvertToPages(page))
-                {
-                    this.Pages.Add(split);
-                }
+                AddPages(page);
             }
 
             ShowNextPage();
@@ -288,10 +291,7 @@ public class DialogBox : FrameworkElement, IInputReceiver
         {
             foreach (var page in pages)
             {
-                foreach (var split in ConvertToPages(page))
-                {
-                    this.Pages.Add(split);
-                }
+                AddPages(page);
             }
             await StartShowAllPagesLoop();
         }
@@ -376,9 +376,51 @@ public class DialogBox : FrameworkElement, IInputReceiver
 
         if(page != null)
         {
-            ShowInternal(page.Page ?? string.Empty, forceImmediatePrint);
+            ShowInternal(page.Page ?? string.Empty, forceImmediatePrint, page.IsTranslated);
             Pages.RemoveAt(0);
         }
+    }
+
+    // Splits one entry into the pages that fit the text box and queues them. The split measures the
+    // translated text, since a key is short and its translation is what has to fit.
+    private void AddPages(string page)
+    {
+        string translated = TranslateForPagination(page);
+        string[] pieces = ConvertToPages(translated);
+
+        if (pieces.Length == 1)
+        {
+            // It fits: keep the original so it is translated when shown and follows a language change.
+            Pages.Add(new DialogPageTask { Page = page });
+        }
+        else
+        {
+            // The pieces are slices of one language's translation, so they are shown as-is: looked up
+            // again they would be missing keys ("(loc)" suffix) and could not follow a language change.
+            foreach (var piece in pieces)
+            {
+                Pages.Add(new DialogPageTask { Page = piece, IsTranslated = true });
+            }
+        }
+    }
+
+    // Mirrors the Text assignment: a value containing markup is used as-is, otherwise it is translated.
+    private static string TranslateForPagination(string text)
+    {
+        var localizationService = global::Gum.Localization.LocalizationRuntimeState.Current;
+        if (localizationService == null || text.Contains("["))
+        {
+            return text;
+        }
+        return localizationService.Translate(text);
+    }
+
+    // Stops the typewriter so a later Activity tick cannot finish a page that is no longer showing.
+    private void StopTyping()
+    {
+#if !FRB
+        isTyping = false;
+#endif
     }
 
     bool wasLastAdvancePressPrintImmediate = false;
@@ -393,6 +435,7 @@ public class DialogBox : FrameworkElement, IInputReceiver
             Pages.RemoveAt(0);
             if(page.Task != null)
             {
+                StopTyping();
                 this.IsVisible = false;
                 this.IsFocused = false;
                 await page.Task();
@@ -426,7 +469,7 @@ public class DialogBox : FrameworkElement, IInputReceiver
                 this.PageAdvanced += ReleaseSemaphor;
 
                 semaphoreSlim.Wait();
-                ShowInternal(page.Page ?? string.Empty, forceImmediatePrint: wasLastAdvancePressPrintImmediate);
+                ShowInternal(page.Page ?? string.Empty, forceImmediatePrint: wasLastAdvancePressPrintImmediate, isTranslated: page.IsTranslated);
 
                 await semaphoreSlim.WaitAsync();
                 semaphoreSlim.Dispose();
@@ -437,7 +480,7 @@ public class DialogBox : FrameworkElement, IInputReceiver
         }
     }
 
-    private void ShowInternal(string text, bool forceImmediatePrint)
+    private void ShowInternal(string text, bool forceImmediatePrint, bool isTranslated)
     {
         // Every show path ends here, so Glyph tags become their character before letters are counted.
         text = BbCodeParser.ReplaceGlyphTags(text);
@@ -452,8 +495,7 @@ public class DialogBox : FrameworkElement, IInputReceiver
         isTyping = false;
 #endif
         // go through the component instead of the core text object to force a layout refresh if necessary
-        TextComponent.SetProperty("Text", text);
-
+        TextComponent.SetProperty(isTranslated ? "TextNoTranslate" : "Text", text);
 
         // The component translated the text and stripped its tags, so count what it holds rather than
         // the untranslated input: a translation can be longer or shorter than the key.
@@ -574,7 +616,8 @@ public class DialogBox : FrameworkElement, IInputReceiver
 
             this.TextComponent.TextOverflowVerticalMode = oldVerticalMode;
 
-            this.TextComponent.SetProperty("Text", withRemovedTags);
+            // The text is already translated, so it must not be looked up again.
+            this.TextComponent.SetProperty("TextNoTranslate", withRemovedTags);
             this.TextComponent.TextOverflowVerticalMode = oldVerticalMode;
 
             var limitedLines = CoreTextObject.WrappedText;
@@ -686,6 +729,9 @@ public class DialogBox : FrameworkElement, IInputReceiver
         }
         else if (Pages.Count > 0)
         {
+            // Leaving this page ends its typing. The async loop resumes after this returns, so until it
+            // does a tick must not finish a page that was already advanced past.
+            StopTyping();
             if (showNextPageOnDismissedPage)
             {
                 ShowNextPage(forceImmediatePrint);
@@ -701,6 +747,7 @@ public class DialogBox : FrameworkElement, IInputReceiver
 
     public void Dismiss()
     {
+        StopTyping();
         this.IsVisible = false;
 #if FRB
         LastTimeDismissed = TimeManager.CurrentTime;
@@ -714,6 +761,13 @@ public class DialogBox : FrameworkElement, IInputReceiver
         this.Pages.Clear();
         IsFocused = false;
         FinishedShowing?.Invoke(this, EventArgs.Empty);
+    }
+
+    /// <inheritdoc/>
+    protected override void ReactToClosed()
+    {
+        base.ReactToClosed();
+        StopTyping();
     }
 
     public void OnFocusUpdatePreview(RoutedEventArgs args)
