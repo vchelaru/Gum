@@ -456,8 +456,9 @@ public class DialogBox : FrameworkElement, IInputReceiver
         TextComponent.SetProperty("Text", text);
 
 
-        var tags = BbCodeParser.Parse(text, BbCodeParser.KnownTags);
-        var strippedLength = BbCodeParser.RemoveTags(text, tags).Length;
+        // The component translated the text and stripped its tags, so count what it holds rather than
+        // the untranslated input: a translation can be longer or shorter than the key.
+        var strippedLength = CoreTextObject.RawText?.Length ?? 0;
 
         var shouldPrintCharacterByCharacter = LettersPerSecond > 0 && !forceImmediatePrint;
         if(shouldPrintCharacterByCharacter)
@@ -678,7 +679,7 @@ public class DialogBox : FrameworkElement, IInputReceiver
                 continueIndicatorInstance.Visible = true;
             }
 
-            CoreTextObject.MaxLettersToShow = currentPageText.Length;
+            CoreTextObject.MaxLettersToShow = CoreTextObject.RawText?.Length ?? 0;
 
             FinishedTypingPage?.Invoke(this, EventArgs.Empty);
         }
