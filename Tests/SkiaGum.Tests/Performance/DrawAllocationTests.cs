@@ -220,6 +220,12 @@ public class DrawAllocationTests : BaseTestClass
                 SpriteRuntime sprite = (SpriteRuntime)Create("Sprite");
                 element = sprite;
                 return frame => sprite.Color = frame % 2 == 0 ? SKColors.White : SKColors.Gray;
+            case "FlippedSpriteColor":
+                // A flipped sprite draws on its own, so it still builds its tint filter on each Color change.
+                SpriteRuntime flipped = (SpriteRuntime)Create("Sprite");
+                flipped.FlipHorizontal = true;
+                element = flipped;
+                return frame => flipped.Color = frame % 2 == 0 ? SKColors.White : SKColors.Gray;
             case "TextDropshadowOffset":
                 TextRuntime text = (TextRuntime)Create("TextDropshadow");
                 element = text;
@@ -236,6 +242,7 @@ public class DrawAllocationTests : BaseTestClass
     [InlineData("DropshadowOffset", 120)]
     [InlineData("GradientColor", 220)]
     [InlineData("SpriteColor", 120)]
+    [InlineData("FlippedSpriteColor", 120)]
     [InlineData("TextDropshadowOffset", 120)]
     public void UpdateAndDraw_AnimatedProperty_AllocationBaseline(string kind, int limitBytesPerFrame)
     {
@@ -260,7 +267,42 @@ public class DrawAllocationTests : BaseTestClass
         result.BytesPerIteration.ShouldBeLessThanOrEqualTo(limitBytesPerFrame);
     }
 
-    private const string RevealText = "The quick brown fox jumps over the lazy dog and keeps going";
+    // A sprite that joins a DrawAtlas batch passes its tint as a per-sprite color, so changing Color must not
+    // build the Modulate color filter a sprite drawn on its own uses (#7826).
+    [Fact]
+    public void UpdateAndDraw_BatchedSpriteAnimatingColor_AllocatesNothing()
+    {
+        SKBitmap texture = CreateBitmap(16);
+        SpriteRuntime first = new SpriteRuntime { Texture = texture, Width = 100, Height = 100,
+            WidthUnits = DimensionUnitType.Absolute, HeightUnits = DimensionUnitType.Absolute };
+        SpriteRuntime second = new SpriteRuntime { Texture = texture, X = 120, Width = 100, Height = 100,
+            WidthUnits = DimensionUnitType.Absolute, HeightUnits = DimensionUnitType.Absolute };
+        first.AddToRoot();
+        second.AddToRoot();
+        int frame = 0;
+
+        AllocationResult result = AllocationMeasurer.MeasureMinimum(
+            () =>
+            {
+                frame++;
+                SKColor color = frame % 2 == 0 ? SKColors.White : SKColors.Gray;
+                first.Color = color;
+                second.Color = color;
+                _host.Update();
+                _host.Draw();
+            },
+            warmupIterations: 50,
+            measuredIterations: 300);
+
+        _output.WriteLine($"Batched sprite color: {result.BytesPerIteration:N0} bytes/frame");
+
+        // Both sprites drew in one batch, so the scene really took the batched path.
+        global::RenderingLibrary.SystemManagers.Default.Renderer.RenderStateChangeStatistics.DrawCallCount.ShouldBe(1);
+        _host.CountPaintedSamples().ShouldBeGreaterThan(0);
+        result.BytesPerIteration.ShouldBe(0);
+    }
+
+    private const string RevealText ="The quick brown fox jumps over the lazy dog and keeps going";
 
     // Builds a Text whose content changes every frame (issue #7818). The strings are built here, before
     // measuring, so the test's own string formatting is not counted.

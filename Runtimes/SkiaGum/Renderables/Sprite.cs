@@ -249,11 +249,28 @@ public class Sprite : RenderableShapeBase, IAspectRatio, ITextureCoordinate, IAn
         // sprites that never touch Red/Green/Blue. Add draws the texture untinted and adds Color as a
         // single-pass color-matrix offset, rather than a second draw pass like
         // RenderingLibrary.Graphics.Renderer.DrawAdditiveColorOverlay.
-        ApplyTextureTint(paint,
-            ColorOperation == ColorOperation.ColorTextureAlpha ? SKBlendMode.SrcIn : SKBlendMode.Modulate);
+        if (_defersTint)
+        {
+            _isTintPending = true;
+        }
+        else
+        {
+            ApplyTint(paint);
+        }
 
         return paint;
     }
+
+    private void ApplyTint(SKPaint paint) => ApplyTextureTint(paint,
+        ColorOperation == ColorOperation.ColorTextureAlpha ? SKBlendMode.SrcIn : SKBlendMode.Modulate);
+
+    // Set while the draw path rebuilds the cached paint. A sprite that joins a DrawAtlas batch passes its tint
+    // as a per-sprite color, so the paint is built without the tint filter and an animated Color builds no
+    // filter (#7826).
+    bool _defersTint;
+
+    // True when the cached paint was built without its tint filter; the next draw that does not batch adds it.
+    bool _isTintPending;
 
     public override void DrawBound(SKRect boundingRect, SKCanvas canvas, float absoluteRotation)
     {
@@ -477,7 +494,16 @@ public class Sprite : RenderableShapeBase, IAspectRatio, ITextureCoordinate, IAn
         // here would double it (a 25 deg Sprite would render at 50 deg) — see the
         // matching fix in NineSlice.DrawBound.
 
-        var paint = base.GetCachedPaint(boundingRect, absoluteRotation);
+        _defersTint = true;
+        SKPaint paint;
+        try
+        {
+            paint = base.GetCachedPaint(boundingRect, absoluteRotation);
+        }
+        finally
+        {
+            _defersTint = false;
+        }
 
         // A flip comes from FlipHorizontal/FlipVertical, as on MonoGame, or from a source rectangle
         // whose edges are swapped (how an animation frame's flip was encoded). Either one mirrors.
@@ -509,6 +535,11 @@ public class Sprite : RenderableShapeBase, IAspectRatio, ITextureCoordinate, IAn
             return;
         }
         AtlasBatch?.Flush();
+        if (_isTintPending)
+        {
+            ApplyTint(paint);
+            _isTintPending = false;
+        }
         int saveCount = isFlipped ? canvas.Save() : 0;
         if (isFlipped)
         {
