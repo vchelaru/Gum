@@ -82,6 +82,9 @@
   <ComponentReference Name="Bubblegum/SliderThumb" />
   <ComponentReference Name="Bubblegum/Splitter" />
   <ComponentReference Name="Bubblegum/StackPanel" />
+  <ComponentReference Name="Bubblegum/TabControl" />
+  <ComponentReference Name="Bubblegum/TabItem" />
+  <ComponentReference Name="Bubblegum/TabPage" />
   <ComponentReference Name="Bubblegum/Styles" />
   <ComponentReference Name="Bubblegum/TextBox" />
   <ComponentReference Name="Bubblegum/Toast" />
@@ -117,6 +120,9 @@
   <BehaviorReference Name="SliderBehavior" SourcePath="../../FormsBehaviors/SliderBehavior.behx" DefaultImplementationOverride="Bubblegum/Slider" />
   <BehaviorReference Name="SplitterBehavior" SourcePath="../../FormsBehaviors/SplitterBehavior.behx" DefaultImplementationOverride="Bubblegum/Splitter" />
   <BehaviorReference Name="StackPanelBehavior" SourcePath="../../FormsBehaviors/StackPanelBehavior.behx" />
+  <BehaviorReference Name="TabControlBehavior" SourcePath="../../FormsBehaviors/TabControlBehavior.behx" DefaultImplementationOverride="Bubblegum/TabControl" />
+  <BehaviorReference Name="TabItemBehavior" SourcePath="../../FormsBehaviors/TabItemBehavior.behx" DefaultImplementationOverride="Bubblegum/TabItem" />
+  <BehaviorReference Name="TabPageBehavior" SourcePath="../../FormsBehaviors/TabPageBehavior.behx" DefaultImplementationOverride="Bubblegum/TabPage" />
   <BehaviorReference Name="TextBoxBehavior" SourcePath="../../FormsBehaviors/TextBoxBehavior.behx" DefaultImplementationOverride="Bubblegum/TextBox" />
   <BehaviorReference Name="ToastBehavior" SourcePath="../../FormsBehaviors/ToastBehavior.behx" DefaultImplementationOverride="Bubblegum/Toast" />
   <BehaviorReference Name="ToggleBehavior" SourcePath="../../FormsBehaviors/ToggleBehavior.behx" DefaultImplementationOverride="Bubblegum/ToggleButton" />

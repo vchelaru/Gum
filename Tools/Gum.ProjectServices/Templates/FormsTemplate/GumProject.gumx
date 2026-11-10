@@ -88,6 +88,9 @@
   <ComponentReference Name="Controls/SliderThumb" />
   <ComponentReference Name="Controls/SplitterStandard" />
   <ComponentReference Name="Controls/StackPanel" />
+  <ComponentReference Name="Controls/TabControl" />
+  <ComponentReference Name="Controls/TabItem" />
+  <ComponentReference Name="Controls/TabPage" />
   <ComponentReference Name="Controls/TextBox" />
   <ComponentReference Name="Controls/Toast" />
   <ComponentReference Name="Controls/ToggleButton" />
@@ -139,6 +142,9 @@
   <BehaviorReference Name="SliderBehavior" SourcePath="../FormsBehaviors/SliderBehavior.behx" />
   <BehaviorReference Name="SplitterBehavior" SourcePath="../FormsBehaviors/SplitterBehavior.behx" />
   <BehaviorReference Name="StackPanelBehavior" SourcePath="../FormsBehaviors/StackPanelBehavior.behx" />
+  <BehaviorReference Name="TabControlBehavior" SourcePath="../FormsBehaviors/TabControlBehavior.behx" />
+  <BehaviorReference Name="TabItemBehavior" SourcePath="../FormsBehaviors/TabItemBehavior.behx" />
+  <BehaviorReference Name="TabPageBehavior" SourcePath="../FormsBehaviors/TabPageBehavior.behx" />
   <BehaviorReference Name="TextBoxBehavior" SourcePath="../FormsBehaviors/TextBoxBehavior.behx" />
   <BehaviorReference Name="ToastBehavior" SourcePath="../FormsBehaviors/ToastBehavior.behx" />
   <BehaviorReference Name="ToggleBehavior" SourcePath="../FormsBehaviors/ToggleBehavior.behx" />

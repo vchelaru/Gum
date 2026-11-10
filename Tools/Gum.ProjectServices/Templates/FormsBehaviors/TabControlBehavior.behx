@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<BehaviorSave xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <Name>TabControlBehavior</Name>
+  <RequiredVariables />
+  <FormsProperty Type="string" Name="ToolTip" />
+  <FormsProperty Type="bool" Name="IsEnabled">
+    <Value xsi:type="xsd:boolean">true</Value>
+  </FormsProperty>
+  <FormsProperty Type="int" Name="SelectedIndex">
+    <Value xsi:type="xsd:int">0</Value>
+    <Description>The index of the selected tab. Tab N shows page N; an index with no tab selects none.</Description>
+  </FormsProperty>
+  <RequiredInstances>
+    <InstanceSave Name="InnerPanelInstance" BaseType="">
+      <Behaviors />
+    </InstanceSave>
+    <InstanceSave Name="ContentPanelInstance" BaseType="">
+      <Behaviors />
+    </InstanceSave>
+  </RequiredInstances>
+  <RequiredAnimations />
+  <DefaultImplementation>Controls/TabControl</DefaultImplementation>
+</BehaviorSave>
