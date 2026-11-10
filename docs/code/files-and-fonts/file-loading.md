@@ -117,8 +117,7 @@ Be careful setting CacheTextures to false since all existing textures will be di
 
 ### Editing a Loaded Texture on SkiaSharp
 
-On [SkiaSharp-based runtimes](../about/runtimes.md), Gum marks every texture it loads as read-only, whether it comes from a file, a URL, an `.achx` frame, or the built-in Forms sprite sheet. Every `SpriteRuntime` and `NineSliceRuntime` that uses one of these textures shares a single copy of its pixels, which keeps memory use and GPU work flat as the number of visuals grows. In one test, 517 NineSlices over a single sprite sheet went from about 48 fps and 1.6 GB to 120 fps (the vsync limit) and 160 MB, measured on an M5 Pro with a Release build, the BRUTAL OpenGL host, and a 1600x900 surface.
-
+On [SkiaSharp-based runtimes](../about/runtimes.md), Gum marks every texture it loads as read-only, whether it comes from a file, a URL, an `.achx` frame, or the built-in Forms sprite sheet. Every `SpriteRuntime` and `NineSliceRuntime` that uses one of these textures shares a single copy of its pixels, which keeps memory use and GPU work flat as the number of visuals grows.
 {% hint style="info" %}
 Available in December 2026, or now if building Gum from source.
 {% endhint %}
@@ -134,7 +133,7 @@ sprite.Texture = copy;
 
 Only the visuals you assign the copy to change. A bitmap your own code creates, such as one from `SKBitmap.Decode`, is not shared. Each visual you assign it to keeps its own copy of the pixels, so assigning one bitmap to many visuals uses more memory and GPU time than loading the file through Gum. A custom `IContentLoader` that returns mutable bitmaps behaves the same way.
 
-If you edit a loaded bitmap in place instead, assign it to `Texture` again to show the change. `Erase`, `SKCanvas` drawing, and `SetPixel` need nothing more. Writes through `GetPixels` or `GetPixelSpan` also need a call to `NotifyPixelsChanged()` on the bitmap, otherwise a GPU surface keeps drawing the old texture.
+Editing a loaded bitmap in place is not the supported route. If you do, assign the bitmap to `Texture` again to show the change.
 
 ### Customizing How Content Loads
 
