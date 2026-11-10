@@ -452,9 +452,9 @@ public class TextureAssignmentDrawTests : BaseTestClass
         byte[] red = Solid(255, 0, 0);
         byte[] blue = Solid(0, 0, 255);
 
-        GraphicalUiElement.ApplyPooledTextureFromPixelData!(sprite, owner, red, Size, Size);
+        GraphicalUiElement.ApplyPooledTextureFromPixelData!(sprite, owner, red, PooledSize, PooledSize);
         DrawAll(sprite).Dispose();
-        GraphicalUiElement.ApplyPooledTextureFromPixelData!(sprite, owner, blue, Size, Size);
+        GraphicalUiElement.ApplyPooledTextureFromPixelData!(sprite, owner, blue, PooledSize, PooledSize);
         using SKBitmap drawn = DrawAll(sprite);
 
         drawn.GetPixel(5, 1).ShouldBe(SKColors.Blue);
@@ -468,14 +468,20 @@ public class TextureAssignmentDrawTests : BaseTestClass
         SpriteRuntime first = (SpriteRuntime)Create(nameof(SpriteRuntime), 4);
         SpriteRuntime second = (SpriteRuntime)Create(nameof(SpriteRuntime), 10);
 
-        GraphicalUiElement.ApplyPooledTextureFromPixelData!(first, firstOwner, Solid(255, 0, 0), Size, Size);
-        GraphicalUiElement.ApplyPooledTextureFromPixelData!(second, secondOwner, Solid(0, 0, 255), Size, Size);
-        GraphicalUiElement.ApplyPooledTextureFromPixelData!(first, firstOwner, Solid(0, 255, 0), Size, Size);
+        GraphicalUiElement.ApplyPooledTextureFromPixelData!(first, firstOwner, Solid(255, 0, 0), PooledSize, PooledSize);
+        GraphicalUiElement.ApplyPooledTextureFromPixelData!(second, secondOwner, Solid(0, 0, 255), PooledSize, PooledSize);
+        GraphicalUiElement.ApplyPooledTextureFromPixelData!(first, firstOwner, Solid(0, 255, 0), PooledSize, PooledSize);
         using SKBitmap drawn = DrawAll(first, second);
 
         drawn.GetPixel(5, 1).ShouldBe(SKColors.Lime);
         drawn.GetPixel(11, 1).ShouldBe(SKColors.Blue);
     }
+
+    // The pooled-texture list is process-wide, and a detached owner's bitmap is handed to the next caller
+    // whatever its size. ColorPickerTests (same process) leave 256x256 entries in it, so pooled pixel data
+    // here must also be 256x256: any other size would reclaim one of those bitmaps and draw it scaled, or
+    // leave a small bitmap that ColorPicker's 256x256 upload then overruns.
+    private const int PooledSize = 256;
 
     // A pooled texture is reserved for an owner only while the owner is in the visual tree.
     private static GraphicalUiElement AttachedOwner()
@@ -487,7 +493,7 @@ public class TextureAssignmentDrawTests : BaseTestClass
 
     private static byte[] Solid(byte red, byte green, byte blue)
     {
-        byte[] rgba = new byte[Size * Size * 4];
+        byte[] rgba = new byte[PooledSize * PooledSize * 4];
         for (int i = 0; i < rgba.Length; i += 4)
         {
             rgba[i] = red;
