@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using GumKeys = Gum.Forms.Input.Keys;
 
 namespace Gum.Input;
@@ -15,16 +16,21 @@ public abstract class TablePolledKeyboard<TDeviceKey> : PolledKeyboard
 {
     private readonly IReadOnlyDictionary<GumKeys, TDeviceKey> _gumToDevice;
 
+    // The table's keys copied once, so the per-frame poll indexes an array instead of boxing the
+    // dictionary's key enumerator.
+    private readonly GumKeys[] _supportedKeys;
+
     /// <summary>
     /// Creates a keyboard that polls the keys in <paramref name="gumToDevice"/>.
     /// </summary>
     protected TablePolledKeyboard(IReadOnlyDictionary<GumKeys, TDeviceKey> gumToDevice)
     {
         _gumToDevice = gumToDevice;
+        _supportedKeys = gumToDevice.Keys.ToArray();
     }
 
     /// <inheritdoc/>
-    protected sealed override IEnumerable<GumKeys> SupportedKeys => _gumToDevice.Keys;
+    protected sealed override IEnumerable<GumKeys> SupportedKeys => _supportedKeys;
 
     /// <inheritdoc/>
     protected sealed override bool IsDeviceKeyDown(GumKeys key) =>

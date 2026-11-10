@@ -76,6 +76,21 @@ public class FormsInputAllocationTests : BaseTestClass
                     _ => _cursor.MoveToCenterOf(button.Visual),
                     () => rollOn.ShouldBeGreaterThan(0));
             }
+            case "CursorStillOffControls":
+            {
+                Button button = new Button { Text = "Play" };
+                panel.AddChild(button);
+                int rollOn = 0;
+                button.Visual.RollOn += (_, _) => rollOn++;
+                // The cursor sits away from the button, so it must never roll on.
+                return new InputCase(
+                    _ =>
+                    {
+                        _cursor.X = 600;
+                        _cursor.Y = 460;
+                    },
+                    () => rollOn.ShouldBe(0));
+            }
             case "HoverButtonEnterExit":
             {
                 Button button = new Button { Text = "Play" };
@@ -201,6 +216,30 @@ public class FormsInputAllocationTests : BaseTestClass
             default:
                 throw new ArgumentException("Unknown kind " + kind);
         }
+    }
+
+    // An idle Forms frame (cursor still, no keys) must allocate nothing: every Forms game pays it.
+    [Theory]
+    [InlineData("HoverButtonStill")]
+    [InlineData("CursorStillOffControls")]
+    public void UpdateAndDraw_IdleFormsFrame_ShouldNotAllocate(string kind)
+    {
+        InputCase inputCase = CreateCase(kind);
+
+        AllocationResult result = AllocationMeasurer.MeasureMinimum(
+            () =>
+            {
+                inputCase.Act(0);
+                RunFrame();
+            },
+            warmupIterations: 50,
+            measuredIterations: 300);
+
+        _output.WriteLine($"{kind}: {result.BytesPerIteration:N0} bytes/frame");
+
+        _host.CountPaintedSamples().ShouldBeGreaterThan(0);
+        inputCase.AssertInputLanded();
+        result.BytesPerIteration.ShouldBe(0d);
     }
 
     [Theory]
