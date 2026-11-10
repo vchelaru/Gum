@@ -46,7 +46,7 @@ public class SharedTextureConcurrencyTests : SharedTextureTestBase
     }
 
     [Fact]
-    public void ApplyCached_TwoThreadsOnOneKey_BothSpritesGetAnImmutableBitmapOfThePixels()
+    public async Task ApplyCached_TwoThreadsOnOneKey_BothSpritesGetAnImmutableBitmapOfThePixels()
     {
         byte[] pixels = new byte[4 * 4 * 4];
         for (int i = 0; i < pixels.Length; i += 4)
@@ -65,7 +65,7 @@ public class SharedTextureConcurrencyTests : SharedTextureTestBase
             PixelDataTextureApplier.ApplyCached(target, cacheKey, pixels, 4, 4);
         });
         Task[] tasks = { apply(first), apply(second) };
-        Task.WaitAll(tasks, TimeSpan.FromSeconds(60)).ShouldBeTrue();
+        await Task.WhenAll(tasks).WaitAsync(TimeSpan.FromSeconds(60));
 
         foreach (Gum.GueDeriving.SpriteRuntime sprite in new[] { first, second })
         {
