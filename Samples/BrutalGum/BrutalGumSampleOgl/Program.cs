@@ -27,7 +27,8 @@ try
     using GlfwWindow window = Glfw.CreateWindow(new GlfwWindow.CreateInfo { Title = "Gum.Brutal.OGL sample", Size = new int2(1400, 900) });
     SampleSupport.PlaceWindow(window, sample);
     window.MakeContextCurrent();
-    Glfw.SwapInterval(1);
+    FrameTiming timing = new FrameTiming(args, GetProc);
+    Glfw.SwapInterval(timing.SwapInterval);
 
     GumService GumUI = GumService.Default;
 
@@ -50,13 +51,19 @@ try
     bool resized = false;
     while (!window.ShouldClose)
     {
+        timing.BeginFrame();
         Glfw.PollEvents();
         double gameTime = clock.Elapsed.TotalSeconds;
-        GumUI.Update(gameTime);
-        gallery.Tick(gameTime - previousSeconds);
+        timing.Time(0, () =>
+        {
+            GumUI.Update(gameTime);
+            gallery.Tick(gameTime - previousSeconds);
+        });
         previousSeconds = gameTime;
-        GlClear.ToColor(GetProc, 100 / 255f, 149 / 255f, 237 / 255f); // the game's own background; Gum draws over it
-        GumUI.Draw();
+        // the game's own background; Gum draws over it
+        timing.Time(5, () => GlClear.ToColor(GetProc, 100 / 255f, 149 / 255f, 237 / 255f));
+        timing.Time(1, GumUI.Draw);
+        timing.Finish();
 
         if (sample.ExitAfterSeconds > 0 && gameTime >= sample.ExitAfterSeconds)
         {
@@ -73,8 +80,10 @@ try
             resized = true;
         }
 
-        window.SwapBuffers();
+        timing.Time(3, window.SwapBuffers);
+        timing.EndFrame();
     }
+    timing.Write($"screen={sample.Screen + 1} hidden={sample.Hidden} offscreen={sample.Offscreen} fb={window.FramebufferSize.X}x{window.FramebufferSize.Y}");
 }
 finally
 {
