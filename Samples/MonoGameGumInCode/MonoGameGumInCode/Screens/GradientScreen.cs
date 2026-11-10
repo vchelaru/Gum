@@ -2,11 +2,22 @@ using Gum.Converters;
 using Gum.Forms.Controls;
 using Gum.GueDeriving;
 using Gum.Wireframe;
-using Microsoft.Xna.Framework;
-using Gum.Renderables;
 using RenderingLibrary.Graphics;
+#if RAYLIB
+using Color = Raylib_cs.Color;
+#elif SKIA
+using Color = SkiaSharp.SKColor;
+#else
+using Color = Microsoft.Xna.Framework.Color;
+#endif
 
+#if RAYLIB
+namespace Examples.Shapes;
+#elif SKIA
+namespace SilkNetGum.Screens;
+#else
 namespace MonoGameGumInCode.Screens;
+#endif
 
 // Deep-dive on a rounded RectangleRuntime's gradient surface. Three rows of three cells -
 // every cell uses the same rectangle size so the configuration is what changes, not the
@@ -23,8 +34,10 @@ internal class GradientScreen : FrameworkElement
     private const float RectWidth = 280;
     private const float RectHeight = 120;
 
-    private static readonly Color StartColor = new Color(15, 196, 72);
-    private static readonly Color EndColor = new Color(0, 70, 22);
+    private static readonly Color StartColor = new Color(15, 196, 72, 255);
+    private const int EndRed = 0;
+    private const int EndGreen = 70;
+    private const int EndBlue = 22;
 
     public GradientScreen() : base(new ContainerRuntime())
     {
@@ -92,11 +105,11 @@ internal class GradientScreen : FrameworkElement
         rect.CornerRadius = 6;
         rect.UseGradient = true;
         // The gradient start is the fill color, so a filled rectangle with no stroke draws
-        // StartColor -> EndColor.
+        // StartColor -> the End channels.
         rect.IsFilled = true;
         rect.FillColor = StartColor;
         rect.StrokeWidth = 0;
-        rect.Red2 = EndColor.R;   rect.Green2 = EndColor.G;   rect.Blue2 = EndColor.B;   rect.Alpha2 = 255;
+        rect.Red2 = EndRed;   rect.Green2 = EndGreen;   rect.Blue2 = EndBlue;   rect.Alpha2 = 255;
         configure(rect);
         cell.AddChild(rect);
 

@@ -4,7 +4,14 @@ using Gum.Wireframe;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
 
+#if RAYLIB
+namespace Examples.Shapes;
+#elif SKIA
+namespace SilkNetGum.Screens;
+#else
 namespace MonoGameGumInCode.Screens;
+#endif
+
 internal class InvisibleScreen : FrameworkElement
 {
     public InvisibleScreen() : base(new ContainerRuntime())

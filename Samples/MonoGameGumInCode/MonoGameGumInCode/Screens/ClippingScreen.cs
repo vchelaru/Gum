@@ -2,9 +2,21 @@ using Gum.DataTypes;
 using Gum.Forms.Controls;
 using Gum.GueDeriving;
 using Gum.Wireframe;
-using Microsoft.Xna.Framework;
+#if RAYLIB
+using Color = Raylib_cs.Color;
+#elif SKIA
+using Color = SkiaSharp.SKColor;
+#else
+using Color = Microsoft.Xna.Framework.Color;
+#endif
 
+#if RAYLIB
+namespace Examples.Shapes;
+#elif SKIA
+namespace SilkNetGum.Screens;
+#else
 namespace MonoGameGumInCode.Screens;
+#endif
 
 // Visual regression coverage for clip + Apos.Shapes interaction. Shapes go through
 // ShapeBatch (Apos.Shapes), sprites through SpriteBatch — when a ClipsChildren scope
@@ -45,7 +57,7 @@ internal class ClippingScreen : FrameworkElement
         outsideClipShape.Y = 20;
         outsideClipShape.Width = 48;
         outsideClipShape.Height = 48;
-        outsideClipShape.FillColor = Color.OrangeRed;
+        outsideClipShape.FillColor = new Color(255, 69, 0, 255);
         outsideClipShape.IsFilled = true;
         AddChild(outsideClipShape);
 
@@ -77,7 +89,7 @@ internal class ClippingScreen : FrameworkElement
             bg.Height = 36;
             bg.Y = 2;
             bg.CornerRadius = 6;
-            bg.FillColor = (i % 2 == 0) ? new Color(60, 60, 90) : new Color(80, 80, 120);
+            bg.FillColor = (i % 2 == 0) ? new Color(60, 60, 90, 255) : new Color(80, 80, 120, 255);
             bg.IsFilled = true;
             row.AddChild(bg);
 
@@ -86,7 +98,7 @@ internal class ClippingScreen : FrameworkElement
             dot.Y = 8;
             dot.Width = 24;
             dot.Height = 24;
-            dot.FillColor = Color.Goldenrod;
+            dot.FillColor = new Color(218, 165, 32, 255);
             dot.IsFilled = true;
             row.AddChild(dot);
 

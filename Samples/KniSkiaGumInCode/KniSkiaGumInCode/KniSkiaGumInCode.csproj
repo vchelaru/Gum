@@ -56,7 +56,13 @@
 		<Compile Include="..\..\MonoGameGumInCode\MonoGameGumInCode\Screens\LayerCameraSettingsScreen.cs" Link="Screens\LayerCameraSettingsScreen.cs" />
 		<Compile Include="..\..\SilkNetGum\SilkNetGumSample\Screens\ArcsScreen.cs" Link="Screens\ArcsScreen.cs" />
 		<Compile Include="..\..\SilkNetGum\SilkNetGumSample\Screens\PolygonsScreen.cs" Link="Screens\PolygonsScreen.cs" />
-		<Compile Include="..\..\SilkNetGum\SilkNetGumSample\Screens\NineSliceScreen.cs" Link="Screens\NineSliceScreen.cs" />
+		<Compile Include="..\..\MonoGameGumInCode\MonoGameGumInCode\Screens\NineSliceScreen.cs" Link="Screens\NineSliceScreen.cs" />
+		<Compile Include="..\..\MonoGameGumInCode\MonoGameGumInCode\Screens\StandardsScreen.cs" Link="Screens\StandardsScreen.cs" />
+		<Compile Include="..\..\MonoGameGumInCode\MonoGameGumInCode\Screens\GradientScreen.cs" Link="Screens\GradientScreen.cs" />
+		<Compile Include="..\..\MonoGameGumInCode\MonoGameGumInCode\Screens\MixedScreen.cs" Link="Screens\MixedScreen.cs" />
+		<Compile Include="..\..\MonoGameGumInCode\MonoGameGumInCode\Screens\InvisibleScreen.cs" Link="Screens\InvisibleScreen.cs" />
+		<Compile Include="..\..\MonoGameGumInCode\MonoGameGumInCode\Screens\ClippingScreen.cs" Link="Screens\ClippingScreen.cs" />
+		<Compile Include="..\..\Shared\GumGallery.cs" Link="GumGallery.cs" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -64,6 +70,7 @@
 		<None Include="..\..\SilkNetGum\SilkNetGumSample\resources\**\*.*" LinkBase="resources" CopyToOutputDirectory="PreserveNewest" />
 		<!-- The one Outline.slang that MonoGameGumInCode, raylib and the Skia samples all run. -->
 		<None Include="..\..\..\Gum\Content\Shaders\Outline.slang" Link="resources\Outline.slang" CopyToOutputDirectory="PreserveNewest" />
+		<None Include="..\..\MonoGameGumInCode\MonoGameGumInCode\Content\*.slang" Link="resources\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
 	</ItemGroup>
 
 	<!-- In-process automation (scripted Gum input, NDJSON runner, off-screen window). Debug only, so it

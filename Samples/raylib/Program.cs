@@ -5,6 +5,7 @@ using Gum.Forms.DefaultVisuals.V3;
 using Gum.GueDeriving;
 using Gum.Wireframe;
 using Gum;
+using GumSamples;
 using KernSmith.Gum;
 using Raylib_cs;
 using RaylibGum.Renderables;
@@ -22,13 +23,7 @@ public class BasicShapes
 {
     static GumService GumUI => GumService.Default;
 
-    static StackPanel? navStrip;
-    static FrameworkElement? activeScreen;
-
-    // Set when a screen is shown so its initial gamepad focus is applied after the next
-    // GumUI.Update — ShowScreen runs inside a nav button's Click handler (during Update), and
-    // applying focus there gets cleared by the rest of that frame's input processing.
-    static bool _applyInitialFocusAfterUpdate;
+    static readonly GumGallery gallery = new GumGallery();
 
     // Manual-camera demo state. When _useManualCamera is true the render loop calls
     // GumUI.Draw(_manualCamera) instead of GumUI.Draw(), exercising the new
@@ -47,7 +42,6 @@ public class BasicShapes
     // shown, a few frames are drawn so layout settles, a PNG is saved and the sample exits.
     static readonly string? screenshotPath = Environment.GetEnvironmentVariable("GUM_SCREENSHOT_PATH");
     static readonly string screenshotScreenName = Environment.GetEnvironmentVariable("GUM_SCREENSHOT_SCREEN") ?? "RT Shader";
-    static readonly Dictionary<string, Func<FrameworkElement>> screenFactoriesByName = new();
 
     public static void Main()
     {
@@ -95,8 +89,8 @@ public class BasicShapes
         GumUI.EnableZoomToWindow();
 
         InitializeStyling();
-        BuildNavStrip();
-        ShowScreen(() => new RawVisualsScreen());
+        gallery.Build("Forms");
+        AddManualCameraRadio();
 
         if (screenshotPath != null)
         {
@@ -108,17 +102,7 @@ public class BasicShapes
         {
             GumUI.Update(GetTime());
 
-            // FrameworkElement.Activity() is FRB-only and unavailable here, so screens that animate
-            // (e.g. TextScreen's typewriter reveal, #3701) get a host-driven per-frame Tick instead.
-            (activeScreen as TextScreen)?.Tick(GetFrameTime());
-
-            // Apply a freshly-shown screen's initial gamepad focus now that this frame's
-            // input (including the nav-button click that swapped screens) has been processed.
-            if (_applyInitialFocusAfterUpdate)
-            {
-                _applyInitialFocusAfterUpdate = false;
-                (activeScreen as FormsControlsScreen)?.FocusInitialControl();
-            }
+            gallery.Tick(GetFrameTime());
 
             if (_useManualCamera)
             {
@@ -147,57 +131,12 @@ public class BasicShapes
         CloseWindow();
     }
 
-    // Mirrors MonoGameGumInCode/Game1.BuildNavStrip — horizontal Forms Button strip
-    // across the top swaps the active screen at runtime. Replaces the prior Space-key toggle
-    // so adding a screen (e.g. CirclesScreen for #2757) is a one-line registration.
-    private static void BuildNavStrip()
+    // The gallery adds the Zoom and Expand radios; this adds the raylib-only manual camera, which swaps the
+    // render loop to GumUI.Draw(_manualCamera). Zoom and Expand turn it back off.
+    private static void AddManualCameraRadio()
     {
-        navStrip = new StackPanel();
-        navStrip.Orientation = Orientation.Horizontal;
-        navStrip.Spacing = 4;
-        navStrip.Visual.X = 4;
-        navStrip.Visual.Y = 4;
-        // Fill the window width and wrap the button row instead of letting buttons bleed off the
-        // right edge; height grows to fit however many rows the wrap produces. Mirrors
-        // MonoGameGumInCode/Game1.BuildNavStrip.
-        navStrip.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
-        navStrip.Width = 0;
-        navStrip.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
-        navStrip.Height = 0;
-        navStrip.Visual.WrapsChildren = true;
-        navStrip.AddToRoot();
-
-        AddNavButton("Raw visuals", () => new RawVisualsScreen());
-        AddNavButton("Forms controls", () => new FormsControlsScreen());
-        AddNavButton("Circles", () => new CirclesScreen());
-        AddNavButton("Rectangles", () => new RectanglesScreen());
-        AddNavButton("Polygons", () => new PolygonsScreen());
-        AddNavButton("Arcs", () => new ArcsScreen());
-        AddNavButton("Sprite", () => new SpriteScreen());
-        AddNavButton("NineSlice", () => new NineSliceScreen());
-        AddNavButton("Text", () => new TextScreen());
-        AddNavButton("Render Target", () => new RenderTargetScreen());
-        AddNavButton("RT Shader", () => new RenderTargetShaderScreen());
-        AddNavButton("Zoom", () => new ZoomScreen());
-        AddNavButton("Layer Camera", () => new LayerCameraSettingsScreen());
-
-        AddFitModeRadio("Zoom", isChecked: true, () =>
-        {
-            _useManualCamera = false;
-            GumUI.EnableZoomToWindow();
-        });
-        AddFitModeRadio("Expand", isChecked: false, () =>
-        {
-            _useManualCamera = false;
-            GumUI.EnableExpandToWindow();
-        });
-        AddFitModeRadio("Manual camera", isChecked: false, () =>
-        {
-            // Enabling manual camera mode swaps the render loop to
-            // GumUI.Draw(_manualCamera) — see UpdateManualCameraFromInput for the
-            // arrow-key pan / mouse-wheel zoom controls.
-            _useManualCamera = true;
-        });
+        gallery.FitModeChanging += () => _useManualCamera = false;
+        gallery.AddFitModeRadio("Manual camera", isChecked: false, () => _useManualCamera = true);
     }
 
     // Reads keyboard/mouse input and mutates _manualCamera. Pan with arrows, zoom with
@@ -232,22 +171,9 @@ public class BasicShapes
         }
     }
 
-    private static void AddFitModeRadio(string text, bool isChecked, Action onChecked)
-    {
-        RadioButton radio = new RadioButton();
-        radio.GroupName = "FitMode";
-        radio.Text = text;
-        radio.IsChecked = isChecked;
-        radio.Checked += (_, _) => onChecked();
-        navStrip!.AddChild(radio);
-    }
-
     private static void CaptureScreenshotAndExit(string path)
     {
-        if (screenFactoriesByName.TryGetValue(screenshotScreenName, out Func<FrameworkElement>? factory))
-        {
-            ShowScreen(factory);
-        }
+        gallery.TryShowCodeScreen(screenshotScreenName);
 
         for (int frame = 0; frame < 15; frame++)
         {
@@ -262,44 +188,6 @@ public class BasicShapes
         ExportImage(image, path);
         UnloadImage(image);
         CloseWindow();
-    }
-
-    private static void AddNavButton(string text, Func<FrameworkElement> factory)
-    {
-        screenFactoriesByName[text] = factory;
-        Button button = new Button();
-        button.Text = text;
-        button.Click += (_, _) => ShowScreen(factory);
-        navStrip!.AddChild(button);
-    }
-
-    private static void ShowScreen(Func<FrameworkElement> factory)
-    {
-        if (activeScreen != null)
-        {
-            activeScreen.RemoveFromRoot();
-        }
-
-        // ZoomScreen and LayerCameraSettingsScreen both drive the shared main Camera directly
-        // (issues #4330, #4367) -- reset it here so leaving either screen zoomed/panned never leaks
-        // into whichever screen is shown next.
-        SystemManagers.Default.Renderer.Camera.Zoom = 1f;
-        SystemManagers.Default.Renderer.Camera.X = 0f;
-        SystemManagers.Default.Renderer.Camera.Y = 0f;
-
-        activeScreen = factory();
-        // Offset the screen so it doesn't sit underneath the nav strip — same trick as
-        // MonoGameGumInCode/Game1.ShowScreen. Use the nav strip's actual laid-out height so a
-        // wrapped (multi-row) button strip still clears the screen content below it.
-        float navStripHeight = navStrip!.Visual.AbsoluteHeight;
-        activeScreen.Visual.YOrigin = VerticalAlignment.Top;
-        activeScreen.Visual.YUnits = GeneralUnitType.PixelsFromSmall;
-        activeScreen.Visual.Y = navStripHeight;
-        activeScreen.Visual.Height = -navStripHeight;
-        activeScreen.AddToRoot();
-
-        // Defer initial gamepad focus to just after the next GumUI.Update (see field comment).
-        _applyInitialFocusAfterUpdate = true;
     }
 
     private static void InitializeStyling()

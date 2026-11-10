@@ -68,6 +68,12 @@
 	  <!-- Sprite gallery shared from MonoGameGumInCode, gated #if SKIA (#6054). -->
 	  <Compile Include="..\..\MonoGameGumInCode\MonoGameGumInCode\Screens\SpriteScreen.cs" Link="Screens\SpriteScreen.cs" />
 	  <!-- Tab bar and screen switching shared with BrutalGumSample. -->
+	  <Compile Include="..\..\MonoGameGumInCode\MonoGameGumInCode\Screens\NineSliceScreen.cs" Link="Screens\NineSliceScreen.cs" />
+	  <Compile Include="..\..\MonoGameGumInCode\MonoGameGumInCode\Screens\StandardsScreen.cs" Link="Screens\StandardsScreen.cs" />
+	  <Compile Include="..\..\MonoGameGumInCode\MonoGameGumInCode\Screens\GradientScreen.cs" Link="Screens\GradientScreen.cs" />
+	  <Compile Include="..\..\MonoGameGumInCode\MonoGameGumInCode\Screens\MixedScreen.cs" Link="Screens\MixedScreen.cs" />
+	  <Compile Include="..\..\MonoGameGumInCode\MonoGameGumInCode\Screens\InvisibleScreen.cs" Link="Screens\InvisibleScreen.cs" />
+	  <Compile Include="..\..\MonoGameGumInCode\MonoGameGumInCode\Screens\ClippingScreen.cs" Link="Screens\ClippingScreen.cs" />
 	  <Compile Include="../../Shared/GumGallery.cs" Link="GumGallery.cs" />
 	  <!-- SVG gallery shared from MonoGameGumInCode, gated #if SKIA (#4506). Deliberately NOT
 	       linked into Samples/raylib/GumTest.csproj — raylib has no SVG support (#4505). -->
@@ -85,6 +91,10 @@
 	  </None>
 	  <!-- The one Outline.slang that MonoGameGumInCode, raylib and SilkNetGum all run. -->
 	  <None Include="..\..\..\Gum\Content\Shaders\Outline.slang" Link="resources\Outline.slang">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </None>
+	  <!-- The grayscale, blur and sepia Slang shaders MonoGameGumInCode runs; ShadowDusk converts them to SkSL. -->
+	  <None Include="..\..\MonoGameGumInCode\MonoGameGumInCode\Content\*.slang" Link="resources\%(Filename)%(Extension)">
 	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	  </None>
 	  <None Update="libEGL.dll">

@@ -1,9 +1,8 @@
 using Gum;
-using Gum.Forms.Controls;
+using GumSamples;
 using GumSamples.Screens;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
-using RenderingLibrary;
 using SilkNetGum.Screens;
 
 namespace KniSkiaGumInCode;
@@ -24,8 +23,7 @@ public class Game1 : Game
     private readonly Gum.Automation.GumAutomationHost? _automation;
 #endif
 
-    private StackPanel _navStrip = null!;
-    private FrameworkElement? _currentScreen;
+    private readonly GumGallery gallery = new GumGallery();
 
     public Game1()
     {
@@ -70,82 +68,9 @@ public class Game1 : Game
         // Demo the auto-fit helpers. Flip via the Zoom/Expand buttons in the nav strip.
         GumUI.EnableZoomToWindow();
 
-        BuildNavStrip();
-
-        ShowScreen<FormsScreen>();
+        gallery.Build("Forms");
 
         base.Initialize();
-    }
-
-    private void BuildNavStrip()
-    {
-        _navStrip = new StackPanel();
-        _navStrip.Orientation = Orientation.Horizontal;
-        _navStrip.Spacing = 4;
-        _navStrip.Visual.X = 4;
-        _navStrip.Visual.Y = 4;
-        _navStrip.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
-        _navStrip.Width = 0;
-        _navStrip.Visual.WrapsChildren = true;
-        _navStrip.AddToRoot();
-
-        AddNavButton("Forms", () => ShowScreen<FormsScreen>());
-        AddNavButton("Circles", () => ShowScreen<CirclesScreen>());
-        AddNavButton("Rectangles", () => ShowScreen<RectanglesScreen>());
-        AddNavButton("Arcs", () => ShowScreen<ArcsScreen>());
-        AddNavButton("Polygons", () => ShowScreen<PolygonsScreen>());
-        AddNavButton("Text", () => ShowScreen<TextScreen>());
-        AddNavButton("NineSlice", () => ShowScreen<NineSliceScreen>());
-        AddNavButton("Sprite", () => ShowScreen<SpriteScreen>());
-        AddNavButton("Svg", () => ShowScreen<SvgScreen>());
-        AddNavButton("Render Target", () => ShowScreen<RenderTargetScreen>());
-        AddNavButton("RT Shader", () => ShowScreen<RenderTargetShaderScreen>());
-        AddNavButton("Zoom", () => ShowScreen<ZoomScreen>());
-        AddNavButton("Layer Camera", () => ShowScreen<LayerCameraSettingsScreen>());
-
-        AddFitModeRadio("Zoom", isChecked: true, () => GumUI.EnableZoomToWindow());
-        AddFitModeRadio("Expand", isChecked: false, () => GumUI.EnableExpandToWindow());
-    }
-
-    private void AddFitModeRadio(string text, bool isChecked, Action onChecked)
-    {
-        RadioButton radio = new RadioButton();
-        radio.Name = "FitMode" + text;
-        radio.GroupName = "FitMode";
-        radio.Text = text;
-        radio.IsChecked = isChecked;
-        radio.Checked += (_, _) => onChecked();
-        _navStrip.AddChild(radio);
-    }
-
-    private void AddNavButton(string text, Action onClick)
-    {
-        Button button = new Button();
-        // Named so automation scripts can target it, e.g. NavForms or NavRenderTarget.
-        button.Name = "Nav" + text.Replace(" ", "");
-        button.Text = text;
-        button.Click += (_, _) => onClick();
-        _navStrip.AddChild(button);
-    }
-
-    private void ShowScreen<T>() where T : FrameworkElement, new()
-    {
-        _currentScreen?.RemoveFromRoot();
-
-        // ZoomScreen and LayerCameraSettingsScreen drive the shared main Camera directly, so reset it
-        // here so leaving either screen zoomed or panned never leaks into the next screen.
-        SystemManagers.Default.Renderer.Camera.Zoom = 1f;
-        SystemManagers.Default.Renderer.Camera.X = 0f;
-        SystemManagers.Default.Renderer.Camera.Y = 0f;
-
-        _currentScreen = new T();
-        // The screen's ctor calls Dock(Fill); anchor it to the top and shrink it by the nav strip's
-        // height so the two never overlap.
-        _currentScreen.Visual.YOrigin = RenderingLibrary.Graphics.VerticalAlignment.Top;
-        _currentScreen.Visual.YUnits = Gum.Converters.GeneralUnitType.PixelsFromSmall;
-        _currentScreen.Visual.Y = _navStrip.Visual.AbsoluteHeight;
-        _currentScreen.Visual.Height = -_navStrip.Visual.AbsoluteHeight;
-        _currentScreen.AddToRoot();
     }
 
     protected override void Update(GameTime gameTime)
@@ -164,8 +89,7 @@ public class Game1 : Game
 
         GumUI.Update(gameTime);
 
-        // FrameworkElement.Activity() is FRB-only, so screens that animate get a host-driven Tick.
-        (_currentScreen as TextScreen)?.Tick(gameTime.ElapsedGameTime.TotalSeconds);
+        gallery.Tick(gameTime.ElapsedGameTime.TotalSeconds);
 
         base.Update(gameTime);
     }
