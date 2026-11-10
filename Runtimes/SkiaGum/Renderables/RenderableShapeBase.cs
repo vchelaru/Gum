@@ -883,7 +883,7 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
         var systemManagers = (SystemManagers)managers;
         var canvas = systemManagers.Canvas;
         DrawStatistics = systemManagers.RenderStatisticsIfInitialized;
-        AtlasBatch = systemManagers.SpriteBatchIfInitialized;
+        AtlasBatch = systemManagers.ActiveSpriteBatch;
         try
         {
             RenderToCanvas(canvas);

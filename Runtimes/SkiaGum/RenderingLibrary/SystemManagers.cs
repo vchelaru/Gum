@@ -89,7 +89,8 @@ namespace RenderingLibrary
         internal RenderingLibrary.Graphics.RenderStateChangeStatistics? RenderStatisticsIfInitialized =>
             _renderer?.RenderStateChangeStatistics;
 
-        internal RenderingLibrary.Graphics.SpriteAtlasBatch? SpriteBatchIfInitialized => _renderer?.SpriteBatch;
+        // Null outside a Renderer draw entry point, so a sprite rendered by hand draws immediately.
+        internal RenderingLibrary.Graphics.SpriteAtlasBatch? ActiveSpriteBatch => _renderer?.ActiveSpriteBatch;
 
         #endregion
 
