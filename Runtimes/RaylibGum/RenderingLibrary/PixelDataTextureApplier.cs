@@ -18,6 +18,8 @@ internal static class PixelDataTextureApplier
 
     public static void ApplyCached(GraphicalUiElement target, string cacheKey, byte[] rgba, int width, int height)
     {
+        PixelDataValidation.EnsureRgbaLength(rgba, width, height);
+
         if (target?.RenderableComponent is not Sprite sprite)
         {
             return;
@@ -42,6 +44,8 @@ internal static class PixelDataTextureApplier
 
     public static void ApplyPooled(GraphicalUiElement target, GraphicalUiElement owner, byte[] rgba, int width, int height)
     {
+        PixelDataValidation.EnsureRgbaLength(rgba, width, height);
+
         if (target?.RenderableComponent is not Sprite sprite)
         {
             return;

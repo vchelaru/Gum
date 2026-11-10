@@ -74,17 +74,93 @@ public class PooledPixelDataTextureTests
         second.GetPixel(3, 3).ShouldBe(new SKColor(90, 0, 0, 255));
     }
 
+    // The size rule is tested with plain numbers: a test that handed oversized data to a real bitmap
+    // would write past its native buffer if the rule ever regressed, aborting the test host.
     [Fact]
-    public void Upload_DataLargerThanTheBitmap_ThrowsInsteadOfWritingPastIt()
+    public void EnsureFits_DataLargerThanTheBitmap_Throws()
     {
-        using SKBitmap bitmap = new SKBitmap(new SKImageInfo(3, 3, SKColorType.Rgba8888, SKAlphaType.Premul));
-        byte[] oversized = new byte[5 * 5 * 4];
-
         ArgumentException exception = Should.Throw<ArgumentException>(
-            () => RenderingLibrary.PixelDataTextureApplier.Upload(bitmap, oversized));
+            () => RenderingLibrary.PixelDataTextureApplier.EnsureFits(bitmapByteCount: 36, dataLength: 100));
 
         exception.Message.ShouldContain("100 bytes");
-        exception.Message.ShouldContain("3x3");
+        exception.Message.ShouldContain("36");
+    }
+
+    [Fact]
+    public void EnsureFits_DataOneByteOverTheBitmap_Throws()
+    {
+        Should.Throw<ArgumentException>(
+            () => RenderingLibrary.PixelDataTextureApplier.EnsureFits(bitmapByteCount: 36, dataLength: 37));
+    }
+
+    [Theory]
+    [InlineData(36, 36)]
+    [InlineData(36, 8)]
+    [InlineData(36, 0)]
+    public void EnsureFits_DataAtMostTheBitmapSize_DoesNotThrow(long bitmapByteCount, int dataLength)
+    {
+        Should.NotThrow(
+            () => RenderingLibrary.PixelDataTextureApplier.EnsureFits(bitmapByteCount, dataLength));
+    }
+
+    [Fact]
+    public void Upload_DataSmallerThanTheBitmap_CopiesItWithoutTouchingTheRest()
+    {
+        using SKBitmap bitmap = new SKBitmap(new SKImageInfo(2, 2, SKColorType.Rgba8888, SKAlphaType.Premul));
+        bitmap.Erase(new SKColor(0, 0, 0, 0));
+        byte[] firstPixelOnly = { 11, 0, 0, 255 };
+
+        RenderingLibrary.PixelDataTextureApplier.Upload(bitmap, firstPixelOnly);
+
+        bitmap.GetPixel(0, 0).ShouldBe(new SKColor(11, 0, 0, 255));
+        bitmap.GetPixel(1, 1).ShouldBe(new SKColor(0, 0, 0, 0));
+    }
+
+    [Fact]
+    public void ApplyPooled_DataShorterThanTheSize_ThrowsAndLeavesTheSpriteAlone()
+    {
+        ContainerRuntime root = new ContainerRuntime();
+        SpriteRuntime target = new SpriteRuntime();
+
+        Should.Throw<ArgumentException>(() =>
+            GraphicalUiElement.ApplyPooledTextureFromPixelData!(target, Attach(root), new byte[8], 6, 6));
+
+        ((Sprite)target.RenderableComponent).Texture.ShouldBeNull();
+    }
+
+    [Fact]
+    public void ApplyPooled_DataLongerThanTheSize_Throws()
+    {
+        ContainerRuntime root = new ContainerRuntime();
+
+        Should.Throw<ArgumentException>(() =>
+            GraphicalUiElement.ApplyPooledTextureFromPixelData!(
+                new SpriteRuntime(), Attach(root), new byte[6 * 6 * 4 + 4], 6, 6));
+    }
+
+    [Fact]
+    public void ApplyCached_DataShorterThanTheSize_Throws()
+    {
+        Should.Throw<ArgumentException>(() =>
+            GraphicalUiElement.ApplyCachedTextureFromPixelData!(
+                new SpriteRuntime(), "PooledPixelDataTextureTests.ShortData", new byte[8], 6, 6));
+    }
+
+    [Fact]
+    public void ApplyPooled_BadDataWhenAnOwnerChangesSize_KeepsTheOwnersBitmapFromOtherOwners()
+    {
+        ContainerRuntime root = new ContainerRuntime();
+        ContainerRuntime ownerA = Attach(root);
+        SpriteRuntime targetA = new SpriteRuntime();
+        SKBitmap bitmapA = ApplyPooled(targetA, ownerA, size: 6, red: 40);
+
+        Should.Throw<ArgumentException>(() =>
+            GraphicalUiElement.ApplyPooledTextureFromPixelData!(targetA, ownerA, new byte[8], 9, 9));
+        SKBitmap bitmapB = ApplyPooled(new SpriteRuntime(), Attach(root), size: 6, red: 200);
+
+        bitmapB.ShouldNotBeSameAs(bitmapA);
+        ((Sprite)targetA.RenderableComponent).Texture.ShouldBeSameAs(bitmapA);
+        bitmapA.GetPixel(0, 0).ShouldBe(new SKColor(40, 0, 0, 255));
     }
 
     [Fact]

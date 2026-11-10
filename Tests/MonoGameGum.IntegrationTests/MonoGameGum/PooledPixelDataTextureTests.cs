@@ -61,6 +61,37 @@ public class PooledPixelDataTextureTests : BaseTestClass
         second.ShouldBeSameAs(first);
     }
 
+    [Fact]
+    public void ApplyPooled_DataOfTheWrongLength_ThrowsTheSharedMessageAndLeavesTheSpriteAlone()
+    {
+        using GumServiceGame game = StartGame();
+        ContainerRuntime root = new ContainerRuntime();
+        SpriteRuntime target = new SpriteRuntime();
+
+        ArgumentException exception = Should.Throw<ArgumentException>(() =>
+            GraphicalUiElement.ApplyPooledTextureFromPixelData!(target, Attach(root), new byte[8], 6, 6));
+
+        exception.Message.ShouldContain("6x6");
+        ((global::RenderingLibrary.Graphics.Sprite)target.RenderableComponent).Texture.ShouldBeNull();
+    }
+
+    [Fact]
+    public void ApplyPooled_BadDataWhenAnOwnerChangesSize_KeepsTheOwnersTextureFromOtherOwners()
+    {
+        using GumServiceGame game = StartGame();
+        ContainerRuntime root = new ContainerRuntime();
+        ContainerRuntime ownerA = Attach(root);
+        SpriteRuntime targetA = new SpriteRuntime();
+        Texture2D textureA = ApplyPooled(targetA, ownerA, size: 6);
+
+        Should.Throw<ArgumentException>(() =>
+            GraphicalUiElement.ApplyPooledTextureFromPixelData!(targetA, ownerA, new byte[8], 9, 9));
+        Texture2D textureB = ApplyPooled(new SpriteRuntime(), Attach(root), size: 6);
+
+        textureB.ShouldNotBeSameAs(textureA);
+        ((global::RenderingLibrary.Graphics.Sprite)targetA.RenderableComponent).Texture.ShouldBeSameAs(textureA);
+    }
+
     private static GumServiceGame StartGame()
     {
         GumServiceGame game = new GumServiceGame();

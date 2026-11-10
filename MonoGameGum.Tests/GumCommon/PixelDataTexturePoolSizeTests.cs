@@ -126,6 +126,26 @@ public class PixelDataTexturePoolSizeTests : BaseTestClass
     }
 
     [Fact]
+    public void GetOrCreate_CreateThrowsOnASizeChange_OwnerKeepsItsTextureAndNobodyElseGetsIt()
+    {
+        ContainerRuntime root = new ContainerRuntime();
+        PixelDataTexturePool<SizedTexture> pool = new PixelDataTexturePool<SizedTexture>();
+        int createCount = 0;
+        GraphicalUiElement owner = AttachedOwner(root);
+        SizedTexture ownersTexture = GetOrCreate(pool, owner, 3, ref createCount);
+
+        Should.Throw<InvalidOperationException>(() => pool.GetOrCreate(
+            owner,
+            existing => existing.Size == 9,
+            () => throw new InvalidOperationException("allocation failed")));
+        SizedTexture otherOwnersTexture = GetOrCreate(pool, AttachedOwner(root), 3, ref createCount);
+        SizedTexture ownerAgain = GetOrCreate(pool, owner, 3, ref createCount);
+
+        otherOwnersTexture.ShouldNotBeSameAs(ownersTexture);
+        ownerAgain.ShouldBeSameAs(ownersTexture);
+    }
+
+    [Fact]
     public void GetOrCreate_LiveOwnerKeepsItsTexture_WhenAnotherOwnerNeedsADifferentSize()
     {
         ContainerRuntime root = new ContainerRuntime();

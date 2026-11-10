@@ -20,6 +20,8 @@ internal static class PixelDataTextureApplier
 
     public static void ApplyCached(GraphicalUiElement target, string cacheKey, byte[] rgba, int width, int height)
     {
+        PixelDataValidation.EnsureRgbaLength(rgba, width, height);
+
         if (target?.RenderableComponent is not Sprite sprite)
         {
             return;
@@ -38,6 +40,8 @@ internal static class PixelDataTextureApplier
 
     public static void ApplyPooled(GraphicalUiElement target, GraphicalUiElement owner, byte[] rgba, int width, int height)
     {
+        PixelDataValidation.EnsureRgbaLength(rgba, width, height);
+
         if (target?.RenderableComponent is not Sprite sprite)
         {
             return;
@@ -63,16 +67,24 @@ internal static class PixelDataTextureApplier
 
     internal static void Upload(SKBitmap bitmap, byte[] rgba)
     {
-        // Marshal.Copy writes whatever it is told into the bitmap's native buffer, so a pixel array
-        // larger than the bitmap would corrupt the heap. Fail with a clear exception instead.
-        if (rgba.Length > bitmap.ByteCount)
-        {
-            throw new ArgumentException(
-                $"Pixel data is {rgba.Length} bytes but the {bitmap.Width}x{bitmap.Height} bitmap holds only {bitmap.ByteCount}.",
-                nameof(rgba));
-        }
+        EnsureFits(bitmap.ByteCount, rgba.Length);
 
         Marshal.Copy(rgba, 0, bitmap.GetPixels(), rgba.Length);
         bitmap.NotifyPixelsChanged();
+    }
+
+    /// <summary>
+    /// Marshal.Copy writes whatever it is told into the bitmap's native buffer, so a pixel array larger
+    /// than the bitmap would corrupt the heap. This is the check that stops it, kept free of any bitmap
+    /// so it can be tested with plain numbers.
+    /// </summary>
+    internal static void EnsureFits(long bitmapByteCount, int dataLength)
+    {
+        if (dataLength > bitmapByteCount)
+        {
+            throw new ArgumentException(
+                $"Pixel data is {dataLength} bytes but the bitmap holds only {bitmapByteCount}.",
+                "rgba");
+        }
     }
 }

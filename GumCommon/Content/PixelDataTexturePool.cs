@@ -56,15 +56,17 @@ public class PixelDataTexturePool<TTexture>
 
     /// <summary>
     /// Returns a texture reserved for <paramref name="owner"/> that satisfies <paramref name="fits"/>.
-    /// The owner's own texture is returned when it fits. Otherwise the owner gives that entry up (it
-    /// stays in the pool for a caller it fits) and the texture of a detached entry that fits is
-    /// reused, or <paramref name="create"/> allocates one when none does.
+    /// The owner's own texture is returned when it fits. Otherwise the texture of a detached entry that
+    /// fits is reused, or <paramref name="create"/> allocates one when none does, and only then does the
+    /// owner give up its old entry (it stays in the pool for a caller it fits). If <paramref name="create"/>
+    /// throws, the owner keeps its old entry.
     /// </summary>
     /// <param name="owner">The element the texture is reserved for.</param>
     /// <param name="fits">Whether an existing texture has the size this caller needs.</param>
     /// <param name="create">Allocates a texture of the size this caller needs. Only called when nothing fits.</param>
     public TTexture GetOrCreate(GraphicalUiElement owner, Func<TTexture, bool> fits, Func<TTexture> create)
     {
+        PoolEntry? outgrown = null;
         foreach (PoolEntry candidate in _entries)
         {
             if (candidate.Owner != owner)
@@ -77,26 +79,35 @@ public class PixelDataTexturePool<TTexture>
                 return candidate.Texture;
             }
 
-            // The owner's pixel data changed size. Give the old entry up so a caller of that size can
-            // reclaim it; the owner's sprite is pointed at the new texture by the caller.
-            candidate.Owner = null;
+            outgrown = candidate;
             break;
         }
 
+        PoolEntry? replacement = null;
         foreach (PoolEntry candidate in _entries)
         {
             // An entry whose owner has left the visual tree (removed from root) can be reused.
             bool isReclaimable = candidate.Owner == null || candidate.Owner.Parent == null;
             if (isReclaimable && fits(candidate.Texture))
             {
-                candidate.Owner = owner;
-                return candidate.Texture;
+                replacement = candidate;
+                break;
             }
         }
 
-        PoolEntry entry = AddEntry(create());
-        entry.Owner = owner;
-        return entry.Texture;
+        // create() can throw. Until the owner has its new texture it keeps the old entry, because the
+        // owner's sprite is still showing that texture and must not hand it to another owner.
+        replacement ??= AddEntry(create());
+        replacement.Owner = owner;
+
+        if (outgrown != null)
+        {
+            // The owner's pixel data changed size. Give the old entry up so a caller of that size can
+            // reclaim it; the caller points the owner's sprite at the new texture.
+            outgrown.Owner = null;
+        }
+
+        return replacement.Texture;
     }
 
     private PoolEntry AddEntry(TTexture texture)

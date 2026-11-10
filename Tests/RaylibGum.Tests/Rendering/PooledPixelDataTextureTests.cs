@@ -56,6 +56,44 @@ public class PooledPixelDataTextureTests : BaseTestClass
         second.Id.ShouldBe(first.Id);
     }
 
+    [Fact]
+    public void ApplyPooled_DataLongerThanTheSize_ThrowsAndLeavesTheSpriteAlone()
+    {
+        ContainerRuntime root = new ContainerRuntime();
+        SpriteRuntime target = new SpriteRuntime();
+
+        ArgumentException exception = Should.Throw<ArgumentException>(() =>
+            GraphicalUiElement.ApplyPooledTextureFromPixelData!(target, Attach(root), new byte[6 * 6 * 4 + 4], 6, 6));
+
+        exception.Message.ShouldContain("6x6");
+        ((Sprite)target.RenderableComponent).Texture.ShouldBeNull();
+    }
+
+    [Fact]
+    public void ApplyPooled_DataShorterThanTheSize_Throws()
+    {
+        ContainerRuntime root = new ContainerRuntime();
+
+        Should.Throw<ArgumentException>(() =>
+            GraphicalUiElement.ApplyPooledTextureFromPixelData!(new SpriteRuntime(), Attach(root), new byte[8], 6, 6));
+    }
+
+    [Fact]
+    public void ApplyPooled_BadDataWhenAnOwnerChangesSize_KeepsTheOwnersTextureFromOtherOwners()
+    {
+        ContainerRuntime root = new ContainerRuntime();
+        ContainerRuntime ownerA = Attach(root);
+        SpriteRuntime targetA = new SpriteRuntime();
+        Texture2D textureA = ApplyPooled(targetA, ownerA, size: 6);
+
+        Should.Throw<ArgumentException>(() =>
+            GraphicalUiElement.ApplyPooledTextureFromPixelData!(targetA, ownerA, new byte[8], 9, 9));
+        Texture2D textureB = ApplyPooled(new SpriteRuntime(), Attach(root), size: 6);
+
+        textureB.Id.ShouldNotBe(textureA.Id);
+        ((Sprite)targetA.RenderableComponent).Texture!.Value.Id.ShouldBe(textureA.Id);
+    }
+
     private static ContainerRuntime Attach(ContainerRuntime root)
     {
         ContainerRuntime owner = new ContainerRuntime();
