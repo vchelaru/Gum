@@ -114,8 +114,8 @@ public class KniSkiaFrameAllocationTests : BaseTestClass
     }
 
     // Ratchets: zero is the target. What remains, sampled over 40,000 frames with GCAllocationTick, is
-    // the FULL_DIAGNOSTICS duplicate-gamepad HashSet in FormsUtilities.UpdateGamepads, the boxed key
-    // enumerator of PolledKeyboard.SupportedKeys (an IEnumerable), and one closure not yet traced.
+    // the FULL_DIAGNOSTICS duplicate-gamepad HashSet in FormsUtilities.UpdateGamepads and the boxed key
+    // enumerator of PolledKeyboard.SupportedKeys (an IEnumerable).
     // The seconds overload also builds a GameTime each frame (40 bytes): KNI keeps its setters internal.
     [Fact]
     public void UpdateWithGameTimeAndDraw_UnchangedScreen_AllocationBaseline()
@@ -146,7 +146,7 @@ public class KniSkiaFrameAllocationTests : BaseTestClass
         _created.Count.ShouldBe(1);
         _created[0].PresentCount.ShouldBeGreaterThan(300);
         _created[0].PixelAt(25, 25).Red.ShouldBe((byte)255);
-        result.BytesPerIteration.ShouldBeLessThanOrEqualTo(128);
+        result.BytesPerIteration.ShouldBeLessThanOrEqualTo(96);
     }
 
     [Fact]
@@ -169,6 +169,6 @@ public class KniSkiaFrameAllocationTests : BaseTestClass
 
         _created.Count.ShouldBe(1);
         _created[0].PixelAt(25, 25).Red.ShouldBe((byte)255);
-        result.BytesPerIteration.ShouldBeLessThanOrEqualTo(168);
+        result.BytesPerIteration.ShouldBeLessThanOrEqualTo(136);
     }
 }

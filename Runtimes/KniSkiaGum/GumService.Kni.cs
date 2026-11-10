@@ -364,12 +364,7 @@ public partial class GumService : GumServiceSkiaInteractiveBase, IGumService, Ba
         }
 
         (int width, int height) = GetWindowSize();
-        _targetHolder ??= new SkiaTargetHolder<IKniSkiaTarget>(
-            (w, h) => TargetFactoryOverride != null
-                ? TargetFactoryOverride(w, h)
-                : new KniSkiaTarget(graphicsDevice!, w, h),
-            canvas => SystemManagers.Default.Canvas = canvas,
-            HandleResize);
+        _targetHolder ??= CreateTargetHolder(graphicsDevice);
 
         if (_targetHolder.Target == null)
         {
@@ -388,6 +383,16 @@ public partial class GumService : GumServiceSkiaInteractiveBase, IGumService, Ba
         _frameOpen = frameCanvas != null;
         return _frameOpen;
     }
+
+    // Separate from TryOpenFrame so the lambdas' capture of graphicsDevice allocates only when the holder
+    // is created, not on every frame.
+    private SkiaTargetHolder<IKniSkiaTarget> CreateTargetHolder(XnaGraphicsDevice? graphicsDevice) =>
+        new SkiaTargetHolder<IKniSkiaTarget>(
+            (w, h) => TargetFactoryOverride != null
+                ? TargetFactoryOverride(w, h)
+                : new KniSkiaTarget(graphicsDevice!, w, h),
+            canvas => SystemManagers.Default.Canvas = canvas,
+            HandleResize);
 
     private void CloseFrame(bool present)
     {
