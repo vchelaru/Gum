@@ -217,6 +217,23 @@ public class ListBoxSelectedIndexPushTests : BaseTestClass
         secondViewModel.Selected.ShouldBe("C");
     }
 
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void Rebind_ShouldNotWriteToPreviousViewModel(bool bindIndexFirst)
+    {
+        ListBox listBox = CreateListBox("A", "B", "C");
+        SelectionViewModel first = new();
+        BindBoth(listBox, first, bindIndexFirst);
+        listBox.SelectedIndex = 2;
+        SelectionViewModel second = new() { SelectedIndex = 0 };
+
+        listBox.BindingContext = second;
+
+        first.SelectedIndex.ShouldBe(2);
+        first.Selected.ShouldBe("C");
+    }
+
     [Fact]
     public void VisualSwap_LaterChanges_ShouldPush()
     {
@@ -283,7 +300,39 @@ public class ListBoxSelectedIndexPushTests : BaseTestClass
         count[0].ShouldBe(2);
     }
 
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void ComboBox_Rebind_ShouldNotWriteToPreviousViewModel(bool bindIndexFirst)
+    {
+        ComboBox comboBox = CreateComboBox("A", "B", "C");
+        SelectionViewModel first = new();
+        BindBoth(comboBox, first, bindIndexFirst);
+        comboBox.SelectedIndex = 2;
+        SelectionViewModel second = new() { SelectedIndex = 0 };
+
+        comboBox.BindingContext = second;
+
+        first.SelectedIndex.ShouldBe(2);
+        first.Selected.ShouldBe("C");
+    }
+
     #endregion
+
+    private static void BindBoth(FrameworkElement element, SelectionViewModel viewModel, bool bindIndexFirst)
+    {
+        element.BindingContext = viewModel;
+        if (bindIndexFirst)
+        {
+            element.SetBinding(nameof(ListBox.SelectedIndex), nameof(viewModel.SelectedIndex));
+            element.SetBinding(nameof(ListBox.SelectedObject), nameof(viewModel.Selected));
+        }
+        else
+        {
+            element.SetBinding(nameof(ListBox.SelectedObject), nameof(viewModel.Selected));
+            element.SetBinding(nameof(ListBox.SelectedIndex), nameof(viewModel.SelectedIndex));
+        }
+    }
 
     private static SelectionViewModel Bind(FrameworkElement element)
     {

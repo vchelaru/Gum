@@ -53,6 +53,13 @@ internal abstract class UntypedBindingExpression : BindingExpressionBase
     protected bool SuppressAttach { get; set; }
 
     /// <summary>
+    /// Whether the source this binding is attached to is the target's current BindingContext. False
+    /// while a BindingContext change is being relayed and this binding has not re-attached yet.
+    /// </summary>
+    protected bool IsAttachedToCurrentBindingContext =>
+        ReferenceEquals(CurrentRoot, TargetElement.BindingContext);
+
+    /// <summary>
     /// Commits any pending edit to the outgoing source before <see cref="AttachToSource"/> repoints
     /// this binding at a new one. A source swap (e.g. a master-detail panel's BindingContext changing)
     /// is an implicit end-of-edit, since the control is about to display a different object entirely -
