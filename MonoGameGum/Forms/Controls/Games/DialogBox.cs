@@ -435,7 +435,6 @@ public class DialogBox : FrameworkElement, IInputReceiver
             Pages.RemoveAt(0);
             if(page.Task != null)
             {
-                StopTyping();
                 this.IsVisible = false;
                 this.IsFocused = false;
                 await page.Task();
