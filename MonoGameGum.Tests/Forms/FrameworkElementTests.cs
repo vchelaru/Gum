@@ -1132,6 +1132,85 @@ public class FrameworkElementTests : BaseTestClass
             "because the button is already drawn through its managed parent");
     }
 
+    [Theory]
+    [InlineData(typeof(Button))]
+    [InlineData(typeof(Label))]
+    [InlineData(typeof(CheckBox))]
+    [InlineData(typeof(ToggleButton))]
+    [InlineData(typeof(TextBox))]
+    [InlineData(typeof(PasswordBox))]
+    [InlineData(typeof(Slider))]
+    [InlineData(typeof(ListBox))]
+    [InlineData(typeof(ComboBox))]
+    [InlineData(typeof(ScrollViewer))]
+    [InlineData(typeof(StackPanel))]
+    public void Show_ForEachControlType_WhenAncestorIsManaged_ShouldNotRegisterRenderableAsTopLevel(Type controlType)
+    {
+        List<RenderingLibrary.Graphics.IRenderableIpso> registered = new();
+        GraphicalUiElement.AddRenderableToManagers = (renderable, managers, layer) => registered.Add(renderable);
+        FrameworkElement control = (FrameworkElement)Activator.CreateInstance(controlType)!;
+        ContainerRuntime container = new();
+        Gum.GumService.Default.Root.AddChild(container);
+        container.AddChild(control.Visual);
+
+        control.Show();
+
+        registered.ShouldNotContain((RenderingLibrary.Graphics.IRenderableIpso)control.Visual.RenderableComponent);
+    }
+
+    [Theory]
+    [InlineData(typeof(Button))]
+    [InlineData(typeof(Label))]
+    [InlineData(typeof(CheckBox))]
+    [InlineData(typeof(TextBox))]
+    [InlineData(typeof(Slider))]
+    [InlineData(typeof(ListBox))]
+    [InlineData(typeof(ScrollViewer))]
+    [InlineData(typeof(StackPanel))]
+    public void Show_ForEachControlType_WhenNoAncestorIsManaged_ShouldRegisterRenderableExactlyOnce(Type controlType)
+    {
+        List<RenderingLibrary.Graphics.IRenderableIpso> registered = new();
+        GraphicalUiElement.AddRenderableToManagers = (renderable, managers, layer) => registered.Add(renderable);
+        FrameworkElement control = (FrameworkElement)Activator.CreateInstance(controlType)!;
+
+        control.Show();
+        control.Show();
+
+        registered.Count(renderable => ReferenceEquals(renderable, control.Visual.RenderableComponent)).ShouldBe(1);
+    }
+
+    [Fact]
+    public void Show_WhenVisualHasNoParentButRootIsManaged_ShouldStillRegisterRenderable()
+    {
+        // Pins that the guard keys on the visual's own ancestry, not on Root existing:
+        // an unparented visual is not drawn by Root, so Show must put it on a layer.
+        List<RenderingLibrary.Graphics.IRenderableIpso> registered = new();
+        GraphicalUiElement.AddRenderableToManagers = (renderable, managers, layer) => registered.Add(renderable);
+        Gum.GumService.Default.Root.EffectiveManagers.ShouldNotBeNull();
+        Button button = new();
+
+        button.Show();
+
+        registered.ShouldContain((RenderingLibrary.Graphics.IRenderableIpso)button.Visual.RenderableComponent);
+    }
+
+    [Fact]
+    public void Show_WhenAncestorWasManagedThenRemoved_ShouldRegisterRenderable()
+    {
+        List<RenderingLibrary.Graphics.IRenderableIpso> registered = new();
+        GraphicalUiElement.AddRenderableToManagers = (renderable, managers, layer) => registered.Add(renderable);
+        Button button = new();
+        ContainerRuntime container = new();
+        Gum.GumService.Default.Root.AddChild(container);
+        container.AddChild(button.Visual);
+        container.Parent = null;
+        container.EffectiveManagers.ShouldBeNull("the container left the managed Root");
+
+        button.Show();
+
+        registered.ShouldContain((RenderingLibrary.Graphics.IRenderableIpso)button.Visual.RenderableComponent);
+    }
+
     [Fact]
     public void Show_WhenNoAncestorIsManaged_ShouldRegisterRenderableAsTopLevel()
     {

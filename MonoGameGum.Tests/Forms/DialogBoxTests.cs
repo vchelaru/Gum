@@ -469,6 +469,250 @@ public class DialogBoxTests : BaseTestClass
         registered.ShouldContain((IRenderableIpso)visual.RenderableComponent);
     }
 
+    // What the renderer would draw this frame: Root plus every renderable Show put on a layer.
+    private static int CountDrawsOfDialogText(List<IRenderableIpso> registered, TestDialogBoxVisual visual)
+    {
+        Layer layer = new();
+        layer.Add((IRenderableIpso)Gum.GumService.Default.Root.RenderableComponent);
+        foreach (IRenderableIpso renderable in registered)
+        {
+            layer.Add(renderable);
+        }
+        List<DrawCommand> commands = new();
+        HierarchicalOrderer.Instance.BuildDrawList(layer, commands);
+        return commands.Count(command =>
+            command.Kind == DrawCommandKind.DrawRenderable && ReferenceEquals(command.Target, visual.TextInstance));
+    }
+
+    [Fact]
+    public void Show_WithNoParent_ShouldDrawDialogTextOnce()
+    {
+        List<IRenderableIpso> registered = RecordLayerRegistrations();
+        var (dialogBox, visual) = CreateDialogBox();
+
+        dialogBox.Show("hello");
+
+        CountDrawsOfDialogText(registered, visual).ShouldBe(1);
+    }
+
+    [Fact]
+    public void Show_InsideManagedContainer_ShouldDrawDialogTextOnce()
+    {
+        List<IRenderableIpso> registered = RecordLayerRegistrations();
+        var (dialogBox, visual) = CreateDialogBox();
+        ContainerRuntime container = new();
+        Gum.GumService.Default.Root.AddChild(container);
+        container.AddChild(visual);
+
+        dialogBox.Show("hello");
+
+        CountDrawsOfDialogText(registered, visual).ShouldBe(1);
+    }
+
+    [Fact]
+    public void Show_DeeplyNestedInManagedContainers_ShouldDrawDialogTextOnce()
+    {
+        List<IRenderableIpso> registered = RecordLayerRegistrations();
+        var (dialogBox, visual) = CreateDialogBox();
+        ContainerRuntime outer = new();
+        ContainerRuntime middle = new();
+        ContainerRuntime inner = new();
+        Gum.GumService.Default.Root.AddChild(outer);
+        outer.AddChild(middle);
+        middle.AddChild(inner);
+        inner.AddChild(visual);
+
+        dialogBox.Show("hello");
+
+        CountDrawsOfDialogText(registered, visual).ShouldBe(1);
+    }
+
+    [Fact]
+    public void ShowAsync_WithPageTasks_InsideManagedContainer_ShouldNotRegisterRenderableAsTopLevel()
+    {
+        List<IRenderableIpso> registered = RecordLayerRegistrations();
+        var (dialogBox, visual) = CreateDialogBox();
+        ContainerRuntime container = new();
+        Gum.GumService.Default.Root.AddChild(container);
+        container.AddChild(visual);
+
+        _ = dialogBox.ShowAsync(new DialogPageTask[] { "hello" });
+
+        registered.ShouldNotContain((IRenderableIpso)visual.RenderableComponent);
+    }
+
+    [Fact]
+    public void ShowAsync_WithStringPages_InsideManagedContainer_ShouldNotRegisterRenderableAsTopLevel()
+    {
+        List<IRenderableIpso> registered = RecordLayerRegistrations();
+        var (dialogBox, visual) = CreateDialogBox();
+        ContainerRuntime container = new();
+        Gum.GumService.Default.Root.AddChild(container);
+        container.AddChild(visual);
+
+        _ = dialogBox.ShowAsync(new[] { "hello", "world" });
+
+        registered.ShouldNotContain((IRenderableIpso)visual.RenderableComponent);
+    }
+
+    [Fact]
+    public void ShowAsync_WithNoParent_ShouldAddToRootWithoutRegisteringTopLevelRenderable()
+    {
+        List<IRenderableIpso> registered = RecordLayerRegistrations();
+        var (dialogBox, visual) = CreateDialogBox();
+
+        _ = dialogBox.ShowAsync("hello");
+
+        visual.Parent.ShouldBe(Gum.GumService.Default.Root);
+        registered.ShouldNotContain((IRenderableIpso)visual.RenderableComponent);
+    }
+
+    [Fact]
+    public void Show_InsideContainerAddedToManagersOnCustomLayer_ShouldNotRegisterOnDefaultLayer()
+    {
+        List<IRenderableIpso> registered = RecordLayerRegistrations();
+        var (dialogBox, visual) = CreateDialogBox();
+        ContainerRuntime container = new();
+        container.AddToManagers(SystemManagers.Default, new Layer());
+        container.AddChild(visual);
+
+        dialogBox.Show("hello");
+
+        registered.ShouldNotContain((IRenderableIpso)visual.RenderableComponent,
+            "because the container, on the user's own layer, already draws the dialog");
+        visual.Parent.ShouldBe(container);
+    }
+
+    [Theory]
+    [InlineData("PopupRoot")]
+    [InlineData("ModalRoot")]
+    public void Show_InsidePopupOrModalRoot_ShouldNotRegisterRenderableAsTopLevel(string rootName)
+    {
+        List<IRenderableIpso> registered = RecordLayerRegistrations();
+        var (dialogBox, visual) = CreateDialogBox();
+        InteractiveGue root = rootName == "PopupRoot" ? Gum.GumService.Default.PopupRoot : Gum.GumService.Default.ModalRoot;
+        root.AddChild(visual);
+
+        dialogBox.Show("hello");
+
+        registered.ShouldNotContain((IRenderableIpso)visual.RenderableComponent);
+        visual.Parent.ShouldBe(root);
+    }
+
+    [Fact]
+    public void Show_WithLayerArgument_WhenAncestorIsManaged_ShouldNotRegisterOnThatLayer()
+    {
+        List<IRenderableIpso> registered = RecordLayerRegistrations();
+        var (dialogBox, visual) = CreateDialogBox();
+        ContainerRuntime container = new();
+        Gum.GumService.Default.Root.AddChild(container);
+        container.AddChild(visual);
+
+        dialogBox.Show("hello", new Layer());
+
+        registered.ShouldNotContain((IRenderableIpso)visual.RenderableComponent);
+    }
+
+    [Fact]
+    public void Show_CalledTwice_ShouldAddVisualToRootOnce()
+    {
+        var (dialogBox, visual) = CreateDialogBox();
+
+        dialogBox.Show("first");
+        dialogBox.Show("second");
+
+        Gum.GumService.Default.Root.Children.Count(child => child == visual).ShouldBe(1);
+    }
+
+    [Fact]
+    public void Show_CalledTwiceWithNoManagedAncestor_ShouldRegisterRenderableOnce()
+    {
+        List<IRenderableIpso> registered = RecordLayerRegistrations();
+        var (dialogBox, visual) = CreateDialogBox();
+        ContainerRuntime detachedContainer = new();
+        detachedContainer.AddChild(visual);
+
+        dialogBox.Show("first");
+        dialogBox.Show("second");
+
+        registered.Count(renderable => ReferenceEquals(renderable, visual.RenderableComponent)).ShouldBe(1);
+    }
+
+    [Fact]
+    public void Show_AfterVisualRemovedFromRoot_ShouldAddItBackToRootOnce()
+    {
+        var (dialogBox, visual) = CreateDialogBox();
+        dialogBox.Show("first");
+        visual.Parent = null;
+
+        dialogBox.Show("second");
+
+        Gum.GumService.Default.Root.Children.Count(child => child == visual).ShouldBe(1);
+    }
+
+    [Fact]
+    public void Show_ThenVisualMovedToManagedContainer_ShouldDrawDialogTextOnce()
+    {
+        List<IRenderableIpso> registered = RecordLayerRegistrations();
+        var (dialogBox, visual) = CreateDialogBox();
+        dialogBox.Show("hello");
+        ContainerRuntime container = new();
+        Gum.GumService.Default.Root.AddChild(container);
+
+        container.AddChild(visual);
+
+        Gum.GumService.Default.Root.Children.ShouldNotContain(visual);
+        CountDrawsOfDialogText(registered, visual).ShouldBe(1);
+    }
+
+    [Fact]
+    public void Show_AfterDismiss_ShouldBeVisibleAgain()
+    {
+        var (dialogBox, visual) = CreateDialogBox();
+        dialogBox.Show("first");
+        dialogBox.Dismiss();
+        dialogBox.IsVisible.ShouldBeFalse();
+
+        dialogBox.Show("second");
+
+        dialogBox.IsVisible.ShouldBeTrue();
+        Gum.GumService.Default.Root.Children.Count(child => child == visual).ShouldBe(1);
+    }
+
+    [Fact]
+    public void Show_AfterClose_ShouldStillDrawDialogTextOnce()
+    {
+        List<IRenderableIpso> registered = RecordLayerRegistrations();
+        var (dialogBox, visual) = CreateDialogBox();
+        ContainerRuntime container = new();
+        Gum.GumService.Default.Root.AddChild(container);
+        container.AddChild(visual);
+        dialogBox.Show("first");
+        dialogBox.Close();
+
+        dialogBox.Show("second");
+
+        CountDrawsOfDialogText(registered, visual).ShouldBe(1);
+    }
+
+    [Fact]
+    public void Show_TwoDialogsInSameManagedContainer_ShouldRegisterNeitherAsTopLevel()
+    {
+        List<IRenderableIpso> registered = RecordLayerRegistrations();
+        var (dialogA, visualA) = CreateDialogBox();
+        var (dialogB, visualB) = CreateDialogBox();
+        ContainerRuntime container = new();
+        Gum.GumService.Default.Root.AddChild(container);
+        container.AddChild(visualA);
+        container.AddChild(visualB);
+
+        dialogA.Show("a");
+        dialogB.Show("b");
+
+        registered.ShouldNotContain((IRenderableIpso)visualA.RenderableComponent);
+        registered.ShouldNotContain((IRenderableIpso)visualB.RenderableComponent);
+    }
+
     private static Gum.Localization.LocalizationService CreateLocalization(string key, string translation)
     {
         Gum.Localization.LocalizationService localizationService = new();
