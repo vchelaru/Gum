@@ -42,6 +42,7 @@
 		<Compile Include="..\..\Gum\SvgPlugin\Managers\DefaultStateManager.cs" Link="DefaultStateManager.cs" />
 		<Compile Include="..\..\RenderingLibrary\Graphics\Animation\AnimationChain.cs" Link="Animation\AnimationChain.cs" />
 		<Compile Include="..\..\RenderingLibrary\Graphics\NineSliceBorders.cs" Link="Renderables\NineSliceBorders.cs" />
+		<Compile Include="..\..\RenderingLibrary\Graphics\RenderStateChangeStatistics.cs" Link="RenderingLibrary\RenderStateChangeStatistics.cs" />
 		<Compile Include="..\..\RenderingLibrary\Graphics\Animation\AnimationChainList.cs" Link="Animation\AnimationChainList.cs" />
 		<Compile Include="..\..\RenderingLibrary\Graphics\Animation\AnimationFrame.cs" Link="Animation\AnimationFrame.cs" />
 		<Compile Include="..\..\RenderingLibrary\Graphics\Animation\AnimationChainLogic.cs" Link="Animation\AnimationChainLogic.cs" />
@@ -119,6 +120,9 @@
 		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\SliderVisual.cs" Link="Forms\DefaultVisuals\V3\SliderVisual.cs" />
 		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\SplitterVisual.cs" Link="Forms\DefaultVisuals\V3\SplitterVisual.cs" />
 		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\Styling.cs" Link="Forms\DefaultVisuals\V3\Styling.cs" />
+		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\TabControlVisual.cs" Link="Forms\DefaultVisuals\V3\TabControlVisual.cs" />
+		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\TabItemVisual.cs" Link="Forms\DefaultVisuals\V3\TabItemVisual.cs" />
+		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\TabPageVisual.cs" Link="Forms\DefaultVisuals\V3\TabPageVisual.cs" />
 		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\ToggleButtonVisual.cs" Link="Forms\DefaultVisuals\V3\ToggleButtonVisual.cs" />
 		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\TextBoxBaseVisual.cs" Link="Forms\DefaultVisuals\V3\TextBoxBaseVisual.cs" />
 		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\TextBoxVisual.cs" Link="Forms\DefaultVisuals\V3\TextBoxVisual.cs" />

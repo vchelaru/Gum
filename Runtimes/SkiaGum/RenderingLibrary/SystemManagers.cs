@@ -85,6 +85,13 @@ namespace RenderingLibrary
 
         IRenderer ISystemManagers.Renderer => Renderer;
 
+        // Null before Initialize, so a renderable drawn by hand onto a canvas does not throw.
+        internal RenderingLibrary.Graphics.RenderStateChangeStatistics? RenderStatisticsIfInitialized =>
+            _renderer?.RenderStateChangeStatistics;
+
+        // Null outside a Renderer draw entry point, so a sprite rendered by hand draws immediately.
+        internal RenderingLibrary.Graphics.SpriteAtlasBatch? ActiveSpriteBatch => _renderer?.ActiveSpriteBatch;
+
         #endregion
 
         static bool HasInitializedGlobal = false;

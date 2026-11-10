@@ -197,12 +197,16 @@
 		<Compile Remove="..\Forms\Controls\PasswordBox.cs" />
 		<Compile Remove="..\Forms\Controls\Primitives\ButtonBase.cs" />
 		<Compile Remove="..\Forms\Controls\Primitives\RangeBase.cs" />
+		<Compile Remove="..\Forms\Controls\Primitives\ItemSelection.cs" />
 		<Compile Remove="..\Forms\Controls\RadioButton.cs" />
 		<Compile Remove="..\Forms\Controls\RowDefinition.cs" />
 		<Compile Remove="..\Forms\Controls\ScrollBar.cs" />
 		<Compile Remove="..\Forms\Controls\ScrollViewer.cs" />
 		<Compile Remove="..\Forms\Controls\Slider.cs" />
 		<Compile Remove="..\Forms\Controls\Splitter.cs" />
+		<Compile Remove="..\Forms\Controls\TabControl.cs" />
+		<Compile Remove="..\Forms\Controls\TabItem.cs" />
+		<Compile Remove="..\Forms\Controls\TabPage.cs" />
 		<Compile Remove="..\Forms\Controls\StackPanel.cs" />
 		<Compile Remove="..\Forms\Controls\TextBox.cs" />
 		<Compile Remove="..\Forms\Controls\TextBoxBase.cs" />

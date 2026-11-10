@@ -219,6 +219,53 @@ public class SpriteRenderer
         mSpriteBatch.RemoveLastStateStackEntry();
     }
 
+    /// <summary>
+    /// True while ColorTextureAlpha draws through BasicEffect's fog. Fog writes
+    /// <c>FogColor * alpha</c>, so this pass outputs color already multiplied by the vertex and texture
+    /// alpha: the tint must reach it straight, and the blend must not multiply by alpha again (#7837).
+    /// </summary>
+    internal bool IsColorTextureAlphaFogActive =>
+        !Renderer.UseCustomEffectRendering && Renderer.UseBasicEffectRendering && basicEffect?.FogEnabled == true;
+
+    // Weak keys, like XNAExtensions' cache, so a user BlendState that is dropped is not kept alive.
+    private readonly System.Runtime.CompilerServices.ConditionalWeakTable<Gum.BlendState, Gum.BlendState> _premultipliedColorBlendStates = new();
+
+    // A blend whose color source factor is SourceAlpha, with One in its place, for output whose color is
+    // already multiplied by alpha. Cached per source so a Begin allocates nothing (#7619), and rebuilt
+    // when the source was edited since.
+    internal Gum.BlendState? GetBlendStateForPremultipliedColor(Gum.BlendState? blendState)
+    {
+        if (blendState == null || blendState.ColorSourceBlend != Gum.Blend.SourceAlpha)
+        {
+            return blendState;
+        }
+
+        if (!_premultipliedColorBlendStates.TryGetValue(blendState, out var adjusted)
+            || !IsSameApartFromColorSource(adjusted, blendState))
+        {
+            adjusted = blendState.Clone();
+            adjusted.ColorSourceBlend = Gum.Blend.One;
+            _premultipliedColorBlendStates.Remove(blendState);
+            _premultipliedColorBlendStates.Add(blendState, adjusted);
+        }
+
+        return adjusted;
+    }
+
+    private static bool IsSameApartFromColorSource(Gum.BlendState a, Gum.BlendState b) =>
+        a.ColorBlendFunction == b.ColorBlendFunction
+        && a.ColorDestinationBlend == b.ColorDestinationBlend
+        && a.AlphaSourceBlend == b.AlphaSourceBlend
+        && a.AlphaBlendFunction == b.AlphaBlendFunction
+        && a.AlphaDestinationBlend == b.AlphaDestinationBlend
+        && a.ColorWriteChannels == b.ColorWriteChannels
+        && a.ColorWriteChannels1 == b.ColorWriteChannels1
+        && a.ColorWriteChannels2 == b.ColorWriteChannels2
+        && a.ColorWriteChannels3 == b.ColorWriteChannels3
+        && a.BlendFactor == b.BlendFactor
+        && a.MultiSampleMask == b.MultiSampleMask
+        && a.IndependentBlendEnable == b.IndependentBlendEnable;
+
     public void BeginSpriteBatch(RenderStateVariables renderStates, Layer layer, BeginType beginType, Camera camera, object? objectStartingSpriteBatch, Effect? effectOverride = null)
     {
         // Use the full camera transform for both UsingEffect and non-UsingEffect paths.
@@ -380,6 +427,10 @@ public class SpriteRenderer
             }
         }
 
+        var blendState = IsColorTextureAlphaFogActive
+            ? GetBlendStateForPremultipliedColor(renderStates.BlendState)
+            : renderStates.BlendState;
+
         // Miguel 2023/08/10
         // Why use Immediate instead of Deferred if it's slower?
         // I'll change it and let's see if it breaks anything.
@@ -388,7 +439,7 @@ public class SpriteRenderer
         if (beginType == BeginType.Begin)
         {
             mSpriteBatch.ReplaceRenderStates(SpriteSortMode.Deferred,
-                renderStates.BlendState,
+                blendState,
                 samplerState,
                 depthStencilState,
                 rasterizerState,
@@ -402,7 +453,7 @@ public class SpriteRenderer
         else
         {
             mSpriteBatch.PushRenderStates(SpriteSortMode.Deferred,
-                renderStates.BlendState,
+                blendState,
                 samplerState,
                 depthStencilState,
                 rasterizerState,
@@ -713,7 +764,7 @@ public class SpriteRenderer
         }
 #endif
 
-        if (!Renderer.UseCustomEffectRendering && Renderer.UseBasicEffectRendering && basicEffect?.FogEnabled == true)
+        if (IsColorTextureAlphaFogActive)
         {
             basicEffect.FogColor = new Microsoft.Xna.Framework.Vector3(color.R/255f, color.G/255f, color.B/255f);
         }

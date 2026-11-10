@@ -258,6 +258,13 @@ public sealed class WireframeCanvasCore
 
             if (!ShapeRenderer.Self.IsInitialized)
             {
+                // Same CI escape hatch as GumPreview: the macOS package smoke test runs on Apple's
+                // software GL renderer, where the full shader warmup keeps the tool from starting
+                // within 300 s. Users on a GPU leave it unset (#7842).
+                if (Environment.GetEnvironmentVariable("GUM_SHAPES_WARMUP_DEFAULT_ONLY") == "1")
+                {
+                    ShapeRenderer.Self.WarmupFeatures = Apos.Shapes.ShapeFeatures.None;
+                }
                 ContentManager shapesContentManager = new ContentManager(renderHost.Services, "Content");
                 ShapeRenderer.Self.Initialize(renderHost.GraphicsDevice, shapesContentManager);
             }

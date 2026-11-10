@@ -152,8 +152,8 @@ public class Sprite : InvisibleRenderable, IAspectRatio, ITextureCoordinate, IAn
     /// How the sprite's tint <see cref="Color"/> combines with its texture, matching MonoGame's
     /// <see cref="ColorOperation"/> (issue #3486). <see cref="ColorOperation.Modulate"/> (the default)
     /// multiplies texture RGBA by the tint; <see cref="ColorOperation.ColorTextureAlpha"/> uses the
-    /// texture only as an alpha mask and fills with the tint color, via
-    /// <see cref="global::RenderingLibrary.Graphics.Renderer.ColorTextureAlphaShader"/>.
+    /// texture only as an alpha mask and fills with the tint color; <see cref="ColorOperation.Add"/>
+    /// adds the tint's RGB to the texture's. Both fade with the tint alpha like Modulate.
     /// </summary>
     public ColorOperation ColorOperation { get; set; } = ColorOperation.Modulate;
 
@@ -214,20 +214,19 @@ public class Sprite : InvisibleRenderable, IAspectRatio, ITextureCoordinate, IAn
         // if we don't have a source rectangle, the source is the entire texture
         var srcRect = SourceRectangle ?? defaultSrcRect;
 
-        // ColorTextureAlpha (issue #3486): bind the mask shader around every draw path below so the
-        // texture supplies only alpha and the sprite fills with its tint Color, matching MonoGame. The
-        // shader's non-premultiplied output composites identically to a normal Modulate draw, so it is
-        // correct both on screen and inside a render-target bake. Modulate (the default) draws unshaded.
-        bool useColorTextureAlpha = ColorOperation == ColorOperation.ColorTextureAlpha;
-        if (useColorTextureAlpha)
+        // ColorTextureAlpha (issue #3486) and Add (issue #7845) bind their shader around every draw
+        // path below. The shaders' non-premultiplied output composites like a normal Modulate draw,
+        // on screen and inside a render-target bake. Modulate (the default) draws unshaded.
+        var renderer = global::RenderingLibrary.Graphics.Renderer.Self;
+        Gum.Renderables.ColorOperationShader? colorOperationShader = renderer.GetColorOperationShader(ColorOperation);
+        if (colorOperationShader != null)
         {
-            global::RenderingLibrary.Graphics.Renderer.Self.BatchDrawCallCounter.BeginShaderMode(
-                global::RenderingLibrary.Graphics.Renderer.Self.ColorTextureAlphaShader.Shader);
+            renderer.BatchDrawCallCounter.BeginShaderMode(colorOperationShader.Shader);
         }
 
         if (Blend.HasValue)
         {
-            global::RenderingLibrary.Graphics.Renderer.Self.BatchDrawCallCounter.BeginBlendMode(Blend.Value);
+            renderer.BatchDrawCallCounter.BeginBlendMode(Blend.Value);
         }
 
         // RenderTargetTextureSource is excluded: its source rect already encodes the bottom-up GL
@@ -256,34 +255,17 @@ public class Sprite : InvisibleRenderable, IAspectRatio, ITextureCoordinate, IAn
                     GetDiagonalFlipDraw(destinationRectangle, drawRotation, srcRect);
             }
 
-            // Add draws the texture untinted and then adds Color in a second pass, so Color
-            // contributes only once.
-            bool isAdd = ColorOperation == ColorOperation.Add;
-
-            DrawTexturePro(textureToDraw, srcRect, drawDestination, Vector2.Zero, drawRotation,
-                isAdd ? new Color((byte)255, (byte)255, (byte)255, Color.A) : Color);
-
-            if (isAdd)
-            {
-                var counter = global::RenderingLibrary.Graphics.Renderer.Self.BatchDrawCallCounter;
-                counter.BeginShaderMode(global::RenderingLibrary.Graphics.Renderer.Self.AdditiveColorOverlayShader.Shader);
-                counter.BeginBlendModeAddColorPreserveDestinationAlpha();
-
-                DrawTexturePro(textureToDraw, srcRect, drawDestination, Vector2.Zero, drawRotation, Color);
-
-                counter.EndBlendMode();
-                counter.EndShaderMode();
-            }
+            DrawTexturePro(textureToDraw, srcRect, drawDestination, Vector2.Zero, drawRotation, Color);
         }
 
         if (Blend.HasValue)
         {
-            global::RenderingLibrary.Graphics.Renderer.Self.BatchDrawCallCounter.EndBlendMode();
+            renderer.BatchDrawCallCounter.EndBlendMode();
         }
 
-        if (useColorTextureAlpha)
+        if (colorOperationShader != null)
         {
-            global::RenderingLibrary.Graphics.Renderer.Self.BatchDrawCallCounter.EndShaderMode();
+            renderer.BatchDrawCallCounter.EndShaderMode();
         }
     }
 

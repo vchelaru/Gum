@@ -101,7 +101,17 @@ public class Game1 : Game, IPreviewDefaultsTarget
     }
 
     void IPreviewDefaultsTarget.UseHiDefProfile() => _graphics.GraphicsProfile = GraphicsProfile.HiDef;
-    void IPreviewDefaultsTarget.InitializeShapes() => GumService.Default.UseShapes();
+    // CI/software-renderer escape hatch: GUM_SHAPES_WARMUP_DEFAULT_ONLY=1 compiles only Apos.Shapes'
+    // default shader version at startup. A software GL renderer (macOS CI's "Apple Software Renderer")
+    // takes minutes on the full warmup; users on a GPU leave it unset so no shape compiles mid-game.
+    void IPreviewDefaultsTarget.InitializeShapes()
+    {
+        if (Environment.GetEnvironmentVariable("GUM_SHAPES_WARMUP_DEFAULT_ONLY") == "1")
+        {
+            ShapeRenderer.Self.WarmupFeatures = Apos.Shapes.ShapeFeatures.None;
+        }
+        GumService.Default.UseShapes();
+    }
     void IPreviewDefaultsTarget.UseKeyboardDefaults() => GumService.Default.UseKeyboardDefaults();
     void IPreviewDefaultsTarget.UseGamepadDefaults() => GumService.Default.UseGamepadDefaults();
 

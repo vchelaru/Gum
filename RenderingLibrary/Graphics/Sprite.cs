@@ -937,8 +937,9 @@ public class Sprite : SpriteBatchRenderableBase,
 
         var modifiedColor = color;
 
-        // Custom effect already does premultiply alpha on the shader so we skip that in this case
-        if (Renderer.ShouldPremultiplyColor(objectCausingRendering))
+        // Custom effect already does premultiply alpha on the shader so we skip that in this case, and
+        // so does ColorTextureAlpha's fog pass (#7837).
+        if (Renderer.ShouldPremultiplyColor(objectCausingRendering) && !spriteRenderer.IsColorTextureAlphaFogActive)
         {
             // we are using premult textures, so we need to premult the color:
             var alphaRatio = color.A / 255.0f;

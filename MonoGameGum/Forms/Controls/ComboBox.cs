@@ -124,17 +124,11 @@ public class ComboBox :
     {
         if (listBox != null && _subscribedListBox != listBox)
         {
-            if (_subscribedListBox != null)
-            {
-                _subscribedListBox.SelectionChanged -= HandleSelectionChanged;
-                _subscribedListBox.ItemPushed -= HandleListBoxItemPushed;
-                _subscribedListBox.ConfirmedWithoutFocusedRow -= HandleListBoxItemPushed;
-                _subscribedListBox.EscapeHandler = null;
-                _subscribedListBox.IsComboBoxDropDown = false;
-            }
+            UnsubscribeFromListBox();
 
             listBox.IsComboBoxDropDown = true;
             listBox.SelectionChanged += HandleSelectionChanged;
+            listBox.PropertyChanged += HandleListBoxPropertyChanged;
             listBox.ItemPushed += HandleListBoxItemPushed;
             listBox.ConfirmedWithoutFocusedRow += HandleListBoxItemPushed;
             listBox.EscapeHandler = CloseDropDownOnEscape;
@@ -609,9 +603,15 @@ public class ComboBox :
         Visual.RollOff -= this.HandleRollOff;
 #endif
 
+        UnsubscribeFromListBox();
+    }
+
+    private void UnsubscribeFromListBox()
+    {
         if (_subscribedListBox != null)
         {
             _subscribedListBox.SelectionChanged -= HandleSelectionChanged;
+            _subscribedListBox.PropertyChanged -= HandleListBoxPropertyChanged;
             _subscribedListBox.ItemPushed -= HandleListBoxItemPushed;
             _subscribedListBox.ConfirmedWithoutFocusedRow -= HandleListBoxItemPushed;
             _subscribedListBox.EscapeHandler = null;
@@ -1209,10 +1209,49 @@ public class ComboBox :
             UpdateToObject(selectedObject);
         }
 
-        PushValueToViewModel(nameof(SelectedObject));
-        PushValueToViewModel(nameof(SelectedIndex));
+        // OnBindingContextChanged resolves and pushes the selection once every binding re-attached.
+        if (!IsRebindingBothSelectionBindings)
+        {
+            PushValueToViewModel(nameof(SelectedObject));
+            PushSelectedIndexIfChanged();
+        }
 
         SelectionChanged?.Invoke(this, args);
+    }
+
+    internal override void OnBindingContextRelayed()
+    {
+        if (ApplySelectionBindingsAfterRebind())
+        {
+            // The new view model may hold either value from before, so push both unconditionally.
+            PushValueToViewModel(nameof(SelectedObject));
+            _lastPushedSelectedIndex = int.MinValue;
+            PushSelectedIndexIfChanged();
+        }
+    }
+
+    private void HandleListBoxPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        // The list box reports every SelectedIndex change, including an Items edit that shifts the
+        // selected row without a selection change (#7849).
+        if (e.PropertyName == nameof(ListBox.SelectedIndex) && !IsRebindingBothSelectionBindings)
+        {
+            PushSelectedIndexIfChanged();
+        }
+    }
+
+    // The SelectedIndex last reported through PropertyChanged, so a change reported both by the list
+    // box's SelectionChanged and by its PropertyChanged is pushed once.
+    int _lastPushedSelectedIndex = -1;
+
+    private void PushSelectedIndexIfChanged()
+    {
+        int selectedIndex = SelectedIndex;
+        if (selectedIndex != _lastPushedSelectedIndex)
+        {
+            _lastPushedSelectedIndex = selectedIndex;
+            PushValueToViewModel(nameof(SelectedIndex));
+        }
     }
 
     [UnconditionalSuppressMessage("Trimming", "IL2075",

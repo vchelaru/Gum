@@ -60,6 +60,11 @@ public class GumElementReachability
                 StandardFormsBehaviorNames.LabelBehaviorName, StandardFormsBehaviorNames.ListBoxItemBehaviorName,
             },
             [StandardFormsBehaviorNames.ListBoxBehaviorName] = new[] { StandardFormsBehaviorNames.ListBoxItemBehaviorName },
+            // TabControl.AddTab and a data item's header make a TabItem; each tab's page is a new TabPage
+            [StandardFormsBehaviorNames.TabControlBehaviorName] = new[]
+            {
+                StandardFormsBehaviorNames.TabItemBehaviorName, StandardFormsBehaviorNames.TabPageBehaviorName,
+            },
             // FormsUtilities' drop-down template, then the ListBox's items
             [StandardFormsBehaviorNames.ComboBoxBehaviorName] = new[]
             {

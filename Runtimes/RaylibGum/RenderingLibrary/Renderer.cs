@@ -154,20 +154,27 @@ public class Renderer : IRenderer
     public ShadowBlurRenderer ShadowBlur { get; }
 
     /// <summary>
-    /// Owns the fragment shader that reproduces MonoGame's <see cref="ColorOperation.ColorTextureAlpha"/>
-    /// on raylib. A <see cref="Gum.Renderables.Sprite"/> whose <c>ColorOperation</c> is
-    /// <c>ColorTextureAlpha</c> binds <c>ColorTextureAlphaShader.Shader</c> around its draw calls so the
-    /// texture acts as an alpha mask filled with the sprite's tint color (issue #3486).
+    /// The shader for <see cref="ColorOperation.ColorTextureAlpha"/>: the texture acts as an alpha
+    /// mask filled with the element's tint color (issue #3486).
     /// </summary>
-    public Gum.Renderables.ColorTextureAlphaShader ColorTextureAlphaShader { get; }
+    public Gum.Renderables.ColorOperationShader ColorTextureAlphaShader { get; }
 
     /// <summary>
-    /// Owns the fragment shader for the extra additive pass an authored
-    /// <see cref="Gum.Content.AnimationChain.AnimationFrameColorOperation.Add"/> frame draws (#4821 gap 2).
-    /// A <see cref="Gum.Renderables.Sprite"/> set to <c>ColorOperation.Add</c> binds
-    /// <c>AdditiveColorOverlayShader.Shader</c> around its extra draw call.
+    /// The shader for <see cref="ColorOperation.Add"/>: the tint's RGB is added to the texture's
+    /// (issue #7845).
     /// </summary>
-    public Gum.Renderables.AdditiveColorOverlayShader AdditiveColorOverlayShader { get; }
+    public Gum.Renderables.ColorOperationShader AddColorOperationShader { get; }
+
+    /// <summary>
+    /// The shader a sprite or nine-slice binds for <paramref name="colorOperation"/>, or null for
+    /// Modulate (the default), which draws unshaded.
+    /// </summary>
+    public Gum.Renderables.ColorOperationShader? GetColorOperationShader(ColorOperation colorOperation) => colorOperation switch
+    {
+        ColorOperation.ColorTextureAlpha => ColorTextureAlphaShader,
+        ColorOperation.Add => AddColorOperationShader,
+        _ => null,
+    };
 
     /// <summary>
     /// Per-frame render-state-change counters for this renderer, including the authoritative
@@ -211,8 +218,8 @@ public class Renderer : IRenderer
         _layersReadOnly = new ReadOnlyCollection<Layer>(_layers);
         _layers.Add(new Layer());
         ShadowBlur = new ShadowBlurRenderer();
-        ColorTextureAlphaShader = new Gum.Renderables.ColorTextureAlphaShader();
-        AdditiveColorOverlayShader = new Gum.Renderables.AdditiveColorOverlayShader();
+        ColorTextureAlphaShader = Gum.Renderables.ColorOperationShader.CreateColorTextureAlpha();
+        AddColorOperationShader = Gum.Renderables.ColorOperationShader.CreateAdd();
         RenderStateChangeStatistics = new RenderStateChangeStatistics();
         BatchDrawCallCounter = new BatchDrawCallCounter();
         _bakeScissorRectangleMapping = renderable => GetScissorRectangleFor(_bakeLayer, renderable);

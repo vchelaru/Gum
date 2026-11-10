@@ -4,11 +4,13 @@ using System.Linq;
 
 #if FRB
 using FlatRedBall.Gui;
+using FlatRedBall.Forms.Controls.Primitives;
 using InteractiveGue = global::Gum.Wireframe.GraphicalUiElement;
 namespace FlatRedBall.Forms.Controls;
 #endif
 
 #if !FRB
+using Gum.Forms.Controls.Primitives;
 namespace Gum.Forms.Controls;
 
 #endif
@@ -19,6 +21,7 @@ public class ListBoxItem :
 #else
     Gum.Forms.Controls.FrameworkElement
 #endif
+    , ISelectableRow
 {
     #region Fields/Properties
 
@@ -69,6 +72,18 @@ public class ListBoxItem :
     /// selection onto the wrong object. See issue #556.
     /// </summary>
     internal object? DataObject { get; set; }
+
+    bool ISelectableRow.IsSelected
+    {
+        get => IsSelected;
+        set => IsSelected = value;
+    }
+
+    bool ISelectableRow.IsEnabled => IsEnabled;
+
+    bool ISelectableRow.IsFocused => IsFocused;
+
+    object? ISelectableRow.DataObject => DataObject;
 
     #endregion
 

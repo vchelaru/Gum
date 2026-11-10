@@ -309,6 +309,21 @@ public class ShapeRenderer
         }
     }
 
+    /// <summary>
+    /// The shader version<see cref="Initialize()"/> compiles: every <see cref="ShapeFeatures"/> Gum's
+    /// shapes draw with apart from dashes and SVG text. One version holding all of them covers any draw
+    /// or batch that needs fewer, so no shape compiles a shader mid-game.
+    /// </summary>
+    public const ShapeFeatures DefaultWarmupFeatures = ShapeFeatures.Gradients | ShapeFeatures.BorderGradients
+        | ShapeFeatures.EllipsesAndPaths | ShapeFeatures.Clips | ShapeFeatures.Ramps;
+
+    /// <summary>
+    /// The features of the shader version compiled at startup; set before Initialize. None compiles
+    /// only the default version, which starts fastest but makes the first draw that needs more
+    /// compile mid-game. Defaults to <see cref="DefaultWarmupFeatures"/>.
+    /// </summary>
+    public ShapeFeatures WarmupFeatures { get; set; } = DefaultWarmupFeatures;
+
     public void Initialize()
     {
         // Resolve the device from the active SystemManagers rather than GumService.Default, so this
@@ -352,18 +367,14 @@ public class ShapeRenderer
         }
         IsInitialized = true;
         // Eager on purpose, so the shader compile happens at startup and not mid-game.
-        // From Apos.Shapes 0.10.0 the constructor's warmup leaves out ellipses, paths (SVG strokes),
-        // clips (SVG clip-path) and ramps, which 0.9.4's covered, so name them (#7808). Draws that
-        // need less reuse this compiled version.
-#if APOS_MONOGAME && GUM_EXPERIMENT_7842_NAMED_WARMUP
-        _sb = new ShapeBatch(graphicsDevice, (Effect?)null, warmup: false);
-        _sb.Warmup(ShapeFeatures.EllipsesAndPaths | ShapeFeatures.Clips | ShapeFeatures.Ramps);
-#else
-        // KNI (the tool's head) warms up only the smallest version. On the macOS CI runners the
-        // named warmup kept the packaged tool from starting within 300 s; with the plain
-        // constructor the editor tab initializes in about 2 s (#7842).
-        _sb = new ShapeBatch(graphicsDevice, (Effect?)null);
-#endif
+        // From Apos.Shapes 0.10.0 (MonoGame and KNI) the constructor's warmup compiles only the default
+        // version, so name the rest (#7808). Draws that need less reuse this compiled version.
+        bool defaultVersionOnly = WarmupFeatures == ShapeFeatures.None;
+        _sb = new ShapeBatch(graphicsDevice, (Effect?)null, warmup: defaultVersionOnly);
+        if (!defaultVersionOnly)
+        {
+            _sb.Warmup(WarmupFeatures);
+        }
         // Issue #7307: Apos.Shapes interpolates gradients in Oklab by default, which brightens the
         // mid-tones and mixes premultiplied alpha. Skia and raylib interpolate the straight sRGB channels.
         _sb.ColorSpace = ColorSpace.Rgb;

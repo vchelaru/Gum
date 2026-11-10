@@ -380,6 +380,7 @@
 		<Compile Include="..\MonoGameGum\Forms\Controls\PasswordBox.cs" Link="Forms\Controls\PasswordBox.cs" />
 		<Compile Include="..\MonoGameGum\Forms\Controls\Primitives\ButtonBase.cs" Link="Forms\Controls\Primitives\ButtonBase.cs" />
 		<Compile Include="..\MonoGameGum\Forms\Controls\Primitives\RangeBase.cs" Link="Forms\Controls\Primitives\RangeBase.cs" />
+		<Compile Include="..\MonoGameGum\Forms\Controls\Primitives\ItemSelection.cs" Link="Forms\Controls\Primitives\ItemSelection.cs" />
 		<Compile Include="..\MonoGameGum\Forms\Controls\RadioButton.cs" Link="Forms\Controls\RadioButton.cs" />
 		<Compile Include="..\MonoGameGum\Forms\Controls\RowDefinition.cs" Link="Forms\Controls\RowDefinition.cs" />
 		<Compile Include="..\MonoGameGum\Forms\Controls\ScrollBar.cs" Link="Forms\Controls\ScrollBar.cs" />
@@ -387,6 +388,9 @@
 		<Compile Include="..\MonoGameGum\Forms\Controls\Slider.cs" Link="Forms\Controls\Slider.cs" />
 		<Compile Include="..\MonoGameGum\Forms\Controls\Splitter.cs" Link="Forms\Controls\Splitter.cs" />
 		<Compile Include="..\MonoGameGum\Forms\Controls\StackPanel.cs" Link="Forms\Controls\StackPanel.cs" />
+		<Compile Include="..\MonoGameGum\Forms\Controls\TabControl.cs" Link="Forms\Controls\TabControl.cs" />
+		<Compile Include="..\MonoGameGum\Forms\Controls\TabItem.cs" Link="Forms\Controls\TabItem.cs" />
+		<Compile Include="..\MonoGameGum\Forms\Controls\TabPage.cs" Link="Forms\Controls\TabPage.cs" />
 		<Compile Include="..\MonoGameGum\Forms\Controls\TextBox.cs" Link="Forms\Controls\TextBox.cs" />
 		<Compile Include="..\MonoGameGum\Forms\Controls\TextBoxBase.cs" Link="Forms\Controls\TextBoxBase.cs" />
 		<Compile Include="..\MonoGameGum\Forms\Controls\ToggleButton.cs" Link="Forms\Controls\ToggleButton.cs" />
