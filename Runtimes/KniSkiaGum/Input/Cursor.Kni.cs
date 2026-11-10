@@ -70,12 +70,17 @@ public partial class Cursor
         {
             return;
         }
-        XnaTouchCollection current = touches.Value;
-        _hostTouches = TouchCollection.Create(
+        _hostTouches = touches.Value.Count == 0 ? NoHostTouches : Translate(touches.Value);
+    }
+
+    private static readonly TouchCollection NoHostTouches = new TouchCollection();
+
+    // Its own method so the closure over current is allocated only on frames with fingers down.
+    private static TouchCollection Translate(XnaTouchCollection current) =>
+        TouchCollection.Create(
             current.Count,
             i => current[i].Id,
             i => new Vector2(current[i].Position.X, current[i].Position.Y));
-    }
 
     /// <summary>
     /// Reads this frame's mouse state. Override to supply input from another source, such as a
