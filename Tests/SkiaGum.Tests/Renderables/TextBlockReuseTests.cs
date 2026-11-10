@@ -129,6 +129,71 @@ public class TextBlockReuseTests : BaseTestClass
         changed.GetCachedTextBlock().Lines.Count.ShouldBe(fresh.GetCachedTextBlock().Lines.Count);
     }
 
+    [Fact]
+    public void Render_PlainTextChangedEveryFrame_MatchesFresh()
+    {
+        string[] texts = { "Score: 1", "Score: 22 and a much longer line that wraps", "S", "", "Score: 4444 wraps over lines" };
+        Text changed = CreateText(texts[0]);
+        Render(changed);
+        Render(changed);
+        foreach (string rawText in texts)
+        {
+            changed.RawText = rawText;
+            Text fresh = CreateText(rawText);
+            ShouldMatchFresh(changed, fresh, rawText);
+            Render(changed).ShouldBe(Render(fresh), rawText + " drawn again");
+            changed.WrappedText.ShouldBe(fresh.WrappedText, rawText);
+        }
+    }
+
+    // A block built but never drawn or read sits between two that are, so the third reuses the first one's block
+    // while the picture, wrapped lines and reveal recorded from it are still cached.
+    [Theory]
+    [InlineData(null)]
+    [InlineData(6)]
+    public void Render_PlainTextChangedTwiceWithoutDrawing_MatchesFresh(int? maxLettersToShow)
+    {
+        Text changed = CreateText("First text, wrapped over lines");
+        changed.MaxLettersToShow = maxLettersToShow;
+        Render(changed);
+        Render(changed);
+        _ = changed.WrappedText;
+
+        changed.RawText = "Second";
+        changed.GetCachedTextBlock();
+        changed.RawText = "Third text, also wrapped over";
+
+        Text fresh = CreateText("Third text, also wrapped over");
+        fresh.MaxLettersToShow = maxLettersToShow;
+        changed.WrappedText.ShouldBe(fresh.WrappedText);
+        ShouldMatchFresh(changed, fresh, "third text");
+        Render(changed).ShouldBe(Render(fresh), "third text drawn again");
+    }
+
+    [Fact]
+    public void Render_PlainTextChangedWithSameRevealCount_MatchesFresh()
+    {
+        Text changed = CreateText("Hello world, wrapped over lines");
+        changed.MaxLettersToShow = 8;
+        Render(changed);
+
+        changed.RawText = "Other words, also wrapped";
+        Text fresh = CreateText("Other words, also wrapped");
+        fresh.MaxLettersToShow = 8;
+        ShouldMatchFresh(changed, fresh, "same reveal count, new text");
+    }
+
+    [Fact]
+    public void Render_PlainTextThenMarkupThenPlain_MatchesFresh()
+    {
+        Text changed = CreateText("Plain first");
+        Render(changed);
+        changed.RawText = FontSizeRunText;
+        ShouldMatchFresh(changed, CreateText(FontSizeRunText), "markup");
+        changed.RawText = "Plain again, wrapped over lines";
+        ShouldMatchFresh(changed, CreateText("Plain again, wrapped over lines"), "plain again");
+    }
+
     [Theory]
     [InlineData("Hello world, wrapped over lines and more")]
     [InlineData("Hello [FontSize=40]world[/FontSize], wrapped over lines and more")]

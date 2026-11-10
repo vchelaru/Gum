@@ -1237,7 +1237,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
 
         if(_cachedTextBlock == null)
         {
-            _cachedTextBlock = GetTextBlock(effectiveWidth);
+            _cachedTextBlock = _hasMarkup ? GetTextBlock(effectiveWidth) : BuildReusedPlainTextBlock(effectiveWidth);
             _isCachedTextBlockUnbounded = effectiveWidth == null;
         }
         return _cachedTextBlock;
@@ -1303,6 +1303,46 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
 
     // The block GetTextBlock lays the runs out into to find the line breaks FitRunsToLines fits to. Never painted.
     private TextBlock? _lineBreakLayout;
+
+    // The two plain-text blocks GetCachedTextBlock alternates between, each cleared and laid out again (#7846).
+    private TextBlock?[] _plainBlocks = new TextBlock?[2];
+    private int _nextPlainBlock;
+    private List<StyledTextRun> _plainRuns = new(1);
+
+    /// <summary>
+    /// Lays plain text out into a block built for an earlier text instead of a new one, the way the reveal block
+    /// is reused (#7846). Two blocks alternate, so a rebuild still returns a different object than the block it
+    /// replaces and a caller holding that block can read it until the next rebuild. A reused block keeps its
+    /// identity, so every cache keyed on it is dropped first.
+    /// </summary>
+    private TextBlock BuildReusedPlainTextBlock(float? width)
+    {
+        TextBlock? reuse = _plainBlocks[_nextPlainBlock];
+        if (reuse != null)
+        {
+            if (ReferenceEquals(_wrappedTextSourceBlock, reuse))
+            {
+                _wrappedTextSourceBlock = null;
+            }
+            if (ReferenceEquals(_revealBlockSource, reuse))
+            {
+                _revealBlockSource = null;
+            }
+            if (ReferenceEquals(_cachedPictureBlock, reuse))
+            {
+                _cachedPicture?.Dispose();
+                _cachedPicture = null;
+                _cachedPictureBlock = null;
+            }
+        }
+
+        _plainRuns.Clear();
+        _plainRuns.Add(new StyledTextRun(_layoutText ?? string.Empty, GetStyle()));
+        TextBlock built = BuildTextBlockFromRuns(_plainRuns, width, reuse);
+        _plainBlocks[_nextPlainBlock] = built;
+        _nextPlainBlock = 1 - _nextPlainBlock;
+        return built;
+    }
 
     /// <summary>Whether the styled runs are refit line by line (<see cref="FitRunsToLines"/>) after a first layout.</summary>
     private bool FitsRunsPerLine => _hasHeightRun;
@@ -2643,6 +2683,8 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
         newInstance._revealBlock = null;
         newInstance._revealBlockSource = null;
         newInstance._lineBreakLayout = null;
+        newInstance._plainBlocks = new TextBlock?[2];
+        newInstance._plainRuns = new(1);
         newInstance._cachedRenderPaint = null;
         newInstance._hasCachedRenderPaint = false;
         newInstance._hasActiveRenderPaint = false;
