@@ -91,6 +91,9 @@
     <Variable Type="DimensionUnitType" Name="InnerPanelInstance.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
     </Variable>
+    <Variable Type="State" Name="State" Category="States and Visibility" SetsValue="false">
+      <Value xsi:type="xsd:string">Default</Value>
+    </Variable>
     <Variable Type="float" Name="Width" SetsValue="true">
       <Value xsi:type="xsd:float">400</Value>
     </Variable>

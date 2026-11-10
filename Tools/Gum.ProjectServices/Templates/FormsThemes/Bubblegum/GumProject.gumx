@@ -82,10 +82,10 @@
   <ComponentReference Name="Bubblegum/SliderThumb" />
   <ComponentReference Name="Bubblegum/Splitter" />
   <ComponentReference Name="Bubblegum/StackPanel" />
+  <ComponentReference Name="Bubblegum/Styles" />
   <ComponentReference Name="Bubblegum/TabControl" />
   <ComponentReference Name="Bubblegum/TabItem" />
   <ComponentReference Name="Bubblegum/TabPage" />
-  <ComponentReference Name="Bubblegum/Styles" />
   <ComponentReference Name="Bubblegum/TextBox" />
   <ComponentReference Name="Bubblegum/Toast" />
   <ComponentReference Name="Bubblegum/ToggleButton" />
