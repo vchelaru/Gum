@@ -64,7 +64,7 @@ text.AddToRoot();
 ```
 
 {% hint style="info" %}
-`HasDropshadow` toggles the shadow on MonoGame, KNI, FNA, and raylib. On SkiaSharp-based runtimes (Skia, Silk.NET, MAUI, WPF) the tag is parsed and stripped from the text but has no effect - the shadow always follows the TextRuntime's own `HasDropshadow` value there.
+`HasDropshadow` toggles the shadow on MonoGame, KNI, FNA, and raylib. On [SkiaSharp-based runtimes](../../about/runtimes.md) the tag is parsed and stripped from the text but has no effect - the shadow always follows the TextRuntime's own `HasDropshadow` value there.
 {% endhint %}
 
 ## Inline Glyphs

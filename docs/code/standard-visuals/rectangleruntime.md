@@ -13,7 +13,7 @@ For the full property surface (fill, outline, corner radius, gradient, drop shad
 {% hint style="info" %}
 On MonoGame, KNI, and FNA the outline, geometry, and a plain (square-cornered) **fill** all render out of the box, with no extra package needed. `CornerRadius` and the richer effects (gradient, drop shadow, dashed stroke, anti-aliasing) only draw once the `Gum.Shapes.<platform>` package is added; otherwise they are stored and round-trip but silently do not draw. (`CircleRuntime`'s fill has the opposite requirement; see its own page.) See the [Shapes](shapes-apos.shapes.md) page for setup.
 
-Skia, .NET MAUI, raylib, and Silk.NET support the full surface natively; no additional package needed.
+[SkiaSharp-based runtimes](../about/runtimes.md) and raylib support the full surface natively; no additional package needed.
 {% endhint %}
 
 ### Code Example

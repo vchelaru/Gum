@@ -1,7 +1,7 @@
 # GumBatch
 
 {% hint style="info" %}
-`GumBatch` is available on MonoGame, KNI, and FNA, and on SkiaSharp runtimes (Silk.NET, Stride, Unity, and KNI with Skia) starting with the November 2026 release. It is not available on raylib.
+`GumBatch` is available on MonoGame, KNI, and FNA, and on [SkiaSharp-based runtimes](../about/runtimes.md) starting with the November 2026 release. It is not available on raylib.
 {% endhint %}
 
 ### Introduction

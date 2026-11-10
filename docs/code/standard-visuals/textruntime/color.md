@@ -15,8 +15,7 @@ The Color type depends on the platform.
 
 `SkiaSharp.SKColor`
 
-* Silk.NET
-* SkiaSharp
+* [SkiaSharp-based runtimes](../../about/runtimes.md)
 
 ## Example - Assigning Color
 

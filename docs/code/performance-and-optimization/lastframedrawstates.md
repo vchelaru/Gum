@@ -1,7 +1,7 @@
 # Measuring Draw Calls
 
 {% hint style="info" %}
-`LastFrameDrawStates` is available on MonoGame, KNI, and FNA. It is not available on raylib or on SkiaSharp-based runtimes such as Silk.NET, Stride, and Unity.
+`LastFrameDrawStates` is available on MonoGame, KNI, and FNA. It is not available on raylib or on [SkiaSharp-based runtimes](../about/runtimes.md).
 {% endhint %}
 
 ### Introduction

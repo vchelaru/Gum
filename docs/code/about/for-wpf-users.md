@@ -107,7 +107,7 @@ Before creating any controls, you must initialize Gum. This registers the defaul
 
 * **MonoGame/KNI/FNA:** `GumUI.Initialize(this)` in your Game's `Initialize` method
 * **raylib:** `GumUI.Initialize()` after calling `Raylib.InitWindow`. See [raylib setup](../getting-started/setup/adding-initializing-gum/raylib-raylib-cs.md) for a full example.
-* **Silk.NET:** `GumUI.Initialize(window)`, passed the Silk.NET `IWindow` your project owns. See [Silk.NET setup](../getting-started/setup/adding-initializing-gum/silk.net.md) for a full example.
+* **Other runtimes:** see the setup page for your runtime in [Adding/Initializing Gum](../getting-started/setup/adding-initializing-gum/README.md).
 {% endhint %}
 
 ```csharp
