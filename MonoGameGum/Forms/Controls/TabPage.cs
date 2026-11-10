@@ -9,7 +9,7 @@ namespace Gum.Forms.Controls;
 public class TabPage : FrameworkElement
 {
     /// <summary>The state category this control sets: Selected or Unselected.</summary>
-    public const string TabPageCategoryName = "TabPageCategory";
+    internal const string TabPageCategoryName = "TabPageCategory";
 
     bool _isSelected;
 
@@ -31,7 +31,7 @@ public class TabPage : FrameworkElement
     /// The container that content is added to: the visual's child named InnerPanelInstance, or the
     /// visual itself when it has none.
     /// </summary>
-    public GraphicalUiElement ContentContainer =>
+    internal GraphicalUiElement ContentContainer =>
         Visual.GetGraphicalUiElementByName("InnerPanelInstance") ?? Visual;
 
     public TabPage() : base() { }

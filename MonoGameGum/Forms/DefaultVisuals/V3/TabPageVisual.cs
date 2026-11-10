@@ -27,7 +27,7 @@ public class TabPageVisual : InteractiveGue
     public class TabPageCategoryStates
     {
         public StateSave Selected { get; set; } = new StateSave() { Name = FrameworkElement.SelectedStateName };
-        public StateSave Unselected { get; set; } = new StateSave() { Name = TabItem.UnselectedStateName };
+        public StateSave Unselected { get; set; } = new StateSave() { Name = "Unselected" };
     }
 
     /// <summary>This visual's category states, typed by name. Hides the untyped States dictionary on GraphicalUiElement.</summary>
@@ -56,7 +56,7 @@ public class TabPageVisual : InteractiveGue
         AddChild(InnerPanelInstance);
 
         TabPageCategory = new StateSaveCategory();
-        TabPageCategory.Name = TabPage.TabPageCategoryName;
+        TabPageCategory.Name = "TabPageCategory";
         AddCategory(TabPageCategory);
 
         States = new TabPageCategoryStates();

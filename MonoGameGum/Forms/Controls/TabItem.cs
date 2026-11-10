@@ -11,10 +11,10 @@ namespace Gum.Forms.Controls;
 public class TabItem : FrameworkElement, ISelectableRow
 {
     /// <summary>The state category this control sets: Selected or Unselected.</summary>
-    public const string TabItemCategoryName = "TabItemCategory";
+    internal const string TabItemCategoryName = "TabItemCategory";
 
     /// <summary>The state name used when the tab is not the selected one.</summary>
-    public const string UnselectedStateName = "Unselected";
+    internal const string UnselectedStateName = "Unselected";
 
     GraphicalUiElement? _text;
 

@@ -24,7 +24,9 @@ public class TabControlTests : BaseTestClass
 
         tabControl.TabItems.Count.ShouldBe(2);
         tabControl.Pages.Count.ShouldBe(2);
-        tabControl.SelectedIndex.ShouldBe(0);
+        tabControl.SelectedIndex.ShouldBe(-1);
+
+        tabControl.SelectedIndex = 0;
         tabControl.Pages[0].Visual.Visible.ShouldBeTrue();
         tabControl.Pages[1].Visual.Visible.ShouldBeFalse();
     }
@@ -35,6 +37,7 @@ public class TabControlTests : BaseTestClass
         TabControl tabControl = new TabControl();
         tabControl.AddTab("A");
         tabControl.AddTab("B");
+        tabControl.SelectedIndex = 0;
 
         Mock<IInputReceiverKeyboard> keyboard = new Mock<IInputReceiverKeyboard>();
         keyboard.Setup(k => k.KeyTyped(Keys.Right)).Returns(true);

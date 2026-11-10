@@ -36,7 +36,9 @@ public class TabControl : ItemsControl
     private GraphicalUiElement? _contentPanel;
     private bool _isSyncingSelection;
     private bool _isReactingToVisual;
-    private int _removedSelectedTabIndex = -1;
+    // What a bound view model was last given: the empty control's -1 and null until the first push.
+    private int _lastPushedSelectedIndex = -1;
+    private object? _lastPushedSelectedObject;
 
     /// <summary>The tab headers, in strip order.</summary>
     public ReadOnlyCollection<TabItem> TabItems { get; }
@@ -85,8 +87,9 @@ public class TabControl : ItemsControl
     }
 
     /// <summary>
-    /// The index of the selected tab, or -1 when none is selected. The first tab added to an empty
-    /// TabControl is selected. An index out of range is ignored, as with ListBox.
+    /// The index of the selected tab, or -1 when none is selected. As with ListBox, adding tabs does
+    /// not select one, removing or replacing the selected tab leaves none selected, and an index out
+    /// of range is ignored.
     /// </summary>
     public int SelectedIndex
     {
@@ -192,13 +195,21 @@ public class TabControl : ItemsControl
 
         if (hadSelection)
         {
+            // Rows were rebuilt for the new Visual, so the selection is restored by data object, as
+            // ListBox does; one with no row in the new Visual is dropped.
             int index = ItemSelection<TabItem>.IndexOfData(_tabItems, selectedData);
-            SelectTab(index > -1 ? _tabItems[index] : (_tabItems.Count > 0 ? _tabItems[0] : null));
+            if (index > -1)
+            {
+                SelectTab(_tabItems[index]);
+            }
+            else
+            {
+                SelectionChangedEventArgs args = new SelectionChangedEventArgs();
+                args.RemovedItems.Add(selectedData);
+                RaiseSelectionChanged(args);
+            }
         }
-        else
-        {
-            SelectFirstTabIfNoneSelected();
-        }
+        PushSelectionIfChanged();
     }
 
     private bool IsPageInUse(TabPage page)
@@ -346,8 +357,15 @@ public class TabControl : ItemsControl
         {
             tab.DataObject ??= tab;
             InsertTab(tab, CountTabItemsInPanelBefore(newItemIndex));
-            SelectFirstTabIfNoneSelected();
         }
+    }
+
+    protected override void HandleItemsCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
+    {
+        base.HandleItemsCollectionChanged(sender, e);
+        // An insert, removal or move before the selected tab shifts SelectedIndex without changing
+        // the selection, so it is pushed here too.
+        PushSelectionIfChanged();
     }
 
     private void InsertTab(TabItem tab, int tabIndex)
@@ -403,11 +421,6 @@ public class TabControl : ItemsControl
     {
         if (removedItem is TabItem tab)
         {
-            int tabIndex = _tabItems.IndexOf(tab);
-            if (_selection.Contains(tab))
-            {
-                _removedSelectedTabIndex = tabIndex;
-            }
             RemoveTab(tab, detachVisualOwnedPage: true);
             _selection.HandleRowRemoved(tab);
         }
@@ -437,17 +450,9 @@ public class TabControl : ItemsControl
             return;
         }
 
+        // As with ListBox, removing the selected tab leaves nothing selected.
         SelectionChangedEventArgs args = new SelectionChangedEventArgs();
         _selection.TakeRemovedSelection(args.RemovedItems);
-
-        if (_tabItems.Count > 0)
-        {
-            // The tab that took the removed one's place, or the new last tab.
-            int index = Math.Min(Math.Max(_removedSelectedTabIndex, 0), _tabItems.Count - 1);
-            _selection.SelectOnly(_tabItems[index]);
-        }
-        _removedSelectedTabIndex = -1;
-
         SyncSelection(args);
         RaiseSelectionChanged(args);
     }
@@ -490,7 +495,6 @@ public class TabControl : ItemsControl
             }
         }
         ReorderPages();
-        PushValueToViewModel(nameof(SelectedIndex));
     }
 
     private void ReorderPages()
@@ -528,14 +532,6 @@ public class TabControl : ItemsControl
     #endregion
 
     #region Selection
-
-    private void SelectFirstTabIfNoneSelected()
-    {
-        if (_selection.Count == 0 && _tabItems.Count > 0 && !_isReactingToVisual)
-        {
-            SelectTab(_tabItems[0]);
-        }
-    }
 
     private void SelectTab(TabItem? tab)
     {
@@ -614,8 +610,30 @@ public class TabControl : ItemsControl
         {
             SelectionChanged?.Invoke(this, args);
         }
-        PushValueToViewModel(nameof(SelectedObject));
-        PushValueToViewModel(nameof(SelectedIndex));
+        PushSelectionIfChanged();
+    }
+
+    /// <summary>
+    /// Pushes SelectedIndex and SelectedObject to a bound view model when either differs from what was
+    /// last pushed, whatever changed it, so each change is pushed once.
+    /// </summary>
+    private void PushSelectionIfChanged()
+    {
+        int index = SelectedIndex;
+        object? selectedObject = SelectedObject;
+        bool objectChanged = !ReferenceEquals(selectedObject, _lastPushedSelectedObject);
+        bool indexChanged = index != _lastPushedSelectedIndex;
+        // Both are recorded before either push, since a push can re-enter through the view model.
+        _lastPushedSelectedObject = selectedObject;
+        _lastPushedSelectedIndex = index;
+        if (objectChanged)
+        {
+            PushValueToViewModel(nameof(SelectedObject));
+        }
+        if (indexChanged)
+        {
+            PushValueToViewModel(nameof(SelectedIndex));
+        }
     }
 
     #endregion

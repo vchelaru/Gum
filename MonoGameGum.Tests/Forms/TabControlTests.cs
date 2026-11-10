@@ -179,6 +179,8 @@ public class TabControlTests : BaseTestClass
 
         tabControl.TabItems.Single().ShouldBe(tab);
         content.Visual.Parent.ShouldBe(tabControl.Pages[0].ContentContainer);
+
+        tabControl.SelectedIndex = 0;
         tabControl.SelectedObject.ShouldBe(tab);
     }
 
@@ -207,13 +209,13 @@ public class TabControlTests : BaseTestClass
     }
 
     [Fact]
-    public void SelectedIndex_ShouldBeZero_WhenFirstTabAdded()
+    public void SelectedIndex_ShouldStayMinusOne_WhenTabsAdded_AsListBoxDoes()
     {
         TabControl tabControl = CreateWithTitles("A", "B");
 
-        tabControl.SelectedIndex.ShouldBe(0);
-        tabControl.TabItems[0].IsSelected.ShouldBeTrue();
-        tabControl.TabItems[1].IsSelected.ShouldBeFalse();
+        tabControl.SelectedIndex.ShouldBe(-1);
+        tabControl.TabItems.Select(t => t.IsSelected).ShouldBe(new[] { false, false });
+        tabControl.Pages.Select(p => p.Visual.Visible).ShouldBe(new[] { false, false });
     }
 
     [Fact]
@@ -266,6 +268,7 @@ public class TabControlTests : BaseTestClass
     public void SelectionChanged_ShouldReportAddedAndRemovedItems()
     {
         TabControl tabControl = CreateWithTitles("A", "B");
+        tabControl.SelectedIndex = 0;
         List<SelectionChangedEventArgs> raised = new List<SelectionChangedEventArgs>();
         tabControl.SelectionChanged += (_, args) => raised.Add(args);
 
@@ -280,6 +283,7 @@ public class TabControlTests : BaseTestClass
     public void SelectionChanged_ShouldReportClick_WhenTabSelectedDirectly()
     {
         TabControl tabControl = CreateWithTitles("A", "B");
+        tabControl.SelectedIndex = 0;
         List<SelectionChangedEventArgs> raised = new List<SelectionChangedEventArgs>();
         tabControl.SelectionChanged += (_, args) => raised.Add(args);
 
@@ -291,7 +295,7 @@ public class TabControlTests : BaseTestClass
     }
 
     [Fact]
-    public void RemovingSelectedTab_ShouldSelectTabThatTookItsPlace()
+    public void RemovingSelectedTab_ShouldLeaveNothingSelected_AsListBoxDoes()
     {
         TabControl tabControl = CreateWithTitles("A", "B", "C");
         tabControl.SelectedIndex = 1;
@@ -301,17 +305,32 @@ public class TabControlTests : BaseTestClass
 
         tabControl.Items.RemoveAt(1);
 
-        tabControl.SelectedIndex.ShouldBe(1);
-        tabControl.SelectedObject.ShouldBe(tabControl.Items[1]);
-        tabControl.Pages[1].IsSelected.ShouldBeTrue();
+        tabControl.SelectedIndex.ShouldBe(-1);
+        tabControl.SelectedObject.ShouldBeNull();
+        tabControl.Pages.Select(p => p.IsSelected).ShouldBe(new[] { false, false });
         raised.Count.ShouldBe(1);
         raised[0].RemovedItems.Cast<object>().ShouldBe(new[] { removed });
+        raised[0].AddedItems.Count.ShouldBe(0);
+    }
+
+    [Fact]
+    public void ReplacingSelectedItem_ShouldLeaveNothingSelected_AsListBoxDoes()
+    {
+        TabControl tabControl = CreateWithTitles("A", "B");
+        tabControl.SelectedIndex = 1;
+
+        tabControl.Items![1] = new TabViewModel { Title = "C" };
+
+        tabControl.SelectedIndex.ShouldBe(-1);
+        tabControl.TabItems[1].IsSelected.ShouldBeFalse();
+        tabControl.Pages[1].IsSelected.ShouldBeFalse();
     }
 
     [Fact]
     public void SelectedIndex_ShouldFollowMovedTab()
     {
         TabControl tabControl = CreateWithTitles("A", "B", "C");
+        tabControl.SelectedIndex = 0;
         ObservableCollection<TabViewModel> items = (ObservableCollection<TabViewModel>)tabControl.Items!;
         TabViewModel selected = items[0];
 
@@ -348,6 +367,184 @@ public class TabControlTests : BaseTestClass
         tabControl.SelectedIndex.ShouldBe(1);
     }
 
+    private class CountingViewModel : INotifyPropertyChanged
+    {
+        public event PropertyChangedEventHandler? PropertyChanged;
+        public ObservableCollection<TabViewModel> Tabs { get; } = new ObservableCollection<TabViewModel>();
+        public int IndexSets;
+        public int SelectedSets;
+
+        // Starts where an empty TabControl is, so any difference later is one the control failed to push.
+        int _index = -1;
+        public int SelectedIndex
+        {
+            get => _index;
+            set { IndexSets++; if (_index != value) { _index = value; Raise(); } }
+        }
+
+        TabViewModel? _selected;
+        public TabViewModel? Selected
+        {
+            get => _selected;
+            set { SelectedSets++; if (_selected != value) { _selected = value; Raise(); } }
+        }
+
+        private void Raise([CallerMemberName] string? name = null) =>
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
+    }
+
+    private static TabControl BindCounting(CountingViewModel vm)
+    {
+        TabControl tabControl = new TabControl { BindingContext = vm };
+        tabControl.SetBinding(nameof(TabControl.Items), nameof(CountingViewModel.Tabs));
+        tabControl.SetBinding(nameof(TabControl.SelectedIndex), nameof(CountingViewModel.SelectedIndex));
+        tabControl.SetBinding(nameof(TabControl.SelectedObject), nameof(CountingViewModel.Selected));
+        return tabControl;
+    }
+
+    private static CountingViewModel CreateCountingViewModel(int count)
+    {
+        CountingViewModel vm = new CountingViewModel();
+        for (int i = 0; i < count; i++)
+        {
+            vm.Tabs.Add(new TabViewModel { Title = "Tab" + i });
+        }
+        return vm;
+    }
+
+    [Fact]
+    public void InsertBeforeSelectedTab_ShouldPushShiftedIndex()
+    {
+        CountingViewModel vm = CreateCountingViewModel(3);
+        TabControl tabControl = BindCounting(vm);
+        tabControl.SelectedIndex = 1;
+
+        vm.Tabs.Insert(0, new TabViewModel { Title = "New" });
+
+        tabControl.SelectedIndex.ShouldBe(2);
+        vm.SelectedIndex.ShouldBe(2);
+    }
+
+    [Fact]
+    public void RemoveBeforeSelectedTab_ShouldPushShiftedIndex()
+    {
+        CountingViewModel vm = CreateCountingViewModel(3);
+        TabControl tabControl = BindCounting(vm);
+        tabControl.SelectedIndex = 2;
+
+        vm.Tabs.RemoveAt(0);
+
+        tabControl.SelectedIndex.ShouldBe(1);
+        vm.SelectedIndex.ShouldBe(1);
+    }
+
+    [Fact]
+    public void MoveUnselectedTabPastSelectedTab_ShouldPushShiftedIndex()
+    {
+        CountingViewModel vm = CreateCountingViewModel(3);
+        TabControl tabControl = BindCounting(vm);
+        tabControl.SelectedIndex = 1;
+
+        vm.Tabs.Move(0, 2);
+
+        tabControl.SelectedIndex.ShouldBe(0);
+        vm.SelectedIndex.ShouldBe(0);
+    }
+
+    [Fact]
+    public void SelectionChange_ShouldPushEachPropertyOnce()
+    {
+        CountingViewModel vm = CreateCountingViewModel(3);
+        TabControl tabControl = BindCounting(vm);
+        vm.IndexSets = 0;
+        vm.SelectedSets = 0;
+
+        tabControl.SelectedIndex = 2;
+
+        vm.IndexSets.ShouldBe(1);
+        vm.SelectedSets.ShouldBe(1);
+    }
+
+    [Fact]
+    public void RandomOperations_ShouldKeepTabsPagesAndViewModelInSync()
+    {
+        CountingViewModel vm = new CountingViewModel();
+        TabControl tabControl = new TabControl { BindingContext = vm };
+        tabControl.ContentTemplate = new VisualTemplate(_ => new LabelVisual());
+        tabControl.SetBinding(nameof(TabControl.Items), nameof(CountingViewModel.Tabs));
+        tabControl.SetBinding(nameof(TabControl.SelectedIndex), nameof(CountingViewModel.SelectedIndex));
+        tabControl.SetBinding(nameof(TabControl.SelectedObject), nameof(CountingViewModel.Selected));
+
+        System.Random random = new System.Random(6408);
+        int nextId = 0;
+        ObservableCollection<TabViewModel> items = vm.Tabs;
+        for (int op = 0; op < 400; op++)
+        {
+            int kind = random.Next(100);
+            string step;
+            if (items.Count == 0 || kind < 30)
+            {
+                int at = random.Next(items.Count + 1);
+                step = $"op{op} insert@{at}";
+                items.Insert(at, new TabViewModel { Title = "Tab" + nextId++ });
+            }
+            else if (kind < 50)
+            {
+                int at = random.Next(items.Count);
+                step = $"op{op} remove@{at}";
+                items.RemoveAt(at);
+            }
+            else if (kind < 65)
+            {
+                int from = random.Next(items.Count);
+                int to = random.Next(items.Count);
+                step = $"op{op} move {from}->{to}";
+                items.Move(from, to);
+            }
+            else if (kind < 80)
+            {
+                int at = random.Next(items.Count);
+                step = $"op{op} replace@{at}";
+                items[at] = new TabViewModel { Title = "Tab" + nextId++ };
+            }
+            else if (kind < 83)
+            {
+                step = $"op{op} clear";
+                items.Clear();
+            }
+            else
+            {
+                int at = random.Next(-1, items.Count);
+                step = $"op{op} select {at}";
+                tabControl.SelectedIndex = at;
+            }
+
+            ShouldBePairedWithSelection(tabControl, items, step);
+            vm.SelectedIndex.ShouldBe(tabControl.SelectedIndex, step + " view model index");
+            vm.Selected.ShouldBeSameAs(tabControl.SelectedObject, step + " view model selection");
+        }
+    }
+
+    private static void ShouldBePairedWithSelection(TabControl tabControl, IList<TabViewModel> items, string step)
+    {
+        tabControl.TabItems.Count.ShouldBe(items.Count, step);
+        tabControl.Pages.Count.ShouldBe(items.Count, step);
+        for (int i = 0; i < items.Count; i++)
+        {
+            tabControl.Pages[i].BindingContext.ShouldBeSameAs(items[i], step + " page " + i);
+            tabControl.TabItems[i].BindingContext.ShouldBeSameAs(items[i], step + " tab " + i);
+            tabControl.TabItems[i].Header.ShouldBeSameAs(items[i], step + " header " + i);
+            tabControl.ContentPanel!.Children.IndexOf(tabControl.Pages[i].Visual).ShouldBe(i, step + " page slot " + i);
+            tabControl.InnerPanel.Children.IndexOf(tabControl.TabItems[i].Visual).ShouldBe(i, step + " tab slot " + i);
+            tabControl.Pages[i].IsSelected.ShouldBe(tabControl.TabItems[i].IsSelected, step + " page selection " + i);
+        }
+        tabControl.ContentPanel!.Children.Count.ShouldBe(items.Count, step + " stray pages");
+        if (tabControl.SelectedIndex > -1)
+        {
+            tabControl.SelectedObject.ShouldBeSameAs(items[tabControl.SelectedIndex], step + " selected object");
+        }
+    }
+
     [Fact]
     public void Binding_ShouldReplaceAuthoredTabs_AsListBoxDoes()
     {
@@ -369,7 +566,7 @@ public class TabControlTests : BaseTestClass
         tabControl.Pages.Count.ShouldBe(1);
         tabControl.Pages[0].ShouldNotBe(authoredPage.FormsControl);
         authoredPage.Parent.ShouldBeNull();
-        tabControl.SelectedIndex.ShouldBe(0);
+        tabControl.SelectedIndex.ShouldBe(-1);
     }
 
     [Fact]
@@ -389,7 +586,10 @@ public class TabControlTests : BaseTestClass
 
         tabControl.Items!.Count.ShouldBe(2);
         tabControl.Pages.ShouldBe(new[] { page0.FormsControl, page1.FormsControl });
-        tabControl.SelectedIndex.ShouldBe(0);
+        // No selection until the tool's SelectedIndex default (or code) sets one, as with ListBox.
+        tabControl.SelectedIndex.ShouldBe(-1);
+
+        tabControl.SelectedIndex = 0;
         page0.Visible.ShouldBeTrue();
         page1.Visible.ShouldBeFalse();
 
@@ -414,6 +614,7 @@ public class TabControlTests : BaseTestClass
     public void RightKey_ShouldSelectNextEnabledTab()
     {
         TabControl tabControl = CreateWithTitles("A", "B", "C");
+        tabControl.SelectedIndex = 0;
         tabControl.TabItems[1].IsEnabled = false;
         FrameworkElement.KeyboardsForUiControl.Add(CreateKeyboardTyping(Gum.Forms.Input.Keys.Right).Object);
 
@@ -426,6 +627,7 @@ public class TabControlTests : BaseTestClass
     public void LeftKey_ShouldStayOnFirstTab()
     {
         TabControl tabControl = CreateWithTitles("A", "B");
+        tabControl.SelectedIndex = 0;
         FrameworkElement.KeyboardsForUiControl.Add(CreateKeyboardTyping(Gum.Forms.Input.Keys.Left).Object);
 
         tabControl.OnFocusUpdate();
@@ -450,6 +652,7 @@ public class TabControlTests : BaseTestClass
     public void DPadRight_ShouldSelectNextTab()
     {
         TabControl tabControl = CreateWithTitles("A", "B");
+        tabControl.SelectedIndex = 0;
         tabControl.IsFocused = true;
 
         GamePad gamepad = new();
