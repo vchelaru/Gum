@@ -58,6 +58,8 @@ firstNineSlice.SourceFileName = "Frame.png";
 secondNineSlice.Texture = firstNineSlice.Texture;
 ```
 
+On SkiaSharp-based runtimes, a texture Gum loads is shared and read-only. See [Editing a Loaded Texture on SkiaSharp](../files-and-fonts/file-loading.md#editing-a-loaded-texture-on-skiasharp) before changing its pixels.
+
 ### Border Scale
 
 `BorderScale` multiplies the thickness of every border. `CustomBorderScaleLeft`, `CustomBorderScaleTop`, `CustomBorderScaleRight`, and `CustomBorderScaleBottom` override it for one side. A side left `null` uses `BorderScale`, and a side set to `0` draws no border.
