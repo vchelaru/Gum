@@ -191,11 +191,9 @@ public static class SkiaResourceManager
                 return cached;
             }
 
-            // Whatever is still cached here is a disposed bitmap. Dropping it before the load means a load
-            // that throws leaves no entry behind, rather than the disposed one.
-            skBitmapCache.TryRemove(cacheKey, out _);
-
-            // A failed decode throws before the cache write, so a later call (e.g. a retried download) can succeed.
+            // Whatever is still cached here is a disposed bitmap, which reads as a miss, so a load that throws
+            // leaves nothing usable cached. A failed decode throws before the cache write, so a later call
+            // (e.g. a retried download) can succeed.
             SKBitmap bitmap = stream != null
                 ? DecodeBitmap(resourceName, stream)
                     ?? throw new InvalidDataException($"Could not decode an image for {resourceName}.")
