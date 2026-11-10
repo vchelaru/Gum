@@ -65,6 +65,9 @@ public class Polygon : RenderableShapeBase
     {
         Polygon clone = (Polygon)base.Clone();
         clone.Points = new List<SKPoint>(Points);
+        // The copied path and its point snapshot belong to the source.
+        clone._cachedPath = null;
+        clone._cachedPathPoints = new List<SKPoint>();
         return clone;
     }
 
@@ -169,9 +172,67 @@ public class Polygon : RenderableShapeBase
         }
     }
 
+    // The path is rebuilt only when something it is made from differs from the last build. Points is a
+    // public list that can change in place, so a copy of it is compared instead of watching for writes.
+    SKPath? _cachedPath;
+    SKRect _cachedPathBounds;
+    bool _cachedPathIsClosed;
+    GeneralUnitType _cachedPathXUnits;
+    GeneralUnitType _cachedPathYUnits;
+    List<SKPoint> _cachedPathPoints = new List<SKPoint>();
+
+    bool IsCachedPathCurrent(SKRect boundingRect)
+    {
+        if (_cachedPath == null
+            || _cachedPathBounds != boundingRect
+            || _cachedPathIsClosed != IsClosed
+            || _cachedPathXUnits != PointXUnits
+            || _cachedPathYUnits != PointYUnits
+            || _cachedPathPoints.Count != Points.Count)
+        {
+            return false;
+        }
+
+        for (int i = 0; i < Points.Count; i++)
+        {
+            if (_cachedPathPoints[i] != Points[i])
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
     public override void DrawBound(SKRect boundingRect, SKCanvas canvas, float absoluteRotation)
     {
         var paint = GetCachedPaint(boundingRect, absoluteRotation);
+
+        if (!IsCachedPathCurrent(boundingRect))
+        {
+            _cachedPath?.Dispose();
+            _cachedPath = BuildPath(boundingRect);
+            _cachedPathBounds = boundingRect;
+            _cachedPathIsClosed = IsClosed;
+            _cachedPathXUnits = PointXUnits;
+            _cachedPathYUnits = PointYUnits;
+            _cachedPathPoints.Clear();
+            _cachedPathPoints.AddRange(Points);
+        }
+
+        canvas.DrawPath(_cachedPath, paint);
+    }
+
+    /// <inheritdoc/>
+    public override void Dispose()
+    {
+        _cachedPath?.Dispose();
+        _cachedPath = null;
+        base.Dispose();
+    }
+
+    SKPath BuildPath(SKRect boundingRect)
+    {
         using var builder = new SKPathBuilder();
 
         var thisPosition = new SKPoint(boundingRect.Left, boundingRect.Top);
@@ -195,7 +256,6 @@ public class Polygon : RenderableShapeBase
             builder.Close();
         }
 
-        using SKPath path = builder.Detach();
-        canvas.DrawPath(path, paint);
+        return builder.Detach();
     }
 }

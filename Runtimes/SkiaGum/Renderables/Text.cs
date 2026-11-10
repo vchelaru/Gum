@@ -165,8 +165,11 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
         get => _typeface;
         set
         {
-            _typeface = value;
-            _cachedTextBlock = null;
+            if (_typeface != value)
+            {
+                _typeface = value;
+                _cachedTextBlock = null;
+            }
         }
     }
 
@@ -183,8 +186,11 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
         get => _fontName; 
         set
         {
-            _fontName = value;
-            _cachedTextBlock = null;
+            if (_fontName != value)
+            {
+                _fontName = value;
+                _cachedTextBlock = null;
+            }
 
         }
     }
@@ -193,8 +199,11 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
         get => _fontSize;
         set
         {
-            _fontSize = value;
-            _cachedTextBlock = null;
+            if (_fontSize != value)
+            {
+                _fontSize = value;
+                _cachedTextBlock = null;
+            }
         }
     }
     public float FontScale
@@ -202,8 +211,11 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
         get => _fontScale; 
         set
         {
-            _fontScale = value;
-            _cachedTextBlock = null;
+            if (_fontScale != value)
+            {
+                _fontScale = value;
+                _cachedTextBlock = null;
+            }
         }
     }
 
@@ -212,8 +224,11 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
         get => _boldWeight; 
         set
         {
-            _boldWeight = value;
-            _cachedTextBlock = null;
+            if (_boldWeight != value)
+            {
+                _boldWeight = value;
+                _cachedTextBlock = null;
+            }
         }
     }
     // I don't know if this should be a skia, XamForms, or XNA color...
@@ -222,8 +237,11 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
         get => _color;
         set
         {
-            _color = value;
-            _cachedTextBlock = null;
+            if (_color != value)
+            {
+                _color = value;
+                _cachedTextBlock = null;
+            }
         }
     }
 
@@ -271,8 +289,11 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
     {
         get => _maximumNumberOfLines; set
         {
-            _maximumNumberOfLines = value;
-            _cachedTextBlock = null;
+            if (_maximumNumberOfLines != value)
+            {
+                _maximumNumberOfLines = value;
+                _cachedTextBlock = null;
+            }
         }
     }
 
@@ -288,8 +309,11 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
         get => _isTruncatingWithEllipsisOnLastLine;
         set
         {
-            _isTruncatingWithEllipsisOnLastLine = value;
-            _cachedTextBlock = null;
+            if (_isTruncatingWithEllipsisOnLastLine != value)
+            {
+                _isTruncatingWithEllipsisOnLastLine = value;
+                _cachedTextBlock = null;
+            }
         }
     }
 
@@ -499,8 +523,11 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
     {
         get => _isItalic; set
         {
-            _isItalic = value;
-            _cachedTextBlock = null;
+            if (_isItalic != value)
+            {
+                _isItalic = value;
+                _cachedTextBlock = null;
+            }
         }
     }
 
@@ -517,8 +544,11 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
         get => _outlineThickness;
         set
         {
-            _outlineThickness = value;
-            _cachedTextBlock = null;
+            if (_outlineThickness != value)
+            {
+                _outlineThickness = value;
+                _cachedTextBlock = null;
+            }
         }
     }
 
@@ -533,8 +563,11 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
         get => _outlineColor;
         set
         {
-            _outlineColor = value;
-            _cachedTextBlock = null;
+            if (_outlineColor != value)
+            {
+                _outlineColor = value;
+                _cachedTextBlock = null;
+            }
         }
     }
 
@@ -836,8 +869,11 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
         get => _horizontalAlignment;
         set
         {
-            _horizontalAlignment = value;
-            _cachedTextBlock = null;
+            if (_horizontalAlignment != value)
+            {
+                _horizontalAlignment = value;
+                _cachedTextBlock = null;
+            }
         }
     }
 
@@ -907,8 +943,11 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
         get => _lineHeightMultiplier;
         set
         {
-            _lineHeightMultiplier = value;
-            _cachedTextBlock = null;
+            if (_lineHeightMultiplier != value)
+            {
+                _lineHeightMultiplier = value;
+                _cachedTextBlock = null;
+            }
         }
     }
     public float WrappedTextHeight
@@ -968,8 +1007,11 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
         get => _textOverflowVerticalMode;
         set
         {
-            _textOverflowVerticalMode = value;
-            _cachedTextBlock = null;
+            if (_textOverflowVerticalMode != value)
+            {
+                _textOverflowVerticalMode = value;
+                _cachedTextBlock = null;
+            }
         }
     }
 
@@ -1047,7 +1089,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
             // text into an offscreen layer whose paint carries the ImageFilter (shadow) and/or
             // BlendMode (blend) so both compose when the layer is composited back on Restore. Same
             // primitive/blur convention as the Skia shapes.
-            var renderPaint = GetRenderPaint();
+            SKPaint? renderPaint = GetCachedRenderPaint();
             if (renderPaint != null)
             {
                 // A blend that writes alpha (ReplaceAlpha, MinAlpha, Replace) would otherwise act on the
@@ -1059,18 +1101,16 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
                 }
 
                 canvas.SaveLayer(renderPaint);
-                PaintTextBlock(canvas, paintBlock);
+                PaintTextBlockCached(canvas, paintBlock, textBlock);
                 canvas.Restore();
                 if (Blend.HasValue)
                 {
                     canvas.Restore();
                 }
-
-                renderPaint.Dispose();
             }
             else
             {
-                PaintTextBlock(canvas, paintBlock);
+                PaintTextBlockCached(canvas, paintBlock, textBlock);
             }
             canvas.Restore();
         }
@@ -1512,6 +1552,36 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
     // The scaled or rotated letters of each block BuildTextBlockFromRuns made. The block lays them out invisibly so
     // layout is unchanged. Keyed by block so the cached block and a MaxLettersToShow reveal block each carry their own.
     private static readonly System.Runtime.CompilerServices.ConditionalWeakTable<TextBlock, List<TransformedLetter>> _transformedLetters = new();
+
+    // RichTextKit's TextBlock.Paint allocates on every call, so the cached block is recorded once into a
+    // picture and replayed while the block is unchanged. A MaxLettersToShow reveal block is rebuilt per
+    // frame and painted directly. Native memory is released when the picture is replaced or finalized.
+    private SKPicture? _cachedPicture;
+    private TextBlock? _cachedPictureBlock;
+
+    // Larger than any text the picture is replayed into, so recording never culls a line.
+    private static readonly SKRect _pictureCullRect = new SKRect(-100000, -100000, 100000, 100000);
+
+    private void PaintTextBlockCached(SKCanvas canvas, TextBlock paintBlock, TextBlock cachedBlock)
+    {
+        if (!ReferenceEquals(paintBlock, cachedBlock))
+        {
+            PaintTextBlock(canvas, paintBlock);
+            return;
+        }
+
+        if (_cachedPicture == null || !ReferenceEquals(_cachedPictureBlock, cachedBlock))
+        {
+            _cachedPicture?.Dispose();
+            using SKPictureRecorder recorder = new SKPictureRecorder();
+            SKCanvas recordingCanvas = recorder.BeginRecording(_pictureCullRect);
+            PaintTextBlock(recordingCanvas, cachedBlock);
+            _cachedPicture = recorder.EndRecording();
+            _cachedPictureBlock = cachedBlock;
+        }
+
+        canvas.DrawPicture(_cachedPicture);
+    }
 
     /// <summary>Paints <paramref name="block"/>, then its scaled or rotated <c>[Custom]</c> letters.</summary>
     private static void PaintTextBlock(SKCanvas canvas, TextBlock block)
@@ -2321,6 +2391,57 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
     /// unchanged. The caller owns the returned paint and must dispose it. The blur values are
     /// converted to a sigma with <see cref="DropshadowBlur.GetSigma"/>, the same convention <see cref="RenderableShapeBase"/> uses for Skia shapes.
     /// </summary>
+    private SKPaint? _cachedRenderPaint;
+    private bool _hasCachedRenderPaint;
+    private (bool HasDropshadow, float OffsetX, float OffsetY, float BlurX, float BlurY, SKColor Color, Gum.RenderingLibrary.Blend? Blend) _cachedRenderPaintKey;
+
+    /// <summary>
+    /// <see cref="GetRenderPaint"/>, kept until one of the values it reads changes. The renderable owns
+    /// the returned paint; callers must not dispose it.
+    /// </summary>
+    private SKPaint? GetCachedRenderPaint()
+    {
+        (bool, float, float, float, float, SKColor, Gum.RenderingLibrary.Blend?) key =
+            (HasDropshadow, DropshadowOffsetX, DropshadowOffsetY, DropshadowBlurX, DropshadowBlurY, DropshadowColor, Blend);
+
+        if (!_hasCachedRenderPaint || _cachedRenderPaintKey != key)
+        {
+            // The paint object is rebuilt in place, so animating a shadow value allocates no new paint.
+            _cachedRenderPaintKey = key;
+            _hasCachedRenderPaint = true;
+            _hasActiveRenderPaint = HasDropshadow || Blend.HasValue;
+            if (_hasActiveRenderPaint)
+            {
+                _cachedRenderPaint ??= new SKPaint();
+                _cachedRenderPaint.Reset();
+                ConfigureRenderPaint(_cachedRenderPaint);
+            }
+        }
+
+        return _hasActiveRenderPaint ? _cachedRenderPaint : null;
+    }
+
+    private bool _hasActiveRenderPaint;
+
+    private void ConfigureRenderPaint(SKPaint paint)
+    {
+        if (HasDropshadow)
+        {
+            using SKImageFilter dropshadow = SKImageFilter.CreateDropShadow(
+                DropshadowOffsetX,
+                DropshadowOffsetY,
+                global::Gum.Wireframe.DropshadowBlur.GetSigma(DropshadowBlurX),
+                global::Gum.Wireframe.DropshadowBlur.GetSigma(DropshadowBlurY),
+                DropshadowColor);
+            paint.ImageFilter = dropshadow;
+        }
+
+        if (Blend.HasValue)
+        {
+            paint.ApplyBlend(Blend.Value);
+        }
+    }
+
     internal SKPaint? GetRenderPaint()
     {
         if (!HasDropshadow && !Blend.HasValue)
@@ -2328,23 +2449,8 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
             return null;
         }
 
-        var paint = new SKPaint();
-
-        if (HasDropshadow)
-        {
-            paint.ImageFilter = SKImageFilter.CreateDropShadow(
-                DropshadowOffsetX,
-                DropshadowOffsetY,
-                global::Gum.Wireframe.DropshadowBlur.GetSigma(DropshadowBlurX),
-                global::Gum.Wireframe.DropshadowBlur.GetSigma(DropshadowBlurY),
-                DropshadowColor);
-        }
-
-        if (Blend.HasValue)
-        {
-            paint.ApplyBlend(Blend.Value);
-        }
-
+        SKPaint paint = new SKPaint();
+        ConfigureRenderPaint(paint);
         return paint;
     }
 
@@ -2429,6 +2535,12 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
         newInstance.mParent = null;
         newInstance.mChildren = new();
         newInstance._cachedTextBlock = null;
+        // The copied picture and render paint belong to the source.
+        newInstance._cachedPicture = null;
+        newInstance._cachedPictureBlock = null;
+        newInstance._cachedRenderPaint = null;
+        newInstance._hasCachedRenderPaint = false;
+        newInstance._hasActiveRenderPaint = false;
         // MemberwiseClone shares the list reference; give the clone its own copy so re-parsing markup
         // on one instance (via RawText) doesn't mutate the other's inline-styling runs (issue #3679).
         newInstance._inlineVariables = new List<InlineVariable>(_inlineVariables);

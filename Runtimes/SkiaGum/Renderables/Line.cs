@@ -25,8 +25,11 @@ public class Line : RenderableShapeBase
         get => _isRounded;
         set
         {
-            _isRounded = value;
-            ClearCachedPaint();
+            if (_isRounded != value)
+            {
+                _isRounded = value;
+                ClearCachedPaint();
+            }
         }
     }
 

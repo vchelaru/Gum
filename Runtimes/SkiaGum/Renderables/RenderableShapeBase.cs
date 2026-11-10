@@ -28,6 +28,8 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
         clone.mParent = null;
         // The copied paint reference belongs to the source, so drop it rather than dispose it.
         clone._cachedPaint = null;
+        clone._layerPaint = null;
+        clone._paintToReuse = null;
         clone.NeedsUpdate = true;
         // The hook targets the source's runtime; the clone's runtime rebinds its own.
         clone.OnPreRender = null;
@@ -42,8 +44,11 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
         get => _color;
         set
         {
-            _color = value;
-            ClearCachedPaint();
+            if (_color != value)
+            {
+                _color = value;
+                ClearCachedPaint();
+            }
         }
     }
 
@@ -234,8 +239,11 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
         get => _useGradient;
         set
         {
-            _useGradient = value;
-            ClearCachedPaint();
+            if (_useGradient != value)
+            {
+                _useGradient = value;
+                ClearCachedPaint();
+            }
         }
     }
 
@@ -245,8 +253,11 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
         get => _gradientType; 
         set
         {
-            _gradientType = value;
-            ClearCachedPaint();
+            if (_gradientType != value)
+            {
+                _gradientType = value;
+                ClearCachedPaint();
+            }
         }
     }
 
@@ -256,8 +267,11 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
         get => _alpha1; 
         set
         {
-            _alpha1 = value;
-            ClearCachedPaint();
+            if (_alpha1 != value)
+            {
+                _alpha1 = value;
+                ClearCachedPaint();
+            }
         }
     }
     private int _red1;
@@ -265,8 +279,11 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
     {
         get => _red1; set
         {
-            _red1 = value;
-            ClearCachedPaint();
+            if (_red1 != value)
+            {
+                _red1 = value;
+                ClearCachedPaint();
+            }
         }
     }
     private int _green1;
@@ -275,8 +292,11 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
         get => _green1;
         set
         {
-            _green1 = value;
-            ClearCachedPaint();
+            if (_green1 != value)
+            {
+                _green1 = value;
+                ClearCachedPaint();
+            }
         }
     }
     private int _blue1;
@@ -285,8 +305,11 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
         get => _blue1;
         set
         {
-            _blue1 = value;
-            ClearCachedPaint();
+            if (_blue1 != value)
+            {
+                _blue1 = value;
+                ClearCachedPaint();
+            }
         }
     }
 
@@ -296,8 +319,11 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
         get => _alpha2;
         set
         {
-            _alpha2 = value;
-            ClearCachedPaint();
+            if (_alpha2 != value)
+            {
+                _alpha2 = value;
+                ClearCachedPaint();
+            }
         }
     }
     private int _red2;
@@ -306,8 +332,11 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
         get => _red2;
         set
         {
-            _red2 = value;
-            ClearCachedPaint();
+            if (_red2 != value)
+            {
+                _red2 = value;
+                ClearCachedPaint();
+            }
         }
     }
     private int _green2;
@@ -316,8 +345,11 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
         get => _green2;
         set
         {
-            _green2 = value;
-            ClearCachedPaint();
+            if (_green2 != value)
+            {
+                _green2 = value;
+                ClearCachedPaint();
+            }
         }
     }
     private int _blue2;
@@ -326,8 +358,11 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
         get => _blue2;
         set
         {
-            _blue2 = value;
-            ClearCachedPaint();
+            if (_blue2 != value)
+            {
+                _blue2 = value;
+                ClearCachedPaint();
+            }
         }
     }
 
@@ -337,8 +372,11 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
         get => _gradientX1;
         set
         {
-            _gradientX1 = value;
-            ClearCachedPaint();
+            if (_gradientX1 != value)
+            {
+                _gradientX1 = value;
+                ClearCachedPaint();
+            }
         }
     }
     private GeneralUnitType _gradientX1Units;
@@ -347,8 +385,11 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
         get => _gradientX1Units;
         set
         {
-            _gradientX1Units = value;
-            ClearCachedPaint();
+            if (_gradientX1Units != value)
+            {
+                _gradientX1Units = value;
+                ClearCachedPaint();
+            }
         }
     }
     private float _gradientY1;
@@ -357,8 +398,11 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
         get => _gradientY1;
         set
         {
-            _gradientY1 = value;
-            ClearCachedPaint();
+            if (_gradientY1 != value)
+            {
+                _gradientY1 = value;
+                ClearCachedPaint();
+            }
         }
     }
     private GeneralUnitType _gradientY1Units;
@@ -367,8 +411,11 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
         get => _gradientY1Units;
         set
         {
-            _gradientY1Units = value;
-            ClearCachedPaint();
+            if (_gradientY1Units != value)
+            {
+                _gradientY1Units = value;
+                ClearCachedPaint();
+            }
         }
     }
 
@@ -378,8 +425,11 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
         get => _gradientX2;
         set
         {
-            _gradientX2 = value;
-            ClearCachedPaint();
+            if (_gradientX2 != value)
+            {
+                _gradientX2 = value;
+                ClearCachedPaint();
+            }
         }
     }
 
@@ -389,8 +439,11 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
         get => _gradientX2Units;
         set
         {
-            _gradientX2Units = value;
-            ClearCachedPaint();
+            if (_gradientX2Units != value)
+            {
+                _gradientX2Units = value;
+                ClearCachedPaint();
+            }
         }
     }
 
@@ -400,8 +453,11 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
         get => _gradientY2;
         set
         {
-            _gradientY2 = value;
-            ClearCachedPaint();
+            if (_gradientY2 != value)
+            {
+                _gradientY2 = value;
+                ClearCachedPaint();
+            }
         }
     }
     private GeneralUnitType _gradientY2Units;
@@ -410,8 +466,11 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
         get => _gradientY2Units;
         set
         {
-            _gradientY2Units = value;
-            ClearCachedPaint();
+            if (_gradientY2Units != value)
+            {
+                _gradientY2Units = value;
+                ClearCachedPaint();
+            }
         }
     }
 
@@ -422,8 +481,11 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
         get => _gradientInnerRadius;
         set
         {
-            _gradientInnerRadius = value;
-            ClearCachedPaint();
+            if (_gradientInnerRadius != value)
+            {
+                _gradientInnerRadius = value;
+                ClearCachedPaint();
+            }
         }
     }
     private DimensionUnitType _gradientInnerRadiusUnits;
@@ -432,8 +494,11 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
         get => _gradientInnerRadiusUnits;
         set
         {
-            _gradientInnerRadiusUnits = value;
-            ClearCachedPaint();
+            if (_gradientInnerRadiusUnits != value)
+            {
+                _gradientInnerRadiusUnits = value;
+                ClearCachedPaint();
+            }
         }
     }
 
@@ -443,8 +508,11 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
         get => _gradientOuterRadius;
         set
         {
-            _gradientOuterRadius = value;
-            ClearCachedPaint();
+            if (_gradientOuterRadius != value)
+            {
+                _gradientOuterRadius = value;
+                ClearCachedPaint();
+            }
         }
     }
     private DimensionUnitType _gradientOuterRadiusUnits;
@@ -453,8 +521,11 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
         get => _gradientOuterRadiusUnits;
         set
         {
-            _gradientOuterRadiusUnits = value;
-            ClearCachedPaint();
+            if (_gradientOuterRadiusUnits != value)
+            {
+                _gradientOuterRadiusUnits = value;
+                ClearCachedPaint();
+            }
         }
     }
 
@@ -464,8 +535,11 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
         get => _isDimmed;
         set
         {
-            _isDimmed = value;
-            ClearCachedPaint();
+            if (_isDimmed != value)
+            {
+                _isDimmed = value;
+                ClearCachedPaint();
+            }
         }
     }
 
@@ -481,8 +555,11 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
         get => _isFilled;
         set
         {
-            _isFilled = value;
-            ClearCachedPaint();
+            if (_isFilled != value)
+            {
+                _isFilled = value;
+                ClearCachedPaint();
+            }
         }
     }
 
@@ -501,8 +578,11 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
         {
             if (_isAntialiased != value)
             {
-                _isAntialiased = value;
-                ClearCachedPaint();
+                if (_isAntialiased != value)
+                {
+                    _isAntialiased = value;
+                    ClearCachedPaint();
+                }
             }
         }
     }
@@ -521,8 +601,11 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
                     throw new ArgumentException("StrokeWidth cannot be set to PositiveInfinity");
                 }
 #endif
-                _strokeWidth = value;
-                ClearCachedPaint();
+                if (_strokeWidth != value)
+                {
+                    _strokeWidth = value;
+                    ClearCachedPaint();
+                }
             }
         }
     }
@@ -539,8 +622,11 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
         {
             if (value != _strokeDashLength)
             {
-                _strokeDashLength = value;
-                ClearCachedPaint();
+                if (_strokeDashLength != value)
+                {
+                    _strokeDashLength = value;
+                    ClearCachedPaint();
+                }
             }
         }
     }
@@ -557,8 +643,11 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
         {
             if (value != _strokeGapLength)
             {
-                _strokeGapLength = value;
-                ClearCachedPaint();
+                if (_strokeGapLength != value)
+                {
+                    _strokeGapLength = value;
+                    ClearCachedPaint();
+                }
             }
         }
     }
@@ -572,8 +661,11 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
         get => _dropshadowColor;
         set
         {
-            _dropshadowColor = value;
-            ClearCachedPaint();
+            if (_dropshadowColor != value)
+            {
+                _dropshadowColor = value;
+                ClearCachedPaint();
+            }
         }
     }
 
@@ -620,8 +712,11 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
         get => _hasDropshadow;
         set
         {
-            _hasDropshadow = value;
-            ClearCachedPaint();
+            if (_hasDropshadow != value)
+            {
+                _hasDropshadow = value;
+                ClearCachedPaint();
+            }
         }
     }
 
@@ -632,8 +727,11 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
         get => _dropshadowOffsetX;
         set
         {
-            _dropshadowOffsetX = value;
-            ClearCachedPaint();
+            if (_dropshadowOffsetX != value)
+            {
+                _dropshadowOffsetX = value;
+                ClearCachedPaint();
+            }
         }
     }
 
@@ -644,8 +742,11 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
         get => _dropshadowOffsetY;
         set
         {
-            _dropshadowOffsetY = value;
-            ClearCachedPaint();
+            if (_dropshadowOffsetY != value)
+            {
+                _dropshadowOffsetY = value;
+                ClearCachedPaint();
+            }
         }
     }
 
@@ -660,8 +761,11 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
         get => _dropshadowBlurX;
         set
         {
-            _dropshadowBlurX = value;
-            ClearCachedPaint();
+            if (_dropshadowBlurX != value)
+            {
+                _dropshadowBlurX = value;
+                ClearCachedPaint();
+            }
         }
     }
 
@@ -675,8 +779,11 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
         get => _dropshadowBlurY;
         set
         {
-            _dropshadowBlurY = value;
-            ClearCachedPaint();
+            if (_dropshadowBlurY != value)
+            {
+                _dropshadowBlurY = value;
+                ClearCachedPaint();
+            }
         }
     }
 
@@ -782,7 +889,8 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
                 // See BlendsWholeBounds: draw the shape normally into a layer clipped to the bounds,
                 // then composite that layer with the blend. A fill slot draws its stroke slot into the
                 // same layer, so the pair blends as one shape (#6246).
-                using SKPaint layerPaint = new SKPaint();
+                SKPaint layerPaint = _layerPaint ??= new SKPaint();
+                layerPaint.Reset();
                 layerPaint.ApplyBlend(Blend!.Value);
                 canvas.Save();
                 canvas.ClipRect(blendBounds);
@@ -832,8 +940,11 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
         {
             if (_replacesPaintBelow != value)
             {
-                _replacesPaintBelow = value;
-                ClearCachedPaint();
+                if (_replacesPaintBelow != value)
+                {
+                    _replacesPaintBelow = value;
+                    ClearCachedPaint();
+                }
             }
         }
     }
@@ -893,14 +1004,24 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
     SKRect _lastBoundingRect;
 
     SKPaint? _cachedPaint;
+    bool _isCachedPaintStale;
+
+    // Reused by the whole-bounds blend layer so a ReplaceAlpha/MinAlpha shape allocates no paint per draw.
+    SKPaint? _layerPaint;
+
+    // The paint object to rebuild in place. Set by GetCachedPaint around its GetPaint call so the base
+    // GetPaint (which every override calls first) reuses it instead of allocating a new one.
+    SKPaint? _paintToReuse;
+
+    /// <summary>
+    /// Marks the paint as out of date. The next draw rebuilds it, reusing the same <see cref="SKPaint"/>
+    /// object so an animated property does not allocate a paint every frame.
+    /// </summary>
     protected void ClearCachedPaint()
     {
-        _cachedPaint?.Dispose();
-        _cachedPaint = null;
+        _isCachedPaintStale = true;
         NeedsUpdate = true;
     }
-
-
 
     float _lastAbsoluteRotation;
     protected SKPaint GetCachedPaint(SKRect boundingRect, float absoluteRotation)
@@ -911,15 +1032,30 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
             _lastAbsoluteRotation = absoluteRotation;
             ClearCachedPaint();
         }
-        if(_cachedPaint == null)
+        if(_cachedPaint == null || _isCachedPaintStale)
         {
+            _paintToReuse = _cachedPaint;
             _cachedPaint = GetPaint(boundingRect, absoluteRotation);
+            _paintToReuse = null;
+            _isCachedPaintStale = false;
         }
         return _cachedPaint;
     }
 
+    /// <summary>
+    /// Builds the paint for a draw. Overrides call this first and then adjust the paint it returns.
+    /// When called from <see cref="GetCachedPaint"/> the returned paint is the previous one reset to
+    /// defaults, so callers other than that must not keep it past the next draw.
+    /// </summary>
     protected virtual SKPaint GetPaint(SKRect boundingRect, float absoluteRotation)
     {
+        SKPaint paint = _paintToReuse ?? new SKPaint();
+        if (_paintToReuse != null)
+        {
+            paint.Reset();
+            _paintToReuse = null;
+        }
+
         var effectiveColor = this.Color;
         if (IsDimmed)
         {
@@ -934,23 +1070,23 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
 
 
 
-        var paint = new SKPaint
-        {
-            Color = effectiveColor,
-            Style = IsFilled ? SKPaintStyle.Fill : SKPaintStyle.Stroke,
-            StrokeWidth = StrokeWidth,
-            IsAntialias = _isAntialiased
-        };
+        paint.Color = effectiveColor;
+        paint.Style = IsFilled ? SKPaintStyle.Fill : SKPaintStyle.Stroke;
+        paint.StrokeWidth = StrokeWidth;
+        paint.IsAntialias = _isAntialiased;
 
+        // The paint keeps its own reference to a filter, shader or path effect, so the object made here
+        // is released as soon as it is assigned instead of waiting for the finalizer.
         if (HasDropshadow)
         {
-            paint.ImageFilter = SKImageFilter.CreateDropShadow(
+            using SKImageFilter dropshadow = SKImageFilter.CreateDropShadow(
                         DropshadowOffsetX,
                         // See https://stackoverflow.com/questions/60456526/how-can-i-tell-the-amount-of-space-needed-for-a-skia-dropshadow
                         DropshadowOffsetY,
                         global::Gum.Wireframe.DropshadowBlur.GetSigma(DropshadowBlurX),
                         global::Gum.Wireframe.DropshadowBlur.GetSigma(DropshadowBlurY),
                         DropshadowColor);
+            paint.ImageFilter = dropshadow;
         }
 
         if (UseGradient)
@@ -968,8 +1104,9 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
 
         if (!IsFilled && StrokeDashLength > 0 && StrokeGapLength > 0)
         {
-            paint.PathEffect = SKPathEffect.CreateDash(
+            using SKPathEffect dash = SKPathEffect.CreateDash(
                 new[] { StrokeDashLength, StrokeGapLength }, phase: 0);
+            paint.PathEffect = dash;
         }
 
         if (_replacesPaintBelow)
@@ -1098,12 +1235,13 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
         if (GradientType == GradientType.Linear)
         {
 
-            paint.Shader = SKShader.CreateLinearGradient(
+            using SKShader linear = SKShader.CreateLinearGradient(
                 new SKPoint(effectiveGradientX1, effectiveGradientY1), // left, top
                 new SKPoint(effectiveGradientX2, effectiveGradientY2), // right, bottom
                 new SKColor[] { firstColor, secondColor },
                 new float[] { 0, 1 },
                 SKShaderTileMode.Clamp);
+            paint.Shader = linear;
         }
         else if (GradientType == GradientType.Radial)
         {
@@ -1141,12 +1279,13 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
             var innerToOuterRatio = effectiveInnerRadius / effectiveOuterRadius;
 
 
-            paint.Shader = SKShader.CreateRadialGradient(
+            using SKShader radial = SKShader.CreateRadialGradient(
                 new SKPoint(effectiveGradientX1, effectiveGradientY1), // center
                 effectiveOuterRadius,
                 new SKColor[] { firstColor, secondColor },
                 new float[] { innerToOuterRatio, 1 },
                 SKShaderTileMode.Clamp);
+            paint.Shader = radial;
         }
     }
 
@@ -1174,6 +1313,10 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
     /// </summary>
     public virtual void Dispose()
     {
+        _cachedPaint?.Dispose();
+        _cachedPaint = null;
+        _layerPaint?.Dispose();
+        _layerPaint = null;
         ClearCachedPaint();
 
         if(this.Children != null)

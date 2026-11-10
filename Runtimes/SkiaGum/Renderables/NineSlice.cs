@@ -257,11 +257,13 @@ public class NineSlice : RenderableShapeBase, IAnimatable, IAnimationChainRender
                 0, 0, 1, 0, Color.Blue / 255f,
                 0, 0, 0, 1, 0,
             };
-            paint.ColorFilter = SKColorFilter.CreateColorMatrix(addMatrix);
+            using SKColorFilter addFilter = SKColorFilter.CreateColorMatrix(addMatrix);
+            paint.ColorFilter = addFilter;
         }
         else
         {
-            paint.ColorFilter = SKColorFilter.CreateBlendMode(Color, SKBlendMode.Modulate);
+            using SKColorFilter blendFilter = SKColorFilter.CreateBlendMode(Color, SKBlendMode.Modulate);
+            paint.ColorFilter = blendFilter;
         }
         // Antialias on DrawImage anti-aliases the destination rect's edges. When
         // two sections of the nine-slice abut at a fractional pixel boundary

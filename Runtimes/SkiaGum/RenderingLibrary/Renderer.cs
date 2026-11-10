@@ -114,10 +114,16 @@ namespace RenderingLibrary.Graphics
         // once per frame via RenderTargetServiceBase, exactly like the raylib/MonoGame renderers.
         readonly SkiaRenderTargetService _renderTargetService = new SkiaRenderTargetService();
 
-        // This frame's baked snapshots, keyed by the same contained-renderable owner. Rebuilt each
-        // top-level Draw (old snapshots disposed first) and read by both the composite pass and a
-        // Sprite pulling its RenderTargetTextureSource.
+        // This frame's baked surfaces, keyed by the same contained-renderable owner. Rebuilt each
+        // top-level Draw. The composite pass draws a surface directly; a snapshot is only made when
+        // something needs an image (a Sprite pulling its RenderTargetTextureSource, or an effect).
+        readonly Dictionary<IRenderableIpso, SKSurface> _bakedSurfaces = new Dictionary<IRenderableIpso, SKSurface>();
+
+        // Snapshots of the baked surfaces made on demand this frame, disposed with them.
         readonly Dictionary<IRenderableIpso, SKImage> _bakedImages = new Dictionary<IRenderableIpso, SKImage>();
+
+        // Reused for every composite so a frame without effects allocates no paint.
+        readonly SKPaint _compositePaint = new SKPaint();
 
         // The camera zoom each baked image was drawn at. An image is zoom times larger than its
         // container in pixels, so the composite shrinks it back to the container's canvas-unit
@@ -585,7 +591,7 @@ namespace RenderingLibrary.Graphics
         /// Resolves the container's cache owner internally. Intended for tests and diagnostics.
         /// </summary>
         public bool HasBakedRenderTargetFor(IRenderableIpso container)
-            => _bakedImages.ContainsKey(ResolveRenderTargetCacheOwner(container));
+            => _bakedSurfaces.ContainsKey(ResolveRenderTargetCacheOwner(container));
 
         /// <summary>
         /// The offscreen texture baked for the given render-target container this frame, or null if
@@ -593,9 +599,27 @@ namespace RenderingLibrary.Graphics
         /// <c>RenderTargetTextureSource</c>, and by tests.
         /// </summary>
         public SKImage? TryGetBakedRenderTargetFor(IRenderableIpso container)
-            => _bakedImages.TryGetValue(ResolveRenderTargetCacheOwner(container), out SKImage? image)
-                ? image
-                : null;
+            => GetBakedImage(ResolveRenderTargetCacheOwner(container));
+
+        // The snapshot of the owner's baked surface, made the first time it is asked for this frame.
+        // The snapshot stays valid across the frame via SkiaSharp copy-on-write; the persistent
+        // surface is only re-cleared next frame, after DisposeBakedImages frees this snapshot.
+        private SKImage? GetBakedImage(IRenderableIpso owner)
+        {
+            if (_bakedImages.TryGetValue(owner, out SKImage? image))
+            {
+                return image;
+            }
+
+            if (!_bakedSurfaces.TryGetValue(owner, out SKSurface? surface))
+            {
+                return null;
+            }
+
+            image = surface.Snapshot();
+            _bakedImages[owner] = image;
+            return image;
+        }
 
         // The cached offscreen surface for a render-target container, for tests.
         internal SKSurface? TryGetRenderTargetSurfaceFor(IRenderableIpso container)
@@ -608,6 +632,7 @@ namespace RenderingLibrary.Graphics
                 image?.Dispose();
             }
             _bakedImages.Clear();
+            _bakedSurfaces.Clear();
             _bakedZooms.Clear();
         }
 
@@ -752,14 +777,14 @@ namespace RenderingLibrary.Graphics
                 offscreenCanvas.Restore();
             }
 
-            // The snapshot stays valid across the frame via SkiaSharp copy-on-write; the persistent
-            // surface is only re-cleared next frame, after DisposeBakedImages frees this snapshot.
-            // A second bake in the same frame (PreRenderRoots then a full-scene Draw) replaces it.
+            // A second bake in the same frame (PreRenderRoots then a full-scene Draw) replaces the first,
+            // so a snapshot made from it is dropped.
             if (_bakedImages.TryGetValue(owner, out SKImage? previous))
             {
-                previous?.Dispose();
+                previous.Dispose();
+                _bakedImages.Remove(owner);
             }
-            _bakedImages[owner] = renderTarget.Surface.Snapshot();
+            _bakedSurfaces[owner] = renderTarget.Surface;
             _bakedZooms[owner] = zoom;
         }
 
@@ -788,7 +813,7 @@ namespace RenderingLibrary.Graphics
         private void CompositeRenderTarget(IRenderableIpso container, SystemManagers managers)
         {
             IRenderableIpso owner = ResolveRenderTargetCacheOwner(container);
-            if (!_bakedImages.TryGetValue(owner, out SKImage? image) || image == null)
+            if (!_bakedSurfaces.TryGetValue(owner, out SKSurface? surface))
             {
                 return;
             }
@@ -809,7 +834,10 @@ namespace RenderingLibrary.Graphics
             // unconfigured or unrecognized BlendState composites as Normal. Group alpha tints the
             // whole texture via the paint's alpha channel either way.
             byte alpha = (byte)System.Math.Clamp(container.Alpha, 0, 255);
-            using SKPaint paint = new SKPaint();
+            // The paint is shared across composites, so clear what the last one set that this one may not.
+            SKPaint paint = _compositePaint;
+            paint.Shader = null;
+            paint.Blender = null;
             paint.Color = new SKColor(255, 255, 255, alpha);
             paint.ApplyBlend(Gum.RenderingLibrary.BlendExtensions.ToBlend(owner.BlendState)
                 ?? Gum.RenderingLibrary.Blend.Normal);
@@ -819,7 +847,8 @@ namespace RenderingLibrary.Graphics
             GetDevicePixelFraction(container, zoom, out float fractionX, out float fractionY);
             float imageLeft = left - fractionX / zoom;
             float imageTop = top - fractionY / zoom;
-            SKRect destination = new SKRect(imageLeft, imageTop, imageLeft + image.Width / zoom, imageTop + image.Height / zoom);
+            SKRectI surfaceBounds = surface.Canvas.DeviceClipBounds;
+            SKRect destination = new SKRect(imageLeft, imageTop, imageLeft + surfaceBounds.Width / zoom, imageTop + surfaceBounds.Height / zoom);
 
             // The bake is upright, so turn the composite by the container's absolute rotation about
             // its origin (#6588). The shaded path's child shader stays in this local space too.
@@ -828,7 +857,7 @@ namespace RenderingLibrary.Graphics
             canvas.RotateDegrees(-container.GetAbsoluteRotation(), left, top);
             try
             {
-                DrawRenderTargetImage(image, destination, paint, owner, imageLeft, imageTop, width, height, zoom, canvas);
+                DrawRenderTargetImage(surface, destination, paint, owner, imageLeft, imageTop, width, height, zoom, canvas);
             }
             finally
             {
@@ -853,7 +882,7 @@ namespace RenderingLibrary.Graphics
             fractionY = deviceY - (float)System.Math.Floor(deviceY);
         }
 
-        private static void DrawRenderTargetImage(SKImage image, SKRect destination, SKPaint paint,
+        private void DrawRenderTargetImage(SKSurface surface, SKRect destination, SKPaint paint,
             IRenderableIpso owner, float left, float top, int width, int height, float zoom, SKCanvas canvas)
         {
             // Optional post-process shader (ContainerRuntime.RenderTargetEffect / SourceShaderFile,
@@ -864,9 +893,17 @@ namespace RenderingLibrary.Graphics
             SKRuntimeEffect? effect = (owner as IRenderTargetRenderable)?.RenderTargetEffect as SKRuntimeEffect;
             if (effect == null)
             {
-                canvas.DrawImage(image, destination, SKSamplingOptions.Default, paint);
+                // The surface is drawn as it stands, so no image is made; mapping its pixels onto the
+                // destination is the same translate and shrink DrawImage does with a destination rect.
+                canvas.Save();
+                canvas.Translate(destination.Left, destination.Top);
+                canvas.Scale(1 / zoom);
+                surface.Draw(canvas, 0, 0, SKSamplingOptions.Default, paint);
+                canvas.Restore();
                 return;
             }
+
+            SKImage image = GetBakedImage(owner)!;
 
             // SKCanvas.DrawImage ignores paint.Shader -- a paint's shader only takes effect on a
             // shape-drawing call, so the shaded path switches to DrawRect and feeds the baked image
