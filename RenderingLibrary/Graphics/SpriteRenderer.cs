@@ -219,6 +219,42 @@ public class SpriteRenderer
         mSpriteBatch.RemoveLastStateStackEntry();
     }
 
+    /// <summary>
+    /// True while ColorTextureAlpha draws through BasicEffect's fog. Fog writes
+    /// <c>FogColor * alpha</c>, so this pass outputs color already multiplied by the vertex and texture
+    /// alpha: the tint must reach it straight, and the blend must not multiply by alpha again (#7837).
+    /// </summary>
+    internal bool IsColorTextureAlphaFogActive =>
+        !Renderer.UseCustomEffectRendering && Renderer.UseBasicEffectRendering && basicEffect?.FogEnabled == true;
+
+    private readonly Dictionary<Gum.BlendState, Gum.BlendState> _premultipliedColorBlendStates = new();
+
+    // A blend whose color source factor is SourceAlpha, with One in its place, for output whose color is
+    // already multiplied by alpha. Cached per source so a Begin allocates nothing (#7619), and rebuilt
+    // when the source was edited since.
+    private Gum.BlendState? GetBlendStateForPremultipliedColor(Gum.BlendState? blendState)
+    {
+        if (blendState == null || blendState.ColorSourceBlend != Gum.Blend.SourceAlpha)
+        {
+            return blendState;
+        }
+
+        if (!_premultipliedColorBlendStates.TryGetValue(blendState, out var adjusted)
+            || adjusted.ColorBlendFunction != blendState.ColorBlendFunction
+            || adjusted.ColorDestinationBlend != blendState.ColorDestinationBlend
+            || adjusted.AlphaSourceBlend != blendState.AlphaSourceBlend
+            || adjusted.AlphaBlendFunction != blendState.AlphaBlendFunction
+            || adjusted.AlphaDestinationBlend != blendState.AlphaDestinationBlend
+            || adjusted.ColorWriteChannels != blendState.ColorWriteChannels)
+        {
+            adjusted = blendState.Clone();
+            adjusted.ColorSourceBlend = Gum.Blend.One;
+            _premultipliedColorBlendStates[blendState] = adjusted;
+        }
+
+        return adjusted;
+    }
+
     public void BeginSpriteBatch(RenderStateVariables renderStates, Layer layer, BeginType beginType, Camera camera, object? objectStartingSpriteBatch, Effect? effectOverride = null)
     {
         // Use the full camera transform for both UsingEffect and non-UsingEffect paths.
@@ -380,6 +416,10 @@ public class SpriteRenderer
             }
         }
 
+        var blendState = IsColorTextureAlphaFogActive
+            ? GetBlendStateForPremultipliedColor(renderStates.BlendState)
+            : renderStates.BlendState;
+
         // Miguel 2023/08/10
         // Why use Immediate instead of Deferred if it's slower?
         // I'll change it and let's see if it breaks anything.
@@ -388,7 +428,7 @@ public class SpriteRenderer
         if (beginType == BeginType.Begin)
         {
             mSpriteBatch.ReplaceRenderStates(SpriteSortMode.Deferred,
-                renderStates.BlendState,
+                blendState,
                 samplerState,
                 depthStencilState,
                 rasterizerState,
@@ -402,7 +442,7 @@ public class SpriteRenderer
         else
         {
             mSpriteBatch.PushRenderStates(SpriteSortMode.Deferred,
-                renderStates.BlendState,
+                blendState,
                 samplerState,
                 depthStencilState,
                 rasterizerState,
@@ -713,7 +753,7 @@ public class SpriteRenderer
         }
 #endif
 
-        if (!Renderer.UseCustomEffectRendering && Renderer.UseBasicEffectRendering && basicEffect?.FogEnabled == true)
+        if (IsColorTextureAlphaFogActive)
         {
             basicEffect.FogColor = new Microsoft.Xna.Framework.Vector3(color.R/255f, color.G/255f, color.B/255f);
         }
