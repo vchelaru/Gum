@@ -234,7 +234,7 @@ public class DrawAllocationTests : BaseTestClass
     [InlineData("StrokeWidth", 0)]
     [InlineData("Size", 0)]
     [InlineData("DropshadowOffset", 120)]
-    [InlineData("GradientColor", 300)]
+    [InlineData("GradientColor", 220)]
     [InlineData("SpriteColor", 120)]
     [InlineData("TextDropshadowOffset", 120)]
     public void UpdateAndDraw_AnimatedProperty_AllocationBaseline(string kind, int limitBytesPerFrame)

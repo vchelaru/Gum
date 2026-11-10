@@ -126,6 +126,8 @@ To find what allocates, enable an in-process `EventListener` on `Microsoft-Windo
 
 A property setter that clears a cache unconditionally allocates every frame once a runtime wrapper re-pushes its values each frame (`SkiaShapeRuntime.ApplyDropshadow`, the `TextRuntime` font bridge in `SystemManagers`); guard it with `!= value`. RichTextKit's `TextBlock.Paint` allocates on every call, so `Text` replays a recorded `SKPicture` while its block is unchanged.
 
+`SKImageFilter`, `SKShader` and `SKColorFilter` cannot change after creation, so an animated dropshadow, gradient or sprite tint allocates one wrapper (104 bytes) per frame (`UpdateAndDraw_AnimatedProperty_AllocationBaseline`). Arrays passed to their factories can be kept on the renderable and reused, because Skia copies them (`GradientGoldenImageTests`).
+
 ## WPF-touching tool code (GumToolUnitTests, frozen WPF head) needs an STA thread
 
 xUnit's runner is **MTA**, but WPF `FrameworkElement`s (`MenuItem`, `Menu`, `ComboBox`, …) throw `InvalidOperationException: The calling thread must be STA` when constructed. If a tool class news up a WPF control — often a ViewModel building right-click `MenuItem`s in its constructor, or a plugin's `StartUp()` — mark the test `[StaFact]` (Xunit.StaFact), which runs it on an `ApartmentState.STA` thread. See `MenuStripManagerTests`.
