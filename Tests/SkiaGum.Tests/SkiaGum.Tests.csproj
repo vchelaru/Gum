@@ -35,6 +35,7 @@
 	<ItemGroup>
 		<!-- Linked rather than referencing MonoGameGum.TestsCommon, which pulls in MonoGame. -->
 		<Compile Include="..\MonoGameGum.TestsCommon\AllocationMeasurer.cs" Link="Shared\AllocationMeasurer.cs" />
+		<Compile Include="..\..\MonoGameGum.Tests\SweepScale.cs" Link="SweepScale.cs" />
 		<Compile Include="..\Shared\FontContainerTestWriter.cs" Link="Shared\FontContainerTestWriter.cs" />
 		<Compile Include="..\Shared\ShimRetention.cs" Link="Shared\ShimRetention.cs" />
 		<Compile Include="..\Shared\TypedSetterSweep.cs" Link="Shared\TypedSetterSweep.cs" />

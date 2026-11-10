@@ -35,6 +35,20 @@ internal sealed class SkiaSceneHost : IDisposable
         GumService.Default.Draw();
     }
 
+    /// <summary>Wipes the surface, which a draw does not do itself.</summary>
+    public void Clear()
+    {
+        _surface.Canvas.Clear(SKColors.Transparent);
+    }
+
+    /// <summary>The surface's pixels, to compare two draws.</summary>
+    public byte[] CaptureBytes()
+    {
+        using SKImage image = _surface.Snapshot();
+        using SKBitmap bitmap = SKBitmap.FromImage(image);
+        return bitmap.Bytes;
+    }
+
     /// <summary>Counts non-transparent pixels on a coarse grid, to prove a draw produced output.</summary>
     public int CountPaintedSamples()
     {
