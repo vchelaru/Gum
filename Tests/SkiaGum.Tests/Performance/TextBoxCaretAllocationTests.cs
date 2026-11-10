@@ -221,9 +221,9 @@ public class TextBoxCaretAllocationTests : BaseTestClass
     // Bytes per frame; set from the measurements in the pull request, with headroom.
     private static class Limits
     {
-        public const int Click = 24000;
-        public const int CaretMove = 2000;
-        public const int ShiftArrow = 4000;
+        public const int Click = 2000;
+        public const int CaretMove = 600;
+        public const int ShiftArrow = 1000;
         public const int Type = 55000;
     }
 }
