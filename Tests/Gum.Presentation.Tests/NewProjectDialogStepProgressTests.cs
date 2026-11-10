@@ -85,7 +85,7 @@ public class NewProjectDialogStepProgressTests
         _viewModel = new NewProjectDialogViewModel(
             new ThemeSelectionViewModel(_formsFileService.Object, new Mock<Gum.ToolStates.IProjectState>().Object),
             _service.Object, new Mock<IExistingCodeProjectDetector>().Object, new Mock<IDialogService>().Object,
-            new Mock<INewProjectLocationSettings>().Object)
+            new Mock<INewProjectLocationSettings>().Object, runChecksInline: true)
         {
             ProjectName = "MyGame",
             Location = Folder,
