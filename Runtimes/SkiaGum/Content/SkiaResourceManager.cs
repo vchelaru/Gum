@@ -119,7 +119,20 @@ public static class SkiaResourceManager
     private static string GetBitmapCacheKey(string resourceName) =>
         RenderingLibrary.Content.ContentLoader.StandardizeCaseSensitive(resourceName);
 
-    public static bool IsCached(string resourceName) => skBitmapCache.ContainsKey(GetBitmapCacheKey(resourceName));
+    public static bool IsCached(string resourceName) => TryGetCachedBitmap(GetBitmapCacheKey(resourceName), out _);
+
+    // A bitmap the caller disposed is a miss, so a later load reads the file again instead of handing back a
+    // bitmap that can no longer be drawn (#7886). The disposed entry is replaced by the reload.
+    private static bool TryGetCachedBitmap(string cacheKey, out SKBitmap bitmap)
+    {
+        if (skBitmapCache.TryGetValue(cacheKey, out SKBitmap? cached) && Renderables.Sprite.IsUsable(cached))
+        {
+            bitmap = cached;
+            return true;
+        }
+        bitmap = null!;
+        return false;
+    }
 
     private static Stream GetUrlStream(string url)
     {
@@ -134,7 +147,7 @@ public static class SkiaResourceManager
         // Even though GetSKBitmap does a cache check internally, we want to do a cache check before getting the url
         // so we'll wrap the check here:
         string cacheKey = GetBitmapCacheKey(url);
-        if (!skBitmapCache.ContainsKey(cacheKey))
+        if (!TryGetCachedBitmap(cacheKey, out SKBitmap? cachedBitmap))
         {
             try
             {
@@ -150,7 +163,7 @@ public static class SkiaResourceManager
         }
         else
         {
-            return skBitmapCache[cacheKey];
+            return cachedBitmap;
         }
     }
 
@@ -165,7 +178,7 @@ public static class SkiaResourceManager
     public static SKBitmap GetSKBitmap(string resourceName, Stream? stream = null)
     {
         string cacheKey = GetBitmapCacheKey(resourceName);
-        if (skBitmapCache.TryGetValue(cacheKey, out SKBitmap? cached))
+        if (TryGetCachedBitmap(cacheKey, out SKBitmap? cached))
         {
             return cached;
         }
@@ -173,10 +186,14 @@ public static class SkiaResourceManager
         lock (bitmapLoadLocks.GetOrAdd(cacheKey, _ => new object()))
         {
             // Another thread may have finished this name while this one waited for the lock.
-            if (skBitmapCache.TryGetValue(cacheKey, out cached))
+            if (TryGetCachedBitmap(cacheKey, out cached))
             {
                 return cached;
             }
+
+            // Whatever is still cached here is a disposed bitmap. Dropping it before the load means a load
+            // that throws leaves no entry behind, rather than the disposed one.
+            skBitmapCache.TryRemove(cacheKey, out _);
 
             // A failed decode throws before the cache write, so a later call (e.g. a retried download) can succeed.
             SKBitmap bitmap = stream != null
