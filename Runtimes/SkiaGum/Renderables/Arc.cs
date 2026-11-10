@@ -47,8 +47,11 @@ public class Arc : RenderableShapeBase
         get => _isEndRounded;
         set
         {
-            _isEndRounded = value;
-            ClearCachedPaint();
+            if (_isEndRounded != value)
+            {
+                _isEndRounded = value;
+                ClearCachedPaint();
+            }
         }
     }
 
@@ -70,11 +73,44 @@ public class Arc : RenderableShapeBase
 
     protected override bool BlendsWholeBounds => true;
 
+    SKPath? _cachedPath;
+    SKRect _cachedPathBounds;
+    float _cachedPathStartAngle;
+    float _cachedPathSweepAngle;
+
     public override void DrawBound(SKRect boundingRect, SKCanvas canvas, float absoluteRotation)
     {
         var paint = GetCachedPaint(boundingRect, absoluteRotation);
-        using SKPath path = CreatePath(boundingRect);
-        canvas.DrawPath(path, paint);
+
+        if (_cachedPath == null
+            || _cachedPathBounds != boundingRect
+            || _cachedPathStartAngle != StartAngle
+            || _cachedPathSweepAngle != SweepAngle)
+        {
+            _cachedPath?.Dispose();
+            _cachedPath = CreatePath(boundingRect);
+            _cachedPathBounds = boundingRect;
+            _cachedPathStartAngle = StartAngle;
+            _cachedPathSweepAngle = SweepAngle;
+        }
+
+        canvas.DrawPath(_cachedPath, paint);
+    }
+
+    /// <inheritdoc cref="RenderableShapeBase.Clone"/>
+    public override object Clone()
+    {
+        Arc clone = (Arc)base.Clone();
+        // The copied path belongs to the source.
+        clone._cachedPath = null;
+        return clone;
+    }
+
+    public override void Dispose()
+    {
+        _cachedPath?.Dispose();
+        _cachedPath = null;
+        base.Dispose();
     }
 
     private SKPath CreatePath(SKRect boundingRect)

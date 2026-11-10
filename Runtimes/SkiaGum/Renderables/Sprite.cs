@@ -263,12 +263,14 @@ public class Sprite : RenderableShapeBase, IAspectRatio, ITextureCoordinate, IAn
                 0, 0, 1, 0, Color.Blue / 255f,
                 0, 0, 0, 1, 0,
             };
-            paint.ColorFilter = SKColorFilter.CreateColorMatrix(addMatrix);
+            using SKColorFilter addFilter = SKColorFilter.CreateColorMatrix(addMatrix);
+            paint.ColorFilter = addFilter;
         }
         else
         {
-            paint.ColorFilter = SKColorFilter.CreateBlendMode(Color,
+            using SKColorFilter blendFilter = SKColorFilter.CreateBlendMode(Color,
                 ColorOperation == ColorOperation.ColorTextureAlpha ? SKBlendMode.SrcIn : SKBlendMode.Modulate);
+            paint.ColorFilter = blendFilter;
         }
 
         return paint;
