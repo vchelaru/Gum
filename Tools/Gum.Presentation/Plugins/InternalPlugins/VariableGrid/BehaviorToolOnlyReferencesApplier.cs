@@ -6,6 +6,7 @@ using Gum.Expressions;
 using Gum.Managers;
 using Gum.ProjectServices;
 using Gum.Wireframe;
+using GumRuntime;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -29,6 +30,8 @@ namespace Gum.Plugins.InternalPlugins.VariableGrid;
 /// </summary>
 public static class BehaviorToolOnlyReferencesApplier
 {
+    private static readonly BehaviorAncestorFinder AncestorFinder = new BehaviorAncestorFinder();
+
     public static void Apply(ElementSave element, StateSave stateSave)
     {
         // Tool-only references exist solely to drive the element's resting design-time
@@ -419,6 +422,12 @@ public static class BehaviorToolOnlyReferencesApplier
         }
     }
 
+    /// <summary>True when the right side of a behavior line of any instance in <paramref name="element"/> matches <paramref name="pattern"/>.</summary>
+    public static bool AnyInstanceLineMatches(ElementSave element, System.Text.RegularExpressions.Regex pattern) =>
+        element.Instances.Any(instance =>
+            ObjectFinder.Self.GetElementSave(instance.BaseType) is ComponentSave component &&
+            GetReferenceLines(component).Any(line => pattern.IsMatch(line.Right)));
+
     /// <summary>The (unqualified) variables the active reference lines of <paramref name="behavior"/> write.</summary>
     public static ISet<string> GetDrivenVariableNames(BehaviorSave behavior) =>
         new HashSet<string>(GetReferenceLines(behavior).Select(line => line.Left));
@@ -506,6 +515,15 @@ public static class BehaviorToolOnlyReferencesApplier
     {
         if (instance != null)
         {
+            // FindAncestor runs first so an ancestor name that is not an identifier (tab-control) is still
+            // encoded by ResolveOwnerPrefix, which also turns @Index into Owner.Index.
+            string? withAncestors = AncestorFinder.Resolve(right, instance, stateSave);
+            if (withAncestors == null)
+            {
+                return null;
+            }
+            right = ElementSaveExtensions.ResolveOwnerPrefix(
+                withAncestors, instance.Name, ElementSaveExtensions.GetReferencableInstanceNames(instance.ParentContainer));
             right = QualifyBareIdentifiersWithInstance(right, instance.Name);
         }
 
@@ -570,8 +588,20 @@ public static class BehaviorToolOnlyReferencesApplier
     {
         string? instancePrefix = instance != null ? instance.Name + "." : null;
         StateSave? componentDefaultState = instance != null ? component.DefaultState : null;
+        ElementSave? container = instance?.ParentContainer;
         return name =>
         {
+            // "Other.Prop" (from a FindAncestor line): the declared default of another instance's Forms property.
+            int dotIndex = name.IndexOf('.');
+            if (container != null && instancePrefix != null && dotIndex > 0 && !name.StartsWith(instancePrefix))
+            {
+                InstanceSave? other = AncestorFinder.FindInstanceInElementOrBase(container, name.Substring(0, dotIndex));
+                if (other != null && ObjectFinder.Self.GetElementSave(other.BaseType) is ComponentSave otherComponent)
+                {
+                    return BuildFormsPropertyDefaultsFallback(otherComponent, other)(name);
+                }
+            }
+
             string lookupName = instancePrefix != null && name.StartsWith(instancePrefix)
                 ? name.Substring(instancePrefix.Length)
                 : name;
