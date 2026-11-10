@@ -2035,12 +2035,28 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
 
     private readonly record struct FontLineMetricsKey(string? Family, float Size, int Weight, bool Italic);
 
+    private readonly record struct StringWidthKey(FontLineMetricsKey Font, string Text);
+
     /// <summary>The metrics probed so far for one font mapper. Guarded by its own lock.</summary>
     private sealed class FontLineMetricsCache
     {
         public readonly Dictionary<FontLineMetricsKey, FontLineMetrics> Entries = new();
         public readonly Dictionary<FontLineMetricsKey, int> RawLineHeights = new();
+        public readonly Dictionary<StringWidthKey, float> StringWidths = new();
         public int RegistrationVersion;
+
+        /// <summary>Drops every entry when a font was registered since they were stored. Call with the lock held.</summary>
+        public void DropEntriesIfFontsWereRegistered()
+        {
+            int version = Content.Fonts.GumFontMapper.RegistrationVersion;
+            if (RegistrationVersion != version)
+            {
+                Entries.Clear();
+                RawLineHeights.Clear();
+                StringWidths.Clear();
+                RegistrationVersion = version;
+            }
+        }
     }
 
     // The metrics depend only on the font a style resolves to, so one probe per distinct font serves every
@@ -2063,13 +2079,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
         FontLineMetricsCache cache = _fontLineMetricsCaches.GetValue(FontMapper.Default, static _ => new FontLineMetricsCache());
         lock (cache)
         {
-            int version = Content.Fonts.GumFontMapper.RegistrationVersion;
-            if (cache.RegistrationVersion != version)
-            {
-                cache.Entries.Clear();
-                cache.RawLineHeights.Clear();
-                cache.RegistrationVersion = version;
-            }
+            cache.DropEntriesIfFontsWereRegistered();
 
             if (cache.Entries.TryGetValue(key, out FontLineMetrics cached))
             {
@@ -2096,13 +2106,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
         FontLineMetricsCache cache = _fontLineMetricsCaches.GetValue(FontMapper.Default, static _ => new FontLineMetricsCache());
         lock (cache)
         {
-            int version = Content.Fonts.GumFontMapper.RegistrationVersion;
-            if (cache.RegistrationVersion != version)
-            {
-                cache.Entries.Clear();
-                cache.RawLineHeights.Clear();
-                cache.RegistrationVersion = version;
-            }
+            cache.DropEntriesIfFontsWereRegistered();
 
             if (cache.RawLineHeights.TryGetValue(key, out int cached))
             {
@@ -2829,6 +2833,10 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
     [ThreadStatic] private static TextBlock? _scratchMeasureBlock;
     [ThreadStatic] private static Style? _scratchMeasureStyle;
     private const int MaxScratchMeasureLength = 512;
+    // The widths kept per font mapper: strings up to this long, this many at most (a line of a wrapped TextBox and
+    // its prefixes), so what is retained stays small whatever is measured.
+    private const int MaxMemoizedMeasureLength = 128;
+    private const int MaxMemoizedMeasures = 512;
 
     /// <inheritdoc/>
     public float MeasureString(string text)
@@ -2838,8 +2846,47 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
             return 0;
         }
 
-        bool useScratch = text.Length <= MaxScratchMeasureLength;
         FontLineMetricsKey font = GetRawMeasurementFontKey();
+        if (text.Length > MaxMemoizedMeasureLength)
+        {
+            return LayOutAndMeasure(text, font);
+        }
+
+        // A TextBox measures the same prefixes of its lines on every caret move and drag frame, and a width depends
+        // only on the font values and the text, so a repeat is a lookup instead of a layout (#7872).
+        StringWidthKey key = new StringWidthKey(font, text);
+        FontLineMetricsCache cache = _fontLineMetricsCaches.GetValue(FontMapper.Default, static _ => new FontLineMetricsCache());
+        int version;
+        lock (cache)
+        {
+            cache.DropEntriesIfFontsWereRegistered();
+            if (cache.StringWidths.TryGetValue(key, out float cached))
+            {
+                return cached;
+            }
+            version = cache.RegistrationVersion;
+        }
+
+        float width = LayOutAndMeasure(text, font);
+        lock (cache)
+        {
+            cache.DropEntriesIfFontsWereRegistered();
+            // A font registered while the text was measured may have changed the answer, so it is not kept.
+            if (cache.RegistrationVersion == version)
+            {
+                if (cache.StringWidths.Count >= MaxMemoizedMeasures)
+                {
+                    cache.StringWidths.Clear();
+                }
+                cache.StringWidths[key] = width;
+            }
+        }
+        return width;
+    }
+
+    private float LayOutAndMeasure(string text, FontLineMetricsKey font)
+    {
+        bool useScratch = text.Length <= MaxScratchMeasureLength;
         Style style = useScratch ? (_scratchMeasureStyle ??= new Style()) : new Style();
         style.FontFamily = font.Family;
         style.FontSize = font.Size;
@@ -2860,6 +2907,28 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
         textBlock.AddText(text, style);
         return textBlock.MeasuredWidth;
     }
+
+    // One string per Latin-1 character, so asking for a character's advance builds no string.
+    private static readonly string[] _latin1Strings = BuildLatin1Strings();
+
+    private static string[] BuildLatin1Strings()
+    {
+        string[] strings = new string[256];
+        for (int i = 0; i < strings.Length; i++)
+        {
+            strings[i] = ((char)i).ToString();
+        }
+        return strings;
+    }
+
+    /// <summary>
+    /// The advance of one character, which is <see cref="MeasureString(string)"/> of the one-character string, so it
+    /// is measured once per font and character and a repeat is a lookup. A click or a drag on a TextBox adds up one
+    /// of these per character of a line (#7872), and each used to be a RichTextKit layout of its own. A surrogate half
+    /// is measured on its own like any other char, as the hit test asks for it.
+    /// </summary>
+    public float GetCharacterAdvance(char character) =>
+        MeasureString(character < _latin1Strings.Length ? _latin1Strings[character] : character.ToString());
 
     /// <summary>
     /// Measures <paramref name="text"/> using this Text's active font. The
