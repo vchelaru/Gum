@@ -1101,7 +1101,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
                 }
 
                 canvas.SaveLayer(renderPaint);
-                PaintTextBlockCached(canvas, paintBlock, textBlock);
+                PaintTextBlockCached(canvas, paintBlock);
                 canvas.Restore();
                 if (Blend.HasValue)
                 {
@@ -1110,7 +1110,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
             }
             else
             {
-                PaintTextBlockCached(canvas, paintBlock, textBlock);
+                PaintTextBlockCached(canvas, paintBlock);
             }
             canvas.Restore();
         }
@@ -1224,7 +1224,12 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
             || _lastScreenDensity != GlobalTextScale
             || effectiveMaxHeight != _lastEffectiveMaxHeight)
         {
-            _cachedTextBlock = null;
+            if (!IsUnboundedBlockValidAtWidth(effectiveWidth)
+                || _lastScreenDensity != GlobalTextScale
+                || effectiveMaxHeight != _lastEffectiveMaxHeight)
+            {
+                _cachedTextBlock = null;
+            }
             _lastEffectiveWidth = effectiveWidth;
             _lastScreenDensity = GlobalTextScale;
             _lastEffectiveMaxHeight = effectiveMaxHeight;
@@ -1233,9 +1238,26 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
         if(_cachedTextBlock == null)
         {
             _cachedTextBlock = GetTextBlock(effectiveWidth);
+            _isCachedTextBlockUnbounded = effectiveWidth == null;
         }
         return _cachedTextBlock;
     }
+
+    // True when _cachedTextBlock was laid out with no width limit.
+    private bool _isCachedTextBlockUnbounded;
+
+    /// <summary>
+    /// Whether the cached block, laid out with no width limit, is also the layout at <paramref name="width"/>.
+    /// Layout measures a size-to-children text unbounded and then sets <see cref="Width"/> to the measured
+    /// width; a left-aligned block that fits wraps nowhere and places every line at x = 0 either way, so it
+    /// is kept instead of laid out again (#7818). Center and right alignment place lines by the width.
+    /// </summary>
+    private bool IsUnboundedBlockValidAtWidth(float? width) =>
+        _cachedTextBlock != null
+        && _isCachedTextBlockUnbounded
+        && HorizontalAlignment == HorizontalAlignment.Left
+        && width != null
+        && width.Value >= _cachedTextBlock.MeasuredWidth;
 
     /// <summary>
     /// The max height passed to the RichTextKit <c>TextBlock</c>: <see cref="Height"/> when
@@ -1434,11 +1456,27 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
             return fullBlock;
         }
 
+        // A reveal paused partway (a typewriter waiting for input) keeps its block instead of building
+        // one per frame (#7818). The full block changes with every input the reveal depends on.
+        if (_revealBlock != null
+            && ReferenceEquals(_revealBlockSource, fullBlock)
+            && _revealBlockLetters == MaxLettersToShow.Value)
+        {
+            return _revealBlock;
+        }
+
         // Reveal keeps per-run BBCode styling (issue #3701): GetVisibleStyledRuns slices the same
         // styled runs GetTextBlock uses for the full layout down to the revealed prefix. Plain text is
         // one run, so it takes the same path.
-        return BuildTextBlockFromRuns(GetVisibleStyledRuns(fullBlock), this.Width);
+        _revealBlock = BuildTextBlockFromRuns(GetVisibleStyledRuns(fullBlock), this.Width);
+        _revealBlockSource = fullBlock;
+        _revealBlockLetters = MaxLettersToShow.Value;
+        return _revealBlock;
     }
+
+    private TextBlock? _revealBlock;
+    private TextBlock? _revealBlockSource;
+    private int _revealBlockLetters;
 
 
     internal Style GetStyle() => BuildRunStyle(string.Empty, null).Style;
@@ -1554,30 +1592,34 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
     private static readonly System.Runtime.CompilerServices.ConditionalWeakTable<TextBlock, List<TransformedLetter>> _transformedLetters = new();
 
     // RichTextKit's TextBlock.Paint allocates on every call, so the cached block is recorded once into a
-    // picture and replayed while the block is unchanged. A MaxLettersToShow reveal block is rebuilt per
-    // frame and painted directly. Native memory is released when the picture is replaced or finalized.
+    // picture and replayed while the block is unchanged. The block (the full block, or a MaxLettersToShow reveal
+    // block) is recorded the second frame it is painted, so text that changes every frame is painted directly and
+    // never pays for a recording it would not replay (#7818). Native memory is released when the picture is
+    // replaced or finalized.
     private SKPicture? _cachedPicture;
+    // The block painted last frame, recorded into _cachedPicture once it is painted again.
     private TextBlock? _cachedPictureBlock;
 
     // Larger than any text the picture is replayed into, so recording never culls a line.
     private static readonly SKRect _pictureCullRect = new SKRect(-100000, -100000, 100000, 100000);
 
-    private void PaintTextBlockCached(SKCanvas canvas, TextBlock paintBlock, TextBlock cachedBlock)
+    private void PaintTextBlockCached(SKCanvas canvas, TextBlock block)
     {
-        if (!ReferenceEquals(paintBlock, cachedBlock))
+        if (!ReferenceEquals(_cachedPictureBlock, block))
         {
-            PaintTextBlock(canvas, paintBlock);
+            _cachedPicture?.Dispose();
+            _cachedPicture = null;
+            _cachedPictureBlock = block;
+            PaintTextBlock(canvas, block);
             return;
         }
 
-        if (_cachedPicture == null || !ReferenceEquals(_cachedPictureBlock, cachedBlock))
+        if (_cachedPicture == null)
         {
-            _cachedPicture?.Dispose();
             using SKPictureRecorder recorder = new SKPictureRecorder();
             SKCanvas recordingCanvas = recorder.BeginRecording(_pictureCullRect);
-            PaintTextBlock(recordingCanvas, cachedBlock);
+            PaintTextBlock(recordingCanvas, block);
             _cachedPicture = recorder.EndRecording();
-            _cachedPictureBlock = cachedBlock;
         }
 
         canvas.DrawPicture(_cachedPicture);
@@ -2535,9 +2577,11 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
         newInstance.mParent = null;
         newInstance.mChildren = new();
         newInstance._cachedTextBlock = null;
-        // The copied picture and render paint belong to the source.
+        // The copied picture, reveal block and render paint belong to the source.
         newInstance._cachedPicture = null;
         newInstance._cachedPictureBlock = null;
+        newInstance._revealBlock = null;
+        newInstance._revealBlockSource = null;
         newInstance._cachedRenderPaint = null;
         newInstance._hasCachedRenderPaint = false;
         newInstance._hasActiveRenderPaint = false;

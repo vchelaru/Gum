@@ -260,6 +260,110 @@ public class DrawAllocationTests : BaseTestClass
         result.BytesPerIteration.ShouldBeLessThanOrEqualTo(limitBytesPerFrame);
     }
 
+    private const string RevealText = "The quick brown fox jumps over the lazy dog and keeps going";
+
+    // Builds a Text whose content changes every frame (issue #7818). The strings are built here, before
+    // measuring, so the test's own string formatting is not counted.
+    private static Action<int> CreateChangingText(string kind, out TextRuntime text)
+    {
+        switch (kind)
+        {
+            case "TextChangedEveryFrame":
+                string[] counters = BuildStrings(frame => "Score: " + frame);
+                TextRuntime counter = new TextRuntime { Text = counters[0] };
+                text = counter;
+                return frame => counter.Text = counters[frame % counters.Length];
+            case "MaxLettersToShowReveal":
+                TextRuntime revealed = new TextRuntime
+                {
+                    Text = RevealText,
+                    Width = 120,
+                    WidthUnits = DimensionUnitType.Absolute,
+                    MaxLettersToShow = 1
+                };
+                text = revealed;
+                return frame => revealed.MaxLettersToShow = 1 + frame % (RevealText.Length - 1);
+            case "BbCodeChangedEveryFrame":
+                string[] styled = BuildStrings(frame =>
+                    $"[Color=Red]HP[/Color] [IsBold=true]{frame}[/IsBold] [FontSize=24]of[/FontSize] [IsItalic=true]999[/IsItalic]");
+                TextRuntime bbCode = new TextRuntime { Text = styled[0] };
+                text = bbCode;
+                return frame => bbCode.Text = styled[frame % styled.Length];
+            default:
+                throw new ArgumentException("Unknown kind " + kind);
+        }
+    }
+
+    private static string[] BuildStrings(Func<int, string> build)
+    {
+        string[] strings = new string[1000];
+        for (int i = 0; i < strings.Length; i++)
+        {
+            strings[i] = build(i);
+        }
+        return strings;
+    }
+
+    // Changing text rebuilds a RichTextKit TextBlock, which allocates on every build, so the limit cannot be 0.
+    // Measured on Windows: 5,144 / 13,244 / 30,307 bytes per frame; a bare RichTextKit build and paint of the
+    // counter text alone is about 4,540 (#7818). The
+    // BBCode case builds two blocks per change because a [FontSize] run is refit line by line. The limit is the
+    // per-frame managed bytes of Update + Draw while the text changes every frame.
+    [Theory]
+    [InlineData("TextChangedEveryFrame", 6000)]
+    [InlineData("MaxLettersToShowReveal", 15500)]
+    [InlineData("BbCodeChangedEveryFrame", 35000)]
+    public void UpdateAndDraw_ChangingText_AllocationBaseline(string kind, int limitBytesPerFrame)
+    {
+        Action<int> change = CreateChangingText(kind, out TextRuntime text);
+        text.AddToRoot();
+        int frame = 0;
+
+        AllocationResult result = AllocationMeasurer.MeasureMinimum(
+            () =>
+            {
+                frame++;
+                change(frame);
+                _host.Update();
+                _host.Draw();
+            },
+            warmupIterations: 50,
+            measuredIterations: 300);
+
+        _output.WriteLine($"{kind}: {result.BytesPerIteration:N0} bytes/frame");
+
+        _host.CountPaintedSamples().ShouldBeGreaterThan(0);
+        result.BytesPerIteration.ShouldBeLessThanOrEqualTo(limitBytesPerFrame);
+    }
+
+    // A reveal that is paused partway (a typewriter waiting for input) draws the same letters every frame.
+    [Fact]
+    public void UpdateAndDraw_PartialRevealUnchanged_AllocatesNothing()
+    {
+        TextRuntime text = new TextRuntime
+        {
+            Text = RevealText,
+            Width = 120,
+            WidthUnits = DimensionUnitType.Absolute,
+            MaxLettersToShow = 10
+        };
+        text.AddToRoot();
+
+        AllocationResult result = AllocationMeasurer.MeasureMinimum(
+            () =>
+            {
+                _host.Update();
+                _host.Draw();
+            },
+            warmupIterations: 50,
+            measuredIterations: 300);
+
+        _output.WriteLine($"Partial reveal: {result.BytesPerIteration:N0} bytes/frame");
+
+        _host.CountPaintedSamples().ShouldBeGreaterThan(0);
+        result.BytesPerIteration.ShouldBe(0);
+    }
+
     [Fact]
     public void UpdateAndDraw_RealisticFormsTree_AllocationBaseline()
     {
