@@ -86,6 +86,9 @@ public class GumElementReachabilityTests
     // MenuItem builds its popup from the ScrollViewer component when the project has no submenu popup.
     [InlineData("MenuItemBehavior", "ScrollViewerBehavior")]
     [InlineData("MenuBehavior", "ScrollViewerBehavior")]
+    // TabControl builds a TabItem header and a TabPage for each tab added in code.
+    [InlineData("TabControlBehavior", "TabItemBehavior")]
+    [InlineData("TabControlBehavior", "TabPageBehavior")]
     public void Compute_keeps_the_component_a_kept_control_creates(string ownerBehavior, string createdBehavior)
     {
         ScreenSave screen = TestProjectBuilder.BuildScreen("Game");
