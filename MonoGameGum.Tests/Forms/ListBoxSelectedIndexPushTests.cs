@@ -1,5 +1,10 @@
 using Gum.Forms.Controls;
+using Gum.Forms.DefaultVisuals.V3;
+using Gum.Input;
 using Gum.Mvvm;
+using Gum.Wireframe;
+using Moq;
+using RenderingLibrary;
 using Shouldly;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -112,6 +117,121 @@ public class ListBoxSelectedIndexPushTests : BaseTestClass
         count[0].ShouldBe(1);
     }
 
+    [Theory]
+    [InlineData("ViewModelSetIndex")]
+    [InlineData("ViewModelSetObject")]
+    [InlineData("ControlSetIndex")]
+    [InlineData("ControlSetObject")]
+    [InlineData("RowIsSelected")]
+    [InlineData("Add")]
+    [InlineData("InsertAbove")]
+    [InlineData("RemoveAbove")]
+    [InlineData("RemoveSelected")]
+    [InlineData("Move")]
+    [InlineData("Clear")]
+    [InlineData("SelectionModeMultiple")]
+    [InlineData("SelectionModeMultipleThenSingle")]
+    public void SelectionChange_ShouldNotifyEachPropertyAtMostOnce(string operation)
+    {
+        ListBox listBox = CreateListBox("A", "B", "C", "D");
+        SelectionViewModel viewModel = Bind(listBox);
+        listBox.SelectedIndex = 2;
+        int[] controlIndex = TrackNotifications(listBox, nameof(ListBox.SelectedIndex));
+        int[] controlObject = TrackNotifications(listBox, nameof(ListBox.SelectedObject));
+        int[] viewModelIndex = TrackNotifications(viewModel, nameof(SelectionViewModel.SelectedIndex));
+        int[] viewModelObject = TrackNotifications(viewModel, nameof(SelectionViewModel.Selected));
+
+        switch (operation)
+        {
+            case "ViewModelSetIndex": viewModel.SelectedIndex = 1; break;
+            case "ViewModelSetObject": viewModel.Selected = "D"; break;
+            case "ControlSetIndex": listBox.SelectedIndex = 0; break;
+            case "ControlSetObject": listBox.SelectedObject = "B"; break;
+            case "RowIsSelected": listBox.ListBoxItems[3].IsSelected = true; break;
+            case "Add": listBox.Items!.Add("E"); break;
+            case "InsertAbove": listBox.Items!.Insert(0, "Z"); break;
+            case "RemoveAbove": listBox.Items!.RemoveAt(0); break;
+            case "RemoveSelected": listBox.Items!.RemoveAt(2); break;
+            case "Move": ((ObservableCollection<object>)listBox.Items!).Move(0, 3); break;
+            case "Clear": listBox.Items!.Clear(); break;
+            case "SelectionModeMultiple": listBox.SelectionMode = SelectionMode.Multiple; break;
+            case "SelectionModeMultipleThenSingle":
+                listBox.SelectionMode = SelectionMode.Multiple;
+                listBox.ListBoxItems[0].IsSelected = true;
+                controlIndex[0] = controlObject[0] = viewModelIndex[0] = viewModelObject[0] = 0;
+                listBox.SelectionMode = SelectionMode.Single;
+                break;
+        }
+
+        viewModel.SelectedIndex.ShouldBe(listBox.SelectedIndex);
+        viewModel.Selected.ShouldBe(listBox.SelectedObject);
+        controlIndex[0].ShouldBeLessThanOrEqualTo(1);
+        controlObject[0].ShouldBeLessThanOrEqualTo(1);
+        viewModelIndex[0].ShouldBeLessThanOrEqualTo(1);
+        viewModelObject[0].ShouldBeLessThanOrEqualTo(1);
+    }
+
+    [Fact]
+    public void ClickRow_ShouldNotifyEachPropertyOnce()
+    {
+        ListBox listBox = CreateListBox("A", "B", "C", "D");
+        SelectionViewModel viewModel = Bind(listBox);
+        listBox.SelectedIndex = 0;
+        int[] controlIndex = TrackNotifications(listBox, nameof(ListBox.SelectedIndex));
+        int[] controlObject = TrackNotifications(listBox, nameof(ListBox.SelectedObject));
+        InteractiveGue row = listBox.ListBoxItems[2].Visual;
+        float x = row.GetAbsoluteX() + row.AbsoluteWidth / 2;
+        float y = row.GetAbsoluteY() + row.AbsoluteHeight / 2;
+        Mock<ICursor> cursor = new();
+        cursor.Setup(c => c.XRespectingGumZoomAndBounds()).Returns(x);
+        cursor.Setup(c => c.YRespectingGumZoomAndBounds()).Returns(y);
+        cursor.Setup(c => c.X).Returns((int)x);
+        cursor.Setup(c => c.Y).Returns((int)y);
+        cursor.Setup(c => c.LastInputDevice).Returns(InputDevice.Mouse);
+        cursor.Setup(c => c.PrimaryPush).Returns(true);
+        cursor.SetupProperty(c => c.VisualOver);
+        cursor.SetupProperty(c => c.WindowPushed);
+        FrameworkElement.MainCursor = cursor.Object;
+
+        GueInteractiveExtensionMethods.DoUiActivityRecursively(listBox.Visual, cursor.Object, null!, 0);
+
+        listBox.SelectedIndex.ShouldBe(2);
+        viewModel.SelectedIndex.ShouldBe(2);
+        viewModel.Selected.ShouldBe("C");
+        controlIndex[0].ShouldBe(1);
+        controlObject[0].ShouldBe(1);
+    }
+
+    [Fact]
+    public void Rebind_ControlChangeBackToLastPushedValue_ShouldPush()
+    {
+        ListBox listBox = CreateListBox("A", "B", "C");
+        Bind(listBox);
+        listBox.SelectedIndex = 2;
+        SelectionViewModel secondViewModel = new() { SelectedIndex = 0, Selected = "A" };
+        listBox.BindingContext = secondViewModel;
+
+        listBox.SelectedIndex = 2;
+
+        secondViewModel.SelectedIndex.ShouldBe(2);
+        secondViewModel.Selected.ShouldBe("C");
+    }
+
+    [Fact]
+    public void VisualSwap_LaterChanges_ShouldPush()
+    {
+        ListBox listBox = CreateListBox("A", "B", "C");
+        SelectionViewModel viewModel = Bind(listBox);
+        listBox.SelectedIndex = 2;
+        listBox.Visual = new ListBoxVisual(tryCreateFormsObject: false);
+
+        listBox.SelectedIndex = 1;
+        viewModel.Selected.ShouldBe("B");
+        listBox.Items!.Insert(0, "Z");
+
+        viewModel.SelectedIndex.ShouldBe(2);
+    }
+
     #endregion
 
     #region ComboBox
@@ -174,12 +294,15 @@ public class ListBoxSelectedIndexPushTests : BaseTestClass
         return viewModel;
     }
 
-    private static int[] TrackSelectedIndexNotifications(INotifyPropertyChanged element)
+    private static int[] TrackSelectedIndexNotifications(INotifyPropertyChanged element) =>
+        TrackNotifications(element, nameof(ListBox.SelectedIndex));
+
+    private static int[] TrackNotifications(INotifyPropertyChanged source, string propertyName)
     {
         int[] count = new int[1];
-        element.PropertyChanged += (_, args) =>
+        source.PropertyChanged += (_, args) =>
         {
-            if (args.PropertyName == nameof(ListBox.SelectedIndex))
+            if (args.PropertyName == propertyName)
             {
                 count[0]++;
             }

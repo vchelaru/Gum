@@ -380,25 +380,33 @@ public class ListBox : ItemsControl, IInputReceiver
             _pendingScrollRow = null;
         }
 
-        PushValueToViewModel(nameof(SelectedObject));
-        PushSelectedIndexIfChanged();
+        PushSelectionIfChanged();
     }
 
-    // The SelectedIndex last reported through PropertyChanged. SelectedIndex has no backing field: it
-    // follows the selected row's position, which Items edits (Insert, Remove, Move) shift without any
-    // selection change, so every path that can move it compares against this instead (#7849).
+    // The SelectedObject and SelectedIndex last reported through PropertyChanged. Neither has a backing
+    // field: they follow the selected rows, which several paths change (and Items edits shift without
+    // any selection change), so every path compares against these instead (#7849).
+    object? _lastPushedSelectedObject;
     int _lastPushedSelectedIndex = -1;
 
     /// <summary>
-    /// Raises PropertyChanged for SelectedIndex when its value differs from the last one raised, so a
-    /// binding sees every change exactly once, whatever caused it.
+    /// Raises PropertyChanged for SelectedObject and SelectedIndex when each differs from the last value
+    /// raised, so listeners see every change exactly once, whatever caused it.
     /// </summary>
-    private void PushSelectedIndexIfChanged()
+    private void PushSelectionIfChanged()
     {
+        // Each field is assigned before raising, so a handler that changes the selection again pushes
+        // its own value.
+        object? selectedObject = SelectedObject;
+        if (!Equals(selectedObject, _lastPushedSelectedObject))
+        {
+            _lastPushedSelectedObject = selectedObject;
+            PushValueToViewModel(nameof(SelectedObject));
+        }
+
         int selectedIndex = SelectedIndex;
         if (selectedIndex != _lastPushedSelectedIndex)
         {
-            // Assigned before raising, so a handler that changes the selection again pushes its own value.
             _lastPushedSelectedIndex = selectedIndex;
             PushValueToViewModel(nameof(SelectedIndex));
         }
@@ -655,8 +663,7 @@ public class ListBox : ItemsControl, IInputReceiver
             SelectionChanged?.Invoke(this, droppedArgs);
         }
 
-        PushValueToViewModel(nameof(SelectedObject));
-        PushSelectedIndexIfChanged();
+        PushSelectionIfChanged();
     }
 
 
@@ -942,8 +949,7 @@ public class ListBox : ItemsControl, IInputReceiver
             SelectionChanged?.Invoke(this, args);
         }
 
-        PushValueToViewModel(nameof(SelectedObject));
-        PushSelectedIndexIfChanged();
+        PushSelectionIfChanged();
     }
 
     private void HandleItemFocused(object? sender, EventArgs e)
@@ -1355,8 +1361,7 @@ public class ListBox : ItemsControl, IInputReceiver
         if (selectionChangedArgs.AddedItems.Count > 0 || selectionChangedArgs.RemovedItems.Count > 0)
         {
             SelectionChanged?.Invoke(this, selectionChangedArgs);
-            PushValueToViewModel(nameof(SelectedObject));
-            PushSelectedIndexIfChanged();
+            PushSelectionIfChanged();
         }
     }
 
@@ -1392,8 +1397,6 @@ public class ListBox : ItemsControl, IInputReceiver
         if (e.Action == NotifyCollectionChangedAction.Remove && e.OldItems != null)
         {
             RebuildSelectedItemsCollectionFromRows();
-
-            PushValueToViewModel(nameof(SelectedObject));
         }
         else if (e.Action == NotifyCollectionChangedAction.Reset)
         {
@@ -1409,13 +1412,11 @@ public class ListBox : ItemsControl, IInputReceiver
             {
                 _suppressSelectionSync = wasSuppressed;
             }
-
-            PushValueToViewModel(nameof(SelectedObject));
         }
 
         // Any Items edit can move the selected row (an Insert or Move above it shifts it without a
-        // selection change), so check SelectedIndex after every action (#7849).
-        PushSelectedIndexIfChanged();
+        // selection change), so check the selection after every action (#7849).
+        PushSelectionIfChanged();
     }
 
     protected override void HandleCollectionItemMoved(int oldIndex, int newIndex)
@@ -1542,8 +1543,7 @@ public class ListBox : ItemsControl, IInputReceiver
 
         SelectionChanged?.Invoke(this, args);
 
-        PushValueToViewModel(nameof(SelectedObject));
-        PushSelectedIndexIfChanged();
+        PushSelectionIfChanged();
     }
 
     protected override void HandleCollectionReset()
