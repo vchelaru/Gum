@@ -43,6 +43,12 @@ public class PixelDataValidationTests
     }
 
     [Fact]
+    public void EnsureRgbaLength_NullPixels_ThrowsArgumentNullException()
+    {
+        Should.Throw<ArgumentNullException>(() => PixelDataValidation.EnsureRgbaLength(null!, 4, 4));
+    }
+
+    [Fact]
     public void EnsureRgbaLength_SizeWhoseByteCountOverflowsInt_ThrowsInsteadOfWrapping()
     {
         // 32768 * 32768 * 4 wraps to 0 in int arithmetic, which an empty array would then "match".
