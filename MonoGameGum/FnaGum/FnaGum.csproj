@@ -154,6 +154,7 @@
 		<Compile Remove="..\Forms\Controls\PasswordBox.cs" />
 		<Compile Remove="..\Forms\Controls\Primitives\ButtonBase.cs" />
 		<Compile Remove="..\Forms\Controls\Primitives\RangeBase.cs" />
+		<Compile Remove="..\Forms\Controls\Primitives\ItemSelection.cs" />
 		<Compile Remove="..\Forms\Controls\RadioButton.cs" />
 		<Compile Remove="..\Forms\Controls\RowDefinition.cs" />
 		<Compile Remove="..\Forms\Controls\ScrollBar.cs" />

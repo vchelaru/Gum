@@ -380,6 +380,7 @@
 		<Compile Include="..\MonoGameGum\Forms\Controls\PasswordBox.cs" Link="Forms\Controls\PasswordBox.cs" />
 		<Compile Include="..\MonoGameGum\Forms\Controls\Primitives\ButtonBase.cs" Link="Forms\Controls\Primitives\ButtonBase.cs" />
 		<Compile Include="..\MonoGameGum\Forms\Controls\Primitives\RangeBase.cs" Link="Forms\Controls\Primitives\RangeBase.cs" />
+		<Compile Include="..\MonoGameGum\Forms\Controls\Primitives\ItemSelection.cs" Link="Forms\Controls\Primitives\ItemSelection.cs" />
 		<Compile Include="..\MonoGameGum\Forms\Controls\RadioButton.cs" Link="Forms\Controls\RadioButton.cs" />
 		<Compile Include="..\MonoGameGum\Forms\Controls\RowDefinition.cs" Link="Forms\Controls\RowDefinition.cs" />
 		<Compile Include="..\MonoGameGum\Forms\Controls\ScrollBar.cs" Link="Forms\Controls\ScrollBar.cs" />
