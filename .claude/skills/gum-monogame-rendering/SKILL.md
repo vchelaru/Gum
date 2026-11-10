@@ -1,6 +1,6 @@
 ---
 name: gum-monogame-rendering
-description: Gum's MonoGame rendering pipeline — Renderer/SpriteBatchStack/GumBatch, BatchKey transitions, SpriteBatch ↔ Apos.Shapes ShapeBatch interleaving. Triggers: Renderer.cs, SpriteBatchStack.cs, GumBatch, RenderableShapeBase, SpriteBatchRenderableBase, BatchKey, draw-order bugs, GumRenderBatch in FRB2/MonoGameGumImmediateMode.
+description: Gum's MonoGame rendering pipeline — Renderer/SpriteBatchStack/GumBatch, BatchKey transitions, SpriteBatch ↔ Apos.Shapes ShapeBatch interleaving. Triggers: Renderer.cs, SpriteBatchStack.cs, GumBatch, RenderableShapeBase, SpriteBatchRenderableBase, BatchKey, draw-order bugs, GumRenderBatch in FRB2/MonoGameGumImmediateMode, shaders, post-process effects, RenderTargetEffect, SourceShaderFile, outline/glow/shadow effects.
 ---
 
 # Gum's MonoGame Rendering Pipeline
