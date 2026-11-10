@@ -1219,10 +1219,8 @@ public class ComboBox :
         SelectionChanged?.Invoke(this, args);
     }
 
-    protected override void OnBindingContextChanged(object? sender, BindingContextChangedEventArgs args)
+    internal override void OnBindingContextRelayed()
     {
-        base.OnBindingContextChanged(sender, args);
-
         if (ApplySelectionBindingsAfterRebind())
         {
             // The new view model may hold either value from before, so push both unconditionally.

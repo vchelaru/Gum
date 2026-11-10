@@ -389,10 +389,8 @@ public class ListBox : ItemsControl, IInputReceiver
     object? _lastPushedSelectedObject;
     int _lastPushedSelectedIndex = -1;
 
-    protected override void OnBindingContextChanged(object? sender, BindingContextChangedEventArgs args)
+    internal override void OnBindingContextRelayed()
     {
-        base.OnBindingContextChanged(sender, args);
-
         if (ApplySelectionBindingsAfterRebind())
         {
             // The new view model may hold either value from before, so push both unconditionally.

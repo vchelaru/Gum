@@ -218,6 +218,31 @@ public class ListBoxSelectedIndexPushTests : BaseTestClass
     }
 
     [Theory]
+    [InlineData(true, 0, null, -1)]
+    [InlineData(false, 0, null, -1)]
+    [InlineData(true, -1, "B", 1)]
+    [InlineData(false, -1, "B", 1)]
+    [InlineData(true, 0, "B", 1)]
+    [InlineData(false, 0, "B", 1)]
+    [InlineData(true, 1, "B", 1)]
+    [InlineData(false, 1, "B", 1)]
+    public void Rebind_ViewModelValuesDisagree_SelectedObjectShouldWin(
+        bool bindIndexFirst, int selectedIndex, string? selected, int expectedIndex)
+    {
+        ListBox listBox = CreateListBox("A", "B", "C");
+        BindBoth(listBox, new SelectionViewModel(), bindIndexFirst);
+        listBox.SelectedIndex = 2;
+        SelectionViewModel second = new() { SelectedIndex = selectedIndex, Selected = selected };
+
+        listBox.BindingContext = second;
+
+        listBox.SelectedObject.ShouldBe(selected);
+        listBox.SelectedIndex.ShouldBe(expectedIndex);
+        second.Selected.ShouldBe(selected);
+        second.SelectedIndex.ShouldBe(expectedIndex);
+    }
+
+    [Theory]
     [InlineData(true)]
     [InlineData(false)]
     public void Rebind_ShouldNotWriteToPreviousViewModel(bool bindIndexFirst)
@@ -298,6 +323,29 @@ public class ListBoxSelectedIndexPushTests : BaseTestClass
         comboBox.Items!.Insert(0, "Z");
 
         count[0].ShouldBe(2);
+    }
+
+    [Theory]
+    [InlineData(true, 0, null, -1)]
+    [InlineData(false, 0, null, -1)]
+    [InlineData(true, 0, "B", 1)]
+    [InlineData(false, 0, "B", 1)]
+    [InlineData(true, -1, "B", 1)]
+    [InlineData(false, -1, "B", 1)]
+    public void ComboBox_Rebind_ViewModelValuesDisagree_SelectedObjectShouldWin(
+        bool bindIndexFirst, int selectedIndex, string? selected, int expectedIndex)
+    {
+        ComboBox comboBox = CreateComboBox("A", "B", "C");
+        BindBoth(comboBox, new SelectionViewModel(), bindIndexFirst);
+        comboBox.SelectedIndex = 2;
+        SelectionViewModel second = new() { SelectedIndex = selectedIndex, Selected = selected };
+
+        comboBox.BindingContext = second;
+
+        comboBox.SelectedObject.ShouldBe(selected);
+        comboBox.SelectedIndex.ShouldBe(expectedIndex);
+        second.Selected.ShouldBe(selected);
+        second.SelectedIndex.ShouldBe(expectedIndex);
     }
 
     [Theory]

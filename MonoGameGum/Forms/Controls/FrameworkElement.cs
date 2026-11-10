@@ -799,6 +799,7 @@ public class FrameworkElement : INotifyPropertyChanged
         {
             _isRelayingBindingContextChange = false;
         }
+        OnBindingContextRelayed();
         OnPropertyChanged(nameof(BindingContext));
         OnBindingContextChanged(sender, args);
     }
@@ -2861,6 +2862,12 @@ public class FrameworkElement : INotifyPropertyChanged
     /// After a BindingContext change, re-applies the bound SelectedObject when SelectedIndex is also
     /// bound, so SelectedObject wins. Returns whether it did; the caller then pushes both values.
     /// </summary>
+    /// <summary>
+    /// Runs once a BindingContext change has reached every binding, before PropertyChanged and
+    /// OnBindingContextChanged. Internal so a subclass overriding OnBindingContextChanged can't skip it.
+    /// </summary>
+    internal virtual void OnBindingContextRelayed() { }
+
     internal bool ApplySelectionBindingsAfterRebind()
     {
         if (!IsDataBound("SelectedIndex") ||
