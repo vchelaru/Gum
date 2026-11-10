@@ -16,9 +16,9 @@ public class GraphicalUiElementStateLookupTests : BaseTestClass
 {
     private readonly List<string> _applied = new List<string>();
 
-    private StateSave CreateState(string name, string tag)
+    private StateSave CreateState(string? name, string tag)
     {
-        return new StateSave { Name = name, Apply = () => _applied.Add(tag) };
+        return new StateSave { Name = name!, Apply = () => _applied.Add(tag) };
     }
 
     private GraphicalUiElement CreateElementWithCategory()
@@ -133,5 +133,82 @@ public class GraphicalUiElementStateLookupTests : BaseTestClass
 
         element.TryGetStateByName("highlighted", out StateSave? wrongCase).ShouldBeFalse();
         wrongCase.ShouldBeNull();
+    }
+
+    [Fact]
+    public void SetProperty_BareState_ShouldNotApplyUncategorizedState()
+    {
+        GraphicalUiElement element = new GraphicalUiElement(new InvisibleRenderable());
+        element.AddStates(new List<StateSave> { CreateState("Big", "Big") });
+
+        element.SetProperty("State", "Big");
+
+        _applied.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void SetProperty_CategoryNamedLikeVariable_ShouldApplyStateAndKeepVariable()
+    {
+        GraphicalUiElement element = new GraphicalUiElement(new InvisibleRenderable());
+        StateSaveCategory category = new StateSaveCategory { Name = "Width" };
+        category.States.Add(CreateState("A", "Width.A"));
+        element.AddCategory(category);
+
+        element.SetProperty("WidthState", "A");
+        element.SetProperty("Width", 17f);
+
+        _applied.ShouldBe(new[] { "Width.A" });
+        element.Width.ShouldBe(17f);
+    }
+
+    [Fact]
+    public void SetProperty_NameEndingInStateWithoutCategory_ShouldApplyNothing()
+    {
+        GraphicalUiElement element = new GraphicalUiElement(new InvisibleRenderable());
+        StateSaveCategory category = new StateSaveCategory { Name = "Mode" };
+        category.States.Add(CreateState("A", "Mode.A"));
+        element.AddCategory(category);
+
+        element.SetProperty("ModeXState", "A");
+        element.SetProperty("ModState", "A");
+        element.SetProperty("XModeState", "A");
+
+        _applied.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void ApplyState_NullNameAndEmptyCategory_ShouldMatchFirstOrDefault()
+    {
+        GraphicalUiElement element = new GraphicalUiElement(new InvisibleRenderable());
+        StateSaveCategory category = new StateSaveCategory { Name = "Mode" };
+        category.States.Add(CreateState("A", "Mode.A"));
+        category.States.Add(CreateState(null, "Mode.Null"));
+        element.AddCategory(category);
+        element.AddCategory(new StateSaveCategory { Name = "Empty" });
+
+        element.ApplyState("Mode", null!);
+        element.ApplyState("Empty", "A");
+
+        _applied.ShouldBe(new[] { "Mode.Null" });
+    }
+
+    [Fact]
+    public void ApplyState_VariablesPath_ShouldApplyVariablesAndNestedCategoryState()
+    {
+        GraphicalUiElement element = new GraphicalUiElement(new InvisibleRenderable());
+        StateSaveCategory category = new StateSaveCategory { Name = "Mode" };
+        category.States.Add(CreateState("A", "Mode.A"));
+        element.AddCategory(category);
+        StateSave state = new StateSave { Name = "V" };
+        state.Variables.Add(new VariableSave { Name = "Width", Value = 33f, SetsValue = true });
+        state.Variables.Add(new VariableSave { Name = "Height", Value = 44f, SetsValue = false });
+        state.Variables.Add(new VariableSave { Name = "ModeState", Value = "A", SetsValue = true });
+
+        element.ApplyState(state);
+
+        element.Width.ShouldBe(33f);
+        element.Height.ShouldNotBe(44f);
+        _applied.ShouldBe(new[] { "Mode.A" });
+        element.IsLayoutSuspended.ShouldBeFalse();
     }
 }
