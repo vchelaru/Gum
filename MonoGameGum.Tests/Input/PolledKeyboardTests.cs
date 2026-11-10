@@ -193,4 +193,73 @@ public class PolledKeyboardTests
         keyboard.Activity(1.0);
         keyboard.KeyTyped(GumKeys.Left).ShouldBeFalse();
     }
+
+    // A host whose key list grows as the device reports new keys (as the Unity keyboard does).
+    private sealed class GrowingListKeyboard : PolledKeyboard
+    {
+        public readonly List<GumKeys> Supported = new();
+        public readonly HashSet<GumKeys> DeviceDown = new();
+        public readonly List<GumKeys> Queried = new();
+
+        protected override IEnumerable<GumKeys> SupportedKeys => Supported;
+
+        protected override bool IsDeviceKeyDown(GumKeys key)
+        {
+            Queried.Add(key);
+            return DeviceDown.Contains(key);
+        }
+    }
+
+    // A host that yields its keys lazily rather than from a list or array.
+    private sealed class LazySequenceKeyboard : PolledKeyboard
+    {
+        public readonly HashSet<GumKeys> DeviceDown = new();
+        public readonly List<GumKeys> Queried = new();
+
+        protected override IEnumerable<GumKeys> SupportedKeys
+        {
+            get
+            {
+                yield return GumKeys.B;
+                yield return GumKeys.A;
+            }
+        }
+
+        protected override bool IsDeviceKeyDown(GumKeys key)
+        {
+            Queried.Add(key);
+            return DeviceDown.Contains(key);
+        }
+    }
+
+    [Fact]
+    public void Activity_KeyAddedToSupportedListAfterConstruction_IsPolled()
+    {
+        var keyboard = new GrowingListKeyboard();
+        keyboard.DeviceDown.Add(GumKeys.A);
+        keyboard.Activity(0);
+        keyboard.KeyDown(GumKeys.A).ShouldBeFalse();
+
+        keyboard.Supported.Add(GumKeys.A);
+        keyboard.Activity(0.1);
+
+        keyboard.KeyDown(GumKeys.A).ShouldBeTrue();
+        keyboard.KeyPushed(GumKeys.A).ShouldBeTrue();
+    }
+
+    [Fact]
+    public void Activity_ShouldQueryOnlySupportedKeys_InSupportedOrder()
+    {
+        var listKeyboard = new GrowingListKeyboard();
+        listKeyboard.Supported.AddRange(new[] { GumKeys.Left, GumKeys.A });
+        var lazyKeyboard = new LazySequenceKeyboard();
+        lazyKeyboard.DeviceDown.Add(GumKeys.B);
+
+        listKeyboard.Activity(0);
+        lazyKeyboard.Activity(0);
+
+        listKeyboard.Queried.ShouldBe(new[] { GumKeys.Left, GumKeys.A });
+        lazyKeyboard.Queried.ShouldBe(new[] { GumKeys.B, GumKeys.A });
+        lazyKeyboard.KeyDown(GumKeys.B).ShouldBeTrue();
+    }
 }

@@ -545,12 +545,20 @@ public class FormsUtilities
         }
 
 #if FULL_DIAGNOSTICS
-        var hashSet = FrameworkElement.GamePadsForUiControl.ToHashSet();
-
-        if (hashSet.Count != FrameworkElement.GamePadsForUiControl.Count)
+        // A pairwise scan rather than a HashSet so this per-frame check allocates nothing; the list
+        // holds a handful of gamepads at most.
+        var gamepads = FrameworkElement.GamePadsForUiControl;
+        var comparer = EqualityComparer<Gum.Input.IGamePad>.Default;
+        for (int i = 0; i < gamepads.Count; i++)
         {
-            throw new InvalidOperationException("The same gamepad has been added to FrameworkElement.GamePadsForUiControl multiple times. " +
-                "This should not be done");
+            for (int j = i + 1; j < gamepads.Count; j++)
+            {
+                if (comparer.Equals(gamepads[i], gamepads[j]))
+                {
+                    throw new InvalidOperationException("The same gamepad has been added to FrameworkElement.GamePadsForUiControl multiple times. " +
+                        "This should not be done");
+                }
+            }
         }
 #endif
     }

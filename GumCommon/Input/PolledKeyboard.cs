@@ -178,11 +178,20 @@ public abstract class PolledKeyboard : IInputReceiverKeyboard, IDisposable
         BeginPoll();
 
         _currentDown.Clear();
-        foreach (GumKeys key in SupportedKeys)
+        IEnumerable<GumKeys> supportedKeys = SupportedKeys;
+        // Index a list or array: a foreach over the IEnumerable boxes an enumerator every frame.
+        if (supportedKeys is IReadOnlyList<GumKeys> keyList)
         {
-            if (IsDeviceKeyDown(key))
+            for (int i = 0; i < keyList.Count; i++)
             {
-                _currentDown.Add(key);
+                PollKey(keyList[i]);
+            }
+        }
+        else
+        {
+            foreach (GumKeys key in supportedKeys)
+            {
+                PollKey(key);
             }
         }
 
@@ -204,6 +213,14 @@ public abstract class PolledKeyboard : IInputReceiverKeyboard, IDisposable
 
         _frameChars = _charsTyped.ToString();
         _charsTyped.Clear();
+    }
+
+    private void PollKey(GumKeys key)
+    {
+        if (IsDeviceKeyDown(key))
+        {
+            _currentDown.Add(key);
+        }
     }
 
     /// <summary>
