@@ -89,6 +89,8 @@ namespace RenderingLibrary
         internal RenderingLibrary.Graphics.RenderStateChangeStatistics? RenderStatisticsIfInitialized =>
             _renderer?.RenderStateChangeStatistics;
 
+        internal RenderingLibrary.Graphics.SpriteAtlasBatch? SpriteBatchIfInitialized => _renderer?.SpriteBatch;
+
         #endregion
 
         static bool HasInitializedGlobal = false;

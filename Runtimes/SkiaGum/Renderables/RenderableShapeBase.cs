@@ -851,6 +851,12 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
     /// </summary>
     private protected virtual bool RecordsOwnDrawCalls => false;
 
+    /// <summary>
+    /// The renderer's sprite batch while <see cref="Render"/> runs, null otherwise. Sprites add to it; a draw
+    /// that does not go through it must flush it first.
+    /// </summary>
+    private protected SpriteAtlasBatch? AtlasBatch { get; private set; }
+
     private void DrawBoundCounted(RenderableShapeBase shape, SKRect boundingRect, SKCanvas canvas)
     {
         RenderStateChangeStatistics? statistics = DrawStatistics;
@@ -877,6 +883,7 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
         var systemManagers = (SystemManagers)managers;
         var canvas = systemManagers.Canvas;
         DrawStatistics = systemManagers.RenderStatisticsIfInitialized;
+        AtlasBatch = systemManagers.SpriteBatchIfInitialized;
         try
         {
             RenderToCanvas(canvas);
@@ -884,6 +891,7 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
         finally
         {
             DrawStatistics = null;
+            AtlasBatch = null;
         }
 #endif
     }
@@ -936,6 +944,8 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
 
             if (UsesBoundsLayer)
             {
+                // The layer's clip must not reach sprites queued before this shape.
+                AtlasBatch?.Flush();
                 // See BlendsWholeBounds: draw the shape normally into a layer clipped to the bounds,
                 // then composite that layer with the blend. A fill slot draws its stroke slot into the
                 // same layer, so the pair blends as one shape (#6246).

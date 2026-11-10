@@ -28,9 +28,10 @@ namespace RenderingLibrary.Graphics
         /// backend-neutral draw-call total. The raylib renderer owns a <c>RenderBatch</c> and banks
         /// its authoritative draw counter at each batch flush; the MonoGame/KNI/FNA renderer
         /// (<see cref="Renderer.Draw(SystemManagers)"/>) sources it from a before/after delta of
-        /// <c>GraphicsDevice.Metrics.DrawCount</c> for the pass (issue #2697). The Skia renderer counts
-        /// each SKCanvas draw call its renderables issue (one per DrawImage, DrawRect, DrawPicture,
-        /// DrawAtlas or composited layer) through <see cref="RecordDrawCall"/> (issue #7826).
+        /// <c>GraphicsDevice.Metrics.DrawCount</c> for the pass (issue #2697). On every runtime it counts
+        /// draw submissions: the Skia renderer records one per DrawAtlas flush of batched sprites and one
+        /// per draw that does not batch (a shape, a Text paint, a NineSlice section, a composited layer
+        /// or render target) through <see cref="RecordDrawCall"/> (issue #7826).
         /// </summary>
         public int DrawCallCount { get; private set; }
 

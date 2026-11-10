@@ -369,12 +369,7 @@ public class Sprite : RenderableShapeBase, IAspectRatio, ITextureCoordinate, IAn
     /// </summary>
     private void DrawSourceRectangle(SKCanvas canvas, SKRect sourceRectangle, SKRect boundingRect, SKPaint paint)
     {
-        if (Renderer.TextureFilter == SKFilterMode.Nearest)
-        {
-            float insetX = GetPointSamplingInset(canvas, sourceRectangle.Width, boundingRect.Width, 1, 0);
-            float insetY = GetPointSamplingInset(canvas, sourceRectangle.Height, boundingRect.Height, 0, 1);
-            sourceRectangle.Inflate(-insetX, -insetY);
-        }
+        sourceRectangle = GetSampledSource(canvas, sourceRectangle, boundingRect);
 
         if (Image != null)
         {
@@ -384,6 +379,56 @@ public class Sprite : RenderableShapeBase, IAspectRatio, ITextureCoordinate, IAn
         {
             canvas.DrawBitmap(Texture, sourceRectangle, boundingRect, Renderer.TextureSampling, paint);
         }
+    }
+
+    private static SKRect GetSampledSource(SKCanvas canvas, SKRect sourceRectangle, SKRect boundingRect)
+    {
+        if (Renderer.TextureFilter == SKFilterMode.Nearest)
+        {
+            float insetX = GetPointSamplingInset(canvas, sourceRectangle.Width, boundingRect.Width, 1, 0);
+            float insetY = GetPointSamplingInset(canvas, sourceRectangle.Height, boundingRect.Height, 0, 1);
+            sourceRectangle.Inflate(-insetX, -insetY);
+        }
+        return sourceRectangle;
+    }
+
+    // Every draw path below records its own draw call; a batched sprite is counted when its batch flushes.
+    private protected override bool RecordsOwnDrawCalls => true;
+
+    // Adds the sprite to the renderer's DrawAtlas batch when its paint carries nothing a batch cannot: a Modulate
+    // tint (passed per sprite) and an alpha are fine; a blend, shader, filter or another color operation is not.
+    // Returns false when the sprite must draw on its own.
+    private bool TryAddToBatch(SKCanvas canvas, SKRect boundingRect, SKPaint paint, SKRect sourceRectangle)
+    {
+        SpriteAtlasBatch? batch = AtlasBatch;
+        SKImage? image = Image;
+        if (batch == null || image == null ||
+            ColorOperation != ColorOperation.Modulate ||
+            paint.Shader != null || paint.ImageFilter != null || paint.MaskFilter != null ||
+            paint.Blender != null || paint.BlendMode != SKBlendMode.SrcOver || paint.PathEffect != null ||
+            // Measured: a translucent sprite under linear sampling differs from DrawImage by up to 4 at its
+            // edge when drawn through DrawAtlas, so it draws alone to keep the output identical.
+            (paint.Color.Alpha != 255 && Renderer.TextureFilter != SKFilterMode.Nearest))
+        {
+            return false;
+        }
+
+        SKRect source;
+        if (EffectiveRectangle != null)
+        {
+            if (Wrap && ExtendsPastTexture(sourceRectangle))
+            {
+                return false;
+            }
+            source = GetSampledSource(canvas, sourceRectangle, boundingRect);
+        }
+        else
+        {
+            source = new SKRect(0, 0, image.Width, image.Height);
+        }
+
+        return batch.TryAdd(canvas, (object?)Texture ?? image, image, source, boundingRect,
+            Color.WithAlpha(255), paint.Color.Alpha, Renderer.TextureSampling);
     }
 
     private static float GetPointSamplingInset(SKCanvas canvas, float sourceLength, float destinationLength, float axisX, float axisY)
@@ -457,6 +502,13 @@ public class Sprite : RenderableShapeBase, IAspectRatio, ITextureCoordinate, IAn
 
         // Saved and restored by hand: an SKAutoCanvasRestore would allocate on every unflipped draw.
         bool isFlipped = isFlippedHorizontal || isFlippedVertical;
+
+        // A flip needs its own canvas matrix, which an RSXform cannot hold, so a flipped sprite draws alone.
+        if (!isFlipped && bakedImage == null && TryAddToBatch(canvas, boundingRect, paint, sourceRectangle))
+        {
+            return;
+        }
+        AtlasBatch?.Flush();
         int saveCount = isFlipped ? canvas.Save() : 0;
         if (isFlipped)
         {
@@ -492,6 +544,7 @@ public class Sprite : RenderableShapeBase, IAspectRatio, ITextureCoordinate, IAn
         {
             canvas.DrawBitmap(Texture, boundingRect, Renderer.TextureSampling, paint);
         }
+        DrawStatistics?.RecordDrawCall();
 
         if (isFlipped)
         {

@@ -219,6 +219,11 @@ namespace RenderingLibrary.Graphics
         /// </summary>
         public RenderStateChangeStatistics RenderStateChangeStatistics { get; } = new RenderStateChangeStatistics();
 
+        SpriteAtlasBatch? _spriteBatch;
+
+        // Consecutive same-image sprites draw through one DrawAtlas call (#7826).
+        internal SpriteAtlasBatch SpriteBatch => _spriteBatch ??= new SpriteAtlasBatch(RenderStateChangeStatistics);
+
         private void StartHostFrameRenderTargets()
         {
             RenderStateChangeStatistics.Reset();
@@ -496,6 +501,7 @@ namespace RenderingLibrary.Graphics
             // hidden one is skipped by the caller's Visible check, so no stale texture ghosts.
             if (renderable.IsRenderTarget)
             {
+                SpriteBatch.Flush();
                 CompositeRenderTarget(renderable, managers);
                 return;
             }
@@ -516,14 +522,15 @@ namespace RenderingLibrary.Graphics
 
                 if (isOnScreen)
                 {
+                    SpriteBatch.Flush();
                     canvas.Save();
                     canvas.ClipTo(renderable);
-                    renderable.Render(managers);
+                    RenderOne(renderable, managers);
                 }
             }
             else
             {
-                renderable.Render(managers);
+                RenderOne(renderable, managers);
             }
 
             if (isOnScreen)
@@ -535,9 +542,24 @@ namespace RenderingLibrary.Graphics
 
                 if (renderable.ClipsChildren)
                 {
+                    SpriteBatch.Flush();
                     canvas.Restore();
                 }
             }
+        }
+
+        // Sprites add themselves to SpriteBatch; anything else that draws flushes it first so draw order holds.
+        // Containers draw nothing, so sprites in separate containers still share a batch.
+        private void RenderOne(IRenderableIpso renderable, SystemManagers managers)
+        {
+            IRenderableIpso inner = renderable is GraphicalUiElement element && element.RenderableComponent is IRenderableIpso contained
+                ? contained
+                : renderable;
+            if (inner is not Sprite && inner is not InvisibleRenderable)
+            {
+                SpriteBatch.Flush();
+            }
+            renderable.Render(managers);
         }
 
         private void PreRender(IList<IRenderableIpso> renderables)
@@ -780,6 +802,7 @@ namespace RenderingLibrary.Graphics
             }
             finally
             {
+                SpriteBatch.Flush();
                 _bakeDepth--;
                 managers.Canvas = screenCanvas;
                 offscreenCanvas.Restore();
@@ -1086,6 +1109,7 @@ namespace RenderingLibrary.Graphics
 
         private void RestoreCamera(SKCanvas canvas)
         {
+            SpriteBatch.Flush();
             canvas.Restore();
             _cameraBaseMatrix = null;
             _cameraCallerMatrix = null;
@@ -1135,6 +1159,7 @@ namespace RenderingLibrary.Graphics
             }
             finally
             {
+                SpriteBatch.Flush();
                 canvas.Restore();
                 canvas.Restore();
                 _cameraBaseMatrix = outerBaseMatrix;

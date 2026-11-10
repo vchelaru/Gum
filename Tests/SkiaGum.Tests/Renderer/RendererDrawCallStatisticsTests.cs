@@ -68,6 +68,66 @@ public class RendererDrawCallStatisticsTests : IDisposable
         SystemManagers.Default.Renderer.RenderStateChangeStatistics.DrawCallCount.ShouldBe(1);
     }
 
+    static SpriteRuntime CreateSprite(SKBitmap texture, float x) => new()
+    {
+        Texture = texture,
+        X = x,
+        Width = 8,
+        Height = 8,
+        WidthUnits = Gum.DataTypes.DimensionUnitType.Absolute,
+        HeightUnits = Gum.DataTypes.DimensionUnitType.Absolute,
+    };
+
+    [Fact]
+    public void Draw_ConsecutiveSameTextureSprites_DrawInOneCall()
+    {
+        using SKBitmap texture = new(4, 4);
+        texture.Erase(SKColors.Red);
+        for (int i = 0; i < 5; i++)
+        {
+            // Each in its own container, as in a real screen; containers draw nothing, so they do not break the batch.
+            ContainerRuntime container = new();
+            container.Children.Add(CreateSprite(texture, i * 10));
+            GumService.Default.Root.Children.Add(container);
+        }
+
+        GumService.Default.Draw();
+
+        SystemManagers.Default.Renderer.RenderStateChangeStatistics.DrawCallCount.ShouldBe(1);
+    }
+
+    [Fact]
+    public void Draw_TextBetweenSameTextureSprites_BreaksTheBatch()
+    {
+        using SKBitmap texture = new(4, 4);
+        texture.Erase(SKColors.Red);
+        GumService.Default.Root.Children.Add(CreateSprite(texture, 0));
+        GumService.Default.Root.Children.Add(CreateSprite(texture, 10));
+        GumService.Default.Root.Children.Add(new TextRuntime { Y = 20, Text = "Hi" });
+        GumService.Default.Root.Children.Add(CreateSprite(texture, 20));
+        GumService.Default.Root.Children.Add(CreateSprite(texture, 30));
+
+        GumService.Default.Draw();
+
+        SystemManagers.Default.Renderer.RenderStateChangeStatistics.DrawCallCount.ShouldBe(3);
+    }
+
+    [Fact]
+    public void Draw_FlippedSpriteBetweenSameTextureSprites_DrawsAlone()
+    {
+        using SKBitmap texture = new(4, 4);
+        texture.Erase(SKColors.Red);
+        GumService.Default.Root.Children.Add(CreateSprite(texture, 0));
+        SpriteRuntime flipped = CreateSprite(texture, 10);
+        flipped.FlipHorizontal = true;
+        GumService.Default.Root.Children.Add(flipped);
+        GumService.Default.Root.Children.Add(CreateSprite(texture, 20));
+
+        GumService.Default.Draw();
+
+        SystemManagers.Default.Renderer.RenderStateChangeStatistics.DrawCallCount.ShouldBe(3);
+    }
+
     [Fact]
     public void Draw_RenderTargetContainer_CountsTheBakedChildAndTheComposite()
     {
