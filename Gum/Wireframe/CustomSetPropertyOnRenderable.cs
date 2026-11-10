@@ -1094,17 +1094,48 @@ public partial class CustomSetPropertyOnRenderable
     // TrySetPropertyOnText below. Public so both call sites can reach it (#3706).
     public static void SetText(Text textRenderable, GraphicalUiElement graphicalUiElement, string propertyName, object? value)
     {
-        // Setting the string a tagged text already shows changes nothing, so skip the parse and the
+        string? valueAsString = value as string;
+        string? displayText = GetDisplayText(graphicalUiElement, propertyName, valueAsString);
+
+        // Setting what a tagged text already shows changes nothing, so skip the parse and the
         // measure-and-wrap below, matching how Text.RawText ignores an equal plain string (#7779).
-        if (value is string markup && markup.Contains("[") && IsBbCodeAlreadyParsed(textRenderable, graphicalUiElement, markup))
+        // This compares the translated result, so a key whose translation is tagged skips too (#7786).
+        if (displayText != null && displayText.Contains("[") && IsBbCodeAlreadyParsed(textRenderable, graphicalUiElement, displayText))
         {
-            TrackLocalizationKey(graphicalUiElement, propertyName, markup);
+            TrackLocalizationKey(graphicalUiElement, propertyName, valueAsString);
             return;
         }
 
         // Measures the new text unwrapped when RelativeToChildren, then lays out or restores the renderable's width.
         graphicalUiElement.AssignTextAndUpdateLayout(textRenderable,
-            (textRenderable, graphicalUiElement, propertyName, value), AssignText);
+            (textRenderable, graphicalUiElement, propertyName, valueAsString, displayText), AssignText);
+    }
+
+    // The string a Text assignment ends up showing: a value that already contains markup is used as-is,
+    // otherwise the "Text" property is translated (the translation may itself contain markup).
+    private static string? GetDisplayText(GraphicalUiElement graphicalUiElement, string propertyName, string? valueAsString)
+    {
+        if (valueAsString == null || valueAsString.Contains("["))
+        {
+            return valueAsString;
+        }
+
+#if !FRB
+        // TextRuntime doesn't exist under FRB (see Guard symmetry in coder.md), so a bare
+        // GraphicalUiElement(Text) - not possible outside FRB per TrySetPropertyOnText above -
+        // is treated as translatable, matching pre-LocalizeText behavior.
+        var shouldTranslate = graphicalUiElement is not Gum.GueDeriving.TextRuntime textRuntimeForLocalization
+            || textRuntimeForLocalization.LocalizeText;
+#else
+        var shouldTranslate = true;
+#endif
+        // A null Text stays null; translating it would display the service placeholder.
+        if (LocalizationService != null && propertyName == "Text" && shouldTranslate)
+        {
+            return LocalizationService.Translate(valueAsString);
+        }
+
+        return valueAsString;
     }
 
     // Track the original (untranslated) value so RefreshLocalization can
@@ -1243,10 +1274,9 @@ public partial class CustomSetPropertyOnRenderable
         UpdateRecordFromOwner(record, graphicalUiElement, write: true);
     }
 
-    private static void AssignText((Text textRenderable, GraphicalUiElement graphicalUiElement, string propertyName, object? value) state)
+    private static void AssignText((Text textRenderable, GraphicalUiElement graphicalUiElement, string propertyName, string? valueAsString, string? displayText) state)
     {
-        var (textRenderable, graphicalUiElement, propertyName, value) = state;
-        var valueAsString = value as string;
+        var (textRenderable, graphicalUiElement, propertyName, valueAsString, displayText) = state;
 
         TrackLocalizationKey(graphicalUiElement, propertyName, valueAsString);
 
@@ -1254,39 +1284,15 @@ public partial class CustomSetPropertyOnRenderable
 #if !FRB
         textRenderable.ParsedBbCodeTags = null;
 #endif
-        if (valueAsString?.Contains("[") == true)
+        if (displayText?.Contains("[") == true)
         {
-            textRenderable.StoredMarkupText = valueAsString;
+            textRenderable.StoredMarkupText = displayText;
             SetBbCodeText(textRenderable, graphicalUiElement, textRenderable.StoredMarkupText);
         }
         else
         {
             textRenderable.StoredMarkupText = null;
-            var rawText = valueAsString;
-#if !FRB
-            // TextRuntime doesn't exist under FRB (see Guard symmetry in coder.md), so a bare
-            // GraphicalUiElement(Text) - not possible outside FRB per TrySetPropertyOnText above -
-            // is treated as translatable, matching pre-LocalizeText behavior.
-            var shouldTranslate = graphicalUiElement is not Gum.GueDeriving.TextRuntime textRuntimeForLocalization
-                || textRuntimeForLocalization.LocalizeText;
-#else
-            var shouldTranslate = true;
-#endif
-            // A null Text stays null; translating it would display the service placeholder.
-            if(LocalizationService != null && rawText != null && propertyName == "Text" && shouldTranslate)
-            {
-                rawText = LocalizationService.Translate(rawText);
-            }
-
-            if(rawText?.Contains("[") == true)
-            {
-                textRenderable.StoredMarkupText = rawText;
-                SetBbCodeText(textRenderable, graphicalUiElement, textRenderable.StoredMarkupText);
-            }
-            else
-            {
-                textRenderable.RawText = rawText;
-            }
+            textRenderable.RawText = displayText;
         }
     }
 
