@@ -115,6 +115,27 @@ Sprite2.SourceFile = "MyFile.png"; // This also goes to disk to load the file
 
 Be careful setting CacheTextures to false since all existing textures will be disposed. This means that if you have loaded textures which are still being referenced by runtime objects, you will get an exception if those are still being drawn after setting CacheTextures to false.
 
+### Editing a Loaded Texture on SkiaSharp
+
+On [SkiaSharp-based runtimes](../about/runtimes.md), Gum marks every texture it loads as read-only, whether it comes from a file, a URL, an `.achx` frame, or the built-in Forms sprite sheet. Every `SpriteRuntime` and `NineSliceRuntime` that uses one of these textures shares a single copy of its pixels, which keeps memory use and GPU work flat as the number of visuals grows.
+
+{% hint style="info" %}
+Available in December 2026, or now if building Gum from source.
+{% endhint %}
+
+To change the pixels of a loaded texture, edit a copy and assign the copy to `Texture`:
+
+```csharp
+// Initialize
+SkiaSharp.SKBitmap copy = sprite.Texture.Copy();
+copy.Erase(SkiaSharp.SKColors.Red);
+sprite.Texture = copy;
+```
+
+Only the visuals you assign the copy to change. A bitmap your own code creates, such as one from `SKBitmap.Decode`, is not shared. Each visual you assign it to keeps its own copy of the pixels, so assigning one bitmap to many visuals uses more memory and GPU time than loading the file through Gum. A custom `IContentLoader` that returns mutable bitmaps behaves the same way.
+
+Editing a loaded bitmap in place is not the supported route. If you do, assign the bitmap to `Texture` again to show the change.
+
 ### Customizing How Content Loads
 
 By default Gum resolves a `SourceFile` name to a texture by reading a file from disk (relative to `FileManager.RelativeDirectory`). You can replace this behavior with your own logic. For example, you can load assets from a custom store, or hand back a texture your game engine has *already* loaded so the same image does not occupy video memory twice.
