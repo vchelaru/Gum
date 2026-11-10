@@ -347,8 +347,8 @@ public class DrawAllocationTests : BaseTestClass
     }
 
     // Changing text rebuilds a RichTextKit TextBlock, which allocates on every build, so the limit cannot be 0.
-    // Measured on Windows: 1,781 / 6,970 / 20,449 bytes per frame (#7846), and the reveal up to 7,800 when other
-    // text test classes run first. Building and painting a new RichTextKit block for the counter text alone is about
+    // Measured on Windows: 1,781 / 6,970 / 20,449 bytes per frame (#7846); on macOS 1,785 / 6,668 / 20,503, the same
+    // whatever ran first (#7860). Building and painting a new RichTextKit block for the counter text alone is about
     // 4,540 (#7818). The reveal and the BBCode line-break layout (a [FontSize] run is refit line by line) clear and
     // reuse a block, plain text alternates between two reused blocks, and a Text reuses the styles it built before
     // and the typefaces it resolved. The limit is the per-frame managed bytes of Update + Draw while the text changes
@@ -361,12 +361,12 @@ public class DrawAllocationTests : BaseTestClass
     {
         Action<int> change = CreateChangingText(kind, out TextRuntime text);
         text.AddToRoot();
-        int frame = 0;
 
-        AllocationResult result = AllocationMeasurer.MeasureMinimum(
-            () =>
+        // SkiaAllocationMeasurer replays the same frames in every window and keeps SkiaSharp's handle table
+        // resize and the collector's timing out of the reading (#7860).
+        AllocationResult result = SkiaAllocationMeasurer.MeasureMinimum(
+            frame =>
             {
-                frame++;
                 change(frame);
                 _host.Update();
                 _host.Draw();
