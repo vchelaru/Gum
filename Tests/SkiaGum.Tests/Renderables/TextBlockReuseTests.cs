@@ -171,6 +171,72 @@ public class TextBlockReuseTests : BaseTestClass
     }
 
     [Fact]
+    public void Render_PlainTextAlternatingDrawnEachTime_MatchesFresh()
+    {
+        const string longText = "Alpha text that wraps over lines";
+        Text changed = CreateText(longText);
+        Render(changed);
+        foreach (string rawText in new[] { "Beta", longText, "Beta", longText })
+        {
+            changed.RawText = rawText;
+            ShouldMatchFresh(changed, CreateText(rawText), rawText);
+            changed.WrappedText.ShouldBe(CreateText(rawText).WrappedText, rawText);
+        }
+    }
+
+    [Fact]
+    public void Render_PlainTextAlternatingWithoutDrawingBetween_MatchesFresh()
+    {
+        const string longText = "Alpha text that wraps over lines";
+        Text changed = CreateText(longText);
+        Render(changed);
+        _ = changed.WrappedText;
+        changed.RawText = "Beta";
+        changed.GetCachedTextBlock();
+        changed.RawText = longText;
+        changed.GetCachedTextBlock();
+
+        changed.RawText = "Gamma";
+        ShouldMatchFresh(changed, CreateText("Gamma"), "gamma");
+        changed.WrappedText.ShouldBe(CreateText("Gamma").WrappedText);
+
+        changed.RawText = longText;
+        ShouldMatchFresh(changed, CreateText(longText), "alpha again");
+        changed.WrappedText.ShouldBe(CreateText(longText).WrappedText);
+    }
+
+    [Fact]
+    public void Render_CloneChangedIndependently_MatchesFresh()
+    {
+        Text original = CreateText("Original text wraps over lines");
+        Render(original);
+        original.RawText = "Second";
+        Render(original);
+
+        Text clone = original.Clone();
+        clone.RawText = "Clone text that wraps over lines";
+        original.RawText = "Original third";
+        ShouldMatchFresh(clone, CreateText("Clone text that wraps over lines"), "clone");
+        ShouldMatchFresh(original, CreateText("Original third"), "original");
+
+        clone.RawText = "Clone again";
+        ShouldMatchFresh(clone, CreateText("Clone again"), "clone again");
+        ShouldMatchFresh(original, CreateText("Original third"), "original unchanged");
+    }
+
+    [Fact]
+    public void Render_FontScaleChanged_MatchesFresh()
+    {
+        Text changed = CreateText("Scaled text wraps over lines");
+        Render(changed);
+        changed.FontScale = 1.5f;
+
+        Text fresh = CreateText("Scaled text wraps over lines");
+        fresh.FontScale = 1.5f;
+        ShouldMatchFresh(changed, fresh, "font scale 1.5");
+    }
+
+    [Fact]
     public void Render_PlainTextChangedWithSameRevealCount_MatchesFresh()
     {
         Text changed = CreateText("Hello world, wrapped over lines");

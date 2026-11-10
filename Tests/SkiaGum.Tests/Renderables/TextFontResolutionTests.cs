@@ -86,17 +86,50 @@ public class TextFontResolutionTests : BaseTestClass
         Render(fresh).ShouldNotBe(beforeRegistration);
     }
 
+    // The base RichTextKit lookup already hands back the same managed typeface for the same style, so only the
+    // missing allocation shows the second resolution never reached it.
     [Fact]
-    public void TypefaceFromStyle_SystemFamilyResolvedTwice_ReturnsTheSameLiveTypeface()
+    public void TypefaceFromStyle_SystemFamilyResolvedTwice_SecondResolutionAllocatesNothing()
     {
         GumFontMapper mapper = new();
         Style style = new() { FontFamily = "Arial", FontWeight = 700, FontItalic = true };
-
         SKTypeface first = mapper.TypefaceFromStyle(style, ignoreFontVariants: false);
-        SKTypeface second = mapper.TypefaceFromStyle(style, ignoreFontVariants: false);
 
+        long before = GC.GetAllocatedBytesForCurrentThread();
+        SKTypeface second = mapper.TypefaceFromStyle(style, ignoreFontVariants: false);
+        long allocated = GC.GetAllocatedBytesForCurrentThread() - before;
+
+        allocated.ShouldBe(0);
         second.ShouldBeSameAs(first);
         second.Handle.ShouldNotBe(IntPtr.Zero);
+    }
+
+    [Fact]
+    public void TypefaceFromStyle_TwoMappers_EachReturnLiveTypefaces()
+    {
+        GumFontMapper a = new();
+        GumFontMapper b = new();
+        Style style = new() { FontFamily = "Arial", FontWeight = 700 };
+
+        SKTypeface fromA = a.TypefaceFromStyle(style, ignoreFontVariants: false);
+        SKTypeface fromB = b.TypefaceFromStyle(style, ignoreFontVariants: false);
+
+        fromA.Handle.ShouldNotBe(IntPtr.Zero);
+        fromB.Handle.ShouldNotBe(IntPtr.Zero);
+        fromA.FamilyName.ShouldBe(fromB.FamilyName);
+    }
+
+    [Fact]
+    public void RegisterFont_NamesDifferingOnlyByCase_ShareOneSlot()
+    {
+        byte[] bytes = File.ReadAllBytes(FixtureTtfPath);
+        SKTypeface? lower = GumFontMapper.RegisterFont("textfontresolutioncasefamily", bytes);
+        SKTypeface? upper = GumFontMapper.RegisterFont("TEXTFONTRESOLUTIONCASEFAMILY", bytes);
+        lower.ShouldNotBeSameAs(upper);
+
+        GumFontMapper mapper = new();
+        mapper.TypefaceFromStyle(new Style { FontFamily = "textfontresolutioncasefamily" }, ignoreFontVariants: false)
+            .ShouldBeSameAs(upper);
     }
 
     [Fact]
