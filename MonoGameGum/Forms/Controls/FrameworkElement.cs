@@ -326,15 +326,23 @@ public class FrameworkElement : INotifyPropertyChanged
     // visibility and parent changes, so nothing runs per frame.
     List<GraphicalUiElement>? _visibilityWatched;
 
+    // A method group converts to a new delegate at every use, and focus is gained and lost often
+    // (a ComboBox focuses its drop-down on every open); created once, on first use (#7870).
+    EventHandler? _focusedVisibilityChangedHandler;
+    EventHandler<GraphicalUiElement.ParentChangedEventArgs>? _focusedParentChangedHandler;
+
     void WatchVisibilityWhileFocused()
     {
         StopWatchingVisibility();
         _visibilityWatched ??= new List<GraphicalUiElement>();
+        EventHandler visibilityChanged = _focusedVisibilityChangedHandler ??= HandleFocusedVisibilityChanged;
+        EventHandler<GraphicalUiElement.ParentChangedEventArgs> parentChanged =
+            _focusedParentChangedHandler ??= HandleFocusedParentChanged;
         GraphicalUiElement? current = Visual;
         while (current != null)
         {
-            current.VisibleChanged += HandleFocusedVisibilityChanged;
-            current.ParentChanged += HandleFocusedParentChanged;
+            current.VisibleChanged += visibilityChanged;
+            current.ParentChanged += parentChanged;
             _visibilityWatched.Add(current);
             current = current.Parent;
         }
@@ -345,8 +353,8 @@ public class FrameworkElement : INotifyPropertyChanged
         if (_visibilityWatched == null) return;
         for (int i = 0; i < _visibilityWatched.Count; i++)
         {
-            _visibilityWatched[i].VisibleChanged -= HandleFocusedVisibilityChanged;
-            _visibilityWatched[i].ParentChanged -= HandleFocusedParentChanged;
+            _visibilityWatched[i].VisibleChanged -= _focusedVisibilityChangedHandler;
+            _visibilityWatched[i].ParentChanged -= _focusedParentChangedHandler;
         }
         _visibilityWatched.Clear();
     }
