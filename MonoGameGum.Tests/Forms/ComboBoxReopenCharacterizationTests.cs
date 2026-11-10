@@ -372,7 +372,10 @@ public class ComboBoxReopenCharacterizationTests : BaseTestClass
 
     private static class Expected
     {
-        public const string OpenFourItems = """
+        // A Windows checkout turns the LF line endings in these literals into CRLF (autocrlf); Snapshot() always returns LF.
+        private static string Normalize(string expected) => expected.Replace("\r\n", "\n");
+
+        public static readonly string OpenFourItems = Normalize("""
 combo open=True text='' selected=-1 rect=(20,30,256,24)
 list visible=True parent=PopupRoot rect=(20,54,256,128) units=PixelsFromSmall/PixelsFromSmall/Absolute/Absolute values=20,54,256,128 z=∞
 list focused=True itemsFocus=True selected=-1 scroll=0/0
@@ -381,8 +384,8 @@ list focused=True itemsFocus=True selected=-1 scroll=0/0
   row 2 'Item 2' rect=(22,98,252,21) selected=False highlighted=False enabled=True
   row 3 'Item 3' rect=(22,119,252,21) selected=False highlighted=False enabled=True
   rows outside the list: 0
-""";
-        public const string ClosedFourItems = """
+""");
+        public static readonly string ClosedFourItems = Normalize("""
 combo open=False text='' selected=-1 rect=(20,30,256,24)
 list visible=False parent=none rect=(0,24,1056,128) units=PixelsFromSmall/PixelsFromSmall/RelativeToContainer/Absolute values=0,24,0,128 z=∞
 list focused=False itemsFocus=False selected=-1 scroll=0/0
@@ -391,8 +394,8 @@ list focused=False itemsFocus=False selected=-1 scroll=0/0
   row 2 'Item 2' rect=(2,68,252,21) selected=False highlighted=False enabled=True
   row 3 'Item 3' rect=(2,89,252,21) selected=False highlighted=False enabled=True
   rows outside the list: 0
-""";
-        public const string ReopenAfterItemsChangedClosed = """
+""");
+        public static readonly string ReopenAfterItemsChangedClosed = Normalize("""
 combo open=True text='' selected=-1 rect=(20,30,256,24)
 list visible=True parent=PopupRoot rect=(20,54,256,128) units=PixelsFromSmall/PixelsFromSmall/Absolute/Absolute values=20,54,256,128 z=∞
 list focused=True itemsFocus=True selected=-1 scroll=0/0
@@ -402,8 +405,8 @@ list focused=True itemsFocus=True selected=-1 scroll=0/0
   row 3 'Item 3' rect=(22,119,252,21) selected=False highlighted=False enabled=True
   row 4 'Added' rect=(22,140,252,21) selected=False highlighted=False enabled=True
   rows outside the list: 0
-""";
-        public const string ItemsChangedWhileOpen = """
+""");
+        public static readonly string ItemsChangedWhileOpen = Normalize("""
 combo open=True text='' selected=-1 rect=(20,30,256,24)
 list visible=True parent=PopupRoot rect=(20,54,256,128) units=PixelsFromSmall/PixelsFromSmall/Absolute/Absolute values=20,54,256,128 z=∞
 list focused=True itemsFocus=True selected=-1 scroll=0/0
@@ -412,8 +415,8 @@ list focused=True itemsFocus=True selected=-1 scroll=0/0
   row 2 'Item 3' rect=(22,98,252,21) selected=False highlighted=False enabled=True
   row 3 'Late' rect=(22,119,252,21) selected=False highlighted=False enabled=True
   rows outside the list: 0
-""";
-        public const string ItemsChangedWhileOpenThenReopened = """
+""");
+        public static readonly string ItemsChangedWhileOpenThenReopened = Normalize("""
 combo open=True text='' selected=-1 rect=(20,30,256,24)
 list visible=True parent=PopupRoot rect=(20,54,256,128) units=PixelsFromSmall/PixelsFromSmall/Absolute/Absolute values=20,54,256,128 z=∞
 list focused=True itemsFocus=True selected=-1 scroll=0/0
@@ -422,8 +425,8 @@ list focused=True itemsFocus=True selected=-1 scroll=0/0
   row 2 'Item 3' rect=(22,98,252,21) selected=False highlighted=False enabled=True
   row 3 'Late' rect=(22,119,252,21) selected=False highlighted=False enabled=True
   rows outside the list: 0
-""";
-        public const string ReopenSelectedFar = """
+""");
+        public static readonly string ReopenSelectedFar = Normalize("""
 combo open=True text='Item 27' selected=27 rect=(20,30,256,24)
 list visible=True parent=PopupRoot rect=(20,54,256,128) units=PixelsFromSmall/PixelsFromSmall/Absolute/Absolute values=20,54,256,128 z=∞
 list focused=True itemsFocus=True selected=27 scroll=464/506
@@ -435,15 +438,15 @@ list focused=True itemsFocus=True selected=27 scroll=464/506
   row 27 'Item 27' rect=(22,159,228,21) selected=True highlighted=False enabled=True
   row 28 'Item 28' rect=(22,180,228,21) selected=False highlighted=False enabled=True
   rows outside the list: 23
-""";
-        public const string SelectedMovesBetweenOpens = """
+""");
+        public static readonly string SelectedMovesBetweenOpens = Normalize("""
 27: scroll=464 selected=27 rect=(20,54,256,128)
 2: scroll=42 selected=2 rect=(20,54,256,128)
 15: scroll=212 selected=15 rect=(20,54,256,128)
 -1: scroll=212 selected=-1 rect=(20,54,256,128)
 29: scroll=506 selected=29 rect=(20,54,256,128)
-""";
-        public const string DisabledItem = """
+""");
+        public static readonly string DisabledItem = Normalize("""
 combo open=True text='' selected=-1 rect=(20,30,256,24)
 list visible=True parent=PopupRoot rect=(20,54,256,128) units=PixelsFromSmall/PixelsFromSmall/Absolute/Absolute values=20,54,256,128 z=∞
 list focused=True itemsFocus=True selected=-1 scroll=0/0
@@ -452,8 +455,8 @@ list focused=True itemsFocus=True selected=-1 scroll=0/0
   row 2 'Item 2' rect=(22,98,252,21) selected=False highlighted=False enabled=False
   row 3 'Item 3' rect=(22,119,252,21) selected=False highlighted=False enabled=True
   rows outside the list: 0
-""";
-        public const string TallDropDown = """
+""");
+        public static readonly string TallDropDown = Normalize("""
 combo open=True text='' selected=-1 rect=(20,30,256,24)
 list visible=True parent=PopupRoot rect=(20,54,256,128) units=PixelsFromSmall/PixelsFromSmall/Absolute/Absolute values=20,54,256,128 z=∞
 list focused=True itemsFocus=True selected=-1 scroll=0/1136
@@ -464,8 +467,8 @@ list focused=True itemsFocus=True selected=-1 scroll=0/1136
   row 4 'Item 4' rect=(22,140,228,21) selected=False highlighted=False enabled=True
   row 5 'Item 5' rect=(22,161,228,21) selected=False highlighted=False enabled=True
   rows outside the list: 54
-""";
-        public const string MovedWhileClosed = """
+""");
+        public static readonly string MovedWhileClosed = Normalize("""
 combo open=True text='' selected=-1 rect=(140,90,180,24)
 list visible=True parent=PopupRoot rect=(140,114,180,128) units=PixelsFromSmall/PixelsFromSmall/Absolute/Absolute values=140,114,180,128 z=∞
 list focused=True itemsFocus=True selected=-1 scroll=0/0
@@ -474,8 +477,8 @@ list focused=True itemsFocus=True selected=-1 scroll=0/0
   row 2 'Item 2' rect=(142,158,176,21) selected=False highlighted=False enabled=True
   row 3 'Item 3' rect=(142,179,176,21) selected=False highlighted=False enabled=True
   rows outside the list: 0
-""";
-        public const string NearBottom = """
+""");
+        public static readonly string NearBottom = Normalize("""
 combo open=True text='' selected=-1 rect=(20,560,256,24)
 list visible=True parent=PopupRoot rect=(20,472,256,128) units=PixelsFromSmall/PixelsFromSmall/Absolute/Absolute values=20,472,256,128 z=∞
 list focused=True itemsFocus=True selected=-1 scroll=0/44
@@ -486,8 +489,8 @@ list focused=True itemsFocus=True selected=-1 scroll=0/44
   row 4 'Item 4' rect=(22,558,228,21) selected=False highlighted=False enabled=True
   row 5 'Item 5' rect=(22,579,228,21) selected=False highlighted=False enabled=True
   rows outside the list: 2
-""";
-        public const string AfterSelectingRow = """
+""");
+        public static readonly string AfterSelectingRow = Normalize("""
 combo open=True text='Item 4' selected=4 rect=(20,30,256,24)
 list visible=True parent=PopupRoot rect=(20,54,256,128) units=PixelsFromSmall/PixelsFromSmall/Absolute/Absolute values=20,54,256,128 z=∞
 list focused=True itemsFocus=True selected=4 scroll=0/2
@@ -498,8 +501,8 @@ list focused=True itemsFocus=True selected=4 scroll=0/2
   row 4 'Item 4' rect=(22,140,228,21) selected=True highlighted=False enabled=True
   row 5 'Item 5' rect=(22,161,228,21) selected=False highlighted=False enabled=True
   rows outside the list: 0
-""";
-        public const string TwoComboBoxes = """
+""");
+        public static readonly string TwoComboBoxes = Normalize("""
 combo open=True text='' selected=-1 rect=(20,30,256,24)
 list visible=True parent=PopupRoot rect=(20,54,256,128) units=PixelsFromSmall/PixelsFromSmall/Absolute/Absolute values=20,54,256,128 z=∞
 list focused=True itemsFocus=True selected=-1 scroll=0/0
@@ -515,8 +518,8 @@ list focused=False itemsFocus=False selected=-1 scroll=0/0
   row 3 'Item 3' rect=(2,89,252,21) selected=False highlighted=False enabled=True
   row 4 'Item 4' rect=(2,110,252,21) selected=False highlighted=False enabled=True
   rows outside the list: 0
-""";
-        public const string OpenedWhileDisabled = """
+""");
+        public static readonly string OpenedWhileDisabled = Normalize("""
 combo open=True text='' selected=-1 rect=(20,30,256,24)
 list visible=True parent=PopupRoot rect=(20,54,256,128) units=PixelsFromSmall/PixelsFromSmall/Absolute/Absolute values=20,54,256,128 z=∞
 list focused=False itemsFocus=False selected=-1 scroll=0/0
@@ -525,6 +528,6 @@ list focused=False itemsFocus=False selected=-1 scroll=0/0
   row 2 'Item 2' rect=(22,98,252,21) selected=False highlighted=False enabled=True
   row 3 'Item 3' rect=(22,119,252,21) selected=False highlighted=False enabled=True
   rows outside the list: 0
-""";
+""");
     }
 }
