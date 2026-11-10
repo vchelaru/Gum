@@ -1292,16 +1292,28 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
 
     /// <summary>
     /// Whether the cached block, laid out with no width limit, is also the layout at <paramref name="width"/>.
-    /// Layout measures a size-to-children text unbounded and then sets <see cref="Width"/> to the measured
-    /// width; a left-aligned block that fits wraps nowhere and places every line at x = 0 either way, so it
-    /// is kept instead of laid out again (#7818). Center and right alignment place lines by the width.
+    /// Layout measures a size-to-children text unbounded (<see cref="Width"/> null) and then sets
+    /// <see cref="Width"/> to the measured width, on every layout. A block that fits wraps nowhere, so it is the
+    /// layout at no limit, at a left-aligned width it fits in (#7818), and at exactly its measured width for any
+    /// alignment, where the lines are placed in a block as wide as the widest. A wider width places center and right
+    /// lines further over, so those lay out again.
     /// </summary>
-    private bool IsUnboundedBlockValidAtWidth(float? width) =>
-        _cachedTextBlock != null
-        && _isCachedTextBlockUnbounded
-        && HorizontalAlignment == HorizontalAlignment.Left
-        && width != null
-        && width.Value >= _cachedTextBlock.MeasuredWidth;
+    private bool IsUnboundedBlockValidAtWidth(float? width)
+    {
+        if (_cachedTextBlock == null || !_isCachedTextBlockUnbounded)
+        {
+            return false;
+        }
+
+        if (width == null)
+        {
+            return true;
+        }
+
+        float measuredWidth = _cachedTextBlock.MeasuredWidth;
+        return width.Value == measuredWidth
+            || (HorizontalAlignment == HorizontalAlignment.Left && width.Value > measuredWidth);
+    }
 
     /// <summary>
     /// The max height passed to the RichTextKit <c>TextBlock</c>: <see cref="Height"/> when
