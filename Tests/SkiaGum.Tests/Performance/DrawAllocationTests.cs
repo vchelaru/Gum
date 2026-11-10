@@ -307,8 +307,8 @@ public class DrawAllocationTests : BaseTestClass
     // Changing text rebuilds a RichTextKit TextBlock, which allocates on every build, so the limit cannot be 0.
     // Measured on Windows: 4,874 / 7,737 / 22,740 bytes per frame; a bare RichTextKit build and paint of the
     // counter text alone is about 4,540 (#7818). The reveal and the BBCode line-break layout (a [FontSize] run is
-    // refit line by line) clear and reuse a block, and a Text reuses the styles it built before. The limit is the per-frame managed bytes of Update + Draw while
-    // the text changes every frame.
+    // refit line by line) clear and reuse a block, and a Text reuses the styles it built before. The limit is the
+    // per-frame managed bytes of Update + Draw while the text changes every frame.
     [Theory]
     [InlineData("TextChangedEveryFrame", 6000)]
     [InlineData("MaxLettersToShowReveal", 9000)]
