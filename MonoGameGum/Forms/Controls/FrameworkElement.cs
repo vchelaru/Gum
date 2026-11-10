@@ -842,6 +842,96 @@ public class FrameworkElement : INotifyPropertyChanged
     public static Dictionary<Type, VisualTemplate> DefaultFormsTemplates => GumContext.Own?.DefaultFormsTemplates ?? _defaultFormsTemplates;
 
     static readonly Dictionary<Type, VisualTemplate> _defaultFormsTemplates = new Dictionary<Type, VisualTemplate>();
+
+    /// <summary>
+    /// The visual template (and obsolete component type) registered for each control type that
+    /// <see cref="GetGraphicalUiElementForFrameworkElement"/> looked up while a log was active. A caller that
+    /// keeps what it built asks <see cref="StillResolvesTheSame"/> before reusing it, so a template registered or
+    /// swapped for any control the build created (not only the ones the caller knows about) is noticed (#7864).
+    /// </summary>
+    internal sealed class TemplateLookupLog
+    {
+        private readonly List<Type> _types = new List<Type>();
+        private readonly List<VisualTemplate?> _templates = new List<VisualTemplate?>();
+        private readonly List<Type?> _components = new List<Type?>();
+
+        // Keeps the first template seen for a type: a row built later in the same popup's life cannot hide that an
+        // earlier one was built from a template that has since been replaced.
+        internal void Record(Type type)
+        {
+            if (_types.Contains(type))
+            {
+                return;
+            }
+            DefaultFormsTemplates.TryGetValue(type, out VisualTemplate? template);
+#pragma warning disable CS0618 // The obsolete registry still decides which visual a type gets.
+            DefaultFormsComponents.TryGetValue(type, out Type? component);
+#pragma warning restore CS0618
+            _types.Add(type);
+            _templates.Add(template);
+            _components.Add(component);
+        }
+
+        // True when every recorded type resolves to the same registration now. Allocates nothing.
+        internal bool StillResolvesTheSame()
+        {
+            for (int i = 0; i < _types.Count; i++)
+            {
+                DefaultFormsTemplates.TryGetValue(_types[i], out VisualTemplate? template);
+#pragma warning disable CS0618
+                DefaultFormsComponents.TryGetValue(_types[i], out Type? component);
+#pragma warning restore CS0618
+                if (!ReferenceEquals(template, _templates[i]) || component != _components[i])
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+    }
+
+    // The log that records the lookups made now, or null when nothing is recording.
+    internal static TemplateLookupLog? ActiveTemplateLookupLog;
+
+    /// <summary>
+    /// Which objects the active <c>Styling</c> is made of (the style and the Colors, NineSlice, Icons, Text and
+    /// sprite sheet it holds), by reference. The default visuals read them when they are built, so a caller that
+    /// keeps what it built compares this before reusing it (#7864). Values changed in place are not seen.
+    /// </summary>
+    internal readonly struct StyleIdentity : IEquatable<StyleIdentity>
+    {
+        private readonly object? _style;
+        private readonly object? _colors;
+        private readonly object? _nineSlice;
+        private readonly object? _icons;
+        private readonly object? _text;
+        private readonly object? _spriteSheet;
+
+        internal StyleIdentity(object? style, object? colors, object? nineSlice, object? icons, object? text, object? spriteSheet)
+        {
+            _style = style;
+            _colors = colors;
+            _nineSlice = nineSlice;
+            _icons = icons;
+            _text = text;
+            _spriteSheet = spriteSheet;
+        }
+
+        public bool Equals(StyleIdentity other) =>
+            ReferenceEquals(_style, other._style) && ReferenceEquals(_colors, other._colors)
+            && ReferenceEquals(_nineSlice, other._nineSlice) && ReferenceEquals(_icons, other._icons)
+            && ReferenceEquals(_text, other._text) && ReferenceEquals(_spriteSheet, other._spriteSheet);
+
+        public override bool Equals(object? obj) => obj is StyleIdentity other && Equals(other);
+
+        public override int GetHashCode() => _style?.GetHashCode() ?? 0;
+    }
+
+    // Set by Styling, which lives in the platform assemblies. Stays null, and every identity equal, in a host that
+    // never touches Styling.
+    internal static Func<StyleIdentity>? ReadActiveStyleIdentity;
+
+    internal static StyleIdentity GetActiveStyleIdentity() => ReadActiveStyleIdentity?.Invoke() ?? default;
 #endif
 
     protected static InteractiveGue? GetGraphicalUiElementFor(FrameworkElement element)
@@ -856,6 +946,9 @@ public class FrameworkElement : INotifyPropertyChanged
             "which constructs content without reflection.")]
     public static InteractiveGue? GetGraphicalUiElementForFrameworkElement(Type type)
     {
+#if !FRB
+        ActiveTemplateLookupLog?.Record(type);
+#endif
         if (DefaultFormsTemplates.ContainsKey(type))
         {
             return DefaultFormsTemplates[type].CreateContent(null, createFormsInternally:false) as InteractiveGue;
