@@ -1283,6 +1283,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
         {
             _cachedTextBlock = _hasMarkup ? GetTextBlock(effectiveWidth) : BuildReusedPlainTextBlock(effectiveWidth);
             _isCachedTextBlockUnbounded = effectiveWidth == null;
+            _hasUnboundedLineEndingInWhitespace = _isCachedTextBlockUnbounded && HasLineEndingInWhitespace(_layoutText);
         }
         return _cachedTextBlock;
     }
@@ -1290,13 +1291,43 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
     // True when _cachedTextBlock was laid out with no width limit.
     private bool _isCachedTextBlockUnbounded;
 
+    // True when that block has a line before the last that ends in whitespace.
+    private bool _hasUnboundedLineEndingInWhitespace;
+
+    /// <summary>
+    /// Whether a line of <paramref name="text"/> other than the last ends in whitespace. RichTextKit counts that
+    /// whitespace in the line's width in a block with no width limit and not in a block of a set width, so the two
+    /// differ in the measured width and in where center, right and right-to-left lines are placed.
+    /// </summary>
+    private static bool HasLineEndingInWhitespace(string? text)
+    {
+        if (text == null)
+        {
+            return false;
+        }
+
+        for (int i = 1; i < text.Length; i++)
+        {
+            if (IsLineBreak(text[i]) && !IsLineBreak(text[i - 1])
+                && (char.IsWhiteSpace(text[i - 1]) || char.GetUnicodeCategory(text[i - 1]) == System.Globalization.UnicodeCategory.Format))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static bool IsLineBreak(char c) =>
+        c == '\n' || c == '\r' || c == '\v' || c == '\f' || c == '\u0085' || c == '\u2028' || c == '\u2029';
+
     /// <summary>
     /// Whether the cached block, laid out with no width limit, is also the layout at <paramref name="width"/>.
     /// Layout measures a size-to-children text unbounded (<see cref="Width"/> null) and then sets
     /// <see cref="Width"/> to the measured width, on every layout. A block that fits wraps nowhere, so it is the
     /// layout at no limit, at a left-aligned width it fits in (#7818), and at exactly its measured width for any
-    /// alignment, where the lines are placed in a block as wide as the widest. A wider width places center and right
-    /// lines further over, so those lay out again.
+    /// alignment, as long as no line before the last ends in whitespace (<see cref="HasLineEndingInWhitespace"/>).
+    /// A wider width places center and right lines further over.
     /// </summary>
     private bool IsUnboundedBlockValidAtWidth(float? width)
     {
@@ -1308,6 +1339,11 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
         if (width == null)
         {
             return true;
+        }
+
+        if (_hasUnboundedLineEndingInWhitespace)
+        {
+            return false;
         }
 
         float measuredWidth = _cachedTextBlock.MeasuredWidth;
@@ -1586,7 +1622,8 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
         // one per frame (#7818). The full block changes with every input the reveal depends on.
         if (_revealBlock != null
             && ReferenceEquals(_revealBlockSource, fullBlock)
-            && _revealBlockLetters == MaxLettersToShow.Value)
+            && _revealBlockLetters == MaxLettersToShow.Value
+            && _revealBlockWidth == this.Width)
         {
             return _revealBlock;
         }
@@ -1608,12 +1645,14 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
         buffers.ReleaseVisibleRuns();
         _revealBlockSource = fullBlock;
         _revealBlockLetters = MaxLettersToShow.Value;
+        _revealBlockWidth = this.Width;
         return _revealBlock;
     }
 
     private TextBlock? _revealBlock;
     private TextBlock? _revealBlockSource;
     private int _revealBlockLetters;
+    private float? _revealBlockWidth;
 
 
     internal Style GetStyle() => BuildRunStyle(string.Empty, null).Style;
