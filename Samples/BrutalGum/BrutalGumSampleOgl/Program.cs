@@ -5,6 +5,7 @@
 //   BrutalGumSampleOgl --hidden --exit-after 5           same, invisible, closes after 5 seconds
 //   add --capture <png>      saves the window's pixels (glReadPixels on the default framebuffer) before exiting
 //   add --resize 900x500     resizes the window once, halfway through the run
+//   BrutalGumSampleOgl --hidden --batch-stats <txt>       appends each screen's same-image draw runs, then exits (#7826)
 using Brutal.GlfwApi;
 using Brutal.Numerics;
 using Gum;
@@ -44,6 +45,24 @@ try
     GumGallery gallery = new GumGallery();
     gallery.Build();
     gallery.LoadScreen(Math.Clamp(sample.Screen, 0, gallery.ScreenCount - 1)); // --screen, for unattended runs
+
+    // --batch-stats <file> (#7826): draws every gallery screen twice, appends its same-image draw runs, then exits.
+    string? batchStatsPath = args.SkipWhile(arg => arg != "--batch-stats").Skip(1).FirstOrDefault();
+    if (batchStatsPath != null)
+    {
+        for (int i = 0; i < gallery.ScreenCount; i++)
+        {
+            gallery.LoadScreen(i);
+            for (int frame = 0; frame < 2; frame++)
+            {
+                GumUI.Update(frame / 60.0);
+                GumUI.Draw();
+                window.SwapBuffers();
+            }
+            BatchStats.Append(batchStatsPath, gallery.GetScreenName(i));
+        }
+        return;
+    }
 
     Stopwatch clock = Stopwatch.StartNew();
     double previousSeconds = 0;

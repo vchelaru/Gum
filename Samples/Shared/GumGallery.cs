@@ -78,6 +78,11 @@ internal sealed class GumGallery
     /// <summary>The number of screens in the gallery: the gumx project's screens, then the code screens.</summary>
     public int ScreenCount => GumxScreenCount + codeScreens.Length;
 
+    /// <summary>The nav-strip label of the screen at <paramref name="index"/>.</summary>
+    public string GetScreenName(int index) => index < GumxScreenCount
+        ? ObjectFinder.Self.GumProjectSave!.Screens[index].Name
+        : codeScreens[index - GumxScreenCount].Name;
+
     /// <summary>Builds the tab bar, then shows the code screen named <paramref name="initialCodeScreenName"/>, or the first screen.</summary>
     public void Build(string? initialCodeScreenName = null)
     {
