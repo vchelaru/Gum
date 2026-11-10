@@ -227,12 +227,13 @@ public class SpriteRenderer
     internal bool IsColorTextureAlphaFogActive =>
         !Renderer.UseCustomEffectRendering && Renderer.UseBasicEffectRendering && basicEffect?.FogEnabled == true;
 
-    private readonly Dictionary<Gum.BlendState, Gum.BlendState> _premultipliedColorBlendStates = new();
+    // Weak keys, like XNAExtensions' cache, so a user BlendState that is dropped is not kept alive.
+    private readonly System.Runtime.CompilerServices.ConditionalWeakTable<Gum.BlendState, Gum.BlendState> _premultipliedColorBlendStates = new();
 
     // A blend whose color source factor is SourceAlpha, with One in its place, for output whose color is
     // already multiplied by alpha. Cached per source so a Begin allocates nothing (#7619), and rebuilt
     // when the source was edited since.
-    private Gum.BlendState? GetBlendStateForPremultipliedColor(Gum.BlendState? blendState)
+    internal Gum.BlendState? GetBlendStateForPremultipliedColor(Gum.BlendState? blendState)
     {
         if (blendState == null || blendState.ColorSourceBlend != Gum.Blend.SourceAlpha)
         {
@@ -240,20 +241,30 @@ public class SpriteRenderer
         }
 
         if (!_premultipliedColorBlendStates.TryGetValue(blendState, out var adjusted)
-            || adjusted.ColorBlendFunction != blendState.ColorBlendFunction
-            || adjusted.ColorDestinationBlend != blendState.ColorDestinationBlend
-            || adjusted.AlphaSourceBlend != blendState.AlphaSourceBlend
-            || adjusted.AlphaBlendFunction != blendState.AlphaBlendFunction
-            || adjusted.AlphaDestinationBlend != blendState.AlphaDestinationBlend
-            || adjusted.ColorWriteChannels != blendState.ColorWriteChannels)
+            || !IsSameApartFromColorSource(adjusted, blendState))
         {
             adjusted = blendState.Clone();
             adjusted.ColorSourceBlend = Gum.Blend.One;
-            _premultipliedColorBlendStates[blendState] = adjusted;
+            _premultipliedColorBlendStates.Remove(blendState);
+            _premultipliedColorBlendStates.Add(blendState, adjusted);
         }
 
         return adjusted;
     }
+
+    private static bool IsSameApartFromColorSource(Gum.BlendState a, Gum.BlendState b) =>
+        a.ColorBlendFunction == b.ColorBlendFunction
+        && a.ColorDestinationBlend == b.ColorDestinationBlend
+        && a.AlphaSourceBlend == b.AlphaSourceBlend
+        && a.AlphaBlendFunction == b.AlphaBlendFunction
+        && a.AlphaDestinationBlend == b.AlphaDestinationBlend
+        && a.ColorWriteChannels == b.ColorWriteChannels
+        && a.ColorWriteChannels1 == b.ColorWriteChannels1
+        && a.ColorWriteChannels2 == b.ColorWriteChannels2
+        && a.ColorWriteChannels3 == b.ColorWriteChannels3
+        && a.BlendFactor == b.BlendFactor
+        && a.MultiSampleMask == b.MultiSampleMask
+        && a.IndependentBlendEnable == b.IndependentBlendEnable;
 
     public void BeginSpriteBatch(RenderStateVariables renderStates, Layer layer, BeginType beginType, Camera camera, object? objectStartingSpriteBatch, Effect? effectOverride = null)
     {
