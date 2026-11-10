@@ -578,7 +578,9 @@ internal static class PixelDataTextureApplier
             return;
         }
 
-        Texture2D texture = Pool.GetOrCreate(owner,
+        Texture2D texture = Pool.GetOrCreate(
+            owner,
+            existing => existing.Width == width && existing.Height == height,
             () => new Texture2D(graphicsDevice, width, height, false, SurfaceFormat.Color));
 
         texture.SetData(rgba);

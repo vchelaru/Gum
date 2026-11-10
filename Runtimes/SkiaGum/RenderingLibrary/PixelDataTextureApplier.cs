@@ -2,6 +2,7 @@ using Gum.Wireframe;
 using RenderingLibrary.Content;
 using SkiaGum.Renderables;
 using SkiaSharp;
+using System;
 using System.Runtime.InteropServices;
 
 namespace RenderingLibrary;
@@ -42,7 +43,10 @@ internal static class PixelDataTextureApplier
             return;
         }
 
-        SKBitmap bitmap = Pool.GetOrCreate(owner, () => CreateBitmap(rgba, width, height));
+        SKBitmap bitmap = Pool.GetOrCreate(
+            owner,
+            existing => existing.Width == width && existing.Height == height,
+            () => CreateBitmap(rgba, width, height));
 
         Upload(bitmap, rgba);
         sprite.Texture = bitmap;
@@ -57,8 +61,17 @@ internal static class PixelDataTextureApplier
         return bitmap;
     }
 
-    private static void Upload(SKBitmap bitmap, byte[] rgba)
+    internal static void Upload(SKBitmap bitmap, byte[] rgba)
     {
+        // Marshal.Copy writes whatever it is told into the bitmap's native buffer, so a pixel array
+        // larger than the bitmap would corrupt the heap. Fail with a clear exception instead.
+        if (rgba.Length > bitmap.ByteCount)
+        {
+            throw new ArgumentException(
+                $"Pixel data is {rgba.Length} bytes but the {bitmap.Width}x{bitmap.Height} bitmap holds only {bitmap.ByteCount}.",
+                nameof(rgba));
+        }
+
         Marshal.Copy(rgba, 0, bitmap.GetPixels(), rgba.Length);
         bitmap.NotifyPixelsChanged();
     }
