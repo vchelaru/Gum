@@ -600,6 +600,167 @@ public class TabControlTests : BaseTestClass
 
     #endregion
 
+    #region Pages parented after the control is built
+
+    // A screen parents its TabItems into InnerPanelInstance and its TabPages into ContentPanelInstance
+    // after the TabControl exists (GumPreview), so the panels change at any time.
+
+    private static (TabControlVisual Visual, TabControl Control) CreateEmptyControl()
+    {
+        TabControlVisual visual = new TabControlVisual(tryCreateFormsObject: false);
+        return (visual, new TabControl(visual));
+    }
+
+    private static TabPageVisual[] AddPages(TabControlVisual visual, int count)
+    {
+        TabPageVisual[] pages = new TabPageVisual[count];
+        for (int i = 0; i < count; i++)
+        {
+            pages[i] = new TabPageVisual();
+            pages[i].Parent = visual.ContentPanelInstance;
+        }
+        return pages;
+    }
+
+    private static void AddTabs(TabControlVisual visual, int count)
+    {
+        for (int i = 0; i < count; i++)
+        {
+            new TabItemVisual().Parent = visual.InnerPanelInstance;
+        }
+    }
+
+    [Fact]
+    public void TabWithNoPage_ShouldGetAPlaceholderPage()
+    {
+        (TabControlVisual visual, TabControl tabControl) = CreateEmptyControl();
+
+        AddTabs(visual, 1);
+
+        tabControl.TabItems.Count.ShouldBe(1);
+        tabControl.Pages.Count.ShouldBe(1);
+        visual.ContentPanelInstance.Children.Count.ShouldBe(1);
+    }
+
+    [Fact]
+    public void PagesAddedAfterTabs_ShouldPairByPosition()
+    {
+        (TabControlVisual visual, TabControl tabControl) = CreateEmptyControl();
+        AddTabs(visual, 3);
+
+        TabPageVisual[] pages = AddPages(visual, 3);
+
+        tabControl.Pages.ShouldBe(pages.Select(p => p.FormsControl).ToArray());
+        visual.ContentPanelInstance.Children.Count.ShouldBe(3);
+
+        tabControl.SelectedIndex = 1;
+        pages.Select(p => p.Visible).ShouldBe(new[] { false, true, false });
+    }
+
+    [Fact]
+    public void PagesAddedBeforeTabs_ShouldPairByPosition()
+    {
+        (TabControlVisual visual, TabControl tabControl) = CreateEmptyControl();
+        TabPageVisual[] pages = AddPages(visual, 2);
+
+        AddTabs(visual, 2);
+
+        tabControl.Pages.ShouldBe(pages.Select(p => p.FormsControl).ToArray());
+        visual.ContentPanelInstance.Children.Count.ShouldBe(2);
+
+        tabControl.SelectedIndex = 0;
+        pages.Select(p => p.Visible).ShouldBe(new[] { true, false });
+    }
+
+    [Fact]
+    public void PageRemovedFromPanel_ShouldRepairPairingByPosition()
+    {
+        (TabControlVisual visual, TabControl tabControl) = CreateEmptyControl();
+        AddTabs(visual, 3);
+        TabPageVisual[] pages = AddPages(visual, 3);
+
+        pages[1].Parent = null;
+
+        tabControl.Pages.Count.ShouldBe(3);
+        tabControl.Pages[0].ShouldBe(pages[0].FormsControl);
+        tabControl.Pages[1].ShouldBe(pages[2].FormsControl);
+        tabControl.Pages.ShouldNotContain(pages[1].FormsControl);
+        visual.ContentPanelInstance.Children.Count.ShouldBe(3);
+
+        tabControl.SelectedIndex = 1;
+        pages[2].Visible.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void PageMovedInPanel_ShouldRepairPairingByPosition()
+    {
+        (TabControlVisual visual, TabControl tabControl) = CreateEmptyControl();
+        AddTabs(visual, 3);
+        TabPageVisual[] pages = AddPages(visual, 3);
+
+        visual.ContentPanelInstance.Children.Move(0, 2);
+
+        tabControl.Pages.ShouldBe(new[] { pages[1].FormsControl, pages[2].FormsControl, pages[0].FormsControl });
+        tabControl.SelectedIndex = 0;
+        pages.Select(p => p.Visible).ShouldBe(new[] { false, true, false });
+    }
+
+    [Fact]
+    public void OnlyPageRemoved_ShouldLeaveTheTabWithAPlaceholder()
+    {
+        (TabControlVisual visual, TabControl tabControl) = CreateEmptyControl();
+        AddTabs(visual, 1);
+        TabPageVisual page = AddPages(visual, 1)[0];
+
+        page.Parent = null;
+
+        tabControl.Pages.Count.ShouldBe(1);
+        tabControl.Pages[0].ShouldNotBe(page.FormsControl);
+        visual.ContentPanelInstance.Children.Count.ShouldBe(1);
+    }
+
+    [Fact]
+    public void PagesAddedAfterPagesWereRead_ShouldReplacePlaceholders()
+    {
+        (TabControlVisual visual, TabControl tabControl) = CreateEmptyControl();
+        AddTabs(visual, 2);
+        tabControl.Pages.Count.ShouldBe(2);
+        visual.ContentPanelInstance.Children.Count.ShouldBe(2);
+
+        TabPageVisual[] pages = AddPages(visual, 2);
+
+        tabControl.Pages.ShouldBe(pages.Select(p => p.FormsControl).ToArray());
+        visual.ContentPanelInstance.Children.ToArray().ShouldBe(pages);
+    }
+
+    [Fact]
+    public void TabItemWithoutContentAddedToItems_ShouldGetAPlaceholderPageAtOnce()
+    {
+        TabControl tabControl = new TabControl();
+
+        tabControl.Items!.Add(new TabItem { Header = "Empty" });
+
+        tabControl.ContentPanel!.Children.Count.ShouldBe(1);
+        tabControl.Pages.Single().Visual.Parent.ShouldBe(tabControl.ContentPanel);
+    }
+
+    [Fact]
+    public void PagesAddedAfterVisualSwap_ShouldPairWithTheNewPanelOnly()
+    {
+        TabControlVisual first = new TabControlVisual(tryCreateFormsObject: false);
+        TabControl tabControl = new TabControl(first);
+        TabControlVisual second = new TabControlVisual(tryCreateFormsObject: false);
+        tabControl.Visual = second;
+        AddTabs(second, 1);
+
+        TabPageVisual page = AddPages(second, 1)[0];
+        AddPages(first, 1);
+
+        tabControl.Pages.ShouldBe(new[] { page.FormsControl });
+    }
+
+    #endregion
+
     #region Input
 
     private static Mock<IInputReceiverKeyboardMonoGame> CreateKeyboardTyping(Gum.Forms.Input.Keys key)

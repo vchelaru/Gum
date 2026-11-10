@@ -101,6 +101,11 @@ internal static class BehaviorFormsPropertyApplier
                 continue;
             }
 
+            if (!authoredOverridesOnly && formsControl.TryDeferDesignDefault(declaration.Name, value))
+            {
+                continue;
+            }
+
             TrySet(formsControl, formsType, declaration.Name, value);
         }
 

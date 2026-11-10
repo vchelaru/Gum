@@ -32,12 +32,24 @@ public class TabControl : ItemsControl
     private readonly List<TabPage> _authoredPages = new List<TabPage>();
     // Every page adopted from a Visual. The Visual owns these, so a Visual swap leaves them in place.
     private readonly HashSet<TabPage> _visualOwnedPages = new HashSet<TabPage>();
+    // Pages this control made for tabs with no page of their own. A page that appears in the content
+    // panel replaces one.
+    private readonly HashSet<TabPage> _placeholderPages = new HashSet<TabPage>();
+    // Placeholders a page replaced while the content panel was raising its change event, which cannot be
+    // edited then. They stay hidden until the next flush takes them out of the panel.
+    private readonly List<TabPage> _replacedPlaceholders = new List<TabPage>();
 
     private GraphicalUiElement? _contentPanel;
     private bool _isSyncingSelection;
     private bool _isReactingToVisual;
+    // True while this control edits the content panel itself, so its change event is not read as an outside edit.
+    private bool _isEditingContentPanel;
+    private bool _isHandlingContentPanelEvent;
     // What a bound view model was last given: the empty control's -1 and null until the first push.
     private int _lastPushedSelectedIndex = -1;
+    // The SelectedIndex a project defines (the behavior's declared 0), waiting for the tabs the owning
+    // screen parents into the strip after this control is built. Any other selection change drops it.
+    private int? _deferredDefaultSelectedIndex;
     private object? _lastPushedSelectedObject;
 
     /// <summary>The tab headers, in strip order.</summary>
@@ -48,6 +60,7 @@ public class TabControl : ItemsControl
     {
         get
         {
+            FlushContentPanelEdits();
             List<TabPage> pages = new List<TabPage>(_tabItems.Count);
             foreach (TabItem tab in _tabItems)
             {
@@ -61,7 +74,14 @@ public class TabControl : ItemsControl
     }
 
     /// <summary>The container that holds the pages, found by the name ContentPanelInstance.</summary>
-    public GraphicalUiElement? ContentPanel => _contentPanel;
+    public GraphicalUiElement? ContentPanel
+    {
+        get
+        {
+            FlushContentPanelEdits();
+            return _contentPanel;
+        }
+    }
 
     VisualTemplate? _contentTemplate;
 
@@ -158,6 +178,7 @@ public class TabControl : ItemsControl
         object? selectedData = _selection.Count > 0 ? _selection.SelectedRows[0].DataObject : null;
         bool hadSelection = _selection.Count > 0;
 
+        UnsubscribeFromContentPanel();
         _contentPanel = Visual.GetGraphicalUiElementByName(ContentPanelInstanceName);
         _authoredPages.Clear();
         if (_contentPanel != null)
@@ -188,10 +209,17 @@ public class TabControl : ItemsControl
             {
                 if (!IsPageInUse(page))
                 {
-                    page.Visual.Parent = null;
+                    RunContentPanelEdit(() => page.Visual.Parent = null);
                 }
             }
         }
+
+        if (_contentPanel != null)
+        {
+            _contentPanel.Children.CollectionChanged += HandleContentPanelCollectionChanged;
+        }
+        // Tabs added in code above may take pages the Visual authored.
+        PairPagesFromContentPanel();
 
         if (hadSelection)
         {
@@ -210,6 +238,21 @@ public class TabControl : ItemsControl
             }
         }
         PushSelectionIfChanged();
+    }
+
+    /// <inheritdoc/>
+    protected override void ReactToVisualRemoved()
+    {
+        base.ReactToVisualRemoved();
+        UnsubscribeFromContentPanel();
+    }
+
+    private void UnsubscribeFromContentPanel()
+    {
+        if (_contentPanel != null)
+        {
+            _contentPanel.Children.CollectionChanged -= HandleContentPanelCollectionChanged;
+        }
     }
 
     private bool IsPageInUse(TabPage page)
@@ -343,7 +386,11 @@ public class TabControl : ItemsControl
                     return page;
                 }
             default:
-                return new TabPage();
+                {
+                    TabPage placeholder = new TabPage();
+                    _placeholderPages.Add(placeholder);
+                    return placeholder;
+                }
         }
     }
 
@@ -355,8 +402,13 @@ public class TabControl : ItemsControl
     {
         if (newItem is TabItem tab)
         {
+            // A tab put straight into the strip (not through Items) is the Visual owner's, who parents its
+            // pages into the content panel too, so it gets no placeholder until the control is read.
+            bool isParentedByVisualOwner = tab.DataObject == null && Items?.Contains(tab) != true;
             tab.DataObject ??= tab;
-            InsertTab(tab, CountTabItemsInPanelBefore(newItemIndex));
+            InsertTab(tab, CountTabItemsInPanelBefore(newItemIndex), createPage: !isParentedByVisualOwner);
+            // A tab with no page of its own takes a page the content panel already holds.
+            PairPagesFromContentPanel();
         }
     }
 
@@ -368,14 +420,37 @@ public class TabControl : ItemsControl
         PushSelectionIfChanged();
     }
 
-    private void InsertTab(TabItem tab, int tabIndex)
+    /// <inheritdoc/>
+    internal override bool TryDeferDesignDefault(string propertyName, object value)
+    {
+        if (propertyName != nameof(SelectedIndex) || value is not int index || index < _tabItems.Count)
+        {
+            return false;
+        }
+
+        _deferredDefaultSelectedIndex = index;
+        return true;
+    }
+
+    private void InsertTab(TabItem tab, int tabIndex, bool createPage = true)
     {
         _tabItems.Insert(tabIndex, tab);
         tab.IsSelectedChangedInternal += HandleTabIsSelectedChanged;
 
-        tab.Page ??= CreatePage(tab);
-        tab.Page.IsSelected = tab.IsSelected;
-        PlacePage(tab.Page, tabIndex);
+        if (createPage)
+        {
+            tab.Page ??= CreatePage(tab);
+        }
+        if (tab.Page != null)
+        {
+            tab.Page.IsSelected = tab.IsSelected;
+            PlacePage(tab.Page, tabIndex);
+        }
+
+        if (_deferredDefaultSelectedIndex is int deferred && deferred < _tabItems.Count)
+        {
+            SelectTab(_tabItems[deferred]);
+        }
     }
 
     /// <summary>Puts the page in the content panel before the page of the next tab that has one there.</summary>
@@ -396,8 +471,26 @@ public class TabControl : ItemsControl
                 break;
             }
         }
-        _contentPanel.Children.Insert(insertAt, page.Visual);
-        page.Visual.Parent = _contentPanel;
+        GraphicalUiElement contentPanel = _contentPanel;
+        RunContentPanelEdit(() =>
+        {
+            contentPanel.Children.Insert(insertAt, page.Visual);
+            page.Visual.Parent = contentPanel;
+        });
+    }
+
+    private void RunContentPanelEdit(Action edit)
+    {
+        bool wasEditing = _isEditingContentPanel;
+        _isEditingContentPanel = true;
+        try
+        {
+            edit();
+        }
+        finally
+        {
+            _isEditingContentPanel = wasEditing;
+        }
     }
 
     private int CountTabItemsInPanelBefore(int panelIndex)
@@ -434,7 +527,11 @@ public class TabControl : ItemsControl
         if (page != null && (detachVisualOwnedPage || !_visualOwnedPages.Contains(page)) &&
             page.Visual.Parent == _contentPanel && _contentPanel != null)
         {
-            page.Visual.Parent = null;
+            RunContentPanelEdit(() => page.Visual.Parent = null);
+        }
+        if (page != null)
+        {
+            _placeholderPages.Remove(page);
         }
         if (page != null && _visualOwnedPages.Contains(page))
         {
@@ -499,7 +596,8 @@ public class TabControl : ItemsControl
 
     private void ReorderPages()
     {
-        if (_contentPanel == null)
+        GraphicalUiElement? contentPanel = _contentPanel;
+        if (contentPanel == null)
         {
             return;
         }
@@ -511,9 +609,9 @@ public class TabControl : ItemsControl
         foreach (TabItem tab in _tabItems)
         {
             GraphicalUiElement? pageVisual = tab.Page?.Visual;
-            if (pageVisual != null && pageVisual.Parent == _contentPanel)
+            if (pageVisual != null && pageVisual.Parent == contentPanel)
             {
-                slots.Add(_contentPanel.Children.IndexOf(pageVisual));
+                slots.Add(contentPanel.Children.IndexOf(pageVisual));
                 pagesInTabOrder.Add(pageVisual);
             }
         }
@@ -521,10 +619,156 @@ public class TabControl : ItemsControl
 
         for (int i = 0; i < pagesInTabOrder.Count; i++)
         {
-            int currentIndex = _contentPanel.Children.IndexOf(pagesInTabOrder[i]);
-            if (currentIndex != slots[i])
+            int currentIndex = contentPanel.Children.IndexOf(pagesInTabOrder[i]);
+            int targetIndex = slots[i];
+            if (currentIndex != targetIndex)
             {
-                _contentPanel.Children.Move(currentIndex, slots[i]);
+                RunContentPanelEdit(() => contentPanel.Children.Move(currentIndex, targetIndex));
+            }
+        }
+    }
+
+    #endregion
+
+    #region Pages in the content panel
+
+    // A screen parents its pages into the content panel at any time, so the pages the Visual authored
+    // are re-paired by position whenever the panel or the tabs change.
+
+    private void HandleContentPanelCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
+    {
+        if (_isEditingContentPanel || _isReactingToVisual)
+        {
+            return;
+        }
+
+        _isHandlingContentPanelEvent = true;
+        try
+        {
+            PairPagesFromContentPanel();
+        }
+        finally
+        {
+            _isHandlingContentPanelEvent = false;
+        }
+    }
+
+    /// <summary>
+    /// Pairs the tabs that have no page of their own (a placeholder, or a page the Visual authored) with
+    /// the TabPages in the content panel, in panel order. A tab whose page left the panel has none until
+    /// <see cref="FlushContentPanelEdits"/> makes it a placeholder, and a page with no tab to take it stays in the panel unpaired. Pages a data
+    /// item or a tab's Content made are never touched.
+    /// </summary>
+    private void PairPagesFromContentPanel()
+    {
+        GraphicalUiElement? contentPanel = _contentPanel;
+        if (contentPanel == null || _isEditingContentPanel || _isReactingToVisual)
+        {
+            return;
+        }
+
+        List<TabItem> pagelessTabs = new List<TabItem>();
+        HashSet<TabPage> explicitPages = new HashSet<TabPage>();
+        foreach (TabItem tab in _tabItems)
+        {
+            bool isDataBacked = !ReferenceEquals(tab.DataObject, tab);
+            if (tab.Page == null || (!isDataBacked &&
+                (_placeholderPages.Contains(tab.Page) || _visualOwnedPages.Contains(tab.Page))))
+            {
+                pagelessTabs.Add(tab);
+            }
+            else
+            {
+                explicitPages.Add(tab.Page);
+            }
+        }
+
+        List<TabPage> panelPages = new List<TabPage>();
+        foreach (GraphicalUiElement child in contentPanel.Children)
+        {
+            if (child is InteractiveGue { FormsControlAsObject: TabPage page } &&
+                !explicitPages.Contains(page) && !_placeholderPages.Contains(page) &&
+                !_replacedPlaceholders.Contains(page))
+            {
+                panelPages.Add(page);
+            }
+        }
+
+        RunContentPanelEdit(() =>
+        {
+            for (int i = 0; i < pagelessTabs.Count; i++)
+            {
+                TabItem tab = pagelessTabs[i];
+                TabPage? wanted = i < panelPages.Count ? panelPages[i] : null;
+                if (wanted == tab.Page && wanted != null)
+                {
+                    continue;
+                }
+
+                if (wanted != null)
+                {
+                    if (tab.Page != null && _placeholderPages.Remove(tab.Page))
+                    {
+                        tab.Page.IsSelected = false;
+                        _replacedPlaceholders.Add(tab.Page);
+                    }
+                    tab.Page = wanted;
+                    _visualOwnedPages.Add(wanted);
+                    wanted.IsSelected = tab.IsSelected;
+                }
+                else if (tab.Page == null || !_placeholderPages.Contains(tab.Page))
+                {
+                    // Its page left the panel: it has none until the flush makes a placeholder.
+                    tab.Page = null;
+                }
+            }
+        });
+
+        _visualOwnedPages.RemoveWhere(page => !contentPanel.Children.Contains(page.Visual) || !IsPageInUse(page));
+        // A page no tab took (or lost its tab) has no selection to show.
+        foreach (TabPage page in panelPages)
+        {
+            if (!IsPageInUse(page))
+            {
+                page.IsSelected = false;
+            }
+        }
+    }
+
+    /// <summary>
+    /// Takes the placeholders a page replaced out of the content panel, makes a placeholder for every tab
+    /// still without a page and puts the placeholders into the panel. A change event of the panel cannot
+    /// edit the panel, and a screen parents its pages after its tabs, so those edits wait here until the
+    /// control is next read or changed.
+    /// </summary>
+    private void FlushContentPanelEdits()
+    {
+        GraphicalUiElement? contentPanel = _contentPanel;
+        if (contentPanel == null || _isEditingContentPanel || _isHandlingContentPanelEvent || _isReactingToVisual)
+        {
+            return;
+        }
+
+        foreach (TabPage replaced in _replacedPlaceholders)
+        {
+            if (replaced.Visual.Parent == contentPanel)
+            {
+                RunContentPanelEdit(() => replaced.Visual.Parent = null);
+            }
+        }
+        _replacedPlaceholders.Clear();
+
+        for (int i = 0; i < _tabItems.Count; i++)
+        {
+            TabItem tab = _tabItems[i];
+            if (tab.Page == null)
+            {
+                tab.Page = CreatePage(tab);
+                tab.Page.IsSelected = tab.IsSelected;
+            }
+            if (_placeholderPages.Contains(tab.Page))
+            {
+                PlacePage(tab.Page, i);
             }
         }
     }
@@ -535,6 +779,8 @@ public class TabControl : ItemsControl
 
     private void SelectTab(TabItem? tab)
     {
+        _deferredDefaultSelectedIndex = null;
+        FlushContentPanelEdits();
         bool isAlreadyTheSelection = tab == null
             ? _selection.Count == 0
             : _selection.Count == 1 && _selection.Contains(tab);
@@ -564,6 +810,7 @@ public class TabControl : ItemsControl
         }
 
         // The tab already flipped its own IsSelected, so it is reported here rather than by the sync.
+        _deferredDefaultSelectedIndex = null;
         SelectionChangedEventArgs args = new SelectionChangedEventArgs();
         if (tab.IsSelected && !_selection.Contains(tab))
         {
