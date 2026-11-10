@@ -2,6 +2,7 @@ using Gum.Wireframe;
 using RenderingLibrary.Content;
 using SkiaGum.Renderables;
 using SkiaSharp;
+using System;
 using System.Runtime.InteropServices;
 
 namespace RenderingLibrary;
@@ -19,6 +20,8 @@ internal static class PixelDataTextureApplier
 
     public static void ApplyCached(GraphicalUiElement target, string cacheKey, byte[] rgba, int width, int height)
     {
+        PixelDataValidation.EnsureRgbaLength(rgba, width, height);
+
         if (target?.RenderableComponent is not Sprite sprite)
         {
             return;
@@ -37,12 +40,17 @@ internal static class PixelDataTextureApplier
 
     public static void ApplyPooled(GraphicalUiElement target, GraphicalUiElement owner, byte[] rgba, int width, int height)
     {
+        PixelDataValidation.EnsureRgbaLength(rgba, width, height);
+
         if (target?.RenderableComponent is not Sprite sprite)
         {
             return;
         }
 
-        SKBitmap bitmap = Pool.GetOrCreate(owner, () => CreateBitmap(rgba, width, height));
+        SKBitmap bitmap = Pool.GetOrCreate(
+            owner,
+            existing => existing.Width == width && existing.Height == height,
+            () => CreateBitmap(rgba, width, height));
 
         Upload(bitmap, rgba);
         sprite.Texture = bitmap;
@@ -57,9 +65,26 @@ internal static class PixelDataTextureApplier
         return bitmap;
     }
 
-    private static void Upload(SKBitmap bitmap, byte[] rgba)
+    internal static void Upload(SKBitmap bitmap, byte[] rgba)
     {
+        EnsureFits(bitmap.ByteCount, rgba.Length);
+
         Marshal.Copy(rgba, 0, bitmap.GetPixels(), rgba.Length);
         bitmap.NotifyPixelsChanged();
+    }
+
+    /// <summary>
+    /// Marshal.Copy writes whatever it is told into the bitmap's native buffer, so a pixel array larger
+    /// than the bitmap would corrupt the heap. This is the check that stops it, kept free of any bitmap
+    /// so it can be tested with plain numbers.
+    /// </summary>
+    internal static void EnsureFits(long bitmapByteCount, int dataLength)
+    {
+        if (dataLength > bitmapByteCount)
+        {
+            throw new ArgumentException(
+                $"Pixel data is {dataLength} bytes but the bitmap holds only {bitmapByteCount}.",
+                "rgba");
+        }
     }
 }
