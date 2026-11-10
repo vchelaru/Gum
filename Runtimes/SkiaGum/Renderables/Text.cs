@@ -1882,10 +1882,12 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
     /// <summary>How many one-glyph probes have been laid out, so tests can assert a font is probed once.</summary>
     internal static int FontLineMetricsProbeCount => System.Threading.Volatile.Read(ref _fontLineMetricsProbeCount);
 
-    private static FontLineMetrics GetFontLineMetrics(Style style)
+    private static FontLineMetrics GetFontLineMetrics(Style style) =>
+        GetFontLineMetrics(new FontLineMetricsKey(style.FontFamily, style.FontSize, style.FontWeight, style.FontItalic));
+
+    private static FontLineMetrics GetFontLineMetrics(FontLineMetricsKey key)
     {
         FontLineMetricsCache cache = _fontLineMetricsCaches.GetValue(FontMapper.Default, static _ => new FontLineMetricsCache());
-        var key = new FontLineMetricsKey(style.FontFamily, style.FontSize, style.FontWeight, style.FontItalic);
         lock (cache)
         {
             int version = Content.Fonts.GumFontMapper.RegistrationVersion;
@@ -1900,7 +1902,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
                 return cached;
             }
 
-            FontLineMetrics metrics = ProbeFontLineMetrics(style);
+            FontLineMetrics metrics = ProbeFontLineMetrics(key);
             if (cache.Entries.Count >= MaxCachedFontLineMetrics)
             {
                 cache.Entries.Clear();
@@ -1910,7 +1912,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
         }
     }
 
-    private static FontLineMetrics ProbeFontLineMetrics(Style style)
+    private static FontLineMetrics ProbeFontLineMetrics(FontLineMetricsKey key)
     {
         System.Threading.Interlocked.Increment(ref _fontLineMetricsProbeCount);
 
@@ -1918,10 +1920,10 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
         var probe = new TextBlock();
         probe.AddText("x", new Style()
         {
-            FontFamily = style.FontFamily,
-            FontSize = style.FontSize,
-            FontWeight = style.FontWeight,
-            FontItalic = style.FontItalic,
+            FontFamily = key.Family,
+            FontSize = key.Size,
+            FontWeight = key.Weight,
+            FontItalic = key.Italic,
         });
         return probe.FontRuns.Count == 0
             ? default
@@ -1936,16 +1938,16 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
     /// <paramref name="lineHeightFactor"/> times the plain line height of <paramref name="style"/>, matching the
     /// other runtimes. A factor of 1 is already exact and is returned untouched.
     /// </summary>
-    /// <param name="style">The run's style; its own <see cref="Style.LineHeight"/> must still be the default 1.</param>
-    /// <param name="lineHeightFactor">The wanted line height in plain lines of <paramref name="style"/>.</param>
-    private static float GetLeadingCompensatedLineHeight(Style style, float lineHeightFactor)
+    /// <param name="font">The run's font.</param>
+    /// <param name="lineHeightFactor">The wanted line height in plain lines of <paramref name="font"/>.</param>
+    private static float GetLeadingCompensatedLineHeight(FontLineMetricsKey font, float lineHeightFactor)
     {
         if (lineHeightFactor == 1 || float.IsNaN(lineHeightFactor) || float.IsInfinity(lineHeightFactor))
         {
             return lineHeightFactor;
         }
 
-        FontLineMetrics metrics = GetFontLineMetrics(style);
+        FontLineMetrics metrics = GetFontLineMetrics(font);
         if (!metrics.IsValid)
         {
             return lineHeightFactor;
@@ -2066,17 +2068,44 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
     }
 
     /// <summary>A copy of a style built by <see cref="BuildRunStyle"/> with another <see cref="Style.LineHeight"/>.</summary>
-    private static Style WithLineHeight(Style style, float lineHeight) => new Style()
+    private Style WithLineHeight(Style style, float lineHeight) => GetCachedStyle(new StyleKey(
+        style.FontFamily, style.FontSize, style.TextColor, style.FontItalic, style.FontWeight, style.HaloWidth, style.HaloColor, lineHeight));
+
+    /// <summary>The values of a <see cref="Style"/> this Text builds.</summary>
+    private readonly record struct StyleKey(string? FontFamily, float FontSize, SKColor TextColor, bool FontItalic,
+        int FontWeight, float HaloWidth, SKColor HaloColor, float LineHeight);
+
+    // Text that changes every frame builds the same few styles again on each change, so they are kept by value and
+    // shared by the blocks built from them (#7818). Nothing changes a Style once it is built, so sharing one is safe.
+    private Dictionary<StyleKey, Style> _styleCache = new();
+    private const int MaxCachedStyles = 64;
+
+    private Style GetCachedStyle(StyleKey key)
     {
-        FontFamily = style.FontFamily,
-        FontSize = style.FontSize,
-        TextColor = style.TextColor,
-        FontItalic = style.FontItalic,
-        FontWeight = style.FontWeight,
-        HaloWidth = style.HaloWidth,
-        HaloColor = style.HaloColor,
-        LineHeight = lineHeight,
-    };
+        if (_styleCache.TryGetValue(key, out Style? cached))
+        {
+            return cached;
+        }
+
+        if (_styleCache.Count >= MaxCachedStyles)
+        {
+            _styleCache.Clear();
+        }
+
+        var style = new Style()
+        {
+            FontFamily = key.FontFamily,
+            FontSize = key.FontSize,
+            TextColor = key.TextColor,
+            FontItalic = key.FontItalic,
+            FontWeight = key.FontWeight,
+            HaloWidth = key.HaloWidth,
+            HaloColor = key.HaloColor,
+            LineHeight = key.LineHeight,
+        };
+        _styleCache[key] = style;
+        return style;
+    }
 
     /// <summary>
     /// Builds the RichTextKit <see cref="Style"/> for one run: the base font/color/weight/italic from
@@ -2186,13 +2215,21 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
             }
         }
 
-        var style = new Style()
-        {
-            FontFamily = fontFamily,
-            FontSize = fontSizePixels * (float)GlobalTextScale * fontScale,
-            TextColor = color,
-            FontItalic = italic,
-            FontWeight = weight,
+        float scaledFontSize = fontSizePixels * (float)GlobalTextScale * fontScale;
+
+        // Style.LineHeight multiplies a run's ascent and descent but not its leading, so the factor is
+        // adjusted until the line is exactly the multiplier times a plain line of this run (#6467). In text with a
+        // size or font run, every factor is replaced line by line in FitRunsToLines (#6475).
+        float lineHeight = isSizeRun
+            ? GetSizeRunLineHeightMultiplier(fontSizePixels * fontScale / FontSize)
+            : GetLeadingCompensatedLineHeight(new FontLineMetricsKey(fontFamily, scaledFontSize, weight, italic), LineHeightMultiplier);
+
+        Style style = GetCachedStyle(new StyleKey(
+            fontFamily,
+            scaledFontSize,
+            color,
+            italic,
+            weight,
             // HaloWidth is a stroke centered on the glyph edge, so at width N the fill covers the
             // inner half and only ~N/2 shows -- doubled here so the requested thickness shows in
             // full outward. That doubling used to hit RichTextKit's hardcoded miter join and spike
@@ -2202,21 +2239,14 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
             // possible (issue #4037) -- RichTextKit paints per-run halo natively in one pass.
             // The thickness is stretched by the scale the glyphs get (GlobalTextScale and the run's FontScale)
             // and not by FontSize, as on MonoGame and Raylib where the outline is baked into the font (#6669).
-            HaloWidth = outlineThickness > 0 ? outlineThickness * 2f * (float)GlobalTextScale * fontScale : 0f,
+            outlineThickness > 0 ? outlineThickness * 2f * (float)GlobalTextScale * fontScale : 0f,
             // RichTextKit's halo gate (`Style.HaloColor != SKColor.Empty`) ignores HaloWidth, and a
             // Stroke-style SKPaint with StrokeWidth 0 draws as a 1px hairline instead of nothing -- so
             // passing OutlineColor through unconditionally drew a thin outline on every glyph whenever
             // OutlineColor was non-transparent, even with no outline requested (issue #4077 follow-up).
             // Suppress to Empty whenever there's no actual outline thickness.
-            HaloColor = outlineThickness > 0 ? OutlineColor : SKColor.Empty,
-        };
-
-        // Style.LineHeight multiplies a run's ascent and descent but not its leading, so the factor is
-        // adjusted until the line is exactly the multiplier times a plain line of this run (#6467). In text with a
-        // size or font run, every factor is replaced line by line in FitRunsToLines (#6475).
-        style.LineHeight = isSizeRun
-            ? GetSizeRunLineHeightMultiplier(fontSizePixels * fontScale / FontSize)
-            : GetLeadingCompensatedLineHeight(style, LineHeightMultiplier);
+            outlineThickness > 0 ? OutlineColor : SKColor.Empty,
+            lineHeight));
 
         return (style, text, letter, isSizeRun || isFontRun);
     }
@@ -2619,6 +2649,8 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
         // MemberwiseClone shares the list reference; give the clone its own copy so re-parsing markup
         // on one instance (via RawText) doesn't mutate the other's inline-styling runs (issue #3679).
         newInstance._inlineVariables = new List<InlineVariable>(_inlineVariables);
+        // A Dictionary is not safe to share between Texts that may be built on different threads.
+        newInstance._styleCache = new Dictionary<StyleKey, Style>();
 
         return newInstance;
     }
