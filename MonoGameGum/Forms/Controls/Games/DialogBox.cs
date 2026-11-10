@@ -207,10 +207,7 @@ public class DialogBox : FrameworkElement, IInputReceiver
 
     public void Show(IEnumerable<string> pages, Layer? frbLayer = null)
     {
-#pragma warning disable CS0618 // DialogBox's layer overloads are built on the obsolete Show(Layer)
-        base.Show(frbLayer);
-#pragma warning restore CS0618
-        EnsureVisualInRoot();
+        ShowVisual(frbLayer);
 
         Pages.Clear();
 #if FRB
@@ -241,6 +238,16 @@ public class DialogBox : FrameworkElement, IInputReceiver
     // pump (GumService.Update -> Root.AnimateSelf) only walks Root.Children, so
     // without this the typewriter (IUpdateEveryFrame.Activity) never ticks.
     // Skipped under FRB — that runtime has its own pump path via base.Show.
+    // Parents first, so base.Show sees a managed ancestor and does not also register the
+    // renderable as a top-level layer item, which would draw the dialog twice.
+    private void ShowVisual(Layer? frbLayer)
+    {
+        EnsureVisualInRoot();
+#pragma warning disable CS0618 // DialogBox's layer overloads are built on the obsolete Show(Layer)
+        base.Show(frbLayer);
+#pragma warning restore CS0618
+    }
+
     private void EnsureVisualInRoot()
     {
 #if !FRB
@@ -268,10 +275,7 @@ public class DialogBox : FrameworkElement, IInputReceiver
 
     public async Task ShowAsync(IEnumerable<string> pages, Layer? frbLayer = null)
     {
-#pragma warning disable CS0618 // DialogBox's layer overloads are built on the obsolete Show(Layer)
-        base.Show(frbLayer);
-#pragma warning restore CS0618
-        EnsureVisualInRoot();
+        ShowVisual(frbLayer);
 
         Pages.Clear();
 #if FRB
@@ -296,10 +300,7 @@ public class DialogBox : FrameworkElement, IInputReceiver
 
     public async Task ShowAsync(IEnumerable<DialogPageTask> pageTasks, Layer? frbLayer = null)
     {
-#pragma warning disable CS0618 // DialogBox's layer overloads are built on the obsolete Show(Layer)
-        base.Show(frbLayer);
-#pragma warning restore CS0618
-        EnsureVisualInRoot();
+        ShowVisual(frbLayer);
 
         Pages.Clear();
 #if FRB
