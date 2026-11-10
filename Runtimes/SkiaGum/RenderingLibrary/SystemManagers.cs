@@ -349,7 +349,7 @@ namespace RenderingLibrary
             using var stream = ToolsUtilities.FileManager.GetStreamFromEmbeddedResource(assembly,
                 $"{AssemblyPrefix}.{embeddedTexture2dName}");
 
-            Texture2D texture = Texture2D.Decode(stream);
+            Texture2D texture = global::SkiaGum.Content.SharedTexture.MarkShared(Texture2D.Decode(stream));
 
             var resourceName = $"{AssemblyPrefix}.{embeddedTexture2dName}";
             Content.LoaderManager.Self.AddDisposable($"EmbeddedResource.{resourceName}", texture,
