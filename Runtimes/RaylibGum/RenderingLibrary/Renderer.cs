@@ -166,6 +166,17 @@ public class Renderer : IRenderer
     public Gum.Renderables.ColorOperationShader AddColorOperationShader { get; }
 
     /// <summary>
+    /// The shader a sprite or nine-slice binds for <paramref name="colorOperation"/>, or null for
+    /// Modulate (the default), which draws unshaded.
+    /// </summary>
+    public Gum.Renderables.ColorOperationShader? GetColorOperationShader(ColorOperation colorOperation) => colorOperation switch
+    {
+        ColorOperation.ColorTextureAlpha => ColorTextureAlphaShader,
+        ColorOperation.Add => AddColorOperationShader,
+        _ => null,
+    };
+
+    /// <summary>
     /// Per-frame render-state-change counters for this renderer, including the authoritative
     /// <see cref="RenderStateChangeStatistics.DrawCallCount"/> measured via the owned RenderBatch.
     /// Reset at the start of each <see cref="Draw(SystemManagers)"/> and readable afterward to

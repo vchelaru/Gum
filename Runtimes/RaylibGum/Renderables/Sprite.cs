@@ -218,12 +218,7 @@ public class Sprite : InvisibleRenderable, IAspectRatio, ITextureCoordinate, IAn
         // path below. The shaders' non-premultiplied output composites like a normal Modulate draw,
         // on screen and inside a render-target bake. Modulate (the default) draws unshaded.
         var renderer = global::RenderingLibrary.Graphics.Renderer.Self;
-        Gum.Renderables.ColorOperationShader? colorOperationShader = ColorOperation switch
-        {
-            ColorOperation.ColorTextureAlpha => renderer.ColorTextureAlphaShader,
-            ColorOperation.Add => renderer.AddColorOperationShader,
-            _ => null,
-        };
+        Gum.Renderables.ColorOperationShader? colorOperationShader = renderer.GetColorOperationShader(ColorOperation);
         if (colorOperationShader != null)
         {
             renderer.BatchDrawCallCounter.BeginShaderMode(colorOperationShader.Shader);

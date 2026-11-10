@@ -276,7 +276,7 @@ public class NineSlice : RenderableBase, IAnimatable, IAnimationChainRenderable,
 
     /// <summary>
     /// How <see cref="Color"/> combines with the texture. Add adds Color's RGB to the texture's,
-    /// faded by Color's alpha.
+    /// faded by Color's alpha; ColorTextureAlpha uses the texture only as an alpha mask filled with Color.
     /// </summary>
     public ColorOperation ColorOperation { get; set; } = ColorOperation.Modulate;
 
@@ -347,10 +347,10 @@ public class NineSlice : RenderableBase, IAnimatable, IAnimationChainRenderable,
         }
 
         var renderer = global::RenderingLibrary.Graphics.Renderer.Self;
-        bool isAdd = ColorOperation == ColorOperation.Add;
-        if (isAdd)
+        Gum.Renderables.ColorOperationShader? colorOperationShader = renderer.GetColorOperationShader(ColorOperation);
+        if (colorOperationShader != null)
         {
-            renderer.BatchDrawCallCounter.BeginShaderMode(renderer.AddColorOperationShader.Shader);
+            renderer.BatchDrawCallCounter.BeginShaderMode(colorOperationShader.Shader);
         }
 
         if (Blend.HasValue)
@@ -365,7 +365,7 @@ public class NineSlice : RenderableBase, IAnimatable, IAnimationChainRenderable,
             renderer.BatchDrawCallCounter.EndBlendMode();
         }
 
-        if (isAdd)
+        if (colorOperationShader != null)
         {
             renderer.BatchDrawCallCounter.EndShaderMode();
         }
