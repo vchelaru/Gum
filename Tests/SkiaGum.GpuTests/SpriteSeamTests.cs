@@ -20,6 +20,7 @@ namespace SkiaGum.GpuTests;
 public class SpriteSeamTests
 {
     static readonly SKColor Red = new SKColor(255, 0, 0);
+    static readonly SKColor Marker = new SKColor(0, 0, 255);
 
     readonly WglGpuContext _gpu;
 
@@ -45,7 +46,8 @@ public class SpriteSeamTests
         SKColor? Border = null,
         bool FlipHorizontal = false,
         bool FlipVertical = false,
-        SKFilterMode Filter = SKFilterMode.Nearest);
+        SKFilterMode Filter = SKFilterMode.Nearest,
+        bool MarkCellTopLeft = false);
 
     SKBitmap Render(Layout layout)
     {
@@ -74,6 +76,10 @@ public class SpriteSeamTests
                     {
                         atlas.SetPixel(layout.CellLeft + x, layout.CellLeft + y, SKColors.White);
                     }
+                }
+                if (layout.MarkCellTopLeft)
+                {
+                    atlas.SetPixel(layout.CellLeft, layout.CellLeft, Marker);
                 }
 
                 var container = new ContainerRuntime
@@ -192,10 +198,23 @@ public class SpriteSeamTests
     public void Draw_FlippedPointFilterSprites_ShouldNeverSampleOutsideSourceRectangle(
         bool flipHorizontal, bool flipVertical, float containerX, float zoom)
     {
-        var layout = new Layout(containerX, 2.5f, zoom, Columns: 3, Rows: 3, Border: Red,
-            FlipHorizontal: flipHorizontal, FlipVertical: flipVertical);
+        float containerY = 2.5f;
+        var layout = new Layout(containerX, containerY, zoom, Columns: 3, Rows: 3, Border: Red,
+            FlipHorizontal: flipHorizontal, FlipVertical: flipVertical, MarkCellTopLeft: true);
         using SKBitmap pixels = Render(layout);
         CountColor(pixels, Red).ShouldBe(0, $"red border pixels, flip H {flipHorizontal} V {flipVertical}, container X {containerX}, zoom {zoom}");
+
+        // The cell's top-left texel lands in the first sprite's mirrored corner, so the draw really is flipped.
+        // A texel is one gum unit here. At zoom 1 on a half pixel no pixel center lies strictly inside a
+        // texel's row, so that axis has no pixel to check and the case asserts only the border.
+        int markerColumn = flipHorizontal ? layout.CellSize - 1 : 0;
+        int markerRow = flipVertical ? layout.CellSize - 1 : 0;
+        (int firstX, int lastX) = PixelsInside((containerX + markerColumn) * zoom, (containerX + markerColumn + 1) * zoom);
+        (int firstY, int lastY) = PixelsInside((containerY + markerRow) * zoom, (containerY + markerRow + 1) * zoom);
+        if (firstX <= lastX && firstY <= lastY)
+        {
+            pixels.GetPixel(firstX, firstY).ShouldBe(Marker, $"flip H {flipHorizontal} V {flipVertical}, container X {containerX}, zoom {zoom}");
+        }
     }
 
     [Theory]

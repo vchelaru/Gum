@@ -1043,6 +1043,36 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
     }
 
     /// <summary>
+    /// Tints a texture draw by <see cref="Color"/> through a color filter. Add adds Color's RGB in a
+    /// single pass; otherwise Color is blended with <paramref name="tintBlendMode"/> (Modulate, or
+    /// SrcIn for ColorTextureAlpha). The filter's tint is opaque because the paint's own alpha,
+    /// which Skia applies to every image draw, already carries <see cref="Alpha"/>; an Alpha of 128
+    /// draws at half opacity, as on MonoGame.
+    /// </summary>
+    protected void ApplyTextureTint(SKPaint paint, SKBlendMode tintBlendMode)
+    {
+        if (ColorOperation == ColorOperation.Add)
+        {
+            // The offset is added in unpremultiplied space and gets scaled by the pixel's own alpha
+            // when Skia premultiplies for compositing, so it is masked by the drawn image's silhouette.
+            float[] addMatrix =
+            {
+                1, 0, 0, 0, Color.Red / 255f,
+                0, 1, 0, 0, Color.Green / 255f,
+                0, 0, 1, 0, Color.Blue / 255f,
+                0, 0, 0, 1, 0,
+            };
+            using SKColorFilter addFilter = SKColorFilter.CreateColorMatrix(addMatrix);
+            paint.ColorFilter = addFilter;
+        }
+        else
+        {
+            using SKColorFilter blendFilter = SKColorFilter.CreateBlendMode(Color.WithAlpha(255), tintBlendMode);
+            paint.ColorFilter = blendFilter;
+        }
+    }
+
+    /// <summary>
     /// Builds the paint for a draw. Overrides call this first and then adjust the paint it returns.
     /// When called from <see cref="GetCachedPaint"/> the returned paint is the previous one reset to
     /// defaults, so callers other than that must not keep it past the next draw.
