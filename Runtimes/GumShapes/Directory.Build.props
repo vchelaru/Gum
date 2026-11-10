@@ -40,9 +40,9 @@
 
   <PropertyGroup>
     <!--
-      MonoGameGumShapes references Apos.Shapes and KniGumShapes references Apos.Shapes.KNI. Keep
-      the two on the same version when possible: the shared runtime sources linked below are
-      written against one shader/API generation.
+      One version for both packages: MonoGameGumShapes references Apos.Shapes and KniGumShapes
+      references Apos.Shapes.KNI, and the shared runtime sources linked below are written against
+      one shader/API generation.
 
       As of Apos.Shapes 0.7.2 the shader is precompiled and embedded in the assembly — no content
       pipeline, no buildTransitive content, no PrivateAssets blocking needed (see issue #4020).
@@ -64,12 +64,10 @@
       and keeps squashed drawings inside their box) and #6448 (iOS device precision; that fix
       shipped in 0.8.7, so 0.9.1 already had it).
 
-      Bumped Apos.Shapes (MonoGame) from 0.9.4 to 0.10.1 for issue #7808 (0.10.1 signs its DX12
-      shaders, which DirectX 12 refuses unsigned).
+      Bumped from 0.9.4 to 0.10.1 for issue #7808 (0.10.1 signs its DX12 shaders, which DirectX 12
+      refuses unsigned). Apos.Shapes.KNI 0.10.x requires KNI 4.3.9001 (#7842).
     -->
     <AposShapesVersion>0.10.1</AposShapesVersion>
-    <!-- Apos.Shapes.KNI 0.10.0+ requires KNI 4.3 and Gum is on 4.2.9001, so KNI stays on 0.9.4 until Gum moves to KNI 4.3 (#7808). -->
-    <AposShapesKniVersion>0.9.4</AposShapesKniVersion>
   </PropertyGroup>
 
   <!--

@@ -23,10 +23,10 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="nkast.Xna.Framework" Version="4.2.9001" />
-		<PackageReference Include="nkast.Xna.Framework.Graphics" Version="4.2.9001" />
-		<PackageReference Include="nkast.Xna.Framework.Input" Version="4.2.9001" />
-		<PackageReference Include="nkast.Xna.Framework.Content" Version="4.2.9001" />
+		<PackageReference Include="nkast.Xna.Framework" Version="4.3.9001" />
+		<PackageReference Include="nkast.Xna.Framework.Graphics" Version="4.3.9001" />
+		<PackageReference Include="nkast.Xna.Framework.Input" Version="4.3.9001" />
+		<PackageReference Include="nkast.Xna.Framework.Content" Version="4.3.9001" />
 		<!--
 			ShadowDusk compiles a render-target Container's SourceShaderFile (.fx or .slang) into an
 			Effect at runtime (no content pipeline) for the WYSIWYG preview; each head picks the
