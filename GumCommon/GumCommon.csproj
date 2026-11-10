@@ -388,6 +388,9 @@
 		<Compile Include="..\MonoGameGum\Forms\Controls\Slider.cs" Link="Forms\Controls\Slider.cs" />
 		<Compile Include="..\MonoGameGum\Forms\Controls\Splitter.cs" Link="Forms\Controls\Splitter.cs" />
 		<Compile Include="..\MonoGameGum\Forms\Controls\StackPanel.cs" Link="Forms\Controls\StackPanel.cs" />
+		<Compile Include="..\MonoGameGum\Forms\Controls\TabControl.cs" Link="Forms\Controls\TabControl.cs" />
+		<Compile Include="..\MonoGameGum\Forms\Controls\TabItem.cs" Link="Forms\Controls\TabItem.cs" />
+		<Compile Include="..\MonoGameGum\Forms\Controls\TabPage.cs" Link="Forms\Controls\TabPage.cs" />
 		<Compile Include="..\MonoGameGum\Forms\Controls\TextBox.cs" Link="Forms\Controls\TextBox.cs" />
 		<Compile Include="..\MonoGameGum\Forms\Controls\TextBoxBase.cs" Link="Forms\Controls\TextBoxBase.cs" />
 		<Compile Include="..\MonoGameGum\Forms\Controls\ToggleButton.cs" Link="Forms\Controls\ToggleButton.cs" />

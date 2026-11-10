@@ -117,6 +117,9 @@
 		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\SliderVisual.cs" Link="Forms\DefaultVisuals\V3\SliderVisual.cs" />
 		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\SplitterVisual.cs" Link="Forms\DefaultVisuals\V3\SplitterVisual.cs" />
 		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\Styling.cs" Link="Forms\DefaultVisuals\V3\Styling.cs" />
+		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\TabControlVisual.cs" Link="Forms\DefaultVisuals\V3\TabControlVisual.cs" />
+		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\TabItemVisual.cs" Link="Forms\DefaultVisuals\V3\TabItemVisual.cs" />
+		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\TabPageVisual.cs" Link="Forms\DefaultVisuals\V3\TabPageVisual.cs" />
 		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\ToggleButtonVisual.cs" Link="Forms\DefaultVisuals\V3\ToggleButtonVisual.cs" />
 		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\TextBoxBaseVisual.cs" Link="Forms\DefaultVisuals\V3\TextBoxBaseVisual.cs" />
 		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\TextBoxVisual.cs" Link="Forms\DefaultVisuals\V3\TextBoxVisual.cs" />
@@ -219,6 +222,9 @@
 	  <Compile Remove="..\..\MonoGameGum\Forms\Controls\ScrollViewer.cs" />
 	  <Compile Remove="..\..\MonoGameGum\Forms\Controls\Slider.cs" />
 	  <Compile Remove="..\..\MonoGameGum\Forms\Controls\Splitter.cs" />
+	  <Compile Remove="..\..\MonoGameGum\Forms\Controls\TabControl.cs" />
+	  <Compile Remove="..\..\MonoGameGum\Forms\Controls\TabItem.cs" />
+	  <Compile Remove="..\..\MonoGameGum\Forms\Controls\TabPage.cs" />
 	  <Compile Remove="..\..\MonoGameGum\Forms\Controls\StackPanel.cs" />
 	  <Compile Remove="..\..\MonoGameGum\Forms\Controls\TextBox.cs" />
 	  <Compile Remove="..\..\MonoGameGum\Forms\Controls\TextBoxBase.cs" />

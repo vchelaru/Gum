@@ -29,6 +29,9 @@ public static class StandardFormsBehaviorNames
     public const string SliderBehaviorName = "SliderBehavior";
     public const string SplitterBehaviorName = "SplitterBehavior";
     public const string StackPanelBehaviorName = "StackPanelBehavior";
+    public const string TabControlBehaviorName = "TabControlBehavior";
+    public const string TabItemBehaviorName = "TabItemBehavior";
+    public const string TabPageBehaviorName = "TabPageBehavior";
     public const string TextBoxBehaviorName = "TextBoxBehavior";
     public const string ToggleBehaviorName = "ToggleBehavior";
     public const string TooltipBehaviorName = "TooltipBehavior";
@@ -58,6 +61,9 @@ public static class StandardFormsBehaviorNames
         SliderBehaviorName,
         SplitterBehaviorName,
         StackPanelBehaviorName,
+        TabControlBehaviorName,
+        TabItemBehaviorName,
+        TabPageBehaviorName,
         TextBoxBehaviorName,
         ToggleBehaviorName,
         TooltipBehaviorName,
