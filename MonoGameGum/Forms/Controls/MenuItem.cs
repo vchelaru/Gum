@@ -567,6 +567,12 @@ public class MenuItem : ItemsControl
         {
             RefreshOpenPopup();
         }
+#if !FRB
+        else
+        {
+            DiscardClosedPopup();
+        }
+#endif
     }
 
     private void RefreshSubmenuIndicatorVisibility()
@@ -638,6 +644,69 @@ public class MenuItem : ItemsControl
         {
             timeOpened = MainCursor.LastPrimaryPushTime;
 
+#if !FRB
+            if (!TryReuseClosedPopup())
+#endif
+            {
+                BuildItemsPopup();
+            }
+
+#if !FRB
+            // The popup's size must be resolved before it is placed, because placing clamps it to the screen (#6686).
+            if (isPopupSizedByItems)
+            {
+                SizePopupToItems();
+                FitPopupToCanvas();
+            }
+#endif
+
+            PlaceItemsPopup();
+
+#if !FRB
+            // An open submenu needs Activity every frame (IUpdateEveryFrame.IsActivityNeeded), which
+            // ancestors that already went idle would otherwise skip.
+            Visual.InvalidateSubtreeCaches();
+
+            WatchAncestorsWhileOpen();
+#endif
+#if FRB
+            if (isPopupSizedByItems)
+            {
+                SizePopupToItems();
+            }
+
+            GuiManager.SortZAndLayerBased();
+            itemsPopup.RepositionToKeepInScreen();
+#endif
+        }
+    }
+
+    // Creates the popup from the first template that supplies one and fills it with a row per item. The key
+    // records what it was built from, so a closed popup is reused only while all of that still holds (#7864).
+    private void BuildItemsPopup()
+    {
+#if !FRB
+        PopupBuildKey key = new PopupBuildKey(this);
+        _openPopupKey = key;
+        FrameworkElement.TemplateLookupLog? previousLog = ActiveTemplateLookupLog;
+        ActiveTemplateLookupLog = key.Lookups;
+        try
+        {
+            BuildItemsPopupCore();
+        }
+        finally
+        {
+            ActiveTemplateLookupLog = previousLog;
+        }
+        key.CaptureStyle();
+#else
+        BuildItemsPopupCore();
+#endif
+    }
+
+    private void BuildItemsPopupCore()
+    {
+        {
             var visualTemplateVisual = ScrollViewerVisualTemplate?.CreateContent(null) as InteractiveGue;
             // A popup with no template sizes itself to its rows, including one built from the project's component.
             isPopupSizedByItems = visualTemplateVisual == null;
@@ -683,7 +752,7 @@ public class MenuItem : ItemsControl
             bool suspendedPanel = SuspendPopupPanelLayout();
             try
             {
-                foreach (var item in Items)
+                foreach (var item in Items!)
                 {
                     FrameworkElement row = CreatePopupRow(item);
                     popupRows.Add(row);
@@ -696,34 +765,6 @@ public class MenuItem : ItemsControl
             {
                 ResumePopupPanelLayout(suspendedPanel);
             }
-
-#if !FRB
-            // The popup's size must be resolved before it is placed, because placing clamps it to the screen (#6686).
-            if (isPopupSizedByItems)
-            {
-                SizePopupToItems();
-                FitPopupToCanvas();
-            }
-#endif
-
-            PlaceItemsPopup();
-
-#if !FRB
-            // An open submenu needs Activity every frame (IUpdateEveryFrame.IsActivityNeeded), which
-            // ancestors that already went idle would otherwise skip.
-            Visual.InvalidateSubtreeCaches();
-
-            WatchAncestorsWhileOpen();
-#endif
-#if FRB
-            if (isPopupSizedByItems)
-            {
-                SizePopupToItems();
-            }
-
-            GuiManager.SortZAndLayerBased();
-            itemsPopup.RepositionToKeepInScreen();
-#endif
         }
     }
 
@@ -808,7 +849,22 @@ public class MenuItem : ItemsControl
             return asFrameworkElement;
         }
 
+#if !FRB
+        // A row built after the popup (an item added while it is open) was built from the templates of now.
+        FrameworkElement.TemplateLookupLog? previousLog = ActiveTemplateLookupLog;
+        ActiveTemplateLookupLog = _openPopupKey?.Lookups;
+        MenuItem menuItem;
+        try
+        {
+            menuItem = new MenuItem();
+        }
+        finally
+        {
+            ActiveTemplateLookupLog = previousLog;
+        }
+#else
         MenuItem menuItem = new MenuItem();
+#endif
         menuItem.Visual.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToChildren;
         menuItem.UpdateToObject(item);
         menuItem.BindingContext = item;
@@ -824,10 +880,16 @@ public class MenuItem : ItemsControl
             menuItem.SelectOnHighlight = this.SelectOnHighlight;
             MenuItemsInternal.Add(menuItem);
             menuItem.ParentMenuItem = this;
-            menuItem.Selected += HandleSubItemSelected;
-            menuItem.HighlightGained += HandleSubItemHighlightGained;
+            menuItem.Selected += SubItemSelectedHandler;
+            menuItem.HighlightGained += SubItemHighlightGainedHandler;
         }
     }
+
+    // One delegate per item, not one per row per open: converting a method group allocates each time.
+    EventHandler? _subItemSelectedHandler;
+    EventHandler SubItemSelectedHandler => _subItemSelectedHandler ??= HandleSubItemSelected!;
+    EventHandler? _subItemHighlightGainedHandler;
+    EventHandler SubItemHighlightGainedHandler => _subItemHighlightGainedHandler ??= HandleSubItemHighlightGained!;
 
     private void HandleSubItemHighlightGained(object? sender, EventArgs e)
     {
@@ -857,8 +919,8 @@ public class MenuItem : ItemsControl
     {
         if (row is MenuItem menuItem)
         {
-            menuItem.Selected -= HandleSubItemSelected;
-            menuItem.HighlightGained -= HandleSubItemHighlightGained;
+            menuItem.Selected -= SubItemSelectedHandler;
+            menuItem.HighlightGained -= SubItemHighlightGainedHandler;
             menuItem.ParentMenuItem = null;
         }
     }
@@ -868,12 +930,187 @@ public class MenuItem : ItemsControl
     {
         foreach (MenuItem menuItem in MenuItemsInternal)
         {
-            menuItem.Selected -= HandleSubItemSelected;
-            menuItem.HighlightGained -= HandleSubItemHighlightGained;
+            menuItem.Selected -= SubItemSelectedHandler;
+            menuItem.HighlightGained -= SubItemHighlightGainedHandler;
         }
         popupRows.Clear();
         generatedPopupRows.Clear();
     }
+
+#if !FRB
+    // The popup of the last open, kept while the submenu is closed so the next open reuses it and its rows
+    // instead of building them again (#7864). _closedPopupKey is what the popup was built from, so a change to
+    // anything that would build it differently (theme swap, new template, new style) builds a new one. The rows are
+    // compared with Items on every reuse, so a changed item list builds a new popup too.
+    ScrollViewer? _closedPopup;
+    PopupBuildKey? _closedPopupKey;
+    PopupBuildKey? _openPopupKey;
+    readonly List<FrameworkElement> _closedPopupRows = new List<FrameworkElement>();
+    readonly HashSet<MenuItem> _closedGeneratedRows = new HashSet<MenuItem>();
+
+    // A closed popup holding more generated rows than this is released instead of kept: each generated row is a
+    // whole MenuItem visual tree, and a long submenu would otherwise hold all of them while it is closed.
+    internal const int MaxRetainedGeneratedRows = 32;
+
+    // Everything a popup is built from, captured when it is built. Compared by reference, so checking it
+    // allocates nothing.
+    //  - This item's ScrollViewerVisualTemplate, DefaultSubmenuPopupTemplate, the from-file popup template, the
+    //    ScrollViewer template in DefaultFormsTemplates and the loaded project (what picks the popup's visual).
+    //  - Styling.ActiveStyle and the Colors, NineSlice, Icons, Text and SpriteSheet it holds: the default visuals
+    //    read them when they are built.
+    //  - The template or component registered for every control type built for the popup (the ScrollViewer, its
+    //    scroll bars and thumbs, each generated row), recorded as the build asks for them.
+    // A value changed in place (Styling.ActiveStyle.Colors.Primary = ..., a state edited in NineSlice) is not seen:
+    // existing controls restyle through RefreshStyles, which also discards a closed popup.
+    private sealed class PopupBuildKey
+    {
+        private readonly object? _itemTemplate;
+        private readonly object? _defaultSubmenuTemplate;
+        private readonly object? _fromFileTemplate;
+        private readonly object? _registeredScrollViewerTemplate;
+        private readonly object? _project;
+        private FrameworkElement.StyleIdentity _style;
+
+        internal readonly FrameworkElement.TemplateLookupLog Lookups = new FrameworkElement.TemplateLookupLog();
+
+        internal PopupBuildKey(MenuItem owner)
+        {
+            _itemTemplate = owner.ScrollViewerVisualTemplate;
+            _defaultSubmenuTemplate = DefaultSubmenuPopupTemplate;
+            _fromFileTemplate = FromFileSubmenuPopupTemplate;
+            DefaultFormsTemplates.TryGetValue(typeof(ScrollViewer), out VisualTemplate? registered);
+            _registeredScrollViewerTemplate = registered;
+            _project = global::Gum.Managers.ObjectFinder.Self.GumProjectSave;
+        }
+
+        // Taken once the popup is built, because building it may be what first creates the active style.
+        internal void CaptureStyle() => _style = GetActiveStyleIdentity();
+
+        internal bool Matches(MenuItem owner)
+        {
+            DefaultFormsTemplates.TryGetValue(typeof(ScrollViewer), out VisualTemplate? registered);
+            return ReferenceEquals(_itemTemplate, owner.ScrollViewerVisualTemplate)
+                && ReferenceEquals(_defaultSubmenuTemplate, DefaultSubmenuPopupTemplate)
+                && ReferenceEquals(_fromFileTemplate, FromFileSubmenuPopupTemplate)
+                && ReferenceEquals(_registeredScrollViewerTemplate, registered)
+                && ReferenceEquals(_project, global::Gum.Managers.ObjectFinder.Self.GumProjectSave)
+                && _style.Equals(GetActiveStyleIdentity())
+                && Lookups.StillResolvesTheSame();
+        }
+    }
+
+    // Called as the popup closes, before its rows are released.
+    private void KeepClosedPopup(ScrollViewer popup)
+    {
+        DiscardClosedPopup();
+        PopupBuildKey? key = _openPopupKey;
+        _openPopupKey = null;
+        if (key == null)
+        {
+            return;
+        }
+        if (isPopupShrunkToCanvas || generatedPopupRows.Count > MaxRetainedGeneratedRows)
+        {
+            return;
+        }
+        _closedPopup = popup;
+        _closedPopupKey = key;
+        _closedPopupRows.AddRange(popupRows);
+        _closedGeneratedRows.UnionWith(generatedPopupRows);
+    }
+
+    private void DiscardClosedPopup()
+    {
+        _closedPopup = null;
+        _closedPopupKey = null;
+        _closedPopupRows.Clear();
+        _closedGeneratedRows.Clear();
+    }
+
+    // Opens the popup the last open built when nothing it was built from changed. Returns false, leaving
+    // nothing changed, when there is none or it no longer matches.
+    [UnconditionalSuppressMessage("Trimming", "IL2026",
+        Justification = "Automatic per-item BindingContext assignment when populating sub-items from a " +
+            "bound collection. Any by-name VM member resolution happens in the item template's own " +
+            "bindings, which already carry this warning at the SetBinding call that created them.")]
+    private bool TryReuseClosedPopup()
+    {
+        ScrollViewer? popup = _closedPopup;
+        PopupBuildKey? key = _closedPopupKey;
+        if (popup == null || key == null || !key.Matches(this) || !ClosedPopupMatchesItems(popup))
+        {
+            DiscardClosedPopup();
+            return false;
+        }
+
+        itemsPopup = popup;
+        _openPopupKey = key;
+        isPopupShrunkToCanvas = false;
+        if (popup.VerticalScrollBarValue != 0)
+        {
+            popup.VerticalScrollBarValue = 0;
+        }
+        if (popup.HorizontalScrollBarValue != 0)
+        {
+            popup.HorizontalScrollBarValue = 0;
+        }
+
+        MenuItemsInternal.Clear();
+        popupRows.Clear();
+        generatedPopupRows.Clear();
+        popupRows.AddRange(_closedPopupRows);
+        generatedPopupRows.UnionWith(_closedGeneratedRows);
+        for (int i = 0; i < popupRows.Count; i++)
+        {
+            FrameworkElement row = popupRows[i];
+            if (row is MenuItem menuItem && generatedPopupRows.Contains(menuItem))
+            {
+                // A row built for a data object starts the way a new one does.
+                menuItem.UpdateToObject(Items![i]);
+                menuItem.BindingContext = Items[i];
+                if (menuItem.IsHighlighted)
+                {
+                    menuItem.SetHighlightFromNavigation(false);
+                }
+            }
+            AttachPopupRow(row);
+        }
+        DiscardClosedPopup();
+        return true;
+    }
+
+    // True when the kept popup holds exactly one row per item, in order: the control itself for an item that is
+    // a control, a row built for the object otherwise, each still in the popup's panel.
+    private bool ClosedPopupMatchesItems(ScrollViewer popup)
+    {
+        System.Collections.IList? items = Items;
+        if (items == null || items.Count != _closedPopupRows.Count)
+        {
+            return false;
+        }
+
+        var panelChildren = popup.InnerPanel.Children;
+        if (panelChildren.Count != items.Count)
+        {
+            return false;
+        }
+
+        for (int i = 0; i < items.Count; i++)
+        {
+            FrameworkElement row = _closedPopupRows[i];
+            object? item = items[i];
+            bool isGenerated = row is MenuItem generated && _closedGeneratedRows.Contains(generated);
+            bool isRowForItem = isGenerated
+                ? item is not FrameworkElement && Equals(row.BindingContext, item)
+                : ReferenceEquals(row, item);
+            if (!isRowForItem || panelChildren[i] != row.Visual)
+            {
+                return false;
+            }
+        }
+        return true;
+    }
+#endif
 
     /// <summary>
     /// Brings the open popup in line with Items after it changed: rows for removed items leave (closing
@@ -1326,6 +1563,7 @@ public class MenuItem : ItemsControl
 #if FRB
 #else
                 itemsPopup.Visual.GetTopParent()?.Children.Remove(itemsPopup.Visual);
+                KeepClosedPopup(itemsPopup);
 #endif
                 itemsPopup = null;
 #if !FRB
@@ -1359,6 +1597,9 @@ public class MenuItem : ItemsControl
     private void CloseSubmenuForVisualRemoved()
     {
         TearDownPopup();
+#if !FRB
+        DiscardClosedPopup();
+#endif
         isSelected = false;
     }
 
@@ -1393,6 +1634,10 @@ public class MenuItem : ItemsControl
             itemsPopup = null;
             ReleasePopupRows();
 #if !FRB
+            _openPopupKey = null;
+            DiscardClosedPopup();
+#endif
+#if !FRB
             StopWatchingAncestors();
             Visual.InvalidateSubtreeCaches();
 #endif
@@ -1417,19 +1662,24 @@ public class MenuItem : ItemsControl
         GraphicalUiElement? current = Visual;
         while (current != null && current != owningPopup)
         {
-            current.VisibleChanged += HandleWatchedVisibleChanged;
-            current.ParentChanged += HandleWatchedParentChanged;
+            current.VisibleChanged += WatchedVisibleChangedHandler;
+            current.ParentChanged += WatchedParentChangedHandler;
             _watchedAncestors.Add(current);
             current = current.Parent as GraphicalUiElement;
         }
     }
 
+    EventHandler? _watchedVisibleChangedHandler;
+    EventHandler WatchedVisibleChangedHandler => _watchedVisibleChangedHandler ??= HandleWatchedVisibleChanged!;
+    EventHandler<GraphicalUiElement.ParentChangedEventArgs>? _watchedParentChangedHandler;
+    EventHandler<GraphicalUiElement.ParentChangedEventArgs> WatchedParentChangedHandler => _watchedParentChangedHandler ??= HandleWatchedParentChanged!;
+
     private void StopWatchingAncestors()
     {
         for (int i = 0; i < _watchedAncestors.Count; i++)
         {
-            _watchedAncestors[i].VisibleChanged -= HandleWatchedVisibleChanged;
-            _watchedAncestors[i].ParentChanged -= HandleWatchedParentChanged;
+            _watchedAncestors[i].VisibleChanged -= WatchedVisibleChangedHandler;
+            _watchedAncestors[i].ParentChanged -= WatchedParentChangedHandler;
         }
         _watchedAncestors.Clear();
     }
@@ -1517,6 +1767,10 @@ public class MenuItem : ItemsControl
     public override void ApplyRuntimeProperties()
     {
         _codeText.Restore(text);
+#if !FRB
+        // Refreshing styles restyles the controls in the tree; a closed popup is not in it.
+        DiscardClosedPopup();
+#endif
         base.ApplyRuntimeProperties();
     }
 
