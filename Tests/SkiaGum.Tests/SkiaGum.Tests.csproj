@@ -73,6 +73,7 @@
 		<Compile Include="..\..\MonoGameGum.Tests\Forms\MenuKeyboardNavigationTests.cs" Link="Forms\Linked\MenuKeyboardNavigationTests.cs" />
 		<Compile Include="..\..\MonoGameGum.Tests\Forms\ListBoxGamepadDirectionTests.cs" Link="Forms\Linked\ListBoxGamepadDirectionTests.cs" />
 		<Compile Include="..\..\MonoGameGum.Tests\Forms\ComboBoxTests.cs" Link="Forms\Linked\ComboBoxTests.cs" />
+		<Compile Include="..\..\MonoGameGum.Tests\Forms\TabControlTests.cs" Link="Forms\Linked\TabControlTests.cs" />
 	</ItemGroup>
 
 	<!-- Golden-image baselines for GoldenImages/*Tests.cs (pixel-diff regression tests). -->
