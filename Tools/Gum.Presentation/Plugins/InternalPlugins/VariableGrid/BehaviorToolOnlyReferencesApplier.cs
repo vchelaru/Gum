@@ -30,6 +30,8 @@ namespace Gum.Plugins.InternalPlugins.VariableGrid;
 /// </summary>
 public static class BehaviorToolOnlyReferencesApplier
 {
+    private static readonly BehaviorAncestorFinder AncestorFinder = new BehaviorAncestorFinder();
+
     public static void Apply(ElementSave element, StateSave stateSave)
     {
         // Tool-only references exist solely to drive the element's resting design-time
@@ -515,7 +517,7 @@ public static class BehaviorToolOnlyReferencesApplier
         {
             // FindAncestor runs first so an ancestor name that is not an identifier (tab-control) is still
             // encoded by ResolveOwnerPrefix, which also turns @Index into Owner.Index.
-            string? withAncestors = BehaviorAncestorFinder.Resolve(right, instance, stateSave);
+            string? withAncestors = AncestorFinder.Resolve(right, instance, stateSave);
             if (withAncestors == null)
             {
                 return null;
@@ -593,7 +595,7 @@ public static class BehaviorToolOnlyReferencesApplier
             int dotIndex = name.IndexOf('.');
             if (container != null && instancePrefix != null && dotIndex > 0 && !name.StartsWith(instancePrefix))
             {
-                InstanceSave? other = BehaviorAncestorFinder.FindInstanceInElementOrBase(container, name.Substring(0, dotIndex));
+                InstanceSave? other = AncestorFinder.FindInstanceInElementOrBase(container, name.Substring(0, dotIndex));
                 if (other != null && ObjectFinder.Self.GetElementSave(other.BaseType) is ComponentSave otherComponent)
                 {
                     return BuildFormsPropertyDefaultsFallback(otherComponent, other)(name);

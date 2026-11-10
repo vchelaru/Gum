@@ -14,7 +14,7 @@ namespace Gum.Plugins.InternalPlugins.VariableGrid;
 /// found by walking <c>Parent</c> values, so intermediate containers and slot paths
 /// (<c>TabControl1.TabStripInstance</c>) count, and the owner may be declared by a base element.
 /// </summary>
-internal static class BehaviorAncestorFinder
+internal sealed class BehaviorAncestorFinder
 {
     // Group 1: a string literal, left untouched. Group 2: the behavior name of a FindAncestor<Name>() call,
     // with or without the @ prefix. A behavior name must be an identifier; anything else never matches, so the
@@ -26,7 +26,7 @@ internal static class BehaviorAncestorFinder
     /// <paramref name="right"/> with each <c>FindAncestor&lt;Behavior&gt;()</c> replaced by the ancestor's instance
     /// name; unchanged when it has no call; null when any call finds no ancestor.
     /// </summary>
-    public static string? Resolve(string right, InstanceSave instance, StateSave stateSave)
+    public string? Resolve(string right, InstanceSave instance, StateSave stateSave)
     {
         if (!FindAncestorCall.IsMatch(right))
         {
@@ -53,13 +53,13 @@ internal static class BehaviorAncestorFinder
     }
 
     /// <summary>The instance named <paramref name="name"/> in <paramref name="container"/> or one of its base elements.</summary>
-    public static InstanceSave? FindInstanceInElementOrBase(ElementSave container, string name) =>
+    public InstanceSave? FindInstanceInElementOrBase(ElementSave container, string name) =>
         ObjectFinder.Self.GetBaseElements(container)
             .Prepend(container)
             .SelectMany(element => element.Instances)
             .FirstOrDefault(item => item.Name == name);
 
-    private static string? FindAncestorWithBehavior(InstanceSave instance, StateSave stateSave, string behaviorName)
+    private string? FindAncestorWithBehavior(InstanceSave instance, StateSave stateSave, string behaviorName)
     {
         ElementSave? container = instance.ParentContainer ?? stateSave.ParentContainer;
         if (container == null)
