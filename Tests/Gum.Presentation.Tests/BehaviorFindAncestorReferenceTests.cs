@@ -273,6 +273,34 @@ public class BehaviorFindAncestorReferenceTests : BaseTestClass
     }
 
     [Fact]
+    public void Apply_AuthoredSelectedIndexDiffersFromComponentDefault_IsWrittenAsADeviation()
+    {
+        // Resting comes from the component default (2), not the behavior default (0), so authored 0 deviates
+        // from resting and the line's result is written.
+        ScreenSave screen = Build(selectedIndex: 0,
+            line: "TabItemCategoryState = FindAncestor<TabControlBehavior>().SelectedIndex == 2 ? \"Selected\" : \"Unselected\"",
+            customizeTabControl: tabControl =>
+                tabControl.DefaultState.Variables.Add(new VariableSave { Type = "int", Name = "SelectedIndex", Value = 2, SetsValue = true }));
+        BehaviorToolOnlyReferencesApplier.Apply(screen, screen.DefaultState);
+        States(screen.DefaultState).ShouldBe(new string?[] { "Unselected", "Unselected", "Unselected" });
+    }
+
+    [Fact]
+    public void Apply_ParentIsBareControlName_Resolves()
+    {
+        ScreenSave screen = Build((s, state) =>
+        {
+            for (int i = 0; i < 3; i++)
+            {
+                state.Variables.First(v => v.Name == $"Tab{i}.Parent").Value = "TabControl1";
+            }
+        }, selectedIndex: 0, customizeTabControl: tabControl =>
+            tabControl.DefaultState.Variables.Add(new VariableSave { Type = "int", Name = "SelectedIndex", Value = 2, SetsValue = true }));
+        BehaviorToolOnlyReferencesApplier.Apply(screen, screen.DefaultState);
+        States(screen.DefaultState).ShouldBe(new string?[] { "Selected", "Unselected", "Unselected" });
+    }
+
+    [Fact]
     public void Apply_ControlDeclaredInBaseScreen_DerivedScreenTabFindsIt()
     {
         ScreenSave baseScreen = Build();
