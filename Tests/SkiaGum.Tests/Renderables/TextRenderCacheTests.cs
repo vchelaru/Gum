@@ -1,4 +1,5 @@
 using RenderingLibrary;
+using RenderingLibrary.Graphics;
 using Shouldly;
 using SkiaGum;
 using SkiaSharp;
@@ -145,6 +146,130 @@ public class TextRenderCacheTests
         }
 
         text.GetCachedTextBlock().ShouldNotBeSameAs(block);
+    }
+
+    // Layout measures a size-to-children text unbounded, then sets Width to the measured width. A left-aligned
+    // block that already fits lays out the same at that width, so it is kept (#7818).
+    [Fact]
+    public void GetCachedTextBlock_LeftAlignedWidthSetToMeasuredWidth_KeepsTheBlock()
+    {
+        Text text = CreateText("Hello world");
+        text.Width = null;
+        TextBlock unbounded = text.GetCachedTextBlock();
+
+        text.Width = unbounded.MeasuredWidth;
+
+        text.GetCachedTextBlock().ShouldBeSameAs(unbounded);
+    }
+
+    [Theory]
+    [InlineData(HorizontalAlignment.Center, 0)]
+    [InlineData(HorizontalAlignment.Right, 0)]
+    [InlineData(HorizontalAlignment.Left, -1)]
+    public void GetCachedTextBlock_WidthNeedsANewLayout_BuildsANewBlock(HorizontalAlignment alignment, float widthChange)
+    {
+        Text text = CreateText("Hello world");
+        text.HorizontalAlignment = alignment;
+        text.Width = null;
+        TextBlock unbounded = text.GetCachedTextBlock();
+
+        text.Width = unbounded.MeasuredWidth + widthChange;
+
+        text.GetCachedTextBlock().ShouldNotBeSameAs(unbounded);
+    }
+
+    [Theory]
+    [InlineData("Hello world")]
+    [InlineData("Trailing space ")]
+    [InlineData("Two\nlines")]
+    [InlineData("[Color=Red]Hello[/Color] [FontSize=40]big[/FontSize] world")]
+    public void Render_LeftAlignedWidthSetToMeasuredWidth_MatchesAFreshLayoutAtThatWidth(string rawText)
+    {
+        Text sized = CreateText(rawText);
+        sized.Width = null;
+        float measuredWidth = sized.GetCachedTextBlock().MeasuredWidth;
+        sized.Width = measuredWidth;
+        Text fresh = CreateText(rawText);
+        fresh.Width = measuredWidth;
+
+        RenderFrames(sized, frames: 1).ShouldBe(RenderFrames(fresh, frames: 1));
+    }
+
+    [Fact]
+    public void Render_WrappingTextWidthSetToFractionalMeasuredWidth_MatchesAFreshLayoutAtThatWidth()
+    {
+        const string rawText = "Hello wide world";
+        Text sized = CreateText(rawText);
+        sized.Width = null;
+        float measuredWidth = sized.GetCachedTextBlock().MeasuredWidth;
+        measuredWidth.ShouldNotBe(MathF.Floor(measuredWidth));
+        sized.Width = measuredWidth;
+        Text fresh = CreateText(rawText);
+        fresh.Width = measuredWidth;
+
+        LineBreaks(sized).ShouldBe(LineBreaks(fresh));
+        RenderFrames(sized, frames: 1).ShouldBe(RenderFrames(fresh, frames: 1));
+    }
+
+    [Fact]
+    public void Render_WidthSetBelowMeasuredWidth_RebuildsAndWrapsLikeAFreshLayout()
+    {
+        const string rawText = "Hello wide world";
+        Text sized = CreateText(rawText);
+        sized.Width = null;
+        TextBlock unbounded = sized.GetCachedTextBlock();
+        float narrowerWidth = unbounded.MeasuredWidth - 0.5f;
+        sized.Width = narrowerWidth;
+        Text fresh = CreateText(rawText);
+        fresh.Width = narrowerWidth;
+
+        sized.GetCachedTextBlock().ShouldNotBeSameAs(unbounded);
+        sized.GetCachedTextBlock().Lines.Count.ShouldBeGreaterThan(1);
+        LineBreaks(sized).ShouldBe(LineBreaks(fresh));
+        RenderFrames(sized, frames: 1).ShouldBe(RenderFrames(fresh, frames: 1));
+    }
+
+    private static (int Start, int Length)[] LineBreaks(Text text) =>
+        text.GetCachedTextBlock().Lines.Select(line => (line.Start, line.Length)).ToArray();
+
+    [Fact]
+    public void GetPaintTextBlock_RevealUnchanged_ReturnsTheSameBlock()
+    {
+        Text text = CreateText("Hello world, wrapped over lines");
+        text.MaxLettersToShow = 5;
+        TextBlock full = text.GetCachedTextBlock();
+        TextBlock revealed = text.GetPaintTextBlock(full);
+
+        text.GetPaintTextBlock(full).ShouldBeSameAs(revealed);
+    }
+
+    [Fact]
+    public void Render_RevealAdvancedAfterFirstFrames_DrawsTheNewReveal()
+    {
+        Text changed = CreateText("Hello world, wrapped over lines");
+        changed.MaxLettersToShow = 3;
+        RenderFrames(changed, frames: 3);
+        changed.MaxLettersToShow = 9;
+
+        byte[] actual = RenderFrames(changed, frames: 1);
+
+        Text expected = CreateText("Hello world, wrapped over lines");
+        expected.MaxLettersToShow = 9;
+        actual.ShouldBe(RenderFrames(expected, frames: 1));
+    }
+
+    [Fact]
+    public void Render_TextChangedEveryFrame_DrawsTheLatestText()
+    {
+        Text changed = CreateText("Frame 1");
+        RenderFrames(changed, frames: 1);
+        changed.RawText = "Frame 2";
+        RenderFrames(changed, frames: 1);
+        changed.RawText = "Frame 3";
+
+        byte[] actual = RenderFrames(changed, frames: 2);
+
+        actual.ShouldBe(RenderFrames(CreateText("Frame 3"), frames: 1));
     }
 
     [Fact]
