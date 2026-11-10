@@ -74,6 +74,7 @@ public class SpriteGoldenImageTests : IDisposable
     void DrawAndMatch(string name, SKFilterMode filter = SKFilterMode.Nearest)
     {
         RenderingLibrary.Graphics.Renderer.TextureFilter = filter;
+        RenderingLibrary.Graphics.Renderer.TextureFilter = SKFilterMode.Nearest;
         GumService.Default.Draw();
         GoldenImageAssert.Matches(_surface, name, tolerance: 0);
     }
@@ -174,6 +175,7 @@ public class SpriteGoldenImageTests : IDisposable
             container.Children.Add(sprite);
             GumService.Default.Root.Children.Add(container);
         }
+        RenderingLibrary.Graphics.Renderer.TextureFilter = SKFilterMode.Nearest;
         GumService.Default.Draw();
         GoldenImageAssert.Matches(_surface, "Sprite_ManySameTexture", tolerance: 2);
     }
