@@ -31,8 +31,8 @@ internal sealed class FrameCursor : ICursor
     /// <summary>Places the cursor at the center of <paramref name="element"/>.</summary>
     public void MoveToCenterOf(GraphicalUiElement element)
     {
-        X = (int)(element.GetAbsoluteX() + element.GetAbsoluteWidth() / 2);
-        Y = (int)(element.GetAbsoluteY() + element.GetAbsoluteHeight() / 2);
+        X = (int)(element.GetAbsoluteX() + element.AbsoluteWidth / 2);
+        Y = (int)(element.GetAbsoluteY() + element.AbsoluteHeight / 2);
     }
 
     public Cursors? CustomCursor { get; set; }
