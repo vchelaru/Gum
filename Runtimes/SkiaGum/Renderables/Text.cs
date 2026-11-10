@@ -1290,11 +1290,19 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
         }
 
         List<StyledTextRun> runs = GetStyledRuns();
-        TextBlock textBlock = BuildTextBlockFromRuns(runs, forcedWidth);
-        return FitsRunsPerLine
-            ? BuildTextBlockFromRuns(FitRunsToLines(runs, textBlock), forcedWidth)
-            : textBlock;
+        if (!FitsRunsPerLine)
+        {
+            return BuildTextBlockFromRuns(runs, forcedWidth);
+        }
+
+        // The first layout only supplies the line breaks, so it is laid out into a block this Text keeps and
+        // clears for the next change instead of a new one (#7818).
+        _lineBreakLayout = BuildTextBlockFromRuns(runs, forcedWidth, _lineBreakLayout);
+        return BuildTextBlockFromRuns(FitRunsToLines(runs, _lineBreakLayout), forcedWidth);
     }
+
+    // The block GetTextBlock lays the runs out into to find the line breaks FitRunsToLines fits to. Never painted.
+    private TextBlock? _lineBreakLayout;
 
     /// <summary>Whether the styled runs are refit line by line (<see cref="FitRunsToLines"/>) after a first layout.</summary>
     private bool FitsRunsPerLine => _hasHeightRun;
@@ -1305,9 +1313,21 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
     /// and the <see cref="MaxLettersToShow"/> reveal path (<see cref="GetPaintTextBlock"/>) so both honor
     /// per-run BBCode styling (issue #3679) and the <c>[Custom]</c> glyph-offset callback (issue #3692).
     /// </summary>
-    private TextBlock BuildTextBlockFromRuns(List<StyledTextRun> runs, float? forcedWidth)
+    /// <param name="reuse">A block to clear and lay out into instead of a new one. RichTextKit keeps its buffers
+    /// across <c>Clear</c>, so a block rebuilt every change allocates far less than a new block.</param>
+    private TextBlock BuildTextBlockFromRuns(List<StyledTextRun> runs, float? forcedWidth, TextBlock? reuse = null)
     {
-        var textBlock = new TextBlock();
+        TextBlock textBlock;
+        if (reuse != null)
+        {
+            reuse.Clear();
+            _transformedLetters.Remove(reuse);
+            textBlock = reuse;
+        }
+        else
+        {
+            textBlock = new TextBlock();
+        }
         // Code-point start index (in the added-text stream, which lines up with _layoutText since
         // ReplacementCharacter substitution keeps a run's length at 1) -> the glyph offset a [Custom]
         // callback produced for that run (issue #3692). Applied once, after Alignment/MaxLines/MaxHeight
@@ -1468,7 +1488,15 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
         // Reveal keeps per-run BBCode styling (issue #3701): GetVisibleStyledRuns slices the same
         // styled runs GetTextBlock uses for the full layout down to the revealed prefix. Plain text is
         // one run, so it takes the same path.
-        _revealBlock = BuildTextBlockFromRuns(GetVisibleStyledRuns(fullBlock), this.Width);
+        // An advancing reveal rebuilds every frame, so the reveal block is cleared and laid out again rather than
+        // replaced (#7818). It is the same object afterwards, so the picture recorded from it is dropped.
+        if (_revealBlock != null && ReferenceEquals(_cachedPictureBlock, _revealBlock))
+        {
+            _cachedPicture?.Dispose();
+            _cachedPicture = null;
+            _cachedPictureBlock = null;
+        }
+        _revealBlock = BuildTextBlockFromRuns(GetVisibleStyledRuns(fullBlock), this.Width, _revealBlock);
         _revealBlockSource = fullBlock;
         _revealBlockLetters = MaxLettersToShow.Value;
         return _revealBlock;
@@ -2582,6 +2610,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
         newInstance._cachedPictureBlock = null;
         newInstance._revealBlock = null;
         newInstance._revealBlockSource = null;
+        newInstance._lineBreakLayout = null;
         newInstance._cachedRenderPaint = null;
         newInstance._hasCachedRenderPaint = false;
         newInstance._hasActiveRenderPaint = false;
