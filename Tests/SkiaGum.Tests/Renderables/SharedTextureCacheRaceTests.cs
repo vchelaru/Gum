@@ -2,6 +2,7 @@ using MonoGameGum.Tests;
 using Shouldly;
 using SkiaGum.Content;
 using SkiaSharp;
+using ToolsUtilities;
 
 // SkiaResourceManager is what the default ContentLoader loads bitmaps through.
 #pragma warning disable CS0618
@@ -84,5 +85,29 @@ public class SharedTextureCacheRaceTests : SharedTextureTestBase
         fromA.IsImmutable.ShouldBeTrue();
         IsDisposed(fromA).ShouldBeFalse();
         IsDisposed(fromB).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void GetSKBitmap_TwoLoadsOfOneFileOverlappingInTheDecode_ReturnOneBitmap()
+    {
+        // The same race through the file-loading path (the one a SourceFile takes), with the first read of
+        // the file held open by the stream hook.
+        string path = WriteGridPng(GridSize, seed: 0);
+        byte[] bytes = File.ReadAllBytes(path);
+        using ManualResetEventSlim aInsideDecode = new();
+        using ManualResetEventSlim bFinished = new();
+        int hookCalls = 0;
+        FileManager.CustomGetStreamFromFile = _ => Interlocked.Increment(ref hookCalls) == 1
+            ? new GatedStream(bytes, aInsideDecode, bFinished)
+            : new MemoryStream(bytes);
+
+        Task<SKBitmap> a = Task.Run(() => SkiaResourceManager.GetSKBitmap(path));
+        aInsideDecode.Wait(TimeSpan.FromSeconds(30)).ShouldBeTrue();
+        SKBitmap fromB = SkiaResourceManager.GetSKBitmap(path);
+        bFinished.Set();
+        SKBitmap fromA = WaitFor(a);
+
+        fromA.ShouldBeSameAs(fromB);
+        IsDisposed(fromA).ShouldBeFalse();
     }
 }
