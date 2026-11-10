@@ -5,6 +5,10 @@ using RenderingLibrary.Graphics;
 using Shouldly;
 using SkiaSharp;
 
+// RoundedRectangleRuntime is obsolete, but it is the one Skia shape that sets both gradient stops
+// directly, the same setup DrawAllocationTests animates.
+#pragma warning disable CS0618
+
 namespace SkiaGum.Tests.GoldenImages;
 
 /// <summary>
