@@ -161,6 +161,21 @@ public sealed class WglGpuContext : IDisposable
     }
 
     /// <summary>
+    /// Runs <paramref name="use"/> with a fresh GPU surface and the GRContext behind it, for callers that need to
+    /// flush and wait for the GPU themselves (timing).
+    /// </summary>
+    public void WithSurface(int width, int height, Action<SKSurface, GRContext> use)
+    {
+        lock (Lock)
+        {
+            MakeCurrent();
+            using SKSurface surface = SKSurface.Create(_grContext, true, new SKImageInfo(width, height), 0)
+                ?? throw new InvalidOperationException("SKSurface.Create failed for the GPU context.");
+            use(surface, _grContext);
+        }
+    }
+
+    /// <summary>
     /// Runs <paramref name="draw"/> against a fresh GPU surface of the given size and returns the pixels read back.
     /// </summary>
     public SKBitmap Render(int width, int height, int sampleCount, Action<SKCanvas> draw)
