@@ -1,5 +1,6 @@
 using Gum.Wireframe;
 using RenderingLibrary.Content;
+using SkiaGum.Content;
 using SkiaGum.Renderables;
 using SkiaSharp;
 using System.Runtime.InteropServices;
@@ -28,7 +29,7 @@ internal static class PixelDataTextureApplier
         SKBitmap? bitmap = loader.TryGetCachedDisposable<SKBitmap>(cacheKey);
         if (bitmap == null)
         {
-            bitmap = CreateBitmap(rgba, width, height);
+            bitmap = SharedTexture.MarkShared(CreateBitmap(rgba, width, height));
             loader.AddDisposable(cacheKey, bitmap, LoaderManager.ExistingContentBehavior.Replace);
         }
 
