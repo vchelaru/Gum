@@ -1,7 +1,7 @@
 # Batch Key Grouped Orderer
 
 {% hint style="info" %}
-`BatchKeyGroupedOrderer` is available on MonoGame, KNI, FNA, and raylib. It is not available on SkiaSharp-based runtimes such as Silk.NET, Stride, and Unity.
+`BatchKeyGroupedOrderer` is available on MonoGame, KNI, FNA, and raylib. It is not available on [SkiaSharp-based runtimes](../about/runtimes.md).
 {% endhint %}
 
 ### Introduction

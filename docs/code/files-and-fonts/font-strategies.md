@@ -7,7 +7,7 @@ This page covers each font loading strategy in detail with code samples and trad
 The strategies are:
 
 * [Dynamic KernSmith Generation](font-strategies.md#dynamic-kernsmith-generation) — recommended for MonoGame, KNI, FNA, and Raylib.
-* [Dynamic Generation on SkiaGum](font-strategies.md#dynamic-generation-on-skiagum) — SkiaGum and Silk.NET rasterize glyphs themselves via SkiaSharp, separate from KernSmith.
+* [Dynamic Generation on SkiaGum](font-strategies.md#dynamic-generation-on-skiagum) — [SkiaSharp-based runtimes](../about/runtimes.md) rasterize glyphs themselves via SkiaSharp, separate from KernSmith.
 * [Custom Font File](font-strategies.md#custom-font-file) — load a specific `.fnt` file you ship with the game.
 * [Direct BitmapFont Assignment](font-strategies.md#direct-bitmapfont-assignment) — fully manual.
 * [Build-Time Font Cache](font-strategies.md#build-time-font-cache) — pre-baked atlases from the Gum tool.
@@ -20,9 +20,7 @@ The strategies are:
 | KNI      | Yes — via KernSmith.                                                                                                                   |
 | Raylib   | Yes — via KernSmith (`KernSmith.RaylibGum`).                                                                                           |
 | FNA      | Yes — via KernSmith (`KernSmith.FnaGum`).                                                                                              |
-| Sokol    | Not yet. Use the [Build-Time Font Cache](font-strategies.md#build-time-font-cache) for now.                                            |
-| SkiaGum  | Yes — uses SkiaSharp's own glyph rasterization. See [Dynamic Generation on SkiaGum](font-strategies.md#dynamic-generation-on-skiagum). |
-| Silk.NET | Yes — renders through SkiaGum and shares its glyph rasterization; no KernSmith package needed. See [Dynamic Generation on SkiaGum](font-strategies.md#dynamic-generation-on-skiagum). |
+| [SkiaSharp-based runtimes](../about/runtimes.md) | Yes, uses SkiaSharp's own glyph rasterization; no KernSmith package needed. See [Dynamic Generation on SkiaGum](font-strategies.md#dynamic-generation-on-skiagum). |
 
 ## Dynamic KernSmith Generation
 
@@ -259,7 +257,7 @@ text.IsBold = true;
 A real bold face almost always looks better than a built one, so register the styles you care about when you have the files. Either way the text comes out bold, and it stays in your typeface.
 
 {% hint style="info" %}
-This is KernSmith's behavior, so it covers MonoGame, KNI, FNA, and raylib. SkiaGum and Silk.NET behave differently, see [Bold and Italic on SkiaGum](font-strategies.md#bold-and-italic-on-skiagum).
+This is KernSmith's behavior, so it covers MonoGame, KNI, FNA, and raylib. SkiaSharp-based runtimes behave differently, see [Bold and Italic on SkiaGum](font-strategies.md#bold-and-italic-on-skiagum).
 {% endhint %}
 
 KernSmith can also build the style even when a real face exists, which makes every platform render the same letters. `TextRuntime` does not expose that option, so reaching it means calling KernSmith yourself. See [Forcing Synthetic Bold and Italic](advanced-font-effects.md#forcing-synthetic-bold-and-italic) on the Advanced Font Effects page.
@@ -301,7 +299,7 @@ Both `AddFontRange` and `AddCharacters` are static and apply to every `BmfcSave`
 
 ## Dynamic Generation on SkiaGum
 
-SkiaGum is its own thing, and Silk.NET (`Gum.SilkNet`) shares this exact same font path since it renders through SkiaGum. Neither uses KernSmith. SkiaSharp rasterizes glyphs directly, so dynamic font generation works out of the box. No NuGet package to install, no `UseKernSmith()` call.
+Every [SkiaSharp-based runtime](../about/runtimes.md) shares this font path, and none of them uses KernSmith. SkiaSharp rasterizes glyphs directly, so dynamic font generation works out of the box. No NuGet package to install, no `UseKernSmith()` call.
 
 ### System Fonts
 
@@ -318,7 +316,7 @@ text.IsBold = true;
 
 ### Custom .ttf Files
 
-Point `Font` (or `CustomFontFile` with `UseCustomFont = true`) at a `.ttf` path instead of a family name. SkiaGum/Silk.NET load and cache the file automatically, the same as the [`.ttf`-path route](font-strategies.md#using-a-ttf-path-directly) on the KernSmith runtimes:
+Point `Font` (or `CustomFontFile` with `UseCustomFont = true`) at a `.ttf` path instead of a family name. SkiaSharp-based runtimes load and cache the file automatically, the same as the [`.ttf`-path route](font-strategies.md#using-a-ttf-path-directly) on the KernSmith runtimes:
 
 ```csharp
 // Initialize
@@ -328,7 +326,7 @@ text.Font = "Content/Fonts/Bungee-Regular.ttf";
 text.FontSize = 24;
 ```
 
-SkiaGum reads the file the same way it reads any other asset, so a `.ttf` served by your own `FileManager.CustomGetStreamFromFile` function loads exactly like a file on disk. SkiaGum and Silk.NET load loose project files only, so a [`.gumpkg` bundle](../../cli/pack.md) is not an option there. See [Where a .ttf Can Live](font-strategies.md#where-a-ttf-can-live).
+SkiaSharp-based runtimes read the file the same way they read any other asset, so a `.ttf` served by your own `FileManager.CustomGetStreamFromFile` function loads exactly like a file on disk. See [Where a .ttf Can Live](font-strategies.md#where-a-ttf-can-live).
 
 For a font you already hold as bytes, an embedded resource for example, call `SkiaGum.Content.Fonts.GumFontMapper.RegisterFont(familyName, fontBytes)` and then assign `Font = familyName`. That method also takes an optional style name, so you can register a bold or italic version alongside the regular one.
 
@@ -338,7 +336,7 @@ For a font you already hold as bytes, an embedded resource for example, call `Sk
 
 ### Bold and Italic on SkiaGum
 
-SkiaGum and Silk.NET answer `IsBold` and `IsItalic` by picking a typeface, never by building one. The KernSmith runtimes instead fall back to faux bold and faux italic (see [Bold and Italic With One Registered Face](font-strategies.md#bold-and-italic-with-one-registered-face)). What you get here depends on where the font came from:
+SkiaSharp-based runtimes answer `IsBold` and `IsItalic` by picking a typeface, never by building one. The KernSmith runtimes instead fall back to faux bold and faux italic (see [Bold and Italic With One Registered Face](font-strategies.md#bold-and-italic-with-one-registered-face)). What you get here depends on where the font came from:
 
 * **A font registered with `GumFontMapper.RegisterFont`** falls back to the family's regular version when you have not registered one for the style you asked for. The text stays in your font, at regular weight. Register a `Bold` and an `Italic` version if you need those styles.
 * **A `.ttf` assigned by path** points at one file, and that file is what you get whatever `IsBold` and `IsItalic` are set to.
@@ -530,7 +528,7 @@ foreach (var label in titleLabels)
 ## Build-Time Font Cache
 
 {% hint style="info" %}
-This approach is primarily useful when your project already has pre-generated font files from the Gum tool, or when dynamic font generation is not yet available for your runtime (Sokol today). For MonoGame, KNI, FNA, and Raylib, [Dynamic KernSmith Generation](font-strategies.md#dynamic-kernsmith-generation) is the recommended approach; for SkiaGum or Silk.NET see [Dynamic Generation on SkiaGum](font-strategies.md#dynamic-generation-on-skiagum).
+This approach is primarily useful when your project already has pre-generated font files from the Gum tool. For MonoGame, KNI, FNA, and Raylib, [Dynamic KernSmith Generation](font-strategies.md#dynamic-kernsmith-generation) is the recommended approach; for SkiaSharp-based runtimes see [Dynamic Generation on SkiaGum](font-strategies.md#dynamic-generation-on-skiagum).
 {% endhint %}
 
 If `UseCustomFont` is `false` (the default) and no `InMemoryFontCreator` is registered, a `TextRuntime`'s font is determined by its font component values. These values combine to produce a file name, and the corresponding `.fnt` file must already exist in a `FontCache` folder.

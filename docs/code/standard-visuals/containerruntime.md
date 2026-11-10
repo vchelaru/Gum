@@ -161,7 +161,7 @@ The ShadowDusk packages for MonoGame, KNI, FNA and raylib are available in Novem
 
 ### Render Target Shaders on SkiaSharp
 
-On SkiaSharp (including Silk.NET), a render target container applies an `SKRuntimeEffect`, which is compiled from SkSL. Set `SourceShaderFile` to a `.sksl` file and Gum compiles it for you.
+On [SkiaSharp-based runtimes](../about/runtimes.md), a render target container applies an `SKRuntimeEffect`, which is compiled from SkSL. Set `SourceShaderFile` to a `.sksl` file and Gum compiles it for you.
 
 ```csharp
 // Initialize

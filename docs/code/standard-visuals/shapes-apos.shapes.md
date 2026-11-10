@@ -60,17 +60,14 @@ dotnet add package Gum.Shapes.KNI
 There is no shape support NuGet package for FNA. An outlined `Circle` or `Rectangle` renders without any package (`StrokeColor`, `StrokeWidth`, and geometry all work), and `Rectangle`'s fill (at square corners) renders too. `Circle`'s fill, `Rectangle`'s rounded corners, and the richer effects (gradient, drop shadow, dashed stroke) are currently available on MonoGame and KNI only, since there is no shape support package for FNA.
 {% endtab %}
 
-{% tab title=".NET MAUI" %}
-No additional setup is required to use shapes in .NET MAUI. The full fill, outline, gradient, drop shadow, dashed-stroke, and corner-radius surface is supported natively.
+{% tab title="SkiaSharp-based runtimes" %}
+No additional setup is required to use shapes on [SkiaSharp-based runtimes](../about/runtimes.md). The full fill, outline, gradient, drop shadow, dashed-stroke, and corner-radius surface is supported natively.
 {% endtab %}
 
 {% tab title="raylib" %}
 No additional setup is required to use shapes on raylib. The full surface is built into `CircleRuntime` and `RectangleRuntime` natively: fill, outline (stroke), gradient, drop shadow, dashed stroke, and corner-radius. No extra NuGet package or initialization is needed.
 {% endtab %}
 
-{% tab title="Silk.NET" %}
-No additional setup is required to use shapes in Silk.NET.
-{% endtab %}
 {% endtabs %}
 
 ## Setup in Code
@@ -90,16 +87,12 @@ Available in preview NuGet packages (use a `-preview` version), or now if buildi
 {% endhint %}
 {% endtab %}
 
-{% tab title=".NET MAUI" %}
-No additional setup is needed if you have already added SkiaSharp and Gum to your project. For more information see the [.NET Maui Initializing Gum](../getting-started/setup/adding-initializing-gum/.net-maui.md) page.
+{% tab title="SkiaSharp-based runtimes" %}
+No additional setup is needed if you have already added Gum to your project. For setup, see the page for your runtime in [Adding/Initializing Gum](../getting-started/setup/adding-initializing-gum/README.md).
 {% endtab %}
 
 {% tab title="raylib" %}
 No additional setup is required. The full surface is built into `CircleRuntime` and `RectangleRuntime` natively: fill, outline (stroke), gradient, drop shadow, dashed stroke, and corner-radius. See those pages for their full property surface.
-{% endtab %}
-
-{% tab title="Silk.NET" %}
-No additional setup is needed if you have already added Gum to your project. For more information see the [Silk.NET Initializing Gum](../getting-started/setup/adding-initializing-gum/silk.net.md) page.
 {% endtab %}
 {% endtabs %}
 

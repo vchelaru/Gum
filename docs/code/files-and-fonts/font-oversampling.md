@@ -9,7 +9,7 @@ Font oversampling is a preview feature. It first shipped in the `2026.8.18.1-pre
 {% endhint %}
 
 {% hint style="info" %}
-Works on MonoGame, KNI, FNA, and Raylib. SkiaGum and Silk.NET do not need it, since SkiaSharp draws text at whatever size it is asked for, so the text stays sharp when you zoom.
+Works on MonoGame, KNI, FNA, and Raylib. [SkiaSharp-based runtimes](../about/runtimes.md) do not need it, since SkiaSharp draws text at whatever size it is asked for, so the text stays sharp when you zoom.
 {% endhint %}
 
 ## Enabling Oversampling

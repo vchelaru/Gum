@@ -2,14 +2,14 @@
 
 ## Introduction
 
-This page is for projects that render with SkiaSharp but don't fit one of Gum's dedicated Skia hosts (.NET MAUI, WPF, or Silk.NET). It assumes you already have your own `SKCanvas` rendering in your project, gotten however your platform requires. Skia itself is just a 2D graphics API, not a windowing or input system, so beyond "get an `SKCanvas` on screen," Gum can't offer platform-specific setup guidance here, that part is entirely up to your own project.
+This page is for projects that render with SkiaSharp but don't fit one of Gum's dedicated SkiaSharp hosts (see [Runtimes](../../../about/runtimes.md)). It assumes you already have your own `SKCanvas` rendering in your project, gotten however your platform requires. Skia itself is just a 2D graphics API, not a windowing or input system, so beyond "get an `SKCanvas` on screen," Gum can't offer platform-specific setup guidance here, that part is entirely up to your own project.
 
 {% hint style="info" %}
-If your project is .NET MAUI, WPF, or Silk.NET, use that page instead: [.NET MAUI](.net-maui.md), [WPF](wpf.md), [Silk.NET](silk.net.md). Each of those wires up a canvas view (or window) for you, and Silk.NET also wires up real mouse/keyboard input. This page is for everything else.
+If your engine or framework has its own page in [Adding/Initializing Gum](README.md), use that page instead. Each of those wires up a canvas view or window for you. This page is for everything else.
 {% endhint %}
 
 {% hint style="warning" %}
-This setup is rendering and layout only. There is no supported way to wire mouse, keyboard, or Forms control interactivity (hover, click, focus) here, not even as DIY glue code. If you need interactive Forms controls on SkiaSharp, use the Silk.NET, MAUI, or WPF setup instead, each of which has a real input story.
+This setup is rendering and layout only. There is no supported way to wire mouse, keyboard, or Forms control interactivity (hover, click, focus) here, not even as DIY glue code. If you need interactive Forms controls on SkiaSharp, use the dedicated setup page for your engine or framework instead (see [Adding/Initializing Gum](README.md)).
 {% endhint %}
 
 ## Adding Gum NuGet package
@@ -60,7 +60,7 @@ Next, add SkiaGum as a project reference in your game project. Your project migh
 `GumService` for this page's setup is available in `Gum.SkiaSharp` starting September 2026, or now if building Gum from source. Before that, WPF and MAUI hosts still get their own copy of the same type through their dedicated packages (see [WPF](wpf.md) / [.NET MAUI](.net-maui.md)); this page's setup did not have one until now.
 {% endhint %}
 
-`Gum.SkiaSharp` includes a render-only `GumService`, the same `Initialize`/`Update`/`Draw`/`HandleResize` API shape used by the dedicated Silk.NET host (see [Silk.NET](silk.net.md)), just without input. Call `GumUI.Initialize` once you have an `SKCanvas`, passing a `.gumj` project path only if you're loading one (omit it for a code-only setup):
+`Gum.SkiaSharp` includes a render-only `GumService`, the same `Initialize`/`Update`/`Draw`/`HandleResize` API shape used by the dedicated SkiaSharp hosts, just without input. Call `GumUI.Initialize` once you have an `SKCanvas`, passing a `.gumj` project path only if you're loading one (omit it for a code-only setup):
 
 ```csharp
 // Initialize
