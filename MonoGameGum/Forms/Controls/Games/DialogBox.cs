@@ -89,7 +89,6 @@ public class DialogBox : FrameworkElement, IInputReceiver
 #else
     bool isTyping;
     double typingElapsedSeconds;
-    int typingTargetLetterCount;
 #endif
 
     public event Action<IInputReceiver>? FocusUpdate;
@@ -491,7 +490,6 @@ public class DialogBox : FrameworkElement, IInputReceiver
                 FinishedTypingPage?.Invoke(this, EventArgs.Empty);
             };
 #else
-            typingTargetLetterCount = strippedLength;
             typingElapsedSeconds = 0;
             isTyping = true;
 #endif
@@ -520,10 +518,13 @@ public class DialogBox : FrameworkElement, IInputReceiver
 
         typingElapsedSeconds += secondDifference;
 
+        // Read the length every frame: the text can be replaced while typing (a language change
+        // re-translates it), so a count stored in ShowInternal would go stale.
+        var targetLetterCount = CoreTextObject.RawText?.Length ?? 0;
         var lettersToShow = (int)(typingElapsedSeconds * (LettersPerSecond ?? 0));
-        if (lettersToShow >= typingTargetLetterCount)
+        if (lettersToShow >= targetLetterCount)
         {
-            lettersToShow = typingTargetLetterCount;
+            lettersToShow = targetLetterCount;
             isTyping = false;
             CoreTextObject.MaxLettersToShow = lettersToShow;
 
