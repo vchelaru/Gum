@@ -71,11 +71,11 @@ public class SpriteGoldenImageTests : IDisposable
         return sprite;
     }
 
-    void DrawAndMatch(string name, SKFilterMode filter = SKFilterMode.Nearest)
+    void DrawAndMatch(string name, SKFilterMode filter = SKFilterMode.Nearest, byte tolerance = 0)
     {
         RenderingLibrary.Graphics.Renderer.TextureFilter = filter;
         GumService.Default.Draw();
-        GoldenImageAssert.Matches(_surface, name, tolerance: 0);
+        GoldenImageAssert.Matches(_surface, name, tolerance);
     }
 
     [Theory]
@@ -174,6 +174,8 @@ public class SpriteGoldenImageTests : IDisposable
             container.Children.Add(sprite);
             GumService.Default.Root.Children.Add(container);
         }
-        DrawAndMatch("Sprite_ManySameTexture");
+        // The Windows-made baseline is not exact on macOS where translucent texels overlap, with main's
+        // DrawImage path too, so this image uses GoldenImageAssert's default cross-OS tolerance.
+        DrawAndMatch("Sprite_ManySameTexture", tolerance: 2);
     }
 }
