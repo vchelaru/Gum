@@ -212,8 +212,40 @@ namespace RenderingLibrary.Graphics
             }
         }
 
+        /// <summary>
+        /// Counters for the last host frame's draw calls, the same API the MonoGame and raylib renderers
+        /// expose. Reset once per host frame (each full-scene <c>Draw</c>, or the first GumBatch call
+        /// after <c>GumService.Update</c>), so GumBatch cycles within one frame add up.
+        /// </summary>
+        public RenderStateChangeStatistics RenderStateChangeStatistics { get; } = new RenderStateChangeStatistics();
+
+        SpriteAtlasBatch? _spriteBatch;
+
+        // Consecutive same-image sprites draw through one DrawAtlas call (#7826).
+        internal SpriteAtlasBatch SpriteBatch => _spriteBatch ??= new SpriteAtlasBatch(RenderStateChangeStatistics);
+
+        // Greater than zero while a public draw entry point runs. Sprites batch only then, and the outermost
+        // entry point flushes before returning, so no sprite is left pending when control goes back to the
+        // host (a host draw in between, a sprite's Render called directly, a Draw outside a cycle).
+        int _drawScopeDepth;
+
+        // The batch sprites add to, or null outside a draw entry point, where a sprite draws on its own.
+        internal SpriteAtlasBatch? ActiveSpriteBatch => _drawScopeDepth > 0 ? SpriteBatch : null;
+
+        private void EnterDrawScope() => _drawScopeDepth++;
+
+        private void ExitDrawScope()
+        {
+            _drawScopeDepth--;
+            if (_drawScopeDepth == 0)
+            {
+                _spriteBatch?.Flush();
+            }
+        }
+
         private void StartHostFrameRenderTargets()
         {
+            RenderStateChangeStatistics.Reset();
             DisposeBakedImages();
             _referencedRenderTargetOwners.Clear();
             _renderTargetService.ClearUnusedRenderTargetsLastFrame();
@@ -225,19 +257,27 @@ namespace RenderingLibrary.Graphics
         private void DrawTopLevel(IList<IRenderableIpso> whatToRender, SystemManagers managers, Layer? layer)
         {
             _referencedRenderTargetOwners.Clear();
-            // Before the camera transform is applied to the screen canvas.
-            BakeRenderTargets(whatToRender, managers, layer);
-
-            ApplyCamera(managers.Canvas, layer, matrix: null);
+            EnterDrawScope();
             try
             {
-                DrawList(whatToRender, managers, layer);
+                // Before the camera transform is applied to the screen canvas.
+                BakeRenderTargets(whatToRender, managers, layer);
+
+                ApplyCamera(managers.Canvas, layer, matrix: null);
+                try
+                {
+                    DrawList(whatToRender, managers, layer);
+                }
+                finally
+                {
+                    // Undoes this layer's camera so the next layer (or the next frame) starts from a
+                    // clean matrix (#4330), even when a Render throws.
+                    RestoreCamera(managers.Canvas);
+                }
             }
             finally
             {
-                // Undoes this layer's camera so the next layer (or the next frame) starts from a
-                // clean matrix (#4330), even when a Render throws.
-                RestoreCamera(managers.Canvas);
+                ExitDrawScope();
             }
         }
 
@@ -367,7 +407,17 @@ namespace RenderingLibrary.Graphics
             }
             else if (renderable.Visible)
             {
-                DrawRenderable(renderable, OwnManagers);
+                // Immediate mode and a Draw outside a cycle draw before returning, so a host draw
+                // between two calls lands between them.
+                EnterDrawScope();
+                try
+                {
+                    DrawRenderable(renderable, OwnManagers);
+                }
+                finally
+                {
+                    ExitDrawScope();
+                }
             }
         }
 
@@ -377,6 +427,7 @@ namespace RenderingLibrary.Graphics
         /// </summary>
         public void End()
         {
+            EnterDrawScope();
             try
             {
                 if (_deferredRoots.Count > 0)
@@ -397,6 +448,7 @@ namespace RenderingLibrary.Graphics
             }
             finally
             {
+                ExitDrawScope();
                 // Cleared and restored even when a Render throws, so the next cycle neither redraws
                 // this cycle's roots (#4584) nor inherits its matrix.
                 _deferredRoots.Clear();
@@ -428,6 +480,7 @@ namespace RenderingLibrary.Graphics
         {
             _preRenderRootsBuffer.Clear();
             _preRenderRootsBuffer.AddRange(roots);
+            EnterDrawScope();
             try
             {
                 TryStartHostFrameForBatch();
@@ -437,6 +490,7 @@ namespace RenderingLibrary.Graphics
             }
             finally
             {
+                ExitDrawScope();
                 _preRenderRootsBuffer.Clear();
             }
         }
@@ -488,6 +542,7 @@ namespace RenderingLibrary.Graphics
             // hidden one is skipped by the caller's Visible check, so no stale texture ghosts.
             if (renderable.IsRenderTarget)
             {
+                SpriteBatch.Flush();
                 CompositeRenderTarget(renderable, managers);
                 return;
             }
@@ -508,14 +563,15 @@ namespace RenderingLibrary.Graphics
 
                 if (isOnScreen)
                 {
+                    SpriteBatch.Flush();
                     canvas.Save();
                     canvas.ClipTo(renderable);
-                    renderable.Render(managers);
+                    RenderOne(renderable, managers);
                 }
             }
             else
             {
-                renderable.Render(managers);
+                RenderOne(renderable, managers);
             }
 
             if (isOnScreen)
@@ -527,9 +583,24 @@ namespace RenderingLibrary.Graphics
 
                 if (renderable.ClipsChildren)
                 {
+                    SpriteBatch.Flush();
                     canvas.Restore();
                 }
             }
+        }
+
+        // Sprites add themselves to SpriteBatch; anything else that draws flushes it first so draw order holds.
+        // Containers draw nothing, so sprites in separate containers still share a batch.
+        private void RenderOne(IRenderableIpso renderable, SystemManagers managers)
+        {
+            IRenderableIpso inner = renderable is GraphicalUiElement element && element.RenderableComponent is IRenderableIpso contained
+                ? contained
+                : renderable;
+            if (inner is not Sprite && inner is not InvisibleRenderable)
+            {
+                SpriteBatch.Flush();
+            }
+            renderable.Render(managers);
         }
 
         private void PreRender(IList<IRenderableIpso> renderables)
@@ -772,6 +843,7 @@ namespace RenderingLibrary.Graphics
             }
             finally
             {
+                SpriteBatch.Flush();
                 _bakeDepth--;
                 managers.Canvas = screenCanvas;
                 offscreenCanvas.Restore();
@@ -858,6 +930,7 @@ namespace RenderingLibrary.Graphics
             try
             {
                 DrawRenderTargetImage(surface, destination, paint, owner, imageLeft, imageTop, width, height, zoom, canvas);
+                RenderStateChangeStatistics.RecordDrawCall();
             }
             finally
             {
@@ -1077,6 +1150,7 @@ namespace RenderingLibrary.Graphics
 
         private void RestoreCamera(SKCanvas canvas)
         {
+            SpriteBatch.Flush();
             canvas.Restore();
             _cameraBaseMatrix = null;
             _cameraCallerMatrix = null;
@@ -1095,7 +1169,20 @@ namespace RenderingLibrary.Graphics
                 return;
             }
 
-            SystemManagers skiaManagers = (SystemManagers)managers;
+            // A host may call this directly, so it flushes before returning when it is the outermost draw.
+            EnterDrawScope();
+            try
+            {
+                RenderLayerInScope((SystemManagers)managers, layer, prerender);
+            }
+            finally
+            {
+                ExitDrawScope();
+            }
+        }
+
+        private void RenderLayerInScope(SystemManagers skiaManagers, Layer layer, bool prerender)
+        {
             SKCanvas canvas = skiaManagers.Canvas;
             SKMatrix? outerBaseMatrix = _cameraBaseMatrix;
             SKMatrix? outerCallerMatrix = _cameraCallerMatrix;
@@ -1126,6 +1213,7 @@ namespace RenderingLibrary.Graphics
             }
             finally
             {
+                SpriteBatch.Flush();
                 canvas.Restore();
                 canvas.Restore();
                 _cameraBaseMatrix = outerBaseMatrix;

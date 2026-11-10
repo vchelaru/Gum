@@ -259,6 +259,9 @@ public class NineSlice : RenderableShapeBase, IAnimatable, IAnimationChainRender
         return paint;
     }
 
+    // Up to nine sections, more when tiling; each DrawImage records itself.
+    private protected override bool RecordsOwnDrawCalls => true;
+
     public override void DrawBound(SKRect boundingRect, SKCanvas canvas, float absoluteRotation)
     {
         // RenderableShapeBase.Render has already saved the canvas, translated to
@@ -537,6 +540,7 @@ public class NineSlice : RenderableShapeBase, IAnimatable, IAnimationChainRender
             SKRect src = new SKRect(srcX, srcY, srcX + srcW, srcY + srcH);
             SKRect dest = new SKRect(destX, destY, destX + destW, destY + destH);
             draw.Canvas.DrawImage(sourceImage, src, dest, draw.Sampling, draw.Paint);
+            DrawStatistics?.RecordDrawCall();
             return;
         }
 
@@ -580,6 +584,7 @@ public class NineSlice : RenderableShapeBase, IAnimatable, IAnimationChainRender
                     destX + currentX + thisTileDestW,
                     destY + currentY + thisTileDestH);
                 draw.Canvas.DrawImage(sourceImage, src, dest, draw.Sampling, draw.Paint);
+                DrawStatistics?.RecordDrawCall();
 
                 currentX += thisTileDestW;
             }
