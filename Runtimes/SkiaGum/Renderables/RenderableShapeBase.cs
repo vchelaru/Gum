@@ -1154,10 +1154,18 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
 
     #endregion
 
+    // Reused for every gradient this shape builds, so a gradient animated every frame allocates only the
+    // shader. Skia copies the stops into the shader when it is created. Created on first use so shapes
+    // without a gradient do not carry them.
+    private SKColor[]? _gradientColors;
+    private float[]? _gradientPositions;
+
     protected void ApplyGradientToPaint(SKRect boundingRect, SKPaint paint, float absoluteRotation)
     {
-        var firstColor = new SKColor((byte)Red1, (byte)Green1, (byte)Blue1, (byte)Alpha1);
-        var secondColor = new SKColor((byte)Red2, (byte)Green2, (byte)Blue2, (byte)Alpha2);
+        _gradientColors ??= new SKColor[2];
+        _gradientPositions ??= new float[2];
+        _gradientColors[0] = new SKColor((byte)Red1, (byte)Green1, (byte)Blue1, (byte)Alpha1);
+        _gradientColors[1] = new SKColor((byte)Red2, (byte)Green2, (byte)Blue2, (byte)Alpha2);
 
         var effectiveGradientX1 = GradientX1;
         switch (this.GradientX1Units)
@@ -1238,8 +1246,8 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
             using SKShader linear = SKShader.CreateLinearGradient(
                 new SKPoint(effectiveGradientX1, effectiveGradientY1), // left, top
                 new SKPoint(effectiveGradientX2, effectiveGradientY2), // right, bottom
-                new SKColor[] { firstColor, secondColor },
-                new float[] { 0, 1 },
+                _gradientColors,
+                SetGradientPositions(0, 1),
                 SKShaderTileMode.Clamp);
             paint.Shader = linear;
         }
@@ -1282,11 +1290,18 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
             using SKShader radial = SKShader.CreateRadialGradient(
                 new SKPoint(effectiveGradientX1, effectiveGradientY1), // center
                 effectiveOuterRadius,
-                new SKColor[] { firstColor, secondColor },
-                new float[] { innerToOuterRatio, 1 },
+                _gradientColors,
+                SetGradientPositions(innerToOuterRatio, 1),
                 SKShaderTileMode.Clamp);
             paint.Shader = radial;
         }
+    }
+
+    float[] SetGradientPositions(float first, float second)
+    {
+        _gradientPositions![0] = first;
+        _gradientPositions[1] = second;
+        return _gradientPositions;
     }
 
     SKRect Unrotate(SKRect beforeRotation, float angleToUndoDegrees)

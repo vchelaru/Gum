@@ -2,20 +2,43 @@ using Gum;
 using Gum.GueDeriving;
 using Gum.Wireframe;
 using RenderingLibrary.Graphics;
+using Shouldly;
 using SkiaSharp;
 
 namespace SkiaGum.Tests.GoldenImages;
 
 /// <summary>
-/// Pins the pixels of linear and radial gradients. Two gradients with different stops are drawn in the
-/// same frame, so a gradient that kept a reference to stop data shared with the next one would show the
-/// second gradient's colors in the first.
+/// Pins the pixels of linear and radial gradients, so a change to how the gradient shader is built must
+/// render identically.
 /// </summary>
 public class GradientGoldenImageTests
 {
     public GradientGoldenImageTests()
     {
         GraphicalUiElement.SetPropertyOnRenderable = CustomSetPropertyOnRenderable.SetPropertyOnRenderable;
+    }
+
+    // RenderableShapeBase reuses its stop arrays for every shader it builds, which is safe only because
+    // Skia copies the stops when the shader is created.
+    [Fact]
+    public void GradientShader_StopArraysChangedAfterCreation_KeepsCreationColors()
+    {
+        SKColor[] colors = { SKColors.Red, SKColors.Red };
+        float[] positions = { 0, 1 };
+        using SKShader shader = SKShader.CreateLinearGradient(
+            new SKPoint(0, 0), new SKPoint(8, 0), colors, positions, SKShaderTileMode.Clamp);
+        colors[0] = SKColors.Blue;
+        colors[1] = SKColors.Blue;
+        positions[0] = 0.5f;
+
+        using SKBitmap bitmap = new SKBitmap(8, 8);
+        using (SKCanvas canvas = new SKCanvas(bitmap))
+        using (SKPaint paint = new SKPaint { Shader = shader })
+        {
+            canvas.DrawRect(0, 0, 8, 8, paint);
+        }
+
+        bitmap.GetPixel(4, 4).ShouldBe(SKColors.Red);
     }
 
     [Fact]
