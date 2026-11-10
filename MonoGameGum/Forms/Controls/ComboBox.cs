@@ -911,15 +911,26 @@ public class ComboBox :
         // Now that we have the values, detach it. Each of the changes below would lay the rows out
         // again (and a text row measures its text again whenever its width changes), so the list box
         // lays out once, with all of them, when layout resumes (#7870).
+        // A suspension the caller already holds on the list box stays theirs; only ours is released, even if a handler throws.
+        bool wasSuspended = listBoxVisual.IsLayoutSuspended;
         listBoxVisual.SuspendLayout();
-        this.Visual.Children.Remove(listBoxVisual);
-        listBox.X = x;
-        listBox.Y = y;
-        listBoxVisual.WidthUnits = DimensionUnitType.Absolute;
-        listBoxVisual.HeightUnits = DimensionUnitType.Absolute;
-        listBox.Width = width;
-        listBox.Height = height;
-        listBoxVisual.ResumeLayout();
+        try
+        {
+            this.Visual.Children.Remove(listBoxVisual);
+            listBox.X = x;
+            listBox.Y = y;
+            listBoxVisual.WidthUnits = DimensionUnitType.Absolute;
+            listBoxVisual.HeightUnits = DimensionUnitType.Absolute;
+            listBox.Width = width;
+            listBox.Height = height;
+        }
+        finally
+        {
+            if (!wasSuspended)
+            {
+                listBoxVisual.ResumeLayout();
+            }
+        }
         ListBox.ShowPopupListBox(listBox, this.Visual);
 
 #if !FRB

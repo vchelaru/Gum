@@ -325,6 +325,51 @@ public class ComboBoxReopenCharacterizationTests : BaseTestClass
         Snapshot(comboBox).ShouldBe(Expected.OpenedWhileDisabled);
     }
 
+    [Fact]
+    public void Open_ParentChangedHandlerThrowsOnce_ListBoxIsNotLeftSuspendedAndNextOpenWorks()
+    {
+        ComboBox comboBox = CreateComboBox(4);
+        comboBox.IsDropDownOpen = true;
+        comboBox.IsDropDownOpen = false;
+        GraphicalUiElement listVisual = comboBox.ListBox.Visual;
+        bool thrown = false;
+        void ThrowOnceWhenDetachedFromComboBox(object? sender, GraphicalUiElement.ParentChangedEventArgs args)
+        {
+            if (!thrown && args.OldValue == comboBox.Visual && args.NewValue == null)
+            {
+                thrown = true;
+                throw new System.InvalidOperationException("handler failed");
+            }
+        }
+        listVisual.ParentChanged += ThrowOnceWhenDetachedFromComboBox;
+
+        Should.Throw<System.InvalidOperationException>(() => comboBox.IsDropDownOpen = true);
+
+        thrown.ShouldBeTrue();
+        listVisual.IsLayoutSuspended.ShouldBeFalse();
+        listVisual.ParentChanged -= ThrowOnceWhenDetachedFromComboBox;
+        comboBox.IsDropDownOpen = false;
+        comboBox.IsDropDownOpen = true;
+        Snapshot(comboBox).ShouldBe(Expected.OpenFourItems);
+    }
+
+    [Fact]
+    public void Open_ListBoxSuspendedByCaller_StaysSuspendedThroughOpenAndClose()
+    {
+        ComboBox comboBox = CreateComboBox(4);
+        comboBox.IsDropDownOpen = true;
+        comboBox.IsDropDownOpen = false;
+        GraphicalUiElement listVisual = comboBox.ListBox.Visual;
+        listVisual.SuspendLayout();
+
+        comboBox.IsDropDownOpen = true;
+        bool suspendedWhileOpen = listVisual.IsLayoutSuspended;
+        comboBox.IsDropDownOpen = false;
+
+        suspendedWhileOpen.ShouldBeTrue();
+        listVisual.IsLayoutSuspended.ShouldBeTrue();
+    }
+
     private static class Expected
     {
         public const string OpenFourItems = """
