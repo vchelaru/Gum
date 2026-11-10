@@ -107,6 +107,9 @@ internal sealed class ItemSelection<TRow> where TRow : class, ISelectableRow
         for (int i = 0; i < rows.Count; i++)
         {
             TRow row = rows[i];
+            // Read before setting IsSelected: its setter raises Selected synchronously, and a handler
+            // could change the row's data object.
+            object? item = row.DataObject;
             bool shouldBeSelected = _selectedRows.Contains(row);
 
             if (row.IsSelected != shouldBeSelected)
@@ -115,11 +118,11 @@ internal sealed class ItemSelection<TRow> where TRow : class, ISelectableRow
 
                 if (shouldBeSelected)
                 {
-                    addedItems.Add(row.DataObject);
+                    addedItems.Add(item);
                 }
                 else
                 {
-                    removedItems.Add(row.DataObject);
+                    removedItems.Add(item);
                 }
             }
         }

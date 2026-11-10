@@ -12,7 +12,8 @@ namespace MonoGameGum.Tests.Forms;
 /// <summary>
 /// Pins ListBox selection behavior that no other test covered before the selection logic moved into a
 /// shared helper (#7843): direct binding, collection edits next to a selected row, the Extended-to-Single
-/// collapse, gamepad button events, and a subclass overriding the protected hooks.
+/// collapse, gamepad button events, a subclass overriding the protected hooks, re-entrant reselection,
+/// clearing with a selection, and stepping past disabled rows.
 /// </summary>
 public class ListBoxSelectionCharacterizationTests : BaseTestClass
 {
@@ -312,6 +313,102 @@ public class ListBoxSelectionCharacterizationTests : BaseTestClass
             base.HandleCollectionItemRemoved(indexToRemoveFrom, removedItem);
             RowCountsSeenOnRemove.Add(ListBoxItemsInternal.Count);
         }
+    }
+
+    #endregion
+
+    #region Re-entrancy, clearing and stepping
+
+    [Fact]
+    public void SelectionChanged_HandlerReselects_EndsOnHandlerChoice()
+    {
+        ListBox listBox = CreateListBox("A", "B", "C");
+        List<int> seenIndexes = new();
+        listBox.SelectionChanged += (_, _) =>
+        {
+            seenIndexes.Add(listBox.SelectedIndex);
+            if (listBox.SelectedIndex == 1)
+            {
+                listBox.SelectedIndex = 2;
+            }
+        };
+
+        listBox.ListBoxItems[1].IsSelected = true;
+
+        listBox.SelectedIndex.ShouldBe(2);
+        listBox.SelectedItems.Cast<object>().ShouldBe(new object[] { "C" });
+        listBox.ListBoxItems.Select(row => row.IsSelected).ShouldBe(new[] { false, false, true });
+        seenIndexes.ShouldBe(new[] { 1, 2 });
+    }
+
+    [Fact]
+    public void ItemsClear_WithSelection_ClearsSelectionAndAllowsReselect()
+    {
+        ListBox listBox = CreateListBox("A", "B", "C");
+        listBox.SelectedIndex = 1;
+        int changedCount = 0;
+        listBox.SelectionChanged += (_, _) => changedCount++;
+
+        listBox.Items!.Clear();
+        listBox.SelectedIndex.ShouldBe(-1);
+        listBox.SelectedItems.Count.ShouldBe(0);
+
+        listBox.Items.Add("X");
+        listBox.Items.Add("B");
+        listBox.ListBoxItems.Any(row => row.IsSelected).ShouldBeFalse();
+        listBox.SelectedObject = "B";
+
+        listBox.SelectedIndex.ShouldBe(1);
+        listBox.ListBoxItems[1].IsSelected.ShouldBeTrue();
+        changedCount.ShouldBe(2);
+    }
+
+    [Fact]
+    public void StepRowSelection_SkipsDisabledRows()
+    {
+        ListBox listBox = CreateListBox("A", "B", "C", "D", "E");
+        listBox.SelectedIndex = 4;
+        listBox.ListBoxItems[3].IsEnabled = false;
+
+        listBox.StepRowSelection(forward: false);
+
+        listBox.SelectedIndex.ShouldBe(2);
+    }
+
+    [Fact]
+    public void StepRowSelection_NoEnabledRowAhead_StaysOnCurrent()
+    {
+        ListBox listBox = CreateListBox("A", "B", "C", "D", "E");
+        listBox.SelectedIndex = 2;
+        listBox.ListBoxItems[3].IsEnabled = false;
+        listBox.ListBoxItems[4].IsEnabled = false;
+
+        listBox.StepRowSelection(forward: true);
+
+        listBox.SelectedIndex.ShouldBe(2);
+    }
+
+    [Fact]
+    public void StepRowSelection_NoSelection_FirstEnabledRow()
+    {
+        ListBox listBox = CreateListBox("A", "B", "C");
+        listBox.ListBoxItems[0].IsEnabled = false;
+
+        listBox.StepRowSelection(forward: true);
+
+        listBox.SelectedIndex.ShouldBe(1);
+    }
+
+    [Fact]
+    public void StepRowSelection_SelectedRowDisabled_StepsFromSelectedRow()
+    {
+        ListBox listBox = CreateListBox("A", "A", "B", "C");
+        listBox.ListBoxItems[1].IsSelected = true;
+        listBox.ListBoxItems[1].IsEnabled = false;
+
+        listBox.StepRowSelection(forward: true);
+
+        listBox.SelectedIndex.ShouldBe(2);
     }
 
     #endregion
