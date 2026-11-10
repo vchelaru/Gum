@@ -59,7 +59,8 @@ public class BehaviorFormsPropertyCatalogTests : BaseTestClass
     /// <summary>
     /// Declared defaults that intentionally differ from a code-created control's. A code-created
     /// TabControl starts empty, so it selects none (-1, as ListBox does); a tool-authored one
-    /// selects its first tab, which the declared 0 gives it (#6408).
+    /// selects its first tab once its tabs arrive, which the declared 0 gives it
+    /// (ThemeTabControlDefaultSelectionTests, #6408).
     /// </summary>
     private static readonly HashSet<string> DefaultsThatDifferByDesign = new HashSet<string>
     {

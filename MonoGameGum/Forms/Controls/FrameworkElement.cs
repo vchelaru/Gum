@@ -2736,6 +2736,13 @@ public class FrameworkElement : INotifyPropertyChanged
     /// </summary>
     internal virtual bool KeepsPushedStateWhenCursorLeaves => false;
 
+    /// <summary>
+    /// Offered a value the project defines for a Forms property when the control is built, before the
+    /// element that owns it has put its children in. Returns true when the control keeps the value to
+    /// apply once it can, so the caller does not write it now.
+    /// </summary>
+    internal virtual bool TryDeferDesignDefault(string propertyName, object value) => false;
+
     protected virtual bool GetIfPushInputIsHeld() =>
         GetIfGamepadOrKeyboardPrimaryPushInputIsHeld();
 

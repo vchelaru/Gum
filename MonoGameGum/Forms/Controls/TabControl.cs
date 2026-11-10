@@ -47,6 +47,9 @@ public class TabControl : ItemsControl
     private bool _isHandlingContentPanelEvent;
     // What a bound view model was last given: the empty control's -1 and null until the first push.
     private int _lastPushedSelectedIndex = -1;
+    // The SelectedIndex a project defines (the behavior's declared 0), waiting for the tabs the owning
+    // screen parents into the strip after this control is built. Any other selection change drops it.
+    private int? _deferredDefaultSelectedIndex;
     private object? _lastPushedSelectedObject;
 
     /// <summary>The tab headers, in strip order.</summary>
@@ -417,6 +420,18 @@ public class TabControl : ItemsControl
         PushSelectionIfChanged();
     }
 
+    /// <inheritdoc/>
+    internal override bool TryDeferDesignDefault(string propertyName, object value)
+    {
+        if (propertyName != nameof(SelectedIndex) || value is not int index || index < _tabItems.Count)
+        {
+            return false;
+        }
+
+        _deferredDefaultSelectedIndex = index;
+        return true;
+    }
+
     private void InsertTab(TabItem tab, int tabIndex, bool createPage = true)
     {
         _tabItems.Insert(tabIndex, tab);
@@ -430,6 +445,11 @@ public class TabControl : ItemsControl
         {
             tab.Page.IsSelected = tab.IsSelected;
             PlacePage(tab.Page, tabIndex);
+        }
+
+        if (_deferredDefaultSelectedIndex is int deferred && deferred < _tabItems.Count)
+        {
+            SelectTab(_tabItems[deferred]);
         }
     }
 
@@ -759,6 +779,7 @@ public class TabControl : ItemsControl
 
     private void SelectTab(TabItem? tab)
     {
+        _deferredDefaultSelectedIndex = null;
         FlushContentPanelEdits();
         bool isAlreadyTheSelection = tab == null
             ? _selection.Count == 0
@@ -789,6 +810,7 @@ public class TabControl : ItemsControl
         }
 
         // The tab already flipped its own IsSelected, so it is reported here rather than by the sync.
+        _deferredDefaultSelectedIndex = null;
         SelectionChangedEventArgs args = new SelectionChangedEventArgs();
         if (tab.IsSelected && !_selection.Contains(tab))
         {
