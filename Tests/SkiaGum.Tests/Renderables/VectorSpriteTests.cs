@@ -61,6 +61,32 @@ public class VectorSpriteTests
         center.ShouldBe(new SKColor(0, 0, 255, 255));
     }
 
+    // The tint paint is cached between draws, so a Color change must still reach the next draw.
+    [Fact]
+    public void Render_ColorChangedBetweenDraws_UsesNewTint()
+    {
+        using SKSurface surface = SKSurface.Create(new SKImageInfo(16, 16, SKColorType.Rgba8888, SKAlphaType.Premul));
+        SystemManagers managers = new SystemManagers();
+        managers.Canvas = surface.Canvas;
+        using SKSvg svg = new SKSvg();
+        using MemoryStream stream = new MemoryStream(Encoding.UTF8.GetBytes(
+            "<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16'>" +
+            "<rect width='16' height='16' fill='#ffffff'/></svg>"));
+        svg.Load(stream);
+        VectorSprite sprite = new VectorSprite { Width = 16, Height = 16, Texture = svg };
+        using SKBitmap bitmap = new SKBitmap(16, 16);
+
+        sprite.Color = new SKColor(255, 0, 0);
+        surface.Canvas.Clear(SKColors.Transparent);
+        sprite.Render(managers);
+        sprite.Color = new SKColor(0, 0, 255);
+        surface.Canvas.Clear(SKColors.Transparent);
+        sprite.Render(managers);
+
+        surface.ReadPixels(bitmap.Info, bitmap.GetPixels(), bitmap.RowBytes, 0, 0);
+        bitmap.GetPixel(8, 8).ShouldBe(new SKColor(0, 0, 255, 255));
+    }
+
     private static SKColor RenderSvgAndReadCenter(string svgText)
     {
         using SKSurface surface = SKSurface.Create(new SKImageInfo(16, 16, SKColorType.Rgba8888, SKAlphaType.Premul));
