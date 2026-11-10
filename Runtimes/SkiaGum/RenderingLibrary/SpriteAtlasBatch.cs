@@ -62,10 +62,9 @@ internal sealed class SpriteAtlasBatch
     /// Adds a sprite drawing <paramref name="source"/> of <paramref name="image"/> into <paramref name="destination"/>
     /// under the canvas's current matrix, tinted by <paramref name="tint"/> (Modulate, opaque) and faded by
     /// <paramref name="alpha"/>. Returns false, adding nothing, when the sprite cannot be an RSXform; the caller
-    /// then flushes and draws it itself.
+    /// then flushes and draws it itself. <paramref name="key"/> decides whether two sprites draw the same pixels:
+    /// the sprites' shared bitmap, so sprites that each wrap the same bitmap in their own image still batch.
     /// </summary>
-    /// <param name="key">What decides whether two sprites draw the same pixels: the sprites' shared bitmap, so
-    /// sprites that each wrap the same bitmap in their own image still batch.</param>
     public bool TryAdd(SKCanvas canvas, object key, SKImage image, SKRect source, SKRect destination,
         SKColor tint, byte alpha, SKSamplingOptions sampling)
     {
