@@ -232,6 +232,51 @@ public class SpriteAtlasBatchDrawOrderTests : IDisposable
         bytes.ShouldBe(0);
     }
 
+    // A run longer than the cap splits into DrawAtlas calls of at most MaxBatchLength sprites, in order, so
+    // the output matches one uncapped call and the pool never keeps arrays longer than the cap.
+    [Fact]
+    public void Draw_RunLongerThanCap_SplitsIntoCappedCallsWithSameOutput()
+    {
+        for (int i = 0; i < 1500; i++)
+        {
+            // Overlapping, alternating tints, so a reordered split would change pixels.
+            SpriteRuntime sprite = Sprite(_red, i % 50, i / 50 * 2, size: 6);
+            sprite.Color = i % 2 == 0 ? SKColors.Gray : SKColors.White;
+            GumService.Default.Root.Children.Add(sprite);
+        }
+        SpriteAtlasBatch batch = SystemManagers.Default.Renderer.SpriteBatch;
+        int cap = batch.MaxBatchLength;
+        cap.ShouldBe(1024);
+
+        byte[] uncapped;
+        try
+        {
+            batch.MaxBatchLength = int.MaxValue;
+            GumService.Default.Draw();
+            DrawCalls.ShouldBe(1);
+            uncapped = Snapshot();
+        }
+        finally
+        {
+            batch.MaxBatchLength = cap;
+        }
+
+        _surface.Canvas.Clear(SKColors.Transparent);
+        batch.ClearPool();
+        GumService.Default.Draw();
+
+        DrawCalls.ShouldBe(2);
+        Snapshot().ShouldBe(uncapped);
+        batch.LongestPooledLength.ShouldBeLessThanOrEqualTo(1024);
+    }
+
+    byte[] Snapshot()
+    {
+        using SKImage image = _surface.Snapshot();
+        using SKBitmap bitmap = SKBitmap.FromImage(image);
+        return bitmap.Bytes;
+    }
+
     // The pool keeps one exact-length array set per batch length, so random lengths stop allocating once
     // each length has been drawn.
     [Fact]

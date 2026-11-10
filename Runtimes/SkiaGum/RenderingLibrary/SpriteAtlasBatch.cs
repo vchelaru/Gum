@@ -16,7 +16,8 @@ namespace RenderingLibrary.Graphics;
 /// camera) share a batch; the flush draws with an identity matrix. A sprite whose device transform is not a
 /// rotation plus uniform scale (a flip, a non-uniform scale) cannot be an RSXform and is drawn on its own by
 /// its caller. SkiaSharp's DrawAtlas takes whole arrays only, so the flush copies into a pooled array of the
-/// exact batch length; once each length has been seen, a frame allocates nothing.
+/// exact batch length; once each length has been seen, a frame allocates nothing. A batch holds at most
+/// MaxBatchLength sprites, so the pool keeps at most that many lengths (about 19 MB at 1,024 in the worst case).
 /// </remarks>
 internal sealed class SpriteAtlasBatch
 {
@@ -59,6 +60,29 @@ internal sealed class SpriteAtlasBatch
     public int PendingCount => _count;
 
     /// <summary>
+    /// The most sprites one DrawAtlas call draws (1,024). A longer run splits into several calls in order, so the
+    /// exact-length pool holds at most this many lengths. Settable for tests.
+    /// </summary>
+    internal int MaxBatchLength { get; set; } = 1024;
+
+    /// <summary>The longest batch length the pool holds arrays for, 0 when empty.</summary>
+    internal int LongestPooledLength
+    {
+        get
+        {
+            int longest = 0;
+            foreach (int length in _exactArrays.Keys)
+            {
+                longest = System.Math.Max(longest, length);
+            }
+            return longest;
+        }
+    }
+
+    /// <summary>Drops every pooled array set.</summary>
+    internal void ClearPool() => _exactArrays.Clear();
+
+    /// <summary>
     /// Adds a sprite drawing <paramref name="source"/> of <paramref name="image"/> into <paramref name="destination"/>
     /// under the canvas's current matrix, tinted by <paramref name="tint"/> (Modulate, opaque) and faded by
     /// <paramref name="alpha"/>. Returns false, adding nothing, when the sprite cannot be an RSXform; the caller
@@ -90,7 +114,7 @@ internal sealed class SpriteAtlasBatch
         }
 
         if (_count > 0 && (!ReferenceEquals(canvas, _canvas) || !ReferenceEquals(key, _key) ||
-            !sampling.Equals(_sampling) || alpha != _alpha))
+            !sampling.Equals(_sampling) || alpha != _alpha || _count >= MaxBatchLength))
         {
             Flush();
         }
