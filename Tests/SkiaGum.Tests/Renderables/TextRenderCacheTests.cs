@@ -196,6 +196,43 @@ public class TextRenderCacheTests
     }
 
     [Fact]
+    public void Render_WrappingTextWidthSetToFractionalMeasuredWidth_MatchesAFreshLayoutAtThatWidth()
+    {
+        const string rawText = "Hello wide world";
+        Text sized = CreateText(rawText);
+        sized.Width = null;
+        float measuredWidth = sized.GetCachedTextBlock().MeasuredWidth;
+        measuredWidth.ShouldNotBe(MathF.Floor(measuredWidth));
+        sized.Width = measuredWidth;
+        Text fresh = CreateText(rawText);
+        fresh.Width = measuredWidth;
+
+        LineBreaks(sized).ShouldBe(LineBreaks(fresh));
+        RenderFrames(sized, frames: 1).ShouldBe(RenderFrames(fresh, frames: 1));
+    }
+
+    [Fact]
+    public void Render_WidthSetBelowMeasuredWidth_RebuildsAndWrapsLikeAFreshLayout()
+    {
+        const string rawText = "Hello wide world";
+        Text sized = CreateText(rawText);
+        sized.Width = null;
+        TextBlock unbounded = sized.GetCachedTextBlock();
+        float narrowerWidth = unbounded.MeasuredWidth - 0.5f;
+        sized.Width = narrowerWidth;
+        Text fresh = CreateText(rawText);
+        fresh.Width = narrowerWidth;
+
+        sized.GetCachedTextBlock().ShouldNotBeSameAs(unbounded);
+        sized.GetCachedTextBlock().Lines.Count.ShouldBeGreaterThan(1);
+        LineBreaks(sized).ShouldBe(LineBreaks(fresh));
+        RenderFrames(sized, frames: 1).ShouldBe(RenderFrames(fresh, frames: 1));
+    }
+
+    private static (int Start, int Length)[] LineBreaks(Text text) =>
+        text.GetCachedTextBlock().Lines.Select(line => (line.Start, line.Length)).ToArray();
+
+    [Fact]
     public void GetPaintTextBlock_RevealUnchanged_ReturnsTheSameBlock()
     {
         Text text = CreateText("Hello world, wrapped over lines");
