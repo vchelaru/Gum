@@ -1,5 +1,7 @@
+using System.Collections.Generic;
 using Gum.DataTypes;
 using Gum.Forms.Controls.Games;
+using RenderingLibrary;
 using Gum.Wireframe;
 using Gum.GueDeriving;
 using RenderingLibrary.Graphics;
@@ -403,4 +405,68 @@ public class DialogBoxTests : BaseTestClass
 
         newText.MaxLettersToShow.ShouldBe(0, "because only the current visual should advance the dialog");
     }
+
+    private static List<IRenderableIpso> RecordLayerRegistrations()
+    {
+        List<IRenderableIpso> registered = new();
+        GraphicalUiElement.AddRenderableToManagers = (renderable, managers, layer) => registered.Add(renderable);
+        return registered;
+    }
+
+    [Fact]
+    public void Show_WhenVisualIsInsideManagedContainer_ShouldNotRegisterRenderableAsTopLevel()
+    {
+        List<IRenderableIpso> registered = RecordLayerRegistrations();
+        var (dialogBox, visual) = CreateDialogBox();
+        ContainerRuntime container = new();
+        Gum.GumService.Default.Root.AddChild(container);
+        container.AddChild(visual);
+        container.EffectiveManagers.ShouldNotBeNull("the container is under the managed Root");
+
+        dialogBox.Show("hello");
+
+        registered.ShouldNotContain((IRenderableIpso)visual.RenderableComponent,
+            "because the dialog is already drawn through its container and a second top-level item draws it twice");
+        visual.Parent.ShouldBe(container);
+    }
+
+    [Fact]
+    public void ShowAsync_WhenVisualIsInsideManagedContainer_ShouldNotRegisterRenderableAsTopLevel()
+    {
+        List<IRenderableIpso> registered = RecordLayerRegistrations();
+        var (dialogBox, visual) = CreateDialogBox();
+        ContainerRuntime container = new();
+        Gum.GumService.Default.Root.AddChild(container);
+        container.AddChild(visual);
+
+        _ = dialogBox.ShowAsync("hello");
+
+        registered.ShouldNotContain((IRenderableIpso)visual.RenderableComponent);
+    }
+
+    [Fact]
+    public void Show_WhenVisualHasNoParent_ShouldAddToRootWithoutRegisteringTopLevelRenderable()
+    {
+        List<IRenderableIpso> registered = RecordLayerRegistrations();
+        var (dialogBox, visual) = CreateDialogBox();
+
+        dialogBox.Show("hello");
+
+        visual.Parent.ShouldBe(Gum.GumService.Default.Root);
+        registered.ShouldNotContain((IRenderableIpso)visual.RenderableComponent);
+    }
+
+    [Fact]
+    public void Show_WhenNoAncestorIsManaged_ShouldStillRegisterRenderableSoItDraws()
+    {
+        List<IRenderableIpso> registered = RecordLayerRegistrations();
+        var (dialogBox, visual) = CreateDialogBox();
+        ContainerRuntime detachedContainer = new();
+        detachedContainer.AddChild(visual);
+
+        dialogBox.Show("hello");
+
+        registered.ShouldContain((IRenderableIpso)visual.RenderableComponent);
+    }
 }
+

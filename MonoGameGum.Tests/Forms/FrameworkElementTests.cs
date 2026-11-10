@@ -1113,4 +1113,35 @@ public class FrameworkElementTests : BaseTestClass
         button.Visual.WidthUnits.ShouldBe(Gum.DataTypes.DimensionUnitType.Ratio);
         button.Visual.HeightUnits.ShouldBe(Gum.DataTypes.DimensionUnitType.RelativeToParent);
     }
+
+#pragma warning disable CS0618 // Show is obsolete but still public
+    [Fact]
+    public void Show_WhenAncestorIsManaged_ShouldNotRegisterRenderableAsTopLevel()
+    {
+        List<RenderingLibrary.Graphics.IRenderableIpso> registered = new();
+        GraphicalUiElement.AddRenderableToManagers = (renderable, managers, layer) => registered.Add(renderable);
+        Button button = new();
+        ContainerRuntime container = new();
+        Gum.GumService.Default.Root.AddChild(container);
+        container.AddChild(button.Visual);
+        container.EffectiveManagers.ShouldNotBeNull("the container is under the managed Root");
+
+        button.Show();
+
+        registered.ShouldNotContain((RenderingLibrary.Graphics.IRenderableIpso)button.Visual.RenderableComponent,
+            "because the button is already drawn through its managed parent");
+    }
+
+    [Fact]
+    public void Show_WhenNoAncestorIsManaged_ShouldRegisterRenderableAsTopLevel()
+    {
+        List<RenderingLibrary.Graphics.IRenderableIpso> registered = new();
+        GraphicalUiElement.AddRenderableToManagers = (renderable, managers, layer) => registered.Add(renderable);
+        Button button = new();
+
+        button.Show();
+
+        registered.ShouldContain((RenderingLibrary.Graphics.IRenderableIpso)button.Visual.RenderableComponent);
+    }
+#pragma warning restore CS0618
 }

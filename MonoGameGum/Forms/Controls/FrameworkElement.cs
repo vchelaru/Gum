@@ -1191,6 +1191,14 @@ public class FrameworkElement : INotifyPropertyChanged
         else
 #endif
         {
+#if !FRB
+            // A visual under an already managed ancestor is drawn through that ancestor. Registering
+            // its renderable as a top-level layer item too draws it twice, on the default layer.
+            if (Visual.EffectiveManagers != null)
+            {
+                return;
+            }
+#endif
             Visual.AddToManagers(global::RenderingLibrary.ISystemManagers.Default,
 #if FRB
                 gumLayer);
