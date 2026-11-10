@@ -248,7 +248,7 @@ public class FormsInputAllocationTests : BaseTestClass
     [InlineData("PressReleaseButton", 160)]
     [InlineData("ScrollListBox", 400)]
     [InlineData("TypeAndDeleteInTextBox", 4500)]
-    [InlineData("OpenCloseComboBox", 38000)]
+    [InlineData("OpenCloseComboBox", 1500)]
     public void UpdateAndDraw_FormsInput_AllocationBaseline(string kind, int limitBytesPerFrame)
     {
         InputCase inputCase = CreateCase(kind);

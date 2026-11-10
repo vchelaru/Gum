@@ -752,10 +752,9 @@ public class ComboBox :
             }
         }
 
-        if(!wasSuspenced)
-        {
-            listBox.Visual.UpdateLayout();
-        }
+        // No layout here: the list box is laid out when PlaceListBoxRelativeToComboBox attaches it to
+        // this ComboBox to measure it. A layout now would lay its rows out detached, at a width they
+        // never keep, and lay them out again when they are attached (#7870).
 
         // The values the list box has while attached to this ComboBox are only available now, before
         // it is detached into the popup layer:
@@ -772,20 +771,20 @@ public class ComboBox :
         PlaceListBoxRelativeToComboBox();
 
 #if FRB
-        GuiManager.AddNextPushAction(TryHideFromPush);
+        GuiManager.AddNextPushAction(TryHideFromPushAction);
         GuiManager.SortZAndLayerBased();
         listBox.RepositionToKeepInScreen();
 
 #else
 
-        InteractiveGue.AddNextPushAction(TryHideFromPush, Visual);
+        InteractiveGue.AddNextPushAction(TryHideFromPushAction, Visual);
 
         WatchAncestorsWhileOpen();
 
         FocusDropDown();
 
-        LostFocus += HandleOwnerLostFocusWhileOpen;
-        listBox.LostFocus += HandleOwnerLostFocusWhileOpen;
+        LostFocus += OwnerLostFocusHandler;
+        listBox.LostFocus += OwnerLostFocusHandler;
 #endif
 
 
@@ -909,14 +908,29 @@ public class ComboBox :
         }
 #endif
 
-        // Now that we have the values, detach it:
-        this.Visual.Children.Remove(listBoxVisual);
-        listBox.X = x;
-        listBox.Y = y;
-        listBoxVisual.WidthUnits = DimensionUnitType.Absolute;
-        listBoxVisual.HeightUnits = DimensionUnitType.Absolute;
-        listBox.Width = width;
-        listBox.Height = height;
+        // Now that we have the values, detach it. Each of the changes below would lay the rows out
+        // again (and a text row measures its text again whenever its width changes), so the list box
+        // lays out once, with all of them, when layout resumes (#7870).
+        // A suspension the caller already holds on the list box stays theirs; only ours is released, even if a handler throws.
+        bool wasSuspended = listBoxVisual.IsLayoutSuspended;
+        listBoxVisual.SuspendLayout();
+        try
+        {
+            this.Visual.Children.Remove(listBoxVisual);
+            listBox.X = x;
+            listBox.Y = y;
+            listBoxVisual.WidthUnits = DimensionUnitType.Absolute;
+            listBoxVisual.HeightUnits = DimensionUnitType.Absolute;
+            listBox.Width = width;
+            listBox.Height = height;
+        }
+        finally
+        {
+            if (!wasSuspended)
+            {
+                listBoxVisual.ResumeLayout();
+            }
+        }
         ListBox.ShowPopupListBox(listBox, this.Visual);
 
 #if !FRB
@@ -1019,15 +1033,28 @@ public class ComboBox :
     // changes of the Visual and each ancestor, and closes itself the way a native combo box does (#6681).
     readonly List<GraphicalUiElement> _watchedAncestors = new();
 
+    // A method group converts to a new delegate at every use, and the drop-down subscribes and
+    // unsubscribes these on every open and close (#7870). Each is created once, on first use.
+    EventHandler? _watchedVisibleChangedHandler;
+    EventHandler<GraphicalUiElement.ParentChangedEventArgs>? _watchedParentChangedHandler;
+    EventHandler? _ownerLostFocusHandler;
+
+    EventHandler WatchedVisibleChangedHandler => _watchedVisibleChangedHandler ??= HandleWatchedVisibleChanged;
+    EventHandler<GraphicalUiElement.ParentChangedEventArgs> WatchedParentChangedHandler =>
+        _watchedParentChangedHandler ??= HandleWatchedParentChanged;
+    EventHandler OwnerLostFocusHandler => _ownerLostFocusHandler ??= HandleOwnerLostFocusWhileOpen;
+
     private void WatchAncestorsWhileOpen()
     {
         StopWatchingAncestors();
 
+        EventHandler visibleChanged = WatchedVisibleChangedHandler;
+        EventHandler<GraphicalUiElement.ParentChangedEventArgs> parentChanged = WatchedParentChangedHandler;
         GraphicalUiElement? current = Visual;
         while (current != null)
         {
-            current.VisibleChanged += HandleWatchedVisibleChanged;
-            current.ParentChanged += HandleWatchedParentChanged;
+            current.VisibleChanged += visibleChanged;
+            current.ParentChanged += parentChanged;
             _watchedAncestors.Add(current);
             current = current.Parent;
         }
@@ -1037,8 +1064,8 @@ public class ComboBox :
     {
         for (int i = 0; i < _watchedAncestors.Count; i++)
         {
-            _watchedAncestors[i].VisibleChanged -= HandleWatchedVisibleChanged;
-            _watchedAncestors[i].ParentChanged -= HandleWatchedParentChanged;
+            _watchedAncestors[i].VisibleChanged -= WatchedVisibleChangedHandler;
+            _watchedAncestors[i].ParentChanged -= WatchedParentChangedHandler;
         }
         _watchedAncestors.Clear();
     }
@@ -1071,6 +1098,10 @@ public class ComboBox :
     }
 #endif
 
+    // Queued on every open and again by every push inside the popup; created once, on first use (#7870).
+    Action? _tryHideFromPushAction;
+    Action TryHideFromPushAction => _tryHideFromPushAction ??= TryHideFromPush;
+
     private void TryHideFromPush()
     {
         // A push action queued by an earlier open can run after the drop-down closed (or its ListBox or
@@ -1102,9 +1133,9 @@ public class ComboBox :
             // of the list box. If the user keeps clicking on the scrollbar, this event
             // keeps getting raised, and it re-adds itself.
 #if FRB
-            GuiManager.AddNextPushAction(TryHideFromPush);
+            GuiManager.AddNextPushAction(TryHideFromPushAction);
 #else
-            InteractiveGue.AddNextPushAction(TryHideFromPush, Visual);
+            InteractiveGue.AddNextPushAction(TryHideFromPushAction, Visual);
 #endif
         }
     }
@@ -1116,10 +1147,10 @@ public class ComboBox :
     {
 #if !FRB
         StopWatchingAncestors();
-        LostFocus -= HandleOwnerLostFocusWhileOpen;
+        LostFocus -= OwnerLostFocusHandler;
         if (listBox != null)
         {
-            listBox.LostFocus -= HandleOwnerLostFocusWhileOpen;
+            listBox.LostFocus -= OwnerLostFocusHandler;
         }
 #endif
 
