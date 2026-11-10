@@ -258,6 +258,69 @@ public class TextRenderCacheTests
         actual.ShouldBe(RenderFrames(expected, frames: 1));
     }
 
+    private const string FontSizeRunText = "Hello [FontSize=40]world[/FontSize], wrapped over lines";
+
+    [Fact]
+    public void GetPaintTextBlock_RevealAdvanced_ReusesTheRevealBlock()
+    {
+        Text text = CreateText("Hello world, wrapped over lines");
+        text.MaxLettersToShow = 5;
+        TextBlock full = text.GetCachedTextBlock();
+        TextBlock revealed = text.GetPaintTextBlock(full);
+
+        text.MaxLettersToShow = 6;
+
+        text.GetPaintTextBlock(full).ShouldBeSameAs(revealed);
+    }
+
+    [Theory]
+    [InlineData("Hello world, wrapped over lines")]
+    [InlineData(FontSizeRunText)]
+    public void Render_RevealAdvancedEveryFrame_MatchesAFreshRevealEachFrame(string rawText)
+    {
+        Text changed = CreateText(rawText);
+        for (int letters = 1; letters < 20; letters++)
+        {
+            changed.MaxLettersToShow = letters;
+            byte[] actual = RenderFrames(changed, frames: 1);
+
+            Text expected = CreateText(rawText);
+            expected.MaxLettersToShow = letters;
+            actual.ShouldBe(RenderFrames(expected, frames: 1), $"letters {letters}");
+        }
+    }
+
+    [Fact]
+    public void Render_RevealPausedAfterAdvancing_DrawsThePausedReveal()
+    {
+        Text changed = CreateText("Hello world, wrapped over lines");
+        for (int letters = 1; letters < 8; letters++)
+        {
+            changed.MaxLettersToShow = letters;
+            RenderFrames(changed, frames: 1);
+        }
+
+        byte[] actual = RenderFrames(changed, frames: 3);
+
+        Text expected = CreateText("Hello world, wrapped over lines");
+        expected.MaxLettersToShow = 7;
+        actual.ShouldBe(RenderFrames(expected, frames: 1));
+    }
+
+    [Fact]
+    public void Render_FontSizeRunTextChangedEveryFrame_MatchesAFreshLayout()
+    {
+        Text changed = CreateText(FontSizeRunText);
+        RenderFrames(changed, frames: 1);
+        changed.RawText = "Bye [FontSize=40]all[/FontSize] of [FontSize=12]you[/FontSize] wrapped over lines";
+        RenderFrames(changed, frames: 1);
+        changed.RawText = "Hi [FontSize=30]there[/FontSize], wrapped over the lines";
+
+        byte[] actual = RenderFrames(changed, frames: 1);
+
+        actual.ShouldBe(RenderFrames(CreateText("Hi [FontSize=30]there[/FontSize], wrapped over the lines"), frames: 1));
+    }
+
     [Fact]
     public void Render_TextChangedEveryFrame_DrawsTheLatestText()
     {
