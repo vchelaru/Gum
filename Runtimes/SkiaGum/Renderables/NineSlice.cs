@@ -244,27 +244,9 @@ public class NineSlice : RenderableShapeBase, IAnimatable, IAnimationChainRender
     protected override SKPaint GetPaint(SKRect boundingRect, float absoluteRotation)
     {
         // Modulate the image's texels by Color so the unified runtime's Color
-        // property tints the nine-slice. The base paint has Color set too, but
-        // that only matters for non-image draws (DrawRect, etc.); for DrawImage
-        // we need a ColorFilter.
+        // property tints the nine-slice.
         SKPaint paint = base.GetPaint(boundingRect, absoluteRotation);
-        if (ColorOperation == ColorOperation.Add)
-        {
-            float[] addMatrix =
-            {
-                1, 0, 0, 0, Color.Red / 255f,
-                0, 1, 0, 0, Color.Green / 255f,
-                0, 0, 1, 0, Color.Blue / 255f,
-                0, 0, 0, 1, 0,
-            };
-            using SKColorFilter addFilter = SKColorFilter.CreateColorMatrix(addMatrix);
-            paint.ColorFilter = addFilter;
-        }
-        else
-        {
-            using SKColorFilter blendFilter = SKColorFilter.CreateBlendMode(Color, SKBlendMode.Modulate);
-            paint.ColorFilter = blendFilter;
-        }
+        ApplyTextureTint(paint, SKBlendMode.Modulate);
         // Antialias on DrawImage anti-aliases the destination rect's edges. When
         // two sections of the nine-slice abut at a fractional pixel boundary
         // (because layout placed the whole NineSlice at a non-integer position),

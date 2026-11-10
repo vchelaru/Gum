@@ -244,34 +244,13 @@ public class Sprite : RenderableShapeBase, IAspectRatio, ITextureCoordinate, IAn
 
         // Modulate/ColorTextureAlpha (#4821, matching MonoGame/raylib's SpriteRuntime.ColorOperation):
         // Modulate multiplies the image's texels by Color; ColorTextureAlpha instead uses the image
-        // only as an alpha mask and fills with Color (SrcIn: result = tint * dst.Alpha). Mirrors
-        // NineSlice.GetPaint — the base paint's Color is set too, but that only matters for
-        // non-image draws; DrawImage needs a ColorFilter. White (the default Color, see the
-        // constructor) is the Modulate identity, so this is a no-op for sprites that never touch
-        // Red/Green/Blue.
-        // Add draws the texture untinted and adds Color as a single-pass color-matrix offset,
-        // rather than a second draw pass like RenderingLibrary.Graphics.Renderer.
-        // DrawAdditiveColorOverlay. The offset is added in unpremultiplied space and gets scaled by
-        // the pixel's own alpha when Skia premultiplies for compositing, so it's naturally masked by
-        // the drawn image's silhouette.
-        if (ColorOperation == ColorOperation.Add)
-        {
-            float[] addMatrix =
-            {
-                1, 0, 0, 0, Color.Red / 255f,
-                0, 1, 0, 0, Color.Green / 255f,
-                0, 0, 1, 0, Color.Blue / 255f,
-                0, 0, 0, 1, 0,
-            };
-            using SKColorFilter addFilter = SKColorFilter.CreateColorMatrix(addMatrix);
-            paint.ColorFilter = addFilter;
-        }
-        else
-        {
-            using SKColorFilter blendFilter = SKColorFilter.CreateBlendMode(Color,
-                ColorOperation == ColorOperation.ColorTextureAlpha ? SKBlendMode.SrcIn : SKBlendMode.Modulate);
-            paint.ColorFilter = blendFilter;
-        }
+        // only as an alpha mask and fills with Color (SrcIn: result = tint * dst.Alpha). White (the
+        // default Color, see the constructor) is the Modulate identity, so this is a no-op for
+        // sprites that never touch Red/Green/Blue. Add draws the texture untinted and adds Color as a
+        // single-pass color-matrix offset, rather than a second draw pass like
+        // RenderingLibrary.Graphics.Renderer.DrawAdditiveColorOverlay.
+        ApplyTextureTint(paint,
+            ColorOperation == ColorOperation.ColorTextureAlpha ? SKBlendMode.SrcIn : SKBlendMode.Modulate);
 
         return paint;
     }
@@ -431,21 +410,17 @@ public class Sprite : RenderableShapeBase, IAspectRatio, ITextureCoordinate, IAn
         // Render-target pull (#3988): display the baked texture of the referenced container instead of
         // an assigned Texture/Image. A null bake (degenerate size, or off-screen) draws nothing rather
         // than stale content, matching the raylib/MonoGame pull model.
+        SKImage? bakedImage = null;
         if (RenderTargetTextureSource != null)
         {
-            SKImage? bakedImage = Renderer.Self.TryGetBakedRenderTargetFor(RenderTargetTextureSource);
+            bakedImage = Renderer.Self.TryGetBakedRenderTargetFor(RenderTargetTextureSource);
             if (bakedImage == null)
             {
                 return;
             }
-
-            SKPaint renderTargetPaint = base.GetCachedPaint(boundingRect, absoluteRotation);
-            canvas.DrawImage(bakedImage, boundingRect, Renderer.TextureSampling, renderTargetPaint);
-            return;
         }
-
         ////////////Early Out/////////////
-        if (Texture == null && Image == null)
+        else if (Texture == null && Image == null)
         {
             return;
         }
@@ -459,66 +434,67 @@ public class Sprite : RenderableShapeBase, IAspectRatio, ITextureCoordinate, IAn
 
         var paint = base.GetCachedPaint(boundingRect, absoluteRotation);
 
-        if(EffectiveRectangle != null)
+        // A flip comes from FlipHorizontal/FlipVertical, as on MonoGame, or from a source rectangle
+        // whose edges are swapped (how an animation frame's flip was encoded). Either one mirrors.
+        bool isSourceSwappedHorizontal = false;
+        bool isSourceSwappedVertical = false;
+        SKRect sourceRectangle = default;
+        if (bakedImage == null && EffectiveRectangle != null)
         {
+            var effective = EffectiveRectangle.Value;
+            isSourceSwappedHorizontal = effective.Left > effective.Right;
+            isSourceSwappedVertical = effective.Top > effective.Bottom;
+            sourceRectangle = new SKRect(
+                Math.Min(effective.Left, effective.Right),
+                Math.Min(effective.Top, effective.Bottom),
+                Math.Max(effective.Left, effective.Right),
+                Math.Max(effective.Top, effective.Bottom));
+        }
 
-            var sourceRectangle = new SKRect(EffectiveRectangle.Value.Left, EffectiveRectangle.Value.Top, EffectiveRectangle.Value.Right, EffectiveRectangle.Value.Bottom);
+        bool isFlippedHorizontal = FlipHorizontal != isSourceSwappedHorizontal;
+        bool isFlippedVertical = FlipVertical != isSourceSwappedVertical;
 
-            var isFlippedHorizontal =
-                sourceRectangle.Left > sourceRectangle.Right;
+        // Saved and restored by hand: an SKAutoCanvasRestore would allocate on every unflipped draw.
+        bool isFlipped = isFlippedHorizontal || isFlippedVertical;
+        int saveCount = isFlipped ? canvas.Save() : 0;
+        if (isFlipped)
+        {
+            // Mirror about the center of the rectangle being drawn into, so the flipped
+            // sprite stays inside its own bounds.
+            canvas.Scale(
+                isFlippedHorizontal ? -1 : 1,
+                isFlippedVertical ? -1 : 1,
+                boundingRect.MidX,
+                boundingRect.MidY);
+        }
 
-            var isFlippedVertical =
-                sourceRectangle.Top > sourceRectangle.Bottom;
-
-            if (Wrap && !isFlippedHorizontal && !isFlippedVertical && ExtendsPastTexture(sourceRectangle))
+        if (bakedImage != null)
+        {
+            canvas.DrawImage(bakedImage, boundingRect, Renderer.TextureSampling, paint);
+        }
+        else if (EffectiveRectangle != null)
+        {
+            if (Wrap && !isSourceSwappedHorizontal && !isSourceSwappedVertical && ExtendsPastTexture(sourceRectangle))
             {
                 DrawTiled(canvas, sourceRectangle, boundingRect, paint);
-                return;
-            }
-
-            if (isFlippedHorizontal || isFlippedVertical)
-            {
-                using (new SKAutoCanvasRestore(canvas, true))
-                {
-                    // Mirror about the center of the rectangle being drawn into, so the flipped
-                    // sprite stays inside its own bounds.
-                    canvas.Scale(
-                        isFlippedHorizontal ? -1 : 1,
-                        isFlippedVertical ? -1 : 1,
-                        boundingRect.MidX,
-                        boundingRect.MidY);
-
-                    var left = Math.Min(EffectiveRectangle.Value.Left, EffectiveRectangle.Value.Right);
-                    var right = Math.Max(EffectiveRectangle.Value.Left, EffectiveRectangle.Value.Right);
-                    var top = Math.Min(EffectiveRectangle.Value.Top, EffectiveRectangle.Value.Bottom);
-                    var bottom = Math.Max(EffectiveRectangle.Value.Top, EffectiveRectangle.Value.Bottom);
-
-                    sourceRectangle = new SKRect(
-                        left, 
-                        top, 
-                        right, 
-                        bottom);
-
-                    DrawSourceRectangle(canvas, sourceRectangle, boundingRect, paint);
-                }
-
             }
             else
             {
                 DrawSourceRectangle(canvas, sourceRectangle, boundingRect, paint);
             }
-
+        }
+        else if (Image != null)
+        {
+            canvas.DrawImage(Image, boundingRect, Renderer.TextureSampling, paint);
         }
         else
         {
-            if (Image != null)
-            {
-                canvas.DrawImage(Image, boundingRect, Renderer.TextureSampling, paint);
-            }
-            else
-            {
-                canvas.DrawBitmap(Texture, boundingRect, Renderer.TextureSampling, paint);
-            }
+            canvas.DrawBitmap(Texture, boundingRect, Renderer.TextureSampling, paint);
+        }
+
+        if (isFlipped)
+        {
+            canvas.RestoreToCount(saveCount);
         }
     }
 
