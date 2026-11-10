@@ -12,10 +12,12 @@ namespace SkiaGum;
 /// </summary>
 internal sealed class TextMarkupBuffers
 {
-    private const int MaxRetainedRuns = 64;
-    private const int MaxRetainedTags = 32;
-    private const int MaxRetainedBuilderCapacity = 1024;
-    private const int MaxPooledInlineVariables = 64;
+    // What a buffer keeps once a parse or a build has finished, however large the text it held was.
+    internal const int MaxRetainedRuns = 64;
+    internal const int MaxRetainedTags = 32;
+    internal const int MaxRetainedBuilderCapacity = 1024;
+    internal const int MaxPooledInlineVariables = 64;
+    internal const int MaxRetainedSubstrings = 64;
 
     private List<Text.StyledTextRun>? _runs;
     private List<Text.StyledTextRun>? _fittedRuns;
@@ -67,6 +69,18 @@ internal sealed class TextMarkupBuffers
     /// <summary>The runs the splitter produced for the text; valid until the next split.</summary>
     public List<StyledSubstring> Substrings => _substrings ??= new List<StyledSubstring>();
 
+    /// <summary>How many tags the last parse left in <see cref="Tags"/>; reading it creates nothing.</summary>
+    internal int RetainedTagCount => _tags?.Count ?? 0;
+
+    /// <summary>The array size <see cref="Tags"/> holds on to.</summary>
+    internal int RetainedTagCapacity => _tags?.Capacity ?? 0;
+
+    /// <summary>How many runs <see cref="Substrings"/> still points at.</summary>
+    internal int RetainedSubstringCount => _substrings?.Count ?? 0;
+
+    /// <summary>The array size <see cref="Substrings"/> holds on to.</summary>
+    internal int RetainedSubstringCapacity => _substrings?.Capacity ?? 0;
+
     public StyledSubstringSplitter Splitter => _splitter ??= new StyledSubstringSplitter();
 
     /// <summary>
@@ -108,6 +122,40 @@ internal sealed class TextMarkupBuffers
             _visibleLineLengths.Clear();
             _visibleLineLengths.Capacity = 0;
         }
+    }
+
+    /// <summary>
+    /// Brings everything the parse and the split of the text keep down to its bound: the arrays they grew past it, and every
+    /// reference they hold into the text. The tags of the text now set stay, since <see cref="Text.ParsedBbCodeTags"/> is
+    /// those. Called wherever a parse or a split ends, so the worst case a Text keeps is the same whatever text it held before.
+    /// The run lists are not here because a build is still using them when a split ends; they are released by the build.
+    /// </summary>
+    public void TrimToBounds()
+    {
+        ReleaseParse();
+        ReleaseSplit();
+    }
+
+    /// <summary><see cref="TrimToBounds"/> for a text that has no tags (plain, empty, or none it recognizes): the tags of the last parse go too.</summary>
+    public void DiscardParse()
+    {
+        _tags?.Clear();
+        TrimToBounds();
+    }
+
+    /// <summary>Drops the runs of the last split and the lists and strings they and the splitter hold, past the bound.</summary>
+    public void ReleaseSplit()
+    {
+        if (_substrings != null)
+        {
+            _substrings.Clear();
+            if (_substrings.Capacity > MaxRetainedSubstrings)
+            {
+                _substrings.Capacity = 0;
+            }
+        }
+
+        _splitter?.ReleaseSplit();
     }
 
     /// <summary>Drops the arrays the last parse grew past the bound.</summary>

@@ -100,6 +100,167 @@ public class TextMarkupBuffersTests : BaseTestClass
         }
     }
 
+    private static string FlatTags(int count)
+    {
+        StringBuilder builder = new StringBuilder();
+        for (int i = 0; i < count; i++)
+        {
+            builder.Append("[Color=Red]a[/Color]");
+        }
+        return builder.ToString();
+    }
+
+    private static string NestedCustomTags(int depth)
+    {
+        StringBuilder builder = new StringBuilder();
+        for (int i = 0; i < depth; i++)
+        {
+            builder.Append("[Custom=A]");
+        }
+        builder.Append("ab");
+        for (int i = 0; i < depth; i++)
+        {
+            builder.Append("[/Custom]");
+        }
+        return builder.ToString();
+    }
+
+    private static void ShouldRetainOnlyTheBounds(Text text)
+    {
+        TextMarkupBuffers buffers = text.RetainedMarkupBuffers!;
+        text.RetainedInlineVariableCapacity.ShouldBeLessThanOrEqualTo(Math.Max(TextMarkupBuffers.MaxRetainedRuns, text.InlineVariableCount));
+        // The tags of the text now set are live; only room beyond them is a leftover.
+        buffers.RetainedTagCapacity.ShouldBeLessThanOrEqualTo(Math.Max(TextMarkupBuffers.MaxRetainedTags, buffers.RetainedTagCount));
+        buffers.RetainedSubstringCapacity.ShouldBeLessThanOrEqualTo(TextMarkupBuffers.MaxRetainedSubstrings);
+        buffers.Splitter.RetainedVariableCapacity.ShouldBeLessThanOrEqualTo(StyledSubstringSplitter.MaxRetainedVariables);
+    }
+
+    [Fact]
+    public void RawText_ChangedFromTenThousandTagsToPlainText_RetainsOnlyTheBounds()
+    {
+        Text text = new Text();
+        text.FontSize = 24;
+        text.RawText = FlatTags(10000);
+        text.GetStyledRuns();
+        text.RetainedMarkupBuffers!.RetainedTagCount.ShouldBe(10000);
+
+        text.RawText = "plain";
+        text.GetStyledRuns();
+
+        TextMarkupBuffers buffers = text.RetainedMarkupBuffers!;
+        buffers.RetainedTagCount.ShouldBe(0);
+        buffers.RetainedSubstringCount.ShouldBe(0);
+        buffers.Splitter.RetainedVariableCount.ShouldBe(0);
+        ShouldRetainOnlyTheBounds(text);
+    }
+
+    [Fact]
+    public void RawText_ChangedFromTenThousandTagsToEmptyText_RetainsOnlyTheBounds()
+    {
+        Text text = new Text();
+        text.FontSize = 24;
+        text.RawText = FlatTags(10000);
+        text.GetCachedTextBlock();
+
+        text.RawText = "";
+
+        TextMarkupBuffers buffers = text.RetainedMarkupBuffers!;
+        buffers.RetainedTagCount.ShouldBe(0);
+        buffers.RetainedSubstringCount.ShouldBe(0);
+        ShouldRetainOnlyTheBounds(text);
+    }
+
+    [Fact]
+    public void RawText_ChangedFromTenThousandTagsToThreeTags_RetainsOnlyTheBounds()
+    {
+        Text text = new Text();
+        text.FontSize = 24;
+        text.RawText = FlatTags(10000);
+        text.GetCachedTextBlock();
+
+        text.RawText = FlatTags(3);
+        text.GetCachedTextBlock();
+
+        TextMarkupBuffers buffers = text.RetainedMarkupBuffers!;
+        buffers.RetainedTagCount.ShouldBe(3);
+        buffers.RetainedSubstringCount.ShouldBe(0);
+        ShouldRetainOnlyTheBounds(text);
+    }
+
+    [Fact]
+    public void GetStyledRuns_TenThousandTagsParsed_RetainsOnlyTheBoundsOnceTheRunsAreBuilt()
+    {
+        Text text = new Text();
+        text.FontSize = 24;
+        text.RawText = FlatTags(10000);
+
+        text.GetStyledRuns().Count.ShouldBe(10000);
+
+        TextMarkupBuffers buffers = text.RetainedMarkupBuffers!;
+        buffers.RetainedSubstringCount.ShouldBe(0);
+        buffers.RetainedSubstringCapacity.ShouldBeLessThanOrEqualTo(TextMarkupBuffers.MaxRetainedSubstrings);
+    }
+
+    [Fact]
+    public void RawText_ChangedFromDeepNestingToPlainText_ReleasesTheVariableLists()
+    {
+        Text text = new Text();
+        text.FontSize = 24;
+        text.RawText = NestedCustomTags(3000);
+        text.GetStyledRuns();
+
+        text.RawText = "plain";
+        text.GetStyledRuns();
+
+        TextMarkupBuffers buffers = text.RetainedMarkupBuffers!;
+        buffers.Splitter.RetainedVariableCount.ShouldBe(0);
+        ShouldRetainOnlyTheBounds(text);
+    }
+
+    [Fact]
+    public void GetStyledRuns_AfterDeepNesting_ReleasesTheVariableListsWithoutChangingTheRuns()
+    {
+        Text text = new Text();
+        text.FontSize = 24;
+        text.RawText = NestedCustomTags(3000);
+
+        List<Text.StyledTextRun> runs = text.GetStyledRuns();
+
+        string.Concat(runs.Select(run => run.Text)).ShouldBe("ab");
+        ShouldRetainOnlyTheBounds(text);
+    }
+
+    // A Text that keeps changing a few tags keeps the same lists, which stay big enough for it: nothing is released and rebuilt per change.
+    [Fact]
+    public void RawText_FourTagsChangedRepeatedly_KeepsTheSameBuffers()
+    {
+        Text text = new Text();
+        text.FontSize = 24;
+        text.RawText = "[Color=Red]HP[/Color] [IsBold=true]12[/IsBold] [FontSize=24]of[/FontSize] [IsItalic=true]999[/IsItalic]";
+        text.GetStyledRuns();
+        TextMarkupBuffers buffers = text.RetainedMarkupBuffers!;
+        List<FoundTag> tags = buffers.Tags;
+        List<StyledSubstring> substrings = buffers.Substrings;
+        int tagCapacity = buffers.RetainedTagCapacity;
+        int substringCapacity = buffers.RetainedSubstringCapacity;
+        int variableCapacity = buffers.Splitter.RetainedVariableCapacity;
+
+        for (int i = 0; i < 20; i++)
+        {
+            text.RawText = $"[Color=Red]HP[/Color] [IsBold=true]{i}[/IsBold] [FontSize=24]of[/FontSize] [IsItalic=true]999[/IsItalic]";
+            text.GetStyledRuns();
+        }
+
+        text.RetainedMarkupBuffers.ShouldBeSameAs(buffers);
+        buffers.Tags.ShouldBeSameAs(tags);
+        buffers.Substrings.ShouldBeSameAs(substrings);
+        buffers.RetainedTagCapacity.ShouldBe(tagCapacity);
+        buffers.RetainedSubstringCapacity.ShouldBe(substringCapacity);
+        buffers.Splitter.RetainedVariableCapacity.ShouldBe(variableCapacity);
+        tagCapacity.ShouldBeGreaterThan(0);
+        substringCapacity.ShouldBeGreaterThan(0);
+    }
+
     [Fact]
     public void GetStyledSubstringsReusing_AcrossLines_MatchesAFreshSplit()
     {

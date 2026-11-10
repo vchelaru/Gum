@@ -1217,6 +1217,15 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
     private TextMarkupBuffers? _markupBuffers;
     private TextMarkupBuffers MarkupBuffers => _markupBuffers ??= new TextMarkupBuffers();
 
+    /// <summary>The buffers this Text has built so far, or null; reading it creates none. For unit tests of what a Text keeps.</summary>
+    internal TextMarkupBuffers? RetainedMarkupBuffers => _markupBuffers;
+
+    /// <summary>The array size the Text keeps for its inline variables.</summary>
+    internal int RetainedInlineVariableCapacity => _inlineVariables.Capacity;
+
+    /// <summary>How many inline variables the current text has.</summary>
+    internal int InlineVariableCount => _inlineVariables.Count;
+
     // The subset of BbCodeParser.KnownTags SkiaGum honors. Most map onto a RichTextKit Style override;
     // "custom" (issue #3692) instead produces one single-character InlineVariable per letter, resolved
     // against Customizations/ContextCustomizations in BuildRunStyle and applied as a Style color override
@@ -1787,6 +1796,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
         if (substrings.Count == 0)
         {
             runs.Add(new StyledTextRun(_layoutText, GetStyle()));
+            buffers.TrimToBounds();
             return;
         }
 
@@ -1797,6 +1807,8 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
             runs.Add(new StyledTextRun(text, style, letter, isHeightRun));
         }
 
+        // The runs are built; the split's own runs and lists are not kept for the next change.
+        buffers.TrimToBounds();
         AttachLineBreaksToPrecedingRun(runs);
     }
 
@@ -2379,6 +2391,27 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
 
     private void ParseMarkup()
     {
+        ParseMarkupCore();
+
+        // The one exit of every parse (plain, empty, no recognized tag, or markup): what the parse left is brought down to
+        // its bound, and a text without tags keeps none of the last one's. A Text that never had markup has no buffers to create.
+        if (_hasMarkup)
+        {
+            _markupBuffers?.TrimToBounds();
+        }
+        else
+        {
+            _markupBuffers?.DiscardParse();
+        }
+
+        if (_inlineVariables.Capacity > TextMarkupBuffers.MaxRetainedRuns)
+        {
+            _inlineVariables.Capacity = _inlineVariables.Count;
+        }
+    }
+
+    private void ParseMarkupCore()
+    {
         _inlineVariables.Clear();
         _hasHeightRun = false;
         ParsedBbCodeTags = null;
@@ -2406,13 +2439,11 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
         {
             _hasMarkup = false;
             _layoutText = BlankControlCharacters(normalized);
-            buffers.ReleaseParse();
             return;
         }
 
         _hasMarkup = true;
         _layoutText = BlankControlCharacters(BbCodeParser.RemoveTags(normalized, tags, ref buffers.SortScratch, buffers.Builder));
-        buffers.ReleaseParse();
         BuildInlineVariables(tags);
         foreach (InlineVariable variable in _inlineVariables)
         {
