@@ -201,7 +201,9 @@ internal class NpcBindingExpression : UntypedBindingExpression
 
     public override void UpdateSource()
     {
-        if (_isUpdatingSource || _isUpdatingTarget || !ShouldUpdateSource)
+        // During a BindingContext change, a binding that has not re-attached yet still points at the
+        // outgoing view model; a target change raised by a sibling binding must not be written there (#7856).
+        if (_isUpdatingSource || _isUpdatingTarget || !ShouldUpdateSource || !IsAttachedToCurrentBindingContext)
         {
             return;
         }

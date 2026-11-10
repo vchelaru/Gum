@@ -1209,17 +1209,32 @@ public class ComboBox :
             UpdateToObject(selectedObject);
         }
 
-        PushValueToViewModel(nameof(SelectedObject));
-        PushSelectedIndexIfChanged();
+        // OnBindingContextChanged resolves and pushes the selection once every binding re-attached.
+        if (!IsRebindingBothSelectionBindings)
+        {
+            PushValueToViewModel(nameof(SelectedObject));
+            PushSelectedIndexIfChanged();
+        }
 
         SelectionChanged?.Invoke(this, args);
+    }
+
+    internal override void OnBindingContextRelayed()
+    {
+        if (ApplySelectionBindingsAfterRebind())
+        {
+            // The new view model may hold either value from before, so push both unconditionally.
+            PushValueToViewModel(nameof(SelectedObject));
+            _lastPushedSelectedIndex = int.MinValue;
+            PushSelectedIndexIfChanged();
+        }
     }
 
     private void HandleListBoxPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
     {
         // The list box reports every SelectedIndex change, including an Items edit that shifts the
         // selected row without a selection change (#7849).
-        if (e.PropertyName == nameof(ListBox.SelectedIndex))
+        if (e.PropertyName == nameof(ListBox.SelectedIndex) && !IsRebindingBothSelectionBindings)
         {
             PushSelectedIndexIfChanged();
         }
