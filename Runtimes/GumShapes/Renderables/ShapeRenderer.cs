@@ -359,7 +359,9 @@ public class ShapeRenderer
         _sb = new ShapeBatch(graphicsDevice, (Effect?)null, warmup: false);
         _sb.Warmup(ShapeFeatures.EllipsesAndPaths | ShapeFeatures.Clips | ShapeFeatures.Ramps);
 #else
-        // Discriminator for the macOS publish smoke-test hang (#7842): KNI back on the plain constructor.
+        // KNI (the tool's head) warms up only the smallest version. On the macOS CI runners the
+        // named warmup kept the packaged tool from starting within 300 s; with the plain
+        // constructor the editor tab initializes in about 2 s (#7842).
         _sb = new ShapeBatch(graphicsDevice, (Effect?)null);
 #endif
         // Issue #7307: Apos.Shapes interpolates gradients in Oklab by default, which brightens the
