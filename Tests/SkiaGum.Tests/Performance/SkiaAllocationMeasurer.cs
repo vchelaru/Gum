@@ -51,11 +51,17 @@ internal static class SkiaAllocationMeasurer
 
         // Peak pass: the table grows to the capacity a window needs.
         bool inRegion = StartNoGcRegion();
-        for (int i = 0; i < total; i++)
+        try
         {
-            frame(i);
+            for (int i = 0; i < total; i++)
+            {
+                frame(i);
+            }
         }
-        EndNoGcRegion(inRegion);
+        finally
+        {
+            EndNoGcRegion(inRegion);
+        }
         Settle();
 
         for (int i = 0; i < warmupIterations; i++)
@@ -65,13 +71,21 @@ internal static class SkiaAllocationMeasurer
         Settle();
 
         inRegion = StartNoGcRegion();
-        long before = GC.GetAllocatedBytesForCurrentThread();
-        for (int i = warmupIterations; i < total; i++)
+        long before;
+        long after;
+        try
         {
-            frame(i);
+            before = GC.GetAllocatedBytesForCurrentThread();
+            for (int i = warmupIterations; i < total; i++)
+            {
+                frame(i);
+            }
+            after = GC.GetAllocatedBytesForCurrentThread();
         }
-        long after = GC.GetAllocatedBytesForCurrentThread();
-        EndNoGcRegion(inRegion);
+        finally
+        {
+            EndNoGcRegion(inRegion);
+        }
 
         return new AllocationResult(after - before, measuredIterations);
     }
