@@ -577,6 +577,85 @@ public class TextRuntimeBbCodeSameStringSetTests : BaseTestClass
         CustomSetPropertyOnRenderable.TryGetLocalizationKey(runtime).ShouldBeNull();
     }
 
+    // #7786: a plain key whose translation is tagged skips the parse when the translation is unchanged.
+    [Fact]
+    public void Text_SameKeyWithTaggedTranslation_DoesNotReparse()
+    {
+        using Setup setup = new();
+        TextRuntime runtime = Make("Tagged");
+        InlineVariable first = Renderable(runtime).InlineVariables.Single();
+
+        runtime.Text = "Tagged";
+
+        Renderable(runtime).InlineVariables.Single().ShouldBeSameAs(first);
+    }
+
+    [Fact]
+    public void Text_SameKeyWithTaggedTranslation_AllocatesNothing()
+    {
+        using Setup setup = new();
+        TextRuntime runtime = Make("Tagged");
+
+        AllocatedBySets(runtime, "Tagged").ShouldBeLessThan(64);
+    }
+
+    [Fact]
+    public void Text_SameKeyAfterLanguageChange_ReparsesTheNewTranslation()
+    {
+        using Setup setup = new();
+        TextRuntime runtime = Make("Tagged");
+
+        setup.Service.CurrentLanguage = 1;
+        runtime.Text = "Tagged";
+
+        runtime.Text.ShouldBe("Spanish blue mas");
+        Renderable(runtime).InlineVariables.Single().Value.ShouldBe(System.Drawing.Color.Blue);
+    }
+
+    [Fact]
+    public void Text_SameKeyWithTaggedTranslation_KeepsLocalizationKey()
+    {
+        using Setup setup = new();
+        TextRuntime runtime = Make("Tagged");
+
+        runtime.Text = "Tagged";
+
+        CustomSetPropertyOnRenderable.TryGetLocalizationKey(runtime).ShouldBe("Tagged");
+    }
+
+    [Fact]
+    public void Text_SameKeyWithTaggedTranslation_ReflectsFontSizeChange()
+    {
+        using Setup setup = new();
+        TextRuntime runtime = Make("Tagged");
+        runtime.FontSize = 40;
+        runtime.Text = "Tagged";
+
+        TextRuntime fresh = Make(null);
+        fresh.FontSize = 40;
+        fresh.Text = "Tagged";
+        fresh.UpdateLayout();
+
+        Snapshot(runtime).ShouldBe(Snapshot(fresh));
+    }
+
+    [Fact]
+    public void Text_KeyThenDifferentKeyWithSameTranslation_ShowsTranslation()
+    {
+        using Setup setup = new();
+        setup.Service.AddDatabase(new Dictionary<string, string[]>
+        {
+            { "Tagged", new[] { "[Color=Red]English red[/Color]", "x" } },
+            { "TaggedAlias", new[] { "[Color=Red]English red[/Color]", "x" } },
+        }, new List<string> { "English", "Spanish" });
+        TextRuntime runtime = Make("Tagged");
+
+        runtime.Text = "TaggedAlias";
+
+        runtime.Text.ShouldBe("English red");
+        CustomSetPropertyOnRenderable.TryGetLocalizationKey(runtime).ShouldBe("TaggedAlias");
+    }
+
     #endregion
 
 
