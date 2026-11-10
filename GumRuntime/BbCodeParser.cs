@@ -337,7 +337,20 @@ public static class BbCodeParser
             results[i] = found;
         }
 
-        return results.OrderBy(x => x.Open.StartIndex).ToList();
+        // A stable sort in place, the same order OrderBy gave, without its per-call buffers (#7818).
+        for (int i = 1; i < results.Count; i++)
+        {
+            FoundTag found = results[i];
+            int j = i - 1;
+            while (j >= 0 && results[j].Open.StartIndex > found.Open.StartIndex)
+            {
+                results[j + 1] = results[j];
+                j--;
+            }
+            results[j + 1] = found;
+        }
+
+        return results;
     }
 
     private static int CountMatchedTagLettersBefore(List<FoundTag> matchedTags, int index)
@@ -493,15 +506,19 @@ public static class BbCodeParser
 
     public static string RemoveTags(string text, List<FoundTag> tags)
     {
-        var allTags = new List<TagInfo>(tags.Count * 2);
-        for (int i = 0; i < tags.Count; i++)
+        // Sorted stably by stripped index, the order OrderBy gave, without its per-call buffers (#7818).
+        var sorted = new TagInfo[tags.Count * 2];
+        for (int i = 0; i < sorted.Length; i++)
         {
-            allTags.Add(tags[i].Open);
-            allTags.Add(tags[i].Close);
-
+            TagInfo tag = i % 2 == 0 ? tags[i / 2].Open : tags[i / 2].Close;
+            int j = i - 1;
+            while (j >= 0 && sorted[j].StartStrippedIndex > tag.StartStrippedIndex)
+            {
+                sorted[j + 1] = sorted[j];
+                j--;
+            }
+            sorted[j + 1] = tag;
         }
-
-        var sorted = allTags.OrderBy(item => item.StartStrippedIndex).ToArray();
 
         var stringBuilder = new StringBuilder(text);
 
