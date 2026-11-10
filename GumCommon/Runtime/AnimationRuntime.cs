@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.ExceptionServices;
 using System.Text;
+using System.Threading;
 
 namespace Gum.StateAnimation.Runtime;
 public class AnimationRuntime
@@ -27,7 +28,18 @@ public class AnimationRuntime
             }
             else
             {
-                return Keyframes.Max(item => item.Time + item.Length);
+                // A loop rather than Max with a lambda: a looping animation reads this every tick, and
+                // the enumerator and selector cost 64 bytes each time (#7873).
+                float length = float.MinValue;
+                for (int i = 0; i < Keyframes.Count; i++)
+                {
+                    float end = Keyframes[i].Time + Keyframes[i].Length;
+                    if (end > length)
+                    {
+                        length = end;
+                    }
+                }
+                return length;
             }
         }
     }
@@ -234,17 +246,21 @@ public class AnimationRuntime
     /// </summary>
     internal StateSave GetStateToSet(double animationTime, ElementSave element, GraphicalUiElement? liveRoot, bool defaultIfNull = false)
     {
-        StateSave stateToSet = GetStateToSetFromStateKeyframes(animationTime, element, defaultIfNull, null, liveRoot);
-
-        CombineStateFromAnimations(animationTime, element, null, stateToSet);
-
-        return stateToSet;
+        return BuildStateToSet(animationTime, element, null, liveRoot, defaultIfNull, null);
     }
 
     public StateSave GetStateToSet(double animationTime, GraphicalUiElement graphicalUiElement, bool defaultIfNull = false)
     {
-        StateSave stateToSet = GetStateToSetFromStateKeyframes(animationTime, null, defaultIfNull, graphicalUiElement);
-        CombineStateFromAnimations(animationTime, null, graphicalUiElement, stateToSet);
+        return BuildStateToSet(animationTime, null, graphicalUiElement, null, defaultIfNull, null);
+    }
+
+    // With a scratch, the returned state is the scratch's and is rewritten by the next tick that uses it, so only
+    // ApplyAtTimeTo passes one. The public overloads return a state the caller may keep, so they pass none.
+    private StateSave BuildStateToSet(double animationTime, ElementSave? element, GraphicalUiElement? graphicalUiElement,
+        GraphicalUiElement? liveRoot, bool defaultIfNull, TickScratch? scratch)
+    {
+        StateSave stateToSet = GetStateToSetFromStateKeyframes(animationTime, element, defaultIfNull, graphicalUiElement, liveRoot, scratch);
+        CombineStateFromAnimations(animationTime, element, graphicalUiElement, stateToSet, scratch);
         return stateToSet;
     }
 
@@ -277,7 +293,7 @@ public class AnimationRuntime
         return liveRoot.ResolveKeyframeReferences(element, state);
     }
 
-    private StateSave GetStateToSetFromStateKeyframes(double animationTime, ElementSave? element, bool defaultIfNull, GraphicalUiElement? graphicalUiElement = null, GraphicalUiElement? liveRoot = null)
+    private StateSave GetStateToSetFromStateKeyframes(double animationTime, ElementSave? element, bool defaultIfNull, GraphicalUiElement? graphicalUiElement, GraphicalUiElement? liveRoot, TickScratch? scratch)
     {
         //var stateKeyframes = this.Keyframes.Where(item => !string.IsNullOrEmpty(item.StateName) || item.CachedCumulativeState != null);
 
@@ -287,7 +303,14 @@ public class AnimationRuntime
         }
 
         // A GraphicalUiElement, or an element with no states, has no default to start from.
-        StateSave stateToSet = (defaultIfNull ? element?.DefaultState?.Clone() : null) ?? new StateSave();
+        // The scratch has no default state to start from, so a default-based tick builds its own.
+        if (defaultIfNull)
+        {
+            scratch = null;
+        }
+        StateSave stateToSet = scratch?.Result.Begin()
+            ?? (defaultIfNull ? element?.DefaultState?.Clone() : null)
+            ?? new StateSave();
 
         if(_tracks.Count == 0)
         {
@@ -331,9 +354,7 @@ public class AnimationRuntime
                         double processedRatio = ProcessRatio(keyframeBefore.InterpolationType, keyframeBefore.Easing, linearRatio);
 
 
-                        var combined = stateBefore.Clone();
-                        combined.MergeIntoThis(stateAfter, (float)processedRatio);
-                        stateForTrack = combined;
+                        stateForTrack = Interpolate(stateBefore, stateAfter, (float)processedRatio, scratch);
                     }
                 }
             }
@@ -358,25 +379,49 @@ public class AnimationRuntime
                         double processedRatio = ProcessRatio(keyframeBefore.InterpolationType, keyframeBefore.Easing, linearRatio);
 
 
-                        var combined = stateBefore.Clone();
-                        combined.MergeIntoThis(stateAfter, (float)processedRatio);
-                        stateForTrack = combined;
+                        stateForTrack = Interpolate(stateBefore, stateAfter, (float)processedRatio, scratch);
                     }
                 }
             }
 
             if (stateForTrack != null)
             {
-                stateToSet.MergeIntoThis(stateForTrack, 1);
+                MergeInto(stateToSet, stateForTrack, 1, scratch?.Result);
             }
         }
 
         return stateToSet;
     }
 
+    // before with after merged in at the ratio, without changing either.
+    private static StateSave Interpolate(StateSave before, StateSave after, float ratio, TickScratch? scratch)
+    {
+        if (scratch == null)
+        {
+            StateSave combined = before.Clone();
+            combined.MergeIntoThis(after, ratio);
+            return combined;
+        }
+        StateSave reused = scratch.Combined.BeginCopyOf(before);
+        reused.MergeIntoThis(after, ratio, scratch.Combined.Create);
+        return reused;
+    }
+
+    private static void MergeInto(StateSave into, StateSave from, float ratio, ReusedState? reuse)
+    {
+        if (reuse == null)
+        {
+            into.MergeIntoThis(from, ratio);
+        }
+        else
+        {
+            into.MergeIntoThis(from, ratio, reuse.Create);
+        }
+    }
 
 
-    private void CombineStateFromAnimations(double animationTime, ElementSave? element, GraphicalUiElement? graphicalUiElement, StateSave stateToSet)
+
+    private void CombineStateFromAnimations(double animationTime, ElementSave? element, GraphicalUiElement? graphicalUiElement, StateSave stateToSet, TickScratch? scratch)
     {
         // Iterate the keyframe list directly and guard inline rather than using a LINQ Where: this
         // runs every frame per playing animation, and the capturing lambda would allocate a closure,
@@ -427,7 +472,7 @@ public class AnimationRuntime
                         }
                     }
 
-                    stateToSet.MergeIntoThis(stateFromAnimation, 1);
+                    MergeInto(stateToSet, stateFromAnimation, 1, scratch?.Result);
                 }
             }
         }
@@ -471,7 +516,7 @@ public class AnimationRuntime
                         }
                     }
 
-                    stateToSet.MergeIntoThis(stateFromAnimation, 1);
+                    MergeInto(stateToSet, stateFromAnimation, 1, scratch?.Result);
                 }
             }
         }
@@ -538,16 +583,98 @@ public class AnimationRuntime
         // be applying default, potentially wiping
         // the state set by other animations.
         bool shouldFirstKeyframeBeDefaultState = false;
-        if(graphicalUiElement.ElementSave != null)
+
+        // The state is applied and dropped within this call, so it is built in states kept from the last tick
+        // (#7873). The scratch is taken out of the field while in use: a tick of this animation that starts
+        // while ApplyState runs (another element, or the same one from a handler) finds the field empty and
+        // builds its own, so neither can overwrite the state the other is applying.
+        TickScratch scratch = Interlocked.Exchange(ref _scratch, null) ?? new TickScratch();
+        try
         {
-            var state = GetStateToSet(secondsFromBeginning, graphicalUiElement.ElementSave, graphicalUiElement, shouldFirstKeyframeBeDefaultState);
+            StateSave state = graphicalUiElement.ElementSave != null
+                ? BuildStateToSet(secondsFromBeginning, graphicalUiElement.ElementSave, null, graphicalUiElement, shouldFirstKeyframeBeDefaultState, scratch)
+                : BuildStateToSet(secondsFromBeginning, null, graphicalUiElement, null, shouldFirstKeyframeBeDefaultState, scratch);
             graphicalUiElement.ApplyState(state);
         }
-        else
+        finally
         {
-            var state = GetStateToSet(secondsFromBeginning, graphicalUiElement, shouldFirstKeyframeBeDefaultState);
-            graphicalUiElement.ApplyState(state);
+            _scratch = scratch;
         }
+    }
+
+    private TickScratch? _scratch;
+
+    // A state that is rewritten in place, with the variable objects it hands out kept between rewrites. Only
+    // what a tick reads or applies is copied onto a variable (name, exposed name, type, SetsValue, Value), not
+    // every property of the VariableSave a clone would carry.
+    private sealed class ReusedState
+    {
+        private readonly StateSave _state = new StateSave();
+        private readonly List<VariableSave> _pool = new List<VariableSave>();
+        private int _used;
+
+        public ReusedState()
+        {
+            Create = Rent;
+        }
+
+        // Rent for MergeIntoThis, which adds the variable to the state itself.
+        public Func<VariableSave, VariableSave> Create { get; }
+
+        public StateSave Begin()
+        {
+            for (int i = 0; i < _used; i++)
+            {
+                _pool[i].Value = null;
+            }
+            _used = 0;
+            _state.Variables.Clear();
+            _state.Name = string.Empty;
+            _state.ParentContainer = null;
+            _state.Apply = null;
+            return _state;
+        }
+
+        // The same as source.Clone() for the variables of a state.
+        public StateSave BeginCopyOf(StateSave source)
+        {
+            StateSave state = Begin();
+            state.Name = source.Name;
+            state.ParentContainer = source.ParentContainer;
+            state.Apply = source.Apply;
+            List<VariableSave> variables = source.Variables;
+            for (int i = 0; i < variables.Count; i++)
+            {
+                state.Variables.Add(Rent(variables[i]));
+            }
+            return state;
+        }
+
+        private VariableSave Rent(VariableSave source)
+        {
+            if (_used == _pool.Count)
+            {
+                _pool.Add(new VariableSave());
+            }
+            VariableSave variable = _pool[_used++];
+            // Assigning a name splits it, which allocates for an instance variable, so only when it changed.
+            if (variable.Name != source.Name)
+            {
+                variable.Name = source.Name;
+            }
+            variable.ExposedAsName = source.ExposedAsName;
+            variable.Type = source.Type;
+            variable.SetsValue = source.SetsValue;
+            variable.Value = source.Value;
+            return variable;
+        }
+    }
+
+    // The two states one tick is built in: the interpolation of a pair of keyframes, and the result of all tracks.
+    private sealed class TickScratch
+    {
+        public ReusedState Combined { get; } = new ReusedState();
+        public ReusedState Result { get; } = new ReusedState();
     }
 
     public override string ToString()

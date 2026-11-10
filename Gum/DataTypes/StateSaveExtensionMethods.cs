@@ -1152,7 +1152,20 @@ public static class StateSaveExtensionMethods
 
     }
 
+    private static readonly Func<VariableSave, VariableSave> CloneVariable = variable => variable.Clone();
+
     public static void MergeIntoThis(this StateSave thisState, StateSave other, float otherRatio = 1)
+    {
+        thisState.MergeIntoThis(other, otherRatio, CloneVariable);
+    }
+
+    /// <summary>
+    /// Merges like <see cref="MergeIntoThis(StateSave, StateSave, float)"/>, but gets the variable it adds for a
+    /// variable that <paramref name="thisState"/> lacks from <paramref name="createVariable"/> (which receives the
+    /// other state's variable) instead of cloning it, so a caller that rewrites one state every tick can reuse
+    /// variable objects.
+    /// </summary>
+    internal static void MergeIntoThis(this StateSave thisState, StateSave other, float otherRatio, Func<VariableSave, VariableSave> createVariable)
     {
 #if FULL_DIAGNOSTICS
         if (other == null)
@@ -1174,7 +1187,7 @@ public static class StateSaveExtensionMethods
 
             if (whatToSet == null)
             {
-                whatToSet = variableSave.Clone();
+                whatToSet = createVariable(variableSave);
 
                 // Get the value recursively before adding it to the list
                 if (needsValueFromBase)
@@ -1309,11 +1322,16 @@ public static class StateSaveExtensionMethods
     /// <param name="secondValue">The second value as a numeric value.</param>
     /// <param name="interpolationValue">A value between 0 and 1. A value of 0 returns the firstValue. A value of 1 returns the second value.</param>
     /// <returns>The resulting interpolated value, matching the type of the arguments.</returns>
+    // Boxed once: a box is never changed, and this runs for each variable of every tick of a playing animation.
+    private static readonly object BoxedZeroFloat = 0f;
+    private static readonly object BoxedZeroDouble = 0.0;
+    private static readonly object BoxedZeroInt = 0;
+
     private static object? GetZeroOfNumericType(object value)
     {
-        if (value is float) return 0f;
-        if (value is double) return 0.0;
-        if (value is int) return 0;
+        if (value is float) return BoxedZeroFloat;
+        if (value is double) return BoxedZeroDouble;
+        if (value is int) return BoxedZeroInt;
         return null;
     }
 

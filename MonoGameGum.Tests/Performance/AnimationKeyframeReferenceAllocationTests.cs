@@ -52,7 +52,8 @@ public class AnimationKeyframeReferenceAllocationTests : BaseTestClass
         _output.WriteLine($"ApplyAtTimeTo without references: {result.BytesPerIteration:N0} bytes/frame");
 
         gue.X.ShouldBeGreaterThan(0f);
-        // 2,088 bytes/frame measured on the code before keyframe references were resolved (the cloned and merged states).
-        result.BytesPerIteration.ShouldBeLessThanOrEqualTo(2100);
+        // 2,088 bytes/frame measured on the code before keyframe references were resolved (the cloned and merged
+        // states), 1,168 once the interpolated state is built in objects kept between ticks (#7873).
+        result.BytesPerIteration.ShouldBeLessThanOrEqualTo(1300);
     }
 }
