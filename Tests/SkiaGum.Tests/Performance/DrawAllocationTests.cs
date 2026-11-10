@@ -312,7 +312,7 @@ public class DrawAllocationTests : BaseTestClass
     [Theory]
     [InlineData("TextChangedEveryFrame", 6000)]
     [InlineData("MaxLettersToShowReveal", 9000)]
-    [InlineData("BbCodeChangedEveryFrame", 30000)]
+    [InlineData("BbCodeChangedEveryFrame", 28000)]
     public void UpdateAndDraw_ChangingText_AllocationBaseline(string kind, int limitBytesPerFrame)
     {
         Action<int> change = CreateChangingText(kind, out TextRuntime text);
