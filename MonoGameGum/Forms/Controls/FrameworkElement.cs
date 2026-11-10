@@ -2859,15 +2859,15 @@ public class FrameworkElement : INotifyPropertyChanged
         IsDataBound("SelectedIndex");
 
     /// <summary>
-    /// After a BindingContext change, re-applies the bound SelectedObject when SelectedIndex is also
-    /// bound, so SelectedObject wins. Returns whether it did; the caller then pushes both values.
-    /// </summary>
-    /// <summary>
     /// Runs once a BindingContext change has reached every binding, before PropertyChanged and
     /// OnBindingContextChanged. Internal so a subclass overriding OnBindingContextChanged can't skip it.
     /// </summary>
     internal virtual void OnBindingContextRelayed() { }
 
+    /// <summary>
+    /// After a BindingContext change, re-applies the bound SelectedObject when SelectedIndex is also
+    /// bound, so SelectedObject wins. Returns whether it did; the caller then pushes both values.
+    /// </summary>
     internal bool ApplySelectionBindingsAfterRebind()
     {
         if (!IsDataBound("SelectedIndex") ||
