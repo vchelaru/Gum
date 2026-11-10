@@ -53,6 +53,13 @@ internal static class TextHitTesting
     }
 
     /// <summary>
+    /// Whether <see cref="GetHorizontalAlignmentOffset"/> reads the line's width. A caller that must measure the
+    /// line to get it skips the measurement when this is false (left alignment), where the offset is 0.
+    /// </summary>
+    public static bool PlacesLineByWidth(HorizontalAlignment horizontalAlignment) =>
+        horizontalAlignment == HorizontalAlignment.Center || horizontalAlignment == HorizontalAlignment.Right;
+
+    /// <summary>
     /// The distance from the left of a Text's box to the start of a line drawn <paramref name="lineWidth"/>
     /// wide: centered lines split the leftover width, right-aligned lines take all of it.
     /// </summary>
