@@ -72,6 +72,32 @@ public class CursorKniTouchTests : BaseTestClass
     }
 
     [Fact]
+    public void Activity_PressReleaseIdleThenPressAgain_TransitionsEachTime()
+    {
+        XnaTouchCollection touches = Touches((40, 50), (90, 95));
+        Cursor cursor = new Cursor { ReadMouse = () => default, ReadTouches = () => touches };
+
+        cursor.Activity(0);
+        cursor.PrimaryPush.ShouldBeTrue();
+        cursor.X.ShouldBe(40);
+
+        touches = NoTouches();
+        cursor.Activity(0.02);
+        cursor.PrimaryClick.ShouldBeTrue();
+        cursor.PrimaryDown.ShouldBeFalse();
+
+        cursor.Activity(0.04);
+        cursor.PrimaryClick.ShouldBeFalse();
+        cursor.PrimaryDown.ShouldBeFalse();
+
+        touches = Touches((11, 22));
+        cursor.Activity(0.06);
+        cursor.PrimaryPush.ShouldBeTrue();
+        cursor.X.ShouldBe(11);
+        cursor.Y.ShouldBe(22);
+    }
+
+    [Fact]
     public void Activity_IsMobile_OffsetsTouchByWindowClientBounds()
     {
         // As on KniGum: on mobile, touches are relative to the client bounds, so the bounds' origin is added.

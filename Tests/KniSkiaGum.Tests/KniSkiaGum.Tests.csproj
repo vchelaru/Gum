@@ -34,6 +34,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Include="..\MonoGameGum.TestsCommon\AllocationMeasurer.cs" Link="Shared\AllocationMeasurer.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Using Include="Xunit" />
   </ItemGroup>
 
