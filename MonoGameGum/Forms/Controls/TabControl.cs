@@ -235,9 +235,12 @@ public class TabControl : ItemsControl
 
     #region Item creation
 
-    [UnconditionalSuppressMessage("Trimming", "IL2026",
-        Justification = "Automatic per-item BindingContext assignment when populating from a bound " +
-            "collection, as ListBox does.")]
+    private const string PerItemBindingContextJustification =
+        "Automatic per-item BindingContext assignment when populating from a bound collection, as " +
+        "ListBox does. Any by-name VM member resolution happens in the templates' own bindings, which " +
+        "already carry this warning at the SetBinding call that created them.";
+
+    [UnconditionalSuppressMessage("Trimming", "IL2026", Justification = PerItemBindingContextJustification)]
     protected override FrameworkElement CreateNewItemFrameworkElement(object o)
     {
         if (o is TabItem directTab)
@@ -277,6 +280,7 @@ public class TabControl : ItemsControl
             ?? throw new InvalidOperationException("The TabItem visual template must create an InteractiveGue.");
     }
 
+    [UnconditionalSuppressMessage("Trimming", "IL2026", Justification = PerItemBindingContextJustification)]
     protected override void HandleCreatedItemVisual(GraphicalUiElement newVisual, object item)
     {
         // The VisualTemplate path creates the header visual without a Forms control.
@@ -288,6 +292,7 @@ public class TabControl : ItemsControl
         }
     }
 
+    [UnconditionalSuppressMessage("Trimming", "IL2026", Justification = PerItemBindingContextJustification)]
     private TabPage CreatePage(TabItem tab)
     {
         object? data = tab.DataObject;
