@@ -163,8 +163,8 @@ public class TextRenderCacheTests
     }
 
     [Theory]
-    [InlineData(HorizontalAlignment.Center, 0)]
-    [InlineData(HorizontalAlignment.Right, 0)]
+    [InlineData(HorizontalAlignment.Center, 1)]
+    [InlineData(HorizontalAlignment.Right, 1)]
     [InlineData(HorizontalAlignment.Left, -1)]
     public void GetCachedTextBlock_WidthNeedsANewLayout_BuildsANewBlock(HorizontalAlignment alignment, float widthChange)
     {

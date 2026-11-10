@@ -1281,6 +1281,9 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
         {
             _cachedTextBlock = _hasMarkup ? GetTextBlock(effectiveWidth) : BuildReusedPlainTextBlock(effectiveWidth);
             _isCachedTextBlockUnbounded = effectiveWidth == null;
+            _hasUnboundedLineEndingInWhitespace = _isCachedTextBlockUnbounded
+                && HorizontalAlignment != HorizontalAlignment.Left
+                && HasLineEndingInWhitespace(_layoutText);
         }
         return _cachedTextBlock;
     }
@@ -1288,18 +1291,65 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
     // True when _cachedTextBlock was laid out with no width limit.
     private bool _isCachedTextBlockUnbounded;
 
+    // True when that block is center or right aligned and a line before the last ends in whitespace.
+    private bool _hasUnboundedLineEndingInWhitespace;
+
+    /// <summary>
+    /// Whether a line of <paramref name="text"/> other than the last ends in whitespace. RichTextKit counts that
+    /// whitespace in the line's width in a block with no width limit and not in a block of a set width, so the two
+    /// place center and right lines differently.
+    /// </summary>
+    private static bool HasLineEndingInWhitespace(string? text)
+    {
+        if (text == null)
+        {
+            return false;
+        }
+
+        for (int i = 1; i < text.Length; i++)
+        {
+            if (IsLineBreak(text[i]) && !IsLineBreak(text[i - 1])
+                && (char.IsWhiteSpace(text[i - 1]) || char.GetUnicodeCategory(text[i - 1]) == System.Globalization.UnicodeCategory.Format))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static bool IsLineBreak(char c) =>
+        c == '\n' || c == '\r' || c == '\v' || c == '\f' || c == '\u0085' || c == '\u2028' || c == '\u2029';
+
     /// <summary>
     /// Whether the cached block, laid out with no width limit, is also the layout at <paramref name="width"/>.
-    /// Layout measures a size-to-children text unbounded and then sets <see cref="Width"/> to the measured
-    /// width; a left-aligned block that fits wraps nowhere and places every line at x = 0 either way, so it
-    /// is kept instead of laid out again (#7818). Center and right alignment place lines by the width.
+    /// Layout measures a size-to-children text unbounded (<see cref="Width"/> null) and then sets
+    /// <see cref="Width"/> to the measured width, on every layout. A block that fits wraps nowhere, so it is the
+    /// layout at no limit, at a left-aligned width it fits in (#7818), and at exactly its measured width where the
+    /// lines are placed the same way: always when left aligned, and when center or right aligned unless a line before
+    /// the last ends in whitespace (<see cref="HasLineEndingInWhitespace"/>). A wider width places center and right
+    /// lines further over.
     /// </summary>
-    private bool IsUnboundedBlockValidAtWidth(float? width) =>
-        _cachedTextBlock != null
-        && _isCachedTextBlockUnbounded
-        && HorizontalAlignment == HorizontalAlignment.Left
-        && width != null
-        && width.Value >= _cachedTextBlock.MeasuredWidth;
+    private bool IsUnboundedBlockValidAtWidth(float? width)
+    {
+        if (_cachedTextBlock == null || !_isCachedTextBlockUnbounded)
+        {
+            return false;
+        }
+
+        if (width == null)
+        {
+            return true;
+        }
+
+        float measuredWidth = _cachedTextBlock.MeasuredWidth;
+        if (HorizontalAlignment == HorizontalAlignment.Left)
+        {
+            return width.Value >= measuredWidth;
+        }
+
+        return width.Value == measuredWidth && !_hasUnboundedLineEndingInWhitespace;
+    }
 
     /// <summary>
     /// The max height passed to the RichTextKit <c>TextBlock</c>: <see cref="Height"/> when
@@ -1572,7 +1622,8 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
         // one per frame (#7818). The full block changes with every input the reveal depends on.
         if (_revealBlock != null
             && ReferenceEquals(_revealBlockSource, fullBlock)
-            && _revealBlockLetters == MaxLettersToShow.Value)
+            && _revealBlockLetters == MaxLettersToShow.Value
+            && _revealBlockWidth == this.Width)
         {
             return _revealBlock;
         }
@@ -1594,12 +1645,14 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
         buffers.ReleaseVisibleRuns();
         _revealBlockSource = fullBlock;
         _revealBlockLetters = MaxLettersToShow.Value;
+        _revealBlockWidth = this.Width;
         return _revealBlock;
     }
 
     private TextBlock? _revealBlock;
     private TextBlock? _revealBlockSource;
     private int _revealBlockLetters;
+    private float? _revealBlockWidth;
 
 
     internal Style GetStyle() => BuildRunStyle(string.Empty, null).Style;
