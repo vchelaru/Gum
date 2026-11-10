@@ -357,7 +357,18 @@ public class ShapeRenderer
         // clips (SVG clip-path) and ramps, which 0.9.4's covered, so name them (#7808). Draws that
         // need less reuse this compiled version. KNI is still on 0.9.4, which lacks these flags.
         _sb = new ShapeBatch(graphicsDevice, (Effect?)null, warmup: false);
-        _sb.Warmup(ShapeFeatures.EllipsesAndPaths | ShapeFeatures.Clips | ShapeFeatures.Ramps);
+        // EXPERIMENT (macOS CI diagnosis, not for merge): report the GL renderer and time each
+        // single-feature version, leaving out the combined one that exceeds the CI limit.
+        System.Console.Error.WriteLine($"[ShapeWarmup] adapter={GraphicsAdapter.DefaultAdapter.Description}");
+        foreach (ShapeFeatures f in new[] { ShapeFeatures.None, ShapeFeatures.EllipsesAndPaths, ShapeFeatures.Clips, ShapeFeatures.Gradients, ShapeFeatures.Ramps })
+        {
+            System.Console.Error.WriteLine($"[ShapeWarmup] start {f} at {System.DateTime.UtcNow:HH:mm:ss.fff}");
+            System.Console.Error.Flush();
+            var sw = System.Diagnostics.Stopwatch.StartNew();
+            _sb.Warmup(f);
+            System.Console.Error.WriteLine($"[ShapeWarmup] done {f} ms={sw.Elapsed.TotalMilliseconds:F0}");
+            System.Console.Error.Flush();
+        }
 #else
         _sb = new ShapeBatch(graphicsDevice, (Effect?)null);
 #endif

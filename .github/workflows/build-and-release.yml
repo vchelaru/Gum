@@ -20,6 +20,7 @@ on:
       - Tool/Gum.Avalonia/Gum.Avalonia.csproj
       - Tool/Gum.Avalonia/Packaging/**
       - Tool/GumPreview/**
+      - Runtimes/GumShapes/**
       - Tools/Gum.Cli/Gum.Cli.csproj
       - Unity/*.ps1
 
