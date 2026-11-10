@@ -275,8 +275,8 @@ public class NineSlice : RenderableBase, IAnimatable, IAnimationChainRenderable,
     } = Color.White;
 
     /// <summary>
-    /// How <see cref="Color"/> combines with the texture. Add draws the nine-slice untinted and
-    /// then adds Color in a second pass.
+    /// How <see cref="Color"/> combines with the texture. Add adds Color's RGB to the texture's,
+    /// faded by Color's alpha.
     /// </summary>
     public ColorOperation ColorOperation { get; set; } = ColorOperation.Modulate;
 
@@ -346,28 +346,28 @@ public class NineSlice : RenderableBase, IAnimatable, IAnimationChainRenderable,
             }
         }
 
+        var renderer = global::RenderingLibrary.Graphics.Renderer.Self;
+        bool isAdd = ColorOperation == ColorOperation.Add;
+        if (isAdd)
+        {
+            renderer.BatchDrawCallCounter.BeginShaderMode(renderer.AddColorOperationShader.Shader);
+        }
+
         if (Blend.HasValue)
         {
-            global::RenderingLibrary.Graphics.Renderer.Self.BatchDrawCallCounter.BeginBlendMode(Blend.Value);
+            renderer.BatchDrawCallCounter.BeginBlendMode(Blend.Value);
         }
 
         DrawOnce();
 
         if (Blend.HasValue)
         {
-            global::RenderingLibrary.Graphics.Renderer.Self.BatchDrawCallCounter.EndBlendMode();
+            renderer.BatchDrawCallCounter.EndBlendMode();
         }
 
-        if (ColorOperation == ColorOperation.Add)
+        if (isAdd)
         {
-            var counter = global::RenderingLibrary.Graphics.Renderer.Self.BatchDrawCallCounter;
-            counter.BeginShaderMode(global::RenderingLibrary.Graphics.Renderer.Self.AdditiveColorOverlayShader.Shader);
-            counter.BeginBlendModeAddColorPreserveDestinationAlpha();
-
-            DrawOnce();
-
-            counter.EndBlendMode();
-            counter.EndShaderMode();
+            renderer.BatchDrawCallCounter.EndShaderMode();
         }
     }
 
