@@ -174,6 +174,7 @@ public class SpriteGoldenImageTests : IDisposable
             container.Children.Add(sprite);
             GumService.Default.Root.Children.Add(container);
         }
-        DrawAndMatch("Sprite_ManySameTexture");
+        GumService.Default.Draw();
+        GoldenImageAssert.Matches(_surface, "Sprite_ManySameTexture", tolerance: 2);
     }
 }
