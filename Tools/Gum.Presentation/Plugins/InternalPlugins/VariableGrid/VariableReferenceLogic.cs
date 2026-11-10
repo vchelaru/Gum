@@ -793,7 +793,9 @@ public class VariableReferenceLogic : IVariableReferenceLogic
         List<StateSave> states = element.AllStates
             .Where(state => state.VariableLists.Any(IsSiblingDependentRow))
             .ToList();
-        if (states.Count == 0)
+        // A behavior line (a tab reading @Index) goes stale the same way as a typed row.
+        bool behaviorLinesReadIndex = BehaviorToolOnlyReferencesApplier.AnyInstanceLineMatches(element, SiblingDependentName);
+        if (states.Count == 0 && !behaviorLinesReadIndex)
         {
             return;
         }
@@ -804,6 +806,11 @@ public class VariableReferenceLogic : IVariableReferenceLogic
         foreach (StateSave state in states)
         {
             ElementSaveExtensions.ApplyVariableReferences(element, state, liveRoot);
+        }
+
+        if (behaviorLinesReadIndex && element.DefaultState != null)
+        {
+            BehaviorToolOnlyReferencesApplier.Apply(element, element.DefaultState);
         }
 
         // The values written above are what the wireframe should now show.
