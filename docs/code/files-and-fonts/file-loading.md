@@ -118,6 +118,7 @@ Be careful setting CacheTextures to false since all existing textures will be di
 ### Editing a Loaded Texture on SkiaSharp
 
 On [SkiaSharp-based runtimes](../about/runtimes.md), Gum marks every texture it loads as read-only, whether it comes from a file, a URL, an `.achx` frame, or the built-in Forms sprite sheet. Every `SpriteRuntime` and `NineSliceRuntime` that uses one of these textures shares a single copy of its pixels, which keeps memory use and GPU work flat as the number of visuals grows.
+
 {% hint style="info" %}
 Available in December 2026, or now if building Gum from source.
 {% endhint %}
