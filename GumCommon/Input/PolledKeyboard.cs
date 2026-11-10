@@ -134,6 +134,7 @@ public abstract class PolledKeyboard : IInputReceiverKeyboard, IDisposable
         System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.OSX);
 #endif
 
+    // Returns one reused sequence: enumerate it once, right away, and do not keep it past the next read.
     /// <inheritdoc/>
     IEnumerable<GumKeys> IInputReceiverKeyboard.KeysTyped => _keysTyped ??= new KeysTypedSequence(this);
 

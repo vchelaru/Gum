@@ -1517,6 +1517,10 @@ public interface IInputReceiverKeyboard
     /// space. Implementations must translate from any native key type to Gum/XNA values
     /// before yielding.
     /// </summary>
+    /// <remarks>
+    /// Enumerate the returned sequence once, right away (typically one foreach). Do not store it or enumerate
+    /// it after the next read of <c>KeysTyped</c>, since implementations may reuse one sequence.
+    /// </remarks>
     IEnumerable<Gum.Forms.Input.Keys> KeysTyped { get; }
 
     /// <summary>
