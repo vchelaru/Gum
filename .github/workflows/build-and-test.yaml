@@ -6,7 +6,7 @@ name: Test Runtimes
 # does not skip the check, it prevents the check from ever being reported, so
 # any PR matching the filter (a docs-only PR) is stuck at BLOCKED permanently
 # with no way to re-run it into a passing state. Docs-only CI savings are instead
-# restored inside the Build-and-Test job itself: its "Detect docs-only PR" step
+# restored inside the Build-and-Test job itself: its Plan step, fed by the Changes job,
 # guards every expensive step so the job still runs and reports green, it just
 # does no work. Required contexts must always report.
 # push is safe to filter: pushes to main are not gated on required checks.
@@ -39,7 +39,7 @@ jobs:
   # Whether the PR touches anything but docs. The jobs below that are not required checks skip
   # themselves on a docs-only PR (about 40 runner-minutes of nothing). The required Build-and-Test
   # legs cannot skip at job level (their matrix names would not report), so they guard their own
-  # steps instead - see "Detect docs-only PR" there. Not a path filter on the trigger, for the reason
+  # steps instead - see the Plan step there. Not a path filter on the trigger, for the reason
   # in the top-of-file comment. Outputs 'true' for every event other than pull_request.
   #
   # It also outputs `scope`: 'fast' when the PR carries the `fast-ci` label, else 'full' (and always
@@ -511,42 +511,27 @@ jobs:
         with:
           submodules: false
 
-      # Required contexts must always report (see the top-of-file comment), so this
-      # trigger stays unfiltered. This step instead detects a docs-only PR so every
-      # expensive step below can skip its work while the job still runs and reports
-      # green. Uses the GitHub API (no local diff/full-history checkout needed) for
-      # pull_request events; irrelevant for push/workflow_dispatch, which don't gate
-      # on this output.
-      - name: Detect docs-only PR
-        if: github.event_name == 'pull_request'
-        id: docs-only
-        uses: dorny/paths-filter@v3
-        with:
-          # predicate-quantifier: every is required for the '!'-prefixed excludes below to
-          # actually exclude. The default ('some'/OR) matches a file against '**' alone and
-          # short-circuits true, so every PR — docs-only or not — reported non-docs=true and
-          # this guard never actually skipped the expensive steps it gates.
-          predicate-quantifier: every
-          filters: |
-            non-docs:
-              - '**'
-              - '!docs/**'
-              - '!**/*.md'
-              - '!.gitbook/**'
-
       # Whether this leg has anything to do. Every later step keys off this instead of repeating the
-      # event logic. A docs-only PR does nothing; a push to main only seeds the macOS workload cache
-      # (Windows installs no workloads, so its leg is a no-op on push); in fast scope the macOS leg is a
-      # no-op and the Windows leg runs only the headless test stream.
+      # event logic. A docs-only PR does nothing (the Changes job's non-docs output; required contexts
+      # must always report, so the trigger stays unfiltered and the steps skip instead); a push to main
+      # only seeds the macOS workload cache (Windows installs no workloads, so its leg is a no-op on
+      # push); in fast scope the macOS leg is a no-op and the Windows leg runs only the headless test
+      # stream. A failed Changes job fails the leg: its outputs would otherwise read as docs-only and
+      # turn real work into a green no-op.
       - name: Plan
         id: plan
         shell: bash
         env:
           EVENT: ${{ github.event_name }}
-          NON_DOCS: ${{ steps.docs-only.outputs.non-docs }}
+          CHANGES_RESULT: ${{ needs.Changes.result }}
+          NON_DOCS: ${{ needs.Changes.outputs.non-docs }}
           SCOPE: ${{ needs.Changes.outputs.scope }}
           MATRIX_OS: ${{ matrix.os }}
         run: |
+          if [ "$CHANGES_RESULT" != "success" ]; then
+            echo "::error::The Changes job ended '$CHANGES_RESULT', so this leg cannot tell what the PR touches."
+            exit 1
+          fi
           active=true
           if [ "$EVENT" = "pull_request" ] && [ "$NON_DOCS" != "true" ]; then active=false; fi
           if [ "$EVENT" = "push" ] && [ "$MATRIX_OS" != "macos-15" ]; then active=false; fi
