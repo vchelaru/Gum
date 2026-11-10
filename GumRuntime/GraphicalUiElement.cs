@@ -708,7 +708,7 @@ public static class GraphicalUiElementExtensions
 
         foreach (var category in graphicalUiElement.Categories.Values)
         {
-            state = category.States.FirstOrDefault(item => item.Name == name);
+            state = category.States.FindByName(name);
             if (state != null)
             {
                 return true;

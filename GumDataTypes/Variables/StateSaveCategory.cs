@@ -57,3 +57,23 @@ public class StateSaveCategory
         return toReturn;
     }
 }
+
+internal static class StateSaveListExtensions
+{
+    /// <summary>
+    /// Returns the first state whose name matches <paramref name="name"/> (ordinal, case-sensitive),
+    /// or null. Same result as <c>FirstOrDefault(item => item.Name == name)</c> without allocating a
+    /// closure, which matters because Forms looks states up on every hover and press.
+    /// </summary>
+    internal static StateSave? FindByName(this List<StateSave> states, string name)
+    {
+        for (int i = 0; i < states.Count; i++)
+        {
+            if (states[i].Name == name)
+            {
+                return states[i];
+            }
+        }
+        return null;
+    }
+}
