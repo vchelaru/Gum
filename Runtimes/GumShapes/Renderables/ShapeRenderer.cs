@@ -309,9 +309,8 @@ public class ShapeRenderer
         }
     }
 
-#if APOS_MONOGAME
     /// <summary>
-    /// The shader version <see cref="Initialize()"/> compiles: every <see cref="ShapeFeatures"/> Gum's
+    /// The shader version<see cref="Initialize()"/> compiles: every <see cref="ShapeFeatures"/> Gum's
     /// shapes draw with apart from dashes and SVG text. One version holding all of them covers any draw
     /// or batch that needs fewer, so no shape compiles a shader mid-game.
     /// </summary>
@@ -324,7 +323,6 @@ public class ShapeRenderer
     /// compile mid-game. Defaults to <see cref="DefaultWarmupFeatures"/>.
     /// </summary>
     public ShapeFeatures WarmupFeatures { get; set; } = DefaultWarmupFeatures;
-#endif
 
     public void Initialize()
     {
@@ -369,19 +367,14 @@ public class ShapeRenderer
         }
         IsInitialized = true;
         // Eager on purpose, so the shader compile happens at startup and not mid-game.
-#if APOS_MONOGAME
-        // From Apos.Shapes 0.10.0 the constructor's warmup compiles only the default version, so name
-        // the rest (#7808). Draws that need less reuse this compiled version. KNI is still on 0.9.4,
-        // which lacks these flags.
+        // From Apos.Shapes 0.10.0 (MonoGame and KNI) the constructor's warmup compiles only the default
+        // version, so name the rest (#7808). Draws that need less reuse this compiled version.
         bool defaultVersionOnly = WarmupFeatures == ShapeFeatures.None;
         _sb = new ShapeBatch(graphicsDevice, (Effect?)null, warmup: defaultVersionOnly);
         if (!defaultVersionOnly)
         {
             _sb.Warmup(WarmupFeatures);
         }
-#else
-        _sb = new ShapeBatch(graphicsDevice, (Effect?)null);
-#endif
         // Issue #7307: Apos.Shapes interpolates gradients in Oklab by default, which brightens the
         // mid-tones and mixes premultiplied alpha. Skia and raylib interpolate the straight sRGB channels.
         _sb.ColorSpace = ColorSpace.Rgb;

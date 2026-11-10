@@ -47,8 +47,8 @@
 			alongside the plugin so they load when invoked.
 		-->
 		<PackageReference Include="ShadowDusk.Compiler" Version="0.25.0" />
-		<PackageReference Include="nkast.Kni.Platform.WinForms.DX11" Version="4.2.9001" />
-		<PackageReference Include="nkast.Xna.Framework.Input" Version="4.2.9001" />
+		<PackageReference Include="nkast.Kni.Platform.WinForms.DX11" Version="4.3.9001" />
+		<PackageReference Include="nkast.Xna.Framework.Input" Version="4.3.9001" />
 		<ProjectReference Include="..\..\FlatRedBall.SpecializedXnaControls\FlatRedBall.SpecializedXnaControls.csproj" />
 		<ProjectReference Include="..\..\Gum\Gum.csproj" />
 		<ProjectReference Include="..\EditorTabPlugin.Core\EditorTabPlugin.Core.csproj" />
@@ -64,8 +64,8 @@
 		<ProjectReference Include="..\..\XnaAndWinforms\XnaAndWinforms.csproj" />
 		<ProjectReference Include="..\..\XnaAndWinforms.Wpf\XnaAndWinforms.Wpf.csproj" />
 
-		<PackageReference Include="nkast.Xna.Framework" Version="4.2.9001" />
-		<PackageReference Include="nkast.Xna.Framework.Graphics" Version="4.2.9001" />
+		<PackageReference Include="nkast.Xna.Framework" Version="4.3.9001" />
+		<PackageReference Include="nkast.Xna.Framework.Graphics" Version="4.3.9001" />
 
 	</ItemGroup>
 	<Target Name="PostBuild" AfterTargets="PostBuildEvent">

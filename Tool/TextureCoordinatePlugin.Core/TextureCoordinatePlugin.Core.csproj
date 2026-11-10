@@ -22,8 +22,8 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="nkast.Xna.Framework" Version="4.2.9001" />
-		<PackageReference Include="nkast.Xna.Framework.Graphics" Version="4.2.9001" />
+		<PackageReference Include="nkast.Xna.Framework" Version="4.3.9001" />
+		<PackageReference Include="nkast.Xna.Framework.Graphics" Version="4.3.9001" />
 		<PackageReference Include="Microsoft.CodeAnalysis.BannedApiAnalyzers" Version="3.3.4">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>

@@ -10,7 +10,7 @@ Two heads share one source tree (`Shared/`), so the backends can be compared lik
 | Head | Backend | Why |
 |---|---|---|
 | `AvaloniaCanvasSpike.MonoGame` | `MonoGame.Framework.DesktopGL` 3.8.4.1 + `MonoGameGum` | The path `gumcli screenshot` already proves cross-platform in CI (macOS, and Mesa on Windows). |
-| `AvaloniaCanvasSpike.Kni` | KNI 4.2.9001 + `nkast.Kni.Platform.SDL2.GL` + `KniGum` | The tool ships on KNI today (`WinForms.DX11`); this is KNI's cross-platform desktop backend. |
+| `AvaloniaCanvasSpike.Kni` | KNI 4.3.9001 + `nkast.Kni.Platform.SDL2.GL` + `KniGum` | The tool ships on KNI today (`WinForms.DX11`); this is KNI's cross-platform desktop backend. |
 
 ## How it works
 
