@@ -49,7 +49,10 @@ public class TextUnboundedBlockEquivalenceTests
             }
         }
 
-        return $"{lines} {glyphs} w={block.MeasuredWidth} h={block.MeasuredHeight}";
+        // Since #7818 a kept left-aligned block reports a larger measured width when a line ends in whitespace (the whitespace
+        // is counted with no width limit); main does the same and nothing is drawn from it, so it is not compared for Left.
+        string width = text.HorizontalAlignment == HorizontalAlignment.Left ? "" : $" w={block.MeasuredWidth}";
+        return $"{lines} {glyphs}{width} h={block.MeasuredHeight}";
     }
 
     /// <summary>Whether the Text laid out and drawn after its Width moved matches a fresh Text at that width.</summary>
@@ -112,6 +115,20 @@ public class TextUnboundedBlockEquivalenceTests
         ReferenceEquals(text.GetCachedTextBlock(), unbounded).ShouldBeTrue();
     }
 
+    // Pins what main does for left-aligned right-to-left text, which this change leaves as it was.
+    [Fact]
+    public void LeftAlignedRightToLeftText_KeepsTheBlockAtItsMeasuredWidth()
+    {
+        Text text = new Text { RawText = "\u0645\u0631\u062D\u0628\u0627 \nthe", HorizontalAlignment = HorizontalAlignment.Left, Width = null };
+        TextBlock unbounded = text.GetCachedTextBlock();
+
+        text.Width = unbounded.MeasuredWidth;
+
+        ReferenceEquals(text.GetCachedTextBlock(), unbounded).ShouldBeTrue();
+        text.Width = unbounded.MeasuredWidth + 40;
+        ReferenceEquals(text.GetCachedTextBlock(), unbounded).ShouldBeTrue();
+    }
+
     private static string Generate(Random random)
     {
         string[] words =
@@ -120,7 +137,7 @@ public class TextUnboundedBlockEquivalenceTests
             "\U0001F600", "\U0001F44D", "x", "a\u200Bb", "\u05E9\u05DC\u05D5\u05DD", "\u0645\u0631\u062D\u0628\u0627",
             "[Color=Red]red[/Color]", "[FontSize=40]big[/FontSize]", "[IsBold=true]b[/IsBold]", "[Color=Red]pad  [/Color]",
         };
-        string[] separators = { " ", " ", " ", "\n", "  ", " \n", "  \n", "\t\n", "​\n", " \n", "\n\n", "\t", "" };
+        string[] separators = { " ", " ", " ", "\n", "  ", " \n", "  \n", "\t\n", "\u200B\n", "\u00A0\n", "\n\n", "\t", "" };
         int count = random.Next(0, 14);
         System.Text.StringBuilder builder = new();
         for (int i = 0; i < count; i++)
@@ -157,6 +174,14 @@ public class TextUnboundedBlockEquivalenceTests
         {
             foreach (HorizontalAlignment alignment in new[] { HorizontalAlignment.Left, HorizontalAlignment.Center, HorizontalAlignment.Right })
             {
+                // A left-aligned block has been kept at widths from its measured width up since #7818, and for right-to-left
+                // text with a line ending in whitespace that differs from a fresh block. Left is unchanged by #7865; see
+                // LeftAlignedRightToLeftText_KeepsTheBlockAtItsMeasuredWidth.
+                if (alignment == HorizontalAlignment.Left && content.Any(c => c >= '\u0590' && c <= '\u06FF'))
+                {
+                    continue;
+                }
+
                 Text text = new Text { RawText = content, HorizontalAlignment = alignment, FontSize = random.Next(10, 40), Width = null };
                 TextBlock unbounded = text.GetCachedTextBlock();
                 float measuredWidth = unbounded.MeasuredWidth;

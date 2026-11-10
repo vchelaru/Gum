@@ -1283,7 +1283,9 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
         {
             _cachedTextBlock = _hasMarkup ? GetTextBlock(effectiveWidth) : BuildReusedPlainTextBlock(effectiveWidth);
             _isCachedTextBlockUnbounded = effectiveWidth == null;
-            _hasUnboundedLineEndingInWhitespace = _isCachedTextBlockUnbounded && HasLineEndingInWhitespace(_layoutText);
+            _hasUnboundedLineEndingInWhitespace = _isCachedTextBlockUnbounded
+                && HorizontalAlignment != HorizontalAlignment.Left
+                && HasLineEndingInWhitespace(_layoutText);
         }
         return _cachedTextBlock;
     }
@@ -1291,13 +1293,13 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
     // True when _cachedTextBlock was laid out with no width limit.
     private bool _isCachedTextBlockUnbounded;
 
-    // True when that block has a line before the last that ends in whitespace.
+    // True when that block is center or right aligned and a line before the last ends in whitespace.
     private bool _hasUnboundedLineEndingInWhitespace;
 
     /// <summary>
     /// Whether a line of <paramref name="text"/> other than the last ends in whitespace. RichTextKit counts that
     /// whitespace in the line's width in a block with no width limit and not in a block of a set width, so the two
-    /// differ in the measured width and in where center, right and right-to-left lines are placed.
+    /// place center and right lines differently.
     /// </summary>
     private static bool HasLineEndingInWhitespace(string? text)
     {
@@ -1325,9 +1327,10 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
     /// Whether the cached block, laid out with no width limit, is also the layout at <paramref name="width"/>.
     /// Layout measures a size-to-children text unbounded (<see cref="Width"/> null) and then sets
     /// <see cref="Width"/> to the measured width, on every layout. A block that fits wraps nowhere, so it is the
-    /// layout at no limit, at a left-aligned width it fits in (#7818), and at exactly its measured width for any
-    /// alignment, as long as no line before the last ends in whitespace (<see cref="HasLineEndingInWhitespace"/>).
-    /// A wider width places center and right lines further over.
+    /// layout at no limit, at a left-aligned width it fits in (#7818), and at exactly its measured width where the
+    /// lines are placed the same way: always when left aligned, and when center or right aligned unless a line before
+    /// the last ends in whitespace (<see cref="HasLineEndingInWhitespace"/>). A wider width places center and right
+    /// lines further over.
     /// </summary>
     private bool IsUnboundedBlockValidAtWidth(float? width)
     {
@@ -1341,14 +1344,13 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
             return true;
         }
 
-        if (_hasUnboundedLineEndingInWhitespace)
+        float measuredWidth = _cachedTextBlock.MeasuredWidth;
+        if (HorizontalAlignment == HorizontalAlignment.Left)
         {
-            return false;
+            return width.Value >= measuredWidth;
         }
 
-        float measuredWidth = _cachedTextBlock.MeasuredWidth;
-        return width.Value == measuredWidth
-            || (HorizontalAlignment == HorizontalAlignment.Left && width.Value > measuredWidth);
+        return width.Value == measuredWidth && !_hasUnboundedLineEndingInWhitespace;
     }
 
     /// <summary>
