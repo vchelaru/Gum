@@ -328,12 +328,7 @@ public class SharedTextureImageTests : BaseTestClass
     {
         // The Forms color picker re-uploads one pooled bitmap as its hue changes, so the bitmap stays
         // mutable and each upload must reach the sprite's image.
-        // The owner stays in a tree: PixelDataTexturePool hands the bitmap of an owner that left the tree to
-        // the next caller whatever its size, and ApplyPooled copies without a size check, so a later
-        // 256x256 color picker upload would overflow this 4x4 bitmap and crash the test host (#7877).
-        ContainerRuntime root = new();
         SpriteRuntime owner = new();
-        owner.Parent = root;
         SpriteRuntime target = new();
         byte[] red = new byte[4 * 4 * 4];
         byte[] blue = new byte[4 * 4 * 4];
