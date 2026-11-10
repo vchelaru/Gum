@@ -322,6 +322,7 @@ public class VectorSprite : IRenderableIpso, IVisible, IAspectRatio, ITextureCoo
                 {
                     canvas.DrawPicture(picture, in result);
                 }
+                ((SystemManagers)managers).RenderStatisticsIfInitialized?.RecordDrawCall();
             }
             if (shouldClip)
             {

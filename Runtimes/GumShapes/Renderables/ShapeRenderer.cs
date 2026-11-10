@@ -309,6 +309,23 @@ public class ShapeRenderer
         }
     }
 
+#if APOS_MONOGAME
+    /// <summary>
+    /// The shader version <see cref="Initialize()"/> compiles: every <see cref="ShapeFeatures"/> Gum's
+    /// shapes draw with apart from dashes and SVG text. One version holding all of them covers any draw
+    /// or batch that needs fewer, so no shape compiles a shader mid-game.
+    /// </summary>
+    public const ShapeFeatures DefaultWarmupFeatures = ShapeFeatures.Gradients | ShapeFeatures.BorderGradients
+        | ShapeFeatures.EllipsesAndPaths | ShapeFeatures.Clips | ShapeFeatures.Ramps;
+
+    /// <summary>
+    /// The features of the shader version compiled at startup; set before Initialize. None compiles
+    /// only the default version, which starts fastest but makes the first draw that needs more
+    /// compile mid-game. Defaults to <see cref="DefaultWarmupFeatures"/>.
+    /// </summary>
+    public ShapeFeatures WarmupFeatures { get; set; } = DefaultWarmupFeatures;
+#endif
+
     public void Initialize()
     {
         // Resolve the device from the active SystemManagers rather than GumService.Default, so this
@@ -353,11 +370,15 @@ public class ShapeRenderer
         IsInitialized = true;
         // Eager on purpose, so the shader compile happens at startup and not mid-game.
 #if APOS_MONOGAME
-        // From Apos.Shapes 0.10.0 the constructor's warmup leaves out ellipses, paths (SVG strokes),
-        // clips (SVG clip-path) and ramps, which 0.9.4's covered, so name them (#7808). Draws that
-        // need less reuse this compiled version. KNI is still on 0.9.4, which lacks these flags.
-        _sb = new ShapeBatch(graphicsDevice, (Effect?)null, warmup: false);
-        _sb.Warmup(ShapeFeatures.EllipsesAndPaths | ShapeFeatures.Clips | ShapeFeatures.Ramps);
+        // From Apos.Shapes 0.10.0 the constructor's warmup compiles only the default version, so name
+        // the rest (#7808). Draws that need less reuse this compiled version. KNI is still on 0.9.4,
+        // which lacks these flags.
+        bool defaultVersionOnly = WarmupFeatures == ShapeFeatures.None;
+        _sb = new ShapeBatch(graphicsDevice, (Effect?)null, warmup: defaultVersionOnly);
+        if (!defaultVersionOnly)
+        {
+            _sb.Warmup(WarmupFeatures);
+        }
 #else
         _sb = new ShapeBatch(graphicsDevice, (Effect?)null);
 #endif

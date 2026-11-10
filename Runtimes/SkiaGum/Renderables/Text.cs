@@ -1044,6 +1044,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
     public void Render(ISystemManagers managers)
     {
         var canvas = ((SystemManagers)managers).Canvas;
+        var statistics = ((SystemManagers)managers).RenderStatisticsIfInitialized;
 
         if (Visible)
         {
@@ -1103,6 +1104,8 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
                 canvas.SaveLayer(renderPaint);
                 PaintTextBlockCached(canvas, paintBlock);
                 canvas.Restore();
+                // Restoring the layer composites it onto the canvas, one more draw.
+                statistics?.RecordDrawCall();
                 if (Blend.HasValue)
                 {
                     canvas.Restore();
@@ -1112,6 +1115,8 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
             {
                 PaintTextBlockCached(canvas, paintBlock);
             }
+            // The block paints (or replays its recorded picture) as one draw.
+            statistics?.RecordDrawCall();
             canvas.Restore();
         }
     }

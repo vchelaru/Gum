@@ -790,7 +790,16 @@ public class FrameworkElement : INotifyPropertyChanged
 
     private void OnVisualBindingContextChanged(object? sender, BindingContextChangedEventArgs args)
     {
-        BindingContextChanged?.Invoke(sender, args);
+        _isRelayingBindingContextChange = true;
+        try
+        {
+            BindingContextChanged?.Invoke(sender, args);
+        }
+        finally
+        {
+            _isRelayingBindingContextChange = false;
+        }
+        OnBindingContextRelayed();
         OnPropertyChanged(nameof(BindingContext));
         OnBindingContextChanged(sender, args);
     }
@@ -2840,4 +2849,41 @@ public class FrameworkElement : INotifyPropertyChanged
     }
 
     public bool IsDataBound(string propertyName) => PropertyRegistry.GetBindingExpression(propertyName) != null;
+
+    // True while a BindingContext change is being relayed to this control's bindings, before
+    // OnBindingContextChanged runs.
+    bool _isRelayingBindingContextChange;
+
+    /// <summary>
+    /// True while a BindingContext change is relayed to the bindings of a selector (ListBox, ComboBox)
+    /// whose SelectedObject and SelectedIndex are both bound. The selector holds its view-model pushes
+    /// until <see cref="ApplySelectionBindingsAfterRebind"/>, because the new view model's two values
+    /// can disagree and SelectedObject wins whatever the bind order (#7856).
+    /// </summary>
+    internal bool IsRebindingBothSelectionBindings =>
+        _isRelayingBindingContextChange &&
+        IsDataBound("SelectedObject") &&
+        IsDataBound("SelectedIndex");
+
+    /// <summary>
+    /// Runs once a BindingContext change has reached every binding, before PropertyChanged and
+    /// OnBindingContextChanged. Internal so a subclass overriding OnBindingContextChanged can't skip it.
+    /// </summary>
+    internal virtual void OnBindingContextRelayed() { }
+
+    /// <summary>
+    /// After a BindingContext change, re-applies the bound SelectedObject when SelectedIndex is also
+    /// bound, so SelectedObject wins. Returns whether it did; the caller then pushes both values.
+    /// </summary>
+    internal bool ApplySelectionBindingsAfterRebind()
+    {
+        if (!IsDataBound("SelectedIndex") ||
+            PropertyRegistry.GetBindingExpression("SelectedObject") is not NpcBindingExpression selectedObjectBinding)
+        {
+            return false;
+        }
+
+        selectedObjectBinding.RefreshTarget();
+        return true;
+    }
 }

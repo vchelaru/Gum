@@ -389,12 +389,31 @@ public class ListBox : ItemsControl, IInputReceiver
     object? _lastPushedSelectedObject;
     int _lastPushedSelectedIndex = -1;
 
+    internal override void OnBindingContextRelayed()
+    {
+        if (ApplySelectionBindingsAfterRebind())
+        {
+            // The new view model may hold either value from before, so push both unconditionally.
+            _lastPushedSelectedObject = _neverPushed;
+            _lastPushedSelectedIndex = int.MinValue;
+            PushSelectionIfChanged();
+        }
+    }
+
+    static readonly object _neverPushed = new object();
+
     /// <summary>
     /// Raises PropertyChanged for SelectedObject and SelectedIndex when each differs from the last value
     /// raised, so listeners see every change exactly once, whatever caused it.
     /// </summary>
     private void PushSelectionIfChanged()
     {
+        if (IsRebindingBothSelectionBindings)
+        {
+            // OnBindingContextChanged resolves and pushes the selection once every binding re-attached.
+            return;
+        }
+
         // Each field is assigned before raising, so a handler that changes the selection again pushes
         // its own value.
         object? selectedObject = SelectedObject;
