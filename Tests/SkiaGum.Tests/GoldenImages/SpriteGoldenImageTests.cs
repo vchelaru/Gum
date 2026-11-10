@@ -71,11 +71,11 @@ public class SpriteGoldenImageTests : IDisposable
         return sprite;
     }
 
-    void DrawAndMatch(string name, SKFilterMode filter = SKFilterMode.Nearest)
+    void DrawAndMatch(string name, SKFilterMode filter = SKFilterMode.Nearest, byte tolerance = 0)
     {
         RenderingLibrary.Graphics.Renderer.TextureFilter = filter;
         GumService.Default.Draw();
-        GoldenImageAssert.Matches(_surface, name, tolerance: 0);
+        GoldenImageAssert.Matches(_surface, name, tolerance);
     }
 
     [Theory]
@@ -174,6 +174,8 @@ public class SpriteGoldenImageTests : IDisposable
             container.Children.Add(sprite);
             GumService.Default.Root.Children.Add(container);
         }
-        DrawAndMatch("Sprite_ManySameTexture");
+        // macOS CI rendered one pixel where two translucent texels overlap 1 off from the Windows baseline;
+        // every other pin is exact on both, and the GPU render of this scene matches before and after exactly.
+        DrawAndMatch("Sprite_ManySameTexture", tolerance: 1);
     }
 }
