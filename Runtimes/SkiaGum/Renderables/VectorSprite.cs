@@ -23,7 +23,41 @@ public class VectorSprite : IRenderableIpso, IVisible, IAspectRatio, ITextureCoo
         VectorSprite clone = (VectorSprite)MemberwiseClone();
         clone.mChildren = new();
         clone.mParent = null;
+        // The clone builds its own, so a color change on one never disposes the other's paint.
+        clone._tintPaint = null;
         return clone;
+    }
+
+    // The multiply paint for a non-white Color, rebuilt only when Color changes so an unchanged
+    // tinted sprite draws without allocating.
+    private SKPaint? _tintPaint;
+    private SKColor _tintPaintColor;
+
+    private SKPaint GetTintPaint()
+    {
+        if (_tintPaint == null || _tintPaintColor != Color)
+        {
+            _tintPaint?.ColorFilter?.Dispose();
+            _tintPaint?.Dispose();
+
+            float redRatio = Color.Red / 255.0f;
+            float greenRatio = Color.Green / 255.0f;
+            float blueRatio = Color.Blue / 255.0f;
+            _tintPaint = new SKPaint
+            {
+                Color = Color,
+                ColorFilter = SKColorFilter.CreateColorMatrix(new float[]
+                {
+                    redRatio, 0,          0,         0, 0,
+                    0,        greenRatio, 0,         0, 0,
+                    0,        0,          blueRatio, 0, 0,
+                    0,        0,          0,         1, 0
+                })
+            };
+            _tintPaintColor = Color;
+        }
+
+        return _tintPaint;
     }
 
     #region Fields/Properties
@@ -282,24 +316,7 @@ public class VectorSprite : IRenderableIpso, IVisible, IAspectRatio, ITextureCoo
                 // Currently this supports "multiply". Other color operations could be supported...
                 if (Color.Red != 255 || Color.Green != 255 || Color.Blue != 255 || Color.Alpha != 255)
                 {
-                    var paint = new SKPaint() { Color = Color };
-                    var redRatio = Color.Red / 255.0f;
-                    var greenRatio = Color.Green / 255.0f;
-                    var blueRatio = Color.Blue / 255.0f;
-
-                    paint.ColorFilter =
-                        SKColorFilter.CreateColorMatrix(new float[]
-                        {
-                        redRatio   , 0            , 0        , 0, 0,
-                        0,           greenRatio   , 0        , 0, 0,
-                        0,           0            , blueRatio, 0, 0,
-                        0,           0            , 0        , 1, 0
-                        });
-
-                    using (paint)
-                    {
-                        canvas.DrawPicture(picture, in result, paint);
-                    }
+                    canvas.DrawPicture(picture, in result, GetTintPaint());
                 }
                 else
                 {
