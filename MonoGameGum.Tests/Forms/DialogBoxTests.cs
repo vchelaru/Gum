@@ -712,5 +712,125 @@ public class DialogBoxTests : BaseTestClass
         registered.ShouldNotContain((IRenderableIpso)visualA.RenderableComponent);
         registered.ShouldNotContain((IRenderableIpso)visualB.RenderableComponent);
     }
+
+    private static Gum.Localization.LocalizationService CreateLocalization(string key, string translation)
+    {
+        Gum.Localization.LocalizationService localizationService = new();
+        localizationService.AddDatabase(
+            new Dictionary<string, string[]> { { key, new[] { translation } } },
+            new List<string> { "English" });
+        localizationService.CurrentLanguage = 0;
+        return localizationService;
+    }
+
+    [Fact]
+    public void Show_WhenTranslationIsLongerThanKey_ShouldTypeTheWholeTranslation()
+    {
+        const string translation = "Hello there, traveler! Welcome to the village.";
+        CustomSetPropertyOnRenderable.LocalizationService = CreateLocalization("Greeting", translation);
+        try
+        {
+            var (dialogBox, visual) = CreateDialogBox();
+            dialogBox.LettersPerSecond = 10;
+            dialogBox.Show("Greeting");
+
+            Tick(dialogBox, 1000);
+
+            ((Text)visual.TextInstance.RenderableComponent).RawText.ShouldBe(translation);
+            (visual.TextInstance.MaxLettersToShow ?? 0).ShouldBeGreaterThanOrEqualTo(translation.Length,
+                "because every letter of the translated text should be revealed, not just as many as the key has");
+        }
+        finally
+        {
+            CustomSetPropertyOnRenderable.LocalizationService = null;
+        }
+    }
+
+    [Fact]
+    public void Show_WithImmediatePrintAndLongerTranslation_ShouldRevealTheWholeTranslation()
+    {
+        const string translation = "Hello there, traveler! Welcome to the village.";
+        CustomSetPropertyOnRenderable.LocalizationService = CreateLocalization("Greeting", translation);
+        try
+        {
+            var (dialogBox, visual) = CreateDialogBox();
+            dialogBox.LettersPerSecond = 0;
+
+            dialogBox.Show("Greeting");
+
+            (visual.TextInstance.MaxLettersToShow ?? 0).ShouldBeGreaterThanOrEqualTo(translation.Length);
+        }
+        finally
+        {
+            CustomSetPropertyOnRenderable.LocalizationService = null;
+        }
+    }
+
+    [Fact]
+    public void Click_WhileTypingLongerTranslation_ShouldRevealTheWholeTranslation()
+    {
+        const string translation = "Hello there, traveler! Welcome to the village.";
+        CustomSetPropertyOnRenderable.LocalizationService = CreateLocalization("Greeting", translation);
+        try
+        {
+            var (dialogBox, visual) = CreateDialogBox();
+            dialogBox.LettersPerSecond = 10;
+            dialogBox.Show("Greeting");
+
+            visual.CallClick();
+
+            (visual.TextInstance.MaxLettersToShow ?? 0).ShouldBeGreaterThanOrEqualTo(translation.Length,
+                "because a click while typing skips to the end of the translated page");
+        }
+        finally
+        {
+            CustomSetPropertyOnRenderable.LocalizationService = null;
+        }
+    }
+
+    [Fact]
+    public void Click_WhenTranslationIsLongerThanKeyAndTypingIsDone_ShouldAdvanceToNextPage()
+    {
+        CustomSetPropertyOnRenderable.LocalizationService =
+            CreateLocalization("Greeting", "Hello there, traveler! Welcome to the village.");
+        try
+        {
+            var (dialogBox, visual) = CreateDialogBox();
+            dialogBox.LettersPerSecond = 10;
+            dialogBox.Show(new[] { "Greeting", "Second page" });
+            dialogBox.PagesRemaining.ShouldBe(1);
+            Tick(dialogBox, 1000);
+
+            visual.CallClick();
+
+            dialogBox.PagesRemaining.ShouldBe(0, "because a click on a fully typed page shows the next page");
+        }
+        finally
+        {
+            CustomSetPropertyOnRenderable.LocalizationService = null;
+        }
+    }
+
+    [Fact]
+    public void Click_WhenTranslationIsShorterThanKeyAndTypingIsDone_ShouldAdvanceToNextPage()
+    {
+        CustomSetPropertyOnRenderable.LocalizationService =
+            CreateLocalization("Greeting_Long_Key_Name", "Hi");
+        try
+        {
+            var (dialogBox, visual) = CreateDialogBox();
+            dialogBox.LettersPerSecond = 10;
+            dialogBox.Show(new[] { "Greeting_Long_Key_Name", "Second page" });
+            Tick(dialogBox, 1000);
+
+            visual.CallClick();
+
+            dialogBox.PagesRemaining.ShouldBe(0);
+        }
+        finally
+        {
+            CustomSetPropertyOnRenderable.LocalizationService = null;
+        }
+    }
 }
 

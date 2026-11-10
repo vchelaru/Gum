@@ -18,6 +18,8 @@ internal static class PixelDataTextureApplier
 
     public static void ApplyCached(GraphicalUiElement target, string cacheKey, byte[] rgba, int width, int height)
     {
+        PixelDataValidation.EnsureRgbaLength(rgba, width, height);
+
         if (target?.RenderableComponent is not Sprite sprite)
         {
             return;
@@ -42,6 +44,8 @@ internal static class PixelDataTextureApplier
 
     public static void ApplyPooled(GraphicalUiElement target, GraphicalUiElement owner, byte[] rgba, int width, int height)
     {
+        PixelDataValidation.EnsureRgbaLength(rgba, width, height);
+
         if (target?.RenderableComponent is not Sprite sprite)
         {
             return;
@@ -52,7 +56,10 @@ internal static class PixelDataTextureApplier
             return;
         }
 
-        Texture2D texture = Pool.GetOrCreate(owner, () => CreateTexture(rgba, width, height));
+        Texture2D texture = Pool.GetOrCreate(
+            owner,
+            existing => existing.Width == width && existing.Height == height,
+            () => CreateTexture(rgba, width, height));
 
         UpdateTexture(texture, rgba);
         sprite.Texture = texture;

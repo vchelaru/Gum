@@ -225,14 +225,15 @@ public static class SkiaResourceManager
         {
             SKBitmap rawBitmap = new SKBitmap(new SKImageInfo(header.Width, header.Height, SKColorType.Rgba8888, SKAlphaType.Premul));
             System.Runtime.InteropServices.Marshal.Copy(rawTexture, 0, rawBitmap.GetPixels(), rawTexture.Length);
-            return rawBitmap;
+            return SharedTexture.MarkShared(rawBitmap);
         }
 
         Stream original = stream;
         try
         {
             DecodedImage? decoded = LoaderManager.Self.ImageDecoders.TryDecode(resourceName, ref stream);
-            return decoded != null ? ToBitmap(decoded) : SKBitmap.Decode(stream);
+            SKBitmap? bitmap = decoded != null ? ToBitmap(decoded) : SKBitmap.Decode(stream);
+            return bitmap != null ? SharedTexture.MarkShared(bitmap) : null;
         }
         finally
         {

@@ -423,7 +423,8 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     /// <summary>
     /// Applies changing RGBA pixel data (width*height*4 bytes) to the sprite renderable of the target
     /// using a texture pooled per owner (second argument). Pooled textures whose owner has detached from
-    /// the visual tree are reclaimed, so repeated create/destroy cycles reuse a bounded set. For per-instance
+    /// the visual tree are reclaimed when they have the requested width and height (a different size gets its
+    /// own texture), so repeated create/destroy cycles reuse a bounded set. For per-instance
     /// procedural backgrounds (e.g. a color picker saturation/value square). Assigned per rendering backend.
     /// </summary>
     public static Action<GraphicalUiElement, GraphicalUiElement, byte[], int, int>? ApplyPooledTextureFromPixelData;
