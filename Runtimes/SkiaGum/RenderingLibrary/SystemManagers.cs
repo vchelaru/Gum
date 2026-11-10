@@ -85,6 +85,10 @@ namespace RenderingLibrary
 
         IRenderer ISystemManagers.Renderer => Renderer;
 
+        // Null before Initialize, so a renderable drawn by hand onto a canvas does not throw.
+        internal RenderingLibrary.Graphics.RenderStateChangeStatistics? RenderStatisticsIfInitialized =>
+            _renderer?.RenderStateChangeStatistics;
+
         #endregion
 
         static bool HasInitializedGlobal = false;

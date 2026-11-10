@@ -837,10 +837,60 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
 
     public void PreRender() => OnPreRender?.Invoke();
 
+#if SKIA
+    /// <summary>
+    /// The renderer's draw-call statistics while <see cref="Render"/> runs, null otherwise. A subclass
+    /// that overrides <see cref="RecordsOwnDrawCalls"/> records each SKCanvas draw call into it.
+    /// </summary>
+    private protected RenderStateChangeStatistics? DrawStatistics { get; private set; }
+
+    /// <summary>
+    /// False (the default) counts one draw call per <see cref="DrawBound"/>. True when
+    /// <see cref="DrawBound"/> issues a varying number of draws and records each in
+    /// <see cref="DrawStatistics"/> itself.
+    /// </summary>
+    private protected virtual bool RecordsOwnDrawCalls => false;
+
+    private void DrawBoundCounted(RenderableShapeBase shape, SKRect boundingRect, SKCanvas canvas)
+    {
+        RenderStateChangeStatistics? statistics = DrawStatistics;
+        RenderStateChangeStatistics? previous = shape.DrawStatistics;
+        shape.DrawStatistics = statistics;
+        try
+        {
+            shape.DrawBound(boundingRect, canvas, shape.GetAbsoluteRotation());
+        }
+        finally
+        {
+            shape.DrawStatistics = previous;
+        }
+        if (!shape.RecordsOwnDrawCalls)
+        {
+            statistics?.RecordDrawCall();
+        }
+    }
+#endif
+
     public void Render(ISystemManagers managers)
     {
 #if SKIA
-        var canvas = ((SystemManagers)managers).Canvas;
+        var systemManagers = (SystemManagers)managers;
+        var canvas = systemManagers.Canvas;
+        DrawStatistics = systemManagers.RenderStatisticsIfInitialized;
+        try
+        {
+            RenderToCanvas(canvas);
+        }
+        finally
+        {
+            DrawStatistics = null;
+        }
+#endif
+    }
+
+#if SKIA
+    private void RenderToCanvas(SKCanvas canvas)
+    {
 
         // Issue #3671 (Dark Pro / Forest Glade ListBoxItem regression) -- a stroke-only renderable
         // (IsFilled == false, the two-slot fill+stroke composition's dedicated stroke object) with
@@ -895,20 +945,22 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
                 canvas.Save();
                 canvas.ClipRect(blendBounds);
                 canvas.SaveLayer(layerPaint);
-                DrawBound(boundingRect, canvas, this.GetAbsoluteRotation());
+                DrawBoundCounted(this, boundingRect, canvas);
                 RenderableShapeBase? pairedStroke = PairedStrokeInLayer;
                 // A fully transparent ring draws nothing (replacing the fill with it would erase the ring zone).
                 if (pairedStroke != null && !pairedStroke.IsTransparentStroke)
                 {
                     pairedStroke.ReplacesPaintBelow = true;
-                    pairedStroke.DrawBound(pairedStroke.GetStrokeAdjustedBounds(blendBounds), canvas, pairedStroke.GetAbsoluteRotation());
+                    DrawBoundCounted(pairedStroke, pairedStroke.GetStrokeAdjustedBounds(blendBounds), canvas);
                 }
                 canvas.Restore();
                 canvas.Restore();
+                // Restoring the layer composites it onto the canvas, one more draw.
+                DrawStatistics?.RecordDrawCall();
             }
             else
             {
-                DrawBound(boundingRect, canvas, this.GetAbsoluteRotation());
+                DrawBoundCounted(this, boundingRect, canvas);
             }
 
             if (applyRotation)
@@ -916,8 +968,8 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
                 canvas.Restore();
             }
         }
-#endif
     }
+#endif
 
     private bool CanRender =>
         Visible &&

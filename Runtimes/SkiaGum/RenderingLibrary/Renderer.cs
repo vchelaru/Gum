@@ -212,8 +212,16 @@ namespace RenderingLibrary.Graphics
             }
         }
 
+        /// <summary>
+        /// Counters for the last host frame's draw calls, the same API the MonoGame and raylib renderers
+        /// expose. Reset once per host frame (each full-scene <c>Draw</c>, or the first GumBatch call
+        /// after <c>GumService.Update</c>), so GumBatch cycles within one frame add up.
+        /// </summary>
+        public RenderStateChangeStatistics RenderStateChangeStatistics { get; } = new RenderStateChangeStatistics();
+
         private void StartHostFrameRenderTargets()
         {
+            RenderStateChangeStatistics.Reset();
             DisposeBakedImages();
             _referencedRenderTargetOwners.Clear();
             _renderTargetService.ClearUnusedRenderTargetsLastFrame();
@@ -858,6 +866,7 @@ namespace RenderingLibrary.Graphics
             try
             {
                 DrawRenderTargetImage(surface, destination, paint, owner, imageLeft, imageTop, width, height, zoom, canvas);
+                RenderStateChangeStatistics.RecordDrawCall();
             }
             finally
             {
