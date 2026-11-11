@@ -114,4 +114,78 @@ public class DropshadowRenderTests
 
         picture.ApproximateOperationCount.ShouldBeGreaterThan(2);
     }
+
+    const int CaseSize = 240;
+
+    static SKBitmap RenderCaseGum(byte fillAlpha, float rotation, float offsetX, float offsetY, float blur)
+    {
+        RoundedRectangleRuntime shape = CreateShape(fillAlpha);
+        shape.X = 100;
+        shape.Y = 100;
+        shape.Rotation = rotation;
+        shape.DropshadowOffsetX = offsetX;
+        shape.DropshadowOffsetY = offsetY;
+        shape.DropshadowBlurX = blur;
+        shape.DropshadowBlurY = blur;
+        var bitmap = new SKBitmap(CaseSize, CaseSize);
+        using var canvas = new SKCanvas(bitmap);
+        canvas.Clear(SKColors.Transparent);
+        SystemManagers managers = CreateManagers(canvas);
+        shape.AddToManagers(managers, null);
+        managers.Draw();
+        shape.RemoveFromManagers();
+        return bitmap;
+    }
+
+    // What the renderable drew before the blurred shadow draw: the image filter on the shape's paint.
+    static SKBitmap RenderCaseReference(byte fillAlpha, float rotation, float offsetX, float offsetY, float blur)
+    {
+        var bitmap = new SKBitmap(CaseSize, CaseSize);
+        using var canvas = new SKCanvas(bitmap);
+        canvas.Clear(SKColors.Transparent);
+        float sigma = DropshadowBlur.GetSigma(blur);
+        using var filter = SKImageFilter.CreateDropShadow(offsetX, offsetY, sigma, sigma, new SKColor(0, 0, 0, 160));
+        using var paint = new SKPaint { Color = new SKColor(200, 80, 80, fillAlpha), IsAntialias = true, ImageFilter = filter };
+        if (rotation != 0)
+        {
+            canvas.Translate(100, 100);
+            canvas.RotateDegrees(-rotation);
+            canvas.DrawRoundRect(new SKRect(0, 0, 48, 48), 5, 5, paint);
+        }
+        else
+        {
+            canvas.DrawRoundRect(new SKRect(100, 100, 148, 148), 5, 5, paint);
+        }
+        return bitmap;
+    }
+
+    [Theory]
+    [InlineData(255, 209f, -6f, -17f, 21f)]
+    [InlineData(255, 58f, 16f, 13f, 19f)]
+    [InlineData(255, 90f, 8f, 0f, 8f)]
+    public void Render_RotatedShape_MatchesImageFilterReference(byte fillAlpha, float rotation, float offsetX, float offsetY, float blur)
+    {
+        using SKBitmap actual = RenderCaseGum(fillAlpha, rotation, offsetX, offsetY, blur);
+        using SKBitmap expected = RenderCaseReference(fillAlpha, rotation, offsetX, offsetY, blur);
+        MaxChannelDifference(actual, expected).ShouldBeLessThanOrEqualTo(2);
+    }
+
+    [Theory]
+    [InlineData(255, 0f, 4f, 4f, 1f)]
+    [InlineData(128, 0f, 4f, 4f, 1f)]
+    [InlineData(255, 0f, 20f, -20f, 100f)]
+    [InlineData(255, 0f, -12f, 3f, 100f)]
+    [InlineData(255, 0f, 3f, -13f, 39f)]
+    [InlineData(255, 0f, 4f, 4f, 40f)]
+    [InlineData(128, 0f, 20f, -20f, 5f)]
+    [InlineData(128, 0f, 20f, -20f, 40f)]
+    [InlineData(255, 0f, 20f, -20f, 4.9f)]
+    [InlineData(255, 0f, 20f, -20f, 40.1f)]
+    public void Render_BlurRange_MatchesImageFilterReference(byte fillAlpha, float rotation, float offsetX, float offsetY, float blur)
+    {
+        using SKBitmap actual = RenderCaseGum(fillAlpha, rotation, offsetX, offsetY, blur);
+        using SKBitmap expected = RenderCaseReference(fillAlpha, rotation, offsetX, offsetY, blur);
+        MaxChannelDifference(actual, expected).ShouldBeLessThanOrEqualTo(2);
+    }
+
 }

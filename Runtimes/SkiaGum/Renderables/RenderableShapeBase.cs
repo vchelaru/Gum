@@ -1101,18 +1101,24 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
     protected virtual bool DrawsBlurredShadow => false;
 
     // The mask filter takes one sigma and ignores a gradient's per-stop alpha, and a Src or custom blend
-    // would apply to the shadow too, so those shapes keep the image filter.
+    // would apply to the shadow too, so those shapes keep the image filter. A rotated shape keeps it
+    // too: the image filter offsets the shadow in unrotated surface space, which the rotated canvas would not match.
+    // Outside this blur range the mask filter drifts from the image filter by more than 2 levels: below it
+    // the analytic blur is coarse (sigma under 2), and above it the image filter is limited by the surface.
+    private const float MinBlurredShadowBlur = 5;
+    private const float MaxBlurredShadowBlur = 40;
+
     private bool UsesBlurredShadowDraw
     {
         get
         {
-            if (!DrawsBlurredShadow || !HasDropshadow || UseGradient || Blend.HasValue || _replacesPaintBelow)
+            if (!DrawsBlurredShadow || !HasDropshadow || UseGradient || Blend.HasValue || this.GetAbsoluteRotation() != 0 || _replacesPaintBelow)
             {
                 return false;
             }
             float sigmaX = global::Gum.Wireframe.DropshadowBlur.GetSigma(DropshadowBlurX);
             float sigmaY = global::Gum.Wireframe.DropshadowBlur.GetSigma(DropshadowBlurY);
-            return sigmaX == sigmaY && sigmaX > 0 && float.IsFinite(sigmaX);
+            return sigmaX == sigmaY && DropshadowBlurX >= MinBlurredShadowBlur && DropshadowBlurX <= MaxBlurredShadowBlur;
         }
     }
 
