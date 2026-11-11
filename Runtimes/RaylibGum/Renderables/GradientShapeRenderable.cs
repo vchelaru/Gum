@@ -20,24 +20,18 @@ public abstract class GradientShapeRenderable : InvisibleRenderable
     /// the Sprite / NineSlice blends use. The dropshadow is left out of the wrap: it composites
     /// through its own path, and XNALIKE applies blend to the fill/stroke renderables only.
     /// </summary>
-    public global::Gum.RenderingLibrary.Blend? Blend { get; set; }
+    public global::Gum.RenderingLibrary.Blend? Blend { get; set; } = global::Gum.RenderingLibrary.Blend.Normal;
 
     /// <summary>Opens the <see cref="Blend"/> wrap when one is set; pair with <see cref="EndBlend"/>.</summary>
     protected void BeginBlend()
     {
-        if (Blend.HasValue)
-        {
-            global::RenderingLibrary.Graphics.Renderer.Self.BatchDrawCallCounter.BeginBlendMode(Blend.Value);
-        }
+        global::RenderingLibrary.Graphics.Renderer.Self.BatchDrawCallCounter.BeginBlendMode(Blend ?? global::Gum.RenderingLibrary.Blend.Normal);
     }
 
     /// <summary>Closes the wrap opened by <see cref="BeginBlend"/>.</summary>
     protected void EndBlend()
     {
-        if (Blend.HasValue)
-        {
-            global::RenderingLibrary.Graphics.Renderer.Self.BatchDrawCallCounter.EndBlendMode();
-        }
+        global::RenderingLibrary.Graphics.Renderer.Self.BatchDrawCallCounter.EndBlendMode();
     }
 
     /// <summary>

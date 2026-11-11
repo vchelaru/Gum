@@ -18,6 +18,20 @@ You are affected if you set a deliberately different absolute height on the sele
 
 See [Properties Set by Forms Controls](../../code/styling/properties-set-by-forms-controls.md) for everything the control writes to its Visual.
 
+## Raylib
+
+### Gum Draws With Normal Blending
+
+On Raylib, `SpriteRuntime`, `NineSliceRuntime`, `TextRuntime`, `RectangleRuntime`, `CircleRuntime` and `ArcRuntime` now default `Blend` to `Normal`, the same as every other runtime. Previously a `Blend` that was `null` (the default for a sprite, nine slice or text created in code) drew with whatever Raylib blend mode your game had set, so Gum content drawn between your own `BeginBlendMode` and `EndBlendMode` calls used that mode. Gum now draws each of these with `Normal`, and a `null` `Blend` also draws as `Normal`. After each of these items Raylib is left in its default blend mode, so your own draws after Gum drawing lose the mode you set.
+
+You are affected if you wrap Gum drawing in your own Raylib blend mode, for example additive. Set `Blend` to the mode you want on the Gum elements instead, such as `sprite.Blend = Blend.Additive`. `ColoredRectangleRuntime` and `PolygonRuntime` have no `Blend` and now also draw with `Normal`. `Draw()` sets Raylib to `Normal` when it starts and leaves it in `Normal` when it ends, even when the scene has no sprite, nine slice or text, so call `BeginBlendMode` again after `Draw()` for your own drawing.
+
+### Color Operation Shader Classes Merged
+
+On Raylib, the `AdditiveColorOverlayShader` and `ColorTextureAlphaShader` classes are replaced by one class, `ColorOperationShader`. `Renderer.AdditiveColorOverlayShader` and `BatchDrawCallCounter.BeginBlendModeAddColorPreserveDestinationAlpha` are removed. Gum now picks and binds the shader for `ColorOperation.Add` and `ColorOperation.ColorTextureAlpha` itself, so delete any code that binds these shaders around a draw.
+
+`Renderer.ColorTextureAlphaShader` keeps its name, but its type is now `ColorOperationShader`.
+
 ## Silk.NET
 
 ### Initialize Takes the Window
@@ -196,14 +210,6 @@ foreach (FoundTag tag in BbCodeParser.Parse("[Link=shop]Shop[/Link]", BbCodePars
     }
 }
 ```
-
-## Raylib Color Operations
-
-### Color Operation Shader Classes Merged
-
-On Raylib, the `AdditiveColorOverlayShader` and `ColorTextureAlphaShader` classes are replaced by one class, `ColorOperationShader`. `Renderer.AdditiveColorOverlayShader` and `BatchDrawCallCounter.BeginBlendModeAddColorPreserveDestinationAlpha` are removed. Gum now picks and binds the shader for `ColorOperation.Add` and `ColorOperation.ColorTextureAlpha` itself, so delete any code that binds these shaders around a draw.
-
-`Renderer.ColorTextureAlphaShader` keeps its name, but its type is now `ColorOperationShader`.
 
 ## Forms Text Editing
 

@@ -8,10 +8,10 @@ namespace RaylibGum.Tests.Runtimes;
 public class BlendTests : BaseTestClass
 {
     [Fact]
-    public void NineSliceRuntime_Blend_DefaultsToNull()
+    public void NineSliceRuntime_Blend_DefaultsToNormal()
     {
         NineSliceRuntime sut = new();
-        sut.Blend.ShouldBeNull();
+        sut.Blend.ShouldBe(Blend.Normal);
     }
 
     [Fact]
@@ -36,10 +36,10 @@ public class BlendTests : BaseTestClass
     }
 
     [Fact]
-    public void SpriteRuntime_Blend_DefaultsToNull()
+    public void SpriteRuntime_Blend_DefaultsToNormal()
     {
         SpriteRuntime sut = new();
-        sut.Blend.ShouldBeNull();
+        sut.Blend.ShouldBe(Blend.Normal);
     }
 
     [Fact]
@@ -64,10 +64,10 @@ public class BlendTests : BaseTestClass
     }
 
     [Fact]
-    public void TextRuntime_Blend_DefaultsToNull()
+    public void TextRuntime_Blend_DefaultsToNormal()
     {
         TextRuntime sut = new();
-        sut.Blend.ShouldBeNull();
+        sut.Blend.ShouldBe(Blend.Normal);
     }
 
     [Fact]

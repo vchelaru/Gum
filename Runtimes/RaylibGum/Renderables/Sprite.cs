@@ -146,7 +146,7 @@ public class Sprite : InvisibleRenderable, IAspectRatio, ITextureCoordinate, IAn
         get; set;
     } = Color.White;
 
-    public global::Gum.RenderingLibrary.Blend? Blend { get; set; }
+    public global::Gum.RenderingLibrary.Blend? Blend { get; set; } = global::Gum.RenderingLibrary.Blend.Normal;
 
     /// <summary>
     /// How the sprite's tint <see cref="Color"/> combines with its texture, matching MonoGame's
@@ -224,10 +224,7 @@ public class Sprite : InvisibleRenderable, IAspectRatio, ITextureCoordinate, IAn
             renderer.BatchDrawCallCounter.BeginShaderMode(colorOperationShader.Shader);
         }
 
-        if (Blend.HasValue)
-        {
-            renderer.BatchDrawCallCounter.BeginBlendMode(Blend.Value);
-        }
+        renderer.BatchDrawCallCounter.BeginBlendMode(Blend ?? global::Gum.RenderingLibrary.Blend.Normal);
 
         // RenderTargetTextureSource is excluded: its source rect already encodes the bottom-up GL
         // flip via a negative height, which the tiling/clamping loops' positive-range math does
@@ -258,10 +255,7 @@ public class Sprite : InvisibleRenderable, IAspectRatio, ITextureCoordinate, IAn
             DrawTexturePro(textureToDraw, srcRect, drawDestination, Vector2.Zero, drawRotation, Color);
         }
 
-        if (Blend.HasValue)
-        {
-            renderer.BatchDrawCallCounter.EndBlendMode();
-        }
+        renderer.BatchDrawCallCounter.EndBlendMode();
 
         if (colorOperationShader != null)
         {
