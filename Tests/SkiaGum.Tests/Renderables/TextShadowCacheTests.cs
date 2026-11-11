@@ -159,7 +159,7 @@ public class TextShadowCacheTests
     }
 
     // The settled (cached mask) draw must match the forced layer draw, and must actually draw a shadow.
-    private static void AssertSettledMatchesLayerPath(Func<TextRuntime> create, float canvasScale = 1, bool expectMask = true)
+    private static void AssertSettledMatchesLayerPath(Func<TextRuntime> create, float canvasScale = 1, bool expectMask = true, double minShadowMean = 0.02)
     {
         using SKBitmap layer = Render(create(), forceLayer: true, canvasScale: canvasScale);
         TextRuntime cachedText = create();
@@ -169,7 +169,7 @@ public class TextShadowCacheTests
         noShadowText.HasDropshadow = false;
         using SKBitmap noShadow = Render(noShadowText, forceLayer: false, canvasScale: canvasScale);
 
-        Compare(noShadow, layer).MeanDifference.ShouldBeGreaterThan(0.02, "the layer path should draw a shadow");
+        Compare(noShadow, layer).MeanDifference.ShouldBeGreaterThan(minShadowMean, "the layer path should draw a shadow");
         (int max, double mean) = Compare(layer, cached);
         max.ShouldBeLessThanOrEqualTo(40);
         mean.ShouldBeLessThan(0.5);
@@ -296,7 +296,7 @@ public class TextShadowCacheTests
             text.DropshadowColor = new SKColor(255, 255, 255, 181);
             ((Text)text.RenderableComponent).Blend = blend;
             return text;
-        }, expectMask: blend is not (Gum.RenderingLibrary.Blend.ReplaceAlpha or Gum.RenderingLibrary.Blend.MinAlpha or Gum.RenderingLibrary.Blend.Replace));
+        }, expectMask: blend is not (Gum.RenderingLibrary.Blend.ReplaceAlpha or Gum.RenderingLibrary.Blend.MinAlpha or Gum.RenderingLibrary.Blend.Replace or Gum.RenderingLibrary.Blend.SubtractAlpha));
     }
 
     [Fact]
@@ -311,5 +311,46 @@ public class TextShadowCacheTests
 
         // The first draws earn the mask, every later one uses it.
         renderable.CachedShadowDrawCount.ShouldBeGreaterThanOrEqualTo(7);
+    }
+
+    // The alpha-erasing blends clip to the measured text (not the box), with or without a shadow, as before the mask existed.
+    [Theory]
+    [InlineData(Gum.RenderingLibrary.Blend.ReplaceAlpha, HorizontalAlignment.Left, false)]
+    [InlineData(Gum.RenderingLibrary.Blend.ReplaceAlpha, HorizontalAlignment.Center, false)]
+    [InlineData(Gum.RenderingLibrary.Blend.ReplaceAlpha, HorizontalAlignment.Right, false)]
+    [InlineData(Gum.RenderingLibrary.Blend.MinAlpha, HorizontalAlignment.Left, true)]
+    [InlineData(Gum.RenderingLibrary.Blend.MinAlpha, HorizontalAlignment.Center, true)]
+    [InlineData(Gum.RenderingLibrary.Blend.Replace, HorizontalAlignment.Left, false)]
+    [InlineData(Gum.RenderingLibrary.Blend.Replace, HorizontalAlignment.Right, true)]
+    public void Draw_AlphaWritingBlend_LeavesTheBoxBeyondTheMeasuredTextAlone(Gum.RenderingLibrary.Blend blend, HorizontalAlignment horizontal, bool shadow)
+    {
+        TextRuntime text = CreateBoxed(horizontal);
+        text.HasDropshadow = shadow;
+        ((Text)text.RenderableComponent).Blend = blend;
+        using SKBitmap bitmap = Render(text, forceLayer: false);
+
+        // Box spans x 40..240; the measured text is about 110 wide, so x 235 is outside the blend clip.
+        bitmap.GetPixel(235, 50).Alpha.ShouldBe((byte)255);
+    }
+
+    [Theory]
+    [InlineData(1, -6, 3, 0.5f, HorizontalAlignment.Right, false)]
+    [InlineData(1, 0, 0.75f, 1f, HorizontalAlignment.Right, true)]
+    [InlineData(20, 4, 4, 1f, HorizontalAlignment.Left, false)]
+    public void Draw_SubtractAlphaTextDropshadow_MatchesLayerPath(float blur, float offsetX, float offsetY, float scale, HorizontalAlignment horizontal, bool outline)
+    {
+        AssertSettledMatchesLayerPath(() =>
+        {
+            TextRuntime text = CreateBoxed(horizontal, blur: blur);
+            text.DropshadowOffsetX = offsetX;
+            text.DropshadowOffsetY = offsetY;
+            text.DropshadowColor = new SKColor(255, 255, 255, 181);
+            if (outline)
+            {
+                text.OutlineThickness = 2;
+            }
+            ((Text)text.RenderableComponent).Blend = Gum.RenderingLibrary.Blend.SubtractAlpha;
+            return text;
+        }, scale, expectMask: false, minShadowMean: 0.001);
     }
 }

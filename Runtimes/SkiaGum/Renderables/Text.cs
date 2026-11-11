@@ -762,9 +762,9 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
     public Gum.RenderingLibrary.Blend? Blend { get; set; } = Gum.RenderingLibrary.Blend.Normal;
 
     // Normal is SrcOver, the canvas default, so it needs no layer or paint; only another blend does.
-    // These blends write alpha over the whole layer, and with a translucent shadow the cached mask drew different glyph pixels
-    // than the layer path (#7910), so they keep the layer path.
-    private bool BlendWritesAlpha => Blend is Gum.RenderingLibrary.Blend.ReplaceAlpha or Gum.RenderingLibrary.Blend.MinAlpha or Gum.RenderingLibrary.Blend.Replace;
+    // These blends write alpha, and the cached mask drew glyph pixels that differed from the layer path by up to 132 levels
+    // (#7910), so they keep the layer path.
+    private bool BlendWritesAlpha => Blend is Gum.RenderingLibrary.Blend.ReplaceAlpha or Gum.RenderingLibrary.Blend.MinAlpha or Gum.RenderingLibrary.Blend.Replace or Gum.RenderingLibrary.Blend.SubtractAlpha;
 
     private bool HasActiveBlend => Blend.HasValue && Blend.Value != Gum.RenderingLibrary.Blend.Normal;
 
@@ -1889,7 +1889,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
             SKMatrix shadowMatrix = matrix;
             shadowMatrix.TransX = key.Item5;
             shadowMatrix.TransY = key.Item6;
-            SKRect deviceBounds = shadowMatrix.MapRect(GetBlendLayerBounds(block));
+            SKRect deviceBounds = shadowMatrix.MapRect(GetBlendLayerBounds(block, includeLayoutWidth: true));
             // The blur reaches about three sigma past the shape, in the transform's units.
             float reach = 3 * sigma * MathF.Max(MathF.Abs(matrix.ScaleX) + MathF.Abs(matrix.SkewX), MathF.Abs(matrix.ScaleY) + MathF.Abs(matrix.SkewY));
             deviceBounds.Inflate(reach, reach);
@@ -2895,7 +2895,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
     /// The text-local rectangle the blend is limited to: the measured block plus room for the outline
     /// and drop shadow.
     /// </summary>
-    internal SKRect GetBlendLayerBounds(TextBlock textBlock)
+    internal SKRect GetBlendLayerBounds(TextBlock textBlock, bool includeLayoutWidth = false)
     {
         // The halo is a stroke centered on the glyph edge, so half its width shows outward; the widest run decides.
         float outlinePadding = 0;
@@ -2910,8 +2910,11 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
                 + System.Math.Max(DropshadowBlurX, DropshadowBlurY);
         }
 
-        // Center and Right alignment place lines inside the block's MaxWidth, past the measured width.
-        float layoutWidth = System.Math.Max(textBlock.MeasuredWidth, textBlock.MaxWidth ?? 0);
+        // Center and Right alignment place lines inside the block's MaxWidth, past the measured width. Only the cached
+        // shadow mask needs that room; the blend clip stays at the measured width.
+        float layoutWidth = includeLayoutWidth
+            ? System.Math.Max(textBlock.MeasuredWidth, textBlock.MaxWidth ?? 0)
+            : textBlock.MeasuredWidth;
         SKRect bounds = new SKRect(0, 0, layoutWidth, textBlock.MeasuredHeight);
         // A scaled or rotated [Custom] letter can draw outside the measured block.
         if (_transformedLetters.TryGetValue(textBlock, out List<TransformedLetter>? letters))
