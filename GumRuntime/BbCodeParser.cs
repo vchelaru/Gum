@@ -59,7 +59,7 @@ public struct FoundTag
 public readonly struct TextTagSpan
 {
     /// <summary>
-    /// The tag name as written in the text, such as "Link" for <c>[Link=shop]</c>.
+    /// The canonical spelling of the tag name (not the casing written in the text), such as "Link" for <c>[Link=shop]</c>.
     /// </summary>
     public string Name { get; }
 

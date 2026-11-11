@@ -43,7 +43,9 @@ public class BbCodeParserAllocationTests : BaseTestClass
 
         _output.WriteLine($"Parse: {result.BytesPerIteration:N0} bytes");
         results.Count.ShouldBe(6);
-        // 640 bytes before; what is left is the six arguments (Red, true, 24, 5, true, x), which must be strings.
-        result.BytesPerIteration.ShouldBeLessThanOrEqualTo(200);
+        // 640 bytes before, 176 measured after on net10.0 (the only target MonoGameGum.Tests has); what is left is the six
+        // arguments (Red, true, 24, 5, true, x), which must be strings. 224 leaves 48 bytes for runtime string-size changes;
+        // copying the twelve tag names again would be about 460 bytes more and fail.
+        result.BytesPerIteration.ShouldBeLessThanOrEqualTo(224);
     }
 }
