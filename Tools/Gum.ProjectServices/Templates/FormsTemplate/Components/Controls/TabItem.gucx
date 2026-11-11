@@ -107,7 +107,7 @@
     <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
       <Value xsi:type="xsd:int">255</Value>
     </Variable>
-    <Variable Type="string" Name="TextInstance.Text" SetsValue="true">
+    <Variable Type="string" Name="TextInstance.Text" ExposedAsName="Header" SetsValue="true">
       <Value xsi:type="xsd:string">Tab</Value>
     </Variable>
     <Variable Type="bool" Name="TextInstance.UseCustomFont" SetsValue="true">
