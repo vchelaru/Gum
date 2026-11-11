@@ -2,7 +2,7 @@
 
 	<!--
 		Gum.Brutal.OGL: an input host over BRUTAL's GLFW window (Ahwoo.Brutal.Glfw) that renders through
-		SkiaGum into an OpenGL 3.3 texture (SkiaGameRendering.Brutal.OGL) and blits it to the window.
+		SkiaGum straight into the window's default framebuffer (SkiaGameRendering.Brutal.OGL SkiaDirectCanvas, OpenGL 3.3).
 		The game calls GumService.Default.Initialize(window), Update and Draw and never touches Skia.
 		Gum.Brutal.Vulkan (Runtimes/BrutalGum.Vulkan) is the Vulkan twin built from the same shared
 		source (BrutalHost.props).
@@ -28,7 +28,7 @@
 	<ItemGroup>
 		<PackageReference Include="Ahwoo.Brutal.Glfw" Version="2026.10.5" />
 		<!-- Skia on OpenGL. Never reference SkiaGameRendering.Brutal (Vulkan) here: both declare SkiaRenderTarget2D. -->
-		<PackageReference Include="SkiaGameRendering.Brutal.OGL" Version="0.22.0" />
+		<PackageReference Include="SkiaGameRendering.Brutal.OGL" Version="0.23.0" />
 	</ItemGroup>
 
 	<ItemGroup>

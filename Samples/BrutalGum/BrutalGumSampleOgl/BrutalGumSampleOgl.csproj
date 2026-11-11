@@ -14,7 +14,7 @@
 
 	<ItemGroup>
 		<PackageReference Include="Ahwoo.Brutal.Glfw" Version="2026.10.5" />
-		<PackageReference Include="SkiaGameRendering.Brutal.OGL" Version="0.22.0" />
+		<PackageReference Include="SkiaGameRendering.Brutal.OGL" Version="0.23.0" />
 	</ItemGroup>
 
 	<ItemGroup>

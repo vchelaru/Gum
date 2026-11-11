@@ -47,7 +47,7 @@ dotnet add package Gum.Brutal.Vulkan --prerelease
 {% endtab %}
 {% endtabs %}
 
-Both packages render through SkiaSharp and add real Forms input (mouse, keyboard, gamepad, focus) from a BRUTAL `GlfwWindow`. Gum creates the Skia GPU context and render target itself, recreates the target when the window's framebuffer size changes, and puts the frame on the window. You never call Skia or SkiaGameRendering. Both packages work on Windows and Linux.
+Both packages render through SkiaSharp and add real Forms input (mouse, keyboard, gamepad, focus) from a BRUTAL `GlfwWindow`. Gum creates the Skia GPU context itself and puts the frame on the window: with OpenGL it draws straight into the default framebuffer, and with Vulkan it renders to an image of its own and presents it, recreating that image when the window's framebuffer size changes. You never call Skia or SkiaGameRendering. Both packages work on Windows and Linux.
 
 Do not reference both packages in one project. They declare the same `GumService` type.
 
@@ -155,7 +155,7 @@ GumUI.Draw();
 {% endtab %}
 {% endtabs %}
 
-Gum's canvas is the window's framebuffer. When the window is resized, `Draw` recreates the render target at the new size and lays out your controls for it. Mouse positions are scaled from window coordinates to framebuffer pixels, so high-DPI displays line up. Gum draws over whatever your game already drew to the framebuffer (OpenGL), so clear or draw your background before calling `Draw`.
+Gum's canvas is the window's framebuffer. When the window is resized, `Draw` follows the new size and lays out your controls for it. Mouse positions are scaled from window coordinates to framebuffer pixels, so high-DPI displays line up. Gum draws over whatever your game already drew to the framebuffer (OpenGL), so clear or draw your background before calling `Draw`.
 
 ### Using Your Own Renderer (Vulkan)
 
