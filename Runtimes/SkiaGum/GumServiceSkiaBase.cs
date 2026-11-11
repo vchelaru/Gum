@@ -104,6 +104,18 @@ public abstract class GumServiceSkiaBase : IGumService
         target?.RefreshStyles();
     }
 
+    /// <summary>
+    /// Shows pixels written to a Sprite or NineSlice <c>Texture</c> bitmap since it was assigned, on everything under
+    /// <see cref="Root"/>, <see cref="PopupRoot"/> and <see cref="ModalRoot"/>. See
+    /// <see cref="GraphicalUiElementTextureExtensions.RefreshTextures(GraphicalUiElement)"/>.
+    /// </summary>
+    public void RefreshTextures()
+    {
+        Root?.RefreshTextures();
+        PopupRoot?.RefreshTextures();
+        ModalRoot?.RefreshTextures();
+    }
+
     // Cursors and keyboards a host created through OwnInput.
     private readonly List<IDisposable> _ownedInput = new List<IDisposable>();
 

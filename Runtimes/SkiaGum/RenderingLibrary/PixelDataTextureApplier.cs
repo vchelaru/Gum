@@ -54,7 +54,15 @@ internal static class PixelDataTextureApplier
             () => CreateBitmap(rgba, width, height));
 
         Upload(bitmap, rgba);
-        sprite.Texture = bitmap;
+        if (ReferenceEquals(sprite.Texture, bitmap))
+        {
+            // A reused bitmap was just rewritten; the sprite's image is a copy of the old pixels.
+            sprite.RefreshTexture(bitmap);
+        }
+        else
+        {
+            sprite.Texture = bitmap;
+        }
     }
 
     private static SKBitmap CreateBitmap(byte[] rgba, int width, int height)

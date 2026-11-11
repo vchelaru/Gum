@@ -36,6 +36,20 @@ public class Sprite : RenderableShapeBase, IAspectRatio, ITextureCoordinate, IAn
         }
     }
 
+    /// <summary>
+    /// Copies the pixels of <see cref="Texture"/> into the image again, so pixels written to the bitmap since it was
+    /// assigned show. Does nothing when the bitmap is null or disposed, when an <see cref="Image"/> was assigned over
+    /// it, or when <paramref name="onlyBitmap"/> is given and is not the texture.
+    /// </summary>
+    internal void RefreshTexture(SKBitmap? onlyBitmap = null)
+    {
+        if (!_ownsImage || !IsUsable(_texture) || (onlyBitmap != null && !ReferenceEquals(onlyBitmap, _texture)))
+        {
+            return;
+        }
+        SetImage(CreateImage(_texture), ownsImage: true);
+    }
+
     internal static bool IsUsable(SKBitmap? bitmap) => bitmap != null && bitmap.Handle != IntPtr.Zero;
 
     // Skia aborts the whole process on SKImage.FromBitmap of a disposed bitmap, so it never sees one.
