@@ -134,7 +134,7 @@ sprite.Texture = copy;
 
 Only the visuals you assign the copy to change. A bitmap your own code creates, such as one from `SKBitmap.Decode`, is not shared. Each visual you assign it to keeps its own copy of the pixels, so assigning one bitmap to many visuals uses more memory and GPU time than loading the file through Gum. A custom `IContentLoader` that returns mutable bitmaps behaves the same way.
 
-After you edit one that is already assigned to `Texture`, call `RefreshTextures` to show the change. Called on an element it refreshes that element and its children; called on `GumService` it refreshes everything under `Root`, `PopupRoot` and `ModalRoot`. Passing the bitmap refreshes only the visuals that use it.
+After you edit a bitmap that is already assigned to `Texture`, call `RefreshTextures` to show the change. Called on an element it refreshes that element and its children; called on `GumService` it refreshes everything under `Root`, `PopupRoot` and `ModalRoot`. Passing the bitmap refreshes only the visuals that use it.
 
 ```csharp
 // Initialize
