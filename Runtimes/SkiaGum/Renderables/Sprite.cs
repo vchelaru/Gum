@@ -14,17 +14,54 @@ public class Sprite : RenderableShapeBase, IAspectRatio, ITextureCoordinate, IAn
     /// <summary>
     /// The bitmap this sprite draws. Setting it builds a new <see cref="Image"/> that the sprite owns
     /// and disposes when it is replaced. The bitmap itself is never disposed here, since it usually
-    /// comes from the shared content cache.
+    /// comes from the shared content cache. A bitmap that was already disposed (content unload) is
+    /// treated as no texture, since Skia aborts the process when it builds an image from one.
     /// </summary>
     public SKBitmap? Texture
     {
         get => _texture;
         set
         {
-            _texture = value;
-            SetImage(value != null ? SKImage.FromBitmap(value) : null, ownsImage: true);
+            SKImage? image = CreateImage(value);
+            _texture = image != null ? value : null;
+            SetImage(image, ownsImage: true);
         }
     }
+
+    internal static bool IsUsable(SKBitmap? bitmap) => bitmap != null && bitmap.Handle != IntPtr.Zero;
+
+    // Skia aborts the whole process on SKImage.FromBitmap of a disposed bitmap, so it never sees one.
+    internal static SKImage? CreateImage(SKBitmap? bitmap) => IsUsable(bitmap) ? SKImage.FromBitmap(bitmap!) : null;
+
+    /// <summary>
+    /// Builds an image a clone can own: from <paramref name="bitmap"/> when it is still alive, otherwise (the
+    /// content cache disposed it) from a copy of the pixels of <paramref name="image"/>, which outlives its bitmap.
+    /// </summary>
+    internal static SKImage? CreateOwnedCopy(SKBitmap? bitmap, SKImage? image)
+    {
+        if (IsUsable(bitmap))
+        {
+            return SKImage.FromBitmap(bitmap!);
+        }
+        if (image == null || image.Handle == IntPtr.Zero)
+        {
+            return null;
+        }
+        using SKBitmap? copy = SKBitmap.FromImage(image);
+        if (copy == null)
+        {
+            return null;
+        }
+        // Immutable, so the image shares the copy's pixels, which stay alive after the copy is disposed.
+        copy.SetImmutable();
+        return SKImage.FromBitmap(copy);
+    }
+
+    /// <summary>
+    /// Identifies the pixels this sprite draws. An image built from the Texture has the same pixels as any other
+    /// built from it, so the bitmap identifies it; an image assigned over the Texture is its own pixels.
+    /// </summary>
+    private object? BatchKey => _ownsImage ? _texture : _image;
 
     /// <summary>
     /// The image this sprite draws. An image assigned here stays owned by the caller: the sprite never
@@ -128,9 +165,10 @@ public class Sprite : RenderableShapeBase, IAspectRatio, ITextureCoordinate, IAn
         clone.AnimationLogic = AnimationLogic.Clone(clone.ApplyAnimationFrame, clone.ApplyKeyframeColor);
         // An owned image would be disposed by whichever side changes texture first, so the clone
         // builds its own. A caller-assigned image is shared, since neither side disposes it.
-        if (_ownsImage && _texture != null)
+        if (_ownsImage)
         {
-            clone._image = SKImage.FromBitmap(_texture);
+            clone._image = CreateOwnedCopy(_texture, _image);
+            clone._ownsImage = clone._image != null;
         }
         return clone;
     }
@@ -444,7 +482,7 @@ public class Sprite : RenderableShapeBase, IAspectRatio, ITextureCoordinate, IAn
             source = new SKRect(0, 0, image.Width, image.Height);
         }
 
-        return batch.TryAdd(canvas, (object?)Texture ?? image, image, source, boundingRect,
+        return batch.TryAdd(canvas, BatchKey ?? image, image, source, boundingRect,
             Color.WithAlpha(255), paint.Color.Alpha, Renderer.TextureSampling);
     }
 

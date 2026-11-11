@@ -44,11 +44,14 @@ public class NewProjectDialogViewModelTests
         Resolved = new ResolvedNewProject { Name = "MyGame", CsprojPath = Path.Combine(Folder, "MyGame", "MyGame.csproj") },
     };
 
-    private NewProjectDialogViewModel Create(Action<NewProjectDialogViewModel>? configure = null)
+    // Folder checks run on the calling thread by default: off-thread they resume on a pool thread and mutate the
+    // view model while the test does (#7710). A test of the asynchronous checks passes runChecksInline: false.
+    private NewProjectDialogViewModel Create(Action<NewProjectDialogViewModel>? configure = null, bool runChecksInline = true)
     {
         NewProjectDialogViewModel viewModel = new NewProjectDialogViewModel(
             new ThemeSelectionViewModel(_formsFileService.Object, _projectState.Object),
-            _service.Object, _detector.Object, _dialogService.Object, new Mock<INewProjectLocationSettings>().Object)
+            _service.Object, _detector.Object, _dialogService.Object, new Mock<INewProjectLocationSettings>().Object,
+            runChecksInline)
         {
             ProjectName = "MyGame",
             Location = Folder,
@@ -712,6 +715,29 @@ public class NewProjectDialogViewModelTests
     }
 
     [Fact]
+    public void Create_RunsTheFolderChecksOnTheCallingThread_SoNoPoolThreadMutatesTheViewModelDuringATest()
+    {
+        int callingThread = Environment.CurrentManagedThreadId;
+        List<int> checkThreads = new List<int>();
+        _detector.Setup(x => x.FindExistingCodeProject(It.IsAny<string>())).Returns(() =>
+        {
+            lock (checkThreads)
+            {
+                checkThreads.Add(Environment.CurrentManagedThreadId);
+            }
+            return null;
+        });
+
+        Create(vm => vm.IncludeCodeProject = true);
+
+        lock (checkThreads)
+        {
+            checkThreads.ShouldNotBeEmpty();
+            checkThreads.ShouldAllBe(thread => thread == callingThread);
+        }
+    }
+
+    [Fact]
     public async Task Checks_DoNotBlockTyping()
     {
         using ManualResetEventSlim release = new ManualResetEventSlim();
@@ -720,7 +746,7 @@ public class NewProjectDialogViewModelTests
             release.Wait(TimeSpan.FromSeconds(30));
             return Path.Combine(Folder, "Other.csproj");
         });
-        NewProjectDialogViewModel viewModel = Create(vm => vm.IncludeCodeProject = true);
+        NewProjectDialogViewModel viewModel = Create(vm => vm.IncludeCodeProject = true, runChecksInline: false);
 
         viewModel.ProjectName = "Typed";
 
@@ -745,7 +771,7 @@ public class NewProjectDialogViewModelTests
             }
             return Path.Combine(Folder, "Fresh.csproj");
         });
-        NewProjectDialogViewModel viewModel = Create(vm => vm.IncludeCodeProject = true);
+        NewProjectDialogViewModel viewModel = Create(vm => vm.IncludeCodeProject = true, runChecksInline: false);
         Task first = viewModel.ChecksRefresh;
 
         viewModel.ProjectName = "Second";

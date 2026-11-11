@@ -144,6 +144,26 @@ public class SkiaResourceManagerTests : BaseTestClass
         SkiaResourceManager.IsCached(resourceName).ShouldBeTrue();
     }
 
+    // #7881: the cache key is the standardized path, so IsCached agrees with GetSKBitmap on every spelling.
+    [Fact]
+    public void IsCached_AnotherSpellingOfACachedName_ReturnsTrue()
+    {
+        string folder = "GumIsCached_" + Guid.NewGuid().ToString("N");
+        FileManager.RelativeDirectory = "/gum_is_cached_root/";
+        using MemoryStream stream = new MemoryStream();
+        using (SKBitmap source = new SKBitmap(2, 2))
+        using (SKImage image = SKImage.FromBitmap(source))
+        using (SKData encoded = image.Encode(SKEncodedImageFormat.Png, 100))
+        {
+            encoded.SaveTo(stream);
+        }
+        stream.Position = 0;
+        SkiaResourceManager.GetSKBitmap(folder + "/a.png", stream);
+
+        SkiaResourceManager.IsCached("./" + folder + "/sub/../a.png").ShouldBeTrue();
+        SkiaResourceManager.IsCached(folder + "/b.png").ShouldBeFalse();
+    }
+
     [Fact]
     public void GetSKBitmap_WithUndecodableStream_ShouldThrowAndNotCache()
     {

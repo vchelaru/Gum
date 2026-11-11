@@ -27,9 +27,10 @@ public class NineSlice : RenderableShapeBase, IAnimatable, IAnimationChainRender
         clone._sectionImages = null;
         // An owned image would be disposed by whichever side changes texture first, so the clone
         // builds its own. A caller-assigned image is shared, since neither side disposes it.
-        if (_ownsImage && _texture != null)
+        if (_ownsImage)
         {
-            clone._image = SKImage.FromBitmap(_texture);
+            clone._image = Sprite.CreateOwnedCopy(_texture, _image);
+            clone._ownsImage = clone._image != null;
         }
         return clone;
     }
@@ -143,15 +144,18 @@ public class NineSlice : RenderableShapeBase, IAnimatable, IAnimationChainRender
     /// <summary>
     /// The bitmap this nine-slice draws. Setting it builds a new <see cref="Image"/> that the
     /// nine-slice owns and disposes when it is replaced. The bitmap itself is never disposed here,
-    /// since it usually comes from the shared content cache.
+    /// since it usually comes from the shared content cache. A bitmap that was already disposed
+    /// (content unload) is treated as no texture, since Skia aborts the process when it builds an
+    /// image from one.
     /// </summary>
     public SKBitmap? Texture
     {
         get => _texture;
         set
         {
-            _texture = value;
-            SetImage(value != null ? SKImage.FromBitmap(value) : null, ownsImage: true);
+            SKImage? image = Sprite.CreateImage(value);
+            _texture = image != null ? value : null;
+            SetImage(image, ownsImage: true);
         }
     }
     private SKBitmap? _texture;
@@ -193,8 +197,9 @@ public class NineSlice : RenderableShapeBase, IAnimatable, IAnimationChainRender
 
     public Rectangle? SourceRectangle { get; set; }
 
-    public float? TextureWidth => Texture?.Width;
-    public float? TextureHeight => Texture?.Height;
+    // Image is what DrawBound draws, so its size wins, as on Sprite.
+    public float? TextureWidth => _image?.Width ?? _texture?.Width;
+    public float? TextureHeight => _image?.Height ?? _texture?.Height;
 
     // RenderableShapeBase.Wrap is a non-virtual `public bool Wrap => false;`, so
     // the ITextureCoordinate.Wrap setter is exposed via explicit interface

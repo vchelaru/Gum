@@ -861,6 +861,132 @@ public class DialogBoxTests : BaseTestClass
         ((Text)visual.TextInstance.RenderableComponent).RawText ?? string.Empty;
 
     [Fact]
+    public void LanguageChanged_WhileTyping_ShouldRevealTheWholeNewTranslation()
+    {
+        WithLocalization(CreateLocalization(
+            new Dictionary<string, string[]> { { "Greeting", new[] { "Hi", LongTranslation } } },
+            "English", "Spanish"), () =>
+        {
+            var (dialogBox, visual) = CreateDialogBox();
+            dialogBox.LettersPerSecond = 10;
+            dialogBox.Show("Greeting");
+            Tick(dialogBox, 0.1);
+
+            CustomSetPropertyOnRenderable.LocalizationService!.CurrentLanguage = 1;
+            RawTextOf(visual).ShouldBe(LongTranslation, "the live dialog text re-translates on a language change");
+            Tick(dialogBox, 1000);
+
+            (visual.TextInstance.MaxLettersToShow ?? 0).ShouldBeGreaterThanOrEqualTo(LongTranslation.Length);
+        });
+    }
+
+    [Fact]
+    public void LanguageChanged_WhileTyping_ShouldFireFinishedTypingPageOnceAndShowContinueIndicatorAtTheNewEnd()
+    {
+        WithLocalization(CreateLocalization(
+            new Dictionary<string, string[]> { { "Greeting", new[] { "Hi", LongTranslation } } },
+            "English", "Spanish"), () =>
+        {
+            var (dialogBox, visual) = CreateDialogBox();
+            dialogBox.LettersPerSecond = 10;
+            int finishedCount = 0;
+            dialogBox.FinishedTypingPage += (_, _) => finishedCount++;
+            dialogBox.Show("Greeting");
+            Tick(dialogBox, 0.1);
+            CustomSetPropertyOnRenderable.LocalizationService!.CurrentLanguage = 1;
+
+            Tick(dialogBox, 1.0);
+            finishedCount.ShouldBe(0, "only 10 of the 46 new letters are revealed");
+            visual.ContinueIndicatorInstance.Visible.ShouldBeFalse();
+            Tick(dialogBox, 1000);
+            Tick(dialogBox, 1000);
+
+            finishedCount.ShouldBe(1);
+            visual.ContinueIndicatorInstance.Visible.ShouldBeTrue();
+        });
+    }
+
+    [Fact]
+    public void LanguageChanged_ToShorterTextWhileTyping_ShouldFinishAtTheNewLength()
+    {
+        WithLocalization(CreateLocalization(
+            new Dictionary<string, string[]> { { "Greeting", new[] { LongTranslation, "Hi" } } },
+            "English", "Spanish"), () =>
+        {
+            var (dialogBox, visual) = CreateDialogBox();
+            dialogBox.LettersPerSecond = 10;
+            int finishedCount = 0;
+            dialogBox.FinishedTypingPage += (_, _) => finishedCount++;
+            dialogBox.Show(new[] { "Greeting", "Second" });
+            Tick(dialogBox, 0.5);
+            CustomSetPropertyOnRenderable.LocalizationService!.CurrentLanguage = 1;
+
+            Tick(dialogBox, 0.1);
+
+            finishedCount.ShouldBe(1, "the 2 letter text is fully revealed, not waiting for the old 46 letters");
+            visual.TextInstance.MaxLettersToShow.ShouldBe(2);
+            visual.ContinueIndicatorInstance.Visible.ShouldBeTrue();
+            Tick(dialogBox, 1000);
+            finishedCount.ShouldBe(1);
+            visual.CallClick();
+            dialogBox.PagesRemaining.ShouldBe(0, "the first click advances since nothing is left to reveal");
+        });
+    }
+
+    [Fact]
+    public void LanguageChanged_AfterTypingFinished_ShouldNotRestartTypingAndShouldNeedOneClickToRevealThenOneToAdvance()
+    {
+        WithLocalization(CreateLocalization(
+            new Dictionary<string, string[]> { { "Greeting", new[] { "Hi", LongTranslation } } },
+            "English", "Spanish"), () =>
+        {
+            var (dialogBox, visual) = CreateDialogBox();
+            dialogBox.LettersPerSecond = 10;
+            int finishedCount = 0;
+            dialogBox.FinishedTypingPage += (_, _) => finishedCount++;
+            dialogBox.Show(new[] { "Greeting", "Second" });
+            Tick(dialogBox, 1000);
+            finishedCount.ShouldBe(1);
+            CustomSetPropertyOnRenderable.LocalizationService!.CurrentLanguage = 1;
+            Tick(dialogBox, 1000);
+
+            finishedCount.ShouldBe(1, "a finished page does not start typing again");
+            visual.CallClick();
+            (visual.TextInstance.MaxLettersToShow ?? 0).ShouldBeGreaterThanOrEqualTo(LongTranslation.Length);
+            dialogBox.PagesRemaining.ShouldBe(1, "the first click only reveals the rest of the new text");
+            visual.CallClick();
+
+            dialogBox.PagesRemaining.ShouldBe(0);
+        });
+    }
+
+    [Fact]
+    public void LanguageChanged_OnLastPageWhileTyping_ShouldRevealTheNewTextThenDismissOnClick()
+    {
+        WithLocalization(CreateLocalization(
+            new Dictionary<string, string[]> { { "Greeting", new[] { "Hi", LongTranslation } } },
+            "English", "Spanish"), () =>
+        {
+            var (dialogBox, visual) = CreateDialogBox();
+            dialogBox.LettersPerSecond = 10;
+            int finishedShowingCount = 0;
+            dialogBox.FinishedShowing += (_, _) => finishedShowingCount++;
+            dialogBox.Show("Greeting");
+            dialogBox.PagesRemaining.ShouldBe(0);
+            Tick(dialogBox, 0.1);
+            CustomSetPropertyOnRenderable.LocalizationService!.CurrentLanguage = 1;
+
+            Tick(dialogBox, 1000);
+            (visual.TextInstance.MaxLettersToShow ?? 0).ShouldBeGreaterThanOrEqualTo(LongTranslation.Length);
+            finishedShowingCount.ShouldBe(0, "the page is revealed but not yet dismissed");
+            visual.CallClick();
+
+            finishedShowingCount.ShouldBe(1);
+            dialogBox.IsVisible.ShouldBeFalse();
+        });
+    }
+
+    [Fact]
     public void Show_WithMissingKeyInLoadedDatabase_ShouldRevealTheWholeSuffixedText()
     {
         // A loaded database turns an unknown key into "<key>(loc)", which is longer than the key.
