@@ -1048,7 +1048,20 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
     /// <c>ReplaceAlpha</c> has no <see cref="SKBlendMode"/>, so it is applied as a custom
     /// <see cref="SKBlender"/>; see <see cref="BlendToSkBlendModeExtensions"/>.
     /// </summary>
-    public Gum.RenderingLibrary.Blend? Blend { get; set; }
+    public Gum.RenderingLibrary.Blend? Blend
+    {
+        get => _blend;
+        set
+        {
+            if (value != _blend)
+            {
+                _blend = value;
+                ClearCachedPaint();
+            }
+        }
+    }
+
+    private Gum.RenderingLibrary.Blend? _blend;
 
     /// <summary>
     /// Whether <c>ReplaceAlpha</c> and <c>MinAlpha</c> act on the shape's whole bounds, so pixels
@@ -1103,14 +1116,13 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
     /// </summary>
     protected virtual bool DrawsBlurredShadow => false;
 
-    // The mask filter takes one sigma and ignores a gradient's per-stop alpha, and a Src or custom blend
-    // would apply to the shadow too, so those shapes keep the image filter. A rotated or clipped shape keeps it
+    // The mask filter takes one sigma and ignores a gradient's per-stop alpha, so a gradient shape keeps the image filter. So does a Replace (Src) blend: the image filter replaces the whole shadow-and-shape bounds, which a blurred draw does not (it replaces only where it has coverage), so that output stays as it was. A rotated or clipped shape keeps it
     // too (the old filter cropped the blur at the clip edge; the clip is applied after the blur here): the image filter offsets the shadow in unrotated surface space, which the rotated canvas would not match.
     private bool UsesBlurredShadowDraw
     {
         get
         {
-            if (!DrawsBlurredShadow || !HasDropshadow || UseGradient || Blend.HasValue || this.GetAbsoluteRotation() != 0 || IsClipped() || _replacesPaintBelow)
+            if (!DrawsBlurredShadow || !HasDropshadow || UseGradient || Blend == Gum.RenderingLibrary.Blend.Replace || this.GetAbsoluteRotation() != 0 || IsClipped() || _replacesPaintBelow)
             {
                 return false;
             }
@@ -1162,6 +1174,11 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
         // gives a proportionally fainter shadow.
         byte alpha = (byte)Math.Round(DropshadowColor.Alpha * shapePaint.Color.Alpha / 255f);
         shadow.Color = DropshadowColor.WithAlpha(alpha);
+        // The shadow blends like the shape. A whole-bounds blend is applied once to the layer around both draws.
+        if (Blend.HasValue && !UsesBoundsLayer)
+        {
+            shadow.ApplyBlend(Blend.Value);
+        }
 
         float sigma = global::Gum.Wireframe.DropshadowBlur.GetSigma(DropshadowBlurX);
         if (_shadowMaskFilter == null || sigma != _shadowMaskSigma)
