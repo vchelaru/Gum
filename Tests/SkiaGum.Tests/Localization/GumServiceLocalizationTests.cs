@@ -15,11 +15,10 @@ namespace SkiaGum.Tests.Localization;
 /// #5223: the Skia GumService loads the project's LocalizationFiles during Initialize and
 /// re-translates live text on a language switch, the same as the MonoGame/raylib GumService.
 /// </summary>
-public class GumServiceLocalizationTests : IDisposable
+public class GumServiceLocalizationTests : BaseTestClass
 {
     private readonly string _tempDirectory =
         Path.Combine(Path.GetTempPath(), "SkiaGumServiceLocalization_" + Guid.NewGuid().ToString("N"));
-    private readonly string _previousRelativeDirectory = ToolsUtilities.FileManager.RelativeDirectory;
 
     public GumServiceLocalizationTests()
     {
@@ -27,11 +26,11 @@ public class GumServiceLocalizationTests : IDisposable
         CustomSetPropertyOnRenderable.LocalizationService = null;
     }
 
-    public void Dispose()
+    public override void Dispose()
     {
         CustomSetPropertyOnRenderable.LocalizationService = null;
-        ToolsUtilities.FileManager.RelativeDirectory = _previousRelativeDirectory;
         try { Directory.Delete(_tempDirectory, recursive: true); } catch { /* best-effort */ }
+        base.Dispose();
     }
 
     [Fact]
