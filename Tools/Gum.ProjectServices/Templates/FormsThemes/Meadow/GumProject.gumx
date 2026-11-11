@@ -83,6 +83,9 @@
   <ComponentReference Name="Meadow/Splitter" />
   <ComponentReference Name="Meadow/StackPanel" />
   <ComponentReference Name="Meadow/Styles" />
+  <ComponentReference Name="Meadow/TabControl" />
+  <ComponentReference Name="Meadow/TabItem" />
+  <ComponentReference Name="Meadow/TabPage" />
   <ComponentReference Name="Meadow/TextBox" />
   <ComponentReference Name="Meadow/Toast" />
   <ComponentReference Name="Meadow/ToggleButton" />
@@ -117,6 +120,9 @@
   <BehaviorReference Name="SliderBehavior" SourcePath="../../FormsBehaviors/SliderBehavior.behx" DefaultImplementationOverride="Meadow/Slider" />
   <BehaviorReference Name="SplitterBehavior" SourcePath="../../FormsBehaviors/SplitterBehavior.behx" DefaultImplementationOverride="Meadow/Splitter" />
   <BehaviorReference Name="StackPanelBehavior" SourcePath="../../FormsBehaviors/StackPanelBehavior.behx" />
+  <BehaviorReference Name="TabControlBehavior" SourcePath="../../FormsBehaviors/TabControlBehavior.behx" DefaultImplementationOverride="Meadow/TabControl" />
+  <BehaviorReference Name="TabItemBehavior" SourcePath="../../FormsBehaviors/TabItemBehavior.behx" DefaultImplementationOverride="Meadow/TabItem" />
+  <BehaviorReference Name="TabPageBehavior" SourcePath="../../FormsBehaviors/TabPageBehavior.behx" DefaultImplementationOverride="Meadow/TabPage" />
   <BehaviorReference Name="TextBoxBehavior" SourcePath="../../FormsBehaviors/TextBoxBehavior.behx" DefaultImplementationOverride="Meadow/TextBox" />
   <BehaviorReference Name="ToastBehavior" SourcePath="../../FormsBehaviors/ToastBehavior.behx" DefaultImplementationOverride="Meadow/Toast" />
   <BehaviorReference Name="ToggleBehavior" SourcePath="../../FormsBehaviors/ToggleBehavior.behx" DefaultImplementationOverride="Meadow/ToggleButton" />

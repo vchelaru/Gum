@@ -82,6 +82,9 @@
   <ComponentReference Name="ForestGlade/Splitter" />
   <ComponentReference Name="ForestGlade/StackPanel" />
   <ComponentReference Name="ForestGlade/Styles" />
+  <ComponentReference Name="ForestGlade/TabControl" />
+  <ComponentReference Name="ForestGlade/TabItem" />
+  <ComponentReference Name="ForestGlade/TabPage" />
   <ComponentReference Name="ForestGlade/TextBox" />
   <ComponentReference Name="ForestGlade/TextInputChrome" />
   <ComponentReference Name="ForestGlade/Toast" />
@@ -117,6 +120,9 @@
   <BehaviorReference Name="SliderBehavior" SourcePath="../../FormsBehaviors/SliderBehavior.behx" DefaultImplementationOverride="ForestGlade/Slider" />
   <BehaviorReference Name="SplitterBehavior" SourcePath="../../FormsBehaviors/SplitterBehavior.behx" DefaultImplementationOverride="ForestGlade/Splitter" />
   <BehaviorReference Name="StackPanelBehavior" SourcePath="../../FormsBehaviors/StackPanelBehavior.behx" />
+  <BehaviorReference Name="TabControlBehavior" SourcePath="../../FormsBehaviors/TabControlBehavior.behx" DefaultImplementationOverride="ForestGlade/TabControl" />
+  <BehaviorReference Name="TabItemBehavior" SourcePath="../../FormsBehaviors/TabItemBehavior.behx" DefaultImplementationOverride="ForestGlade/TabItem" />
+  <BehaviorReference Name="TabPageBehavior" SourcePath="../../FormsBehaviors/TabPageBehavior.behx" DefaultImplementationOverride="ForestGlade/TabPage" />
   <BehaviorReference Name="TextBoxBehavior" SourcePath="../../FormsBehaviors/TextBoxBehavior.behx" DefaultImplementationOverride="ForestGlade/TextBox" />
   <BehaviorReference Name="ToastBehavior" SourcePath="../../FormsBehaviors/ToastBehavior.behx" DefaultImplementationOverride="ForestGlade/Toast" />
   <BehaviorReference Name="ToggleBehavior" SourcePath="../../FormsBehaviors/ToggleBehavior.behx" DefaultImplementationOverride="ForestGlade/ToggleButton" />

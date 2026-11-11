@@ -83,6 +83,9 @@
   <ComponentReference Name="DarkPro/Splitter" />
   <ComponentReference Name="DarkPro/StackPanel" />
   <ComponentReference Name="DarkPro/Styles" />
+  <ComponentReference Name="DarkPro/TabControl" />
+  <ComponentReference Name="DarkPro/TabItem" />
+  <ComponentReference Name="DarkPro/TabPage" />
   <ComponentReference Name="DarkPro/TextBox" />
   <ComponentReference Name="DarkPro/Toast" />
   <ComponentReference Name="DarkPro/ToggleButton" />
@@ -117,6 +120,9 @@
   <BehaviorReference Name="SliderBehavior" SourcePath="../../FormsBehaviors/SliderBehavior.behx" DefaultImplementationOverride="DarkPro/Slider" />
   <BehaviorReference Name="SplitterBehavior" SourcePath="../../FormsBehaviors/SplitterBehavior.behx" DefaultImplementationOverride="DarkPro/Splitter" />
   <BehaviorReference Name="StackPanelBehavior" SourcePath="../../FormsBehaviors/StackPanelBehavior.behx" />
+  <BehaviorReference Name="TabControlBehavior" SourcePath="../../FormsBehaviors/TabControlBehavior.behx" DefaultImplementationOverride="DarkPro/TabControl" />
+  <BehaviorReference Name="TabItemBehavior" SourcePath="../../FormsBehaviors/TabItemBehavior.behx" DefaultImplementationOverride="DarkPro/TabItem" />
+  <BehaviorReference Name="TabPageBehavior" SourcePath="../../FormsBehaviors/TabPageBehavior.behx" DefaultImplementationOverride="DarkPro/TabPage" />
   <BehaviorReference Name="TextBoxBehavior" SourcePath="../../FormsBehaviors/TextBoxBehavior.behx" DefaultImplementationOverride="DarkPro/TextBox" />
   <BehaviorReference Name="ToastBehavior" SourcePath="../../FormsBehaviors/ToastBehavior.behx" DefaultImplementationOverride="DarkPro/Toast" />
   <BehaviorReference Name="ToggleBehavior" SourcePath="../../FormsBehaviors/ToggleBehavior.behx" DefaultImplementationOverride="DarkPro/ToggleButton" />

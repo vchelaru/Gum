@@ -17,6 +17,13 @@ public class ThemeTabItemHeaderTests : FileThemeInputTestBase
     [Theory]
     [InlineData("")]
     [InlineData("Bubblegum")]
+    [InlineData("DarkPro")]
+    [InlineData("Meadow")]
+    [InlineData("Editor")]
+    [InlineData("Retro95")]
+    [InlineData("ForestGlade")]
+    [InlineData("Hazard")]
+    [InlineData("Neon")]
     public void TabItemComponent_ExposesTextInstanceTextAsHeader(string theme)
     {
         GumProjectSave project = LoadTheme(theme);
@@ -30,6 +37,13 @@ public class ThemeTabItemHeaderTests : FileThemeInputTestBase
     [Theory]
     [InlineData("")]
     [InlineData("Bubblegum")]
+    [InlineData("DarkPro")]
+    [InlineData("Meadow")]
+    [InlineData("Editor")]
+    [InlineData("Retro95")]
+    [InlineData("ForestGlade")]
+    [InlineData("Hazard")]
+    [InlineData("Neon")]
     public void AuthoredHeaders_ShowDifferentTextOnEachTab(string theme)
     {
         GumProjectSave project = LoadTheme(theme);

@@ -86,6 +86,9 @@
   <ComponentReference Name="Retro95/Splitter" />
   <ComponentReference Name="Retro95/StackPanel" />
   <ComponentReference Name="Retro95/Styles" />
+  <ComponentReference Name="Retro95/TabControl" />
+  <ComponentReference Name="Retro95/TabItem" />
+  <ComponentReference Name="Retro95/TabPage" />
   <ComponentReference Name="Retro95/TextBox" />
   <ComponentReference Name="Retro95/Toast" />
   <ComponentReference Name="Retro95/ToggleButton" />
@@ -121,6 +124,9 @@
   <BehaviorReference Name="SliderBehavior" SourcePath="../../FormsBehaviors/SliderBehavior.behx" DefaultImplementationOverride="Retro95/Slider" />
   <BehaviorReference Name="SplitterBehavior" SourcePath="../../FormsBehaviors/SplitterBehavior.behx" DefaultImplementationOverride="Retro95/Splitter" />
   <BehaviorReference Name="StackPanelBehavior" SourcePath="../../FormsBehaviors/StackPanelBehavior.behx" />
+  <BehaviorReference Name="TabControlBehavior" SourcePath="../../FormsBehaviors/TabControlBehavior.behx" DefaultImplementationOverride="Retro95/TabControl" />
+  <BehaviorReference Name="TabItemBehavior" SourcePath="../../FormsBehaviors/TabItemBehavior.behx" DefaultImplementationOverride="Retro95/TabItem" />
+  <BehaviorReference Name="TabPageBehavior" SourcePath="../../FormsBehaviors/TabPageBehavior.behx" DefaultImplementationOverride="Retro95/TabPage" />
   <BehaviorReference Name="TextBoxBehavior" SourcePath="../../FormsBehaviors/TextBoxBehavior.behx" DefaultImplementationOverride="Retro95/TextBox" />
   <BehaviorReference Name="ToastBehavior" SourcePath="../../FormsBehaviors/ToastBehavior.behx" DefaultImplementationOverride="Retro95/Toast" />
   <BehaviorReference Name="ToggleBehavior" SourcePath="../../FormsBehaviors/ToggleBehavior.behx" DefaultImplementationOverride="Retro95/ToggleButton" />
