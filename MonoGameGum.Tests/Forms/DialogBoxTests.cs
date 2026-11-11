@@ -1286,5 +1286,257 @@ public class DialogBoxTests : BaseTestClass
     }
 
     #endregion
+
+    #region Localization behavior pinned by PR 7898
+
+    [Fact]
+    public void Show_WithMissingKeyInLoadedDatabase_ShouldRevealTheWholeSuffixedText()
+    {
+        // A loaded database turns an unknown key into "<key>(loc)", which is longer than the key.
+        WithLocalization(CreateLocalization("Known", "Hi"), () =>
+        {
+            var (dialogBox, visual) = CreateDialogBox();
+            dialogBox.LettersPerSecond = 10;
+            dialogBox.Show(new[] { "Unknown", "Second" });
+            Tick(dialogBox, 1000);
+
+            RawTextOf(visual).ShouldBe("Unknown(loc)");
+            (visual.TextInstance.MaxLettersToShow ?? 0).ShouldBeGreaterThanOrEqualTo(RawTextOf(visual).Length);
+            visual.CallClick();
+            dialogBox.PagesRemaining.ShouldBe(0);
+        });
+    }
+
+    [Fact]
+    public void Click_WithEachPageTranslated_ShouldShowTheSecondTranslationAfterTheFirst()
+    {
+        WithLocalization(CreateLocalization(
+            new Dictionary<string, string[]>
+            {
+                { "One", new[] { "First page text that is fairly long." } },
+                { "Two", new[] { "Second page text." } },
+            }, "English"), () =>
+        {
+            var (dialogBox, visual) = CreateDialogBox();
+            dialogBox.LettersPerSecond = 10;
+            dialogBox.Show(new[] { "One", "Two" });
+            RawTextOf(visual).ShouldBe("First page text that is fairly long.");
+            Tick(dialogBox, 1000);
+
+            visual.CallClick();
+
+            RawTextOf(visual).ShouldBe("Second page text.");
+        });
+    }
+
+    [Fact]
+    public void Show_WithBbCodeInLongerTranslation_ShouldRevealAllVisibleLetters()
+    {
+        WithLocalization(CreateLocalization("Greeting", "Hello [Color=Red]there, traveler[/Color] and welcome!"), () =>
+        {
+            var (dialogBox, visual) = CreateDialogBox();
+            dialogBox.LettersPerSecond = 10;
+            dialogBox.Show(new[] { "Greeting", "Second" });
+            Tick(dialogBox, 1000);
+
+            RawTextOf(visual).ShouldBe("Hello there, traveler and welcome!");
+            (visual.TextInstance.MaxLettersToShow ?? 0).ShouldBeGreaterThanOrEqualTo(RawTextOf(visual).Length);
+            visual.CallClick();
+            dialogBox.PagesRemaining.ShouldBe(0);
+        });
+    }
+
+    [Fact]
+    public void Show_WithGlyphTagInTranslation_ShouldCountGlyphAsOneLetter()
+    {
+        WithLocalization(CreateLocalization("Greeting", "A[Glyph=0xE000]B"), () =>
+        {
+            var (dialogBox, visual) = CreateDialogBox();
+            dialogBox.LettersPerSecond = 0;
+
+            dialogBox.Show("Greeting");
+
+            visual.TextInstance.MaxLettersToShow.ShouldBe(3);
+            RawTextOf(visual).ShouldNotContain("[Glyph");
+        });
+    }
+
+    [Fact]
+    public void LanguageChanged_AfterTypingFinished_ShouldNeedOneClickToRevealThenOneToAdvance()
+    {
+        WithLocalization(CreateLocalization(
+            new Dictionary<string, string[]> { { "Greeting", new[] { "Hi", LongTranslation } } },
+            "English", "Spanish"), () =>
+        {
+            var (dialogBox, visual) = CreateDialogBox();
+            dialogBox.LettersPerSecond = 10;
+            dialogBox.Show(new[] { "Greeting", "Second" });
+            Tick(dialogBox, 1000);
+            CustomSetPropertyOnRenderable.LocalizationService!.CurrentLanguage = 1;
+
+            visual.CallClick();
+            (visual.TextInstance.MaxLettersToShow ?? 0).ShouldBeGreaterThanOrEqualTo(LongTranslation.Length);
+            dialogBox.PagesRemaining.ShouldBe(1, "the first click only reveals the rest of the new text");
+            visual.CallClick();
+
+            dialogBox.PagesRemaining.ShouldBe(0);
+        });
+    }
+
+    [Fact]
+    public void LanguageChanged_ToShorterTextWhileTyping_ShouldLetAClickAdvance()
+    {
+        WithLocalization(CreateLocalization(
+            new Dictionary<string, string[]> { { "Greeting", new[] { LongTranslation, "Hi" } } },
+            "English", "Spanish"), () =>
+        {
+            var (dialogBox, visual) = CreateDialogBox();
+            dialogBox.LettersPerSecond = 10;
+            dialogBox.Show(new[] { "Greeting", "Second" });
+            Tick(dialogBox, 0.5);
+            CustomSetPropertyOnRenderable.LocalizationService!.CurrentLanguage = 1;
+            Tick(dialogBox, 1000);
+
+            visual.CallClick();
+
+            dialogBox.PagesRemaining.ShouldBe(0);
+        });
+    }
+
+    [Fact]
+    public void Show_WithEmptyTranslation_ShouldLetAClickAdvance()
+    {
+        WithLocalization(CreateLocalization("Empty", string.Empty), () =>
+        {
+            var (dialogBox, visual) = CreateDialogBox();
+            dialogBox.LettersPerSecond = 10;
+            dialogBox.Show(new[] { "Empty", "Second" });
+            Tick(dialogBox, 1000);
+
+            visual.CallClick();
+
+            dialogBox.PagesRemaining.ShouldBe(0);
+        });
+    }
+
+    [Fact]
+    public void Activity_WithLongerTranslation_ShouldFireFinishedTypingPageExactlyOnce()
+    {
+        WithLocalization(CreateLocalization("Greeting", LongTranslation), () =>
+        {
+            var (dialogBox, _) = CreateDialogBox();
+            dialogBox.LettersPerSecond = 10;
+            int finishedCount = 0;
+            dialogBox.FinishedTypingPage += (_, _) => finishedCount++;
+            dialogBox.Show("Greeting");
+
+            Tick(dialogBox, 1000);
+            Tick(dialogBox, 1000);
+
+            finishedCount.ShouldBe(1);
+        });
+    }
+
+    [Fact]
+    public void Activity_WithLongerTranslation_ShouldShowContinueIndicatorOnlyWhenAllLettersAreRevealed()
+    {
+        WithLocalization(CreateLocalization("Greeting", LongTranslation), () =>
+        {
+            var (dialogBox, visual) = CreateDialogBox();
+            dialogBox.LettersPerSecond = 10;
+            dialogBox.Show("Greeting");
+
+            Tick(dialogBox, 1.0);
+            visual.ContinueIndicatorInstance.Visible.ShouldBeFalse("only 10 of the 46 letters are revealed");
+            Tick(dialogBox, 1000);
+
+            visual.ContinueIndicatorInstance.Visible.ShouldBeTrue();
+        });
+    }
+
+    [Fact]
+    public void Activity_WithLongerTranslation_ShouldRevealLettersPastTheKeyLengthOverTime()
+    {
+        WithLocalization(CreateLocalization("Greeting", LongTranslation), () =>
+        {
+            var (dialogBox, visual) = CreateDialogBox();
+            dialogBox.LettersPerSecond = 10;
+            dialogBox.Show("Greeting");
+
+            Tick(dialogBox, 0.5);
+            Tick(dialogBox, 0.5);
+
+            visual.TextInstance.MaxLettersToShow.ShouldBe(10, "the key has 8 letters but the translation has 46");
+        });
+    }
+
+    [Fact]
+    public void ShowNextPage_WithImmediatePrint_ShouldRevealTheWholeTranslation()
+    {
+        WithLocalization(CreateLocalization("Greeting", LongTranslation), () =>
+        {
+            var (dialogBox, visual) = CreateDialogBox();
+            dialogBox.LettersPerSecond = 10;
+            dialogBox.Show(new[] { "Greeting", "Greeting" });
+
+            dialogBox.ShowNextPage(forceImmediatePrint: true);
+
+            (visual.TextInstance.MaxLettersToShow ?? 0).ShouldBeGreaterThanOrEqualTo(LongTranslation.Length);
+        });
+    }
+
+    [Fact]
+    public void ShowAsync_WithLongerTranslation_ShouldRevealTheWholeTranslation()
+    {
+        WithLocalization(CreateLocalization("Greeting", LongTranslation), () =>
+        {
+            var (dialogBox, visual) = CreateDialogBox();
+            dialogBox.LettersPerSecond = 10;
+            _ = dialogBox.ShowAsync("Greeting");
+
+            Tick(dialogBox, 1000);
+
+            (visual.TextInstance.MaxLettersToShow ?? 0).ShouldBeGreaterThanOrEqualTo(LongTranslation.Length);
+        });
+    }
+
+    [Fact]
+    public void Show_WithoutLocalizationService_ShouldRevealAllLettersAndAdvance()
+    {
+        var (dialogBox, visual) = CreateDialogBox();
+        dialogBox.LettersPerSecond = 10;
+        dialogBox.Show(new[] { "Greeting", "Second" });
+        Tick(dialogBox, 1000);
+
+        visual.CallClick();
+
+        dialogBox.PagesRemaining.ShouldBe(0);
+    }
+
+    [Fact]
+    public void Show_AfterDismissWithDifferentTranslation_ShouldUseTheNewLength()
+    {
+        WithLocalization(CreateLocalization(
+            new Dictionary<string, string[]>
+            {
+                { "Long", new[] { LongTranslation } },
+                { "Short", new[] { "Hi" } },
+            }, "English"), () =>
+        {
+            var (dialogBox, visual) = CreateDialogBox();
+            dialogBox.LettersPerSecond = 10;
+            dialogBox.Show("Long");
+            Tick(dialogBox, 1000);
+            dialogBox.Dismiss();
+
+            dialogBox.Show(new[] { "Short", "Second" });
+            Tick(dialogBox, 1000);
+            visual.CallClick();
+
+            dialogBox.PagesRemaining.ShouldBe(0);
+        });
+    }
+
+    #endregion
 }
 
