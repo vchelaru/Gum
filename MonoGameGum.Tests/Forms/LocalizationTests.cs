@@ -157,6 +157,15 @@ public class LocalizationTests : BaseTestClass
         label.Text.ShouldBe("Greeting");
     }
 
+    [Fact]
+    public void LabelText_ShouldTranslate_WhenPreviousTextWasNoTranslateWithSameValue()
+    {
+        Label label = new();
+        label.SetTextNoTranslate("Greeting");
+        label.Text = "Greeting";
+        label.Text.ShouldBe("Hello");
+    }
+
     #endregion
 
     #region TextBox
@@ -226,6 +235,15 @@ public class LocalizationTests : BaseTestClass
         menuItem.Header.ShouldBe("Hello");
         menuItem.SetHeaderNoTranslate("Greeting");
         menuItem.Header.ShouldBe("Greeting");
+    }
+
+    [Fact]
+    public void MenuItemHeader_ShouldTranslate_WhenPreviousTextWasNoTranslateWithSameValue()
+    {
+        MenuItem menuItem = new();
+        menuItem.SetHeaderNoTranslate("Greeting");
+        menuItem.Header = "Greeting";
+        menuItem.Header.ShouldBe("Hello");
     }
 
     #endregion
