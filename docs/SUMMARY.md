@@ -271,6 +271,7 @@
   * [StackPanel](code/controls/stackpanel.md)
   * [Slider](code/controls/slider.md)
   * [Splitter](code/controls/splitter.md)
+  * [TabControl](code/controls/tabcontrol.md)
   * [TextBox](code/controls/textbox.md)
   * [Tooltip](code/controls/tooltip.md)
   * [Window](code/controls/window.md)
