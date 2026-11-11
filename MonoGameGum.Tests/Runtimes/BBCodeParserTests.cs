@@ -17,6 +17,55 @@ public class BBCodeParserTests : BaseTestClass
         BbCodeParser.KnownTags.Contains("state").ShouldBeTrue();
     }
 
+    [Theory]
+    [InlineData("Alpha")]
+    [InlineData("Red")]
+    [InlineData("Blue")]
+    [InlineData("Green")]
+    [InlineData("Color")]
+    [InlineData("Font")]
+    [InlineData("FontSize")]
+    [InlineData("OutlineThickness")]
+    [InlineData("IsItalic")]
+    [InlineData("IsBold")]
+    [InlineData("UseFontSmoothing")]
+    [InlineData("FontScale")]
+    [InlineData("LineHeightMultiplier")]
+    [InlineData("Custom")]
+    [InlineData("State")]
+    [InlineData("HasDropshadow")]
+    [InlineData("Link")]
+    public void Parse_KnownTagInAnyCasing_ReportsCanonicalName(string canonical)
+    {
+        foreach (string written in new[] { canonical, canonical.ToLowerInvariant(), canonical.ToUpperInvariant() })
+        {
+            string text = $"x[{written}=1]ab[/{written}]y";
+            List<FoundTag> parsed = BbCodeParser.Parse(text, BbCodeParser.KnownTags);
+
+            parsed.Count.ShouldBe(1, written);
+            parsed[0].Name.ShouldBe(canonical);
+            parsed[0].Open.Name.ShouldBe(canonical);
+            parsed[0].Close.Name.ShouldBe(canonical);
+            parsed[0].Open.Argument.ShouldBe("1");
+            BbCodeParser.RemoveTags(text, parsed).ShouldBe("xaby");
+        }
+    }
+
+    [Fact]
+    public void Parse_UnknownTag_StaysText()
+    {
+        BbCodeParser.Parse("[Zork=1]a[/Zork]", BbCodeParser.KnownTags).Count.ShouldBe(0);
+    }
+
+    [Fact]
+    public void Parse_CaseSensitiveTagSet_StillMatchesCaseSensitively()
+    {
+        HashSet<string> tags = new() { "Color" };
+
+        BbCodeParser.Parse("[color=Red]a[/color]", tags).Count.ShouldBe(0);
+        BbCodeParser.Parse("[Color=Red]a[/Color]", tags).Count.ShouldBe(1);
+    }
+
     [Fact]
     public void Parse_ShouldParseOverlappingColors()
     {
@@ -205,7 +254,7 @@ public class BBCodeParserTests : BaseTestClass
                     int found = stack.FindLastIndex(item => item.Name == token.Name);
                     if (found >= 0)
                     {
-                        expected.Add((token.Name, stack[found].Start, stack[found].Count, token.Start, token.Count));
+                        expected.Add((names.First(n => string.Equals(n, token.Name, StringComparison.OrdinalIgnoreCase)), stack[found].Start, stack[found].Count, token.Start, token.Count));
                         stack.RemoveAt(found);
                     }
                 }

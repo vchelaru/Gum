@@ -132,3 +132,89 @@ See [Stride setup](../../code/getting-started/setup/adding-initializing-gum/stri
 ### UseKeyboardDefaults, UseGamepadDefaults and UseSingleThreadedAsync Need `using Gum;`
 
 On the Skia hosts (Silk.NET, Stride, Unity, KNI Skia, Brutal and the standalone SkiaGum service), these three calls are now extension methods in the `Gum` namespace, so they can chain with the other `Use...` calls. Add `using Gum;` to any file that calls them, or the call fails with CS1061. Calls such as `GumUI.UseKeyboardDefaults().UseGamepadDefaults();` then work as written.
+
+## KNI
+
+### KNI 4.3 Is Required
+
+`Gum.KNI`, `Gum.KniSkia` and `Gum.Shapes.KNI` are now built for KNI `4.3.9001`, and `Gum.Shapes.KNI` uses `Apos.Shapes.KNI` `0.10.1`, which requires it. In your project, update every `nkast.Xna.Framework*` and `nkast.Kni.Platform.*` package reference from `4.2.9001` to `4.3.9001`. Then follow [KNI's 4.2 to 4.3 migration guide](https://github.com/kniEngine/kni/blob/main/Documentation/articles/migrate_4_2.md) for your platform.
+
+## Unity
+
+### GumRenderer Draws Only on the GPU
+
+`GumRenderer` no longer has a CPU fallback, so `ForceCpu` and `IsUsingGpu` are removed. Delete any code that sets or reads them. On a graphics API that SkiaGameRendering does not support, Gum logs one error and draws nothing.
+
+## Skia Rendering
+
+### Blend Defaults to Normal
+
+On SkiaSharp runtimes, the Skia renderables (shapes, `Sprite`, `NineSlice` and `Text`) now default `Blend` to `Normal` instead of `null`. The property type is still `Blend?`, and they draw the same as before.
+
+You are affected if your code reads `Blend` from a renderable to find out whether a blend was set.
+
+❌ Old:
+
+```csharp
+// Update
+bool hasBlend = renderable.Blend != null;
+```
+
+✅ New:
+
+```csharp
+// Update
+bool hasBlend = renderable.Blend != Gum.RenderingLibrary.Blend.Normal;
+```
+
+### Loaded Textures Are Shared
+
+Gum shares one copy of the pixels of every texture it loads on a SkiaSharp runtime. Editing them in place does not throw. It changes the texture for every sprite and nine slice that uses it, and a GPU surface may not show the edit. Edit a copy and assign the copy to `Texture` instead.
+
+See [Editing a Loaded Texture on SkiaSharp](../../code/files-and-fonts/file-loading.md#editing-a-loaded-texture-on-skiasharp).
+
+## BBCode
+
+### Tag Names Are PascalCase
+
+`BbCodeParser.KnownTags` now holds PascalCase names such as `Color`, `IsBold` and `FontScale`, where it held lowercase ones. The set still ignores case, and tags render the same. The tag name Gum reports (`TextTagSpan.Name`, `FoundTag.Name`) is now the spelling stored in the set, not the casing typed in the text. A tag you added to `KnownTags` reports the spelling you added.
+
+You are affected if your code compares a reported tag name to a lowercase literal with a case-sensitive comparison, or enumerates `KnownTags` expecting lowercase.
+
+❌ Old:
+
+```csharp
+// Initialize
+foreach (FoundTag tag in BbCodeParser.Parse("[Link=shop]Shop[/Link]", BbCodeParser.KnownTags))
+{
+    if (tag.Name == "link")
+    {
+    }
+}
+```
+
+✅ New:
+
+```csharp
+// Initialize
+foreach (FoundTag tag in BbCodeParser.Parse("[Link=shop]Shop[/Link]", BbCodeParser.KnownTags))
+{
+    if (string.Equals(tag.Name, "link", System.StringComparison.OrdinalIgnoreCase))
+    {
+    }
+}
+```
+
+## Raylib Color Operations
+
+### Color Operation Shader Classes Merged
+
+On Raylib, the `AdditiveColorOverlayShader` and `ColorTextureAlphaShader` classes are replaced by one class, `ColorOperationShader`. `Renderer.AdditiveColorOverlayShader` and `BatchDrawCallCounter.BeginBlendModeAddColorPreserveDestinationAlpha` are removed. Gum now picks and binds the shader for `ColorOperation.Add` and `ColorOperation.ColorTextureAlpha` itself, so delete any code that binds these shaders around a draw.
+
+`Renderer.ColorTextureAlphaShader` keeps its name, but its type is now `ColorOperationShader`.
+
+## Forms Text Editing
+
+### TextBoxBase Word Helpers Replaced
+
+If you subclass `TextBox` or `PasswordBox`, the protected `GetCtrlBeforeTarget`, `GetSpaceIndexBefore` and `GetSpaceIndexAfter` methods are removed. `GetPreviousWordStart(int index)` replaces `GetCtrlBeforeTarget`. It returns `int` instead of `int?` and returns the start of the previous word, not the index of a space, so it can give a different result for the same input, for example after leading whitespace. `GetSpaceIndexBefore` and `GetSpaceIndexAfter` have no direct replacement; Ctrl+Right now uses a private `GetNextWordStart`. Move any logic that depended on the old results into your subclass.
