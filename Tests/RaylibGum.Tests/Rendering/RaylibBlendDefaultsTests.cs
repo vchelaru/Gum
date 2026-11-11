@@ -1,4 +1,9 @@
+using Gum.DataTypes;
+using Gum.DataTypes.Variables;
+using Gum.Managers;
 using Gum.GueDeriving;
+using GumRuntime;
+using RenderingLibrary;
 using Gum.Renderables;
 using Gum.RenderingLibrary;
 using Gum.Wireframe;
@@ -36,9 +41,10 @@ public class RaylibBlendDefaultsTests : BaseTestClass
         public Func<Blend?> ReadRuntimeBlend = null!;
         public Func<Blend?> ReadRenderableBlend = null!;
         public Texture2D? Texture;
+        public GraphicalUiElement Root = null!;
     }
 
-    private static Subject Create(string kind, int alpha)
+    private static Subject Create(string kind, int alpha, string? loaded = null)
     {
         Subject subject = new();
         Color red = new Color((byte)255, (byte)0, (byte)0, (byte)alpha);
@@ -56,7 +62,7 @@ public class RaylibBlendDefaultsTests : BaseTestClass
         {
             case "Sprite":
             {
-                SpriteRuntime sprite = new();
+                SpriteRuntime sprite = Make("Sprite", loaded, subject, () => new SpriteRuntime());
                 sprite.WidthUnits = Gum.DataTypes.DimensionUnitType.Absolute;
                 sprite.HeightUnits = Gum.DataTypes.DimensionUnitType.Absolute;
                 sprite.X = 20; sprite.Y = 20; sprite.Width = 60; sprite.Height = 60;
@@ -69,7 +75,7 @@ public class RaylibBlendDefaultsTests : BaseTestClass
             }
             case "NineSlice":
             {
-                NineSliceRuntime nine = new();
+                NineSliceRuntime nine = Make("NineSlice", loaded, subject, () => new NineSliceRuntime());
                 nine.X = 20; nine.Y = 20; nine.Width = 60; nine.Height = 60;
                 nine.Texture = MakeTexture();
                 subject.Runtime = nine;
@@ -80,7 +86,7 @@ public class RaylibBlendDefaultsTests : BaseTestClass
             }
             case "Text":
             {
-                TextRuntime text = new();
+                TextRuntime text = Make("Text", loaded, subject, () => new TextRuntime());
                 text.Text = "W";
                 text.FontSize = 80;
                 text.X = 10; text.Y = 5;
@@ -93,7 +99,7 @@ public class RaylibBlendDefaultsTests : BaseTestClass
             }
             case "Rectangle":
             {
-                RectangleRuntime rectangle = new();
+                RectangleRuntime rectangle = Make("Rectangle", loaded, subject, () => new RectangleRuntime());
                 rectangle.X = 20; rectangle.Y = 20; rectangle.Width = 60; rectangle.Height = 60;
                 rectangle.IsFilled = true; rectangle.StrokeWidth = 0; rectangle.FillColor = red;
                 subject.Runtime = rectangle;
@@ -105,7 +111,7 @@ public class RaylibBlendDefaultsTests : BaseTestClass
             }
             case "Circle":
             {
-                CircleRuntime circle = new();
+                CircleRuntime circle = Make("Circle", loaded, subject, () => new CircleRuntime());
                 circle.X = 20; circle.Y = 20; circle.Width = 60; circle.Height = 60;
                 circle.IsFilled = true; circle.StrokeWidth = 0; circle.FillColor = red;
                 subject.Runtime = circle;
@@ -117,7 +123,7 @@ public class RaylibBlendDefaultsTests : BaseTestClass
             }
             default:
             {
-                ArcRuntime arc = new();
+                ArcRuntime arc = Make("Arc", loaded, subject, () => new ArcRuntime());
                 arc.X = 20; arc.Y = 20; arc.Width = 60; arc.Height = 60;
                 arc.StartAngle = 0; arc.SweepAngle = 360; arc.Thickness = 12; arc.StrokeColor = red;
                 subject.Runtime = arc;
@@ -128,7 +134,54 @@ public class RaylibBlendDefaultsTests : BaseTestClass
                 break;
             }
         }
+        subject.Root ??= subject.Runtime;
         return subject;
+    }
+
+
+    // Builds the element the way a loaded project does: a screen instance whose base standard element
+    // carries the authored Blend variable ("Normal" or "Additive" on the instance, "absent" for a project
+    // that never wrote one). Null builds it in code.
+    private static T Make<T>(string standardName, string? loaded, Subject subject, Func<T> create) where T : GraphicalUiElement
+    {
+        if (loaded == null)
+        {
+            return create();
+        }
+
+        StandardElementSave standard = new() { Name = standardName };
+        standard.States.Add(new StateSave { Name = "Default", ParentContainer = standard });
+        if (loaded != "absent")
+        {
+            standard.DefaultState.Variables.Add(new VariableSave { Name = "Blend", Type = "Blend", Value = Blend.Normal, SetsValue = true });
+        }
+
+        ScreenSave screen = new() { Name = "BlendScreen" };
+        screen.States.Add(new StateSave { Name = "Default", ParentContainer = screen });
+        screen.Instances.Add(new InstanceSave { Name = "Inst", BaseType = standardName, ParentContainer = screen });
+        if (loaded == "Additive")
+        {
+            screen.DefaultState.Variables.Add(new VariableSave { Name = "Inst.Blend", Type = "Blend", Value = Blend.Additive, SetsValue = true });
+        }
+
+        typeof(SystemManagers).GetMethod("RegisterComponentRuntimeInstantiations", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!
+            .Invoke(new SystemManagers(), null);
+
+        GumProjectSave project = new();
+        project.StandardElements.Add(standard);
+        project.Screens.Add(screen);
+        GumProjectSave? previous = ObjectFinder.Self.GumProjectSave;
+        ObjectFinder.Self.GumProjectSave = project;
+        try
+        {
+            GraphicalUiElement visual = screen.ToGraphicalUiElement(systemManagers: null!, addToManagers: false);
+            subject.Root = visual;
+            return (T)visual.GetGraphicalUiElementByName("Inst")!;
+        }
+        finally
+        {
+            ObjectFinder.Self.GumProjectSave = previous;
+        }
     }
 
     /// <summary>The pixel that differs most from the backdrop, so text and ring shapes are probed on their ink.</summary>
@@ -149,14 +202,14 @@ public class RaylibBlendDefaultsTests : BaseTestClass
         return best;
     }
 
-    private static Color RenderBaked(string kind, int alpha, string? mode)
+    private static Color RenderBaked(string kind, int alpha, string? mode, string? loaded = null)
     {
-        Subject subject = Create(kind, alpha);
+        Subject subject = Create(kind, alpha, loaded);
         Apply(subject, mode);
         try
         {
             PixelGrid grid = RaylibPixelHarness.Render(CanvasSize, CanvasSize, Backdrop,
-                container => container.Children.Add(subject.Runtime));
+                container => container.Children.Add(subject.Root));
             return Probe(grid);
         }
         finally
@@ -165,12 +218,12 @@ public class RaylibBlendDefaultsTests : BaseTestClass
         }
     }
 
-    private static Color RenderDirect(string kind, int alpha, string? mode, BlendMode? ambient)
+    private static Color RenderDirect(string kind, int alpha, string? mode, BlendMode? ambient, string? loaded = null)
     {
-        Subject subject = Create(kind, alpha);
+        Subject subject = Create(kind, alpha, loaded);
         Apply(subject, mode);
         RenderTexture2D target = LoadRenderTexture(CanvasSize, CanvasSize);
-        Gum.GumService.Default.Root.Children.Add(subject.Runtime);
+        Gum.GumService.Default.Root.Children.Add(subject.Root);
         Gum.GumService.Default.Root.UpdateLayout();
         try
         {
@@ -192,7 +245,7 @@ public class RaylibBlendDefaultsTests : BaseTestClass
         }
         finally
         {
-            Gum.GumService.Default.Root.Children.Remove(subject.Runtime);
+            Gum.GumService.Default.Root.Children.Remove(subject.Root);
             UnloadRenderTexture(target);
             Release(subject);
         }
@@ -420,6 +473,61 @@ public class RaylibBlendDefaultsTests : BaseTestClass
                 if (alpha == 128)
                 {
                     Math.Abs(defaultAmbient.B - normal.B).ShouldBeGreaterThan(40, kind);
+                }
+            }
+        }
+    }
+
+    [Fact]
+    public void Polygon_HasNoBlendMember_SoNothingToDefault()
+    {
+        bool runtimeHasBlend = typeof(PolygonRuntime).GetProperty("Blend") != null;
+        bool renderableHasBlend = typeof(LinePolygon).GetProperty("Blend") != null;
+        Record($"Polygon|Blend member|runtime={runtimeHasBlend} renderable={renderableHasBlend}");
+        runtimeHasBlend.ShouldBeFalse();
+        renderableHasBlend.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void ProjectLoaded_ReadbackAndPixels_IncludingAmbientAdditive()
+    {
+        foreach (string kind in Kinds)
+        {
+            foreach (string loaded in new[] { "Normal", "Additive", "absent" })
+            {
+                Subject subject = Create(kind, 255, loaded);
+                Record($"{kind}|loaded {loaded}|readback=rt:{subject.ReadRuntimeBlend()?.ToString() ?? "null"} renderable:{subject.ReadRenderableBlend()?.ToString() ?? "null"}");
+                Release(subject);
+
+                foreach (int alpha in new[] { 255, 128 })
+                {
+                    Color baked = RenderBaked(kind, alpha, null, loaded);
+                    Color direct = RenderDirect(kind, alpha, null, null, loaded);
+                    Color ambient = RenderDirect(kind, alpha, null, BlendMode.Additive, loaded);
+                    Record($"{kind}|loaded {loaded}|a{alpha}|baked={Format(baked)}");
+                    Record($"{kind}|loaded {loaded}|a{alpha}|direct={Format(direct)}");
+                    Record($"{kind}|loaded {loaded}|a{alpha}|ambientAdditive={Format(ambient)}");
+
+                    Color additive = RenderDirect(kind, alpha, "Additive", null);
+                    Color normal = RenderDirect(kind, alpha, "Normal", null);
+                    if (loaded == "Additive")
+                    {
+                        AssertClose(direct, additive, $"{kind} loaded Additive a{alpha}", 30);
+                        AssertClose(ambient, additive, $"{kind} loaded Additive ambient a{alpha}", 30);
+                    }
+                    else if (loaded == "Normal")
+                    {
+                        AssertClose(direct, normal, $"{kind} loaded Normal a{alpha}", 30);
+                        // TODAY: a loaded Normal overrides the ambient mode except on Circle, whose Blend setter stores Normal as null
+                        // (Arc keeps Normal on the renderable when loaded).
+                        AssertClose(ambient, kind == "Circle" ? additive : normal, $"{kind} loaded Normal ambient a{alpha}", 30);
+                    }
+                    else
+                    {
+                        // TODAY: no authored Blend leaves the renderable default (null), which follows the ambient mode.
+                        AssertClose(direct, normal, $"{kind} loaded absent a{alpha}", 30);
+                        AssertClose(ambient, additive, $"{kind} loaded absent ambient a{alpha}", 30);
+                    }
                 }
             }
         }
