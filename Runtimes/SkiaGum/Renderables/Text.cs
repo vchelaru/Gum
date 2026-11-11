@@ -1817,7 +1817,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
 
     /// <summary>
     /// Draws the drop shadow from the cached mask and returns true, or returns false (nothing drawn) when the
-    /// shadow needs the layer path: unequal or zero blur, a non-finite value, a perspective transform or a
+    /// shadow needs the layer path: unequal or zero blur, a non-finite value, a rotated, skewed or perspective transform or a
     /// mask that would be too large.
     /// </summary>
     internal bool TryDrawCachedShadow(SKCanvas canvas, TextBlock block, SKMatrix matrix)
@@ -1825,7 +1825,10 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
         float sigma = global::Gum.Wireframe.DropshadowBlur.GetSigma(DropshadowBlurX);
         if (ForceLayerShadow || DropshadowBlurX != DropshadowBlurY || !(sigma > 0) || !float.IsFinite(sigma)
             || !float.IsFinite(DropshadowOffsetX) || !float.IsFinite(DropshadowOffsetY)
-            || matrix.Persp0 != 0 || matrix.Persp1 != 0)
+            || matrix.Persp0 != 0 || matrix.Persp1 != 0
+            // A mask baked under rotation or skew did not match the layer path (#7910), so only a
+            // translation and scale take the mask.
+            || matrix.SkewX != 0 || matrix.SkewY != 0)
         {
             return false;
         }
@@ -2854,7 +2857,9 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
                 + System.Math.Max(DropshadowBlurX, DropshadowBlurY);
         }
 
-        SKRect bounds = new SKRect(0, 0, textBlock.MeasuredWidth, textBlock.MeasuredHeight);
+        // Center and Right alignment place lines inside the block's MaxWidth, past the measured width.
+        float layoutWidth = System.Math.Max(textBlock.MeasuredWidth, textBlock.MaxWidth ?? 0);
+        SKRect bounds = new SKRect(0, 0, layoutWidth, textBlock.MeasuredHeight);
         // A scaled or rotated [Custom] letter can draw outside the measured block.
         if (_transformedLetters.TryGetValue(textBlock, out List<TransformedLetter>? letters))
         {

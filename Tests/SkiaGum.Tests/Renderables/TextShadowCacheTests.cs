@@ -2,6 +2,7 @@ using Shouldly;
 using Gum;
 using Gum.GueDeriving;
 using Gum.Wireframe;
+using RenderingLibrary.Graphics;
 using SkiaSharp;
 
 namespace SkiaGum.Tests.Renderables;
@@ -38,7 +39,7 @@ public class TextShadowCacheTests
     // The mask is built once the inputs held still for a few frames, so the cached path needs several.
     private const int SettledFrames = 4;
 
-    private static SKBitmap Render(TextRuntime text, bool forceLayer, int frames = SettledFrames)
+    private static SKBitmap Render(TextRuntime text, bool forceLayer, int frames = SettledFrames, float canvasScale = 1)
     {
         using SKSurface surface = SKSurface.Create(new SKImageInfo(Width, Height));
         GumService.Default.Initialize(surface.Canvas, Width, Height);
@@ -48,7 +49,10 @@ public class TextShadowCacheTests
         for (int i = 0; i < frames; i++)
         {
             surface.Canvas.Clear(new SKColor(128, 128, 128));
+            surface.Canvas.Save();
+            surface.Canvas.Scale(canvasScale);
             GumService.Default.Draw();
+            surface.Canvas.Restore();
         }
         GumService.Default.Root.Children.Clear();
         return SKBitmap.FromImage(surface.Snapshot());
@@ -152,5 +156,126 @@ public class TextShadowCacheTests
         text.DropshadowBlurY = 2;
         using SKBitmap bitmap = Render(text, forceLayer: false);
         ((Text)text.RenderableComponent).HasCachedShadowMask.ShouldBeFalse();
+    }
+
+    // The settled (cached mask) draw must match the forced layer draw, and must actually draw a shadow.
+    private static void AssertSettledMatchesLayerPath(Func<TextRuntime> create, float canvasScale = 1)
+    {
+        using SKBitmap layer = Render(create(), forceLayer: true, canvasScale: canvasScale);
+        using SKBitmap cached = Render(create(), forceLayer: false, canvasScale: canvasScale);
+        TextRuntime noShadowText = create();
+        noShadowText.HasDropshadow = false;
+        using SKBitmap noShadow = Render(noShadowText, forceLayer: false, canvasScale: canvasScale);
+
+        Compare(noShadow, layer).MeanDifference.ShouldBeGreaterThan(0.02, "the layer path should draw a shadow");
+        (int max, double mean) = Compare(layer, cached);
+        max.ShouldBeLessThanOrEqualTo(40);
+        mean.ShouldBeLessThan(0.5);
+    }
+
+    private static TextRuntime CreateBoxed(HorizontalAlignment horizontal, VerticalAlignment vertical = VerticalAlignment.Top,
+        string markup = "Score: 1234", float boxWidth = 200, float boxHeight = 60, float blur = 6)
+    {
+        TextRuntime text = CreateText(blur, 4, 4, markup);
+        text.WidthUnits = Gum.DataTypes.DimensionUnitType.Absolute;
+        text.HeightUnits = Gum.DataTypes.DimensionUnitType.Absolute;
+        text.Width = boxWidth;
+        text.Height = boxHeight;
+        text.HorizontalAlignment = horizontal;
+        text.VerticalAlignment = vertical;
+        return text;
+    }
+
+    [Theory]
+    [InlineData(HorizontalAlignment.Left)]
+    [InlineData(HorizontalAlignment.Center)]
+    [InlineData(HorizontalAlignment.Right)]
+    public void Draw_TextDropshadowInWiderBox_MatchesLayerPath(HorizontalAlignment horizontal)
+    {
+        AssertSettledMatchesLayerPath(() => CreateBoxed(horizontal));
+    }
+
+    [Theory]
+    [InlineData(VerticalAlignment.Center)]
+    [InlineData(VerticalAlignment.Bottom)]
+    public void Draw_TextDropshadowWithVerticalAlignment_MatchesLayerPath(VerticalAlignment vertical)
+    {
+        AssertSettledMatchesLayerPath(() => CreateBoxed(HorizontalAlignment.Center, vertical));
+    }
+
+    [Theory]
+    [InlineData(HorizontalAlignment.Left)]
+    [InlineData(HorizontalAlignment.Center)]
+    [InlineData(HorizontalAlignment.Right)]
+    public void Draw_TextDropshadowMultiLine_MatchesLayerPath(HorizontalAlignment horizontal)
+    {
+        AssertSettledMatchesLayerPath(() => CreateBoxed(horizontal, markup: "Score: 1234\nPlayer one\nx", boxHeight: 90));
+    }
+
+    [Theory]
+    [InlineData(HorizontalAlignment.Left)]
+    [InlineData(HorizontalAlignment.Center)]
+    [InlineData(HorizontalAlignment.Right)]
+    public void Draw_TextDropshadowWiderThanItsBox_MatchesLayerPath(HorizontalAlignment horizontal)
+    {
+        AssertSettledMatchesLayerPath(() => CreateBoxed(horizontal, markup: "Score: 1234 and some more words", boxWidth: 60));
+    }
+
+    [Theory]
+    [InlineData(8)]
+    [InlineData(-20)]
+    public void Draw_RotatedTextDropshadow_MatchesLayerPath(float degrees)
+    {
+        AssertSettledMatchesLayerPath(() =>
+        {
+            TextRuntime text = CreateText(6, 4, 4);
+            text.Rotation = degrees;
+            return text;
+        });
+    }
+
+    [Theory]
+    [InlineData(2f)]
+    [InlineData(0.5f)]
+    public void Draw_TextDropshadowOnScaledCanvas_MatchesLayerPath(float scale)
+    {
+        AssertSettledMatchesLayerPath(() => CreateText(6, 4, 4), scale);
+    }
+
+    [Fact]
+    public void Draw_OutlinedTextDropshadow_MatchesLayerPath()
+    {
+        AssertSettledMatchesLayerPath(() =>
+        {
+            TextRuntime text = CreateText(6, 4, 4);
+            text.OutlineThickness = 2;
+            text.OutlineColor = SKColors.Blue;
+            return text;
+        });
+    }
+
+    [Theory]
+    [InlineData(10, 1)]
+    [InlineData(10, 8)]
+    [InlineData(20, 2)]
+    public void Draw_SmallAndTranslucentTextDropshadow_MatchesLayerPath(float fontSize, float blur)
+    {
+        AssertSettledMatchesLayerPath(() =>
+        {
+            TextRuntime text = CreateText(blur, 3, 3, "[Color=Red]Score:[/Color] 1234", fontSize);
+            text.Color = new SKColor(255, 255, 255, 128);
+            return text;
+        });
+    }
+
+    [Theory]
+    [InlineData(HorizontalAlignment.Left)]
+    [InlineData(HorizontalAlignment.Center)]
+    [InlineData(HorizontalAlignment.Right)]
+    public void Draw_TextDropshadowInBox_SettlesIntoTheMask(HorizontalAlignment horizontal)
+    {
+        TextRuntime text = CreateBoxed(horizontal);
+        using SKBitmap bitmap = Render(text, forceLayer: false);
+        ((Text)text.RenderableComponent).HasCachedShadowMask.ShouldBeTrue();
     }
 }
