@@ -1238,20 +1238,20 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
     // Unrecognized tags are left as literal characters, matching the parser.
     private static readonly HashSet<string> SupportedTags = new(StringComparer.OrdinalIgnoreCase)
     {
-        "color",
-        "red",
-        "green",
-        "blue",
-        "font",
-        "fontsize",
-        "fontscale",
-        "isbold",
-        "isitalic",
-        "outlinethickness",
-        "custom",
-        "hasdropshadow",
+        "Color",
+        "Red",
+        "Green",
+        "Blue",
+        "Font",
+        "FontSize",
+        "FontScale",
+        "IsBold",
+        "IsItalic",
+        "OutlineThickness",
+        "Custom",
+        "HasDropshadow",
         // [Link=id]: kept as a range for TextRuntime.GetTagAtIndex, no styling.
-        "link",
+        "Link",
     };
 
     public TextBlock GetCachedTextBlock(float? forcedWidth = null)
@@ -2574,59 +2574,59 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
             InlineVariable slot = MarkupBuffers.GetInlineVariable(_inlineVariables.Count);
             object? existing = slot.Value;
 
-            // Every tag that was parsed is in SupportedTags, which holds the lower-case names.
-            switch (SupportedTags.TryGetValue(tag.Name, out string? lowerCaseName) ? lowerCaseName : tag.Name.ToLowerInvariant())
+            // Every tag that was parsed is in SupportedTags, so Name is the PascalCase spelling listed there.
+            switch (tag.Name)
             {
-                case "font":
+                case "Font":
                     variableName = "Font";
                     value = string.IsNullOrEmpty(argument)
                         ? null
                         : Content.Fonts.GumFontMapper.ResolveFontFamily(useCustomFont: false, customFontFile: null, font: argument);
                     break;
-                case "color":
+                case "Color":
                     variableName = "Color";
                     System.Drawing.Color? parsedColor = ParseColor(argument);
                     value = parsedColor.HasValue ? Box(existing, parsedColor.Value) : null;
                     break;
-                case "red":
+                case "Red":
                     variableName = "Red";
                     value = byte.TryParse(argument, out var red) ? Box(existing, red) : null;
                     break;
-                case "green":
+                case "Green":
                     variableName = "Green";
                     value = byte.TryParse(argument, out var green) ? Box(existing, green) : null;
                     break;
-                case "blue":
+                case "Blue":
                     variableName = "Blue";
                     value = byte.TryParse(argument, out var blue) ? Box(existing, blue) : null;
                     break;
-                case "fontsize":
+                case "FontSize":
                     variableName = "FontSize";
                     value = float.TryParse(argument, NumberStyles.Float, CultureInfo.InvariantCulture, out var size)
                         ? Box(existing, size)
                         : null;
                     break;
-                case "fontscale":
+                case "FontScale":
                     variableName = "FontScale";
                     value = float.TryParse(argument, NumberStyles.Float, CultureInfo.InvariantCulture, out var scale)
                         ? Box(existing, scale)
                         : null;
                     break;
-                case "isbold":
+                case "IsBold":
                     variableName = "IsBold";
                     value = bool.TryParse(argument, out var bold) ? Box(existing, bold) : null;
                     break;
-                case "isitalic":
+                case "IsItalic":
                     variableName = "IsItalic";
                     value = bool.TryParse(argument, out var italic) ? Box(existing, italic) : null;
                     break;
-                case "outlinethickness":
+                case "OutlineThickness":
                     variableName = "OutlineThickness";
                     value = int.TryParse(argument, NumberStyles.Integer, CultureInfo.InvariantCulture, out var outlineThickness)
                         ? Box(existing, outlineThickness)
                         : null;
                     break;
-                case "custom":
+                case "Custom":
                     // A [Custom=Name] callback applies per letter (issue #3692), so -- unlike every other
                     // tag above, which adds a single InlineVariable spanning the whole tagged range --
                     // this adds one InlineVariable per character, each with its own CharacterIndex/

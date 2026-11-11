@@ -105,23 +105,23 @@ public static class BbCodeParser
     /// </remarks>
     public static HashSet<string> KnownTags { get; } = new HashSet<string>(System.StringComparer.OrdinalIgnoreCase)
     {
-        "alpha",
-        "red",
-        "blue",
-        "green",
-        "color",
-        "font",
-        "fontsize",
-        "outlinethickness",
-        "isitalic",
-        "isbold",
-        "usefontsmoothing",
-        "fontscale",
-        "lineheightmultiplier",
-        "custom",
-        "state",
-        "hasdropshadow",
-        "link",
+        "Alpha",
+        "Red",
+        "Blue",
+        "Green",
+        "Color",
+        "Font",
+        "FontSize",
+        "OutlineThickness",
+        "IsItalic",
+        "IsBold",
+        "UseFontSmoothing",
+        "FontScale",
+        "LineHeightMultiplier",
+        "Custom",
+        "State",
+        "HasDropshadow",
+        "Link",
     };
 
     internal struct Tag
@@ -441,6 +441,31 @@ public static class BbCodeParser
         return stringBuilder.ToString();
     }
 
+    /// <summary>
+    /// Returns the set's own spelling of the tag name found at <paramref name="start"/> (so a tag written in any case
+    /// reports one canonical name and no string is copied out of <paramref name="text"/>), or null when the set does not
+    /// contain it. A set that is not case-insensitive is asked with a copied string, as before.
+    /// </summary>
+    private static string? FindKnownTagName(HashSet<string> tags, string text, int start, int length)
+    {
+        if (ReferenceEquals(tags.Comparer, StringComparer.OrdinalIgnoreCase))
+        {
+            ReadOnlySpan<char> name = text.AsSpan(start, length);
+            foreach (string known in tags)
+            {
+                if (name.Equals(known.AsSpan(), StringComparison.OrdinalIgnoreCase))
+                {
+                    return known;
+                }
+            }
+
+            return null;
+        }
+
+        string copied = text.Substring(start, length);
+        return tags.Contains(copied) ? copied : null;
+    }
+
     private static Tag? GetTagAtIndex(string text, HashSet<string> tags, int startIndex)
     {
         if (text[startIndex] != '[' || text.Length <= startIndex + 1)
@@ -486,8 +511,8 @@ public static class BbCodeParser
                             return null;
                         }
 
-                        var tagName = text.Substring(nameStartIndex, nameEndIndex - nameStartIndex);
-                        if (!tags.Contains(tagName))
+                        string? tagName = FindKnownTagName(tags, text, nameStartIndex, nameEndIndex - nameStartIndex);
+                        if (tagName == null)
                         {
                             // Not a known tag name
                             return null;
