@@ -35,8 +35,13 @@ internal sealed class SpriteAtlasBatch
         }
     }
 
-    /// <summary>The most a batched sprite's far edge may land away from its true size, in device pixels.</summary>
-    internal const float MaxEdgeErrorPixels = 0.25f;
+    /// <summary>
+    /// The most a batched sprite's far edge may land away from its true size, in device pixels. Layout-derived sizes
+    /// are off by about 1e-4 px at worst (measured), so they batch. 0.001 is where pixels start to differ: fuzzed
+    /// against a single draw, 0.002 px or less changed no pixel, 0.005 px flipped some at hard texel edges, 0.25 px
+    /// thousands.
+    /// </summary>
+    internal const float MaxEdgeErrorPixels = 0.001f;
 
     readonly RenderStateChangeStatistics _statistics;
     readonly SKPaint _paint = new SKPaint { IsAntialias = false };
@@ -108,7 +113,7 @@ internal sealed class SpriteAtlasBatch
         // layout (413x578 drawn at 102.32599x143.20685) has scales one float step apart, which is no real
         // stretch. The drawn size is off by |scale - scaleX| * source width at the far edge (likewise for
         // height); the sprite batches while that stays within MaxEdgeErrorPixels device pixels and otherwise
-        // draws alone at its true size. A float step is about a millionth of a pixel; the limit is a quarter.
+        // draws alone at its true size. A float step is about a millionth of a pixel; the limit is a thousandth.
         float scale = (scaleX + scaleY) * 0.5f;
         float deviceScale = (float)System.Math.Sqrt(total.ScaleX * total.ScaleX + total.SkewY * total.SkewY);
         float edgeErrorX = System.Math.Abs(scale - scaleX) * source.Width * deviceScale;
