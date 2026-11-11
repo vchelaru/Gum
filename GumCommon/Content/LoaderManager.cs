@@ -84,9 +84,14 @@ public class LoaderManager
     bool mCacheTextures = true;
     Dictionary<string, IDisposable> mCachedDisposables = new Dictionary<string, IDisposable>(StringComparer.OrdinalIgnoreCase);
 
+    // Content is loaded from more than one thread (for example sprites applying cached pixel data), and a
+    // Dictionary corrupted by concurrent writes throws on every later call. Every access below takes this lock.
+    readonly object mCacheLock = new object();
+
     /// <summary>
     /// The currently cached content, keyed by standardized (case-insensitive) file path. Read-only;
-    /// use <see cref="AddDisposable"/> / <see cref="Dispose(string)"/> to modify the cache.
+    /// use <see cref="AddDisposable"/> / <see cref="Dispose(string)"/> to modify the cache. Enumerating it
+    /// is not synchronized with concurrent loads.
     /// </summary>
     public IReadOnlyDictionary<string, IDisposable> CachedDisposables => mCachedDisposables;
 
@@ -104,13 +109,7 @@ public class LoaderManager
 
             if (!mCacheTextures)
             {
-                foreach (KeyValuePair<string, IDisposable> kvp in mCachedDisposables)
-                {
-                    kvp.Value.Dispose();
-                }
-
-                mCachedDisposables.Clear();
-
+                DisposeAndClear();
             }
         }
     }
@@ -156,14 +155,15 @@ public class LoaderManager
     /// </summary>
     public T? TryGetCachedDisposable<T>(string contentName)
     {
-        if (mCachedDisposables.ContainsKey(contentName))
+        lock (mCacheLock)
         {
-            return (T)mCachedDisposables[contentName];
+            if (mCachedDisposables.TryGetValue(contentName, out IDisposable? cached))
+            {
+                return (T)cached;
+            }
         }
-        else
-        {
-            return default(T);
-        }
+
+        return default(T);
     }
 
     /// <summary>
@@ -172,13 +172,9 @@ public class LoaderManager
     /// </summary>
     public IDisposable? GetDisposable(string name)
     {
-        if (mCachedDisposables.ContainsKey(name))
+        lock (mCacheLock)
         {
-            return mCachedDisposables[name];
-        }
-        else
-        {
-            return null;
+            return mCachedDisposables.TryGetValue(name, out IDisposable? cached) ? cached : null;
         }
     }
 
@@ -198,13 +194,16 @@ public class LoaderManager
                 $"The cached disposable already contains an entry for {name}:{mCachedDisposables[name]}");
         }
 #endif
-        if(existingContentBehavior == ExistingContentBehavior.ThrowException)
+        lock (mCacheLock)
         {
-            mCachedDisposables.Add(name, disposable);
-        }
-        else
-        {
-            mCachedDisposables[name] = disposable;
+            if (existingContentBehavior == ExistingContentBehavior.ThrowException)
+            {
+                mCachedDisposables.Add(name, disposable);
+            }
+            else
+            {
+                mCachedDisposables[name] = disposable;
+            }
         }
     }
 
@@ -217,12 +216,15 @@ public class LoaderManager
     /// </remarks>
     public void DisposeAndClear()
     {
-        foreach (var item in mCachedDisposables.Values)
+        lock (mCacheLock)
         {
-            item.Dispose();
-        }
+            foreach (var item in mCachedDisposables.Values)
+            {
+                item.Dispose();
+            }
 
-        mCachedDisposables.Clear();
+            mCachedDisposables.Clear();
+        }
     }
 
     /// <summary>
@@ -231,10 +233,13 @@ public class LoaderManager
     /// </summary>
     public void Dispose(string name)
     {
-        if (mCachedDisposables.ContainsKey(name))
+        lock (mCacheLock)
         {
-            mCachedDisposables[name].Dispose();
-            mCachedDisposables.Remove(name);
+            if (mCachedDisposables.TryGetValue(name, out IDisposable? cached))
+            {
+                cached.Dispose();
+                mCachedDisposables.Remove(name);
+            }
         }
     }
 
@@ -244,11 +249,14 @@ public class LoaderManager
     /// </summary>
     public void RemoveWithoutDisposing(IDisposable disposable)
     {
-        var kvp = mCachedDisposables.FirstOrDefault(item => item.Value == disposable);
-
-        if(kvp.Value == disposable)
+        lock (mCacheLock)
         {
-            mCachedDisposables.Remove(kvp.Key);
+            var kvp = mCachedDisposables.FirstOrDefault(item => item.Value == disposable);
+
+            if (kvp.Value == disposable)
+            {
+                mCachedDisposables.Remove(kvp.Key);
+            }
         }
     }
 }
