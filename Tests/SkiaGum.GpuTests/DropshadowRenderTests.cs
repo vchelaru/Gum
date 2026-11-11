@@ -188,4 +188,52 @@ public class DropshadowRenderTests
         MaxChannelDifference(actual, expected).ShouldBeLessThanOrEqualTo(2);
     }
 
+
+    [Theory]
+    [InlineData(110f, 110f, 30f, 30f)]
+    [InlineData(120f, 120f, 12f, 12f)]
+    [InlineData(95f, 105f, 40f, 17f)]
+    [InlineData(130f, 90f, 25f, 70f)]
+    public void Render_ShapeUnderParentClip_MatchesImageFilterReference(float clipX, float clipY, float clipWidth, float clipHeight)
+    {
+        RoundedRectangleRuntime shape = CreateShape();
+        shape.X = 100 - clipX;
+        shape.Y = 100 - clipY;
+        shape.DropshadowOffsetX = 1;
+        shape.DropshadowOffsetY = -17;
+        shape.DropshadowBlurX = 18;
+        shape.DropshadowBlurY = 18;
+        var parent = new ContainerRuntime();
+        parent.X = clipX;
+        parent.Y = clipY;
+        parent.WidthUnits = DimensionUnitType.Absolute;
+        parent.HeightUnits = DimensionUnitType.Absolute;
+        parent.Width = clipWidth;
+        parent.Height = clipHeight;
+        parent.ClipsChildren = true;
+        shape.Parent = parent;
+
+        using var actual = new SKBitmap(CaseSize, CaseSize);
+        using (var canvas = new SKCanvas(actual))
+        {
+            canvas.Clear(SKColors.Transparent);
+            SystemManagers managers = CreateManagers(canvas);
+            parent.AddToManagers(managers, null);
+            managers.Draw();
+            parent.RemoveFromManagers();
+        }
+
+        using var expected = new SKBitmap(CaseSize, CaseSize);
+        using (var canvas = new SKCanvas(expected))
+        {
+            canvas.Clear(SKColors.Transparent);
+            canvas.ClipRect(new SKRect(clipX, clipY, clipX + clipWidth, clipY + clipHeight), antialias: true);
+            float sigma = DropshadowBlur.GetSigma(18);
+            using var filter = SKImageFilter.CreateDropShadow(1, -17, sigma, sigma, new SKColor(0, 0, 0, 160));
+            using var paint = new SKPaint { Color = new SKColor(200, 80, 80, 255), IsAntialias = true, ImageFilter = filter };
+            canvas.DrawRoundRect(new SKRect(100, 100, 148, 148), 5, 5, paint);
+        }
+
+        MaxChannelDifference(actual, expected).ShouldBeLessThanOrEqualTo(2);
+    }
 }

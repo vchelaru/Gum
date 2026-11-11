@@ -1101,8 +1101,8 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
     protected virtual bool DrawsBlurredShadow => false;
 
     // The mask filter takes one sigma and ignores a gradient's per-stop alpha, and a Src or custom blend
-    // would apply to the shadow too, so those shapes keep the image filter. A rotated shape keeps it
-    // too: the image filter offsets the shadow in unrotated surface space, which the rotated canvas would not match.
+    // would apply to the shadow too, so those shapes keep the image filter. A rotated or clipped shape keeps it
+    // too (the old filter cropped the blur at the clip edge; the clip is applied after the blur here): the image filter offsets the shadow in unrotated surface space, which the rotated canvas would not match.
     // Outside this blur range the mask filter drifts from the image filter by more than 2 levels: below it
     // the analytic blur is coarse (sigma under 2), and above it the image filter is limited by the surface.
     private const float MinBlurredShadowBlur = 5;
@@ -1112,7 +1112,7 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
     {
         get
         {
-            if (!DrawsBlurredShadow || !HasDropshadow || UseGradient || Blend.HasValue || this.GetAbsoluteRotation() != 0 || _replacesPaintBelow)
+            if (!DrawsBlurredShadow || !HasDropshadow || UseGradient || Blend.HasValue || this.GetAbsoluteRotation() != 0 || this.GetEffectiveClipper() != null || _replacesPaintBelow)
             {
                 return false;
             }
@@ -1155,9 +1155,20 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
         canvas.Translate(DropshadowOffsetX, DropshadowOffsetY);
     }
 
+    bool _wasClippedAtLastPaint;
     float _lastAbsoluteRotation;
     protected SKPaint GetCachedPaint(SKRect boundingRect, float absoluteRotation)
     {
+        if (DrawsBlurredShadow && HasDropshadow)
+        {
+            // A clip changes which draw the shadow uses (see UsesBlurredShadowDraw) without touching any property.
+            bool isClipped = this.GetEffectiveClipper() != null;
+            if (isClipped != _wasClippedAtLastPaint)
+            {
+                _wasClippedAtLastPaint = isClipped;
+                ClearCachedPaint();
+            }
+        }
         if(boundingRect != _lastBoundingRect || absoluteRotation != _lastAbsoluteRotation)
         {
             _lastBoundingRect = boundingRect;
