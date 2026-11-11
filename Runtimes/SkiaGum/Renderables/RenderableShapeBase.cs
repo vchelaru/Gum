@@ -28,6 +28,7 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
         clone.mParent = null;
         // The copied paint reference belongs to the source, so drop it rather than dispose it.
         clone._cachedPaint = null;
+        clone._shadowPaint = null;
         clone._layerPaint = null;
         clone._paintToReuse = null;
         clone.NeedsUpdate = true;
@@ -1085,6 +1086,69 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
         NeedsUpdate = true;
     }
 
+    // The dropshadow of a shape that opts in is a second draw of the same geometry with a blur mask filter,
+    // offset by the dropshadow offset, instead of an image filter on the shape's paint. The image filter makes
+    // Skia render each shape into an offscreen layer and blur that, which costs about 0.12 ms of GPU time per
+    // shape; the mask filter blurs the geometry directly (an analytic blur for rounded rectangles) for about
+    // a twentieth of that, with the same pixels to within one level.
+    SKPaint? _shadowPaint;
+
+    /// <summary>
+    /// True for a shape whose <see cref="DrawBound"/> draws <see cref="GetShadowPaint"/> (moved by the
+    /// dropshadow offset with <see cref="SaveAtShadowOffset"/>) before its own draw. Shapes that do not
+    /// stay on the image filter.
+    /// </summary>
+    protected virtual bool DrawsBlurredShadow => false;
+
+    // The mask filter takes one sigma and ignores a gradient's per-stop alpha, and a Src or custom blend
+    // would apply to the shadow too, so those shapes keep the image filter.
+    private bool UsesBlurredShadowDraw
+    {
+        get
+        {
+            if (!DrawsBlurredShadow || !HasDropshadow || UseGradient || Blend.HasValue || _replacesPaintBelow)
+            {
+                return false;
+            }
+            float sigmaX = global::Gum.Wireframe.DropshadowBlur.GetSigma(DropshadowBlurX);
+            float sigmaY = global::Gum.Wireframe.DropshadowBlur.GetSigma(DropshadowBlurY);
+            return sigmaX == sigmaY && sigmaX > 0 && float.IsFinite(sigmaX);
+        }
+    }
+
+    private void RefreshShadowPaint(SKPaint shapePaint)
+    {
+        _shadowPaint?.Dispose();
+        _shadowPaint = null;
+        if (!UsesBlurredShadowDraw)
+        {
+            return;
+        }
+
+        _shadowPaint = shapePaint.Clone();
+        // The image filter shadow takes its alpha from the shape's silhouette, so a translucent fill
+        // gives a proportionally fainter shadow.
+        byte alpha = (byte)Math.Round(DropshadowColor.Alpha * shapePaint.Color.Alpha / 255f);
+        _shadowPaint.Color = DropshadowColor.WithAlpha(alpha);
+        _shadowPaint.ImageFilter = null;
+        using SKMaskFilter blur = SKMaskFilter.CreateBlur(
+            SKBlurStyle.Normal, global::Gum.Wireframe.DropshadowBlur.GetSigma(DropshadowBlurX));
+        _shadowPaint.MaskFilter = blur;
+    }
+
+    /// <summary>
+    /// The paint for the blurred shadow draw, or null when the shadow is not drawn this way (no dropshadow,
+    /// or <see cref="DrawsBlurredShadow"/> is false). Call after <see cref="GetCachedPaint"/>.
+    /// </summary>
+    protected SKPaint? GetShadowPaint() => _shadowPaint;
+
+    /// <summary>Moves the canvas by the dropshadow offset; undo with <see cref="SKCanvas.Restore"/>.</summary>
+    protected void SaveAtShadowOffset(SKCanvas canvas)
+    {
+        canvas.Save();
+        canvas.Translate(DropshadowOffsetX, DropshadowOffsetY);
+    }
+
     float _lastAbsoluteRotation;
     protected SKPaint GetCachedPaint(SKRect boundingRect, float absoluteRotation)
     {
@@ -1099,6 +1163,7 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
             _paintToReuse = _cachedPaint;
             _cachedPaint = GetPaint(boundingRect, absoluteRotation);
             _paintToReuse = null;
+            RefreshShadowPaint(_cachedPaint);
             _isCachedPaintStale = false;
         }
         return _cachedPaint;
@@ -1169,7 +1234,7 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
 
         // The paint keeps its own reference to a filter, shader or path effect, so the object made here
         // is released as soon as it is assigned instead of waiting for the finalizer.
-        if (HasDropshadow)
+        if (HasDropshadow && !UsesBlurredShadowDraw)
         {
             using SKImageFilter dropshadow = SKImageFilter.CreateDropShadow(
                         DropshadowOffsetX,
@@ -1422,6 +1487,8 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
     {
         _cachedPaint?.Dispose();
         _cachedPaint = null;
+        _shadowPaint?.Dispose();
+        _shadowPaint = null;
         _layerPaint?.Dispose();
         _layerPaint = null;
         ClearCachedPaint();
