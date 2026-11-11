@@ -986,6 +986,309 @@ public class DialogBoxTests : BaseTestClass
         });
     }
 
+    #region Pagination of translated text (#7896)
+
+    // Tagged so BBCode has to survive the split: the Color run straddles a page break.
+    private const string TaggedLongText =
+        "This is sentence one of a fairly long passage. " +
+        "[Color=Red]This is sentence two which keeps going on and on. " +
+        "Sentence three adds even more text to push past the height.[/Color] " +
+        "Sentence four ensures we definitely overflow the visible area. " +
+        "And sentence five is here to be very sure of pagination[Glyph=0xE000]";
+
+    // Every page the dialog shows, in order, as the text it holds (tags stripped).
+    private static List<string> CollectShownPages(DialogBox dialogBox, TestDialogBoxVisual visual)
+    {
+        List<string> shown = new List<string> { RawTextOf(visual) };
+        while (dialogBox.PagesRemaining > 0)
+        {
+            visual.CallClick();
+            shown.Add(RawTextOf(visual));
+        }
+        return shown;
+    }
+
+    // What the dialog shows for this text when no localization service is involved.
+    private static List<string> ShownPagesWithoutLocalization(string text)
+    {
+        var (dialogBox, visual) = CreateDialogBox(paginating: true);
+        dialogBox.LettersPerSecond = 0;
+        dialogBox.Show(text);
+        return CollectShownPages(dialogBox, visual);
+    }
+
+    [Fact]
+    public void Show_WithTranslationThatOverflowsThePage_ShouldSplitIntoMorePages()
+    {
+        WithLocalization(CreateLocalization("Greeting", LongText), () =>
+        {
+            var (dialogBox, _) = CreateDialogBox(paginating: true);
+            dialogBox.LettersPerSecond = 0;
+
+            dialogBox.Show("Greeting");
+
+            dialogBox.PagesRemaining.ShouldBeGreaterThan(0,
+                "because the translated text, not the short key, is what has to fit on a page");
+        });
+    }
+
+    [Fact]
+    public void Show_WithTranslationThatOverflowsThePage_ShouldShowEachPieceExactlyAndLeaveOutLocSuffix()
+    {
+        List<string> expected = ShownPagesWithoutLocalization(LongText);
+        expected.Count.ShouldBeGreaterThan(1, "sanity: the text must overflow");
+
+        WithLocalization(CreateLocalization("Greeting", LongText), () =>
+        {
+            var (dialogBox, visual) = CreateDialogBox(paginating: true);
+            dialogBox.LettersPerSecond = 0;
+
+            dialogBox.Show("Greeting");
+            List<string> shown = CollectShownPages(dialogBox, visual);
+
+            shown.ShouldBe(expected);
+            shown.ShouldAllBe(piece => !piece.Contains("(loc)"));
+        });
+    }
+
+    [Fact]
+    public void Show_WithTranslationThatOverflowsThePage_ShouldCountPagesRemainingExactly()
+    {
+        int expectedRemaining = ShownPagesWithoutLocalization(LongText).Count - 1;
+
+        WithLocalization(CreateLocalization("Greeting", LongText), () =>
+        {
+            var (dialogBox, _) = CreateDialogBox(paginating: true);
+            dialogBox.LettersPerSecond = 0;
+
+            dialogBox.Show("Greeting");
+
+            dialogBox.PagesRemaining.ShouldBe(expectedRemaining);
+        });
+    }
+
+    [Fact]
+    public void Show_WithTranslationThatFitsThePage_ShouldStayOnePage()
+    {
+        WithLocalization(CreateLocalization("Greeting", "Hello there."), () =>
+        {
+            var (dialogBox, visual) = CreateDialogBox(paginating: true);
+            dialogBox.LettersPerSecond = 0;
+
+            dialogBox.Show("Greeting");
+
+            dialogBox.PagesRemaining.ShouldBe(0);
+            RawTextOf(visual).ShouldBe("Hello there.");
+        });
+    }
+
+    [Fact]
+    public void Show_WithLocalizeTextFalse_ShouldKeepTheLiteralKeyOnOnePage()
+    {
+        WithLocalization(CreateLocalization("Greeting", LongText), () =>
+        {
+            var (dialogBox, visual) = CreateDialogBox(paginating: true);
+            visual.TextInstance.LocalizeText = false;
+            dialogBox.LettersPerSecond = 0;
+
+            dialogBox.Show("Greeting");
+
+            dialogBox.PagesRemaining.ShouldBe(0, "text that does not localize is never translated, so it never overflows");
+            RawTextOf(visual).ShouldBe("Greeting");
+        });
+    }
+
+    [Fact]
+    public void Show_WithTaggedTranslationThatOverflows_ShouldSplitAndCountLikeTheSameTextWithoutLocalization()
+    {
+        List<string> expected = ShownPagesWithoutLocalization(TaggedLongText);
+        expected.Count.ShouldBeGreaterThan(1, "sanity: the text must overflow");
+
+        WithLocalization(CreateLocalization("Greeting", TaggedLongText), () =>
+        {
+            var (dialogBox, visual) = CreateDialogBox(paginating: true);
+            dialogBox.LettersPerSecond = 10;
+            dialogBox.Show("Greeting");
+
+            int firstPageLength = RawTextOf(visual).Length;
+            Tick(dialogBox, 1000);
+            visual.TextInstance.MaxLettersToShow.ShouldBe(firstPageLength,
+                "tags are not counted as letters, so the whole first page is revealed");
+
+            dialogBox.LettersPerSecond = 0;
+            List<string> shown = CollectShownPages(dialogBox, visual);
+            shown.ShouldBe(expected);
+            shown.ShouldAllBe(piece => !piece.Contains("[") && !piece.Contains("(loc)"));
+        });
+    }
+
+    [Fact]
+    public void Show_WithMultiplePagesEachOverflowing_ShouldTranslateAndSplitEachOne()
+    {
+        var (referenceBox, referenceVisual) = CreateDialogBox(paginating: true);
+        referenceBox.LettersPerSecond = 0;
+        referenceBox.Show(new[] { LongText, TaggedLongText });
+        List<string> expected = CollectShownPages(referenceBox, referenceVisual);
+
+        WithLocalization(CreateLocalization(
+            new Dictionary<string, string[]>
+            {
+                { "A", new[] { "A", LongText } },
+                { "B", new[] { "B", TaggedLongText } },
+            }, "English", "Spanish"), () =>
+        {
+            CustomSetPropertyOnRenderable.LocalizationService!.CurrentLanguage = 1;
+            var (dialogBox, visual) = CreateDialogBox(paginating: true);
+            dialogBox.LettersPerSecond = 0;
+
+            dialogBox.Show(new[] { "A", "B" });
+
+            CollectShownPages(dialogBox, visual).ShouldBe(expected);
+        });
+    }
+
+    [Fact]
+    public void Show_WithSplitTranslation_ThenLanguageChange_ShouldKeepThePiecesAlreadyBuilt()
+    {
+        List<string> expected = ShownPagesWithoutLocalization(LongText);
+
+        WithLocalization(CreateLocalization(
+            new Dictionary<string, string[]> { { "Greeting", new[] { "Greeting", LongText, "Otro texto" } } },
+            "English", "Spanish", "Other"), () =>
+        {
+            CustomSetPropertyOnRenderable.LocalizationService!.CurrentLanguage = 1;
+            var (dialogBox, visual) = CreateDialogBox(paginating: true);
+            dialogBox.LettersPerSecond = 0;
+            dialogBox.Show("Greeting");
+
+            CustomSetPropertyOnRenderable.LocalizationService.CurrentLanguage = 2;
+
+            CollectShownPages(dialogBox, visual).ShouldBe(expected,
+                "pages split from the translation at Show time are not re-translated and never get a (loc) suffix");
+        });
+    }
+
+    [Fact]
+    public void ShowAsync_StringWithTranslationThatOverflows_ShouldSplitLikeShow()
+    {
+        int expectedRemaining = ShownPagesWithoutLocalization(LongText).Count - 1;
+
+        WithLocalization(CreateLocalization("Greeting", LongText), () =>
+        {
+            var (dialogBox, visual) = CreateDialogBox(paginating: true);
+            dialogBox.LettersPerSecond = 0;
+
+            // The first page is shown before the first await, so the loop is left running.
+            _ = dialogBox.ShowAsync("Greeting");
+
+            dialogBox.PagesRemaining.ShouldBe(expectedRemaining);
+            RawTextOf(visual).ShouldNotContain("(loc)");
+        });
+    }
+
+    [Fact]
+    public void ShowAsync_DialogPageTaskWithTranslatedPage_ShouldShowTheTranslationWithoutLocSuffix()
+    {
+        WithLocalization(CreateLocalization("Greeting", "Hello there."), () =>
+        {
+            var (dialogBox, visual) = CreateDialogBox(paginating: true);
+            dialogBox.LettersPerSecond = 0;
+
+            _ = dialogBox.ShowAsync(new DialogPageTask[] { "Greeting" });
+
+            RawTextOf(visual).ShouldBe("Hello there.");
+        });
+    }
+
+    #endregion
+
+    #region Stale typing state (#7902)
+
+    [Fact]
+    public void Dismiss_WhileTyping_ShouldNotRaiseFinishedTypingPageOnLaterTick()
+    {
+        var (dialogBox, _) = CreateDialogBox();
+        dialogBox.LettersPerSecond = 10;
+        int finishedCount = 0;
+        dialogBox.FinishedTypingPage += (_, _) => finishedCount++;
+        dialogBox.Show("This text takes a while to type out.");
+        Tick(dialogBox, 0.5);
+
+        dialogBox.Dismiss();
+        Tick(dialogBox, 1000);
+
+        finishedCount.ShouldBe(0);
+    }
+
+    [Fact]
+    public void Dismiss_WhileTyping_ShouldNotRevealMoreLettersOnLaterTick()
+    {
+        var (dialogBox, visual) = CreateDialogBox();
+        dialogBox.LettersPerSecond = 10;
+        dialogBox.Show("This text takes a while to type out.");
+        Tick(dialogBox, 0.5);
+        int revealedAtDismiss = visual.TextInstance.MaxLettersToShow ?? 0;
+
+        dialogBox.Dismiss();
+        Tick(dialogBox, 1000);
+
+        visual.TextInstance.MaxLettersToShow.ShouldBe(revealedAtDismiss);
+    }
+
+    [Fact]
+    public void Close_WhileTyping_ShouldNotRaiseFinishedTypingPageOnLaterTick()
+    {
+        var (dialogBox, _) = CreateDialogBox();
+        dialogBox.LettersPerSecond = 10;
+        int finishedCount = 0;
+        dialogBox.FinishedTypingPage += (_, _) => finishedCount++;
+        dialogBox.Show("This text takes a while to type out.");
+        Tick(dialogBox, 0.5);
+
+        dialogBox.Close();
+        Tick(dialogBox, 1000);
+
+        finishedCount.ShouldBe(0);
+    }
+
+    [Fact]
+    public void Show_WhileTypingAnotherDialog_ShouldRestartTypingFromZero()
+    {
+        var (dialogBox, visual) = CreateDialogBox();
+        dialogBox.LettersPerSecond = 10;
+        dialogBox.Show("This text takes a while to type out.");
+        Tick(dialogBox, 2);
+
+        dialogBox.Show("Second text that is also long enough.");
+
+        visual.TextInstance.MaxLettersToShow.ShouldBe(0);
+    }
+
+    [Fact]
+    public void ShowAsync_AdvancingFromEmptyPageIntoTaskPage_ShouldNotRaiseFinishedTypingPageDuringTheTask()
+    {
+        var (dialogBox, visual) = CreateDialogBox();
+        dialogBox.LettersPerSecond = 10;
+        int finishedCount = 0;
+        dialogBox.FinishedTypingPage += (_, _) => finishedCount++;
+        System.Threading.Tasks.TaskCompletionSource<bool> taskGate = new();
+        // An empty page has nothing left to reveal, so the first click advances before any tick.
+        _ = dialogBox.ShowAsync(new DialogPageTask[]
+        {
+            string.Empty,
+            new System.Func<System.Threading.Tasks.Task>(() => taskGate.Task),
+        });
+
+        visual.CallClick();
+        Tick(dialogBox, 1000);
+
+        finishedCount.ShouldBe(0, "the dialog is hidden while the task runs");
+    }
+
+    #endregion
+
+    #region Localization behavior pinned by PR 7898
+
     [Fact]
     public void Show_WithMissingKeyInLoadedDatabase_ShouldRevealTheWholeSuffixedText()
     {
@@ -1233,5 +1536,7 @@ public class DialogBoxTests : BaseTestClass
             dialogBox.PagesRemaining.ShouldBe(0);
         });
     }
+
+    #endregion
 }
 
