@@ -570,6 +570,29 @@ public class NineSlice : RenderableShapeBase, IAnimatable, IAnimationChainRender
             return false;
         }
 
+        // Nearest sampling picks a texel by where a pixel center falls. When a pixel center lands exactly on a
+        // texel boundary the choice is decided by float noise, and the lattice (scaled local space) and the
+        // per-section draws have different noise, so they can pick different texels. That happens when a cell
+        // of n texels covers D device pixels with n/gcd even and D/gcd odd. Exact arithmetic (border scale 1 and a
+        // canvas scale of 1) has no noise, so only then is such a cell allowed.
+        bool exactArithmetic = scale == 1f && Math.Abs(matrix.ScaleX) == 1f && Math.Abs(matrix.ScaleY) == 1f;
+        if (!exactArithmetic)
+        {
+            float deviceScaleX = Math.Abs(matrix.ScaleX);
+            float deviceScaleY = Math.Abs(matrix.ScaleY);
+            int insideTexelsW = usedWidth - (fullOutsideW * 2);
+            int insideTexelsH = usedHeight - (fullOutsideH * 2);
+            if (CanSampleOnTexelBoundary(fullOutsideW, MathF.Round(deviceScaleX * borders.DestLeft))
+                || CanSampleOnTexelBoundary(insideTexelsW, MathF.Round(deviceScaleX * (boundingRect.Width - borders.DestLeft - borders.DestRight)))
+                || CanSampleOnTexelBoundary(fullOutsideW, MathF.Round(deviceScaleX * borders.DestRight))
+                || CanSampleOnTexelBoundary(fullOutsideH, MathF.Round(deviceScaleY * borders.DestTop))
+                || CanSampleOnTexelBoundary(insideTexelsH, MathF.Round(deviceScaleY * (boundingRect.Height - borders.DestTop - borders.DestBottom)))
+                || CanSampleOnTexelBoundary(fullOutsideH, MathF.Round(deviceScaleY * borders.DestBottom)))
+            {
+                return false;
+            }
+        }
+
         _latticeXDivs[0] = srcLeft + fullOutsideW;
         _latticeXDivs[1] = srcLeft + usedWidth - fullOutsideW;
         _latticeYDivs[0] = srcTop + fullOutsideH;
@@ -587,6 +610,24 @@ public class NineSlice : RenderableShapeBase, IAnimatable, IAnimationChainRender
         canvas.Restore();
         DrawStatistics?.RecordDrawCall();
         return true;
+    }
+
+    // True when some pixel center of a cell of texelCount texels drawn over devicePixels pixels sits exactly on a
+    // texel boundary: (2k + 1) * texelCount == 2 * m * devicePixels has a solution.
+    private static bool CanSampleOnTexelBoundary(int texelCount, float devicePixels)
+    {
+        int pixels = (int)devicePixels;
+        if (texelCount <= 0 || pixels <= 0)
+        {
+            return false;
+        }
+        int a = texelCount;
+        int b = pixels;
+        while (b != 0)
+        {
+            (a, b) = (b, a % b);
+        }
+        return (texelCount / a) % 2 == 0 && (pixels / a) % 2 == 1;
     }
 
     private static bool IsOnDevicePixel(float deviceCoordinate)

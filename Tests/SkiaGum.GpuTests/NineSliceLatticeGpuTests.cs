@@ -195,7 +195,7 @@ public class NineSliceLatticeGpuTests
             MaxDifference(fast, old).ShouldBe(0,
                 $"case {i}: size {size} x {x} y {y} w {w} h {h} scale {scale} zoom {zoom} offsetY {offsetY} flip {flipH}/{flipV} source {source} clip {clip}");
         }
-        engaged.ShouldBeGreaterThan(4);
+        engaged.ShouldBeGreaterThan(2);
     }
 
     [Theory]

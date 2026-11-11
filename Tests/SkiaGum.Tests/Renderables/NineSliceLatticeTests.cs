@@ -143,8 +143,8 @@ public class NineSliceLatticeTests : IDisposable
     [InlineData(10f, 10f, 64f, 40f, true, true, true, 1f)]
     [InlineData(10f, 10f, 64f, 40f, false, false, true, 1f)]
     [InlineData(10f, 10f, 80f, 60f, false, false, false, 2f)]
-    [InlineData(10f, 11f, 63f, 42f, true, false, true, 2f)]
-    [InlineData(10f, 10f, 64f, 40f, false, false, true, 1.5f)]
+    [InlineData(10f, 11f, 64f, 48f, true, false, true, 2f)]
+    [InlineData(10f, 10f, 96f, 80f, false, false, true, 3f)]
     public void Render_Nearest_MatchesPerSectionPixels(
         float x, float y, float width, float height, bool flipH, bool semi, bool customFrame, float borderScale)
     {
@@ -368,5 +368,17 @@ public class NineSliceLatticeTests : IDisposable
         Result result = Draw((NineSlice)runtime.RenderableComponent);
 
         result.DrawCalls.ShouldBe(1);
+    }
+
+    [Fact]
+    public void Render_ScaledBordersWithIntegerParentOffset_MatchesPerSectionPixels()
+    {
+        // Found by fuzzing: border scale 3 under a parent translate of 7 differed by up to 237 on a raster surface, all in
+        // one device column whose pixel centers sit exactly on a texel boundary (8 texels over 61 pixels).
+        using SKBitmap texture = Texture(true, 24);
+
+        (Result fast, Result old) = DrawBoth(texture, 1, 29, 109, 74, ns => ns.BorderScale = 3, canvas => canvas.Translate(7, 7));
+
+        MaxDifference(fast.Pixels, old.Pixels).ShouldBe(0);
     }
 }
