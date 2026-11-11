@@ -712,6 +712,28 @@ jobs:
         if: runner.os == 'Windows' && steps.plan.outputs.active == 'true'
         run: dotnet restore "Tests/CiTestProjects.slnf" --verbosity quiet
 
+      # Stride's build target copies its AssemblyProcessor into %TEMP%\stride\... only when the processor
+      # dll is missing, once per project. Projects building in parallel (StrideGum's two TFMs, its tests)
+      # all see it missing, copy over each other, and one fails MSB3027 because another node already
+      # loaded a half-copied dll (run 43027961402). Copying it once before the build makes every project
+      # skip the copy.
+      - name: Prime Stride AssemblyProcessor (Windows)
+        if: runner.os == 'Windows' && steps.plan.outputs.active == 'true'
+        continue-on-error: true
+        shell: pwsh
+        run: |
+          foreach ($dir in Get-ChildItem "$env:NUGET_PACKAGES\stride.core\*\tools\AssemblyProcessor\netstandard2.0" -Directory -ErrorAction SilentlyContinue) {
+            try {
+              $hash = (Get-Content -Raw "$dir\Stride.Core.AssemblyProcessor.dll.hash").Trim()
+              $dest = Join-Path $env:TEMP "stride\AssemblyProcessor\netstandard2.0\$hash"
+              New-Item -ItemType Directory -Force $dest | Out-Null
+              Copy-Item "$dir\*" $dest -Force
+              Write-Host "Primed Stride AssemblyProcessor from $dir into $dest"
+            } catch {
+              Write-Warning "SKIPPED priming Stride AssemblyProcessor from ${dir}: $_"
+            }
+          }
+
       - name: Compile test projects (Windows)
         if: runner.os == 'Windows' && steps.plan.outputs.active == 'true'
         run: dotnet build "Tests/CiTestProjects.slnf" --configuration Release --no-restore --verbosity quiet -p:WarningLevel=0
