@@ -41,20 +41,45 @@ public class TabItem : FrameworkElement, ISelectableRow
         }
     }
 
-    object? _header;
-
     /// <summary>
-    /// The value shown in the tab's header text. A data item's header is its ToString unless a
-    /// VisualTemplate is set.
+    /// The text shown in the tab's header. Setting it applies localization if a
+    /// <see cref="Gum.Localization.LocalizationService"/> is registered. To bypass localization,
+    /// use <see cref="SetHeaderNoTranslate"/>.
     /// </summary>
-    public object? Header
+    public string? Header
     {
-        get => _header;
+        get => (_text?.RenderableComponent as global::RenderingLibrary.Graphics.IText)?.RawText;
         set
         {
-            _header = value;
-            UpdateHeaderText();
+            _codeText.Record(value, translate: true);
+            // go through the component instead of the core text object to apply localization and force a layout refresh
+            _text?.SetProperty("Text", value);
         }
+    }
+
+    /// <summary>
+    /// Sets the tab's header text without applying localization/translation.
+    /// </summary>
+    /// <remarks>
+    /// This is a method rather than a property because the "no translate" state is not preserved on
+    /// the underlying text renderable, only the final string is stored.
+    /// </remarks>
+    public void SetHeaderNoTranslate(string? value)
+    {
+        _codeText.Record(value, translate: false);
+        _text?.SetProperty("TextNoTranslate", value);
+    }
+
+    // Manual restore rather than RegisterRuntimeProperty because ReactToVisualChanged can fire
+    // multiple times (visual reassignment). Only text assigned through the property or the
+    // no-translate method is restored; text the Visual authored is re-applied from the Visual's state.
+    private CodeAssignedText _codeText;
+
+    /// <inheritdoc/>
+    public override void ApplyRuntimeProperties()
+    {
+        _codeText.Restore(_text);
+        base.ApplyRuntimeProperties();
     }
 
     /// <summary>
@@ -102,7 +127,7 @@ public class TabItem : FrameworkElement, ISelectableRow
     {
         Visual.Push += HandlePush;
         RefreshInternalVisualReferences();
-        UpdateHeaderText();
+        _codeText.Restore(_text);
         UpdateState();
         base.ReactToVisualChanged();
     }
@@ -128,14 +153,6 @@ public class TabItem : FrameworkElement, ISelectableRow
         Pushed?.Invoke(this, EventArgs.Empty);
     }
 
-    private void UpdateHeaderText()
-    {
-        if (_text?.RenderableComponent is global::RenderingLibrary.Graphics.IText coreText && _header != null)
-        {
-            coreText.RawText = _header.ToString();
-        }
-    }
-
     public override void UpdateState()
     {
         if (Visual == null)
@@ -145,5 +162,5 @@ public class TabItem : FrameworkElement, ISelectableRow
         Visual.SetProperty(TabItemCategoryName + "State", IsSelected ? SelectedStateName : UnselectedStateName);
     }
 
-    public override string ToString() => _header?.ToString() ?? nameof(TabItem);
+    public override string ToString() => Header ?? nameof(TabItem);
 }

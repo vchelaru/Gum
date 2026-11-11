@@ -62,6 +62,8 @@ tabControl.SelectedIndex = 0;
 
 As with [ListBox](listbox.md), assigning a bound collection to `Items` replaces tabs that were authored in the Gum tool.
 
+Setting `TabItem.Header` in code, or passing a header to `AddTab`, translates the string when a `LocalizationService` is active. A header made from an item in `Items` is not translated. See [Localization](../localization.md).
+
 ## Selection
 
 `SelectedIndex` and `SelectedObject` read and set the selected tab. A TabControl authored in the Gum tool with no `SelectedIndex` set selects the first tab. Tabs added from code start unselected, so `SelectedIndex` is `-1` until you set it. `SelectedIndex` is also `-1` when no tab is selected, and an out-of-range value is ignored. Removing the selected tab leaves nothing selected. `SelectionChanged` is raised whenever the selection changes, including when the user clicks a tab.

@@ -81,7 +81,7 @@ public class TabControlTests : BaseTestClass
         TabControl tabControl = CreateWithTitles("A", "B", "C");
 
         ShouldBePaired(tabControl);
-        tabControl.TabItems[1].Header.ShouldBe(tabControl.Items![1]);
+        tabControl.TabItems[1].Header.ShouldBe(tabControl.Items![1].ToString());
     }
 
     [Fact]
@@ -533,7 +533,7 @@ public class TabControlTests : BaseTestClass
         {
             tabControl.Pages[i].BindingContext.ShouldBeSameAs(items[i], step + " page " + i);
             tabControl.TabItems[i].BindingContext.ShouldBeSameAs(items[i], step + " tab " + i);
-            tabControl.TabItems[i].Header.ShouldBeSameAs(items[i], step + " header " + i);
+            tabControl.TabItems[i].Header.ShouldBe(items[i].ToString(), step + " header " + i);
             tabControl.ContentPanel!.Children.IndexOf(tabControl.Pages[i].Visual).ShouldBe(i, step + " page slot " + i);
             tabControl.InnerPanel.Children.IndexOf(tabControl.TabItems[i].Visual).ShouldBe(i, step + " tab slot " + i);
             tabControl.Pages[i].IsSelected.ShouldBe(tabControl.TabItems[i].IsSelected, step + " page selection " + i);
