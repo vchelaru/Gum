@@ -762,6 +762,10 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
     public Gum.RenderingLibrary.Blend? Blend { get; set; } = Gum.RenderingLibrary.Blend.Normal;
 
     // Normal is SrcOver, the canvas default, so it needs no layer or paint; only another blend does.
+    // These blends write alpha over the whole layer, and with a translucent shadow the cached mask drew different glyph pixels
+    // than the layer path (#7910), so they keep the layer path.
+    private bool BlendWritesAlpha => Blend is Gum.RenderingLibrary.Blend.ReplaceAlpha or Gum.RenderingLibrary.Blend.MinAlpha or Gum.RenderingLibrary.Blend.Replace;
+
     private bool HasActiveBlend => Blend.HasValue && Blend.Value != Gum.RenderingLibrary.Blend.Normal;
 
     Vector2 Position;
@@ -1119,11 +1123,28 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
             // BlendMode (blend) so both compose when the layer is composited back on Restore. Same
             // primitive/blur convention as the Skia shapes.
             SKPaint? renderPaint = GetCachedRenderPaint();
-            if (renderPaint != null && !Blend.HasValue && TryDrawCachedShadow(canvas, paintBlock, result))
+            if (renderPaint != null && HasDropshadow && !BlendWritesAlpha && TryPrepareShadowMask(paintBlock, result))
             {
-                // The blurred shadow replayed from its cached image, then the text on top: two draws, no layer.
-                statistics?.RecordDrawCall();
-                PaintTextBlockCached(canvas, paintBlock);
+                if (HasActiveBlend)
+                {
+                    // The blend applies to shadow and text together, so they still compose in a layer; the layer
+                    // carries only the blend (no blur filter), the shadow comes from the cached mask.
+                    canvas.Save();
+                    canvas.ClipRect(GetBlendLayerBounds(paintBlock));
+                    canvas.SaveLayer(GetBlendOnlyPaint());
+                    DrawShadowMask(canvas);
+                    PaintTextBlockCached(canvas, paintBlock);
+                    canvas.Restore();
+                    canvas.Restore();
+                    statistics?.RecordDrawCall();
+                }
+                else
+                {
+                    // The blurred shadow replayed from its cached image, then the text on top: two draws, no layer.
+                    DrawShadowMask(canvas);
+                    statistics?.RecordDrawCall();
+                    PaintTextBlockCached(canvas, paintBlock);
+                }
             }
             else if (renderPaint != null)
             {
@@ -1819,11 +1840,11 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
     private const int MaxShadowImageSize = 4096;
 
     /// <summary>
-    /// Draws the drop shadow from the cached mask and returns true, or returns false (nothing drawn) when the
-    /// shadow needs the layer path: unequal or zero blur, a non-finite value, a rotated, skewed or perspective transform or a
-    /// mask that would be too large.
+    /// Makes the cached shadow mask ready for <see cref="DrawShadowMask"/> and returns true, or returns false when the
+    /// shadow needs the layer path: inputs still changing, unequal or zero blur, a non-finite value, a rotated, skewed
+    /// or perspective transform or a mask that would be too large.
     /// </summary>
-    internal bool TryDrawCachedShadow(SKCanvas canvas, TextBlock block, SKMatrix matrix)
+    internal bool TryPrepareShadowMask(TextBlock block, SKMatrix matrix)
     {
         float sigma = global::Gum.Wireframe.DropshadowBlur.GetSigma(DropshadowBlurX);
         if (ForceLayerShadow || DropshadowBlurX != DropshadowBlurY || !(sigma > 0) || !float.IsFinite(sigma)
@@ -1904,13 +1925,42 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
             _shadowImageY = top;
         }
 
+        _shadowDrawX = floorX + _shadowImageX;
+        _shadowDrawY = floorY + _shadowImageY;
+        return true;
+    }
+
+    private float _shadowDrawX;
+    private float _shadowDrawY;
+
+    /// <summary>Test hook: how many draws replayed the cached shadow mask.</summary>
+    internal int CachedShadowDrawCount { get; private set; }
+
+    private void DrawShadowMask(SKCanvas canvas)
+    {
         _shadowPaint ??= new SKPaint();
         _shadowPaint.Color = DropshadowColor;
         canvas.Save();
         canvas.ResetMatrix();
-        canvas.DrawImage(_shadowImage, floorX + _shadowImageX, floorY + _shadowImageY, new SKSamplingOptions(SKFilterMode.Nearest), _shadowPaint);
+        canvas.DrawImage(_shadowImage!, _shadowDrawX, _shadowDrawY, new SKSamplingOptions(SKFilterMode.Nearest), _shadowPaint);
         canvas.Restore();
-        return true;
+        CachedShadowDrawCount++;
+    }
+
+    private SKPaint? _blendOnlyPaint;
+    private Gum.RenderingLibrary.Blend? _blendOnlyPaintBlend;
+
+    // The layer paint for the cached-shadow path: the blend alone, rebuilt only when the blend changes.
+    private SKPaint GetBlendOnlyPaint()
+    {
+        if (_blendOnlyPaint == null || _blendOnlyPaintBlend != Blend)
+        {
+            _blendOnlyPaint ??= new SKPaint();
+            _blendOnlyPaint.Reset();
+            _blendOnlyPaint.ApplyBlend(Blend!.Value);
+            _blendOnlyPaintBlend = Blend;
+        }
+        return _blendOnlyPaint;
     }
 
     private void PaintTextBlockCached(SKCanvas canvas, TextBlock block)
@@ -3120,6 +3170,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
         newInstance._shadowImage = null;
         newInstance._shadowImageBlock = null;
         newInstance._shadowPaint = null;
+        newInstance._blendOnlyPaint = null;
         newInstance._revealBlock = null;
         newInstance._revealBlockSource = null;
         newInstance._lineBreakLayout = null;

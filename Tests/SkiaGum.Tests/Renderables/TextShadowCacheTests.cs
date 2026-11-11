@@ -159,10 +159,12 @@ public class TextShadowCacheTests
     }
 
     // The settled (cached mask) draw must match the forced layer draw, and must actually draw a shadow.
-    private static void AssertSettledMatchesLayerPath(Func<TextRuntime> create, float canvasScale = 1)
+    private static void AssertSettledMatchesLayerPath(Func<TextRuntime> create, float canvasScale = 1, bool expectMask = true)
     {
         using SKBitmap layer = Render(create(), forceLayer: true, canvasScale: canvasScale);
-        using SKBitmap cached = Render(create(), forceLayer: false, canvasScale: canvasScale);
+        TextRuntime cachedText = create();
+        using SKBitmap cached = Render(cachedText, forceLayer: false, canvasScale: canvasScale);
+        ((Text)cachedText.RenderableComponent).HasCachedShadowMask.ShouldBe(expectMask);
         TextRuntime noShadowText = create();
         noShadowText.HasDropshadow = false;
         using SKBitmap noShadow = Render(noShadowText, forceLayer: false, canvasScale: canvasScale);
@@ -231,7 +233,7 @@ public class TextShadowCacheTests
             TextRuntime text = CreateText(6, 4, 4);
             text.Rotation = degrees;
             return text;
-        });
+        }, expectMask: false);
     }
 
     [Theory]
@@ -277,5 +279,37 @@ public class TextShadowCacheTests
         TextRuntime text = CreateBoxed(horizontal);
         using SKBitmap bitmap = Render(text, forceLayer: false);
         ((Text)text.RenderableComponent).HasCachedShadowMask.ShouldBeTrue();
+    }
+
+    public static IEnumerable<object?[]> Blends() =>
+        new[] { new object?[] { null } }.Concat(Enum.GetValues<Gum.RenderingLibrary.Blend>().Select(b => new object?[] { b }));
+
+    // A project load assigns Blend = Normal explicitly (#7914), so a path that bailed out on any Blend never ran there.
+    [Theory]
+    [MemberData(nameof(Blends))]
+    public void Draw_TextDropshadowWithBlend_MatchesLayerPath(Gum.RenderingLibrary.Blend? blend)
+    {
+        AssertSettledMatchesLayerPath(() =>
+        {
+            TextRuntime text = CreateBoxed(HorizontalAlignment.Left);
+            text.DropshadowAlpha = 181;
+            text.DropshadowColor = new SKColor(255, 255, 255, 181);
+            ((Text)text.RenderableComponent).Blend = blend;
+            return text;
+        }, expectMask: blend is not (Gum.RenderingLibrary.Blend.ReplaceAlpha or Gum.RenderingLibrary.Blend.MinAlpha or Gum.RenderingLibrary.Blend.Replace));
+    }
+
+    [Fact]
+    public void Draw_ProjectLoadedTextDropshadow_UsesTheCachedMaskEveryDrawOnceSettled()
+    {
+        TextRuntime text = CreateText(2, 0, 0.75f);
+        Text renderable = (Text)text.RenderableComponent;
+        renderable.Blend = Gum.RenderingLibrary.Blend.Normal;
+        text.DropshadowAlpha = 181;
+
+        using SKBitmap bitmap = Render(text, forceLayer: false, frames: 10);
+
+        // The first draws earn the mask, every later one uses it.
+        renderable.CachedShadowDrawCount.ShouldBeGreaterThanOrEqualTo(7);
     }
 }
