@@ -404,11 +404,19 @@ public class DialogBox : FrameworkElement, IInputReceiver
         }
     }
 
-    // Mirrors the Text assignment: a value containing markup is used as-is, otherwise it is translated.
-    private static string TranslateForPagination(string text)
+    // Mirrors the Text assignment: a value containing markup is used as-is, a text component with
+    // LocalizeText false never translates, and anything else is translated.
+    private string TranslateForPagination(string text)
     {
         var localizationService = global::Gum.Localization.LocalizationRuntimeState.Current;
         if (localizationService == null || text.Contains("["))
+        {
+            return text;
+        }
+
+        // LocalizeText lives on TextRuntime, which this project cannot see, so read it by name.
+        // A component without the property is translated, as the Text assignment does.
+        if (TextComponent.TryGetProperty("LocalizeText", out object? localizeText) && localizeText is false)
         {
             return text;
         }
@@ -416,6 +424,8 @@ public class DialogBox : FrameworkElement, IInputReceiver
     }
 
     // Stops the typewriter so a later Activity tick cannot finish a page that is no longer showing.
+    // Under FRB this does nothing: FRB types with a tweener, and FRB projects use their own DialogBox.cs,
+    // so Dismiss and Close do not stop that tweener here.
     private void StopTyping()
     {
 #if !FRB

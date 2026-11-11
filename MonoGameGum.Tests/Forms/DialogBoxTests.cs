@@ -1083,17 +1083,18 @@ public class DialogBoxTests : BaseTestClass
     }
 
     [Fact]
-    public void Show_WithShortKeyAndOverflowingTranslation_ShouldNotShowTheWholeTranslationOnOnePage()
+    public void Show_WithLocalizeTextFalse_ShouldKeepTheLiteralKeyOnOnePage()
     {
-        // The key is one word and fits; only the translation overflows.
-        WithLocalization(CreateLocalization("K", LongText), () =>
+        WithLocalization(CreateLocalization("Greeting", LongText), () =>
         {
             var (dialogBox, visual) = CreateDialogBox(paginating: true);
+            visual.TextInstance.LocalizeText = false;
             dialogBox.LettersPerSecond = 0;
 
-            dialogBox.Show("K");
+            dialogBox.Show("Greeting");
 
-            RawTextOf(visual).Length.ShouldBeLessThan(LongText.Length);
+            dialogBox.PagesRemaining.ShouldBe(0, "text that does not localize is never translated, so it never overflows");
+            RawTextOf(visual).ShouldBe("Greeting");
         });
     }
 
