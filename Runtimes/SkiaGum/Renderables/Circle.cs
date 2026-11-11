@@ -38,6 +38,8 @@ public class Circle : RenderableShapeBase
 
     protected override bool BlendsWholeBounds => true;
 
+    protected override bool DrawsBlurredShadow => true;
+
     public override void DrawBound(SKRect boundingRect, SKCanvas canvas, float absoluteRotation)
     {
         var paint = GetCachedPaint(boundingRect, absoluteRotation);
@@ -45,6 +47,13 @@ public class Circle : RenderableShapeBase
         if (IsFilled)
         {
             radius = System.Math.Max(0f, radius - FillRadiusInset);
+        }
+        SKPaint? shadowPaint = GetShadowPaint();
+        if (shadowPaint != null)
+        {
+            SaveAtShadowOffset(canvas);
+            canvas.DrawCircle(boundingRect.MidX, boundingRect.MidY, radius, shadowPaint);
+            canvas.Restore();
         }
         canvas.DrawCircle(boundingRect.MidX, boundingRect.MidY, radius, paint);
     }

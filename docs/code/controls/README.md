@@ -45,5 +45,6 @@ All controls can be tested on [XnaFiddle](https://xnafiddle.net/), so feel free 
 * [StackPanel](stackpanel.md)
 * [Slider](slider.md)
 * [Splitter](splitter.md)
+* [TabControl](tabcontrol.md)
 * [TextBox](textbox.md)
 * [Window](window.md)

@@ -13,11 +13,11 @@ namespace SkiaGum.Tests.Renderables;
 public class TextBlendTests
 {
     [Fact]
-    public void Blend_DefaultsToNull()
+    public void Blend_DefaultsToNormal()
     {
         Text sut = new();
 
-        sut.Blend.ShouldBeNull();
+        sut.Blend.ShouldBe(Blend.Normal);
     }
 
     [Fact]
