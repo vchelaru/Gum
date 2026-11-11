@@ -70,7 +70,7 @@ public class RaylibBlendDefaultsTests : BaseTestClass
                 subject.Runtime = sprite;
                 subject.SetBlend = b => sprite.Blend = b;
                 subject.ReadRuntimeBlend = () => sprite.Blend;
-                subject.ReadRenderableBlend = () => ((Sprite)sprite.RenderableComponent).Blend;
+                subject.ReadRenderableBlend = () => ((Sprite)sprite.RenderableComponent!).Blend;
                 break;
             }
             case "NineSlice":
@@ -81,7 +81,7 @@ public class RaylibBlendDefaultsTests : BaseTestClass
                 subject.Runtime = nine;
                 subject.SetBlend = b => nine.Blend = b;
                 subject.ReadRuntimeBlend = () => nine.Blend;
-                subject.ReadRenderableBlend = () => ((NineSlice)nine.RenderableComponent).Blend;
+                subject.ReadRenderableBlend = () => ((NineSlice)nine.RenderableComponent!).Blend;
                 break;
             }
             case "Text":
@@ -94,7 +94,7 @@ public class RaylibBlendDefaultsTests : BaseTestClass
                 subject.Runtime = text;
                 subject.SetBlend = b => text.Blend = b;
                 subject.ReadRuntimeBlend = () => text.Blend;
-                subject.ReadRenderableBlend = () => ((Text)text.RenderableComponent).Blend;
+                subject.ReadRenderableBlend = () => ((Text)text.RenderableComponent!).Blend;
                 break;
             }
             case "Rectangle":
@@ -103,7 +103,7 @@ public class RaylibBlendDefaultsTests : BaseTestClass
                 rectangle.X = 20; rectangle.Y = 20; rectangle.Width = 60; rectangle.Height = 60;
                 rectangle.IsFilled = true; rectangle.StrokeWidth = 0; rectangle.FillColor = red;
                 subject.Runtime = rectangle;
-                LineRectangle renderable = (LineRectangle)rectangle.RenderableComponent;
+                LineRectangle renderable = (LineRectangle)rectangle.RenderableComponent!;
                 subject.SetBlend = b => { if (b.HasValue) rectangle.Blend = b.Value; else renderable.Blend = null; };
                 subject.ReadRuntimeBlend = () => rectangle.Blend;
                 subject.ReadRenderableBlend = () => renderable.Blend;
@@ -115,7 +115,7 @@ public class RaylibBlendDefaultsTests : BaseTestClass
                 circle.X = 20; circle.Y = 20; circle.Width = 60; circle.Height = 60;
                 circle.IsFilled = true; circle.StrokeWidth = 0; circle.FillColor = red;
                 subject.Runtime = circle;
-                LineCircle renderable = (LineCircle)circle.RenderableComponent;
+                LineCircle renderable = (LineCircle)circle.RenderableComponent!;
                 subject.SetBlend = b => { if (b.HasValue) circle.Blend = b.Value; else renderable.Blend = null; };
                 subject.ReadRuntimeBlend = () => circle.Blend;
                 subject.ReadRenderableBlend = () => renderable.Blend;
@@ -127,7 +127,7 @@ public class RaylibBlendDefaultsTests : BaseTestClass
                 arc.X = 20; arc.Y = 20; arc.Width = 60; arc.Height = 60;
                 arc.StartAngle = 0; arc.SweepAngle = 360; arc.Thickness = 12; arc.StrokeColor = red;
                 subject.Runtime = arc;
-                LineArc renderable = (LineArc)arc.RenderableComponent;
+                LineArc renderable = (LineArc)arc.RenderableComponent!;
                 subject.SetBlend = b => { if (b.HasValue) arc.Blend = b.Value; else renderable.Blend = null; };
                 subject.ReadRuntimeBlend = () => arc.Blend;
                 subject.ReadRenderableBlend = () => renderable.Blend;
@@ -153,7 +153,7 @@ public class RaylibBlendDefaultsTests : BaseTestClass
         standard.States.Add(new StateSave { Name = "Default", ParentContainer = standard });
         if (loaded != "absent")
         {
-            standard.DefaultState.Variables.Add(new VariableSave { Name = "Blend", Type = "Blend", Value = Blend.Normal, SetsValue = true });
+            standard.DefaultState!.Variables.Add(new VariableSave { Name = "Blend", Type = "Blend", Value = Blend.Normal, SetsValue = true });
         }
 
         ScreenSave screen = new() { Name = "BlendScreen" };
@@ -161,7 +161,7 @@ public class RaylibBlendDefaultsTests : BaseTestClass
         screen.Instances.Add(new InstanceSave { Name = "Inst", BaseType = standardName, ParentContainer = screen });
         if (loaded == "Additive")
         {
-            screen.DefaultState.Variables.Add(new VariableSave { Name = "Inst.Blend", Type = "Blend", Value = Blend.Additive, SetsValue = true });
+            screen.DefaultState!.Variables.Add(new VariableSave { Name = "Inst.Blend", Type = "Blend", Value = Blend.Additive, SetsValue = true });
         }
 
         typeof(SystemManagers).GetMethod("RegisterComponentRuntimeInstantiations", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!
@@ -339,12 +339,12 @@ public class RaylibBlendDefaultsTests : BaseTestClass
                 GraphicalUiElement clone = subject.Runtime.Clone();
                 Blend? cloned = kind switch
                 {
-                    "Sprite" => ((Sprite)clone.RenderableComponent).Blend,
-                    "NineSlice" => ((NineSlice)clone.RenderableComponent).Blend,
-                    "Text" => ((Text)clone.RenderableComponent).Blend,
-                    "Rectangle" => ((LineRectangle)clone.RenderableComponent).Blend,
-                    "Circle" => ((LineCircle)clone.RenderableComponent).Blend,
-                    _ => ((LineArc)clone.RenderableComponent).Blend,
+                    "Sprite" => ((Sprite)clone.RenderableComponent!).Blend,
+                    "NineSlice" => ((NineSlice)clone.RenderableComponent!).Blend,
+                    "Text" => ((Text)clone.RenderableComponent!).Blend,
+                    "Rectangle" => ((LineRectangle)clone.RenderableComponent!).Blend,
+                    "Circle" => ((LineCircle)clone.RenderableComponent!).Blend,
+                    _ => ((LineArc)clone.RenderableComponent!).Blend,
                 };
                 Record($"{kind}|clone of {mode ?? "default"}|renderable={cloned?.ToString() ?? "null"}");
                 cloned.ShouldBe(before, $"{kind} clone of {mode ?? "default"}");
@@ -357,14 +357,14 @@ public class RaylibBlendDefaultsTests : BaseTestClass
     public void Text_BlendState_NullAndNormalAreNonPremultiplied()
     {
         TextRuntime text = new();
-        Text renderable = (Text)text.RenderableComponent;
+        Text renderable = (Text)text.RenderableComponent!;
 
         text.Blend = null;
-        Gum.BlendState forNull = ((global::RenderingLibrary.Graphics.IRenderable)renderable).BlendState;
+        Gum.BlendState? forNull = ((global::RenderingLibrary.Graphics.IRenderable)renderable).BlendState;
         text.Blend = Blend.Normal;
-        Gum.BlendState forNormal = ((global::RenderingLibrary.Graphics.IRenderable)renderable).BlendState;
+        Gum.BlendState? forNormal = ((global::RenderingLibrary.Graphics.IRenderable)renderable).BlendState;
         text.Blend = Blend.Additive;
-        Gum.BlendState forAdditive = ((global::RenderingLibrary.Graphics.IRenderable)renderable).BlendState;
+        Gum.BlendState? forAdditive = ((global::RenderingLibrary.Graphics.IRenderable)renderable).BlendState;
 
         Record($"Text|BlendState|null={forNull == Gum.BlendState.NonPremultiplied} normal={forNormal == Gum.BlendState.NonPremultiplied} additiveIsNonPremultiplied={forAdditive == Gum.BlendState.NonPremultiplied}");
         forNull.ShouldBe(Gum.BlendState.NonPremultiplied);
@@ -372,7 +372,7 @@ public class RaylibBlendDefaultsTests : BaseTestClass
         forAdditive.ShouldNotBe(Gum.BlendState.NonPremultiplied);
 
         TextRuntime defaultText = new();
-        ((global::RenderingLibrary.Graphics.IRenderable)defaultText.RenderableComponent).BlendState
+        ((global::RenderingLibrary.Graphics.IRenderable)defaultText.RenderableComponent!).BlendState
             .ShouldBe(Gum.BlendState.NonPremultiplied);
     }
 
