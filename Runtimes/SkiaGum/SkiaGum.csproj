@@ -192,6 +192,7 @@
 		<InternalsVisibleTo Include="KniSkiaGum.Tests" />
 		<InternalsVisibleTo Include="StrideGum" />
 		<InternalsVisibleTo Include="StrideGum.Tests" />
+		<InternalsVisibleTo Include="SkiaGum.GpuTests" />
 		<InternalsVisibleTo Include="StrideGum.GpuTests.D3D11" />
 		<InternalsVisibleTo Include="StrideGum.GpuTests.D3D12" />
 		<InternalsVisibleTo Include="BrutalGum.OGL" />

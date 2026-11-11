@@ -286,6 +286,9 @@ public class NineSlice : RenderableShapeBase, IAnimatable, IAnimationChainRender
         return paint;
     }
 
+    /// <summary>Test hook: draws every section with its own DrawImage, as before the lattice fast path.</summary>
+    internal bool DisableLatticeFastPath { get; set; }
+
     // Up to nine sections, more when tiling; each DrawImage records itself.
     private protected override bool RecordsOwnDrawCalls => true;
 
@@ -408,6 +411,13 @@ public class NineSlice : RenderableShapeBase, IAnimatable, IAnimationChainRender
         SKSamplingOptions sampling = global::RenderingLibrary.Graphics.Renderer.TextureSampling;
         SectionDraw draw = new(canvas, paint, sampling, UseSectionImages: sampling.Filter != SKFilterMode.Nearest);
 
+        if (TryDrawLattice(
+                canvas, paint, sampling, boundingRect,
+                srcLeft, srcTop, usedWidth, usedHeight, fullOutsideW, fullOutsideH, borders))
+        {
+            return;
+        }
+
         float destLeft = boundingRect.Left;
         float destTop = boundingRect.Top;
         float destRight = boundingRect.Right;
@@ -469,6 +479,100 @@ public class NineSlice : RenderableShapeBase, IAnimatable, IAnimationChainRender
             tileHorizontally: IsTilingMiddleSections, tileVertically: IsTilingMiddleSections,
             BorderScale, BorderScale,
             draw);
+    }
+
+    // Divisions handed to DrawImageLattice, kept so a frame allocates nothing.
+    private readonly int[] _latticeXDivs = new int[2];
+    private readonly int[] _latticeYDivs = new int[2];
+
+    // Draws all nine sections with one DrawImageLattice call. Measured 2026-11-11 (200 NineSlices, GPU
+    // surface, Nearest): about 38 us per NineSlice for nine DrawImage calls against about 4 us for the
+    // lattice, with identical pixels. Only the cases below are identical, so everything else keeps the
+    // per-section draws:
+    //  - Nearest only. The lattice ignores the sampling option, so Linear blends in the neighboring
+    //    section's texels, which GetSectionImage exists to prevent.
+    //  - The whole image, one border scale on all four sides, no tiling. A lattice cell is as large as its
+    //    texels, so a scale s draws the lattice into a rectangle 1/s the size under a canvas scale of s.
+    //  - Axis aligned, with no section edge on a half pixel (GPU rounding differs there).
+    //  - Borders that fit: when NineSliceBorders clamps a band the sections are no longer the texels' size.
+    private bool TryDrawLattice(
+        SKCanvas canvas, SKPaint paint, SKSamplingOptions sampling, SKRect boundingRect,
+        int srcLeft, int srcTop, int usedWidth, int usedHeight, int fullOutsideW, int fullOutsideH,
+        NineSliceBorders borders)
+    {
+        if (DisableLatticeFastPath || sampling.Filter != SKFilterMode.Nearest || IsTilingMiddleSections)
+        {
+            return false;
+        }
+
+        float scale = EffectiveBorderScaleLeft;
+        if (scale <= 0f
+            || EffectiveBorderScaleTop != scale
+            || EffectiveBorderScaleRight != scale
+            || EffectiveBorderScaleBottom != scale
+            || BorderScale != scale)
+        {
+            return false;
+        }
+
+        if (srcLeft != 0 || srcTop != 0 || usedWidth != Image!.Width || usedHeight != Image.Height)
+        {
+            return false;
+        }
+
+        if (fullOutsideW <= 0 || fullOutsideH <= 0
+            || usedWidth - (fullOutsideW * 2) <= 0 || usedHeight - (fullOutsideH * 2) <= 0)
+        {
+            return false;
+        }
+
+        // The bands must be exactly the texels' size times the scale (no clamping), with room left in the middle.
+        if (borders.SourceLeft != fullOutsideW || borders.SourceRight != fullOutsideW
+            || borders.SourceTop != fullOutsideH || borders.SourceBottom != fullOutsideH
+            || borders.DestLeft != fullOutsideW * scale || borders.DestRight != fullOutsideW * scale
+            || borders.DestTop != fullOutsideH * scale || borders.DestBottom != fullOutsideH * scale
+            || boundingRect.Width <= borders.DestLeft + borders.DestRight
+            || boundingRect.Height <= borders.DestTop + borders.DestBottom)
+        {
+            return false;
+        }
+
+        // A section edge exactly halfway between two device pixels rounds one way for a rectangle and can round
+        // the other way for the lattice's triangles on a GPU surface (seen at x = 10.5). Rotated or skewed
+        // canvases are not axis aligned, so the edges cannot be checked.
+        SKMatrix matrix = canvas.TotalMatrix;
+        if (matrix.SkewX != 0 || matrix.SkewY != 0
+            || IsHalfPixel(matrix.ScaleX * boundingRect.Left + matrix.TransX)
+            || IsHalfPixel(matrix.ScaleX * (boundingRect.Left + borders.DestLeft) + matrix.TransX)
+            || IsHalfPixel(matrix.ScaleX * (boundingRect.Right - borders.DestRight) + matrix.TransX)
+            || IsHalfPixel(matrix.ScaleX * boundingRect.Right + matrix.TransX)
+            || IsHalfPixel(matrix.ScaleY * boundingRect.Top + matrix.TransY)
+            || IsHalfPixel(matrix.ScaleY * (boundingRect.Top + borders.DestTop) + matrix.TransY)
+            || IsHalfPixel(matrix.ScaleY * (boundingRect.Bottom - borders.DestBottom) + matrix.TransY)
+            || IsHalfPixel(matrix.ScaleY * boundingRect.Bottom + matrix.TransY))
+        {
+            return false;
+        }
+
+        _latticeXDivs[0] = fullOutsideW;
+        _latticeXDivs[1] = usedWidth - fullOutsideW;
+        _latticeYDivs[0] = fullOutsideH;
+        _latticeYDivs[1] = usedHeight - fullOutsideH;
+        SKLattice lattice = new() { XDivs = _latticeXDivs, YDivs = _latticeYDivs };
+
+        canvas.Save();
+        canvas.Translate(boundingRect.Left, boundingRect.Top);
+        canvas.Scale(scale);
+        canvas.DrawImageLattice(Image, lattice, new SKRect(0, 0, boundingRect.Width / scale, boundingRect.Height / scale), paint);
+        canvas.Restore();
+        DrawStatistics?.RecordDrawCall();
+        return true;
+    }
+
+    private static bool IsHalfPixel(float deviceCoordinate)
+    {
+        float fraction = deviceCoordinate - MathF.Floor(deviceCoordinate);
+        return Math.Abs(fraction - 0.5f) < 0.01f;
     }
 
     // What every section of one DrawBound call draws with.
