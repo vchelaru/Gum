@@ -347,16 +347,17 @@ public class DrawAllocationTests : BaseTestClass
     }
 
     // Changing text rebuilds a RichTextKit TextBlock, which allocates on every build, so the limit cannot be 0.
-    // Measured on macOS Debug: 1,785 / 5,610 / 16,017 bytes per frame, the same on every run and whatever ran first
-    // (#7860, #7846). Before the BBCode buffers were reused (#7862) Windows read 1,781 / 6,970 / 20,449. Building and painting a new RichTextKit block for the counter text alone is about
+    // Measured on Windows Debug with RichTextKit 0.6.171: 832 / 3,003 / 11,674 bytes per frame (0.6.170 read
+    // 1,753 / 6,078 / 15,673; macOS Debug read 1,785 / 5,610 / 16,017 with 0.6.170), the same on every run and whatever
+    // ran first (#7860, #7846). Before the BBCode buffers were reused (#7862) Windows read 1,781 / 6,970 / 20,449. Building and painting a new RichTextKit block for the counter text alone is about
     // 4,540 (#7818). The reveal and the BBCode line-break layout (a [FontSize] run is refit line by line) clear and
     // reuse a block, plain text alternates between two reused blocks, and a Text reuses the styles it built before
     // and the typefaces it resolved. The limit is the per-frame managed bytes of Update + Draw while the text changes
     // every frame.
     [Theory]
-    [InlineData("TextChangedEveryFrame", 2000)]
-    [InlineData("MaxLettersToShowReveal", 6400)]
-    [InlineData("BbCodeChangedEveryFrame", 17000)]
+    [InlineData("TextChangedEveryFrame", 1100)]
+    [InlineData("MaxLettersToShowReveal", 3600)]
+    [InlineData("BbCodeChangedEveryFrame", 13500)]
     public void UpdateAndDraw_ChangingText_AllocationBaseline(string kind, int limitBytesPerFrame)
     {
         Action<int> change = CreateChangingText(kind, out TextRuntime text);
