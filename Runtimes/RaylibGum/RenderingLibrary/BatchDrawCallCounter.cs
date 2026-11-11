@@ -81,7 +81,7 @@ public sealed unsafe class BatchDrawCallCounter
     /// How many times this counter has called raylib's <c>BeginBlendMode</c>/<c>EndBlendMode</c>.
     /// Diagnostic for tests: equal blends in a row should not each pay for a native call.
     /// </summary>
-    public int NativeBlendModeCallCount { get; private set; }
+    internal int NativeBlendModeCallCount { get; private set; }
 
     private void NativeBeginBlendMode(BlendMode mode)
     {
