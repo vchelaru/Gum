@@ -13,6 +13,30 @@ namespace SkiaGum.Tests.Architecture;
 /// </summary>
 public class ProcessStaticsBaseClassGuardTests
 {
+    private static readonly Regex Assignment = new(@"\b(ContentLoader|CacheTextures|RelativeDirectory)\s*(?:\?\?|[-+*/%&|^])?=(?!=)");
+
+    [Theory]
+    [InlineData("LoaderManager.Self.ContentLoader = loader;")]
+    [InlineData("LoaderManager.Self.ContentLoader ??= loader;")]
+    [InlineData("LoaderManager.Self.CacheTextures = false;")]
+    [InlineData("LoaderManager.Self.CacheTextures ??= false;")]
+    [InlineData("FileManager.RelativeDirectory = path;")]
+    [InlineData("FileManager.RelativeDirectory ??= path;")]
+    [InlineData("FileManager.RelativeDirectory += \"sub/\";")]
+    public void Assignment_Matches_AssignmentsToTheGuardedStatics(string line)
+    {
+        Assignment.IsMatch(line).ShouldBeTrue();
+    }
+
+    [Theory]
+    [InlineData("if (LoaderManager.Self.CacheTextures == true)")]
+    [InlineData("bool cached = LoaderManager.Self.CacheTextures;")]
+    [InlineData("FileManager.RelativeDirectory.ShouldBe(path);")]
+    public void Assignment_DoesNotMatch_ReadsAndComparisons(string line)
+    {
+        Assignment.IsMatch(line).ShouldBeFalse();
+    }
+
     [Fact]
     public void TestClassesAssigningLoaderOrRelativeDirectory_DeriveFromBaseTestClass()
     {
@@ -24,7 +48,7 @@ public class ProcessStaticsBaseClassGuardTests
         };
 
         string sourceDirectory = FindSourceDirectory();
-        Regex assignment = new(@"\b(ContentLoader|CacheTextures|RelativeDirectory)\s*=(?!=)");
+        Regex assignment = Assignment;
         Regex classDeclaration = new(@"\bclass\s+(\w+)");
         Assembly testAssembly = typeof(ProcessStaticsBaseClassGuardTests).Assembly;
         List<string> violations = new List<string>();
