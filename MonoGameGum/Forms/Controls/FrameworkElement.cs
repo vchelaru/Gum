@@ -1141,7 +1141,13 @@ public class FrameworkElement : INotifyPropertyChanged
             }
         }
         Visual.RemoveFromManagers();
+        ReactToClosed();
     }
+
+    /// <summary>
+    /// Called after <see cref="Close"/> has removed this element's Visual from the managers.
+    /// </summary>
+    protected virtual void ReactToClosed() { }
 
     /// <summary>
     /// Displays this element visually and adds it to the underlying managers for Cursor interaction.
