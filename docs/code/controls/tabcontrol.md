@@ -41,6 +41,10 @@ tabControl.SelectedIndex = 0;
 An object added to `Items` makes a tab whose header shows the object's `ToString()`. `VisualTemplate` changes the header and `ContentTemplate` creates the page content. Both receive the item, which also becomes the `BindingContext` of the page.
 
 ```csharp
+using Gum.Forms;
+```
+
+```csharp
 // Initialize
 var tabControl = new TabControl();
 tabControl.AddToRoot();
@@ -60,10 +64,10 @@ As with [ListBox](listbox.md), assigning a bound collection to `Items` replaces 
 
 ## Selection
 
-`SelectedIndex` and `SelectedObject` read and set the selected tab. `SelectedIndex` is `-1` when no tab is selected, and an out-of-range value is ignored. Removing the selected tab leaves nothing selected. `SelectionChanged` is raised whenever the selection changes, including when the user clicks a tab.
+`SelectedIndex` and `SelectedObject` read and set the selected tab. A TabControl authored in the Gum tool with no `SelectedIndex` set selects the first tab. Tabs added from code start unselected, so `SelectedIndex` is `-1` until you set it. `SelectedIndex` is also `-1` when no tab is selected, and an out-of-range value is ignored. Removing the selected tab leaves nothing selected. `SelectionChanged` is raised whenever the selection changes, including when the user clicks a tab.
 
 ```csharp
-// Initialize
+// Initialize, using the tabControl from above
 var statusLabel = new Label();
 statusLabel.AddToRoot();
 statusLabel.Y = 300;
@@ -76,8 +80,8 @@ tabControl.SelectionChanged += (_, args) =>
 
 ## Keyboard and Gamepad
 
-A focused TabControl selects the previous or next enabled tab with the left and right arrow keys, the gamepad DPad, or the left stick. Selection stops at the first and last tab. Call `GumUI.UseKeyboardDefaults()` or `GumUI.UseGamepadDefaults()` first to enable the input device.
+A focused TabControl selects the previous or next enabled tab with the left and right arrow keys, the gamepad DPad, or the left stick. Selection stops at the first and last tab. For setup and the keys and buttons each device uses, see [Keyboard Support](../events-and-interactivity/keyboard-support.md) and [Gamepad Support](../events-and-interactivity/gamepad-support.md).
 
 ## Styling
 
-TabControl, TabItem, and TabPage are styled by your theme. The Standard and Bubblegum themes include components for all three, so tabs and pages can be authored in the Gum tool and parented to the `InnerPanelInstance` and `ContentPanelInstance` of the TabControl.
+TabControl, TabItem, and TabPage are styled by your theme. The default `FormsTemplate` and the Bubblegum theme include components for all three, so tabs and pages can be authored in the Gum tool and parented to the `InnerPanelInstance` and `ContentPanelInstance` of the TabControl.
