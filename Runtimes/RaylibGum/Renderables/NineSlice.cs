@@ -280,7 +280,7 @@ public class NineSlice : RenderableBase, IAnimatable, IAnimationChainRenderable,
     /// </summary>
     public ColorOperation ColorOperation { get; set; } = ColorOperation.Modulate;
 
-    public global::Gum.RenderingLibrary.Blend? Blend { get; set; }
+    public global::Gum.RenderingLibrary.Blend? Blend { get; set; } = global::Gum.RenderingLibrary.Blend.Normal;
 
     /// <summary>
     /// Edge thickness in texture pixels. When null, the renderable uses 1/3 of the
@@ -353,17 +353,11 @@ public class NineSlice : RenderableBase, IAnimatable, IAnimationChainRenderable,
             renderer.BatchDrawCallCounter.BeginShaderMode(colorOperationShader.Shader);
         }
 
-        if (Blend.HasValue)
-        {
-            renderer.BatchDrawCallCounter.BeginBlendMode(Blend.Value);
-        }
+        renderer.BatchDrawCallCounter.BeginBlendMode(Blend ?? global::Gum.RenderingLibrary.Blend.Normal);
 
         DrawOnce();
 
-        if (Blend.HasValue)
-        {
-            renderer.BatchDrawCallCounter.EndBlendMode();
-        }
+        renderer.BatchDrawCallCounter.EndBlendMode();
 
         if (colorOperationShader != null)
         {

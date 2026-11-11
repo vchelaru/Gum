@@ -15,14 +15,14 @@ namespace RaylibGum.Tests.Runtimes;
 public class ArcRuntimeTests : BaseTestClass
 {
     // #7523 - Blend parity with raylib CircleRuntime (non-nullable runtime, Normal maps to a null
-    // renderable Blend so Render skips the wrap).
+    // renderable Blend, which draws as Normal like the renderable default).
     [Fact]
     public void Blend_DefaultsToNormal()
     {
         ArcRuntime sut = new();
 
         sut.Blend.ShouldBe(Gum.RenderingLibrary.Blend.Normal);
-        ((LineArc)sut.RenderableComponent!).Blend.ShouldBeNull();
+        ((LineArc)sut.RenderableComponent!).Blend.ShouldBe(Gum.RenderingLibrary.Blend.Normal);
     }
 
     [Fact]

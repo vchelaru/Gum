@@ -70,6 +70,10 @@ public sealed unsafe class BatchDrawCallCounter
     // re-establishes the premultiply pass instead (issue #3434).
     private bool _renderTargetBlendActive;
 
+    // Whether this counter last left raylib in straight-alpha blending. A Normal blend then changes
+    // nothing, so raylib does not flush and Bank must not count the pending slots a second time.
+    private bool _straightAlphaBlendActive = true;
+
     /// <summary>
     /// Activates the owned batch for a render pass and routes subsequent <see cref="Bank"/> calls
     /// into <paramref name="statistics"/>. If the GL context isn't ready (so the batch can't be
@@ -128,6 +132,7 @@ public sealed unsafe class BatchDrawCallCounter
     {
         Bank();
         Raylib.BeginBlendMode(mode);
+        _straightAlphaBlendActive = mode == BlendMode.Alpha;
     }
 
     /// <summary>
@@ -150,6 +155,15 @@ public sealed unsafe class BatchDrawCallCounter
     /// </summary>
     public void BeginBlendMode(global::Gum.RenderingLibrary.Blend blend)
     {
+        if (!_renderTargetBlendActive
+            && _straightAlphaBlendActive
+            && blend == global::Gum.RenderingLibrary.Blend.Normal)
+        {
+            // Already straight alpha: still issue the call so a blend mode the game set itself is reset.
+            Raylib.BeginBlendMode(BlendMode.Alpha);
+            return;
+        }
+
         Bank();
 
         // raylib's canned Normal/Additive modes square the source alpha when written into
@@ -158,6 +172,7 @@ public sealed unsafe class BatchDrawCallCounter
         if (!_renderTargetBlendActive && blend.TryGetSimpleRaylibBlendMode(out BlendMode mode))
         {
             Raylib.BeginBlendMode(mode);
+            _straightAlphaBlendActive = mode == BlendMode.Alpha;
             return;
         }
 
@@ -165,6 +180,7 @@ public sealed unsafe class BatchDrawCallCounter
             blend.ToGlBlendFactorsSeparate(isPremultiplyingContext: _renderTargetBlendActive);
         Rlgl.SetBlendFactorsSeparate(srcRgb, dstRgb, srcAlpha, dstAlpha, eqRgb, eqAlpha);
         Raylib.BeginBlendMode(BlendMode.CustomSeparate);
+        _straightAlphaBlendActive = false;
     }
 
     /// <summary>
@@ -179,6 +195,7 @@ public sealed unsafe class BatchDrawCallCounter
     {
         Bank();
         _renderTargetBlendActive = true;
+        _straightAlphaBlendActive = false;
         ApplyRenderTargetBlend();
     }
 
@@ -190,6 +207,7 @@ public sealed unsafe class BatchDrawCallCounter
     {
         Bank();
         _renderTargetBlendActive = false;
+        _straightAlphaBlendActive = true;
         Raylib.EndBlendMode();
     }
 
@@ -205,6 +223,7 @@ public sealed unsafe class BatchDrawCallCounter
         Bank();
         Rlgl.SetBlendFactorsSeparate(GlOne, GlOne, GlOne, GlOne, GlFuncAdd, GlFuncAdd);
         Raylib.BeginBlendMode(BlendMode.CustomSeparate);
+        _straightAlphaBlendActive = false;
     }
 
     /// <summary>
@@ -214,6 +233,13 @@ public sealed unsafe class BatchDrawCallCounter
     /// </summary>
     public void EndBlendMode()
     {
+        if (!_renderTargetBlendActive && _straightAlphaBlendActive)
+        {
+            // Nothing to restore, so raylib does not flush and there is nothing to bank.
+            Raylib.EndBlendMode();
+            return;
+        }
+
         Bank();
         if (_renderTargetBlendActive)
         {
@@ -222,6 +248,7 @@ public sealed unsafe class BatchDrawCallCounter
         else
         {
             Raylib.EndBlendMode();
+            _straightAlphaBlendActive = true;
         }
     }
 

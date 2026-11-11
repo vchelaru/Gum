@@ -442,19 +442,13 @@ public class RaylibBlendDefaultsTests : BaseTestClass
                 Color normalNoAmbient = RenderDirect(kind, alpha, "Normal", null);
                 Color normalAmbient = RenderDirect(kind, alpha, "Normal", BlendMode.Additive);
                 Record($"{kind}|Normal|a{alpha}|ambientAdditive={Format(normalAmbient)}");
-                // TODAY: CircleRuntime and ArcRuntime store Normal as a null renderable Blend (shared source), so they keep the ambient mode.
-                if (kind is "Circle" or "Arc")
-                {
-                    AssertClose(normalAmbient, RenderDirect(kind, alpha, "Additive", null), $"{kind} Normal under ambient additive a{alpha}", 30);
-                    continue;
-                }
                 AssertClose(normalAmbient, normalNoAmbient, $"{kind} Normal under ambient additive a{alpha}", 2);
             }
         }
     }
 
     [Fact]
-    public void Pixels_AmbientAdditive_DefaultAndNullFollowTheDefaultRule()
+    public void Pixels_AmbientAdditive_DefaultAndNullDrawAsNormal()
     {
         foreach (string kind in Kinds)
         {
@@ -467,12 +461,12 @@ public class RaylibBlendDefaultsTests : BaseTestClass
                 Record($"{kind}|default|a{alpha}|ambientAdditive={Format(defaultAmbient)}");
                 Record($"{kind}|null|a{alpha}|ambientAdditive={Format(nullAmbient)}");
 
-                // TODAY (before the default changes): null draws under the game's own blend mode.
-                AssertClose(defaultAmbient, additive, $"{kind} default under ambient additive a{alpha}", 30);
-                AssertClose(nullAmbient, additive, $"{kind} null under ambient additive a{alpha}", 30);
+                // Rule: a default or null Blend draws as Normal, so it overrides the ambient mode like an explicit Normal.
+                AssertClose(defaultAmbient, normal, $"{kind} default under ambient additive a{alpha}", 30);
+                AssertClose(nullAmbient, normal, $"{kind} null under ambient additive a{alpha}", 30);
                 if (alpha == 128)
                 {
-                    Math.Abs(defaultAmbient.B - normal.B).ShouldBeGreaterThan(40, kind);
+                    Math.Abs(defaultAmbient.B - additive.B).ShouldBeGreaterThan(40, kind);
                 }
             }
         }
@@ -518,15 +512,14 @@ public class RaylibBlendDefaultsTests : BaseTestClass
                     else if (loaded == "Normal")
                     {
                         AssertClose(direct, normal, $"{kind} loaded Normal a{alpha}", 30);
-                        // TODAY: a loaded Normal overrides the ambient mode except on Circle, whose Blend setter stores Normal as null
-                        // (Arc keeps Normal on the renderable when loaded).
-                        AssertClose(ambient, kind == "Circle" ? additive : normal, $"{kind} loaded Normal ambient a{alpha}", 30);
+                        // Every kind, Circle included: a null renderable Blend now draws as Normal.
+                        AssertClose(ambient, normal, $"{kind} loaded Normal ambient a{alpha}", 30);
                     }
                     else
                     {
-                        // TODAY: no authored Blend leaves the renderable default (null), which follows the ambient mode.
+                        // Rule: no authored Blend leaves the renderable default, Normal, which overrides the ambient mode.
                         AssertClose(direct, normal, $"{kind} loaded absent a{alpha}", 30);
-                        AssertClose(ambient, additive, $"{kind} loaded absent ambient a{alpha}", 30);
+                        AssertClose(ambient, normal, $"{kind} loaded absent ambient a{alpha}", 30);
                     }
                 }
             }

@@ -756,16 +756,14 @@ public class Text : IVisible, IRenderableIpso,
     /// <see cref="global::RenderingLibrary.Graphics.BatchDrawCallCounter"/>, mirroring the raylib Sprite and
     /// NineSlice renderables.
     /// </summary>
-    public global::Gum.RenderingLibrary.Blend? Blend { get; set; }
+    public global::Gum.RenderingLibrary.Blend? Blend { get; set; } = global::Gum.RenderingLibrary.Blend.Normal;
 
     // Satisfies the IRenderable contract by deriving from Blend, so there is a single source of
     // truth for this Text's blend mode. Render consumes Blend directly; this getter exists only for
     // the interface (e.g. render-target additive-composite detection on RenderableBase does not
     // apply to Text, but any generic IRenderable consumer still gets the correct state).
     global::Gum.BlendState IRenderable.BlendState =>
-        Blend.HasValue
-            ? global::Gum.RenderingLibrary.BlendExtensions.ToBlendState(Blend.Value)
-            : global::Gum.BlendState.NonPremultiplied;
+        global::Gum.RenderingLibrary.BlendExtensions.ToBlendState(Blend ?? global::Gum.RenderingLibrary.Blend.Normal);
 
     public float FontSize
     {
@@ -1257,10 +1255,7 @@ public class Text : IVisible, IRenderableIpso,
 
         // Honor an explicit Blend by wrapping every glyph draw in a begin/end pair, mirroring the
         // raylib Sprite and NineSlice renderables. Null Blend leaves the renderer's ambient mode.
-        if (Blend.HasValue)
-        {
-            global::RenderingLibrary.Graphics.Renderer.Self.BatchDrawCallCounter.BeginBlendMode(Blend.Value);
-        }
+        global::RenderingLibrary.Graphics.Renderer.Self.BatchDrawCallCounter.BeginBlendMode(Blend ?? global::Gum.RenderingLibrary.Blend.Normal);
 
         // Per-line vertical offsets. Plain text (no inline runs) advances every line by the same height;
         // when inline [FontSize]/[FontScale] runs can enlarge a line, each line advances by its own height
@@ -1321,10 +1316,7 @@ public class Text : IVisible, IRenderableIpso,
             Raylib_cs.Rlgl.PopMatrix();
         }
 
-        if (Blend.HasValue)
-        {
-            global::RenderingLibrary.Graphics.Renderer.Self.BatchDrawCallCounter.EndBlendMode();
-        }
+        global::RenderingLibrary.Graphics.Renderer.Self.BatchDrawCallCounter.EndBlendMode();
     }
 
     /// <summary>

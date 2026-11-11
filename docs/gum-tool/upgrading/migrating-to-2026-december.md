@@ -18,6 +18,14 @@ You are affected if you set a deliberately different absolute height on the sele
 
 See [Properties Set by Forms Controls](../../code/styling/properties-set-by-forms-controls.md) for everything the control writes to its Visual.
 
+## Raylib
+
+### Gum Draws With Normal Blending
+
+On Raylib, `SpriteRuntime`, `NineSliceRuntime`, `TextRuntime`, `RectangleRuntime`, `CircleRuntime` and `ArcRuntime` now default `Blend` to `Normal`, the same as every other runtime. Previously a `Blend` that was `null` (the default for a sprite, nine slice or text created in code) drew with whatever Raylib blend mode your game had set, so Gum content drawn between your own `BeginBlendMode` and `EndBlendMode` calls used that mode. Gum now resets the blend mode for each of these, and a `null` `Blend` also draws as `Normal`.
+
+You are affected if you wrap Gum drawing in your own Raylib blend mode, for example additive. Set `Blend` to the mode you want on the Gum elements instead, such as `sprite.Blend = Blend.Additive`.
+
 ## Silk.NET
 
 ### Initialize Takes the Window
