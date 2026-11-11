@@ -21,6 +21,7 @@ public class NineSliceLatticeTests : IDisposable
 
     readonly SKSurface _surface;
     readonly SKFilterMode _previousFilter;
+    readonly RenderingLibrary.Content.IContentLoader? _previousContentLoader = LoaderManager.Self.ContentLoader;
 
     public NineSliceLatticeTests()
     {
@@ -33,6 +34,7 @@ public class NineSliceLatticeTests : IDisposable
     public void Dispose()
     {
         RenderingLibrary.Graphics.Renderer.TextureFilter = _previousFilter;
+        LoaderManager.Self.ContentLoader = _previousContentLoader!;
         GumService.Default.Root.Children.Clear();
         _surface.Dispose();
     }
