@@ -1116,7 +1116,13 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
             // BlendMode (blend) so both compose when the layer is composited back on Restore. Same
             // primitive/blur convention as the Skia shapes.
             SKPaint? renderPaint = GetCachedRenderPaint();
-            if (renderPaint != null)
+            if (renderPaint != null && !Blend.HasValue && TryDrawCachedShadow(canvas, paintBlock, result))
+            {
+                // The blurred shadow replayed from its cached image, then the text on top: two draws, no layer.
+                statistics?.RecordDrawCall();
+                PaintTextBlockCached(canvas, paintBlock);
+            }
+            else if (renderPaint != null)
             {
                 // A blend that writes alpha (ReplaceAlpha, MinAlpha, Replace) would otherwise act on the
                 // whole clip, erasing everything the text does not cover. Clip to the text first.
@@ -1430,9 +1436,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
             }
             if (ReferenceEquals(_cachedPictureBlock, reuse))
             {
-                _cachedPicture?.Dispose();
-                _cachedPicture = null;
-                _cachedPictureBlock = null;
+                DropCachedPicture();
             }
         }
 
@@ -1635,9 +1639,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
         // replaced (#7818). It is the same object afterwards, so the picture recorded from it is dropped.
         if (_revealBlock != null && ReferenceEquals(_cachedPictureBlock, _revealBlock))
         {
-            _cachedPicture?.Dispose();
-            _cachedPicture = null;
-            _cachedPictureBlock = null;
+            DropCachedPicture();
         }
         TextMarkupBuffers buffers = MarkupBuffers;
         FillVisibleStyledRuns(fullBlock, buffers.VisibleRuns, buffers.VisibleSourceRuns, buffers.VisibleFittedRuns);
@@ -1779,12 +1781,137 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
     // Larger than any text the picture is replayed into, so recording never culls a line.
     private static readonly SKRect _pictureCullRect = new SKRect(-100000, -100000, 100000, 100000);
 
+    private void DropCachedPicture()
+    {
+        _cachedPicture?.Dispose();
+        _cachedPicture = null;
+        _cachedPictureBlock = null;
+        _shadowImage?.Dispose();
+        _shadowImage = null;
+        _shadowImageBlock = null;
+        _shadowPendingBlock = null;
+        _shadowStableDraws = 0;
+    }
+
+    // The blurred shadow as an alpha mask in device pixels, so a frame costs one image draw instead of an
+    // offscreen layer plus a blur (#7910). Rebuilt only when the block, the transform or the shadow shape changes.
+    private SKImage? _shadowImage;
+    private TextBlock? _shadowImageBlock;
+    private (float ScaleX, float SkewX, float SkewY, float ScaleY, float FracX, float FracY, float Sigma) _shadowImageKey;
+    private int _shadowImageX;
+    private int _shadowImageY;
+    private SKPaint? _shadowPaint;
+    private TextBlock? _shadowPendingBlock;
+    private (float ScaleX, float SkewX, float SkewY, float ScaleY, float FracX, float FracY, float Sigma) _shadowPendingKey;
+    private int _shadowStableDraws;
+    private const int ShadowStableDrawsBeforeMask = 2;
+
+    /// <summary>Test hook: always use the offscreen-layer shadow, to compare against the cached mask.</summary>
+    internal bool ForceLayerShadow { get; set; }
+
+    /// <summary>Test hook: whether the last draw used the cached shadow mask.</summary>
+    internal bool HasCachedShadowMask => _shadowImage != null;
+
+    // Larger shadows keep the layer path rather than holding a big mask.
+    private const int MaxShadowImageSize = 4096;
+
+    /// <summary>
+    /// Draws the drop shadow from the cached mask and returns true, or returns false (nothing drawn) when the
+    /// shadow needs the layer path: unequal or zero blur, a non-finite value, a perspective transform or a
+    /// mask that would be too large.
+    /// </summary>
+    internal bool TryDrawCachedShadow(SKCanvas canvas, TextBlock block, SKMatrix matrix)
+    {
+        float sigma = global::Gum.Wireframe.DropshadowBlur.GetSigma(DropshadowBlurX);
+        if (ForceLayerShadow || DropshadowBlurX != DropshadowBlurY || !(sigma > 0) || !float.IsFinite(sigma)
+            || !float.IsFinite(DropshadowOffsetX) || !float.IsFinite(DropshadowOffsetY)
+            || matrix.Persp0 != 0 || matrix.Persp1 != 0)
+        {
+            return false;
+        }
+
+        // The shadow's device position is the text's plus the offset mapped through the transform. Its whole-pixel part
+        // moves the cached mask for free; only the fraction is baked in, so an offset that steps by whole pixels reuses it.
+        SKPoint deviceOffset = matrix.MapVector(DropshadowOffsetX, DropshadowOffsetY);
+        float shadowX = matrix.TransX + deviceOffset.X;
+        float shadowY = matrix.TransY + deviceOffset.Y;
+        float floorX = MathF.Floor(shadowX);
+        float floorY = MathF.Floor(shadowY);
+        var key = (matrix.ScaleX, matrix.SkewX, matrix.SkewY, matrix.ScaleY, shadowX - floorX, shadowY - floorY, sigma);
+
+        if (_shadowImage == null || !ReferenceEquals(_shadowImageBlock, block) || _shadowImageKey != key)
+        {
+            // A mask costs a CPU blur to build, more than the layer path costs per frame, so it is only built once the
+            // inputs have held still for a couple of frames. Text, reveal or offset values that change every frame never
+            // earn one and keep the layer path at its old cost.
+            if (!ReferenceEquals(_shadowPendingBlock, block) || _shadowPendingKey != key)
+            {
+                _shadowPendingBlock = block;
+                _shadowPendingKey = key;
+                _shadowStableDraws = 0;
+                return false;
+            }
+            if (++_shadowStableDraws < ShadowStableDrawsBeforeMask)
+            {
+                return false;
+            }
+
+            _shadowImage?.Dispose();
+            _shadowImage = null;
+
+            SKMatrix shadowMatrix = matrix;
+            shadowMatrix.TransX = key.Item5;
+            shadowMatrix.TransY = key.Item6;
+            SKRect deviceBounds = shadowMatrix.MapRect(GetBlendLayerBounds(block));
+            // The blur reaches about three sigma past the shape, in the transform's units.
+            float reach = 3 * sigma * MathF.Max(MathF.Abs(matrix.ScaleX) + MathF.Abs(matrix.SkewX), MathF.Abs(matrix.ScaleY) + MathF.Abs(matrix.SkewY));
+            deviceBounds.Inflate(reach, reach);
+            int left = (int)MathF.Floor(deviceBounds.Left);
+            int top = (int)MathF.Floor(deviceBounds.Top);
+            int width = (int)MathF.Ceiling(deviceBounds.Right) - left;
+            int height = (int)MathF.Ceiling(deviceBounds.Bottom) - top;
+            if (width <= 0 || height <= 0 || width > MaxShadowImageSize || height > MaxShadowImageSize)
+            {
+                return false;
+            }
+
+            using (SKSurface surface = SKSurface.Create(new SKImageInfo(width, height, SKColorType.Alpha8, SKAlphaType.Premul)))
+            {
+                SKCanvas maskCanvas = surface.Canvas;
+                maskCanvas.Clear(SKColors.Transparent);
+                shadowMatrix.TransX -= left;
+                shadowMatrix.TransY -= top;
+                maskCanvas.SetMatrix(shadowMatrix);
+                using (SKPaint blur = new SKPaint())
+                using (SKImageFilter filter = SKImageFilter.CreateBlur(sigma, sigma))
+                {
+                    blur.ImageFilter = filter;
+                    maskCanvas.SaveLayer(blur);
+                    PaintTextBlock(maskCanvas, block);
+                    maskCanvas.Restore();
+                }
+                _shadowImage = surface.Snapshot();
+            }
+            _shadowImageBlock = block;
+            _shadowImageKey = key;
+            _shadowImageX = left;
+            _shadowImageY = top;
+        }
+
+        _shadowPaint ??= new SKPaint();
+        _shadowPaint.Color = DropshadowColor;
+        canvas.Save();
+        canvas.ResetMatrix();
+        canvas.DrawImage(_shadowImage, floorX + _shadowImageX, floorY + _shadowImageY, new SKSamplingOptions(SKFilterMode.Nearest), _shadowPaint);
+        canvas.Restore();
+        return true;
+    }
+
     private void PaintTextBlockCached(SKCanvas canvas, TextBlock block)
     {
         if (!ReferenceEquals(_cachedPictureBlock, block))
         {
-            _cachedPicture?.Dispose();
-            _cachedPicture = null;
+            DropCachedPicture();
             _cachedPictureBlock = block;
             PaintTextBlock(canvas, block);
             return;
@@ -2982,6 +3109,9 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
         // The copied picture, reveal block and render paint belong to the source.
         newInstance._cachedPicture = null;
         newInstance._cachedPictureBlock = null;
+        newInstance._shadowImage = null;
+        newInstance._shadowImageBlock = null;
+        newInstance._shadowPaint = null;
         newInstance._revealBlock = null;
         newInstance._revealBlockSource = null;
         newInstance._lineBreakLayout = null;
