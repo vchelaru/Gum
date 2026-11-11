@@ -94,11 +94,8 @@ public class MenuItem : ItemsControl
             ReportMissingTextInstance();
 #endif
             _codeText.Record(value, translate: true);
-            if (value != coreText?.RawText)
-            {
-                // go through the component instead of the core text object to apply localization and force a layout refresh
-                text?.SetProperty("Text", value);
-            }
+            // go through the component instead of the core text object to apply localization and force a layout refresh
+            text?.SetProperty("Text", value);
         }
     }
 
@@ -113,10 +110,7 @@ public class MenuItem : ItemsControl
     public void SetHeaderNoTranslate(string? value)
     {
         _codeText.Record(value, translate: false);
-        if (value != coreText?.RawText)
-        {
-            text?.SetProperty("TextNoTranslate", value);
-        }
+        text?.SetProperty("TextNoTranslate", value);
     }
 
     bool isHighlighted;

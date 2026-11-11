@@ -87,6 +87,36 @@ public class RefreshLocalizationTests : BaseTestClass
     }
 
     [Fact]
+    public void RefreshLocalization_ShouldNotTouchMenuItemSetHeaderNoTranslate_WhenTextEqualsTranslatedHeader()
+    {
+        MenuItem menuItem = new();
+        menuItem.Visual.AddToRoot();
+        menuItem.Header = "Greeting";
+        menuItem.Header.ShouldBe("Hello");
+        menuItem.SetHeaderNoTranslate("Hello");
+
+        _localizationService.CurrentLanguage = 1;
+        Gum.GumService.Default.RefreshLocalization();
+
+        menuItem.Header.ShouldBe("Hello");
+    }
+
+    [Fact]
+    public void RefreshLocalization_ShouldNotTouchLabelSetTextNoTranslate_WhenTextEqualsTranslatedText()
+    {
+        Label label = new();
+        label.Visual.AddToRoot();
+        label.Text = "Greeting";
+        label.Text.ShouldBe("Hello");
+        label.SetTextNoTranslate("Hello");
+
+        _localizationService.CurrentLanguage = 1;
+        Gum.GumService.Default.RefreshLocalization();
+
+        label.Text.ShouldBe("Hello");
+    }
+
+    [Fact]
     public void RefreshLocalization_ShouldNotTouchTabControlDataItemHeader()
     {
         TabControl tabControl = new();
