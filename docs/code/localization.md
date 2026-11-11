@@ -386,7 +386,7 @@ If a control's `Text` is data-bound, refreshing the language will overwrite the 
 
 ## Forms Control Localization
 
-Forms controls localize text automatically when a `LocalizationService` is active. When you assign a string ID to a control's `Text` property (or `Header` for MenuItem, `Placeholder` for TextBox), Gum translates it at assignment time. Each control that supports localization also provides a no-translate method for setting literal text that should not be translated.
+Forms controls localize text automatically when a `LocalizationService` is active. When you assign a string ID to a control's `Text` property (or `Header` for MenuItem and TabItem, `Placeholder` for TextBox), Gum translates it at assignment time. Each control that supports localization also provides a no-translate method for setting literal text that should not be translated.
 
 ### Localization by Control
 
@@ -401,6 +401,7 @@ The following table shows how each Forms control handles localization:
 | TextBox      | `Text`             | `SetTextNoTranslate()`        | Setting `Text` in code localizes. User-typed text does not localize. See below. |
 | TextBoxBase  | `Placeholder`      | `SetPlaceholderNoTranslate()` | Placeholder text localizes when set in code.                                    |
 | MenuItem     | `Header`           | `SetHeaderNoTranslate()`      |                                                                                 |
+| TabItem      | `Header`           | `SetHeaderNoTranslate()`      | `TabControl` data items show their `ToString()` without translation.            |
 | PasswordBox  | —                  | —                             | Mask characters are never localized.                                            |
 | ComboBox     | —                  | —                             | Text comes from selected item. Pre-translate items before adding.               |
 | ListBoxItem  | —                  | —                             | Text comes from data items. Pre-translate items before adding.                  |

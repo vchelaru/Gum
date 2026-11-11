@@ -230,6 +230,61 @@ public class LocalizationTests : BaseTestClass
 
     #endregion
 
+    #region TabItem
+
+    [Fact]
+    public void TabItemHeader_ShouldTranslate_WhenLocalizationServiceIsActive()
+    {
+        TabItem tabItem = new();
+        tabItem.Header = "Greeting";
+        tabItem.Header.ShouldBe("Hello");
+    }
+
+    [Fact]
+    public void TabItemHeader_ShouldAppendLoc_WhenKeyNotFound()
+    {
+        TabItem tabItem = new();
+        tabItem.Header = "Unknown";
+        tabItem.Header.ShouldBe("Unknown(loc)");
+    }
+
+    [Fact]
+    public void TabItemSetHeaderNoTranslate_ShouldBypassTranslation()
+    {
+        TabItem tabItem = new();
+        tabItem.Header = "Greeting";
+        tabItem.Header.ShouldBe("Hello");
+        tabItem.SetHeaderNoTranslate("Greeting");
+        tabItem.Header.ShouldBe("Greeting");
+    }
+
+    [Fact]
+    public void TabItemHeader_ShouldTranslate_WhenPreviousTextWasNoTranslateWithSameValue()
+    {
+        TabItem tabItem = new();
+        tabItem.SetHeaderNoTranslate("Greeting");
+        tabItem.Header = "Greeting";
+        tabItem.Header.ShouldBe("Hello");
+    }
+
+    [Fact]
+    public void TabControlAddTab_ShouldTranslateHeader_WhenLocalizationServiceIsActive()
+    {
+        TabControl tabControl = new();
+        TabItem tab = tabControl.AddTab("Greeting");
+        tab.Header.ShouldBe("Hello");
+    }
+
+    [Fact]
+    public void TabControlDataItemHeader_ShouldNotTranslate_WhenItemToStringMatchesKey()
+    {
+        TabControl tabControl = new();
+        tabControl.Items!.Add("Greeting");
+        tabControl.TabItems[0].Header.ShouldBe("Greeting");
+    }
+
+    #endregion
+
     #region TextBoxBase Placeholder
 
     [Fact]

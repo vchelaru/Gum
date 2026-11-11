@@ -299,6 +299,44 @@ public class VisualAuthoredPropertiesTests : BaseTestClass
     }
 
     [Fact]
+    public void TabItemRefreshStyles_AuthoredHeaderNotSetInCode_KeepsAuthoredHeader()
+    {
+        TabItemVisual visual = new(fullInstantiation: true, tryCreateFormsObject: false);
+        visual.TextInstance.Text = "Authored header";
+        TabItem tabItem = new(visual);
+
+        visual.RefreshStyles();
+
+        tabItem.Header.ShouldBe("Authored header");
+    }
+
+    [Fact]
+    public void TabItemRefreshStyles_AuthoredHeaderChanged_ShowsNewAuthoredHeader()
+    {
+        TabItemVisual visual = new(fullInstantiation: true, tryCreateFormsObject: false);
+        visual.TextInstance.Text = "Old authored";
+        TabItem tabItem = new(visual);
+        ContainerRuntime screen = AttachToScreenAuthoring(visual, "TextInstance.Text", "New authored");
+
+        screen.RefreshStyles();
+
+        tabItem.Header.ShouldBe("New authored");
+    }
+
+    [Fact]
+    public void TabItemRefreshStyles_HeaderSetInCodeAndAuthoredChanged_KeepsCodeHeader()
+    {
+        TabItemVisual visual = new(fullInstantiation: true, tryCreateFormsObject: false);
+        TabItem tabItem = new(visual);
+        tabItem.Header = "From code";
+        ContainerRuntime screen = AttachToScreenAuthoring(visual, "TextInstance.Text", "New authored");
+
+        screen.RefreshStyles();
+
+        tabItem.Header.ShouldBe("From code");
+    }
+
+    [Fact]
     public void ExpanderRefreshStyles_AuthoredHeaderChanged_ShowsNewAuthoredHeader()
     {
         InteractiveGue visual = new(new InvisibleRenderable());

@@ -160,7 +160,7 @@ public class TabControl : ItemsControl
     /// a GraphicalUiElement or a TabPage) in its page.
     /// </summary>
     /// <returns>The added tab.</returns>
-    public TabItem AddTab(object? header, object? content = null)
+    public TabItem AddTab(string? header, object? content = null)
     {
         TabItem tab = new TabItem
         {
@@ -318,7 +318,8 @@ public class TabControl : ItemsControl
 
         tab.DataObject = o;
         tab.BindingContext = o;
-        tab.Header = o;
+        // A data item's text is not a localization key.
+        tab.SetHeaderNoTranslate(o.ToString());
         return tab;
     }
 

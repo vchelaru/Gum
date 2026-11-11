@@ -60,6 +60,47 @@ public class RefreshLocalizationTests : BaseTestClass
     }
 
     [Fact]
+    public void RefreshLocalization_ShouldRetranslateTabItemHeader()
+    {
+        TabItem tabItem = new();
+        tabItem.Visual.AddToRoot();
+        tabItem.Header = "Greeting";
+        tabItem.Header.ShouldBe("Hello");
+
+        _localizationService.CurrentLanguage = 1;
+        Gum.GumService.Default.RefreshLocalization();
+
+        tabItem.Header.ShouldBe("Hola");
+    }
+
+    [Fact]
+    public void RefreshLocalization_ShouldNotTouchTabItemSetHeaderNoTranslate()
+    {
+        TabItem tabItem = new();
+        tabItem.Visual.AddToRoot();
+        tabItem.SetHeaderNoTranslate("Greeting");
+
+        _localizationService.CurrentLanguage = 1;
+        Gum.GumService.Default.RefreshLocalization();
+
+        tabItem.Header.ShouldBe("Greeting");
+    }
+
+    [Fact]
+    public void RefreshLocalization_ShouldNotTouchTabControlDataItemHeader()
+    {
+        TabControl tabControl = new();
+        tabControl.Visual.AddToRoot();
+        tabControl.Items!.Add("Greeting");
+        tabControl.TabItems[0].Header.ShouldBe("Greeting");
+
+        _localizationService.CurrentLanguage = 1;
+        Gum.GumService.Default.RefreshLocalization();
+
+        tabControl.TabItems[0].Header.ShouldBe("Greeting");
+    }
+
+    [Fact]
     public void RefreshLocalization_ShouldNotTouchTextNoTranslate_WhenLanguageChanges()
     {
         TextRuntime text = new();
