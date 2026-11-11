@@ -759,7 +759,10 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
     /// drop-shadow setters, this is a live render-time effect and intentionally does not invalidate
     /// the cached <see cref="TextBlock"/>.
     /// </summary>
-    public Gum.RenderingLibrary.Blend? Blend { get; set; }
+    public Gum.RenderingLibrary.Blend? Blend { get; set; } = Gum.RenderingLibrary.Blend.Normal;
+
+    // Normal is SrcOver, the canvas default, so it needs no layer or paint; only another blend does.
+    private bool HasActiveBlend => Blend.HasValue && Blend.Value != Gum.RenderingLibrary.Blend.Normal;
 
     Vector2 Position;
     IRenderableIpso? mParent;
@@ -1120,7 +1123,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
             {
                 // A blend that writes alpha (ReplaceAlpha, MinAlpha, Replace) would otherwise act on the
                 // whole clip, erasing everything the text does not cover. Clip to the text first.
-                if (Blend.HasValue)
+                if (HasActiveBlend)
                 {
                     canvas.Save();
                     canvas.ClipRect(GetBlendLayerBounds(paintBlock));
@@ -1131,7 +1134,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
                 canvas.Restore();
                 // Restoring the layer composites it onto the canvas, one more draw.
                 statistics?.RecordDrawCall();
-                if (Blend.HasValue)
+                if (HasActiveBlend)
                 {
                     canvas.Restore();
                 }
@@ -2771,7 +2774,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
             // The paint object is rebuilt in place, so animating a shadow value allocates no new paint.
             _cachedRenderPaintKey = key;
             _hasCachedRenderPaint = true;
-            _hasActiveRenderPaint = HasDropshadow || Blend.HasValue;
+            _hasActiveRenderPaint = HasDropshadow || HasActiveBlend;
             if (_hasActiveRenderPaint)
             {
                 _cachedRenderPaint ??= new SKPaint();
@@ -2798,7 +2801,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
             paint.ImageFilter = dropshadow;
         }
 
-        if (Blend.HasValue)
+        if (HasActiveBlend)
         {
             paint.ApplyBlend(Blend.Value);
         }
@@ -2806,7 +2809,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
 
     internal SKPaint? GetRenderPaint()
     {
-        if (!HasDropshadow && !Blend.HasValue)
+        if (!HasDropshadow && !HasActiveBlend)
         {
             return null;
         }

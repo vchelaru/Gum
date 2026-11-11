@@ -17,11 +17,11 @@ namespace SkiaGum.Tests.Renderables;
 public class BlendTests
 {
     [Fact]
-    public void RenderableShapeBase_Blend_DefaultsToNull()
+    public void RenderableShapeBase_Blend_DefaultsToNormal()
     {
         TestableSprite sut = new();
 
-        sut.Blend.ShouldBeNull();
+        sut.Blend.ShouldBe(Blend.Normal);
     }
 
     [Fact]

@@ -1044,7 +1044,7 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
 
     /// <summary>
     /// The Gum blend mode applied when constructing the SKPaint used to draw this renderable.
-    /// When null, the SkiaSharp default (SrcOver / standard alpha blending) is used.
+    /// Defaults to Normal (SrcOver / standard alpha blending), as on a project-loaded shape; null draws the same.
     /// <c>ReplaceAlpha</c> has no <see cref="SKBlendMode"/>, so it is applied as a custom
     /// <see cref="SKBlender"/>; see <see cref="BlendToSkBlendModeExtensions"/>.
     /// </summary>
@@ -1061,7 +1061,7 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
         }
     }
 
-    private Gum.RenderingLibrary.Blend? _blend;
+    private Gum.RenderingLibrary.Blend? _blend = Gum.RenderingLibrary.Blend.Normal;
 
     /// <summary>
     /// Whether <c>ReplaceAlpha</c> and <c>MinAlpha</c> act on the shape's whole bounds, so pixels

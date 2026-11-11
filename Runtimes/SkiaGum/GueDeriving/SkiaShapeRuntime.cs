@@ -789,7 +789,7 @@ public abstract class SkiaShapeRuntime : InteractiveGue
     }
 
     /// <summary>
-    /// Blend mode of the shape (non-nullable; the renderable keeps <c>null</c> for "no blend set"). Mirrors the
+    /// Blend mode of the shape (non-nullable; the renderable defaults to Normal). Mirrors the
     /// <c>Blend</c> property on the MonoGame <c>CircleRuntime</c> and <c>RectangleRuntime</c>. When two-slot
     /// composition is engaged the value goes to the stroke slot too, so the ring blends like the fill (#6246).
     /// </summary>
