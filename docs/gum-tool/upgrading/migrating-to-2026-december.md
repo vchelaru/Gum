@@ -177,8 +177,11 @@ You are affected if your code compares a reported tag name to a lowercase litera
 
 ```csharp
 // Initialize
-if (span.Name == "link")
+foreach (FoundTag tag in BbCodeParser.Parse("[Link=shop]Shop[/Link]", BbCodeParser.KnownTags))
 {
+    if (tag.Name == "link")
+    {
+    }
 }
 ```
 
@@ -186,9 +189,11 @@ if (span.Name == "link")
 
 ```csharp
 // Initialize
-TextTagSpan span = spans[0];
-if (string.Equals(span.Name, "link", System.StringComparison.OrdinalIgnoreCase))
+foreach (FoundTag tag in BbCodeParser.Parse("[Link=shop]Shop[/Link]", BbCodeParser.KnownTags))
 {
+    if (string.Equals(tag.Name, "link", System.StringComparison.OrdinalIgnoreCase))
+    {
+    }
 }
 ```
 
@@ -196,12 +201,12 @@ if (string.Equals(span.Name, "link", System.StringComparison.OrdinalIgnoreCase))
 
 ### Color Operation Shader Classes Merged
 
-On Raylib, the `AdditiveColorOverlayShader` and `ColorTextureAlphaShader` classes are replaced by one class, `ColorOperationShader`, and `Renderer.AdditiveColorOverlayShader` and `BeginBlendModeAddColorPreserveDestinationAlpha` are removed. Gum now picks and binds the shader for `ColorOperation.Add` and `ColorOperation.ColorTextureAlpha` itself, so delete any code that binds these shaders around a draw.
+On Raylib, the `AdditiveColorOverlayShader` and `ColorTextureAlphaShader` classes are replaced by one class, `ColorOperationShader`. `Renderer.AdditiveColorOverlayShader` and `BatchDrawCallCounter.BeginBlendModeAddColorPreserveDestinationAlpha` are removed. Gum now picks and binds the shader for `ColorOperation.Add` and `ColorOperation.ColorTextureAlpha` itself, so delete any code that binds these shaders around a draw.
 
-If you still need the shader, `ColorOperationShader.CreateAdd()` and `ColorOperationShader.CreateColorTextureAlpha()` create it, and `Renderer.Self.GetColorOperationShader(colorOperation)` returns the one Gum uses. `Renderer.ColorTextureAlphaShader` keeps its name, but its type is now `ColorOperationShader`.
+`Renderer.ColorTextureAlphaShader` keeps its name, but its type is now `ColorOperationShader`.
 
 ## Forms Text Editing
 
 ### TextBoxBase Word Helpers Replaced
 
-If you subclass `TextBox` or `PasswordBox`, the protected `GetCtrlBeforeTarget`, `GetSpaceIndexBefore` and `GetSpaceIndexAfter` methods are removed. `GetPreviousWordStart(int index)` replaces the backward ones and returns `int`, where they returned `int?`. Nothing replaces `GetSpaceIndexAfter`, so move that logic into your subclass.
+If you subclass `TextBox` or `PasswordBox`, the protected `GetCtrlBeforeTarget`, `GetSpaceIndexBefore` and `GetSpaceIndexAfter` methods are removed. `GetPreviousWordStart(int index)` replaces `GetCtrlBeforeTarget`. It returns `int` instead of `int?` and returns the start of the previous word, not the index of a space, so it can give a different result for the same input, for example after leading whitespace. `GetSpaceIndexBefore` and `GetSpaceIndexAfter` have no direct replacement; Ctrl+Right now uses a private `GetNextWordStart`. Move any logic that depended on the old results into your subclass.

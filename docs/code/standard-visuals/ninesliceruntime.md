@@ -58,7 +58,7 @@ firstNineSlice.SourceFileName = "Frame.png";
 secondNineSlice.Texture = firstNineSlice.Texture;
 ```
 
-On SkiaSharp-based runtimes, a texture Gum loads is shared and read-only. See [Editing a Loaded Texture on SkiaSharp](../files-and-fonts/file-loading.md#editing-a-loaded-texture-on-skiasharp) before changing its pixels.
+On SkiaSharp-based runtimes, a texture Gum loads is shared; editing its pixels changes it for every visual that uses it. See [Editing a Loaded Texture on SkiaSharp](../files-and-fonts/file-loading.md#editing-a-loaded-texture-on-skiasharp) before changing its pixels.
 
 ### Border Scale
 
