@@ -14,7 +14,7 @@ internal interface ISkiaHostTarget : IDisposable
     /// <summary>The Skia canvas. Only readable between <see cref="Begin"/> and an End call.</summary>
     SKCanvas Canvas { get; }
 
-    /// <summary>Starts a pass and clears the target to transparent.</summary>
+    /// <summary>Starts a pass. Targets that own an image start it transparent; a target over a framebuffer draws on top of what is there.</summary>
     void Begin();
 
     /// <summary>Ends a pass without presenting anything.</summary>

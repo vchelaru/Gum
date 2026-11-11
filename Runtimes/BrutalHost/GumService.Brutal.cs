@@ -1,7 +1,7 @@
 // BRUTAL's GumService, a subclass of GumServiceSkiaInteractiveBase, shared by Gum.Brutal.OGL (OpenGL) and
 // Gum.Brutal.Vulkan. The game calls Initialize once, Update and Draw every frame, and never touches
 // Skia: GumService owns the SkiaGameRendering context and render target, recreates the target when the
-// framebuffer size changes, and puts the frame on the window (the per-package IBrutalGpuBackend).
+// framebuffer size changes, and puts the frame on the window (the per-package IBrutalGpuBackend). On OpenGL that is the window's default framebuffer itself.
 // Input comes from the GLFW window (Ahwoo.Brutal.Glfw) the game created.
 #if BRUTAL
 #nullable enable
@@ -102,8 +102,6 @@ public partial class GumService : GumServiceSkiaInteractiveBase, IGumService
             return;
         }
 
-        // Transparent, so the frame composites over whatever the game already drew.
-        canvas.Clear(SKColors.Transparent);
         base.Draw();
         target.End();
         _backend.Present(target, _targetHolder.Width, _targetHolder.Height);

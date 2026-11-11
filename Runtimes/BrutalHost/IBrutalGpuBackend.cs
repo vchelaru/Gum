@@ -5,10 +5,10 @@ using SkiaGum.Helpers;
 
 namespace Gum;
 
-/// <summary>A Skia render target Gum draws into, wrapped over the package's <c>SkiaRenderTarget2D</c>.</summary>
+/// <summary>A Skia target Gum draws into: the package's <c>SkiaRenderTarget2D</c> (Vulkan) or its <c>SkiaDirectCanvas</c> over the default framebuffer (OpenGL). <c>Begin</c> leaves the target transparent, or, for the direct canvas, untouched so Gum composites over the game's frame.</summary>
 internal interface IBrutalTarget : ISkiaHostTarget
 {
-    /// <summary>Ends the pass and flushes Skia's work so the target can be sampled.</summary>
+    /// <summary>Ends the pass and flushes Skia's work.</summary>
     void End();
 }
 
