@@ -11,11 +11,15 @@ namespace SkiaGum.Tests.Renderables;
 
 // Skia always sampled Sprite textures with nearest filtering, so a project whose
 // TextureFilter is "Linear" rendered point-filtered (issue #5231).
-public class TextureFilterTests : IDisposable
+public class TextureFilterTests : BaseTestClass
 {
     private readonly SKFilterMode _savedFilter = global::RenderingLibrary.Graphics.Renderer.TextureFilter;
 
-    public void Dispose() => global::RenderingLibrary.Graphics.Renderer.TextureFilter = _savedFilter;
+    public override void Dispose()
+    {
+        global::RenderingLibrary.Graphics.Renderer.TextureFilter = _savedFilter;
+        base.Dispose();
+    }
 
     // A 2x1 black|white texture stretched to 100x1. Nearest sampling keeps x=40 pure black; linear
     // sampling blends it toward the white texel.
@@ -154,7 +158,6 @@ public class TextureFilterTests : IDisposable
     {
         string directory = Path.Combine(Path.GetTempPath(), "SkiaTextureFilterTests_" + Path.GetRandomFileName());
         Directory.CreateDirectory(directory);
-        string previousRelativeDirectory = ToolsUtilities.FileManager.RelativeDirectory;
         try
         {
             string gumxPath = Path.Combine(directory, "Proj.gumx");
@@ -167,8 +170,6 @@ public class TextureFilterTests : IDisposable
         }
         finally
         {
-            Gum.Managers.ObjectFinder.Self.GumProjectSave = null;
-            ToolsUtilities.FileManager.RelativeDirectory = previousRelativeDirectory;
             try { Directory.Delete(directory, recursive: true); } catch { /* best-effort */ }
         }
     }
