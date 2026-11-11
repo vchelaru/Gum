@@ -16,6 +16,7 @@ public class ShapePaintReuseTests
     private sealed class ProbeShape : RoundedRectangle
     {
         public SKPaint Paint() => GetCachedPaint(Bounds, absoluteRotation: 0);
+        public SKPaint? Shadow() => GetShadowPaint();
     }
 
     private sealed class ProbeArc : Arc
@@ -62,13 +63,15 @@ public class ShapePaintReuseTests
         shape.Paint().Color.ShouldBe(SKColors.Green);
     }
 
+    // Unequal X and Y blur keeps the image filter, which the blurred shadow draw does not cover. The
+    // same-blur case is pinned by the mask filter test below.
     [Fact]
     public void GetCachedPaint_DropshadowTurnedOff_LeavesNoImageFilter()
     {
         ProbeShape shape = new ProbeShape();
         shape.HasDropshadow = true;
         shape.DropshadowBlurX = 4;
-        shape.DropshadowBlurY = 4;
+        shape.DropshadowBlurY =  6;
         SKPaint first = shape.Paint();
         first.ImageFilter.ShouldNotBeNull();
 
@@ -77,6 +80,26 @@ public class ShapePaintReuseTests
 
         second.ShouldBeSameAs(first);
         second.ImageFilter.ShouldBeNull();
+    }
+
+    [Fact]
+    public void GetCachedPaint_BlurredShadowDrawTurnedOff_LeavesNoShadowPaintAndNoImageFilter()
+    {
+        ProbeShape shape = new ProbeShape();
+        shape.HasDropshadow = true;
+        shape.DropshadowBlurX = 4;
+        shape.DropshadowBlurY = 4;
+        SKPaint first = shape.Paint();
+        first.ImageFilter.ShouldBeNull();
+        shape.Shadow().ShouldNotBeNull();
+        shape.Shadow()!.MaskFilter.ShouldNotBeNull();
+
+        shape.HasDropshadow = false;
+        SKPaint second = shape.Paint();
+
+        second.ShouldBeSameAs(first);
+        second.ImageFilter.ShouldBeNull();
+        shape.Shadow().ShouldBeNull();
     }
 
     [Fact]

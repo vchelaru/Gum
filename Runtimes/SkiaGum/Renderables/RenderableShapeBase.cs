@@ -29,6 +29,7 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
         // The copied paint reference belongs to the source, so drop it rather than dispose it.
         clone._cachedPaint = null;
         clone._shadowPaint = null;
+        clone._shadowMaskFilter = null;
         clone._layerPaint = null;
         clone._paintToReuse = null;
         clone.NeedsUpdate = true;
@@ -1092,6 +1093,8 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
     // shape; the mask filter blurs the geometry directly (an analytic blur for rounded rectangles) for about
     // a twentieth of that, with the same pixels to within one level.
     SKPaint? _shadowPaint;
+    SKMaskFilter? _shadowMaskFilter;
+    float _shadowMaskSigma;
 
     /// <summary>
     /// True for a shape whose <see cref="DrawBound"/> draws <see cref="GetShadowPaint"/> (moved by the
@@ -1134,22 +1137,40 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
 
     private void RefreshShadowPaint(SKPaint shapePaint)
     {
-        _shadowPaint?.Dispose();
-        _shadowPaint = null;
         if (!UsesBlurredShadowDraw)
         {
+            _shadowPaint?.Dispose();
+            _shadowPaint = null;
+            _shadowMaskFilter?.Dispose();
+            _shadowMaskFilter = null;
             return;
         }
 
-        _shadowPaint = shapePaint.Clone();
+        // Rebuilt in place from the few settings these shapes put on their paint (they do not override
+        // GetPaint), so animating the offset or color allocates nothing. A shape that sets more on its
+        // paint than this must copy it here too.
+        SKPaint shadow = _shadowPaint ??= new SKPaint();
+        shadow.Reset();
+        shadow.Style = shapePaint.Style;
+        shadow.StrokeWidth = shapePaint.StrokeWidth;
+        shadow.IsAntialias = shapePaint.IsAntialias;
+        if (!IsFilled && StrokeDashLength > 0 && StrokeGapLength > 0)
+        {
+            shadow.PathEffect = shapePaint.PathEffect;
+        }
         // The image filter shadow takes its alpha from the shape's silhouette, so a translucent fill
         // gives a proportionally fainter shadow.
         byte alpha = (byte)Math.Round(DropshadowColor.Alpha * shapePaint.Color.Alpha / 255f);
-        _shadowPaint.Color = DropshadowColor.WithAlpha(alpha);
-        _shadowPaint.ImageFilter = null;
-        using SKMaskFilter blur = SKMaskFilter.CreateBlur(
-            SKBlurStyle.Normal, global::Gum.Wireframe.DropshadowBlur.GetSigma(DropshadowBlurX));
-        _shadowPaint.MaskFilter = blur;
+        shadow.Color = DropshadowColor.WithAlpha(alpha);
+
+        float sigma = global::Gum.Wireframe.DropshadowBlur.GetSigma(DropshadowBlurX);
+        if (_shadowMaskFilter == null || sigma != _shadowMaskSigma)
+        {
+            _shadowMaskFilter?.Dispose();
+            _shadowMaskFilter = SKMaskFilter.CreateBlur(SKBlurStyle.Normal, sigma);
+            _shadowMaskSigma = sigma;
+        }
+        shadow.MaskFilter = _shadowMaskFilter;
     }
 
     /// <summary>
@@ -1514,6 +1535,8 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
     {
         _cachedPaint?.Dispose();
         _cachedPaint = null;
+        _shadowMaskFilter?.Dispose();
+        _shadowMaskFilter = null;
         _shadowPaint?.Dispose();
         _shadowPaint = null;
         _layerPaint?.Dispose();
