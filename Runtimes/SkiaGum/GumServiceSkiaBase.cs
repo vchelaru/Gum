@@ -116,18 +116,6 @@ public abstract class GumServiceSkiaBase : IGumService
         ModalRoot?.RefreshTextures();
     }
 
-    /// <summary>
-    /// Like <see cref="RefreshTextures()"/>, but only for Sprites and NineSlices whose <c>Texture</c> is
-    /// <paramref name="bitmap"/>.
-    /// </summary>
-    /// <param name="bitmap">The bitmap that was edited.</param>
-    public void RefreshTextures(SKBitmap bitmap)
-    {
-        Root?.RefreshTextures(bitmap);
-        PopupRoot?.RefreshTextures(bitmap);
-        ModalRoot?.RefreshTextures(bitmap);
-    }
-
     // Cursors and keyboards a host created through OwnInput.
     private readonly List<IDisposable> _ownedInput = new List<IDisposable>();
 

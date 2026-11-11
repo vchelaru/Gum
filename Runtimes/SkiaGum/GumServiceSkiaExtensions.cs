@@ -1,3 +1,4 @@
+using SkiaSharp;
 using System;
 
 namespace Gum;
@@ -32,6 +33,20 @@ public static class GumServiceSkiaExtensions
     {
         ((global::RenderingLibrary.IGumService)gumService).UseGamepadDefaults();
         return gumService;
+    }
+
+    /// <summary>
+    /// Like <c>RefreshTextures()</c> on the service, but only for Sprites and NineSlices under <c>Root</c>,
+    /// <c>PopupRoot</c> and <c>ModalRoot</c> whose <c>Texture</c> is <paramref name="bitmap"/>. An extension, not a
+    /// member, so a host's public service exposes no SkiaSharp type.
+    /// </summary>
+    /// <param name="gumService">The service to refresh.</param>
+    /// <param name="bitmap">The bitmap that was edited.</param>
+    public static void RefreshTextures(this GumServiceSkiaBase gumService, SKBitmap bitmap)
+    {
+        gumService.Root?.RefreshTextures(bitmap);
+        gumService.PopupRoot?.RefreshTextures(bitmap);
+        gumService.ModalRoot?.RefreshTextures(bitmap);
     }
 
     /// <summary>
