@@ -134,7 +134,7 @@ sprite.Texture = copy;
 
 Only the visuals you assign the copy to change. A bitmap your own code creates, such as one from `SKBitmap.Decode`, is not shared. Each visual you assign it to keeps its own copy of the pixels, so assigning one bitmap to many visuals uses more memory and GPU time than loading the file through Gum. A custom `IContentLoader` that returns mutable bitmaps behaves the same way.
 
-Textures Gum loads are read-only, but a bitmap you create yourself can be edited. After you edit one that is already assigned to `Texture`, call `RefreshTextures` to show the change. Called on an element it refreshes that element and its children; called on `GumService` it refreshes everything under `Root`, `PopupRoot` and `ModalRoot`. Passing the bitmap refreshes only the visuals that use it.
+After you edit one that is already assigned to `Texture`, call `RefreshTextures` to show the change. Called on an element it refreshes that element and its children; called on `GumService` it refreshes everything under `Root`, `PopupRoot` and `ModalRoot`. Passing the bitmap refreshes only the visuals that use it.
 
 ```csharp
 // Initialize
@@ -145,7 +145,7 @@ sprite.Texture = bitmap;
 // Update
 bitmap.Erase(SkiaSharp.SKColors.Blue);
 sprite.RefreshTextures();
-// or for every visual in the UI:
+// or refresh every visual that uses this bitmap:
 GumService.Default.RefreshTextures(bitmap);
 ```
 
