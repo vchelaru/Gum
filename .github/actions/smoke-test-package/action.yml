@@ -23,8 +23,7 @@ runs:
       if: runner.os == 'Linux'
       shell: bash
       run: |
-        sudo apt-get update -q
-        sudo apt-get install -y -q dbus xvfb libgl1-mesa-dri libglu1-mesa libsdl2-2.0-0 file
+        bash .github/scripts/apt-install.sh dbus xvfb libgl1-mesa-dri libglu1-mesa libsdl2-2.0-0 file
 
     - name: Extract the package
       shell: bash
