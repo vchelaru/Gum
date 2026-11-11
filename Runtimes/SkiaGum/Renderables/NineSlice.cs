@@ -493,7 +493,7 @@ public class NineSlice : RenderableShapeBase, IAnimatable, IAnimationChainRender
     //    section's texels, which GetSectionImage exists to prevent.
     //  - One border scale on all four sides, no tiling. A lattice cell is as large as its
     //    texels, so a scale s draws the lattice into a rectangle 1/s the size under a canvas scale of s.
-    //  - Axis aligned, with all eight section edges on whole device pixels (anything else rounds differently).
+    //  - Axis aligned, with all eight section edges on whole device pixels (anything else rounds differently), and not touched by the canvas clip.
     //  - Borders that fit: when NineSliceBorders clamps a band the sections are no longer the texels' size.
     private bool TryDrawLattice(
         SKCanvas canvas, SKPaint paint, SKSamplingOptions sampling, SKRect boundingRect,
@@ -550,6 +550,22 @@ public class NineSlice : RenderableShapeBase, IAnimatable, IAnimationChainRender
             || !IsOnDevicePixel(matrix.ScaleY * (boundingRect.Top + borders.DestTop) + matrix.TransY)
             || !IsOnDevicePixel(matrix.ScaleY * (boundingRect.Bottom - borders.DestBottom) + matrix.TransY)
             || !IsOnDevicePixel(matrix.ScaleY * boundingRect.Bottom + matrix.TransY))
+        {
+            return false;
+        }
+
+        // A clip with a fractional edge crops the lattice's triangles differently from the sections' rectangles
+        // on a GPU surface. The canvas only reports the clip rounded outward to whole pixels, so the fast path
+        // is taken only when the nine-slice sits at least a pixel inside that box, where no clip can touch it.
+        SKRectI clip = canvas.DeviceClipBounds;
+        float deviceLeft = matrix.ScaleX * boundingRect.Left + matrix.TransX;
+        float deviceRight = matrix.ScaleX * boundingRect.Right + matrix.TransX;
+        float deviceTop = matrix.ScaleY * boundingRect.Top + matrix.TransY;
+        float deviceBottom = matrix.ScaleY * boundingRect.Bottom + matrix.TransY;
+        if (Math.Min(deviceLeft, deviceRight) < clip.Left + 1
+            || Math.Max(deviceLeft, deviceRight) > clip.Right - 1
+            || Math.Min(deviceTop, deviceBottom) < clip.Top + 1
+            || Math.Max(deviceTop, deviceBottom) > clip.Bottom - 1)
         {
             return false;
         }

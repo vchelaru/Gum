@@ -40,7 +40,7 @@ public class NineSliceLatticeGpuTests
         return bitmap;
     }
 
-    SKBitmap Render(SKBitmap texture, float x, float y, float width, float height, float borderScale, bool flip, bool perSection, out int drawCalls, bool flipVertical = false, float zoom = 1f, float offsetY = 0f, System.Drawing.Rectangle? source = null)
+    SKBitmap Render(SKBitmap texture, float x, float y, float width, float height, float borderScale, bool flip, bool perSection, out int drawCalls, bool flipVertical = false, float zoom = 1f, float offsetY = 0f, System.Drawing.Rectangle? source = null, SKRect? clip = null)
     {
         GraphicalUiElement.SetPropertyOnRenderable = global::SkiaGum.CustomSetPropertyOnRenderable.SetPropertyOnRenderable;
         int calls = 0;
@@ -73,6 +73,10 @@ public class NineSliceLatticeGpuTests
             canvas.Save();
             canvas.Scale(zoom);
             canvas.Translate(0, offsetY);
+            if (clip.HasValue)
+            {
+                canvas.ClipRect(clip.Value);
+            }
             nineSlice.Render(managers);
             canvas.Restore();
             calls = managers.Renderer.RenderStateChangeStatistics.DrawCallCount;
@@ -152,11 +156,11 @@ public class NineSliceLatticeGpuTests
     public void Render_SeededFractionalFuzz_EngagedCasesMatchPerSectionPixelsOnGpu()
     {
         RenderingLibrary.Graphics.Renderer.TextureFilter = SKFilterMode.Nearest;
-        Random random = new(20260712);
+        Random random = new(20260713);
         float[] zooms = { 0.5f, 1f, 1.25f, 1.5f, 2f, 3f };
         float[] fractions = { 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0.02f, 0.05f, 0.1f, 0.25f, 0.5f, 0.75f };
         int engaged = 0;
-        for (int i = 0; i < 150; i++)
+        for (int i = 0; i < 300; i++)
         {
             int size = random.Next(12, 33);
             using SKBitmap texture = Texture(random.Next(2) == 0, size);
@@ -173,16 +177,44 @@ public class NineSliceLatticeGpuTests
                 ? new System.Drawing.Rectangle(1, 2, size - 3, size - 4)
                 : null;
 
-            using SKBitmap fast = Render(texture, x, y, w, h, scale, flipH, false, out int calls, flipV, zoom, offsetY, source);
-            using SKBitmap old = Render(texture, x, y, w, h, scale, flipH, true, out _, flipV, zoom, offsetY, source);
+            SKRect? clip = null;
+            if (random.Next(2) == 0)
+            {
+                float cl = x + random.Next(-2, 8) + fractions[random.Next(fractions.Length)];
+                float ct = y + random.Next(-2, 8) + fractions[random.Next(fractions.Length)];
+                clip = new SKRect(cl, ct, x + w - random.Next(0, 8) - fractions[random.Next(fractions.Length)], y + h - random.Next(0, 8) - fractions[random.Next(fractions.Length)]);
+            }
+
+            using SKBitmap fast = Render(texture, x, y, w, h, scale, flipH, false, out int calls, flipV, zoom, offsetY, source, clip);
+            using SKBitmap old = Render(texture, x, y, w, h, scale, flipH, true, out _, flipV, zoom, offsetY, source, clip);
 
             if (calls == 1)
             {
                 engaged++;
             }
             MaxDifference(fast, old).ShouldBe(0,
-                $"case {i}: size {size} x {x} y {y} w {w} h {h} scale {scale} zoom {zoom} offsetY {offsetY} flip {flipH}/{flipV} source {source}");
+                $"case {i}: size {size} x {x} y {y} w {w} h {h} scale {scale} zoom {zoom} offsetY {offsetY} flip {flipH}/{flipV} source {source} clip {clip}");
         }
         engaged.ShouldBeGreaterThan(4);
+    }
+
+    [Theory]
+    [InlineData(10f, 10f, 64f, 40f, 1f, true, true, 13.3f, 12.7f, 70.4f, 48.6f)]
+    [InlineData(10f, 10f, 64f, 40f, 1f, true, false, 10f, 10f, 70.5f, 48f)]
+    [InlineData(10f, 10f, 80f, 60f, 2f, true, true, 14.25f, 10f, 85f, 66.6f)]
+    [InlineData(10f, 10f, 64f, 40f, 1f, false, false, 10f, 14.1f, 74f, 44f)]
+    [InlineData(10f, 10f, 64f, 40f, 1f, false, true, 12.2f, 10f, 60.9f, 50f)]
+    public void Render_FractionalClip_MatchesPerSectionPixelsOnGpu(
+        float x, float y, float width, float height, float borderScale, bool flipH, bool flipV,
+        float clipLeft, float clipTop, float clipRight, float clipBottom)
+    {
+        RenderingLibrary.Graphics.Renderer.TextureFilter = SKFilterMode.Nearest;
+        using SKBitmap texture = Texture(true);
+        var clip = new SKRect(clipLeft, clipTop, clipRight, clipBottom);
+
+        using SKBitmap fast = Render(texture, x, y, width, height, borderScale, flipH, false, out _, flipV, clip: clip);
+        using SKBitmap old = Render(texture, x, y, width, height, borderScale, flipH, true, out _, flipV, clip: clip);
+
+        MaxDifference(fast, old).ShouldBe(0);
     }
 }
