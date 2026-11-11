@@ -212,6 +212,7 @@
       * [KNI with Skia](code/getting-started/setup/adding-initializing-gum/kni-skia.md)
       * [Silk.NET](code/getting-started/setup/adding-initializing-gum/silk.net.md)
       * [SkiaSharp (General Canvas)](code/getting-started/setup/adding-initializing-gum/skiasharp-general-canvas.md)
+        * [Rendering to an Image](code/getting-started/setup/adding-initializing-gum/skiasharp-rendering-to-an-image.md)
       * [BRUTAL](code/getting-started/setup/adding-initializing-gum/brutal.md)
       * [Stride](code/getting-started/setup/adding-initializing-gum/stride.md)
       * [Unity](code/getting-started/setup/adding-initializing-gum/unity.md)

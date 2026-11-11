@@ -2,7 +2,7 @@
 
 ## Introduction
 
-This page is for projects that render with SkiaSharp but don't fit one of Gum's dedicated SkiaSharp hosts (see [Runtimes](../../../about/runtimes.md)). It assumes you already have your own `SKCanvas` rendering in your project, gotten however your platform requires. Skia itself is just a 2D graphics API, not a windowing or input system, so beyond "get an `SKCanvas` on screen," Gum can't offer platform-specific setup guidance here, that part is entirely up to your own project.
+This page is for projects that render with SkiaSharp but don't fit one of Gum's dedicated SkiaSharp hosts (see [Runtimes](../../../about/runtimes.md)). It assumes you already have your own `SKCanvas` rendering in your project, gotten however your platform requires. Skia itself is just a 2D graphics API, not a windowing or input system, so beyond "get an `SKCanvas` on screen," Gum can't offer platform-specific setup guidance here, that part is entirely up to your own project. To draw into an offscreen surface and read the pixels back instead, see [Rendering to an Image](skiasharp-rendering-to-an-image.md).
 
 {% hint style="info" %}
 If your engine or framework has its own page in [Adding/Initializing Gum](README.md), use that page instead. Each of those wires up a canvas view or window for you. This page is for everything else.
@@ -67,9 +67,12 @@ Next, add SkiaGum as a project reference in your game project. Your project migh
 using Gum;
 using SkiaSharp;
 
-var bounds = canvas.DeviceClipBounds;
-GumUI.Initialize(canvas, bounds.Width, bounds.Height, "Content/GumProject/GumProject.gumj");
+GumService GumUI = GumService.Default;
+
+GumUI.Initialize(canvas, "Content/GumProject/GumProject.gumj");
 ```
+
+`Initialize` reads the size from `canvas.DeviceClipBounds`. If your canvas's clip is not configured yet, pass the size yourself with `GumUI.Initialize(canvas, width, height, "Content/GumProject/GumProject.gumj")`.
 
 Each frame, update and then draw:
 
