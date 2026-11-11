@@ -491,9 +491,9 @@ public class NineSlice : RenderableShapeBase, IAnimatable, IAnimationChainRender
     // per-section draws:
     //  - Nearest only. The lattice ignores the sampling option, so Linear blends in the neighboring
     //    section's texels, which GetSectionImage exists to prevent.
-    //  - The whole image, one border scale on all four sides, no tiling. A lattice cell is as large as its
+    //  - One border scale on all four sides, no tiling. A lattice cell is as large as its
     //    texels, so a scale s draws the lattice into a rectangle 1/s the size under a canvas scale of s.
-    //  - Axis aligned, with no section edge on a half pixel (GPU rounding differs there).
+    //  - Axis aligned, with all eight section edges on whole device pixels (anything else rounds differently).
     //  - Borders that fit: when NineSliceBorders clamps a band the sections are no longer the texels' size.
     private bool TryDrawLattice(
         SKCanvas canvas, SKPaint paint, SKSamplingOptions sampling, SKRect boundingRect,
@@ -515,7 +515,7 @@ public class NineSlice : RenderableShapeBase, IAnimatable, IAnimationChainRender
             return false;
         }
 
-        if (srcLeft != 0 || srcTop != 0 || usedWidth != Image!.Width || usedHeight != Image.Height)
+        if (srcLeft < 0 || srcTop < 0 || srcLeft + usedWidth > Image!.Width || srcTop + usedHeight > Image.Height)
         {
             return false;
         }
@@ -537,28 +537,32 @@ public class NineSlice : RenderableShapeBase, IAnimatable, IAnimationChainRender
             return false;
         }
 
-        // A section edge exactly halfway between two device pixels rounds one way for a rectangle and can round
-        // the other way for the lattice's triangles on a GPU surface (seen at x = 10.5). Rotated or skewed
-        // canvases are not axis aligned, so the edges cannot be checked.
+        // The lattice and the per-section draws only agree when every edge lands exactly on a device pixel; at a
+        // fractional edge the two round differently, on CPU and GPU surfaces. Rotated or skewed canvases are not
+        // axis aligned, so their edges cannot be checked.
         SKMatrix matrix = canvas.TotalMatrix;
         if (matrix.SkewX != 0 || matrix.SkewY != 0
-            || IsHalfPixel(matrix.ScaleX * boundingRect.Left + matrix.TransX)
-            || IsHalfPixel(matrix.ScaleX * (boundingRect.Left + borders.DestLeft) + matrix.TransX)
-            || IsHalfPixel(matrix.ScaleX * (boundingRect.Right - borders.DestRight) + matrix.TransX)
-            || IsHalfPixel(matrix.ScaleX * boundingRect.Right + matrix.TransX)
-            || IsHalfPixel(matrix.ScaleY * boundingRect.Top + matrix.TransY)
-            || IsHalfPixel(matrix.ScaleY * (boundingRect.Top + borders.DestTop) + matrix.TransY)
-            || IsHalfPixel(matrix.ScaleY * (boundingRect.Bottom - borders.DestBottom) + matrix.TransY)
-            || IsHalfPixel(matrix.ScaleY * boundingRect.Bottom + matrix.TransY))
+            || !IsOnDevicePixel(matrix.ScaleX * boundingRect.Left + matrix.TransX)
+            || !IsOnDevicePixel(matrix.ScaleX * (boundingRect.Left + borders.DestLeft) + matrix.TransX)
+            || !IsOnDevicePixel(matrix.ScaleX * (boundingRect.Right - borders.DestRight) + matrix.TransX)
+            || !IsOnDevicePixel(matrix.ScaleX * boundingRect.Right + matrix.TransX)
+            || !IsOnDevicePixel(matrix.ScaleY * boundingRect.Top + matrix.TransY)
+            || !IsOnDevicePixel(matrix.ScaleY * (boundingRect.Top + borders.DestTop) + matrix.TransY)
+            || !IsOnDevicePixel(matrix.ScaleY * (boundingRect.Bottom - borders.DestBottom) + matrix.TransY)
+            || !IsOnDevicePixel(matrix.ScaleY * boundingRect.Bottom + matrix.TransY))
         {
             return false;
         }
 
-        _latticeXDivs[0] = fullOutsideW;
-        _latticeXDivs[1] = usedWidth - fullOutsideW;
-        _latticeYDivs[0] = fullOutsideH;
-        _latticeYDivs[1] = usedHeight - fullOutsideH;
+        _latticeXDivs[0] = srcLeft + fullOutsideW;
+        _latticeXDivs[1] = srcLeft + usedWidth - fullOutsideW;
+        _latticeYDivs[0] = srcTop + fullOutsideH;
+        _latticeYDivs[1] = srcTop + usedHeight - fullOutsideH;
         SKLattice lattice = new() { XDivs = _latticeXDivs, YDivs = _latticeYDivs };
+        if (srcLeft != 0 || srcTop != 0 || usedWidth != Image.Width || usedHeight != Image.Height)
+        {
+            lattice.Bounds = SKRectI.Create(srcLeft, srcTop, usedWidth, usedHeight);
+        }
 
         canvas.Save();
         canvas.Translate(boundingRect.Left, boundingRect.Top);
@@ -569,10 +573,9 @@ public class NineSlice : RenderableShapeBase, IAnimatable, IAnimationChainRender
         return true;
     }
 
-    private static bool IsHalfPixel(float deviceCoordinate)
+    private static bool IsOnDevicePixel(float deviceCoordinate)
     {
-        float fraction = deviceCoordinate - MathF.Floor(deviceCoordinate);
-        return Math.Abs(fraction - 0.5f) < 0.01f;
+        return Math.Abs(deviceCoordinate - MathF.Round(deviceCoordinate)) < 0.001f;
     }
 
     // What every section of one DrawBound call draws with.

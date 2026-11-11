@@ -16,8 +16,8 @@ namespace SkiaGum.Tests.Renderables;
 /// </summary>
 public class NineSliceLatticeTests : IDisposable
 {
-    const int SurfaceWidth = 140;
-    const int SurfaceHeight = 100;
+    const int SurfaceWidth = 220;
+    const int SurfaceHeight = 340;
 
     readonly SKSurface _surface;
     readonly SKFilterMode _previousFilter;
@@ -37,15 +37,15 @@ public class NineSliceLatticeTests : IDisposable
         _surface.Dispose();
     }
 
-    static SKBitmap Texture(bool semiTransparentBorders)
+    static SKBitmap Texture(bool semiTransparentBorders, int size = 32)
     {
-        SKBitmap bitmap = new(32, 32);
+        SKBitmap bitmap = new(size, size);
         Random random = new(5);
-        for (int y = 0; y < 32; y++)
+        for (int y = 0; y < size; y++)
         {
-            for (int x = 0; x < 32; x++)
+            for (int x = 0; x < size; x++)
             {
-                bool border = x < 8 || y < 8 || x >= 24 || y >= 24;
+                bool border = x < size / 4 || y < size / 4 || x >= size - size / 4 || y >= size - size / 4;
                 byte alpha = (byte)(semiTransparentBorders && border ? 140 : 255);
                 byte r = (byte)(random.Next(256) * alpha / 255);
                 byte g = (byte)(random.Next(256) * alpha / 255);
@@ -58,7 +58,7 @@ public class NineSliceLatticeTests : IDisposable
 
     record struct Result(SKBitmap Pixels, int DrawCalls);
 
-    Result Draw(NineSlice nineSlice)
+    Result Draw(NineSlice nineSlice, Action<SKCanvas>? transform = null)
     {
         SKCanvas canvas = _surface.Canvas;
         using SKShader shader = SKShader.CreateLinearGradient(
@@ -69,7 +69,10 @@ public class NineSliceLatticeTests : IDisposable
 
         var managers = SystemManagers.Default;
         managers.Renderer.RenderStateChangeStatistics.Reset();
+        canvas.Save();
+        transform?.Invoke(canvas);
         nineSlice.Render(managers);
+        canvas.Restore();
         int drawCalls = managers.Renderer.RenderStateChangeStatistics.DrawCallCount;
 
         SKBitmap pixels = new(SurfaceWidth, SurfaceHeight);
@@ -110,13 +113,13 @@ public class NineSliceLatticeTests : IDisposable
     }
 
     // The new path and the per-section path drawn from identical settings.
-    (Result Fast, Result Old) DrawBoth(SKBitmap texture, float x, float y, float width, float height, Action<NineSlice>? configure = null)
+    (Result Fast, Result Old) DrawBoth(SKBitmap texture, float x, float y, float width, float height, Action<NineSlice>? configure = null, Action<SKCanvas>? transform = null)
     {
         using NineSlice fast = Create(texture, x, y, width, height, configure);
-        Result fastResult = Draw(fast);
+        Result fastResult = Draw(fast, transform);
         using NineSlice old = Create(texture, x, y, width, height, configure);
         old.DisableLatticeFastPath = true;
-        Result oldResult = Draw(old);
+        Result oldResult = Draw(old, transform);
         return (fastResult, oldResult);
     }
 
@@ -133,15 +136,15 @@ public class NineSliceLatticeTests : IDisposable
 
     [Theory]
     [InlineData(10f, 10f, 64f, 40f, false, false, false, 1f)]
-    [InlineData(10.25f, 10.75f, 64f, 40f, false, false, false, 1f)]
-    [InlineData(10.3f, 10.7f, 63.4f, 41.6f, false, false, false, 1f)]
+    [InlineData(10f, 12f, 64f, 40f, false, false, false, 1f)]
+    [InlineData(11f, 7f, 63f, 42f, false, false, false, 1f)]
     [InlineData(10f, 10f, 64f, 40f, true, false, false, 1f)]
     [InlineData(10f, 10f, 64f, 40f, false, true, false, 1f)]
     [InlineData(10f, 10f, 64f, 40f, true, true, true, 1f)]
     [InlineData(10f, 10f, 64f, 40f, false, false, true, 1f)]
     [InlineData(10f, 10f, 80f, 60f, false, false, false, 2f)]
-    [InlineData(10.25f, 10.75f, 63.4f, 41.6f, true, false, true, 2f)]
-    [InlineData(10.3f, 10.7f, 63.4f, 41.6f, false, false, true, 1.5f)]
+    [InlineData(10f, 11f, 63f, 42f, true, false, true, 2f)]
+    [InlineData(10f, 10f, 64f, 40f, false, false, true, 1.5f)]
     public void Render_Nearest_MatchesPerSectionPixels(
         float x, float y, float width, float height, bool flipH, bool semi, bool customFrame, float borderScale)
     {
@@ -166,7 +169,7 @@ public class NineSliceLatticeTests : IDisposable
     {
         using SKBitmap texture = Texture(true);
 
-        (Result fast, Result old) = DrawBoth(texture, 10.25f, 10.75f, 60, 44, ns =>
+        (Result fast, Result old) = DrawBoth(texture, 10, 11, 60, 44, ns =>
         {
             ns.FlipVertical = true;
             ns.Color = new SKColor(255, 128, 64, 200);
@@ -230,17 +233,106 @@ public class NineSliceLatticeTests : IDisposable
         MaxDifference(fast.Pixels, old.Pixels).ShouldBe(0);
     }
 
-    [Fact]
-    public void Render_PartialSourceRectangle_KeepsPerSectionDraws()
+    [Theory]
+    [InlineData(4, 4, 24, 24, 10f, 10f, 64f, 40f)]
+    [InlineData(2, 6, 20, 22, 11f, 12f, 70f, 50f)]
+    public void Render_PartialSourceRectangle_MatchesPerSectionPixelsInOneOperation(
+        int left, int top, int width, int height, float x, float y, float w, float h)
     {
-        using SKBitmap texture = Texture(false);
+        // The texels around the rectangle are random, so any sampling outside the rectangle shows.
+        using SKBitmap texture = Texture(true);
 
-        (Result fast, Result old) = DrawBoth(texture, 10, 10, 64, 40,
-            ns => ns.SourceRectangle = new System.Drawing.Rectangle(4, 4, 24, 24));
+        (Result fast, Result old) = DrawBoth(texture, x, y, w, h,
+            ns => ns.SourceRectangle = new System.Drawing.Rectangle(left, top, width, height));
 
-        fast.DrawCalls.ShouldBe(old.DrawCalls);
-        old.DrawCalls.ShouldBeGreaterThan(1);
+        fast.DrawCalls.ShouldBe(1);
+        old.DrawCalls.ShouldBe(9);
         MaxDifference(fast.Pixels, old.Pixels).ShouldBe(0);
+    }
+
+    [Fact]
+    public void Render_ZoomedWithFractionalParentOffset_MatchesPerSectionPixels()
+    {
+        // Found by fuzzing: an edge at device y 111.7956 differed by up to 214 on a raster surface.
+        using SKBitmap texture = Texture(true, 24);
+
+        (Result fast, Result old) = DrawBoth(texture, -5, 23.3978f, 77, 102, ns =>
+        {
+            ns.BorderScale = 3;
+            ns.FlipVertical = true;
+        }, canvas =>
+        {
+            canvas.Scale(2);
+            canvas.Translate(0, 32.5f);
+        });
+
+        MaxDifference(fast.Pixels, old.Pixels).ShouldBe(0);
+    }
+
+    [Fact]
+    public void Render_ShrunkWithFractionalParentOffset_MatchesPerSectionPixels()
+    {
+        using SKBitmap texture = Texture(true, 15);
+
+        (Result fast, Result old) = DrawBoth(texture, 34.52f, 32.52f, 22.889f, 23.663f, ns =>
+        {
+            ns.BorderScale = 2;
+            ns.FlipHorizontal = true;
+            ns.FlipVertical = true;
+        }, canvas =>
+        {
+            canvas.Scale(0.5f);
+            canvas.Translate(0, 7.915f);
+        });
+
+        MaxDifference(fast.Pixels, old.Pixels).ShouldBe(0);
+    }
+
+    [Fact]
+    public void Render_SeededFractionalFuzz_EngagedCasesMatchPerSectionPixels()
+    {
+        Random random = new(20260711);
+        float[] canvasScales = { 0.5f, 1f, 1.25f, 1.5f, 2f, 3f };
+        float[] fractions = { 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0.02f, 0.05f, 0.1f, 0.25f, 0.5f, 0.75f };
+        int engaged = 0;
+        for (int i = 0; i < 300; i++)
+        {
+            int size = random.Next(12, 33);
+            using SKBitmap texture = Texture(random.Next(2) == 0, size);
+            float x = random.Next(0, 40) + fractions[random.Next(fractions.Length)];
+            float y = random.Next(0, 40) + fractions[random.Next(fractions.Length)];
+            float w = random.Next(30, 90) + fractions[random.Next(fractions.Length)];
+            float h = random.Next(30, 90) + fractions[random.Next(fractions.Length)];
+            float scale = new[] { 1f, 1f, 2f, 3f }[random.Next(4)];
+            float zoom = canvasScales[random.Next(canvasScales.Length)];
+            float offsetY = random.Next(0, 20) + fractions[random.Next(fractions.Length)];
+            bool flipH = random.Next(2) == 0;
+            bool flipV = random.Next(2) == 0;
+            bool partial = random.Next(3) == 0 && size >= 16;
+
+            (Result fast, Result old) = DrawBoth(texture, x, y, w, h, ns =>
+            {
+                ns.BorderScale = scale;
+                ns.FlipHorizontal = flipH;
+                ns.FlipVertical = flipV;
+                if (partial)
+                {
+                    ns.SourceRectangle = new System.Drawing.Rectangle(1, 2, size - 3, size - 4);
+                }
+            }, canvas =>
+            {
+                canvas.Scale(zoom);
+                canvas.Translate(0, offsetY);
+            });
+
+            if (fast.DrawCalls == 1)
+            {
+                engaged++;
+            }
+            MaxDifference(fast.Pixels, old.Pixels).ShouldBe(0,
+                $"case {i}: size {size} x {x} y {y} w {w} h {h} scale {scale} zoom {zoom} offsetY {offsetY} flip {flipH}/{flipV} partial {partial}");
+        }
+        engaged.ShouldBeGreaterThan(8);
     }
 
     [Fact]
