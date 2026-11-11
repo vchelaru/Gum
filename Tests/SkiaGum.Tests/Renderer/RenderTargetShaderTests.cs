@@ -19,7 +19,7 @@ namespace SkiaGum.Tests.Renderer;
 /// pixels directly off the top-level <see cref="SKSurface"/> (Skia's top-level surface is directly
 /// readable, unlike raylib's bottom-up render texture).
 /// </summary>
-public class RenderTargetShaderTests
+public class RenderTargetShaderTests : BaseTestClass
 {
     // Contract SkSL fixture (issue #3998): a fixed "SpriteTexture" child shader collapses the sampled
     // color to luma, so a solid-red composite reads back as R ≈ G ≈ B, which a straight blit never
