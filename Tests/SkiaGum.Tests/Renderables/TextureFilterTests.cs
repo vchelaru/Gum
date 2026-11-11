@@ -154,6 +154,7 @@ public class TextureFilterTests : IDisposable
     {
         string directory = Path.Combine(Path.GetTempPath(), "SkiaTextureFilterTests_" + Path.GetRandomFileName());
         Directory.CreateDirectory(directory);
+        string previousRelativeDirectory = ToolsUtilities.FileManager.RelativeDirectory;
         try
         {
             string gumxPath = Path.Combine(directory, "Proj.gumx");
@@ -167,6 +168,7 @@ public class TextureFilterTests : IDisposable
         finally
         {
             Gum.Managers.ObjectFinder.Self.GumProjectSave = null;
+            ToolsUtilities.FileManager.RelativeDirectory = previousRelativeDirectory;
             try { Directory.Delete(directory, recursive: true); } catch { /* best-effort */ }
         }
     }

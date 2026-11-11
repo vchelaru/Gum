@@ -286,6 +286,9 @@ public class NineSlice : RenderableShapeBase, IAnimatable, IAnimationChainRender
         return paint;
     }
 
+    /// <summary>Test hook: draws every section with its own DrawImage, as before the lattice fast path.</summary>
+    internal bool DisableLatticeFastPath { get; set; }
+
     // Up to nine sections, more when tiling; each DrawImage records itself.
     private protected override bool RecordsOwnDrawCalls => true;
 
@@ -408,6 +411,13 @@ public class NineSlice : RenderableShapeBase, IAnimatable, IAnimationChainRender
         SKSamplingOptions sampling = global::RenderingLibrary.Graphics.Renderer.TextureSampling;
         SectionDraw draw = new(canvas, paint, sampling, UseSectionImages: sampling.Filter != SKFilterMode.Nearest);
 
+        if (TryDrawLattice(
+                canvas, paint, sampling, boundingRect,
+                srcLeft, srcTop, usedWidth, usedHeight, fullOutsideW, fullOutsideH, borders))
+        {
+            return;
+        }
+
         float destLeft = boundingRect.Left;
         float destTop = boundingRect.Top;
         float destRight = boundingRect.Right;
@@ -469,6 +479,160 @@ public class NineSlice : RenderableShapeBase, IAnimatable, IAnimationChainRender
             tileHorizontally: IsTilingMiddleSections, tileVertically: IsTilingMiddleSections,
             BorderScale, BorderScale,
             draw);
+    }
+
+    // Divisions handed to DrawImageLattice, kept so a frame allocates nothing.
+    private readonly int[] _latticeXDivs = new int[2];
+    private readonly int[] _latticeYDivs = new int[2];
+
+    // Draws all nine sections with one DrawImageLattice call. Measured 2026-11-11 (200 NineSlices, GPU
+    // surface, Nearest): about 38 us per NineSlice for nine DrawImage calls against about 4 us for the
+    // lattice, with identical pixels. Only the cases below are identical, so everything else keeps the
+    // per-section draws:
+    //  - Nearest only. The lattice ignores the sampling option, so Linear blends in the neighboring
+    //    section's texels, which GetSectionImage exists to prevent.
+    //  - One border scale on all four sides, no tiling. A lattice cell is as large as its
+    //    texels, so a scale s draws the lattice into a rectangle 1/s the size under a canvas scale of s.
+    //  - Axis aligned, with all eight section edges on whole device pixels (anything else rounds differently), and not touched by the canvas clip.
+    //  - Borders that fit: when NineSliceBorders clamps a band the sections are no longer the texels' size.
+    private bool TryDrawLattice(
+        SKCanvas canvas, SKPaint paint, SKSamplingOptions sampling, SKRect boundingRect,
+        int srcLeft, int srcTop, int usedWidth, int usedHeight, int fullOutsideW, int fullOutsideH,
+        NineSliceBorders borders)
+    {
+        if (DisableLatticeFastPath || sampling.Filter != SKFilterMode.Nearest || IsTilingMiddleSections)
+        {
+            return false;
+        }
+
+        float scale = EffectiveBorderScaleLeft;
+        if (scale <= 0f
+            || EffectiveBorderScaleTop != scale
+            || EffectiveBorderScaleRight != scale
+            || EffectiveBorderScaleBottom != scale
+            || BorderScale != scale)
+        {
+            return false;
+        }
+
+        if (srcLeft < 0 || srcTop < 0 || srcLeft + usedWidth > Image!.Width || srcTop + usedHeight > Image.Height)
+        {
+            return false;
+        }
+
+        if (fullOutsideW <= 0 || fullOutsideH <= 0
+            || usedWidth - (fullOutsideW * 2) <= 0 || usedHeight - (fullOutsideH * 2) <= 0)
+        {
+            return false;
+        }
+
+        // The bands must be exactly the texels' size times the scale (no clamping), with room left in the middle.
+        if (borders.SourceLeft != fullOutsideW || borders.SourceRight != fullOutsideW
+            || borders.SourceTop != fullOutsideH || borders.SourceBottom != fullOutsideH
+            || borders.DestLeft != fullOutsideW * scale || borders.DestRight != fullOutsideW * scale
+            || borders.DestTop != fullOutsideH * scale || borders.DestBottom != fullOutsideH * scale
+            || boundingRect.Width <= borders.DestLeft + borders.DestRight
+            || boundingRect.Height <= borders.DestTop + borders.DestBottom)
+        {
+            return false;
+        }
+
+        // The lattice and the per-section draws only agree when every edge lands exactly on a device pixel; at a
+        // fractional edge the two round differently, on CPU and GPU surfaces. Rotated or skewed canvases are not
+        // axis aligned, so their edges cannot be checked.
+        SKMatrix matrix = canvas.TotalMatrix;
+        if (matrix.SkewX != 0 || matrix.SkewY != 0
+            || !IsOnDevicePixel(matrix.ScaleX * boundingRect.Left + matrix.TransX)
+            || !IsOnDevicePixel(matrix.ScaleX * (boundingRect.Left + borders.DestLeft) + matrix.TransX)
+            || !IsOnDevicePixel(matrix.ScaleX * (boundingRect.Right - borders.DestRight) + matrix.TransX)
+            || !IsOnDevicePixel(matrix.ScaleX * boundingRect.Right + matrix.TransX)
+            || !IsOnDevicePixel(matrix.ScaleY * boundingRect.Top + matrix.TransY)
+            || !IsOnDevicePixel(matrix.ScaleY * (boundingRect.Top + borders.DestTop) + matrix.TransY)
+            || !IsOnDevicePixel(matrix.ScaleY * (boundingRect.Bottom - borders.DestBottom) + matrix.TransY)
+            || !IsOnDevicePixel(matrix.ScaleY * boundingRect.Bottom + matrix.TransY))
+        {
+            return false;
+        }
+
+        // A clip with a fractional edge crops the lattice's triangles differently from the sections' rectangles
+        // on a GPU surface. The canvas only reports the clip rounded outward to whole pixels, so the fast path
+        // is taken only when the nine-slice sits at least a pixel inside that box, where no clip can touch it.
+        SKRectI clip = canvas.DeviceClipBounds;
+        float deviceLeft = matrix.ScaleX * boundingRect.Left + matrix.TransX;
+        float deviceRight = matrix.ScaleX * boundingRect.Right + matrix.TransX;
+        float deviceTop = matrix.ScaleY * boundingRect.Top + matrix.TransY;
+        float deviceBottom = matrix.ScaleY * boundingRect.Bottom + matrix.TransY;
+        if (Math.Min(deviceLeft, deviceRight) < clip.Left + 1
+            || Math.Max(deviceLeft, deviceRight) > clip.Right - 1
+            || Math.Min(deviceTop, deviceBottom) < clip.Top + 1
+            || Math.Max(deviceTop, deviceBottom) > clip.Bottom - 1)
+        {
+            return false;
+        }
+
+        // Nearest sampling picks a texel by where a pixel center falls. When a pixel center lands exactly on a
+        // texel boundary the choice is decided by float noise, and the lattice (scaled local space) and the
+        // per-section draws have different noise, so they can pick different texels. That happens when a cell
+        // of n texels covers D device pixels with n/gcd even and D/gcd odd. Exact arithmetic (border scale 1 and a
+        // canvas scale of 1) has no noise, so only then is such a cell allowed.
+        bool exactArithmetic = scale == 1f && Math.Abs(matrix.ScaleX) == 1f && Math.Abs(matrix.ScaleY) == 1f;
+        if (!exactArithmetic)
+        {
+            float deviceScaleX = Math.Abs(matrix.ScaleX);
+            float deviceScaleY = Math.Abs(matrix.ScaleY);
+            int insideTexelsW = usedWidth - (fullOutsideW * 2);
+            int insideTexelsH = usedHeight - (fullOutsideH * 2);
+            if (CanSampleOnTexelBoundary(fullOutsideW, MathF.Round(deviceScaleX * borders.DestLeft))
+                || CanSampleOnTexelBoundary(insideTexelsW, MathF.Round(deviceScaleX * (boundingRect.Width - borders.DestLeft - borders.DestRight)))
+                || CanSampleOnTexelBoundary(fullOutsideW, MathF.Round(deviceScaleX * borders.DestRight))
+                || CanSampleOnTexelBoundary(fullOutsideH, MathF.Round(deviceScaleY * borders.DestTop))
+                || CanSampleOnTexelBoundary(insideTexelsH, MathF.Round(deviceScaleY * (boundingRect.Height - borders.DestTop - borders.DestBottom)))
+                || CanSampleOnTexelBoundary(fullOutsideH, MathF.Round(deviceScaleY * borders.DestBottom)))
+            {
+                return false;
+            }
+        }
+
+        _latticeXDivs[0] = srcLeft + fullOutsideW;
+        _latticeXDivs[1] = srcLeft + usedWidth - fullOutsideW;
+        _latticeYDivs[0] = srcTop + fullOutsideH;
+        _latticeYDivs[1] = srcTop + usedHeight - fullOutsideH;
+        SKLattice lattice = new() { XDivs = _latticeXDivs, YDivs = _latticeYDivs };
+        if (srcLeft != 0 || srcTop != 0 || usedWidth != Image.Width || usedHeight != Image.Height)
+        {
+            lattice.Bounds = SKRectI.Create(srcLeft, srcTop, usedWidth, usedHeight);
+        }
+
+        canvas.Save();
+        canvas.Translate(boundingRect.Left, boundingRect.Top);
+        canvas.Scale(scale);
+        canvas.DrawImageLattice(Image, lattice, new SKRect(0, 0, boundingRect.Width / scale, boundingRect.Height / scale), paint);
+        canvas.Restore();
+        DrawStatistics?.RecordDrawCall();
+        return true;
+    }
+
+    // True when some pixel center of a cell of texelCount texels drawn over devicePixels pixels sits exactly on a
+    // texel boundary: (2k + 1) * texelCount == 2 * m * devicePixels has a solution.
+    private static bool CanSampleOnTexelBoundary(int texelCount, float devicePixels)
+    {
+        int pixels = (int)devicePixels;
+        if (texelCount <= 0 || pixels <= 0)
+        {
+            return false;
+        }
+        int a = texelCount;
+        int b = pixels;
+        while (b != 0)
+        {
+            (a, b) = (b, a % b);
+        }
+        return (texelCount / a) % 2 == 0 && (pixels / a) % 2 == 1;
+    }
+
+    private static bool IsOnDevicePixel(float deviceCoordinate)
+    {
+        return Math.Abs(deviceCoordinate - MathF.Round(deviceCoordinate)) < 0.001f;
     }
 
     // What every section of one DrawBound call draws with.
