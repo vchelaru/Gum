@@ -147,6 +147,14 @@ public class NineSlice : RenderableShapeBase, IAnimatable, IAnimationChainRender
     /// since it usually comes from the shared content cache. A bitmap that was already disposed
     /// (content unload) is treated as no texture, since Skia aborts the process when it builds an
     /// image from one.
+    /// <para>
+    /// The pixels are copied into an <see cref="SKImage"/> on purpose; the nine-slice never draws the
+    /// SKBitmap directly. Measured 2026-11-11 (256x256 bitmap drawn 200 times per frame on a 1280x720 surface,
+    /// NotifyPixelsChanged once per frame, 60 frames after warmup): on a GPU surface (NVIDIA RTX 5060 Laptop)
+    /// DrawBitmap took 37.8 ms per frame against 0.46 ms for DrawImage (about 80x slower); on a CPU raster
+    /// surface 6.7 ms against 4.3 ms (about 1.5x). Pixels written to the bitmap after assignment therefore do
+    /// not show until the Texture is assigned again, which is the explicit refresh path for edits.
+    /// </para>
     /// </summary>
     public SKBitmap? Texture
     {
