@@ -14,14 +14,13 @@ namespace SkiaGum.Tests.Renderables;
 /// #7920: with Nearest sampling a NineSlice draws all nine sections with one DrawImageLattice call. Every
 /// case where the lattice cannot match the per-section draws pixel for pixel keeps the per-section path.
 /// </summary>
-public class NineSliceLatticeTests : IDisposable
+public class NineSliceLatticeTests : BaseTestClass
 {
     const int SurfaceWidth = 220;
     const int SurfaceHeight = 340;
 
     readonly SKSurface _surface;
     readonly SKFilterMode _previousFilter;
-    readonly RenderingLibrary.Content.IContentLoader? _previousContentLoader = LoaderManager.Self.ContentLoader;
 
     public NineSliceLatticeTests()
     {
@@ -31,12 +30,12 @@ public class NineSliceLatticeTests : IDisposable
         _previousFilter = RenderingLibrary.Graphics.Renderer.TextureFilter;
     }
 
-    public void Dispose()
+    public override void Dispose()
     {
         RenderingLibrary.Graphics.Renderer.TextureFilter = _previousFilter;
-        LoaderManager.Self.ContentLoader = _previousContentLoader!;
         GumService.Default.Root.Children.Clear();
         _surface.Dispose();
+        base.Dispose();
     }
 
     static SKBitmap Texture(bool semiTransparentBorders, int size = 32)
