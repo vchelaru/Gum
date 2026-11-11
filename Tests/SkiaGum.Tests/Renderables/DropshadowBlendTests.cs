@@ -204,13 +204,21 @@ public class DropshadowBlendTests
     }
 
     [Fact]
-    public void Blend_Normal_IsTheSameAsNull()
+    public void Normal_AndNullBlend_DrawTheSameAndUseTheSameShadowPath()
     {
-        RoundedRectangle fromCode = new RoundedRectangle();
-        RoundedRectangle fromProject = new RoundedRectangle();
-        fromProject.Blend = Blend.Normal;
+        ProbeShape fromCode = CreateProbe(null);
+        ProbeShape fromProject = CreateProbe(Blend.Normal);
+        fromCode.Paint();
+        fromProject.Paint();
 
-        fromProject.Blend.ShouldBe(fromCode.Blend);
+        (fromProject.Shadow() != null).ShouldBe(fromCode.Shadow() != null);
+        fromProject.Shadow()!.BlendMode.ShouldBe(fromCode.Shadow()!.BlendMode);
+        foreach (byte alpha in new byte[] { 255, 128 })
+        {
+            using SKBitmap withNull = RenderNew(null, alpha);
+            using SKBitmap withNormal = RenderNew(Blend.Normal, alpha);
+            MaxDifference(withNull, withNormal).ShouldBe(0);
+        }
     }
 
     [Fact]

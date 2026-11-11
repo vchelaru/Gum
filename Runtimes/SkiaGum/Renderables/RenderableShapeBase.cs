@@ -1053,12 +1053,9 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
         get => _blend;
         set
         {
-            // Normal is the default SrcOver, the same as no blend, so it is stored as null: a shape made in code (null)
-            // and one loaded from a project (Normal) then have the same Blend.
-            Gum.RenderingLibrary.Blend? stored = value == Gum.RenderingLibrary.Blend.Normal ? null : value;
-            if (stored != _blend)
+            if (value != _blend)
             {
-                _blend = stored;
+                _blend = value;
                 ClearCachedPaint();
             }
         }
