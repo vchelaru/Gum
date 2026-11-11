@@ -35,6 +35,9 @@ internal sealed class SpriteAtlasBatch
         }
     }
 
+    /// <summary>The most a batched sprite's far edge may land away from its true size, in device pixels.</summary>
+    internal const float MaxEdgeErrorPixels = 0.25f;
+
     readonly RenderStateChangeStatistics _statistics;
     readonly SKPaint _paint = new SKPaint { IsAntialias = false };
     readonly Dictionary<int, ExactArrays> _exactArrays = new Dictionary<int, ExactArrays>();
@@ -99,14 +102,24 @@ internal sealed class SpriteAtlasBatch
 
         float scaleX = destination.Width / source.Width;
         float scaleY = destination.Height / source.Height;
-        if (scaleX != scaleY)
+        SKMatrix total = canvas.TotalMatrix;
+
+        // An RSXform carries one scale, so the sprite draws at the average of the two. A size that came from
+        // layout (413x578 drawn at 102.32599x143.20685) has scales one float step apart, which is no real
+        // stretch. The drawn size is off by |scale - scaleX| * source width at the far edge (likewise for
+        // height); the sprite batches while that stays within MaxEdgeErrorPixels device pixels and otherwise
+        // draws alone at its true size. A float step is about a millionth of a pixel; the limit is a quarter.
+        float scale = (scaleX + scaleY) * 0.5f;
+        float deviceScale = (float)System.Math.Sqrt(total.ScaleX * total.ScaleX + total.SkewY * total.SkewY);
+        float edgeErrorX = System.Math.Abs(scale - scaleX) * source.Width * deviceScale;
+        float edgeErrorY = System.Math.Abs(scale - scaleY) * source.Height * deviceScale;
+        if (!(edgeErrorX <= MaxEdgeErrorPixels && edgeErrorY <= MaxEdgeErrorPixels))
         {
             return false;
         }
 
-        SKMatrix total = canvas.TotalMatrix;
         // The source rectangle's top left lands on the destination's top left, scaled uniformly.
-        SKMatrix device = total.PreConcat(new SKMatrix(scaleX, 0, destination.Left, 0, scaleX, destination.Top, 0, 0, 1));
+        SKMatrix device = total.PreConcat(new SKMatrix(scale, 0, destination.Left, 0, scale, destination.Top, 0, 0, 1));
         if (device.Persp0 != 0 || device.Persp1 != 0 || device.Persp2 != 1 ||
             device.ScaleX != device.ScaleY || device.SkewX != -device.SkewY)
         {
