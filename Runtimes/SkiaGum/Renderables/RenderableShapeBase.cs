@@ -1106,13 +1106,13 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
     // Outside this blur range the mask filter drifts from the image filter by more than 2 levels: below it
     // the analytic blur is coarse (sigma under 2), and above it the image filter is limited by the surface.
     private const float MinBlurredShadowBlur = 5;
-    private const float MaxBlurredShadowBlur = 40;
+    private const float MaxBlurredShadowBlur = 100;
 
     private bool UsesBlurredShadowDraw
     {
         get
         {
-            if (!DrawsBlurredShadow || !HasDropshadow || UseGradient || Blend.HasValue || this.GetAbsoluteRotation() != 0 || this.GetEffectiveClipper() != null || _replacesPaintBelow)
+            if (!DrawsBlurredShadow || !HasDropshadow || UseGradient || Blend.HasValue || this.GetAbsoluteRotation() != 0 || IsClipped() || _replacesPaintBelow)
             {
                 return false;
             }
@@ -1120,6 +1120,21 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
             float sigmaY = global::Gum.Wireframe.DropshadowBlur.GetSigma(DropshadowBlurY);
             return sigmaX == sigmaY && DropshadowBlurX >= MinBlurredShadowBlur && DropshadowBlurX <= MaxBlurredShadowBlur;
         }
+    }
+
+    // Walks the parents itself: the extension that does this is not compiled into every project that includes this file.
+    private bool IsClipped()
+    {
+        IRenderableIpso? current = this;
+        while (current != null)
+        {
+            if (current.ClipsChildren)
+            {
+                return true;
+            }
+            current = current.Parent;
+        }
+        return false;
     }
 
     private void RefreshShadowPaint(SKPaint shapePaint)
@@ -1162,7 +1177,7 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
         if (DrawsBlurredShadow && HasDropshadow)
         {
             // A clip changes which draw the shadow uses (see UsesBlurredShadowDraw) without touching any property.
-            bool isClipped = this.GetEffectiveClipper() != null;
+            bool isClipped = IsClipped();
             if (isClipped != _wasClippedAtLastPaint)
             {
                 _wasClippedAtLastPaint = isClipped;
