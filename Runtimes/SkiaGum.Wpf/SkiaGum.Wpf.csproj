@@ -1,4 +1,5 @@
 <Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">
+  <Import Project="$(MSBuildThisFileDirectory)../SkiaVersions.props" />
 
   <PropertyGroup>
     <TargetFramework>net8.0-windows</TargetFramework>
@@ -7,7 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="SkiaSharp.Views.WPF" Version="4.153.1" />
+    <PackageReference Include="SkiaSharp.Views.WPF" Version="$(GumSkiaSharpVersion)" />
   </ItemGroup>
 
   <ItemGroup>

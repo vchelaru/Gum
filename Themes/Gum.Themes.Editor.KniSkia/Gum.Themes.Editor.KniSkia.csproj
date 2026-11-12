@@ -1,4 +1,5 @@
 <Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="$(MSBuildThisFileDirectory)../../Runtimes/SkiaVersions.props" />
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>disable</ImplicitUsings>
@@ -36,7 +37,7 @@
     <!-- Color (SkiaSharp.SKColor) resolves through this package on the SKIA branch of the theme
          sources; the theme imports it explicitly (no global using). Skia needs no KernSmith
          atlas-baking dependency: it rasterizes TTFs natively via GumFontMapper. -->
-    <PackageReference Include="SkiaSharp" Version="4.153.1" />
+    <PackageReference Include="SkiaSharp" Version="$(GumSkiaSharpVersion)" />
   </ItemGroup>
   <ItemGroup>
     <!-- Gum.KniSkia: the KNI game-host runtime (window/input + Skia rendering). It references SkiaGum.csproj

@@ -1,10 +1,14 @@
 <Project>
   <!--
     The Skia package versions, shared by SkiaPackages.props (the Skia-family runtimes) and the Gum tool
-    (Gum.Avalonia, Gum.Presentation, Gum.ImageDiff, SkiaPlugin), so one bump moves both.
+    (Gum.Avalonia, Gum.Presentation, Gum.ImageDiff, SkiaPlugin), the Skia themes, SkiaGum.Wpf and UnityGum,
+    so one bump moves them all.
   -->
   <PropertyGroup>
     <GumSkiaSharpVersion>4.153.1</GumSkiaSharpVersion>
+    <!-- What SkiaSharp.HarfBuzz $(GumSkiaSharpVersion) depends on. Gum.Avalonia pins it so Avalonia.Skia's
+         older HarfBuzzSharp does not win, and UnityGum downloads the matching natives. -->
+    <GumHarfBuzzSharpVersion>14.2.1.301</GumHarfBuzzSharpVersion>
     <GumSkiaSharpExtendedVersion>3.0.0</GumSkiaSharpExtendedVersion>
     <GumSvgSkiaVersion>5.2.3</GumSvgSkiaVersion>
   </PropertyGroup>

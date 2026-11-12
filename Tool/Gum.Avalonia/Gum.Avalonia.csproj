@@ -51,6 +51,9 @@
 		<PackageReference Include="SkiaSharp.Extended" Version="$(GumSkiaSharpExtendedVersion)" />
 		<PackageReference Include="SkiaSharp.Skottie" Version="$(GumSkiaSharpVersion)" />
 		<PackageReference Include="Svg.Skia" Version="$(GumSvgSkiaVersion)" />
+		<!-- Avalonia.Skia brings an older HarfBuzzSharp; SkiaPlugin's SkiaSharp.HarfBuzz needs this one. -->
+		<PackageReference Include="HarfBuzzSharp" Version="$(GumHarfBuzzSharpVersion)" />
+		<PackageReference Include="HarfBuzzSharp.NativeAssets.Linux" Version="$(GumHarfBuzzSharpVersion)" />
 		<!--
 			The editor canvases draw with KNI. The framework packages are the reference assemblies
 			the neutral canvas projects compile against; the SDL2/GL platform is the one concrete
