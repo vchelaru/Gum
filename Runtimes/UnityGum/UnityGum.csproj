@@ -1,4 +1,5 @@
 <Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="$(MSBuildThisFileDirectory)../SkiaVersions.props" />
 
 	<!--
 		Gum for Unity: renders through SkiaGum and adds Forms input, the same split as SilkNetGum. It
@@ -36,8 +37,8 @@
 	     script copies into Plugins/. Must match the HarfBuzzSharp version this project resolves; the
 	     script fails if it doesn't. -->
 	<ItemGroup>
-		<PackageDownload Include="HarfBuzzSharp.NativeAssets.Win32" Version="[14.2.1.301]" />
-		<PackageDownload Include="HarfBuzzSharp.NativeAssets.macOS" Version="[14.2.1.301]" />
+		<PackageDownload Include="HarfBuzzSharp.NativeAssets.Win32" Version="[$(GumHarfBuzzSharpVersion)]" />
+		<PackageDownload Include="HarfBuzzSharp.NativeAssets.macOS" Version="[$(GumHarfBuzzSharpVersion)]" />
 	</ItemGroup>
 
 	<ItemGroup>

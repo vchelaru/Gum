@@ -1,4 +1,5 @@
 <Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="$(MSBuildThisFileDirectory)../../Runtimes/SkiaVersions.props" />
 
 	<!--
 		Gum.Avalonia: the cross-platform (Windows / macOS / Linux) head of the Gum tool. See
@@ -47,9 +48,12 @@
 		<PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.0" />
 		<!-- Runtime dependencies of the Skia plugin (SVG and Lottie), matching what Gum.csproj ships for
 		     the WPF head: a plugin's NuGet dependencies load from the application folder. -->
-		<PackageReference Include="SkiaSharp.Extended" Version="1.60.0" />
-		<PackageReference Include="SkiaSharp.Skottie" Version="3.119.4" />
-		<PackageReference Include="Svg.Skia" Version="5.1.1" />
+		<PackageReference Include="SkiaSharp.Extended" Version="$(GumSkiaSharpExtendedVersion)" />
+		<PackageReference Include="SkiaSharp.Skottie" Version="$(GumSkiaSharpVersion)" />
+		<PackageReference Include="Svg.Skia" Version="$(GumSvgSkiaVersion)" />
+		<!-- Avalonia.Skia brings an older HarfBuzzSharp; SkiaPlugin's SkiaSharp.HarfBuzz needs this one. -->
+		<PackageReference Include="HarfBuzzSharp" Version="$(GumHarfBuzzSharpVersion)" />
+		<PackageReference Include="HarfBuzzSharp.NativeAssets.Linux" Version="$(GumHarfBuzzSharpVersion)" />
 		<!--
 			The editor canvases draw with KNI. The framework packages are the reference assemblies
 			the neutral canvas projects compile against; the SDL2/GL platform is the one concrete

@@ -1,4 +1,5 @@
 <Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="$(MSBuildThisFileDirectory)../../Runtimes/SkiaVersions.props" />
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>disable</ImplicitUsings>
@@ -60,7 +61,7 @@
          atlas-baking dependency: it rasterizes TTFs natively via GumFontMapper, and no Apos.Shapes
          package: SkiaGum renders RectangleRuntime / CircleRuntime (gradients, dropshadows,
          per-corner radii) natively. -->
-    <PackageReference Include="SkiaSharp" Version="4.153.1" />
+    <PackageReference Include="SkiaSharp" Version="$(GumSkiaSharpVersion)" />
   </ItemGroup>
   <ItemGroup>
     <!-- Gum.SilkNet: the real game-host runtime (window/input + Skia rendering). Deliberately NOT
