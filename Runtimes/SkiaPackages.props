@@ -15,6 +15,6 @@
     <PackageReference Include="Svg.Skia" Version="5.2.3" />
     <!-- Needs the halo stroke-join fix (#114) for per-run outline thickness (#4037). It requires
          SkiaSharp 4.153.1, which brings SkiaSharp.HarfBuzz 4.153.1 with it. -->
-    <PackageReference Include="Topten.RichTextKit" Version="0.6.171" />
+    <PackageReference Include="Topten.RichTextKit" Version="0.6.172" />
   </ItemGroup>
 </Project>
