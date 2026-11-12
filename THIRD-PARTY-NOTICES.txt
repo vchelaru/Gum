@@ -292,8 +292,9 @@ AngelCode Bitmap Font Generator (BMFont, native: bmfont.exe) — Copyright (c)
     2004-2025 Andreas Jonsson
     https://www.angelcode.com/products/bmfont/
     Embedded: bmfont.exe
-    Embedded in Gum.ProjectServices.dll (tool and GumCli) and extracted on
-    first use to generate bitmap fonts; runs on Windows only. The executable
+    Embedded in Gum.ProjectServices.dll (tool, GumCli and the
+    Gum.ProjectServices NuGet package, which carries BMFont-LICENSE.txt) and
+    extracted on first use to generate bitmap fonts; runs on Windows only. The executable
     statically links zlib 1.2.8 (Copyright (C) 1995-2013 Jean-loup Gailly and
     Mark Adler, zlib License), libpng 1.6.19 (Copyright (c) 1998-2015 Glenn
     Randers-Pehrson et al., libpng License) and the Independent JPEG Group's

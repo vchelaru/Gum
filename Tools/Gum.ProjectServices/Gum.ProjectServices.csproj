@@ -2,6 +2,8 @@
 
 	<PropertyGroup>
 		<TargetFramework>net10.0</TargetFramework>
+		<PackageLicenseExpression>MIT</PackageLicenseExpression>
+		<Description>Gum project services shared by the Gum tool and gumcli. Embeds AngelCode BMFont (bmfont.exe), which is under the zlib License; see BMFont-LICENSE.txt in the package.</Description>
 		<Nullable>enable</Nullable>
 		<LangVersion>12.0</LangVersion>
 		<NoWarn>1591</NoWarn>
@@ -44,6 +46,8 @@
 		     BmFontExeFileGenerator.IsEmbedded reports which. -->
 		<EmbeddedResource Include="..\..\Gum\Libraries\bmfont.exe" Link="Libraries\bmfont.exe"
 		                  Condition="'$(EmbedBmFont)' != 'false'" />
+		<!-- bmfont.exe is zlib-licensed, not MIT, so its licence ships in the package that embeds it (#7961). -->
+		<None Include="BMFont-LICENSE.txt" Pack="true" PackagePath="\" Condition="'$(EmbedBmFont)' != 'false'" />
 		<EmbeddedResource Include="..\..\Gum\Content\BmfcTemplate.bmfc" Link="Content\BmfcTemplate.bmfc" />
 	</ItemGroup>
 
