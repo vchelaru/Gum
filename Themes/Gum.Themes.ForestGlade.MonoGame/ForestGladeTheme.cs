@@ -220,6 +220,17 @@ public static class ForestGladeTheme
         FrameworkElement.DefaultFormsTemplates[typeof(ListBoxItem)] =
             new VisualTemplate((_, c) => new ListBoxItemVisual(tryCreateFormsObject: c));
 
+        FrameworkElement.DefaultFormsTemplates[typeof(TabControl)] =
+            new VisualTemplate((_, c) => new TabControlVisual(tryCreateFormsObject: c));
+
+        FrameworkElement.DefaultFormsTemplates[typeof(TabItem)] =
+            new VisualTemplate((_, c) => new TabItemVisual(tryCreateFormsObject: c));
+
+        // A TabPage has nothing to theme (the tool-content themes leave it unstyled too), so it is pinned to
+        // the stock visual and a theme switch cannot leave a previous theme's page visual behind.
+        FrameworkElement.DefaultFormsTemplates[typeof(TabPage)] =
+            new VisualTemplate((_, c) => new Gum.Forms.DefaultVisuals.V3.TabPageVisual(tryCreateFormsObject: c));
+
         FrameworkElement.DefaultFormsTemplates[typeof(ScrollViewer)] =
             new VisualTemplate((_, c) => new ScrollViewerVisual(tryCreateFormsObject: c));
 
