@@ -7,7 +7,6 @@ using MonoGameGum;
 using RenderingLibrary;
 using System;
 using System.IO;
-using System.Linq;
 using System.Runtime.InteropServices;
 
 namespace Gum.ProjectServices.MonoGame;
@@ -90,13 +89,11 @@ public class MonoGameScreenshotService : IScreenshotService
                 gumService.CanvasWidth = width;
                 gumService.CanvasHeight = height;
 
-                var elementSave = project.AllElements
-                    .FirstOrDefault(e => e.Name == _request.ElementName);
+                var elementSave = _request.FindElement(project);
 
                 if (elementSave == null)
                 {
-                    Result = ScreenshotResult.Failed(
-                        $"Element '{_request.ElementName}' not found in project.");
+                    Result = ScreenshotResult.ElementNotFound(_request.ElementName);
                     return;
                 }
 
@@ -121,12 +118,7 @@ public class MonoGameScreenshotService : IScreenshotService
 
                 GraphicsDevice.SetRenderTarget(null);
 
-                string outputPath = Path.GetFullPath(_request.OutputPath);
-                string? outputDir = Path.GetDirectoryName(outputPath);
-                if (outputDir != null)
-                {
-                    Directory.CreateDirectory(outputDir);
-                }
+                string outputPath = _request.PrepareOutputPath();
 
                 using var stream = File.OpenWrite(outputPath);
 

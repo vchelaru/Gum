@@ -113,22 +113,36 @@ namespace RenderingLibrary
             //ShapeManager.Managers = this;
             //Tex
 
+            // Another runtime's GumService in the same process (MonoGame, raylib) assigns these hooks on
+            // its Initialize and clears the registrations on its Uninitialize
+            // (ElementSaveExtensions.ClearRegistrations), so they are assigned on every Initialize, as the
+            // MonoGame/raylib SystemManagers do. Assigning a delegate does not stack.
+            bool registrationsCleared = HasInitializedGlobal
+                && ElementSaveExtensions.CustomCreateGraphicalComponentFunc == null;
+            ElementSaveExtensions.CustomCreateGraphicalComponentFunc = HandleCreateGraphicalComponent;
+            GraphicalUiElement.SetPropertyOnRenderable = CustomSetPropertyOnRenderable.SetPropertyOnRenderable;
+            ElementSaveExtensions.ReportPropertyAssignmentError = CustomSetPropertyOnRenderable.RaisePropertyAssignmentError;
+            GraphicalUiElement.UpdateFontFromProperties = UpdateFonts;
+            GraphicalUiElement.ApplyCachedTextureFromPixelData = PixelDataTextureApplier.ApplyCached;
+            GraphicalUiElement.ApplyPooledTextureFromPixelData = PixelDataTextureApplier.ApplyPooled;
+            GraphicalUiElement.AddRenderableToManagers = AddRenderableToManagers;
+            GraphicalUiElement.RemoveRenderableFromManagers = RemoveRenderableFromManagers;
+
+            if (registrationsCleared)
+            {
+                // Re-registered only after a clear, so a host's own registration for a standard
+                // type survives a second Initialize.
+                RegisterComponentRuntimeInstantiations();
+            }
+
             if(!HasInitializedGlobal)
             {
                 // If we don't do this, then multiple windows may initialize the same thing, causing events to stack,
                 // and wiping customization of standard elements:
                 HasInitializedGlobal = true;
                 StandardElementsManager.Self.Initialize();
+                // Once only: RegisterExtendedDefaultStates may wrap this handler later.
                 StandardElementsManager.Self.CustomGetDefaultState = HandleCustomGetDefaultState;
-                ElementSaveExtensions.CustomCreateGraphicalComponentFunc = HandleCreateGraphicalComponent;
-                GraphicalUiElement.SetPropertyOnRenderable = CustomSetPropertyOnRenderable.SetPropertyOnRenderable;
-                ElementSaveExtensions.ReportPropertyAssignmentError = CustomSetPropertyOnRenderable.RaisePropertyAssignmentError;
-                GraphicalUiElement.UpdateFontFromProperties = UpdateFonts;
-                GraphicalUiElement.ApplyCachedTextureFromPixelData = PixelDataTextureApplier.ApplyCached;
-                GraphicalUiElement.ApplyPooledTextureFromPixelData = PixelDataTextureApplier.ApplyPooled;
-
-                GraphicalUiElement.AddRenderableToManagers = AddRenderableToManagers;
-                GraphicalUiElement.RemoveRenderableFromManagers = RemoveRenderableFromManagers;
                 RenderingLibrary.Content.ContentLoader.MarkInitialized();
                 LoaderManager.Self.ContentLoader = LoaderManager.Self.ContentLoader ?? new RenderingLibrary.Content.ContentLoader();
                 RegisterComponentRuntimeInstantiations();

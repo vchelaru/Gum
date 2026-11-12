@@ -36,6 +36,26 @@ public class ScreenshotCommandTests : BaseTestClass
         File.Exists(outputPath).ShouldBeTrue();
     }
 
+    // Proves `--backend skia` dispatches to SkiaGumScreenshotService (#7965); pixel checks are in
+    // Gum.ProjectServices.SkiaGum.Tests. Skia renders to a CPU raster, so no OS gate is needed.
+    [Fact]
+    public void Screenshot_WithSkiaBackend_WritesPngWithBackgroundColor()
+    {
+        string projectPath = CreateProjectWithScreen();
+        string outputPath = Path.Combine(TempDirectory, "Screen.png");
+
+        CliTestHelper result = CliTestHelper.Run(
+            "screenshot", projectPath, "Screen", "--output", outputPath,
+            "--backend", "skia", "--background", "1E2A38", "--width", "64", "--height", "32");
+
+        result.ExitCode.ShouldBe(0, result.StandardError);
+
+        using SKBitmap bitmap = SKBitmap.Decode(outputPath);
+        bitmap.Width.ShouldBe(64);
+        bitmap.Height.ShouldBe(32);
+        bitmap.GetPixel(10, 10).ShouldBe(new SKColor(0x1E, 0x2A, 0x38, 255));
+    }
+
     [Fact]
     public void Screenshot_WithUnknownBackend_ReturnsExitCode2()
     {
