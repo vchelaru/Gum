@@ -100,4 +100,58 @@ public class CodeGeneratorFormsBehaviorMappingTests : BaseTestClass
         code.ShouldContain("partial class Thing : global::Gum.Forms.Controls.Tooltip");
         code.ShouldNotContain("DefaultFormsTemplates[typeof(global::Gum.Forms.Controls.Tooltip)]");
     }
+
+    [Theory]
+    [InlineData("TabControlBehavior", "global::Gum.Forms.Controls.TabControl")]
+    [InlineData("TabItemBehavior", "global::Gum.Forms.Controls.TabItem")]
+    [InlineData("TabPageBehavior", "global::Gum.Forms.Controls.TabPage")]
+    public void GetGeneratedCodeForElement_TabBehavior_DerivesFromMatchingFormsClass(string behaviorName, string formsType)
+    {
+        string code = Generate(new[] { behaviorName });
+
+        code.ShouldContain("partial class Thing : " + formsType);
+    }
+
+    // The runtime pairs headers and pages by position (TabControl), so the generated TabControl only needs the
+    // right base class and the tab instances kept in authored order, each typed as its tab component.
+    [Fact]
+    public void GetGeneratedCodeForElement_TabControlWithTabsAndPages_KeepsTabsAndPagesInOrder()
+    {
+        foreach (string behaviorName in new[] { "TabControlBehavior", "TabItemBehavior", "TabPageBehavior" })
+        {
+            Project.Behaviors.Add(new BehaviorSave { Name = behaviorName });
+            ComponentSave tabComponent = new ComponentSave { Name = "Controls/" + behaviorName.Replace("Behavior", ""), BaseType = "Container" };
+            tabComponent.States.Add(new StateSave { Name = "Default", ParentContainer = tabComponent });
+            tabComponent.Behaviors.Add(new ElementBehaviorReference { BehaviorName = behaviorName });
+            Project.Components.Add(tabComponent);
+        }
+
+        ComponentSave tabControl = Project.Components.Single(c => c.Name == "Controls/TabControl");
+        foreach ((string name, string baseType) in new[]
+        {
+            ("FirstTab", "Controls/TabItem"),
+            ("SecondTab", "Controls/TabItem"),
+            ("FirstPage", "Controls/TabPage"),
+            ("SecondPage", "Controls/TabPage"),
+        })
+        {
+            tabControl.Instances.Add(new InstanceSave { Name = name, BaseType = baseType, ParentContainer = tabControl });
+        }
+        ObjectFinder.Self.GumProjectSave = Project;
+
+        CodeOutputProjectSettings settings = new CodeOutputProjectSettings
+        {
+            OutputLibrary = OutputLibrary.GumForms,
+            RootNamespace = "MyGame",
+        };
+
+        string code = CodeGeneratorDefaultFormsRegistrationTests.CreateCodeGenerator(syntaxVersion: 4)
+            .GetGeneratedCodeForElement(tabControl, new CodeOutputElementSettings(), settings);
+
+        code.ShouldContain("partial class TabControl : global::Gum.Forms.Controls.TabControl");
+        code.ShouldContain("public TabItem FirstTab");
+        code.ShouldContain("FindFormsControl<TabPage>(this.Visual,\"SecondPage\")");
+        code.IndexOf("FirstTab = ", StringComparison.Ordinal).ShouldBeLessThan(code.IndexOf("SecondTab = ", StringComparison.Ordinal));
+        code.IndexOf("FirstPage = ", StringComparison.Ordinal).ShouldBeLessThan(code.IndexOf("SecondPage = ", StringComparison.Ordinal));
+    }
 }
