@@ -5,6 +5,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using MonoGameGum;
 using RenderingLibrary;
+using RenderingLibrary.Content;
 using System;
 using System.IO;
 using System.Runtime.InteropServices;
@@ -114,13 +115,24 @@ public class MonoGameScreenshotService : IScreenshotService
                 GraphicsDevice.SetRenderTarget(renderTarget);
                 GraphicsDevice.Clear(clearColor);
 
-                gumService.Draw();
+                // Draw with render-target bake blends so translucent content keeps its alpha over a
+                // transparent clear (#7992); the target then holds premultiplied pixels, which are
+                // un-premultiplied for the straight-alpha PNG below.
+                SystemManagers.Default.Renderer.IsDrawingToTransparentTarget = true;
+                try
+                {
+                    gumService.Draw();
+                }
+                finally
+                {
+                    SystemManagers.Default.Renderer.IsDrawingToTransparentTarget = false;
+                }
 
                 GraphicsDevice.SetRenderTarget(null);
 
                 string outputPath = _request.PrepareOutputPath();
 
-                using var stream = File.OpenWrite(outputPath);
+                using var stream = File.Create(outputPath);
 
                 if (_request.BackgroundColor.HasValue)
                 {
@@ -138,7 +150,7 @@ public class MonoGameScreenshotService : IScreenshotService
                 }
                 else
                 {
-                    renderTarget.SaveAsPng(stream, width, height);
+                    TexturePremultiply.SaveAsUnpremultipliedPng(renderTarget, stream);
                 }
 
                 Result = ScreenshotResult.Succeeded(outputPath);
