@@ -50,6 +50,9 @@ public class Sprite : RenderableShapeBase, IAspectRatio, ITextureCoordinate, IAn
         SetImage(CreateImage(_texture), ownsImage: true);
     }
 
+    private bool HasOwnedImageFor(SKBitmap? bitmap) =>
+        bitmap != null && ReferenceEquals(bitmap, _texture) && _ownsImage && _image?.Handle != IntPtr.Zero && IsUsable(bitmap);
+
     internal static bool IsUsable(SKBitmap? bitmap) => bitmap != null && bitmap.Handle != IntPtr.Zero;
 
     // Skia aborts the whole process on SKImage.FromBitmap of a disposed bitmap, so it never sees one.
@@ -208,7 +211,12 @@ public class Sprite : RenderableShapeBase, IAspectRatio, ITextureCoordinate, IAn
 
     void ApplyAnimationFrame(Gum.Graphics.Animation.AnimationFrame frame)
     {
-        Texture = frame.Texture;
+        // Frames cut from one spritesheet share a bitmap, so assigning it would rebuild an identical image on every
+        // frame change (#7943). Texture itself still rebuilds on a repeat assignment, which is how edits are refreshed.
+        if (!HasOwnedImageFor(frame.Texture))
+        {
+            Texture = frame.Texture;
+        }
         FlipDiagonal = frame.FlipDiagonal;
 
         if (frame.Texture != null)
