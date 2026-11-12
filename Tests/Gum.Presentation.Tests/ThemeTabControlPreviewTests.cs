@@ -42,6 +42,20 @@ public class ThemeTabControlPreviewTests : BaseTestClass
     [InlineData("FormsTemplate", "Controls/", null)]
     [InlineData("FormsThemes/Bubblegum", "Bubblegum/", 2)]
     [InlineData("FormsThemes/Bubblegum", "Bubblegum/", null)]
+    [InlineData("FormsThemes/DarkPro", "DarkPro/", 2)]
+    [InlineData("FormsThemes/DarkPro", "DarkPro/", null)]
+    [InlineData("FormsThemes/Meadow", "Meadow/", 2)]
+    [InlineData("FormsThemes/Meadow", "Meadow/", null)]
+    [InlineData("FormsThemes/Editor", "Editor/", 2)]
+    [InlineData("FormsThemes/Editor", "Editor/", null)]
+    [InlineData("FormsThemes/Retro95", "Retro95/", 2)]
+    [InlineData("FormsThemes/Retro95", "Retro95/", null)]
+    [InlineData("FormsThemes/ForestGlade", "ForestGlade/", 2)]
+    [InlineData("FormsThemes/ForestGlade", "ForestGlade/", null)]
+    [InlineData("FormsThemes/Hazard", "Hazard/", 2)]
+    [InlineData("FormsThemes/Hazard", "Hazard/", null)]
+    [InlineData("FormsThemes/Neon", "Neon/", 2)]
+    [InlineData("FormsThemes/Neon", "Neon/", null)]
     public void Wireframe_ThemeTabControl_ShowsOnlyTheSelectedPage(string template, string prefix, int? selectedIndex)
     {
         StandardElementsManager.Self.Initialize();

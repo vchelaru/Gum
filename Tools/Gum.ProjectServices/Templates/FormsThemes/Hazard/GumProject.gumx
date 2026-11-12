@@ -83,6 +83,9 @@
   <ComponentReference Name="Hazard/Splitter" />
   <ComponentReference Name="Hazard/StackPanel" />
   <ComponentReference Name="Hazard/Styles" />
+  <ComponentReference Name="Hazard/TabControl" />
+  <ComponentReference Name="Hazard/TabItem" />
+  <ComponentReference Name="Hazard/TabPage" />
   <ComponentReference Name="Hazard/TextBox" />
   <ComponentReference Name="Hazard/Toast" />
   <ComponentReference Name="Hazard/ToggleButton" />
@@ -117,6 +120,9 @@
   <BehaviorReference Name="SliderBehavior" SourcePath="../../FormsBehaviors/SliderBehavior.behx" DefaultImplementationOverride="Hazard/Slider" />
   <BehaviorReference Name="SplitterBehavior" SourcePath="../../FormsBehaviors/SplitterBehavior.behx" DefaultImplementationOverride="Hazard/Splitter" />
   <BehaviorReference Name="StackPanelBehavior" SourcePath="../../FormsBehaviors/StackPanelBehavior.behx" />
+  <BehaviorReference Name="TabControlBehavior" SourcePath="../../FormsBehaviors/TabControlBehavior.behx" DefaultImplementationOverride="Hazard/TabControl" />
+  <BehaviorReference Name="TabItemBehavior" SourcePath="../../FormsBehaviors/TabItemBehavior.behx" DefaultImplementationOverride="Hazard/TabItem" />
+  <BehaviorReference Name="TabPageBehavior" SourcePath="../../FormsBehaviors/TabPageBehavior.behx" DefaultImplementationOverride="Hazard/TabPage" />
   <BehaviorReference Name="TextBoxBehavior" SourcePath="../../FormsBehaviors/TextBoxBehavior.behx" DefaultImplementationOverride="Hazard/TextBox" />
   <BehaviorReference Name="ToastBehavior" SourcePath="../../FormsBehaviors/ToastBehavior.behx" DefaultImplementationOverride="Hazard/Toast" />
   <BehaviorReference Name="ToggleBehavior" SourcePath="../../FormsBehaviors/ToggleBehavior.behx" DefaultImplementationOverride="Hazard/ToggleButton" />

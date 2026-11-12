@@ -82,6 +82,9 @@
   <ComponentReference Name="Neon/Splitter" />
   <ComponentReference Name="Neon/StackPanel" />
   <ComponentReference Name="Neon/Styles" />
+  <ComponentReference Name="Neon/TabControl" />
+  <ComponentReference Name="Neon/TabItem" />
+  <ComponentReference Name="Neon/TabPage" />
   <ComponentReference Name="Neon/TextBox" />
   <ComponentReference Name="Neon/Toast" />
   <ComponentReference Name="Neon/ToggleButton" />
@@ -116,6 +119,9 @@
   <BehaviorReference Name="SliderBehavior" SourcePath="../../FormsBehaviors/SliderBehavior.behx" DefaultImplementationOverride="Neon/Slider" />
   <BehaviorReference Name="SplitterBehavior" SourcePath="../../FormsBehaviors/SplitterBehavior.behx" DefaultImplementationOverride="Neon/Splitter" />
   <BehaviorReference Name="StackPanelBehavior" SourcePath="../../FormsBehaviors/StackPanelBehavior.behx" />
+  <BehaviorReference Name="TabControlBehavior" SourcePath="../../FormsBehaviors/TabControlBehavior.behx" DefaultImplementationOverride="Neon/TabControl" />
+  <BehaviorReference Name="TabItemBehavior" SourcePath="../../FormsBehaviors/TabItemBehavior.behx" DefaultImplementationOverride="Neon/TabItem" />
+  <BehaviorReference Name="TabPageBehavior" SourcePath="../../FormsBehaviors/TabPageBehavior.behx" DefaultImplementationOverride="Neon/TabPage" />
   <BehaviorReference Name="TextBoxBehavior" SourcePath="../../FormsBehaviors/TextBoxBehavior.behx" DefaultImplementationOverride="Neon/TextBox" />
   <BehaviorReference Name="ToastBehavior" SourcePath="../../FormsBehaviors/ToastBehavior.behx" DefaultImplementationOverride="Neon/Toast" />
   <BehaviorReference Name="ToggleBehavior" SourcePath="../../FormsBehaviors/ToggleBehavior.behx" DefaultImplementationOverride="Neon/ToggleButton" />

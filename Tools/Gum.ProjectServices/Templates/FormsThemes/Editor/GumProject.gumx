@@ -98,6 +98,9 @@
   <ComponentReference Name="Editor/Splitter" />
   <ComponentReference Name="Editor/StackPanel" />
   <ComponentReference Name="Editor/Styles" />
+  <ComponentReference Name="Editor/TabControl" />
+  <ComponentReference Name="Editor/TabItem" />
+  <ComponentReference Name="Editor/TabPage" />
   <ComponentReference Name="Editor/TextBox" />
   <ComponentReference Name="Editor/Toast" />
   <ComponentReference Name="Editor/ToggleButton" />
@@ -142,6 +145,9 @@
   <BehaviorReference Name="SliderBehavior" SourcePath="../../FormsBehaviors/SliderBehavior.behx" DefaultImplementationOverride="Editor/Slider" />
   <BehaviorReference Name="SplitterBehavior" SourcePath="../../FormsBehaviors/SplitterBehavior.behx" DefaultImplementationOverride="Editor/Splitter" />
   <BehaviorReference Name="StackPanelBehavior" SourcePath="../../FormsBehaviors/StackPanelBehavior.behx" />
+  <BehaviorReference Name="TabControlBehavior" SourcePath="../../FormsBehaviors/TabControlBehavior.behx" DefaultImplementationOverride="Editor/TabControl" />
+  <BehaviorReference Name="TabItemBehavior" SourcePath="../../FormsBehaviors/TabItemBehavior.behx" DefaultImplementationOverride="Editor/TabItem" />
+  <BehaviorReference Name="TabPageBehavior" SourcePath="../../FormsBehaviors/TabPageBehavior.behx" DefaultImplementationOverride="Editor/TabPage" />
   <BehaviorReference Name="TextBoxBehavior" SourcePath="../../FormsBehaviors/TextBoxBehavior.behx" DefaultImplementationOverride="Editor/TextBox" />
   <BehaviorReference Name="ToastBehavior" SourcePath="../../FormsBehaviors/ToastBehavior.behx" DefaultImplementationOverride="Editor/Toast" />
   <BehaviorReference Name="ToggleBehavior" SourcePath="../../FormsBehaviors/ToggleBehavior.behx" DefaultImplementationOverride="Editor/ToggleButton" />

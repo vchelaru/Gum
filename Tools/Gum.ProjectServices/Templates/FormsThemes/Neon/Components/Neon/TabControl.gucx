@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ComponentSave xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <Name>Neon/TabControl</Name>
+  <BaseType>Container</BaseType>
+  <State>
+    <Name>Default</Name>
+    <Variable Type="float" Name="BorderInstance.CornerRadius" SetsValue="true">
+      <Value xsi:type="xsd:float">5</Value>
+    </Variable>
+    <Variable Type="float" Name="BorderInstance.Height" SetsValue="true">
+      <Value xsi:type="xsd:float">-32</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="BorderInstance.HeightUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">2</Value>
+    </Variable>
+    <Variable Type="bool" Name="BorderInstance.IsFilled" SetsValue="true">
+      <Value xsi:type="xsd:boolean">false</Value>
+    </Variable>
+    <Variable Type="int" Name="BorderInstance.StrokeBlue" SetsValue="true">
+      <Value xsi:type="xsd:int">80</Value>
+    </Variable>
+    <Variable Type="int" Name="BorderInstance.StrokeGreen" SetsValue="true">
+      <Value xsi:type="xsd:int">30</Value>
+    </Variable>
+    <Variable Type="int" Name="BorderInstance.StrokeRed" SetsValue="true">
+      <Value xsi:type="xsd:int">30</Value>
+    </Variable>
+    <Variable Type="float" Name="BorderInstance.StrokeWidth" SetsValue="true">
+      <Value xsi:type="xsd:float">1</Value>
+    </Variable>
+    <Variable Type="float" Name="BorderInstance.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="BorderInstance.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">2</Value>
+    </Variable>
+    <Variable Type="float" Name="BorderInstance.Y" SetsValue="true">
+      <Value xsi:type="xsd:float">32</Value>
+    </Variable>
+    <Variable Type="float" Name="ContentBackground.CornerRadius" SetsValue="true">
+      <Value xsi:type="xsd:float">5</Value>
+    </Variable>
+    <Variable Type="int" Name="ContentBackground.FillBlue" SetsValue="true">
+      <Value xsi:type="xsd:int">34</Value>
+    </Variable>
+    <Variable Type="int" Name="ContentBackground.FillGreen" SetsValue="true">
+      <Value xsi:type="xsd:int">13</Value>
+    </Variable>
+    <Variable Type="int" Name="ContentBackground.FillRed" SetsValue="true">
+      <Value xsi:type="xsd:int">13</Value>
+    </Variable>
+    <Variable Type="float" Name="ContentBackground.Height" SetsValue="true">
+      <Value xsi:type="xsd:float">-32</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="ContentBackground.HeightUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">2</Value>
+    </Variable>
+    <Variable Type="bool" Name="ContentBackground.IsFilled" SetsValue="true">
+      <Value xsi:type="xsd:boolean">true</Value>
+    </Variable>
+    <Variable Type="float" Name="ContentBackground.StrokeWidth" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="float" Name="ContentBackground.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="ContentBackground.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">2</Value>
+    </Variable>
+    <Variable Type="float" Name="ContentBackground.Y" SetsValue="true">
+      <Value xsi:type="xsd:float">32</Value>
+    </Variable>
+    <Variable Type="bool" Name="ContentPanelInstance.HasEvents" SetsValue="true">
+      <Value xsi:type="xsd:boolean">false</Value>
+    </Variable>
+    <Variable Type="float" Name="ContentPanelInstance.Height" SetsValue="true">
+      <Value xsi:type="xsd:float">-32</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="ContentPanelInstance.HeightUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">2</Value>
+    </Variable>
+    <Variable Type="float" Name="ContentPanelInstance.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="ContentPanelInstance.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">2</Value>
+    </Variable>
+    <Variable Type="float" Name="ContentPanelInstance.Y" SetsValue="true">
+      <Value xsi:type="xsd:float">32</Value>
+    </Variable>
+    <Variable Type="string" Name="DefaultChildContainer" SetsValue="true">
+      <Value xsi:type="xsd:string">InnerPanelInstance</Value>
+    </Variable>
+    <Variable Type="float" Name="Height" SetsValue="true">
+      <Value xsi:type="xsd:float">300</Value>
+    </Variable>
+    <Variable Type="ChildrenLayout" Name="InnerPanelInstance.ChildrenLayout" SetsValue="true">
+      <Value xsi:type="xsd:int">2</Value>
+    </Variable>
+    <Variable Type="bool" Name="InnerPanelInstance.HasEvents" SetsValue="true">
+      <Value xsi:type="xsd:boolean">false</Value>
+    </Variable>
+    <Variable Type="float" Name="InnerPanelInstance.Height" SetsValue="true">
+      <Value xsi:type="xsd:float">32</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="InnerPanelInstance.HeightUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="float" Name="InnerPanelInstance.StackSpacing" SetsValue="true">
+      <Value xsi:type="xsd:float">2</Value>
+    </Variable>
+    <Variable Type="float" Name="InnerPanelInstance.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="InnerPanelInstance.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">2</Value>
+    </Variable>
+    <Variable Type="State" Name="State" Category="States and Visibility" SetsValue="false">
+      <Value xsi:type="xsd:string">Default</Value>
+    </Variable>
+    <Variable Type="float" Name="Width" SetsValue="true">
+      <Value xsi:type="xsd:float">400</Value>
+    </Variable>
+    <VariableList xsi:type="VariableListSaveOfString">
+      <Type>string</Type>
+      <Name>BorderInstance.VariableReferences</Name>
+      <Category>References</Category>
+      <IsFile>false</IsFile>
+      <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+      <Value>
+        <string>StrokeColor = Components/Neon/Styles.Border.FillColor</string>
+      </Value>
+    </VariableList>
+    <VariableList xsi:type="VariableListSaveOfString">
+      <Type>string</Type>
+      <Name>ContentBackground.VariableReferences</Name>
+      <Category>References</Category>
+      <IsFile>false</IsFile>
+      <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+      <Value>
+        <string>FillColor = Components/Neon/Styles.Surface1.FillColor</string>
+      </Value>
+    </VariableList>
+  </State>
+  <Instance Name="InnerPanelInstance" BaseType="Container" IsSlot="true" />
+  <Instance Name="ContentBackground" BaseType="Rectangle" />
+  <Instance Name="BorderInstance" BaseType="Rectangle" />
+  <Instance Name="ContentPanelInstance" BaseType="Container" IsSlot="true" />
+  <Behaviors>
+    <ElementBehaviorReference>
+      <BehaviorName>TabControlBehavior</BehaviorName>
+    </ElementBehaviorReference>
+  </Behaviors>
+  <VariablesHiddenFromInstances>
+    <string>ContainedType</string>
+    <string>ChildrenLayout</string>
+    <string>ClipsChildren</string>
+    <string>IsRenderTarget</string>
+    <string>ExposeChildrenEvents</string>
+  </VariablesHiddenFromInstances>
+</ComponentSave>

@@ -51,6 +51,13 @@ public class ThemeTabControlDefaultSelectionTests : FileThemeInputTestBase
     [Theory]
     [InlineData("")]
     [InlineData("Bubblegum")]
+    [InlineData("DarkPro")]
+    [InlineData("Meadow")]
+    [InlineData("Editor")]
+    [InlineData("Retro95")]
+    [InlineData("ForestGlade")]
+    [InlineData("Hazard")]
+    [InlineData("Neon")]
     public void SelectedIndexNotAuthored_SelectsFirstTabAndShowsOnlyItsPage(string theme)
     {
         (TabControl tabs, _) = BuildScreen(theme, authoredIndex: null);
