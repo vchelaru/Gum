@@ -117,8 +117,6 @@ namespace RenderingLibrary
             // its Initialize and clears the registrations on its Uninitialize
             // (ElementSaveExtensions.ClearRegistrations), so they are assigned on every Initialize, as the
             // MonoGame/raylib SystemManagers do. Assigning a delegate does not stack.
-            bool registrationsCleared = HasInitializedGlobal
-                && ElementSaveExtensions.CustomCreateGraphicalComponentFunc == null;
             ElementSaveExtensions.CustomCreateGraphicalComponentFunc = HandleCreateGraphicalComponent;
             GraphicalUiElement.SetPropertyOnRenderable = CustomSetPropertyOnRenderable.SetPropertyOnRenderable;
             ElementSaveExtensions.ReportPropertyAssignmentError = CustomSetPropertyOnRenderable.RaisePropertyAssignmentError;
@@ -128,11 +126,12 @@ namespace RenderingLibrary
             GraphicalUiElement.AddRenderableToManagers = AddRenderableToManagers;
             GraphicalUiElement.RemoveRenderableFromManagers = RemoveRenderableFromManagers;
 
-            if (registrationsCleared)
+            if (HasInitializedGlobal)
             {
-                // Re-registered only after a clear, so a host's own registration for a standard
-                // type survives a second Initialize.
-                RegisterComponentRuntimeInstantiations();
+                // Fills only the standard types missing from the registry, so a host's own registration
+                // survives a second Initialize and a registry cleared by any means (ClearRegistrations,
+                // ElementSaveExtensions.Reset) gets the standard runtimes back.
+                RegisterComponentRuntimeInstantiations(onlyMissing: true);
             }
 
             if(!HasInitializedGlobal)
@@ -145,7 +144,7 @@ namespace RenderingLibrary
                 StandardElementsManager.Self.CustomGetDefaultState = HandleCustomGetDefaultState;
                 RenderingLibrary.Content.ContentLoader.MarkInitialized();
                 LoaderManager.Self.ContentLoader = LoaderManager.Self.ContentLoader ?? new RenderingLibrary.Content.ContentLoader();
-                RegisterComponentRuntimeInstantiations();
+                RegisterComponentRuntimeInstantiations(onlyMissing: false);
 
                 // #3670/#3703: route RichTextKit's family-name resolution through GumFontMapper so a
                 // custom .ttf/.otf (loaded via Font/CustomFontFile) resolves to its loaded SKTypeface
@@ -208,8 +207,16 @@ namespace RenderingLibrary
             }
         }
 
-        private void RegisterComponentRuntimeInstantiations()
+        private void RegisterComponentRuntimeInstantiations(bool onlyMissing)
         {
+            void Register<T>(string elementName, Func<T> templateFunc) where T : GraphicalUiElement
+            {
+                if (!onlyMissing || !ElementSaveExtensions.IsRegistered(elementName))
+                {
+                    ElementSaveExtensions.RegisterGueInstantiation(elementName, templateFunc);
+                }
+            }
+
             // Construct the SkiaGum.GueDeriving shim subclasses (not the new Gum.GueDeriving base
             // types). This file has `using Gum.GueDeriving;`, so an unqualified `new ContainerRuntime()`
             // resolves to the base type — but already-generated user code casts the loaded instance to
@@ -219,23 +226,23 @@ namespace RenderingLibrary
             // in RenderingLibrary.SystemManagers (MonoGame) and AposShapeRuntime. Drop the
             // qualification once the SkiaGum.GueDeriving shims are removed.
 #pragma warning disable CS0618 // Type or member is obsolete
-            ElementSaveExtensions.RegisterGueInstantiation(
+            Register(
                 "Arc",
                 () => new global::SkiaGum.GueDeriving.ArcRuntime());
 
-            ElementSaveExtensions.RegisterGueInstantiation(
+            Register(
                 "Circle",
                 () => new global::SkiaGum.GueDeriving.CircleRuntime());
 
-            ElementSaveExtensions.RegisterGueInstantiation(
+            Register(
                 "ColoredCircle",
                 () => new global::SkiaGum.GueDeriving.ColoredCircleRuntime());
 
-            ElementSaveExtensions.RegisterGueInstantiation(
+            Register(
                 "ColoredRectangle",
                 () => new global::SkiaGum.GueDeriving.ColoredRectangleRuntime());
 
-            ElementSaveExtensions.RegisterGueInstantiation(
+            Register(
                 "Container",
                 () => new global::SkiaGum.GueDeriving.ContainerRuntime());
 
@@ -243,16 +250,16 @@ namespace RenderingLibrary
             // renderable, so a Line was silently dropped from SVG export (the same #3259-class
             // gap that hit Rectangle). The XNALIKE/Apos backend registers the same runtime in
             // AposShapeRuntime. Pairs with the "Line" arm added to HandleCustomGetDefaultState.
-            ElementSaveExtensions.RegisterGueInstantiation(
+            Register(
                 "Line",
                 () => new global::SkiaGum.GueDeriving.LineRuntime());
 
             // NineSliceRuntime has no SkiaGum.GueDeriving shim, so it stays the canonical base type.
-            ElementSaveExtensions.RegisterGueInstantiation(
+            Register(
                 "NineSlice",
                 () => new NineSliceRuntime());
 
-            ElementSaveExtensions.RegisterGueInstantiation(
+            Register(
                 "Polygon",
                 () => new global::SkiaGum.GueDeriving.PolygonRuntime());
 
@@ -263,15 +270,15 @@ namespace RenderingLibrary
             // svg / tool File ▸ Export) and any SkiaGum-hosted render — only Text/Container/etc.
             // drew. The XNALIKE/raylib backends register the same runtime in their SystemManagers.
             // RectangleRuntime has no SkiaGum.GueDeriving shim, so it stays the canonical base type.
-            ElementSaveExtensions.RegisterGueInstantiation(
+            Register(
                 "Rectangle",
                 () => new RectangleRuntime());
 
-            ElementSaveExtensions.RegisterGueInstantiation(
+            Register(
                 "Sprite",
                 () => new global::SkiaGum.GueDeriving.SpriteRuntime());
 
-            ElementSaveExtensions.RegisterGueInstantiation(
+            Register(
                 "Text",
                 () => new global::SkiaGum.GueDeriving.TextRuntime());
 #pragma warning restore CS0618

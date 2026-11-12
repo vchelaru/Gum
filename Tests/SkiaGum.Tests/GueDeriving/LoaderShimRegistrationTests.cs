@@ -32,7 +32,7 @@ public class LoaderShimRegistrationTests
             "RegisterComponentRuntimeInstantiations",
             BindingFlags.Instance | BindingFlags.NonPublic);
         method.ShouldNotBeNull("RegisterComponentRuntimeInstantiations must exist on SystemManagers.");
-        method!.Invoke(managers, parameters: null);
+        method!.Invoke(managers, new object[] { false }); // onlyMissing: false, as on the first Initialize
     }
 
 #pragma warning disable CS0618 // intentionally pinning the obsolete back-compat shim types

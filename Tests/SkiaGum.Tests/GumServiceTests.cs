@@ -345,6 +345,45 @@ public class GumServiceTests : BaseTestClass
     }
 
     [Fact]
+    public void Initialize_AfterRegistryReset_RegistersStandardRuntimesAgain()
+    {
+        using SKSurface surface = SKSurface.Create(new SKImageInfo(200, 100));
+        GumService.Default.Initialize(surface.Canvas, 200, 100);
+        GumRuntime.ElementSaveExtensions.Reset();
+
+        GumService.Default.Initialize(surface.Canvas, 200, 100);
+
+        GumRuntime.ElementSaveExtensions.CreateGueForElement(new StandardElementSave { Name = "Text" })
+            .ShouldBeAssignableTo<TextRuntime>();
+    }
+
+    [Fact]
+    public void Initialize_Again_KeepsAHostRegistrationForAStandardType()
+    {
+        using SKSurface surface = SKSurface.Create(new SKImageInfo(200, 100));
+        GumService.Default.Initialize(surface.Canvas, 200, 100);
+        GumRuntime.ElementSaveExtensions.RegisterGueInstantiation("Text", () => new HostTextRuntime());
+
+        try
+        {
+            GumService.Default.Initialize(surface.Canvas, 200, 100);
+
+            GumRuntime.ElementSaveExtensions.CreateGueForElement(new StandardElementSave { Name = "Text" })
+                .ShouldBeOfType<HostTextRuntime>();
+        }
+        finally
+        {
+#pragma warning disable CS0618 // The SkiaGum.GueDeriving shim is what SystemManagers registers.
+            GumRuntime.ElementSaveExtensions.RegisterGueInstantiation("Text", () => new global::SkiaGum.GueDeriving.TextRuntime());
+#pragma warning restore CS0618
+        }
+    }
+
+    private class HostTextRuntime : TextRuntime
+    {
+    }
+
+    [Fact]
     public void Initialize_ShouldSetIGumServiceDefault()
     {
         using SKSurface surface = SKSurface.Create(new SKImageInfo(200, 100));

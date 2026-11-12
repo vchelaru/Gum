@@ -227,6 +227,15 @@ public class Renderer : IRenderer
     }
 
 
+    /// <summary>
+    /// Set while drawing a frame into a texture cleared to transparent that is saved as an image
+    /// (<c>gumcli screenshot --backend raylib</c>). Each layer then draws inside the same premultiply
+    /// pass a render-target bake uses, so the texture holds premultiplied color with correct alpha; the
+    /// caller un-premultiplies it before saving a straight-alpha PNG. Without it raylib's
+    /// <c>BlendMode.Alpha</c> writes alpha as srcA * srcA over the transparent clear (#7992).
+    /// </summary>
+    public bool IsDrawingToTransparentTarget { get; set; }
+
     internal void Draw(SystemManagers systemManagers)
     {
         Draw(systemManagers, _layers);
@@ -337,9 +346,17 @@ public class Renderer : IRenderer
             Camera2D layerCamera2D = GetCamera2DForLayer(layer);
             ActiveCamera2D = layerCamera2D;
             BatchDrawCallCounter.BeginMode2D(layerCamera2D);
+            if (IsDrawingToTransparentTarget)
+            {
+                BatchDrawCallCounter.BeginRenderTargetBlend();
+            }
 
             RenderLayer(managers, layer, prerender: false);
 
+            if (IsDrawingToTransparentTarget)
+            {
+                BatchDrawCallCounter.EndRenderTargetBlend();
+            }
             BatchDrawCallCounter.EndMode2D();
         }
 
