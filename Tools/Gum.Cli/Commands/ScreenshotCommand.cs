@@ -5,6 +5,7 @@ using System.IO;
 using Gum.ProjectServices.MonoGame;
 using Gum.ProjectServices.Raylib;
 using Gum.ProjectServices.Screenshot;
+using Gum.ProjectServices.SkiaGum;
 
 namespace Gum.Cli.Commands;
 
@@ -15,7 +16,8 @@ namespace Gum.Cli.Commands;
 /// Defaults to MonoGame (DesktopGL); <c>--backend raylib</c> renders the same element via raylib
 /// instead, so the two outputs can be diffed pixel-for-pixel against the same project (#4174) —
 /// exactly the gap that let raylib's rendering silently diverge from the tool's undetected (#4172).
-/// Both backends are referenced directly (see Gum.Cli.csproj) rather than loaded via a custom
+/// <c>--backend skia</c> renders through SkiaGum for games that draw with Skia (#7965).
+/// All backends are referenced directly (see Gum.Cli.csproj) rather than loaded via a custom
 /// AssemblyLoadContext: each `gumcli screenshot` invocation is a one-shot process that only ever
 /// initializes one backend, so the static-singleton collision a shared-process concurrent-init would
 /// risk never arises in practice.
@@ -24,6 +26,7 @@ public static class ScreenshotCommand
 {
     private const string MonoGameBackend = "monogame";
     private const string RaylibBackend = "raylib";
+    private const string SkiaBackend = "skia";
 
     /// <summary>
     /// Creates the <c>screenshot</c> command definition.
@@ -53,7 +56,7 @@ public static class ScreenshotCommand
         Option<string> backendOption = new Option<string>(
             "--backend",
             () => MonoGameBackend,
-            $"Rendering backend to use: '{MonoGameBackend}' (default) or '{RaylibBackend}'.");
+            $"Rendering backend to use: '{MonoGameBackend}' (default), '{RaylibBackend}' or '{SkiaBackend}'.");
 
         Option<string?> backgroundOption = new Option<string?>(
             "--background",
@@ -124,9 +127,12 @@ public static class ScreenshotCommand
             case RaylibBackend:
                 service = new RaylibScreenshotService();
                 break;
+            case SkiaBackend:
+                service = new SkiaGumScreenshotService();
+                break;
             default:
                 Console.Error.WriteLine(
-                    $"error: Unknown backend '{backend}'. Expected '{MonoGameBackend}' or '{RaylibBackend}'.");
+                    $"error: Unknown backend '{backend}'. Expected '{MonoGameBackend}', '{RaylibBackend}' or '{SkiaBackend}'.");
                 return 2;
         }
 

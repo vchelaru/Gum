@@ -4,8 +4,6 @@ using Gum.Wireframe;
 using Raylib_cs;
 using RenderingLibrary;
 using System;
-using System.IO;
-using System.Linq;
 
 namespace Gum.ProjectServices.Raylib;
 
@@ -45,13 +43,11 @@ public class RaylibScreenshotService : IScreenshotService
                 return ScreenshotResult.Failed($"Failed to load project: {request.ProjectPath}");
             }
 
-            ElementSave? elementSave = project.AllElements
-                .FirstOrDefault(e => e.Name == request.ElementName);
+            ElementSave? elementSave = request.FindElement(project);
 
             if (elementSave == null)
             {
-                return ScreenshotResult.Failed(
-                    $"Element '{request.ElementName}' not found in project.");
+                return ScreenshotResult.ElementNotFound(request.ElementName);
             }
 
             // Same resolution as MonoGameScreenshotService, so the two backends stay diffable.
@@ -101,12 +97,7 @@ public class RaylibScreenshotService : IScreenshotService
                         }
                     }
 
-                    string outputPath = Path.GetFullPath(request.OutputPath);
-                    string? outputDir = Path.GetDirectoryName(outputPath);
-                    if (outputDir != null)
-                    {
-                        Directory.CreateDirectory(outputDir);
-                    }
+                    string outputPath = request.PrepareOutputPath();
 
                     bool exported = Raylib_cs.Raylib.ExportImage(image, outputPath);
                     if (!exported)
