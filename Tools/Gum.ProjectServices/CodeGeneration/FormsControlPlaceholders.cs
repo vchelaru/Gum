@@ -75,6 +75,11 @@ namespace Gum.Forms.Controls
     {
     }
 
+    public class TabItem
+    {
+        public string? Header { get; set; }
+    }
+
     public class TextBox : TextBoxBase
     {
         public virtual string Text { get; set; } = string.Empty;
