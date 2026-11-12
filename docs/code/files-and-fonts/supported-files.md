@@ -78,7 +78,7 @@ A render target container loads a shader file through `SourceShaderFile`. See [C
 | `.slang` | `Gum.MonoGame.ShadowDusk` | `Gum.FNA.ShadowDusk` | `Gum.KNI.ShadowDusk` | `Gum.raylib.ShadowDusk` | `Gum.SkiaSharp.ShadowDusk` |
 | `.sksl` |  |  |  |  | ✓ |
 
-SkiaGum is the only runtime that loads a shader file without a package, and only `.sksl`. Bare `.hlsl`, `.glsl`, `.fs` and WGSL files do not load on any runtime. On MonoGame, KNI, FNA and raylib, you can register your own shader resolver to load another format.
+SkiaGum is the only runtime that loads a shader file without a package, and only `.sksl`. On MonoGame, KNI, FNA and raylib, you can register your own shader resolver to load another format.
 
 ## SVG
 
