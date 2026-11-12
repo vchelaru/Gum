@@ -98,7 +98,8 @@ public class GumServiceInitializeTests
         // MonoGame/KNI/FNA's SystemManagers.Initialize() sets this to ThrowException, but raylib's
         // never did, leaving raylib on the shared ConsumeSilently default (#4577).
         Gum.GumService.Default.Uninitialize();
-        GraphicalUiElement.MissingFileBehavior = MissingFileBehavior.ConsumeSilently;
+        // Nothing assigned: a value the user assigns before Initialize is kept (#7963).
+        GraphicalUiElement.AssignedMissingFileBehavior = null;
 
         try
         {

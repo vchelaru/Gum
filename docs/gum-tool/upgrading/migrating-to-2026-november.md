@@ -212,13 +212,19 @@ To find what still uses an old name, build with the bundled `Gum.Analyzers` pack
 
 ## Missing Files and Load Errors
 
-Gum now fails loudly instead of drawing nothing in these cases. Fix the file or path. To keep the old silent behavior, set `ConsumeSilently` after Gum initializes. Gum then raises `PropertyAssignmentError` with the file name.
+Gum now fails loudly instead of drawing nothing in these cases. Fix the file or path. To keep the old silent behavior, set `ConsumeSilently`. Gum then raises `PropertyAssignmentError` with the file name.
 
 ```csharp
 // Initialize
 Gum.Wireframe.GraphicalUiElement.MissingFileBehavior =
     Gum.Wireframe.MissingFileBehavior.ConsumeSilently;
 ```
+
+### MissingFileBehavior Set Before Initialize Is Kept
+
+`GumService.Initialize` no longer replaces a `MissingFileBehavior` you set before it. It sets `ThrowException` only when nothing set a value first. If your game sets `ConsumeSilently` before `Initialize` and expects missing files to throw, remove that line.
+
+With `ConsumeSilently` set before `Initialize`, a project whose screen, component or standard element file is missing still loads, and `GumService.Default.LastLoadResult.MissingFiles` lists the missing files. An instance of a missing component is an empty container. With `ThrowException`, `Initialize` throws as before.
 
 ### raylib Throws When an Image Cannot Be Decoded
 

@@ -119,6 +119,32 @@ public class SkiaGumScreenshotServiceTests : IDisposable
         result.ErrorMessage.ShouldContain("'Missing' not found");
     }
 
+    // Initialize applies its ThrowException default only while nothing is assigned (#7963), so a screenshot
+    // that started with nothing assigned must not leave a value behind for a later command in the same process.
+    [Fact]
+    public void TakeScreenshot_LeavesMissingFileBehaviorUnassigned_WhenNothingWasAssigned()
+    {
+        string projectPath = CreateProjectWithRedRectangle();
+        Gum.Wireframe.MissingFileBehavior? before = Gum.Wireframe.GraphicalUiElement.AssignedMissingFileBehavior;
+        Gum.Wireframe.GraphicalUiElement.AssignedMissingFileBehavior = null;
+        try
+        {
+            ScreenshotResult result = new SkiaGumScreenshotService().TakeScreenshot(new ScreenshotRequest
+            {
+                ProjectPath = projectPath,
+                ElementName = "Screen",
+                OutputPath = Path.Combine(_tempDirectory, "Restore.png"),
+            });
+
+            result.Success.ShouldBeTrue(result.ErrorMessage);
+            Gum.Wireframe.GraphicalUiElement.AssignedMissingFileBehavior.ShouldBeNull();
+        }
+        finally
+        {
+            Gum.Wireframe.GraphicalUiElement.AssignedMissingFileBehavior = before;
+        }
+    }
+
     private string CreateProjectWithRedRectangle()
     {
         string projectPath = Path.Combine(_tempDirectory, "Project.gumx");

@@ -10,6 +10,14 @@ using System.Runtime.CompilerServices;
 // Gum.Expressions shares the int-range guard (ElementSaveExtensions.IsInIntRange) with its CastTo.
 [assembly: InternalsVisibleTo("GumExpressions")]
 [assembly: InternalsVisibleTo("Gum.ProjectServices")]
+// These save and restore GraphicalUiElement.AssignedMissingFileBehavior (#7963).
+[assembly: InternalsVisibleTo("Gum.ProjectServices.SkiaGum")]
+[assembly: InternalsVisibleTo("Gum.ProjectServices.Tests")]
+[assembly: InternalsVisibleTo("Gum.ProjectServices.SkiaGum.Tests")]
+[assembly: InternalsVisibleTo("Gum.Cli.Tests")]
+[assembly: InternalsVisibleTo("Gum.Presentation.Tests")]
+[assembly: InternalsVisibleTo("GumToolUnitTests")]
+[assembly: InternalsVisibleTo("SkiaHost.TestsCommon")]
 // The tool preview resolves a keyframe state's variable references (AnimationRuntime.GetStateToSet with a live root).
 [assembly: InternalsVisibleTo("Gum.Presentation")]
 [assembly: InternalsVisibleTo("MonoGameGum.IntegrationTests")]

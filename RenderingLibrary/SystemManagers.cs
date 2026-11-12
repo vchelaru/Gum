@@ -319,7 +319,7 @@ public partial class SystemManagers : ISystemManagers
 
             RegisterComponentRuntimeInstantiations();
 
-            GraphicalUiElement.MissingFileBehavior = MissingFileBehavior.ThrowException;
+            GraphicalUiElement.ApplyRuntimeMissingFileBehaviorDefault();
 
 #endif
         }
