@@ -891,7 +891,7 @@ namespace RenderingLibrary.Graphics
 
             IRenderableIpso owner = ResolveRenderTargetCacheOwner(renderable);
             return TryGetManualBakePlan(renderable, owner, zoom, out ManualBakePlan plan) &&
-                _renderTargetService.GetValidImageTarget(owner, plan.Width, plan.Height, plan.Zoom, plan.RefreshVersion) != null;
+                _renderTargetService.GetValidImageTarget(owner, plan.ContainerWidth, plan.ContainerHeight, plan.Zoom, plan.RefreshVersion) != null;
         }
 
         // Records the surface as this frame's baked result for the owner. A second bake in the same frame
@@ -910,12 +910,14 @@ namespace RenderingLibrary.Graphics
         /// <summary>What a manual-mode container needs this frame: its pixel size, the zoom and the refresh version.</summary>
         private readonly struct ManualBakePlan
         {
-            public ManualBakePlan(IRenderTargetRenderable settings, IRenderableIpso owner, int width, int height, float zoom)
+            public ManualBakePlan(IRenderTargetRenderable settings, IRenderableIpso owner, int width, int height, float containerWidth, float containerHeight, float zoom)
             {
                 Settings = settings;
                 Owner = owner;
                 Width = width;
                 Height = height;
+                ContainerWidth = containerWidth;
+                ContainerHeight = containerHeight;
                 Zoom = zoom;
             }
 
@@ -923,6 +925,8 @@ namespace RenderingLibrary.Graphics
             public IRenderableIpso Owner { get; }
             public int Width { get; }
             public int Height { get; }
+            public float ContainerWidth { get; }
+            public float ContainerHeight { get; }
             public float Zoom { get; }
             public int RefreshVersion => Settings.RenderTargetRefreshVersion;
         }
@@ -948,7 +952,7 @@ namespace RenderingLibrary.Graphics
                 return false;
             }
 
-            plan = new ManualBakePlan(settings, owner, width, height, zoom);
+            plan = new ManualBakePlan(settings, owner, width, height, container.Width, container.Height, zoom);
             return true;
         }
 
@@ -960,7 +964,7 @@ namespace RenderingLibrary.Graphics
         {
             IRenderableIpso owner = plan.Owner;
             SkiaRenderTarget? cached = _renderTargetService.GetValidImageTarget(
-                owner, plan.Width, plan.Height, plan.Zoom, plan.RefreshVersion);
+                owner, plan.ContainerWidth, plan.ContainerHeight, plan.Zoom, plan.RefreshVersion);
             if (cached != null)
             {
                 _renderTargetService.MarkUsed(owner);
@@ -1003,7 +1007,7 @@ namespace RenderingLibrary.Graphics
             }
 
             _renderTargetService.CommitImage(owner,
-                new SkiaCachedImage(plan.Width, plan.Height, zoom, plan.RefreshVersion, fractionX, fractionY));
+                new SkiaCachedImage(plan.ContainerWidth, plan.ContainerHeight, zoom, plan.RefreshVersion, fractionX, fractionY));
             RegisterBakedSurface(owner, image.Surface, zoom);
         }
 

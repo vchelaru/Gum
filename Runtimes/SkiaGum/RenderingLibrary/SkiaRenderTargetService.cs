@@ -30,14 +30,14 @@ internal sealed class SkiaRenderTarget
 /// </summary>
 internal sealed class SkiaCachedImage
 {
-    public int ContainerWidth { get; }
-    public int ContainerHeight { get; }
+    public float ContainerWidth { get; }
+    public float ContainerHeight { get; }
     public float Zoom { get; }
     public int RefreshVersion { get; }
     public float FractionX { get; }
     public float FractionY { get; }
 
-    public SkiaCachedImage(int containerWidth, int containerHeight, float zoom, int refreshVersion, float fractionX, float fractionY)
+    public SkiaCachedImage(float containerWidth, float containerHeight, float zoom, int refreshVersion, float fractionX, float fractionY)
     {
         ContainerWidth = containerWidth;
         ContainerHeight = containerHeight;
@@ -84,7 +84,7 @@ internal sealed class SkiaRenderTargetService : RenderTargetServiceBase<SkiaRend
     /// The cached image for <paramref name="owner"/> when it was baked at exactly this container size, zoom and
     /// refresh version; null when it has to be baked. Does not mark the owner used.
     /// </summary>
-    public SkiaRenderTarget? GetValidImageTarget(IRenderableIpso owner, int containerWidth, int containerHeight, float zoom, int refreshVersion)
+    public SkiaRenderTarget? GetValidImageTarget(IRenderableIpso owner, float containerWidth, float containerHeight, float zoom, int refreshVersion)
     {
         if (_images.TryGetValue(owner, out SkiaCachedImage? image)
             && image.ContainerWidth == containerWidth && image.ContainerHeight == containerHeight

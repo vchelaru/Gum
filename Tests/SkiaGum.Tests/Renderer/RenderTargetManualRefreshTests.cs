@@ -159,6 +159,22 @@ half4 main(float2 coord) {
     }
 
     [Fact]
+    public void Draw_ManualResizedByLessThanAPixel_Rebakes()
+    {
+        using SKSurface surface = SKSurface.Create(new SKImageInfo(64, 64));
+        GumService.Default.Initialize(surface.Canvas, 64, 64);
+        ContainerRuntime container = CreateContainer(SKColors.Red);
+        container.Width = 50;
+        GumService.Default.Root.Children.Add(container);
+        DrawFrame(surface);
+
+        container.Width = 50.4f;
+        DrawFrame(surface);
+
+        SkiaRenderer.RenderTargetBakeCount.ShouldBe(2);
+    }
+
+    [Fact]
     public void Draw_ManualZoomChanged_Rebakes()
     {
         using SKSurface surface = SKSurface.Create(new SKImageInfo(64, 64));
