@@ -551,6 +551,14 @@ namespace RenderingLibrary.Graphics
 
             var isOnScreen = true;
 
+            // Only a container that clips its children is culled here, and that is deliberate. A clipper's
+            // rectangle is a hard limit on where its subtree can draw, so a clipper outside the current clip
+            // hides everything under it. A renderable that does not clip has no known visible extent: its own
+            // bounds miss drop shadows, strokes and text overflow, and its children can spill outside it.
+            // Culling those would need every descendant's real drawn extent, computed per frame (more CPU than
+            // the skipped draws save) or cached and invalidated on every property change. Skia already rejects
+            // the off-screen pixels through the clip. For long lists, skip the items at the control level
+            // (virtualization) rather than here.
             if (renderable.ClipsChildren)
             {
                 var bounds = renderable.GetClipTransform(out SKRect localRect).MapRect(localRect);
