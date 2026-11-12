@@ -1,0 +1,32 @@
+AngelCode Bitmap Font Generator (BMFont) 1.14b
+Copyright (c) 2004-2025 Andreas Jonsson
+https://www.angelcode.com/products/bmfont/
+
+Gum.ProjectServices.dll embeds bmfont.exe as a resource and extracts it on first
+use to generate bitmap fonts (Windows only). BMFont is distributed under the
+zlib License:
+
+This software is provided 'as-is', without any express or implied
+warranty.  In no event will the authors be held liable for any damages
+arising from the use of this software.
+
+Permission is granted to anyone to use this software for any purpose,
+including commercial applications, and to alter it and redistribute it
+freely, subject to the following restrictions:
+
+1. The origin of this software must not be misrepresented; you must not
+   claim that you wrote the original software. If you use this software
+   in a product, an acknowledgment in the product documentation would be
+   appreciated but is not required.
+2. Altered source versions must be plainly marked as such, and must not be
+   misrepresented as being the original software.
+3. This notice may not be removed or altered from any source distribution.
+
+bmfont.exe statically links:
+- zlib 1.2.8, Copyright (C) 1995-2013 Jean-loup Gailly and Mark Adler
+  (zlib License, above)
+- libpng 1.6.19, Copyright (c) 1998-2015 Glenn Randers-Pehrson et al.
+  (libpng License: http://www.libpng.org/pub/png/src/libpng-LICENSE.txt)
+- libjpeg from the Independent JPEG Group (IJG License:
+  https://jpegclub.org/reference/libjpeg-license/). This software is based in
+  part on the work of the Independent JPEG Group.

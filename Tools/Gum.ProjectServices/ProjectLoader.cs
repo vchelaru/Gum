@@ -55,7 +55,9 @@ public class ProjectLoader : IProjectLoader
                 // first lets check say that the file on disk is out of date (GUM0016).
                 List<MissingBaseInstanceRepair> missingBaseInstances = new List<MissingBaseInstanceRepair>();
                 project.RepairMissingDefinedByBaseInstances(missingBaseInstances);
-                project.Initialize();
+                // Same tolerance as the tool's load, so check accepts a project the tool opens: an instance of
+                // a standard type with no registered default state (e.g. one a tool plugin adds) is kept as-is.
+                project.Initialize(tolerateMissingDefaultStates: true);
                 StripRemovedVariables(project);
 
                 bool isJsonFormat = GumProjectSave.IsJsonFormat(filePath);
