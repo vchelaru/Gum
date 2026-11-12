@@ -429,6 +429,55 @@ namespace GumRuntime
         private static HashSet<ElementSave> _elementsBeingBuilt =>
             _elementsBeingBuiltOfThread ??= new HashSet<ElementSave>();
 
+        // Takes the report of a skipped circular instance in place of RaiseReferenceError while set: the hot
+        // reload adds it to the reload's result, which prints it. Per thread, like the set it reports on.
+        [ThreadStatic]
+        private static Action<InstanceSave, string>? _circularInstanceReporterOfThread;
+
+        /// <summary>
+        /// Treats <paramref name="elementSave"/> as being built until the returned scope is disposed, so an
+        /// instance of it created inside the scope is skipped as circular, the way a build of the element skips
+        /// it. Hot reload walks an existing tree with this around each visual, so the instances it creates stop
+        /// at the same loop a fresh build stops at (#7988).
+        /// </summary>
+        internal static BuildScope EnterBuild(ElementSave elementSave) =>
+            new BuildScope(_elementsBeingBuilt.Add(elementSave) ? elementSave : null);
+
+        /// <summary>
+        /// Sends every circular instance skipped on this thread to <paramref name="reporter"/> until the returned
+        /// scope is disposed, with the message that would otherwise be raised.
+        /// </summary>
+        internal static CircularInstanceReportScope ReportCircularInstancesTo(Action<InstanceSave, string> reporter)
+        {
+            CircularInstanceReportScope scope = new CircularInstanceReportScope(_circularInstanceReporterOfThread);
+            _circularInstanceReporterOfThread = reporter;
+            return scope;
+        }
+
+        internal readonly struct BuildScope : IDisposable
+        {
+            private readonly ElementSave? _added;
+
+            public BuildScope(ElementSave? added) => _added = added;
+
+            public void Dispose()
+            {
+                if (_added != null)
+                {
+                    _elementsBeingBuilt.Remove(_added);
+                }
+            }
+        }
+
+        internal readonly struct CircularInstanceReportScope : IDisposable
+        {
+            private readonly Action<InstanceSave, string>? _previous;
+
+            public CircularInstanceReportScope(Action<InstanceSave, string>? previous) => _previous = previous;
+
+            public void Dispose() => _circularInstanceReporterOfThread = _previous;
+        }
+
         /// <summary>
         /// True, after reporting it, when <paramref name="instanceElement"/> is already being built higher up the
         /// stack, so building another one for an instance would never end. The instance is skipped.
@@ -440,25 +489,25 @@ namespace GumRuntime
                 return false;
             }
 
-            RaiseReferenceError($"Circular instance: {instance.ParentContainer?.Name}.{instance.Name} is an instance of " +
-                $"{instanceElement.Name}, which contains it. The instance was not created.");
+            string message = $"Circular instance: {instance.ParentContainer?.Name}.{instance.Name} is an instance of " +
+                $"{instanceElement.Name}, which contains it. The instance was not created.";
+            if (_circularInstanceReporterOfThread != null)
+            {
+                _circularInstanceReporterOfThread(instance, message);
+            }
+            else
+            {
+                RaiseReferenceError(message);
+            }
             return true;
         }
 
         private static GraphicalUiElement ToGraphicalUiElementCore(ElementSave elementSave,
             ISystemManagers systemManagers, bool addToManagers, string? genericType, bool isOutermostBuild)
         {
-            bool addedToBeingBuilt = _elementsBeingBuilt.Add(elementSave);
-            try
+            using (EnterBuild(elementSave))
             {
                 return BuildElement(elementSave, systemManagers, addToManagers, genericType, isOutermostBuild);
-            }
-            finally
-            {
-                if (addedToBeingBuilt)
-                {
-                    _elementsBeingBuilt.Remove(elementSave);
-                }
             }
         }
 

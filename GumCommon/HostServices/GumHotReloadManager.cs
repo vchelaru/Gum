@@ -1648,9 +1648,16 @@ public class GumHotReloadManager : IGumHotReloadManager
             root.SaveFormsRuntimePropertiesRecursive();
         }
 
-        foreach (GraphicalUiElement root in rootList)
+        // An instance the walk skips because it would contain itself is part of this reload's result,
+        // printed with the issues instead of on its own.
+        using (ElementSaveExtensions.ReportCircularInstancesTo((instance, message) => context.ReportOnce(
+            $"loop:{instance.ParentContainer?.Name}.{instance.Name}",
+            new HotReloadIssue(HotReloadIssueKind.InstanceLoop, message, instance.ParentContainer?.Name, instance.Name))))
         {
-            ApplyDiffRecursive(root, byName, systemManagers, context);
+            foreach (GraphicalUiElement root in rootList)
+            {
+                ApplyDiffRecursive(root, byName, systemManagers, context);
+            }
         }
 
         // Re-applying a default state overwrites what a categorical state set, so each visual goes
@@ -1761,6 +1768,12 @@ public class GumHotReloadManager : IGumHotReloadManager
 
         if (name != null && byName.TryGetValue(name, out ElementSave? newEs))
         {
+            // While its instances are walked, this element counts as being built, as it is when a
+            // restart builds it: an instance of it created below (a component that contains this one)
+            // is skipped and reported instead of growing the tree one level per reload until the
+            // stack overflows (#7988).
+            using ElementSaveExtensions.BuildScope building = ElementSaveExtensions.EnterBuild(newEs);
+
             ElementSave? oldEs = element.ElementSave;
             element.ElementSave = newEs;
             RefreshStatesAndCategories(element, newEs, byName);
