@@ -61,7 +61,7 @@ public class NineSlice : RenderableShapeBase, IAnimatable, IAnimationChainRender
     {
         Texture = frame.Texture;
 
-        if (frame.Texture != null)
+        if (Sprite.IsUsable(frame.Texture))
         {
             SKBitmap tex = frame.Texture;
             int left = MathFunctions.RoundToInt(frame.LeftCoordinate * tex.Width);

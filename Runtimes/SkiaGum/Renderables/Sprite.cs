@@ -219,7 +219,7 @@ public class Sprite : RenderableShapeBase, IAspectRatio, ITextureCoordinate, IAn
         }
         FlipDiagonal = frame.FlipDiagonal;
 
-        if (frame.Texture != null)
+        if (IsUsable(frame.Texture))
         {
             var tex = frame.Texture;
             var left = MathFunctions.RoundToInt(frame.LeftCoordinate * tex.Width);
