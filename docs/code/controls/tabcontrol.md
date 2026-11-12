@@ -86,4 +86,4 @@ A focused TabControl selects the previous or next enabled tab with the left and 
 
 ## Styling
 
-TabControl, TabItem, and TabPage are styled by your theme. The default `FormsTemplate` and the Bubblegum theme include components for all three, so tabs and pages can be authored in the Gum tool and parented to the `InnerPanelInstance` and `ContentPanelInstance` of the TabControl.
+TabControl, TabItem, and TabPage are styled by your theme, and the themes that ship with Gum style all three. To build tabs and pages in the Gum tool, see [TabControl](../../gum-tool/forms-controls/tabcontrol.md).
