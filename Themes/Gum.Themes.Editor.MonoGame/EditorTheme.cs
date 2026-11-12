@@ -99,6 +99,11 @@ public static class EditorTheme
         TryAdd(typeof(Expander), (_, c) => new ExpanderVisual(tryCreateFormsObject: c));
         TryAdd(typeof(ListBoxItem), (_, c) => new ListBoxItemVisual(tryCreateFormsObject: c));
         TryAdd(typeof(ListBox), (_, c) => new ListBoxVisual(tryCreateFormsObject: c));
+        TryAdd(typeof(TabItem), (_, c) => new TabItemVisual(tryCreateFormsObject: c));
+        // Editor's tool-content tabs use the stock content panel and page, so only the TabItem is themed here;
+        // the stock ones are pinned so a theme switch cannot leave a previous theme's visuals behind.
+        TryAdd(typeof(TabControl), (_, c) => new Gum.Forms.DefaultVisuals.V3.TabControlVisual(tryCreateFormsObject: c));
+        TryAdd(typeof(TabPage), (_, c) => new Gum.Forms.DefaultVisuals.V3.TabPageVisual(tryCreateFormsObject: c));
         TryAdd(typeof(ScrollBar), (_, c) => new ScrollBarVisual(tryCreateFormsObject: c));
         TryAdd(typeof(ScrollViewer), (_, c) => new ScrollViewerVisual(tryCreateFormsObject: c));
         TryAdd(typeof(Slider), (_, c) => new SliderVisual(tryCreateFormsObject: c));
