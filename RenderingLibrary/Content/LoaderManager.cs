@@ -145,8 +145,11 @@ namespace RenderingLibrary.Content
         public BitmapFont DefaultBitmapFont => Text.DefaultBitmapFont;
 
         /// <summary>
-        /// The file extensions (without leading dot) that Gum treats as loadable textures.
+        /// Obsolete. Use <see cref="ContentLoader.SupportedImageExtensions"/> instead, which lists what the
+        /// loader actually decodes.
         /// </summary>
+        // Obsoleted 2026-11-12. Warning now; error:true no earlier than May 2027; remove no earlier than November 2027.
+        [Obsolete("Use ContentLoader.SupportedImageExtensions instead")]
         public IEnumerable<string> ValidTextureExtensions
         {
             get

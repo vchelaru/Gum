@@ -26,6 +26,17 @@ namespace RenderingLibrary.Content;
 /// </remarks>
 public sealed class ContentLoader : IContentLoader
 {
+    // The formats the stock raylib native decodes (its config.h SUPPORT_FILEFORMAT_* defaults).
+    private static readonly string[] BuiltInImageExtensions = { "png", "bmp", "gif", "qoi", "dds" };
+
+    /// <summary>
+    /// The image file extensions (lower case, without the dot) this loader decodes: the formats the
+    /// stock raylib native decodes, plus the extensions the registered
+    /// <see cref="LoaderManager.ImageDecoders"/> declare. A custom raylib native build can decode more.
+    /// </summary>
+    public static IReadOnlyCollection<string> SupportedImageExtensions =>
+        BuiltInImageExtensions.Union(LoaderManager.Self.ImageDecoders.DeclaredExtensions).ToArray();
+
     /// <summary>
     /// The texture filter applied to sprite and font textures as they are loaded. Set from the
     /// project's <see cref="Gum.DataTypes.GumProjectSave.TextureFilter"/> during
@@ -296,8 +307,7 @@ public sealed class ContentLoader : IContentLoader
             UnloadImage(image);
         }
 
-        // The stock raylib native has no decoder for these.
-        string message = extension is "jpg" or "jpeg" or "tga"
+        string message = extension.Length > 0 && Array.IndexOf(BuiltInImageExtensions, extension) < 0
             ? $"Could not load '{path}': the stock raylib native does not decode .{extension}. " +
               $"Convert it to PNG, or add an IImageDecoder for .{extension} to LoaderManager.Self.ImageDecoders " +
               "before GumService.Initialize loads the project."
