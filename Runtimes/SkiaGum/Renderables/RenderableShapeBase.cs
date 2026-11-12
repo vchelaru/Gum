@@ -1116,13 +1116,16 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
     /// </summary>
     protected virtual bool DrawsBlurredShadow => false;
 
-    // The mask filter takes one sigma and ignores a gradient's per-stop alpha, so a gradient shape keeps the image filter. So does a Replace (Src) blend: the image filter replaces the whole shadow-and-shape bounds, which a blurred draw does not (it replaces only where it has coverage), so that output stays as it was. A rotated or clipped shape keeps it
-    // too (the old filter cropped the blur at the clip edge; the clip is applied after the blur here): the image filter offsets the shadow in unrotated surface space, which the rotated canvas would not match.
+    // The mask filter takes one sigma and ignores a gradient's per-stop alpha, so a gradient shape keeps the image filter. So does a Replace (Src) blend: the image filter replaces the whole shadow-and-shape bounds, which a blurred draw does not (it replaces only where it has coverage), so that output stays as it was. A rotated shape keeps it
+    // too: the image filter offsets the shadow in unrotated surface space, which the rotated canvas would not match. So does a shape
+    // that crosses the edge of a clip (or lies outside it): rendered side by side, the two draws differ by up to 31 levels along
+    // the cut rim. A shape inside its clips, whose blur may still cross
+    // an edge, matches to the level of an unclipped one (#7945).
     private bool UsesBlurredShadowDraw
     {
         get
         {
-            if (!DrawsBlurredShadow || !HasDropshadow || UseGradient || Blend == Gum.RenderingLibrary.Blend.Replace || this.GetAbsoluteRotation() != 0 || IsClipped() || _replacesPaintBelow)
+            if (!DrawsBlurredShadow || !HasDropshadow || UseGradient || Blend == Gum.RenderingLibrary.Blend.Replace || this.GetAbsoluteRotation() != 0 || _replacesPaintBelow || !IsInsideEveryClip())
             {
                 return false;
             }
@@ -1132,20 +1135,38 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
         }
     }
 
-    // Walks the parents itself: the extension that does this is not compiled into every project that includes this file.
-    private bool IsClipped()
+    // True when this shape's bounds lie inside the rectangle of every clipping ancestor (and of itself, which also
+    // clips its own draw). Walks the parents itself: the extension that does this is not compiled into every project
+    // that includes this file. Each clipper's rectangle is placed and turned as IRenderableIpsoExtensions.GetClipTransform
+    // does.
+    private bool IsInsideEveryClip()
     {
-        IRenderableIpso? current = this;
-        while (current != null)
+        float x = this.GetAbsoluteX();
+        float y = this.GetAbsoluteY();
+        IRenderableIpso? clipper = this;
+        while (clipper != null)
         {
-            if (current.ClipsChildren)
+            if (clipper.ClipsChildren)
             {
-                return true;
+                float rotation = clipper.GetAbsoluteRotation();
+                SKMatrix toWorld = SKMatrix.CreateTranslation(clipper.GetAbsoluteX(), clipper.GetAbsoluteY())
+                    .PreConcat(SKMatrix.CreateRotationDegrees(-rotation));
+                if (!toWorld.TryInvert(out SKMatrix toLocal)
+                    || !IsInside(toLocal.MapPoint(x, y), clipper)
+                    || !IsInside(toLocal.MapPoint(x + Width, y), clipper)
+                    || !IsInside(toLocal.MapPoint(x, y + Height), clipper)
+                    || !IsInside(toLocal.MapPoint(x + Width, y + Height), clipper))
+                {
+                    return false;
+                }
             }
-            current = current.Parent;
+            clipper = clipper.Parent;
         }
-        return false;
+        return true;
     }
+
+    private static bool IsInside(SKPoint pointInClipper, IRenderableIpso clipper) =>
+        pointInClipper.X >= 0 && pointInClipper.Y >= 0 && pointInClipper.X <= clipper.Width && pointInClipper.Y <= clipper.Height;
 
     private void RefreshShadowPaint(SKPaint shapePaint)
     {
@@ -1203,24 +1224,24 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
         canvas.Translate(DropshadowOffsetX, DropshadowOffsetY);
     }
 
-    bool _wasClippedAtLastPaint;
+    bool _lastUsedBlurredShadowDraw;
     float _lastAbsoluteRotation;
     protected SKPaint GetCachedPaint(SKRect boundingRect, float absoluteRotation)
     {
-        if (DrawsBlurredShadow && HasDropshadow)
+        // Which shadow draw applies (see UsesBlurredShadowDraw) follows the shape's rotation, its place in its
+        // clips and its size, none of which touch a paint property, so a change of draw rebuilds the paint.
+        bool usesBlurredShadowDraw = UsesBlurredShadowDraw;
+        if (usesBlurredShadowDraw != _lastUsedBlurredShadowDraw)
         {
-            // A clip changes which draw the shadow uses (see UsesBlurredShadowDraw) without touching any property.
-            bool isClipped = IsClipped();
-            if (isClipped != _wasClippedAtLastPaint)
-            {
-                _wasClippedAtLastPaint = isClipped;
-                ClearCachedPaint();
-            }
+            _lastUsedBlurredShadowDraw = usesBlurredShadowDraw;
+            ClearCachedPaint();
         }
-        if(boundingRect != _lastBoundingRect || absoluteRotation != _lastAbsoluteRotation)
+        // Only a gradient is built from the bounds and rotation, so a scrolling solid shape keeps its paint.
+        bool boundsChanged = boundingRect != _lastBoundingRect || absoluteRotation != _lastAbsoluteRotation;
+        _lastBoundingRect = boundingRect;
+        _lastAbsoluteRotation = absoluteRotation;
+        if (boundsChanged && UseGradient)
         {
-            _lastBoundingRect = boundingRect;
-            _lastAbsoluteRotation = absoluteRotation;
             ClearCachedPaint();
         }
         if(_cachedPaint == null || _isCachedPaintStale)
