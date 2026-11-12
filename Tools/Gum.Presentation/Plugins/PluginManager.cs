@@ -1059,7 +1059,7 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
         #region Get the Catalog
 
 
-        ResolveEventHandler reh = new ResolveEventHandler(instance.currentDomain_AssemblyResolve);
+        ResolveEventHandler reh = new PluginAssemblyResolver(message => instance._guiCommands.PrintOutput(message)).Resolve;
 
         try
         {
@@ -1147,16 +1147,6 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
     }
 
 
-
-    private Assembly? currentDomain_AssemblyResolve(object? sender, ResolveEventArgs args)
-    {
-        if(args.RequestingAssembly != null)
-        {
-            _guiCommands.PrintOutput("Couldn't find assembly: " + args.Name + " for " + args.RequestingAssembly);
-        }
-
-        return null;
-    }
 
     //internal static void Initialize()
     //{

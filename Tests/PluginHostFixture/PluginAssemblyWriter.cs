@@ -26,6 +26,15 @@ public static class PluginAssemblyWriter
     public static string WriteDerivingFrom(string directory, string assemblyName,
         string baseAssemblyName, string baseTypeNamespace, string baseTypeName, params string[] otherReferences)
     {
+        return WriteDerivingFrom(directory, assemblyName, baseAssemblyName, FixtureVersion,
+            baseTypeNamespace, baseTypeName, otherReferences);
+    }
+
+    /// <summary>As the overload without a version, with the base assembly referenced at <paramref name="baseAssemblyVersion"/>.</summary>
+    public static string WriteDerivingFrom(string directory, string assemblyName,
+        string baseAssemblyName, Version baseAssemblyVersion, string baseTypeNamespace, string baseTypeName,
+        params string[] otherReferences)
+    {
         MetadataBuilder metadata = StartAssembly(assemblyName);
         foreach (string reference in otherReferences)
         {
@@ -33,7 +42,7 @@ public static class PluginAssemblyWriter
                 default, default, default, default);
         }
         AssemblyReferenceHandle baseAssembly = metadata.AddAssemblyReference(metadata.GetOrAddString(baseAssemblyName),
-            FixtureVersion, default, default, default, default);
+            baseAssemblyVersion, default, default, default, default);
         TypeReferenceHandle baseType = metadata.AddTypeReference(baseAssembly,
             metadata.GetOrAddString(baseTypeNamespace), metadata.GetOrAddString(baseTypeName));
         metadata.AddTypeDefinition(TypeAttributes.Public | TypeAttributes.Class,
