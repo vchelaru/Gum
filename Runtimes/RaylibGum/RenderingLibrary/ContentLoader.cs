@@ -308,7 +308,7 @@ public sealed class ContentLoader : IContentLoader
         }
 
         string message = extension.Length > 0 && Array.IndexOf(BuiltInImageExtensions, extension) < 0
-            ? $"Could not load '{path}': the stock raylib native does not decode .{extension}. " +
+            ? $"Could not load '{path}': its data could not be decoded, because the stock raylib native does not decode .{extension}. " +
               $"Convert it to PNG, or add an IImageDecoder for .{extension} to LoaderManager.Self.ImageDecoders " +
               "before GumService.Initialize loads the project."
             : extension.Length == 0
