@@ -69,7 +69,7 @@ This uses two properties together:
 `RenderTargetEffect` is available on the XNA-like runtimes (MonoGame, KNI, and FNA), where the effect is a `Microsoft.Xna.Framework.Graphics.Effect`, and on SkiaSharp, where it is an `SKRuntimeEffect`. See [Render Target Shaders on SkiaSharp](#render-target-shaders-on-skiasharp).
 {% endhint %}
 
-You can supply an already-constructed `Effect` yourself, loaded however you like: the MonoGame content pipeline, or `new Effect(graphicsDevice, bytes)` with precompiled shader bytes (no content pipeline required). To point at an `.fx` or `.slang` source file instead, see [Loading Shader Files With SourceShaderFile](#loading-shader-files-with-sourceshaderfile).
+You can supply an already-constructed `Effect` yourself, loaded however you like: the MonoGame content pipeline, or `new Effect(graphicsDevice, bytes)` with precompiled shader bytes (no content pipeline required). To point at an `.fx` or `.slang` source file instead, see [Loading Shader Files With SourceShaderFile](#loading-shader-files-with-sourceshaderfile). The file formats each runtime accepts are in [Shader Files](../files-and-fonts/supported-files.md#shader-files).
 
 #### Example - Applying a shader to a container
 
@@ -161,7 +161,7 @@ The ShadowDusk packages for MonoGame, KNI, FNA and raylib are available in Novem
 
 ### Render Target Shaders on SkiaSharp
 
-On [SkiaSharp-based runtimes](../about/runtimes.md), a render target container applies an `SKRuntimeEffect`, which is compiled from SkSL. Set `SourceShaderFile` to a `.sksl` file and Gum compiles it for you.
+On [SkiaSharp-based runtimes](../about/runtimes.md), a render target container applies an `SKRuntimeEffect`, which is compiled from SkSL. Set `SourceShaderFile` to a `.sksl` file and Gum compiles it for you. The other formats are listed in [Shader Files](../files-and-fonts/supported-files.md#shader-files).
 
 ```csharp
 // Initialize
@@ -197,7 +197,7 @@ GumUI.UseShadowDusk();
 
 After this call, `SourceShaderFile` also accepts `.fx` and `.slang` files, and `.sksl` files keep working. The package converts the shader to SkSL when it loads.
 
-The shader must sample exactly one texture, named `SpriteTexture`, the same name MonoGame shaders use. Shaders that read the sprite's vertex color or the size of the drawn image also work, because Gum supplies a white tint and the container's size for those. Gum sets no other shader parameters, so a shader that depends on one should hard-code its value.
+The shader must sample exactly one texture, named `SpriteTexture`, the same name MonoGame shaders use. Shaders that read the sprite's vertex color or the size of the drawn image also work, because Gum supplies a white tint and the container's size for those. Values you set with `SetShaderParameter` apply to the container. A parameter you do not set reads as the default a `.fx` or `.slang` file declares, or as zero in an `.sksl` file.
 
 {% hint style="info" %}
 Loading `.sksl` files by default, the `SpriteTexture` input name, and the `Gum.SkiaSharp.ShadowDusk` package are available in November 2026, or now if building Gum from source. Before this, the input was named `inputImage` and `SourceShaderFile` loaded nothing unless you registered a resolver.

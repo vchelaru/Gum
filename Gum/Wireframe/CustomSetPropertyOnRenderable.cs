@@ -257,7 +257,7 @@ public partial class CustomSetPropertyOnRenderable
 
     /// <summary>
     /// Optional resolver that turns a render-target shader file reference (e.g. an <c>.fx</c> path on
-    /// the XNA-family backends, or a <c>.fs</c>/<c>.glsl</c> path on raylib, assigned via
+    /// the XNA-family backends or raylib, assigned via
     /// <c>ContainerRuntime.SourceShaderFile</c>) into a platform effect object, which is stored in
     /// <see cref="RenderableBase.RenderTargetEffect"/>. Gum core ships no shader loader; the consumer
     /// (or an opt-in library, the shader equivalent of Gum.Shapes) registers this — typically
@@ -530,7 +530,7 @@ public partial class CustomSetPropertyOnRenderable
 
     /// <summary>
     /// Resolves a render-target shader file reference (e.g. an <c>.fx</c> path on the XNA-family
-    /// backends, or a <c>.fs</c>/<c>.glsl</c> path on raylib) into a platform effect via
+    /// backends or raylib) into a platform effect via
     /// <see cref="RenderTargetEffectResolver"/> and stores it in the container's
     /// <see cref="RenderableBase.RenderTargetEffect"/> slot. Mirrors
     /// <see cref="AssignSourceFileOnSprite"/>: the resolved effect is cached in

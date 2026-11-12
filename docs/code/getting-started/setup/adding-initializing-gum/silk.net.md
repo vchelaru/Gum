@@ -96,7 +96,7 @@ Then call `GumUI.UseShadowDusk()` after `GumUI.Initialize`, as shown in [Initial
 
 If linking to source instead of NuGet, add `<Gum Root>/Runtimes/SkiaGum.ShadowDusk/SkiaGum.ShadowDusk.csproj` to your solution.
 
-For more information, see [Render Target Shaders on SkiaSharp](../../../standard-visuals/containerruntime.md#render-target-shaders-on-skiasharp).
+For more information, see [Render Target Shaders on SkiaSharp](../../../standard-visuals/containerruntime.md#render-target-shaders-on-skiasharp). The supported formats are listed in [Shader Files](../../../files-and-fonts/supported-files.md#shader-files).
 
 ## Adding Expression Support (Optional)
 

@@ -68,6 +68,18 @@ On every runtime, a Sprite or NineSlice `SourceFile` accepts `.achx` and `.achj`
 
 On every runtime, Gum loads `.csv` and `.resx` localization files. A file linked in a Gum project loads when you initialize with that project. Code-only projects load a file with `AddCsvDatabase` or `AddResxDatabase`. See [Localization](../localization.md).
 
+## Shader Files
+
+A render target container loads a shader file through `SourceShaderFile`. See [ContainerRuntime](../standard-visuals/containerruntime.md#render-target-shaders-rendertargeteffect) for the code. Each ShadowDusk package is optional and registers with `UseShadowDusk()`.
+
+| | MonoGame | FNA | KNI | raylib | SkiaGum |
+| --- | --- | --- | --- | --- | --- |
+| `.fx` | `Gum.MonoGame.ShadowDusk` | `Gum.FNA.ShadowDusk` | `Gum.KNI.ShadowDusk` | `Gum.raylib.ShadowDusk` | `Gum.SkiaSharp.ShadowDusk` |
+| `.slang` | `Gum.MonoGame.ShadowDusk` | `Gum.FNA.ShadowDusk` | `Gum.KNI.ShadowDusk` | `Gum.raylib.ShadowDusk` | `Gum.SkiaSharp.ShadowDusk` |
+| `.sksl` |  |  |  |  | ✓ |
+
+SkiaGum is the only runtime that loads a shader file without a package, and only `.sksl`. Bare `.hlsl`, `.glsl`, `.fs` and WGSL files do not load on any runtime. On MonoGame, KNI, FNA and raylib, you can register your own shader resolver to load another format.
+
 ## SVG
 
 SkiaGum loads `.svg` files into an Svg `SourceFile`.
