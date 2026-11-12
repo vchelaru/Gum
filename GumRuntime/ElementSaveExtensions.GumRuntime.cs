@@ -113,7 +113,7 @@ namespace GumRuntime
             WriteLayer.SetFunc(elementName, templateFunc);
         }
 
-        private static bool IsRegistered(string elementName)
+        internal static bool IsRegistered(string elementName)
         {
             return ElementTypeRegistry.Base.ContainsName(elementName)
                 || (ReadLayer?.ContainsName(elementName) ?? false);
