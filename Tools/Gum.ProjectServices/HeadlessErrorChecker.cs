@@ -54,10 +54,16 @@ public partial class HeadlessErrorChecker : IHeadlessErrorChecker
         _caseChecker = new FileNameCaseChecker();
     }
 
+    // The checked project gets a finder of its own on this thread. ObjectFinder.Self is the project of the
+    // current GumService (or the tool), which other threads keep reading during the check and which must
+    // still be that project afterwards.
+    private static IDisposable UseOwnFinder(GumProjectSave project) =>
+        ObjectFinder.UseOnThisThread(new ObjectFinder { GumProjectSave = project });
+
     /// <inheritdoc/>
     public IReadOnlyList<ErrorResult> GetErrorsFor(ElementSave element, GumProjectSave project)
     {
-        ObjectFinder.Self.GumProjectSave = project;
+        using IDisposable finderScope = UseOwnFinder(project);
         ObjectFinder.Self.EnableCache();
         try
         {
@@ -76,7 +82,7 @@ public partial class HeadlessErrorChecker : IHeadlessErrorChecker
         // Paths the element checks already reported as GUM0008, so the project pass skips them.
         var caseMismatchPaths = new HashSet<string>(StringComparer.Ordinal);
 
-        ObjectFinder.Self.GumProjectSave = project;
+        using IDisposable finderScope = UseOwnFinder(project);
         ObjectFinder.Self.EnableCache();
         try
         {
@@ -113,7 +119,7 @@ public partial class HeadlessErrorChecker : IHeadlessErrorChecker
         // reference; running only those two checks finds the paths to skip.
         var caseMismatchPaths = new HashSet<string>(StringComparer.Ordinal);
 
-        ObjectFinder.Self.GumProjectSave = project;
+        using IDisposable finderScope = UseOwnFinder(project);
         ObjectFinder.Self.EnableCache();
         try
         {

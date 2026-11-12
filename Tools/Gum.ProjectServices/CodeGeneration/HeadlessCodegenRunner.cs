@@ -32,16 +32,11 @@ public class HeadlessCodegenRunner : IHeadlessCodegenRunner
     /// <inheritdoc/>
     public int Run(string projectPath, IReadOnlyList<string>? elementNames, bool prune, TextWriter output, TextWriter error)
     {
-        // The finder is a process-wide singleton the loaded project shares with the caller (the tool keeps its own
-        // project in it), so this run puts back what it found.
-        GumProjectSave? previousProject = ObjectFinder.Self.GumProjectSave;
-        try
+        // ObjectFinder.Self is the caller's project (the tool's, or a running GumService's), which other threads
+        // keep reading, so the generated project gets a finder of its own on this thread.
+        using (ObjectFinder.UseOnThisThread(new ObjectFinder()))
         {
             return RunCore(projectPath, elementNames, prune, output, error);
-        }
-        finally
-        {
-            ObjectFinder.Self.GumProjectSave = previousProject;
         }
     }
 
