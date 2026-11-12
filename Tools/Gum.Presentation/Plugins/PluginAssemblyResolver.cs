@@ -25,6 +25,29 @@ internal class PluginAssemblyResolver
         _toolDirectory = Path.TrimEndingDirectorySeparator(Path.GetFullPath(AppContext.BaseDirectory));
     }
 
+    /// <summary>
+    /// Subscribes one resolver to <see cref="AppDomain.AssemblyResolve"/> for the rest of the process,
+    /// or only updates where it prints when one is already subscribed. It stays on because a plugin
+    /// binds Gum types lazily too (the first call of a method that uses one, long after load).
+    /// </summary>
+    public static void Install(Action<string> printOutput)
+    {
+        lock (_installLock)
+        {
+            if (_installed == null)
+            {
+                _installed = new PluginAssemblyResolver(message => _installedOutput?.Invoke(message));
+                AppDomain.CurrentDomain.AssemblyResolve += _installed.Resolve;
+            }
+
+            _installedOutput = printOutput;
+        }
+    }
+
+    private static readonly object _installLock = new();
+    private static PluginAssemblyResolver? _installed;
+    private static Action<string>? _installedOutput;
+
     /// <summary>Handler for <see cref="AppDomain.AssemblyResolve"/>; returns null when the reference stays unbound.</summary>
     public Assembly? Resolve(object? sender, ResolveEventArgs args)
     {

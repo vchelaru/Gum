@@ -104,4 +104,47 @@ public class PluginAssemblyResolverTests
 
         output.ShouldHaveSingleItem().ShouldContain("Couldn't find assembly");
     }
+
+    private static string WritePluginTouchingInMethodBody(Type touchedType, Version referencedVersion)
+    {
+        string directory = Path.Combine(Path.GetTempPath(), "GumPluginResolverTests", Guid.NewGuid().ToString("N"));
+        return PluginAssemblyWriter.WriteTouchingInMethodBody(directory, "TouchPlugin" + Guid.NewGuid().ToString("N"),
+            touchedType.Assembly.GetName().Name!, referencedVersion, touchedType.Namespace!, touchedType.Name);
+    }
+
+    private static void RunTouch(string pluginPath)
+    {
+        using IDisposable withoutHostFallback = SuspendTestHostResolvingFallback();
+        Assembly plugin = Assembly.LoadFrom(pluginPath);
+        plugin.GetType(plugin.GetName().Name + ".Entry")!.GetMethod("Touch")!.Invoke(null, null);
+    }
+
+    [Fact]
+    public void Install_PluginUsesGumTypeOnlyInsideAMethodBody_RunsWithoutLoadFailure()
+    {
+        Version loaded = typeof(VariableSave).Assembly.GetName().Version!;
+        // A revision no other test requests: the runtime remembers a bind that succeeded, which
+        // would let this test pass without the resolver.
+        string pluginPath = WritePluginTouchingInMethodBody(typeof(VariableSave),
+            new Version(loaded.Major, loaded.Minor, loaded.Build, loaded.Revision + 2));
+        PluginAssemblyResolver.Install(_ => { });
+
+        Should.NotThrow(() => RunTouch(pluginPath));
+    }
+
+    [Fact]
+    public void Install_CalledRepeatedly_SubscribesOnce()
+    {
+        Version loaded = typeof(VariableSave).Assembly.GetName().Version!;
+        string pluginPath = WritePluginTouchingInMethodBody(typeof(VariableSave),
+            new Version(loaded.Major, loaded.Minor, loaded.Build + 2, 0));
+        List<string> output = new();
+        PluginAssemblyResolver.Install(_ => { });
+        PluginAssemblyResolver.Install(output.Add);
+        PluginAssemblyResolver.Install(output.Add);
+
+        Should.Throw<Exception>(() => RunTouch(pluginPath));
+
+        output.Count.ShouldBe(1);
+    }
 }

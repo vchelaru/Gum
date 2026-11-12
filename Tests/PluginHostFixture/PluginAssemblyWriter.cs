@@ -52,6 +52,52 @@ public static class PluginAssemblyWriter
         return Write(directory, assemblyName, metadata);
     }
 
+    /// <summary>
+    /// Writes a plugin-shaped assembly whose class <c>{assemblyName}.Entry</c> derives from
+    /// <c>System.Object</c> and has a static <c>Touch()</c> that only constructs the public type
+    /// <paramref name="typeNamespace"/>.<paramref name="typeName"/> of <paramref name="referencedAssemblyName"/>
+    /// (referenced at <paramref name="referencedVersion"/>). The reference binds when <c>Touch</c> is first
+    /// compiled, not when the assembly or its types load, like a plugin using a type only inside a method body.
+    /// </summary>
+    public static string WriteTouchingInMethodBody(string directory, string assemblyName,
+        string referencedAssemblyName, Version referencedVersion, string typeNamespace, string typeName)
+    {
+        MetadataBuilder metadata = StartAssembly(assemblyName);
+        AssemblyReferenceHandle runtime = metadata.AddAssemblyReference(metadata.GetOrAddString("System.Runtime"),
+            new Version(10, 0, 0, 0), default,
+            metadata.GetOrAddBlob(new byte[] { 0xb0, 0x3f, 0x5f, 0x7f, 0x11, 0xd5, 0x0a, 0x3a }), default, default);
+        TypeReferenceHandle objectType = metadata.AddTypeReference(runtime,
+            metadata.GetOrAddString("System"), metadata.GetOrAddString("Object"));
+        AssemblyReferenceHandle referenced = metadata.AddAssemblyReference(metadata.GetOrAddString(referencedAssemblyName),
+            referencedVersion, default, default, default, default);
+        TypeReferenceHandle touched = metadata.AddTypeReference(referenced,
+            metadata.GetOrAddString(typeNamespace), metadata.GetOrAddString(typeName));
+
+        BlobBuilder ctorSignature = new BlobBuilder();
+        new BlobEncoder(ctorSignature).MethodSignature(isInstanceMethod: true).Parameters(0, returnType => returnType.Void(), parameters => { });
+        MemberReferenceHandle constructor = metadata.AddMemberReference(touched, metadata.GetOrAddString(".ctor"),
+            metadata.GetOrAddBlob(ctorSignature));
+
+        BlobBuilder code = new BlobBuilder();
+        InstructionEncoder instructions = new InstructionEncoder(code);
+        instructions.OpCode(ILOpCode.Newobj);
+        instructions.Token(constructor);
+        instructions.OpCode(ILOpCode.Pop);
+        instructions.OpCode(ILOpCode.Ret);
+        BlobBuilder ilStream = new BlobBuilder();
+        int bodyOffset = new MethodBodyStreamEncoder(ilStream).AddMethodBody(instructions);
+
+        BlobBuilder methodSignature = new BlobBuilder();
+        new BlobEncoder(methodSignature).MethodSignature().Parameters(0, returnType => returnType.Void(), parameters => { });
+        metadata.AddTypeDefinition(TypeAttributes.Public | TypeAttributes.Class,
+            metadata.GetOrAddString(assemblyName), metadata.GetOrAddString("Entry"), objectType,
+            MetadataTokens.FieldDefinitionHandle(1), MetadataTokens.MethodDefinitionHandle(1));
+        metadata.AddMethodDefinition(MethodAttributes.Public | MethodAttributes.Static, MethodImplAttributes.IL,
+            metadata.GetOrAddString("Touch"), metadata.GetOrAddBlob(methodSignature), bodyOffset, default);
+
+        return Write(directory, assemblyName, metadata, ilStream);
+    }
+
     /// <summary>Writes <paramref name="assemblyName"/>.dll into <paramref name="directory"/> with no types; returns its path.</summary>
     public static string WriteEmpty(string directory, string assemblyName)
     {
@@ -68,10 +114,10 @@ public static class PluginAssemblyWriter
         return metadata;
     }
 
-    private static string Write(string directory, string assemblyName, MetadataBuilder metadata)
+    private static string Write(string directory, string assemblyName, MetadataBuilder metadata, BlobBuilder? ilStream = null)
     {
         ManagedPEBuilder peBuilder = new ManagedPEBuilder(PEHeaderBuilder.CreateLibraryHeader(),
-            new MetadataRootBuilder(metadata), new BlobBuilder());
+            new MetadataRootBuilder(metadata), ilStream ?? new BlobBuilder());
         BlobBuilder image = new BlobBuilder();
         peBuilder.Serialize(image);
 
