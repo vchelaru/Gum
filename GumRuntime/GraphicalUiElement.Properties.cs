@@ -44,7 +44,30 @@ public partial class GraphicalUiElement
 
     ColorOperation IRenderableIpso.ColorOperation => RequiredContainedObject.ColorOperation;
 
-    public static MissingFileBehavior MissingFileBehavior { get; set; } = MissingFileBehavior.ConsumeSilently;
+    /// <summary>
+    /// What happens when a file is missing: a texture, font or other asset, and an element file
+    /// (screen, component, standard) when a runtime GumService loads a project. Initializing a runtime
+    /// sets it to <see cref="MissingFileBehavior.ThrowException"/> unless a value was assigned before.
+    /// </summary>
+    public static MissingFileBehavior MissingFileBehavior
+    {
+        get => AssignedMissingFileBehavior ?? MissingFileBehavior.ConsumeSilently;
+        set => AssignedMissingFileBehavior = value;
+    }
+
+    /// <summary>
+    /// The value last assigned to <see cref="MissingFileBehavior"/>, or null when none was. Code that sets
+    /// MissingFileBehavior temporarily saves and restores this, so it does not leave a value behind that
+    /// stops a later runtime Initialize from applying its default.
+    /// </summary>
+    internal static MissingFileBehavior? AssignedMissingFileBehavior { get; set; }
+
+    /// <summary>
+    /// The runtime default, applied by each runtime's SystemManagers.Initialize: throw on a missing file,
+    /// unless the user assigned <see cref="MissingFileBehavior"/> first.
+    /// </summary>
+    internal static void ApplyRuntimeMissingFileBehaviorDefault() =>
+        AssignedMissingFileBehavior ??= MissingFileBehavior.ThrowException;
 
     /// <summary>
     /// The element this was created from, or null for an element created in code.

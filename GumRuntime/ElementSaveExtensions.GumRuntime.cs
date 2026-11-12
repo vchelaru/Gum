@@ -560,6 +560,14 @@ namespace GumRuntime
                 graphicalElement.Visible = true;
             }
 
+            // An element whose file is missing has no base type to build from. When missing files are
+            // consumed silently it becomes an empty container, as a missing texture draws nothing (#7963).
+            if (containedObject == null && elementSave.IsSourceFileMissing &&
+                GraphicalUiElement.MissingFileBehavior == MissingFileBehavior.ConsumeSilently)
+            {
+                containedObject = new InvisibleRenderable();
+            }
+
             if (containedObject != null)
             {
                 graphicalElement.SetContainedObject(containedObject);

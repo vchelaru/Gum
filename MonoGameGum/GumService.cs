@@ -551,7 +551,9 @@ public partial class GumService : IGumService
     /// (or platform-equivalent overloads). Null if no project file has been loaded.
     /// Inspect <see cref="GumLoadResult.Warnings"/> for non-fatal issues such as
     /// localization string-ID collisions across multi-file RESX projects or
-    /// misconfigured mixed CSV/RESX localization lists.
+    /// misconfigured mixed CSV/RESX localization lists, and <see cref="GumLoadResult.MissingFiles"/> for
+    /// element files that were missing when <see cref="GraphicalUiElement.MissingFileBehavior"/> was
+    /// ConsumeSilently (with ThrowException, Initialize throws instead).
     /// </summary>
     public GumLoadResult? LastLoadResult { get; private set; }
 

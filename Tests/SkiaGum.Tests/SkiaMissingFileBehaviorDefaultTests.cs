@@ -17,7 +17,8 @@ public class SkiaMissingFileBehaviorDefaultTests : BaseTestClass
     [Fact]
     public void Initialize_DefaultsMissingFileBehaviorToThrowException()
     {
-        GraphicalUiElement.MissingFileBehavior = MissingFileBehavior.ConsumeSilently;
+        // Nothing assigned: a value the user assigns before Initialize is kept (#7963).
+        GraphicalUiElement.AssignedMissingFileBehavior = null;
         using SKSurface surface = SKSurface.Create(new SKImageInfo(200, 100));
 
         Gum.GumService.Default.Initialize(surface.Canvas, 200, 100);
@@ -28,7 +29,8 @@ public class SkiaMissingFileBehaviorDefaultTests : BaseTestClass
     [Fact]
     public void Initialize_ThenSpriteSourceFileMissing_ThrowsFileNotFound()
     {
-        GraphicalUiElement.MissingFileBehavior = MissingFileBehavior.ConsumeSilently;
+        // Nothing assigned: a value the user assigns before Initialize is kept (#7963).
+        GraphicalUiElement.AssignedMissingFileBehavior = null;
         using SKSurface surface = SKSurface.Create(new SKImageInfo(200, 100));
         Gum.GumService.Default.Initialize(surface.Canvas, 200, 100);
         string missing = Path.Combine(Path.GetTempPath(), "GumSkiaDefault_" + Guid.NewGuid().ToString("N"), "missing.png");

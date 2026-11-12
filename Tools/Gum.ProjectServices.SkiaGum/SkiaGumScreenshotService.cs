@@ -24,9 +24,11 @@ public class SkiaGumScreenshotService : IScreenshotService
     /// <inheritdoc/>
     public ScreenshotResult TakeScreenshot(ScreenshotRequest request)
     {
-        // Initializing SkiaGum sets MissingFileBehavior to ThrowException (#6889). Like the SVG export,
+        // Initializing SkiaGum defaults MissingFileBehavior to ThrowException (#6889). Like the SVG export,
         // a screenshot still draws the rest of an element whose image is missing.
-        MissingFileBehavior previousMissingFileBehavior = GraphicalUiElement.MissingFileBehavior;
+        // The raw value: restoring the resolved one would leave it assigned, and a later Initialize in this
+        // process would no longer apply its ThrowException default (#7963).
+        MissingFileBehavior? previousMissingFileBehavior = GraphicalUiElement.AssignedMissingFileBehavior;
         GumService gumService = GumService.Default;
         try
         {
@@ -94,7 +96,7 @@ public class SkiaGumScreenshotService : IScreenshotService
                 // best-effort cleanup
             }
 
-            GraphicalUiElement.MissingFileBehavior = previousMissingFileBehavior;
+            GraphicalUiElement.AssignedMissingFileBehavior = previousMissingFileBehavior;
         }
     }
 }

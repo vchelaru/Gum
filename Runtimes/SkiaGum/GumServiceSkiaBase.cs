@@ -161,6 +161,8 @@ public abstract class GumServiceSkiaBase : IGumService
     /// <summary>
     /// Result of the most recent project load performed by <c>Initialize</c>, including
     /// non-fatal warnings such as localization file collisions. Null when no project was loaded.
+    /// <see cref="GumLoadResult.MissingFiles"/> lists element files that were missing when
+    /// <see cref="GraphicalUiElement.MissingFileBehavior"/> was ConsumeSilently (with ThrowException, Initialize throws instead).
     /// </summary>
     public GumLoadResult? LastLoadResult { get; private set; }
 
