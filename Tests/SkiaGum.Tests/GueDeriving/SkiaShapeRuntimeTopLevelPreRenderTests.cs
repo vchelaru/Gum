@@ -76,6 +76,18 @@ public class SkiaShapeRuntimeTopLevelPreRenderTests : IDisposable
     }
 
     [Fact]
+    public void Draw_RectangleCloneTopLevel_DrawsOwnCornerRadius()
+    {
+        RectangleRuntime source = new() { Width = 80, Height = 40, CornerRadius = 12, IsFilled = true, FillColor = SKColors.Red, StrokeColor = SKColors.Transparent };
+        RectangleRuntime clone = (RectangleRuntime)source.Clone();
+        source.CornerRadius = 0;
+
+        SKColor corner = DrawAndReadPixel(clone, isTopLevel: true, x: 2, y: 2);
+
+        corner.ShouldBe(SKColors.Black, "because the clone's renderable must run the clone's PreRender (radius 12), not the source's (radius 0)");
+    }
+
+    [Fact]
     public void Draw_CircleNested_InsetsFillInsideStroke()
     {
         CircleRuntime shape = CreateCircle();
