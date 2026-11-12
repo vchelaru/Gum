@@ -8,7 +8,7 @@ using SkiaSharp;
 namespace SkiaGum.Tests.Renderables;
 
 /// <summary>
-/// Issue #7910: a Text drop shadow is a cached blurred mask drawn under the text instead of an offscreen layer with
+/// Issues #7910, #7944: a Text drop shadow is the text drawn again, tinted and blurred through ConfigurePaint, instead of an offscreen layer with
 /// an image filter. These compare it with the layer path (forced through <c>ForceLayerShadow</c>).
 /// </summary>
 public class TextShadowCacheTests
@@ -58,7 +58,32 @@ public class TextShadowCacheTests
         return SKBitmap.FromImage(surface.Snapshot());
     }
 
-    private static (int MaxDifference, double MeanDifference) Compare(SKBitmap a, SKBitmap b)
+    // Compared over a fixed backdrop so a blend that writes alpha is judged by what it shows, not by unpremultiplied noise at near-zero alpha.
+    private static SKColor Over(SKColor c)
+    {
+        float alpha = c.Alpha / 255f;
+        return new SKColor((byte)(c.Red * alpha + 255 * (1 - alpha)), (byte)(c.Green * alpha), (byte)(c.Blue * alpha + 255 * (1 - alpha)));
+    }
+
+    // glyphMask: pixels within two pixels of text in this render are skipped, to judge only the shadow.
+    private static bool NearGlyph(SKBitmap mask, int x, int y)
+    {
+        for (int dy = -2; dy <= 2; dy++)
+        {
+            for (int dx = -2; dx <= 2; dx++)
+            {
+                int px = x + dx;
+                int py = y + dy;
+                if (px >= 0 && py >= 0 && px < mask.Width && py < mask.Height && mask.GetPixel(px, py) != new SKColor(128, 128, 128))
+                {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private static (int MaxDifference, double MeanDifference) Compare(SKBitmap a, SKBitmap b, SKBitmap? glyphMask = null)
     {
         int max = 0;
         double sum = 0;
@@ -66,8 +91,12 @@ public class TextShadowCacheTests
         {
             for (int x = 0; x < a.Width; x++)
             {
-                SKColor ca = a.GetPixel(x, y);
-                SKColor cb = b.GetPixel(x, y);
+                if (glyphMask != null && NearGlyph(glyphMask, x, y))
+                {
+                    continue;
+                }
+                SKColor ca = Over(a.GetPixel(x, y));
+                SKColor cb = Over(b.GetPixel(x, y));
                 int d = System.Math.Max(System.Math.Abs(ca.Red - cb.Red), System.Math.Max(System.Math.Abs(ca.Green - cb.Green), System.Math.Abs(ca.Blue - cb.Blue)));
                 max = System.Math.Max(max, d);
                 sum += d;
@@ -123,7 +152,7 @@ public class TextShadowCacheTests
         using SKBitmap cached = Render(Create(), forceLayer: false);
 
         (int max, double mean) = Compare(layer, cached);
-        max.ShouldBeLessThanOrEqualTo(40);
+        max.ShouldBeLessThanOrEqualTo(blur == 2 ? 45 : 40); // blur 2 is the sub-pixel regime where mask and image-filter blur differ most: max 34 on Windows, 43 on macOS
         mean.ShouldBeLessThan(0.5);
     }
 
@@ -140,13 +169,16 @@ public class TextShadowCacheTests
         ReachLeft(cached, row).ShouldBeInRange(ReachLeft(layer, row) - 1, ReachLeft(layer, row) + 1);
     }
 
-    [Fact]
-    public void Draw_TextDropshadow_BuildsTheMaskOnceAndReusesIt()
+    [Theory]
+    [InlineData(0, 4, 4, 0f)]
+    [InlineData(8, 4, 4, 0f)]
+    [InlineData(8, 4, 4, 15f)]
+    public void Draw_TextDropshadowWithEqualBlur_NeverUsesAnOffscreenLayer(float blur, float offsetX, float offsetY, float degrees)
     {
-        TextRuntime text = CreateText(8, 4, 4);
-        using SKBitmap first = Render(text, forceLayer: false, frames: SettledFrames);
-        Text renderable = (Text)text.RenderableComponent;
-        renderable.HasCachedShadowMask.ShouldBeTrue();
+        TextRuntime text = CreateText(blur, offsetX, offsetY);
+        text.Rotation = degrees;
+        using SKBitmap bitmap = Render(text, forceLayer: false, frames: 1);
+        ((Text)text.RenderableComponent!).LayerShadowDrawCount.ShouldBe(0);
     }
 
     [Fact]
@@ -155,23 +187,23 @@ public class TextShadowCacheTests
         TextRuntime text = CreateText(8, 4, 4);
         text.DropshadowBlurY = 2;
         using SKBitmap bitmap = Render(text, forceLayer: false);
-        ((Text)text.RenderableComponent).HasCachedShadowMask.ShouldBeFalse();
+        ((Text)text.RenderableComponent!).LayerShadowDrawCount.ShouldBeGreaterThan(0);
     }
 
     // The settled (cached mask) draw must match the forced layer draw, and must actually draw a shadow.
-    private static void AssertSettledMatchesLayerPath(Func<TextRuntime> create, float canvasScale = 1, bool expectMask = true, double minShadowMean = 0.02)
+    private static void AssertSettledMatchesLayerPath(Func<TextRuntime> create, float canvasScale = 1, double minShadowMean = 0.02, bool shadowPixelsOnly = false, int maxDifference = 40)
     {
         using SKBitmap layer = Render(create(), forceLayer: true, canvasScale: canvasScale);
         TextRuntime cachedText = create();
         using SKBitmap cached = Render(cachedText, forceLayer: false, canvasScale: canvasScale);
-        ((Text)cachedText.RenderableComponent).HasCachedShadowMask.ShouldBe(expectMask);
+        ((Text)cachedText.RenderableComponent!).LayerShadowDrawCount.ShouldBe(0);
         TextRuntime noShadowText = create();
         noShadowText.HasDropshadow = false;
         using SKBitmap noShadow = Render(noShadowText, forceLayer: false, canvasScale: canvasScale);
 
         Compare(noShadow, layer).MeanDifference.ShouldBeGreaterThan(minShadowMean, "the layer path should draw a shadow");
-        (int max, double mean) = Compare(layer, cached);
-        max.ShouldBeLessThanOrEqualTo(40);
+        (int max, double mean) = Compare(layer, cached, shadowPixelsOnly ? noShadow : null);
+        max.ShouldBeLessThanOrEqualTo(maxDifference);
         mean.ShouldBeLessThan(0.5);
     }
 
@@ -233,7 +265,7 @@ public class TextShadowCacheTests
             TextRuntime text = CreateText(6, 4, 4);
             text.Rotation = degrees;
             return text;
-        }, expectMask: false);
+        }, shadowPixelsOnly: true); // the layer path resamples rotated glyph edges; the shadow is what is compared
     }
 
     [Theory]
@@ -267,18 +299,7 @@ public class TextShadowCacheTests
             TextRuntime text = CreateText(blur, 3, 3, "[Color=Red]Score:[/Color] 1234", fontSize);
             text.Color = new SKColor(255, 255, 255, 128);
             return text;
-        });
-    }
-
-    [Theory]
-    [InlineData(HorizontalAlignment.Left)]
-    [InlineData(HorizontalAlignment.Center)]
-    [InlineData(HorizontalAlignment.Right)]
-    public void Draw_TextDropshadowInBox_SettlesIntoTheMask(HorizontalAlignment horizontal)
-    {
-        TextRuntime text = CreateBoxed(horizontal);
-        using SKBitmap bitmap = Render(text, forceLayer: false);
-        ((Text)text.RenderableComponent).HasCachedShadowMask.ShouldBeTrue();
+        }, maxDifference: blur == 2 ? 45 : 40); // same gap as above: max 34 on Windows, 43 on macOS
     }
 
     public static IEnumerable<object?[]> Blends() =>
@@ -296,21 +317,7 @@ public class TextShadowCacheTests
             text.DropshadowColor = new SKColor(255, 255, 255, 181);
             ((Text)text.RenderableComponent).Blend = blend;
             return text;
-        }, expectMask: blend is not (Gum.RenderingLibrary.Blend.ReplaceAlpha or Gum.RenderingLibrary.Blend.MinAlpha or Gum.RenderingLibrary.Blend.Replace or Gum.RenderingLibrary.Blend.SubtractAlpha));
-    }
-
-    [Fact]
-    public void Draw_ProjectLoadedTextDropshadow_UsesTheCachedMaskEveryDrawOnceSettled()
-    {
-        TextRuntime text = CreateText(2, 0, 0.75f);
-        Text renderable = (Text)text.RenderableComponent;
-        renderable.Blend = Gum.RenderingLibrary.Blend.Normal;
-        text.DropshadowAlpha = 181;
-
-        using SKBitmap bitmap = Render(text, forceLayer: false, frames: 10);
-
-        // The first draws earn the mask, every later one uses it.
-        renderable.CachedShadowDrawCount.ShouldBeGreaterThanOrEqualTo(7);
+        });
     }
 
     // The alpha-erasing blends clip to the measured text (not the box), with or without a shadow, as before the mask existed.
@@ -351,6 +358,6 @@ public class TextShadowCacheTests
             }
             ((Text)text.RenderableComponent).Blend = Gum.RenderingLibrary.Blend.SubtractAlpha;
             return text;
-        }, scale, expectMask: false, minShadowMean: 0.001);
+        }, scale, minShadowMean: 0.001, maxDifference: blur * scale < 1 ? 55 : 40); // a sub-pixel blur differs most between the two blur kinds
     }
 }
