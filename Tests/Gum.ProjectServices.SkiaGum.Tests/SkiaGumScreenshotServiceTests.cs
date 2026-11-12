@@ -2,6 +2,7 @@ using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using Gum.ProjectServices;
 using Gum.ProjectServices.Screenshot;
+using GumRuntime;
 using Shouldly;
 using SkiaSharp;
 
@@ -51,6 +52,32 @@ public class SkiaGumScreenshotServiceTests : IDisposable
 
         // Outside the rectangle the default clear stays fully transparent.
         bitmap.GetPixel(150, 120).Alpha.ShouldBe((byte)0);
+    }
+
+    // MonoGame and raylib's GumService.Uninitialize clear the process-wide hooks
+    // (ElementSaveExtensions.ClearRegistrations), so a Skia render that follows one in the same
+    // process must register them again rather than rely on its first initialization.
+    [Fact]
+    public void TakeScreenshot_AfterAnotherBackendClearedRegistrations_StillRendersElement()
+    {
+        string projectPath = CreateProjectWithRedRectangle();
+        string outputPath = Path.Combine(_tempDirectory, "Screen.png");
+        ScreenshotRequest request = new ScreenshotRequest
+        {
+            ProjectPath = projectPath,
+            ElementName = "Screen",
+            OutputPath = outputPath,
+            Width = 200,
+            Height = 150,
+        };
+        new SkiaGumScreenshotService().TakeScreenshot(request);
+
+        ElementSaveExtensions.ClearRegistrations();
+        ScreenshotResult result = new SkiaGumScreenshotService().TakeScreenshot(request);
+
+        result.Success.ShouldBeTrue(result.ErrorMessage);
+        using SKBitmap bitmap = SKBitmap.Decode(outputPath);
+        bitmap.GetPixel(50, 37).ShouldBe(new SKColor(255, 0, 0, 255));
     }
 
     [Fact]
