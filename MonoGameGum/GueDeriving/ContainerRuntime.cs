@@ -70,6 +70,9 @@ public class ContainerRuntime : InteractiveGue
         }
     }
 
+#endif
+
+#if XNALIKE || SKIA
     /// <summary>
     /// How often this render-target container re-renders its children. <see cref="RenderTargetRefreshMode.EveryFrame"/>
     /// (the default) re-bakes every frame. <see cref="RenderTargetRefreshMode.Manual"/> bakes the children once, applies
@@ -106,7 +109,9 @@ public class ContainerRuntime : InteractiveGue
             invisibleRenderable.RefreshRenderTarget();
         }
     }
-#elif RAYLIB
+#endif
+
+#if RAYLIB
     /// <summary>
     /// An optional GLSL <see cref="global::Raylib_cs.Shader"/> applied when this container is drawn
     /// back to the screen as a render target. Only has an effect when <see cref="IsRenderTarget"/>
