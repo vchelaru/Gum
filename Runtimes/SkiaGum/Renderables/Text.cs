@@ -1102,6 +1102,10 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
             canvas.Save();
 
             // set the clip rect *after* save so it gets undone and restored
+            // This clip looks redundant, because Renderer.DrawRenderable already clips to every ancestor that
+            // clips its children, but it is not. GumBatch.Draw(text) draws only this renderable and never walks
+            // its ancestors, and a render-target bake draws into an offscreen canvas that carries none of the
+            // ancestor clips. Text.Render is then the only thing applying the clip, so removing it changes pixels.
             var clipper = this.GetEffectiveClipper();
             if(clipper != null)
             {
