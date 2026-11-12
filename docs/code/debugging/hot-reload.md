@@ -179,6 +179,7 @@ Every reload's result lists every issue that reload had, including one an earlie
 | `ShownElementGone`    | The screen or component the game shows was renamed, moved or deleted. It stays on screen as it was. | `false`          |
 | `InstanceRemoved`     | An instance of a deleted component was removed, as a restart would.                                 | `true`           |
 | `InstanceRebuilt`     | An instance's component changed or was renamed, so its visual was rebuilt. References and handlers on it are stale. | `true` |
+| `InstanceLoop`        | An instance is of a component that contains it, directly or through other components. It was not created, as a restart would not create it. | `true` |
 | `ComponentBaseTypeChanged` | A screen or component changed its base type. Visuals already on screen keep what they inherited from the old base. | `false` |
 | `BaseElementMissing` | A screen or component derives from an element that is not in the project. Visuals already on screen keep what they inherited from it. | `false` |
 | `ExposedVariableChanged` | A component changed which variables it exposes. Instances already on screen keep the exposure they were built with. | `false` |
