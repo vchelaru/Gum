@@ -90,9 +90,26 @@ public class GumElementReachability
     /// </summary>
     /// <param name="project">The loaded project.</param>
     /// <param name="extraRoots">Names of elements to keep besides the Screens, such as those created only from code.</param>
-    /// <param name="excludedElementNames">Names of elements that are never kept, nor walked through, such as Debug Only elements; null for none.</param>
+    /// <param name="excludedElementNames">Names of elements that are never kept, nor walked through, such as Debug Only elements; null for none.
+    /// An excluded screen also hides the screens it derives from, so do not exclude other screens to check one screen;
+    /// use the overload that takes <c>screensAreRoots</c> instead.</param>
     public GumElementReachabilityResult Compute(GumProjectSave project, IEnumerable<string> extraRoots,
         IReadOnlyCollection<string>? excludedElementNames = null)
+        => Compute(project, extraRoots, excludedElementNames, screensAreRoots: true);
+
+    /// <summary>
+    /// Walks the project from <paramref name="extraRoots"/>, plus every Screen when <paramref name="screensAreRoots"/> is true.
+    /// To check what one screen needs, pass its name as the only root with <paramref name="screensAreRoots"/> false;
+    /// its base screens are still kept, because base types are walked.
+    /// </summary>
+    /// <param name="project">The loaded project.</param>
+    /// <param name="extraRoots">Names of elements to walk from, such as those created only from code.</param>
+    /// <param name="excludedElementNames">Names of elements that are never kept, nor walked through, such as Debug Only elements; null for none.
+    /// An element reached only through an excluded one is trimmed.</param>
+    /// <param name="screensAreRoots">True to walk from every Screen as well as <paramref name="extraRoots"/>; false to walk only from
+    /// <paramref name="extraRoots"/>, so a Screen nothing reaches is trimmed.</param>
+    public GumElementReachabilityResult Compute(GumProjectSave project, IEnumerable<string> extraRoots,
+        IReadOnlyCollection<string>? excludedElementNames, bool screensAreRoots)
     {
         if (project == null)
         {
@@ -134,9 +151,12 @@ public class GumElementReachability
         {
             Visit(standard);
         }
-        foreach (ScreenSave screen in project.Screens)
+        if (screensAreRoots)
         {
-            Visit(screen);
+            foreach (ScreenSave screen in project.Screens)
+            {
+                Visit(screen);
+            }
         }
         List<string> unknownRoots = new List<string>();
         foreach (string root in extraRoots)
