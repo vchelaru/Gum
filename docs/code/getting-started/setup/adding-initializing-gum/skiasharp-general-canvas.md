@@ -16,18 +16,18 @@ This setup is rendering and layout only. There is no supported way to wire mouse
 
 The easiest way to add Gum to your project is to use the NuGet package. Open your project in your preferred IDE, or add Gum through the command line.
 
-Add the Gum.SkiaSharp NuGet package ([https://www.nuget.org/packages/Gum.SkiaSharp](https://www.nuget.org/packages/Gum.SkiaSharp))
+Add the Gum.SkiaSharp.Standalone NuGet package ([https://www.nuget.org/packages/Gum.SkiaSharp.Standalone](https://www.nuget.org/packages/Gum.SkiaSharp.Standalone))
 
 Modify csproj:
 
 ```xml
-<PackageReference Include="Gum.SkiaSharp" />
+<PackageReference Include="Gum.SkiaSharp.Standalone" />
 ```
 
 Or add through command line:
 
 ```bash
-dotnet add package Gum.SkiaSharp
+dotnet add package Gum.SkiaSharp.Standalone
 ```
 
 {% hint style="warning" %}
@@ -44,23 +44,23 @@ If you have already added the Gum NuGet package to your project, remove it.
 
 Add the following project to your solution:
 
-* \<Gum Root>/Runtimes/SkiaGum/SkiaGum.csproj
+* \<Gum Root>/Runtimes/SkiaGum.Standalone/SkiaGum.Standalone.csproj
 
-`SkiaGum.csproj` already references `GumCommon` itself, so you do not need to add `GumCommon` separately.
+`SkiaGum.Standalone.csproj` already references `SkiaGum` and `GumCommon` itself, so you do not need to add them separately.
 
-Next, add SkiaGum as a project reference in your game project. Your project might look like this depending on the location of the Gum repository relative to your game project:
+Next, add SkiaGum.Standalone as a project reference in your game project. Your project might look like this depending on the location of the Gum repository relative to your game project:
 
 ```xml
-<ProjectReference Include="..\Gum\Runtimes\SkiaGum\SkiaGum.csproj" />
+<ProjectReference Include="..\Gum\Runtimes\SkiaGum.Standalone\SkiaGum.Standalone.csproj" />
 ```
 
 ## Initializing Gum
 
 {% hint style="info" %}
-`GumService` for this page's setup is available in `Gum.SkiaSharp` starting September 2026, or now if building Gum from source. Before that, WPF and MAUI hosts still get their own copy of the same type through their dedicated packages (see [WPF](wpf.md) / [.NET MAUI](.net-maui.md)); this page's setup did not have one until now.
+`GumService` for this page's setup is available in `Gum.SkiaSharp.Standalone` starting September 2026, or now if building Gum from source. Before that, WPF and MAUI hosts still get their own copy of the same type through their dedicated packages (see [WPF](wpf.md) / [.NET MAUI](.net-maui.md)); this page's setup did not have one until now.
 {% endhint %}
 
-`Gum.SkiaSharp` includes a render-only `GumService`, the same `Initialize`/`Update`/`Draw`/`HandleResize` API shape used by the dedicated SkiaSharp hosts, just without input. Call `GumUI.Initialize` once you have an `SKCanvas`, passing a `.gumj` project path only if you're loading one (omit it for a code-only setup):
+`Gum.SkiaSharp.Standalone` includes a render-only `GumService`, the same `Initialize`/`Update`/`Draw`/`HandleResize` API shape used by the dedicated SkiaSharp hosts, just without input. Call `GumUI.Initialize` once you have an `SKCanvas`, passing a `.gumj` project path only if you're loading one (omit it for a code-only setup):
 
 ```csharp
 // Initialize
