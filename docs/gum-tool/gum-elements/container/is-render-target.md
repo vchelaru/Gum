@@ -32,6 +32,10 @@ If you are managing a render target yourself in code instead of using `Is Render
 
 If your game draws its world before Gum and the world disappears when a container with `Is Render Target` is visible, see [The Scene Drawn Before Gum Disappears](../../../code/rendering/render-targets.md#the-scene-drawn-before-gum-disappears-monogame-kni-fna).
 
+## Source Shader File
+
+A container with `Is Render Target` can set `Source Shader File` to apply a shader to everything inside it. The tool picks and previews `.fx` and `.slang` files.
+
 ## Shader Parameters
 
 Available in December 2026, or now if building Gum from source.

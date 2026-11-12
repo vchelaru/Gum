@@ -89,7 +89,7 @@ Add the NuGet package as shown above, then call `GumUI.UseShadowDusk()` after `G
 
 If linking to source instead of NuGet, add `<Gum Root>/Runtimes/RaylibGum.ShadowDusk/RaylibGum.ShadowDusk.csproj` to your solution.
 
-For loading, errors, and examples, see [ContainerRuntime](../../../standard-visuals/containerruntime.md#loading-shader-files-with-sourceshaderfile).
+For loading, errors, and examples, see [ContainerRuntime](../../../standard-visuals/containerruntime.md#loading-shader-files-with-sourceshaderfile). The supported formats are listed in [Shader Files](../../../files-and-fonts/supported-files.md#shader-files).
 
 ## Adding Expression Support (Optional)
 
