@@ -132,6 +132,8 @@
     * [Wrapping](gum-tool/gum-elements/text/wrapping.md)
 * [Editor Tab](gum-tool/editor-tab.md)
 * [Project Tab](gum-tool/project-tab.md)
+* [Forms Controls](gum-tool/forms-controls/README.md)
+  * [TabControl](gum-tool/forms-controls/tabcontrol.md)
 * [Code Tab](gum-tool/code-tab/README.md)
   * [Runtime Generation Details](gum-tool/code-tab/runtime-generation-details.md)
   * [Generation Scope](gum-tool/code-tab/generation-scope.md)
