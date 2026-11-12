@@ -288,6 +288,66 @@ The project file can list a behavior whose file is not on disk, for example afte
 Available in December 2026, or now if building Gum from source.
 {% endhint %}
 
+## Missing Behavior (GUM0032)
+
+A component lists a behavior that the project does not have. **GUM0032** is an error. To resolve it, add the behavior to the project or remove it from the component.
+
+## Behavior Variable Requirements (GUM0033)
+
+A behavior requires a variable that the component using it does not have, or has with a different type. **GUM0033** is an error. To resolve it, add or expose a variable with the required name and type.
+
+## Parent That Does Not Exist (GUM0034)
+
+An instance's `Parent` names an instance that the element does not have. **GUM0034** is an error. To resolve it, set `Parent` to an existing instance or clear it.
+
+## Instance of a Missing Type (GUM0035)
+
+An instance's type is a component or standard element that the project does not have. **GUM0035** is an error. To resolve it, add the missing element or change the instance's type.
+
+## State Variable Without the State Suffix (GUM0036)
+
+A variable that sets a category's state has a type or name without the `State` suffix, which older Gum versions allowed. Generated code may not compile. **GUM0036** is a warning. To resolve it, add the suffix the message names.
+
+## Animation Chain Offsets With a Non-Center Origin (GUM0037)
+
+A Sprite plays an `.achx` whose frames have offsets, but its `XOrigin` or `YOrigin` is not `Center`, so the animation drifts as frames change size. **GUM0037** is a warning. To resolve it, set both origins to `Center`.
+
+## Malformed Element File (GUM0038)
+
+An element file is not valid XML or JSON, so the element does not load. **GUM0038** is an error naming the parser's line and column. To resolve it, fix the file in a text editor.
+
+## Element File Load Problem (GUM0039)
+
+Loading the project reported a problem with an element file that has no more specific code, such as a file whose element name differs from the name in the project file. **GUM0039** is a warning. The message names the problem.
+
+## Ignored File Content (GUM0040)
+
+An element file has XML elements or JSON properties that loading silently ignores, such as `<States>` wrapping states or a misspelled JSON property. Their content is lost at load. **GUM0040** is an error. To resolve it, rename the content as the message says.
+
+## Git Conflict Markers (GUM0041)
+
+An element file has unresolved git conflict markers (`<<<<<<<`, `=======`, `>>>>>>>`), so it does not load. **GUM0041** is an error. To resolve it, resolve the conflict in your editor and reload.
+
+## Unreadable Animation File (GUM0042)
+
+An element's animation file cannot be read. **GUM0042** is an error naming the reason. To resolve it, fix or delete the animation file.
+
+## Animation Keyframe That Uses a Missing State or Animation (GUM0043, GUM0044)
+
+An animation keyframe sets a state the element does not have (**GUM0043**) or plays an animation that does not exist (**GUM0044**). Both are errors. To resolve them, change or delete the keyframe.
+
+## Category Name Collision in Generated Code (GUM0045)
+
+`gumcli codegen` reports **GUM0045** when an element's category names clash with the names code generation gives its enums, state properties or class. To resolve it, rename a category.
+
+## Forms Component With an Unsupported Base Type (GUM0046)
+
+With Forms code generation, a component must inherit from `Container` or have a Forms behavior. `gumcli codegen` reports **GUM0046** for one that does neither. To resolve it, change its base type to `Container` or add a Forms behavior.
+
+{% hint style="info" %}
+GUM0032 through GUM0046 are available in December 2026, or now if building Gum from source.
+{% endhint %}
+
 ## Version Control (.gitignore)
 
 The following `.gitignore` entries are recommended for Gum projects:

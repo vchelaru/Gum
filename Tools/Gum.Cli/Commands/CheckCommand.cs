@@ -133,7 +133,9 @@ public static class CheckCommand
             element = e.ElementName,
             message = e.Message,
             severity = e.Severity.ToString(),
-            code = e.Code
+            code = e.Code,
+            // As object, so the serializer writes the subclass's fields rather than the empty base type's.
+            details = (object?)e.Details
         });
 
         Console.WriteLine(JsonSerializer.Serialize(output, JsonOptions));

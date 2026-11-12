@@ -876,7 +876,9 @@ public partial class HeadlessErrorChecker : IHeadlessErrorChecker
                 errors.Add(new ErrorResult
                 {
                     ElementName = component.Name,
-                    Message = $"Missing reference to behavior {behaviorReference.BehaviorName}"
+                    Code = "GUM0032",
+                    Message = $"Missing reference to behavior {behaviorReference.BehaviorName}",
+                    Details = new MissingBehaviorDetails { BehaviorName = behaviorReference.BehaviorName }
                 });
             }
             else
@@ -911,9 +913,16 @@ public partial class HeadlessErrorChecker : IHeadlessErrorChecker
             errors.Add(new ErrorResult
             {
                 ElementName = component.Name,
+                Code = "GUM0033",
                 Message = $"The behavior {behavior} " +
                         $"requires a variable named {behaviorVariable.Name} but this variable doesn't exist. " +
-                        $"Add a custom variable or expose a variable and give it the required name to solve this error."
+                        $"Add a custom variable or expose a variable and give it the required name to solve this error.",
+                Details = new BehaviorVariableRequirementDetails
+                {
+                    BehaviorName = behavior.Name,
+                    VariableName = behaviorVariable.Name,
+                    RequiredType = behaviorVariable.Type
+                }
             });
         }
         else if (variable.Type != behaviorVariable.Type)
@@ -921,9 +930,17 @@ public partial class HeadlessErrorChecker : IHeadlessErrorChecker
             errors.Add(new ErrorResult
             {
                 ElementName = component.Name,
+                Code = "GUM0033",
                 Message = $"The behavior {behavior} " +
                         $"requires a variable named {behaviorVariable.Name} with type {behaviorVariable.Type}. " +
-                        $"This variable exists but it has the wrong type {variable.Type};"
+                        $"This variable exists but it has the wrong type {variable.Type};",
+                Details = new BehaviorVariableRequirementDetails
+                {
+                    BehaviorName = behavior.Name,
+                    VariableName = behaviorVariable.Name,
+                    RequiredType = behaviorVariable.Type,
+                    ActualType = variable.Type
+                }
             });
         }
     }
@@ -1014,7 +1031,14 @@ public partial class HeadlessErrorChecker : IHeadlessErrorChecker
                             errors.Add(new ErrorResult
                             {
                                 ElementName = elementSave.Name,
-                                Message = $"{variable.SourceObject} has a parent set to {value} which does not exist in the state {state.Name}"
+                                Code = "GUM0034",
+                                Message = $"{variable.SourceObject} has a parent set to {value} which does not exist in the state {state.Name}",
+                                Details = new MissingParentDetails
+                                {
+                                    InstanceName = variable.SourceObject!,
+                                    ParentValue = value!,
+                                    StateName = state.Name
+                                }
                             });
                         }
                     }
@@ -1118,7 +1142,12 @@ public partial class HeadlessErrorChecker : IHeadlessErrorChecker
                 Code = "GUM0006",
                 Severity = ErrorSeverity.Warning,
                 Message = $"{warning.ReferencedFromElementName} references \"{warning.ReferencedPath}\", " +
-                    $"which was not found on disk."
+                    $"which was not found on disk.",
+                Details = new MissingExternalFileDetails
+                {
+                    ReferencedFrom = warning.ReferencedFromElementName,
+                    ReferencedPath = warning.ReferencedPath
+                }
             });
         }
 
@@ -1178,7 +1207,13 @@ public partial class HeadlessErrorChecker : IHeadlessErrorChecker
             Severity = loadsHere ? ErrorSeverity.Warning : ErrorSeverity.Error,
             Message = $"{referencedFrom} references \"{relativePath}\", but the file on disk is named " +
                 $"\"{onDiskPath}\". The names must match exactly on case-sensitive file systems.",
-            FilePath = Path.Combine(projectRootDirectory, onDiskPath)
+            FilePath = Path.Combine(projectRootDirectory, onDiskPath),
+            Details = new FileNameCaseMismatchDetails
+            {
+                ReferencedFrom = referencedFrom,
+                ReferencedPath = relativePath,
+                OnDiskPath = onDiskPath
+            }
         };
         return true;
     }
@@ -1468,7 +1503,8 @@ public partial class HeadlessErrorChecker : IHeadlessErrorChecker
                 Code = "GUM0018",
                 Severity = ErrorSeverity.Error,
                 Message = $"{elementSave.Name} contains itself: {string.Join(" -> ", path.Select(item => item.Name))}. " +
-                    "Remove the instance that closes the loop; an element that instantiates itself can never finish building."
+                    "Remove the instance that closes the loop; an element that instantiates itself can never finish building.",
+                Details = new ElementContainsItselfDetails { ElementPath = path.Select(item => item.Name).ToList() }
             });
         }
 
@@ -1522,7 +1558,9 @@ public partial class HeadlessErrorChecker : IHeadlessErrorChecker
                 errors.Add(new ErrorResult
                 {
                     ElementName = elementSave.Name,
-                    Message = $"{instance.Name} references {instance.BaseType} which is an invalid element"
+                    Code = "GUM0035",
+                    Message = $"{instance.Name} references {instance.BaseType} which is an invalid element",
+                    Details = new MissingInstanceTypeDetails { InstanceName = instance.Name, BaseType = instance.BaseType }
                 });
             }
         }
@@ -1578,7 +1616,14 @@ public partial class HeadlessErrorChecker : IHeadlessErrorChecker
                                 $"The variable {variable.Name} uses a type of {variable.Type}. " +
                                 $"This type is probably referencing a category, but the type should be {variableClone.Type} (with the word State suffix). " +
                                 $"This can cause code generation problems.",
-                        Severity = ErrorSeverity.Warning
+                        Severity = ErrorSeverity.Warning,
+                        Code = "GUM0036",
+                        Details = new StateSuffixDetails
+                        {
+                            VariableName = variable.Name,
+                            VariableType = variable.Type,
+                            SuggestedVariableType = variableClone.Type
+                        }
                     });
                     continue;
                 }
@@ -1593,7 +1638,14 @@ public partial class HeadlessErrorChecker : IHeadlessErrorChecker
                                 $"The variable {variable.Name} uses a type of {variable.Type}. " +
                                 $"This type is probably referencing a category, but name should be {variableClone.Name} (with the word State suffix). " +
                                 $"This can cause code generation problems.",
-                        Severity = ErrorSeverity.Warning
+                        Severity = ErrorSeverity.Warning,
+                        Code = "GUM0036",
+                        Details = new StateSuffixDetails
+                        {
+                            VariableName = variable.Name,
+                            VariableType = variable.Type,
+                            SuggestedVariableName = variableClone.Name
+                        }
                     });
                     continue;
                 }
@@ -1801,7 +1853,9 @@ public partial class HeadlessErrorChecker : IHeadlessErrorChecker
                 $"RelativeX/RelativeY values against a center-anchored Sprite, so a non-Center " +
                 $"origin will cause the animation to drift as frames change size. " +
                 $"Set XOrigin and YOrigin to Center.",
-            Severity = ErrorSeverity.Warning
+            Severity = ErrorSeverity.Warning,
+            Code = "GUM0037",
+            Details = new AnimationChainOriginDetails { InstanceName = instanceName, SourceFile = sourceFile }
         });
     }
 

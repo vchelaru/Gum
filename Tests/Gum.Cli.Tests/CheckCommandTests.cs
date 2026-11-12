@@ -80,6 +80,20 @@ public class CheckCommandTests : BaseTestClass
     }
 
     [Fact]
+    public void Check_JsonFlag_ShouldIncludeEachErrorsDetails()
+    {
+        string filePath = CreateProjectWithMissingSpriteTexture("DetailsJson");
+
+        CliTestHelper result = CliTestHelper.Run("check", filePath, "--json");
+
+        using JsonDocument document = JsonDocument.Parse(result.StandardOutput);
+        JsonElement details = document.RootElement.EnumerateArray()
+            .Single(e => e.GetProperty("element").GetString() == "SpriteWithMissingTexture")
+            .GetProperty("details");
+        details.GetProperty("referencedPath").GetString().ShouldBe("Textures/DoesNotExist.png");
+    }
+
+    [Fact]
     public void Check_ProjectWithOnlyWarnings_ShouldReturnExitCode0AndNotReportAsError()
     {
         string filePath = CreateProjectWithMissingSpriteTexture("Warnings");

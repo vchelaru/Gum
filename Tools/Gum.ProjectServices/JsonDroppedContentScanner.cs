@@ -87,7 +87,7 @@ internal static class JsonDroppedContentScanner
             return;
         }
 
-        List<string> messages = new List<string>();
+        List<(string Message, string Content)> messages = new List<(string Message, string Content)>();
         ScanObject(root, isBehavior ? BehaviorKeys : ElementKeys, messages);
 
         if (isBehavior)
@@ -107,13 +107,13 @@ internal static class JsonDroppedContentScanner
             }
         }
 
-        foreach (string message in messages.Distinct())
+        foreach ((string message, string content) in messages.Distinct())
         {
-            errors.Add(new ErrorResult { ElementName = name, Message = message, Severity = ErrorSeverity.Error });
+            errors.Add(new ErrorResult { ElementName = name, Code = "GUM0040", Message = message, Severity = ErrorSeverity.Error, Details = new IgnoredContentDetails { Content = content } });
         }
     }
 
-    private static void ScanStates(JsonNode? states, List<string> messages)
+    private static void ScanStates(JsonNode? states, List<(string Message, string Content)> messages)
     {
         if (states is JsonArray array)
         {
@@ -124,7 +124,7 @@ internal static class JsonDroppedContentScanner
         }
     }
 
-    private static void ScanState(JsonNode? state, List<string> messages)
+    private static void ScanState(JsonNode? state, List<(string Message, string Content)> messages)
     {
         if (state is JsonObject stateObject)
         {
@@ -132,7 +132,7 @@ internal static class JsonDroppedContentScanner
         }
     }
 
-    private static void ScanObject(JsonObject obj, string[] knownKeys, List<string> messages)
+    private static void ScanObject(JsonObject obj, string[] knownKeys, List<(string Message, string Content)> messages)
     {
         foreach (KeyValuePair<string, JsonNode?> pair in obj)
         {
@@ -144,11 +144,11 @@ internal static class JsonDroppedContentScanner
             string? caseMatch = knownKeys.FirstOrDefault(known => string.Equals(known, pair.Key, StringComparison.OrdinalIgnoreCase));
             if (caseMatch != null)
             {
-                messages.Add($"JSON property \"{pair.Key}\" is ignored because property names are case-sensitive. Use \"{caseMatch}\".");
+                messages.Add(($"JSON property \"{pair.Key}\" is ignored because property names are case-sensitive. Use \"{caseMatch}\".", pair.Key));
             }
             else if (Misspellings.TryGetValue(pair.Key, out string? correct) && knownKeys.Contains(correct))
             {
-                messages.Add($"JSON property \"{pair.Key}\" is ignored. The collection is named \"{correct}\" (plural), so its content is dropped at load.");
+                messages.Add(($"JSON property \"{pair.Key}\" is ignored. The collection is named \"{correct}\" (plural), so its content is dropped at load.", pair.Key));
             }
         }
     }

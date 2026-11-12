@@ -150,11 +150,14 @@ public class ProjectLoader : IProjectLoader
                 string message = (i + 1 < lines.Length)
                     ? lines[i + 1].Trim()
                     : "Unknown error";
+                string format = isJsonFormat ? "JSON" : "XML";
                 errors.Add(new ErrorResult
                 {
                     ElementName = elementName,
-                    Message = $"Malformed {(isJsonFormat ? "JSON" : "XML")}: {message}",
-                    Severity = ErrorSeverity.Error
+                    Code = "GUM0038",
+                    Message = $"Malformed {format}: {message}",
+                    Severity = ErrorSeverity.Error,
+                    Details = new MalformedFileDetails { Format = format, ParserMessage = message }
                 });
                 i += 2;
             }
@@ -163,6 +166,7 @@ public class ProjectLoader : IProjectLoader
                 errors.Add(new ErrorResult
                 {
                     ElementName = "",
+                    Code = "GUM0039",
                     Message = line,
                     Severity = ErrorSeverity.Warning
                 });
@@ -288,8 +292,10 @@ public class ProjectLoader : IProjectLoader
                     errors.Add(new ErrorResult
                     {
                         ElementName = elementName,
+                        Code = "GUM0040",
                         Message = message,
-                        Severity = ErrorSeverity.Error
+                        Severity = ErrorSeverity.Error,
+                        Details = new IgnoredContentDetails { Content = pattern }
                     });
                 }
             }
@@ -314,11 +320,15 @@ public class ProjectLoader : IProjectLoader
             string path = Path.Combine(projectDirectory, subfolder, name + "." + extension);
             if (File.Exists(path) && ContainsGitConflictMarkers(File.ReadAllText(path)))
             {
+                string fileName = name + "." + extension;
                 errors.Add(new ErrorResult
                 {
                     ElementName = name,
-                    Message = ConflictMarkerMessage(name + "." + extension),
-                    Severity = ErrorSeverity.Error
+                    Code = "GUM0041",
+                    Message = ConflictMarkerMessage(fileName),
+                    Severity = ErrorSeverity.Error,
+                    FilePath = path,
+                    Details = new ConflictMarkerDetails { FileName = fileName }
                 });
             }
         }
@@ -394,6 +404,7 @@ public class ProjectLoader : IProjectLoader
             errors.Add(new ErrorResult
             {
                 ElementName = elementName,
+                Code = "GUM0004",
                 Message = $"Referenced file not found: {relativePath}",
                 Severity = ErrorSeverity.Warning
             });
