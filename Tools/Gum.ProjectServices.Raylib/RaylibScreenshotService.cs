@@ -3,6 +3,7 @@ using Gum.ProjectServices.Screenshot;
 using Gum.Wireframe;
 using Raylib_cs;
 using RenderingLibrary;
+using RenderingLibrary.Content;
 using System;
 
 namespace Gum.ProjectServices.Raylib;
@@ -74,7 +75,17 @@ public class RaylibScreenshotService : IScreenshotService
             {
                 Raylib_cs.Raylib.BeginTextureMode(renderTexture);
                 Raylib_cs.Raylib.ClearBackground(clearColor);
-                gumService.Draw();
+                // Draw in the render-target premultiply pass so translucent content keeps its alpha
+                // over a transparent clear (#7992); the pixels are un-premultiplied for the PNG below.
+                SystemManagers.Default.Renderer.IsDrawingToTransparentTarget = true;
+                try
+                {
+                    gumService.Draw();
+                }
+                finally
+                {
+                    SystemManagers.Default.Renderer.IsDrawingToTransparentTarget = false;
+                }
                 Raylib_cs.Raylib.EndTextureMode();
 
                 Image image = Raylib_cs.Raylib.LoadImageFromTexture(renderTexture.Texture);
@@ -83,6 +94,12 @@ public class RaylibScreenshotService : IScreenshotService
                     // Render textures are stored bottom-up in GL; flip so the exported PNG reads
                     // right-side-up like any other screenshot.
                     Raylib_cs.Raylib.ImageFlipVertical(ref image);
+
+                    // PNG stores straight alpha; the texture holds premultiplied pixels.
+                    unsafe
+                    {
+                        RgbaPixels.Unpremultiply(new Span<byte>((void*)image.Data, image.Width * image.Height * 4));
+                    }
 
                     if (request.BackgroundColor.HasValue)
                     {
