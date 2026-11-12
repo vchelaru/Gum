@@ -33,11 +33,141 @@ public class FileNameCaseMismatchDetails : ErrorDetails
     public string OnDiskPath { get; set; } = "";
 }
 
-/// <summary>GUM0018: an element contains an instance of itself.</summary>
-public class ElementContainsItselfDetails : ErrorDetails
+/// <summary>
+/// A loop. GUM0013 (variable references, as <c>Element.Variable</c>), GUM0014 (base types), GUM0018 (an element
+/// containing itself, as element names) and GUM0024 (Parent values, as instance names).
+/// </summary>
+public class CycleDetails : ErrorDetails
 {
-    /// <summary>The element names on the loop, starting and ending with the element itself.</summary>
-    public IReadOnlyList<string> ElementPath { get; set; } = new List<string>();
+    /// <summary>The names on the loop, in order, ending with the first name again.</summary>
+    public IReadOnlyList<string> Path { get; set; } = new List<string>();
+
+    /// <summary>The state the loop is in, or null when it is not in one state.</summary>
+    public string? StateName { get; set; }
+}
+
+/// <summary>
+/// A variable in a state. GUM0003 (a category state sets its own category), GUM0007 (enum value not defined),
+/// GUM0019 (value does not fit the type), GUM0026 (state the category does not have), GUM0027 (variable of a
+/// missing instance) and GUM0028 (unknown type).
+/// </summary>
+public class StateVariableDetails : ErrorDetails
+{
+    /// <summary>The state that sets the variable.</summary>
+    public string StateName { get; set; } = "";
+
+    /// <summary>The category of the state, or null for an uncategorized state or when the code does not report it.</summary>
+    public string? CategoryName { get; set; }
+
+    /// <summary>The variable's name, qualified with its instance when it has one (<c>Instance.Variable</c>).</summary>
+    public string VariableName { get; set; } = "";
+
+    /// <summary>The variable's type, or null when the code does not report it.</summary>
+    public string? VariableType { get; set; }
+
+    /// <summary>The variable's value as text, or null when the code does not report it.</summary>
+    public string? Value { get; set; }
+}
+
+/// <summary>What kind of thing has a duplicate name in <see cref="DuplicateNameDetails"/>.</summary>
+public enum DuplicateKind
+{
+    Instance,
+    State,
+    Category,
+    Variable,
+    Screen,
+    Component,
+    StandardElement,
+    Behavior
+}
+
+/// <summary>
+/// A name used more than once. GUM0020 (instances), GUM0021 (states or categories), GUM0022 (variables in a state)
+/// and GUM0023 (references in the project file).
+/// </summary>
+public class DuplicateNameDetails : ErrorDetails
+{
+    /// <summary>What has the duplicate name.</summary>
+    public DuplicateKind Kind { get; set; }
+
+    /// <summary>The duplicated name.</summary>
+    public string Name { get; set; } = "";
+
+    /// <summary>The category that holds the duplicate states, or null.</summary>
+    public string? CategoryName { get; set; }
+
+    /// <summary>The state that holds the duplicate variables, or null.</summary>
+    public string? StateName { get; set; }
+}
+
+/// <summary>A file the project expects that is not on disk. GUM0004 (element file) and GUM0031 (behavior file).</summary>
+public class MissingFileDetails : ErrorDetails
+{
+    /// <summary>The expected path, relative to the project folder.</summary>
+    public string ExpectedPath { get; set; } = "";
+}
+
+/// <summary>GUM0001: a component lacks an instance its behavior requires.</summary>
+public class BehaviorInstanceRequirementDetails : ErrorDetails
+{
+    /// <summary>The behavior that requires the instance.</summary>
+    public string BehaviorName { get; set; } = "";
+
+    /// <summary>The required instance name.</summary>
+    public string InstanceName { get; set; } = "";
+
+    /// <summary>The required instance type, or null when any type will do.</summary>
+    public string? InstanceType { get; set; }
+
+    /// <summary>The behaviors the instance's type must have.</summary>
+    public IReadOnlyList<string> RequiredBehaviors { get; set; } = new List<string>();
+}
+
+/// <summary>
+/// A font range problem. GUM0010 (entry matches no font: <see cref="Font"/>), GUM0011 (invalid range:
+/// <see cref="Font"/>, null for the project-wide range, and <see cref="Ranges"/>) and GUM0012 (Text outside its
+/// font's range: <see cref="InstanceName"/>, <see cref="Font"/> and <see cref="CodePoints"/>).
+/// </summary>
+public class FontRangeDetails : ErrorDetails
+{
+    /// <summary>The font family or font file, or null for the project-wide range.</summary>
+    public string? Font { get; set; }
+
+    /// <summary>The range text, or null.</summary>
+    public string? Ranges { get; set; }
+
+    /// <summary>The Text instance, or null when the element itself is the Text or the code is not GUM0012.</summary>
+    public string? InstanceName { get; set; }
+
+    /// <summary>The Unicode code points the range leaves out.</summary>
+    public IReadOnlyList<int> CodePoints { get; set; } = new List<int>();
+}
+
+/// <summary>GUM0009: a VariableReferences line reads something the project does not have.</summary>
+public class VariableReferenceLineDetails : ErrorDetails
+{
+    /// <summary>The state that has the line.</summary>
+    public string StateName { get; set; } = "";
+
+    /// <summary>The VariableReferences variable, qualified with its instance when it has one.</summary>
+    public string VariableListName { get; set; } = "";
+
+    /// <summary>The line as written.</summary>
+    public string Line { get; set; } = "";
+}
+
+/// <summary>GUM0016: a derived element's file does not list an instance its base defines.</summary>
+public class MissingBaseInstanceDetails : ErrorDetails
+{
+    /// <summary>The base element that defines the instance.</summary>
+    public string BaseElementName { get; set; } = "";
+
+    /// <summary>The instance's name.</summary>
+    public string InstanceName { get; set; } = "";
+
+    /// <summary>The instance's type.</summary>
+    public string InstanceType { get; set; } = "";
 }
 
 /// <summary>GUM0032: a component uses a behavior the project does not have.</summary>
@@ -76,14 +206,17 @@ public class MissingParentDetails : ErrorDetails
     public string StateName { get; set; } = "";
 }
 
-/// <summary>GUM0035: an instance's type is an element the project does not have.</summary>
-public class MissingInstanceTypeDetails : ErrorDetails
+/// <summary>
+/// A type an element or instance names that it cannot use. GUM0025 (a Screen used as a type), GUM0030 (an
+/// element's base type does not exist) and GUM0035 (an instance's type does not exist).
+/// </summary>
+public class TypeReferenceDetails : ErrorDetails
 {
-    /// <summary>The instance whose type is missing.</summary>
-    public string InstanceName { get; set; } = "";
+    /// <summary>The instance whose type it is, or null when it is the element's own base type.</summary>
+    public string? InstanceName { get; set; }
 
-    /// <summary>The missing type.</summary>
-    public string BaseType { get; set; } = "";
+    /// <summary>The type as written.</summary>
+    public string Type { get; set; } = "";
 }
 
 /// <summary>GUM0036: a state variable's type or name lacks the <c>State</c> suffix.</summary>

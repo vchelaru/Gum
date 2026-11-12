@@ -421,7 +421,12 @@ public partial class HeadlessErrorChecker : IHeadlessErrorChecker
                     ElementName = element.Name,
                     Code = "GUM0013",
                     Severity = ErrorSeverity.Warning,
-                    Message = $"{state.Name}: Circular variable reference: {path}. These rows are not evaluated and keep their stored values."
+                    Message = $"{state.Name}: Circular variable reference: {path}. These rows are not evaluated and keep their stored values.",
+                    Details = new CycleDetails
+                    {
+                        Path = loop.Concat(new[] { loop[0] }).Select(row => element.Name + "." + row.WrittenName).ToList(),
+                        StateName = state.Name
+                    }
                 });
             }
         }
@@ -465,7 +470,8 @@ public partial class HeadlessErrorChecker : IHeadlessErrorChecker
                 ElementName = element.Name,
                 Code = "GUM0013",
                 Severity = ErrorSeverity.Warning,
-                Message = $"Default: Circular variable reference: {string.Join(" -> ", names)}. These rows are not evaluated and keep their stored values."
+                Message = $"Default: Circular variable reference: {string.Join(" -> ", names)}. These rows are not evaluated and keep their stored values.",
+                Details = new CycleDetails { Path = names, StateName = "Default" }
             });
         }
         return errors;
@@ -580,7 +586,8 @@ public partial class HeadlessErrorChecker : IHeadlessErrorChecker
                         ElementName = element.Name,
                         Code = "GUM0009",
                         Severity = ErrorSeverity.Warning,
-                        Message = $"{state.Name}: the {variableList.Name} line \"{line}\" reads {problem}, so it never applies."
+                        Message = $"{state.Name}: the {variableList.Name} line \"{line}\" reads {problem}, so it never applies.",
+                        Details = new VariableReferenceLineDetails { StateName = state.Name, VariableListName = variableList.Name, Line = line }
                     });
                 }
             }
@@ -849,7 +856,15 @@ public partial class HeadlessErrorChecker : IHeadlessErrorChecker
                                 $"category selector \"{variable.Name}\". A state cannot select a state within " +
                                 $"its own category - this is a circular reference that re-drives the category " +
                                 $"when the state is applied, discarding the state's authored values. " +
-                                $"Remove \"{variable.Name}\" from this state."
+                                $"Remove \"{variable.Name}\" from this state.",
+                            Details = new StateVariableDetails
+                            {
+                                StateName = state.Name,
+                                CategoryName = category.Name,
+                                VariableName = variable.Name,
+                                VariableType = variable.Type,
+                                Value = variable.Value?.ToString()
+                            }
                         });
                     }
                 }
@@ -995,7 +1010,14 @@ public partial class HeadlessErrorChecker : IHeadlessErrorChecker
             {
                 ElementName = component.Name,
                 Message = message,
-                Code = "GUM0001"
+                Code = "GUM0001",
+                Details = new BehaviorInstanceRequirementDetails
+                {
+                    BehaviorName = behavior.Name,
+                    InstanceName = behaviorInstance.Name,
+                    InstanceType = string.IsNullOrEmpty(behaviorInstance.BaseType) ? null : behaviorInstance.BaseType,
+                    RequiredBehaviors = behaviorInstance.Behaviors.Select(item => item.Name).ToList()
+                }
             });
         }
     }
@@ -1087,7 +1109,8 @@ public partial class HeadlessErrorChecker : IHeadlessErrorChecker
                 Message = $"The source file for \"{element.Name}\" is missing. Gum expected it at " +
                     $"\"{expectedRelativePath}\" but could not find it on disk. The element still exists " +
                     $"in the project in memory - saving it will recreate the file, or restore the file " +
-                    $"to resolve this error."
+                    $"to resolve this error.",
+                Details = new MissingFileDetails { ExpectedPath = expectedRelativePath }
             });
         }
 
@@ -1295,7 +1318,12 @@ public partial class HeadlessErrorChecker : IHeadlessErrorChecker
                     Severity = ErrorSeverity.Warning,
                     Message = $"{owner} is \"{entry.Ranges}\", which is not a valid range. The BMFont generator " +
                         $"bakes the default {BmfcSave.GetEffectiveDefaultRanges()} instead, and the KernSmith generator skips the parts it " +
-                        "cannot read. Use comma-separated codepoints or start-end pairs with no spaces, such as 32-126,160-255."
+                        "cannot read. Use comma-separated codepoints or start-end pairs with no spaces, such as 32-126,160-255.",
+                    Details = new FontRangeDetails
+                    {
+                        Font = string.IsNullOrWhiteSpace(entry.FontFamily) ? null : entry.FontFamily,
+                        Ranges = entry.Ranges
+                    }
                 });
             }
         }
@@ -1309,7 +1337,8 @@ public partial class HeadlessErrorChecker : IHeadlessErrorChecker
                 Severity = ErrorSeverity.Warning,
                 Message = $"The font range entry for \"{entry.FontFamily}\" matches no font in the project, so it " +
                     "never applies. A system font matches by family name ignoring case, and a font file matches by its " +
-                    "project-relative path exactly as a Text names it."
+                    "project-relative path exactly as a Text names it.",
+                Details = new FontRangeDetails { Font = entry.FontFamily, Ranges = entry.Ranges }
             });
         }
 
@@ -1408,7 +1437,13 @@ public partial class HeadlessErrorChecker : IHeadlessErrorChecker
                 Code = "GUM0012",
                 Severity = ErrorSeverity.Warning,
                 Message = $"Text '{textName}' uses {characters}, which the ranges of font '{pair.Value.Font}' leave out, " +
-                    $"so they draw as '?'. Add {codes} to the font's ranges on the Fonts page."
+                    $"so they draw as '?'. Add {codes} to the font's ranges on the Fonts page.",
+                Details = new FontRangeDetails
+                {
+                    Font = pair.Value.Font,
+                    InstanceName = pair.Key.Length > 0 ? pair.Key : null,
+                    CodePoints = pair.Value.CodePoints.ToList()
+                }
             });
         }
 
@@ -1432,7 +1467,8 @@ public partial class HeadlessErrorChecker : IHeadlessErrorChecker
                 {
                     ElementName = elementSave.Name,
                     Code = "GUM0030",
-                    Message = $"{elementSave.Name} has a base type of {elementSave.BaseType} which does not exist"
+                    Message = $"{elementSave.Name} has a base type of {elementSave.BaseType} which does not exist",
+                    Details = new TypeReferenceDetails { Type = elementSave.BaseType }
                 });
             }
         }
@@ -1455,7 +1491,8 @@ public partial class HeadlessErrorChecker : IHeadlessErrorChecker
                 ElementName = elementSave.Name,
                 Code = "GUM0014",
                 Severity = ErrorSeverity.Error,
-                Message = $"Circular base type: {path}. These elements are treated as having no base type until the cycle is broken."
+                Message = $"Circular base type: {path}. These elements are treated as having no base type until the cycle is broken.",
+                Details = new CycleDetails { Path = cycle.Concat(new[] { cycle[0] }).Select(item => item.Name).ToList() }
             });
         }
 
@@ -1504,7 +1541,7 @@ public partial class HeadlessErrorChecker : IHeadlessErrorChecker
                 Severity = ErrorSeverity.Error,
                 Message = $"{elementSave.Name} contains itself: {string.Join(" -> ", path.Select(item => item.Name))}. " +
                     "Remove the instance that closes the loop; an element that instantiates itself can never finish building.",
-                Details = new ElementContainsItselfDetails { ElementPath = path.Select(item => item.Name).ToList() }
+                Details = new CycleDetails { Path = path.Select(item => item.Name).ToList() }
             });
         }
 
@@ -1560,7 +1597,7 @@ public partial class HeadlessErrorChecker : IHeadlessErrorChecker
                     ElementName = elementSave.Name,
                     Code = "GUM0035",
                     Message = $"{instance.Name} references {instance.BaseType} which is an invalid element",
-                    Details = new MissingInstanceTypeDetails { InstanceName = instance.Name, BaseType = instance.BaseType }
+                    Details = new TypeReferenceDetails { InstanceName = instance.Name, Type = instance.BaseType }
                 });
             }
         }
@@ -1696,7 +1733,14 @@ public partial class HeadlessErrorChecker : IHeadlessErrorChecker
                     Severity = ErrorSeverity.Error,
                     Message =
                         $"The variable {variable.Name} in state {state.Name} has a value of " +
-                        $"{variable.Value}, which is not a valid {variableType.Name}."
+                        $"{variable.Value}, which is not a valid {variableType.Name}.",
+                    Details = new StateVariableDetails
+                    {
+                        StateName = state.Name,
+                        VariableName = variable.Name,
+                        VariableType = variable.Type,
+                        Value = variable.Value.ToString()
+                    }
                 });
             }
         }

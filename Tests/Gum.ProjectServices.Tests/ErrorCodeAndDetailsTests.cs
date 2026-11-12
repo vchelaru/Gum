@@ -39,9 +39,9 @@ public class ErrorCodeAndDetailsTests : BaseTestClass
         ErrorResult error = _sut.GetErrorsFor(component, Project).ShouldHaveSingleItem();
 
         error.Code.ShouldBe("GUM0035");
-        MissingInstanceTypeDetails details = error.Details.ShouldBeOfType<MissingInstanceTypeDetails>();
+        TypeReferenceDetails details = error.Details.ShouldBeOfType<TypeReferenceDetails>();
         details.InstanceName.ShouldBe("Child");
-        details.BaseType.ShouldBe("Nope");
+        details.Type.ShouldBe("Nope");
     }
 
     [Fact]
@@ -181,7 +181,7 @@ public class ErrorCodeAndDetailsTests : BaseTestClass
 
         ErrorResult error = _sut.GetErrorsFor(component, Project).Single(e => e.Code == "GUM0018");
 
-        error.Details.ShouldBeOfType<ElementContainsItselfDetails>().ElementPath.ShouldBe(new[] { "Matryoshka", "Matryoshka" });
+        error.Details.ShouldBeOfType<CycleDetails>().Path.ShouldBe(new[] { "Matryoshka", "Matryoshka" });
     }
 
     [Fact]
@@ -333,7 +333,7 @@ public class ErrorCodeAndDetailsTests : BaseTestClass
     private static CodeGenerator CreateCodeGenerator()
     {
         Mock<INameVerifier> mockNameVerifier = new Mock<INameVerifier>();
-        string whyNotValid;
+        string? whyNotValid;
         CommonValidationError error;
         mockNameVerifier
             .Setup(v => v.IsValidCSharpName(It.IsAny<string>(), out whyNotValid, out error))
@@ -443,6 +443,51 @@ public class ErrorCodeAndDetailsTests : BaseTestClass
 
             ErrorResult error = result.LoadErrors.Single(e => e.ElementName == "MissingScreen");
             error.Code.ShouldBe("GUM0004");
+            error.Details.ShouldBeOfType<MissingFileDetails>().ExpectedPath.ShouldEndWith("MissingScreen.gusx");
+        }
+        finally
+        {
+            Directory.Delete(tempDir, recursive: true);
+        }
+    }
+
+    [Fact]
+    public void Load_DerivedElementMissingBaseInstance_HasGum0016Details()
+    {
+        string tempDir = Path.Combine(Path.GetTempPath(), "Gum7966_" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(tempDir);
+        string gumxPath = Path.Combine(tempDir, "Test.gumx");
+        try
+        {
+            new ProjectCreator().Create(gumxPath);
+            string componentDir = Path.Combine(tempDir, "Components");
+            File.WriteAllText(Path.Combine(componentDir, "RepairBase.gucx"), """
+                <?xml version="1.0" encoding="utf-8"?>
+                <ComponentSave>
+                  <Name>RepairBase</Name>
+                  <BaseType>Container</BaseType>
+                  <Instance><Name>A</Name><BaseType>Container</BaseType></Instance>
+                </ComponentSave>
+                """);
+            File.WriteAllText(Path.Combine(componentDir, "RepairDerived.gucx"), """
+                <?xml version="1.0" encoding="utf-8"?>
+                <ComponentSave>
+                  <Name>RepairDerived</Name>
+                  <BaseType>RepairBase</BaseType>
+                </ComponentSave>
+                """);
+            string gumxContent = File.ReadAllText(gumxPath).Replace("</GumProjectSave>",
+                """  <ComponentReference Name="RepairBase" />""" + "\n" +
+                """  <ComponentReference Name="RepairDerived" />""" + "\n</GumProjectSave>");
+            File.WriteAllText(gumxPath, gumxContent);
+
+            ProjectLoadResult result = new ProjectLoader().Load(gumxPath);
+
+            ErrorResult error = result.LoadErrors.Single(e => e.Code == "GUM0016");
+            MissingBaseInstanceDetails details = error.Details.ShouldBeOfType<MissingBaseInstanceDetails>();
+            details.BaseElementName.ShouldBe("RepairBase");
+            details.InstanceName.ShouldBe("A");
+            details.InstanceType.ShouldBe("Container");
         }
         finally
         {

@@ -38,7 +38,9 @@ public partial class HeadlessErrorChecker
                 {
                     errors.Add(Error(element, "GUM0027",
                         $"{element.Name} sets {variable.Name} in state {state.Name}, but {element.Name} has no instance named {instanceName}. " +
-                        "The value is ignored.", ErrorSeverity.Warning));
+                        "The value is ignored.",
+                        new StateVariableDetails { StateName = state.Name, VariableName = variable.Name, VariableType = variable.Type },
+                        ErrorSeverity.Warning));
                 }
             }
         }
@@ -165,7 +167,9 @@ public partial class HeadlessErrorChecker
                 if (reported.Add(variable.Name + "|" + type))
                 {
                     errors.Add(Error(element, "GUM0028",
-                        $"{variable.Name} in state {state.Name} has the type {type}, which is not a known type or state category.", ErrorSeverity.Warning));
+                        $"{variable.Name} in state {state.Name} has the type {type}, which is not a known type or state category.",
+                        new StateVariableDetails { StateName = state.Name, VariableName = variable.Name, VariableType = type },
+                        ErrorSeverity.Warning));
                 }
             }
         }

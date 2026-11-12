@@ -22,8 +22,8 @@ public partial class HeadlessErrorChecker
 
     private static readonly HashSet<string> BoolTypes = new HashSet<string>(StringComparer.Ordinal) { "bool", "bool?" };
 
-    private static ErrorResult Error(ElementSave element, string code, string message, ErrorSeverity severity = ErrorSeverity.Error) =>
-        new ErrorResult { ElementName = element.Name, Code = code, Severity = severity, Message = message };
+    private static ErrorResult Error(ElementSave element, string code, string message, ErrorDetails details, ErrorSeverity severity = ErrorSeverity.Error) =>
+        new ErrorResult { ElementName = element.Name, Code = code, Severity = severity, Message = message, Details = details };
 
     #region GUM0019 — Value does not fit the variable's type
 
@@ -50,7 +50,14 @@ public partial class HeadlessErrorChecker
 
                 errors.Add(Error(element, "GUM0019",
                     $"{variable.Name} in state {state.Name} is a {variable.Type} variable but holds the {variable.Value.GetType().Name} value '{variable.Value}'. " +
-                    $"Set it to a {(isBool ? "true or false" : "number")}."));
+                    $"Set it to a {(isBool ? "true or false" : "number")}.",
+                    new StateVariableDetails
+                    {
+                        StateName = state.Name,
+                        VariableName = variable.Name,
+                        VariableType = variable.Type,
+                        Value = variable.Value.ToString()
+                    }));
             }
         }
 
@@ -81,22 +88,26 @@ public partial class HeadlessErrorChecker
         foreach (string name in DuplicatesOf(element.Instances.Select(instance => instance.Name)))
         {
             errors.Add(Error(element, "GUM0020",
-                $"{element.Name} has more than one instance named {name}. Rename or delete all but one; which one is used is arbitrary."));
+                $"{element.Name} has more than one instance named {name}. Rename or delete all but one; which one is used is arbitrary.",
+                new DuplicateNameDetails { Kind = DuplicateKind.Instance, Name = name }));
         }
 
         foreach (string name in DuplicatesOf(element.States.Select(state => state.Name)))
         {
-            errors.Add(Error(element, "GUM0021", $"{element.Name} has more than one state named {name}. Rename or delete all but one."));
+            errors.Add(Error(element, "GUM0021", $"{element.Name} has more than one state named {name}. Rename or delete all but one.",
+                new DuplicateNameDetails { Kind = DuplicateKind.State, Name = name }));
         }
         foreach (string name in DuplicatesOf(element.Categories.Select(category => category.Name)))
         {
-            errors.Add(Error(element, "GUM0021", $"{element.Name} has more than one state category named {name}. Rename or delete all but one."));
+            errors.Add(Error(element, "GUM0021", $"{element.Name} has more than one state category named {name}. Rename or delete all but one.",
+                new DuplicateNameDetails { Kind = DuplicateKind.Category, Name = name }));
         }
         foreach (StateSaveCategory category in element.Categories)
         {
             foreach (string name in DuplicatesOf(category.States.Select(state => state.Name)))
             {
-                errors.Add(Error(element, "GUM0021", $"{element.Name} has more than one state named {name} in the category {category.Name}. Rename or delete all but one."));
+                errors.Add(Error(element, "GUM0021", $"{element.Name} has more than one state named {name} in the category {category.Name}. Rename or delete all but one.",
+                    new DuplicateNameDetails { Kind = DuplicateKind.State, Name = name, CategoryName = category.Name }));
             }
         }
 
@@ -105,7 +116,8 @@ public partial class HeadlessErrorChecker
             foreach (string name in DuplicatesOf(state.Variables.Select(variable => variable.Name)))
             {
                 errors.Add(Error(element, "GUM0022",
-                    $"State {state.Name} of {element.Name} sets {name} more than once. Delete all but one; which value wins is arbitrary."));
+                    $"State {state.Name} of {element.Name} sets {name} more than once. Delete all but one; which value wins is arbitrary.",
+                    new DuplicateNameDetails { Kind = DuplicateKind.Variable, Name = name, StateName = state.Name }));
             }
         }
 
@@ -124,15 +136,15 @@ public partial class HeadlessErrorChecker
     private static List<ErrorResult> GetDuplicateReferenceErrors(GumProjectSave project)
     {
         List<ErrorResult> errors = new List<ErrorResult>();
-        (string Kind, IEnumerable<string?> Names)[] lists =
+        (string Kind, DuplicateKind DuplicateKind, IEnumerable<string?> Names)[] lists =
         {
-            ("Screen", project.ScreenReferences.Select(reference => reference.Name)),
-            ("Component", project.ComponentReferences.Select(reference => reference.Name)),
-            ("Standard element", project.StandardElementReferences.Select(reference => reference.Name)),
-            ("Behavior", project.BehaviorReferences.Select(reference => reference.Name)),
+            ("Screen", DuplicateKind.Screen, project.ScreenReferences.Select(reference => reference.Name)),
+            ("Component", DuplicateKind.Component, project.ComponentReferences.Select(reference => reference.Name)),
+            ("Standard element", DuplicateKind.StandardElement, project.StandardElementReferences.Select(reference => reference.Name)),
+            ("Behavior", DuplicateKind.Behavior, project.BehaviorReferences.Select(reference => reference.Name)),
         };
 
-        foreach ((string kind, IEnumerable<string?> names) in lists)
+        foreach ((string kind, DuplicateKind duplicateKind, IEnumerable<string?> names) in lists)
         {
             foreach (string name in DuplicatesOf(names))
             {
@@ -141,7 +153,8 @@ public partial class HeadlessErrorChecker
                     ElementName = name,
                     Code = "GUM0023",
                     Severity = ErrorSeverity.Error,
-                    Message = $"{kind} {name} is referenced more than once in the project file, so it loads as two items with one name. Delete the extra reference."
+                    Message = $"{kind} {name} is referenced more than once in the project file, so it loads as two items with one name. Delete the extra reference.",
+                    Details = new DuplicateNameDetails { Kind = duplicateKind, Name = name }
                 });
             }
         }
@@ -176,7 +189,8 @@ public partial class HeadlessErrorChecker
                 Code = "GUM0031",
                 Severity = ErrorSeverity.Warning,
                 Message = $"The file for behavior \"{reference.Name}\" is missing. Gum expected it at \"{relativePath}\", so the behavior loads empty " +
-                    "and its requirements are not checked. Restore the file or delete the behavior reference from the project file."
+                    "and its requirements are not checked. Restore the file or delete the behavior reference from the project file.",
+                Details = new MissingFileDetails { ExpectedPath = relativePath }
             });
         }
 
@@ -218,7 +232,8 @@ public partial class HeadlessErrorChecker
                         if (reported.Add(string.Join("|", cycle.OrderBy(name => name, StringComparer.Ordinal))))
                         {
                             errors.Add(Error(element, "GUM0024",
-                                $"Parents in {element.Name} form a loop: {string.Join(" -> ", cycle.Append(cycle[0]))}. Clear or change the Parent of one of them."));
+                                $"Parents in {element.Name} form a loop: {string.Join(" -> ", cycle.Append(cycle[0]))}. Clear or change the Parent of one of them.",
+                                new CycleDetails { Path = cycle.Append(cycle[0]).ToList(), StateName = state.Name }));
                         }
                         break;
                     }
@@ -273,14 +288,16 @@ public partial class HeadlessErrorChecker
             if (IsOnlyAScreen(instance.BaseType))
             {
                 errors.Add(Error(element, "GUM0025",
-                    $"Instance {instance.Name} of {element.Name} has the Screen {instance.BaseType} as its type. A Screen cannot be an instance; use a Component."));
+                    $"Instance {instance.Name} of {element.Name} has the Screen {instance.BaseType} as its type. A Screen cannot be an instance; use a Component.",
+                    new TypeReferenceDetails { InstanceName = instance.Name, Type = instance.BaseType }));
             }
         }
 
         if (element is ComponentSave && !string.IsNullOrEmpty(element.BaseType) && IsOnlyAScreen(element.BaseType))
         {
             errors.Add(Error(element, "GUM0025",
-                $"Component {element.Name} has the Screen {element.BaseType} as its base type. A component can only derive from a component or a standard element."));
+                $"Component {element.Name} has the Screen {element.BaseType} as its base type. A component can only derive from a component or a standard element.",
+                new TypeReferenceDetails { Type = element.BaseType }));
         }
 
         return errors;
@@ -323,7 +340,14 @@ public partial class HeadlessErrorChecker
                 {
                     string where = category != null ? $"the category {category.Name}" : categoryContainer.Name;
                     errors.Add(Error(element, "GUM0026",
-                        $"{element.Name} sets {variable.Name} to {stateName}, but {where} has no state with that name (it has {(available.Count == 0 ? "none" : string.Join(", ", available))})."));
+                        $"{element.Name} sets {variable.Name} to {stateName}, but {where} has no state with that name (it has {(available.Count == 0 ? "none" : string.Join(", ", available))}).",
+                        new StateVariableDetails
+                        {
+                            StateName = state.Name,
+                            VariableName = variable.Name,
+                            VariableType = variable.Type,
+                            Value = stateName
+                        }));
                 }
             }
         }

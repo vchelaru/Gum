@@ -101,7 +101,13 @@ public class ProjectLoader : IProjectLoader
             Message = $"{repair.Element.Name} derives from {repair.OwnerName} but does not list its instance " +
                 $"'{repair.InstanceName}' ({repair.InstanceBaseType}) with DefinedByBase true, so Gum adds it in memory at load. " +
                 $"Add an <Instance> named '{repair.InstanceName}' with <DefinedByBase>true</DefinedByBase> to the file, " +
-                $"or run gumcli resave to write it."
+                $"or run gumcli resave to write it.",
+            Details = new MissingBaseInstanceDetails
+            {
+                BaseElementName = repair.OwnerName,
+                InstanceName = repair.InstanceName,
+                InstanceType = repair.InstanceBaseType
+            }
         };
     }
 
@@ -406,6 +412,7 @@ public class ProjectLoader : IProjectLoader
                 ElementName = elementName,
                 Code = "GUM0004",
                 Message = $"Referenced file not found: {relativePath}",
+                Details = new MissingFileDetails { ExpectedPath = relativePath },
                 Severity = ErrorSeverity.Warning
             });
         }
