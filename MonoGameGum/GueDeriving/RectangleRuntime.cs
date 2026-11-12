@@ -2011,11 +2011,6 @@ public class RectangleRuntime : GraphicalUiElement
         // RenderableComponent on next access. The fill slot color/dimensions were copied
         // by RoundedRectangle.Clone (ICloneable, MemberwiseClone).
         toReturn.containedLineRectangle = null!;
-        // The fill's MemberwiseClone shallow-copies OnPreRender too, so it still points at the
-        // SOURCE runtime's RefreshShapeState. Rebind to the clone's own instance method or the
-        // clone's stroke never gets its Width/Height mirror when added top-level to a Layer
-        // (issue #4367 follow-up).
-        toReturn.ContainedRenderable.OnPreRender = toReturn.RefreshShapeState;
         // Issue #2790 recipe - drop the inherited stroke-slot reference and rebuild a fresh
         // one parented to the clone fill so the clone is fully independent.
         toReturn.ClearStrokeRenderable();

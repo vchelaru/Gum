@@ -995,44 +995,39 @@ public abstract class SkiaShapeRuntime : InteractiveGue
     #endregion
 
     /// <summary>
-    /// Passthrough to <see cref="GraphicalUiElement.SetContainedObject"/> that ALSO wires the
-    /// fill slot's <see cref="RenderableShapeBase.OnPreRender"/> hook to <see cref="RefreshShapeState"/>,
-    /// mirroring <c>AposShapeRuntime.SetContainedShape</c> (XNALIKE). The hook is what makes
-    /// <see cref="RefreshShapeState"/> (the two-slot stroke Width/Height mirror,
-    /// <c>StrokeWidthUnits.ScreenPixel</c> resolution) run even when this runtime is a TOP-LEVEL
-    /// <c>Layer</c> member added via <c>AddToManagers</c> — in
-    /// that case only the raw fill renderable (not this GUE wrapper) is registered on the Layer,
-    /// so <see cref="PreRender"/>'s own override is otherwise unreachable from the render walk
-    /// (issue #4367 follow-up). A NESTED (tree-parented) instance still reaches
-    /// <see cref="RefreshShapeState"/> the original way too, through its own <see cref="PreRender"/>
-    /// override — the hook just adds the top-level path; <see cref="RefreshShapeState"/> is
-    /// idempotent so running twice in that case is harmless. Callers MUST use this instead of
-    /// calling <c>SetContainedObject</c> directly for any shape whose <see cref="PreRender"/>
-    /// override does real work — a direct <c>SetContainedObject</c> call silently skips this
-    /// wiring, which is exactly how the top-level bug shipped. Having the same method name
-    /// available on both runtimes also lets unified shape-runtime files (e.g.
-    /// RoundedRectangleRuntime) share one constructor without #if-gating the contained-object
-    /// setup.
+    /// Passthrough to <see cref="GraphicalUiElement.SetContainedObject"/>. Exists so unified
+    /// shape-runtime files (e.g. RoundedRectangleRuntime) can call the same method name as
+    /// <c>AposShapeRuntime.SetContainedShape</c> (XNALIKE) without #if-gating the constructor.
     /// </summary>
     protected void SetContainedShape(RenderableShapeBase shape)
     {
         SetContainedObject(shape);
-        shape.OnPreRender = RefreshShapeState;
     }
 
     /// <summary>
-    /// Per-frame PreRender logic shared by every two-slot/dropshadow-capable Skia shape runtime.
-    /// Reached two ways: (1) a derived runtime's own <c>PreRender()</c> override calling
-    /// <c>base.PreRender()</c>, which chains up to <see cref="PreRender"/> below; (2) the fill
-    /// slot's <see cref="RenderableShapeBase.OnPreRender"/> hook (wired in
-    /// <see cref="SetContainedShape"/>), which fires even when this runtime is a top-level Layer
-    /// member and path (1) is unreachable. See <see cref="SetContainedShape"/>'s remarks.
-    /// <c>protected</c> (not <c>private</c>) so a derived runtime's <c>Clone()</c> override can
-    /// rebind <see cref="RenderableShapeBase.OnPreRender"/> to the CLONE's own instance — the
-    /// fill's <c>MemberwiseClone</c> shallow-copies that delegate, so without rebinding it would
-    /// still point at the source runtime.
+    /// Binds the contained renderable's <see cref="RenderableShapeBase.OnPreRender"/> hook to this
+    /// runtime's <see cref="PreRender"/>. A runtime added top-level via <c>AddToManagers</c>
+    /// registers only its contained renderable on the Layer, so the render walk calls that
+    /// renderable's <c>PreRender</c>, never this runtime's; the hook routes it back here so every
+    /// derived override (corner radii, circle fill inset, arc gradient start) runs the same as
+    /// when nested (issues #4367, #7975). Binding here covers every constructor and
+    /// <see cref="GraphicalUiElement.Clone"/>, which assigns the cloned renderable through
+    /// <see cref="GraphicalUiElement.SetContainedObject"/>.
     /// </summary>
-    protected void RefreshShapeState()
+    protected override void OnContainedObjectSet(IRenderable? containedObject)
+    {
+        if (containedObject is RenderableShapeBase shape)
+        {
+            shape.OnPreRender = PreRender;
+        }
+    }
+
+    /// <summary>
+    /// Per-frame state shared by every Skia shape runtime: stroke width (resolving
+    /// <c>StrokeWidthUnits.ScreenPixel</c>), the two-slot stroke Width/Height mirror and dropshadow
+    /// routing.
+    /// </summary>
+    private void RefreshShapeState()
     {
         var strokeWidth = StrokeWidth;
 
@@ -1067,14 +1062,14 @@ public abstract class SkiaShapeRuntime : InteractiveGue
     }
 
     /// <summary>
-    /// Runs <see cref="RefreshShapeState"/> for the GUE-nested reach path (see its remarks), then
-    /// forwards to the base <see cref="GraphicalUiElement.PreRender"/>, which calls
-    /// <c>.PreRender()</c> on the contained fill renderable — firing <see cref="RefreshShapeState"/>
-    /// a second, harmless time via <see cref="SetContainedShape"/>'s <c>OnPreRender</c> hook.
+    /// Pushes runtime-held state to the renderables each frame. Reached from the render walk
+    /// directly when this runtime is nested, and through the contained renderable's
+    /// <see cref="RenderableShapeBase.OnPreRender"/> hook when it is top-level (see
+    /// <see cref="OnContainedObjectSet"/>). Does not call <c>base.PreRender()</c>: that only calls
+    /// the contained renderable's <c>PreRender</c>, whose hook is this method, so it would recurse.
     /// </summary>
     public override void PreRender()
     {
         RefreshShapeState();
-        base.PreRender();
     }
 }

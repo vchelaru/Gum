@@ -824,9 +824,9 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
 
     /// <summary>
     /// Optional callback invoked at the end of <see cref="PreRender"/>, wired by the owning
-    /// GraphicalUiElement runtime (see <c>SkiaShapeRuntime.SetContainedShape</c>) so per-frame,
-    /// GUE-level PreRender logic (e.g. the two-slot stroke Width/Height mirror, or
-    /// <c>StrokeWidthUnits.ScreenPixel</c> resolution) still runs even when this renderable is a
+    /// GraphicalUiElement runtime (see <c>SkiaShapeRuntime.OnContainedObjectSet</c>) so the runtime's
+    /// <c>PreRender()</c> override (stroke width, corner radii, fill inset, gradient start)
+    /// still runs even when this renderable is a
     /// TOP-LEVEL <see cref="RenderingLibrary.Graphics.Layer"/> member added via
     /// <c>GraphicalUiElement.AddToManagers</c>. In that case only this raw renderable (the fill
     /// slot, <c>mContainedObjectAsIpso</c>) is registered on the Layer -- the GUE wrapper's own
