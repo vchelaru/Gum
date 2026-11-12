@@ -94,6 +94,34 @@ public class CheckCommandTests : BaseTestClass
     }
 
     [Fact]
+    public void Check_JsonFlag_ShouldWriteEnumsInDetailsAsNames()
+    {
+        string filePath = CreateTestProject("EnumDetailsJson");
+        string componentDir = Path.Combine(Path.GetDirectoryName(filePath)!, "Components");
+        Directory.CreateDirectory(componentDir);
+        File.WriteAllText(Path.Combine(componentDir, "Twins.gucx"), """
+            <?xml version="1.0" encoding="utf-8"?>
+            <ComponentSave xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+              <Name>Twins</Name>
+              <BaseType>Container</BaseType>
+              <State><Name>Default</Name></State>
+              <Instance><Name>Twin</Name><BaseType>Container</BaseType></Instance>
+              <Instance><Name>Twin</Name><BaseType>Container</BaseType></Instance>
+            </ComponentSave>
+            """);
+        File.WriteAllText(filePath, File.ReadAllText(filePath).Replace("</GumProjectSave>",
+            """  <ComponentReference Name="Twins" />""" + "\n</GumProjectSave>"));
+
+        CliTestHelper result = CliTestHelper.Run("check", filePath, "--json");
+
+        using JsonDocument document = JsonDocument.Parse(result.StandardOutput);
+        JsonElement details = document.RootElement.EnumerateArray()
+            .Single(e => e.GetProperty("code").GetString() == "GUM0020")
+            .GetProperty("details");
+        details.GetProperty("kind").GetString().ShouldBe("Instance");
+    }
+
+    [Fact]
     public void Check_ProjectWithOnlyWarnings_ShouldReturnExitCode0AndNotReportAsError()
     {
         string filePath = CreateProjectWithMissingSpriteTexture("Warnings");

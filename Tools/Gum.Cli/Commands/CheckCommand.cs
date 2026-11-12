@@ -20,7 +20,9 @@ public static class CheckCommand
     private static readonly JsonSerializerOptions JsonOptions = new JsonSerializerOptions
     {
         WriteIndented = true,
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+        // Enums in details are written by name, like severity.
+        Converters = { new System.Text.Json.Serialization.JsonStringEnumConverter() }
     };
 
     /// <summary>
