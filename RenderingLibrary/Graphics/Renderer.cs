@@ -1366,6 +1366,22 @@ public class Renderer : IRenderer
     /// </summary>
     public bool IsBakingRenderTarget => _isBakingRenderTarget;
 
+    /// <summary>
+    /// Set while drawing a frame into a target cleared to transparent that is saved as an image (the tool's
+    /// Export as Image, <c>gumcli screenshot</c>). Every draw then uses the blend states of a render-target
+    /// bake, so the target ends up holding premultiplied color with correct alpha, the same as a
+    /// render-target container's own target. The caller un-premultiplies the pixels before saving a
+    /// straight-alpha PNG. Without it the straight pipeline's NonPremultiplied blend writes alpha as
+    /// srcA * srcA over the transparent clear.
+    /// </summary>
+    public bool IsDrawingToTransparentTarget { get; set; }
+
+    /// <summary>
+    /// Whether draws use the render-target bake blend states (<see cref="AdjustBlendStateForRenderTargetBake"/>):
+    /// while baking a render-target container, or while <see cref="IsDrawingToTransparentTarget"/>.
+    /// </summary>
+    public bool UsesRenderTargetBakeBlendStates => _isBakingRenderTarget || IsDrawingToTransparentTarget;
+
     // #5696: bake targets carry a stencil buffer only when something baked into them draws through
     // it (alpha-mask shapes). A nested render target bakes into its own target, so it ends the scan.
     private static bool SubtreeRequiresStencil(IRenderableIpso container)
@@ -2324,7 +2340,7 @@ public class Renderer : IRenderer
     private void AdjustNonClipRenderStates(RenderStateVariables renderState, Layer layer, IRenderableIpso renderable, SystemManagers managers)
     {
         BlendState renderBlendState = renderable.BlendState ?? Renderer.NormalBlendState;
-        renderBlendState = AdjustBlendStateForRenderTargetBake(renderBlendState, _isBakingRenderTarget);
+        renderBlendState = AdjustBlendStateForRenderTargetBake(renderBlendState, UsesRenderTargetBakeBlendStates);
         bool wrap = renderable.Wrap;
         bool shouldResetStates = false;
 
@@ -2359,7 +2375,7 @@ public class Renderer : IRenderer
         bool shouldResetStates = false;
         bool didClipChange = false;
 
-        renderBlendState = AdjustBlendStateForRenderTargetBake(renderBlendState, _isBakingRenderTarget);
+        renderBlendState = AdjustBlendStateForRenderTargetBake(renderBlendState, UsesRenderTargetBakeBlendStates);
         if (renderState.BlendState != renderBlendState)
         {
             // This used to set this, but not sure why...I think it should set the renderBlendState:

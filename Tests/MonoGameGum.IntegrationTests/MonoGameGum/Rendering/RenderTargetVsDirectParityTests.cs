@@ -19,16 +19,14 @@ namespace MonoGameGum.IntegrationTests.MonoGameGum.Rendering;
 /// <summary>
 /// Content drawn inside an <c>IsRenderTarget</c> container (path B) must render the same pixels as the same
 /// content in a plain container (path A), in both alpha modes. Each case draws solid colors over a solid
-/// background and checks both paths, RGBA, pixel by pixel, against an image worked out by hand with the
+/// background and checks both paths, pixel by pixel, against an image worked out by hand with the
 /// "over" operator: with a = texelAlpha * elementAlpha * containerAlpha,
 ///   opaque background:      rgb = src * a + dst * (1 - a), alpha = 255;
 ///   transparent background: rgb = src * a + dst * (1 - a), alpha = a + dstA * (1 - a) (premultiplied form).
-/// One known gap is pinned rather than asserted equal: on the straight-alpha pipeline path A blends with
-/// NonPremultiplied, which writes alpha = srcA * srcA + dstA * (1 - srcA), so its alpha channel is checked
-/// against that formula instead. Over an opaque background that alpha is never shown on the canvas (the
-/// editor forces the frame opaque), but over a transparent clear (File > Export as Image) it is.
-/// The Editor host backs the container with a <see cref="LineRectangle"/>, as the Gum tool does; its outline
-/// pixels are excluded. Set GUM_RT_PARITY_DIR to save the A, B, expected and diff PNGs plus results.txt.
+/// Transparent-background cases draw with <see cref="Renderer.IsDrawingToTransparentTarget"/>, as Export as
+/// Image and <c>gumcli screenshot</c> do (#7992), and are checked RGBA on both paths. The Editor host backs
+/// the container with a <see cref="LineRectangle"/>, as the Gum tool does; its outline pixels are excluded.
+/// Set GUM_RT_PARITY_DIR to save the A, B, expected and diff PNGs plus results.txt.
 /// </summary>
 [Collection(SharedGame.CollectionName)]
 public class RenderTargetVsDirectParityTests : BaseTestClass
@@ -113,27 +111,22 @@ public class RenderTargetVsDirectParityTests : BaseTestClass
             }
         }
 
-        (XnaColor[] expected, byte[] nonPremultipliedAlpha) = ExpectedImages(scene, coverage);
+        XnaColor[] expected = ExpectedImage(scene, coverage);
 
-        Stats aVsB = Compare(a, b, mask, alphaOnly: false);
-        Stats aVsExpected = Compare(a, expected, mask, alphaOnly: false);
-        Stats bVsExpected = Compare(b, expected, mask, alphaOnly: false);
+        Stats aVsB = Compare(a, b, mask);
+        Stats aVsExpected = Compare(a, expected, mask);
+        Stats bVsExpected = Compare(b, expected, mask);
 
         string name = $"{c}_{(premultiplied ? "Premultiplied" : "Straight")}_{host}";
-        Report(name, scene, coverage, a, b, expected, nonPremultipliedAlpha, mask, aVsB, aVsExpected, bVsExpected);
+        Report(name, scene, coverage, a, b, expected, mask, aVsB, aVsExpected, bVsExpected);
 
-        // B: RGBA against the hand math.
         bVsExpected.MaxDelta.ShouldBeLessThanOrEqualTo(Tolerance, $"{name}: B vs expected (RGBA)");
 
-        // A: RGB against the hand math; alpha against the hand math on the premultiplied pipeline and against
-        // the NonPremultiplied formula on the straight one (the known gap described on the class).
-        Compare(a, expected, mask, alphaOnly: false, ignoreAlpha: true).MaxDelta
-            .ShouldBeLessThanOrEqualTo(Tolerance, $"{name}: A vs expected (RGB)");
-        XnaColor[] alphaReference = premultiplied
-            ? expected
-            : nonPremultipliedAlpha.Select(x => new XnaColor((byte)0, (byte)0, (byte)0, x)).ToArray();
-        Compare(a, alphaReference, mask, alphaOnly: true).MaxDelta
-            .ShouldBeLessThanOrEqualTo(Tolerance, $"{name}: A alpha");
+        // The canvas shows every frame opaque (AvaloniaRenderSurface.Push with forceOpaque), so over an opaque
+        // background the straight pipeline's alpha channel (srcA * srcA from NonPremultiplied) is never seen.
+        bool alphaObservable = premultiplied || scene.Background == null;
+        Compare(a, expected, mask, ignoreAlpha: !alphaObservable).MaxDelta
+            .ShouldBeLessThanOrEqualTo(Tolerance, $"{name}: A vs expected ({(alphaObservable ? "RGBA" : "RGB")})");
     }
 
     private static Scene SceneFor(Case c)
@@ -206,12 +199,11 @@ public class RenderTargetVsDirectParityTests : BaseTestClass
         return coverage;
     }
 
-    // The hand-computed image (the over operator, quad by quad), plus the alpha the NonPremultiplied blend
-    // state writes instead: srcA * srcA + dstA * (1 - srcA).
-    private static (XnaColor[] Expected, byte[] NonPremultipliedAlpha) ExpectedImages(Scene scene, float[] textCoverage)
+    // The hand-computed image: the over operator, quad by quad.
+    private static XnaColor[] ExpectedImage(Scene scene, float[] textCoverage)
     {
         int n = Width * Height;
-        float[] r = new float[n], g = new float[n], b = new float[n], alpha = new float[n], npAlpha = new float[n];
+        float[] r = new float[n], g = new float[n], b = new float[n], alpha = new float[n];
         for (int i = 0; i < n; i++)
         {
             Rgba? bg = scene.Background;
@@ -219,7 +211,6 @@ public class RenderTargetVsDirectParityTests : BaseTestClass
             g[i] = bg?.G ?? 0;
             b[i] = bg?.B ?? 0;
             alpha[i] = bg == null ? 0 : 1;
-            npAlpha[i] = alpha[i];
         }
 
         void Over(int i, Rgba color, float a)
@@ -228,7 +219,6 @@ public class RenderTargetVsDirectParityTests : BaseTestClass
             g[i] = color.G * a + g[i] * (1 - a);
             b[i] = color.B * a + b[i] * (1 - a);
             alpha[i] = a + alpha[i] * (1 - a);
-            npAlpha[i] = a * a + npAlpha[i] * (1 - a);
         }
 
         foreach (Quad q in scene.Quads)
@@ -257,13 +247,11 @@ public class RenderTargetVsDirectParityTests : BaseTestClass
 
         static byte B(float v) => (byte)Math.Round(Math.Clamp(v, 0, 255));
         XnaColor[] expected = new XnaColor[n];
-        byte[] np = new byte[n];
         for (int i = 0; i < n; i++)
         {
             expected[i] = new XnaColor(B(r[i]), B(g[i]), B(b[i]), B(alpha[i] * 255));
-            np[i] = B(npAlpha[i] * 255);
         }
-        return (expected, np);
+        return expected;
     }
 
     // Editor host: the LineRectangle outline (and one pixel either side) is not part of the content.
@@ -394,7 +382,15 @@ public class RenderTargetVsDirectParityTests : BaseTestClass
                 gd.SetRenderTarget(target);
                 // Opaque scenes draw a full-size background sprite over this; transparent ones keep it.
                 gd.Clear(XnaColor.Transparent);
-                managers.Renderer.Draw(managers);
+                managers.Renderer.IsDrawingToTransparentTarget = scene.Background == null;
+                try
+                {
+                    managers.Renderer.Draw(managers);
+                }
+                finally
+                {
+                    managers.Renderer.IsDrawingToTransparentTarget = false;
+                }
             }
             gd.SetRenderTarget(null);
 
@@ -456,17 +452,13 @@ public class RenderTargetVsDirectParityTests : BaseTestClass
 
     private sealed record Stats(int MaxDelta, int PixelsOver);
 
-    private static int Delta(XnaColor x, XnaColor y, bool alphaOnly = false, bool ignoreAlpha = false)
+    private static int Delta(XnaColor x, XnaColor y, bool ignoreAlpha = false)
     {
         int alpha = ignoreAlpha ? 0 : Math.Abs(x.A - y.A);
-        if (alphaOnly)
-        {
-            return alpha;
-        }
         return Math.Max(alpha, Math.Max(Math.Abs(x.R - y.R), Math.Max(Math.Abs(x.G - y.G), Math.Abs(x.B - y.B))));
     }
 
-    private static Stats Compare(XnaColor[] a, XnaColor[] b, bool[] mask, bool alphaOnly, bool ignoreAlpha = false)
+    private static Stats Compare(XnaColor[] a, XnaColor[] b, bool[] mask, bool ignoreAlpha = false)
     {
         int max = 0;
         int over = 0;
@@ -476,7 +468,7 @@ public class RenderTargetVsDirectParityTests : BaseTestClass
             {
                 continue;
             }
-            int d = Delta(a[i], b[i], alphaOnly, ignoreAlpha);
+            int d = Delta(a[i], b[i], ignoreAlpha);
             max = Math.Max(max, d);
             if (d > 1)
             {
@@ -509,7 +501,7 @@ public class RenderTargetVsDirectParityTests : BaseTestClass
     }
 
     private static void Report(string name, Scene scene, float[] coverage, XnaColor[] a, XnaColor[] b,
-        XnaColor[] expected, byte[] nonPremultipliedAlpha, bool[] mask, Stats aVsB, Stats aVsExpected, Stats bVsExpected)
+        XnaColor[] expected, bool[] mask, Stats aVsB, Stats aVsExpected, Stats bVsExpected)
     {
         string? dir = Environment.GetEnvironmentVariable("GUM_RT_PARITY_DIR");
         if (string.IsNullOrEmpty(dir))
@@ -530,8 +522,7 @@ public class RenderTargetVsDirectParityTests : BaseTestClass
         {
             int i = y * Width + x;
             lines.Add($"  {point} ({x},{y}) expected={Fmt(expected[i])} A={Fmt(a[i])} B={Fmt(b[i])}" +
-                      $" dA={Delta(a[i], expected[i])} dB={Delta(b[i], expected[i])}" +
-                      $" nonPremultipliedAlphaFormula={nonPremultipliedAlpha[i]}");
+                      $" dA={Delta(a[i], expected[i])} dB={Delta(b[i], expected[i])}");
         }
         File.AppendAllLines(Path.Combine(dir, "results.txt"), lines);
 
