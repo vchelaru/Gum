@@ -16,6 +16,7 @@ public class ShapePaintReuseTests
     private sealed class ProbeShape : RoundedRectangle
     {
         public SKPaint Paint() => GetCachedPaint(Bounds, absoluteRotation: 0);
+        public SKPaint PaintAt(SKRect bounds, float absoluteRotation) => GetCachedPaint(bounds, absoluteRotation);
         public SKPaint? Shadow() => GetShadowPaint();
     }
 
@@ -31,6 +32,46 @@ public class ShapePaintReuseTests
         SKPaint first = shape.Paint();
 
         shape.Paint().ShouldBeSameAs(first);
+    }
+
+    // A scrolling solid shape moves its bounds every frame; its paint does not depend on them.
+    [Fact]
+    public void GetCachedPaint_BoundsMovedOnASolidShape_DoesNotRebuild()
+    {
+        ProbeShape shape = new ProbeShape();
+        SKPaint paint = shape.Paint();
+        // A rebuild would reset this marker.
+        paint.StrokeWidth = 77;
+
+        shape.PaintAt(new SKRect(5, 9, 105, 109), absoluteRotation: 0);
+
+        paint.StrokeWidth.ShouldBe(77);
+    }
+
+    [Fact]
+    public void GetCachedPaint_BoundsMovedOnAGradientShape_Rebuilds()
+    {
+        ProbeShape shape = new ProbeShape();
+        shape.UseGradient = true;
+        SKPaint paint = shape.Paint();
+        paint.StrokeWidth = 77;
+
+        shape.PaintAt(new SKRect(5, 9, 105, 109), absoluteRotation: 0);
+
+        paint.StrokeWidth.ShouldNotBe(77);
+    }
+
+    [Fact]
+    public void GetCachedPaint_RotationChangedOnAGradientShape_Rebuilds()
+    {
+        ProbeShape shape = new ProbeShape();
+        shape.UseGradient = true;
+        SKPaint paint = shape.Paint();
+        paint.StrokeWidth = 77;
+
+        shape.PaintAt(Bounds, absoluteRotation: 30);
+
+        paint.StrokeWidth.ShouldNotBe(77);
     }
 
     [Fact]
