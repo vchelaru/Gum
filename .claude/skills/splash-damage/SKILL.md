@@ -27,5 +27,5 @@ A bug usually exists because a test was missing. Nearby behavior in the same are
 
 - Stay inside the named boundary. Drifting into neighboring features turns a sweep into a rewrite.
 - Do not change existing tests to make new ones pass.
-- A question about how the area behaves gets a yes or no answer from a test. Find the test that pins it and name it. If no test does, that is a gap: write the test, run it, and answer from the result. Reading the code alone gives a guess, not an answer.
+- A question about how the area behaves gets a yes or no answer from a test. Find the test that pins it and name it. If no test does, that is a gap: write the test, run it, and answer from the result. Reading the code alone gives a guess, not an answer. A test that pins wrong behavior (an accepted limitation, a "restart needed" where hot reload should just work) is a bug, handled like a red test.
 - If nothing in the batch is red, say so. That is a result, and the coverage is still worth merging.
