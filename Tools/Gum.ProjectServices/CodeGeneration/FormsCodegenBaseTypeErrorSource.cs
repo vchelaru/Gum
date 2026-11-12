@@ -34,6 +34,7 @@ public class FormsCodegenBaseTypeErrorSource : IAdditionalErrorSource
             yield return new ErrorResult
             {
                 ElementName = element.Name,
+                Code = "GUM0046",
                 Message = message,
                 Severity = ErrorSeverity.Error
             };

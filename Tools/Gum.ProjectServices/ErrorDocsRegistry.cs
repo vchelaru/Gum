@@ -42,6 +42,21 @@ public class ErrorDocsRegistry : IErrorDocsRegistry
             ["GUM0028"] = "gum-tool/project-files#variable-with-an-unknown-type-gum0028",
             ["GUM0030"] = "gum-tool/gum-elements/general-properties/base-type-inheritance#unknown-base-type-gum0030",
             ["GUM0031"] = "gum-tool/project-files#behavior-file-missing-gum0031",
+            ["GUM0032"] = "gum-tool/project-files#missing-behavior-gum0032",
+            ["GUM0033"] = "gum-tool/project-files#behavior-variable-requirements-gum0033",
+            ["GUM0034"] = "gum-tool/project-files#parent-that-does-not-exist-gum0034",
+            ["GUM0035"] = "gum-tool/project-files#instance-of-a-missing-type-gum0035",
+            ["GUM0036"] = "gum-tool/project-files#state-variable-without-the-state-suffix-gum0036",
+            ["GUM0037"] = "gum-tool/project-files#animation-chain-offsets-with-a-non-center-origin-gum0037",
+            ["GUM0038"] = "gum-tool/project-files#malformed-element-file-gum0038",
+            ["GUM0039"] = "gum-tool/project-files#element-file-load-problem-gum0039",
+            ["GUM0040"] = "gum-tool/project-files#ignored-file-content-gum0040",
+            ["GUM0041"] = "gum-tool/project-files#git-conflict-markers-gum0041",
+            ["GUM0042"] = "gum-tool/project-files#unreadable-animation-file-gum0042",
+            ["GUM0043"] = "gum-tool/project-files#animation-keyframe-that-uses-a-missing-state-or-animation-gum0043-gum0044",
+            ["GUM0044"] = "gum-tool/project-files#animation-keyframe-that-uses-a-missing-state-or-animation-gum0043-gum0044",
+            ["GUM0045"] = "gum-tool/project-files#category-name-collision-in-generated-code-gum0045",
+            ["GUM0046"] = "gum-tool/project-files#forms-component-with-an-unsupported-base-type-gum0046",
         };
     }
 

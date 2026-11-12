@@ -288,6 +288,118 @@ The project file can list a behavior whose file is not on disk, for example afte
 Available in December 2026, or now if building Gum from source.
 {% endhint %}
 
+## Missing Behavior (GUM0032)
+
+A component lists the behaviors it uses by name. When a name matches no behavior in the project, for example after the behavior was renamed or deleted, the requirements of that behavior are never checked. `gumcli check` reports **GUM0032** as an error naming the behavior. To resolve it, add the behavior to the project or remove it from the component.
+
+{% hint style="info" %}
+Available in December 2026, or now if building Gum from source.
+{% endhint %}
+
+## Behavior Variable Requirements (GUM0033)
+
+A behavior can require a variable with a given name and type, such as a `bool` named `IsOn`. When a component that uses the behavior has no such variable, or has it with a different type, code that relies on the behavior does not work. `gumcli check` reports **GUM0033** as an error naming the behavior, the variable, and the required type. To resolve it, add or expose a variable with the required name and type.
+
+{% hint style="info" %}
+Available in December 2026, or now if building Gum from source.
+{% endhint %}
+
+## Parent That Does Not Exist (GUM0034)
+
+An instance's `Parent` names another instance in the same element. When no instance has that name, for example after the parent was renamed or deleted, the instance is not attached where the file says. `gumcli check` reports **GUM0034** as an error naming the instance, the `Parent` value, and the state. To resolve it, set `Parent` to an existing instance or clear it.
+
+{% hint style="info" %}
+Available in December 2026, or now if building Gum from source.
+{% endhint %}
+
+## Instance of a Missing Type (GUM0035)
+
+Each instance has a type, which is a component or standard element in the project. When the project has no element with that name, the instance cannot be created. `gumcli check` reports **GUM0035** as an error naming the instance and its type. To resolve it, add the missing element or change the instance's type.
+
+{% hint style="info" %}
+Available in December 2026, or now if building Gum from source.
+{% endhint %}
+
+## State Variable Without the State Suffix (GUM0036)
+
+A variable that selects a state of a category is named after the category with a `State` suffix, such as `ButtonModeState`. Older versions of Gum saved some of these variables without the suffix, and generated code that uses them may not compile. `gumcli check` reports **GUM0036** as a warning naming the variable and the name it should have. To resolve it, rename the variable as the message says.
+
+{% hint style="info" %}
+Available in December 2026, or now if building Gum from source.
+{% endhint %}
+
+## Animation Chain Offsets With a Non-Center Origin (GUM0037)
+
+The FlatRedBall AnimationEditor positions each frame of an `.achx` relative to the center of the Sprite. When a Sprite plays an `.achx` whose frames have offsets but its `XOrigin` or `YOrigin` is not `Center`, the animation drifts as frames change size. `gumcli check` reports **GUM0037** as a warning naming the Sprite and the `.achx`. To resolve it, set both origins to `Center`.
+
+{% hint style="info" %}
+Available in December 2026, or now if building Gum from source.
+{% endhint %}
+
+## Malformed Element File (GUM0038)
+
+An element file that is not valid XML or JSON, for example after a hand edit left a tag unclosed, does not load, while the rest of the project still does. `gumcli check` reports **GUM0038** as an error naming the element and the parser's message, which usually gives the line and column. To resolve it, fix the file in a text editor.
+
+{% hint style="info" %}
+Available in December 2026, or now if building Gum from source.
+{% endhint %}
+
+## Element File Load Problem (GUM0039)
+
+Loading the project can report a problem with an element file that has no more specific code, such as a file whose element name differs from the name the project file lists. `gumcli check` reports **GUM0039** as a warning, and the message names the problem. To resolve it, change the file or the project file so the two agree.
+
+{% hint style="info" %}
+Available in December 2026, or now if building Gum from source.
+{% endhint %}
+
+## Ignored File Content (GUM0040)
+
+Loading skips XML elements and JSON properties it does not know, such as `<States>` wrapped around states or a JSON property spelled `states` instead of `States`. The content inside them is lost. `gumcli check` reports **GUM0040** as an error naming the ignored element or property. To resolve it, rename it as the message says.
+
+{% hint style="info" %}
+Available in December 2026, or now if building Gum from source.
+{% endhint %}
+
+## Git Conflict Markers (GUM0041)
+
+A merge or rebase can leave git conflict markers (`<<<<<<<`, `=======`, `>>>>>>>`) in an element file. The file is then not valid XML or JSON, so the element does not load. `gumcli check` reports **GUM0041** as an error naming the file. To resolve it, resolve the conflict in your editor and reload the project.
+
+{% hint style="info" %}
+Available in December 2026, or now if building Gum from source.
+{% endhint %}
+
+## Unreadable Animation File (GUM0042)
+
+An element's animations are saved in a file next to the element file. When that file cannot be read, for example because it is damaged, the element's animations are not checked. `gumcli check` reports **GUM0042** as an error naming the reason. To resolve it, fix or delete the animation file.
+
+{% hint style="info" %}
+Available in December 2026, or now if building Gum from source.
+{% endhint %}
+
+## Animation Keyframe That Uses a Missing State or Animation (GUM0043, GUM0044)
+
+An animation keyframe either applies a state of the element or plays another animation. When the state does not exist (**GUM0043**) or the animation does not exist (**GUM0044**), for example after it was renamed, the keyframe does nothing. `gumcli check` reports both as errors naming the animation, the keyframe time, and the missing name. To resolve it, change or delete the keyframe.
+
+{% hint style="info" %}
+Available in December 2026, or now if building Gum from source.
+{% endhint %}
+
+## Category Name Collision in Generated Code (GUM0045)
+
+Code generation creates an enum and a state property for each category, named after it, plus a class for the element. When a category name produces a name that another category or the class already uses, such as categories named `Mode` and `ModeState`, the generated code does not compile. `gumcli codegen` reports **GUM0045** as an error naming the clash. To resolve it, rename a category.
+
+{% hint style="info" %}
+Available in December 2026, or now if building Gum from source.
+{% endhint %}
+
+## Forms Component With an Unsupported Base Type (GUM0046)
+
+With Forms code generation, a component must inherit from `Container` or have a Forms behavior. `gumcli codegen` reports **GUM0046** as an error for a component that does neither. To resolve it, change its base type to `Container` or add a Forms behavior.
+
+{% hint style="info" %}
+Available in December 2026, or now if building Gum from source.
+{% endhint %}
+
 ## Version Control (.gitignore)
 
 The following `.gitignore` entries are recommended for Gum projects:

@@ -20,7 +20,9 @@ public static class CheckCommand
     private static readonly JsonSerializerOptions JsonOptions = new JsonSerializerOptions
     {
         WriteIndented = true,
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+        // Enums in details are written by name, like severity.
+        Converters = { new System.Text.Json.Serialization.JsonStringEnumConverter() }
     };
 
     /// <summary>
@@ -133,7 +135,9 @@ public static class CheckCommand
             element = e.ElementName,
             message = e.Message,
             severity = e.Severity.ToString(),
-            code = e.Code
+            code = e.Code,
+            // As object, so the serializer writes the subclass's fields rather than the empty base type's.
+            details = (object?)e.Details
         });
 
         Console.WriteLine(JsonSerializer.Serialize(output, JsonOptions));

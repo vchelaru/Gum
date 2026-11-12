@@ -44,6 +44,7 @@ public class AnimationKeyframeErrorSource : IAdditionalErrorSource
                 new ErrorResult
                 {
                     ElementName = element.Name,
+                    Code = "GUM0042",
                     Message = $"The animation file could not be read: {exception.Message}",
                     Severity = ErrorSeverity.Error
                 }
@@ -67,7 +68,14 @@ public class AnimationKeyframeErrorSource : IAdditionalErrorSource
                         ElementName = element.Name,
                         Message = $"Animation '{animation.Name}' keyframe at time {keyframe.Time} " +
                                   $"references state '{keyframe.StateName}' which does not exist.",
-                        Severity = ErrorSeverity.Error
+                        Severity = ErrorSeverity.Error,
+                        Code = "GUM0043",
+                        Details = new KeyframeMissingStateDetails
+                        {
+                            AnimationName = animation.Name,
+                            Time = keyframe.Time,
+                            StateName = keyframe.StateName
+                        }
                     };
                 }
             }
@@ -81,7 +89,14 @@ public class AnimationKeyframeErrorSource : IAdditionalErrorSource
                         ElementName = element.Name,
                         Message = $"Animation '{animation.Name}' keyframe at time {keyframe.Time} " +
                                   $"plays animation '{keyframe.Name}' which does not exist.",
-                        Severity = ErrorSeverity.Error
+                        Severity = ErrorSeverity.Error,
+                        Code = "GUM0044",
+                        Details = new KeyframeMissingAnimationDetails
+                        {
+                            AnimationName = animation.Name,
+                            Time = keyframe.Time,
+                            MissingAnimationName = keyframe.Name
+                        }
                     };
                 }
             }

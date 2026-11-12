@@ -2466,4 +2466,373 @@ public class HeadlessErrorCheckerTests : BaseTestClass
     }
 
     #endregion
+
+    #region Details (#7966)
+
+    [Fact]
+    public void Details_Gum0001_NamesBehaviorAndRequiredInstance()
+    {
+        BehaviorSave behavior = new BehaviorSave { Name = "IToggle" };
+        behavior.RequiredInstances.Add(new BehaviorInstanceSave { Name = "ToggleSprite", BaseType = "Sprite" });
+        Project.Behaviors.Add(behavior);
+        ComponentSave component = new ComponentSave { Name = "ToggleButton" };
+        component.Behaviors.Add(new ElementBehaviorReference { BehaviorName = "IToggle" });
+        Project.Components.Add(component);
+
+        ErrorResult error = _sut.GetErrorsFor(component, Project).Single(item => item.Code == "GUM0001");
+
+        BehaviorInstanceRequirementDetails details = error.Details.ShouldBeOfType<BehaviorInstanceRequirementDetails>();
+        details.BehaviorName.ShouldBe("IToggle");
+        details.InstanceName.ShouldBe("ToggleSprite");
+        details.InstanceType.ShouldBe("Sprite");
+        details.RequiredBehaviors.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void Details_Gum0003_NamesCategoryStateAndVariable()
+    {
+        ComponentSave component = new ComponentSave { Name = "TextBox", BaseType = "Container" };
+        component.States.Add(new StateSave { Name = "Default", ParentContainer = component });
+        StateSaveCategory category = new StateSaveCategory { Name = "TextBoxCategory" };
+        StateSave focused = new StateSave { Name = "Focused", ParentContainer = component };
+        focused.Variables.Add(new VariableSave { Name = "TextBoxCategoryState", Type = "TextBoxCategory", Value = "Enabled", SetsValue = true });
+        category.States.Add(focused);
+        component.Categories.Add(category);
+        Project.Components.Add(component);
+
+        ErrorResult error = _sut.GetErrorsFor(component, Project).Single(item => item.Code == "GUM0003");
+
+        StateVariableDetails details = error.Details.ShouldBeOfType<StateVariableDetails>();
+        details.StateName.ShouldBe("Focused");
+        details.CategoryName.ShouldBe("TextBoxCategory");
+        details.VariableName.ShouldBe("TextBoxCategoryState");
+        details.Value.ShouldBe("Enabled");
+    }
+
+    [Fact]
+    public void Details_Gum0004_NamesExpectedPath()
+    {
+        ComponentSave component = new ComponentSave { Name = "Gone", BaseType = "Container", IsSourceFileMissing = true };
+        component.States.Add(new StateSave { Name = "Default", ParentContainer = component });
+        Project.Components.Add(component);
+
+        ErrorResult error = _sut.GetErrorsFor(component, Project).Single(item => item.Code == "GUM0004");
+
+        error.Details.ShouldBeOfType<MissingFileDetails>().ExpectedPath.ShouldBe("Components/Gone.gucx");
+    }
+
+    [Fact]
+    public void Details_Gum0007_NamesStateVariableTypeAndValue()
+    {
+        _mockTypeResolver.Setup(item => item.GetTypeFromString("DimensionUnitType")).Returns(typeof(DimensionUnitType));
+        ComponentSave component = new ComponentSave { Name = "BrokenButton" };
+        component.Instances.Add(new InstanceSave { Name = "Background", BaseType = "ColoredRectangle" });
+        StateSave defaultState = new StateSave { Name = "Default", ParentContainer = component };
+        defaultState.Variables.Add(new VariableSave { Name = "Background.WidthUnits", Value = 14, Type = "DimensionUnitType", SetsValue = true });
+        component.States.Add(defaultState);
+        Project.Components.Add(component);
+
+        ErrorResult error = _sut.GetErrorsFor(component, Project).Single(item => item.Code == "GUM0007");
+
+        StateVariableDetails details = error.Details.ShouldBeOfType<StateVariableDetails>();
+        details.StateName.ShouldBe("Default");
+        details.VariableName.ShouldBe("Background.WidthUnits");
+        details.VariableType.ShouldBe("DimensionUnitType");
+        details.Value.ShouldBe("14");
+    }
+
+    [Fact]
+    public void Details_Gum0009_NamesStateListAndLine()
+    {
+        ComponentSave component = AddComponentWithReferences("Label", sourceObject: null, "X = Screens/Menus/Main.Width");
+
+        ErrorResult error = _sut.GetErrorsFor(component, Project).Single(item => item.Code == "GUM0009");
+
+        VariableReferenceLineDetails details = error.Details.ShouldBeOfType<VariableReferenceLineDetails>();
+        details.StateName.ShouldBe("Default");
+        details.VariableListName.ShouldBe("VariableReferences");
+        details.Line.ShouldBe("X = Screens/Menus/Main.Width");
+    }
+
+    [Fact]
+    public void Details_Gum0010_NamesFont()
+    {
+        AddComponentWithTextFont("Label", "Fonts/Icons.ttf");
+        Project.FontRangeEntries.Add(new FontRangeEntry { FontFamily = "Fonts/Icon.ttf", Ranges = "57344-57400" });
+
+        ErrorResult error = _sut.GetProjectErrors(Project).Single(item => item.Code == "GUM0010");
+
+        error.Details.ShouldBeOfType<FontRangeDetails>().Font.ShouldBe("Fonts/Icon.ttf");
+    }
+
+    [Fact]
+    public void Details_Gum0011_NamesFontAndRanges()
+    {
+        AddComponentWithTextFont("Label", "Arial");
+        Project.FontRangeEntries.Add(new FontRangeEntry { FontFamily = "Arial", Ranges = "50-40" });
+
+        ErrorResult error = _sut.GetProjectErrors(Project).Single(item => item.Code == "GUM0011");
+
+        FontRangeDetails details = error.Details.ShouldBeOfType<FontRangeDetails>();
+        details.Font.ShouldBe("Arial");
+        details.Ranges.ShouldBe("50-40");
+    }
+
+    [Fact]
+    public void Details_Gum0012_NamesTextFontAndCodePoints()
+    {
+        Project.FontRangeEntries.Single().Ranges = "32-126";
+        ComponentSave component = AddComponentWithTextFont("PriceLabel", "Arial");
+        component.DefaultState!.Variables.Add(new VariableSave { Name = "MyText.Text", Value = "€Ω", Type = "string", SetsValue = true });
+
+        ErrorResult error = _sut.GetErrorsFor(component, Project).Single(item => item.Code == "GUM0012");
+
+        FontRangeDetails details = error.Details.ShouldBeOfType<FontRangeDetails>();
+        details.InstanceName.ShouldBe("MyText");
+        details.Font.ShouldBe("Arial");
+        details.CodePoints.ShouldBe(new[] { 8364, 937 });
+    }
+
+    [Fact]
+    public void Details_Gum0013_NamesLoopAndState()
+    {
+        ComponentSave component = AddComponentWithRowsOnInstances("Panel", ("A", "Width = B.Width + 1"), ("B", "Width = A.Width + 1"));
+
+        ErrorResult error = _sut.GetErrorsFor(component, Project).Single(item => item.Code == "GUM0013");
+
+        CycleDetails details = error.Details.ShouldBeOfType<CycleDetails>();
+        details.StateName.ShouldBe("Default");
+        details.Path.Count.ShouldBe(3);
+        details.Path[0].ShouldBe(details.Path[2]);
+        details.Path.ShouldContain("Panel.A.Width");
+    }
+
+    [Fact]
+    public void Details_Gum0014_NamesBaseTypeLoop()
+    {
+        ComponentSave a = new ComponentSave { Name = "A", BaseType = "B" };
+        ComponentSave b = new ComponentSave { Name = "B", BaseType = "A" };
+        Project.Components.Add(a);
+        Project.Components.Add(b);
+        Gum.Managers.ObjectFinder.Self.GumProjectSave = Project;
+
+        ErrorResult error = _sut.GetErrorsFor(a, Project).Single(item => item.Code == "GUM0014");
+
+        CycleDetails details = error.Details.ShouldBeOfType<CycleDetails>();
+        details.Path.Count.ShouldBe(3);
+        details.Path.ShouldContain("A");
+        details.Path.ShouldContain("B");
+        details.StateName.ShouldBeNull();
+    }
+
+    [Fact]
+    public void Details_Gum0019_NamesStateVariableTypeAndValue()
+    {
+        ComponentSave component = ComponentWithDefaultVariable(new VariableSave { Name = "Width", Type = "float", Value = "wide", SetsValue = true });
+
+        ErrorResult error = _sut.GetErrorsFor(component, Project).Single(item => item.Code == "GUM0019");
+
+        StateVariableDetails details = error.Details.ShouldBeOfType<StateVariableDetails>();
+        details.StateName.ShouldBe("Default");
+        details.VariableName.ShouldBe("Width");
+        details.VariableType.ShouldBe("float");
+        details.Value.ShouldBe("wide");
+    }
+
+    [Fact]
+    public void Details_Gum0020_NamesDuplicateInstance()
+    {
+        ComponentSave component = ComponentWithDefaultVariable();
+        component.Instances.Add(new InstanceSave { Name = "Twin", BaseType = "Container" });
+        component.Instances.Add(new InstanceSave { Name = "Twin", BaseType = "Container" });
+
+        ErrorResult error = _sut.GetErrorsFor(component, Project).Single(item => item.Code == "GUM0020");
+
+        DuplicateNameDetails details = error.Details.ShouldBeOfType<DuplicateNameDetails>();
+        details.Kind.ShouldBe(DuplicateKind.Instance);
+        details.Name.ShouldBe("Twin");
+    }
+
+    [Fact]
+    public void Details_Gum0021_NamesDuplicateStateAndItsCategory()
+    {
+        ComponentSave component = ComponentWithDefaultVariable();
+        StateSaveCategory category = new StateSaveCategory { Name = "Mode" };
+        category.States.Add(new StateSave { Name = "On", ParentContainer = component });
+        category.States.Add(new StateSave { Name = "On", ParentContainer = component });
+        component.Categories.Add(category);
+
+        ErrorResult error = _sut.GetErrorsFor(component, Project).Single(item => item.Code == "GUM0021");
+
+        DuplicateNameDetails details = error.Details.ShouldBeOfType<DuplicateNameDetails>();
+        details.Kind.ShouldBe(DuplicateKind.State);
+        details.Name.ShouldBe("On");
+        details.CategoryName.ShouldBe("Mode");
+    }
+
+    [Fact]
+    public void Details_Gum0022_NamesDuplicateVariableAndItsState()
+    {
+        ComponentSave component = ComponentWithDefaultVariable(
+            new VariableSave { Name = "Width", Type = "float", Value = 1f, SetsValue = true },
+            new VariableSave { Name = "Width", Type = "float", Value = 2f, SetsValue = true });
+
+        ErrorResult error = _sut.GetErrorsFor(component, Project).Single(item => item.Code == "GUM0022");
+
+        DuplicateNameDetails details = error.Details.ShouldBeOfType<DuplicateNameDetails>();
+        details.Kind.ShouldBe(DuplicateKind.Variable);
+        details.Name.ShouldBe("Width");
+        details.StateName.ShouldBe("Default");
+    }
+
+    [Fact]
+    public void Details_Gum0023_NamesDuplicateReference()
+    {
+        Project.ComponentReferences.Add(new ElementReference { Name = "Button", ElementType = ElementType.Component });
+        Project.ComponentReferences.Add(new ElementReference { Name = "Button", ElementType = ElementType.Component });
+
+        ErrorResult error = _sut.GetProjectErrors(Project).Single(item => item.Code == "GUM0023");
+
+        DuplicateNameDetails details = error.Details.ShouldBeOfType<DuplicateNameDetails>();
+        details.Kind.ShouldBe(DuplicateKind.Component);
+        details.Name.ShouldBe("Button");
+    }
+
+    [Fact]
+    public void Details_Gum0024_NamesParentLoop()
+    {
+        ComponentSave component = ComponentWithDefaultVariable(
+            new VariableSave { Name = "A.Parent", Type = "string", Value = "B", SetsValue = true },
+            new VariableSave { Name = "B.Parent", Type = "string", Value = "A", SetsValue = true });
+        component.Instances.Add(new InstanceSave { Name = "A", BaseType = "Container" });
+        component.Instances.Add(new InstanceSave { Name = "B", BaseType = "Container" });
+
+        ErrorResult error = _sut.GetErrorsFor(component, Project).Single(item => item.Code == "GUM0024");
+
+        CycleDetails details = error.Details.ShouldBeOfType<CycleDetails>();
+        details.Path.Count.ShouldBe(3);
+        details.Path[0].ShouldBe(details.Path[2]);
+        details.StateName.ShouldBe("Default");
+    }
+
+    [Fact]
+    public void Details_Gum0025_NamesInstanceAndScreenType()
+    {
+        Project.Screens.Add(new ScreenSave { Name = "MainMenu" });
+        ComponentSave component = ComponentWithDefaultVariable();
+        component.Instances.Add(new InstanceSave { Name = "Menu", BaseType = "MainMenu" });
+
+        ErrorResult error = _sut.GetErrorsFor(component, Project).Single(item => item.Code == "GUM0025");
+
+        TypeReferenceDetails details = error.Details.ShouldBeOfType<TypeReferenceDetails>();
+        details.InstanceName.ShouldBe("Menu");
+        details.Type.ShouldBe("MainMenu");
+    }
+
+    [Fact]
+    public void Details_Gum0025_NamesScreenBaseType()
+    {
+        Project.Screens.Add(new ScreenSave { Name = "MainMenu" });
+        ComponentSave component = new ComponentSave { Name = "Panel", BaseType = "MainMenu" };
+        component.States.Add(new StateSave { Name = "Default", ParentContainer = component });
+        Project.Components.Add(component);
+
+        ErrorResult error = _sut.GetErrorsFor(component, Project).Single(item => item.Code == "GUM0025");
+
+        TypeReferenceDetails details = error.Details.ShouldBeOfType<TypeReferenceDetails>();
+        details.InstanceName.ShouldBeNull();
+        details.Type.ShouldBe("MainMenu");
+    }
+
+    [Fact]
+    public void Details_Gum0021_NamesDuplicateCategory()
+    {
+        ComponentSave component = ComponentWithDefaultVariable();
+        component.Categories.Add(new StateSaveCategory { Name = "Mode" });
+        component.Categories.Add(new StateSaveCategory { Name = "Mode" });
+
+        ErrorResult error = _sut.GetErrorsFor(component, Project).Single(item => item.Code == "GUM0021");
+
+        DuplicateNameDetails details = error.Details.ShouldBeOfType<DuplicateNameDetails>();
+        details.Kind.ShouldBe(DuplicateKind.Category);
+        details.Name.ShouldBe("Mode");
+    }
+
+    [Fact]
+    public void Details_Gum0026_NamesStateVariableAndValue()
+    {
+        ComponentSave component = ComponentWithDefaultVariable(new VariableSave { Name = "ModeState", Type = "Mode", Value = "Missing", SetsValue = true });
+        StateSaveCategory category = new StateSaveCategory { Name = "Mode" };
+        category.States.Add(new StateSave { Name = "On", ParentContainer = component });
+        component.Categories.Add(category);
+
+        ErrorResult error = _sut.GetErrorsFor(component, Project).Single(item => item.Code == "GUM0026");
+
+        StateVariableDetails details = error.Details.ShouldBeOfType<StateVariableDetails>();
+        details.StateName.ShouldBe("Default");
+        details.VariableName.ShouldBe("ModeState");
+        details.Value.ShouldBe("Missing");
+    }
+
+    [Fact]
+    public void Details_Gum0027_NamesStateAndVariable()
+    {
+        HeadlessErrorChecker checker = new HeadlessErrorChecker(_mockTypeResolver.Object) { ReportsLeftoverInstanceVariables = true };
+        ComponentSave component = ComponentWithDefaultVariable(new VariableSave { Name = "Ghost.Width", Type = "float", Value = 1f, SetsValue = true });
+
+        ErrorResult error = checker.GetErrorsFor(component, Project).Single(item => item.Code == "GUM0027");
+
+        StateVariableDetails details = error.Details.ShouldBeOfType<StateVariableDetails>();
+        details.StateName.ShouldBe("Default");
+        details.VariableName.ShouldBe("Ghost.Width");
+    }
+
+    [Fact]
+    public void Details_Gum0028_NamesStateVariableAndType()
+    {
+        ComponentSave component = ComponentWithDefaultVariable(new VariableSave { Name = "Wobble", Type = "Blorp", Value = 1, SetsValue = true });
+
+        ErrorResult error = _sut.GetErrorsFor(component, Project).Single(item => item.Code == "GUM0028");
+
+        StateVariableDetails details = error.Details.ShouldBeOfType<StateVariableDetails>();
+        details.StateName.ShouldBe("Default");
+        details.VariableName.ShouldBe("Wobble");
+        details.VariableType.ShouldBe("Blorp");
+    }
+
+    [Fact]
+    public void Details_Gum0030_NamesMissingBaseType()
+    {
+        ComponentSave component = new ComponentSave { Name = "Orphan", BaseType = "Nope" };
+        Project.Components.Add(component);
+
+        ErrorResult error = _sut.GetErrorsFor(component, Project).Single(item => item.Code == "GUM0030");
+
+        TypeReferenceDetails details = error.Details.ShouldBeOfType<TypeReferenceDetails>();
+        details.InstanceName.ShouldBeNull();
+        details.Type.ShouldBe("Nope");
+    }
+
+    [Fact]
+    public void Details_Gum0031_NamesExpectedPath()
+    {
+        Project.BehaviorReferences.Add(new BehaviorReference { Name = "IGone" });
+        Project.Behaviors.Add(new BehaviorSave { Name = "IGone", IsSourceFileMissing = true });
+
+        ErrorResult error = _sut.GetProjectErrors(Project).Single(item => item.Code == "GUM0031");
+
+        error.Details.ShouldBeOfType<MissingFileDetails>().ExpectedPath.ShouldEndWith("IGone.behx");
+    }
+
+    private ComponentSave ComponentWithDefaultVariable(params VariableSave[] variables)
+    {
+        ComponentSave component = new ComponentSave { Name = "Holder", BaseType = "Container" };
+        StateSave defaultState = new StateSave { Name = "Default", ParentContainer = component };
+        defaultState.Variables.AddRange(variables);
+        component.States.Add(defaultState);
+        Project.Components.Add(component);
+        return component;
+    }
+
+    #endregion
 }
