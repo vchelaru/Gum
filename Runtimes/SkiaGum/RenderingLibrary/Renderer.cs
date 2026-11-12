@@ -692,6 +692,16 @@ namespace RenderingLibrary.Graphics
             return image;
         }
 
+        /// <summary>
+        /// For tests: how many container bakes (children rendered into a container's surface) this
+        /// renderer has run. A manual-mode refresh with an effect counts once; its effect pass is part of the bake.
+        /// </summary>
+        internal int RenderTargetBakeCount { get; private set; }
+
+        // For tests: whether a manual-mode cached image is held for the container.
+        internal bool HasManualRenderTargetImage(IRenderableIpso container)
+            => _renderTargetService.HasImage(ResolveRenderTargetCacheOwner(container));
+
         // The cached offscreen surface for a render-target container, for tests.
         internal SKSurface? TryGetRenderTargetSurfaceFor(IRenderableIpso container)
             => _renderTargetService.TryGetExisting(ResolveRenderTargetCacheOwner(container))?.Surface;
@@ -779,7 +789,8 @@ namespace RenderingLibrary.Graphics
                     continue;
                 }
 
-                if (renderable.Children != null)
+                // A valid manual cache draws as one image, so its children are neither baked nor drawn this frame.
+                if (renderable.Children != null && !HasValidManualImage(renderable, zoom))
                 {
                     BakeRenderTargetsInSubtree(renderable.Children, managers, zoom);
                 }
@@ -802,6 +813,19 @@ namespace RenderingLibrary.Graphics
                 return;
             }
 
+            IRenderableIpso owner = ResolveRenderTargetCacheOwner(container);
+            if (TryGetManualBakePlan(container, owner, zoom, out ManualBakePlan plan))
+            {
+                BakeManualRenderTarget(container, managers, plan);
+                return;
+            }
+
+            // A container that left manual mode drops its cached image, so the surface is rebuilt for this path.
+            if (_renderTargetService.HasImage(owner))
+            {
+                _renderTargetService.Remove(owner);
+            }
+
             // The surface holds the container at the camera's zoom, so it is zoom times its size in
             // canvas units (rounded up so the last partial pixel is not cut off).
             // The fraction keeps the container's fractional device-pixel offset inside the surface so
@@ -810,17 +834,25 @@ namespace RenderingLibrary.Graphics
             int width = (int)System.Math.Ceiling(container.Width * zoom + fractionX);
             int height = (int)System.Math.Ceiling(container.Height * zoom + fractionY);
 
-            IRenderableIpso owner = ResolveRenderTargetCacheOwner(container);
             SkiaRenderTarget? renderTarget = _renderTargetService.GetFor(owner, width, height);
             if (renderTarget == null)
             {
                 return;
             }
 
+            RenderTargetBakeCount++;
+            BakeChildrenInto(container, managers, renderTarget.Surface, zoom, fractionX, fractionY);
+            RegisterBakedSurface(owner, renderTarget.Surface, zoom);
+        }
+
+        // Renders the container's children into the surface, in the surface's local pixel space.
+        private void BakeChildrenInto(IRenderableIpso container, SystemManagers managers, SKSurface surface,
+            float zoom, float fractionX, float fractionY)
+        {
             float left = container.GetAbsoluteX();
             float top = container.GetAbsoluteY();
 
-            SKCanvas offscreenCanvas = renderTarget.Surface.Canvas;
+            SKCanvas offscreenCanvas = surface.Canvas;
             offscreenCanvas.Clear(SKColors.Transparent);
             offscreenCanvas.Save();
             offscreenCanvas.Translate(fractionX, fractionY);
@@ -848,16 +880,131 @@ namespace RenderingLibrary.Graphics
                 managers.Canvas = screenCanvas;
                 offscreenCanvas.Restore();
             }
+        }
 
-            // A second bake in the same frame (PreRenderRoots then a full-scene Draw) replaces the first,
-            // so a snapshot made from it is dropped.
+        private bool HasValidManualImage(IRenderableIpso renderable, float zoom)
+        {
+            if (!renderable.IsRenderTarget)
+            {
+                return false;
+            }
+
+            IRenderableIpso owner = ResolveRenderTargetCacheOwner(renderable);
+            return TryGetManualBakePlan(renderable, owner, zoom, out ManualBakePlan plan) &&
+                _renderTargetService.GetValidImageTarget(owner, plan.Width, plan.Height, plan.Zoom, plan.RefreshVersion) != null;
+        }
+
+        // Records the surface as this frame's baked result for the owner. A second bake in the same frame
+        // (PreRenderRoots then a full-scene Draw) replaces the first, so a snapshot made from it is dropped.
+        private void RegisterBakedSurface(IRenderableIpso owner, SKSurface surface, float zoom)
+        {
             if (_bakedImages.TryGetValue(owner, out SKImage? previous))
             {
                 previous.Dispose();
                 _bakedImages.Remove(owner);
             }
-            _bakedSurfaces[owner] = renderTarget.Surface;
+            _bakedSurfaces[owner] = surface;
             _bakedZooms[owner] = zoom;
+        }
+
+        /// <summary>What a manual-mode container needs this frame: its pixel size, the zoom and the refresh version.</summary>
+        private readonly struct ManualBakePlan
+        {
+            public ManualBakePlan(IRenderTargetRenderable settings, IRenderableIpso owner, int width, int height, float zoom)
+            {
+                Settings = settings;
+                Owner = owner;
+                Width = width;
+                Height = height;
+                Zoom = zoom;
+            }
+
+            public IRenderTargetRenderable Settings { get; }
+            public IRenderableIpso Owner { get; }
+            public int Width { get; }
+            public int Height { get; }
+            public float Zoom { get; }
+            public int RefreshVersion => Settings.RenderTargetRefreshVersion;
+        }
+
+        // Past this many pixels on a side a whole-container cache is not attempted (the same side the MonoGame
+        // renderer allows on its HiDef profile), and the container keeps the every-frame behavior.
+        private const int MaxManualRenderTargetSize = 4096;
+
+        // True when the container is in manual mode and small enough to cache whole.
+        private static bool TryGetManualBakePlan(IRenderableIpso container, IRenderableIpso owner, float zoom, out ManualBakePlan plan)
+        {
+            plan = default;
+            if (owner is not IRenderTargetRenderable settings || settings.RenderTargetRefreshMode != RenderTargetRefreshMode.Manual)
+            {
+                return false;
+            }
+
+            int width = MathFunctions.RoundToInt(container.Width);
+            int height = MathFunctions.RoundToInt(container.Height);
+            if (MathFunctions.RoundToInt(container.Width * zoom) > MaxManualRenderTargetSize ||
+                MathFunctions.RoundToInt(container.Height * zoom) > MaxManualRenderTargetSize)
+            {
+                return false;
+            }
+
+            plan = new ManualBakePlan(settings, owner, width, height, zoom);
+            return true;
+        }
+
+        // Bakes a manual container once into its cached surface and reuses it until the size, zoom or refresh
+        // version changes. A reused cache is registered as this frame's baked result without drawing the children.
+        // With a render-target effect the children go into a scratch surface and the effect writes the final
+        // image once, so the composite draws the cache as it is.
+        private void BakeManualRenderTarget(IRenderableIpso container, SystemManagers managers, in ManualBakePlan plan)
+        {
+            IRenderableIpso owner = plan.Owner;
+            SkiaRenderTarget? cached = _renderTargetService.GetValidImageTarget(
+                owner, plan.Width, plan.Height, plan.Zoom, plan.RefreshVersion);
+            if (cached != null)
+            {
+                _renderTargetService.MarkUsed(owner);
+                RegisterBakedSurface(owner, cached.Surface, plan.Zoom);
+                return;
+            }
+
+            float zoom = plan.Zoom;
+            GetDevicePixelFraction(container, zoom, out float fractionX, out float fractionY);
+            int width = (int)System.Math.Ceiling(container.Width * zoom + fractionX);
+            int height = (int)System.Math.Ceiling(container.Height * zoom + fractionY);
+            SkiaRenderTarget? image = _renderTargetService.GetFor(owner, width, height);
+            if (image == null)
+            {
+                return;
+            }
+
+            RenderTargetBakeCount++;
+            if (plan.Settings.RenderTargetEffect is SKRuntimeEffect)
+            {
+                using SKSurface scratch = SKSurface.Create(new SKImageInfo(width, height, SKColorType.Rgba8888, SKAlphaType.Premul));
+                BakeChildrenInto(container, managers, scratch, zoom, fractionX, fractionY);
+                using SKImage source = scratch.Snapshot();
+
+                SKCanvas canvas = image.Surface.Canvas;
+                canvas.Clear(SKColors.Transparent);
+                canvas.Save();
+                if (zoom != 1)
+                {
+                    canvas.Scale(zoom);
+                }
+                using SKPaint paint = new SKPaint();
+                SKRect destination = new SKRect(0, 0, width / zoom, height / zoom);
+                DrawRenderTargetImage(null, destination, paint, owner, 0, 0, plan.Width, plan.Height, zoom, canvas, source);
+                canvas.Restore();
+            }
+            else
+            {
+                BakeChildrenInto(container, managers, image.Surface, zoom, fractionX, fractionY);
+            }
+
+            _renderTargetService.CommitImage(owner,
+                new SkiaCachedImage(plan.Width, plan.Height, zoom, plan.RefreshVersion, fractionX, fractionY));
+            RegisterBakedSurface(owner, image.Surface, zoom);
         }
 
         // Bakes every render-target container's subtree under whatToRender into its offscreen
@@ -916,7 +1063,21 @@ namespace RenderingLibrary.Graphics
 
             float left = container.GetAbsoluteX();
             float top = container.GetAbsoluteY();
-            GetDevicePixelFraction(container, zoom, out float fractionX, out float fractionY);
+
+            // A manual container's surface was baked offset by the fraction of the position it had then; a
+            // moved container is composited with that same fraction, not its current one.
+            bool isManual = _renderTargetService.TryGetImage(owner, out SkiaCachedImage? cachedImage);
+            float fractionX;
+            float fractionY;
+            if (isManual)
+            {
+                fractionX = cachedImage!.FractionX;
+                fractionY = cachedImage.FractionY;
+            }
+            else
+            {
+                GetDevicePixelFraction(container, zoom, out fractionX, out fractionY);
+            }
             float imageLeft = left - fractionX / zoom;
             float imageTop = top - fractionY / zoom;
             SKRectI surfaceBounds = surface.Canvas.DeviceClipBounds;
@@ -929,7 +1090,9 @@ namespace RenderingLibrary.Graphics
             canvas.RotateDegrees(-container.GetAbsoluteRotation(), left, top);
             try
             {
-                DrawRenderTargetImage(surface, destination, paint, owner, imageLeft, imageTop, width, height, zoom, canvas);
+                // The effect of a manual container is already in its cached image.
+                DrawRenderTargetImage(surface, destination, paint, owner, imageLeft, imageTop, width, height, zoom, canvas,
+                    sourceImage: null, applyEffect: !isManual);
                 RenderStateChangeStatistics.RecordDrawCall();
             }
             finally
@@ -955,15 +1118,18 @@ namespace RenderingLibrary.Graphics
             fractionY = deviceY - (float)System.Math.Floor(deviceY);
         }
 
-        private void DrawRenderTargetImage(SKSurface surface, SKRect destination, SKPaint paint,
-            IRenderableIpso owner, float left, float top, int width, int height, float zoom, SKCanvas canvas)
+        // sourceImage is the image the effect reads, or null to snapshot the owner's baked surface; surface is
+        // only drawn directly when there is no effect to apply.
+        private void DrawRenderTargetImage(SKSurface? surface, SKRect destination, SKPaint paint,
+            IRenderableIpso owner, float left, float top, int width, int height, float zoom, SKCanvas canvas,
+            SKImage? sourceImage = null, bool applyEffect = true)
         {
             // Optional post-process shader (ContainerRuntime.RenderTargetEffect / SourceShaderFile,
             // #3998). The effect is image-independent (declares a `uniform shader SpriteTexture`
             // child, the same texture name MonoGame .fx/.slang shaders use) -- the baked image is
             // only known here, at composite time, so it is bound as that child shader input on this
             // call rather than cached on the effect.
-            SKRuntimeEffect? effect = (owner as IRenderTargetRenderable)?.RenderTargetEffect as SKRuntimeEffect;
+            SKRuntimeEffect? effect = applyEffect ? (owner as IRenderTargetRenderable)?.RenderTargetEffect as SKRuntimeEffect : null;
             if (effect == null)
             {
                 // The surface is drawn as it stands, so no image is made; mapping its pixels onto the
@@ -971,12 +1137,12 @@ namespace RenderingLibrary.Graphics
                 canvas.Save();
                 canvas.Translate(destination.Left, destination.Top);
                 canvas.Scale(1 / zoom);
-                surface.Draw(canvas, 0, 0, SKSamplingOptions.Default, paint);
+                surface!.Draw(canvas, 0, 0, SKSamplingOptions.Default, paint);
                 canvas.Restore();
                 return;
             }
 
-            SKImage image = GetBakedImage(owner)!;
+            SKImage image = sourceImage ?? GetBakedImage(owner)!;
 
             // SKCanvas.DrawImage ignores paint.Shader -- a paint's shader only takes effect on a
             // shape-drawing call, so the shaded path switches to DrawRect and feeds the baked image
