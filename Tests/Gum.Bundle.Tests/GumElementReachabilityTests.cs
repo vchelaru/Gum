@@ -57,6 +57,38 @@ public class GumElementReachabilityTests
     }
 
     [Fact]
+    public void Compute_keeps_every_screen_by_default()
+    {
+        GumProjectSave project = BuildDerivedScreenProject();
+
+        GumElementReachabilityResult result = new GumElementReachability().Compute(project, extraRoots: new[] { "Level2" });
+
+        result.KeptElementNames.ShouldBe(new[] { "LevelBase", "Level2", "Title" }, ignoreOrder: true);
+        result.TrimmedElementNames.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void Compute_with_screens_not_roots_keeps_only_the_root_screen_and_its_base_screen()
+    {
+        GumProjectSave project = BuildDerivedScreenProject();
+
+        GumElementReachabilityResult result = new GumElementReachability().Compute(
+            project, extraRoots: new[] { "Level2" }, excludedElementNames: null, screensAreRoots: false);
+
+        result.KeptElementNames.ShouldBe(new[] { "LevelBase", "Level2" }, ignoreOrder: true);
+        result.TrimmedElementNames.ShouldBe(new[] { "Title" });
+    }
+
+    private static GumProjectSave BuildDerivedScreenProject()
+    {
+        ScreenSave levelBase = TestProjectBuilder.BuildScreen("LevelBase");
+        ScreenSave level2 = TestProjectBuilder.BuildScreen("Level2");
+        level2.BaseType = "LevelBase";
+        ScreenSave title = TestProjectBuilder.BuildScreen("Title");
+        return TestProjectBuilder.BuildProject(screens: new[] { levelBase, level2, title });
+    }
+
+    [Fact]
     public void Compute_follows_extra_roots_base_types_and_cross_element_references()
     {
         ComponentSave card = TestProjectBuilder.BuildComponent("Card");
