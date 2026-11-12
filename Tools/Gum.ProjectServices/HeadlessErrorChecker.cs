@@ -54,16 +54,19 @@ public partial class HeadlessErrorChecker : IHeadlessErrorChecker
         _caseChecker = new FileNameCaseChecker();
     }
 
-    // The checked project gets a finder of its own on this thread. ObjectFinder.Self is the project of the
-    // current GumService (or the tool), which other threads keep reading during the check and which must
-    // still be that project afterwards.
-    private static IDisposable UseOwnFinder(GumProjectSave project) =>
-        ObjectFinder.UseOnThisThread(new ObjectFinder { GumProjectSave = project });
+    // ObjectFinder.Self is the project of the current GumService (or the tool), which other threads keep
+    // reading during the check and which must still be that project afterwards. A different project gets a
+    // finder of its own on this thread. The same project uses the caller's finder, so a cache the caller
+    // enabled around a per-element loop is built once, not per call.
+    private static IDisposable? UseOwnFinder(GumProjectSave project) =>
+        ReferenceEquals(ObjectFinder.Self.GumProjectSave, project)
+            ? null
+            : ObjectFinder.UseOnThisThread(new ObjectFinder { GumProjectSave = project });
 
     /// <inheritdoc/>
     public IReadOnlyList<ErrorResult> GetErrorsFor(ElementSave element, GumProjectSave project)
     {
-        using IDisposable finderScope = UseOwnFinder(project);
+        using IDisposable? finderScope = UseOwnFinder(project);
         ObjectFinder.Self.EnableCache();
         try
         {
@@ -82,7 +85,7 @@ public partial class HeadlessErrorChecker : IHeadlessErrorChecker
         // Paths the element checks already reported as GUM0008, so the project pass skips them.
         var caseMismatchPaths = new HashSet<string>(StringComparer.Ordinal);
 
-        using IDisposable finderScope = UseOwnFinder(project);
+        using IDisposable? finderScope = UseOwnFinder(project);
         ObjectFinder.Self.EnableCache();
         try
         {
@@ -119,7 +122,7 @@ public partial class HeadlessErrorChecker : IHeadlessErrorChecker
         // reference; running only those two checks finds the paths to skip.
         var caseMismatchPaths = new HashSet<string>(StringComparer.Ordinal);
 
-        using IDisposable finderScope = UseOwnFinder(project);
+        using IDisposable? finderScope = UseOwnFinder(project);
         ObjectFinder.Self.EnableCache();
         try
         {

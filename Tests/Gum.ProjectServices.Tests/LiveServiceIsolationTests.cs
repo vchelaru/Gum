@@ -92,6 +92,49 @@ public class LiveServiceIsolationTests : BaseTestClass
         FileManager.RelativeDirectory.ShouldBe(relativeDirectoryA);
     }
 
+    // The tool's tree view and error list check element by element inside one EnableCache scope on the open
+    // project. The checker must look elements up through that same finder, so the scope's cache is built once
+    // instead of once per element.
+    [Fact]
+    public void GetErrorsFor_ShouldUseTheCallersFinder_WhenItAlreadyHoldsTheProject()
+    {
+        GumProjectSave project = CreateProjectA("AButton");
+        ComponentSave second = new ComponentSave { Name = "ASlider", BaseType = "Container" };
+        second.States.Add(new StateSave { Name = "Default", ParentContainer = second });
+        project.Components.Add(second);
+        ObjectFinder callersFinder = ObjectFinder.Self;
+        callersFinder.GumProjectSave = project;
+        FinderIdentityProbe probe = new FinderIdentityProbe();
+        HeadlessErrorChecker checker = new HeadlessErrorChecker(new Mock<ITypeResolver>().Object, new[] { probe });
+
+        callersFinder.EnableCache();
+        try
+        {
+            foreach (ComponentSave component in project.Components)
+            {
+                checker.GetErrorsFor(component, project);
+            }
+        }
+        finally
+        {
+            callersFinder.DisableCache();
+        }
+
+        probe.FindersSeen.Count.ShouldBe(2);
+        probe.FindersSeen.ShouldAllBe(finder => ReferenceEquals(finder, callersFinder));
+    }
+
+    private sealed class FinderIdentityProbe : IAdditionalErrorSource
+    {
+        public List<ObjectFinder> FindersSeen { get; } = new List<ObjectFinder>();
+
+        public IEnumerable<ErrorResult> GetErrors(ElementSave element, GumProjectSave project)
+        {
+            FindersSeen.Add(ObjectFinder.Self);
+            return Array.Empty<ErrorResult>();
+        }
+    }
+
     // The live service is the default service (first live, uses the process-wide statics) or a second one
     // (its own ObjectFinder and relative directory), made current the way GumService.Update makes it.
     private void MakeServiceWithProject(bool isSecondService, GumProjectSave project, string relativeDirectory)
