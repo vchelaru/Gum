@@ -551,10 +551,21 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
             asText.TextOverflowVerticalMode = this.TextOverflowVerticalMode;
         }
 
+        OnContainedObjectSet(containedObject);
+
         if (containedObject != null)
         {
             UpdateLayout();
         }
+    }
+
+    /// <summary>
+    /// Called by <see cref="SetContainedObject"/>, including from <see cref="Clone"/>, once
+    /// <paramref name="containedObject"/> is this element's renderable and before layout runs.
+    /// </summary>
+    /// <param name="containedObject">The new renderable, or null.</param>
+    protected virtual void OnContainedObjectSet(IRenderable? containedObject)
+    {
     }
 
     public virtual void CreateChildrenRecursively(ElementSave elementSave, ISystemManagers systemManagers)

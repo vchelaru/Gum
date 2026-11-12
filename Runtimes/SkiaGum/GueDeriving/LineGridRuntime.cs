@@ -76,9 +76,4 @@ public class LineGridRuntime: SkiaShapeRuntime
 
         return toReturn;
     }
-
-    public override void PreRender()
-    {
-        base.PreRender();
-    }
 }
