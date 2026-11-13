@@ -18,10 +18,11 @@ GumService GumUI => GumService.Default;
 
 ## Update and Draw
 
-Samples on other pages call `GumUI.Update(gameTime)` and `GumUI.Draw()` as written for MonoGame, KNI, and FNA. The per-frame calls differ on other runtimes:
+Samples on other pages write the per-frame calls as `GumUI.Update(gameTime);` and `GumUI.Draw();`. The value of `gameTime` depends on your runtime, and its setup page shows where it comes from:
 
-* Raylib takes the elapsed seconds as a `double`: `GumUI.Update(Raylib.GetTime())`.
-* Silk.NET, BRUTAL, and general SkiaSharp hosts take `Update(double totalSeconds)`.
+* MonoGame, KNI, and FNA pass the `GameTime` that the game's `Update` receives.
+* Raylib passes the seconds from `Raylib.GetTime()` as a `double`.
+* Silk.NET, BRUTAL, and general SkiaSharp hosts pass the total seconds since the game started as a `double`.
 * Stride and Unity call `Update` and `Draw` for you, so skip both. See the [Stride](../../getting-started/setup/adding-initializing-gum/stride.md) and [Unity](../../getting-started/setup/adding-initializing-gum/unity.md) setup pages.
 
 ## Initialize

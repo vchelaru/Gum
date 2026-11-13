@@ -60,7 +60,7 @@ On Raylib, oversampling builds the base font of a `TextRuntime` again. Runs that
 
 ## Try It
 
-Drag the **Zoom** slider to zoom the camera. The text stays sharp because it is oversampled. Turn off **Oversampling** to see how the same text looks without it. The font (`std/DroidSans.ttf`) ships with XnaFiddle, so there is nothing to upload.
+Drag the **Zoom** slider to zoom the camera. The text stays sharp because it is oversampled. Turn off **Oversampling** to see how the same text looks without it. The font (`std/DroidSans.ttf`) ships with XnaFiddle, so there is nothing to upload. This sample is MonoGame-only, since it uses `Content.RootDirectory` and the MonoGame `KernSmithFontCreator`.
 
 ```csharp
 using MonoGameGum;

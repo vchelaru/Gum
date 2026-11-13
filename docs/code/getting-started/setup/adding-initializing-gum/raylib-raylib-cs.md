@@ -95,7 +95,8 @@ button.Click += (_, _) => button.Text = $"Clicked\n{System.DateTime.Now}";
 
 while (!Raylib.WindowShouldClose())
 {
-    GumUI.Update(Raylib.GetTime());
+    double gameTime = Raylib.GetTime();
+    GumUI.Update(gameTime);
 
     Raylib.BeginDrawing();
     Raylib.ClearBackground(Raylib_cs.Color.SkyBlue);
