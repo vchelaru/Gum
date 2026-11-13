@@ -1,6 +1,9 @@
 using System;
 using System.Diagnostics;
 using Gum;
+using Gum.Forms.Controls;
+using Gum.GueDeriving;
+using Gum.Wireframe;
 {{HostUsings}}
 using Silk.NET.Maths;
 using Silk.NET.OpenGL;
