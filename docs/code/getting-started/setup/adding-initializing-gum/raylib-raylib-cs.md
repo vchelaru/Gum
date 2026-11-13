@@ -72,6 +72,7 @@ Available in preview NuGet packages (use a `-preview` version), or now if buildi
 ```csharp
 using Gum;
 using Gum.Forms.Controls;
+using Gum.GueDeriving;
 using Gum.Wireframe;
 using Raylib_cs;
 

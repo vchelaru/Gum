@@ -63,6 +63,7 @@ namespace MyGame;
 // The usings are inside the namespace so a project named like one of these types (Game, Button) still finds them.
 using Gum;
 using Gum.Forms.Controls;
+using Gum.GueDeriving;
 using Gum.Wireframe;
 using Microsoft.Xna.Framework;
 

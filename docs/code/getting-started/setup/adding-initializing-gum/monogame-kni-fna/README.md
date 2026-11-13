@@ -152,6 +152,7 @@ If your game derives from Nez's `Core` instead of `Game`, use this class instead
 ```csharp
 using Gum;
 using Gum.Forms;
+using Gum.GueDeriving;
 
 public class Game1 : Core
 {
@@ -201,6 +202,7 @@ namespace MonoGameGum1;
 // The usings are inside the namespace so a project named like one of these types (Game, Button) still finds them.
 using Gum;
 using Gum.Forms.Controls;
+using Gum.GueDeriving;
 using Gum.Wireframe;
 using Microsoft.Xna.Framework;
 
