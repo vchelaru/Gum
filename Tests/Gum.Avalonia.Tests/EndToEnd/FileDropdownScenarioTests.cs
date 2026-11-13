@@ -413,6 +413,188 @@ public class FileDropdownScenarioTests
         tree.SnapshotFiles().ShouldMatch(start, "one undo restores both instances");
     }
 
+    [AvaloniaFact]
+    [Trait("Feature", "DISP-011")]
+    public void SourceFileRow_TypedTextThenEscapeThenEnter_WritesNothing()
+    {
+        using ProjectTreeHarness tree = new ProjectTreeHarness();
+        ComponentSave card = tree.Project.AddComponent("Card");
+        InstanceSave icon = tree.Project.AddInstance(card, "Icon", "Sprite");
+        File.Copy(Path.Combine(AppContext.BaseDirectory, "Content", "ExampleSpriteFrame.png"), Path.Combine(tree.Project.ProjectFolder, "Hero.png"));
+        tree.Click(tree.NodeFor(icon));
+        VariableGridHarness grid = tree.Grid;
+        grid.Settle();
+
+        TextBox field = TypedField(grid);
+        grid.Input.TypeInto(field, "Hero.png");
+        grid.Input.Press(Key.Escape, PhysicalKey.Escape);
+        grid.Input.Press(Key.Enter, PhysicalKey.Enter);
+
+        (VariableGridHarness.StoredValue(card, "Icon.SourceFile") as string).ShouldBeNullOrEmpty("escaped text is not an edit");
+        grid.Member("SourceFile").IsDefault.ShouldBeTrue();
+        grid.Combo("SourceFile").Text.ShouldBeNullOrEmpty();
+    }
+
+    [AvaloniaFact]
+    [Trait("Feature", "DISP-011")]
+    public void SourceFileRow_TypedTextPending_WhenAnotherInstanceIsSelected_NeverReachesTheOtherInstance()
+    {
+        using ProjectTreeHarness tree = new ProjectTreeHarness();
+        ComponentSave card = tree.Project.AddComponent("Card");
+        File.Copy(Path.Combine(AppContext.BaseDirectory, "Content", "ExampleSpriteFrame.png"), Path.Combine(tree.Project.ProjectFolder, "Hero.png"));
+        InstanceSave first = tree.Project.AddInstance(card, "First", "Sprite");
+        InstanceSave second = tree.Project.AddInstance(card, "Second", "Sprite");
+        tree.SaveAll();
+        tree.Click(tree.NodeFor(first));
+        VariableGridHarness grid = tree.Grid;
+        grid.Settle();
+        grid.Input.TypeInto(TypedField(grid), "Hero.png");
+
+        tree.Click(tree.NodeFor(second));
+        grid.Settle();
+
+        (VariableGridHarness.StoredValue(card, "Second.SourceFile") as string).ShouldBeNullOrEmpty("the text was typed for the first instance");
+        grid.Combo("SourceFile").Text.ShouldBeNullOrEmpty();
+    }
+
+    [AvaloniaFact]
+    [Trait("Feature", "DISP-011")]
+    public void SourceFileRow_UndoingAndRedoingAPick_ShowsTheValueInTheRow()
+    {
+        using ProjectTreeHarness tree = new ProjectTreeHarness();
+        ComponentSave card = tree.Project.AddComponent("Card");
+        File.Copy(Path.Combine(AppContext.BaseDirectory, "Content", "ExampleSpriteFrame.png"), Path.Combine(tree.Project.ProjectFolder, "Hero.png"));
+        InstanceSave icon = tree.Project.AddInstance(card, "Icon", "Sprite");
+        tree.Project.AddInstance(card, "Holder", "Sprite");
+        card.GetDefaultStateOrThrow().SetValue("Holder.SourceFile", "Hero.png", "string");
+        tree.SaveAll();
+        tree.Click(tree.NodeFor(icon));
+        VariableGridHarness grid = tree.Grid;
+        grid.Settle();
+        grid.PickComboItem("SourceFile", "Hero.png");
+        grid.Combo("SourceFile").Text.ShouldBe("Hero.png");
+
+        tree.Undo();
+        grid.Settle();
+        grid.Combo("SourceFile").Text.ShouldBeNullOrEmpty("undo empties the row");
+        grid.Member("SourceFile").IsDefault.ShouldBeTrue();
+
+        tree.Redo();
+        grid.Settle();
+        grid.Combo("SourceFile").Text.ShouldBe("Hero.png");
+    }
+
+    [AvaloniaFact]
+    [Trait("Feature", "DISP-011")]
+    public void SourceFileRow_UndoingATypedCommit_ShowsThePreviousValueInTheRow()
+    {
+        using ProjectTreeHarness tree = new ProjectTreeHarness();
+        ComponentSave card = tree.Project.AddComponent("Card");
+        File.Copy(Path.Combine(AppContext.BaseDirectory, "Content", "ExampleSpriteFrame.png"), Path.Combine(tree.Project.ProjectFolder, "Hero.png"));
+        File.Copy(Path.Combine(AppContext.BaseDirectory, "Content", "ExampleSpriteFrame.png"), Path.Combine(tree.Project.ProjectFolder, "Other.png"));
+        InstanceSave icon = tree.Project.AddInstance(card, "Icon", "Sprite");
+        tree.Click(tree.NodeFor(icon));
+        VariableGridHarness grid = tree.Grid;
+        grid.Settle();
+        grid.Input.TypeAndEnter(TypedField(grid), "Hero.png");
+        grid.Input.TypeAndEnter(TypedField(grid), "Other.png");
+        grid.Combo("SourceFile").Text.ShouldBe("Other.png");
+
+        tree.Undo();
+        grid.Settle();
+
+        VariableGridHarness.StoredValue(card, "Icon.SourceFile").ShouldBe("Hero.png");
+        grid.Combo("SourceFile").Text.ShouldBe("Hero.png");
+    }
+
+    [AvaloniaTheory]
+    [InlineData(false)]
+    [InlineData(true)]
+    [Trait("Feature", "DISP-011")]
+    public void SourceFileRow_OpeningTheListAndLeavingWithoutPicking_WritesNothing(bool rowHoldsAFile)
+    {
+        using ProjectTreeHarness tree = new ProjectTreeHarness();
+        ComponentSave card = tree.Project.AddComponent("Card");
+        File.Copy(Path.Combine(AppContext.BaseDirectory, "Content", "ExampleSpriteFrame.png"), Path.Combine(tree.Project.ProjectFolder, "Hero.png"));
+        InstanceSave icon = tree.Project.AddInstance(card, "Icon", "Sprite");
+        if (rowHoldsAFile)
+        {
+            card.GetDefaultStateOrThrow().SetValue("Icon.SourceFile", "Hero.png", "string");
+        }
+        tree.SaveAll();
+        tree.Click(tree.NodeFor(icon));
+        VariableGridHarness grid = tree.Grid;
+        grid.Settle();
+
+        grid.Combo("SourceFile").Focus();
+        grid.Combo("SourceFile").IsDropDownOpen = true;
+        grid.Settle();
+        grid.Combo("SourceFile").IsDropDownOpen = false;
+        grid.Settle();
+        grid.Input.Press(Key.Tab, PhysicalKey.Tab);
+        grid.Settle();
+
+        if (rowHoldsAFile)
+        {
+            VariableGridHarness.StoredValue(card, "Icon.SourceFile").ShouldBe("Hero.png");
+        }
+        grid.Member("SourceFile").IsDefault.ShouldBe(!rowHoldsAFile);
+    }
+
+    [AvaloniaFact]
+    [Trait("Feature", "DISP-011")]
+    public void SourceFileRow_OpeningTheListWithTwoInstancesHoldingDifferentFiles_LeavesBothAlone()
+    {
+        using ProjectTreeHarness tree = new ProjectTreeHarness();
+        ComponentSave card = tree.Project.AddComponent("Card");
+        File.Copy(Path.Combine(AppContext.BaseDirectory, "Content", "ExampleSpriteFrame.png"), Path.Combine(tree.Project.ProjectFolder, "Hero.png"));
+        File.Copy(Path.Combine(AppContext.BaseDirectory, "Content", "ExampleSpriteFrame.png"), Path.Combine(tree.Project.ProjectFolder, "Other.png"));
+        InstanceSave sprite = tree.Project.AddInstance(card, "Icon", "Sprite");
+        InstanceSave nineSlice = tree.Project.AddInstance(card, "Panel", "NineSlice");
+        card.GetDefaultStateOrThrow().SetValue("Icon.SourceFile", "Hero.png", "string");
+        card.GetDefaultStateOrThrow().SetValue("Panel.SourceFile", "Other.png", "string");
+        tree.SaveAll();
+        VariableGridHarness grid = tree.Grid;
+        grid.Select(sprite, nineSlice);
+        grid.Settle();
+
+        grid.Combo("SourceFile").Focus();
+        grid.Combo("SourceFile").IsDropDownOpen = true;
+        grid.Settle();
+        grid.Combo("SourceFile").IsDropDownOpen = false;
+        grid.Input.Press(Key.Tab, PhysicalKey.Tab);
+        grid.Settle();
+
+        VariableGridHarness.StoredValue(card, "Icon.SourceFile").ShouldBe("Hero.png");
+        VariableGridHarness.StoredValue(card, "Panel.SourceFile").ShouldBe("Other.png");
+    }
+
+    [AvaloniaFact]
+    [Trait("Feature", "DISP-011")]
+    public void CustomFontFileRow_PickingAFontFromTheList_IsNotFollowedByAnEmptyCommit()
+    {
+        using ProjectTreeHarness tree = new ProjectTreeHarness();
+        ComponentSave card = tree.Project.AddComponent("Card");
+        InstanceSave label = tree.Project.AddInstance(card, "Label", "Text");
+        tree.Project.AddInstance(card, "Holder", "Text");
+        StateSave state = card.GetDefaultStateOrThrow();
+        state.SetValue("Label.UseCustomFont", true, "bool");
+        state.SetValue("Holder.UseCustomFont", true, "bool");
+        state.SetValue("Holder.CustomFontFile", "Fonts/Mine.fnt", "string");
+        Directory.CreateDirectory(Path.Combine(tree.Project.ProjectFolder, "Fonts"));
+        File.WriteAllText(Path.Combine(tree.Project.ProjectFolder, "Fonts", "Mine.fnt"), "");
+        tree.SaveAll();
+        tree.Click(tree.NodeFor(label));
+        VariableGridHarness grid = tree.Grid;
+        grid.Settle();
+
+        grid.Combo("CustomFontFile").Focus();
+        grid.PickComboItem("CustomFontFile", "Fonts/Mine.fnt");
+        grid.Settle();
+
+        VariableGridHarness.StoredValue(card, "Label.CustomFontFile").ShouldBe("Fonts/Mine.fnt");
+    }
+
     private static void ClearAndEnter(VariableGridHarness grid)
     {
         TextBox field = TypedField(grid);

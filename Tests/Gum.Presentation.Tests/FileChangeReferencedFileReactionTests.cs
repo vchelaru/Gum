@@ -231,6 +231,65 @@ public class FileChangeReferencedFileReactionTests : BaseTestClass
         VerifyReloaded(Times.Once());
     }
 
+    [Fact]
+    public void ReactToFileChanged_DisposesNothingItself_SoAnAnimationListNeverOutlivesItsFramePicture()
+    {
+        // Disposing only the changed picture's cache entry would leave the cached animation list holding it.
+        // Content is dropped solely by the full reload (RefreshAll with reloaded textures), which drops every entry.
+        ScreenSave screen = AddScreen("Main");
+        AddInstance(screen, "Item", "Sprite");
+        AddFileVariable(screen, "Item", "AnimationChains", "Animations/Idle.achx");
+        Select(screen);
+        WriteFile("Animations/Idle.achx",
+            "<?xml version=\"1.0\"?><AnimationChainArraySave><FileRelativeTextures>false</FileRelativeTextures>" +
+            "<AnimationChain><Name>Idle</Name><Frame><TextureName>Textures/Frame1.png</TextureName>" +
+            "<FrameLength>0.1</FrameLength></Frame></AnimationChain></AnimationChainArraySave>");
+        string picture = WriteFile("Textures/Frame1.png");
+        Cached list = new Cached();
+        Cached texture = new Cached();
+        LoaderManager.Self.AddDisposable(Path.GetFullPath(Path.Combine(_projectFolder, "Animations/Idle.achx")), list);
+        LoaderManager.Self.AddDisposable(picture, texture);
+
+        _reaction.ReactToFileChanged(new FilePath(picture));
+
+        VerifyReloaded(Times.Once());
+        texture.Disposed.ShouldBeFalse("the reload owns disposal");
+        list.Disposed.ShouldBeFalse();
+        LoaderManager.Self.CachedDisposables.Count.ShouldBe(2);
+    }
+
+    [Fact]
+    public void ReactToFileDeleted_DisposesNothingItself_LeavingDisposalToTheFullReload()
+    {
+        ScreenSave screen = AddScreen("Main");
+        AddInstance(screen, "Item", "Sprite");
+        AddFileVariable(screen, "Item", "SourceFile", "Textures/Photo.png");
+        Select(screen);
+        string picture = Path.GetFullPath(Path.Combine(_projectFolder, "Textures/Photo.png"));
+        Cached texture = new Cached();
+        Cached other = new Cached();
+        LoaderManager.Self.AddDisposable(picture, texture);
+        LoaderManager.Self.AddDisposable(Path.Combine(_projectFolder, "Other.png"), other);
+
+        _reaction.ReactToFileDeleted(new FilePath(picture));
+
+        VerifyReloaded(Times.Once());
+        texture.Disposed.ShouldBeFalse();
+        other.Disposed.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void ReactToFileChanged_WithNothingSelected_StillRequestsTheFullReload_SoNoDeadEntryStaysCached()
+    {
+        Select(null);
+        string path = WriteFile("FontCache/Font18Arial.fnt");
+        LoaderManager.Self.AddDisposable(path, new Cached());
+
+        _reaction.ReactToFileChanged(new FilePath(path));
+
+        VerifyReloaded(Times.Once());
+    }
+
     [Theory]
     [InlineData("Textures/Photo.png")]
     [InlineData("Textures/Unused.svg")]
