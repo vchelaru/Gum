@@ -86,7 +86,7 @@ public class Retro95Colors
     /// <c>#CACACA</c> — barely perceptible but it is what the CSS specifies).</summary>
     public Color SurfaceHover { get; set; } = new Color(202, 202, 202);
 
-    /// <summary>Hover background for text input fields (<c>#F8F8F8</c>).</summary>
+    /// <summary>Former hover background for text input fields (<c>#F8F8F8</c>). Fields now keep <see cref="WhiteFill"/> on hover so every input in a state paints the same fill; the token is kept for compatibility.</summary>
     public Color WhiteHover { get; set; } = new Color(248, 248, 248);
 
     /// <summary>"Black" window-shadow color (Win95 uses a solid 2 px hard offset shadow on

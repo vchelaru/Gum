@@ -579,22 +579,22 @@
     <State>
       <Name>Disabled</Name>
       <Variable Type="int" Name="Background.FillBlue" SetsValue="true">
-        <Value xsi:type="xsd:int">48</Value>
+        <Value xsi:type="xsd:int">18</Value>
       </Variable>
       <Variable Type="int" Name="Background.FillGreen" SetsValue="true">
-        <Value xsi:type="xsd:int">21</Value>
+        <Value xsi:type="xsd:int">6</Value>
       </Variable>
       <Variable Type="int" Name="Background.FillRed" SetsValue="true">
-        <Value xsi:type="xsd:int">21</Value>
+        <Value xsi:type="xsd:int">6</Value>
       </Variable>
       <Variable Type="int" Name="BorderInstance.StrokeBlue" SetsValue="true">
-        <Value xsi:type="xsd:int">48</Value>
+        <Value xsi:type="xsd:int">56</Value>
       </Variable>
       <Variable Type="int" Name="BorderInstance.StrokeGreen" SetsValue="true">
-        <Value xsi:type="xsd:int">21</Value>
+        <Value xsi:type="xsd:int">24</Value>
       </Variable>
       <Variable Type="int" Name="BorderInstance.StrokeRed" SetsValue="true">
-        <Value xsi:type="xsd:int">21</Value>
+        <Value xsi:type="xsd:int">24</Value>
       </Variable>
       <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
@@ -606,7 +606,7 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>FillColor = Components/Neon/Styles.Disabled.FillColor</string>
+          <string>FillColor = Components/Neon/Styles.Background.FillColor</string>
         </Value>
       </VariableList>
       <VariableList xsi:type="VariableListSaveOfString">
@@ -616,29 +616,29 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>StrokeColor = Components/Neon/Styles.Disabled.FillColor</string>
+          <string>StrokeColor = Components/Neon/Styles.DisabledBorder.FillColor</string>
         </Value>
       </VariableList>
     </State>
     <State>
       <Name>DisabledFocused</Name>
       <Variable Type="int" Name="Background.FillBlue" SetsValue="true">
-        <Value xsi:type="xsd:int">48</Value>
+        <Value xsi:type="xsd:int">18</Value>
       </Variable>
       <Variable Type="int" Name="Background.FillGreen" SetsValue="true">
-        <Value xsi:type="xsd:int">21</Value>
+        <Value xsi:type="xsd:int">6</Value>
       </Variable>
       <Variable Type="int" Name="Background.FillRed" SetsValue="true">
-        <Value xsi:type="xsd:int">21</Value>
+        <Value xsi:type="xsd:int">6</Value>
       </Variable>
       <Variable Type="int" Name="BorderInstance.StrokeBlue" SetsValue="true">
-        <Value xsi:type="xsd:int">48</Value>
+        <Value xsi:type="xsd:int">56</Value>
       </Variable>
       <Variable Type="int" Name="BorderInstance.StrokeGreen" SetsValue="true">
-        <Value xsi:type="xsd:int">21</Value>
+        <Value xsi:type="xsd:int">24</Value>
       </Variable>
       <Variable Type="int" Name="BorderInstance.StrokeRed" SetsValue="true">
-        <Value xsi:type="xsd:int">21</Value>
+        <Value xsi:type="xsd:int">24</Value>
       </Variable>
       <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">true</Value>
@@ -650,7 +650,7 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>FillColor = Components/Neon/Styles.Disabled.FillColor</string>
+          <string>FillColor = Components/Neon/Styles.Background.FillColor</string>
         </Value>
       </VariableList>
       <VariableList xsi:type="VariableListSaveOfString">
@@ -660,7 +660,7 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>StrokeColor = Components/Neon/Styles.Disabled.FillColor</string>
+          <string>StrokeColor = Components/Neon/Styles.DisabledBorder.FillColor</string>
         </Value>
       </VariableList>
     </State>

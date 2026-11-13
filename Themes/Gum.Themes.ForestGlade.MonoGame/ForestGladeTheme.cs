@@ -264,7 +264,7 @@ public static class ForestGladeTheme
         // (theme switching) would leave a previously-applied theme's visual in place for these
         // controls. These match what a single-theme Forest Glade run already falls back to.
         FrameworkElement.DefaultFormsTemplates[typeof(ItemsControl)] =
-            new VisualTemplate((_, c) => new Gum.Forms.DefaultVisuals.V3.ItemsControlVisual(tryCreateFormsObject: c));
+            new VisualTemplate((_, c) => new ItemsControlVisual(tryCreateFormsObject: c));
 
         FrameworkElement.DefaultFormsTemplates[typeof(Gum.Forms.Controls.Games.DialogBox)] =
             new VisualTemplate((_, c) => new Gum.Forms.DefaultVisuals.V3.DialogBoxVisual(tryCreateFormsObject: c));

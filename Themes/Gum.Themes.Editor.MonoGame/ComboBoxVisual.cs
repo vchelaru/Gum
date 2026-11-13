@@ -23,6 +23,7 @@ public class ComboBoxVisual : BaseComboBoxVisual
         this.FocusedIndicator.Parent = null;
 
         DropdownIndicatorColor = EditorStyling.ActiveStyle.Colors.TextPrimary;
+        BackgroundColor = EditorStyling.ActiveStyle.Colors.RecessedBackground;
 
         this.States.Enabled.Apply += () =>
         {
