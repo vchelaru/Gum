@@ -4,29 +4,31 @@
 
 This page assumes you have an existing Stride project. This can be an empty project or an existing game.
 
+## Starting From a New Project
+
+If you plan to use a Gum project, the easiest start is a new game that Gum creates for you. In the Gum tool, select **File** > **New Project**, check **Create C# project**, and choose Stride in **Platform**. Or run [`gumcli new MyGame --platform stride`](../../../../cli/new.md). The game already references Gum, loads the Gum project and copies it to the output folder, so you can skip the rest of this page. See [Creating a Project](../../../../gum-tool/setup/creating-a-project.md).
+
+The rest of this page adds Gum to a game you already have.
+
 ## Adding Gum NuGet package
 
 The easiest way to add Gum to your project is to use the NuGet package. Open your project in your preferred IDE, or add Gum through the command line.
 
 Add the Gum.Stride NuGet package ([https://www.nuget.org/packages/Gum.Stride](https://www.nuget.org/packages/Gum.Stride))
 
-The block below includes the base package and two add-ons marked **optional**: shader file support and arithmetic expression support. If you don't need an add-on, skip its line here and delete the matching line from the initialization code in [Initializing Gum](#initializing-gum) below.
-
 Modify csproj:
 
 ```xml
 <PackageReference Include="Gum.Stride" Version="*" />
-<PackageReference Include="Gum.SkiaSharp.ShadowDusk" Version="*" /> <!-- Optional: .fx and .slang shader files -->
-<PackageReference Include="Gum.Expressions" Version="*" /> <!-- Optional: arithmetic expressions in variable references -->
 ```
 
 Or add through command line:
 
 ```bash
 dotnet add package Gum.Stride
-dotnet add package Gum.SkiaSharp.ShadowDusk # Optional: .fx and .slang shader files
-dotnet add package Gum.Expressions          # Optional: arithmetic expressions in variable references
 ```
+
+Extra features come as separate packages, listed in [Optional Extras](#optional-extras).
 
 `Gum.Stride` renders through SkiaSharp and adds real Forms input (mouse, keyboard, gamepad, focus) through `Stride.Input`. Stride owns the window and the render pipeline, and Gum draws into the frame Stride composites.
 
@@ -68,31 +70,22 @@ To add source, first clone the Gum repository: [https://github.com/vchelaru/Gum]
 
 If you have already added the Gum NuGet package to your project, remove it.
 
-As with the NuGet packages above, the shader and expression projects are marked **optional**; skip a project if you don't need it, and delete its matching line from the initialization code in [Initializing Gum](#initializing-gum).
-
-Add the following projects to your solution:
+Add the following project to your solution:
 
 * \<Gum Root>/Runtimes/StrideGum/StrideGum.csproj
-* \<Gum Root>/Runtimes/SkiaGum.ShadowDusk/SkiaGum.ShadowDusk.csproj, **Optional:** .fx and .slang shader files
-* \<Gum Root>/Runtimes/GumExpressions/GumExpressions.csproj, **Optional:** arithmetic expressions in variable references
 
 `StrideGum.csproj` already references `GumCommon` and `SkiaGum` itself, so you do not need to add either separately.
 
-Next, add project references in your game project for the pieces you use. Your project might look like this depending on the location of the Gum repository relative to your game project:
+Next, add a project reference in your game project. Your project might look like this depending on the location of the Gum repository relative to your game project:
 
 ```xml
 <ProjectReference Include="..\Gum\Runtimes\StrideGum\StrideGum.csproj" />
-<ProjectReference Include="..\Gum\Runtimes\SkiaGum.ShadowDusk\SkiaGum.ShadowDusk.csproj" />
-<ProjectReference Include="..\Gum\Runtimes\GumExpressions\GumExpressions.csproj" />
 ```
 
-## About Shader Support (Optional)
+To link an extra from [Optional Extras](#optional-extras), add its project instead of its package:
 
-`Gum.SkiaSharp.ShadowDusk` lets a render target container's `SourceShaderFile` point at an `.fx` or `.slang` shader file. For loading, errors, and examples, see [Render Target Shaders on SkiaSharp](../../../standard-visuals/containerruntime.md#render-target-shaders-on-skiasharp).
-
-## About Expression Support (Optional)
-
-If your Gum project uses arithmetic expressions in variable references (such as `Width = OtherInstance.Width + 20`), `Gum.Expressions` provides full expression evaluation at runtime. Without it, simple variable references like `Width = OtherInstance.Width` still work. For more information, see the [Runtime Variable References](../../../styling/runtime-variable-references.md) page.
+* ShadowDusk: \<Gum Root>/Runtimes/SkiaGum.ShadowDusk/SkiaGum.ShadowDusk.csproj
+* Expressions: \<Gum Root>/Runtimes/GumExpressions/GumExpressions.csproj
 
 ## Placing the Scene Renderer Yourself (Optional)
 
@@ -108,7 +101,7 @@ For more detail, see the documentation on `GumService.Initialize` in your IDE.
 
 ## Initializing Gum
 
-Stride draws through a `GraphicsCompositor`, and Gum draws as part of that pipeline, so create the compositor before calling `Initialize`. Stride also renders the scene through a camera, so add one or the window stays empty. The following is a complete `Program.cs` that also shows a button. Lines marked **Optional** match the optional packages above, so delete the lines for any package you skipped.
+Stride draws through a `GraphicsCompositor`, and Gum draws as part of that pipeline, so create the compositor before calling `Initialize`. Stride also renders the scene through a camera, so add one or the window stays empty. The following is a complete `Program.cs` that also shows a button. It needs only `Gum.Stride` and the Stride host package, and builds its UI in code, so it runs without a Gum project.
 
 {% hint style="info" %}
 Available in preview NuGet packages (use a `-preview` version), or now if building Gum from source.
@@ -134,9 +127,7 @@ void Start(Scene rootScene)
 
     GumService GumUI = GumService.Default;
 
-    GumUI.Initialize(game, "Content/GumProject/GumProject.gumj");
-    GumUI.UseShadowDusk(); // Optional: .fx and .slang shader files
-    GumUI.UseExpressions(); // Optional: arithmetic expressions in variable references
+    GumUI.Initialize(game);
     GumUI.UseKeyboardDefaults();
     GumUI.UseGamepadDefaults();
 
@@ -152,7 +143,40 @@ void Start(Scene rootScene)
 
 `Initialize` adds Gum's scene renderer to the compositor, and Stride runs Gum's update and draw every frame from there. Stride is the one runtime where you never call `Update` and `Draw` yourself, so the per-frame calls the other setup pages show have no equivalent here.
 
-You can add controls as soon as `Initialize` returns. The project path is optional: call `Initialize(game)` alone to build the UI in code. To get the same file with a Gum project already set up, run [`gumcli new MyGame -p stride`](../../../../cli/new.md).
+You can add controls as soon as `Initialize` returns. The button in the center of the window confirms Gum works. Delete it once you start building your game.
+
+## Optional Extras
+
+Each extra is a separate package. Add the package, then add its line right after `GumUI.Initialize`.
+
+| Extra | Package | Line after `Initialize` |
+| --- | --- | --- |
+| [ShadowDusk](../../../standard-visuals/containerruntime.md#render-target-shaders-on-skiasharp): `.fx` and `.slang` shader files | `Gum.SkiaSharp.ShadowDusk` | `GumUI.UseShadowDusk();` |
+| [Expressions](../../../styling/runtime-variable-references.md): arithmetic in variable references | `Gum.Expressions` | `GumUI.UseExpressions();` |
+
+## Loading Your Gum Project
+
+To load a Gum project, pass its `.gumj` path to `Initialize`:
+
+```csharp
+// Initialize
+GumUI.Initialize(game, "Content/GumProject/GumProject.gumj");
+```
+
+Then copy the Gum project to the output folder by adding this to your `.csproj`:
+
+```xml
+<ItemGroup>
+    <None Update="Content\GumProject\**\*.*">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+</ItemGroup>
+```
+
+To create the Gum project and show its screens, see [Loading a Gum Project](../loading-a-gum-project-.gumx.md).
+
+## Sample Project
+
 
 For a working project with a larger demo (`Label`, `TextBox`, `CheckBox`, and `ListBox` in a `StackPanel`), see the Gum Stride sample:
 

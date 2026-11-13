@@ -10,17 +10,21 @@ This page assumes you have an existing KNI DesktopGL project. This can be an emp
 Available in preview NuGet packages (use a `-preview` version), or now if building Gum from source.
 {% endhint %}
 
+## Starting From a New Project
+
+If you plan to use a Gum project, the easiest start is a new game that Gum creates for you. In the Gum tool, select **File** > **New Project**, check **Create C# project**, and choose KNI with Skia in **Platform**. Or run [`gumcli new MyGame --platform kniskia --preview`](../../../../cli/new.md). The game already references Gum, loads the Gum project and copies it to the output folder, so you can skip the rest of this page. See [Creating a Project](../../../../gum-tool/setup/creating-a-project.md).
+
+The rest of this page adds Gum to a game you already have.
+
 ## Adding Gum NuGet package
 
 Add the Gum.KniSkia NuGet package ([https://www.nuget.org/packages/Gum.KniSkia](https://www.nuget.org/packages/Gum.KniSkia)) along with the KNI DesktopGL packages your project already uses.
 
-The block below includes the base package and two add-ons marked **optional**: shader file support and arithmetic expression support. If you don't need an add-on, skip its line here and delete the matching line from the initialization code in [Initializing Gum](#initializing-gum) below.
-
 ```xml
 <PackageReference Include="Gum.KniSkia" Version="*-*" />
-<PackageReference Include="Gum.SkiaSharp.ShadowDusk" Version="*" /> <!-- Optional: .fx and .slang shader files -->
-<PackageReference Include="Gum.Expressions" Version="*" /> <!-- Optional: arithmetic expressions in variable references -->
 ```
+
+The `Game1` class in [Initializing Gum](#initializing-gum) needs only this package. Extra features come as separate packages, listed in [Optional Extras](#optional-extras).
 
 {% hint style="warning" %}
 Don't name your project `KniSkiaGum`, that's the assembly name inside the `Gum.KniSkia` package. A same-named project produces a same-named output DLL that silently overwrites the runtime's copy in your `bin` folder, causing a `TypeLoadException` at runtime with no build warning.
@@ -32,25 +36,26 @@ You can directly link your project to source instead of a NuGet package for impr
 
 To add source, first clone the Gum repository: [https://github.com/vchelaru/Gum](https://github.com/vchelaru/Gum)
 
-If you have already added the Gum NuGet package to your project, remove it. Add the following projects to your solution:
+If you have already added the Gum NuGet package to your project, remove it. Add the following project to your solution:
 
 * \<Gum Root>/Runtimes/KniSkiaGum/KniSkiaGum.csproj
-* \<Gum Root>/Runtimes/SkiaGum.ShadowDusk/SkiaGum.ShadowDusk.csproj, **Optional:** .fx and .slang shader files
-* \<Gum Root>/Runtimes/GumExpressions/GumExpressions.csproj, **Optional:** arithmetic expressions in variable references
 
-Then add project references in your game project. Your project might look like this depending on the location of the Gum repository relative to your game project:
+Then add a project reference in your game project. Your project might look like this depending on the location of the Gum repository relative to your game project:
 
 ```xml
 <ProjectReference Include="..\Gum\Runtimes\KniSkiaGum\KniSkiaGum.csproj" />
-<ProjectReference Include="..\Gum\Runtimes\SkiaGum.ShadowDusk\SkiaGum.ShadowDusk.csproj" />
-<ProjectReference Include="..\Gum\Runtimes\GumExpressions\GumExpressions.csproj" />
 ```
+
+To link an extra from [Optional Extras](#optional-extras), add its project instead of its package:
+
+* ShadowDusk: \<Gum Root>/Runtimes/SkiaGum.ShadowDusk/SkiaGum.ShadowDusk.csproj
+* Expressions: \<Gum Root>/Runtimes/GumExpressions/GumExpressions.csproj
 
 To create a project that already references Gum source, run [`gumcli new MyGame -p kniskia --source-linked`](../../../../cli/new.md#linking-to-gum-source).
 
 ## Initializing Gum
 
-The following is a complete `Game1` class that also shows a button. Lines marked **Optional** match the optional packages above, so delete the lines for any package you skipped. `Window.AllowUserResizing` is optional too: the render target follows the window when it is resized.
+The following is a complete `Game1` class that also shows a button. It needs only the base package and builds its UI in code, so it runs without a Gum project. `Window.AllowUserResizing` is optional: the render target follows the window when it is resized.
 
 ```csharp
 namespace MyGame;
@@ -77,9 +82,7 @@ public class Game1 : Game
 
     protected override void Initialize()
     {
-        GumUI.Initialize(this, "Content/GumProject/GumProject.gumj");
-        GumUI.UseShadowDusk(); // Optional: .fx and .slang shader files
-        GumUI.UseExpressions(); // Optional: arithmetic expressions in variable references
+        GumUI.Initialize(this);
         GumUI.UseKeyboardDefaults();
         GumUI.UseGamepadDefaults();
 
@@ -107,7 +110,39 @@ public class Game1 : Game
 }
 ```
 
-Skia reads the Gum project from disk instead of through the content pipeline, so the path starts at `Content` and the project files must be copied to the output folder. To get the same class with a Gum project already set up, run [`gumcli new MyGame -p kniskia --source-linked`](../../../../cli/new.md).
+The button in the center of the window confirms Gum works. Delete it once you start building your game.
+
+## Optional Extras
+
+Each extra is a separate package. Add the package, then add its line right after `GumUI.Initialize`.
+
+| Extra | Package | Line after `Initialize` |
+| --- | --- | --- |
+| [ShadowDusk](../../../standard-visuals/containerruntime.md#render-target-shaders-on-skiasharp): `.fx` and `.slang` shader files | `Gum.SkiaSharp.ShadowDusk` | `GumUI.UseShadowDusk();` |
+| [Expressions](../../../styling/runtime-variable-references.md): arithmetic in variable references | `Gum.Expressions` | `GumUI.UseExpressions();` |
+
+## Loading Your Gum Project
+
+To load a Gum project, pass its `.gumj` path to `Initialize`. Skia reads the Gum project from disk instead of through the content pipeline, so the path starts at `Content`:
+
+```csharp
+// Initialize
+GumUI.Initialize(this, "Content/GumProject/GumProject.gumj");
+```
+
+Then copy the Gum project to the output folder by adding this to your `.csproj`:
+
+```xml
+<ItemGroup>
+    <None Update="Content\GumProject\**\*.*">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+</ItemGroup>
+```
+
+To create the Gum project and show its screens, see [Loading a Gum Project](../loading-a-gum-project-.gumx.md).
+
+## Sample Project
 
 For a working project, see the Gum KNI with Skia sample:
 
