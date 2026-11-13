@@ -28,6 +28,11 @@
 	<Import Project="..\SkiaInputHost.props" />
 	<Import Project="..\SkiaPackages.props" />
 
+	<!-- Gum.Color compiles into Gum.XnaCompat here, not Gum: with using Gum; and the KNI usings, Color would otherwise be ambiguous (CS0104) in every existing game file. -->
+	<PropertyGroup>
+		<DefineConstants>$(DefineConstants);GUM_COLOR_OPT_IN</DefineConstants>
+	</PropertyGroup>
+
 	<ItemGroup>
 		<!-- Same KNI version as the samples and the SkiaGameRendering.Kni.DesktopGL package below, which pins it. Compile-time only: the game brings its own KNI platform package. -->
 		<PackageReference Include="nkast.Xna.Framework" Version="4.3.9001" PrivateAssets="All" />
@@ -38,6 +43,11 @@
 		<!-- The render target GumService owns. DesktopGL is the supported KNI platform; the package flows
 		     to the game, which therefore references no SkiaGameRendering package itself. -->
 		<PackageReference Include="SkiaGameRendering.Kni.DesktopGL" Version="0.19.0" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<!-- Gum.Color, the XNA-compatible color docs snippets use. Games alias it (using Color = Gum.Color;) because KNI has its own Color; Color.Kni.cs converts it to KNI's. -->
+		<Compile Include="..\SkiaHost\Color.cs" Link="Color.cs" />
 	</ItemGroup>
 
 	<ItemGroup>
