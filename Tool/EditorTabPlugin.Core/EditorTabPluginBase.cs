@@ -924,25 +924,16 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
         // Update January 19, 2025 - actually for incrmeental changes just use it, it will be fast
         if (!areSame || canIncrementallyUpdate)
         {
+            // A file already in the cache is reloaded from disk, so the rebuild below drops the whole cache.
+            // Disposing only this file's entry would leave other cached content (an animation chain list's
+            // frames, other elements' sprites) holding the disposed texture, which crashes the canvas when
+            // they are drawn.
             VariableSave? editedVariable = element != null ? ObjectFinder.Self.GetRootVariable(qualifiedName, element) : null;
-            if (editedVariable?.IsFile == true && value is string editedFile)
+            fileWasCached = EditedFileReload.IsCachedFileEdit(editedVariable, value,
+                key => global::RenderingLibrary.Content.LoaderManager.Self.GetDisposable(key) != null);
+            if (editedVariable?.IsFile == true)
             {
-                try
-                {
-                    string standardized = ToolsUtilities.FileManager.Standardize(editedFile, preserveCase: true, makeAbsolute: true);
-                    standardized = ToolsUtilities.FileManager.RemoveDotDotSlash(standardized);
-
-                    // A file already in the cache is reloaded from disk, so the rebuild below drops the whole
-                    // cache. Disposing only this file's entry would leave other cached content (an animation
-                    // chain list's frames, other elements' sprites) holding the disposed texture, which
-                    // crashes the canvas when they are drawn.
-                    fileWasCached = global::RenderingLibrary.Content.LoaderManager.Self.GetDisposable(standardized) != null;
-                    Gum.Wireframe.TextureDiagnostics.Note($"SourceFile edit: standardized key='{standardized}' cachedBefore={fileWasCached}");
-                }
-                catch
-                {
-                    // this could be an invalid file name, so tolerate crashes
-                }
+                Gum.Wireframe.TextureDiagnostics.Note($"SourceFile edit: value='{value}' cachedBefore={fileWasCached}");
             }
 
             // if a deep reference is set, then this is more complicated than a single variable assignment, so we should
