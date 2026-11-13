@@ -198,6 +198,38 @@ public class UndoManagerTests : BaseTestClass
     }
 
     [Fact]
+    public void PerformUndoAndRedo_WithACategorySelected_ReselectsTheRestoredCategory()
+    {
+        // Undo replaces the category with a clone, so the selected category goes stale and the
+        // Variables tab stops showing the category's variables until the user clicks it again.
+        ComponentSave component = _selectedState.Object.SelectedComponent!;
+        StateSaveCategory category = new StateSaveCategory { Name = "Looks" };
+        category.States.Add(new StateSave { Name = "Big", ParentContainer = component });
+        category.States[0].SetValue("Width", 100f, "float");
+        component.Categories.Add(category);
+        _selectedState.Setup(x => x.SelectedStateSave).Returns((StateSave?)null);
+        _selectedState.Setup(x => x.SelectedStateCategorySave).Returns(category);
+        _undoManager.RecordState();
+
+        category.States[0].Variables.Clear();
+        _undoManager.RecordUndo();
+
+        StateSaveCategory? reselected = null;
+        _selectedState.SetupSet(x => x.SelectedStateCategorySave = It.IsAny<StateSaveCategory?>())
+            .Callback<StateSaveCategory?>(value => reselected = value);
+
+        _undoManager.PerformUndo();
+
+        reselected.ShouldBeSameAs(component.Categories[0]);
+        component.Categories[0].ShouldNotBeSameAs(category);
+
+        reselected = null;
+        _undoManager.PerformRedo();
+
+        reselected.ShouldBeSameAs(component.Categories[0]);
+    }
+
+    [Fact]
     public void PerformUndo_OfADefaultStateEdit_KeepsTheCategoryVariablesStateConverter()
     {
         // Undo copies the default state's variables from a serialized snapshot, which has no
