@@ -1,6 +1,6 @@
 # Themes
 
-A single line of code restyles **every** Gum Forms control created in code. Drop in a built-in theme — or author your own — and the same UI takes on a completely different look without changing any of your control code.
+A single line of code restyles **every** Gum Forms control created in code. Drop in a built-in theme or author your own, and the same UI takes on a completely different look without changing any of your control code.
 
 |                                                  DarkPro                                                 |                                                   Bubblegum                                                  |                                                Neon                                                |
 | :------------------------------------------------------------------------------------------------------: | :----------------------------------------------------------------------------------------------------------: | :------------------------------------------------------------------------------------------------: |
