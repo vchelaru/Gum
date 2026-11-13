@@ -139,11 +139,8 @@ void ShowOptionsScreen()
     optionsScreen.AddToRoot();
 }
 
-protected override void Initialize()
-{
-    // GumUI.Initialize goes here
-    ShowTitleScreen();
-}
+// Initialize
+ShowTitleScreen();
 ```
 
 This example creates a new screen on each switch, so every screen starts with the values set in the Gum tool. To keep a screen's state between visits, create it once and reuse it as shown in the code-only example above.

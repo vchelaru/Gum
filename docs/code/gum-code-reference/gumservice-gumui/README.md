@@ -18,10 +18,11 @@ GumService GumUI => GumService.Default;
 
 ## Update and Draw
 
-Samples on other pages call `GumUI.Update(gameTime)` and `GumUI.Draw()` as written for MonoGame, KNI, and FNA. The per-frame calls differ on other runtimes:
+Samples on other pages write the per-frame calls as `GumUI.Update(gameTime);` and `GumUI.Draw();`. The value of `gameTime` depends on your runtime, and its setup page shows where it comes from:
 
-* Raylib takes the elapsed seconds as a `double`: `GumUI.Update(Raylib.GetTime())`.
-* Silk.NET, BRUTAL, and general SkiaSharp hosts take `Update(double totalSeconds)`.
+* MonoGame, KNI, and FNA pass the `GameTime` that the game's `Update` receives.
+* Raylib passes the seconds from `Raylib.GetTime()` as a `double`.
+* Silk.NET, BRUTAL, and general SkiaSharp hosts pass the total seconds since the game started as a `double`.
 * Stride and Unity call `Update` and `Draw` for you, so skip both. See the [Stride](../../getting-started/setup/adding-initializing-gum/stride.md) and [Unity](../../getting-started/setup/adding-initializing-gum/unity.md) setup pages.
 
 ## Initialize
@@ -36,14 +37,9 @@ Samples on other pages call `GumUI.Update(gameTime)` and `GumUI.Draw()` as writt
 
 ### Loading a Gum Project (.gumj/.gumx)
 
-To load a Gum project, the following code can be used:
+To load a Gum project, pass its path to `Initialize` as shown on the [Loading a Gum Project](../../getting-started/setup/loading-a-gum-project-.gumx.md) page, such as `"GumProject/GumProject.gumj"`.
 
-```csharp
-// Initialize
-GumUI.Initialize(this, "GumProject/GumProject.gumj");
-```
-
-This code assumes that the Gum project is located in the following path relative to your .csproj file:
+This path assumes that the Gum project is located in the following path relative to your .csproj file:
 
 ```
 Content/GumProject/GumProject.gumj
@@ -51,25 +47,9 @@ Content/GumProject/GumProject.gumj
 
 If the Gum project is located outside of the Content folder, it can be loaded using a number of techniques:
 
-1.  Prefix the path with "../". For example the following code can be used to load a Gum project located in a resources folder:&#x20;
-
-    ```csharp
-    // Initialize
-    GumUI.Initialize(this, "../resources/GumProject/GumProject.gumj");
-    ```
-2.  Set FileManager.RelativeDirectory prior to loading:
-
-    ```csharp
-    // Initialize
-    FileManager.RelativeDirectory = "resources/";
-    GumUI.Initialize(this, "GumProject/GumProject.gumj");
-    ```
-3.  Set an absolute path. Be careful specifying an absolute path as this may prevent your project from running on other machines.
-
-    ```csharp
-    // Initialize
-    GumUI.Initialize(this, "c:/Gum/GumProject.gumj");
-    ```
+1. Prefix the path with "../". For example the path `"../resources/GumProject/GumProject.gumj"` loads a Gum project located in a resources folder.
+2. Set `FileManager.RelativeDirectory = "resources/";` prior to loading, then pass `"GumProject/GumProject.gumj"`.
+3. Set an absolute path, such as `"c:/Gum/GumProject.gumj"`. Be careful specifying an absolute path as this may prevent your project from running on other machines.
 
 ## More Than One GumService
 

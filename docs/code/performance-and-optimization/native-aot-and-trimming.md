@@ -19,12 +19,7 @@ gumcli convert-to-json MyProject.gumj
 
 Or in the Gum tool, use **Content** and then **Convert to JSON**.
 
-This writes a `.gumj` project plus a JSON sibling for every screen, component, standard element, behavior, and animation file the project references. Point your game at the new extension:
-
-```csharp
-// Initialize
-GumUI.Initialize(this, "GumProject/MyProject.gumj");
-```
+This writes a `.gumj` project plus a JSON sibling for every screen, component, standard element, behavior, and animation file the project references. Point your game at the new extension by changing the path it passes when [loading the Gum project](../getting-started/setup/loading-a-gum-project-.gumx.md), such as `"GumProject/MyProject.gumj"`.
 
 See [Project Files](../../gum-tool/project-files/README.md) for the full list of JSON extensions.
 

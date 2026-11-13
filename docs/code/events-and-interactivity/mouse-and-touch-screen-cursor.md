@@ -27,22 +27,18 @@ Code that only reacts when `LastInputDevice == InputDevice.TouchScreen` will loo
 GumService contains an instance of the `Cursor` class. The following code shows how to access the Cursor class and create rectangles when the `Cursor` detects a click.
 
 ```csharp
-protected override void Update(GameTime gameTime)
+// Update
+GumUI.Update(gameTime);
+
+Cursor cursor = GumUI.Cursor;
+
+if(cursor.PrimaryClick)
 {
-    GumUI.Update(gameTime);
-
-    Cursor cursor = GumUI.Cursor;
-
-    if(cursor.PrimaryClick)
-    {
-        ColoredRectangleRuntime rectangle = new ();
-        rectangle.AddToRoot();
-        rectangle.X = cursor.XRespectingGumZoomAndBounds();
-        rectangle.Y = cursor.YRespectingGumZoomAndBounds();
-        rectangle.Color = Color.Red;
-    }
-
-    base.Update(gameTime);
+    ColoredRectangleRuntime rectangle = new ();
+    rectangle.AddToRoot();
+    rectangle.X = cursor.XRespectingGumZoomAndBounds();
+    rectangle.Y = cursor.YRespectingGumZoomAndBounds();
+    rectangle.Color = Color.Red;
 }
 ```
 
@@ -60,45 +56,35 @@ The `FrameworkElementOver` property returns the FrameworkElement (control) that 
 // Class scope
 Label label;
 
-protected override void Initialize()
+// Initialize
+StackPanel panel = new ();
+panel.AddToRoot();
+panel.Name = "Button Panel";
+panel.Anchor(Anchor.Center);
+
+for(int i = 0; i < 5; i++)
 {
-    GumUI.Initialize(this);
-
-    StackPanel panel = new ();
-    panel.AddToRoot();
-    panel.Name = "Button Panel";
-    panel.Anchor(Anchor.Center);
-    
-    for(int i = 0; i < 5; i++)
-    {
-        Button button = new();
-        panel.AddChild(button);
-        button.Text = "Button " + i;
-        button.Name = button.Text;
-    }
-
-    label = new Label();
-    panel.AddChild(label);
-
-    base.Initialize();
+    Button button = new();
+    panel.AddChild(button);
+    button.Text = "Button " + i;
+    button.Name = button.Text;
 }
 
-protected override void Update(GameTime gameTime)
+label = new Label();
+panel.AddChild(label);
+
+// Update
+GumUI.Update(gameTime);
+
+var control = GumUI.Cursor.FrameworkElementOver;
+
+if(control == null)
 {
-    GumUI.Update(gameTime);
-
-    var control = GumUI.Cursor.FrameworkElementOver;
-
-    if(control == null)
-    {
-        label.Text = "Not over any visual";
-    }
-    else
-    {
-        label.Text = "Over: " + control.Name;
-    }
-
-    base.Update(gameTime);
+    label.Text = "Not over any visual";
+}
+else
+{
+    label.Text = "Over: " + control.Name;
 }
 ```
 
@@ -123,43 +109,34 @@ For information on which controls support events, see the [Visual Events page](v
 
 The following code creates a rectangle and checks if the cursor is overlapping the rectangle:
 
-<pre class="language-csharp"><code class="lang-csharp">using RenderingLibrary; // needed for extension method
+```csharp
+using RenderingLibrary; // needed for extension method
 
 // Class scope
 Gum.Forms.Controls.Label label;
 RectangleRuntime rectangle;
 
-protected override void Initialize()
-{
-    GumUI.Initialize(this);
+// Initialize
+label = new Label();
+label.AddToRoot();
 
-<strong>    label = new Label();
-</strong>    label.AddToRoot();
+rectangle = new RectangleRuntime();
+rectangle.AddToRoot();
+rectangle.Width = 100;
+rectangle.Height = 100;
+rectangle.X = 100;
+rectangle.Y = 100;
 
-    rectangle = new RectangleRuntime();
-    rectangle.AddToRoot();
-    rectangle.Width = 100;
-    rectangle.Height = 100;
-    rectangle.X = 100;
-    rectangle.Y = 100;
+// Update
+GumUI.Update(gameTime);
 
-    base.Initialize();
-}
+var cursor = GumUI.Cursor;
+var isOver = rectangle.HasCursorOver(
+    cursor.XRespectingGumZoomAndBounds(),
+    cursor.YRespectingGumZoomAndBounds());
 
-protected override void Update(GameTime gameTime)
-{
-    GumUI.Update(gameTime);
-
-    var cursor = GumUI.Cursor;
-    var isOver = rectangle.HasCursorOver(
-        cursor.XRespectingGumZoomAndBounds(),
-        cursor.YRespectingGumZoomAndBounds());
-
-    label.Text = $"Cursor is over rectangle: {isOver}";
-
-    base.Update(gameTime);
-}
-</code></pre>
+label.Text = $"Cursor is over rectangle: {isOver}";
+```
 
 [Try on XnaFiddle.NET](https://xnafiddle.net/#snippet=H4sIAAAAAAAAA31QW0vDMBT-KyH40EEpdY8tPkwfdDAQysRN60O6HLtAk4xc5mXsv3uSzs7J9CWQ73a-c3Z0am-9pIUzHlLqrVCtpcUzRTB7FAZeDZNAU1qB4mCQnYnGMPNBX1IqQTZgUE5nrIGOdOEta1XByjHVdlB55YQEYr6BEpOEEk6wTnwCGqOFXBEFbySGJCMMiGg24XyuK61dxIaMg_r3kFPRX2bcibs1Rlzm-Ql-B6JduzPE4gy2PGC4jd9w5sImW2bIyhurDZJ4vYdpdhO_6AycsPdbCNyPmcz2ksAktert2aICu0ERHhtznrSWE8WvtVfcJqN0kC3_kx2vOIf3sNZF7fN8PO7nYRmiQ5uhS0F2fcF9ryvp_gvGXgjfGwIAAA)
 
@@ -184,21 +161,15 @@ ContainerRuntime gameUi;
 float blitScale = 1.5f;
 System.Numerics.Vector2 blitOffset = new System.Numerics.Vector2(60, 100);
 
-protected override void Initialize()
-{
-    GumUI.Initialize(this);
+// Initialize
+gameUi = new ContainerRuntime { Width = 300, Height = 300 };
+// ...add the game UI's controls as children of gameUi...
 
-    gameUi = new ContainerRuntime { Width = 300, Height = 300 };
-    // ...add the game UI's controls as children of gameUi...
-
-    // Map a raw window pixel back into render-target space: undo the blit
-    // offset, then the blit scale. Descendants inherit this by climbing.
-    gameUi.HitTestTransformMatrix =
-        System.Numerics.Matrix3x2.CreateTranslation(-blitOffset.X, -blitOffset.Y) *
-        System.Numerics.Matrix3x2.CreateScale(1f / blitScale);
-
-    base.Initialize();
-}
+// Map a raw window pixel back into render-target space: undo the blit
+// offset, then the blit scale. Descendants inherit this by climbing.
+gameUi.HitTestTransformMatrix =
+    System.Numerics.Matrix3x2.CreateTranslation(-blitOffset.X, -blitOffset.Y) *
+    System.Numerics.Matrix3x2.CreateScale(1f / blitScale);
 ```
 
 Draw `gameUi` into the render target and blit it to the window just as in the [TransformMatrix example](../gum-code-reference/cursor/transformmatrix.md), using `blitOffset` and `blitScale` for the blit destination. Any UI drawn straight to the window stays at 1:1 with no transform, so both are clickable in the same frame. Check hits with the `HasCursorOver(ICursor)` overload, for example `gameUi.HasCursorOver(GumUI.Cursor)`.
@@ -283,18 +254,12 @@ Future versions of Gum are likely to change the `ICursor` class by adding or ren
 This `DisabledCursor` class can be assigned to disable all Cursor actions as shown in the following code:
 
 ```csharp
-protected override void Initialize()
-{
-    GumUI.Initialize(this);
+// Initialize
+Button button = new();
+button.AddToRoot();
+button.Anchor(Anchor.Center);
 
-    Button button = new();
-    button.AddToRoot();
-    button.Anchor(Anchor.Center);
-
-    FormsUtilities.SetCursor(new DisabledCursor());
-
-    base.Initialize();
-}
+FormsUtilities.SetCursor(new DisabledCursor());
 ```
 
 <figure><img src="../../.gitbook/assets/17_04 48 28.gif" alt=""><figcaption><p><code>DisabledCursor</code> used to prevent UI interaction</p></figcaption></figure>

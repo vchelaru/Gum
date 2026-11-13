@@ -30,59 +30,55 @@ The following properties exist on Colors:
 The `Styling.ActiveStyle.Color` property includes styles that are used by controls when they are created. We can see how these affect controls by creating a sample project:
 
 ```csharp
-protected override void Initialize()
+// Initialize
+var window = new Window();
+window.AddToRoot();
+window.Anchor(Anchor.Center);
+window.Width = 270;
+window.MinWidth = 270;
+window.Height = 400;
+window.MinHeight = 400;
+
+var windowVisual = (WindowVisual)window.Visual;
+
+var stackPanel = new StackPanel();
+window.AddChild(stackPanel);
+stackPanel.Dock(Dock.Top);
+stackPanel.Y = window.TitleHeight;
+stackPanel.Width = -16;
+
+var button = new Button();
+var buttonVisual = (Gum.Forms.DefaultVisuals.V3.ButtonVisual)button.Visual;
+stackPanel.AddChild(button);
+
+var checkBox = new CheckBox();
+stackPanel.AddChild(checkBox);
+
+var comboBox = new ComboBox();
+stackPanel.AddChild(comboBox);
+for(int i = 0; i < 10; i++)
 {
-    GumUI.Initialize(this);
-
-    var window = new Window();
-    window.AddToRoot();
-    window.Anchor(Anchor.Center);
-    window.Width = 270;
-    window.MinWidth = 270;
-    window.Height = 400;
-    window.MinHeight = 400;
-
-    var windowVisual = (WindowVisual)window.Visual;
-
-    var stackPanel = new StackPanel();
-    window.AddChild(stackPanel);
-    stackPanel.Dock(Dock.Top);
-    stackPanel.Y = window.TitleHeight;
-    stackPanel.Width = -16;
-
-    var button = new Button();
-    var buttonVisual = (Gum.Forms.DefaultVisuals.V3.ButtonVisual)button.Visual;
-    stackPanel.AddChild(button);
-
-    var checkBox = new CheckBox();
-    stackPanel.AddChild(checkBox);
-
-    var comboBox = new ComboBox();
-    stackPanel.AddChild(comboBox);
-    for(int i = 0; i < 10; i++)
-    {
-        comboBox.Items.Add($"ComboBox Item {i}");
-    }
-
-    var listBox = new ListBox();
-    stackPanel.AddChild(listBox);
-    listBox.Height = 200;
-    for(int i = 0; i < 20; i++)
-    {
-        listBox.Items.Add($"Item {i}");
-    }
-
-    var radioButton1 = new RadioButton();
-    stackPanel.AddChild(radioButton1);
-    radioButton1.Text = "Option 1";
-
-    var radioButton2 = new RadioButton();
-    stackPanel.AddChild(radioButton2);
-    radioButton2.Text = "Option 2";
-
-    var textBox = new TextBox();
-    stackPanel.AddChild(textBox);
+    comboBox.Items.Add($"ComboBox Item {i}");
 }
+
+var listBox = new ListBox();
+stackPanel.AddChild(listBox);
+listBox.Height = 200;
+for(int i = 0; i < 20; i++)
+{
+    listBox.Items.Add($"Item {i}");
+}
+
+var radioButton1 = new RadioButton();
+stackPanel.AddChild(radioButton1);
+radioButton1.Text = "Option 1";
+
+var radioButton2 = new RadioButton();
+stackPanel.AddChild(radioButton2);
+radioButton2.Text = "Option 2";
+
+var textBox = new TextBox();
+stackPanel.AddChild(textBox);
 ```
 
 This code produces a set of controls which can be used to check how styling is applied.
@@ -100,16 +96,13 @@ This code produces a set of controls which can be used to check how styling is a
 We can prefix the following code before creating all of our controls:
 
 ```csharp
-protected override void Initialize()
-{
-    GumUI.Initialize(this);
+// Initialize
+Styling.ActiveStyle.Colors.Primary = Color.DarkGreen;
+Styling.ActiveStyle.Colors.InputBackground = Color.Black;
+Styling.ActiveStyle.Colors.TextPrimary = Color.LimeGreen;
+Styling.ActiveStyle.Colors.Accent = Color.Yellow;
 
-    Styling.ActiveStyle.Colors.Primary = Color.DarkGreen;
-    Styling.ActiveStyle.Colors.InputBackground = Color.Black;
-    Styling.ActiveStyle.Colors.TextPrimary = Color.LimeGreen;
-    Styling.ActiveStyle.Colors.Accent = Color.Yellow;
-
-    // Create controls here:
+// Create controls here:
 ```
 
 By changing these colors, controls are created using the new colors:
@@ -139,9 +132,7 @@ Available in preview NuGet packages (use a `-preview` version), or now if buildi
 {% endhint %}
 
 ```csharp
-// initialize
-GumUI.Initialize(this);
-
+// Initialize
 GumUI.UseKernSmith();
 
 var textStyling = Gum.Forms.DefaultVisuals.V3.Styling.ActiveStyle.Text;
@@ -152,8 +143,6 @@ normalState.SetValue("FontSize", 28, "int");
 var button = new Button();
 button.AddToRoot();
 button.Anchor(Anchor.Center);
-
-base.Initialize();
 ```
 
 <figure><img src="../../../.gitbook/assets/18_04 59 05.png" alt=""><figcaption><p>Button using larger Consolas font</p></figcaption></figure>

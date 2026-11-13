@@ -12,12 +12,7 @@ This page covers how Gum reacts to the game window's resolution and how to handl
 
 ```csharp
 // Initialize
-protected override void Initialize()
-{
-    GumUI.Initialize(this);
-
-    GumUI.EnableZoomToWindow();
-}
+GumUI.EnableZoomToWindow();
 ```
 
 ### Expand To Window
@@ -26,15 +21,10 @@ protected override void Initialize()
 
 ```csharp
 // Initialize
-protected override void Initialize()
-{
-    GumUI.Initialize(this);
-
-    GumUI.EnableExpandToWindow();
-}
+GumUI.EnableExpandToWindow();
 ```
 
-Both methods are available on MonoGame, KNI, FNA, and raylib. (On raylib, replace `Initialize(this)` with the parameterless `Initialize()` overload.) Calling either method replaces any previously enabled policy, so flipping at runtime — for example from a settings menu — is a single method call.
+Both methods are available on MonoGame, KNI, FNA, and raylib. Calling either method replaces any previously enabled policy, so flipping at runtime, for example from a settings menu, is a single method call.
 
 ### `defaultZoom`
 
@@ -87,7 +77,7 @@ This is sometimes the behavior you want (e.g. if you draw Gum to a `RenderTarget
 
 ## Setting the Initial Resolution
 
-By default Gum uses `GraphicsDevice.Viewport` to set its internal resolution on initialization. This value can be assigned in the Game's constructor by assigning `_graphics.PreferredBackBufferWidth` and `_graphics.PreferredBackBufferHeight`. Most likely your game is already doing this to set the initial Window size. The following shows an example game with Gum:
+On MonoGame, Gum uses `GraphicsDevice.Viewport` by default to set its internal resolution on initialization. This value can be assigned in the Game's constructor by assigning `_graphics.PreferredBackBufferWidth` and `_graphics.PreferredBackBufferHeight`. Most likely your game is already doing this to set the initial Window size. The following shows an example game with Gum:
 
 <pre class="language-csharp"><code class="lang-csharp">public class Game1 : Game
 {

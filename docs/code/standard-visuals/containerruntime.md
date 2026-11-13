@@ -134,7 +134,6 @@ Add the package, then call `UseShadowDusk` once at startup. It takes no argument
 
 ```csharp
 // Initialize
-GumUI.Initialize(this);
 GumUI.UseShadowDusk();
 
 var container = new ContainerRuntime();

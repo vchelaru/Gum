@@ -55,26 +55,17 @@ The code presented below requires version 2026.1.7.1 or newer.
 
 A typical Gum project includes the following draw and update calls:
 
-<pre class="language-csharp"><code class="lang-csharp">protected override void Update(GameTime gameTime)
-{
-<strong>    GumUI.Update(gameTime);
-</strong>
-    base.Update(gameTime);
-}
+```csharp
+// Update
+GumUI.Update(gameTime);
 
-protected override void Draw(GameTime gameTime)
-{
-    GraphicsDevice.Clear(Color.CornflowerBlue);
-
-<strong>    GumUI.Draw();
-</strong>
-    base.Draw(gameTime);
-}
-</code></pre>
+// Draw
+GumUI.Draw();
+```
 
 These draw calls Update and Draw the root object. If all of our items should be drawn in one call, then this simple approach will work. However, you may want to mix drawing code with Gum, such as by drawing a sprite in between Gum objects.
 
-The following code shows how to draw two Gum windows - one is below and one is above a SpriteBatch draw call.
+The following code shows how to draw two Gum windows - one is below and one is above a SpriteBatch draw call. This example is MonoGame-only, since it uses `SpriteBatch` and `GumBatch`.
 
 ```csharp
 public class Game1 : Game

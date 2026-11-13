@@ -26,12 +26,8 @@ Without a sync context, the line after the `await` can land on a thread other th
 Call `UseSingleThreadedAsync` once, after `Initialize`:
 
 ```csharp
-protected override void Initialize()
-{
-    GumUI.Initialize(this);
-    GumUI.UseSingleThreadedAsync(); // ← this is all you need
-    base.Initialize();
-}
+// Initialize
+GumUI.UseSingleThreadedAsync(); // ← this is all you need
 ```
 
 `GumService.Update` (which you already call each frame) drains queued continuations, so there is no per-frame plumbing. Calling `UseSingleThreadedAsync` more than once is a no-op.

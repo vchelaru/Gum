@@ -60,7 +60,7 @@ On Raylib, oversampling builds the base font of a `TextRuntime` again. Runs that
 
 ## Try It
 
-Drag the **Zoom** slider to zoom the camera. The text stays sharp because it is oversampled. Turn off **Oversampling** to see how the same text looks without it. The font (`std/DroidSans.ttf`) ships with XnaFiddle, so there is nothing to upload.
+Drag the **Zoom** slider to zoom the camera. The text stays sharp because it is oversampled. Turn off **Oversampling** to see how the same text looks without it. The font (`std/DroidSans.ttf`) ships with XnaFiddle, so there is nothing to upload. This sample is MonoGame-only, since it uses `Content.RootDirectory` and the MonoGame `KernSmithFontCreator`.
 
 ```csharp
 using MonoGameGum;
@@ -71,88 +71,63 @@ using MonoGameGum.GueDeriving;
 using Gum.Wireframe;
 using KernSmith.Gum;
 using RenderingLibrary;
-using Microsoft.Xna.Framework;
 
-public class Game1 : Game
+// Class scope
+TextRuntime previewText;
+Label zoomLabel;
+Slider zoomSlider;
+CheckBox oversampleCheck;
+
+// Initialize
+GumUI.UseKernSmith();
+KernSmithFontCreator.RegisterFont("Droid Sans",
+    System.IO.Path.Combine(Content.RootDirectory, "std/DroidSans.ttf"));
+
+TextRuntime.UseFontOversampling = true;
+
+previewText = new TextRuntime();
+previewText.Font = "Droid Sans";
+previewText.FontSize = 48;
+previewText.Text = "Crisp under zoom";
+previewText.AddToRoot();
+previewText.Anchor(Gum.Wireframe.Anchor.Center);
+
+oversampleCheck = new CheckBox();
+oversampleCheck.Text = "Oversampling";
+oversampleCheck.Width = 200;
+oversampleCheck.IsChecked = true;
+oversampleCheck.X = 8;
+oversampleCheck.Y = 8;
+oversampleCheck.AddToRoot();
+oversampleCheck.Checked += (_, _) => TextRuntime.UseFontOversampling = true;
+oversampleCheck.Unchecked += (_, _) => TextRuntime.UseFontOversampling = false;
+
+zoomLabel = new Label();
+zoomLabel.Text = "Zoom: 1.0x";
+zoomLabel.Width = 200;
+zoomLabel.X = 8;
+zoomLabel.Y = 40;
+zoomLabel.AddToRoot();
+
+zoomSlider = new Slider();
+zoomSlider.Minimum = 1;
+zoomSlider.Maximum = 4;
+zoomSlider.Value = 1;
+zoomSlider.Width = 200;
+zoomSlider.X = 8;
+zoomSlider.Y = 70;
+zoomSlider.AddToRoot();
+zoomSlider.ValueChanged += (_, _) =>
 {
-    GraphicsDeviceManager graphics;
-    GumService GumUI => GumService.Default;
+    GumUI.SystemManagers.Renderer.Camera.Zoom = (float)zoomSlider.Value;
+    zoomLabel.Text = $"Zoom: {zoomSlider.Value:0.0}x";
+};
 
-    TextRuntime previewText;
-    Label zoomLabel;
-    Slider zoomSlider;
-    CheckBox oversampleCheck;
+// Update
+GumUI.Update(gameTime);
 
-    public Game1()
-    {
-        graphics = new GraphicsDeviceManager(this);
-        IsMouseVisible = true;
-    }
-
-    protected override void Initialize()
-    {
-        GumUI.Initialize(this, DefaultVisualsVersion.V3);
-
-        GumUI.UseKernSmith();
-        KernSmithFontCreator.RegisterFont("Droid Sans",
-            System.IO.Path.Combine(Content.RootDirectory, "std/DroidSans.ttf"));
-
-        TextRuntime.UseFontOversampling = true;
-
-        previewText = new TextRuntime();
-        previewText.Font = "Droid Sans";
-        previewText.FontSize = 48;
-        previewText.Text = "Crisp under zoom";
-        previewText.AddToRoot();
-        previewText.Anchor(Gum.Wireframe.Anchor.Center);
-
-        oversampleCheck = new CheckBox();
-        oversampleCheck.Text = "Oversampling";
-        oversampleCheck.Width = 200;
-        oversampleCheck.IsChecked = true;
-        oversampleCheck.X = 8;
-        oversampleCheck.Y = 8;
-        oversampleCheck.AddToRoot();
-        oversampleCheck.Checked += (_, _) => TextRuntime.UseFontOversampling = true;
-        oversampleCheck.Unchecked += (_, _) => TextRuntime.UseFontOversampling = false;
-
-        zoomLabel = new Label();
-        zoomLabel.Text = "Zoom: 1.0x";
-        zoomLabel.Width = 200;
-        zoomLabel.X = 8;
-        zoomLabel.Y = 40;
-        zoomLabel.AddToRoot();
-
-        zoomSlider = new Slider();
-        zoomSlider.Minimum = 1;
-        zoomSlider.Maximum = 4;
-        zoomSlider.Value = 1;
-        zoomSlider.Width = 200;
-        zoomSlider.X = 8;
-        zoomSlider.Y = 70;
-        zoomSlider.AddToRoot();
-        zoomSlider.ValueChanged += (_, _) =>
-        {
-            GumUI.SystemManagers.Renderer.Camera.Zoom = (float)zoomSlider.Value;
-            zoomLabel.Text = $"Zoom: {zoomSlider.Value:0.0}x";
-        };
-
-        base.Initialize();
-    }
-
-    protected override void Update(GameTime gameTime)
-    {
-        GumUI.Update(gameTime);
-        base.Update(gameTime);
-    }
-
-    protected override void Draw(GameTime gameTime)
-    {
-        GraphicsDevice.Clear(Color.CornflowerBlue);
-        GumUI.Draw();
-        base.Draw(gameTime);
-    }
-}
+// Draw
+GumUI.Draw();
 ```
 
 [Try on XnaFiddle.NET](https://xnafiddle.net/#code=H4sIAAAAAAAACp1WbW_aMBD-zq-w0D4EDXl0q7SpVSdtQa3QhloBfdm-TCYcYDWxke2U0qn_fefECSZ1tmr5gnv3-O65N19zzcWKjKWQFyyDizw77eSFCI_0XKpMvxDQWAqjZBrQDGHJ8tTccJ2zVNObDxXEc0AvchiC4g8o9y3ccgVLhZhK-A2UmGbcrF8IqMdzAmKB1sTqO58rpna1R54oqeXS0DvB6Lk1vJXq_rTT2eTzlCckSZnWxJI6IifFb-d3h-B3odhmzRM9hAeewJgJtgJFVk56WmLybArK6u3xekTOPnuyKg_ozIJn8GgmuTA8A7JRaBW2VlRa-s7mkJInKbPiVAqnKcegCml5LMXxGpL7r_KRyAdQmmWbFAqR8-MCK0KKeoWojMh-FX9yRgRsw0FGZs11r_Rlv5Eey1wDlpPPU8CbRuVYHqt6di6VNJAYWBSUFFIlD5IvyEhww1nKn-AFkSJf1ANYp31y2Do3GB-XAjsI6dRX41wbzAiYKyU3oMzuUpTlZ0gPTY4hk2p3ju0ZK2BGKnJW37WfDbxuIg8WHWajTyZMG2yqJ1BfWXKPLujUzGcY_Gy3AS9BIWN0Aitur1tZ1B0qm48pE7rbPyAz3SEoo6NLesWwpWOZzbmAyA4XCEMnUpohjkSCJnd90tVm8a6wZU1RY5bdnp8ar8fotQbr-7JqEjsOVe3qC14jupbwTERejB4Qp1xYtB9UO3CK-UPw8acwxHnuxorrDclF1fAtFr8sFjNpk9LG7YtI1raU_lPihDTGjILy89WYIJeCasB8Hw1kzdtPb7cdfssXZo3494NBO2iki18cI3_GQsg7RHxqV__4uzqYxCaoovL2jES_-uRXzz5ur-2vNqPXWIj_MrvE18Dv2_qldCUrzn44NaCu1E-UnJAjOnjshmDBCu3VjYzvFTbXx8ErB2k-0LuHvaRe_tHkXkrpmAue5RlCj8J69uj0x0H9DUtzaL3dGrPTB4J2Ghv1x_ClYHc1KcVrJlaNNqjB-y2x3xTlO-k2lMbX1b4UaC3G-VaM2uIipWiZSmZ6TW97HsHWeON643fz3smADp79dnn2Cjln2m6b_YZ71Uq83iyYgchu55n9T2DlDuH96NA1aM-k8B5W_4PBULHtK_wf7EIap8AUbqXUPqNSCczzFtci5sjjVHIu7DeZFsIXPJ87fwBk4c0ZeQoAAA)

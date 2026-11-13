@@ -6,76 +6,45 @@ Gum can be used purely in code (no editor), or by referencing a Gum project. Bot
 
 ## Gum Code-Only
 
-Gum can be used fully in code. A code-only setup requires minimal code. The following shows a simple MonoGame Game1 class with a few functional Gum controls. All lines of code related to Gum are highlighted:
+Gum can be used fully in code. A code-only setup requires minimal code. The following code creates a few functional Gum controls:
 
-<pre class="language-csharp"><code class="lang-csharp"><strong>using Gum.Forms.Controls;
-</strong><strong>using Gum.Wireframe;
-</strong>using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
-<strong>using Gum;
-</strong>using System;
+```csharp
+using Gum.Forms.Controls;
+using Gum.Wireframe;
+using Gum;
+using System;
 
-namespace MonoGameAndGum;
+// Initialize
+var stackPanel = new StackPanel();
+stackPanel.AddToRoot();
+stackPanel.Spacing = 6;
+stackPanel.Anchor(Anchor.Center);
 
-public class Game1 : Game
+var button = new Button();
+stackPanel.AddChild(button);
+button.Text = "Click Me";
+button.Click += (s, e) => 
 {
-    private GraphicsDeviceManager _graphics;
-<strong>    GumService GumUI => GumService.Default;
-</strong>    public Game1()
-    {
-        _graphics = new GraphicsDeviceManager(this);
-        Content.RootDirectory = "Content";
-        IsMouseVisible = true;
-    }
+    button.Text = DateTime.Now.ToString();
+};
 
-    protected override void Initialize()
-    {
-<strong>        GumUI.Initialize(this);
-</strong>
-<strong>        var stackPanel = new StackPanel();
-</strong><strong>        stackPanel.AddToRoot();
-</strong><strong>        stackPanel.Spacing = 6;
-</strong><strong>        stackPanel.Anchor(Anchor.Center);
-</strong>
-<strong>        var button = new Button();
-</strong><strong>        stackPanel.AddChild(button);
-</strong><strong>        button.Text = "Click Me";
-</strong><strong>        button.Click += (s, e) => 
-</strong><strong>        {
-</strong><strong>            button.Text = DateTime.Now.ToString();
-</strong><strong>        };
-</strong>
-<strong>        var textBox = new TextBox();
-</strong><strong>        textBox.Width = 150;
-</strong><strong>        stackPanel.AddChild(textBox);
-</strong>
-<strong>        var listBox = new ListBox();
-</strong><strong>        stackPanel.AddChild(listBox);
-</strong><strong>        for(int i = 0; i &#x3C; 10; i++)
-</strong><strong>        {
-</strong><strong>            listBox.Items.Add("Item " + i);
-</strong><strong>        }
-</strong>
-        base.Initialize();
-    }
+var textBox = new TextBox();
+textBox.Width = 150;
+stackPanel.AddChild(textBox);
 
-
-    protected override void Update(GameTime gameTime)
-    {
-<strong>        GumUI.Update(gameTime);
-</strong>        base.Update(gameTime);
-    }
-
-    protected override void Draw(GameTime gameTime)
-    {
-        GraphicsDevice.Clear(Color.CornflowerBlue);
-<strong>        GumUI.Draw();
-</strong>        base.Draw(gameTime);
-    }
+var listBox = new ListBox();
+stackPanel.AddChild(listBox);
+for(int i = 0; i < 10; i++)
+{
+    listBox.Items.Add("Item " + i);
 }
 
+// Update
+GumUI.Update(gameTime);
 
-</code></pre>
+// Draw
+GumUI.Draw();
+```
 
 [Try on XnaFiddle.NET](https://xnafiddle.net/#snippet=H4sIAAAAAAAAA3VQwU4CMRD9laanJSHNgtEDhIOsxpCoMbKJB9dD3R1kwm5r2lkhEv7ddltAiexh2zfvzUzf2_KZvWsbPiLTQp-3FtWH5aNX7oriBQ0sjGyAv_U5KiSUNX4DH_EvaZglWa6epIKaTZiCNZsfCklvXKgjL66rKtfPWtMpMf-UpdvoBlyddKhyqU0SDpGBIjC-1y9-b4m0ikunHfhnYbbEukqC1rPhJnLYkGst2jQdDrMayxV7gICOolDvqtMJS2yfQY9NPL64LdS2UMx9fwfeSIIcGxCPei1yPSfjfHXP2sVnkxNO9Sa-Ow-oU0TG5V3R0vGDy_SMnajcJ1Gj_TXyPqCzWUS1pxcuW1TE0LWmY3d03jI28CD4Dv_ewW7sFjOCxvqhSUjN4xhnTIxhZ5vvfgAhBmriXQIAAA)
 
@@ -89,103 +58,53 @@ The following image shows a screen similar to the one above created in the Gum t
 
 <figure><img src="../../.gitbook/assets/15_08 47 22.png" alt=""><figcaption></figcaption></figure>
 
-The following code can be used to load and interact with the controls:
+After [loading the Gum project](../getting-started/setup/loading-a-gum-project-.gumx.md), the following code can be used to interact with the controls:
 
-<pre class="language-csharp"><code class="lang-csharp">public class Game1 : Game
+```csharp
+// Initialize
+var screen = new ExampleScreen();
+screen.AddToRoot();
+
+screen.ButtonStandardInstance.Click += (s,e) =>
 {
-    private GraphicsDeviceManager _graphics;
-<strong>    GumService GumUI => GumService.Default;
-</strong>    public Game1()
-    {
-        _graphics = new GraphicsDeviceManager(this);
-        Content.RootDirectory = "Content";
-        IsMouseVisible = true;
-    }
+    screen.ButtonStandardInstance.Text = DateTime.Now.ToString();
+};
 
-    protected override void Initialize()
-    {
-<strong>        GumUI.Initialize(this, "GumProject/GumProject.gumj");
-</strong>
-<strong>        var screen = new ExampleScreen();
-</strong><strong>        screen.AddToRoot();
-</strong>
-<strong>        screen.ButtonStandardInstance.Click += (s,e) =>
-</strong><strong>        {
-</strong><strong>            screen.ButtonStandardInstance.Text = DateTime.Now.ToString();
-</strong><strong>        };
-</strong>
-<strong>        for(int i = 0; i &#x3C; 10; i++)
-</strong><strong>        {
-</strong><strong>            screen.ListBoxInstance.Items.Add("Item " + (i + 1));
-</strong><strong>        }
-</strong>
-        base.Initialize();
-    }
-
-    protected override void Update(GameTime gameTime)
-    {
-<strong>        GumUI.Update(gameTime);
-</strong>        base.Update(gameTime);
-    }
-
-    protected override void Draw(GameTime gameTime)
-    {
-        GraphicsDevice.Clear(Color.CornflowerBlue);
-<strong>        GumUI.Draw();
-</strong>        base.Draw(gameTime);
-    }
+for(int i = 0; i < 10; i++)
+{
+    screen.ListBoxInstance.Items.Add("Item " + (i + 1));
 }
 
-</code></pre>
+// Update
+GumUI.Update(gameTime);
+
+// Draw
+GumUI.Draw();
+```
 
 Generated code is optional - code can access Gum objects without any generated code as shown in the following block:
 
-<pre class="language-csharp"><code class="lang-csharp">public class Game1 : Game
+```csharp
+// Initialize
+var screen = ObjectFinder.Self.GumProjectSave.Screens
+    .First().ToGraphicalUiElement();
+screen.AddToRoot();
+
+var button = screen.GetFrameworkElementByName<Button>("ButtonStandardInstance");
+button.Click += (s,e) =>
 {
-    private GraphicsDeviceManager _graphics;
-<strong>    GumService GumUI => GumService.Default;
-</strong>    public Game1()
-    {
-        _graphics = new GraphicsDeviceManager(this);
-        Content.RootDirectory = "Content";
-        IsMouseVisible = true;
-    }
+    button.Text = DateTime.Now.ToString();
+};
 
-    protected override void Initialize()
-    {
-<strong>        GumUI.Initialize(this, "GumProject/GumProject.gumj");
-</strong>
-<strong>        var screen = ObjectFinder.Self.GumProjectSave.Screens
-</strong><strong>            .First().ToGraphicalUiElement();
-</strong><strong>        screen.AddToRoot();
-</strong>
-<strong>        var button = screen.GetFrameworkElementByName&#x3C;Button>("ButtonStandardInstance");
-</strong><strong>        button.Click += (s,e) =>
-</strong><strong>        {
-</strong><strong>            button.Text = DateTime.Now.ToString();
-</strong><strong>        };
-</strong>
-<strong>        var listBox = screen.GetFrameworkElementByName&#x3C;ListBox>("ListBoxInstance");
-</strong><strong>        for (int i = 0; i &#x3C; 10; i++)
-</strong><strong>        {
-</strong><strong>            listBox.Items.Add("Item " + (i + 1));
-</strong><strong>        }
-</strong>
-        base.Initialize();
-    }
-
-
-    protected override void Update(GameTime gameTime)
-    {
-<strong>        GumUI.Update(gameTime);
-</strong>        base.Update(gameTime);
-    }
-
-    protected override void Draw(GameTime gameTime)
-    {
-        GraphicsDevice.Clear(Color.CornflowerBlue);
-<strong>        GumUI.Draw();
-</strong>        base.Draw(gameTime);
-    }
+var listBox = screen.GetFrameworkElementByName<ListBox>("ListBoxInstance");
+for (int i = 0; i < 10; i++)
+{
+    listBox.Items.Add("Item " + (i + 1));
 }
-</code></pre>
+
+// Update
+GumUI.Update(gameTime);
+
+// Draw
+GumUI.Draw();
+```
