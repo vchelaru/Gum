@@ -530,26 +530,7 @@ public class ElementUndoStrategy : IUndoStrategy
             //    undoSnapshot.UndoState.StateName != _selectedState.SelectedStateSave?.Name)
             //{
 
-            StateSave? stateToSelect = null;
-            if(!string.IsNullOrEmpty(undoSnapshot.UndoState.CategoryName))
-            {
-                var category = toApplyTo.Categories.FirstOrDefault(item => item.Name == undoSnapshot.UndoState.CategoryName);
-                if(category != null)
-                {
-                    stateToSelect = category.States.FirstOrDefault(item => item.Name == undoSnapshot.UndoState.StateName);
-                }
-            }
-            else
-            {
-                stateToSelect = toApplyTo.States.FirstOrDefault(item => item.Name == undoSnapshot.UndoState.StateName);
-            }
-            if (stateToSelect != null)
-            {
-                isRecordingUndos = false;
-                _selectedState.SelectedStateSave = stateToSelect;
-
-                isRecordingUndos = true;
-            }
+            ReselectRestoredState(toApplyTo, undoSnapshot.UndoState);
 
             var newIndex = elementHistory.UndoIndex - 1;
 
@@ -563,6 +544,37 @@ public class ElementUndoStrategy : IUndoStrategy
                 shouldRefreshBehaviorView,
                 addedAndRemovedInstances, beforeRestore, undoSnapshot.RedoState?.Element);
         }
+    }
+
+    /// <summary>
+    /// Restoring a snapshot replaces the element's states and categories with clones, so the selected
+    /// state or category is a stale object. Select the live one with the snapshot's names; a category
+    /// selected without a state is reselected as the category.
+    /// </summary>
+    private void ReselectRestoredState(ElementSave element, UndoSnapshot snapshot)
+    {
+        StateSave? state;
+        StateSaveCategory? category = null;
+        if (!string.IsNullOrEmpty(snapshot.CategoryName))
+        {
+            category = element.Categories.FirstOrDefault(item => item.Name == snapshot.CategoryName);
+            state = category?.States.FirstOrDefault(item => item.Name == snapshot.StateName);
+        }
+        else
+        {
+            state = element.States.FirstOrDefault(item => item.Name == snapshot.StateName);
+        }
+
+        isRecordingUndos = false;
+        if (state != null)
+        {
+            _selectedState.SelectedStateSave = state;
+        }
+        else if (category != null && string.IsNullOrEmpty(snapshot.StateName))
+        {
+            _selectedState.SelectedStateCategorySave = category;
+        }
+        isRecordingUndos = true;
     }
 
     private void DoAfterUndoLogic(ElementSave toApplyTo,
@@ -685,20 +697,7 @@ public class ElementUndoStrategy : IUndoStrategy
             ReplayCrossElementVariableChanges(actionToRedo!.CrossElementVariableChanges, isUndo: false);
             ReplayAnimationRenames(actionToRedo.AnimationRenames, toApplyTo, isUndo: false);
 
-            if (redoSnapshot.CategoryName != _selectedState.SelectedStateCategorySave?.Name ||
-                redoSnapshot.StateName != _selectedState.SelectedStateSave?.Name)
-            {
-                var listOfStates = toApplyTo.States;
-                var state = listOfStates?.FirstOrDefault(item => item.Name == redoSnapshot.StateName);
-
-                if (state != null)
-                {
-                    isRecordingUndos = false;
-                    _selectedState.SelectedStateSave = state;
-
-                    isRecordingUndos = true;
-                }
-            }
+            ReselectRestoredState(toApplyTo, redoSnapshot);
 
             elementHistory.UndoIndex++;
 
