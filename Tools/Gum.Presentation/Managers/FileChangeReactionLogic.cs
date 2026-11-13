@@ -815,6 +815,11 @@ namespace Gum.Managers
                 _standardElementsManagerGumTool.FixCustomTypeConverters(gumProject);
 
 
+                // The reload replaces every InstanceSave, so remember the selection by name.
+                List<string> selectedInstanceNames = refreshingSelected
+                    ? GetSelectedInstanceNames()
+                    : new List<string>();
+
                 if (refreshingSelected)
                 {
                     _selectedState.SelectedElement = null;
@@ -826,6 +831,7 @@ namespace Gum.Managers
                 if(refreshingSelected)
                 {
                     _selectedState.SelectedElement = element;
+                    ReselectInstancesByName(element, selectedInstanceNames);
                 }
                 // The reloaded file can hold an element under another name.
                 if (element != null)
@@ -872,6 +878,47 @@ namespace Gum.Managers
             {
                 // todo - this isn't working if I rename a variable...
                 RefreshCanvasAndVariables();
+            }
+        }
+
+        private List<string> GetSelectedInstanceNames()
+        {
+            List<string> names = new List<string>();
+            IEnumerable<InstanceSave>? selected = _selectedState.SelectedInstances;
+            if (selected == null) return names;
+
+            foreach (InstanceSave? instance in selected)
+            {
+                if (!string.IsNullOrEmpty(instance?.Name))
+                {
+                    names.Add(instance!.Name);
+                }
+            }
+            return names;
+        }
+
+        /// <summary>
+        /// Selects the instances of the reloaded <paramref name="element"/> that match <paramref name="names"/>.
+        /// A name no longer in the file (deleted or renamed outside Gum) is skipped; if none match, only
+        /// the element stays selected.
+        /// </summary>
+        private void ReselectInstancesByName(ElementSave? element, List<string> names)
+        {
+            if (element == null || names.Count == 0) return;
+
+            List<InstanceSave> matches = new List<InstanceSave>();
+            foreach (string name in names)
+            {
+                InstanceSave? match = element.Instances.FirstOrDefault(i => i != null && i.Name == name);
+                if (match != null && !matches.Contains(match))
+                {
+                    matches.Add(match);
+                }
+            }
+
+            if (matches.Count > 0)
+            {
+                _selectedState.SelectedInstances = matches;
             }
         }
 
