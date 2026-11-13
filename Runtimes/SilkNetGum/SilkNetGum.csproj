@@ -48,6 +48,11 @@
 	<!-- ===== Input host half (the stack SkiaGum omits because it is render-only) ===== -->
 	<Import Project="..\SkiaInputHost.props" />
 
+	<ItemGroup>
+		<!-- Gum.Color, the XNA-compatible color docs snippets use. Kept out of SkiaGum so KNI and Stride users' own Color stays unambiguous. -->
+		<Compile Include="..\SkiaHost\Color.cs" Link="Color.cs" />
+	</ItemGroup>
+
 	<Import Project="..\SkiaPackages.props" />
 
 	<ItemGroup>
