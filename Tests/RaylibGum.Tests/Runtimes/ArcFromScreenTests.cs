@@ -30,7 +30,7 @@ public class ArcFromScreenTests : BaseTestClass
         screen.DefaultState.Variables.Add(new VariableSave { Name = "ArcInstance.StartAngle", Type = "float", Value = 30f, SetsValue = true });
 
         typeof(SystemManagers).GetMethod("RegisterComponentRuntimeInstantiations", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!
-            .Invoke(new SystemManagers(), null);
+            .Invoke(new SystemManagers(), new object[] { true });
 
         GumProjectSave project = new();
         project.StandardElements.Add(arcStandard);

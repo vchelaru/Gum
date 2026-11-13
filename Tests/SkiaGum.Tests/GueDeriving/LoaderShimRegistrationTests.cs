@@ -23,8 +23,8 @@ public class LoaderShimRegistrationTests
 {
     public LoaderShimRegistrationTests()
     {
-        // RegisterComponentRuntimeInstantiations is private and normally runs once behind
-        // SystemManagers.Initialize's HasInitializedGlobal gate; invoke it directly via reflection
+        // RegisterComponentRuntimeInstantiations is private and runs from SystemManagers.Initialize,
+        // which overwrites only on its first call in the process; invoke it directly via reflection
         // (same pattern as MonoGameGum.Tests' ElementSaveExtensionsTests) so registration is
         // deterministic and needs no GraphicsDevice.
         SystemManagers managers = new SystemManagers();
@@ -32,7 +32,7 @@ public class LoaderShimRegistrationTests
             "RegisterComponentRuntimeInstantiations",
             BindingFlags.Instance | BindingFlags.NonPublic);
         method.ShouldNotBeNull("RegisterComponentRuntimeInstantiations must exist on SystemManagers.");
-        method!.Invoke(managers, new object[] { false }); // onlyMissing: false, as on the first Initialize
+        method!.Invoke(managers, new object[] { true }); // overwrite: true, as on the first Initialize
     }
 
 #pragma warning disable CS0618 // intentionally pinning the obsolete back-compat shim types

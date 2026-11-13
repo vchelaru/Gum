@@ -165,7 +165,7 @@ public class RaylibBlendDefaultsTests : BaseTestClass
         }
 
         typeof(SystemManagers).GetMethod("RegisterComponentRuntimeInstantiations", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!
-            .Invoke(new SystemManagers(), null);
+            .Invoke(new SystemManagers(), new object[] { true });
 
         GumProjectSave project = new();
         project.StandardElements.Add(standard);

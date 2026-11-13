@@ -107,10 +107,30 @@ namespace GumRuntime
         /// wrapper has been registered; see <c>Gum.Wireframe.FallbackRenderableFactory</c>
         /// and <see href="https://github.com/vchelaru/Gum/issues/2915">issue #2915</see> for
         /// the architectural background.
+        /// <para>
+        /// A registration for a standard type (for example a <c>TextRuntime</c> subclass for
+        /// <c>"Text"</c>) survives a repeat <c>SystemManagers.Initialize</c>, which registers only the
+        /// standard types missing from the registry and never overrides a host registration. To
+        /// return to the stock runtimes, call <see cref="Reset"/> and then <c>SystemManagers.Initialize</c>.
+        /// </para>
         /// </remarks>
         public static void RegisterGueInstantiation<T>(string elementName, Func<T> templateFunc) where T : GraphicalUiElement
         {
             WriteLayer.SetFunc(elementName, templateFunc);
+        }
+
+        /// <summary>
+        /// Registers a factory for <paramref name="elementName"/> like
+        /// <see cref="RegisterGueInstantiation{T}(string, Func{T})"/>. When
+        /// <paramref name="overwriteIfAlreadyExists"/> is false and the name already has a
+        /// registration, the existing one is kept.
+        /// </summary>
+        public static void RegisterGueInstantiation<T>(string elementName, Func<T> templateFunc, bool overwriteIfAlreadyExists) where T : GraphicalUiElement
+        {
+            if (overwriteIfAlreadyExists || !IsRegistered(elementName))
+            {
+                WriteLayer.SetFunc(elementName, templateFunc);
+            }
         }
 
         internal static bool IsRegistered(string elementName)
@@ -2379,6 +2399,12 @@ namespace GumRuntime
             }
         }
 
+        /// <summary>
+        /// Clears every element-type registration: the process-wide ones and the current service's.
+        /// The next <c>SystemManagers.Initialize</c> registers the standard runtimes again, so Reset
+        /// followed by Initialize returns the registry to stock and drops any host registration for a
+        /// standard type.
+        /// </summary>
         public static void Reset()
         {
             ElementTypeRegistry.Base.Clear();
