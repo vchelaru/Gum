@@ -1,5 +1,8 @@
 using System;
 using Gum;
+using Gum.Forms.Controls;
+using Gum.GueDeriving;
+using Gum.Wireframe;
 {{HostUsings}}
 using Stride.CommunityToolkit.Engine;
 using Stride.CommunityToolkit.Rendering.Compositing;

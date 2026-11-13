@@ -86,6 +86,33 @@ public class NewProjectDemoScreenHostTests : IDisposable
         // The core overload (systemManagers, addToManagers) exists on every runtime, stable and source; the no-argument one is MonoGameGum only.
     }
 
+    // A snippet pasted from the docs (new Button(), Anchor.Center, new RectangleRuntime()) compiles in the generated host.
+    [Theory]
+    [InlineData(HostPlatform.MonoGame, false)]
+    [InlineData(HostPlatform.MonoGame, true)]
+    [InlineData(HostPlatform.Kni, false)]
+    [InlineData(HostPlatform.KniSkia, false)]
+    [InlineData(HostPlatform.Raylib, false)]
+    [InlineData(HostPlatform.Raylib, true)]
+    [InlineData(HostPlatform.SilkNet, false)]
+    [InlineData(HostPlatform.SilkNet, true)]
+    [InlineData(HostPlatform.Stride, false)]
+    [InlineData(HostPlatform.Brutal, false)]
+    public void Host_HasTheUsingsDocsSnippetsNeed_OnceEach(HostPlatform platform, bool generated)
+    {
+        (NewProjectService service, ResolvedNewProject resolved, NewProjectFilesResult files) = Create(platform);
+        if (generated)
+        {
+            service.UpdateHost(resolved, files, packagesAdded: false, screenCodeGenerated: true);
+        }
+
+        string host = ReadHost(platform);
+        foreach (string expected in new[] { "using Gum;", "using Gum.Forms.Controls;", "using Gum.Wireframe;", "using Gum.GueDeriving;" })
+        {
+            Regex.Matches(host, "^\\s*" + Regex.Escape(expected) + "\\s*$", RegexOptions.Multiline).Count.ShouldBe(1, expected);
+        }
+    }
+
     // The host's own Gum handle: GumUI on every platform (#7671, #7788).
     [Theory]
     [InlineData(HostPlatform.MonoGame, "GumUI")]

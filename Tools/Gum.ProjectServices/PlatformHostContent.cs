@@ -66,7 +66,7 @@ internal static class PlatformHostContent
         if (screen != null)
         {
             usings.AddRange(generated
-                ? new[] { "using Gum.Forms.Controls;", $"using {screen.Namespace};" }
+                ? new[] { $"using {screen.Namespace};" }
                 : new[] { "using Gum.Managers;", "using GumRuntime;" });
         }
 
