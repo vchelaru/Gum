@@ -18,10 +18,10 @@ The rest of this page adds Gum to a game you already have.
 
 Gum has one package per graphics API. Add only one of them:
 
-| Graphics API | Gum package | SkiaGameRendering package (pulled in for you) |
-| --- | --- | --- |
-| OpenGL 3.3 | `Gum.Brutal.OGL` | `SkiaGameRendering.Brutal.OGL` |
-| Vulkan 1.3 | `Gum.Brutal.Vulkan` | `SkiaGameRendering.Brutal` |
+| Graphics API | Gum package |
+| --- | --- |
+| OpenGL 3.3 | `Gum.Brutal.OGL` |
+| Vulkan 1.3 | `Gum.Brutal.Vulkan` |
 
 {% tabs %}
 {% tab title="OpenGL" %}
@@ -61,7 +61,7 @@ The Vulkan program in [Full Program](#full-program) uses `unsafe` blocks, so als
 {% endtab %}
 {% endtabs %}
 
-Both packages render through SkiaSharp and add real Forms input (mouse, keyboard, gamepad, focus) from a BRUTAL `GlfwWindow`. Gum creates the Skia GPU context itself and puts the frame on the window: with OpenGL it draws straight into the default framebuffer, and with Vulkan it renders to an image of its own and presents it, recreating that image when the window's framebuffer size changes. You never call Skia or SkiaGameRendering. Both packages work on Windows and Linux. The [Full Program](#full-program) below needs only one of them. Extra features come as separate packages, listed in [Optional Extras](#optional-extras).
+Both packages read mouse, keyboard and gamepad input from your BRUTAL `GlfwWindow` and draw Gum to it, so you never write rendering code for Gum. They work on Windows and Linux.
 
 Do not reference both packages in one project. They declare the same `GumService` type.
 

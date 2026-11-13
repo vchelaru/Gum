@@ -81,7 +81,7 @@ To create a project that already references Gum source, run [`gumcli new MyGame 
 
 ## Initializing Gum
 
-Gum takes the window you create, then creates the input context and the SkiaSharp surface over the window's framebuffer, and follows window resizes. The following is a complete `Program.cs` that also shows a button. It runs on Windows, macOS, and Linux. It needs only the packages above and builds its UI in code, so it runs without a Gum project.
+Gum takes the window you create and handles its input, drawing and resizing. The following is a complete `Program.cs` that also shows a button. It runs on Windows, macOS, and Linux. It needs only the packages above and builds its UI in code, so it runs without a Gum project.
 
 {% hint style="info" %}
 Available in preview NuGet packages (use a `-preview` version), or now if building Gum from source.
