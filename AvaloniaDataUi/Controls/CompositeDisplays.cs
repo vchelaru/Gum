@@ -988,6 +988,13 @@ public class FileSelectionDisplay : DataUiDisplayBase
 
     private void CommitTypedText()
     {
+        // Replacing the items makes the ComboBox move focus and clear its text mid-load; that lost-focus
+        // is not the user finishing an edit, so it must not commit the cleared text as an empty path.
+        if (_isLoadingChoices)
+        {
+            return;
+        }
+
         string typed = _choiceBox.Text ?? string.Empty;
         if (_fileChoices != null && typed != _shownChoiceText)
         {

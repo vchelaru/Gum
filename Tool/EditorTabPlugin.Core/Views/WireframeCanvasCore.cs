@@ -519,7 +519,15 @@ public sealed class WireframeCanvasCore
         FrameUpdate?.Invoke();
         GraphicsDevice.Clear(BackgroundColor);
         _pluginManager.BeforeRender();
-        Renderer.Self.Draw((SystemManagers)null!);
+        try
+        {
+            Renderer.Self.Draw((SystemManagers)null!);
+        }
+        catch (ObjectDisposedException e)
+        {
+            Gum.Wireframe.TextureDiagnostics.RecordDrawFailure(e);
+            throw;
+        }
         _pluginManager.AfterRender();
     }
 

@@ -43,6 +43,11 @@ public static class DiagnosticLogFile
     /// </summary>
     public static FileStream Open(string path, bool rotate = true)
     {
+        string? directory = Path.GetDirectoryName(path);
+        if (!string.IsNullOrEmpty(directory))
+        {
+            Directory.CreateDirectory(directory);
+        }
         bool append = !rotate || !Rotate(path);
         return new FileStream(path, append ? FileMode.Append : FileMode.Create, FileAccess.Write, FileShare.ReadWrite);
     }

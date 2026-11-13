@@ -180,6 +180,7 @@ public partial class WireframeObjectManager : IWireframeObjectManager
 
                 if(forceReloadTextures)
                 {
+                    TextureDiagnostics.RecordDrop("RefreshAll rebuild");
                     LoaderManager.Self.DisposeAndClear();
                     LoaderManager.Self.CacheTextures = false;
                 }
@@ -272,6 +273,7 @@ public partial class WireframeObjectManager : IWireframeObjectManager
     {
         if (forceReloadTextures)
         {
+            TextureDiagnostics.RecordDrop("RefreshAll with nothing shown");
             LoaderManager.Self.DisposeAndClear();
         }
     }
