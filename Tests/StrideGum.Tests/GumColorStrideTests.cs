@@ -3,13 +3,13 @@ using Gum.GueDeriving;
 using Shouldly;
 using SkiaSharp;
 using Stride.Core.Mathematics;
-using Color = Gum.Color;
+using Color = Gum.XnaCompat.Color;
 using StrideColor = Stride.Core.Mathematics.Color;
 
 namespace StrideGum.Tests;
 
 /// <summary>
-/// Gum.Color converts to and from Stride's Color. A game file that adds <c>using Color = Gum.Color;</c>
+/// Gum.Color converts to and from Stride's Color. A game file that adds <c>using Color = Gum.XnaCompat.Color;</c>
 /// compiles MonoGame docs snippets unchanged, and the same file still passes the color to Stride calls.
 /// The usings above are the ones a game file has: Gum, Stride.Core.Mathematics and the alias.
 /// </summary>

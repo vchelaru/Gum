@@ -68,6 +68,11 @@
 	     packages (below) pin it exactly, and NuGet flags anything lower as a downgrade. -->
 	<Import Project="..\SkiaPackages.props" />
 
+	<!-- Gum.Color compiles into Gum.XnaCompat here, not Gum: with using Gum; and the Stride usings, Color would otherwise be ambiguous (CS0104) in every existing game file. -->
+	<PropertyGroup>
+		<DefineConstants>$(DefineConstants);GUM_COLOR_OPT_IN</DefineConstants>
+	</PropertyGroup>
+
 	<ItemGroup>
 		<!-- Stride only: the renderer registers itself into the compositor directly, so a game's
 		     Stride.CommunityToolkit version cannot break this package (#6149). -->

@@ -132,7 +132,7 @@ The `.Skia` theme packages are available in December 2026, or now if building Gu
 Gum visuals take a Skia color, which KNI's `Color` is not. Add this line to a file that sets visual colors, and `Color.Red` and `new Color(255, 0, 0)` work as they do in the rest of these docs. `Gum.Color` converts to and from KNI's `Color`, so the file can still pass it to KNI, such as `GraphicsDevice.Clear(Color.CornflowerBlue)`.
 
 ```csharp
-using Color = Gum.Color;
+using Color = Gum.XnaCompat.Color;
 ```
 
 {% hint style="info" %}

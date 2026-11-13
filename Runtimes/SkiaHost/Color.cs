@@ -3,7 +3,11 @@
 using SkiaSharp;
 using System;
 
+#if GUM_COLOR_OPT_IN
+namespace Gum.XnaCompat;
+#else
 namespace Gum;
+#endif
 
 /// <summary>
 /// An XNA/MonoGame-compatible color that converts implicitly to and from <see cref="SKColor"/>, so code

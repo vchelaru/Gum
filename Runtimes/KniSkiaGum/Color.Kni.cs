@@ -1,4 +1,8 @@
+#if GUM_COLOR_OPT_IN
+namespace Gum.XnaCompat;
+#else
 namespace Gum;
+#endif
 
 public partial struct Color
 {

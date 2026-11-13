@@ -3,13 +3,13 @@ using Gum.GueDeriving;
 using Microsoft.Xna.Framework;
 using Shouldly;
 using SkiaSharp;
-using Color = Gum.Color;
+using Color = Gum.XnaCompat.Color;
 using XnaColor = Microsoft.Xna.Framework.Color;
 
 namespace KniSkiaGum.Tests;
 
 /// <summary>
-/// Gum.Color converts to and from KNI's Color. A game file that adds <c>using Color = Gum.Color;</c>
+/// Gum.Color converts to and from KNI's Color. A game file that adds <c>using Color = Gum.XnaCompat.Color;</c>
 /// compiles MonoGame docs snippets unchanged, and the same file still passes the color to KNI calls.
 /// The usings above are the ones a game file has: Gum, Microsoft.Xna.Framework and the alias.
 /// </summary>

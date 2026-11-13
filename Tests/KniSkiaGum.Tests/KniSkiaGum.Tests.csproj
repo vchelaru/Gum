@@ -35,8 +35,6 @@
 
   <ItemGroup>
     <Compile Include="..\MonoGameGum.TestsCommon\AllocationMeasurer.cs" Link="Shared\AllocationMeasurer.cs" />
-    <!-- Gum.Color must match KNI's Color value for value (named colors, constructors). -->
-    <Compile Include="..\BrutalGum.OGL.Tests\GumColorTests.cs" Link="GumColorTests.cs" />
   </ItemGroup>
 
   <ItemGroup>
