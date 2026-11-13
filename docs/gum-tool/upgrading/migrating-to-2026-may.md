@@ -303,6 +303,7 @@ The obsoleted types and their replacements:
 
 ```csharp
 CircleRuntime circle = new();
+circle.IsFilled = true;
 circle.FillColor = Color.Red;
 circle.StrokeWidth = 0; // disable the default white outline
 ```
@@ -317,7 +318,7 @@ Earlier in this same unreleased cycle (issue #2790 / #2814) `CircleRuntime` and 
 - **Hide fill**: set `IsFilled = false` (survives round-tripping the color value).
 - **Hide stroke**: set `StrokeWidth = 0` (a zero-width stroke is already a no-op in every backend, so this expresses intent without a separate flag).
 
-**Default visual is unchanged:** a freshly-constructed `CircleRuntime` / `RectangleRuntime` still renders as a stroke-only outline, preserving the pre-#2938 visual that existing sample code assumes ("construct + only set `StrokeColor`"). This is achieved by defaulting `FillColor` to transparent (alpha 0) while leaving `IsFilled = true`. Assigning `FillColor` to a visible color lights up the fill without flipping `IsFilled`, so existing code like `frame.FillColor = darkGray;` continues to work.
+**Default visual is unchanged:** a freshly-constructed `CircleRuntime` / `RectangleRuntime` still renders as a stroke-only outline, preserving the pre-#2938 visual that existing sample code assumes ("construct + only set `StrokeColor`"). `IsFilled` defaults to `false` and `FillColor` defaults to opaque white, so set `IsFilled = true` to show the fill.
 
 The runtimes also gain channel-decomposition setters on both colors so animations and the Gum tool's variable system can drive each channel independently:
 
@@ -362,15 +363,18 @@ rounded.CornerRadius = 8;
 
 ```csharp
 var rect = new RectangleRuntime();
+rect.IsFilled = true;
 rect.FillColor = Color.Red;
 
 var disc = new CircleRuntime();
+disc.IsFilled = true;
 disc.FillColor = Color.Yellow;
 
 var ring = new CircleRuntime();
 ring.StrokeColor = Color.Yellow;
 
 var rounded = new RectangleRuntime();
+rounded.IsFilled = true;
 rounded.FillColor = new Color(0, 128, 255);
 rounded.CornerRadius = 8;
 ```
@@ -460,12 +464,13 @@ circle.Color2 = Color.White;
 var circle = new CircleRuntime();
 circle.Width = 56;
 circle.Height = 56;
-circle.FillColor = Color.Black;   // light the fill up and set the gradient start
+circle.IsFilled = true;
+circle.FillColor = Color.Black;   // set the gradient start
 circle.UseGradient = true;
 circle.Color2 = Color.White;
 ```
 
-Only the alpha of `FillColor` gates whether the fill paints at all. `StrokeColor` works the same way for the outline on backends that support gradient-on-stroke (Skia and Apos.Shapes; raylib's outline is solid only).
+The fill paints only when `IsFilled` is `true` and `FillColor` is not transparent. A transparent `StrokeColor` likewise suppresses the outline gradient on backends that support gradient-on-stroke (Skia and Apos.Shapes; raylib's outline is solid only).
 
 ### Breaking: `Color1` removed from `CircleRuntime` / `RectangleRuntime`, gradient start is now the fill/stroke color
 

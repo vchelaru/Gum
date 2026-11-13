@@ -115,7 +115,7 @@ BubblegumTheme.Apply();
 
 {% tab title="Skia" %}
 ```bash
-dotnet add package Gum.Themes.Bubblegum.Skia
+dotnet add package Gum.Themes.Bubblegum.Skia --prerelease
 ```
 
 ```csharp
@@ -198,7 +198,7 @@ DarkProTheme.Apply();
 
 {% tab title="Skia" %}
 ```bash
-dotnet add package Gum.Themes.DarkPro.Skia
+dotnet add package Gum.Themes.DarkPro.Skia --prerelease
 ```
 
 ```csharp
@@ -277,7 +277,7 @@ EditorTheme.Apply();
 
 {% tab title="Skia" %}
 ```bash
-dotnet add package Gum.Themes.Editor.Skia
+dotnet add package Gum.Themes.Editor.Skia --prerelease
 ```
 
 ```csharp
@@ -359,7 +359,7 @@ ForestGladeTheme.Apply();
 
 {% tab title="Skia" %}
 ```bash
-dotnet add package Gum.Themes.ForestGlade.Skia
+dotnet add package Gum.Themes.ForestGlade.Skia --prerelease
 ```
 
 ```csharp
@@ -448,7 +448,7 @@ HazardTheme.Apply();
 
 {% tab title="Skia" %}
 ```bash
-dotnet add package Gum.Themes.Hazard.Skia
+dotnet add package Gum.Themes.Hazard.Skia --prerelease
 ```
 
 ```csharp
@@ -540,7 +540,7 @@ MeadowTheme.Apply();
 
 {% tab title="Skia" %}
 ```bash
-dotnet add package Gum.Themes.Meadow.Skia
+dotnet add package Gum.Themes.Meadow.Skia --prerelease
 ```
 
 ```csharp
@@ -631,7 +631,7 @@ NeonTheme.Apply();
 
 {% tab title="Skia" %}
 ```bash
-dotnet add package Gum.Themes.Neon.Skia
+dotnet add package Gum.Themes.Neon.Skia --prerelease
 ```
 
 ```csharp

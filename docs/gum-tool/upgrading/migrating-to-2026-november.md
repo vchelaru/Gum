@@ -461,6 +461,7 @@ circle.Color = SkiaSharp.SKColors.Red;
 
 ```csharp
 // Initialize
+circle.IsFilled = true;
 circle.FillColor = SkiaSharp.SKColors.Red;
 ```
 
