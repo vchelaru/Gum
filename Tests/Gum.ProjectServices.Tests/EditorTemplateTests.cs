@@ -289,12 +289,12 @@ public class EditorTemplateTests
     }
 
     [Fact]
-    public void ListBox_ShouldUsePanelBackgroundWithAPrimaryBorder()
+    public void ListBox_ShouldUseRecessedBackgroundWithAPrimaryBorder()
     {
         GumProjectSave project = LoadEditor();
         ComponentSave listBox = GetControl(project, "ListBox");
 
-        GetStyleReference(listBox.DefaultState!, "Background", "Color").ShouldBe("Components/Editor/Styles.PanelBackground.FillColor");
+        GetStyleReference(listBox.DefaultState!, "Background", "Color").ShouldBe("Components/Editor/Styles.RecessedBackground.FillColor");
         GetStyleReference(listBox.DefaultState!, "Outline", "StrokeColor").ShouldBe("Components/Editor/Styles.Primary.FillColor");
         listBox.DefaultState!.Variables.Single(v => v.Name == "Outline.Parent").Value.ShouldBe("Background");
         GetBool(listBox.DefaultState!, "Outline.Visible").ShouldBe(true);
@@ -319,14 +319,14 @@ public class EditorTemplateTests
     }
 
     [Fact]
-    public void ScrollBarAndScrollViewer_ShouldUseRecessedAndPanelBackgrounds()
+    public void ScrollBarAndScrollViewer_ShouldUseRecessedBackgrounds()
     {
         GumProjectSave project = LoadEditor();
 
         GetStyleReference(GetControl(project, "ScrollBar").DefaultState!, "TrackBackground", "Color")
             .ShouldBe("Components/Editor/Styles.RecessedBackground.FillColor");
         GetStyleReference(GetControl(project, "ScrollViewer").DefaultState!, "Background", "Color")
-            .ShouldBe("Components/Editor/Styles.PanelBackground.FillColor");
+            .ShouldBe("Components/Editor/Styles.RecessedBackground.FillColor");
     }
 
     [Fact]
