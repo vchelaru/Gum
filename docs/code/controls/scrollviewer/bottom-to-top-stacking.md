@@ -22,6 +22,7 @@ We will follow a similar pattern to the Bottom-Up Stack example. Specifically we
 The following code shows how to achieve this:
 
 ```csharp
+// Class scope
 ScrollViewer scrollViewer;
 
 // Initialize

@@ -60,6 +60,9 @@ The Polygon type can be used to create custom shapes. All events respect the sha
 The following code shows how to create hit testing for polygons:
 
 ```csharp
+// Class scope
+Label label;
+
 // Initialize
 label = new Label();
 label.X = 10;

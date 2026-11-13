@@ -8,7 +8,7 @@ Hot reload watches for changes to Gum project files (`.gumj`, `.gusj`, `.gucj`, 
 
 ## Enabling Hot Reload
 
-Call `EnableHotReload` after [loading your Gum project](../getting-started/setup/loading-a-gum-project-.gumx.md), passing the absolute path to your **source** `.gumj` file — not the copy in your `bin/Content` folder.
+Call `EnableHotReload` after [loading your Gum project](../getting-started/setup/loading-a-gum-project-.gumx.md), passing the absolute path to your **source** `.gumj` file rather than the copy in your `bin/Content` folder.
 
 ```csharp
 // Initialize

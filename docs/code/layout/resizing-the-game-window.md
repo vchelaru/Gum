@@ -24,7 +24,7 @@ GumUI.EnableZoomToWindow();
 GumUI.EnableExpandToWindow();
 ```
 
-Both methods are available on MonoGame, KNI, FNA, and raylib. Calling either method replaces any previously enabled policy, so flipping at runtime — for example from a settings menu — is a single method call.
+Both methods are available on MonoGame, KNI, FNA, and raylib. Calling either method replaces any previously enabled policy, so flipping at runtime, for example from a settings menu, is a single method call.
 
 ### `defaultZoom`
 

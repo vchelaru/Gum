@@ -29,7 +29,6 @@ textRuntime.Height = 0;
 textRuntime.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
 textRuntime.MaxLettersToShow = 0;
 
-
 // Update
 GumUI.Update(gameTime);
 

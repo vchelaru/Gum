@@ -74,7 +74,7 @@ No additional setup is required to use shapes on raylib. The full surface is bui
 
 {% tabs %}
 {% tab title="MonoGame / KNI / FNA" %}
-Whether you are using code-only or the Gum tool, add the following line of code in your Initialize method, after `GumUI.Initialize(...)`:
+Whether you are using code-only or the Gum tool, add the following line of code after `GumUI.Initialize`:
 
 ```csharp
 // Initialize

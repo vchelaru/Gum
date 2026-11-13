@@ -21,7 +21,6 @@ The following code shows how to add ColoredRectangleRuntime instances when the C
 // Initialize
 GumUI.Renderer.Camera.Zoom = 2;
 
-
 // Update
 GumUI.Update(gameTime);
 

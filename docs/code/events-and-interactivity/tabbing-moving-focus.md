@@ -294,7 +294,6 @@ for(int i = 0; i < 5; i++)
 label = new ();
 stackPanel.AddChild(label);
 
-
 // Update
 GumUI.Update(gameTime);
 

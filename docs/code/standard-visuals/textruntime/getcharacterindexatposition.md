@@ -38,7 +38,6 @@ textRuntime.Anchor(Anchor.Center);
 textRuntime.HorizontalAlignment = HorizontalAlignment.Left;
 textRuntime.VerticalAlignment = VerticalAlignment.Top;
 
-
 // Update
 GumUI.Update(gameTime);
 
