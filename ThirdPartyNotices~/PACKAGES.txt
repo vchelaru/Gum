@@ -35,5 +35,4 @@ System.Text.Encoding.CodePages 8.0.0 : MIT
 System.Text.Encodings.Web 8.0.0 : MIT
 System.Text.Json 8.0.5 : MIT
 System.Threading.Tasks.Extensions 4.5.4 : https://github.com/dotnet/corefx/blob/master/LICENSE.TXT
-System.ValueTuple 4.5.0 : https://github.com/dotnet/corefx/blob/master/LICENSE.TXT
-Topten.RichTextKit 0.6.170 : Apache-2.0
+Topten.RichTextKit 0.6.172 : Apache-2.0
