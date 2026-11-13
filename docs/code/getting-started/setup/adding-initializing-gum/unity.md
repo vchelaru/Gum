@@ -101,6 +101,7 @@ Unity does not run `[ModuleInitializer]` methods, so call the registration yours
 using Gum;
 using Gum.Forms;
 using Gum.Forms.Controls;
+using Gum.GueDeriving;
 using Gum.Unity;
 using UnityEngine;
 

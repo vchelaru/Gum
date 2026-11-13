@@ -204,6 +204,7 @@ The following is a complete `Program.cs` that opens a window, initializes Gum, s
 using Brutal.GlfwApi;
 using Gum;
 using Gum.Forms.Controls;
+using Gum.GueDeriving;
 using Gum.Wireframe;
 using System.Diagnostics;
 
@@ -248,6 +249,7 @@ using Brutal.VulkanApi;
 using Brutal.VulkanApi.Abstractions;
 using Gum;
 using Gum.Forms.Controls;
+using Gum.GueDeriving;
 using Gum.Wireframe;
 using System.Diagnostics;
 

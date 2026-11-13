@@ -91,6 +91,7 @@ Available in preview NuGet packages (use a `-preview` version), or now if buildi
 using System.Diagnostics;
 using Gum;
 using Gum.Forms.Controls;
+using Gum.GueDeriving;
 using Gum.Wireframe;
 using Silk.NET.Maths;
 using Silk.NET.OpenGL;
