@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.VisualTree;
@@ -22,14 +23,42 @@ public static class CapturedPointerDrag
     {
         bool isDragging = false;
         DataUiDisplayBase? owner = null;
+        List<(Control Control, object Tip)> hiddenTips = new();
 
         void EndForRebind(object? sender, EventArgs e) => End();
+
+        // A tooltip on the handle or any ancestor (the row) would pop up over the drag.
+        void HideTips()
+        {
+            for (Control? control = handle; control != null; control = control.GetVisualParent() as Control)
+            {
+                if (ToolTip.GetTip(control) is object tip)
+                {
+                    hiddenTips.Add((control, tip));
+                    ToolTip.SetTip(control, null);
+                }
+            }
+        }
+
+        void RestoreTips()
+        {
+            foreach ((Control control, object tip) in hiddenTips)
+            {
+                // The row may have set a newer tip meanwhile; keep that one.
+                if (ToolTip.GetTip(control) == null)
+                {
+                    ToolTip.SetTip(control, tip);
+                }
+            }
+            hiddenTips.Clear();
+        }
 
         void End()
         {
             if (isDragging)
             {
                 isDragging = false;
+                RestoreTips();
                 if (owner != null)
                 {
                     owner.InstanceMemberChanging -= EndForRebind;
@@ -46,6 +75,7 @@ public static class CapturedPointerDrag
                 return;
             }
             isDragging = true;
+            HideTips();
             // The row can be pointed at another member while the button is held (another element
             // selected); the drag then ends against the member it began on.
             owner = handle.FindAncestorOfType<DataUiDisplayBase>();
