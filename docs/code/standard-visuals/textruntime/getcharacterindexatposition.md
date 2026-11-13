@@ -22,64 +22,55 @@ The following code shows how to use the Gum cursor to hover over a TextRuntime a
 // Class scope
 TextRuntime textRuntime;
 
-protected override void Initialize()
+// Initialize
+textRuntime = new TextRuntime();
+textRuntime.AddToRoot();
+
+textRuntime.Text = 
+    "I am a text runtime which should line wrap because my " +
+    "width is set to an absolute 200 units";
+
+textRuntime.Width = 200;
+textRuntime.WidthUnits = Gum.DataTypes.DimensionUnitType.Absolute;
+
+textRuntime.Anchor(Anchor.Center);
+
+textRuntime.HorizontalAlignment = HorizontalAlignment.Left;
+textRuntime.VerticalAlignment = VerticalAlignment.Top;
+
+
+// Update
+GumUI.Update(gameTime);
+
+var cursor = GumUI.Cursor;
+var x = cursor.XRespectingGumZoomAndBounds();
+var y = cursor.YRespectingGumZoomAndBounds();
+
+if(textRuntime.HasCursorOver(GumUI.Cursor))
 {
-    GumUI.Initialize(this);
+    var innerText = (RenderingLibrary.Graphics.Text)textRuntime.RenderableComponent;
 
-    textRuntime = new TextRuntime();
-    textRuntime.AddToRoot();
+    int characterIndex = innerText.GetCharacterIndexAtPosition(x, y);
 
-    textRuntime.Text = 
-        "I am a text runtime which should line wrap because my " +
-        "width is set to an absolute 200 units";
-
-    textRuntime.Width = 200;
-    textRuntime.WidthUnits = Gum.DataTypes.DimensionUnitType.Absolute;
-
-    textRuntime.Anchor(Anchor.Center);
-
-    textRuntime.HorizontalAlignment = HorizontalAlignment.Left;
-    textRuntime.VerticalAlignment = VerticalAlignment.Top;
-
-    base.Initialize();
-}
-
-
-protected override void Update(GameTime gameTime)
-{
-    GumUI.Update(gameTime);
-
-    var cursor = GumUI.Cursor;
-    var x = cursor.XRespectingGumZoomAndBounds();
-    var y = cursor.YRespectingGumZoomAndBounds();
-
-    if(textRuntime.HasCursorOver(GumUI.Cursor))
+    if(characterIndex != -1)
     {
-        var innerText = (RenderingLibrary.Graphics.Text)textRuntime.RenderableComponent;
+        int indexLeft = characterIndex;
 
-        int characterIndex = innerText.GetCharacterIndexAtPosition(x, y);
-
-        if(characterIndex != -1)
+        // We need to loop through the wrapped text to see which line we're on:
+        foreach(var line in textRuntime.WrappedText)
         {
-            int indexLeft = characterIndex;
-
-            // We need to loop through the wrapped text to see which line we're on:
-            foreach(var line in textRuntime.WrappedText)
+            if(line.Length > indexLeft)
             {
-                if(line.Length > indexLeft)
-                {
-                    Debug.WriteLine($"At character {characterIndex}");
-                    Debug.WriteLine($"Character is {line[indexLeft]}");
-                    break;
-                }
-                else
-                {
-                    indexLeft -= line.Length;
-                }
+                Debug.WriteLine($"At character {characterIndex}");
+                Debug.WriteLine($"Character is {line[indexLeft]}");
+                break;
+            }
+            else
+            {
+                indexLeft -= line.Length;
             }
         }
     }
-    base.Update(gameTime);
 }
 ```
 

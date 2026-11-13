@@ -88,8 +88,6 @@ The type-based overload is the easiest starting point — it searches `Root`, `P
 
 ```csharp
 // Initialize
-GumUI.Initialize(this);
-
 var button = new Button();
 button.AddToRoot();
 button.IsVisible = false;

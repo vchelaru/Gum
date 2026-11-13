@@ -78,9 +78,10 @@ Whether you are using code-only or the Gum tool, add the following line of code 
 
 ```csharp
 // Initialize
-GumUI.Initialize(...);
 GumUI.UseShapes();
 ```
+
+Shapes also needs the HiDef graphics profile, set in the `Game1` constructor as shown in [Optional Extras](../getting-started/setup/adding-initializing-gum/monogame-kni-fna/README.md#optional-extras).
 
 {% hint style="info" %}
 Available in preview NuGet packages (use a `-preview` version), or now if building Gum from source.
@@ -98,67 +99,39 @@ No additional setup is required. The full surface is built into `CircleRuntime` 
 
 ### Code Example: Rendering Shapes in Code
 
-The following code shows how to add shapes to a MonoGame project:
+The following code shows how to add shapes in code:
 
 ```csharp
-public class Game1 : Game
-{
-    private GraphicsDeviceManager _graphics;
-    GumService GumUI => GumService.Default;
+// Initialize
+var circle = new CircleRuntime();
+circle.AddToRoot();
+circle.Width = 100;
+circle.Height = 100;
+circle.IsFilled = true;
+circle.FillColor = Color.Red;
 
-    public Game1()
-    {
-        _graphics = new GraphicsDeviceManager(this);
-        _graphics.GraphicsProfile = GraphicsProfile.HiDef;
-        Content.RootDirectory = "Content";
-        IsMouseVisible = true;
-    }
+var rectangle = new RectangleRuntime();
+rectangle.AddToRoot();
+rectangle.X = 100;
+rectangle.CornerRadius = 15;
+rectangle.IsFilled = true; // FillColor is the gradient start, so show the fill
+rectangle.FillColor = Color.Blue;
+rectangle.UseGradient = true;
+rectangle.Color2 = Color.Green;
 
-    protected override void Initialize()
-    {
-        GumUI.Initialize(this);
-        GumUI.UseShapes(); // Initialize shape renderer after GumUI
+var arc = new ArcRuntime();
+arc.AddToRoot();
+arc.X = 200;
+arc.Color = Color.Purple;
+arc.Thickness = 20;
+arc.StartAngle = 0;
+arc.SweepAngle = 270;
 
-        var circle = new CircleRuntime();
-        circle.AddToRoot();
-        circle.Width = 100;
-        circle.Height = 100;
-        circle.IsFilled = true;
-        circle.FillColor = Color.Red;
+// Update
+GumUI.Update(gameTime);
 
-        var rectangle = new RectangleRuntime();
-        rectangle.AddToRoot();
-        rectangle.X = 100;
-        rectangle.CornerRadius = 15;
-        rectangle.IsFilled = true; // FillColor is the gradient start, so show the fill
-        rectangle.FillColor = Color.Blue;
-        rectangle.UseGradient = true;
-        rectangle.Color2 = Color.Green;
-
-        var arc = new ArcRuntime();
-        arc.AddToRoot();
-        arc.X = 200;
-        arc.Color = Color.Purple;
-        arc.Thickness = 20;
-        arc.StartAngle = 0;
-        arc.SweepAngle = 270;
-
-        base.Initialize();
-    }
-
-    protected override void Update(GameTime gameTime)
-    {
-        GumUI.Update(gameTime);
-        base.Update(gameTime);
-    }
-
-    protected override void Draw(GameTime gameTime)
-    {
-        GraphicsDevice.Clear(Color.CornflowerBlue);
-        GumUI.Draw();
-        base.Draw(gameTime);
-    }
-}
+// Draw
+GumUI.Draw();
 ```
 
 <figure><img src="../../.gitbook/assets/06_05 57 11.png" alt=""><figcaption><p>Shapes rendered in an otherwise empty project</p></figcaption></figure>

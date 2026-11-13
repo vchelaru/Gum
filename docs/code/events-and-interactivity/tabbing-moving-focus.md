@@ -270,46 +270,36 @@ The following code shows how to display which button has focus with a label:
 // Class scope
 Label label;
 
-protected override void Initialize()
+// Initialize
+// Enables tabbing with the keyboard
+GumUI.UseKeyboardDefaults();
+
+StackPanel stackPanel = new();
+stackPanel.AddToRoot();
+stackPanel.Anchor(Anchor.Center);
+stackPanel.Spacing = 6;
+
+for(int i = 0; i < 5; i++)
 {
-    GumUI.Initialize(this);
-
-    // Enables tabbing with the keyboard
-    GumUI.UseKeyboardDefaults();
-
-    StackPanel stackPanel = new();
-    stackPanel.AddToRoot();
-    stackPanel.Anchor(Anchor.Center);
-    stackPanel.Spacing = 6;
-
-    for(int i = 0; i < 5; i++)
+    Button button = new();
+    stackPanel.AddChild(button);
+    button.Text = $"Button {i + 1}";
+    button.Name = button.Text;
+    if(i == 0)
     {
-        Button button = new();
-        stackPanel.AddChild(button);
-        button.Text = $"Button {i + 1}";
-        button.Name = button.Text;
-        if(i == 0)
-        {
-            button.IsFocused = true;
-        }
+        button.IsFocused = true;
     }
-
-    label = new ();
-    stackPanel.AddChild(label);
-
-    base.Initialize();
 }
 
+label = new ();
+stackPanel.AddChild(label);
 
-protected override void Update(GameTime gameTime)
-{
-    GumUI.Update(gameTime);
 
-    label.Text = 
-        $"Focused Control: {InteractiveGue.CurrentInputReceiver?.ToString() ?? "null"}";
+// Update
+GumUI.Update(gameTime);
 
-    base.Update(gameTime);
-}
+label.Text = 
+    $"Focused Control: {InteractiveGue.CurrentInputReceiver?.ToString() ?? "null"}";
 ```
 
 <figure><img src="../../.gitbook/assets/17_05 01 49.gif" alt=""><figcaption><p><code>CurrentInputReceiver</code> displayed on a <code>Label</code></p></figcaption></figure>

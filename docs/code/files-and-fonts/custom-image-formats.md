@@ -60,12 +60,12 @@ This decoder loads the first frame of an animated WebP file.
 
 ### Registering a Decoder
 
-Add the decoder to `LoaderManager.Self.ImageDecoders` before Gum loads your project. Textures that load before the decoder is registered go through Gum's own loading and fail for formats it does not know.
+Add the decoder to `LoaderManager.Self.ImageDecoders` before Gum [loads your project](../getting-started/setup/loading-a-gum-project-.gumx.md). Textures that load before the decoder is registered go through Gum's own loading and fail for formats it does not know.
 
 ```csharp
 // Initialize
+// Runs before the GumUI.Initialize call that loads your project
 RenderingLibrary.Content.LoaderManager.Self.ImageDecoders.Add(new WebPDecoder());
-GumUI.Initialize(this, "GumProject/GumProject.gumx");
 ```
 
 Gum asks decoders in the order they were added, and `Insert(0, decoder)` puts a decoder first.

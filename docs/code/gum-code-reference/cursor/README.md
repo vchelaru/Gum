@@ -57,13 +57,10 @@ if(isOverUi == false)
 The WindowOver property can be used to identify problems with items not receiving mouse events. For example, a Button may be a child of a parent container but be positioned outside of the parent's bounds. This results in the Button not receiving clicks. This can be diagnosed by printing the WindowOver to output.
 
 ```csharp
-protected override void Update(GameTime)
-{
-    GumUI.Update(gameTime);
-    var cursor = GumUI.Cursor;
-    System.Diagnostics.Debug.WriteLine(cursor.WindowOver);
-    base.Update(gameTime);
-}
+// Update
+GumUI.Update(gameTime);
+var cursor = GumUI.Cursor;
+System.Diagnostics.Debug.WriteLine(cursor.WindowOver);
 ```
 
 ## WindowPushed

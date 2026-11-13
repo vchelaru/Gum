@@ -18,28 +18,20 @@ The following properties are available for position?
 The following code shows how to add ColoredRectangleRuntime instances when the Cursor is clicked. This approach respects camera zoom:
 
 ```csharp
-protected override void Initialize()
+// Initialize
+GumUI.Renderer.Camera.Zoom = 2;
+
+
+// Update
+GumUI.Update(gameTime);
+
+var cursor = GumUI.Cursor;
+if(cursor.PrimaryPush)
 {
-    GumUI.Initialize(this);
-    GumUI.Renderer.Camera.Zoom = 2;
-    base.Initialize();
-}
-
-
-protected override void Update(GameTime gameTime)
-{
-    GumUI.Update(gameTime);
-
-    var cursor = GumUI.Cursor;
-    if(cursor.PrimaryPush)
-    {
-        var rectangle = new ColoredRectangleRuntime();
-        rectangle.X = cursor.XRespectingGumZoomAndBounds();
-        rectangle.Y = cursor.YRespectingGumZoomAndBounds();
-        rectangle.AddToRoot();
-    }
-
-    base.Update(gameTime);
+    var rectangle = new ColoredRectangleRuntime();
+    rectangle.X = cursor.XRespectingGumZoomAndBounds();
+    rectangle.Y = cursor.YRespectingGumZoomAndBounds();
+    rectangle.AddToRoot();
 }
 ```
 

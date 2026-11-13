@@ -104,29 +104,17 @@ To show the TitleScreen in game, we can use the newly-generated TitleScreen clas
 {% tabs %}
 {% tab title="Full Code" %}
 ```csharp
-protected override void Initialize()
-{
-    GumUI.Initialize(this, "GumProject/GumProject.gumj");
-
-    var screen = new TitleScreen();
-    screen.AddToRoot();
-
-    base.Initialize();
-}
+// Initialize
+var screen = new TitleScreen();
+screen.AddToRoot();
 ```
 {% endtab %}
 
 {% tab title="Diff" %}
 ```diff
-protected override void Initialize()
-{
-    GumUI.Initialize(this, "GumProject/GumProject.gumj");
-
-+   var screen = new TitleScreen();
-+   screen.AddToRoot();
-
-    base.Initialize();
-}
+// Initialize
++var screen = new TitleScreen();
++screen.AddToRoot();
 ```
 {% endtab %}
 {% endtabs %}
@@ -144,41 +132,27 @@ The new code has 2 calls:
 
 ## Accessing Instances in Code
 
-We can access the buttons in our TitleScreen using the generated code. We can access the buttons in our Game1 class, or we can access them in the TitleScreen.cs file. Both are perfectly fine, and which you do depends on whether you intend to have the Gum screen contained in a higher-level object that is specific to your game (such as a game scene), or if you want to keep all Gum code within the screen's custom code file. Either way, the code to interact with items is similar.
+We can access the buttons in our TitleScreen using the generated code. We can access the buttons in our game code, or we can access them in the TitleScreen.cs file. Both are perfectly fine, and which you do depends on whether you intend to have the Gum screen contained in a higher-level object that is specific to your game (such as a game scene), or if you want to keep all Gum code within the screen's custom code file. Either way, the code to interact with items is similar.
 
-For example, the following code could be used to set the time when a button was clicked in the Game class. Notice that we access the button using the same name as is given in the Gum screen. If you changed the name of your button to something other than ButtonStandardInstance, then you should use that new name in code too:
+For example, the following code could be used to set the time when a button was clicked in your game code. Notice that we access the button using the same name as is given in the Gum screen. If you changed the name of your button to something other than ButtonStandardInstance, then you should use that new name in code too:
 
 {% tabs %}
 {% tab title="Full Code" %}
 ```csharp
-// In your Game class:
-protected override void Initialize()
-{
-    GumUI.Initialize(this, "GumProject/GumProject.gumj");
-
-    var screen = new TitleScreen();
-    screen.ButtonStandardInstance.Click += (_, _) =>
-        screen.ButtonStandardInstance.Text = DateTime.Now.ToString();
-    screen.AddToRoot();
-
-    base.Initialize();
-}
+// Initialize
+var screen = new TitleScreen();
+screen.ButtonStandardInstance.Click += (_, _) =>
+    screen.ButtonStandardInstance.Text = DateTime.Now.ToString();
+screen.AddToRoot();
 ```
 {% endtab %}
 
 {% tab title="Diff" %}
-<pre class="language-diff"><code class="lang-diff">// In your Game class:
-protected override void Initialize()
-{
-    GumUI.Initialize(this, "GumProject/GumProject.gumj");
-
-    var screen = new TitleScreen();
-<strong>+   screen.ButtonStandardInstance.Click += (_, _) =>
-</strong>+       screen.ButtonStandardInstance.Text = DateTime.Now.ToString();
-    screen.AddToRoot();
-
-    base.Initialize();
-}
+<pre class="language-diff"><code class="lang-diff">// Initialize
+var screen = new TitleScreen();
+<strong>+screen.ButtonStandardInstance.Click += (_, _) =>
+</strong>+    screen.ButtonStandardInstance.Text = DateTime.Now.ToString();
+screen.AddToRoot();
 </code></pre>
 {% endtab %}
 {% endtabs %}

@@ -121,30 +121,20 @@ The following code creates a bottom-up stack similar to a chat room or command l
 // Class scope
 StackPanel stackPanel;
 
-protected override void Initialize()
+// Initialize
+stackPanel = new StackPanel();
+stackPanel.AddToRoot();
+stackPanel.Anchor(Gum.Wireframe.Anchor.Bottom);
+
+// Update
+GumUI.Update(gameTime);
+
+if(GumUI.Keyboard.KeyPushed(Gum.Forms.Input.Keys.Enter))
 {
-    GumUI.Initialize(this);
-
-    stackPanel = new StackPanel();
-    stackPanel.AddToRoot();
-    stackPanel.Anchor(Gum.Wireframe.Anchor.Bottom);
-
-    base.Initialize();
-}
-
-protected override void Update(GameTime gameTime)
-{
-    GumUI.Update(gameTime);
-
-    if(GumUI.Keyboard.KeyPushed(Gum.Forms.Input.Keys.Enter))
-    {
-        var label = new Label();
-        stackPanel.AddChild(label);
-        int index = stackPanel.Children.Count;
-        label.Text = $"{index}: Added at {System.DateTime.Now}";
-    }
-
-    base.Update(gameTime);
+    var label = new Label();
+    stackPanel.AddChild(label);
+    int index = stackPanel.Children.Count;
+    label.Text = $"{index}: Added at {System.DateTime.Now}";
 }
 ```
 
@@ -158,32 +148,22 @@ Right-to-left stacking uses the same approach horizontally: set `ChildrenLayout`
 // Class scope
 StackPanel stackPanel;
 
-protected override void Initialize()
+// Initialize
+stackPanel = new StackPanel();
+stackPanel.AddToRoot();
+stackPanel.Anchor(Gum.Wireframe.Anchor.Right);
+stackPanel.Visual.ChildrenLayout =
+    Gum.Managers.ChildrenLayout.LeftToRightStack;
+
+// Update
+GumUI.Update(gameTime);
+
+if(GumUI.Keyboard.KeyPushed(Gum.Forms.Input.Keys.Enter))
 {
-    GumUI.Initialize(this);
-
-    stackPanel = new StackPanel();
-    stackPanel.AddToRoot();
-    stackPanel.Anchor(Gum.Wireframe.Anchor.Right);
-    stackPanel.Visual.ChildrenLayout =
-        Gum.Managers.ChildrenLayout.LeftToRightStack;
-
-    base.Initialize();
-}
-
-protected override void Update(GameTime gameTime)
-{
-    GumUI.Update(gameTime);
-
-    if(GumUI.Keyboard.KeyPushed(Gum.Forms.Input.Keys.Enter))
-    {
-        var label = new Label();
-        stackPanel.AddChild(label);
-        int index = stackPanel.Children.Count;
-        label.Text = $"Item {index}";
-    }
-
-    base.Update(gameTime);
+    var label = new Label();
+    stackPanel.AddChild(label);
+    int index = stackPanel.Children.Count;
+    label.Text = $"Item {index}";
 }
 ```
 
@@ -203,31 +183,22 @@ The following code creates buttons which all share the height of their parent St
 // Class scope
 StackPanel stackPanel;
 
-protected override void Initialize()
+// Initialize
+stackPanel = new StackPanel();
+stackPanel.AddToRoot();
+stackPanel.Anchor(Gum.Wireframe.Anchor.Center);
+stackPanel.HeightUnits = Gum.DataTypes.DimensionUnitType.Absolute;
+stackPanel.Height = 200;
+
+// Update
+GumUI.Update(gameTime);
+if(GumUI.Keyboard.KeyPushed(Gum.Forms.Input.Keys.Enter))
 {
-    GumUI.Initialize(this);
-
-    stackPanel = new StackPanel();
-    stackPanel.AddToRoot();
-    stackPanel.Anchor(Gum.Wireframe.Anchor.Center);
-    stackPanel.HeightUnits = Gum.DataTypes.DimensionUnitType.Absolute;
-    stackPanel.Height = 200;
-
-    base.Initialize();
-}
-
-protected override void Update(GameTime gameTime)
-{
-    GumUI.Update(gameTime);
-    if(GumUI.Keyboard.KeyPushed(Gum.Forms.Input.Keys.Enter))
-    {
-        var button = new Button();
-        stackPanel.AddChild(button);
-        button.HeightUnits = Gum.DataTypes.DimensionUnitType.Ratio;
-        button.Height = 1;
-        button.Text = $"Button {stackPanel.Children.Count}";
-    }
-    base.Update(gameTime);
+    var button = new Button();
+    stackPanel.AddChild(button);
+    button.HeightUnits = Gum.DataTypes.DimensionUnitType.Ratio;
+    button.Height = 1;
+    button.Text = $"Button {stackPanel.Children.Count}";
 }
 ```
 

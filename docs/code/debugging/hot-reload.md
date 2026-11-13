@@ -8,12 +8,10 @@ Hot reload watches for changes to Gum project files (`.gumj`, `.gusj`, `.gucj`, 
 
 ## Enabling Hot Reload
 
-Call `EnableHotReload` after initializing Gum, passing the absolute path to your **source** `.gumj` file — not the copy in your `bin/Content` folder.
+Call `EnableHotReload` after [loading your Gum project](../getting-started/setup/loading-a-gum-project-.gumx.md), passing the absolute path to your **source** `.gumj` file — not the copy in your `bin/Content` folder.
 
 ```csharp
 // Initialize
-var gumProject = GumUI.Initialize(this, "GumProject/GumProject.gumj");
-
 GumUI.EnableHotReload(
     @"c:\Users\YourName\source\YourGame\Content\GumProject\GumProject.gumj");
 ```
@@ -199,8 +197,6 @@ Hot reload is automatically stopped when `GumService.Uninitialize()` is called. 
 
 ```csharp
 // Initialize
-var gumProject = GumUI.Initialize(this, "GumProject/GumProject.gumj");
-
 #if DEBUG
 GumUI.EnableHotReload(
     @"c:\Users\YourName\source\YourGame\Content\GumProject\GumProject.gumj");

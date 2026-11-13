@@ -29,15 +29,11 @@ Install the package matching your runtime, then call the theme's `Apply` after `
 ```csharp
 using Gum.Themes.DarkPro;
 
-protected override void Initialize()
-{
-    GumUI.Initialize(this, DefaultVisualsVersion.Newest);
+// Initialize
+DarkProTheme.Apply();
 
-    DarkProTheme.Apply();
-
-    var button = new Button();
-    button.Text = "Click Me";
-}
+var button = new Button();
+button.Text = "Click Me";
 ```
 
 The pattern is the same for every theme — only the `using` namespace, NuGet package, and `Apply` call change. Pick a theme from the sections below, then copy the tab matching your rendering backend for a ready-to-paste install command and initialization snippet.

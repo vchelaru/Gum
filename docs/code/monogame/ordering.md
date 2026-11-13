@@ -84,7 +84,7 @@ void CreateWindow(int x, int y)
 
 private void BringToFront(Window window)
 {
-    var root = GumUi.Root;
+    var root = GumUI.Root;
     var currentIndex = root.Children.IndexOf(window.Visual);
     root.Children.Move(currentIndex, root.Children.Count-1);
 }

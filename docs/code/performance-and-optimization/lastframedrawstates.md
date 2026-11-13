@@ -32,54 +32,41 @@ That per-frame reset is tied to the same signal `SystemManagers.Activity`/`GumUI
 The following code shows how to check the performance of a simple project. Note that this code creates visuals instead of Forms controls to intentionally create render breaks.
 
 ```csharp
-protected override void Initialize()
+// Initialize
+// Create a panel to hold all children.
+var panel = new StackPanel();
+panel.AddToRoot();
+
+for(int i = 0; i < 5; i++)
 {
-    // Initialize Gum - can load a project, although it isn't used below
-    GumUI.Initialize(this);
+    var subContainer = new ContainerRuntime();
+    // ClipsChildren sets 
+    subContainer.ClipsChildren = true;
+    panel.AddChild(subContainer);
 
-    // Create a panel to hold all children.
-    var panel = new StackPanel();
-    panel.AddToRoot();
-
-    for(int i = 0; i < 5; i++)
-    {
-        var subContainer = new ContainerRuntime();
-        // ClipsChildren sets 
-        subContainer.ClipsChildren = true;
-        panel.AddChild(subContainer);
-
-        var rectangle = new ColoredRectangleRuntime();
-        subContainer.AddChild(rectangle);
-    }
+    var rectangle = new ColoredRectangleRuntime();
+    subContainer.AddChild(rectangle);
 }
 
-protected override void Update(GameTime gameTime)
+// Update
+GumUI.Update(gameTime);
+
+// Draw
+GumUI.Draw();
+
+if(GumUI.Keyboard.KeyPushed(Gum.Forms.Input.Keys.Space))
 {
-    GumUI.Update(gameTime);
-    base.Update(gameTime);
-}
 
-protected override void Draw(GameTime gameTime)
-{
-    GraphicsDevice.Clear(Color.CornflowerBlue);
+    var spriteRenderer = GumUI.SystemManagers.Renderer.SpriteRenderer;
+    var lastFrameDrawStates = spriteRenderer.LastFrameDrawStates;
 
-    GumUI.Draw();
+    System.Diagnostics.Debug.WriteLine(
+        $"Last Frame Draw States ({lastFrameDrawStates.Count()}):");
 
-    if(GumUI.Keyboard.KeyPushed(Gum.Forms.Input.Keys.Space))
+    foreach(var item in lastFrameDrawStates)
     {
-
-        var spriteRenderer = GumUI.SystemManagers.Renderer.SpriteRenderer;
-        var lastFrameDrawStates = spriteRenderer.LastFrameDrawStates;
-        
-        System.Diagnostics.Debug.WriteLine(
-            $"Last Frame Draw States ({lastFrameDrawStates.Count()}):");
-
-        foreach(var item in lastFrameDrawStates)
-        {
-            System.Diagnostics.Debug.WriteLine(item);
-        }
+        System.Diagnostics.Debug.WriteLine(item);
     }
-    base.Draw(gameTime);
 }
 
 ```

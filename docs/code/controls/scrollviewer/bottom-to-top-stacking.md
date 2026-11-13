@@ -24,41 +24,37 @@ The following code shows how to achieve this:
 ```csharp
 ScrollViewer scrollViewer;
 
-protected override void Initialize()
+// Initialize
+var panel = new StackPanel();
+panel.AddToRoot();
+panel.Anchor(Anchor.Center);
+
+// wrapped ScrollViewer
+scrollViewer = new ScrollViewer();
+panel.AddChild(scrollViewer);
+scrollViewer.Width = 400;
+var innerPanel = scrollViewer.GetVisual("InnerPanelInstance");
+
+var bottomAlignedContainer = new ContainerRuntime();
+innerPanel.AddChild(bottomAlignedContainer);
+bottomAlignedContainer.Dock(Dock.Bottom);
+bottomAlignedContainer.Height = 0;
+bottomAlignedContainer.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+bottomAlignedContainer.ChildrenLayout = Gum.Managers.ChildrenLayout.TopToBottomStack;
+
+var button = new Button();
+panel.AddChild(button);
+button.Text = "Add Label";
+button.Click += (sender, args) =>
 {
-    GumUI.Initialize(this);
+    var label = new Label();
+    bottomAlignedContainer.AddChild(label);
+    label.Text = $"Added at " + DateTime.Now.ToString("hh:mm:ss.ff");
+    FillAndExpandVertically(innerPanel);
+    scrollViewer.ScrollToBottom();
+};
 
-
-    var panel = new StackPanel();
-    panel.AddToRoot();
-    panel.Anchor(Anchor.Center);
-
-    // wrapped ScrollViewer
-    scrollViewer = new ScrollViewer();
-    panel.AddChild(scrollViewer);
-    scrollViewer.Width = 400;
-    var innerPanel = scrollViewer.GetVisual("InnerPanelInstance");
-
-    var bottomAlignedContainer = new ContainerRuntime();
-    innerPanel.AddChild(bottomAlignedContainer);
-    bottomAlignedContainer.Dock(Dock.Bottom);
-    bottomAlignedContainer.Height = 0;
-    bottomAlignedContainer.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
-    bottomAlignedContainer.ChildrenLayout = Gum.Managers.ChildrenLayout.TopToBottomStack;
-
-    var button = new Button();
-    panel.AddChild(button);
-    button.Text = "Add Label";
-    button.Click += (sender, args) =>
-    {
-        var label = new Label();
-        bottomAlignedContainer.AddChild(label);
-        label.Text = $"Added at " + DateTime.Now.ToString("hh:mm:ss.ff");
-        FillAndExpandVertically(innerPanel);
-        scrollViewer.ScrollToBottom();
-    };
-}
-
+// Class scope
 void FillAndExpandVertically(GraphicalUiElement visual)
 {
     // let it expand...

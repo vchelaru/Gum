@@ -97,43 +97,33 @@ The following code shows which link the player clicked in a `Label`. The `Color`
 TextRuntime linkText;
 Label linkLabel;
 
-protected override void Initialize()
+// Initialize
+linkText = new TextRuntime();
+linkText.Text =
+    "Visit the [Link=shop][Color=Yellow]shop[/Color][/Link] " +
+    "or read the [Link=help][Color=Yellow]help[/Color][/Link].";
+linkText.AddToRoot();
+
+linkLabel = new Label();
+linkLabel.AddToRoot();
+linkLabel.Y = 40;
+
+// Update
+GumUI.Update(gameTime);
+
+var cursor = GumUI.Cursor;
+if (cursor.PrimaryClick && linkText.HasCursorOver(cursor))
 {
-    GumUI.Initialize(this);
+    int index = linkText.GetCharacterIndexAtPosition(
+        cursor.XRespectingGumZoomAndBounds(),
+        cursor.YRespectingGumZoomAndBounds());
 
-    linkText = new TextRuntime();
-    linkText.Text =
-        "Visit the [Link=shop][Color=Yellow]shop[/Color][/Link] " +
-        "or read the [Link=help][Color=Yellow]help[/Color][/Link].";
-    linkText.AddToRoot();
-
-    linkLabel = new Label();
-    linkLabel.AddToRoot();
-    linkLabel.Y = 40;
-
-    base.Initialize();
-}
-
-protected override void Update(GameTime gameTime)
-{
-    GumUI.Update(gameTime);
-
-    var cursor = GumUI.Cursor;
-    if (cursor.PrimaryClick && linkText.HasCursorOver(cursor))
+    TextTagSpan? link = linkText.GetTagAtIndex("Link", index);
+    if (link != null)
     {
-        int index = linkText.GetCharacterIndexAtPosition(
-            cursor.XRespectingGumZoomAndBounds(),
-            cursor.YRespectingGumZoomAndBounds());
-
-        TextTagSpan? link = linkText.GetTagAtIndex("Link", index);
-        if (link != null)
-        {
-            // Argument is "shop" or "help"
-            linkLabel.Text = "Clicked " + link.Value.Argument;
-        }
+        // Argument is "shop" or "help"
+        linkLabel.Text = "Clicked " + link.Value.Argument;
     }
-
-    base.Update(gameTime);
 }
 ```
 
@@ -238,32 +228,28 @@ We can register this function and use it on a TextRuntime. The following code cr
 int _gold = 0;
 GrowShrinkCustomFunction _growShrink;
 
-protected override void Initialize()
+// Initialize
+_growShrink = new GrowShrinkCustomFunction();
+// The function must be registered before it is used
+RenderingLibrary.Graphics.Text.Customizations["GrowAndShrink"] = 
+    _growShrink.Execute;
+
+var goldDisplayText = new TextRuntime();
+goldDisplayText.AddToRoot();
+goldDisplayText.Anchor(Anchor.Center);
+goldDisplayText.Text = "Gold: [Custom=GrowAndShrink]0[/Custom]";
+
+var button = new Button();
+button.Text = "Get Gold!";
+button.AddToRoot();
+button.Anchor(Anchor.Center);
+button.Y += 50;
+button.Click += (_, _) =>
 {
-    GumUI.Initialize(this);
-
-    _growShrink = new GrowShrinkCustomFunction();
-    // The function must be registered before it is used
-    RenderingLibrary.Graphics.Text.Customizations["GrowAndShrink"] = 
-        _growShrink.Execute;
-
-    var goldDisplayText = new TextRuntime();
-    goldDisplayText.AddToRoot();
-    goldDisplayText.Anchor(Anchor.Center);
-    goldDisplayText.Text = "Gold: [Custom=GrowAndShrink]0[/Custom]";
-
-    var button = new Button();
-    button.Text = "Get Gold!";
-    button.AddToRoot();
-    button.Anchor(Anchor.Center);
-    button.Y += 50;
-    button.Click += (_, _) =>
-    {
-        _gold += 5;
-        goldDisplayText.Text = "Gold: [Custom=GrowAndShrink]" + _gold + "[/Custom]";
-        _growShrink.StartTime = DateTime.Now;
-    };
-}
+    _gold += 5;
+    goldDisplayText.Text = "Gold: [Custom=GrowAndShrink]" + _gold + "[/Custom]";
+    _growShrink.StartTime = DateTime.Now;
+};
 ```
 
 <figure><img src="../../../.gitbook/assets/01_07 39 37 (1).gif" alt=""><figcaption><p>Button adding gold and resetting the grow shirnk time.</p></figcaption></figure>

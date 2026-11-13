@@ -218,33 +218,37 @@ Every `\`\`\`csharp` block must have a placement comment as its first line so re
 
 | Comment | Meaning |
 |---|---|
-| `// Initialize` | General initialization — could be `Initialize()`, `CustomInitialize()`, a constructor, etc. Use this by default. |
+| `// Initialize` | Runs once right after `GumUI.Initialize`. Use this by default. |
 | `// Update` | Code that runs each frame in the update loop. |
 | `// Draw` | Code that runs each frame in the draw loop. |
 | `// Class scope` | Field or property declarations at class level. |
 | `// In CustomInitialize` | Code specifically in a generated partial `CustomInitialize()` method. |
 
 **When to omit the comment:**
-- Tutorial pages that show a complete Game/app class — leave as-is.
 - Non-game types shown as their own type definition (ViewModels, enums, partial generated classes).
 - `using` statements — self-evident, no comment needed.
 
-**Mixed-scope snippets** (class members + method bodies): use `// Class scope` for the member declarations, then show the actual method block(s) with full signatures and indented bodies — no outer class wrapper:
+**Mixed-scope snippets** get one marker per part, with no class wrapper and no method signatures:
 
 ```csharp
 // Class scope
 int clickCount;
 
-protected override void Initialize()
-{
-    var button = new Button();
-    button.Click += (_, _) => clickCount++;
-}
+// Initialize
+var button = new Button();
+button.Click += (_, _) => clickCount++;
+
+// Update
+GumUI.Update(gameTime);
 ```
 
-**Platform-agnostic by default:** prefer `// Initialize` over MonoGame-specific phrasing unless the page is explicitly MonoGame-only. This supports Raylib and other runtimes.
+## Runtime-Neutral Snippets
 
-**Irreducible per-platform syntax → tabs, don't ask.** First try to collapse a sample to a single platform-neutral form. When the syntax genuinely *cannot* collapse — most often because a host skeleton differs (a `Game` subclass vs a `Program.Main` loop) — wrap just those blocks in GitBook `{% tabs %}` with one `{% tab %}` per platform (e.g. `MonoGame` / `Raylib`). This is the standard, expected treatment for irreducible divergence; use it without asking. Keep the surrounding prose shared above/below the tabs — only the code that truly differs goes inside. Don't assume a member's type differs per backend from memory (e.g. `KeyCombo.PushedKey`, `KeyEventArgs.Key`) — check current source, since Gum has been steadily unifying input types onto `Gum.Forms.Input.Keys` across backends.
+Snippets outside MonoGame-only pages show no `Game` class, no `override` methods and no `GumUI.Initialize` call; they start after Gum is initialized and use the markers above. The markers are defined for readers in `docs/code/getting-started/setup/adding-initializing-gum/README.md`. Per-frame calls are written `GumUI.Update(gameTime);` and `GumUI.Draw();`. A page that needs a Gum project loaded links to `getting-started/setup/loading-a-gum-project-.gumx.md` (or reads `ObjectFinder.Self.GumProjectSave`) instead of showing the load call. Host setup never gets per-runtime tabs; it lives only on the runtime setup pages.
+
+A page may stay MonoGame-only when it is a runtime setup page or uses MonoGame-only types (`SpriteBatch`, `GraphicsDevice`, `RenderTarget2D`, `GumBatch`, `Window`). Its title, intro or the line before the sample says so.
+
+**Irreducible per-platform syntax → tabs, don't ask.** First try to collapse a sample to a single platform-neutral form. When an API genuinely differs per runtime (for example opening bundled content with `TitleContainer`), wrap just those blocks in GitBook `{% tabs %}` with one `{% tab %}` per platform (e.g. `MonoGame` / `Raylib`). This is the standard, expected treatment for irreducible divergence; use it without asking. Keep the surrounding prose shared above/below the tabs — only the code that truly differs goes inside. Don't assume a member's type differs per backend from memory (e.g. `KeyCombo.PushedKey`, `KeyEventArgs.Key`) — check current source, since Gum has been steadily unifying input types onto `Gum.Forms.Input.Keys` across backends.
 
 ## Runtime Setup Pages
 

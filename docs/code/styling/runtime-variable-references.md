@@ -18,11 +18,11 @@ For information on setting up variable references in the Gum tool, see the [Vari
 Available in November 2026, or now if building Gum from source.
 {% endhint %}
 
-After loading a Gum project, you can modify style variables and call `ApplyAllVariableReferences` to propagate changes across all elements in dependency order. Elements that are referenced by others are applied first, so downstream references always pick up the latest values.
+After [loading a Gum project](../getting-started/setup/loading-a-gum-project-.gumx.md), you can modify style variables and call `ApplyAllVariableReferences` to propagate changes across all elements in dependency order. Elements that are referenced by others are applied first, so downstream references always pick up the latest values.
 
 ```csharp
 // Initialize
-var project = GumUI.Initialize(this, "GumProject/GumProject.gumj");
+var project = ObjectFinder.Self.GumProjectSave;
 
 // Find your style component and change values
 var styles = project.Components.First(item => item.Name == "Styles");
@@ -237,7 +237,6 @@ Then call `UseExpressions` at startup:
 
 ```csharp
 // Initialize
-var project = GumUI.Initialize(this, "GumProject/GumProject.gumj");
 GumUI.UseExpressions();
 ```
 

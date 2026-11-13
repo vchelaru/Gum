@@ -37,7 +37,6 @@ Available in preview NuGet packages (use a `-preview` version), or now if buildi
 
 ```csharp
 // Initialize
-GumUI.Initialize(this);
 GumUI.UseKernSmith();
 ```
 
@@ -62,7 +61,6 @@ Any combination of font properties can be used and the font is created on demand
 
 ```csharp
 // Initialize
-GumUI.Initialize(this);
 GumUI.UseKernSmith();
 ```
 
@@ -108,7 +106,6 @@ text.AddToRoot();
 
 ```csharp
 // Initialize
-GumUI.Initialize(this);
 GumUI.UseKernSmith();
 ```
 
