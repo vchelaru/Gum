@@ -1,6 +1,6 @@
 # Themes
 
-A single line of code restyles **every** Gum Forms control. Drop in a built-in theme — or author your own — and the same UI takes on a completely different look without changing any of your control code.
+A single line of code restyles **every** Gum Forms control created in code. Drop in a built-in theme — or author your own — and the same UI takes on a completely different look without changing any of your control code.
 
 |                                                  DarkPro                                                 |                                                   Bubblegum                                                  |                                                Neon                                                |
 | :------------------------------------------------------------------------------------------------------: | :----------------------------------------------------------------------------------------------------------: | :------------------------------------------------------------------------------------------------: |
@@ -15,6 +15,8 @@ Here are six of Gum's built-in themes, each rendering the same sample settings p
 ## Introduction
 
 A **theme** is a per-backend NuGet package that restyles every default Gum Forms control with a single call. After calling `GumUI.Initialize(...)`, calling `<Name>Theme.Apply` swaps the default visuals for the theme's visuals — every `Button`, `TextBox`, `CheckBox`, `ComboBox`, etc. created afterward renders in that theme's style.
+
+`Apply` only changes controls created in code. Controls loaded from a Gum project keep the project's own component visuals. To theme a Gum project, pick the theme when creating it, either in the **New Project** dialog or with `gumcli new --theme <Name>`, which copies the theme's components into the project.
 
 Themes ship one NuGet per rendering backend (for example `Gum.Themes.DarkPro.MonoGame`, `Gum.Themes.DarkPro.Kni`, `Gum.Themes.DarkPro.Raylib`, and `Gum.Themes.DarkPro.Skia`) so each package only carries the assets and references it needs. The `.Skia` package serves every SkiaSharp host: Silk.NET, KNI with Skia, BRUTAL, and Stride.
 
