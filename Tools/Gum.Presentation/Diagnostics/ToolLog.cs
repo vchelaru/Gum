@@ -7,10 +7,11 @@ namespace Gum.Diagnostics;
 
 /// <summary>
 /// Diagnostic log for diagnosing slow, frozen or failing edits. In a Debug build it is always on and
-/// writes to <see cref="DefaultPath"/>, <c>{temp folder}/Gum/tool.log</c> (Windows:
-/// <c>%TEMP%\Gum\tool.log</c>); a Release build is off. The GUM_TOOL_LOG environment variable, when it
-/// names an absolute file path, writes there instead in either build. Each run moves the previous file
-/// to <c>tool.previous.log</c> and starts a fresh one, and every line is flushed as it is written, so a
+/// writes to <see cref="DefaultPath"/>, <c>{temp folder}/Gum/Logs/tool-yyyyMMdd-HHmmss.log</c> named by the
+/// time the tool started (Windows: <c>%TEMP%\Gum\Logs</c>), one file per session, so history is kept; a
+/// Release build is off. The GUM_TOOL_LOG environment variable, when it
+/// names an absolute file path, writes there instead in either build, moving that path's previous file
+/// to <c>.previous</c>. Nothing prunes old logs; delete files older than a month by hand. Every line is flushed as it is written, so a
 /// freeze leaves the log up to the stall. Unhandled and reported exceptions are written with their
 /// stack (<see cref="WriteException"/>, called by the crash reporter). When off, every call returns at
 /// once and allocates nothing. Lines look like
@@ -23,6 +24,8 @@ public static class ToolLog
     private const string EnableVariable = "GUM_TOOL_LOG";
 
     private static readonly object _lock = new object();
+    // Declared before _writer: static fields initialize in order and Open() reads DefaultPath.
+    private static readonly string _sessionFileName = $"tool-{Process.GetCurrentProcess().StartTime:yyyyMMdd-HHmmss}.log";
     private static readonly StreamWriter? _writer = Open();
     private static readonly long _startTimestamp = Stopwatch.GetTimestamp();
 
@@ -52,8 +55,11 @@ public static class ToolLog
         WriteLine(stage, count, detail, durationMilliseconds: -1);
     }
 
-    /// <summary>The file Debug builds write to: <c>Gum/tool.log</c> in the user's temp folder.</summary>
-    public static string DefaultPath => Path.Combine(Path.GetTempPath(), "Gum", "tool.log");
+    /// <summary>The folder holding one log per tool session: <c>Gum/Logs</c> in the user's temp folder.</summary>
+    public static string LogFolder => Path.Combine(Path.GetTempPath(), "Gum", "Logs");
+
+    /// <summary>The file Debug builds write to: this session's <c>tool-yyyyMMdd-HHmmss.log</c> (the time the tool started) in <see cref="LogFolder"/>.</summary>
+    public static string DefaultPath => Path.Combine(LogFolder, _sessionFileName);
 
     /// <summary>Writes an exception with its stack, as an <c>error</c> line. Never throws.</summary>
     public static void WriteException(string context, Exception exception)
@@ -82,7 +88,9 @@ public static class ToolLog
         try
         {
             // Shared read so the file can be tailed while the tool runs.
-            return new StreamWriter(DiagnosticLogFile.Open(path)) { AutoFlush = true };
+            // The default file is unique to this session, so history is kept and nothing is rotated. A path
+            // the user chose through GUM_TOOL_LOG keeps the old behavior of moving the previous run aside.
+            return new StreamWriter(DiagnosticLogFile.Open(path, rotate: explicitPath != null)) { AutoFlush = true };
         }
         catch (Exception)
         {

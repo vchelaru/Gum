@@ -901,6 +901,9 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
         // to do it one by one:
         var handledByDirectSet = false;
 
+        // True when the edited file was already cached, so the rebuild reloads the whole cache from disk.
+        var fileWasCached = false;
+
         var supportsIncrementalChange = PropertiesSupportingIncrementalChange.Contains(unqualifiedMember);
 
         // A Forms-promoted alias (e.g. Spacing, Orientation) is not itself a visual property, but a
@@ -921,6 +924,26 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
         // Update January 19, 2025 - actually for incrmeental changes just use it, it will be fast
         if (!areSame || canIncrementallyUpdate)
         {
+            VariableSave? editedVariable = element != null ? ObjectFinder.Self.GetRootVariable(qualifiedName, element) : null;
+            if (editedVariable?.IsFile == true && value is string editedFile)
+            {
+                try
+                {
+                    string standardized = ToolsUtilities.FileManager.Standardize(editedFile, preserveCase: true, makeAbsolute: true);
+                    standardized = ToolsUtilities.FileManager.RemoveDotDotSlash(standardized);
+
+                    // A file already in the cache is reloaded from disk, so the rebuild below drops the whole
+                    // cache. Disposing only this file's entry would leave other cached content (an animation
+                    // chain list's frames, other elements' sprites) holding the disposed texture, which
+                    // crashes the canvas when they are drawn.
+                    fileWasCached = global::RenderingLibrary.Content.LoaderManager.Self.GetDisposable(standardized) != null;
+                    Gum.Wireframe.TextureDiagnostics.Note($"SourceFile edit: standardized key='{standardized}' cachedBefore={fileWasCached}");
+                }
+                catch
+                {
+                    // this could be an invalid file name, so tolerate crashes
+                }
+            }
 
             // if a deep reference is set, then this is more complicated than a single variable assignment, so we should
             // force everything. This makes debugging a little more difficult, but it keeps the wireframe accurate without having to track individual assignments.
@@ -945,40 +968,11 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
                     gue = _wireframeObjectManager.GetSelectedRepresentation();
                 }
 
-                // If we dispose a file, we should re-create the screen for sure!
-                var disposedFile = false;
+                // A file that was already loaded is reloaded from disk, so the whole screen is rebuilt for sure.
+                var disposedFile = fileWasCached;
 
                 if (gue != null)
                 {
-                    VariableSave? variable = null;
-                    if(element != null)
-                    {
-                        variable = ObjectFinder.Self.GetRootVariable(qualifiedName, element);
-                    }
-
-                    if(variable?.IsFile == true && value is string asString)
-                    {
-                        try
-                        {
-                            var standardized =  ToolsUtilities.FileManager.Standardize(asString, preserveCase:true, makeAbsolute:true);
-                            standardized = ToolsUtilities.FileManager.RemoveDotDotSlash(standardized);
-                            // invalidate files...
-                            var loaderManager = global::RenderingLibrary.Content.LoaderManager.Self;
-
-                            var existing = loaderManager.GetDisposable(standardized);
-
-                            disposedFile = existing != null;
-
-                            loaderManager.Dispose(standardized);
-
-                        }
-
-                        catch
-                        {
-                            // this could be an invalid file name, so tolerate crashes
-                        }
-                    }
-
                     // The directly-changed member maps to a visual property only when it is itself
                     // incrementally supported; a Forms alias (e.g. Spacing) has no matching GUE property,
                     // so pushing it would be a no-op - skip it and push the underlying member(s) instead.
@@ -1009,12 +1003,30 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
                     //gue.ApplyVariableReferences(_selectedState.SelectedStateSave);
 
                     handledByDirectSet = didPush && !disposedFile;
+
+                    if (unqualifiedMember == "SourceFile")
+                    {
+                        gue.TryGetTexture(out object? shownTexture);
+                        Gum.Wireframe.TextureDiagnostics.Note(
+                            $"SourceFile set on {qualifiedName} value='{value}' relativeDirectory='{ToolsUtilities.FileManager.RelativeDirectory}' " +
+                            $"disposedCachedFile={disposedFile} handledByDirectSet={handledByDirectSet} " +
+                            $"gueType={gue.GetType().Name} textureAfterSet={Gum.Wireframe.TextureDiagnostics.Describe(shownTexture)}");
+                    }
                 }
             }
 
             if (!handledByDirectSet)
             {
-                _wireframeObjectManager.RefreshAll(true, forceReloadTextures: false);
+                _wireframeObjectManager.RefreshAll(true, forceReloadTextures: fileWasCached);
+
+                if (unqualifiedMember == "SourceFile")
+                {
+                    GraphicalUiElement? rebuilt = instance != null ? _wireframeObjectManager.GetRepresentation(instance) : null;
+                    object? rebuiltTexture = null;
+                    rebuilt?.TryGetTexture(out rebuiltTexture);
+                    Gum.Wireframe.TextureDiagnostics.Note(
+                        $"SourceFile {qualifiedName} value='{value}' went through RefreshAll; textureAfterRefresh={Gum.Wireframe.TextureDiagnostics.Describe(rebuiltTexture)}");
+                }
             }
 
 

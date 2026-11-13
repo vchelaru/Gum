@@ -182,6 +182,35 @@ public class FileDropdownScenarioTests
 
     [AvaloniaFact]
     [Trait("Feature", "DISP-011")]
+    public void SourceFileDropdown_PickingAFile_IsNotFollowedByAnEmptyCommit()
+    {
+        using ProjectTreeHarness tree = new ProjectTreeHarness();
+        ComponentSave card = tree.Project.AddComponent("Card");
+        File.Copy(Path.Combine(AppContext.BaseDirectory, "Content", "ExampleSpriteFrame.png"), Path.Combine(tree.Project.ProjectFolder, "Hero.png"));
+        File.Copy(Path.Combine(AppContext.BaseDirectory, "Content", "ExampleSpriteFrame.png"), Path.Combine(tree.Project.ProjectFolder, "Other.png"));
+        InstanceSave panel = tree.Project.AddInstance(card, "Panel", "NineSlice");
+        tree.Project.AddInstance(card, "Holder", "Sprite");
+        card.GetDefaultStateOrThrow().SetValue("Holder.SourceFile", "Hero.png", "string");
+        card.GetDefaultStateOrThrow().SetValue("Panel.SourceFile", "Other.png", "string");
+        tree.SaveAll();
+        VariableGridHarness grid = tree.Grid;
+
+        // Picking replaces the drop-down's items, which makes the ComboBox move focus mid-load. That
+        // lost-focus must not commit the text the swap just cleared as an empty path.
+        tree.Click(tree.NodeFor(panel));
+        grid.Settle();
+        grid.Combo("SourceFile").Focus();
+        grid.Combo("SourceFile").IsDropDownOpen = true;
+        grid.Settle();
+        grid.Combo("SourceFile").IsDropDownOpen = false;
+        grid.PickComboItem("SourceFile", "Hero.png");
+        grid.Settle();
+
+        VariableGridHarness.StoredValue(card, "Panel.SourceFile").ShouldBe("Hero.png");
+    }
+
+    [AvaloniaFact]
+    [Trait("Feature", "DISP-011")]
     public void SourceFileDropdown_WithASpriteAndANineSliceSelected_ListsOnceAndPicksForBoth()
     {
         using ProjectTreeHarness tree = new ProjectTreeHarness();

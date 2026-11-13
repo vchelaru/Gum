@@ -49,9 +49,26 @@ public class AlwaysOnDebugLogTests : IDisposable
     }
 
     [Fact]
-    public void ToolLogDefaultPath_IsFixedFileInTempFolder()
+    public void ToolLogDefaultPath_IsTimestampedSessionFileInLogsFolder()
     {
-        ToolLog.DefaultPath.ShouldBe(Path.Combine(Path.GetTempPath(), "Gum", "tool.log"));
+        Path.GetDirectoryName(ToolLog.DefaultPath).ShouldBe(Path.Combine(Path.GetTempPath(), "Gum", "Logs"));
+        System.Text.RegularExpressions.Regex.IsMatch(Path.GetFileName(ToolLog.DefaultPath), @"^tool-\d{8}-\d{6}\.log$").ShouldBeTrue();
+    }
+
+    [Fact]
+    public void ToolLogOpen_DefaultPathExistingFile_AppendsAndKeepsNoPreviousCopy()
+    {
+        string path = Path.Combine(_folder, "tool-20260101-000000.log");
+        Directory.CreateDirectory(_folder);
+        File.WriteAllText(path, "same session\n");
+
+        using (System.IO.StreamWriter? writer = ToolLog.Open(null, isDebugBuild: true, path))
+        {
+            writer!.WriteLine("more");
+        }
+
+        File.ReadAllText(path).ShouldContain("same session");
+        File.Exists(Path.Combine(_folder, "tool-20260101-000000.previous.log")).ShouldBeFalse();
     }
 
     [Fact]

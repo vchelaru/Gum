@@ -745,6 +745,7 @@ namespace Gum.Managers
                 .ToList();
             foreach (string key in keys)
             {
+                Gum.Wireframe.TextureDiagnostics.RecordDrop("cached effect " + key);
                 LoaderManager.Self.Dispose(key);
             }
         }
