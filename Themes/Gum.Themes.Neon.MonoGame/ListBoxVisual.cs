@@ -142,15 +142,15 @@ public class ListBoxVisual : BaseListBoxVisual
             border: NeonStyling.ActiveStyle.Colors.Accent, showFocusRing: false);
 
         States.Disabled.Apply = () => ApplyPalette(
-            border: NeonStyling.ActiveStyle.Colors.Disabled, showFocusRing: false, fillDisabled: true);
+            border: NeonStyling.ActiveStyle.Colors.DisabledBorder, showFocusRing: false, fillDisabled: true);
 
         States.DisabledFocused.Apply = () => ApplyPalette(
-            border: NeonStyling.ActiveStyle.Colors.Disabled, showFocusRing: true, fillDisabled: true);
+            border: NeonStyling.ActiveStyle.Colors.DisabledBorder, showFocusRing: true, fillDisabled: true);
     }
 
     private void ApplyPalette(Color border, bool showFocusRing, bool fillDisabled = false)
     {
-        _fill.FillColor = fillDisabled ? NeonStyling.ActiveStyle.Colors.Disabled : NeonStyling.ActiveStyle.Colors.Surface1;
+        _fill.FillColor = fillDisabled ? NeonStyling.ActiveStyle.Colors.Background : NeonStyling.ActiveStyle.Colors.Surface1;
         _border.StrokeColor = border;
         _focusRing.Visible = showFocusRing;
     }

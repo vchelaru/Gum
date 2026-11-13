@@ -5,13 +5,13 @@
   <State>
     <Name>Default</Name>
     <Variable Type="int" Name="Background.Blue" SetsValue="true">
-      <Value xsi:type="xsd:int">27</Value>
+      <Value xsi:type="xsd:int">10</Value>
     </Variable>
     <Variable Type="bool" Name="Background.ExposeChildrenEvents" SetsValue="true">
       <Value xsi:type="xsd:boolean">false</Value>
     </Variable>
     <Variable Type="int" Name="Background.Green" SetsValue="true">
-      <Value xsi:type="xsd:int">27</Value>
+      <Value xsi:type="xsd:int">10</Value>
     </Variable>
     <Variable Type="float" Name="Background.Height" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
@@ -20,7 +20,7 @@
       <Value xsi:type="xsd:int">2</Value>
     </Variable>
     <Variable Type="int" Name="Background.Red" SetsValue="true">
-      <Value xsi:type="xsd:int">27</Value>
+      <Value xsi:type="xsd:int">10</Value>
     </Variable>
     <Variable IsFile="true" Type="string" Name="Background.SourceFile" SetsValue="true">
       <Value xsi:type="xsd:string">UISpriteSheet.png</Value>
@@ -342,7 +342,7 @@
       <IsFile>false</IsFile>
       <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
       <Value>
-        <string>Color = Components/Editor/Styles.PanelBackground.FillColor</string>
+        <string>Color = Components/Editor/Styles.RecessedBackground.FillColor</string>
       </Value>
     </VariableList>
     <VariableList xsi:type="VariableListSaveOfString">
@@ -371,13 +371,13 @@
     <State>
       <Name>Enabled</Name>
       <Variable Type="int" Name="Background.Blue" SetsValue="true">
-        <Value xsi:type="xsd:int">27</Value>
+        <Value xsi:type="xsd:int">10</Value>
       </Variable>
       <Variable Type="int" Name="Background.Green" SetsValue="true">
-        <Value xsi:type="xsd:int">27</Value>
+        <Value xsi:type="xsd:int">10</Value>
       </Variable>
       <Variable Type="int" Name="Background.Red" SetsValue="true">
-        <Value xsi:type="xsd:int">27</Value>
+        <Value xsi:type="xsd:int">10</Value>
       </Variable>
       <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
@@ -389,20 +389,20 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>Color = Components/Editor/Styles.PanelBackground.FillColor</string>
+          <string>Color = Components/Editor/Styles.RecessedBackground.FillColor</string>
         </Value>
       </VariableList>
     </State>
     <State>
       <Name>Disabled</Name>
       <Variable Type="int" Name="Background.Blue" SetsValue="true">
-        <Value xsi:type="xsd:int">17</Value>
+        <Value xsi:type="xsd:int">6</Value>
       </Variable>
       <Variable Type="int" Name="Background.Green" SetsValue="true">
-        <Value xsi:type="xsd:int">17</Value>
+        <Value xsi:type="xsd:int">6</Value>
       </Variable>
       <Variable Type="int" Name="Background.Red" SetsValue="true">
-        <Value xsi:type="xsd:int">17</Value>
+        <Value xsi:type="xsd:int">6</Value>
       </Variable>
       <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
@@ -414,20 +414,20 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>Color = Components/Editor/Styles.PanelBackgroundDark.FillColor</string>
+          <string>Color = Components/Editor/Styles.RecessedBackgroundDark.FillColor</string>
         </Value>
       </VariableList>
     </State>
     <State>
       <Name>Focused</Name>
       <Variable Type="int" Name="Background.Blue" SetsValue="true">
-        <Value xsi:type="xsd:int">27</Value>
+        <Value xsi:type="xsd:int">10</Value>
       </Variable>
       <Variable Type="int" Name="Background.Green" SetsValue="true">
-        <Value xsi:type="xsd:int">27</Value>
+        <Value xsi:type="xsd:int">10</Value>
       </Variable>
       <Variable Type="int" Name="Background.Red" SetsValue="true">
-        <Value xsi:type="xsd:int">27</Value>
+        <Value xsi:type="xsd:int">10</Value>
       </Variable>
       <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">true</Value>
@@ -439,20 +439,20 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>Color = Components/Editor/Styles.PanelBackground.FillColor</string>
+          <string>Color = Components/Editor/Styles.RecessedBackground.FillColor</string>
         </Value>
       </VariableList>
     </State>
     <State>
       <Name>DisabledFocused</Name>
       <Variable Type="int" Name="Background.Blue" SetsValue="true">
-        <Value xsi:type="xsd:int">17</Value>
+        <Value xsi:type="xsd:int">6</Value>
       </Variable>
       <Variable Type="int" Name="Background.Green" SetsValue="true">
-        <Value xsi:type="xsd:int">17</Value>
+        <Value xsi:type="xsd:int">6</Value>
       </Variable>
       <Variable Type="int" Name="Background.Red" SetsValue="true">
-        <Value xsi:type="xsd:int">17</Value>
+        <Value xsi:type="xsd:int">6</Value>
       </Variable>
       <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">true</Value>
@@ -464,7 +464,7 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>Color = Components/Editor/Styles.PanelBackgroundDark.FillColor</string>
+          <string>Color = Components/Editor/Styles.RecessedBackgroundDark.FillColor</string>
         </Value>
       </VariableList>
     </State>

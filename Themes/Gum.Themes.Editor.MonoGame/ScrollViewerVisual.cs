@@ -19,6 +19,6 @@ public class ScrollViewerVisual : BaseScrollViewerVisual
     public ScrollViewerVisual(bool fullInstantiation = true, bool tryCreateFormsObject = true) :
         base(fullInstantiation, tryCreateFormsObject)
     {
-        this.BackgroundColor = EditorStyling.ActiveStyle.Colors.PanelBackground;
+        this.BackgroundColor = EditorStyling.ActiveStyle.Colors.RecessedBackground;
     }
 }

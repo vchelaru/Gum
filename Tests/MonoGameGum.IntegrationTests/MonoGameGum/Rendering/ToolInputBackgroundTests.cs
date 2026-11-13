@@ -32,6 +32,8 @@ public class ToolInputBackgroundTests : BaseTestClass
         yield return new object[] { "FormsThemes/Editor", "Editor/ScrollViewer", (Action)Gum.Themes.Editor.EditorTheme.Apply, (Func<FrameworkElement>)(() => new ScrollViewer()) };
         yield return new object[] { "FormsThemes/Editor", "Editor/ItemsControl", (Action)Gum.Themes.Editor.EditorTheme.Apply, (Func<FrameworkElement>)(() => new ItemsControl()) };
         yield return new object[] { "FormsThemes/Editor", "Editor/ListBox", (Action)Gum.Themes.Editor.EditorTheme.Apply, (Func<FrameworkElement>)(() => new ListBox()) };
+        yield return new object[] { "FormsTemplate", "Controls/PasswordBox", null!, (Func<FrameworkElement>)(() => new PasswordBox()) };
+        yield return new object[] { "FormsThemes/Editor", "Editor/PasswordBox", (Action)Gum.Themes.Editor.EditorTheme.Apply, (Func<FrameworkElement>)(() => new PasswordBox()) };
     }
 
     [Theory]
@@ -417,23 +419,23 @@ public class ToolInputBackgroundTests : BaseTestClass
         }
     }
 
-    // The fill comes from the Styles InputBackground swatch, so recoloring the swatch recolors the control.
+    // The fill comes from the Styles input swatch (InputBackground, or RecessedBackground in Editor), so recoloring the swatch recolors the control.
     [Theory]
-    [InlineData("FormsTemplate", "Controls/ScrollViewer", "Styles")]
-    [InlineData("FormsTemplate", "Controls/ItemsControl", "Styles")]
-    [InlineData("FormsTemplate", "Controls/ListBox", "Styles")]
-    [InlineData("FormsTemplate", "Controls/ComboBox", "Styles")]
-    [InlineData("FormsTemplate", "Controls/TextBox", "Styles")]
-    [InlineData("FormsThemes/Editor", "Editor/ItemsControl", "Editor/Styles")]
-    public void ToolBackground_FollowsInputBackgroundSwatch(string templateFolder, string componentName, string stylesName)
+    [InlineData("FormsTemplate", "Controls/ScrollViewer", "Styles", "InputBackground")]
+    [InlineData("FormsTemplate", "Controls/ItemsControl", "Styles", "InputBackground")]
+    [InlineData("FormsTemplate", "Controls/ListBox", "Styles", "InputBackground")]
+    [InlineData("FormsTemplate", "Controls/ComboBox", "Styles", "InputBackground")]
+    [InlineData("FormsTemplate", "Controls/TextBox", "Styles", "InputBackground")]
+    [InlineData("FormsThemes/Editor", "Editor/ItemsControl", "Editor/Styles", "RecessedBackground")]
+    public void ToolBackground_FollowsInputBackgroundSwatch(string templateFolder, string componentName, string stylesName, string swatch)
     {
         BackgroundLook tool = MeasureTool(templateFolder, componentName, beforeCreate: () =>
         {
             GumProjectSave project = ObjectFinder.Self.GumProjectSave.ShouldNotBeNull();
             StateSave styles = project.Components.Single(c => c.Name == stylesName).DefaultState!;
-            styles.SetValue("InputBackground.FillRed", 200, "int");
-            styles.SetValue("InputBackground.FillGreen", 10, "int");
-            styles.SetValue("InputBackground.FillBlue", 20, "int");
+            styles.SetValue(swatch + ".FillRed", 200, "int");
+            styles.SetValue(swatch + ".FillGreen", 10, "int");
+            styles.SetValue(swatch + ".FillBlue", 20, "int");
             project.ApplyAllVariableReferences();
         });
 
@@ -469,7 +471,7 @@ public class ToolInputBackgroundTests : BaseTestClass
     [InlineData("FormsTemplate", "Controls/ListBox", "Styles", "InputBackgroundDark", "ListBoxCategoryState", "Disabled,DisabledFocused")]
     [InlineData("FormsTemplate", "Controls/TextBox", "Styles", "InputBackgroundDark", "TextBoxCategoryState", "Disabled")]
     [InlineData("FormsTemplate", "Controls/TextBox", "Styles", "InputBackgroundLight", "TextBoxCategoryState", "Highlighted")]
-    [InlineData("FormsThemes/Editor", "Editor/ListBox", "Editor/Styles", "PanelBackgroundDark", "ListBoxCategoryState", "Disabled,DisabledFocused")]
+    [InlineData("FormsThemes/Editor", "Editor/ListBox", "Editor/Styles", "RecessedBackgroundDark", "ListBoxCategoryState", "Disabled,DisabledFocused")]
     [InlineData("FormsThemes/Editor", "Editor/TextBox", "Editor/Styles", "RecessedBackgroundDark", "TextBoxCategoryState", "Disabled")]
     [InlineData("FormsThemes/Editor", "Editor/TextBox", "Editor/Styles", "RecessedBackgroundLight", "TextBoxCategoryState", "Highlighted")]
     public void ToolBackground_StateSwatch_RecolorsOnlyItsStates(string templateFolder, string componentName, string stylesName,

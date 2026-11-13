@@ -127,13 +127,13 @@ public static class EditorTheme
         // no-op for consumers who apply Editor once.
         TryAdd(typeof(RadioButton), (_, c) => new Gum.Forms.DefaultVisuals.V3.RadioButtonVisual(tryCreateFormsObject: c));
         TryAdd(typeof(ToggleButton), (_, c) => new Gum.Forms.DefaultVisuals.V3.ToggleButtonVisual(tryCreateFormsObject: c));
-        TryAdd(typeof(PasswordBox), (_, c) => new Gum.Forms.DefaultVisuals.V3.PasswordBoxVisual(tryCreateFormsObject: c));
+        TryAdd(typeof(PasswordBox), (_, c) => new PasswordBoxVisual(tryCreateFormsObject: c));
         TryAdd(typeof(Menu), (_, c) => new Gum.Forms.DefaultVisuals.V3.MenuVisual(tryCreateFormsObject: c));
         TryAdd(typeof(MenuItem), (_, c) => new Gum.Forms.DefaultVisuals.V3.MenuItemVisual(tryCreateFormsObject: c));
         TryAdd(typeof(Window), (_, c) => new Gum.Forms.DefaultVisuals.V3.WindowVisual(tryCreateFormsObject: c));
         TryAdd(typeof(Splitter), (_, c) => new Gum.Forms.DefaultVisuals.V3.SplitterVisual(tryCreateFormsObject: c));
         TryAdd(typeof(Label), (_, c) => new Gum.Forms.DefaultVisuals.V3.LabelVisual(tryCreateFormsObject: c));
-        TryAdd(typeof(ItemsControl), (_, c) => new Gum.Forms.DefaultVisuals.V3.ItemsControlVisual(tryCreateFormsObject: c));
+        TryAdd(typeof(ItemsControl), (_, c) => new ItemsControlVisual(tryCreateFormsObject: c));
         TryAdd(typeof(Tooltip), (_, c) => new Gum.Forms.DefaultVisuals.V3.TooltipVisual(tryCreateFormsObject: c));
         TryAdd(typeof(Gum.Forms.Controls.Games.DialogBox), (_, c) => new Gum.Forms.DefaultVisuals.V3.DialogBoxVisual(tryCreateFormsObject: c));
     }
