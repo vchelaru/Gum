@@ -21,11 +21,12 @@ Normally invisible objects are not rendered and do not perform their Layout call
 
 ## Code Example: Scaling a ListBox
 
-The following code creates a ListBox which is displayed on a render target with wavy scaling:
+The following code creates a ListBox which is displayed on a render target with wavy scaling. `deltaSeconds` is your framework's frame time in seconds.
 
 ```csharp
 // Class scope
 SpriteRuntime sprite;
+float totalSeconds;
 
 // Initialize
 var container = new ContainerRuntime();
@@ -48,9 +49,9 @@ sprite.Anchor(Anchor.Center);
 sprite.RenderTargetTextureSource = container;
 
 // Update
-var gameSeconds = (float)gameTime.TotalGameTime.TotalSeconds;
-sprite.Width = 100 + 50 * MathF.Sin(gameSeconds * 4);
-sprite.Height = 100 + 50 * MathF.Sin(gameSeconds * 3);
+totalSeconds += (float)deltaSeconds;
+sprite.Width = 100 + 50 * MathF.Sin(totalSeconds * 4);
+sprite.Height = 100 + 50 * MathF.Sin(totalSeconds * 3);
 
 GumUI.Update(gameTime);
 ```

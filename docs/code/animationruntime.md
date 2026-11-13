@@ -336,7 +336,7 @@ Future versions of Gum may change this behavior, allowing `PlayAnimation` to sta
 
 To play multiple animations, we can keep track of each animation time and apply it manually in our update function.
 
-The following code assumes that `Animation1` and `Animation2` are valid animations. The following code also assumes that `MyInstance` is a valid visual instance.
+The following code assumes that `Animation1` and `Animation2` are valid animations. The following code also assumes that `MyInstance` is a valid visual instance. `deltaSeconds` is your framework's frame time in seconds.
 
 ```csharp
 // Class scope
@@ -348,8 +348,8 @@ GumUI.Update(gameTime);
 
 var keyboard = GumUI.Keyboard;
 
-animation1Time += gameTime.ElapsedGameTime.TotalSeconds;
-animation2Time += gameTime.ElapsedGameTime.TotalSeconds;
+animation1Time += deltaSeconds;
+animation2Time += deltaSeconds;
 
 if(keyboard.KeyPushed(Gum.Forms.Input.Keys.Space))
 {

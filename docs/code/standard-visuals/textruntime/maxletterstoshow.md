@@ -6,7 +6,7 @@
 
 ## Code Example - Printing Letters One at a Time
 
-The following code can be used to print letters out one at a time.
+The following code can be used to print letters out one at a time. `deltaSeconds` is your framework's frame time in seconds.
 
 ```csharp
 // Class scope
@@ -42,7 +42,7 @@ if(isPrinting)
 {
     const int charactersPerSecond = 20;
     numberOfCharacters += 
-        (float)gameTime.ElapsedGameTime.TotalSeconds * charactersPerSecond;
+        (float)deltaSeconds * charactersPerSecond;
 
     textRuntime.MaxLettersToShow = (int)numberOfCharacters;
 }
