@@ -698,7 +698,7 @@ public partial class GeneratedFormsConstructionTests : BaseTestClass
     {
         Type systemManagersType = MonoGameGum.GetType("RenderingLibrary.SystemManagers", throwOnError: true)!;
         systemManagersType.GetMethod("RegisterComponentRuntimeInstantiations", BindingFlags.NonPublic | BindingFlags.Instance)!
-            .Invoke(systemManagersType.GetProperty("Default")!.GetValue(null), null);
+            .Invoke(systemManagersType.GetProperty("Default")!.GetValue(null), new object[] { true });
         GumProjectSave project = GumProjectSave.Load(Path.Combine(TempDirectory, "MyProject.gumx"), out _)!;
         Gum.Managers.ObjectFinder.Self.GumProjectSave = project;
         Gum.Managers.StandardElementsManager.Self.RegisterExtendedDefaultStates();

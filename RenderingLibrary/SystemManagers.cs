@@ -147,7 +147,22 @@ public partial class SystemManagers : ISystemManagers
         "MonoGameGum.Content";
 #endif
 
-    
+
+    /// <summary>
+    /// Creates the renderer and managers for <paramref name="graphicsDevice"/>. With
+    /// <paramref name="fullInstantiation"/>, also wires the Gum runtime: content loading, property
+    /// assignment, default fonts and the standard runtime types.
+    /// </summary>
+#if USE_GUMCOMMON
+    /// <remarks>
+    /// The first call in the process registers the standard runtime types (<c>TextRuntime</c>,
+    /// <c>ContainerRuntime</c> and the rest) with <see cref="GumRuntime.ElementSaveExtensions"/>. A repeat
+    /// call registers only the standard types missing from the registry and never overrides a host
+    /// registration, so a <c>RegisterGueInstantiation("Text", ...)</c> for a custom <c>TextRuntime</c>
+    /// subclass survives it. To return to the stock runtimes, call
+    /// <see cref="GumRuntime.ElementSaveExtensions.Reset"/> and then Initialize.
+    /// </remarks>
+#endif
     public void Initialize(GraphicsDevice graphicsDevice, bool fullInstantiation = false)
     {
         // Install a default TitleContainer-based hook on platforms where files
@@ -317,7 +332,8 @@ public partial class SystemManagers : ISystemManagers
             ToolsUtilities.FileManager.RelativeDirectory = "Content/";
 #endif
 
-            RegisterComponentRuntimeInstantiations();
+            RegisterComponentRuntimeInstantiations(overwrite: !_hasRegisteredStandardRuntimes);
+            _hasRegisteredStandardRuntimes = true;
 
             GraphicalUiElement.ApplyRuntimeMissingFileBehaviorDefault();
 
@@ -474,7 +490,10 @@ public partial class SystemManagers : ISystemManagers
 
 #if USE_GUMCOMMON
 
-    private void RegisterComponentRuntimeInstantiations()
+    // Process-wide: the first Initialize overwrites, a repeat one fills only missing standard types.
+    private static bool _hasRegisteredStandardRuntimes;
+
+    private void RegisterComponentRuntimeInstantiations(bool overwrite)
     {
         // Construct the MonoGameGum.GueDeriving shim subclasses (not the new Gum.GueDeriving
         // base types). See the comment on the `using` directive at the top of the file —
@@ -483,35 +502,35 @@ public partial class SystemManagers : ISystemManagers
 #pragma warning disable CS0618 // Type or member is obsolete
         ElementSaveExtensions.RegisterGueInstantiation(
             "Circle",
-            () => new CircleRuntime());
+            () => new CircleRuntime(), overwrite);
 
         ElementSaveExtensions.RegisterGueInstantiation(
             "ColoredRectangle",
-            () => new ColoredRectangleRuntime());
+            () => new ColoredRectangleRuntime(), overwrite);
 
         ElementSaveExtensions.RegisterGueInstantiation(
             "Container",
-            () => new ContainerRuntime());
+            () => new ContainerRuntime(), overwrite);
 
         ElementSaveExtensions.RegisterGueInstantiation(
             "NineSlice",
-            () => new NineSliceRuntime());
+            () => new NineSliceRuntime(), overwrite);
 
         ElementSaveExtensions.RegisterGueInstantiation(
             "Polygon",
-            () => new PolygonRuntime(systemManagers: this));
+            () => new PolygonRuntime(systemManagers: this), overwrite);
 
         ElementSaveExtensions.RegisterGueInstantiation(
             "Rectangle",
-            () => new RectangleRuntime(systemManagers: this));
+            () => new RectangleRuntime(systemManagers: this), overwrite);
 
         ElementSaveExtensions.RegisterGueInstantiation(
             "Sprite",
-            () => new SpriteRuntime());
+            () => new SpriteRuntime(), overwrite);
 
         ElementSaveExtensions.RegisterGueInstantiation(
             "Text",
-            () => new TextRuntime(systemManagers: this));
+            () => new TextRuntime(systemManagers: this), overwrite);
 #pragma warning restore CS0618
     }
 #endif

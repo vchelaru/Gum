@@ -124,6 +124,18 @@ public partial class SystemManagers : ISystemManagers
         Renderer = new Renderer();
     }
 
+    /// <summary>
+    /// Wires the Gum runtime to raylib: content loading, property assignment and the standard
+    /// runtime types.
+    /// </summary>
+    /// <remarks>
+    /// The first call in the process registers the standard runtime types (<c>TextRuntime</c>,
+    /// <c>ContainerRuntime</c> and the rest) with <see cref="GumRuntime.ElementSaveExtensions"/>. A repeat
+    /// call registers only the standard types missing from the registry and never overrides a host
+    /// registration, so a <c>RegisterGueInstantiation("Text", ...)</c> for a custom <c>TextRuntime</c>
+    /// subclass survives it. To return to the stock runtimes, call
+    /// <see cref="GumRuntime.ElementSaveExtensions.Reset"/> and then Initialize.
+    /// </remarks>
     public void Initialize()
     {
         bool fullInstantiation = true;
@@ -176,7 +188,8 @@ public partial class SystemManagers : ISystemManagers
             ToolsUtilities.FileManager.RelativeDirectory = "Content/";
 #endif
 
-            RegisterComponentRuntimeInstantiations();
+            RegisterComponentRuntimeInstantiations(overwrite: !_hasRegisteredStandardRuntimes);
+            _hasRegisteredStandardRuntimes = true;
 
             GraphicalUiElement.ApplyRuntimeMissingFileBehaviorDefault();
         }
@@ -290,47 +303,50 @@ public partial class SystemManagers : ISystemManagers
     }
 
 
-    private void RegisterComponentRuntimeInstantiations()
+    // Process-wide: the first Initialize overwrites, a repeat one fills only missing standard types.
+    private static bool _hasRegisteredStandardRuntimes;
+
+    private void RegisterComponentRuntimeInstantiations(bool overwrite)
     {
         // A standard element with a runtime class but no registration loads as a plain
         // GraphicalUiElement, which drops the runtime-only variables (IsFilled/FillRed/...) (#7287).
         ElementSaveExtensions.RegisterGueInstantiation(
             "Arc",
-            () => new ArcRuntime());
+            () => new ArcRuntime(), overwrite);
 
         ElementSaveExtensions.RegisterGueInstantiation(
             "Circle",
-            () => new CircleRuntime());
+            () => new CircleRuntime(), overwrite);
 
         // ColoredRectangle is obsolete, but existing projects still load it by type name.
 #pragma warning disable CS0618 // Type or member is obsolete
         ElementSaveExtensions.RegisterGueInstantiation(
             "ColoredRectangle",
-            () => new ColoredRectangleRuntime());
+            () => new ColoredRectangleRuntime(), overwrite);
 #pragma warning restore CS0618
 
         ElementSaveExtensions.RegisterGueInstantiation(
             "Container",
-            () => new ContainerRuntime());
+            () => new ContainerRuntime(), overwrite);
 
         ElementSaveExtensions.RegisterGueInstantiation(
             "NineSlice",
-            () => new NineSliceRuntime());
+            () => new NineSliceRuntime(), overwrite);
 
         ElementSaveExtensions.RegisterGueInstantiation(
             "Polygon",
-            () => new PolygonRuntime(systemManagers: this));
+            () => new PolygonRuntime(systemManagers: this), overwrite);
 
         ElementSaveExtensions.RegisterGueInstantiation(
             "Rectangle",
-            () => new RectangleRuntime(systemManagers: this));
+            () => new RectangleRuntime(systemManagers: this), overwrite);
 
         ElementSaveExtensions.RegisterGueInstantiation(
             "Sprite",
-            () => new SpriteRuntime());
+            () => new SpriteRuntime(), overwrite);
 
         ElementSaveExtensions.RegisterGueInstantiation(
             "Text",
-            () => new TextRuntime(systemManagers: this));
+            () => new TextRuntime(systemManagers: this), overwrite);
     }
 }
