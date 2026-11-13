@@ -151,6 +151,12 @@ On the Skia hosts (Silk.NET, Stride, Unity, KNI Skia, Brutal and the standalone 
 
 `GumRenderer` no longer has a CPU fallback, so `ForceCpu` and `IsUsingGpu` are removed. Delete any code that sets or reads them. On a graphics API that SkiaGameRendering does not support, Gum logs one error and draws nothing.
 
+### Theme Packages Renamed to `.Skia`
+
+The `Gum.Themes.<Name>.SilkNet` and `Gum.Themes.<Name>.KniSkia` theme packages are replaced by one `Gum.Themes.<Name>.Skia` package per theme, which works on every Skia host (Silk.NET, KNI with Skia, BRUTAL and Stride). Remove the old theme package and add the `.Skia` one, for example `Gum.Themes.DarkPro.Skia` in place of `Gum.Themes.DarkPro.SilkNet`. The `Apply` call does not change.
+
+See [Themes](../../code/styling/themes/README.md).
+
 ## Skia Rendering
 
 ### Blend Defaults to Normal

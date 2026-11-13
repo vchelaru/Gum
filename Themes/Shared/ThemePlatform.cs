@@ -15,7 +15,7 @@ namespace Gum.Themes;
 
 /// <summary>
 /// Isolates the per-backend differences a Gum theme needs at <c>Apply</c> time so each theme's
-/// body stays platform-agnostic and source-shared across its MonoGame/KNI, raylib, and Skia/SilkNet
+/// body stays platform-agnostic and source-shared across its MonoGame/KNI, raylib, and Skia
 /// project variants. This file is the single home for the <c>#if RAYLIB</c> / <c>#if SKIA</c>
 /// branches; the theme classes that link it stay free of platform conditionals.
 /// </summary>
@@ -25,7 +25,7 @@ internal static class ThemePlatform
     /// Assigns the backend-appropriate KernSmith in-memory font creator so themed controls can
     /// rasterize their fonts (system or embedded) at runtime without shipping <c>.fnt</c> files.
     /// On MonoGame/KNI the graphics device is resolved from the active Gum renderer, so this must
-    /// be called after Gum has been initialized (<c>GumService.Initialize</c>). No-op on Skia/SilkNet:
+    /// be called after Gum has been initialized (<c>GumService.Initialize</c>). No-op on Skia:
     /// <c>SystemManagers.Initialize()</c> already routes RichTextKit's font resolution through
     /// <see cref="GumFontMapper"/> (<c>Topten.RichTextKit.FontMapper.Default</c>), so there is no
     /// separate in-memory font creator to wire the way the bitmap-font-atlas backends need (#3671).
@@ -48,7 +48,7 @@ internal static class ThemePlatform
     /// Registers an embedded TTF (raw bytes) under a family/style so a theme's bundled fonts
     /// resolve without the consumer copying font files. On XNA-like/raylib this forwards to the
     /// backend's KernSmith creator (both expose the same static <c>RegisterFont</c> surface; this
-    /// only hides the type name). On Skia/SilkNet it forwards to <see cref="GumFontMapper.RegisterFont"/>,
+    /// only hides the type name). On Skia it forwards to <see cref="GumFontMapper.RegisterFont"/>,
     /// which resolves the same family+style vocabulary directly against SkiaSharp's native TTF
     /// loading -- no atlas baking needed (#3671).
     /// </summary>

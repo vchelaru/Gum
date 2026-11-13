@@ -10,11 +10,11 @@
          .MonoGame / .Kni / .Raylib variants leave this undefined. -->
     <DefineConstants>$(DefineConstants);SKIA</DefineConstants>
 
-    <PackageId>Gum.Themes.DarkPro.KniSkia</PackageId>
+    <PackageId>Gum.Themes.Neon.Skia</PackageId>
     <Version>2026.5.11.1</Version>
     <Authors>Gum Contributors</Authors>
     <RepositoryUrl>https://github.com/vchelaru/Gum</RepositoryUrl>
-    <Description>A flat dark theme for Gum UI inspired by modern code editors. Provides styled visuals for Gum Forms controls with KNI Skia and Gum.</Description>
+    <Description>A neon / cyberpunk theme for Gum UI. Provides styled visuals for Gum Forms controls with saturated cyan glow, near-square corners, and the Share Tech Mono / Orbitron typefaces, for Gum on SkiaSharp (Silk.NET, KNI with Skia, BRUTAL, Stride).</Description>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageReadmeFile>README.md</PackageReadmeFile>
 
@@ -24,36 +24,38 @@
     <NoWarn>1591</NoWarn>
   </PropertyGroup>
   <ItemGroup>
-    <None Include="..\Gum.Themes.DarkPro.MonoGame\README.md" Pack="true" PackagePath="\" />
-    <None Include="..\Gum.Themes.DarkPro.MonoGame\Content\Fonts\OFL.txt" Pack="true" PackagePath="\" />
-    <None Include="..\Gum.Themes.DarkPro.MonoGame\Content\Fonts\DejaVuSansMono-LICENSE.txt" Pack="true" PackagePath="\" />
+    <None Include="..\Gum.Themes.Neon.MonoGame\README.md" Pack="true" PackagePath="\" />
+    <None Include="..\Gum.Themes.Neon.MonoGame\Content\Fonts\ShareTechMono-LICENSE.txt" Pack="true" PackagePath="\" />
+    <None Include="..\Gum.Themes.Neon.MonoGame\Content\Fonts\Orbitron-LICENSE.txt" Pack="true" PackagePath="\" />
+    <None Include="..\Gum.Themes.Neon.MonoGame\Content\Fonts\DejaVuSansMono-LICENSE.txt" Pack="true" PackagePath="\" />
   </ItemGroup>
   <ItemGroup>
     <!-- Source-share every theme .cs from the MonoGame variant; the SKIA symbol above swaps the
          per-backend branches. The shims live outside that folder, so they are linked explicitly. -->
-    <Compile Include="..\Gum.Themes.DarkPro.MonoGame\**\*.cs" />
-    <Compile Remove="..\Gum.Themes.DarkPro.MonoGame\obj\**" />
+    <Compile Include="..\Gum.Themes.Neon.MonoGame\**\*.cs" />
+    <Compile Remove="..\Gum.Themes.Neon.MonoGame\obj\**" />
+    <Compile Remove="..\Gum.Themes.Neon.MonoGame\bin\**" />
     <Compile Include="..\Shared\ThemePlatform.cs" Link="ThemePlatform.cs" />
     <Compile Include="..\Shared\ThemeShapePlatform.cs" Link="ThemeShapePlatform.cs" />
   </ItemGroup>
   <ItemGroup>
     <!-- Re-embed the TTFs from the MonoGame project's Content\Fonts folder, mapped under this
          assembly's Content\Fonts via <Link> so the resource name resolves to
-         "Gum.Themes.DarkPro.KniSkia.Content.Fonts.<file>" — matching what
-         DarkProTheme.RegisterEmbeddedFont derives from the assembly name. -->
-    <EmbeddedResource Include="..\Gum.Themes.DarkPro.MonoGame\Content\Fonts\DMMono-Regular.ttf">
-      <Link>Content\Fonts\DMMono-Regular.ttf</Link>
+         "Gum.Themes.Neon.Skia.Content.Fonts.<file>" — matching what
+         NeonTheme.RegisterEmbeddedFont derives from the assembly name. -->
+    <EmbeddedResource Include="..\Gum.Themes.Neon.MonoGame\Content\Fonts\ShareTechMono-Regular.ttf">
+      <Link>Content\Fonts\ShareTechMono-Regular.ttf</Link>
     </EmbeddedResource>
-    <EmbeddedResource Include="..\Gum.Themes.DarkPro.MonoGame\Content\Fonts\DMMono-Medium.ttf">
-      <Link>Content\Fonts\DMMono-Medium.ttf</Link>
+    <EmbeddedResource Include="..\Gum.Themes.Neon.MonoGame\Content\Fonts\Orbitron-Regular.ttf">
+      <Link>Content\Fonts\Orbitron-Regular.ttf</Link>
     </EmbeddedResource>
-    <EmbeddedResource Include="..\Gum.Themes.DarkPro.MonoGame\Content\Fonts\DMMono-Italic.ttf">
-      <Link>Content\Fonts\DMMono-Italic.ttf</Link>
+    <EmbeddedResource Include="..\Gum.Themes.Neon.MonoGame\Content\Fonts\Orbitron-Bold.ttf">
+      <Link>Content\Fonts\Orbitron-Bold.ttf</Link>
     </EmbeddedResource>
-    <EmbeddedResource Include="..\Gum.Themes.DarkPro.MonoGame\Content\Fonts\DMMono-MediumItalic.ttf">
-      <Link>Content\Fonts\DMMono-MediumItalic.ttf</Link>
+    <EmbeddedResource Include="..\Gum.Themes.Neon.MonoGame\Content\Fonts\Orbitron-Black.ttf">
+      <Link>Content\Fonts\Orbitron-Black.ttf</Link>
     </EmbeddedResource>
-    <EmbeddedResource Include="..\Gum.Themes.DarkPro.MonoGame\Content\Fonts\DejaVuSansMono.ttf">
+    <EmbeddedResource Include="..\Gum.Themes.Neon.MonoGame\Content\Fonts\DejaVuSansMono.ttf">
       <Link>Content\Fonts\DejaVuSansMono.ttf</Link>
     </EmbeddedResource>
   </ItemGroup>
@@ -66,10 +68,10 @@
     <PackageReference Include="SkiaSharp" Version="$(GumSkiaSharpVersion)" />
   </ItemGroup>
   <ItemGroup>
-    <!-- Gum.KniSkia: the KNI game-host runtime (window/input + Skia rendering). It references SkiaGum.csproj
-         itself (unlike SilkNetGum, which file-links it), so SkiaGum's types flow in transitively and
-         there is one set of them. -->
+    <!-- SkiaGum, not a host runtime: every Skia host (Gum.SilkNet, Gum.KniSkia, Gum.Brutal.OGL,
+         Gum.Brutal.Vulkan, Gum.Stride) ProjectReferences SkiaGum.csproj, so they all share one SkiaGum
+         assembly and its Forms/visual types, and this one package serves them all. -->
     <ProjectReference Include="..\..\GumCommon\GumCommon.csproj" />
-    <ProjectReference Include="..\..\Runtimes\KniSkiaGum\KniSkiaGum.csproj" />
+    <ProjectReference Include="..\..\Runtimes\SkiaGum\SkiaGum.csproj" />
   </ItemGroup>
 </Project>

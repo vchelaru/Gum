@@ -10,11 +10,11 @@
          .MonoGame / .Kni / .Raylib variants leave this undefined. -->
     <DefineConstants>$(DefineConstants);SKIA</DefineConstants>
 
-    <PackageId>Gum.Themes.Meadow.KniSkia</PackageId>
-    <Version>2026.5.31.1</Version>
+    <PackageId>Gum.Themes.Retro95.Skia</PackageId>
+    <Version>2026.5.11.1</Version>
     <Authors>Gum Contributors</Authors>
     <RepositoryUrl>https://github.com/vchelaru/Gum</RepositoryUrl>
-    <Description>A cozy cottagecore theme for Gum UI in cream, sage, peach, teal, sky-blue, and coral. Provides styled visuals for Gum Forms controls with chunky pill buttons, dashed-outline panels, soft drop shadows, and the Baloo 2 + Quicksand typefaces, for KNI Skia and Gum.</Description>
+    <Description>A retro Windows 95 / "Classic" theme for Gum UI. Provides styled visuals for Gum Forms controls with raised/sunken beveled chrome, navy selection bands, and the canonical battleship-gray (#C0C0C0) palette, for Gum on SkiaSharp (Silk.NET, KNI with Skia, BRUTAL, Stride).</Description>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageReadmeFile>README.md</PackageReadmeFile>
 
@@ -24,38 +24,31 @@
     <NoWarn>1591</NoWarn>
   </PropertyGroup>
   <ItemGroup>
-    <None Include="..\Gum.Themes.Meadow.MonoGame\README.md" Pack="true" PackagePath="\" />
-    <None Include="..\Gum.Themes.Meadow.MonoGame\Content\Fonts\Baloo2-OFL.txt" Pack="true" PackagePath="\" />
-    <None Include="..\Gum.Themes.Meadow.MonoGame\Content\Fonts\Quicksand-OFL.txt" Pack="true" PackagePath="\" />
-    <None Include="..\Gum.Themes.Meadow.MonoGame\Content\Fonts\DejaVuSansMono-LICENSE.txt" Pack="true" PackagePath="\" />
+    <None Include="..\Gum.Themes.Retro95.MonoGame\README.md" Pack="true" PackagePath="\" />
+    <None Include="..\Gum.Themes.Retro95.MonoGame\Content\Fonts\OFL.txt" Pack="true" PackagePath="\" />
+    <None Include="..\Gum.Themes.Retro95.MonoGame\Content\Fonts\DejaVuSansMono-LICENSE.txt" Pack="true" PackagePath="\" />
   </ItemGroup>
   <ItemGroup>
     <!-- Source-share every theme .cs from the MonoGame variant; the SKIA symbol above swaps the
          per-backend branches. The shims live outside that folder, so they are linked explicitly. -->
-    <Compile Include="..\Gum.Themes.Meadow.MonoGame\**\*.cs" />
-    <Compile Remove="..\Gum.Themes.Meadow.MonoGame\obj\**" />
-    <Compile Remove="..\Gum.Themes.Meadow.MonoGame\bin\**" />
+    <Compile Include="..\Gum.Themes.Retro95.MonoGame\**\*.cs" />
+    <Compile Remove="..\Gum.Themes.Retro95.MonoGame\obj\**" />
+    <Compile Remove="..\Gum.Themes.Retro95.MonoGame\bin\**" />
     <Compile Include="..\Shared\ThemePlatform.cs" Link="ThemePlatform.cs" />
     <Compile Include="..\Shared\ThemeShapePlatform.cs" Link="ThemeShapePlatform.cs" />
   </ItemGroup>
   <ItemGroup>
     <!-- Re-embed the TTFs from the MonoGame project's Content\Fonts folder, mapped under this
          assembly's Content\Fonts via <Link> so the resource name resolves to
-         "Gum.Themes.Meadow.KniSkia.Content.Fonts.<file>" — matching what
-         MeadowTheme.RegisterEmbeddedFont derives from the assembly name. -->
-    <EmbeddedResource Include="..\Gum.Themes.Meadow.MonoGame\Content\Fonts\Baloo2-SemiBold.ttf">
-      <Link>Content\Fonts\Baloo2-SemiBold.ttf</Link>
+         "Gum.Themes.Retro95.Skia.Content.Fonts.<file>" — matching what
+         Retro95Theme.RegisterEmbeddedFont derives from the assembly name. -->
+    <EmbeddedResource Include="..\Gum.Themes.Retro95.MonoGame\Content\Fonts\Nunito-Regular.ttf">
+      <Link>Content\Fonts\Nunito-Regular.ttf</Link>
     </EmbeddedResource>
-    <EmbeddedResource Include="..\Gum.Themes.Meadow.MonoGame\Content\Fonts\Baloo2-Bold.ttf">
-      <Link>Content\Fonts\Baloo2-Bold.ttf</Link>
+    <EmbeddedResource Include="..\Gum.Themes.Retro95.MonoGame\Content\Fonts\Nunito-Bold.ttf">
+      <Link>Content\Fonts\Nunito-Bold.ttf</Link>
     </EmbeddedResource>
-    <EmbeddedResource Include="..\Gum.Themes.Meadow.MonoGame\Content\Fonts\Quicksand-Medium.ttf">
-      <Link>Content\Fonts\Quicksand-Medium.ttf</Link>
-    </EmbeddedResource>
-    <EmbeddedResource Include="..\Gum.Themes.Meadow.MonoGame\Content\Fonts\Quicksand-Bold.ttf">
-      <Link>Content\Fonts\Quicksand-Bold.ttf</Link>
-    </EmbeddedResource>
-    <EmbeddedResource Include="..\Gum.Themes.Meadow.MonoGame\Content\Fonts\DejaVuSansMono.ttf">
+    <EmbeddedResource Include="..\Gum.Themes.Retro95.MonoGame\Content\Fonts\DejaVuSansMono.ttf">
       <Link>Content\Fonts\DejaVuSansMono.ttf</Link>
     </EmbeddedResource>
   </ItemGroup>
@@ -68,10 +61,10 @@
     <PackageReference Include="SkiaSharp" Version="$(GumSkiaSharpVersion)" />
   </ItemGroup>
   <ItemGroup>
-    <!-- Gum.KniSkia: the KNI game-host runtime (window/input + Skia rendering). It references SkiaGum.csproj
-         itself (unlike SilkNetGum, which file-links it), so SkiaGum's types flow in transitively and
-         there is one set of them. -->
+    <!-- SkiaGum, not a host runtime: every Skia host (Gum.SilkNet, Gum.KniSkia, Gum.Brutal.OGL,
+         Gum.Brutal.Vulkan, Gum.Stride) ProjectReferences SkiaGum.csproj, so they all share one SkiaGum
+         assembly and its Forms/visual types, and this one package serves them all. -->
     <ProjectReference Include="..\..\GumCommon\GumCommon.csproj" />
-    <ProjectReference Include="..\..\Runtimes\KniSkiaGum\KniSkiaGum.csproj" />
+    <ProjectReference Include="..\..\Runtimes\SkiaGum\SkiaGum.csproj" />
   </ItemGroup>
 </Project>

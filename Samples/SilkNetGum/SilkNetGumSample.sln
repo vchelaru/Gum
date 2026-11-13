@@ -13,7 +13,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "LibraryProjects", "LibraryP
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GumCommon", "..\..\GumCommon\GumCommon.csproj", "{2ABFB42D-954D-4429-8B01-397581BC8C9D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Gum.Themes.Editor.SilkNet", "..\..\Themes\Gum.Themes.Editor.SilkNet\Gum.Themes.Editor.SilkNet.csproj", "{7A6E5C4D-8B1A-4F3E-9C7D-2E5B1A9F6C3D}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Gum.Themes.Editor.Skia", "..\..\Themes\Gum.Themes.Editor.Skia\Gum.Themes.Editor.Skia.csproj", "{7A6E5C4D-8B1A-4F3E-9C7D-2E5B1A9F6C3D}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SkiaGum.ShadowDusk", "..\..\Runtimes\SkiaGum.ShadowDusk\SkiaGum.ShadowDusk.csproj", "{702098EB-6438-4420-9CE7-D3D69FFF7061}"
 EndProject

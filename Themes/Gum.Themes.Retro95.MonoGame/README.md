@@ -9,7 +9,7 @@ Pick the package matching your runtime:
 - MonoGame: `dotnet add package Gum.Themes.Retro95.MonoGame`
 - KNI: `dotnet add package Gum.Themes.Retro95.Kni`
 - raylib: `dotnet add package Gum.Themes.Retro95.Raylib`
-- Skia/SilkNet: `dotnet add package Gum.Themes.Retro95.SilkNet`
+- Skia (Silk.NET, KNI with Skia, BRUTAL, Stride): `dotnet add package Gum.Themes.Retro95.Skia`
 
 ## Usage
 

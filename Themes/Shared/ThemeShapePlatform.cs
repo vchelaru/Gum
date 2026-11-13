@@ -13,7 +13,7 @@ internal static class ThemeShapePlatform
 {
     /// <summary>
     /// Initializes the Apos.Shapes <c>ShapeRenderer</c> on the XNA-like backends (MonoGame/KNI),
-    /// where the shape runtimes require it. No-op on raylib and Skia/SilkNet, which both render
+    /// where the shape runtimes require it. No-op on raylib and Skia, which both render
     /// <c>RectangleRuntime</c> / <c>CircleRuntime</c> natively (no Apos.Shapes <c>ShapeRenderer</c>
     /// involved -- #3671). Calls <c>UseShapes()</c>, which does nothing when shapes are already
     /// set up, so a host that did it (or another theme) stays safe.
