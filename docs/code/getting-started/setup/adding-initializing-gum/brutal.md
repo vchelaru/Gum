@@ -12,6 +12,10 @@ Available in preview NuGet packages (use a `-preview` version), or now if buildi
 
 If you plan to use a Gum project with OpenGL, the easiest start is a new game that Gum creates for you. In the Gum tool, select **File** > **New Project**, check **Create C# project**, and choose BRUTAL in **Platform**. Or run [`gumcli new MyGame --platform brutal --preview`](../../../../cli/new.md). The game already references Gum, loads the Gum project and copies it to the output folder, so you can skip the rest of this page. See [Creating a Project](../../../../gum-tool/setup/creating-a-project.md).
 
+{% hint style="info" %}
+BRUTAL appears in **Platform** only in the Gum tool pre-release from November 9, 2026 or newer. Download it from the [Releases page](https://github.com/vchelaru/Gum/releases). For `gumcli`, install the preview with `dotnet tool install -g GumCli --prerelease`.
+{% endhint %}
+
 The rest of this page adds Gum to a game you already have.
 
 ## Adding Gum NuGet package
