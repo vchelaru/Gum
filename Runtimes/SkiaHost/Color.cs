@@ -8,10 +8,11 @@ namespace Gum;
 /// <summary>
 /// An XNA/MonoGame-compatible color that converts implicitly to and from <see cref="SKColor"/>, so code
 /// written against MonoGame's <c>Color</c> (<c>Color.Red</c>, <c>new Color(255, 0, 0)</c>) compiles on
-/// this host. Compiled into the BRUTAL and Silk.NET hosts only (not SkiaGum, where KNI and Stride users
-/// bring their own <c>Color</c>).
+/// this host. Compiled into the BRUTAL, Silk.NET, KNI Skia and Stride hosts only (not SkiaGum). KNI and
+/// Stride have their own <c>Color</c>, so those hosts add the conversion to it in a partial and their
+/// users alias this type (<c>using Color = Gum.Color;</c>) instead of importing it by namespace alone.
 /// </summary>
-public struct Color : IEquatable<Color>
+public partial struct Color : IEquatable<Color>
 {
     private byte _r;
     private byte _g;
