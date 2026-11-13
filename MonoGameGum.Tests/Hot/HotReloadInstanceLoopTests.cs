@@ -389,20 +389,29 @@ public class HotReloadInstanceLoopTests : BaseTestClass
     [Fact]
     public void ComponentHoldingAnInstanceOfItsDerivedComponent_ReloadKeepsTheTreeARestartBuilds()
     {
-        // The reload diffs only the instances an element declares itself, so the inherited loop
-        // instance is never met and nothing is reported; the tree still matches a restart.
+        // DerivedCard inherits Nested, a DerivedCard, so it holds itself. As loaded from disk it lists
+        // the inherited instance (the repair a project load runs), and the reload meets the loop where a
+        // restart does and reports it with the same text.
         GumProjectSave project = NewProject();
         ComponentSave baseComponent = AddComponent(project, "BaseCard");
         AddComponent(project, "DerivedCard", baseType: "BaseCard");
         AddInstance(baseComponent, "Nested", "DerivedCard");
         ScreenSave screen = AddScreen(project, "Main");
         AddInstance(screen, "Card", "DerivedCard");
+        project.RepairMissingDefinedByBaseInstances();
         GraphicalUiElement screenGue = Build(screen);
 
         HotReloadResult result = Reload(screenGue, project);
+        _errors.Clear();
 
         Describe(screenGue).ShouldBe(DescribeAFreshLoad(screen));
-        result.Issues.ShouldAllBe(issue => issue.Kind == HotReloadIssueKind.InstanceLoop);
+        string printedByARestart = _errors.ShouldHaveSingleItem();
+        HotReloadIssue issue = result.Issues.ShouldHaveSingleItem();
+        issue.Kind.ShouldBe(HotReloadIssueKind.InstanceLoop);
+        issue.ElementName.ShouldBe("DerivedCard");
+        issue.InstanceName.ShouldBe("Nested");
+        issue.Message.ShouldBe(printedByARestart);
+        result.MatchesRestart.ShouldBeTrue();
     }
 
     [Fact]
