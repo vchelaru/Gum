@@ -28,6 +28,8 @@
   <ItemGroup>
     <ProjectReference Include="..\..\Runtimes\BrutalGum.OGL\BrutalGum.OGL.csproj" />
     <ProjectReference Include="..\SkiaHost.TestsCommon\SkiaHost.TestsCommon.csproj" />
+    <!-- A .Skia theme in a BRUTAL project: proves the theme package shares SkiaGum's types with this host. -->
+    <ProjectReference Include="..\..\Themes\Gum.Themes.Neon.Skia\Gum.Themes.Neon.Skia.csproj" />
   </ItemGroup>
 
   <ItemGroup>

@@ -26,8 +26,7 @@ namespace SilkNetGumThemesShowcase;
 /// use -- the screen sources are source-shared across all three, so they render identically and can be
 /// compared side by side.
 ///
-/// Number keys swap the active theme (only themes with a Skia/SilkNet variant are listed); F1/F2 swap
-/// the screen. Add a theme to <see cref="_themes"/> as each gains a <c>.SilkNet</c> variant (#3671).
+/// Number keys swap the active theme (each theme's <c>.Skia</c> package); F1/F2 swap the screen.
 /// </summary>
 unsafe class Program
 {

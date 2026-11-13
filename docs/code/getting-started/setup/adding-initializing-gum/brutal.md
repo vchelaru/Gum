@@ -357,6 +357,11 @@ Each extra is a separate package. Add the package, then add its line right after
 | --- | --- | --- |
 | [ShadowDusk](../../../standard-visuals/containerruntime.md#render-target-shaders-on-skiasharp): `.fx` and `.slang` shader files | `Gum.SkiaSharp.ShadowDusk` | `GumUI.UseShadowDusk();` |
 | [Expressions](../../../styling/runtime-variable-references.md): arithmetic in variable references | `Gum.Expressions` | `GumUI.UseExpressions();` |
+| [Themes](../../../styling/themes/README.md): restyles every Forms control | One package per theme, such as `Gum.Themes.DarkPro.Skia` | `Gum.Themes.DarkPro.DarkProTheme.Apply();` |
+
+{% hint style="info" %}
+The `.Skia` theme packages are available in December 2026, or now if building Gum from source.
+{% endhint %}
 
 ## Loading Your Gum Project
 
