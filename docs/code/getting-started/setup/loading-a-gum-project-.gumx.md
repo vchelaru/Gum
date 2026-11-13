@@ -30,10 +30,14 @@ Set the **Location** to your game's `Content` folder. The project is created in 
 {% endtab %}
 
 {% tab title="raylib" %}
-Set the **Location** to your game's `resources` folder. The project is created in `resources/GumProject`.
+Set the **Location** to your game's `Content` folder. The project is created in `Content/GumProject`.
 {% endtab %}
 
 {% tab title="Silk.NET" %}
+Set the **Location** to your game's `Content` folder. The project is created in `Content/GumProject`.
+{% endtab %}
+
+{% tab title="BRUTAL" %}
 Set the **Location** to your game's `Content` folder. The project is created in `Content/GumProject`.
 {% endtab %}
 
@@ -85,7 +89,7 @@ If you are using the Contentless project ([https://github.com/Ellpeck/Contentles
 {% tab title="raylib" %}
 ```xml
 <ItemGroup>
-    <None Update="resources\GumProject\**\*.*">
+    <None Update="Content\GumProject\**\*.*">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
 </ItemGroup>
@@ -93,6 +97,16 @@ If you are using the Contentless project ([https://github.com/Ellpeck/Contentles
 {% endtab %}
 
 {% tab title="Silk.NET" %}
+```xml
+<ItemGroup>
+    <None Update="Content\GumProject\**\*.*">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+</ItemGroup>
+```
+{% endtab %}
+
+{% tab title="BRUTAL" %}
 ```xml
 <ItemGroup>
     <None Update="Content\GumProject\**\*.*">
@@ -196,7 +210,7 @@ public static void Main()
 {
     // Additional code needed to initialize your raylib project goes here
     GumUI.Initialize(
-        "resources/GumProject/raylibGumProject.gumj");
+        "Content/GumProject/GumProject.gumj");
     
     // This assumes that your project has at least 1 screen
     if(ObjectFinder.Self.GumProjectSave.Screens.Count == 0)

@@ -8,14 +8,20 @@ This page assumes you have an existing [BRUTAL](https://github.com/ahwootech/BRU
 Available in preview NuGet packages (use a `-preview` version), or now if building Gum from source.
 {% endhint %}
 
+## Starting From a New Project
+
+If you plan to use a Gum project with OpenGL, the easiest start is a new game that Gum creates for you. In the Gum tool, select **File** > **New Project**, check **Create C# project**, and choose BRUTAL in **Platform**. Or run [`gumcli new MyGame --platform brutal --preview`](../../../../cli/new.md). The game already references Gum, loads the Gum project and copies it to the output folder, so you can skip the rest of this page. See [Creating a Project](../../../../gum-tool/setup/creating-a-project.md).
+
+The rest of this page adds Gum to a game you already have.
+
 ## Adding Gum NuGet package
 
 Gum has one package per graphics API. Add only one of them:
 
-| Graphics API | Gum package | SkiaGameRendering package (pulled in for you) |
-| --- | --- | --- |
-| OpenGL 3.3 | `Gum.Brutal.OGL` | `SkiaGameRendering.Brutal.OGL` |
-| Vulkan 1.3 | `Gum.Brutal.Vulkan` | `SkiaGameRendering.Brutal` |
+| Graphics API | Gum package |
+| --- | --- |
+| OpenGL 3.3 | `Gum.Brutal.OGL` |
+| Vulkan 1.3 | `Gum.Brutal.Vulkan` |
 
 {% tabs %}
 {% tab title="OpenGL" %}
@@ -44,10 +50,18 @@ Or add through command line:
 ```bash
 dotnet add package Gum.Brutal.Vulkan --prerelease
 ```
+
+The Vulkan program in [Full Program](#full-program) uses `unsafe` blocks, so also allow them in your csproj:
+
+```xml
+<PropertyGroup>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+</PropertyGroup>
+```
 {% endtab %}
 {% endtabs %}
 
-Both packages render through SkiaSharp and add real Forms input (mouse, keyboard, gamepad, focus) from a BRUTAL `GlfwWindow`. Gum creates the Skia GPU context itself and puts the frame on the window: with OpenGL it draws straight into the default framebuffer, and with Vulkan it renders to an image of its own and presents it, recreating that image when the window's framebuffer size changes. You never call Skia or SkiaGameRendering. Both packages work on Windows and Linux.
+Both packages read mouse, keyboard and gamepad input from your BRUTAL `GlfwWindow` and draw Gum to it, so you never write rendering code for Gum. They work on Windows and Linux.
 
 Do not reference both packages in one project. They declare the same `GumService` type.
 
@@ -75,6 +89,11 @@ Next, add it as a project reference in your game project. Your project might loo
 ```xml
 <ProjectReference Include="..\Gum\Runtimes\BrutalGum.OGL\BrutalGum.OGL.csproj" />
 ```
+
+To link an extra from [Optional Extras](#optional-extras), add its project instead of its package:
+
+* ShadowDusk: \<Gum Root>/Runtimes/SkiaGum.ShadowDusk/SkiaGum.ShadowDusk.csproj
+* Expressions: \<Gum Root>/Runtimes/GumExpressions/GumExpressions.csproj
 
 ## Initializing Gum
 
@@ -115,14 +134,7 @@ Gum never destroys the objects you pass. Destroy them after `GumUI.Uninitialize(
 {% endtab %}
 {% endtabs %}
 
-To load a Gum project (a `.gumj` file) at the same time, pass its path as the last argument:
-
-```csharp
-// Initialize
-GumUI.Initialize(window, "Content/GumProject/GumProject.gumj");
-```
-
-You can add controls as soon as `Initialize` returns.
+You can add controls as soon as `Initialize` returns. To load a Gum project too, see [Loading Your Gum Project](#loading-your-gum-project).
 
 ## Updating and Drawing Gum
 
@@ -178,70 +190,9 @@ Things to know:
 
 OpenGL has no equivalent switch. `Draw` writes the whole default framebuffer, so anything of yours must be drawn after it.
 
-## Adding Shader Support (Optional)
-
-`Gum.SkiaSharp.ShadowDusk` lets a render target container's `SourceShaderFile` point at an `.fx` or `.slang` shader file.
-
-Add the NuGet package:
-
-```bash
-dotnet add package Gum.SkiaSharp.ShadowDusk
-```
-
-Then call `UseShadowDusk` after `GumUI.Initialize`:
-
-```csharp
-// Initialize
-GumUI.Initialize(window, "Content/GumProject/GumProject.gumj");
-GumUI.UseShadowDusk();
-```
-
-If linking to source instead of NuGet, add `<Gum Root>/Runtimes/SkiaGum.ShadowDusk/SkiaGum.ShadowDusk.csproj` to your solution.
-
-For loading, errors, and examples, see [Render Target Shaders on SkiaSharp](../../../standard-visuals/containerruntime.md#render-target-shaders-on-skiasharp). The supported formats are listed in [Shader Files](../../../files-and-fonts/supported-files.md#shader-files).
-
-## Adding Expression Support (Optional)
-
-If your Gum project uses arithmetic expressions in variable references (such as `Width = OtherInstance.Width + 20`), you can add the `Gum.Expressions` NuGet package for full expression evaluation at runtime. Without this package, simple variable references like `Width = OtherInstance.Width` still work.
-
-Add the NuGet package:
-
-```bash
-dotnet add package Gum.Expressions
-```
-
-Then call `UseExpressions` after `GumUI.Initialize`:
-
-```csharp
-// Initialize
-GumUI.Initialize(window, "Content/GumProject/GumProject.gumj");
-GumUI.UseExpressions();
-```
-
-If linking to source instead of NuGet, add `<Gum Root>/Runtimes/GumExpressions/GumExpressions.csproj` to your solution.
-
-For more information, see the [Runtime Variable References](../../../styling/runtime-variable-references.md) page.
-
-## Adding a Button (Testing the Setup)
-
-Gum can be tested by adding a Button after Gum is initialized. To do so, add code to create a `Button` as shown in the following block of code after Gum is initialized:
-
-```csharp
-// Initialize
-GumUI.Initialize(window);
-
-var button = new Button();
-button.AddToRoot();
-button.Width = 200;
-button.Anchor(Anchor.Center);
-button.Click += (_, _) => button.Text = $"Clicked\n{System.DateTime.Now}";
-```
-
-`Button` comes from `Gum.Forms.Controls`, `Anchor` from `Gum.Wireframe`.
-
 ## Full Program
 
-The following is a complete `Program.cs` that opens a window, initializes Gum, shows a button and runs the game loop. Lines marked Optional need the extra packages described above.
+The following is a complete `Program.cs` that opens a window, initializes Gum, shows a button and runs the game loop. It needs only the Gum package and builds its UI in code, so it runs without a Gum project.
 
 {% tabs %}
 {% tab title="OpenGL" %}
@@ -261,9 +212,7 @@ window.MakeContextCurrent();
 Glfw.SwapInterval(1);
 
 GumService GumUI = GumService.Default;
-GumUI.Initialize(window, "Content/GumProject/GumProject.gumj");
-GumUI.UseShadowDusk(); // Optional: .fx and .slang shader files (Gum.SkiaSharp.ShadowDusk)
-GumUI.UseExpressions(); // Optional: arithmetic expressions in variable references (Gum.Expressions)
+GumUI.Initialize(window);
 GumUI.UseKeyboardDefaults();
 GumUI.UseGamepadDefaults();
 
@@ -271,7 +220,7 @@ var button = new Button();
 button.AddToRoot();
 button.Width = 200;
 button.Anchor(Anchor.Center);
-button.Click += (_, _) => button.Text = $"Clicked\n{DateTime.Now}";
+button.Click += (_, _) => button.Text = $"Clicked\n{System.DateTime.Now}";
 
 Stopwatch clock = Stopwatch.StartNew();
 while (!window.ShouldClose)
@@ -367,9 +316,7 @@ using Device deviceScope = device;
 Queue queue = device.GetQueue(queueFamily, 0);
 
 GumService GumUI = GumService.Default;
-GumUI.Initialize(window, instance, physicalDevice, device, queue, queueFamily, surface, "Content/GumProject/GumProject.gumj");
-GumUI.UseShadowDusk(); // Optional: .fx and .slang shader files (Gum.SkiaSharp.ShadowDusk)
-GumUI.UseExpressions(); // Optional: arithmetic expressions in variable references (Gum.Expressions)
+GumUI.Initialize(window, instance, physicalDevice, device, queue, queueFamily, surface);
 GumUI.UseKeyboardDefaults();
 GumUI.UseGamepadDefaults();
 
@@ -377,7 +324,7 @@ var button = new Button();
 button.AddToRoot();
 button.Width = 200;
 button.Anchor(Anchor.Center);
-button.Click += (_, _) => button.Text = $"Clicked\n{DateTime.Now}";
+button.Click += (_, _) => button.Text = $"Clicked\n{System.DateTime.Now}";
 
 Stopwatch clock = Stopwatch.StartNew();
 while (!window.ShouldClose)
@@ -395,3 +342,46 @@ Glfw.Terminate();
 ```
 {% endtab %}
 {% endtabs %}
+
+The button in the center of the window confirms Gum works. Delete it once you start building your game.
+
+## Optional Extras
+
+Each extra is a separate package. Add the package, then add its line right after `GumUI.Initialize`.
+
+| Extra | Package | Line after `Initialize` |
+| --- | --- | --- |
+| [ShadowDusk](../../../standard-visuals/containerruntime.md#render-target-shaders-on-skiasharp): `.fx` and `.slang` shader files | `Gum.SkiaSharp.ShadowDusk` | `GumUI.UseShadowDusk();` |
+| [Expressions](../../../styling/runtime-variable-references.md): arithmetic in variable references | `Gum.Expressions` | `GumUI.UseExpressions();` |
+
+## Loading Your Gum Project
+
+To load a Gum project, pass its `.gumj` path as the last argument to `Initialize`:
+
+{% tabs %}
+{% tab title="OpenGL" %}
+```csharp
+// Initialize
+GumUI.Initialize(window, "Content/GumProject/GumProject.gumj");
+```
+{% endtab %}
+
+{% tab title="Vulkan" %}
+```csharp
+// Initialize
+GumUI.Initialize(window, instance, physicalDevice, device, queue, queueFamily, surface, "Content/GumProject/GumProject.gumj");
+```
+{% endtab %}
+{% endtabs %}
+
+Then copy the Gum project to the output folder by adding this to your `.csproj`:
+
+```xml
+<ItemGroup>
+    <None Update="Content\GumProject\**\*.*">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+</ItemGroup>
+```
+
+To create the Gum project and show its screens, see [Loading a Gum Project](../loading-a-gum-project-.gumx.md).

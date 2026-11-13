@@ -246,6 +246,10 @@ protected override void Initialize()
 
 **Irreducible per-platform syntax → tabs, don't ask.** First try to collapse a sample to a single platform-neutral form. When the syntax genuinely *cannot* collapse — most often because a host skeleton differs (a `Game` subclass vs a `Program.Main` loop) — wrap just those blocks in GitBook `{% tabs %}` with one `{% tab %}` per platform (e.g. `MonoGame` / `Raylib`). This is the standard, expected treatment for irreducible divergence; use it without asking. Keep the surrounding prose shared above/below the tabs — only the code that truly differs goes inside. Don't assume a member's type differs per backend from memory (e.g. `KeyCombo.PushedKey`, `KeyEventArgs.Key`) — check current source, since Gum has been steadily unifying input types onto `Gum.Forms.Input.Keys` across backends.
 
+## Runtime Setup Pages
+
+Each page in `docs/code/getting-started/setup/adding-initializing-gum/` has the same shape, with `monogame-kni-fna/README.md` as the model: a **Starting From a New Project** section on platforms `gumcli new --platform` supports, a complete program that builds with only the base package and loads no `.gumj`, then an **Optional Extras** table (package plus the one `Use*()` line per extra) and a **Loading Your Gum Project** section (the `.gumj` `Initialize` line plus the csproj copy rule). Never put optional `Use*()` calls or a `.gumj` path in the complete program, since a reader who skipped a package must still get a build that runs.
+
 ## XnaFiddle Links
 
 For adding or updating XnaFiddle interactive links, see [xnafiddle.md](xnafiddle.md).
