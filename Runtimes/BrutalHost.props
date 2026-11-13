@@ -11,5 +11,7 @@
 
   <ItemGroup>
     <Compile Include="$(MSBuildThisFileDirectory)BrutalHost\**\*.cs" Link="BrutalHost\%(RecursiveDir)%(Filename)%(Extension)" />
+    <!-- Gum.Color, the XNA-compatible color docs snippets use. Kept out of SkiaGum so KNI and Stride users' own Color stays unambiguous. -->
+    <Compile Include="$(MSBuildThisFileDirectory)SkiaHost\Color.cs" Link="Color.cs" />
   </ItemGroup>
 </Project>

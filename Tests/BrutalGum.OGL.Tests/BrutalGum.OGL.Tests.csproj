@@ -23,6 +23,8 @@
     <!-- SKSurface for the in-memory raster canvas; BRUTAL GLFW enums (GlfwKey and friends) for the fake window. -->
     <PackageReference Include="SkiaSharp" VersionOverride="4.153.1" />
     <PackageReference Include="Ahwoo.Brutal.Glfw" VersionOverride="2026.10.5" />
+    <!-- Reference values for GumColorTests: Gum.Color must match MonoGame's Color. -->
+    <PackageReference Include="MonoGame.Framework.DesktopGL" VersionOverride="3.8.4.1" />
   </ItemGroup>
 
   <ItemGroup>
