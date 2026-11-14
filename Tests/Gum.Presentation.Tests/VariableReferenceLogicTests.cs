@@ -989,6 +989,43 @@ public class VariableReferenceLogicTests : BaseTestClass
     }
 
     [Theory]
+    [InlineData("Width = Item1.AbsoluteWidth")]
+    [InlineData("Width = Item1.AbsoluteRight")]
+    public void DoVariableReferenceReaction_AbsoluteValueOfExistingInstanceWithNothingDisplayed_ExplainsItComesFromTheLayout(string line)
+    {
+        // Item1 exists, so the names resolve; with nothing displayed there is no live layout to read from.
+        GumProjectSave project = new GumProjectSave();
+        ObjectFinder.Self.GumProjectSave = project;
+
+        ComponentSave itemType = new ComponentSave { Name = "ItemType" };
+        itemType.States.Add(new StateSave { Name = "Default", ParentContainer = itemType });
+        project.Components.Add(itemType);
+        ScreenSave screen = BuildScreenWithVariableReference(line, out StateSave defaultState, out VariableListSave<string> varList);
+        screen.Instances.Add(new InstanceSave { Name = "Item1", BaseType = "ItemType", ParentContainer = screen });
+        defaultState.Variables.Add(new VariableSave { Name = "Width", SetsValue = true, Value = 0f, Type = "float" });
+        project.Screens.Add(screen);
+
+        Action? postedAction = null;
+        _dispatcherMock.Setup(x => x.Post(It.IsAny<Action>()))
+            .Callback<Action>(action => postedAction = action);
+        string? shownMessage = null;
+        _dialogServiceMock.Setup(x => x.ShowMessage(It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<MessageDialogStyle?>()))
+            .Callback<string, string?, MessageDialogStyle?>((message, _, _) => shownMessage = message);
+
+        _sut.DoVariableReferenceReaction(
+            parentElement: screen,
+            leftSideInstance: null,
+            unqualifiedMember: "VariableReferences",
+            stateSave: defaultState,
+            qualifiedName: "VariableReferences",
+            trySave: false);
+        postedAction!.Invoke();
+
+        varList.Value[0].ShouldStartWith("//");
+        shownMessage.ShouldNotBeNull();
+        shownMessage.ShouldContain("computed from the layout");
+    }
+    [Theory]
     [InlineData("Width = 5 / 0")]
     [InlineData("Width = 5.0 / 0")]
     [InlineData("Width = 5 / Zero")]
