@@ -41,7 +41,7 @@ TextBox-specific variables are all organized under the Behavior category. TextBo
 
 #### Multi-line TextBox
 
-TextBoxes use a combination of variables to support multi-line editing. You can set any combination of these to customize how a TextBox behaves.
+TextBoxes use a combination of variables to support multi-line editing.
 
 The Text Wrapping variable controls whether text wraps or stays on one line. To see multi-line text easily, you may also want to adjust a TextBox's Height.
 
