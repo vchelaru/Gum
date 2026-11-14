@@ -67,7 +67,12 @@ The StackPanelInstance now resizes to fit its buttons.
 
 ### Spacing and Children Size
 
-Now that the StackPanelInstance depends on its children's size, we can modify either the children or the spacing between the children and the stack panel updates automatically. To change the Stack Pacing, select the StackPanelInstance and change its Sacing variable under the Variables tab.
+Now that the StackPanelInstance depends on its children's size, we can modify either the children or the spacing between the children and the stack panel updates automatically.
+
+1. Select **StackPanelInstance** and click the **Variables** tab.
+2. Change the `Spacing` variable.
+
+The distance between each button changes.
 
 <figure><img src="../../../.gitbook/assets/13_11_23_39.gif" alt=""><figcaption><p>Spacing adjusts the distance between each button</p></figcaption></figure>
 
