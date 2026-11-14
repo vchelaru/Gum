@@ -761,17 +761,22 @@ public class NewProjectDialogViewModelTests
     public async Task Checks_KeepOnlyTheLatestResult()
     {
         using ManualResetEventSlim release = new ManualResetEventSlim();
+        using ManualResetEventSlim entered = new ManualResetEventSlim();
         int calls = 0;
         _detector.Setup(x => x.FindExistingCodeProject(It.IsAny<string>())).Returns(() =>
         {
             if (Interlocked.Increment(ref calls) == 1)
             {
+                entered.Set();
                 release.Wait(TimeSpan.FromSeconds(30));
                 return Path.Combine(Folder, "Stale.csproj");
             }
             return Path.Combine(Folder, "Fresh.csproj");
         });
         NewProjectDialogViewModel viewModel = Create(vm => vm.IncludeCodeProject = true, runChecksInline: false);
+        // Two refreshes can be in flight at once, so wait until the blocked call is really running; otherwise
+        // the call that counts as "first" may belong to the later refresh and block the very result under test.
+        entered.Wait(TimeSpan.FromSeconds(30)).ShouldBeTrue();
         Task first = viewModel.ChecksRefresh;
 
         viewModel.ProjectName = "Second";
