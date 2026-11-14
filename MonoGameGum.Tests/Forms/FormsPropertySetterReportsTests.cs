@@ -298,4 +298,152 @@ public class FormsPropertySetterReportsTests : BaseTestClass
         probe.Text.ShouldBe(afterComputed);
         afterComputed.ShouldBe("123");
     }
+
+    #region Paths that change a declared property without its setter (#8043)
+
+    private static FrameworkElement LoadControl(string behavior, string name, out GraphicalUiElement screen, out Gum.GueDeriving.TextRuntime probe)
+    {
+        GumExpressionService.Initialize();
+        GumProjectSave project = GetProject("FormsTemplate");
+        ObjectFinder.Self.GumProjectSave = project;
+        RegisterRuntimes();
+        Gum.Forms.FormsUtilities.RegisterFromFileFormRuntimeDefaults();
+        screen = project.Screens.Single(s => s.Name == ScreenName(behavior, name))
+            .ToGraphicalUiElement(SystemManagers.Default, addToManagers: false);
+        probe = (Gum.GueDeriving.TextRuntime)screen.GetGraphicalUiElementByName("Probe")!;
+        return (FrameworkElement)((InteractiveGue)screen.GetGraphicalUiElementByName("Ctl1")!).FormsControlAsObject!;
+    }
+
+    // Plants a value only a re-evaluation of the row can replace.
+    private const string Sentinel = "not re-evaluated";
+
+    [Fact]
+    public void TabRemovedBeforeTheSelectedTab_ShouldReEvaluateTheRowsThatReadSelectedIndex()
+    {
+        TabControl tabs = (TabControl)LoadControl("TabControlBehavior", "SelectedIndex", out GraphicalUiElement screen, out Gum.GueDeriving.TextRuntime probe);
+        tabs.AddTab("One");
+        tabs.AddTab("Two");
+        tabs.AddTab("Three");
+        tabs.SelectedIndex = 2;
+        probe.Text = Sentinel;
+
+        tabs.Items!.RemoveAt(0);
+
+        tabs.SelectedIndex.ShouldBe(1);
+        string? afterRemove = probe.Text;
+        screen.RefreshReferences("Ctl1.SelectedIndex");
+        afterRemove.ShouldBe(probe.Text, "removing a tab before the selected one moved SelectedIndex");
+    }
+
+    [Fact]
+    public void TabInsertedBeforeTheSelectedTab_ShouldReEvaluateTheRowsThatReadSelectedIndex()
+    {
+        TabControl tabs = (TabControl)LoadControl("TabControlBehavior", "SelectedIndex", out GraphicalUiElement screen, out Gum.GueDeriving.TextRuntime probe);
+        tabs.AddTab("One");
+        tabs.AddTab("Two");
+        tabs.SelectedIndex = 1;
+        probe.Text = Sentinel;
+
+        tabs.Items!.Insert(0, new TabItem { Header = "Zero" });
+
+        tabs.SelectedIndex.ShouldBe(2);
+        string? afterInsert = probe.Text;
+        screen.RefreshReferences("Ctl1.SelectedIndex");
+        afterInsert.ShouldBe(probe.Text, "inserting a tab before the selected one moved SelectedIndex");
+    }
+
+    [Theory]
+    // SmallChange is not a case: the shipped templates author the scroll bar's SmallChange, so its computed value never applies.
+    [InlineData("LargeChange")]
+    public void ScrollViewerChangeComputedByItsScrollBar_ShouldReEvaluateTheRowsThatReadIt(string name)
+    {
+        ScrollViewer viewer = (ScrollViewer)LoadControl("ScrollViewerBehavior", name, out GraphicalUiElement screen, out Gum.GueDeriving.TextRuntime probe);
+        ScrollBar bar = (ScrollBar)((InteractiveGue)viewer.Visual.GetGraphicalUiElementByName("VerticalScrollBarInstance")!).FormsControlAsObject!;
+        // The scroll bar derives these from its layout; 77 is a value neither starts with.
+        double computed = 77;
+        probe.Text = Sentinel;
+
+        if (name == "SmallChange")
+        {
+            bar.SetComputedSmallChange(computed);
+        }
+        else
+        {
+            bar.SetComputedLargeChange(computed);
+        }
+
+        string? afterComputed = probe.Text;
+        screen.RefreshReferences("Ctl1." + name);
+        afterComputed.ShouldBe(probe.Text, "the ScrollViewer " + name + " follows the vertical scroll bar");
+        probe.Text.ShouldBe("77");
+    }
+
+    [Fact]
+    public void PlaceholderSetToTheTextAlreadyShown_ShouldNotReEvaluateTheRows()
+    {
+        TextBox box = (TextBox)LoadControl("TextBoxBehavior", "Placeholder", out GraphicalUiElement screen, out Gum.GueDeriving.TextRuntime probe);
+        box.Placeholder = "Same";
+        probe.Text = Sentinel;
+
+        box.Placeholder = "Same";
+
+        probe.Text.ShouldBe(Sentinel);
+        box.Placeholder = "Different";
+        probe.Text.ShouldBe("Different");
+    }
+
+    [Fact]
+    public void PlaceholderSetWithoutTranslation_ShouldReEvaluateTheRowsThatReadIt()
+    {
+        TextBox box = (TextBox)LoadControl("TextBoxBehavior", "Placeholder", out GraphicalUiElement screen, out Gum.GueDeriving.TextRuntime probe);
+        box.Placeholder = "Before";
+        probe.Text = Sentinel;
+
+        box.SetPlaceholderNoTranslate("After");
+
+        probe.Text.ShouldBe("After");
+    }
+
+    [Fact]
+    public void PlaceholderRetranslatedByALanguageChange_ShouldReEvaluateTheRowsThatReadIt()
+    {
+        Gum.Localization.LocalizationService service = new Gum.Localization.LocalizationService();
+        service.AddDatabase(
+            new Dictionary<string, string[]> { { "Greeting", new[] { "Hello", "Hola" } } },
+            new List<string> { "English", "Spanish" });
+        service.CurrentLanguage = 0;
+        Gum.Localization.ILocalizationService? originalService = CustomSetPropertyOnRenderable.LocalizationService;
+        Action<GraphicalUiElement>? originalRefresh = GraphicalUiElement.RefreshLocalizationOnElementAction;
+        CustomSetPropertyOnRenderable.LocalizationService = service;
+        GraphicalUiElement.RefreshLocalizationOnElementAction = element =>
+        {
+            string? key = CustomSetPropertyOnRenderable.TryGetLocalizationKey(element);
+            if (key != null)
+            {
+                element.SetProperty("Text", key);
+            }
+        };
+        try
+        {
+            TextBox box = (TextBox)LoadControl("TextBoxBehavior", "Placeholder", out GraphicalUiElement screen, out Gum.GueDeriving.TextRuntime probe);
+            box.Placeholder = "Greeting";
+            box.Placeholder.ShouldBe("Hello");
+            probe.Text = Sentinel;
+
+            service.CurrentLanguage = 1;
+            screen.RefreshLocalization();
+
+            box.Placeholder.ShouldBe("Hola");
+            string? afterRefresh = probe.Text;
+            screen.RefreshReferences("Ctl1.Placeholder");
+            afterRefresh.ShouldBe(probe.Text, "a language change re-translated the placeholder");
+        }
+        finally
+        {
+            CustomSetPropertyOnRenderable.LocalizationService = originalService;
+            GraphicalUiElement.RefreshLocalizationOnElementAction = originalRefresh;
+        }
+    }
+
+    #endregion
 }

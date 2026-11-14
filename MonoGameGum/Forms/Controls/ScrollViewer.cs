@@ -203,6 +203,18 @@ public class ScrollViewer :
         }
     }
 
+    // The scroll bars compute these from their layout; the ScrollViewer reports them as its own.
+    private Action<Primitives.RangeBase, string>? _computedChangeHandler;
+
+    private void HandleScrollBarComputedChange(Primitives.RangeBase bar, string propertyName)
+    {
+        // SmallChange and LargeChange read the vertical bar, or the horizontal one when there is none.
+        if (ReferenceEquals(bar, verticalScrollBar ?? horizontalScrollBar))
+        {
+            ReportFormsPropertyChanged(propertyName);
+        }
+    }
+
     double _smallChange;
     bool _isSmallChangeSet;
     double _largeChange;
@@ -455,6 +467,7 @@ public class ScrollViewer :
             if (verticalScrollBar != null)
             {
                 verticalScrollBar.ValueChanged += HandleVerticalScrollBarValueChanged;
+                verticalScrollBar.ComputedChangeReported = _computedChangeHandler ??= HandleScrollBarComputedChange;
 
                 // Not sure if we want to set these here. This was moved out of 
                 // UpdateVerticalScrollBarValues so that it's only set once before
@@ -505,6 +518,7 @@ public class ScrollViewer :
             {
                 horizontalScrollBar.Orientation = Orientation.Horizontal;
                 horizontalScrollBar.ValueChanged += HandleHorizontalScrollBarValueChanged;
+                horizontalScrollBar.ComputedChangeReported = _computedChangeHandler ??= HandleScrollBarComputedChange;
 
                 if (_isSmallChangeSet)
                 {
@@ -571,12 +585,14 @@ public class ScrollViewer :
             {
                 verticalScrollBar.Visual.SizeChanged -= HandleVerticalScrollBarThumbSizeChanged;
                 verticalScrollBar.ValueChanged -= HandleVerticalScrollBarValueChanged;
+                verticalScrollBar.ComputedChangeReported = null;
             }
 
             if(horizontalScrollBar != null)
             {
                 horizontalScrollBar.Visual.SizeChanged -= HandleHorizontalScrollBarThumbSizeChanged;
                 horizontalScrollBar.ValueChanged -= HandleHorizontalScrollBarValueChanged;
+                horizontalScrollBar.ComputedChangeReported = null;
             }
 
         }
