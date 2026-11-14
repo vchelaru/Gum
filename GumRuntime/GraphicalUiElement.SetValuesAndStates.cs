@@ -655,33 +655,53 @@ public partial class GraphicalUiElement
             return false;
         }
 
-        foreach (VariableSave candidate in Gum.ProjectServices.FormsBehaviorChain.GetFormsPropertyDeclarations(element))
-        {
-            if (candidate.Name == propertyName)
-            {
-                declaration = candidate;
-                break;
-            }
-        }
+        declaration = Gum.ProjectServices.FormsBehaviorChain.FindFormsPropertyDeclaration(element, propertyName);
         if (declaration == null)
         {
             return false;
         }
 
-        try
-        {
-            System.Reflection.PropertyInfo? propertyInfo = GetFormsControlType(formsControl).GetProperty(propertyName);
-            if (propertyInfo == null || !propertyInfo.CanRead || propertyInfo.GetIndexParameters().Length != 0)
-            {
-                return false;
-            }
-            value = propertyInfo.GetValue(formsControl, null);
-        }
-        catch (System.Reflection.AmbiguousMatchException)
+        System.Reflection.PropertyInfo? propertyInfo = GetReadableFormsProperty(formsControl, propertyName);
+        if (propertyInfo == null)
         {
             return false;
         }
+        value = propertyInfo.GetValue(formsControl, null);
         return value != null;
+    }
+
+    // A live update reads the same few properties on every change, so the reflection lookup is kept per type.
+    private static readonly Dictionary<(Type, string), System.Reflection.PropertyInfo?> _readableFormsProperties =
+        new Dictionary<(Type, string), System.Reflection.PropertyInfo?>();
+
+    private static System.Reflection.PropertyInfo? GetReadableFormsProperty(object formsControl, string propertyName)
+    {
+        Type type = formsControl.GetType();
+        lock (_readableFormsProperties)
+        {
+            if (_readableFormsProperties.TryGetValue((type, propertyName), out System.Reflection.PropertyInfo? cached))
+            {
+                return cached;
+            }
+        }
+
+        System.Reflection.PropertyInfo? found = null;
+        try
+        {
+            System.Reflection.PropertyInfo? propertyInfo = GetFormsControlType(formsControl).GetProperty(propertyName);
+            if (propertyInfo != null && propertyInfo.CanRead && propertyInfo.GetIndexParameters().Length == 0)
+            {
+                found = propertyInfo;
+            }
+        }
+        catch (System.Reflection.AmbiguousMatchException)
+        {
+        }
+        lock (_readableFormsProperties)
+        {
+            _readableFormsProperties[(type, propertyName)] = found;
+        }
+        return found;
     }
 #endif
 

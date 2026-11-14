@@ -61,6 +61,38 @@ public static class FormsBehaviorChain
     }
 
     /// <summary>
+    /// The declaration of the FormsProperty named <paramref name="name"/> on <paramref name="element"/> and its
+    /// base chain, the nearest winning, or null. Same answer as searching <see cref="GetFormsPropertyDeclarations"/>
+    /// but with plain loops and no collections, since a live reference update asks it on every re-evaluation.
+    /// </summary>
+    public static VariableSave? FindFormsPropertyDeclaration(ElementSave element, string name)
+    {
+        ElementSave? current = element;
+        for (int depth = 0; current != null && depth < 32; depth++)
+        {
+            List<ElementBehaviorReference> references = current.Behaviors;
+            for (int i = 0; i < references.Count; i++)
+            {
+                BehaviorSave? behavior = ObjectFinder.Self.GetBehavior(references[i]);
+                if (behavior == null)
+                {
+                    continue;
+                }
+                List<VariableSave> properties = behavior.FormsProperties;
+                for (int j = 0; j < properties.Count; j++)
+                {
+                    if (properties[j].Name == name)
+                    {
+                        return properties[j];
+                    }
+                }
+            }
+            current = ObjectFinder.Self.GetBaseElement(current);
+        }
+        return null;
+    }
+
+    /// <summary>
     /// A name resolver for the Forms properties of a component's behaviors, used where the instance (or
     /// the project's stored data) holds no value. It checks, in order, the component's own default state
     /// (when an <paramref name="instance"/> is given) and then the behavior declarations on the component's
