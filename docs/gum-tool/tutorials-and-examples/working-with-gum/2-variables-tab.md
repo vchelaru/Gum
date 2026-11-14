@@ -2,9 +2,7 @@
 
 ## Introduction
 
-The Gum Variables tab displays all available variables when editing an instance. The Variables tab is also used to create default values for components.
-
-The Variables tab shows the selected instance or element's variables.
+The Variables tab displays the variables of the selected instance or element. When a component is selected, the values set in the Variables tab become the defaults that its instances inherit.
 
 <figure><img src="../../../.gitbook/assets/13_06_13_11.png" alt=""><figcaption><p>Variables tab in Gum</p></figcaption></figure>
 
@@ -26,7 +24,7 @@ Variables which can be edited in the Editor tab also update in real time in the 
 
 Newly-created Gum instances inherit their variable values from their Component or Standard definition. These default values can be changed, resulting in the default value being overwritten.
 
-For example, the Button instance that has been used in this tutorial has its X and Y values changed. If you resized the button, then its Width and Height are also set, overwriting their default values.
+For example, the ButtonStandard instance you added on the previous page has its X and Y values changed. If you resized the button, then its Width and Height are also set, overwriting their default values.
 
 Variables which overwrite their default have an icon next to the label.
 
