@@ -239,6 +239,14 @@ public partial class GraphicalUiElement
         {
             Children[i].RefreshLocalization();
         }
+#if !FRB
+        // The children just re-translated, which moves the one Forms property that reads translated text
+        // (a TextBox Placeholder) without going through its setter.
+        if (this is InteractiveGue { FormsControlAsObject: not null })
+        {
+            ReportFormsPropertyChanged("Placeholder");
+        }
+#endif
     }
 
     string NameOrType => !string.IsNullOrEmpty(Name) ? Name : $"<{GetType().Name}>";

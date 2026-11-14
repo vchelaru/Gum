@@ -347,13 +347,19 @@ public abstract class TextBoxBase :
         get => placeholderTextObject?.RawText;
         set
         {
+            string? previous = placeholderTextObject?.RawText;
             _placeholderSetInCode.Record(value, translate: true);
             if (placeholderComponent != null)
             {
                 // go through the component instead of the renderable to apply localization and force a layout refresh
                 placeholderComponent.SetProperty("Text", value);
             }
-            ReportFormsPropertyChanged();
+            // Compared after the set, so a key that translates to the text already shown is not a change. A language
+            // change re-translates through GraphicalUiElement.RefreshLocalization, which reports on its own.
+            if (previous != placeholderTextObject?.RawText)
+            {
+                ReportFormsPropertyChanged();
+            }
         }
     }
 
@@ -367,10 +373,15 @@ public abstract class TextBoxBase :
     /// </remarks>
     public void SetPlaceholderNoTranslate(string? value)
     {
+        string? previous = placeholderTextObject?.RawText;
         _placeholderSetInCode.Record(value, translate: false);
         if (placeholderComponent != null)
         {
             placeholderComponent.SetProperty("TextNoTranslate", value);
+        }
+        if (previous != placeholderTextObject?.RawText)
+        {
+            ReportFormsPropertyChanged(nameof(Placeholder));
         }
     }
 
