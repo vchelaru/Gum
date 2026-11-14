@@ -1,5 +1,9 @@
 # 1 - The Basics
 
+{% hint style="warning" %}
+## The tutorials in this section have been replaced by the [Working with Gum](../working-with-gum/) tutorials. They have been left here for historical reasons but may be removed at some point in the future.
+{% endhint %}
+
 ## Introduction
 
 This page walks you through the basics of using the _Gum UI tool,_ which we'll refer to simply as Gum for this and all other documentation.

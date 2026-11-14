@@ -56,7 +56,7 @@ You may have noticed that some variables in the Variables tab have an icon next 
 
 Whenever an instance does not explicitly set a variable value, it uses a default value.
 
-Gum lets us view and edit tese values.
+Gum lets us view and edit these values.
 
 {% hint style="info" %}
 Keep in mind, doing this changes the default values for your entire project. Also, by making changes to the default components, you may make your components less portable. However, understanding the default/override behavior in Gum is useful so we cover it here.
