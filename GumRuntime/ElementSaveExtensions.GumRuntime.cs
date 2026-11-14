@@ -1663,7 +1663,7 @@ namespace GumRuntime
         // another element has no live instance). The evaluators read a state, so a value that differs from the state's
         // goes in a copy of it; the state itself, which the caller writes results to, is never changed.
         // Live re-evaluation does not come through here: it reads the control as it reads any live input.
-        private static StateSave WithFormsPropertyInputs(StateSave stateSave, string right, GraphicalUiElement? liveRoot)
+        public static StateSave WithFormsPropertyInputs(StateSave stateSave, string right, GraphicalUiElement? liveRoot)
         {
 #if FRB
             return stateSave;

@@ -1,4 +1,8 @@
+using Gum.Commands;
 using Gum.DataTypes;
+using Gum.Services;
+using Gum.Services.Dialogs;
+using Gum.Wireframe;
 using Gum.DataTypes.Variables;
 using Gum.Logic;
 using Gum.Managers;
@@ -182,5 +186,81 @@ public class BehaviorValueReferenceGum0009Tests : BaseTestClass
     {
         SetThroughBehaviorRow("Minimum", 1.0);
         ApplyAndReadMinTextText("Text = Slider.Maximum").ShouldBe("100");
+    }
+
+    // Edit side (#8032): the check made while the line is typed accepts what the apply path resolves.
+    private string? EditLine(string line, out VariableListSave<string> list)
+    {
+        Gum.Expressions.GumExpressionService.Initialize();
+        AddReferenceLine(line);
+        list = (VariableListSave<string>)_defaultState.VariableLists.Single(item => item.Name == "MinText.VariableReferences");
+        Mock<IDispatcher> dispatcher = new Mock<IDispatcher>();
+        Action? posted = null;
+        dispatcher.Setup(x => x.Post(It.IsAny<Action>())).Callback<Action>(action => posted = action);
+        Mock<IDialogService> dialogs = new Mock<IDialogService>();
+        string? shown = null;
+        dialogs.Setup(x => x.ShowMessage(It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<MessageDialogStyle?>()))
+            .Callback<string, string?, MessageDialogStyle?>((message, _, _) => shown = message);
+        Mock<ICompositeMemberRegistry> registry = new Mock<ICompositeMemberRegistry>();
+        registry.Setup(x => x.Descriptors).Returns(new List<CompositeMemberDescriptor>());
+        VariableReferenceLogic logic = new VariableReferenceLogic(new Mock<IGuiCommands>().Object, new Mock<IWireframeCommands>().Object,
+            dialogs.Object, new Mock<IFileCommands>().Object, registry.Object, dispatcher.Object, new Mock<IWireframeObjectManager>().Object);
+
+        logic.DoVariableReferenceReaction(_component, _component.GetInstance("MinText"), "VariableReferences", _defaultState,
+            "MinText.VariableReferences", trySave: false);
+        posted?.Invoke();
+        return shown;
+    }
+
+    [Theory]
+    [InlineData("Text = Slider.Minimum")]
+    [InlineData("Width = Slider.Minimum")]
+    [InlineData("Text = Slider.Maximum")]
+    public void DoVariableReferenceReaction_ReadsBehaviorDefaultWithNothingStored_KeepsLine(string line)
+    {
+        string? shown = EditLine(line, out VariableListSave<string> list);
+
+        shown.ShouldBeNull();
+        list.Value[0].ShouldBe(line);
+    }
+
+    [Fact]
+    public void DoVariableReferenceReaction_ReadsBehaviorDefaultWithNothingStored_WritesTheDefault()
+    {
+        EditLine("Text = Slider.Maximum", out _);
+
+        _defaultState.Variables.First(item => item.Name == "MinText.Text").Value.ShouldBe("100");
+    }
+
+    [Fact]
+    public void DoVariableReferenceReaction_ReadsDefaultOfInstanceWhoseComponentInheritsTheBehavior_KeepsLine()
+    {
+        ComponentSave derived = new ComponentSave { Name = "Custom/MySlider", BaseType = "DarkPro/Slider" };
+        derived.States.Add(new StateSave { Name = "Default", ParentContainer = derived });
+        _project.Components.Add(derived);
+        _slider.BaseType = "Custom/MySlider";
+
+        string? shown = EditLine("Text = Slider.Maximum", out VariableListSave<string> list);
+
+        shown.ShouldBeNull();
+        list.Value[0].ShouldBe("Text = Slider.Maximum");
+    }
+
+    [Fact]
+    public void DoVariableReferenceReaction_ReadsNameNoBehaviorDeclares_StillRejectsWithTheNamedMessage()
+    {
+        string? shown = EditLine("Text = Slider.Typo", out VariableListSave<string> list);
+
+        list.Value[0].ShouldStartWith("//");
+        shown.ShouldNotBeNull();
+        shown.ShouldContain("\"Slider.Typo\"");
+    }
+
+    [Fact]
+    public void GetNote_ReadsBehaviorDefaultWithNothingStored_HasNoNote()
+    {
+        AddReferenceLine("Text = Slider.Minimum");
+
+        new VariableReferenceStatusLogic().GetNote("Text", _component.GetInstance("MinText"), _component, _defaultState).ShouldBeNull();
     }
 }
