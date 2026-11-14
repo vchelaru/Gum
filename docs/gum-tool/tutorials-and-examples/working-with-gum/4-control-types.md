@@ -16,7 +16,7 @@ The ButtonStandard control is one of the most common controls. It reacts to the 
 
 <figure><img src="../../../.gitbook/assets/13_12_58_49.png" alt=""><figcaption><p>ButtonStandard Component</p></figcaption></figure>
 
-By default Buttons contain text that line wraps. By adding additional text, it can line wrap which grows the size of a button. Note that the button height is relative to its text.
+By default Buttons contain text that line wraps, and the height of a button is relative to its text. Adding additional text makes it wrap onto more lines, which grows the size of the button.
 
 <figure><img src="../../../.gitbook/assets/13_13_06_04.png" alt=""><figcaption><p>Buttons with different text</p></figcaption></figure>
 
