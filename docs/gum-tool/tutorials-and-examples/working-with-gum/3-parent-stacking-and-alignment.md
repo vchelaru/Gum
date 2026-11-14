@@ -76,11 +76,11 @@ The distance between each button changes.
 
 <figure><img src="../../../.gitbook/assets/13_11_23_39.gif" alt=""><figcaption><p>Spacing adjusts the distance between each button</p></figcaption></figure>
 
-Similarly we can adjust the size of buttons by changing their height, or adding text that wraps, and the stack adjusts dynamically, staying centered.
+Similarly, changing the size of the buttons, by changing their `Height` or by adding text that wraps, updates the StackPanelInstance dynamically, and it stays centered.
 
-<figure><img src="../../../.gitbook/assets/13_11_25_40.gif" alt=""><figcaption></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/13_11_25_40.gif" alt=""><figcaption><p>The StackPanelInstance adjusting to changes in its buttons' size</p></figcaption></figure>
 
-Individual button spacing can be adjusted by changing its Y value. The total spacing is the total of spacing and Y.
+Individual button spacing can be adjusted by changing its `Y` value. The total spacing is the total of `Spacing` and `Y`.
 
-<figure><img src="../../../.gitbook/assets/13_11_27_05.png" alt=""><figcaption></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/13_11_27_05.png" alt=""><figcaption><p>A button's Y value adds to its spacing</p></figcaption></figure>
 
