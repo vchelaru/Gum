@@ -71,6 +71,11 @@ public class BehaviorValueReferenceRuntimeTests : BaseTestClass
 
         project.ApplyAllVariableReferences();
         StandardRuntimeRegistrations.Register();
+        // Circle, Rectangle and Polygon need a rendering SystemManagers a headless test lacks; the references do not read them.
+        foreach (string unrendered in new[] { "Circle", "Rectangle", "Polygon" })
+        {
+            ElementSaveExtensions.RegisterGueInstantiation(unrendered, () => new Gum.GueDeriving.ContainerRuntime());
+        }
         Gum.Forms.FormsUtilities.RegisterFromFileFormRuntimeDefaults();
         GraphicalUiElement screenGue = screen.ToGraphicalUiElement(SystemManagers.Default, addToManagers: false);
         GraphicalUiElement ownerGue = screenGue.GetGraphicalUiElementByName("Owner1")!;
@@ -86,7 +91,6 @@ public class BehaviorValueReferenceRuntimeTests : BaseTestClass
             " setNoExpr=" + BuildAndReadMinText(false, true, "Text = Slider.Minimum") +
             " defExpr=" + BuildAndReadMinText(true, false, "Text = Slider.Minimum") +
             " defNoExpr=" + BuildAndReadMinText(false, false, "Text = Slider.Minimum");
-        // One test: the static registrations do not survive a second test of this class.
         result.ShouldBe("setExpr=[1] setNoExpr=[Hello] defExpr=[Hello] defNoExpr=[Hello]");
     }
 }
