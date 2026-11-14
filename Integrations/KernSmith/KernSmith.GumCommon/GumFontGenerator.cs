@@ -35,6 +35,10 @@ public static class GumFontGenerator
         () => Type.GetType("KernSmith.Rasterizers.StbTrueType.StbTrueTypeRasterizer, KernSmith.Rasterizers.StbTrueType");
 #endif
 
+    /// <summary>Test seam: the system-font build.</summary>
+    internal static Func<string, FontGeneratorOptions, BmFontResult> GenerateFromSystem =
+        (name, options) => BmFont.GenerateFromSystem(name, options);
+
     /// <summary>Test seam: runs a type's static constructor.</summary>
     internal static Action<Type> ForceStaticConstructor =
         type => System.Runtime.CompilerServices.RuntimeHelpers.RunClassConstructor(type.TypeHandle);
@@ -63,7 +67,17 @@ public static class GumFontGenerator
         FontGeneratorOptions options = BuildOptionsWithBackend(bmfcSave, backend);
         if (string.IsNullOrEmpty(bmfcSave.FontFile))
         {
-            return BmFont.GenerateFromSystem(bmfcSave.FontName, options);
+            try
+            {
+                return GenerateFromSystem(bmfcSave.FontName, options);
+            }
+            // KernSmith documents FontParsingException as the family-not-installed failure. Any other
+            // failure leaves an installed Arial alone: a registered family beats an installed one.
+            catch (FontParsingException) when (BundledArialFont.TryRegisterFor(bmfcSave.FontName))
+            {
+                // #8044: no Arial on this machine; the bundled Liberation Sans is now registered under it.
+                return GenerateFromSystem(bmfcSave.FontName, options);
+            }
         }
 
         // The resolved path is the face's identity for KernSmith's FaceCache (a no-op while the cache is
