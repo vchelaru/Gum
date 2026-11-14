@@ -48,7 +48,7 @@ public class ReferenceSuggestionScreenshotTests
         }
         Dispatcher.UIThread.RunJobs();
 
-        foreach ((string state, string typed) in new[] { ("instances", "X = Le"), ("members", "X = Leader.Wi") })
+        foreach ((string state, string typed) in new[] { ("instances", "X = Le"), ("members", "X = Leader.Wi"), ("owner", "X = @Wi"), ("function", "X = 1 + Cl"), ("localization", "X = Loc") })
         {
             foreach (ThemeVariant theme in new[] { ThemeVariant.Dark, ThemeVariant.Light })
             {

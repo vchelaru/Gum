@@ -1,6 +1,7 @@
 using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
+using Gum.Expressions;
 using Gum.Managers;
 using Gum.Plugins.InternalPlugins.VariableGrid;
 using Gum.ProjectServices;
@@ -304,7 +305,7 @@ public class VariableReferenceSuggestionsTests : BaseTestClass
         foreach (string typed in typedPrefixes)
         {
             string line = "Text = " + typed;
-            foreach (VariableReferenceSuggestion item in _suggestions.GetSuggestions(_component, "MinText", line, line.Length).Items.Where(item => !item.IsContinuation))
+            foreach (VariableReferenceSuggestion item in _suggestions.GetSuggestions(_component, "MinText", line, line.Length).Items.Where(item => !item.IsContinuation && item.Insertion == null))
             {
                 lines.Add("Text = " + item.Text);
             }
@@ -320,5 +321,114 @@ public class VariableReferenceSuggestionsTests : BaseTestClass
 
         List<string> problems = _checker.GetErrorsFor(_component, _project).Where(item => item.Code == "GUM0009").Select(item => item.Message).ToList();
         problems.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void GetSuggestions_ShouldOfferOwnerPrefixedVariables_OnInstanceRow()
+    {
+        Texts("Width = @Wi").ShouldContain("@Width");
+        Texts("Width = @Abs").ShouldContain("@AbsoluteWidth");
+        Texts("Width = @Ind").ShouldContain("@Index");
+        Texts("Width = @Ind").ShouldAllBe(item => item.StartsWith("@"));
+        // The owner is MinText (a Text), so its own variables are offered, not the component's.
+        Texts("Width = @Te").ShouldContain("@Text");
+        Texts("Width = @Te").ShouldNotContain("@Slider");
+    }
+
+    [Fact]
+    public void GetSuggestions_ShouldOfferNothingWithAt_OnElementRow()
+    {
+        Texts("Width = @", owningInstance: null).ShouldBeEmpty();
+        Texts("Width = @Wi", owningInstance: null).ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void GetSuggestions_ShouldStepIntoNestedInstanceOfOwner_AfterAtChild()
+    {
+        string child = ObjectFinder.Self.GetElementSave("DarkPro/Slider")!.Instances[0].Name;
+
+        VariableReferenceSuggestion item = _suggestions.GetSuggestions(_component, "Slider", "Text = @", 8).Items.Single(entry => entry.Text == "@" + child);
+        item.IsContinuation.ShouldBeTrue();
+        item.InsertText.ShouldBe("@" + child + ".");
+        Texts("Text = @" + child + ".Wi", "Slider").ShouldContain("@" + child + ".Width");
+        Texts("Text = @Mini", "Slider").ShouldContain("@Minimum");
+    }
+
+    [Fact]
+    public void GetSuggestions_ShouldOfferFunctionsAtTheStartOfAnyOperand()
+    {
+        Texts("Width = Si").ShouldContain("Sin");
+        Texts("Width = 1 + Cl").ShouldContain("Clamp");
+        Texts("Width = Max(1, Mi").ShouldContain("Min");
+        Texts("Width = Abs(Sq").ShouldContain("Sqrt");
+        Texts("Width = (Ro").ShouldContain("Round");
+        // Case sensitive, and not after a dot or inside a path.
+        Texts("Width = si").ShouldNotContain("Sin");
+        Texts("Width = Slider.Si").ShouldNotContain("Sin");
+    }
+
+    [Fact]
+    public void GetSuggestions_ShouldInsertFunctionWithOpeningParenthesis_AndShowSignature()
+    {
+        VariableReferenceSuggestion clamp = _suggestions.GetSuggestions(_component, "MinText", "Width = Cla", 11).Items.Single(item => item.Text == "Clamp");
+
+        clamp.InsertText.ShouldBe("Clamp(");
+        clamp.DisplayText.ShouldBe("Clamp(value, min, max)");
+        clamp.IsContinuation.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void GetSuggestions_ShouldOfferEveryEvaluatorFunction()
+    {
+        // Fails when the evaluator's table gains a function the popup does not offer.
+        foreach (string name in ExpressionFunctions.Names)
+        {
+            VariableReferenceSuggestion item = _suggestions.GetSuggestions(_component, "MinText", "Width = " + name, 8 + name.Length).Items.Single(entry => entry.Text == name);
+            item.InsertText.ShouldBe(name + "(");
+            item.DisplayText.Count(c => c == ',').ShouldBe(ExpressionFunctions.GetArgumentCount(name) - 1, name);
+        }
+        List<string> atOperandStart = Texts("Width = ");
+        foreach (string name in ExpressionFunctions.Names)
+        {
+            atOperandStart.ShouldContain(name);
+        }
+    }
+
+    [Theory]
+    [InlineData("g")]
+    [InlineData("global")]
+    [InlineData("global::Loc")]
+    [InlineData("L")]
+    [InlineData("Loc")]
+    public void GetSuggestions_ShouldOfferLocalizationName_ForPrefix(string typed)
+    {
+        string line = "Width = " + typed;
+        VariableReferenceSuggestion item = _suggestions.GetSuggestions(_component, "MinText", line, line.Length).Items.Single(entry => entry.Text == "global::Localization.CurrentLanguage");
+
+        item.InsertText.ShouldBe("global::Localization.CurrentLanguage");
+    }
+
+    [Fact]
+    public void GetSuggestions_ShouldNotOfferLocalizationName_ForUnrelatedPrefix()
+    {
+        Texts("Width = Sli").ShouldNotContain("global::Localization.CurrentLanguage");
+        Texts("Width = Slider.L").ShouldNotContain("global::Localization.CurrentLanguage");
+    }
+
+    [Fact]
+    public void GetSuggestions_ShouldListIncompatibleTypesAfterCompatibleOnes_WithoutHidingAny()
+    {
+        VariableReferenceSuggestionResult numeric = _suggestions.GetSuggestions(_component, "MinText", "Width = MinText.", 16);
+        List<string> texts = numeric.Items.Select(item => item.Text).ToList();
+
+        texts.ShouldContain("MinText.Text");
+        texts.ShouldContain("MinText.Height");
+        numeric.Items.Single(item => item.Text == "MinText.Text").IsTypeMismatch.ShouldBeTrue();
+        numeric.Items.Single(item => item.Text == "MinText.Height").IsTypeMismatch.ShouldBeFalse();
+        int firstMismatch = numeric.Items.ToList().FindIndex(item => item.IsTypeMismatch);
+        numeric.Items.Skip(firstMismatch).ShouldAllBe(item => item.IsTypeMismatch);
+
+        // A string left side accepts anything.
+        _suggestions.GetSuggestions(_component, "MinText", "Text = MinText.", 15).Items.ShouldAllBe(item => !item.IsTypeMismatch);
     }
 }

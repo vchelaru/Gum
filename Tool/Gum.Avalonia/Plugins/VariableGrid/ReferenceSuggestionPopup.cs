@@ -45,7 +45,7 @@ public sealed class ReferenceSuggestionPopup
 
         _list = new ListBox { Focusable = false, MinWidth = 180, MaxHeight = 180 };
         _list.ItemTemplate = new global::Avalonia.Controls.Templates.FuncDataTemplate<VariableReferenceSuggestion>(
-            (item, _) => new TextBlock { Text = item.Text, Focusable = false });
+            (item, _) => new TextBlock { Text = item.DisplayText, Focusable = false, Opacity = item.IsTypeMismatch ? 0.55 : 1 });
         _list.AddHandler(InputElement.PointerPressedEvent, HandleListPointerPressed, RoutingStrategies.Tunnel);
 
         Border frame = new Border
