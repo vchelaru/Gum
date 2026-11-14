@@ -2,7 +2,7 @@
 // Gum.Brutal.Vulkan. The game calls Initialize once, Update and Draw every frame, and never touches
 // Skia: GumService owns the SkiaGameRendering context and render target, recreates the target when the
 // framebuffer size changes, and puts the frame on the window (the per-package IBrutalGpuBackend). On OpenGL that is the window's default framebuffer itself.
-// Input comes from the GLFW window (Ahwoo.Brutal.Glfw) the game created.
+// Input comes from the GLFW window (Ahwoo.Brutal.Glfw) the game created, or from any host through the public IBrutalInput.
 #if BRUTAL
 #nullable enable
 
@@ -54,17 +54,15 @@ public partial class GumService : GumServiceSkiaInteractiveBase, IGumService
     /// <inheritdoc/>
     void IGumService.ApplyGamePadState(Gum.Input.GamePad gamepad, int index, double time)
     {
-        byte[] buttons = new byte[Gum.Input.GamePadDriver.ButtonCount];
-        float[] axes = new float[Gum.Input.GamePadDriver.AxisCount];
-        if (_input != null && _input.TryReadGamepad(index, buttons, axes))
+        if (_input != null && _input.TryReadGamepad(index, out GamePadSnapshot snapshot))
         {
-            Gum.Input.GamePadDriver.Apply(gamepad, buttons, axes, time);
+            gamepad.SetState(snapshot);
         }
         else
         {
             gamepad.SetConnected(false);
-            gamepad.Activity(time);
         }
+        gamepad.Activity(time);
     }
 
     /// <summary>

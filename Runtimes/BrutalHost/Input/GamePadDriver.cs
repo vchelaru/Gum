@@ -4,7 +4,7 @@ using System;
 namespace Gum.Input;
 
 /// <summary>
-/// Copies a GLFW gamepad reading into the platform-neutral <see cref="GamePad"/> holder.
+/// Translates a GLFW gamepad reading into the platform-neutral <see cref="GamePadSnapshot"/>.
 /// </summary>
 internal static class GamePadDriver
 {
@@ -12,14 +12,11 @@ internal static class GamePadDriver
     public const int ButtonCount = 15;
     public const int AxisCount = 6;
 
-    /// <summary>
-    /// Pushes a reading into <paramref name="gamepad"/> and commits the frame with
-    /// <see cref="GamePad.Activity"/>. <paramref name="buttons"/> hold 1 when pressed.
-    /// </summary>
-    public static void Apply(GamePad gamepad, ReadOnlySpan<byte> buttons, ReadOnlySpan<float> axes, double time)
+    /// <summary>Translates a GLFW gamepad reading into Gum's conventions.</summary>
+    public static GamePadSnapshot ToSnapshot(ReadOnlySpan<byte> buttons, ReadOnlySpan<float> axes)
     {
         // GLFW's triggers rest at -1 and reach +1; Gum's are 0 to 1.
-        gamepad.SetState(new GamePadSnapshot
+        return new GamePadSnapshot
         {
             IsConnected = true,
 
@@ -48,9 +45,7 @@ internal static class GamePadDriver
             LeftStickY = -Axis(axes, GlfwGamepadAxis.LeftY),
             RightStickX = Axis(axes, GlfwGamepadAxis.RightX),
             RightStickY = -Axis(axes, GlfwGamepadAxis.RightY),
-        });
-
-        gamepad.Activity(time);
+        };
     }
 
     private static bool Down(ReadOnlySpan<byte> buttons, GlfwGamepadButton button) =>

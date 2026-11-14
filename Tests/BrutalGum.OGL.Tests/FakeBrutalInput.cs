@@ -1,11 +1,13 @@
 using Brutal.GlfwApi;
 using Gum.Input;
+using Gum.Wireframe;
+using GumKeys = Gum.Forms.Input.Keys;
 using System;
 using System.Collections.Generic;
 
 namespace BrutalGum.Tests;
 
-/// <summary>A scriptable stand-in for a GLFW window, read through the same seam production code uses.</summary>
+/// <summary>A scriptable host, read through the public IBrutalInput seam production code uses. Only the gamepad helper speaks GLFW's layout.</summary>
 internal sealed class FakeBrutalInput : IBrutalInput
 {
     public double CursorX { get; set; }
@@ -14,10 +16,10 @@ internal sealed class FakeBrutalInput : IBrutalInput
     public int WindowHeight { get; set; } = 600;
     public int FramebufferWidth { get; set; } = 800;
     public int FramebufferHeight { get; set; } = 600;
-    public HashSet<GlfwMouseButton> HeldButtons { get; } = new();
-    public HashSet<GlfwKey> HeldKeys { get; } = new();
+    public HashSet<MouseButton> HeldButtons { get; } = new();
+    public HashSet<GumKeys> HeldKeys { get; } = new();
     public string? ClipboardText { get; set; } = "";
-    public GlfwStandardCursor? LastCursorShape { get; private set; }
+    public Cursors? LastCursorShape { get; private set; }
 
     public int ScrolledSubscribers => _scrolled?.GetInvocationList().Length ?? 0;
     public int CharSubscribers => _charTyped?.GetInvocationList().Length ?? 0;
@@ -28,23 +30,23 @@ internal sealed class FakeBrutalInput : IBrutalInput
     public event Action<double>? Scrolled { add => _scrolled += value; remove => _scrolled -= value; }
     public event Action<uint>? CharTyped { add => _charTyped += value; remove => _charTyped -= value; }
 
-    public bool IsMouseButtonDown(GlfwMouseButton button) => HeldButtons.Contains(button);
+    public bool IsMouseButtonDown(MouseButton button) => HeldButtons.Contains(button);
 
-    public bool IsKeyDown(GlfwKey key) => HeldKeys.Contains(key);
+    public bool IsKeyDown(GumKeys key) => HeldKeys.Contains(key);
 
-    public void SetCursorShape(GlfwStandardCursor shape) => LastCursorShape = shape;
+    public void SetCursorShape(Cursors shape) => LastCursorShape = shape;
 
     /// <summary>Gamepads present on the fake window, by index; none by default.</summary>
     public Dictionary<int, FakeGamepadReading> Gamepads { get; } = new();
 
-    public bool TryReadGamepad(int index, byte[] buttons, float[] axes)
+    public bool TryReadGamepad(int index, out GamePadSnapshot snapshot)
     {
         if (!Gamepads.TryGetValue(index, out FakeGamepadReading? reading))
         {
+            snapshot = default;
             return false;
         }
-        reading.Buttons.CopyTo(buttons, 0);
-        reading.Axes.CopyTo(axes, 0);
+        snapshot = GamePadDriver.ToSnapshot(reading.Buttons, reading.Axes);
         return true;
     }
 

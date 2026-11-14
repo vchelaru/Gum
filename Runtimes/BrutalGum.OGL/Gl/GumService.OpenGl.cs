@@ -20,7 +20,7 @@ public partial class GumService
     /// <param name="window">The GLFW window, with its OpenGL context current on this thread.</param>
     /// <param name="gumProjectFile">An optional .gumx or .gumj project file to load.</param>
     public void Initialize(GlfwWindow window, string? gumProjectFile = null) =>
-        Initialize(new BrutalGlfwInput(window), new GlBackend(), gumProjectFile);
+        Initialize(new BrutalGlfwInput(window), gumProjectFile);
 
     /// <summary>
     /// Initializes Gum like <see cref="Initialize(GlfwWindow, string?)"/> with an explicit set of default Forms visuals.
@@ -30,6 +30,28 @@ public partial class GumService
     /// <param name="visualsVersion">The default Forms visuals to register.</param>
     /// <param name="gumProjectFile">An optional .gumx or .gumj project file to load.</param>
     public void Initialize(GlfwWindow window, DefaultVisualsVersion visualsVersion, string? gumProjectFile = null) =>
-        Initialize(new BrutalGlfwInput(window), new GlBackend(), gumProjectFile, visualsVersion);
+        Initialize(new BrutalGlfwInput(window), visualsVersion, gumProjectFile);
+
+    /// <summary>
+    /// Initializes Gum for a BRUTAL application drawing with OpenGL 3.3 whose window and events are not
+    /// GLFW's (SDL3, a custom loop). The host supplies cursor, keyboard, clipboard and gamepad state through
+    /// <paramref name="input"/>; otherwise this behaves like <see cref="Initialize(GlfwWindow, string?)"/>:
+    /// the host's OpenGL 3.3 core context must be current on this thread, and <see cref="Draw"/> draws into
+    /// the default framebuffer.
+    /// </summary>
+    /// <param name="input">The host's window, mouse, keyboard, clipboard and gamepad state.</param>
+    /// <param name="gumProjectFile">An optional .gumx or .gumj project file to load.</param>
+    public void Initialize(IBrutalInput input, string? gumProjectFile = null) =>
+        Initialize(input, new GlBackend(), gumProjectFile);
+
+    /// <summary>
+    /// Initializes Gum like <see cref="Initialize(IBrutalInput, string?)"/> with an explicit set of default Forms visuals.
+    /// Skia supports <see cref="DefaultVisualsVersion.V3"/> only; any other value throws <see cref="NotSupportedException"/>.
+    /// </summary>
+    /// <param name="input">The host's window, mouse, keyboard, clipboard and gamepad state.</param>
+    /// <param name="visualsVersion">The default Forms visuals to register.</param>
+    /// <param name="gumProjectFile">An optional .gumx or .gumj project file to load.</param>
+    public void Initialize(IBrutalInput input, DefaultVisualsVersion visualsVersion, string? gumProjectFile = null) =>
+        Initialize(input, new GlBackend(), gumProjectFile, visualsVersion);
 }
 #endif

@@ -46,7 +46,8 @@ public class GamePadDriverTests : GamePadDriverStickTestsBase
             _axes[(int)GlfwGamepadAxis.LeftY] = _left.Y;
             _axes[(int)GlfwGamepadAxis.RightX] = _right.X;
             _axes[(int)GlfwGamepadAxis.RightY] = _right.Y;
-            GamePadDriver.Apply(GamePad, _buttons, _axes, time);
+            GamePad.SetState(GamePadDriver.ToSnapshot(_buttons, _axes));
+            GamePad.Activity(time);
         }
 
         // The bootstrap window has no gamepad, so index 0 is already absent.
@@ -85,14 +86,15 @@ public class GamePadDriverTests : GamePadDriverStickTestsBase
     protected override IHostStickGamePadRig CreateStickRig() => new BrutalGamePadRig();
 
     [Fact]
-    public void Apply_RestingTriggers_ReadZero()
+    public void ToSnapshot_RestingTriggers_ReadZero()
     {
         GamePad sut = new GamePad();
         float[] axes = new float[GamePadDriver.AxisCount];
         axes[(int)GlfwGamepadAxis.LeftTrigger] = -1f;
         axes[(int)GlfwGamepadAxis.RightTrigger] = -1f;
 
-        GamePadDriver.Apply(sut, new byte[GamePadDriver.ButtonCount], axes, 1);
+        sut.SetState(GamePadDriver.ToSnapshot(new byte[GamePadDriver.ButtonCount], axes));
+        sut.Activity(1);
 
         sut.IsConnected.ShouldBeTrue();
         sut.ButtonDown(GumGamepadButton.LeftTrigger).ShouldBeFalse();
