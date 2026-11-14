@@ -18,8 +18,6 @@ public class TextRuntimeOversampleFailureRetryTests : BaseTestClass
     {
         bool savedUseFontOversampling = TextRuntime.UseFontOversampling;
         IRaylibFontCreator? savedCreator = CustomSetPropertyOnRenderable.InMemoryFontCreator;
-        DateTime now = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc);
-        TextRuntime.OversampleFailureClock = () => now;
         try
         {
             CustomSetPropertyOnRenderable.InMemoryFontCreator = null;
@@ -47,14 +45,13 @@ public class TextRuntimeOversampleFailureRetryTests : BaseTestClass
             creator.Calls.ShouldBe(1);
             errors.ShouldBe(creatorThrows ? 1 : 0);
 
-            now = now.AddSeconds(60);
+            CustomSetPropertyOnRenderable.InMemoryFontCreator = creator;
             textRuntime.UpdateAutomaticFontOversampling(2f);
 
             creator.Calls.ShouldBe(2);
         }
         finally
         {
-            TextRuntime.OversampleFailureClock = () => DateTime.UtcNow;
             TextRuntime.UseFontOversampling = savedUseFontOversampling;
             CustomSetPropertyOnRenderable.InMemoryFontCreator = savedCreator;
         }

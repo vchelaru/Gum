@@ -776,62 +776,43 @@ public class TextRuntime : InteractiveGue
         return RegenerateOversampledFontAtRasterSize(GetOversampleRasterFontSize(oversampleRatio));
     }
 
-    // Test seam for the failed-oversample cooldown.
-    internal static Func<DateTime> OversampleFailureClock = () => DateTime.UtcNow;
+    // Issue #8035: font families the creator could not build at an oversampled size, for the rest of the
+    // run. Automatic oversampling asks every frame for every zoomed text, so without this each would call
+    // the creator (a full font generation) and re-report the same error per frame. Keyed by BmfcSave.FontName
+    // (not raster size: a family the creator cannot build at one size will not build at another), valued by
+    // the creator version it failed under; assigning InMemoryFontCreator bumps the version, which makes
+    // every entry stale. Size is bounded by the distinct families a game uses. The text keeps its regular
+    // (non-oversampled) font meanwhile.
+    static readonly Dictionary<string, int> _oversampleFailedFamilies = new(StringComparer.OrdinalIgnoreCase);
 
-    // Issue #8035: oversampled fonts the creator could not build, keyed by BmfcSave.FontCacheFileName
-    // (font and raster size), with when it failed and which creator failed. Automatic oversampling asks
-    // every frame for every zoomed text, so without this each would call the creator (a full font
-    // generation) and re-report the same error per frame. Retried after the cooldown so a font installed
-    // later is still picked up; a different creator is tried at once. Bounded like _prebuiltFontMisses.
-    sealed class OversampleFailure
+    static bool IsOversampleFailureRemembered(string family)
     {
-        public DateTime At;
-        public object? Creator;
-    }
-
-    static readonly Dictionary<string, OversampleFailure> _oversampleFailures = new(StringComparer.OrdinalIgnoreCase);
-    static readonly TimeSpan OversampleFailureRetryDelay = TimeSpan.FromSeconds(5);
-    const int MaxOversampleFailures = 256;
-
-    static bool IsOversampleFailureRemembered(string key)
-    {
-        lock (_oversampleFailures)
+        lock (_oversampleFailedFamilies)
         {
-            return _oversampleFailures.TryGetValue(key, out OversampleFailure? failure)
-                && failure.Creator == CustomSetPropertyOnRenderableType.InMemoryFontCreator
-                && OversampleFailureClock() - failure.At < OversampleFailureRetryDelay;
+            return _oversampleFailedFamilies.TryGetValue(family, out int version)
+                && version == CustomSetPropertyOnRenderableType.InMemoryFontCreatorVersion;
         }
     }
 
-    // Returns true if this key had no failure from the current creator yet, so the caller reports the error only then.
-    static bool RememberOversampleFailure(string key)
+    // Returns true if this family had no live failure yet, so the caller reports the error only then.
+    static bool RememberOversampleFailure(string family)
     {
-        lock (_oversampleFailures)
+        if (CustomSetPropertyOnRenderableType.InMemoryFontCreator == null)
         {
-            object? creator = CustomSetPropertyOnRenderableType.InMemoryFontCreator;
-            if (creator == null)
-            {
-                // Nothing to retry: the FontCache lookup has its own, shorter memo (_prebuiltFontMisses).
-                return false;
-            }
-            bool isNew = !_oversampleFailures.TryGetValue(key, out OversampleFailure? existing) || existing.Creator != creator;
-            if (isNew && _oversampleFailures.Count >= MaxOversampleFailures)
-            {
-                _oversampleFailures.Clear();
-            }
-            _oversampleFailures[key] = new OversampleFailure { At = OversampleFailureClock(), Creator = creator };
+            // Nothing to retry: the FontCache lookup has its own memo (_prebuiltFontMisses).
+            return false;
+        }
+        lock (_oversampleFailedFamilies)
+        {
+            bool isNew = !IsOversampleFailureRememberedLocked(family);
+            _oversampleFailedFamilies[family] = CustomSetPropertyOnRenderableType.InMemoryFontCreatorVersion;
             return isNew;
         }
     }
 
-    static void ForgetOversampleFailure(string key)
-    {
-        lock (_oversampleFailures)
-        {
-            _oversampleFailures.Remove(key);
-        }
-    }
+    static bool IsOversampleFailureRememberedLocked(string family) =>
+        _oversampleFailedFamilies.TryGetValue(family, out int version)
+        && version == CustomSetPropertyOnRenderableType.InMemoryFontCreatorVersion;
 
     bool RegenerateOversampledFontAtRasterSize(float rasterFontSize)
     {
@@ -847,7 +828,7 @@ public class TextRuntime : InteractiveGue
 
 #if XNALIKE
         BitmapFont? font = FindSharedOversampledFont(bmfcSave.FontCacheFileName);
-        if (font == null && IsOversampleFailureRemembered(bmfcSave.FontCacheFileName))
+        if (font == null && IsOversampleFailureRemembered(bmfcSave.FontName))
         {
             return false;
         }
@@ -862,7 +843,7 @@ public class TextRuntime : InteractiveGue
             // would escape past End(), leaving the SpriteBatch open and every subsequent frame's Begin()
             // throwing "Begin has already been called" (found via a BlazorGL/WASM repro where the default
             // FreeType rasterizer backend can't run and TryCreateFont throws instead of returning null).
-            if (RememberOversampleFailure(bmfcSave.FontCacheFileName))
+            if (RememberOversampleFailure(bmfcSave.FontName))
             {
                 CustomSetPropertyOnRenderableType.RaisePropertyAssignmentError(
                     $"Error creating oversampled font via {CustomSetPropertyOnRenderableType.InMemoryFontCreator!.GetType().Name}:\n{ex}");
@@ -874,10 +855,9 @@ public class TextRuntime : InteractiveGue
         font ??= TryLoadPrebuiltOversampledFont(bmfcSave.FontCacheFileName);
         if (font == null)
         {
-            RememberOversampleFailure(bmfcSave.FontCacheFileName);
+            RememberOversampleFailure(bmfcSave.FontName);
             return false;
         }
-        ForgetOversampleFailure(bmfcSave.FontCacheFileName);
 
         // Issue #4542: this freshly-generated font was built from BmfcSave.Ranges alone -- it knows
         // nothing about characters grown in at runtime, so replay this Text's own growth history into
@@ -899,7 +879,7 @@ public class TextRuntime : InteractiveGue
         // Raylib_cs.Font (a live GPU-resident font, not a BitmapFont) -- see IRaylibFontCreator and
         // Text.SetOversampledDisplayFont/MeasureLinesWidth (Runtimes/RaylibGum/Renderables/Text.cs).
         Raylib_cs.Font? font = FindSharedOversampledFont(bmfcSave.FontCacheFileName);
-        if (font == null && IsOversampleFailureRemembered(bmfcSave.FontCacheFileName))
+        if (font == null && IsOversampleFailureRemembered(bmfcSave.FontName))
         {
             return false;
         }
@@ -910,7 +890,7 @@ public class TextRuntime : InteractiveGue
         catch (Exception ex)
         {
             // See the matching try/catch in the XNALIKE branch above -- same render-time reentrancy risk.
-            if (RememberOversampleFailure(bmfcSave.FontCacheFileName))
+            if (RememberOversampleFailure(bmfcSave.FontName))
             {
                 CustomSetPropertyOnRenderableType.RaisePropertyAssignmentError(
                     $"Error creating oversampled font via {CustomSetPropertyOnRenderableType.InMemoryFontCreator.GetType().Name}:\n{ex}");
@@ -919,10 +899,9 @@ public class TextRuntime : InteractiveGue
         }
         if (font == null || font.Value.BaseSize == 0)
         {
-            RememberOversampleFailure(bmfcSave.FontCacheFileName);
+            RememberOversampleFailure(bmfcSave.FontName);
             return false;
         }
-        ForgetOversampleFailure(bmfcSave.FontCacheFileName);
 
         // Issue #4546: mirrors the XNALIKE ReplayGrownCharacters call above -- this freshly-generated
         // font was built from BmfcSave.Ranges alone, so replay this Text's own growth history into it

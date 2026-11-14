@@ -17,17 +17,14 @@ public class TextRuntimeOversampleFailureRetryTests : BaseTestClass
     private readonly bool _savedUseFontOversampling = TextRuntime.UseFontOversampling;
     private readonly IInMemoryFontCreator? _savedCreator = CustomSetPropertyOnRenderable.InMemoryFontCreator;
     private readonly List<TextRuntime> _texts = new();
-    private DateTime _now = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 
     public TextRuntimeOversampleFailureRetryTests()
     {
         TextRuntime.UseFontOversampling = true;
-        TextRuntime.OversampleFailureClock = () => _now;
     }
 
     public override void Dispose()
     {
-        TextRuntime.OversampleFailureClock = () => DateTime.UtcNow;
         // Shared oversampled fonts are static; turning oversampling off puts each text back on its native font.
         TextRuntime.UseFontOversampling = false;
         foreach (TextRuntime textRuntime in _texts)
@@ -155,94 +152,49 @@ public class TextRuntimeOversampleFailureRetryTests : BaseTestClass
     }
 
     [Fact]
-    public void UpdateAutomaticFontOversampling_ZoomChangesAfterAFailure_TriesTheNewSize()
+    public void UpdateAutomaticFontOversampling_FailedFamily_IsNotRetriedAtAnySize()
     {
         ScriptedCreator creator = new() { Throw = true };
         CustomSetPropertyOnRenderable.InMemoryFontCreator = creator;
         TextRuntime textRuntime = CreateText();
-        Frames(textRuntime, 2f, 3);
 
+        Frames(textRuntime, 2f, 3);
         Frames(textRuntime, 3f, 3);
-
-        creator.Calls.ShouldBe(2);
-    }
-
-    [Fact]
-    public void UpdateAutomaticFontOversampling_FailsAtOneSizeAndWorksAtAnother_UsesTheWorkingSize()
-    {
-        BitmapFont workingFont = CreateStubFont();
-        ScriptedCreator creator = new() { Throw = true };
-        creator.FontForRasterSize = size => size >= 54f ? workingFont : null;
-        CustomSetPropertyOnRenderable.InMemoryFontCreator = creator;
-        TextRuntime textRuntime = CreateText();
-        Frames(textRuntime, 2f, 3);
-        Text text = GetText(textRuntime);
-        text.BitmapFont.ShouldNotBeSameAs(workingFont);
-
-        Frames(textRuntime, 3f, 1);
-
-        text.BitmapFont.ShouldBeSameAs(workingFont);
-    }
-
-    [Fact]
-    public void UpdateAutomaticFontOversampling_FailureCooldownNotElapsed_DoesNotRetry()
-    {
-        ScriptedCreator creator = new() { Throw = true };
-        CustomSetPropertyOnRenderable.InMemoryFontCreator = creator;
-        TextRuntime textRuntime = CreateText();
-        Frames(textRuntime, 2f, 1);
-
-        _now = _now.AddSeconds(1);
+        Frames(textRuntime, 1.5f, 3);
         Frames(textRuntime, 2f, 3);
 
         creator.Calls.ShouldBe(1);
     }
 
     [Fact]
-    public void UpdateAutomaticFontOversampling_FailureCooldownElapsed_RetriesOncePerCooldown()
+    public void UpdateAutomaticFontOversampling_FailedFamily_StillRendersAtItsRegularSize()
     {
-        ScriptedCreator creator = new() { Throw = true };
-        CustomSetPropertyOnRenderable.InMemoryFontCreator = creator;
+        CustomSetPropertyOnRenderable.InMemoryFontCreator = new ScriptedCreator { Throw = true };
         TextRuntime textRuntime = CreateText();
-        Frames(textRuntime, 2f, 3);
-
-        _now = _now.AddSeconds(60);
-        Frames(textRuntime, 2f, 3);
-
-        creator.Calls.ShouldBe(2);
-    }
-
-    [Fact]
-    public void UpdateAutomaticFontOversampling_FontBecomesAvailableAfterTheCooldown_IsUsed()
-    {
-        BitmapFont workingFont = CreateStubFont();
-        ScriptedCreator creator = new() { Throw = true };
-        CustomSetPropertyOnRenderable.InMemoryFontCreator = creator;
-        TextRuntime textRuntime = CreateText();
-        Frames(textRuntime, 2f, 3);
-        creator.Throw = false;
-        creator.FontForRasterSize = _ => workingFont;
+        textRuntime.Text = "Hello";
         Text text = GetText(textRuntime);
+        BitmapFont? nativeFont = text.BitmapFont;
+        float widthBefore = text.WrappedTextWidth;
 
-        _now = _now.AddSeconds(60);
-        Frames(textRuntime, 2f, 1);
+        Should.NotThrow(() => Frames(textRuntime, 2f, 5));
 
-        text.BitmapFont.ShouldBeSameAs(workingFont);
+        nativeFont.ShouldNotBeNull();
+        text.BitmapFont.ShouldBeSameAs(nativeFont);
+        text.OversampleCompensationScale.ShouldBe(1f);
+        text.WrappedTextWidth.ShouldBe(widthBefore);
+        textRuntime.Visible.ShouldBeTrue();
     }
 
     [Fact]
-    public void UpdateAutomaticFontOversampling_FontBecomesAvailableAfterTheCooldown_StopsRetrying()
+    public void UpdateAutomaticFontOversampling_SameCreatorAssignedAgainAfterAFailure_TriesAgain()
     {
-        BitmapFont workingFont = CreateStubFont();
         ScriptedCreator creator = new() { Throw = true };
         CustomSetPropertyOnRenderable.InMemoryFontCreator = creator;
         TextRuntime textRuntime = CreateText();
         Frames(textRuntime, 2f, 3);
-        creator.Throw = false;
-        creator.FontForRasterSize = _ => workingFont;
 
-        _now = _now.AddSeconds(60);
-        Frames(textRuntime, 2f, 5);
+        CustomSetPropertyOnRenderable.InMemoryFontCreator = creator;
+        Frames(textRuntime, 2f, 3);
 
         creator.Calls.ShouldBe(2);
     }
@@ -260,21 +212,6 @@ public class TextRuntimeOversampleFailureRetryTests : BaseTestClass
         Frames(textRuntime, 2f, 1);
 
         GetText(textRuntime).BitmapFont.ShouldBeSameAs(workingFont);
-    }
-
-    [Fact]
-    public void UpdateAutomaticFontOversampling_ZoomReturnsToAFailedSizeWithinTheCooldown_DoesNotRetry()
-    {
-        ScriptedCreator creator = new() { Throw = true };
-        CustomSetPropertyOnRenderable.InMemoryFontCreator = creator;
-        TextRuntime textRuntime = CreateText();
-        Frames(textRuntime, 2f, 1);
-        Frames(textRuntime, 3f, 1);
-        int callsAfterBoth = creator.Calls;
-
-        Frames(textRuntime, 2f, 3);
-
-        creator.Calls.ShouldBe(callsAfterBoth);
     }
 
     [Fact]
