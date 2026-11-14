@@ -30,11 +30,9 @@ For a step-by-step tool walkthrough of rotating and scaling a clipped container,
 
 If you are managing a render target yourself in code instead of using `Is Render Target`, see [Render Targets](../../../code/rendering/render-targets.md) for the blend-mode setup needed to composite translucent content correctly on MonoGame and raylib.
 
-## Content Behind a Render Target Container
-
-`Alpha` and `Blend` on a container with `Is Render Target` combine the container with whatever is already drawn behind it. In a MonoGame, KNI or FNA game, drawing the container can clear everything the game drew before Gum (such as the game world), so the world disappears and the container appears over an empty background. raylib keeps it.
-
-Content that is part of the Gum project is not cleared. To keep a background behind the container on every platform, make the background an instance in the Gum project that draws behind the container, rather than something the game draws before Gum. If the game must draw the world itself, see [The Scene Drawn Before Gum Disappears](../../../code/rendering/render-targets.md#the-scene-drawn-before-gum-disappears-monogame-kni-fna) for the setting that keeps it.
+{% hint style="warning" %}
+**MonoGame, KNI and FNA:** if your game draws anything before Gum (such as the game world), a visible container with `Is Render Target` erases it. Fix: [set `PreserveContents`](../../../code/rendering/render-targets.md#the-scene-drawn-before-gum-disappears-monogame-kni-fna). Anything drawn by the Gum project itself is not erased.
+{% endhint %}
 
 ## Source Shader File
 
