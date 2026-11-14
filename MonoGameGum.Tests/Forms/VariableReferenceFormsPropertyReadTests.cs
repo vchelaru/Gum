@@ -47,7 +47,7 @@ public class VariableReferenceFormsPropertyReadTests : BaseTestClass
         public required GraphicalUiElement OwnerGue;
         public required GraphicalUiElement Target;
         public required GraphicalUiElement SliderGue;
-        public Slider SliderControl => (Slider)((InteractiveGue)SliderGue).FormsControlAsObject;
+        public Slider SliderControl => (Slider)(((InteractiveGue)SliderGue).FormsControlAsObject ?? throw new InvalidOperationException("No Forms control."));
     }
 
     // Owner "Custom/PropertySlider": a DarkPro Slider instance and a Container Target, with one row on Target.
