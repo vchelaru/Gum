@@ -144,6 +144,67 @@ public class DragDropScenarioTests
     }
 
     [AvaloniaFact]
+    [Trait("Feature", "DRAG-008")]
+    public void DraggingAStandardsChip_ShowsTheSameIndicator_AndDropsWhereItShows()
+    {
+        using ProjectTreeHarness tree = new ProjectTreeHarness();
+        ComponentSave button = tree.Project.AddComponent("Button");
+        tree.Project.AddInstance(button, "A", "Rectangle");
+        tree.Project.AddInstance(button, "B", "Rectangle");
+        tree.Project.AddInstance(button, "Panel", "Container");
+        tree.Project.AddInstance(button, "X", "Rectangle");
+        tree.Drag(tree.NodeFor(button.GetInstance("X")!), tree.NodeFor(button.GetInstance("Panel")!));
+        tree.Click(tree.NodeFor(button));
+        GumTreeNode a = tree.NodeFor(button.GetInstance("A")!);
+        GumTreeNode panel = tree.NodeFor(button.GetInstance("Panel")!);
+        GumTreeNode buttonNode = tree.NodeFor(button);
+        const double indentPerLevel = 16;
+        IDataTransfer chip = ProjectTreeHarness.StandardChipData("Sprite");
+
+        // The top of A's row: a line along its top edge, flush with its highlight, and Button washed as the parent.
+        tree.DragChipOver(chip, a, fraction: 0.1).ShouldBe(DragDropEffects.Copy);
+        Rect aRow = tree.RowHighlightBounds(a);
+        Rect line = tree.DropIndicatorBounds.ShouldNotBeNull();
+        line.Left.ShouldBe(aRow.Left, tolerance: 1.5);
+        line.Center.Y.ShouldBe(aRow.Top, tolerance: 2);
+        tree.DropParentHighlightBounds.ShouldNotBeNull().Top.ShouldBe(tree.RowHighlightBounds(buttonNode).Top, tolerance: 1.5);
+
+        // The middle of Panel's row: an outline around the row, no separate parent wash.
+        tree.DragChipOver(chip, panel, fraction: 0.5).ShouldBe(DragDropEffects.Copy);
+        Rect panelRow = tree.RowHighlightBounds(panel);
+        tree.DropIndicatorBounds.ShouldNotBeNull().Height.ShouldBeGreaterThan(line.Height);
+        tree.DropParentHighlightBounds.ShouldBeNull();
+
+        // The bottom of the expanded Panel: its first child, so the line is one level in and Panel is washed.
+        tree.DragChipOver(chip, panel, fraction: 0.9).ShouldBe(DragDropEffects.Copy);
+        tree.DropIndicatorBounds.ShouldNotBeNull().Left.ShouldBe(panelRow.Left + indentPerLevel, tolerance: 1.5);
+        tree.DropParentHighlightBounds.ShouldNotBeNull().Top.ShouldBe(panelRow.Top, tolerance: 1.5);
+
+        // An element row has no siblings to insert beside, so any height means "add to it".
+        tree.DragChipOver(chip, buttonNode, fraction: 0.1).ShouldBe(DragDropEffects.Copy);
+        tree.DropIndicatorBounds.ShouldNotBeNull().Height.ShouldBeGreaterThan(line.Height);
+
+        // Leaving the tree clears it.
+        tree.CancelChipDrag(chip);
+        tree.DropIndicatorBounds.ShouldBeNull();
+        tree.DropParentHighlightBounds.ShouldBeNull();
+
+        // Dropped where the line showed: before A, as a root sibling of A.
+        tree.DropChipOn(chip, a, fraction: 0.1);
+        button.Instances.Select(instance => instance.Name).Take(2).ShouldBe(new[] { "SpriteInstance", "A" });
+        tree.DropIndicatorBounds.ShouldBeNull();
+
+        // Dropped where the first-child line showed: the new instance is Panel's first child.
+        tree.DropChipOn(chip, panel, fraction: 0.9);
+        GumTreeNode[] panelChildren = tree.NodeFor(button.GetInstance("Panel")!).Nodes.ToArray();
+        panelChildren.Length.ShouldBe(2);
+        panelChildren[1].Text.ShouldBe("X");
+        ((InstanceSave)panelChildren[0].Tag!).BaseType.ShouldBe("Sprite");
+
+        tree.AssertOracles();
+    }
+
+    [AvaloniaFact]
     [Trait("Feature", "DRAG-003")]
     [Trait("Feature", "DRAG-004")]
     [Trait("Feature", "DRAG-005")]

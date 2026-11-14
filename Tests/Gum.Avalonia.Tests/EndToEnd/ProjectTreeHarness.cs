@@ -433,12 +433,67 @@ internal sealed class ProjectTreeHarness : IDisposable
     public DragDropEffects DropOn(GumTreeNode target, double fraction = 0.5)
     {
         IDataTransfer data = _dragData ?? throw new InvalidOperationException("No drag was started.");
-        Control row = RowFor(target);
-        Point topLeft = row.TranslatePoint(new Point(0, 0), _driver.Window) ?? throw new InvalidOperationException($"{target.Text}'s row is not in the window.");
-        Point point = new Point(topLeft.X + row.Bounds.Width / 2, topLeft.Y + row.Bounds.Height * fraction);
-        DragDropEffects reported = DeliverDrop(point, data, DragDropEffects.Move | DragDropEffects.Copy);
+        DragDropEffects reported = DeliverDrop(PointOnRow(target, fraction), data, DragDropEffects.Move | DragDropEffects.Copy);
         EndDrag(reported);
         return reported;
+    }
+
+    private Point PointOnRow(GumTreeNode target, double fraction)
+    {
+        Control row = RowFor(target);
+        Point topLeft = row.TranslatePoint(new Point(0, 0), _driver.Window) ?? throw new InvalidOperationException($"{target.Text}'s row is not in the window.");
+        return new Point(topLeft.X + row.Bounds.Width / 2, topLeft.Y + row.Bounds.Height * fraction);
+    }
+
+    /// <summary>What the Standards palette puts in its drag (AvaloniaStandardsPalette).</summary>
+    public static DataTransfer StandardChipData(string typeName)
+    {
+        DataTransfer data = new DataTransfer();
+        data.Add(DataTransferItem.Create(AvaloniaDragFormats.StandardElementName, typeName));
+        return data;
+    }
+
+    /// <summary>
+    /// Carries a palette chip's <paramref name="data"/> (<see cref="StandardChipData"/>) over
+    /// <paramref name="target"/>'s row at <paramref name="fraction"/> of its height without dropping
+    /// it. Returns the effect the tree reported. Headless Avalonia has no drag source, so the
+    /// platform's events are delivered directly.
+    /// </summary>
+    public DragDropEffects DragChipOver(IDataTransfer data, GumTreeNode target, double fraction)
+    {
+        Point point = PointOnRow(target, fraction);
+        DragDropEffects reported = DragDropEffects.None;
+        EventHandler<DragEventArgs> record = (_, e) => reported = e.DragEffects;
+        _driver.Window.AddHandler(DragDrop.DragOverEvent, record, handledEventsToo: true);
+        try
+        {
+            _driver.Window.DragDrop(point, RawDragEventType.DragEnter, data, DragDropEffects.Copy);
+            _driver.Window.DragDrop(point, RawDragEventType.DragOver, data, DragDropEffects.Copy);
+            _driver.Layout();
+        }
+        finally
+        {
+            _driver.Window.RemoveHandler(DragDrop.DragOverEvent, record);
+        }
+        _exceptions.ThrowIfCrashed();
+        return reported;
+    }
+
+    /// <summary>Carries a palette chip's <paramref name="data"/> out of the tree, as dragging it away or pressing Escape does.</summary>
+    public void CancelChipDrag(IDataTransfer data)
+    {
+        _driver.Window.DragDrop(new Point(-10, -10), RawDragEventType.DragLeave, data, DragDropEffects.Copy);
+        _driver.Layout();
+        _exceptions.ThrowIfCrashed();
+    }
+
+    /// <summary>Drops a palette chip's <paramref name="data"/> on <paramref name="target"/>'s row at <paramref name="fraction"/> of its height.</summary>
+    public void DropChipOn(IDataTransfer data, GumTreeNode target, double fraction)
+    {
+        DragChipOver(data, target, fraction);
+        _driver.Window.DragDrop(PointOnRow(target, fraction), RawDragEventType.Drop, data, DragDropEffects.Copy);
+        _driver.Layout();
+        _exceptions.ThrowIfCrashed();
     }
 
     /// <summary>

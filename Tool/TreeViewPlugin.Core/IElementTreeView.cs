@@ -154,12 +154,21 @@ public interface IElementTreeViewFactory
 public sealed class TreeExternalDragEventArgs : EventArgs
 {
     /// <summary>Creates the event for the given payload and the row under the pointer.</summary>
-    public TreeExternalDragEventArgs(string[]? files, string? standardElementTypeName, GumTreeNode? targetNode)
+    public TreeExternalDragEventArgs(string[]? files, string? standardElementTypeName, GumTreeNode? targetNode,
+        TreeDropKind kind = TreeDropKind.Into)
     {
         Files = files;
         StandardElementTypeName = standardElementTypeName;
         TargetNode = targetNode;
+        Kind = kind;
     }
+
+    /// <summary>
+    /// Where on the row under the pointer the drag is (before it, onto it, after it), measured the same
+    /// way as for a node drag. A handler may change it during a drag-over to the kind the drop will
+    /// really use, which is the one the head then draws.
+    /// </summary>
+    public TreeDropKind Kind { get; set; }
 
     /// <summary>Paths of dropped files, or null when the payload has none.</summary>
     public string[]? Files { get; }
