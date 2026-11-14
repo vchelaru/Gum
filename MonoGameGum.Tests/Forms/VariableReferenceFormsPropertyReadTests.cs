@@ -51,7 +51,7 @@ public class VariableReferenceFormsPropertyReadTests : BaseTestClass
     }
 
     // Owner "Custom/PropertySlider": a DarkPro Slider instance and a Container Target, with one row on Target.
-    private static Built Build(bool useExpressions, double? storedMinimum, string row)
+    private static Built Build(bool useExpressions, double? storedMinimum, string row, (string Name, double Value)? extra = null)
     {
         ElementSaveExtensions.CustomEvaluateExpression = null;
         ElementSaveExtensions.CustomEvaluateExpressionAllBranches = null;
@@ -72,6 +72,10 @@ public class VariableReferenceFormsPropertyReadTests : BaseTestClass
         if (storedMinimum != null)
         {
             state.Variables.Add(new VariableSave { Name = "Slider.Minimum", Type = "System.Double", Value = storedMinimum.Value, SetsValue = true });
+        }
+        if (extra != null)
+        {
+            state.Variables.Add(new VariableSave { Name = extra.Value.Name, Type = "System.Double", Value = extra.Value.Value, SetsValue = true });
         }
         VariableListSave<string> list = new VariableListSave<string> { Name = "Target.VariableReferences", Type = "string" };
         list.Value.Add(row);
@@ -97,44 +101,166 @@ public class VariableReferenceFormsPropertyReadTests : BaseTestClass
         };
     }
 
-    // Pins current behavior; see model doc, inconsistencies 4 and 5 (cases 2, 3, 6, 8, 10).
-    // One test: the static registrations RegisterFromFileFormRuntimeDefaults makes do not survive a second
-    // test of this class (the second build throws "single pixel texture is not set"), so every scenario runs here.
+
     [Fact]
-    public void ForwardedAndLiveReads_OfAFormsOnlyProperty_AreWhatTheModelDocSays()
+    public void FirstApply_MinimumStoredInOwnerState_WithExpressions_TargetAndControlHoldTheStoredValue()
     {
-        List<string> results = new List<string>();
+        Built built = Build(true, 12.0, "Width = Slider.Minimum");
 
-        Built stored = Build(true, 12.0, "Width = Slider.Minimum");
-        results.Add("1 firstApplyStoredExpr target=" + stored.Target.Width + " control=" + stored.SliderControl.Minimum);
-        stored.SliderControl.Minimum = 5.0;
-        results.Add("2 controlSetAfterLoad target=" + stored.Target.Width);
-        stored.OwnerGue.RefreshReferences("Slider.Minimum");
-        results.Add("3 controlSetThenRefreshReferences target=" + stored.Target.Width);
-        stored.OwnerGue.SetProperty("Slider.Minimum", 7.0);
-        results.Add("4 setPropertyOnOwner target=" + stored.Target.Width + " control=" + stored.SliderControl.Minimum);
-        stored.Owner.DefaultState!.SetValue("Target.Width", 1f, "float");
-        stored.Owner.ApplyVariableReferences(stored.Owner.DefaultState!);
-        results.Add("5 toolApplyStored target=" + stored.Owner.DefaultState!.GetValueRecursive("Target.Width"));
+        built.Target.Width.ShouldBe(12f);
+        built.SliderControl.Minimum.ShouldBe(12.0);
+    }
 
-        Built plain = Build(false, 12.0, "Width = Slider.Minimum");
-        results.Add("6 firstApplyStoredNoExpr target=" + plain.Target.Width + " control=" + plain.SliderControl.Minimum);
+    [Fact]
+    public void FirstApply_MinimumStoredInOwnerState_WithoutExpressions_RowIsNotApplied()
+    {
+        Built built = Build(false, 12.0, "Width = Slider.Minimum");
 
-        Built never = Build(true, null, "Width = Slider.Minimum");
-        results.Add("7 neverStored target=" + never.Target.Width + " control=" + never.SliderControl.Minimum);
-        never.SliderControl.Minimum = 5.0;
-        never.OwnerGue.RefreshReferences("Slider.Minimum");
-        results.Add("8 neverStoredControlSet target=" + never.Target.Width);
+        // pins current behavior; see model doc, inconsistency 4
+        built.Target.Width.ShouldBe(150f);
+        built.SliderControl.Minimum.ShouldBe(12.0);
+    }
 
-        Built visual = Build(true, 12.0, "Width = Slider.Width");
-        visual.SliderGue.Width = 61;
-        results.Add("9 visualPropertyLive target=" + visual.Target.Width);
+    [Fact]
+    public void FirstApply_MaximumNeverStored_ControlHoldsTheBehaviorDefaultButTheRowReadsNothing()
+    {
+        Built built = Build(true, null, "Width = Slider.Maximum");
 
-        Built mixed = Build(true, 12.0, "Width = Slider.Minimum + Slider.Width");
-        mixed.SliderControl.Minimum = 5.0;
-        mixed.SliderGue.Width = 20;
-        results.Add("10 controlSetThenVisualInput target=" + mixed.Target.Width);
+        // pins current behavior; see model doc, inconsistency 5
+        built.SliderControl.Maximum.ShouldBe(100.0);
+        built.Target.Width.ShouldBe(150f);
+    }
 
-        string.Join("; ", results).ShouldBe("1 firstApplyStoredExpr target=12 control=12; 2 controlSetAfterLoad target=12; 3 controlSetThenRefreshReferences target=12; 4 setPropertyOnOwner target=7 control=7; 5 toolApplyStored target=12; 6 firstApplyStoredNoExpr target=150 control=12; 7 neverStored target=150 control=0; 8 neverStoredControlSet target=150; 9 visualPropertyLive target=61; 10 controlSetThenVisualInput target=32");
+    [Fact]
+    public void Live_MinimumSetByCodeOnTheControl_TargetStillHasTheStoredValue()
+    {
+        Built built = Build(true, 12.0, "Width = Slider.Minimum");
+
+        built.SliderControl.Minimum = 5.0;
+
+        // pins current behavior; see model doc, inconsistency 5
+        built.Target.Width.ShouldBe(12f);
+    }
+
+    [Fact]
+    public void Live_MinimumSetByCodeThenRefreshReferences_TargetStillHasTheStoredValue()
+    {
+        Built built = Build(true, 12.0, "Width = Slider.Minimum");
+
+        built.SliderControl.Minimum = 5.0;
+        built.OwnerGue.RefreshReferences("Slider.Minimum");
+
+        // pins current behavior; see model doc, inconsistency 5
+        built.Target.Width.ShouldBe(12f);
+    }
+
+    [Fact]
+    public void Live_MinimumSetByCodeThenAnotherInputChanges_RowReadsTheStoredMinimumNotTheControl()
+    {
+        Built built = Build(true, 12.0, "Width = Slider.Minimum + Slider.Width");
+
+        built.SliderControl.Minimum = 5.0;
+        built.SliderGue.Width = 20;
+
+        // pins current behavior; see model doc, inconsistency 5 (12 + 20, not 5 + 20)
+        built.Target.Width.ShouldBe(32f);
+    }
+
+    [Fact]
+    public void Live_MinimumNeverStoredSetByCode_TargetKeepsItsDefault()
+    {
+        Built built = Build(true, null, "Width = Slider.Minimum");
+
+        built.SliderControl.Minimum = 5.0;
+        built.OwnerGue.RefreshReferences("Slider.Minimum");
+
+        // pins current behavior; see model doc, inconsistency 5
+        built.Target.Width.ShouldBe(150f);
+    }
+
+    [Fact]
+    public void Live_MinimumWrittenThroughOwnerSetProperty_RowAndControlBothTakeIt()
+    {
+        Built built = Build(true, 12.0, "Width = Slider.Minimum");
+
+        built.OwnerGue.SetProperty("Slider.Minimum", 7.0);
+
+        built.Target.Width.ShouldBe(7f);
+        built.SliderControl.Minimum.ShouldBe(7.0);
+    }
+
+    [Fact]
+    public void Live_VisualPropertyOfTheSameInstance_FollowsTheVisual()
+    {
+        Built built = Build(true, 12.0, "Width = Slider.Width");
+
+        built.SliderGue.Width = 61;
+
+        built.Target.Width.ShouldBe(61f);
+    }
+
+    [Fact]
+    public void ToolApply_MinimumStoredAndControlChanged_ReadsTheStoredValue()
+    {
+        Built built = Build(true, 12.0, "Width = Slider.Minimum");
+        built.SliderControl.Minimum = 5.0;
+        built.Owner.DefaultState!.SetValue("Target.Width", 1f, "float");
+
+        built.Owner.ApplyVariableReferences(built.Owner.DefaultState!);
+
+        built.Owner.DefaultState!.GetValueRecursive("Target.Width").ShouldBe(12f);
+    }
+
+    [Fact]
+    public void ApplyAll_MinimumStored_WritesTheStoredValueToTheStateAndLeavesTheControl()
+    {
+        Built built = Build(true, 12.0, "Width = Slider.Minimum");
+        built.SliderControl.Minimum = 5.0;
+        built.Owner.DefaultState!.SetValue("Target.Width", 1f, "float");
+
+        built.Project.ApplyAllVariableReferences();
+
+        built.Owner.DefaultState!.GetValueRecursive("Target.Width").ShouldBe(12f);
+        built.SliderControl.Minimum.ShouldBe(5.0);
+    }
+
+    [Fact]
+    public void FirstApply_ValueStoredAboveMaximum_ControlClampsAndRowReadsTheStoredValue()
+    {
+        Built built = Build(true, 12.0, "Width = Slider.Value", extra: ("Slider.Value", 150.0));
+
+        // pins current behavior; see model doc, inconsistency 6
+        built.SliderControl.Value.ShouldBe(100.0);
+        built.Target.Width.ShouldBe(150f);
+    }
+
+    [Fact]
+    public void Live_MinimumRaisedByCodeAboveValue_ControlMovesValueButRowReadsTheStoredValue()
+    {
+        Built built = Build(true, 12.0, "Width = Slider.Value", extra: ("Slider.Value", 20.0));
+
+        built.SliderControl.Minimum = 30.0;
+
+        // pins current behavior; see model doc, inconsistency 6
+        built.SliderControl.Value.ShouldBe(30.0);
+        built.Target.Width.ShouldBe(20f);
+    }
+
+    [Fact]
+    public void Live_MinimumSetByACategoryState_RowAndControlBothTakeIt()
+    {
+        Built built = Build(true, 12.0, "Width = Slider.Minimum");
+        StateSaveCategory category = new StateSaveCategory { Name = "Cat" };
+        StateSave state = new StateSave { Name = "Low", ParentContainer = built.Owner };
+        state.Variables.Add(new VariableSave { Name = "Slider.Minimum", Type = "System.Double", Value = 3.0, SetsValue = true });
+        category.States.Add(state);
+        built.Owner.Categories.Add(category);
+        GraphicalUiElement fresh = built.Owner.ToGraphicalUiElement();
+
+        fresh.ApplyState("Cat", "Low");
+
+        InteractiveGue slider = (InteractiveGue)fresh.GetGraphicalUiElementByName("Slider")!;
+        fresh.GetGraphicalUiElementByName("Target")!.Width.ShouldBe(3f);
+        ((Slider)slider.FormsControlAsObject!).Minimum.ShouldBe(3.0);
     }
 }
