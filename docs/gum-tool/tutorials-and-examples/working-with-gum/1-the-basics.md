@@ -55,7 +55,7 @@ For example you can think of screens in a video game which might include a main 
 
 ### Behaviors
 
-Behaviors define built-in events and variables for components. Behaviors are considered an advanced topic, so they are not covered in this tutorial series.
+Behaviors are sets of requirements, such as required states and instances, that let Gum treat a component as a Forms control like a Button. Adding Forms controls to your project also adds their behaviors, so this series does not cover creating or editing them. For more, see [Behaviors](../../gum-elements/behaviors/README.md).
 
 ### Standard Types
 
