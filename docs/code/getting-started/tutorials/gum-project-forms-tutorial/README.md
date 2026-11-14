@@ -13,7 +13,7 @@ This series of tutorials covers how to use the Gum tool to create UI for your pr
 This tutorial assumes a basic understanding of the Gum tool. Specifically it assumes you know how to:
 
 * Move and resize instances
-* Create Screens and Entities
+* Create Screens and Components
 * Work with the Variables tab
 
 If you are brand new to Gum, we recommend learning about how to work with the Gum tool by reading the Gum tool [Intro Tutorials](../../../../gum-tool/tutorials-and-examples/intro-tutorials/).&#x20;
