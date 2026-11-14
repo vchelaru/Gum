@@ -201,6 +201,7 @@ Three habits that cost words without buying understanding:
 - **Bold** UI element names: menu items, button labels, tab names, category names shown in the tool (e.g., **Source** category, **Variables** tab).
 - Backticks for property names, variable names, property values, file names, and code: `Width Units`, `Relative To Children`, `Is Tiling Middle Sections`.
 - Avoid passive voice, prefer "Gum displays a label" over "a label is displayed."
+- Never mix informing and instructing. A sentence either says what something is or shows (no imperative, no "you can ... to ..."), or it is a numbered step that names where to act and what the reader then sees.
 - Screenshots (`.png`) for single states; animated GIFs (`.gif`) for multi-step interactions. Use them liberally.
 - **Do not document error and warning states or every dialog option.** The tool's own tooltips and messages own that. Use one screenshot per distinct task step, two at most per page, and match the length of the sibling pages.
 - **Do not copy a list of values the tool or code owns into prose** (platforms, themes, file formats, dialog options, version limits). Name the control and let the tool show the values, or link to the one page that owns the list.
