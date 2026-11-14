@@ -129,19 +129,49 @@ public class BehaviorValueReferenceGum0009Tests : BaseTestClass, IDisposable
     }
 
     [Fact]
-    public void GetErrorsFor_ShouldNotReportGum0009_WhenLineReadsBehaviorPropertyNobodySet()
+    public void GetErrorsFor_ShouldReportGum0009_WhenLineReadsBehaviorPropertyNobodySet()
     {
         SetThroughBehaviorRow("Minimum", 1.0);
         AddReferenceLine("Text = Slider.Maximum");
 
-        Gum0009Messages().ShouldBeEmpty();
+        Gum0009Messages().ShouldHaveSingleItem();
     }
 
     [Fact]
-    public void GetErrorsFor_ShouldNotReportGum0009_WhenLineReadsBehaviorDefaultWithNothingSetOnOwner()
+    public void GetErrorsFor_ShouldReportGum0009_WhenLineReadsBehaviorDefaultWithNothingSetOnOwner()
     {
         AddReferenceLine("Text = Slider.Minimum");
 
-        Gum0009Messages().ShouldBeEmpty();
+        Gum0009Messages().ShouldHaveSingleItem();
+    }
+
+    // Editor side: the same lines applied the way the tool applies them on a reference edit.
+    private object? ApplyAndReadMinTextText(string line)
+    {
+        Gum.Expressions.GumExpressionService.Initialize();
+        AddReferenceLine(line);
+        GumRuntime.ElementSaveExtensions.ApplyVariableReferences(_component, _defaultState, null, true);
+        BehaviorToolOnlyReferencesApplier.Apply(_component, _defaultState);
+        return _defaultState.Variables.FirstOrDefault(item => item.Name == "MinText.Text")?.Value;
+    }
+
+    [Fact]
+    public void ApplyVariableReferences_WritesOwnerValue_WhenOwnerSetsMinimum()
+    {
+        SetThroughBehaviorRow("Minimum", 1.0);
+        ApplyAndReadMinTextText("Text = Slider.Minimum").ShouldBe("1");
+    }
+
+    [Fact]
+    public void ApplyVariableReferences_WritesNothing_WhenOnlyBehaviorDefaultExists()
+    {
+        ApplyAndReadMinTextText("Text = Slider.Minimum").ShouldBeNull();
+    }
+
+    [Fact]
+    public void ApplyVariableReferences_WritesNothing_WhenMaximumIsUnset()
+    {
+        SetThroughBehaviorRow("Minimum", 1.0);
+        ApplyAndReadMinTextText("Text = Slider.Maximum").ShouldBeNull();
     }
 }
