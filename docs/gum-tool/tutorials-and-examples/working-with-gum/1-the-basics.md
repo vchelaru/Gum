@@ -27,6 +27,8 @@ After you click OK, your project should contain screens, components, and behavio
 
 <figure><img src="../../../.gitbook/assets/13_05_40_13.png" alt=""><figcaption><p>Screens, Components, and Behaviors after creating a new project</p></figcaption></figure>
 
+The Project tab lists your Screens, Components, and Behaviors as folders. We'll use it throughout this tutorial series. For everything the Project tab does, see [Project Tab](../../project-tab.md).
+
 ### Gum Elements
 
 Gum separates its elements into a few categories: Screens, Components, Behaviors, and Standards.&#x20;
