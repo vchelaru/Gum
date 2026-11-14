@@ -47,7 +47,12 @@ The StackPanelInstance is now centered in MainScreen.
 
 By default the StackPanelInstance has an absolute width and height of 150, regardless of what it contains. This presents two problems. First, the contents of the stack panel are not perfectly center aligned - buttons are left-aligned and also spill out of the bottom. Second, buttons which spill out of the bottom of the StackPanel will not receive events.
 
-The event problem can be easily tested by launching the game and moving the mouse over the buttons. Notice that the buttons inside the StackPanelInstance receive events, while the buttons outside do not receive events.
+To see the event problem:
+
+1. Click the **Preview** button.
+2. Move the mouse over the buttons.
+
+The buttons inside the StackPanelInstance react to the mouse, while the buttons outside it do not.
 
 <figure><img src="../../../.gitbook/assets/13_11_16_10.gif" alt=""><figcaption><p>Button events in Gum</p></figcaption></figure>
 
