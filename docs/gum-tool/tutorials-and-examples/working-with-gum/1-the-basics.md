@@ -8,7 +8,7 @@ This page walks you through the basics of using the _Gum UI tool,_ which we'll r
 
 ### Creating a Project
 
-Before we begin looking at the Gum tool, we'll create a new project. If this is the first time you are running Gum, the New Project window opens automatically. To create a new project:
+Before we begin looking at the Gum tool, we'll create a new project. The New Project window opens automatically when Gum starts with no project to reopen, and from **File** > **New Project**. To create a new project:
 
 1. Enter a name for your project
 2. Select a location for your project
