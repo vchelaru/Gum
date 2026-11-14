@@ -956,13 +956,52 @@ public class VariableReferenceLogicTests : BaseTestClass
     }
 
     [Fact]
-    public void DoVariableReferenceReaction_IndexCannotBeResolved_ExplainsItComesFromTheLayout()
+    public void DoVariableReferenceReaction_IndexOfUnknownInstance_NamesThePath()
     {
-        // With nothing displayed for the element there is no live layout to read Index from.
+        // Item1 is not an instance of the screen, so the missing instance is named rather than the layout.
         GumProjectSave project = new GumProjectSave();
         ObjectFinder.Self.GumProjectSave = project;
 
         ScreenSave screen = BuildScreenWithVariableReference("Width = Item1.Index", out StateSave defaultState, out VariableListSave<string> varList);
+
+        defaultState.Variables.Add(new VariableSave { Name = "Width", SetsValue = true, Value = 0f, Type = "float" });
+        project.Screens.Add(screen);
+
+        Action? postedAction = null;
+        _dispatcherMock.Setup(x => x.Post(It.IsAny<Action>()))
+            .Callback<Action>(action => postedAction = action);
+        string? shownMessage = null;
+        _dialogServiceMock.Setup(x => x.ShowMessage(It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<MessageDialogStyle?>()))
+            .Callback<string, string?, MessageDialogStyle?>((message, _, _) => shownMessage = message);
+
+        _sut.DoVariableReferenceReaction(
+            parentElement: screen,
+            leftSideInstance: null,
+            unqualifiedMember: "VariableReferences",
+            stateSave: defaultState,
+            qualifiedName: "VariableReferences",
+            trySave: false);
+        postedAction!.Invoke();
+
+        varList.Value[0].ShouldStartWith("//");
+        shownMessage.ShouldNotBeNull();
+        shownMessage.ShouldContain("The right side reads \"Item1.Index\", which TestScreen does not have.");
+    }
+
+    [Theory]
+    [InlineData("Width = Item1.AbsoluteWidth")]
+    [InlineData("Width = Item1.AbsoluteRight")]
+    public void DoVariableReferenceReaction_AbsoluteValueOfExistingInstanceWithNothingDisplayed_ExplainsItComesFromTheLayout(string line)
+    {
+        // Item1 exists, so the names resolve; with nothing displayed there is no live layout to read from.
+        GumProjectSave project = new GumProjectSave();
+        ObjectFinder.Self.GumProjectSave = project;
+
+        ComponentSave itemType = new ComponentSave { Name = "ItemType" };
+        itemType.States.Add(new StateSave { Name = "Default", ParentContainer = itemType });
+        project.Components.Add(itemType);
+        ScreenSave screen = BuildScreenWithVariableReference(line, out StateSave defaultState, out VariableListSave<string> varList);
+        screen.Instances.Add(new InstanceSave { Name = "Item1", BaseType = "ItemType", ParentContainer = screen });
         defaultState.Variables.Add(new VariableSave { Name = "Width", SetsValue = true, Value = 0f, Type = "float" });
         project.Screens.Add(screen);
 
@@ -986,7 +1025,6 @@ public class VariableReferenceLogicTests : BaseTestClass
         shownMessage.ShouldNotBeNull();
         shownMessage.ShouldContain("computed from the layout");
     }
-
     [Theory]
     [InlineData("Width = 5 / 0")]
     [InlineData("Width = 5.0 / 0")]
@@ -1018,24 +1056,62 @@ public class VariableReferenceLogicTests : BaseTestClass
     }
 
     [Fact]
-    public void DoVariableReferenceReaction_MissingVariableOnRightSide_KeepsGenericMessage()
+    public void DoVariableReferenceReaction_UnknownNameOnRightSide_NamesTheName()
+    {
+        string? shownMessage = ReactToLineAndGetShownMessage("Width = 5 / Missing", out _);
+
+        shownMessage.ShouldNotBeNull();
+        shownMessage.ShouldContain("The right side reads \"Missing\", which TestScreen does not have.");
+    }
+
+    [Fact]
+    public void DoVariableReferenceReaction_UnknownInstanceOnRightSide_NamesTheQualifiedPath()
+    {
+        string? shownMessage = ReactToLineAndGetShownMessage("Width = Zero + Ghost.Text", out _);
+
+        shownMessage.ShouldNotBeNull();
+        shownMessage.ShouldContain("The right side reads \"Ghost.Text\", which TestScreen does not have.");
+        shownMessage.ShouldNotContain("cannot be evaluated");
+    }
+
+    [Fact]
+    public void DoVariableReferenceReaction_SeveralUnknownNames_NamesTheFirstInReadingOrder()
+    {
+        string? shownMessage = ReactToLineAndGetShownMessage("Width = Zero + First + Second", out _);
+
+        shownMessage.ShouldNotBeNull();
+        shownMessage.ShouldContain("\"First\"");
+        shownMessage.ShouldNotContain("\"Second\"");
+    }
+
+    [Fact]
+    public void DoVariableReferenceReaction_UnknownElementOnRightSide_NamesTheElement()
+    {
+        string? shownMessage = ReactToLineAndGetShownMessage("Width = Components/Nope.Width", out _);
+
+        shownMessage.ShouldNotBeNull();
+        shownMessage.ShouldContain("The right side reads from Components/Nope, which the project does not have.");
+    }
+
+    [Fact]
+    public void DoVariableReferenceReaction_MissingVariableOnRightSide_NamesTheVariableNotDivideByZero()
     {
         string? shownMessage = ReactToLineAndGetShownMessage("Width = 5 / Missing", out VariableListSave<string> varList);
 
         varList.Value[0].ShouldStartWith("//");
         shownMessage.ShouldNotBeNull();
-        shownMessage.ShouldContain("cannot be evaluated");
+        shownMessage.ShouldContain("\"Missing\"");
         shownMessage.ShouldNotContain("divides by zero");
     }
 
     [Fact]
-    public void DoVariableReferenceReaction_GuardedDivisorWithOtherFailure_KeepsGenericMessage()
+    public void DoVariableReferenceReaction_GuardedDivisorWithOtherFailure_NamesTheMissingVariable()
     {
         string? shownMessage = ReactToLineAndGetShownMessage("Width = (Zero > 0 ? 5 / Zero : 1) + Missing", out VariableListSave<string> varList);
 
         varList.Value[0].ShouldStartWith("//");
         shownMessage.ShouldNotBeNull();
-        shownMessage.ShouldContain("cannot be evaluated");
+        shownMessage.ShouldContain("\"Missing\"");
         shownMessage.ShouldNotContain("divides by zero");
     }
 
