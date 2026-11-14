@@ -1,16 +1,18 @@
 # 3 - Parent, Stacking, and Alignment
 
-### Introduction
+## Introduction
 
 Although it is technically possible to align UI manually by setting X and Y values, this type of layout makes it more difficult to maintain UI or create UI that is responsive to its parents.
 
-Gum provides parent/children relationships which can be combined with layout values to easily center, stack, dock instances.
+Gum provides parent/children relationships which can be combined with layout values to easily center, stack, and dock instances.
 
 A parent is an instance that contains other instances, called its children. When a parent moves, its children move with it. For more, see [Parent](../../gum-elements/general-properties/parent.md).
 
 ### StackPanel Control
 
 The key to creating layouts in Gum is to add your controls to containers. Containers can be used to create stacks, grids, add margins, and move children together. The StackPanel control is one of the most common controls since it automatically stacks its children, vertically by default or horizontally when its `Orientation` is changed.
+
+For more on how stacking works, see [Children Layout](../../gum-elements/container/children-layout.md).
 
 This page starts with an empty MainScreen.
 
@@ -30,7 +32,7 @@ To add buttons to the StackPanel:
 
 The buttons stack top to bottom inside StackPanelInstance.
 
-<figure><img src="../../../.gitbook/assets/13_10_58_39.png" alt=""><figcaption></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/13_10_58_39.png" alt=""><figcaption><p>Buttons extending past the StackPanelInstance's outline</p></figcaption></figure>
 
 ### Alignment and Dock
 
@@ -44,6 +46,8 @@ To center the StackPanel:
 The StackPanelInstance is now centered in MainScreen.
 
 <figure><img src="../../../.gitbook/assets/image (91).png" alt=""><figcaption><p>Centering the StackPanel</p></figcaption></figure>
+
+For more on Anchor, see [Anchor](../../gum-elements/general-properties/anchor.md).
 
 By default the StackPanelInstance has an absolute width and height of 150, regardless of what it contains. This presents two problems. First, the contents of the stack panel are not perfectly center aligned - buttons are left-aligned and also spill out of the bottom. Second, buttons which spill out of the bottom of the StackPanel will not receive events.
 
@@ -65,6 +69,8 @@ The StackPanelInstance now resizes to fit its buttons.
 
 <figure><img src="../../../.gitbook/assets/13_11_18_48.png" alt=""><figcaption><p>Size to Children button in the Alignment tab</p></figcaption></figure>
 
+For more on Dock, see [Dock](../../gum-elements/general-properties/dock.md).
+
 ### Spacing and Children Size
 
 Now that the StackPanelInstance depends on its children's size, we can modify either the children or the spacing between the children and the stack panel updates automatically.
@@ -75,6 +81,8 @@ Now that the StackPanelInstance depends on its children's size, we can modify ei
 The distance between each button changes.
 
 <figure><img src="../../../.gitbook/assets/13_11_23_39.gif" alt=""><figcaption><p>Spacing adjusts the distance between each button</p></figcaption></figure>
+
+For more on spacing, see [Stack Spacing](../../gum-elements/container/stack-spacing.md).
 
 Similarly, changing the size of the buttons, by changing their `Height` or by adding text that wraps, updates the StackPanelInstance dynamically, and it stays centered.
 
