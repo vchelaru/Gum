@@ -22,6 +22,11 @@ By default Buttons contain text that line wraps, and the height of a button is r
 
 Buttons can also be disabled, which changes their appearance and makes them not respond to hover or click events.
 
+1. Select the button instance.
+2. In the **Behavior** category of the Variables tab, clear **Is Enabled**.
+
+The button changes to its disabled appearance.
+
 <figure><img src="../../../.gitbook/assets/13_13_07_18.png" alt=""><figcaption><p>Enabled and Disabled button</p></figcaption></figure>
 
 ### TextBox
