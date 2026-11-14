@@ -256,6 +256,7 @@ public abstract class TextBoxBase :
             if (value != textWrapping)
             {
                 textWrapping = value;
+                ReportFormsPropertyChanged();
                 UpdateStateForSingleOrMultiLine();
                 // Refresh the selection template after the state has been applied so the
                 // clone picks up the new "Multi" / "MultiNoWrap" / "Single" variable values.
@@ -352,6 +353,7 @@ public abstract class TextBoxBase :
                 // go through the component instead of the renderable to apply localization and force a layout refresh
                 placeholderComponent.SetProperty("Text", value);
             }
+            ReportFormsPropertyChanged();
         }
     }
 
@@ -395,6 +397,7 @@ public abstract class TextBoxBase :
         {
             maxLength = value;
             TruncateTextToMaxLength();
+            ReportFormsPropertyChanged();
         }
     }
 
@@ -402,7 +405,17 @@ public abstract class TextBoxBase :
     /// Whether the text box is read-only. When <c>true</c>, the user cannot type, paste,
     /// delete, or otherwise modify the text, but can still select and copy.
     /// </summary>
-    public bool IsReadOnly { get; set; }
+    public bool IsReadOnly
+    {
+        get => _isReadOnly;
+        set
+        {
+            _isReadOnly = value;
+            ReportFormsPropertyChanged();
+        }
+    }
+
+    bool _isReadOnly;
 
     /// <summary>
     /// Whether the caret is visible when <see cref="IsReadOnly"/> is <c>true</c>.
@@ -414,7 +427,17 @@ public abstract class TextBoxBase :
     /// Whether pressing the tab key inserts a tab character. If true, then
     /// tab characters can be inserted and tab navigation (moving focus to the next control) is disabled.
     /// </summary>
-    public bool AcceptsTab { get; set; } = false;
+    public bool AcceptsTab
+    {
+        get => _acceptsTab;
+        set
+        {
+            _acceptsTab = value;
+            ReportFormsPropertyChanged();
+        }
+    }
+
+    bool _acceptsTab;
 
     /// <summary>
     /// Returns true if tab navigation is enabled. This is the inverse of <see cref="AcceptsTab"/>.
@@ -1927,6 +1950,7 @@ public abstract class TextBoxBase :
             if(_acceptsReturn != value)
             {
                 _acceptsReturn = value;
+                ReportFormsPropertyChanged();
                 UpdateStateForSingleOrMultiLine();
                 // Refresh the selection template after the state has been applied so the
                 // clone picks up the new "Multi" / "MultiNoWrap" / "Single" variable values.

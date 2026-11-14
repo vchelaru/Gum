@@ -92,4 +92,37 @@ public class FormsPropertyReferenceAllocationTests : BaseTestClass
         // Both rows seed one extra input; the Forms one also boxes the double it reads.
         forms.ShouldBeLessThanOrEqualTo(visual + 48, $"visual row {visual} bytes per frame, Forms row {forms}");
     }
+
+    private static double MeasureControlSetter(string row)
+    {
+        (GraphicalUiElement slider, GraphicalUiElement target) = Build(row);
+        Slider control = (Slider)((InteractiveGue)slider).FormsControlAsObject!;
+        bool toggle = false;
+        AllocationResult result = AllocationMeasurer.MeasureMinimum(
+            () =>
+            {
+                control.Maximum = toggle ? 50 : 60;
+                toggle = !toggle;
+            },
+            attempts: 3,
+            warmupIterations: 50,
+            measuredIterations: 500);
+        target.Width.ShouldNotBe(0f);
+        return result.BytesPerIteration;
+    }
+
+    [Fact]
+    public void ControlSetter_NoRowReadsTheProperty_AllocatesNothing()
+    {
+        MeasureControlSetter("Width = Slider.Height").ShouldBe(0);
+    }
+
+    [Fact]
+    public void ControlSetter_RowReadsTheProperty_AllocatesNoMoreThanASetterOfAVisualPropertyPlusTheBoxedValue()
+    {
+        double visual = Measure("Width = Slider.Width + Slider.Height");
+        double forms = MeasureControlSetter("Width = Slider.Maximum + Slider.Height");
+
+        forms.ShouldBeLessThanOrEqualTo(visual + 128, $"visual setter {visual} bytes per call, Forms setter {forms}");
+    }
 }

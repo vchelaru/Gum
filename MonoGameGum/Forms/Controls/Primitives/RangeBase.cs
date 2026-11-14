@@ -64,6 +64,7 @@ public abstract class RangeBase :
         {
             _largeChange = value;
             IsLargeChangeSet = true;
+            ReportFormsPropertyChanged();
         }
     }
 
@@ -100,6 +101,7 @@ public abstract class RangeBase :
         {
             _smallChange = value;
             IsSmallChangeSet = true;
+            ReportFormsPropertyChanged();
         }
     }
 
@@ -137,6 +139,8 @@ public abstract class RangeBase :
             minimum = value;
 
             OnMinimumChanged(oldValue, minimum);
+            // After OnMinimumChanged, which may move Value (it reports itself): Minimum is final here.
+            ReportFormsPropertyChanged();
         }
     }
 
@@ -155,6 +159,7 @@ public abstract class RangeBase :
                 maximum = value;
 
                 OnMaximumChanged(oldValue, maximum);
+                ReportFormsPropertyChanged();
             }
         }
     }
@@ -192,6 +197,7 @@ public abstract class RangeBase :
                 this.value = newValue;
 
                 OnValueChanged(oldValue, this.value);
+                ReportFormsPropertyChanged();
 
                 ValueChanged?.Invoke(this, EventArgs.Empty);
 
@@ -248,6 +254,7 @@ public abstract class RangeBase :
             if (_orientation != value)
             {
                 _orientation = value;
+                ReportFormsPropertyChanged();
 
                 OrientationChanged?.Invoke(this, EventArgs.Empty);
             }

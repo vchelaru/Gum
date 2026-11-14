@@ -192,14 +192,24 @@ public class VariableReferenceFormsPropertyReadTests : BaseTestClass
     }
 
     [Fact]
-    public void Live_MinimumSetByCodeOnTheControl_TargetStillHasTheStoredValue()
+    public void Live_MinimumSetByCodeOnTheControl_RowFollowsWithoutARefresh()
     {
         Built built = Build(true, 12.0, "Width = Slider.Minimum");
 
         built.SliderControl.Minimum = 5.0;
 
-        // pins current behavior; see model doc, inconsistency 5
-        built.Target.Width.ShouldBe(12f);
+        built.Target.Width.ShouldBe(5f);
+    }
+
+    [Fact]
+    public void Live_ValueSetByCodeAboveMaximum_RowFollowsWhatTheControlClampedTo()
+    {
+        Built built = Build(true, null, "Width = Slider.Value");
+
+        built.SliderControl.Value = 150.0;
+
+        built.SliderControl.Value.ShouldBe(100.0);
+        built.Target.Width.ShouldBe(100f);
     }
 
     [Fact]
@@ -291,15 +301,14 @@ public class VariableReferenceFormsPropertyReadTests : BaseTestClass
     }
 
     [Fact]
-    public void Live_MinimumRaisedByCodeAboveValue_ControlMovesValueButRowReadsTheStoredValue()
+    public void Live_MinimumRaisedByCodeAboveValue_ControlMovesValueAndTheRowFollowsIt()
     {
         Built built = Build(true, 12.0, "Width = Slider.Value", extra: ("Slider.Value", 20.0));
 
         built.SliderControl.Minimum = 30.0;
 
-        // pins current behavior; see model doc, inconsistency 6
         built.SliderControl.Value.ShouldBe(30.0);
-        built.Target.Width.ShouldBe(20f);
+        built.Target.Width.ShouldBe(30f);
     }
 
     [Fact]

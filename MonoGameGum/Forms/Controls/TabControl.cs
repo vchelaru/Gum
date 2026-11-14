@@ -124,6 +124,7 @@ public class TabControl : ItemsControl
             {
                 SelectTab(null);
             }
+            ReportFormsPropertyChanged();
         }
     }
 

@@ -41,13 +41,33 @@ public class Slider : RangeBase, IInputReceiver
     /// The frequency to snap the Slider value when IsSnapToTickEnabled is true. If IsSnapToTickEnabled
     /// is false, then this value is ignored.
     /// </summary>
-    public double TicksFrequency { get; set; } = 1;
+    public double TicksFrequency
+    {
+        get => _ticksFrequency;
+        set
+        {
+            _ticksFrequency = value;
+            ReportFormsPropertyChanged();
+        }
+    }
+
+    double _ticksFrequency = 1;
 
     /// <summary>
     /// Controls whether the TickFrequency is applied when the slider is moved throuh the UI. If false, then any
     /// value between Minimum and Maximum is possible. If true, then values snap to the TickFrequency.
     /// </summary>
-    public bool IsSnapToTickEnabled { get; set; } = false;
+    public bool IsSnapToTickEnabled
+    {
+        get => _isSnapToTickEnabled;
+        set
+        {
+            _isSnapToTickEnabled = value;
+            ReportFormsPropertyChanged();
+        }
+    }
+
+    bool _isSnapToTickEnabled;
 
     public bool IsThumbGrabbed => MainCursor.WindowPushed == this.thumb?.Visual;
 

@@ -30,9 +30,15 @@ public class Splitter : Gum.Forms.Controls.FrameworkElement
     /// </summary>
     public ResizeBehavior? ResizeBehavior
     {
-        get;
-        set;
+        get => _resizeBehavior;
+        set
+        {
+            _resizeBehavior = value;
+            ReportFormsPropertyChanged();
+        }
     }
+
+    ResizeBehavior? _resizeBehavior;
 
     ResizeBehavior EffectiveResizeBehavior
     {

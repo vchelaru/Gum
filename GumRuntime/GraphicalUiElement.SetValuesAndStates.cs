@@ -700,6 +700,20 @@ public partial class GraphicalUiElement
         return value != null;
     }
 
+    /// <summary>
+    /// Reports a Forms-only property that code just assigned on this element's Forms control to the references
+    /// that read it, with the value the control ends with (after clamping). Nothing is read or boxed unless a
+    /// reference reads the property.
+    /// </summary>
+    internal void ReportFormsPropertyChanged(string propertyName)
+    {
+        if (GetReferenceAudience(propertyName) != ReferenceAudience.None &&
+            TryReadFormsControlProperty(propertyName, out object? value, out _))
+        {
+            ReportReferenceSourceChanged(propertyName, value);
+        }
+    }
+
     // A live update reads the same few properties on every change, so the reflection lookup is kept per type.
     // Like the other static reflection caches here, it is never cleared: types are kept for the process lifetime.
     private static readonly Dictionary<(Type, string), System.Reflection.PropertyInfo?> _readableFormsProperties =

@@ -225,6 +225,7 @@ public class ItemsControl : ScrollViewer
                     InnerPanel.ChildrenLayout =
                         global::Gum.Managers.ChildrenLayout.TopToBottomStack;
                 }
+                ReportFormsPropertyChanged();
             }
         }
     }

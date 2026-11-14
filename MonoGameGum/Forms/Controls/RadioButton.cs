@@ -40,6 +40,7 @@ public class RadioButton : ToggleButton
         set
         {
             _groupName = value ?? "";
+            ReportFormsPropertyChanged();
         }
     }
 

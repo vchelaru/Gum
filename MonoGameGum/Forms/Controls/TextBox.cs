@@ -140,6 +140,7 @@ public class TextBox : TextBoxBase
             {
                 if (coreTextObject != null) { coreTextObject.MaxLettersToShow = value; }
             }
+            ReportFormsPropertyChanged();
         }
     }
 
@@ -160,6 +161,7 @@ public class TextBox : TextBoxBase
             {
                 if (coreTextObject != null) { coreTextObject.MaxNumberOfLines = value; }
             }
+            ReportFormsPropertyChanged();
         }
     }
 

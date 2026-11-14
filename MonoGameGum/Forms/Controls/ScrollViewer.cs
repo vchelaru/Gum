@@ -156,6 +156,7 @@ public class ScrollViewer :
             {
                 verticalScrollBarVisibility = value;
                 UpdateVerticalScrollBarValues();
+                ReportFormsPropertyChanged();
             }
         }
     }
@@ -170,6 +171,7 @@ public class ScrollViewer :
             {
                 horizontalScrollBarVisibility = value;
                 UpdateHorizontalScrollBarValues();
+                ReportFormsPropertyChanged();
             }
         }
     }
@@ -193,6 +195,7 @@ public class ScrollViewer :
             {
                 horizontalScrollBar.SmallChange = value;
             }
+            ReportFormsPropertyChanged();
         }
     }
 
@@ -220,6 +223,7 @@ public class ScrollViewer :
             {
                 horizontalScrollBar.LargeChange = value;
             }
+            ReportFormsPropertyChanged();
         }
     }
 

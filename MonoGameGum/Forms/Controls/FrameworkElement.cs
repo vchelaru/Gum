@@ -560,6 +560,19 @@ public class FrameworkElement : INotifyPropertyChanged
     public void Anchor(Anchor anchor) => Visual.Anchor(anchor);
     public void Dock(Dock dock) => Visual.Dock(dock);
 
+    /// <summary>
+    /// Tells the variable references that read a Forms-only property of this control (<c>Text = Slider.Minimum</c>) that a
+    /// declared setter just changed it, so they re-evaluate like they do for a visual property (#8029). Call it once from
+    /// the setter, after the value is final. Nothing is read or boxed unless a reference reads the property.
+    /// </summary>
+    /// <param name="propertyName">The property, filled in by the compiler with the calling setter.</param>
+    protected void ReportFormsPropertyChanged([CallerMemberName] string propertyName = "")
+    {
+#if !FRB
+        Visual?.ReportFormsPropertyChanged(propertyName);
+#endif
+    }
+
     bool isEnabled = true;
     /// <summary>
     /// Whether the element is enabled or not. When disabled, the element does
@@ -591,6 +604,7 @@ public class FrameworkElement : INotifyPropertyChanged
                 Visual.IsEnabled = value;
 
                 UpdateState();
+                ReportFormsPropertyChanged();
             }
         }
     }
@@ -625,6 +639,7 @@ public class FrameworkElement : INotifyPropertyChanged
 
             _toolTip = value;
             ToolTipService.RegisterTooltip(this, tooltip);
+            ReportFormsPropertyChanged();
         }
     }
 
