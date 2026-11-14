@@ -22,9 +22,9 @@ Standard elements explicitly set their values on their Default state, so every v
 
 <figure><img src="../../.gitbook/assets/14_09_20_01.png" alt=""><figcaption><p>All values explicitly set on a Rectangle standard element</p></figcaption></figure>
 
-By contrast, if a Rectangle is dropped into a Screen or Component, this creates an instance. Most of its variables on the instance are not explicitly set, so they have no icon. For example, in the following image only `X` is set on the instance. `Y` and the unit variables inherit their values from the Rectangle standard element.
+By contrast, if a Rectangle is dropped into a Screen or Component, this creates an instance. Most of its variables on the instance are not explicitly set, so they have no icon. For example, in the following image `X` is the only Position variable that is set on the instance. `Y` and the unit variables inherit their values from the Rectangle standard element.
 
-<figure><img src="../../.gitbook/assets/14_09_20_02.png" alt=""><figcaption><p>Only X is set, so only X has the icon</p></figcaption></figure>
+<figure><img src="../../.gitbook/assets/14_09_20_02.png" alt=""><figcaption><p>Only X is set in Position, so only X has the icon there</p></figcaption></figure>
 
 If a variable is set, then its value is updated and the icon appears. Variables can be set by typing in values, clicking on icons, dragging over the labels, or changing the value in the editor tab.
 
