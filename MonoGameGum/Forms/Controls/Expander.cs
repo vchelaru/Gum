@@ -49,6 +49,7 @@ public class Expander : FrameworkElement
                 }
 
                 UpdateState();
+                ReportFormsPropertyChanged();
                 PushValueToViewModel();
             }
         }

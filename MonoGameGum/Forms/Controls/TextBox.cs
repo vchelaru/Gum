@@ -131,6 +131,7 @@ public class TextBox : TextBoxBase
         get => coreTextObject != null ? coreTextObject.MaxLettersToShow : _pendingMaxLettersToShow;
         set
         {
+            int? previous = MaxLettersToShow;
             if (coreTextObject == null)
             {
                 // A component variable can be applied before the text child exists; it lands when the child does.
@@ -139,6 +140,10 @@ public class TextBox : TextBoxBase
             else if (value != MaxLettersToShow)
             {
                 if (coreTextObject != null) { coreTextObject.MaxLettersToShow = value; }
+            }
+            if (previous != MaxLettersToShow)
+            {
+                ReportFormsPropertyChanged();
             }
         }
     }
@@ -152,6 +157,7 @@ public class TextBox : TextBoxBase
         get => coreTextObject != null ? coreTextObject.MaxNumberOfLines : _pendingMaxNumberOfLines;
         set
         {
+            int? previous = MaxNumberOfLines;
             if (coreTextObject == null)
             {
                 _pendingMaxNumberOfLines = value;
@@ -159,6 +165,10 @@ public class TextBox : TextBoxBase
             else if (value != MaxNumberOfLines)
             {
                 if (coreTextObject != null) { coreTextObject.MaxNumberOfLines = value; }
+            }
+            if (previous != MaxNumberOfLines)
+            {
+                ReportFormsPropertyChanged();
             }
         }
     }

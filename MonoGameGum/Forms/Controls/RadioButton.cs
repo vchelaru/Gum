@@ -39,7 +39,12 @@ public class RadioButton : ToggleButton
         }
         set
         {
+            string previous = _groupName;
             _groupName = value ?? "";
+            if (previous != _groupName)
+            {
+                ReportFormsPropertyChanged();
+            }
         }
     }
 

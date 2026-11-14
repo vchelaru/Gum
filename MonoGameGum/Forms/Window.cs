@@ -55,7 +55,7 @@ public class Window : Gum.Forms.Controls.FrameworkElement
             {
                 _resizeMode = value;
                 AssignCursorsOnBorders();
-
+                ReportFormsPropertyChanged();
             }
             ResizeModeChanged?.Invoke(this, EventArgs.Empty);
         }

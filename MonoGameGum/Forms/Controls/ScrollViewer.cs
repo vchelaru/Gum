@@ -156,6 +156,7 @@ public class ScrollViewer :
             {
                 verticalScrollBarVisibility = value;
                 UpdateVerticalScrollBarValues();
+                ReportFormsPropertyChanged();
             }
         }
     }
@@ -170,6 +171,7 @@ public class ScrollViewer :
             {
                 horizontalScrollBarVisibility = value;
                 UpdateHorizontalScrollBarValues();
+                ReportFormsPropertyChanged();
             }
         }
     }
@@ -183,6 +185,7 @@ public class ScrollViewer :
         get => (verticalScrollBar ?? horizontalScrollBar)?.SmallChange ?? 0;
         set
         {
+            double previous = SmallChange;
             _smallChange = value;
             _isSmallChangeSet = true;
             if (verticalScrollBar != null)
@@ -192,6 +195,10 @@ public class ScrollViewer :
             if(horizontalScrollBar != null)
             {
                 horizontalScrollBar.SmallChange = value;
+            }
+            if (previous != SmallChange)
+            {
+                ReportFormsPropertyChanged();
             }
         }
     }
@@ -210,6 +217,7 @@ public class ScrollViewer :
         get => (verticalScrollBar ?? horizontalScrollBar)?.LargeChange ?? 0;
         set
         {
+            double previous = LargeChange;
             _largeChange = value;
             _isLargeChangeSet = true;
             if (verticalScrollBar != null)
@@ -219,6 +227,10 @@ public class ScrollViewer :
             if(horizontalScrollBar != null)
             {
                 horizontalScrollBar.LargeChange = value;
+            }
+            if (previous != LargeChange)
+            {
+                ReportFormsPropertyChanged();
             }
         }
     }

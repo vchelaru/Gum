@@ -26,6 +26,7 @@ public class StackPanel : Panel
             {
                 orientation = value;
                 UpdateToOrientation();
+                ReportFormsPropertyChanged();
             }
         }
     }
@@ -33,7 +34,15 @@ public class StackPanel : Panel
     public float Spacing
     {
         get => Visual.StackSpacing;
-        set => Visual.StackSpacing = value;
+        set
+        {
+            float previous = Visual.StackSpacing;
+            Visual.StackSpacing = value;
+            if (previous != value)
+            {
+                ReportFormsPropertyChanged();
+            }
+        }
     }
 
     #endregion

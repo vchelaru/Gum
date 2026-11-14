@@ -105,6 +105,7 @@ public class ToggleButton : ButtonBase
             {
                 isChecked = value;
                 UpdateState();
+                ReportFormsPropertyChanged();
 
                 if (isChecked == true)
                 {
