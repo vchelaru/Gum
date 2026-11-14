@@ -63,7 +63,8 @@ public class VariableReferenceSuggestions : IVariableReferenceSuggestions
     public const string LocalizationName = "global::Localization.CurrentLanguage";
 
     // Parameter names shown in the list. The evaluator's table (ExpressionFunctions) owns which functions exist
-    // and how many arguments each takes; a test fails when it gains one this table lacks.
+    // and how many arguments each takes; every function is offered whether or not it is named here, and a test
+    // fails when the evaluator gains one this table lacks (it would otherwise show as arg1, arg2).
     private static readonly Dictionary<string, string[]> FunctionParameters = new Dictionary<string, string[]>
     {
         ["Sin"] = new[] { "degrees" },
@@ -78,6 +79,9 @@ public class VariableReferenceSuggestions : IVariableReferenceSuggestions
         ["Max"] = new[] { "a", "b" },
         ["Clamp"] = new[] { "value", "min", "max" },
     };
+
+    /// <summary>Whether <paramref name="name"/> has parameter names for its signature.</summary>
+    public static bool HasFunctionParameters(string name) => FunctionParameters.ContainsKey(name);
 
     /// <summary>The function signature shown in the list, such as <c>Clamp(value, min, max)</c>.</summary>
     public static string GetFunctionSignature(string name) =>
@@ -135,7 +139,7 @@ public class VariableReferenceSuggestions : IVariableReferenceSuggestions
                 accepted.Add(new VariableReferenceSuggestion(functionName, false, GetFunctionSignature(functionName), functionName + "("));
             }
         }
-        if (word.Length > 0 &&
+        if (word.Length > 0 && !word.Equals(LocalizationName, StringComparison.Ordinal) &&
             (LocalizationName.StartsWith(word, StringComparison.OrdinalIgnoreCase) ||
              LocalizationName.Substring("global::".Length).StartsWith(word, StringComparison.OrdinalIgnoreCase)))
         {
@@ -208,7 +212,7 @@ public class VariableReferenceSuggestions : IVariableReferenceSuggestions
             ElementSave? ownerType = ownerInstance == null ? null : ObjectFinder.Self.GetElementSave(ownerInstance.BaseType);
             if (ownerType != null)
             {
-                AddMembers(ownerType, "@", word.Substring(1), word, leftType, candidates);
+                AddMembers(ownerType, "@", word.Substring(1), word, leftType, candidates, new List<(ElementSave, string)> { (owner, ownerInstance!.Name) });
             }
             return;
         }
@@ -245,8 +249,11 @@ public class VariableReferenceSuggestions : IVariableReferenceSuggestions
     /// Adds instance names, the element's own variables and, for a typed <c>Instance.</c> prefix, that
     /// instance's variables, each with <paramref name="pathPrefix"/> in front.
     /// </summary>
-    private static void AddMembers(ElementSave element, string pathPrefix, string typedMember, string word, string leftType, List<VariableReferenceSuggestion> candidates)
+    private static void AddMembers(ElementSave element, string pathPrefix, string typedMember, string word, string leftType, List<VariableReferenceSuggestion> candidates,
+        List<(ElementSave Holder, string InstancePath)>? holders = null)
     {
+        // Elements whose states may store "Instance.Variable" overrides for the instance being read, with that instance's path.
+        holders ??= new List<(ElementSave, string)>();
         // Each typed "Instance." steps into that instance's component, so nested instances
         // (Slider.Thumb.Width) are offered the same way as top-level ones.
         int dot;
@@ -259,6 +266,11 @@ public class VariableReferenceSuggestions : IVariableReferenceSuggestions
                 return;
             }
             pathPrefix += instance.Name + ".";
+            for (int i = 0; i < holders.Count; i++)
+            {
+                holders[i] = (holders[i].Holder, holders[i].InstancePath + "." + instance.Name);
+            }
+            holders.Add((element, instance.Name));
             element = instanceType;
             typedMember = typedMember.Substring(dot + 1);
         }
@@ -273,6 +285,29 @@ public class VariableReferenceSuggestions : IVariableReferenceSuggestions
             // The type is only looked up for names that pass the typed prefix; the rest are filtered out anyway.
             bool mismatch = path.StartsWith(word, StringComparison.OrdinalIgnoreCase) && !IsAssignable(leftType, GetDeclaredType(element, name));
             candidates.Add(new VariableReferenceSuggestion(path, false, IsTypeMismatch: mismatch));
+        }
+
+        // A container can store a variable for an instance that the instance's type never declares (a keyboard
+        // key's HorizontalAlignment); the checker accepts it, so it is a candidate too.
+        HashSet<string> seen = new HashSet<string>(StringComparer.Ordinal);
+        foreach ((ElementSave holder, string instancePath) in holders)
+        {
+            string stored = instancePath + ".";
+            foreach (ElementSave inChain in ObjectFinder.Self.GetBaseElements(holder).Prepend(holder))
+            {
+                foreach (StateSave state in inChain.AllStates)
+                {
+                    foreach (VariableSave variable in state.Variables)
+                    {
+                        if (variable.Name.StartsWith(stored, StringComparison.Ordinal) && variable.Name.IndexOf('.', stored.Length) < 0 && seen.Add(variable.Name))
+                        {
+                            string path = pathPrefix + variable.Name.Substring(stored.Length);
+                            bool mismatch = path.StartsWith(word, StringComparison.OrdinalIgnoreCase) && !IsAssignable(leftType, variable.Type);
+                            candidates.Add(new VariableReferenceSuggestion(path, false, IsTypeMismatch: mismatch));
+                        }
+                    }
+                }
+            }
         }
     }
 

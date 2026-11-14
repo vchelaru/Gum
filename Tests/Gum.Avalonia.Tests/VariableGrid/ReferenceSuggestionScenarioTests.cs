@@ -1,6 +1,7 @@
 using Avalonia.Controls;
 using Avalonia.Headless.XUnit;
 using Avalonia.Input;
+using Avalonia.VisualTree;
 using AvaloniaDataUi.Controls;
 using Gum.Avalonia.Plugins.VariableGrid;
 using Gum.DataTypes;
@@ -138,6 +139,51 @@ public class ReferenceSuggestionScenarioTests
 
         PopupFor(grid).IsOpen.ShouldBeFalse();
         grid.Editor<StringListTextBoxDisplay>("VariableReferences").EditorTextBox.Text.ShouldBe("X = Lea");
+    }
+
+    [AvaloniaFact]
+    public void AcceptingAFunction_InsertsTheParenthesis_AndClosesTheList()
+    {
+        (VariableGridHarness grid, _, _) = Arrange();
+        using DiscardingScope owned = new DiscardingScope(grid);
+        grid.TypeLines("VariableReferences", "X = Cla");
+
+        Press(grid, Key.Enter, PhysicalKey.Enter);
+
+        grid.Editor<StringListTextBoxDisplay>("VariableReferences").EditorTextBox.Text.ShouldBe("X = Clamp(");
+        PopupFor(grid).IsOpen.ShouldBeFalse();
+    }
+
+    [AvaloniaFact]
+    public void AcceptingTheLocalizationName_ClosesTheList()
+    {
+        (VariableGridHarness grid, _, _) = Arrange();
+        using DiscardingScope owned = new DiscardingScope(grid);
+        grid.TypeLines("VariableReferences", "X = Loc");
+
+        Press(grid, Key.Enter, PhysicalKey.Enter);
+
+        grid.Editor<StringListTextBoxDisplay>("VariableReferences").EditorTextBox.Text.ShouldBe("X = global::Localization.CurrentLanguage");
+        PopupFor(grid).IsOpen.ShouldBeFalse();
+    }
+
+    [AvaloniaFact]
+    public void ClickingAnEntry_AcceptsIt_WithoutLeavingTheEditor()
+    {
+        (VariableGridHarness grid, _, _) = Arrange();
+        using DiscardingScope owned = new DiscardingScope(grid);
+        grid.TypeLines("VariableReferences", "X = Lea");
+        ReferenceSuggestionPopup popup = PopupFor(grid);
+        ListBoxItem item = popup.List.GetVisualDescendants().OfType<ListBoxItem>().First();
+
+        item.RaiseEvent(new global::Avalonia.Input.PointerPressedEventArgs(
+            item, new global::Avalonia.Input.Pointer(0, global::Avalonia.Input.PointerType.Mouse, true), item, new global::Avalonia.Point(5, 5),
+            0, new global::Avalonia.Input.PointerPointProperties(RawInputModifiers.LeftMouseButton, global::Avalonia.Input.PointerUpdateKind.LeftButtonPressed), KeyModifiers.None)
+        { RoutedEvent = InputElement.PointerPressedEvent });
+
+        TextBox box = grid.Editor<StringListTextBoxDisplay>("VariableReferences").EditorTextBox;
+        box.Text.ShouldBe("X = Leader.");
+        box.IsFocused.ShouldBeTrue();
     }
 
     [AvaloniaFact]

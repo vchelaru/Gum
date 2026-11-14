@@ -32,6 +32,7 @@ public sealed class ReferenceSuggestionPopup
     private Func<string?> _getOwningInstanceName;
     private VariableReferenceSuggestionResult _current;
     private int _lineStartIndex;
+    private string? _acceptedText;
 
     /// <summary>Attaches suggestions to <paramref name="editor"/>.</summary>
     public ReferenceSuggestionPopup(StringListTextBoxDisplay editor, IVariableReferenceSuggestions suggestions,
@@ -107,6 +108,12 @@ public sealed class ReferenceSuggestionPopup
 
     private void Refresh()
     {
+        // The text an accepted entry produced stays closed until the user changes it.
+        if (_acceptedText != null && _editor.EditorTextBox.Text == _acceptedText)
+        {
+            return;
+        }
+        _acceptedText = null;
         TextBox box = _editor.EditorTextBox;
         ElementSave? owner = _getOwner();
         if (owner == null || !box.IsFocused)
@@ -217,9 +224,13 @@ public sealed class ReferenceSuggestionPopup
         string insert = _current.Items[_list.SelectedIndex].InsertText;
         int start = _lineStartIndex + _current.ReplaceStart;
         int length = _current.ReplaceLength;
+        // A name that continues with a dot reopens the list through TextChanged; a function (caret inside its
+        // parenthesis), the localization name and a finished variable end the word, so the list stays closed.
+        bool reopens = _current.Items[_list.SelectedIndex].IsContinuation;
         Close();
-        // TextChanged reopens the list for a name that continues with a dot.
-        box.Text = text.Substring(0, start) + insert + text.Substring(start + length);
+        string newText = text.Substring(0, start) + insert + text.Substring(start + length);
+        _acceptedText = reopens ? null : newText;
+        box.Text = newText;
         box.CaretIndex = start + insert.Length;
     }
 }

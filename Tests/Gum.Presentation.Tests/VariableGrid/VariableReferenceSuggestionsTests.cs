@@ -380,9 +380,10 @@ public class VariableReferenceSuggestionsTests : BaseTestClass
     [Fact]
     public void GetSuggestions_ShouldOfferEveryEvaluatorFunction()
     {
-        // Fails when the evaluator's table gains a function the popup does not offer.
+        // Fails when the evaluator's table gains a function the popup has no parameter names for.
         foreach (string name in ExpressionFunctions.Names)
         {
+            VariableReferenceSuggestions.HasFunctionParameters(name).ShouldBeTrue(name + " has no parameter names in VariableReferenceSuggestions");
             VariableReferenceSuggestion item = _suggestions.GetSuggestions(_component, "MinText", "Width = " + name, 8 + name.Length).Items.Single(entry => entry.Text == name);
             item.InsertText.ShouldBe(name + "(");
             item.DisplayText.Count(c => c == ',').ShouldBe(ExpressionFunctions.GetArgumentCount(name) - 1, name);
@@ -430,5 +431,23 @@ public class VariableReferenceSuggestionsTests : BaseTestClass
 
         // A string left side accepts anything.
         _suggestions.GetSuggestions(_component, "MinText", "Text = MinText.", 15).Items.ShouldAllBe(item => !item.IsTypeMismatch);
+    }
+
+    [Fact]
+    public void GetSuggestions_ShouldNotOfferLocalizationName_WhenItIsAlreadyFullyTyped()
+    {
+        Texts("Width = global::Localization.CurrentLanguage").ShouldNotContain("global::Localization.CurrentLanguage");
+    }
+
+    [Fact]
+    public void GetSuggestions_ShouldOfferVariablesStoredUnderDottedInstanceNames_ThatTheInstanceTypeDoesNotDeclare()
+    {
+        // The container stores an override for a variable its instance's type never declares; GUM0009 accepts it.
+        _defaultState.Variables.Add(new VariableSave { Name = "MinText.CustomStored", Type = "float", Value = 1f });
+        string line = "X = MinText.CustomStored";
+        HeadlessErrorChecker.FindUnresolvableReference(_component, null, line).ShouldBeNull();
+
+        Texts("X = MinText.Cust", owningInstance: null).ShouldContain("MinText.CustomStored");
+        Texts("X = @Cust", "MinText").ShouldContain("@CustomStored");
     }
 }
