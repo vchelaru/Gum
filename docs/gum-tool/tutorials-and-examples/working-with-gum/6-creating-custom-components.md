@@ -119,3 +119,9 @@ Hidden variables are also labeled as hidden with a small label under each variab
 ### Conclusion
 
 This tutorial shows how to create a simple component with explicitly exposed variables along with hidden variables. This covers the concepts of creating a component, but components can be anything that you might want to encapsulate or reuse. It's best to spend some time creating new components or modifying the LevelUpItem component that we created to become more familiar with how components work.
+
+To use the screens and components you create in a game, continue with the [Gum UI Tool and Code Tutorial](../../../code/getting-started/tutorials/gum-project-forms-tutorial/README.md).
+
+For more on working in the Gum tool, see [Gum Elements](../../gum-elements/README.md), [Variables](../../variables/README.md), and [States](../../gum-elements/states/README.md).
+
+If you have questions, or want to show what you are building, join the [Discord chat](https://discord.gg/EvqwmSQuBz).
