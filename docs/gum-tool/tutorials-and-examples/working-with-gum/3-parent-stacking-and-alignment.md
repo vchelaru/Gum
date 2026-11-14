@@ -12,8 +12,6 @@ A parent is an instance that contains other instances, called its children. When
 
 The key to creating layouts in Gum is to add your controls to containers. Containers can be used to create stacks, grids, add margins, and move children together. The StackPanel control is one of the most common controls since it automatically stacks its children, vertically by default or horizontally when its `Orientation` is changed.
 
-For more on how stacking works, see [Children Layout](../../gum-elements/container/children-layout.md).
-
 This page starts with an empty MainScreen.
 
 1. Select an instance in MainScreen, press `Delete`, and click **Yes** in the **Delete?** dialog. Repeat for each instance that was added on the previous pages.
