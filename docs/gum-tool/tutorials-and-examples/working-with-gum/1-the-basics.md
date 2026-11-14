@@ -87,7 +87,7 @@ Plugins can add additional standard elements. The list above is the default list
 
 ### Previewing your Project
 
-Gum lets you project in a real game by clicking the preview button at the top right of the editor tab.
+Gum can run your project as a live game in a Preview window. The **Preview** button is the play triangle at the top right of the Editor tab.
 
 <figure><img src="../../../.gitbook/assets/13_05_57_16.png" alt=""><figcaption></figcaption></figure>
 
