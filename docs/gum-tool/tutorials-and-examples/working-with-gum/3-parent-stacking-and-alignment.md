@@ -65,6 +65,8 @@ Both problems can be solved by having the StackPanelInstance resize itself accor
 
 The StackPanelInstance now resizes to fit its buttons.
 
+**Size to Children** sets the `Width Units` and `Height Units` of the StackPanelInstance to `Relative To Children`. For more on how values are measured, see [Width Units](../../gum-elements/general-properties/width-units.md) and [Height Units](../../gum-elements/general-properties/height-units.md).
+
 <figure><img src="../../../.gitbook/assets/13_11_18_48.png" alt=""><figcaption><p>Size to Children button in the Alignment tab</p></figcaption></figure>
 
 For more on Dock, see [Dock](../../gum-elements/general-properties/dock.md).
