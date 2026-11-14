@@ -63,7 +63,15 @@ public static class GumFontGenerator
         FontGeneratorOptions options = BuildOptionsWithBackend(bmfcSave, backend);
         if (string.IsNullOrEmpty(bmfcSave.FontFile))
         {
-            return BmFont.GenerateFromSystem(bmfcSave.FontName, options);
+            try
+            {
+                return BmFont.GenerateFromSystem(bmfcSave.FontName, options);
+            }
+            catch (Exception) when (BundledArialFont.TryRegisterFor(bmfcSave.FontName))
+            {
+                // #8044: no Arial on this machine; the bundled Liberation Sans is now registered under it.
+                return BmFont.GenerateFromSystem(bmfcSave.FontName, options);
+            }
         }
 
         // The resolved path is the face's identity for KernSmith's FaceCache (a no-op while the cache is
