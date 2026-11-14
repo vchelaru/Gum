@@ -36,15 +36,20 @@ Values can be restored to their default by right-clicking on the variable and se
 
 Default variables are not just a starting point - they are live references that continue to apply if the base component changes. In other words, if a variable changes on the ButtonStandard component, then these variables automatically update all ButtonStandard instances everywhere, unless the instance explicitly overrides that variable.
 
-To see this in action, create two ButtonStandard instances - one that explicitly sets a Width and one which keeps its width to default, as shown in the following screenshot. The top button has a default width of 128, while the bottom button explicitly sets a larger Width value.
+To see this in action:
+
+1. Drag two **ButtonStandard** instances onto MainScreen.
+2. Select the second instance and set its `Width` to a value larger than the first one's.
 
 <figure><img src="../../../.gitbook/assets/13_06_33_14.png" alt=""><figcaption></figcaption></figure>
 
-Next, we can change the default width of the Button Standard to a large value, like 250.
+The first button keeps the default `Width` of 128, while the second button explicitly sets its own `Width`.
+
+3. Under **Components** > **Controls**, select **ButtonStandard** and set its `Width` to 250.
 
 <figure><img src="../../../.gitbook/assets/13_06_35_01.png" alt=""><figcaption><p>ButtonStandard's default value changed</p></figcaption></figure>
 
-If we return to the buttons shown earlier, the top button has gotten wider, while the bottom button (the one with an explicitly set Width value) has not changed.
+Back on MainScreen, the first button is wider because it inherits the default, while the second button has not changed because it sets its own `Width`.
 
 <figure><img src="../../../.gitbook/assets/13_06_36_06.png" alt=""><figcaption><p>Width values after ButtonStandard has changed</p></figcaption></figure>
 
