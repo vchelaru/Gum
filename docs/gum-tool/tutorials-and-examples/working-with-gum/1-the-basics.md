@@ -29,6 +29,13 @@ After you click OK, your project should contain screens, components, and behavio
 
 The Project tab lists your Screens, Components, and Behaviors as folders. We'll use it throughout this tutorial series. For everything the Project tab does, see [Project Tab](../../project-tab.md).
 
+The examples in this series use a blank screen named MainScreen, which a new project does not contain.
+
+1. In the Project tab, right-click the **Screens** folder and select **Add Screen**.
+2. In the **Add Screen** dialog, type `MainScreen` and click **OK**.
+
+A MainScreen item now appears under **Screens** in the Project tab.
+
 ### Gum Elements
 
 Gum separates its elements into a few categories: Screens, Components, Behaviors, and Standards.&#x20;
