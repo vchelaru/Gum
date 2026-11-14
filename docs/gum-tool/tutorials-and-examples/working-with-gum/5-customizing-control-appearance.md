@@ -2,9 +2,9 @@
 
 ## Introduction
 
-The controls in a default project act as a starting point for customization. These can be fully customized. Note that the available customizations depend on the initial style you used for your project.
+The controls in a default project act as a starting point for customization. These can be fully customized. Note that the available customizations depend on the theme you selected when creating your project.
 
-This page discusses customizing the default theme, but if you are using a different theme then the customization steps will be slightly different.
+This page discusses customizing the Standard theme, but if you are using a different theme then the customization steps will be slightly different.
 
 ### Component States
 
@@ -31,7 +31,7 @@ If we want to change the color, we can do a few things:
 1. Change the color in the Styles component by selecting the instance (like Primary) in the Styles component and changing its color.
 2. Change which style color is being referenced.
 3. Remove the styles reference altogether and set the color directly.
-4. Replace the Visual completely
+4. Replace the visuals completely
 
 Let's look at how to perform each of these.
 
@@ -86,9 +86,9 @@ Once this reference is removed, the color can be set directly.
 
 <figure><img src="../../../.gitbook/assets/13_15_18_33.png" alt=""><figcaption><p>Direct color assignment after removing reference</p></figcaption></figure>
 
-### 4 - Removing Visuals Completely
+### 4 - Replacing Visuals Completely
 
-Visuals in components can be completely removed or replaced to customize the appearance of a component. When components are replaced, the newly-added instances in a component do not have any built-in functionality. The individual states must be wired up manually.
+Visuals in components can be completely removed or replaced to customize the appearance of a component. When components are replaced, the newly-added instances in a component do not have any built-in functionality. The individual states must be set up manually (shown below).
 
 As an example, we will replace the background of the ButtonStandard to use a rounded Rectangle rather than a NineSlice.
 
