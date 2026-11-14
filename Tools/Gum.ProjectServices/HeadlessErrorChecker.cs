@@ -676,7 +676,7 @@ public partial class HeadlessErrorChecker : IHeadlessErrorChecker
         {
             // A stored value on an exposed Forms property (Slider.Minimum exposed as SliderMin) is
             // read by the evaluator even though the instance's type declares no such variable.
-            if (exposed.Value != null && ExposesBehaviorProperty(element, exposed.Name))
+            if (exposed.Value != null && exposed.SetsValue && ExposesBehaviorProperty(element, exposed.Name))
             {
                 return true;
             }

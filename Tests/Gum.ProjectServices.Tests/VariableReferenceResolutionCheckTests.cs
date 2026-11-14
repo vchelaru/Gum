@@ -210,6 +210,15 @@ public class VariableReferenceResolutionCheckTests : IDisposable
     #region Exposed variables
 
     [Fact]
+    public void Reports_WhenExposedBehaviorPropertyEntryDoesNotSetValue()
+    {
+        ComponentSave owner = AddSliderOwner();
+        SetDouble(owner, "Slider.Minimum", 1, exposedAs: "SliderMin");
+        owner.DefaultState!.Variables.Single(item => item.Name == "Slider.Minimum").SetsValue = false;
+        ShouldReport(owner, "Text = SliderMin");
+    }
+
+    [Fact]
     public void Resolves_WhenExposedVariableIsSetOnOwner()
     {
         ComponentSave owner = AddSliderOwner();
