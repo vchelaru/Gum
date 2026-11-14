@@ -30,7 +30,9 @@ For a step-by-step tool walkthrough of rotating and scaling a clipped container,
 
 If you are managing a render target yourself in code instead of using `Is Render Target`, see [Render Targets](../../../code/rendering/render-targets.md) for the blend-mode setup needed to composite translucent content correctly on MonoGame and raylib.
 
-If your game draws its world before Gum and the world disappears when a container with `Is Render Target` is visible, see [The Scene Drawn Before Gum Disappears](../../../code/rendering/render-targets.md#the-scene-drawn-before-gum-disappears-monogame-kni-fna).
+{% hint style="warning" %}
+**MonoGame, KNI and FNA:** if your game draws anything before Gum (such as the game world), a visible container with `Is Render Target` erases it. Fix: [set `PreserveContents`](../../../code/rendering/render-targets.md#the-scene-drawn-before-gum-disappears-monogame-kni-fna). Anything drawn by the Gum project itself is not erased.
+{% endhint %}
 
 ## Source Shader File
 
