@@ -44,7 +44,7 @@ Gum separates its elements into a few categories: Screens, Components, Behaviors
 
 Let's take a look at each of the different types.
 
-### Screens
+#### Screens
 
 Screens are objects which can contain standard elements and instances of other components. Screens cannot be added to other Screens and are considered _top level_ objects. Screens exist mainly for organization. Screens can be simple, such as a loading screen, or complex such as a HUD in an RTS game.
 
@@ -52,7 +52,7 @@ Your project includes DemoScreenGum which shows how controls can be created and 
 
 <figure><img src="../../../.gitbook/assets/13_05_49_52.png" alt=""><figcaption><p>DemoScreenGum with default controls</p></figcaption></figure>
 
-### Components
+#### Components
 
 Components are objects which can contain standard elements and instances of other components. Components can be very simple, such as a Label, or very complex, such as an options menu with dozens of _instances_. Items added to components or screens are called _instances_.
 
@@ -60,11 +60,11 @@ Components are objects which can contain standard elements and instances of othe
 
 For example you can think of screens in a video game which might include a main menu, credits screen, options screen, and level selection screen. You can think of components as elements which are composed of multiple standard elements. Examples include a Button component which is made up of a Sprite instance and a Text instance, or a Logo component which may be made up of multiple Sprites and Text objects.
 
-### Behaviors
+#### Behaviors
 
 Behaviors are sets of requirements, such as required states and instances, that let Gum treat a component as a Forms control like a Button. Adding Forms controls to your project also adds their behaviors, so this series does not cover creating or editing them. For more, see [Behaviors](../../gum-elements/behaviors/README.md).
 
-### Standard Elements
+#### Standard Elements
 
 * ![](<../../../.gitbook/assets/image (51).png>) \
   Circle - a circle which can be filled in, outlined, or both. Often used for visualizations or for defining collision in your Gum objects for a game.
