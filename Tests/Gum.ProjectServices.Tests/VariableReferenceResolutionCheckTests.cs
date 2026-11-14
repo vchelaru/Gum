@@ -150,19 +150,19 @@ public class VariableReferenceResolutionCheckTests : IDisposable
     }
 
     [Fact]
-    public void Reports_WhenOnlyBehaviorDefaultExists_Slider()
+    public void Resolves_WhenOnlyBehaviorDefaultExists_Slider()
     {
         ComponentSave owner = AddSliderOwner();
-        ShouldReport(owner, "Text = Slider.Minimum");
+        ShouldResolve(owner, "Text = Slider.Minimum");
     }
 
     [Fact]
-    public void Reports_WhenOnlyBehaviorDefaultExists_ScrollBar()
+    public void Resolves_WhenOnlyBehaviorDefaultExists_ScrollBar()
     {
         ComponentSave owner = AddComponent("Custom/Owner");
         AddInstance(owner, "Bar", "DarkPro/ScrollBar");
         AddInstance(owner, "MinText", "Text");
-        ShouldReport(owner, "Text = Bar.Maximum");
+        ShouldResolve(owner, "Text = Bar.Maximum");
     }
 
     [Fact]
@@ -175,11 +175,11 @@ public class VariableReferenceResolutionCheckTests : IDisposable
     }
 
     [Fact]
-    public void Reports_WhenBehaviorIsDeclaredOnBaseOfInstanceType()
+    public void Resolves_WhenBehaviorIsDeclaredOnBaseOfInstanceType()
     {
         AddComponent("Custom/MySlider", "DarkPro/Slider");
         ComponentSave owner = AddSliderOwner(sliderType: "Custom/MySlider");
-        ShouldReport(owner, "Text = Slider.Minimum");
+        ShouldResolve(owner, "Text = Slider.Minimum");
     }
 
     [Fact]
@@ -267,10 +267,10 @@ public class VariableReferenceResolutionCheckTests : IDisposable
     }
 
     [Fact]
-    public void Reports_WhenOwnerPrefixReadsBehaviorDefault()
+    public void Resolves_WhenOwnerPrefixReadsBehaviorDefault()
     {
         ComponentSave owner = AddSliderOwner();
-        ShouldReport(owner, "Value = @Maximum", "Slider");
+        ShouldResolve(owner, "Value = @Maximum", "Slider");
     }
 
     [Fact]
@@ -434,12 +434,12 @@ public class VariableReferenceResolutionCheckTests : IDisposable
     }
 
     [Fact]
-    public void Reports_WhenScreenReadsBehaviorDefaultOfItsInstance()
+    public void Resolves_WhenScreenReadsBehaviorDefaultOfItsInstance()
     {
         ScreenSave screen = AddScreen("Custom/MainScreen");
         AddInstance(screen, "Slider", "DarkPro/Slider");
         AddInstance(screen, "MinText", "Text");
-        ShouldReport(screen, "Text = Slider.Minimum");
+        ShouldResolve(screen, "Text = Slider.Minimum");
     }
 
     [Fact]
@@ -456,17 +456,17 @@ public class VariableReferenceResolutionCheckTests : IDisposable
     #region Functions and ternaries
 
     [Fact]
-    public void Reports_WhenFunctionMixesBehaviorValueWithLiteral()
+    public void Resolves_WhenFunctionMixesBehaviorDefaultWithLiteral()
     {
         ComponentSave owner = AddSliderOwner();
-        ShouldReport(owner, "Width = Max(Slider.Minimum, 3)");
+        ShouldResolve(owner, "Width = Max(Slider.Minimum, 3)");
     }
 
     [Fact]
-    public void Reports_WhenTernaryMixesBehaviorValueWithLiteral()
+    public void Resolves_WhenTernaryMixesBehaviorDefaultWithLiteral()
     {
         ComponentSave owner = AddSliderOwner();
-        ShouldReport(owner, "Width = Slider.Minimum > 2 ? 1 : 0");
+        ShouldResolve(owner, "Width = Slider.Minimum > 2 ? 1 : 0");
     }
 
     [Fact]

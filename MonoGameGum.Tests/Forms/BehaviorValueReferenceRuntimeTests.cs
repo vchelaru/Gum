@@ -84,13 +84,13 @@ public class BehaviorValueReferenceRuntimeTests : BaseTestClass
     }
 
     [Fact]
-    public void Build_ReferenceReadingBehaviorProperty_AppliesOnlyWhenValueIsStoredAndExpressionsAreOn()
+    public void Build_ReferenceReadingBehaviorProperty_AppliesStoredValueOrBehaviorDefaultWhenExpressionsAreOn()
     {
         string result =
             "setExpr=" + BuildAndReadMinText(true, true, "Text = Slider.Minimum") +
             " setNoExpr=" + BuildAndReadMinText(false, true, "Text = Slider.Minimum") +
             " defExpr=" + BuildAndReadMinText(true, false, "Text = Slider.Minimum") +
             " defNoExpr=" + BuildAndReadMinText(false, false, "Text = Slider.Minimum");
-        result.ShouldBe("setExpr=[1] setNoExpr=[Hello] defExpr=[Hello] defNoExpr=[Hello]");
+        result.ShouldBe("setExpr=[1] setNoExpr=[Hello] defExpr=[0] defNoExpr=[Hello]");
     }
 }

@@ -111,7 +111,7 @@ When designing fixes in this area, the question is almost always "did `ApplyVari
 
 ### Hard Values — Runtime Implications
 
-Variable references write **hard values** into the `StateSave`. This means at game runtime (where `ApplyVariableReferences` on the `GraphicalUiElement` runs once at load time), the referenced values are already baked into the save data. References are **not dynamically re-evaluated** at game runtime when the source value changes — they are a tool-time binding mechanism. The runtime `ApplyVariableReferences(GraphicalUiElement)` overload exists primarily for the tool's wireframe preview.
+Variable references write **hard values** into the `StateSave`. The `ElementSave` overload bakes them into the save data, which is what the tool and `ApplyAllVariableReferences` use. In a game the rows of a component are also re-evaluated live when an input changes (see **gum-runtime-variable-references**, "Live re-evaluation within a component"); only references into another element stay explicit.
 
 ### Cross-Element References and Cascading
 

@@ -130,18 +130,26 @@ public class BehaviorValueReferenceGum0009Tests : BaseTestClass
     }
 
     [Fact]
-    public void GetErrorsFor_ShouldReportGum0009_WhenLineReadsBehaviorPropertyNobodySet()
+    public void GetErrorsFor_ShouldNotReportGum0009_WhenLineReadsBehaviorPropertyNobodySetButDeclaresADefault()
     {
         SetThroughBehaviorRow("Minimum", 1.0);
         AddReferenceLine("Text = Slider.Maximum");
 
-        Gum0009Messages().ShouldHaveSingleItem();
+        Gum0009Messages().ShouldBeEmpty();
     }
 
     [Fact]
-    public void GetErrorsFor_ShouldReportGum0009_WhenLineReadsBehaviorDefaultWithNothingSetOnOwner()
+    public void GetErrorsFor_ShouldNotReportGum0009_WhenLineReadsBehaviorDefaultWithNothingSetOnOwner()
     {
         AddReferenceLine("Text = Slider.Minimum");
+
+        Gum0009Messages().ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void GetErrorsFor_ShouldReportGum0009_WhenLineReadsNameNoBehaviorDeclares()
+    {
+        AddReferenceLine("Text = Slider.NotAFormsProperty");
 
         Gum0009Messages().ShouldHaveSingleItem();
     }
@@ -164,15 +172,15 @@ public class BehaviorValueReferenceGum0009Tests : BaseTestClass
     }
 
     [Fact]
-    public void ApplyVariableReferences_WritesNothing_WhenOnlyBehaviorDefaultExists()
+    public void ApplyVariableReferences_WritesBehaviorDefault_WhenOnlyBehaviorDefaultExists()
     {
-        ApplyAndReadMinTextText("Text = Slider.Minimum").ShouldBeNull();
+        ApplyAndReadMinTextText("Text = Slider.Minimum").ShouldBe("0");
     }
 
     [Fact]
-    public void ApplyVariableReferences_WritesNothing_WhenMaximumIsUnset()
+    public void ApplyVariableReferences_WritesBehaviorDefault_WhenMaximumIsUnset()
     {
         SetThroughBehaviorRow("Minimum", 1.0);
-        ApplyAndReadMinTextText("Text = Slider.Maximum").ShouldBeNull();
+        ApplyAndReadMinTextText("Text = Slider.Maximum").ShouldBe("100");
     }
 }

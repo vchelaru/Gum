@@ -625,10 +625,86 @@ public partial class GraphicalUiElement
         {
             return true;
         }
+
+        // A Forms-only property lives on the Forms control, which holds the effective value: the behavior
+        // default, what code set, and the control's own clamping.
+        if (owner.TryReadFormsControlProperty(propertyName, out value, out _))
+        {
+            return true;
+        }
 #endif
         // A null cannot be seeded: the state would fall back to the authored value for it.
         return owner._referenceInputs != null && owner._referenceInputs.TryGetValue(propertyName, out value) && value != null;
     }
+
+#if !FRB
+    /// <summary>
+    /// Reads a behavior-declared Forms property (such as <c>Slider.Minimum</c>) from the live Forms control
+    /// of this element. Only a name some behavior on the element's type chain declares is read, so a
+    /// reference resolves exactly the properties the tool and the checker know about. False when the
+    /// element has no Forms control (the tool's canvas never creates one) or no such property.
+    /// </summary>
+    internal bool TryReadFormsControlProperty(string propertyName, out object? value, out VariableSave? declaration)
+    {
+        value = null;
+        declaration = null;
+        object? formsControl = (this as InteractiveGue)?.FormsControlAsObject;
+        ElementSave? element = ElementSave;
+        if (formsControl == null || element == null)
+        {
+            return false;
+        }
+
+        declaration = Gum.ProjectServices.FormsBehaviorChain.FindFormsPropertyDeclaration(element, propertyName);
+        if (declaration == null)
+        {
+            return false;
+        }
+
+        System.Reflection.PropertyInfo? propertyInfo = GetReadableFormsProperty(formsControl, propertyName);
+        if (propertyInfo == null)
+        {
+            return false;
+        }
+        value = propertyInfo.GetValue(formsControl, null);
+        return value != null;
+    }
+
+    // A live update reads the same few properties on every change, so the reflection lookup is kept per type.
+    // Like the other static reflection caches here, it is never cleared: types are kept for the process lifetime.
+    private static readonly Dictionary<(Type, string), System.Reflection.PropertyInfo?> _readableFormsProperties =
+        new Dictionary<(Type, string), System.Reflection.PropertyInfo?>();
+
+    private static System.Reflection.PropertyInfo? GetReadableFormsProperty(object formsControl, string propertyName)
+    {
+        Type type = GetFormsControlType(formsControl);
+        lock (_readableFormsProperties)
+        {
+            if (_readableFormsProperties.TryGetValue((type, propertyName), out System.Reflection.PropertyInfo? cached))
+            {
+                return cached;
+            }
+        }
+
+        System.Reflection.PropertyInfo? found = null;
+        try
+        {
+            System.Reflection.PropertyInfo? propertyInfo = GetFormsControlType(formsControl).GetProperty(propertyName);
+            if (propertyInfo != null && propertyInfo.CanRead && propertyInfo.GetIndexParameters().Length == 0)
+            {
+                found = propertyInfo;
+            }
+        }
+        catch (System.Reflection.AmbiguousMatchException)
+        {
+        }
+        lock (_readableFormsProperties)
+        {
+            _readableFormsProperties[(type, propertyName)] = found;
+        }
+        return found;
+    }
+#endif
 
     private static bool StateHasVariable(DataTypes.Variables.StateSave state, string name)
     {

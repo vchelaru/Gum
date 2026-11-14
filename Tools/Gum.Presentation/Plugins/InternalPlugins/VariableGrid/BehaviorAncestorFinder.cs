@@ -54,10 +54,7 @@ internal sealed class BehaviorAncestorFinder
 
     /// <summary>The instance named <paramref name="name"/> in <paramref name="container"/> or one of its base elements.</summary>
     public InstanceSave? FindInstanceInElementOrBase(ElementSave container, string name) =>
-        ObjectFinder.Self.GetBaseElements(container)
-            .Prepend(container)
-            .SelectMany(element => element.Instances)
-            .FirstOrDefault(item => item.Name == name);
+        FormsBehaviorChain.FindInstanceInElementOrBase(container, name);
 
     private string? FindAncestorWithBehavior(InstanceSave instance, StateSave stateSave, string behaviorName)
     {

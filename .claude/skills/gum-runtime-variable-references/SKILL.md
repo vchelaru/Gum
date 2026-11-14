@@ -7,7 +7,7 @@ description: "Runtime variable reference propagation and the optional Gum.Expres
 
 ## Overview
 
-Variable references defined in the Gum tool can be re-evaluated at runtime. The primary use case is theming: modify centralized style values in code, propagate them across all elements, then create UI. A line that reads a Forms-only behavior property resolves only from a stored value: see "Two Layers in One Variable List" in **gum-forms-behaviors**.
+Variable references defined in the Gum tool can be re-evaluated at runtime. The primary use case is theming: modify centralized style values in code, propagate them across all elements, then create UI. A line that reads a Forms-only behavior property reads the live Forms control in a game and the stored value, else the behavior default, in the tool: see "Where a row reads its inputs" below and "Two Layers in One Variable List" in **gum-forms-behaviors**.
 
 ## Key API
 
@@ -76,6 +76,15 @@ Rows on a component or screen that read a variable re-evaluate when it changes: 
 ## `@`, `%` and `Index` at runtime
 
 All three work in a game that calls `GumExpressionService.Initialize()`. The `GraphicalUiElement` overload of `ApplyVariableReferencesOnSpecificOwner` rewrites `@` through `ResolveOwnerPrefix`, and `Index` reads the element's own instance order when no live tree is passed. Without Gum.Expressions, `@Width` still resolves as a plain lookup, but `%`, `Index` and every other operator need it (see `gum-tool-variable-references`).
+
+## Where a row reads its inputs
+
+- A live instance wins: visual properties come from the visual, a Forms-only property (a behavior FormsProperty such as `Slider.Minimum`) from the live Forms control, which already holds the behavior default, what code set and its clamping. Saved data is read only when no live instance exists, such as a reference into another element.
+- The first apply at load and live re-evaluation agree: `WithFormsPropertyInputs` puts the control's value (or, with no control, the stored value else the declared default) in a copy of the state the first apply reads. Live re-evaluation reads the control in `TryReadLiveInput`.
+- A code change to the control is seen when a row re-evaluates (`RefreshReferences("Slider.Minimum")` or another input changing), since a Forms setter does not report.
+- The tool has no Forms control: it reads the stored value, else the behavior-declared default.
+- `RefreshStyles` re-applies authored data over code-set values, by design.
+- The GUM0009 check accepts exactly what the resolver finds: a read of an instance's own FormsProperty that declares a default.
 
 ## Circular references (#6871)
 

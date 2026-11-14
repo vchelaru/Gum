@@ -2456,7 +2456,7 @@ public class HeadlessErrorCheckerTests : BaseTestClass
 
     // #8020 shape: nothing sets Slider.Minimum anywhere, but the Slider behavior declares it.
     [Fact]
-    public void GetErrorsFor_ShouldReportGum0009_WhenReferenceReadsBehaviorPropertyNobodySets()
+    public void GetErrorsFor_ShouldNotReportGum0009_WhenReferenceReadsBehaviorPropertyNobodySetsButDeclaresADefault()
     {
         AddSliderLikeComponent("DarkPro/Controls/Slider", behaviorName: "SliderBehavior");
         ComponentSave component = AddComponentWithReferences("Custom/PropertySlider", sourceObject: "MinText", "Text = Slider.Minimum");
@@ -2465,7 +2465,7 @@ public class HeadlessErrorCheckerTests : BaseTestClass
 
         IReadOnlyList<ErrorResult> errors = _sut.GetErrorsFor(component, Project);
 
-        errors.Where(item => item.Code == "GUM0009").ShouldHaveSingleItem();
+        errors.Where(item => item.Code == "GUM0009").ShouldBeEmpty();
     }
 
     // Control: nothing sets or declares Minimum, so the warning is right.
