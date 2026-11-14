@@ -610,7 +610,7 @@ public partial class HeadlessErrorChecker : IHeadlessErrorChecker
     /// against <paramref name="ownerInstanceName"/>, the instance that owns the line (null on an
     /// element-level line, where <c>@</c> means the element itself).
     /// </summary>
-    private static string? FindUnresolvableReference(ElementSave owner, string? ownerInstanceName, string line)
+    public static string? FindUnresolvableReference(ElementSave owner, string? ownerInstanceName, string line)
     {
         int equalsIndex = line.IndexOf('=');
         if (equalsIndex <= 0 || equalsIndex + 1 >= line.Length || line[equalsIndex + 1] == '=' || "!<>".IndexOf(line[equalsIndex - 1]) >= 0)

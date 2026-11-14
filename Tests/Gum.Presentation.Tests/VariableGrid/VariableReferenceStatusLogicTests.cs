@@ -164,4 +164,22 @@ public class VariableReferenceStatusLogicTests : BaseTestClass
 
         _status.GetNote("Width", null, _reader, _reader.DefaultState!).ShouldBeNull();
     }
+
+    [Fact]
+    public void GetNote_RightSideReadsAnUnknownInstance_NamesThePath()
+    {
+        SetRows(_reader.DefaultState!, null, "Width = 100 / Ghost.Width");
+
+        _status.GetNote("Width", null, _reader, _reader.DefaultState!)
+            .ShouldBe("Not updating: it reads \"Ghost.Width\", which Reader does not have.");
+    }
+
+    [Fact]
+    public void GetNote_RightSideReadsAnUnknownVariableOfAnInstance_NamesThePath()
+    {
+        SetRows(_reader.DefaultState!, null, "Width = 100 / Inner.Nope");
+
+        _status.GetNote("Width", null, _reader, _reader.DefaultState!)
+            .ShouldBe("Not updating: it reads \"Inner.Nope\", which Reader does not have.");
+    }
 }

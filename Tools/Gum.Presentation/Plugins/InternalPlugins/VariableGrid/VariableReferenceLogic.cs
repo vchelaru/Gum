@@ -172,14 +172,17 @@ public class VariableReferenceLogic : IVariableReferenceLogic
 
         if (evaluatedSyntax == null)
         {
-            failures.Add((line, GeneralResponse.UnsuccessfulWith($"Could not evaluate right-side expression {assignmentSyntax}")));
+            // An unknown element ("Components/Nope.Width") fails before any type is known; name it instead of echoing the parsed syntax.
+            failures.Add((line, GeneralResponse.UnsuccessfulWith(
+                DescribeMissingReference(parentElement, leftSideInstance?.Name, line)?.EditMessage
+                ?? $"Could not evaluate right-side expression {assignmentSyntax}")));
             return;
         }
 
         if (evaluatedSyntax.EvaluatedType == null)
         {
             failures.Add((line, GeneralResponse.UnsuccessfulWith(
-                DescribeRightSideFailure(assignmentSyntax.Right, parentElement.GetDefaultStateOrThrow(), liveRoot).EditMessage)));
+                DescribeRightSideFailure(assignmentSyntax.Right, parentElement.GetDefaultStateOrThrow(), liveRoot, parentElement, leftSideInstance?.Name, line).EditMessage)));
             return;
         }
 
@@ -217,8 +220,15 @@ public class VariableReferenceLogic : IVariableReferenceLogic
     /// Explains why <paramref name="right"/> evaluated to nothing. The one source of the wording shared by the
     /// edit-time dialog and the note on a row that stopped following its reference.
     /// </summary>
-    internal static RightSideFailure DescribeRightSideFailure(SyntaxNode right, StateSave state, GraphicalUiElement? liveRoot)
+    internal static RightSideFailure DescribeRightSideFailure(SyntaxNode right, StateSave state, GraphicalUiElement? liveRoot, ElementSave owner, string? ownerInstanceName, string line)
     {
+        // The missing part comes first: it is the most specific cause, and the layout and divide-by-zero
+        // messages below would otherwise hide a misspelled instance or variable.
+        if (DescribeMissingReference(owner, ownerInstanceName, line) is { } missing)
+        {
+            return missing;
+        }
+
         if (right.DescendantNodesAndSelf()
             .OfType<IdentifierNameSyntax>()
             .Any(identifier => EvaluatedSyntax.IsLiveLayoutName(identifier.Identifier.Text)))
@@ -241,6 +251,20 @@ public class VariableReferenceLogic : IVariableReferenceLogic
         return new RightSideFailure(
             "The right side cannot be evaluated, are you referencing a variable that doesn't exist or mixing variable types?",
             "it cannot be evaluated (a variable it reads is missing, or the types do not mix)");
+    }
+
+    /// <summary>
+    /// Names the first path the right side of <paramref name="line"/> reads that the project does not have, using the
+    /// same check as the GUM0009 error so the dialog, the row note and the error list agree. "First" means the first
+    /// qualified element path (<c>Components/Name.Variable</c>) in reading order, else the first local path. With several
+    /// missing names only that one is reported; the next appears once it is fixed. Null when every path exists.
+    /// </summary>
+    private static RightSideFailure? DescribeMissingReference(ElementSave owner, string? ownerInstanceName, string line)
+    {
+        string? problem = HeadlessErrorChecker.FindUnresolvableReference(owner, ownerInstanceName, line);
+        return problem == null
+            ? null
+            : new RightSideFailure($"The right side reads {problem}.", $"it reads {problem}");
     }
 
     private static SyntaxNode? FindZeroDivisor(SyntaxNode rightSide, StateSave state, GraphicalUiElement? liveRoot)
