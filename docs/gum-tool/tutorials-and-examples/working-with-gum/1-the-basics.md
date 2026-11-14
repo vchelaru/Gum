@@ -14,13 +14,13 @@ Before we begin looking at the Gum tool, we'll create a new project. If this is 
 2. Select a location for your project
 3. Keep the forms and demo screen options selected
 4. Select a theme - this tutorial series uses the Standard theme, but you are free to use a different theme. If you choose a different theme, there will be some differences between your selected theme and the tutorial screenshots.
-5. Choose whether to create a C# project
+5. Leave **Create C# project** unchecked
 6. Click OK
 
 <figure><img src="../../../.gitbook/assets/13_05_37_14.png" alt=""><figcaption><p>Enter or confirm options when creating a new project</p></figcaption></figure>
 
 {% hint style="info" %}
-The Create C# project option creates an entire game project which includes your Gum project. This option can be used to test Gum in a real project with just a few clicks. This tutorial series does not cover working with Gum in code, so you are free to keep it unchecked. Checking it will add additional files and nests your Gum project in content folders according to the selected C# project type.
+Create C# project also creates a runnable game project that contains your Gum project. This series does not cover working with that project.
 {% endhint %}
 
 After you click OK, your project should contain screens, components, and behaviors
