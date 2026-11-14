@@ -2418,6 +2418,10 @@ namespace GumRuntime
             {
                 toReturn.UpdateFontRecursive();
                 toReturn.UpdateLayout();
+
+                // Rows reading AbsoluteWidth and the like were applied while layout was suspended and read
+                // zero; now that the tree is laid out they read the real value (8026).
+                toReturn.ReevaluateLiveLayoutReferences();
             }
         }
 
