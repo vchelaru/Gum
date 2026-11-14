@@ -1046,6 +1046,11 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
                 // string-list editor, and the entry ignores every other variable.
                 member.UiCreated += displayer =>
                     _variableGridHead.AttachReferenceTextEditor(displayer, member.HandleReferenceTextEditKeyDown);
+                if (entry.RootVariableName == "VariableReferences")
+                {
+                    member.UiCreated += displayer =>
+                        _variableGridHead.AttachReferenceSuggestions(displayer, () => entry.ElementSave, () => entry.InstanceSave?.Name);
+                }
                 category.Members.Add(member);
             }
 
