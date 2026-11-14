@@ -26,11 +26,11 @@ Newly-created Gum instances inherit their variable values from their Component o
 
 For example, the ButtonStandard instance you added on the previous page has its X and Y values changed. If you resized the button, then its Width and Height are also set, overwriting their default values.
 
-Variables which overwrite their default have an icon next to the label.
+Variables which overwrite their default have a small box icon next to the label.
 
 <figure><img src="../../../.gitbook/assets/13_06_25_07.png" alt=""><figcaption><p>Values which overwrite their defaults</p></figcaption></figure>
 
-Values can be restored to their default by right-clicking on the variable and selecting the Make Default value.
+Values can be restored to their default by right-clicking on the variable and selecting **Make Default**.
 
 <figure><img src="../../../.gitbook/assets/13_06_26_13.png" alt=""><figcaption><p>Right-click option to make a variable restore its default</p></figcaption></figure>
 
@@ -53,7 +53,7 @@ Back on MainScreen, the first button is wider because it inherits the default, w
 
 <figure><img src="../../../.gitbook/assets/13_06_36_06.png" alt=""><figcaption><p>Width values after ButtonStandard has changed</p></figcaption></figure>
 
-Note that the Preview window can be pinned on the screen, letting you test how default value changes affect instances in realtime. Give it a shot!
+Note that the Preview window can be pinned on the screen, letting you test how default value changes affect instances in realtime.
 
 <figure><img src="../../../.gitbook/assets/13_06_37_49.gif" alt=""><figcaption><p>Preview window displaying width changes in real time</p></figcaption></figure>
 
