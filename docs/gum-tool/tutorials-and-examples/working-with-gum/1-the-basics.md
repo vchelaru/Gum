@@ -56,8 +56,6 @@ Components are objects which can contain standard elements and instances of othe
 
 <figure><img src="../../../.gitbook/assets/13_05_53_41.png" alt=""><figcaption><p>ButtonStandard component in the Controls folder</p></figcaption></figure>
 
-Components and screens are similar - both can contain instances of standard elements, and both can contain other components. The only difference between screens and components is that screens cannot contain other screens.
-
 For example you can think of screens in a video game which might include a main menu, credits screen, options screen, and level selection screen. You can think of components as elements which are composed of multiple standard elements. Examples include a Button component which is made up of a Sprite instance and a Text instance, or a Logo component which may be made up of multiple Sprites and Text objects.
 
 ### Behaviors
