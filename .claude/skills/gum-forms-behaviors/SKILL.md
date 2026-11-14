@@ -59,6 +59,13 @@ The `DefaultFromFileXxxRuntime` classes exist solely to bridge the file-loading 
 
 The Gum tool operates at the visual layer — layout, colors, fonts, dimensions saved as `VariableSave` entries. The Forms behavioral layer (state, data, interaction) is added at runtime. Two mechanisms now bridge the save model into Forms semantics: **`FormsProperties`** for the value-on-the-control half, and **`ToolOnlyVariableReferences`** for the design-time visual-state preview half.
 
+### Two Layers in One Variable List
+
+- Selecting an instance in the tool lists every visual variable (X, XUnits, origins, ...) and, in a "Behavior" category, the `FormsProperties` of its behaviors. In code a `Button` is only the Forms control and the visual is `button.Visual`, so the tool's list mixes the two layers.
+- A FormsProperty is not a variable of the visual. It lives on the `FrameworkElement` and `BehaviorFormsPropertyApplier` sets it by reflection. The tool still stores an edit as an `Instance.Name` variable in the owner's state (`Slider.Minimum`), and a `VariableReferences` line can read it.
+- A reference line reads only that stored variable, in the tool and in a built game. `ApplyVariableReferences` writes the stored value (`Text = Slider.Minimum` gives `"1"`) and writes nothing when only the behavior default exists. The behavior default (`BuildFormsPropertyDefaultsFallback`: component default, then declaration) feeds the behavior's own `ToolOnlyVariableReferences`, not a user line. At runtime the value arrives only with expression evaluation on (`GumExpressionService.Initialize()`); without it the line is not applied.
+- GUM0009 resolves `Instance.Var` through the same chain: a variable stored under that exact name on the owner or its base components, then the instance type and its bases. A behavior default alone is not enough, since the line would never apply. `BehaviorValueReferenceRuntimeTests` and `BehaviorValueReferenceGum0009Tests` pin this.
+
 ### `BehaviorSave.FormsProperties` (v1)
 
 A `List<VariableSave>` declaring design-time properties that flow through to the wrapped `FrameworkElement` at runtime via reflection. Each entry's `Name` must match a property on the control (e.g. `ToolTip`, `IsEnabled`); `Value` is the **declared default** (used as a fallback tier — see below).
