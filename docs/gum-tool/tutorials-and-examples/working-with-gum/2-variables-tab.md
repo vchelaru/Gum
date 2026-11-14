@@ -34,6 +34,8 @@ Values can be restored to their default by right-clicking on the variable and se
 
 <figure><img src="../../../.gitbook/assets/13_06_26_13.png" alt=""><figcaption><p>Right-click option to make a variable restore its default</p></figcaption></figure>
 
+For more, see [Variables](../../variables/README.md#setting-variables-to-default).
+
 Default variables are not just a starting point - they are live references that continue to apply if the base component changes. In other words, if a variable changes on the ButtonStandard component, then these variables automatically update all ButtonStandard instances everywhere, unless the instance explicitly overrides that variable.
 
 To see this in action:
@@ -62,6 +64,8 @@ Note that the Preview window can be pinned on the screen, letting you test how d
 The Variables tab supports searching for variables by name. This filter persists across selections so you can filter down and hop between different instances when performing similar types of edits.
 
 <figure><img src="../../../.gitbook/assets/13_10_25_25.png" alt=""><figcaption><p>Variables tab displaying the Text variable, filtered by the word "text"</p></figcaption></figure>
+
+For more on filtering, see [Variables](../../variables/README.md#filtering-variables).
 
 Similarly, categories can also be collapsed to hide their variables.
 
