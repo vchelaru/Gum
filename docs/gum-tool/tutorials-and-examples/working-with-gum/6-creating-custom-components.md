@@ -1,6 +1,6 @@
 # 6 - Creating Custom Components
 
-### Introduction
+## Introduction
 
 This document covers how to create custom components. We'll be creating a component which can be used to display player stats and apply points earned by leveling up.
 
@@ -11,6 +11,8 @@ This tutorial uses the default ButtonStandard. If you modified yours in previous
 ### Creating a New Component
 
 New components can be created by right-clicking on the Components folder or any subfolder under Components.
+
+For more on components, see [Component](../../gum-elements/component/README.md).
 
 <figure><img src="../../../.gitbook/assets/13_16_52_44.png" alt=""><figcaption><p>Add Component in the right-click menu</p></figcaption></figure>
 
@@ -26,7 +28,7 @@ The LevelUpItem will have 3 items:<br>
 2. A Label displaying the current value of the stat
 3. A button that can be clicked to assign points
 
-First we'll add the instances before we worry about their layout. Drag two labels and a ButtonStandard into LevelUpItem.
+First we'll add the instances before we worry about their layout. Drag two Labels and a ButtonStandard from **Components** > **Controls** into LevelUpItem.
 
 <figure><img src="../../../.gitbook/assets/13_17_19_46.png" alt=""><figcaption><p>LevelUpItem with a button and two labels</p></figcaption></figure>
 
@@ -57,17 +59,17 @@ Finally we can adjust the values for the instances:
 * StatValue Text to `999` as a default value
 * StatName Text to `<Stat Name>`&#x20;
 
-We now have a LevelUpitem with a good setup and defaults.
+We now have a LevelUpItem with a good setup and defaults.
 
-<figure><img src="../../../.gitbook/assets/14_05_22_59.png" alt=""><figcaption></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/14_05_22_59.png" alt=""><figcaption><p>LevelUpItem with its default layout and values</p></figcaption></figure>
 
 ### Exposed Variables
 
-Next we'll set up exposed variables so that each instance can be independently modified. Before we create this, let's explore why variable references are needed.
+Next we'll set up exposed variables so that each instance can be independently modified. Before we create this, let's explore why exposed variables are needed.
 
 To understand the need, we can create a screen with 2 LevelUpItem instances. These 2 instances can differ by setting their "top level" variables. In other words, we can change their positions, sizes, and visibility. However, we cannot change the `<Stat Name>` or `999` values. Those are properties that belong to the Text instances contained within each LevelUpItem.
 
-This is intentional - if it didn't work this way, then the LevelUpItem would expose every property of every contained item, which would be an overwhelming number of variables to deal with. Instead, variables that belong to instances in an component are _hidden_ unless explicitly exposed.
+This is intentional - if it didn't work this way, then the LevelUpItem would expose every property of every contained item, which would be an overwhelming number of variables to deal with. Instead, variables that belong to instances in a component are _hidden_ unless explicitly exposed.
 
 We can solve this by picking which variables we want to expose so that they can be set per LevelUpItem instance.
 
@@ -80,7 +82,7 @@ First, we'll expose the variable to replace `<Stat Name>` . To do this:
     <figure><img src="../../../.gitbook/assets/14_05_38_20.png" alt=""><figcaption><p>Expose Variable right click item</p></figcaption></figure>
 4. Enter the desired name, such as `Stat` . Notice that you cannot have an exposed variable that matches the name of your instance, so StatName is an invalid variable name.
 
-Repeat this by explsoing the `Text` variable on StatValue, creating a variable named `Value` . Also, repeat this by explsing the AddPointButton's `Visible` variable, naming it `IsAddPointVisible` .
+Repeat this by exposing the `Text` variable on StatValue, creating a variable named `Value` . Also, repeat this by exposing the AddPointButton's `Visible` variable, naming it `IsAddPointVisible` .
 
 After you're finished, these variables should show up if you select the LevelUpItem component.
 
@@ -93,6 +95,8 @@ Now that we have these exposed variables, we can also customize them per-instanc
 ### Hiding Variables
 
 Gum also supports hiding variables at the component level. Hiding variables makes it easier to work with component instances by only displaying variables which should be modified for each instance.
+
+For more on hiding variables, see [Hide from Instances](../../variables/hide-from-instances.md).
 
 For example, some variables may not make much sense to expose, such as the Children Layout variable on a LevelUpItem. After all, we have determined a very specific layout of our children, and we don't want each instance to change this.
 
@@ -114,4 +118,10 @@ Hidden variables are also labeled as hidden with a small label under each variab
 
 ### Conclusion
 
-This tutorial shows how to create a simple component with explicitly exposed variables  along with hidden variables. This covers the concepts of creating a component, but components can be anything that you might want to encapsulate or reuse. It's best to spend some time creating new components or modifying the LevelUpItem component that we created to become more familiar with how components work.
+This tutorial shows how to create a simple component with explicitly exposed variables along with hidden variables. This covers the concepts of creating a component, but components can be anything that you might want to encapsulate or reuse. It's best to spend some time creating new components or modifying the LevelUpItem component that we created to become more familiar with how components work.
+
+To use the screens and components you create in a game, continue with the [Gum UI Tool and Code Tutorial](../../../code/getting-started/tutorials/gum-project-forms-tutorial/README.md).
+
+For more on working in the Gum tool, see [Gum Elements](../../gum-elements/README.md), [Variables](../../variables/README.md), and [States](../../gum-elements/states/README.md).
+
+If you have questions, or want to show what you are building, join the [Discord chat](https://discord.gg/EvqwmSQuBz).

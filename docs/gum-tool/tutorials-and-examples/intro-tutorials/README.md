@@ -1,7 +1,7 @@
 # Intro Tutorials (Old)
 
 {% hint style="warning" %}
-## The tutorials in this section have been replaced by the Working with Gum tutorials. They have been left here for historical reasons but may be removed at some point in the future.
+The tutorials in this section have been replaced by the Working with Gum tutorials. They have been left here for historical reasons but may be removed at some point in the future.
 {% endhint %}
 
 ## Introduction

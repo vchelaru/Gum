@@ -1,7 +1,7 @@
 # 1 - The Basics
 
 {% hint style="warning" %}
-## The tutorials in this section have been replaced by the [Working with Gum](../working-with-gum/) tutorials. They have been left here for historical reasons but may be removed at some point in the future.
+The tutorials in this section have been replaced by the [Working with Gum](../working-with-gum/README.md) tutorials. They have been left here for historical reasons but may be removed at some point in the future.
 {% endhint %}
 
 ## Introduction

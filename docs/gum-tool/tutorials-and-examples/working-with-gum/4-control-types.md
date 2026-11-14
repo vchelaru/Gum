@@ -1,24 +1,31 @@
 # 4 - Control Types
 
-### Introduction
+## Introduction
 
 By default Gum projects include typical controls for game UI including Button, CheckBox, TextBox, and ListBox. This page covers some of the most common types of controls and explains how to work with them. This page does not provide exhaustive coverage of all controls, so you are encouraged to explore and try them out in your own project.
 
 Controls are added to your Controls folder under Components. Note that if you used a different theme, the folder names may differ, but most of the controls will be the same.
 
+Label and CheckBox, which are used later in this series, are in the same folder.
+
 <figure><img src="../../../.gitbook/assets/13_12_48_44.png" alt=""><figcaption><p>Controls in the Project tab</p></figcaption></figure>
 
 ### Button
 
-The ButtonStandard control is one of the most common controls. It provides built-in events for click and hover.
+The ButtonStandard control is one of the most common controls. It reacts to the cursor hovering over it and clicking it.
 
 <figure><img src="../../../.gitbook/assets/13_12_58_49.png" alt=""><figcaption><p>ButtonStandard Component</p></figcaption></figure>
 
-By default Buttons contain text that line wraps. By adding additional text, it can line wrap which grows the size of a button. Note that the button height is relative to its text.
+By default Buttons contain text that line wraps, and the height of a button is relative to its text. Adding additional text makes it wrap onto more lines, which grows the size of the button.
 
 <figure><img src="../../../.gitbook/assets/13_13_06_04.png" alt=""><figcaption><p>Buttons with different text</p></figcaption></figure>
 
 Buttons can also be disabled, which changes their appearance and makes them not respond to hover or click events.
+
+1. Select the button instance.
+2. In the **Behavior** category of the Variables tab, clear **Is Enabled**.
+
+The button changes to its disabled appearance.
 
 <figure><img src="../../../.gitbook/assets/13_13_07_18.png" alt=""><figcaption><p>Enabled and Disabled button</p></figcaption></figure>
 
@@ -28,15 +35,15 @@ Gum provides a fully-functional TextBox component which accepts typing, selectio
 
 <figure><img src="../../../.gitbook/assets/13_13_11_59.png" alt=""><figcaption><p>TextBox in Gum</p></figcaption></figure>
 
-TextBox-specific variables are all organized under the Behaviors category. TextBox has far more varaibles controlling its behavior compared to Button.
+TextBox-specific variables are all organized under the Behavior category. TextBox has far more variables controlling its behavior compared to Button.
 
-<figure><img src="../../../.gitbook/assets/13_13_13_19.png" alt=""><figcaption></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/13_13_13_19.png" alt=""><figcaption><p>TextBox variables in the Behavior category</p></figcaption></figure>
 
 #### Multi-line TextBox
 
-TextBoxes use a combination of variables to support multi-line editing. You can set any combination of these to customize how a TextBox behaves.
+TextBoxes use a combination of variables to support multi-line editing.
 
-The Text Wrapping varaible controls whether text wraps or stays on one line. To see multi-line text easily, you may also want to adjust a TextBox's Height.
+The Text Wrapping variable controls whether text wraps or stays on one line. To see multi-line text easily, you may also want to adjust a TextBox's Height.
 
 <figure><img src="../../../.gitbook/assets/13_13_15_53.png" alt=""><figcaption><p>TextBox with text wrapping</p></figcaption></figure>
 
@@ -58,7 +65,7 @@ To add items to a ListBox, drag+drop ListBoxItem instances onto the ListBox.
 
 <figure><img src="../../../.gitbook/assets/13_13_22_48.gif" alt=""><figcaption><p>Adding items to ListBox</p></figcaption></figure>
 
-Each item's text can be set by selecting it and changing its Text property.
+Each item's text can be set by selecting it and changing its `List Item Display Text` variable.
 
 <figure><img src="../../../.gitbook/assets/13_13_29_23.png" alt=""><figcaption><p>ListBoxItem with changed text</p></figcaption></figure>
 
