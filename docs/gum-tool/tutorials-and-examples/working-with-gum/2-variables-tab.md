@@ -12,7 +12,7 @@ Variables can be edited by changing the displayed value for a given variable. On
 
 <figure><img src="../../../.gitbook/assets/13_06_14_58.png" alt=""><figcaption><p>Editing values</p></figcaption></figure>
 
-Numerical values can also be changed by push+dragging over the label.
+Numerical values can also be changed by holding down the left mouse button over the variable name and dragging left or right.
 
 <figure><img src="../../../.gitbook/assets/13_06_16_32.gif" alt=""><figcaption></figcaption></figure>
 
