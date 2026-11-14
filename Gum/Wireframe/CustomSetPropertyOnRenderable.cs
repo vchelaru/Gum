@@ -178,6 +178,9 @@ public partial class CustomSetPropertyOnRenderable
 
     private static FontCreatorType? _inMemoryFontCreator;
 
+    /// <summary>Bumped on every assignment of <see cref="InMemoryFontCreator"/>, so per-creator memos (issue #8035) go stale.</summary>
+    internal static int InMemoryFontCreatorVersion { get; private set; }
+
     /// <summary>
     /// Optional in-memory font creator. When set, font generation bypasses disk entirely. On the
     /// XNA-family backends the creator produces a <c>BitmapFont</c> directly from raw pixel
@@ -192,6 +195,7 @@ public partial class CustomSetPropertyOnRenderable
         set
         {
             _inMemoryFontCreator = value;
+            InMemoryFontCreatorVersion++;
 #if !RAYLIB
             // #4563: same reasoning as FontService's setter above -- a new (or removed) creator gets
             // a fresh attempt at any signature previously marked unresolvable.

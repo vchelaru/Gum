@@ -776,6 +776,44 @@ public class TextRuntime : InteractiveGue
         return RegenerateOversampledFontAtRasterSize(GetOversampleRasterFontSize(oversampleRatio));
     }
 
+    // Issue #8035: font families the creator could not build at an oversampled size, for the rest of the
+    // run. Automatic oversampling asks every frame for every zoomed text, so without this each would call
+    // the creator (a full font generation) and re-report the same error per frame. Keyed by BmfcSave.FontName
+    // (not raster size: a family the creator cannot build at one size will not build at another), valued by
+    // the creator version it failed under; assigning InMemoryFontCreator bumps the version, which makes
+    // every entry stale. Size is bounded by the distinct families a game uses. The text keeps its regular
+    // (non-oversampled) font meanwhile.
+    static readonly Dictionary<string, int> _oversampleFailedFamilies = new(StringComparer.OrdinalIgnoreCase);
+
+    static bool IsOversampleFailureRemembered(string family)
+    {
+        lock (_oversampleFailedFamilies)
+        {
+            return _oversampleFailedFamilies.TryGetValue(family, out int version)
+                && version == CustomSetPropertyOnRenderableType.InMemoryFontCreatorVersion;
+        }
+    }
+
+    // Returns true if this family had no live failure yet, so the caller reports the error only then.
+    static bool RememberOversampleFailure(string family)
+    {
+        if (CustomSetPropertyOnRenderableType.InMemoryFontCreator == null)
+        {
+            // Nothing to retry: the FontCache lookup has its own memo (_prebuiltFontMisses).
+            return false;
+        }
+        lock (_oversampleFailedFamilies)
+        {
+            bool isNew = !IsOversampleFailureRememberedLocked(family);
+            _oversampleFailedFamilies[family] = CustomSetPropertyOnRenderableType.InMemoryFontCreatorVersion;
+            return isNew;
+        }
+    }
+
+    static bool IsOversampleFailureRememberedLocked(string family) =>
+        _oversampleFailedFamilies.TryGetValue(family, out int version)
+        && version == CustomSetPropertyOnRenderableType.InMemoryFontCreatorVersion;
+
     bool RegenerateOversampledFontAtRasterSize(float rasterFontSize)
     {
         if (!CanOversample)
@@ -790,6 +828,10 @@ public class TextRuntime : InteractiveGue
 
 #if XNALIKE
         BitmapFont? font = FindSharedOversampledFont(bmfcSave.FontCacheFileName);
+        if (font == null && IsOversampleFailureRemembered(bmfcSave.FontName))
+        {
+            return false;
+        }
         try
         {
             font ??= CustomSetPropertyOnRenderableType.InMemoryFontCreator?.TryCreateFont(bmfcSave);
@@ -801,8 +843,11 @@ public class TextRuntime : InteractiveGue
             // would escape past End(), leaving the SpriteBatch open and every subsequent frame's Begin()
             // throwing "Begin has already been called" (found via a BlazorGL/WASM repro where the default
             // FreeType rasterizer backend can't run and TryCreateFont throws instead of returning null).
-            CustomSetPropertyOnRenderableType.RaisePropertyAssignmentError(
-                $"Error creating oversampled font via {CustomSetPropertyOnRenderableType.InMemoryFontCreator!.GetType().Name}:\n{ex}");
+            if (RememberOversampleFailure(bmfcSave.FontName))
+            {
+                CustomSetPropertyOnRenderableType.RaisePropertyAssignmentError(
+                    $"Error creating oversampled font via {CustomSetPropertyOnRenderableType.InMemoryFontCreator!.GetType().Name}:\n{ex}");
+            }
             return false;
         }
 
@@ -810,6 +855,7 @@ public class TextRuntime : InteractiveGue
         font ??= TryLoadPrebuiltOversampledFont(bmfcSave.FontCacheFileName);
         if (font == null)
         {
+            RememberOversampleFailure(bmfcSave.FontName);
             return false;
         }
 
@@ -833,6 +879,10 @@ public class TextRuntime : InteractiveGue
         // Raylib_cs.Font (a live GPU-resident font, not a BitmapFont) -- see IRaylibFontCreator and
         // Text.SetOversampledDisplayFont/MeasureLinesWidth (Runtimes/RaylibGum/Renderables/Text.cs).
         Raylib_cs.Font? font = FindSharedOversampledFont(bmfcSave.FontCacheFileName);
+        if (font == null && IsOversampleFailureRemembered(bmfcSave.FontName))
+        {
+            return false;
+        }
         try
         {
             font ??= CustomSetPropertyOnRenderableType.InMemoryFontCreator.TryCreateFont(bmfcSave);
@@ -840,12 +890,16 @@ public class TextRuntime : InteractiveGue
         catch (Exception ex)
         {
             // See the matching try/catch in the XNALIKE branch above -- same render-time reentrancy risk.
-            CustomSetPropertyOnRenderableType.RaisePropertyAssignmentError(
-                $"Error creating oversampled font via {CustomSetPropertyOnRenderableType.InMemoryFontCreator.GetType().Name}:\n{ex}");
+            if (RememberOversampleFailure(bmfcSave.FontName))
+            {
+                CustomSetPropertyOnRenderableType.RaisePropertyAssignmentError(
+                    $"Error creating oversampled font via {CustomSetPropertyOnRenderableType.InMemoryFontCreator.GetType().Name}:\n{ex}");
+            }
             return false;
         }
         if (font == null || font.Value.BaseSize == 0)
         {
+            RememberOversampleFailure(bmfcSave.FontName);
             return false;
         }
 
