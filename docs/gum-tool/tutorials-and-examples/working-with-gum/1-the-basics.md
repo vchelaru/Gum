@@ -91,6 +91,8 @@ Gum can run your project as a live game in a Preview window. The **Preview** but
 
 <figure><img src="../../../.gitbook/assets/13_05_57_16.png" alt=""><figcaption></figcaption></figure>
 
+By default, Gum saves your project automatically, and the Preview window refreshes whenever it saves. For more on Preview, see [Editor Tab](../../editor-tab.md#preview).
+
 The selected screen or component is displayed in the preview window. This preview is a live game running, so all controls react to cursor events. This preview lets you easily test whether your controls are behaving as expected, including any styling changes that you might make.
 
 <figure><img src="../../../.gitbook/assets/13_05_58_48.gif" alt=""><figcaption><p>DemoScreenGum in the Gum preview window</p></figcaption></figure>
