@@ -688,6 +688,15 @@ public partial class HeadlessErrorChecker : IHeadlessErrorChecker
             {
                 return false;
             }
+            // A value the element (or a base) saved on one of its instances, such as "Slider.Minimum",
+            // is stored under the full dotted name and resolves even when the instance's type
+            // declares no such variable (a Forms property shown under the Behavior category). An exposed
+            // variable is left to the exposed-variable check, which reports one whose type lost the variable.
+            if (SelfAndBaseElements(element).Any(inChain =>
+                inChain.AllStates.Any(state => state.Variables.Any(variable => variable.Name == variablePath && variable.SetsValue && string.IsNullOrEmpty(variable.ExposedAsName)))))
+            {
+                return true;
+            }
             ElementSave? instanceType = ObjectFinder.Self.GetElementSave(instance.BaseType);
             // A missing instance type is already reported as a missing base type.
             if (instanceType == null || VariableExists(instanceType, variablePath.Substring(dot + 1)))
