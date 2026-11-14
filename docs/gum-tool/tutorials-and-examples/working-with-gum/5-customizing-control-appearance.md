@@ -8,6 +8,8 @@ This page discusses customizing the Standard theme, but if you are using a diffe
 
 ### Component States
 
+A state is a collection of variables that represents a configuration of a component, and a category organizes similar states into one group.
+
 Many Gum components have multiple states to control their appearance in response to cursor, keyboard, focus, or enabled actions/states. For example, the ButtonStandard component has a number of states under ButtonCategory.
 
 For more on states and categories, see [States](../../gum-elements/states/README.md) and [Categories](../../gum-elements/states/categories.md).
