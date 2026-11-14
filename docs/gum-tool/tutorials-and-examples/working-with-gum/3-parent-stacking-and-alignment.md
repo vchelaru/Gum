@@ -14,7 +14,7 @@ The key to creating layouts in Gum is to add your controls to containers. Contai
 
 This page starts with an empty MainScreen.
 
-1. Delete the instances that were added to MainScreen on the previous pages.
+1. Select an instance in MainScreen, press `Delete`, and click **Yes** in the **Delete?** dialog. Repeat for each instance that was added on the previous pages.
 2. Drag **StackPanel** from **Components** > **Controls** onto the Editor tab.
 
 A StackPanelInstance now appears in MainScreen.
