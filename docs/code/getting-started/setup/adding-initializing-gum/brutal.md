@@ -67,6 +67,10 @@ The Vulkan program in [Full Program](#full-program) uses `unsafe` blocks, so als
 
 Both packages read mouse, keyboard and gamepad input from your BRUTAL `GlfwWindow` and draw Gum to it, so you never write rendering code for Gum. They work on Windows and Linux.
 
+{% hint style="warning" %}
+BRUTAL is not supported on macOS. `Gum.Brutal.Vulkan` cannot run there, and `Gum.Brutal.OGL` is untested.
+{% endhint %}
+
 Do not reference both packages in one project. They declare the same `GumService` type.
 
 {% hint style="warning" %}
