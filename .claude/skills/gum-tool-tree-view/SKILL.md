@@ -74,6 +74,8 @@ produces one refresh instead of N.
 
 Every gesture that creates an instance (a plain left click on a Standards chip; Ctrl+Shift+click on an element node; chip or node drag onto a node or the canvas; the right-click Add menus; the Add Instance dialog) ends in `IAddInstanceLogic` (`Tools/Gum.Presentation/Logic/AddInstanceLogic.cs`). The click and menu gestures all call `AddInstanceAtDestination`, which adds to the remembered add destination, else the selected instance, else the element root, the same rule Ctrl+V uses; only a drag names its own container. Validation, naming, parenting (default child slot), undo, selection and the destination live there once. Do not add a second `IElementCommands.AddInstance` call site or a gesture-specific target rule.
 
+A Standards chip dragged over the tree takes the same path as a node drag for placement: the head measures the row into a `TreeDropKind` (`TreeExternalDragEventArgs.Kind`), `ElementTreeViewManager.ResolveChipDrop` maps it through `ProcessDrop`, and the head draws the shared line/outline/parent wash for the kind the handler returns. Any new drop source reuses `ProcessDrop` and `ShowDropIndicator`, never its own target rule.
+
 ## Gotchas
 
 - **Reordering within one collection must be remove-then-insert.** `GumTreeNodeCollection` throws if a

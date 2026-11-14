@@ -367,7 +367,13 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         }
         else if (e.StandardElementTypeName != null)
         {
-            e.Accepted = GetChipDropTargetNode(e.TargetNode) != null;
+            ChipDrop? chipDrop = ResolveChipDrop(e.TargetNode, e.Kind);
+            e.Accepted = chipDrop != null;
+            if (chipDrop != null)
+            {
+                // Draw what the drop will really do (an element row is always "add to it").
+                e.Kind = chipDrop.Kind;
+            }
         }
 
         if (e.TargetNode is { } hovered)
@@ -383,10 +389,10 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
             _dragDropManager.OnFilesDroppedInTreeView(e.Files, e.TargetNode);
         }
         else if (e.StandardElementTypeName is { } standardTypeName
-            && GetChipDropTargetNode(e.TargetNode) is { } targetNode
+            && ResolveChipDrop(e.TargetNode, e.Kind) is { } chipDrop
             && ObjectFinder.Self.GetStandardElement(standardTypeName) is { } standardElement)
         {
-            _addInstanceLogic.AddInstance(standardElement, targetNode.Tag);
+            _addInstanceLogic.AddInstance(standardElement, chipDrop.Container, position: chipDrop.Position);
         }
     }
 
@@ -584,6 +590,42 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         {
             SuppressNextEnsureVisible = false;
         }
+    }
+
+    /// <summary>Where a dropped Standards chip lands: the container, the place in its flat list, and the drop kind that names it.</summary>
+    internal sealed record ChipDrop(object Container, DropPosition? Position, TreeDropKind Kind);
+
+    /// <summary>
+    /// Resolves a Standards-chip drop on <paramref name="target"/> the way a node drop is resolved
+    /// (<see cref="ProcessDrop"/>), so a chip can land between rows and as a first child, not only
+    /// at the end of the row under the pointer. Null when the chip cannot be dropped there.
+    /// </summary>
+    internal static ChipDrop? ResolveChipDrop(GumTreeNode? target, TreeDropKind kind)
+    {
+        if (target == null)
+        {
+            return null;
+        }
+
+        // An element row has no siblings to insert beside; anywhere on it means "add to it".
+        if (target.Tag is ElementSave)
+        {
+            kind = TreeDropKind.Into;
+        }
+
+        (GumTreeNode TreeTarget, DropTarget? Drop)? resolved = ProcessDrop(target, kind);
+        if (resolved is { Drop: { } drop })
+        {
+            return GetChipDropTargetNode(resolved.Value.TreeTarget) is { Tag: { } container }
+                ? new ChipDrop(container, drop.Position, kind)
+                : null;
+        }
+
+        // No flat-list meaning (an instance the tree cannot place, e.g. a behavior's required
+        // instance): onto the row still adds to it, as before.
+        return kind == TreeDropKind.Into && GetChipDropTargetNode(target) is { Tag: { } rowTag }
+            ? new ChipDrop(rowTag, null, kind)
+            : null;
     }
 
     /// <summary>

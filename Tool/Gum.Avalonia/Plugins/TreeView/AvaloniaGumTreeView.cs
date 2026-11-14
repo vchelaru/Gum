@@ -645,11 +645,23 @@ public sealed class AvaloniaGumTreeView : UserControl
         IReadOnlyList<GumTreeNode> dragged = DraggedNodesFrom(e);
         if (dragged.Count == 0)
         {
-            ClearDropIndicator();
-            TreeExternalDragEventArgs args = ReadExternalPayload(e, NodeAt(position));
+            (LogicalRow? externalRow, GumTreeNode? externalTarget, TreeDropKind externalKind) = GetDropAt(position, dragged);
+            TreeExternalDragEventArgs args = ReadExternalPayload(e, externalTarget, externalKind);
             ExternalDragOver?.Invoke(this, args);
             bool hasPayload = args.Files != null || args.StandardElementTypeName != null;
-            e.DragEffects = hasPayload && args.Accepted ? DragDropEffects.Copy : DragDropEffects.None;
+            bool accepted = hasPayload && args.Accepted;
+            e.DragEffects = accepted ? DragDropEffects.Copy : DragDropEffects.None;
+
+            // A palette chip lands where the pointer is in the hierarchy, like a node drag, so it
+            // shows the same line or outline. Files only ever land on a row, so they show none.
+            if (accepted && args.StandardElementTypeName != null && externalRow != null)
+            {
+                ShowDropIndicator(externalRow.Value, args.Kind);
+            }
+            else
+            {
+                ClearDropIndicator();
+            }
             e.Handled = true;
             return;
         }
@@ -680,7 +692,8 @@ public sealed class AvaloniaGumTreeView : UserControl
         IReadOnlyList<GumTreeNode> dragged = DraggedNodesFrom(e);
         if (dragged.Count == 0)
         {
-            TreeExternalDragEventArgs args = ReadExternalPayload(e, NodeAt(position));
+            (_, GumTreeNode? externalTarget, TreeDropKind externalKind) = GetDropAt(position, dragged);
+            TreeExternalDragEventArgs args = ReadExternalPayload(e, externalTarget, externalKind);
             if (args.Files != null || args.StandardElementTypeName != null)
             {
                 ExternalDrop?.Invoke(this, args);
@@ -702,7 +715,7 @@ public sealed class AvaloniaGumTreeView : UserControl
             ? nodes
             : Array.Empty<GumTreeNode>();
 
-    private static TreeExternalDragEventArgs ReadExternalPayload(DragEventArgs e, GumTreeNode? target)
+    private static TreeExternalDragEventArgs ReadExternalPayload(DragEventArgs e, GumTreeNode? target, TreeDropKind kind)
     {
         IStorageItem[]? items = e.DataTransfer.TryGetFiles();
         string[]? files = items?
@@ -711,7 +724,7 @@ public sealed class AvaloniaGumTreeView : UserControl
             .Select(path => path!)
             .ToArray();
         string? standardElementTypeName = e.DataTransfer.TryGetValue(AvaloniaDragFormats.StandardElementName);
-        return new TreeExternalDragEventArgs(files is { Length: > 0 } ? files : null, standardElementTypeName, target);
+        return new TreeExternalDragEventArgs(files is { Length: > 0 } ? files : null, standardElementTypeName, target, kind);
     }
 
     private (LogicalRow? Row, GumTreeNode? Target, TreeDropKind Kind) GetDropAt(Point position, IReadOnlyList<GumTreeNode> dragged)
