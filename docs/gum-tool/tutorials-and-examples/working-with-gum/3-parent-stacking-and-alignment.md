@@ -84,3 +84,6 @@ Individual button spacing can be adjusted by changing its `Y` value. The total s
 
 <figure><img src="../../../.gitbook/assets/13_11_27_05.png" alt=""><figcaption><p>A button's Y value adds to its spacing</p></figcaption></figure>
 
+### Conclusion
+
+This page shows how to work with parenting, stacking, and alignment, including the StackPanel, the Alignment tab, and spacing between children. The next tutorial introduces some of the most common control types.
