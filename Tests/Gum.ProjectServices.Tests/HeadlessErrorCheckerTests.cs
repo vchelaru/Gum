@@ -2424,6 +2424,80 @@ public class HeadlessErrorCheckerTests : BaseTestClass
         _sut.GetErrorsFor(reader, Project).Where(item => item.Code == "GUM0009").ShouldBeEmpty();
     }
 
+    // #8020: a component sets Slider.Minimum on its own state, then another line reads it back.
+    [Fact]
+    public void GetErrorsFor_ShouldNotReportGum0009_WhenReferenceReadsVariableTheOwnerSetsOnItsOwnState()
+    {
+        AddSliderLikeComponent("DarkPro/Controls/Slider", behaviorName: null);
+        ComponentSave component = AddComponentWithReferences("Custom/PropertySlider", sourceObject: "MinText", "Text = Slider.Minimum");
+        component.Instances.Add(new InstanceSave { Name = "Slider", BaseType = "DarkPro/Controls/Slider", ParentContainer = component });
+        component.Instances.Add(new InstanceSave { Name = "MinText", BaseType = "Text", ParentContainer = component });
+        component.DefaultState!.Variables.Add(new VariableSave { Name = "Slider.Minimum", Type = "System.Double", Value = 1.0, SetsValue = true });
+
+        IReadOnlyList<ErrorResult> errors = _sut.GetErrorsFor(component, Project);
+
+        errors.Where(item => item.Code == "GUM0009").Select(item => item.Message).ShouldBeEmpty();
+    }
+
+    // #8020: same, with the Slider behavior attached to the instance's component type.
+    [Fact]
+    public void GetErrorsFor_ShouldNotReportGum0009_WhenOwnerSetsVariableOnInstanceWhoseTypeHasBehaviorProperty()
+    {
+        AddSliderLikeComponent("DarkPro/Controls/Slider", behaviorName: "SliderBehavior");
+        ComponentSave component = AddComponentWithReferences("Custom/PropertySlider", sourceObject: "MinText", "Text = Slider.Minimum");
+        component.Instances.Add(new InstanceSave { Name = "Slider", BaseType = "DarkPro/Controls/Slider", ParentContainer = component });
+        component.Instances.Add(new InstanceSave { Name = "MinText", BaseType = "Text", ParentContainer = component });
+        component.DefaultState!.Variables.Add(new VariableSave { Name = "Slider.Minimum", Type = "System.Double", Value = 1.0, SetsValue = true });
+
+        IReadOnlyList<ErrorResult> errors = _sut.GetErrorsFor(component, Project);
+
+        errors.Where(item => item.Code == "GUM0009").Select(item => item.Message).ShouldBeEmpty();
+    }
+
+    // #8020 shape: nothing sets Slider.Minimum anywhere, but the Slider behavior declares it.
+    [Fact]
+    public void GetErrorsFor_ShouldReportGum0009_WhenReferenceReadsBehaviorPropertyNobodySets()
+    {
+        AddSliderLikeComponent("DarkPro/Controls/Slider", behaviorName: "SliderBehavior");
+        ComponentSave component = AddComponentWithReferences("Custom/PropertySlider", sourceObject: "MinText", "Text = Slider.Minimum");
+        component.Instances.Add(new InstanceSave { Name = "Slider", BaseType = "DarkPro/Controls/Slider", ParentContainer = component });
+        component.Instances.Add(new InstanceSave { Name = "MinText", BaseType = "Text", ParentContainer = component });
+
+        IReadOnlyList<ErrorResult> errors = _sut.GetErrorsFor(component, Project);
+
+        errors.Where(item => item.Code == "GUM0009").ShouldHaveSingleItem();
+    }
+
+    // Control: nothing sets or declares Minimum, so the warning is right.
+    [Fact]
+    public void GetErrorsFor_ShouldReportGum0009_WhenNeitherOwnerNorTypeHasTheVariable()
+    {
+        AddSliderLikeComponent("DarkPro/Controls/Slider", behaviorName: null);
+        ComponentSave component = AddComponentWithReferences("Custom/PropertySlider", sourceObject: "MinText", "Text = Slider.Minimum");
+        component.Instances.Add(new InstanceSave { Name = "Slider", BaseType = "DarkPro/Controls/Slider", ParentContainer = component });
+        component.Instances.Add(new InstanceSave { Name = "MinText", BaseType = "Text", ParentContainer = component });
+
+        IReadOnlyList<ErrorResult> errors = _sut.GetErrorsFor(component, Project);
+
+        errors.ShouldHaveSingleItem().Code.ShouldBe("GUM0009");
+    }
+
+    private ComponentSave AddSliderLikeComponent(string name, string? behaviorName)
+    {
+        ComponentSave slider = new ComponentSave { Name = name, BaseType = "Container" };
+        slider.States.Add(new StateSave { Name = "Default", ParentContainer = slider });
+        if (behaviorName != null)
+        {
+            BehaviorSave behavior = new BehaviorSave { Name = behaviorName };
+            behavior.FormsProperties.Add(new VariableSave { Name = "Minimum", Type = "double", Value = 0.0, SetsValue = true });
+            behavior.FormsProperties.Add(new VariableSave { Name = "Maximum", Type = "double", Value = 0.0, SetsValue = true });
+            Project.Behaviors.Add(behavior);
+            slider.Behaviors.Add(new ElementBehaviorReference { BehaviorName = behaviorName });
+        }
+        Project.Components.Add(slider);
+        return slider;
+    }
+
     private ComponentSave AddStylesComponent(string name, string colorInstanceName)
     {
         ComponentSave styles = new ComponentSave { Name = name, BaseType = "Container" };

@@ -1,11 +1,11 @@
 ---
 name: gum-tool-variable-references
-description: Gum variable references — Excel-like cross-instance/cross-element binding via Roslyn-parsed assignments. Triggers: VariableReferenceLogic, EvaluatedSyntax, ApplyVariableReferences, VariableChangedThroughReference, VariableReferences VariableListSave.
+description: "Gum variable references: Excel-like cross-instance/cross-element binding via Roslyn-parsed assignments, including lines that read a Forms-only (behavior) property. Triggers: VariableReferenceLogic, EvaluatedSyntax, ApplyVariableReferences, VariableChangedThroughReference, VariableReferences VariableListSave, a reference to a FormsProperty such as Slider.Minimum."
 ---
 
 # Variable References
 
-Variable references are Gum's system for keeping variables in sync across instances and elements, like cell references in a spreadsheet. A user writes `X = SomeOtherObject.X` and the left side stays updated whenever the right side changes.
+Variable references are Gum's system for keeping variables in sync across instances and elements, like cell references in a spreadsheet. A user writes `X = SomeOtherObject.X` and the left side stays updated whenever the right side changes. A line that reads a Forms-only behavior property (a FormsProperty) is a special case: see "Two Layers in One Variable List" in **gum-forms-behaviors**.
 
 ## Storage
 
@@ -146,6 +146,8 @@ Invalid lines are auto-commented with `//` prefix and a message is shown to the 
 ## Behavior-Sourced Tool-Only References
 
 A separate variable-reference flavor lives on `BehaviorSave.ToolOnlyVariableReferences` (a `List<string>`, not a `VariableListSave`). Used by Forms property promotion (#2637 v2): a behavior declares e.g. `ButtonCategoryState = IsEnabled ? "Enabled" : "Disabled"` so the design-time wireframe reflects authored `FormsProperty` values. **Strictly tool-only** — applied by `BehaviorToolOnlyReferencesApplier` invoked from `VariableReferenceLogic.DoVariableReferenceReaction` immediately after the state-level apply. The runtime never traverses this list; the wrapped Forms control's setter (e.g. `FrameworkElement.IsEnabled` → `UpdateState()`) owns the visual at runtime, so applying the reference there would double-write. See `gum-forms-behaviors` for the property-promotion pipeline.
+
+A user `VariableReferences` line that reads a Forms-behavior property (`Text = Slider.Minimum`) is a different case: see "Two Layers in One Variable List" in `gum-forms-behaviors`.
 
 The applier passes a `fallback` resolver into `EvaluatedSyntax.FromSyntaxNode` so identifiers not authored on state fall back to the behavior's `FormsProperty.Value` declarations (mirrors WPF DependencyProperty default values). Plumbed through `RecursiveVariableFinder.Fallback` — any caller that needs the same "default-when-state-empty" shape can use it.
 

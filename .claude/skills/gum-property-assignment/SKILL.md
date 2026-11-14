@@ -1,9 +1,11 @@
 ---
 name: gum-property-assignment
-description: How Gum instantiates runtime objects from save data and applies variables to renderables. Triggers: ToGraphicalUiElement, SetGraphicalUiElement, ApplyState, SetProperty, SetVariablesRecursively, CustomSetPropertyOnRenderable, font loading, IsAllLayoutSuspended, isFontDirty.
+description: "How Gum instantiates runtime objects from save data and applies variables to renderables. Triggers: ToGraphicalUiElement, SetGraphicalUiElement, ApplyState, SetProperty, SetVariablesRecursively, CustomSetPropertyOnRenderable, font loading, IsAllLayoutSuspended, isFontDirty."
 ---
 
 # Gum Property Assignment Reference
+
+For the Forms, visual and Renderable layers this code moves between, see **gum-architecture-layers**.
 
 ## Save-to-Runtime Instantiation
 

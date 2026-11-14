@@ -674,6 +674,13 @@ public partial class HeadlessErrorChecker : IHeadlessErrorChecker
         VariableSave? exposed = FindExposedVariable(element, variablePath);
         if (exposed != null)
         {
+            // A stored value on an exposed Forms property (Slider.Minimum exposed as SliderMin) is
+            // read by the evaluator even though the instance's type declares no such variable.
+            if (exposed.Value != null && exposed.SetsValue && ExposesBehaviorProperty(element, exposed.Name))
+            {
+                return true;
+            }
+
             // An exposed variable is read through the instance variable it exposes. Only a dotted
             // name is followed: each step then shortens the path, so a hand-edited file where two
             // variables expose each other cannot recurse forever.
@@ -687,6 +694,15 @@ public partial class HeadlessErrorChecker : IHeadlessErrorChecker
             if (instance == null)
             {
                 return false;
+            }
+            // A value the element (or a base) saved on one of its instances, such as "Slider.Minimum",
+            // is stored under the full dotted name and resolves even when the instance's type
+            // declares no such variable (a Forms property shown under the Behavior category). An exposed
+            // variable is left to the exposed-variable check, which reports one whose type lost the variable.
+            if (SelfAndBaseElements(element).Any(inChain =>
+                inChain.AllStates.Any(state => state.Variables.Any(variable => variable.Name == variablePath && variable.SetsValue && string.IsNullOrEmpty(variable.ExposedAsName)))))
+            {
+                return true;
             }
             ElementSave? instanceType = ObjectFinder.Self.GetElementSave(instance.BaseType);
             // A missing instance type is already reported as a missing base type.
@@ -732,6 +748,24 @@ public partial class HeadlessErrorChecker : IHeadlessErrorChecker
             return VariableExists(element, variablePath.Substring(0, variablePath.Length - "Color".Length) + "Red");
         }
         return false;
+    }
+
+    /// <summary>
+    /// Whether <paramref name="exposedTarget"/> (<c>Instance.Property</c>) names a FormsProperty declared by a
+    /// behavior on the instance type or its bases.
+    /// </summary>
+    private static bool ExposesBehaviorProperty(ElementSave element, string exposedTarget)
+    {
+        int dot = exposedTarget.IndexOf('.');
+        if (dot < 0)
+        {
+            return false;
+        }
+        InstanceSave? instance = FindInstanceInInheritance(element, exposedTarget.Substring(0, dot));
+        ElementSave? instanceType = instance == null ? null : ObjectFinder.Self.GetElementSave(instance.BaseType);
+        string property = exposedTarget.Substring(dot + 1);
+        return instanceType != null
+            && FormsBehaviorChain.GetFormsPropertyDeclarations(instanceType).Any(declaration => declaration.Name == property);
     }
 
     private static VariableSave? FindExposedVariable(ElementSave element, string exposedName) =>

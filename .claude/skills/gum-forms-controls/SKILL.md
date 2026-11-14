@@ -1,13 +1,13 @@
 ---
 name: gum-forms-controls
-description: Forms controls (FrameworkElement subclasses). Triggers: Button, CheckBox, ListBox, ComboBox, TextBox, ScrollViewer, anything in Gum.Forms.Controls or FlatRedBall.Forms.Controls, FrameworkElement itself, the Visual/InteractiveGue relationship, state machines, DefaultVisuals, ReactToVisualChanged.
+description: "Forms controls (FrameworkElement subclasses) and their relationship to the visual behind them. Triggers: Button, CheckBox, ListBox, ComboBox, TextBox, ScrollViewer, Gum.Forms.Controls, FlatRedBall.Forms.Controls, FrameworkElement, button.Visual, InteractiveGue, FormsControlAsObject, state machines, DefaultVisuals, ReactToVisualChanged."
 ---
 
 # Gum Forms Controls Reference
 
 ## What They Are
 
-Forms controls are classes inheriting from `FrameworkElement` (`MonoGameGum/Forms/Controls/FrameworkElement.cs`). Their names and API intentionally mirror WPF (Button, CheckBox, ListBox, TextBox, etc.), but the visual and layout engine is Gum (`GraphicalUiElement`/`InteractiveGue`), not WPF.
+Forms controls are classes inheriting from `FrameworkElement` (`MonoGameGum/Forms/Controls/FrameworkElement.cs`). Their names and API intentionally mirror WPF (Button, CheckBox, ListBox, TextBox, etc.), but the visual and layout engine is Gum (`GraphicalUiElement`/`InteractiveGue`), not WPF. A control reaches its visual through `Visual`; see **gum-architecture-layers** for the Forms, visual and Renderable layers and the user docs [Controls vs Visuals: What Goes Where](../../../docs/code/about/for-wpf-users.md#controls-vs-visuals-what-goes-where) and [Visual/Logical Tree Separation](../../../docs/code/about/for-wpf-users.md#visuallogical-tree-separation).
 
 **WPF conventions that do NOT apply here:**
 - No `Margin`, `Padding`, `HorizontalAlignment`, `VerticalAlignment` (in the WPF sense) on `FrameworkElement`
