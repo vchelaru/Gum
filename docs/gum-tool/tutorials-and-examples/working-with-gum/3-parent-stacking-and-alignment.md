@@ -6,6 +6,8 @@ Although it is technically possible to align UI manually by setting X and Y valu
 
 Gum provides parent/children relationships which can be combined with layout values to easily center, stack, dock instances.
 
+A parent is an instance that contains other instances, called its children. When a parent moves, its children move with it. For more, see [Parent](../../gum-elements/general-properties/parent.md).
+
 ### StackPanel Control
 
 The key to creating layouts in Gum is to add your controls to containers. Containers can be used to create stacks, grids, add margins, and move children together. The StackPanel control is one of the most common controls since it automatically stacks its children vertically or horizontally.
