@@ -60,7 +60,7 @@ public class VariableReferenceFormsPropertyReadTests : BaseTestClass
             GumExpressionService.Initialize();
         }
         string gumx = Path.Combine(LocateRepoRoot(), "Tools", "Gum.ProjectServices", "Templates", "FormsThemes", "DarkPro", "GumProject.gumx");
-        GumProjectSave project = GumProjectSave.Load(gumx, out _)!;
+        GumProjectSave project = GumProjectSave.Load(gumx, out _) ?? throw new InvalidOperationException("DarkPro project did not load.");
         project.Initialize();
         ObjectFinder.Self.GumProjectSave = project;
 
@@ -80,6 +80,11 @@ public class VariableReferenceFormsPropertyReadTests : BaseTestClass
 
         project.ApplyAllVariableReferences();
         StandardRuntimeRegistrations.Register();
+        // Circle, Rectangle and Polygon need a rendering SystemManagers a headless test lacks; the references do not read them.
+        foreach (string unrendered in new[] { "Circle", "Rectangle", "Polygon" })
+        {
+            ElementSaveExtensions.RegisterGueInstantiation(unrendered, () => new Gum.GueDeriving.ContainerRuntime());
+        }
         Gum.Forms.FormsUtilities.RegisterFromFileFormRuntimeDefaults();
         GraphicalUiElement ownerGue = owner.ToGraphicalUiElement();
         return new Built
