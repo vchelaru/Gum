@@ -6,6 +6,8 @@ By default Gum projects include typical controls for game UI including Button, C
 
 Controls are added to your Controls folder under Components. Note that if you used a different theme, the folder names may differ, but most of the controls will be the same.
 
+Label and CheckBox, which are used later in this series, are in the same folder.
+
 <figure><img src="../../../.gitbook/assets/13_12_48_44.png" alt=""><figcaption><p>Controls in the Project tab</p></figcaption></figure>
 
 ### Button
