@@ -671,12 +671,13 @@ public partial class GraphicalUiElement
     }
 
     // A live update reads the same few properties on every change, so the reflection lookup is kept per type.
+    // Like the other static reflection caches here, it is never cleared: types are kept for the process lifetime.
     private static readonly Dictionary<(Type, string), System.Reflection.PropertyInfo?> _readableFormsProperties =
         new Dictionary<(Type, string), System.Reflection.PropertyInfo?>();
 
     private static System.Reflection.PropertyInfo? GetReadableFormsProperty(object formsControl, string propertyName)
     {
-        Type type = formsControl.GetType();
+        Type type = GetFormsControlType(formsControl);
         lock (_readableFormsProperties)
         {
             if (_readableFormsProperties.TryGetValue((type, propertyName), out System.Reflection.PropertyInfo? cached))
