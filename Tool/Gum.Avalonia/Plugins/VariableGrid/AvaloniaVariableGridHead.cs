@@ -21,6 +21,8 @@ public class AvaloniaVariableGridHead : IVariableGridHead
 {
     // One key handler per reference editor, so a re-bound editor forwards to its current row only.
     private readonly ConditionalWeakTable<StringListTextBoxDisplay, EventHandler<KeyEventArgs>> _referenceHandlers;
+    private readonly ConditionalWeakTable<StringListTextBoxDisplay, ReferenceSuggestionPopup> _suggestionPopups;
+    private readonly IVariableReferenceSuggestions _referenceSuggestions;
     private readonly IHotkeyManager _hotkeyManager;
     private readonly IKeyCombinationFormatter _keyFormatter;
 
@@ -30,6 +32,8 @@ public class AvaloniaVariableGridHead : IVariableGridHead
         _hotkeyManager = hotkeyManager;
         _keyFormatter = keyFormatter;
         _referenceHandlers = new ConditionalWeakTable<StringListTextBoxDisplay, EventHandler<KeyEventArgs>>();
+        _suggestionPopups = new ConditionalWeakTable<StringListTextBoxDisplay, ReferenceSuggestionPopup>();
+        _referenceSuggestions = new VariableReferenceSuggestions();
         Displayers = DataUiGrid.CreateStandardRegistry();
         RegisterDisplayers(Displayers);
         // The same icon the category remove button uses.
@@ -70,6 +74,26 @@ public class AvaloniaVariableGridHead : IVariableGridHead
         registry.Register(typeof(GumDisplayers.TextHorizontalAlignment), typeof(TextHorizontalAlignmentDisplay));
         registry.Register(typeof(GumDisplayers.XOrigin), typeof(XOriginDisplay));
     }
+
+    /// <inheritdoc/>
+    public void AttachReferenceSuggestions(object displayer, Func<Gum.DataTypes.ElementSave?> getOwner, Func<string?> getOwningInstanceName)
+    {
+        if (displayer is not StringListTextBoxDisplay editor)
+        {
+            return;
+        }
+
+        if (_suggestionPopups.TryGetValue(editor, out ReferenceSuggestionPopup? existing))
+        {
+            existing.SetOwner(getOwner, getOwningInstanceName);
+            return;
+        }
+        _suggestionPopups.Add(editor, new ReferenceSuggestionPopup(editor, _referenceSuggestions, getOwner, getOwningInstanceName));
+    }
+
+    /// <summary>The suggestion list attached to <paramref name="editor"/>, or null; for tests.</summary>
+    public ReferenceSuggestionPopup? GetSuggestionPopup(StringListTextBoxDisplay editor) =>
+        _suggestionPopups.TryGetValue(editor, out ReferenceSuggestionPopup? popup) ? popup : null;
 
     /// <inheritdoc/>
     public void AttachReferenceTextEditor(object displayer, Action<GumKeyEventArgs, string> handleKeyDown)

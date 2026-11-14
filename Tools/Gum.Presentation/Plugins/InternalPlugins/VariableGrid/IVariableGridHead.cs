@@ -1,4 +1,5 @@
 using System;
+using Gum.DataTypes;
 using Gum.Input;
 using Gum.Plugins.VariableGrid;
 using WpfDataUi;
@@ -51,4 +52,16 @@ public interface IVariableGridHead
     /// string-list editor. Other displayers are ignored.
     /// </summary>
     void AttachReferenceTextEditor(object displayer, Action<GumKeyEventArgs, string> handleKeyDown);
+
+    /// <summary>
+    /// Offers name suggestions while typing in a variable-reference editor, when <paramref name="displayer"/>
+    /// is this head's string-list editor. The owner is read when suggestions are asked for, so a re-bound
+    /// row keeps working. A head with no suggestion list ignores the call.
+    /// </summary>
+    /// <param name="displayer">The row's editor.</param>
+    /// <param name="getOwner">The element that holds the row.</param>
+    /// <param name="getOwningInstanceName">The instance that owns the row, or null on an element row.</param>
+    void AttachReferenceSuggestions(object displayer, Func<Gum.DataTypes.ElementSave?> getOwner, Func<string?> getOwningInstanceName)
+    {
+    }
 }
