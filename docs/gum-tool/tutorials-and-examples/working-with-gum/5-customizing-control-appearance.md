@@ -26,7 +26,7 @@ This tells us that when the state of a button changes, the background color, tex
 
 Even once we select a state like Enabled, the color value itself is read only. This is because the ButtonStandard is set to use a centralized color value, rather than explicitly setting a color value. For example, the background is set to use the Primary color in our Styles component.
 
-<figure><img src="../../../.gitbook/assets/13_14_34_03.png" alt=""><figcaption></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/13_14_34_03.png" alt=""><figcaption><p>The Enabled state sets Color from Styles.Primary</p></figcaption></figure>
 
 If we want to change the color, we can do a few things:
 
@@ -39,7 +39,7 @@ Let's look at how to perform each of these.
 
 ### 1 - Changing the Styles component (Global Change)
 
-To change colors globally, select the Styles component and find the color that you would like to change. Keep in mind that these colors may be used by many controls, so a change here can affect many controls and states.
+To change colors globally, select the Styles component and find the color that you would like to change under Colors, such as Primary. Keep in mind that these colors may be used by many controls, so a change here can affect many controls and states.
 
 These changes can be made while Gum Preview is open, so changes can be seen in real time. Pinning the DemoScreenGum in Gum Preview is a great way to see how these changes affect your project.
 
@@ -51,7 +51,7 @@ Each style has its own set of colors, and these colors affect different componen
 
 Styles components come with a set of style colors built-in, and any of these can be used by your component states.
 
-<figure><img src="../../../.gitbook/assets/13_14_56_15.png" alt=""><figcaption></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/13_14_56_15.png" alt=""><figcaption><p>Colors in the Styles component</p></figcaption></figure>
 
 The colors that are used are set in variable references on component instances. For example, the background color for ButtonStandard is set in each of its states. To see the variable references, select the state, select the instance, and scroll to the bottom of the Variables tab to see the variable references.
 
@@ -94,11 +94,11 @@ Visuals in components can be completely removed or replaced to customize the app
 
 As an example, we will replace the background of the ButtonStandard to use a rounded Rectangle rather than a NineSlice.
 
-For more on Rectangle, see [Rectangle](../../gum-elements/rectangle.md).
+For more on Rectangle, see [Rectangle](../../gum-elements/rectangle.md) and [Is Filled](../../gum-elements/shape-properties/is-filled.md).
 
 First, select and delete the background on ButtonStandard.
 
-<figure><img src="../../../.gitbook/assets/13_15_36_57.png" alt=""><figcaption></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/13_15_36_57.png" alt=""><figcaption><p>ButtonStandard after deleting its background</p></figcaption></figure>
 
 Next we'll add a Rectangle as a new background. To do this:
 
@@ -107,6 +107,8 @@ Next we'll add a Rectangle as a new background. To do this:
 3. Click the Alignment tab, then click **Fill** in the **Dock** group
 
 <figure><img src="../../../.gitbook/assets/13_15_46_24.gif" alt=""><figcaption><p>Adding a Rectangle to ButtonStandard</p></figcaption></figure>
+
+For more on draw order, see [Order](../../gum-elements/general-properties/order.md).
 
 Now the rectangle can be customized to match the style you want for your button. For example, we can set:
 

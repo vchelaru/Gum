@@ -61,7 +61,7 @@ Finally we can adjust the values for the instances:
 
 We now have a LevelUpItem with a good setup and defaults.
 
-<figure><img src="../../../.gitbook/assets/14_05_22_59.png" alt=""><figcaption></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/14_05_22_59.png" alt=""><figcaption><p>LevelUpItem with its default layout and values</p></figcaption></figure>
 
 ### Exposed Variables
 

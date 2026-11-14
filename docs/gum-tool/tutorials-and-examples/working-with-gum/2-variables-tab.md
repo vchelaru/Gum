@@ -14,11 +14,11 @@ Variables can be edited by changing the displayed value for a given variable. On
 
 Numerical values can also be changed by holding down the left mouse button over the variable name and dragging left or right.
 
-<figure><img src="../../../.gitbook/assets/13_06_16_32.gif" alt=""><figcaption></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/13_06_16_32.gif" alt=""><figcaption><p>Dragging over a variable name to change its value</p></figcaption></figure>
 
 Variables which can be edited in the Editor tab also update in real time in the Variables tab.
 
-<figure><img src="../../../.gitbook/assets/13_06_22_16.gif" alt=""><figcaption></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/13_06_22_16.gif" alt=""><figcaption><p>Editing an instance in the Editor tab updates the Variables tab</p></figcaption></figure>
 
 ### Default and Overriding Values
 
@@ -43,7 +43,7 @@ To see this in action:
 1. Drag two **ButtonStandard** instances onto MainScreen.
 2. Select the second instance and set its `Width` to a value larger than the first one's.
 
-<figure><img src="../../../.gitbook/assets/13_06_33_14.png" alt=""><figcaption></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/13_06_33_14.png" alt=""><figcaption><p>Two ButtonStandard instances, the second with a larger Width</p></figcaption></figure>
 
 The first button keeps the default `Width` of 128, while the second button explicitly sets its own `Width`.
 
