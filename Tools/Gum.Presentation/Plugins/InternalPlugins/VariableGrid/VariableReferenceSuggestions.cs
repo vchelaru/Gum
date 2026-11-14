@@ -138,19 +138,20 @@ public class VariableReferenceSuggestions : IVariableReferenceSuggestions
     /// </summary>
     private static void AddMembers(ElementSave element, string pathPrefix, string typedMember, List<VariableReferenceSuggestion> candidates)
     {
-        int dot = typedMember.IndexOf('.');
-        if (dot >= 0)
+        // Each typed "Instance." steps into that instance's component, so nested instances
+        // (Slider.Thumb.Width) are offered the same way as top-level ones.
+        int dot;
+        while ((dot = typedMember.IndexOf('.')) >= 0)
         {
             InstanceSave? instance = FindInstance(element, typedMember.Substring(0, dot));
             ElementSave? instanceType = instance == null ? null : ObjectFinder.Self.GetElementSave(instance.BaseType);
-            if (instance != null && instanceType != null)
+            if (instance == null || instanceType == null)
             {
-                foreach (string name in GetVariableNames(instanceType))
-                {
-                    candidates.Add(new VariableReferenceSuggestion(pathPrefix + instance.Name + "." + name, false));
-                }
+                return;
             }
-            return;
+            pathPrefix += instance.Name + ".";
+            element = instanceType;
+            typedMember = typedMember.Substring(dot + 1);
         }
 
         foreach (string instanceName in ElementSaveExtensions.GetReferencableInstanceNames(element).Distinct())

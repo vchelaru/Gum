@@ -40,7 +40,7 @@ public class ReferenceSuggestionScreenshotTests
         MainWindow window = TestAppBuilder.Services.GetRequiredService<MainWindow>();
         window.MinHeight = 0;
         window.Width = 1000;
-        window.Height = 1300;
+        window.Height = 1000;
         window.Show();
         foreach (AvaloniaGraphicsDeviceControl canvas in window.GetVisualDescendants().OfType<AvaloniaGraphicsDeviceControl>())
         {
@@ -65,7 +65,7 @@ public class ReferenceSuggestionScreenshotTests
                         scale.BaseFontSize = size;
                         Dispatcher.UIThread.RunJobs();
                         StringListTextBoxDisplay editor = grid.Editor<StringListTextBoxDisplay>("VariableReferences");
-                        editor.BringIntoView();
+                        editor.BringIntoView(new global::Avalonia.Rect(0, 0, editor.Bounds.Width, 330));
                         Dispatcher.UIThread.RunJobs();
                         editor.EditorTextBox.Text = string.Empty;
                         editor.EditorTextBox.Focus();

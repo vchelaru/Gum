@@ -1,8 +1,10 @@
 using Gum.DataTypes;
+using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
 using Gum.Managers;
 using Gum.Plugins.InternalPlugins.VariableGrid;
 using Gum.ProjectServices;
+using MonoGameGum.Tests;
 using Shouldly;
 
 namespace Gum.Presentation.Tests.VariableGrid;
@@ -171,12 +173,117 @@ public class VariableReferenceSuggestionsTests : BaseTestClass
     }
 
     [Fact]
-    public void GetSuggestions_ShouldOfferNothing_OnLeftSideCommentOrInsideString()
+    public void GetSuggestions_ShouldOfferNothing_OnLeftSide()
     {
         _suggestions.GetSuggestions(_component, "MinText", "Sli", 3).Items.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void GetSuggestions_ShouldOfferNothing_WhenCaretIsBeforeTheEquals()
+    {
         _suggestions.GetSuggestions(_component, "MinText", "Te = Slider.Minimum", 2).Items.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void GetSuggestions_ShouldOfferNothing_OnCommentedLine()
+    {
         Texts("// Text = Sli").ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void GetSuggestions_ShouldOfferNothing_InsideStringLiteral()
+    {
         Texts("Text = \"Sli").ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void GetSuggestions_ShouldOfferNestedInstances_AndTheirMembers()
+    {
+        ComponentSave inner = AddComponent("Custom/Inner", "Container");
+        AddInstance(inner, "Sub", "Text");
+        AddInstance(_component, "Inner", "Custom/Inner");
+
+        VariableReferenceSuggestion sub = _suggestions.GetSuggestions(_component, "MinText", "Text = Inner.S", 14).Items.Single(item => item.Text == "Inner.Sub");
+        sub.IsContinuation.ShouldBeTrue();
+        Texts("Text = Inner.Sub.Te").ShouldContain("Inner.Sub.Text");
+        Texts("Text = Components/Custom/PropertySlider.Inner.Sub.Te").ShouldContain("Components/Custom/PropertySlider.Inner.Sub.Text");
+    }
+
+    [Fact]
+    public void GetSuggestions_ShouldOfferChildInstancesOfAFormsControl()
+    {
+        ElementSave slider = ObjectFinder.Self.GetElementSave("DarkPro/Slider")!;
+        slider.Instances.ShouldNotBeEmpty();
+        string child = slider.Instances[0].Name;
+
+        Texts("Text = Slider.").ShouldContain("Slider." + child);
+    }
+
+    [Fact]
+    public void GetSuggestions_ShouldOfferEveryNameGum0009Accepts_ForSampledNamesAndInstancePaths()
+    {
+        ComponentSave inner = AddComponent("Custom/Inner", "Container");
+        AddInstance(inner, "Sub", "Text");
+        AddInstance(_component, "Inner", "Custom/Inner");
+        _defaultState.Variables.Add(new VariableSave { Name = "MinText.Text", Type = "string", Value = "x", ExposedAsName = "CaptionText" });
+        ComponentSave host = AddComponent("Custom/Host", "Container");
+        AddInstance(host, "Prop", "Custom/PropertySlider");
+        AddInstance(host, "Other", "Text");
+
+        // The universe of names is gathered from every saved variable and Forms property in the project, not from the suggestion class.
+        HashSet<string> names = new HashSet<string>(StringComparer.Ordinal) { "State", "Index", "AbsoluteWidth", "CaptionText" };
+        foreach (ElementSave element in _project.AllElements)
+        {
+            foreach (StateSave state in element.AllStates)
+            {
+                foreach (VariableSave variable in state.Variables.Where(item => !item.Name.Contains('.')))
+                {
+                    names.Add(variable.Name);
+                }
+            }
+        }
+        foreach (BehaviorSave behavior in _project.Behaviors)
+        {
+            foreach (VariableSave declaration in behavior.FormsProperties)
+            {
+                names.Add(declaration.Name);
+            }
+        }
+
+        List<(ElementSave Owner, string Qualifier)> scopes = new List<(ElementSave, string)>
+        {
+            (_component, string.Empty), (_component, "Slider."), (_component, "Inner."), (_component, "Inner.Sub."),
+            (host, "Prop."), (host, "Prop.Inner."), (host, "Prop.Inner.Sub."),
+            (host, "Components/Custom/PropertySlider."), (host, "Components/Custom/PropertySlider.Inner.Sub."),
+        };
+        List<(ElementSave Owner, string Path)> accepted = new List<(ElementSave, string)>();
+        foreach ((ElementSave owner, string qualifier) in scopes)
+        {
+            foreach (string name in names)
+            {
+                string path = qualifier + name;
+                if (path.Length > 2 && HeadlessErrorChecker.FindUnresolvableReference(owner, null, "X = " + path) == null)
+                {
+                    accepted.Add((owner, path));
+                }
+            }
+        }
+        accepted.Count.ShouldBeGreaterThan(100);
+
+        Random random = new Random(8023);
+        int cases = SweepScale.Cases(300);
+        List<string> missing = new List<string>();
+        for (int i = 0; i < cases; i++)
+        {
+            (ElementSave owner, string path) = accepted[random.Next(accepted.Count)];
+            string line = "X = " + path.Substring(0, path.Length - 1);
+            VariableReferenceSuggestionResult result = _suggestions.GetSuggestions(owner, null, line, line.Length);
+            if (!result.Items.Any(item => item.Text == path))
+            {
+                missing.Add($"{owner.Name}: {path}");
+            }
+        }
+        missing.ShouldBeEmpty();
     }
 
     [Fact]

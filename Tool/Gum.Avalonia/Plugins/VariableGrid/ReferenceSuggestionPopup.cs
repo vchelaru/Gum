@@ -5,7 +5,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Presenters;
 using Avalonia.Controls.Primitives;
-using Avalonia.Controls.Primitives.PopupPositioning;
+
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Layout;
@@ -61,9 +61,7 @@ public sealed class ReferenceSuggestionPopup
         {
             Child = frame,
             PlacementTarget = editor.EditorTextBox,
-            Placement = PlacementMode.AnchorAndGravity,
-            PlacementAnchor = PopupAnchor.BottomLeft,
-            PlacementGravity = PopupGravity.BottomRight,
+            Placement = PlacementMode.Bottom,
             IsLightDismissEnabled = false,
             Focusable = false,
         };
@@ -132,7 +130,11 @@ public sealed class ReferenceSuggestionPopup
 
         _list.ItemsSource = _current.Items.ToList();
         _list.SelectedIndex = 0;
-        _popup.PlacementRect = GetCaretRect(box);
+        // Bottom placement centers the popup on the rect, so the rect is as wide as the popup: its left edge
+        // then sits at the caret and its top edge just under the caret line (it flips above when there is no room).
+        _popup.Child!.Measure(Size.Infinity);
+        Rect caretRect = GetCaretRect(box);
+        _popup.PlacementRect = new Rect(caretRect.X, caretRect.Y, _popup.Child.DesiredSize.Width, caretRect.Height + 2);
         _popup.IsOpen = true;
     }
 

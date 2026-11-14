@@ -95,6 +95,39 @@ public class ReferenceSuggestionScenarioTests
     }
 
     [AvaloniaFact]
+    public void ArrowUp_MovesBackToTheFirstEntry_AndStopsAtTheTop()
+    {
+        (VariableGridHarness grid, _, _) = Arrange();
+        using DiscardingScope owned = new DiscardingScope(grid);
+        grid.TypeLines("VariableReferences", "X = Leader.X");
+        ReferenceSuggestionPopup popup = PopupFor(grid);
+        string first = popup.Items[0].Text;
+
+        Press(grid, Key.Down, PhysicalKey.ArrowDown);
+        Press(grid, Key.Up, PhysicalKey.ArrowUp);
+        popup.Selected!.Value.Text.ShouldBe(first);
+        Press(grid, Key.Up, PhysicalKey.ArrowUp);
+        popup.Selected!.Value.Text.ShouldBe(first);
+    }
+
+    [AvaloniaFact]
+    public void ArrowDown_StopsAtTheLastEntry()
+    {
+        (VariableGridHarness grid, _, _) = Arrange();
+        using DiscardingScope owned = new DiscardingScope(grid);
+        grid.TypeLines("VariableReferences", "X = Leader.X");
+        ReferenceSuggestionPopup popup = PopupFor(grid);
+        string last = popup.Items[^1].Text;
+
+        for (int i = 0; i < popup.Items.Count + 2; i++)
+        {
+            Press(grid, Key.Down, PhysicalKey.ArrowDown);
+        }
+
+        popup.Selected!.Value.Text.ShouldBe(last);
+    }
+
+    [AvaloniaFact]
     public void Escape_ClosesTheList_AndKeepsTheTypedText()
     {
         (VariableGridHarness grid, _, _) = Arrange();
