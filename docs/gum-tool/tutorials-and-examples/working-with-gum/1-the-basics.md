@@ -23,7 +23,9 @@ Before we begin looking at the Gum tool, we'll create a new project. The New Pro
 Create C# project also creates a runnable game project that contains your Gum project. This series does not cover working with that project.
 {% endhint %}
 
-After you click OK, your project should contain screens, components, and behaviors
+For more on creating projects, see [Creating a Project](../../setup/creating-a-project.md).
+
+After you click OK, your project should contain screens, components, and behaviors.
 
 <figure><img src="../../../.gitbook/assets/13_05_40_13.png" alt=""><figcaption><p>Screens, Components, and Behaviors after creating a new project</p></figcaption></figure>
 
@@ -46,7 +48,7 @@ Let's take a look at each of the different types.
 
 Screens are objects which can contain standard elements and instances of other components. Screens cannot be added to other Screens and are considered _top level_ objects. Screens exist mainly for organization. Screens can be simple, such as a loading screen, or complex such as a HUD in an RTS game.
 
-Your game includes DemoScreenGum which shows how controls can be created and laid out.
+Your project includes DemoScreenGum which shows how controls can be created and laid out.
 
 <figure><img src="../../../.gitbook/assets/13_05_49_52.png" alt=""><figcaption><p>DemoScreenGum with default controls</p></figcaption></figure>
 
@@ -62,7 +64,7 @@ For example you can think of screens in a video game which might include a main 
 
 Behaviors are sets of requirements, such as required states and instances, that let Gum treat a component as a Forms control like a Button. Adding Forms controls to your project also adds their behaviors, so this series does not cover creating or editing them. For more, see [Behaviors](../../gum-elements/behaviors/README.md).
 
-### Standard Types
+### Standard Elements
 
 * ![](<../../../.gitbook/assets/image (51).png>) \
   Circle - a circle which can be filled in, outlined, or both. Often used for visualizations or for defining collision in your Gum objects for a game.
@@ -83,11 +85,13 @@ Behaviors are sets of requirements, such as required states and instances, that 
 Plugins can add additional standard elements. The list above is the default list of standard elements before plugins have made any changes.
 {% endhint %}
 
+For more on each element, see [Gum Elements](../../gum-elements/README.md).
+
 ### Previewing your Project
 
 Gum can run your project as a live game in a Preview window. The **Preview** button is the play triangle at the top right of the Editor tab.
 
-<figure><img src="../../../.gitbook/assets/13_05_57_16.png" alt=""><figcaption></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/13_05_57_16.png" alt=""><figcaption><p>The Preview button in the Editor tab</p></figcaption></figure>
 
 By default, Gum saves your project automatically, and the Preview window refreshes whenever it saves. For more on Preview, see [Editor Tab](../../editor-tab.md#preview).
 
@@ -107,7 +111,7 @@ Instances can be added to screens and components. To add an instance:
 
 1. Select the destination screen or component. For example, select the MainScreen.
 2. Drag a Standard or Component onto the Editor tab. For example, drag **ButtonStandard** from **Components** > **Controls**.
-3. Release the moue button and the instance appears in the desired location
+3. Release the mouse button and the instance appears in the desired location
 
 <figure><img src="../../../.gitbook/assets/13_06_05_38.gif" alt=""><figcaption><p>Adding instances by drag+dropping</p></figcaption></figure>
 
@@ -121,7 +125,7 @@ If an element is dropped in the Editor window, it appears at the location where 
 
 ### Editing in the Editor Tab
 
-Once an instance is part of a screen or component, it can be edted visually in the preview window. The selected instance can be moved or resized with its resize handles.
+Once an instance is part of a screen or component, it can be edited visually in the Editor tab. The selected instance can be moved or resized with its resize handles.
 
 <figure><img src="../../../.gitbook/assets/13_06_09_03.gif" alt=""><figcaption><p>Editing in the Editor tab</p></figcaption></figure>
 
