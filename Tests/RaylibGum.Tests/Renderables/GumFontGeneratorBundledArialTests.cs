@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using KernSmith;
@@ -132,4 +133,51 @@ public class GumFontGeneratorBundledArialTests : IDisposable
 
     private static string FixtureFontPath =>
         Path.Combine(AppContext.BaseDirectory, "Content", "Fonts", "Orbitron-Black.ttf");
+
+    private record Measure(int XAdvance, int Width, long PixelSum);
+
+    private static Measure MeasureStyle(bool bold, bool italic)
+    {
+        BmfcSave save = Make(MissingFamily);
+        save.Ranges = "72"; // 'H'
+        save.IsBold = bold;
+        save.IsItalic = italic;
+        BmFontResult result = GumFontGenerator.Generate(save);
+        KernSmith.Output.Model.CharEntry h = result.Model.Characters.Single();
+        long sum = 0;
+        foreach (byte b in result.Pages[0].PixelData) sum += b;
+        return new Measure(h.XAdvance, h.Width, sum);
+    }
+
+    [Fact]
+    public void Generate_BoldWithOnlyTheBundledRegularFace_IsWiderAndHeavier()
+    {
+        Measure regular = MeasureStyle(bold: false, italic: false);
+        Measure bold = MeasureStyle(bold: true, italic: false);
+
+        bold.XAdvance.ShouldBeGreaterThan(regular.XAdvance);
+        bold.PixelSum.ShouldBeGreaterThan(regular.PixelSum);
+    }
+
+    [Fact]
+    public void Generate_ItalicWithOnlyTheBundledRegularFace_IsSlanted()
+    {
+        Measure regular = MeasureStyle(bold: false, italic: false);
+        Measure italic = MeasureStyle(bold: false, italic: true);
+
+        italic.Width.ShouldBeGreaterThan(regular.Width, "because a slanted H covers more columns than an upright one");
+        italic.PixelSum.ShouldNotBe(regular.PixelSum);
+    }
+
+    [Fact]
+    public void Generate_BoldItalicWithOnlyTheBundledRegularFace_IsHeavierThanEitherAlone()
+    {
+        Measure bold = MeasureStyle(bold: true, italic: false);
+        Measure italic = MeasureStyle(bold: false, italic: true);
+        Measure both = MeasureStyle(bold: true, italic: true);
+
+        both.PixelSum.ShouldBeGreaterThan(bold.PixelSum);
+        both.PixelSum.ShouldBeGreaterThan(italic.PixelSum);
+        both.Width.ShouldBeGreaterThan(bold.Width);
+    }
 }
