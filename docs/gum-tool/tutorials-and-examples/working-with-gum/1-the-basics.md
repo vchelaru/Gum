@@ -2,7 +2,7 @@
 
 ## Introduction
 
-This page walks you through the basics of using the _Gum UI tool,_ which we'll refer to simply as Gum for this tutorial series.
+This page walks you through the basics of using the _Gum tool_, which we'll refer to simply as Gum for this tutorial series.
 
 <figure><img src="../../../.gitbook/assets/13_05_33_49.png" alt=""><figcaption><p>Gum tool with New Project window open</p></figcaption></figure>
 
