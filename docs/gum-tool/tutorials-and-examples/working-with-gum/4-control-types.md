@@ -12,7 +12,7 @@ Label and CheckBox, which are used later in this series, are in the same folder.
 
 ### Button
 
-The ButtonStandard control is one of the most common controls. It provides built-in events for click and hover.
+The ButtonStandard control is one of the most common controls. It reacts to the cursor hovering over it and clicking it.
 
 <figure><img src="../../../.gitbook/assets/13_12_58_49.png" alt=""><figcaption><p>ButtonStandard Component</p></figcaption></figure>
 
