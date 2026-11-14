@@ -18,7 +18,7 @@ namespace Gum.Presentation.Tests.VariableGrid;
 /// #8020: a project made from the DarkPro Forms theme, with a Slider instance whose Minimum is set
 /// through the Variables tab's Behavior row, then read back by a VariableReferences line.
 /// </summary>
-public class BehaviorValueReferenceGum0009Tests : BaseTestClass, IDisposable
+public class BehaviorValueReferenceGum0009Tests : BaseTestClass
 {
     private readonly AutoMocker _mocker = new();
     private readonly string _directory;
@@ -64,9 +64,10 @@ public class BehaviorValueReferenceGum0009Tests : BaseTestClass, IDisposable
         _displayer = _mocker.CreateInstance<ElementSaveDisplayer>();
     }
 
-    public void Dispose()
+    public override void Dispose()
     {
         try { Directory.Delete(_directory, true); } catch { }
+        base.Dispose();
     }
 
     private static string FindThemesRoot()
