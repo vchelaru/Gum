@@ -56,7 +56,12 @@ The buttons inside the StackPanelInstance react to the mouse, while the buttons 
 
 <figure><img src="../../../.gitbook/assets/13_11_16_10.gif" alt=""><figcaption><p>Button events in Gum</p></figcaption></figure>
 
-Both problems can be solved by changing the StackPanelInstance so it resizes itself according to its children rather than using an absolute 150x150 size. To do this, click the Size to Children Dock button on StackPanel.
+Both problems can be solved by having the StackPanelInstance resize itself according to its children rather than using an absolute 150x150 size.
+
+1. Select **StackPanelInstance** and click the **Alignment** tab.
+2. In the **Dock** group, click the **Size to Children** button.
+
+The StackPanelInstance now resizes to fit its buttons.
 
 <figure><img src="../../../.gitbook/assets/13_11_18_48.png" alt=""><figcaption><p>Size to Children button in the Alignment tab</p></figcaption></figure>
 
