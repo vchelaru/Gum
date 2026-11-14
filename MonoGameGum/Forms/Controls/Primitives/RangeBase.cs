@@ -91,8 +91,15 @@ public abstract class RangeBase :
         {
             _largeChange = value;
             ReportFormsPropertyChanged(nameof(LargeChange));
+            ComputedChangeReported?.Invoke(this, nameof(LargeChange));
         }
     }
+
+    /// <summary>
+    /// Raised after a layout-derived SmallChange or LargeChange changed, for the owner (a ScrollViewer) that
+    /// exposes the value of this bar as its own and reports it to the references that read it.
+    /// </summary>
+    internal Action<RangeBase, string>? ComputedChangeReported;
 
     /// <summary>
     /// The amount to change Value when the user presses the up or down buttons on a scrollbar, 
@@ -133,6 +140,7 @@ public abstract class RangeBase :
         {
             _smallChange = value;
             ReportFormsPropertyChanged(nameof(SmallChange));
+            ComputedChangeReported?.Invoke(this, nameof(SmallChange));
         }
     }
 

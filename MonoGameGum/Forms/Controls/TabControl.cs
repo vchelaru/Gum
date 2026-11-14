@@ -47,6 +47,8 @@ public class TabControl : ItemsControl
     private bool _isHandlingContentPanelEvent;
     // What a bound view model was last given: the empty control's -1 and null until the first push.
     private int _lastPushedSelectedIndex = -1;
+    // The SelectedIndex the references that read it last saw, so a shift with no selection change is reported once.
+    private int _lastReportedSelectedIndex = -1;
     // The SelectedIndex a project defines (the behavior's declared 0), waiting for the tabs the owning
     // screen parents into the strip after this control is built. Any other selection change drops it.
     private int? _deferredDefaultSelectedIndex;
@@ -417,7 +419,8 @@ public class TabControl : ItemsControl
     {
         base.HandleItemsCollectionChanged(sender, e);
         // An insert, removal or move before the selected tab shifts SelectedIndex without changing
-        // the selection, so it is pushed here too.
+        // the selection, so it is pushed and reported here too.
+        ReportSelectedIndexIfShifted();
         PushSelectionIfChanged();
     }
 
@@ -858,10 +861,25 @@ public class TabControl : ItemsControl
         {
             // Every selection change lands here, the setter, a tab pushed by the user, and the default selection
             // a first tab brings, so SelectedIndex is reported from here and not from its setter.
+            _lastReportedSelectedIndex = SelectedIndex;
             ReportFormsPropertyChanged(nameof(SelectedIndex));
             SelectionChanged?.Invoke(this, args);
         }
         PushSelectionIfChanged();
+    }
+
+    /// <summary>
+    /// An insert, removal or move before the selected tab shifts SelectedIndex without a selection change, so the
+    /// references that read it hear about the shift here.
+    /// </summary>
+    private void ReportSelectedIndexIfShifted()
+    {
+        int index = SelectedIndex;
+        if (index != _lastReportedSelectedIndex)
+        {
+            _lastReportedSelectedIndex = index;
+            ReportFormsPropertyChanged(nameof(SelectedIndex));
+        }
     }
 
     /// <summary>
