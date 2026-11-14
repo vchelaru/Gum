@@ -15,6 +15,7 @@ internal static class BundledArialFont
     private const string RegularResourceName = "KernSmith.Gum.Fonts.LiberationSans-Regular.ttf";
 
     private static bool _attempted;
+    private static bool _registered;
     private static readonly object _lock = new();
 
     /// <summary>Test seam: the family name the bundled font is registered under.</summary>
@@ -30,6 +31,7 @@ internal static class BundledArialFont
         lock (_lock)
         {
             _attempted = false;
+            _registered = false;
         }
     }
 
@@ -44,24 +46,23 @@ internal static class BundledArialFont
             return false;
         }
 
+        // Registration runs inside the lock, so a second thread that failed at the same moment waits for
+        // it and then retries against the registered font instead of reporting a failure (#8035 memoizes one).
         lock (_lock)
         {
-            if (_attempted)
+            if (!_attempted)
             {
-                return false;
+                _attempted = true;
+                using Stream? stream = typeof(BundledArialFont).Assembly.GetManifestResourceStream(RegularResourceName);
+                if (stream != null)
+                {
+                    using MemoryStream bytes = new();
+                    stream.CopyTo(bytes);
+                    RegisterFont(FamilyName, bytes.ToArray(), null);
+                    _registered = true;
+                }
             }
-            _attempted = true;
+            return _registered;
         }
-
-        using Stream? stream = typeof(BundledArialFont).Assembly.GetManifestResourceStream(RegularResourceName);
-        if (stream == null)
-        {
-            return false;
-        }
-
-        using MemoryStream bytes = new();
-        stream.CopyTo(bytes);
-        RegisterFont(FamilyName, bytes.ToArray(), null);
-        return true;
     }
 }

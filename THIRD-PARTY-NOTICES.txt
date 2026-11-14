@@ -363,7 +363,7 @@ Content/FormsThemes/<Theme>/Fonts/, as the OFL requires:
         regular/Bold/Italic/Bold_Italic, kept under those names; Liberation Sans 2.1.5), embedded in
         MonoGameGum.dll, KniGum.dll and FnaGum.dll. These are rasterized glyph
         images generated with KernSmith, not font software.
-        Also embedded as font software (LiberationSans-Regular.ttf) in
+        Also embedded as font software (LiberationSans-Regular.ttf, Version 2.1.5; license URL in the font: http://scripts.sil.org/OFL) in
         KernSmith.GumCommon.dll, registered under "Arial" when no Arial is found
         (#8044); the OFL text ships beside it as Fonts/LiberationSans-LICENSE.txt.
 

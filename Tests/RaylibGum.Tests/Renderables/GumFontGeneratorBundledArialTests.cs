@@ -1,7 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 using KernSmith;
+using KernSmith.Font;
 using KernSmith.Gum;
 using KernSmith.Output;
 using RenderingLibrary.Graphics.Fonts;
@@ -84,6 +87,47 @@ public class GumFontGeneratorBundledArialTests : IDisposable
         Should.Throw<Exception>(() => GumFontGenerator.Generate(Make("GumSomeOtherMissingFamily")));
 
         registrations.ShouldBe(0);
+    }
+
+    [Fact]
+    public void Generate_WhenTheBuildFailsForAnotherReason_DoesNotRegisterTheBundledFont()
+    {
+        int registrations = 0;
+        BundledArialFont.RegisterFont = (_, _, _) => registrations++;
+        Func<string, FontGeneratorOptions, BmFontResult> previous = GumFontGenerator.GenerateFromSystem;
+        GumFontGenerator.GenerateFromSystem = (_, _) => throw new InvalidOperationException("rasterizer failed");
+        try
+        {
+            Should.Throw<InvalidOperationException>(() => GumFontGenerator.Generate(Make(MissingFamily)));
+        }
+        finally
+        {
+            GumFontGenerator.GenerateFromSystem = previous;
+        }
+
+        registrations.ShouldBe(0, "because an installed Arial must not be shadowed by a failure that is not 'not installed'");
+    }
+
+    [Fact]
+    public void TryRegisterFor_WhenAnotherThreadIsRegistering_WaitsAndReportsTheRetryIsWorthIt()
+    {
+        using ManualResetEventSlim entered = new();
+        using ManualResetEventSlim release = new();
+        BundledArialFont.RegisterFont = (_, _, _) =>
+        {
+            entered.Set();
+            release.Wait();
+        };
+
+        Task<bool> first = Task.Run(() => BundledArialFont.TryRegisterFor(MissingFamily));
+        entered.Wait();
+        Task<bool> second = Task.Run(() => BundledArialFont.TryRegisterFor(MissingFamily));
+
+        second.Wait(200).ShouldBeFalse("because the second caller must wait for the registration in progress");
+        release.Set();
+
+        first.Result.ShouldBeTrue();
+        second.Result.ShouldBeTrue();
     }
 
     private static string FixtureFontPath =>
