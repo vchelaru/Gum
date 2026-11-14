@@ -1,19 +1,50 @@
-# Fails when a .claude/skills/*/SKILL.md has no usable description.
-# Claude Code silently drops an unquoted "description: ... Triggers: ..." (value contains ": ") when the file
-# has CRLF line endings, and the skill then lists with only its H1 title. Fix: LF (see .gitattributes) or quote the value.
-param([string]$Root = (Join-Path $PSScriptRoot '..\.claude\skills'))
+# Fails when a .claude/skills/**/SKILL.md has a CRLF, no frontmatter, or no single-line description.
+# Claude Code drops an unquoted "description: ... Triggers: ..." (value contains ": ") from CRLF files, and the
+# skill then lists with only its H1 title. .gitattributes forces LF for these files; this catches a checkout that did not.
+# Manual (not part of verify.ps1): pwsh Tools/verify-skills.ps1   |   self-test: pwsh Tools/verify-skills.ps1 -SelfTest
+param([string]$Root = (Join-Path $PSScriptRoot '..\.claude\skills'), [switch]$SelfTest)
+
+function Test-SkillFile([string]$Path) {
+    $raw = [IO.File]::ReadAllText($Path)
+    if ($raw.Contains("`r`n")) { return "CRLF line endings" }
+    $m = [regex]::Match($raw, '\A---\n(.*?)\n---\n', 'Singleline')
+    if (-not $m.Success) { return "no frontmatter" }
+    $d = [regex]::Match($m.Groups[1].Value, '(?m)^description:[ \t]*(.*)$')
+    if (-not $d.Success) { return "no description" }
+    $v = $d.Groups[1].Value.Trim()
+    if ($v -eq '' -or $v -match '^[>|]') { return "description is not a single-line string" }
+    return $null
+}
+
+if ($SelfTest) {
+    $tmp = Join-Path ([IO.Path]::GetTempPath()) ("skillselftest" + [guid]::NewGuid().ToString('N'))
+    New-Item -ItemType Directory $tmp | Out-Null
+    $cases = [ordered]@{
+        'lf-unquoted'         = @("---`nname: a`ndescription: Thing. Triggers: x, y.`n---`n# A`n", $false)
+        'lf-quoted'           = @("---`nname: a`ndescription: `"Thing. Triggers: x.`"`n---`n# A`n", $false)
+        'crlf-unquoted'       = @("---`r`nname: a`r`ndescription: Thing. Triggers: x, y.`r`n---`r`n# A`r`n", $true)
+        'crlf-folded'         = @("---`r`nname: a`r`ndescription: >`r`n  Thing. Triggers: x.`r`n---`r`n# A`r`n", $true)
+        'crlf-quoted'         = @("---`r`nname: a`r`ndescription: `"Thing. Triggers: x.`"`r`n---`r`n# A`r`n", $true)
+        'no-frontmatter'      = @("# A`nbody`n", $true)
+        'missing-description' = @("---`nname: a`n---`n# A`n", $true)
+    }
+    $fail = 0
+    foreach ($k in $cases.Keys) {
+        $p = Join-Path $tmp "$k.md"
+        [IO.File]::WriteAllText($p, $cases[$k][0])
+        $failed = $null -ne (Test-SkillFile $p)
+        if ($failed -ne $cases[$k][1]) { Write-Host "SELFTEST WRONG: $k (expected fail=$($cases[$k][1]))"; $fail++ }
+    }
+    Remove-Item -Recurse -Force $tmp
+    if ($fail) { exit 1 }
+    Write-Host 'Self-test OK'
+    exit 0
+}
+
 $bad = 0
 foreach ($f in Get-ChildItem -Path $Root -Filter SKILL.md -Recurse) {
-    $raw = [IO.File]::ReadAllText($f.FullName)
-    $m = [regex]::Match($raw, '\A---\r?\n(.*?)\r?\n---\r?\n', 'Singleline')
-    if (-not $m.Success) { Write-Host "NO FRONTMATTER: $($f.FullName)"; $bad++; continue }
-    $d = [regex]::Match($m.Groups[1].Value, '(?m)^description:[ \t]*(.*?)\r?$')
-    if (-not $d.Success -or $d.Groups[1].Value.Trim() -eq '') { Write-Host "NO DESCRIPTION (single line required): $($f.FullName)"; $bad++; continue }
-    $v = $d.Groups[1].Value.Trim()
-    $quoted = $v.StartsWith('"') -or $v.StartsWith("'")
-    if (-not $quoted -and $v.Contains(': ') -and $m.Groups[1].Value.Contains("`r")) {
-        Write-Host "CRLF + unquoted ': ' in description (listed without description): $($f.FullName)"; $bad++
-    }
+    $err = Test-SkillFile $f.FullName
+    if ($err) { Write-Host "${err}: $($f.FullName)"; $bad++ }
 }
 if ($bad) { Write-Host "$bad skill(s) failed"; exit 1 }
 Write-Host 'All skill descriptions OK'
