@@ -49,7 +49,8 @@ public static class GraphicalUiElementPropertyReadExtensions
                 propertyName = name.Substring(dot + 1);
             }
 
-            if (owner.TryGetPropertyExact(propertyName, out object? value))
+            if (owner.TryGetPropertyExact(propertyName, out object? value)
+                || owner.TryReadFormsControlProperty(propertyName, out value, out _))
             {
                 changed.Add(new Gum.DataTypes.Variables.VariableSave { Name = name, Value = value, SetsValue = true });
             }

@@ -1370,7 +1370,7 @@ namespace GumRuntime
         /// happens to own the reference.</param>
         public static void ApplyVariableReferencesOnSpecificOwner(GraphicalUiElement referenceOwner, string referenceString, StateSave stateSave, GraphicalUiElement? liveRootForRightSide = null)
         {
-            if (!TryReadReference(referenceOwner.Tag as InstanceSave, referenceString, stateSave, liveRootForRightSide ?? referenceOwner,
+            if (!TryReadReference(referenceOwner.Tag as InstanceSave, referenceString, stateSave, liveRootForRightSide ?? referenceOwner, true,
                 out string left, out _, out _, out object? value, out _))
             {
                 return;
@@ -1579,15 +1579,15 @@ namespace GumRuntime
         /// </summary>
         public static VariableReferenceAssignmentResult ApplyVariableReferencesOnSpecificOwner(InstanceSave? instanceLeft, string referenceString, StateSave stateSave, GraphicalUiElement? liveRoot = null)
         {
-            return ApplyVariableReferencesOnSpecificOwner(instanceLeft, referenceString, stateSave, liveRoot, propagateNull: false);
+            return ApplyVariableReferencesOnSpecificOwner(instanceLeft, referenceString, stateSave, liveRoot, propagateNull: false, readFormsInputs: true);
         }
 
         // propagateNull: when true, a null result is written to a nullable variable instead of being skipped.
 #nullable enable
-        internal static VariableReferenceAssignmentResult ApplyVariableReferencesOnSpecificOwner(InstanceSave? instanceLeft, string referenceString, StateSave stateSave, GraphicalUiElement? liveRoot, bool propagateNull)
+        internal static VariableReferenceAssignmentResult ApplyVariableReferencesOnSpecificOwner(InstanceSave? instanceLeft, string referenceString, StateSave stateSave, GraphicalUiElement? liveRoot, bool propagateNull, bool readFormsInputs = false)
         {
 
-            if (!TryReadReference(instanceLeft, referenceString, stateSave, liveRoot,
+            if (!TryReadReference(instanceLeft, referenceString, stateSave, liveRoot, readFormsInputs,
                 out string left, out string right, out string? leftSideType, out object? value, out bool mismatchReported))
             {
                 return new VariableReferenceAssignmentResult { NewValue = null, OldValue = null, VariableName = null };
@@ -1657,12 +1657,88 @@ namespace GumRuntime
 
         private static bool IsNumericTypeName(string type) => type == "int" || type == "float" || type == "double";
 
+        // Where a reference reads a Forms-only property of an instance (Slider.Minimum): the live Forms control when
+        // the instance has one (it holds the behavior default, what code set and its own clamping), else the value
+        // the state stores, else the behavior's declared default (the tool has no Forms control, and a reference into
+        // another element has no live instance). The evaluators read a state, so a value that differs from the state's
+        // goes in a copy of it; the state itself, which the caller writes results to, is never changed.
+        // Live re-evaluation does not come through here: it reads the control as it reads any live input.
+        private static StateSave WithFormsPropertyInputs(StateSave stateSave, string right, GraphicalUiElement? liveRoot)
+        {
+#if FRB
+            return stateSave;
+#else
+            ElementSave? container = stateSave.ParentContainer;
+            if (container == null || right.IndexOf('.') < 0)
+            {
+                return stateSave;
+            }
+
+            List<string> reads = new List<string>();
+            VariableReferenceGraph.ScanReads(right, reads);
+
+            List<VariableSave>? inputs = null;
+            foreach (string read in reads)
+            {
+                int dot = read.IndexOf('.');
+                if (dot <= 0)
+                {
+                    continue;
+                }
+                InstanceSave? instance = Gum.ProjectServices.FormsBehaviorChain.FindInstanceInElementOrBase(container, read.Substring(0, dot));
+                if (instance == null || ObjectFinder.Self.GetElementSave(instance.BaseType) is not ComponentSave component)
+                {
+                    continue;
+                }
+
+                string property = read.Substring(dot + 1);
+                VariableSave? input = null;
+                if (liveRoot?.GetGraphicalUiElementByName(instance.Name) is { } liveInstance
+                    && liveInstance.TryReadFormsControlProperty(property, out object? live, out VariableSave? declaration))
+                {
+                    input = new VariableSave { Name = read, Type = declaration!.Type, Value = live, SetsValue = true };
+                }
+                else if (stateSave.GetValueRecursive(read) == null)
+                {
+                    object? declared = Gum.ProjectServices.FormsBehaviorChain.BuildFormsPropertyDefaultsFallback(component, instance)(read);
+                    if (declared != null)
+                    {
+                        VariableSave? declarationOfProperty = Gum.ProjectServices.FormsBehaviorChain
+                            .GetFormsPropertyDeclarations(component).FirstOrDefault(item => item.Name == property);
+                        input = new VariableSave { Name = read, Type = declarationOfProperty?.Type ?? string.Empty, Value = declared, SetsValue = true };
+                    }
+                }
+
+                if (input != null)
+                {
+                    (inputs ??= new List<VariableSave>()).Add(input);
+                }
+            }
+
+            if (inputs == null)
+            {
+                return stateSave;
+            }
+
+            StateSave copy = new StateSave { Name = stateSave.Name, ParentContainer = container };
+            foreach (VariableSave variable in stateSave.Variables)
+            {
+                if (!inputs.Any(item => item.Name == variable.Name))
+                {
+                    copy.Variables.Add(variable);
+                }
+            }
+            copy.Variables.AddRange(inputs);
+            return copy;
+#endif
+        }
+
         // The part of applying a reference line that both overloads of ApplyVariableReferencesOnSpecificOwner share:
         // split the line, find the left side's type and read the right side. Returns false for a comment or a line
         // that is not "left = right". A value that does not fit the left variable (see ReportedMismatch) comes back
         // null with mismatchReported set, so a caller does not treat that null as a value.
         private static bool TryReadReference(InstanceSave? instanceLeft, string referenceString, StateSave stateSave,
-            GraphicalUiElement? liveRoot, out string left, out string right, out string? leftSideType, out object? value,
+            GraphicalUiElement? liveRoot, bool readFormsInputs, out string left, out string right, out string? leftSideType, out object? value,
             out bool mismatchReported)
         {
             left = string.Empty;
@@ -1697,16 +1773,20 @@ namespace GumRuntime
 
             right = ResolveOwnerPrefix(split[1], instanceLeft?.Name, GetReferencableInstanceNames(stateSave.ParentContainer));
 
+            // The state the right side reads. A Forms-only property the state does not hold, or that a live Forms
+            // control holds a different value for, is put in a copy (see WithFormsPropertyInputs).
+            StateSave readState = readFormsInputs ? WithFormsPropertyInputs(stateSave, right, liveRoot) : stateSave;
+
             // Without Gum.Expressions the plain lookup also says what type the source variable is; a negation yields a bool.
             string? sourceType = null;
             if (CustomEvaluateExpression == null && !IsNegation(right))
             {
-                value = ReadPlainReference(stateSave, right, findSourceType: true, out sourceType);
+                value = ReadPlainReference(readState, right, findSourceType: true, out sourceType);
             }
             else
             {
                 RejectedCastValue = null;
-                value = GetRightSideValue(stateSave, right, leftSideType, liveRoot);
+                value = GetRightSideValue(readState, right, leftSideType, liveRoot);
                 sourceType = CustomEvaluateExpression == null ? "bool" : null;
                 object? rejectedValue = RejectedCastValue;
                 RejectedCastValue = null;

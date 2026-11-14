@@ -653,7 +653,7 @@ public partial class HeadlessErrorChecker : IHeadlessErrorChecker
         foreach (Match match in LocalReferencePathRegex.Matches(rightSide))
         {
             string referencedName = ElementSaveExtensions.DecodeOwnerName(match.Value);
-            if (!ReferenceKeywords.Contains(referencedName) && !VariableExists(owner, referencedName))
+            if (!ReferenceKeywords.Contains(referencedName) && !VariableExists(owner, referencedName, readFromOwnInstance: true))
             {
                 string? brokenCause = DescribeBrokenExposedVariable(owner, referencedName);
                 return brokenCause != null
@@ -669,7 +669,7 @@ public partial class HeadlessErrorChecker : IHeadlessErrorChecker
     /// variable of <paramref name="element"/>, walking into instance types and base types the way
     /// reference evaluation does.
     /// </summary>
-    private static bool VariableExists(ElementSave element, string variablePath)
+    private static bool VariableExists(ElementSave element, string variablePath, bool readFromOwnInstance = false)
     {
         VariableSave? exposed = FindExposedVariable(element, variablePath);
         if (exposed != null)
@@ -707,6 +707,16 @@ public partial class HeadlessErrorChecker : IHeadlessErrorChecker
             ElementSave? instanceType = ObjectFinder.Self.GetElementSave(instance.BaseType);
             // A missing instance type is already reported as a missing base type.
             if (instanceType == null || VariableExists(instanceType, variablePath.Substring(dot + 1)))
+            {
+                return true;
+            }
+            // A behavior-declared default is what a reference reads when nothing is stored, but only for a read of
+            // an instance of the reading element itself (the lookup the resolver makes), not one that passes through
+            // an exposed name, another element or a nested instance.
+            string property = variablePath.Substring(dot + 1);
+            if (readFromOwnInstance && property.IndexOf('.') < 0
+                && FormsBehaviorChain.GetFormsPropertyDeclarations(instanceType)
+                .Any(declaration => declaration.Name == property && declaration.Value != null))
             {
                 return true;
             }

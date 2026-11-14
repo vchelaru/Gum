@@ -122,12 +122,72 @@ public class VariableReferenceFormsPropertyReadTests : BaseTestClass
     }
 
     [Fact]
-    public void FirstApply_MaximumNeverStored_ControlHoldsTheBehaviorDefaultButTheRowReadsNothing()
+    public void FirstApply_MaximumNeverStored_RowReadsTheControlsBehaviorDefault()
     {
         Built built = Build(true, null, "Width = Slider.Maximum");
 
-        // pins current behavior; see model doc, inconsistency 5
         built.SliderControl.Maximum.ShouldBe(100.0);
+        built.Target.Width.ShouldBe(100f);
+    }
+
+    [Fact]
+    public void FirstApply_MinimumAuthoredByTheContainer_RowReadsWhatTheContainerAuthored()
+    {
+        // The behavior default is 0; the container authors 5 on its own Slider instance.
+        Built built = Build(true, 5.0, "Width = Slider.Minimum");
+
+        built.SliderControl.Minimum.ShouldBe(5.0);
+        built.Target.Width.ShouldBe(5f);
+    }
+
+    [Fact]
+    public void FirstApply_MinimumNeverStored_RowReadsTheBehaviorDefaultZero()
+    {
+        Built built = Build(true, null, "Width = Slider.Minimum + 7");
+
+        built.Target.Width.ShouldBe(7f);
+    }
+
+    [Fact]
+    public void Live_ValueRaisedByCodeAboveMaximumAndRefreshed_RowReadsTheClampedControlValue()
+    {
+        Built built = Build(true, 12.0, "Width = Slider.Value");
+
+        built.SliderControl.Value = 500.0;
+        built.OwnerGue.RefreshReferences("Slider.Value");
+
+        built.SliderControl.Value.ShouldBe(100.0);
+        built.Target.Width.ShouldBe(100f);
+    }
+
+    [Fact]
+    public void ToolApply_MaximumNeverStored_WritesTheBehaviorDeclaredDefault()
+    {
+        Built built = Build(true, null, "Width = Slider.Maximum");
+        built.Owner.DefaultState!.SetValue("Target.Width", 1f, "float");
+
+        built.Owner.ApplyVariableReferences(built.Owner.DefaultState!);
+
+        built.Owner.DefaultState!.GetValueRecursive("Target.Width").ShouldBe(100f);
+    }
+
+    [Fact]
+    public void ToolApply_MinimumStoredAndDefaultDeclared_StoredValueWins()
+    {
+        Built built = Build(true, 12.0, "Width = Slider.Minimum");
+        built.Owner.DefaultState!.SetValue("Target.Width", 1f, "float");
+
+        built.Owner.ApplyVariableReferences(built.Owner.DefaultState!);
+
+        built.Owner.DefaultState!.GetValueRecursive("Target.Width").ShouldBe(12f);
+    }
+
+    [Fact]
+    public void FirstApply_MaximumNeverStored_WithoutExpressions_DoubleIntoFloatStaysRefused()
+    {
+        Built built = Build(false, null, "Width = Slider.Maximum");
+
+        // The documented refusal of a double into a float without Gum.Expressions is unchanged.
         built.Target.Width.ShouldBe(150f);
     }
 
@@ -143,39 +203,36 @@ public class VariableReferenceFormsPropertyReadTests : BaseTestClass
     }
 
     [Fact]
-    public void Live_MinimumSetByCodeThenRefreshReferences_TargetStillHasTheStoredValue()
+    public void Live_MinimumSetByCodeThenRefreshReferences_RowReadsTheControl()
     {
         Built built = Build(true, 12.0, "Width = Slider.Minimum");
 
         built.SliderControl.Minimum = 5.0;
         built.OwnerGue.RefreshReferences("Slider.Minimum");
 
-        // pins current behavior; see model doc, inconsistency 5
-        built.Target.Width.ShouldBe(12f);
+        built.Target.Width.ShouldBe(5f);
     }
 
     [Fact]
-    public void Live_MinimumSetByCodeThenAnotherInputChanges_RowReadsTheStoredMinimumNotTheControl()
+    public void Live_MinimumSetByCodeThenAnotherInputChanges_RowReadsTheControl()
     {
         Built built = Build(true, 12.0, "Width = Slider.Minimum + Slider.Width");
 
         built.SliderControl.Minimum = 5.0;
         built.SliderGue.Width = 20;
 
-        // pins current behavior; see model doc, inconsistency 5 (12 + 20, not 5 + 20)
-        built.Target.Width.ShouldBe(32f);
+        built.Target.Width.ShouldBe(25f);
     }
 
     [Fact]
-    public void Live_MinimumNeverStoredSetByCode_TargetKeepsItsDefault()
+    public void Live_MinimumNeverStoredSetByCodeThenRefreshed_RowReadsTheControl()
     {
         Built built = Build(true, null, "Width = Slider.Minimum");
 
         built.SliderControl.Minimum = 5.0;
         built.OwnerGue.RefreshReferences("Slider.Minimum");
 
-        // pins current behavior; see model doc, inconsistency 5
-        built.Target.Width.ShouldBe(150f);
+        built.Target.Width.ShouldBe(5f);
     }
 
     [Fact]
@@ -225,13 +282,12 @@ public class VariableReferenceFormsPropertyReadTests : BaseTestClass
     }
 
     [Fact]
-    public void FirstApply_ValueStoredAboveMaximum_ControlClampsAndRowReadsTheStoredValue()
+    public void FirstApply_ValueStoredAboveMaximum_ControlClampsAndRowReadsTheClampedValue()
     {
         Built built = Build(true, 12.0, "Width = Slider.Value", extra: ("Slider.Value", 150.0));
 
-        // pins current behavior; see model doc, inconsistency 6
         built.SliderControl.Value.ShouldBe(100.0);
-        built.Target.Width.ShouldBe(150f);
+        built.Target.Width.ShouldBe(100f);
     }
 
     [Fact]

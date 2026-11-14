@@ -112,7 +112,7 @@ public static class BehaviorToolOnlyReferencesApplier
                 continue;
             }
 
-            Func<string, object?> fallback = BuildFormsPropertyDefaultsFallback(instanceComponent, instance);
+            Func<string, object?> fallback = FormsBehaviorChain.BuildFormsPropertyDefaultsFallback(instanceComponent, instance);
             foreach ((string left, string right) in GetReferenceLines(instanceComponent))
             {
                 // Only a Forms value the author set counts: with every Forms property at its default, a state
@@ -218,7 +218,7 @@ public static class BehaviorToolOnlyReferencesApplier
                 continue;
             }
 
-            Func<string, object?> fallback = BuildFormsPropertyDefaultsFallback(innerComponent, instance: null);
+            Func<string, object?> fallback = FormsBehaviorChain.BuildFormsPropertyDefaultsFallback(innerComponent, instance: null);
             foreach ((string left, string right) in GetReferenceLines(innerComponent))
             {
                 if (!ReadIdentifiers(right).Any(identifier => innerState.Variables.Any(item => item.Name == identifier)))
@@ -261,7 +261,7 @@ public static class BehaviorToolOnlyReferencesApplier
         // A value the Forms control assigns (a reference line that is not a category state) belongs to
         // Default, so a category state does not override it, whether it sets it by value or by a reference row (#6908).
         HashSet<string> formsAssigned = new HashSet<string>();
-        Func<string, object?> fallback = BuildFormsPropertyDefaultsFallback(component, instance: null);
+        Func<string, object?> fallback = FormsBehaviorChain.BuildFormsPropertyDefaultsFallback(component, instance: null);
         foreach ((string left, string right) in GetReferenceLines(component))
         {
             string? categoryName = ResolveLeftSideType(left, instance: null, defaultState);
@@ -438,7 +438,7 @@ public static class BehaviorToolOnlyReferencesApplier
 
     private static void ApplyBehaviorsOf(ComponentSave component, InstanceSave? instance, StateSave stateSave)
     {
-        Func<string, object?> fallback = BuildFormsPropertyDefaultsFallback(component, instance);
+        Func<string, object?> fallback = FormsBehaviorChain.BuildFormsPropertyDefaultsFallback(component, instance);
 
         // Two behaviors can write the same variable; a resting line must not undo what an earlier line
         // of this pass wrote, whichever behavior comes first.
@@ -566,62 +566,6 @@ public static class BehaviorToolOnlyReferencesApplier
         return elementOwningInstance == null
             ? null
             : ObjectFinder.Self.GetRootVariable(qualifiedLeftName, elementOwningInstance)?.Type;
-    }
-
-    /// <summary>
-    /// Builds a name-resolver that looks up bare or instance-qualified identifiers first
-    /// against <paramref name="component"/>'s own default state (its authored baseline) and
-    /// then against every linked behavior's <c>FormsProperty</c> declarations, returning the
-    /// declared <c>Value</c>. Used by <see cref="EvaluatedSyntax.FromSyntaxNode"/> as a
-    /// fallback when the state (the instance's state, when <paramref name="instance"/> is
-    /// non-null) has no authored value — mirroring the three-tier default resolution the rest
-    /// of the Forms-property feature uses (instance override → component default → behavior
-    /// declaration, see the <c>gum-forms-behaviors</c> skill). Consulting only the static
-    /// declaration here — skipping the component-default tier — was issue #4904: once a
-    /// component's own default diverged from the behavior's original declared default (e.g.
-    /// Orientation edited from the declared "Vertical" to "Horizontal"), an instance whose
-    /// value still equalled that stale declared default was wrongly resolved (here, and via
-    /// the "resting" comparison in <see cref="ApplyLine"/> that reuses this fallback) as if
-    /// nothing had changed, instead of inheriting the component's current default.
-    /// </summary>
-    private static Func<string, object?> BuildFormsPropertyDefaultsFallback(ComponentSave component, InstanceSave? instance)
-    {
-        string? instancePrefix = instance != null ? instance.Name + "." : null;
-        StateSave? componentDefaultState = instance != null ? component.DefaultState : null;
-        ElementSave? container = instance?.ParentContainer;
-        return name =>
-        {
-            // "Other.Prop" (from a FindAncestor line): the declared default of another instance's Forms property.
-            int dotIndex = name.IndexOf('.');
-            if (container != null && instancePrefix != null && dotIndex > 0 && !name.StartsWith(instancePrefix))
-            {
-                InstanceSave? other = AncestorFinder.FindInstanceInElementOrBase(container, name.Substring(0, dotIndex));
-                if (other != null && ObjectFinder.Self.GetElementSave(other.BaseType) is ComponentSave otherComponent)
-                {
-                    return BuildFormsPropertyDefaultsFallback(otherComponent, other)(name);
-                }
-            }
-
-            string lookupName = instancePrefix != null && name.StartsWith(instancePrefix)
-                ? name.Substring(instancePrefix.Length)
-                : name;
-
-            object? componentValue = componentDefaultState?.GetValue(lookupName);
-            if (componentValue != null)
-            {
-                return componentValue;
-            }
-
-            foreach (VariableSave declaration in FormsBehaviorChain.GetFormsPropertyDeclarations(component))
-            {
-                if (declaration.Name == lookupName)
-                {
-                    return declaration.Value;
-                }
-            }
-
-            return null;
-        };
     }
 
     /// <summary>

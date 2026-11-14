@@ -625,10 +625,65 @@ public partial class GraphicalUiElement
         {
             return true;
         }
+
+        // A Forms-only property lives on the Forms control, which holds the effective value: the behavior
+        // default, what code set, and the control's own clamping.
+        if (owner.TryReadFormsControlProperty(propertyName, out value, out _))
+        {
+            return true;
+        }
 #endif
         // A null cannot be seeded: the state would fall back to the authored value for it.
         return owner._referenceInputs != null && owner._referenceInputs.TryGetValue(propertyName, out value) && value != null;
     }
+
+#if !FRB
+    /// <summary>
+    /// Reads a behavior-declared Forms property (such as <c>Slider.Minimum</c>) from the live Forms control
+    /// of this element. Only a name some behavior on the element's type chain declares is read, so a
+    /// reference resolves exactly the properties the tool and the checker know about. False when the
+    /// element has no Forms control (the tool's canvas never creates one) or no such property.
+    /// </summary>
+    internal bool TryReadFormsControlProperty(string propertyName, out object? value, out VariableSave? declaration)
+    {
+        value = null;
+        declaration = null;
+        object? formsControl = (this as InteractiveGue)?.FormsControlAsObject;
+        ElementSave? element = ElementSave;
+        if (formsControl == null || element == null)
+        {
+            return false;
+        }
+
+        foreach (VariableSave candidate in Gum.ProjectServices.FormsBehaviorChain.GetFormsPropertyDeclarations(element))
+        {
+            if (candidate.Name == propertyName)
+            {
+                declaration = candidate;
+                break;
+            }
+        }
+        if (declaration == null)
+        {
+            return false;
+        }
+
+        try
+        {
+            System.Reflection.PropertyInfo? propertyInfo = GetFormsControlType(formsControl).GetProperty(propertyName);
+            if (propertyInfo == null || !propertyInfo.CanRead || propertyInfo.GetIndexParameters().Length != 0)
+            {
+                return false;
+            }
+            value = propertyInfo.GetValue(formsControl, null);
+        }
+        catch (System.Reflection.AmbiguousMatchException)
+        {
+            return false;
+        }
+        return value != null;
+    }
+#endif
 
     private static bool StateHasVariable(DataTypes.Variables.StateSave state, string name)
     {
