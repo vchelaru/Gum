@@ -210,6 +210,26 @@ public class VariableReferenceResolutionCheckTests : IDisposable
     #region Exposed variables
 
     [Fact]
+    public void Resolves_WhenExposedVariableIsSetOnOwner()
+    {
+        ComponentSave owner = AddSliderOwner();
+        SetDouble(owner, "Slider.Minimum", 1, exposedAs: "SliderMin");
+        ShouldResolve(owner, "Text = SliderMin");
+    }
+
+    [Fact]
+    public void Resolves_WhenExposedVariableIsOnBaseOfOwner()
+    {
+        ComponentSave baseOwner = AddSliderOwner("Custom/BaseOwner");
+        SetDouble(baseOwner, "Slider.Minimum", 1, exposedAs: "SliderMin");
+        ComponentSave owner = AddComponent("Custom/Owner", "Custom/BaseOwner");
+        AddInstance(owner, "MinText2", "Text");
+        ShouldResolve(owner, "Text = SliderMin", "MinText2");
+    }
+
+    [Fact]
+    // Reports because the exposure holds no Value (Expose() stores none), not because of SetsValue:
+    // the exposed-behavior-property rule needs a stored Value.
     public void Reports_WhenExposedBehaviorPropertyHasNoStoredValue()
     {
         ComponentSave owner = AddSliderOwner();
