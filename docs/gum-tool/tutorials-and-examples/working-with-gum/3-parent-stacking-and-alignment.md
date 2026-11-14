@@ -21,11 +21,14 @@ A StackPanelInstance now appears in MainScreen.
 
 <figure><img src="../../../.gitbook/assets/13_10_43_53.png" alt=""><figcaption><p>StackPanel in MainScreen</p></figcaption></figure>
 
-Instances can be added to the StackPanel by drag+dropping them onto the StackPanelInstance in the tree view.
+To add buttons to the StackPanel:
+
+1. Drag **ButtonStandard** from **Components** > **Controls** onto **StackPanelInstance** in the Project tab.
+2. Select the new button, then press `CTRL+C` and `CTRL+V` to add another button. Repeat until the stack of buttons extends past the bottom of the StackPanelInstance's outline.
 
 <figure><img src="../../../.gitbook/assets/13_10_45_30.gif" alt=""><figcaption><p>ButtonStandard instances added to a StackPanel</p></figcaption></figure>
 
-Additional instances can be added by selecting one of the existing buttons and pressing `CTRL+C`, `CTRL+V`.
+The buttons stack top to bottom inside StackPanelInstance.
 
 <figure><img src="../../../.gitbook/assets/13_10_58_39.png" alt=""><figcaption></figcaption></figure>
 
