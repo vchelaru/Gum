@@ -34,7 +34,14 @@ The buttons stack top to bottom inside StackPanelInstance.
 
 ### Alignment and Dock
 
-Once a StackPanel has been created, it can be moved and its children move with it. We can use the Alignment tab to position the dock accurately. To center the dock, click the Alignment tab, and then click the Anchor Center button.
+The **Alignment** tab positions the selected instance. Its **Anchor** buttons change position only, and its **Dock** buttons change position and size.
+
+To center the StackPanel:
+
+1. Select **StackPanelInstance** and click the **Alignment** tab.
+2. In the **Anchor** group, click the button in the middle of the grid.
+
+The StackPanelInstance is now centered in MainScreen.
 
 <figure><img src="../../../.gitbook/assets/image (91).png" alt=""><figcaption><p>Centering the StackPanel</p></figcaption></figure>
 
