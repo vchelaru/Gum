@@ -106,7 +106,7 @@ The preview automatically follows your select in Gum, unless you click to pin th
 Instances can be added to screens and components. To add an instance:
 
 1. Select the destination screen or component. For example, select the MainScreen.
-2. Drag a Standard or Component onto the Editor tab
+2. Drag a Standard or Component onto the Editor tab. For example, drag **ButtonStandard** from **Components** > **Controls**.
 3. Release the moue button and the instance appears in the desired location
 
 <figure><img src="../../../.gitbook/assets/13_06_05_38.gif" alt=""><figcaption><p>Adding instances by drag+dropping</p></figcaption></figure>
