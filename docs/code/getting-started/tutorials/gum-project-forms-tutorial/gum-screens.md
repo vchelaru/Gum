@@ -36,7 +36,7 @@ Add a second ButtonStandard instance by dropping Components/Controls/ButtonStand
 
 Be sure to select the TitleScreen first, then drag+drop. If you click the component instead, then it will be selected, so you must re-select the TitleScreen.
 
-The Gum tool includes lots of functionality for creating and customizing UI. For a more complete tutorial covering the Gum tool, see the [Gum Tool Intro Tutorials](../../../../gum-tool/tutorials-and-examples/intro-tutorials/). Feel free to spend some time creating your TitleScreen.
+The Gum tool includes lots of functionality for creating and customizing UI. For a more complete tutorial covering the Gum tool, see [Working with Gum](../../../../gum-tool/tutorials-and-examples/working-with-gum/README.md). Feel free to spend some time creating your TitleScreen.
 
 ## Setting Up Code Generation
 
