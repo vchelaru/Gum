@@ -74,6 +74,33 @@ public class HostSuppliedInputTests : BaseTestClass
         clicks.ShouldBe(1);
     }
 
+    [Theory]
+    [InlineData(30, 15, 1)]
+    [InlineData(150, 100, 0)]
+    public void Update_HighDpiHost_ScalesWindowCursorToFramebufferPixels(double windowX, double windowY, int expectedClicks)
+    {
+        // The window is half the framebuffer, so the host's cursor must be doubled to land on Gum's canvas.
+        _host.WindowWidth = 400;
+        _host.WindowHeight = 300;
+        _host.FramebufferWidth = 800;
+        _host.FramebufferHeight = 600;
+        Button button = AddButton();
+        button.X = 50;
+        button.Y = 20;
+        int clicks = 0;
+        button.Click += (_, _) => clicks++;
+        _host.CursorX = windowX;
+        _host.CursorY = windowY;
+        Frame();
+
+        _host.HeldButtons.Add(MouseButton.Left);
+        Frame();
+        _host.HeldButtons.Remove(MouseButton.Left);
+        Frame();
+
+        clicks.ShouldBe(expectedClicks);
+    }
+
     [Fact]
     public void Update_HostPressesAwayFromButton_DoesNotClick()
     {

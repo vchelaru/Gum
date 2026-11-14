@@ -404,33 +404,25 @@ By default Gum reads the mouse, keyboard, clipboard and gamepad from the `GlfwWi
 ```csharp
 public class MyHostInput : Gum.Input.IBrutalInput
 {
-    // Cursor position in window coordinates, and the window and framebuffer sizes.
+    // Update these from your window's events.
     public double CursorX { get; set; }
     public double CursorY { get; set; }
     public int WindowWidth { get; set; }
     public int WindowHeight { get; set; }
     public int FramebufferWidth { get; set; }
     public int FramebufferHeight { get; set; }
-
-    // Held state, read once per Update.
-    public bool IsMouseButtonDown(Gum.Input.MouseButton button) => leftIsDown && button == Gum.Input.MouseButton.Left;
-    public bool IsKeyDown(Gum.Forms.Input.Keys key) => heldKeys.Contains(key);
+    public string? ClipboardText { get; set; }
 
     // Raise these from your event loop.
     public event System.Action<double>? Scrolled;
     public event System.Action<uint>? CharTyped;
 
-    public string? ClipboardText { get; set; }
-    public void SetCursorShape(Gum.Wireframe.Cursors shape) { /* set your window's cursor */ }
-    public bool TryReadGamepad(int index, out Gum.Input.GamePadSnapshot snapshot)
-    {
-        snapshot = default;
-        return false;
-    }
+    // Return what is held right now.
+    public bool IsMouseButtonDown(Gum.Input.MouseButton button) => false;
+    public bool IsKeyDown(Gum.Forms.Input.Keys key) => false;
 
-    // Your own bookkeeping, filled in from your window's events.
-    bool leftIsDown;
-    System.Collections.Generic.HashSet<Gum.Forms.Input.Keys> heldKeys = new();
+    public void SetCursorShape(Gum.Wireframe.Cursors shape) { }
+    public bool TryReadGamepad(int index, out Gum.Input.GamePadSnapshot snapshot) { snapshot = default; return false; }
 }
 ```
 
