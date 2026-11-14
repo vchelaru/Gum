@@ -12,7 +12,7 @@ Before we begin looking at the Gum tool, we'll create a new project. The New Pro
 
 1. Enter a name for your project
 2. Select a location for your project
-3. Keep the forms and demo screen options selected
+3. Keep **Include Forms controls** and **Include demo screen** checked
 4. Select a theme - this tutorial series uses the Standard theme, but you are free to use a different theme. If you choose a different theme, there will be some differences between your selected theme and the tutorial screenshots.
 5. Leave **Create C# project** unchecked
 6. Click OK
