@@ -716,6 +716,8 @@ public class StandardElementsManager
                 Name = "HasEvents",
                 Category = "Behavior",
                 CanOnlyBeSetInDefaultState = true,
+                DetailText = "Only affects cursor input (mouse and touch)",
+                ToolTipText = "Only affects cursor input (mouse and touch)",
                 // We used to exclude them from instances, but there are plenty of situations where we want to hide events on an instance. It's similar to InputTransparent in XamForms
                 //ExcludeFromInstances = true
             };
