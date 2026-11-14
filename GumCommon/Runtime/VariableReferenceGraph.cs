@@ -138,10 +138,21 @@ public sealed class VariableReferenceGraph
             }
         }
         _liveRows = live.ToArray();
+        foreach (ReferenceRow row in _liveRows)
+        {
+            if (row.ReadsLiveLayout)
+            {
+                HasLiveLayoutRows = true;
+                break;
+            }
+        }
     }
 
     /// <summary>True when the element has at least one reference row.</summary>
     public bool HasRows => _loadOrderRows.Length > 0 || _cyclicRows.Length > 0;
+
+    /// <summary>True when a re-evaluable row reads a laid-out value such as <c>AbsoluteWidth</c>.</summary>
+    internal bool HasLiveLayoutRows { get; private set; }
 
     /// <summary>True when some row reads a variable another row writes.</summary>
     public bool HasChains => _hasChains;
@@ -430,6 +441,16 @@ public sealed class VariableReferenceGraph
             _scratch.Add(name);
         }
         Select(results, false, includeLiveLayoutRows);
+    }
+
+    /// <summary>
+    /// The rows that read a laid-out value, and the rows reading a result of one of those, in evaluation order.
+    /// </summary>
+    internal void FindLiveLayoutRows(List<ReferenceRow> results)
+    {
+        results.Clear();
+        _scratch.Clear();
+        Select(results, false, true);
     }
 
     /// <summary>

@@ -298,7 +298,7 @@ public class VariableReferenceLiveReadTests : BaseTestClass
     }
 
     [Fact]
-    public void FirstApply_AbsoluteWidthOfSource_IsZeroBeforeLayoutWithExpressions()
+    public void FirstApply_AbsoluteWidthOfSource_ReadsTheLaidOutValueWithExpressions()
     {
         GumProjectSave project = NewProject(true);
         ComponentSave component = NewComponent(project, "Panel", "Container", true, "Width = Source.AbsoluteWidth");
@@ -306,8 +306,8 @@ public class VariableReferenceLiveReadTests : BaseTestClass
 
         GraphicalUiElement panel = component.ToGraphicalUiElement();
 
-        // pins current behavior; see model doc, inconsistency 2
-        panel.GetGraphicalUiElementByName("Target")!.Width.ShouldBe(0f);
+        // rows reading a laid-out value are evaluated again once the build has laid out (8026)
+        panel.GetGraphicalUiElementByName("Target")!.Width.ShouldBe(50f);
     }
 
     [Fact]
@@ -322,6 +322,22 @@ public class VariableReferenceLiveReadTests : BaseTestClass
 
         // pins current behavior; see model doc, inconsistency 2
         panel.GetGraphicalUiElementByName("Target")!.Width.ShouldBe(80f);
+    }
+
+
+    [Fact]
+    public void FirstApply_AbsoluteWidthInNestedComponent_ReadsTheLaidOutValueWithExpressions()
+    {
+        GumProjectSave project = NewProject(true);
+        ComponentSave inner = NewComponent(project, "Inner", "Container", true, "Width = Source.AbsoluteWidth");
+        Store(inner.DefaultState!, "Source.Width", 50f);
+        ComponentSave outer = NewComponent(project, "Outer", "Container", false, null);
+        outer.Instances.Add(new InstanceSave { Name = "Child", BaseType = "Inner", ParentContainer = outer });
+
+        GraphicalUiElement panel = outer.ToGraphicalUiElement();
+
+        GraphicalUiElement child = panel.GetGraphicalUiElementByName("Child")!;
+        child.GetGraphicalUiElementByName("Target")!.Width.ShouldBe(50f);
     }
 
     [Fact]

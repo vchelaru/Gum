@@ -572,6 +572,36 @@ public partial class GraphicalUiElement
         VariableReferenceGraph.Evaluate(affected, evaluationState, this);
     }
 
+    /// <summary>
+    /// Evaluates the rows that read a laid-out value (<c>AbsoluteWidth</c> and so on) again on this element
+    /// and everything it contains. A build applies references while layout is suspended, so those rows read
+    /// zero; the build calls this once after its final layout (8026). Elements without such a row cost one
+    /// cached graph lookup.
+    /// </summary>
+    internal void ReevaluateLiveLayoutReferences()
+    {
+        VariableReferenceGraph? graph = GetReferenceGraph();
+        ElementSave? element = ElementSave;
+        if (graph != null && element != null && graph.HasLiveLayoutRows)
+        {
+            List<ReferenceRow> rows = new List<ReferenceRow>();
+            graph.FindLiveLayoutRows(rows);
+            DataTypes.Variables.StateSave evaluationState = new DataTypes.Variables.StateSave
+            {
+                Name = "ReferenceLayout",
+                ParentContainer = element
+            };
+            AddLiveInputs(rows, evaluationState);
+            VariableReferenceGraph.Evaluate(rows, evaluationState, this);
+        }
+
+        IList<GraphicalUiElement> contained = ContainedElements;
+        for (int i = 0; i < contained.Count; i++)
+        {
+            contained[i].ReevaluateLiveLayoutReferences();
+        }
+    }
+
     // Variables that have no property on the visual (a component's custom variables) are not held
     // anywhere on the live object, so the last value reported for each is kept here. Read only when the
     // object cannot be asked, and only for names some row reads. Holds the names a row of the default state reads
