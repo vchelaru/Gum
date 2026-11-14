@@ -1,12 +1,12 @@
 ---
 name: gum-variable-deep-dive
-description: Full variable lifecycle — VariableSave on ElementSave through runtime application on GraphicalUiElement and Forms controls. Triggers: styling, theming, RefreshStyles, value flow from save data to live visuals.
+description: "Full variable lifecycle: VariableSave on ElementSave through runtime application on GraphicalUiElement and Forms controls. Triggers: styling, theming, RefreshStyles, value flow from save data to live visuals."
 ---
 
 # Variable Lifecycle Deep Dive
 
 For individual subsystem references, see: **gum-tool-save-classes** (save model),
-**gum-property-assignment** (instantiation + SetProperty), **gum-forms-controls** (Forms
+**gum-architecture-layers** (Forms vs visual vs Renderable), **gum-property-assignment** (instantiation + SetProperty), **gum-forms-controls** (Forms
 state machine), **gum-runtime-variable-references** (ApplyAllVariableReferences).
 
 This skill connects them into one end-to-end picture.

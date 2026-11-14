@@ -1,6 +1,6 @@
 ---
 name: gum-runtime-topology
-description: Map of Gum's render-backend projects and every place that compiles shared Gum source. Triggers: moving/renaming/deleting runtime or GumCommon/RenderingLibrary files, AllLibraries.sln, SkiaGum.Wpf, FRB GumCoreShared/Forms shproj, duplicate same-FQN build errors, "what must I rebuild after a runtime refactor."
+description: "Map of Gum render-backend projects and every place that compiles shared Gum source. Triggers: moving/renaming/deleting runtime or GumCommon/RenderingLibrary files, AllLibraries.sln, SkiaGum.Wpf, FRB GumCoreShared/Forms shproj, duplicate same-FQN build errors, what must I rebuild after a runtime refactor. For the Forms/visual/Renderable layers see gum-architecture-layers."
 ---
 
 # Gum Runtime Topology

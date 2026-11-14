@@ -1,6 +1,6 @@
 ---
 name: gum-tool-errors
-description: Gum error detection/display. Triggers: Errors tab, '!' icons in tree view, ErrorChecker, ErrorViewModel, IErrorChecker, AllErrorsViewModel, MainErrorsPlugin, RequestErrorRefreshMessage, adding new error checks.
+description: "Gum error detection and display, including GUM0009 (variable reference that never applies). Triggers: Errors tab, ! icons in tree view, ErrorChecker, HeadlessErrorChecker, ErrorViewModel, IErrorChecker, AllErrorsViewModel, MainErrorsPlugin, RequestErrorRefreshMessage, adding new error checks."
 ---
 
 # Gum Tool Error System Reference
@@ -54,7 +54,7 @@ The tree's "!" follows every full check through `ErrorsChecked`, including the E
 | `GetMissingExternalFileErrorsFor` | GUM0006: referenced texture/font file missing (via `GumProjectDependencyWalker`); GUM0008 for a case-only difference |
 | `GetFontRangeEntryErrors` | Project-level warnings: GUM0010 a font-specific `FontRangeEntries` entry no Text's font reaches, GUM0011 an entry whose range `BmfcSave.GetIfIsValidRange` rejects (BMFont bakes the default, KernSmith drops the unreadable parts). GUM0010 runs `FontReferenceCollector` (through `FontRangeEntryChecker`, which the Fonts settings page also uses) over the project only when such an entry exists |
 | `GetTextOutsideFontRangeErrorsFor` | GUM0012 (warning): a literal `Text` value in any state has characters its font's ranges (`GetFontRanges`) leave out; skips pre-baked `.fnt` and GUM0011-invalid ranges |
-| `GetUnresolvableVariableReferenceErrorsFor` | GUM0009 (warning): a `VariableReferences` line reads an element, instance or variable the project doesn't have, so it never applies. The end-to-end oracles fail on it despite the warning severity. A line reading a Forms-behavior property follows the model in `gum-forms-behaviors` ("Two Layers in One Variable List") |
+| `GetUnresolvableVariableReferenceErrorsFor` | GUM0009 (warning): a `VariableReferences` line reads an element, instance or variable the project doesn't have, so it never applies. The end-to-end oracles fail on it despite the warning severity. A line reading a Forms-behavior property resolves only stored values, with no behavior-default fallback (see `gum-forms-behaviors`, "Two Layers in One Variable List") |
 
 ## Key Files
 

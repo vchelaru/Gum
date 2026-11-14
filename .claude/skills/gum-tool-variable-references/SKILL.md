@@ -1,11 +1,11 @@
 ---
 name: gum-tool-variable-references
-description: Gum variable references — Excel-like cross-instance/cross-element binding via Roslyn-parsed assignments. Triggers: VariableReferenceLogic, EvaluatedSyntax, ApplyVariableReferences, VariableChangedThroughReference, VariableReferences VariableListSave.
+description: "Gum variable references: Excel-like cross-instance/cross-element binding via Roslyn-parsed assignments, including lines that read a Forms-only (behavior) property. Triggers: VariableReferenceLogic, EvaluatedSyntax, ApplyVariableReferences, VariableChangedThroughReference, VariableReferences VariableListSave, a reference to a FormsProperty such as Slider.Minimum."
 ---
 
 # Variable References
 
-Variable references are Gum's system for keeping variables in sync across instances and elements, like cell references in a spreadsheet. A user writes `X = SomeOtherObject.X` and the left side stays updated whenever the right side changes.
+Variable references are Gum's system for keeping variables in sync across instances and elements, like cell references in a spreadsheet. A user writes `X = SomeOtherObject.X` and the left side stays updated whenever the right side changes. A line that reads a Forms-only behavior property (a FormsProperty) is a special case: see "Two Layers in One Variable List" in **gum-forms-behaviors**.
 
 ## Storage
 

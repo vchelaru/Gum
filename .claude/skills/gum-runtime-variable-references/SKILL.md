@@ -1,13 +1,13 @@
 ---
 name: gum-runtime-variable-references
-description: Runtime variable reference propagation and the optional Gum.Expressions NuGet. Triggers: ApplyAllVariableReferences, GumExpressionService, runtime styling/theming, GumExpressions project.
+description: "Runtime variable reference propagation and the optional Gum.Expressions NuGet, including references that read a Forms-only (behavior) property. Triggers: ApplyAllVariableReferences, GumExpressionService, runtime styling/theming, GumExpressions project, Text = Slider.Minimum in a built game."
 ---
 
 # Runtime Variable References
 
 ## Overview
 
-Variable references defined in the Gum tool can be re-evaluated at runtime. The primary use case is theming: modify centralized style values in code, propagate them across all elements, then create UI.
+Variable references defined in the Gum tool can be re-evaluated at runtime. The primary use case is theming: modify centralized style values in code, propagate them across all elements, then create UI. A line that reads a Forms-only behavior property resolves only from a stored value: see "Two Layers in One Variable List" in **gum-forms-behaviors**.
 
 ## Key API
 

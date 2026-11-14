@@ -1,21 +1,25 @@
 ---
 name: gum-architecture-layers
-description: Gum's Forms/Runtime/Renderable layering and which layer owns what. Triggers: "what layer does X belong in", GueDeriving, orienting in a new area of Gum's visual stack, confusing a Runtime with a Renderable.
+description: "The three layers of Gum: Forms (Button, FrameworkElement), the visual (Runtime: GueDeriving *Runtime, GraphicalUiElement) and Renderable, and which owns what. Triggers: what layer is this, Forms vs Visual vs Renderable, button.Visual, FormsControlAsObject, GueDeriving, confusing a Runtime with a Renderable, why the tool shows visual variables for a Forms control, behavior variables."
 ---
 
 # Gum's Three Layers
 
-Gum's visual stack is three layers, each owned by a different degree of sharing:
+Gum's visual stack is three layers, each owned by a different degree of sharing. The Runtime layer is what the docs, the tool and most other skills call the visual (`GraphicalUiElement` and the `GueDeriving` `*Runtime` classes):
 
 | Layer | Example | Owns | Shared how |
 |---|---|---|---|
 | **Forms** | `Button`, `TextBox` | Lookless interaction/state logic | Same `.cs` file for every backend — `FrameworkElement` and a growing set of controls arrive via the `GumCommon` project reference; the rest are still source-linked per backend from `MonoGameGum/Forms/` |
-| **Runtime** | `SpriteRuntime`, `TextRuntime`, `RectangleRuntime` (`GueDeriving`) | Gum layout + property forwarding to a Renderable | *Can* be linked across backends; some backends keep their own copy instead |
+| **Runtime (the visual)** | `SpriteRuntime`, `TextRuntime`, `RectangleRuntime` (`GueDeriving`) | Gum layout + property forwarding to a Renderable | *Can* be linked across backends; some backends keep their own copy instead |
 | **Renderable** | MonoGame `Sprite`, raylib draw calls | Actual per-backend drawing code | Effectively never shared — except XNA-likes (MonoGame/KNI/FNA), which are close enough to share |
 
 Forms are lookless — the same `Button.cs` works identically whether its `Visual` is a MonoGame, Skia, or raylib tree, because Forms only ever talks to a Runtime through Gum's property/layout API, never to backend drawing code directly. See **gum-forms-controls** for the Forms↔Visual split (a Visual is a Runtime tree rooted in an `InteractiveGue`).
 
 Runtime-level sharing across backends is real but partial — see **gum-runtime-topology** for which Runtimes are actually linked vs. forked per backend, and why (`#if` gates for texture/blend differences). Renderable-level drawing specifics (batching, matrices, effects) are backend-specific; see **gum-monogame-rendering** for the XNA-family renderer. The Runtime→Renderable property bridge (`SetProperty` → `CustomSetPropertyOnRenderable` → renderable) is in **gum-property-assignment**.
+
+## The tool shows the visual
+
+In Gum everything is a visual, so selecting a Button instance in the tool lists every visual variable (X, XUnits, origins, ...), not only button variables. In code a `Button` is only the Forms control and the visual is `button.Visual`. A behavior's `FormsProperties` appear in the instance's "Behavior" category, which puts Forms-only properties next to the visual variables; a `VariableReferences` line can read them, though references otherwise act on the visual. That case is in **gum-forms-behaviors** ("Two Layers in One Variable List"). The user docs cover the same split: [Controls vs Visuals: What Goes Where](../../../docs/code/about/for-wpf-users.md#controls-vs-visuals-what-goes-where) and [Visual/Logical Tree Separation](../../../docs/code/about/for-wpf-users.md#visuallogical-tree-separation).
 
 ## Why "Runtime" types exist
 
