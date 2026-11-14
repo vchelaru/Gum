@@ -25,7 +25,7 @@ public class VariableReferenceLiveReadTests : BaseTestClass
         base.Dispose();
     }
 
-    private static GumProjectSave NewProject(bool useExpressions)
+    internal static GumProjectSave NewProject(bool useExpressions)
     {
         ElementSaveExtensions.CustomEvaluateExpression = null;
         ElementSaveExtensions.CustomEvaluateExpressionAllBranches = null;
@@ -46,7 +46,7 @@ public class VariableReferenceLiveReadTests : BaseTestClass
         return project;
     }
 
-    private static ComponentSave NewComponent(GumProjectSave project, string name, string baseType, bool withInstances, string? targetRow)
+    internal static ComponentSave NewComponent(GumProjectSave project, string name, string baseType, bool withInstances, string? targetRow)
     {
         ComponentSave component = new ComponentSave { Name = name, BaseType = baseType };
         StateSave state = new StateSave { Name = "Default", ParentContainer = component };
@@ -66,12 +66,12 @@ public class VariableReferenceLiveReadTests : BaseTestClass
         return component;
     }
 
-    private static void Store(StateSave state, string name, object value)
+    internal static void Store(StateSave state, string name, object value)
     {
         state.Variables.Add(new VariableSave { Name = name, Type = "float", Value = value, SetsValue = true });
     }
 
-    private static object? StoredValue(ComponentSave component, string name) => component.DefaultState!.GetValueRecursive(name);
+    internal static object? StoredValue(ComponentSave component, string name) => component.DefaultState!.GetValueRecursive(name);
 
     // Panel: Source.Width stored 50, Target.Width stored 10, row Target.Width = Source.Width.
     private static (GumProjectSave Project, ComponentSave Component, GraphicalUiElement Panel, GraphicalUiElement Source, GraphicalUiElement Target) BuildPair(bool useExpressions)
