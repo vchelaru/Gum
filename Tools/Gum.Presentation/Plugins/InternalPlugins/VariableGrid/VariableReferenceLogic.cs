@@ -168,7 +168,7 @@ public class VariableReferenceLogic : IVariableReferenceLogic
             return;
         }
 
-        EvaluatedSyntax? evaluatedSyntax = EvaluatedSyntax.FromSyntaxNode(assignmentSyntax.Right, parentElement.GetDefaultStateOrThrow(), liveRoot: liveRoot);
+        EvaluatedSyntax? evaluatedSyntax = EvaluatedSyntax.FromSyntaxNode(assignmentSyntax.Right, ElementSaveExtensions.WithFormsPropertyInputs(parentElement.GetDefaultStateOrThrow(), assignmentSyntax.Right.ToString(), liveRoot), liveRoot: liveRoot);
 
         if (evaluatedSyntax == null)
         {
@@ -282,7 +282,7 @@ public class VariableReferenceLogic : IVariableReferenceLogic
                 continue;
             }
 
-            object? divisor = EvaluatedSyntax.FromSyntaxNode(binary.Right, state, liveRoot: liveRoot)?.Value;
+            object? divisor = EvaluatedSyntax.FromSyntaxNode(binary.Right, ElementSaveExtensions.WithFormsPropertyInputs(state, binary.Right.ToString(), liveRoot), liveRoot: liveRoot)?.Value;
             if (divisor is sbyte or byte or short or ushort or int or uint or long or ulong or float or double or decimal
                 && Convert.ToDouble(divisor) == 0)
             {

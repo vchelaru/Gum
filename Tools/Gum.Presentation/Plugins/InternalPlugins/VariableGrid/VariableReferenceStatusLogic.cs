@@ -70,7 +70,7 @@ public class VariableReferenceStatusLogic : IVariableReferenceStatusLogic
                     continue;
                 }
 
-                EvaluatedSyntax? evaluated = EvaluatedSyntax.FromSyntaxNode(assignment.Right, state);
+                EvaluatedSyntax? evaluated = EvaluatedSyntax.FromSyntaxNode(assignment.Right, ElementSaveExtensions.WithFormsPropertyInputs(state, assignment.Right.ToString(), null));
                 if (evaluated != null && evaluated.EvaluatedType == null)
                 {
                     return Prefix + VariableReferenceLogic.DescribeRightSideFailure(assignment.Right, state, null, owner, instance?.Name, expanded).NoteReason + ".";
