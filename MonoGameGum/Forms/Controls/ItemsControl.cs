@@ -215,6 +215,7 @@ public class ItemsControl : ScrollViewer
         {
             if(value.HasValue && InnerPanel != null)
             {
+                Orientation? previous = Orientation;
                 if(value == Controls.Orientation.Horizontal)
                 {
                     InnerPanel.ChildrenLayout =
@@ -225,7 +226,10 @@ public class ItemsControl : ScrollViewer
                     InnerPanel.ChildrenLayout =
                         global::Gum.Managers.ChildrenLayout.TopToBottomStack;
                 }
-                ReportFormsPropertyChanged();
+                if (previous != Orientation)
+                {
+                    ReportFormsPropertyChanged();
+                }
             }
         }
     }

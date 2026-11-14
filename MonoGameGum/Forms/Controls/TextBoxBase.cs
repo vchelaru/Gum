@@ -395,9 +395,13 @@ public abstract class TextBoxBase :
         get => maxLength;
         set
         {
+            int? previous = maxLength;
             maxLength = value;
             TruncateTextToMaxLength();
-            ReportFormsPropertyChanged();
+            if (previous != value)
+            {
+                ReportFormsPropertyChanged();
+            }
         }
     }
 
@@ -410,8 +414,11 @@ public abstract class TextBoxBase :
         get => _isReadOnly;
         set
         {
-            _isReadOnly = value;
-            ReportFormsPropertyChanged();
+            if (_isReadOnly != value)
+            {
+                _isReadOnly = value;
+                ReportFormsPropertyChanged();
+            }
         }
     }
 
@@ -432,8 +439,11 @@ public abstract class TextBoxBase :
         get => _acceptsTab;
         set
         {
-            _acceptsTab = value;
-            ReportFormsPropertyChanged();
+            if (_acceptsTab != value)
+            {
+                _acceptsTab = value;
+                ReportFormsPropertyChanged();
+            }
         }
     }
 

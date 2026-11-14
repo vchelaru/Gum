@@ -36,8 +36,12 @@ public class StackPanel : Panel
         get => Visual.StackSpacing;
         set
         {
+            float previous = Visual.StackSpacing;
             Visual.StackSpacing = value;
-            ReportFormsPropertyChanged();
+            if (previous != value)
+            {
+                ReportFormsPropertyChanged();
+            }
         }
     }
 

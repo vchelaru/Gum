@@ -185,6 +185,7 @@ public class ScrollViewer :
         get => (verticalScrollBar ?? horizontalScrollBar)?.SmallChange ?? 0;
         set
         {
+            double previous = SmallChange;
             _smallChange = value;
             _isSmallChangeSet = true;
             if (verticalScrollBar != null)
@@ -195,7 +196,10 @@ public class ScrollViewer :
             {
                 horizontalScrollBar.SmallChange = value;
             }
-            ReportFormsPropertyChanged();
+            if (previous != SmallChange)
+            {
+                ReportFormsPropertyChanged();
+            }
         }
     }
 
@@ -213,6 +217,7 @@ public class ScrollViewer :
         get => (verticalScrollBar ?? horizontalScrollBar)?.LargeChange ?? 0;
         set
         {
+            double previous = LargeChange;
             _largeChange = value;
             _isLargeChangeSet = true;
             if (verticalScrollBar != null)
@@ -223,7 +228,10 @@ public class ScrollViewer :
             {
                 horizontalScrollBar.LargeChange = value;
             }
-            ReportFormsPropertyChanged();
+            if (previous != LargeChange)
+            {
+                ReportFormsPropertyChanged();
+            }
         }
     }
 

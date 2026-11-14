@@ -70,16 +70,28 @@ public class FormsPropertySetterReportsTests : BaseTestClass
     public static IEnumerable<object[]> Inventory()
     {
         int index = 0;
-        foreach (Row row in Rows())
+        foreach (string theme in Themes)
         {
-            if (SweepScale.Includes(index++))
+            foreach (Row row in Rows())
             {
-                yield return new object[] { row.Behavior, row.Name };
+                if (SweepScale.Includes(index++))
+                {
+                    yield return new object[] { theme, row.Behavior, row.Name };
+                }
             }
         }
     }
 
-    private static GumProjectSave? _project;
+    // The plain template and one shipped theme, so a difference between the two is caught.
+    private static readonly string[] Themes = { "FormsTemplate", Path.Combine("FormsThemes", "DarkPro") };
+
+    // A behavior a theme ships no component for has no control to set. Named here with the reason, and asserted below,
+    // so a new behavior or a dropped component fails instead of passing without checking anything.
+    private static readonly Dictionary<string, string> NoComponentInTheme = new Dictionary<string, string>
+    {
+    };
+
+    private static readonly Dictionary<string, GumProjectSave> _projects = new Dictionary<string, GumProjectSave>();
 
     private static string ScreenName(string behavior, string name) => "Sweep_" + behavior + "_" + name;
 
@@ -87,13 +99,13 @@ public class FormsPropertySetterReportsTests : BaseTestClass
         project.Components.FirstOrDefault(c => c.Behaviors.Any(b => b.BehaviorName == behavior));
 
     // One screen per row: a control instance and a Text whose row reads the property.
-    private static GumProjectSave GetProject()
+    private static GumProjectSave GetProject(string theme)
     {
-        if (_project != null)
+        if (_projects.TryGetValue(theme, out GumProjectSave? existing))
         {
-            return _project;
+            return existing;
         }
-        GumProjectSave project = GumProjectSave.Load(Path.Combine(TemplatesFolder, "FormsTemplate", "GumProject.gumx"), out _)!;
+        GumProjectSave project = GumProjectSave.Load(Path.Combine(TemplatesFolder, theme, "GumProject.gumx"), out _)!;
         project.Initialize();
         foreach (Row row in Rows())
         {
@@ -113,8 +125,18 @@ public class FormsPropertySetterReportsTests : BaseTestClass
             project.Screens.Add(screen);
         }
         project.Initialize();
-        _project = project;
+        _projects[theme] = project;
         return project;
+    }
+
+    private static void RegisterRuntimes()
+    {
+        StandardRuntimeRegistrations.Register();
+        // A theme draws with shapes that need a rendering SystemManagers a headless test lacks; the references do not read them.
+        foreach (string unrendered in new[] { "Circle", "Rectangle", "Polygon" })
+        {
+            ElementSaveExtensions.RegisterGueInstantiation(unrendered, () => new Gum.GueDeriving.ContainerRuntime());
+        }
     }
 
     public override void Dispose()
@@ -145,17 +167,21 @@ public class FormsPropertySetterReportsTests : BaseTestClass
 
     [Theory]
     [MemberData(nameof(Inventory))]
-    public void SettingTheProperty_ShouldReEvaluateTheRowsThatReadIt(string behavior, string name)
+    public void SettingTheProperty_ShouldReEvaluateTheRowsThatReadIt(string theme, string behavior, string name)
     {
         GumExpressionService.Initialize();
-        GumProjectSave project = GetProject();
+        GumProjectSave project = GetProject(theme);
         if (ComponentOf(project, behavior) == null)
         {
+            NoComponentInTheme.ContainsKey(theme + ":" + behavior).ShouldBeTrue(
+                theme + " ships no component for " + behavior + "; list it with the reason");
             return;
         }
+        NoComponentInTheme.ContainsKey(theme + ":" + behavior).ShouldBeFalse(
+            theme + ":" + behavior + " has a component now; drop it from the skip list");
 
         ObjectFinder.Self.GumProjectSave = project;
-        StandardRuntimeRegistrations.Register();
+        RegisterRuntimes();
         Gum.Forms.FormsUtilities.RegisterFromFileFormRuntimeDefaults();
         GraphicalUiElement screen = project.Screens.Single(s => s.Name == ScreenName(behavior, name))
             .ToGraphicalUiElement(SystemManagers.Default, addToManagers: false);
@@ -199,5 +225,77 @@ public class FormsPropertySetterReportsTests : BaseTestClass
 
         afterRefresh.ShouldNotBe(initialText, "the control changed, so a read of it must differ");
         afterSetter.ShouldBe(afterRefresh, behavior + "." + name + " did not re-evaluate the row that reads it");
+    }
+
+    private static TabControl LoadTabControl(string theme, out GraphicalUiElement screen, out Gum.GueDeriving.TextRuntime probe)
+    {
+        GumExpressionService.Initialize();
+        GumProjectSave project = GetProject(theme);
+        ObjectFinder.Self.GumProjectSave = project;
+        RegisterRuntimes();
+        Gum.Forms.FormsUtilities.RegisterFromFileFormRuntimeDefaults();
+        screen = project.Screens.Single(s => s.Name == ScreenName("TabControlBehavior", "SelectedIndex"))
+            .ToGraphicalUiElement(SystemManagers.Default, addToManagers: false);
+        probe = (Gum.GueDeriving.TextRuntime)screen.GetGraphicalUiElementByName("Probe")!;
+        return (TabControl)((InteractiveGue)screen.GetGraphicalUiElementByName("Ctl1")!).FormsControlAsObject!;
+    }
+
+    [Theory]
+    [InlineData("FormsTemplate")]
+    [InlineData("FormsThemes/DarkPro")]
+    public void TabPushedByTheUser_ShouldReEvaluateTheRowsThatReadSelectedIndex(string theme)
+    {
+        TabControl tabs = LoadTabControl(theme, out GraphicalUiElement screen, out Gum.GueDeriving.TextRuntime probe);
+        tabs.AddTab("One");
+        TabItem second = tabs.AddTab("Two");
+        tabs.SelectedIndex = 0;
+        string? before = probe.Text;
+
+        second.IsSelected = true;
+
+        tabs.SelectedIndex.ShouldBe(1);
+        probe.Text.ShouldNotBe(before);
+        string? afterSelect = probe.Text;
+        screen.RefreshReferences("Ctl1.SelectedIndex");
+        probe.Text.ShouldBe(afterSelect);
+    }
+
+    [Theory]
+    [InlineData("FormsTemplate")]
+    [InlineData("FormsThemes/DarkPro")]
+    public void DefaultSelectionOfTheFirstTab_ShouldReEvaluateTheRowsThatReadSelectedIndex(string theme)
+    {
+        TabControl tabs = LoadTabControl(theme, out GraphicalUiElement screen, out Gum.GueDeriving.TextRuntime probe);
+        string? beforeTabs = probe.Text;
+
+        tabs.AddTab("One");
+
+        tabs.SelectedIndex.ShouldBe(0);
+        string? afterAdd = probe.Text;
+        screen.RefreshReferences("Ctl1.SelectedIndex");
+        probe.Text.ShouldBe(afterAdd);
+        afterAdd.ShouldNotBe(beforeTabs);
+    }
+
+    [Fact]
+    public void LayoutDerivedLargeChange_ShouldReEvaluateTheRowsThatReadIt()
+    {
+        GumExpressionService.Initialize();
+        GumProjectSave project = GetProject("FormsTemplate");
+        ObjectFinder.Self.GumProjectSave = project;
+        RegisterRuntimes();
+        Gum.Forms.FormsUtilities.RegisterFromFileFormRuntimeDefaults();
+        GraphicalUiElement screen = project.Screens.Single(s => s.Name == ScreenName("ScrollBarBehavior", "LargeChange"))
+            .ToGraphicalUiElement(SystemManagers.Default, addToManagers: false);
+        Gum.Forms.Controls.ScrollBar bar = (Gum.Forms.Controls.ScrollBar)((InteractiveGue)screen.GetGraphicalUiElementByName("Ctl1")!).FormsControlAsObject!;
+        Gum.GueDeriving.TextRuntime probe = (Gum.GueDeriving.TextRuntime)screen.GetGraphicalUiElementByName("Probe")!;
+
+        bar.SetComputedLargeChange(123);
+
+        bar.LargeChange.ShouldBe(123);
+        string? afterComputed = probe.Text;
+        screen.RefreshReferences("Ctl1.LargeChange");
+        probe.Text.ShouldBe(afterComputed);
+        afterComputed.ShouldBe("123");
     }
 }

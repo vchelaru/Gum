@@ -112,6 +112,27 @@ public class FormsPropertyReferenceAllocationTests : BaseTestClass
     }
 
     [Fact]
+    public void ControlSetter_SameValueAsBefore_AllocatesNothingEvenWhenARowReadsIt()
+    {
+        (GraphicalUiElement slider, _) = Build("Width = Slider.Minimum + Slider.Height");
+        Slider control = (Slider)((InteractiveGue)slider).FormsControlAsObject!;
+        control.Minimum = 5;
+        AllocationResult result = AllocationMeasurer.MeasureMinimum(
+            () => control.Minimum = 5,
+            attempts: 3,
+            warmupIterations: 50,
+            measuredIterations: 500);
+
+        result.BytesPerIteration.ShouldBe(0);
+    }
+
+    [Fact]
+    public void ControlSetter_OnlyARowReadingLaidOutValuesExists_AllocatesNothing()
+    {
+        MeasureControlSetter("Width = Slider.AbsoluteWidth").ShouldBe(0);
+    }
+
+    [Fact]
     public void ControlSetter_NoRowReadsTheProperty_AllocatesNothing()
     {
         MeasureControlSetter("Width = Slider.Height").ShouldBe(0);
@@ -126,3 +147,4 @@ public class FormsPropertyReferenceAllocationTests : BaseTestClass
         forms.ShouldBeLessThanOrEqualTo(visual + 128, $"visual setter {visual} bytes per call, Forms setter {forms}");
     }
 }
+

@@ -707,7 +707,7 @@ public partial class GraphicalUiElement
     /// </summary>
     internal void ReportFormsPropertyChanged(string propertyName)
     {
-        if (GetReferenceAudience(propertyName) != ReferenceAudience.None &&
+        if (GetReferenceAudience(propertyName, forFormsProperty: true) != ReferenceAudience.None &&
             TryReadFormsControlProperty(propertyName, out object? value, out _))
         {
             ReportReferenceSourceChanged(propertyName, value);
@@ -901,7 +901,7 @@ public partial class GraphicalUiElement
 
     // Which elements have a reference that reads the variable: this element's own, and the one
     // containing this instance. Allocates nothing, so a typed property can ask before boxing its value.
-    private ReferenceAudience GetReferenceAudience(string propertyName)
+    private ReferenceAudience GetReferenceAudience(string propertyName, bool forFormsProperty = false)
     {
         ReferenceAudience audience = ReferenceAudience.None;
         // A row writing its result, or this element applying its own default state: the load applies
@@ -915,8 +915,8 @@ public partial class GraphicalUiElement
         // reports it to this element itself.
         if (ElementSave != null && IsFullyCreated && propertyName.IndexOf('.') < 0)
         {
-            VariableReferenceGraph? graph = GetReferenceGraph();
-            if (graph != null && graph.IsAffectedBy(propertyName))
+            VariableReferenceGraph? graph = GetReferenceGraph(forFormsProperty);
+            if (graph != null && graph.IsAffectedBy(propertyName, includeLiveLayout: !forFormsProperty))
             {
                 audience |= ReferenceAudience.Self;
             }
@@ -926,8 +926,8 @@ public partial class GraphicalUiElement
         // A container that is loading applies its own rows after the state that wrote this value.
         if (container != null && container.IsFullyCreated && container._referenceLoadDepth == 0 && Tag is InstanceSave instance)
         {
-            VariableReferenceGraph? containerGraph = container.GetReferenceGraph();
-            if (containerGraph != null && containerGraph.IsAffectedBy(instance.Name, propertyName))
+            VariableReferenceGraph? containerGraph = container.GetReferenceGraph(forFormsProperty);
+            if (containerGraph != null && containerGraph.IsAffectedBy(instance.Name, propertyName, includeLiveLayout: !forFormsProperty))
             {
                 audience |= ReferenceAudience.Container;
             }
@@ -1054,7 +1054,7 @@ public partial class GraphicalUiElement
         }
     }
 
-    private VariableReferenceGraph? GetReferenceGraph()
+    private VariableReferenceGraph? GetReferenceGraph(bool trustCached = false)
     {
         ElementSave? element = ElementSave;
         // Standard elements (Sprite, Text, ...) hold the styling rows ApplyAllVariableReferences
@@ -1065,6 +1065,12 @@ public partial class GraphicalUiElement
         }
 
         VariableReferenceGraph? graph = _referenceGraph;
+        // A Forms property setter can run on every frame and almost never has a reader, and validating the graph walks every
+        // reference list of the element. It trusts the graph it has; a row added since is found by the next path that validates.
+        if (trustCached && graph != null)
+        {
+            return graph;
+        }
         if (graph == null || !graph.IsCurrent(element))
         {
             graph = VariableReferenceGraph.GetFor(element);

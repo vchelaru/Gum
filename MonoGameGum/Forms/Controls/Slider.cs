@@ -46,8 +46,11 @@ public class Slider : RangeBase, IInputReceiver
         get => _ticksFrequency;
         set
         {
-            _ticksFrequency = value;
-            ReportFormsPropertyChanged();
+            if (_ticksFrequency != value)
+            {
+                _ticksFrequency = value;
+                ReportFormsPropertyChanged();
+            }
         }
     }
 
@@ -62,8 +65,11 @@ public class Slider : RangeBase, IInputReceiver
         get => _isSnapToTickEnabled;
         set
         {
-            _isSnapToTickEnabled = value;
-            ReportFormsPropertyChanged();
+            if (_isSnapToTickEnabled != value)
+            {
+                _isSnapToTickEnabled = value;
+                ReportFormsPropertyChanged();
+            }
         }
     }
 

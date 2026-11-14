@@ -637,9 +637,13 @@ public class FrameworkElement : INotifyPropertyChanged
         {
             Tooltip? tooltip = ToolTipService.ToTooltip(value, memberName: "FrameworkElement.ToolTip");
 
+            object? previous = _toolTip;
             _toolTip = value;
             ToolTipService.RegisterTooltip(this, tooltip);
-            ReportFormsPropertyChanged();
+            if (!Equals(previous, value))
+            {
+                ReportFormsPropertyChanged();
+            }
         }
     }
 

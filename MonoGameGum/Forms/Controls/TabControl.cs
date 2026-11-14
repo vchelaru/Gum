@@ -124,7 +124,6 @@ public class TabControl : ItemsControl
             {
                 SelectTab(null);
             }
-            ReportFormsPropertyChanged();
         }
     }
 
@@ -857,6 +856,9 @@ public class TabControl : ItemsControl
     {
         if (args.AddedItems.Count > 0 || args.RemovedItems.Count > 0)
         {
+            // Every selection change lands here, the setter, a tab pushed by the user, and the default selection
+            // a first tab brings, so SelectedIndex is reported from here and not from its setter.
+            ReportFormsPropertyChanged(nameof(SelectedIndex));
             SelectionChanged?.Invoke(this, args);
         }
         PushSelectionIfChanged();

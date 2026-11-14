@@ -62,9 +62,13 @@ public abstract class RangeBase :
         get => _largeChange;
         set
         {
+            double previous = _largeChange;
             _largeChange = value;
             IsLargeChangeSet = true;
-            ReportFormsPropertyChanged();
+            if (previous != value)
+            {
+                ReportFormsPropertyChanged();
+            }
         }
     }
 
@@ -83,9 +87,10 @@ public abstract class RangeBase :
     /// </summary>
     protected internal void SetComputedLargeChange(double value)
     {
-        if (!IsLargeChangeSet)
+        if (!IsLargeChangeSet && _largeChange != value)
         {
             _largeChange = value;
+            ReportFormsPropertyChanged(nameof(LargeChange));
         }
     }
 
@@ -99,9 +104,13 @@ public abstract class RangeBase :
         get => _smallChange;
         set
         {
+            double previous = _smallChange;
             _smallChange = value;
             IsSmallChangeSet = true;
-            ReportFormsPropertyChanged();
+            if (previous != value)
+            {
+                ReportFormsPropertyChanged();
+            }
         }
     }
 
@@ -120,9 +129,10 @@ public abstract class RangeBase :
     /// </summary>
     protected internal void SetComputedSmallChange(double value)
     {
-        if (!IsSmallChangeSet)
+        if (!IsSmallChangeSet && _smallChange != value)
         {
             _smallChange = value;
+            ReportFormsPropertyChanged(nameof(SmallChange));
         }
     }
 
@@ -140,7 +150,10 @@ public abstract class RangeBase :
 
             OnMinimumChanged(oldValue, minimum);
             // After OnMinimumChanged, which may move Value (it reports itself): Minimum is final here.
-            ReportFormsPropertyChanged();
+            if (oldValue != minimum)
+            {
+                ReportFormsPropertyChanged();
+            }
         }
     }
 

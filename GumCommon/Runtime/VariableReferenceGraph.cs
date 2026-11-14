@@ -110,6 +110,10 @@ public sealed class VariableReferenceGraph
     private readonly bool _hasChains;
     private readonly HashSet<string> _scratch = new HashSet<string>();
 
+    // The last segment of every name a live row reads (Slider.Maximum -> Maximum), so a variable no row reads is rejected
+    // with one lookup instead of a walk over every row.
+    private readonly HashSet<string> _readMembers = new HashSet<string>();
+
     // What the graph was built from, so a changed row is noticed without rebuilding every frame.
     private readonly StateSave[] _sourceStates;
     private readonly List<VariableListSave> _sourceLists = new List<VariableListSave>();
@@ -138,6 +142,13 @@ public sealed class VariableReferenceGraph
             }
         }
         _liveRows = live.ToArray();
+        foreach (ReferenceRow row in _liveRows)
+        {
+            foreach (string read in row.ReadNames)
+            {
+                _readMembers.Add(read.Substring(read.LastIndexOf('.') + 1));
+            }
+        }
         foreach (ReferenceRow row in _liveRows)
         {
             if (row.ReadsLiveLayout)
@@ -520,12 +531,17 @@ public sealed class VariableReferenceGraph
     /// True when changing the variable can affect a row: a row reads it, or reads a laid-out value. A
     /// cheap check that avoids building anything for a change no row cares about.
     /// </summary>
-    public bool IsAffectedBy(string variableName)
+    public bool IsAffectedBy(string variableName, bool includeLiveLayout = true)
     {
+        if (!includeLiveLayout && variableName.IndexOf('.') < 0 && !_readMembers.Contains(variableName))
+        {
+            return false;
+        }
+
         for (int i = 0; i < _liveRows.Length; i++)
         {
             ReferenceRow row = _liveRows[i];
-            if (row.ReadsLiveLayout)
+            if (includeLiveLayout && row.ReadsLiveLayout)
             {
                 return true;
             }
@@ -544,12 +560,17 @@ public sealed class VariableReferenceGraph
     /// <summary>
     /// <see cref="IsAffectedBy(string)"/> for the variable <c>instanceName.memberName</c>, without building the name.
     /// </summary>
-    public bool IsAffectedBy(string instanceName, string memberName)
+    public bool IsAffectedBy(string instanceName, string memberName, bool includeLiveLayout = true)
     {
+        if (!includeLiveLayout && !_readMembers.Contains(memberName))
+        {
+            return false;
+        }
+
         for (int i = 0; i < _liveRows.Length; i++)
         {
             ReferenceRow row = _liveRows[i];
-            if (row.ReadsLiveLayout)
+            if (includeLiveLayout && row.ReadsLiveLayout)
             {
                 return true;
             }
