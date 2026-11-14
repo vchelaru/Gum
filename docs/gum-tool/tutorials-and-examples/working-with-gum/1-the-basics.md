@@ -99,9 +99,9 @@ The selected screen or component is displayed in the preview window. This previe
 
 Note that while these controls react to events, their reactions are just the built-in behaviors. For example the Detect Resolutions button does not actually have the ability to detect your screen's display adaptor's display resolutions.
 
-The preview automatically follows your select in Gum, unless you click to pin the selection.
+The Preview window shows the screen or component selected in Gum. The **pin** button, to the left of the **Preview** button, stops the Preview window from following the selection.
 
-<figure><img src="../../../.gitbook/assets/13_06_00_34.png" alt=""><figcaption></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/13_06_00_34.png" alt=""><figcaption><p>The pin button in the Editor tab toolbar</p></figcaption></figure>
 
 ### Adding Instances
 
