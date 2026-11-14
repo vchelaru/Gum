@@ -14,7 +14,7 @@ This page covers **manually managed** render targets, where you create the rende
 
 ### The Scene Drawn Before Gum Disappears (MonoGame, KNI, FNA)
 
-If your game draws its world and then draws Gum on top, a visible container with `IsRenderTarget` set to `true` can make everything drawn before `GumUI.Draw()` disappear, leaving only the Gum UI on a cleared background.
+If your game draws its world and then draws Gum on top, a visible container with `IsRenderTarget` set to `true` can make everything drawn before `GumUI.Draw()` disappear, leaving only the Gum UI on a cleared background. The container's `Alpha` and `Blend` then combine with that empty background instead of your scene. Content drawn by Gum itself is not affected, and raylib keeps what was drawn before Gum.
 
 To draw the container, Gum switches to the container's render target and then back to the target that was bound before. If that target uses `RenderTargetUsage.DiscardContents`, which is the default for the back buffer and for render targets created with default settings, switching back clears it. Gum logs a one-time `[Gum]` message when this is about to happen.
 
