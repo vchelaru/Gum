@@ -60,7 +60,7 @@ Use ready-made controls such as Button, ListBox, TextBox, and Slider, restyle th
 
 Open any screen or component in its own window running the real runtime, where buttons click, lists scroll, and text boxes take input.
 
-<figure><img src=".gitbook/assets/15_10 04 27.png" alt=""><figcaption><p>An inventory screen shown in Preview</p></figcaption></figure>
+<figure><img src=".gitbook/assets/15_10 55 19.webp" alt=""><figcaption><p>The Preview window runs the real runtime next to the editor</p></figcaption></figure>
 
 ### [Variable References](gum-tool/gum-elements/general-properties/variable-references.md)
 
