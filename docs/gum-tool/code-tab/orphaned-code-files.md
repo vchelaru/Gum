@@ -38,6 +38,10 @@ Detection is deliberately conservative, so it never flags a file Gum did not wri
 * **Generated files written by other tools.** Gum only recognizes a `.Generated.cs` file that carries the header its own code generation writes.
 * **Custom code you chose to keep.** Deleting an element removes its generated file, and leaves the custom `.cs` file whenever you leave **Delete custom code file (contains your code)** unchecked. Gum finds an orphaned custom file through its generated file, so once that generated file is gone the custom one is no longer reported. Delete it yourself if you later change your mind.
 
+## Finding Them From the Command Line
+
+`gumcli check <project>` reports the same files as **GUM0005** warnings, so a CI job can see them. Warnings do not change the exit code. Add `--json` to read each file's path and kind from `details`.
+
 ## Cleaning Up From the Command Line
 
 `gumcli codegen <project.gumj> --prune` regenerates the project and then deletes generated files with no matching element. This is often the better option for a project already under source control: it is explicit, it handles every file at once, and the result shows up as a reviewable diff.

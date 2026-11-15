@@ -9,6 +9,7 @@ using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
 using Gum.Expressions;
 using Gum.ProjectServices;
+using Gum.ProjectServices.CodeGeneration;
 
 namespace Gum.Cli.Commands;
 
@@ -80,7 +81,8 @@ public static class CheckCommand
         ITypeResolver typeResolver = new DefaultTypeResolver();
         HeadlessErrorChecker checker = new HeadlessErrorChecker(
             typeResolver,
-            new IAdditionalErrorSource[] { new AnimationKeyframeErrorSource(new FileElementAnimationsProvider()) })
+            new IAdditionalErrorSource[] { new AnimationKeyframeErrorSource(new FileElementAnimationsProvider()) },
+            new HeadlessOrphanCodeFileProvider())
         {
             ReportsLeftoverInstanceVariables = true
         };
