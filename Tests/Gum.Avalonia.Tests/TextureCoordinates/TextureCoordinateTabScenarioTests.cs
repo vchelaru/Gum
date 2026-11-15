@@ -3,6 +3,7 @@ using Avalonia.Headless;
 using Avalonia.Input;
 using Gum.DataTypes;
 using Gum.Avalonia.Shell;
+using Gum.Avalonia.Tests.Harness;
 using Gum.Dialogs;
 using Gum.Managers;
 using Gum.Plugins.PropertiesWindowPlugin;
@@ -351,6 +352,8 @@ public class TextureCoordinateTabScenarioTests
             tab.Select(icon);
             int doubleClicks = 0;
             tab.Canvas.DoubleClick += (_, _) => doubleClicks++;
+            // A stopped clock keeps the clicks inside the double-click window however slow a frame is.
+            tab.Canvas.TimeManager.SetTimeProvider(new ManualTimeProvider());
             Point press = tab.WindowPointOf(64, 64);
 
             tab.Drag(press, tab.WindowPointOf(104, 64));
