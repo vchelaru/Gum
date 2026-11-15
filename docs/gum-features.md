@@ -56,9 +56,9 @@ Use ready-made controls such as Button, ListBox, TextBox, and Slider, restyle th
 
 <figure><img src=".gitbook/assets/15_10 02 11.png" alt=""><figcaption><p>Forms controls in the Hazard theme</p></figcaption></figure>
 
-### [Live Preview](gum-tool/editor-tab.md#preview)
+### [Live Preview and Hot Reload](gum-tool/editor-tab.md#preview)
 
-Open any screen or component in its own window running the real runtime, where buttons click, lists scroll, and text boxes take input.
+Open any screen or component in its own window running the real runtime, where buttons click, lists scroll, and text boxes take input, and see your running game update when you save a change in the editor.
 
 <figure><img src=".gitbook/assets/15_14 38 24.gif" alt=""><figcaption><p>The Preview window runs the real runtime next to the editor</p></figcaption></figure>
 
@@ -102,7 +102,7 @@ Render a container to its own texture, then fade, blend, or mask it or apply a s
 
 Show sprites and NineSlice panels from image files, or SVG and Lottie vector art through SkiaSharp.
 
-<figure><img src=".gitbook/assets/image (147).png" alt=""><figcaption><p>An Svg instance</p></figcaption></figure>
+<figure><img src=".gitbook/assets/15_15 31 40.png" alt=""><figcaption><p>An SVG logo displayed in the Gum editor</p></figcaption></figure>
 
 ### [Rich Text and Fonts](code/standard-visuals/textruntime/bbcode.md)
 
@@ -115,14 +115,6 @@ Style individual words with BBCode tags, and generate fonts at runtime from a fo
 Link a CSV or RESX file to your project and switch languages in the editor to check how longer text fits your layout.
 
 <figure><img src=".gitbook/assets/15_13 16 27.png" alt=""><figcaption><p>Localization files and language selection</p></figcaption></figure>
-
-### [Hot Reload](code/debugging/hot-reload.md)
-
-Save a change in the editor and watch your running game update without a restart.
-
-{% hint style="warning" %}
-**TODO:** Screenshot of a game and the editor side by side.
-{% endhint %}
 
 ### [Full Code Generation](gum-tool/code-tab/README.md)
 
@@ -140,17 +132,11 @@ Bind controls to a view model so your UI stays in sync with your game data.
 
 Publish with Native AOT or trimming after converting your project to the JSON file format.
 
-{% hint style="warning" %}
-**TODO:** Screenshot of a Native AOT published game.
-{% endhint %}
-
 ### [Customizable Down to the Renderer](code/styling/code-only-styling/adding-and-removing-visual-children.md)
 
 Replace the visuals behind any control, down to adding your own renderable types, when styling is not enough.
 
-{% hint style="warning" %}
-**TODO:** Screenshot of a control with a replaced background.
-{% endhint %}
+<figure><img src=".gitbook/assets/Legends2.jpg" alt=""><figcaption><p>The UI of Champions of Anteria</p></figcaption></figure>
 
 ### [Tooling](cli/README.md)
 
