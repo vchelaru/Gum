@@ -42,3 +42,4 @@ re-litigating it.
 | [0020](0020-bring-unity-and-godot-into-scope.md) | Bring Unity and Godot into scope, and widen the mission beyond UI-less frameworks | Accepted | 2026-09-30 |
 | [0021](0021-converge-sprite-nineslice-container-polygon-dispatch.md) | Converge Sprite/NineSlice/Container/Polygon dispatch onto their Runtimes, smallest-first | Accepted | 2026-07-16 |
 | [0022](0022-reactive-variable-references-within-a-component.md) | Re-evaluate variable references live, within one component | Accepted | 2026-10-05 |
+| [0023](0023-ui-performance-direction.md) | UI performance direction: sub-millisecond full redraw, drawn straight to the back buffer | Accepted | 2026-11-15 |
