@@ -211,3 +211,5 @@ For a working project, see the Gum Silk.NET sample:
 {% embed url="https://github.com/vchelaru/Gum/tree/main/Samples/SilkNetGum" %}
 
 <figure><img src="../../../../.gitbook/assets/22_12 20 45.png" alt=""><figcaption><p>Gum running in a Silk.NET project</p></figcaption></figure>
+
+To start building UI, continue with the [code-only Forms tutorial](../../tutorials/code-only-gum-forms-tutorial/README.md).
