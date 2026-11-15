@@ -203,7 +203,7 @@ public class PlatformProjectScaffolderTests : IDisposable
         _sut.Create(projectDirectory, HostPlatform.Brutal, includeFormsTemplate: true);
 
         string program = File.ReadAllText(Path.Combine(projectDirectory, "Program.cs"));
-        program.ShouldContain("if (OperatingSystem.IsMacOS())");
+        program.ShouldContain("if (System.OperatingSystem.IsMacOS())");
         program.ShouldContain("(GlfwWindowHint)0x22006");
     }
 
