@@ -18,6 +18,13 @@ public interface IProjectOpenRequestRouter
     Task RequestOpenAsync(IEnumerable<string> paths);
 
     /// <summary>
+    /// Handles a request from another Gum launch: like <see cref="RequestOpenAsync(IEnumerable{string})"/>,
+    /// then selects <see cref="SingleInstance.OpenRequest.Element"/> once its project is loaded. A project
+    /// that is already open is not loaded again. The latest request received during startup wins.
+    /// </summary>
+    Task RequestOpenAsync(SingleInstance.OpenRequest request);
+
+    /// <summary>
     /// Returns and clears the project requested during startup, or null if there is none. Called by
     /// the startup project load so the requested project replaces the last-opened one.
     /// </summary>

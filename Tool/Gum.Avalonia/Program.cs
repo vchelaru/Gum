@@ -8,6 +8,7 @@ using Gum.Diagnostics;
 using Gum.Services;
 using Gum.Services.Dialogs;
 using Gum.Settings;
+using Gum.Startup.SingleInstance;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -36,6 +37,15 @@ public static class Program
             return 1;
         }
 
+        // First, before a window or a project load: a launch that finds the project already owned hands
+        // its request over and exits, and the owner's pipe exists before the slow startup begins.
+        using SingleInstanceGate? gate = EnterSingleInstanceGate(options);
+        if (gate?.Outcome == GateOutcome.HandedOff)
+        {
+            Console.Out.WriteLine("Handed " + options.HandoffRequest!.Project + " to the running Gum.");
+            return 0;
+        }
+
         // Before anything reads or writes a per-user file.
         ApplyUserDataFolder(options);
         if (options.ExitAfterSeconds is double exitAfterSeconds)
@@ -52,7 +62,14 @@ public static class Program
         UnhandledExceptionHooks.InstallProcessHooks(crashReporter);
 
         using IHost host = CreateHostBuilder(args)
-            .ConfigureServices(serviceCollection => serviceCollection.AddSingleton<ICrashReporter>(crashReporter))
+            .ConfigureServices(serviceCollection =>
+            {
+                serviceCollection.AddSingleton<ICrashReporter>(crashReporter);
+                if (gate?.Inbox is { } inbox)
+                {
+                    serviceCollection.AddSingleton<IOpenRequestInbox>(inbox);
+                }
+            })
             .Build();
         StartupTiming.Mark("Host built");
         Locator.Register(host.Services);
@@ -68,6 +85,30 @@ public static class Program
 
         host.StopAsync().GetAwaiter().GetResult();
         return exitCode;
+    }
+
+    // Null when the launch does not take part. Waits for an owner that is still starting, so a launch
+    // that arrives during startup is delivered instead of opening a second copy.
+    private static SingleInstanceGate? EnterSingleInstanceGate(HeadOptions options)
+    {
+        if (!options.UsesSingleInstance)
+        {
+            return null;
+        }
+
+        SingleInstanceGate gate = SingleInstanceGate.Enter(
+            options.HandoffRequest!,
+            InstanceIdentity.DefaultInstanceDirectory(),
+            Environment.UserName,
+            InstanceIdentity.IsFileSystemCaseSensitive(),
+            TimeSpan.FromSeconds(15),
+            WindowsForegroundPermission.Allow);
+        if (gate.Outcome == GateOutcome.Unclaimed)
+        {
+            Console.Error.WriteLine(gate.Message + " Starting a new Gum.");
+        }
+
+        return gate;
     }
 
     /// <summary>
