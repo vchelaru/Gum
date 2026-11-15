@@ -1506,7 +1506,45 @@ public partial class GraphicalUiElement
             foreach (KeyValuePair<string, string> applied in _appliedCategoryStates.ToArray())
             {
                 ApplyState(applied.Key, applied.Value);
+                ReassertContainerOverrides(applied.Key, applied.Value);
             }
+        }
+    }
+
+    // A state applied by name overwrites the values the containing elements gave this instance (a ListBox
+    // sizing its ScrollBar, a screen sizing the ListBox). Building applies the state first and the
+    // containers' values after it, so re-applying the state must put those values back, innermost
+    // container first so the outermost one wins.
+    private void ReassertContainerOverrides(string categoryName, string stateName)
+    {
+        if (Tag is not InstanceSave instance
+            || !mCategories.TryGetValue(categoryName, out StateSaveCategory? category)
+            || category.States.FindByName(stateName) is not { } state)
+        {
+            return;
+        }
+
+        string path = instance.Name;
+        GraphicalUiElement? container = ElementGueContainingThis;
+        StateSave? containerState = container?.ElementSave?.DefaultState ?? instance.ParentContainer?.DefaultState;
+        while (containerState != null)
+        {
+            foreach (VariableSave variable in state.Variables)
+            {
+                if (variable.SetsValue && variable.Value != null
+                    && containerState.GetValueRecursive(path + "." + variable.Name) is { } overridden)
+                {
+                    SetProperty(variable.Name, overridden);
+                }
+            }
+
+            if (container?.Tag is not InstanceSave containerInstance)
+            {
+                break;
+            }
+            path = containerInstance.Name + "." + path;
+            container = container.ElementGueContainingThis;
+            containerState = container?.ElementSave?.DefaultState ?? containerInstance.ParentContainer?.DefaultState;
         }
     }
 
