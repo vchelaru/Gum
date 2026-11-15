@@ -1079,25 +1079,46 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
         {
             var textBlock = GetCachedTextBlock();
             
-            // Gum uses counterclockwise rotation, Skia uses clockwise, so invert. The absolute rotation
-            // includes every parent's, as on MonoGame.
-            SKMatrix rotationMatrix = SKMatrix.CreateRotationDegrees(-this.GetAbsoluteRotation());
-            // The text turns about its top-left, so the vertical alignment offset turns with it, as on
-            // MonoGame and Raylib. Horizontal alignment is already inside the block's own layout.
-            SKPoint verticalOffset = rotationMatrix.MapVector(0, GetVerticalAlignmentOffset(textBlock));
-            var absoluteX = this.GetAbsoluteX() + verticalOffset.X;
-            var absoluteY = this.GetAbsoluteY() + verticalOffset.Y;
-            (absoluteX, absoluteY) = GetSnappedOrigin(absoluteX, absoluteY, canvas.TotalMatrix);
+            float absoluteRotation = this.GetAbsoluteRotation();
+            SKMatrix canvasMatrix = canvas.TotalMatrix;
+            // Unrotated text under a scale-and-translate canvas (the usual case) snaps and positions with plain
+            // arithmetic and one Translate, instead of inverting the canvas matrix and concatenating three
+            // matrices (about 0.0003 ms per draw). It snaps to the same device pixel (the unrounded floats can differ slightly).
+            bool isSimple = absoluteRotation == 0
+                && canvasMatrix.SkewX == 0 && canvasMatrix.SkewY == 0 && canvasMatrix.Persp0 == 0 && canvasMatrix.Persp1 == 0
+                && canvasMatrix.Persp2 == 1 && canvasMatrix.ScaleX != 0 && canvasMatrix.ScaleY != 0;
 
-            SKMatrix translateMatrix = SKMatrix.CreateTranslation(absoluteX, absoluteY);
-            // Continue to apply the previou matrix in case there is scaling
-            // for device density
-            SKMatrix result = rotationMatrix;
+            float absoluteX;
+            float absoluteY;
+            SKMatrix result = default;
+            if (isSimple)
+            {
+                absoluteX = this.GetAbsoluteX();
+                absoluteY = this.GetAbsoluteY() + GetVerticalAlignmentOffset(textBlock);
+                if (EffectiveTextRenderingPositionMode == TextRenderingPositionMode.SnapToPixel)
+                {
+                    absoluteX = (MathFunctions.RoundToInt(canvasMatrix.ScaleX * absoluteX + canvasMatrix.TransX) - canvasMatrix.TransX) / canvasMatrix.ScaleX;
+                    absoluteY = (MathFunctions.RoundToInt(canvasMatrix.ScaleY * absoluteY + canvasMatrix.TransY) - canvasMatrix.TransY) / canvasMatrix.ScaleY;
+                }
+            }
+            else
+            {
+                // Gum uses counterclockwise rotation, Skia uses clockwise, so invert. The absolute rotation
+                // includes every parent's, as on MonoGame.
+                SKMatrix rotationMatrix = SKMatrix.CreateRotationDegrees(-absoluteRotation);
+                // The text turns about its top-left, so the vertical alignment offset turns with it, as on
+                // MonoGame and Raylib. Horizontal alignment is already inside the block's own layout.
+                SKPoint verticalOffset = rotationMatrix.MapVector(0, GetVerticalAlignmentOffset(textBlock));
+                absoluteX = this.GetAbsoluteX() + verticalOffset.X;
+                absoluteY = this.GetAbsoluteY() + verticalOffset.Y;
+                (absoluteX, absoluteY) = GetSnappedOrigin(absoluteX, absoluteY, canvasMatrix);
 
-            SKMatrix.Concat(
-                ref result, translateMatrix, result);
-            SKMatrix.Concat(
-                ref result, canvas.TotalMatrix, result);
+                SKMatrix translateMatrix = SKMatrix.CreateTranslation(absoluteX, absoluteY);
+                // Continue to apply the previous matrix in case there is scaling for device density.
+                result = rotationMatrix;
+                SKMatrix.Concat(ref result, translateMatrix, result);
+                SKMatrix.Concat(ref result, canvasMatrix, result);
+            }
 
             canvas.Save();
 
@@ -1112,7 +1133,14 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
                 canvas.ClipTo(clipper);
             }
 
-            canvas.SetMatrix(result);
+            if (isSimple)
+            {
+                canvas.Translate(absoluteX, absoluteY);
+            }
+            else
+            {
+                canvas.SetMatrix(result);
+            }
 
             // MaxLettersToShow (issue #3678): the paint block reveals only the first N letters, but
             // vertical alignment above was computed from the full block so the revealed letters stay in
