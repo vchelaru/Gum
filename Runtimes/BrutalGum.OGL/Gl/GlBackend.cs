@@ -41,7 +41,7 @@ internal sealed unsafe class GlTarget : IBrutalTarget
         _height = height;
     }
 
-    public SKCanvas Canvas => _direct.Canvas;
+    public SKCanvas Canvas => _ownActive ? _ownSurface!.Canvas : _direct.Canvas;
 
     public void Begin()
     {
@@ -54,13 +54,53 @@ internal sealed unsafe class GlTarget : IBrutalTarget
         (_gameX, _gameY, _gameWidth, _gameHeight) = (viewport[0], viewport[1], viewport[2], viewport[3]);
         _bindFramebuffer(GL_FRAMEBUFFER, 0);
         _viewport(0, 0, _width, _height);
-        _direct.Begin();
+        FlushProbe.BeginStart = System.Diagnostics.Stopwatch.GetTimestamp();
+        if (FlushProbe.OwnPass && _ownSurface != null)
+        {
+            // SPIKE: SGR's Begin minus the GL queries, with a chosen reset mask.
+            if (FlushProbe.Reset != "none") Gr.ResetContext();
+            _ownSave = _ownSurface.Canvas.Save();
+            _ownActive = true;
+        }
+        else _direct.Begin();
+        FlushProbe.BeginEnd = System.Diagnostics.Stopwatch.GetTimestamp();
     }
+
+    private static GRContext? _gr;
+    private GRContext Gr => _gr ??= (GRContext)typeof(SkiaGlContext).GetField("_grContext", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!
+        .GetValue(typeof(SkiaDirectCanvas).GetField("_context", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!.GetValue(_direct))!;
+    private SKSurface? _ownSurface;
+    private int _ownSave;
+    private bool _ownActive;
 
     public void End()
     {
-        _direct.End();
+        if (FlushProbe.Raw > 0) { FlushProbe.GlTargetGr = Gr; FlushProbe.DrawRaw(Canvas); }
+        FlushProbe.FlushStart = System.Diagnostics.Stopwatch.GetTimestamp();
+        if (FlushProbe.Enabled)
+        {
+            if (_ownActive) _ownSurface!.Canvas.RestoreToCount(_ownSave);
+            else _direct.Canvas.RestoreToCount(1);
+            Gr.Flush(false);
+            FlushProbe.FlushEnd = System.Diagnostics.Stopwatch.GetTimestamp();
+            if (!FlushProbe.Defer) Gr.Submit(false);
+        }
+        else FlushProbe.FlushEnd = System.Diagnostics.Stopwatch.GetTimestamp();
+        FlushProbe.SubmitEnd = System.Diagnostics.Stopwatch.GetTimestamp();
+        if (_ownActive)
+        {
+            _ownActive = false;
+            if (!FlushProbe.Enabled) { _ownSurface!.Canvas.RestoreToCount(_ownSave); _ownSurface.Flush(); }
+        }
+        else
+        {
+            _direct.End();
+            if (FlushProbe.OwnPass && _ownSurface == null)
+                _ownSurface = (SKSurface?)typeof(SkiaDirectCanvas).GetField("_backBufferSurface", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!.GetValue(_direct);
+        }
         RestoreGameState();
+        FlushProbe.EndEnd = System.Diagnostics.Stopwatch.GetTimestamp();
+        if (FlushProbe.Enabled) FlushProbe.FrameDone();
     }
 
     public void EndWithoutDrawing() => End();
@@ -84,6 +124,22 @@ internal sealed class GlBackend : IBrutalGpuBackend
     public GlBackend()
     {
         _context = new SkiaGlContext(GetProc);
+        if (FlushProbe.GlTime || FlushProbe.CtxOpt != null)
+        {
+            // SPIKE (#8098): rebuild the GRContext with timing wrappers and/or options variants.
+            var field = typeof(SkiaGlContext).GetField("_grContext", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!;
+            ((GRContext)field.GetValue(_context)!).Dispose();
+            var glInterface = GRGlInterface.Create(name => FlushProbe.Wrap(name, GetProc(name)))!;
+            var options = new GRContextOptions();
+            switch (FlushProbe.CtxOpt)
+            {
+                case "map0": options.BufferMapThreshold = 0; break;
+                case "nomap": options.BufferMapThreshold = int.MaxValue; break;
+                case "nostencil": options.AvoidStencilBuffers = true; break;
+                case "atlas": options.GlyphCacheTextureMaximumBytes = 64 * 1024 * 1024; break;
+            }
+            field.SetValue(_context, GRContext.CreateGl(glInterface, options));
+        }
         _direct = new SkiaDirectCanvas(_context);
     }
 
