@@ -56,12 +56,15 @@ try
         benchmarkScreen.ShowOnly(region);
         Console.WriteLine("GL_RENDERER: " + GlHost.Renderer(GetProc) + (region == null ? "" : "  region: " + region));
         GlHost glHost = new GlHost(GetProc);
+        long glFrames = 0, glDraws = 0, glPrograms = 0, glTextures = 0;
         BenchmarkRunner.Run("BRUTAL OpenGL 3.3", benchmarkScreen,
             update: seconds => GumUI.Update(seconds),
             draw: () =>
             {
                 GlClear.ToColor(GetProc, 100 / 255f, 149 / 255f, 237 / 255f);
+                long d0 = GlCallCounter.Draws, p0 = GlCallCounter.Programs, t0 = GlCallCounter.Textures;
                 GumUI.Draw();
+                if (GlCallCounter.Enabled) { glFrames++; glDraws += GlCallCounter.Draws - d0; glPrograms += GlCallCounter.Programs - p0; glTextures += GlCallCounter.Textures - t0; }
             },
             sync: () =>
             {
@@ -69,6 +72,8 @@ try
                 glHost.Sync();
             },
             benchmarkPath);
+        if (GlCallCounter.Enabled)
+            Console.WriteLine($"GL per frame (inside GumUI.Draw, {glFrames} frames): draws {glDraws / (double)glFrames:F1}, programs {glPrograms / (double)glFrames:F1}, texture binds {glTextures / (double)glFrames:F1}");
         return;
     }
 
