@@ -36,6 +36,7 @@ public class PluginsDialogViewModel : DialogViewModel
     {
         Title = "Manage Plugins";
         AffirmativeText = "Close";
+        AffirmativeIsDefault = false;
         NegativeText = null;
 
         // Sorted by name so a plugin can be found by scanning; MEF hands them back in load order,

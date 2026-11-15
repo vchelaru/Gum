@@ -23,6 +23,7 @@ public class StandardDiffDetailsViewModel : DialogViewModel
         StandardName = standardName;
         Rows = rows;
         AffirmativeText = "Close";
+        AffirmativeIsDefault = false;
         NegativeText = null;
     }
 }
