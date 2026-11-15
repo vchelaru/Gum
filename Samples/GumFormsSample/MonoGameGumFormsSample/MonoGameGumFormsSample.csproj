@@ -34,6 +34,16 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
+  <!-- The shared benchmark scene and runner (#8052). -->
+  <ItemGroup>
+    <Compile Include="..\..\Benchmark\*.cs" Link="Benchmark\%(Filename)%(Extension)" />
+    <Compile Include="..\..\BenchmarkSdl\BenchmarkHost.cs" Link="Benchmark\BenchmarkHost.cs" />
+    <Using Include="System" />
+    <Using Include="System.IO" />
+    <Using Include="System.Linq" />
+    <Using Include="System.Collections.Generic" />
+    <None Include="..\..\SilkNetGum\SilkNetGumSample\Content\GumProject\Frame.png" Link="Content/Frame.png" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
   <ItemGroup>
     <Folder Include="Content\FormsGumProject\" />
   </ItemGroup>
