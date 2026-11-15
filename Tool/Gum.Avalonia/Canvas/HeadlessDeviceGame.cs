@@ -1,4 +1,5 @@
 using System;
+using Gum.Diagnostics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -47,6 +48,11 @@ internal sealed class HeadlessDeviceGame : Game
         }
         RunOneFrame();
         _isInitialized = true;
+        // A native crash (SIGSEGV) leaves no stderr, so the log is the only record of which GL driver was in use.
+        if (ToolLog.IsEnabled)
+        {
+            ToolLog.Write("device.ready", detail: $"adapter '{GraphicsDevice.Adapter.Description}', profile {GraphicsDevice.GraphicsProfile}");
+        }
     }
 
     /// <inheritdoc/>

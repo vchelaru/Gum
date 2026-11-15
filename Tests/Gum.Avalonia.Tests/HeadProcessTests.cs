@@ -21,7 +21,16 @@ public class HeadProcessTests
 
     private static bool CanRunTheHead => TestEnvironment.CanUseDisplay("GUM_RUN_HEAD_PROCESS_TEST");
 
-    private sealed record HeadRun(int ExitCode, string Output, string Errors, TimeSpan Elapsed);
+    private sealed record HeadRun(int ExitCode, string Output, string Errors, TimeSpan Elapsed, string LogTail)
+    {
+        /// <summary>
+        /// What an assertion on this run prints. A native crash (exit 139 is SIGSEGV, 128 + signal on Linux)
+        /// leaves stderr empty, so this adds the exit code and the tail of the head's own log (GL adapter, stages).
+        /// </summary>
+        public string Diagnosis => $"exit code {ExitCode} after {Elapsed.TotalMilliseconds:F0} ms"
+            + (ExitCode > 128 && !OperatingSystem.IsWindows() ? $" (signal {ExitCode - 128})" : "")
+            + $"\nstderr: {Errors}\nhead log tail:\n{LogTail}";
+    }
 
     [SkippableFact]
     public async Task UnattendedRun_LoadsAProject_AndExitsOnceReady()
@@ -107,7 +116,7 @@ public class HeadProcessTests
         HeadRun run = await RunHead(scratch.Project, "--exit-after", "90", "--select", "BigTextureScreen#SpriteInstance",
             "--screenshot", scratch.Screenshot, "--user-data", scratch.UserData);
 
-        run.ExitCode.ShouldBe(0, run.Errors);
+        run.ExitCode.ShouldBe(0, run.Diagnosis);
         run.Errors.ShouldNotContain("Error setting SourceFile");
     }
 
@@ -122,7 +131,7 @@ public class HeadProcessTests
         HeadRun run = await RunHead(scratch.Project, "--exit-after", "90", "--select", "BigTextureScreen#SpriteInstance",
             "--screenshot", scratch.Screenshot, "--user-data", scratch.UserData);
 
-        run.ExitCode.ShouldBe(0, run.Errors);
+        run.ExitCode.ShouldBe(0, run.Diagnosis);
         run.Errors.ShouldContain("BigTexture.png");
         run.Errors.ShouldContain("maximum Texture2D size of 8192");
     }
@@ -240,10 +249,25 @@ public class HeadProcessTests
         return startInfo;
     }
 
+    private static string ReadLogTail(string logPath)
+    {
+        try
+        {
+            return string.Join('\n', File.ReadLines(logPath).TakeLast(25));
+        }
+        catch (IOException)
+        {
+            return "(no head log)";
+        }
+    }
+
     private static async Task<HeadRun> RunHead(params string[] arguments)
     {
         Stopwatch stopwatch = Stopwatch.StartNew();
-        using Process process = Process.Start(HeadStartInfo(arguments))!;
+        string logPath = Path.Combine(Path.GetTempPath(), "GumHeadLog_" + Guid.NewGuid().ToString("N") + ".log");
+        ProcessStartInfo startInfo = HeadStartInfo(arguments);
+        startInfo.Environment["GUM_TOOL_LOG"] = logPath;
+        using Process process = Process.Start(startInfo)!;
         Task<string> output = process.StandardOutput.ReadToEndAsync();
         Task<string> errors = process.StandardError.ReadToEndAsync();
         using CancellationTokenSource timeout = new CancellationTokenSource(TimeSpan.FromMinutes(3));
@@ -257,7 +281,9 @@ public class HeadProcessTests
             throw new TimeoutException("The head did not exit within three minutes, although --exit-after should force an exit well before then.");
         }
         stopwatch.Stop();
-        return new HeadRun(process.ExitCode, await output, await errors, stopwatch.Elapsed);
+        HeadRun result = new HeadRun(process.ExitCode, await output, await errors, stopwatch.Elapsed, ReadLogTail(logPath));
+        try { File.Delete(logPath); } catch (IOException) { }
+        return result;
     }
 
     private static string FindRepositoryRoot()
