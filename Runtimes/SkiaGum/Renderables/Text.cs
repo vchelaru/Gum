@@ -1083,7 +1083,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
             SKMatrix canvasMatrix = canvas.TotalMatrix;
             // Unrotated text under a scale-and-translate canvas (the usual case) snaps and positions with plain
             // arithmetic and one Translate, instead of inverting the canvas matrix and concatenating three
-            // matrices (about 0.0003 ms per draw). It gives the same origin and the same canvas matrix.
+            // matrices (about 0.0003 ms per draw). It snaps to the same device pixel (the unrounded floats can differ slightly).
             bool isSimple = absoluteRotation == 0
                 && canvasMatrix.SkewX == 0 && canvasMatrix.SkewY == 0 && canvasMatrix.Persp0 == 0 && canvasMatrix.Persp1 == 0
                 && canvasMatrix.Persp2 == 1 && canvasMatrix.ScaleX != 0 && canvasMatrix.ScaleY != 0;
