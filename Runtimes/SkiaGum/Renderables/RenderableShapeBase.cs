@@ -1255,6 +1255,9 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
         return _cachedPaint;
     }
 
+    /// <summary>Spike only: skips the white Modulate filter so both variants come from one binary.</summary>
+    internal static bool SpikeSkipOpaqueWhiteTint;
+
     /// <summary>
     /// Tints a texture draw by <see cref="Color"/> through a color filter. Add adds Color's RGB in a
     /// single pass; otherwise Color is blended with <paramref name="tintBlendMode"/> (Modulate, or
@@ -1280,6 +1283,11 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
         }
         else
         {
+            if (SpikeSkipOpaqueWhiteTint && tintBlendMode == SKBlendMode.Modulate && Color.Red == 255 && Color.Green == 255 && Color.Blue == 255)
+            {
+                return;
+            }
+
             using SKColorFilter blendFilter = SKColorFilter.CreateBlendMode(Color.WithAlpha(255), tintBlendMode);
             paint.ColorFilter = blendFilter;
         }
