@@ -644,12 +644,16 @@ public class NineSlice : RenderableShapeBase, IAnimatable, IAnimationChainRender
             float deviceScaleY = Math.Abs(matrix.ScaleY);
             int insideTexelsW = usedWidth - (fullOutsideW * 2);
             int insideTexelsH = usedHeight - (fullOutsideH * 2);
-            if (CanSampleOnTexelBoundary(fullOutsideW, MathF.Round(deviceScaleX * borders.DestLeft))
-                || CanSampleOnTexelBoundary(insideTexelsW, MathF.Round(deviceScaleX * (boundingRect.Width - borders.DestLeft - borders.DestRight)))
+            bool borderTie = CanSampleOnTexelBoundary(fullOutsideW, MathF.Round(deviceScaleX * borders.DestLeft))
                 || CanSampleOnTexelBoundary(fullOutsideW, MathF.Round(deviceScaleX * borders.DestRight))
                 || CanSampleOnTexelBoundary(fullOutsideH, MathF.Round(deviceScaleY * borders.DestTop))
-                || CanSampleOnTexelBoundary(insideTexelsH, MathF.Round(deviceScaleY * (boundingRect.Height - borders.DestTop - borders.DestBottom)))
-                || CanSampleOnTexelBoundary(fullOutsideH, MathF.Round(deviceScaleY * borders.DestBottom)))
+                || CanSampleOnTexelBoundary(fullOutsideH, MathF.Round(deviceScaleY * borders.DestBottom));
+            bool middleTieX = CanSampleOnTexelBoundary(insideTexelsW, MathF.Round(deviceScaleX * (boundingRect.Width - borders.DestLeft - borders.DestRight)));
+            bool middleTieY = CanSampleOnTexelBoundary(insideTexelsH, MathF.Round(deviceScaleY * (boundingRect.Height - borders.DestTop - borders.DestBottom)));
+            // A tie in the stretched middle only matters when the texels either side of it differ: where the middle is the
+            // same color along that axis (a flat fill, an outline row), either choice draws the same pixel.
+            if (borderTie || ((middleTieX || middleTieY)
+                && !IsMiddleUniform(middleTieX, middleTieY, srcLeft, srcTop, usedWidth, usedHeight, fullOutsideW, fullOutsideH)))
             {
                 return false;
             }
@@ -672,6 +676,60 @@ public class NineSlice : RenderableShapeBase, IAnimatable, IAnimationChainRender
         canvas.Restore();
         DrawStatistics?.RecordDrawCall();
         return true;
+    }
+
+    // Whether the texels of the stretched middle are the same along the axes asked for: across the columns between the
+    // two side borders for X, across the rows between the top and bottom borders for Y, over the whole source rectangle.
+    // Cached per image and source rectangle. Without the bitmap (an image assigned directly) it answers false.
+    private (SKImage? Image, int Left, int Top, int Width, int Height, int OutsideW, int OutsideH, bool X, bool Y) _uniformity;
+
+    private bool IsMiddleUniform(bool needX, bool needY, int srcLeft, int srcTop, int usedWidth, int usedHeight, int outsideW, int outsideH)
+    {
+        var u = _uniformity;
+        if (!ReferenceEquals(u.Image, _image) || u.Left != srcLeft || u.Top != srcTop || u.Width != usedWidth
+            || u.Height != usedHeight || u.OutsideW != outsideW || u.OutsideH != outsideH)
+        {
+            bool uniformX = false;
+            bool uniformY = false;
+            SKBitmap? bitmap = _texture;
+            if (bitmap != null && Sprite.IsUsable(bitmap)
+                && srcLeft >= 0 && srcTop >= 0 && srcLeft + usedWidth <= bitmap.Width && srcTop + usedHeight <= bitmap.Height)
+            {
+                int firstColumn = srcLeft + outsideW;
+                int lastColumn = srcLeft + usedWidth - outsideW - 1;
+                int firstRow = srcTop + outsideH;
+                int lastRow = srcTop + usedHeight - outsideH - 1;
+                uniformX = true;
+                for (int y = srcTop; y < srcTop + usedHeight && uniformX; y++)
+                {
+                    SKColor first = bitmap.GetPixel(firstColumn, y);
+                    for (int x = firstColumn + 1; x <= lastColumn; x++)
+                    {
+                        if (bitmap.GetPixel(x, y) != first)
+                        {
+                            uniformX = false;
+                            break;
+                        }
+                    }
+                }
+                uniformY = true;
+                for (int x = srcLeft; x < srcLeft + usedWidth && uniformY; x++)
+                {
+                    SKColor first = bitmap.GetPixel(x, firstRow);
+                    for (int y = firstRow + 1; y <= lastRow; y++)
+                    {
+                        if (bitmap.GetPixel(x, y) != first)
+                        {
+                            uniformY = false;
+                            break;
+                        }
+                    }
+                }
+            }
+            u = (_image, srcLeft, srcTop, usedWidth, usedHeight, outsideW, outsideH, uniformX, uniformY);
+            _uniformity = u;
+        }
+        return (!needX || u.X) && (!needY || u.Y);
     }
 
     // True when some pixel center of a cell of texelCount texels drawn over devicePixels pixels sits exactly on a

@@ -29,15 +29,19 @@ public class NineSliceSnappingGpuTests
     };
 
     SKBitmap Render(int tileIndex, float zoom, float x, float y, float width, float height, int count, float spacing, bool snap)
+        => Render(tileIndex, zoom, x, y, width, height, count, spacing, snap, out _);
+
+    SKBitmap Render(int tileIndex, float zoom, float x, float y, float width, float height, int count, float spacing, bool snap, out int drawCalls)
     {
         GraphicalUiElement.SetPropertyOnRenderable = global::SkiaGum.CustomSetPropertyOnRenderable.SetPropertyOnRenderable;
         SKFilterMode previousFilter = RenderingLibrary.Graphics.Renderer.TextureFilter;
         RenderingLibrary.Graphics.Renderer.TextureFilter = SKFilterMode.Nearest;
+        int calls = 0;
         int pixelWidth = (int)MathF.Ceiling((x + width + 4) * zoom);
         int pixelHeight = (int)MathF.Ceiling((y + count * (height + spacing) + 4) * zoom);
         try
         {
-            return _gpu.Render(pixelWidth, pixelHeight, 0, canvas =>
+            SKBitmap result = _gpu.Render(pixelWidth, pixelHeight, 0, canvas =>
             {
                 var managers = new SystemManagers();
                 managers.Initialize();
@@ -48,6 +52,7 @@ public class NineSliceSnappingGpuTests
                 canvas.Clear(new SKColor(255, 0, 255));
                 canvas.Save();
                 canvas.Scale(zoom);
+                managers.Renderer.RenderStateChangeStatistics.Reset();
                 for (int i = 0; i < count; i++)
                 {
                     using var nineSlice = new NineSlice
@@ -63,8 +68,11 @@ public class NineSliceSnappingGpuTests
                     };
                     nineSlice.Render(managers);
                 }
+                calls = managers.Renderer.RenderStateChangeStatistics.DrawCallCount;
                 canvas.Restore();
             });
+            drawCalls = calls;
+            return result;
         }
         finally
         {
@@ -171,5 +179,51 @@ public class NineSliceSnappingGpuTests
         using var image = SKImage.FromBitmap(sheet);
         using var data = image.Encode(SKEncodedImageFormat.Png, 100);
         File.WriteAllBytes(Path.Combine(folder, $"snap-{Tiles[tile].Name}-z{zoom}-f{fraction}-h{height}.png"), data.ToArray());
+    }
+
+    /// <summary>The stack the benchmark scene has: four Forms tiles at a line-height size and fractional positions.</summary>
+    [Theory]
+    [InlineData(0)]
+    [InlineData(1)]
+    public void Render_FractionalStackOfFormsTiles_DrawsOneLatticeOperationPerItem(int tile)
+    {
+        using SKBitmap pixels = Render(tile, 1f, 8.35f, 9.3f, 48.5f, 30.698242f, 4, 0f, snap: true, out int drawCalls);
+
+        drawCalls.ShouldBe(4);
+    }
+
+    /// <summary>
+    /// Offsets in 1/60 px steps over a whole pixel in both axes (3721 positions): a flat-middled Forms tile takes the
+    /// one-call lattice path at nearly all of them. A tie between texels that differ always keeps the nine draws, so
+    /// the noise-textured fuzz in NineSliceLatticeGpuTests still covers the fallback.
+    /// </summary>
+    [Theory]
+    [InlineData(0)]
+    [InlineData(1)]
+    public void Render_FractionalOffsetsOfAFormsTile_MostlyUseTheLattice(int tile)
+    {
+        int lattice = 0;
+        int total = 0;
+        for (int i = 0; i <= 60; i++)
+        {
+            for (int j = 0; j <= 60; j++)
+            {
+                using SKBitmap pixels = Render(tile, 1f, 8f + i / 60f, 9f + j / 60f, 48.5f, 30.698242f, 1, 0f, snap: true, out int drawCalls);
+                total++;
+                if (drawCalls == 1)
+                {
+                    lattice++;
+                }
+            }
+        }
+
+        string? folder = Environment.GetEnvironmentVariable("GUM_SEAM_DUMP");
+        if (!string.IsNullOrEmpty(folder))
+        {
+            Directory.CreateDirectory(folder);
+            File.AppendAllText(Path.Combine(folder, "lattice-fraction.txt"), $"tile {tile}: {lattice} of {total}{Environment.NewLine}");
+        }
+        total.ShouldBe(3721);
+        lattice.ShouldBeGreaterThan(total * 95 / 100, $"{lattice} of {total} took the lattice path");
     }
 }
