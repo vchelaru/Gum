@@ -222,7 +222,9 @@ namespace InputLibrary
                 var timeSinceLastClick =
                     currentTime - mLastClickTime;
 
-                if (timeSinceLastClick < MaximumSecondsBetweenClickForDoubleClick &&
+                // A negative difference means the clock restarted since the last click.
+                if (timeSinceLastClick >= 0 &&
+                    timeSinceLastClick < MaximumSecondsBetweenClickForDoubleClick &&
                     Math.Abs(X - mLastClickX) <= doubleClickDistance &&
                     Math.Abs(Y - mLastClickY) <= doubleClickDistance)
                 {
