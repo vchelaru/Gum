@@ -104,11 +104,11 @@ public class Game1 : Game
         GumSamples.Benchmark.BenchmarkRunner.RequireRelease();
         if (_hidden)
         {
-            BenchmarkHost.HideWindow(Window.Handle);
+            GumSamples.Benchmark.BenchmarkHost.HideWindow(Window.Handle);
         }
         GumSamples.Benchmark.BenchmarkScreen screen = new GumSamples.Benchmark.BenchmarkScreen();
         screen.AddToRoot();
-        Console.WriteLine("GL_RENDERER: " + BenchmarkHost.Renderer());
+        Console.WriteLine("GL_RENDERER: " + GumSamples.Benchmark.BenchmarkHost.Renderer());
         GumSamples.Benchmark.BenchmarkRunner.Run("KNI Skia (DesktopGL)", screen,
             update: seconds => GumUI.Update(seconds),
             draw: () =>
@@ -119,7 +119,7 @@ public class Game1 : Game
             sync: () =>
             {
                 GraphicsDevice.Present();
-                BenchmarkHost.Finish();
+                GumSamples.Benchmark.BenchmarkHost.Finish();
             },
             _benchmarkPath);
     }

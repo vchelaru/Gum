@@ -1,8 +1,9 @@
+#nullable enable
 using System.Runtime.InteropServices;
 
-namespace KniSkiaGumSample;
+namespace GumSamples.Benchmark;
 
-/// <summary>The host-specific benchmark bits on KNI DesktopGL (SDL2): glFinish (so a frame includes the GPU finishing),
+/// <summary>The host-specific benchmark bits on an SDL2 desktop host (KNI DesktopGL, MonoGame DesktopGL): glFinish (so a frame includes the GPU finishing),
 /// GL_RENDERER (which GPU produced the numbers) and hiding the window. #8052</summary>
 internal static class BenchmarkHost
 {
