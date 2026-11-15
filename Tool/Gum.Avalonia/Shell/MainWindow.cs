@@ -173,6 +173,29 @@ public sealed class MainWindow : Window, IRecipient<CloseMainWindowMessage>
     // title bar, beside the system's caption buttons. Where the platform cannot draw into the title
     // bar (Linux), the system title bar stays and this row sits under it. On macOS the menu is in
     // the system menu bar instead, so the row has no menu column.
+    // With the client area extended, Avalonia 12 draws the caption buttons itself, plus the window's
+    // title text and (where the platform allows it) a full-screen button. The title row above already
+    // shows the project name, so the drawn title is hidden and the full-screen button dropped, which
+    // leaves the minimize, maximize and close buttons the earlier system chrome had.
+    private static ControlTheme? CreateCaptionButtonsOnlyTheme()
+    {
+        if (global::Avalonia.Application.Current is not { } application
+            || !application.TryGetResource(typeof(global::Avalonia.Controls.Chrome.WindowDrawnDecorations), application.ActualThemeVariant, out object? found)
+            || found is not ControlTheme baseTheme)
+        {
+            return null;
+        }
+
+        ControlTheme theme = new ControlTheme(typeof(global::Avalonia.Controls.Chrome.WindowDrawnDecorations)) { BasedOn = baseTheme };
+        Style hideTitle = new Style(x => x.Nesting().Template().OfType<Panel>().Name("PART_TitleTextPanel").Descendant().OfType<TextBlock>());
+        hideTitle.Setters.Add(new Setter(OpacityProperty, 0.0));
+        theme.Children.Add(hideTitle);
+        Style hideFullScreen = new Style(x => x.Nesting().Template().OfType<Button>().Name("PART_FullScreenButton"));
+        hideFullScreen.Setters.Add(new Setter(IsVisibleProperty, false));
+        theme.Children.Add(hideFullScreen);
+        return theme;
+    }
+
     private Control CreateTitleRow(Menu? menu)
     {
         bool drawsInTitleBar = OperatingSystem.IsWindows() || OperatingSystem.IsMacOS();
@@ -185,6 +208,7 @@ public sealed class MainWindow : Window, IRecipient<CloseMainWindowMessage>
             }
             ExtendClientAreaToDecorationsHint = true;
             WindowDecorations = WindowDecorations.Full;
+            WindowDecorationsTheme = CreateCaptionButtonsOnlyTheme();
             this.Bind(ExtendClientAreaTitleBarHeightHintProperty, ScaledWithFont(TitleBarHeight));
         }
 

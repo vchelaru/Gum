@@ -11,6 +11,7 @@ using Avalonia.Platform;
 using Avalonia.Styling;
 using Avalonia.Themes.Fluent;
 using Avalonia.Threading;
+using Avalonia.VisualTree;
 using CommunityToolkit.Mvvm.Messaging;
 using Gum.Avalonia.Accessibility;
 using Gum.Avalonia.Canvas;
@@ -359,11 +360,14 @@ public sealed class App : Application
 
     private static void CaptureWindow(Window window, string path)
     {
+        // Avalonia 12 draws the caption buttons in a layer of the window's host, above the window's own
+        // visual, so a render of the host is the one that shows them.
+        Visual root = window.GetVisualParent() ?? window;
         PixelSize pixelSize = new PixelSize(
-            (int)Math.Round(window.Bounds.Width * window.RenderScaling),
-            (int)Math.Round(window.Bounds.Height * window.RenderScaling));
+            (int)Math.Round(root.Bounds.Width * window.RenderScaling),
+            (int)Math.Round(root.Bounds.Height * window.RenderScaling));
         using RenderTargetBitmap bitmap = new RenderTargetBitmap(pixelSize, new Vector(96 * window.RenderScaling, 96 * window.RenderScaling));
-        bitmap.Render(window);
+        bitmap.Render(root);
         Directory.CreateDirectory(Path.GetDirectoryName(path)!);
         bitmap.Save(path);
     }

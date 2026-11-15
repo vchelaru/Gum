@@ -169,7 +169,7 @@ public sealed class FontRangesDisplay : DataUiDisplayBase
         {
             if (e.Key == Key.Enter)
             {
-                TopLevel.GetTopLevel(box)?.Focus();
+                TopLevel.GetTopLevel(box)?.FocusManager?.Focus(null);
                 e.Handled = true;
             }
         };
