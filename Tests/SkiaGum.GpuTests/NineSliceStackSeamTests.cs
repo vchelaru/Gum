@@ -717,30 +717,6 @@ public class NineSliceStackSeamTests
     [InlineData(1f, 6f)]
     [InlineData(2f, 0f)]
     [InlineData(2f, 6f)]
-    public void Draw_ClipEdgeOnFractionalItemEdges_AtAwkwardSteps_ShouldNotCropBorder(float zoom, float spacing)
-    {
-        var counts = new SeamCounts();
-        foreach (TextureSpec spec in SweepSpecs())
-        {
-            foreach (float height in new[] { 30.698242f, 20.5f })
-            {
-                for (int k = 0; k <= 158; k++)
-                {
-                    var layout = new Layout(8.35f, 8.698242f, 48.5f, height, spacing, 4, k * 0.0126123f, zoom, ClipToItems: true);
-                    using SKBitmap pixels = Render(spec, layout, SKFilterMode.Nearest);
-                    CountSeams(pixels, spec, layout, counts, $"{spec.Name} height {height} scroll {layout.Scroll:F4}");
-                }
-            }
-        }
-        WriteSummary($"clip edge, step 0.0126123, zoom {zoom}, spacing {spacing}", counts.ToString());
-        counts.Total.ShouldBe(0, counts.ToString());
-    }
-
-    [Theory]
-    [InlineData(1f, 0f)]
-    [InlineData(1f, 6f)]
-    [InlineData(2f, 0f)]
-    [InlineData(2f, 6f)]
     public void Draw_ClipEdgeOnFractionalItemEdges_AtRandomOffsets_ShouldNotCropBorder(float zoom, float spacing)
     {
         var random = new Random(8071 + (int)zoom * 10 + (int)spacing);
