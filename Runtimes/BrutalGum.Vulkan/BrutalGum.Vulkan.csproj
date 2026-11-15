@@ -32,7 +32,7 @@
 		<PackageReference Include="Ahwoo.Brutal.Vulkan.Abstractions" Version="2026.10.3" />
 		<PackageReference Include="Ahwoo.Brutal.ShaderC" Version="2026.10.3" />
 		<!-- Skia on Vulkan. Never reference SkiaGameRendering.Brutal.OGL here: both declare SkiaRenderTarget2D. -->
-		<PackageReference Include="SkiaGameRendering.Brutal" Version="0.22.0" />
+		<PackageReference Include="SkiaGameRendering.Brutal" Version="0.24.0" />
 	</ItemGroup>
 
 	<ItemGroup>

@@ -65,17 +65,37 @@ The Vulkan program in [Full Program](#full-program) uses `unsafe` blocks, so als
 {% endtab %}
 {% endtabs %}
 
-Both packages read mouse, keyboard and gamepad input from your BRUTAL `GlfwWindow` and draw Gum to it, so you never write rendering code for Gum. They work on Windows and Linux.
-
-{% hint style="warning" %}
-BRUTAL is not supported on macOS. `Gum.Brutal.Vulkan` cannot run there, and `Gum.Brutal.OGL` is untested.
-{% endhint %}
+Both packages read mouse, keyboard and gamepad input from your BRUTAL `GlfwWindow` and draw Gum to it, so you never write rendering code for Gum. They work on Windows, Linux and macOS (see [macOS](#macos)).
 
 Do not reference both packages in one project. They declare the same `GumService` type.
 
 {% hint style="warning" %}
 Do not name your project `BrutalGum` (or `BrutalGum.Vulkan`), that is the assembly name inside the package. A same-named project produces a same-named output DLL that silently overwrites the runtime's copy in your `bin` folder. Gum's build catches this for you: if your `AssemblyName` collides, the build fails with an error telling you to change it.
 {% endhint %}
+
+## macOS
+
+{% hint style="info" %}
+macOS support is available in December 2026, or now if building Gum from source.
+{% endhint %}
+
+OpenGL needs one more window hint. macOS creates a core profile context only when GLFW's forward compatibility hint is set, and then provides OpenGL 4.1:
+
+```csharp
+// Initialize
+if (OperatingSystem.IsMacOS())
+{
+    Glfw.WindowHint((GlfwWindowHint)0x22006 /* GLFW_OPENGL_FORWARD_COMPAT */, Glfw.Constants.GLFW_TRUE);
+}
+```
+
+Vulkan runs on MoltenVK. Install the Vulkan loader and MoltenVK:
+
+```bash
+brew install molten-vk vulkan-loader
+```
+
+Skia draws with Metal on macOS, so the instance must export the Metal device and queue, and the device must enable `VK_EXT_metal_objects`. [Full Program](#full-program) does not include this; the [Vulkan sample](https://github.com/vchelaru/Gum/tree/main/Samples/BrutalGum/BrutalGumSample) shows it. Retina displays need nothing extra, since Gum scales the cursor to the framebuffer.
 
 ## Adding Source (Optional)
 

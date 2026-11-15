@@ -31,6 +31,6 @@ Next, add the needed NuGet packages:
 {% endtab %}
 {% endtabs %}
 
-BRUTAL's packages ship `net10.0` builds only, so your project must target `net10.0`. BRUTAL runs on Windows and Linux and needs an OpenGL 3.3 driver, or a Vulkan 1.3 driver if you use Vulkan.
+BRUTAL's packages ship `net10.0` builds only, so your project must target `net10.0`. BRUTAL runs on Windows, Linux and macOS and needs an OpenGL 3.3 driver, or a Vulkan 1.3 driver if you use Vulkan.
 
 Next, you can begin adding Gum to your project. For more information see the [Adding/Initializing Gum](../adding-initializing-gum/brutal.md) page.

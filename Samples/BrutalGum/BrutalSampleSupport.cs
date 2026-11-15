@@ -54,6 +54,21 @@ internal static class SampleSupport
         }
     }
 
+    /// <summary>
+    /// OpenGL 3.3 core for the window's context. macOS creates no core context without GLFW_OPENGL_FORWARD_COMPAT,
+    /// and then hands out the newest it has (4.1 core), which Gum.Brutal.OGL runs on.
+    /// </summary>
+    public static void ApplyOpenGlHints()
+    {
+        Glfw.WindowHint(GlfwWindowHint.ContextVersionMajor, 3);
+        Glfw.WindowHint(GlfwWindowHint.ContextVersionMinor, 3);
+        Glfw.WindowHint(GlfwWindowHint.OpenGlProfile, 0x32001 /* GLFW_OPENGL_CORE_PROFILE */);
+        if (OperatingSystem.IsMacOS())
+        {
+            Glfw.WindowHint((GlfwWindowHint)0x22006 /* GLFW_OPENGL_FORWARD_COMPAT */, Glfw.Constants.GLFW_TRUE);
+        }
+    }
+
     public static void PlaceWindow(GlfwWindow window, SampleArgs args)
     {
         if (args.Offscreen)
