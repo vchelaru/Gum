@@ -6,7 +6,7 @@
 //   add --capture <png>      saves the window's pixels (glReadPixels on the default framebuffer) before exiting
 //   add --resize 900x500     resizes the window once, halfway through the run
 //   BrutalGumSampleOgl --hidden --batch-stats <txt>       appends each screen's same-image draw runs, then exits (#7826)
-//   BrutalGumSampleOgl --benchmark [out.md] [--region forms|list|pairs|empty]   RELEASE ONLY (dotnet build -c Release); Debug refuses. 30 warmup + 300 measured
+//   BrutalGumSampleOgl --benchmark [out.md] [--region forms|list|pairs|empty]   RELEASE ONLY (dotnet build -c Release); Debug refuses. 600 warmup + 300 measured
 //                                                         prints a markdown row of CPU and GPU ms per frame, then exits (#8052)
 using Brutal.GlfwApi;
 using Brutal.Numerics;
