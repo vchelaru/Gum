@@ -20,6 +20,135 @@ public class RendererFrameLifecycleTests
         GraphicalUiElement.SetPropertyOnRenderable = CustomSetPropertyOnRenderable.SetPropertyOnRenderable;
     }
 
+    private sealed class PreRenderCounter : InvisibleRenderable
+    {
+        public int PreRenderCount;
+        public override void PreRender() => PreRenderCount++;
+    }
+
+    // Adds a child the first time it is pre-rendered, as a renderable that builds content in PreRender would.
+    private sealed class ChildAddingRenderable : InvisibleRenderable
+    {
+        public PreRenderCounter? Added;
+        public override void PreRender()
+        {
+            if (Added == null)
+            {
+                Added = new PreRenderCounter();
+                Children.Add(new GraphicalUiElement(Added));
+            }
+        }
+    }
+
+    private static SKSurface InitializeSurface()
+    {
+        SKSurface surface = SKSurface.Create(new SKImageInfo(32, 32));
+        GumService.Default.Initialize(surface.Canvas, 32, 32);
+        return surface;
+    }
+
+    [Fact]
+    public void Draw_NestedChild_PreRendersOncePerFrame()
+    {
+        using SKSurface surface = InitializeSurface();
+        ContainerRuntime outer = new();
+        ContainerRuntime middle = new();
+        PreRenderCounter counter = new();
+        GraphicalUiElement leaf = new(counter);
+        middle.Children.Add(leaf);
+        outer.Children.Add(middle);
+        GumService.Default.Root.Children.Add(outer);
+
+        GumService.Default.Draw();
+
+        counter.PreRenderCount.ShouldBe(1);
+    }
+
+    [Fact]
+    public void Draw_DeeplyNestedChildren_PreRenderEachNodeOncePerFrame()
+    {
+        using SKSurface surface = InitializeSurface();
+        List<PreRenderCounter> counters = new();
+        GraphicalUiElement parent = GumService.Default.Root;
+        for (int depth = 0; depth < 6; depth++)
+        {
+            PreRenderCounter counter = new();
+            GraphicalUiElement node = new(counter);
+            parent.Children.Add(node);
+            counters.Add(counter);
+            parent = node;
+        }
+
+        GumService.Default.Draw();
+
+        counters.Select(item => item.PreRenderCount).ShouldAllBe(count => count == 1);
+    }
+
+    [Theory]
+    [InlineData(0f)]
+    [InlineData(1000f)]
+    public void Draw_ClippedContainerChild_PreRendersOncePerFrame(float containerX)
+    {
+        using SKSurface surface = InitializeSurface();
+        ContainerRuntime outer = new() { X = containerX, Width = 20, Height = 20, ClipsChildren = true };
+        ContainerRuntime middle = new() { Width = 20, Height = 20, ClipsChildren = true };
+        PreRenderCounter counter = new();
+        middle.Children.Add(new GraphicalUiElement(counter));
+        outer.Children.Add(middle);
+        GumService.Default.Root.Children.Add(outer);
+
+        GumService.Default.Draw();
+
+        counter.PreRenderCount.ShouldBe(1);
+    }
+
+    [Fact]
+    public void Draw_RenderTargetContainerChild_PreRendersOncePerBakeAndOncePerWalk()
+    {
+        using SKSurface surface = InitializeSurface();
+        ContainerRuntime renderTarget = new() { Width = 20, Height = 20, IsRenderTarget = true };
+        ContainerRuntime middle = new();
+        PreRenderCounter counter = new();
+        middle.Children.Add(new GraphicalUiElement(counter));
+        renderTarget.Children.Add(middle);
+        GumService.Default.Root.Children.Add(renderTarget);
+
+        GumService.Default.Draw();
+
+        // Once when the bake draws the container's children, once in the frame's own pre-render walk.
+        counter.PreRenderCount.ShouldBe(2);
+    }
+
+    [Fact]
+    public void Draw_ChildAddedDuringParentPreRender_PreRendersTheChildOnce()
+    {
+        using SKSurface surface = InitializeSurface();
+        ChildAddingRenderable adder = new();
+        ContainerRuntime container = new();
+        container.Children.Add(new GraphicalUiElement(adder));
+        GumService.Default.Root.Children.Add(container);
+
+        GumService.Default.Draw();
+
+        adder.Added.ShouldNotBeNull();
+        adder.Added!.PreRenderCount.ShouldBe(1);
+    }
+
+    [Fact]
+    public void Draw_HiddenChild_IsNotPreRendered()
+    {
+        using SKSurface surface = InitializeSurface();
+        ContainerRuntime outer = new();
+        PreRenderCounter counter = new();
+        GraphicalUiElement leaf = new(counter) { Visible = false };
+        outer.Children.Add(leaf);
+        GumService.Default.Root.Children.Add(outer);
+
+        GumService.Default.Draw();
+
+        counter.PreRenderCount.ShouldBe(0);
+    }
+
     [Fact]
     public void Draw_ClearsCanvas_ErasesPreviousFramePixels()
     {
