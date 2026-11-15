@@ -345,7 +345,7 @@ public class Sprite : RenderableShapeBase, IAspectRatio, ITextureCoordinate, IAn
         // The canvas is already rotated with the sprite when it has a rotation, so the offset is
         // applied in the sprite's own axes with no rotation here. Translating the canvas, rather
         // than moving boundingRect, keeps the cached paint valid while an offset glides.
-        (float X, float Y) offset = AnimationLogic.GetRenderOffset(0);
+        (float X, float Y) offset = PerfAblation.SpriteSkipRenderOffset ? (0f, 0f) : AnimationLogic.GetRenderOffset(0);
         bool hasOffset = offset.X != 0 || offset.Y != 0;
         bool canFlipDiagonal = FlipDiagonal && boundingRect.Width > 0 && boundingRect.Height > 0;
         if (!hasOffset && !canFlipDiagonal)
@@ -468,7 +468,7 @@ public class Sprite : RenderableShapeBase, IAspectRatio, ITextureCoordinate, IAn
 
     private static SKRect GetSampledSource(SKCanvas canvas, SKRect sourceRectangle, SKRect boundingRect)
     {
-        if (Renderer.TextureFilter == SKFilterMode.Nearest)
+        if (Renderer.TextureFilter == SKFilterMode.Nearest && !PerfAblation.SpriteSkipSampledSource)
         {
             float insetX = GetPointSamplingInset(canvas, sourceRectangle.Width, boundingRect.Width, 1, 0);
             float insetY = GetPointSamplingInset(canvas, sourceRectangle.Height, boundingRect.Height, 0, 1);

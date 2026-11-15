@@ -309,7 +309,7 @@ public class NineSlice : RenderableShapeBase, IAnimatable, IAnimationChainRender
         // Evaluated every render so an offset glide moves the nine-slice between frame changes.
         // The offset is in the nine-slice's own axes, which the canvas is already rotated into.
         // Translating the canvas, rather than moving boundingRect, keeps the cached paint valid.
-        (float X, float Y) offset = AnimationLogic.GetRenderOffset(0);
+        (float X, float Y) offset = PerfAblation.NsSkipRenderOffset ? (0f, 0f) : AnimationLogic.GetRenderOffset(0);
         bool hasOffset = offset.X != 0 || offset.Y != 0;
         bool canFlipDiagonal = FlipDiagonal && boundingRect.Width > 0 && boundingRect.Height > 0;
         if (!hasOffset && !canFlipDiagonal && !FlipHorizontal && !FlipVertical)
@@ -387,6 +387,8 @@ public class NineSlice : RenderableShapeBase, IAnimatable, IAnimationChainRender
     private static float SnapEdge(float device) => MathF.Floor(MathF.Round(device * 256f) / 256f + 0.5f);
 
     private bool _movedBySnapping;
+    private NineSliceBorders _perfBorders;
+    private bool _perfHasBorders;
 
     private void DrawBoundAtOrigin(SKRect boundingRect, SKCanvas canvas, float absoluteRotation)
     {
@@ -435,7 +437,7 @@ public class NineSlice : RenderableShapeBase, IAnimatable, IAnimationChainRender
         int insideTextureW = usedWidth - (fullOutsideW * 2);
         int insideTextureH = usedHeight - (fullOutsideH * 2);
 
-        if (!DisableDeviceSnapping)
+        if (!DisableDeviceSnapping && !PerfAblation.NsSkipSnap)
         {
             SKRect snapped = SnapToDevicePixels(canvas, boundingRect);
             // A nine-slice smaller than its borders squeezes them; that squeeze matches the other runtimes at the exact
@@ -452,10 +454,11 @@ public class NineSlice : RenderableShapeBase, IAnimatable, IAnimationChainRender
 
         // Per-side destination thickness (clamped so opposing bands never overlap) and the texels
         // each band samples, shared with every other runtime.
-        NineSliceBorders borders = NineSliceBorders.Compute(
+        NineSliceBorders borders = PerfAblation.NsSkipBorderCompute && _perfHasBorders ? _perfBorders : NineSliceBorders.Compute(
             fullOutsideW, fullOutsideH,
             EffectiveBorderScaleLeft, EffectiveBorderScaleTop, EffectiveBorderScaleRight, EffectiveBorderScaleBottom,
             boundingRect.Width, boundingRect.Height);
+        _perfBorders = borders; _perfHasBorders = true;
         float destLeftW = borders.DestLeft;
         float destTopH = borders.DestTop;
         float destRightW = borders.DestRight;
@@ -567,6 +570,7 @@ public class NineSlice : RenderableShapeBase, IAnimatable, IAnimationChainRender
         }
 
         float scale = EffectiveBorderScaleLeft;
+        if (PerfAblation.NsSkipLatticeChecks) goto perfDraw;
         if (scale <= 0f
             || EffectiveBorderScaleTop != scale
             || EffectiveBorderScaleRight != scale
@@ -659,6 +663,7 @@ public class NineSlice : RenderableShapeBase, IAnimatable, IAnimationChainRender
             }
         }
 
+        perfDraw:
         _latticeXDivs[0] = srcLeft + fullOutsideW;
         _latticeXDivs[1] = srcLeft + usedWidth - fullOutsideW;
         _latticeYDivs[0] = srcTop + fullOutsideH;

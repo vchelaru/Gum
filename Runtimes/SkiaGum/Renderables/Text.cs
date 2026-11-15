@@ -1077,27 +1077,34 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
 
         if (Visible)
         {
-            var textBlock = GetCachedTextBlock();
-            
+            var textBlock = SkiaGum.Renderables.PerfAblation.TextSkipBlockCheck ? (_cachedTextBlock ?? GetCachedTextBlock()) : GetCachedTextBlock();
+
             // Gum uses counterclockwise rotation, Skia uses clockwise, so invert. The absolute rotation
             // includes every parent's, as on MonoGame.
-            SKMatrix rotationMatrix = SKMatrix.CreateRotationDegrees(-this.GetAbsoluteRotation());
+            SKMatrix rotationMatrix = SkiaGum.Renderables.PerfAblation.TextSkipRotation ? SKMatrix.Identity : SKMatrix.CreateRotationDegrees(-this.GetAbsoluteRotation());
             // The text turns about its top-left, so the vertical alignment offset turns with it, as on
             // MonoGame and Raylib. Horizontal alignment is already inside the block's own layout.
-            SKPoint verticalOffset = rotationMatrix.MapVector(0, GetVerticalAlignmentOffset(textBlock));
+            SKPoint verticalOffset = SkiaGum.Renderables.PerfAblation.TextSkipRotation ? new SKPoint(0, GetVerticalAlignmentOffset(textBlock)) : rotationMatrix.MapVector(0, GetVerticalAlignmentOffset(textBlock));
             var absoluteX = this.GetAbsoluteX() + verticalOffset.X;
             var absoluteY = this.GetAbsoluteY() + verticalOffset.Y;
-            (absoluteX, absoluteY) = GetSnappedOrigin(absoluteX, absoluteY, canvas.TotalMatrix);
+            if (!SkiaGum.Renderables.PerfAblation.TextSkipSnap)
+            {
+                (absoluteX, absoluteY) = GetSnappedOrigin(absoluteX, absoluteY, canvas.TotalMatrix);
+            }
 
-            SKMatrix translateMatrix = SKMatrix.CreateTranslation(absoluteX, absoluteY);
-            // Continue to apply the previou matrix in case there is scaling
-            // for device density
-            SKMatrix result = rotationMatrix;
+            SKMatrix result = default;
+            if (!SkiaGum.Renderables.PerfAblation.TextSkipMatrixChain)
+            {
+                SKMatrix translateMatrix = SKMatrix.CreateTranslation(absoluteX, absoluteY);
+                // Continue to apply the previou matrix in case there is scaling
+                // for device density
+                result = rotationMatrix;
 
-            SKMatrix.Concat(
-                ref result, translateMatrix, result);
-            SKMatrix.Concat(
-                ref result, canvas.TotalMatrix, result);
+                SKMatrix.Concat(
+                    ref result, translateMatrix, result);
+                SKMatrix.Concat(
+                    ref result, canvas.TotalMatrix, result);
+            }
 
             canvas.Save();
 
@@ -1106,24 +1113,39 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
             // clips its children, but it is not. GumBatch.Draw(text) draws only this renderable and never walks
             // its ancestors, and a render-target bake draws into an offscreen canvas that carries none of the
             // ancestor clips. Text.Render is then the only thing applying the clip, so removing it changes pixels.
-            var clipper = this.GetEffectiveClipper();
+            var clipper = SkiaGum.Renderables.PerfAblation.TextSkipClipper ? null : this.GetEffectiveClipper();
             if(clipper != null)
             {
                 canvas.ClipTo(clipper);
             }
 
-            canvas.SetMatrix(result);
+            if (SkiaGum.Renderables.PerfAblation.TextSkipMatrixChain)
+            {
+                canvas.Translate(absoluteX, absoluteY);
+            }
+            else
+            {
+                canvas.SetMatrix(result);
+            }
 
             // MaxLettersToShow (issue #3678): the paint block reveals only the first N letters, but
             // vertical alignment above was computed from the full block so the revealed letters stay in
             // their final positions (typewriter reveal). Null MaxLettersToShow returns the full block.
             var paintBlock = GetPaintTextBlock(textBlock);
 
+            if (SkiaGum.Renderables.PerfAblation.TextDirectBlob)
+            {
+                PerfDrawDirectBlob(canvas, paintBlock);
+                canvas.Restore();
+                return;
+            }
+
             // Drop shadow and Blend are canvas effects (not RichTextKit Style properties): paint the
             // text into an offscreen layer whose paint carries the ImageFilter (shadow) and/or
             // BlendMode (blend) so both compose when the layer is composited back on Restore. Same
             // primitive/blur convention as the Skia shapes.
-            SKPaint? renderPaint = GetCachedRenderPaint();
+            SKPaint? renderPaint = SkiaGum.Renderables.PerfAblation.TextSkipRenderPaint ? null : GetCachedRenderPaint();
+            if (SkiaGum.Renderables.PerfAblation.TextSkipStats) statistics = null;
             if (renderPaint != null && HasDropshadow && CanDrawShadowAsPaint)
             {
                 if (HasActiveBlend)
@@ -1179,6 +1201,45 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
             // The block paints (or replays its recorded picture) as one draw.
             statistics?.RecordDrawCall();
             canvas.Restore();
+        }
+    }
+
+    // Spike: the block's glyphs as one pre-shaped blob, drawn with one DrawText (measurement only).
+    private SKTextBlob? _perfBlob;
+    private TextBlock? _perfBlobBlock;
+    private SKPaint? _perfBlobPaint;
+    private void PerfDrawDirectBlob(SKCanvas canvas, TextBlock block)
+    {
+        if (!ReferenceEquals(_perfBlobBlock, block))
+        {
+            _perfBlob?.Dispose();
+            using var builder = new SKTextBlobBuilder();
+            foreach (var line in block.Lines)
+            {
+                foreach (var run in line.Runs)
+                {
+                    if (run is not Topten.RichTextKit.FontRun fr || fr.Glyphs.Length == 0) continue;
+                    using var font = new SKFont(fr.Typeface, fr.Style.FontSize);
+                    var buffer = builder.AllocatePositionedRun(font, fr.Glyphs.Length);
+                    var glyphs = new ushort[fr.Glyphs.Length];
+                    var pos = new SKPoint[fr.Glyphs.Length];
+                    for (int g = 0; g < fr.Glyphs.Length; g++)
+                    {
+                        glyphs[g] = fr.Glyphs[g];
+                        pos[g] = new SKPoint(fr.GlyphPositions[g].X + fr.XCoord, fr.GlyphPositions[g].Y + line.YCoord + line.BaseLine);
+                    }
+                    buffer.SetGlyphs(glyphs);
+                    buffer.SetPositions(pos);
+                }
+            }
+            _perfBlob = builder.Build();
+            _perfBlobBlock = block;
+            _perfBlobPaint ??= new SKPaint { IsAntialias = true };
+            _perfBlobPaint.Color = Color;
+        }
+        if (_perfBlob != null)
+        {
+            canvas.DrawText(_perfBlob, 0, 0, _perfBlobPaint);
         }
     }
 
@@ -1881,7 +1942,11 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
         return _blendOnlyPaint;
     }
 
-    private void PaintTextBlockCached(SKCanvas canvas, TextBlock block) => _pictureCache.Paint(canvas, block, null);
+    private void PaintTextBlockCached(SKCanvas canvas, TextBlock block)
+    {
+        if (SkiaGum.Renderables.PerfAblation.TextBypassPicture) { PaintTextBlock(canvas, block, null); return; }
+        _pictureCache.Paint(canvas, block, null);
+    }
 
     /// <summary>
     /// A block recorded into a picture once it has been painted two frames in a row (see the note on

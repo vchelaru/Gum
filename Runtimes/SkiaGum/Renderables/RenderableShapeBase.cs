@@ -970,6 +970,10 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
                 // Restoring the layer composites it onto the canvas, one more draw.
                 DrawStatistics?.RecordDrawCall();
             }
+            else if (PerfAblation.ShapeDirectDrawBound)
+            {
+                DrawBound(boundingRect, canvas, rotation);
+            }
             else
             {
                 DrawBoundCounted(this, boundingRect, canvas);
@@ -1264,6 +1268,11 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
     /// </summary>
     protected void ApplyTextureTint(SKPaint paint, SKBlendMode tintBlendMode)
     {
+        if (PerfAblation.SkipWhiteTintFilter && ColorOperation != ColorOperation.Add && tintBlendMode == SKBlendMode.Modulate
+            && Color.Red == 255 && Color.Green == 255 && Color.Blue == 255)
+        {
+            return;
+        }
         if (ColorOperation == ColorOperation.Add)
         {
             // The offset is added in unpremultiplied space and gets scaled by the pixel's own alpha
