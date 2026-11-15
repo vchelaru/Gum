@@ -96,9 +96,7 @@ Draw rectangles and circles with fills, outlines, gradients, drop shadows, and r
 
 Render a container to its own texture, then fade, blend, or mask it or apply a shader to everything inside it at once.
 
-{% hint style="warning" %}
-**TODO:** Screenshot of a container with a shader applied.
-{% endhint %}
+<figure><img src=".gitbook/assets/15_15 22 07.png" alt=""><figcaption><p>A post-process outline shader applied to a container and its contents</p></figcaption></figure>
 
 ### [Vector or Raster Art](gum-tool/gum-elements/skia-standard-elements/README.md)
 
