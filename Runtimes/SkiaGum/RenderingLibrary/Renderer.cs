@@ -522,6 +522,12 @@ namespace RenderingLibrary.Graphics
             }
             layerToSort?.SortRenderables();
 
+            if (WalkMode == 3 && prerender)
+            {
+                FlatWalk(whatToRender, managers);
+                return;
+            }
+
             var count = whatToRender.Count;
 
             for (int i = 0; i < count; i++)
@@ -530,6 +536,83 @@ namespace RenderingLibrary.Graphics
                 if (renderable.Visible)
                 {
                     DrawRenderable(renderable, managers);
+                }
+            }
+        }
+
+        // SPIKE (GUM_WALK): 0 baseline, 1 skip Render of plain containers, 2 skip the empty-batch flush call, 3 flat op list with clips honoured.
+        static readonly int WalkMode = int.TryParse(Environment.GetEnvironmentVariable("GUM_WALK"), out int w) ? w : 0;
+
+        struct Op { public IRenderableIpso R; public int Kind; public int End; } // Kind 0 draw, 1 clip push (End = pop op index), 2 clip pop, 3 render target
+        Op[] _ops = new Op[1024];
+        int _opCount;
+
+        void AddOp(IRenderableIpso r, int kind)
+        {
+            if (_opCount == _ops.Length) Array.Resize(ref _ops, _ops.Length * 2);
+            _ops[_opCount++] = new Op { R = r, Kind = kind };
+        }
+
+        void FlatCollect(IList<IRenderableIpso> list)
+        {
+            for (int i = 0; i < list.Count; i++)
+            {
+                var r = list[i];
+                if (!r.Visible) continue;
+                if (r.IsRenderTarget) { AddOp(r, 3); continue; }
+                if (r.ClipsChildren)
+                {
+                    int pushIndex = _opCount;
+                    AddOp(r, 1);
+                    if (RenderUsingHierarchy) FlatCollect(r.Children);
+                    _ops[pushIndex].End = _opCount;
+                    AddOp(r, 2);
+                }
+                else
+                {
+                    IRenderableIpso inner = r is GraphicalUiElement e && e.RenderableComponent is IRenderableIpso c ? c : r;
+                    if (inner.GetType() != typeof(InvisibleRenderable)) AddOp(r, 0);
+                    if (RenderUsingHierarchy) FlatCollect(r.Children);
+                }
+            }
+        }
+
+        void FlatWalk(IList<IRenderableIpso> roots, SystemManagers managers)
+        {
+            _opCount = 0;
+            FlatCollect(roots);
+            var canvas = managers.Canvas;
+            for (int i = 0; i < _opCount; i++)
+            {
+                ref Op op = ref _ops[i];
+                switch (op.Kind)
+                {
+                    case 0:
+                        RenderOne(op.R, managers);
+                        break;
+                    case 3:
+                        SpriteBatch.Flush();
+                        CompositeRenderTarget(op.R, managers);
+                        break;
+                    case 1:
+                        {
+                            var bounds = op.R.GetClipTransform(out SKRect localRect).MapRect(localRect);
+                            bool onScreen =
+                                bounds.Bottom > canvas.LocalClipBounds.Top &&
+                                bounds.Top < canvas.LocalClipBounds.Bottom &&
+                                bounds.Right > canvas.LocalClipBounds.Left &&
+                                bounds.Left < canvas.LocalClipBounds.Right;
+                            if (!onScreen) { i = op.End; break; }
+                            SpriteBatch.Flush();
+                            canvas.Save();
+                            canvas.ClipTo(op.R);
+                            RenderOne(op.R, managers);
+                            break;
+                        }
+                    case 2:
+                        SpriteBatch.Flush();
+                        canvas.Restore();
+                        break;
                 }
             }
         }
@@ -622,9 +705,10 @@ namespace RenderingLibrary.Graphics
             IRenderableIpso inner = renderable is GraphicalUiElement element && element.RenderableComponent is IRenderableIpso contained
                 ? contained
                 : renderable;
+            if (WalkMode == 1 && inner.GetType() == typeof(InvisibleRenderable)) return;
             if (inner is not Sprite && inner is not InvisibleRenderable)
             {
-                SpriteBatch.Flush();
+                if (WalkMode != 2 || SpriteBatch.PendingCount != 0) SpriteBatch.Flush();
             }
             renderable.Render(managers);
         }
