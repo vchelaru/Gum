@@ -1264,6 +1264,14 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
     /// </summary>
     protected void ApplyTextureTint(SKPaint paint, SKBlendMode tintBlendMode)
     {
+        if (ColorOperation != ColorOperation.Add && tintBlendMode == SKBlendMode.Modulate
+            && Color.Red == 255 && Color.Green == 255 && Color.Blue == 255)
+        {
+            // Modulate by white is the identity, but Skia still runs a color filter for it (about 0.0008 ms per
+            // image draw). White is the default for every sprite and nine-slice.
+            return;
+        }
+
         if (ColorOperation == ColorOperation.Add)
         {
             // The offset is added in unpremultiplied space and gets scaled by the pixel's own alpha

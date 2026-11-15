@@ -56,6 +56,53 @@ public class SpriteColorOperationTests
     }
 
     [Fact]
+    public void GetPaint_ModulateWhite_HasNoColorFilter()
+    {
+        TestableSprite sut = new() { Color = new SKColor(255, 255, 255, 128) };
+
+        using SKPaint paint = sut.InvokeGetPaint(new SKRect(0, 0, 10, 10), absoluteRotation: 0);
+
+        paint.ColorFilter.ShouldBeNull();
+        paint.Color.Alpha.ShouldBe((byte)128);
+    }
+
+    [Theory]
+    [InlineData(255)]
+    [InlineData(128)]
+    public void GetPaint_ModulateWhite_DrawsSamePixelsAsWhiteModulateFilter(byte alpha)
+    {
+        TestableSprite sut = new() { Color = new SKColor(255, 255, 255, alpha) };
+        using SKPaint skipped = sut.InvokeGetPaint(new SKRect(0, 0, 4, 4), absoluteRotation: 0);
+        using SKPaint filtered = skipped.Clone();
+        using SKColorFilter white = SKColorFilter.CreateBlendMode(SKColors.White, SKBlendMode.Modulate);
+        filtered.ColorFilter = white;
+
+        using SKBitmap source = new(4, 4);
+        for (int y = 0; y < 4; y++)
+        {
+            for (int x = 0; x < 4; x++)
+            {
+                source.SetPixel(x, y, new SKColor((byte)(x * 80), (byte)(y * 80), (byte)(255 - x * 60), (byte)(255 - y * 50)));
+            }
+        }
+
+        byte[] withoutFilter = DrawBytes(source, skipped);
+        byte[] withFilter = DrawBytes(source, filtered);
+
+        withoutFilter.ShouldBe(withFilter);
+    }
+
+    private static byte[] DrawBytes(SKBitmap source, SKPaint paint)
+    {
+        using SKSurface surface = SKSurface.Create(new SKImageInfo(4, 4, SKColorType.Rgba8888, SKAlphaType.Premul));
+        surface.Canvas.Clear(new SKColor(10, 20, 30, 255));
+        surface.Canvas.DrawBitmap(source, 0, 0, paint);
+        using SKImage image = surface.Snapshot();
+        using SKBitmap readback = SKBitmap.FromImage(image);
+        return readback.Bytes;
+    }
+
+    [Fact]
     public void GetPaint_Modulate_MultipliesTextureRgbByTint()
     {
         TestableSprite sut = new() { Color = new SKColor(255, 0, 0, 255) };
