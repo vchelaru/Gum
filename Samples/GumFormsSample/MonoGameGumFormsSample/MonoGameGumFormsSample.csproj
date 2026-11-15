@@ -37,6 +37,7 @@
   <!-- The shared benchmark scene and runner (#8052). -->
   <ItemGroup>
     <Compile Include="..\..\Benchmark\*.cs" Link="Benchmark\%(Filename)%(Extension)" />
+    <Compile Include="..\..\BenchmarkSdl\BenchmarkHost.cs" Link="Benchmark\BenchmarkHost.cs" />
     <Using Include="System" />
     <Using Include="System.IO" />
     <Using Include="System.Linq" />
