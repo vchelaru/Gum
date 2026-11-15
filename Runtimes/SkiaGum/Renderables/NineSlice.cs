@@ -386,8 +386,11 @@ public class NineSlice : RenderableShapeBase, IAnimatable, IAnimationChainRender
     // it two ways at an exact half pixel.
     private static float SnapEdge(float device) => MathF.Floor(MathF.Round(device * 256f) / 256f + 0.5f);
 
+    private bool _movedBySnapping;
+
     private void DrawBoundAtOrigin(SKRect boundingRect, SKCanvas canvas, float absoluteRotation)
     {
+        _movedBySnapping = false;
         SKPaint paint = base.GetCachedPaint(boundingRect, absoluteRotation);
 
         int srcLeft;
@@ -442,6 +445,7 @@ public class NineSlice : RenderableShapeBase, IAnimatable, IAnimationChainRender
             if (boundingRect.Width >= minWidth && boundingRect.Height >= minHeight
                 && snapped.Width >= minWidth && snapped.Height >= minHeight)
             {
+                _movedBySnapping = snapped != boundingRect;
                 boundingRect = snapped;
             }
         }
@@ -632,7 +636,8 @@ public class NineSlice : RenderableShapeBase, IAnimatable, IAnimationChainRender
         // per-section draws have different noise, so they can pick different texels. That happens when a cell
         // of n texels covers D device pixels with n/gcd even and D/gcd odd. Exact arithmetic (border scale 1 and a
         // canvas scale of 1) has no noise, so only then is such a cell allowed.
-        bool exactArithmetic = scale == 1f && Math.Abs(matrix.ScaleX) == 1f && Math.Abs(matrix.ScaleY) == 1f;
+        // A rectangle that snapping moved is never trusted as exact: the rasterizers disagree at a texel boundary there (Mesa llvmpipe, #8069).
+        bool exactArithmetic = !_movedBySnapping && scale == 1f && Math.Abs(matrix.ScaleX) == 1f && Math.Abs(matrix.ScaleY) == 1f;
         if (!exactArithmetic)
         {
             float deviceScaleX = Math.Abs(matrix.ScaleX);
