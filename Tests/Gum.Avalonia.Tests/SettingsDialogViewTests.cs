@@ -78,6 +78,7 @@ public class SettingsDialogViewTests
         Dispatcher.UIThread.RunJobs();
 
         window.IsVisible.ShouldBeTrue("Enter on a page list item must not press Close");
+        window.GetVisualDescendants().OfType<Button>().Single(button => button.Name == DialogWindow.AffirmativeButtonName).IsDefault.ShouldBeFalse("Close must not be the default button, so Enter never means Close here");
         window.Result.ShouldBeNull();
         window.Close();
     }
