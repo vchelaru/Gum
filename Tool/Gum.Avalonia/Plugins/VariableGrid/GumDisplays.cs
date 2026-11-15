@@ -86,7 +86,9 @@ public abstract class GumToggleOptionDisplay : ToggleButtonOptionDisplay
             }
         }
 
-        if (option.IconName != null && Enum.TryParse(option.IconName, out FluentIcons.Common.Icon fluentIcon))
+        // FluentIcons 2 spells the text box glyphs TextBox..., the shared option table (also read by the
+        // WPF head on FluentIcons 1) still says Textbox....
+        if (option.IconName != null && Enum.TryParse(option.IconName.Replace("Textbox", "TextBox"), out FluentIcons.Common.Icon fluentIcon))
         {
             return GumFluentIcons.Create(fluentIcon, OptionIconSizeBinding());
         }
