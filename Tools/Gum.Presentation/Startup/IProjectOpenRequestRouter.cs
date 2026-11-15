@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -18,6 +19,13 @@ public interface IProjectOpenRequestRouter
     Task RequestOpenAsync(IEnumerable<string> paths);
 
     /// <summary>
+    /// Handles a request from another Gum launch: like <see cref="RequestOpenAsync(IEnumerable{string})"/>,
+    /// then selects <see cref="SingleInstance.OpenRequest.Element"/> once its project is loaded. A project
+    /// that is already open is not loaded again. The latest request received during startup wins.
+    /// </summary>
+    Task RequestOpenAsync(SingleInstance.OpenRequest request);
+
+    /// <summary>
     /// Returns and clears the project requested during startup, or null if there is none. Called by
     /// the startup project load so the requested project replaces the last-opened one.
     /// </summary>
@@ -28,4 +36,14 @@ public interface IProjectOpenRequestRouter
     /// already chosen its project. Called once, at the end of the startup sequence.
     /// </summary>
     Task CompleteStartupAsync();
+
+    /// <summary>
+    /// Raised when the project this tool has open changes: loaded, newly created, or first saved
+    /// to a file. The argument is the project file's path, or null when there is no file. A running
+    /// Gum uses it to claim the project it now owns (#8076).
+    /// </summary>
+    event Action<string?> ProjectPathChanged;
+
+    /// <summary>Raises <see cref="ProjectPathChanged"/>.</summary>
+    void NotifyProjectPathChanged(string? projectPath);
 }

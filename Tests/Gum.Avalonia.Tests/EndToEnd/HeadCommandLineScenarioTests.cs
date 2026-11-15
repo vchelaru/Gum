@@ -233,7 +233,8 @@ public class HeadCommandLineScenarioTests
         CopyProject(fixture.ProjectFolder, otherFolder);
         string otherProject = Path.Combine(otherFolder, Path.GetFileName(fixture.ProjectFilePath));
         ProjectOpenRequestRouter router = new ProjectOpenRequestRouter(fixture.SelectedState,
-            new Lazy<IFileCommands>(() => Services.GetRequiredService<IFileCommands>()));
+            new Lazy<IFileCommands>(() => Services.GetRequiredService<IFileCommands>()),
+            new Lazy<Gum.ToolStates.IProjectState>(() => Services.GetRequiredService<Gum.ToolStates.IProjectState>()));
         FileActivationHandler handler = new FileActivationHandler(new Lazy<IProjectOpenRequestRouter>(() => router));
 
         handler.HandleActivated(null, Activation(otherProject));

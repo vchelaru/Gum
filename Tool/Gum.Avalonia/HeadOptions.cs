@@ -3,21 +3,27 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using Gum.CommandLine;
+using Gum.Startup.SingleInstance;
 
 namespace Gum.Avalonia;
 
 /// <summary>
 /// Options the Avalonia head reads from its own command line for unattended verification runs:
 /// <c>--exit-after seconds</c>, <c>--screenshot path.png</c>, <c>--select Element[#Instance]</c>,
-/// <c>--theme light|dark</c>, <c>--user-data folder</c>, and <c>--zoom-to-fit</c>. Everything else is left for
+/// <c>--theme light|dark</c>, <c>--user-data folder</c>, <c>--zoom-to-fit</c>, <c>--no-handoff</c> and
+/// <c>--await-open-requests count</c>. Everything else is left for
 /// <see cref="Gum.CommandLine.CommandLineManager"/>, which reads the process command line itself.
 /// </summary>
 public sealed class HeadOptions
 {
     /// <summary>Creates the options.</summary>
     public HeadOptions(double? exitAfterSeconds, string? screenshotPath, string? selectPath = null, string? theme = null, string? userDataFolder = null,
-        bool zoomToFit = false, string? startupFileError = null)
+        bool zoomToFit = false, string? startupFileError = null, OpenRequest? handoffRequest = null, bool noHandoff = false,
+        int? awaitOpenRequests = null)
     {
+        HandoffRequest = handoffRequest;
+        NoHandoff = noHandoff;
+        AwaitOpenRequests = awaitOpenRequests;
         StartupFileError = startupFileError;
         ExitAfterSeconds = exitAfterSeconds;
         ScreenshotPath = screenshotPath;
@@ -76,6 +82,32 @@ public sealed class HeadOptions
     /// </summary>
     public string? StartupFileError { get; }
 
+    /// <summary>
+    /// The project, and the element when an element file is named, that this launch asks for; null
+    /// when no usable project file is on the command line. A second launch sends it to the Gum that
+    /// already owns the project instead of opening another window (#8076).
+    /// </summary>
+    public OpenRequest? HandoffRequest { get; }
+
+    /// <summary>
+    /// True when this launch claims the project it ends up with open so later launches can reach it:
+    /// not started with <c>--no-handoff</c>, and not an unattended run unless
+    /// <see cref="AwaitOpenRequests"/> asks for it.
+    /// </summary>
+    public bool TakesPartInHandoff => !NoHandoff && (ExitAfterSeconds == null || AwaitOpenRequests != null);
+
+    /// <summary>
+    /// <c>--no-handoff</c>: start a new Gum even when another one owns the project, and claim nothing.
+    /// </summary>
+    public bool NoHandoff { get; }
+
+    /// <summary>
+    /// <c>--await-open-requests N</c>: an unattended run (<see cref="ExitAfterSeconds"/>) does not
+    /// capture and exit until N requests from later launches have been handled. Lets a script drive
+    /// the handoff without a visible window.
+    /// </summary>
+    public int? AwaitOpenRequests { get; }
+
     /// <summary>Parses the head-owned flags and ignores everything else.</summary>
     public static HeadOptions Parse(IReadOnlyList<string> args)
     {
@@ -85,6 +117,8 @@ public sealed class HeadOptions
         string? theme = null;
         string? userData = null;
         bool zoomToFit = false;
+        bool noHandoff = false;
+        int? awaitOpenRequests = null;
         List<string> positionals = new List<string>();
         bool followsUnknownFlag = false;
         for (int i = 0; i < args.Count; i++)
@@ -111,6 +145,14 @@ public sealed class HeadOptions
             {
                 zoomToFit = true;
             }
+            else if (args[i] == "--no-handoff")
+            {
+                noHandoff = true;
+            }
+            else if (args[i] == "--await-open-requests" && i + 1 < args.Count)
+            {
+                awaitOpenRequests = int.Parse(args[++i], CultureInfo.InvariantCulture);
+            }
             else if (args[i] == "--user-data" && i + 1 < args.Count)
             {
                 userData = Path.GetFullPath(args[++i]);
@@ -125,7 +167,43 @@ public sealed class HeadOptions
                 positionals.Add(args[i]);
             }
         }
-        return new HeadOptions(exitAfter, screenshot, select, theme, userData, zoomToFit, FindStartupFileError(positionals));
+        string? startupFileError = FindStartupFileError(positionals);
+        return new HeadOptions(exitAfter, screenshot, select, theme, userData, zoomToFit, startupFileError,
+            startupFileError == null ? FindHandoffRequest(positionals) : null, noHandoff, awaitOpenRequests);
+    }
+
+    // The last explicit project file names the project; otherwise the project beside the last element
+    // file does. The last element file names the element, as CommandLineManager reads it.
+    private static OpenRequest? FindHandoffRequest(IReadOnlyList<string> positionals)
+    {
+        string? project = null;
+        string? elementFile = null;
+        foreach (string positional in positionals)
+        {
+            if (!CommandLineManager.TryResolveStartupFile(positional, out string? resolvedProject, out string? elementName))
+            {
+                continue;
+            }
+
+            if (elementName == null)
+            {
+                project = resolvedProject;
+            }
+            else
+            {
+                elementFile = positional;
+                project ??= resolvedProject;
+            }
+        }
+
+        if (project == null)
+        {
+            return null;
+        }
+
+        string projectPath = Path.GetFullPath(project);
+        string? element = elementFile == null ? null : InstanceIdentity.ElementNameFor(projectPath, Path.GetFullPath(elementFile));
+        return new OpenRequest(projectPath, element);
     }
 
     // The head and CommandLineManager read the same arguments; the last project or element file wins there.

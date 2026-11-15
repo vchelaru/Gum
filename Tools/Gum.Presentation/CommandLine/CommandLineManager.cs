@@ -144,17 +144,43 @@ namespace Gum.CommandLine
                 // A relative path is relative to the working directory; a one-folder one such as
                 // Components/Foo.gucx has no directory above its folder to find without this (#7134).
                 string elementPath = System.IO.Path.IsPathRooted(arg) ? arg : System.IO.Path.GetFullPath(arg);
-                string gluxDirectory = FileManager.GetDirectory(FileManager.GetDirectory(elementPath));
+                string gluxDirectory = FindProjectDirectory(elementPath);
 
                 // The containing project may itself be XML or JSON-formatted (issue #4182) -
                 // whichever project file sits next to the element wins.
                 projectToLoad = System.IO.Directory.Exists(gluxDirectory)
                     ? System.IO.Directory.GetFiles(gluxDirectory).FirstOrDefault(GumProjectSave.IsProjectFile)
                     : null;
+                if (projectToLoad != null)
+                {
+                    // Below Screens, Components or Standards the name includes the subfolder.
+                    elementName = Startup.SingleInstance.InstanceIdentity.ElementNameFor(projectToLoad, elementPath) ?? elementName;
+                }
                 return true;
             }
 
             return false;
+        }
+
+        // The folder above the Screens, Components or Standards folder the element sits in, at any depth;
+        // for a file outside those folders, the folder above its own.
+        private static string FindProjectDirectory(string elementPath)
+        {
+            string? directory = System.IO.Path.GetDirectoryName(elementPath);
+            while (directory != null)
+            {
+                string name = System.IO.Path.GetFileName(directory);
+                if (name.Equals("Screens", StringComparison.OrdinalIgnoreCase) ||
+                    name.Equals("Components", StringComparison.OrdinalIgnoreCase) ||
+                    name.Equals("Standards", StringComparison.OrdinalIgnoreCase))
+                {
+                    return System.IO.Path.GetDirectoryName(directory) ?? directory;
+                }
+
+                directory = System.IO.Path.GetDirectoryName(directory);
+            }
+
+            return FileManager.GetDirectory(FileManager.GetDirectory(elementPath));
         }
 
         private void ReportUsageError(string message)

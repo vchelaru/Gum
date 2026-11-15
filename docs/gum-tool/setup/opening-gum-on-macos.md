@@ -53,4 +53,4 @@ If you clicked **Don't Allow**, Gum cannot read the project. To fix it:
 * **Gum is blocked again after updating.** Each new download carries a new internet mark. Approve the new copy with either option above.
 * **Gum opens but can't find your project.** Check the folder access steps in [Folder Access Prompts](#folder-access-prompts).
 
-For other setup details, including how to open a project from the command line, see [Setup](README.md).
+For other setup details, see [Setup](README.md). To open a project from the command line, see [Launching Gum with a Project](launching-gum-with-a-project.md).

@@ -8,6 +8,8 @@ using Gum.Diagnostics;
 using Gum.Services;
 using Gum.Services.Dialogs;
 using Gum.Settings;
+using Gum.Startup;
+using Gum.Startup.SingleInstance;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -38,6 +40,16 @@ public static class Program
 
         // Before anything reads or writes a per-user file.
         ApplyUserDataFolder(options);
+
+        // Before a window or a project load: a launch that finds the project already owned hands
+        // its request over and exits, and the owner's pipe exists before the slow startup begins.
+        using SingleInstanceGate? gate = EnterSingleInstanceGate(options);
+        if (gate?.Outcome == GateOutcome.HandedOff)
+        {
+            Console.Out.WriteLine("Handed " + options.HandoffRequest!.Project + " to the running Gum.");
+            return 0;
+        }
+
         if (options.ExitAfterSeconds is double exitAfterSeconds)
         {
             _exitDeadline = UnattendedExitDeadline.Start(UnattendedExitDeadline.For(exitAfterSeconds), ForceExit);
@@ -52,10 +64,24 @@ public static class Program
         UnhandledExceptionHooks.InstallProcessHooks(crashReporter);
 
         using IHost host = CreateHostBuilder(args)
-            .ConfigureServices(serviceCollection => serviceCollection.AddSingleton<ICrashReporter>(crashReporter))
+            .ConfigureServices(serviceCollection =>
+            {
+                serviceCollection.AddSingleton<ICrashReporter>(crashReporter);
+                if (gate?.Inbox is { } inbox)
+                {
+                    serviceCollection.AddSingleton<IOpenRequestInbox>(inbox);
+                }
+            })
             .Build();
         StartupTiming.Mark("Host built");
         Locator.Register(host.Services);
+        if (gate != null)
+        {
+            // The claim follows the project this Gum has open, so a launch for any other project
+            // opens its own Gum and a launch for this one reaches this Gum.
+            host.Services.GetRequiredService<IProjectOpenRequestRouter>().ProjectPathChanged += path => gate.Reclaim(path);
+        }
+
         host.StartAsync().GetAwaiter().GetResult();
 
         int exitCode = BuildAvaloniaApp(host.Services, options)
@@ -69,6 +95,61 @@ public static class Program
         host.StopAsync().GetAwaiter().GetResult();
         return exitCode;
     }
+
+    // Null when the launch does not take part. A launch that names a project waits for an owner that
+    // is still starting, so it is delivered instead of opening a second copy. One that names none
+    // claims the project it is about to reopen, so a launch during its startup reaches it.
+    private static SingleInstanceGate? EnterSingleInstanceGate(HeadOptions options)
+    {
+        if (!options.TakesPartInHandoff)
+        {
+            return null;
+        }
+
+        // Gum always starts: a claim that fails for any reason leaves this Gum unclaimed.
+        try
+        {
+            return EnterSingleInstanceGateCore(options);
+        }
+        catch (Exception exception)
+        {
+            Console.Error.WriteLine("The single-instance claim failed (" + exception.Message + "). Starting a new Gum.");
+            ToolLog.WriteException("single-instance gate", exception);
+            return null;
+        }
+    }
+
+    private static SingleInstanceGate EnterSingleInstanceGateCore(HeadOptions options)
+    {
+        string instanceDirectory = InstanceIdentity.DefaultInstanceDirectory();
+        string userName = Environment.UserName;
+        bool caseSensitive = InstanceIdentity.IsFileSystemCaseSensitive();
+        if (options.HandoffRequest == null)
+        {
+            SingleInstanceGate unclaimed = SingleInstanceGate.StartUnclaimed(instanceDirectory, userName, caseSensitive);
+            unclaimed.Reclaim(LastOpenedProject());
+            return unclaimed;
+        }
+
+        SingleInstanceGate gate = SingleInstanceGate.Enter(
+            options.HandoffRequest,
+            instanceDirectory,
+            userName,
+            caseSensitive,
+            TimeSpan.FromSeconds(15),
+            WindowsForegroundPermission.Allow);
+        if (gate.Outcome == GateOutcome.Unclaimed && gate.Message != null)
+        {
+            Console.Error.WriteLine(gate.Message + " Starting a new Gum.");
+        }
+
+        return gate;
+    }
+
+    // The project startup will reopen unless something stops it; a wrong guess is corrected when the
+    // project that did open reports its path.
+    private static string? LastOpenedProject() =>
+        GeneralSettingsFile.LoadOrCreateNew().LastProject is { Length: > 0 } last && File.Exists(last) ? last : null;
 
     /// <summary>
     /// Points every per-user file (settings, recent projects, crash logs) at <c>--user-data</c>'s

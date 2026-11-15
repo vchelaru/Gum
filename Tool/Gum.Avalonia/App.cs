@@ -29,6 +29,7 @@ using Gum.Plugins.InternalPlugins.EditorTab.Services;
 using Gum.Services;
 using Gum.Services.Dialogs;
 using Gum.Startup;
+using Gum.Startup.SingleInstance;
 using Gum.ToolStates;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -44,6 +45,8 @@ public sealed class App : Application
     private readonly HeadOptions _options;
     private readonly IFreezeDiagnosticsInbox _freezeDiagnostics;
     private bool _previousSessionEndedDirty;
+    private readonly TaskCompletionSource _awaitedOpenRequestsHandled = new TaskCompletionSource();
+    private int _handledOpenRequests;
 
     /// <summary>Creates the app over the built service host.</summary>
     public App(IServiceProvider services, HeadOptions options)
@@ -119,19 +122,60 @@ public sealed class App : Application
 
             window.Opened += (_, _) =>
             {
+                // Before startup runs: requests that arrived while the tool was starting are queued
+                // in the inbox, and the router holds them until the startup load has finished.
+                _services.GetService<IOpenRequestInbox>()?.Attach(request =>
+                    Dispatcher.UIThread.InvokeAsync(() => HandleOpenRequestAsync(request, window)));
                 messenger.Send<ApplicationStartupMessage>();
                 TaskCompletionSource<UnattendedStartupOutcome> startup = new TaskCompletionSource<UnattendedStartupOutcome>();
                 StartupFailureReporter failureReporter = new StartupFailureReporter(window, Console.Error);
                 Dispatcher.UIThread.Post(() => _ = SignalStartupAsync(startup, desktop, failureReporter), DispatcherPriority.Background);
                 if (_options.ExitAfterSeconds is double seconds)
                 {
-                    _ = RunUnattendedAsync(startup.Task, seconds, window, desktop, messenger, failureReporter);
+                    _ = RunUnattendedAsync(AwaitOpenRequestsAsync(startup.Task), seconds, window, desktop, messenger, failureReporter);
                 }
                 StartFreezeWatchdog();
             };
         }
 
         base.OnFrameworkInitializationCompleted();
+    }
+
+    // A request from a later launch: open or select it, then come forward (an unattended run stays put).
+    private async Task HandleOpenRequestAsync(OpenRequest request, Window window)
+    {
+        await _services.GetRequiredService<IProjectOpenRequestRouter>().RequestOpenAsync(request);
+        if (_options.ExitAfterSeconds == null)
+        {
+            BringToFront(window);
+        }
+
+        if (_options.AwaitOpenRequests is int awaited && ++_handledOpenRequests >= awaited)
+        {
+            _awaitedOpenRequestsHandled.TrySetResult();
+        }
+    }
+
+    internal static void BringToFront(Window window)
+    {
+        if (window.WindowState == WindowState.Minimized)
+        {
+            window.WindowState = WindowState.Normal;
+        }
+
+        window.Activate();
+    }
+
+    // The unattended run captures only after the requests it was told to expect have been applied.
+    private async Task<UnattendedStartupOutcome> AwaitOpenRequestsAsync(Task<UnattendedStartupOutcome> startup)
+    {
+        UnattendedStartupOutcome outcome = await startup;
+        if (outcome == UnattendedStartupOutcome.Ready && _options.AwaitOpenRequests != null)
+        {
+            await _awaitedOpenRequestsHandled.Task;
+        }
+
+        return outcome;
     }
 
     private async Task SignalStartupAsync(TaskCompletionSource<UnattendedStartupOutcome> startup,

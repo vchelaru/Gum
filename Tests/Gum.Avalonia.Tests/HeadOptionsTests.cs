@@ -1,5 +1,6 @@
 ﻿using System.IO;
 using Gum.CommandLine;
+using Gum.Startup.SingleInstance;
 using Shouldly;
 
 namespace Gum.Avalonia.Tests;
@@ -99,5 +100,98 @@ public class HeadOptionsTests
 
         project.ShouldBeNull();
         elementName.ShouldBe("Foo");
+    }
+
+    private static string MakeProjectFolder(out string project, out string menuScreen)
+    {
+        string folder = Path.Combine(Path.GetTempPath(), "HeadOptions-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(Path.Combine(folder, "Screens", "Menus"));
+        project = Path.Combine(folder, "Ui.gumx");
+        menuScreen = Path.Combine(folder, "Screens", "Menus", "Main.gusx");
+        File.WriteAllText(project, "");
+        File.WriteAllText(menuScreen, "");
+        return folder;
+    }
+
+    [Fact]
+    public void HandoffRequest_ProjectAndScreen_NamesTheProjectAndTheScreenBelowItsFolder()
+    {
+        string folder = MakeProjectFolder(out string project, out string screen);
+        try
+        {
+            HeadOptions.Parse(new[] { project, screen }).HandoffRequest.ShouldBe(new OpenRequest(project, "Menus/Main"));
+            HeadOptions.Parse(new[] { screen, project }).HandoffRequest.ShouldBe(new OpenRequest(project, "Menus/Main"));
+        }
+        finally
+        {
+            Directory.Delete(folder, true);
+        }
+    }
+
+    [Fact]
+    public void HandoffRequest_ScreenOnly_FindsTheProjectBesideItsFolder()
+    {
+        string folder = MakeProjectFolder(out string project, out string screen);
+        try
+        {
+            HeadOptions.Parse(new[] { screen }).HandoffRequest.ShouldBe(new OpenRequest(project, "Menus/Main"));
+        }
+        finally
+        {
+            Directory.Delete(folder, true);
+        }
+    }
+
+    [Fact]
+    public void HandoffRequest_ProjectOnly_HasNoElement()
+    {
+        string folder = MakeProjectFolder(out string project, out _);
+        try
+        {
+            HeadOptions.Parse(new[] { project }).HandoffRequest.ShouldBe(new OpenRequest(project, null));
+        }
+        finally
+        {
+            Directory.Delete(folder, true);
+        }
+    }
+
+    [Fact]
+    public void HandoffRequest_IsNullWithoutAProject_OrWhenTheFileIsBad()
+    {
+        HeadOptions.Parse(new[] { "--exit-after", "5" }).HandoffRequest.ShouldBeNull();
+        HeadOptions.Parse(new[] { Path.Combine(Path.GetTempPath(), "no-such-folder-8076", "Missing.gumx") }).HandoffRequest.ShouldBeNull();
+        HeadOptions.Parse(new[] { "run.ps1" }).HandoffRequest.ShouldBeNull();
+    }
+
+    [Fact]
+    public void Parse_ReadsNoHandoffAndAwaitOpenRequests()
+    {
+        HeadOptions options = HeadOptions.Parse(new[] { "--no-handoff", "--await-open-requests", "2" });
+
+        options.NoHandoff.ShouldBeTrue();
+        options.AwaitOpenRequests.ShouldBe(2);
+        HeadOptions plain = HeadOptions.Parse(new[] { "project.gumx" });
+        plain.NoHandoff.ShouldBeFalse();
+        plain.AwaitOpenRequests.ShouldBeNull();
+    }
+
+    [Fact]
+    public void TakesPartInHandoff_OnlyForAttendedLaunchesOrOnesThatAwaitRequests()
+    {
+        string folder = MakeProjectFolder(out string project, out _);
+        try
+        {
+            HeadOptions.Parse(new[] { project }).TakesPartInHandoff.ShouldBeTrue();
+            HeadOptions.Parse(new[] { project, "--no-handoff" }).TakesPartInHandoff.ShouldBeFalse();
+            HeadOptions.Parse(new[] { project, "--exit-after", "5" }).TakesPartInHandoff.ShouldBeFalse();
+            HeadOptions.Parse(new[] { project, "--exit-after", "5", "--await-open-requests", "1" }).TakesPartInHandoff.ShouldBeTrue();
+            HeadOptions.Parse(new[] { "--exit-after", "5" }).TakesPartInHandoff.ShouldBeFalse();
+            HeadOptions.Parse(Array.Empty<string>()).TakesPartInHandoff.ShouldBeTrue();
+        }
+        finally
+        {
+            Directory.Delete(folder, true);
+        }
     }
 }
