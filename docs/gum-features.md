@@ -64,7 +64,7 @@ Open any screen or component in its own window running the real runtime, where b
 
 ### [Variable References](gum-tool/gum-elements/general-properties/variable-references.md)
 
-Point any variable at another variable, like a spreadsheet formula, to keep sizes and colors consistent across a project.
+Point any variable at another variable or a formula, like a spreadsheet, to keep sizes and colors consistent across a project or to generate whole layouts from math, such as an instance's index.
 
 <figure><img src=".gitbook/assets/15_15 03 44.png" alt=""><figcaption><p>Variable references drive each square's size, position, and rotation from its index</p></figcaption></figure>
 
