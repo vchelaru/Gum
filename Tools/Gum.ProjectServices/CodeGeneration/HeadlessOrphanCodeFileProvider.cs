@@ -10,6 +10,14 @@ namespace Gum.ProjectServices.CodeGeneration;
 /// </summary>
 public class HeadlessOrphanCodeFileProvider : IOrphanCodeFileProvider
 {
+    private readonly TextWriter _error;
+
+    /// <param name="error">Where notes about an incomplete scan go. Null discards them.</param>
+    public HeadlessOrphanCodeFileProvider(TextWriter? error = null)
+    {
+        _error = error ?? TextWriter.Null;
+    }
+
     /// <inheritdoc/>
     public OrphanCodeFileScanResult? GetOrphans(GumProjectSave project)
     {
@@ -23,22 +31,25 @@ public class HeadlessOrphanCodeFileProvider : IOrphanCodeFileProvider
         IProjectDirectoryProvider projectDirectoryProvider = new FixedProjectDirectoryProvider(projectDirectory);
         ICodeGenLogger logger = new TextWriterCodeGenLogger(TextWriter.Null, TextWriter.Null);
         CodeOutputProjectSettingsManager settingsManager = new CodeOutputProjectSettingsManager(logger, projectDirectoryProvider);
-        CodeOutputProjectSettings projectSettings = settingsManager.TryLoadSettingsForProject()
-            ?? CodeOutputProjectSettingsManager.CreateDefaultSettings();
+        CodeOutputProjectSettings? loaded = settingsManager.TryLoadSettingsForProject(out string? loadError);
+        if (loadError != null)
+        {
+            _error.WriteLine("warning: could not read ProjectCodeSettings.codsj, so the orphaned code file check " +
+                $"used default settings and may be incomplete: {loadError}");
+        }
+        CodeOutputProjectSettings projectSettings = loaded ?? CodeOutputProjectSettingsManager.CreateDefaultSettings();
 
-        // The same pipeline gumcli codegen --prune scans with; a variable the engine profile hides decides
-        // which elements are generated, and so which files are orphans.
-        CodeGenerationNameVerifier nameVerifier = new CodeGenerationNameVerifier(new NameRules());
-        CodeOutputElementSettingsManager elementSettingsManager = new CodeOutputElementSettingsManager(projectDirectoryProvider);
+        // A variable the engine profile hides decides which elements are generated, and so which files are orphans.
         EngineProfileLoadResult profileResult = new EngineProfileLoader().Load(project.FullFileName, project.EngineProfile);
-        CodeGenerator codeGenerator = new CodeGenerator(
-            nameVerifier, new Gum.Localization.LocalizationService(), elementSettingsManager, projectDirectoryProvider,
-            variableRestrictions: new EngineProfileVariableRestrictions(profileResult.Profile));
-        CodeGenerationFileLocationsService fileLocationsService = new CodeGenerationFileLocationsService(
-            codeGenerator, nameVerifier, projectDirectoryProvider);
+        OrphanCodeFileScanPipeline pipeline = OrphanCodeFileScanPipeline.Create(
+            projectDirectoryProvider, new CodeGenerationNameVerifier(new NameRules()),
+            new Gum.Localization.LocalizationService(), new EngineProfileVariableRestrictions(profileResult.Profile));
 
-        OrphanCodeFileScanService scanService = new OrphanCodeFileScanService(
-            codeGenerator, fileLocationsService, elementSettingsManager, projectDirectoryProvider);
-        return scanService.Scan(project, projectSettings);
+        OrphanCodeFileScanResult result = pipeline.ScanService.Scan(project, projectSettings);
+        if (result.IsTruncated)
+        {
+            _error.WriteLine("warning: " + OrphanCodeFileScanService.GetTruncatedMessage(result.CodeRoot));
+        }
+        return result;
     }
 }

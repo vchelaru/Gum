@@ -64,6 +64,18 @@ public class CheckOrphanedCodeFilesTests : BaseTestClass
         result.StandardOutput.ShouldNotContain("GUM0005");
     }
 
+    [Fact]
+    public void Check_UnreadableCodeSettings_ShouldWarnOnStandardErrorAndKeepTheExitCode()
+    {
+        string gumxPath = CreateProjectWithCodeSettings();
+        File.WriteAllText(Path.Combine(TempDirectory, "ProjectCodeSettings.codsj"), "{ not json");
+
+        CliTestHelper result = CliTestHelper.Run("check", gumxPath);
+
+        result.ExitCode.ShouldBe(0, customMessage: result.StandardOutput);
+        result.StandardError.ShouldContain("ProjectCodeSettings.codsj");
+    }
+
     private string CreateProjectWithCodeSettings()
     {
         string gumxPath = Path.Combine(TempDirectory, "MyProject.gumx");

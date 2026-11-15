@@ -40,7 +40,11 @@ Detection is deliberately conservative, so it never flags a file Gum did not wri
 
 ## Finding Them From the Command Line
 
-`gumcli check <project>` reports the same files as **GUM0005** warnings, so a CI job can see them. Warnings do not change the exit code. Add `--json` to read each file's path and kind from `details`.
+`gumcli check <project>` reports orphaned code files as **GUM0005** warnings. Warnings do not change the exit code, so a script that needs to act on them reads the `--json` output and looks for the `GUM0005` code. Each entry's `details` holds the file path and kind.
+
+{% hint style="info" %}
+Available in December 2026, or now if building Gum from source.
+{% endhint %}
 
 ## Cleaning Up From the Command Line
 

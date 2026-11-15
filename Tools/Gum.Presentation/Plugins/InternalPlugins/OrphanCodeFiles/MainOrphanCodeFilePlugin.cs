@@ -64,18 +64,17 @@ internal class MainOrphanCodeFilePlugin : PluginBase
         // how MainCodeOutputPlugin and the CLI assemble it.
         IProjectDirectoryProvider projectDirectoryProvider = new ProjectStateDirectoryProvider(projectState);
         var codeGenerationNameVerifier = new CodeGenerationNameVerifier(nameVerifier);
-        var elementSettingsManager = new CodeOutputElementSettingsManager(projectDirectoryProvider);
         ICodeGenLogger logger = new ToolCodeGenLogger(outputManager);
-        var codeGenerator = new CodeGenerator(
-            codeGenerationNameVerifier, localizationService, elementSettingsManager, projectDirectoryProvider,
-            variableRestrictions: projectRestrictions);
-        var fileLocationsService = new CodeGenerationFileLocationsService(
-            codeGenerator, codeGenerationNameVerifier, projectDirectoryProvider);
+        // The scan's services come from the factory gumcli check also uses.
+        OrphanCodeFileScanPipeline pipeline = OrphanCodeFileScanPipeline.Create(
+            projectDirectoryProvider, codeGenerationNameVerifier, localizationService, projectRestrictions);
+        CodeOutputElementSettingsManager elementSettingsManager = pipeline.ElementSettingsManager;
+        CodeGenerator codeGenerator = pipeline.CodeGenerator;
+        CodeGenerationFileLocationsService fileLocationsService = pipeline.FileLocationsService;
 
         _projectSettingsManager = new CodeOutputProjectSettingsManager(logger, projectDirectoryProvider);
 
-        IOrphanCodeFileScanService scanService = new OrphanCodeFileScanService(
-            codeGenerator, fileLocationsService, elementSettingsManager, projectDirectoryProvider);
+        IOrphanCodeFileScanService scanService = pipeline.ScanService;
 
         var customCodeGenerator = new CustomCodeGenerator(codeGenerator, codeGenerationNameVerifier);
         var codeGenerationService = new CodeGenerationService(guiCommands, codeGenerator, dialogService,

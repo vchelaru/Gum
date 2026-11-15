@@ -82,7 +82,7 @@ public static class CheckCommand
         HeadlessErrorChecker checker = new HeadlessErrorChecker(
             typeResolver,
             new IAdditionalErrorSource[] { new AnimationKeyframeErrorSource(new FileElementAnimationsProvider()) },
-            new HeadlessOrphanCodeFileProvider())
+            new HeadlessOrphanCodeFileProvider(Console.Error))
         {
             ReportsLeftoverInstanceVariables = true
         };
