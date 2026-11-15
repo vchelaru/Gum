@@ -18,26 +18,35 @@ public class ExportAsImageAlphaTests
 {
     private static IServiceProvider Services => TestAppBuilder.Services;
 
-    [Theory]
-    [InlineData(false)]
-    [InlineData(true)]
+    [Fact]
     [Trait("Feature", "FILE-007")]
-    public void ExportAsImage_TranslucentElements_WriteStraightAlphaPng(bool premultiplied)
+    public void ExportAsImage_TranslucentElements_WriteStraightAlphaPng()
     {
         Assert.SkipUnless(CanvasHarness.CanRun, CanvasHarness.SkipReason);
         CanvasHarness.OnUiThread(() =>
         {
-            // Set before anything loads, so textures and fonts are premultiplied on load.
-            Renderer.UsePremultipliedAlpha = premultiplied;
-            try
-            {
-                ExportAndCheck(premultiplied);
-            }
-            finally
-            {
-                Renderer.UsePremultipliedAlpha = false;
-            }
+            // One test, in this order, on purpose. Renderer.UsePremultipliedAlpha is meant to be set before
+            // anything loads; switching it back from true leaves the shared font atlas premultiplied, so the
+            // straight run after a premultiplied one reads glyph edges at half color (reproduced by running
+            // the true run first; clearing LoaderManager does not help). Separate theory rows left the order
+            // to the test runner and failed on CI when it put the premultiplied row first.
+            RunWithAlphaMode(premultiplied: false);
+            RunWithAlphaMode(premultiplied: true);
         });
+    }
+
+    private static void RunWithAlphaMode(bool premultiplied)
+    {
+        // Set before anything loads, so textures and fonts are premultiplied on load.
+        Renderer.UsePremultipliedAlpha = premultiplied;
+        try
+        {
+            ExportAndCheck(premultiplied);
+        }
+        finally
+        {
+            Renderer.UsePremultipliedAlpha = false;
+        }
     }
 
     private static void ExportAndCheck(bool premultiplied)
