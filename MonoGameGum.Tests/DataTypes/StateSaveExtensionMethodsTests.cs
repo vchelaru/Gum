@@ -119,4 +119,62 @@ public class StateSaveExtensionMethodsTests : BaseTestClass
             CultureInfo.CurrentCulture = originalCulture;
         }
     }
+
+    private static StateSave CreateStateWith(string name, string type, object value)
+    {
+        StateSave state = new StateSave();
+        state.Variables.Add(new VariableSave { Name = name, Type = type, Value = value, SetsValue = true });
+        return state;
+    }
+
+    [Fact]
+    public void SubtractFromThis_BoolVariable_KeepsTheValueBeingSubtractedFrom()
+    {
+        // Relative animations compute end - start. A bool can't be subtracted, so the end value must survive;
+        // otherwise a Visible true -> false animation never ends invisible.
+        StateSave end = CreateStateWith("Visible", "bool", false);
+        StateSave start = CreateStateWith("Visible", "bool", true);
+
+        end.SubtractFromThis(start);
+
+        end.Variables.Single().Value.ShouldBe(false);
+    }
+
+    [Fact]
+    public void SubtractFromThis_StringVariable_KeepsTheValueBeingSubtractedFrom()
+    {
+        StateSave end = CreateStateWith("Text", "string", "End");
+        StateSave start = CreateStateWith("Text", "string", "Start");
+
+        end.SubtractFromThis(start);
+
+        end.Variables.Single().Value.ShouldBe("End");
+    }
+
+    [Fact]
+    public void RelativeAnimationMath_BoolVariable_EndsOnTheEndValue()
+    {
+        // The generated relative animation does: difference = end - start; target = current + difference.
+        StateSave start = CreateStateWith("Visible", "bool", true);
+        StateSave end = CreateStateWith("Visible", "bool", false);
+        StateSave current = CreateStateWith("Visible", "bool", true);
+
+        end.SubtractFromThis(start);
+        current.AddIntoThis(end);
+
+        current.Variables.Single().Value.ShouldBe(false);
+    }
+
+    [Fact]
+    public void RelativeAnimationMath_FloatVariable_AddsTheDifference()
+    {
+        StateSave start = CreateStateWith("Y", "float", -150f);
+        StateSave end = CreateStateWith("Y", "float", 400f);
+        StateSave current = CreateStateWith("Y", "float", 10f);
+
+        end.SubtractFromThis(start);
+        current.AddIntoThis(end);
+
+        current.Variables.Single().Value.ShouldBe(560f);
+    }
 }

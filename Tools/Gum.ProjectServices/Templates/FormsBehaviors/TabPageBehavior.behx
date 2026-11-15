@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<BehaviorSave xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <Name>TabPageBehavior</Name>
+  <RequiredVariables />
+  <FormsProperty Type="string" Name="ToolTip" />
+  <FormsProperty Type="bool" Name="IsEnabled">
+    <Value xsi:type="xsd:boolean">true</Value>
+  </FormsProperty>
+  <ToolOnlyVariableReference>TabPageCategoryState = @FindAncestor&lt;TabControlBehavior&gt;().SelectedIndex == @Index ? "Selected" : "Unselected"</ToolOnlyVariableReference>
+  <Category>
+    <Name>TabPageCategory</Name>
+    <State>
+      <Name>Selected</Name>
+    </State>
+    <State>
+      <Name>Unselected</Name>
+    </State>
+  </Category>
+  <RequiredInstances />
+  <RequiredAnimations />
+  <DefaultImplementation>Controls/TabPage</DefaultImplementation>
+</BehaviorSave>

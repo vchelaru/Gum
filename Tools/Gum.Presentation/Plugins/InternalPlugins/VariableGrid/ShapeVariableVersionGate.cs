@@ -1,5 +1,8 @@
 using System.Collections.Generic;
+using System.Linq;
 using Gum.DataTypes;
+using Gum.DataTypes.Variables;
+using Gum.Managers;
 
 namespace Gum.Plugins.InternalPlugins.VariableGrid;
 
@@ -112,16 +115,57 @@ internal class ShapeVariableVersionGate
     /// </summary>
     public bool GetIfHiddenForProjectVersion(string rootName, string? rootStandardTypeName, int projectVersion)
     {
-        if (rootStandardTypeName == null || !GatedStandardTypeNames.Contains(rootStandardTypeName))
+        if (rootStandardTypeName == null)
         {
             return false;
         }
 
-        if (!GatedVariableMinimumVersions.TryGetValue(rootName, out int minimumVersion))
+        if (GatedStandardTypeNames.Contains(rootStandardTypeName) &&
+            GatedVariableMinimumVersions.TryGetValue(rootName, out int minimumVersion))
+        {
+            return projectVersion < minimumVersion;
+        }
+
+        return GetIfTaggedNewerThanProject(rootName, rootStandardTypeName, projectVersion);
+    }
+
+    // Variables the grid deliberately keeps visible on older projects even though their default is
+    // tagged: Stroke is the always-present surface of the shapes (see the map above), and Blend on
+    // Circle / Rectangle has always been shown.
+    private static readonly HashSet<string> AlwaysVisibleTaggedNames = new()
+    {
+        "StrokeWidth", "StrokeAlpha", "StrokeRed", "StrokeGreen", "StrokeBlue", "Blend",
+    };
+
+    private readonly StandardElementsManager? _standardElementsManager;
+
+    public ShapeVariableVersionGate()
+    {
+    }
+
+    /// <param name="standardElementsManager">Supplies the standard defaults whose
+    /// <c>MinimumGumxVersion</c> tags gate every standard type; without it only the map above applies.</param>
+    public ShapeVariableVersionGate(StandardElementsManager standardElementsManager)
+    {
+        _standardElementsManager = standardElementsManager;
+    }
+
+    /// <summary>
+    /// The general rule behind the map above: a standard variable whose default is tagged with a
+    /// <see cref="VariableSave.MinimumGumxVersion"/> newer than the project is hidden, for every
+    /// standard element type. This keeps the grid in step with the load-time back-fill gate, which
+    /// reads the same tags, without a second list per new variable (#7520).
+    /// </summary>
+    private bool GetIfTaggedNewerThanProject(string rootName, string rootStandardTypeName, int projectVersion)
+    {
+        if (_standardElementsManager == null || AlwaysVisibleTaggedNames.Contains(rootName))
         {
             return false;
         }
 
-        return projectVersion < minimumVersion;
+        StateSave? defaultState = _standardElementsManager.TryGetDefaultStateFor(rootStandardTypeName, throwExceptionOnMissing: false);
+        VariableSave? standardVariable = defaultState?.Variables.FirstOrDefault(variable => variable.Name == rootName);
+
+        return standardVariable != null && standardVariable.MinimumGumxVersion > projectVersion;
     }
 }

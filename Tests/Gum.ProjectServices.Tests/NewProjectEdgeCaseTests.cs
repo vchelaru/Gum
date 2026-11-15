@@ -53,8 +53,13 @@ public class NewProjectEdgeCaseTests : BaseTestClass
             : gumSourceSearchDirectories);
     }
 
-    private static NewProjectRequest Request(string path, string? platform = null) =>
-        new NewProjectRequest { Path = path, Platform = platform, Template = "empty", Restore = false };
+    private static NewProjectRequest Request(string path, string? platform = null, bool packages = false) =>
+        new NewProjectRequest
+        {
+            Path = path, Platform = platform, Template = "empty", Restore = false, IncludeRecommendedPackages = packages,
+            // KNI with Skia has no stable NuGet package, so this helper source-links it.
+            SourceLinked = platform == "kniskia"
+        };
 
     private static List<string> RelativeFiles(string root) =>
         Directory.GetFiles(root, "*", SearchOption.AllDirectories)
@@ -112,7 +117,44 @@ public class NewProjectEdgeCaseTests : BaseTestClass
         errors.ShouldBeEmpty(string.Join(Environment.NewLine, errors));
     }
 
-    // Small stand-ins for the Xna/KNI, Gum and Skia types the Game1/Program templates use.
+    [Theory]
+    [InlineData("monogame")]
+    [InlineData("kni")]
+    public async Task UpdateHost_WithTheAddOnPackages_GeneratesCodeThatCompiles(string platform)
+    {
+        NewProjectService service = CreateService();
+        NewProjectRequest request = Request(Path.Combine(_folder, "WithAddOns"), platform, packages: true);
+        NewProjectValidation validation = service.Validate(request);
+        validation.Error.ShouldBeNull(validation.Error?.Message);
+        NewProjectFilesResult files = await service.CreateFilesAsync(validation.Resolved!, CancellationToken.None);
+        service.UpdateHost(validation.Resolved!, files, packagesAdded: true, screenCodeGenerated: false);
+
+        string game = File.ReadAllText(Path.Combine(_folder, "WithAddOns", "Game1.cs"));
+        foreach (string call in new[] { "UseShadowDusk", "UseShapes", "UseKernSmith", "UseExpressions" })
+        {
+            game.ShouldContain(call + "();");
+        }
+
+        CSharpCompilation compilation = CSharpCompilation.Create(
+            "Host",
+            new[]
+            {
+                CSharpSyntaxTree.ParseText(XnaStubs),
+                CSharpSyntaxTree.ParseText(game),
+                CSharpSyntaxTree.ParseText(File.ReadAllText(Path.Combine(_folder, "WithAddOns", "Program.cs")))
+            },
+            ((string)AppContext.GetData("TRUSTED_PLATFORM_ASSEMBLIES")!).Split(Path.PathSeparator)
+                .Select(path => MetadataReference.CreateFromFile(path)),
+            new CSharpCompilationOptions(OutputKind.ConsoleApplication, nullableContextOptions: NullableContextOptions.Disable));
+        List<string> errors = compilation.GetDiagnostics()
+            .Where(diagnostic => diagnostic.Severity == DiagnosticSeverity.Error)
+            .Select(diagnostic => diagnostic.ToString())
+            .ToList();
+
+        errors.ShouldBeEmpty(string.Join(Environment.NewLine, errors));
+    }
+
+    // Small stand-ins for the Xna/KNI and Gum types the Game1/Program templates use.
     private const string XnaStubs = @"
 namespace Microsoft.Xna.Framework
 {
@@ -125,9 +167,12 @@ namespace Microsoft.Xna.Framework
     {
         public PresentationParameters PresentationParameters { get; } = new PresentationParameters();
         public void Clear(Color color) { }
-        public void SetRenderTarget(object target) { }
     }
-    public class GraphicsDeviceManager { public GraphicsDeviceManager(Game game) { } }
+    public class GraphicsDeviceManager
+    {
+        public GraphicsDeviceManager(Game game) { }
+        public Graphics.GraphicsProfile GraphicsProfile { get; set; }
+    }
     public class Game : System.IDisposable
     {
         public ContentManager Content { get; } = new ContentManager();
@@ -142,31 +187,9 @@ namespace Microsoft.Xna.Framework
         public void Dispose() { }
     }
 }
-namespace SkiaSharp
+namespace Microsoft.Xna.Framework.Graphics
 {
-    public struct SKColor { }
-    public static class SKColors { public static SKColor Transparent; }
-    public class SKCanvas { public void Clear(SKColor color) { } }
-}
-namespace SkiaGameRendering
-{
-    public class SkiaTexture { public int Width { get; set; } public int Height { get; set; } }
-    public class SkiaRenderTarget2D : System.IDisposable
-    {
-        public SkiaRenderTarget2D(Microsoft.Xna.Framework.GraphicsDevice device, int width, int height) { }
-        public SkiaTexture Texture { get; } = new SkiaTexture();
-        public SkiaSharp.SKCanvas Canvas { get; } = new SkiaSharp.SKCanvas();
-        public void Begin() { }
-        public void End() { }
-        public void Dispose() { }
-    }
-    public static class SkiaRenderer
-    {
-        public static bool IsInitialized { get; }
-        public static bool IsReady { get; }
-        public static void Initialize(Microsoft.Xna.Framework.GraphicsDevice device) { }
-        public static void Dispose() { }
-    }
+    public enum GraphicsProfile { Reach, HiDef }
 }
 namespace Gum
 {
@@ -176,8 +199,16 @@ namespace Gum
         public void Initialize(Microsoft.Xna.Framework.Game game, string project) { }
         public void Update(Microsoft.Xna.Framework.GameTime gameTime) { }
         public void Draw() { }
-        public void Draw(SkiaSharp.SKCanvas canvas) { }
-        public void HandleResize(int width, int height) { }
+        public GumService UseKeyboardDefaults() => this;
+        public GumService UseGamepadDefaults() => this;
+    }
+    // Non-generic, so they win over the real generic extensions this test project can also see.
+    public static class GumServiceAddOnStubs
+    {
+        public static GumService UseShadowDusk(this GumService service) => service;
+        public static GumService UseShapes(this GumService service) => service;
+        public static GumService UseKernSmith(this GumService service) => service;
+        public static GumService UseExpressions(this GumService service) => service;
     }
 }
 namespace Gum.Forms.Controls
@@ -231,7 +262,7 @@ namespace Gum.Forms.Controls
         NewProjectValidation validation = service.Validate(Request(Path.Combine(_folder, "Program"), platform));
 
         validation.Error!.Kind.ShouldBe(NewProjectErrorKind.InvalidProjectName);
-        validation.Error.Message.ShouldContain("namespace");
+        validation.Error.Message.ShouldContain("is reserved");
     }
 
     [Fact]

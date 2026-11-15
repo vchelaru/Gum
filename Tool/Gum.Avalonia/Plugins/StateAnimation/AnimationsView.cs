@@ -11,6 +11,7 @@ using Avalonia.Interactivity;
 using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.VisualTree;
+using Gum.Avalonia.Plugins.TreeView;
 using Gum.Avalonia.Services;
 using Gum.Avalonia.Shell;
 using StateAnimationPlugin;
@@ -122,6 +123,7 @@ public sealed class AnimationsView : Grid
         Grid area = new Grid { ColumnDefinitions = new ColumnDefinitions("Auto,*"), RowDefinitions = new RowDefinitions("Auto,*") };
 
         ToggleButton play = new ToggleButton { Margin = new Thickness(8, 0, 4, 0), MinWidth = 72, HorizontalContentAlignment = HorizontalAlignment.Center };
+        AvaloniaTreeIcons.FollowBaseFontSize(play, Layoutable.MinWidthProperty, 72);
         play.Bind(ToggleButton.IsCheckedProperty, new Binding(nameof(ElementAnimationsViewModel.IsPlaying)) { Mode = BindingMode.TwoWay });
         play.Bind(ContentControl.ContentProperty,new Binding(nameof(ElementAnimationsViewModel.IsPlaying)) { Converter = PlayStopText });
         play.Bind(IsVisibleProperty, new Binding(nameof(ElementAnimationsViewModel.SelectedAnimation)) { Converter = ObjectConverters.IsNotNull });
@@ -130,6 +132,7 @@ public sealed class AnimationsView : Grid
         StackPanel speed = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 2, VerticalAlignment = VerticalAlignment.Center };
         speed.Children.Add(CreateButton("−", "Slow Down: reduces game speed (makes it run in slow-motion)", vm => vm.DecreaseGameSpeed()));
         TextBlock speedText = new TextBlock { MinWidth = 48, TextAlignment = TextAlignment.Center, VerticalAlignment = VerticalAlignment.Center };
+        AvaloniaTreeIcons.FollowBaseFontSize(speedText, Layoutable.MinWidthProperty, 48);
         speedText.Bind(TextBlock.TextProperty, new Binding(nameof(ElementAnimationsViewModel.CurrentGameSpeed)) { FallbackValue = "100%" });
         speed.Children.Add(speedText);
         speed.Children.Add(CreateButton("+", "Speed Up: increases game speed (makes it run in fast-forward)", vm => vm.IncreaseGameSpeed()));
@@ -179,11 +182,25 @@ public sealed class AnimationsView : Grid
         return CreateColumn(title, add, animations);
     }
 
-    private static Control CreateAnimationRow()
+    // The category color dot shared by the animation list and the keyframe list.
+    private static Border CreateColorDot(Control host, string notifyPropertyName, Func<object?, string?> read)
+    {
+        Border dot = new Border { CornerRadius = new CornerRadius(100), VerticalAlignment = VerticalAlignment.Center };
+        AvaloniaTreeIcons.FollowBaseFontSize(dot, 9);
+        CategoryColorBrushes.Follow(host, dot, Border.BackgroundProperty, notifyPropertyName, read);
+        return dot;
+    }
+
+    internal static Control CreateAnimationRow()
     {
         StackPanel row = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 6 };
 
+        // A dot in the color of the category of the animation's first state; its space is kept when uncolored.
+        row.Children.Add(CreateColorDot(row, nameof(AnimationViewModel.CategoryColorName),
+            context => (context as AnimationViewModel)?.CategoryColorName));
+
         ToggleButton loops = new ToggleButton { MinWidth = 26, Padding = new Thickness(4, 0), HorizontalContentAlignment = HorizontalAlignment.Center };
+        AvaloniaTreeIcons.FollowBaseFontSize(loops, Layoutable.MinWidthProperty, 26);
         loops.Bind(ToggleButton.IsCheckedProperty, new Binding(nameof(AnimationViewModel.Loops)) { Mode = BindingMode.TwoWay });
         loops.Bind(ContentControl.ContentProperty,new Binding(nameof(AnimationViewModel.Loops)) { Converter = LoopText });
         loops.Bind(ToolTip.TipProperty, new Binding(nameof(AnimationViewModel.Loops)) { Converter = new FuncValueConverter<bool, string>(value => value ? "Loops forever" : "Plays once") });
@@ -260,7 +277,12 @@ public sealed class AnimationsView : Grid
         StackPanel row = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 6, Background = Brushes.Transparent };
         row.Bind(Panel.BackgroundProperty, new Binding(nameof(AnimatedKeyframeViewModel.IsTimelineVisualHovered)) { Converter = HoverBackground });
 
+        // A dot in the color of the keyframe state's category, transparent when uncolored.
+        row.Children.Add(CreateColorDot(row, nameof(AnimatedKeyframeViewModel.CategoryColorName),
+            context => (context as AnimatedKeyframeViewModel)?.CategoryColorName));
+
         TextBlock glyph = new TextBlock { MinWidth = 14, VerticalAlignment = VerticalAlignment.Center };
+        AvaloniaTreeIcons.FollowBaseFontSize(glyph, Layoutable.MinWidthProperty, 14);
         glyph.Bind(TextBlock.TextProperty, new MultiBinding
         {
             Converter = KeyframeGlyph,
@@ -328,6 +350,7 @@ public sealed class AnimationsView : Grid
     {
         DockPanel column = new DockPanel();
         Grid header = new Grid { ColumnDefinitions = new ColumnDefinitions("*,Auto"), MinHeight = 28, Background = new SolidColorBrush(Color.FromArgb(40, 128, 128, 128)) };
+        AvaloniaTreeIcons.FollowBaseFontSize(header, Layoutable.MinHeightProperty, 28);
         header.Children.Add(title);
         if (action != null)
         {

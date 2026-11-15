@@ -235,6 +235,9 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
 
     BitmapFont? EffectiveMeasurementFont => mMeasurementFont ?? mBitmapFont;
 
+    // The font glyphs are drawn from: while oversampling, the display font, not the pinned measurement font.
+    BitmapFont? DrawnFont => mBitmapFont ?? DefaultBitmapFont;
+
     /// <summary>
     /// Runs once per frame during this Text's <see cref="IRenderable.PreRender"/>, before texture
     /// regeneration. Used by <c>TextRuntime</c> (XNALIKE) to automatically re-rasterize at the
@@ -256,6 +259,47 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
         baseFontScale * SystemManagers.GlobalFontScale * mOversampleCompensationScale;
 
     private float EffectiveFontScale => ComposeFontScale(mFontScale);
+
+    // The step between plain lines as DrawTextLines draws them: the pinned measurement font while oversampling.
+    private float PlainDrawnLineStep =>
+        (EffectiveMeasurementFont?.LineHeightInPixels ?? LineHeightInPixels) * MeasurementFontScale * LineHeightMultiplier;
+
+    /// <inheritdoc cref="IFormsText.GetDrawnLineTop"/>
+    /// <remarks>
+    /// With inline variables each line steps as <see cref="DrawWithInlineVariables"/> advances (a size run makes
+    /// its line taller); without them every line steps by the plain line height.
+    /// </remarks>
+    public float GetDrawnLineTop(int lineIndex)
+    {
+        if (InlineVariables.Count == 0 || DrawnFont == null)
+        {
+            return lineIndex * PlainDrawnLineStep;
+        }
+
+        var font = DrawnFont;
+        float top = 0;
+        int startOfLineIndex = 0;
+        for (int i = 0; i < lineIndex; i++)
+        {
+            if (i >= WrappedText.Count)
+            {
+                top += font.EffectiveLineHeight(EffectiveFontScale, DrawLineHeightMultiplier);
+                continue;
+            }
+
+            var line = WrappedText[i];
+            var substrings = GetCachedStyledSubstrings(i, startOfLineIndex, line);
+            top += substrings.Count == 0
+                ? font.EffectiveLineHeight(EffectiveFontScale, DrawLineHeightMultiplier)
+                : ComputeStyledLineHeight(font, substrings, out _);
+            startOfLineIndex += line.Length;
+        }
+        return top;
+    }
+
+    /// <inheritdoc cref="IFormsText.DrawnGlyphRowHeight"/>
+    public float DrawnGlyphRowHeight =>
+        (EffectiveMeasurementFont?.LineHeightInPixels ?? LineHeightInPixels) * MeasurementFontScale;
 
     /// <summary>
     /// The scale this text draws at without <see cref="OversampleCompensationScale"/>:
@@ -1076,6 +1120,31 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
         return bitmapFontToUse.GetCharacterInfo(character)?.XAdvance ?? 0;
     }
 
+    // Glyphs are drawn from the display font at EffectiveFontScale, so a position within a line is that
+    // font's whole-pixel advances times that scale, never the pinned measurement font's (#6814, #7675).
+
+    /// <inheritdoc/>
+    public float MeasureDrawnString(string whatToMeasure, HorizontalMeasurementStyle style)
+    {
+        BitmapFont? drawnFont = DrawnFont;
+        if (drawnFont == null)
+        {
+            return MeasureString(whatToMeasure, style) * EffectiveFontScale;
+        }
+        return drawnFont.MeasureString(whatToMeasure, style) * EffectiveFontScale;
+    }
+
+    /// <inheritdoc/>
+    public float GetDrawnCharacterAdvance(char character)
+    {
+        BitmapFont? drawnFont = DrawnFont;
+        if (drawnFont == null)
+        {
+            return MeasureString(character.ToString()) * EffectiveFontScale;
+        }
+        return (drawnFont.GetCharacterInfo(character)?.XAdvance ?? 0) * EffectiveFontScale;
+    }
+
     // made public so that objects that need to position based off of the texture can force call this
     public void TryUpdateTextureToRender()
     {
@@ -1095,11 +1164,7 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
     {
         if (!mIsTextureCreationSuppressed && TextRenderingMode == TextRenderingMode.RenderTarget)
         {
-            BitmapFont? fontToUse = mBitmapFont;
-            if (mBitmapFont == null)
-            {
-                fontToUse = DefaultBitmapFont;
-            }
+            BitmapFont? fontToUse = DrawnFont;
 
 
             if (fontToUse != null)
@@ -1267,15 +1332,17 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
         size = new Vector2(WrappedTextWidth + 2 * padding, WrappedTextHeight + 2 * padding);
     }
 
+    /// <summary>
+    /// Test-only access to the character-by-character draw, so unit tests can record where every glyph lands
+    /// (through <c>SpriteRenderer.DrawObserver</c>) without a render pass.
+    /// </summary>
+    internal void DrawCharacterByCharacterForTests(SpriteRenderer spriteRenderer) => RenderCharacterByCharacter(spriteRenderer);
+
     // todo: reduce allocs by using a static here (static is prob okay since it can't be multithreaded)
     static List<int> widths = new List<int>();
     private void RenderCharacterByCharacter(SpriteRenderer spriteRenderer)
     {
-        BitmapFont? fontToUse = mBitmapFont;
-        if (mBitmapFont == null)
-        {
-            fontToUse = DefaultBitmapFont;
-        }
+        BitmapFont? fontToUse = DrawnFont;
 
 
         if (fontToUse != null)
@@ -1401,7 +1468,7 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
                     EffectiveFontScale, lettersLeft, OverrideTextRenderingPositionMode, lineHeightMultiplier: LineHeightMultiplier,
                     overlapDirection: OverlapDirection);
 
-                startOfLine += fontToUse.EffectiveLineHeight(EffectiveFontScale, LineHeightMultiplier) * yAxis;
+                startOfLine += fontToUse.EffectiveLineHeight(EffectiveFontScale, DrawLineHeightMultiplier) * yAxis;
                 maxLettersToShow -= lineOfText.Length;
             }
             else
@@ -1597,7 +1664,8 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
     /// </summary>
     public float ComputeStyledLineHeight(BitmapFont fontToUse, List<StyledSubstring> substrings, out float maxBaseline)
     {
-        var multipliedBaseHeight = fontToUse.EffectiveLineHeight(EffectiveFontScale, LineHeightMultiplier);
+        var multipliedBaseHeight = fontToUse.EffectiveLineHeight(EffectiveFontScale, DrawLineHeightMultiplier);
+        float oversampledRatio = OversampledLineHeightRatio;
         float tallestSizeRunHeight = 0;
 
         maxBaseline = EffectiveFontScale * fontToUse.BaselineY;
@@ -1607,7 +1675,10 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
             if (ResolveRunFont(substring.Variables, fontToUse, out BitmapFont? runFont, out float runScale))
             {
                 BitmapFont font = runFont ?? fontToUse;
-                tallestSizeRunHeight = System.Math.Max(tallestSizeRunHeight, font.EffectiveLineHeight(runScale, 1));
+                // A run in the display font gets the same display-to-native correction as the base line; a run in
+                // another font has no pinned counterpart to correct against.
+                float runHeight = font.EffectiveLineHeight(runScale, 1) * (ReferenceEquals(font, fontToUse) ? oversampledRatio : 1);
+                tallestSizeRunHeight = System.Math.Max(tallestSizeRunHeight, runHeight);
                 maxBaseline = System.Math.Max(maxBaseline, runScale * font.BaselineY);
             }
         }
@@ -1621,17 +1692,20 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
     /// from the base, so a tag on one run never carries into the next. Shared by the draw, the line advance and
     /// the measurement so the three agree. Returns true when the run has either tag (a size run).
     /// </summary>
-    private bool ResolveRunFont(List<InlineVariable> variables, BitmapFont? baseFont, out BitmapFont? runFont, out float runScale)
+    private bool ResolveRunFont(List<InlineVariable> variables, BitmapFont? baseFont, out BitmapFont? runFont, out float runScale, bool forMeasurement = false)
     {
         runFont = baseFont;
-        runScale = EffectiveFontScale;
+        runScale = forMeasurement ? MeasurementFontScale : EffectiveFontScale;
         bool isSizeRun = false;
         for (int variableIndex = 0; variableIndex < variables.Count; variableIndex++)
         {
             var variable = variables[variableIndex];
             if (variable.VariableName == nameof(FontScale))
             {
-                runScale = ComposeFontScale((float)variable.Value);
+                // Measuring against the pinned font leaves out the oversample compensation, as MeasurementFontScale does (#7282).
+                runScale = forMeasurement && mMeasurementFont != null
+                    ? (float)variable.Value * SystemManagers.GlobalFontScale
+                    : ComposeFontScale((float)variable.Value);
                 isSizeRun = true;
             }
             else if (variable.VariableName == nameof(BitmapFont))
@@ -1700,13 +1774,29 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
                 return LineHeightMultiplier;
             }
 
+            return LineHeightMultiplier * OversampledLineHeightRatio;
+        }
+    }
+
+    // The pinned measurement font's line height over the display font's, both at the scale they draw at: 1 when
+    // the text isn't oversampling. Multiplying a display-font line height by it gives the line height layout
+    // measures with, so lines step the same whether the text has inline runs or not (#6814, #7733).
+    private float OversampledLineHeightRatio
+    {
+        get
+        {
+            if (mMeasurementFont == null || mBitmapFont == null)
+            {
+                return 1;
+            }
+
             float drawnLineHeight = mBitmapFont.LineHeightInPixels * EffectiveFontScale;
             if (drawnLineHeight <= 0)
             {
-                return LineHeightMultiplier;
+                return 1;
             }
 
-            return LineHeightMultiplier * mMeasurementFont.LineHeightInPixels * MeasurementFontScale / drawnLineHeight;
+            return mMeasurementFont.LineHeightInPixels * MeasurementFontScale / drawnLineHeight;
         }
     }
 
@@ -1897,6 +1987,13 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
                 ? requiredHeight
                 : (int)(requiredHeight * LineHeightMultiplier + .5f);
         }
+        else
+        {
+            // No font: forget sizes measured against a font that is gone, so this text reports
+            // what a text that never had one does (#7787).
+            mPreRenderWidth = null;
+            mPreRenderHeight = null;
+        }
     }
 
     /// <summary>
@@ -1934,7 +2031,7 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
             {
                 lineHeightFactor = 0;
                 // Only reached from UpdatePreRenderDimensions, which requires mBitmapFont.
-                lineWidthInBaseUnits = mBitmapFont!.MeasureString(line);
+                lineWidthInBaseUnits = EffectiveMeasurementFont!.MeasureString(line);
             }
             else
             {
@@ -1942,7 +2039,7 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
             }
 
             maxWidth = System.Math.Max(maxWidth, lineWidthInBaseUnits);
-            totalHeight += TextLineHeight.Compute(LineHeightInPixels, 1, LineHeightMultiplier, lineHeightFactor);
+            totalHeight += TextLineHeight.Compute(EffectiveMeasurementFont?.LineHeightInPixels ?? LineHeightInPixels, 1, LineHeightMultiplier, lineHeightFactor);
 
             startOfLineIndex += line.Length;
         }
@@ -1978,7 +2075,10 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
     /// </remarks>
     private float MeasureStyledLineInBaseUnits(List<StyledSubstring> substrings, out float lineHeightFactor)
     {
-        var effectiveFontScale = EffectiveFontScale;
+        // Issue #7282: measure with the same font and scale as the plain path (the pinned measurement font
+        // while oversampled), so a text with only a [Color] run wraps and sizes like the same text without it.
+        var measurementFont = EffectiveMeasurementFont;
+        var effectiveFontScale = MeasurementFontScale;
 
         float maxRunScale = 0;
         float lineWidthAtScale = 0;
@@ -1986,14 +2086,14 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
         {
             var substring = substrings[substringIndex];
             // runFont is null when no font is loaded yet (see MeasureString); that run then measures as 0.
-            bool isSizeRun = ResolveRunFont(substring.Variables, mBitmapFont, out BitmapFont? runFont, out float runScale);
+            bool isSizeRun = ResolveRunFont(substring.Variables, measurementFont, out BitmapFont? runFont, out float runScale, forMeasurement: true);
             float runHeightScale = 0;
             if (isSizeRun)
             {
                 runHeightScale = runScale;
-                if (runFont != null && mBitmapFont != null && mBitmapFont.LineHeightInPixels > 0)
+                if (runFont != null && measurementFont != null && measurementFont.LineHeightInPixels > 0)
                 {
-                    runHeightScale = runScale * runFont.LineHeightInPixels / mBitmapFont.LineHeightInPixels;
+                    runHeightScale = runScale * runFont.LineHeightInPixels / measurementFont.LineHeightInPixels;
                 }
             }
             var measurementStyle = substringIndex == substrings.Count - 1

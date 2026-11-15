@@ -26,12 +26,8 @@ Without a sync context, the line after the `await` can land on a thread other th
 Call `UseSingleThreadedAsync` once, after `Initialize`:
 
 ```csharp
-protected override void Initialize()
-{
-    GumService.Default.Initialize(this);
-    GumService.Default.UseSingleThreadedAsync(); // ← this is all you need
-    base.Initialize();
-}
+// Initialize
+GumUI.UseSingleThreadedAsync(); // ← this is all you need
 ```
 
 `GumService.Update` (which you already call each frame) drains queued continuations, so there is no per-frame plumbing. Calling `UseSingleThreadedAsync` more than once is a no-op.
@@ -52,8 +48,8 @@ A service that did not call `UseSingleThreadedAsync` (for example because you in
 
 If you copied `SingleThreadSynchronizationContext` into your own project from an older version of this guide and pump `Update()` yourself, that still works — do **not** also call `UseSingleThreadedAsync`. The two installs would conflict.
 
-If you want to take ownership of the context for advanced reasons (custom queueing, screen-change `Clear()` calls, etc.), you can access the installed instance via `GumService.Default.SynchronizationContext` after calling `UseSingleThreadedAsync`.
+If you want to take ownership of the context for advanced reasons (custom queueing, screen-change `Clear()` calls, etc.), you can access the installed instance via `GumUI.SynchronizationContext` after calling `UseSingleThreadedAsync`.
 
 ## Platform Coverage
 
-`UseSingleThreadedAsync` is available on MonoGame, KNI, FNA, Raylib, Silk.NET, and Sokol. Under FlatRedBall, the FRB runtime supplies its own thread/instruction model; this opt-in is intentionally not exposed there — use FRB's own facilities (e.g. `InstructionManager`) for primary-thread work.
+`UseSingleThreadedAsync` is available on every [runtime](about/runtimes.md). Under FlatRedBall, the FRB runtime supplies its own thread/instruction model; this opt-in is intentionally not exposed there — use FRB's own facilities (e.g. `InstructionManager`) for primary-thread work.

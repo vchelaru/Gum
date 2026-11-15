@@ -54,6 +54,7 @@ public class ElementUndoStrategy : IUndoStrategy
     // Changes to other elements made under the current lock; attached to the action TryRecord appends
     // when the last lock is released, then discarded.
     private readonly List<CrossElementVariableChange> _pendingCrossElementChanges;
+    private readonly List<CrossElementAnimationRename> _pendingAnimationRenames = new List<CrossElementAnimationRename>();
 
     public UndoSnapshot? RecordedSnapshot => recordedSnapshot;
 
@@ -304,6 +305,12 @@ public class ElementUndoStrategy : IUndoStrategy
                     _pendingCrossElementChanges.Clear();
                 }
 
+                if (_pendingAnimationRenames.Count > 0)
+                {
+                    history.Actions[history.Actions.Count - 1].AnimationRenames = _pendingAnimationRenames.ToList();
+                    _pendingAnimationRenames.Clear();
+                }
+
                 CaptureBaseline();
 
                 _raiseUndosChanged(UndoOperation.HistoryAppended);
@@ -487,6 +494,11 @@ public class ElementUndoStrategy : IUndoStrategy
         {
             return;
         }
+        if (!CanReplayAnimationRenames(elementHistory!.Actions[elementHistory.UndoIndex].AnimationRenames,
+            _selectedState.SelectedElement!, isUndo: true))
+        {
+            return;
+        }
         ////////////////////////////////////End Early Out/////////////////////////////////////
 
         var isLast = elementHistory!.UndoIndex == elementHistory.Actions.Count - 1;
@@ -512,31 +524,13 @@ public class ElementUndoStrategy : IUndoStrategy
                 out bool shouldRefreshBehaviorView);
 
             ReplayCrossElementVariableChanges(undoSnapshot.CrossElementVariableChanges, isUndo: true);
+            ReplayAnimationRenames(undoSnapshot.AnimationRenames, toApplyTo, isUndo: true);
 
             //if (undoSnapshot.UndoState.CategoryName != _selectedState.SelectedStateCategorySave?.Name ||
             //    undoSnapshot.UndoState.StateName != _selectedState.SelectedStateSave?.Name)
             //{
 
-            StateSave? stateToSelect = null;
-            if(!string.IsNullOrEmpty(undoSnapshot.UndoState.CategoryName))
-            {
-                var category = toApplyTo.Categories.FirstOrDefault(item => item.Name == undoSnapshot.UndoState.CategoryName);
-                if(category != null)
-                {
-                    stateToSelect = category.States.FirstOrDefault(item => item.Name == undoSnapshot.UndoState.StateName);
-                }
-            }
-            else
-            {
-                stateToSelect = toApplyTo.States.FirstOrDefault(item => item.Name == undoSnapshot.UndoState.StateName);
-            }
-            if (stateToSelect != null)
-            {
-                isRecordingUndos = false;
-                _selectedState.SelectedStateSave = stateToSelect;
-
-                isRecordingUndos = true;
-            }
+            ReselectRestoredState(toApplyTo, undoSnapshot.UndoState);
 
             var newIndex = elementHistory.UndoIndex - 1;
 
@@ -550,6 +544,37 @@ public class ElementUndoStrategy : IUndoStrategy
                 shouldRefreshBehaviorView,
                 addedAndRemovedInstances, beforeRestore, undoSnapshot.RedoState?.Element);
         }
+    }
+
+    /// <summary>
+    /// Restoring a snapshot replaces the element's states and categories with clones, so the selected
+    /// state or category is a stale object. Select the live one with the snapshot's names; a category
+    /// selected without a state is reselected as the category.
+    /// </summary>
+    private void ReselectRestoredState(ElementSave element, UndoSnapshot snapshot)
+    {
+        StateSave? state;
+        StateSaveCategory? category = null;
+        if (!string.IsNullOrEmpty(snapshot.CategoryName))
+        {
+            category = element.Categories.FirstOrDefault(item => item.Name == snapshot.CategoryName);
+            state = category?.States.FirstOrDefault(item => item.Name == snapshot.StateName);
+        }
+        else
+        {
+            state = element.States.FirstOrDefault(item => item.Name == snapshot.StateName);
+        }
+
+        isRecordingUndos = false;
+        if (state != null)
+        {
+            _selectedState.SelectedStateSave = state;
+        }
+        else if (category != null && string.IsNullOrEmpty(snapshot.StateName))
+        {
+            _selectedState.SelectedStateCategorySave = category;
+        }
+        isRecordingUndos = true;
     }
 
     private void DoAfterUndoLogic(ElementSave toApplyTo,
@@ -566,11 +591,15 @@ public class ElementUndoStrategy : IUndoStrategy
         // lock held, so no history entry is added.
         _variableReferenceLogic.Value.ReapplyReferences(toApplyTo, beforeRestore, otherSide);
 
-        CaptureBaseline();
-
         _raiseUndosChanged(UndoOperation.Undo);
 
         _messenger.Send(new AfterUndoMessage());
+
+        // After AfterUndo, not before: the animation plugin repaints its tab from the restored .ganx
+        // there, and the baseline reads the tab's live animations. A baseline taken first holds the
+        // pre-undo ones, so the InstanceAdd / InstancesDelete notifications below (the undo plugin
+        // answers each with RecordUndo) diffed them as an edit, appended it, and dropped the redo tail.
+        CaptureBaseline();
 
         _guiCommands.RefreshElementTreeView(toApplyTo);
 
@@ -647,6 +676,10 @@ public class ElementUndoStrategy : IUndoStrategy
         {
             return;
         }
+        if (!CanReplayAnimationRenames(actionToRedo!.AnimationRenames, _selectedState.SelectedElement!, isUndo: false))
+        {
+            return;
+        }
         ////////////////////////////////////End Early Out////////////////////////////////////////
 
         ElementSave? toApplyTo = _selectedState.SelectedElement;
@@ -662,21 +695,9 @@ public class ElementUndoStrategy : IUndoStrategy
                 out bool shouldRefreshBehaviorView);
 
             ReplayCrossElementVariableChanges(actionToRedo!.CrossElementVariableChanges, isUndo: false);
+            ReplayAnimationRenames(actionToRedo.AnimationRenames, toApplyTo, isUndo: false);
 
-            if (redoSnapshot.CategoryName != _selectedState.SelectedStateCategorySave?.Name ||
-                redoSnapshot.StateName != _selectedState.SelectedStateSave?.Name)
-            {
-                var listOfStates = toApplyTo.States;
-                var state = listOfStates?.FirstOrDefault(item => item.Name == redoSnapshot.StateName);
-
-                if (state != null)
-                {
-                    isRecordingUndos = false;
-                    _selectedState.SelectedStateSave = state;
-
-                    isRecordingUndos = true;
-                }
-            }
+            ReselectRestoredState(toApplyTo, redoSnapshot);
 
             elementHistory.UndoIndex++;
 
@@ -714,6 +735,54 @@ public class ElementUndoStrategy : IUndoStrategy
     public void DiscardPendingCrossElementChanges()
     {
         _pendingCrossElementChanges.Clear();
+        _pendingAnimationRenames.Clear();
+    }
+
+    /// <summary>
+    /// Queues an animation rename to be attached to the action recorded when the last undo lock is
+    /// released. Ignored when no lock is held, since no action would record it.
+    /// </summary>
+    public void RecordAnimationRename(string oldName, string newName)
+    {
+        if (_areUndoLocksActive())
+        {
+            _pendingAnimationRenames.Add(new CrossElementAnimationRename { OldName = oldName, NewName = newName });
+        }
+    }
+
+    // Whether every animation rename of the action can run in the given direction. An animation
+    // already using the name the rename would give back (or forward) is refused up front, so the
+    // undo or redo changes nothing rather than half of it.
+    private bool CanReplayAnimationRenames(List<CrossElementAnimationRename>? renames, ElementSave element, bool isUndo)
+    {
+        if (renames == null)
+        {
+            return true;
+        }
+        foreach (CrossElementAnimationRename rename in renames)
+        {
+            if (!_animationUndoProvider.CanRenameAnimation(element, isUndo ? rename.OldName : rename.NewName))
+            {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    // Runs the rename (undo: backwards, redo: forwards) over the other elements that play the
+    // animation now, which includes copies made after the rename that no history entry records.
+    private void ReplayAnimationRenames(List<CrossElementAnimationRename>? renames, ElementSave element, bool isUndo)
+    {
+        if (renames == null)
+        {
+            return;
+        }
+        foreach (CrossElementAnimationRename rename in isUndo ? Enumerable.Reverse(renames) : renames)
+        {
+            _animationUndoProvider.RenameAnimationReferences(element,
+                isUndo ? rename.NewName : rename.OldName,
+                isUndo ? rename.OldName : rename.NewName);
+        }
     }
 
     /// <summary>

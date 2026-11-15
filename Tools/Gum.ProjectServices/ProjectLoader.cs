@@ -51,11 +51,18 @@ public class ProjectLoader : IProjectLoader
             }
             else
             {
-                project.Initialize();
+                // Initialize repairs a derived element that lacks its base's instances, silently. Doing it
+                // first lets check say that the file on disk is out of date (GUM0016).
+                List<MissingBaseInstanceRepair> missingBaseInstances = new List<MissingBaseInstanceRepair>();
+                project.RepairMissingDefinedByBaseInstances(missingBaseInstances);
+                // Same tolerance as the tool's load, so check accepts a project the tool opens: an instance of
+                // a standard type with no registered default state (e.g. one a tool plugin adds) is kept as-is.
+                project.Initialize(tolerateMissingDefaultStates: true);
                 StripRemovedVariables(project);
 
-                var elementLoadErrors = ParseElementLoadErrors(gumLoadResult.ErrorMessage);
-                var conflictErrors = DetectConflictMarkers(project, projectDirectory, GumProjectSave.IsJsonFormat(filePath));
+                bool isJsonFormat = GumProjectSave.IsJsonFormat(filePath);
+                var elementLoadErrors = ParseElementLoadErrors(gumLoadResult.ErrorMessage, isJsonFormat);
+                var conflictErrors = DetectConflictMarkers(project, projectDirectory, isJsonFormat);
 
                 // A conflicted element file is invalid XML, so it ALSO failed to deserialize and
                 // produced a cryptic "Malformed XML" entry via ParseElementLoadErrors. Drop those
@@ -69,7 +76,9 @@ public class ProjectLoader : IProjectLoader
                 result.LoadErrors.AddRange(
                     ConvertMissingFiles(gumLoadResult.MissingFiles, projectDirectory));
                 result.LoadErrors.AddRange(
-                    DetectSilentlyDroppedContent(project, projectDirectory));
+                    DetectSilentlyDroppedContent(project, projectDirectory, isJsonFormat));
+                result.LoadErrors.AddRange(
+                    missingBaseInstances.Select(ToMissingBaseInstanceError));
             }
         }
         catch (Exception ex)
@@ -78,6 +87,28 @@ public class ProjectLoader : IProjectLoader
         }
 
         return result;
+    }
+
+    // GUM0016. The loader already adds the missing instance in memory, so nothing breaks at runtime
+    // or in codegen; the row exists because the file on disk is out of date.
+    private static ErrorResult ToMissingBaseInstanceError(MissingBaseInstanceRepair repair)
+    {
+        return new ErrorResult
+        {
+            ElementName = repair.Element.Name,
+            Code = "GUM0016",
+            Severity = ErrorSeverity.Warning,
+            Message = $"{repair.Element.Name} derives from {repair.OwnerName} but does not list its instance " +
+                $"'{repair.InstanceName}' ({repair.InstanceBaseType}) with DefinedByBase true, so Gum adds it in memory at load. " +
+                $"Add an <Instance> named '{repair.InstanceName}' with <DefinedByBase>true</DefinedByBase> to the file, " +
+                $"or run gumcli resave to write it.",
+            Details = new MissingBaseInstanceDetails
+            {
+                BaseElementName = repair.OwnerName,
+                InstanceName = repair.InstanceName,
+                InstanceType = repair.InstanceBaseType
+            }
+        };
     }
 
     /// <summary>
@@ -101,7 +132,7 @@ public class ProjectLoader : IProjectLoader
     /// The format from GumProjectSave is: "\nError loading Name:\nmessage"
     /// and name mismatches as: "\nThe project references an element named ..."
     /// </summary>
-    private static List<ErrorResult> ParseElementLoadErrors(string? errorMessage)
+    private static List<ErrorResult> ParseElementLoadErrors(string? errorMessage, bool isJsonFormat)
     {
         var errors = new List<ErrorResult>();
 
@@ -125,11 +156,14 @@ public class ProjectLoader : IProjectLoader
                 string message = (i + 1 < lines.Length)
                     ? lines[i + 1].Trim()
                     : "Unknown error";
+                string format = isJsonFormat ? "JSON" : "XML";
                 errors.Add(new ErrorResult
                 {
                     ElementName = elementName,
-                    Message = $"Malformed XML: {message}",
-                    Severity = ErrorSeverity.Error
+                    Code = "GUM0038",
+                    Message = $"Malformed {format}: {message}",
+                    Severity = ErrorSeverity.Error,
+                    Details = new MalformedFileDetails { Format = format, ParserMessage = message }
                 });
                 i += 2;
             }
@@ -138,6 +172,7 @@ public class ProjectLoader : IProjectLoader
                 errors.Add(new ErrorResult
                 {
                     ElementName = "",
+                    Code = "GUM0039",
                     Message = line,
                     Severity = ErrorSeverity.Warning
                 });
@@ -189,8 +224,13 @@ public class ProjectLoader : IProjectLoader
     /// with structurally wrong XML would load as empty elements with no error reported.
     /// </summary>
     private static List<ErrorResult> DetectSilentlyDroppedContent(
-        GumProjectSave project, string projectDirectory)
+        GumProjectSave project, string projectDirectory, bool isJsonFormat)
     {
+        if (isJsonFormat)
+        {
+            return JsonDroppedContentScanner.Scan(project, projectDirectory);
+        }
+
         var errors = new List<ErrorResult>();
 
         foreach (var component in project.Components)
@@ -258,8 +298,10 @@ public class ProjectLoader : IProjectLoader
                     errors.Add(new ErrorResult
                     {
                         ElementName = elementName,
+                        Code = "GUM0040",
                         Message = message,
-                        Severity = ErrorSeverity.Error
+                        Severity = ErrorSeverity.Error,
+                        Details = new IgnoredContentDetails { Content = pattern }
                     });
                 }
             }
@@ -284,11 +326,15 @@ public class ProjectLoader : IProjectLoader
             string path = Path.Combine(projectDirectory, subfolder, name + "." + extension);
             if (File.Exists(path) && ContainsGitConflictMarkers(File.ReadAllText(path)))
             {
+                string fileName = name + "." + extension;
                 errors.Add(new ErrorResult
                 {
                     ElementName = name,
-                    Message = ConflictMarkerMessage(name + "." + extension),
-                    Severity = ErrorSeverity.Error
+                    Code = "GUM0041",
+                    Message = ConflictMarkerMessage(fileName),
+                    Severity = ErrorSeverity.Error,
+                    FilePath = path,
+                    Details = new ConflictMarkerDetails { FileName = fileName }
                 });
             }
         }
@@ -364,7 +410,9 @@ public class ProjectLoader : IProjectLoader
             errors.Add(new ErrorResult
             {
                 ElementName = elementName,
+                Code = "GUM0004",
                 Message = $"Referenced file not found: {relativePath}",
+                Details = new MissingFileDetails { ExpectedPath = relativePath },
                 Severity = ErrorSeverity.Warning
             });
         }

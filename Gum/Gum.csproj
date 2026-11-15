@@ -409,10 +409,10 @@
 		</PackageReference>
 		<PackageReference Include="System.ComponentModel.Composition" Version="9.0.3" />
 
-		<PackageReference Include="nkast.Xna.Framework" Version="4.2.9001" />
-		<PackageReference Include="nkast.Xna.Framework.Graphics" Version="4.2.9001" />
-		<PackageReference Include="nkast.Xna.Framework.Input" Version="4.2.9001" />
-		<PackageReference Include="nkast.Kni.Platform.WinForms.DX11" Version="4.2.9001" />
+		<PackageReference Include="nkast.Xna.Framework" Version="4.3.9001" />
+		<PackageReference Include="nkast.Xna.Framework.Graphics" Version="4.3.9001" />
+		<PackageReference Include="nkast.Xna.Framework.Input" Version="4.3.9001" />
+		<PackageReference Include="nkast.Kni.Platform.WinForms.DX11" Version="4.3.9001" />
 		<PackageReference Include="MaterialDesignThemes" Version="5.1.0" />
 	</ItemGroup>
 	<ItemGroup>

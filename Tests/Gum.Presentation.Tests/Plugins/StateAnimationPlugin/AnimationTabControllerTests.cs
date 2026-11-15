@@ -1,5 +1,6 @@
 using Gum.Commands;
 using Gum.DataTypes;
+using Gum.DataTypes.Variables;
 using Gum.Managers;
 using Gum.Services;
 using Gum.Services.Dialogs;
@@ -125,6 +126,86 @@ public class AnimationTabControllerTests
         show.Keyframes.Select(keyframe => keyframe.AnimationName ?? keyframe.StateName)
             .ShouldBe(new[] { "Labeled.FadeIn", "Hidden" });
         collectionManager.Verify(manager => manager.Save(buttonTab), Times.AtLeastOnce);
+    }
+
+    [Fact]
+    public void RefreshViewModel_ValidatingKeyframes_DoesNotSaveTheAnimationsOrRequestAnErrorRecheck()
+    {
+        // Selecting an element re-validates its keyframes, which flips the derived HasBrokenKeyframe
+        // flag. That is display state, not an edit: saving the .ganx and re-running the whole error
+        // check once per animation made selecting a screen with animations take seconds (#7592).
+        ComponentSave button = new ComponentSave { Name = "Button" };
+        button.States.Add(new StateSave { Name = "Default" });
+        Mock<ISelectedState> selectedState = new Mock<ISelectedState>();
+        selectedState.SetupGet(state => state.SelectedElement).Returns(button);
+        Mock<IProjectState> projectState = new Mock<IProjectState>();
+        projectState.SetupGet(state => state.GumProjectSave).Returns(new GumProjectSave { FullFileName = "/project/Project.gumx" });
+        ElementAnimationsViewModel buttonTab = CreateViewModel(selectedState.Object, Mock.Of<IUiTimer>());
+        buttonTab.Element = button;
+        AnimationViewModel show = new AnimationViewModel(selectedState.Object, Mock.Of<IWireframeObjectManager>()) { Name = "Show" };
+        show.Keyframes.Add(new AnimatedKeyframeViewModel { StateName = "Default", Time = 0 });
+        buttonTab.Animations.Add(show);
+        Mock<IAnimationCollectionViewModelManager> collectionManager = new Mock<IAnimationCollectionViewModelManager>();
+        collectionManager.Setup(manager => manager.GetAnimationCollectionViewModel(button)).Returns(buttonTab);
+        AnimationTabController controller = new AnimationTabController(
+            selectedState.Object,
+            Mock.Of<IUndoManager>(),
+            Mock.Of<IGuiCommands>(),
+            Mock.Of<IDialogService>(),
+            projectState.Object,
+            collectionManager.Object,
+            Mock.Of<IRenameManager>(),
+            Mock.Of<IDuplicateService>(),
+            Mock.Of<IAnimationFilePathService>(),
+            () => CreateViewModel(selectedState.Object, Mock.Of<IUiTimer>()));
+        int dataSavedCount = 0;
+        controller.DataSaved += () => dataSavedCount++;
+
+        controller.RefreshViewModel();
+
+        show.Keyframes.Single().HasValidState.ShouldBeTrue();
+        collectionManager.Verify(manager => manager.Save(It.IsAny<ElementAnimationsViewModel>()), Times.Never);
+        dataSavedCount.ShouldBe(0);
+    }
+
+    /// <summary>
+    /// A property that only drives how the tab looks is not an edit: it must never save the .ganx, take an undo
+    /// step or request an error check, or every selection would do all three per animation (#7592, #7591).
+    /// </summary>
+    [Theory]
+    [InlineData(typeof(AnimationViewModel), nameof(AnimationViewModel.HasBrokenKeyframe))]
+    [InlineData(typeof(AnimationViewModel), nameof(AnimationViewModel.CategoryColorName))]
+    [InlineData(typeof(AnimationViewModel), nameof(AnimationViewModel.Length))]
+    [InlineData(typeof(AnimationViewModel), nameof(AnimationViewModel.SelectedKeyframe))]
+    [InlineData(typeof(AnimatedKeyframeViewModel), nameof(AnimatedKeyframeViewModel.CategoryColorName))]
+    [InlineData(typeof(AnimatedKeyframeViewModel), nameof(AnimatedKeyframeViewModel.HasValidState))]
+    [InlineData(typeof(AnimatedKeyframeViewModel), nameof(AnimatedKeyframeViewModel.IsTimelineVisualHovered))]
+    public void HandleDataChange_ADisplayOnlyProperty_NeverSavesOrRequestsACheck(Type senderType, string propertyName)
+    {
+        Mock<ISelectedState> selectedState = new Mock<ISelectedState>();
+        Mock<IAnimationCollectionViewModelManager> collectionManager = new Mock<IAnimationCollectionViewModelManager>();
+        AnimationTabController controller = new AnimationTabController(
+            selectedState.Object,
+            Mock.Of<IUndoManager>(),
+            Mock.Of<IGuiCommands>(),
+            Mock.Of<IDialogService>(),
+            Mock.Of<IProjectState>(),
+            collectionManager.Object,
+            Mock.Of<IRenameManager>(),
+            Mock.Of<IDuplicateService>(),
+            Mock.Of<IAnimationFilePathService>(),
+            () => CreateViewModel(selectedState.Object, Mock.Of<IUiTimer>()));
+        controller.CreateInitialViewModel();
+        object sender = senderType == typeof(AnimationViewModel)
+            ? new AnimationViewModel(selectedState.Object, Mock.Of<IWireframeObjectManager>())
+            : new AnimatedKeyframeViewModel();
+        int dataSavedCount = 0;
+        controller.DataSaved += () => dataSavedCount++;
+
+        controller.HandleDataChange(sender, new System.ComponentModel.PropertyChangedEventArgs(propertyName));
+
+        collectionManager.Verify(manager => manager.Save(It.IsAny<ElementAnimationsViewModel>()), Times.Never);
+        dataSavedCount.ShouldBe(0);
     }
 
     [Fact]

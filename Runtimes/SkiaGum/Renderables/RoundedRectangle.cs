@@ -53,9 +53,12 @@ public class RoundedRectangle : RenderableShapeBase, IClipPath, ICloneable
 
     protected override bool BlendsWholeBounds => true;
 
+    protected override bool DrawsBlurredShadow => true;
+
     public override void DrawBound(SKRect boundingRect, SKCanvas canvas, float absoluteRotation)
     {
         var paint = GetCachedPaint(boundingRect, absoluteRotation);
+        SKPaint? shadowPaint = GetShadowPaint();
 
         float radiusInset = IsFilled ? FillInset : 0f;
         SKRect effectiveRect = GetFillInsetRect(boundingRect);
@@ -63,11 +66,23 @@ public class RoundedRectangle : RenderableShapeBase, IClipPath, ICloneable
         if (CustomRadiusBottomLeft == null && CustomRadiusBottomRight == null && CustomRadiusTopLeft == null && CustomRadiusTopRight == null)
         {
             float radius = System.Math.Max(0f, CornerRadius - radiusInset);
+            if (shadowPaint != null)
+            {
+                SaveAtShadowOffset(canvas);
+                canvas.DrawRoundRect(effectiveRect, radius, radius, shadowPaint);
+                canvas.Restore();
+            }
             canvas.DrawRoundRect(effectiveRect, radius, radius, paint);
         }
         else
         {
             using SKPath path = BuildCustomCornerPath(effectiveRect, radiusInset);
+            if (shadowPaint != null)
+            {
+                SaveAtShadowOffset(canvas);
+                canvas.DrawPath(path, shadowPaint);
+                canvas.Restore();
+            }
             canvas.DrawPath(path, paint);
         }
     }

@@ -59,7 +59,7 @@ public struct FoundTag
 public readonly struct TextTagSpan
 {
     /// <summary>
-    /// The tag name as written in the text, such as "Link" for <c>[Link=shop]</c>.
+    /// The canonical spelling of the tag name (not the casing written in the text), such as "Link" for <c>[Link=shop]</c>.
     /// </summary>
     public string Name { get; }
 
@@ -105,26 +105,26 @@ public static class BbCodeParser
     /// </remarks>
     public static HashSet<string> KnownTags { get; } = new HashSet<string>(System.StringComparer.OrdinalIgnoreCase)
     {
-        "alpha",
-        "red",
-        "blue",
-        "green",
-        "color",
-        "font",
-        "fontsize",
-        "outlinethickness",
-        "isitalic",
-        "isbold",
-        "usefontsmoothing",
-        "fontscale",
-        "lineheightmultiplier",
-        "custom",
-        "state",
-        "hasdropshadow",
-        "link",
+        "Alpha",
+        "Red",
+        "Blue",
+        "Green",
+        "Color",
+        "Font",
+        "FontSize",
+        "OutlineThickness",
+        "IsItalic",
+        "IsBold",
+        "UseFontSmoothing",
+        "FontScale",
+        "LineHeightMultiplier",
+        "Custom",
+        "State",
+        "HasDropshadow",
+        "Link",
     };
 
-    private struct Tag
+    internal struct Tag
     {
         public bool IsOpening;
         public int StartIndex;
@@ -253,13 +253,31 @@ public static class BbCodeParser
     public static List<FoundTag> Parse(string text, HashSet<string> availableTags)
     {
         var results = new List<FoundTag>();
+        Parse(text, availableTags, results, null);
+        return results;
+    }
+
+    /// <summary>
+    /// <see cref="Parse(string, HashSet{string})"/> into a list the caller keeps and clears for the next text, with
+    /// the stack of open tags passed in too, so a text parsed on every change allocates neither list (#7846).
+    /// </summary>
+    internal static void Parse(string text, HashSet<string> availableTags, List<FoundTag> results, List<Tag>? activeTags)
+    {
+        results.Clear();
         if (availableTags.Count == 0 || string.IsNullOrWhiteSpace(text))
         {
-            return results;
+            return;
         }
 
         var index = 0;
-        var activeTags = new List<Tag>();
+        if (activeTags == null)
+        {
+            activeTags = new List<Tag>();
+        }
+        else
+        {
+            activeTags.Clear();
+        }
 
         while (index < text.Length)
         {
@@ -337,7 +355,18 @@ public static class BbCodeParser
             results[i] = found;
         }
 
-        return results.OrderBy(x => x.Open.StartIndex).ToList();
+        // A stable sort in place, the same order OrderBy gave, without its per-call buffers (#7818).
+        for (int i = 1; i < results.Count; i++)
+        {
+            FoundTag found = results[i];
+            int j = i - 1;
+            while (j >= 0 && results[j].Open.StartIndex > found.Open.StartIndex)
+            {
+                results[j + 1] = results[j];
+                j--;
+            }
+            results[j + 1] = found;
+        }
     }
 
     private static int CountMatchedTagLettersBefore(List<FoundTag> matchedTags, int index)
@@ -412,6 +441,31 @@ public static class BbCodeParser
         return stringBuilder.ToString();
     }
 
+    /// <summary>
+    /// Returns the set's own spelling of the tag name found at <paramref name="start"/> (so a tag written in any case
+    /// reports one canonical name and no string is copied out of <paramref name="text"/>), or null when the set does not
+    /// contain it. A set that is not case-insensitive is asked with a copied string, as before.
+    /// </summary>
+    private static string? FindKnownTagName(HashSet<string> tags, string text, int start, int length)
+    {
+        if (ReferenceEquals(tags.Comparer, StringComparer.OrdinalIgnoreCase))
+        {
+            ReadOnlySpan<char> name = text.AsSpan(start, length);
+            foreach (string known in tags)
+            {
+                if (name.Equals(known.AsSpan(), StringComparison.OrdinalIgnoreCase))
+                {
+                    return known;
+                }
+            }
+
+            return null;
+        }
+
+        string copied = text.Substring(start, length);
+        return tags.Contains(copied) ? copied : null;
+    }
+
     private static Tag? GetTagAtIndex(string text, HashSet<string> tags, int startIndex)
     {
         if (text[startIndex] != '[' || text.Length <= startIndex + 1)
@@ -457,8 +511,8 @@ public static class BbCodeParser
                             return null;
                         }
 
-                        var tagName = text.Substring(nameStartIndex, nameEndIndex - nameStartIndex);
-                        if (!tags.Contains(tagName))
+                        string? tagName = FindKnownTagName(tags, text, nameStartIndex, nameEndIndex - nameStartIndex);
+                        if (tagName == null)
                         {
                             // Not a known tag name
                             return null;
@@ -493,21 +547,48 @@ public static class BbCodeParser
 
     public static string RemoveTags(string text, List<FoundTag> tags)
     {
-        var allTags = new List<TagInfo>(tags.Count * 2);
-        for (int i = 0; i < tags.Count; i++)
-        {
-            allTags.Add(tags[i].Open);
-            allTags.Add(tags[i].Close);
+        TagInfo[]? sortScratch = null;
+        return RemoveTags(text, tags, ref sortScratch, null);
+    }
 
+    /// <summary>
+    /// <see cref="RemoveTags(string, List{FoundTag})"/> with the sort array and the string builder passed in, so a text
+    /// parsed on every change allocates only the resulting string (#7846). <paramref name="sortScratch"/> is replaced
+    /// when it is too small; <paramref name="builder"/> is cleared and refilled.
+    /// </summary>
+    internal static string RemoveTags(string text, List<FoundTag> tags, ref TagInfo[]? sortScratch, StringBuilder? builder)
+    {
+        // Sorted stably by stripped index, the order OrderBy gave, without its per-call buffers (#7818).
+        int sortedCount = tags.Count * 2;
+        TagInfo[] sorted = sortScratch != null && sortScratch.Length >= sortedCount ? sortScratch : new TagInfo[sortedCount];
+        sortScratch = sorted;
+        for (int i = 0; i < sortedCount; i++)
+        {
+            TagInfo tag = i % 2 == 0 ? tags[i / 2].Open : tags[i / 2].Close;
+            int j = i - 1;
+            while (j >= 0 && sorted[j].StartStrippedIndex > tag.StartStrippedIndex)
+            {
+                sorted[j + 1] = sorted[j];
+                j--;
+            }
+            sorted[j + 1] = tag;
         }
 
-        var sorted = allTags.OrderBy(item => item.StartStrippedIndex).ToArray();
-
-        var stringBuilder = new StringBuilder(text);
-
-        foreach (var tag in sorted)
+        StringBuilder stringBuilder;
+        if (builder == null)
         {
-            stringBuilder.Remove(tag.StartStrippedIndex, tag.Count);
+            stringBuilder = new StringBuilder(text);
+        }
+        else
+        {
+            stringBuilder = builder;
+            stringBuilder.Clear();
+            stringBuilder.Append(text);
+        }
+
+        for (int i = 0; i < sortedCount; i++)
+        {
+            stringBuilder.Remove(sorted[i].StartStrippedIndex, sorted[i].Count);
         }
 
         return stringBuilder.ToString();

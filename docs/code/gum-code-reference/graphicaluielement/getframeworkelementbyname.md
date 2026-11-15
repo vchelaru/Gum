@@ -14,13 +14,11 @@ using Gum.Forms;
 
 ## Code Example - Getting a Button from a Screen
 
-The following code shows how to get a Button instance from a screen which is loaded from a Gum project.
+The following code shows how to get a Button instance from a screen which is loaded from a [Gum project](../../getting-started/setup/loading-a-gum-project-.gumx.md).
 
 ```csharp
 // Initialize
-var project = GumUI.Initialize(this, "GumProject/GumProject.gumj");
-
-var screen = project.Screens.Find(item => item.Name == "MainMenu");
+var screen = ObjectFinder.Self.GumProjectSave.Screens.Find(item => item.Name == "MainMenu");
 var screenRuntime = screen.ToGraphicalUiElement();
 screenRuntime.AddToRoot();
 

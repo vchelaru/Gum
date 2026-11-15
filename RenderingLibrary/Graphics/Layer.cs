@@ -296,17 +296,23 @@ namespace RenderingLibrary.Graphics
         /// </summary>
         public void WorldToScreen(Camera camera, float worldX, float worldY, out float screenX, out float screenY)
         {
+            GetWorldToScreenTransform(camera).Transform(worldX, worldY, out screenX, out screenY);
+        }
+
+        /// <summary>
+        /// The mapping <see cref="WorldToScreen"/> applies, resolved once so many points can be
+        /// mapped without rebuilding the matrix for each. It is a snapshot: resolve it again after
+        /// the camera or <see cref="LayerCameraSettings"/> change.
+        /// </summary>
+        public WorldToScreenTransform GetWorldToScreenTransform(Camera camera)
+        {
             Matrix transformationMatrix = GetEffectiveTransformationMatrix(camera, out float effectiveZoom);
 
 #if FRB
-            Vector3 position = new Vector3(worldX, worldY, 0);
+            return new WorldToScreenTransform(transformationMatrix, 0, 0);
 #else
-            Vector3 position = new Vector3(worldX + camera.ClientLeft / effectiveZoom, worldY + camera.ClientTop / effectiveZoom, 0);
+            return new WorldToScreenTransform(transformationMatrix, camera.ClientLeft / effectiveZoom, camera.ClientTop / effectiveZoom);
 #endif
-            Vector3 transformed = Vector3.Transform(position, transformationMatrix);
-
-            screenX = transformed.X;
-            screenY = transformed.Y;
         }
     }
 }

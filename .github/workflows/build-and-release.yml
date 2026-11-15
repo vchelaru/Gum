@@ -20,6 +20,7 @@ on:
       - Tool/Gum.Avalonia/Gum.Avalonia.csproj
       - Tool/Gum.Avalonia/Packaging/**
       - Tool/GumPreview/**
+      - Runtimes/GumShapes/**
       - Tools/Gum.Cli/Gum.Cli.csproj
       - Unity/*.ps1
 
@@ -191,6 +192,11 @@ jobs:
       - name: Smoke-test the package
         timeout-minutes: 20
         uses: ./.github/actions/smoke-test-package
+        # macOS runners have no GPU: GL reports "Apple Software Renderer", where Apos.Shapes' startup
+        # warmup took over 120 s (Ramps alone; None 246 ms, EllipsesAndPaths 4.3 s, Gradients 2.7 s)
+        # against about 0.7 s on a GPU or Linux's llvmpipe. Warm only the default version there.
+        env:
+          GUM_SHAPES_WARMUP_DEFAULT_ONLY: ${{ startsWith(matrix.rid, 'osx') && '1' || '' }}
         with:
           rid: ${{ matrix.rid }}
 

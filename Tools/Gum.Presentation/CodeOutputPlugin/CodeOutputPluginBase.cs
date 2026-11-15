@@ -100,7 +100,8 @@ public abstract class CodeOutputPluginBase : PluginBase
         IRetryService retryService,
         IMessenger messenger,
         IFileCommands fileCommands,
-        IDispatcher dispatcher)
+        IDispatcher dispatcher,
+        IProjectRestrictions projectRestrictions)
     {
         codeOutputProjectSettings = new CodeOutputProjectSettings();
         _dispatcher = dispatcher;
@@ -118,7 +119,7 @@ public abstract class CodeOutputPluginBase : PluginBase
         var codeGenLoggerForDetection = new ToolCodeGenLogger(outputManager);
         var syntaxVersionDetectionService = new SyntaxVersionDetectionService(codeGenLoggerForDetection);
 
-        _codeGenerator = new CodeGenerator(_codeGenerationNameVerifier, _localizationService, _elementSettingsManager, _projectDirectoryProvider, typeStringResolver, syntaxVersionDetectionService, new CSharpVersionDetectionService());
+        _codeGenerator = new CodeGenerator(_codeGenerationNameVerifier, _localizationService, _elementSettingsManager, _projectDirectoryProvider, typeStringResolver, syntaxVersionDetectionService, new CSharpVersionDetectionService(), projectRestrictions);
 
         _codeGenerationFileLocationsService = new CodeGenerationFileLocationsService(_codeGenerator, _codeGenerationNameVerifier, _projectDirectoryProvider);
 
@@ -254,6 +255,7 @@ public abstract class CodeOutputPluginBase : PluginBase
         this.VariableAdd += HandleVariableAdd;
         this.VariableSet += HandleVariableSet;
         this.VariableSetThroughReference += HandleVariableSetThroughReference;
+        this.VariableSetBatchCompleted += _ => HandleRefreshAndExport();
         this.VariableDelete += HandleVariableDelete;
         this.VariableExcluded += HandleVariableExcluded;
         this.AddAndRemoveVariablesForType += CustomVariableManager.HandleAddAndRemoveVariablesForType;
@@ -441,6 +443,12 @@ public abstract class CodeOutputPluginBase : PluginBase
         if (!IsProjectSettingsReadOnly)
         {
             _renameService.HandleVariableSet(element, instance, variableName, oldValue, codeOutputProjectSettings);
+        }
+
+        // Code generation covers the whole element, so a multi-select edit's batch runs it once, on completion.
+        if (IsVariableSetBatchOpen && isFullCommit)
+        {
+            return;
         }
 
         HandleRefreshAndExport(isFullCommit);

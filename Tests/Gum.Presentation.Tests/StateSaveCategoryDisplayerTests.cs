@@ -41,6 +41,29 @@ public class StateSaveCategoryDisplayerTests : BaseTestClass
     }
 
     [Fact]
+    public void BuildCommonMembersCategory_ShouldIncludeVariablesSetByAnyState_EachOnce()
+    {
+        StateSaveCategoryDisplayer sut = CreateSut();
+        var category = new StateSaveCategory { Name = "Coloring" };
+        var first = new StateSave();
+        first.SetValue("Red", 1);
+        var second = new StateSave();
+        second.SetValue("Red", 2);
+        second.SetValue("Green", 3);
+        second.VariableLists.Add(new VariableListSave<string> { Name = "Tags" });
+        var third = new StateSave();
+        third.SetValue("Blue", 4);
+        third.VariableLists.Add(new VariableListSave<string> { Name = "Tags" });
+        category.States.Add(first);
+        category.States.Add(second);
+        category.States.Add(third);
+
+        var result = sut.BuildCommonMembersCategory(instance: null, category);
+
+        result!.Members.Select(m => m.Name).ShouldBe(new[] { "Red", "Green", "Tags", "Blue" });
+    }
+
+    [Fact]
     public void BuildCommonMembersCategory_ShouldExcludeVariable_WhenExcludeFromInstancesIsSetAndInstanceProvided()
     {
         StateSaveCategoryDisplayer sut = CreateSut();

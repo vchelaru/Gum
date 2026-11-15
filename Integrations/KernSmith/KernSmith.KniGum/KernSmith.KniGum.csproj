@@ -26,6 +26,7 @@
 
   <ItemGroup>
     <Compile Include="..\KernSmith.MonoGameGum\KernSmithFontCreator.cs" Link="KernSmithFontCreator.cs" />
+    <Compile Include="..\KernSmith.MonoGameGum\GumServiceKernSmithExtensions.cs" Link="GumServiceKernSmithExtensions.cs" />
   </ItemGroup>
 
   <ItemGroup>
@@ -34,8 +35,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="nkast.Xna.Framework" Version="4.2.9001" PrivateAssets="All" />
-    <PackageReference Include="nkast.Xna.Framework.Graphics" Version="4.2.9001" PrivateAssets="All" />
+    <PackageReference Include="nkast.Xna.Framework" Version="4.3.9001" PrivateAssets="All" />
+    <PackageReference Include="nkast.Xna.Framework.Graphics" Version="4.3.9001" PrivateAssets="All" />
   </ItemGroup>
 
 </Project>

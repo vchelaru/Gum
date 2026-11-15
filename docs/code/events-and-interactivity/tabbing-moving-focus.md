@@ -76,6 +76,8 @@ MyButton.GamepadTabbingFocusBehavior = TabbingFocusBehavior.SkipOnTab;
 Despite its name, the GamepadTabbingFocusBehavior property controls tabbing for both gamepad and keyboard tabbing. Future versions of Gum may change this property to more clearly indicate its purpose.
 {% endhint %}
 
+A skipped control is also left out of spatial and gamepad navigation. A `ScrollBar`'s up and down buttons and thumb (and a `Slider`'s thumb) are skipped this way, so tabbing visits only the content of a `ScrollViewer`. A stand-alone `ScrollBar` therefore cannot receive focus from tabbing or a gamepad and is operated with the mouse only.
+
 ### Customizing Tab Key Combos
 
 The keys that trigger tabbing are defined as static lists on `FrameworkElement`: `TabKeyCombos` for moving forward and `TabReverseKeyCombos` for moving backward. By default `TabKeyCombos` contains Tab, and `TabReverseKeyCombos` contains Shift+Tab (both left and right Shift).
@@ -250,7 +252,7 @@ Available in November 2026, or now if building Gum from source.
 
 ## Modal Tab Trapping
 
-When you show an element modally by adding it to `GumService.Default.ModalRoot`, tab focus is confined to the controls inside that modal element. Tabbing forward past the last focusable control wraps back to the first, and Shift+Tabbing before the first control wraps to the last. Focus never escapes to the controls behind the modal under the regular `Root`.
+When you show an element modally by adding it to `GumUI.ModalRoot`, tab focus is confined to the controls inside that modal element. Tabbing forward past the last focusable control wraps back to the first, and Shift+Tabbing before the first control wraps to the last. Focus never escapes to the controls behind the modal under the regular `Root`.
 
 This is the keyboard and gamepad counterpart to the input blocking already described for modal popups — see [ModalRoot and PopupRoot](../gum-code-reference/gumservice-gumui/modalroot-and-popuproot.md). A modal captures all interaction until it is dismissed: mouse input is routed only to the top-most modal element, and tab focus is trapped within it.
 
@@ -268,46 +270,35 @@ The following code shows how to display which button has focus with a label:
 // Class scope
 Label label;
 
-protected override void Initialize()
+// Initialize
+// Enables tabbing with the keyboard
+GumUI.UseKeyboardDefaults();
+
+StackPanel stackPanel = new();
+stackPanel.AddToRoot();
+stackPanel.Anchor(Anchor.Center);
+stackPanel.Spacing = 6;
+
+for(int i = 0; i < 5; i++)
 {
-    GumUI.Initialize(this);
-
-    // Enables tabbing with the keyboard
-    GumUI.UseKeyboardDefaults();
-
-    StackPanel stackPanel = new();
-    stackPanel.AddToRoot();
-    stackPanel.Anchor(Anchor.Center);
-    stackPanel.Spacing = 6;
-
-    for(int i = 0; i < 5; i++)
+    Button button = new();
+    stackPanel.AddChild(button);
+    button.Text = $"Button {i + 1}";
+    button.Name = button.Text;
+    if(i == 0)
     {
-        Button button = new();
-        stackPanel.AddChild(button);
-        button.Text = $"Button {i + 1}";
-        button.Name = button.Text;
-        if(i == 0)
-        {
-            button.IsFocused = true;
-        }
+        button.IsFocused = true;
     }
-
-    label = new ();
-    stackPanel.AddChild(label);
-
-    base.Initialize();
 }
 
+label = new ();
+stackPanel.AddChild(label);
 
-protected override void Update(GameTime gameTime)
-{
-    GumUI.Update(gameTime);
+// Update
+GumUI.Update(gameTime);
 
-    label.Text = 
-        $"Focused Control: {InteractiveGue.CurrentInputReceiver?.ToString() ?? "null"}";
-
-    base.Update(gameTime);
-}
+label.Text = 
+    $"Focused Control: {InteractiveGue.CurrentInputReceiver?.ToString() ?? "null"}";
 ```
 
 <figure><img src="../../.gitbook/assets/17_05 01 49.gif" alt=""><figcaption><p><code>CurrentInputReceiver</code> displayed on a <code>Label</code></p></figcaption></figure>

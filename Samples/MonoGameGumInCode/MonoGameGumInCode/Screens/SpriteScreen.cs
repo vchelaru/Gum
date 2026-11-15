@@ -240,14 +240,10 @@ internal class SpriteScreen : FrameworkElement
         offsetSprite.Animate = true;
         offsetLane.Children.Add(offsetSprite);
 
-#if !RAYLIB && !SKIA
         // RenderColorOperation authored on an animation frame (#4822) — same Modulate/
         // ColorTextureAlpha technique as the property-driven row above, but driven by the
         // AnimationFrame.RenderColorOperation field instead of setting SpriteRuntime.ColorOperation
-        // directly. Proves the .achx/.achj-authoring path, not just the runtime property. MonoGame
-        // only: unlike AnimationFrameColorOperation.Add (widened to every backend by #4821),
-        // RenderColorOperation is only applied by Sprite.ApplyAnimationFrame on MonoGame/KNI/FNA -
-        // raylib and Skia don't read it from a frame yet, so this row stays #if'd out.
+        // directly. Proves the .achx/.achj-authoring path, not just the runtime property.
         AddLabel(container, "RenderColorOperation via animation frame (Modulate, ColorTextureAlpha):");
         var renderColorOpFrameRow = AddRow(container);
         foreach (var renderColorOperation in new[]
@@ -278,7 +274,6 @@ internal class SpriteScreen : FrameworkElement
 
             renderColorOpFrameRow.Children.Add(s);
         }
-#endif
 
         // Alpha — same sprite at 64 / 128 / 192 / 255.
         AddLabel(container, "Alpha (64, 128, 192, 255):");

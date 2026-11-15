@@ -65,3 +65,6 @@
 
 # Force line endings to always be just LF (linux style)
 *.sh eol=lf
+
+# Skill frontmatter must stay LF: with CRLF Claude Code drops an unquoted "description: ... Triggers: ..." (see Tools/verify-skills.ps1)
+.claude/skills/**/SKILL.md text eol=lf

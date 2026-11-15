@@ -30,6 +30,13 @@ public class ErrorResult
     /// </summary>
     public VariableReferenceConflict? ReferenceConflict { get; set; }
 
+    /// <summary>
+    /// The values this result is about, as the <see cref="ErrorDetails"/> subclass for its <see cref="Code"/>.
+    /// Read these instead of parsing <see cref="Message"/>, whose wording may change. Null for a code that
+    /// carries no values.
+    /// </summary>
+    public ErrorDetails? Details { get; set; }
+
     public ErrorResult()
     {
         ElementName = string.Empty;

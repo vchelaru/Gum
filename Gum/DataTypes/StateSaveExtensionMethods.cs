@@ -1152,7 +1152,20 @@ public static class StateSaveExtensionMethods
 
     }
 
+    private static readonly Func<VariableSave, VariableSave> CloneVariable = variable => variable.Clone();
+
     public static void MergeIntoThis(this StateSave thisState, StateSave other, float otherRatio = 1)
+    {
+        thisState.MergeIntoThis(other, otherRatio, CloneVariable);
+    }
+
+    /// <summary>
+    /// Merges like <see cref="MergeIntoThis(StateSave, StateSave, float)"/>, but gets the variable it adds for a
+    /// variable that <paramref name="thisState"/> lacks from <paramref name="createVariable"/> (which receives the
+    /// other state's variable) instead of cloning it, so a caller that rewrites one state every tick can reuse
+    /// variable objects.
+    /// </summary>
+    internal static void MergeIntoThis(this StateSave thisState, StateSave other, float otherRatio, Func<VariableSave, VariableSave> createVariable)
     {
 #if FULL_DIAGNOSTICS
         if (other == null)
@@ -1174,7 +1187,7 @@ public static class StateSaveExtensionMethods
 
             if (whatToSet == null)
             {
-                whatToSet = variableSave.Clone();
+                whatToSet = createVariable(variableSave);
 
                 // Get the value recursively before adding it to the list
                 if (needsValueFromBase)
@@ -1250,76 +1263,56 @@ public static class StateSaveExtensionMethods
 
     }
 
-    private static object? SubtractValue(VariableSave firstVariable, VariableSave secondVariable)
+    private static object? SubtractValue(VariableSave minuend, VariableSave subtrahend)
     {
-        if (firstVariable.Value == null || secondVariable.Value == null)
+        if (minuend.Value == null || subtrahend.Value == null)
         {
-            return secondVariable.Value;
+            return subtrahend.Value;
         }
-        else if (firstVariable.Value is float && secondVariable.Value is float)
+        else if (minuend.Value is float && subtrahend.Value is float)
         {
-            float firstFloat = (float)firstVariable.Value;
-            float secondFloat = (float)secondVariable.Value;
-
-            return firstFloat - secondFloat;
+            return (float)minuend.Value - (float)subtrahend.Value;
         }
-        else if (firstVariable.Value is double && secondVariable.Value is double)
+        else if (minuend.Value is double && subtrahend.Value is double)
         {
-            double firstDouble = (double)firstVariable.Value;
-            double secondDouble = (double)secondVariable.Value;
-
-            return firstDouble - secondDouble;
+            return (double)minuend.Value - (double)subtrahend.Value;
         }
-
-        else if (firstVariable.Value is int)
+        else if (minuend.Value is int)
         {
-            int firstInt = (int)firstVariable.Value;
-            int secondInt = (int)secondVariable.Value;
-
-            return firstInt - secondInt;
+            return (int)minuend.Value - (int)subtrahend.Value;
         }
         else
         {
-            return secondVariable.Value;
+            // Values that can't be subtracted (bool, string, enums) keep the value being subtracted from.
+            // Returning the subtrahend would, in a relative animation (end - start), yield the start value.
+            return minuend.Value;
         }
-
     }
 
-
-
-    private static object? AddValue(VariableSave firstVariable, VariableSave secondVariable)
+    private static object? AddValue(VariableSave augend, VariableSave addend)
     {
-        if (firstVariable.Value == null || secondVariable.Value == null)
+        if (augend.Value == null || addend.Value == null)
         {
-            return secondVariable.Value;
+            return addend.Value;
         }
-        else if (firstVariable.Value is float && secondVariable.Value is float)
+        else if (augend.Value is float && addend.Value is float)
         {
-            float firstFloat = (float)firstVariable.Value;
-            float secondFloat = (float)secondVariable.Value;
-
-            return firstFloat + secondFloat;
+            return (float)augend.Value + (float)addend.Value;
         }
-        else if (firstVariable.Value is double && secondVariable.Value is double)
+        else if (augend.Value is double && addend.Value is double)
         {
-            double firstDouble = (double)firstVariable.Value;
-            double secondDouble = (double)secondVariable.Value;
-
-            return firstDouble + secondDouble;
+            return (double)augend.Value + (double)addend.Value;
         }
-
-        else if (firstVariable.Value is int)
+        else if (augend.Value is int)
         {
-            int firstInt = (int)firstVariable.Value;
-            int secondInt = (int)secondVariable.Value;
-
-            return firstInt + secondInt;
+            return (int)augend.Value + (int)addend.Value;
         }
         else
         {
-            return secondVariable.Value;
+            // Non-numeric values can't be added; the addend (for relative animations, the end-start
+            // difference, which holds the end value) wins.
+            return addend.Value;
         }
-
     }
 
     /// <summary>
@@ -1329,11 +1322,16 @@ public static class StateSaveExtensionMethods
     /// <param name="secondValue">The second value as a numeric value.</param>
     /// <param name="interpolationValue">A value between 0 and 1. A value of 0 returns the firstValue. A value of 1 returns the second value.</param>
     /// <returns>The resulting interpolated value, matching the type of the arguments.</returns>
+    // Boxed once: a box is never changed, and this runs for each variable of every tick of a playing animation.
+    private static readonly object BoxedZeroFloat = 0f;
+    private static readonly object BoxedZeroDouble = 0.0;
+    private static readonly object BoxedZeroInt = 0;
+
     private static object? GetZeroOfNumericType(object value)
     {
-        if (value is float) return 0f;
-        if (value is double) return 0.0;
-        if (value is int) return 0;
+        if (value is float) return BoxedZeroFloat;
+        if (value is double) return BoxedZeroDouble;
+        if (value is int) return BoxedZeroInt;
         return null;
     }
 

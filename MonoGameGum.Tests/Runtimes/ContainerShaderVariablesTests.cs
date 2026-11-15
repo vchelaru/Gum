@@ -251,6 +251,50 @@ public class ContainerShaderVariablesTests : BaseTestClass
         Has(sut, "Outline_Tint__X").ShouldBeFalse();
     }
 
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void SetProperty_TextVectorWithOnlyTheFirstComponentVariable_KeepsTheTextsOtherComponents(bool textFirst)
+    {
+        ContainerRuntime sut = new();
+        sut.SetProperty("SourceShaderFile", OutlineFile);
+
+        if (textFirst)
+        {
+            sut.SetProperty("ShaderParameters", "Tint=(0.5, 0.25)");
+        }
+        sut.SetProperty("Outline_Tint__X", 0.9f);
+        if (!textFirst)
+        {
+            sut.SetProperty("ShaderParameters", "Tint=(0.5, 0.25)");
+        }
+
+        ShaderParameterValue tint = Get(sut, "Tint");
+        tint.Count.ShouldBe(2);
+        tint.X.ShouldBe(0.9f);
+        tint.Y.ShouldBe(0.25f);
+    }
+
+    [Fact]
+    public void SetProperty_OverridingOneComponentOfACompleteVector_KeepsTheOtherComponents()
+    {
+        ContainerRuntime sut = new();
+        sut.SetProperty("SourceShaderFile", OutlineFile);
+        sut.SetProperty("Outline_Tint__X", 0.1f);
+        sut.SetProperty("Outline_Tint__Y", 0.2f);
+        sut.SetProperty("Outline_Tint__Z", 0.3f);
+        sut.SetProperty("Outline_Tint__W", 0.4f);
+
+        sut.SetProperty("Outline_Tint__X", 0.9f);
+
+        ShaderParameterValue tint = Get(sut, "Tint");
+        tint.Count.ShouldBe(4);
+        tint.X.ShouldBe(0.9f);
+        tint.Y.ShouldBe(0.2f);
+        tint.Z.ShouldBe(0.3f);
+        tint.W.ShouldBe(0.4f);
+    }
+
     [Fact]
     public void SetProperty_ComponentVariablesBeforeTheFile_AssembleOneVector()
     {

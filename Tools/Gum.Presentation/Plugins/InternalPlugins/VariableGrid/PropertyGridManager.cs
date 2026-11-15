@@ -48,6 +48,7 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
     private readonly ISetVariableLogic _setVariableLogic;
     private readonly ReferencedFileChoices _referencedFileChoices;
     private readonly IBuiltInShaderFiles _builtInShaderFiles;
+    private readonly Gum.Managers.IProjectRestrictions _projectRestrictions;
     private readonly IDialogService _dialogService;
     private readonly LocalizationService _localizationService;
     private readonly ITabManager _tabManager;
@@ -99,6 +100,7 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
     public List<object> ObjectsSuppressingRefresh { get; private set; } = new List<object>();
 
     private readonly CompositeMemberLogic _compositeMemberLogic;
+    private readonly ShaderVectorRow _shaderVectorRow;
     private StateSaveCategoryDisplayer _stateSaveCategoryDisplayer;
     private BehaviorShowingLogic _behaviorShowingLogic;
     private readonly IVariableCategoryCopyPasteService _variableCategoryCopyPasteService;
@@ -146,8 +148,11 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
         IClipboardService clipboardService,
         IStateEditingIndicatorService stateEditingIndicatorService,
         IVariableGridHead variableGridHead,
-        IBuiltInShaderFiles builtInShaderFiles)
+        IBuiltInShaderFiles builtInShaderFiles,
+        IVariableReferenceLogic variableReferenceLogic,
+        IProjectRestrictions projectRestrictions)
     {
+        _projectRestrictions = projectRestrictions;
         _builtInShaderFiles = builtInShaderFiles;
         _selectedState = selectedState;
         _exposeVariableService = exposeVariableService;
@@ -182,7 +187,8 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
         _behaviorShowingLogic = new BehaviorShowingLogic(fileCommands, projectState);
         _variableCategoryCopyPasteService = new VariableCategoryCopyPasteService(_undoManager);
         _variableCategoryRowAdapter = new VariableCategoryRowAdapter();
-        _multiSelectCommitLogic = new MultiSelectCommitLogic(_undoManager, _setVariableLogic);
+        _multiSelectCommitLogic = new MultiSelectCommitLogic(_undoManager, _setVariableLogic, _pluginManager, _fileCommands, variableReferenceLogic);
+        _shaderVectorRow = new ShaderVectorRow(_undoManager, _selectedState, _exposeVariableService, _dialogService, _nameVerifier);
         _compositeMemberLogic = new CompositeMemberLogic(_selectedState,
             _exposeVariableService,
             _undoManager,
@@ -210,7 +216,9 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
             _wireframeObjectManager,
             _clipboardService,
             _projectState,
-            new VariableReferenceLinkLogic(_selectedState, _objectFinder, _setVariableLogic));
+            new VariableReferenceLinkLogic(_selectedState, _objectFinder, _setVariableLogic),
+            new VariableReferenceStatusLogic(),
+            _projectRestrictions);
     }
 
     // Normally plugins will initialize through the PluginManager. This needs to happen earlier (see where it's called for info)
@@ -639,6 +647,7 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
         VariableViewModel.HasStateInformation = info.HasStateInformation;
         VariableViewModel.StateInformation = info.StateInformation;
         VariableViewModel.StateBackground = info.StateBackground;
+        VariableViewModel.StateCategoryColorName = info.CategoryColorName;
     }
 
     private void RefreshCategoryNotification(StateSaveCategory? stateCategory, StateSave? state)
@@ -656,8 +665,7 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
         }
         else
         {
-            var firstState = stateCategory.States[0];
-            var hasVariables = firstState.Variables.Any() || firstState.VariableLists.Any();
+            var hasVariables = stateCategory.States.Any(item => item.Variables.Any() || item.VariableLists.Any());
 
             if (!hasVariables)
             {
@@ -672,8 +680,31 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
         }
     }
 
+    private bool _isValueRefreshDeferred;
+
+    /// <summary>
+    /// Runs the value refresh a multi-select batch postponed (see <see cref="RefreshVariablesDataGridValues"/>);
+    /// does nothing when none was asked for.
+    /// </summary>
+    internal void FlushDeferredValueRefresh()
+    {
+        if (_isValueRefreshDeferred)
+        {
+            _isValueRefreshDeferred = false;
+            RefreshVariablesDataGridValues();
+        }
+    }
+
     public void RefreshVariablesDataGridValues()
     {
+        // One per selected instance in a multi-select batch repeats the same refresh; the batch's
+        // completion does it once.
+        if (_pluginManager.IsInVariableSetBatch)
+        {
+            _isValueRefreshDeferred = true;
+            return;
+        }
+
         ObjectFinder.Self.EnableCache();
         try
         {
@@ -1015,6 +1046,11 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
                 // string-list editor, and the entry ignores every other variable.
                 member.UiCreated += displayer =>
                     _variableGridHead.AttachReferenceTextEditor(displayer, member.HandleReferenceTextEditKeyDown);
+                if (entry.RootVariableName == "VariableReferences")
+                {
+                    member.UiCreated += displayer =>
+                        _variableGridHead.AttachReferenceSuggestions(displayer, () => entry.ElementSave, () => entry.InstanceSave?.Name);
+                }
                 category.Members.Add(member);
             }
 
@@ -1141,18 +1177,21 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
 
         foreach (ShaderParameterInfo parameter in parameters)
         {
-            InstanceMember? variableMember = instance != null && stateSave != null && element != null
-                ? CreateShaderParameterVariableMember(parameter, shaderFile, instance, element, stateSave, textMember.IsReadOnly)
-                : null;
+            List<InstanceMember> variableMembers = instance != null && stateSave != null && element != null
+                ? CreateShaderParameterVariableMembers(parameter, shaderFile, instance, element, stateSave, textMember.IsReadOnly)
+                : new List<InstanceMember>();
 
-            if (variableMember != null)
+            if (variableMembers.Count > 0)
             {
-                category.Members.Insert(index, variableMember);
-                index++;
+                foreach (InstanceMember variableMember in variableMembers)
+                {
+                    category.Members.Insert(index, variableMember);
+                    index++;
+                }
                 continue;
             }
 
-            // A vector, or a parameter no variable name can stand for, stays on the saved text.
+            // A parameter no variable name can stand for stays on the saved text.
             foreach (SyntheticVariableRow row in ShaderParameterRows.Build(
                 new[] { parameter }, () => textMember.Value as string, text => textMember.Value = text))
             {
@@ -1165,22 +1204,57 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
     }
 
     /// <summary>
-    /// The row for a single valued shader parameter, backed by the real saved variable
-    /// <c>Instance.&lt;shader file&gt;_&lt;Parameter&gt;</c>; null when the parameter is a vector, Gum fills it in
-    /// itself, or no variable name can stand for it (no shader file, or an unsupported parameter name).
+    /// The rows for a shader parameter, each backed by a real saved variable: one row for a single valued parameter
+    /// (<c>Instance.&lt;shader file&gt;_&lt;Parameter&gt;</c>), one per component for a float vector
+    /// (<c>Instance.&lt;shader file&gt;_&lt;Parameter&gt;__X</c>). Empty when Gum fills the parameter in itself, no
+    /// variable name can stand for it (no shader file, or an unsupported parameter name), or it is a vector that is not
+    /// a float.
     /// </summary>
-    private InstanceMember? CreateShaderParameterVariableMember(ShaderParameterInfo parameter, string? shaderFile,
+    private List<InstanceMember> CreateShaderParameterVariableMembers(ShaderParameterInfo parameter, string? shaderFile,
         InstanceSave instance, ElementSave element, StateSave stateSave, bool isReadOnly)
     {
-        if (parameter.Count != 1 || ShaderParameterRows.IsHiddenParameter(parameter) || string.IsNullOrEmpty(shaderFile) ||
-            !ShaderVariableNaming.IsSupportedParameterName(parameter.Name))
+        List<InstanceMember> members = new List<InstanceMember>();
+        bool isVector = parameter.Count > 1;
+        if (parameter.Count < 1 || ShaderParameterRows.IsHiddenParameter(parameter) || string.IsNullOrEmpty(shaderFile) ||
+            !ShaderVariableNaming.IsSupportedParameterName(parameter.Name) ||
+            (isVector && (parameter.Kind != ShaderParameterKind.Float || parameter.Count > ShaderParameterMarker.MaximumComponentCount)))
         {
-            return null;
+            return members;
         }
 
-        ShaderParameterVariableBinding binding = new ShaderParameterVariableBinding(parameter, instance.Name + ".ShaderParameters");
-        string variableName = instance.Name + "." + ShaderVariableNaming.GetVariableName(shaderFile, parameter.Name);
+        string legacyTextName = instance.Name + ".ShaderParameters";
+        if (!isVector)
+        {
+            members.Add(CreateShaderParameterVariableMember(
+                new ShaderParameterVariableBinding(parameter, legacyTextName),
+                instance.Name + "." + ShaderVariableNaming.GetVariableName(shaderFile, parameter.Name),
+                parameter.Name, instance, element, stateSave, isReadOnly));
+            return members;
+        }
 
+        Func<int, string> getComponentName = componentIndex => instance.Name + "." +
+            ShaderVariableNaming.GetVariableName(shaderFile, parameter.Name, componentIndex, parameter.Count);
+        List<InstanceMember> components = new List<InstanceMember>();
+        List<ShaderParameterVariableBinding> bindings = new List<ShaderParameterVariableBinding>();
+        List<string> rootNames = new List<string>();
+        for (int i = 0; i < parameter.Count; i++)
+        {
+            ShaderParameterVariableBinding binding = new ShaderParameterVariableBinding(parameter, legacyTextName, i, getComponentName);
+            bindings.Add(binding);
+            rootNames.Add(ShaderVariableNaming.GetVariableName(shaderFile, parameter.Name, i, parameter.Count));
+            components.Add(CreateShaderParameterVariableMember(
+                binding, getComponentName(i), ShaderParameterRows.GetComponentRowName(parameter, i), instance, element, stateSave, isReadOnly,
+                displayName: ShaderParameterRows.GetComponentLabel(i)));
+        }
+
+        // One row for the whole parameter; the components keep their own members for the fields inside it.
+        members.Add(_shaderVectorRow.Create(parameter.Name, components, bindings, rootNames, instance));
+        return members;
+    }
+
+    private InstanceMember CreateShaderParameterVariableMember(ShaderParameterVariableBinding binding, string variableName,
+        string rowName, InstanceSave instance, ElementSave element, StateSave stateSave, bool isReadOnly, string? displayName = null)
+    {
         VariableGridEntry entry = new VariableGridEntry(
             attributes: null,
             converter: null,
@@ -1208,8 +1282,8 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
             _clipboardService)
         {
             ShaderBinding = binding,
-            GridName = parameter.Name,
-            DisplayName = parameter.Name,
+            GridName = rowName,
+            DisplayName = displayName ?? rowName,
         };
         entry.DefaultValueFallback = () => binding.GetFallbackValue(stateSave);
 
@@ -1539,12 +1613,26 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
 
 
 
+    private static bool HasReferenceLines(ElementSave? element, InstanceSave? instance)
+    {
+        StateSave? state = element?.DefaultState;
+        string listName = instance == null ? "VariableReferences" : instance.Name + ".VariableReferences";
+        return state?.GetValueRecursive(listName) is System.Collections.IList { Count: > 0 };
+    }
+
     internal void HandleVariableSet(ElementSave? element, InstanceSave? instance, string strippedName, object? oldValue,
         bool isFullCommit)
     {
         if (strippedName == "VariableReferences")
         {
             // force refresh:
+            RefreshEntireGrid(force: true);
+        }
+        else if (isFullCommit && HasReferenceLines(element, instance))
+        {
+            // A reference row's note depends on the values it reads, so a commit on an element
+            // with references rebuilds the grid to recompute it (#7512). Only the full commit: a
+            // rebuild on a drag tick destroys the row being dragged.
             RefreshEntireGrid(force: true);
         }
         // Rebuilding the grid on an intermediate tick of a drag destroys the row being dragged,

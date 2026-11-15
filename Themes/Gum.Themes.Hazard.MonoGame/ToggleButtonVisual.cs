@@ -39,9 +39,12 @@ public class ToggleButtonVisual : BaseToggleButtonVisual
         TextInstance.Parent = null;
 
         Width = 96;
-        Height = 32;
+        Height = 8;
         WidthUnits = DimensionUnitType.Absolute;
-        HeightUnits = DimensionUnitType.Absolute;
+        // The button is as tall as its label: 8 of chrome padding plus the 24 px line of the
+        // theme font is the old fixed height for one line, and wrapped lines grow it.
+        HeightUnits = DimensionUnitType.RelativeToChildren;
+        TextInstance.Height = 0;
 
         _focusRing = HazardShapes.FocusRing(HazardStyling.ActiveStyle.Colors.Accent, CornerRadius, FocusRingInset, BorderThickness);
         AddChild(_focusRing);

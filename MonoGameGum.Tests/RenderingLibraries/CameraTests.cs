@@ -140,6 +140,54 @@ public class CameraTests : BaseTestClass
     }
 
     [Fact]
+    public void ClipBoundsSource_WithLayerCameraSettings_MapsThroughTheLayer()
+    {
+        Camera camera = new Camera();
+        camera.ClientWidth = 800;
+        camera.ClientHeight = 600;
+        camera.CameraCenterOnScreen = CameraCenterOnScreen.TopLeft;
+        camera.X = 50;
+        camera.Y = 30;
+
+        // Effective camera at (60, 50), zoomed 2x
+        Layer layer = new Layer();
+        layer.LayerCameraSettings = new LayerCameraSettings
+        {
+            Position = new System.Numerics.Vector2(10, 20),
+            Zoom = 2,
+        };
+
+        StubRenderable ipso = new StubRenderable { X = 100, Y = 80, Width = 40, Height = 30 };
+
+        ClipBoundsSource source = new ClipBoundsSource(camera, layer);
+
+        System.Drawing.Rectangle expected = new System.Drawing.Rectangle(80, 60, 80, 60);
+        source.GetScissorRectangle(ipso).ShouldBe(expected);
+        source.GetCullTestBounds(ipso).ShouldBe(expected);
+        camera.GetScissorRectangleFor(layer, ipso).ShouldBe(expected);
+        camera.GetCullTestBoundsFor(layer, ipso).ShouldBe(expected);
+    }
+
+    // The walk resolves the camera's transform once, when its source is made, rather than per
+    // renderable; nothing moves the camera while a draw list builds.
+    [Fact]
+    public void ClipBoundsSource_AfterTheCameraMoves_KeepsTheCameraAsItWasWhenMade()
+    {
+        Camera camera = new Camera();
+        camera.ClientWidth = 800;
+        camera.ClientHeight = 600;
+        camera.CameraCenterOnScreen = CameraCenterOnScreen.TopLeft;
+
+        StubRenderable ipso = new StubRenderable { X = 100, Y = 80, Width = 40, Height = 30 };
+
+        ClipBoundsSource source = new ClipBoundsSource(camera, layer: null);
+        camera.X = 50;
+
+        source.GetCullTestBounds(ipso).ShouldBe(new System.Drawing.Rectangle(100, 80, 40, 30));
+        camera.GetCullTestBoundsFor(layer: null, ipso).ShouldBe(new System.Drawing.Rectangle(50, 80, 40, 30));
+    }
+
+    [Fact]
     public void GetRenderTargetBounds_EntirelyOffCamera_HasNoVisibleArea()
     {
         Camera camera = new Camera();

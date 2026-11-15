@@ -156,6 +156,7 @@ public class ScrollViewer :
             {
                 verticalScrollBarVisibility = value;
                 UpdateVerticalScrollBarValues();
+                ReportFormsPropertyChanged();
             }
         }
     }
@@ -170,6 +171,7 @@ public class ScrollViewer :
             {
                 horizontalScrollBarVisibility = value;
                 UpdateHorizontalScrollBarValues();
+                ReportFormsPropertyChanged();
             }
         }
     }
@@ -183,6 +185,7 @@ public class ScrollViewer :
         get => (verticalScrollBar ?? horizontalScrollBar)?.SmallChange ?? 0;
         set
         {
+            double previous = SmallChange;
             _smallChange = value;
             _isSmallChangeSet = true;
             if (verticalScrollBar != null)
@@ -193,6 +196,22 @@ public class ScrollViewer :
             {
                 horizontalScrollBar.SmallChange = value;
             }
+            if (previous != SmallChange)
+            {
+                ReportFormsPropertyChanged();
+            }
+        }
+    }
+
+    // The scroll bars compute these from their layout; the ScrollViewer reports them as its own.
+    private Action<Primitives.RangeBase, string>? _computedChangeHandler;
+
+    private void HandleScrollBarComputedChange(Primitives.RangeBase bar, string propertyName)
+    {
+        // SmallChange and LargeChange read the vertical bar, or the horizontal one when there is none.
+        if (ReferenceEquals(bar, verticalScrollBar ?? horizontalScrollBar))
+        {
+            ReportFormsPropertyChanged(propertyName);
         }
     }
 
@@ -210,6 +229,7 @@ public class ScrollViewer :
         get => (verticalScrollBar ?? horizontalScrollBar)?.LargeChange ?? 0;
         set
         {
+            double previous = LargeChange;
             _largeChange = value;
             _isLargeChangeSet = true;
             if (verticalScrollBar != null)
@@ -219,6 +239,10 @@ public class ScrollViewer :
             if(horizontalScrollBar != null)
             {
                 horizontalScrollBar.LargeChange = value;
+            }
+            if (previous != LargeChange)
+            {
+                ReportFormsPropertyChanged();
             }
         }
     }
@@ -443,6 +467,7 @@ public class ScrollViewer :
             if (verticalScrollBar != null)
             {
                 verticalScrollBar.ValueChanged += HandleVerticalScrollBarValueChanged;
+                verticalScrollBar.ComputedChangeReported = _computedChangeHandler ??= HandleScrollBarComputedChange;
 
                 // Not sure if we want to set these here. This was moved out of 
                 // UpdateVerticalScrollBarValues so that it's only set once before
@@ -493,6 +518,7 @@ public class ScrollViewer :
             {
                 horizontalScrollBar.Orientation = Orientation.Horizontal;
                 horizontalScrollBar.ValueChanged += HandleHorizontalScrollBarValueChanged;
+                horizontalScrollBar.ComputedChangeReported = _computedChangeHandler ??= HandleScrollBarComputedChange;
 
                 if (_isSmallChangeSet)
                 {
@@ -559,12 +585,14 @@ public class ScrollViewer :
             {
                 verticalScrollBar.Visual.SizeChanged -= HandleVerticalScrollBarThumbSizeChanged;
                 verticalScrollBar.ValueChanged -= HandleVerticalScrollBarValueChanged;
+                verticalScrollBar.ComputedChangeReported = null;
             }
 
             if(horizontalScrollBar != null)
             {
                 horizontalScrollBar.Visual.SizeChanged -= HandleHorizontalScrollBarThumbSizeChanged;
                 horizontalScrollBar.ValueChanged -= HandleHorizontalScrollBarValueChanged;
+                horizontalScrollBar.ComputedChangeReported = null;
             }
 
         }

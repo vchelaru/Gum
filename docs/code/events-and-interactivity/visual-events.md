@@ -60,50 +60,48 @@ The Polygon type can be used to create custom shapes. All events respect the sha
 The following code shows how to create hit testing for polygons:
 
 ```csharp
-protected override void Initialize()
+// Class scope
+Label label;
+
+// Initialize
+label = new Label();
+label.X = 10;
+label.Y = 10;
+label.AddToRoot();
+
+// Triangle pointing up
+AddPolygon("Triangle", 10, new[]
 {
-    base.Initialize();
-    GumUI.Initialize(this);
+    new Vector2(0, 100),
+    new Vector2(50, 0),
+    new Vector2(100, 100),
+    new Vector2(0, 100),
+});
 
-    label = new Label();
-    label.X = 10;
-    label.Y = 10;
-    label.AddToRoot();
+// Tall pointed shape
+AddPolygon("Tall", 140, new[]
+{
+    new Vector2(20, 0),
+    new Vector2(40, 40),
+    new Vector2(40, 160),
+    new Vector2(0, 160),
+    new Vector2(0, 40),
+    new Vector2(20, 0),
+});
 
-    // Triangle pointing up
-    AddPolygon("Triangle", 10, new[]
-    {
-        new Vector2(0, 100),
-        new Vector2(50, 0),
-        new Vector2(100, 100),
-        new Vector2(0, 100),
-    });
+// L shape (concave). The notch at the top right is outside the polygon.
+AddPolygon("L Shape", 220, new[]
+{
+    new Vector2(0, 0),
+    new Vector2(40, 0),
+    new Vector2(40, 60),
+    new Vector2(100, 60),
+    new Vector2(100, 100),
+    new Vector2(0, 100),
+    new Vector2(0, 0),
+});
 
-    // Tall pointed shape
-    AddPolygon("Tall", 140, new[]
-    {
-        new Vector2(20, 0),
-        new Vector2(40, 40),
-        new Vector2(40, 160),
-        new Vector2(0, 160),
-        new Vector2(0, 40),
-        new Vector2(20, 0),
-    });
-
-    // L shape (concave). The notch at the top right is outside the polygon.
-    AddPolygon("L Shape", 220, new[]
-    {
-        new Vector2(0, 0),
-        new Vector2(40, 0),
-        new Vector2(40, 60),
-        new Vector2(100, 60),
-        new Vector2(100, 100),
-        new Vector2(0, 100),
-        new Vector2(0, 0),
-    });
-
-}
-
+// Class scope
 void AddPolygon(string name, float x, Vector2[] points)
 {
     var polygon = new PolygonRuntime();

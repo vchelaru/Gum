@@ -33,6 +33,20 @@ public interface IAnimationUndoProvider
     /// moved out of the element. The caller holds an undo lock, so the change joins that record.
     /// </summary>
     void RemoveKeyframesPlaying(ElementSave element, string instanceName);
+
+    /// <summary>
+    /// Whether <paramref name="element"/>'s animation can be renamed to <paramref name="toName"/> now,
+    /// which fails when a different animation of the element already uses that name. Tells the user
+    /// why when it can't; the caller then leaves everything as it is.
+    /// </summary>
+    bool CanRenameAnimation(ElementSave element, string toName);
+
+    /// <summary>
+    /// Re-points the keyframes of the other elements that play <paramref name="element"/>'s animation
+    /// <paramref name="fromName"/> to <paramref name="toName"/>, for the references that exist now.
+    /// Used to undo and redo an animation rename.
+    /// </summary>
+    void RenameAnimationReferences(ElementSave element, string fromName, string toName);
 }
 
 /// <summary>

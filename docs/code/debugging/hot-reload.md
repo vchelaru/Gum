@@ -8,12 +8,10 @@ Hot reload watches for changes to Gum project files (`.gumj`, `.gusj`, `.gucj`, 
 
 ## Enabling Hot Reload
 
-Call `EnableHotReload` after initializing Gum, passing the absolute path to your **source** `.gumj` file — not the copy in your `bin/Content` folder.
+Call `EnableHotReload` after [loading your Gum project](../getting-started/setup/loading-a-gum-project-.gumx.md), passing the absolute path to your **source** `.gumj` file rather than the copy in your `bin/Content` folder.
 
 ```csharp
 // Initialize
-var gumProject = GumUI.Initialize(this, "GumProject/GumProject.gumj");
-
 GumUI.EnableHotReload(
     @"c:\Users\YourName\source\YourGame\Content\GumProject\GumProject.gumj");
 ```
@@ -42,7 +40,7 @@ When any of these files change, Gum reloads the project in place: it diffs the n
 
 Children added at runtime by your game code are left untouched. Hot reload identifies "design-time" children by their `Tag` — when Gum creates a visual from an `InstanceSave`, it stores the `InstanceSave` in `Tag`. Anything without an `InstanceSave` `Tag` is treated as runtime-owned and skipped.
 
-Localization files are reloaded too. Hot reload reacts to the files in the project's `LocalizationFiles` (`.csv` or `.resx`, plus the `.resx` language files next to a listed one). When one changes, or the list itself changes in the project, Gum reads the files again, replaces the database of `GumService.Default.LocalizationService` and translates the text on screen again in the current language. Text set with `SetTextNoTranslate` is left alone. A file Gum cannot find is reported as `MissingFile`; one it cannot read (a malformed or empty file, or one the editor still has open) is tried once more after the debounce, then leaves the old translations in place and is reported as `ReloadFailed`. A game that has no `LocalizationService` is not affected.
+Localization files are reloaded too. Hot reload reacts to the files in the project's `LocalizationFiles` (`.csv` or `.resx`, plus the `.resx` language files next to a listed one). When one changes, or the list itself changes in the project, Gum reads the files again, replaces the database of `GumUI.LocalizationService` and translates the text on screen again in the current language. Text set with `SetTextNoTranslate` is left alone. A file Gum cannot find is reported as `MissingFile`; one it cannot read (a malformed or empty file, or one the editor still has open) is tried once more after the debounce, then leaves the old translations in place and is reported as `ReloadFailed`. A game that has no `LocalizationService` is not affected.
 
 Animation chain files (`.achx`, `.achj`) are reloaded when a Sprite or NineSlice uses one as its `SourceFile`: Gum drops the cached chains, reads the file again and assigns it to every visual using it, except those whose chains your code replaced. A chain file no visual uses is ignored. The playing chain is found again by name, so reordering chains is fine. If the chain was renamed or deleted, the visual keeps its last frame and Gum reports a `ReloadFailed` issue (`MatchesRestart` is `false`), since a restart would show nothing. Chains your code assigned to the visual's `AnimationChains` after the file was assigned are left alone.
 
@@ -60,7 +58,7 @@ An instance whose component was renamed, moved to another folder, or changed to 
 
 Hot reload is focused on Gum element definitions. The following are **not** automatically reloaded:
 
-* **Shader files** — When a file that a container's `SourceShaderFile` points at changes (any extension), the shader is compiled again and assigned to every container using it. The element tree is not rebuilt. A file the shader imports or includes is not tracked.
+* **Shader files** — When a file that a container's `SourceShaderFile` points at changes (any extension), the shader is compiled again and assigned to every container using it. The element tree is not rebuilt. A file the shader `#include`s reloads it too, when the shader loads through `UseShadowDusk()` on MonoGame, KNI, FNA or Skia (raylib and Slang `import` are not tracked). Available in December 2026, or now if building Gum from source.
 * **Textures and images** — If you change a `.png` file that a Sprite or NineSlice shows, the cached texture is still used. Restart the game to pick up texture changes. This includes images that an animation chain file names for its frames. Gum reports the file as a `ReloadFailed` issue, so `MatchesRestart` is `false`, and lists it in every later result until the game restarts.
 * **Animation files** — `.ganx` animation definitions are not reloaded.
 * **Runtime state on existing instances** — A reload applies the variables the project changed and leaves the rest alone, so a value your code set (e.g., `Text` or `Width`) stays unless the project changed that variable. See [Preserving Runtime State](#preserving-runtime-state) below.
@@ -179,6 +177,7 @@ Every reload's result lists every issue that reload had, including one an earlie
 | `ShownElementGone`    | The screen or component the game shows was renamed, moved or deleted. It stays on screen as it was. | `false`          |
 | `InstanceRemoved`     | An instance of a deleted component was removed, as a restart would.                                 | `true`           |
 | `InstanceRebuilt`     | An instance's component changed or was renamed, so its visual was rebuilt. References and handlers on it are stale. | `true` |
+| `InstanceLoop`        | An instance is of a component that contains it, directly or through other components. It was not created, as a restart would not create it. | `true` |
 | `ComponentBaseTypeChanged` | A screen or component changed its base type. Visuals already on screen keep what they inherited from the old base. | `false` |
 | `BaseElementMissing` | A screen or component derives from an element that is not in the project. Visuals already on screen keep what they inherited from it. | `false` |
 | `ExposedVariableChanged` | A component changed which variables it exposes. Instances already on screen keep the exposure they were built with. | `false` |
@@ -198,8 +197,6 @@ Hot reload is automatically stopped when `GumService.Uninitialize()` is called. 
 
 ```csharp
 // Initialize
-var gumProject = GumUI.Initialize(this, "GumProject/GumProject.gumj");
-
 #if DEBUG
 GumUI.EnableHotReload(
     @"c:\Users\YourName\source\YourGame\Content\GumProject\GumProject.gumj");

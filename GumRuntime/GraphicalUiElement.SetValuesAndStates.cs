@@ -204,7 +204,19 @@ public partial class GraphicalUiElement
         var propertyInfo = this.GetType().GetProperty(propertyName);
         if (propertyInfo == null)
         {
-            return TrySetCustomVariableOnFormsControl(propertyName, value);
+            if (TrySetCustomVariableOnFormsControl(propertyName, value))
+            {
+                return true;
+            }
+            // No property holds the value, so keep it where a reference reads it from. Without this a
+            // keyframe's X = OffsetX (#7645) would never see an OffsetX set on a plain element, since no
+            // row of the element's own default state reads it. Only a variable the element declares is kept,
+            // so a misspelled name is not stored.
+            if (ElementSave?.DefaultState?.GetVariableRecursive(propertyName) != null)
+            {
+                RecordReferenceInput(propertyName, value);
+            }
+            return false;
         }
 
         if (propertyInfo.DeclaringType == typeof(GraphicalUiElement))
@@ -398,7 +410,7 @@ public partial class GraphicalUiElement
             foreach (KeyValuePair<string, string> applied in container._appliedCategoryStates)
             {
                 StateSave? state = container.mCategories.TryGetValue(applied.Key, out StateSaveCategory? category)
-                    ? category.States.FirstOrDefault(item => item.Name == applied.Value)
+                    ? category.States.FindByName(applied.Value)
                     : null;
                 if (state != null)
                 {
@@ -443,7 +455,17 @@ public partial class GraphicalUiElement
                 // Children may not have been created yet
                 if (containedGue != null)
                 {
-                    containedGue.SetProperty(variable, value);
+                    // SetProperty reports the write under the exposed name, so the instance must not
+                    // report that name for this element as well (it would evaluate the rows twice).
+                    _exposedForwardDepth++;
+                    try
+                    {
+                        containedGue.SetProperty(variable, value);
+                    }
+                    finally
+                    {
+                        _exposedForwardDepth--;
+                    }
                 }
             }
         }
@@ -560,9 +582,40 @@ public partial class GraphicalUiElement
         VariableReferenceGraph.Evaluate(affected, evaluationState, this);
     }
 
+    /// <summary>
+    /// Evaluates the rows that read a laid-out value (<c>AbsoluteWidth</c> and so on) again on this element
+    /// and everything it contains. A build applies references while layout is suspended, so those rows read
+    /// zero; the build calls this once after its final layout (8026). Elements without such a row cost one
+    /// cached graph lookup.
+    /// </summary>
+    internal void ReevaluateLiveLayoutReferences()
+    {
+        VariableReferenceGraph? graph = GetReferenceGraph();
+        ElementSave? element = ElementSave;
+        if (graph != null && element != null && graph.HasLiveLayoutRows)
+        {
+            List<ReferenceRow> rows = new List<ReferenceRow>();
+            graph.FindLiveLayoutRows(rows);
+            DataTypes.Variables.StateSave evaluationState = new DataTypes.Variables.StateSave
+            {
+                Name = "ReferenceLayout",
+                ParentContainer = element
+            };
+            AddLiveInputs(rows, evaluationState);
+            VariableReferenceGraph.Evaluate(rows, evaluationState, this);
+        }
+
+        IList<GraphicalUiElement> contained = ContainedElements;
+        for (int i = 0; i < contained.Count; i++)
+        {
+            contained[i].ReevaluateLiveLayoutReferences();
+        }
+    }
+
     // Variables that have no property on the visual (a component's custom variables) are not held
     // anywhere on the live object, so the last value reported for each is kept here. Read only when the
-    // object cannot be asked, and only for names some row reads.
+    // object cannot be asked, and only for names some row reads. Holds the names a row of the default state reads
+    // that were reported, and the custom variables the element declares (a keyframe's rows read those).
     private Dictionary<string, object?>? _referenceInputs;
 
     // Keeps the value of a variable some row reads. For an instance-qualified name the instance holds it.
@@ -612,10 +665,100 @@ public partial class GraphicalUiElement
         {
             return true;
         }
+
+        // A Forms-only property lives on the Forms control, which holds the effective value: the behavior
+        // default, what code set, and the control's own clamping.
+        if (owner.TryReadFormsControlProperty(propertyName, out value, out _))
+        {
+            return true;
+        }
 #endif
         // A null cannot be seeded: the state would fall back to the authored value for it.
         return owner._referenceInputs != null && owner._referenceInputs.TryGetValue(propertyName, out value) && value != null;
     }
+
+#if !FRB
+    /// <summary>
+    /// Reads a behavior-declared Forms property (such as <c>Slider.Minimum</c>) from the live Forms control
+    /// of this element. Only a name some behavior on the element's type chain declares is read, so a
+    /// reference resolves exactly the properties the tool and the checker know about. False when the
+    /// element has no Forms control (the tool's canvas never creates one) or no such property.
+    /// </summary>
+    internal bool TryReadFormsControlProperty(string propertyName, out object? value, out VariableSave? declaration)
+    {
+        value = null;
+        declaration = null;
+        object? formsControl = (this as InteractiveGue)?.FormsControlAsObject;
+        ElementSave? element = ElementSave;
+        if (formsControl == null || element == null)
+        {
+            return false;
+        }
+
+        declaration = Gum.ProjectServices.FormsBehaviorChain.FindFormsPropertyDeclaration(element, propertyName);
+        if (declaration == null)
+        {
+            return false;
+        }
+
+        System.Reflection.PropertyInfo? propertyInfo = GetReadableFormsProperty(formsControl, propertyName);
+        if (propertyInfo == null)
+        {
+            return false;
+        }
+        value = propertyInfo.GetValue(formsControl, null);
+        return value != null;
+    }
+
+    /// <summary>
+    /// Reports a Forms-only property that code just assigned on this element's Forms control to the references
+    /// that read it, with the value the control ends with (after clamping). Nothing is read or boxed unless a
+    /// reference reads the property.
+    /// </summary>
+    internal void ReportFormsPropertyChanged(string propertyName)
+    {
+        if (GetReferenceAudience(propertyName, forFormsProperty: true) != ReferenceAudience.None &&
+            TryReadFormsControlProperty(propertyName, out object? value, out _))
+        {
+            ReportReferenceSourceChanged(propertyName, value);
+        }
+    }
+
+    // A live update reads the same few properties on every change, so the reflection lookup is kept per type.
+    // Like the other static reflection caches here, it is never cleared: types are kept for the process lifetime.
+    private static readonly Dictionary<(Type, string), System.Reflection.PropertyInfo?> _readableFormsProperties =
+        new Dictionary<(Type, string), System.Reflection.PropertyInfo?>();
+
+    private static System.Reflection.PropertyInfo? GetReadableFormsProperty(object formsControl, string propertyName)
+    {
+        Type type = GetFormsControlType(formsControl);
+        lock (_readableFormsProperties)
+        {
+            if (_readableFormsProperties.TryGetValue((type, propertyName), out System.Reflection.PropertyInfo? cached))
+            {
+                return cached;
+            }
+        }
+
+        System.Reflection.PropertyInfo? found = null;
+        try
+        {
+            System.Reflection.PropertyInfo? propertyInfo = GetFormsControlType(formsControl).GetProperty(propertyName);
+            if (propertyInfo != null && propertyInfo.CanRead && propertyInfo.GetIndexParameters().Length == 0)
+            {
+                found = propertyInfo;
+            }
+        }
+        catch (System.Reflection.AmbiguousMatchException)
+        {
+        }
+        lock (_readableFormsProperties)
+        {
+            _readableFormsProperties[(type, propertyName)] = found;
+        }
+        return found;
+    }
+#endif
 
     private static bool StateHasVariable(DataTypes.Variables.StateSave state, string name)
     {
@@ -629,7 +772,7 @@ public partial class GraphicalUiElement
         return false;
     }
 
-    private static bool WrittenByAny(List<ReferenceRow> rows, string name)
+    private static bool WrittenByAny(IReadOnlyList<ReferenceRow> rows, string name)
     {
         for (int i = 0; i < rows.Count; i++)
         {
@@ -643,7 +786,7 @@ public partial class GraphicalUiElement
 
     // Puts the live value of every input the rows read into the state they evaluate against. The changed
     // variables are already there, and a result of one of the rows is computed in order, so neither is read.
-    private void AddLiveInputs(List<ReferenceRow> rows, DataTypes.Variables.StateSave state)
+    private void AddLiveInputs(IReadOnlyList<ReferenceRow> rows, DataTypes.Variables.StateSave state)
     {
         for (int i = 0; i < rows.Count; i++)
         {
@@ -661,6 +804,58 @@ public partial class GraphicalUiElement
                 }
             }
         }
+    }
+
+    /// <summary>
+    /// A copy of the animation keyframe state with each of its variable-reference rows evaluated against
+    /// this element's live values (#7645), so a keyframe's <c>X = OffsetX</c> is the offset the element holds
+    /// now. The state itself is not changed, since it is shared by every element playing the animation.
+    /// A row that cannot be evaluated (unknown name, a type that does not fit, an expression without
+    /// Gum.Expressions) leaves the variable at its stored value and is reported once, like any other row.
+    /// </summary>
+    internal DataTypes.Variables.StateSave ResolveKeyframeReferences(ElementSave element, DataTypes.Variables.StateSave keyframeState)
+    {
+        VariableReferenceGraph graph = VariableReferenceGraph.GetForState(element, keyframeState);
+        if (!graph.HasRows)
+        {
+            return keyframeState;
+        }
+
+        DataTypes.Variables.StateSave resolved = keyframeState.Clone();
+
+        // Rows read the keyframe's own variables first, then what this element holds now. The evaluation
+        // state shares the variables of the copy, so a result lands in the copy; a result for a variable
+        // the keyframe does not store is added to the copy below.
+        DataTypes.Variables.StateSave evaluationState = new DataTypes.Variables.StateSave
+        {
+            Name = "KeyframeReferences",
+            ParentContainer = element
+        };
+        evaluationState.Variables.AddRange(resolved.Variables);
+        IReadOnlyList<ReferenceRow> rows = graph.LoadOrderRows;
+        AddLiveInputs(rows, evaluationState);
+
+        for (int i = 0; i < rows.Count; i++)
+        {
+            ReferenceRow row = rows[i];
+            ElementSaveExtensions.ApplyVariableReferencesOnSpecificOwner(row.Instance, row.Line, evaluationState, this, propagateNull: false);
+
+            DataTypes.Variables.VariableSave? result = null;
+            for (int j = 0; j < evaluationState.Variables.Count; j++)
+            {
+                if (evaluationState.Variables[j].Name == row.WrittenName)
+                {
+                    result = evaluationState.Variables[j];
+                    break;
+                }
+            }
+            if (result != null && result.Value != null && !StateHasVariable(resolved, row.WrittenName))
+            {
+                resolved.Variables.Add(result);
+            }
+        }
+
+        return resolved;
     }
 
     /// <summary>
@@ -716,7 +911,7 @@ public partial class GraphicalUiElement
 
     // Which elements have a reference that reads the variable: this element's own, and the one
     // containing this instance. Allocates nothing, so a typed property can ask before boxing its value.
-    private ReferenceAudience GetReferenceAudience(string propertyName)
+    private ReferenceAudience GetReferenceAudience(string propertyName, bool forFormsProperty = false)
     {
         ReferenceAudience audience = ReferenceAudience.None;
         // A row writing its result, or this element applying its own default state: the load applies
@@ -730,8 +925,8 @@ public partial class GraphicalUiElement
         // reports it to this element itself.
         if (ElementSave != null && IsFullyCreated && propertyName.IndexOf('.') < 0)
         {
-            VariableReferenceGraph? graph = GetReferenceGraph();
-            if (graph != null && graph.IsAffectedBy(propertyName))
+            VariableReferenceGraph? graph = GetReferenceGraph(forFormsProperty);
+            if (graph != null && graph.IsAffectedBy(propertyName, includeLiveLayout: !forFormsProperty))
             {
                 audience |= ReferenceAudience.Self;
             }
@@ -741,13 +936,43 @@ public partial class GraphicalUiElement
         // A container that is loading applies its own rows after the state that wrote this value.
         if (container != null && container.IsFullyCreated && container._referenceLoadDepth == 0 && Tag is InstanceSave instance)
         {
-            VariableReferenceGraph? containerGraph = container.GetReferenceGraph();
-            if (containerGraph != null && containerGraph.IsAffectedBy(instance.Name, propertyName))
+            VariableReferenceGraph? containerGraph = container.GetReferenceGraph(forFormsProperty);
+            if (containerGraph != null && containerGraph.IsAffectedBy(instance.Name, propertyName, includeLiveLayout: !forFormsProperty))
             {
                 audience |= ReferenceAudience.Container;
             }
+
+            // The container may expose this variable under its own name (IsMyButtonVisible for
+            // MyButton.Visible). That is the same value, so rows reading the exposed name follow a write
+            // through the instance. A write made through the exposed name is reported under it already.
+            if (container.mExposedVariables.Count > 0 && container._exposedForwardDepth == 0 &&
+                container.FindExposedNameOf(instance.Name, propertyName) is string exposedName &&
+                container.GetReferenceAudience(exposedName, forFormsProperty) != ReferenceAudience.None)
+            {
+                audience |= ReferenceAudience.ExposedName;
+            }
         }
         return audience;
+    }
+
+    // Greater than zero while this element forwards a write made through an exposed name to an instance.
+    private int _exposedForwardDepth;
+
+    // The name this element exposes instanceName.memberName under, or null. Allocates nothing.
+    private string? FindExposedNameOf(string instanceName, string memberName)
+    {
+        foreach (KeyValuePair<string, string> exposed in mExposedVariables)
+        {
+            string underlying = exposed.Value;
+            if (underlying.Length == instanceName.Length + 1 + memberName.Length
+                && underlying[instanceName.Length] == '.'
+                && string.CompareOrdinal(underlying, 0, instanceName, 0, instanceName.Length) == 0
+                && string.CompareOrdinal(underlying, instanceName.Length + 1, memberName, 0, memberName.Length) == 0)
+            {
+                return exposed.Key;
+            }
+        }
+        return null;
     }
 
     [Flags]
@@ -755,7 +980,8 @@ public partial class GraphicalUiElement
     {
         None = 0,
         Self = 1,
-        Container = 2
+        Container = 2,
+        ExposedName = 4
     }
 
     // The typed properties report their own changes so that code such as element.X = 5 updates the
@@ -819,6 +1045,20 @@ public partial class GraphicalUiElement
         {
             QueueReferenceChange(mWhatContainsThis!, ((InstanceSave)Tag!).Name + "." + propertyName, value);
         }
+        if ((audience & ReferenceAudience.ExposedName) != 0)
+        {
+            GraphicalUiElement container = mWhatContainsThis!;
+            string exposedName = container.FindExposedNameOf(((InstanceSave)Tag!).Name, propertyName)!;
+
+            // SetProperty reports even when the value is the same, and a Forms control sets its visual that
+            // way, so a value the exposed name was last reported with is not reported again. Not inside a state batch, where the last report is still queued.
+            bool unchanged = _stateBatchDepth == 0 && container._referenceInputs != null &&
+                container._referenceInputs.TryGetValue(exposedName, out object? last) && Equals(last, value);
+            if (!unchanged)
+            {
+                container.ReportReferenceSourceChanged(exposedName, value);
+            }
+        }
     }
 
     private static void QueueReferenceChange(GraphicalUiElement root, string name, object? value)
@@ -869,7 +1109,7 @@ public partial class GraphicalUiElement
         }
     }
 
-    private VariableReferenceGraph? GetReferenceGraph()
+    private VariableReferenceGraph? GetReferenceGraph(bool trustCached = false)
     {
         ElementSave? element = ElementSave;
         // Standard elements (Sprite, Text, ...) hold the styling rows ApplyAllVariableReferences
@@ -880,6 +1120,12 @@ public partial class GraphicalUiElement
         }
 
         VariableReferenceGraph? graph = _referenceGraph;
+        // A Forms property setter can run on every frame and almost never has a reader, and validating the graph walks every
+        // reference list of the element. It trusts the graph it has; a row added since is found by the next path that validates.
+        if (trustCached && graph != null)
+        {
+            return graph;
+        }
         if (graph == null || !graph.IsCurrent(element))
         {
             graph = VariableReferenceGraph.GetFor(element);
@@ -1098,27 +1344,14 @@ public partial class GraphicalUiElement
                 {
                     var valueAsString = (string)value;
 
-                    string nameWithoutState = propertyName.Substring(0, propertyName.Length - "State".Length);
-
-                    if (string.IsNullOrEmpty(nameWithoutState))
+                    if (TryGetCategoryByPrefix(propertyName, propertyNameLength - "State".Length,
+                        out string? categoryName, out StateSaveCategory? category))
                     {
-                        // This is an uncategorized state
-                        if (mStates.ContainsKey(valueAsString))
-                        {
-                            ApplyState(mStates[valueAsString]);
-                            toReturn = true;
-                        }
-                    }
-                    else if (mCategories.ContainsKey(nameWithoutState))
-                    {
-
-                        var category = mCategories[nameWithoutState];
-
-                        var state = category.States.FirstOrDefault(item => item.Name == valueAsString);
+                        var state = category.States.FindByName(valueAsString);
                         if (state != null)
                         {
                             ApplyState(state);
-                            RecordAppliedCategoryState(nameWithoutState, valueAsString);
+                            RecordAppliedCategoryState(categoryName, valueAsString);
                             toReturn = true;
                         }
                     }
@@ -1164,7 +1397,7 @@ public partial class GraphicalUiElement
         {
             var category = mCategories[categoryName];
 
-            var state = category.States.FirstOrDefault(item => item.Name == stateName);
+            var state = category.States.FindByName(stateName);
             if (state != null)
             {
                 ApplyState(state);
@@ -1203,7 +1436,7 @@ public partial class GraphicalUiElement
         // Technically categories could have same-named states.
         foreach (var category in mCategories.Values)
         {
-            var foundState = category.States.FirstOrDefault(item => item.Name == name);
+            var foundState = category.States.FindByName(name);
 
             if (foundState != null)
             {
@@ -1218,7 +1451,7 @@ public partial class GraphicalUiElement
         {
             var category = mCategories[categoryName];
 
-            var state = category.States.FirstOrDefault(item => item.Name == stateName);
+            var state = category.States.FindByName(stateName);
 
             if (state != null)
             {
@@ -1226,6 +1459,28 @@ public partial class GraphicalUiElement
                 RecordAppliedCategoryState(categoryName, stateName);
             }
         }
+    }
+
+    // Finds the category whose key equals the first prefixLength characters of text, the same match
+    // as mCategories.TryGetValue(text.Substring(0, prefixLength)) without building that string.
+    // Forms sets "<Category>State" on every hover and press, so the Substring was a per-change allocation.
+    private bool TryGetCategoryByPrefix(string text, int prefixLength,
+        [System.Diagnostics.CodeAnalysis.NotNullWhen(true)] out string? categoryName,
+        [System.Diagnostics.CodeAnalysis.NotNullWhen(true)] out StateSaveCategory? category)
+    {
+        foreach (KeyValuePair<string, StateSaveCategory> pair in mCategories)
+        {
+            string key = pair.Key;
+            if (key.Length == prefixLength && string.CompareOrdinal(key, 0, text, 0, prefixLength) == 0)
+            {
+                categoryName = key;
+                category = pair.Value;
+                return true;
+            }
+        }
+        categoryName = null;
+        category = null;
+        return false;
     }
 
     private void RecordAppliedCategoryState(string categoryName, string stateName)
@@ -1282,99 +1537,7 @@ public partial class GraphicalUiElement
             }
             else
             {
-                bool didSuspend = false;
-                // Also check this.IsLayoutSuspended: a state's own Variables can include a category-state
-                // assignment (e.g. "ButtonCategoryState" = "Highlighted"), which TrySetValueOnThis resolves
-                // by calling ApplyState AGAIN on this same instance, nested inside this loop. Without this
-                // check, that nested call would see IsAllLayoutSuspended still false, suspend/resume on its
-                // own, and its ResumeLayout would prematurely clear mIsLayoutSuspended -- and flush any
-                // deferred font load -- before THIS (outer) call finishes applying its own remaining
-                // variables (#4567). Skipping suspend/resume when already suspended lets the nested call's
-                // variables apply under the outer suspension, so only the outermost ApplyState flushes.
-                if (GraphicalUiElement.IsAllLayoutSuspended == false && this.IsLayoutSuspended == false)
-                {
-                    didSuspend = true;
-                    this.SuspendLayout(true);
-                }
-
-                // SuspendLayout(true) suspended this element and every descendant. If a variable throws
-                // (a custom setter, an event handler), none of them may stay suspended: every later
-                // UpdateLayout early-outs for a suspended element, so it would never lay out again.
-                bool appliedAllVariables = false;
-                try
-                {
-                    var variablesWithoutStatesOnParent =
-                        state.Variables.Where(item =>
-                        {
-                            if (item.SetsValue)
-                            {
-                                // We can set the variable if it's not setting a state (to prevent recursive setting).
-                                // Update May 4, 2023 - But if you have a base element that defines a state, and the derived
-                                // element sets that state, then we want to allow it.  But should we just allow all states?
-                                // Or should we check if it's defined by the base...
-                                //return (item.IsState(state.ParentContainer) == false ||
-                                //    // If it is setting a state we'll allow it if it's on a child.
-                                //    !string.IsNullOrEmpty(item.SourceObject));
-                                // let's test this out:
-                                return true;
-
-                            }
-                            return false;
-                        }).ToArray();
-
-
-                    var parentSettingVariables =
-                        variablesWithoutStatesOnParent
-                            .Where(item => item.GetRootName() == "Parent")
-                            .OrderBy(item => GetOrderedIndexForParentVariable(item))
-                            .ToArray();
-
-                    var nonParentSettingVariables =
-                        variablesWithoutStatesOnParent
-                            .Except(parentSettingVariables)
-                            // Even though we removed state-setting variables on the parent, we still allow setting
-                            // states on the contained objects
-                            .OrderBy(item => state.ParentContainer == null || !item.IsState(state.ParentContainer))
-                            .ToArray();
-
-                    var variablesToConsider =
-                        parentSettingVariables.Concat(nonParentSettingVariables)
-                        .ToArray();
-
-                    int variableCount = variablesToConsider.Length;
-                    for (int i = 0; i < variableCount; i++)
-                    {
-                        var variable = variablesToConsider[i];
-                        if (variable.SetsValue && variable.Value != null)
-                        {
-                            this.SetProperty(variable.Name, variable.Value);
-                        }
-                    }
-
-                    foreach (var variableList in state.VariableLists)
-                    {
-                        this.SetProperty(variableList.Name, variableList.ValueAsIList);
-                    }
-
-                    appliedAllVariables = true;
-                }
-                finally
-                {
-                    if (didSuspend)
-                    {
-                        if (appliedAllVariables)
-                        {
-                            this.ResumeLayout(true);
-                        }
-                        else
-                        {
-                            // Lift the suspension without flushing: the flush would run layout (and the same
-                            // throwing setter) while the original exception is unwinding. The dirty state is
-                            // kept, so the next layout of these elements catches up.
-                            this.ClearLayoutSuspensionRecursive();
-                        }
-                    }
-                }
+                ApplyStateVariables(state);
             }
 
         }
@@ -1389,6 +1552,105 @@ public partial class GraphicalUiElement
             FlushPendingReferenceChanges();
         }
 
+    }
+
+    // Kept out of ApplyState so the closure capturing state is allocated only on this path; a state
+    // with an Apply delegate (every Forms control's default visual) then allocates nothing.
+    private void ApplyStateVariables(DataTypes.Variables.StateSave state)
+    {
+        bool didSuspend = false;
+        // Also check this.IsLayoutSuspended: a state's own Variables can include a category-state
+        // assignment (e.g. "ButtonCategoryState" = "Highlighted"), which TrySetValueOnThis resolves
+        // by calling ApplyState AGAIN on this same instance, nested inside this loop. Without this
+        // check, that nested call would see IsAllLayoutSuspended still false, suspend/resume on its
+        // own, and its ResumeLayout would prematurely clear mIsLayoutSuspended -- and flush any
+        // deferred font load -- before THIS (outer) call finishes applying its own remaining
+        // variables (#4567). Skipping suspend/resume when already suspended lets the nested call's
+        // variables apply under the outer suspension, so only the outermost ApplyState flushes.
+        if (GraphicalUiElement.IsAllLayoutSuspended == false && this.IsLayoutSuspended == false)
+        {
+            didSuspend = true;
+            this.SuspendLayout(true);
+        }
+
+        // SuspendLayout(true) suspended this element and every descendant. If a variable throws
+        // (a custom setter, an event handler), none of them may stay suspended: every later
+        // UpdateLayout early-outs for a suspended element, so it would never lay out again.
+        bool appliedAllVariables = false;
+        try
+        {
+            var variablesWithoutStatesOnParent =
+                state.Variables.Where(item =>
+                {
+                    if (item.SetsValue)
+                    {
+                        // We can set the variable if it's not setting a state (to prevent recursive setting).
+                        // Update May 4, 2023 - But if you have a base element that defines a state, and the derived
+                        // element sets that state, then we want to allow it.  But should we just allow all states?
+                        // Or should we check if it's defined by the base...
+                        //return (item.IsState(state.ParentContainer) == false ||
+                        //    // If it is setting a state we'll allow it if it's on a child.
+                        //    !string.IsNullOrEmpty(item.SourceObject));
+                        // let's test this out:
+                        return true;
+
+                    }
+                    return false;
+                }).ToArray();
+
+
+            var parentSettingVariables =
+                variablesWithoutStatesOnParent
+                    .Where(item => item.GetRootName() == "Parent")
+                    .OrderBy(item => GetOrderedIndexForParentVariable(item))
+                    .ToArray();
+
+            var nonParentSettingVariables =
+                variablesWithoutStatesOnParent
+                    .Except(parentSettingVariables)
+                    // Even though we removed state-setting variables on the parent, we still allow setting
+                    // states on the contained objects
+                    .OrderBy(item => state.ParentContainer == null || !item.IsState(state.ParentContainer))
+                    .ToArray();
+
+            var variablesToConsider =
+                parentSettingVariables.Concat(nonParentSettingVariables)
+                .ToArray();
+
+            int variableCount = variablesToConsider.Length;
+            for (int i = 0; i < variableCount; i++)
+            {
+                var variable = variablesToConsider[i];
+                if (variable.SetsValue && variable.Value != null)
+                {
+                    this.SetProperty(variable.Name, variable.Value);
+                }
+            }
+
+            foreach (var variableList in state.VariableLists)
+            {
+                this.SetProperty(variableList.Name, variableList.ValueAsIList);
+            }
+
+            appliedAllVariables = true;
+        }
+        finally
+        {
+            if (didSuspend)
+            {
+                if (appliedAllVariables)
+                {
+                    this.ResumeLayout(true);
+                }
+                else
+                {
+                    // Lift the suspension without flushing: the flush would run layout (and the same
+                    // throwing setter) while the original exception is unwinding. The dirty state is
+                    // kept, so the next layout of these elements catches up.
+                    this.ClearLayoutSuspensionRecursive();
+                }
+            }
+        }
     }
 
     public void ApplyState(List<DataTypes.Variables.VariableSaveValues> variableSaveValues)

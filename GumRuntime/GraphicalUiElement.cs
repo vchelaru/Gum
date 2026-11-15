@@ -193,6 +193,9 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     public static int UpdateLayoutCallCount;
     public static int ChildrenUpdatingParentLayoutCalls;
 
+    // Elements checked for a deferred font load. Tests read it to prove a recursive resume checks each element once (#7732).
+    internal static int FontCheckCount;
+
     // This used to be true until Jan 26, 2024, but it's
     // confusing for new users. Let's keep this off and document
     // how to use it (eventually).
@@ -420,7 +423,8 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     /// <summary>
     /// Applies changing RGBA pixel data (width*height*4 bytes) to the sprite renderable of the target
     /// using a texture pooled per owner (second argument). Pooled textures whose owner has detached from
-    /// the visual tree are reclaimed, so repeated create/destroy cycles reuse a bounded set. For per-instance
+    /// the visual tree are reclaimed when they have the requested width and height (a different size gets its
+    /// own texture), so repeated create/destroy cycles reuse a bounded set. For per-instance
     /// procedural backgrounds (e.g. a color picker saturation/value square). Assigned per rendering backend.
     /// </summary>
     public static Action<GraphicalUiElement, GraphicalUiElement, byte[], int, int>? ApplyPooledTextureFromPixelData;
@@ -547,10 +551,21 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
             asText.TextOverflowVerticalMode = this.TextOverflowVerticalMode;
         }
 
+        OnContainedObjectSet(containedObject);
+
         if (containedObject != null)
         {
             UpdateLayout();
         }
+    }
+
+    /// <summary>
+    /// Called by <see cref="SetContainedObject"/>, including from <see cref="Clone"/>, once
+    /// <paramref name="containedObject"/> is this element's renderable and before layout runs.
+    /// </summary>
+    /// <param name="containedObject">The new renderable, or null.</param>
+    protected virtual void OnContainedObjectSet(IRenderable? containedObject)
+    {
     }
 
     public virtual void CreateChildrenRecursively(ElementSave elementSave, ISystemManagers systemManagers)
@@ -705,7 +720,7 @@ public static class GraphicalUiElementExtensions
 
         foreach (var category in graphicalUiElement.Categories.Values)
         {
-            state = category.States.FirstOrDefault(item => item.Name == name);
+            state = category.States.FindByName(name);
             if (state != null)
             {
                 return true;

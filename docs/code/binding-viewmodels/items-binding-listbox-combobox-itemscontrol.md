@@ -293,82 +293,51 @@ public class WeaponDisplay : ListBoxItem
     }
 }
 
+// Initialize
+var viewModel = new TopLevelViewModel();
 
+var comboBox = new ComboBox();
+comboBox.AddToRoot();
+comboBox.Anchor(Anchor.Center);
+comboBox.Width = 300;
+comboBox.BindingContext = viewModel;
+comboBox.SetBinding(
+    nameof(comboBox.Items),
+    nameof(viewModel.Weapons));
+comboBox.DisplayMemberPath = nameof(WeaponViewModel.WeaponName);
 
-public class Game1 : Game
+comboBox.FrameworkElementTemplate =
+    new Gum.Forms.FrameworkElementTemplate(typeof(WeaponDisplay));
+
+viewModel.Weapons.Add(new WeaponViewModel
 {
-    private GraphicsDeviceManager _graphics;
-    GumService GumUI => GumService.Default;
-    public Game1()
-    {
-        _graphics = new GraphicsDeviceManager(this);
-        Content.RootDirectory = "Content";
-        IsMouseVisible = true;
-    }
+    WeaponName = "Sword",
+    WeaponDetails = "A sharp blade used for cutting."
+});
 
-    protected override void Initialize()
-    {
-        GumUI.Initialize(this);
+viewModel.Weapons.Add(new WeaponViewModel
+{
+    WeaponName = "Bow",
+    WeaponDetails = "A ranged weapon that shoots arrows."
+});
 
-        var viewModel = new TopLevelViewModel();
+viewModel.Weapons.Add(new WeaponViewModel
+{
+    WeaponName = "Staff",
+    WeaponDetails = "A magical staff used for casting spells."
+});
 
-        var comboBox = new ComboBox();
-        comboBox.AddToRoot();
-        comboBox.Anchor(Anchor.Center);
-        comboBox.Width = 300;
-        comboBox.BindingContext = viewModel;
-        comboBox.SetBinding(
-            nameof(comboBox.Items),
-            nameof(viewModel.Weapons));
-        comboBox.DisplayMemberPath = nameof(WeaponViewModel.WeaponName);
+viewModel.Weapons.Add(new WeaponViewModel
+{
+    WeaponName = "Dagger",
+    WeaponDetails = "A small, sharp blade used for stabbing."
+});
 
-        comboBox.FrameworkElementTemplate =
-            new Gum.Forms.FrameworkElementTemplate(typeof(WeaponDisplay));
+// Update
+GumUI.Update(gameTime);
 
-
-        viewModel.Weapons.Add(new WeaponViewModel
-        {
-            WeaponName = "Sword",
-            WeaponDetails = "A sharp blade used for cutting."
-        });
-
-        viewModel.Weapons.Add(new WeaponViewModel
-        {
-            WeaponName = "Bow",
-            WeaponDetails = "A ranged weapon that shoots arrows."
-        });
-
-        viewModel.Weapons.Add(new WeaponViewModel
-        {
-            WeaponName = "Staff",
-            WeaponDetails = "A magical staff used for casting spells."
-        });
-
-        viewModel.Weapons.Add(new WeaponViewModel
-        {
-            WeaponName = "Dagger",
-            WeaponDetails = "A small, sharp blade used for stabbing."
-        });
-
-        base.Initialize();
-    }
-
-    protected override void Update(GameTime gameTime)
-    {
-        GumUI.Update(gameTime);
-
-        base.Update(gameTime);
-    }
-
-    protected override void Draw(GameTime gameTime)
-    {
-        GraphicsDevice.Clear(Color.CornflowerBlue);
-
-        GumUI.Draw();
-
-        base.Draw(gameTime);
-    }
-}
+// Draw
+GumUI.Draw();
 
 ```
 

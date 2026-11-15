@@ -27,9 +27,10 @@ public class NineSlice : RenderableShapeBase, IAnimatable, IAnimationChainRender
         clone._sectionImages = null;
         // An owned image would be disposed by whichever side changes texture first, so the clone
         // builds its own. A caller-assigned image is shared, since neither side disposes it.
-        if (_ownsImage && _texture != null)
+        if (_ownsImage)
         {
-            clone._image = SKImage.FromBitmap(_texture);
+            clone._image = Sprite.CreateOwnedCopy(_texture, _image);
+            clone._ownsImage = clone._image != null;
         }
         return clone;
     }
@@ -60,7 +61,7 @@ public class NineSlice : RenderableShapeBase, IAnimatable, IAnimationChainRender
     {
         Texture = frame.Texture;
 
-        if (frame.Texture != null)
+        if (Sprite.IsUsable(frame.Texture))
         {
             SKBitmap tex = frame.Texture;
             int left = MathFunctions.RoundToInt(frame.LeftCoordinate * tex.Width);
@@ -143,18 +144,43 @@ public class NineSlice : RenderableShapeBase, IAnimatable, IAnimationChainRender
     /// <summary>
     /// The bitmap this nine-slice draws. Setting it builds a new <see cref="Image"/> that the
     /// nine-slice owns and disposes when it is replaced. The bitmap itself is never disposed here,
-    /// since it usually comes from the shared content cache.
+    /// since it usually comes from the shared content cache. A bitmap that was already disposed
+    /// (content unload) is treated as no texture, since Skia aborts the process when it builds an
+    /// image from one.
+    /// <para>
+    /// The pixels are copied into an <see cref="SKImage"/> on purpose; the nine-slice never draws the
+    /// SKBitmap directly. Measured 2026-11-11 (256x256 bitmap drawn 200 times per frame on a 1280x720 surface,
+    /// NotifyPixelsChanged once per frame, 60 frames after warmup): on a GPU surface (NVIDIA RTX 5060 Laptop)
+    /// DrawBitmap took 37.8 ms per frame against 0.46 ms for DrawImage (about 80x slower); on a CPU raster
+    /// surface 6.7 ms against 4.3 ms (about 1.5x). Pixels written to the bitmap after assignment therefore do
+    /// not show until the Texture is assigned again, which is the explicit refresh path for edits.
+    /// </para>
     /// </summary>
     public SKBitmap? Texture
     {
         get => _texture;
         set
         {
-            _texture = value;
-            SetImage(value != null ? SKImage.FromBitmap(value) : null, ownsImage: true);
+            SKImage? image = Sprite.CreateImage(value);
+            _texture = image != null ? value : null;
+            SetImage(image, ownsImage: true);
         }
     }
     private SKBitmap? _texture;
+
+    /// <summary>
+    /// Copies the pixels of <see cref="Texture"/> into the image again, so pixels written to the bitmap since it was
+    /// assigned show. Does nothing when the bitmap is null or disposed, when an <see cref="Image"/> was assigned over
+    /// it, or when <paramref name="onlyBitmap"/> is given and is not the texture.
+    /// </summary>
+    internal void RefreshTexture(SKBitmap? onlyBitmap = null)
+    {
+        if (!_ownsImage || !Sprite.IsUsable(_texture) || (onlyBitmap != null && !ReferenceEquals(onlyBitmap, _texture)))
+        {
+            return;
+        }
+        SetImage(Sprite.CreateImage(_texture), ownsImage: true);
+    }
 
     /// <summary>
     /// The image this nine-slice draws. An image assigned here stays owned by the caller: the
@@ -193,8 +219,9 @@ public class NineSlice : RenderableShapeBase, IAnimatable, IAnimationChainRender
 
     public Rectangle? SourceRectangle { get; set; }
 
-    public float? TextureWidth => Texture?.Width;
-    public float? TextureHeight => Texture?.Height;
+    // Image is what DrawBound draws, so its size wins, as on Sprite.
+    public float? TextureWidth => _image?.Width ?? _texture?.Width;
+    public float? TextureHeight => _image?.Height ?? _texture?.Height;
 
     // RenderableShapeBase.Wrap is a non-virtual `public bool Wrap => false;`, so
     // the ITextureCoordinate.Wrap setter is exposed via explicit interface
@@ -244,25 +271,9 @@ public class NineSlice : RenderableShapeBase, IAnimatable, IAnimationChainRender
     protected override SKPaint GetPaint(SKRect boundingRect, float absoluteRotation)
     {
         // Modulate the image's texels by Color so the unified runtime's Color
-        // property tints the nine-slice. The base paint has Color set too, but
-        // that only matters for non-image draws (DrawRect, etc.); for DrawImage
-        // we need a ColorFilter.
+        // property tints the nine-slice.
         SKPaint paint = base.GetPaint(boundingRect, absoluteRotation);
-        if (ColorOperation == ColorOperation.Add)
-        {
-            float[] addMatrix =
-            {
-                1, 0, 0, 0, Color.Red / 255f,
-                0, 1, 0, 0, Color.Green / 255f,
-                0, 0, 1, 0, Color.Blue / 255f,
-                0, 0, 0, 1, 0,
-            };
-            paint.ColorFilter = SKColorFilter.CreateColorMatrix(addMatrix);
-        }
-        else
-        {
-            paint.ColorFilter = SKColorFilter.CreateBlendMode(Color, SKBlendMode.Modulate);
-        }
+        ApplyTextureTint(paint, SKBlendMode.Modulate);
         // Antialias on DrawImage anti-aliases the destination rect's edges. When
         // two sections of the nine-slice abut at a fractional pixel boundary
         // (because layout placed the whole NineSlice at a non-integer position),
@@ -274,6 +285,15 @@ public class NineSlice : RenderableShapeBase, IAnimatable, IAnimationChainRender
         paint.IsAntialias = false;
         return paint;
     }
+
+    /// <summary>Test hook: draws every section with its own DrawImage, as before the lattice fast path.</summary>
+    internal bool DisableLatticeFastPath { get; set; }
+
+    /// <summary>Test hook: draws at the exact fractional edges, as before the edges were snapped to device pixels (#8069).</summary>
+    internal bool DisableDeviceSnapping { get; set; }
+
+    // Up to nine sections, more when tiling; each DrawImage records itself.
+    private protected override bool RecordsOwnDrawCalls => true;
 
     public override void DrawBound(SKRect boundingRect, SKCanvas canvas, float absoluteRotation)
     {
@@ -326,8 +346,51 @@ public class NineSlice : RenderableShapeBase, IAnimatable, IAnimationChainRender
         }
     }
 
+    // Nearest sampling picks a texel by where a pixel center falls, and a non-antialiased rectangle covers the pixels
+    // whose centers it contains. At a fractional edge the two can disagree (a scroll position within a few thousandths
+    // of a pixel of a tie covers a row the outline texel does not reach), so a one-texel outline vanishes for a frame
+    // and the line between two touching items loses or gains a pixel row (#8069). Each edge is therefore rounded to a
+    // whole device pixel on its own, never position and size separately, so two items that share an edge round it to
+    // the same pixel and cannot leave a gap or overlap.
+    private static SKRect SnapToDevicePixels(SKCanvas canvas, SKRect rect)
+    {
+        if (global::RenderingLibrary.Graphics.Renderer.TextureSampling.Filter != SKFilterMode.Nearest)
+        {
+            return rect;
+        }
+
+        SKMatrix matrix = canvas.TotalMatrix;
+        if (matrix.SkewX != 0 || matrix.SkewY != 0 || matrix.Persp0 != 0 || matrix.Persp1 != 0
+            || matrix.ScaleX == 0 || matrix.ScaleY == 0)
+        {
+            return rect;
+        }
+
+        float deviceA = SnapEdge(matrix.ScaleX * rect.Left + matrix.TransX);
+        float deviceB = SnapEdge(matrix.ScaleX * rect.Right + matrix.TransX);
+        float deviceC = SnapEdge(matrix.ScaleY * rect.Top + matrix.TransY);
+        float deviceD = SnapEdge(matrix.ScaleY * rect.Bottom + matrix.TransY);
+        if (deviceA == deviceB || deviceC == deviceD)
+        {
+            return rect;
+        }
+
+        float xa = (deviceA - matrix.TransX) / matrix.ScaleX;
+        float xb = (deviceB - matrix.TransX) / matrix.ScaleX;
+        float ya = (deviceC - matrix.TransY) / matrix.ScaleY;
+        float yb = (deviceD - matrix.TransY) / matrix.ScaleY;
+        return new SKRect(MathF.Min(xa, xb), MathF.Min(ya, yb), MathF.Max(xa, xb), MathF.Max(ya, yb));
+    }
+
+    // Quantized to 1/256 pixel first so a one-ulp difference between two items' copies of a shared edge cannot round
+    // it two ways at an exact half pixel.
+    internal static float SnapEdge(float device) => MathF.Floor(MathF.Round(device * 256f) / 256f + 0.5f);
+
+    private bool _movedBySnapping;
+
     private void DrawBoundAtOrigin(SKRect boundingRect, SKCanvas canvas, float absoluteRotation)
     {
+        _movedBySnapping = false;
         SKPaint paint = base.GetCachedPaint(boundingRect, absoluteRotation);
 
         int srcLeft;
@@ -372,6 +435,21 @@ public class NineSlice : RenderableShapeBase, IAnimatable, IAnimationChainRender
         int insideTextureW = usedWidth - (fullOutsideW * 2);
         int insideTextureH = usedHeight - (fullOutsideH * 2);
 
+        if (!DisableDeviceSnapping)
+        {
+            SKRect snapped = SnapToDevicePixels(canvas, boundingRect);
+            // A nine-slice smaller than its borders squeezes them; that squeeze matches the other runtimes at the exact
+            // rectangle, so only a nine-slice that fits its borders, before and after snapping, is moved.
+            float minWidth = fullOutsideW * (EffectiveBorderScaleLeft + EffectiveBorderScaleRight);
+            float minHeight = fullOutsideH * (EffectiveBorderScaleTop + EffectiveBorderScaleBottom);
+            if (boundingRect.Width >= minWidth && boundingRect.Height >= minHeight
+                && snapped.Width >= minWidth && snapped.Height >= minHeight)
+            {
+                _movedBySnapping = snapped != boundingRect;
+                boundingRect = snapped;
+            }
+        }
+
         // Per-side destination thickness (clamped so opposing bands never overlap) and the texels
         // each band samples, shared with every other runtime.
         NineSliceBorders borders = NineSliceBorders.Compute(
@@ -393,6 +471,13 @@ public class NineSlice : RenderableShapeBase, IAnimatable, IAnimationChainRender
         // from its own image (see GetSectionImage), whose edges clamp.
         SKSamplingOptions sampling = global::RenderingLibrary.Graphics.Renderer.TextureSampling;
         SectionDraw draw = new(canvas, paint, sampling, UseSectionImages: sampling.Filter != SKFilterMode.Nearest);
+
+        if (TryDrawLattice(
+                canvas, paint, sampling, boundingRect,
+                srcLeft, srcTop, usedWidth, usedHeight, fullOutsideW, fullOutsideH, borders))
+        {
+            return;
+        }
 
         float destLeft = boundingRect.Left;
         float destTop = boundingRect.Top;
@@ -455,6 +540,219 @@ public class NineSlice : RenderableShapeBase, IAnimatable, IAnimationChainRender
             tileHorizontally: IsTilingMiddleSections, tileVertically: IsTilingMiddleSections,
             BorderScale, BorderScale,
             draw);
+    }
+
+    // Divisions handed to DrawImageLattice, kept so a frame allocates nothing.
+    private readonly int[] _latticeXDivs = new int[2];
+    private readonly int[] _latticeYDivs = new int[2];
+
+    // Draws all nine sections with one DrawImageLattice call. Measured 2026-11-11 (200 NineSlices, GPU
+    // surface, Nearest): about 38 us per NineSlice for nine DrawImage calls against about 4 us for the
+    // lattice, with identical pixels. Only the cases below are identical, so everything else keeps the
+    // per-section draws:
+    //  - Nearest only. The lattice ignores the sampling option, so Linear blends in the neighboring
+    //    section's texels, which GetSectionImage exists to prevent.
+    //  - One border scale on all four sides, no tiling. A lattice cell is as large as its
+    //    texels, so a scale s draws the lattice into a rectangle 1/s the size under a canvas scale of s.
+    //  - Axis aligned, with all eight section edges on whole device pixels (anything else rounds differently), and not touched by the canvas clip.
+    //  - Borders that fit: when NineSliceBorders clamps a band the sections are no longer the texels' size.
+    private bool TryDrawLattice(
+        SKCanvas canvas, SKPaint paint, SKSamplingOptions sampling, SKRect boundingRect,
+        int srcLeft, int srcTop, int usedWidth, int usedHeight, int fullOutsideW, int fullOutsideH,
+        NineSliceBorders borders)
+    {
+        if (DisableLatticeFastPath || sampling.Filter != SKFilterMode.Nearest || IsTilingMiddleSections)
+        {
+            return false;
+        }
+
+        float scale = EffectiveBorderScaleLeft;
+        if (scale <= 0f
+            || EffectiveBorderScaleTop != scale
+            || EffectiveBorderScaleRight != scale
+            || EffectiveBorderScaleBottom != scale
+            || BorderScale != scale)
+        {
+            return false;
+        }
+
+        if (srcLeft < 0 || srcTop < 0 || srcLeft + usedWidth > Image!.Width || srcTop + usedHeight > Image.Height)
+        {
+            return false;
+        }
+
+        if (fullOutsideW <= 0 || fullOutsideH <= 0
+            || usedWidth - (fullOutsideW * 2) <= 0 || usedHeight - (fullOutsideH * 2) <= 0)
+        {
+            return false;
+        }
+
+        // The bands must be exactly the texels' size times the scale (no clamping), with room left in the middle.
+        if (borders.SourceLeft != fullOutsideW || borders.SourceRight != fullOutsideW
+            || borders.SourceTop != fullOutsideH || borders.SourceBottom != fullOutsideH
+            || borders.DestLeft != fullOutsideW * scale || borders.DestRight != fullOutsideW * scale
+            || borders.DestTop != fullOutsideH * scale || borders.DestBottom != fullOutsideH * scale
+            || boundingRect.Width <= borders.DestLeft + borders.DestRight
+            || boundingRect.Height <= borders.DestTop + borders.DestBottom)
+        {
+            return false;
+        }
+
+        // The lattice and the per-section draws only agree when every edge lands exactly on a device pixel; at a
+        // fractional edge the two round differently, on CPU and GPU surfaces. Rotated or skewed canvases are not
+        // axis aligned, so their edges cannot be checked.
+        SKMatrix matrix = canvas.TotalMatrix;
+        if (matrix.SkewX != 0 || matrix.SkewY != 0
+            || !IsOnDevicePixel(matrix.ScaleX * boundingRect.Left + matrix.TransX)
+            || !IsOnDevicePixel(matrix.ScaleX * (boundingRect.Left + borders.DestLeft) + matrix.TransX)
+            || !IsOnDevicePixel(matrix.ScaleX * (boundingRect.Right - borders.DestRight) + matrix.TransX)
+            || !IsOnDevicePixel(matrix.ScaleX * boundingRect.Right + matrix.TransX)
+            || !IsOnDevicePixel(matrix.ScaleY * boundingRect.Top + matrix.TransY)
+            || !IsOnDevicePixel(matrix.ScaleY * (boundingRect.Top + borders.DestTop) + matrix.TransY)
+            || !IsOnDevicePixel(matrix.ScaleY * (boundingRect.Bottom - borders.DestBottom) + matrix.TransY)
+            || !IsOnDevicePixel(matrix.ScaleY * boundingRect.Bottom + matrix.TransY))
+        {
+            return false;
+        }
+
+        // A clip with a fractional edge crops the lattice's triangles differently from the sections' rectangles
+        // on a GPU surface. The canvas only reports the clip rounded outward to whole pixels, so the fast path
+        // is taken only when the nine-slice sits at least a pixel inside that box, where no clip can touch it.
+        SKRectI clip = canvas.DeviceClipBounds;
+        float deviceLeft = matrix.ScaleX * boundingRect.Left + matrix.TransX;
+        float deviceRight = matrix.ScaleX * boundingRect.Right + matrix.TransX;
+        float deviceTop = matrix.ScaleY * boundingRect.Top + matrix.TransY;
+        float deviceBottom = matrix.ScaleY * boundingRect.Bottom + matrix.TransY;
+        if (Math.Min(deviceLeft, deviceRight) < clip.Left + 1
+            || Math.Max(deviceLeft, deviceRight) > clip.Right - 1
+            || Math.Min(deviceTop, deviceBottom) < clip.Top + 1
+            || Math.Max(deviceTop, deviceBottom) > clip.Bottom - 1)
+        {
+            return false;
+        }
+
+        // Nearest sampling picks a texel by where a pixel center falls. When a pixel center lands exactly on a
+        // texel boundary the choice is decided by float noise, and the lattice (scaled local space) and the
+        // per-section draws have different noise, so they can pick different texels. That happens when a cell
+        // of n texels covers D device pixels with n/gcd even and D/gcd odd. Exact arithmetic (border scale 1 and a
+        // canvas scale of 1) has no noise, so only then is such a cell allowed.
+        // A rectangle that snapping moved is never trusted as exact: the rasterizers disagree at a texel boundary there (Mesa llvmpipe, #8069).
+        bool exactArithmetic = !_movedBySnapping && scale == 1f && Math.Abs(matrix.ScaleX) == 1f && Math.Abs(matrix.ScaleY) == 1f;
+        if (!exactArithmetic)
+        {
+            float deviceScaleX = Math.Abs(matrix.ScaleX);
+            float deviceScaleY = Math.Abs(matrix.ScaleY);
+            int insideTexelsW = usedWidth - (fullOutsideW * 2);
+            int insideTexelsH = usedHeight - (fullOutsideH * 2);
+            bool borderTie = CanSampleOnTexelBoundary(fullOutsideW, MathF.Round(deviceScaleX * borders.DestLeft))
+                || CanSampleOnTexelBoundary(fullOutsideW, MathF.Round(deviceScaleX * borders.DestRight))
+                || CanSampleOnTexelBoundary(fullOutsideH, MathF.Round(deviceScaleY * borders.DestTop))
+                || CanSampleOnTexelBoundary(fullOutsideH, MathF.Round(deviceScaleY * borders.DestBottom));
+            bool middleTieX = CanSampleOnTexelBoundary(insideTexelsW, MathF.Round(deviceScaleX * (boundingRect.Width - borders.DestLeft - borders.DestRight)));
+            bool middleTieY = CanSampleOnTexelBoundary(insideTexelsH, MathF.Round(deviceScaleY * (boundingRect.Height - borders.DestTop - borders.DestBottom)));
+            // A tie in the stretched middle only matters when the texels either side of it differ: where the middle is the
+            // same color along that axis (a flat fill, an outline row), either choice draws the same pixel.
+            if (borderTie || ((middleTieX || middleTieY)
+                && !IsMiddleUniform(middleTieX, middleTieY, srcLeft, srcTop, usedWidth, usedHeight, fullOutsideW, fullOutsideH)))
+            {
+                return false;
+            }
+        }
+
+        _latticeXDivs[0] = srcLeft + fullOutsideW;
+        _latticeXDivs[1] = srcLeft + usedWidth - fullOutsideW;
+        _latticeYDivs[0] = srcTop + fullOutsideH;
+        _latticeYDivs[1] = srcTop + usedHeight - fullOutsideH;
+        SKLattice lattice = new() { XDivs = _latticeXDivs, YDivs = _latticeYDivs };
+        if (srcLeft != 0 || srcTop != 0 || usedWidth != Image.Width || usedHeight != Image.Height)
+        {
+            lattice.Bounds = SKRectI.Create(srcLeft, srcTop, usedWidth, usedHeight);
+        }
+
+        canvas.Save();
+        canvas.Translate(boundingRect.Left, boundingRect.Top);
+        canvas.Scale(scale);
+        canvas.DrawImageLattice(Image, lattice, new SKRect(0, 0, boundingRect.Width / scale, boundingRect.Height / scale), paint);
+        canvas.Restore();
+        DrawStatistics?.RecordDrawCall();
+        return true;
+    }
+
+    // Whether the texels of the stretched middle are the same along the axes asked for: across the columns between the
+    // two side borders for X, across the rows between the top and bottom borders for Y, over the whole source rectangle.
+    // Cached per image and source rectangle. Without the bitmap (an image assigned directly) it answers false.
+    private (SKImage? Image, int Left, int Top, int Width, int Height, int OutsideW, int OutsideH, bool X, bool Y) _uniformity;
+
+    private bool IsMiddleUniform(bool needX, bool needY, int srcLeft, int srcTop, int usedWidth, int usedHeight, int outsideW, int outsideH)
+    {
+        var u = _uniformity;
+        if (!ReferenceEquals(u.Image, _image) || u.Left != srcLeft || u.Top != srcTop || u.Width != usedWidth
+            || u.Height != usedHeight || u.OutsideW != outsideW || u.OutsideH != outsideH)
+        {
+            bool uniformX = false;
+            bool uniformY = false;
+            SKBitmap? bitmap = _texture;
+            if (bitmap != null && Sprite.IsUsable(bitmap)
+                && srcLeft >= 0 && srcTop >= 0 && srcLeft + usedWidth <= bitmap.Width && srcTop + usedHeight <= bitmap.Height)
+            {
+                int firstColumn = srcLeft + outsideW;
+                int lastColumn = srcLeft + usedWidth - outsideW - 1;
+                int firstRow = srcTop + outsideH;
+                int lastRow = srcTop + usedHeight - outsideH - 1;
+                uniformX = true;
+                for (int y = srcTop; y < srcTop + usedHeight && uniformX; y++)
+                {
+                    SKColor first = bitmap.GetPixel(firstColumn, y);
+                    for (int x = firstColumn + 1; x <= lastColumn; x++)
+                    {
+                        if (bitmap.GetPixel(x, y) != first)
+                        {
+                            uniformX = false;
+                            break;
+                        }
+                    }
+                }
+                uniformY = true;
+                for (int x = srcLeft; x < srcLeft + usedWidth && uniformY; x++)
+                {
+                    SKColor first = bitmap.GetPixel(x, firstRow);
+                    for (int y = firstRow + 1; y <= lastRow; y++)
+                    {
+                        if (bitmap.GetPixel(x, y) != first)
+                        {
+                            uniformY = false;
+                            break;
+                        }
+                    }
+                }
+            }
+            u = (_image, srcLeft, srcTop, usedWidth, usedHeight, outsideW, outsideH, uniformX, uniformY);
+            _uniformity = u;
+        }
+        return (!needX || u.X) && (!needY || u.Y);
+    }
+
+    // True when some pixel center of a cell of texelCount texels drawn over devicePixels pixels sits exactly on a
+    // texel boundary: (2k + 1) * texelCount == 2 * m * devicePixels has a solution.
+    private static bool CanSampleOnTexelBoundary(int texelCount, float devicePixels)
+    {
+        int pixels = (int)devicePixels;
+        if (texelCount <= 0 || pixels <= 0)
+        {
+            return false;
+        }
+        int a = texelCount;
+        int b = pixels;
+        while (b != 0)
+        {
+            (a, b) = (b, a % b);
+        }
+        return (texelCount / a) % 2 == 0 && (pixels / a) % 2 == 1;
+    }
+
+    private static bool IsOnDevicePixel(float deviceCoordinate)
+    {
+        return Math.Abs(deviceCoordinate - MathF.Round(deviceCoordinate)) < 0.001f;
     }
 
     // What every section of one DrawBound call draws with.
@@ -553,6 +851,7 @@ public class NineSlice : RenderableShapeBase, IAnimatable, IAnimationChainRender
             SKRect src = new SKRect(srcX, srcY, srcX + srcW, srcY + srcH);
             SKRect dest = new SKRect(destX, destY, destX + destW, destY + destH);
             draw.Canvas.DrawImage(sourceImage, src, dest, draw.Sampling, draw.Paint);
+            DrawStatistics?.RecordDrawCall();
             return;
         }
 
@@ -596,6 +895,7 @@ public class NineSlice : RenderableShapeBase, IAnimatable, IAnimationChainRender
                     destX + currentX + thisTileDestW,
                     destY + currentY + thisTileDestH);
                 draw.Canvas.DrawImage(sourceImage, src, dest, draw.Sampling, draw.Paint);
+                DrawStatistics?.RecordDrawCall();
 
                 currentX += thisTileDestW;
             }

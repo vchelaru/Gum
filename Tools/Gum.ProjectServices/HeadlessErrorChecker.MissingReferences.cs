@@ -19,8 +19,8 @@ public partial class HeadlessErrorChecker
     public bool ReportsLeftoverInstanceVariables { get; init; }
 
     // "Ghost.Text" in an element with no instance Ghost (in itself or any base element) sets nothing. A warning, not an
-    // error: the tool leaves such variables behind (e.g. when an instance is deleted or its base type changes) and
-    // hides them, so the user cannot always remove them.
+    // error: the tool leaves such variables behind when an instance is deleted, and a project saved before the tool
+    // removed variables on a base type change still holds them. The tool hides them, so the user cannot always remove them.
     private List<ErrorResult> GetMissingInstanceVariableErrorsFor(ElementSave element)
     {
         List<ErrorResult> errors = new List<ErrorResult>();
@@ -38,7 +38,9 @@ public partial class HeadlessErrorChecker
                 {
                     errors.Add(Error(element, "GUM0027",
                         $"{element.Name} sets {variable.Name} in state {state.Name}, but {element.Name} has no instance named {instanceName}. " +
-                        "The value is ignored.", ErrorSeverity.Warning));
+                        "The value is ignored.",
+                        new StateVariableDetails { StateName = state.Name, VariableName = variable.Name, VariableType = variable.Type },
+                        ErrorSeverity.Warning));
                 }
             }
         }
@@ -165,7 +167,9 @@ public partial class HeadlessErrorChecker
                 if (reported.Add(variable.Name + "|" + type))
                 {
                     errors.Add(Error(element, "GUM0028",
-                        $"{variable.Name} in state {state.Name} has the type {type}, which is not a known type or state category.", ErrorSeverity.Warning));
+                        $"{variable.Name} in state {state.Name} has the type {type}, which is not a known type or state category.",
+                        new StateVariableDetails { StateName = state.Name, VariableName = variable.Name, VariableType = type },
+                        ErrorSeverity.Warning));
                 }
             }
         }

@@ -1,13 +1,13 @@
 ---
 name: gum-runtime-variable-references
-description: Runtime variable reference propagation and the optional Gum.Expressions NuGet. Triggers: ApplyAllVariableReferences, GumExpressionService, runtime styling/theming, GumExpressions project.
+description: "Runtime variable reference propagation and the optional Gum.Expressions NuGet, including references that read a Forms-only (behavior) property. Triggers: ApplyAllVariableReferences, GumExpressionService, runtime styling/theming, GumExpressions project, Text = Slider.Minimum in a built game."
 ---
 
 # Runtime Variable References
 
 ## Overview
 
-Variable references defined in the Gum tool can be re-evaluated at runtime. The primary use case is theming: modify centralized style values in code, propagate them across all elements, then create UI.
+Variable references defined in the Gum tool can be re-evaluated at runtime. The primary use case is theming: modify centralized style values in code, propagate them across all elements, then create UI. A line that reads a Forms-only behavior property reads the live Forms control in a game and the stored value, else the behavior default, in the tool: see "Where a row reads its inputs" below and "Two Layers in One Variable List" in **gum-forms-behaviors**.
 
 ## Key API
 
@@ -72,10 +72,24 @@ Rows on a component or screen that read a variable re-evaluate when it changes: 
 - `SetVariablesRecursively` marks the element being loaded (`BeginReferenceLoad`): what it writes to that element, and rows reading that element from its container, report to nobody, since the load applies those rows itself. What it writes to the element's children reports as usual, so a screen override (`Label1.Text`), an exposed variable, a nested component's row or a hot reload reaches the child's own rows, which were evaluated at its creation against defaults. Do not wrap a load in `BeginSuppression` again: that silences the children too (#6385).
 - `VariableReferenceGraph.BeginSuppression` is for row evaluation only: `Evaluate` writes each result silently, then notifies a child owner's own rows explicitly. A derived component whose base owns rows has them evaluated again after its own values apply (`HasInheritedRows`).
 - A new reporting path must check `GetReferenceAudience` before boxing a value; the zero-allocation guard is `ReferenceReevaluationAllocationTests`.
+- Rows reading `Absolute*` (#8026): a build applies references while layout is suspended, so such a row would read 0. After the outermost build's final `UpdateLayout`, `GraphicalUiElement.ReevaluateLiveLayoutReferences` evaluates the rows with `ReadsLiveLayout` (and rows reading their results) again, on the built element and everything it contains. Elements with no such row do nothing extra (`VariableReferenceGraph.HasLiveLayoutRows`). Test: `VariableReferenceLiveReadTests`.
 
 ## `@`, `%` and `Index` at runtime
 
 All three work in a game that calls `GumExpressionService.Initialize()`. The `GraphicalUiElement` overload of `ApplyVariableReferencesOnSpecificOwner` rewrites `@` through `ResolveOwnerPrefix`, and `Index` reads the element's own instance order when no live tree is passed. Without Gum.Expressions, `@Width` still resolves as a plain lookup, but `%`, `Index` and every other operator need it (see `gum-tool-variable-references`).
+
+## Where a row reads its inputs
+
+- A live instance wins: visual properties come from the visual, a Forms-only property (a behavior FormsProperty such as `Slider.Minimum`) from the live Forms control, which already holds the behavior default, what code set and its clamping. Saved data is read only when no live instance exists, such as a reference into another element.
+- The first apply at load and live re-evaluation agree: `WithFormsPropertyInputs` puts the control's value (or, with no control, the stored value else the declared default) in a copy of the state the first apply reads. Live re-evaluation reads the control in `TryReadLiveInput`.
+- A code change to a declared Forms property is seen at once: its setter reports to the rows that read it. `RefreshReferences("Slider.Minimum")` is only needed for a property no setter reports.
+- The tool has no Forms control: it reads the stored value, else the behavior-declared default.
+- `RefreshStyles` re-applies authored data over code-set values, by design.
+- The GUM0009 check accepts exactly what the resolver finds: a read of an instance's own FormsProperty that declares a default.
+
+## An exposed variable and the variable it exposes
+
+A component's exposed name (`IsMyButtonVisible`) and the inner variable it exposes (`MyButton.Visible`) both notify rows that read either name. A write through the exposed name is forwarded to the instance and reported under the exposed name by `SetProperty`. A write on the instance reports `MyButton.Visible` and also the exposed name (`ReferenceAudience.ExposedName`, `FindExposedNameOf`). `_exposedForwardDepth` stops a forwarded write from reporting the exposed name twice. An exposed name is not reported again for the value it was last reported with, except inside `ApplyState`, where earlier reports are still queued. Test: `ExposedVariableReferenceTests`.
 
 ## Circular references (#6871)
 
@@ -88,3 +102,5 @@ Rows that read each other (or their own result) never freeze or overflow on any 
 ## A fresh load applies references like a reload (#6881)
 
 A service that loads a project from files (`GumService.FinishInitialize`, `GumServiceSkiaBase`) calls `ApplyAllVariableReferencesBeforeFirstBuild()`; the project's rows are applied once, in `ElementSave.ToGraphicalUiElement`'s outermost build, to whichever project is then in `ObjectFinder`. It waits for the first build because games call `GumExpressionService.Initialize()` after `GumService.Initialize()`. A project built in code or by the tool is never flagged, so a build does not change it. Tests: `FreshLoadReferenceChainTests`, `GumServiceFreshLoadReferenceChainTests`.
+
+- A Forms control reports a declared FormsProperty set in code: every public setter of a name some behavior declares calls `FrameworkElement.ReportFormsPropertyChanged()` (the caller name is the property), which asks `GraphicalUiElement.ReportFormsPropertyChanged` (audience check first, then reads the control, so the value is the clamped one). A new FormsProperty setter must call it; `FormsPropertySetterReportsTests` sweeps the behx declarations and goes red otherwise. A change that bypasses the setter must report too: `TabControl` reports `SelectedIndex` from `RaiseSelectionChanged` and `ReportSelectedIndexIfShifted` (a tab inserted or removed before the selected one), a `ScrollViewer` forwards its scroll bar's computed `SmallChange`/`LargeChange` through `RangeBase.ComputedChangeReported`, `SetPlaceholderNoTranslate` and `GraphicalUiElement.RefreshLocalization` (a language change) report `Placeholder`, and `Placeholder` skips the report when the shown text is unchanged. Left: `ItemsControl.Orientation` and `StackPanel.Spacing` read a visual variable live, so only a change made through the Forms property reports.

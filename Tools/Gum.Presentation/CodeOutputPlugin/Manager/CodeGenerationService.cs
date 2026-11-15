@@ -88,6 +88,12 @@ public class CodeGenerationService
     public bool GenerateCodeForElement(ElementSave selectedElement, CodeOutputElementSettings elementSettings, CodeOutputProjectSettings codeOutputProjectSettings, bool showPopups,
         bool checkForMissing = true)
     {
+        // An element the engine profile does not support is dormant: it gets no code and needs no message.
+        if (_codeGenerator.IsElementBlockedByEngineProfile(selectedElement))
+        {
+            return false;
+        }
+
         var visualApi = _codeGenerator.GetVisualApiForElement(selectedElement);
         var generatedFileName = _codeGenerationFileLocationsService.GetGeneratedFileName(selectedElement, elementSettings,  codeOutputProjectSettings, visualApi);
 
@@ -115,7 +121,7 @@ public class CodeGenerationService
 
         // Same checks gumcli codegen runs (FormsCodegenBaseTypeErrorSource, CategoryNameCollisionErrorSource):
         // without the first the error sentence is written into the file as the class's base type.
-        string? baseTypeError = CodeGenerator.GetUnsupportedFormsBaseTypeError(selectedElement, codeOutputProjectSettings) ??
+        string? baseTypeError = CodeGenerator.GetUnsupportedFormsBaseTypeError(selectedElement, codeOutputProjectSettings, _codeGenerator.AreBehaviorsDisabledByEngineProfile) ??
             _codeGenerator.GetCategoryNameCollisionError(selectedElement, codeOutputProjectSettings);
         if (baseTypeError != null)
         {
@@ -137,7 +143,7 @@ public class CodeGenerationService
                 .OfType<ElementSave>()
                 .Where(item =>
                 {
-                    if(item is StandardElementSave)
+                    if(item is StandardElementSave || _codeGenerator.IsElementBlockedByEngineProfile(item))
                     {
                         return false;
                     }

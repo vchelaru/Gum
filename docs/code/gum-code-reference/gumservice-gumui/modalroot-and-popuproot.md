@@ -37,7 +37,7 @@ popupButton.Click += (_, _) =>
 void ShowPopup(string text, bool isModal)
 {
     var container = isModal ?
-        GumService.Default.ModalRoot : GumService.Default.PopupRoot;
+        GumUI.ModalRoot : GumUI.PopupRoot;
 
     var button = new Button();
     button.Text = "Close Me";
@@ -68,7 +68,7 @@ Popups can also be created if your game is loading a Gum project. Since the Grap
 var popupComponent = gumProject.Components.First(item => item.Name == "MyPopup")
     .ToGraphicalUiElement();
 
-popupComponent.Parent = GumService.Default.ModalRoot;
+popupComponent.Parent = GumUI.ModalRoot;
 
 // later, the popup can be removed:
 popupComponent.RemoveFromManagers();
@@ -81,7 +81,7 @@ If you are going to add a Screen to a ModalRoot, then the Screen must have a ren
 // Initialize
 var popupScreen = gumProject.Screens.First(item => item.Name == "MyScreen")
     .ToGraphicalUiElement();
-popupScreen.Parent = GumService.Default.ModalRoot;
+popupScreen.Parent = GumUI.ModalRoot;
 
 // later, the popup can be removed:
 popupScreen.RemoveFromManagers();

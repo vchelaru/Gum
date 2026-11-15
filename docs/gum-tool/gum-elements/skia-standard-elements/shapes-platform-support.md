@@ -35,7 +35,7 @@ Gradient-on-outline (a gradient applied to the stroke rather than the fill) is n
 {% endhint %}
 {% endtab %}
 
-{% tab title="Skia platforms (Maui, WPF, Silk.NET)" %}
+{% tab title="SkiaSharp-based platforms" %}
 All shape types are fully supported.
 {% endtab %}
 {% endtabs %}

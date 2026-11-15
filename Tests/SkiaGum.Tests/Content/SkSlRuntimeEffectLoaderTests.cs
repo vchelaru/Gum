@@ -75,7 +75,7 @@ public class SkSlRuntimeEffectLoaderTests
             NotSupportedException exception =
                 Should.Throw<NotSupportedException>(() => SkSlRuntimeEffectLoader.Load(path));
 
-            exception.Message.ShouldContain(".sksl");
+            exception.Message.ShouldNotContain(".sksl");
             exception.Message.ShouldContain("Gum.SkiaSharp.ShadowDusk");
         }
         finally

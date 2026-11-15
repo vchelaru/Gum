@@ -12,6 +12,7 @@ using Moq;
 using Shouldly;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Gum.Presentation.Tests;
 
@@ -608,6 +609,98 @@ public class VariableReferenceLogicTests : BaseTestClass
         varList.Value[0].StartsWith("//").ShouldBeFalse();
     }
 
+    private (ComponentSave element, StateSave state, InstanceSave icon) BuildShadedIconWithPixelSize(params string[] referenceLines)
+    {
+        GumExpressionService.Initialize();
+        ComponentSave element = new() { Name = "MyComp" };
+        StateSave defaultState = new() { Name = "Default", ParentContainer = element };
+        element.States.Add(defaultState);
+        InstanceSave icon = new() { Name = "Icon", BaseType = "Container", ParentContainer = element };
+        InstanceSave sprite = new() { Name = "Sprite", BaseType = "Container", ParentContainer = element };
+        element.Instances.Add(icon);
+        element.Instances.Add(sprite);
+
+        defaultState.Variables.Add(new VariableSave { Name = "PixelSize", Type = "float", Value = 4f, SetsValue = true });
+        defaultState.Variables.Add(new VariableSave { Name = "Sprite.Width", Type = "float", Value = 0f, SetsValue = true });
+        foreach (string name in new[] { "Outline_Thickness", "Outline_Tint__X", "Outline_Tint__Y" })
+        {
+            string marker = name == "Outline_Thickness" ? "Thickness" : "Tint#" + (name.EndsWith("X") ? "0/2" : "1/2");
+            defaultState.Variables.Add(new VariableSave
+            {
+                Name = "Icon." + name, Type = "float", SetsValue = false, ShaderParameter = marker
+            });
+        }
+
+        VariableListSave<string> iconRefs = new() { Type = "string", Name = "Icon.VariableReferences" };
+        VariableListSave<string> spriteRefs = new() { Type = "string", Name = "Sprite.VariableReferences" };
+        foreach (string line in referenceLines)
+        {
+            (line.StartsWith("Width") ? spriteRefs : iconRefs).Value.Add(line);
+        }
+        defaultState.VariableLists.Add(iconRefs);
+        defaultState.VariableLists.Add(spriteRefs);
+
+        StandardElementSave containerStandard = new() { Name = "Container" };
+        StateSave containerDefault = new() { Name = "Default", ParentContainer = containerStandard };
+        containerDefault.Variables.Add(new VariableSave { Name = "Width", Type = "float", Value = 0f, SetsValue = true });
+        containerStandard.States.Add(containerDefault);
+
+        GumProjectSave project = new();
+        project.StandardElements.Add(containerStandard);
+        project.Components.Add(element);
+        ObjectFinder.Self.GumProjectSave = project;
+        return (element, defaultState, icon);
+    }
+
+    [Fact]
+    public void DoVariableReferenceReaction_ShaderParameterOnLeftSide_WritesTheFollowedValueAndKeepsTheMarker()
+    {
+        (ComponentSave element, StateSave state, InstanceSave icon) = BuildShadedIconWithPixelSize("Outline_Thickness = PixelSize");
+
+        _sut.DoVariableReferenceReaction(element, icon, "VariableReferences", state, "Icon.VariableReferences", trySave: false);
+
+        VariableSave written = state.Variables.Single(v => v.Name == "Icon.Outline_Thickness");
+        written.Value.ShouldBe(4f);
+        written.ShaderParameter.ShouldBe("Thickness");
+    }
+
+    [Fact]
+    public void DoVariableReferenceReaction_OneComponentVariable_DrivesAnOrdinaryVariableAndAShaderParameter()
+    {
+        // The #7010 example: PixelSize drives the Sprite's size and the container's shader parameter.
+        (ComponentSave element, StateSave state, InstanceSave icon) = BuildShadedIconWithPixelSize(
+            "Outline_Thickness = PixelSize", "Width = PixelSize");
+
+        _sut.DoVariableReferenceReaction(element, icon, "VariableReferences", state, "Icon.VariableReferences", trySave: false);
+
+        state.GetValue("Sprite.Width").ShouldBe(4f);
+        state.GetValue("Icon.Outline_Thickness").ShouldBe(4f);
+    }
+
+    [Fact]
+    public void DoVariableReferenceReaction_ShaderVectorComponentsOnLeftSide_EachWriteTheirOwnComponent()
+    {
+        (ComponentSave element, StateSave state, InstanceSave icon) = BuildShadedIconWithPixelSize(
+            "Outline_Tint__X = PixelSize", "Outline_Tint__Y = PixelSize * 2");
+
+        _sut.DoVariableReferenceReaction(element, icon, "VariableReferences", state, "Icon.VariableReferences", trySave: false);
+
+        state.GetValue("Icon.Outline_Tint__X").ShouldBe(4f);
+        state.GetValue("Icon.Outline_Tint__Y").ShouldBe(8f);
+    }
+
+    [Fact]
+    public void DoVariableReferenceReaction_ShaderParameterOnLeftSide_FollowsTheSourceWhenItChanges()
+    {
+        (ComponentSave element, StateSave state, InstanceSave icon) = BuildShadedIconWithPixelSize("Outline_Thickness = PixelSize");
+        _sut.DoVariableReferenceReaction(element, icon, "VariableReferences", state, "Icon.VariableReferences", trySave: false);
+
+        state.SetValue("PixelSize", 11f, null, "float");
+        _sut.DoVariableReferenceReaction(element, null, "PixelSize", state, "PixelSize", trySave: false);
+
+        state.GetValue("Icon.Outline_Thickness").ShouldBe(11f);
+    }
+
     [Fact]
     public void ReactIfChangedMemberIsVariableReference_AtPrefixOnInstanceRow_IsNotQualifiedWithInstanceName()
     {
@@ -863,13 +956,52 @@ public class VariableReferenceLogicTests : BaseTestClass
     }
 
     [Fact]
-    public void DoVariableReferenceReaction_IndexCannotBeResolved_ExplainsItComesFromTheLayout()
+    public void DoVariableReferenceReaction_IndexOfUnknownInstance_NamesThePath()
     {
-        // With nothing displayed for the element there is no live layout to read Index from.
+        // Item1 is not an instance of the screen, so the missing instance is named rather than the layout.
         GumProjectSave project = new GumProjectSave();
         ObjectFinder.Self.GumProjectSave = project;
 
         ScreenSave screen = BuildScreenWithVariableReference("Width = Item1.Index", out StateSave defaultState, out VariableListSave<string> varList);
+
+        defaultState.Variables.Add(new VariableSave { Name = "Width", SetsValue = true, Value = 0f, Type = "float" });
+        project.Screens.Add(screen);
+
+        Action? postedAction = null;
+        _dispatcherMock.Setup(x => x.Post(It.IsAny<Action>()))
+            .Callback<Action>(action => postedAction = action);
+        string? shownMessage = null;
+        _dialogServiceMock.Setup(x => x.ShowMessage(It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<MessageDialogStyle?>()))
+            .Callback<string, string?, MessageDialogStyle?>((message, _, _) => shownMessage = message);
+
+        _sut.DoVariableReferenceReaction(
+            parentElement: screen,
+            leftSideInstance: null,
+            unqualifiedMember: "VariableReferences",
+            stateSave: defaultState,
+            qualifiedName: "VariableReferences",
+            trySave: false);
+        postedAction!.Invoke();
+
+        varList.Value[0].ShouldStartWith("//");
+        shownMessage.ShouldNotBeNull();
+        shownMessage.ShouldContain("The right side reads \"Item1.Index\", which TestScreen does not have.");
+    }
+
+    [Theory]
+    [InlineData("Width = Item1.AbsoluteWidth")]
+    [InlineData("Width = Item1.AbsoluteRight")]
+    public void DoVariableReferenceReaction_AbsoluteValueOfExistingInstanceWithNothingDisplayed_ExplainsItComesFromTheLayout(string line)
+    {
+        // Item1 exists, so the names resolve; with nothing displayed there is no live layout to read from.
+        GumProjectSave project = new GumProjectSave();
+        ObjectFinder.Self.GumProjectSave = project;
+
+        ComponentSave itemType = new ComponentSave { Name = "ItemType" };
+        itemType.States.Add(new StateSave { Name = "Default", ParentContainer = itemType });
+        project.Components.Add(itemType);
+        ScreenSave screen = BuildScreenWithVariableReference(line, out StateSave defaultState, out VariableListSave<string> varList);
+        screen.Instances.Add(new InstanceSave { Name = "Item1", BaseType = "ItemType", ParentContainer = screen });
         defaultState.Variables.Add(new VariableSave { Name = "Width", SetsValue = true, Value = 0f, Type = "float" });
         project.Screens.Add(screen);
 
@@ -892,6 +1024,126 @@ public class VariableReferenceLogicTests : BaseTestClass
         varList.Value[0].ShouldStartWith("//");
         shownMessage.ShouldNotBeNull();
         shownMessage.ShouldContain("computed from the layout");
+    }
+    [Theory]
+    [InlineData("Width = 5 / 0")]
+    [InlineData("Width = 5.0 / 0")]
+    [InlineData("Width = 5 / Zero")]
+    [InlineData("Width = 5 / ZeroInt")]
+    [InlineData("Width = 5 % 0")]
+    [InlineData("Width = 5 % Zero")]
+    [InlineData("Width = 5 / (Zero - Zero)")]
+    [InlineData("Width = 5 + 3 / Zero")]
+    public void DoVariableReferenceReaction_DividingByZero_CommentsLineAndSaysDivisionByZero(string line)
+    {
+        string? shownMessage = ReactToLineAndGetShownMessage(line, out VariableListSave<string> varList);
+
+        varList.Value[0].ShouldStartWith("//");
+        shownMessage.ShouldNotBeNull();
+        shownMessage.ShouldContain("divides by zero");
+    }
+
+    [Theory]
+    [InlineData("Width = 5 / 2")]
+    [InlineData("Width = 5 % 2")]
+    [InlineData("Width = 5 / (Zero + 1)")]
+    public void DoVariableReferenceReaction_DividingByNonZero_KeepsLine(string line)
+    {
+        string? shownMessage = ReactToLineAndGetShownMessage(line, out VariableListSave<string> varList);
+
+        varList.Value[0].ShouldBe(line);
+        shownMessage.ShouldBeNull();
+    }
+
+    [Fact]
+    public void DoVariableReferenceReaction_UnknownNameOnRightSide_NamesTheName()
+    {
+        string? shownMessage = ReactToLineAndGetShownMessage("Width = 5 / Missing", out _);
+
+        shownMessage.ShouldNotBeNull();
+        shownMessage.ShouldContain("The right side reads \"Missing\", which TestScreen does not have.");
+    }
+
+    [Fact]
+    public void DoVariableReferenceReaction_UnknownInstanceOnRightSide_NamesTheQualifiedPath()
+    {
+        string? shownMessage = ReactToLineAndGetShownMessage("Width = Zero + Ghost.Text", out _);
+
+        shownMessage.ShouldNotBeNull();
+        shownMessage.ShouldContain("The right side reads \"Ghost.Text\", which TestScreen does not have.");
+        shownMessage.ShouldNotContain("cannot be evaluated");
+    }
+
+    [Fact]
+    public void DoVariableReferenceReaction_SeveralUnknownNames_NamesTheFirstInReadingOrder()
+    {
+        string? shownMessage = ReactToLineAndGetShownMessage("Width = Zero + First + Second", out _);
+
+        shownMessage.ShouldNotBeNull();
+        shownMessage.ShouldContain("\"First\"");
+        shownMessage.ShouldNotContain("\"Second\"");
+    }
+
+    [Fact]
+    public void DoVariableReferenceReaction_UnknownElementOnRightSide_NamesTheElement()
+    {
+        string? shownMessage = ReactToLineAndGetShownMessage("Width = Components/Nope.Width", out _);
+
+        shownMessage.ShouldNotBeNull();
+        shownMessage.ShouldContain("The right side reads from Components/Nope, which the project does not have.");
+    }
+
+    [Fact]
+    public void DoVariableReferenceReaction_MissingVariableOnRightSide_NamesTheVariableNotDivideByZero()
+    {
+        string? shownMessage = ReactToLineAndGetShownMessage("Width = 5 / Missing", out VariableListSave<string> varList);
+
+        varList.Value[0].ShouldStartWith("//");
+        shownMessage.ShouldNotBeNull();
+        shownMessage.ShouldContain("\"Missing\"");
+        shownMessage.ShouldNotContain("divides by zero");
+    }
+
+    [Fact]
+    public void DoVariableReferenceReaction_GuardedDivisorWithOtherFailure_NamesTheMissingVariable()
+    {
+        string? shownMessage = ReactToLineAndGetShownMessage("Width = (Zero > 0 ? 5 / Zero : 1) + Missing", out VariableListSave<string> varList);
+
+        varList.Value[0].ShouldStartWith("//");
+        shownMessage.ShouldNotBeNull();
+        shownMessage.ShouldContain("\"Missing\"");
+        shownMessage.ShouldNotContain("divides by zero");
+    }
+
+    private string? ReactToLineAndGetShownMessage(string line, out VariableListSave<string> varList)
+    {
+        GumExpressionService.Initialize();
+        GumProjectSave project = new GumProjectSave();
+        ObjectFinder.Self.GumProjectSave = project;
+
+        ScreenSave screen = BuildScreenWithVariableReference(line, out StateSave defaultState, out varList);
+        defaultState.Variables.Add(new VariableSave { Name = "Width", SetsValue = true, Value = 0f, Type = "float" });
+        defaultState.Variables.Add(new VariableSave { Name = "Zero", SetsValue = true, Value = 0f, Type = "float", IsCustomVariable = true });
+        defaultState.Variables.Add(new VariableSave { Name = "ZeroInt", SetsValue = true, Value = 0, Type = "int", IsCustomVariable = true });
+        project.Screens.Add(screen);
+
+        Action? postedAction = null;
+        _dispatcherMock.Setup(x => x.Post(It.IsAny<Action>()))
+            .Callback<Action>(action => postedAction = action);
+        string? shownMessage = null;
+        _dialogServiceMock.Setup(x => x.ShowMessage(It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<MessageDialogStyle?>()))
+            .Callback<string, string?, MessageDialogStyle?>((message, _, _) => shownMessage = message);
+
+        _sut.DoVariableReferenceReaction(
+            parentElement: screen,
+            leftSideInstance: null,
+            unqualifiedMember: "VariableReferences",
+            stateSave: defaultState,
+            qualifiedName: "VariableReferences",
+            trySave: false);
+        postedAction?.Invoke();
+
+        return shownMessage;
     }
 
     [Fact]

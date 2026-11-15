@@ -40,6 +40,7 @@ public class StandardWireframeEditor : WireframeEditor
     RotationInputHandler _rotationInputHandler;
     RotationHandleVisual _rotationHandleVisual;
     LockedSelectionVisual _lockedSelectionVisual;
+    HiddenSizeSelectionVisual _hiddenSizeSelectionVisual;
 
     List<GraphicalUiElement> selectedObjects =
         new List<GraphicalUiElement>();
@@ -47,6 +48,8 @@ public class StandardWireframeEditor : WireframeEditor
     DimensionDisplayVisual widthDimensionDisplay;
     DimensionDisplayVisual heightDimensionDisplay;
 
+
+    private readonly EditHandleRestrictions _editHandleRestrictions;
     private readonly IElementCommands _elementCommands;
     private readonly IWireframeObjectManager _wireframeObjectManager;
     private readonly IVariableInCategoryPropagationLogic _variableInCategoryPropagationLogic;
@@ -99,7 +102,8 @@ public class StandardWireframeEditor : WireframeEditor
         IGumCursorState cursor,
         IToolFontService toolFontService,
         IPluginManager pluginManager,
-        ICanvasDisplayScale displayScale)
+        ICanvasDisplayScale displayScale,
+        IProjectRestrictions projectRestrictions)
         : base(
               hotkeyManager,
               selectionManager,
@@ -120,6 +124,7 @@ public class StandardWireframeEditor : WireframeEditor
               pluginManager,
               displayScale)
     {
+        _editHandleRestrictions = new EditHandleRestrictions(projectRestrictions);
         _elementCommands = elementCommands;
         _wireframeObjectManager = wireframeObjectManager;
         _variableInCategoryPropagationLogic = variableInCategoryPropagationLogic;
@@ -128,6 +133,7 @@ public class StandardWireframeEditor : WireframeEditor
         _resizeHandlesVisual.ShowOrigin = true;
 
         _lockedSelectionVisual = new LockedSelectionVisual(_context, lineColor);
+        _hiddenSizeSelectionVisual = new HiddenSizeSelectionVisual(_context, lineColor, ObjectFinder.Self);
 
         _resizeInputHandler = new ResizeInputHandler(_context, _resizeHandlesVisual);
 
@@ -146,6 +152,7 @@ public class StandardWireframeEditor : WireframeEditor
         _visuals.Add(_resizeHandlesVisual);
         _visuals.Add(_rotationHandleVisual);
         _visuals.Add(_lockedSelectionVisual);
+        _visuals.Add(_hiddenSizeSelectionVisual);
         _visuals.Add(widthDimensionDisplay);
         _visuals.Add(heightDimensionDisplay);
     }
@@ -199,6 +206,11 @@ public class StandardWireframeEditor : WireframeEditor
                 rfv = new RecursiveVariableFinder(selectedStateSave);
             }
         }
+
+        _editHandleRestrictions.Apply(_context, tag);
+        _resizeHandlesVisual.ShowOrigin = _editHandleRestrictions.GetShouldShowOrigin(tag);
+        _resizeHandlesVisual.ShowXOffsetLine = _editHandleRestrictions.GetShouldShowXOffsetLine(tag);
+        _resizeHandlesVisual.ShowYOffsetLine = _editHandleRestrictions.GetShouldShowYOffsetLine(tag);
 
         var variableReferences = rfv?.GetVariableList("VariableReferences");
 

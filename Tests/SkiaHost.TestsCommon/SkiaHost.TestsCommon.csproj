@@ -25,6 +25,9 @@
   <ItemGroup>
     <ProjectReference Include="..\..\GumCommon\GumCommon.csproj" />
     <ProjectReference Include="..\..\Runtimes\SkiaGum\SkiaGum.csproj" />
+    <!-- The add-ons whose Use... calls must chain on every host (#7765). -->
+    <ProjectReference Include="..\..\Runtimes\SkiaGum.ShadowDusk\SkiaGum.ShadowDusk.csproj" />
+    <ProjectReference Include="..\..\Runtimes\GumExpressions\GumExpressions.csproj" />
   </ItemGroup>
 
   <ItemGroup>

@@ -1,6 +1,6 @@
 using Gum.GueDeriving;
+using Microsoft.Xna.Framework.Graphics;
 using RenderingLibrary.Graphics;
-using SkiaSharp;
 
 namespace KniSkiaGumImmediateMode.Screens;
 
@@ -13,7 +13,7 @@ public class TextRuntimeScreen : IImmediateModeScreen
     private TextRuntime _wrappedText = null!;
     private TextRuntime _rotatedText = null!;
 
-    public void Initialize()
+    public void Initialize(GraphicsDevice graphicsDevice)
     {
         _wrappedText = new TextRuntime();
         _wrappedText.Font = "Arial";
@@ -38,7 +38,7 @@ public class TextRuntimeScreen : IImmediateModeScreen
         _rotatedText.Rotation = 30;
     }
 
-    public void Draw(GumBatch gumBatch, SKCanvas canvas)
+    public void Draw(GumBatch gumBatch, SpriteBatch spriteBatch)
     {
         gumBatch.Begin();
         gumBatch.Draw(_wrappedText);

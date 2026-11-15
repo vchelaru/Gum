@@ -43,12 +43,13 @@ public class CodeGeneratorStatePropertyTests : BaseTestClass
         string behaviorName,
         string categoryName,
         string[] stateNames,
-        ObjectInstantiationType instantiationType)
+        ObjectInstantiationType instantiationType,
+        string? categoryColorName = null)
     {
         ComponentSave component = new ComponentSave { Name = "Controls/Thing", BaseType = "Container" };
         component.States.Add(new StateSave { Name = "Default", ParentContainer = component });
         component.Behaviors.Add(new ElementBehaviorReference { BehaviorName = behaviorName });
-        StateSaveCategory category = new StateSaveCategory { Name = categoryName };
+        StateSaveCategory category = new StateSaveCategory { Name = categoryName, ColorName = categoryColorName };
         foreach (string stateName in stateNames)
         {
             category.States.Add(new StateSave { Name = stateName, ParentContainer = component });
@@ -108,5 +109,17 @@ public class CodeGeneratorStatePropertyTests : BaseTestClass
         code.ShouldContain("public EmptyCategory? EmptyCategoryState");
         code.ShouldNotContain("switch (value)");
         code.ShouldNotContain("appliedDynamically");
+    }
+
+    [Theory]
+    [InlineData(ObjectInstantiationType.FullyInCode)]
+    [InlineData(ObjectInstantiationType.FindByName)]
+    public void GetGeneratedCodeForElement_CategoryColor_DoesNotChangeTheGeneratedCode(ObjectInstantiationType instantiationType)
+    {
+        string plain = Generate("ButtonBehavior", "Size", new[] { "Small", "Large" }, instantiationType);
+
+        string colored = Generate("ButtonBehavior", "Size", new[] { "Small", "Large" }, instantiationType, categoryColorName: "Indigo");
+
+        colored.ShouldBe(plain);
     }
 }

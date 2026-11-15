@@ -69,6 +69,7 @@ internal static class PluginBridgedServiceTypes
 
         typeof(InheritanceLogic),
         typeof(IFavoriteComponentManager),
+        typeof(IProjectRestrictions),
 
         typeof(MainPanelViewModel),
         typeof(Gum.Plugins.InternalPlugins.HideShowTools.IToolsVisibility),

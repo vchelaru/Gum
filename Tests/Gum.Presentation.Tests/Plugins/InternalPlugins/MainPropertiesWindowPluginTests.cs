@@ -34,7 +34,8 @@ public class MainPropertiesWindowPluginTests
             _projectState.Object,
             Mock.Of<IPluginManager>(),
             Mock.Of<IProjectManager>(),
-            new LocalizationService())
+            new LocalizationService(),
+            Mock.Of<IProjectRestrictions>())
         {
             FileCommands = Mock.Of<IFileCommands>(),
             Menu = _menu,
@@ -76,7 +77,7 @@ public class MainPropertiesWindowPluginTests
     {
         SettingsPage canvas = _registry.Pages.Single(page => page.Id == SettingsPageIds.Canvas);
 
-        canvas.SearchTerms.ShouldNotBeNull().Invoke().ShouldContain("Canvas Width");
+        canvas.SearchTerms.ShouldNotBeNull().Invoke().ShouldContain("Canvas width");
     }
 
     [Fact]

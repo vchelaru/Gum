@@ -1,3 +1,4 @@
+using RaylibGum.Tests.Helpers;
 using Gum.DataTypes;
 using Gum.GueDeriving;
 using Gum.RenderingLibrary;
@@ -37,19 +38,6 @@ public class BlendModeRenderTests : BaseTestClass
 
     // Render targets are stored bottom-up in GL (see RenderTargetTests), but every case here reads
     // the exact center pixel, which is unaffected by a vertical flip.
-    private static Color ReadRenderTargetCenter(RenderTexture2D renderTexture)
-    {
-        Image image = LoadImageFromTexture(renderTexture.Texture);
-        try
-        {
-            return GetImageColor(image, renderTexture.Texture.Width / 2, renderTexture.Texture.Height / 2);
-        }
-        finally
-        {
-            UnloadImage(image);
-        }
-    }
-
     private static ContainerRuntime RenderTargetCell(int size)
     {
         ContainerRuntime container = new();
@@ -106,8 +94,8 @@ public class BlendModeRenderTests : BaseTestClass
 
         DrawOnce();
 
-        Color cellPixel = ReadRenderTargetCenter(Renderer.Self.TryGetBakedRenderTargetFor(cell)!.Value);
-        Color outerPixel = ReadRenderTargetCenter(Renderer.Self.TryGetBakedRenderTargetFor(outer)!.Value);
+        Color cellPixel = RaylibPixelHarness.ReadRawCenter(Renderer.Self.TryGetBakedRenderTargetFor(cell)!.Value);
+        Color outerPixel = RaylibPixelHarness.ReadRawCenter(Renderer.Self.TryGetBakedRenderTargetFor(outer)!.Value);
 
         GumService.Default.Root.Children.Clear();
 

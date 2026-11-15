@@ -13,8 +13,29 @@ namespace SilkNetGum.Tests;
 /// scroll accumulation from the <see cref="IMouse.Scroll"/> event. The cursor is attached to a
 /// mocked input context and read through its public surface after <c>Activity</c>.
 /// </summary>
-public class CursorSilkTests
+public class CursorSilkTests : SkiaHostTests.CursorTestsBase
 {
+    private sealed class SilkCursorRig : SkiaHostTests.IHostCursorRig
+    {
+        private readonly Cursor _cursor;
+        private readonly Mock<IMouse> _mouse;
+
+        public SilkCursorRig()
+        {
+            (_cursor, _mouse) = CreateAttachedCursor();
+        }
+
+        public Gum.Wireframe.ICursor Cursor => _cursor;
+
+        public void SetPosition(int x, int y) => _mouse.SetupGet(m => m.Position).Returns(new Vector2(x, y));
+
+        public void SetPrimaryDown(bool isDown) => _mouse.Setup(m => m.IsButtonPressed(MouseButton.Left)).Returns(isDown);
+
+        public void Scroll(int notches) => _mouse.Raise(m => m.Scroll += null, _mouse.Object, new ScrollWheel(0, notches));
+    }
+
+    protected override SkiaHostTests.IHostCursorRig CreateRig() => new SilkCursorRig();
+
     private static (Cursor cursor, Mock<IMouse> mouse) CreateAttachedCursor()
     {
         var mouse = new Mock<IMouse>();
@@ -26,18 +47,6 @@ public class CursorSilkTests
         var cursor = new Cursor();
         cursor.AttachSilkInput(context.Object);
         return (cursor, mouse);
-    }
-
-    [Fact]
-    public void Activity_MapsMousePosition()
-    {
-        (Cursor cursor, Mock<IMouse> mouse) = CreateAttachedCursor();
-        mouse.SetupGet(m => m.Position).Returns(new Vector2(37, 52));
-
-        cursor.Activity(0);
-
-        cursor.X.ShouldBe(37);
-        cursor.Y.ShouldBe(52);
     }
 
     [Fact]
@@ -53,31 +62,6 @@ public class CursorSilkTests
         cursor.PrimaryDown.ShouldBeFalse();
         cursor.X.ShouldBe(0);
         cursor.LastInputDevice.ShouldBe(InputDevice.TouchScreen);
-    }
-
-    [Fact]
-    public void Activity_MapsPrimaryButtonDown()
-    {
-        (Cursor cursor, Mock<IMouse> mouse) = CreateAttachedCursor();
-        mouse.Setup(m => m.IsButtonPressed(MouseButton.Left)).Returns(true);
-
-        cursor.Activity(0);
-
-        cursor.PrimaryDown.ShouldBeTrue();
-    }
-
-    [Fact]
-    public void Scroll_AccumulatesIntoScrollWheelDelta()
-    {
-        (Cursor cursor, Mock<IMouse> mouse) = CreateAttachedCursor();
-
-        // Two notches up. Silk reports a per-event delta; the cursor scales to the XNA detent
-        // convention (120 units/notch) into a running total, and the shared Cursor exposes the
-        // per-frame change as ScrollWheelChange = (current - lastFrame) / 120.
-        mouse.Raise(m => m.Scroll += null, mouse.Object, new ScrollWheel(0, 2));
-        cursor.Activity(0);
-
-        cursor.ScrollWheelChange.ShouldBe(2);
     }
 
     [Fact]

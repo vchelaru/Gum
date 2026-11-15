@@ -107,13 +107,33 @@ namespace GumRuntime
         /// wrapper has been registered; see <c>Gum.Wireframe.FallbackRenderableFactory</c>
         /// and <see href="https://github.com/vchelaru/Gum/issues/2915">issue #2915</see> for
         /// the architectural background.
+        /// <para>
+        /// A registration for a standard type (for example a <c>TextRuntime</c> subclass for
+        /// <c>"Text"</c>) survives a repeat <c>SystemManagers.Initialize</c>, which registers only the
+        /// standard types missing from the registry and never overrides a host registration. To
+        /// return to the stock runtimes, call <see cref="Reset"/> and then <c>SystemManagers.Initialize</c>.
+        /// </para>
         /// </remarks>
         public static void RegisterGueInstantiation<T>(string elementName, Func<T> templateFunc) where T : GraphicalUiElement
         {
             WriteLayer.SetFunc(elementName, templateFunc);
         }
 
-        private static bool IsRegistered(string elementName)
+        /// <summary>
+        /// Registers a factory for <paramref name="elementName"/> like
+        /// <see cref="RegisterGueInstantiation{T}(string, Func{T})"/>. When
+        /// <paramref name="overwriteIfAlreadyExists"/> is false and the name already has a
+        /// registration, the existing one is kept.
+        /// </summary>
+        public static void RegisterGueInstantiation<T>(string elementName, Func<T> templateFunc, bool overwriteIfAlreadyExists) where T : GraphicalUiElement
+        {
+            if (overwriteIfAlreadyExists || !IsRegistered(elementName))
+            {
+                WriteLayer.SetFunc(elementName, templateFunc);
+            }
+        }
+
+        internal static bool IsRegistered(string elementName)
         {
             return ElementTypeRegistry.Base.ContainsName(elementName)
                 || (ReadLayer?.ContainsName(elementName) ?? false);
@@ -261,12 +281,44 @@ namespace GumRuntime
                         toReturn = TryCreateStrongTypeForElement(baseElement, fullInstantiation, genericType);
                     }
                     // If it has a base type, but we can't resolve it, it's an error.
-                    // We can still create something useful to avoid falling apart here:
-                    toReturn = toReturn ?? new GraphicalUiElement(new InvisibleRenderable());
+                    // We can still create something useful to avoid falling apart here, unless the editor wants
+                    // this component outlined (#7417): then leave the renderable empty so the factory is asked
+                    // for the base type (Container) and supplies the dotted outline.
+                    if (toReturn == null && !ShouldLeaveRenderableForOutline(elementSave))
+                    {
+                        toReturn = new GraphicalUiElement(new InvisibleRenderable());
+                    }
                 }
             }
 
             return toReturn;
+        }
+
+        // True when the editor draws outlines, a factory exists to supply one, and the component and every
+        // component it derives from has no instances of its own, ending at the standard Container (a
+        // StackPanel). A component with children of its own (directly or inherited) is not outlined.
+        private static bool ShouldLeaveRenderableForOutline(ElementSave elementSave)
+        {
+            if (!GraphicalUiElement.ShowLineRectangles || CustomCreateGraphicalComponentFunc == null)
+            {
+                return false;
+            }
+
+            ElementSave? current = elementSave;
+            // The depth cap guards against a base type cycle in a hand-edited project.
+            for (int depth = 0; depth < 100 && current != null; depth++)
+            {
+                if (current is StandardElementSave)
+                {
+                    return current.Name == "Container";
+                }
+                if (current.Instances.Count > 0)
+                {
+                    return false;
+                }
+                current = ObjectFinder.Self.GetBaseElement(current);
+            }
+            return false;
         }
 
         /// <summary>
@@ -383,11 +435,103 @@ namespace GumRuntime
             }
         }
 
-        // Nesting depth of ToGraphicalUiElement; only the outermost build stamps its owner. A plain static:
-        // all UI work runs on one thread.
+        // Nesting depth of ToGraphicalUiElement on this thread; only the outermost build stamps its owner. Per thread:
+        // builds on several threads must not corrupt each other's count, which would leave it non-zero for good.
+        [ThreadStatic]
         private static int _buildDepth;
 
+        // Elements whose build is in progress. An instance of one of these, met while building its own contents,
+        // would recurse until the stack overflows, which cannot be caught (#7468).
+        // Per thread, so another thread's build never makes a legitimate instance look circular.
+        [ThreadStatic]
+        private static HashSet<ElementSave>? _elementsBeingBuiltOfThread;
+
+        private static HashSet<ElementSave> _elementsBeingBuilt =>
+            _elementsBeingBuiltOfThread ??= new HashSet<ElementSave>();
+
+        // Takes the report of a skipped circular instance in place of RaiseReferenceError while set: the hot
+        // reload adds it to the reload's result, which prints it. Per thread, like the set it reports on.
+        [ThreadStatic]
+        private static Action<InstanceSave, string>? _circularInstanceReporterOfThread;
+
+        /// <summary>
+        /// Treats <paramref name="elementSave"/> as being built until the returned scope is disposed, so an
+        /// instance of it created inside the scope is skipped as circular, the way a build of the element skips
+        /// it. Hot reload walks an existing tree with this around each visual, so the instances it creates stop
+        /// at the same loop a fresh build stops at (#7988).
+        /// </summary>
+        internal static BuildScope EnterBuild(ElementSave elementSave) =>
+            new BuildScope(_elementsBeingBuilt.Add(elementSave) ? elementSave : null);
+
+        /// <summary>
+        /// Sends every circular instance skipped on this thread to <paramref name="reporter"/> until the returned
+        /// scope is disposed, with the message that would otherwise be raised.
+        /// </summary>
+        internal static CircularInstanceReportScope ReportCircularInstancesTo(Action<InstanceSave, string> reporter)
+        {
+            CircularInstanceReportScope scope = new CircularInstanceReportScope(_circularInstanceReporterOfThread);
+            _circularInstanceReporterOfThread = reporter;
+            return scope;
+        }
+
+        internal readonly struct BuildScope : IDisposable
+        {
+            private readonly ElementSave? _added;
+
+            public BuildScope(ElementSave? added) => _added = added;
+
+            public void Dispose()
+            {
+                if (_added != null)
+                {
+                    _elementsBeingBuilt.Remove(_added);
+                }
+            }
+        }
+
+        internal readonly struct CircularInstanceReportScope : IDisposable
+        {
+            private readonly Action<InstanceSave, string>? _previous;
+
+            public CircularInstanceReportScope(Action<InstanceSave, string>? previous) => _previous = previous;
+
+            public void Dispose() => _circularInstanceReporterOfThread = _previous;
+        }
+
+        /// <summary>
+        /// True, after reporting it, when <paramref name="instanceElement"/> is already being built higher up the
+        /// stack, so building another one for an instance would never end. The instance is skipped.
+        /// </summary>
+        internal static bool IsCircularInstance(ElementSave instanceElement, InstanceSave instance)
+        {
+            if (!_elementsBeingBuilt.Contains(instanceElement))
+            {
+                return false;
+            }
+
+            string message = $"Circular instance: {instance.ParentContainer?.Name}.{instance.Name} is an instance of " +
+                $"{instanceElement.Name}, which contains it. The instance was not created.";
+            if (_circularInstanceReporterOfThread != null)
+            {
+                _circularInstanceReporterOfThread(instance, message);
+            }
+            else
+            {
+                RaiseReferenceError(message);
+            }
+            return true;
+        }
+
         private static GraphicalUiElement ToGraphicalUiElementCore(ElementSave elementSave,
+            ISystemManagers systemManagers, bool addToManagers, string? genericType, bool isOutermostBuild)
+        {
+            using (EnterBuild(elementSave))
+            {
+                return BuildElement(elementSave, systemManagers, addToManagers, genericType, isOutermostBuild);
+            }
+        }
+
+        private static GraphicalUiElement BuildElement(ElementSave elementSave,
             ISystemManagers systemManagers, bool addToManagers, string? genericType, bool isOutermostBuild)
         {
             GraphicalUiElement toReturn = CreateGueForElement(elementSave, genericType: genericType);
@@ -483,6 +627,14 @@ namespace GumRuntime
                 graphicalElement.Width = 0;
                 graphicalElement.Height = 0;
                 graphicalElement.Visible = true;
+            }
+
+            // An element whose file is missing has no base type to build from. When missing files are
+            // consumed silently it becomes an empty container, as a missing texture draws nothing (#7963).
+            if (containedObject == null && elementSave.IsSourceFileMissing &&
+                GraphicalUiElement.MissingFileBehavior == MissingFileBehavior.ConsumeSilently)
+            {
+                containedObject = new InvisibleRenderable();
             }
 
             if (containedObject != null)
@@ -1218,7 +1370,7 @@ namespace GumRuntime
         /// happens to own the reference.</param>
         public static void ApplyVariableReferencesOnSpecificOwner(GraphicalUiElement referenceOwner, string referenceString, StateSave stateSave, GraphicalUiElement? liveRootForRightSide = null)
         {
-            if (!TryReadReference(referenceOwner.Tag as InstanceSave, referenceString, stateSave, liveRootForRightSide ?? referenceOwner,
+            if (!TryReadReference(referenceOwner.Tag as InstanceSave, referenceString, stateSave, liveRootForRightSide ?? referenceOwner, true,
                 out string left, out _, out _, out object? value, out _))
             {
                 return;
@@ -1427,15 +1579,15 @@ namespace GumRuntime
         /// </summary>
         public static VariableReferenceAssignmentResult ApplyVariableReferencesOnSpecificOwner(InstanceSave? instanceLeft, string referenceString, StateSave stateSave, GraphicalUiElement? liveRoot = null)
         {
-            return ApplyVariableReferencesOnSpecificOwner(instanceLeft, referenceString, stateSave, liveRoot, propagateNull: false);
+            return ApplyVariableReferencesOnSpecificOwner(instanceLeft, referenceString, stateSave, liveRoot, propagateNull: false, readFormsInputs: true);
         }
 
         // propagateNull: when true, a null result is written to a nullable variable instead of being skipped.
 #nullable enable
-        internal static VariableReferenceAssignmentResult ApplyVariableReferencesOnSpecificOwner(InstanceSave? instanceLeft, string referenceString, StateSave stateSave, GraphicalUiElement? liveRoot, bool propagateNull)
+        internal static VariableReferenceAssignmentResult ApplyVariableReferencesOnSpecificOwner(InstanceSave? instanceLeft, string referenceString, StateSave stateSave, GraphicalUiElement? liveRoot, bool propagateNull, bool readFormsInputs = false)
         {
 
-            if (!TryReadReference(instanceLeft, referenceString, stateSave, liveRoot,
+            if (!TryReadReference(instanceLeft, referenceString, stateSave, liveRoot, readFormsInputs,
                 out string left, out string right, out string? leftSideType, out object? value, out bool mismatchReported))
             {
                 return new VariableReferenceAssignmentResult { NewValue = null, OldValue = null, VariableName = null };
@@ -1505,12 +1657,88 @@ namespace GumRuntime
 
         private static bool IsNumericTypeName(string type) => type == "int" || type == "float" || type == "double";
 
+        // Where a reference reads a Forms-only property of an instance (Slider.Minimum): the live Forms control when
+        // the instance has one (it holds the behavior default, what code set and its own clamping), else the value
+        // the state stores, else the behavior's declared default (the tool has no Forms control, and a reference into
+        // another element has no live instance). The evaluators read a state, so a value that differs from the state's
+        // goes in a copy of it; the state itself, which the caller writes results to, is never changed.
+        // Live re-evaluation does not come through here: it reads the control as it reads any live input.
+        internal static StateSave WithFormsPropertyInputs(StateSave stateSave, string right, GraphicalUiElement? liveRoot)
+        {
+#if FRB
+            return stateSave;
+#else
+            ElementSave? container = stateSave.ParentContainer;
+            if (container == null || right.IndexOf('.') < 0)
+            {
+                return stateSave;
+            }
+
+            List<string> reads = new List<string>();
+            VariableReferenceGraph.ScanReads(right, reads);
+
+            List<VariableSave>? inputs = null;
+            foreach (string read in reads)
+            {
+                int dot = read.IndexOf('.');
+                if (dot <= 0)
+                {
+                    continue;
+                }
+                InstanceSave? instance = Gum.ProjectServices.FormsBehaviorChain.FindInstanceInElementOrBase(container, read.Substring(0, dot));
+                if (instance == null || ObjectFinder.Self.GetElementSave(instance.BaseType) is not ComponentSave component)
+                {
+                    continue;
+                }
+
+                string property = read.Substring(dot + 1);
+                VariableSave? input = null;
+                if (liveRoot?.GetGraphicalUiElementByName(instance.Name) is { } liveInstance
+                    && liveInstance.TryReadFormsControlProperty(property, out object? live, out VariableSave? declaration))
+                {
+                    input = new VariableSave { Name = read, Type = declaration!.Type, Value = live, SetsValue = true };
+                }
+                else if (stateSave.GetValueRecursive(read) == null)
+                {
+                    object? declared = Gum.ProjectServices.FormsBehaviorChain.BuildFormsPropertyDefaultsFallback(component, instance)(read);
+                    if (declared != null)
+                    {
+                        VariableSave? declarationOfProperty = Gum.ProjectServices.FormsBehaviorChain
+                            .GetFormsPropertyDeclarations(component).FirstOrDefault(item => item.Name == property);
+                        input = new VariableSave { Name = read, Type = declarationOfProperty?.Type ?? string.Empty, Value = declared, SetsValue = true };
+                    }
+                }
+
+                if (input != null)
+                {
+                    (inputs ??= new List<VariableSave>()).Add(input);
+                }
+            }
+
+            if (inputs == null)
+            {
+                return stateSave;
+            }
+
+            StateSave copy = new StateSave { Name = stateSave.Name, ParentContainer = container };
+            foreach (VariableSave variable in stateSave.Variables)
+            {
+                if (!inputs.Any(item => item.Name == variable.Name))
+                {
+                    copy.Variables.Add(variable);
+                }
+            }
+            copy.Variables.AddRange(inputs);
+            return copy;
+#endif
+        }
+
         // The part of applying a reference line that both overloads of ApplyVariableReferencesOnSpecificOwner share:
         // split the line, find the left side's type and read the right side. Returns false for a comment or a line
         // that is not "left = right". A value that does not fit the left variable (see ReportedMismatch) comes back
         // null with mismatchReported set, so a caller does not treat that null as a value.
         private static bool TryReadReference(InstanceSave? instanceLeft, string referenceString, StateSave stateSave,
-            GraphicalUiElement? liveRoot, out string left, out string right, out string? leftSideType, out object? value,
+            GraphicalUiElement? liveRoot, bool readFormsInputs, out string left, out string right, out string? leftSideType, out object? value,
             out bool mismatchReported)
         {
             left = string.Empty;
@@ -1545,16 +1773,20 @@ namespace GumRuntime
 
             right = ResolveOwnerPrefix(split[1], instanceLeft?.Name, GetReferencableInstanceNames(stateSave.ParentContainer));
 
+            // The state the right side reads. A Forms-only property the state does not hold, or that a live Forms
+            // control holds a different value for, is put in a copy (see WithFormsPropertyInputs).
+            StateSave readState = readFormsInputs ? WithFormsPropertyInputs(stateSave, right, liveRoot) : stateSave;
+
             // Without Gum.Expressions the plain lookup also says what type the source variable is; a negation yields a bool.
             string? sourceType = null;
             if (CustomEvaluateExpression == null && !IsNegation(right))
             {
-                value = ReadPlainReference(stateSave, right, findSourceType: true, out sourceType);
+                value = ReadPlainReference(readState, right, findSourceType: true, out sourceType);
             }
             else
             {
                 RejectedCastValue = null;
-                value = GetRightSideValue(stateSave, right, leftSideType, liveRoot);
+                value = GetRightSideValue(readState, right, leftSideType, liveRoot);
                 sourceType = CustomEvaluateExpression == null ? "bool" : null;
                 object? rejectedValue = RejectedCastValue;
                 RejectedCastValue = null;
@@ -2186,6 +2418,10 @@ namespace GumRuntime
             {
                 toReturn.UpdateFontRecursive();
                 toReturn.UpdateLayout();
+
+                // Rows reading AbsoluteWidth and the like were applied while layout was suspended and read
+                // zero; now that the tree is laid out they read the real value (8026).
+                toReturn.ReevaluateLiveLayoutReferences();
             }
         }
 
@@ -2247,6 +2483,12 @@ namespace GumRuntime
             }
         }
 
+        /// <summary>
+        /// Clears every element-type registration: the process-wide ones and the current service's.
+        /// The next <c>SystemManagers.Initialize</c> registers the standard runtimes again, so Reset
+        /// followed by Initialize returns the registry to stock and drops any host registration for a
+        /// standard type.
+        /// </summary>
         public static void Reset()
         {
             ElementTypeRegistry.Base.Clear();

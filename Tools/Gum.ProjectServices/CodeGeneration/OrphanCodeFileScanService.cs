@@ -184,6 +184,12 @@ public class OrphanCodeFileScanService : IOrphanCodeFileScanService
     {
         foreach (ElementSave element in GetCodeGeneratedElements(project))
         {
+            if (_codeGenerator.IsElementBlockedByEngineProfile(element))
+            {
+                // Code generation skips it, so its files are orphans exactly like a deleted element's.
+                continue;
+            }
+
             CodeOutputElementSettings elementSettings = _elementSettingsManager.LoadOrCreateSettingsFor(element);
             VisualApi visualApi = _codeGenerator.GetVisualApiForElement(element);
 

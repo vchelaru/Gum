@@ -785,49 +785,6 @@ public class CanvasMenuAndToolbarScenarioTests
         });
     }
 
-    // Stands in for GumPreview: records each launch and reports itself running until told otherwise.
-    private sealed class StandInPreview : IPreviewProcessStarter, IPreviewProcess
-    {
-        public List<ProcessStartInfo> Started { get; } = new List<ProcessStartInfo>();
-
-        public bool HasExited { get; set; }
-
-        public int CloseCount { get; private set; }
-
-        public void Close()
-        {
-            CloseCount++;
-            HasExited = true;
-        }
-
-        public ResolvedPreviewExecutable? Resolve() => new ResolvedPreviewExecutable("/Preview/GumPreview", IsNativeAot: false);
-
-        public IPreviewProcess? Start(ProcessStartInfo startInfo)
-        {
-            Started.Add(startInfo);
-            HasExited = false;
-            return this;
-        }
-
-        public string Argument(int launch, string name)
-        {
-            List<string> arguments = Started[launch].ArgumentList.ToList();
-            return arguments[arguments.IndexOf(name) + 1];
-        }
-
-        public PreviewSelectionMessage Selection(int launch) =>
-            PreviewSelectionMessage.TryParse(File.ReadAllLines(Argument(launch, "--selection-file")))
-            ?? throw new InvalidOperationException("The selection file holds no selection.");
-
-        public void DeleteSelectionFiles()
-        {
-            for (int launch = 0; launch < Started.Count; launch++)
-            {
-                File.Delete(Argument(launch, "--selection-file"));
-            }
-        }
-    }
-
     #endregion
 
     private static void OnCanvas(Action<CanvasHarness> scenario)

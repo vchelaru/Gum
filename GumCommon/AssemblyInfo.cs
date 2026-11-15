@@ -6,9 +6,20 @@ using System.Runtime.CompilerServices;
 [assembly: InternalsVisibleTo("RaylibGum.Tests")]
 [assembly: InternalsVisibleTo("SkiaGum.Tests")]
 [assembly: InternalsVisibleTo("Gum.Bundle.Tests")]
+[assembly: InternalsVisibleTo("Gum.Avalonia.Tests")]
 // Gum.Expressions shares the int-range guard (ElementSaveExtensions.IsInIntRange) with its CastTo.
 [assembly: InternalsVisibleTo("GumExpressions")]
 [assembly: InternalsVisibleTo("Gum.ProjectServices")]
+// These save and restore GraphicalUiElement.AssignedMissingFileBehavior (#7963).
+[assembly: InternalsVisibleTo("Gum.ProjectServices.SkiaGum")]
+[assembly: InternalsVisibleTo("Gum.ProjectServices.Tests")]
+[assembly: InternalsVisibleTo("Gum.ProjectServices.SkiaGum.Tests")]
+[assembly: InternalsVisibleTo("Gum.Cli.Tests")]
+[assembly: InternalsVisibleTo("Gum.Presentation.Tests")]
+[assembly: InternalsVisibleTo("GumToolUnitTests")]
+[assembly: InternalsVisibleTo("SkiaHost.TestsCommon")]
+// The tool preview resolves a keyframe state's variable references (AnimationRuntime.GetStateToSet with a live root).
+[assembly: InternalsVisibleTo("Gum.Presentation")]
 [assembly: InternalsVisibleTo("MonoGameGum.IntegrationTests")]
 // Moq builds proxies for IGumService, whose internal Context member is overridden by the proxy.
 [assembly: InternalsVisibleTo("DynamicProxyGenAssembly2")]
@@ -34,6 +45,8 @@ using System.Runtime.CompilerServices;
 // The Skia input hosts source-link MonoGameGum/Input/CursorExtensions.cs, whose GetEventFailureReason
 // reads the cursor walk's cached subtree state (GraphicalUiElement._subtreeEventsState).
 [assembly: InternalsVisibleTo("KniSkiaGum")]
+[assembly: InternalsVisibleTo("BrutalGum.OGL")]
+[assembly: InternalsVisibleTo("BrutalGum.Vulkan")]
 [assembly: InternalsVisibleTo("SilkNetGum")]
 [assembly: InternalsVisibleTo("StrideGum")]
 [assembly: InternalsVisibleTo("UnityGum")]

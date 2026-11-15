@@ -54,9 +54,10 @@ public class MainCodeOutputPlugin : CodeOutputPluginBase, IDeleteOptionsDialogPl
         IRetryService retryService,
         IMessenger messenger,
         IFileCommands fileCommands,
-        IDispatcher dispatcher)
+        IDispatcher dispatcher,
+        IProjectRestrictions projectRestrictions)
         : base(guiCommands, dialogService, nameVerifier, localizationService, projectState, typeManager,
-            outputManager, selectedState, retryService, messenger, fileCommands, dispatcher)
+            outputManager, selectedState, retryService, messenger, fileCommands, dispatcher, projectRestrictions)
     {
     }
 

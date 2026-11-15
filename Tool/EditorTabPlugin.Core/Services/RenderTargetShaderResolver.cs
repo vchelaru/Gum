@@ -129,7 +129,7 @@ public static class RenderTargetShaderResolver
         try
         {
             return Compile(
-                ShaderSourceCompiler.ReadFxSource(absolutePath), target, absolutePath,
+                File.ReadAllText(absolutePath), target, absolutePath,
                 includes == null ? null : path => included.Add(new FilePath(path)));
         }
         finally

@@ -39,6 +39,10 @@ namespace GumFromZipFile
 
             GumUI.Initialize(this, "GumProject/FromZipFileGumProject.gumx");
 
+            GumUI.UseKeyboardDefaults();
+
+            GumUI.UseGamepadDefaults();
+
             var screen = ObjectFinder.Self.GumProjectSave.Screens.First().ToGraphicalUiElement();
             screen.AddToRoot();
 

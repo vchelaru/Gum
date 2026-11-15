@@ -17,6 +17,55 @@ public class BBCodeParserTests : BaseTestClass
         BbCodeParser.KnownTags.Contains("state").ShouldBeTrue();
     }
 
+    [Theory]
+    [InlineData("Alpha")]
+    [InlineData("Red")]
+    [InlineData("Blue")]
+    [InlineData("Green")]
+    [InlineData("Color")]
+    [InlineData("Font")]
+    [InlineData("FontSize")]
+    [InlineData("OutlineThickness")]
+    [InlineData("IsItalic")]
+    [InlineData("IsBold")]
+    [InlineData("UseFontSmoothing")]
+    [InlineData("FontScale")]
+    [InlineData("LineHeightMultiplier")]
+    [InlineData("Custom")]
+    [InlineData("State")]
+    [InlineData("HasDropshadow")]
+    [InlineData("Link")]
+    public void Parse_KnownTagInAnyCasing_ReportsCanonicalName(string canonical)
+    {
+        foreach (string written in new[] { canonical, canonical.ToLowerInvariant(), canonical.ToUpperInvariant() })
+        {
+            string text = $"x[{written}=1]ab[/{written}]y";
+            List<FoundTag> parsed = BbCodeParser.Parse(text, BbCodeParser.KnownTags);
+
+            parsed.Count.ShouldBe(1, written);
+            parsed[0].Name.ShouldBe(canonical);
+            parsed[0].Open.Name.ShouldBe(canonical);
+            parsed[0].Close.Name.ShouldBe(canonical);
+            parsed[0].Open.Argument.ShouldBe("1");
+            BbCodeParser.RemoveTags(text, parsed).ShouldBe("xaby");
+        }
+    }
+
+    [Fact]
+    public void Parse_UnknownTag_StaysText()
+    {
+        BbCodeParser.Parse("[Zork=1]a[/Zork]", BbCodeParser.KnownTags).Count.ShouldBe(0);
+    }
+
+    [Fact]
+    public void Parse_CaseSensitiveTagSet_StillMatchesCaseSensitively()
+    {
+        HashSet<string> tags = new() { "Color" };
+
+        BbCodeParser.Parse("[color=Red]a[/color]", tags).Count.ShouldBe(0);
+        BbCodeParser.Parse("[Color=Red]a[/Color]", tags).Count.ShouldBe(1);
+    }
+
     [Fact]
     public void Parse_ShouldParseOverlappingColors()
     {
@@ -205,7 +254,7 @@ public class BBCodeParserTests : BaseTestClass
                     int found = stack.FindLastIndex(item => item.Name == token.Name);
                     if (found >= 0)
                     {
-                        expected.Add((token.Name, stack[found].Start, stack[found].Count, token.Start, token.Count));
+                        expected.Add((names.First(n => string.Equals(n, token.Name, StringComparison.OrdinalIgnoreCase)), stack[found].Start, stack[found].Count, token.Start, token.Count));
                         stack.RemoveAt(found);
                     }
                 }
@@ -229,6 +278,73 @@ public class BBCodeParserTests : BaseTestClass
                 oracleStripped.Remove(pair.Item1, pair.Item2);
             }
             BbCodeParser.RemoveTags(s, parsed).ShouldBe(oracleStripped.ToString(), s);
+        }
+    }
+
+    private static string RemoveTagsWithOrderBy(string text, List<FoundTag> tags)
+    {
+        var allTags = new List<TagInfo>(tags.Count * 2);
+        for (int i = 0; i < tags.Count; i++)
+        {
+            allTags.Add(tags[i].Open);
+            allTags.Add(tags[i].Close);
+        }
+        var sorted = allTags.OrderBy(item => item.StartStrippedIndex).ToArray();
+        var sb = new StringBuilder(text);
+        foreach (var tag in sorted) sb.Remove(tag.StartStrippedIndex, tag.Count);
+        return sb.ToString();
+    }
+
+    private static readonly string[] SortTestTagNames = { "Color", "IsBold", "FontSize", "IsItalic" };
+    private static readonly HashSet<string> SortTestAvailableTags = new(SortTestTagNames);
+
+    private static string RandomBbCode(Random r)
+    {
+        var sb = new StringBuilder();
+        var open = new Stack<string>();
+        int pieces = r.Next(1, 12);
+        for (int p = 0; p < pieces; p++)
+        {
+            int kind = r.Next(5);
+            if (kind == 0) { string n = SortTestTagNames[r.Next(SortTestTagNames.Length)]; sb.Append('[').Append(n).Append('=').Append(r.Next(1, 40)).Append(']'); open.Push(n); }
+            else if (kind == 1 && open.Count > 0) sb.Append("[/").Append(open.Pop()).Append(']');
+            else if (kind == 2) sb.Append("[/").Append(SortTestTagNames[r.Next(SortTestTagNames.Length)]).Append(']');
+            else sb.Append(new string((char)('a' + r.Next(26)), r.Next(0, 4)));
+        }
+        return sb.ToString();
+    }
+
+    [Fact]
+    public void Parse_RandomMarkup_IsSortedLikeOrderByAndRemoveTagsMatchesOrderBy()
+    {
+        var r = new Random(7840);
+        for (int c = 0; c < 500; c++)
+        {
+            string text = RandomBbCode(r);
+            List<FoundTag> parsed = BbCodeParser.Parse(text, SortTestAvailableTags);
+            parsed.Select(t => t.ToString()).ShouldBe(parsed.OrderBy(t => t.Open.StartIndex).Select(t => t.ToString()), text);
+            BbCodeParser.RemoveTags(text, parsed).ShouldBe(RemoveTagsWithOrderBy(text, parsed), text);
+        }
+    }
+
+    [Fact]
+    public void RemoveTags_RandomTagListsWithEqualKeys_MatchesOrderBy()
+    {
+        var r = new Random(18);
+        for (int c = 0; c < 500; c++)
+        {
+            int len = r.Next(10, 60);
+            string text = new string(Enumerable.Range(0, len).Select(i => (char)('a' + r.Next(26))).ToArray());
+            int n = r.Next(0, 8);
+            var tags = new List<FoundTag>();
+            int budget = len;
+            for (int i = 0; i < n; i++)
+            {
+                TagInfo Make() { int start = r.Next(0, 4); int count = r.Next(0, 3); return new TagInfo { StartStrippedIndex = start, Count = count, Name = "T" }; }
+                tags.Add(new FoundTag { Name = "T", Open = Make(), Close = Make() });
+            }
+            if (tags.Sum(t => t.Open.Count + t.Close.Count) + 4 > len) continue;
+            BbCodeParser.RemoveTags(text, tags).ShouldBe(RemoveTagsWithOrderBy(text, tags));
         }
     }
 }

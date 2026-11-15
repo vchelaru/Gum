@@ -54,10 +54,19 @@ public partial class HeadlessErrorChecker : IHeadlessErrorChecker
         _caseChecker = new FileNameCaseChecker();
     }
 
+    // ObjectFinder.Self is the project of the current GumService (or the tool), which other threads keep
+    // reading during the check and which must still be that project afterwards. A different project gets a
+    // finder of its own on this thread. The same project uses the caller's finder, so a cache the caller
+    // enabled around a per-element loop is built once, not per call.
+    private static IDisposable? UseOwnFinder(GumProjectSave project) =>
+        ReferenceEquals(ObjectFinder.Self.GumProjectSave, project)
+            ? null
+            : ObjectFinder.UseOnThisThread(new ObjectFinder { GumProjectSave = project });
+
     /// <inheritdoc/>
     public IReadOnlyList<ErrorResult> GetErrorsFor(ElementSave element, GumProjectSave project)
     {
-        ObjectFinder.Self.GumProjectSave = project;
+        using IDisposable? finderScope = UseOwnFinder(project);
         ObjectFinder.Self.EnableCache();
         try
         {
@@ -76,7 +85,7 @@ public partial class HeadlessErrorChecker : IHeadlessErrorChecker
         // Paths the element checks already reported as GUM0008, so the project pass skips them.
         var caseMismatchPaths = new HashSet<string>(StringComparer.Ordinal);
 
-        ObjectFinder.Self.GumProjectSave = project;
+        using IDisposable? finderScope = UseOwnFinder(project);
         ObjectFinder.Self.EnableCache();
         try
         {
@@ -95,6 +104,7 @@ public partial class HeadlessErrorChecker : IHeadlessErrorChecker
             errors.AddRange(GetProjectFileCaseMismatchErrors(project, caseMismatchPaths));
             errors.AddRange(GetFontRangeEntryErrors(project));
             errors.AddRange(GetMissingComponentBaseTypeErrors(project));
+            errors.AddRange(GetMissingBehaviorFileErrors(project, caseMismatchPaths));
             errors.AddRange(GetDuplicateReferenceErrors(project));
         }
         finally
@@ -112,7 +122,7 @@ public partial class HeadlessErrorChecker : IHeadlessErrorChecker
         // reference; running only those two checks finds the paths to skip.
         var caseMismatchPaths = new HashSet<string>(StringComparer.Ordinal);
 
-        ObjectFinder.Self.GumProjectSave = project;
+        using IDisposable? finderScope = UseOwnFinder(project);
         ObjectFinder.Self.EnableCache();
         try
         {
@@ -124,6 +134,7 @@ public partial class HeadlessErrorChecker : IHeadlessErrorChecker
             List<ErrorResult> errors = GetProjectFileCaseMismatchErrors(project, caseMismatchPaths);
             errors.AddRange(GetFontRangeEntryErrors(project));
             errors.AddRange(GetMissingComponentBaseTypeErrors(project));
+            errors.AddRange(GetMissingBehaviorFileErrors(project, caseMismatchPaths));
             errors.AddRange(GetDuplicateReferenceErrors(project));
             return errors;
         }
@@ -327,7 +338,7 @@ public partial class HeadlessErrorChecker : IHeadlessErrorChecker
             Severity = ErrorSeverity.Warning,
             Message = $"{localState.Name}: \"{qualifiedLeft}\" is set explicitly to {FormatValue(materialized.Value)}, " +
                 $"but the active VariableReference would set it to {FormatValue(evaluated)}. " +
-                "The explicit value will win; remove the local override or change the reference to resolve the conflict.",
+                "The two values conflict, and which one applies depends on where it is read. Remove the local override or change the reference so they agree.",
             ReferenceConflict = new VariableReferenceConflict(
                 element, localState, qualifiedLeft, instanceName, materialized.Value, evaluated, referenceLine)
         });
@@ -419,7 +430,12 @@ public partial class HeadlessErrorChecker : IHeadlessErrorChecker
                     ElementName = element.Name,
                     Code = "GUM0013",
                     Severity = ErrorSeverity.Warning,
-                    Message = $"{state.Name}: Circular variable reference: {path}. These rows are not evaluated and keep their stored values."
+                    Message = $"{state.Name}: Circular variable reference: {path}. These rows are not evaluated and keep their stored values.",
+                    Details = new CycleDetails
+                    {
+                        Path = loop.Concat(new[] { loop[0] }).Select(row => element.Name + "." + row.WrittenName).ToList(),
+                        StateName = state.Name
+                    }
                 });
             }
         }
@@ -463,7 +479,8 @@ public partial class HeadlessErrorChecker : IHeadlessErrorChecker
                 ElementName = element.Name,
                 Code = "GUM0013",
                 Severity = ErrorSeverity.Warning,
-                Message = $"Default: Circular variable reference: {string.Join(" -> ", names)}. These rows are not evaluated and keep their stored values."
+                Message = $"Default: Circular variable reference: {string.Join(" -> ", names)}. These rows are not evaluated and keep their stored values.",
+                Details = new CycleDetails { Path = names, StateName = "Default" }
             });
         }
         return errors;
@@ -578,7 +595,8 @@ public partial class HeadlessErrorChecker : IHeadlessErrorChecker
                         ElementName = element.Name,
                         Code = "GUM0009",
                         Severity = ErrorSeverity.Warning,
-                        Message = $"{state.Name}: the {variableList.Name} line \"{line}\" reads {problem}, so it never applies."
+                        Message = $"{state.Name}: the {variableList.Name} line \"{line}\" reads {problem}, so it never applies.",
+                        Details = new VariableReferenceLineDetails { StateName = state.Name, VariableListName = variableList.Name, Line = line }
                     });
                 }
             }
@@ -592,7 +610,7 @@ public partial class HeadlessErrorChecker : IHeadlessErrorChecker
     /// against <paramref name="ownerInstanceName"/>, the instance that owns the line (null on an
     /// element-level line, where <c>@</c> means the element itself).
     /// </summary>
-    private static string? FindUnresolvableReference(ElementSave owner, string? ownerInstanceName, string line)
+    public static string? FindUnresolvableReference(ElementSave owner, string? ownerInstanceName, string line)
     {
         int equalsIndex = line.IndexOf('=');
         if (equalsIndex <= 0 || equalsIndex + 1 >= line.Length || line[equalsIndex + 1] == '=' || "!<>".IndexOf(line[equalsIndex - 1]) >= 0)
@@ -635,7 +653,7 @@ public partial class HeadlessErrorChecker : IHeadlessErrorChecker
         foreach (Match match in LocalReferencePathRegex.Matches(rightSide))
         {
             string referencedName = ElementSaveExtensions.DecodeOwnerName(match.Value);
-            if (!ReferenceKeywords.Contains(referencedName) && !VariableExists(owner, referencedName))
+            if (!ReferenceKeywords.Contains(referencedName) && !VariableExists(owner, referencedName, readFromOwnInstance: true))
             {
                 string? brokenCause = DescribeBrokenExposedVariable(owner, referencedName);
                 return brokenCause != null
@@ -651,11 +669,18 @@ public partial class HeadlessErrorChecker : IHeadlessErrorChecker
     /// variable of <paramref name="element"/>, walking into instance types and base types the way
     /// reference evaluation does.
     /// </summary>
-    private static bool VariableExists(ElementSave element, string variablePath)
+    private static bool VariableExists(ElementSave element, string variablePath, bool readFromOwnInstance = false)
     {
         VariableSave? exposed = FindExposedVariable(element, variablePath);
         if (exposed != null)
         {
+            // A stored value on an exposed Forms property (Slider.Minimum exposed as SliderMin) is
+            // read by the evaluator even though the instance's type declares no such variable.
+            if (exposed.Value != null && exposed.SetsValue && ExposesBehaviorProperty(element, exposed.Name))
+            {
+                return true;
+            }
+
             // An exposed variable is read through the instance variable it exposes. Only a dotted
             // name is followed: each step then shortens the path, so a hand-edited file where two
             // variables expose each other cannot recurse forever.
@@ -670,9 +695,28 @@ public partial class HeadlessErrorChecker : IHeadlessErrorChecker
             {
                 return false;
             }
+            // A value the element (or a base) saved on one of its instances, such as "Slider.Minimum",
+            // is stored under the full dotted name and resolves even when the instance's type
+            // declares no such variable (a Forms property shown under the Behavior category). An exposed
+            // variable is left to the exposed-variable check, which reports one whose type lost the variable.
+            if (SelfAndBaseElements(element).Any(inChain =>
+                inChain.AllStates.Any(state => state.Variables.Any(variable => variable.Name == variablePath && variable.SetsValue && string.IsNullOrEmpty(variable.ExposedAsName)))))
+            {
+                return true;
+            }
             ElementSave? instanceType = ObjectFinder.Self.GetElementSave(instance.BaseType);
             // A missing instance type is already reported as a missing base type.
             if (instanceType == null || VariableExists(instanceType, variablePath.Substring(dot + 1)))
+            {
+                return true;
+            }
+            // A behavior-declared default is what a reference reads when nothing is stored, but only for a read of
+            // an instance of the reading element itself (the lookup the resolver makes), not one that passes through
+            // an exposed name, another element or a nested instance.
+            string property = variablePath.Substring(dot + 1);
+            if (readFromOwnInstance && property.IndexOf('.') < 0
+                && FormsBehaviorChain.GetFormsPropertyDeclarations(instanceType)
+                .Any(declaration => declaration.Name == property && declaration.Value != null))
             {
                 return true;
             }
@@ -714,6 +758,24 @@ public partial class HeadlessErrorChecker : IHeadlessErrorChecker
             return VariableExists(element, variablePath.Substring(0, variablePath.Length - "Color".Length) + "Red");
         }
         return false;
+    }
+
+    /// <summary>
+    /// Whether <paramref name="exposedTarget"/> (<c>Instance.Property</c>) names a FormsProperty declared by a
+    /// behavior on the instance type or its bases.
+    /// </summary>
+    private static bool ExposesBehaviorProperty(ElementSave element, string exposedTarget)
+    {
+        int dot = exposedTarget.IndexOf('.');
+        if (dot < 0)
+        {
+            return false;
+        }
+        InstanceSave? instance = FindInstanceInInheritance(element, exposedTarget.Substring(0, dot));
+        ElementSave? instanceType = instance == null ? null : ObjectFinder.Self.GetElementSave(instance.BaseType);
+        string property = exposedTarget.Substring(dot + 1);
+        return instanceType != null
+            && FormsBehaviorChain.GetFormsPropertyDeclarations(instanceType).Any(declaration => declaration.Name == property);
     }
 
     private static VariableSave? FindExposedVariable(ElementSave element, string exposedName) =>
@@ -847,7 +909,15 @@ public partial class HeadlessErrorChecker : IHeadlessErrorChecker
                                 $"category selector \"{variable.Name}\". A state cannot select a state within " +
                                 $"its own category - this is a circular reference that re-drives the category " +
                                 $"when the state is applied, discarding the state's authored values. " +
-                                $"Remove \"{variable.Name}\" from this state."
+                                $"Remove \"{variable.Name}\" from this state.",
+                            Details = new StateVariableDetails
+                            {
+                                StateName = state.Name,
+                                CategoryName = category.Name,
+                                VariableName = variable.Name,
+                                VariableType = variable.Type,
+                                Value = variable.Value?.ToString()
+                            }
                         });
                     }
                 }
@@ -874,7 +944,9 @@ public partial class HeadlessErrorChecker : IHeadlessErrorChecker
                 errors.Add(new ErrorResult
                 {
                     ElementName = component.Name,
-                    Message = $"Missing reference to behavior {behaviorReference.BehaviorName}"
+                    Code = "GUM0032",
+                    Message = $"Missing reference to behavior {behaviorReference.BehaviorName}",
+                    Details = new MissingBehaviorDetails { BehaviorName = behaviorReference.BehaviorName }
                 });
             }
             else
@@ -909,9 +981,16 @@ public partial class HeadlessErrorChecker : IHeadlessErrorChecker
             errors.Add(new ErrorResult
             {
                 ElementName = component.Name,
+                Code = "GUM0033",
                 Message = $"The behavior {behavior} " +
                         $"requires a variable named {behaviorVariable.Name} but this variable doesn't exist. " +
-                        $"Add a custom variable or expose a variable and give it the required name to solve this error."
+                        $"Add a custom variable or expose a variable and give it the required name to solve this error.",
+                Details = new BehaviorVariableRequirementDetails
+                {
+                    BehaviorName = behavior.Name,
+                    VariableName = behaviorVariable.Name,
+                    RequiredType = behaviorVariable.Type
+                }
             });
         }
         else if (variable.Type != behaviorVariable.Type)
@@ -919,9 +998,17 @@ public partial class HeadlessErrorChecker : IHeadlessErrorChecker
             errors.Add(new ErrorResult
             {
                 ElementName = component.Name,
+                Code = "GUM0033",
                 Message = $"The behavior {behavior} " +
                         $"requires a variable named {behaviorVariable.Name} with type {behaviorVariable.Type}. " +
-                        $"This variable exists but it has the wrong type {variable.Type};"
+                        $"This variable exists but it has the wrong type {variable.Type};",
+                Details = new BehaviorVariableRequirementDetails
+                {
+                    BehaviorName = behavior.Name,
+                    VariableName = behaviorVariable.Name,
+                    RequiredType = behaviorVariable.Type,
+                    ActualType = variable.Type
+                }
             });
         }
     }
@@ -976,7 +1063,14 @@ public partial class HeadlessErrorChecker : IHeadlessErrorChecker
             {
                 ElementName = component.Name,
                 Message = message,
-                Code = "GUM0001"
+                Code = "GUM0001",
+                Details = new BehaviorInstanceRequirementDetails
+                {
+                    BehaviorName = behavior.Name,
+                    InstanceName = behaviorInstance.Name,
+                    InstanceType = string.IsNullOrEmpty(behaviorInstance.BaseType) ? null : behaviorInstance.BaseType,
+                    RequiredBehaviors = behaviorInstance.Behaviors.Select(item => item.Name).ToList()
+                }
             });
         }
     }
@@ -1012,7 +1106,14 @@ public partial class HeadlessErrorChecker : IHeadlessErrorChecker
                             errors.Add(new ErrorResult
                             {
                                 ElementName = elementSave.Name,
-                                Message = $"{variable.SourceObject} has a parent set to {value} which does not exist in the state {state.Name}"
+                                Code = "GUM0034",
+                                Message = $"{variable.SourceObject} has a parent set to {value} which does not exist in the state {state.Name}",
+                                Details = new MissingParentDetails
+                                {
+                                    InstanceName = variable.SourceObject!,
+                                    ParentValue = value!,
+                                    StateName = state.Name
+                                }
                             });
                         }
                     }
@@ -1061,7 +1162,8 @@ public partial class HeadlessErrorChecker : IHeadlessErrorChecker
                 Message = $"The source file for \"{element.Name}\" is missing. Gum expected it at " +
                     $"\"{expectedRelativePath}\" but could not find it on disk. The element still exists " +
                     $"in the project in memory - saving it will recreate the file, or restore the file " +
-                    $"to resolve this error."
+                    $"to resolve this error.",
+                Details = new MissingFileDetails { ExpectedPath = expectedRelativePath }
             });
         }
 
@@ -1116,7 +1218,12 @@ public partial class HeadlessErrorChecker : IHeadlessErrorChecker
                 Code = "GUM0006",
                 Severity = ErrorSeverity.Warning,
                 Message = $"{warning.ReferencedFromElementName} references \"{warning.ReferencedPath}\", " +
-                    $"which was not found on disk."
+                    $"which was not found on disk.",
+                Details = new MissingExternalFileDetails
+                {
+                    ReferencedFrom = warning.ReferencedFromElementName,
+                    ReferencedPath = warning.ReferencedPath
+                }
             });
         }
 
@@ -1176,7 +1283,13 @@ public partial class HeadlessErrorChecker : IHeadlessErrorChecker
             Severity = loadsHere ? ErrorSeverity.Warning : ErrorSeverity.Error,
             Message = $"{referencedFrom} references \"{relativePath}\", but the file on disk is named " +
                 $"\"{onDiskPath}\". The names must match exactly on case-sensitive file systems.",
-            FilePath = Path.Combine(projectRootDirectory, onDiskPath)
+            FilePath = Path.Combine(projectRootDirectory, onDiskPath),
+            Details = new FileNameCaseMismatchDetails
+            {
+                ReferencedFrom = referencedFrom,
+                ReferencedPath = relativePath,
+                OnDiskPath = onDiskPath
+            }
         };
         return true;
     }
@@ -1258,7 +1371,12 @@ public partial class HeadlessErrorChecker : IHeadlessErrorChecker
                     Severity = ErrorSeverity.Warning,
                     Message = $"{owner} is \"{entry.Ranges}\", which is not a valid range. The BMFont generator " +
                         $"bakes the default {BmfcSave.GetEffectiveDefaultRanges()} instead, and the KernSmith generator skips the parts it " +
-                        "cannot read. Use comma-separated codepoints or start-end pairs with no spaces, such as 32-126,160-255."
+                        "cannot read. Use comma-separated codepoints or start-end pairs with no spaces, such as 32-126,160-255.",
+                    Details = new FontRangeDetails
+                    {
+                        Font = string.IsNullOrWhiteSpace(entry.FontFamily) ? null : entry.FontFamily,
+                        Ranges = entry.Ranges
+                    }
                 });
             }
         }
@@ -1272,7 +1390,8 @@ public partial class HeadlessErrorChecker : IHeadlessErrorChecker
                 Severity = ErrorSeverity.Warning,
                 Message = $"The font range entry for \"{entry.FontFamily}\" matches no font in the project, so it " +
                     "never applies. A system font matches by family name ignoring case, and a font file matches by its " +
-                    "project-relative path exactly as a Text names it."
+                    "project-relative path exactly as a Text names it.",
+                Details = new FontRangeDetails { Font = entry.FontFamily, Ranges = entry.Ranges }
             });
         }
 
@@ -1371,7 +1490,13 @@ public partial class HeadlessErrorChecker : IHeadlessErrorChecker
                 Code = "GUM0012",
                 Severity = ErrorSeverity.Warning,
                 Message = $"Text '{textName}' uses {characters}, which the ranges of font '{pair.Value.Font}' leave out, " +
-                    $"so they draw as '?'. Add {codes} to the font's ranges on the Fonts page."
+                    $"so they draw as '?'. Add {codes} to the font's ranges on the Fonts page.",
+                Details = new FontRangeDetails
+                {
+                    Font = pair.Value.Font,
+                    InstanceName = pair.Key.Length > 0 ? pair.Key : null,
+                    CodePoints = pair.Value.CodePoints.ToList()
+                }
             });
         }
 
@@ -1394,7 +1519,9 @@ public partial class HeadlessErrorChecker : IHeadlessErrorChecker
                 errors.Add(new ErrorResult
                 {
                     ElementName = elementSave.Name,
-                    Message = $"{elementSave.Name} has a base type of {elementSave.BaseType} which does not exist"
+                    Code = "GUM0030",
+                    Message = $"{elementSave.Name} has a base type of {elementSave.BaseType} which does not exist",
+                    Details = new TypeReferenceDetails { Type = elementSave.BaseType }
                 });
             }
         }
@@ -1417,7 +1544,8 @@ public partial class HeadlessErrorChecker : IHeadlessErrorChecker
                 ElementName = elementSave.Name,
                 Code = "GUM0014",
                 Severity = ErrorSeverity.Error,
-                Message = $"Circular base type: {path}. These elements are treated as having no base type until the cycle is broken."
+                Message = $"Circular base type: {path}. These elements are treated as having no base type until the cycle is broken.",
+                Details = new CycleDetails { Path = cycle.Concat(new[] { cycle[0] }).Select(item => item.Name).ToList() }
             });
         }
 
@@ -1425,21 +1553,25 @@ public partial class HeadlessErrorChecker : IHeadlessErrorChecker
     }
 
     // GUM0015: a component with no BaseType loads fine, but codegen then writes a class with no base class.
-    // Screens and standards legitimately have none.
+    // Screens and standards legitimately have none. A component whose file is missing was never read (GUM0004 reports it), so its BaseType is unknown, not empty.
     // It is a project-level row, so the Errors tab lists it whichever element is selected.
     private static List<ErrorResult> GetMissingComponentBaseTypeErrors(GumProjectSave project)
     {
         List<ErrorResult> errors = new List<ErrorResult>();
+        bool isJsonFormat = GumProjectSave.IsJsonFormat(project.FullFileName ?? "");
 
-        foreach (ComponentSave elementSave in project.Components.Where(component => string.IsNullOrWhiteSpace(component.BaseType)))
+        foreach (ComponentSave elementSave in project.Components.Where(component => !component.IsSourceFileMissing && string.IsNullOrWhiteSpace(component.BaseType)))
         {
+            string fix = isJsonFormat
+                ? $"set \"BaseType\" in its .{GumProjectSave.ComponentJsonExtension} file"
+                : $"set <BaseType> in its .{GumProjectSave.ComponentExtension} file";
             errors.Add(new ErrorResult
             {
                 ElementName = elementSave.Name,
                 Code = "GUM0015",
                 Severity = ErrorSeverity.Error,
                 Message = $"Component {elementSave.Name} has no BaseType, so generated code gives its class no base class. " +
-                    "In the Gum tool, pick a Base Type (for example Container) in the BaseType dropdown, or set <BaseType> in its .gucx file to Container or to the component it derives from."
+                    $"In the Gum tool, pick a Base Type (for example Container) in the BaseType dropdown, or {fix} to Container or to the component it derives from."
             });
         }
 
@@ -1461,7 +1593,8 @@ public partial class HeadlessErrorChecker : IHeadlessErrorChecker
                 Code = "GUM0018",
                 Severity = ErrorSeverity.Error,
                 Message = $"{elementSave.Name} contains itself: {string.Join(" -> ", path.Select(item => item.Name))}. " +
-                    "Remove the instance that closes the loop; an element that instantiates itself can never finish building."
+                    "Remove the instance that closes the loop; an element that instantiates itself can never finish building.",
+                Details = new CycleDetails { Path = path.Select(item => item.Name).ToList() }
             });
         }
 
@@ -1515,7 +1648,9 @@ public partial class HeadlessErrorChecker : IHeadlessErrorChecker
                 errors.Add(new ErrorResult
                 {
                     ElementName = elementSave.Name,
-                    Message = $"{instance.Name} references {instance.BaseType} which is an invalid element"
+                    Code = "GUM0035",
+                    Message = $"{instance.Name} references {instance.BaseType} which is an invalid element",
+                    Details = new TypeReferenceDetails { InstanceName = instance.Name, Type = instance.BaseType }
                 });
             }
         }
@@ -1571,7 +1706,14 @@ public partial class HeadlessErrorChecker : IHeadlessErrorChecker
                                 $"The variable {variable.Name} uses a type of {variable.Type}. " +
                                 $"This type is probably referencing a category, but the type should be {variableClone.Type} (with the word State suffix). " +
                                 $"This can cause code generation problems.",
-                        Severity = ErrorSeverity.Warning
+                        Severity = ErrorSeverity.Warning,
+                        Code = "GUM0036",
+                        Details = new StateSuffixDetails
+                        {
+                            VariableName = variable.Name,
+                            VariableType = variable.Type,
+                            SuggestedVariableType = variableClone.Type
+                        }
                     });
                     continue;
                 }
@@ -1586,7 +1728,14 @@ public partial class HeadlessErrorChecker : IHeadlessErrorChecker
                                 $"The variable {variable.Name} uses a type of {variable.Type}. " +
                                 $"This type is probably referencing a category, but name should be {variableClone.Name} (with the word State suffix). " +
                                 $"This can cause code generation problems.",
-                        Severity = ErrorSeverity.Warning
+                        Severity = ErrorSeverity.Warning,
+                        Code = "GUM0036",
+                        Details = new StateSuffixDetails
+                        {
+                            VariableName = variable.Name,
+                            VariableType = variable.Type,
+                            SuggestedVariableName = variableClone.Name
+                        }
                     });
                     continue;
                 }
@@ -1637,7 +1786,14 @@ public partial class HeadlessErrorChecker : IHeadlessErrorChecker
                     Severity = ErrorSeverity.Error,
                     Message =
                         $"The variable {variable.Name} in state {state.Name} has a value of " +
-                        $"{variable.Value}, which is not a valid {variableType.Name}."
+                        $"{variable.Value}, which is not a valid {variableType.Name}.",
+                    Details = new StateVariableDetails
+                    {
+                        StateName = state.Name,
+                        VariableName = variable.Name,
+                        VariableType = variable.Type,
+                        Value = variable.Value.ToString()
+                    }
                 });
             }
         }
@@ -1794,7 +1950,9 @@ public partial class HeadlessErrorChecker : IHeadlessErrorChecker
                 $"RelativeX/RelativeY values against a center-anchored Sprite, so a non-Center " +
                 $"origin will cause the animation to drift as frames change size. " +
                 $"Set XOrigin and YOrigin to Center.",
-            Severity = ErrorSeverity.Warning
+            Severity = ErrorSeverity.Warning,
+            Code = "GUM0037",
+            Details = new AnimationChainOriginDetails { InstanceName = instanceName, SourceFile = sourceFile }
         });
     }
 

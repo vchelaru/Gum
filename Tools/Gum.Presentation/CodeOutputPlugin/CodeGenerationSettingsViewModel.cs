@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Gum.SettingsWindow;
 using WpfDataUi.DataTypes;
 
 namespace CodeOutputPlugin;
@@ -10,7 +11,7 @@ namespace CodeOutputPlugin;
 /// element. An edit made here raises the members' <see cref="CodeOutputSettingsMembers.SettingsChanged"/>,
 /// which the Code Output plugin already saves and regenerates on.
 /// </summary>
-public class CodeGenerationSettingsViewModel
+public class CodeGenerationSettingsViewModel : IRowsSettingsPage
 {
     private readonly CodeOutputSettingsMembers _members;
 
@@ -21,10 +22,10 @@ public class CodeGenerationSettingsViewModel
         _members.RebuildRequested += (_, _) => Reloaded?.Invoke();
     }
 
-    /// <summary>Raised when the view should rebuild its rows from <see cref="BuildCategories"/>.</summary>
+    /// <inheritdoc/>
     public event Action? Reloaded;
 
-    /// <summary>The rows the page shows: the project-wide category.</summary>
+    /// <inheritdoc/>
     public List<MemberCategory> BuildCategories() => _members.BuildProjectSections();
 
     /// <summary>Asks the view to rebuild its rows, as when the page is opened.</summary>

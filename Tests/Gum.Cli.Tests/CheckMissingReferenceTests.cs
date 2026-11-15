@@ -57,8 +57,8 @@ public class CheckMissingReferenceTests : CheckHandWrittenFileHarness
     {
         string project = CreateProject("BaseInstanceVariable");
         AddComponent(project, "Root", "Container", DefaultState() + Instance("Label", "Text"));
-        AddComponent(project, "Middle", "Root", DefaultState());
-        AddComponent(project, "Leaf", "Middle", DefaultState(Variable("string", "Label.Text", "string", "hi")));
+        AddComponent(project, "Middle", "Root", DefaultState() + Instance("Label", "Text", definedByBase: true));
+        AddComponent(project, "Leaf", "Middle", DefaultState(Variable("string", "Label.Text", "string", "hi")) + Instance("Label", "Text", definedByBase: true));
 
         Check(project).Entries.ShouldBeEmpty();
     }

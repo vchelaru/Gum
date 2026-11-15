@@ -18,10 +18,7 @@ public class PlatformProjectScaffolder : IPlatformProjectScaffolder
 
     // Each is the assembly name of a Gum runtime package. A host project with the same name writes a
     // same-named DLL over the runtime's copy in bin/ and fails at runtime with no build warning.
-    private static readonly string[] ReservedProjectNames =
-    {
-        "GumCommon", "MonoGameGum", "KniGum", "FnaGum", "RaylibGum", "SkiaGum", "SilkNetGum", "StrideGum", "KniSkiaGum"
-    };
+    private static readonly IReadOnlyList<string> ReservedProjectNames = HostPlatformInfo.ReservedAssemblyNames;
 
     private static readonly Regex ValidProjectName = new Regex("^[A-Za-z_][A-Za-z0-9_.-]*$");
     private static readonly Regex PackageReferenceInclude = new Regex("<PackageReference\\s+Include=\"([^\"]+)\"");
@@ -29,7 +26,7 @@ public class PlatformProjectScaffolder : IPlatformProjectScaffolder
     /// <inheritdoc/>
     public PlatformProjectResult Create(
         string projectDirectory, HostPlatform platform, bool includeFormsTemplate, string? gumSourceDirectory = null,
-        string? themeDirectory = null, bool useXmlFormat = false)
+        string? themeDirectory = null, bool useXmlFormat = false, IReadOnlyList<string>? linkedAddOns = null, bool preview = false)
     {
         string fullDirectory = GetFullDirectory(projectDirectory);
         string projectName = Path.GetFileName(fullDirectory);
@@ -44,7 +41,7 @@ public class PlatformProjectScaffolder : IPlatformProjectScaffolder
         string gumFolder = Path.GetDirectoryName(gumProjectPath)!;
 
         (string packageName, string runtimeProjectPath) = GetGumRuntime(platform);
-        string gumReference = $"<PackageReference Include=\"{packageName}\" Version=\"*\" />";
+        string gumReference = $"<PackageReference Include=\"{packageName}\" Version=\"{(preview ? "*-*" : "*")}\" />";
         if (gumSourceDirectory != null)
         {
             string runtimeCsproj = Path.GetFullPath(Path.Combine(gumSourceDirectory, runtimeProjectPath));
@@ -54,8 +51,18 @@ public class PlatformProjectScaffolder : IPlatformProjectScaffolder
             }
 
             // MSBuild paths use backslashes by convention; the syntax version detection also expects them.
-            string include = Path.GetRelativePath(fullDirectory, runtimeCsproj).Replace('/', '\\');
-            gumReference = $"<ProjectReference Include=\"{EscapeForIncludeAttribute(include)}\" />";
+            gumReference = ProjectReferenceLine(fullDirectory, runtimeCsproj);
+
+            foreach (string addOn in linkedAddOns ?? Array.Empty<string>())
+            {
+                string addOnCsproj = Path.GetFullPath(Path.Combine(gumSourceDirectory, RecommendedPackages.GetSourceProject(addOn)));
+                if (!File.Exists(addOnCsproj))
+                {
+                    return Fail($"Gum source not found: {addOnCsproj} does not exist. Pass the root of a Gum checkout.");
+                }
+
+                gumReference += Environment.NewLine + "    " + ProjectReferenceLine(fullDirectory, addOnCsproj);
+            }
         }
 
         Directory.CreateDirectory(gumFolder);
@@ -71,7 +78,7 @@ public class PlatformProjectScaffolder : IPlatformProjectScaffolder
         DemoScreenInfo? demoScreen = FindDemoScreen(gumProjectPath, settings);
         WriteHostSources(
             fullDirectory, projectName, rootNamespace, platform, Path.GetFileName(gumProjectPath),
-            demoScreen, screenCodeGenerated: false, addedPackages: Array.Empty<string>());
+            demoScreen, screenCodeGenerated: false, addedPackages: gumSourceDirectory != null ? linkedAddOns ?? Array.Empty<string>() : Array.Empty<string>());
 
         return new PlatformProjectResult
         {
@@ -118,6 +125,13 @@ public class PlatformProjectScaffolder : IPlatformProjectScaffolder
         WriteHostSources(
             fullDirectory, projectName, NameRules.ToCSharpIdentifier(projectName), platform, gumProjectFileName, demoScreen,
             screenCodeGenerated, addedPackages);
+    }
+
+    // MSBuild paths use backslashes by convention; the syntax version detection also expects them.
+    private static string ProjectReferenceLine(string fromDirectory, string projectPath)
+    {
+        string include = Path.GetRelativePath(fromDirectory, projectPath).Replace('/', '\\');
+        return $"<ProjectReference Include=\"{EscapeForIncludeAttribute(include)}\" />";
     }
 
     // MSBuild reads %XX in an item include as a character, splits it at ';', expands '*' and '?' and
@@ -197,7 +211,7 @@ public class PlatformProjectScaffolder : IPlatformProjectScaffolder
         return null;
     }
 
-    private static string? GetProjectNameError(string projectName, HostPlatform platform)
+    internal static string? GetProjectNameError(string projectName, HostPlatform platform)
     {
         if (!ValidProjectName.IsMatch(projectName))
         {
@@ -206,20 +220,20 @@ public class PlatformProjectScaffolder : IPlatformProjectScaffolder
 
         if (ReservedProjectNames.Contains(projectName, StringComparer.OrdinalIgnoreCase))
         {
-            return $"'{projectName}' is the assembly name of a Gum runtime package. Pick another project name.";
+            return $"'{projectName}' is a Gum package name. Pick another project name.";
         }
 
         // The Program class that top-level statements create in the global namespace clashes (CS0101) with a
         // root namespace of the same name.
         if (NameRules.ToCSharpIdentifier(projectName) == "Program")
         {
-            return $"'{projectName}' cannot be a project name: the generated code has a class named Program, which clashes with a namespace of that name. Pick another project name.";
+            return $"'{projectName}' is reserved. Pick another project name.";
         }
 
         // A project named like a package it references fails to restore with NU1108 (a cycle).
         if (GetReferencedPackageIds(platform).Contains(projectName, StringComparer.OrdinalIgnoreCase))
         {
-            return $"'{projectName}' is the name of a package the {platform} project references, which makes restore fail with a cycle. Pick another project name.";
+            return $"'{projectName}' is a package the project uses. Pick another project name.";
         }
 
         return null;
@@ -237,16 +251,11 @@ public class PlatformProjectScaffolder : IPlatformProjectScaffolder
     }
 
     // Each platform's Gum package, and the location of that package's project inside a Gum checkout.
-    private static (string PackageName, string RuntimeProjectPath) GetGumRuntime(HostPlatform platform) => platform switch
+    private static (string PackageName, string RuntimeProjectPath) GetGumRuntime(HostPlatform platform)
     {
-        HostPlatform.MonoGame => ("Gum.MonoGame", Path.Combine("MonoGameGum", "MonoGameGum.csproj")),
-        HostPlatform.Kni => ("Gum.KNI", Path.Combine("MonoGameGum", "KniGum", "KniGum.csproj")),
-        HostPlatform.Raylib => ("Gum.raylib", Path.Combine("Runtimes", "RaylibGum", "RaylibGum.csproj")),
-        HostPlatform.Stride => ("Gum.Stride", Path.Combine("Runtimes", "StrideGum", "StrideGum.csproj")),
-        HostPlatform.SilkNet => ("Gum.SilkNet", Path.Combine("Runtimes", "SilkNetGum", "SilkNetGum.csproj")),
-        HostPlatform.KniSkia => ("Gum.KniSkia", Path.Combine("Runtimes", "KniSkiaGum", "KniSkiaGum.csproj")),
-        _ => throw new ArgumentOutOfRangeException(nameof(platform), platform, null)
-    };
+        HostPlatformInfo info = HostPlatformInfo.For(platform);
+        return (info.PackageId!, info.ProjectPath);
+    }
 
     private static void WriteHostFiles(
         string directory, string csprojPath, string projectName, HostPlatform platform, string gumReference, string gumProjectFileName)
@@ -271,25 +280,27 @@ public class PlatformProjectScaffolder : IPlatformProjectScaffolder
         DemoScreenInfo? demoScreen, bool screenCodeGenerated, IReadOnlyList<string> addedPackages)
     {
         string platformFolder = platform.ToString();
-        // The XNA-style hosts share Program.cs and run a Game1. KNI Skia draws through a Skia canvas,
-        // so it has its own Game1.
+        // The XNA-style hosts (KNI Skia included, since its service owns the Skia target) share Program.cs
+        // and Game1.cs.
         bool isXnaGame = NewProjectLayout.WritesGame1(platform);
         string programFolder = isXnaGame ? "Xna" : platformFolder;
 
+        string gum = PlatformHostContent.GetGumReceiver(platform);
         string Fill(string folder, string fileName)
         {
-            string text = ReadTemplate(folder, fileName, projectName, rootNamespace, gumProjectFileName);
-            text = PlatformHostContent.Expand(text, "{{HostUsings}}", PlatformHostContent.GetUsings(demoScreen, screenCodeGenerated));
-            text = PlatformHostContent.Expand(text, "{{InitLines}}", PlatformHostContent.GetInitLines(addedPackages));
-            return PlatformHostContent.Expand(text, "{{ScreenLines}}", PlatformHostContent.GetScreenLines(demoScreen, screenCodeGenerated));
+            string text = ReadTemplate(folder, fileName, projectName, rootNamespace, gumProjectFileName)
+                .Replace("{{GumProjectFolder}}", PlatformHostContent.GetGumProjectFolder(platform));
+            text = PlatformHostContent.Expand(text, "{{WindowLines}}", PlatformHostContent.GetWindowLines(platform, addedPackages));
+            text = PlatformHostContent.Expand(text, "{{HostUsings}}", PlatformHostContent.GetUsings(demoScreen, screenCodeGenerated, addedPackages));
+            text = PlatformHostContent.Expand(text, "{{InitLines}}", PlatformHostContent.GetInitLines(addedPackages, gum));
+            return PlatformHostContent.Expand(text, "{{ScreenLines}}", PlatformHostContent.GetScreenLines(demoScreen, screenCodeGenerated, gum));
         }
 
         File.WriteAllText(Path.Combine(directory, NewProjectLayout.ProgramFileName), Fill(programFolder, "Program.cs.template"));
 
         if (isXnaGame)
         {
-            string gameFolder = platform == HostPlatform.KniSkia ? platformFolder : "Xna";
-            File.WriteAllText(Path.Combine(directory, NewProjectLayout.Game1FileName), Fill(gameFolder, "Game1.cs.template"));
+            File.WriteAllText(Path.Combine(directory, NewProjectLayout.Game1FileName), Fill("Xna", "Game1.cs.template"));
         }
     }
 

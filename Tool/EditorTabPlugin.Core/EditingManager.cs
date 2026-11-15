@@ -25,6 +25,7 @@ public partial class EditingManager : IContextMenuState
     private readonly ICircularReferenceManager _circularReferenceManager;
     private readonly IFavoriteComponentManager _favoriteComponentManager;
     private readonly IHotkeyManager _hotkeyManager;
+    private readonly IProjectRestrictions _projectRestrictions;
 
     public EditingManager(
         IWireframeObjectManager wireframeObjectManager,
@@ -34,8 +35,10 @@ public partial class EditingManager : IContextMenuState
         ISelectedState selectedState,
         ICircularReferenceManager circularReferenceManager,
         IFavoriteComponentManager favoriteComponentManager,
-        IHotkeyManager hotkeyManager)
+        IHotkeyManager hotkeyManager,
+        IProjectRestrictions projectRestrictions)
     {
+        _projectRestrictions = projectRestrictions;
         _selectedState = selectedState;
         _reorderLogic = reorderLogic;
         _wireframeObjectManager = wireframeObjectManager;

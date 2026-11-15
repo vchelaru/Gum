@@ -433,6 +433,28 @@ public class CursorHitTestIdleCostTests : BaseTestClass
     }
 
     [Fact]
+    public void DoUiActivityRecursively_ShouldRaiseChildClick_WhenParentStartsRaisingChildrenEventsOutsideOfBounds()
+    {
+        (List<GraphicalUiElement> roots, List<CountingInteractive> cards, List<CountingInteractive> children) =
+            CreateBoard(cardsHaveEvents: true);
+        CountingInteractive card = cards[3];
+        CountingInteractive child = children[3 * 8];
+        child.HasEvents = true;
+        child.X = 2000;
+        int childClicks = 0;
+        child.Click += (_, _) => childClicks++;
+        Mock<ICursor> cursor = CreateCursor(card.X + 2005, 5, click: true);
+        Walk(roots, cursor);
+        Walk(roots, cursor);
+        childClicks.ShouldBe(0, "the child is outside the card's bounds");
+
+        card.RaiseChildrenEventsOutsideOfBounds = true;
+        Walk(roots, cursor);
+
+        childClicks.ShouldBe(1);
+    }
+
+    [Fact]
     public void DoUiActivityRecursively_ShouldRaiseClick_WhenDisabledElementIsEnabledAgain()
     {
         (List<GraphicalUiElement> roots, List<CountingInteractive> cards, List<CountingInteractive> children) =

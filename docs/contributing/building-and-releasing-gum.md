@@ -44,21 +44,28 @@ The Gum repository builds and uploads its NuGet packages through a GitHub Action
 
 Reference the existing versions on [nuget.org](https://www.nuget.org/packages/Gum.MonoGame/#versions-body-tab) when choosing the next version number.
 
+The workflow publishes through nuget.org Trusted Publishing, so there is no API key secret to expire. The trust is a policy on the `vchelaru` nuget.org account (owner `vchelaru`, repository `Gum`, workflow file `dotnet-nuget.yaml`, no environment). If the workflow file is renamed, update the policy.
+
 ## Gum Tool Release
 
 A tool release is several coordinated steps: generating the release notes, running the release build, and announcing it.
 
 ### 1. Generate the release notes
 
-Run the `/gum-monthly-release` skill in Claude Code from the Gum repository. It drafts the release notes from the PRs and commits since the previous release and asks for three inputs up front:
+Run the `/gum-monthly-release` skill in Claude Code from the Gum repository. It drafts the release notes from the PRs and commits since the previous release and asks for two inputs up front:
 
 * **Release tag**: following the pattern `Release_<Month>_<DD>_<YYYY>` (for example, `Release_May_31_2026`).
-* **Previous-release boundary**: the previous release tag or URL to diff the release branch against.
 * **Breaking-changes migration doc URL**: the [Upgrading](../gum-tool/upgrading/README.md) page for this release, or confirmation that there are no breaking changes.
+
+The notes always cover the previous full release (`Release_*`) through the release branch. A `PreRelease_*` tag is never the boundary, so the skill does not ask for one.
 
 The skill writes a draft to `temp/` and walks through any open questions with you. It only produces the notes draft. It does not bump versions, create the tag, or trigger the release workflow.
 
+This step is finished when every open question in the draft is answered, the migration page exists (or there are no breaking changes), and you have approved the notes. Do not run the `release` build in step 2, or publish NuGet packages for a monthly release, before then. The `test` build in step 2 can run while the notes are being worked on.
+
 ### 2. Run the release
+
+Publish the stable NuGet packages for the same release before announcing it. New Project adds packages with a floating `Version="*"`, which resolves only stable versions, so `Tools/Gum.ProjectServices/RecommendedPackages.cs` may list a package only once it has a stable version on nuget.org.
 
 1. Create screenshots (and GIFs) for the highlighted features.
 2. Run the [Build and Release Gum Tool workflow](https://github.com/vchelaru/Gum/actions/workflows/build-and-release.yml) from the release branch with **Type** set to `test`. This builds every package into a hidden draft release. Download the build for your OS and run it.

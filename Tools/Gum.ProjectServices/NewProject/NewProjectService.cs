@@ -93,12 +93,6 @@ public class NewProjectService : INewProjectService
                 return Fail(NewProjectErrorKind.RecommendedPackagesNeedPlatform,
                     "Recommended packages need a code project: they are added to its .csproj.");
             }
-
-            if (request.SourceLinked)
-            {
-                return Fail(NewProjectErrorKind.RecommendedPackagesNeedNuGetRuntime,
-                    "Recommended packages need the NuGet Gum runtime: they would pull in a second copy of Gum next to the linked source.");
-            }
         }
 
         if (request.GenerateCode && options.Platform == null)
@@ -116,7 +110,7 @@ public class NewProjectService : INewProjectService
                     "With --platform, <path> names the project folder, not a Gum project file.");
             }
 
-            if (request.SourceLinked)
+            if (request.PackageChannel == NewProjectPackageChannel.LocalSource)
             {
                 gumSourceDirectory = FindGumSourceDirectory();
                 if (gumSourceDirectory == null)
@@ -127,6 +121,15 @@ public class NewProjectService : INewProjectService
             }
         }
 
+        // The folder name as typed, before the path is normalized: on Windows the full path rewrites NUL to a device path
+        // and drops a trailing dot or space, which hides them from the rules.
+        string? typedName = GetTypedName(request.Path);
+        string? typedProblem = typedName == null ? null : NewProjectNameRules.GetProblem(typedName, options.Platform != null);
+        if (typedProblem != null)
+        {
+            return Fail(NewProjectErrorKind.InvalidProjectName, typedProblem);
+        }
+
         Targets targets = ComputeTargets(request.Path, options.Platform != null, GetGumExtension(request));
 
         // Only a bare file system root resolves to a folder with no name.
@@ -134,6 +137,12 @@ public class NewProjectService : INewProjectService
         {
             return Fail(NewProjectErrorKind.InvalidProjectName,
                 $"'{request.Path}' has no folder name to name the project after. Give a folder or project name.");
+        }
+
+        string? nameProblem = NewProjectNameRules.GetProblem(targets.Name, includeCodeProject: options.Platform != null);
+        if (nameProblem != null)
+        {
+            return Fail(NewProjectErrorKind.InvalidProjectName, nameProblem);
         }
 
         if (options.Platform == null)
@@ -170,8 +179,13 @@ public class NewProjectService : INewProjectService
                 CsprojPath = targets.CsprojPath,
                 Name = targets.Name,
                 GenerateCode = request.GenerateCode,
-                RecommendedPackages = request.IncludeRecommendedPackages
-                    ? RecommendedPackages.For(options.Platform!.Value)
+                PackageChannel = request.PackageChannel,
+                // Local source: the add-ons are linked as projects while the files are written, so no package is added.
+                RecommendedPackages = request.IncludeRecommendedPackages && request.PackageChannel != NewProjectPackageChannel.LocalSource
+                    ? RecommendedPackages.For(options.Platform!.Value, request.PackageChannel)
+                    : Array.Empty<string>(),
+                LinkedAddOns = request.IncludeRecommendedPackages && request.PackageChannel == NewProjectPackageChannel.LocalSource
+                    ? RecommendedPackages.ForSourceLinked(options.Platform!.Value)
                     : Array.Empty<string>()
             }
         };
@@ -194,10 +208,16 @@ public class NewProjectService : INewProjectService
     {
         options = new Options();
 
-        if (request.SourceLinked && request.Platform == null)
+        if (request.PackageChannel == NewProjectPackageChannel.LocalSource && request.Platform == null)
         {
             return new NewProjectError(NewProjectErrorKind.SourceLinkedNeedsPlatform,
                 "--source-linked needs --platform: it links a platform's Gum runtime project.");
+        }
+
+        if (request.PackageChannel == NewProjectPackageChannel.Preview && request.Platform == null)
+        {
+            return new NewProjectError(NewProjectErrorKind.PreviewNeedsPlatform,
+                "--preview needs --platform: it picks the preview Gum packages of a code project.");
         }
 
         bool isForms = string.Equals(request.Template, "forms", StringComparison.OrdinalIgnoreCase);
@@ -244,6 +264,12 @@ public class NewProjectService : INewProjectService
                     $"Unknown platform '{request.Platform}'. Valid values are: {NewProjectPlatforms.ValidNames}.");
             }
 
+            if (request.PackageChannel == NewProjectPackageChannel.Stable && !NewProjectPlatforms.HasStablePackage(parsed))
+            {
+                return new NewProjectError(NewProjectErrorKind.NoStablePackage,
+                    $"The {request.Platform} platform has no stable Gum package yet: pass --preview, or --source-linked (needs a Gum checkout).");
+            }
+
             platform = parsed;
         }
 
@@ -274,6 +300,23 @@ public class NewProjectService : INewProjectService
         }
 
         return request.UseXmlFormat ? GumProjectSave.ProjectExtension : GumProjectSave.ProjectJsonExtension;
+    }
+
+    // The last segment of a path that names a project folder, or null when it names a project file or has no usable segment.
+    private static string? GetTypedName(string? path)
+    {
+        if (string.IsNullOrEmpty(path) || GumProjectSave.IsProjectFile(path))
+        {
+            return null;
+        }
+        string? root = Path.GetPathRoot(path);
+        if (root != null && root.Length >= path.Length)
+        {
+            return null;
+        }
+        string segment = path.TrimEnd('/', '\\');
+        segment = segment.Substring(segment.LastIndexOfAny(new[] { '/', '\\' }) + 1);
+        return segment.Length == 0 || segment == "." || segment == ".." ? null : segment;
     }
 
     // The one place the path rules live, for both the Gum-only and the platform layout.
@@ -357,7 +400,7 @@ public class NewProjectService : INewProjectService
         NewProjectFilesResult result;
         try
         {
-            result = WriteFiles(options, targets, project.GumSourceDirectory);
+            result = WriteFiles(options, targets, project.GumSourceDirectory, project.LinkedAddOns, project.UsesPrerelease);
 
             if (result.Success && cancellationToken.IsCancellationRequested)
             {
@@ -379,7 +422,8 @@ public class NewProjectService : INewProjectService
     }
 
     // Writes the Gum project (and the code project around it).
-    private static NewProjectFilesResult WriteFiles(Options options, Targets targets, string? gumSourceDirectory)
+    private static NewProjectFilesResult WriteFiles(
+        Options options, Targets targets, string? gumSourceDirectory, IReadOnlyList<string> linkedAddOns, bool preview)
     {
         try
         {
@@ -387,7 +431,7 @@ public class NewProjectService : INewProjectService
             {
                 PlatformProjectResult result = new PlatformProjectScaffolder().Create(
                     targets.RootDirectory, platform, options.IncludeFormsTemplate, gumSourceDirectory, options.ThemeDirectory,
-                    useXmlFormat: !GumProjectSave.IsJsonFormat(targets.GumProjectPath));
+                    useXmlFormat: !GumProjectSave.IsJsonFormat(targets.GumProjectPath), linkedAddOns: linkedAddOns, preview: preview);
                 if (!result.Success)
                 {
                     return new NewProjectFilesResult { ErrorMessage = result.ErrorMessage };
@@ -422,12 +466,17 @@ public class NewProjectService : INewProjectService
         _restoreRunner.RestoreAsync(csprojPath, onOutputLine, cancellationToken);
 
     /// <inheritdoc/>
+    public Task<AddPackagesResult> AddPackagesAsync(
+        string csprojPath, IReadOnlyList<string> packages, Action<string>? onOutputLine, CancellationToken cancellationToken) =>
+        AddPackagesAsync(csprojPath, packages, prerelease: false, onOutputLine, cancellationToken);
+
+    /// <inheritdoc/>
     public async Task<AddPackagesResult> AddPackagesAsync(
-        string csprojPath, IReadOnlyList<string> packages, Action<string>? onOutputLine, CancellationToken cancellationToken)
+        string csprojPath, IReadOnlyList<string> packages, bool prerelease, Action<string>? onOutputLine, CancellationToken cancellationToken)
     {
         foreach (string package in packages)
         {
-            RestoreResult result = await _packageAddRunner.AddAsync(csprojPath, package, onOutputLine, cancellationToken);
+            RestoreResult result = await _packageAddRunner.AddAsync(csprojPath, package, prerelease, onOutputLine, cancellationToken);
             if (result.Status != RestoreStatus.Succeeded)
             {
                 return new AddPackagesResult
@@ -435,6 +484,7 @@ public class NewProjectService : INewProjectService
                     Status = result.Status,
                     FailedPackage = package,
                     OutputTail = result.OutputTail,
+                    ExitCode = result.ExitCode,
                     ErrorMessage = result.ErrorMessage
                 };
             }
@@ -494,7 +544,7 @@ public class NewProjectService : INewProjectService
         PlatformProjectScaffolder.RewriteHostSources(
             project.RootDirectory, platform, System.IO.Path.GetFileName(files.GumProjectPath), files.DemoScreen,
             screenCodeGenerated && files.DemoScreen != null,
-            packagesAdded ? project.RecommendedPackages : Array.Empty<string>());
+            (packagesAdded ? project.RecommendedPackages : Array.Empty<string>()).Concat(project.LinkedAddOns).ToList());
     }
 
     /// <inheritdoc/>
@@ -521,7 +571,8 @@ public class NewProjectService : INewProjectService
         if (validation.Resolved.RecommendedPackages.Count > 0)
         {
             progress?.Report(new NewProjectProgress(NewProjectStep.AddingPackages, "Adding recommended packages..."));
-            packageAdd = await AddPackagesAsync(files.CsprojPath, validation.Resolved.RecommendedPackages, null, cancellationToken);
+            packageAdd = await AddPackagesAsync(
+                files.CsprojPath, validation.Resolved.RecommendedPackages, validation.Resolved.UsesPrerelease, null, cancellationToken);
             if (packageAdd.Status != RestoreStatus.Succeeded)
             {
                 return new NewProjectResult { Files = files, PackageAdd = packageAdd };
@@ -545,8 +596,9 @@ public class NewProjectService : INewProjectService
         }
 
         // After the restore: the code generator reads the restored runtime package to choose the syntax it emits.
+        // Without the restore there is no package to read, so it is skipped, as the dialog says.
         GenerateCodeResult? codegen = null;
-        if (validation.Resolved.GenerateCode && validation.Resolved.IncludeFormsTemplate)
+        if (validation.Resolved.GenerateCode && validation.Resolved.IncludeFormsTemplate && request.Restore)
         {
             progress?.Report(new NewProjectProgress(NewProjectStep.GeneratingCode, "Generating code..."));
             codegen = await GenerateCodeAsync(validation.Resolved, files, null, cancellationToken);

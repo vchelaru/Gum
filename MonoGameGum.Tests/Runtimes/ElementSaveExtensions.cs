@@ -110,7 +110,7 @@ public class ElementSaveExtensionsTests : BaseTestClass
             "RegisterComponentRuntimeInstantiations",
             BindingFlags.Instance | BindingFlags.NonPublic);
         method.ShouldNotBeNull("RegisterComponentRuntimeInstantiations must exist on SystemManagers.");
-        method!.Invoke(managers, parameters: null);
+        method!.Invoke(managers, new object[] { true });
     }
 
     [Fact]

@@ -229,6 +229,83 @@ public class ElementTreeViewManagerProcessDropTests : BaseTestClass
     }
 
     [Fact]
+    public void ResolveChipDrop_BeforeInstance_InsertsBeforeItInItsContainer()
+    {
+        ScreenSave screen = new ScreenSave { Name = "Screen" };
+        InstanceSave first = new InstanceSave { Name = "First", ParentContainer = screen };
+        screen.Instances.Add(first);
+        GumTreeNode parent = new GumTreeNode { Tag = screen };
+        GumTreeNode firstNode = new GumTreeNode("First") { Tag = first };
+        parent.Nodes.Add(firstNode);
+
+        ElementTreeViewManager.ChipDrop? result = ElementTreeViewManager.ResolveChipDrop(firstNode, TreeDropKind.Before);
+
+        result.ShouldNotBeNull();
+        result.Container.ShouldBeSameAs(screen);
+        result.Position.ShouldBeOfType<DropPosition.BeforeSibling>().Sibling.ShouldBe(first);
+        result.Kind.ShouldBe(TreeDropKind.Before);
+    }
+
+    [Fact]
+    public void ResolveChipDrop_AfterInstanceInsideAnInstance_ParentsToThatInstance()
+    {
+        ScreenSave screen = new ScreenSave { Name = "Screen" };
+        InstanceSave panel = new InstanceSave { Name = "Panel", ParentContainer = screen };
+        InstanceSave child = new InstanceSave { Name = "Child", ParentContainer = screen };
+        screen.Instances.Add(panel);
+        screen.Instances.Add(child);
+        GumTreeNode panelNode = new GumTreeNode("Panel") { Tag = panel };
+        GumTreeNode childNode = new GumTreeNode("Child") { Tag = child };
+        panelNode.Nodes.Add(childNode);
+
+        ElementTreeViewManager.ChipDrop? result = ElementTreeViewManager.ResolveChipDrop(childNode, TreeDropKind.After);
+
+        result.ShouldNotBeNull();
+        result.Container.ShouldBeSameAs(panel);
+        result.Position.ShouldBeOfType<DropPosition.AfterSibling>().Sibling.ShouldBe(child);
+    }
+
+    [Fact]
+    public void ResolveChipDrop_BeforeAnElementRow_IsAnAddToThatElement()
+    {
+        // An element row has no sibling instance to insert beside, so the edge bands mean "onto it".
+        ComponentSave component = new ComponentSave { Name = "Button" };
+        GumTreeNode node = new GumTreeNode("Button") { Tag = component };
+
+        ElementTreeViewManager.ChipDrop? result = ElementTreeViewManager.ResolveChipDrop(node, TreeDropKind.Before);
+
+        result.ShouldNotBeNull();
+        result.Container.ShouldBeSameAs(component);
+        result.Position.ShouldBeOfType<DropPosition.Append>();
+        result.Kind.ShouldBe(TreeDropKind.Into);
+    }
+
+    [Fact]
+    public void ResolveChipDrop_OntoAStandardElementOrFolder_IsRejected()
+    {
+        ResolveFor(new StandardElementSave { Name = "Sprite" }, TreeDropKind.Into).ShouldBeNull();
+        ResolveFor(null, TreeDropKind.Into).ShouldBeNull();
+
+        static ElementTreeViewManager.ChipDrop? ResolveFor(object? tag, TreeDropKind kind) =>
+            ElementTreeViewManager.ResolveChipDrop(new GumTreeNode("Row") { Tag = tag }, kind);
+    }
+
+    [Fact]
+    public void ResolveChipDrop_IntoAnInstanceWithoutAContainer_StillAddsToIt()
+    {
+        // A behavior's required instance has no ParentContainer, so there is no flat list to place
+        // into; dropping onto it keeps adding to it.
+        InstanceSave required = new InstanceSave { Name = "Required" };
+        GumTreeNode node = new GumTreeNode("Required") { Tag = required };
+
+        ElementTreeViewManager.ChipDrop? result = ElementTreeViewManager.ResolveChipDrop(node, TreeDropKind.Into);
+
+        result.ShouldNotBeNull();
+        result.Container.ShouldBeSameAs(required);
+        result.Position.ShouldBeNull();
+    }
+
+    [Fact]
     public void ProcessDrop_BeforeNonInstanceSibling_ReturnsNullDrop()
     {
         // Reordering element nodes (or other non-InstanceSave-tagged nodes)

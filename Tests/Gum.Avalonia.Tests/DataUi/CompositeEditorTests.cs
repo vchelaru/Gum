@@ -448,6 +448,230 @@ public class CompositeEditorTests : IDisposable
         fixture.File.ShouldBe("old.png");
     }
 
+    // Counts writes, which a plain fixture cannot: a write of the value already held is a spurious commit.
+    private sealed class CountingFileFixture
+    {
+        private string _file = "";
+        public int Writes { get; private set; }
+        public string File
+        {
+            get => _file;
+            set
+            {
+                _file = value;
+                Writes++;
+            }
+        }
+    }
+
+    private static Window HostInWindow(Control content)
+    {
+        Window window = new Window { Content = content, Width = 400, Height = 200 };
+        window.Show();
+        Dispatcher.UIThread.RunJobs();
+        return window;
+    }
+
+    private static FileSelectionDisplay CountingDisplay(CountingFileFixture fixture, Func<string?, IReadOnlyList<string>> choices)
+    {
+        FileSelectionDisplay display = new FileSelectionDisplay { FileChoices = choices };
+        display.InstanceMember = new InstanceMember(nameof(CountingFileFixture.File), fixture);
+        display.Refresh();
+        return display;
+    }
+
+    private static void PressKey(FileSelectionDisplay display, Key key) =>
+        display.ChoiceBox.RaiseEvent(new KeyEventArgs { RoutedEvent = InputElement.KeyDownEvent, Key = key });
+
+    private static void LoseFocus(FileSelectionDisplay display) =>
+        display.ChoiceBox.RaiseEvent(new RoutedEventArgs(InputElement.LostFocusEvent));
+
+    [AvaloniaFact]
+    public void FileSelectionDisplay_WithChoices_RefreshWhileTheListIsOpen_LeavesTheListAndWritesNothing()
+    {
+        CountingFileFixture fixture = new CountingFileFixture();
+        FileSelectionDisplay display = CountingDisplay(fixture, _ => new[] { "a.png", "b.png" });
+        display.ChoiceBox.IsDropDownOpen = true;
+
+        display.Refresh(forceRefreshEvenIfFocused: true);
+
+        display.ChoiceBox.Items.Cast<object?>().ShouldBe(new object[] { "a.png", "b.png" });
+        fixture.Writes.ShouldBe(0);
+    }
+
+    [AvaloniaFact]
+    public void FileSelectionDisplay_WithChoices_RefreshWhileFocused_KeepsTheTypedText()
+    {
+        CountingFileFixture fixture = new CountingFileFixture { File = "old.png" };
+        FileSelectionDisplay display = CountingDisplay(fixture, _ => new[] { "old.png" });
+        Window window = HostInWindow(display);
+        try
+        {
+            display.ChoiceBox.Focus();
+            Dispatcher.UIThread.RunJobs();
+            display.ChoiceBox.Text = "half-typed";
+
+            display.Refresh();
+
+            display.ChoiceBox.Text.ShouldBe("half-typed");
+        }
+        finally
+        {
+            window.Close();
+        }
+    }
+
+    [AvaloniaFact]
+    public void FileSelectionDisplay_WithChoices_ForcedRefreshWhileFocused_ShowsTheValue_AndLosingFocusAfterwardsWritesNothing()
+    {
+        CountingFileFixture fixture = new CountingFileFixture { File = "old.png" };
+        FileSelectionDisplay display = CountingDisplay(fixture, _ => new[] { "old.png" });
+        int writesAfterSetup = fixture.Writes;
+        Window window = HostInWindow(display);
+        try
+        {
+            display.ChoiceBox.Focus();
+            Dispatcher.UIThread.RunJobs();
+            display.ChoiceBox.Text = "half-typed";
+
+            display.Refresh(forceRefreshEvenIfFocused: true);
+            Dispatcher.UIThread.RunJobs();
+            LoseFocus(display);
+
+            display.ChoiceBox.Text.ShouldBe("old.png");
+            fixture.File.ShouldBe("old.png");
+            fixture.Writes.ShouldBe(writesAfterSetup);
+        }
+        finally
+        {
+            window.Close();
+        }
+    }
+
+    [AvaloniaFact]
+    public void FileSelectionDisplay_WithChoices_RefreshAfterAnOutsideChange_FollowsTheValueAndClearsWhenEmptied()
+    {
+        CountingFileFixture fixture = new CountingFileFixture { File = "old.png" };
+        FileSelectionDisplay display = CountingDisplay(fixture, current => current == null ? new string[0] : new[] { current });
+
+        fixture.File = "new.png";
+        display.Refresh();
+        display.ChoiceBox.Text.ShouldBe("new.png");
+        display.ChoiceBox.SelectedItem.ShouldBe("new.png");
+
+        fixture.File = "";
+        display.Refresh();
+        display.ChoiceBox.Text.ShouldBeNullOrEmpty();
+        display.ChoiceBox.SelectedItem.ShouldBeNull();
+    }
+
+    [AvaloniaFact]
+    public void FileSelectionDisplay_WithChoices_EnterOrLostFocusOnTheShownText_WritesNothing()
+    {
+        CountingFileFixture fixture = new CountingFileFixture { File = "old.png" };
+        FileSelectionDisplay display = CountingDisplay(fixture, _ => new[] { "old.png" });
+        int writesAfterSetup = fixture.Writes;
+
+        PressKey(display, Key.Enter);
+        LoseFocus(display);
+
+        fixture.Writes.ShouldBe(writesAfterSetup, "an unedited field is not a change");
+    }
+
+    [AvaloniaFact]
+    public void FileSelectionDisplay_WithChoices_OpeningTheListRepeatedly_LeavingAndPickingTheCurrentFile_WriteNothing()
+    {
+        CountingFileFixture fixture = new CountingFileFixture { File = "b.png" };
+        FileSelectionDisplay display = CountingDisplay(fixture, _ => new[] { "a.png", "b.png" });
+        int writesAfterSetup = fixture.Writes;
+
+        for (int i = 0; i < 3; i++)
+        {
+            display.ChoiceBox.IsDropDownOpen = true;
+            display.ChoiceBox.IsDropDownOpen = false;
+            LoseFocus(display);
+        }
+        display.ChoiceBox.IsDropDownOpen = true;
+        display.ChoiceBox.SelectedItem = "b.png";
+
+        fixture.Writes.ShouldBe(writesAfterSetup);
+        display.ChoiceBox.Text.ShouldBe("b.png");
+    }
+
+    [AvaloniaFact]
+    public void FileSelectionDisplay_WithChoices_EscapeThenEnter_WritesNothing()
+    {
+        CountingFileFixture fixture = new CountingFileFixture { File = "old.png" };
+        FileSelectionDisplay display = CountingDisplay(fixture, _ => new[] { "old.png" });
+        int writesAfterSetup = fixture.Writes;
+
+        display.ChoiceBox.Text = "half-typed";
+        PressKey(display, Key.Escape);
+        PressKey(display, Key.Enter);
+
+        fixture.Writes.ShouldBe(writesAfterSetup);
+        display.ChoiceBox.Text.ShouldBe("old.png");
+    }
+
+    [AvaloniaFact]
+    public void FileSelectionDisplay_WithChoices_ClearingTheText_WritesTheEmptyPathOnce_EvenWithALostFocusAfterTheEnter()
+    {
+        CountingFileFixture fixture = new CountingFileFixture { File = "old.png" };
+        FileSelectionDisplay display = CountingDisplay(fixture, _ => new[] { "old.png" });
+        int writesAfterSetup = fixture.Writes;
+
+        display.ChoiceBox.Text = "";
+        PressKey(display, Key.Enter);
+        LoseFocus(display);
+
+        fixture.File.ShouldBe("");
+        fixture.Writes.ShouldBe(writesAfterSetup + 1, "the lost focus after the Enter finds the shown text unchanged");
+        display.ChoiceBox.SelectedItem.ShouldBeNull();
+    }
+
+    [AvaloniaFact]
+    public void FileSelectionDisplay_RevealButton_FollowsWhetherThePathIsEmpty_AfterRefreshAndAfterACommit()
+    {
+        CountingFileFixture fixture = new CountingFileFixture();
+        FileSelectionDisplay display = CountingDisplay(fixture, _ => new[] { "a.png" });
+        Button reveal = ((Grid)display.Content!).Children.OfType<Button>().Single(button => button.Content?.ToString() == "↗");
+        reveal.IsEnabled.ShouldBeFalse();
+
+        display.ChoiceBox.Text = "a.png";
+        PressKey(display, Key.Enter);
+        reveal.IsEnabled.ShouldBeTrue();
+
+        fixture.File = "";
+        display.Refresh();
+        reveal.IsEnabled.ShouldBeFalse();
+    }
+
+    [AvaloniaFact]
+    public void FileSelectionDisplay_SettingFileChoicesRepeatedlyOrToNull_KeepsExactlyOneFieldInTheRow()
+    {
+        CountingFileFixture fixture = new CountingFileFixture { File = "a.png" };
+        FileSelectionDisplay display = new FileSelectionDisplay();
+        display.InstanceMember = new InstanceMember(nameof(CountingFileFixture.File), fixture);
+        Grid grid = (Grid)display.Content!;
+
+        display.FileChoices = _ => new[] { "a.png" };
+        display.FileChoices = _ => new[] { "a.png", "b.png" };
+        grid.Children.Count(child => child == display.ChoiceBox).ShouldBe(1);
+        grid.Children.Contains(display.TextBox).ShouldBeFalse();
+
+        display.FileChoices = null;
+        grid.Children.Count(child => child == display.TextBox).ShouldBe(1);
+        grid.Children.Contains(display.ChoiceBox).ShouldBeFalse();
+    }
+
+    [AvaloniaFact]
+    public void FileSelectionDisplay_RefreshWithNoMember_DoesNothing()
+    {
+        FileSelectionDisplay display = new FileSelectionDisplay { FileChoices = _ => new[] { "a.png" } };
+
+        Should.NotThrow(() => display.Refresh(forceRefreshEvenIfFocused: true));
+    }
+
     [AvaloniaFact]
     public void FileSelectionDisplay_WithoutChoices_ButtonsAreAsTallAsTheTextBox()
     {

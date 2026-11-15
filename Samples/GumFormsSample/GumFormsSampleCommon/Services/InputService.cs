@@ -9,9 +9,11 @@ namespace GumFormsSample.Services
 {
     public class InputService
     {
+        GumService GumUI => GumService.Default;
+
         public int Update()
         {
-            var keyboard = GumService.Default.Keyboard;
+            var keyboard = GumUI.Keyboard;
             if (keyboard.KeyPushed(Gum.Forms.Input.Keys.D0)) return 0;
             if (keyboard.KeyPushed(Gum.Forms.Input.Keys.D1)) return 1;
             if (keyboard.KeyPushed(Gum.Forms.Input.Keys.D2)) return 2;

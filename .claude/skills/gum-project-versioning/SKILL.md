@@ -25,7 +25,7 @@ A **brand-new project** is the opposite case — it seeds the latest standard-el
 
 On every load, `GumProjectSaveExtensionMethods.Initialize` back-fills each standard element with the tool's current `StandardElementsManager` default variables. This is **version-gated**: it skips any default variable whose `VariableSave.MinimumGumxVersion` exceeds the project's `Version`. **When you add a variable to a standard element's default state that an older runtime won't have, you MUST tag it** — pass `minimumGumxVersion:` to the `Add*Variables` helper, or set `MinimumGumxVersion = …` on the inline `new VariableSave { … }`. Pin it to the *version that introduced the surface* (e.g. `ShapeVariableExpansion`), **not** the floating `NativeVersion` — a floating tag would gate the variable out of projects that legitimately have it after the next bump.
 
-Skip the tag (leave it 0 = always back-fill) only for variables every supported runtime already has. Forgetting the tag is exactly how FRB #1881 happened: opening a pre-v3 project injected the v3 shape surface into its `.gutx`, and FRB1 (which generates its own runtime classes from the standard elements) then emitted code referencing properties its pinned older runtime lacked — a wall of CS0246. This back-fill gate is **separate from** the variable-grid display gate (`ShapeVariableVersionGate`) and the runtime `GumSyntaxVersion` codegen gate; the three don't share a list, so a new variable may need entries in more than one.
+Skip the tag (leave it 0 = always back-fill) only for variables every supported runtime already has. Forgetting the tag is exactly how FRB #1881 happened: opening a pre-v3 project injected the v3 shape surface into its `.gutx`, and FRB1 (which generates its own runtime classes from the standard elements) then emitted code referencing properties its pinned older runtime lacked — a wall of CS0246. The variable-grid display gate (`ShapeVariableVersionGate`) reads the same tag for every standard element type, so a tagged variable is hidden on older projects with no further entry; its name map and the `AlwaysVisibleTaggedNames` exemptions (Stroke*, Blend) only cover pre-tag cases. The runtime `GumSyntaxVersion` codegen gate is separate and has its own list.
 
 ### Deprecated standard types are a separate mechanism from version gating
 
@@ -33,7 +33,7 @@ A standard element can be excluded from new/back-filled projects without any `Gu
 
 ## The three load-time behaviors
 
-`ProjectManager.LoadProject` (~line 201 and ~288 per recent research) compares the file's `Version` against `NativeVersion`:
+`ProjectManager.LoadProject` (~line 201 and ~288 per recent research) compares the file's `Version` against `NativeVersion` (items 1 and 3) and `AttributeVersion` (item 2):
 
 1. **File version > NativeVersion** → dialog: *"saved with a newer version of Gum... Please update Gum."* File is rejected.
 2. **File version < AttributeVersion** → Output-tab warning with an upgrade docs link (`https://docs.flatredball.com/gum/gum-tool/upgrading/upgrading-file-gumx-version`). File still opens and works.

@@ -39,7 +39,8 @@ public class DialogViewRegistry
         Register<NewProjectDialogViewModel>(() => new NewProjectDialogView());
         Register<ExposeColorDialogViewModel>(() => new ExposeColorDialogView());
         Register<DisplayReferencesDialog>(() => new DisplayReferencesDialogView());
-        Register<ThemingDialogViewModel>(() => new ThemingDialogView());
+        // Reached only through the Settings window, but every dialog view model needs a view here.
+        Register<ThemingDialogViewModel>(() => new Gum.Avalonia.Settings.AppearanceSettingsPageView());
         Register<LoadRecentViewModel>(() => new LoadRecentDialogView());
         Register<ImportBaseDialogViewModel>(() => new ImportFileDialogView());
         Register<AddAnimationDialogViewModel>(() => new AddAnimationDialogView());

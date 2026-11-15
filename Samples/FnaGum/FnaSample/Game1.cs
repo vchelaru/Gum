@@ -17,6 +17,8 @@ namespace FnaSample
 {
     public partial class Game1 : Microsoft.Xna.Framework.Game
     {
+        GumService GumUI => GumService.Default;
+
         GraphicsDeviceManager graphics;
 
         SpriteBatch _spriteBatch;
@@ -37,12 +39,21 @@ namespace FnaSample
         protected override void Initialize()
         {
 
-            GumService.Default.Initialize(this, "GumProject/GumProject.gumx");
+            GumUI.Initialize(this, "GumProject/GumProject.gumx");
+
+            GumUI.UseKeyboardDefaults();
+
+            GumUI.UseGamepadDefaults();
+
+            GumUI.UseShadowDusk();
+
+            // Scales the whole canvas to fit the window.
+            GumUI.EnableZoomToWindow();
 
             IsMouseVisible = true;
 
             Root = new MainScreenRuntime();
-            Root.AddToManagers();
+            Root.AddToRoot();
 
             //var rectangle = new RectangleRuntime();
 
@@ -58,14 +69,14 @@ namespace FnaSample
 
         protected override void Update(GameTime gameTime)
         {
-            GumService.Default.Update(this, gameTime, Root);
+            GumUI.Update(gameTime);
 
             base.Update(gameTime);
         }
 
         protected override void Draw(GameTime gameTime)
         {
-            GumService.Default.Draw();
+            GumUI.Draw();
 
             base.Draw(gameTime);
         }

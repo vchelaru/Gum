@@ -82,6 +82,7 @@ public sealed class AvaloniaElementTreeView : IElementTreeView
             IsVisible = false,
             VerticalAlignment = VerticalAlignment.Center,
         };
+        AvaloniaTreeIcons.FollowBaseFontSize((Control)_searchClearButton.Content, 12);
         _searchClearButton.Classes.Add(GumChromeStyles.FlatButtonClass);
         ToolTip.SetTip(_searchClearButton, "Clear search");
         _searchClearButton.Click += (_, _) => ClearSearchText();
@@ -235,19 +236,7 @@ public sealed class AvaloniaElementTreeView : IElementTreeView
     /// <inheritdoc/>
     public void UpdateCollapseButtonSizes(double baseFontSize)
     {
-        double scale = baseFontSize / FrbThemeResources.DefaultBaseFontSize;
-        foreach (Button button in new[] { _collapseAllButton, _collapseToElementButton })
-        {
-            button.FontSize = baseFontSize;
-            button.Height = ToolButtonHeight * scale;
-            if (button.Content is FluentIcon icon)
-            {
-                double iconSize = ToolButtonIconSize * scale;
-                icon.FontSize = iconSize;
-                icon.Width = iconSize;
-                icon.Height = iconSize;
-            }
-        }
+        // Nothing to do: the buttons and their icons follow the base font size through resource bindings.
     }
 
     /// <inheritdoc/>
@@ -487,8 +476,9 @@ public sealed class AvaloniaElementTreeView : IElementTreeView
         {
             Content = GumFluentIcons.Create(icon, ToolButtonIconSize),
             Padding = new Thickness(4, 2),
-            Height = ToolButtonHeight,
         };
+        AvaloniaTreeIcons.FollowBaseFontSize((Control)button.Content, ToolButtonIconSize);
+        AvaloniaTreeIcons.FollowBaseFontSize(button, Layoutable.HeightProperty, ToolButtonHeight);
         button.Classes.Add(GumChromeStyles.FlatButtonClass);
         ToolTip.SetTip(button, toolTip);
         button.Click += (_, _) => onClick();

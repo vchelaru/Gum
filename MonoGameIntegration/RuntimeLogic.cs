@@ -38,7 +38,7 @@ namespace Gum.MonoGameIntegration
             global::RenderingLibrary.Content.LoaderManager.Self.ContentLoader = new global::RenderingLibrary.Content.ContentLoader();
 
             // We do this to help the programmer find missing files
-            Wireframe.GraphicalUiElement.MissingFileBehavior = Wireframe.MissingFileBehavior.ThrowException;
+            Wireframe.GraphicalUiElement.ApplyRuntimeMissingFileBehaviorDefault();
 
             // Hide component outlines:
             Wireframe.GraphicalUiElement.ShowLineRectangles = false;

@@ -12,12 +12,7 @@ This page covers how Gum reacts to the game window's resolution and how to handl
 
 ```csharp
 // Initialize
-protected override void Initialize()
-{
-    GumService.Default.Initialize(this);
-
-    GumService.Default.EnableZoomToWindow();
-}
+GumUI.EnableZoomToWindow();
 ```
 
 ### Expand To Window
@@ -26,15 +21,10 @@ protected override void Initialize()
 
 ```csharp
 // Initialize
-protected override void Initialize()
-{
-    GumService.Default.Initialize(this);
-
-    GumService.Default.EnableExpandToWindow();
-}
+GumUI.EnableExpandToWindow();
 ```
 
-Both methods are available on MonoGame, KNI, FNA, and raylib. (On raylib, replace `Initialize(this)` with the parameterless `Initialize()` overload.) Calling either method replaces any previously enabled policy, so flipping at runtime — for example from a settings menu — is a single method call.
+Both methods are available on MonoGame, KNI, FNA, and raylib. Calling either method replaces any previously enabled policy, so flipping at runtime, for example from a settings menu, is a single method call.
 
 ### `defaultZoom`
 
@@ -42,14 +32,14 @@ Both methods accept an optional `defaultZoom` multiplier applied at the referenc
 
 ```csharp
 // Initialize
-GumService.Default.EnableZoomToWindow(defaultZoom: 2f);
+GumUI.EnableZoomToWindow(defaultZoom: 2f);
 ```
 
 The same parameter works for `EnableExpandToWindow` — useful if you author UI at a smaller virtual resolution and want it drawn larger:
 
 ```csharp
 // Initialize
-GumService.Default.EnableExpandToWindow(defaultZoom: 2f);
+GumUI.EnableExpandToWindow(defaultZoom: 2f);
 ```
 
 ### `WindowZoomMode`
@@ -60,21 +50,21 @@ The default is `HeightDominant` (window height drives the zoom):
 
 ```csharp
 // Initialize
-GumService.Default.EnableZoomToWindow(WindowZoomMode.HeightDominant);
+GumUI.EnableZoomToWindow(WindowZoomMode.HeightDominant);
 ```
 
 Pass `WidthDominant` to drive the zoom from window width instead:
 
 ```csharp
 // Initialize
-GumService.Default.EnableZoomToWindow(WindowZoomMode.WidthDominant);
+GumUI.EnableZoomToWindow(WindowZoomMode.WidthDominant);
 ```
 
 Both parameters can be combined:
 
 ```csharp
 // Initialize
-GumService.Default.EnableZoomToWindow(WindowZoomMode.WidthDominant, defaultZoom: 1.5f);
+GumUI.EnableZoomToWindow(WindowZoomMode.WidthDominant, defaultZoom: 1.5f);
 ```
 
 ### What Happens Without the Helpers
@@ -87,13 +77,13 @@ This is sometimes the behavior you want (e.g. if you draw Gum to a `RenderTarget
 
 ## Setting the Initial Resolution
 
-By default Gum uses `GraphicsDevice.Viewport` to set its internal resolution on initialization. This value can be assigned in the Game's constructor by assigning `_graphics.PreferredBackBufferWidth` and `_graphics.PreferredBackBufferHeight`. Most likely your game is already doing this to set the initial Window size. The following shows an example game with Gum:
+On MonoGame, Gum uses `GraphicsDevice.Viewport` by default to set its internal resolution on initialization. This value can be assigned in the Game's constructor by assigning `_graphics.PreferredBackBufferWidth` and `_graphics.PreferredBackBufferHeight`. Most likely your game is already doing this to set the initial Window size. The following shows an example game with Gum:
 
 <pre class="language-csharp"><code class="lang-csharp">public class Game1 : Game
 {
     GraphicsDeviceManager _graphics;
 
-    GumService GumUi => GumService.Default;
+    GumService GumUI => GumService.Default;
 
     public Game1()
     {
@@ -111,7 +101,7 @@ By default Gum uses `GraphicsDevice.Viewport` to set its internal resolution on 
     protected override void Initialize()
     {
 <strong>        // Internally this will initialize using the viewport values
-</strong><strong>        GumUi.Initialize(this);
+</strong><strong>        GumUI.Initialize(this);
 </strong>        ...
 </code></pre>
 
@@ -191,64 +181,21 @@ As with the expand example, `Root.UpdateLayout()` is only needed if your game lo
 
 ### Silk.NET
 
-Silk.NET has no `Game`/`GraphicsDeviceManager` host, so there's no `Window.ClientSizeChanged` event to subscribe to, and unlike the other backends, your project owns the Skia render surface directly. `GumService.Default.Initialize` is handed an `SKCanvas` once at startup and never re-reads it, so a resize handler needs more than just `HandleResize`. On every resize you must:
+`GumUI.Initialize(window)` subscribes to the window's resize event. At the next `Update`, Gum recreates its SkiaSharp surface at the new framebuffer size, calls `HandleResize`, and lays out again, so elements using relative units (`RelativeToParent`, `Dock(Fill)`, etc.) reposition automatically. There is nothing to wire up in your game loop.
 
-1. **Recreate the `GRBackendRenderTarget`/`SKSurface`.** Both declare a fixed logical size, separate from the GL viewport. With `GRSurfaceOrigin.BottomLeft`, Skia uses that declared height to flip rows, so once the viewport grows past a stale surface size, everything Gum draws renders shifted down by the size delta.
-2. **Reassign `GumUI.SystemManagers.Canvas`** to the new surface's `Canvas`. Without this, `GumUI.Draw()` keeps rendering into the disposed `SKCanvas` from the old surface, an `AccessViolationException`.
-3. **Update the GL viewport** to the new size.
-4. **Call `GumUI.HandleResize(width, height)`**, which updates `GraphicalUiElement.CanvasWidth`/`CanvasHeight` and calls `Root.UpdateLayout()` for you, so elements using relative units (`RelativeToParent`, `Dock(Fill)`, etc.) reposition automatically.
+Gum applies the resize in `Update` and not inside the event because dragging a window border runs a nested "live resize" message loop, where the GL context is not safe to touch.
 
-{% hint style="warning" %}
-Don't do this work synchronously inside the `window.Resize` event itself. Dragging a window border enters a nested "live resize" modal message loop, and Silk.NET's SDL backend can invoke `Resize` from inside that loop, where the GL context isn't guaranteed to be current. Recreating GPU resources there can crash with `AccessViolationException`. Instead, record the new size in the event and apply the full resize once per frame from your main loop, where the GL context state is well-defined.
-{% endhint %}
+If your app sets a screen's `Width`/`Height` in pixels, for example a loaded `.gumj` screen sized once at startup, those values do **not** track the canvas on their own. Use `RelativeToParent` units instead:
 
 ```csharp
 // Initialize
-Vector2D<int>? pendingResize = null;
-window.Resize += newSize => pendingResize = newSize;
-
-void RecreateSurface(int width, int height)
-{
-    surface?.Dispose();
-    renderTarget?.Dispose();
-
-    renderTarget = new GRBackendRenderTarget(width, height, 0, 8, new GRGlFramebufferInfo(0, 0x8058)); // 0x8058 = GL_RGBA8
-    surface = SKSurface.Create(grContext, renderTarget, GRSurfaceOrigin.BottomLeft, SKColorType.Rgba8888);
-
-    GumUI.SystemManagers.Canvas = surface.Canvas;
-}
-
-// Main loop
-while (running)
-{
-    window.DoEvents();
-
-    if (pendingResize.HasValue)
-    {
-        var newSize = pendingResize.Value;
-        pendingResize = null;
-
-        gl.Viewport(0, 0, (uint)newSize.X, (uint)newSize.Y);
-        RecreateSurface(newSize.X, newSize.Y);
-        GumUI.HandleResize(newSize.X, newSize.Y);
-    }
-
-    // ...update and draw...
-}
+screen.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
+screen.Width = 0;
+screen.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
+screen.Height = 0;
 ```
 
-If your app manages a screen's `Width`/`Height` in pixels rather than relative units, for example a loaded `.gumj` screen sized once at startup to match the initial canvas, those pixel values do **not** track canvas size changes on their own. Re-apply them in the same block after `HandleResize`, or the screen will keep its original size while descendants anchored to its edges drift out of place as the canvas grows or shrinks:
-
-```csharp
-gl.Viewport(0, 0, (uint)newSize.X, (uint)newSize.Y);
-RecreateSurface(newSize.X, newSize.Y);
-GumUI.HandleResize(newSize.X, newSize.Y);
-
-currentGumxScreen.Width = GraphicalUiElement.CanvasWidth;
-currentGumxScreen.Height = GraphicalUiElement.CanvasHeight;
-```
-
-For a complete working example, see `RecreateSurface` and the `pendingResize` handling in the Gum Silk.NET sample:
+For a complete working example, see the Gum Silk.NET sample:
 
 {% embed url="https://github.com/vchelaru/Gum/tree/main/Samples/SilkNetGum" %}
 

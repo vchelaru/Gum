@@ -304,6 +304,36 @@ public class FileCommandsTests : BaseTestClass
     }
 
     [Fact]
+    public void BeginAutoSaveBatch_SavesAnElementEditedManyTimesOnce_WhenTheScopeEnds()
+    {
+        _tempDirectory = CreateTempDirectory();
+        _gumProject.FullFileName = Path.Combine(_tempDirectory, "MyProject.gumx");
+        _gumProject.ComponentReferences.Add(new ElementReference { Name = "Button", ElementType = ElementType.Component });
+        _projectManager.Setup(p => p.AutoSave).Returns(true);
+        bool isProjectNew = false;
+        _projectManager.Setup(p => p.AskUserForProjectNameIfNecessary(out isProjectNew)).Returns(true);
+        ComponentSave button = new() { Name = "Button", BaseType = "Container" };
+        button.States.Add(new StateSave { Name = "Default", ParentContainer = button });
+        string path = Path.Combine(_tempDirectory, "Components", "Button.gucx");
+
+        using (_fileCommands.BeginAutoSaveBatch())
+        {
+            for (int i = 0; i < 5; i++)
+            {
+                button.DefaultState!.SetValue($"Sprite{i}.X", 10f * i, "float");
+                _fileCommands.TryAutoSaveElement(button);
+            }
+
+            // Nothing is written while the scope is open, but the element is already marked unsaved.
+            File.Exists(path).ShouldBeFalse();
+            _unsavedChangesTracker.HasUnsavedChanges(button).ShouldBeTrue();
+        }
+
+        File.ReadAllText(path).ShouldContain("Sprite4.X");
+        _projectManager.Verify(p => p.AskUserForProjectNameIfNecessary(out isProjectNew), Times.Once);
+    }
+
+    [Fact]
     public void LoadLocalizationFile_ShouldClearPreviousDatabase_WhenSwitchingToAProjectWithNoLocalizationFiles()
     {
         _tempDirectory = CreateTempDirectory();

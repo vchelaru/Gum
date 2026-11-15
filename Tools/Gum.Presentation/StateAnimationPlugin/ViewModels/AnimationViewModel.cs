@@ -3,6 +3,7 @@ using Gum;
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using Gum.Managers;
+using Gum.Plugins.InternalPlugins.StatePlugin;
 using Gum.Mvvm;
 using Gum.ToolStates;
 using Gum.Wireframe;
@@ -70,6 +71,12 @@ public partial class AnimationViewModel : ViewModel
     /// error icon (issue #3401); mirrors <see cref="AnimatedKeyframeViewModel.IsMissingReference"/>.
     /// </summary>
     public bool HasBrokenKeyframe => Keyframes.Any(keyframe => keyframe.IsMissingReference);
+
+    /// <summary>
+    /// The palette name of the category color of the first keyframe that names a state (the animation's
+    /// first state), or null. The animation list draws a bar in it.
+    /// </summary>
+    public string? CategoryColorName => Keyframes.Where(keyframe => !string.IsNullOrEmpty(keyframe.StateName)).OrderBy(keyframe => keyframe.Time).FirstOrDefault()?.CategoryColorName;
 
     public ObservableCollection<AnimatedKeyframeViewModel> Keyframes { get; private set; }
 
@@ -332,6 +339,7 @@ public partial class AnimationViewModel : ViewModel
 
         NotifyPropertyChanged(nameof(Keyframes));
         NotifyPropertyChanged(nameof(HasBrokenKeyframe));
+        NotifyPropertyChanged(nameof(CategoryColorName));
 
         if (_selectedState.SelectedElement != null)
         {
@@ -371,8 +379,12 @@ public partial class AnimationViewModel : ViewModel
                     RefreshCumulativeStates(_selectedState.SelectedElement);
                 }
                 break;
-            case nameof(AnimatedKeyframeViewModel.HasValidState):
             case nameof(AnimatedKeyframeViewModel.AnimationName):
+                // An edit (an instance rename follows into the reference), so it reaches
+                // FramePropertyChanged below and is saved; it used to be saved only through the
+                // HasBrokenKeyframe notification it also raised.
+                break;
+            case nameof(AnimatedKeyframeViewModel.HasValidState):
             case nameof(AnimatedKeyframeViewModel.IsMissingReference):
                 NotifyPropertyChanged(nameof(HasBrokenKeyframe));
                 return;
@@ -493,7 +505,7 @@ public partial class AnimationViewModel : ViewModel
 
     public void SetStateAtTime(double animationTime, ElementSave element, bool defaultIfNull)
     {
-        var stateToSet = _cachedAnimationRuntime?.GetStateToSet(animationTime, element, defaultIfNull);
+        var stateToSet = _cachedAnimationRuntime?.GetStateToSet(animationTime, element, _wireframeObjectManager.RootGue, defaultIfNull);
 
         if(stateToSet != null)
         {
@@ -507,6 +519,7 @@ public partial class AnimationViewModel : ViewModel
             _selectedState.SelectedStateSave = null;
             // The preview already evaluated the references into stateToSet.
             VariableReferenceGraph.RunWithoutReevaluation(() => _wireframeObjectManager.RootGue?.ApplyState(stateToSet));
+            _wireframeObjectManager.ResetRestrictedVariables();
         }
     }
 
@@ -517,6 +530,7 @@ public partial class AnimationViewModel : ViewModel
             if(!string.IsNullOrEmpty(keyframe.StateName))
             {
                 keyframe.HasValidState = GetStateFromCategorizedName(keyframe.StateName, elementSave) != null;
+                keyframe.CategoryColorName = CategoryColors.GetNameOfState(elementSave, keyframe.StateName);
             }
             else if(!string.IsNullOrEmpty(keyframe.AnimationName))
             {
@@ -525,6 +539,7 @@ public partial class AnimationViewModel : ViewModel
         }
 
         NotifyPropertyChanged(nameof(HasBrokenKeyframe));
+        NotifyPropertyChanged(nameof(CategoryColorName));
     }
 
     #endregion

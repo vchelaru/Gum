@@ -140,7 +140,7 @@
 	<ItemGroup>
 		<PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.4.1" />
 		<!-- Compiles a container's SourceShaderFile (.fx or .slang) at runtime; see PreviewShaderResolver. -->
-		<PackageReference Include="ShadowDusk.Compiler" Version="0.22.1" />
+		<PackageReference Include="ShadowDusk.Compiler" Version="0.25.0" />
 	</ItemGroup>
 	<ItemGroup>
 		<!-- MonoGame's SDL window loads Icon.bmp from the entry assembly and falls back to the MonoGame logo. -->
@@ -149,6 +149,9 @@
 	<ItemGroup>
 		<!-- The selection-file format shared with the tool side (PreviewLauncher), linked rather than
 		     referenced so this host stays free of the tool's plugin assemblies. -->
+		<Compile Include="..\..\Tools\Gum.Presentation\Diagnostics\DiagnosticLogFile.cs" Link="DiagnosticLogFile.cs" />
+		<!-- The list of defaults the Preview applies; the tool's Code tab generates its game-setup code from the same list. -->
+		<Compile Include="..\..\Tools\Gum.ProjectServices\CodeGeneration\PreviewDefaults.cs" Link="PreviewDefaults.cs" />
 		<Compile Include="..\EditorTabPlugin.Core\Services\PreviewSelectionMessage.cs" Link="PreviewSelectionMessage.cs" />
 		<Compile Include="..\EditorTabPlugin.Core\Services\PreviewSelectionFile.cs" Link="PreviewSelectionFile.cs" />
 		<Compile Include="..\EditorTabPlugin.Core\Services\ShaderSourceCompiler.cs" Link="ShaderSourceCompiler.cs" />
@@ -158,7 +161,7 @@
 		<ProjectReference Include="..\..\MonoGameGum\MonoGameGum.csproj" />
 		<!-- Apos.Shapes-backed shape rendering (filled/rounded/shadowed Circle, Rectangle, Arc,
 		     Polygon) - RectangleRuntime and friends render nothing without this (see Game1's
-		     ShapeRenderer.Self.Initialize() call and the gum-samples skill's MonoGame host-init note). -->
+		     UseShapes() call and the gum-samples skill's MonoGame host-init note). -->
 		<ProjectReference Include="..\..\Runtimes\GumShapes\MonoGameGumShapes.csproj" />
 	</ItemGroup>
 

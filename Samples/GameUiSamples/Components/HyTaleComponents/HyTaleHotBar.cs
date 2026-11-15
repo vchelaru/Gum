@@ -12,6 +12,8 @@ namespace GameUiSamples.Components
 {
     partial class HyTaleHotBar
     {
+        GumService GumUI => GumService.Default;
+
         public event EventHandler SelectedIndexChanged;
         
 
@@ -55,7 +57,7 @@ namespace GameUiSamples.Components
 
         internal void HandleKeyboardInput()
         {
-            var keyboard = GumService.Default.Keyboard;
+            var keyboard = GumUI.Keyboard;
             int? indexToSelect = null;
             if (keyboard.KeyPushed(Gum.Forms.Input.Keys.D1)) indexToSelect = 0;
             if (keyboard.KeyPushed(Gum.Forms.Input.Keys.D2)) indexToSelect = 1;

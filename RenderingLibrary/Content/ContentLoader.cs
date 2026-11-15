@@ -6,6 +6,7 @@ using Microsoft.Xna.Framework.Graphics;
 using RenderingLibrary.Graphics;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using ToolsUtilities;
 
 namespace RenderingLibrary.Content;
@@ -23,6 +24,23 @@ namespace RenderingLibrary.Content;
 /// </remarks>
 public sealed class ContentLoader : IContentLoader
 {
+    // The formats Texture2D.FromStream loads on every XNA-like backend.
+    private static readonly string[] BuiltInImageExtensions =
+        { "png", "jpg", "jpeg", "bmp", "gif", "tga", "tif", "tiff", "dds" };
+
+    /// <summary>
+    /// The image file extensions (lower case, without the dot) this loader decodes: the formats
+    /// Texture2D.FromStream loads, plus the extensions the registered
+    /// <c>LoaderManager.ImageDecoders</c> declare. A platform head can decode fewer (KNI picks
+    /// its decoder per head).
+    /// </summary>
+    public static IReadOnlyCollection<string> SupportedImageExtensions =>
+#if FRB
+        BuiltInImageExtensions;
+#else
+        BuiltInImageExtensions.Union(LoaderManager.Self.ImageDecoders.DeclaredExtensions).ToArray();
+#endif
+
     public SystemManagers? SystemManagers { get; set; }
 
 #if XNALIKE && !FRB
@@ -198,6 +216,24 @@ public sealed class ContentLoader : IContentLoader
     {
         bool usePremultipliedAlpha = Graphics.Renderer.UsePremultipliedAlpha;
         bool bleedTransparentEdges = Graphics.Renderer.BleedTransparentTextureEdgesOnLoad;
+
+        stream = Gum.Bundle.GumRawTexture.EnsureSeekable(stream);
+
+        // A gumcli-packed texture (#6514): already decoded, so convert the alpha mode if the
+        // package's differs and upload, with no image decode and no GetData readback.
+        byte[]? rawTexture = Gum.Bundle.GumRawTexture.ReadForRuntime(stream, fileName,
+            usePremultipliedAlpha,
+            usePremultipliedAlpha
+                ? "Renderer.UsePremultipliedAlpha is true"
+                : "Renderer.UsePremultipliedAlpha is false",
+            bleedTransparentEdges,
+            out Gum.Bundle.GumRawTextureHeader header);
+        if (rawTexture != null)
+        {
+            isProcessedOnLoad = true;
+            return CreateTextureFromRgba(device, rawTexture, header.Width, header.Height);
+        }
+
 #if !FRB
         System.IO.Stream original = stream;
         try
@@ -262,9 +298,8 @@ public sealed class ContentLoader : IContentLoader
         }
     }
 
-    // The formats Texture2D.FromStream loads on every XNA-like backend.
     private static bool IsBuiltInImageExtension(string extension) =>
-        extension is "png" or "jpg" or "jpeg" or "bmp" or "gif" or "tga" or "tif" or "tiff" or "dds";
+        Array.IndexOf(BuiltInImageExtensions, extension) >= 0;
 
     private static Texture2D CreateTextureFromRgba(GraphicsDevice device, byte[] rgba, int width, int height)
     {

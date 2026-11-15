@@ -29,6 +29,7 @@ using Gum.Plugins.InternalPlugins.EditorTab.Services;
 using Gum.Services;
 using Gum.Services.Dialogs;
 using Gum.Startup;
+using Gum.Startup.SingleInstance;
 using Gum.ToolStates;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -44,6 +45,8 @@ public sealed class App : Application
     private readonly HeadOptions _options;
     private readonly IFreezeDiagnosticsInbox _freezeDiagnostics;
     private bool _previousSessionEndedDirty;
+    private readonly TaskCompletionSource _awaitedOpenRequestsHandled = new TaskCompletionSource();
+    private int _handledOpenRequests;
 
     /// <summary>Creates the app over the built service host.</summary>
     public App(IServiceProvider services, HeadOptions options)
@@ -119,19 +122,60 @@ public sealed class App : Application
 
             window.Opened += (_, _) =>
             {
+                // Before startup runs: requests that arrived while the tool was starting are queued
+                // in the inbox, and the router holds them until the startup load has finished.
+                _services.GetService<IOpenRequestInbox>()?.Attach(request =>
+                    Dispatcher.UIThread.InvokeAsync(() => HandleOpenRequestAsync(request, window)));
                 messenger.Send<ApplicationStartupMessage>();
                 TaskCompletionSource<UnattendedStartupOutcome> startup = new TaskCompletionSource<UnattendedStartupOutcome>();
                 StartupFailureReporter failureReporter = new StartupFailureReporter(window, Console.Error);
                 Dispatcher.UIThread.Post(() => _ = SignalStartupAsync(startup, desktop, failureReporter), DispatcherPriority.Background);
                 if (_options.ExitAfterSeconds is double seconds)
                 {
-                    _ = RunUnattendedAsync(startup.Task, seconds, window, desktop, messenger, failureReporter);
+                    _ = RunUnattendedAsync(AwaitOpenRequestsAsync(startup.Task), seconds, window, desktop, messenger, failureReporter);
                 }
                 StartFreezeWatchdog();
             };
         }
 
         base.OnFrameworkInitializationCompleted();
+    }
+
+    // A request from a later launch: open or select it, then come forward (an unattended run stays put).
+    private async Task HandleOpenRequestAsync(OpenRequest request, Window window)
+    {
+        await _services.GetRequiredService<IProjectOpenRequestRouter>().RequestOpenAsync(request);
+        if (_options.ExitAfterSeconds == null)
+        {
+            BringToFront(window);
+        }
+
+        if (_options.AwaitOpenRequests is int awaited && ++_handledOpenRequests >= awaited)
+        {
+            _awaitedOpenRequestsHandled.TrySetResult();
+        }
+    }
+
+    internal static void BringToFront(Window window)
+    {
+        if (window.WindowState == WindowState.Minimized)
+        {
+            window.WindowState = WindowState.Normal;
+        }
+
+        window.Activate();
+    }
+
+    // The unattended run captures only after the requests it was told to expect have been applied.
+    private async Task<UnattendedStartupOutcome> AwaitOpenRequestsAsync(Task<UnattendedStartupOutcome> startup)
+    {
+        UnattendedStartupOutcome outcome = await startup;
+        if (outcome == UnattendedStartupOutcome.Ready && _options.AwaitOpenRequests != null)
+        {
+            await _awaitedOpenRequestsHandled.Task;
+        }
+
+        return outcome;
     }
 
     private async Task SignalStartupAsync(TaskCompletionSource<UnattendedStartupOutcome> startup,
@@ -156,7 +200,13 @@ public sealed class App : Application
     {
         await new GumStartupSequence(_services, _services.GetRequiredService<AvaloniaHeadStartup>()).RunAsync();
         StartupTiming.Mark("InitializeGum complete");
-        ApplyStartupSelection();
+        if (!ApplyStartupSelection() && _options.ExitAfterSeconds != null)
+        {
+            // An unattended run that reports success would show the wrong picture.
+            Console.Error.WriteLine("Element not found: " + _options.SelectPath + ". No screenshot was taken.");
+            return UnattendedStartupOutcome.Failed;
+        }
+
         ApplyThemeOverride();
         ICommandLineManager commandLine = _services.GetRequiredService<ICommandLineManager>();
         if (!commandLine.ShouldExitImmediately)
@@ -239,31 +289,34 @@ public sealed class App : Application
 
 
     // An unattended run can start with an element, and optionally one of its instances, selected.
-    private void ApplyStartupSelection()
-    {
-        if (_options.SelectPath is { } path)
-        {
-            SelectStartupPath(path, _services.GetRequiredService<ISelectedState>());
-        }
-    }
+    private bool ApplyStartupSelection() =>
+        _options.SelectPath is not { } path || SelectStartupPath(path, _services.GetRequiredService<ISelectedState>());
 
     /// <summary>
     /// Selects the element named before the <c>#</c> of <paramref name="path"/> and, when one
     /// follows it, that element's instance; an element that doesn't exist selects nothing.
+    /// False when the element, or the named instance, is not found.
     /// </summary>
-    internal static void SelectStartupPath(string path, ISelectedState selectedState)
+    internal static bool SelectStartupPath(string path, ISelectedState selectedState)
     {
         string[] parts = path.Split('#', 2);
         if (ObjectFinder.Self.GetElementSave(parts[0]) is not { } element)
         {
-            return;
+            return false;
         }
 
         selectedState.SelectedElement = element;
-        if (parts.Length > 1 && element.Instances.Find(instance => instance.Name == parts[1]) is { } selectedInstance)
+        if (parts.Length > 1)
         {
+            if (element.Instances.Find(instance => instance.Name == parts[1]) is not { } selectedInstance)
+            {
+                return false;
+            }
+
             selectedState.SelectedInstance = selectedInstance;
         }
+
+        return true;
     }
 
     // An unattended run can show the other theme variant without changing the saved setting.

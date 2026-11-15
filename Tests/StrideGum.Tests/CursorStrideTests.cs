@@ -13,8 +13,32 @@ namespace StrideGum.Tests;
 /// and scroll accumulation from the <see cref="MouseWheelEvent"/> listener. The cursor is attached to
 /// a mocked mouse device and read through its public surface after <c>Activity</c>.
 /// </summary>
-public class CursorStrideTests
+public class CursorStrideTests : SkiaHostTests.CursorTestsBase
 {
+    private sealed class StrideCursorRig : SkiaHostTests.IHostCursorRig
+    {
+        private readonly Cursor _cursor;
+        private readonly Mock<IMouseDevice> _mouse;
+
+        public StrideCursorRig()
+        {
+            (_cursor, _mouse) = CreateAttachedCursor();
+        }
+
+        public Gum.Wireframe.ICursor Cursor => _cursor;
+
+        // Stride's position is normalized (0..1) and Cursor.Stride scales it by SurfaceSize (800x600).
+        public void SetPosition(int x, int y) => _mouse.SetupGet(m => m.Position).Returns(new Vector2(x / 800f, y / 600f));
+
+        public void SetPrimaryDown(bool isDown) => _mouse.SetupGet(m => m.DownButtons).Returns(
+            new ReadOnlySet<MouseButton>(isDown ? new HashSet<MouseButton> { MouseButton.Left } : new HashSet<MouseButton>()));
+
+        public void Scroll(int notches) =>
+            ((IInputEventListener<MouseWheelEvent>)_cursor).ProcessEvent(new MouseWheelEvent { WheelDelta = notches });
+    }
+
+    protected override SkiaHostTests.IHostCursorRig CreateRig() => new StrideCursorRig();
+
     private static (Cursor cursor, Mock<IMouseDevice> mouse) CreateAttachedCursor()
     {
         var mouse = new Mock<IMouseDevice>();
@@ -24,44 +48,6 @@ public class CursorStrideTests
         var cursor = new Cursor();
         cursor.AttachStrideInput(mouse.Object);
         return (cursor, mouse);
-    }
-
-    [Fact]
-    public void Activity_MapsMousePosition()
-    {
-        (Cursor cursor, Mock<IMouseDevice> mouse) = CreateAttachedCursor();
-        // Position is normalized (0..1); Cursor.Stride scales by SurfaceSize (800x600) to pixels.
-        mouse.SetupGet(m => m.Position).Returns(new Vector2(0.5f, 0.5f));
-
-        cursor.Activity(0);
-
-        cursor.X.ShouldBe(400);
-        cursor.Y.ShouldBe(300);
-    }
-
-    [Fact]
-    public void Activity_MapsPrimaryButtonDown()
-    {
-        (Cursor cursor, Mock<IMouseDevice> mouse) = CreateAttachedCursor();
-        mouse.SetupGet(m => m.DownButtons).Returns(new ReadOnlySet<MouseButton>(new HashSet<MouseButton> { MouseButton.Left }));
-
-        cursor.Activity(0);
-
-        cursor.PrimaryDown.ShouldBeTrue();
-    }
-
-    [Fact]
-    public void Scroll_AccumulatesIntoScrollWheelDelta()
-    {
-        (Cursor cursor, Mock<IMouseDevice> mouse) = CreateAttachedCursor();
-
-        // Two notches up. Stride reports a per-event delta; the cursor scales to the XNA detent
-        // convention (120 units/notch) into a running total, and the shared Cursor exposes the
-        // per-frame change as ScrollWheelChange = (current - lastFrame) / 120.
-        ((IInputEventListener<MouseWheelEvent>)cursor).ProcessEvent(new MouseWheelEvent { WheelDelta = 2f });
-        cursor.Activity(0);
-
-        cursor.ScrollWheelChange.ShouldBe(2);
     }
 
     [Fact]

@@ -29,6 +29,7 @@ public class CategoryNameCollisionErrorSource : IAdditionalErrorSource
             yield return new ErrorResult
             {
                 ElementName = element.Name,
+                Code = "GUM0045",
                 Message = message,
                 Severity = ErrorSeverity.Error
             };

@@ -111,21 +111,21 @@ public class VisualAuthoredPropertiesTests : BaseTestClass
     #region TextBox line mode and placeholder
 
     [Fact]
-    public void TextBoxAssign_VisualAuthoredMultiLineMode_StaysMulti()
+    public void TextBoxAssign_VisualAuthoredMultiLineMode_ControlPropertiesDecideLineMode()
     {
         TextBoxVisual visual = new(fullInstantiation: true, tryCreateFormsObject: false);
         visual.SetProperty("LineModeCategoryState", "Multi");
 
         TextBox textBox = new(visual);
 
-        // The Multi state top-aligns the text; the Single state would put it back to center.
-        visual.TextInstance.VerticalAlignment.ShouldBe(VerticalAlignment.Top);
+        // The control is single line, so the Single state centers the text again (#7325).
+        visual.TextInstance.VerticalAlignment.ShouldBe(VerticalAlignment.Center);
         textBox.TextWrapping.ShouldBe(TextWrapping.NoWrap);
         textBox.AcceptsReturn.ShouldBeFalse();
     }
 
     [Fact]
-    public void TextBoxSwap_NewVisualAuthoredMultiLineMode_DefaultControlKeepsMulti()
+    public void TextBoxSwap_NewVisualAuthoredMultiLineMode_DefaultControlGetsSingle()
     {
         TextBox textBox = new();
         TextBoxVisual newVisual = new(fullInstantiation: true, tryCreateFormsObject: false);
@@ -133,7 +133,7 @@ public class VisualAuthoredPropertiesTests : BaseTestClass
 
         textBox.Visual = newVisual;
 
-        newVisual.TextInstance.VerticalAlignment.ShouldBe(VerticalAlignment.Top);
+        newVisual.TextInstance.VerticalAlignment.ShouldBe(VerticalAlignment.Center);
     }
 
     [Fact]
@@ -296,6 +296,44 @@ public class VisualAuthoredPropertiesTests : BaseTestClass
         screen.RefreshStyles();
 
         menuItem.Header.ShouldBe("New authored");
+    }
+
+    [Fact]
+    public void TabItemRefreshStyles_AuthoredHeaderNotSetInCode_KeepsAuthoredHeader()
+    {
+        TabItemVisual visual = new(fullInstantiation: true, tryCreateFormsObject: false);
+        visual.TextInstance.Text = "Authored header";
+        TabItem tabItem = new(visual);
+
+        visual.RefreshStyles();
+
+        tabItem.Header.ShouldBe("Authored header");
+    }
+
+    [Fact]
+    public void TabItemRefreshStyles_AuthoredHeaderChanged_ShowsNewAuthoredHeader()
+    {
+        TabItemVisual visual = new(fullInstantiation: true, tryCreateFormsObject: false);
+        visual.TextInstance.Text = "Old authored";
+        TabItem tabItem = new(visual);
+        ContainerRuntime screen = AttachToScreenAuthoring(visual, "TextInstance.Text", "New authored");
+
+        screen.RefreshStyles();
+
+        tabItem.Header.ShouldBe("New authored");
+    }
+
+    [Fact]
+    public void TabItemRefreshStyles_HeaderSetInCodeAndAuthoredChanged_KeepsCodeHeader()
+    {
+        TabItemVisual visual = new(fullInstantiation: true, tryCreateFormsObject: false);
+        TabItem tabItem = new(visual);
+        tabItem.Header = "From code";
+        ContainerRuntime screen = AttachToScreenAuthoring(visual, "TextInstance.Text", "New authored");
+
+        screen.RefreshStyles();
+
+        tabItem.Header.ShouldBe("From code");
     }
 
     [Fact]

@@ -1,3 +1,4 @@
+using Gum.Avalonia.Controls;
 using Gum.Avalonia.Shell;
 using System;
 using System.Collections.Specialized;
@@ -26,6 +27,7 @@ using Gum.ViewModels;
 using WpfDataUi;
 using FluentIcons.Avalonia;
 using Gum.Avalonia.Themes;
+using Gum.Avalonia.Plugins.TreeView;
 
 namespace Gum.Avalonia.Plugins.VariableGrid;
 
@@ -57,12 +59,7 @@ public sealed class VariablesTabView : DockPanel, IVariablesTabView
         _variablesGrid.RowPairs = VariableGridRows.Pairs;
         _variablesGrid.AlternatesRowBackgrounds = false;
 
-        Border stateBanner = new Border { Padding = new Thickness(6, 3) };
-        stateBanner.Bind(Border.BackgroundProperty, new Binding(nameof(MainControlViewModel.StateBackground)) { Converter = DrawingColorToBrushConverter.Instance });
-        stateBanner.Bind(IsVisibleProperty, new Binding(nameof(MainControlViewModel.HasStateInformation)));
-        TextBlock stateText = new TextBlock { Foreground = Brushes.Black };
-        stateText.Bind(TextBlock.TextProperty, new Binding(nameof(MainControlViewModel.StateInformation)));
-        stateBanner.Child = stateText;
+        StateEditingIndicatorBar stateBanner = new StateEditingIndicatorBar();
 
         TextBlock errors = new TextBlock { Foreground = Brushes.OrangeRed, TextWrapping = TextWrapping.Wrap, Margin = new Thickness(4, 2) };
         errors.Bind(TextBlock.TextProperty, new Binding(nameof(MainControlViewModel.ErrorInformation)));
@@ -96,6 +93,7 @@ public sealed class VariablesTabView : DockPanel, IVariablesTabView
             BorderThickness = new Thickness(0),
             Classes = { GumChromeStyles.IconButtonClass },
         };
+        AvaloniaTreeIcons.FollowBaseFontSize((Control)clearFilter.Content, 12);
         ToolTip.SetTip(clearFilter, "Clear filter");
         clearFilter.Bind(IsVisibleProperty, new Binding(nameof(MainControlViewModel.IsFilterWatermarkVisible)) { Converter = BoolConverters.Not });
         clearFilter.Click += (_, _) =>
@@ -112,6 +110,7 @@ public sealed class VariablesTabView : DockPanel, IVariablesTabView
         Grid.SetColumn(filterBox, 1);
         Grid filterRow = new Grid { Margin = new Thickness(2, 2, 2, 4), ColumnDefinitions = new ColumnDefinitions("Auto,*") };
         FluentIcon searchIcon = GumFluentIcons.Create(FluentIcons.Common.Icon.Search, 16);
+        AvaloniaTreeIcons.FollowBaseFontSize(searchIcon, 16);
         searchIcon.Margin = new Thickness(2, 0, 4, 0);
         searchIcon.VerticalAlignment = VerticalAlignment.Center;
         filterRow.Children.Add(searchIcon);

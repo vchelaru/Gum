@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+
 namespace Gum.ProjectServices;
 
 /// <summary>
@@ -23,7 +25,15 @@ public interface IPlatformProjectScaffolder
     /// plain Forms template. Takes precedence over <paramref name="includeFormsTemplate"/>.
     /// </param>
     /// <param name="useXmlFormat">Whether the Gum project is the XML <c>.gumx</c> format instead of <c>.gumj</c>; the generated code loads whichever is written.</param>
+    /// <param name="linkedAddOns">
+    /// Package ids (see <see cref="RecommendedPackages.ForSourceLinked"/>) to reference as projects of the checkout, with their init
+    /// lines in the host. Only used with <paramref name="gumSourceDirectory"/>; the project fails if one is not in the checkout.
+    /// </param>
+    /// <param name="preview">
+    /// Whether the Gum package reference may resolve to a preview (prerelease) version: <c>Version="*-*"</c> instead of <c>Version="*"</c>,
+    /// which does not resolve prereleases. Ignored with <paramref name="gumSourceDirectory"/>.
+    /// </param>
     PlatformProjectResult Create(
         string projectDirectory, HostPlatform platform, bool includeFormsTemplate, string? gumSourceDirectory = null,
-        string? themeDirectory = null, bool useXmlFormat = false);
+        string? themeDirectory = null, bool useXmlFormat = false, IReadOnlyList<string>? linkedAddOns = null, bool preview = false);
 }

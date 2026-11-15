@@ -29,7 +29,8 @@ public partial class EditingManager
             _setVariableLogic,
             _circularReferenceManager,
             _favoriteComponentManager,
-            _hotkeyManager);
+            _hotkeyManager,
+            _projectRestrictions);
         _isContextMenuOpen = isContextMenuOpen;
     }
 

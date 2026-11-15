@@ -116,10 +116,9 @@ public class ElementSaveDisplayerCompositeReferenceTests : BaseTestClass
         }
 
         List<VariableGridEntry>? members = null;
-        System.Threading.Tasks.Task built = System.Threading.Tasks.Task.Run(() =>
-            members = _displayer.GetCategories(_screen, first, _screenDefaultState, null).SelectMany(category => category.Members).ToList());
-        built.Wait(5000).ShouldBeTrue("the Variables grid froze on a circular reference (#6871)");
-        built.GetAwaiter().GetResult();
+        Gum.Tests.Shared.FreezeGuard.Run(
+            () => members = _displayer.GetCategories(_screen, first, _screenDefaultState, null).SelectMany(category => category.Members).ToList(),
+            "the Variables grid froze on a circular reference (#6871)");
 
         members!.First(member => member.RootVariableName == "Width").DetailText.ShouldBe("Set by B.Width + 1");
     }

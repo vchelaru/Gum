@@ -46,5 +46,13 @@ namespace Gum.ProjectServices.CodeGeneration
 
         public bool LocalizeElement { get; set; }
 
+        /// <summary>
+        /// When true, the element's generated file is wrapped in <c>#if DEBUG</c> and every generated
+        /// reference to the element from other elements is too, so release builds leave it out.
+        /// Omitted from the .codsj file while false, so files written before this existed keep their bytes.
+        /// </summary>
+        [Newtonsoft.Json.JsonProperty(DefaultValueHandling = Newtonsoft.Json.DefaultValueHandling.Ignore)]
+        public bool DebugOnly { get; set; }
+
    }
 }

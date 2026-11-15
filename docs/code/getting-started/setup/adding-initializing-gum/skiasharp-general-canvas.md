@@ -2,32 +2,32 @@
 
 ## Introduction
 
-This page is for projects that render with SkiaSharp but don't fit one of Gum's dedicated Skia hosts (.NET MAUI, WPF, or Silk.NET). It assumes you already have your own `SKCanvas` rendering in your project, gotten however your platform requires. Skia itself is just a 2D graphics API, not a windowing or input system, so beyond "get an `SKCanvas` on screen," Gum can't offer platform-specific setup guidance here, that part is entirely up to your own project.
+This page is for projects that render with SkiaSharp but don't fit one of Gum's dedicated SkiaSharp hosts (see [Runtimes](../../../about/runtimes.md)). It assumes you already have your own `SKCanvas` rendering in your project, gotten however your platform requires. Skia itself is just a 2D graphics API, not a windowing or input system, so beyond "get an `SKCanvas` on screen," Gum can't offer platform-specific setup guidance here, that part is entirely up to your own project. To draw into an offscreen surface and read the pixels back instead, see [Rendering to an Image](skiasharp-rendering-to-an-image.md).
 
 {% hint style="info" %}
-If your project is .NET MAUI, WPF, or Silk.NET, use that page instead: [.NET MAUI](.net-maui.md), [WPF](wpf.md), [Silk.NET](silk.net.md). Each of those wires up a canvas view (or window) for you, and Silk.NET also wires up real mouse/keyboard input. This page is for everything else.
+If your engine or framework has its own page in [Adding/Initializing Gum](README.md), use that page instead. Each of those wires up a canvas view or window for you. This page is for everything else.
 {% endhint %}
 
 {% hint style="warning" %}
-This setup is rendering and layout only. There is no supported way to wire mouse, keyboard, or Forms control interactivity (hover, click, focus) here, not even as DIY glue code. If you need interactive Forms controls on SkiaSharp, use the Silk.NET, MAUI, or WPF setup instead, each of which has a real input story.
+This setup is rendering and layout only. There is no supported way to wire mouse, keyboard, or Forms control interactivity (hover, click, focus) here, not even as DIY glue code. If you need interactive Forms controls on SkiaSharp, use the dedicated setup page for your engine or framework instead (see [Adding/Initializing Gum](README.md)).
 {% endhint %}
 
 ## Adding Gum NuGet package
 
 The easiest way to add Gum to your project is to use the NuGet package. Open your project in your preferred IDE, or add Gum through the command line.
 
-Add the Gum.SkiaSharp NuGet package ([https://www.nuget.org/packages/Gum.SkiaSharp](https://www.nuget.org/packages/Gum.SkiaSharp))
+Add the Gum.SkiaSharp.Standalone NuGet package ([https://www.nuget.org/packages/Gum.SkiaSharp.Standalone](https://www.nuget.org/packages/Gum.SkiaSharp.Standalone))
 
 Modify csproj:
 
 ```xml
-<PackageReference Include="Gum.SkiaSharp" />
+<PackageReference Include="Gum.SkiaSharp.Standalone" />
 ```
 
 Or add through command line:
 
 ```bash
-dotnet add package Gum.SkiaSharp
+dotnet add package Gum.SkiaSharp.Standalone
 ```
 
 {% hint style="warning" %}
@@ -44,53 +44,56 @@ If you have already added the Gum NuGet package to your project, remove it.
 
 Add the following project to your solution:
 
-* \<Gum Root>/Runtimes/SkiaGum/SkiaGum.csproj
+* \<Gum Root>/Runtimes/SkiaGum.Standalone/SkiaGum.Standalone.csproj
 
-`SkiaGum.csproj` already references `GumCommon` itself, so you do not need to add `GumCommon` separately.
+`SkiaGum.Standalone.csproj` already references `SkiaGum` and `GumCommon` itself, so you do not need to add them separately.
 
-Next, add SkiaGum as a project reference in your game project. Your project might look like this depending on the location of the Gum repository relative to your game project:
+Next, add SkiaGum.Standalone as a project reference in your game project. Your project might look like this depending on the location of the Gum repository relative to your game project:
 
 ```xml
-<ProjectReference Include="..\Gum\Runtimes\SkiaGum\SkiaGum.csproj" />
+<ProjectReference Include="..\Gum\Runtimes\SkiaGum.Standalone\SkiaGum.Standalone.csproj" />
 ```
 
 ## Initializing Gum
 
 {% hint style="info" %}
-`GumService` for this page's setup is available in `Gum.SkiaSharp` starting September 2026, or now if building Gum from source. Before that, WPF and MAUI hosts still get their own copy of the same type through their dedicated packages (see [WPF](wpf.md) / [.NET MAUI](.net-maui.md)); this page's setup did not have one until now.
+`GumService` for this page's setup is available in `Gum.SkiaSharp.Standalone` starting September 2026, or now if building Gum from source. Before that, WPF and MAUI hosts still get their own copy of the same type through their dedicated packages (see [WPF](wpf.md) / [.NET MAUI](.net-maui.md)); this page's setup did not have one until now.
 {% endhint %}
 
-`Gum.SkiaSharp` includes a render-only `GumService`, the same `Initialize`/`Update`/`Draw`/`HandleResize` API shape used by the dedicated Silk.NET host (see [Silk.NET](silk.net.md)), just without input. Call `GumService.Default.Initialize` once you have an `SKCanvas`, passing a `.gumj` project path only if you're loading one (omit it for a code-only setup):
+`Gum.SkiaSharp.Standalone` includes a render-only `GumService`, the same `Initialize`/`Update`/`Draw`/`HandleResize` API shape used by the dedicated SkiaSharp hosts, just without input. Call `GumUI.Initialize` once you have an `SKCanvas`, passing a `.gumj` project path only if you're loading one (omit it for a code-only setup):
 
 ```csharp
 // Initialize
 using Gum;
 using SkiaSharp;
 
-var bounds = canvas.DeviceClipBounds;
-GumService.Default.Initialize(canvas, bounds.Width, bounds.Height, "Content/GumProject/GumProject.gumj");
+GumService GumUI = GumService.Default;
+
+GumUI.Initialize(canvas, "Content/GumProject/GumProject.gumj");
 ```
+
+`Initialize` reads the size from `canvas.DeviceClipBounds`. If your canvas's clip is not configured yet, pass the size yourself with `GumUI.Initialize(canvas, width, height, "Content/GumProject/GumProject.gumj")`.
 
 Each frame, update and then draw:
 
 ```csharp
 // Update
-GumService.Default.Update(totalSecondsSinceStart);
+GumUI.Update(totalSecondsSinceStart);
 ```
 
 ```csharp
 // Draw
-GumService.Default.Draw();
+GumUI.Draw();
 ```
 
 Whenever your canvas is resized, tell Gum so layout re-runs against the new size:
 
 ```csharp
-GumService.Default.HandleResize(newWidth, newHeight);
+GumUI.HandleResize(newWidth, newHeight);
 ```
 
 {% hint style="info" %}
-Gum does not clear the canvas for you, so your own draw code is expected to clear or paint the background before calling `GumService.Default.Draw()`.
+Gum does not clear the canvas for you, so your own draw code is expected to clear or paint the background before calling `GumUI.Draw()`.
 {% endhint %}
 
 ## Adding Shader Support (Optional)
@@ -103,21 +106,17 @@ Add the NuGet package:
 dotnet add package Gum.SkiaSharp.ShadowDusk
 ```
 
-Then call `UseShadowDusk` after `GumService.Default.Initialize`:
+Then call `UseShadowDusk` after `GumUI.Initialize`:
 
 ```csharp
 // Initialize
-GumService.Default.Initialize(canvas, width, height, "Content/GumProject/GumProject.gumj");
-GumService.Default.UseShadowDusk();
+GumUI.Initialize(canvas, width, height, "Content/GumProject/GumProject.gumj");
+GumUI.UseShadowDusk();
 ```
 
 If linking to source instead of NuGet, add `<Gum Root>/Runtimes/SkiaGum.ShadowDusk/SkiaGum.ShadowDusk.csproj` to your solution.
 
-For loading, errors, and examples, see [Render Target Shaders on SkiaSharp](../../../standard-visuals/containerruntime.md#render-target-shaders-on-skiasharp).
-
-{% hint style="info" %}
-`Gum.SkiaSharp.ShadowDusk` is available in November 2026, or now if building Gum from source.
-{% endhint %}
+For loading, errors, and examples, see [Render Target Shaders on SkiaSharp](../../../standard-visuals/containerruntime.md#render-target-shaders-on-skiasharp). The supported formats are listed in [Shader Files](../../../files-and-fonts/supported-files.md#shader-files).
 
 ## Adding Expression Support (Optional)
 
@@ -129,12 +128,16 @@ Add the NuGet package:
 dotnet add package Gum.Expressions
 ```
 
-Then call `GumExpressionService.Initialize()` after `GumService.Default.Initialize`. Expression support is typically used with a Gum project that has variable references defined in the tool:
+Then call `UseExpressions` after `GumUI.Initialize`. Expression support is typically used with a Gum project that has variable references defined in the tool:
+
+{% hint style="info" %}
+Available in preview NuGet packages (use a `-preview` version), or now if building Gum from source.
+{% endhint %}
 
 ```csharp
 // Initialize
-GumService.Default.Initialize(canvas, width, height, "Content/GumProject/GumProject.gumj");
-GumExpressionService.Initialize();
+GumUI.Initialize(canvas, width, height, "Content/GumProject/GumProject.gumj");
+GumUI.UseExpressions();
 ```
 
 If linking to source instead of NuGet, add `<Gum Root>/Runtimes/GumExpressions/GumExpressions.csproj` to your solution.
@@ -147,7 +150,7 @@ Gum can be tested by adding a couple of renderables after Gum is initialized:
 
 ```csharp
 // Initialize
-GumService.Default.Initialize(canvas, width, height);
+GumUI.Initialize(canvas, width, height);
 
 var circle = new ColoredCircleRuntime();
 circle.Color = SKColors.Red;

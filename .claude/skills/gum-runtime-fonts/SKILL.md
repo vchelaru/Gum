@@ -9,6 +9,10 @@ Gum renders text using **BitmapFont** — a `.fnt` descriptor file plus one or m
 
 For crisp text under camera/layer zoom, see `docs/code/files-and-fonts/font-oversampling.md` — `TextRuntime.UseFontOversampling` rebuilds the font bigger automatically when zoom changes; unrelated to the three loading paths below.
 
+## Oversampled text positions
+
+While oversampled, a Text draws from the bigger display font but lays out with the pinned native font, and the two fonts' whole-pixel advances add up to different widths. Layout (wrapping, sizing) uses `MeasureString`; a position within a line (caret, selection, click, alignment offset) uses `IFormsText.MeasureDrawnString` or `GetDrawnCharacterAdvance`. Never fit the drawn glyphs to the measured width: the exact inverse raster ratio keeps each atlas pixel on one screen pixel.
+
 ## `.fnt` encodings
 
 BMFont defines three encodings for the same data, and `ParsedFontFile` picks a branch off the first character. Gum's tool and KernSmith both emit **text**, so that is the only branch normal users reach. XML requires hand-authoring a file from BMFont's XML export and deserializes via `XmlSerializer` (so it is not Native AOT safe); binary throws outright. Treat gaps confined to the XML or binary branch as near-zero user impact.
@@ -45,7 +49,7 @@ Six properties combine into a deterministic filename in `FontCache/`:
 
 Examples: `FontCache/Font18Arial.fnt`, `FontCache/Font24Times_New_Roman_o1_Bold.fnt`. A font file adds `_ttf` and, in a project at `Version` 6 or later, a path hash after it; see `gum-tool-font-generation`.
 
-`BmfcSave.GetFontCacheFileNameFor()` produces this name. Every property setter on TextRuntime (Font, FontSize, etc.) calls `UpdateToFontValues()`, which regenerates the filename and attempts to load.
+`BmfcSave.GetFontCacheFileNameFor()` produces this name. Every property setter on TextRuntime (Font, FontSize, etc.) calls `UpdateToFontValues()`, which regenerates the filename and attempts to load. The load happens at assignment, before layout, because layout measures the text from the loaded font; see "Layout Runs on Every Assignment" in **gum-property-assignment**.
 
 **Key gotcha:** Unless an `IInMemoryFontCreator` or `IRuntimeFontService` is registered, the `.fnt` file must already exist in `FontCache/`. Users often set `FontSize = 24` expecting it to work, but silently get `DefaultBitmapFont` because `Font24Arial.fnt` was never generated. There is no error or warning — the text just renders in the default font. A font that was missing is remembered as unresolvable (`_knownUnresolvableFontKeys` in `GetOrCreateBakedFont`) only while its file is still missing; the mark is dropped when the file appears.
 

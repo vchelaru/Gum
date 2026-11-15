@@ -1,4 +1,5 @@
-﻿using Gum.Content.AnimationChain;
+﻿using RaylibGum.Tests.Helpers;
+using Gum.Content.AnimationChain;
 using Gum.DataTypes;
 using Gum.Graphics.Animation;
 using Gum.GueDeriving;
@@ -24,19 +25,6 @@ public class SpriteAdditiveColorOperationTests : BaseTestClass
         BeginDrawing();
         GumService.Default.Draw();
         EndDrawing();
-    }
-
-    private static Color ReadRenderTargetCenter(RenderTexture2D renderTexture)
-    {
-        Image image = LoadImageFromTexture(renderTexture.Texture);
-        try
-        {
-            return GetImageColor(image, renderTexture.Texture.Width / 2, renderTexture.Texture.Height / 2);
-        }
-        finally
-        {
-            UnloadImage(image);
-        }
     }
 
     [Fact]
@@ -82,7 +70,7 @@ public class SpriteAdditiveColorOperationTests : BaseTestClass
         // Fully-opaque blue texture pixel. Add + white(255) should saturate every drawn pixel to
         // white regardless of the underlying art - the MonsterProjectWeb "un-revealed silhouette"
         // use case from #4792.
-        Color center = ReadRenderTargetCenter(Renderer.Self.TryGetBakedRenderTargetFor(cell)!.Value);
+        Color center = RaylibPixelHarness.ReadRawCenter(Renderer.Self.TryGetBakedRenderTargetFor(cell)!.Value);
 
         GumService.Default.Root.Children.Clear();
         UnloadTexture(texture);
@@ -120,7 +108,7 @@ public class SpriteAdditiveColorOperationTests : BaseTestClass
 
         DrawOnce();
 
-        Color center = ReadRenderTargetCenter(Renderer.Self.TryGetBakedRenderTargetFor(cell)!.Value);
+        Color center = RaylibPixelHarness.ReadRawCenter(Renderer.Self.TryGetBakedRenderTargetFor(cell)!.Value);
 
         GumService.Default.Root.Children.Clear();
         UnloadTexture(texture);

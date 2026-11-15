@@ -89,17 +89,14 @@ public class TextInputDialog : Panel
 }
 ```
 
-Before we look at the individual parts of the code, let's add an instance to our game so we can see what it looks like. Add the following code to your Initialize method:
+Before we look at the individual parts of the code, let's add an instance to our game so we can see what it looks like. Add the following code after `GumUI.Initialize`:
 
-<pre class="language-csharp"><code class="lang-csharp">protected override void Initialize()
-{
-    GumUi.Initialize(this);
-
-<strong>    var dialog = new TextInputDialog();
-</strong><strong>    dialog.AddToRoot();
-</strong><strong>    dialog.Anchor(Gum.Wireframe.Anchor.Center);
-</strong>}
-</code></pre>
+```csharp
+// Initialize
+var dialog = new TextInputDialog();
+dialog.AddToRoot();
+dialog.Anchor(Gum.Wireframe.Anchor.Center);
+```
 
 [Try on XnaFiddle.NET](https://xnafiddle.net/#code=H4sIAAAAAAAAA51VTW_bMAy951cIPTnAILRbTw06II3XtNi6Fk3a7qrYjC1EkQxZTvqB_vdRsmPLjoOuyyX24yP5TFJUkXOZkBsl1ZStYVqsR4PCQfhIL5Ve53sAnShptBK1xfOm0wJC0HyD-L5jCEtWCPPI84KJnD5-qyPwSKtcLQ39Ixm91Bhsq_TqAzOdapalPEIhg6xYCB6RSLA8J3N4NtcyK0zImVAJOSN3TIIYvA0I_n6xBQiSabXODHpaqPLOjbbp7pzJBnHG0sv-EjDk_HvlSi1hVNvyPRs5JxsmCig5761MHYXBsJPJpDynTzw2KUb5ejpqG66AJ6mpLLVpwzRZsGiVaFXIGK0StuQ3lzDDjHBfSMPXEAw7scZxPEm5iIPG1aM0IA1VtApsL5-4hqXtgYPoJRei38N-ZKEBlczMi8DK0nFk-AbsG9BZprmBWQpger3HWSZeZoYZCPrc6w-jrrfDTiG4lKCdpSoERopWDvBL0NBQD4ts98_JyXEvYSyjVOlOCUqQTkAa0Adr20TxdZazUulzU3lAWh2n9PBI7XE7-mFVEINvZ0edgljwQj1X2ebl20f5Kif_u0qkns3jfVN5vEvGg-QmR5otWsgMm79kgHsAB1HmXElrthC9B8Fsb-fqjmmsZXesC2OU_FQ7m7lufP0xbVCv86f9hFvNURMKVBJJ3hu9Upq_4jpkoqNYrS5cgEpu-RIcEFBr3Xl5vB1U9_j2Z7e1EZMRiP_J53t6XB-u804ceLTbZu-dnWsvgBPctPa_WrS79RzCBs_pDZMswelM6qXtOMV6Btra7ePDtd2hDba7Mdpr2qUKhuStjlV9dW_CwB7F4ahewFoZiAzERG1Aax4D2Sgek2scRdzF_BX2lrETRj2CjfiFtG-zR9B2ovFS8wppuxOXd1Bz7lp7v-GWPNububpXyvTZPrOBFiwHX_SwfQ8dKMNDFtuNa0s8x1NKkuqhvyYVuyZ1svebP1AQarb9h_ytVtOJAKaDiRK2EkrLpVBb0Bd4-3qaSs0uflepA_d0vg_-Ak_Oz1ofCQAA)
 
@@ -257,17 +254,13 @@ Therefore, the order of determining width for innerPanel is as as follows:
 
 If we change our prompt, notice that the textBox adjusts appropriately:
 
-<pre class="language-csharp"><code class="lang-csharp">protected override void Initialize()
-{
-    GumUi.Initialize(this);
+<pre class="language-csharp"><code class="lang-csharp">// Initialize
+var dialog = new TextInputDialog();
+dialog.AddToRoot();
+dialog.Anchor(Gum.Wireframe.Anchor.Center);
 
-    var dialog = new TextInputDialog();
-    dialog.AddToRoot();
-    dialog.Anchor(Gum.Wireframe.Anchor.Center);
-
-<strong>    dialog.PromptText = "This is a much longer prompt, so the dialog is wider:";
-</strong>}
-</code></pre>
+<strong>dialog.PromptText = "This is a much longer prompt, so the dialog is wider:";
+</strong></code></pre>
 
 [Try on XnaFiddle.NET](https://xnafiddle.net/#code=H4sIAAAAAAAAA51VUU_bMBB-76-w-pRKyIKNJyomlXYUtDEQLbBXk1xTq64vcpwWmPjvOydp4qSpGKuQSO6-u_tyd_6cpVLH7AY1TsUaptl62MtyEz3ySzTrdM_Ax6itQVV5vGg-zWACRm7Ivh84gYXIlH2UaSZUyh-_VhlkaDDFheW_teCXhpJt0aw-cPOpEclShkSkl2TPSoYsVCJN2Rxe7LVOMjuRQmHMztid0KB6f3qMfj_FMyiWGFwnliKdqYxOrXHl7nKXS5I7iyj3i8Gy829lKHeAYeVL93zsnG2EyqDAvDcqtRgGg1Ylu5Qpf5KRXVKWL6fDpuMKZLy0padybYRhzyJcxQYzHZFXw5b9khpmVBHuM23lGoJBK9coisZLqaKgDvUgtZFPMFwFbpZP0sDCzSA38UupVHeE-8jMADGZ2VdFneWj0MoNuDfgs8RIC7MlgO2MHiWJep1ZYSHoCq8-jOezHbQaIbUGk3vKRlCmcJUb_BbUMOIjQjf9c3Zy3AkY6XCJptWCwsjHoC2Yg72ts_g8i10p-eVbeYBalaeI8EDNdet_dyyYpbezfqshzniBL2W1efH2Ub0yyP-uwlLt5vG-qzjeBeJBS5sSzDVtIqyYvyZAOkCLqFOJ2rmdid-DEm62c7wThnrZXuvMWtSfGme913Wsv6a11Zv8aTfg1kjiRARRE8h741do5BvJoVAtxri6yBOUdIuX4ACBiusuysPtTNWMb3-0RxsKHYL6n3p-pIf1zVXdcW7s79TsvaW57gI4IaV1_0uh3cnzBDZ0Tm-EFjFtZ1yJdo7J1jMwzu8eH66dhta23Y3RlOm8VDBgf6pc5Vd3FgzcURwMKwE2aCG0EDHcgDEyArZBGbFrWkXSYvkGe2KcE-MewGU8Ys3b7BGM22i61LxGuulExR1Un7uG7tfYAudmM8d7RNvl-4wClTH1ZeaGOCfmjP4EW2fhkinUbiSFihyxFEm3YMeYYFtqjznr-_qcgt-JQfNyO9DbhyRyMu7mNqejz-LyobvRJboCtap3uz9gMDFi-w_1G_vDxwqECcaoXHvR6IXCLZgLutI9TgXnPH-baW7c4_ne-ws0GW6-dAkAAA)
 

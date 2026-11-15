@@ -105,6 +105,9 @@ internal class ScreenshotService
 
             graphicsDevice.Clear(
                 Microsoft.Xna.Framework.Color.Transparent);
+            // Draw with render-target bake blends so translucent content keeps its alpha over the
+            // transparent clear; HandleAfterRender un-premultiplies for the PNG.
+            Renderer.Self.IsDrawingToTransparentTarget = true;
         }
     }
 
@@ -113,12 +116,13 @@ internal class ScreenshotService
         if (nextScreenshotFileLocation != null && renderTarget != null)
         {
             Renderer.Self.GraphicsDevice?.SetRenderTarget(null);
+            Renderer.Self.IsDrawingToTransparentTarget = false;
 
             try
             {
-                using (var stream = System.IO.File.OpenWrite(nextScreenshotFileLocation))
+                using (var stream = System.IO.File.Create(nextScreenshotFileLocation))
                 {
-                    renderTarget.SaveAsPng(stream, renderTarget.Width, renderTarget.Height);
+                    global::RenderingLibrary.Content.TexturePremultiply.SaveAsUnpremultipliedPng(renderTarget, stream);
                 }
             }
             catch (Exception e)

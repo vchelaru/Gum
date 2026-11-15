@@ -387,6 +387,29 @@ public class StandardElementBackfillVersionGateTests : BaseTestClass
             "A v5 project should get ColorOperation back-filled into its standard.");
     }
 
+    [Fact]
+    public void Initialize_DoesNotInjectRaiseChildrenEventsOutsideOfBounds_IntoV7Container()
+    {
+        // Version 7 shipped in the November 2026 release without this variable, so a v7 project must not get it.
+        GumProjectSave project = MakeProjectWithBareStandard(
+            "Container", (int)GumProjectSave.GumxVersions.ShaderParametersExpansion, "Width", "Height", "Visible");
+
+        StateSave defaultState = DefaultStateAfterInitialize(project, "Container");
+
+        defaultState.Variables.Any(v => v.Name == "RaiseChildrenEventsOutsideOfBounds").ShouldBeFalse();
+    }
+
+    [Fact]
+    public void Initialize_InjectsRaiseChildrenEventsOutsideOfBounds_IntoV8Container()
+    {
+        GumProjectSave project = MakeProjectWithBareStandard(
+            "Container", (int)GumProjectSave.GumxVersions.RaiseChildrenEventsExpansion, "Width", "Height", "Visible");
+
+        StateSave defaultState = DefaultStateAfterInitialize(project, "Container");
+
+        defaultState.Variables.Any(v => v.Name == "RaiseChildrenEventsOutsideOfBounds").ShouldBeTrue();
+    }
+
     // ShaderParameters (#6988) is absent from older runtimes, so a project saved before it existed
     // must not have it back-filled into its Container standard.
     [Fact]

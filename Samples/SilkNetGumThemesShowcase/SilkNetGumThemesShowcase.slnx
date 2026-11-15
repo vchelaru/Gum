@@ -5,13 +5,13 @@
     <Project Path="../../Runtimes/SilkNetGum/SilkNetGum.csproj" />
   </Folder>
   <Folder Name="/Themes/">
-    <Project Path="../../Themes/Gum.Themes.Editor.SilkNet/Gum.Themes.Editor.SilkNet.csproj" />
-    <Project Path="../../Themes/Gum.Themes.DarkPro.SilkNet/Gum.Themes.DarkPro.SilkNet.csproj" />
-    <Project Path="../../Themes/Gum.Themes.ForestGlade.SilkNet/Gum.Themes.ForestGlade.SilkNet.csproj" />
-    <Project Path="../../Themes/Gum.Themes.Bubblegum.SilkNet/Gum.Themes.Bubblegum.SilkNet.csproj" />
-    <Project Path="../../Themes/Gum.Themes.Hazard.SilkNet/Gum.Themes.Hazard.SilkNet.csproj" />
-    <Project Path="../../Themes/Gum.Themes.Meadow.SilkNet/Gum.Themes.Meadow.SilkNet.csproj" />
-    <Project Path="../../Themes/Gum.Themes.Neon.SilkNet/Gum.Themes.Neon.SilkNet.csproj" />
-    <Project Path="../../Themes/Gum.Themes.Retro95.SilkNet/Gum.Themes.Retro95.SilkNet.csproj" />
+    <Project Path="../../Themes/Gum.Themes.Editor.Skia/Gum.Themes.Editor.Skia.csproj" />
+    <Project Path="../../Themes/Gum.Themes.DarkPro.Skia/Gum.Themes.DarkPro.Skia.csproj" />
+    <Project Path="../../Themes/Gum.Themes.ForestGlade.Skia/Gum.Themes.ForestGlade.Skia.csproj" />
+    <Project Path="../../Themes/Gum.Themes.Bubblegum.Skia/Gum.Themes.Bubblegum.Skia.csproj" />
+    <Project Path="../../Themes/Gum.Themes.Hazard.Skia/Gum.Themes.Hazard.Skia.csproj" />
+    <Project Path="../../Themes/Gum.Themes.Meadow.Skia/Gum.Themes.Meadow.Skia.csproj" />
+    <Project Path="../../Themes/Gum.Themes.Neon.Skia/Gum.Themes.Neon.Skia.csproj" />
+    <Project Path="../../Themes/Gum.Themes.Retro95.Skia/Gum.Themes.Retro95.Skia.csproj" />
   </Folder>
 </Solution>

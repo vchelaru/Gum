@@ -1,4 +1,6 @@
-﻿using Gum.DataTypes.Variables;
+﻿using Gum.DataTypes;
+using Gum.Wireframe;
+using Gum.DataTypes.Variables;
 using Shouldly;
 using System;
 using System.Collections.Generic;
@@ -46,5 +48,23 @@ public class StateSaveCategoryTests
         {
             state.Variables.Count.ShouldBe(0);
         }
+    }
+
+    [Fact]
+    public void ColorName_IsEditorOnlyMetadata_SoAColoredCategoryStillAppliesItsStatesAtRuntime()
+    {
+        ComponentSave component = new ComponentSave { Name = "Button", BaseType = "Container" };
+        component.States.Add(new StateSave { Name = "Default" });
+        StateSaveCategory category = new StateSaveCategory { Name = "Size", ColorName = "Indigo" };
+        StateSave large = new StateSave { Name = "Large" };
+        large.Variables.Add(new VariableSave { Name = "Width", Type = "float", Value = 200f, SetsValue = true });
+        category.States.Add(large);
+        component.Categories.Add(category);
+
+        GraphicalUiElement gue = new GraphicalUiElement();
+        gue.ElementSave = component;
+        gue.ApplyState(large);
+
+        gue.Width.ShouldBe(200f);
     }
 }

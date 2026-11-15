@@ -15,7 +15,7 @@ public class ListBoxVisual : BaseListBoxVisual
     public ListBoxVisual(bool fullInstantiation = true, bool tryCreateFormsObject = true) :
         base(fullInstantiation, tryCreateFormsObject)
     {
-        this.BackgroundColor = EditorStyling.ActiveStyle.Colors.PanelBackground;
+        this.BackgroundColor = EditorStyling.ActiveStyle.Colors.RecessedBackground;
 
         var rectangle = new RectangleRuntime();
         Background.Children.Add(rectangle);

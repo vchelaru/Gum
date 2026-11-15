@@ -333,8 +333,12 @@ public class TextBoxDisplay : DataUiDisplayBase, ISetDefaultable
         _scrubLogic.Begin(value, propertyType);
         _dragLastPosition = e.GetPosition(this);
         _hasScrubbed = false;
+        _labelHost.Background = ScrubHighlightBrush;
         return true;
     }
+
+    private static readonly global::Avalonia.Media.IBrush ScrubHighlightBrush =
+        new global::Avalonia.Media.SolidColorBrush(global::Avalonia.Media.Color.Parse("#40808080")).ToImmutable();
 
     private void HandleLabelScrubMoved(PointerEventArgs e)
     {
@@ -377,6 +381,7 @@ public class TextBoxDisplay : DataUiDisplayBase, ISetDefaultable
     private void EndLabelScrub()
     {
         _dragLastPosition = null;
+        _labelHost.Background = global::Avalonia.Media.Brushes.Transparent;
         if (_hasScrubbed)
         {
             _hasScrubbed = false;

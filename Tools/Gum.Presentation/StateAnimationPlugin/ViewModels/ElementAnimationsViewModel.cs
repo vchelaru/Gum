@@ -418,6 +418,8 @@ public partial class ElementAnimationsViewModel : ViewModel
                 _renameManager.HandleRename(
                     SelectedAnimation,
                     oldAnimationName, Animations, Element);
+
+                _undoManager.RecordAnimationRename(oldAnimationName, result);
             }
         }
     }

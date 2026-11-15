@@ -447,6 +447,11 @@ public class ImageRegionSelectionCore
     public event EventHandler? DoubleClick;
 
     /// <summary>
+    /// Raised when the canvas cursor completes a primary click (a release that did not end a drag).
+    /// </summary>
+    public event EventHandler? Click;
+
+    /// <summary>
     /// Raised when <see cref="DisplayScale"/> changes, such as when the window moves to a monitor
     /// with a different scale.
     /// </summary>
@@ -642,6 +647,11 @@ public class ImageRegionSelectionCore
 
             // The canvas cursor's double click, like the editor canvas's: a release that ended a
             // drag is not a click (#5286).
+            if (mCursor.PrimaryClick && !mCursor.HasDraggedSincePrimaryPush)
+            {
+                Click?.Invoke(this, EventArgs.Empty);
+            }
+
             if (mCursor.PrimaryDoubleClick)
             {
                 DoubleClick?.Invoke(this, EventArgs.Empty);

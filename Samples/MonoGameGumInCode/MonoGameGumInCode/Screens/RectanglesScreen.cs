@@ -49,9 +49,6 @@ namespace MonoGameGumInCode.Screens;
 // the black-to-white gradient the other backends show. Left as-is rather than special-cased (same
 // treatment as CirclesScreen.BuildRotationRow), not swapped out for an "unsupported" label.
 //
-// Blend runs on every backend except Skia (#if !SKIA) -- Skia's RectangleRuntime has no Blend
-// property at all, so calling it is a compile error there, not a no-op.
-//
 // Layout convention: every container that sets WidthUnits / HeightUnits to RelativeToChildren
 // also sets Width / Height = 0. RelativeToChildren means the final size is children-extent + the
 // explicit Width/Height; a non-zero value adds extra padding the layout almost never wants.
@@ -92,12 +89,9 @@ internal class RectanglesScreen : FrameworkElement
         right.Children.Add(BuildSection("Inscribed", BuildInscribedRow()));
         right.Children.Add(BuildSection("Rotation (filled)", BuildRotationRow(filled: true)));
         right.Children.Add(BuildSection("Rotation (outline)", BuildRotationRow(filled: false)));
-#if !SKIA
         right.Children.Add(BuildSection("Blend (additive #3458)", BuildBlendRow()));
-#endif
     }
 
-#if !SKIA
     // Issue #3458 — two overlapping-triad cells sit side by side: the left cell uses
     // Blend.Additive on all three rectangles so where red/green/blue overlap the channels sum
     // and the intersection brightens (R+G = yellow, R+G+B ~= white). The right cell is the SAME
@@ -149,7 +143,6 @@ internal class RectanglesScreen : FrameworkElement
         rect.Blend = blend;
         frame.Children.Add(rect);
     }
-#endif
 
     static ContainerRuntime BuildColumn()
     {

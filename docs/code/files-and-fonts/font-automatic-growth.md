@@ -15,23 +15,15 @@ You need two things, the same shape as [Font Oversampling](font-oversampling.md)
 1. Turn on the flag: `TextRuntime.UseAutomaticFontGrowth = true`. One `static` switch for the whole game, off by default.
 2. Give Gum a way to build and grow fonts while the game runs. KernSmith's `IGrowableFontCreator`/`IGrowableRaylibFontCreator` implementations support this, see [Dynamic KernSmith Generation](font-strategies.md#dynamic-kernsmith-generation).
 
-{% tabs %}
-{% tab title="MonoGame" %}
 ```csharp
+// Initialize
 TextRuntime.UseAutomaticFontGrowth = true;
-CustomSetPropertyOnRenderable.InMemoryFontCreator =
-    new KernSmithFontCreator(GraphicsDevice);
+GumUI.UseKernSmith();
 ```
-{% endtab %}
 
-{% tab title="Raylib" %}
-```csharp
-TextRuntime.UseAutomaticFontGrowth = true;
-CustomSetPropertyOnRenderable.InMemoryFontCreator =
-    new KernSmithRaylibFontCreator();
-```
-{% endtab %}
-{% endtabs %}
+{% hint style="info" %}
+Available in preview NuGet packages (use a `-preview` version), or now if building Gum from source.
+{% endhint %}
 
 After that it runs on its own. Assigning `Text` (or `TextNoTranslate`) checks the new string against the font's known characters; anything missing is added to the live texture before the text wraps and measures, so there is no stale frame where the character is still missing.
 

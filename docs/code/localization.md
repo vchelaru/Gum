@@ -18,40 +18,28 @@ At runtime the string IDs are displayed by default:
 
 <figure><img src="../.gitbook/assets/06_04 53 46.png" alt=""><figcaption><p>Screen displaying string IDs</p></figcaption></figure>
 
-We can select our string IDs before creating our screen:
+After [loading the Gum project](getting-started/setup/loading-a-gum-project-.gumx.md), we can select our string IDs before creating our screen:
 
 {% tabs %}
 {% tab title="Generated Code" %}
 ```csharp
-protected override void Initialize()
-{
-    var project = GumUI.Initialize(this, "GumProject/GumProject.gumj");
+// Initialize
+// set the language index before instantiating a screen or component:
+GumUI.LocalizationService.CurrentLanguage = 1;
 
-    // set the language index before instantiating a screen or component:
-    GumUI.LocalizationService.CurrentLanguage = 1;
-    
-    var screen = new MainMenu();
-    screen.AddToRoot();
-
-    base.Initialize();
-}
+var screen = new MainMenu();
+screen.AddToRoot();
 ```
 {% endtab %}
 
 {% tab title="No Generated Code" %}
 ```csharp
-protected override void Initialize()
-{
-    var project = GumUI.Initialize(this, "GumProject/GumProject.gumj");
+// Initialize
+// set the language index before calling ToGraphicalUiElement:
+GumUI.LocalizationService.CurrentLanguage = 1;
 
-    // set the language index before calling ToGraphicalUiElement:
-    GumUI.LocalizationService.CurrentLanguage = 1;
-
-    var screen = project.Screens.First().ToGraphicalUiElement();
-    screen.AddToRoot();
-
-    base.Initialize();
-}
+var screen = ObjectFinder.Self.GumProjectSave.Screens.First().ToGraphicalUiElement();
+screen.AddToRoot();
 ```
 {% endtab %}
 {% endtabs %}
@@ -92,81 +80,69 @@ T_Greeting,"Welcome, this is a localized project example","Bienvenido, este es u
 {% tabs %}
 {% tab title="XNA-like (MonoGame/KNI/FNA)" %}
 ```csharp
-// Initialize
 using Gum.Localization; // for extension methods
 using Microsoft.Xna.Framework; // for TitleContainer
-// ...
-protected override void Initialize()
-{
-    //var project = GumUI.Initialize(this, "GumProject/GumProject.gumj");
-    GumUI.Initialize(this);
 
-    var localizationService = GumUI.LocalizationService;
+// Initialize
+var localizationService = GumUI.LocalizationService;
 
-    // TitleContainer opens content bundled into the app package.
-    // This is required on iOS, Android, consoles, and web.
-    using var stream = TitleContainer.OpenStream("Content/LocalizationDB.csv");
-    localizationService.AddCsvDatabase(stream);
+// TitleContainer opens content bundled into the app package.
+// This is required on iOS, Android, consoles, and web.
+using var stream = TitleContainer.OpenStream("Content/LocalizationDB.csv");
+localizationService.AddCsvDatabase(stream);
 
-    // set the language index before creating your UI:
-    localizationService.CurrentLanguage = 2;
+// set the language index before creating your UI:
+localizationService.CurrentLanguage = 2;
 
-    // create UI using the string IDs:
-    StackPanel panel = new();
-    panel.AddToRoot();
-    panel.Anchor(Anchor.Center);
+// create UI using the string IDs:
+StackPanel panel = new();
+panel.AddToRoot();
+panel.Anchor(Anchor.Center);
 
-    Label label = new();
-    panel.AddChild(label);
-    label.Text = "T_Greeting";
+Label label = new();
+panel.AddChild(label);
+label.Text = "T_Greeting";
 
-    Button okButton = new();
-    panel.AddChild(okButton);
-    okButton.Text = "T_OK";
+Button okButton = new();
+panel.AddChild(okButton);
+okButton.Text = "T_OK";
 
-    Button cancelButton = new();
-    panel.AddChild(cancelButton);
-    cancelButton.Text = "T_Cancel";
-}
+Button cancelButton = new();
+panel.AddChild(cancelButton);
+cancelButton.Text = "T_Cancel";
 ```
 {% endtab %}
 
 {% tab title="Non-XNA (raylib, SkiaSharp, etc.)" %}
 ```csharp
-// Initialize
 using Gum.Localization; // for extension methods
-// ...
-protected override void Initialize()
-{
-    //var project = GumUI.Initialize(this, "GumProject/GumProject.gumj");
-    GumUI.Initialize(this);
 
-    var localizationService = GumUI.LocalizationService;
+// Initialize
+var localizationService = GumUI.LocalizationService;
 
-    // obtain a stream to your localization data
-    using var stream = System.IO.File.OpenRead("Content/LocalizationDB.csv");
-    localizationService.AddCsvDatabase(stream);
+// obtain a stream to your localization data
+using var stream = System.IO.File.OpenRead("Content/LocalizationDB.csv");
+localizationService.AddCsvDatabase(stream);
 
-    // set the language index before creating your UI:
-    localizationService.CurrentLanguage = 2;
+// set the language index before creating your UI:
+localizationService.CurrentLanguage = 2;
 
-    // create UI using the string IDs:
-    StackPanel panel = new();
-    panel.AddToRoot();
-    panel.Anchor(Anchor.Center);
+// create UI using the string IDs:
+StackPanel panel = new();
+panel.AddToRoot();
+panel.Anchor(Anchor.Center);
 
-    Label label = new();
-    panel.AddChild(label);
-    label.Text = "T_Greeting";
+Label label = new();
+panel.AddChild(label);
+label.Text = "T_Greeting";
 
-    Button okButton = new();
-    panel.AddChild(okButton);
-    okButton.Text = "T_OK";
+Button okButton = new();
+panel.AddChild(okButton);
+okButton.Text = "T_OK";
 
-    Button cancelButton = new();
-    panel.AddChild(cancelButton);
-    cancelButton.Text = "T_Cancel";
-}
+Button cancelButton = new();
+panel.AddChild(cancelButton);
+cancelButton.Text = "T_Cancel";
 ```
 {% endtab %}
 {% endtabs %}
@@ -194,57 +170,47 @@ A satellite `Strings.es.resx` sits next to it with the Spanish translations (sam
 The path-based overload uses `Directory.GetFiles` to auto-discover satellites, which does not work with bundled content. Open the base file and each satellite as streams via `TitleContainer` and pass them as `(languageName, stream)` pairs:
 
 ```csharp
-// Initialize
 using Gum.Localization; // for extension methods
 using Microsoft.Xna.Framework; // for TitleContainer
-// ...
-protected override void Initialize()
+
+// Initialize
+var localizationService = GumUI.LocalizationService;
+
+var streams = new (string languageName, System.IO.Stream stream)[]
 {
-    GumUI.Initialize(this);
+    ("Default", TitleContainer.OpenStream("Content/Strings.resx")),
+    ("es", TitleContainer.OpenStream("Content/Strings.es.resx")),
+};
 
-    var localizationService = GumUI.LocalizationService;
+localizationService.AddResxDatabase(streams);
 
-    var streams = new (string languageName, System.IO.Stream stream)[]
-    {
-        ("Default", TitleContainer.OpenStream("Content/Strings.resx")),
-        ("es", TitleContainer.OpenStream("Content/Strings.es.resx")),
-    };
+// index 0 is the string ID, index 1 is "Default" (base file),
+// index 2+ are satellites in the order they are passed
+localizationService.CurrentLanguage = 2; // Spanish
 
-    localizationService.AddResxDatabase(streams);
-
-    // index 0 is the string ID, index 1 is "Default" (base file),
-    // index 2+ are satellites in the order they are passed
-    localizationService.CurrentLanguage = 2; // Spanish
-
-    Label label = new();
-    label.AddToRoot();
-    label.Text = "T_Greeting";
-}
+Label label = new();
+label.AddToRoot();
+label.Text = "T_Greeting";
 ```
 {% endtab %}
 
 {% tab title="Non-XNA (raylib, SkiaSharp, etc.)" %}
 ```csharp
-// Initialize
 using Gum.Localization; // for extension methods
-// ...
-protected override void Initialize()
-{
-    GumUI.Initialize(this);
 
-    var localizationService = GumUI.LocalizationService;
+// Initialize
+var localizationService = GumUI.LocalizationService;
 
-    // pass the path to the base .resx file; satellites are auto-discovered
-    localizationService.AddResxDatabase("Content/Strings.resx");
+// pass the path to the base .resx file; satellites are auto-discovered
+localizationService.AddResxDatabase("Content/Strings.resx");
 
-    // index 0 is the string ID, index 1 is "Default" (base file),
-    // index 2+ are satellites in the order they are discovered
-    localizationService.CurrentLanguage = 2; // Spanish
+// index 0 is the string ID, index 1 is "Default" (base file),
+// index 2+ are satellites in the order they are discovered
+localizationService.CurrentLanguage = 2; // Spanish
 
-    Label label = new();
-    label.AddToRoot();
-    label.Text = "T_Greeting";
-}
+Label label = new();
+label.AddToRoot();
+label.Text = "T_Greeting";
 ```
 {% endtab %}
 {% endtabs %}
@@ -336,7 +302,7 @@ The set of languages is the union of cultures across all base files. If `Strings
 {% hint style="warning" %}
 **Bundled-content platforms and `.gumj` auto-load**
 
-When you pass a `.gumj` file to `GumUI.Initialize(this, "…gumj")` that references RESX localization files, Gum auto-loads them from the filesystem using `Directory.GetFiles` for satellite discovery. This works on desktop platforms (Windows, Linux, macOS) and on any platform that exposes a real filesystem to the running app.
+When you [load a `.gumj` project](getting-started/setup/loading-a-gum-project-.gumx.md) that references RESX localization files, Gum auto-loads them from the filesystem using `Directory.GetFiles` for satellite discovery. This works on desktop platforms (Windows, Linux, macOS) and on any platform that exposes a real filesystem to the running app.
 
 It does **not** work on bundled-content platforms — iOS, Android, consoles, and web — where `Content/` files are packed into the app bundle and can only be read via `TitleContainer.OpenStream`. On those platforms, skip the `.gumj`-driven auto-load for RESX and call `AddResxDatabase(groups, ...)` manually with streams as shown in the XNA-like tab above. CSV auto-load has the same limitation.
 
@@ -386,7 +352,7 @@ If a control's `Text` is data-bound, refreshing the language will overwrite the 
 
 ## Forms Control Localization
 
-Forms controls localize text automatically when a `LocalizationService` is active. When you assign a string ID to a control's `Text` property (or `Header` for MenuItem, `Placeholder` for TextBox), Gum translates it at assignment time. Each control that supports localization also provides a no-translate method for setting literal text that should not be translated.
+Forms controls localize text automatically when a `LocalizationService` is active. When you assign a string ID to a control's `Text` property (or `Header` for MenuItem and TabItem, `Placeholder` for TextBox), Gum translates it at assignment time. Each control that supports localization also provides a no-translate method for setting literal text that should not be translated.
 
 ### Localization by Control
 
@@ -401,6 +367,7 @@ The following table shows how each Forms control handles localization:
 | TextBox      | `Text`             | `SetTextNoTranslate()`        | Setting `Text` in code localizes. User-typed text does not localize. See below. |
 | TextBoxBase  | `Placeholder`      | `SetPlaceholderNoTranslate()` | Placeholder text localizes when set in code.                                    |
 | MenuItem     | `Header`           | `SetHeaderNoTranslate()`      |                                                                                 |
+| TabItem      | `Header`           | `SetHeaderNoTranslate()`      | `TabControl` data items show their `ToString()` without translation.            |
 | PasswordBox  | —                  | —                             | Mask characters are never localized.                                            |
 | ComboBox     | —                  | —                             | Text comes from selected item. Pre-translate items before adding.               |
 | ListBoxItem  | —                  | —                             | Text comes from data items. Pre-translate items before adding.                  |
@@ -455,3 +422,25 @@ label.SetTextNoTranslate("1,250 pts");
 {% hint style="info" %}
 `SetTextNoTranslate` is a method rather than a property because the underlying text component only stores the final string. A `TextNoTranslate` property getter would be misleading since there is no way to distinguish translated from untranslated text after assignment.
 {% endhint %}
+
+### Inserting Values into Translated Text
+
+To put a runtime value in a translated string, store the string with `string.Format` placeholders such as `{0}` and `{1}`. Translate the key, format the result, and assign it with `SetTextNoTranslate`. For example, `T_PickupMessage` in English might be `{0} picked up {1} coins. Press {2} to continue.`
+
+```csharp
+// Initialize
+// T_PickupMessage in English: "{0} picked up {1} coins. Press {2} to continue."
+var label = new Label();
+label.AddToRoot();
+
+void ApplyPickupMessage()
+{
+    var template = GumUI.LocalizationService.Translate("T_PickupMessage");
+    label.SetTextNoTranslate(string.Format(template, "Ana", 12, "Enter"));
+}
+
+ApplyPickupMessage();
+GumUI.LocalizationService.CurrentLanguageChanged += ApplyPickupMessage;
+```
+
+Text set through `SetTextNoTranslate` is not refreshed when the language changes, so the sample runs the method again on `CurrentLanguageChanged`. Each language can place the placeholders in any order, such as `{2}` before `{0}`. To show a literal brace, write `{{` or `}}` in the stored string.

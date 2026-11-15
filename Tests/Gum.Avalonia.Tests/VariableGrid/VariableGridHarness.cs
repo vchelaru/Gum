@@ -295,8 +295,8 @@ internal sealed class VariableGridHarness : IDisposable
         ThrowIfPluginFailed();
     }
 
-    /// <summary>Types <paramref name="lines"/> into a string-list row (VariableReferences) and applies them with Ctrl+Enter.</summary>
-    public void TypeLinesAndApply(string memberName, params string[] lines)
+    /// <summary>Types <paramref name="lines"/> into a string-list row (VariableReferences) without applying them.</summary>
+    public void TypeLines(string memberName, params string[] lines)
     {
         TextBox box = Editor<StringListTextBoxDisplay>(memberName).EditorTextBox;
         _driver.Click(box);
@@ -304,10 +304,15 @@ internal sealed class VariableGridHarness : IDisposable
         box.SelectAll();
         // The box takes new lines as typed text; Enter alone would add a line, not apply.
         _driver.Window.KeyTextInput(string.Join("\n", lines));
+    }
+
+    /// <summary>Types <paramref name="lines"/> into a string-list row (VariableReferences) and applies them with Ctrl+Enter.</summary>
+    public void TypeLinesAndApply(string memberName, params string[] lines)
+    {
+        TypeLines(memberName, lines);
         _driver.Press(Key.Enter, PhysicalKey.Enter, RawInputModifiers.Control);
         ThrowIfPluginFailed();
     }
-
     /// <summary>
     /// Opens a combo row's drop-down and picks <paramref name="item"/>, which commits it as a click
     /// in the list does. The drop-down's popup is its own top level, which the window's pointer

@@ -2,6 +2,7 @@ using FlatRedBall.Glue.StateInterpolation;
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using Gum.Mvvm;
+using Gum.Plugins.InternalPlugins.StatePlugin;
 using StateAnimationPlugin.Managers;
 using Gum.StateAnimation.SaveClasses;
 using System;
@@ -28,6 +29,16 @@ public class AnimatedKeyframeViewModel : ViewModel, IComparable
     public string StateName
     {
         get => Get<string>();
+        set => Set(value);
+    }
+
+    /// <summary>
+    /// The palette name of the color of the category of <see cref="StateName"/>, or null when the state is
+    /// uncategorized, missing or in an uncolored category. The keyframe list draws a dot in it.
+    /// </summary>
+    public string? CategoryColorName
+    {
+        get => Get<string?>();
         set => Set(value);
     }
 
@@ -234,6 +245,7 @@ public class AnimatedKeyframeViewModel : ViewModel, IComparable
         var newInstance = new AnimatedKeyframeViewModel();
 
         newInstance.StateName = StateName;
+        newInstance.CategoryColorName = CategoryColorName;
         newInstance.AnimationName = AnimationName;
         newInstance.EventName = EventName;
         newInstance.Time = Time;
@@ -256,6 +268,7 @@ public class AnimatedKeyframeViewModel : ViewModel, IComparable
 
         toReturn.StateName = save.StateName;
         toReturn.Time = save.Time;
+        toReturn.CategoryColorName = CategoryColors.GetNameOfState(elementSave, save.StateName);
         toReturn.InterpolationType = save.InterpolationType;
         toReturn.Easing = save.Easing;
 

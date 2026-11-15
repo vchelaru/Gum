@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Gum.DataTypes;
 using Gum.Managers;
@@ -36,13 +38,20 @@ public class AddInstanceDialogViewModel : GetUserStringDialogBaseViewModel
         INameVerifier nameVerifier, 
         IAddInstanceLogic addInstanceLogic,
         ISetVariableLogic setVariableLogic,
-        IUndoManager undoManager)
+        IUndoManager undoManager,
+        IProjectRestrictions projectRestrictions)
     {
         _undoManager = undoManager;
         _selectedState = selectedState;
         _nameVerifier = nameVerifier;
         _addInstanceLogic = addInstanceLogic;
         _setVariableLogic = setVariableLogic;
+
+        IReadOnlyList<string> supportedTypes = projectRestrictions.SupportedStandardTypes;
+        if (supportedTypes.Count > 0 && !supportedTypes.Contains(TypeToCreate))
+        {
+            TypeToCreate = supportedTypes[0];
+        }
     }
 
     public override void OnAffirmative()

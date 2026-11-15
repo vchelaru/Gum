@@ -87,7 +87,7 @@ public class ComboBoxVisual : BaseComboBoxVisual
         fill.HeightUnits = DimensionUnitType.RelativeToParent;
         fill.CornerRadius = CornerRadius;
         fill.IsFilled = true;
-        fill.FillColor = MeadowStyling.ActiveStyle.Colors.PeachLight;
+        fill.FillColor = MeadowStyling.ActiveStyle.Colors.Cream2;
         fill.StrokeWidth = 0;
         return fill;
     }
@@ -165,23 +165,23 @@ public class ComboBoxVisual : BaseComboBoxVisual
     private void WireStates()
     {
         States.Enabled.Apply = () => Apply(
-            fill: MeadowStyling.ActiveStyle.Colors.PeachLight, border: new Color(0, 0, 0, 0),
+            fill: MeadowStyling.ActiveStyle.Colors.Cream2, border: new Color(0, 0, 0, 0),
             text: MeadowStyling.ActiveStyle.Colors.TealDark, glyph: MeadowStyling.ActiveStyle.Colors.CoralDark, ring: false);
 
         States.Highlighted.Apply = () => Apply(
-            fill: MeadowStyling.ActiveStyle.Colors.PeachLight, border: MeadowStyling.ActiveStyle.Colors.PeachDark,
+            fill: MeadowStyling.ActiveStyle.Colors.Cream2, border: MeadowStyling.ActiveStyle.Colors.PeachDark,
             text: MeadowStyling.ActiveStyle.Colors.TealDark, glyph: MeadowStyling.ActiveStyle.Colors.CoralDark, ring: false);
 
         States.Focused.Apply = () => Apply(
-            fill: MeadowStyling.ActiveStyle.Colors.White, border: MeadowStyling.ActiveStyle.Colors.Blue,
+            fill: MeadowStyling.ActiveStyle.Colors.Cream2, border: MeadowStyling.ActiveStyle.Colors.Blue,
             text: MeadowStyling.ActiveStyle.Colors.TealDark, glyph: MeadowStyling.ActiveStyle.Colors.CoralDark, ring: true);
 
         States.HighlightedFocused.Apply = () => Apply(
-            fill: MeadowStyling.ActiveStyle.Colors.White, border: MeadowStyling.ActiveStyle.Colors.Blue,
+            fill: MeadowStyling.ActiveStyle.Colors.Cream2, border: MeadowStyling.ActiveStyle.Colors.Blue,
             text: MeadowStyling.ActiveStyle.Colors.TealDark, glyph: MeadowStyling.ActiveStyle.Colors.CoralDark, ring: true);
 
         States.Pushed.Apply = () => Apply(
-            fill: MeadowStyling.ActiveStyle.Colors.PeachLight, border: MeadowStyling.ActiveStyle.Colors.PeachDark,
+            fill: MeadowStyling.ActiveStyle.Colors.Cream2, border: MeadowStyling.ActiveStyle.Colors.PeachDark,
             text: MeadowStyling.ActiveStyle.Colors.TealDark, glyph: MeadowStyling.ActiveStyle.Colors.Coral, ring: false);
 
         States.Disabled.Apply = () => Apply(

@@ -4,7 +4,7 @@
   <State>
     <Name>Default</Name>
     <Variable Type="float" Name="Background.CornerRadius" SetsValue="true">
-      <Value xsi:type="xsd:float">6</Value>
+      <Value xsi:type="xsd:float">4</Value>
     </Variable>
     <Variable Type="float" Name="Background.CustomRadiusBottomLeft" SetsValue="true">
       <Value xsi:type="xsd:float">24</Value>
@@ -40,13 +40,13 @@
       <Value xsi:type="xsd:string">DemoSettingsMenu</Value>
     </Variable>
     <Variable Type="int" Name="Background.StrokeBlue" SetsValue="true">
-      <Value xsi:type="xsd:int">20</Value>
+      <Value xsi:type="xsd:int">117</Value>
     </Variable>
     <Variable Type="int" Name="Background.StrokeGreen" SetsValue="true">
-      <Value xsi:type="xsd:int">28</Value>
+      <Value xsi:type="xsd:int">255</Value>
     </Variable>
     <Variable Type="int" Name="Background.StrokeRed" SetsValue="true">
-      <Value xsi:type="xsd:int">70</Value>
+      <Value xsi:type="xsd:int">232</Value>
     </Variable>
     <Variable Type="float" Name="Background.StrokeWidth" SetsValue="true">
       <Value xsi:type="xsd:float">1</Value>
@@ -441,6 +441,42 @@
     <Variable Type="PositionUnitType" Name="LabelInstance1.YUnits" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
     </Variable>
+    <Variable Type="string" Name="ListBoxItemInstance.ListItemDisplayText" SetsValue="true">
+      <Value xsi:type="xsd:string">1280 x 720</Value>
+    </Variable>
+    <Variable Type="string" Name="ListBoxItemInstance.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">ResolutionBox.InnerPanelInstance</Value>
+    </Variable>
+    <Variable Type="string" Name="ListBoxItemInstance1.ListItemDisplayText" SetsValue="true">
+      <Value xsi:type="xsd:string">1920 x 1080</Value>
+    </Variable>
+    <Variable Type="string" Name="ListBoxItemInstance1.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">ResolutionBox.InnerPanelInstance</Value>
+    </Variable>
+    <Variable Type="string" Name="ListBoxItemInstance2.ListItemDisplayText" SetsValue="true">
+      <Value xsi:type="xsd:string">2560 x 1440</Value>
+    </Variable>
+    <Variable Type="string" Name="ListBoxItemInstance2.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">ResolutionBox.InnerPanelInstance</Value>
+    </Variable>
+    <Variable Type="string" Name="ListBoxItemInstance3.ListItemDisplayText" SetsValue="true">
+      <Value xsi:type="xsd:string">Easy</Value>
+    </Variable>
+    <Variable Type="string" Name="ListBoxItemInstance3.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">ComboBoxInstance.ListBoxInstance.InnerPanelInstance</Value>
+    </Variable>
+    <Variable Type="string" Name="ListBoxItemInstance4.ListItemDisplayText" SetsValue="true">
+      <Value xsi:type="xsd:string">Normal</Value>
+    </Variable>
+    <Variable Type="string" Name="ListBoxItemInstance4.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">ComboBoxInstance.ListBoxInstance.InnerPanelInstance</Value>
+    </Variable>
+    <Variable Type="string" Name="ListBoxItemInstance5.ListItemDisplayText" SetsValue="true">
+      <Value xsi:type="xsd:string">Hard</Value>
+    </Variable>
+    <Variable Type="string" Name="ListBoxItemInstance5.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">ComboBoxInstance.ListBoxInstance.InnerPanelInstance</Value>
+    </Variable>
     <Variable Type="ChildrenLayout" Name="MarginContainer.ChildrenLayout" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
     </Variable>
@@ -800,7 +836,7 @@
       <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
       <Value>
         <string>FillColor = Components/ForestGlade/Styles.WindowBody.FillColor</string>
-        <string>StrokeColor = Components/ForestGlade/Styles.Bark.FillColor</string>
+        <string>StrokeColor = Components/ForestGlade/Styles.SunPale.FillColor</string>
       </Value>
     </VariableList>
     <VariableList xsi:type="VariableListSaveOfString">
@@ -843,37 +879,43 @@
   <Instance Name="MenuItems" BaseType="Container" />
   <Instance Name="TitleText" BaseType="Text" />
   <Instance Name="TitleText1" BaseType="Text" />
-  <Instance Name="DividerInstance" BaseType="ForestGlade/Elements/Divider" />
-  <Instance Name="DividerInstance4" BaseType="ForestGlade/Elements/Divider" />
-  <Instance Name="ResolutionLabel" BaseType="ForestGlade/Controls/Label" />
-  <Instance Name="ResolutionBox" BaseType="ForestGlade/Controls/ListBox" />
-  <Instance Name="DetectResolutionsButton" BaseType="ForestGlade/Controls/Button" />
-  <Instance Name="FullScreenCheckbox" BaseType="ForestGlade/Controls/CheckBox" />
-  <Instance Name="DividerInstance1" BaseType="ForestGlade/Elements/Divider" />
-  <Instance Name="MusicLabel" BaseType="ForestGlade/Controls/Label" />
-  <Instance Name="MusicSlider" BaseType="ForestGlade/Controls/Slider" />
-  <Instance Name="SoundLabel" BaseType="ForestGlade/Controls/Label" />
-  <Instance Name="SoundSlider" BaseType="ForestGlade/Controls/Slider" />
-  <Instance Name="DividerInstance2" BaseType="ForestGlade/Elements/Divider" />
-  <Instance Name="ControlLabel" BaseType="ForestGlade/Controls/Label" />
-  <Instance Name="RadioButtonInstance" BaseType="ForestGlade/Controls/RadioButton" />
-  <Instance Name="RadioButtonInstance1" BaseType="ForestGlade/Controls/RadioButton" />
-  <Instance Name="RadioButtonInstance2" BaseType="ForestGlade/Controls/RadioButton" />
-  <Instance Name="DividerInstance3" BaseType="ForestGlade/Elements/Divider" />
-  <Instance Name="DifficultyLabel" BaseType="ForestGlade/Controls/Label" />
+  <Instance Name="DividerInstance" BaseType="ForestGlade/Divider" />
+  <Instance Name="DividerInstance4" BaseType="ForestGlade/Divider" />
+  <Instance Name="ResolutionLabel" BaseType="ForestGlade/Label" />
+  <Instance Name="ResolutionBox" BaseType="ForestGlade/ListBox" />
+  <Instance Name="DetectResolutionsButton" BaseType="ForestGlade/Button" />
+  <Instance Name="FullScreenCheckbox" BaseType="ForestGlade/CheckBox" />
+  <Instance Name="DividerInstance1" BaseType="ForestGlade/Divider" />
+  <Instance Name="MusicLabel" BaseType="ForestGlade/Label" />
+  <Instance Name="MusicSlider" BaseType="ForestGlade/Slider" />
+  <Instance Name="SoundLabel" BaseType="ForestGlade/Label" />
+  <Instance Name="SoundSlider" BaseType="ForestGlade/Slider" />
+  <Instance Name="DividerInstance2" BaseType="ForestGlade/Divider" />
+  <Instance Name="ControlLabel" BaseType="ForestGlade/Label" />
+  <Instance Name="RadioButtonInstance" BaseType="ForestGlade/RadioButton" />
+  <Instance Name="RadioButtonInstance1" BaseType="ForestGlade/RadioButton" />
+  <Instance Name="RadioButtonInstance2" BaseType="ForestGlade/RadioButton" />
+  <Instance Name="DividerInstance3" BaseType="ForestGlade/Divider" />
+  <Instance Name="DifficultyLabel" BaseType="ForestGlade/Label" />
   <Instance Name="Background1" BaseType="Rectangle" />
-  <Instance Name="ComboBoxInstance" BaseType="ForestGlade/Controls/ComboBox" />
+  <Instance Name="ComboBoxInstance" BaseType="ForestGlade/ComboBox" />
   <Instance Name="ButtonContainer" BaseType="Container" />
-  <Instance Name="ButtonConfirmInstance" BaseType="ForestGlade/Controls/Button" />
-  <Instance Name="ButtonDenyInstance" BaseType="ForestGlade/Controls/Button" />
+  <Instance Name="ButtonConfirmInstance" BaseType="ForestGlade/Button" />
+  <Instance Name="ButtonDenyInstance" BaseType="ForestGlade/Button" />
   <Instance Name="DemoDialog" BaseType="Container" />
   <Instance Name="MarginContainer" BaseType="Container" />
-  <Instance Name="LabelInstance" BaseType="ForestGlade/Controls/Label" />
-  <Instance Name="TextBoxInstance" BaseType="ForestGlade/Controls/TextBox" />
-  <Instance Name="TextBoxInstance1" BaseType="ForestGlade/Controls/PasswordBox" />
-  <Instance Name="MultiLineTextBox" BaseType="ForestGlade/Controls/TextBox" />
-  <Instance Name="DialogBoxInstance" BaseType="ForestGlade/Controls/DialogBox" />
-  <Instance Name="WindowStandardInstance" BaseType="ForestGlade/Controls/Window" />
-  <Instance Name="LabelInstance1" BaseType="ForestGlade/Controls/Label" />
+  <Instance Name="LabelInstance" BaseType="ForestGlade/Label" />
+  <Instance Name="TextBoxInstance" BaseType="ForestGlade/TextBox" />
+  <Instance Name="TextBoxInstance1" BaseType="ForestGlade/PasswordBox" />
+  <Instance Name="MultiLineTextBox" BaseType="ForestGlade/TextBox" />
+  <Instance Name="DialogBoxInstance" BaseType="ForestGlade/DialogBox" />
+  <Instance Name="WindowStandardInstance" BaseType="ForestGlade/Window" />
+  <Instance Name="LabelInstance1" BaseType="ForestGlade/Label" />
+  <Instance Name="ListBoxItemInstance" BaseType="ForestGlade/ListBoxItem" />
+  <Instance Name="ListBoxItemInstance1" BaseType="ForestGlade/ListBoxItem" />
+  <Instance Name="ListBoxItemInstance2" BaseType="ForestGlade/ListBoxItem" />
+  <Instance Name="ListBoxItemInstance3" BaseType="ForestGlade/ListBoxItem" />
+  <Instance Name="ListBoxItemInstance4" BaseType="ForestGlade/ListBoxItem" />
+  <Instance Name="ListBoxItemInstance5" BaseType="ForestGlade/ListBoxItem" />
   <Behaviors />
 </ScreenSave>

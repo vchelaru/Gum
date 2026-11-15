@@ -85,11 +85,15 @@ public abstract class TextBoxBase :
     protected GraphicalUiElement? selectionInstance;
     float _selectionInstanceYOffset;
 
+    // The caret's Y as the visual authored it, which is where a single-line box keeps it.
+    float _caretSingleLineY;
+
     // Resting X of the text instance as set by the visual template. KeepCaretEdgeInsideParent
     // clamps textComponent.X to never exceed this value, so a horizontal scroll-left
     // (negative offset) applied during typing/overflow snaps back here when the content
     // shrinks again. See issue #2683.
     float _textRestingX;
+    float _textRestingY;
 
     List<GraphicalUiElement> _selectionInstances = new List<GraphicalUiElement>();
 
@@ -169,6 +173,8 @@ public abstract class TextBoxBase :
         get => caretIndex; 
         set
         {
+            // Like SelectionStart and SelectionLength, the caret stays within the text.
+            value = System.Math.Clamp(value, 0, DisplayedText?.Length ?? 0);
             bool valueChanged = value != caretIndex;
 
             caretIndex = value;
@@ -250,10 +256,12 @@ public abstract class TextBoxBase :
             if (value != textWrapping)
             {
                 textWrapping = value;
+                ReportFormsPropertyChanged();
                 UpdateStateForSingleOrMultiLine();
                 // Refresh the selection template after the state has been applied so the
                 // clone picks up the new "Multi" / "MultiNoWrap" / "Single" variable values.
                 RefreshTemplateFromSelectionInstance();
+                ResetScrollForLineModeChange();
             }
         }
     }
@@ -339,11 +347,18 @@ public abstract class TextBoxBase :
         get => placeholderTextObject?.RawText;
         set
         {
+            string? previous = placeholderTextObject?.RawText;
             _placeholderSetInCode.Record(value, translate: true);
             if (placeholderComponent != null)
             {
                 // go through the component instead of the renderable to apply localization and force a layout refresh
                 placeholderComponent.SetProperty("Text", value);
+            }
+            // Compared after the set, so a key that translates to the text already shown is not a change. A language
+            // change re-translates through GraphicalUiElement.RefreshLocalization, which reports on its own.
+            if (previous != placeholderTextObject?.RawText)
+            {
+                ReportFormsPropertyChanged();
             }
         }
     }
@@ -358,10 +373,15 @@ public abstract class TextBoxBase :
     /// </remarks>
     public void SetPlaceholderNoTranslate(string? value)
     {
+        string? previous = placeholderTextObject?.RawText;
         _placeholderSetInCode.Record(value, translate: false);
         if (placeholderComponent != null)
         {
             placeholderComponent.SetProperty("TextNoTranslate", value);
+        }
+        if (previous != placeholderTextObject?.RawText)
+        {
+            ReportFormsPropertyChanged(nameof(Placeholder));
         }
     }
 
@@ -386,8 +406,13 @@ public abstract class TextBoxBase :
         get => maxLength;
         set
         {
+            int? previous = maxLength;
             maxLength = value;
             TruncateTextToMaxLength();
+            if (previous != value)
+            {
+                ReportFormsPropertyChanged();
+            }
         }
     }
 
@@ -395,7 +420,20 @@ public abstract class TextBoxBase :
     /// Whether the text box is read-only. When <c>true</c>, the user cannot type, paste,
     /// delete, or otherwise modify the text, but can still select and copy.
     /// </summary>
-    public bool IsReadOnly { get; set; }
+    public bool IsReadOnly
+    {
+        get => _isReadOnly;
+        set
+        {
+            if (_isReadOnly != value)
+            {
+                _isReadOnly = value;
+                ReportFormsPropertyChanged();
+            }
+        }
+    }
+
+    bool _isReadOnly;
 
     /// <summary>
     /// Whether the caret is visible when <see cref="IsReadOnly"/> is <c>true</c>.
@@ -407,7 +445,20 @@ public abstract class TextBoxBase :
     /// Whether pressing the tab key inserts a tab character. If true, then
     /// tab characters can be inserted and tab navigation (moving focus to the next control) is disabled.
     /// </summary>
-    public bool AcceptsTab { get; set; } = false;
+    public bool AcceptsTab
+    {
+        get => _acceptsTab;
+        set
+        {
+            if (_acceptsTab != value)
+            {
+                _acceptsTab = value;
+                ReportFormsPropertyChanged();
+            }
+        }
+    }
+
+    bool _acceptsTab;
 
     /// <summary>
     /// Returns true if tab navigation is enabled. This is the inverse of <see cref="AcceptsTab"/>.
@@ -482,13 +533,9 @@ public abstract class TextBoxBase :
 
     protected override void ReactToVisualChanged()
     {
-        // The new visual starts in whatever line mode it was authored with. Apply the mode
-        // only when it was changed from the default, so a freshly created control does not
-        // override an authored Multi state.
-        if (textWrapping != TextWrapping.NoWrap || AcceptsReturn)
-        {
-            UpdateStateForSingleOrMultiLine();
-        }
+        // A text box is always in exactly one line-mode state, so the new visual is put in the
+        // state that matches this control's TextWrapping and AcceptsReturn, whatever it was authored in.
+        UpdateStateForSingleOrMultiLine();
 
         RefreshInternalVisualReferences();
 
@@ -546,6 +593,25 @@ public abstract class TextBoxBase :
         {
             RaiseSelectionChanged();
         }
+    }
+
+    /// <summary>True while text is re-applied without being a new value (RefreshStyles, assigning the same password), so the selection stays.</summary>
+    protected bool keepSelectionOnTextChange;
+
+    /// <summary>
+    /// Clears the selection after the text was replaced, as a TextBox in other UI frameworks does, so text
+    /// set from code cannot leave a selection and its highlight over the new text, where the next typed
+    /// character would replace all of it. Raises SelectionChanged only when a selection was cleared.
+    /// </summary>
+    protected void ClearSelectionAfterTextChange(int textLength)
+    {
+        if (keepSelectionOnTextChange)
+        {
+            return;
+        }
+
+        selectionStart = System.Math.Min(selectionStart, textLength);
+        SelectionLength = 0;
     }
 
     /// <inheritdoc/>
@@ -610,10 +676,18 @@ public abstract class TextBoxBase :
         coreTextObject = textComponent.RenderableComponent as IFormsText
             ?? throw new Exception("The Text instance must be of type Text");
         placeholderTextObject = placeholderComponent?.RenderableComponent as IFormsText;
+        OnCoreTextObjectAssigned();
 
         this.textComponent.XUnits = global::Gum.Converters.GeneralUnitType.PixelsFromSmall;
         _textRestingX = this.textComponent.X;
+        _textRestingY = this.textComponent.Y;
         caretComponent.X = 0;
+        _caretSingleLineY = caretComponent.Y;
+    }
+
+    /// <summary>Called once the text renderable exists, for values set before it did.</summary>
+    protected virtual void OnCoreTextObjectAssigned()
+    {
     }
 
     private void HandleTextComponentPropertyChanged(object? sender, PropertyChangedEventArgs e)
@@ -749,6 +823,8 @@ public abstract class TextBoxBase :
 
                 var maxIndex = System.Math.Max(currentIndex, indexPushed.Value);
 
+                // The caret follows the dragged end, so Shift+arrows then move that end.
+                CaretIndex = currentIndex;
                 SetSelectionRange(minIndex, maxIndex - minIndex);
             }
         }
@@ -758,7 +834,7 @@ public abstract class TextBoxBase :
             {
                 var xChange = MainCursor.XChange / global::RenderingLibrary.ISystemManagers.Default.Renderer.Camera.Zoom;
 
-                var stringLength = MeasureStringScaled(DisplayedText ?? string.Empty, global::RenderingLibrary.Graphics.HorizontalMeasurementStyle.Full);
+                var stringLength = GetDrawnWidth(DisplayedText ?? string.Empty);
 
                 var minimumShift = System.Math.Min(
                     edgeToTextPadding,
@@ -807,28 +883,25 @@ public abstract class TextBoxBase :
 
         if (IsRenderedAsSingleLine)
         {
-            return GetIndex(cursorOffset, DisplayedText);
+            return GetIndex(cursorOffset - GetLineXOffsetForHorizontalAlignment(DisplayedText ?? string.Empty), DisplayedText);
         }
 
-        var lineHeight = EffectiveLineHeightInPixels;
         var topOfText = this.textComponent.GetAbsoluteTop() + VerticalAlignmentOffset;
 
         return WrappedToTextIndex(DisplayedText, TextHitTesting.GetIndexInWrappedLines(
             coreTextObject.WrappedText,
             cursorOffset,
             screenY - topOfText,
-            lineHeight,
+            coreTextObject.GetDrawnLineTop,
             GetLineXOffsetForHorizontalAlignment,
             GetIndex));
     }
 
-    // The same scaled hit test as TextExtensions.GetCharacterIndexAtPosition, in TextHitTesting.GetIndexInLine.
-    // Per-character advance comes from IFormsText.GetCharacterAdvance, which each backend's concrete Text
-    // implements: the XNA-family Text (RenderingLibrary/Graphics/Text.cs) overrides it with an allocation-free
-    // BitmapFont.XAdvance lookup; other backends fall back to measuring a one-character string.
-    // See https://github.com/vchelaru/Gum/issues/3542.
+    // The same hit test as TextExtensions.GetCharacterIndexAtPosition, in TextHitTesting.GetIndexInLine.
+    // Per-character advance comes from IFormsText.GetDrawnCharacterAdvance: the XNA-family Text reads it
+    // allocation-free off the drawn BitmapFont (#3542); other backends measure a one-character string.
     private int GetIndex(float cursorOffset, string? textToUse) =>
-        TextHitTesting.GetIndexInLine(textToUse, cursorOffset, coreTextObject.GetCharacterAdvance, MeasurementFontScale);
+        TextHitTesting.GetIndexInLine(textToUse, cursorOffset, coreTextObject.GetDrawnCharacterAdvance);
 
     /// <summary>
     /// Handles special situations only like [LEFT, HOME, END, BACK (Backspace), RIGHT, UP, DOWN, DELETE, CTRL+C, CTRL+X, CTRL+V, CTRL+A]
@@ -870,31 +943,15 @@ public abstract class TextBoxBase :
                 }
                 else if (caretIndex > 0)
                 {
-                    int? letterToMoveToFromCtrl = null;
-                    if (isCtrlDown)
-                    {
-                        // Both WPF (and visual Studio) Move to the beginning of the
-                        // current word. Discord works differently but we're going to 
-                        // match WPF behavior. For example:
-                        // 12 34
-                        // If the cursor is at 4, pressing left moves the cursor
-                        // before the 3 but after the space.
-                        letterToMoveToFromCtrl = GetCtrlBeforeTarget(StepLeft(CaretStepText, caretIndex));
-                        if (letterToMoveToFromCtrl != null)
-                        {
-
-                            if (letterToMoveToFromCtrl == StepLeft(CaretStepText, caretIndex))
-                            {
-                                letterToMoveToFromCtrl = null;
-                            }
-                        }
-                        else
-                        {
-                            letterToMoveToFromCtrl = 0;
-                        }
-                    }
-
-                    caretIndex = letterToMoveToFromCtrl ?? StepLeft(CaretStepText, caretIndex);
+                    // Both WPF (and visual Studio) Move to the beginning of the
+                    // current word. Discord works differently but we're going to
+                    // match WPF behavior. For example:
+                    // 12 34
+                    // If the cursor is at 4, pressing left moves the cursor
+                    // before the 3 but after the space.
+                    caretIndex = isCtrlDown
+                        ? GetPreviousWordStart(caretIndex)
+                        : StepLeft(CaretStepText, caretIndex);
                 }
                 break;
             case Keys.Home:
@@ -940,32 +997,10 @@ public abstract class TextBoxBase :
                 }
                 else if (caretIndex < (DisplayedText?.Length ?? 0))
                 {
-                    int? letterToMoveToFromCtrl = null;
-
-                    if (isCtrlDown)
-                    {
-                        letterToMoveToFromCtrl = GetSpaceIndexAfter(StepRight(CaretStepText, caretIndex));
-                        if (letterToMoveToFromCtrl != null)
-                        {
-
-                            // match Visual Studio behavior, and go after the last space
-                            if (letterToMoveToFromCtrl != StepRight(CaretStepText, caretIndex))
-                            {
-                                letterToMoveToFromCtrl = StepRight(CaretStepText, letterToMoveToFromCtrl.Value);
-                            }
-                            else
-                            {
-                                letterToMoveToFromCtrl = null;
-                            }
-                        }
-                        else
-                        {
-                            letterToMoveToFromCtrl = DisplayedText?.Length ?? 0;
-                        }
-                    }
-
-                    caretIndex = letterToMoveToFromCtrl ?? StepRight(CaretStepText, caretIndex);
-
+                    // Ctrl matches Visual Studio: go to the start of the next word.
+                    caretIndex = isCtrlDown
+                        ? GetNextWordStart(caretIndex)
+                        : StepRight(CaretStepText, caretIndex);
                 }
                 break;
             case Keys.Up:
@@ -979,7 +1014,7 @@ public abstract class TextBoxBase :
                 {
                     if (caretIndex < (DisplayedText?.Length ?? 0) || selectionLength > 0)
                     {
-                        HandleDelete();
+                        HandleDelete(isCtrlDown);
                     }
                 }
                 break;
@@ -1029,6 +1064,13 @@ public abstract class TextBoxBase :
         }
 
 
+        // Without Shift, Home and End collapse a selection even when the caret is already at the
+        // line's edge, like Left and Right do.
+        if (oldIndex == caretIndex && !isShiftDown && key is Keys.Home or Keys.End && selectionLength != 0)
+        {
+            SelectionLength = 0;
+        }
+
         if (oldIndex != caretIndex)
         {
             UpdateToCaretChanged(oldIndex, caretIndex, isShiftDown);
@@ -1070,15 +1112,16 @@ public abstract class TextBoxBase :
             {
                 string line = lines[lineNumber];
                 string beforeCaret = line.Substring(0, System.Math.Min(relativeIndexOnLine, line.Length));
-                caretXOffset = MeasureStringScaled(beforeCaret, global::RenderingLibrary.Graphics.HorizontalMeasurementStyle.Full)
+                caretXOffset = GetDrawnWidth(beforeCaret)
                     + GetLineXOffsetForHorizontalAlignment(line);
             }
-            var lineHeight = EffectiveLineHeightInPixels;
+            float targetTop = coreTextObject.GetDrawnLineTop(targetLine);
+            float targetMiddle = (targetTop + coreTextObject.GetDrawnLineTop(targetLine + 1)) / 2.0f;
             CaretIndex = WrappedToTextIndex(DisplayedText, TextHitTesting.GetIndexInWrappedLines(
                 lines,
                 caretXOffset,
-                (targetLine + 0.5f) * lineHeight,
-                lineHeight,
+                targetMiddle,
+                coreTextObject.GetDrawnLineTop,
                 GetLineXOffsetForHorizontalAlignment,
                 GetIndex));
         }
@@ -1149,7 +1192,7 @@ public abstract class TextBoxBase :
 
     public abstract void HandleBackspace(bool isCtrlDown = false);
 
-    protected abstract void HandleDelete();
+    protected abstract void HandleDelete(bool isCtrlDown = false);
 
     public abstract void HandleCharEntered(char character);
 
@@ -1332,7 +1375,15 @@ public abstract class TextBoxBase :
 
         if (_hasSavedCaret && coreTextObject != null)
         {
-            _textSetInCode.Restore(textComponent);
+            keepSelectionOnTextChange = true;
+            try
+            {
+                _textSetInCode.Restore(textComponent);
+            }
+            finally
+            {
+                keepSelectionOnTextChange = false;
+            }
             caretIndex = System.Math.Min(_savedCaretIndex, DisplayedText?.Length ?? 0);
             selectionLength = _savedSelectionLength;
 
@@ -1483,6 +1534,13 @@ public abstract class TextBoxBase :
         return (start, StepRight(text, start) - start);
     }
 
+    // Delete removes one character; Ctrl+Delete removes up to the start of the next word, the Ctrl+Right target.
+    internal (int Start, int Length) GetDeleteRange(string? text, int caretIndex, bool isCtrlDown)
+    {
+        var (start, length) = GetDeleteRange(text, caretIndex);
+        return isCtrlDown ? (start, GetNextWordStart(start) - start) : (start, length);
+    }
+
     // Widens a selection so neither edge is between the halves of a character.
     private static void ExpandToWholeCharacters(string? text, ref int start, ref int length)
     {
@@ -1611,6 +1669,9 @@ public abstract class TextBoxBase :
             var stringToMeasure = DisplayedText ?? "";
 
             SetXCaretPositionForLine(stringToMeasure, caretIndex);
+            // Only the multi-line placement writes the caret's Y; a box that was multi-line keeps that
+            // Y unless it is put back, which floats the caret above the text (#7497).
+            caretComponent.Y = _caretSingleLineY;
         }
         else
         {
@@ -1910,10 +1971,12 @@ public abstract class TextBoxBase :
             if(_acceptsReturn != value)
             {
                 _acceptsReturn = value;
+                ReportFormsPropertyChanged();
                 UpdateStateForSingleOrMultiLine();
                 // Refresh the selection template after the state has been applied so the
                 // clone picks up the new "Multi" / "MultiNoWrap" / "Single" variable values.
                 RefreshTemplateFromSelectionInstance();
+                ResetScrollForLineModeChange();
             }
         }
     }
@@ -1969,6 +2032,17 @@ public abstract class TextBoxBase :
     /// </list>
     /// Called whenever either property changes.
     /// </summary>
+    /// <summary>
+    /// Puts the box back in the line-mode state its wrapping and AcceptsReturn derive, for a hot reload that
+    /// removed the file's explicit state.
+    /// </summary>
+    internal void ReapplyDerivedLineMode()
+    {
+        UpdateStateForSingleOrMultiLine();
+        RefreshTemplateFromSelectionInstance();
+        ResetScrollForLineModeChange();
+    }
+
     private void UpdateStateForSingleOrMultiLine()
     {
         if( Visual.Categories.TryGetValue("LineModeCategory", out StateSaveCategory? category))
@@ -1993,13 +2067,86 @@ public abstract class TextBoxBase :
         }
     }
 
+    /// <summary>
+    /// After TextWrapping or AcceptsReturn changes the text is laid out differently, so the scroll
+    /// offset left by the previous mode (a no-wrap line scrolled left to follow the caret, a
+    /// multi-line box scrolled down) no longer applies. The text goes back to its resting place and
+    /// the caret and selection are placed again, scrolling only if the new mode needs it.
+    /// </summary>
+    private void ResetScrollForLineModeChange()
+    {
+        if (textComponent == null || caretComponent == null || coreTextObject == null)
+        {
+            return;
+        }
+
+        textComponent.XUnits = global::Gum.Converters.GeneralUnitType.PixelsFromSmall;
+        textComponent.X = _textRestingX;
+        textComponent.Y = _textRestingY;
+        Visual.UpdateLayout();
+
+        UpdateCaretPositionFromCaretIndex();
+        OffsetTextToKeepCaretInView();
+        UpdateToSelection();
+    }
+
     List<SelectionPosition> selectionStartEnds = new List<SelectionPosition>();
+
+    /// <summary>
+    /// Raised each time the selection visuals are recomputed, with the name of the member that asked for it.
+    /// A diagnostic hook (Preview's log); nothing in the control listens to it.
+    /// </summary>
+    public event Action<string>? SelectionVisualsUpdated;
+
+    /// <summary>
+    /// One compact line per piece of selection geometry, for diagnostics (Preview's log): each selection
+    /// instance, the wrapped text lines, the caret, the clip container and text scroll, and the cached
+    /// selection Y offset next to the template's current Y.
+    /// </summary>
+    public IReadOnlyList<string> DescribeSelectionGeometry()
+    {
+        List<string> lines = new List<string>();
+        if (selectionInstance == null || textComponent == null)
+        {
+            return lines;
+        }
+
+        for (int i = 0; i < _selectionInstances.Count; i++)
+        {
+            GraphicalUiElement r = _selectionInstances[i];
+            lines.Add($"sel[{i}] vis={r.Visible} x={r.X:0.##} y={r.Y:0.##} w={r.Width:0.##} h={r.Height:0.##} "
+                + $"xu={r.XUnits} yu={r.YUnits} wu={r.WidthUnits} hu={r.HeightUnits} parent={r.Parent?.Name}");
+            // What layout computed, then what the renderable that is actually drawn holds: a mismatch
+            // means the layout results never reached the renderable.
+            string renderable = r.RenderableComponent is global::RenderingLibrary.Graphics.IRenderableIpso ipso
+                ? $"x={ipso.X:0.##} y={ipso.Y:0.##} w={ipso.Width:0.##} h={ipso.Height:0.##} vis={ipso.Visible} alpha={ipso.Alpha} z={ipso.Z:0.##} clips={ipso.ClipsChildren}"
+                : "(none)";
+            lines.Add($"sel[{i}] abs left={r.AbsoluteLeft:0.##} top={r.AbsoluteTop:0.##} w={r.GetAbsoluteWidth():0.##} h={r.GetAbsoluteHeight():0.##} "
+                + $"renderable {renderable} suspended={r.IsLayoutSuspended}");
+        }
+
+        int start = 0;
+        for (int i = 0; i < coreTextObject.WrappedText.Count; i++)
+        {
+            int length = coreTextObject.WrappedText[i].Length;
+            lines.Add($"line[{i}] start={start} len={length} centerY={GetCenterOfYForLinePixelsFromSmall(i):0.##}");
+            start += length;
+        }
+
+        lines.Add($"caret x={caretComponent.X:0.##} y={caretComponent.Y:0.##} h={caretComponent.Height:0.##}");
+        GraphicalUiElement? clip = textComponent.Parent as GraphicalUiElement;
+        lines.Add($"clip w={clip?.GetAbsoluteWidth():0.##} h={clip?.GetAbsoluteHeight():0.##} "
+            + $"textScroll x={textComponent.X - _textRestingX:0.##} y={textComponent.Y - _textRestingY:0.##}");
+        lines.Add($"selectionYOffset cached={_selectionInstanceYOffset:0.##} templateY={selectionTemplate?.Y:0.##}");
+        return lines;
+    }
 
     /// <summary>
     /// Updates the Selection visuals to match the current selection values.
     /// </summary>
-    protected void UpdateToSelection()
+    protected void UpdateToSelection([System.Runtime.CompilerServices.CallerMemberName] string? caller = null)
     {
+        SelectionVisualsUpdated?.Invoke(caller ?? "?");
         _placedTextAbsoluteRotation = textComponent.GetAbsoluteRotation();
 
         var displayedText = DisplayedText;
@@ -2017,6 +2164,13 @@ public abstract class TextBoxBase :
                 var parentToAddTo = selectionInstance.Parent;
                 var indexToAddTo = parentToAddTo.Children.IndexOf(selectionInstance) + 1;
                 parentToAddTo.Children.Insert(indexToAddTo, newSelection);
+                // The template can be cloned while the original is suspended (a hot reload applies a
+                // state with its instances suspended), and a clone inherits that: its X/Y/Width are
+                // then stored but never laid out, so the highlight is drawn with stale geometry (#7497).
+                if (newSelection.IsLayoutSuspended)
+                {
+                    newSelection.ResumeLayout();
+                }
             }
 
             foreach (var item in _selectionInstances)
@@ -2036,6 +2190,12 @@ public abstract class TextBoxBase :
                 // (selection drifts down by _selectionInstanceYOffset pixels per update).
                 selection.Y = selectionStartEnds[i].Y + _selectionInstanceYOffset;
                 selection.Width = selectionStartEnds[i].Width;
+                // A multi-line highlight covers one line, so an absolute height (the default visual's
+                // 20 fits only the default font) follows the font. A relative height is left alone.
+                if (!IsSingleLineMode && selection.HeightUnits == global::Gum.DataTypes.DimensionUnitType.Absolute)
+                {
+                    selection.Height = ScaledLineHeightInPixels;
+                }
                 selection.Visible = true;
                 if (textComponent.Rotation != 0)
                 {
@@ -2060,7 +2220,6 @@ public abstract class TextBoxBase :
     private void UpdateSelectionStartEnds(string displayedText, GraphicalUiElement selectionInstance)
     {
         selectionStartEnds.Clear();
-        var substring = displayedText.Substring(0, selectionStart);
 
         if (!IsRenderedAsSingleLine)
         {
@@ -2120,14 +2279,14 @@ public abstract class TextBoxBase :
         }
         else
         {
+            // The same placement the caret uses, so both ends honor the horizontal alignment.
             var selectionPosition = new SelectionPosition();
-            var firstMeasure = MeasureStringScaled(substring, global::RenderingLibrary.Graphics.HorizontalMeasurementStyle.Full);
-            substring = displayedText.Substring(0, selectionStart + selectionLength);
+            float startX = GetXCaretPositionForLineRelativeToTextParent(displayedText, selectionStart);
+            float endX = GetXCaretPositionForLineRelativeToTextParent(displayedText, selectionStart + selectionLength);
 
-            selectionPosition.XStart = this.textComponent.X + firstMeasure;
+            selectionPosition.XStart = startX;
             selectionPosition.Y = this.textComponent.Y;
-            selectionPosition.Width = 1 +
-                MeasureStringScaled(substring, global::RenderingLibrary.Graphics.HorizontalMeasurementStyle.Full) - firstMeasure;
+            selectionPosition.Width = endX - startX;
 
             selectionStartEnds.Add(selectionPosition);
         }
@@ -2145,6 +2304,19 @@ public abstract class TextBoxBase :
     private enum LayoutAxis { Horizontal, Vertical }
 
     protected void OffsetTextToKeepCaretInView()
+    {
+        float oldX = textComponent.X;
+        float oldY = textComponent.Y;
+        ScrollTextToKeepCaretInView();
+
+        // The highlight is placed from the text's position, so a scroll leaves it behind (#7686).
+        if ((textComponent.X != oldX || textComponent.Y != oldY) && selectionLength > 0)
+        {
+            UpdateToSelection();
+        }
+    }
+
+    private void ScrollTextToKeepCaretInView()
     {
         // Horizontal scrolling fires whenever wrapping is off — that covers both
         // single-line (NoWrap + !AcceptsReturn) and "MultiNoWrap" (NoWrap + AcceptsReturn),
@@ -2170,29 +2342,29 @@ public abstract class TextBoxBase :
     }
 
     /// <summary>
-    /// After a vertical scroll, prevents the bottom of the (possibly shorter,
-    /// post-delete) text from leaving an empty band at the bottom of the
-    /// container while <see cref="textComponent"/>'s Y is still negative.
-    /// Mirrors how the single-line horizontal branch self-corrects when the
-    /// caret moves back toward the start.
+    /// Keeps the vertical scroll between the text's resting place (scrolled all the way up) and the
+    /// point where the last line's bottom meets the container's bottom, so neither the post-delete
+    /// shorter text leaves an empty band at the bottom nor a caret near the top leaves the text
+    /// shifted down from where it rests. Mirrors how the single-line horizontal branch self-corrects.
     /// </summary>
     private void ClampVerticalScrollToContent()
     {
-        if (this.textComponent.Y >= 0)
-        {
-            return;
-        }
+        float scroll = this.textComponent.Y - _textRestingY;
 
         // textComponent.AbsoluteHeight reflects layout-computed size, which
         // in Multi state is bounded by the parent (HeightUnits=RelativeToParent).
-        // For the clamp we want the actual content height — line count × line
-        // height — so we don't over-clamp and undo a legitimate scroll.
+        // For the clamp we want the actual content height (line count x line
+        // height) so we don't over-clamp and undo a legitimate scroll.
         var lineCount = coreTextObject.WrappedText?.Count ?? 0;
-        float contentHeight = lineCount * EffectiveLineHeightInPixels;
+        float contentHeight = coreTextObject.GetDrawnLineTop(lineCount);
         float containerHeight = caretComponent.EffectiveParentGue?.AbsoluteHeight ?? 0;
-        float maxScrollUp = System.Math.Max(0f, contentHeight - containerHeight);
-        float clamped = System.Math.Max(this.textComponent.Y, -maxScrollUp);
-        float delta = clamped - this.textComponent.Y;
+        // The text rests below the container's top by the visual's inset (the V3 text sits 2 units
+        // down), and that inset is part of how far the content reaches into the container.
+        float containerTop = caretComponent.EffectiveParentGue?.GetAbsoluteTop() ?? 0;
+        float restingInset = this.textComponent.GetAbsoluteTop() - scroll - containerTop;
+        float maxScrollUp = System.Math.Max(0f, contentHeight + restingInset - containerHeight);
+        float clamped = System.Math.Clamp(scroll, -maxScrollUp, 0f);
+        float delta = clamped - scroll;
 
         if (delta != 0f)
         {
@@ -2200,7 +2372,6 @@ public abstract class TextBoxBase :
             this.caretComponent.Y += delta;
         }
     }
-
     /// <summary>
     /// Shifts <see cref="textComponent"/> and <see cref="caretComponent"/> along
     /// <paramref name="axis"/> so the caret stays just inside the parent's bounds
@@ -2356,23 +2527,22 @@ public abstract class TextBoxBase :
         indexIntoLine = System.Math.Min(indexIntoLine, stringToMeasure.Length);
         var substring = stringToMeasure.Substring(0, indexIntoLine);
 
-        // The unified MeasureString overload internally handles the no-font
-        // case (falling back to DefaultBitmapFont, or zero under TEST).
-        var measure = MeasureStringScaled(substring, global::RenderingLibrary.Graphics.HorizontalMeasurementStyle.Full);
+        // MeasureDrawnString handles the no-font case (falling back to
+        // DefaultBitmapFont, or zero under TEST).
+        var measure = GetDrawnWidth(substring);
         return measure + this.textComponent.X + GetLineXOffsetForHorizontalAlignment(stringToMeasure);
     }
 
     public float GetLineXOffsetForHorizontalAlignment(string stringToMeasure)
     {
-        if (coreTextObject.HorizontalAlignment == global::RenderingLibrary.Graphics.HorizontalAlignment.Left)
+        // A left-aligned line starts at the left edge whatever its width, so it is not measured (#7863).
+        if (!TextHitTesting.PlacesLineByWidth(coreTextObject.HorizontalAlignment))
+        {
             return 0;
+        }
 
-        float measuredLineWidth = MeasureStringScaled(stringToMeasure);
-        float textComponentWidth = textComponent.AbsoluteWidth;
-        float gapBetweenTextAndEdge = textComponentWidth - measuredLineWidth;
-        if (coreTextObject.HorizontalAlignment == global::RenderingLibrary.Graphics.HorizontalAlignment.Center)
-            gapBetweenTextAndEdge /= 2.0f;
-        return gapBetweenTextAndEdge;
+        return TextHitTesting.GetHorizontalAlignmentOffset(coreTextObject.HorizontalAlignment, textComponent.AbsoluteWidth,
+            coreTextObject.MeasureDrawnString(stringToMeasure, global::RenderingLibrary.Graphics.HorizontalMeasurementStyle.TrimRight));
     }
 
     float CoreTextObjectHeight =>
@@ -2393,7 +2563,7 @@ public abstract class TextBoxBase :
     {
         var adjusted = centerOfLineY;
         // Half the *rendered glyph row* height, not the full inter-line step. The multiplier only
-        // inflates the spacing between lines, so using EffectiveLineHeightInPixels here would push
+        // inflates the spacing between lines, so using the drawn line step here would push
         // the edge a multiplier-worth away from the actual glyph row. The target is taken to be
         // about one glyph row tall, so its top (or bottom) edge sits on the row's edge.
         if (target.YOrigin == global::RenderingLibrary.Graphics.VerticalAlignment.Top)
@@ -2523,49 +2693,28 @@ public abstract class TextBoxBase :
         || unit == global::Gum.Converters.GeneralUnitType.PixelsFromLarge
         || unit == global::Gum.Converters.GeneralUnitType.Percentage;
 
-    // The scale from the font's own pixels (MeasureString, GetCharacterAdvance, LineHeightInPixels) to
-    // drawn units: IWrappedText.WordWrapFontScale, the effective FontScale except while oversampling pins
-    // a separate measurement font that layout is measured with. Same scale as TextExtensions.GetCharacterIndexAtPosition.
+    // The scale from the font's own pixels (LineHeightInPixels, DescenderHeight) to drawn units:
+    // IWrappedText.WordWrapFontScale, the effective FontScale except while oversampling pins a separate
+    // measurement font, whose line height the drawn lines step by (#6814). Positions within a line come
+    // from IFormsText.MeasureDrawnString and GetDrawnCharacterAdvance instead (#7675).
     private float MeasurementFontScale => coreTextObject.WordWrapFontScale;
 
-    // The full per-line vertical step used by the renderer:
-    // rawLineHeight × FontScale × LineHeightMultiplier. Used for inter-line
-    // stepping (hit-testing, arrow-key vertical movement, content-height
-    // clamps, and the line-to-line component of caret/selection positioning).
-    // IText is fully qualified here (and below) because this file compiles
-    // under multiple backends: under XNALIKE the using directives include
-    // RenderingLibrary.Graphics, but under the #else branch (Raylib/Sokol)
-    // they do not — so the unqualified IText would not resolve.
-    private float EffectiveLineHeightInPixels =>
-        coreTextObject.LineHeightInPixels
-        * MeasurementFontScale
-        * coreTextObject.LineHeightMultiplier;
+    // The height of one rendered glyph row, with no LineHeightMultiplier. This is the right value for
+    // "half a line" offsets that map to the actual ink, e.g. the caret on line 0, whose position must
+    // NOT change when only the multiplier changes.
+    private float ScaledLineHeightInPixels => coreTextObject.DrawnGlyphRowHeight;
 
-    // The height of one rendered glyph row (rawLineHeight × FontScale), with
-    // no LineHeightMultiplier. This is the right value for "half a line"
-    // offsets that map to the actual ink — e.g. the caret on line 0, whose
-    // position must NOT change when only the multiplier changes.
-    private float ScaledLineHeightInPixels =>
-        coreTextObject.LineHeightInPixels * MeasurementFontScale;
-
-    // Text.MeasureString returns the raw glyph-pixel width (it explicitly
-    // ignores FontScale). Caret X, selection X, hit-testing, and centering
-    // padding all live in screen space, so they must multiply by FontScale
-    // to line up with the actual rendered glyphs.
-    private float MeasureStringScaled(string value) =>
-        coreTextObject.MeasureString(value) * MeasurementFontScale;
-
-    private float MeasureStringScaled(string value, global::RenderingLibrary.Graphics.HorizontalMeasurementStyle style) =>
-        coreTextObject.MeasureString(value, style) * MeasurementFontScale;
+    // The drawn width of value through its last character's advance: where a caret after it is drawn.
+    private float GetDrawnWidth(string value) =>
+        coreTextObject.MeasureDrawnString(value, global::RenderingLibrary.Graphics.HorizontalMeasurementStyle.Full);
 
     private float GetCenterOfYForLinePixelsFromSmall(int lineNumber)
     {
-        var lineHeight = EffectiveLineHeightInPixels;
         var glyphHalfHeight = ScaledLineHeightInPixels / 2.0f;
 
-        // The glyph top of line N is the drawn block's top plus N*lineHeight; its center is that
-        // plus glyphHalfHeight.
-        float offset = VerticalAlignmentOffset + lineNumber * lineHeight + glyphHalfHeight;
+        // The glyph top of line N is the drawn block's top plus the drawn top of line N (#7705); its
+        // center is that plus glyphHalfHeight.
+        float offset = VerticalAlignmentOffset + coreTextObject.GetDrawnLineTop(lineNumber) + glyphHalfHeight;
         var caretY = UnrotatedTextTop + offset;
         return caretY;
     }
@@ -2622,104 +2771,38 @@ public abstract class TextBoxBase :
 
     #region Utilities
 
-    // The word helpers take and return indexes into Text, but scan the text with "\r\n" collapsed to "\n"
-    // so a CRLF behaves as the single whitespace character the wrapped text treats it as.
-    private string? NormalizedDisplayedText => DisplayedText?.Replace("\r\n", "\n");
-
-    // The two helpers below take and return indexes into the normalized text (see above).
-    protected int? GetCtrlBeforeTarget(int index)
+    // Ctrl+Right target: skip the rest of the current word, then the whole run of whitespace, so the
+    // caret lands on the start of the next word (or the end of the text).
+    private int GetNextWordStart(int index)
     {
-        var afterRemovingSpaces = GetNonSpaceIndexAtOrBefore(TextToWrappedIndex(DisplayedText, index));
-
-        if (afterRemovingSpaces != null)
+        string text = DisplayedText ?? string.Empty;
+        int next = System.Math.Min(index, text.Length);
+        while (next < text.Length && !char.IsWhiteSpace(text[next]))
         {
-            var nextSpace = GetSpaceIndexAtOrBefore(afterRemovingSpaces.Value);
-
-            if (nextSpace != null)
-            {
-                return WrappedToTextIndex(DisplayedText, nextSpace.Value + 1);
-            }
+            next++;
         }
-
-        return null;
+        while (next < text.Length && char.IsWhiteSpace(text[next]))
+        {
+            next++;
+        }
+        return next;
     }
 
-    int? GetNonSpaceIndexAtOrBefore(int index)
+    // Ctrl+Left and Ctrl+Backspace target: skip the whitespace before index, then the word before it,
+    // so the caret lands on the start of the word (or the start of the text).
+    protected int GetPreviousWordStart(int index)
     {
-        // first get non-space index at or before:
-        var text = NormalizedDisplayedText;
-        if (text != null)
+        string text = DisplayedText ?? string.Empty;
+        int previous = System.Math.Min(index, text.Length);
+        while (previous > 0 && char.IsWhiteSpace(text[previous - 1]))
         {
-            index = System.Math.Min(index, text.Length - 1);
-            for (int i = index; i > 0; i--)
-            {
-                var isNotSpace = !Char.IsWhiteSpace(text[i]);
-
-                if (isNotSpace)
-                {
-                    return i;
-                }
-            }
+            previous--;
         }
-
-        return null;
-
-    }
-
-    int? GetSpaceIndexAtOrBefore(int index)
-    {
-        var text = NormalizedDisplayedText;
-        if (text != null)
+        while (previous > 0 && !char.IsWhiteSpace(text[previous - 1]))
         {
-            for (int i = index - 1; i > 0; i--)
-            {
-                var isSpace = Char.IsWhiteSpace(text[i]);
-
-                if (isSpace)
-                {
-                    return i;
-                }
-            }
+            previous--;
         }
-
-        return null;
-    }
-
-    protected int? GetSpaceIndexBefore(int index)
-    {
-        if (DisplayedText != null)
-        {
-            for (int i = index - 1; i > 0; i--)
-            {
-                var isSpace = Char.IsWhiteSpace(DisplayedText[i]);
-
-                if (isSpace)
-                {
-                    return i;
-                }
-            }
-        }
-
-        return null;
-    }
-
-    protected int? GetSpaceIndexAfter(int index)
-    {
-        var text = NormalizedDisplayedText;
-        if (text != null)
-        {
-            for (int i = TextToWrappedIndex(DisplayedText, index); i < text.Length; i++)
-            {
-                var isSpace = Char.IsWhiteSpace(text[i]);
-
-                if (isSpace)
-                {
-                    return WrappedToTextIndex(DisplayedText, i);
-                }
-            }
-        }
-
-        return null;
+        return previous;
     }
 
 

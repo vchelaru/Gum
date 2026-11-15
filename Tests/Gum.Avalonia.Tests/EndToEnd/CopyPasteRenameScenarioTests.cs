@@ -436,6 +436,83 @@ public class CopyPasteRenameScenarioTests
         tree.AssertOracles();
     }
 
+    [AvaloniaFact]
+    [Trait("Feature", "EDIT-001")]
+    public void RedoingAnInstanceRename_RenamesReferencesInOtherElementsAgain()
+    {
+        using ProjectTreeHarness tree = new ProjectTreeHarness();
+        ReferenceButtonBackgroundFromLabelAndPanel(tree);
+        ProjectFileSnapshot start = tree.SnapshotFiles();
+        tree.Dialogs.AnswerNextUserString("Bg");
+        tree.Dialogs.AnswerNextMessage(MessageDialogResult.Affirmative);
+        tree.Press(Key.F2, PhysicalKey.F2);
+        ProjectFileSnapshot renamed = tree.SnapshotFiles();
+
+        tree.Undo();
+        tree.Redo();
+        tree.SnapshotFiles().ShouldMatch(renamed, "redoing the rename should rename every reference again");
+        tree.Undo();
+        tree.SnapshotFiles().ShouldMatch(start, "undoing it a second time should restore them again");
+
+        tree.AssertOracles();
+    }
+
+    [AvaloniaFact]
+    [Trait("Feature", "EDIT-001")]
+    public void RedoingAComponentRename_RenamesReferencesInOtherElementsAgain()
+    {
+        using ProjectTreeHarness tree = new ProjectTreeHarness();
+        ReferenceButtonBackgroundFromLabelAndPanel(tree);
+        tree.Click(tree.NodeFor(Component(tree, "Button")));
+        ProjectFileSnapshot start = tree.SnapshotFiles();
+        tree.Dialogs.AnswerNext<RenameElementDialogViewModel>(dialog => { dialog.Value = "PrimaryButton"; return true; });
+        tree.Dialogs.AnswerNextMessage(MessageDialogResult.Affirmative);
+        tree.Press(Key.F2, PhysicalKey.F2);
+        ProjectFileSnapshot renamed = tree.SnapshotFiles();
+
+        tree.Undo();
+        tree.Redo();
+        ReferenceLines(Component(tree, "Panel")).ShouldBe(new[] { "Height = Components/PrimaryButton.Background.Width" });
+        tree.SnapshotFiles().ShouldMatch(renamed, "redoing the rename should rename every reference again");
+        tree.Undo();
+        tree.SnapshotFiles().ShouldMatch(start, "undoing it a second time should restore them again");
+
+        tree.AssertOracles();
+    }
+
+    [AvaloniaFact]
+    [Trait("Feature", "EDIT-001")]
+    public void RedoingAnExposedVariableRename_RenamesReferencesInOtherElementsAgain()
+    {
+        using ProjectTreeHarness tree = new ProjectTreeHarness();
+        tree.Project.AddComponent("Panel");
+        ComponentSave button = tree.Project.AddComponent("Button");
+        InstanceSave label = tree.Project.AddInstance(button, "Label", "Text");
+        tree.Click(tree.NodeFor(label));
+        VariableGridHarness grid = tree.Grid;
+        grid.TypeAndEnter("Width", "75");
+        tree.Dialogs.AnswerNextUserString("LabelWidth");
+        grid.PickRowMenuItem("Width", "Expose Variable");
+        tree.Click(tree.NodeFor(Component(tree, "Panel")));
+        grid.TypeLinesAndApply("VariableReferences", "Height = Components/Button.LabelWidth");
+        tree.Click(tree.NodeFor(Component(tree, "Button")));
+        ProjectFileSnapshot start = tree.SnapshotFiles();
+        VariableSave exposed = Component(tree, "Button").GetDefaultStateOrThrow().Variables.Single(variable => variable.ExposedAsName == "LabelWidth");
+        tree.Dialogs.AnswerNextUserString("TextWidth");
+        Services.GetRequiredService<Gum.Services.IEditVariableService>().ShowEditVariableWindow(exposed, Component(tree, "Button"));
+        ProjectFileSnapshot renamed = tree.SnapshotFiles();
+
+        tree.Undo();
+        tree.Redo();
+
+        ReferenceLines(Component(tree, "Panel")).ShouldBe(new[] { "Height = Components/Button.TextWidth" });
+        tree.SnapshotFiles().ShouldMatch(renamed, "redoing the rename should rename the reference again");
+        tree.Undo();
+        tree.SnapshotFiles().ShouldMatch(start, "undoing it a second time should restore the reference");
+
+        tree.AssertOracles();
+    }
+
     /// <summary>
     /// Button with Background (Width 75) and Label, whose Width references Background.Width; Panel's
     /// Height references Components/Button.Background.Width. Leaves Background selected.
@@ -469,7 +546,7 @@ public class CopyPasteRenameScenarioTests
         ScreenSave title = tree.Project.AddScreen("Title");
         InstanceSave okButton = tree.Project.AddInstance(title, "OkButton", "Button");
         string animationFile = Path.Combine(tree.Project.ProjectFolder, "Components", "ButtonAnimations.ganx");
-        File.WriteAllText(animationFile, AnimationFileWithKeyframe("Looks/Pressed"));
+        AnimationFixtures.Write(animationFile, "Press", "Looks/Pressed");
         tree.Click(tree.NodeFor(okButton));
         VariableGridHarness grid = tree.Grid;
         grid.PickComboItem("LooksState", "Pressed");
@@ -541,7 +618,7 @@ public class CopyPasteRenameScenarioTests
         StateSaveCategory looks = tree.Project.AddCategory(button, "Looks");
         tree.Project.AddState(button, looks, "Pressed");
         string components = Path.Combine(tree.Project.ProjectFolder, "Components");
-        File.WriteAllText(Path.Combine(components, "ButtonAnimations.ganx"), AnimationFileWithKeyframe("Looks/Pressed"));
+        AnimationFixtures.Write(Path.Combine(components, "ButtonAnimations.ganx"), "Press", "Looks/Pressed");
         // The Animations tab read Button's (then missing) file when Button was added; selecting
         // another element and back makes it read the file written above.
         tree.Click(tree.RootNode("Components"));
@@ -570,7 +647,7 @@ public class CopyPasteRenameScenarioTests
         StateSaveCategory looks = tree.Project.AddCategory(button, "Looks");
         tree.Project.AddState(button, looks, "Pressed");
         string components = Path.Combine(tree.Project.ProjectFolder, "Components");
-        File.WriteAllText(Path.Combine(components, "ButtonAnimations.ganx"), AnimationFileWithKeyframe("Looks/Pressed"));
+        AnimationFixtures.Write(Path.Combine(components, "ButtonAnimations.ganx"), "Press", "Looks/Pressed");
         tree.Click(tree.RootNode("Components"));
         tree.Click(tree.NodeFor(Component(tree, "Button")));
 
@@ -594,7 +671,7 @@ public class CopyPasteRenameScenarioTests
         StateSaveCategory looks = tree.Project.AddCategory(button, "Looks");
         tree.Project.AddState(button, looks, "Pressed");
         string components = Path.Combine(tree.Project.ProjectFolder, "Components");
-        File.WriteAllText(Path.Combine(components, "ButtonAnimations.ganx"), AnimationFileWithKeyframe("Looks/Pressed"));
+        AnimationFixtures.Write(Path.Combine(components, "ButtonAnimations.ganx"), "Press", "Looks/Pressed");
         // The Animations tab read Button's (then missing) file when Button was added; selecting
         // another element and back makes it read the file written above.
         tree.Click(tree.RootNode("Components"));
@@ -674,26 +751,6 @@ public class CopyPasteRenameScenarioTests
 
     #endregion
 
-    private static string AnimationFileWithKeyframe(string stateName) =>
-        "<?xml version=\"1.0\" encoding=\"utf-8\"?>\r\n" +
-        "<ElementAnimationsSave xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">\r\n" +
-        "  <Animations>\r\n" +
-        "    <AnimationSave>\r\n" +
-        "      <Loops>false</Loops>\r\n" +
-        "      <Name>Press</Name>\r\n" +
-        "      <States>\r\n" +
-        "        <AnimatedStateSave>\r\n" +
-        $"          <StateName>{stateName}</StateName>\r\n" +
-        "          <Time>0</Time>\r\n" +
-        "          <InterpolationType>Linear</InterpolationType>\r\n" +
-        "          <Easing>Out</Easing>\r\n" +
-        "        </AnimatedStateSave>\r\n" +
-        "      </States>\r\n" +
-        "      <Animations />\r\n" +
-        "      <Events />\r\n" +
-        "    </AnimationSave>\r\n" +
-        "  </Animations>\r\n" +
-        "</ElementAnimationsSave>";
 
     private static List<string> ReferenceLines(ElementSave element, string? instanceName = null)
     {

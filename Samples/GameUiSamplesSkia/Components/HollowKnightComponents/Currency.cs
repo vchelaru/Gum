@@ -15,6 +15,8 @@ namespace GameUiSamples.Components;
 
 partial class Currency
 {
+    GumService GumUI => GumService.Default;
+
     int money = 0;
     int moneyToAdd = 0;
     TimeSpan lastAddTime;
@@ -24,7 +26,7 @@ partial class Currency
     internal void AddMoney(int amount)
     {
         moneyToAdd += amount;
-        lastAddTime = GumService.Default.GameTime.TotalGameTime;
+        lastAddTime = GumUI.GameTime.TotalGameTime;
         UpdateTexts();
     }
 

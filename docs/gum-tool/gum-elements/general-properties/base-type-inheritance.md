@@ -81,6 +81,20 @@ Derived types get access to all of the exposed variables in the base type. For e
 
 <figure><img src="../../../.gitbook/assets/28_06 00 59.gif" alt=""><figcaption><p>Exposed variables are inherited</p></figcaption></figure>
 
+### Changing Base Type
+
+Changing the `Base Type` of an instance, or of a component or screen, removes the variables the new type does not have. For example, changing a Text instance to a Container removes its `Text` and `FontSize` values, in the default state and in every state category. Variables both types have, such as `Width`, keep their values.
+
+If the removed variable was exposed, the exposure goes too, and so do the values other components set for it. This is the same as un-exposing the variable.
+
+Components that inherit from the changed component keep their own values for the removed variables.
+
+Changing the `Base Type` back does not bring the removed values back, but undo does. Undo restores everything the change removed in one step.
+
+{% hint style="info" %}
+Available in December 2026, or now if building Gum from source.
+{% endhint %}
+
 ### Base Type vs States
 
 `Base Types` allow for the customization of a component, including the creation of many variants. Similarly, States also allow for the customization of a component in similar ways. When deciding between whether to use states or inheritance, keep the following in mind:
@@ -111,6 +125,26 @@ To resolve it, open the component in the Gum tool and pick a `Base Type` (for ex
 
 {% hint style="info" %}
 Available in November 2026, or now if building Gum from source.
+{% endhint %}
+
+### Missing Base Instance (GUM0016)
+
+A screen or component that derives from another must list each of the base's instances with `<DefinedByBase>true</DefinedByBase>`. When a hand-written or out-of-date file leaves one out, Gum adds the instance in memory at load, so nothing breaks, but the file on disk is stale. `gumcli check` reports **GUM0016** as a warning naming the missing instance.
+
+To resolve it, add an `<Instance>` with that name and `<DefinedByBase>true</DefinedByBase>` to the file, or run `gumcli resave` to write it.
+
+{% hint style="info" %}
+Available in December 2026, or now if building Gum from source.
+{% endhint %}
+
+### Unknown Base Type (GUM0030)
+
+A screen or component whose `<BaseType>` names an element the project does not have, such as a misspelled component or a component whose file was deleted, cannot inherit anything. Gum reports **GUM0030** as an error in the [Errors tab](../../editor-tab.md), and `gumcli check` reports it too.
+
+To resolve it, pick an existing `Base Type` in the `Base Type` dropdown, or correct `<BaseType>` in the element's file.
+
+{% hint style="info" %}
+Available in December 2026, or now if building Gum from source.
 {% endhint %}
 
 ### Component Containing Itself (GUM0018)

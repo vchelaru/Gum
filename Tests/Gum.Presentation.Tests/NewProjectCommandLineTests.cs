@@ -18,6 +18,20 @@ public class NewProjectCommandLineTests
     }
 
     [Fact]
+    public void BuildChained_LinkedProjects_AreAddedAsReferences_NotPackages_BeforeTheRestore()
+    {
+        string command = NewProjectCommandLine.BuildChained(
+            "/p/My Game", "monogame", includeForms: false, theme: null, restore: true, packages: new string[0],
+            csprojPath: "/p/My Game/Game.csproj", sourceLinked: true,
+            linkedProjects: new[] { "/c/Gum Src/Runtimes/GumExpressions/GumExpressions.csproj" });
+
+        command.ShouldBe(
+            "gumcli new \"/p/My Game\" --platform monogame --template empty --source-linked --no-restore" +
+            " && dotnet add \"/p/My Game/Game.csproj\" reference \"/c/Gum Src/Runtimes/GumExpressions/GumExpressions.csproj\"" +
+            " && dotnet restore \"/p/My Game/Game.csproj\"");
+    }
+
+    [Fact]
     public void BuildChained_KeepsSourceLinked_BeforeTheChainedSteps()
     {
         string command = NewProjectCommandLine.BuildChained(

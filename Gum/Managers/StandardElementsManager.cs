@@ -716,6 +716,8 @@ public class StandardElementsManager
                 Name = "HasEvents",
                 Category = "Behavior",
                 CanOnlyBeSetInDefaultState = true,
+                DetailText = "Only affects cursor input (mouse and touch)",
+                ToolTipText = "Only affects cursor input (mouse and touch)",
                 // We used to exclude them from instances, but there are plenty of situations where we want to hide events on an instance. It's similar to InputTransparent in XamForms
                 //ExcludeFromInstances = true
             };
@@ -732,7 +734,18 @@ public class StandardElementsManager
                 Category = "Behavior", 
                 CanOnlyBeSetInDefaultState = true,
                 // We used to exclude ExposeChildrenEvents from instances, but there are plenty of situations where we want to modify this value on an instance-by-instance basis. It's similar to InputTransparent in Maui
-                //ExcludeFromInstances = true 
+                //ExcludeFromInstances = true
+            });
+        stateSave.Variables.Add(
+            new VariableSave
+            {
+                SetsValue = true,
+                Type = "bool",
+                Value = false,
+                Name = "RaiseChildrenEventsOutsideOfBounds",
+                Category = "Behavior",
+                DetailText = "Lets children outside this object's bounds receive the cursor.",
+                MinimumGumxVersion = (int)GumProjectSave.GumxVersions.RaiseChildrenEventsExpansion
             });
     }
 

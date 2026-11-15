@@ -62,14 +62,45 @@ namespace RenderingLibrary.Graphics
         float MeasureString(string value, HorizontalMeasurementStyle style);
 
         /// <summary>
-        /// The horizontal advance of a single character in this Text's active font, in raw
-        /// glyph pixels (before <see cref="IText.FontScale"/>) — used by caret hit-testing
-        /// (<c>TextBoxBase.GetIndex</c>) to walk a string one character at a time without
-        /// repeated substring measurement. The default implementation measures the character
-        /// via <see cref="IWrappedText.MeasureString(string)"/>; backends with cheap per-glyph
-        /// metrics (e.g. a bitmap font's XAdvance table) override this for an allocation-free
-        /// lookup.
+        /// The horizontal advance of a single character in the font this Text measures layout with,
+        /// in raw glyph pixels (before <see cref="IText.FontScale"/>). The default implementation
+        /// measures the character via <see cref="IWrappedText.MeasureString(string)"/>; backends with
+        /// cheap per-glyph metrics (e.g. a bitmap font's XAdvance table) override this for an
+        /// allocation-free lookup. Positions within a line come from <see cref="GetDrawnCharacterAdvance"/>.
         /// </summary>
         float GetCharacterAdvance(char character) => MeasureString(character.ToString());
+
+        /// <summary>
+        /// The width of <paramref name="value"/> as this Text draws it, in the units the Text is positioned
+        /// in (after <see cref="IText.FontScale"/>). Every position within a line comes from this and
+        /// <see cref="GetDrawnCharacterAdvance"/>: the caret, a selection, a click, a line's alignment offset.
+        /// Layout (wrapping, sizing to the text) uses <see cref="MeasureString(string, HorizontalMeasurementStyle)"/>,
+        /// which differs while font oversampling draws from a larger font than layout measures with (#7675).
+        /// </summary>
+        float MeasureDrawnString(string value, HorizontalMeasurementStyle style) =>
+            MeasureString(value, style) * WordWrapFontScale;
+
+        /// <summary>
+        /// The advance of a single character as this Text draws it, in the units the Text is positioned in.
+        /// Used by hit testing to walk a line one character at a time without measuring substrings.
+        /// See <see cref="MeasureDrawnString"/>.
+        /// </summary>
+        float GetDrawnCharacterAdvance(char character) => GetCharacterAdvance(character) * WordWrapFontScale;
+
+        /// <summary>
+        /// The distance from the top of the first drawn line to the top of line <paramref name="lineIndex"/>
+        /// (<c>WrappedText.Count</c> gives the drawn height), in the units the Text is positioned in. A Text
+        /// returns where it draws each line (its measurement font and <see cref="LineHeightMultiplier"/>, and a
+        /// taller line where a size run makes it so) rather than the display font, which differs while font
+        /// oversampling draws from a larger font than layout measures with (#7705). Every vertical position across
+        /// lines comes from this: caret, click, selection rows, Up/Down and scrolling.
+        /// </summary>
+        float GetDrawnLineTop(int lineIndex) => lineIndex * LineHeightInPixels * WordWrapFontScale * LineHeightMultiplier;
+
+        /// <summary>
+        /// The height of one drawn glyph row, without the <see cref="LineHeightMultiplier"/> (which only
+        /// spaces lines apart): the right size for "half a line" offsets onto the ink.
+        /// </summary>
+        float DrawnGlyphRowHeight => LineHeightInPixels * WordWrapFontScale;
     }
 }

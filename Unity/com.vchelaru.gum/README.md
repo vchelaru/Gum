@@ -46,9 +46,9 @@ controls is off until you call `GumService.Default.UseKeyboardDefaults()` or `Us
 
 ## Rendering
 
-Gum draws on the GPU through SkiaGameRendering wherever SkiaGameRendering supports the graphics API.
-On any other API it draws on the CPU and uploads a texture each frame, and the console logs a warning
-saying why. `GumRenderer.Texture` holds the result either way; turn off `DrawToScreen` to show it yourself.
+Gum draws on the GPU through SkiaGameRendering. On a graphics API SkiaGameRendering doesn't support
+(WebGL, for example) `GumRenderer` logs an error and disables itself; there is no CPU fallback.
+`GumRenderer.Texture` holds the result; turn off `DrawToScreen` to show it yourself.
 
 ## IL2CPP
 

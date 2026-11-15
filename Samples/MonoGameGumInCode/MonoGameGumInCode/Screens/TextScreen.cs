@@ -101,9 +101,8 @@ internal class TextScreen : FrameworkElement
             "[Font=Courier New]a different font[/Font] runs, all styled inline in one Text.";
         container.Children.Add(bbcode);
 
-        // [State=Name] BBCode tag (MonoGame/raylib only -- SkiaGum has its own separate
-        // CustomSetPropertyOnRenderable.cs without this feature yet, so this section is excluded on
-        // Skia). The state is defined in code via AddStates (no Gum project needed) with a Color +
+        // [State=Name] BBCode tag. Gated #if !SKIA: the Skia BBCode parser has no [State=] support and
+        // prints the tag literally. The state is defined in code via AddStates (no Gum project needed) with a Color +
         // IsBold pair; only variables already wired for per-run application (like these two) apply to
         // the wrapped substring -- a state can hold anything, including layout properties like
         // X/Width, but those are silently skipped rather than applied to the whole element.
@@ -219,7 +218,7 @@ internal class TextScreen : FrameworkElement
     private const string TypewriterParagraph =
         "This paragraph types itself out one letter at a time. Press any key to start the reveal over from the beginning.";
     private const double TypewriterLettersPerSecond = 18;
-    private TextRuntime _typewriterText;
+    private TextRuntime _typewriterText = null!;
     private double _typewriterElapsedSeconds;
 
     /// <summary>
@@ -228,7 +227,7 @@ internal class TextScreen : FrameworkElement
     /// </summary>
     public void Tick(double elapsedSeconds)
     {
-        if (FormsUtilities.Keyboard.KeysTyped.Any())
+        if (FormsUtilities.Keyboard?.KeysTyped.Any() == true)
         {
             _typewriterElapsedSeconds = 0;
         }

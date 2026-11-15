@@ -14,7 +14,7 @@ public sealed class FreezeDiagnosticsPromptView : StackPanel
     {
         Spacing = 8;
         MaxWidth = 560;
-        TextBlock message = new TextBlock { TextWrapping = TextWrapping.Wrap };
+        SelectableTextBlock message = new SelectableTextBlock { TextWrapping = TextWrapping.Wrap };
         message.Bind(TextBlock.TextProperty, new Binding(nameof(FreezeDiagnosticsPromptViewModel.Message)));
         Children.Add(message);
 

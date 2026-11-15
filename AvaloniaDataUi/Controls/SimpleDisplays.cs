@@ -42,6 +42,8 @@ public class CheckBoxDisplay : DataUiDisplayBase
     private readonly StackPanel _panel;
     private Grid? _spaciousGrid;
     private TextBlock? _spaciousLabel;
+    private TextBlock? _chipText;
+    private Border? _chip;
 
     /// <summary>Builds the displayer.</summary>
     public CheckBoxDisplay()
@@ -63,22 +65,40 @@ public class CheckBoxDisplay : DataUiDisplayBase
         if (_spaciousGrid == null)
         {
             // The same 4px inset the other spacious labels have, so the label column lines up.
-            _spaciousLabel = new TextBlock { Margin = new Thickness(4, 0, 0, 0), VerticalAlignment = VerticalAlignment.Center, TextWrapping = TextWrapping.Wrap };
+            _spaciousLabel = new TextBlock { Margin = new Thickness(4, 0, 8, 0), VerticalAlignment = VerticalAlignment.Center, TextWrapping = TextWrapping.Wrap };
             _spaciousGrid = new Grid
             {
                 ColumnDefinitions = new ColumnDefinitions("100,*"),
                 RowDefinitions = new RowDefinitions("Auto,Auto"),
             };
             _panel.Children.Clear();
-            Grid.SetColumn(_checkBox, 1);
+            // A small chip after the box (InstanceMember.ChipText) names a state, such as "Required".
+            _chipText = new TextBlock { Opacity = 0.7 };
+            _chipText.Bind(TextBlock.FontSizeProperty, _chipText.GetResourceObservable("Frb.FontSize.Caption"));
+            _chip = new Border
+            {
+                Child = _chipText,
+                CornerRadius = new CornerRadius(10),
+                Padding = new Thickness(8, 1),
+                Margin = new Thickness(6, 0, 0, 0),
+                Background = new SolidColorBrush(Color.Parse("#40808080")),
+                VerticalAlignment = VerticalAlignment.Center,
+                IsVisible = false,
+            };
+            StackPanel boxAndChip = new StackPanel { Orientation = Orientation.Horizontal };
+            boxAndChip.Children.Add(_checkBox);
+            boxAndChip.Children.Add(_chip);
+            Grid.SetColumn(boxAndChip, 1);
             Grid.SetRow(_hint, 1);
             Grid.SetColumnSpan(_hint, 2);
             _spaciousGrid.Children.Add(_spaciousLabel);
-            _spaciousGrid.Children.Add(_checkBox);
+            _spaciousGrid.Children.Add(boxAndChip);
             _spaciousGrid.Children.Add(_hint);
             _checkBox.Margin = new Thickness(0, 4, 0, 4);
             Content = _spaciousGrid;
         }
+        _chipText!.Text = InstanceMember?.ChipText;
+        _chip!.IsVisible = !string.IsNullOrEmpty(InstanceMember?.ChipText);
         DataUiRowLayout.ConfigureLabelColumn(_spaciousGrid.ColumnDefinitions[0], InstanceMember?.FirstGridLength ?? 100);
         _spaciousLabel!.Text = InstanceMember?.DisplayName;
         // The text goes through an access-key parser, where "_" marks the key and "__" is a literal underscore.
@@ -309,6 +329,13 @@ public class ComboBoxDisplay : DataUiDisplayBase
         _label = new TextBlock { Margin = new Thickness(4, 0, 0, 0), VerticalAlignment = VerticalAlignment.Center, TextWrapping = TextWrapping.Wrap };
         _comboBox = new WheelIgnoringComboBox { HorizontalAlignment = HorizontalAlignment.Stretch, VerticalAlignment = VerticalAlignment.Center };
         _comboBox.SelectionChanged += HandleSelectionChanged;
+        _comboBox.PropertyChanged += (_, e) =>
+        {
+            if (e.Property == TemplatedControl.FontSizeProperty)
+            {
+                FitNarrowWidth();
+            }
+        };
         _comboBox.LostFocus += (_, _) =>
         {
             if (IsEditable)
@@ -342,6 +369,25 @@ public class ComboBoxDisplay : DataUiDisplayBase
         get => _comboBox.IsEditable;
         set => _comboBox.IsEditable = value;
     }
+
+    /// <summary>
+    /// When above 0, the drop-down is this many ems wide (so it follows the zoom) and left aligned instead
+    /// of filling the row. Set through <see cref="InstanceMember.PropertiesToSetOnDisplayer"/>.
+    /// </summary>
+    public double NarrowWidthInEm
+    {
+        get => _narrowWidthInEm;
+        set
+        {
+            _narrowWidthInEm = value;
+            _comboBox.HorizontalAlignment = value > 0 ? HorizontalAlignment.Left : HorizontalAlignment.Stretch;
+            FitNarrowWidth();
+        }
+    }
+    private double _narrowWidthInEm;
+
+    private void FitNarrowWidth() =>
+        _comboBox.Width = _narrowWidthInEm > 0 ? _comboBox.FontSize * _narrowWidthInEm : double.NaN;
 
     /// <summary>The drop-down, for tests.</summary>
     internal ComboBox ComboBox => _comboBox;

@@ -72,7 +72,7 @@ public class DarkProTemplateTests
         GumProjectSave formsTemplate = LoadFormsTemplate();
 
         darkPro.Behaviors.Single(b => b.Name == "ButtonBehavior").DefaultImplementation
-            .ShouldBe("DarkPro/Controls/Button");
+            .ShouldBe("DarkPro/Button");
         formsTemplate.Behaviors.Single(b => b.Name == "ButtonBehavior").DefaultImplementation
             .ShouldBe("Controls/ButtonStandard");
     }
@@ -211,7 +211,7 @@ public class DarkProTemplateTests
             // black/white contrast pair that must stay legible against any user-picked hue),
             // matching the code-only ColorPickerVisual, which hardcodes the same colors rather
             // than reading them from a theme's Colors class.
-            if (component.Name == "DarkPro/Controls/ColorPicker")
+            if (component.Name == "DarkPro/ColorPicker")
             {
                 continue;
             }

@@ -1,3 +1,4 @@
+using RaylibGum.Tests.Helpers;
 using Gum.Graphics.Animation;
 using Gum.GueDeriving;
 using Gum.Renderables;
@@ -85,23 +86,9 @@ public class NineSliceAnimationFrameTests : BaseTestClass
         }, borderScale, rotation, x, y);
     }
 
-    // A render texture is stored bottom-up in GL, so rows are flipped relative to draw space.
-    private static Color ReadPixel(RenderTexture2D renderTexture, int x, int y)
-    {
-        Image image = LoadImageFromTexture(renderTexture.Texture);
-        try
-        {
-            return GetImageColor(image, x, renderTexture.Texture.Height - 1 - y);
-        }
-        finally
-        {
-            UnloadImage(image);
-        }
-    }
-
     // The color at the center of the cell in column, row of the unrotated nine-slice at (10, 10).
     private static Color CellColor(RenderTexture2D target, int column, int row) =>
-        ReadPixel(target, 10 + column * 10 + 5, 10 + row * 10 + 5);
+        RaylibPixelHarness.ReadPixel(target, 10 + column * 10 + 5, 10 + row * 10 + 5);
 
     private static void ShouldBe(Color actual, Color expected)
     {
@@ -137,7 +124,7 @@ public class NineSliceAnimationFrameTests : BaseTestClass
         ShouldBe(CellColor(target, 2, 0), TexelColor(0, 0));
         ShouldBe(CellColor(target, 0, 2), TexelColor(2, 2));
         ShouldBe(CellColor(target, 1, 1), TexelColor(1, 1));
-        ReadPixel(target, 45, 25).A.ShouldBe((byte)0);
+        RaylibPixelHarness.ReadPixel(target, 45, 25).A.ShouldBe((byte)0);
 
         ClearRoot();
         UnloadTexture(texture);
@@ -153,7 +140,7 @@ public class NineSliceAnimationFrameTests : BaseTestClass
         ShouldBe(CellColor(target, 0, 0), TexelColor(0, 2));
         ShouldBe(CellColor(target, 2, 0), TexelColor(2, 2));
         ShouldBe(CellColor(target, 0, 2), TexelColor(0, 0));
-        ReadPixel(target, 25, 45).A.ShouldBe((byte)0);
+        RaylibPixelHarness.ReadPixel(target, 25, 45).A.ShouldBe((byte)0);
 
         ClearRoot();
         UnloadTexture(texture);
@@ -168,9 +155,9 @@ public class NineSliceAnimationFrameTests : BaseTestClass
         // cannot mirror.
         RenderTexture2D target = RenderGrid(texture, flipHorizontal: true, borderScale: 1);
 
-        ShouldBe(ReadPixel(target, 10, 10), TexelColor(2, 0));
-        ShouldBe(ReadPixel(target, 39, 10), TexelColor(0, 0));
-        ShouldBe(ReadPixel(target, 10, 39), TexelColor(2, 2));
+        ShouldBe(RaylibPixelHarness.ReadPixel(target, 10, 10), TexelColor(2, 0));
+        ShouldBe(RaylibPixelHarness.ReadPixel(target, 39, 10), TexelColor(0, 0));
+        ShouldBe(RaylibPixelHarness.ReadPixel(target, 10, 39), TexelColor(2, 2));
 
         ClearRoot();
         UnloadTexture(texture);
@@ -222,9 +209,9 @@ public class NineSliceAnimationFrameTests : BaseTestClass
         // Rotated 90 degrees counter-clockwise about its top-left it covers x 30..60, y 20..50: its
         // own +x points up and its own +y points right, so own cell (column, row) is centered at
         // screen (35 + 10 * row, 45 - 10 * column). Transposed, it shows texel (row, column).
-        ShouldBe(ReadPixel(target, 35, 45), TexelColor(0, 0));
-        ShouldBe(ReadPixel(target, 35, 25), TexelColor(0, 2));
-        ShouldBe(ReadPixel(target, 55, 45), TexelColor(2, 0));
+        ShouldBe(RaylibPixelHarness.ReadPixel(target, 35, 45), TexelColor(0, 0));
+        ShouldBe(RaylibPixelHarness.ReadPixel(target, 35, 25), TexelColor(0, 2));
+        ShouldBe(RaylibPixelHarness.ReadPixel(target, 55, 45), TexelColor(2, 0));
 
         ClearRoot();
         UnloadTexture(texture);
@@ -247,10 +234,10 @@ public class NineSliceAnimationFrameTests : BaseTestClass
 
         // Un-offset the nine-slice would cover x 10..40, y 10..40; the offset moves it to
         // x 20..50, y 5..35.
-        ShouldBe(ReadPixel(target, 25, 10), TexelColor(0, 0));
-        ReadPixel(target, 15, 15).A.ShouldBe((byte)0);
-        ReadPixel(target, 45, 38).A.ShouldBe((byte)0);
-        ShouldBe(ReadPixel(target, 45, 30), TexelColor(2, 2));
+        ShouldBe(RaylibPixelHarness.ReadPixel(target, 25, 10), TexelColor(0, 0));
+        RaylibPixelHarness.ReadPixel(target, 15, 15).A.ShouldBe((byte)0);
+        RaylibPixelHarness.ReadPixel(target, 45, 38).A.ShouldBe((byte)0);
+        ShouldBe(RaylibPixelHarness.ReadPixel(target, 45, 30), TexelColor(2, 2));
 
         ClearRoot();
         UnloadTexture(texture);
@@ -272,9 +259,9 @@ public class NineSliceAnimationFrameTests : BaseTestClass
             RelativeY = 5,
         }, borderScale: 1);
 
-        ShouldBe(ReadPixel(target, 20, 5), TexelColor(0, 0));
-        ReadPixel(target, 15, 15).A.ShouldBe((byte)0);
-        ReadPixel(target, 45, 38).A.ShouldBe((byte)0);
+        ShouldBe(RaylibPixelHarness.ReadPixel(target, 20, 5), TexelColor(0, 0));
+        RaylibPixelHarness.ReadPixel(target, 15, 15).A.ShouldBe((byte)0);
+        RaylibPixelHarness.ReadPixel(target, 45, 38).A.ShouldBe((byte)0);
 
         ClearRoot();
         UnloadTexture(texture);
@@ -296,8 +283,8 @@ public class NineSliceAnimationFrameTests : BaseTestClass
 
         // Un-offset, a 90 degree nine-slice covers x 30..60, y 20..50; its own +x points up, so
         // the offset moves it to y 10..40.
-        ShouldBe(ReadPixel(target, 35, 35), TexelColor(0, 0));
-        ReadPixel(target, 35, 45).A.ShouldBe((byte)0);
+        ShouldBe(RaylibPixelHarness.ReadPixel(target, 35, 35), TexelColor(0, 0));
+        RaylibPixelHarness.ReadPixel(target, 35, 45).A.ShouldBe((byte)0);
 
         ClearRoot();
         UnloadTexture(texture);

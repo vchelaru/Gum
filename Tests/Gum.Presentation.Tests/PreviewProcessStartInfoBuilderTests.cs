@@ -59,4 +59,60 @@ public class PreviewProcessStartInfoBuilderTests
 
         startInfo.ArgumentList[7].ShouldBe("/MyGame/");
     }
+
+    [Fact]
+    public void Build_WithLogPath_AddsLogArgument()
+    {
+        ProcessStartInfo startInfo = PreviewProcessStartInfoBuilder.Build(
+            "/Gum/Preview/GumPreview", "/p.gumx", "Main", "/sel.txt", "/MyGame/", 1, logPath: "/Temp/preview.log");
+
+        startInfo.ArgumentList.ShouldContain("--log");
+        startInfo.ArgumentList[startInfo.ArgumentList.IndexOf("--log") + 1].ShouldBe("/Temp/preview.log");
+    }
+
+    [Fact]
+    public void Build_LogPathWithSpaces_PassesItAsOneArgument()
+    {
+        ProcessStartInfo startInfo = PreviewProcessStartInfoBuilder.Build(
+            "/Gum/Preview/GumPreview", "/p.gumx", "Main", "/sel.txt", "/MyGame/", 1, logPath: "/My Logs/preview log.txt");
+
+        startInfo.ArgumentList[startInfo.ArgumentList.IndexOf("--log") + 1].ShouldBe("/My Logs/preview log.txt");
+        startInfo.ArgumentList.Count.ShouldBe(12);
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    public void Build_WithoutLogPath_OmitsLogArgument(string? logPath)
+    {
+        ProcessStartInfo startInfo = PreviewProcessStartInfoBuilder.Build(
+            "/Gum/Preview/GumPreview", "/p.gumx", "Main", "/sel.txt", "/MyGame/", 1, logPath: logPath);
+
+        startInfo.ArgumentList.ShouldNotContain("--log");
+    }
+
+    [Fact]
+    public void ResolveLogPath_DebugTool_PassesDefaultLogPath()
+    {
+        PreviewProcessStartInfoBuilder.ResolveLogPath(null, isDebugBuild: true).ShouldBe(PreviewProcessStartInfoBuilder.DefaultLogPath);
+    }
+
+    [Fact]
+    public void ResolveLogPath_ReleaseTool_PassesNoLogPath()
+    {
+        PreviewProcessStartInfoBuilder.ResolveLogPath(null, isDebugBuild: false).ShouldBeNull();
+    }
+
+    [Fact]
+    public void ResolveLogPath_EnvironmentVariable_OverridesInEitherBuild()
+    {
+        PreviewProcessStartInfoBuilder.ResolveLogPath("/x/mine.log", isDebugBuild: true).ShouldBe("/x/mine.log");
+        PreviewProcessStartInfoBuilder.ResolveLogPath("/x/mine.log", isDebugBuild: false).ShouldBe("/x/mine.log");
+    }
+
+    [Fact]
+    public void DefaultLogPath_MatchesPreviewsOwnDefault()
+    {
+        PreviewProcessStartInfoBuilder.DefaultLogPath.ShouldBe(global::GumPreview.PreviewDebugLog.DefaultPath);
+    }
 }

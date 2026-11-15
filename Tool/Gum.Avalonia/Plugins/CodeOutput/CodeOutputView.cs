@@ -51,13 +51,17 @@ public sealed class CodeOutputView : Grid, ICodeOutputTabHost
         _settingsMembers = settingsMembers;
         DataContext = viewModel;
 
-        Grid previewHeader = new Grid { ColumnDefinitions = new ColumnDefinitions("*,Auto"), Margin = new Thickness(4, 2) };
-        previewHeader.Children.Add(new TextBlock { Text = "Preview", VerticalAlignment = VerticalAlignment.Center });
+        // A WrapPanel, so with three choices at a large zoom the choices drop under the label instead of clipping it.
+        WrapPanel previewHeader = new WrapPanel { Margin = new Thickness(4, 2) };
+        previewHeader.Children.Add(new TextBlock { Text = "Preview", VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(0, 0, 8, 0) });
         StackPanel previewChoice = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 2 };
         _selectedObjectToggle = CreateToggle("Object", "Selected Object", nameof(CodeWindowViewModel.IsSelectedObjectSelected));
         previewChoice.Children.Add(_selectedObjectToggle);
         previewChoice.Children.Add(CreateToggle("State", "Selected State", nameof(CodeWindowViewModel.IsSelectedStateSelected)));
-        Grid.SetColumn(previewChoice, 1);
+        // The code a game needs to load the project and enable what the Preview enables; hidden for output libraries with no such code.
+        ToggleButton gameToggle = CreateToggle("Game", "Game setup matching the Preview", nameof(CodeWindowViewModel.IsGameSetupSelected));
+        gameToggle.Bind(IsVisibleProperty, new Binding(nameof(CodeWindowViewModel.HasGameSetup)));
+        previewChoice.Children.Add(gameToggle);
         previewHeader.Children.Add(previewChoice);
 
         _code = new TextBox
@@ -316,9 +320,10 @@ public class MainCodeOutputPlugin : CodeOutputPluginBase
         IRetryService retryService,
         IMessenger messenger,
         IFileCommands fileCommands,
-        IDispatcher dispatcher)
+        IDispatcher dispatcher,
+        IProjectRestrictions projectRestrictions)
         : base(guiCommands, dialogService, nameVerifier, localizationService, projectState, typeManager,
-            outputManager, selectedState, retryService, messenger, fileCommands, dispatcher)
+            outputManager, selectedState, retryService, messenger, fileCommands, dispatcher, projectRestrictions)
     {
     }
 

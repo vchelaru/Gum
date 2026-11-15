@@ -21,7 +21,7 @@ graphicalUiElement.RemoveFromRoot();
 To remove everything under the root, such as when switching screens, clear its children:
 
 ```csharp
-GumService.Default.Root.Children.Clear();
+GumUI.Root.Children.Clear();
 ```
 
 `PopupRoot` and `ModalRoot` are not affected. For a full example, see [Multiple Screens](../../getting-started/tutorials/gum-project-forms-tutorial/multiple-screens.md). For more info on parenting, see the [Parent](parent.md) page.

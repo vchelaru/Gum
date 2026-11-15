@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using ShadowDusk.Compiler;
-using ShadowDusk.Compiler.Slang;
+
 using ShadowDusk.Core;
 using ShadowDusk.Core.Preprocessor;
 
@@ -17,51 +17,25 @@ namespace EditorTabPlugin_XNA.Services;
 internal static class ShaderSourceCompiler
 {
     /// <summary>
-    /// Returns ordinary <c>.fx</c> effect text for <paramref name="absolutePath"/>. A <c>.slang</c> file is
-    /// converted first via ShadowDusk's Slang frontend (Slang has no technique/pass concept, so it can't go
-    /// through <see cref="EffectCompiler.Compile"/> directly); every other extension is assumed to already be
-    /// <c>.fx</c> source and passed through unchanged.
-    /// </summary>
-    public static string ReadFxSource(string absolutePath)
-    {
-        string sourceText = File.ReadAllText(absolutePath);
-        if (!string.Equals(Path.GetExtension(absolutePath), SlangFrontend.Extension, StringComparison.OrdinalIgnoreCase))
-        {
-            return sourceText;
-        }
-
-        Result<SlangFxConversion, ShaderError[]> conversion = SlangFrontend.ConvertToFx(
-            sourceText,
-            new SlangConvertOptions { SourceName = absolutePath });
-
-        if (conversion.IsFailure)
-        {
-            throw new InvalidOperationException(
-                "ShadowDusk could not convert the Slang render-target shader '" + absolutePath + "':\n" +
-                string.Join("\n", conversion.Error.Select(error => error.Message)));
-        }
-
-        return conversion.Value.FxText;
-    }
-
-    /// <summary>
     /// Compiles <paramref name="source"/> for <paramref name="target"/> and returns the bytecode, or throws
-    /// naming <paramref name="sourcePath"/> and every compiler error. <paramref name="sourcePath"/> is the
-    /// shader's own path, which is what a relative <c>#include</c> resolves against. Each file the
+    /// naming <paramref name="sourcePath"/> and every compiler error. ShadowDusk tells <c>.fx</c> from Slang by
+    /// the text, so the file name plays no part; <paramref name="sourcePath"/> is the shader's own path, which
+    /// is what a relative <c>#include</c> resolves against. Input ShadowDusk does not read throws too. Each file the
     /// shader includes, nested includes too, is passed to <paramref name="onInclude"/> as ShadowDusk looks for it,
     /// a file that does not exist yet included, so creating it later can be noticed.
     /// </summary>
     public static byte[] Compile(string source, PlatformTarget target, string sourcePath, Action<string>? onInclude = null)
     {
-        EffectCompiler compiler = new EffectCompiler();
-        Result<CompiledShader, ShaderError[]> result = compiler.Compile(
+        Result<CompiledShader, ShaderError[]> result = ShaderConverter.Compile(
+            new EffectCompiler(),
             source,
             new CompilerOptions
             {
                 Target = target,
                 SourceFileName = sourcePath,
                 IncludeResolver = new ReportingIncludeResolver(sourcePath, onInclude),
-            });
+            },
+            sourcePath);
         if (result.IsFailure)
         {
             throw new InvalidOperationException(

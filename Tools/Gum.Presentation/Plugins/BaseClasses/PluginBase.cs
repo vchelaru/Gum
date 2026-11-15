@@ -216,6 +216,8 @@ public abstract class PluginBase : IPlugin
     public event Action<StateSaveCategory, string>? CategoryRename;
     public event Action<StateSaveCategory>? CategoryAdd;
     public event Action<StateSaveCategory>? CategoryDelete;
+    /// <summary>Raised after a category's palette color was set or cleared.</summary>
+    public event Action<StateSaveCategory>? CategoryColorChange;
     public event Action<string, StateSaveCategory>? VariableRemovedFromCategory;
     public event Action<StateSaveCategory?>? ReactToStateSaveCategorySelected;
 
@@ -269,6 +271,22 @@ public abstract class PluginBase : IPlugin
     /// [bool] - whether the value is committed, as described on <see cref="VariableSet"/>.
     /// </summary>
     public event Action<ElementSave?, InstanceSave?, string, object?, bool>? VariableSetLate;
+
+    /// <summary>
+    /// True while a batch of <see cref="VariableSet"/> calls is running (a multi-select edit). A plugin
+    /// whose reaction covers the whole element can skip it then and do it once in
+    /// <see cref="VariableSetBatchCompleted"/>.
+    /// </summary>
+    protected internal bool IsVariableSetBatchOpen { get; set; }
+
+    /// <summary>
+    /// Raised once per element when a batch of <see cref="VariableSet"/> calls ends.
+    /// [ElementSave] - the element the batch changed. May be null.
+    /// </summary>
+    public event Action<ElementSave?>? VariableSetBatchCompleted;
+
+    public void CallVariableSetBatchCompleted(ElementSave? element) =>
+        VariableSetBatchCompleted?.Invoke(element);
     public event Action<IStateContainer?, VariableSave?>? VariableSelected;
 
     /// <summary>
@@ -359,6 +377,22 @@ public abstract class PluginBase : IPlugin
 
 
     public event Func<string, IRenderableIpso?>? CreateRenderableForType;
+
+    /// <summary>
+    /// Query event: a plugin that knows the named regions of a Source File (a sprite sheet, a PSD) returns
+    /// them, in texture pixels, and the Texture Coordinates tab outlines them and applies one on
+    /// double-click. The argument is the Source File as the project stores it; return null or empty when
+    /// the file is not one the plugin knows. Called when the selection or its Source File changes, and
+    /// the result is cached per file, so it should be cheap. Results from every plugin are concatenated.
+    /// </summary>
+    public event Func<FilePath, IReadOnlyList<TextureRegion>?>? GetTextureRegionsForFile;
+
+    /// <summary>
+    /// Raised once after the user clicks a region in the Texture Coordinates tab and the region has been
+    /// applied to the selected object's texture variables. Carries the Source File and the region, so a
+    /// plugin can tell which one (by Key) was chosen. Not raised for drags, hovers, or clicks outside every region.
+    /// </summary>
+    public event Action<FilePath, TextureRegion>? TextureRegionChosen;
 
     // Vic says - why did we make these events? It adds lots of overhead, and I dont' think it helps in any way
     // Oct 6, 2021 - If we have an event, we can have the null check inside the plugin base, which makes
@@ -538,6 +572,8 @@ public abstract class PluginBase : IPlugin
 
     public void CallStateCategoryDelete(StateSaveCategory category) => CategoryDelete?.Invoke(category);
 
+    public void CallStateCategoryColorChange(StateSaveCategory category) => CategoryColorChange?.Invoke(category);
+
     public void CallVariableRemovedFromCategory(string variableName, StateSaveCategory category) => VariableRemovedFromCategory?.Invoke(variableName, category);
 
     public void CallInstanceRename(ElementSave? parentElement, InstanceSave instanceSave, string oldName) => 
@@ -643,6 +679,10 @@ public abstract class PluginBase : IPlugin
     public StateSave? CallGetDefaultStateFor(string type) => GetDefaultStateForType?.Invoke(type);
 
     public IRenderableIpso? CallCreateRenderableForType(string type) => CreateRenderableForType?.Invoke(type);
+
+    public IReadOnlyList<TextureRegion>? CallGetTextureRegionsForFile(FilePath file) => GetTextureRegionsForFile?.Invoke(file);
+
+    public void CallTextureRegionChosen(FilePath file, TextureRegion region) => TextureRegionChosen?.Invoke(file, region);
 
     // Was internal - bumped to public because PluginBase moved to Gum.Presentation while its only
     // caller (PluginManager) stays in Gum.csproj; the two no longer share an assembly (issue #3950).

@@ -28,6 +28,8 @@ KNI decodes images with the decoder of its platform head: System.Drawing on Desk
 
 An animated `.gif` shows its first frame. SkiaGum hands the file to SkiaSharp without checking the extension, so it loads any format SkiaSharp decodes, including `.webp`. On raylib, Gum picks the decoder from the file extension, so keep the extension in line with the file's real format. An image that SkiaSharp or raylib cannot decode, such as a `.jpg` on raylib, fails like a missing file and follows `MissingFileBehavior`. Convert it to PNG or add an [image decoder](custom-image-formats.md).
 
+`ContentLoader.SupportedImageExtensions` lists the image extensions your runtime loads, including the ones a registered image decoder declares.
+
 {% hint style="info" %}
 Available in November 2026, or now if building Gum from source.
 {% endhint %}
@@ -67,6 +69,18 @@ On every runtime, a Sprite or NineSlice `SourceFile` accepts `.achx` and `.achj`
 ## Localization
 
 On every runtime, Gum loads `.csv` and `.resx` localization files. A file linked in a Gum project loads when you initialize with that project. Code-only projects load a file with `AddCsvDatabase` or `AddResxDatabase`. See [Localization](../localization.md).
+
+## Shader Files
+
+A render target container loads a shader file through `SourceShaderFile`. See [ContainerRuntime](../standard-visuals/containerruntime.md#render-target-shaders-rendertargeteffect) for the code. Each ShadowDusk package is optional and registers with `UseShadowDusk()`.
+
+| | MonoGame | FNA | KNI | raylib | SkiaGum |
+| --- | --- | --- | --- | --- | --- |
+| `.fx` | `Gum.MonoGame.ShadowDusk` | `Gum.FNA.ShadowDusk` | `Gum.KNI.ShadowDusk` | `Gum.raylib.ShadowDusk` | `Gum.SkiaSharp.ShadowDusk` |
+| `.slang` | `Gum.MonoGame.ShadowDusk` | `Gum.FNA.ShadowDusk` | `Gum.KNI.ShadowDusk` | `Gum.raylib.ShadowDusk` | `Gum.SkiaSharp.ShadowDusk` |
+| `.sksl` |  |  |  |  | ✓ |
+
+SkiaGum is the only runtime that loads a shader file without a package, and only `.sksl`. On MonoGame, KNI, FNA and raylib, you can register your own shader resolver to load another format.
 
 ## SVG
 

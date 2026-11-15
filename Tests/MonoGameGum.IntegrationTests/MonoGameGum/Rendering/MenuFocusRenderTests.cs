@@ -51,27 +51,27 @@ public class MenuFocusRenderTests : BaseTestClass
     public static IEnumerable<object[]> ToolTemplates()
     {
         yield return new object[] { "standard", "FormsTemplate", "Controls/", new XnaColor(32, 32, 32) };
-        yield return new object[] { "bubblegum", "FormsThemes/Bubblegum", "Bubblegum/Controls/", new XnaColor(255, 240, 249) };
-        yield return new object[] { "darkpro", "FormsThemes/DarkPro", "DarkPro/Controls/", new XnaColor(26, 27, 30) };
-        yield return new object[] { "editor", "FormsThemes/Editor", "Editor/Controls/", new XnaColor(27, 27, 27) };
-        yield return new object[] { "forestglade", "FormsThemes/ForestGlade", "ForestGlade/Controls/", new XnaColor(10, 45, 38) };
-        yield return new object[] { "hazard", "FormsThemes/Hazard", "Hazard/Controls/", new XnaColor(10, 10, 8) };
-        yield return new object[] { "meadow", "FormsThemes/Meadow", "Meadow/Controls/", new XnaColor(247, 237, 214) };
-        yield return new object[] { "neon", "FormsThemes/Neon", "Neon/Controls/", new XnaColor(6, 6, 18) };
-        yield return new object[] { "retro95", "FormsThemes/Retro95", "Retro95/Controls/", new XnaColor(192, 192, 192) };
+        yield return new object[] { "bubblegum", "FormsThemes/Bubblegum", "Bubblegum/", new XnaColor(255, 240, 249) };
+        yield return new object[] { "darkpro", "FormsThemes/DarkPro", "DarkPro/", new XnaColor(26, 27, 30) };
+        yield return new object[] { "editor", "FormsThemes/Editor", "Editor/", new XnaColor(27, 27, 27) };
+        yield return new object[] { "forestglade", "FormsThemes/ForestGlade", "ForestGlade/", new XnaColor(10, 45, 38) };
+        yield return new object[] { "hazard", "FormsThemes/Hazard", "Hazard/", new XnaColor(10, 10, 8) };
+        yield return new object[] { "meadow", "FormsThemes/Meadow", "Meadow/", new XnaColor(247, 237, 214) };
+        yield return new object[] { "neon", "FormsThemes/Neon", "Neon/", new XnaColor(6, 6, 18) };
+        yield return new object[] { "retro95", "FormsThemes/Retro95", "Retro95/", new XnaColor(192, 192, 192) };
     }
 
     public static IEnumerable<object[]> Pairs()
     {
         yield return new object[] { "standard", null!, "FormsTemplate", "Controls/", new XnaColor(32, 32, 32) };
-        yield return new object[] { "bubblegum", (Action)Gum.Themes.Bubblegum.BubblegumTheme.Apply, "FormsThemes/Bubblegum", "Bubblegum/Controls/", new XnaColor(255, 240, 249) };
-        yield return new object[] { "darkpro", (Action)Gum.Themes.DarkPro.DarkProTheme.Apply, "FormsThemes/DarkPro", "DarkPro/Controls/", new XnaColor(26, 27, 30) };
-        yield return new object[] { "editor", (Action)Gum.Themes.Editor.EditorTheme.Apply, "FormsThemes/Editor", "Editor/Controls/", new XnaColor(27, 27, 27) };
-        yield return new object[] { "forestglade", (Action)Gum.Themes.ForestGlade.ForestGladeTheme.Apply, "FormsThemes/ForestGlade", "ForestGlade/Controls/", new XnaColor(10, 45, 38) };
-        yield return new object[] { "hazard", (Action)Gum.Themes.Hazard.HazardTheme.Apply, "FormsThemes/Hazard", "Hazard/Controls/", new XnaColor(10, 10, 8) };
-        yield return new object[] { "meadow", (Action)Gum.Themes.Meadow.MeadowTheme.Apply, "FormsThemes/Meadow", "Meadow/Controls/", new XnaColor(247, 237, 214) };
-        yield return new object[] { "neon", (Action)Gum.Themes.Neon.NeonTheme.Apply, "FormsThemes/Neon", "Neon/Controls/", new XnaColor(6, 6, 18) };
-        yield return new object[] { "retro95", (Action)Gum.Themes.Retro95.Retro95Theme.Apply, "FormsThemes/Retro95", "Retro95/Controls/", new XnaColor(192, 192, 192) };
+        yield return new object[] { "bubblegum", (Action)Gum.Themes.Bubblegum.BubblegumTheme.Apply, "FormsThemes/Bubblegum", "Bubblegum/", new XnaColor(255, 240, 249) };
+        yield return new object[] { "darkpro", (Action)Gum.Themes.DarkPro.DarkProTheme.Apply, "FormsThemes/DarkPro", "DarkPro/", new XnaColor(26, 27, 30) };
+        yield return new object[] { "editor", (Action)Gum.Themes.Editor.EditorTheme.Apply, "FormsThemes/Editor", "Editor/", new XnaColor(27, 27, 27) };
+        yield return new object[] { "forestglade", (Action)Gum.Themes.ForestGlade.ForestGladeTheme.Apply, "FormsThemes/ForestGlade", "ForestGlade/", new XnaColor(10, 45, 38) };
+        yield return new object[] { "hazard", (Action)Gum.Themes.Hazard.HazardTheme.Apply, "FormsThemes/Hazard", "Hazard/", new XnaColor(10, 10, 8) };
+        yield return new object[] { "meadow", (Action)Gum.Themes.Meadow.MeadowTheme.Apply, "FormsThemes/Meadow", "Meadow/", new XnaColor(247, 237, 214) };
+        yield return new object[] { "neon", (Action)Gum.Themes.Neon.NeonTheme.Apply, "FormsThemes/Neon", "Neon/", new XnaColor(6, 6, 18) };
+        yield return new object[] { "retro95", (Action)Gum.Themes.Retro95.Retro95Theme.Apply, "FormsThemes/Retro95", "Retro95/", new XnaColor(192, 192, 192) };
     }
 
     // The keyboard highlight is the Menu's only focus indicator, so the tool's MenuItem must match the
@@ -139,7 +139,7 @@ public class MenuFocusRenderTests : BaseTestClass
     // The bar reads its fill from the Styles InputBackground swatch, so recoloring the swatch recolors the bar (#6732).
     [Theory]
     [InlineData("FormsTemplate", "Controls/", "Styles")]
-    [InlineData("FormsThemes/Editor", "Editor/Controls/", "Editor/Styles")]
+    [InlineData("FormsThemes/Editor", "Editor/", "Editor/Styles")]
     public void Tool_MenuBar_FollowsInputBackgroundSwatch(string templateFolder, string componentPrefix, string stylesName)
     {
         WithToolProject(templateFolder, mutateProject: null, () =>
@@ -207,8 +207,8 @@ public class MenuFocusRenderTests : BaseTestClass
     // Like the Tooltip, a ScrollViewer template that user code registered wins over the project's components,
     // the ScrollViewer one (Bubblegum) and the MenuItemSubmenuPopupBehavior one (Retro95) (#6720).
     [Theory]
-    [InlineData("bubblegum", "FormsThemes/Bubblegum", "Bubblegum/Controls/", 255, 240, 249)]
-    [InlineData("retro95", "FormsThemes/Retro95", "Retro95/Controls/", 192, 192, 192)]
+    [InlineData("bubblegum", "FormsThemes/Bubblegum", "Bubblegum/", 255, 240, 249)]
+    [InlineData("retro95", "FormsThemes/Retro95", "Retro95/", 192, 192, 192)]
     public void Tool_SubmenuPopup_UserScrollViewerTemplate_WinsOverProjectComponent(string themeName, string templateFolder, string componentPrefix, int red, int green, int blue)
     {
         const string userVisualName = "UserScrollViewer";
@@ -241,7 +241,7 @@ public class MenuFocusRenderTests : BaseTestClass
                 MenuItem.DefaultSubmenuPopupTemplate = new VisualTemplate((_, createForms) =>
                     new global::Gum.Forms.DefaultVisuals.V3.ScrollViewerVisual(tryCreateFormsObject: createForms) { Name = "DefaultSubmenuPopup" });
 
-                (MenuItem file, MenuItem _) = OpenNestedMenu("Retro95/Controls/");
+                (MenuItem file, MenuItem _) = OpenNestedMenu("Retro95/");
 
                 file.itemsPopup.ShouldNotBeNull().Visual.Name.ShouldBe("DefaultSubmenuPopup");
             }
@@ -260,11 +260,11 @@ public class MenuFocusRenderTests : BaseTestClass
         {
             MenuItem Item(string header)
             {
-                MenuItem item = FromComponent<MenuItem>("Retro95/Controls/MenuItem");
+                MenuItem item = FromComponent<MenuItem>("Retro95/MenuItem");
                 item.Header = header;
                 return item;
             }
-            Menu menu = FromComponent<Menu>("Retro95/Controls/Menu");
+            Menu menu = FromComponent<Menu>("Retro95/Menu");
             MenuItem file = Item("File");
             file.Items!.Add(Item("New"));
             menu.Items!.Add(file);
@@ -273,7 +273,7 @@ public class MenuFocusRenderTests : BaseTestClass
 
             file.itemsPopup.ShouldBeNull("before opening");
             file.TryShowPopup();
-            file.itemsPopup.ShouldNotBeNull("after opening").Visual.ElementSave.ShouldNotBeNull().Name.ShouldBe("Retro95/Controls/MenuItemSubmenuPopup");
+            file.itemsPopup.ShouldNotBeNull("after opening").Visual.ElementSave.ShouldNotBeNull().Name.ShouldBe("Retro95/MenuItemSubmenuPopup");
         });
     }
 
@@ -284,12 +284,12 @@ public class MenuFocusRenderTests : BaseTestClass
     {
         WithToolProject("FormsThemes/Retro95", mutateProject: null, () =>
         {
-            (MenuItem _, MenuItem recent) = OpenNestedMenu("Retro95/Controls/");
+            (MenuItem _, MenuItem recent) = OpenNestedMenu("Retro95/");
             ScrollViewer popup = recent.itemsPopup.ShouldNotBeNull();
-            popup.Visual.ElementSave.ShouldNotBeNull().Name.ShouldBe("Retro95/Controls/MenuItemSubmenuPopup");
+            popup.Visual.ElementSave.ShouldNotBeNull().Name.ShouldBe("Retro95/MenuItemSubmenuPopup");
 
             float heightBefore = popup.Visual.AbsoluteHeight;
-            MenuItem added = FromComponent<MenuItem>("Retro95/Controls/MenuItem");
+            MenuItem added = FromComponent<MenuItem>("Retro95/MenuItem");
             added.Header = "Third";
             recent.Items!.Add(added);
             (popup.Visual.AbsoluteHeight - heightBefore).ShouldBe(added.Visual.AbsoluteHeight, 1f);
@@ -304,13 +304,13 @@ public class MenuFocusRenderTests : BaseTestClass
         WithToolProject("FormsThemes/Retro95", mutateProject: null, () =>
         {
             GumProjectSave project = ObjectFinder.Self.GumProjectSave.ShouldNotBeNull();
-            ComponentSave popupComponent = project.Components.Single(item => item.Name == "Retro95/Controls/MenuItemSubmenuPopup");
+            ComponentSave popupComponent = project.Components.Single(item => item.Name == "Retro95/MenuItemSubmenuPopup");
             project.Components.Remove(popupComponent);
-            ObjectFinder.Self.GetComponent("Retro95/Controls/MenuItemSubmenuPopup").ShouldBeNull("removed component still found");
+            ObjectFinder.Self.GetComponent("Retro95/MenuItemSubmenuPopup").ShouldBeNull("removed component still found");
 
-            (MenuItem file, MenuItem _) = OpenNestedMenu("Retro95/Controls/");
+            (MenuItem file, MenuItem _) = OpenNestedMenu("Retro95/");
 
-            file.itemsPopup.ShouldNotBeNull().Visual.ElementSave.ShouldNotBeNull().Name.ShouldBe("Retro95/Controls/ScrollViewer");
+            file.itemsPopup.ShouldNotBeNull().Visual.ElementSave.ShouldNotBeNull().Name.ShouldBe("Retro95/ScrollViewer");
         });
     }
 
@@ -328,9 +328,9 @@ public class MenuFocusRenderTests : BaseTestClass
 
         WithToolProject("FormsThemes/Retro95", DeleteBehaviorFile, () =>
         {
-            (MenuItem file, MenuItem _) = OpenNestedMenu("Retro95/Controls/");
+            (MenuItem file, MenuItem _) = OpenNestedMenu("Retro95/");
 
-            file.itemsPopup.ShouldNotBeNull().Visual.ElementSave.ShouldNotBeNull().Name.ShouldBe("Retro95/Controls/MenuItemSubmenuPopup");
+            file.itemsPopup.ShouldNotBeNull().Visual.ElementSave.ShouldNotBeNull().Name.ShouldBe("Retro95/MenuItemSubmenuPopup");
         });
     }
 
@@ -340,12 +340,12 @@ public class MenuFocusRenderTests : BaseTestClass
     {
         WithToolProject("FormsThemes/Bubblegum", mutateProject: null, () =>
         {
-            (MenuItem _, MenuItem recent) = OpenNestedMenu("Bubblegum/Controls/");
+            (MenuItem _, MenuItem recent) = OpenNestedMenu("Bubblegum/");
             ScrollViewer popup = recent.itemsPopup.ShouldNotBeNull();
-            popup.Visual.ElementSave.ShouldNotBeNull().Name.ShouldBe("Bubblegum/Controls/ScrollViewer");
+            popup.Visual.ElementSave.ShouldNotBeNull().Name.ShouldBe("Bubblegum/ScrollViewer");
 
             float heightBefore = popup.Visual.AbsoluteHeight;
-            MenuItem added = FromComponent<MenuItem>("Bubblegum/Controls/MenuItem");
+            MenuItem added = FromComponent<MenuItem>("Bubblegum/MenuItem");
             added.Header = "Third";
             recent.Items!.Add(added);
             (popup.Visual.AbsoluteHeight - heightBefore).ShouldBe(added.Visual.AbsoluteHeight, 1f);
@@ -358,7 +358,7 @@ public class MenuFocusRenderTests : BaseTestClass
     {
         static void RemoveScrollViewerBehavior(string projectDir)
         {
-            string path = Path.Combine(projectDir, "Components", "Bubblegum", "Controls", "ScrollViewer.gucx");
+            string path = Path.Combine(projectDir, "Components", "Bubblegum", "ScrollViewer.gucx");
             string text = File.ReadAllText(path);
             string withoutBehavior = System.Text.RegularExpressions.Regex.Replace(text,
                 @"<ElementBehaviorReference>\s*<BehaviorName>ScrollViewerBehavior</BehaviorName>\s*</ElementBehaviorReference>", "");
@@ -368,12 +368,12 @@ public class MenuFocusRenderTests : BaseTestClass
 
         WithToolProject("FormsThemes/Bubblegum", RemoveScrollViewerBehavior, () =>
         {
-            (MenuItem file, MenuItem _) = OpenNestedMenu("Bubblegum/Controls/");
+            (MenuItem file, MenuItem _) = OpenNestedMenu("Bubblegum/");
             ScrollViewer popup = file.itemsPopup.ShouldNotBeNull();
             popup.Visual.ShouldBeOfType<global::Gum.Forms.DefaultVisuals.V3.ScrollViewerVisual>();
 
             float heightBefore = popup.Visual.AbsoluteHeight;
-            MenuItem added = FromComponent<MenuItem>("Bubblegum/Controls/MenuItem");
+            MenuItem added = FromComponent<MenuItem>("Bubblegum/MenuItem");
             added.Header = "Close";
             file.Items!.Add(added);
             (popup.Visual.AbsoluteHeight - heightBefore).ShouldBe(added.Visual.AbsoluteHeight, 1f);

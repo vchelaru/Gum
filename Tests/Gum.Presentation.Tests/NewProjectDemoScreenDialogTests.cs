@@ -89,7 +89,7 @@ public class NewProjectDemoScreenDialogTests
         NewProjectDialogViewModel viewModel = new NewProjectDialogViewModel(
             new ThemeSelectionViewModel(_formsFileService.Object, new Mock<IProjectState>().Object),
             _service.Object, new Mock<IExistingCodeProjectDetector>().Object, new Mock<IDialogService>().Object,
-            new Mock<INewProjectLocationSettings>().Object)
+            new Mock<INewProjectLocationSettings>().Object, runChecksInline: true)
         {
             ProjectName = "MyGame",
             Location = Folder,
@@ -200,12 +200,31 @@ public class NewProjectDemoScreenDialogTests
     public void IsGenerateCodeEnabled_RaisesWhenFormsAreToggled()
     {
         NewProjectDialogViewModel viewModel = Create();
-        List<string?> raised = new List<string?>();
-        viewModel.PropertyChanged += (_, e) => raised.Add(e.PropertyName);
+        System.Collections.Concurrent.ConcurrentQueue<string?> raised = new System.Collections.Concurrent.ConcurrentQueue<string?>();
+        viewModel.PropertyChanged += (_, e) => raised.Enqueue(e.PropertyName);
 
         viewModel.IsIncludeFormsControls = false;
 
         raised.ShouldContain(nameof(NewProjectDialogViewModel.IsGenerateCodeEnabled));
+    }
+
+    [Fact]
+    public void Checks_RunOnCallingThread_WhenRunChecksInlineIsRequested()
+    {
+        // A pool-thread continuation would mutate the view model concurrently with the caller (#7710).
+        int checkThreadId = -1;
+        Mock<IExistingCodeProjectDetector> detector = new();
+        detector.Setup(d => d.TargetExists(It.IsAny<string>(), It.IsAny<string>()))
+            .Callback(() => checkThreadId = Environment.CurrentManagedThreadId);
+        NewProjectDialogViewModel viewModel = new NewProjectDialogViewModel(
+            new ThemeSelectionViewModel(_formsFileService.Object, new Mock<IProjectState>().Object),
+            _service.Object, detector.Object, new Mock<IDialogService>().Object,
+            new Mock<INewProjectLocationSettings>().Object, runChecksInline: true);
+
+        viewModel.ProjectName = "Other";
+
+        viewModel.ChecksRefresh.IsCompleted.ShouldBeTrue();
+        checkThreadId.ShouldBe(Environment.CurrentManagedThreadId);
     }
 
     [Fact]

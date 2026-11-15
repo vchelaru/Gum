@@ -62,6 +62,6 @@ Pick by what you changed. **The "Lives in" column is the repo containing the `.c
 
 ## Interpreting results — baseline first
 
-`main` is sometimes already red under FRB (e.g. a shared file gained a member that lives behind `#if !FRB`, or the FRB-side projitems is out of sync). So **build the base branch first to capture the baseline errors, then build your branch and attribute only the *new* errors**. A pre-existing error that survives on both is not yours to fix here (flag it separately).
+`main` is sometimes already red under FRB (e.g. a shared file gained a member that lives behind `#if !FRB`, or the FRB-side projitems is out of sync). So **build the base branch first to capture the baseline errors, then build your branch and attribute only the *new* errors**. A canary failure is treated like a red CI check: fix it (or add diagnostics only as a step toward a real fix); never defer it as unrelated, and fix a break an earlier change introduced too. Before diagnosing, confirm the sibling FlatRedBall checkout is current on `NetStandard`, since a stale checkout produces errors in files nothing here touches.
 
 Common genuinely-new breaks: a shared method/property guarded by `#if !FRB` referenced from un-guarded code (`CS0103`/`CS0246`), a `.cs` file added/renamed/deleted without updating the FRB-side projitems, or a `net7.0+` BCL API used in shared source without an `#if NET7_0_OR_GREATER` gate (FRB multi-targets down to `net6.0`).

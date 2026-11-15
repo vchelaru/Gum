@@ -1,27 +1,15 @@
 ﻿using Silk.NET.OpenGLES;
 using Silk.NET.SDL;
-using Silk.NET.Input;
 using Silk.NET.Maths;
 using Silk.NET.Windowing;
 using Silk.NET.Windowing.Sdl;
-using Avalonia.Skia;
-using SkiaSharp;
 using System.Diagnostics;
-using System.Runtime.InteropServices;
-using RenderingLibrary;
-using Gum.Forms.Controls;
-using Gum.Wireframe;
-using Gum.GueDeriving;
-using RenderingLibrary.Graphics;
 using Gum;
-using SilkNetGum.Screens;
-using GumSamples.Screens;
-using Gum.Managers;
-using GumRuntime;
+using Gum.Forms.Input;
+using GumSamples;
 
 unsafe class Program
 {
-    #region Enums
     enum RenderBackend
     {
         Dx11,
@@ -31,296 +19,27 @@ unsafe class Program
         Metal
     }
 
-    #endregion
-
-    #region Fields/Properties
-
-    private static Sdl sdl;
-    private static GL gl;
-    private static IWindow window = null!;
-    private static bool running = true;
-
-    // Diagnostic toggle: when true, InitializeGum skips the nav strip and all screens and shows a
-    // single bare default-color TextRuntime on the root (no UI, no container, no clip) for isolating
-    // renderable-level rendering questions. Flip to true when you need the minimal repro back.
-    const bool ShowMinimalTextRepro = false;
-
-    static GraphicalUiElement? currentGumxScreen;
-    static FrameworkElement? currentCodeScreen;
-    static int currentScreenIndex;
-    static StackPanel navStrip = null!;
-    static SKPaint sKPaint;
-    static SKCanvas canvas;
-    static SKSurface? surface;
-    static GRBackendRenderTarget? renderTarget;
-
-    static int windowWidth = 1400;
-    static int windowHeight = 900;
+    static readonly GumGallery gallery = new GumGallery();
 
     static GumService GumUI => GumService.Default;
 
-    #endregion
-
-    // Diagnostic screenshot mode (issue #4077): when GUM_SCREENSHOT_PATH is set, jump straight to
-    // the named screen (GUM_SCREENSHOT_SCREEN, default "Text"), render a few frames on the real
-    // ANGLE/D3D11 GPU-backed surface so layout settles, snapshot it to a PNG, and exit -- lets an
-    // agent (or a script) inspect what actually rendered on this GPU backend without a human
-    // watching the live window. Not wired into any CI path; local-only verification tool.
-    static readonly string? screenshotPath = Environment.GetEnvironmentVariable("GUM_SCREENSHOT_PATH");
-    static readonly string screenshotScreenName = Environment.GetEnvironmentVariable("GUM_SCREENSHOT_SCREEN") ?? "Text";
-
-    // Code-only screens appended after every screen from the gumx, allowing the
-    // sample to exercise runtime features (like the unified NineSliceRuntime) that
-    // are not yet authored as Gum screens.
-    private static readonly Func<FrameworkElement>[] codeScreenFactories =
+    static void Main(string[] args)
     {
-        () => new SilkNetGum.Screens.NineSliceScreen(),
-        () => new SilkNetGum.Screens.SpriteScreen(),
-        () => new SilkNetGum.Screens.SvgScreen(),
-        () => new SilkNetGum.Screens.TextScreen(),
-        () => new SilkNetGum.Screens.CirclesScreen(),
-        () => new SilkNetGum.Screens.RectanglesScreen(),
-        () => new SilkNetGum.Screens.ArcsScreen(),
-        () => new SilkNetGum.Screens.PolygonsScreen(),
-        () => new SilkNetGum.Screens.RenderTargetScreen(),
-        () => new SilkNetGum.Screens.RenderTargetShaderScreen(),
-        () => new GumSamples.Screens.FormsScreen(),
-        () => new SilkNetGum.Screens.ZoomScreen(),
-        () => new SilkNetGum.Screens.LayerCameraSettingsScreen(),
-    };
-
-    // Parallel to codeScreenFactories, used as nav-strip button labels.
-    private static readonly string[] codeScreenNames =
-    {
-        "NineSlice",
-        "Sprite",
-        "Svg",
-        "Text",
-        "Circles",
-        "Rectangles",
-        "Arcs",
-        "Polygons",
-        "Render Target",
-        "RT Shader",
-        "Forms",
-        "Zoom",
-        "Layer Camera",
-    };
-
-    private static void InitializeGum(SKCanvas canvas, IInputContext inputContext)
-    {
-        GumUI.Initialize(canvas, inputContext, "Content/GumProject/GumProject.gumx");
-
-        // Issue #3998: Gum core ships no shader loader, so the app registers a resolver that turns a
-        // ContainerRuntime.SourceShaderFile (.sksl path) into a compiled SKRuntimeEffect. With no
-        // resolver registered, a SourceShaderFile fails like a missing file.
-        SkiaGum.CustomSetPropertyOnRenderable.RenderTargetEffectResolver =
-            SilkNetGum.Screens.RenderTargetShaderScreen.CompileEffectFromFile;
-
-        // Adds .fx and .slang files to SourceShaderFile (ShadowDusk converts them to SkSL); the .sksl
-        // resolver above keeps handling .sksl files.
-        GumUI.UseShadowDusk();
-
-        // Registers GumUI.Keyboard for Tab / Shift+Tab focus traversal between Forms controls.
-        GumUI.UseKeyboardDefaults();
-
-        // Enables gamepad navigation for Forms controls (#3668): GumUI.Update reads the connected
-        // controller into these gamepads each frame; the D-pad / left stick then move focus between
-        // controls and A activates the focused control. Mirrors the raylib sample's wiring. Visit the
-        // "Forms" screen and give a control focus (e.g. click it once) to see it take effect.
-        FrameworkElement.GamePadsForUiControl.Clear();
-        FrameworkElement.GamePadsForUiControl.AddRange(GumUI.Gamepads);
-
-        GraphicalUiElement.CanvasWidth = windowWidth;
-        GraphicalUiElement.CanvasHeight = windowHeight;
-
-        if (ShowMinimalTextRepro)
-        {
-            ShowMinimalTextReproScreen();
-            return;
-        }
-
-        BuildNavStrip();
-
-        if (screenshotPath != null)
-        {
-            var gumxScreens = ObjectFinder.Self.GumProjectSave!.Screens;
-            int codeIndex = Array.IndexOf(codeScreenNames, screenshotScreenName);
-            LoadScreen(codeIndex >= 0 ? gumxScreens.Count + codeIndex : 0);
-            return;
-        }
-
-        LoadScreen(0);
-    }
-
-    // Bare single-text diagnostic page (gated by ShowMinimalTextRepro). No nav / screens / container /
-    // clip — just one default-color TextRuntime on the root, for isolating renderable-level rendering.
-    private static void ShowMinimalTextReproScreen()
-    {
-        var repro = new TextRuntime();
-        repro.Text = "Default color text (should be WHITE)";
-        repro.FontSize = 40;
-        repro.X = 20;
-        repro.Y = 20;
-        repro.AddToRoot();
-
-        var reproOutline = new TextRuntime();
-        reproOutline.Text = "Minimal root-level OutlineThickness repro (should show a black outline)";
-        reproOutline.FontSize = 40;
-        reproOutline.X = 20;
-        reproOutline.Y = 100;
-        reproOutline.OutlineThickness = 4;
-        reproOutline.AddToRoot();
-    }
-
-    // Mirrors MonoGameGumInCode's Game1.BuildNavStrip -- a horizontal strip of buttons, one per
-    // screen, pinned to the top-left. Unlike MonoGameGumInCode's generic ShowScreen<T>, this sample
-    // mixes two screen kinds (.gumx-authored GraphicalUiElement screens and code-only
-    // FrameworkElement screens), so each button just calls LoadScreen(index) with its own captured
-    // index instead of a generic factory.
-    private static void BuildNavStrip()
-    {
-        navStrip = new StackPanel();
-        navStrip.Orientation = Orientation.Horizontal;
-        navStrip.Spacing = 4;
-        navStrip.Visual.X = 4;
-        navStrip.Visual.Y = 4;
-        navStrip.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
-        navStrip.Width = 0;
-        navStrip.Visual.WrapsChildren = true;
-        navStrip.AddToRoot();
-
-        var gumxScreens = ObjectFinder.Self.GumProjectSave!.Screens;
-
-        for (int i = 0; i < gumxScreens.Count; i++)
-        {
-            int capturedIndex = i;
-            AddNavButton(gumxScreens[i].Name, () => LoadScreen(capturedIndex));
-        }
-
-        for (int i = 0; i < codeScreenFactories.Length; i++)
-        {
-            int capturedIndex = gumxScreens.Count + i;
-            AddNavButton(codeScreenNames[i], () => LoadScreen(capturedIndex));
-        }
-    }
-
-    private static void AddNavButton(string text, Action onClick)
-    {
-        var button = new Gum.Forms.Controls.Button();
-        button.Text = text;
-        button.Click += (_, _) => onClick();
-        navStrip.AddChild(button);
-    }
-
-    private static void LoadScreen(int index)
-    {
-        var gumxScreens = ObjectFinder.Self.GumProjectSave!.Screens;
-        int total = gumxScreens.Count + codeScreenFactories.Length;
-        if (total == 0) return;
-
-        currentScreenIndex = ((index % total) + total) % total;
-
-        // Attach via AddToRoot (children of GumService.Default.Root) instead of
-        // AddToManagers — that way GumService.Default.Update walks the screen and
-        // its descendants, which is what advances AnimationChain playback on the
-        // SpriteScreen's animated bear row.
-        currentGumxScreen?.RemoveFromRoot();
-        currentGumxScreen = null;
-        currentCodeScreen?.RemoveFromRoot();
-        currentCodeScreen = null;
-
-        // ZoomScreen and LayerCameraSettingsScreen both drive the shared main Camera directly
-        // (issues #4330, #4367) -- reset it here so leaving either screen zoomed/panned never leaks
-        // into whichever screen is shown next.
-        SystemManagers.Default.Renderer.Camera.Zoom = 1f;
-        SystemManagers.Default.Renderer.Camera.X = 0f;
-        SystemManagers.Default.Renderer.Camera.Y = 0f;
-
-        if (currentScreenIndex < gumxScreens.Count)
-        {
-            currentGumxScreen = gumxScreens[currentScreenIndex].ToGraphicalUiElement(SystemManagers.Default, addToManagers: false);
-            currentGumxScreen.AddToRoot();
-            currentGumxScreen.YOrigin = VerticalAlignment.Top;
-            currentGumxScreen.YUnits = Gum.Converters.GeneralUnitType.PixelsFromSmall;
-            ResizeCurrentGumxScreen();
-        }
-        else
-        {
-            // Code screens are FrameworkElement and Dock(Fill) themselves, so their visual
-            // fills the canvas without an explicit size assignment here -- only the top-offset
-            // and height-shrink need to be applied on top of that.
-            currentCodeScreen = codeScreenFactories[currentScreenIndex - gumxScreens.Count]();
-            currentCodeScreen.Visual.YOrigin = VerticalAlignment.Top;
-            currentCodeScreen.Visual.YUnits = Gum.Converters.GeneralUnitType.PixelsFromSmall;
-            currentCodeScreen.Visual.Y = navStrip.Visual.AbsoluteHeight;
-            currentCodeScreen.Visual.Height = -navStrip.Visual.AbsoluteHeight;
-            currentCodeScreen.AddToRoot();
-        }
-    }
-
-    // The loaded .gumx screen's Width/Height are plain pixel values (not RelativeToParent), so they
-    // don't track GraphicalUiElement.CanvasWidth/Height automatically -- unlike code screens, which
-    // Dock(Fill) themselves via relative units. Without re-applying this on every resize (not just
-    // the initial LoadScreen), the screen keeps its original size while the root re-lays-out against
-    // the new canvas size, shifting canvas-edge-anchored elements (e.g. bottom-docked) out of place
-    // (#3657).
-    private static void ResizeCurrentGumxScreen()
-    {
-        if (currentGumxScreen == null) return;
-
-        float navStripHeight = navStrip.Visual.AbsoluteHeight;
-        currentGumxScreen.Width = GraphicalUiElement.CanvasWidth;
-        currentGumxScreen.Height = GraphicalUiElement.CanvasHeight - navStripHeight;
-        currentGumxScreen.Y = navStripHeight;
-    }
-
-    private static void Draw()
-    {
-
-        GumUI.Draw();
-
-        canvas.Flush();
-    }
-
-    #region General Setup/Functions
-
-    static unsafe void Main(string[] args)
-    {
-
-        //vulkan by default uses dedicated gpu, thus why the default on windows
+        // Vulkan by default uses the dedicated GPU, which is why Windows defaults to D3D11.
         RenderBackend renderBackend = RenderBackend.Dx11;
 
-        if (OperatingSystem.IsMacOS())
+        if (OperatingSystem.IsMacOS() || OperatingSystem.IsIOS())
         {
-            Debug.WriteLine("Running on macOS...");
             renderBackend = RenderBackend.Metal;
         }
-
-        if (OperatingSystem.IsIOS())
+        else if (OperatingSystem.IsLinux())
         {
-            Debug.WriteLine("Running on ios...");
-            renderBackend = RenderBackend.Metal;
-        }
-
-        if (OperatingSystem.IsLinux())
-        {
-            Console.WriteLine("Running on linux...");
             renderBackend = RenderBackend.Vulkan;
         }
-
-        if (OperatingSystem.IsWindows())
+        else if (OperatingSystem.IsAndroid())
         {
-            Console.WriteLine("Running on windows...");
-            renderBackend = RenderBackend.Dx11;
-        }
-
-        if (OperatingSystem.IsAndroid())
-        {
-            Debug.WriteLine("Running on android...");
             renderBackend = RenderBackend.Gles;
         }
-
 
         if (renderBackend == RenderBackend.DesktopGl)
             Environment.SetEnvironmentVariable("ANGLE_DEFAULT_PLATFORM", "gl");
@@ -331,14 +50,11 @@ unsafe class Program
         if (renderBackend == RenderBackend.Metal)
             Environment.SetEnvironmentVariable("ANGLE_DEFAULT_PLATFORM", "metal");
 
-
-
-
         // sdl is grabbed via SdlProvider so that the SDL_SetHint calls below apply to the same
         // Sdl instance that Silk.NET.Windowing.Sdl will reuse internally when it creates the
         // window (SdlView pulls Sdl from SdlProvider.SDL too). Accessing SdlProvider.SDL.Value
         // triggers SDL_Init.
-        sdl = Silk.NET.SDL.SdlProvider.SDL.Value;
+        Sdl sdl = SdlProvider.SDL.Value;
 
         try
         {
@@ -351,8 +67,7 @@ unsafe class Program
                 sdl.SetHint("SDL_HINT_OPENGL_ES_DRIVER", "angle");
             }
 
-            // Context API/version/profile per backend, mirroring the GLattr calls this used to
-            // make by hand before window creation.
+            // Context API/version/profile per backend.
             GraphicsAPI api = renderBackend switch
             {
                 RenderBackend.DesktopGl => new GraphicsAPI(
@@ -371,9 +86,9 @@ unsafe class Program
             // typing) never arrives no matter what's polled afterward (#3652).
             SdlWindowing.Use();
 
-            var options = WindowOptions.Default;
+            WindowOptions options = WindowOptions.Default;
             options.API = api;
-            options.Size = new Vector2D<int>(windowWidth, windowHeight);
+            options.Size = new Vector2D<int>(1400, 900);
             options.Title = "SDL ANGLE Example";
             options.WindowState = WindowState.Normal;
             options.WindowBorder = WindowBorder.Resizable;
@@ -381,204 +96,80 @@ unsafe class Program
             options.PreferredDepthBufferBits = 24;
             options.PreferredStencilBufferBits = 8;
             options.VSync = false;
+            // Lets a verification script run the sample with nobody watching: GUM_SAMPLE_HIDDEN=1.
+            options.IsVisible = Environment.GetEnvironmentVariable("GUM_SAMPLE_HIDDEN") != "1";
 
             // SdlView.CoreInitialize applies PreferredBitDepth/DepthBufferBits/StencilBufferBits as
-            // GLattr calls automatically, but never touches Doublebuffer -- the original manual
-            // sdl.GLCreateContext setup explicitly set this before context creation. Setting it here
-            // (attributes are global SDL state, applied before Window.Create below) restores parity.
+            // GLattr calls automatically, but never touches Doublebuffer.
             sdl.GLSetAttribute(GLattr.Doublebuffer, 1);
 
-            // SdlView.CoreInitialize creates the SDL window (Sdl.CreateWindow) BEFORE setting
-            // ContextMajorVersion/MinorVersion/ContextProfileMask -- those are only set later,
-            // immediately before Sdl.GLCreateContext. For ANGLE, that's too late: its EGL surface
-            // binds its format at window-creation time, so the context ends up non-functional
-            // (glGetString and friends silently return null/empty, and GRGlInterface.Create fails)
-            // unless these are also set here, before Window.Create (#3652).
+            // SdlView.CoreInitialize creates the SDL window BEFORE setting the context version and
+            // profile. For ANGLE that is too late: its EGL surface binds its format at window-creation
+            // time, so the context ends up non-functional (glGetString and friends silently return
+            // null/empty, and the Skia GL interface fails) unless these are also set here (#3652).
             sdl.GLSetAttribute(GLattr.ContextMajorVersion, api.Version.MajorVersion);
             sdl.GLSetAttribute(GLattr.ContextMinorVersion, api.Version.MinorVersion);
             sdl.GLSetAttribute(GLattr.ContextProfileMask, (int)(api.API == ContextAPI.OpenGLES ? GLprofile.ES : GLprofile.Core));
 
-            Console.WriteLine("Creating window...");
-            window = Silk.NET.Windowing.Window.Create(options);
+            IWindow window = Silk.NET.Windowing.Window.Create(options);
             window.Initialize();
 
-            Console.WriteLine("Getting GL API...");
-            gl = GL.GetApi(window);
+            GL gl = GL.GetApi(window);
 
-            gl.Enable(EnableCap.DebugOutput);
-            gl.Enable(EnableCap.DebugOutputSynchronous);
+            GumUI.Initialize(window, "Content/GumProject/GumProject.gumx");
 
-            // Set up debug callback
-            gl.DebugMessageCallback((source, type, id, severity, length, message, param) =>
-            {
-                string messageString = Marshal.PtrToStringAnsi(message, length);
-                //Console.WriteLine($"GL Debug: {severity}: {messageString}");
-            }, in IntPtr.Zero);
+            // Issue #3998: Gum core ships no shader loader, so the app registers a resolver that turns a
+            // ContainerRuntime.SourceShaderFile (.sksl path) into a compiled SKRuntimeEffect. With no
+            // resolver registered, a SourceShaderFile fails like a missing file.
+            SkiaGum.CustomSetPropertyOnRenderable.RenderTargetEffectResolver =
+                SilkNetGum.Screens.RenderTargetShaderScreen.CompileEffectFromFile;
 
-            // Print renderer info
-            unsafe
-            {
-                byte* renderer = (byte*)gl.GetString(GLEnum.Renderer);
-                byte* version = (byte*)gl.GetString(GLEnum.Version);
-                Console.WriteLine($"Renderer: {Marshal.PtrToStringUTF8((IntPtr)renderer)}");
-                Console.WriteLine($"Version: {Marshal.PtrToStringUTF8((IntPtr)version)}");
-            }
+            // Adds .fx and .slang files to SourceShaderFile (ShadowDusk converts them to SkSL); the .sksl
+            // resolver above keeps handling .sksl files.
+            GumUI.UseShadowDusk();
 
-            using var grGlInterface = GRGlInterface.Create(name => (nint)sdl.GLGetProcAddress(name));
-            grGlInterface.Validate();
-            using var grContext = GRContext.CreateGl(grGlInterface);
+            // Registers GumUI.Keyboard for Tab / Shift+Tab focus traversal between Forms controls.
+            GumUI.UseKeyboardDefaults();
+            GumUI.UseGamepadDefaults();
 
-            // The GRBackendRenderTarget/SKSurface declare their own fixed logical size, separate from
-            // the GL viewport. With GRSurfaceOrigin.BottomLeft (GL framebuffers are bottom-up), Skia
-            // uses that declared height to flip rows -- if the viewport grows past a stale surface
-            // size, everything Gum draws (including elements pinned to the canvas top, like the nav
-            // strip) renders shifted down by the size delta. Must be recreated on every resize, not
-            // just at startup (#3657).
-            void RecreateSurface(int width, int height)
-            {
-                surface?.Dispose();
-                renderTarget?.Dispose();
+            // Demo the auto-fit helpers. Flip via the Zoom/Expand radios in the nav strip.
+            GumUI.EnableZoomToWindow();
 
-                renderTarget = new GRBackendRenderTarget(width, height, 0, 8, new GRGlFramebufferInfo(0, 0x8058)); // 0x8058 = GL_RGBA8
-                surface = SKSurface.Create(grContext, renderTarget, GRSurfaceOrigin.BottomLeft, SKColorType.Rgba8888);
-                canvas = surface.Canvas;
+            gallery.Build();
 
-                // GumService.Initialize stashes the canvas it's given in SystemManagers.Canvas, but
-                // that's a one-time assignment -- it's never re-read afterward. Reassigning the local
-                // `canvas` above does not update it, so without this line, GumUI.Draw() keeps rendering
-                // into the just-disposed SKCanvas from the previous surface on every resize -- a
-                // use-after-free that crashed with AccessViolationException (#3657).
-                if (GumUI.IsInitialized)
-                {
-                    GumUI.SystemManagers.Canvas = canvas;
-                }
-            }
-
-            RecreateSurface(windowWidth, windowHeight);
-
-            // Now that Silk.NET.Windowing.Sdl created and initialized the window itself,
-            // CreateInput builds a real IInputContext whose events are actually pumped (#3652).
-            var inputContext = window.CreateInput();
-
-            InitializeGum(canvas, inputContext);
-
-            gl.Viewport(0, 0, 600, 600);
-
-            // Dragging a window border on Windows enters a nested "live resize" modal message loop,
-            // and SDL's event pump can invoke this callback from inside that nested loop -- where the
-            // GL context is not guaranteed to be current/consistent. Recreating GPU resources
-            // (RecreateSurface) synchronously here crashed with AccessViolationException. Instead just
-            // record the new size and apply the full resize (surface recreation + layout) once per
-            // frame from the main loop below, where the context state is well-defined (#3657).
-            //
-            // The main loop is blocked for the entire duration of the drag (window.DoEvents() doesn't
-            // return until the drag ends), so nothing repaints while resizing -- producing a black
-            // flash/pop on release (#3660). This is an upstream SDL bug (SDL fires
-            // SDL_EVENT_WINDOW_EXPOSED from a Win32 timer during the live-resize modal loop, decoupled
-            // from real WM_PAINT timing -- see libsdl-org/SDL#15773) reproduced by a minimal SDL+ANGLE
-            // window with no Skia/Gum involved at all, so it is not fixable from this sample's code.
-            // See #3667 for the write-up and upstream links; tracked there, not worked around here.
-            Vector2D<int>? pendingResize = null;
-            window.Closing += () => running = false;
-            window.Resize += newSize => pendingResize = newSize;
-
-            if (inputContext.Keyboards.Count > 0)
-            {
-                var keyboard = inputContext.Keyboards[0];
-                keyboard.KeyDown += (_, key, _) =>
-                {
-                    if (key == Key.Escape)
-                        running = false;
-                };
-            }
-
-            // Main loop
-
-            sKPaint = new SKPaint()
-            {
-                IsAntialias = true,
-                Color = SKColors.DarkRed,
-            };
-
-            int frames = 0;
-            int totalFramesRendered = 0;
-
-            SKPath batchPath = new SKPath();
-
-            Stopwatch sw = new Stopwatch();
-            sw.Start();
-            // GumService.Update wants total elapsed seconds since startup (on
-            // non-XNALIKE backends the engine computes the per-frame delta as
-            // `currentTotal - previousTotal`). `sw` above is reset every second
-            // for FPS reporting, so we keep a separate monotonic clock here.
-            Stopwatch totalTime = new Stopwatch();
-            totalTime.Start();
-            // Per-frame delta for TextScreen's Tick (#3701) -- FrameworkElement.Activity() is FRB-only
-            // and unavailable here, and GumUI.Update below only wants the running total, not a delta.
+            // GumService.Update wants total elapsed seconds since startup.
+            Stopwatch totalTime = Stopwatch.StartNew();
             double previousTotalSeconds = 0;
             // options.VSync = false (above) leaves this loop otherwise uncapped, which let a feedback
             // bug in an earlier cut of the Zoom sample screen (issue #4330) compound far faster here
-            // than on MonoGame's fixed ~60fps timestep or the raylib sample's Thread.Sleep(12) throttle
-            // -- confirmed via a side-by-side frame-rate comparison, even though the actual Slider/
-            // Cursor input code is byte-identical (file-linked) across all three backends. Capping to a
-            // fixed 60fps here, the same way the raylib sample already throttles, keeps per-frame-scaled
-            // logic (like that feedback bug, now separately fixed) behaving comparably across samples.
+            // than on MonoGame's fixed ~60fps timestep. Capping to 60fps keeps per-frame-scaled logic
+            // comparable across samples.
             const double targetFrameSeconds = 1.0 / 60.0;
             Stopwatch frameTimer = new Stopwatch();
-            while (running && !window.IsClosing)
+            while (!window.IsClosing)
             {
                 frameTimer.Restart();
 
-                if (sw.ElapsedMilliseconds > 1000)
-                {
-                    Console.WriteLine(frames);
-                    sw.Restart();
-
-                    frames = 0;
-                }
-                frames++;
-
-                // Pumps SDL events into the window's event list, invokes ProcessEvents (which
-                // drives the input context -- mouse/keyboard state), then clears the list. This
-                // is what makes clicks/typing actually reach the Forms controls (#3652).
+                // Pumps SDL events into the input context so clicks and typing reach the Forms controls (#3652).
                 window.DoEvents();
 
-                if (pendingResize.HasValue)
+                if (GumUI.Keyboard.KeyPushed(Keys.Escape))
                 {
-                    var newSize = pendingResize.Value;
-                    pendingResize = null;
-
-                    gl.Viewport(0, 0, (uint)newSize.X, (uint)newSize.Y);
-                    RecreateSurface(newSize.X, newSize.Y);
-                    GumUI.HandleResize(newSize.X, newSize.Y);
-                    ResizeCurrentGumxScreen();
+                    break;
                 }
 
-                // Per-frame Update drives AnimateSelf (and any other Forms
-                // input/activity pumps). Without this the .achx animation row
-                // on SpriteScreen shows the first frame and never advances.
-                double currentTotalSeconds = totalTime.Elapsed.TotalSeconds;
-                GumUI.Update(currentTotalSeconds);
+                double gameTime = totalTime.Elapsed.TotalSeconds;
+                GumUI.Update(gameTime);
 
-                (currentCodeScreen as TextScreen)?.Tick(currentTotalSeconds - previousTotalSeconds);
-                previousTotalSeconds = currentTotalSeconds;
+                gallery.Tick(gameTime - previousTotalSeconds);
+                previousTotalSeconds = gameTime;
 
-
-
-                // Render. Matches MonoGameGumInCode's GraphicsDevice.Clear(Color.CornflowerBlue)
-                // (RGB 100, 149, 237) so the two samples are visually comparable.
+                // Matches MonoGameGumInCode's GraphicsDevice.Clear(Color.CornflowerBlue) (RGB 100, 149, 237).
                 gl.ClearColor(100f / 255f, 149f / 255f, 237f / 255f, 1.0f);
                 gl.Clear((uint)GLEnum.ColorBufferBit);
 
+                GumUI.Draw();
 
-                grContext.ResetContext();
-                // canvas.Clear(SKColors.Cyan);
-                //_renderer.Render(canvas);
-
-
-                Draw();
-
-                // Swap buffers
                 window.GLContext!.SwapBuffers();
 
                 double remainingSeconds = targetFrameSeconds - frameTimer.Elapsed.TotalSeconds;
@@ -586,27 +177,13 @@ unsafe class Program
                 {
                     System.Threading.Thread.Sleep((int)(remainingSeconds * 1000));
                 }
-
-                totalFramesRendered++;
-                if (screenshotPath != null && totalFramesRendered >= 5)
-                {
-                    using var image = surface!.Snapshot();
-                    using var data = image.Encode(SKEncodedImageFormat.Png, 100);
-                    using var stream = File.OpenWrite(screenshotPath);
-                    data.SaveTo(stream);
-                    running = false;
-                }
             }
+
+            window.Dispose();
         }
         finally
         {
-            canvas?.Dispose();
-            surface?.Dispose();
-            renderTarget?.Dispose();
-            window?.Dispose();
-            sdl?.Quit();
+            sdl.Quit();
         }
     }
-
-    #endregion
 }

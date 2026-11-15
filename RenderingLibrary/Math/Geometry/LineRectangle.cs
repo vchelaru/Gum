@@ -211,6 +211,12 @@ public class LineRectangle : SpriteBatchRenderableBase, IVisible, IRenderableIps
     /// <inheritdoc/>
     public ShaderParameterCollection? ShaderParameters { get; set; }
 
+    /// <inheritdoc/>
+    public RenderTargetRefreshMode RenderTargetRefreshMode { get; set; }
+
+    /// <inheritdoc/>
+    public int RenderTargetRefreshVersion { get; set; }
+
 
     public int Alpha => Color.A;
 

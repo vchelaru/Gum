@@ -12,11 +12,13 @@ namespace GumFormsSample.Services
 {
     internal class RenderService
     {
+        GumService GumUI => GumService.Default;
+
         public void Draw(GraphicsDevice graphicsDevice, RenderTarget2D renderTarget, SpriteBatch spriteBatch, GumFormsSampleConfig config)
         {
             graphicsDevice.SetRenderTarget(renderTarget);
             graphicsDevice.Clear(Color.CornflowerBlue);
-            GumService.Default.Draw();
+            GumUI.Draw();
             graphicsDevice.SetRenderTarget(null);
 
             spriteBatch.Begin();

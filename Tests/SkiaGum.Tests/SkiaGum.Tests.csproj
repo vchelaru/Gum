@@ -21,6 +21,7 @@
 	       (issue #4452 phase 2), which still brings SkiaGum.csproj transitively. -->
 	  <ProjectReference Include="..\..\Runtimes\SkiaGum.Standalone\SkiaGum.Standalone.csproj" />
 	  <ProjectReference Include="..\..\Runtimes\SkiaGum.ShadowDusk\SkiaGum.ShadowDusk.csproj" />
+	  <ProjectReference Include="..\..\Runtimes\GumExpressions\GumExpressions.csproj" />
 	  <!-- PixelComparer/PixelDiffResult (used by GoldenImages/*Tests.cs) live in the dependency-free
 	       Gum.ImageDiff so gumcli diff-screenshots (#4174) can reuse the same comparer instead of
 	       duplicating it. -->
@@ -32,6 +33,9 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<!-- Linked rather than referencing MonoGameGum.TestsCommon, which pulls in MonoGame. -->
+		<Compile Include="..\MonoGameGum.TestsCommon\AllocationMeasurer.cs" Link="Shared\AllocationMeasurer.cs" />
+		<Compile Include="..\..\MonoGameGum.Tests\SweepScale.cs" Link="SweepScale.cs" />
 		<Compile Include="..\Shared\FontContainerTestWriter.cs" Link="Shared\FontContainerTestWriter.cs" />
 		<Compile Include="..\Shared\ShimRetention.cs" Link="Shared\ShimRetention.cs" />
 		<Compile Include="..\Shared\TypedSetterSweep.cs" Link="Shared\TypedSetterSweep.cs" />
@@ -70,6 +74,7 @@
 		<Compile Include="..\..\MonoGameGum.Tests\Forms\MenuKeyboardNavigationTests.cs" Link="Forms\Linked\MenuKeyboardNavigationTests.cs" />
 		<Compile Include="..\..\MonoGameGum.Tests\Forms\ListBoxGamepadDirectionTests.cs" Link="Forms\Linked\ListBoxGamepadDirectionTests.cs" />
 		<Compile Include="..\..\MonoGameGum.Tests\Forms\ComboBoxTests.cs" Link="Forms\Linked\ComboBoxTests.cs" />
+		<Compile Include="..\..\MonoGameGum.Tests\Forms\TabControlTests.cs" Link="Forms\Linked\TabControlTests.cs" />
 	</ItemGroup>
 
 	<!-- Golden-image baselines for GoldenImages/*Tests.cs (pixel-diff regression tests). -->

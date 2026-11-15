@@ -19,6 +19,8 @@ namespace GameUiSamples.Screens;
 
 partial class StardewInventoryScreen : IUpdateScreen
 {
+    GumService GumUI => GumService.Default;
+
     private InventoryService _inventoryService;
 
     ItemIcon _grabbedIcon;
@@ -29,7 +31,7 @@ partial class StardewInventoryScreen : IUpdateScreen
 
         CreateGrabbedIcon();
 
-        GumService.Default.PopupRoot.AddChild(_grabbedIcon);
+        GumUI.PopupRoot.AddChild(_grabbedIcon);
 
         InitializeZoom();
 
@@ -97,7 +99,7 @@ partial class StardewInventoryScreen : IUpdateScreen
         {
             _grabbedIcon.IsVisible = false;
 
-            var visualOver = GumService.Default.Cursor.WindowOver;
+            var visualOver = GumUI.Cursor.WindowOver;
 
             var itemSlotDropped = visualOver?.FormsControlAsObject as ItemSlot;
 
@@ -186,7 +188,7 @@ partial class StardewInventoryScreen : IUpdateScreen
 
     public void Update(GameTime gameTime)
     {
-        var cursor = GumService.Default.Cursor;
+        var cursor = GumUI.Cursor;
 
         if(cursor.PrimaryDown && _grabbedIcon.IsVisible)
         {

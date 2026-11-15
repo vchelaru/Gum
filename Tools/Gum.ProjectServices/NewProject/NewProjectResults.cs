@@ -13,11 +13,12 @@ public enum NewProjectErrorKind
     UnknownPlatform,
     PlatformPathIsProjectFile,
     GumSourceNotFound,
+    NoStablePackage,
     ProjectAlreadyExists,
     InvalidProjectName,
     RecommendedPackagesNeedPlatform,
-    RecommendedPackagesNeedNuGetRuntime,
-    GenerateCodeNeedsPlatform
+    GenerateCodeNeedsPlatform,
+    PreviewNeedsPlatform
 }
 
 /// <summary>A refused request. <see cref="Message"/> is the exact text <c>gumcli new</c> prints.</summary>
@@ -45,6 +46,12 @@ public class ResolvedNewProject
     /// <summary>The theme folder, or <see langword="null"/> for the plain Forms template or an empty project.</summary>
     public string? ThemeDirectory { get; init; }
 
+    /// <summary>Which Gum packages the code project uses.</summary>
+    public NewProjectPackageChannel PackageChannel { get; init; }
+
+    /// <summary>Whether the code project's NuGet references may resolve to preview (prerelease) versions.</summary>
+    public bool UsesPrerelease => PackageChannel == NewProjectPackageChannel.Preview;
+
     /// <summary>The Gum checkout for a source-linked project.</summary>
     public string? GumSourceDirectory { get; init; }
 
@@ -62,6 +69,12 @@ public class ResolvedNewProject
 
     /// <summary>The recommended packages to add to the code project, in order; empty when not requested.</summary>
     public IReadOnlyList<string> RecommendedPackages { get; init; } = new string[0];
+
+    /// <summary>
+    /// The add-ons (package ids, see <see cref="RecommendedPackages.ForSourceLinked"/>) a source-linked project links as project
+    /// references while the files are created; empty otherwise. Nothing is added from NuGet for them.
+    /// </summary>
+    public IReadOnlyList<string> LinkedAddOns { get; init; } = new string[0];
 
     /// <summary>The project name: the game folder's name with a platform, otherwise the Gum project file's name.</summary>
     public string Name { get; init; } = "";
@@ -156,7 +169,7 @@ public class NewProjectResult
     /// <summary>The restore outcome, or <see langword="null"/> when it did not run (no platform, not requested, or the files failed).</summary>
     public RestoreResult? Restore { get; init; }
 
-    /// <summary>The code generation outcome, or <see langword="null"/> when it did not run.</summary>
+    /// <summary>The code generation outcome, or <see langword="null"/> when it did not run (including when the restore was off: the generator needs the restored package).</summary>
     public GenerateCodeResult? Codegen { get; init; }
 }
 
@@ -194,6 +207,9 @@ public class AddPackagesResult
 
     /// <summary>The last lines <c>dotnet add</c> printed for the failed package.</summary>
     public string OutputTail { get; init; } = "";
+
+    /// <summary>The exit code of the failed <c>dotnet add</c>, when it ran to the end.</summary>
+    public int? ExitCode { get; init; }
 
     /// <summary>The reason the process could not be started.</summary>
     public string ErrorMessage { get; init; } = "";

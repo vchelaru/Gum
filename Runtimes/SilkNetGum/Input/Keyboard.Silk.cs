@@ -6,10 +6,10 @@ namespace Gum.Input;
 
 /// <summary>
 /// Keyboard implementation for Silk.NET.Input. Down-state is polled from an <see cref="IKeyboard"/>;
-/// <see cref="PolledKeyboard"/> derives push/release edges and key repeat from it (Silk has no
+/// <see cref="TablePolledKeyboard{TDeviceKey}"/> derives push/release edges and key repeat from it (Silk has no
 /// "pressed this frame" query). Typed text comes from the <see cref="IKeyboard.KeyChar"/> event.
 /// </summary>
-public class Keyboard : PolledKeyboard
+public class Keyboard : TablePolledKeyboard<Key>
 {
     private readonly IKeyboard? _keyboard;
 
@@ -18,7 +18,7 @@ public class Keyboard : PolledKeyboard
     /// <see cref="IInputContext.Keyboards"/>). Subscribes to <see cref="IKeyboard.KeyChar"/> for
     /// typed-text capture.
     /// </summary>
-    public Keyboard(IKeyboard keyboard)
+    public Keyboard(IKeyboard keyboard) : base(GumToSilk)
     {
         _keyboard = keyboard;
         _keyboard.KeyChar += HandleKeyChar;
@@ -34,7 +34,7 @@ public class Keyboard : PolledKeyboard
     /// null. Also used by unit tests to drive the translation table and edge detection through the
     /// <see cref="IsKeyPressed"/> seam without a live Silk device.
     /// </summary>
-    internal Keyboard()
+    internal Keyboard() : base(GumToSilk)
     {
     }
 
@@ -46,7 +46,7 @@ public class Keyboard : PolledKeyboard
     /// OemClear, VolumeUp/Down, F13-F24, etc.) are intentionally omitted -- queries for those
     /// return <c>false</c>.
     /// </summary>
-    private static readonly Dictionary<GumKeys, Key> _gumToSilk = new()
+    internal static readonly IReadOnlyDictionary<GumKeys, Key> GumToSilk = new Dictionary<GumKeys, Key>
     {
         { GumKeys.Back, Key.Backspace },
         { GumKeys.Tab, Key.Tab },
@@ -165,11 +165,7 @@ public class Keyboard : PolledKeyboard
     #endregion
 
     /// <inheritdoc/>
-    protected override IEnumerable<GumKeys> SupportedKeys => _gumToSilk.Keys;
-
-    /// <inheritdoc/>
-    protected override bool IsDeviceKeyDown(GumKeys key) =>
-        _gumToSilk.TryGetValue(key, out Key silkKey) && IsKeyPressed(silkKey);
+    protected override bool IsDeviceKeyPressed(Key key) => IsKeyPressed(key);
 
     /// <summary>
     /// Returns whether the given Silk key is currently held down. Virtual so unit tests can drive

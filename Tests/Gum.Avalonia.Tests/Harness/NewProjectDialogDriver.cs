@@ -1,5 +1,6 @@
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.Primitives;
 using Avalonia.Input;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
@@ -78,17 +79,20 @@ internal sealed class NewProjectDialogDriver
     /// <summary>The check box whose label reads <paramref name="label"/>.</summary>
     public CheckBox CheckBoxLabeled(string label) => _window.Find<CheckBox>(box => LabelOf(box) == label);
 
-    /// <summary>Clicks the check box labeled <paramref name="label"/> when it is not already in the wanted state.</summary>
+    /// <summary>The check box or radio button whose label reads <paramref name="label"/>.</summary>
+    public ToggleButton ToggleLabeled(string label) => _window.Find<ToggleButton>(box => LabelOf(box) == label);
+
+    /// <summary>Clicks the check box or radio button labeled <paramref name="label"/> when it is not already in the wanted state.</summary>
     public void SetChecked(string label, bool isChecked)
     {
         // A banner from the checks of an earlier edit can grow the window and move the box under a click.
         Settle();
-        CheckBox box = CheckBoxLabeled(label);
+        ToggleButton box = ToggleLabeled(label);
         if (box.IsChecked != isChecked)
         {
             _window.Click(box);
         }
-        CheckBoxLabeled(label).IsChecked.ShouldBe(isChecked, $"\"{label}\" after the click");
+        ToggleLabeled(label).IsChecked.ShouldBe(isChecked, $"\"{label}\" after the click");
     }
 
     /// <summary>Picks the entry of a closed drop-down for which <paramref name="isTarget"/> holds, with the Up and Down keys.</summary>
@@ -214,7 +218,7 @@ internal sealed class NewProjectDialogDriver
         _window.Layout();
     }
 
-    private static string? LabelOf(CheckBox box) => box.Content switch
+    private static string? LabelOf(ToggleButton box) => box.Content switch
     {
         string text => text,
         Control label => label.GetVisualDescendants().OfType<TextBlock>().FirstOrDefault()?.Text,

@@ -53,6 +53,7 @@ public class DragDropManager : IDragDropManager
     private readonly IProjectManager _projectManager;
     private readonly IProjectState _projectState;
     private readonly IPathCaseSensitivity _pathCaseSensitivity;
+    private readonly IProjectRestrictions _projectRestrictions;
 
     #endregion
 
@@ -75,8 +76,10 @@ public class DragDropManager : IDragDropManager
         IReorderLogic reorderLogic,
         IProjectManager projectManager,
         IProjectState projectState,
-        IPathCaseSensitivity pathCaseSensitivity)
+        IPathCaseSensitivity pathCaseSensitivity,
+        IProjectRestrictions projectRestrictions)
     {
+        _projectRestrictions = projectRestrictions;
         _pathCaseSensitivity = pathCaseSensitivity;
         _addInstanceLogic = addInstanceLogic;
         _circularReferenceManager = circularReferenceManager;
@@ -105,13 +108,7 @@ public class DragDropManager : IDragDropManager
     {
         get
         {
-            foreach (string extension in ImageFileExtensions.All)
-            {
-                yield return extension;
-            }
-            yield return "svg";
-            yield return "achx";
-            yield return "achj";
+            return ImageFileExtensions.AllSourceFileFormats;
         }
     }
 
@@ -266,6 +263,11 @@ public class DragDropManager : IDragDropManager
         {
             return;
         }
+        if (_projectRestrictions.AreBehaviorsDisabled)
+        {
+            _dialogService.ShowMessage("This project does not support behaviors");
+            return;
+        }
         var alreadyHasBehavior = targetComponent.Behaviors.Any(item => item.BehaviorName == behavior.Name);
 
         if(alreadyHasBehavior)
@@ -392,6 +394,12 @@ public class DragDropManager : IDragDropManager
 
     private void HandleDroppingInstanceOnBehaviorSave(InstanceSave draggedAsInstanceSave, BehaviorSave asBehaviorSave)
     {
+        if (_projectRestrictions.AreBehaviorsDisabled)
+        {
+            _dialogService.ShowMessage("This project does not support behaviors");
+            return;
+        }
+
         // Capture the pre-change state for undo (bypasses the undo lock held by OnNodeSortingDropped).
         _undoManager.RecordBehaviorState(asBehaviorSave);
 
@@ -431,6 +439,14 @@ public class DragDropManager : IDragDropManager
         {
             // drag+drop on the container, so detach:
             parentName = null;
+        }
+
+        if (parentInstance != null &&
+            _projectRestrictions.IsVariableHidden(dragDroppedInstance, "Parent") &&
+            !ParentVariableAlreadyMatches(targetElementSave, dragDroppedInstance, parentName))
+        {
+            _dialogService.ShowMessage($"The project does not support parenting, so {dragDroppedInstance.Name} cannot become a child of {parentInstance.Name}");
+            return;
         }
 
         // No-op when dropping an instance on a parent it already has. For
@@ -622,11 +638,22 @@ public class DragDropManager : IDragDropManager
         if(draggedObject is BehaviorSave behavior)
         {
             // behaviors cannot be added to screens currently:
-            return targetElement is ComponentSave;
+            return targetElement is ComponentSave && !_projectRestrictions.AreBehaviorsDisabled;
+        }
+
+        if (targetBehavior != null && _projectRestrictions.AreBehaviorsDisabled)
+        {
+            return false;
         }
 
         if(draggedObject is ElementSave draggedElement)
         {
+            if ((targetElement != null || targetBehavior != null) &&
+                _projectRestrictions.IsInstanceTypeBlocked(draggedElement))
+            {
+                return false;
+            }
+
             if(targetElement != null)
             {
                 return _circularReferenceManager.CanTypeBeAddedToElement(
@@ -663,6 +690,12 @@ public class DragDropManager : IDragDropManager
                 }
                 else
                 {
+                    if (ObjectFinder.Self.GetElementSave(draggedInstance.BaseType) is { } draggedType &&
+                        _projectRestrictions.IsInstanceTypeBlocked(draggedType))
+                    {
+                        return false;
+                    }
+
                     // do circular reference checks:
                     return _circularReferenceManager.CanTypeBeAddedToElement(
                         targetElement, draggedInstance.BaseType);
@@ -946,7 +979,8 @@ public class DragDropManager : IDragDropManager
             // different, unselected instance (or missing every instance) keeps the old top-level
             // append behavior even though something happens to be selected.
             InstanceSave? selectedInstance = _selectedState.SelectedInstance;
-            InstanceSave? parentInstance = selectedInstance != null && instanceUnderCursor == selectedInstance
+            InstanceSave? parentInstance = selectedInstance != null && instanceUnderCursor == selectedInstance &&
+                !_projectRestrictions.IsHierarchyBlockedFor(draggedAsElementSave)
                 ? selectedInstance
                 : null;
 

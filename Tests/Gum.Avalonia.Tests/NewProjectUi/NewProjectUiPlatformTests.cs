@@ -1,4 +1,5 @@
 using Avalonia.Controls;
+using Avalonia.Controls.Primitives;
 using Avalonia.Headless.XUnit;
 using Gum.Avalonia.Tests.Harness;
 using Gum.Dialogs;
@@ -35,13 +36,13 @@ public class NewProjectUiPlatformTests
     }
 
     [AvaloniaFact]
-    public void PlatformDropDown_ListsTheSixPlatformsInOrder_AndStartsOnMonoGame()
+    public void PlatformDropDown_ListsTheSevenPlatformsInOrder_AndStartsOnMonoGame()
     {
         using NewProjectUiFixture fixture = new NewProjectUiFixture();
         fixture.Dialog.SetChecked(NewProjectUiText.CreateCodeProject, true);
 
-        fixture.Dialog.PlatformBox.ItemCount.ShouldBe(6);
-        fixture.ViewModel.Platforms.Select(option => option.Name).ShouldBe(new[] { "monogame", "kni", "kniskia", "raylib", "stride", "silknet" });
+        fixture.Dialog.PlatformBox.ItemCount.ShouldBe(7);
+        fixture.ViewModel.Platforms.Select(option => option.Name).ShouldBe(new[] { "monogame", "kni", "kniskia", "raylib", "stride", "silknet", "brutal" });
         fixture.Dialog.PlatformBox.SelectedValue.ShouldBe("monogame");
         fixture.Dialog.PlatformBox.IsEffectivelyVisible.ShouldBeTrue();
     }
@@ -68,19 +69,12 @@ public class NewProjectUiPlatformTests
             fixture.IsShown(note).ShouldBeTrue($"the {platform} note shows");
         }
 
-        CheckBox localSource = fixture.Dialog.CheckBoxLabeled(NewProjectUiText.UseLocalSource);
-        if (platform == "kniskia")
-        {
-            localSource.IsChecked.ShouldBe(true, "KNI with Skia always links the source");
-            localSource.IsEffectivelyEnabled.ShouldBeFalse("and the box cannot be changed");
-            fixture.Dialog.CommandLine.ShouldContain("--source-linked");
-        }
-        else
-        {
-            localSource.IsChecked.ShouldBe(false);
-            localSource.IsEffectivelyEnabled.ShouldBeTrue();
-            fixture.Dialog.CommandLine.ShouldNotContain("--source-linked");
-        }
+        ToggleButton localSource = fixture.Dialog.ToggleLabeled(NewProjectUiText.UseLocalSource);
+        localSource.IsChecked.ShouldBe(false);
+        localSource.IsEffectivelyEnabled.ShouldBeTrue();
+        fixture.Dialog.CommandLine.ShouldNotContain("--source-linked");
+        // KNI with Skia has no stable package, so its project uses the preview one.
+        fixture.Dialog.CommandLine.Contains("--preview").ShouldBe(platform == "kniskia");
         fixture.Dialog.OkButton.IsEffectivelyEnabled.ShouldBeTrue();
     }
 
@@ -116,18 +110,12 @@ public class NewProjectUiPlatformTests
         }
         mainFiles.ShouldBe(new[] { "Content/GumProject/GumProject.gumj" });
         string reference = File.ReadAllText(csproj);
-        if (platform == "kniskia")
-        {
-            reference.ShouldContain("ProjectReference", Case.Sensitive, "KNI with Skia links the Gum source");
-        }
-        else
-        {
-            reference.ShouldContain("PackageReference", Case.Sensitive, "the other platforms use the NuGet package");
-        }
+        reference.ShouldContain("PackageReference", Case.Sensitive, "every platform uses the NuGet package");
+        reference.Contains("Version=\"*-*\"").ShouldBe(platform == "kniskia", "only KNI with Skia has no stable package");
     }
 
     [AvaloniaFact]
-    public void KniSkiaWithNoGumCheckout_ShowsWhyOkIsOff_AndKniBringsOkBack()
+    public void KniSkiaWithNoGumCheckout_StillAllowsOk_WithPreview()
     {
         Mock<INewProjectService> service = new Mock<INewProjectService>();
         service.Setup(x => x.IsSourceLinkedAvailable).Returns(false);
@@ -135,21 +123,21 @@ public class NewProjectUiPlatformTests
         using NewProjectUiFixture fixture = new NewProjectUiFixture(service.Object);
         fixture.Dialog.SetChecked(NewProjectUiText.CreateCodeProject, true);
 
-        fixture.Dialog.CheckBoxLabeled(NewProjectUiText.UseLocalSource).IsEffectivelyEnabled.ShouldBeFalse("no checkout, nothing to link");
+        fixture.Dialog.ToggleLabeled(NewProjectUiText.UseLocalSource).IsEffectivelyEnabled.ShouldBeFalse("no checkout, nothing to link");
         fixture.Dialog.ChoosePlatform("kniskia");
         fixture.Settle();
 
-        fixture.Dialog.CheckBoxLabeled(NewProjectUiText.UseLocalSource).IsChecked.ShouldBe(true);
-        fixture.IsShown(NewProjectUiText.NeedsLocalSource).ShouldBeTrue("the dialog says why OK is off");
+        fixture.Dialog.ToggleLabeled(NewProjectUiText.UseLocalSource).IsChecked.ShouldBe(false);
+        fixture.Dialog.ToggleLabeled(NewProjectUiText.Preview).IsChecked.ShouldBe(true);
+        fixture.IsShown(NewProjectUiText.NeedsLocalSource).ShouldBeFalse();
         fixture.IsShown(NewProjectUiText.KniSkiaPlatformNote).ShouldBeTrue();
-        fixture.Dialog.OkButton.IsEffectivelyEnabled.ShouldBeFalse();
+        fixture.Dialog.OkButton.IsEffectivelyEnabled.ShouldBeTrue();
 
         fixture.Dialog.ChoosePlatform("kni");
         fixture.Settle();
 
-        fixture.IsShown(NewProjectUiText.NeedsLocalSource).ShouldBeFalse();
         fixture.Dialog.OkButton.IsEffectivelyEnabled.ShouldBeTrue();
-        fixture.Dialog.CheckBoxLabeled(NewProjectUiText.UseLocalSource).IsChecked.ShouldBe(false, "the forced tick does not stay behind");
+        fixture.Dialog.ToggleLabeled(NewProjectUiText.Stable).IsChecked.ShouldBe(true, "the preview fallback does not stay behind");
     }
 
     [AvaloniaFact]
@@ -163,7 +151,7 @@ public class NewProjectUiPlatformTests
         fixture.Dialog.ChoosePlatform("kniskia");
         fixture.Dialog.ChoosePlatform("raylib");
 
-        fixture.Dialog.CheckBoxLabeled(NewProjectUiText.UseLocalSource).IsChecked.ShouldBe(true, "the user's own tick is still there");
+        fixture.Dialog.ToggleLabeled(NewProjectUiText.UseLocalSource).IsChecked.ShouldBe(true, "the user's own tick is still there");
         fixture.Dialog.CommandLine.ShouldContain("--platform raylib");
         fixture.Dialog.CommandLine.ShouldContain("--source-linked");
     }

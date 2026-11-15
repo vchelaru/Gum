@@ -13,6 +13,8 @@ using System.Threading.Tasks;
 namespace GumFormsSample.CustomForms;
 public class ColorComponentSlider : Slider
 {
+    GumService GumUI => GumService.Default;
+
     SpriteRuntime _gradientSprite;
     Texture2D _gradientTexture;
 
@@ -130,7 +132,7 @@ public class ColorComponentSlider : Slider
     {
         if(_gradientTexture == null)
         {
-            _gradientTexture = new Texture2D(GumService.Default.SystemManagers.Renderer.GraphicsDevice, 255, 1);
+            _gradientTexture = new Texture2D(GumUI.SystemManagers.Renderer.GraphicsDevice, 255, 1);
         }
 
         var colorData = new Color[255];

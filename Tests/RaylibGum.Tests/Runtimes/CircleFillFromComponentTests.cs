@@ -35,7 +35,7 @@ public class CircleFillFromComponentTests : BaseTestClass
         component.DefaultState.Variables.Add(new VariableSave { Name = "Body.FillBlue", Type = "int", Value = 26, SetsValue = true });
 
         typeof(SystemManagers).GetMethod("RegisterComponentRuntimeInstantiations", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!
-            .Invoke(new SystemManagers(), null);
+            .Invoke(new SystemManagers(), new object[] { true });
 
         GumProjectSave project = new();
         project.StandardElements.Add(circleStandard);

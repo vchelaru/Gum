@@ -105,7 +105,16 @@ Earlier, unchanged inputs were read as authored, so `Y = Progress + Offset` igno
 before `Progress`. The maintainer decided every input of a same-component reference is live, like a
 spreadsheet cell. Authored values were chosen for cost, determinism and re-entrancy; measured, the live
 reads add no evaluations (same count per change and at creation) and a few percent per set. Load still
-applies rows against authored values, which equal the live ones at that point.
+applies rows against authored values, which equal the live ones at that point for visual properties. A
+Forms-only property (`Slider.Minimum`) is not one: its live value is on the Forms control (see the entry below).
+
+### 2026-11-14: Forms-only properties are read from the live control
+
+A reference reads a Forms-only property from the live Forms control when the instance has one, so it sees the
+behavior default, code that set the property and the control's own clamping. Saved data is read only when no
+live instance exists (a reference into another element, the tool). The tool has no Forms control, so it reads
+the stored value, else the behavior-declared default. `RefreshStyles` still re-applies authored data over
+code-set values.
 
 Clarification, same day: the original As built text read unchanged inputs as authored values, and this
 decision changed that to live reads. The measurement is in the body of #6413: about 10% more time and 2% more

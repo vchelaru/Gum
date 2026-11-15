@@ -107,13 +107,25 @@ internal sealed class DialogWindowDriver : IDisposable
         Layout();
     }
 
-    /// <summary>Presses and releases a key; a key that answers the dialog closes it on the press.</summary>
+    /// <summary>
+    /// Presses and releases a key; a key that answers the dialog closes it, possibly on a later dispatcher
+    /// pass (an async accept), so the release is skipped once the window is gone.
+    /// </summary>
     public void Press(Key key, PhysicalKey physicalKey, RawInputModifiers modifiers = RawInputModifiers.None, string? symbol = null)
     {
         Window.KeyPress(key, modifiers, physicalKey, symbol);
+        // Let a close the press queued land now, so the check below sees it.
+        Dispatcher.UIThread.RunJobs();
         if (Window.IsVisible)
         {
-            Window.KeyRelease(key, modifiers, physicalKey, symbol);
+            try
+            {
+                Window.KeyRelease(key, modifiers, physicalKey, symbol);
+            }
+            catch (InvalidOperationException) when (!Window.IsVisible)
+            {
+                // The window closed between the check and the release, so there is nothing to release.
+            }
         }
         Layout();
     }

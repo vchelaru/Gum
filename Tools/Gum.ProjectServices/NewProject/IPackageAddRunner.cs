@@ -19,4 +19,12 @@ public interface IPackageAddRunner
     /// <param name="onOutputLine">Receives each line the process prints, or <see langword="null"/>.</param>
     /// <param name="cancellationToken">Cancels the add.</param>
     Task<RestoreResult> AddAsync(string csprojPath, string packageId, Action<string>? onOutputLine, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Like <see cref="AddAsync(string, string, Action{string}, CancellationToken)"/>, and with <paramref name="prerelease"/> the reference may resolve to
+    /// a preview version (<c>--prerelease</c>, written as <c>Version="*-*"</c>). A runner that does not override it adds the stable reference.
+    /// </summary>
+    Task<RestoreResult> AddAsync(
+        string csprojPath, string packageId, bool prerelease, Action<string>? onOutputLine, CancellationToken cancellationToken) =>
+        AddAsync(csprojPath, packageId, onOutputLine, cancellationToken);
 }

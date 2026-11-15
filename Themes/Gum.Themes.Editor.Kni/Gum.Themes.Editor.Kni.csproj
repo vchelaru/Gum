@@ -32,13 +32,13 @@
     <!-- KernSmith is a runtime dependency (the theme generates fonts at runtime), so it must flow
          transitively to consumers — do NOT mark it PrivateAssets=All. -->
     <ProjectReference Include="..\..\Integrations\KernSmith\KernSmith.KniGum\KernSmith.KniGum.csproj" />
-    <PackageReference Include="nkast.Xna.Framework" Version="4.2.9001">
+    <PackageReference Include="nkast.Xna.Framework" Version="4.3.9001">
       <PrivateAssets>All</PrivateAssets>
     </PackageReference>
-    <PackageReference Include="nkast.Xna.Framework.Graphics" Version="4.2.9001">
+    <PackageReference Include="nkast.Xna.Framework.Graphics" Version="4.3.9001">
       <PrivateAssets>All</PrivateAssets>
     </PackageReference>
-    <PackageReference Include="nkast.Xna.Framework.Input" Version="4.2.9001">
+    <PackageReference Include="nkast.Xna.Framework.Input" Version="4.3.9001">
       <PrivateAssets>All</PrivateAssets>
     </PackageReference>
   </ItemGroup>

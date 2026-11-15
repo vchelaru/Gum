@@ -8,11 +8,12 @@ namespace Gum.Tests.Shared;
 
 /// <summary>
 /// Builds components whose base type changed from Text to Container (or whose Text instance became a
-/// Container), leaving Text-only variables behind. The tool keeps those variables on purpose, in case the
-/// type change was accidental, and the tests that use this project pin that.
+/// Container), leaving Text-only variables behind. Gum used to keep those variables when the type changed, so a
+/// project saved by an earlier Gum looks like this and must still load, check and generate code without a new
+/// error or warning. The tool now removes them on a type change (#7191).
 /// <para>
 /// With <c>typeChanged: false</c> the project is the state just before the user changes the types; with
-/// <c>true</c> it is what the tool saves just after. The variables are identical in both.
+/// <c>true</c> it is what an earlier Gum saved just after. The variables are identical in both.
 /// </para>
 /// <list type="bullet">
 /// <item><c>Label</c>: Text and FontSize in Default, Text in category state Looks/Big, shared Width.</item>

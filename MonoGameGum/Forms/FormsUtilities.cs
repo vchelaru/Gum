@@ -171,6 +171,11 @@ public class FormsUtilities
         TryAdd(typeof(ColorPicker), (_, c) => new DefaultVisuals.V3.ColorPickerVisual(tryCreateFormsObject: c));
 #endif
         TryAdd(typeof(Splitter), (_, c) => new DefaultVisuals.V3.SplitterVisual(tryCreateFormsObject: c));
+#if !SOKOL
+        TryAdd(typeof(TabControl), (_, c) => new DefaultVisuals.V3.TabControlVisual(tryCreateFormsObject: c));
+        TryAdd(typeof(TabItem), (_, c) => new DefaultVisuals.V3.TabItemVisual(tryCreateFormsObject: c));
+        TryAdd(typeof(TabPage), (_, c) => new DefaultVisuals.V3.TabPageVisual(tryCreateFormsObject: c));
+#endif
         TryAdd(typeof(ToggleButton), (_, c) => new DefaultVisuals.V3.ToggleButtonVisual(tryCreateFormsObject: c));
         TryAdd(typeof(Window), (_, c) => new DefaultVisuals.V3.WindowVisual(tryCreateFormsObject: c));
         Gum.Forms.DefaultVisuals.V3.Styling.ActiveStyle = new(uiSpriteSheet);
@@ -545,12 +550,20 @@ public class FormsUtilities
         }
 
 #if FULL_DIAGNOSTICS
-        var hashSet = FrameworkElement.GamePadsForUiControl.ToHashSet();
-
-        if (hashSet.Count != FrameworkElement.GamePadsForUiControl.Count)
+        // A pairwise scan rather than a HashSet so this per-frame check allocates nothing; the list
+        // holds a handful of gamepads at most.
+        var gamepads = FrameworkElement.GamePadsForUiControl;
+        var comparer = EqualityComparer<Gum.Input.IGamePad>.Default;
+        for (int i = 0; i < gamepads.Count; i++)
         {
-            throw new InvalidOperationException("The same gamepad has been added to FrameworkElement.GamePadsForUiControl multiple times. " +
-                "This should not be done");
+            for (int j = i + 1; j < gamepads.Count; j++)
+            {
+                if (comparer.Equals(gamepads[i], gamepads[j]))
+                {
+                    throw new InvalidOperationException("The same gamepad has been added to FrameworkElement.GamePadsForUiControl multiple times. " +
+                        "This should not be done");
+                }
+            }
         }
 #endif
     }
@@ -603,6 +616,7 @@ public class FormsUtilities
         ElementSaveExtensions.UnregisterGueInstantiationTypes(type => type.Namespace == fromFileNamespace);
         ElementSaveExtensions.InitialStateAppliedNotifier = null;
         ElementSaveExtensions.InitialFormsPropertiesNotifier = null;
+        GraphicalUiElement.ReapplyChangedFormsPropertiesAction = null;
         MenuItem.FromFileSubmenuPopupTemplate = null;
         ComboBox.FromFileDropDownTemplate = null;
     }
@@ -624,6 +638,14 @@ public class FormsUtilities
 
     public static void RegisterFromFileFormRuntimeDefaults()
     {
+        GraphicalUiElement.ReapplyChangedFormsPropertiesAction = (formsObject, visual, oldElement) =>
+        {
+            if (formsObject is FrameworkElement frameworkElement)
+            {
+                BehaviorFormsPropertyApplier.ReapplyChanged(frameworkElement, visual, oldElement);
+            }
+        };
+
         ElementSaveExtensions.InitialFormsPropertiesNotifier = (gue, isBuiltElement) =>
         {
             if (gue is InteractiveGue igue && igue.FormsControlAsObject is FrameworkElement fe)
@@ -797,6 +819,26 @@ public class FormsUtilities
                     component.Name,
                     typeof(DefaultFromFileExpanderRuntime), overwriteIfAlreadyExists: false);
             }
+#if !SOKOL
+            else if (behaviorNames.Contains(StandardFormsBehaviorNames.TabControlBehaviorName))
+            {
+                ElementSaveExtensions.RegisterGueInstantiationType(
+                    component.Name,
+                    typeof(DefaultFromFileTabControlRuntime), overwriteIfAlreadyExists: false);
+            }
+            else if (behaviorNames.Contains(StandardFormsBehaviorNames.TabItemBehaviorName))
+            {
+                ElementSaveExtensions.RegisterGueInstantiationType(
+                    component.Name,
+                    typeof(DefaultFromFileTabItemRuntime), overwriteIfAlreadyExists: false);
+            }
+            else if (behaviorNames.Contains(StandardFormsBehaviorNames.TabPageBehaviorName))
+            {
+                ElementSaveExtensions.RegisterGueInstantiationType(
+                    component.Name,
+                    typeof(DefaultFromFileTabPageRuntime), overwriteIfAlreadyExists: false);
+            }
+#endif
             else if (behaviorNames.Contains(StandardFormsBehaviorNames.StackPanelBehaviorName))
             {
                 ElementSaveExtensions.RegisterGueInstantiationType(

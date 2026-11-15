@@ -19,7 +19,7 @@ namespace SkiaGum.Tests.Renderer;
 /// pixels directly off the top-level <see cref="SKSurface"/> (Skia's top-level surface is directly
 /// readable, unlike raylib's bottom-up render texture).
 /// </summary>
-public class RenderTargetShaderTests
+public class RenderTargetShaderTests : BaseTestClass
 {
     // Contract SkSL fixture (issue #3998): a fixed "SpriteTexture" child shader collapses the sampled
     // color to luma, so a solid-red composite reads back as R ≈ G ≈ B, which a straight blit never
@@ -93,6 +93,34 @@ half4 main(float2 coord) {
         SKColor withShader = withShaderBitmap.GetPixel(19, 19);
         Math.Abs(withShader.Red - withShader.Green).ShouldBeLessThan(20);
         Math.Abs(withShader.Red - withShader.Blue).ShouldBeLessThan(20);
+    }
+
+    // Characterization of the pre-#5909 input name: a hand-written effect that still declares
+    // `uniform shader inputImage` compiles, but the renderer only binds a child named
+    // "SpriteTexture", so Draw throws instead of drawing the container unshaded.
+    [Fact]
+    public void Draw_EffectDeclaringInputImage_Throws()
+    {
+        const string LegacySksl = @"
+uniform shader inputImage;
+half4 main(float2 coord) {
+    return inputImage.eval(coord);
+}
+";
+        using SKSurface surface = SKSurface.Create(new SKImageInfo(64, 64));
+        GumService.Default.Initialize(surface.Canvas, 64, 64);
+
+        SKRuntimeEffect effect = SKRuntimeEffect.CreateShader(LegacySksl, out string errors);
+        string.IsNullOrEmpty(errors).ShouldBeTrue(errors);
+        using SKRuntimeEffect disposableEffect = effect;
+
+        ContainerRuntime renderTarget = BuildRedRenderTarget();
+        renderTarget.RenderTargetEffect = effect;
+        GumService.Default.Root.Children.Add(renderTarget);
+
+        ArgumentOutOfRangeException thrown =
+            Should.Throw<ArgumentOutOfRangeException>(() => GumService.Default.Draw());
+        thrown.Message.ShouldContain("SpriteTexture");
     }
 
     // Two containers share one compiled effect (as SourceShaderFile does through the cache) and each

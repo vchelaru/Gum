@@ -190,6 +190,11 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
                 finally
                 {
                     sw.Stop();
+                    // Only callbacks that took time: most of the hundreds of broadcasts per edit are free.
+                    if (ToolLog.IsEnabled && sw.ElapsedMilliseconds >= 1)
+                    {
+                        ToolLog.Write("plugin " + methodName, detail: plugin.FriendlyName + " " + sw.Elapsed.TotalMilliseconds.ToString("F1") + "ms");
+                    }
                     // Surface slow plugin callbacks (>50ms) so startup/load
                     // hot spots are visible without flooding output.
                     if (sw.ElapsedMilliseconds > 50)
@@ -355,6 +360,9 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
     public void CategoryDelete(StateSaveCategory category) =>
         CallMethodOnPlugin((plugin) => plugin.CallStateCategoryDelete(category));
 
+    public void CategoryColorChange(StateSaveCategory category) =>
+        CallMethodOnPlugin((plugin) => plugin.CallStateCategoryColorChange(category));
+
     public virtual void ReactToStateSaveCategorySelected(StateSaveCategory? category) =>
         CallMethodOnPlugin((plugin) => plugin.CallReactToStateSaveCategorySelected(category));
 
@@ -364,9 +372,58 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
     public void VariableDelete(ElementSave? elementSave, string variableName) =>
         CallMethodOnPlugin(plugin => plugin.CallVariableDelete(elementSave, variableName));
 
+    private HashSet<ElementSave?>? _variableSetBatchElements;
+
+    public bool IsInVariableSetBatch => _variableSetBatchElements != null;
+
+    public IDisposable BeginVariableSetBatch()
+    {
+        if (_variableSetBatchElements != null)
+        {
+            // Nested: the outermost scope completes the batch.
+            return new VariableSetBatchScope(() => { });
+        }
+
+        _variableSetBatchElements = new HashSet<ElementSave?>();
+        SetVariableSetBatchOpen(true);
+        return new VariableSetBatchScope(() =>
+        {
+            HashSet<ElementSave?> elements = _variableSetBatchElements!;
+            _variableSetBatchElements = null;
+            SetVariableSetBatchOpen(false);
+            foreach (ElementSave? element in elements)
+            {
+                CallMethodOnPlugin(plugin => plugin.CallVariableSetBatchCompleted(element), "VariableSetBatchCompleted");
+            }
+        });
+    }
+
+    private void SetVariableSetBatchOpen(bool isOpen)
+    {
+        foreach (PluginBase plugin in Plugins ?? Enumerable.Empty<PluginBase>())
+        {
+            plugin.IsVariableSetBatchOpen = isOpen;
+        }
+    }
+
+    private sealed class VariableSetBatchScope : IDisposable
+    {
+        private Action? _onDispose;
+
+        public VariableSetBatchScope(Action onDispose) => _onDispose = onDispose;
+
+        public void Dispose()
+        {
+            Action? onDispose = _onDispose;
+            _onDispose = null;
+            onDispose?.Invoke();
+        }
+    }
+
     public void VariableSet(ElementSave? parentElement, InstanceSave? instance, string unqualifiedChangedMemberName, object? oldValue,
         bool isFullCommit = true)
     {
+        _variableSetBatchElements?.Add(parentElement);
         CallMethodOnPlugin(plugin => plugin.CallVariableSet(parentElement, instance, unqualifiedChangedMemberName, oldValue, isFullCommit));
         CallMethodOnPlugin(plugin => plugin.CallVariableSetLate(parentElement, instance, unqualifiedChangedMemberName, oldValue, isFullCommit), "VariableSet (Late)");
     }
@@ -538,6 +595,28 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
 
         return toReturn;
     }
+
+    public IReadOnlyList<TextureRegion> GetTextureRegions(FilePath file)
+    {
+        List<TextureRegion> regions = new List<TextureRegion>();
+
+        // A plugin that throws is reported and disabled by CallMethodOnPlugin; the others still answer.
+        CallMethodOnPlugin(
+            plugin =>
+            {
+                IReadOnlyList<TextureRegion>? pluginRegions = plugin.CallGetTextureRegionsForFile(file);
+                if (pluginRegions != null)
+                {
+                    regions.AddRange(pluginRegions);
+                }
+            },
+            nameof(GetTextureRegions));
+
+        return regions;
+    }
+
+    public void TextureRegionChosen(FilePath file, TextureRegion region) =>
+        CallMethodOnPlugin(plugin => plugin.CallTextureRegionChosen(file, region), nameof(TextureRegionChosen));
 
     public DeleteResponse GetDeleteStateResponse(StateSave stateSave, IStateContainer element)
     {
@@ -829,6 +908,7 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
         // plugin dependency even though PluginManager is not a PluginBase.
         batch.AddExportedValue<IPluginEnablementStore>(Locator.GetRequiredService<IPluginEnablementStore>());
         batch.AddExportedValue<ISelectedState>(Locator.GetRequiredService<ISelectedState>());
+        batch.AddExportedValue<IProjectRestrictions>(Locator.GetRequiredService<IProjectRestrictions>());
         batch.AddExportedValue<IElementCommands>(Locator.GetRequiredService<IElementCommands>());
         batch.AddExportedValue<IUndoManager>(Locator.GetRequiredService<IUndoManager>());
         batch.AddExportedValue<ISelectionHistory>(Locator.GetRequiredService<ISelectionHistory>());
@@ -979,12 +1059,10 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
         #region Get the Catalog
 
 
-        ResolveEventHandler reh = new ResolveEventHandler(instance.currentDomain_AssemblyResolve);
+        PluginAssemblyResolver.Install(message => instance._guiCommands.PrintOutput(message));
 
         try
         {
-            AppDomain currentDomain = AppDomain.CurrentDomain;
-            currentDomain.AssemblyResolve += reh;
             AggregateCatalog catalog;
             using (StartupTiming.Time("    CreateCatalog (assembly scan)"))
             {
@@ -1026,10 +1104,6 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
 
             return;
         }
-        finally
-        {
-            AppDomain.CurrentDomain.AssemblyResolve -= reh;
-        }
 
         #endregion
 
@@ -1067,16 +1141,6 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
     }
 
 
-
-    private Assembly? currentDomain_AssemblyResolve(object? sender, ResolveEventArgs args)
-    {
-        if(args.RequestingAssembly != null)
-        {
-            _guiCommands.PrintOutput("Couldn't find assembly: " + args.Name + " for " + args.RequestingAssembly);
-        }
-
-        return null;
-    }
 
     //internal static void Initialize()
     //{
@@ -1363,9 +1427,17 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
         return ToPluginSummary(container);
     }
 
-    private static PluginSummary ToPluginSummary(PluginContainer container) =>
-        new(container.Name, container.ToString(), container.IsEnabled, !string.IsNullOrEmpty(container.FailureDetails), container,
-            CanBeDisabled: CanUserDisable(container.Plugin));
+    private static PluginSummary ToPluginSummary(PluginContainer container)
+    {
+        // A plugin shipped as its own .dll sits in the Plugins folder; the rest are part of Gum.
+        string location = container.Plugin.GetType().Assembly.Location;
+        bool isInPluginsFolder = !string.IsNullOrEmpty(location) &&
+            string.Equals(System.IO.Path.GetFileName(System.IO.Path.GetDirectoryName(location)), "Plugins", StringComparison.OrdinalIgnoreCase);
+        return new(container.Name, container.ToString(), container.IsEnabled, !string.IsNullOrEmpty(container.FailureDetails), container,
+            CanBeDisabled: CanUserDisable(container.Plugin),
+            SourceFile: string.IsNullOrEmpty(location) ? null : System.IO.Path.GetFileName(location),
+            IsBuiltIn: !isInPluginsFolder);
+    }
 
     internal static void AddInternalPlugins()
     {

@@ -26,7 +26,7 @@
 		<PackageReference Include="xunit.v3" VersionOverride="3.2.2" />
 		<PackageReference Include="xunit.runner.visualstudio" VersionOverride="3.1.5" />
 		<PackageReference Include="MonoGame.Framework.DesktopGL" VersionOverride="3.8.4.1" />
-		<PackageReference Include="ShadowDusk.Compiler" VersionOverride="0.22.1" />
+		<PackageReference Include="ShadowDusk.Compiler" VersionOverride="0.25.0" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -34,6 +34,7 @@
 		<ProjectReference Include="..\..\MonoGameGum\MonoGameGum.csproj" />
 		<ProjectReference Include="..\Gum.Automation\Gum.Automation.csproj" />
 		<ProjectReference Include="..\..\Runtimes\GumShapes\MonoGameGumShapes.csproj" />
+		<ProjectReference Include="..\..\Runtimes\GumExpressions\GumExpressions.csproj" />
 		<!-- The Gum.MonoGame.ShadowDusk package: GumService.UseShadowDusk() (#7053). -->
 		<ProjectReference Include="..\..\Runtimes\GumShadowDusk\MonoGameGum.ShadowDusk.csproj" />
 		<!-- Referenced so the in-memory font creator can be exercised end-to-end (KernSmith atlas
@@ -87,6 +88,7 @@
     <Compile Include="..\Shared\CrossRuntime\NineSliceCases.cs" Link="Shared\CrossRuntime\NineSliceCases.cs" />
 		<Compile Include="..\Shared\CrossRuntime\NineSliceKnownDifferences.cs" Link="Shared\CrossRuntime\NineSliceKnownDifferences.cs" />
 		<Compile Include="..\Shared\CrossRuntime\NineSliceOutlineOracle.cs" Link="Shared\CrossRuntime\NineSliceOutlineOracle.cs" />
+		<Compile Include="..\Shared\CrossRuntime\NineSliceSeamSweep.cs" Link="Shared\CrossRuntime\NineSliceSeamSweep.cs" />
   </ItemGroup>
 
 </Project>

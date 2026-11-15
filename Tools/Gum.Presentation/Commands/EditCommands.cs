@@ -44,6 +44,8 @@ public class EditCommands : IEditCommands
     private readonly IProjectState _projectState;
     private readonly IStandardElementsManagerGumTool _standardElementsManagerGumTool;
     private readonly IReferenceFinder _referenceFinder;
+    private readonly IProjectRestrictions _projectRestrictions;
+    private readonly IElementDuplicateRestrictions _elementDuplicateRestrictions;
     private readonly BehaviorRenamer _behaviorRenamer;
 
     public EditCommands(ISelectedState selectedState,
@@ -60,8 +62,12 @@ public class EditCommands : IEditCommands
         IProjectManager projectManager,
         IProjectState projectState,
         IStandardElementsManagerGumTool standardElementsManagerGumTool,
-        IReferenceFinder referenceFinder)
+        IReferenceFinder referenceFinder,
+        IProjectRestrictions projectRestrictions,
+        IElementDuplicateRestrictions elementDuplicateRestrictions)
     {
+        _projectRestrictions = projectRestrictions;
+        _elementDuplicateRestrictions = elementDuplicateRestrictions;
         _selectedState = selectedState;
         _nameVerifier = nameVerifier;
         _renameLogic = renameLogic;
@@ -235,6 +241,24 @@ public class EditCommands : IEditCommands
 
     #region Category
 
+    public void SetStateCategoryColor(StateSaveCategory category, string? colorName)
+    {
+        string? newColorName = string.IsNullOrEmpty(colorName) ? null : colorName;
+        if (category.ColorName == newColorName)
+        {
+            return;
+        }
+
+        using var undoLock = _undoManager.RequestLock();
+
+        category.ColorName = newColorName;
+
+        _pluginManager.CategoryColorChange(category);
+        _guiCommands.RefreshStateTreeView();
+        _guiCommands.RefreshVariables(force: true);
+        _fileCommands.TryAutoSaveCurrentObject();
+    }
+
     public void MoveToCategory(string categoryNameToMoveTo, StateSave stateToMove, IStateContainer stateContainer)
     {
         var newCategory = stateContainer.Categories
@@ -272,27 +296,10 @@ public class EditCommands : IEditCommands
         _guiCommands.RefreshStateTreeView();
         _selectedState.SelectedStateSave = stateToMove;
 
-        // make sure to propagate all variables in this new state and
-        // also move all existing variables to the new state (use the first)
+        // Propagate the moved state's variables to its new siblings, and every sibling's variables to it.
         if (stateContainer is ElementSave element)
         {
-            foreach (var variable in stateToMove.Variables)
-            {
-                _variableInCategoryPropagationLogic.PropagateVariablesInCategory(variable.Name,
-                    element, _selectedState.SelectedStateCategorySave);
-            }
-
-
-            // newCategory holds stateToMove now, so it has a first state.
-            var firstState = newCategory.States[0];
-            if (firstState != stateToMove)
-            {
-                foreach (var variable in firstState.Variables)
-                {
-                    _variableInCategoryPropagationLogic.PropagateVariablesInCategory(variable.Name,
-                        element, _selectedState.SelectedStateCategorySave);
-                }
-            }
+            _variableInCategoryPropagationLogic.PropagateAllVariablesInCategory(element, newCategory);
         }
 
         _pluginManager.StateMovedToCategory(stateToMove, newCategory, oldCategory);
@@ -464,6 +471,11 @@ public class EditCommands : IEditCommands
         {
             return;
         }
+        if (_projectRestrictions.AreBehaviorsDisabled)
+        {
+            _dialogService.ShowMessage("This project does not support behaviors");
+            return;
+        }
 
         string message = "Enter new behavior name:";
         string title = "Add behavior";
@@ -518,7 +530,11 @@ public class EditCommands : IEditCommands
     /// <inheritdoc/>
     public void ShowAddComponentDialog()
     {
-        if (EnsureProjectSaved("adding a component"))
+        if (_projectRestrictions.AreComponentsDisabled)
+        {
+            _dialogService.ShowMessage("This project does not support components");
+        }
+        else if (EnsureProjectSaved("adding a component"))
         {
             _dialogService.Show<AddComponentDialogViewModel>();
         }
@@ -545,6 +561,14 @@ public class EditCommands : IEditCommands
         {
             _dialogService.ShowMessage("Standard Elements cannot be duplicated");
         }
+        else if (element is ComponentSave && _projectRestrictions.AreComponentsDisabled)
+        {
+            _dialogService.ShowMessage("This project does not support components");
+        }
+        else if (_elementDuplicateRestrictions.GetRefusalMessage(element) is { } refusal)
+        {
+            _dialogService.ShowMessage(refusal);
+        }
         else if (element is ScreenSave elementAsScreen)
         {
             string message = "Enter new Screen name:";
@@ -565,6 +589,7 @@ public class EditCommands : IEditCommands
             {
                 var newScreen = elementAsScreen.Clone();
                 newScreen.Name = name;
+                _elementDuplicateRestrictions.RemoveUnsupportedParents(newScreen);
                 newScreen.Initialize(null);
                 _standardElementsManagerGumTool.FixCustomTypeConverters(newScreen);
 
@@ -605,6 +630,7 @@ public class EditCommands : IEditCommands
                     folder += "/";
                 }
                 newComponent.Name = folder + name;
+                _elementDuplicateRestrictions.RemoveUnsupportedParents(newComponent);
                 newComponent.Initialize(null);
                 _standardElementsManagerGumTool.FixCustomTypeConverters(newComponent);
 
@@ -622,6 +648,11 @@ public class EditCommands : IEditCommands
         InstanceSave? instance = _selectedState.SelectedInstance;
         if (instance == null || _selectedState.SelectedElement == null)
         {
+            return;
+        }
+        if (_projectRestrictions.AreComponentsDisabled)
+        {
+            _dialogService.ShowMessage("This project does not support components");
             return;
         }
 

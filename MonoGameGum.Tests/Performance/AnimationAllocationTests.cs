@@ -158,10 +158,9 @@ public class AnimationAllocationTests : BaseTestClass
         root.X.ShouldBeGreaterThan(0f);
 
         // Upper-bound guard for the state/keyframe advancement path. Removing the LINQ
-        // closures/iterators from the keyframe lookup took this from ~3,040 to ~2,336 B/frame. The
-        // residual is the per-frame interpolated StateSave that gets applied (Clone + MergeIntoThis
-        // + ApplyState), which is out of scope here; the bound locks in the win and guards the
-        // avoidable-allocation portion from regressing.
-        result.BytesPerIteration.ShouldBeLessThan(2500);
+        // closures/iterators from the keyframe lookup took this from ~3,040 to ~2,336 B/frame, and
+        // building the interpolated state in objects kept between ticks (#7873) to ~1,150. The residual
+        // is mostly ApplyState (see AnimationTickAllocationTests for the interpolation alone).
+        result.BytesPerIteration.ShouldBeLessThan(1300);
     }
 }

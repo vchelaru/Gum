@@ -185,4 +185,63 @@ half4 main(float2 coord) {
             effect.ShouldBeNull();
         }
     }
+
+    // The shipped Outline shader declares Thickness = 1 and has no IsSet companion, so an unset
+    // Thickness must draw a one pixel outline and an explicit 0 must draw none (#7037).
+    private static string OutlineShaderPath()
+    {
+        string? directory = AppContext.BaseDirectory;
+        while (directory != null && !File.Exists(Path.Combine(directory, "Gum", "Content", "Shaders", "Outline.slang")))
+        {
+            directory = Path.GetDirectoryName(directory);
+        }
+        directory.ShouldNotBeNull();
+        return Path.Combine(directory, "Gum", "Content", "Shaders", "Outline.slang");
+    }
+
+    // Alpha of the pixels 1 and 2 to the left of a 16 pixel square that starts at x = 8.
+    private (byte OnePixelOut, byte TwoPixelsOut) DrawOutlinedSquare(Action<ContainerRuntime>? setParameters)
+    {
+        using SKSurface surface = SKSurface.Create(new SKImageInfo(32, 32));
+        GumService.Default.Initialize(surface.Canvas, 32, 32);
+        ContainerRuntime container = new() { Width = 32, Height = 32, IsRenderTarget = true };
+        container.Children.Add(new RectangleRuntime
+        {
+            X = 8, Y = 8, Width = 16, Height = 16, IsFilled = true, FillColor = SKColors.White,
+        });
+        GumService.Default.Root.Children.Add(container);
+        setParameters?.Invoke(container);
+        container.SourceShaderFile = OutlineShaderPath();
+        GumService.Default.Draw();
+
+        using SKImage image = surface.Snapshot();
+        using SKBitmap bitmap = SKBitmap.FromImage(image);
+        return (bitmap.GetPixel(7, 16).Alpha, bitmap.GetPixel(6, 16).Alpha);
+    }
+
+    [Fact]
+    public void Outline_WithNothingSet_DrawsAOnePixelOutline()
+    {
+        (byte onePixelOut, byte twoPixelsOut) = DrawOutlinedSquare(null);
+
+        onePixelOut.ShouldBeGreaterThan((byte)200);
+        twoPixelsOut.ShouldBe((byte)0);
+    }
+
+    [Fact]
+    public void Outline_WithThicknessSetToZero_DrawsNoOutline()
+    {
+        (byte onePixelOut, _) = DrawOutlinedSquare(container => container.SetShaderParameter("Thickness", 0f));
+
+        onePixelOut.ShouldBe((byte)0);
+    }
+
+    [Fact]
+    public void Outline_WithThicknessTwo_DrawsATwoPixelOutline()
+    {
+        (byte onePixelOut, byte twoPixelsOut) = DrawOutlinedSquare(container => container.SetShaderParameter("Thickness", 2f));
+
+        onePixelOut.ShouldBeGreaterThan((byte)200);
+        twoPixelsOut.ShouldBeGreaterThan((byte)200);
+    }
 }

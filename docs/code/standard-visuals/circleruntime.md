@@ -17,7 +17,7 @@ A `CircleRuntime` also exposes a `Radius` property, but sizing through `Width` /
 {% hint style="info" %}
 On MonoGame, KNI, and FNA the outline and geometry render out of the box, but the **fill** and the richer effects (gradient, drop shadow, dashed stroke, anti-aliasing) only draw once the `Gum.Shapes.<platform>` package is added. Without the package `CircleRuntime` has no way to render a fill at all, so it stays stroke-only regardless of `IsFilled`; there is no core fallback fill renderable for circles (unlike `RectangleRuntime`, whose fill renders without the package). Values are stored and round-trip but silently do not draw. See the [Shapes](shapes-apos.shapes.md) page for setup.
 
-Skia, .NET MAUI, raylib, and Silk.NET support the full surface natively; no additional package needed.
+[SkiaSharp-based runtimes](../about/runtimes.md) and raylib support the full surface natively; no additional package needed.
 {% endhint %}
 
 ### Code Example

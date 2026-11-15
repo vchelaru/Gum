@@ -28,6 +28,10 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
         clone.mParent = null;
         // The copied paint reference belongs to the source, so drop it rather than dispose it.
         clone._cachedPaint = null;
+        clone._shadowPaint = null;
+        clone._shadowMaskFilter = null;
+        clone._layerPaint = null;
+        clone._paintToReuse = null;
         clone.NeedsUpdate = true;
         // The hook targets the source's runtime; the clone's runtime rebinds its own.
         clone.OnPreRender = null;
@@ -42,8 +46,11 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
         get => _color;
         set
         {
-            _color = value;
-            ClearCachedPaint();
+            if (_color != value)
+            {
+                _color = value;
+                ClearCachedPaint();
+            }
         }
     }
 
@@ -234,8 +241,11 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
         get => _useGradient;
         set
         {
-            _useGradient = value;
-            ClearCachedPaint();
+            if (_useGradient != value)
+            {
+                _useGradient = value;
+                ClearCachedPaint();
+            }
         }
     }
 
@@ -245,8 +255,11 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
         get => _gradientType; 
         set
         {
-            _gradientType = value;
-            ClearCachedPaint();
+            if (_gradientType != value)
+            {
+                _gradientType = value;
+                ClearCachedPaint();
+            }
         }
     }
 
@@ -256,8 +269,11 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
         get => _alpha1; 
         set
         {
-            _alpha1 = value;
-            ClearCachedPaint();
+            if (_alpha1 != value)
+            {
+                _alpha1 = value;
+                ClearCachedPaint();
+            }
         }
     }
     private int _red1;
@@ -265,8 +281,11 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
     {
         get => _red1; set
         {
-            _red1 = value;
-            ClearCachedPaint();
+            if (_red1 != value)
+            {
+                _red1 = value;
+                ClearCachedPaint();
+            }
         }
     }
     private int _green1;
@@ -275,8 +294,11 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
         get => _green1;
         set
         {
-            _green1 = value;
-            ClearCachedPaint();
+            if (_green1 != value)
+            {
+                _green1 = value;
+                ClearCachedPaint();
+            }
         }
     }
     private int _blue1;
@@ -285,8 +307,11 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
         get => _blue1;
         set
         {
-            _blue1 = value;
-            ClearCachedPaint();
+            if (_blue1 != value)
+            {
+                _blue1 = value;
+                ClearCachedPaint();
+            }
         }
     }
 
@@ -296,8 +321,11 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
         get => _alpha2;
         set
         {
-            _alpha2 = value;
-            ClearCachedPaint();
+            if (_alpha2 != value)
+            {
+                _alpha2 = value;
+                ClearCachedPaint();
+            }
         }
     }
     private int _red2;
@@ -306,8 +334,11 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
         get => _red2;
         set
         {
-            _red2 = value;
-            ClearCachedPaint();
+            if (_red2 != value)
+            {
+                _red2 = value;
+                ClearCachedPaint();
+            }
         }
     }
     private int _green2;
@@ -316,8 +347,11 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
         get => _green2;
         set
         {
-            _green2 = value;
-            ClearCachedPaint();
+            if (_green2 != value)
+            {
+                _green2 = value;
+                ClearCachedPaint();
+            }
         }
     }
     private int _blue2;
@@ -326,8 +360,11 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
         get => _blue2;
         set
         {
-            _blue2 = value;
-            ClearCachedPaint();
+            if (_blue2 != value)
+            {
+                _blue2 = value;
+                ClearCachedPaint();
+            }
         }
     }
 
@@ -337,8 +374,11 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
         get => _gradientX1;
         set
         {
-            _gradientX1 = value;
-            ClearCachedPaint();
+            if (_gradientX1 != value)
+            {
+                _gradientX1 = value;
+                ClearCachedPaint();
+            }
         }
     }
     private GeneralUnitType _gradientX1Units;
@@ -347,8 +387,11 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
         get => _gradientX1Units;
         set
         {
-            _gradientX1Units = value;
-            ClearCachedPaint();
+            if (_gradientX1Units != value)
+            {
+                _gradientX1Units = value;
+                ClearCachedPaint();
+            }
         }
     }
     private float _gradientY1;
@@ -357,8 +400,11 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
         get => _gradientY1;
         set
         {
-            _gradientY1 = value;
-            ClearCachedPaint();
+            if (_gradientY1 != value)
+            {
+                _gradientY1 = value;
+                ClearCachedPaint();
+            }
         }
     }
     private GeneralUnitType _gradientY1Units;
@@ -367,8 +413,11 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
         get => _gradientY1Units;
         set
         {
-            _gradientY1Units = value;
-            ClearCachedPaint();
+            if (_gradientY1Units != value)
+            {
+                _gradientY1Units = value;
+                ClearCachedPaint();
+            }
         }
     }
 
@@ -378,8 +427,11 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
         get => _gradientX2;
         set
         {
-            _gradientX2 = value;
-            ClearCachedPaint();
+            if (_gradientX2 != value)
+            {
+                _gradientX2 = value;
+                ClearCachedPaint();
+            }
         }
     }
 
@@ -389,8 +441,11 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
         get => _gradientX2Units;
         set
         {
-            _gradientX2Units = value;
-            ClearCachedPaint();
+            if (_gradientX2Units != value)
+            {
+                _gradientX2Units = value;
+                ClearCachedPaint();
+            }
         }
     }
 
@@ -400,8 +455,11 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
         get => _gradientY2;
         set
         {
-            _gradientY2 = value;
-            ClearCachedPaint();
+            if (_gradientY2 != value)
+            {
+                _gradientY2 = value;
+                ClearCachedPaint();
+            }
         }
     }
     private GeneralUnitType _gradientY2Units;
@@ -410,8 +468,11 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
         get => _gradientY2Units;
         set
         {
-            _gradientY2Units = value;
-            ClearCachedPaint();
+            if (_gradientY2Units != value)
+            {
+                _gradientY2Units = value;
+                ClearCachedPaint();
+            }
         }
     }
 
@@ -422,8 +483,11 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
         get => _gradientInnerRadius;
         set
         {
-            _gradientInnerRadius = value;
-            ClearCachedPaint();
+            if (_gradientInnerRadius != value)
+            {
+                _gradientInnerRadius = value;
+                ClearCachedPaint();
+            }
         }
     }
     private DimensionUnitType _gradientInnerRadiusUnits;
@@ -432,8 +496,11 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
         get => _gradientInnerRadiusUnits;
         set
         {
-            _gradientInnerRadiusUnits = value;
-            ClearCachedPaint();
+            if (_gradientInnerRadiusUnits != value)
+            {
+                _gradientInnerRadiusUnits = value;
+                ClearCachedPaint();
+            }
         }
     }
 
@@ -443,8 +510,11 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
         get => _gradientOuterRadius;
         set
         {
-            _gradientOuterRadius = value;
-            ClearCachedPaint();
+            if (_gradientOuterRadius != value)
+            {
+                _gradientOuterRadius = value;
+                ClearCachedPaint();
+            }
         }
     }
     private DimensionUnitType _gradientOuterRadiusUnits;
@@ -453,8 +523,11 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
         get => _gradientOuterRadiusUnits;
         set
         {
-            _gradientOuterRadiusUnits = value;
-            ClearCachedPaint();
+            if (_gradientOuterRadiusUnits != value)
+            {
+                _gradientOuterRadiusUnits = value;
+                ClearCachedPaint();
+            }
         }
     }
 
@@ -464,8 +537,11 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
         get => _isDimmed;
         set
         {
-            _isDimmed = value;
-            ClearCachedPaint();
+            if (_isDimmed != value)
+            {
+                _isDimmed = value;
+                ClearCachedPaint();
+            }
         }
     }
 
@@ -481,8 +557,11 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
         get => _isFilled;
         set
         {
-            _isFilled = value;
-            ClearCachedPaint();
+            if (_isFilled != value)
+            {
+                _isFilled = value;
+                ClearCachedPaint();
+            }
         }
     }
 
@@ -501,8 +580,11 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
         {
             if (_isAntialiased != value)
             {
-                _isAntialiased = value;
-                ClearCachedPaint();
+                if (_isAntialiased != value)
+                {
+                    _isAntialiased = value;
+                    ClearCachedPaint();
+                }
             }
         }
     }
@@ -521,8 +603,11 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
                     throw new ArgumentException("StrokeWidth cannot be set to PositiveInfinity");
                 }
 #endif
-                _strokeWidth = value;
-                ClearCachedPaint();
+                if (_strokeWidth != value)
+                {
+                    _strokeWidth = value;
+                    ClearCachedPaint();
+                }
             }
         }
     }
@@ -539,8 +624,11 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
         {
             if (value != _strokeDashLength)
             {
-                _strokeDashLength = value;
-                ClearCachedPaint();
+                if (_strokeDashLength != value)
+                {
+                    _strokeDashLength = value;
+                    ClearCachedPaint();
+                }
             }
         }
     }
@@ -557,8 +645,11 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
         {
             if (value != _strokeGapLength)
             {
-                _strokeGapLength = value;
-                ClearCachedPaint();
+                if (_strokeGapLength != value)
+                {
+                    _strokeGapLength = value;
+                    ClearCachedPaint();
+                }
             }
         }
     }
@@ -572,8 +663,11 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
         get => _dropshadowColor;
         set
         {
-            _dropshadowColor = value;
-            ClearCachedPaint();
+            if (_dropshadowColor != value)
+            {
+                _dropshadowColor = value;
+                ClearCachedPaint();
+            }
         }
     }
 
@@ -620,8 +714,11 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
         get => _hasDropshadow;
         set
         {
-            _hasDropshadow = value;
-            ClearCachedPaint();
+            if (_hasDropshadow != value)
+            {
+                _hasDropshadow = value;
+                ClearCachedPaint();
+            }
         }
     }
 
@@ -632,8 +729,11 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
         get => _dropshadowOffsetX;
         set
         {
-            _dropshadowOffsetX = value;
-            ClearCachedPaint();
+            if (_dropshadowOffsetX != value)
+            {
+                _dropshadowOffsetX = value;
+                ClearCachedPaint();
+            }
         }
     }
 
@@ -644,8 +744,11 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
         get => _dropshadowOffsetY;
         set
         {
-            _dropshadowOffsetY = value;
-            ClearCachedPaint();
+            if (_dropshadowOffsetY != value)
+            {
+                _dropshadowOffsetY = value;
+                ClearCachedPaint();
+            }
         }
     }
 
@@ -660,8 +763,11 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
         get => _dropshadowBlurX;
         set
         {
-            _dropshadowBlurX = value;
-            ClearCachedPaint();
+            if (_dropshadowBlurX != value)
+            {
+                _dropshadowBlurX = value;
+                ClearCachedPaint();
+            }
         }
     }
 
@@ -675,8 +781,11 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
         get => _dropshadowBlurY;
         set
         {
-            _dropshadowBlurY = value;
-            ClearCachedPaint();
+            if (_dropshadowBlurY != value)
+            {
+                _dropshadowBlurY = value;
+                ClearCachedPaint();
+            }
         }
     }
 
@@ -715,9 +824,9 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
 
     /// <summary>
     /// Optional callback invoked at the end of <see cref="PreRender"/>, wired by the owning
-    /// GraphicalUiElement runtime (see <c>SkiaShapeRuntime.SetContainedShape</c>) so per-frame,
-    /// GUE-level PreRender logic (e.g. the two-slot stroke Width/Height mirror, or
-    /// <c>StrokeWidthUnits.ScreenPixel</c> resolution) still runs even when this renderable is a
+    /// GraphicalUiElement runtime (see <c>SkiaShapeRuntime.OnContainedObjectSet</c>) so the runtime's
+    /// <c>PreRender()</c> override (stroke width, corner radii, fill inset, gradient start)
+    /// still runs even when this renderable is a
     /// TOP-LEVEL <see cref="RenderingLibrary.Graphics.Layer"/> member added via
     /// <c>GraphicalUiElement.AddToManagers</c>. In that case only this raw renderable (the fill
     /// slot, <c>mContainedObjectAsIpso</c>) is registered on the Layer -- the GUE wrapper's own
@@ -730,10 +839,68 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
 
     public void PreRender() => OnPreRender?.Invoke();
 
+#if SKIA
+    /// <summary>
+    /// The renderer's draw-call statistics while <see cref="Render"/> runs, null otherwise. A subclass
+    /// that overrides <see cref="RecordsOwnDrawCalls"/> records each SKCanvas draw call into it.
+    /// </summary>
+    private protected RenderStateChangeStatistics? DrawStatistics { get; private set; }
+
+    /// <summary>
+    /// False (the default) counts one draw call per <see cref="DrawBound"/>. True when
+    /// <see cref="DrawBound"/> issues a varying number of draws and records each in
+    /// <see cref="DrawStatistics"/> itself.
+    /// </summary>
+    private protected virtual bool RecordsOwnDrawCalls => false;
+
+    /// <summary>
+    /// The renderer's sprite batch while <see cref="Render"/> runs, null otherwise. Sprites add to it; a draw
+    /// that does not go through it must flush it first.
+    /// </summary>
+    private protected SpriteAtlasBatch? AtlasBatch { get; private set; }
+
+    private void DrawBoundCounted(RenderableShapeBase shape, SKRect boundingRect, SKCanvas canvas)
+    {
+        RenderStateChangeStatistics? statistics = DrawStatistics;
+        RenderStateChangeStatistics? previous = shape.DrawStatistics;
+        shape.DrawStatistics = statistics;
+        try
+        {
+            shape.DrawBound(boundingRect, canvas, shape.GetAbsoluteRotation());
+        }
+        finally
+        {
+            shape.DrawStatistics = previous;
+        }
+        if (!shape.RecordsOwnDrawCalls)
+        {
+            statistics?.RecordDrawCall();
+        }
+    }
+#endif
+
     public void Render(ISystemManagers managers)
     {
 #if SKIA
-        var canvas = ((SystemManagers)managers).Canvas;
+        var systemManagers = (SystemManagers)managers;
+        var canvas = systemManagers.Canvas;
+        DrawStatistics = systemManagers.RenderStatisticsIfInitialized;
+        AtlasBatch = systemManagers.ActiveSpriteBatch;
+        try
+        {
+            RenderToCanvas(canvas);
+        }
+        finally
+        {
+            DrawStatistics = null;
+            AtlasBatch = null;
+        }
+#endif
+    }
+
+#if SKIA
+    private void RenderToCanvas(SKCanvas canvas)
+    {
 
         // Issue #3671 (Dark Pro / Forest Glade ListBoxItem regression) -- a stroke-only renderable
         // (IsFilled == false, the two-slot fill+stroke composition's dedicated stroke object) with
@@ -779,28 +946,33 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
 
             if (UsesBoundsLayer)
             {
+                // The layer's clip must not reach sprites queued before this shape.
+                AtlasBatch?.Flush();
                 // See BlendsWholeBounds: draw the shape normally into a layer clipped to the bounds,
                 // then composite that layer with the blend. A fill slot draws its stroke slot into the
                 // same layer, so the pair blends as one shape (#6246).
-                using SKPaint layerPaint = new SKPaint();
+                SKPaint layerPaint = _layerPaint ??= new SKPaint();
+                layerPaint.Reset();
                 layerPaint.ApplyBlend(Blend!.Value);
                 canvas.Save();
                 canvas.ClipRect(blendBounds);
                 canvas.SaveLayer(layerPaint);
-                DrawBound(boundingRect, canvas, this.GetAbsoluteRotation());
+                DrawBoundCounted(this, boundingRect, canvas);
                 RenderableShapeBase? pairedStroke = PairedStrokeInLayer;
                 // A fully transparent ring draws nothing (replacing the fill with it would erase the ring zone).
                 if (pairedStroke != null && !pairedStroke.IsTransparentStroke)
                 {
                     pairedStroke.ReplacesPaintBelow = true;
-                    pairedStroke.DrawBound(pairedStroke.GetStrokeAdjustedBounds(blendBounds), canvas, pairedStroke.GetAbsoluteRotation());
+                    DrawBoundCounted(pairedStroke, pairedStroke.GetStrokeAdjustedBounds(blendBounds), canvas);
                 }
                 canvas.Restore();
                 canvas.Restore();
+                // Restoring the layer composites it onto the canvas, one more draw.
+                DrawStatistics?.RecordDrawCall();
             }
             else
             {
-                DrawBound(boundingRect, canvas, this.GetAbsoluteRotation());
+                DrawBoundCounted(this, boundingRect, canvas);
             }
 
             if (applyRotation)
@@ -808,8 +980,8 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
                 canvas.Restore();
             }
         }
-#endif
     }
+#endif
 
     private bool CanRender =>
         Visible &&
@@ -832,8 +1004,11 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
         {
             if (_replacesPaintBelow != value)
             {
-                _replacesPaintBelow = value;
-                ClearCachedPaint();
+                if (_replacesPaintBelow != value)
+                {
+                    _replacesPaintBelow = value;
+                    ClearCachedPaint();
+                }
             }
         }
     }
@@ -869,11 +1044,24 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
 
     /// <summary>
     /// The Gum blend mode applied when constructing the SKPaint used to draw this renderable.
-    /// When null, the SkiaSharp default (SrcOver / standard alpha blending) is used.
+    /// Defaults to Normal (SrcOver / standard alpha blending), as on a project-loaded shape; null draws the same.
     /// <c>ReplaceAlpha</c> has no <see cref="SKBlendMode"/>, so it is applied as a custom
     /// <see cref="SKBlender"/>; see <see cref="BlendToSkBlendModeExtensions"/>.
     /// </summary>
-    public Gum.RenderingLibrary.Blend? Blend { get; set; }
+    public Gum.RenderingLibrary.Blend? Blend
+    {
+        get => _blend;
+        set
+        {
+            if (value != _blend)
+            {
+                _blend = value;
+                ClearCachedPaint();
+            }
+        }
+    }
+
+    private Gum.RenderingLibrary.Blend? _blend = Gum.RenderingLibrary.Blend.Normal;
 
     /// <summary>
     /// Whether <c>ReplaceAlpha</c> and <c>MinAlpha</c> act on the shape's whole bounds, so pixels
@@ -893,33 +1081,224 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
     SKRect _lastBoundingRect;
 
     SKPaint? _cachedPaint;
+    bool _isCachedPaintStale;
+
+    // Reused by the whole-bounds blend layer so a ReplaceAlpha/MinAlpha shape allocates no paint per draw.
+    SKPaint? _layerPaint;
+
+    // The paint object to rebuild in place. Set by GetCachedPaint around its GetPaint call so the base
+    // GetPaint (which every override calls first) reuses it instead of allocating a new one.
+    SKPaint? _paintToReuse;
+
+    /// <summary>
+    /// Marks the paint as out of date. The next draw rebuilds it, reusing the same <see cref="SKPaint"/>
+    /// object so an animated property does not allocate a paint every frame.
+    /// </summary>
     protected void ClearCachedPaint()
     {
-        _cachedPaint?.Dispose();
-        _cachedPaint = null;
+        _isCachedPaintStale = true;
         NeedsUpdate = true;
     }
 
+    // The dropshadow of a shape that opts in is a second draw of the same geometry with a blur mask filter,
+    // offset by the dropshadow offset, instead of an image filter on the shape's paint. The image filter makes
+    // Skia render each shape into an offscreen layer and blur that, which costs about 0.12 ms of GPU time per
+    // shape; the mask filter blurs the geometry directly (an analytic blur for rounded rectangles) for about
+    // a twentieth of that, with the same pixels to within one level.
+    SKPaint? _shadowPaint;
+    SKMaskFilter? _shadowMaskFilter;
+    float _shadowMaskSigma;
 
+    /// <summary>
+    /// True for a shape whose <see cref="DrawBound"/> draws <see cref="GetShadowPaint"/> (moved by the
+    /// dropshadow offset with <see cref="SaveAtShadowOffset"/>) before its own draw. Shapes that do not
+    /// stay on the image filter.
+    /// </summary>
+    protected virtual bool DrawsBlurredShadow => false;
 
+    // The mask filter takes one sigma and ignores a gradient's per-stop alpha, so a gradient shape keeps the image filter. So does a Replace (Src) blend: the image filter replaces the whole shadow-and-shape bounds, which a blurred draw does not (it replaces only where it has coverage), so that output stays as it was. A rotated shape keeps it
+    // too: the image filter offsets the shadow in unrotated surface space, which the rotated canvas would not match. So does a shape
+    // that crosses the edge of a clip (or lies outside it): rendered side by side, the two draws differ by up to 31 levels along
+    // the cut rim. A shape inside its clips, whose blur may still cross
+    // an edge, matches to the level of an unclipped one (#7945).
+    private bool UsesBlurredShadowDraw
+    {
+        get
+        {
+            if (!DrawsBlurredShadow || !HasDropshadow || UseGradient || Blend == Gum.RenderingLibrary.Blend.Replace || this.GetAbsoluteRotation() != 0 || _replacesPaintBelow || !IsInsideEveryClip())
+            {
+                return false;
+            }
+            float sigmaX = global::Gum.Wireframe.DropshadowBlur.GetSigma(DropshadowBlurX);
+            float sigmaY = global::Gum.Wireframe.DropshadowBlur.GetSigma(DropshadowBlurY);
+            return sigmaX == sigmaY && sigmaX > 0 && float.IsFinite(sigmaX);
+        }
+    }
+
+    // True when this shape's bounds lie inside the rectangle of every clipping ancestor (and of itself, which also
+    // clips its own draw). Walks the parents itself: the extension that does this is not compiled into every project
+    // that includes this file. Each clipper's rectangle is placed and turned as IRenderableIpsoExtensions.GetClipTransform
+    // does.
+    private bool IsInsideEveryClip()
+    {
+        float x = this.GetAbsoluteX();
+        float y = this.GetAbsoluteY();
+        IRenderableIpso? clipper = this;
+        while (clipper != null)
+        {
+            if (clipper.ClipsChildren)
+            {
+                float rotation = clipper.GetAbsoluteRotation();
+                SKMatrix toWorld = SKMatrix.CreateTranslation(clipper.GetAbsoluteX(), clipper.GetAbsoluteY())
+                    .PreConcat(SKMatrix.CreateRotationDegrees(-rotation));
+                if (!toWorld.TryInvert(out SKMatrix toLocal)
+                    || !IsInside(toLocal.MapPoint(x, y), clipper)
+                    || !IsInside(toLocal.MapPoint(x + Width, y), clipper)
+                    || !IsInside(toLocal.MapPoint(x, y + Height), clipper)
+                    || !IsInside(toLocal.MapPoint(x + Width, y + Height), clipper))
+                {
+                    return false;
+                }
+            }
+            clipper = clipper.Parent;
+        }
+        return true;
+    }
+
+    private static bool IsInside(SKPoint pointInClipper, IRenderableIpso clipper) =>
+        pointInClipper.X >= 0 && pointInClipper.Y >= 0 && pointInClipper.X <= clipper.Width && pointInClipper.Y <= clipper.Height;
+
+    private void RefreshShadowPaint(SKPaint shapePaint)
+    {
+        if (!UsesBlurredShadowDraw)
+        {
+            _shadowPaint?.Dispose();
+            _shadowPaint = null;
+            _shadowMaskFilter?.Dispose();
+            _shadowMaskFilter = null;
+            return;
+        }
+
+        // Rebuilt in place from the few settings these shapes put on their paint (they do not override
+        // GetPaint), so animating the offset or color allocates nothing. A shape that sets more on its
+        // paint than this must copy it here too.
+        SKPaint shadow = _shadowPaint ??= new SKPaint();
+        shadow.Reset();
+        shadow.Style = shapePaint.Style;
+        shadow.StrokeWidth = shapePaint.StrokeWidth;
+        shadow.IsAntialias = shapePaint.IsAntialias;
+        if (!IsFilled && StrokeDashLength > 0 && StrokeGapLength > 0)
+        {
+            shadow.PathEffect = shapePaint.PathEffect;
+        }
+        // The image filter shadow takes its alpha from the shape's silhouette, so a translucent fill
+        // gives a proportionally fainter shadow.
+        byte alpha = (byte)Math.Round(DropshadowColor.Alpha * shapePaint.Color.Alpha / 255f);
+        shadow.Color = DropshadowColor.WithAlpha(alpha);
+        // The shadow blends like the shape. A whole-bounds blend is applied once to the layer around both draws.
+        if (Blend.HasValue && !UsesBoundsLayer)
+        {
+            shadow.ApplyBlend(Blend.Value);
+        }
+
+        float sigma = global::Gum.Wireframe.DropshadowBlur.GetSigma(DropshadowBlurX);
+        if (_shadowMaskFilter == null || sigma != _shadowMaskSigma)
+        {
+            _shadowMaskFilter?.Dispose();
+            _shadowMaskFilter = SKMaskFilter.CreateBlur(SKBlurStyle.Normal, sigma);
+            _shadowMaskSigma = sigma;
+        }
+        shadow.MaskFilter = _shadowMaskFilter;
+    }
+
+    /// <summary>
+    /// The paint for the blurred shadow draw, or null when the shadow is not drawn this way (no dropshadow,
+    /// or <see cref="DrawsBlurredShadow"/> is false). Call after <see cref="GetCachedPaint"/>.
+    /// </summary>
+    protected SKPaint? GetShadowPaint() => _shadowPaint;
+
+    /// <summary>Moves the canvas by the dropshadow offset; undo with <see cref="SKCanvas.Restore"/>.</summary>
+    protected void SaveAtShadowOffset(SKCanvas canvas)
+    {
+        canvas.Save();
+        canvas.Translate(DropshadowOffsetX, DropshadowOffsetY);
+    }
+
+    bool _lastUsedBlurredShadowDraw;
     float _lastAbsoluteRotation;
     protected SKPaint GetCachedPaint(SKRect boundingRect, float absoluteRotation)
     {
-        if(boundingRect != _lastBoundingRect || absoluteRotation != _lastAbsoluteRotation)
+        // Which shadow draw applies (see UsesBlurredShadowDraw) follows the shape's rotation, its place in its
+        // clips and its size, none of which touch a paint property, so a change of draw rebuilds the paint.
+        bool usesBlurredShadowDraw = UsesBlurredShadowDraw;
+        if (usesBlurredShadowDraw != _lastUsedBlurredShadowDraw)
         {
-            _lastBoundingRect = boundingRect;
-            _lastAbsoluteRotation = absoluteRotation;
+            _lastUsedBlurredShadowDraw = usesBlurredShadowDraw;
             ClearCachedPaint();
         }
-        if(_cachedPaint == null)
+        // Only a gradient is built from the bounds and rotation, so a scrolling solid shape keeps its paint.
+        bool boundsChanged = boundingRect != _lastBoundingRect || absoluteRotation != _lastAbsoluteRotation;
+        _lastBoundingRect = boundingRect;
+        _lastAbsoluteRotation = absoluteRotation;
+        if (boundsChanged && UseGradient)
         {
+            ClearCachedPaint();
+        }
+        if(_cachedPaint == null || _isCachedPaintStale)
+        {
+            _paintToReuse = _cachedPaint;
             _cachedPaint = GetPaint(boundingRect, absoluteRotation);
+            _paintToReuse = null;
+            RefreshShadowPaint(_cachedPaint);
+            _isCachedPaintStale = false;
         }
         return _cachedPaint;
     }
 
+    /// <summary>
+    /// Tints a texture draw by <see cref="Color"/> through a color filter. Add adds Color's RGB in a
+    /// single pass; otherwise Color is blended with <paramref name="tintBlendMode"/> (Modulate, or
+    /// SrcIn for ColorTextureAlpha). The filter's tint is opaque because the paint's own alpha,
+    /// which Skia applies to every image draw, already carries <see cref="Alpha"/>; an Alpha of 128
+    /// draws at half opacity, as on MonoGame.
+    /// </summary>
+    protected void ApplyTextureTint(SKPaint paint, SKBlendMode tintBlendMode)
+    {
+        if (ColorOperation == ColorOperation.Add)
+        {
+            // The offset is added in unpremultiplied space and gets scaled by the pixel's own alpha
+            // when Skia premultiplies for compositing, so it is masked by the drawn image's silhouette.
+            float[] addMatrix =
+            {
+                1, 0, 0, 0, Color.Red / 255f,
+                0, 1, 0, 0, Color.Green / 255f,
+                0, 0, 1, 0, Color.Blue / 255f,
+                0, 0, 0, 1, 0,
+            };
+            using SKColorFilter addFilter = SKColorFilter.CreateColorMatrix(addMatrix);
+            paint.ColorFilter = addFilter;
+        }
+        else
+        {
+            using SKColorFilter blendFilter = SKColorFilter.CreateBlendMode(Color.WithAlpha(255), tintBlendMode);
+            paint.ColorFilter = blendFilter;
+        }
+    }
+
+    /// <summary>
+    /// Builds the paint for a draw. Overrides call this first and then adjust the paint it returns.
+    /// When called from <see cref="GetCachedPaint"/> the returned paint is the previous one reset to
+    /// defaults, so callers other than that must not keep it past the next draw.
+    /// </summary>
     protected virtual SKPaint GetPaint(SKRect boundingRect, float absoluteRotation)
     {
+        SKPaint paint = _paintToReuse ?? new SKPaint();
+        if (_paintToReuse != null)
+        {
+            paint.Reset();
+            _paintToReuse = null;
+        }
+
         var effectiveColor = this.Color;
         if (IsDimmed)
         {
@@ -934,23 +1313,23 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
 
 
 
-        var paint = new SKPaint
-        {
-            Color = effectiveColor,
-            Style = IsFilled ? SKPaintStyle.Fill : SKPaintStyle.Stroke,
-            StrokeWidth = StrokeWidth,
-            IsAntialias = _isAntialiased
-        };
+        paint.Color = effectiveColor;
+        paint.Style = IsFilled ? SKPaintStyle.Fill : SKPaintStyle.Stroke;
+        paint.StrokeWidth = StrokeWidth;
+        paint.IsAntialias = _isAntialiased;
 
-        if (HasDropshadow)
+        // The paint keeps its own reference to a filter, shader or path effect, so the object made here
+        // is released as soon as it is assigned instead of waiting for the finalizer.
+        if (HasDropshadow && !UsesBlurredShadowDraw)
         {
-            paint.ImageFilter = SKImageFilter.CreateDropShadow(
+            using SKImageFilter dropshadow = SKImageFilter.CreateDropShadow(
                         DropshadowOffsetX,
                         // See https://stackoverflow.com/questions/60456526/how-can-i-tell-the-amount-of-space-needed-for-a-skia-dropshadow
                         DropshadowOffsetY,
                         global::Gum.Wireframe.DropshadowBlur.GetSigma(DropshadowBlurX),
                         global::Gum.Wireframe.DropshadowBlur.GetSigma(DropshadowBlurY),
                         DropshadowColor);
+            paint.ImageFilter = dropshadow;
         }
 
         if (UseGradient)
@@ -968,8 +1347,9 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
 
         if (!IsFilled && StrokeDashLength > 0 && StrokeGapLength > 0)
         {
-            paint.PathEffect = SKPathEffect.CreateDash(
+            using SKPathEffect dash = SKPathEffect.CreateDash(
                 new[] { StrokeDashLength, StrokeGapLength }, phase: 0);
+            paint.PathEffect = dash;
         }
 
         if (_replacesPaintBelow)
@@ -1017,10 +1397,18 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
 
     #endregion
 
+    // Reused for every gradient this shape builds, so a gradient animated every frame allocates only the
+    // shader. Skia copies the stops into the shader when it is created. Created on first use so shapes
+    // without a gradient do not carry them.
+    private SKColor[]? _gradientColors;
+    private float[]? _gradientPositions;
+
     protected void ApplyGradientToPaint(SKRect boundingRect, SKPaint paint, float absoluteRotation)
     {
-        var firstColor = new SKColor((byte)Red1, (byte)Green1, (byte)Blue1, (byte)Alpha1);
-        var secondColor = new SKColor((byte)Red2, (byte)Green2, (byte)Blue2, (byte)Alpha2);
+        _gradientColors ??= new SKColor[2];
+        _gradientPositions ??= new float[2];
+        _gradientColors[0] = new SKColor((byte)Red1, (byte)Green1, (byte)Blue1, (byte)Alpha1);
+        _gradientColors[1] = new SKColor((byte)Red2, (byte)Green2, (byte)Blue2, (byte)Alpha2);
 
         var effectiveGradientX1 = GradientX1;
         switch (this.GradientX1Units)
@@ -1098,12 +1486,13 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
         if (GradientType == GradientType.Linear)
         {
 
-            paint.Shader = SKShader.CreateLinearGradient(
+            using SKShader linear = SKShader.CreateLinearGradient(
                 new SKPoint(effectiveGradientX1, effectiveGradientY1), // left, top
                 new SKPoint(effectiveGradientX2, effectiveGradientY2), // right, bottom
-                new SKColor[] { firstColor, secondColor },
-                new float[] { 0, 1 },
+                _gradientColors,
+                SetGradientPositions(0, 1),
                 SKShaderTileMode.Clamp);
+            paint.Shader = linear;
         }
         else if (GradientType == GradientType.Radial)
         {
@@ -1141,13 +1530,21 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
             var innerToOuterRatio = effectiveInnerRadius / effectiveOuterRadius;
 
 
-            paint.Shader = SKShader.CreateRadialGradient(
+            using SKShader radial = SKShader.CreateRadialGradient(
                 new SKPoint(effectiveGradientX1, effectiveGradientY1), // center
                 effectiveOuterRadius,
-                new SKColor[] { firstColor, secondColor },
-                new float[] { innerToOuterRatio, 1 },
+                _gradientColors,
+                SetGradientPositions(innerToOuterRatio, 1),
                 SKShaderTileMode.Clamp);
+            paint.Shader = radial;
         }
+    }
+
+    float[] SetGradientPositions(float first, float second)
+    {
+        _gradientPositions![0] = first;
+        _gradientPositions[1] = second;
+        return _gradientPositions;
     }
 
     SKRect Unrotate(SKRect beforeRotation, float angleToUndoDegrees)
@@ -1174,6 +1571,14 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
     /// </summary>
     public virtual void Dispose()
     {
+        _cachedPaint?.Dispose();
+        _cachedPaint = null;
+        _shadowMaskFilter?.Dispose();
+        _shadowMaskFilter = null;
+        _shadowPaint?.Dispose();
+        _shadowPaint = null;
+        _layerPaint?.Dispose();
+        _layerPaint = null;
         ClearCachedPaint();
 
         if(this.Children != null)

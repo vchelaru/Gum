@@ -1,13 +1,13 @@
 ---
 name: gum-forms-default-visuals
-description: Forms DefaultVisuals — code-only visual classes backing Forms controls. Triggers: ButtonVisual, any *Visual class in DefaultVisuals/, Styling, DefaultFormsTemplates registration, custom code-only Forms visuals.
+description: "Forms DefaultVisuals: code-only visual classes backing Forms controls. Triggers: ButtonVisual, any *Visual class in DefaultVisuals/, button.Visual, Styling, DefaultFormsTemplates registration, custom code-only Forms visuals."
 ---
 
 # Forms Default Visuals
 
 ## What They Are
 
-Default visuals are `InteractiveGue` subclasses that procedurally build a complete visual tree in their constructor — no Gum project file needed. Each one backs a specific Forms control (e.g., `ButtonVisual` backs `Button`). They live in `MonoGameGum/Forms/DefaultVisuals/`.
+Default visuals are `InteractiveGue` subclasses that procedurally build a complete visual tree in their constructor — no Gum project file needed. Each one backs a specific Forms control (e.g., `ButtonVisual` backs `Button`). They live in `MonoGameGum/Forms/DefaultVisuals/`. The layers (Forms, visual, Renderable) are in **gum-architecture-layers**.
 
 **These are *one* implementation, not *the* structure.** A control can be backed by any visual — a tool-authored component or a custom `InteractiveGue` subclass with a completely different tree — so structural features (a Window's Fill `InnerPanelInstance`, or sizing it to children via `WindowVisual.MakeSizedToChildren()`) live in the visual, never in the control. See the Visual/FrameworkElement split in **gum-forms-controls**.
 

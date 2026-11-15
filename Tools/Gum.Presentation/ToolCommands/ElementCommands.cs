@@ -171,14 +171,9 @@ public class ElementCommands : IElementCommands
     {
         AddStateInternal(stateContainer, category, stateSave, desiredIndex);
 
-        var otherState = category?.States.FirstOrDefault(item => item != stateSave);
-        if (otherState != null && stateContainer is ElementSave elementSave)
+        if (stateContainer is ElementSave elementSave)
         {
-            foreach (var variable in otherState.Variables)
-            {
-                _variableInCategoryPropagationLogic
-                    .PropagateVariablesInCategory(variable.Name, elementSave, category);
-            }
+            _variableInCategoryPropagationLogic.PropagateAllVariablesInCategory(elementSave, category);
         }
 
 

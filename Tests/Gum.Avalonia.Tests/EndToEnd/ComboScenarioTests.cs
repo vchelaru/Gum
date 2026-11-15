@@ -415,7 +415,7 @@ public class ComboScenarioTests
         ScreenSave title = tree.Project.AddScreen("Title");
         tree.Project.AddInstance(title, "OkButton", "Button");
         string components = Path.Combine(tree.Project.ProjectFolder, "Components");
-        File.WriteAllText(Path.Combine(components, "ButtonAnimations.ganx"), AnimationFileWithKeyframe("Press", "Looks/Pressed"));
+        AnimationFixtures.Write(Path.Combine(components, "ButtonAnimations.ganx"), "Press", "Looks/Pressed");
         tree.Click(tree.NodeFor(Instance(Screen(tree, "Title"), "OkButton")));
         VariableGridHarness grid = tree.Grid;
         grid.PickComboItem("LooksState", "Pressed");
@@ -726,7 +726,7 @@ public class ComboScenarioTests
         StateSaveCategory looks = code.Project.AddCategory(button, "Looks");
         code.Project.AddState(button, looks, "Pressed");
         string components = Path.Combine(code.Project.ProjectFolder, "Components");
-        File.WriteAllText(Path.Combine(components, "ButtonAnimations.ganx"), AnimationFileWithKeyframe("Press", "Looks/Pressed"));
+        AnimationFixtures.Write(Path.Combine(components, "ButtonAnimations.ganx"), "Press", "Looks/Pressed");
         tree.SaveAll();
         // The Animations tab read Button's (then missing) file when Button was added; selecting
         // another element and back makes it read the file written above.
@@ -807,7 +807,7 @@ public class ComboScenarioTests
         StateSaveCategory looks = code.Project.AddCategory(button, "Looks");
         code.Project.AddState(button, looks, "Pressed");
         string components = Path.Combine(code.Project.ProjectFolder, "Components");
-        File.WriteAllText(Path.Combine(components, "ButtonAnimations.ganx"), AnimationFileWithKeyframe("Press", "Looks/Pressed"));
+        AnimationFixtures.Write(Path.Combine(components, "ButtonAnimations.ganx"), "Press", "Looks/Pressed");
         tree.SaveAll();
         tree.Click(tree.RootNode("Components"));
         code.Select(Component(tree, "Button"));
@@ -833,26 +833,6 @@ public class ComboScenarioTests
 
     #region Helpers
 
-    private static string AnimationFileWithKeyframe(string animationName, string stateName) =>
-        "<?xml version=\"1.0\" encoding=\"utf-8\"?>\r\n" +
-        "<ElementAnimationsSave xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">\r\n" +
-        "  <Animations>\r\n" +
-        "    <AnimationSave>\r\n" +
-        "      <Loops>false</Loops>\r\n" +
-        $"      <Name>{animationName}</Name>\r\n" +
-        "      <States>\r\n" +
-        "        <AnimatedStateSave>\r\n" +
-        $"          <StateName>{stateName}</StateName>\r\n" +
-        "          <Time>0</Time>\r\n" +
-        "          <InterpolationType>Linear</InterpolationType>\r\n" +
-        "          <Easing>Out</Easing>\r\n" +
-        "        </AnimatedStateSave>\r\n" +
-        "      </States>\r\n" +
-        "      <Animations />\r\n" +
-        "      <Events />\r\n" +
-        "    </AnimationSave>\r\n" +
-        "  </Animations>\r\n" +
-        "</ElementAnimationsSave>";
 
     /// <summary>
     /// Selects each element in turn and presses Ctrl+Z until it has nothing left to undo (undo

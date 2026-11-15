@@ -70,27 +70,75 @@
             else if (value == Gum.BlendState.AlphaBlend) return Microsoft.Xna.Framework.Graphics.BlendState.AlphaBlend;
             else if (value == Gum.BlendState.Additive) return Microsoft.Xna.Framework.Graphics.BlendState.Additive;
             else if (value == Gum.BlendState.NonPremultiplied) return Microsoft.Xna.Framework.Graphics.BlendState.NonPremultiplied;
-            else
+            else return GetOrCreateXnaBlendState(value);
+        }
+
+        // SpriteBatchStack converts the active Gum BlendState on every SpriteBatch.Begin, and the
+        // state a render-target bake uses is not one of the four presets above, so converting by
+        // construction allocated a BlendState (with its four TargetBlendStates, their array and a
+        // WeakReference registered on the device) for every Begin (#7619). The conversion is
+        // cached per source instance and rebuilt when the source was edited or the device the
+        // cached state was bound to has been disposed.
+        private static readonly System.Runtime.CompilerServices.ConditionalWeakTable<Gum.BlendState, Microsoft.Xna.Framework.Graphics.BlendState> _xnaBlendStates =
+            new System.Runtime.CompilerServices.ConditionalWeakTable<Gum.BlendState, Microsoft.Xna.Framework.Graphics.BlendState>();
+
+        private static Microsoft.Xna.Framework.Graphics.BlendState GetOrCreateXnaBlendState(Gum.BlendState value)
+        {
+            if (_xnaBlendStates.TryGetValue(value, out var cached) && !cached.IsDisposed && IsSameBlend(value, cached))
             {
-                var toReturn = new Microsoft.Xna.Framework.Graphics.BlendState();
-
-                toReturn.AlphaBlendFunction = value.AlphaBlendFunction.ToXna();
-                toReturn.AlphaDestinationBlend = value.AlphaDestinationBlend.ToXna();
-                toReturn.AlphaSourceBlend = value.AlphaSourceBlend.ToXna();
-                toReturn.ColorBlendFunction = value.ColorBlendFunction.ToXna();
-                toReturn.ColorDestinationBlend = value.ColorDestinationBlend.ToXna();
-                toReturn.ColorSourceBlend = value.ColorSourceBlend.ToXna();
-                toReturn.ColorWriteChannels = value.ColorWriteChannels.ToXna();
-                toReturn.ColorWriteChannels1 = value.ColorWriteChannels1.ToXna();
-                toReturn.ColorWriteChannels2 = value.ColorWriteChannels2.ToXna();
-                toReturn.ColorWriteChannels3 = value.ColorWriteChannels3.ToXna();
-                toReturn.BlendFactor = value.BlendFactor.ToXNA();
-                toReturn.MultiSampleMask = value.MultiSampleMask;
-                // not supported in XNA, only MonoGame. Do we care?
-                //toReturn.IndependentBlendEnable = value.IndependentBlendEnable;
-
-                return toReturn;
+                return cached;
             }
+
+            // Remove then Add is not atomic and Add throws on a duplicate key, so a stale entry that
+            // several threads convert at once is replaced under a lock.
+            lock (_xnaBlendStates)
+            {
+                if (_xnaBlendStates.TryGetValue(value, out cached) && !cached.IsDisposed && IsSameBlend(value, cached))
+                {
+                    return cached;
+                }
+
+                var created = CreateXnaBlendState(value);
+                _xnaBlendStates.Remove(value);
+                _xnaBlendStates.Add(value, created);
+                return created;
+            }
+        }
+
+        private static bool IsSameBlend(Gum.BlendState value, Microsoft.Xna.Framework.Graphics.BlendState xna) =>
+            xna.AlphaBlendFunction == value.AlphaBlendFunction.ToXna()
+            && xna.AlphaDestinationBlend == value.AlphaDestinationBlend.ToXna()
+            && xna.AlphaSourceBlend == value.AlphaSourceBlend.ToXna()
+            && xna.ColorBlendFunction == value.ColorBlendFunction.ToXna()
+            && xna.ColorDestinationBlend == value.ColorDestinationBlend.ToXna()
+            && xna.ColorSourceBlend == value.ColorSourceBlend.ToXna()
+            && xna.ColorWriteChannels == value.ColorWriteChannels.ToXna()
+            && xna.ColorWriteChannels1 == value.ColorWriteChannels1.ToXna()
+            && xna.ColorWriteChannels2 == value.ColorWriteChannels2.ToXna()
+            && xna.ColorWriteChannels3 == value.ColorWriteChannels3.ToXna()
+            && xna.BlendFactor == value.BlendFactor.ToXNA()
+            && xna.MultiSampleMask == value.MultiSampleMask;
+
+        private static Microsoft.Xna.Framework.Graphics.BlendState CreateXnaBlendState(Gum.BlendState value)
+        {
+            var toReturn = new Microsoft.Xna.Framework.Graphics.BlendState();
+
+            toReturn.AlphaBlendFunction = value.AlphaBlendFunction.ToXna();
+            toReturn.AlphaDestinationBlend = value.AlphaDestinationBlend.ToXna();
+            toReturn.AlphaSourceBlend = value.AlphaSourceBlend.ToXna();
+            toReturn.ColorBlendFunction = value.ColorBlendFunction.ToXna();
+            toReturn.ColorDestinationBlend = value.ColorDestinationBlend.ToXna();
+            toReturn.ColorSourceBlend = value.ColorSourceBlend.ToXna();
+            toReturn.ColorWriteChannels = value.ColorWriteChannels.ToXna();
+            toReturn.ColorWriteChannels1 = value.ColorWriteChannels1.ToXna();
+            toReturn.ColorWriteChannels2 = value.ColorWriteChannels2.ToXna();
+            toReturn.ColorWriteChannels3 = value.ColorWriteChannels3.ToXna();
+            toReturn.BlendFactor = value.BlendFactor.ToXNA();
+            toReturn.MultiSampleMask = value.MultiSampleMask;
+            // not supported in XNA, only MonoGame. Do we care?
+            //toReturn.IndependentBlendEnable = value.IndependentBlendEnable;
+
+            return toReturn;
         }
 
         public static Microsoft.Xna.Framework.Graphics.BlendFunction ToXna(this Gum.BlendFunction value) =>

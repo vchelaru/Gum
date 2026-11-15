@@ -49,6 +49,9 @@ at most once.
   against the code before acting on it.
 - **`treeview-wpf-port.md`** — design and progress record for the element tree view's WinForms → WPF
   port (#4228).
+- **`skia-hosts.md`** — how to add a Skia-based platform: the GPU-only rule (SkiaGameRendering, no CPU
+  path), the one-improvement-per-new-host rule, candidate shared-code improvements, current hosts, and a
+  checklist. Living; append to its Log. **Read before adding or reviewing a Skia host.**
 - **`texture-edge-bleed.md`** — history and open problems of the load-time texture edge bleed
   (#3691). Living; append to its Log.
 

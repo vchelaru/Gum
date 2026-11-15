@@ -64,7 +64,13 @@ public enum HotReloadIssueKind
     /// A font source file (.ttf or .otf) changed. Fonts already generated from it, and the Text using
     /// them, keep the old glyphs until a restart.
     /// </summary>
-    FontSourceChanged
+    FontSourceChanged,
+
+    /// <summary>
+    /// An instance is of a component that already contains it, directly or through other components.
+    /// It was not created, as a restart would not create it.
+    /// </summary>
+    InstanceLoop
 }
 
 /// <summary>One thing a reload reported, with the same text that is written to the console.</summary>
@@ -93,7 +99,9 @@ public sealed class HotReloadIssue
     /// <summary>
     /// True when the running tree is the same as a restart of the project would show, even with this issue.
     /// </summary>
-    public bool MatchesRestart => Kind is HotReloadIssueKind.InstanceRemoved or HotReloadIssueKind.InstanceRebuilt;
+    public bool MatchesRestart => Kind is HotReloadIssueKind.InstanceRemoved
+        or HotReloadIssueKind.InstanceRebuilt
+        or HotReloadIssueKind.InstanceLoop;
 
     // Whether the problem lasts after this reload, so every later reload lists it again.
     internal bool Persists => Kind is HotReloadIssueKind.ShownElementGone

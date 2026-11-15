@@ -234,7 +234,7 @@ public partial class GeneratedFormsConstructionTests : BaseTestClass
             object visual = template.GetType().GetMethod("CreateContent")!.Invoke(template, new object?[] { null, true })!;
 
             object formsControl = Get(visual, "FormsControlAsObject").ShouldNotBeNull();
-            Get(visual, "ElementSave.Name").ShouldBe("Retro95/Controls/MenuItemSubmenuPopup");
+            Get(visual, "ElementSave.Name").ShouldBe("Retro95/MenuItemSubmenuPopup");
             formsControl.ShouldBeAssignableTo(scrollViewerType);
             // Gum Forms output generates the control class; legacy MonoGame output generates the visual class.
             Type generatedType = outputLibrary == OutputLibrary.GumForms ? formsControl.GetType() : visual.GetType();
@@ -698,7 +698,7 @@ public partial class GeneratedFormsConstructionTests : BaseTestClass
     {
         Type systemManagersType = MonoGameGum.GetType("RenderingLibrary.SystemManagers", throwOnError: true)!;
         systemManagersType.GetMethod("RegisterComponentRuntimeInstantiations", BindingFlags.NonPublic | BindingFlags.Instance)!
-            .Invoke(systemManagersType.GetProperty("Default")!.GetValue(null), null);
+            .Invoke(systemManagersType.GetProperty("Default")!.GetValue(null), new object[] { true });
         GumProjectSave project = GumProjectSave.Load(Path.Combine(TempDirectory, "MyProject.gumx"), out _)!;
         Gum.Managers.ObjectFinder.Self.GumProjectSave = project;
         Gum.Managers.StandardElementsManager.Self.RegisterExtendedDefaultStates();

@@ -25,8 +25,8 @@ namespace RenderingLibrary.Graphics;
 public readonly struct ClipBoundsSource
 {
     private readonly Camera? _camera;
-    private readonly Layer? _layer;
     private readonly IRenderableIpso? _bakedContainer;
+    private readonly WorldToScreenTransform _worldToScreen;
     private readonly Func<IRenderableIpso, System.Drawing.Rectangle>? _getScissorRectangle;
     private readonly Func<IRenderableIpso, System.Drawing.Rectangle>? _getCullTestBounds;
 
@@ -48,8 +48,9 @@ public readonly struct ClipBoundsSource
     public ClipBoundsSource(Camera camera, Layer? layer, IRenderableIpso? bakedContainer)
     {
         _camera = camera;
-        _layer = layer;
         _bakedContainer = bakedContainer;
+        // Resolved once for the whole walk: the camera and layer don't change while a draw list builds
+        _worldToScreen = camera.GetWorldToScreenTransform(layer);
         _getScissorRectangle = null;
         _getCullTestBounds = null;
     }
@@ -69,8 +70,8 @@ public readonly struct ClipBoundsSource
         Func<IRenderableIpso, System.Drawing.Rectangle>? getCullTestBounds = null)
     {
         _camera = null;
-        _layer = null;
         _bakedContainer = null;
+        _worldToScreen = default;
         _getScissorRectangle = getScissorRectangle;
         _getCullTestBounds = getCullTestBounds ?? getScissorRectangle;
     }
@@ -93,7 +94,7 @@ public readonly struct ClipBoundsSource
     /// </summary>
     public System.Drawing.Rectangle GetScissorRectangle(IRenderableIpso renderable) =>
         _camera != null
-            ? _camera.GetScissorRectangleFor(_layer, renderable, _bakedContainer)
+            ? _camera.GetScissorRectangleFor(_worldToScreen, renderable, _bakedContainer)
             : _getScissorRectangle!(renderable);
 
     /// <summary>
@@ -102,7 +103,7 @@ public readonly struct ClipBoundsSource
     /// </summary>
     public System.Drawing.Rectangle GetCullTestBounds(IRenderableIpso renderable) =>
         _camera != null
-            ? _camera.GetCullTestBoundsFor(_layer, renderable, _bakedContainer)
+            ? _camera.GetCullTestBoundsFor(_worldToScreen, renderable, _bakedContainer)
             : _getCullTestBounds!(renderable);
 }
 

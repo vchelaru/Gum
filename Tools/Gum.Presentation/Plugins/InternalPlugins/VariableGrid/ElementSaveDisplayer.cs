@@ -6,6 +6,7 @@ using Gum.DataTypes.Variables;
 using Gum.DataTypes;
 using Gum.ToolStates;
 using Gum.Managers;
+using Gum.ProjectServices;
 using Gum.PropertyGridHelpers.Converters;
 using Gum.Plugins;
 using Gum.Logic;
@@ -52,6 +53,7 @@ public class ElementSaveDisplayer
 
     private readonly SubtextLogic _subtextLogic;
     private readonly IVariableReferenceLinkLogic _referenceLinkLogic;
+    private readonly IVariableReferenceStatusLogic _referenceStatusLogic;
     private readonly ISelectedState _selectedState;
     private readonly IUndoManager _undoManager;
     private readonly TypeManager _typeManager;
@@ -70,6 +72,7 @@ public class ElementSaveDisplayer
     private readonly IClipboardService _clipboardService;
     private readonly IProjectState _projectState;
     private readonly ShapeVariableVersionGate _shapeVariableVersionGate;
+    private readonly IProjectRestrictions _projectRestrictions;
 
     #endregion
 
@@ -87,7 +90,8 @@ public class ElementSaveDisplayer
         string? DisplayName = null,
         string? ToolTipText = null,
         Dictionary<string, object>? PropertiesToSetOnDisplayer = null,
-        string? ReferenceSource = null);
+        string? ReferenceSource = null,
+        string? CategoryColorName = null);
 
     #endregion
 
@@ -107,8 +111,12 @@ public class ElementSaveDisplayer
         IWireframeObjectManager wireframeObjectManager,
         IClipboardService clipboardService,
         IProjectState projectState,
-        IVariableReferenceLinkLogic referenceLinkLogic)
+        IVariableReferenceLinkLogic referenceLinkLogic,
+        IVariableReferenceStatusLogic referenceStatusLogic,
+        IProjectRestrictions projectRestrictions)
     {
+        _projectRestrictions = projectRestrictions;
+        _referenceStatusLogic = referenceStatusLogic;
         _subtextLogic = subtextLogic;
         _referenceLinkLogic = referenceLinkLogic;
         _selectedState = selectedState;
@@ -128,7 +136,7 @@ public class ElementSaveDisplayer
         _wireframeObjectManager = wireframeObjectManager;
         _clipboardService = clipboardService;
         _projectState = projectState;
-        _shapeVariableVersionGate = new ShapeVariableVersionGate();
+        _shapeVariableVersionGate = new ShapeVariableVersionGate(_standardElementsManager);
     }
 
     private List<PropertyData> GetProperties(ElementSave? instanceOwner, InstanceSave? instanceSave, StateSave? stateSave)
@@ -275,16 +283,15 @@ public class ElementSaveDisplayer
         {
             if (instanceOwner != null)
             {
-                var exposedVariablesOnThisInstance = instanceOwner.GetDefaultStateOrThrow().Variables
-                    .Where(item => !string.IsNullOrEmpty(item.ExposedAsName) && item.SourceObject == instanceSave.Name);
-                foreach (var variable in exposedVariablesOnThisInstance)
+                // Includes exposures declared on the owner's base types, most derived first (#7650).
+                foreach (var variable in ExposedVariableLookup.GetExposures(instanceOwner, instanceSave))
                 {
                     var definingVariable = GetVariableFromThisOrBase(effectiveElementSave, variable.GetRootName()) ??
                         ObjectFinder.Self.GetRootVariable(variable.Name, instanceOwner);
                     if (definingVariable != null)
                     {
-                        // The Where above keeps only variables with an ExposedAsName.
-                        exposedVariables.Add(definingVariable.Name, variable.ExposedAsName!);
+                        // GetExposures keeps only variables with an ExposedAsName; derived comes first and wins.
+                        exposedVariables.TryAdd(definingVariable.Name, variable.ExposedAsName!);
                     }
                 }
             }
@@ -353,7 +360,7 @@ public class ElementSaveDisplayer
     /// Red/Green/Blue, and only the channel rows exist in the grid - without expanding here the
     /// swatch stays editable and silently loses its value on the next apply (issue #4942).
     /// </summary>
-    private static Dictionary<string, string> GetVariablesSetThroughReferences(ElementSave elementSave, StateSave? currentState, string variableListName)
+    public static Dictionary<string, string> GetVariablesSetThroughReferences(ElementSave elementSave, StateSave? currentState, string variableListName)
     {
         Dictionary<string, string> variablesSetThroughReference = new Dictionary<string, string>();
 
@@ -381,9 +388,10 @@ public class ElementSaveDisplayer
         }
 
         HashSet<InstanceSave> instancesWithExposedVariables = new HashSet<InstanceSave>();
-        foreach (var variable in elementSave.GetDefaultStateOrThrow().Variables)
+        // Exposures declared on base types count too (#7650).
+        foreach (var variable in ExposedVariableLookup.GetExposures(elementSave))
         {
-            if (!string.IsNullOrEmpty(variable.SourceObject) && !string.IsNullOrEmpty(variable.ExposedAsName))
+            if (!string.IsNullOrEmpty(variable.SourceObject))
             {
                 var instance = elementSave.GetInstance(variable.SourceObject);
                 if (instance != null)
@@ -533,6 +541,16 @@ public class ElementSaveDisplayer
             bool shouldInclude = GetIfShouldInclude(variableList, instanceOwner, instance)
                 && !variableList.IsHiddenInPropertyGrid;
 
+            if (shouldInclude)
+            {
+                string listRootName = variableList.Name.Contains('.')
+                    ? variableList.Name.Substring(variableList.Name.LastIndexOf('.') + 1)
+                    : variableList.Name;
+                shouldInclude = instance != null
+                    ? !_projectRestrictions.IsVariableHidden(instance, listRootName)
+                    : !_projectRestrictions.IsVariableHidden(instanceOwner, listRootName);
+            }
+
             if (shouldInclude && instance != null && instanceElementSave != null)
             {
                 if (ObjectFinder.Self.IsVariableHiddenRecursively(instanceElementSave, variableList.Name))
@@ -597,6 +615,10 @@ public class ElementSaveDisplayer
                     entry.PreferredDisplayerKindOverride = VariableDisplayerKind.ListBox;
                 }
 
+                List<StateSaveCategory> settingCategories = _subtextLogic.GetCategoriesSettingVariable(variableList, variableList.Name, instanceOwner, instance);
+                entry.DetailText = SubtextLogic.AppendSetBy(entry.DetailText, settingCategories);
+                entry.CategoryColorName = _subtextLogic.GetCategoryColorName(variableList, variableList.Name, instanceOwner, instance);
+
                 if (instance == null && instanceOwner.VariablesHiddenFromInstances?.Contains(variableList.Name) == true)
                 {
                     var hiddenText = "Hidden from instances";
@@ -634,13 +656,7 @@ public class ElementSaveDisplayer
         StateSaveCategory? stateSaveCategory,
         List<VariableCategoryDescriptor> categories)
     {
-        if (elementWithBehaviors?.Behaviors == null || elementWithBehaviors.Behaviors.Count == 0)
-        {
-            return;
-        }
-
-        var allBehaviors = ObjectFinder.Self.GumProjectSave?.Behaviors;
-        if (allBehaviors == null)
+        if (elementWithBehaviors == null)
         {
             return;
         }
@@ -648,17 +664,15 @@ public class ElementSaveDisplayer
         const string categoryName = "Behavior";
         VariableCategoryDescriptor? behaviorCategory = null;
 
-        foreach (var behaviorRef in elementWithBehaviors.Behaviors)
-        {
-            var behavior = allBehaviors.FirstOrDefault(b => b.Name == behaviorRef.BehaviorName);
-            if (behavior == null)
-            {
-                continue;
-            }
+        // The behaviors of the element's whole base chain: a component derived from a Forms control
+        // shows the control's rows (the nearest declaration of a name wins).
+        HashSet<string> seenProperties = new HashSet<string>(StringComparer.Ordinal);
 
+        foreach (BehaviorSave behavior in FormsBehaviorChain.GetBehaviors(elementWithBehaviors))
+        {
             foreach (var formsProperty in behavior.FormsProperties)
             {
-                if (string.IsNullOrEmpty(formsProperty.Name))
+                if (string.IsNullOrEmpty(formsProperty.Name) || !seenProperties.Add(formsProperty.Name))
                 {
                     // Can occur when a project is at the legacy (v1) gumx format and the
                     // .behx uses the v2 compact attribute form for FormsProperty entries —
@@ -700,8 +714,13 @@ public class ElementSaveDisplayer
                     }
                 }
 
+                string? exposedAsName = instance == null
+                    ? null
+                    : ExposedVariableLookup.GetExposure(instanceOwner, instance, formsProperty.Name)?.ExposedAsName;
+
                 if (existing != null)
                 {
+                    AppendExposedAsText(existing, exposedAsName);
                     if (sourceCategory == behaviorCategory)
                     {
                         continue;
@@ -766,9 +785,31 @@ public class ElementSaveDisplayer
                     entry.DetailText = formsProperty.Description;
                 }
 
+                AppendExposedAsText(entry, exposedAsName);
+
                 behaviorCategory.Members.Add(entry);
             }
         }
+    }
+
+    /// <summary>
+    /// A Forms property row is not built from a default-state variable, so the exposed-variable pass in
+    /// FillPropertyList never reaches it; this adds the same "Exposed as X" line to it (#7641).
+    /// </summary>
+    private static void AppendExposedAsText(VariableGridEntry entry, string? exposedAsName)
+    {
+        if (string.IsNullOrEmpty(exposedAsName))
+        {
+            return;
+        }
+
+        string text = "Exposed as " + exposedAsName;
+        if (entry.DetailText?.Contains(text) == true)
+        {
+            return;
+        }
+
+        entry.DetailText = string.IsNullOrEmpty(entry.DetailText) ? text : entry.DetailText + "\n" + text;
     }
 
     private VariableGridEntry? CreateEntryFromPropertyData(ElementSave? instanceOwner, InstanceSave? instance,
@@ -821,6 +862,7 @@ public class ElementSaveDisplayer
         }
 
         entry.ToolTipText = propertyData.ToolTipText;
+        entry.CategoryColorName = propertyData.CategoryColorName;
 
         if (propertyData.PropertiesToSetOnDisplayer != null)
         {
@@ -840,6 +882,13 @@ public class ElementSaveDisplayer
             if (stateSave != null)
             {
                 entry.DetailAction = _referenceLinkLogic.GetUnlinkAction(propertyData.OriginalName, instance, instanceOwner, stateSave);
+
+                // The note is a second line under "Set by ...": the row keeps its last value (#7512).
+                string? note = _referenceStatusLogic.GetNote(propertyData.OriginalName, instance, instanceOwner, stateSave);
+                if (!string.IsNullOrEmpty(note))
+                {
+                    entry.DetailText = string.IsNullOrEmpty(entry.DetailText) ? note : entry.DetailText + "\n" + note;
+                }
             }
         }
 
@@ -1015,6 +1064,9 @@ public class ElementSaveDisplayer
         }
     }
 
+    private bool GetIfHiddenByProjectRules(ElementSave elementSave, InstanceSave? instanceSave, VariableSave defaultVariable) =>
+        _projectRestrictions.IsVariableHidden(elementSave, instanceSave, defaultVariable);
+
     private PropertyData? CreatePropertyData(ElementSave elementSave, InstanceSave? instanceSave,
         AmountToDisplay amountToDisplay, VariableSave defaultVariable, bool forceReadOnly, bool isAssignedByReference, string? subtext, HashSet<string> addedNames, string? referenceSource = null)
     {
@@ -1053,6 +1105,11 @@ public class ElementSaveDisplayer
                     shouldInclude = false;
                 }
             }
+        }
+
+        if (shouldInclude && GetIfHiddenByProjectRules(elementSave, instanceSave, defaultVariable))
+        {
+            shouldInclude = false;
         }
 
         if (shouldInclude && instanceSave != null)
@@ -1156,7 +1213,8 @@ public class ElementSaveDisplayer
             }
 
             return new PropertyData(name, type, customAttributes, typeConverter, category, forceReadOnly, isAssignedByReference, propertySubtext,
-                ToolTipText: defaultVariable.ToolTipText, ReferenceSource: referenceSource);
+                ToolTipText: defaultVariable.ToolTipText, ReferenceSource: referenceSource,
+                CategoryColorName: _subtextLogic.GetCategoryColorName(defaultVariable, name, elementSave, instanceSave));
         }
         return null;
     }
@@ -1206,7 +1264,7 @@ public class ElementSaveDisplayer
 
         if (!isExcluded)
         {
-            var baseTypeConverter = new AvailableBaseTypeConverter(instanceOwner, instance, _projectState);
+            var baseTypeConverter = new AvailableBaseTypeConverter(instanceOwner, instance, _projectState, _projectRestrictions);
             // We may want to support Screens inheriting from other Screens in the future, but for now we won't allow it
             // "IsEditable" is a literal (rather than nameof(WpfDataUi.Controls.ComboBoxDisplay.IsEditable))
             // since this headless project must never reference WpfDataUi; the WPF ComboBoxDisplay

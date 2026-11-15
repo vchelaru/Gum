@@ -61,6 +61,38 @@ public class CodeOutputElementSettingsManagerTests : IDisposable
         File.Exists(Path.Combine(_projectDirectory, "Components", "CardCopy.codsj")).ShouldBeFalse();
     }
 
+    [Fact]
+    public void DebugOnly_RoundTripsThroughTheCodsjFile()
+    {
+        ComponentSave card = new ComponentSave { Name = "Card" };
+        Directory.CreateDirectory(Path.Combine(_projectDirectory, "Components"));
+
+        _manager.WriteSettingsForElement(card, new CodeOutputElementSettings { DebugOnly = true });
+
+        string text = File.ReadAllText(Path.Combine(_projectDirectory, "Components", "Card.codsj"));
+        text.ShouldContain("\"DebugOnly\":true");
+        _manager.LoadOrCreateSettingsFor(card).DebugOnly.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void OldCodsjWithoutDebugOnly_LoadsAsFalse_AndResavesByteForByteUnchanged()
+    {
+        ComponentSave card = new ComponentSave { Name = "Card" };
+        Directory.CreateDirectory(Path.Combine(_projectDirectory, "Components"));
+        string file = Path.Combine(_projectDirectory, "Components", "Card.codsj");
+        CodeOutputElementSettings original = new CodeOutputElementSettings { Namespace = "Cards", GenerationBehavior = GenerationBehavior.GenerateManually };
+        _manager.WriteSettingsForElement(card, original);
+        // What a build before this field wrote.
+        string oldText = File.ReadAllText(file);
+        oldText.ShouldNotContain("DebugOnly");
+
+        CodeOutputElementSettings loaded = _manager.LoadOrCreateSettingsFor(card);
+        _manager.WriteSettingsForElement(card, loaded);
+
+        loaded.DebugOnly.ShouldBeFalse();
+        File.ReadAllText(file).ShouldBe(oldText);
+    }
+
     private class FixedProvider : IProjectDirectoryProvider
     {
         public FixedProvider(string directory) => ProjectDirectory = directory;

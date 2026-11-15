@@ -80,7 +80,8 @@ public class MainFontsPlugin : PluginBase, IPriorityPlugin
         AddSettingsPage(new SettingsPage(SettingsPageIds.Fonts, "Fonts", SettingsSection.Project, _viewModel, order: 2)
         {
             Activated = Reload,
-            // The page is a custom view, so its labels are listed here instead of read from a grid.
+            SearchTerms = () => new FontsRows(_viewModel).SearchTerms(),
+            // Words a user may search for that are not a row label or hint.
             Keywords = new[]
             {
                 "Character Ranges", "Use Font Character File", "gumfcs", "Add Font Range", "Font Generator", "kernsmith",

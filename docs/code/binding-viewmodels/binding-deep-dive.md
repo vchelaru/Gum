@@ -157,20 +157,14 @@ class MyViewModel : ViewModel
 }
 
 // Initialize
-protected override void Initialize()
-{
-    // either one of these:
-    GumUI.Initialize(this, "GumProject/GumProject.gumj");
+var screen = new MainMenu();
+screen.AddToRoot();
 
-    var screen = new MainMenu();
-    screen.AddToRoot();
-
-    screen.BindingContext = new MyViewModel();
-    screen.ComponentWithStateInstance.SetBinding(
-        nameof(screen.ComponentWithStateInstance.IsLarge),
-        nameof(MyViewModel.IsLarge));
-    // rest of code...
-}
+screen.BindingContext = new MyViewModel();
+screen.ComponentWithStateInstance.SetBinding(
+    nameof(screen.ComponentWithStateInstance.IsLarge),
+    nameof(MyViewModel.IsLarge));
+// rest of code...
 ```
 
 This requires an extra property in the custom code for the component:
@@ -205,20 +199,14 @@ class MyViewModel : ViewModel
 }
 
 // Initialize
-protected override void Initialize()
-{
-    // either one of these:
-    GumUI.Initialize(this, "GumProject/GumProject.gumj");
+var screen = new MainMenu();
+screen.AddToRoot();
 
-    var screen = new MainMenu();
-    screen.AddToRoot();
-
-    screen.BindingContext = new MyViewModel();
-    screen.ComponentWithStateInstance.SetBinding(
-        nameof(screen.ComponentWithStateInstance.SizeCategoryState),
-        nameof(MyViewModel.SizeCategory));
-    // rest of code ...
-}
+screen.BindingContext = new MyViewModel();
+screen.ComponentWithStateInstance.SetBinding(
+    nameof(screen.ComponentWithStateInstance.SizeCategoryState),
+    nameof(MyViewModel.SizeCategory));
+// rest of code ...
 ```
 {% endtab %}
 {% endtabs %}

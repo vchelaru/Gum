@@ -118,7 +118,7 @@ public class NewProjectUiLayoutTests
         // Invalid name: the message sits beside the buttons.
         fixture.Dialog.TypeName("bad/name");
         fixture.Settle();
-        fixture.IsShown(NewProjectUiText.InvalidFolderName).ShouldBeTrue();
+        fixture.IsShown(NewProjectUiText.NameProblem("bad/name")).ShouldBeTrue();
         AssertLaidOut(fixture, $"invalid name, zoom {zoom}, {theme}");
 
         // The refusal: a Gum-only project over an existing project file.

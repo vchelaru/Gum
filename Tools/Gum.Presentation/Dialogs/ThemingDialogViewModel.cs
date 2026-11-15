@@ -146,6 +146,11 @@ public partial class ThemingDialogViewModel : DialogViewModel
     public bool HasExplicitGuideLineColor => _themingService.GuideLine != null;
     public bool HasExplicitGuideTextColor => _themingService.GuideText != null;
 
+    /// <summary>True while any color differs from its default, which is when Reset All has something to do.</summary>
+    public bool HasAnyExplicitColor =>
+        HasExplicitAccentColor || HasExplicitCheckerAColor || HasExplicitCheckerBColor ||
+        HasExplicitOutlineColor || HasExplicitGuideLineColor || HasExplicitGuideTextColor;
+
     [RelayCommand]
     private void Reset(string? propertyName)
     {

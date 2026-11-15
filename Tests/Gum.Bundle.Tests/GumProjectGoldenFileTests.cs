@@ -15,7 +15,7 @@ namespace Gum.Bundle.Tests;
 /// in <c>GumServiceBundleLoadTests</c>: that one proves a bundled load matches a loose load
 /// today, these ones catch silent walker drift and packer corruption over time.
 ///
-/// Path manifests are used as the gold files (not bundle bytes) because brotli output is
+/// Path manifests are used as the gold files (not bundle bytes) because compressed output is
 /// not byte-stable across .NET versions, so byte-level gold files would be flaky. Path
 /// manifests are stable, human-reviewable in PRs, and catch the same regressions.
 /// </summary>

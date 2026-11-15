@@ -35,6 +35,26 @@ public class ArcRuntimeTests
         shape.GetEffectiveXnaBlendState().ShouldBe(Microsoft.Xna.Framework.Graphics.BlendState.Additive);
     }
 
+    // #7522 - code users set Blend on the runtime, like CircleRuntime.Blend.
+    [Fact]
+    public void Blend_ShouldDefaultToNormal()
+    {
+        ArcRuntime sut = new ArcRuntime();
+
+        sut.Blend.ShouldBe(Gum.RenderingLibrary.Blend.Normal);
+    }
+
+    [Fact]
+    public void Blend_ShouldForwardToRenderable()
+    {
+        ArcRuntime sut = new ArcRuntime();
+
+        sut.Blend = Gum.RenderingLibrary.Blend.MinAlpha;
+
+        sut.Blend.ShouldBe(Gum.RenderingLibrary.Blend.MinAlpha);
+        ((RenderableShapeBase)sut.RenderableComponent).Blend.ShouldBe(Gum.RenderingLibrary.Blend.MinAlpha);
+    }
+
     // #2949: ArcRuntime exposes a single isotropic DropshadowBlur (mirroring CSS box-shadow /
     // Figma / Photoshop). Setting the scalar fans the value out to both axes; asserted on the
     // rendered shadow halo (GetShadowAntiAliasSize, the X axis) and the renderable's Y blur,
@@ -191,7 +211,8 @@ public class ArcRuntimeTests
         // on the renderable, not the GUE.
         renderable.PreRender();
 
-        shape.StrokeWidth.ShouldBe(8);
+        // #7309: Circle's Apos draw adds a 1 px anti-alias fringe, so the runtime pushes 8 - 1.
+        shape.StrokeWidth.ShouldBe(7);
     }
 
     // Same propagation guard as StrokeWidth: dashed-stroke values live on the runtime so the

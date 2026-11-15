@@ -19,6 +19,14 @@ public interface IRenderable
     public string BatchKey => string.Empty;
 
     /// <summary>
+    /// When true, <c>Sprite.Render</c> and <c>BitmapFont.DrawTextLines</c> pass this renderable's
+    /// <c>Color</c> to the draw call as set, even on a premultiplied pipeline (where they would
+    /// otherwise scale the RGB by the alpha). For a renderable that begins its own batch with its
+    /// own effect and reads the vertex color's alpha as something other than opacity. Default false.
+    /// </summary>
+    public bool SkipColorPremultiply => false;
+
+    /// <summary>
     /// Finer-grained grouping hint read only by <c>BatchKeyGroupedOrderer</c> (e.g. a
     /// Texture2D reference) — unlike <see cref="BatchKey"/>, <c>BatchOrchestrator</c> never
     /// reads this, so it carries no flush cost. Null means "no finer grouping than BatchKey."

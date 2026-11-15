@@ -2,6 +2,7 @@ using Gum.Commands;
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using Gum.Dialogs;
+using Gum.Logic;
 using Gum.Managers;
 using Gum.Services;
 using Gum.Services.Dialogs;
@@ -160,6 +161,7 @@ public class CompositeMemberLogic
         composite.PreferredDisplayer = descriptor.Displayer;
         composite.SupportsMakeDefault = false;
         composite.DisplayName = ToolsUtilities.StringFunctions.InsertSpacesInCamelCaseString(compositeName);
+        composite.MarkerColorName = GetMarkerColorName(triple.ChannelMembers, element);
 
         // Collapsing the triple removes the per-channel rows, taking their subtext with them. A channel is
         // disabled (read-only) when it's driven by a variable reference, so surface each disabled channel's
@@ -238,6 +240,32 @@ public class CompositeMemberLogic
         }
         insertIndex = Math.Min(insertIndex, category.Members.Count);
         category.Members.Insert(insertIndex, composite);
+    }
+
+    /// <summary>
+    /// The color bar of the first colored category, in category order, that sets any channel. Each channel
+    /// already carries the first colored category that sets it; this picks the earliest among them.
+    /// </summary>
+    private static string? GetMarkerColorName(IReadOnlyList<InstanceMember> channelMembers, ElementSave element)
+    {
+        string? best = null;
+        int bestIndex = int.MaxValue;
+        foreach (InstanceMember channel in channelMembers)
+        {
+            string? name = channel.MarkerColorName;
+            if (name == null)
+            {
+                continue;
+            }
+
+            int index = element.Categories.FindIndex(category => category.ColorName == name);
+            if (best == null || (index >= 0 && index < bestIndex))
+            {
+                best = name;
+                bestIndex = index >= 0 ? index : bestIndex;
+            }
+        }
+        return best;
     }
 
     private void HandleMakeDefault(IReadOnlyList<InstanceMember> channelMembers)
@@ -382,9 +410,17 @@ public class CompositeMemberLogic
 
     private VariableSave? GetChannelVariable(string channelRootName, ElementSave element, InstanceSave? instance)
     {
-        return instance != null
-            ? element.GetDefaultStateOrThrow().GetVariableSave($"{instance.Name}.{channelRootName}")
-            : element.GetDefaultStateOrThrow().GetVariableSave(channelRootName);
+        // An exposure declared on a base type counts for the derived element too (#7650).
+        if (instance != null)
+        {
+            return ExposedVariableLookup.GetExposure(element, instance, channelRootName)
+                ?? element.GetDefaultStateOrThrow().GetVariableSave($"{instance.Name}.{channelRootName}");
+        }
+
+        return new[] { element }.Concat(ObjectFinder.Self.GetBaseElements(element))
+            .Select(chainElement => chainElement.DefaultState?.GetVariableSave(channelRootName))
+            .FirstOrDefault(variable => !string.IsNullOrEmpty(variable?.ExposedAsName))
+            ?? element.GetDefaultStateOrThrow().GetVariableSave(channelRootName);
     }
 
     /// <summary>

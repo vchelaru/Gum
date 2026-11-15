@@ -106,7 +106,11 @@ public static class GumCoreServiceCollectionExtensions
         services.AddSingleton<IFavoriteComponentManager, FavoriteComponentManager>();
         services.AddSingleton<IAddDestinationTracker, AddDestinationTracker>();
         services.AddSingleton<IAddInstanceLogic, AddInstanceLogic>();
+        services.AddSingleton<IEngineProfileLoader, EngineProfileLoader>();
+        services.AddSingleton<IProjectRestrictions, ProjectRestrictions>();
+        services.AddSingleton<IRestrictedVariableResetter, RestrictedVariableResetter>();
         services.AddSingleton<ICopyPasteLogic, CopyPasteLogic>();
+        services.AddSingleton<IElementDuplicateRestrictions, ElementDuplicateRestrictions>();
         services.AddSingleton<IDeleteLogic, DeleteLogic>();
         services.AddSingleton<IGumProjectRepairLogic, GumProjectRepairLogic>();
         services.AddSingleton<ISkiaShapeStandardsLogic, SkiaShapeStandardsLogic>();
@@ -200,6 +204,7 @@ public static class GumCoreServiceCollectionExtensions
         services.AddSingleton<IFileWatchManager>(provider => provider.GetRequiredService<FileWatchManager>());
         services.AddSingleton<ReorderLogic>();
         services.AddSingleton<IReorderLogic>(provider => provider.GetRequiredService<ReorderLogic>());
+        services.AddSingleton<IBaseTypeVariablePruner, BaseTypeVariablePruner>();
         services.AddSingleton<InheritanceLogic>();
 
         services.AddSingleton<IUserProjectSettingsManager, UserProjectSettingsManager>();
@@ -214,7 +219,9 @@ public static class GumCoreServiceCollectionExtensions
         services.AddSingleton<ProjectServices.IErrorDocsRegistry, ProjectServices.ErrorDocsRegistry>();
         services.AddSingleton<ErrorChecker>();
         services.AddSingleton<IErrorChecker>(provider => provider.GetRequiredService<ErrorChecker>());
-        services.AddSingleton<IVariableSaveLogic, VariableSaveLogic>();
+        services.AddSingleton<VariableSaveLogic>();
+        services.AddSingleton<IVariableSaveLogic>(provider => provider.GetRequiredService<VariableSaveLogic>());
+        services.AddSingleton<IVariableDefinedByTypeLogic>(provider => provider.GetRequiredService<VariableSaveLogic>());
         services.AddSingleton<IVariableReferenceLogic, VariableReferenceLogic>();
         services.AddSingleton<IVariableReferenceConflictFixer, VariableReferenceConflictFixer>();
         services.AddSingleton<IReferenceFinder, ReferenceFinder>();

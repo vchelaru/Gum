@@ -68,6 +68,7 @@ public class DeleteLogicTests : BaseTestClass
             _wireframeObjectManager.Object,
             _deleteProjectProvider.Object,
             _referenceFinder.Object,
+            new Lazy<IInstanceOverrideRemover>(() => _mocker.GetMock<IInstanceOverrideRemover>().Object),
             new Lazy<IUndoManager>(() => _mocker.GetMock<IUndoManager>().Object));
 
         _gumProject = new GumProjectSave();

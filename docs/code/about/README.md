@@ -18,15 +18,7 @@ For more information on using the Gum tool, see the [Gum Tool Introduction](../.
 
 ## Gum Runtimes
 
-Gum runtimes can be used to load Gum projects or create code-only UI in many popular game platforms including:
-
-* MonoGame/KNI/FNA
-* raylib
-* Silk.NET
-* FlatRedBall
-* SkiaSharp (WPF, .NET Maui)
-* Meadow
-* [Unity](../getting-started/setup/adding-initializing-gum/unity.md) (experimental)
+Gum runtimes can be used to load Gum projects or create code-only UI in many popular game platforms. See [Runtimes](runtimes.md) for the full list and how the runtimes are grouped.
 
 The use of the Gum tool is completely optional - you can do everything in code if you prefer.
 

@@ -98,6 +98,41 @@ public class PlatformProjectScaffolderTests : IDisposable
         EvaluateOutputType(csproj, "Release").ShouldBe("WinExe");
     }
 
+    [Fact]
+    public void Create_ForKniSkia_WritesAGame1WhoseOnlyGumCallsAreInitializeUpdateAndDraw()
+    {
+        // Same shape as the MonoGame host: the service owns the Skia render target, its resizing and its disposal.
+        string projectDirectory = Path.Combine(_tempDirectory, "MyGame");
+
+        _sut.Create(projectDirectory, HostPlatform.KniSkia, includeFormsTemplate: true);
+
+        string game1 = File.ReadAllText(Path.Combine(projectDirectory, "Game1.cs"));
+        game1.ShouldNotContain("SkiaRenderTarget2D");
+        game1.ShouldNotContain("SkiaRenderer");
+        game1.ShouldNotContain("SkiaGameRendering");
+        game1.ShouldNotContain("SkiaSharp");
+        game1.ShouldNotContain("SKCanvas");
+        game1.ShouldNotContain("HandleResize");
+        game1.ShouldNotContain("UnloadContent");
+        game1.ShouldNotContain(".Begin()");
+        game1.ShouldNotContain(".End()");
+        game1.ShouldContain("GumUI.Draw();");
+        game1.ShouldContain("GumUI.Update(gameTime);");
+        game1.ShouldContain("Window.AllowUserResizing = true;");
+    }
+
+    [Fact]
+    public void Create_ForKniSkia_ReadsTheGumProjectFromTheContentFolderOnDisk()
+    {
+        // Skia reads the project from disk instead of through the content pipeline, so the path starts at Content.
+        string projectDirectory = Path.Combine(_tempDirectory, "MyGame");
+
+        PlatformProjectResult result = _sut.Create(projectDirectory, HostPlatform.KniSkia, includeFormsTemplate: true);
+
+        result.Success.ShouldBeTrue(result.ErrorMessage);
+        File.ReadAllText(Path.Combine(projectDirectory, "Game1.cs")).ShouldContain("\"Content/GumProject/");
+    }
+
     // Applies the OutputType elements in document order, honoring only the Release condition this template uses.
     private static string? EvaluateOutputType(XDocument csproj, string configuration)
     {
@@ -117,16 +152,46 @@ public class PlatformProjectScaffolderTests : IDisposable
     }
 
     [Fact]
-    public void Create_Stride_ShouldTargetPlainNet10SoTheCpuRenderPathRuns()
+    public void Create_Stride_ShouldTargetWindowsSoTheDefaultDirect3D11GpuPathRuns()
     {
-        // The net10.0-windows7.0 target selects Gum.Stride's ANGLE GPU path, which needs native ANGLE
-        // libraries that do not load on a clean machine.
+        // Gum.Stride has no CPU path. Direct3D11 and Direct3D12 exist only in its net10.0-windows7.0
+        // build; the plain net10.0 build supports Vulkan only.
         string projectDirectory = Path.Combine(_tempDirectory, "MyGame");
 
         PlatformProjectResult result = _sut.Create(projectDirectory, HostPlatform.Stride, includeFormsTemplate: true);
 
         string csproj = File.ReadAllText(result.CsprojPath);
-        csproj.ShouldContain("<TargetFramework>net10.0</TargetFramework>");
+        csproj.ShouldContain("<TargetFramework>net10.0-windows7.0</TargetFramework>");
+    }
+
+    [Fact]
+    public void Create_Brutal_ShouldCallGumInitializeUpdateAndDrawOnceAndNeverTouchSkia()
+    {
+        // Gum owns the Skia context, target, resize and presenting; the game is a window and three calls.
+        string projectDirectory = Path.Combine(_tempDirectory, "MyGame");
+
+        PlatformProjectResult result = _sut.Create(projectDirectory, HostPlatform.Brutal, includeFormsTemplate: true);
+
+        string program = File.ReadAllText(Path.Combine(projectDirectory, "Program.cs"));
+        System.Text.RegularExpressions.Regex.Matches(program, @"\.Initialize\(").Count.ShouldBe(1);
+        System.Text.RegularExpressions.Regex.Matches(program, @"\.Update\(").Count.ShouldBe(1);
+        System.Text.RegularExpressions.Regex.Matches(program, @"\.Draw\(\)").Count.ShouldBe(1);
+        program.ShouldNotContain("SkiaRenderTarget2D");
+        program.ShouldNotContain("SkiaGlContext");
+        program.ShouldNotContain("SkiaVulkanContext");
+        program.ShouldNotContain("Begin()");
+        program.ShouldNotContain("Presenter");
+        File.Exists(Path.Combine(projectDirectory, "Presenter.cs")).ShouldBeFalse();
+        program.Split('\n').Length.ShouldBeLessThan(45);
+        // Matches the shared docs samples: the per-frame value is gameTime, in seconds.
+        program.ShouldContain("double gameTime = clock.Elapsed.TotalSeconds;");
+        program.ShouldContain("GumUI.Update(gameTime);");
+
+        string csproj = File.ReadAllText(result.CsprojPath);
+        csproj.ShouldContain("<PackageReference Include=\"Gum.Brutal.OGL\"");
+        csproj.ShouldNotContain("ShaderC");
+        csproj.ShouldNotContain("SkiaGameRendering");
+        csproj.ShouldNotContain("Brutal.Vulkan");
     }
 
     [Fact]
@@ -145,9 +210,37 @@ public class PlatformProjectScaffolderTests : IDisposable
         csproj.ShouldNotContain("-windows");
         string program = File.ReadAllText(Path.Combine(projectDirectory, "Program.cs"));
         program.ShouldContain("MyGame");
-        // GetProcAddress throws for the optional GL functions Skia probes for, and FramebufferResize never fires.
-        program.ShouldContain("TryGetProcAddress");
-        program.ShouldContain("window.Resize");
+    }
+
+    [Fact]
+    public void Create_SilkNet_ProgramShouldHaveTheShapeOfAMonoGameGame()
+    {
+        // One Initialize, one Update, one Draw. Skia, the GL interface, the surface, resize handling and
+        // the flush all live inside GumService, the way MonoGame's Game1 never sees a SpriteBatch for Gum.
+        string projectDirectory = Path.Combine(_tempDirectory, "MyGame");
+
+        _sut.Create(projectDirectory, HostPlatform.SilkNet, includeFormsTemplate: true);
+
+        string program = File.ReadAllText(Path.Combine(projectDirectory, "Program.cs"));
+        foreach (string skiaType in new[] { "SKSurface", "SKCanvas", "GRContext", "GRGlInterface", "GRBackendRenderTarget", "SkiaSharp", "Flush", "ResetContext", "window.Resize", "HandleResize" })
+        {
+            program.ShouldNotContain(skiaType);
+        }
+        program.ShouldContain("GumUI.Initialize(window,");
+        program.ShouldContain("GumUI.Draw();");
+        program.ShouldNotContain("GumUI.Draw(canvas");
+    }
+
+    [Fact]
+    public void Create_SilkNet_ProgramShouldNameTheSecondsValueGameTimeSoSharedDocSnippetsCompile()
+    {
+        string projectDirectory = Path.Combine(_tempDirectory, "MyGame");
+
+        _sut.Create(projectDirectory, HostPlatform.SilkNet, includeFormsTemplate: true);
+
+        string program = File.ReadAllText(Path.Combine(projectDirectory, "Program.cs"));
+        program.ShouldContain("double gameTime = clock.Elapsed.TotalSeconds;");
+        program.ShouldContain("GumUI.Update(gameTime);");
     }
 
     [Fact]

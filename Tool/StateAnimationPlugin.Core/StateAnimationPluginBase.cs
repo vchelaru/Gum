@@ -244,6 +244,12 @@ public abstract class StateAnimationPluginBase : PluginBase, IAnimationUndoProvi
     void IAnimationUndoProvider.RemoveKeyframesPlaying(ElementSave element, string instanceName) =>
         _controller.RemoveKeyframesPlaying(element, instanceName);
 
+    bool IAnimationUndoProvider.CanRenameAnimation(ElementSave element, string toName) =>
+        _controller.CanRenameAnimation(element, toName);
+
+    void IAnimationUndoProvider.RenameAnimationReferences(ElementSave element, string fromName, string toName) =>
+        _controller.RenameAnimationReferences(element, fromName, toName);
+
     #endregion
 
     private void AssignEvents()
@@ -261,6 +267,9 @@ public abstract class StateAnimationPluginBase : PluginBase, IAnimationUndoProvi
         this.VariableSet += _controller.HandleVariableSet;
 
         this.CategoryRename += _controller.HandleCategoryRename;
+
+        // A category's color is drawn on the animation list and its keyframes, so rebuild them.
+        this.CategoryColorChange += _ => _controller.RefreshViewModel();
 
         // Deleting a whole category (and its states) doesn't fire the granular StateDelete event, so
         // recompute the view model afterward - otherwise a keyframe that referenced a state in the

@@ -21,7 +21,7 @@ namespace GameUiSamples.Screens
 
         HyTaleItemSlot _grabbedIcon;
 
-        //GumService GumUI => GumService.Default;
+        GumService GumUI => GumService.Default;
 
         partial void CustomInitialize()
         {
@@ -29,7 +29,7 @@ namespace GameUiSamples.Screens
 
             this.ExitButton.Click += (_, _) =>
             {
-                GumService.Default.Root.Children.Clear();
+                GumUI.Root.Children.Clear();
                 var mainMenu = new MainMenu();
                 Gum.Forms.Controls.FrameworkElementExt.AddToRoot(mainMenu);
             };
@@ -44,7 +44,7 @@ namespace GameUiSamples.Screens
 
             CreateGrabbedIcon();
 
-            GumService.Default.PopupRoot.AddChild(_grabbedIcon);
+            GumUI.PopupRoot.AddChild(_grabbedIcon);
 
             InitializePlayerInventory();
 
@@ -312,7 +312,7 @@ namespace GameUiSamples.Screens
             {
                 _grabbedIcon.IsVisible = false;
 
-                var visualOver = GumService.Default.Cursor.VisualOver;
+                var visualOver = GumUI.Cursor.VisualOver;
 
                 var itemSlotDropped = visualOver?.FormsControlAsObject as HyTaleItemSlot;
 
@@ -384,7 +384,7 @@ namespace GameUiSamples.Screens
 
         public void Update(GameTime gameTime)
         {
-            var cursor = GumService.Default.Cursor;
+            var cursor = GumUI.Cursor;
 
             if (cursor.PrimaryDown && _grabbedIcon.IsVisible)
             {

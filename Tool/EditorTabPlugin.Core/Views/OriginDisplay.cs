@@ -25,18 +25,75 @@ namespace Gum.Wireframe
         Line mTopConnectorLine;  // dotted, closes the top of the offset box
         Line mLeftConnectorLine; // dotted, closes the left of the offset box
 
+        bool _visible = true;
+        bool _showOriginMarker = true;
+        bool _showXOffsetLine = true;
+        bool _showYOffsetLine = true;
+
+        /// <summary>
+        /// Master switch; nothing draws while false, whatever the per-part flags say.
+        /// </summary>
         public bool Visible
         {
-            get => mXOriginLine.Visible;
+            get => _visible;
             set
             {
-                mXLine1.Visible = value;
-                mXLine2.Visible = value;
-                mXOriginLine.Visible = value;
-                mYOriginLine.Visible = value;
-                mTopConnectorLine.Visible = value;
-                mLeftConnectorLine.Visible = value;
+                _visible = value;
+                ApplyVisibility();
             }
+        }
+
+        /// <summary>
+        /// Whether the cross at the object's origin point draws.
+        /// </summary>
+        public bool ShowOriginMarker
+        {
+            get => _showOriginMarker;
+            set
+            {
+                _showOriginMarker = value;
+                ApplyVisibility();
+            }
+        }
+
+        /// <summary>
+        /// Whether the red horizontal line (parent origin to the object's X) and its dotted connector draw.
+        /// </summary>
+        public bool ShowXOffsetLine
+        {
+            get => _showXOffsetLine;
+            set
+            {
+                _showXOffsetLine = value;
+                ApplyVisibility();
+            }
+        }
+
+        /// <summary>
+        /// Whether the green vertical line (parent origin to the object's Y) and its dotted connector draw.
+        /// </summary>
+        public bool ShowYOffsetLine
+        {
+            get => _showYOffsetLine;
+            set
+            {
+                _showYOffsetLine = value;
+                ApplyVisibility();
+            }
+        }
+
+        private void ApplyVisibility()
+        {
+            mXLine1.Visible = _visible && _showOriginMarker;
+            mXLine2.Visible = _visible && _showOriginMarker;
+
+            bool isXLineVisible = _visible && _showXOffsetLine;
+            mXOriginLine.Visible = isXLineVisible;
+            mTopConnectorLine.Visible = isXLineVisible;
+
+            bool isYLineVisible = _visible && _showYOffsetLine;
+            mYOriginLine.Visible = isYLineVisible;
+            mLeftConnectorLine.Visible = isYLineVisible;
         }
 
         readonly ICanvasDisplayScale _displayScale;
@@ -92,8 +149,7 @@ namespace Gum.Wireframe
             var parent = asGue.EffectiveParentGue;
 
 
-            mXOriginLine.Visible = true;
-            mYOriginLine.Visible = true;
+            ApplyVisibility();
 
             float lineWidth = _displayScale.DisplayScale;
             mXOriginLine.LinePixelWidth = lineWidth;

@@ -44,19 +44,17 @@ public class Label :
         set
         {
             _codeText.Record(value, translate: true);
-            if(value != Text)
-            {
-
 #if FULL_DIAGNOSTICS
-                ReportMissingTextInstance();
+            ReportMissingTextInstance();
 #endif
-                // go through the component instead of the core text object to force a layout refresh if necessary
-                textComponent?.SetProperty("Text", value);
+            string? before = Text;
+            // go through the component instead of the core text object to apply localization and force a layout refresh
+            textComponent?.SetProperty("Text", value);
 
+            if (value != before || Text != before)
+            {
                 PushValueToViewModel();
             }
-
-
         }
     }
 
@@ -71,9 +69,11 @@ public class Label :
     public void SetTextNoTranslate(string? value)
     {
         _codeText.Record(value, translate: false);
-        if (value != Text)
+        string? before = Text;
+        textComponent?.SetProperty("TextNoTranslate", value);
+
+        if (value != before || Text != before)
         {
-            textComponent?.SetProperty("TextNoTranslate", value);
             PushValueToViewModel();
         }
     }

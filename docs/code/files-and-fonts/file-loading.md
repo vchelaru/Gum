@@ -37,7 +37,7 @@ In the case of the SourceFile assignment, the SpriteRuntime loads the Texture2D 
 
 Whenever a file is assigned on a runtime object, Gum looks for the file in the `ToolsUtilities.FileManager.RelativeDirectory` directory. This directory defaults to your game's Content folder.
 
-If you call `GumService.Default.Initialize` and pass a .gumj file, then RelativeDirectory is set to the directory containing the Gum project.
+If you call `GumUI.Initialize` and pass a .gumj file, then RelativeDirectory is set to the directory containing the Gum project.
 
 If your Gum project (.gumj) is located in the Content folder, RelativeDirectory is set to "Content/".
 
@@ -115,6 +115,40 @@ Sprite2.SourceFile = "MyFile.png"; // This also goes to disk to load the file
 
 Be careful setting CacheTextures to false since all existing textures will be disposed. This means that if you have loaded textures which are still being referenced by runtime objects, you will get an exception if those are still being drawn after setting CacheTextures to false.
 
+### Editing a Loaded Texture on SkiaSharp
+
+On [SkiaSharp-based runtimes](../about/runtimes.md), Gum shares one copy of the pixels of every texture it loads, whether it comes from a file, a URL, an `.achx` frame, or the built-in Forms sprite sheet. Every `SpriteRuntime` and `NineSliceRuntime` that uses one of these textures uses that copy, which keeps memory use and GPU work flat as the number of visuals grows. Editing those pixels in place does not throw. It changes the texture for every sprite and nine slice that uses it, and a GPU surface may not show the edit.
+
+{% hint style="info" %}
+Available in December 2026, or now if building Gum from source.
+{% endhint %}
+
+To change the pixels of a loaded texture, edit a copy and assign the copy to `Texture`:
+
+```csharp
+// Initialize
+SkiaSharp.SKBitmap copy = sprite.Texture.Copy();
+copy.Erase(SkiaSharp.SKColors.Red);
+sprite.Texture = copy;
+```
+
+Only the visuals you assign the copy to change. A bitmap your own code creates, such as one from `SKBitmap.Decode`, is not shared. Each visual you assign it to keeps its own copy of the pixels, so assigning one bitmap to many visuals uses more memory and GPU time than loading the file through Gum. A custom `IContentLoader` that returns mutable bitmaps behaves the same way.
+
+After you edit a bitmap that is already assigned to `Texture`, call `RefreshTextures` to show the change. Called on an element it refreshes that element and its children; called on `GumService` it refreshes everything under `Root`, `PopupRoot` and `ModalRoot`. Passing the bitmap to the element call refreshes only the visuals that use it.
+
+```csharp
+// Initialize
+SkiaSharp.SKBitmap bitmap = new SkiaSharp.SKBitmap(64, 64);
+SpriteRuntime sprite = new SpriteRuntime();
+sprite.Texture = bitmap;
+
+// Update
+bitmap.Erase(SkiaSharp.SKColors.Blue);
+sprite.RefreshTextures(bitmap);
+// or refresh everything under the roots:
+GumService.Default.RefreshTextures();
+```
+
 ### Customizing How Content Loads
 
 By default Gum resolves a `SourceFile` name to a texture by reading a file from disk (relative to `FileManager.RelativeDirectory`). You can replace this behavior with your own logic. For example, you can load assets from a custom store, or hand back a texture your game engine has *already* loaded so the same image does not occupy video memory twice.
@@ -175,7 +209,7 @@ public class CustomContentLoader : RenderingLibrary.Content.IContentLoader
 }
 ```
 
-`LoaderManager.Self.ContentLoader` already holds your backend's default loader, which Gum installs during `GumService.Default.Initialize`. Read that property and pass it to your own loader, then assign your loader back to the same property. Do this after `Initialize` and before any content loads. If you install earlier, `ContentLoader` is still `null` and your wrapper has nothing to fall back to.
+`LoaderManager.Self.ContentLoader` already holds your backend's default loader, which Gum installs during `GumUI.Initialize`. Read that property and pass it to your own loader, then assign your loader back to the same property. Do this after `Initialize` and before any content loads. If you install earlier, `ContentLoader` is still `null` and your wrapper has nothing to fall back to.
 
 ```csharp
 // Initialize

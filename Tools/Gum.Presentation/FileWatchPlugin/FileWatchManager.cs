@@ -246,7 +246,8 @@ public class FileWatchManager : IFileWatchManager
             or "codsj"
             // Any other file an element references or the canvas cached (a shader in any extension, svg, lottie json,
             // a decoder plugin's format, ...).
-            || _fileChangeReactionLogic.IsReferencedFile(fileName))
+            || _fileChangeReactionLogic.IsReferencedFile(fileName)
+            || _fileChangeReactionLogic.IsEngineProfile(fileName))
         {
             HandleFileSystemChange(fileName, isOnIgnoreList);
         }
@@ -261,7 +262,8 @@ public class FileWatchManager : IFileWatchManager
         // within the debounce window collapses back into a normal reload. A file an element references or the
         // canvas cached (picture, svg, font, shader, ...) is queued the same way so the canvas stops showing the cached
         // copy; other deletes are left unhandled.
-        if (IsElementFileExtension(fileName) || _fileChangeReactionLogic.IsReferencedFile(fileName))
+        if (IsElementFileExtension(fileName) || _fileChangeReactionLogic.IsReferencedFile(fileName) ||
+            _fileChangeReactionLogic.IsEngineProfile(fileName))
         {
             HandleFileSystemChange(fileName, isOnIgnoreList);
         }
@@ -510,7 +512,8 @@ public class FileWatchManager : IFileWatchManager
                     // file that's still gone at flush time is a real deletion the user should see
                     // (issue #3367) — route it to the delete reaction instead of dropping silently.
                     if (!IsTransientTempFile(file)
-                        && (IsElementFileExtension(file) || _fileChangeReactionLogic.IsReferencedFile(file)))
+                        && (IsElementFileExtension(file) || _fileChangeReactionLogic.IsReferencedFile(file) ||
+                            _fileChangeReactionLogic.IsEngineProfile(file)))
                     {
                         deletedFiles.Add(file);
                     }

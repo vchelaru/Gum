@@ -33,6 +33,9 @@ public sealed class SettingsDialogView : Grid
     public SettingsDialogView()
     {
         _pageViews = new SettingsPageViewRegistry();
+        // Page views under the window mark the rows that match the search.
+        this.Bind(global::Gum.Avalonia.Settings.SettingsRowsPageView.SearchTextProperty,
+            new Binding(nameof(SettingsDialogViewModel.SearchText)));
 
         Width = WindowWidth;
         DialogWindow.SetPreferredHeight(this, WindowHeight);

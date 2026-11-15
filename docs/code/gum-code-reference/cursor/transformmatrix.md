@@ -6,6 +6,8 @@ TransformMatrix can be used to adjust the cursor's position. This is useful if y
 
 ## Code Example: Cursor Offsets with TransformMatrix
 
+This example is MonoGame-only, since it draws Gum into a `RenderTarget2D` with a `SpriteBatch`.
+
 ```csharp
 public class Game1 : Game
 {

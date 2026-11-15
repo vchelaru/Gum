@@ -106,7 +106,33 @@ public static class SkiaResourceManager
 
     private static ConcurrentDictionary<string, SKBitmap> skBitmapCache = new ConcurrentDictionary<string, SKBitmap>();
 
-    public static bool IsCached(string resourceName) => skBitmapCache.ContainsKey(resourceName);
+    // One lock per cache key, so the check, decode and cache write of a name are one step and concurrent first
+    // loads of it share one bitmap (#7888). Different names still load in parallel.
+    private static readonly ConcurrentDictionary<string, object> bitmapLoadLocks = new ConcurrentDictionary<string, object>();
+
+    /// <summary>
+    /// The cache key for <paramref name="resourceName"/>: the standardized path, resolved against
+    /// <see cref="FileManager.RelativeDirectory"/>, with its case kept. This is the key the MonoGame loader uses,
+    /// so every spelling of one file (<c>sheet.png</c>, <c>./sheet.png</c>, <c>sub/../sheet.png</c>, the absolute
+    /// path) shares one bitmap (#7881).
+    /// </summary>
+    private static string GetBitmapCacheKey(string resourceName) =>
+        RenderingLibrary.Content.ContentLoader.StandardizeCaseSensitive(resourceName);
+
+    public static bool IsCached(string resourceName) => TryGetCachedBitmap(GetBitmapCacheKey(resourceName), out _);
+
+    // A bitmap the caller disposed is a miss, so a later load reads the file again instead of handing back a
+    // bitmap that can no longer be drawn (#7886). The disposed entry is replaced by the reload.
+    private static bool TryGetCachedBitmap(string cacheKey, out SKBitmap bitmap)
+    {
+        if (skBitmapCache.TryGetValue(cacheKey, out SKBitmap? cached) && Renderables.Sprite.IsUsable(cached))
+        {
+            bitmap = cached;
+            return true;
+        }
+        bitmap = null!;
+        return false;
+    }
 
     private static Stream GetUrlStream(string url)
     {
@@ -120,7 +146,8 @@ public static class SkiaResourceManager
     {
         // Even though GetSKBitmap does a cache check internally, we want to do a cache check before getting the url
         // so we'll wrap the check here:
-        if (!skBitmapCache.ContainsKey(url))
+        string cacheKey = GetBitmapCacheKey(url);
+        if (!TryGetCachedBitmap(cacheKey, out SKBitmap? cachedBitmap))
         {
             try
             {
@@ -136,7 +163,7 @@ public static class SkiaResourceManager
         }
         else
         {
-            return skBitmapCache[url];
+            return cachedBitmap;
         }
     }
 
@@ -150,21 +177,30 @@ public static class SkiaResourceManager
     /// <exception cref="InvalidDataException"><paramref name="stream"/> does not hold a decodable image.</exception>
     public static SKBitmap GetSKBitmap(string resourceName, Stream? stream = null)
     {
-        if (!skBitmapCache.ContainsKey(resourceName))
+        string cacheKey = GetBitmapCacheKey(resourceName);
+        if (TryGetCachedBitmap(cacheKey, out SKBitmap? cached))
         {
-            if (stream != null)
-            {
-                // Don't cache a failed decode, so a later call (e.g. a retried download) can succeed.
-                skBitmapCache[resourceName] = DecodeBitmap(resourceName, stream)
-                    ?? throw new InvalidDataException($"Could not decode an image for {resourceName}.");
-            }
-            else
-            {
-                CacheSKImage(resourceName);
-            }
+            return cached;
         }
 
-        return skBitmapCache[resourceName];
+        lock (bitmapLoadLocks.GetOrAdd(cacheKey, _ => new object()))
+        {
+            // Another thread may have finished this name while this one waited for the lock.
+            if (TryGetCachedBitmap(cacheKey, out cached))
+            {
+                return cached;
+            }
+
+            // Whatever is still cached here is a disposed bitmap, which reads as a miss, so a load that throws
+            // leaves nothing usable cached. A failed decode throws before the cache write, so a later call
+            // (e.g. a retried download) can succeed.
+            SKBitmap bitmap = stream != null
+                ? DecodeBitmap(resourceName, stream)
+                    ?? throw new InvalidDataException($"Could not decode an image for {resourceName}.")
+                : LoadBitmap(resourceName);
+            skBitmapCache[cacheKey] = bitmap;
+            return bitmap;
+        }
     }
 
     /// <summary>
@@ -186,13 +222,13 @@ public static class SkiaResourceManager
         return FileManager.Standardize(absoluteFile, preserveCase: true);
     }
 
-    private static void CacheSKImage(string resourceName)
+    private static SKBitmap LoadBitmap(string resourceName)
     {
         using var stream = TryOpenFile(resourceName) ?? GetManifestResourceStream(
             resourceName, ResourceAssembly);
         // A file Skia cannot decode is a load failure like a missing file, and is not cached, so a later
         // call can succeed once the file is fixed (#6889).
-        skBitmapCache[resourceName] = DecodeBitmap(resourceName, stream)
+        return DecodeBitmap(resourceName, stream)
             ?? throw new FileNotFoundException(DescribeUndecodableImage(resourceName), resourceName);
     }
 
@@ -210,14 +246,30 @@ public static class SkiaResourceManager
     /// <summary>
     /// Decodes <paramref name="stream"/> with the registered <see cref="LoaderManager.ImageDecoders"/>
     /// first, then <see cref="SKBitmap.Decode(Stream)"/>. Returns null when Skia cannot decode it.
+    /// A gumcli-packed raw texture (#6514) is wrapped without decoding: Skia draws premultiplied
+    /// alpha, so a straight package is premultiplied, with the same one-time warning as the other
+    /// runtimes (repacking with --premultiplied-alpha avoids it).
     /// </summary>
     private static SKBitmap? DecodeBitmap(string resourceName, Stream stream)
     {
+        stream = global::Gum.Bundle.GumRawTexture.EnsureSeekable(stream);
+        byte[]? rawTexture = global::Gum.Bundle.GumRawTexture.ReadForRuntime(stream, resourceName,
+            runtimeUsesPremultipliedAlpha: true, runtimeAlphaReason: "SkiaGum draws premultiplied alpha",
+            bleedTransparentEdges: false,
+            out global::Gum.Bundle.GumRawTextureHeader header);
+        if (rawTexture != null)
+        {
+            SKBitmap rawBitmap = new SKBitmap(new SKImageInfo(header.Width, header.Height, SKColorType.Rgba8888, SKAlphaType.Premul));
+            System.Runtime.InteropServices.Marshal.Copy(rawTexture, 0, rawBitmap.GetPixels(), rawTexture.Length);
+            return SharedTexture.MarkShared(rawBitmap);
+        }
+
         Stream original = stream;
         try
         {
             DecodedImage? decoded = LoaderManager.Self.ImageDecoders.TryDecode(resourceName, ref stream);
-            return decoded != null ? ToBitmap(decoded) : SKBitmap.Decode(stream);
+            SKBitmap? bitmap = decoded != null ? ToBitmap(decoded) : SKBitmap.Decode(stream);
+            return bitmap != null ? SharedTexture.MarkShared(bitmap) : null;
         }
         finally
         {

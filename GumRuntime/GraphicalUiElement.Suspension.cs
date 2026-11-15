@@ -119,7 +119,10 @@ public partial class GraphicalUiElement
         {
             if (!IsAllLayoutSuspended)
             {
-
+                // Descendants resumed one at a time would still be suspended while an ancestor lays them out, and
+                // each would then lay its parent out again as it resumed: rows squared for a list (#7239).
+                // Ending every suspension first lets the first layout cover the subtree and clear its dirty state.
+                ClearLayoutSuspensionRecursive();
                 ResumeLayoutUpdateIfDirtyRecursive();
             }
             else
@@ -231,7 +234,7 @@ public partial class GraphicalUiElement
             element.isListedAsGloballyDeferred = false;
             // Layout left on a hidden element is resolved when it is shown, so only its font work runs here.
             bool hasWork = element.isFontDirty ||
-                (element.currentDirtyState != null && ((IVisible)element).AbsoluteVisible);
+                (element.currentDirtyState != null && !element.IsHiddenWithinRenderTarget());
             if (hasWork)
             {
                 int depth = 0;
@@ -302,14 +305,27 @@ public partial class GraphicalUiElement
         }
     }
 
+    // The entry point of a resume walk. Fonts of every element not suspended are loaded here, once, before any
+    // layout runs; the walk itself (ResumeLayoutUpdateIfDirtyRecursiveCore) loads only the element it is on, for
+    // the ones that were still suspended here. Loading the whole subtree at every element made the walk cost
+    // the sum of every element's depth (#7732).
     private bool ResumeLayoutUpdateIfDirtyRecursive(bool skipSuspendedChildren = false)
     {
         // mIsLayoutSuspended must be cleared BEFORE calling UpdateFontRecursive so that this
-        // element's isFontDirty check inside UpdateFontRecursive passes. Children are still
-        // suspended at this point; their suspension is cleared when we recurse below.
+        // element's isFontDirty check inside UpdateFontRecursive passes.
+        mIsLayoutSuspended = false;
+        UpdateFontRecursive();
+        return ResumeLayoutUpdateIfDirtyRecursiveCore(skipSuspendedChildren);
+    }
+
+    private bool ResumeLayoutUpdateIfDirtyRecursiveCore(bool skipSuspendedChildren)
+    {
+        // Cleared before the font check so it passes for this element. Children are still
+        // suspended at this point if they were suspended when the walk began; their suspension is
+        // cleared when we recurse below, and they load their own font then.
         mIsLayoutSuspended = false;
         resumeDescendantsOnResume = false;
-        UpdateFontRecursive();
+        LoadFontIfDirty();
 
         var didCallUpdateLayout = false;
 
@@ -342,7 +358,7 @@ public partial class GraphicalUiElement
 
     private bool IsHiddenForResume() =>
         !AreUpdatesAppliedWhenInvisible && mContainedObjectAsIVisible != null &&
-        ((IVisible)this).AbsoluteVisible == false && !IsRenderTarget && !this.IsInRenderTargetRecursively();
+        this.IsHiddenWithinRenderTarget();
 
     private void ResumeChildrenIfDirty(bool skipSuspendedChildren)
     {
@@ -359,7 +375,7 @@ public partial class GraphicalUiElement
                     asGraphicalUiElement.resumeDescendantsOnResume = true;
                     continue;
                 }
-                asGraphicalUiElement.ResumeLayoutUpdateIfDirtyRecursive(skipSuspendedChildren);
+                asGraphicalUiElement.ResumeLayoutUpdateIfDirtyRecursiveCore(skipSuspendedChildren);
             }
         }
         else
@@ -372,7 +388,7 @@ public partial class GraphicalUiElement
                     mWhatThisContains[i].resumeDescendantsOnResume = true;
                     continue;
                 }
-                mWhatThisContains[i].ResumeLayoutUpdateIfDirtyRecursive(skipSuspendedChildren);
+                mWhatThisContains[i].ResumeLayoutUpdateIfDirtyRecursiveCore(skipSuspendedChildren);
             }
         }
     }

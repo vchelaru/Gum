@@ -95,4 +95,71 @@ public class WireframeObjectManagerReloadTexturesTests : BaseTestClass
             LoaderManager.Self.DisposeAndClear();
         }
     }
+
+    [Fact]
+    public void RefreshAll_WhenReloadingTexturesWithAShownElement_DropsEveryEntryAndKeepsCachingOn()
+    {
+        // An animation list and its frame picture are separate entries; dropping one without the other
+        // leaves the list holding a disposed picture.
+        ScreenSave screen = new ScreenSave { Name = "Main" };
+        Cached list = new Cached();
+        Cached picture = new Cached();
+        LoaderManager.Self.DisposeAndClear();
+        LoaderManager.Self.CacheTextures = true;
+        LoaderManager.Self.AddDisposable("Idle.achx", list);
+        LoaderManager.Self.AddDisposable("Frame1.png", picture);
+        try
+        {
+            Build(screen).RefreshAll(forceLayout: true, forceReloadTextures: true);
+
+            list.Disposed.ShouldBeTrue();
+            picture.Disposed.ShouldBeTrue();
+            LoaderManager.Self.CachedDisposables.Count.ShouldBe(0);
+            LoaderManager.Self.CacheTextures.ShouldBeTrue("the rebuild must go on caching");
+            Should.NotThrow(() => LoaderManager.Self.AddDisposable("Frame1.png", new Cached()), "the slot is free again");
+        }
+        finally
+        {
+            LoaderManager.Self.DisposeAndClear();
+        }
+    }
+
+    [Fact]
+    public void RefreshAll_DropsTheCache_WhenReloadingTexturesAndTheComponentHasNoBaseType()
+    {
+        ComponentSave component = new ComponentSave { Name = "Card" };
+        Cached cached = new Cached();
+        LoaderManager.Self.DisposeAndClear();
+        LoaderManager.Self.AddDisposable("Photo.png", cached);
+        try
+        {
+            Build(component).RefreshAll(forceLayout: true, forceReloadTextures: true);
+
+            cached.Disposed.ShouldBeTrue();
+        }
+        finally
+        {
+            LoaderManager.Self.DisposeAndClear();
+        }
+    }
+
+    [Fact]
+    public void RefreshAll_KeepsTheCache_WhenRebuildingAShownElementWithoutReloadingTextures()
+    {
+        ScreenSave screen = new ScreenSave { Name = "Main" };
+        Cached cached = new Cached();
+        LoaderManager.Self.DisposeAndClear();
+        LoaderManager.Self.AddDisposable("Photo.png", cached);
+        try
+        {
+            Build(screen).RefreshAll(forceLayout: true);
+
+            cached.Disposed.ShouldBeFalse();
+            LoaderManager.Self.CachedDisposables.ShouldContainKey("Photo.png");
+        }
+        finally
+        {
+            LoaderManager.Self.DisposeAndClear();
+        }
+    }
 }

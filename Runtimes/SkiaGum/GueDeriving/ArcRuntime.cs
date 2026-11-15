@@ -186,7 +186,8 @@ public class ArcRuntime : GraphicalUiElement
     /// Same backing field; the obsolete marker is purely a steering hint toward the canonical
     /// user-facing name.
     /// </summary>
-    [Obsolete("Use Thickness instead — it's the canonical user-facing name for arc stroke weight and the variable name the Gum tool persists. StrokeWidth still works (same backing field) but new code should prefer Thickness.")]
+    // Obsoleted November 2026; becomes a compile error (error: true) in May 2027; not removed. See #7526.
+    [Obsolete("Use Thickness instead — it's the canonical user-facing name for arc stroke weight and the variable name the Gum tool persists. StrokeWidth still works (same backing field) but new code should prefer Thickness. Will become an error in May 2027.")]
     public float StrokeWidth
     {
         get => _thickness;
@@ -234,6 +235,21 @@ public class ArcRuntime : GraphicalUiElement
         {
             _strokeGapLength = value;
             ContainedLineArc.StrokeGapLength = value;
+            NotifyPropertyChanged();
+        }
+    }
+
+    /// <summary>
+    /// Blend mode (#7523), matching the raylib <c>CircleRuntime.Blend</c> and the Skia/Apos
+    /// <c>ArcRuntime.Blend</c>: non-nullable, default <see cref="Gum.RenderingLibrary.Blend.Normal"/>.
+    /// Normal maps to a null renderable blend so <see cref="LineArc"/> skips the blend wrap.
+    /// </summary>
+    public Gum.RenderingLibrary.Blend Blend
+    {
+        get => ContainedLineArc.Blend ?? Gum.RenderingLibrary.Blend.Normal;
+        set
+        {
+            ContainedLineArc.Blend = value == Gum.RenderingLibrary.Blend.Normal ? null : value;
             NotifyPropertyChanged();
         }
     }
@@ -325,7 +341,8 @@ public class ArcRuntime : GraphicalUiElement
     /// Deprecated on <c>ArcRuntime</c> — use <see cref="DropshadowBlur"/> (scalar). Kept
     /// functional for back-compat; the arc surface is moving to a single isotropic blur.
     /// </summary>
-    [Obsolete("Use DropshadowBlur (scalar). Per-axis blur is deprecated on ArcRuntime; the arc dropshadow blur is a single isotropic value.")]
+    // Obsoleted November 2026; becomes a compile error (error: true) in May 2027; not removed. See #7526.
+    [Obsolete("Use DropshadowBlur (scalar). Per-axis blur is deprecated on ArcRuntime; the arc dropshadow blur is a single isotropic value. Will become an error in May 2027.")]
     public float DropshadowBlurX
     {
         get => _dropshadowBlurX;
@@ -339,7 +356,8 @@ public class ArcRuntime : GraphicalUiElement
 
     float _dropshadowBlurY;
     /// <inheritdoc cref="DropshadowBlurX"/>
-    [Obsolete("Use DropshadowBlur (scalar). Per-axis blur is deprecated on ArcRuntime; the arc dropshadow blur is a single isotropic value.")]
+    // Obsoleted November 2026; becomes a compile error (error: true) in May 2027; not removed. See #7526.
+    [Obsolete("Use DropshadowBlur (scalar). Per-axis blur is deprecated on ArcRuntime; the arc dropshadow blur is a single isotropic value. Will become an error in May 2027.")]
     public float DropshadowBlurY
     {
         get => _dropshadowBlurY;
@@ -652,15 +670,11 @@ public class ArcRuntime : GraphicalUiElement
 
             // Pre-seed dropshadow offset/blur so toggling HasDropshadow = true at runtime
             // produces a visible shadow without further setup — same default the Skia/Apos
-            // branch lands via the SkiaShapeRuntime/AposShapeRuntime constructor. Anisotropic
-            // seed (X = 0, Y = 3) is intentional; per-axis is deprecated but DropshadowBlur
-            // (scalar) can't express the asymmetry.
+            // branch lands via the SkiaShapeRuntime/AposShapeRuntime constructor. Blur is the tool's
+            // authored default (isotropic 3, #7299).
             DropshadowOffsetX = 0;
             DropshadowOffsetY = 3;
-#pragma warning disable CS0618
-            DropshadowBlurX = 0;
-            DropshadowBlurY = 3;
-#pragma warning restore CS0618
+            DropshadowBlur = 3;
         }
     }
 
@@ -804,7 +818,8 @@ public class ArcRuntime
     /// in the Variables grid; <c>StrokeWidth</c> is a cross-shape technical alias inherited
     /// from the base shape runtime.
     /// </summary>
-    [Obsolete("Use Thickness instead — it's the canonical user-facing name for arc stroke weight and the variable name the Gum tool persists. StrokeWidth still works (same backing field) but new code should prefer Thickness.")]
+    // Obsoleted November 2026; becomes a compile error (error: true) in May 2027; not removed. See #7526.
+    [Obsolete("Use Thickness instead — it's the canonical user-facing name for arc stroke weight and the variable name the Gum tool persists. StrokeWidth still works (same backing field) but new code should prefer Thickness. Will become an error in May 2027.")]
     public new float StrokeWidth
     {
         get => base.StrokeWidth;
@@ -880,7 +895,8 @@ public class ArcRuntime
     /// moving to a single isotropic blur. Per-axis blur stays as the real API on the legacy Skia
     /// shapes (<c>RoundedRectangleRuntime</c> / <c>ColoredCircleRuntime</c>).
     /// </summary>
-    [Obsolete("Use DropshadowBlur (scalar). Per-axis blur is deprecated on ArcRuntime; the arc dropshadow blur is a single isotropic value.")]
+    // Obsoleted November 2026; becomes a compile error (error: true) in May 2027; not removed. See #7526.
+    [Obsolete("Use DropshadowBlur (scalar). Per-axis blur is deprecated on ArcRuntime; the arc dropshadow blur is a single isotropic value. Will become an error in May 2027.")]
     public new float DropshadowBlurX
     {
         get => base.DropshadowBlurX;
@@ -888,7 +904,8 @@ public class ArcRuntime
     }
 
     /// <inheritdoc cref="DropshadowBlurX"/>
-    [Obsolete("Use DropshadowBlur (scalar). Per-axis blur is deprecated on ArcRuntime; the arc dropshadow blur is a single isotropic value.")]
+    // Obsoleted November 2026; becomes a compile error (error: true) in May 2027; not removed. See #7526.
+    [Obsolete("Use DropshadowBlur (scalar). Per-axis blur is deprecated on ArcRuntime; the arc dropshadow blur is a single isotropic value. Will become an error in May 2027.")]
     public new float DropshadowBlurY
     {
         get => base.DropshadowBlurY;
@@ -1066,13 +1083,8 @@ public class ArcRuntime
 
             DropshadowOffsetX = 0;
             DropshadowOffsetY = 3;
-            // Anisotropic seed (X = 0, Y = 3) is intentional — the arc's default shadow blurs
-            // only vertically. Per-axis is deprecated on the public surface but kept here for
-            // that default; DropshadowBlur (scalar) can't express the asymmetry.
-#pragma warning disable CS0618
-            DropshadowBlurX = 0;
-            DropshadowBlurY = 3;
-#pragma warning restore CS0618
+            // The tool's authored default: isotropic blur 3 (#7299).
+            DropshadowBlur = 3;
         }
     }
 

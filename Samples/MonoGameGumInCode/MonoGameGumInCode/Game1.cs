@@ -6,19 +6,19 @@ using Microsoft.Xna.Framework.Input;
 using Gum;
 using KernSmith.Gum;
 using Gum.Renderables;
-using MonoGameGumInCode.Screens;
-using GumSamples.Screens;
+using GumSamples;
 using RenderingLibrary;
 
 namespace MonoGameGumInCode
 {
     public class Game1 : Game
     {
+        GumService GumUI => GumService.Default;
+
         private GraphicsDeviceManager _graphics;
         private SpriteBatch _spriteBatch;
 
-        private StackPanel _navStrip;
-        private FrameworkElement _currentScreen;
+        private readonly GumGallery gallery = new GumGallery();
 
 #if DEBUG
         // Plays an NDJSON script when launched with --gum-automation <script>; null otherwise.
@@ -59,112 +59,33 @@ namespace MonoGameGumInCode
 
         protected override void Initialize()
         {
-            GumService.Default.Initialize(this);
+            GumUI.Initialize(this);
 
-            // Required for Apos.Shapes-backed shape fill/effects (see the shapes doc). Must come
-            // after GumService.Default.Initialize — ShapeRenderer.Initialize reads the initialized
-            // GumService/GraphicsDevice.
-            ShapeRenderer.Self.Initialize();
+            GumUI.UseKeyboardDefaults();
 
-            CustomSetPropertyOnRenderable.InMemoryFontCreator =
-                new KernSmithFontCreator(GraphicsDevice);
+            GumUI.UseGamepadDefaults();
 
             // Gum core ships no shader loader. The Gum.MonoGame.ShadowDusk package registers one that
             // compiles a ContainerRuntime.SourceShaderFile (.fx or .slang path) at runtime (#3206, #7053).
             // With no resolver registered, a SourceShaderFile fails like a missing file
             // (call UseShadowDusk() before building any screen that uses one).
-            GumService.Default.UseShadowDusk();
+            GumUI.UseShadowDusk();
+
+            // Required for Apos.Shapes-backed shape fill/effects (see the shapes doc). Must come
+            // after GumUI.Initialize, which gives it the graphics device.
+            GumUI.UseShapes();
+
+            // Wire up KernSmith so any TextRuntime can get a font for any (family, size, style)
+            // without a .fnt file on disk.
+            GumUI.UseKernSmith();
 
             // Demo the auto-fit helpers — flip via the Zoom/Expand buttons in the nav strip.
-            GumService.Default.EnableZoomToWindow();
-
-            BuildNavStrip();
+            GumUI.EnableZoomToWindow();
 
             // Mixed is the broadest demo, so it's the default landing page.
-            ShowScreen<MixedScreen>();
+            gallery.Build("Mixed");
 
             base.Initialize();
-        }
-
-        private void BuildNavStrip()
-        {
-            _navStrip = new StackPanel();
-            _navStrip.Orientation = Orientation.Horizontal;
-            _navStrip.Spacing = 4;
-            _navStrip.Visual.X = 4;
-            _navStrip.Visual.Y = 4;
-            _navStrip.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
-            _navStrip.Width = 0;
-            _navStrip.Visual.WrapsChildren = true;
-            _navStrip.AddToRoot();
-
-            AddNavButton("Forms", () => ShowScreen<FormsScreen>());
-            AddNavButton("Standards", () => ShowScreen<StandardsScreen>());
-            AddNavButton("Circles", () => ShowScreen<CirclesScreen>());
-            AddNavButton("Rectangles", () => ShowScreen<RectanglesScreen>());
-            AddNavButton("Arcs", () => ShowScreen<ArcsScreen>());
-            AddNavButton("Polygons", () => ShowScreen<PolygonsScreen>());
-            AddNavButton("Gradients", () => ShowScreen<GradientScreen>());
-            AddNavButton("Text", () => ShowScreen<TextScreen>());
-            AddNavButton("Mixed", () => ShowScreen<MixedScreen>());
-            AddNavButton("Invisible", () => ShowScreen<InvisibleScreen>());
-            AddNavButton("NineSlice", () => ShowScreen<NineSliceScreen>());
-            AddNavButton("Sprite", () => ShowScreen<SpriteScreen>());
-            AddNavButton("Svg", () => ShowScreen<SvgScreen>());
-            AddNavButton("Clip", () => ShowScreen<ClippingScreen>());
-            AddNavButton("Render Target", () => ShowScreen<RenderTargetScreen>());
-            AddNavButton("RT Shader", () => ShowScreen<RenderTargetShaderScreen>());
-            AddNavButton("Zoom", () => ShowScreen<ZoomScreen>());
-            AddNavButton("Layer Camera", () => ShowScreen<LayerCameraSettingsScreen>());
-            AddNavButton("Draw Call Stress", () => ShowScreen<DrawCallStressScreen>());
-
-            AddFitModeRadio("Zoom", isChecked: true, () => GumService.Default.EnableZoomToWindow());
-            AddFitModeRadio("Expand", isChecked: false, () => GumService.Default.EnableExpandToWindow());
-        }
-
-        private void AddFitModeRadio(string text, bool isChecked, System.Action onChecked)
-        {
-            var radio = new RadioButton();
-            radio.GroupName = "FitMode";
-            radio.Text = text;
-            radio.IsChecked = isChecked;
-            radio.Checked += (_, _) => onChecked();
-            _navStrip.AddChild(radio);
-        }
-
-        private void AddNavButton(string text, System.Action onClick)
-        {
-            var button = new Button();
-            // Named so automation scripts can target it, e.g. NavForms or NavRenderTarget.
-            button.Name = "Nav" + text.Replace(" ", "");
-            button.Text = text;
-            button.Click += (_, _) => onClick();
-            _navStrip.AddChild(button);
-        }
-
-        private void ShowScreen<T>() where T : FrameworkElement, new()
-        {
-            if (_currentScreen != null)
-            {
-                _currentScreen.RemoveFromRoot();
-            }
-
-            // ZoomScreen and LayerCameraSettingsScreen both drive the shared main Camera directly
-            // (issues #4330, #4367) -- reset it here so leaving either screen zoomed/panned never
-            // leaks into whichever screen is shown next.
-            SystemManagers.Default.Renderer.Camera.Zoom = 1f;
-            SystemManagers.Default.Renderer.Camera.X = 0f;
-            SystemManagers.Default.Renderer.Camera.Y = 0f;
-
-            _currentScreen = new T();
-            // Offset the screen so it doesn't sit underneath the nav strip. The screen's
-            // ctor calls Dock(Fill); reset the vertical anchoring to top + shrink height
-            // by the nav strip's footprint so the two never overlap.
-            _currentScreen.Visual.YOrigin = RenderingLibrary.Graphics.VerticalAlignment.Top;
-            _currentScreen.Visual.YUnits = Gum.Converters.GeneralUnitType.PixelsFromSmall;
-            _currentScreen.Visual.Y = _navStrip.Visual.AbsoluteHeight;
-            _currentScreen.Visual.Height = -_navStrip.Visual.AbsoluteHeight;
-            _currentScreen.AddToRoot();
         }
 
         protected override void LoadContent()
@@ -183,12 +104,9 @@ namespace MonoGameGumInCode
             if (!isAutomated && (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape)))
                 Exit();
 
-            GumService.Default.Update(gameTime);
+            GumUI.Update(gameTime);
 
-            // FrameworkElement.Activity() is FRB-only and unavailable here, so screens that animate
-            // (e.g. TextScreen's typewriter reveal, #3701) get a host-driven per-frame Tick instead.
-            (_currentScreen as TextScreen)?.Tick(gameTime.ElapsedGameTime.TotalSeconds);
-            (_currentScreen as DrawCallStressScreen)?.Tick(gameTime.ElapsedGameTime.TotalSeconds);
+            gallery.Tick(gameTime.ElapsedGameTime.TotalSeconds);
 
             bool moveCameraWithMouse = false;
             if (moveCameraWithMouse)
@@ -211,7 +129,7 @@ namespace MonoGameGumInCode
         {
             GraphicsDevice.Clear(Color.CornflowerBlue);
 
-            GumService.Default.Draw();
+            GumUI.Draw();
 
             base.Draw(gameTime);
         }

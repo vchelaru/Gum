@@ -37,6 +37,26 @@ public class NewProjectDialogScreenshotTests
     [SkippableTheory]
     [InlineData("dark")]
     [InlineData("light")]
+    public void DeviceNameRefused(string theme) => Capture("device-name-refused", theme, (viewModel, _) => viewModel.ProjectName = "CON");
+
+    [SkippableTheory]
+    [InlineData("dark")]
+    [InlineData("light")]
+    public void TrailingDotRefused(string theme) => Capture("trailing-dot-refused", theme, (viewModel, _) => viewModel.ProjectName = "Game.");
+
+    [SkippableTheory]
+    [InlineData("dark")]
+    [InlineData("light")]
+    public void TooLongNameRefused(string theme) => Capture("too-long-name-refused", theme, (viewModel, _) => viewModel.ProjectName = new string('a', 260));
+
+    [SkippableTheory]
+    [InlineData("dark")]
+    [InlineData("light")]
+    public void ForbiddenCharacterRefused(string theme) => Capture("forbidden-character-refused", theme, (viewModel, _) => viewModel.ProjectName = "Game<");
+
+    [SkippableTheory]
+    [InlineData("dark")]
+    [InlineData("light")]
     public void CodeProjectChecked(string theme) => Capture("code-project", theme, (viewModel, _) =>
     {
         viewModel.IncludeCodeProject = true;
@@ -55,6 +75,15 @@ public class NewProjectDialogScreenshotTests
     [SkippableTheory]
     [InlineData("dark")]
     [InlineData("light")]
+    public void CodeProjectBrutal(string theme) => Capture("code-project-brutal", theme, (viewModel, _) =>
+    {
+        viewModel.IncludeCodeProject = true;
+        viewModel.PlatformName = "brutal";
+    });
+
+    [SkippableTheory]
+    [InlineData("dark")]
+    [InlineData("light")]
     public void CodeProjectSilkNet(string theme) => Capture("code-project-silknet", theme, (viewModel, _) =>
     {
         viewModel.IncludeCodeProject = true;
@@ -68,6 +97,54 @@ public class NewProjectDialogScreenshotTests
     {
         viewModel.IncludeCodeProject = true;
         viewModel.PlatformName = "monogame";
+    });
+
+    [SkippableTheory]
+    [InlineData("dark")]
+    [InlineData("light")]
+    public void CodeProjectMonoGameLocalSource(string theme) => Capture("code-project-monogame-local-source", theme, (viewModel, _) =>
+    {
+        viewModel.IncludeCodeProject = true;
+        viewModel.PlatformName = "monogame";
+        viewModel.SourceLinked = true;
+        viewModel.IncludeRecommendedPackages = true;
+    });
+
+    [SkippableTheory]
+    [InlineData("dark")]
+    [InlineData("light")]
+    public void CodeProjectRaylibLocalSource(string theme) => Capture("code-project-raylib-local-source", theme, (viewModel, _) =>
+    {
+        viewModel.IncludeCodeProject = true;
+        viewModel.PlatformName = "raylib";
+        viewModel.SourceLinked = true;
+        viewModel.IncludeRecommendedPackages = true;
+    });
+
+    [SkippableTheory]
+    [InlineData("dark")]
+    public void PackagesStable(string theme) => Capture("packages-stable", theme, (viewModel, _) =>
+    {
+        viewModel.IncludeCodeProject = true;
+        viewModel.PlatformName = "monogame";
+    });
+
+    [SkippableTheory]
+    [InlineData("dark")]
+    public void PackagesPreview(string theme) => Capture("packages-preview", theme, (viewModel, _) =>
+    {
+        viewModel.IncludeCodeProject = true;
+        viewModel.PlatformName = "monogame";
+        viewModel.IsPreviewChannelChecked = true;
+    });
+
+    [SkippableTheory]
+    [InlineData("dark")]
+    public void PackagesLocalSource(string theme) => Capture("packages-local-source", theme, (viewModel, _) =>
+    {
+        viewModel.IncludeCodeProject = true;
+        viewModel.PlatformName = "monogame";
+        viewModel.IsLocalSourceChannelChecked = true;
     });
 
     [SkippableTheory]

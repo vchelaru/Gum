@@ -1,9 +1,12 @@
+using Gum.Logic;
 using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
 using Gum.Expressions;
 using Gum.Managers;
+using Gum.ProjectServices;
 using Gum.Wireframe;
+using GumRuntime;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -27,6 +30,8 @@ namespace Gum.Plugins.InternalPlugins.VariableGrid;
 /// </summary>
 public static class BehaviorToolOnlyReferencesApplier
 {
+    private static readonly BehaviorAncestorFinder AncestorFinder = new BehaviorAncestorFinder();
+
     public static void Apply(ElementSave element, StateSave stateSave)
     {
         // Tool-only references exist solely to drive the element's resting design-time
@@ -58,6 +63,28 @@ public static class BehaviorToolOnlyReferencesApplier
     }
 
     /// <summary>
+    /// Applies only the lines the edit of <paramref name="changedMember"/> on <paramref name="instance"/> (null for
+    /// the element itself) can change, so a drag tick costs what the one edited instance costs, not every
+    /// behavior instance of the element. Same writes as <see cref="Apply"/> for that instance.
+    /// </summary>
+    public static void ApplyDrivenBy(ElementSave element, InstanceSave? instance, string changedMember, StateSave stateSave)
+    {
+        if (element.DefaultState == null || stateSave != element.DefaultState ||
+            GetUnderlyingMembersDrivenBy(element, instance, changedMember).Count == 0)
+        {
+            return;
+        }
+
+        ComponentSave? component = instance != null
+            ? ObjectFinder.Self.GetElementSave(instance.BaseType) as ComponentSave
+            : element as ComponentSave;
+        if (component != null)
+        {
+            ApplyBehaviorsOf(component, instance, stateSave);
+        }
+    }
+
+    /// <summary>
     /// Values a Forms control instance's behavior derives that a non-default <paramref name="selectedState"/> of
     /// <paramref name="element"/> would otherwise override: the selected state sets the derived variable itself
     /// (<c>Play.ButtonCategoryState</c>) or a Forms property it reads (<c>Play.IsEnabled</c>). An instance's
@@ -85,7 +112,7 @@ public static class BehaviorToolOnlyReferencesApplier
                 continue;
             }
 
-            Func<string, object?> fallback = BuildFormsPropertyDefaultsFallback(instanceComponent, instance);
+            Func<string, object?> fallback = FormsBehaviorChain.BuildFormsPropertyDefaultsFallback(instanceComponent, instance);
             foreach ((string left, string right) in GetReferenceLines(instanceComponent))
             {
                 // Only a Forms value the author set counts: with every Forms property at its default, a state
@@ -110,6 +137,113 @@ public static class BehaviorToolOnlyReferencesApplier
     }
 
     /// <summary>
+    /// What the behaviors of buttons (and other Forms controls) nested inside <paramref name="element"/>'s component
+    /// instances derive from a Forms value the element's instance sets through an exposed variable (#7641):
+    /// <c>OptionsRow1.IsEnabled = false</c>, with OptionsRow exposing its button's IsEnabled, gives
+    /// <c>OptionsRow1.ButtonInstance1.ButtonCategoryState = Disabled</c>. Follows the exposure at every level of
+    /// nesting. The result is for the in-memory canvas only; it is never merged into saved data. The values are read
+    /// from the element's Default state with <paramref name="selectedState"/> on top.
+    /// </summary>
+    public static StateSave GetValuesThroughExposedVariables(ElementSave element, StateSave? selectedState)
+    {
+        StateSave result = new StateSave { Name = "FormsExposed", ParentContainer = element };
+        StateSave? defaultState = element.DefaultState;
+        if (defaultState == null)
+        {
+            return result;
+        }
+
+        StateSave effective = defaultState.Clone();
+        effective.ParentContainer = element;
+        if (selectedState != null && selectedState != defaultState)
+        {
+            effective.MergeIntoThis(selectedState);
+        }
+
+        foreach (InstanceSave instance in element.Instances)
+        {
+            if (ObjectFinder.Self.GetElementSave(instance.BaseType) is ComponentSave component)
+            {
+                CollectValuesThroughExposedVariables(effective, instance.Name, component, instance.Name, result, depth: 0);
+            }
+        }
+
+        return result;
+    }
+
+    /// <param name="suppliedValues">Holds the values the owner of <paramref name="component"/>'s instance sets, by exposed name behind <paramref name="suppliedPrefix"/>.</param>
+    private static void CollectValuesThroughExposedVariables(StateSave suppliedValues, string suppliedPrefix, ComponentSave component,
+        string outputPrefix, StateSave result, int depth)
+    {
+        StateSave? componentDefault = component.DefaultState;
+        if (componentDefault == null || depth > 16)
+        {
+            return;
+        }
+
+        // An exposure a base component declares is visible through every component derived from it, and the
+        // derived component's own declaration of the same variable wins (derived first, first name kept).
+        List<VariableSave> exposures = new List<VariableSave>();
+        foreach (StateSave? chainState in new[] { componentDefault }.Concat(ObjectFinder.Self.GetBaseElements(component).Select(item => item.DefaultState)))
+        {
+            foreach (VariableSave candidate in chainState?.Variables.Where(item => !string.IsNullOrEmpty(item.ExposedAsName)) ?? Enumerable.Empty<VariableSave>())
+            {
+                if (!exposures.Any(item => item.Name == candidate.Name))
+                {
+                    exposures.Add(candidate);
+                }
+            }
+        }
+
+        foreach (InstanceSave inner in component.Instances)
+        {
+            if (ObjectFinder.Self.GetElementSave(inner.BaseType) is not ComponentSave innerComponent)
+            {
+                continue;
+            }
+
+            StateSave innerState = new StateSave { Name = "Exposed", ParentContainer = innerComponent };
+            foreach (VariableSave exposure in exposures.Where(item => item.SourceObject == inner.Name))
+            {
+                string suppliedName = suppliedPrefix.Length == 0 ? exposure.ExposedAsName! : $"{suppliedPrefix}.{exposure.ExposedAsName}";
+                VariableSave? supplied = suppliedValues.Variables.FirstOrDefault(item => item.Name == suppliedName && item.SetsValue && item.Value != null);
+                if (supplied != null)
+                {
+                    innerState.Variables.Add(new VariableSave { Name = exposure.GetRootName(), Type = supplied.Type, Value = supplied.Value, SetsValue = true });
+                }
+            }
+
+            if (innerState.Variables.Count == 0)
+            {
+                continue;
+            }
+
+            Func<string, object?> fallback = FormsBehaviorChain.BuildFormsPropertyDefaultsFallback(innerComponent, instance: null);
+            foreach ((string left, string right) in GetReferenceLines(innerComponent))
+            {
+                if (!ReadIdentifiers(right).Any(identifier => innerState.Variables.Any(item => item.Name == identifier)))
+                {
+                    continue;
+                }
+
+                EvaluatedLine? line = EvaluateLine(left, right, instance: null, innerState, fallback);
+                if (line != null)
+                {
+                    result.Variables.Add(new VariableSave
+                    {
+                        Name = $"{outputPrefix}.{inner.Name}.{left}",
+                        Type = ResolveLeftSideType(left, instance: null, innerState) ?? "string",
+                        Value = line.Value,
+                        SetsValue = true
+                    });
+                }
+            }
+
+            CollectValuesThroughExposedVariables(innerState, "", innerComponent, $"{outputPrefix}.{inner.Name}", result, depth + 1);
+        }
+    }
+
+    /// <summary>
     /// The category states a running game has applied on top of <paramref name="element"/>'s Default values:
     /// each category-state reference line of its behaviors (<c>ButtonCategoryState = IsEnabled ? ...</c>)
     /// evaluated against the Default state, with unset Forms values at their declared defaults. The
@@ -127,7 +261,7 @@ public static class BehaviorToolOnlyReferencesApplier
         // A value the Forms control assigns (a reference line that is not a category state) belongs to
         // Default, so a category state does not override it, whether it sets it by value or by a reference row (#6908).
         HashSet<string> formsAssigned = new HashSet<string>();
-        Func<string, object?> fallback = BuildFormsPropertyDefaultsFallback(component, instance: null);
+        Func<string, object?> fallback = FormsBehaviorChain.BuildFormsPropertyDefaultsFallback(component, instance: null);
         foreach ((string left, string right) in GetReferenceLines(component))
         {
             string? categoryName = ResolveLeftSideType(left, instance: null, defaultState);
@@ -158,7 +292,7 @@ public static class BehaviorToolOnlyReferencesApplier
 
     private static IEnumerable<StateSave> GetCategoryStates(ElementSave element, string categoryName)
     {
-        foreach (StateSaveCategory category in element.Categories.Concat(ObjectFinder.Self.GetBaseElements(element).SelectMany(item => item.Categories)))
+        foreach (StateSaveCategory category in InheritedCategories.GetCategories(element))
         {
             if (category.Name == categoryName)
             {
@@ -255,15 +389,12 @@ public static class BehaviorToolOnlyReferencesApplier
     /// </summary>
     private static IEnumerable<(string Left, string Right)> GetReferenceLines(ComponentSave component)
     {
-        foreach (ElementBehaviorReference reference in component.Behaviors)
+        // A component derived from a Forms control behaves as that control, so the base chain's behaviors count.
+        foreach (BehaviorSave behavior in FormsBehaviorChain.GetBehaviors(component))
         {
-            BehaviorSave? behavior = ObjectFinder.Self.GetBehavior(reference);
-            if (behavior != null)
+            foreach ((string left, string right) in GetReferenceLines(behavior))
             {
-                foreach ((string left, string right) in GetReferenceLines(behavior))
-                {
-                    yield return (left, right);
-                }
+                yield return (left, right);
             }
         }
     }
@@ -291,6 +422,12 @@ public static class BehaviorToolOnlyReferencesApplier
         }
     }
 
+    /// <summary>True when the right side of a behavior line of any instance in <paramref name="element"/> matches <paramref name="pattern"/>.</summary>
+    public static bool AnyInstanceLineMatches(ElementSave element, System.Text.RegularExpressions.Regex pattern) =>
+        element.Instances.Any(instance =>
+            ObjectFinder.Self.GetElementSave(instance.BaseType) is ComponentSave component &&
+            GetReferenceLines(component).Any(line => pattern.IsMatch(line.Right)));
+
     /// <summary>The (unqualified) variables the active reference lines of <paramref name="behavior"/> write.</summary>
     public static ISet<string> GetDrivenVariableNames(BehaviorSave behavior) =>
         new HashSet<string>(GetReferenceLines(behavior).Select(line => line.Left));
@@ -301,7 +438,7 @@ public static class BehaviorToolOnlyReferencesApplier
 
     private static void ApplyBehaviorsOf(ComponentSave component, InstanceSave? instance, StateSave stateSave)
     {
-        Func<string, object?> fallback = BuildFormsPropertyDefaultsFallback(component, instance);
+        Func<string, object?> fallback = FormsBehaviorChain.BuildFormsPropertyDefaultsFallback(component, instance);
 
         // Two behaviors can write the same variable; a resting line must not undo what an earlier line
         // of this pass wrote, whichever behavior comes first.
@@ -378,6 +515,15 @@ public static class BehaviorToolOnlyReferencesApplier
     {
         if (instance != null)
         {
+            // FindAncestor runs first so an ancestor name that is not an identifier (tab-control) is still
+            // encoded by ResolveOwnerPrefix, which also turns @Index into Owner.Index.
+            string? withAncestors = AncestorFinder.Resolve(right, instance, stateSave);
+            if (withAncestors == null)
+            {
+                return null;
+            }
+            right = ElementSaveExtensions.ResolveOwnerPrefix(
+                withAncestors, instance.Name, ElementSaveExtensions.GetReferencableInstanceNames(instance.ParentContainer));
             right = QualifyBareIdentifiersWithInstance(right, instance.Name);
         }
 
@@ -420,59 +566,6 @@ public static class BehaviorToolOnlyReferencesApplier
         return elementOwningInstance == null
             ? null
             : ObjectFinder.Self.GetRootVariable(qualifiedLeftName, elementOwningInstance)?.Type;
-    }
-
-    /// <summary>
-    /// Builds a name-resolver that looks up bare or instance-qualified identifiers first
-    /// against <paramref name="component"/>'s own default state (its authored baseline) and
-    /// then against every linked behavior's <c>FormsProperty</c> declarations, returning the
-    /// declared <c>Value</c>. Used by <see cref="EvaluatedSyntax.FromSyntaxNode"/> as a
-    /// fallback when the state (the instance's state, when <paramref name="instance"/> is
-    /// non-null) has no authored value — mirroring the three-tier default resolution the rest
-    /// of the Forms-property feature uses (instance override → component default → behavior
-    /// declaration, see the <c>gum-forms-behaviors</c> skill). Consulting only the static
-    /// declaration here — skipping the component-default tier — was issue #4904: once a
-    /// component's own default diverged from the behavior's original declared default (e.g.
-    /// Orientation edited from the declared "Vertical" to "Horizontal"), an instance whose
-    /// value still equalled that stale declared default was wrongly resolved (here, and via
-    /// the "resting" comparison in <see cref="ApplyLine"/> that reuses this fallback) as if
-    /// nothing had changed, instead of inheriting the component's current default.
-    /// </summary>
-    private static Func<string, object?> BuildFormsPropertyDefaultsFallback(ComponentSave component, InstanceSave? instance)
-    {
-        string? instancePrefix = instance != null ? instance.Name + "." : null;
-        StateSave? componentDefaultState = instance != null ? component.DefaultState : null;
-        return name =>
-        {
-            string lookupName = instancePrefix != null && name.StartsWith(instancePrefix)
-                ? name.Substring(instancePrefix.Length)
-                : name;
-
-            object? componentValue = componentDefaultState?.GetValue(lookupName);
-            if (componentValue != null)
-            {
-                return componentValue;
-            }
-
-            foreach (ElementBehaviorReference reference in component.Behaviors)
-            {
-                BehaviorSave? behavior = ObjectFinder.Self.GetBehavior(reference);
-                if (behavior == null)
-                {
-                    continue;
-                }
-
-                foreach (VariableSave declaration in behavior.FormsProperties)
-                {
-                    if (declaration.Name == lookupName)
-                    {
-                        return declaration.Value;
-                    }
-                }
-            }
-
-            return null;
-        };
     }
 
     /// <summary>

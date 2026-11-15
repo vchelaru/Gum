@@ -100,6 +100,28 @@ public class PreviewOptionsTests
     }
 
     [Fact]
+    public void Parse_SelectAllWithFocus_IsRead()
+    {
+        string[] args = { "--project", "a.gumj", "--element", "Main", "--focus", "NameBox", "--select-all" };
+
+        PreviewOptions options = PreviewOptions.Parse(args);
+
+        options.Error.ShouldBeNull();
+        options.SelectAll.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void Parse_SelectAllWithoutFocus_IsAnError()
+    {
+        string[] args = { "--project", "a.gumj", "--element", "Main", "--select-all" };
+
+        PreviewOptions options = PreviewOptions.Parse(args);
+
+        options.Error.ShouldNotBeNull();
+        options.Error.ShouldContain("--focus");
+    }
+
+    [Fact]
     public void Parse_TypeWithoutFocus_IsAnError()
     {
         string[] args = { "--project", "a.gumj", "--element", "Main", "--type", "Hello" };

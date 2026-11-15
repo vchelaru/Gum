@@ -44,7 +44,7 @@ public static class NewCommand
             description: "Create a full, runnable game project for a platform (not just a Gum project), referencing Gum " +
                          "through NuGet, with the Gum project inside it at Content/GumProject and code generation already " +
                          "configured. <path> then names the project folder. Omit this option to create only a Gum project. " +
-                         $"Accepted values: {NewProjectPlatforms.ValidNames}. 'stride' runs on Windows only; 'kniskia' is KNI drawing Gum through Skia.");
+                         $"Accepted values: {NewProjectPlatforms.ValidNames}. 'stride' runs on Windows only; 'brutal' runs on Windows and Linux with OpenGL 3.3; 'kniskia' is KNI drawing Gum through Skia.");
 
         var noRestoreOption = new Option<bool>(
             "--no-restore",
@@ -57,6 +57,11 @@ public static class NewCommand
             "With --platform, reference the runtime project of the Gum checkout this gumcli was built from " +
             "(or that the current folder is in) instead of the NuGet package, for testing local Gum changes.");
 
+        var previewOption = new Option<bool>(
+            "--preview",
+            "With --platform, reference the newest preview (prerelease) Gum NuGet packages instead of the stable ones. " +
+            "Preview packages may be unstable. Cannot be combined with --source-linked.");
+
         var command = new Command("new", "Create a new Gum project.")
         {
             pathArgument,
@@ -64,7 +69,8 @@ public static class NewCommand
             themeOption,
             platformOption,
             noRestoreOption,
-            sourceLinkedOption
+            sourceLinkedOption,
+            previewOption
         };
 
         command.SetHandler((InvocationContext context) =>
@@ -75,15 +81,22 @@ public static class NewCommand
             string? platform = context.ParseResult.GetValueForOption(platformOption);
             bool noRestore = context.ParseResult.GetValueForOption(noRestoreOption);
             bool sourceLinked = context.ParseResult.GetValueForOption(sourceLinkedOption);
-            context.ExitCode = Execute(path, template, theme, platform, noRestore, sourceLinked);
+            bool preview = context.ParseResult.GetValueForOption(previewOption);
+            context.ExitCode = Execute(path, template, theme, platform, noRestore, sourceLinked, preview);
         });
 
         return command;
     }
 
     private static int Execute(
-        string? path, string template, string? theme, string? platform, bool noRestore, bool sourceLinked)
+        string? path, string template, string? theme, string? platform, bool noRestore, bool sourceLinked, bool preview)
     {
+        if (preview && sourceLinked)
+        {
+            Console.Error.WriteLine("--preview and --source-linked can't be combined: pick one. Use --preview for the preview NuGet packages, or --source-linked for the local Gum source.");
+            return 2;
+        }
+
         INewProjectService service = new NewProjectService(
             FormsThemeLocator.CreateDefault(AppContext.BaseDirectory, Directory.GetCurrentDirectory()),
             new DotnetRestoreRunner(),
@@ -95,7 +108,9 @@ public static class NewCommand
             Template = template,
             Theme = theme,
             Platform = platform,
-            SourceLinked = sourceLinked,
+            PackageChannel = sourceLinked
+                ? NewProjectPackageChannel.LocalSource
+                : preview ? NewProjectPackageChannel.Preview : NewProjectPackageChannel.Stable,
             Restore = !noRestore
         });
 

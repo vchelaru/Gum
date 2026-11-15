@@ -28,6 +28,20 @@ public class ProjectPropertiesViewModelTests
     }
 
     [Fact]
+    public void EngineProfile_RoundTripsThroughTheProject()
+    {
+        ProjectPropertiesViewModel viewModel = new();
+        GumProjectSave gumProject = new() { EngineProfile = "../Engines/MonoGame.gumengine" };
+
+        viewModel.SetFrom(gumProject);
+        viewModel.EngineProfile.ShouldBe("../Engines/MonoGame.gumengine");
+
+        viewModel.EngineProfile = "Other.gumengine";
+        viewModel.ApplyToModelObjects();
+
+        gumProject.EngineProfile.ShouldBe("Other.gumengine");
+    }
+    [Fact]
     public void AvailableLanguages_IsEmpty_UntilThePluginFillsIt()
     {
         ProjectPropertiesViewModel viewModel = new();

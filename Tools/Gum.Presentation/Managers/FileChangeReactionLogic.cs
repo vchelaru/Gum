@@ -34,6 +34,7 @@ namespace Gum.Managers
         private readonly IUnsavedChangesTracker _unsavedChangesTracker;
         private readonly IVariableReferenceLogic _variableReferenceLogic;
         private readonly IUndoManager _undoManager;
+        private readonly IProjectRestrictions? _projectRestrictions;
 
         /// <summary>
         /// Names of the elements reloaded while a <see cref="DeferDependentUpdates"/> scope is open;
@@ -77,8 +78,10 @@ namespace Gum.Managers
             IVariableReferenceLogic variableReferenceLogic,
             IUndoManager undoManager,
             IProjectReferencedFiles? referencedFiles = null,
-            IShaderIncludeMap? shaderIncludes = null)
+            IShaderIncludeMap? shaderIncludes = null,
+            IProjectRestrictions? projectRestrictions = null)
         {
+            _projectRestrictions = projectRestrictions;
             _referencedFiles = referencedFiles ?? new ProjectReferencedFiles();
             _shaderIncludes = shaderIncludes ?? new ShaderIncludeMap();
             _variableReferenceLogic = variableReferenceLogic;
@@ -231,6 +234,10 @@ namespace Gum.Managers
             {
                 ReactToLocalizationFileChanged(file);
             }
+            else if(IsEngineProfile(file))
+            {
+                ReactToEngineProfileChanged();
+            }
             else if(IsShaderFile(file) || _shaderIncludes.IsIncluded(file))
             {
                 ReactToShaderFileChanged(file);
@@ -259,6 +266,10 @@ namespace Gum.Managers
             {
                 ReactToElementSaveDeleted(file);
             }
+            else if (IsEngineProfile(file))
+            {
+                ReactToEngineProfileChanged();
+            }
             else if (IsShaderFile(file) || _shaderIncludes.IsIncluded(file))
             {
                 // The refresh makes the canvas look the shader up again; a missing file is reported
@@ -270,6 +281,20 @@ namespace Gum.Managers
                 // The rebuilt canvas reports the missing file the way it does when the file is picked.
                 ReactToReferencedFileChanged(file);
             }
+        }
+
+        /// <summary>
+        /// True when <paramref name="file"/> is the engine profile the loaded project references.
+        /// </summary>
+        public bool IsEngineProfile(FilePath file) =>
+            _projectRestrictions?.ProfileFilePath is { } profilePath && profilePath == file;
+
+        // Re-reads the profile (a deleted or broken one makes the project unrestricted with a warning); the
+        // restrictions' Changed event refreshes the tree, and the canvas and Variables tab refresh here.
+        private void ReactToEngineProfileChanged()
+        {
+            _projectRestrictions?.Reload();
+            RefreshCanvasAndVariables();
         }
 
         /// <summary>
@@ -624,7 +649,7 @@ namespace Gum.Managers
 
         /// <summary>
         /// True when <paramref name="file"/> is a shader: a container's <c>SourceShaderFile</c> names it, in any
-        /// extension (ShadowDusk lists none and treats every extension but <c>.slang</c> as HLSL text), or it has
+        /// extension (ShadowDusk reads the text, not the extension), or it has
         /// one of the shader extensions the tool offers, which keeps an unreferenced <c>.slang</c>/<c>.fx</c> the
         /// canvas still caches from reloading everything (#7034). The variable's set is kept with the rest of the
         /// referenced files and forgotten with them.
@@ -720,6 +745,7 @@ namespace Gum.Managers
                 .ToList();
             foreach (string key in keys)
             {
+                Gum.Wireframe.TextureDiagnostics.RecordDrop("cached effect " + key);
                 LoaderManager.Self.Dispose(key);
             }
         }
@@ -790,6 +816,11 @@ namespace Gum.Managers
                 _standardElementsManagerGumTool.FixCustomTypeConverters(gumProject);
 
 
+                // The reload replaces every InstanceSave, so remember the selection by name.
+                List<string> selectedInstanceNames = refreshingSelected
+                    ? GetSelectedInstanceNames()
+                    : new List<string>();
+
                 if (refreshingSelected)
                 {
                     _selectedState.SelectedElement = null;
@@ -801,6 +832,7 @@ namespace Gum.Managers
                 if(refreshingSelected)
                 {
                     _selectedState.SelectedElement = element;
+                    ReselectInstancesByName(element, selectedInstanceNames);
                 }
                 // The reloaded file can hold an element under another name.
                 if (element != null)
@@ -847,6 +879,47 @@ namespace Gum.Managers
             {
                 // todo - this isn't working if I rename a variable...
                 RefreshCanvasAndVariables();
+            }
+        }
+
+        private List<string> GetSelectedInstanceNames()
+        {
+            List<string> names = new List<string>();
+            IEnumerable<InstanceSave>? selected = _selectedState.SelectedInstances;
+            if (selected == null) return names;
+
+            foreach (InstanceSave? instance in selected)
+            {
+                if (!string.IsNullOrEmpty(instance?.Name))
+                {
+                    names.Add(instance!.Name);
+                }
+            }
+            return names;
+        }
+
+        /// <summary>
+        /// Selects the instances of the reloaded <paramref name="element"/> that match <paramref name="names"/>.
+        /// A name no longer in the file (deleted or renamed outside Gum) is skipped; if none match, only
+        /// the element stays selected.
+        /// </summary>
+        private void ReselectInstancesByName(ElementSave? element, List<string> names)
+        {
+            if (element == null || names.Count == 0) return;
+
+            List<InstanceSave> matches = new List<InstanceSave>();
+            foreach (string name in names)
+            {
+                InstanceSave? match = element.Instances.FirstOrDefault(i => i != null && i.Name == name);
+                if (match != null && !matches.Contains(match))
+                {
+                    matches.Add(match);
+                }
+            }
+
+            if (matches.Count > 0)
+            {
+                _selectedState.SelectedInstances = matches;
             }
         }
 

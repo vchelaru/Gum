@@ -11,4 +11,4 @@ namespace Gum.Plugins;
 /// (<c>PluginBase.CanUserDisable</c>).
 /// </summary>
 public record PluginSummary(string Name, string DisplayText, bool IsEnabled, bool HasFailureDetails, object PluginHandle,
-    bool CanBeDisabled = true);
+    bool CanBeDisabled = true, string? SourceFile = null, bool IsBuiltIn = false);

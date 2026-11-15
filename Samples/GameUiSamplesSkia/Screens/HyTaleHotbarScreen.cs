@@ -16,6 +16,8 @@ namespace GameUiSamples.Screens
 {
     partial class HyTaleHotbarScreen : IUpdateScreen
     {
+        GumService GumUI => GumService.Default;
+
         HyTaleInventoryService _inventoryService;
 
         partial void CustomInitialize()
@@ -24,7 +26,7 @@ namespace GameUiSamples.Screens
 
             this.ExitButton.Click += (_, _) =>
             {
-                GumService.Default.Root.Children.Clear();
+                GumUI.Root.Children.Clear();
                 var mainMenu = new MainMenu();
                 Gum.Forms.Controls.FrameworkElementExt.AddToRoot(mainMenu);
             };

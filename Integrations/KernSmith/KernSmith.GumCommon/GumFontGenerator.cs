@@ -35,6 +35,10 @@ public static class GumFontGenerator
         () => Type.GetType("KernSmith.Rasterizers.StbTrueType.StbTrueTypeRasterizer, KernSmith.Rasterizers.StbTrueType");
 #endif
 
+    /// <summary>Test seam: the system-font build.</summary>
+    internal static Func<string, FontGeneratorOptions, BmFontResult> GenerateFromSystem =
+        (name, options) => BmFont.GenerateFromSystem(name, options);
+
     /// <summary>Test seam: runs a type's static constructor.</summary>
     internal static Action<Type> ForceStaticConstructor =
         type => System.Runtime.CompilerServices.RuntimeHelpers.RunClassConstructor(type.TypeHandle);
@@ -61,9 +65,51 @@ public static class GumFontGenerator
     {
         GuardBrowserBackend(backend);
         FontGeneratorOptions options = BuildOptionsWithBackend(bmfcSave, backend);
-        return string.IsNullOrEmpty(bmfcSave.FontFile)
-            ? BmFont.GenerateFromSystem(bmfcSave.FontName, options)
-            : BmFont.Generate(ReadFontFileBytes(bmfcSave.FontFile!), options);
+        if (string.IsNullOrEmpty(bmfcSave.FontFile))
+        {
+            try
+            {
+                return GenerateFromSystem(bmfcSave.FontName, options);
+            }
+            // KernSmith documents FontParsingException as the family-not-installed failure. Any other
+            // failure leaves an installed Arial alone: a registered family beats an installed one.
+            catch (FontParsingException) when (BundledArialFont.TryRegisterFor(bmfcSave.FontName))
+            {
+                // #8044: no Arial on this machine; the bundled Liberation Sans is now registered under it.
+                return GenerateFromSystem(bmfcSave.FontName, options);
+            }
+        }
+
+        // The resolved path is the face's identity for KernSmith's FaceCache (a no-op while the cache is
+        // off). When the cache already holds the face, KernSmith ignores the bytes, so skip reading them.
+        string facePath = ResolveFontFilePath(bmfcSave.FontFile!);
+        byte[]? fontBytes = FaceCache.Contains(facePath) ? null : ReadFontFileBytes(bmfcSave.FontFile!);
+        return BmFont.Generate(fontBytes, options, faceCacheKey: facePath);
+    }
+
+    static GumFontGenerator()
+    {
+        FaceCache.Enabled = _useFaceCache;
+    }
+
+    private static bool _useFaceCache = true;
+
+    /// <summary>
+    /// Whether generation reuses each font's parsed face and loaded rasterizer across calls (KernSmith's
+    /// <c>FaceCache</c>). On by default: these libraries are used by games, which build many fonts from a
+    /// few faces and do not change a font file while running. Set to false before generating if the host
+    /// replaces font files while it runs (an editor); turning it off also clears the cache. The Gum tool
+    /// does not use this class, so the cache is never on there. A setting that applies to the whole process,
+    /// because KernSmith's cache does.
+    /// </summary>
+    public static bool UseFaceCache
+    {
+        get => _useFaceCache;
+        set
+        {
+            _useFaceCache = value;
+            FaceCache.Enabled = value;
+        }
     }
 
     /// <summary>
@@ -153,7 +199,7 @@ public static class GumFontGenerator
     /// (every iOS release build, and browser-wasm), which leaves the backend unregistered. Running
     /// its static constructor registers it. Done whenever the resolved backend is StbTrueType,
     /// whether the caller passed it or the platform defaulted to it. Same call as
-    /// <c>ThemePlatform.SelectBackend</c> makes for browser-wasm. A no-op when the package is not
+    /// <see cref="SelectBackend"/> makes for browser-wasm. A no-op when the package is not
     /// referenced, so KernSmith reports the missing backend itself.
     /// </summary>
     private static void EnsureStbTrueTypeIsRegistered()
@@ -163,6 +209,34 @@ public static class GumFontGenerator
         {
             ForceStaticConstructor(rasterizerType);
         }
+    }
+
+    /// <summary>
+    /// The backend a font creator should use when its caller passes none. FreeType (the default, null
+    /// here) is native code and cannot run on browser-wasm (#4564), so there StbTrueType (the sole
+    /// pure-C# backend) is selected and its static constructor forced, because KernSmith's reflection-based
+    /// backend discovery is trimmed away under wasm/AOT publish. Used by <c>UseKernSmith()</c> and the themes.
+    /// </summary>
+    /// <returns>
+    /// <see cref="RasterizerBackend.StbTrueType"/> on browser-wasm when the package is referenced;
+    /// otherwise null, which keeps the FreeType default and, on browser-wasm without the package, the
+    /// actionable <see cref="PlatformNotSupportedException"/> from <see cref="Generate"/>.
+    /// </returns>
+    public static RasterizerBackend? SelectBackend()
+    {
+        if (!IsBrowserPlatform())
+        {
+            return null;
+        }
+
+        Type? stbType = ResolveStbTrueTypeRasterizerType();
+        if (stbType == null)
+        {
+            return null;
+        }
+
+        ForceStaticConstructor(stbType);
+        return RasterizerBackend.StbTrueType;
     }
 
     /// <summary>
@@ -195,6 +269,9 @@ public static class GumFontGenerator
         return ReadFontFileBytes(bmfcSave.FontFile!);
     }
 
+    private static string ResolveFontFilePath(string fontFile) =>
+        FileManager.IsRelative(fontFile) ? FileManager.MakeAbsolute(fontFile) : fontFile;
+
     /// <summary>
     /// Reads a font file through <see cref="FileManager.GetStreamForFile"/> instead of handing its
     /// path to KernSmith, so a font that only exists behind a host stream hook — a <c>.ttf</c>
@@ -205,7 +282,7 @@ public static class GumFontGenerator
     /// </summary>
     public static byte[] ReadFontFileBytes(string fontFile)
     {
-        string fullPath = FileManager.IsRelative(fontFile) ? FileManager.MakeAbsolute(fontFile) : fontFile;
+        string fullPath = ResolveFontFilePath(fontFile);
 
         try
         {

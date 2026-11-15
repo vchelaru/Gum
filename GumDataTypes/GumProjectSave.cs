@@ -172,9 +172,20 @@ public class GumProjectSave
         /// (<see cref="Gum.DataTypes.Variables.VariableSave.MinimumGumxVersion"/>) can tell an older
         /// project apart from a newer one and skip injecting the variable into the older one, whose
         /// pinned runtime lacks the property. The NineSlice <c>CustomBorderScaleLeft/Top/Right/Bottom</c>
-        /// variables (#6983) share this slot because both landed before version 7 shipped.
+        /// variables (#6983) share this slot.
         /// </summary>
         ShaderParametersExpansion = 7,
+
+        /// <summary>
+        /// Reserves a version slot for the <c>RaiseChildrenEventsOutsideOfBounds</c> variable on the
+        /// standard elements that have children events (#7412). Version 7 had already shipped in the
+        /// November 2026 release without it, so it needs its own slot. Files saved at this version use
+        /// the same XML format as <see cref="ShaderParametersExpansion"/>; the bump exists purely so
+        /// the back-fill gate (<see cref="Gum.DataTypes.Variables.VariableSave.MinimumGumxVersion"/>)
+        /// can tell a project saved by the November release apart from a newer one and skip injecting
+        /// the variable into the older one, whose pinned runtime lacks the property.
+        /// </summary>
+        RaiseChildrenEventsExpansion = 8,
     }
 
     /// <summary>
@@ -191,7 +202,7 @@ public class GumProjectSave
     /// explicitly stamp this version. Marking them at the native version is honest — the project
     /// genuinely uses those features — and lets the gate show those variables immediately.
     /// </remarks>
-    public const int NativeVersion = (int)GumxVersions.ShaderParametersExpansion;
+    public const int NativeVersion = (int)GumxVersions.RaiseChildrenEventsExpansion;
 
     #region Fields
 
@@ -464,6 +475,14 @@ public class GumProjectSave
 
     public List<string> FavoriteComponents { get; set; } = new List<string>();
     public bool ShouldSerializeFavoriteComponents() => FavoriteComponents.Count > 0;
+
+    /// <summary>
+    /// Path, relative to the project file's folder and with forward slashes, of the engine profile
+    /// (<c>.gumengine</c>) that says what the target engine supports. Empty means the project is unrestricted.
+    /// The tool reads the profile through <c>IProjectRestrictions</c>; this class only stores the reference.
+    /// </summary>
+    public string EngineProfile { get; set; } = string.Empty;
+    public bool ShouldSerializeEngineProfile() => !string.IsNullOrEmpty(EngineProfile);
 
     /// <summary>
     /// Names of the Screens and Components <c>gumcli pack --shake</c> left out of a bundle because

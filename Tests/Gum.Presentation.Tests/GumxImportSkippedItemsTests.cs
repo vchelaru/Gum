@@ -50,6 +50,7 @@ public class GumxImportSkippedItemsTests : IDisposable
         TextureMissing,
         NameCollision,
         AnimationFileMalformed,
+        UnrecognizedSourceFileExtension,
     }
 
     [Theory]
@@ -62,6 +63,8 @@ public class GumxImportSkippedItemsTests : IDisposable
     [InlineData(Failure.TextureMissing, "BadComponent", "missing.png")]
     [InlineData(Failure.NameCollision, "BadComponent", "already")]
     [InlineData(Failure.AnimationFileMalformed, "Components/BadComponent animations", "could not be read")]
+    [InlineData(Failure.UnrecognizedSourceFileExtension, "art/pic.zzzq", "BadComponent")]
+    [InlineData(Failure.UnrecognizedSourceFileExtension, "art/pic.zzzq", "extension")]
     public async Task ImportAsync_ItemThatCannotBeImported_IsReportedWithReasonAndTheRestStillImports(
         Failure failure, string expectedSkippedName, string expectedReasonText)
     {
@@ -331,6 +334,12 @@ public class GumxImportSkippedItemsTests : IDisposable
             case Failure.StandardFileMissing:
                 project.StandardElements.Add(new StandardElementSave { Name = "Circle" });
                 project.StandardElementReferences.Add(new ElementReference { Name = "Circle", ElementType = ElementType.Standard });
+                break;
+            case Failure.UnrecognizedSourceFileExtension:
+                ComponentSave unknown = AddComponent(project, "BadComponent");
+                unknown.DefaultState.Variables.Add(new VariableSave { Name = "SourceFile", Value = "art/pic.zzzq" });
+                Directory.CreateDirectory(Path.Combine(directory, "art"));
+                File.WriteAllText(Path.Combine(directory, "art", "pic.zzzq"), "x");
                 break;
             case Failure.TextureMissing:
                 ComponentSave textured = AddComponent(project, "BadComponent");

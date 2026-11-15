@@ -34,9 +34,9 @@ Next we'll create Screen2:
 
 <figure><img src="../../../../.gitbook/assets/10_06 11 14.png" alt=""><figcaption><p>Label and Button in Screen2</p></figcaption></figure>
 
-## Modify Your Game (Game1) Class
+## Modify Your Game Code
 
-Next we'll modify our Game class so it loads Screen1.
+Next we'll modify our game code so it loads Screen1.
 
 Make sure you have already setup code generation for your project. You can verify that it is set up correctly by selecting one of your screens. You should see the Code tab appear, and it should reference your .csproj location.
 
@@ -46,63 +46,23 @@ You can also click the Generate Code button on each screen file to make sure tha
 
 By generating code for both screens, you can access each screen as a strongly-typed class in your project: `Screen1` and `Screen2` .
 
-You can load Screen1 by adding the following code to your Game class.
+You can load Screen1 by adding the following code to your game.
 
 {% tabs %}
 {% tab title="Full Code" %}
-<pre class="language-csharp"><code class="lang-csharp"><strong>public class Game1 : Game
-</strong>{
-    private GraphicsDeviceManager _graphics;
-    GumService GumUI => GumService.Default;    
-
-    public Game1()
-    {
-        _graphics = new GraphicsDeviceManager(this);
-        Content.RootDirectory = "Content";
-        IsMouseVisible = true;
-    }
-
-    protected override void Initialize()
-    {
-        GumUI.Initialize(this,
-            // This is relative to Content:
-            "GumProject/GumProject.gumj");
-
-        var screen = new Screen1();
-        screen.AddToRoot();
-
-        base.Initialize();
-    }
-// ...
-</code></pre>
+```csharp
+// Initialize
+var screen = new Screen1();
+screen.AddToRoot();
+```
 {% endtab %}
 
 {% tab title="Diff" %}
-<pre class="language-diff"><code class="lang-diff"><strong>public class Game1 : Game
-</strong>{
-    private GraphicsDeviceManager _graphics;
-    GumService GumUI => GumService.Default;    
-
-    public Game1()
-    {
-        _graphics = new GraphicsDeviceManager(this);
-        Content.RootDirectory = "Content";
-        IsMouseVisible = true;
-    }
-
-    protected override void Initialize()
-    {
-        GumUI.Initialize(this,
-            // This is relative to Content:
-            "GumProject/GumProject.gumj");
-
-+       var screen = new Screen1();
-+       screen.AddToRoot();
-
-        base.Initialize();
-    }
-// ...
-</code></pre>
+```diff
+// Initialize
++var screen = new Screen1();
++screen.AddToRoot();
+```
 {% endtab %}
 {% endtabs %}
 
@@ -129,7 +89,7 @@ partial class Screen1
     {
         ButtonStandardInstance.Click += (_, _) =>
         {
-            GumService.Default.Root.Children.Clear();
+            GumUI.Root.Children.Clear();
             var screen = new Screen2();
             screen.AddToRoot();
         };
@@ -148,7 +108,7 @@ partial class Screen1
     {
 +       ButtonStandardInstance.Click += (_, _) =>
 +       {
-+           GumService.Default.Root.Children.Clear();
++           GumUI.Root.Children.Clear();
 +           var screen = new Screen2();
 +           screen.AddToRoot();
 +       };
@@ -169,7 +129,7 @@ partial class Screen2
     {
         ButtonStandardInstance.Click += (_, _) =>
         {
-            GumService.Default.Root.Children.Clear();
+            GumUI.Root.Children.Clear();
             var screen = new Screen1();
             screen.AddToRoot();
         };
@@ -187,7 +147,7 @@ partial class Screen2
     {
 <strong>+       ButtonStandardInstance.Click += (_, _) =>
 </strong>+       {
-+           GumService.Default.Root.Children.Clear();
++           GumUI.Root.Children.Clear();
 +           var screen = new Screen1();
 +           screen.AddToRoot();
 +       };
@@ -209,7 +169,7 @@ Each screen clears the root (removing everything under it) when its button is cl
 
 This tutorial assumes that a Gum screen is always displayed.
 
-Games can also completely remove Gum screens altogether. To do this, do not create a new screen after calling `GumService.Default.Root.Children.Clear()`.
+Games can also completely remove Gum screens altogether. To do this, do not create a new screen after calling `GumUI.Root.Children.Clear()`.
 
 ## Conclusion
 

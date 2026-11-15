@@ -206,6 +206,7 @@ internal class LottieAnimation : IRenderableIpso, IVisible, ICloneable
             var canvas = ((SystemManagers)managers).Canvas;
 
             Animation.Render(canvas, boundingRect);
+            ((SystemManagers)managers).RenderStatisticsIfInitialized?.RecordDrawCall();
         }
     }
 

@@ -45,6 +45,7 @@ description: Writing unit tests in the Gum repo. Triggers: tests in Gum.ProjectS
   - Shared singletons still make tests order-dependent: a static a test leaves set (e.g. `ObjectFinder.Self.GumProjectSave`) breaks whichever class happens to run after it, and only in some orders. `BaseTestClass` resets the known ones on the way in and out; a class that doesn't derive from it must clear every static it sets in its own `Dispose`. `Architecture/StaticStateBaseClassGuardTests` (in both `Gum.Presentation.Tests` and `MonoGameGum.Tests`) fails for a test class whose file names `ObjectFinder` or `StandardElementsManager` and that does not derive from `BaseTestClass`. If CI fails on an unrelated class after your push, that cleanup is the first suspect. The weekly `shuffled-test-order-weekly.yaml` workflow runs `Gum.Presentation.Tests`, `MonoGameGum.Tests` and `MonoGameGum.IntegrationTests` in random class and method order; setting `GUM_TEST_SHUFFLE_SEED` to a failed run's seed replays that order locally (`ShuffledTestCollectionOrderer`, `ShuffledTestCaseOrderer`; the xunit v3 integration project uses `Tests/TestOrdering/Xunit3` plus the class shuffle in `MainThreadTestFrameworkExecutor`). A class-level `[TestCaseOrderer]` would override the shuffle for that class, so don't add one.
 - A large differential or invariant sweep takes its case count from `SweepScale.Cases(full)` for random seeds or `SweepScale.Includes(index)` for an exhaustive enumeration (`MonoGameGum.Tests/SweepScale.cs`): a tenth locally, all of them on GitHub Actions or with `GUM_FULL_SWEEPS=1`. Golden-file comparisons keep their full count.
 - Don't name a test namespace after an existing Gum type (e.g. `MonoGameGum.Tests.Binding` collides with `Gum.Forms.Data.Binding`) — an unrelated file elsewhere in the same test project that references the type unqualified can suddenly fail to compile (`CS0118: '...' is a namespace but is used like a type`).
+- `GumService.InitializeForTesting` skips the runtime-type registrations a real app gets from `SystemManagers`, so a file-loaded Text is a plain `GraphicalUiElement` that raises no `PropertyChanged`, and a `TextBox` built on it never sees its text change. A test that loads elements from files calls `StandardRuntimeRegistrations.Register()` (`MonoGameGum.Tests`) first.
 
 ## Avalonia head tests (Gum.Avalonia.Tests)
 
@@ -116,6 +117,16 @@ Every `StateSave` must have `ParentContainer` set — `GetValueRecursive` traver
 ## Headless Forms allocation tests: install a real Cursor
 
 `BaseTestClass` installs a Moq mock as `FrameworkElement.MainCursor`, and each proxied member access allocates (~296 B). Any control that reads `MainCursor` (e.g. a `ScrollBar` value setter) then pollutes an `AllocationMeasurer` result with a pure test artifact. Assign a real `Gum.Input.Cursor(null)` before measuring — production always uses a real cursor. See `ListBoxScrollAllocationTests`.
+
+## Skia allocation guards (`Tests/SkiaGum.Tests/Performance`)
+
+`SkiaSceneHost` wires an in-memory surface to `GumService.Default`; `DrawAllocationTests` and `LayoutAllocationTests` measure Update + Draw with `AllocationMeasurer` (managed bytes only, not native Skia memory). `LayoutAllocationTests` and `DrawAllocationTests` also exist in the MonoGame projects, so `fast-test.ps1` needs `SkiaGum.Tests:<Class>`.
+
+To find what allocates, enable an in-process `EventListener` on `Microsoft-Windows-DotNETRuntime` (keyword `0x1`) and count `TypeName` on `GCAllocationTick` events over about 40,000 frames. That names the type directly, which reading the code did not.
+
+A property setter that clears a cache unconditionally allocates every frame once a runtime wrapper re-pushes its values each frame (`SkiaShapeRuntime.ApplyDropshadow`, the `TextRuntime` font bridge in `SystemManagers`); guard it with `!= value`. RichTextKit's `TextBlock.Paint` allocates on every call, so `Text` replays a recorded `SKPicture` while its block is unchanged.
+
+`SKImageFilter`, `SKShader` and `SKColorFilter` cannot change after creation, so an animated dropshadow, gradient or sprite tint allocates one wrapper (104 bytes) per frame (`UpdateAndDraw_AnimatedProperty_AllocationBaseline`). Arrays passed to their factories can be kept on the renderable and reused, because Skia copies them (`GradientGoldenImageTests`).
 
 ## WPF-touching tool code (GumToolUnitTests, frozen WPF head) needs an STA thread
 

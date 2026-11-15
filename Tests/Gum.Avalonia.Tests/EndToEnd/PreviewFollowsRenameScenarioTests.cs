@@ -157,41 +157,4 @@ public class PreviewFollowsRenameScenarioTests
             preview.DeleteSelectionFile();
         }
     }
-
-    private sealed class StandInPreview : IPreviewProcessStarter, IPreviewProcess
-    {
-        private ProcessStartInfo? _startInfo;
-
-        public bool HasExited { get; private set; }
-
-        public void Close() => HasExited = true;
-
-        public ResolvedPreviewExecutable? Resolve() => new ResolvedPreviewExecutable("/Preview/GumPreview", IsNativeAot: false);
-
-        public IPreviewProcess? Start(ProcessStartInfo startInfo)
-        {
-            _startInfo = startInfo;
-            return this;
-        }
-
-        public PreviewSelectionMessage LastPushed() =>
-            PreviewSelectionMessage.TryParse(File.ReadAllLines(SelectionFile)).ShouldNotBeNull();
-
-        public void DeleteSelectionFile()
-        {
-            if (_startInfo != null)
-            {
-                File.Delete(SelectionFile);
-            }
-        }
-
-        private string SelectionFile
-        {
-            get
-            {
-                List<string> arguments = _startInfo!.ArgumentList.ToList();
-                return arguments[arguments.IndexOf("--selection-file") + 1];
-            }
-        }
-    }
 }

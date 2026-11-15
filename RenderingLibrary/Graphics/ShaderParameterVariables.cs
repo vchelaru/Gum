@@ -187,7 +187,9 @@ public static class ShaderParameterVariables
         bool hasCurrent = owner.ShaderParameters != null && owner.ShaderParameters.TryGetValue(parameter, out current);
         bool isDriven = layer.Driven.TryGetValue(parameter, out Driver driver);
 
-        if (layer.ShaderFile != null && TryAssemble(layer, parameter, out ShaderParameterValue value))
+        // Components no variable sets keep the value the legacy text (or code) gave, as far as it has them.
+        ShaderParameterValue? seed = isDriven ? (driver.HadBefore ? driver.Before : null) : (hasCurrent ? current : null);
+        if (layer.ShaderFile != null && TryAssemble(layer, parameter, seed, out ShaderParameterValue value))
         {
             if (!isDriven)
             {
@@ -237,7 +239,7 @@ public static class ShaderParameterVariables
         && first.Z == second.Z
         && first.W == second.W;
 
-    private static bool TryAssemble(Layer layer, string parameter, out ShaderParameterValue value)
+    private static bool TryAssemble(Layer layer, string parameter, ShaderParameterValue? seed, out ShaderParameterValue value)
     {
         string? file = layer.ShaderFile;
 
@@ -282,7 +284,15 @@ public static class ShaderParameterVariables
 
         if (highest >= 0)
         {
-            int count = System.Math.Max(highest + 1, ShaderParameterMarker.MinimumComponentCount);
+            bool hasSeedVector = seed.HasValue && seed.Value.Kind == ShaderParameterKind.Float && seed.Value.Count >= ShaderParameterMarker.MinimumComponentCount;
+            int count = System.Math.Max(highest + 1, hasSeedVector ? seed!.Value.Count : ShaderParameterMarker.MinimumComponentCount);
+            for (int i = 0; hasSeedVector && i < count; i++)
+            {
+                if (componentSequences[i] < 0)
+                {
+                    components[i] = i == 0 ? seed!.Value.X : i == 1 ? seed!.Value.Y : i == 2 ? seed!.Value.Z : seed!.Value.W;
+                }
+            }
             switch (count)
             {
                 case 2: value = ShaderParameterValue.FromVector2(components[0], components[1]); break;

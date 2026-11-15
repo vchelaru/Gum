@@ -26,20 +26,19 @@
 		<Compile Include="..\MonoGameGumThemesShowcase\Screens\*.cs" Link="Screens\%(Filename)%(Extension)" />
 	</ItemGroup>
 
-	<!-- Gum.SilkNet: the real game-host runtime (window/input + Skia rendering). Deliberately not
-	     SkiaGum.csproj: see Gum.Themes.Editor.SilkNet.csproj for why those are incompatible assemblies (#3671). -->
+	<!-- Gum.SilkNet: the game-host runtime (window/input + Skia rendering). The .Skia theme packages
+	     reference SkiaGum.csproj, which SilkNetGum also references, so they share its types. -->
 	<ItemGroup>
 		<ProjectReference Include="..\..\GumCommon\GumCommon.csproj" />
 		<ProjectReference Include="..\..\Runtimes\SilkNetGum\SilkNetGum.csproj" />
-		<!-- Add a theme reference here as each gains a .SilkNet variant, see _themes in Program.cs. -->
-		<ProjectReference Include="..\..\Themes\Gum.Themes.Editor.SilkNet\Gum.Themes.Editor.SilkNet.csproj" />
-		<ProjectReference Include="..\..\Themes\Gum.Themes.DarkPro.SilkNet\Gum.Themes.DarkPro.SilkNet.csproj" />
-		<ProjectReference Include="..\..\Themes\Gum.Themes.ForestGlade.SilkNet\Gum.Themes.ForestGlade.SilkNet.csproj" />
-		<ProjectReference Include="..\..\Themes\Gum.Themes.Bubblegum.SilkNet\Gum.Themes.Bubblegum.SilkNet.csproj" />
-		<ProjectReference Include="..\..\Themes\Gum.Themes.Hazard.SilkNet\Gum.Themes.Hazard.SilkNet.csproj" />
-		<ProjectReference Include="..\..\Themes\Gum.Themes.Meadow.SilkNet\Gum.Themes.Meadow.SilkNet.csproj" />
-		<ProjectReference Include="..\..\Themes\Gum.Themes.Neon.SilkNet\Gum.Themes.Neon.SilkNet.csproj" />
-		<ProjectReference Include="..\..\Themes\Gum.Themes.Retro95.SilkNet\Gum.Themes.Retro95.SilkNet.csproj" />
+		<ProjectReference Include="..\..\Themes\Gum.Themes.Editor.Skia\Gum.Themes.Editor.Skia.csproj" />
+		<ProjectReference Include="..\..\Themes\Gum.Themes.DarkPro.Skia\Gum.Themes.DarkPro.Skia.csproj" />
+		<ProjectReference Include="..\..\Themes\Gum.Themes.ForestGlade.Skia\Gum.Themes.ForestGlade.Skia.csproj" />
+		<ProjectReference Include="..\..\Themes\Gum.Themes.Bubblegum.Skia\Gum.Themes.Bubblegum.Skia.csproj" />
+		<ProjectReference Include="..\..\Themes\Gum.Themes.Hazard.Skia\Gum.Themes.Hazard.Skia.csproj" />
+		<ProjectReference Include="..\..\Themes\Gum.Themes.Meadow.Skia\Gum.Themes.Meadow.Skia.csproj" />
+		<ProjectReference Include="..\..\Themes\Gum.Themes.Neon.Skia\Gum.Themes.Neon.Skia.csproj" />
+		<ProjectReference Include="..\..\Themes\Gum.Themes.Retro95.Skia\Gum.Themes.Retro95.Skia.csproj" />
 	</ItemGroup>
 
 	<!-- ANGLE's GLES/EGL implementation, loaded by the "SDL_HINT_OPENGL_ES_DRIVER=angle" hint in

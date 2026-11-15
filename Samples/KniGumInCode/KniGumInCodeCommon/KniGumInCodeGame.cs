@@ -41,6 +41,13 @@ public class KniGumInCodeGame : Game
 
         GumUI.UseKeyboardDefaults();
 
+        GumUI.UseGamepadDefaults();
+
+        GumUI.UseShadowDusk();
+
+        // Scales the whole canvas to fit the window.
+        GumUI.EnableZoomToWindow();
+
         // uncomment one of these to create a layout. Only have one uncommented or else UI overlaps
         CreateMixedLayout();
         //CreateTextLayout();

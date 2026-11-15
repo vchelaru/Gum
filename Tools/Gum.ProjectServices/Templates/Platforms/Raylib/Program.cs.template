@@ -1,4 +1,6 @@
 using Gum;
+using Gum.Forms.Controls;
+using Gum.GueDeriving;
 using Gum.Wireframe;
 {{HostUsings}}
 using Raylib_cs;
@@ -9,23 +11,21 @@ const int screenHeight = 450;
 Raylib.InitWindow(screenWidth, screenHeight, "{{ProjectName}}");
 Raylib.SetTargetFPS(60);
 
-// This tells Gum to use the entire screen
-GraphicalUiElement.CanvasWidth = screenWidth;
-GraphicalUiElement.CanvasHeight = screenHeight;
+GumService GumUI = GumService.Default;
 
-GumService gumUI = GumService.Default;
-
-gumUI.Initialize("Content/GumProject/{{GumProjectFile}}");
+GumUI.Initialize("Content/GumProject/{{GumProjectFile}}");
+GumUI.UseKeyboardDefaults();
+GumUI.UseGamepadDefaults();
 {{InitLines}}
 {{ScreenLines}}
 
 while (!Raylib.WindowShouldClose())
 {
-    gumUI.Update(Raylib.GetTime());
+    GumUI.Update(Raylib.GetTime());
 
     Raylib.BeginDrawing();
     Raylib.ClearBackground(Raylib_cs.Color.SkyBlue);
-    gumUI.Draw();
+    GumUI.Draw();
     Raylib.EndDrawing();
 }
 

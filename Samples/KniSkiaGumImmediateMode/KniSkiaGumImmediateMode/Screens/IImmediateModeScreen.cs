@@ -1,16 +1,16 @@
 using Gum.Wireframe;
+using Microsoft.Xna.Framework.Graphics;
 using RenderingLibrary.Graphics;
-using SkiaSharp;
 
 namespace KniSkiaGumImmediateMode.Screens;
 
 /// <summary>
 /// A page within the immediate-mode sample. Each screen owns its own Gum objects and draws them via a
-/// shared <see cref="GumBatch"/>, and optionally straight onto the <see cref="SKCanvas"/>.
+/// shared <see cref="GumBatch"/> (and optionally <see cref="SpriteBatch"/>).
 /// </summary>
 public interface IImmediateModeScreen : IDisposable
 {
-    void Initialize();
+    void Initialize(GraphicsDevice graphicsDevice);
 
     /// <summary>
     /// Gum roots owned by this screen that are not part of <c>GumService.Default.Root</c>
@@ -26,5 +26,5 @@ public interface IImmediateModeScreen : IDisposable
     /// </summary>
     IEnumerable<GraphicalUiElement> AdditionalUpdateRoots => Array.Empty<GraphicalUiElement>();
 
-    void Draw(GumBatch gumBatch, SKCanvas canvas);
+    void Draw(GumBatch gumBatch, SpriteBatch spriteBatch);
 }

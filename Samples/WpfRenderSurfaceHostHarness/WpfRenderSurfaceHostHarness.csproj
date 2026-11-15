@@ -19,7 +19,7 @@
 		     package (see Tool/EditorTabPlugin_XNA.csproj, the real working call path) - without
 		     it, GraphicsAdapter/GraphicsDevice construction throws a NullReferenceException on
 		     "graphicsFactory" at runtime, with no compile-time signal. -->
-		<PackageReference Include="nkast.Kni.Platform.WinForms.DX11" Version="4.2.9001" />
+		<PackageReference Include="nkast.Kni.Platform.WinForms.DX11" Version="4.3.9001" />
 	</ItemGroup>
 
 </Project>

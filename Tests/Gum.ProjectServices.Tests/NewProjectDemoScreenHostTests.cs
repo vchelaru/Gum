@@ -34,7 +34,7 @@ public class NewProjectDemoScreenHostTests : IDisposable
 
     private NewProjectService CreateService(FakeCodegen? codegen = null, FakePackageAdd? add = null) =>
         new NewProjectService(
-            new FakeThemes(), new FakeRestore(_calls), add ?? new FakePackageAdd(_calls), new[] { _tempDirectory },
+            new FakeThemes(), new FakeRestore(_calls), add ?? new FakePackageAdd(_calls), new[] { _tempDirectory, FindRepoRoot() },
             codegen ?? new FakeCodegen(_calls));
 
     private (NewProjectService Service, ResolvedNewProject Resolved, NewProjectFilesResult Files) Create(
@@ -51,6 +51,8 @@ public class NewProjectDemoScreenHostTests : IDisposable
             IncludeRecommendedPackages = packages,
             GenerateCode = generate,
             Restore = false,
+            PackageChannel = platform == HostPlatform.KniSkia ? NewProjectPackageChannel.LocalSource
+                : NewProjectPlatforms.HasStablePackage(platform) ? NewProjectPackageChannel.Stable : NewProjectPackageChannel.Preview,
         });
         validation.Error.ShouldBeNull(validation.Error?.Message);
         NewProjectFilesResult files = service.CreateFilesAsync(validation.Resolved!, CancellationToken.None).GetAwaiter().GetResult();
@@ -76,11 +78,67 @@ public class NewProjectDemoScreenHostTests : IDisposable
         host.ShouldNotContain("new Button()");
         host.ShouldNotContain("Clicked at");
         host.ShouldContain("ObjectFinder.Self.GetElementSave(\"DemoScreenGum\")");
-        host.ShouldContain(".ToGraphicalUiElement(GumService.Default.SystemManagers, addToManagers: false)");
+        host.ShouldContain(".ToGraphicalUiElement(");
+        host.ShouldContain(".SystemManagers, addToManagers: false)");
         host.ShouldContain(".AddToRoot()");
         host.ShouldContain("using Gum.Managers;");
         host.ShouldContain("using GumRuntime;");
         // The core overload (systemManagers, addToManagers) exists on every runtime, stable and source; the no-argument one is MonoGameGum only.
+    }
+
+    // A snippet pasted from the docs (new Button(), Anchor.Center, new RectangleRuntime()) compiles in the generated host.
+    [Theory]
+    [InlineData(HostPlatform.MonoGame, false)]
+    [InlineData(HostPlatform.MonoGame, true)]
+    [InlineData(HostPlatform.Kni, false)]
+    [InlineData(HostPlatform.KniSkia, false)]
+    [InlineData(HostPlatform.Raylib, false)]
+    [InlineData(HostPlatform.Raylib, true)]
+    [InlineData(HostPlatform.SilkNet, false)]
+    [InlineData(HostPlatform.SilkNet, true)]
+    [InlineData(HostPlatform.Stride, false)]
+    [InlineData(HostPlatform.Brutal, false)]
+    public void Host_HasTheUsingsDocsSnippetsNeed_OnceEach(HostPlatform platform, bool generated)
+    {
+        (NewProjectService service, ResolvedNewProject resolved, NewProjectFilesResult files) = Create(platform);
+        if (generated)
+        {
+            service.UpdateHost(resolved, files, packagesAdded: false, screenCodeGenerated: true);
+        }
+
+        string host = ReadHost(platform);
+        foreach (string expected in new[] { "using Gum;", "using Gum.Forms.Controls;", "using Gum.Wireframe;", "using Gum.GueDeriving;" })
+        {
+            Regex.Matches(host, "^\\s*" + Regex.Escape(expected) + "\\s*$", RegexOptions.Multiline).Count.ShouldBe(1, expected);
+        }
+    }
+
+    // The host's own Gum handle: GumUI on every platform (#7671, #7788).
+    [Theory]
+    [InlineData(HostPlatform.MonoGame, "GumUI")]
+    [InlineData(HostPlatform.Kni, "GumUI")]
+    [InlineData(HostPlatform.Raylib, "GumUI")]
+    [InlineData(HostPlatform.SilkNet, "GumUI")]
+    [InlineData(HostPlatform.Stride, "GumUI")]
+    public void Host_UsesItsOwnGumHandleForGeneratedLines(HostPlatform platform, string receiver)
+    {
+        (NewProjectService service, ResolvedNewProject resolved, NewProjectFilesResult files) = Create(platform, packages: true);
+
+        service.UpdateHost(resolved, files, packagesAdded: true, screenCodeGenerated: false);
+
+        string host = ReadHost(platform);
+        host.ShouldContain($"{receiver}.UseShadowDusk();", Case.Sensitive);
+        host.ShouldContain($".ToGraphicalUiElement({receiver}.SystemManagers, addToManagers: false)", Case.Sensitive);
+        host.ShouldNotContain("GumService.Default.UseShadowDusk");
+        host.ShouldNotContain("ToGraphicalUiElement(GumService.Default");
+    }
+
+    [Fact]
+    public void Host_KniSkia_UsesGumUiForTheScreenLine()
+    {
+        Create(HostPlatform.KniSkia);
+
+        ReadHost(HostPlatform.KniSkia).ShouldContain(".ToGraphicalUiElement(GumUI.SystemManagers, addToManagers: false)");
     }
 
     [Theory]
@@ -165,21 +223,21 @@ public class NewProjectDemoScreenHostTests : IDisposable
     [Theory]
     [InlineData(HostPlatform.MonoGame, new[]
     {
-        "Gum.Wireframe.CustomSetPropertyOnRenderable.InMemoryFontCreator = new KernSmith.Gum.KernSmithFontCreator(GraphicsDevice);",
-        "Gum.Expressions.GumExpressionService.Initialize();"
+        "GumUI.UseKernSmith();",
+        "GumUI.UseExpressions();"
     })]
     [InlineData(HostPlatform.Kni, new[]
     {
-        "Gum.Wireframe.CustomSetPropertyOnRenderable.InMemoryFontCreator = new KernSmith.Gum.KernSmithFontCreator(GraphicsDevice);",
-        "Gum.Expressions.GumExpressionService.Initialize();"
+        "GumUI.UseKernSmith();",
+        "GumUI.UseExpressions();"
     })]
     [InlineData(HostPlatform.Raylib, new[]
     {
-        "RaylibGum.Renderables.CustomSetPropertyOnRenderable.InMemoryFontCreator = new KernSmith.Gum.KernSmithRaylibFontCreator();",
-        "Gum.Expressions.GumExpressionService.Initialize();"
+        "GumUI.UseKernSmith();",
+        "GumUI.UseExpressions();"
     })]
-    [InlineData(HostPlatform.SilkNet, new[] { "Gum.Expressions.GumExpressionService.Initialize();" })]
-    [InlineData(HostPlatform.Stride, new[] { "Gum.Expressions.GumExpressionService.Initialize();" })]
+    [InlineData(HostPlatform.SilkNet, new[] { "GumUI.UseExpressions();" })]
+    [InlineData(HostPlatform.Stride, new[] { "GumUI.UseExpressions();" })]
     public void UpdateHost_AfterThePackagesAreAdded_InitializesEachOfThem(HostPlatform platform, string[] expectedLines)
     {
         (NewProjectService service, ResolvedNewProject resolved, NewProjectFilesResult files) = Create(platform, packages: true);
@@ -216,26 +274,22 @@ public class NewProjectDemoScreenHostTests : IDisposable
         host.ShouldNotContain("InMemoryFontCreator");
     }
 
-    // A table package whose init line names a type the stable runtime lacks breaks every default project (stable 2026.10.1.1 has
-    // no Gum.Renderables.ShapeRenderer). Until a stable release carries it, no row may add a Shapes package.
     [Theory]
     [InlineData(HostPlatform.MonoGame)]
     [InlineData(HostPlatform.Kni)]
     [InlineData(HostPlatform.Raylib)]
     [InlineData(HostPlatform.SilkNet)]
     [InlineData(HostPlatform.Stride)]
-    public void TablePackages_AllHaveAnInitLine_AndNoneIsShapes(HostPlatform platform)
+    public void TablePackages_AllHaveAnInitLine(HostPlatform platform)
     {
         (NewProjectService service, ResolvedNewProject resolved, NewProjectFilesResult files) = Create(platform, packages: true);
 
         service.UpdateHost(resolved, files, packagesAdded: true, screenCodeGenerated: false);
 
-        resolved.RecommendedPackages.ShouldNotContain(package => package.StartsWith("Gum.Shapes."));
         string host = ReadHost(platform);
-        host.ShouldNotContain("ShapeRenderer");
         foreach (string package in resolved.RecommendedPackages)
         {
-            host.ShouldContain(PlatformHostContent.GetInitLines(new[] { package }).Single(), customMessage: package);
+            host.ShouldContain(PlatformHostContent.GetInitLines(new[] { package }, PlatformHostContent.GetGumReceiver(platform)).Single(), customMessage: package);
         }
     }
 
@@ -244,7 +298,7 @@ public class NewProjectDemoScreenHostTests : IDisposable
     {
         Create(HostPlatform.MonoGame, packages: true);
 
-        ReadHost(HostPlatform.MonoGame).ShouldNotContain("GumExpressionService");
+        ReadHost(HostPlatform.MonoGame).ShouldNotContain("UseExpressions");
     }
 
     #region Service steps
@@ -261,18 +315,19 @@ public class NewProjectDemoScreenHostTests : IDisposable
             },
             progress: null, CancellationToken.None);
 
+        string[] adds = RecommendedPackages.For(HostPlatform.MonoGame).Select(_ => "add").ToArray();
         _calls.Select(call => call.Split(' ')[0]).ToArray()
-            .ShouldBe(new[] { "add", "add", "restore", "codegen" });
+            .ShouldBe(adds.Concat(new[] { "restore", "codegen" }).ToArray());
         result.Codegen.ShouldNotBeNull();
         result.Codegen!.Success.ShouldBeTrue();
 
         string host = ReadHost(HostPlatform.MonoGame);
         host.ShouldContain("new DemoScreenGum().AddToRoot();");
-        host.ShouldContain("GumExpressionService.Initialize();");
+        host.ShouldContain("GumUI.UseExpressions();");
     }
 
     [Fact]
-    public async Task ExecuteAsync_WithoutRestore_RunsCodegenAfterTheAdds()
+    public async Task ExecuteAsync_WithoutRestore_SkipsCodegen()
     {
         NewProjectService service = CreateService();
         await service.ExecuteAsync(
@@ -283,7 +338,8 @@ public class NewProjectDemoScreenHostTests : IDisposable
             },
             progress: null, CancellationToken.None);
 
-        _calls.Select(call => call.Split(' ')[0]).ToArray().ShouldBe(new[] { "add", "add", "codegen" });
+        _calls.Select(call => call.Split(' ')[0]).ToArray()
+            .ShouldBe(RecommendedPackages.For(HostPlatform.MonoGame).Select(_ => "add").ToArray());
     }
 
     [Fact]
@@ -293,7 +349,7 @@ public class NewProjectDemoScreenHostTests : IDisposable
         NewProjectResult result = await service.ExecuteAsync(
             new NewProjectRequest
             {
-                Path = Path.Combine(_tempDirectory, "MyGame"), Platform = "monogame", GenerateCode = true, Restore = false
+                Path = Path.Combine(_tempDirectory, "MyGame"), Platform = "monogame", GenerateCode = true, Restore = true
             },
             progress: null, CancellationToken.None);
 
@@ -395,6 +451,74 @@ public class NewProjectDemoScreenHostTests : IDisposable
         // Everything the screen references is generated too, and the other screens/components are not required.
         Directory.GetFiles(Path.Combine(_tempDirectory, "RealGame"), "*.Generated.cs", SearchOption.AllDirectories)
             .Length.ShouldBeGreaterThan(1);
+    }
+
+    // Every platform's generated host has the same Gum block (MonoGame is the reference): the GumUI alias, Initialize, the
+    // add-on and Use... calls once each in one order, then Update and Draw, with no implementation type in game code.
+    [Theory]
+    [InlineData(HostPlatform.MonoGame, false)]
+    [InlineData(HostPlatform.MonoGame, true)]
+    [InlineData(HostPlatform.Kni, false)]
+    [InlineData(HostPlatform.Kni, true)]
+    [InlineData(HostPlatform.KniSkia, false)]
+    [InlineData(HostPlatform.KniSkia, true)]
+    [InlineData(HostPlatform.Raylib, false)]
+    [InlineData(HostPlatform.Raylib, true)]
+    [InlineData(HostPlatform.SilkNet, false)]
+    [InlineData(HostPlatform.SilkNet, true)]
+    [InlineData(HostPlatform.Stride, false)]
+    [InlineData(HostPlatform.Stride, true)]
+    [InlineData(HostPlatform.Brutal, false)]
+    [InlineData(HostPlatform.Brutal, true)]
+    public void Host_HasTheSameGumInitBlockOnEveryPlatform(HostPlatform platform, bool packages)
+    {
+        (NewProjectService service, ResolvedNewProject resolved, NewProjectFilesResult files) = Create(platform, packages: packages);
+        if (packages)
+        {
+            service.UpdateHost(resolved, files, packagesAdded: true, screenCodeGenerated: false);
+        }
+
+        string host = ReadHost(platform);
+
+        Regex.Matches(host, @"GumService GumUI (=>|=) GumService\.Default;").Count.ShouldBe(1, "the GumUI alias");
+        Regex.Matches(host, @"GumService\.Default").Count.ShouldBe(1, "GumService.Default only in the alias");
+        foreach (string forbidden in new[] { @"\bSK[A-Z]\w*", "SkiaSharp", @"\bGR[A-Z]\w*", @"GumUI\.ClearColor", @"\.ClearColor\s*=", "CanvasWidth", "CanvasHeight", "GamePadsForUiControl" })
+        {
+            Regex.IsMatch(host, forbidden).ShouldBeFalse($"'{forbidden}' in game code");
+        }
+
+        // The old static add-on setup is never emitted, with or without the packages.
+        foreach (string oldStatic in new[] { "ShapeRenderer", "InMemoryFontCreator", "GumExpressionService" })
+        {
+            host.ShouldNotContain(oldStatic);
+        }
+
+        List<string> expected = new() { "Initialize", "UseKeyboardDefaults", "UseGamepadDefaults" };
+        IReadOnlyList<string> added = packages ? RecommendedPackages.For(platform) : Array.Empty<string>();
+        if (added.Any(package => package.Contains("ShadowDusk")))
+        {
+            expected.Add("UseShadowDusk");
+        }
+        if (added.Any(package => package.StartsWith("Gum.Shapes.")))
+        {
+            expected.Add("UseShapes");
+        }
+        if (added.Any(package => package.StartsWith("KernSmith.")))
+        {
+            expected.Add("UseKernSmith");
+        }
+        if (added.Contains("Gum.Expressions"))
+        {
+            expected.Add("UseExpressions");
+        }
+        if (platform != HostPlatform.Stride)
+        {
+            // Stride drives Update and Draw itself, so its host calls neither.
+            expected.AddRange(new[] { "Update", "Draw" });
+        }
+        List<string> actual = Regex.Matches(host, @"GumUI\.(Initialize|Use\w+|Update|Draw)\(")
+            .Select(match => match.Groups[1].Value).ToList();
+        actual.ShouldBe(expected, string.Join(", ", actual));
     }
 
     #endregion

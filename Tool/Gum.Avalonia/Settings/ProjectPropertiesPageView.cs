@@ -1,41 +1,27 @@
-using Avalonia.Controls;
-using AvaloniaDataUi;
 using Gum.Plugins.PropertiesWindowPlugin;
 
 namespace Gum.Avalonia.Settings;
 
 /// <summary>
-/// One Project page of the Settings window (General, Canvas or Localization): a property grid over the
-/// settings of its <see cref="ProjectPropertiesPageViewModel"/>, laid out by the shared
-/// <see cref="ProjectPropertiesGridPresenter"/>.
+/// One Project page of the Settings window (General, Canvas or Localization), each built from rows
+/// (<see cref="ProjectGeneralRows"/>, <see cref="CanvasRows"/>, <see cref="LocalizationRows"/>) like the Code
+/// generation page, over the settings of their <see cref="ProjectPropertiesPageViewModel"/>.
 /// </summary>
-public sealed class ProjectPropertiesPageView : DockPanel
+public sealed class ProjectPropertiesPageView : SettingsRowsPageView
 {
-    private ProjectPropertiesGridPresenter? _presenter;
-
-    /// <summary>Builds the view.</summary>
-    public ProjectPropertiesPageView()
+    /// <inheritdoc/>
+    protected override void HandleDataContextChanged()
     {
-        Grid = new DataUiGrid { HideLoneCategoryHeader = true };
-        Children.Add(Grid);
-
-        DataContextChanged += (_, _) => HandleDataContextChanged();
-    }
-
-    /// <summary>The property grid.</summary>
-    public DataUiGrid Grid { get; }
-
-    private void HandleDataContextChanged()
-    {
-        _presenter?.Bind(null);
-        if (DataContext is ProjectPropertiesPageViewModel page)
+        Rows = null;
+        if (DataContext is not ProjectPropertiesPageViewModel page)
         {
-            _presenter = new ProjectPropertiesGridPresenter(Grid, page.Section);
-            _presenter.Bind(page.Properties);
+            return;
         }
-        else
+        Rows = page.Section switch
         {
-            _presenter = null;
-        }
+            ProjectPropertiesSection.General => new ProjectGeneralRows(page.Properties),
+            ProjectPropertiesSection.Canvas => new CanvasRows(page.Properties),
+            _ => new LocalizationRows(page.Properties),
+        };
     }
 }

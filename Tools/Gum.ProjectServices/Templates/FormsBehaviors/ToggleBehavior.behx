@@ -39,5 +39,5 @@
   </Category>
   <RequiredInstances />
   <RequiredAnimations />
-  <DefaultImplementation>Controls/TreeViewToggle</DefaultImplementation>
+  <DefaultImplementation>Controls/ToggleButton</DefaultImplementation>
 </BehaviorSave>

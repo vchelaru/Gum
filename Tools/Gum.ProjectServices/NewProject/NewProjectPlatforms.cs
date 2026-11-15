@@ -20,7 +20,8 @@ public static class NewProjectPlatforms
         ("raylib", HostPlatform.Raylib),
         ("stride", HostPlatform.Stride),
         ("silknet", HostPlatform.SilkNet),
-        ("silk.net", HostPlatform.SilkNet)
+        ("silk.net", HostPlatform.SilkNet),
+        ("brutal", HostPlatform.Brutal)
     };
 
     /// <summary>One name per platform, in display order.</summary>
@@ -29,6 +30,9 @@ public static class NewProjectPlatforms
 
     /// <summary>The main names joined as <c>monogame, kni, ...</c>, for messages.</summary>
     public static string ValidNames => string.Join(", ", MainNames.Select(entry => entry.Name));
+
+    /// <summary>Whether <paramref name="platform"/>'s Gum package has a stable (non-prerelease) version on NuGet.</summary>
+    public static bool HasStablePackage(HostPlatform platform) => HostPlatformInfo.For(platform).HasStablePackage;
 
     /// <summary>Finds the platform for a name, ignoring case.</summary>
     public static bool TryParse(string name, out HostPlatform platform)

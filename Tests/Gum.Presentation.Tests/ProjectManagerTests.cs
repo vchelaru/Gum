@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.IO;
 using System.Collections.Generic;
 using System.Linq;
@@ -539,6 +539,12 @@ public class ProjectManagerTests : BaseTestClass
             o.Filter.Contains("*.gumx") && o.Filter.Contains("*.gumj"))), Times.Once);
     }
 
+    [Fact]
+    public void CreateBlankProject_StampsVersionEight()
+    {
+        _projectManager.CreateBlankProject().Version.ShouldBe(8);
+    }
+
     // Saves a minimal-but-loadable project to a fresh temp file and returns its path. Used by the
     // two tests below, which exercise ProjectManager.LoadProjectAsync(FilePath) end to end (real
     // GumProjectSave.Load, since it's a static method with no seam) rather than through the
@@ -582,6 +588,36 @@ public class ProjectManagerTests : BaseTestClass
         }
 
         deserializedAfterCallerReturned.ShouldBe(true);
+    }
+
+    [Fact]
+    public async Task LoadProjectAsync_ByFilePath_TellsTheRouterWhichProjectIsNowOpen()
+    {
+        string gumxPath = SaveMinimalProjectToTempFile(out string tempDirectory);
+
+        try
+        {
+            await _projectManager.LoadProjectAsync(gumxPath);
+        }
+        finally
+        {
+            Directory.Delete(tempDirectory, recursive: true);
+        }
+
+        _projectOpenRequests.Verify(
+            r => r.NotifyProjectPathChanged(It.Is<string?>(path => path != null && new FilePath(path) == new FilePath(gumxPath))),
+            Times.AtLeastOnce);
+    }
+
+    [Fact]
+    public void CreateNewProject_TellsTheRouterThereIsNoProjectFile()
+    {
+        StandardElementsManager.Self.Initialize();
+        StandardElementsManager.Self.RegisterExtendedDefaultStates();
+
+        _projectManager.CreateNewProject();
+
+        _projectOpenRequests.Verify(r => r.NotifyProjectPathChanged(null), Times.Once);
     }
 
     [Fact]

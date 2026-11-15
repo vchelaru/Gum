@@ -40,6 +40,28 @@ public class ExternalChangeTests
     }
 
     [AvaloniaFact]
+    public void AnExternalEdit_IsReadByTheTab_ButNotRewrittenByIt()
+    {
+        using AnimationEditorHarness editor = new AnimationEditorHarness();
+        ComponentSave button = editor.AddComponent("Button", Category, "Pressed", "Released");
+        editor.Select(button);
+        editor.AddAnimation("Walk");
+        editor.AddStateKeyframe($"{Category}/Pressed");
+        string path = editor.AnimationFilePath(button);
+        // An editor of the user's saves the file its own way; the tab only reads it.
+        string external = File.ReadAllText(path).Replace("\r\n", "\n").Replace("\n", "\r\n").Replace("<Name>Walk</Name>", "<Name>Run</Name>");
+        File.WriteAllText(path, external);
+        DateTime writtenAt = File.GetLastWriteTimeUtc(path);
+
+        editor.Plugin.CallReactToFileChanged(new FilePath(path));
+        editor.Layout();
+
+        editor.ViewModel.Animations.Single().Name.ShouldBe("Run");
+        File.ReadAllText(path).ShouldBe(external, "reading an edited file should not rewrite it");
+        File.GetLastWriteTimeUtc(path).ShouldBe(writtenAt);
+    }
+
+    [AvaloniaFact]
     public void AnEditToAnotherElementsSidecar_LeavesTheTabAlone()
     {
         using AnimationEditorHarness editor = new AnimationEditorHarness();

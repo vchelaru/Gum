@@ -34,7 +34,7 @@ public partial class ElementTreeViewManager
     /// would crash when instantiated (#4499). "Component" is excluded because it's a StandardElementSave
     /// used internally for default-value lookups, not a type meant to be instantiated directly.
     /// </summary>
-    internal static List<string> GetAvailableStandardInstanceTypes(GumProjectSave? gumProject)
+    internal static List<string> GetAvailableStandardInstanceTypes(GumProjectSave? gumProject, IProjectRestrictions projectRestrictions)
     {
         if (gumProject == null)
         {
@@ -43,6 +43,7 @@ public partial class ElementTreeViewManager
 
         var typeNames = gumProject.StandardElements
             .Where(standard => standard.Name != "Component")
+            .Where(standard => !projectRestrictions.IsStandardTypeBlocked(standard.Name))
             .Select(standard => standard.Name)
             .ToList();
 
@@ -260,7 +261,8 @@ public partial class ElementTreeViewManager
                 // "Create Component" promotes a single instance into a new component (the instance's
                 // children become the component's children). Multi-instance promotion isn't supported
                 // yet, so only offer it when exactly one instance is selected.
-                if (containerElement != null && _selectedState.SelectedInstances.Count() == 1)
+                if (containerElement != null && _selectedState.SelectedInstances.Count() == 1 &&
+                    !_projectRestrictions.AreComponentsDisabled)
                 {
                     AddSeparator();
 
@@ -290,16 +292,20 @@ public partial class ElementTreeViewManager
                 {
                     AddSeparator();
 
-                    AddCreateInstanceMenuItems($"Add child object to '{_selectedState.SelectedInstance.Name}'", containerElement);
+                    if (!_projectRestrictions.IsHierarchyBlocked)
+                    {
+                        AddCreateInstanceMenuItems($"Add child object to '{_selectedState.SelectedInstance.Name}'", containerElement);
 
-                    AddMenuItem($"Add parent object to '{_selectedState.SelectedInstance.Name}'",
-                        () => _dialogService.Show<AddInstanceDialogViewModel>(x => x.IsAddingAsParentToSelectedInstance = true));
+                        AddMenuItem($"Add parent object to '{_selectedState.SelectedInstance.Name}'",
+                            () => _dialogService.Show<AddInstanceDialogViewModel>(x => x.IsAddingAsParentToSelectedInstance = true));
+                    }
 
                     if (!string.IsNullOrEmpty(containerElement?.BaseType))
                     {
                         var containerBase = ObjectFinder.Self.GetElementSave(containerElement.BaseType);
 
-                        if (containerBase is ScreenSave || containerBase is ComponentSave)
+                        if ((containerBase is ScreenSave || containerBase is ComponentSave) &&
+                            CanMoveToBase(_selectedState.SelectedInstances, containerElement!))
                         {
                             AddMenuItem($"Add {_selectedState.SelectedInstance.Name} to base {containerBase}",
                                 () => HandleMoveToBase(_selectedState.SelectedInstances, containerElement, containerBase));
@@ -429,7 +435,10 @@ public partial class ElementTreeViewManager
             else if (SelectedNode.IsTopComponentContainerTreeNode() || SelectedNode.IsComponentsFolderTreeNode())
             {
                 AddMenuItem("Add Component", _editCommands.ShowAddComponentDialog);
-                AddMenuItem("Import Components", HandleImportComponents);
+                if (!_projectRestrictions.AreComponentsDisabled)
+                {
+                    AddMenuItem("Import Components", HandleImportComponents);
+                }
                 AddMenuItem("Add Folder", HandleAddFolder);
                 AddMenuItem("View in explorer", HandleViewInExplorer);
 
@@ -455,7 +464,10 @@ public partial class ElementTreeViewManager
             else if (SelectedNode.IsTopBehaviorTreeNode())
             {
                 AddMenuItem("Add Behavior", HandleAddBehavior);
-                AddMenuItem("Import Behavior", HandleImportBehavior);
+                if (!_projectRestrictions.AreBehaviorsDisabled)
+                {
+                    AddMenuItem("Import Behavior", HandleImportBehavior);
+                }
                 AddMenuItem("View in explorer", HandleViewInExplorer);
 
             }
@@ -475,6 +487,7 @@ public partial class ElementTreeViewManager
         var favoritedComponents = _favoriteComponentManager.GetFilteredFavoritedComponentsFor(
             parent,
             _circularReferenceManager);
+        favoritedComponents.RemoveAll(_projectRestrictions.IsInstanceTypeBlocked);
         if (favoritedComponents.Count > 0)
         {
             foreach (var component in favoritedComponents)
@@ -493,7 +506,7 @@ public partial class ElementTreeViewManager
             parentMenuItem.Children.Add(new ContextMenuItemViewModel { IsSeparator = true });
         }
 
-        foreach (var type in GetAvailableStandardInstanceTypes(_projectState.GumProjectSave))
+        foreach (var type in GetAvailableStandardInstanceTypes(_projectState.GumProjectSave, _projectRestrictions))
         {
             var menuItem = new ContextMenuItemViewModel
             {
@@ -517,7 +530,7 @@ public partial class ElementTreeViewManager
         var parentMenuItem = new ContextMenuItemViewModel { Text = itemText };
         _contextMenuItems.Add(parentMenuItem);
 
-        foreach (var type in GetAvailableStandardInstanceTypes(_projectState.GumProjectSave))
+        foreach (var type in GetAvailableStandardInstanceTypes(_projectState.GumProjectSave, _projectRestrictions))
         {
             var menuItem = new ContextMenuItemViewModel
             {
@@ -564,6 +577,31 @@ public partial class ElementTreeViewManager
 
             AddMenuItem(text, () => _copyPasteLogic.OnPaste(CopyType.InstanceOrElement, TopOrRecursive.Top));
         }
+    }
+
+    /// <summary>
+    /// False when moving the instances into the base would create an instance of a type the project
+    /// does not support, or would drop the Parent of an instance whose type has no hierarchy.
+    /// </summary>
+    private bool CanMoveToBase(IEnumerable<InstanceSave> instances, ElementSave derivedElement)
+    {
+        foreach (InstanceSave instance in instances)
+        {
+            if (ObjectFinder.Self.GetElementSave(instance.BaseType) is not { } instanceType)
+            {
+                continue;
+            }
+            if (_projectRestrictions.IsInstanceTypeBlocked(instanceType))
+            {
+                return false;
+            }
+            bool hasParent = !string.IsNullOrEmpty(derivedElement.DefaultState?.GetValue($"{instance.Name}.Parent") as string);
+            if (hasParent && _projectRestrictions.IsHierarchyBlockedFor(instanceType))
+            {
+                return false;
+            }
+        }
+        return true;
     }
 
     private void HandleMoveToBase(IEnumerable<InstanceSave> instances, ElementSave derivedElement, ElementSave baseElement)

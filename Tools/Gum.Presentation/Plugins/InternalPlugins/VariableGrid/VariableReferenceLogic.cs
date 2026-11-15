@@ -1,9 +1,11 @@
-﻿using Gum.Commands;
+﻿using Gum.Diagnostics;
+using Gum.Commands;
 using Gum.Expressions;
 using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
 using Gum.Managers;
+using Gum.ProjectServices;
 using Gum.Wireframe;
 using GumRuntime;
 using Microsoft.CodeAnalysis;
@@ -53,7 +55,9 @@ public class VariableReferenceLogic : IVariableReferenceLogic
         _wireframeObjectManager = wireframeObjectManager;
     }
 
-    public AssignmentExpressionSyntax? GetAssignmentSyntax(string item)
+    public AssignmentExpressionSyntax? GetAssignmentSyntax(string item) => ParseAssignment(item);
+
+    internal static AssignmentExpressionSyntax? ParseAssignment(string item)
     {
         item = EvaluatedSyntax.ConvertToCSharpSyntax(item);
 
@@ -164,28 +168,21 @@ public class VariableReferenceLogic : IVariableReferenceLogic
             return;
         }
 
-        EvaluatedSyntax? evaluatedSyntax = EvaluatedSyntax.FromSyntaxNode(assignmentSyntax.Right, parentElement.GetDefaultStateOrThrow(), liveRoot: liveRoot);
+        EvaluatedSyntax? evaluatedSyntax = EvaluatedSyntax.FromSyntaxNode(assignmentSyntax.Right, ElementSaveExtensions.WithFormsPropertyInputs(parentElement.GetDefaultStateOrThrow(), assignmentSyntax.Right.ToString(), liveRoot), liveRoot: liveRoot);
 
         if (evaluatedSyntax == null)
         {
-            failures.Add((line, GeneralResponse.UnsuccessfulWith($"Could not evaluate right-side expression {assignmentSyntax}")));
+            // An unknown element ("Components/Nope.Width") fails before any type is known; name it instead of echoing the parsed syntax.
+            failures.Add((line, GeneralResponse.UnsuccessfulWith(
+                DescribeMissingReference(parentElement, leftSideInstance?.Name, line)?.EditMessage
+                ?? $"Could not evaluate right-side expression {assignmentSyntax}")));
             return;
         }
 
         if (evaluatedSyntax.EvaluatedType == null)
         {
-            if (assignmentSyntax.Right.DescendantNodesAndSelf()
-                .OfType<IdentifierNameSyntax>()
-                .Any(identifier => EvaluatedSyntax.IsLiveLayoutName(identifier.Identifier.Text)))
-            {
-                failures.Add((line, GeneralResponse.UnsuccessfulWith(
-                    "The right side reads a value that is computed from the layout (such as Index or AbsoluteWidth). " +
-                    "Check that the instance exists in this element; Absolute* values also need the element to be displayed")));
-                return;
-            }
-
             failures.Add((line, GeneralResponse.UnsuccessfulWith(
-                $"The right side cannot be evaluated, are you referencing a variable that doesn't exist or mixing variable types?")));
+                DescribeRightSideFailure(assignmentSyntax.Right, parentElement.GetDefaultStateOrThrow(), liveRoot, parentElement, leftSideInstance?.Name, line).EditMessage)));
             return;
         }
 
@@ -214,6 +211,101 @@ public class VariableReferenceLogic : IVariableReferenceLogic
         {
             failures.Add((line, typeMatchResponse));
         }
+    }
+
+    /// <summary>Why a right side has no value: the edit-time dialog's message and a short reason for the Variables tab note.</summary>
+    internal sealed record RightSideFailure(string EditMessage, string NoteReason);
+
+    /// <summary>
+    /// Explains why <paramref name="right"/> evaluated to nothing. The one source of the wording shared by the
+    /// edit-time dialog and the note on a row that stopped following its reference.
+    /// </summary>
+    internal static RightSideFailure DescribeRightSideFailure(SyntaxNode right, StateSave state, GraphicalUiElement? liveRoot, ElementSave owner, string? ownerInstanceName, string line)
+    {
+        // The missing part comes first: it is the most specific cause, and the layout and divide-by-zero
+        // messages below would otherwise hide a misspelled instance or variable.
+        if (DescribeMissingReference(owner, ownerInstanceName, line) is { } missing)
+        {
+            return missing;
+        }
+
+        if (right.DescendantNodesAndSelf()
+            .OfType<IdentifierNameSyntax>()
+            .Any(identifier => EvaluatedSyntax.IsLiveLayoutName(identifier.Identifier.Text)))
+        {
+            return new RightSideFailure(
+                "The right side reads a value that is computed from the layout (such as Index or AbsoluteWidth). " +
+                "Check that the instance exists in this element; Absolute* values also need the element to be displayed",
+                "it reads a value computed from the layout, which is not available");
+        }
+
+        SyntaxNode? zeroDivisor = FindZeroDivisor(right, state, liveRoot);
+        if (zeroDivisor != null)
+        {
+            string divisor = EvaluatedSyntax.ConvertToSlashSyntax(zeroDivisor.ToString());
+            return new RightSideFailure(
+                "The right side divides by zero. Check the divisor (the value after / or %), including variables that are currently 0",
+                zeroDivisor is LiteralExpressionSyntax ? "divides by zero" : $"{divisor} is 0, so the reference can't divide by it");
+        }
+
+        return new RightSideFailure(
+            "The right side cannot be evaluated, are you referencing a variable that doesn't exist or mixing variable types?",
+            "it cannot be evaluated (a variable it reads is missing, or the types do not mix)");
+    }
+
+    /// <summary>
+    /// Names the first path the right side of <paramref name="line"/> reads that the project does not have, using the
+    /// same check as the GUM0009 error so the dialog, the row note and the error list agree. "First" means the first
+    /// qualified element path (<c>Components/Name.Variable</c>) in reading order, else the first local path. With several
+    /// missing names only that one is reported; the next appears once it is fixed. Null when every path exists.
+    /// </summary>
+    private static RightSideFailure? DescribeMissingReference(ElementSave owner, string? ownerInstanceName, string line)
+    {
+        string? problem = HeadlessErrorChecker.FindUnresolvableReference(owner, ownerInstanceName, line);
+        return problem == null
+            ? null
+            : new RightSideFailure($"The right side reads {problem}.", $"it reads {problem}");
+    }
+
+    private static SyntaxNode? FindZeroDivisor(SyntaxNode rightSide, StateSave state, GraphicalUiElement? liveRoot)
+    {
+        foreach (BinaryExpressionSyntax binary in rightSide.DescendantNodesAndSelf().OfType<BinaryExpressionSyntax>())
+        {
+            if (!binary.OperatorToken.IsKind(SyntaxKind.SlashToken) && !binary.OperatorToken.IsKind(SyntaxKind.PercentToken))
+            {
+                continue;
+            }
+
+            // A division inside a ternary arm may be guarded, so its failure is not evidence of the cause.
+            if (IsInsideConditionalArm(binary))
+            {
+                continue;
+            }
+
+            object? divisor = EvaluatedSyntax.FromSyntaxNode(binary.Right, ElementSaveExtensions.WithFormsPropertyInputs(state, binary.Right.ToString(), liveRoot), liveRoot: liveRoot)?.Value;
+            if (divisor is sbyte or byte or short or ushort or int or uint or long or ulong or float or double or decimal
+                && Convert.ToDouble(divisor) == 0)
+            {
+                return binary.Right;
+            }
+        }
+
+        return null;
+    }
+
+    private static bool IsInsideConditionalArm(SyntaxNode node)
+    {
+        SyntaxNode child = node;
+        while (child.Parent is { } parent)
+        {
+            if (parent is ConditionalExpressionSyntax conditional && child != conditional.Condition)
+            {
+                return true;
+            }
+            child = parent;
+        }
+
+        return false;
     }
 
     private static void CommentFailures(VariableListSave newDirectValue, List<(string, GeneralResponse)> failures)
@@ -484,18 +576,74 @@ public class VariableReferenceLogic : IVariableReferenceLogic
 
     #region Assignment Reactions
 
+    /// <summary>One edit whose state-wide reaction is waiting for the end of a batch.</summary>
+    private sealed record PendingEdit(InstanceSave? Instance, string UnqualifiedMember, string QualifiedName);
 
-    public void DoVariableReferenceReaction(ElementSave parentElement, InstanceSave? leftSideInstance, string unqualifiedMember,
-        StateSave stateSave, string qualifiedName, bool trySave, bool isFullCommit = true)
+    /// <summary>The deferred state-wide work for one state of one element.</summary>
+    private sealed class PendingReaction
     {
-        // A tick of a drag changes only the dragged variable. The cascade runs once, on the full commit that
-        // ends the drag, so a tick costs nothing that grows with the project and the result is the one a
-        // typed edit gives. Every drag, scrub and slider ends with a full commit (#6888).
-        if (!isFullCommit && unqualifiedMember != "VariableReferences")
+        public PendingReaction(ElementSave element, StateSave state, Dictionary<string, object?> valuesBefore)
+        {
+            Element = element;
+            State = state;
+            ValuesBefore = valuesBefore;
+        }
+
+        public ElementSave Element { get; }
+        public StateSave State { get; }
+        public Dictionary<string, object?> ValuesBefore { get; }
+        public bool TrySave { get; set; }
+        public List<PendingEdit> Edits { get; } = new List<PendingEdit>();
+    }
+
+    private List<PendingReaction>? _pendingReactions;
+    private int _batchDepth;
+
+    /// <inheritdoc/>
+    public IDisposable BeginReferenceBatch()
+    {
+        _batchDepth++;
+        _pendingReactions ??= new List<PendingReaction>();
+        return new BatchScope(this);
+    }
+
+    private sealed class BatchScope : IDisposable
+    {
+        private VariableReferenceLogic? _owner;
+
+        public BatchScope(VariableReferenceLogic owner) => _owner = owner;
+
+        public void Dispose()
+        {
+            VariableReferenceLogic? owner = _owner;
+            _owner = null;
+            owner?.EndBatch();
+        }
+    }
+
+    private void EndBatch()
+    {
+        _batchDepth--;
+        if (_batchDepth > 0)
         {
             return;
         }
 
+        List<PendingReaction> pending = _pendingReactions ?? new List<PendingReaction>();
+        _pendingReactions = null;
+        foreach (PendingReaction reaction in pending)
+        {
+            using (ToolLog.Begin("ReferenceBatchReaction", count: reaction.Edits.Count))
+            {
+                RunStateWideReaction(reaction.Element, reaction.State, reaction.ValuesBefore, reaction.Edits,
+                    reaction.TrySave, isFullCommit: true);
+            }
+        }
+    }
+
+    public void DoVariableReferenceReaction(ElementSave parentElement, InstanceSave? leftSideInstance, string unqualifiedMember,
+        StateSave stateSave, string qualifiedName, bool trySave, bool isFullCommit = true)
+    {
         // The currently-rendered wireframe representation of parentElement, if any. Lets a right
         // side like "Root.AbsoluteWidth" resolve against the live, already-laid-out object - null
         // when nothing is rendered for this element, in which case such identifiers stay
@@ -508,7 +656,11 @@ public class VariableReferenceLogic : IVariableReferenceLogic
 
             if (newDirectValue != null)
             {
-                var failures = GetIndividualFailures(parentElement, leftSideInstance, newDirectValue, liveRoot);
+                List<(string, GeneralResponse)> failures;
+                using (ToolLog.Begin("GetIndividualFailures", count: newDirectValue.ValueAsIList?.Count ?? 0))
+                {
+                    failures = GetIndividualFailures(parentElement, leftSideInstance, newDirectValue, liveRoot);
+                }
 
                 if (failures.Count > 0)
                 {
@@ -539,16 +691,70 @@ public class VariableReferenceLogic : IVariableReferenceLogic
         {
             valuesBefore[variable.Name] = variable.Value;
         }
-        ElementSaveExtensions.ApplyVariableReferences(parentElement, stateSave, liveRoot, isFullCommit);
+
+        PendingEdit edit = new PendingEdit(leftSideInstance, unqualifiedMember, qualifiedName);
+
+        // In a multi-select commit every selected instance would re-apply all references of the state (and
+        // cascade into the other elements) for a result that only the last edit settles, so it runs once when
+        // the batch ends (#7509). The edit itself is already in the state; only the reaction waits.
+        if (_batchDepth > 0 && isFullCommit && _pendingReactions != null)
+        {
+            PendingReaction? pending = _pendingReactions.FirstOrDefault(item => item.Element == parentElement && item.State == stateSave);
+            if (pending == null)
+            {
+                pending = new PendingReaction(parentElement, stateSave, valuesBefore);
+                _pendingReactions.Add(pending);
+            }
+            pending.TrySave |= trySave;
+            pending.Edits.Add(edit);
+            return;
+        }
+
+        RunStateWideReaction(parentElement, stateSave, valuesBefore, new[] { edit }, trySave, isFullCommit);
+    }
+
+    /// <summary>
+    /// The part of a reaction that covers the whole state and what reads it: re-applies the references of
+    /// <paramref name="stateSave"/>, the other states, and the elements that read this one. Runs once per edit,
+    /// or once per batch for every edit in <paramref name="edits"/>.
+    /// </summary>
+    private void RunStateWideReaction(ElementSave parentElement, StateSave stateSave, Dictionary<string, object?> valuesBefore,
+        IReadOnlyList<PendingEdit> edits, bool trySave, bool isFullCommit)
+    {
+        PendingEdit first = edits[0];
+        InstanceSave? leftSideInstance = first.Instance;
+        string unqualifiedMember = first.UnqualifiedMember;
+        bool containsReferencesEdit = edits.Any(item => item.UnqualifiedMember == "VariableReferences");
+        // A tick of a drag applies only the references inside the current element (its own rows, the
+        // behavior's tool-only lines, its other states), so a followed value is live and the cost does not grow
+        // with the project. The part that reaches other elements, files or the whole canvas runs once, on the
+        // full commit that ends the drag, so the result is the one a typed edit gives. Every drag, scrub and
+        // slider ends with a full commit (#6888, #7438).
+        bool isWide = isFullCommit || containsReferencesEdit;
+        var liveRoot = _wireframeObjectManager.GetRepresentation(parentElement);
+
+        // apply references on this element first, then apply the values to the other references:
+        using (ToolLog.Begin("ApplyVariableReferences(state)", count: stateSave.Variables.Count))
+        {
+            ElementSaveExtensions.ApplyVariableReferences(parentElement, stateSave, liveRoot, isFullCommit);
+        }
 
         // Then evaluate any behavior-level ToolOnlyVariableReferences so design-time
         // wireframe preview reflects FormsProperty values (e.g. IsEnabled = false →
         // ButtonCategoryState = "Disabled"). Tool-only by design — never invoked at
         // runtime, since the Forms control's own setter owns the visual at runtime.
-        BehaviorToolOnlyReferencesApplier.Apply(parentElement, stateSave);
+        if (isWide)
+        {
+            BehaviorToolOnlyReferencesApplier.Apply(parentElement, stateSave);
+        }
+        else
+        {
+            // A tick touches only the lines that read the dragged member, on the instance dragged.
+            BehaviorToolOnlyReferencesApplier.ApplyDrivenBy(parentElement, leftSideInstance, unqualifiedMember, stateSave);
+        }
 
         // A categorized state's rows read the same instances, so they follow too (#6886).
-        HashSet<string> changedNames = new HashSet<string> { qualifiedName };
+        HashSet<string> changedNames = new HashSet<string>(edits.Select(item => item.QualifiedName));
         foreach (VariableSave variable in stateSave.Variables)
         {
             if (!valuesBefore.TryGetValue(variable.Name, out object? oldValue) || !ElementSaveExtensions.ValueEquality(oldValue, variable.Value))
@@ -556,22 +762,40 @@ public class VariableReferenceLogic : IVariableReferenceLogic
                 changedNames.Add(variable.Name);
             }
         }
-        ApplyOtherStatesReading(parentElement, stateSave, changedNames, liveRoot, isFullCommit);
-
-        if (unqualifiedMember == "VariableReferences")
+        using (ToolLog.Begin("ApplyOtherStatesReading", count: changedNames.Count))
         {
-            _guiCommands.RefreshVariableValues();
+            ApplyOtherStatesReading(parentElement, stateSave, changedNames, liveRoot, isFullCommit);
         }
 
-        ApplyReferencesToElement(parentElement, trySave, isFullCommit);
+        if (containsReferencesEdit)
+        {
+            using (ToolLog.Begin("RefreshVariableValues"))
+            {
+                _guiCommands.RefreshVariableValues();
+            }
+        }
 
-        var newValue = stateSave.GetValueRecursive(qualifiedName);
+        if (!isWide)
+        {
+            return;
+        }
 
-        // this could be a tunneled variable. If so, we may need to propagate the value to other instances one level deeper
-        var didSetDeepReference = DoVariableReferenceReactionOnInstanceVariableSet(parentElement, leftSideInstance, stateSave, unqualifiedMember, newValue);
+        using (ToolLog.Begin("ApplyReferencesToElement", count: parentElement.Instances.Count))
+        {
+            ApplyReferencesToElement(parentElement, trySave, isFullCommit);
+        }
+
+        bool didSetDeepReference = false;
+        foreach (PendingEdit edit in edits)
+        {
+            var newValue = stateSave.GetValueRecursive(edit.QualifiedName);
+
+            // this could be a tunneled variable. If so, we may need to propagate the value to other instances one level deeper
+            didSetDeepReference |= DoVariableReferenceReactionOnInstanceVariableSet(parentElement, edit.Instance, stateSave, edit.UnqualifiedMember, newValue);
+        }
 
         // now force save it if it's a variable reference:
-        if (unqualifiedMember == "VariableReferences" && trySave)
+        if (containsReferencesEdit && trySave)
         {
             _fileCommands.TryAutoSaveElement(parentElement);
         }
@@ -580,7 +804,10 @@ public class VariableReferenceLogic : IVariableReferenceLogic
         // then we forcefully change the values here.
         if (didSetDeepReference)
         {
-            _wireframeCommands.Refresh(forceLayout: true);
+            using (ToolLog.Begin("WireframeRefresh(forceLayout)"))
+            {
+                _wireframeCommands.Refresh(forceLayout: true);
+            }
         }
     }
 
@@ -590,7 +817,9 @@ public class VariableReferenceLogic : IVariableReferenceLogic
         List<StateSave> states = element.AllStates
             .Where(state => state.VariableLists.Any(IsSiblingDependentRow))
             .ToList();
-        if (states.Count == 0)
+        // A behavior line (a tab reading @Index) goes stale the same way as a typed row.
+        bool behaviorLinesReadIndex = BehaviorToolOnlyReferencesApplier.AnyInstanceLineMatches(element, SiblingDependentName);
+        if (states.Count == 0 && !behaviorLinesReadIndex)
         {
             return;
         }
@@ -601,6 +830,11 @@ public class VariableReferenceLogic : IVariableReferenceLogic
         foreach (StateSave state in states)
         {
             ElementSaveExtensions.ApplyVariableReferences(element, state, liveRoot);
+        }
+
+        if (behaviorLinesReadIndex && element.DefaultState != null)
+        {
+            BehaviorToolOnlyReferencesApplier.Apply(element, element.DefaultState);
         }
 
         // The values written above are what the wireframe should now show.
@@ -768,7 +1002,7 @@ public class VariableReferenceLogic : IVariableReferenceLogic
         Dictionary<ComponentSave, ISet<string>> stale = new Dictionary<ComponentSave, ISet<string>>();
         foreach (ComponentSave component in project.Components)
         {
-            if (component.Behaviors.Any(item => item.BehaviorName == behavior.Name))
+            if (FormsBehaviorChain.GetBehaviors(component).Any(item => item.Name == behavior.Name))
             {
                 HashSet<string> removed = new HashSet<string>(previousNames);
                 removed.ExceptWith(BehaviorToolOnlyReferencesApplier.GetDrivenVariableNames(component));
@@ -1061,7 +1295,10 @@ public class VariableReferenceLogic : IVariableReferenceLogic
 
         if (didChange)
         {
-            _guiCommands.RefreshVariables(force: true);
+            using (ToolLog.Begin("RefreshVariables(force) after line expansion"))
+            {
+                _guiCommands.RefreshVariables(force: true);
+            }
         }
     }
 

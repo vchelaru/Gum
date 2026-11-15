@@ -13,6 +13,7 @@ using Shouldly;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using ToolsUtilities;
 using Xunit;
@@ -303,6 +304,132 @@ public class FileChangeReactionLogicTests : BaseTestClass
         {
             ObjectFinder.Self.GumProjectSave = null;
         }
+    }
+
+    [Fact]
+    public void ReactToFileChanged_ShouldReselectInstancesByName_WhenSelectedElementReloads()
+    {
+        // #8013: the reload swaps in new InstanceSave objects, so the selected instance must be found again by name.
+        FileChangeReactionLogic sut = BuildSelectedReloadSut(
+            fileInstanceNames: new[] { "Button", "Other" },
+            selectedInstanceNames: new[] { "Button" },
+            out Mock<ISelectedState> selectedStateMock,
+            out ComponentSave oldHost, out string hostFile, out string tempDir);
+        try
+        {
+            sut.ReactToFileChanged(new FilePath(hostFile));
+
+            ComponentSave reloaded = ObjectFinder.Self.GumProjectSave!.Components.Single();
+            reloaded.ShouldNotBeSameAs(oldHost);
+            selectedStateMock.Object.SelectedElement.ShouldBeSameAs(reloaded);
+            InstanceSave selected = selectedStateMock.Object.SelectedInstances.ShouldHaveSingleItem();
+            selected.Name.ShouldBe("Button");
+            selected.ShouldBeSameAs(reloaded.Instances.Single(i => i.Name == "Button"));
+        }
+        finally
+        {
+            ObjectFinder.Self.GumProjectSave = null;
+        }
+    }
+
+    [Fact]
+    public void ReactToFileChanged_ShouldSkipInstancesMissingFromTheFile_WhenSelectedElementReloads()
+    {
+        // #8013: an instance deleted or renamed by the outside edit is dropped from the selection without throwing.
+        FileChangeReactionLogic sut = BuildSelectedReloadSut(
+            fileInstanceNames: new[] { "Keep", "RenamedNow" },
+            selectedInstanceNames: new[] { "Keep", "Gone" },
+            out Mock<ISelectedState> selectedStateMock,
+            out _, out string hostFile, out _);
+        try
+        {
+            sut.ReactToFileChanged(new FilePath(hostFile));
+
+            ComponentSave reloaded = ObjectFinder.Self.GumProjectSave!.Components.Single();
+            selectedStateMock.Object.SelectedElement.ShouldBeSameAs(reloaded);
+            selectedStateMock.Object.SelectedInstances.Select(i => i.Name).ShouldBe(new[] { "Keep" });
+        }
+        finally
+        {
+            ObjectFinder.Self.GumProjectSave = null;
+        }
+    }
+
+    [Fact]
+    public void ReactToFileChanged_ShouldLeaveOnlyTheElementSelected_WhenNoSelectedInstanceSurvivesTheReload()
+    {
+        FileChangeReactionLogic sut = BuildSelectedReloadSut(
+            fileInstanceNames: new[] { "Other" },
+            selectedInstanceNames: new[] { "Gone" },
+            out Mock<ISelectedState> selectedStateMock,
+            out _, out string hostFile, out _);
+        try
+        {
+            Should.NotThrow(() => sut.ReactToFileChanged(new FilePath(hostFile)));
+
+            selectedStateMock.Object.SelectedElement.ShouldBeSameAs(ObjectFinder.Self.GumProjectSave!.Components.Single());
+            selectedStateMock.Object.SelectedInstances.ShouldBeEmpty();
+        }
+        finally
+        {
+            ObjectFinder.Self.GumProjectSave = null;
+        }
+    }
+
+    /// <summary>
+    /// Builds a project whose component "Host" is on disk with <paramref name="fileInstanceNames"/> and in memory
+    /// (selected, with <paramref name="selectedInstanceNames"/> selected) as a separate copy, like after an outside edit.
+    /// The selected-state mock mimics the real one: setting the element clears the selected instances.
+    /// </summary>
+    private static FileChangeReactionLogic BuildSelectedReloadSut(
+        string[] fileInstanceNames,
+        string[] selectedInstanceNames,
+        out Mock<ISelectedState> selectedStateMock,
+        out ComponentSave inMemoryHost,
+        out string hostFile,
+        out string tempDir)
+    {
+        FileChangeReactionLogic sut = BuildSut(
+            out _, out Mock<IFileCommands> fileCommandsMock, out _,
+            out Mock<IProjectState> projectStateMock,
+            out selectedStateMock, out _,
+            new Mock<IDialogService>().Object, new UnsavedChangesTracker());
+
+        tempDir = Path.Combine(Path.GetTempPath(), "GumSelectedReloadTest_" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(Path.Combine(tempDir, "Components"));
+        fileCommandsMock.Setup(f => f.ProjectDirectory).Returns(new FilePath(tempDir + Path.DirectorySeparatorChar));
+
+        ComponentSave onDisk = new ComponentSave { Name = "Host", BaseType = "Container" };
+        onDisk.States.Add(new StateSave { Name = "Default", ParentContainer = onDisk });
+        foreach (string name in fileInstanceNames)
+        {
+            onDisk.Instances.Add(new InstanceSave { Name = name, BaseType = "Container", ParentContainer = onDisk });
+        }
+        hostFile = Path.Combine(tempDir, "Components", "Host.gucx");
+        onDisk.Save(hostFile);
+
+        inMemoryHost = new ComponentSave { Name = "Host", BaseType = "Container" };
+        inMemoryHost.States.Add(new StateSave { Name = "Default", ParentContainer = inMemoryHost });
+        foreach (string name in selectedInstanceNames)
+        {
+            inMemoryHost.Instances.Add(new InstanceSave { Name = name, BaseType = "Container", ParentContainer = inMemoryHost });
+        }
+
+        GumProjectSave project = new GumProjectSave { FullFileName = Path.Combine(tempDir, "Project.gumx") };
+        project.Components.Add(inMemoryHost);
+        project.ComponentReferences.Add(new ElementReference { Name = "Host", ElementType = ElementType.Component });
+        projectStateMock.Setup(p => p.GumProjectSave).Returns(project);
+        ObjectFinder.Self.GumProjectSave = project;
+
+        ElementSave? selectedElement = inMemoryHost;
+        List<InstanceSave> selectedInstances = inMemoryHost.Instances.ToList();
+        selectedStateMock.SetupGet(s => s.SelectedElement).Returns(() => selectedElement);
+        selectedStateMock.SetupSet(s => s.SelectedElement = It.IsAny<ElementSave?>())
+            .Callback<ElementSave?>(value => { selectedElement = value; selectedInstances = new List<InstanceSave>(); });
+        selectedStateMock.SetupGet(s => s.SelectedInstances).Returns(() => selectedInstances);
+        selectedStateMock.SetupSet(s => s.SelectedInstances = It.IsAny<IEnumerable<InstanceSave>>())
+            .Callback<IEnumerable<InstanceSave>>(value => selectedInstances = value.ToList());
+        return sut;
     }
 
     [Fact]

@@ -174,7 +174,19 @@ public partial class InteractiveGue : GraphicalUiElement
     /// is outside of the bounds of this object. Setting this to false can have a slight
     /// performance cost since each child is checked even if the cursor is not over this.
     /// </summary>
-    public bool RaiseChildrenEventsOutsideOfBounds { get; set; } = false;
+    public bool RaiseChildrenEventsOutsideOfBounds
+    {
+        get => _raiseChildrenEventsOutsideOfBounds;
+        set
+        {
+            if (_raiseChildrenEventsOutsideOfBounds != value)
+            {
+                _raiseChildrenEventsOutsideOfBounds = value;
+                ReportTypedPropertyChanged("RaiseChildrenEventsOutsideOfBounds");
+            }
+        }
+    }
+    bool _raiseChildrenEventsOutsideOfBounds;
     bool isEnabled = true;
 
     /// <summary>
@@ -1505,6 +1517,10 @@ public interface IInputReceiverKeyboard
     /// space. Implementations must translate from any native key type to Gum/XNA values
     /// before yielding.
     /// </summary>
+    /// <remarks>
+    /// Enumerate the returned sequence once, right away (typically one foreach). Do not store it or enumerate
+    /// it after the next read of <c>KeysTyped</c>, since implementations may reuse one sequence.
+    /// </remarks>
     IEnumerable<Gum.Forms.Input.Keys> KeysTyped { get; }
 
     /// <summary>

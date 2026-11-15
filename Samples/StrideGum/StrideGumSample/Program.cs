@@ -6,6 +6,7 @@ using Stride.CommunityToolkit.Rendering.Compositing;
 using Stride.Engine;
 
 using var game = new Game();
+GumService GumUI = GumService.Default;
 
 game.Run(start: Start);
 
@@ -16,7 +17,11 @@ void Start(Scene rootScene)
     // here on Stride ticks Gum's Update/Draw every frame -- unlike every other Gum runtime,
     // there is nothing for this sample to call per frame.
     game.AddGraphicsCompositor().AddCleanUIStage();
-    GumService.Default.Initialize(game);
+    GumUI.Initialize(game);
+
+    GumUI.UseKeyboardDefaults();
+
+    GumUI.UseGamepadDefaults();
 
     BuildDemoUi();
 
@@ -64,14 +69,4 @@ void BuildDemoUi()
         listBox.Items!.Add("Item " + i);
     }
     stackPanel.AddChild(listBox);
-
-    // Surfaces which render path GumService picked (#4617) so this is visible without a GPU
-    // profiler: GPU path on D3D11 (this sample's TFM), CPU fallback everywhere else.
-    var renderPathLabel = new Label
-    {
-        Text = GumService.Default.IsUsingGpuPath
-            ? "Render path: GPU (D3D11 via ANGLE)"
-            : "Render path: CPU (raster + upload)",
-    };
-    stackPanel.AddChild(renderPathLabel);
 }

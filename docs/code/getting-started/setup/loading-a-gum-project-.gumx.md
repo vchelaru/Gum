@@ -17,37 +17,44 @@ You are not required to use the Gum tool or .gumj projects - you are free to do 
 
 ## Creating a Gum Project
 
-Before creating a Gum project, it is recommended that you already have a functional Game project. Next, you'll need to save your Gum project:
+Before creating a Gum project, it is recommended that you already have a functional Game project. Next, create the Gum project in the Gum tool:
 
 1. Open the Gum tool
-2. Select File->New Project
-3. Navigate to the desired location for your project. See below for recommended locations:
+2. Select File > New Project
+3. Enter a **Project name**, such as `GumProject`. Leave **Create C# project** unchecked, since you already have a game project.
+4. Set the **Location** to the folder that holds your game's content. Gum creates a new folder named after the project inside it. See below for recommended locations:
 
 {% tabs %}
 {% tab title="MonoGame/KNI/FNA" %}
-Create a folder inside of your game's Content folder, such as `Content/GumProject`, then save the file in the newly-created folder.
+Set the **Location** to your game's `Content` folder. The project is created in `Content/GumProject`.
 {% endtab %}
 
 {% tab title="raylib" %}
-Create a folder inside of your game's resources folder, such as `resources/GumProject`, then save the file in the newly-created folder.
+Set the **Location** to your game's `Content` folder. The project is created in `Content/GumProject`.
 {% endtab %}
 
 {% tab title="Silk.NET" %}
-Create a folder inside of your game's Content folder, such as `Content/GumProject`, then save the file in the newly-created folder.
+Set the **Location** to your game's `Content` folder. The project is created in `Content/GumProject`.
+{% endtab %}
+
+{% tab title="BRUTAL" %}
+Set the **Location** to your game's `Content` folder. The project is created in `Content/GumProject`.
 {% endtab %}
 
 {% tab title="MonoGame/KNI Web" %}
-Web targets (KNI BlazorGL and other WebAssembly hosts) must serve the Gum project from `wwwroot`. Create a folder inside your web project's `wwwroot/Content` folder, such as `wwwroot/Content/GumProject`, then save the file in the newly-created folder.
+Web targets (KNI BlazorGL and other WebAssembly hosts) must serve the Gum project from `wwwroot`. Set the **Location** to your web project's `wwwroot/Content` folder. The project is created in `wwwroot/Content/GumProject`.
 
 Files placed anywhere else are not published as static web assets and will fail to load at runtime with a 404.
 {% endtab %}
 
 {% tab title=".NET MAUI" %}
-Create a folder inside of your project's folder, such as `GumProject`, then save the file in the newly-created folder.
+Set the **Location** to your project's folder. The project is created in `GumProject`.
 {% endtab %}
 {% endtabs %}
 
 It's best to put your Gum project in a folder that is not shared with any other content that it stays organized from the rest of your content files. Remember, Gum creates lots of files.
+
+For every option in the dialog, see [Creating a Project](../../../gum-tool/setup/creating-a-project.md). To start without an existing game project, check **Create C# project** and Gum creates a runnable game with the Gum project inside it.
 
 ## Adding the Gum Project to your .csproj
 
@@ -82,7 +89,7 @@ If you are using the Contentless project ([https://github.com/Ellpeck/Contentles
 {% tab title="raylib" %}
 ```xml
 <ItemGroup>
-    <None Update="resources\GumProject\**\*.*">
+    <None Update="Content\GumProject\**\*.*">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
 </ItemGroup>
@@ -90,6 +97,16 @@ If you are using the Contentless project ([https://github.com/Ellpeck/Contentles
 {% endtab %}
 
 {% tab title="Silk.NET" %}
+```xml
+<ItemGroup>
+    <None Update="Content\GumProject\**\*.*">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+</ItemGroup>
+```
+{% endtab %}
+
+{% tab title="BRUTAL" %}
 ```xml
 <ItemGroup>
     <None Update="Content\GumProject\**\*.*">
@@ -113,7 +130,7 @@ If you keep your Gum project outside `wwwroot` and want to include it via a wild
 ```
 
 {% hint style="warning" %}
-The Gum project files must end up under `wwwroot` in the published output. Files placed anywhere else are not served by the WebAssembly host and `GumService.Default.Initialize` will fail to load the `.gumj`.
+The Gum project files must end up under `wwwroot` in the published output. Files placed anywhere else are not served by the WebAssembly host and `GumUI.Initialize` will fail to load the `.gumj`.
 {% endhint %}
 {% endtab %}
 
@@ -193,7 +210,7 @@ public static void Main()
 {
     // Additional code needed to initialize your raylib project goes here
     GumUI.Initialize(
-        "resources/GumProject/raylibGumProject.gumj");
+        "Content/GumProject/GumProject.gumj");
     
     // This assumes that your project has at least 1 screen
     if(ObjectFinder.Self.GumProjectSave.Screens.Count == 0)
@@ -214,7 +231,7 @@ public static void Main()
 {% tab title="Silk.NET" %}
 ```csharp
 // Initialize
-GumService.Default.Initialize(canvas, inputContext, "Content/GumProject/GumProject.gumj");
+GumUI.Initialize(window, "Content/GumProject/GumProject.gumj");
 
 // This assumes that your project has at least 1 screen
 if (ObjectFinder.Self.GumProjectSave.Screens.Count == 0)
@@ -228,7 +245,7 @@ var screen = ObjectFinder.Self.GumProjectSave.Screens[0]
 screen.AddToRoot();
 ```
 
-See the [Silk.NET setup page](adding-initializing-gum/silk.net.md) for where `canvas` and `inputContext` come from — window/GL/Skia surface setup is elided here since it's the same regardless of whether you load a `.gumj` project.
+See the [Silk.NET setup page](adding-initializing-gum/silk.net.md) for how to create `window`.
 {% endtab %}
 
 {% tab title=".NET MAUI" %}
@@ -286,7 +303,3 @@ if (button != null)
 ```
 
 `ToForms` returns `null` for elements that have no Forms control, such as a plain container or a screen. The non-generic `ToForms()` returns a `FrameworkElement?`, and `ToForms<T>()` returns `T?`, which is also `null` when the control is a different type. Like `ToGraphicalUiElement`, `ToForms` does not add the result to the root, so call `AddToRoot` when you want it displayed.
-
-{% hint style="info" %}
-Available in November 2026, or now if building Gum from source.
-{% endhint %}

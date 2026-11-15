@@ -6,6 +6,12 @@ This page assumes you have an existing raylib-cs project. This can be an empty p
 
 The raylib-cs runtime library is still actively developed and the maintainers are prioritizing bugs and features which are needed immediately by the community. If run into a bug or missing feature please let us know on Discord or GitHub issues so we can prioritize fixes for your project.
 
+## Starting From a New Project
+
+If you plan to use a Gum project, the easiest start is a new game that Gum creates for you. In the Gum tool, select **File** > **New Project**, check **Create C# project**, and choose raylib in **Platform**. Or run [`gumcli new MyGame --platform raylib`](../../../../cli/new.md). The game already references Gum, loads the Gum project and copies it to the output folder, so you can skip the rest of this page. See [Creating a Project](../../../../gum-tool/setup/creating-a-project.md).
+
+The rest of this page adds Gum to a game you already have.
+
 ## Adding Gum NuGet package
 
 The easiest way to add Gum to your project is to use the NuGet package. Open your project in your preferred IDE, or add Gum through the command line.
@@ -15,20 +21,16 @@ Add the Gum.raylib NuGet package ([https://www.nuget.org/packages/Gum.raylib](ht
 Modify csproj:
 
 ```xml
-<PackageReference Include="Gum.raylib" />
-<PackageReference Include="KernSmith.RaylibGum" /> <!-- Recommended, optional: dynamic fonts -->
-<PackageReference Include="KernSmith.Rasterizers.StbTrueType" /> <!-- Only needed if targeting web -->
-<PackageReference Include="Gum.raylib.ShadowDusk" /> <!-- Optional: .fx and .slang shader files -->
+<PackageReference Include="Gum.raylib" Version="*" />
 ```
 
 Or add through command line:
 
 ```bash
 dotnet add package Gum.raylib
-dotnet add package KernSmith.RaylibGum               # Recommended, optional: dynamic fonts
-dotnet add package KernSmith.Rasterizers.StbTrueType # Only needed if targeting web
-dotnet add package Gum.raylib.ShadowDusk             # Optional: .fx and .slang shader files
 ```
+
+The [Full Program](#full-program) below needs only this package. Extra features come as separate packages, listed in [Optional Extras](#optional-extras).
 
 {% hint style="warning" %}
 Don't name your project `RaylibGum`, that's the assembly name inside the `Gum.raylib` package. A same-named project produces a same-named output DLL that silently overwrites the runtime's copy in your `bin` folder, causing a `TypeLoadException` at runtime with no build warning. Gum's build now catches this for you: if your `AssemblyName` collides, the build fails with an error telling you to change it.
@@ -53,71 +55,73 @@ Next, add RaylibGum as a project reference in your game project. Your project mi
 <ProjectReference Include="..\Gum\Runtimes\RaylibGum\RaylibGum.csproj" />
 ```
 
-## Adding Gum to Program
+To link an extra from [Optional Extras](#optional-extras), add its project instead of its package:
 
-Gum can be added to a Program class with a few lines of code. Projects are encouraged to create a local GumService property called GumUI for convenience.
+* KernSmith: \<Gum Root>/Integrations/KernSmith/KernSmith.RaylibGum/KernSmith.RaylibGum.csproj
+* ShadowDusk: \<Gum Root>/Runtimes/RaylibGum.ShadowDusk/RaylibGum.ShadowDusk.csproj
+* Expressions: \<Gum Root>/Runtimes/GumExpressions/GumExpressions.csproj
 
-Add code to your Program class to Initialize, Update, and Draw Gum as shown in the following code block:
+## Full Program
 
-<pre class="language-csharp"><code class="lang-csharp"><strong>using Gum.Forms.Controls;
-</strong><strong>using Gum.Wireframe;
-</strong><strong>using Gum;
-</strong>using Raylib_cs;
-namespace raylibExample1;
-
-public class Program
-{
-<strong>    static GumService GumUI => GumService.Default;
-</strong>
-    // STAThread is required if you deploy using NativeAOT on Windows - See https://github.com/raylib-cs/raylib-cs/issues/301
-    [STAThread]
-    public static void Main()
-    {
-        const int screenWidth = 800;
-        const int screenHeight = 450;
-
-        Raylib.InitWindow(screenWidth, screenHeight, "Gum Sample");
-<strong>        Raylib.SetTargetFPS(60);
-</strong>
-<strong>        // This tells Gum to use the entire screen
-</strong><strong>        GraphicalUiElement.CanvasWidth = screenWidth;
-</strong><strong>        GraphicalUiElement.CanvasHeight = screenHeight;
-</strong>
-<strong>        GumUI.Initialize();
-</strong>
-        while (!Raylib.WindowShouldClose())
-        {
-<strong>            GumUI.Update(Raylib.GetTime());
-</strong>
-            Raylib.BeginDrawing();
-            Raylib.ClearBackground(Raylib_cs.Color.SkyBlue);
-<strong>            GumUI.Draw();
-</strong>
-            Raylib.EndDrawing();
-        }
-        Raylib.CloseWindow();
-    }
-}
-</code></pre>
-
-## Adding Dynamic Fonts (Optional)
-
-By default, Gum uses pre-built bitmap font (.fnt) files for text rendering. The `KernSmith.RaylibGum` package added above enables dynamic in-memory font generation, which lets you set `Font`, `FontSize`, `IsBold`, `IsItalic`, `OutlineThickness`, and `UseFontSmoothing` on any `TextRuntime` without needing .fnt/.png files on disk:
-
-```csharp
-using RaylibGum.Renderables;
-
-CustomSetPropertyOnRenderable.InMemoryFontCreator = new KernSmithRaylibFontCreator();
-```
+The following is a complete `Program.cs` that opens a window, initializes Gum, shows a button and runs the game loop. It needs only the base package and builds its UI in code, so it runs without a Gum project.
 
 {% hint style="info" %}
-For shipping games, you should register custom .ttf fonts rather than relying on system fonts. For more information, see the [Fonts](../../../standard-visuals/textruntime/fonts.md) page.
+Available in preview NuGet packages (use a `-preview` version), or now if building Gum from source.
 {% endhint %}
 
-{% hint style="warning" %}
-**On web:** fonts built at runtime start with the FreeType rasterizer, which is native code and cannot run in a browser. KernSmith starts with FreeType on every platform, so adding the `KernSmith.Rasterizers.StbTrueType` package above is not enough on its own. You also have to name that backend and make sure it gets registered. If the font cannot be built, Gum uses its built in 18 pixel font instead and shows no error, so the sign of this problem is text in the wrong font.
+```csharp
+using Gum;
+using Gum.Forms.Controls;
+using Gum.GueDeriving;
+using Gum.Wireframe;
+using Raylib_cs;
 
-Web builds are trimmed by default, which removes the code KernSmith uses to find backends on its own, so register it yourself. Add this to your web target's `Program.cs`, before `GumUI.Initialize()`:
+const int screenWidth = 800;
+const int screenHeight = 450;
+
+Raylib.InitWindow(screenWidth, screenHeight, "My Game");
+Raylib.SetTargetFPS(60);
+
+GumService GumUI = GumService.Default;
+
+GumUI.Initialize();
+GumUI.UseKeyboardDefaults();
+GumUI.UseGamepadDefaults();
+
+var button = new Button();
+button.AddToRoot();
+button.Width = 200;
+button.Anchor(Anchor.Center);
+button.Click += (_, _) => button.Text = $"Clicked\n{System.DateTime.Now}";
+
+while (!Raylib.WindowShouldClose())
+{
+    double gameTime = Raylib.GetTime();
+    GumUI.Update(gameTime);
+
+    Raylib.BeginDrawing();
+    Raylib.ClearBackground(Raylib_cs.Color.SkyBlue);
+    GumUI.Draw();
+    Raylib.EndDrawing();
+}
+
+Raylib.CloseWindow();
+```
+
+The button in the center of the window confirms Gum works. Delete it once you start building your game.
+
+## Optional Extras
+
+Each extra is a separate package. Add the package, then add its line right after `GumUI.Initialize`. The window must already exist.
+
+| Extra | Package | Line after `Initialize` |
+| --- | --- | --- |
+| [KernSmith](../../../files-and-fonts/font-strategies.md#dynamic-kernsmith-generation) (**Recommended**): fonts built at runtime, no .fnt files | `KernSmith.RaylibGum` | `GumUI.UseKernSmith();` |
+| [ShadowDusk](../../../standard-visuals/containerruntime.md#loading-shader-files-with-sourceshaderfile): `.fx` and `.slang` shader files | `Gum.raylib.ShadowDusk` | `GumUI.UseShadowDusk();` |
+| [Expressions](../../../styling/runtime-variable-references.md): arithmetic in variable references | `Gum.Expressions` | `GumUI.UseExpressions();` |
+
+{% hint style="warning" %}
+**On web:** KernSmith builds fonts with FreeType by default, which is native code and cannot run in a browser. Also add the `KernSmith.Rasterizers.StbTrueType` package, register it in your web target's `Program.cs` before `GumUI.Initialize()`, and pass its backend to `UseKernSmith`. Otherwise Gum falls back to its built in 18 pixel font with no error.
 
 ```csharp
 using System.Runtime.CompilerServices;
@@ -126,72 +130,29 @@ using KernSmith.Rasterizers.StbTrueType;
 RuntimeHelpers.RunClassConstructor(typeof(StbTrueTypeRasterizer).TypeHandle);
 ```
 
-Then pass the backend explicitly:
-
 ```csharp
-CustomSetPropertyOnRenderable.InMemoryFontCreator =
-    new KernSmithRaylibFontCreator(KernSmith.RasterizerBackend.StbTrueType);
+// Initialize
+GumUI.UseKernSmith(KernSmith.RasterizerBackend.StbTrueType);
 ```
 {% endhint %}
 
-## Adding Shader Support (Optional)
+## Loading Your Gum Project
 
-`Gum.raylib.ShadowDusk` lets a render target container's `SourceShaderFile` point at an `.fx` or `.slang` shader file. ShadowDusk converts it to a GLSL fragment shader at runtime. Without this package, a container whose `SourceShaderFile` is set fails to load unless you register your own shader resolver.
-
-Add the NuGet package as shown above, then call `UseShadowDusk` after `GumUI.Initialize`. The window must already exist:
+To load a Gum project, pass its `.gumj` path to `Initialize`:
 
 ```csharp
 // Initialize
-GumUI.Initialize();
-GumUI.UseShadowDusk();
+GumUI.Initialize("Content/GumProject/GumProject.gumj");
 ```
 
-If linking to source instead of NuGet, add `<Gum Root>/Runtimes/RaylibGum.ShadowDusk/RaylibGum.ShadowDusk.csproj` to your solution.
+Then copy the Gum project to the output folder by adding this to your `.csproj`:
 
-For loading, errors, and examples, see [ContainerRuntime](../../../standard-visuals/containerruntime.md#loading-shader-files-with-sourceshaderfile).
-
-{% hint style="info" %}
-`Gum.raylib.ShadowDusk` is available in November 2026, or now if building Gum from source.
-{% endhint %}
-
-## Adding Expression Support (Optional)
-
-If your Gum project uses arithmetic expressions in variable references (such as `Width = OtherInstance.Width + 20`), you can add the `Gum.Expressions` NuGet package for full expression evaluation at runtime. Without this package, simple variable references like `Width = OtherInstance.Width` still work.
-
-Add the NuGet package:
-
-```bash
-dotnet add package Gum.Expressions
+```xml
+<ItemGroup>
+    <None Update="Content\GumProject\**\*.*">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+</ItemGroup>
 ```
 
-Then call `GumExpressionService.Initialize()` after `GumUI.Initialize`. Expression support is typically used with a Gum project that has variable references defined in the tool:
-
-```csharp
-// Initialize
-GumUI.Initialize("GumProject/GumProject.gumj");
-GumExpressionService.Initialize();
-```
-
-If linking to source instead of NuGet, add `<Gum Root>/Runtimes/GumExpressions/GumExpressions.csproj` to your solution.
-
-For more information, see the [Runtime Variable References](../../../styling/runtime-variable-references.md) page.
-
-## Adding a Button (Testing the Setup)
-
-Gum can be tested by adding a Button after Gum is initialized. To do so, add code to create a `Button` as shown in the following block of code after Gum is initialized:
-
-```csharp
-public static void Main()
-{
-    //...
-    GumUI.Initialize();
-    
-    var button = new Button();
-    button.AddToRoot();
-    button.Width = 200;
-    button.Anchor(Anchor.Center);
-    button.Click += (_,_) => button.Text = $"Clicked\n{DateTime.Now}";
-    //additional code omitted
-```
-
-<figure><img src="../../../../.gitbook/assets/10_07 36 10.gif" alt=""><figcaption><p>Button in raylib responding to clicks</p></figcaption></figure>
+To create the Gum project and show its screens, see [Loading a Gum Project](../loading-a-gum-project-.gumx.md).

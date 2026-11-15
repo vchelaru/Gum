@@ -309,6 +309,21 @@ public class ShapeRenderer
         }
     }
 
+    /// <summary>
+    /// The shader version<see cref="Initialize()"/> compiles: every <see cref="ShapeFeatures"/> Gum's
+    /// shapes draw with apart from dashes and SVG text. One version holding all of them covers any draw
+    /// or batch that needs fewer, so no shape compiles a shader mid-game.
+    /// </summary>
+    public const ShapeFeatures DefaultWarmupFeatures = ShapeFeatures.Gradients | ShapeFeatures.BorderGradients
+        | ShapeFeatures.EllipsesAndPaths | ShapeFeatures.Clips | ShapeFeatures.Ramps;
+
+    /// <summary>
+    /// The features of the shader version compiled at startup; set before Initialize. None compiles
+    /// only the default version, which starts fastest but makes the first draw that needs more
+    /// compile mid-game. Defaults to <see cref="DefaultWarmupFeatures"/>.
+    /// </summary>
+    public ShapeFeatures WarmupFeatures { get; set; } = DefaultWarmupFeatures;
+
     public void Initialize()
     {
         // Resolve the device from the active SystemManagers rather than GumService.Default, so this
@@ -331,6 +346,10 @@ public class ShapeRenderer
     public void Initialize(GraphicsDevice graphicsDevice, ContentManager contentManager) =>
         InitializeInternal(graphicsDevice);
 
+    // GumService.UseShapes(): the device of the service that asked, not whichever SystemManagers is current.
+    internal void InitializeFor(GraphicsDevice graphicsDevice) =>
+        InitializeInternal(graphicsDevice);
+
     // Issue #6434 — Apos.Shapes chooses which of its embedded shaders to load (OpenGL, DX11, ...) by
     // reading MonoGame's internal Shader.Profile through reflection. Nothing in code names that
     // property, so a trimmed build (Release iOS) removes it, Apos falls back to the DirectX shader and
@@ -348,7 +367,17 @@ public class ShapeRenderer
         }
         IsInitialized = true;
         // Eager on purpose, so the shader compile happens at startup and not mid-game.
-        _sb = new ShapeBatch(graphicsDevice, (Effect?)null);
+        // From Apos.Shapes 0.10.0 (MonoGame and KNI) the constructor's warmup compiles only the default
+        // version, so name the rest (#7808). Draws that need less reuse this compiled version.
+        bool defaultVersionOnly = WarmupFeatures == ShapeFeatures.None;
+        _sb = new ShapeBatch(graphicsDevice, (Effect?)null, warmup: defaultVersionOnly);
+        if (!defaultVersionOnly)
+        {
+            _sb.Warmup(WarmupFeatures);
+        }
+        // Issue #7307: Apos.Shapes interpolates gradients in Oklab by default, which brightens the
+        // mid-tones and mixes premultiplied alpha. Skia and raylib interpolate the straight sRGB channels.
+        _sb.ColorSpace = ColorSpace.Rgb;
 
         // Belt-and-suspenders for consumers using GumBatch directly (without GumService).
         // GumService.Initialize already triggers this via reflection scan; calling it here

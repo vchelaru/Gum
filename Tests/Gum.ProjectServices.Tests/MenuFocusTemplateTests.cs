@@ -19,14 +19,14 @@ public class MenuFocusTemplateTests
     public static IEnumerable<object[]> Menus()
     {
         yield return new object[] { "FormsTemplate", "Controls/Menu" };
-        yield return new object[] { "FormsThemes/Bubblegum", "Bubblegum/Controls/Menu" };
-        yield return new object[] { "FormsThemes/DarkPro", "DarkPro/Controls/Menu" };
-        yield return new object[] { "FormsThemes/Editor", "Editor/Controls/Menu" };
-        yield return new object[] { "FormsThemes/ForestGlade", "ForestGlade/Controls/Menu" };
-        yield return new object[] { "FormsThemes/Hazard", "Hazard/Controls/Menu" };
-        yield return new object[] { "FormsThemes/Meadow", "Meadow/Controls/Menu" };
-        yield return new object[] { "FormsThemes/Neon", "Neon/Controls/Menu" };
-        yield return new object[] { "FormsThemes/Retro95", "Retro95/Controls/Menu" };
+        yield return new object[] { "FormsThemes/Bubblegum", "Bubblegum/Menu" };
+        yield return new object[] { "FormsThemes/DarkPro", "DarkPro/Menu" };
+        yield return new object[] { "FormsThemes/Editor", "Editor/Menu" };
+        yield return new object[] { "FormsThemes/ForestGlade", "ForestGlade/Menu" };
+        yield return new object[] { "FormsThemes/Hazard", "Hazard/Menu" };
+        yield return new object[] { "FormsThemes/Meadow", "Meadow/Menu" };
+        yield return new object[] { "FormsThemes/Neon", "Neon/Menu" };
+        yield return new object[] { "FormsThemes/Retro95", "Retro95/Menu" };
     }
 
     [Theory]

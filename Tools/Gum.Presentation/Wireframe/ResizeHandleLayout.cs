@@ -36,6 +36,22 @@ public class ResizeHandleLayout
     public float GetInnerHandleWorldInset(float zoom) => _displayScale.ToWorld(InnerHandleInset, zoom);
 
     /// <summary>
+    /// Whether the handle for <paramref name="side"/> can be used: left/right edges need width
+    /// changes, top/bottom edges need height changes, and corners need both. The canvas draws and
+    /// hit-tests only the handles for which this is true.
+    /// </summary>
+    public static bool IsSideAvailable(ResizeSide side, bool widthEnabled, bool heightEnabled)
+    {
+        return side switch
+        {
+            ResizeSide.Left or ResizeSide.Right => widthEnabled,
+            ResizeSide.Top or ResizeSide.Bottom => heightEnabled,
+            ResizeSide.None => false,
+            _ => widthEnabled && heightEnabled
+        };
+    }
+
+    /// <summary>
     /// Returns the top-left of the handle for <paramref name="side"/>. Corner handles sit just
     /// outside the rectangle's corners; edge handles sit just outside the edge, centered on it.
     /// </summary>

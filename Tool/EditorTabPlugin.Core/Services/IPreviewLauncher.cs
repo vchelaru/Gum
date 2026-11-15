@@ -36,8 +36,11 @@ public interface IPreviewLauncher
     void ReactToElementRenamed(ElementSave element);
 
     /// <summary>
-    /// Re-points the pin and the shown element at the same-named elements of a newly loaded
-    /// project, since the loaded objects are new. Unpins when the pinned element is not in it.
+    /// Closes the running preview when the loaded project is not the file it was launched against
+    /// (another project opened, or a new one created), since a preview cannot switch projects
+    /// (#7541). When the same file was reloaded, re-points the pin and the shown element at the
+    /// same-named elements of the new project, since the loaded objects are new. Unpins when the
+    /// pinned element is not in it.
     /// </summary>
     void ReactToProjectLoaded(GumProjectSave project);
 

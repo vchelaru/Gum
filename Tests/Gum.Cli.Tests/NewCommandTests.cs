@@ -1,3 +1,5 @@
+using Gum.Cli.Commands;
+using System.CommandLine;
 using Gum.ProjectServices;
 using System.Xml.Linq;
 using Shouldly;
@@ -88,7 +90,7 @@ public class NewCommandTests : BaseTestClass
         CliTestHelper result = CliTestHelper.Run("new", filePath, "--theme", "meadow");
 
         result.ExitCode.ShouldBe(0);
-        File.Exists(Path.Combine(TempDirectory, "Components", "Meadow", "Controls", "Label.gucx")).ShouldBeTrue();
+        File.Exists(Path.Combine(TempDirectory, "Components", "Meadow", "Label.gucx")).ShouldBeTrue();
         File.Exists(Path.Combine(TempDirectory, "Behaviors", "ButtonBehavior.behx")).ShouldBeTrue();
     }
 
@@ -291,7 +293,6 @@ public class NewCommandTests : BaseTestClass
     [Theory]
     [InlineData("monogame")]
     [InlineData("kni")]
-    [InlineData("kniskia")]
     [InlineData("raylib")]
     [InlineData("stride")]
     [InlineData("silknet")]
@@ -362,24 +363,53 @@ public class NewCommandTests : BaseTestClass
     }
 
     [Fact]
-    public void New_WithKniSkiaPlatform_ShouldCreateKniGameDrawingGumThroughSkia()
+    public void New_WithKniSkiaPlatformAndSourceLinked_ShouldCreateASlnxAndLinkTheKniSkiaRuntime()
+    {
+        string projectDir = Path.Combine(TempDirectory, "MyGame");
+
+        CliTestHelper result = CliTestHelper.Run("new", projectDir, "-p", "kniskia", "--source-linked", "--no-restore");
+
+        result.ExitCode.ShouldBe(0, result.StandardError);
+        string csproj = File.ReadAllText(Path.Combine(projectDir, "MyGame.csproj"));
+        csproj.ShouldContain("KniSkiaGum.csproj");
+        csproj.ShouldNotContain("PackageReference Include=\"Gum.KniSkia\"");
+        File.Exists(Path.Combine(projectDir, "MyGame.slnx")).ShouldBeTrue();
+        File.Exists(Path.Combine(projectDir, "Game1.cs")).ShouldBeTrue();
+    }
+
+    [Fact]
+    public void New_WithKniSkiaPlatformWithoutSourceLinked_ShouldReturnExitCode2NamingTheFix()
     {
         string projectDir = Path.Combine(TempDirectory, "MyGame");
 
         CliTestHelper result = CliTestHelper.Run("new", projectDir, "-p", "kniskia", "--no-restore");
 
+        result.ExitCode.ShouldBe(2);
+        result.StandardError.ShouldContain("--source-linked");
+        Directory.Exists(projectDir).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void New_WithBrutalPlatformOnTheStableChannel_ShouldReturnExitCode2NamingTheFix()
+    {
+        string projectDir = Path.Combine(TempDirectory, "MyGame");
+
+        CliTestHelper result = CliTestHelper.Run("new", projectDir, "-p", "brutal", "--no-restore");
+
+        result.ExitCode.ShouldBe(2);
+        result.StandardError.ShouldContain("no stable Gum package yet: pass --preview, or --source-linked");
+        Directory.Exists(projectDir).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void New_WithBrutalPlatformAndPreview_ShouldReferenceThePrereleasePackage()
+    {
+        string projectDir = Path.Combine(TempDirectory, "MyGame");
+
+        CliTestHelper result = CliTestHelper.Run("new", projectDir, "-p", "brutal", "--preview", "--no-restore");
+
         result.ExitCode.ShouldBe(0, result.StandardError);
-        string csproj = File.ReadAllText(Path.Combine(projectDir, "MyGame.csproj"));
-        csproj.ShouldContain("<PackageReference Include=\"Gum.KniSkia\"");
-        csproj.ShouldContain("<PackageReference Include=\"SkiaGameRendering.Kni.DesktopGL\"");
-        csproj.ShouldContain("<PackageReference Include=\"nkast.Kni.Platform.SDL2.GL\"");
-        csproj.ShouldNotContain("Gum.KNI\"");
-        File.Exists(Path.Combine(projectDir, "Program.cs")).ShouldBeTrue();
-        string game = File.ReadAllText(Path.Combine(projectDir, "Game1.cs"));
-        game.ShouldContain("namespace MyGame;");
-        game.ShouldContain("GumUI.Initialize(this, \"Content/GumProject/GumProject.gumj\")");
-        game.ShouldContain("SkiaRenderTarget2D");
-        game.ShouldContain("GumUI.Draw(_canvas.Canvas)");
+        File.ReadAllText(Path.Combine(projectDir, "MyGame.csproj")).ShouldContain("<PackageReference Include=\"Gum.Brutal.OGL\" Version=\"*-*\"");
     }
 
     [Fact]
@@ -459,6 +489,43 @@ public class NewCommandTests : BaseTestClass
         Directory.Exists(projectDir).ShouldBeFalse();
     }
 
+    [Fact]
+    public void New_WithPreview_ShouldWritePrereleaseAwareGumReference()
+    {
+        string projectDir = Path.Combine(TempDirectory, "MyGame");
+
+        CliTestHelper result = CliTestHelper.Run("new", projectDir, "--platform", "monogame", "--preview", "--no-restore");
+
+        result.ExitCode.ShouldBe(0, result.StandardError);
+        string csproj = File.ReadAllText(Path.Combine(projectDir, "MyGame.csproj"));
+        csproj.ShouldContain("<PackageReference Include=\"Gum.MonoGame\" Version=\"*-*\" />");
+    }
+
+    [Fact]
+    public void New_WithPreviewAndSourceLinked_ShouldReturnExitCode2NamingBothOptions()
+    {
+        string projectDir = Path.Combine(TempDirectory, "MyGame");
+
+        CliTestHelper result = CliTestHelper.Run("new", projectDir, "--platform", "monogame", "--preview", "--source-linked", "--no-restore");
+
+        result.ExitCode.ShouldBe(2);
+        result.StandardError.ShouldContain("--preview");
+        result.StandardError.ShouldContain("--source-linked");
+        Directory.Exists(projectDir).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void New_WithPreviewButNoPlatform_ShouldReturnExitCode2()
+    {
+        string projectDir = Path.Combine(TempDirectory, "MyGame");
+
+        CliTestHelper result = CliTestHelper.Run("new", projectDir, "--preview");
+
+        result.ExitCode.ShouldBe(2);
+        result.StandardError.ShouldContain("--platform");
+        Directory.Exists(projectDir).ShouldBeFalse();
+    }
+
     #region Output text pinned for the move into Gum.ProjectServices (#7208)
 
     [Fact]
@@ -497,7 +564,7 @@ public class NewCommandTests : BaseTestClass
 
         result.ExitCode.ShouldBe(2);
         result.StandardError.Trim().ShouldEndWith(
-            "Unknown platform 'nope'. Valid values are: monogame, kni, kniskia, raylib, stride, silknet.");
+            "Unknown platform 'nope'. Valid values are: monogame, kni, kniskia, raylib, stride, silknet, brutal.");
     }
 
     [Fact]
@@ -545,4 +612,60 @@ public class NewCommandTests : BaseTestClass
     }
 
     #endregion
+
+    [Theory]
+    [InlineData("--template")]
+    [InlineData("-t")]
+    [InlineData("--theme")]
+    [InlineData("--platform")]
+    [InlineData("-p")]
+    [InlineData("--no-restore")]
+    [InlineData("--source-linked")]
+    [InlineData("--preview")]
+    public void New_HasEveryOptionTheDialogsCommandLineUses(string alias)
+    {
+        Command command = NewCommand.Create();
+
+        command.Options.ShouldContain(option => option.HasAlias(alias));
+    }
+
+    [Fact]
+    public async Task New_WithThemePlatformAndNoRestore_WritesTheSameFilesTheServiceDoes()
+    {
+        string cliDir = Path.Combine(TempDirectory, "FromCli", "Parity_Game");
+        string serviceDir = Path.Combine(TempDirectory, "FromService", "Parity_Game");
+
+        CliTestHelper result = CliTestHelper.Run("new", cliDir, "--platform", "kni", "--theme", "Bubblegum", "--no-restore");
+        NewProjectService service = new NewProjectService(
+            FormsThemeLocator.CreateDefault(AppContext.BaseDirectory, Directory.GetCurrentDirectory()),
+            new NoRestore(), new[] { AppContext.BaseDirectory });
+        NewProjectResult serviceResult = await service.ExecuteAsync(new NewProjectRequest
+        {
+            Path = serviceDir, Platform = "kni", Theme = "Bubblegum", Restore = false
+        }, null, CancellationToken.None);
+
+        result.ExitCode.ShouldBe(0, result.StandardError);
+        serviceResult.Files.Success.ShouldBeTrue(serviceResult.Files.ErrorMessage);
+        string[] Files(string root) => Directory.GetFiles(root, "*", SearchOption.AllDirectories)
+            .Select(file => Path.GetRelativePath(root, file)).Order().ToArray();
+        Files(cliDir).ShouldBe(Files(serviceDir));
+        File.ReadAllText(Path.Combine(cliDir, "Game1.cs")).ShouldBe(File.ReadAllText(Path.Combine(serviceDir, "Game1.cs")));
+    }
+
+    [Fact]
+    public void New_WithPlatformAndRestoreOff_PrintsNoRestoreLine()
+    {
+        string projectDir = Path.Combine(TempDirectory, "Quiet_Game");
+
+        CliTestHelper result = CliTestHelper.Run("new", projectDir, "--platform", "stride", "--no-restore");
+
+        result.ExitCode.ShouldBe(0, result.StandardError);
+        result.StandardOutput.ShouldNotContain("Restoring");
+    }
+
+    private class NoRestore : IRestoreRunner
+    {
+        public Task<RestoreResult> RestoreAsync(string csprojPath, Action<string>? onOutputLine, CancellationToken cancellationToken) =>
+            Task.FromResult(new RestoreResult { Status = RestoreStatus.Succeeded, ExitCode = 0 });
+    }
 }

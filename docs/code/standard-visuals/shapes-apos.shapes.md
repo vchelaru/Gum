@@ -60,119 +60,78 @@ dotnet add package Gum.Shapes.KNI
 There is no shape support NuGet package for FNA. An outlined `Circle` or `Rectangle` renders without any package (`StrokeColor`, `StrokeWidth`, and geometry all work), and `Rectangle`'s fill (at square corners) renders too. `Circle`'s fill, `Rectangle`'s rounded corners, and the richer effects (gradient, drop shadow, dashed stroke) are currently available on MonoGame and KNI only, since there is no shape support package for FNA.
 {% endtab %}
 
-{% tab title=".NET MAUI" %}
-No additional setup is required to use shapes in .NET MAUI. The full fill, outline, gradient, drop shadow, dashed-stroke, and corner-radius surface is supported natively.
+{% tab title="SkiaSharp-based runtimes" %}
+No additional setup is required to use shapes on [SkiaSharp-based runtimes](../about/runtimes.md). The full fill, outline, gradient, drop shadow, dashed-stroke, and corner-radius surface is supported natively.
 {% endtab %}
 
 {% tab title="raylib" %}
 No additional setup is required to use shapes on raylib. The full surface is built into `CircleRuntime` and `RectangleRuntime` natively: fill, outline (stroke), gradient, drop shadow, dashed stroke, and corner-radius. No extra NuGet package or initialization is needed.
 {% endtab %}
 
-{% tab title="Silk.NET" %}
-No additional setup is required to use shapes in Silk.NET.
-{% endtab %}
 {% endtabs %}
 
 ## Setup in Code
 
 {% tabs %}
 {% tab title="MonoGame / KNI / FNA" %}
-Whether you are using code-only or the Gum tool, add the following line of code in your Initialize method, after `GumUI.Initialize(...)`:
+Whether you are using code-only or the Gum tool, add the following line of code after `GumUI.Initialize`:
 
 ```csharp
 // Initialize
-GumUI.Initialize(...);
-Gum.Renderables.ShapeRenderer.Self.Initialize();
+GumUI.UseShapes();
 ```
 
-`ShapeRenderer` lives in the `Gum.Renderables` namespace. The line above spells the namespace out so it can be pasted as-is. If you prefer, add `using Gum.Renderables;` to the file and call `ShapeRenderer.Self.Initialize();` instead.
+Shapes also needs the HiDef graphics profile, set in the `Game1` constructor as shown in [Optional Extras](../getting-started/setup/adding-initializing-gum/monogame-kni-fna/README.md#optional-extras).
 
 {% hint style="info" %}
-**As of November 2026:** `ShapeRenderer` lives in `Gum.Renderables`. Earlier releases used `MonoGameAndGum.Renderables`, which still compiles with a warning. If you are building Gum from source before the November 2026 release, use the new namespace now. See [Migrating to 2026 November](../../gum-tool/upgrading/migrating-to-2026-november.md#shapes-package-types-moved-to-gum.renderables-and-gum.content).
-{% endhint %}
-
-{% hint style="info" %}
-**December 2025 and earlier** used a different signature that took the graphics device and content manager: `ShapeRenderer.Self.Initialize(GraphicsDevice, Content);`. From January 2026 on, the parameterless `Initialize()` is the form to use.
+Available in preview NuGet packages (use a `-preview` version), or now if building Gum from source.
 {% endhint %}
 {% endtab %}
 
-{% tab title=".NET MAUI" %}
-No additional setup is needed if you have already added SkiaSharp and Gum to your project. For more information see the [.NET Maui Initializing Gum](../getting-started/setup/adding-initializing-gum/.net-maui.md) page.
+{% tab title="SkiaSharp-based runtimes" %}
+No additional setup is needed if you have already added Gum to your project. For setup, see the page for your runtime in [Adding/Initializing Gum](../getting-started/setup/adding-initializing-gum/README.md).
 {% endtab %}
 
 {% tab title="raylib" %}
 No additional setup is required. The full surface is built into `CircleRuntime` and `RectangleRuntime` natively: fill, outline (stroke), gradient, drop shadow, dashed stroke, and corner-radius. See those pages for their full property surface.
 {% endtab %}
-
-{% tab title="Silk.NET" %}
-No additional setup is needed if you have already added Gum to your project. For more information see the [Silk.NET Initializing Gum](../getting-started/setup/adding-initializing-gum/silk.net.md) page.
-{% endtab %}
 {% endtabs %}
 
 ### Code Example: Rendering Shapes in Code
 
-The following code shows how to add shapes to a MonoGame project:
+The following code shows how to add shapes in code:
 
 ```csharp
-public class Game1 : Game
-{
-    private GraphicsDeviceManager _graphics;
-    GumService GumUI => GumService.Default;
+// Initialize
+var circle = new CircleRuntime();
+circle.AddToRoot();
+circle.Width = 100;
+circle.Height = 100;
+circle.IsFilled = true;
+circle.FillColor = Color.Red;
 
-    public Game1()
-    {
-        _graphics = new GraphicsDeviceManager(this);
-        _graphics.GraphicsProfile = GraphicsProfile.HiDef;
-        Content.RootDirectory = "Content";
-        IsMouseVisible = true;
-    }
+var rectangle = new RectangleRuntime();
+rectangle.AddToRoot();
+rectangle.X = 100;
+rectangle.CornerRadius = 15;
+rectangle.IsFilled = true; // FillColor is the gradient start, so show the fill
+rectangle.FillColor = Color.Blue;
+rectangle.UseGradient = true;
+rectangle.Color2 = Color.Green;
 
-    protected override void Initialize()
-    {
-        GumUI.Initialize(this);
-        // Initialize shape renderer after GumUI:
-        Gum.Renderables.ShapeRenderer.Self.Initialize();
+var arc = new ArcRuntime();
+arc.AddToRoot();
+arc.X = 200;
+arc.Color = Color.Purple;
+arc.Thickness = 20;
+arc.StartAngle = 0;
+arc.SweepAngle = 270;
 
-        var circle = new CircleRuntime();
-        circle.AddToRoot();
-        circle.Width = 100;
-        circle.Height = 100;
-        circle.IsFilled = true;
-        circle.FillColor = Color.Red;
+// Update
+GumUI.Update(gameTime);
 
-        var rectangle = new RectangleRuntime();
-        rectangle.AddToRoot();
-        rectangle.X = 100;
-        rectangle.CornerRadius = 15;
-        rectangle.IsFilled = true; // FillColor is the gradient start, so show the fill
-        rectangle.FillColor = Color.Blue;
-        rectangle.UseGradient = true;
-        rectangle.Color2 = Color.Green;
-
-        var arc = new ArcRuntime();
-        arc.AddToRoot();
-        arc.X = 200;
-        arc.Color = Color.Purple;
-        arc.Thickness = 20;
-        arc.StartAngle = 0;
-        arc.SweepAngle = 270;
-
-        base.Initialize();
-    }
-
-    protected override void Update(GameTime gameTime)
-    {
-        GumUI.Update(gameTime);
-        base.Update(gameTime);
-    }
-
-    protected override void Draw(GameTime gameTime)
-    {
-        GraphicsDevice.Clear(Color.CornflowerBlue);
-        GumUI.Draw();
-        base.Draw(gameTime);
-    }
-}
+// Draw
+GumUI.Draw();
 ```
 
 <figure><img src="../../.gitbook/assets/06_05 57 11.png" alt=""><figcaption><p>Shapes rendered in an otherwise empty project</p></figcaption></figure>

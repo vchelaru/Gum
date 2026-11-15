@@ -1,4 +1,4 @@
-# Code Tab
+﻿# Code Tab
 
 ## Introduction
 
@@ -35,6 +35,16 @@ If a Screen or Component is selected, then an entire class for the component is 
 * Properties for each category including switch statements assigning all properties for each state
 * A property for each instance in the Screen or Component
 * Initialization of all variables including variables on the instances if using full code generation
+
+## Game Tab
+
+Next to **Object** and **State** above the preview, the **Game** tab shows the code a game needs to load your project and turn on what the Preview turns on by default, such as shape drawing and keyboard and gamepad navigation. Select the text and copy it, or right-click it and choose **Copy**. If your game already works the Preview way, you do not need it. If your game behaves differently from the Preview, for example Tab does not move focus, the Game tab shows the lines that explain why.
+
+The Game tab shows MonoGame, KNI and FNA code, which is also what you see before code generation is set up. For other output libraries it explains that the Preview runs on MonoGame, and for the legacy libraries the tab is hidden. See [Adding and Initializing Gum](../../code/getting-started/setup/adding-initializing-gum/monogame-kni-fna/README.md) for what each line does.
+
+{% hint style="info" %}
+Available in December 2026, or now if building Gum from source.
+{% endhint %}
 
 ## Setting Up Code Generation
 
@@ -236,3 +246,13 @@ This controls when Gum generates code for a component.
 * NeverGenerate - generated code is not saved for this element, and Gum leaves its existing code files alone
 * GenerateManually - generated code is only saved for this element if the **Generate Code** button is clicked, or if it is a requirement for another component or screen which is generated.
 * GenerateAutomaticallyOnPropertyChanged - this is generated whenever a change is made to this element in Gum.
+
+### Debug Only
+
+Checking **Debug Only** for the selected screen or component wraps its generated file in `#if DEBUG`, so release builds leave it out. Every place another element refers to it (its instances, their variables, parenting and the matching `using`) is wrapped in `#if DEBUG` too. A component derived from a debug only component is treated the same way, since it cannot exist without its base. To also leave these elements out of a `.gumpkg`, see [Leaving Out Debug Only Elements](../../cli/pack.md#leaving-out-debug-only-elements).
+
+Your own custom `.cs` file for the element is not wrapped. Gum regenerates the element and every element that refers to it when you change this setting, following each element's **Generation Behavior**.
+
+{% hint style="info" %}
+Available in December 2026, or now if building Gum from source.
+{% endhint %}

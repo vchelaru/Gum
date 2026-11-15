@@ -186,8 +186,13 @@ namespace StateAnimationPlugin.Managers
                 }
             }
 
+            RenameAnimationReferencesInOtherElements(element, oldAnimationName, animationViewModel.Name);
+        }
+
+        public void RenameAnimationReferencesInOtherElements(ElementSave element, string oldAnimationName, string newAnimationName)
+        {
             // Unfortunately we have to jump out of the view model and
-            // look at any object where this is an instance, and see if 
+            // look at any object where this is an instance, and see if
             // its animation is referenced.
             var elementsReferencingThis = ObjectFinder.Self.GetElementsReferencing(element);
 
@@ -219,7 +224,7 @@ namespace StateAnimationPlugin.Managers
                                 if(instanceElement == element)
                                 {
                                     didChange = true;
-                                    animationReference.Name = animationReference.SourceObject + "." + animationViewModel.Name;
+                                    animationReference.Name = animationReference.SourceObject + "." + newAnimationName;
                                 }
                             }
                         }

@@ -29,7 +29,7 @@ This conversion happens once, when the `.achx` loads — not every frame during 
 
 ## Loading in Code
 
-There are two ways to get an `.achx` onto a `SpriteRuntime` or `NineSliceRuntime`. Both work the same way on either type, and both work across MonoGame, KNI, FNA, Raylib, Skia, and Silk.NET.
+There are two ways to get an `.achx` onto a `SpriteRuntime` or `NineSliceRuntime`. Both work the same way on either type, and both work on every [runtime](../about/runtimes.md).
 
 ### Auto-Load via SourceFileName
 
@@ -84,7 +84,7 @@ Both loading paths go through `LoaderManager`, so an `.achx` loaded from the sam
 
 No `.achx` file is required to play back an animation chain. `AnimationChainList`, `AnimationChain`, and `AnimationFrame` are plain classes with public constructors — you can build a chain entirely in code, with no XML file and no `AnimationChainListSave` involved. This is useful for procedurally generated animations, for splitting a single loaded texture into frames without authoring an `.achx`, or for generating chains from data at runtime.
 
-The most common reason to build a chain by hand is splitting one sprite sheet texture into a grid of equal-sized frames. The following example builds a 4-frame walk cycle from a single row of a sprite sheet:
+The most common reason to build a chain by hand is splitting one sprite sheet texture into a grid of equal-sized frames. The following example is for MonoGame, KNI, and FNA, where the texture type is `Texture2D`. It builds a 4-frame walk cycle from a single row of a sprite sheet:
 
 ```csharp
 // Initialize
@@ -129,13 +129,13 @@ Texture loading works the same as anywhere else in Gum — see [File Loading](fi
 
 ## Playback
 
-Once `AnimationChains` is populated, set `CurrentChainName` to the chain you want to play and set `Animate` to `true`. Setting it to a different chain starts that chain from the beginning; setting it to the chain already playing changes nothing. From there, the chain advances on its own — every call to `GumService.Default.Update` drives the animation for the entire visual tree, so you don't need to advance frames yourself.
+Once `AnimationChains` is populated, set `CurrentChainName` to the chain you want to play and set `Animate` to `true`. Setting it to a different chain starts that chain from the beginning; setting it to the chain already playing changes nothing. From there, the chain advances on its own — every call to `GumUI.Update` drives the animation for the entire visual tree, so you don't need to advance frames yourself.
 
 {% hint style="warning" %}
 Screenshot/GIF needed: an animated GIF showing a `SpriteRuntime` playing back an `.achx` chain frame-by-frame.
 {% endhint %}
 
-If you need lower-level control — for example, driving animation outside of `GumService.Default.Update` — see the [AnimateSelf](../gum-code-reference/graphicaluielement/animateself.md) page.
+If you need lower-level control — for example, driving animation outside of `GumUI.Update` — see the [AnimateSelf](../gum-code-reference/graphicaluielement/animateself.md) page.
 
 ### PingPong and Reverse
 

@@ -66,7 +66,7 @@ internal static class StateSelectionCanvasHarness
         /// <summary>What the manager is showing now, or null when it shows nothing.</summary>
         public GraphicalUiElement? ShownRoot => _manager.RootGue;
 
-        public CanvasSession(ElementSave element, StateSave selected)
+        public CanvasSession(ElementSave element, StateSave selected, IRestrictedVariableResetter? restrictedVariableResetter = null)
         {
             _selected = selected;
             _selectedElements = new[] { element };
@@ -90,7 +90,8 @@ internal static class StateSelectionCanvasHarness
                 Mock.Of<IGuiCommands>(),
                 new LocalizationService(),
                 pluginManager.Object,
-                Mock.Of<IProjectState>());
+                Mock.Of<IProjectState>(),
+                restrictedVariableResetter);
 
             Refresh();
         }

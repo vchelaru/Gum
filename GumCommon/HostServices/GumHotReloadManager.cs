@@ -191,6 +191,12 @@ public class GumHotReloadManager : IGumHotReloadManager
     /// <inheritdoc/>
     public event Action<HotReloadResult>? ReloadFinished;
 
+    /// <summary>
+    /// Raised for each variable a reload writes to a live visual (the ones the saved file changed),
+    /// before the reload finishes. For diagnostics such as Preview's log; handlers must not throw or do heavy work.
+    /// </summary>
+    public static event Action<GraphicalUiElement, VariableSave>? VariableApplied;
+
     /// <inheritdoc/>
     public void Start(string absoluteGumxSourcePath)
     {
@@ -406,7 +412,8 @@ public class GumHotReloadManager : IGumHotReloadManager
                 continue;
             }
 
-            if (!TryResolveReference(shaderFile, out string cacheKey, out string standardized) || !changed.Contains(standardized))
+            if (!TryResolveReference(shaderFile, out string cacheKey, out string standardized)
+                || !(changed.Contains(standardized) || ShaderIncludeTracker.Includes(standardized, changed)))
             {
                 continue;
             }
@@ -1641,9 +1648,16 @@ public class GumHotReloadManager : IGumHotReloadManager
             root.SaveFormsRuntimePropertiesRecursive();
         }
 
-        foreach (GraphicalUiElement root in rootList)
+        // An instance the walk skips because it would contain itself is part of this reload's result,
+        // printed with the issues instead of on its own.
+        using (ElementSaveExtensions.ReportCircularInstancesTo((instance, message) => context.ReportOnce(
+            $"loop:{instance.ParentContainer?.Name}.{instance.Name}",
+            new HotReloadIssue(HotReloadIssueKind.InstanceLoop, message, instance.ParentContainer?.Name, instance.Name))))
         {
-            ApplyDiffRecursive(root, byName, systemManagers, context);
+            foreach (GraphicalUiElement root in rootList)
+            {
+                ApplyDiffRecursive(root, byName, systemManagers, context);
+            }
         }
 
         // Re-applying a default state overwrites what a categorical state set, so each visual goes
@@ -1652,6 +1666,13 @@ public class GumHotReloadManager : IGumHotReloadManager
         foreach (GraphicalUiElement root in rootList)
         {
             root.ReapplyAppliedCategoryStatesRecursive();
+        }
+
+        // A Forms property the reload edited or removed (Placeholder, AcceptsReturn) is a control property, not a
+        // visual variable, so it is written to the control here; a stale code-assigned record would win otherwise.
+        foreach (GraphicalUiElement root in rootList)
+        {
+            root.ReapplyChangedFormsPropertiesRecursive(name => context.OldByName.TryGetValue(name, out ElementSave? old) ? old : null);
         }
 
         foreach (GraphicalUiElement root in rootList)
@@ -1747,6 +1768,12 @@ public class GumHotReloadManager : IGumHotReloadManager
 
         if (name != null && byName.TryGetValue(name, out ElementSave? newEs))
         {
+            // While its instances are walked, this element counts as being built, as it is when a
+            // restart builds it: an instance of it created below (a component that contains this one)
+            // is skipped and reported instead of growing the tree one level per reload until the
+            // stack overflows (#7988).
+            using ElementSaveExtensions.BuildScope building = ElementSaveExtensions.EnterBuild(newEs);
+
             ElementSave? oldEs = element.ElementSave;
             element.ElementSave = newEs;
             RefreshStatesAndCategories(element, newEs, byName);
@@ -1915,6 +1942,14 @@ public class GumHotReloadManager : IGumHotReloadManager
 
         public void RecordApplied(GraphicalUiElement element, VariableSave variable)
         {
+            try
+            {
+                VariableApplied?.Invoke(element, variable);
+            }
+            catch (Exception)
+            {
+                // A diagnostic subscriber must never break a reload.
+            }
             if (!Applied.TryGetValue(element, out HashSet<string>? names))
             {
                 names = new HashSet<string>(StringComparer.Ordinal);

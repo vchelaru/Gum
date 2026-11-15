@@ -112,6 +112,9 @@ public class VariableGridEntry
     /// <summary>Tooltip text shown for the row.</summary>
     public string? ToolTipText { get; set; }
 
+    /// <summary>The palette name of the first colored category that sets this variable, or null; the row draws a bar in its color.</summary>
+    public string? CategoryColorName { get; set; }
+
     /// <summary>Desired sort order among sibling rows (lower sorts first). Defaults to <see cref="int.MaxValue"/> (unsorted/last).</summary>
     public int SortValue { get; set; } = int.MaxValue;
 
@@ -759,7 +762,18 @@ public class VariableGridEntry
                 variableType ??= ShaderBinding?.VariableType;
                 // ...set variable after getting it from base, or else we'd get the variable we just set...
                 stateSave.SetValue(Name, newValue, instanceSave, variableType);
-                ShaderBinding?.AfterWrite(stateSave, Name);
+                if (ShaderBinding != null)
+                {
+                    // The runtime needs the whole vector, so the other components are saved too, and shown now.
+                    foreach ((VariableSave pinned, object pinnedValue) in ShaderBinding.PinComponents(stateSave, instanceSave, includeThisComponent: false))
+                    {
+                        if (instanceSave != null)
+                        {
+                            _wireframeObjectManager.GetRepresentation(instanceSave)?.SetProperty(pinned.GetRootName(), pinnedValue);
+                        }
+                    }
+                    ShaderBinding.AfterWrite(stateSave, Name);
+                }
                 if (existingVariable?.ExposedAsName is { Length: > 0 } exposedAsName && variableDefinedInThisOrBase != null &&
                     stateSave.GetVariableSave(Name) is { } variable)
                 {
@@ -975,9 +989,12 @@ public class VariableGridEntry
             }
         }
 
-        if (shouldReset && state != null && ShaderBinding?.RemoveLegacyValue(state) == true)
+        if (shouldReset && state != null && ShaderBinding != null)
         {
-            wasChangeMade = true;
+            // Make Default on one component of a vector resets the whole parameter.
+            bool resetOthers = ShaderBinding.ResetOtherComponents(state);
+            bool removedLegacy = ShaderBinding.RemoveLegacyValue(state);
+            wasChangeMade |= resetOthers || removedLegacy;
         }
 
         if (wasChangeMade)
@@ -1327,7 +1344,7 @@ public class VariableGridEntry
 
         // A shader parameter nobody has set is not saved, so exposing it is the first thing to name it: give it a
         // placeholder to expose, and take that back when the prompt is cancelled. One lock keeps the placeholder and
-        // the exposure a single undo step.
+        // the exposure a single undo step. (A vector parameter is exposed whole by its row, see ShaderVectorRow.)
         StateSave defaultState = ElementSave.GetDefaultStateOrThrow();
         using var undoLock = _undoManager.RequestLock();
         VariableSave? placeholder = ShaderBinding.AddNamedPlaceholder(defaultState, Name);

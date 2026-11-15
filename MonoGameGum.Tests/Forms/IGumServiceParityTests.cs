@@ -72,6 +72,28 @@ public class IGumServiceParityTests : BaseTestClass
     }
 
     [Fact]
+    public void UseKeyboardDefaults_CalledTwice_RegistersTheKeyboardOnce()
+    {
+        IInputReceiverKeyboard keyboard = new Mock<IInputReceiverKeyboard>().Object;
+        FormsUtilities.SetKeyboard(keyboard);
+
+        Service.UseKeyboardDefaults();
+        Service.UseKeyboardDefaults();
+
+        FrameworkElement.KeyboardsForUiControl.ShouldBe(new[] { keyboard });
+    }
+
+    [Fact]
+    public void UseGamepadDefaults_CalledTwice_RegistersEachGamepadOnce()
+    {
+        Service.UseGamepadDefaults();
+        Service.UseGamepadDefaults();
+
+        FrameworkElement.GamePadsForUiControl.Count.ShouldBe(FrameworkElement.GamePadsForUiControl.Distinct().Count());
+        FrameworkElement.GamePadsForUiControl.Count.ShouldBe(Service.Gamepads.Distinct().Count());
+    }
+
+    [Fact]
     public void UseGamepadDefaults_RegistersEveryGamepad()
     {
         GamePad first = new GamePad();

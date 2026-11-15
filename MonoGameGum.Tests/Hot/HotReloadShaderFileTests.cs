@@ -79,6 +79,7 @@ public class HotReloadShaderFileTests : BaseTestClass
         public void Dispose()
         {
             Gum.Wireframe.CustomSetPropertyOnRenderable.RenderTargetEffectResolver = null;
+            ShaderIncludeTracker.Clear();
             LoaderManager.Self.DisposeAndClear();
             LoaderManager.Self.CacheTextures = _previousCacheTextures;
             try { System.IO.Directory.Delete(Directory, recursive: true); } catch { /* best-effort */ }
@@ -194,5 +195,60 @@ public class HotReloadShaderFileTests : BaseTestClass
         harness.Manager.Update(new GraphicalUiElement[] { container });
 
         harness.Sequence.ShouldBe(new[] { "resolve", "reload" });
+    }
+
+    [Fact]
+    public void Update_ReassignsSourceShaderFile_WhenAFileTheShaderIncludesChanges()
+    {
+        using Harness harness = new Harness();
+        string shaderPath = harness.WriteFile("effect.fx");
+        string includePath = harness.WriteFile("common.fxh");
+        ShaderIncludeTracker.Record(shaderPath, new[] { includePath });
+
+        ContainerRuntime container = new ContainerRuntime();
+        container.IsRenderTarget = true;
+        container.SourceShaderFile = shaderPath;
+
+        harness.ChangeAndUpdate(includePath, container);
+
+        harness.ResolveCount.ShouldBe(2);
+        harness.Effects[0].IsDisposed.ShouldBeTrue();
+        harness.ProjectReloadCount.ShouldBe(0);
+    }
+
+    [Fact]
+    public void Update_LeavesContainersAlone_WhenAnIncludeOfAnotherShaderChanges()
+    {
+        using Harness harness = new Harness();
+        string shaderPath = harness.WriteFile("effect.fx");
+        string otherShaderPath = harness.WriteFile("other.fx");
+        string includePath = harness.WriteFile("common.fxh");
+        ShaderIncludeTracker.Record(otherShaderPath, new[] { includePath });
+
+        ContainerRuntime container = new ContainerRuntime();
+        container.IsRenderTarget = true;
+        container.SourceShaderFile = shaderPath;
+
+        harness.ChangeAndUpdate(includePath, container);
+
+        harness.ResolveCount.ShouldBe(1);
+    }
+
+    [Fact]
+    public void Update_LeavesContainersAlone_WhenAnIncludeThatWasRecordedBeforeTheLatestCompileChanges()
+    {
+        using Harness harness = new Harness();
+        string shaderPath = harness.WriteFile("effect.fx");
+        string oldInclude = harness.WriteFile("old.fxh");
+        ShaderIncludeTracker.Record(shaderPath, new[] { oldInclude });
+        ShaderIncludeTracker.Record(shaderPath, new[] { harness.WriteFile("new.fxh") });
+
+        ContainerRuntime container = new ContainerRuntime();
+        container.IsRenderTarget = true;
+        container.SourceShaderFile = shaderPath;
+
+        harness.ChangeAndUpdate(oldInclude, container);
+
+        harness.ResolveCount.ShouldBe(1);
     }
 }

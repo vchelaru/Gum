@@ -1,3 +1,4 @@
+using RaylibGum.Tests.Helpers;
 using Gum.DataTypes;
 using Gum.GueDeriving;
 using Gum.Renderables;
@@ -29,21 +30,6 @@ public class ClipWalkConformanceTests : BaseTestClass
         GumService.Default.Draw();
         EndDrawing();
         return Renderer.Self.RenderStateChangeStatistics.DrawCallCount;
-    }
-
-    // Reads a pixel in top-left-origin draw space. A render texture is stored bottom-up in GL, so
-    // LoadImageFromTexture yields an image whose rows are flipped relative to draw space.
-    private static Color ReadRenderTargetPixel(RenderTexture2D renderTexture, int x, int y)
-    {
-        Image image = LoadImageFromTexture(renderTexture.Texture);
-        try
-        {
-            return GetImageColor(image, x, renderTexture.Texture.Height - 1 - y);
-        }
-        finally
-        {
-            UnloadImage(image);
-        }
     }
 
     // A raw (non-GraphicalUiElement) IRenderableIpso, drawn directly via raylib so its own draw call
@@ -189,8 +175,8 @@ public class ClipWalkConformanceTests : BaseTestClass
         EndDrawing();
 
         RenderTexture2D renderTexture = Renderer.Self.TryGetBakedRenderTargetFor(readableOuter)!.Value;
-        Color insidePixel = ReadRenderTargetPixel(renderTexture, 90, 40);
-        Color outsidePixel = ReadRenderTargetPixel(renderTexture, 90, 170);
+        Color insidePixel = RaylibPixelHarness.ReadPixel(renderTexture, 90, 40);
+        Color outsidePixel = RaylibPixelHarness.ReadPixel(renderTexture, 90, 170);
 
         insidePixel.G.ShouldBeGreaterThan((byte)200);
         outsidePixel.A.ShouldBeLessThan((byte)50);
@@ -233,8 +219,8 @@ public class ClipWalkConformanceTests : BaseTestClass
         EndDrawing();
 
         RenderTexture2D renderTexture = Renderer.Self.TryGetBakedRenderTargetFor(readableOuter)!.Value;
-        Color insideOwnBounds = ReadRenderTargetPixel(renderTexture, 50, 50);
-        Color inOverdrawZone = ReadRenderTargetPixel(renderTexture, 10, 50);
+        Color insideOwnBounds = RaylibPixelHarness.ReadPixel(renderTexture, 50, 50);
+        Color inOverdrawZone = RaylibPixelHarness.ReadPixel(renderTexture, 10, 50);
 
         insideOwnBounds.R.ShouldBeGreaterThan((byte)200);
         // Outside the element's own bounds but within its overdraw -- must be clipped away.
@@ -321,11 +307,11 @@ public class ClipWalkConformanceTests : BaseTestClass
 
         RenderTexture2D renderTexture = Renderer.Self.TryGetBakedRenderTargetFor(readableOuter)!.Value;
         // Inside both clips' intersection (the top-left quadrant).
-        Color intersection = ReadRenderTargetPixel(renderTexture, 25, 25);
+        Color intersection = RaylibPixelHarness.ReadPixel(renderTexture, 25, 25);
         // Inside innerClip's own rect but outside outerClip -- must stay clipped under intersect
         // semantics; a "replace" bug would leave this filled since innerClip's own scissor alone
         // reaches y=100.
-        Color belowOuterClip = ReadRenderTargetPixel(renderTexture, 25, 75);
+        Color belowOuterClip = RaylibPixelHarness.ReadPixel(renderTexture, 25, 75);
 
         intersection.G.ShouldBeGreaterThan((byte)200);
         belowOuterClip.A.ShouldBeLessThan((byte)50);
@@ -398,8 +384,8 @@ public class ClipWalkConformanceTests : BaseTestClass
         EndDrawing();
 
         RenderTexture2D renderTexture = Renderer.Self.TryGetBakedRenderTargetFor(readableOuter)!.Value;
-        Color compositedContainer = ReadRenderTargetPixel(renderTexture, 20, 20);
-        Color siblingPixel = ReadRenderTargetPixel(renderTexture, 120, 120);
+        Color compositedContainer = RaylibPixelHarness.ReadPixel(renderTexture, 20, 20);
+        Color siblingPixel = RaylibPixelHarness.ReadPixel(renderTexture, 120, 120);
 
         compositedContainer.R.ShouldBeGreaterThan((byte)200);
         siblingPixel.G.ShouldBeGreaterThan((byte)200);
@@ -466,7 +452,7 @@ public class ClipWalkConformanceTests : BaseTestClass
         int withContainer = DrawAndCountDrawCalls();
 
         RenderTexture2D bakedTexture = Renderer.Self.TryGetBakedRenderTargetFor(containerUnderTest)!.Value;
-        Color bakedPixel = ReadRenderTargetPixel(bakedTexture, 10, 10);
+        Color bakedPixel = RaylibPixelHarness.ReadPixel(bakedTexture, 10, 10);
 
         // One draw for the child baked into the texture, one for the on-screen composite blit. A
         // regression that also draws the child directly in the main pass would raise this to 3.

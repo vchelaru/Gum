@@ -22,7 +22,7 @@ ButtonInstance.Click += (_,_) =>
     TextBoxInstance.IsFocused = true;
     // Remove the clear so that the TextBoxInstance doesn't immediately lose focus
     // on the same frame it got focus due to the cursor having been clicked
-    GumService.Default.Cursor.ClearInputValues();
+    GumUI.Cursor.ClearInputValues();
 };
 ```
 

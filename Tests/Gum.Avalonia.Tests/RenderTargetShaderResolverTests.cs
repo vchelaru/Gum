@@ -61,6 +61,36 @@ public class RenderTargetShaderResolverTests
         bytecode.Length.ShouldBeGreaterThan(0);
     }
 
+    // #7104: ShadowDusk tells Slang from .fx by the text, so a Slang shader compiles under any name.
+    private const string GrayscaleSlang = """
+        Texture2D SpriteTexture;
+        SamplerState SpriteTextureSampler;
+
+        struct VertexShaderOutput
+        {
+            float4 Position : SV_POSITION;
+            float4 Color : COLOR0;
+            float2 TextureCoordinates : TEXCOORD0;
+        };
+
+        [shader("fragment")]
+        float4 MainPS(VertexShaderOutput input) : COLOR0
+        {
+            return SpriteTexture.Sample(SpriteTextureSampler, input.TextureCoordinates) * input.Color;
+        }
+        """;
+
+    [Theory]
+    [InlineData("Grayscale.slang")]
+    [InlineData("Grayscale.shader")]
+    [InlineData("Grayscale")]
+    public void Compile_CompilesSlangUnderAnyFileName(string name)
+    {
+        byte[] bytecode = RenderTargetShaderResolver.Compile(GrayscaleSlang, PlatformTarget.OpenGL, name);
+
+        bytecode.Length.ShouldBeGreaterThan(0);
+    }
+
     private const string LumaHlsli = """
         static const float3 LumaWeights = float3(0.299, 0.587, 0.114);
         """;

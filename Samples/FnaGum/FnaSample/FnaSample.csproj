@@ -37,6 +37,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\..\fna\FNA.Core.csproj" />
     <ProjectReference Include="..\..\..\MonoGameGum\FnaGum\FnaGum.csproj" />
+    <ProjectReference Include="..\..\..\Runtimes\GumShadowDusk\FnaGum.ShadowDusk.csproj" />
   </ItemGroup>
   <ItemGroup>
     <None Update="Content\GumProject\**\*.*">

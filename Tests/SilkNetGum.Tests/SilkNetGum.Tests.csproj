@@ -24,11 +24,17 @@
          IKeyboard / Key) for mocking input in the Cursor/Keyboard tests. -->
     <PackageReference Include="SkiaSharp" VersionOverride="4.153.1" />
     <PackageReference Include="Silk.NET.Input" VersionOverride="2.21.0" />
+    <!-- Reference values for GumColorTests: Gum.Color must match MonoGame's Color. -->
+    <PackageReference Include="MonoGame.Framework.DesktopGL" VersionOverride="3.8.4.1" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\Runtimes\SilkNetGum\SilkNetGum.csproj" />
     <ProjectReference Include="..\SkiaHost.TestsCommon\SkiaHost.TestsCommon.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\BrutalGum.OGL.Tests\GumColorTests.cs" Link="GumColorTests.cs" />
   </ItemGroup>
 
   <ItemGroup>

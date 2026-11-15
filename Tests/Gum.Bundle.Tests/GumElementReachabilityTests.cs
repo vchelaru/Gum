@@ -34,6 +34,61 @@ public class GumElementReachabilityTests
     }
 
     [Fact]
+    public void Compute_drops_excluded_elements_and_what_only_they_reach_but_keeps_shared_ones()
+    {
+        ScreenSave screen = TestProjectBuilder.BuildScreen("Game");
+        screen.Instances.Add(new InstanceSave { Name = "Hud1", BaseType = "Hud", ParentContainer = screen });
+        screen.Instances.Add(new InstanceSave { Name = "Dbg1", BaseType = "DebugPanel", ParentContainer = screen });
+        ComponentSave hud = TestProjectBuilder.BuildComponent("Hud");
+        hud.Instances.Add(new InstanceSave { Name = "Icon1", BaseType = "SharedIcon", ParentContainer = hud });
+        ComponentSave debugPanel = TestProjectBuilder.BuildComponent("DebugPanel");
+        debugPanel.Instances.Add(new InstanceSave { Name = "Icon1", BaseType = "SharedIcon", ParentContainer = debugPanel });
+        debugPanel.Instances.Add(new InstanceSave { Name = "Graph1", BaseType = "DebugGraph", ParentContainer = debugPanel });
+        ComponentSave sharedIcon = TestProjectBuilder.BuildComponent("SharedIcon");
+        ComponentSave debugGraph = TestProjectBuilder.BuildComponent("DebugGraph");
+        GumProjectSave project = TestProjectBuilder.BuildProject(
+            screens: new[] { screen }, components: new[] { hud, debugPanel, sharedIcon, debugGraph });
+
+        GumElementReachabilityResult result = new GumElementReachability().Compute(
+            project, extraRoots: new string[0], excludedElementNames: new[] { "DebugPanel" });
+
+        result.KeptElementNames.ShouldBe(new[] { "Game", "Hud", "SharedIcon" }, ignoreOrder: true);
+        result.TrimmedElementNames.ShouldBe(new[] { "DebugGraph", "DebugPanel" }, ignoreOrder: true);
+    }
+
+    [Fact]
+    public void Compute_keeps_every_screen_by_default()
+    {
+        GumProjectSave project = BuildDerivedScreenProject();
+
+        GumElementReachabilityResult result = new GumElementReachability().Compute(project, extraRoots: new[] { "Level2" });
+
+        result.KeptElementNames.ShouldBe(new[] { "LevelBase", "Level2", "Title" }, ignoreOrder: true);
+        result.TrimmedElementNames.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void Compute_with_screens_not_roots_keeps_only_the_root_screen_and_its_base_screen()
+    {
+        GumProjectSave project = BuildDerivedScreenProject();
+
+        GumElementReachabilityResult result = new GumElementReachability().Compute(
+            project, extraRoots: new[] { "Level2" }, excludedElementNames: null, screensAreRoots: false);
+
+        result.KeptElementNames.ShouldBe(new[] { "LevelBase", "Level2" }, ignoreOrder: true);
+        result.TrimmedElementNames.ShouldBe(new[] { "Title" });
+    }
+
+    private static GumProjectSave BuildDerivedScreenProject()
+    {
+        ScreenSave levelBase = TestProjectBuilder.BuildScreen("LevelBase");
+        ScreenSave level2 = TestProjectBuilder.BuildScreen("Level2");
+        level2.BaseType = "LevelBase";
+        ScreenSave title = TestProjectBuilder.BuildScreen("Title");
+        return TestProjectBuilder.BuildProject(screens: new[] { levelBase, level2, title });
+    }
+
+    [Fact]
     public void Compute_follows_extra_roots_base_types_and_cross_element_references()
     {
         ComponentSave card = TestProjectBuilder.BuildComponent("Card");
@@ -63,6 +118,9 @@ public class GumElementReachabilityTests
     // MenuItem builds its popup from the ScrollViewer component when the project has no submenu popup.
     [InlineData("MenuItemBehavior", "ScrollViewerBehavior")]
     [InlineData("MenuBehavior", "ScrollViewerBehavior")]
+    // TabControl builds a TabItem header and a TabPage for each tab added in code.
+    [InlineData("TabControlBehavior", "TabItemBehavior")]
+    [InlineData("TabControlBehavior", "TabPageBehavior")]
     public void Compute_keeps_the_component_a_kept_control_creates(string ownerBehavior, string createdBehavior)
     {
         ScreenSave screen = TestProjectBuilder.BuildScreen("Game");
@@ -100,7 +158,7 @@ public class GumElementReachabilityTests
                 {
                     continue;
                 }
-                string ownerKey = owner == "FrameworkElement" ? GumElementReachability.AnyFormsBehavior : owner + "Behavior";
+                string ownerKey = owner is "FrameworkElement" or "ToolTipService" ? GumElementReachability.AnyFormsBehavior : owner + "Behavior";
                 if (!GumElementReachability.FormsCreatedBehaviors.TryGetValue(ownerKey, out IReadOnlyList<string>? created)
                     || !created.Contains(createdBehavior))
                 {

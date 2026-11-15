@@ -23,6 +23,7 @@ public class RightClickViewModel
     private readonly ICircularReferenceManager _circularReferenceManager;
     private readonly IFavoriteComponentManager _favoriteComponentManager;
     private readonly IHotkeyManager _hotkeyManager;
+    private readonly IProjectRestrictions _projectRestrictions;
 
     public RightClickViewModel(
         ISelectedState selectedState,
@@ -32,8 +33,10 @@ public class RightClickViewModel
         ISetVariableLogic setVariableLogic,
         ICircularReferenceManager circularReferenceManager,
         IFavoriteComponentManager favoriteComponentManager,
-        IHotkeyManager hotkeyManager)
+        IHotkeyManager hotkeyManager,
+        IProjectRestrictions projectRestrictions)
     {
+        _projectRestrictions = projectRestrictions;
         _selectedState = selectedState;
         _reorderLogic = reorderLogic;
         _objectFinder = objectFinder;
@@ -90,9 +93,12 @@ public class RightClickViewModel
         });
 
 
-        items.Add(AddCreateInstanceMenuItems($"Add child object to '{_selectedState.SelectedInstance.Name}'"));
-
-        items.Add(new ContextMenuItemViewModel { IsSeparator = true });
+        ContextMenuItemViewModel addChildItem = AddCreateInstanceMenuItems($"Add child object to '{_selectedState.SelectedInstance.Name}'");
+        if (addChildItem.Children.Count > 0)
+        {
+            items.Add(addChildItem);
+            items.Add(new ContextMenuItemViewModel { IsSeparator = true });
+        }
 
         var instance = _selectedState.SelectedInstance;
         items.Add(new ContextMenuItemViewModel
@@ -122,6 +128,7 @@ public class RightClickViewModel
         List<ComponentSave> favoritedComponents = _selectedState.SelectedElement is { } selectedElement
             ? _favoriteComponentManager.GetFilteredFavoritedComponentsFor(selectedElement, _circularReferenceManager)
             : new List<ComponentSave>();
+        favoritedComponents.RemoveAll(_projectRestrictions.IsInstanceTypeBlocked);
         if (favoritedComponents.Count > 0)
         {
             var favoritesParent = new ContextMenuItemViewModel();
@@ -157,6 +164,14 @@ public class RightClickViewModel
 
         foreach (var type in types)
         {
+            // The menu always creates a child, so hierarchy rules apply too.
+            if (_objectFinder.GetElementSave(type) is { } typeElement &&
+                (_projectRestrictions.IsInstanceTypeBlocked(typeElement) ||
+                _projectRestrictions.IsHierarchyBlockedFor(typeElement)))
+            {
+                continue;
+            }
+
             var menuItem = new ContextMenuItemViewModel();
             menuItem.Text = type;
             parentMenuItem.Children.Add(menuItem);

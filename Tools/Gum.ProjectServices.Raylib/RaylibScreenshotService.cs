@@ -3,9 +3,8 @@ using Gum.ProjectServices.Screenshot;
 using Gum.Wireframe;
 using Raylib_cs;
 using RenderingLibrary;
+using RenderingLibrary.Content;
 using System;
-using System.IO;
-using System.Linq;
 
 namespace Gum.ProjectServices.Raylib;
 
@@ -45,13 +44,11 @@ public class RaylibScreenshotService : IScreenshotService
                 return ScreenshotResult.Failed($"Failed to load project: {request.ProjectPath}");
             }
 
-            ElementSave? elementSave = project.AllElements
-                .FirstOrDefault(e => e.Name == request.ElementName);
+            ElementSave? elementSave = request.FindElement(project);
 
             if (elementSave == null)
             {
-                return ScreenshotResult.Failed(
-                    $"Element '{request.ElementName}' not found in project.");
+                return ScreenshotResult.ElementNotFound(request.ElementName);
             }
 
             // Same resolution as MonoGameScreenshotService, so the two backends stay diffable.
@@ -78,7 +75,17 @@ public class RaylibScreenshotService : IScreenshotService
             {
                 Raylib_cs.Raylib.BeginTextureMode(renderTexture);
                 Raylib_cs.Raylib.ClearBackground(clearColor);
-                gumService.Draw();
+                // Draw in the render-target premultiply pass so translucent content keeps its alpha
+                // over a transparent clear (#7992); the pixels are un-premultiplied for the PNG below.
+                SystemManagers.Default.Renderer.IsDrawingToTransparentTarget = true;
+                try
+                {
+                    gumService.Draw();
+                }
+                finally
+                {
+                    SystemManagers.Default.Renderer.IsDrawingToTransparentTarget = false;
+                }
                 Raylib_cs.Raylib.EndTextureMode();
 
                 Image image = Raylib_cs.Raylib.LoadImageFromTexture(renderTexture.Texture);
@@ -87,6 +94,12 @@ public class RaylibScreenshotService : IScreenshotService
                     // Render textures are stored bottom-up in GL; flip so the exported PNG reads
                     // right-side-up like any other screenshot.
                     Raylib_cs.Raylib.ImageFlipVertical(ref image);
+
+                    // PNG stores straight alpha; the texture holds premultiplied pixels.
+                    unsafe
+                    {
+                        RgbaPixels.Unpremultiply(new Span<byte>((void*)image.Data, image.Width * image.Height * 4));
+                    }
 
                     if (request.BackgroundColor.HasValue)
                     {
@@ -101,12 +114,7 @@ public class RaylibScreenshotService : IScreenshotService
                         }
                     }
 
-                    string outputPath = Path.GetFullPath(request.OutputPath);
-                    string? outputDir = Path.GetDirectoryName(outputPath);
-                    if (outputDir != null)
-                    {
-                        Directory.CreateDirectory(outputDir);
-                    }
+                    string outputPath = request.PrepareOutputPath();
 
                     bool exported = Raylib_cs.Raylib.ExportImage(image, outputPath);
                     if (!exported)

@@ -60,10 +60,9 @@ public class TextBoxTests : BaseTestClass
     [Fact]
     public void GetCaretIndexAtPosition_MapsFurtherRightClicksToLaterIndices()
     {
-        // Issue #3542: TextBoxBase.GetIndex's per-character advance now comes from
-        // IFormsText.GetCharacterAdvance. Raylib's Text has no fast override (no bitmap-font
-        // XAdvance table), so it falls back to the default interface implementation
-        // (single-character MeasureString). Pin that this fallback still produces a sane,
+        // Issue #3542: TextBoxBase.GetIndex's per-character advance comes from
+        // IFormsText.GetDrawnCharacterAdvance. Raylib's Text has no bitmap-font XAdvance table,
+        // so it measures a single-character string. Pin that this still produces a sane,
         // monotonically-increasing caret hit-test — this path previously used a different,
         // O(n^2) growing-substring measurement, so a wrong or reversed result here would be new.
         var textBox = new TextBox();

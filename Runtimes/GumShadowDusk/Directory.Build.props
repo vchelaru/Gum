@@ -41,7 +41,7 @@
 
   <ItemGroup>
     <!-- 0.22.1 reports the declared defaults on the SkSL and raylib routes; the XNA-like route needs 0.19.0+ for the .slang frontend. -->
-    <PackageReference Include="ShadowDusk.Compiler" Version="0.22.1" />
+    <PackageReference Include="ShadowDusk.Compiler" Version="0.25.0" />
   </ItemGroup>
 
   <!-- Collision guard for a consumer assembly named like the package's assembly (see #4311). -->

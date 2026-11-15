@@ -6,9 +6,23 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+#if RAYLIB
+namespace Examples.Shapes;
+#elif SKIA
+namespace SilkNetGum.Screens;
+#else
 namespace MonoGameGumInCode.Screens;
+#endif
+
 internal class StandardsScreen : FrameworkElement
 {
+#if RAYLIB
+    // raylib loads loose files from the output folder.
+    private const string ContentPrefix = "resources\\";
+#else
+    private const string ContentPrefix = "";
+#endif
+
     public StandardsScreen() : base (new ContainerRuntime())
     {
         Dock(Gum.Wireframe.Dock.Fill);
@@ -21,13 +35,13 @@ internal class StandardsScreen : FrameworkElement
         var entireFileNineSlice = new NineSliceRuntime();
         entireFileNineSlice.Width = 100;
         entireFileNineSlice.Height = 100;
-        entireFileNineSlice.SourceFileName = "SquareFrame.png";
+        entireFileNineSlice.SourceFileName = ContentPrefix + "SquareFrame.png";
         innerContainer.AddChild(entireFileNineSlice);
 
         var partialFrame = new NineSliceRuntime();
         partialFrame.Height = 150;
         partialFrame.Width = 150;
-        partialFrame.SourceFileName = "FrameSheet.png";
+        partialFrame.SourceFileName = ContentPrefix + "FrameSheet.png";
         partialFrame.TextureAddress = Gum.Managers.TextureAddress.Custom;
         partialFrame.TextureLeft = 438;
         partialFrame.TextureTop = 231;

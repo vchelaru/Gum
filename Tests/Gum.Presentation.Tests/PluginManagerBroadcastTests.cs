@@ -54,6 +54,53 @@ public class PluginManagerBroadcastTests
         optedIn.LateCount.ShouldBe(1);
     }
 
+    /// <summary>
+    /// A multi-select edit sets one variable per instance. A plugin whose reaction covers the whole
+    /// element hears every set, sees the batch open, and gets one completion per element.
+    /// </summary>
+    [Fact]
+    public void VariableSetBatch_AnnouncesEachElementOnceWhenTheScopeEnds()
+    {
+        PluginManager manager = new PluginManager(
+            new Mock<IPluginEnablementStore>().Object,
+            new Mock<IPluginHostConfiguration>().Object);
+        BatchPlugin plugin = new BatchPlugin();
+        manager.Plugins = new List<PluginBase> { plugin };
+        PluginManager.StartupPlugin(plugin, manager);
+        Gum.DataTypes.ComponentSave component = new Gum.DataTypes.ComponentSave();
+
+        using (manager.BeginVariableSetBatch())
+        {
+            for (int i = 0; i < 4; i++)
+            {
+                manager.VariableSet(component, null, "Width", 0, true);
+            }
+
+            plugin.CompletedCount.ShouldBe(0);
+        }
+
+        plugin.SetsSeenWhileBatchOpen.ShouldBe(4);
+        plugin.CompletedCount.ShouldBe(1);
+        plugin.IsBatchOpenNow.ShouldBeFalse();
+    }
+
+    private sealed class BatchPlugin : PluginBase
+    {
+        public int SetsSeenWhileBatchOpen { get; private set; }
+        public int CompletedCount { get; private set; }
+        public bool IsBatchOpenNow => IsVariableSetBatchOpen;
+
+        public override string FriendlyName => "BatchCounting";
+
+        public override void StartUp()
+        {
+            VariableSet += (_, _, _, _, _) => { if (IsVariableSetBatchOpen) { SetsSeenWhileBatchOpen++; } };
+            VariableSetBatchCompleted += _ => CompletedCount++;
+        }
+
+        public override bool ShutDown(PluginShutDownReason shutDownReason) => true;
+    }
+
     private sealed class VariableSetPlugin : PluginBase
     {
         private readonly bool _handlesThroughReference;

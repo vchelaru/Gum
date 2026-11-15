@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using Gum.Commands;
 using Gum.Localization;
@@ -26,6 +27,8 @@ public class ProjectPropertiesChangeLogic
     private readonly IWireframeCommands _wireframeCommands;
     private readonly IPluginManager _pluginManager;
     private readonly ILocalizationService _localizationService;
+    private readonly IProjectRestrictions _projectRestrictions;
+    private readonly IGuiCommands _guiCommands;
 
     public ProjectPropertiesChangeLogic(
         IProjectManager projectManager,
@@ -34,7 +37,9 @@ public class ProjectPropertiesChangeLogic
         IFileCommands fileCommands,
         IWireframeCommands wireframeCommands,
         IPluginManager pluginManager,
-        ILocalizationService localizationService)
+        ILocalizationService localizationService,
+        IProjectRestrictions projectRestrictions,
+        IGuiCommands guiCommands)
     {
         _projectManager = projectManager;
         _projectState = projectState;
@@ -43,6 +48,8 @@ public class ProjectPropertiesChangeLogic
         _wireframeCommands = wireframeCommands;
         _pluginManager = pluginManager;
         _localizationService = localizationService;
+        _projectRestrictions = projectRestrictions;
+        _guiCommands = guiCommands;
     }
 
     /// <summary>
@@ -131,6 +138,26 @@ public class ProjectPropertiesChangeLogic
                 }
 
                 break;
+            case nameof(viewModel.EngineProfile):
+
+                string? normalizedProfile = ToProjectRelativeReference(viewModel.EngineProfile, _projectState.ProjectDirectory);
+                if (normalizedProfile != viewModel.EngineProfile)
+                {
+                    // This will loop:
+                    viewModel.EngineProfile = normalizedProfile;
+                    shouldSaveAndRefresh = false;
+                }
+                else
+                {
+                    // Applies the profile the way a change to the profile file does: the tree, Standards palette,
+                    // canvas and Variables tab all read the restrictions.
+                    _projectRestrictions.Reload();
+                    _wireframeObjectManager.RefreshAll(true, true);
+                    _guiCommands.RefreshVariables(force: true);
+                    _fileCommands.TryAutoSaveProject();
+                    shouldSaveAndRefresh = false;
+                }
+                break;
             case nameof(viewModel.ShowCheckerBackground):
                 // Checkerboard visibility is handled via WireframePropertyChanged,
                 // so skip the wireframe refresh to avoid resetting the texture
@@ -151,5 +178,22 @@ public class ProjectPropertiesChangeLogic
 
             _fileCommands.TryAutoSaveProject();
         }
+    }
+
+    /// <summary>
+    /// The engine profile reference as the project stores it: relative to <paramref name="projectDirectory"/> with forward
+    /// slashes ("../" segments for a profile outside it). A rooted path stays as it is when the project has no folder yet
+    /// or the profile is on another drive.
+    /// </summary>
+    public static string ToProjectRelativeReference(string reference, string? projectDirectory)
+    {
+        string path = reference.Replace('\\', '/');
+        if (projectDirectory == null || !Path.IsPathRooted(path))
+        {
+            return path;
+        }
+
+        string relative = Path.GetRelativePath(projectDirectory, path).Replace('\\', '/');
+        return Path.IsPathRooted(relative) ? path : relative;
     }
 }

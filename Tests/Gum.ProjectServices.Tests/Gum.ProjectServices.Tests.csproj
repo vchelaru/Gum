@@ -20,7 +20,7 @@
     <!-- ScreenshotDiffServiceTests writes tiny synthetic PNGs from mocked IScreenshotService
          backends; SkiaSharp is already a transitive dependency via Gum.ProjectServices ->
          Gum.ImageDiff, referenced directly here only to encode those fixtures. -->
-    <PackageReference Include="SkiaSharp" VersionOverride="3.119.4" />
+    <PackageReference Include="SkiaSharp" VersionOverride="4.153.1" />
   </ItemGroup>
 
   <ItemGroup>
@@ -45,6 +45,7 @@
 
   <ItemGroup>
     <Compile Include="..\Shared\FileManagerState.cs" Link="Shared\FileManagerState.cs" />
+    <Compile Include="..\Shared\FreezeGuard.cs" Link="Shared\FreezeGuard.cs" />
     <Compile Include="..\Shared\FileManagerStateAssert.cs" Link="Shared\FileManagerStateAssert.cs" />
     <Compile Include="..\Shared\ObjectFinderState.cs" Link="Shared\ObjectFinderState.cs" />
     <Compile Include="..\Shared\ObjectFinderStateAssert.cs" Link="Shared\ObjectFinderStateAssert.cs" />

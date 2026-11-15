@@ -10,11 +10,16 @@ internal sealed class BehaviorSaveJson
 {
     public string Name { get; set; } = "";
     public StateSaveJson RequiredVariables { get; set; } = new StateSaveJson();
-    public List<VariableSaveJson> FormsProperties { get; set; } = new List<VariableSaveJson>();
-    public List<string> ToolOnlyVariableReferences { get; set; } = new List<string>();
-    public List<StateSaveCategoryJson> Categories { get; set; } = new List<StateSaveCategoryJson>();
-    public List<BehaviorInstanceSaveJson> RequiredInstances { get; set; } = new List<BehaviorInstanceSaveJson>();
-    public List<string> RequiredAnimations { get; set; } = new List<string>();
+    private List<VariableSaveJson> _formsProperties = new List<VariableSaveJson>();
+    public List<VariableSaveJson> FormsProperties { get => _formsProperties; set => _formsProperties = value ?? throw JsonNullCollection.For(nameof(FormsProperties)); }
+    private List<string> _toolOnlyVariableReferences = new List<string>();
+    public List<string> ToolOnlyVariableReferences { get => _toolOnlyVariableReferences; set => _toolOnlyVariableReferences = value ?? throw JsonNullCollection.For(nameof(ToolOnlyVariableReferences)); }
+    private List<StateSaveCategoryJson> _categories = new List<StateSaveCategoryJson>();
+    public List<StateSaveCategoryJson> Categories { get => _categories; set => _categories = value ?? throw JsonNullCollection.For(nameof(Categories)); }
+    private List<BehaviorInstanceSaveJson> _requiredInstances = new List<BehaviorInstanceSaveJson>();
+    public List<BehaviorInstanceSaveJson> RequiredInstances { get => _requiredInstances; set => _requiredInstances = value ?? throw JsonNullCollection.For(nameof(RequiredInstances)); }
+    private List<string> _requiredAnimations = new List<string>();
+    public List<string> RequiredAnimations { get => _requiredAnimations; set => _requiredAnimations = value ?? throw JsonNullCollection.For(nameof(RequiredAnimations)); }
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string? DefaultImplementation { get; set; }
 }

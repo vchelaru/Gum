@@ -5,31 +5,46 @@ using Gum.GueDeriving;
 using Gum.Wireframe;
 using RenderingLibrary.Graphics;
 using Microsoft.Xna.Framework;
-using SkiaGameRendering;
 using SkiaSharp;
 
 namespace KniSkiaGumSample;
 
 /// <summary>
-/// A KNI desktop game whose UI is Gum drawn by Skia. SkiaGameRendering gives a <see cref="SkiaRenderTarget2D"/>:
-/// a KNI texture with an SKCanvas. Gum draws into that canvas, then the target is composited onto the
-/// back buffer. Gum initializes from the game, like MonoGameGum, so the first screen is built in
-/// <see cref="Initialize"/>; the canvas arrives with the first <c>Draw</c>. Mouse, keyboard and gamepad
-/// reach Gum through KNI, with no Apos.Shapes involved.
+/// A KNI desktop game whose UI is Gum drawn by Skia. The game class is the MonoGameGum one: Gum initializes
+/// from the game, so the first screen is built in <see cref="Initialize"/>, and <c>Update</c> and <c>Draw</c>
+/// are one call each. The GumService owns the Skia render target and composites it onto the back buffer.
+/// Mouse, keyboard and gamepad reach Gum through KNI, with no Apos.Shapes involved.
 /// </summary>
 public class Game1 : Game
 {
+    GumService GumUI => GumService.Default;
+
     private readonly GraphicsDeviceManager _graphics;
-    private SkiaRenderTarget2D? _canvas;
     private int _clicks;
     private Label? _sizeLabel;
 
-    public Game1()
+    private readonly bool _benchmark;
+    private readonly bool _hidden;
+    private readonly string? _benchmarkPath;
+
+    public Game1() : this(Array.Empty<string>())
     {
+    }
+
+    public Game1(string[] args)
+    {
+        int benchmarkIndex = Array.IndexOf(args, "--benchmark");
+        _benchmark = benchmarkIndex >= 0;
+        _hidden = args.Contains("--hidden");
+        // Resolved against the launch directory, which is where the caller expects the file.
+        _benchmarkPath = _benchmark && benchmarkIndex + 1 < args.Length && !args[benchmarkIndex + 1].StartsWith("--")
+            ? Path.GetFullPath(args[benchmarkIndex + 1]) : Path.GetFullPath("benchmark-result.md"); // the exe is WinExe, so stdout is invisible: with no path the row goes to benchmark-result.md in the launch directory
+
         _graphics = new GraphicsDeviceManager(this)
         {
-            PreferredBackBufferWidth = 1024,
-            PreferredBackBufferHeight = 640,
+            PreferredBackBufferWidth = _benchmark ? 1280 : 1024,
+            PreferredBackBufferHeight = _benchmark ? 720 : 640,
+            SynchronizeWithVerticalRetrace = !_benchmark,
         };
         IsMouseVisible = true;
         Window.AllowUserResizing = true;
@@ -37,17 +52,32 @@ public class Game1 : Game
 
     protected override void Initialize()
     {
-        // The graphics device exists once the base Initialize has run.
-        base.Initialize();
+        GumUI.Initialize(this);
 
-        GumService.Default.Initialize(this);
-        GumService.Default.UseKeyboardDefaults();
+        GumUI.UseKeyboardDefaults();
+
+        GumUI.UseGamepadDefaults();
+
+        if (_benchmark)
+        {
+            RunBenchmark();
+            Exit();
+            return;
+        }
+
         BuildUi();
+
+        base.Initialize();
     }
 
     protected override void Update(GameTime gameTime)
     {
-        GumService.Default.Update(gameTime);
+        if (_benchmark)
+        {
+            return; // the run finished inside Initialize; Exit() takes effect after the first loop pass
+        }
+
+        GumUI.Update(gameTime);
 
         // Gum's canvas size should always equal the back buffer size, including after a resize.
         _sizeLabel!.Text =
@@ -59,49 +89,39 @@ public class Game1 : Game
 
     protected override void Draw(GameTime gameTime)
     {
-        // SkiaRenderer attaches to the GraphicsDevice once KNI has created it.
-        if (!SkiaRenderer.IsInitialized && SkiaRenderer.IsReady)
+        if (_benchmark)
         {
-            SkiaRenderer.Initialize(GraphicsDevice);
+            return;
         }
 
-        GraphicsDevice.SetRenderTarget(null);
-        GraphicsDevice.Clear(new Color(30, 34, 40));
-
-        if (SkiaRenderer.IsInitialized)
-        {
-            DrawGum();
-        }
-
+        GraphicsDevice.Clear(Color.CornflowerBlue);
+        GumUI.Draw();
         base.Draw(gameTime);
     }
 
-    private void DrawGum()
+    private void RunBenchmark()
     {
-        int width = GraphicsDevice.PresentationParameters.BackBufferWidth;
-        int height = GraphicsDevice.PresentationParameters.BackBufferHeight;
-
-        // A SkiaRenderTarget2D has a fixed size, so a resized window needs a new one.
-        bool resized = _canvas == null || _canvas.Texture.Width != width || _canvas.Texture.Height != height;
-        if (resized)
+        GumSamples.Benchmark.BenchmarkRunner.RequireRelease();
+        if (_hidden)
         {
-            _canvas?.Dispose();
-            _canvas = new SkiaRenderTarget2D(GraphicsDevice, width, height);
+            GumSamples.Benchmark.BenchmarkHost.HideWindow(Window.Handle);
         }
-
-        _canvas!.Begin();
-        SKCanvas canvas = _canvas.Canvas;
-        canvas.Clear(SKColors.Transparent);
-
-        if (resized)
-        {
-            GumService.Default.HandleResize(width, height);
-        }
-
-        GumService.Default.Draw(canvas);
-
-        // Composites the target onto the back buffer at the origin, at native size.
-        _canvas.End();
+        GumSamples.Benchmark.BenchmarkScreen screen = new GumSamples.Benchmark.BenchmarkScreen();
+        screen.AddToRoot();
+        Console.WriteLine("GL_RENDERER: " + GumSamples.Benchmark.BenchmarkHost.Renderer());
+        GumSamples.Benchmark.BenchmarkRunner.Run("KNI Skia (DesktopGL)", screen,
+            update: seconds => GumUI.Update(seconds),
+            draw: () =>
+            {
+                GraphicsDevice.Clear(Color.CornflowerBlue);
+                GumUI.Draw();
+            },
+            sync: () =>
+            {
+                GraphicsDevice.Present();
+                GumSamples.Benchmark.BenchmarkHost.Finish();
+            },
+            _benchmarkPath);
     }
 
     private void BuildUi()
@@ -116,7 +136,7 @@ public class Game1 : Game
         outline.IsFilled = false;
         outline.StrokeWidth = 4;
         outline.StrokeColor = SKColors.Red;
-        GumService.Default.Root.AddChild(outline);
+        GumUI.Root.AddChild(outline);
 
         Button bottomRight = new Button();
         bottomRight.Text = "Bottom right";
@@ -183,13 +203,5 @@ public class Game1 : Game
             listBox.Items!.Add($"Item {i}");
         }
         panel.AddChild(listBox);
-    }
-
-    protected override void UnloadContent()
-    {
-        _canvas?.Dispose();
-        _canvas = null;
-        SkiaRenderer.Dispose();
-        base.UnloadContent();
     }
 }

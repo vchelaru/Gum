@@ -1,6 +1,7 @@
 ﻿using Gum.Content.AnimationChain;
 using Gum.Graphics.Animation;
 using RenderingLibrary;
+using RenderingLibrary.Content;
 using RenderingLibrary.Graphics;
 using RenderingLibrary.Graphics.Animation;
 using RenderingLibrary.Math;
@@ -275,12 +276,12 @@ public class NineSlice : RenderableBase, IAnimatable, IAnimationChainRenderable,
     } = Color.White;
 
     /// <summary>
-    /// How <see cref="Color"/> combines with the texture. Add draws the nine-slice untinted and
-    /// then adds Color in a second pass.
+    /// How <see cref="Color"/> combines with the texture. Add adds Color's RGB to the texture's,
+    /// faded by Color's alpha; ColorTextureAlpha uses the texture only as an alpha mask filled with Color.
     /// </summary>
     public ColorOperation ColorOperation { get; set; } = ColorOperation.Modulate;
 
-    public global::Gum.RenderingLibrary.Blend? Blend { get; set; }
+    public global::Gum.RenderingLibrary.Blend? Blend { get; set; } = global::Gum.RenderingLibrary.Blend.Normal;
 
     /// <summary>
     /// Edge thickness in texture pixels. When null, the renderable uses 1/3 of the
@@ -346,28 +347,22 @@ public class NineSlice : RenderableBase, IAnimatable, IAnimationChainRenderable,
             }
         }
 
-        if (Blend.HasValue)
+        var renderer = global::RenderingLibrary.Graphics.Renderer.Self;
+        Gum.Renderables.ColorOperationShader? colorOperationShader = renderer.GetColorOperationShader(ColorOperation);
+        if (colorOperationShader != null)
         {
-            global::RenderingLibrary.Graphics.Renderer.Self.BatchDrawCallCounter.BeginBlendMode(Blend.Value);
+            renderer.BatchDrawCallCounter.BeginShaderMode(colorOperationShader.Shader);
         }
+
+        renderer.BatchDrawCallCounter.BeginBlendMode(Blend ?? global::Gum.RenderingLibrary.Blend.Normal);
 
         DrawOnce();
 
-        if (Blend.HasValue)
+        renderer.BatchDrawCallCounter.EndBlendMode();
+
+        if (colorOperationShader != null)
         {
-            global::RenderingLibrary.Graphics.Renderer.Self.BatchDrawCallCounter.EndBlendMode();
-        }
-
-        if (ColorOperation == ColorOperation.Add)
-        {
-            var counter = global::RenderingLibrary.Graphics.Renderer.Self.BatchDrawCallCounter;
-            counter.BeginShaderMode(global::RenderingLibrary.Graphics.Renderer.Self.AdditiveColorOverlayShader.Shader);
-            counter.BeginBlendModeAddColorPreserveDestinationAlpha();
-
-            DrawOnce();
-
-            counter.EndBlendMode();
-            counter.EndShaderMode();
+            renderer.BatchDrawCallCounter.EndShaderMode();
         }
     }
 
@@ -385,6 +380,46 @@ public class NineSlice : RenderableBase, IAnimatable, IAnimationChainRenderable,
             BorderScale, EffectiveBorderScaleLeft, EffectiveBorderScaleTop, EffectiveBorderScaleRight, EffectiveBorderScaleBottom,
             CustomFrameTextureCoordinateWidth, IsTilingMiddleSections);
 
+    // Nearest sampling picks a texel by where a pixel center falls, and a quad covers the pixels whose centers it
+    // contains. At a fractional edge the two can disagree, so a one-texel outline vanishes for a frame and the line
+    // between two touching items gains or loses a pixel row (#8072, a ListBox scrolled by a fractional amount). Each
+    // edge is therefore rounded to a whole device pixel on its own, never position and size separately, so two quads
+    // that share an edge round it to the same pixel and cannot leave a gap or overlap. Linear filtering keeps its
+    // sub-pixel positions, and a turned camera or nine-slice is not snapped.
+    internal static Rectangle SnapToDevicePixels(Rectangle rectangle)
+    {
+        if (ContentLoader.DefaultTextureFilter != Raylib_cs.TextureFilter.Point)
+        {
+            return rectangle;
+        }
+
+        Camera2D camera = global::RenderingLibrary.Graphics.Renderer.Self.ActiveCamera2D;
+        float zoom = camera.Zoom;
+        if (camera.Rotation != 0 || zoom <= 0 || float.IsNaN(zoom))
+        {
+            return rectangle;
+        }
+
+        float left = SnapEdge((rectangle.X - camera.Target.X) * zoom + camera.Offset.X);
+        float right = SnapEdge((rectangle.X + rectangle.Width - camera.Target.X) * zoom + camera.Offset.X);
+        float top = SnapEdge((rectangle.Y - camera.Target.Y) * zoom + camera.Offset.Y);
+        float bottom = SnapEdge((rectangle.Y + rectangle.Height - camera.Target.Y) * zoom + camera.Offset.Y);
+        if (left == right || top == bottom)
+        {
+            return rectangle;
+        }
+
+        float worldLeft = ((left - camera.Offset.X) / zoom) + camera.Target.X;
+        float worldRight = ((right - camera.Offset.X) / zoom) + camera.Target.X;
+        float worldTop = ((top - camera.Offset.Y) / zoom) + camera.Target.Y;
+        float worldBottom = ((bottom - camera.Offset.Y) / zoom) + camera.Target.Y;
+        return new Rectangle(worldLeft, worldTop, worldRight - worldLeft, worldBottom - worldTop);
+    }
+
+    // Quantized to 1/256 pixel first so a one-ulp difference between two items' copies of a shared edge cannot round
+    // it two ways at an exact half pixel.
+    private static float SnapEdge(float device) => MathF.Floor(MathF.Round(device * 256f) / 256f + 0.5f);
+
     private void RenderNinePatch(Texture2D texture, float absoluteRotation, (float X, float Y) animationOffset)
     {
         float x = this.GetAbsoluteLeft();
@@ -392,6 +427,10 @@ public class NineSlice : RenderableBase, IAnimatable, IAnimationChainRenderable,
 
         var destinationRectangle = new Rectangle(
             x + animationOffset.X, y + animationOffset.Y, this.Width, this.Height);
+        if (absoluteRotation == 0)
+        {
+            destinationRectangle = SnapToDevicePixels(destinationRectangle);
+        }
 
         int leftSize, rightSize, topSize, bottomSize;
 
@@ -472,6 +511,10 @@ public class NineSlice : RenderableBase, IAnimatable, IAnimationChainRenderable,
             float worldY = y + localDest.X * sin + localDest.Y * cos;
 
             var worldDest = new Rectangle(worldX, worldY, localDest.Width, localDest.Height);
+            if (absoluteRotation == 0 && !FlipDiagonal)
+            {
+                worldDest = SnapToDevicePixels(worldDest);
+            }
             float drawRotation = -absoluteRotation;
             if (FlipDiagonal)
             {

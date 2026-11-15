@@ -3,8 +3,6 @@ using Gum.GueDeriving;
 using Microsoft.Xna.Framework;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
-using SkiaGameRendering;
-using SkiaSharp;
 
 namespace KniSkiaGumFontLoading;
 
@@ -14,9 +12,10 @@ namespace KniSkiaGumFontLoading;
 /// </summary>
 public class Game1 : Game
 {
+    GumService GumUI => GumService.Default;
+
     private readonly GraphicsDeviceManager _graphics;
     private readonly List<TextRuntime> _texts = new List<TextRuntime>();
-    private SkiaRenderTarget2D? _canvas;
 
 #if DEBUG
     // Plays an NDJSON script when launched with --gum-automation <script>; null otherwise.
@@ -24,6 +23,7 @@ public class Game1 : Game
     private readonly Gum.Automation.GumAutomationHost? _automation;
 #endif
     private TextRuntime _immediateText = null!;
+    private GumBatch _gumBatch = null!;
 
     public Game1()
     {
@@ -38,10 +38,11 @@ public class Game1 : Game
 
     protected override void Initialize()
     {
-        // The graphics device exists once the base Initialize has run.
-        base.Initialize();
+        GumUI.Initialize(this);
 
-        GumService.Default.Initialize(this);
+        GumUI.UseKeyboardDefaults();
+
+        GumUI.UseGamepadDefaults();
 
         AddText("CustomFontText", "Content/Fonts/CustomFont.ttf", "I use CustomFont", 0);
         AddText("SuperMorningText", "Content/Fonts/Super Morning.ttf", "I use Super Morning", 30);
@@ -55,6 +56,10 @@ public class Game1 : Game
             X = 110,
             Y = 120
         };
+
+        _gumBatch = new GumBatch();
+
+        base.Initialize();
     }
 
     private void AddText(string name, string fontFile, string text, float yPosition)
@@ -76,61 +81,21 @@ public class Game1 : Game
 #if DEBUG
         _automation?.BeforeUpdate();
 #endif
-        GumService.Default.Update(gameTime);
+        GumUI.Update(gameTime);
         base.Update(gameTime);
     }
 
     protected override void Draw(GameTime gameTime)
     {
-        // SkiaRenderer attaches to the GraphicsDevice once KNI has created it.
-        if (!SkiaRenderer.IsInitialized && SkiaRenderer.IsReady)
-        {
-            SkiaRenderer.Initialize(GraphicsDevice);
-        }
-
-        GraphicsDevice.SetRenderTarget(null);
         GraphicsDevice.Clear(Color.CornflowerBlue);
+        GumUI.Draw();
 
-        if (SkiaRenderer.IsInitialized)
-        {
-            DrawGum();
-        }
+        // Immediate mode, drawn after Gum so it lands on top.
+        _gumBatch.Begin();
+        _gumBatch.Draw(_immediateText);
+        _gumBatch.End();
 
         base.Draw(gameTime);
-    }
-
-    private void DrawGum()
-    {
-        int width = GraphicsDevice.PresentationParameters.BackBufferWidth;
-        int height = GraphicsDevice.PresentationParameters.BackBufferHeight;
-
-        // A SkiaRenderTarget2D has a fixed size, so a resized window needs a new one.
-        bool hadCanvas = _canvas != null;
-        bool resized = _canvas == null || _canvas.Texture.Width != width || _canvas.Texture.Height != height;
-        if (resized)
-        {
-            _canvas?.Dispose();
-            _canvas = new SkiaRenderTarget2D(GraphicsDevice, width, height);
-        }
-
-        _canvas!.Begin();
-        SKCanvas canvas = _canvas.Canvas;
-        canvas.Clear(SKColors.Transparent);
-
-        if (hadCanvas && resized)
-        {
-            GumService.Default.HandleResize(width, height);
-        }
-
-        GumService.Default.Draw(canvas);
-
-        Renderer renderer = SystemManagers.Default.Renderer;
-        renderer.Begin();
-        renderer.Draw(_immediateText);
-        renderer.End();
-
-        // Composites the target onto the back buffer at the origin, at native size.
-        _canvas.End();
     }
 
     protected override void UnloadContent()
@@ -140,10 +105,6 @@ public class Game1 : Game
             text.RemoveFromManagers();
         }
         _texts.Clear();
-
-        _canvas?.Dispose();
-        _canvas = null;
-        SkiaRenderer.Dispose();
         base.UnloadContent();
     }
 }

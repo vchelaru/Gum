@@ -68,6 +68,18 @@ public class Styling
 
     public bool UseDefaults { get; set; }
 
+    // Lets GumCommon's controls (MenuItem, which keeps a closed submenu popup) tell whether the style they built
+    // under is still the one in use, without referencing this platform type.
+    static Styling()
+    {
+        Gum.Forms.Controls.FrameworkElement.ReadActiveStyleIdentity = static () =>
+        {
+            Styling style = ActiveStyle;
+            return new Gum.Forms.Controls.FrameworkElement.StyleIdentity(
+                style, style.Colors, style.NineSlice, style.Icons, style.Text, style.SpriteSheet);
+        };
+    }
+
     public Styling(Texture2D? spriteSheet, bool useDefaults = true)
     {
         UseDefaults = useDefaults;

@@ -131,6 +131,20 @@ public class CodeOutputTabController
         }
         /////////////////////end early out/////////////////
 
+        RefreshGameSetup(codeOutputProjectSettings, _selectedState.SelectedElement);
+
+        if (_viewModel.WhatToView == WhatToView.GameSetup)
+        {
+            if (_viewModel.GameSetupCode != null)
+            {
+                _viewModel.Code = _viewModel.GameSetupCode;
+                return;
+            }
+
+            // The Game tab is hidden for this output library, so show the element again.
+            _viewModel.WhatToView = WhatToView.SelectedElement;
+        }
+
         // Defensive: never feed the generator an unsupported combination (e.g. a Raylib project whose
         // .codsj still carries FullyInCode). CoerceToSupportedCombination keeps the display path safe
         // regardless of how the settings reached this state.
@@ -160,9 +174,13 @@ public class CodeOutputTabController
                             string code = _codeGenerator.GetCodeForInstance(instance, selectedElement, codeOutputProjectSettings);
                             _viewModel.Code = code;
                         }
+                        else if (selectedElement is not StandardElementSave && _codeGenerator.IsElementBlockedByEngineProfile(selectedElement))
+                        {
+                            _viewModel.Code = "// not generated: the project's engine profile does not support this element's type";
+                        }
                         else if (selectedElement is not StandardElementSave)
                         {
-                            string? baseTypeError = CodeGenerator.GetUnsupportedFormsBaseTypeError(selectedElement, codeOutputProjectSettings) ??
+                            string? baseTypeError = CodeGenerator.GetUnsupportedFormsBaseTypeError(selectedElement, codeOutputProjectSettings, _codeGenerator.AreBehaviorsDisabledByEngineProfile) ??
                                 _codeGenerator.GetCategoryNameCollisionError(selectedElement, codeOutputProjectSettings);
                             if (baseTypeError != null)
                             {
@@ -196,6 +214,21 @@ public class CodeOutputTabController
         }
     }
 
+
+    /// Fills the Game tab's code (issue #7261): the code a game needs to load the project and
+    /// enable what the Preview enables, or null when the output library has none to show.
+    /// </summary>
+    private void RefreshGameSetup(CodeOutputProjectSettings codeOutputProjectSettings, ElementSave? selectedElement)
+    {
+        // Code generation not set up yet means no output library has been chosen.
+        OutputLibrary? library = string.IsNullOrEmpty(codeOutputProjectSettings.CodeProjectRoot)
+            ? null
+            : codeOutputProjectSettings.OutputLibrary;
+        string projectFileName = System.IO.Path.GetFileName(_projectState.GumProjectSave?.FullFileName ?? "GumProject.gumx");
+        string? screenName = selectedElement is ScreenSave ? selectedElement.Name : null;
+
+        _viewModel.GameSetupCode = GameSetupCode.Generate(library, projectFileName, screenName);
+    }
     /// <summary>
     /// Refreshes the display for the currently-selected element, then auto-regenerates its code file
     /// if the view's current element settings have <see cref="CodeOutputElementSettings.AutoGenerateOnChange"/> set.
@@ -206,6 +239,7 @@ public class CodeOutputTabController
     /// is ignored - the commit that ends the drag refreshes and exports (issue #4946).</param>
     public void HandleRefreshAndExport(CodeOutputProjectSettings codeOutputProjectSettings, bool isFullCommit = true)
     {
+        using Gum.Diagnostics.ToolLog.Scope log = Gum.Diagnostics.ToolLog.Begin("CodeOutput HandleRefreshAndExport");
         if (!isFullCommit)
         {
             return;
@@ -303,11 +337,44 @@ public class CodeOutputTabController
         var element = _selectedState.SelectedElement;
         if (element != null && _view.CodeOutputElementSettings != null)
         {
+            bool debugOnlyChanged = _elementSettingsManager.LoadOrCreateSettingsFor(element).DebugOnly !=
+                _view.CodeOutputElementSettings.DebugOnly;
+
             _elementSettingsManager.WriteSettingsForElement(element, _view.CodeOutputElementSettings);
 
             RefreshCodeDisplay(codeOutputProjectSettings);
+
+            if (debugOnlyChanged)
+            {
+                RegenerateElementsAffectedByDebugOnly(element, codeOutputProjectSettings);
+            }
         }
         _codeOutputProjectSettingsManager.WriteSettingsForProject(codeOutputProjectSettings);
+    }
+
+    /// <summary>
+    /// Toggling Debug Only changes the generated code of the element and of every element that references it,
+    /// so each of those regenerates, under the same rule as any other codegen: only when its own setting is
+    /// auto-generate.
+    /// </summary>
+    private void RegenerateElementsAffectedByDebugOnly(ElementSave toggled, CodeOutputProjectSettings codeOutputProjectSettings)
+    {
+        GumProjectSave? project = _projectState.GumProjectSave;
+        if (project == null || _viewModel.HasProjectSettingsLoadError)
+        {
+            return;
+        }
+
+        foreach (ElementSave affected in new DebugOnlyElementLogic(_elementSettingsManager).GetElementsToRegenerate(toggled, project))
+        {
+            CodeOutputElementSettings settings = affected == toggled
+                ? _view.CodeOutputElementSettings!
+                : _elementSettingsManager.LoadOrCreateSettingsFor(affected);
+            if (settings.AutoGenerateOnChange)
+            {
+                GenerateCodeForElement(showPopups: false, affected, codeOutputProjectSettings, settings);
+            }
+        }
     }
 
     /// <summary>

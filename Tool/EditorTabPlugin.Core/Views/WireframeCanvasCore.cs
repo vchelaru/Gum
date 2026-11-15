@@ -225,7 +225,7 @@ public sealed class WireframeCanvasCore
 
         try
         {
-            LoaderManager.Self.ContentLoader = new ContentLoader();
+            LoaderManager.Self.ContentLoader = new LoggingContentLoader(new ContentLoader());
 
             // The initialization sequence below only depends on the render-host contract, not on
             // the host control type.
@@ -258,6 +258,13 @@ public sealed class WireframeCanvasCore
 
             if (!ShapeRenderer.Self.IsInitialized)
             {
+                // Same CI escape hatch as GumPreview: the macOS package smoke test runs on Apple's
+                // software GL renderer, where the full shader warmup keeps the tool from starting
+                // within 300 s. Users on a GPU leave it unset (#7842).
+                if (Environment.GetEnvironmentVariable("GUM_SHAPES_WARMUP_DEFAULT_ONLY") == "1")
+                {
+                    ShapeRenderer.Self.WarmupFeatures = Apos.Shapes.ShapeFeatures.None;
+                }
                 ContentManager shapesContentManager = new ContentManager(renderHost.Services, "Content");
                 ShapeRenderer.Self.Initialize(renderHost.GraphicsDevice, shapesContentManager);
             }
@@ -512,7 +519,15 @@ public sealed class WireframeCanvasCore
         FrameUpdate?.Invoke();
         GraphicsDevice.Clear(BackgroundColor);
         _pluginManager.BeforeRender();
-        Renderer.Self.Draw((SystemManagers)null!);
+        try
+        {
+            Renderer.Self.Draw((SystemManagers)null!);
+        }
+        catch (ObjectDisposedException e)
+        {
+            Gum.Wireframe.TextureDiagnostics.RecordDrawFailure(e);
+            throw;
+        }
         _pluginManager.AfterRender();
     }
 

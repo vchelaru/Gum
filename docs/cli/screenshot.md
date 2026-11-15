@@ -16,7 +16,7 @@ Renders a Gum Screen or Component to a PNG file. The element is laid out and dra
 - `--output` — Path for the output PNG file. Defaults to `<element>.png` in the current directory.
 - `--width` — Width of the output image in pixels. Defaults to the project canvas width.
 - `--height` — Height of the output image in pixels. Defaults to the project canvas height.
-- `--backend` — Rendering backend to use: `monogame` (default, DesktopGL) or `raylib`.
+- `--backend` — Rendering backend to use: `monogame` (default, DesktopGL), `raylib`, or `skia` (SkiaGum, for games that draw with Skia).
 - `--background` — Background color to clear to before rendering, as 6-digit (`RRGGBB`) or 8-digit (`RRGGBBAA`) hex, with or without a leading `#`. Defaults to fully transparent.
 
 ## Examples
@@ -49,4 +49,4 @@ Screenshot written to: /full/path/to/MainMenu.png
 |------|---------|
 | 0 | Screenshot written successfully |
 | 1 | Rendering failed (for example, the named element does not exist) |
-| 2 | Project file not found, `--backend` is not `monogame` or `raylib`, or `--background` is not a valid hex color |
+| 2 | Project file not found, `--backend` is not `monogame`, `raylib`, or `skia`, or `--background` is not a valid hex color |

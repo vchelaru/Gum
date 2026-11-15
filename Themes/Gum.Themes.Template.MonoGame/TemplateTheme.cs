@@ -288,7 +288,7 @@ public static class TemplateTheme
             new VisualTemplate((_, c) => new V3.LabelVisual(tryCreateFormsObject: c));
 
         FrameworkElement.DefaultFormsTemplates[typeof(ItemsControl)] =
-            new VisualTemplate((_, c) => new V3.ItemsControlVisual(tryCreateFormsObject: c));
+            new VisualTemplate((_, c) => new ItemsControlVisual(tryCreateFormsObject: c));
 
         FrameworkElement.DefaultFormsTemplates[typeof(Gum.Forms.Controls.Games.DialogBox)] =
             new VisualTemplate((_, c) => new V3.DialogBoxVisual(tryCreateFormsObject: c));

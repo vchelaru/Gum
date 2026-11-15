@@ -94,5 +94,6 @@ public class DragDropManagerTreeFileDropTests
             Mock.Of<IReorderLogic>(),
             Mock.Of<IProjectManager>(),
             Mock.Of<IProjectState>(),
-            new PathCaseSensitivity());
+            new PathCaseSensitivity(),
+            Mock.Of<IProjectRestrictions>());
 }

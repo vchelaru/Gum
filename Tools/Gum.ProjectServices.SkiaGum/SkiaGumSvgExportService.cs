@@ -24,9 +24,11 @@ public class SkiaGumSvgExportService : ISvgExportService
     /// <inheritdoc/>
     public SvgExportResult ExportSvg(SvgExportRequest request)
     {
-        // Initializing SkiaGum sets MissingFileBehavior to ThrowException (#6889). An export still draws
+        // Initializing SkiaGum defaults MissingFileBehavior to ThrowException (#6889). An export still draws
         // the rest of an element whose image is missing, and the tool process keeps its own setting.
-        MissingFileBehavior previousMissingFileBehavior = GraphicalUiElement.MissingFileBehavior;
+        // The raw value: restoring the resolved one would leave it assigned, and a later Initialize in this
+        // process would no longer apply its ThrowException default (#7963).
+        MissingFileBehavior? previousMissingFileBehavior = GraphicalUiElement.AssignedMissingFileBehavior;
         try
         {
             string outputPath = Path.GetFullPath(request.OutputPath);
@@ -122,7 +124,7 @@ public class SkiaGumSvgExportService : ISvgExportService
         }
         finally
         {
-            GraphicalUiElement.MissingFileBehavior = previousMissingFileBehavior;
+            GraphicalUiElement.AssignedMissingFileBehavior = previousMissingFileBehavior;
         }
     }
 }

@@ -1,3 +1,4 @@
+using RaylibGum.Tests.Helpers;
 using Gum.GueDeriving;
 using Raylib_cs;
 using Shouldly;
@@ -25,20 +26,7 @@ public class HostRenderTextureShadowTests : BaseTestClass
         return box;
     }
 
-    private static Color ReadPixel(RenderTexture2D renderTexture, int x, int y)
-    {
-        Image image = LoadImageFromTexture(renderTexture.Texture);
-        try
-        {
-            return GetImageColor(image, x, renderTexture.Texture.Height - 1 - y);
-        }
-        finally
-        {
-            UnloadImage(image);
-        }
-    }
-
-    private static int CountDrawCallsFirstTwoFrames(bool insideHostTexture)
+    private static (int First, int Second) CountDrawCallsFirstTwoFrames(bool insideHostTexture)
     {
         for (int i = 0; i < 3; i++)
         {
@@ -54,6 +42,7 @@ public class HostRenderTextureShadowTests : BaseTestClass
         try
         {
             int drawCalls = 0;
+            int secondFrameDrawCalls = 0;
             for (int frame = 0; frame < 2; frame++)
             {
                 BeginDrawing();
@@ -75,12 +64,11 @@ public class HostRenderTextureShadowTests : BaseTestClass
                 }
                 else
                 {
-                    // The cached shadow textures of frame 2 are the reference for frame 1's creation flush.
-                    drawCalls.ShouldBe(count);
+                    secondFrameDrawCalls = count;
                 }
             }
 
-            return drawCalls;
+            return (drawCalls, secondFrameDrawCalls);
         }
         finally
         {
@@ -94,10 +82,13 @@ public class HostRenderTextureShadowTests : BaseTestClass
     {
         // Fresh shadow render textures are created (and their pending batch flushed) on each first
         // frame; that flush must be counted the same wherever the frame is drawn.
-        int onScreen = CountDrawCallsFirstTwoFrames(insideHostTexture: false);
-        int inHostTexture = CountDrawCallsFirstTwoFrames(insideHostTexture: true);
+        (int onScreenFirst, int onScreenSecond) = CountDrawCallsFirstTwoFrames(insideHostTexture: false);
+        (int hostFirst, int hostSecond) = CountDrawCallsFirstTwoFrames(insideHostTexture: true);
 
-        inHostTexture.ShouldBe(onScreen);
+        hostFirst.ShouldBe(onScreenFirst);
+        // The second frame reuses the cached blur (#7303), so it is cheaper than the first and the same either way.
+        hostSecond.ShouldBe(onScreenSecond);
+        onScreenSecond.ShouldBeLessThan(onScreenFirst);
     }
 
     [Fact]
@@ -129,9 +120,9 @@ public class HostRenderTextureShadowTests : BaseTestClass
             EndTextureMode();
             EndDrawing();
 
-            ReadPixel(host, 25, 25).R.ShouldBeGreaterThan((byte)200);
-            ReadPixel(host, 25, 75).B.ShouldBeGreaterThan((byte)200);
-            ReadPixel(host, 75, 25).G.ShouldBeGreaterThan((byte)200);
+            RaylibPixelHarness.ReadPixel(host, 25, 25).R.ShouldBeGreaterThan((byte)200);
+            RaylibPixelHarness.ReadPixel(host, 25, 75).B.ShouldBeGreaterThan((byte)200);
+            RaylibPixelHarness.ReadPixel(host, 75, 25).G.ShouldBeGreaterThan((byte)200);
         }
         finally
         {

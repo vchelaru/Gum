@@ -151,6 +151,20 @@ public class DragDropManagerWireframeDropParentingTests : BaseTestClass
     }
 
     [Fact]
+    public void DropOnSelectedInstance_AddsAtTheRoot_WhenHierarchyIsUnsupported()
+    {
+        var (screen, container, _) = BuildScreenWithTwoInstances();
+        _mocker.GetMock<IProjectRestrictions>()
+            .Setup(x => x.IsHierarchyBlockedFor(It.IsAny<ElementSave>())).Returns(true);
+        _mocker.GetMock<ISelectedState>().Setup(x => x.SelectedInstance).Returns(container);
+
+        _dragDropManager.OnNodeObjectDroppedInWireframe(BuildDraggedComponent(), instanceUnderCursor: container);
+
+        screen.Instances.ShouldContain(item => item.Name == "NewInstance");
+        (screen.DefaultState!.GetValue("NewInstance.Parent") as string).ShouldBeNull();
+    }
+
+    [Fact]
     public void DropWithoutAParent_PositionsAtTheWorldDropPointDirectly()
     {
         // Baseline/regression pin for the pre-existing (non-parenting) behavior: with no parent, the

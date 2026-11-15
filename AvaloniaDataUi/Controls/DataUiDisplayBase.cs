@@ -132,10 +132,16 @@ public abstract class DataUiDisplayBase : UserControl, IDataUi
             ApplyRowStyle();
         }
 
+        if (e.PropertyName == nameof(WpfDataUi.DataTypes.InstanceMember.IsSearchMatch))
+        {
+            ApplyRowStyle();
+        }
+
         if (e.PropertyName == nameof(WpfDataUi.DataTypes.InstanceMember.Value) ||
             e.PropertyName == nameof(WpfDataUi.DataTypes.InstanceMember.DetailText) ||
             e.PropertyName == nameof(WpfDataUi.DataTypes.InstanceMember.FirstGridLength) ||
             e.PropertyName == nameof(WpfDataUi.DataTypes.InstanceMember.IsSpaciousRow) ||
+            e.PropertyName == nameof(WpfDataUi.DataTypes.InstanceMember.IndentLevel) ||
             e.PropertyName == nameof(WpfDataUi.DataTypes.InstanceMember.WarningText) ||
             e.PropertyName == nameof(WpfDataUi.DataTypes.InstanceMember.ChipText) ||
             e.PropertyName == nameof(WpfDataUi.DataTypes.InstanceMember.ToggleText) ||
@@ -309,6 +315,12 @@ public abstract class DataUiDisplayBase : UserControl, IDataUi
         return style;
     }
 
+    /// <summary>Space above a spacious row; a compact list row asks for less.</summary>
+    protected virtual double SpaciousTopPadding => 8;
+
+    /// <summary>Space below a spacious row.</summary>
+    protected virtual double SpaciousBottomPadding => 2;
+
     /// <summary>Whether the member opted into the spacious Settings look.</summary>
     protected bool IsSpacious => InstanceMember?.IsSpaciousRow == true;
 
@@ -327,9 +339,23 @@ public abstract class DataUiDisplayBase : UserControl, IDataUi
         {
             _isRowStyled = true;
             bool isLight = ActualThemeVariant == Avalonia.Styling.ThemeVariant.Light;
-            Padding = new Thickness(10, 8, 10, 2);
+            Padding = new Thickness(10 + 20 * (InstanceMember?.IndentLevel ?? 0), SpaciousTopPadding, 10, SpaciousBottomPadding);
             BorderThickness = new Thickness(0, 0, 0, 1);
             BorderBrush = new SolidColorBrush(Color.Parse(isLight ? "#E0E0E0" : "#303030"));
+            if (InstanceMember?.IsSearchMatch == true)
+            {
+                // A search match: an accent bar on the left and a faint accent wash, like a selected row.
+                Color accent = TryGetResource("SystemAccentColor", ActualThemeVariant, out object? resource) && resource is Color found
+                    ? found
+                    : Color.Parse("#0A84FF");
+                BorderThickness = new Thickness(3, 0, 0, 1);
+                BorderBrush = new SolidColorBrush(accent);
+                Background = new SolidColorBrush(Color.FromArgb(isLight ? (byte)0x26 : (byte)0x33, accent.R, accent.G, accent.B));
+            }
+            else
+            {
+                ClearValue(BackgroundProperty);
+            }
             // Applied once: validation colors set on a field later must not be reset by every refresh.
             foreach (Control control in _areFieldsStyled ? Enumerable.Empty<Control>() : global::Avalonia.LogicalTree.LogicalExtensions.GetLogicalDescendants(this).OfType<Control>())
             {

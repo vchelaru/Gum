@@ -44,6 +44,13 @@ public class MainControlViewModel : ViewModel
         set => Set(value);
     }
 
+    /// <summary>The palette name of the edited state's category color, or null; the Variables and Alignment banners draw it in that color's theme variant.</summary>
+    public string? StateCategoryColorName
+    {
+        get => Get<string?>();
+        set => Set(value);
+    }
+
     public string? ErrorInformation
     {
         get => Get<string?>();

@@ -63,6 +63,27 @@ public class AddInstanceLogicTests : BaseTestClass
     }
 
     [Fact]
+    public void AddInstance_ShouldReject_WhenProjectBlocksTheType()
+    {
+        _mocker.GetMock<IProjectRestrictions>().Setup(x => x.IsInstanceTypeBlocked(_text)).Returns(true);
+
+        InstanceSave? added = _sut.AddInstance(_text, _component);
+
+        added.ShouldBeNull();
+        _mocker.GetMock<IDialogService>().Verify(x => x.ShowMessage(It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<MessageDialogStyle?>()), Times.Once);
+        _mocker.GetMock<IElementCommands>().Verify(x => x.AddInstance(It.IsAny<ElementSave>(), It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<int?>()), Times.Never);
+    }
+
+    [Fact]
+    public void AddInstance_ShouldRejectChild_ButAllowRootAdd_WhenHierarchyIsBlocked()
+    {
+        _mocker.GetMock<IProjectRestrictions>().Setup(x => x.IsHierarchyBlockedFor(_text)).Returns(true);
+
+        _sut.AddInstance(_text, _container).ShouldBeNull();
+        _sut.AddInstance(_text, _component).ShouldNotBeNull();
+    }
+
+    [Fact]
     public void AddInstance_IntoElement_LocksUndoOnThatElement()
     {
         // A drop can target an element that is not selected; the lock must capture that element's

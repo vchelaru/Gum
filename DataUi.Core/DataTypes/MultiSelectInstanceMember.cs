@@ -105,13 +105,18 @@ public class MultiSelectInstanceMember : InstanceMember
     {
         BeforeMultiSet?.Invoke(value);
 
-        foreach(var innerMember in InstanceMembers)
+        try
         {
-            //innerMember.Value = value;
-            innerMember.SetValue(value.Value, value.CommitType);
+            foreach(var innerMember in InstanceMembers)
+            {
+                innerMember.SetValue(value.Value, value.CommitType);
+            }
         }
-
-        AfterMultiSet?.Invoke(value);
+        finally
+        {
+            // BeforeMultiSet may have opened batches and locks; they must close even if a set throws.
+            AfterMultiSet?.Invoke(value);
+        }
     }
 
     private object? HandleCustomGetEvent(object? owner)

@@ -32,16 +32,11 @@ public class HeadlessCodegenRunner : IHeadlessCodegenRunner
     /// <inheritdoc/>
     public int Run(string projectPath, IReadOnlyList<string>? elementNames, bool prune, TextWriter output, TextWriter error)
     {
-        // The finder is a process-wide singleton the loaded project shares with the caller (the tool keeps its own
-        // project in it), so this run puts back what it found.
-        GumProjectSave? previousProject = ObjectFinder.Self.GumProjectSave;
-        try
+        // ObjectFinder.Self is the caller's project (the tool's, or a running GumService's), which other threads
+        // keep reading, so the generated project gets a finder of its own on this thread.
+        using (ObjectFinder.UseOnThisThread(new ObjectFinder()))
         {
             return RunCore(projectPath, elementNames, prune, output, error);
-        }
-        finally
-        {
-            ObjectFinder.Self.GumProjectSave = previousProject;
         }
     }
 
@@ -183,11 +178,20 @@ public class HeadlessCodegenRunner : IHeadlessCodegenRunner
             }
         }
 
+        // A variable the project's engine profile hides is dormant, so it is not generated. An unusable
+        // profile file means unrestricted, with one warning.
+        EngineProfileLoadResult profileResult = new EngineProfileLoader().Load(project.FullFileName, project.EngineProfile);
+        if (profileResult.Warning != null)
+        {
+            error.WriteLine($"warning: {profileResult.Warning}");
+        }
+
         var codeGenerator = new CodeGenerator(
             codeGenNameVerifier, localizationService, elementSettingsManager, projectDirectoryProvider,
             typeStringResolver: null,
             syntaxVersionDetectionService: syntaxVersionDetectionService,
-            cSharpVersionDetectionService: new CSharpVersionDetectionService());
+            cSharpVersionDetectionService: new CSharpVersionDetectionService(),
+            variableRestrictions: new EngineProfileVariableRestrictions(profileResult.Profile));
 
         var customCodeGenerator = new CustomCodeGenerator(codeGenerator, codeGenNameVerifier);
         var fileLocationsService = new CodeGenerationFileLocationsService(
@@ -205,7 +209,7 @@ public class HeadlessCodegenRunner : IHeadlessCodegenRunner
         IHeadlessErrorChecker errorChecker = new HeadlessErrorChecker(
             typeResolver, new IAdditionalErrorSource[]
             {
-                new FormsCodegenBaseTypeErrorSource(projectSettings),
+                new FormsCodegenBaseTypeErrorSource(projectSettings, codeGenerator.AreBehaviorsDisabledByEngineProfile),
                 new CategoryNameCollisionErrorSource(codeGenerator, projectSettings),
             });
 

@@ -36,9 +36,12 @@ public class ButtonVisual : BaseButtonVisual
         TextInstance.Parent = null;
 
         Width = 96;
-        Height = 24;
+        Height = 6;
         WidthUnits = DimensionUnitType.Absolute;
-        HeightUnits = DimensionUnitType.Absolute;
+        // The button is as tall as its label: 6 of chrome padding plus the 18 px line of the
+        // 13 px theme font is the 24 it always was for one line, and wrapped lines grow it.
+        HeightUnits = DimensionUnitType.RelativeToChildren;
+        TextInstance.Height = 0;
 
         _bevel = Retro95Bevel.AddTo(this, BevelMode.Raised);
         _focusRect = new Retro95DottedFocusRect(this, FocusIndicatorInset);

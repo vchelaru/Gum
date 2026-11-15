@@ -13,10 +13,13 @@ namespace SkiaGum.Tests.Runtimes;
 // hook before falling back to reflection; SkiaGum's copy had dropped it entirely, so a plugin
 // registering AdditionalPropertyOnRenderable (e.g. the Apos.Shapes runtimes) would silently never
 // run under SkiaGum.
-public class CustomSetPropertyOnRenderableTests
+public class CustomSetPropertyOnRenderableTests : BaseTestClass
 {
     public CustomSetPropertyOnRenderableTests()
     {
+        // SVG loading needs the real content loader; other test classes leave a mock in the process-wide
+        // LoaderManager. BaseTestClass restores the previous one.
+        RenderingLibrary.Content.LoaderManager.Self.ContentLoader = new RenderingLibrary.Content.ContentLoader();
         // Wire up the SkiaGum custom property setter so SetProperty routes correctly.
         GraphicalUiElement.SetPropertyOnRenderable = CustomSetPropertyOnRenderable.SetPropertyOnRenderable;
     }

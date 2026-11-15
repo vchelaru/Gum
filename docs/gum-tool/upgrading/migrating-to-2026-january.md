@@ -192,7 +192,7 @@ This section lists all deprecated types and members. Projects should migrate to 
 
 ### GumService.Update
 
-In MonoGame/KNI/FNA, GumService, often accessed through the GumUi property, no longer takes a Game instance as its first parameter. All versions of Update which take a Game instance are now obsolete.
+In MonoGame/KNI/FNA, GumService, often accessed through the GumUI property, no longer takes a Game instance as its first parameter. All versions of Update which take a Game instance are now obsolete.
 
 This change is being made to simplify the syntax, and to unify the syntax between XNA-likes and raylib.
 
@@ -200,26 +200,26 @@ This change is being made to simplify the syntax, and to unify the syntax betwee
 
 ```csharp
 // Update which takes a gameTime only
-GumUi.Update(this, gameTime);
+GumUI.Update(this, gameTime);
 
 // Update which takes a custom GraphicalUiElement root
-GumUi.Update(this, gameTime, customRoot);
+GumUI.Update(this, gameTime, customRoot);
 
 // Update which takes a list of elements to update
-GumUi.Update(this, gameTime, listOfElements);
+GumUI.Update(this, gameTime, listOfElements);
 ```
 
 ✅New:
 
 ```csharp
 // Update which takes a gameTime only
-GumUi.Update(gameTime);
+GumUI.Update(gameTime);
 
 // Update which takes a custom GraphicalUiElement root
-GumUi.Update(gameTime, customRoot);
+GumUI.Update(gameTime, customRoot);
 
 // Update which takes a list of elements to update
-GumUi.Update(gameTime, listOfElements);
+GumUI.Update(gameTime, listOfElements);
 ```
 
 ### ListBox.ListBoxItemGumType and ListBox.ListBoxItemFormsType

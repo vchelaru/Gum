@@ -92,7 +92,7 @@ public class LineRuntime
 
             DropshadowOffsetX = 0;
             DropshadowOffsetY = 3;
-            DropshadowBlurX = 0;
+            DropshadowBlurX = 3;
             DropshadowBlurY = 3;
         }
     }

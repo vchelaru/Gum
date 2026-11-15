@@ -12,6 +12,8 @@ namespace MonoGameAndGum
 {
     public class Game1 : Game
     {
+        Gum.GumService GumUI => Gum.GumService.Default;
+
         private GraphicsDeviceManager _graphics;
         private SpriteBatch _spriteBatch;
 
@@ -26,7 +28,11 @@ namespace MonoGameAndGum
 
         protected override void Initialize()
         {
-            MonoGameGum.GumService.Default.Initialize(this, "GumProject/GumProject.gumx");
+            GumUI.Initialize(this, "GumProject/GumProject.gumx");
+
+            GumUI.UseKeyboardDefaults();
+
+            GumUI.UseGamepadDefaults();
 
             //var screen = ObjectFinder.Self.GumProjectSave.Screens.First();
             //Root = screen.ToGraphicalUiElement(SystemManagers.Default, addToManagers:true);
@@ -46,7 +52,7 @@ namespace MonoGameAndGum
 
         protected override void Update(GameTime gameTime)
         {
-            MonoGameGum.GumService.Default.Update(this, gameTime, Root);
+            GumUI.Update(this, gameTime, Root);
 
             base.Update(gameTime);
         }
@@ -55,7 +61,7 @@ namespace MonoGameAndGum
         {
             GraphicsDevice.Clear(Color.CornflowerBlue);
 
-            MonoGameGum.GumService.Default.Draw();
+            GumUI.Draw();
 
             base.Draw(gameTime);
         }

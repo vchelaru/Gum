@@ -13,6 +13,9 @@ public interface IFreezeDiagnosticsInbox
     /// <summary>The folder the watchdog writes to and this inbox manages.</summary>
     string DirectoryPath { get; }
 
+    /// <summary>The Reported subfolder that <see cref="MarkReported"/> moves files into.</summary>
+    string ReportedDirectoryPath { get; }
+
     /// <summary>True once the user has asked not to be prompted again.</summary>
     bool ArePromptsSuppressed { get; }
 

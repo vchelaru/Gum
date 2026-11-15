@@ -28,7 +28,7 @@ internal static class PreviewShaderResolver
         }
 
         // Compiled next to its path, which is what a relative #include in the shader resolves against.
-        byte[] bytecode = ShaderSourceCompiler.Compile(ShaderSourceCompiler.ReadFxSource(absolutePath), PlatformTarget.OpenGL, absolutePath);
+        byte[] bytecode = ShaderSourceCompiler.Compile(File.ReadAllText(absolutePath), PlatformTarget.OpenGL, absolutePath);
         return new Effect(graphicsDevice, bytecode);
     }
 }

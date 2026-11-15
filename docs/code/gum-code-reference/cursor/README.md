@@ -14,7 +14,7 @@ The cursor can be accessed through GumService.
 
 ```csharp
 // Initialize
-var cursor = GumService.Default.Cursor;
+var cursor = GumUI.Cursor;
 ```
 
 GumService.Default.Cursor was introduced in March 2025. For legacy projects on older versions of Gum, the cursor can be accessed through the now-deprecated FormsUtilities class:
@@ -43,7 +43,7 @@ The following code shows how to check if the user is over Gum UI.
 
 ```csharp
 // Update
-var cursor = GumService.Default.Cursor;
+var cursor = GumUI.Cursor;
 var isOverUi = cursor.WindowOver != null;
 
 if(isOverUi == false)
@@ -57,13 +57,10 @@ if(isOverUi == false)
 The WindowOver property can be used to identify problems with items not receiving mouse events. For example, a Button may be a child of a parent container but be positioned outside of the parent's bounds. This results in the Button not receiving clicks. This can be diagnosed by printing the WindowOver to output.
 
 ```csharp
-protected override void Update(GameTime)
-{
-    GumUI.Update(gameTime);
-    var cursor = GumUI.Cursor;
-    System.Diagnostics.Debug.WriteLine(cursor.WindowOver);
-    base.Update(gameTime);
-}
+// Update
+GumUI.Update(gameTime);
+var cursor = GumUI.Cursor;
+System.Diagnostics.Debug.WriteLine(cursor.WindowOver);
 ```
 
 ## WindowPushed
@@ -74,7 +71,7 @@ For example, consider a game which allows the user to purchase items. The user c
 
 ```csharp
 // Update
-var cursor = GumService.Default.Cursor;
+var cursor = GumUI.Cursor;
 
 // A PrimaryClick means the cursor was released...
 // and the WindowOver can be checked if it is over the area 

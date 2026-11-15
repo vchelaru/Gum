@@ -11,6 +11,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GumCommon", "..\..\GumCommo
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SkiaGum", "..\..\Runtimes\SkiaGum\SkiaGum.csproj", "{5D7490CA-974D-470A-821A-43D2E8CDF53A}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Gum.Automation.KniSkia", "..\..\Tests\Gum.Automation.KniSkia\Gum.Automation.KniSkia.csproj", "{1529BC69-9CB9-4B20-9F69-2726D0CB58BF}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -69,6 +71,18 @@ Global
 		{5D7490CA-974D-470A-821A-43D2E8CDF53A}.Release|x64.Build.0 = Release|Any CPU
 		{5D7490CA-974D-470A-821A-43D2E8CDF53A}.Release|x86.ActiveCfg = Release|Any CPU
 		{5D7490CA-974D-470A-821A-43D2E8CDF53A}.Release|x86.Build.0 = Release|Any CPU
+		{1529BC69-9CB9-4B20-9F69-2726D0CB58BF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1529BC69-9CB9-4B20-9F69-2726D0CB58BF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1529BC69-9CB9-4B20-9F69-2726D0CB58BF}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{1529BC69-9CB9-4B20-9F69-2726D0CB58BF}.Debug|x64.Build.0 = Debug|Any CPU
+		{1529BC69-9CB9-4B20-9F69-2726D0CB58BF}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{1529BC69-9CB9-4B20-9F69-2726D0CB58BF}.Debug|x86.Build.0 = Debug|Any CPU
+		{1529BC69-9CB9-4B20-9F69-2726D0CB58BF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1529BC69-9CB9-4B20-9F69-2726D0CB58BF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1529BC69-9CB9-4B20-9F69-2726D0CB58BF}.Release|x64.ActiveCfg = Release|Any CPU
+		{1529BC69-9CB9-4B20-9F69-2726D0CB58BF}.Release|x64.Build.0 = Release|Any CPU
+		{1529BC69-9CB9-4B20-9F69-2726D0CB58BF}.Release|x86.ActiveCfg = Release|Any CPU
+		{1529BC69-9CB9-4B20-9F69-2726D0CB58BF}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

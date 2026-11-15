@@ -15,6 +15,7 @@ using Gum.Services;
 using Gum.ToolStates;
 using Gum.Undo;
 using Gum.Wireframe;
+using ToolsUtilities;
 using InputLibrary;
 using Cursor = InputLibrary.Cursor;
 using Microsoft.Xna.Framework;
@@ -42,6 +43,13 @@ public enum RefreshType
     OnlyIfGrabbed
 }
 
+/// <summary>The pointer gesture that can apply a plugin-reported region as the texture rectangle.</summary>
+public enum RegionGesture
+{
+    Click,
+    DoubleClick
+}
+
 #endregion
 
 public class TextureCoordinateDisplayController : ITextureCoordinateDisplayController, IDisposable
@@ -59,6 +67,18 @@ public class TextureCoordinateDisplayController : ITextureCoordinateDisplayContr
     private readonly LineGridManager _lineGridManager;
     private readonly NineSliceGuideManager _nineSliceGuideManager;
     private readonly TextureOutlineManager _textureOutlineManager;
+    private readonly TextureRegionOverlayManager _regionOverlayManager;
+
+    /// <summary>The overlay that outlines plugin-reported regions; exposed so tests can see what it draws.</summary>
+    public TextureRegionOverlayManager RegionOverlay => _regionOverlayManager;
+    private readonly IPluginManager? _pluginManager;
+    private readonly Dictionary<string, IReadOnlyList<TextureRegion>> _regionCache = new Dictionary<string, IReadOnlyList<TextureRegion>>();
+    private TextureRegionSet _regionSet = TextureRegionSet.Empty;
+    private string? _regionSetKey;
+
+    // The one decision point for which gesture applies a plugin region. Double-click is the only choice
+    // for now; a user setting can make it Click later without touching the code below.
+    private readonly RegionGesture _regionApplyGesture = RegionGesture.Click;
     private readonly CanvasDisplayScale _displayScale = new CanvasDisplayScale();
 
     bool _isSnapToGridEnabled;
@@ -98,7 +118,8 @@ public class TextureCoordinateDisplayController : ITextureCoordinateDisplayContr
         IHotkeyManager hotkeyManager,
         CameraScrollBarBinder scrollBarLogic,
         IMessenger messenger,
-        IThemingService themingService)
+        IThemingService themingService,
+        IPluginManager? pluginManager = null)
     {
         _selectedState = selectedState;
         _undoManager = undoManager;
@@ -114,6 +135,8 @@ public class TextureCoordinateDisplayController : ITextureCoordinateDisplayContr
         _lineGridManager = new LineGridManager();
         _nineSliceGuideManager = new NineSliceGuideManager(_displayScale);
         _textureOutlineManager = new TextureOutlineManager(_displayScale);
+        _regionOverlayManager = new TextureRegionOverlayManager(_displayScale);
+        _pluginManager = pluginManager;
     }
 
     public IPluginTab CreateControl(ITextureCoordinateView view, object dataContext, IList<int> availableZoomLevels)
@@ -137,6 +160,8 @@ public class TextureCoordinateDisplayController : ITextureCoordinateDisplayContr
         //_guiCommands.AddWinformsControl(control, "Texture Coordinates", TabLocation.Right);
 
         var pluginTab = _tabManager.AddControl(_view.View, "Texture Coordinates", TabLocation.RightBottom);
+        innerControl.Click += (_, _) =>
+            HandleRegionGesture(RegionGesture.Click, innerControl);
         innerControl.DoubleClick += (_, _) =>
             HandleRegionDoubleClicked(innerControl);
 
@@ -146,6 +171,7 @@ public class TextureCoordinateDisplayController : ITextureCoordinateDisplayContr
         _lineGridManager.Initialize(SystemManagers);
         _nineSliceGuideManager.Initialize(SystemManagers);
         _textureOutlineManager.Initialize(SystemManagers);
+        _regionOverlayManager.Initialize(SystemManagers);
 
         RefreshLineGrid();
 
@@ -179,6 +205,8 @@ public class TextureCoordinateDisplayController : ITextureCoordinateDisplayContr
     {
         _view.Canvas.ClampCameraToTexture();
         UpdateScrollBarsToTexture();
+        // The hovered region's name keeps a constant size on screen, so it follows the zoom.
+        _regionOverlayManager.Refresh();
         ZoomLevelChanged?.Invoke(_view.Canvas.ZoomValue);
     }
 
@@ -192,6 +220,18 @@ public class TextureCoordinateDisplayController : ITextureCoordinateDisplayContr
     {
         _cameraController.HandleMouseMove(e);
         SyncCameraPanning();
+        UpdateHoveredRegion(e.X, e.Y);
+    }
+
+    private void UpdateHoveredRegion(int screenX, int screenY)
+    {
+        if (_regionSet.IsEmpty)
+        {
+            return;
+        }
+
+        SystemManagers.Renderer.Camera.ScreenToWorld(screenX, screenY, out float worldX, out float worldY);
+        _regionOverlayManager.Hovered = _cameraController.IsPanning ? null : _regionSet.HitTest(worldX, worldY);
     }
 
     private void HandleMouseUp(GumMouseEventArgs e)
@@ -291,6 +331,35 @@ public class TextureCoordinateDisplayController : ITextureCoordinateDisplayContr
             .FirstOrDefault(c => c.Name == _currentExposedSource.SourceObjectName) as GraphicalUiElement;
     }
 
+    // The variables of the selection that a variable reference sets (#7577). Such a coordinate is
+    // locked the way an unexposed one is: the reference owns the value, so the selector must not write it.
+    private HashSet<string> _referenceSetNames = new HashSet<string>();
+
+    private void RefreshReferenceSetNames()
+    {
+        _referenceSetNames = new HashSet<string>();
+
+        var element = _selectedState.SelectedElement;
+        var state = _selectedState.SelectedStateSave;
+        if (element == null || state == null) return;
+
+        var instance = _selectedState.SelectedInstance;
+        var owner = element;
+        var listName = "VariableReferences";
+        if (instance != null)
+        {
+            owner = ObjectFinder.Self.GetElementSave(instance) ?? element;
+            listName = instance.Name + "." + listName;
+        }
+
+        _referenceSetNames = new HashSet<string>(
+            ElementSaveDisplayer.GetVariablesSetThroughReferences(owner, state, listName).Keys);
+    }
+
+    /// <summary>Whether the selector may change the coordinate stored in <paramref name="variableName"/> (null when it is not exposed).</summary>
+    private bool IsEditable(string? variableName) =>
+        variableName != null && !_referenceSetNames.Contains(variableName);
+
     public void Refresh()
     {
         var textureToAssign = GetTextureToAssign(out bool showNineSliceGuides, out float? customFrameTextureCoordinateWidth);
@@ -302,19 +371,21 @@ public class TextureCoordinateDisplayController : ITextureCoordinateDisplayContr
 
         _view.Canvas.CurrentTexture = textureToAssign;
 
+        RefreshReferenceSetNames();
+
         if (_currentExposedSource != null)
         {
-            _view.Canvas.CanChangeX = _currentExposedSource.ExposedLeftName != null;
-            _view.Canvas.CanChangeY = _currentExposedSource.ExposedTopName != null;
-            _view.Canvas.CanChangeWidth = _currentExposedSource.ExposedWidthName != null;
-            _view.Canvas.CanChangeHeight = _currentExposedSource.ExposedHeightName != null;
+            _view.Canvas.CanChangeX = IsEditable(_currentExposedSource.ExposedLeftName);
+            _view.Canvas.CanChangeY = IsEditable(_currentExposedSource.ExposedTopName);
+            _view.Canvas.CanChangeWidth = IsEditable(_currentExposedSource.ExposedWidthName);
+            _view.Canvas.CanChangeHeight = IsEditable(_currentExposedSource.ExposedHeightName);
         }
         else
         {
-            _view.Canvas.CanChangeX = true;
-            _view.Canvas.CanChangeY = true;
-            _view.Canvas.CanChangeWidth = true;
-            _view.Canvas.CanChangeHeight = true;
+            _view.Canvas.CanChangeX = IsEditable("TextureLeft");
+            _view.Canvas.CanChangeY = IsEditable("TextureTop");
+            _view.Canvas.CanChangeWidth = IsEditable("TextureWidth");
+            _view.Canvas.CanChangeHeight = IsEditable("TextureHeight");
 
             var instance = _selectedState.SelectedInstance;
             if (instance != null)
@@ -354,6 +425,88 @@ public class TextureCoordinateDisplayController : ITextureCoordinateDisplayContr
         _nineSliceGuideManager.Selector = _view.Canvas.RectangleSelector;
         _nineSliceGuideManager.CustomFrameWidth = customFrameTextureCoordinateWidth;
         _nineSliceGuideManager.Refresh();
+
+        RefreshRegions(textureToAssign);
+    }
+
+    /// <summary>
+    /// Forgets the regions plugins reported earlier, for when a source file changed on disk or a
+    /// project loaded, so the next refresh asks again.
+    /// </summary>
+    public void ClearRegionCache()
+    {
+        _regionCache.Clear();
+        _regionSetKey = null;
+    }
+
+    private void RefreshRegions(Texture2D? texture)
+    {
+        TextureRegionSet regions = TextureRegionSet.Empty;
+        string? sourceFile = _currentExposedSource == null && texture != null ? GetSourceFile() : null;
+
+        if (_pluginManager != null && texture != null && !string.IsNullOrEmpty(sourceFile))
+        {
+            FilePath file = new FilePath(sourceFile);
+            string key = $"{file.FullPath}|{texture.Width}x{texture.Height}";
+            if (key == _regionSetKey)
+            {
+                // Nothing the regions depend on changed; Refresh runs on every variable set.
+                UpdateCurrentRegionHighlight();
+                return;
+            }
+
+            if (!_regionCache.TryGetValue(file.FullPath, out IReadOnlyList<TextureRegion>? reported))
+            {
+                // PluginManager guards each plugin, so a buggy one cannot break the tab.
+                try
+                {
+                    reported = _pluginManager.GetTextureRegions(file);
+                }
+                catch (Exception)
+                {
+                    // Whatever asked the plugins failed; the tab works without regions.
+                    reported = new List<TextureRegion>();
+                }
+                _regionCache[file.FullPath] = reported;
+            }
+
+            regions = new TextureRegionSet(reported, texture.Width, texture.Height);
+            _regionSetKey = key;
+        }
+        else
+        {
+            _regionSetKey = null;
+        }
+
+        _regionOverlayManager.Regions = regions;
+        _regionSet = regions;
+        UpdateCurrentRegionHighlight();
+    }
+
+    private void UpdateCurrentRegionHighlight()
+    {
+        var selector = _view.Canvas.RectangleSelector;
+        _regionOverlayManager.Current = selector != null && selector.Visible
+            ? (MathFunctions.RoundToInt(selector.Left), MathFunctions.RoundToInt(selector.Top),
+               MathFunctions.RoundToInt(selector.Width), MathFunctions.RoundToInt(selector.Height))
+            : null;
+    }
+
+    private string? GetSourceFile()
+    {
+        var state = _selectedState.SelectedStateSave;
+        if (state == null)
+        {
+            return null;
+        }
+
+        string? instancePrefix = _selectedState.SelectedInstance?.Name;
+        if (!string.IsNullOrEmpty(instancePrefix))
+        {
+            instancePrefix += ".";
+        }
+
+        return new RecursiveVariableFinder(state).GetValue<string>($"{instancePrefix}SourceFile");
     }
 
     private Texture2D? GetTextureToAssign(out bool isNineslice, out float? customFrameTextureCoordinateWidth)
@@ -437,9 +590,33 @@ public class TextureCoordinateDisplayController : ITextureCoordinateDisplayContr
         _lineGridManager.Refresh();
     }
 
-    public void HandleRegionDoubleClicked(ImageRegionSelectionCore control)
+    public void HandleRegionDoubleClicked(ImageRegionSelectionCore control) =>
+        HandleRegionGesture(RegionGesture.DoubleClick, control);
+
+    // Every pointer gesture that can set the texture rectangle ends up here. A double-click inside a
+    // plugin region applies that region; a double-click anywhere else keeps making the default
+    // rectangle. Which gesture applies regions is decided only by _regionApplyGesture.
+    private void HandleRegionGesture(RegionGesture gesture, ImageRegionSelectionCore control)
+    {
+        // The user clicked where they are looking: applying the rectangle must not move the camera.
+        _keepCameraWhileApplying = true;
+        try
+        {
+            ApplyRegionGesture(gesture, control);
+        }
+        finally
+        {
+            _keepCameraWhileApplying = false;
+        }
+    }
+
+    private bool _keepCameraWhileApplying;
+
+    private void ApplyRegionGesture(RegionGesture gesture, ImageRegionSelectionCore control)
     {
         if (_currentExposedSource != null) return;
+
+        RefreshReferenceSetNames();
 
         var doubleClickInstance = _selectedState.SelectedInstance;
         if (doubleClickInstance != null)
@@ -449,6 +626,22 @@ public class TextureCoordinateDisplayController : ITextureCoordinateDisplayContr
             {
                 return;
             }
+        }
+
+        float worldX = InputLibrary.CursorExtensionMethods.GetWorldX(control.XnaCursor, control.SystemManagers);
+        float worldY = InputLibrary.CursorExtensionMethods.GetWorldY(control.XnaCursor, control.SystemManagers);
+        TextureRegion? hit = _regionSet.HitTest(worldX, worldY);
+        TextureRegion? region = gesture == _regionApplyGesture ? hit : null;
+        if (region == null && gesture != RegionGesture.DoubleClick)
+        {
+            // The default rectangle stays a double-click gesture whatever applies regions.
+            return;
+        }
+
+        if (region == null && hit != null)
+        {
+            // The click that started this double-click already applied the region under the cursor.
+            return;
         }
 
         using var undoLock = _undoManager.RequestLock();
@@ -466,21 +659,31 @@ public class TextureCoordinateDisplayController : ITextureCoordinateDisplayContr
         {
             graphicalUiElement.TextureAddress = TextureAddress.Custom;
 
-            var cursorX = (int)control.XnaCursor.GetWorldX(control.SystemManagers);
-            var cursorY = (int)control.XnaCursor.GetWorldY(control.SystemManagers);
+            var selectionRect = region is TextureRegion applied
+                ? new Rectangle(applied.X, applied.Y, applied.Width, applied.Height)
+                : GetOptimalSelectionRectangle((int)worldX, (int)worldY, graphicalUiElement.TextureWidth, graphicalUiElement.TextureHeight);
 
-
-            var selectionRect = GetOptimalSelectionRectangle(cursorX, cursorY, graphicalUiElement.TextureWidth, graphicalUiElement.TextureHeight);
-
-            graphicalUiElement.TextureLeft = selectionRect.X;
-            graphicalUiElement.TextureTop = selectionRect.Y;
-            graphicalUiElement.TextureWidth = selectionRect.Width;
-            graphicalUiElement.TextureHeight = selectionRect.Height;
-
-            state.SetValue($"{instancePrefix}TextureLeft", selectionRect.X, "int");
-            state.SetValue($"{instancePrefix}TextureTop", selectionRect.Y, "int");
-            state.SetValue($"{instancePrefix}TextureWidth", selectionRect.Width, "int");
-            state.SetValue($"{instancePrefix}TextureHeight", selectionRect.Height, "int");
+            // A coordinate a reference sets keeps its value; the free ones take the region's.
+            if (IsEditable("TextureLeft"))
+            {
+                graphicalUiElement.TextureLeft = selectionRect.X;
+                state.SetValue($"{instancePrefix}TextureLeft", selectionRect.X, "int");
+            }
+            if (IsEditable("TextureTop"))
+            {
+                graphicalUiElement.TextureTop = selectionRect.Y;
+                state.SetValue($"{instancePrefix}TextureTop", selectionRect.Y, "int");
+            }
+            if (IsEditable("TextureWidth"))
+            {
+                graphicalUiElement.TextureWidth = selectionRect.Width;
+                state.SetValue($"{instancePrefix}TextureWidth", selectionRect.Width, "int");
+            }
+            if (IsEditable("TextureHeight"))
+            {
+                graphicalUiElement.TextureHeight = selectionRect.Height;
+                state.SetValue($"{instancePrefix}TextureHeight", selectionRect.Height, "int");
+            }
             state.SetValue($"{instancePrefix}TextureAddress",
                 Gum.Managers.TextureAddress.Custom, nameof(TextureAddress));
 
@@ -488,6 +691,7 @@ public class TextureCoordinateDisplayController : ITextureCoordinateDisplayContr
             _textureOutlineManager.Refresh();
 
             RefreshSelector(RefreshType.Force);
+            UpdateCurrentRegionHighlight();
 
             UpdateScrollBarsToTexture();
 
@@ -497,6 +701,13 @@ public class TextureCoordinateDisplayController : ITextureCoordinateDisplayContr
             //_guiCommands.RefreshVariableValues();
             _guiCommands.RefreshVariables();
 
+            string? chosenFile = GetSourceFile();
+            // The second click of a double-click applies the same region again; the first already told plugins.
+            bool secondClickOfDoubleClick = gesture == RegionGesture.Click && control.XnaCursor.PrimaryDoubleClick;
+            if (region is TextureRegion chosen && !secondClickOfDoubleClick && _pluginManager != null && !string.IsNullOrEmpty(chosenFile))
+            {
+                _pluginManager.TextureRegionChosen(new FilePath(chosenFile), chosen);
+            }
         }
     }
 
@@ -581,27 +792,39 @@ public class TextureCoordinateDisplayController : ITextureCoordinateDisplayContr
                     innerChild.TextureWidth = MathFunctions.RoundToInt(selector.Width);
                     innerChild.TextureHeight = MathFunctions.RoundToInt(selector.Height);
 
-                    if (_currentExposedSource.ExposedLeftName != null)
+                    if (IsEditable(_currentExposedSource.ExposedLeftName))
                         state.SetValue($"{instancePrefix}{_currentExposedSource.ExposedLeftName}", innerChild.TextureLeft, "int");
-                    if (_currentExposedSource.ExposedTopName != null)
+                    if (IsEditable(_currentExposedSource.ExposedTopName))
                         state.SetValue($"{instancePrefix}{_currentExposedSource.ExposedTopName}", innerChild.TextureTop, "int");
-                    if (_currentExposedSource.ExposedWidthName != null)
+                    if (IsEditable(_currentExposedSource.ExposedWidthName))
                         state.SetValue($"{instancePrefix}{_currentExposedSource.ExposedWidthName}", innerChild.TextureWidth, "int");
-                    if (_currentExposedSource.ExposedHeightName != null)
+                    if (IsEditable(_currentExposedSource.ExposedHeightName))
                         state.SetValue($"{instancePrefix}{_currentExposedSource.ExposedHeightName}", innerChild.TextureHeight, "int");
                 }
             }
             else
             {
-                graphicalUiElement.TextureLeft = MathFunctions.RoundToInt(selector.Left);
-                graphicalUiElement.TextureTop = MathFunctions.RoundToInt(selector.Top);
-                graphicalUiElement.TextureWidth = MathFunctions.RoundToInt(selector.Width);
-                graphicalUiElement.TextureHeight = MathFunctions.RoundToInt(selector.Height);
-
-                state.SetValue($"{instancePrefix}TextureLeft", graphicalUiElement.TextureLeft, "int");
-                state.SetValue($"{instancePrefix}TextureTop", graphicalUiElement.TextureTop, "int");
-                state.SetValue($"{instancePrefix}TextureWidth", graphicalUiElement.TextureWidth, "int");
-                state.SetValue($"{instancePrefix}TextureHeight", graphicalUiElement.TextureHeight, "int");
+                // A coordinate a reference sets is left alone, so the reference's value is never overwritten.
+                if (IsEditable("TextureLeft"))
+                {
+                    graphicalUiElement.TextureLeft = MathFunctions.RoundToInt(selector.Left);
+                    state.SetValue($"{instancePrefix}TextureLeft", graphicalUiElement.TextureLeft, "int");
+                }
+                if (IsEditable("TextureTop"))
+                {
+                    graphicalUiElement.TextureTop = MathFunctions.RoundToInt(selector.Top);
+                    state.SetValue($"{instancePrefix}TextureTop", graphicalUiElement.TextureTop, "int");
+                }
+                if (IsEditable("TextureWidth"))
+                {
+                    graphicalUiElement.TextureWidth = MathFunctions.RoundToInt(selector.Width);
+                    state.SetValue($"{instancePrefix}TextureWidth", graphicalUiElement.TextureWidth, "int");
+                }
+                if (IsEditable("TextureHeight"))
+                {
+                    graphicalUiElement.TextureHeight = MathFunctions.RoundToInt(selector.Height);
+                    state.SetValue($"{instancePrefix}TextureHeight", graphicalUiElement.TextureHeight, "int");
+                }
             }
 
             _guiCommands.RefreshVariableValues();
@@ -621,16 +844,16 @@ public class TextureCoordinateDisplayController : ITextureCoordinateDisplayContr
         {
             if (_currentExposedSource != null)
             {
-                if (_currentExposedSource.ExposedLeftName != null)
+                if (IsEditable(_currentExposedSource.ExposedLeftName))
                     _setVariableLogic.ReactToPropertyValueChanged(_currentExposedSource.ExposedLeftName, oldTextureLeftValue,
                         element, instance, state, refresh: false);
-                if (_currentExposedSource.ExposedTopName != null)
+                if (IsEditable(_currentExposedSource.ExposedTopName))
                     _setVariableLogic.ReactToPropertyValueChanged(_currentExposedSource.ExposedTopName, oldTextureTopValue,
                         element, instance, state, refresh: false);
-                if (_currentExposedSource.ExposedWidthName != null)
+                if (IsEditable(_currentExposedSource.ExposedWidthName))
                     _setVariableLogic.ReactToPropertyValueChanged(_currentExposedSource.ExposedWidthName, oldTextureWidthValue,
                         element, instance, state, refresh: false);
-                if (_currentExposedSource.ExposedHeightName != null)
+                if (IsEditable(_currentExposedSource.ExposedHeightName))
                     _setVariableLogic.ReactToPropertyValueChanged(_currentExposedSource.ExposedHeightName, oldTextureHeightValue,
                         element, instance, state, refresh: false);
             }
@@ -775,6 +998,12 @@ public class TextureCoordinateDisplayController : ITextureCoordinateDisplayContr
 
     public void CenterCameraOnSelection()
     {
+        if (_keepCameraWhileApplying)
+        {
+            UpdateScrollBarsToTexture();
+            return;
+        }
+
         var camera = SystemManagers.Renderer.Camera;
         _view.InvokeWhenLoaded(() =>
         {

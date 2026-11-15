@@ -281,15 +281,55 @@ namespace RenderingLibrary
 
         public void WorldToScreen(float worldX, float worldY, out float screenX, out float screenY)
         {
-            Matrix matrix = GetTransformationMatrix();
+            GetWorldToScreenTransform().Transform(worldX, worldY, out screenX, out screenY);
+        }
 
-            Vector3 position = new Vector3(worldX + ClientLeft/Zoom, worldY + ClientTop/Zoom, 0);
-            Vector3 transformed = Vector3.Transform(position, matrix);
+        /// <summary>
+        /// The mapping <see cref="WorldToScreen"/> applies, resolved once so many points can be
+        /// mapped without rebuilding the matrix for each. It is a snapshot: resolve it again after
+        /// the camera changes.
+        /// </summary>
+        public WorldToScreenTransform GetWorldToScreenTransform()
+        {
+            return new WorldToScreenTransform(GetTransformationMatrix(), ClientLeft / Zoom, ClientTop / Zoom);
+        }
+#endregion
+    }
+
+    /// <summary>
+    /// A world-to-screen mapping resolved once from a <see cref="Camera"/>, or a camera and a
+    /// <see cref="Layer"/>, by <see cref="Camera.GetWorldToScreenTransform"/> or
+    /// <see cref="Layer.GetWorldToScreenTransform"/>, for mapping many points through the same
+    /// camera state.
+    /// </summary>
+    public readonly struct WorldToScreenTransform
+    {
+        private readonly Matrix _matrix;
+        private readonly float _offsetX;
+        private readonly float _offsetY;
+
+        /// <summary>
+        /// Maps a world point by adding (<paramref name="offsetX"/>, <paramref name="offsetY"/>)
+        /// and then transforming it by <paramref name="matrix"/>.
+        /// </summary>
+        public WorldToScreenTransform(Matrix matrix, float offsetX, float offsetY)
+        {
+            _matrix = matrix;
+            _offsetX = offsetX;
+            _offsetY = offsetY;
+        }
+
+        /// <summary>
+        /// Maps a world-space point to screen space.
+        /// </summary>
+        public void Transform(float worldX, float worldY, out float screenX, out float screenY)
+        {
+            Vector3 position = new Vector3(worldX + _offsetX, worldY + _offsetY, 0);
+            Vector3 transformed = Vector3.Transform(position, _matrix);
 
             screenX = transformed.X;
             screenY = transformed.Y;
         }
-#endregion
     }
 
     /// <summary>
@@ -341,7 +381,16 @@ namespace RenderingLibrary
         /// upright (see <see cref="IPositionedSizedObjectExtensionMethods.GetAbsoluteBoundsInBake"/>, #6618).
         /// Pass null outside a bake.
         /// </summary>
-        public static System.Drawing.Rectangle GetScissorRectangleFor(this Camera camera, Layer? layer, IRenderableIpso? ipso, IRenderableIpso? bakedContainer)
+        public static System.Drawing.Rectangle GetScissorRectangleFor(this Camera camera, Layer? layer, IRenderableIpso? ipso, IRenderableIpso? bakedContainer) =>
+            camera.GetScissorRectangleFor(camera.GetWorldToScreenTransform(layer), ipso, bakedContainer);
+
+        /// <summary>
+        /// <see cref="GetScissorRectangleFor(Camera, Layer?, IRenderableIpso?, IRenderableIpso?)"/>
+        /// through a <paramref name="worldToScreen"/> already resolved by
+        /// <see cref="GetWorldToScreenTransform(Camera, Layer?)"/>, for mapping many renderables
+        /// through the same camera state.
+        /// </summary>
+        public static System.Drawing.Rectangle GetScissorRectangleFor(this Camera camera, in WorldToScreenTransform worldToScreen, IRenderableIpso? ipso, IRenderableIpso? bakedContainer)
         {
             if (ipso == null)
             {
@@ -349,7 +398,7 @@ namespace RenderingLibrary
             }
 
             ipso.GetAbsoluteBoundsInBake(bakedContainer, out float left, out float top, out float right, out float bottom);
-            return camera.GetScissorRectangleForWorldBounds(layer, left, top, right, bottom);
+            return camera.GetScissorRectangleForWorldBounds(worldToScreen, left, top, right, bottom);
         }
 
         /// <summary>
@@ -382,18 +431,34 @@ namespace RenderingLibrary
         /// <param name="layer">The layer, or null.</param>
         /// <param name="ipso">The renderable to test.</param>
         /// <param name="bakedContainer">The render-target container being baked, or null.</param>
-        public static System.Drawing.Rectangle GetCullTestBoundsFor(this Camera camera, Layer? layer, IRenderableIpso ipso, IRenderableIpso? bakedContainer)
+        public static System.Drawing.Rectangle GetCullTestBoundsFor(this Camera camera, Layer? layer, IRenderableIpso ipso, IRenderableIpso? bakedContainer) =>
+            camera.GetCullTestBoundsFor(camera.GetWorldToScreenTransform(layer), ipso, bakedContainer);
+
+        /// <summary>
+        /// <see cref="GetCullTestBoundsFor(Camera, Layer?, IRenderableIpso, IRenderableIpso?)"/>
+        /// through a <paramref name="worldToScreen"/> already resolved by
+        /// <see cref="GetWorldToScreenTransform(Camera, Layer?)"/>, for mapping many renderables
+        /// through the same camera state.
+        /// </summary>
+        public static System.Drawing.Rectangle GetCullTestBoundsFor(this Camera camera, in WorldToScreenTransform worldToScreen, IRenderableIpso ipso, IRenderableIpso? bakedContainer)
         {
             if (ipso == null)
             {
-                return camera.GetScissorRectangleFor(layer, ipso);
+                return camera.GetScissorRectangleFor(worldToScreen, ipso, bakedContainer: null);
             }
 
             ipso.GetAbsoluteBoundsInBake(bakedContainer, out float left, out float worldTop, out float right, out float worldBottom);
             ExpandWorldTopBottomForWrappedTextExcess(ipso, ref worldTop, ref worldBottom);
 
-            return camera.GetScissorRectangleForWorldBounds(layer, left, worldTop, right, worldBottom);
+            return camera.GetScissorRectangleForWorldBounds(worldToScreen, left, worldTop, right, worldBottom);
         }
+
+        /// <summary>
+        /// The world-to-screen mapping the scissor and cull rectangles use: <paramref name="layer"/>'s
+        /// (honoring its <c>LayerCameraSettings</c>) when supplied, else the camera's own.
+        /// </summary>
+        public static WorldToScreenTransform GetWorldToScreenTransform(this Camera camera, Layer? layer) =>
+            layer != null ? layer.GetWorldToScreenTransform(camera) : camera.GetWorldToScreenTransform();
 
         /// <summary>
         /// Finds the <see cref="IWrappedText"/> for <paramref name="ipso"/> — either <paramref
@@ -434,17 +499,9 @@ namespace RenderingLibrary
         /// duplicating it.
         /// </summary>
         private static System.Drawing.Rectangle GetScissorRectangleForWorldBounds(
-            this Camera camera, Layer? layer, float worldLeft, float worldTop, float worldRight, float worldBottom)
+            this Camera camera, in WorldToScreenTransform worldToScreen, float worldLeft, float worldTop, float worldRight, float worldBottom)
         {
-            float screenX, screenY;
-            if (layer != null)
-            {
-                layer.WorldToScreen(camera, worldLeft, worldTop, out screenX, out screenY);
-            }
-            else
-            {
-                camera.WorldToScreen(worldLeft, worldTop, out screenX, out screenY);
-            }
+            worldToScreen.Transform(worldLeft, worldTop, out float screenX, out float screenY);
 
 #if FRB
             // Layer.WorldToScreen / Camera.WorldToScreen intentionally skip the ClientLeft/Top
@@ -459,14 +516,7 @@ namespace RenderingLibrary
             int left = global::RenderingLibrary.Math.MathFunctions.RoundToInt(screenX);
             int top = global::RenderingLibrary.Math.MathFunctions.RoundToInt(screenY);
 
-            if (layer != null)
-            {
-                layer.WorldToScreen(camera, worldRight, worldBottom, out screenX, out screenY);
-            }
-            else
-            {
-                camera.WorldToScreen(worldRight, worldBottom, out screenX, out screenY);
-            }
+            worldToScreen.Transform(worldRight, worldBottom, out screenX, out screenY);
 
 #if FRB
             screenX += camera.ClientLeft;

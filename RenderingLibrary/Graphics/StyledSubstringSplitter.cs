@@ -190,10 +190,111 @@ public class StyledSubstringSplitter
     public List<StyledSubstring> GetStyledSubstrings(int startOfLineIndex, string lineOfText, List<InlineVariable> inlineVariables)
     {
         List<StyledSubstring> substrings = new();
-        int currentSubstringStart = 0;
+        Split(startOfLineIndex, lineOfText, inlineVariables, substrings, new List<InlineVariable>(), new List<InlineVariable>(), pooled: false);
+        return substrings;
+    }
 
-        List<InlineVariable> currentlyActiveInlines = new();
-        List<InlineVariable> inlinesForThisCharacter = new();
+    // What GetStyledSubstringsReusing keeps between calls, so text split on every change allocates no run objects,
+    // lists or temporary lists. Bounded by MaxPooledSubstrings.
+    private const int MaxPooledSubstrings = 32;
+
+    // The most variables a pooled run's list, or either temporary list, keeps room for once a split is over.
+    internal const int MaxRetainedVariables = 16;
+    private readonly List<StyledSubstring> _pooledSubstrings = new();
+    private readonly List<InlineVariable> _currentlyActiveInlines = new();
+    private readonly List<InlineVariable> _inlinesForThisCharacter = new();
+
+    /// <summary>
+    /// <see cref="GetStyledSubstrings(int, string, List{InlineVariable})"/> into <paramref name="substrings"/>, which is
+    /// cleared first, with the run objects reused from the previous call. The runs are valid until the next call on
+    /// this splitter (a Text that changes every frame splits the line again before drawing it).
+    /// </summary>
+    internal void GetStyledSubstringsReusing(int startOfLineIndex, string lineOfText, List<InlineVariable> inlineVariables, List<StyledSubstring> substrings)
+    {
+        substrings.Clear();
+        _currentlyActiveInlines.Clear();
+        _inlinesForThisCharacter.Clear();
+        Split(startOfLineIndex, lineOfText, inlineVariables, substrings, _currentlyActiveInlines, _inlinesForThisCharacter, pooled: true);
+        _currentlyActiveInlines.Clear();
+        _inlinesForThisCharacter.Clear();
+    }
+
+    /// <summary>
+    /// Drops what the last <see cref="GetStyledSubstringsReusing"/> left in the pooled runs (their variables and text), and
+    /// the room their lists and the temporary lists grew past <see cref="MaxRetainedVariables"/>, so a deeply nested text
+    /// does not leave its depth behind. The runs it returned are not valid afterwards.
+    /// </summary>
+    internal void ReleaseSplit()
+    {
+        foreach (StyledSubstring substring in _pooledSubstrings)
+        {
+            substring.Substring = string.Empty;
+            ReleaseVariables(substring.Variables);
+        }
+
+        ReleaseVariables(_currentlyActiveInlines);
+        ReleaseVariables(_inlinesForThisCharacter);
+    }
+
+    private static void ReleaseVariables(List<InlineVariable> variables)
+    {
+        variables.Clear();
+        if (variables.Capacity > MaxRetainedVariables)
+        {
+            variables.Capacity = 0;
+        }
+    }
+
+    /// <summary>How many variables the pooled runs and the temporary lists still point at.</summary>
+    internal int RetainedVariableCount
+    {
+        get
+        {
+            int count = _currentlyActiveInlines.Count + _inlinesForThisCharacter.Count;
+            foreach (StyledSubstring substring in _pooledSubstrings)
+            {
+                count += substring.Variables.Count;
+            }
+            return count;
+        }
+    }
+
+    /// <summary>The largest array any pooled run's variable list or a temporary list holds on to.</summary>
+    internal int RetainedVariableCapacity
+    {
+        get
+        {
+            int capacity = System.Math.Max(_currentlyActiveInlines.Capacity, _inlinesForThisCharacter.Capacity);
+            foreach (StyledSubstring substring in _pooledSubstrings)
+            {
+                capacity = System.Math.Max(capacity, substring.Variables.Capacity);
+            }
+            return capacity;
+        }
+    }
+
+    private StyledSubstring CreateSubstring(List<StyledSubstring> substrings, bool pooled)
+    {
+        if (!pooled || substrings.Count >= MaxPooledSubstrings)
+        {
+            return new StyledSubstring();
+        }
+
+        if (substrings.Count == _pooledSubstrings.Count)
+        {
+            _pooledSubstrings.Add(new StyledSubstring());
+        }
+
+        StyledSubstring reused = _pooledSubstrings[substrings.Count];
+        reused.Variables.Clear();
+        reused.Substring = string.Empty;
+        return reused;
+    }
+
+    private void Split(int startOfLineIndex, string lineOfText, List<InlineVariable> inlineVariables, List<StyledSubstring> substrings,
+        List<InlineVariable> currentlyActiveInlines, List<InlineVariable> inlinesForThisCharacter, bool pooled)
+    {
+        int currentSubstringStart = 0;
 
         int relativeLetterIndex = 0;
         for (; relativeLetterIndex < lineOfText.Length; relativeLetterIndex++)
@@ -235,7 +336,7 @@ public class StyledSubstringSplitter
             {
                 currentSubstringStart = relativeLetterIndex;
 
-                var styledSubstring = new StyledSubstring();
+                var styledSubstring = CreateSubstring(substrings, pooled);
                 foreach (var item in inlinesForThisCharacter)
                 {
                     // Custom variables can stack (e.g. [Custom=A][Custom=B]),
@@ -243,10 +344,13 @@ public class StyledSubstringSplitter
                     // like Color should replace the previous value.
                     if (item.VariableName != "Custom")
                     {
-                        var existing = styledSubstring.Variables.FirstOrDefault(x => x.VariableName == item.VariableName);
-                        if (existing != null)
+                        for (int i = 0; i < styledSubstring.Variables.Count; i++)
                         {
-                            styledSubstring.Variables.Remove(existing);
+                            if (styledSubstring.Variables[i].VariableName == item.VariableName)
+                            {
+                                styledSubstring.Variables.RemoveAt(i);
+                                break;
+                            }
                         }
                     }
                     styledSubstring.Variables.Add(item);
@@ -269,7 +373,5 @@ public class StyledSubstringSplitter
         {
             endSubstring.Substring = lineOfText.Substring(currentSubstringStart, relativeLetterIndex - currentSubstringStart);
         }
-
-        return substrings;
     }
 }

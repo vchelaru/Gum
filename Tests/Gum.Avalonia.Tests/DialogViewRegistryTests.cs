@@ -85,7 +85,7 @@ public class DialogViewRegistryTests
         window.Title.ShouldBe("New Project");
         CheckBox[] checkBoxes = view.GetLogicalDescendants().OfType<CheckBox>().ToArray();
         checkBoxes.Select(box => box.Content is StackPanel label ? label.GetLogicalDescendants().OfType<TextBlock>().First().Text : box.Content).ShouldBe(
-            new object?[] { "Include Forms controls (recommended)", "Include demo screen", "Create C# project", "Use local Gum source", "Restore NuGet packages", "Include recommended packages", "Generate code" });
+            new object?[] { "Include Forms controls (recommended)", "Include demo screen", "Create C# project", "Restore NuGet packages", "Include recommended packages", "Generate code" });
         checkBoxes[0].IsChecked.ShouldBe(true);
 
         checkBoxes[0].IsChecked = false;
@@ -96,17 +96,17 @@ public class DialogViewRegistryTests
     }
 
     [AvaloniaFact]
-    public void ThemingDialog_OpeningDoesNotMarkColorsExplicit()
+    public void AppearancePage_OpeningDoesNotMarkColorsExplicit()
     {
         ThemingDialogViewModel viewModel = TestAppBuilder.Services.GetRequiredService<ThemingDialogViewModel>();
         bool[] before = ExplicitFlags(viewModel);
-        Control view = Registry.CreateView(viewModel);
+        Control view = new SettingsPageViewRegistry().CreateView(viewModel);
         DialogWindow window = new DialogWindow(viewModel, view);
 
         window.Show();
 
         ExplicitFlags(viewModel).ShouldBe(before);
-        view.GetLogicalDescendants().OfType<ColorPicker>().Count().ShouldBe(6);
+        view.GetLogicalDescendants().OfType<Gum.Avalonia.Plugins.VariableGrid.ColorDisplay>().Count().ShouldBe(6);
         // Closing without Cancel: nothing changed, and Cancel re-applies the theme, which the shared
         // test container's canvas plugins cannot react to without a device.
         window.Close();

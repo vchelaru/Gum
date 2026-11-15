@@ -7,8 +7,10 @@ using System.Linq;
 using Gum.DataTypes;
 using Gum.Bundle;
 using Gum.Expressions;
+using Gum.Localization;
 using Gum.Managers;
 using Gum.ProjectServices;
+using Gum.ProjectServices.CodeGeneration;
 
 namespace Gum.Cli.Commands;
 
@@ -37,9 +39,18 @@ public static class PackCommand
             getDefaultValue: () => "core,fontcache,external",
             description: "Comma-separated categories to include. Valid values: core, fontcache, external.");
 
+        var premultipliedAlphaOption = new Option<bool>(
+            aliases: new[] { "--premultiplied-alpha" },
+            description: "Store PNG textures with premultiplied alpha, for games that set Renderer.UsePremultipliedAlpha " +
+                "to true and for SkiaGum. Off by default (straight alpha).");
+
         var shakeOption = new Option<bool>(
             aliases: new[] { "--shake" },
             description: "Leave out every Screen and Component that no Screen or root reaches, with the files only they use.");
+
+        var skipDebugOnlyOption = new Option<bool>(
+            aliases: new[] { "--skip-debug-only" },
+            description: "Leave out every Screen and Component marked Debug Only in the Code tab (and components derived from one), with the files only they use.");
 
         var rootsOption = new Option<string[]>(
             aliases: new[] { "--roots" },
@@ -61,7 +72,9 @@ public static class PackCommand
             projectArgument,
             outputOption,
             includeOption,
+            premultipliedAlphaOption,
             shakeOption,
+            skipDebugOnlyOption,
             rootsOption,
             keepOption,
             rootsAssemblyOption
@@ -72,20 +85,23 @@ public static class PackCommand
             string projectPath = context.ParseResult.GetValueForArgument(projectArgument);
             string? outputPath = context.ParseResult.GetValueForOption(outputOption);
             string includeFlags = context.ParseResult.GetValueForOption(includeOption) ?? "core,fontcache,external";
+            bool premultipliedAlpha = context.ParseResult.GetValueForOption(premultipliedAlphaOption);
             ShakeOptions shake = new ShakeOptions(
                 context.ParseResult.GetValueForOption(shakeOption),
+                context.ParseResult.GetValueForOption(skipDebugOnlyOption),
                 context.ParseResult.GetValueForOption(rootsOption) ?? Array.Empty<string>(),
                 context.ParseResult.GetValueForOption(keepOption) ?? Array.Empty<string>(),
                 context.ParseResult.GetValueForOption(rootsAssemblyOption) ?? Array.Empty<string>());
-            context.ExitCode = Execute(projectPath, outputPath, includeFlags, shake);
+            context.ExitCode = Execute(projectPath, outputPath, includeFlags, premultipliedAlpha, shake);
         });
 
         return command;
     }
 
-    private sealed record ShakeOptions(bool Enabled, string[] RootFiles, string[] Keep, string[] RootAssemblies);
+    private sealed record ShakeOptions(bool Enabled, bool SkipDebugOnly, string[] RootFiles, string[] Keep, string[] RootAssemblies);
 
-    private static int Execute(string projectPath, string? outputPath, string includeFlags, ShakeOptions shake)
+    private static int Execute(string projectPath, string? outputPath, string includeFlags, bool premultipliedAlpha,
+        ShakeOptions shake)
     {
         string fullPath = Path.GetFullPath(projectPath);
 
@@ -129,14 +145,29 @@ public static class PackCommand
 
         GumProjectSave project = loadResult.Project!;
         GumElementReachabilityResult? reachability = null;
-        if (shake.Enabled)
+        if (shake.Enabled || shake.SkipDebugOnly)
         {
-            if (!TryReadRoots(shake, out List<string> roots, out string? rootsError))
+            List<string> roots = new List<string>();
+            if (shake.Enabled && !TryReadRoots(shake, out roots, out string? rootsError))
             {
                 Console.Error.WriteLine(rootsError);
                 return 2;
             }
-            reachability = new GumElementReachability().Compute(project, roots);
+
+            List<string> debugOnlyNames = shake.SkipDebugOnly
+                ? FindDebugOnlyElementNames(project, projectDirectory)
+                : new List<string>();
+            if (!shake.Enabled)
+            {
+                // Without --shake every element is kept, so every element is a root; Debug Only ones are skipped.
+                roots = project.Components.Select(component => component.Name).ToList();
+            }
+            reachability = new GumElementReachability().Compute(project, roots, debugOnlyNames);
+            if (TryFindKeptElementUsingDebugOnly(project, debugOnlyNames, reachability, out string? debugOnlyError))
+            {
+                Console.Error.WriteLine(debugOnlyError);
+                return 2;
+            }
             if (reachability.UnknownRoots.Count > 0)
             {
                 foreach (string unknownRoot in reachability.UnknownRoots)
@@ -147,7 +178,10 @@ public static class PackCommand
             }
         }
 
-        GumProjectDependencyWalker walker = new GumProjectDependencyWalker();
+        GumProjectDependencyWalker walker = new GumProjectDependencyWalker
+        {
+            FontTranslationsOf = ProjectTranslations.CreateLookup(project)
+        };
         WalkResult walkResult = walker.Walk(project, projectDirectory, inclusion,
             reachability == null ? null : new HashSet<string>(reachability.KeptElementNames, StringComparer.OrdinalIgnoreCase));
 
@@ -191,6 +225,19 @@ public static class PackCommand
             {
                 bytes = WriteProjectWithoutTrimmedElements(project, fullPath, reachability.TrimmedElementNames);
             }
+
+            if (IsPng(relativePath))
+            {
+                try
+                {
+                    bytes = ToRawTexture(bytes, premultipliedAlpha);
+                }
+                catch (Exception ex)
+                {
+                    Console.Error.WriteLine($"error: could not decode PNG {relativePath}: {ex.Message}");
+                    return 1;
+                }
+            }
             entries.Add((relativePath, bytes));
             uncompressedBytes += bytes.Length;
         }
@@ -219,6 +266,72 @@ public static class PackCommand
         Console.WriteLine($"Ratio:           {ratio:F1}%");
 
         return 0;
+    }
+
+    // An element is Debug Only when it, or an element it derives from, is flagged in its .codsj file.
+    private static List<string> FindDebugOnlyElementNames(GumProjectSave project, string projectDirectory)
+    {
+        DebugOnlyElementLogic logic = new DebugOnlyElementLogic(
+            new CodeOutputElementSettingsManager(new FixedProjectDirectoryProvider(
+                Path.EndsInDirectorySeparator(projectDirectory) ? projectDirectory : projectDirectory + Path.DirectorySeparatorChar)));
+        return project.Screens.Cast<ElementSave>().Concat(project.Components)
+            .Where(element => logic.IsDebugOnly(element))
+            .Select(element => element.Name)
+            .ToList();
+    }
+
+    // A kept element that derives from or holds an instance of a Debug Only element would fail to load from the
+    // bundle, so pack stops and names it instead of writing a bundle that cannot load.
+    private static bool TryFindKeptElementUsingDebugOnly(GumProjectSave project, List<string> debugOnlyNames,
+        GumElementReachabilityResult reachability, out string? error)
+    {
+        error = null;
+        HashSet<string> debugOnly = new HashSet<string>(debugOnlyNames, StringComparer.OrdinalIgnoreCase);
+        if (debugOnly.Count == 0)
+        {
+            return false;
+        }
+        HashSet<string> kept = new HashSet<string>(reachability.KeptElementNames, StringComparer.OrdinalIgnoreCase);
+        foreach (ElementSave element in project.Screens.Cast<ElementSave>().Concat(project.Components))
+        {
+            if (!kept.Contains(element.Name))
+            {
+                continue;
+            }
+            string? used = new[] { element.BaseType }.Concat(element.Instances.Select(instance => instance.BaseType))
+                .FirstOrDefault(name => !string.IsNullOrEmpty(name) && debugOnly.Contains(name!));
+            if (used != null)
+            {
+                error = $"'{element.Name}' uses the Debug Only element '{used}', which --skip-debug-only leaves out. " +
+                    $"Mark '{element.Name}' Debug Only too, or remove the use.";
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static bool IsPng(string relativePath) =>
+        string.Equals(Path.GetExtension(relativePath), ".png", StringComparison.OrdinalIgnoreCase);
+
+    /// <summary>
+    /// Decodes a PNG to straight RGBA with StbImageSharp (the decoder behind MonoGame's and KNI's
+    /// Texture2D.FromStream, so the pixels match a loose-file load) and stores it as a raw texture,
+    /// premultiplied or with the transparent-edge bleed baked, so the runtime uploads it as-is.
+    /// </summary>
+    private static byte[] ToRawTexture(byte[] png, bool premultiply)
+    {
+        StbImageSharp.ImageResult image =
+            StbImageSharp.ImageResult.FromMemory(png, StbImageSharp.ColorComponents.RedGreenBlueAlpha);
+        byte[] rgba = image.Data;
+        if (premultiply)
+        {
+            global::RenderingLibrary.Content.RgbaPixels.Premultiply(rgba);
+        }
+        else
+        {
+            global::RenderingLibrary.Content.RgbaPixels.BleedTransparentEdges(rgba, image.Width, image.Height);
+        }
+        return GumRawTexture.Encode(image.Width, image.Height, rgba, premultiply);
     }
 
     private static bool TryReadRoots(ShakeOptions shake, out List<string> roots, out string? error)

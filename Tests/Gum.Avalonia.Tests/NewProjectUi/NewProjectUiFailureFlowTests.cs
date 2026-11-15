@@ -153,7 +153,8 @@ public class NewProjectUiFailureFlowTests
         fixture.Dialog.NameBox.IsEffectivelyEnabled.ShouldBeTrue("the form is editable again");
         fixture.IsShown(NewProjectUiText.RefusedHeading).ShouldBeTrue("the files just written now exist, so creating again would be refused");
         fixture.IsShownStartingWith("Project already exists").ShouldBeTrue();
-        fixture.IsShown(NewProjectUiText.TargetNotEmptyHeading).ShouldBeTrue();
+        fixture.IsShown(NewProjectUiText.TargetNotEmptyHeading).ShouldBeFalse(
+            "the not-empty warning is hidden while refusal is shown");
         fixture.Dialog.OkButton.IsEffectivelyEnabled.ShouldBeFalse();
 
         fixture.Dialog.TypeName("Game2");
@@ -201,7 +202,7 @@ public class NewProjectUiFailureFlowTests
         BlockRestore(fixture);
         StartCreation(fixture);
         fixture.WaitUntil(() => fixture.ViewModel.IsBusy && fixture.ViewModel.ProgressText.Contains("restore"), "the restore to start");
-        fixture.IsShown("Running dotnet restore...").ShouldBeTrue();
+        fixture.IsShown("Step 2 of 2: Running dotnet restore...").ShouldBeTrue();
 
         if (how == "cancelButton")
         {
@@ -235,7 +236,7 @@ public class NewProjectUiFailureFlowTests
         BlockCreation(fixture);
         StartCreation(fixture);
         fixture.WaitUntil(() => fixture.ViewModel.IsBusy, "the busy state");
-        fixture.IsShown("Creating files...").ShouldBeTrue();
+        fixture.IsShown("Step 1 of 2: Creating files...").ShouldBeTrue();
         fixture.Dialog.NameBox.IsEffectivelyEnabled.ShouldBeFalse("inputs are locked while busy");
         fixture.Dialog.OkButton.IsEffectivelyEnabled.ShouldBeFalse();
 
@@ -398,7 +399,7 @@ public class NewProjectUiFailureFlowTests
         StartCreation(fixture);
         fixture.WaitUntil(() => fixture.IsShown("Restoring packages for Game.csproj"), "the output line");
 
-        fixture.IsShown("Running dotnet restore...").ShouldBeTrue();
+        fixture.IsShown("Step 2 of 2: Running dotnet restore...").ShouldBeTrue();
         fixture.Dialog.CancelButton.IsEffectivelyEnabled.ShouldBeTrue();
         finish.SetResult(NewProjectUiFixture.RestoreOk());
         fixture.WaitUntil(() => fixture.Dialog.Result != null, "the dialog to close");

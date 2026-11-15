@@ -227,7 +227,7 @@ public partial class GraphicalUiElement
         if (!isSuspended)
         {
             isSuspended = !updateParent && !AreUpdatesAppliedWhenInvisible &&
-                (mContainedObjectAsIVisible != null && asIVisible.AbsoluteVisible == false && this.IsInRenderTargetRecursively() == false);
+                (mContainedObjectAsIVisible != null && this.IsHiddenWithinRenderTarget());
         }
 
         if (isSuspended)
@@ -241,8 +241,7 @@ public partial class GraphicalUiElement
             // it may be used by something else:
             !this.IsRenderTarget)
         {
-            var parentAsIVisible = Parent as IVisible;
-            if (Visible == false && parentAsIVisible?.AbsoluteVisible == false && !this.IsInRenderTargetRecursively())
+            if (Visible == false && Parent != null && Parent.IsHiddenWithinRenderTarget())
             {
                 // Skipped like the suspended case above, so what was asked has to be remembered for when this
                 // is shown. Rows added to this element, or a resize of them, climb here and stop; without the

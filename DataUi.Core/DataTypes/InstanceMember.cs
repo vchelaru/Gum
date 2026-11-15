@@ -386,6 +386,24 @@ namespace WpfDataUi.DataTypes
             }
         }
 
+        int indentLevel;
+        /// <summary>
+        /// How many steps a spacious row is indented, for a row that belongs to the one above it (the
+        /// fields a toggle reveals). Zero for every other row and grid.
+        /// </summary>
+        public int IndentLevel
+        {
+            get => indentLevel;
+            set
+            {
+                if (indentLevel != value)
+                {
+                    indentLevel = value;
+                    OnPropertyChanged(nameof(IndentLevel));
+                }
+            }
+        }
+
         bool isSpaciousRow;
         /// <summary>
         /// Opts the row into the roomier Settings look: padding and a divider around the row, taller fields,
@@ -400,6 +418,24 @@ namespace WpfDataUi.DataTypes
                 {
                     isSpaciousRow = value;
                     OnPropertyChanged(nameof(IsSpaciousRow));
+                }
+            }
+        }
+
+        bool isSearchMatch;
+        /// <summary>
+        /// True while the row is marked as a match of a search (the Settings window's search box). A spacious
+        /// row draws the mark; nothing is hidden.
+        /// </summary>
+        public bool IsSearchMatch
+        {
+            get => isSearchMatch;
+            set
+            {
+                if (isSearchMatch != value)
+                {
+                    isSearchMatch = value;
+                    OnPropertyChanged(nameof(IsSearchMatch));
                 }
             }
         }
@@ -421,6 +457,18 @@ namespace WpfDataUi.DataTypes
                 }
             }
         }
+
+        /// <summary>
+        /// Puts this row back to its default. A displayer that supports it shows a reset button on the row
+        /// while <see cref="CanReset"/> is true and runs this when it is pressed. Null means the row has no reset.
+        /// </summary>
+        public Action? ResetAction { get; set; }
+
+        /// <summary>Says whether the row differs from its default; null means it always can be reset.</summary>
+        public Func<bool>? CanResetCheck { get; set; }
+
+        /// <summary>True when the row has a <see cref="ResetAction"/> and its value is not the default.</summary>
+        public bool CanReset => ResetAction != null && (CanResetCheck?.Invoke() ?? true);
 
         string? toggleText;
         /// <summary>The short caption beside a spacious toggle's box ("Write an .editorconfig"); the label column names the setting and <see cref="DetailText"/> goes under it. Null shows the box alone.</summary>
@@ -484,6 +532,24 @@ namespace WpfDataUi.DataTypes
                 }
             }
         }
+
+        /// <summary>
+        /// The name of a palette color the row marks itself with (a bar at its left edge), or null for none.
+        /// The grid knows only the name; the head maps it to its theme's color.
+        /// </summary>
+        public string? MarkerColorName
+        {
+            get => markerColorName;
+            set
+            {
+                if (markerColorName != value)
+                {
+                    markerColorName = value;
+                    OnPropertyChanged(nameof(MarkerColorName));
+                }
+            }
+        }
+        string? markerColorName;
 
         string? toolTipText;
         public string? ToolTipText

@@ -39,7 +39,7 @@ public class NewProjectDialogViewModel : DialogViewModel
     private static readonly HashSet<string> _inputProperties = new HashSet<string>
     {
         nameof(ProjectName), nameof(Location), nameof(SelectedFileFormat), nameof(IsIncludeFormsControls),
-        nameof(IsIncludeDemoScreenGum), nameof(IncludeCodeProject), nameof(PlatformName), nameof(SourceLinkedChoice),
+        nameof(IsIncludeDemoScreenGum), nameof(IncludeCodeProject), nameof(PlatformName), nameof(PackageChannelChoice),
         nameof(RunRestore), nameof(IncludeRecommendedPackages), nameof(GenerateCodeChoice),
     };
 
@@ -48,6 +48,7 @@ public class NewProjectDialogViewModel : DialogViewModel
         ["stride"] = NewProjectDialogText.StridePlatformNote,
         [KniSkiaPlatform] = NewProjectDialogText.KniSkiaPlatformNote,
         ["silknet"] = NewProjectDialogText.SilkNetPlatformNote,
+        ["brutal"] = NewProjectDialogText.BrutalPlatformNote,
     };
 
     private readonly INewProjectService _service;
@@ -58,6 +59,7 @@ public class NewProjectDialogViewModel : DialogViewModel
     private NewProjectFilesResult? _createdFiles;
     private IReadOnlyList<string> _createdPackages = Array.Empty<string>();
     private ResolvedNewProject? _createdResolved;
+    private List<CreationStep> _stepPlan = new List<CreationStep>();
     private int _refreshVersion;
     private string? _existingCodeProject;
     private bool _targetNotEmpty;
@@ -105,12 +107,25 @@ public class NewProjectDialogViewModel : DialogViewModel
         IExistingCodeProjectDetector detector,
         IDialogService dialogService,
         INewProjectLocationSettings locationSettings)
+        : this(themeSelection, service, detector, dialogService, locationSettings, runChecksInline: false)
+    {
+    }
+
+    /// <summary>Test seam: with runChecksInline the folder checks run on the calling thread from the first refresh, because a test synchronization context would resume them on a pool thread and mutate this view model concurrently with the test (#7710).</summary>
+    internal NewProjectDialogViewModel(
+        ThemeSelectionViewModel themeSelection,
+        INewProjectService service,
+        IExistingCodeProjectDetector detector,
+        IDialogService dialogService,
+        INewProjectLocationSettings locationSettings,
+        bool runChecksInline)
     {
         ThemeSelection = themeSelection;
         _service = service;
         _detector = detector;
         _dialogService = dialogService;
         _locationSettings = locationSettings;
+        _runChecksInline = runChecksInline;
 
         Platforms = NewProjectPlatforms.MainNames
             .Select(entry => new NewProjectPlatformOption(entry.Name, GetPlatformLabel(entry.Name)))
@@ -206,21 +221,84 @@ public class NewProjectDialogViewModel : DialogViewModel
         set => Set(value);
     }
 
-    /// <summary>What the user ticked for Link Gum source; see <see cref="SourceLinked"/> for what applies.</summary>
-    public bool SourceLinkedChoice
+    /// <summary>What the user picked for Gum packages (Stable by default); see <see cref="PackageChannel"/> for what applies.</summary>
+    public NewProjectPackageChannel PackageChannelChoice
     {
-        get => Get<bool>();
+        get => Get<NewProjectPackageChannel>();
         set => Set(value);
     }
 
     /// <summary>
-    /// Whether the code project references the Gum checkout. Always on for KNI with Skia (its package is not on
-    /// NuGet), and off when no checkout is available.
+    /// Whether Local Gum source is the pick. Setting it picks Local Gum source, or Stable when it was the pick and is turned off.
+    /// See <see cref="SourceLinked"/> for what applies.
     /// </summary>
+    public bool SourceLinkedChoice
+    {
+        get => PackageChannelChoice == NewProjectPackageChannel.LocalSource;
+        set
+        {
+            if (value)
+            {
+                PackageChannelChoice = NewProjectPackageChannel.LocalSource;
+            }
+            else if (PackageChannelChoice == NewProjectPackageChannel.LocalSource)
+            {
+                PackageChannelChoice = NewProjectPackageChannel.Stable;
+            }
+        }
+    }
+
+    /// <summary>
+    /// The Gum packages the code project uses: the pick, except that Local Gum source without a checkout falls back to Stable,
+    /// and Stable falls to Preview for a platform with no stable package (KNI with Skia).
+    /// </summary>
+    public NewProjectPackageChannel PackageChannel =>
+        PackageChannelChoice == NewProjectPackageChannel.LocalSource && _service.IsSourceLinkedAvailable
+            ? NewProjectPackageChannel.LocalSource
+            : PackageChannelChoice == NewProjectPackageChannel.Preview || !PlatformHasStablePackage
+                ? NewProjectPackageChannel.Preview
+                : NewProjectPackageChannel.Stable;
+
+    /// <summary>Whether the code project references the Gum checkout; see <see cref="PackageChannel"/>.</summary>
     public bool SourceLinked
     {
-        get => IsSourceLinkedForced || (SourceLinkedChoice && _service.IsSourceLinkedAvailable);
+        get => PackageChannel == NewProjectPackageChannel.LocalSource;
         set => SourceLinkedChoice = value;
+    }
+
+    /// <summary>Whether the code project uses the preview (prerelease) Gum packages.</summary>
+    public bool IsPreview => IncludeCodeProject && PackageChannel == NewProjectPackageChannel.Preview;
+
+    /// <summary>Whether the unstable-packages warning shows: only with the Preview channel.</summary>
+    public bool IsPreviewWarningVisible => IsPreview;
+
+    /// <summary>The Stable radio's state. Setting it to <see langword="true"/> picks Stable; unchecking is the radio group's doing and changes nothing.</summary>
+    public bool IsStableChannelChecked
+    {
+        get => PackageChannel == NewProjectPackageChannel.Stable;
+        set => PickChannel(value, NewProjectPackageChannel.Stable);
+    }
+
+    /// <summary>The Preview radio's state; see <see cref="IsStableChannelChecked"/>.</summary>
+    public bool IsPreviewChannelChecked
+    {
+        get => PackageChannel == NewProjectPackageChannel.Preview;
+        set => PickChannel(value, NewProjectPackageChannel.Preview);
+    }
+
+    /// <summary>The Local Gum source radio's state; see <see cref="IsStableChannelChecked"/>.</summary>
+    public bool IsLocalSourceChannelChecked
+    {
+        get => PackageChannel == NewProjectPackageChannel.LocalSource;
+        set => PickChannel(value, NewProjectPackageChannel.LocalSource);
+    }
+
+    private void PickChannel(bool isChecked, NewProjectPackageChannel channel)
+    {
+        if (isChecked)
+        {
+            PackageChannelChoice = channel;
+        }
     }
 
     /// <summary>Whether Run dotnet restore is ticked.</summary>
@@ -329,8 +407,8 @@ public class NewProjectDialogViewModel : DialogViewModel
     /// <summary>Whether the Include recommended packages checkbox shows: only with a C# project.</summary>
     public bool IsRecommendedPackagesVisible => IncludeCodeProject;
 
-    /// <summary>Whether the checkbox can be changed: the platform has packages and the Gum runtime comes from NuGet.</summary>
-    public bool IsRecommendedPackagesEnabled => IncludeCodeProject && !SourceLinked && RecommendedPackageIds.Count > 0;
+    /// <summary>Whether the checkbox can be changed: the platform has recommended packages (linked as projects with local Gum source).</summary>
+    public bool IsRecommendedPackagesEnabled => IncludeCodeProject && RecommendedPackageIds.Count > 0;
 
     /// <summary>Whether creating adds the platform's recommended packages.</summary>
     public bool AddsRecommendedPackages => IncludeRecommendedPackages && IsRecommendedPackagesEnabled;
@@ -343,20 +421,37 @@ public class NewProjectDialogViewModel : DialogViewModel
     }
 
     /// <summary>The grey line under the checkbox: the packages it adds, or why it is unavailable.</summary>
-    public string RecommendedPackagesNote => IsRecommendedPackagesEnabled
-        ? NewProjectDialogText.RecommendedPackagesNote(string.Join(", ", RecommendedPackageIds))
-        : NewProjectDialogText.RecommendedPackagesDisabledNote;
+    public string RecommendedPackagesNote => !IsRecommendedPackagesEnabled
+        ? NewProjectDialogText.RecommendedPackagesDisabledNote
+        : NewProjectDialogText.RecommendedPackagesNote;
 
+    // With local Gum source the add-ons are linked projects (and shapes is included), otherwise the channel's NuGet packages.
     private IReadOnlyList<string> RecommendedPackageIds =>
         NewProjectPlatforms.TryParse(PlatformName, out HostPlatform platform)
-            ? RecommendedPackages.For(platform)
+            ? SourceLinked ? RecommendedPackages.ForSourceLinked(platform) : RecommendedPackages.For(platform, PackageChannel)
             : Array.Empty<string>();
 
-    /// <summary>Whether the platform forces source-linked on.</summary>
-    public bool IsSourceLinkedForced => IncludeCodeProject && PlatformName == KniSkiaPlatform;
+    // The add-on projects `dotnet add reference` links in the command line, when the Gum checkout is known.
+    private IReadOnlyList<string> LinkedAddOnProjects()
+    {
+        string? checkout = SourceLinked && AddsRecommendedPackages ? _service.FindGumSourceDirectory() : null;
+        return checkout == null
+            ? Array.Empty<string>()
+            : RecommendedPackageIds.Select(id => NewProjectDisplayPath.Normalize(Path.Combine(checkout, RecommendedPackages.GetSourceProject(id)))).ToList();
+    }
 
-    /// <summary>Whether the Link Gum source box can be changed.</summary>
-    public bool IsSourceLinkedEnabled => IncludeCodeProject && !IsSourceLinkedForced && _service.IsSourceLinkedAvailable;
+    /// <summary>False when the chosen platform's Gum package has only preview versions, so Stable cannot restore it.</summary>
+    private bool PlatformHasStablePackage =>
+        !NewProjectPlatforms.TryParse(PlatformName, out HostPlatform platform) || NewProjectPlatforms.HasStablePackage(platform);
+
+    /// <summary>Whether the Local Gum source radio can be picked: only when this tool was built from the source.</summary>
+    public bool IsSourceLinkedEnabled => IncludeCodeProject && _service.IsSourceLinkedAvailable;
+
+    /// <summary>Whether the Stable radio can be picked: not when the platform has no stable package.</summary>
+    public bool IsStableChannelEnabled => IncludeCodeProject && PlatformHasStablePackage;
+
+    /// <summary>Whether the Preview radio can be picked: whenever there is a code project.</summary>
+    public bool IsPreviewChannelEnabled => IncludeCodeProject;
 
     /// <summary>The warning-colored note under the platform dropdown, or empty.</summary>
     public string PlatformNote
@@ -381,6 +476,20 @@ public class NewProjectDialogViewModel : DialogViewModel
 
     /// <summary>Why OK is disabled, or empty.</summary>
     public string ValidationMessage
+    {
+        get => Get<string>() ?? string.Empty;
+        private set => Set(value);
+    }
+
+    /// <summary>The name problem shown under the Project name box, or empty.</summary>
+    public string NameMessage
+    {
+        get => Get<string>() ?? string.Empty;
+        private set => Set(value);
+    }
+
+    /// <summary>The validation message that is not about the name (shown beside OK), or empty.</summary>
+    public string BottomMessage
     {
         get => Get<string>() ?? string.Empty;
         private set => Set(value);
@@ -639,7 +748,8 @@ public class NewProjectDialogViewModel : DialogViewModel
                 return;
             }
 
-            SetBusy(true, "Creating files...");
+            _stepPlan = PlanSteps(validation.Resolved!);
+            SetBusy(true, StepText(CreationStep.CreatingFiles, "Creating files..."));
             _cancellation = new CancellationTokenSource();
             NewProjectFilesResult files = await _service.CreateFilesAsync(validation.Resolved!, _cancellation.Token);
             if (files.Canceled || !files.Success)
@@ -700,9 +810,11 @@ public class NewProjectDialogViewModel : DialogViewModel
             IProgress<string> output = new Progress<string>(line => ProgressDetail = line);
             if (_createdPackages.Count > 0)
             {
-                SetBusy(true, "Adding recommended packages...");
+                SetBusy(true, StepText(CreationStep.AddingPackages, "Adding recommended packages..."));
                 _cancellation = new CancellationTokenSource();
-                AddPackagesResult added = await _service.AddPackagesAsync(csproj, _createdPackages, output.Report, _cancellation.Token);
+                AddPackagesResult added = _createdResolved?.UsesPrerelease == true
+                    ? await _service.AddPackagesAsync(csproj, _createdPackages, prerelease: true, output.Report, _cancellation.Token)
+                    : await _service.AddPackagesAsync(csproj, _createdPackages, output.Report, _cancellation.Token);
                 if (added.Status != RestoreStatus.Succeeded)
                 {
                     RestoreFailureHeading = NewProjectDialogText.PackagesFailedHeading;
@@ -725,7 +837,7 @@ public class NewProjectDialogViewModel : DialogViewModel
                 return;
             }
 
-            SetBusy(true, "Running dotnet restore...");
+            SetBusy(true, StepText(CreationStep.Restoring, "Running dotnet restore..."));
             ProgressDetail = string.Empty;
             _cancellation = new CancellationTokenSource();
             RestoreResult result = await _service.RestoreAsync(csproj, output.Report, _cancellation.Token);
@@ -775,7 +887,7 @@ public class NewProjectDialogViewModel : DialogViewModel
             return;
         }
 
-        SetBusy(true, "Generating code for the demo screen...");
+        SetBusy(true, StepText(CreationStep.GeneratingCode, "Generating code for the demo screen..."));
         ProgressDetail = string.Empty;
         _cancellation = new CancellationTokenSource();
         GenerateCodeResult generated = await _service.GenerateCodeAsync(
@@ -806,6 +918,38 @@ public class NewProjectDialogViewModel : DialogViewModel
         IsCodeProjectCreated = true;
         IsRestoreFailed = false;
         base.OnAffirmative();
+    }
+
+    private enum CreationStep { CreatingFiles, AddingPackages, Restoring, GeneratingCode }
+
+    // The steps this creation runs, in order, known from the chosen options before any of them starts.
+    private List<CreationStep> PlanSteps(ResolvedNewProject resolved)
+    {
+        List<CreationStep> steps = new List<CreationStep> { CreationStep.CreatingFiles };
+        if (resolved.CsprojPath != null)
+        {
+            if (resolved.RecommendedPackages.Count > 0)
+            {
+                steps.Add(CreationStep.AddingPackages);
+            }
+            if (RunRestore)
+            {
+                steps.Add(CreationStep.Restoring);
+            }
+            if (resolved.GenerateCode && resolved.IncludeFormsTemplate)
+            {
+                steps.Add(CreationStep.GeneratingCode);
+            }
+        }
+        return steps;
+    }
+
+    // "Step 2 of 4: Running dotnet restore..."; a lone step has no position to show. The plan is kept for Retry,
+    // so a retried step keeps the number it had in the first run.
+    private string StepText(CreationStep step, string text)
+    {
+        int index = _stepPlan.IndexOf(step);
+        return _stepPlan.Count > 1 && index >= 0 ? $"Step {index + 1} of {_stepPlan.Count}: {text}" : text;
     }
 
     private void SetBusy(bool busy, string progressText)
@@ -852,11 +996,19 @@ public class NewProjectDialogViewModel : DialogViewModel
             {
                 NotifyPropertyChanged(nameof(UseXmlFormat));
             }
-            if (propertyName is nameof(IncludeCodeProject) or nameof(PlatformName) or nameof(SourceLinkedChoice))
+            if (propertyName is nameof(IncludeCodeProject) or nameof(PlatformName) or nameof(PackageChannelChoice))
             {
+                NotifyPropertyChanged(nameof(SourceLinkedChoice));
                 NotifyPropertyChanged(nameof(SourceLinked));
-                NotifyPropertyChanged(nameof(IsSourceLinkedForced));
+                NotifyPropertyChanged(nameof(PackageChannel));
                 NotifyPropertyChanged(nameof(IsSourceLinkedEnabled));
+                NotifyPropertyChanged(nameof(IsPreview));
+                NotifyPropertyChanged(nameof(IsPreviewWarningVisible));
+                NotifyPropertyChanged(nameof(IsStableChannelChecked));
+                NotifyPropertyChanged(nameof(IsPreviewChannelChecked));
+                NotifyPropertyChanged(nameof(IsLocalSourceChannelChecked));
+                NotifyPropertyChanged(nameof(IsStableChannelEnabled));
+                NotifyPropertyChanged(nameof(IsPreviewChannelEnabled));
             }
             if (propertyName is nameof(IncludeCodeProject) or nameof(IsIncludeFormsControls) or nameof(GenerateCodeChoice) or nameof(RunRestore))
             {
@@ -866,7 +1018,7 @@ public class NewProjectDialogViewModel : DialogViewModel
                 NotifyPropertyChanged(nameof(GeneratesCode));
                 NotifyPropertyChanged(nameof(GenerateCodeChecked));
             }
-            if (propertyName is nameof(IncludeCodeProject) or nameof(PlatformName) or nameof(SourceLinkedChoice) or nameof(IncludeRecommendedPackages))
+            if (propertyName is nameof(IncludeCodeProject) or nameof(PlatformName) or nameof(PackageChannelChoice) or nameof(IncludeRecommendedPackages))
             {
                 NotifyPropertyChanged(nameof(IsRecommendedPackagesVisible));
                 NotifyPropertyChanged(nameof(IsRecommendedPackagesEnabled));
@@ -916,7 +1068,7 @@ public class NewProjectDialogViewModel : DialogViewModel
             Template = IsIncludeFormsControls ? "forms" : "empty",
             Theme = IsIncludeFormsControls ? SelectedThemeName : null,
             Platform = game ? PlatformName : null,
-            SourceLinked = game && SourceLinked,
+            PackageChannel = game ? PackageChannel : NewProjectPackageChannel.Stable,
             Restore = RunRestore,
             UseXmlFormat = UseXmlFormat,
             IncludeRecommendedPackages = game && AddsRecommendedPackages,
@@ -942,17 +1094,20 @@ public class NewProjectDialogViewModel : DialogViewModel
                 IsIncludeFormsControls,
                 IsIncludeFormsControls ? SelectedThemeName : null,
                 RunRestore,
-                AddsRecommendedPackages ? RecommendedPackageIds : Array.Empty<string>(),
+                AddsRecommendedPackages && !SourceLinked ? RecommendedPackageIds : Array.Empty<string>(),
                 NewProjectDisplayPath.Normalize(Path.Combine(path, name + ".csproj")),
                 generatesCode ? GumProjectPath : null,
-                SourceLinked)
+                SourceLinked,
+                LinkedAddOnProjects(),
+                IsPreview)
             : NewProjectCommandLine.Build(
                 path,
                 game ? PlatformName : null,
                 IsIncludeFormsControls,
                 IsIncludeFormsControls ? SelectedThemeName : null,
                 game && SourceLinked,
-                RunRestore);
+                RunRestore,
+                IsPreview);
 
         List<string> notes = new List<string>();
         if (chained)
@@ -983,30 +1138,42 @@ public class NewProjectDialogViewModel : DialogViewModel
 
         PlatformNote = game && _platformNotes.TryGetValue(PlatformName, out string? note) ? note : string.Empty;
 
-        ValidationMessage = GetValidationMessage();
+        string nameMessage = GetNameMessage();
+        string otherMessage = nameMessage.Length > 0 ? string.Empty : GetOtherValidationMessage();
+        NameMessage = nameMessage;
+        BottomMessage = otherMessage;
+        ValidationMessage = nameMessage.Length > 0 ? nameMessage : otherMessage;
         RefreshWarnings();
         AffirmativeCommand.NotifyCanExecuteChanged();
     }
 
-    private string GetValidationMessage()
+    // The name's own problems, shown under the Project name box.
+    private string GetNameMessage()
     {
         string name = ProjectName.Trim();
         if (name.Length == 0)
         {
             return NewProjectDialogText.EnterName;
         }
-        if (!NewProjectNameRules.IsValidFolderName(name))
+        string? nameProblem = NewProjectNameRules.GetProblem(name, IncludeCodeProject);
+        if (nameProblem != null)
         {
-            return NewProjectDialogText.InvalidFolderName;
-        }
-        if (NewProjectNameRules.IsTooLong(name, IncludeCodeProject))
-        {
-            return NewProjectDialogText.NameTooLong;
+            return nameProblem;
         }
         if (IncludeCodeProject && !_identifier.IsMatch(name))
         {
             return NewProjectDialogText.InvalidCSharpName;
         }
+        if (IncludeCodeProject && NewProjectPlatforms.TryParse(PlatformName, out HostPlatform platform))
+        {
+            return NewProjectNameRules.GetCodeProjectProblem(name, platform) ?? string.Empty;
+        }
+        return string.Empty;
+    }
+
+    // Everything else that disables OK, shown beside it.
+    private string GetOtherValidationMessage()
+    {
         if (Location.Trim().Length == 0)
         {
             return NewProjectDialogText.ChooseLocation;
@@ -1039,7 +1206,7 @@ public class NewProjectDialogViewModel : DialogViewModel
             ExistingCodeProjectTip = NewProjectDialogText.WarningTip(hasGame1, projectFolder);
         }
 
-        IsTargetNotEmptyWarningVisible = _targetNotEmpty;
+        IsTargetNotEmptyWarningVisible = _targetNotEmpty && !IsRefused;
         TargetNotEmptyText = _targetNotEmpty
             ? NewProjectDialogText.TargetNotEmptyBody(projectFolder)
             : string.Empty;
@@ -1188,9 +1355,14 @@ public class NewProjectDialogViewModel : DialogViewModel
         ChecksRefresh = RefreshChecksAsync(version, BuildRequest(), ResolvedFolder.ParentFolder, EffectiveName);
     }
 
+    private readonly bool _runChecksInline;
+
     private async Task RefreshChecksAsync(int version, NewProjectRequest request, string folder, string name)
     {
-        (string? existing, bool notEmpty, bool exists, string? refusal) = await Task.Run(() =>
+        // In the app the checks run on the pool and the continuation returns to the UI thread. Without a UI thread
+        // (tests) the continuation resumes on a pool thread and would mutate this view model concurrently with the
+        // caller, so runChecksInline runs the checks on the calling thread instead.
+        Func<(string?, bool, bool, string?)> runChecks = () =>
         {
             string? existingProject = null;
             bool targetNotEmpty = false;
@@ -1219,7 +1391,11 @@ public class NewProjectDialogViewModel : DialogViewModel
                 // A location that cannot be read has nothing to warn about.
             }
             return (existingProject, targetNotEmpty, targetExists, refused);
-        });
+        };
+
+        (string? existing, bool notEmpty, bool exists, string? refusal) = _runChecksInline
+            ? runChecks()
+            : await Task.Run(runChecks);
 
         if (version != Volatile.Read(ref _refreshVersion))
         {
@@ -1246,6 +1422,7 @@ public class NewProjectDialogViewModel : DialogViewModel
         "raylib" => "raylib",
         "stride" => "Stride (Windows only)",
         "silknet" => "Silk.NET",
+        "brutal" => "BRUTAL",
         _ => name,
     };
 }

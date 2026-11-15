@@ -47,11 +47,33 @@ public class BehaviorFormsPropertyCatalogTests : BaseTestClass
             ["SliderBehavior"] = () => new Slider(),
             ["SplitterBehavior"] = () => new Splitter(),
             ["StackPanelBehavior"] = () => new StackPanel(),
+            ["TabControlBehavior"] = () => new TabControl(),
+            ["TabItemBehavior"] = () => new TabItem(),
+            ["TabPageBehavior"] = () => new TabPage(),
             ["TextBoxBehavior"] = () => new TextBox(),
             ["ToggleBehavior"] = () => new ToggleButton(),
             ["UserControlBehavior"] = () => new UserControl(),
             ["WindowBehavior"] = () => new Gum.Forms.Window(),
         };
+
+    /// <summary>
+    /// Declared defaults that intentionally differ from a code-created control's. A code-created
+    /// TabControl starts empty, so it selects none (-1, as ListBox does); a tool-authored one
+    /// selects its first tab once its tabs arrive, which the declared 0 gives it
+    /// (ThemeTabControlDefaultSelectionTests, #6408).
+    /// </summary>
+    private static readonly HashSet<string> DefaultsThatDifferByDesign = new HashSet<string>
+    {
+        "TabControlBehavior.SelectedIndex",
+    };
+
+    [Fact]
+    public void TabControlSelectedIndex_ShouldDeclareFirstTab()
+    {
+        BehaviorSave behavior = LoadShippedBehaviors().First(item => item.Name == "TabControlBehavior");
+
+        behavior.FormsProperties.First(item => item.Name == "SelectedIndex").Value.ShouldBe(0);
+    }
 
     public static IEnumerable<object[]> BehaviorProperties()
     {
@@ -80,7 +102,7 @@ public class BehaviorFormsPropertyCatalogTests : BaseTestClass
         property.ShouldNotBeNull($"{behaviorName} declares {propertyName}, which {control.GetType().Name} does not have");
         property.CanWrite.ShouldBeTrue($"{control.GetType().Name}.{propertyName} has no public setter");
 
-        if (declaration.Value == null)
+        if (declaration.Value == null || DefaultsThatDifferByDesign.Contains($"{behaviorName}.{propertyName}"))
         {
             return;
         }

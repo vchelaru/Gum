@@ -126,26 +126,33 @@ public sealed class AvaloniaStateTreeView : DockPanel
 
     // The WPF tree's "BiggerIcon" size: 1.25 times the row's text.
     private static readonly IValueConverter IconSize = GumChromeStyles.ScaleFontSize(1.25);
+    private static readonly IValueConverter ColorDotSize = GumChromeStyles.ScaleFontSize(0.75);
 
     // As the WPF States tree: the category or state icon, the title, the required-by-behavior and
     // edits-the-selected-instance markers, and a category's add-state button.
     private static Control BuildRow(StateTreeViewItem? item)
     {
-        Grid row = new Grid { ColumnDefinitions = new ColumnDefinitions("Auto,*,Auto,Auto") };
+        Grid row = new Grid { ColumnDefinitions = new ColumnDefinitions("Auto,Auto,*,Auto,Auto") };
 
         TextBlock title = new TextBlock
         {
             VerticalAlignment = VerticalAlignment.Center,
             [!TextBlock.TextProperty] = new Binding(nameof(StateTreeViewItem.Title)),
         };
-        Grid.SetColumn(title, 1);
+        Grid.SetColumn(title, 2);
 
         row.Children.Add(CreateIcon(title,
             item is CategoryViewModel ? FluentIcons.Common.Icon.DatabaseMultiple : FluentIcons.Common.Icon.Database,
-            new Thickness(0, 0, 4, 0), column: 0));
+            new Thickness(0, 0, 4, 0), column: 1));
         row.Children.Add(title);
 
-        FluentIcon requiredByBehavior = CreateIcon(title, FluentIcons.Common.Icon.PuzzlePiece, new Thickness(4, 0, 0, 0), column: 2);
+        if (item is CategoryViewModel)
+        {
+            // The dot is always laid out, transparent when uncolored, so titles stay aligned.
+            row.Children.Add(CreateColorDot(title, row));
+        }
+
+        FluentIcon requiredByBehavior = CreateIcon(title, FluentIcons.Common.Icon.PuzzlePiece, new Thickness(4, 0, 0, 0), column: 3);
         requiredByBehavior.Bind(FluentIcon.ForegroundProperty, new DynamicResourceExtension("Frb.Brushes.Icon.Manilla"));
         requiredByBehavior.Bind(Visual.IsVisibleProperty, new Binding(nameof(StateTreeViewItem.IsRequiredBySelectedBehavior)));
         ToolTip.SetTip(requiredByBehavior, "Required by the selected behavior");
@@ -163,18 +170,35 @@ public sealed class AvaloniaStateTreeView : DockPanel
                 [!Button.CommandProperty] = new Binding(nameof(CategoryViewModel.AddStateCommand)),
             }.WithThemeResource(TemplatedControl.ForegroundProperty, "Frb.Brushes.Foreground.Subtle");
             ToolTip.SetTip(addState, $"Add state to {item.Title}");
-            Grid.SetColumn(addState, 3);
+            Grid.SetColumn(addState, 4);
             row.Children.Add(addState);
         }
         else if (item is StateViewModel)
         {
-            FluentIcon edited = CreateIcon(title, FluentIcons.Common.Icon.BoxEdit, new Thickness(4, 0, 0, 0), column: 3);
+            FluentIcon edited = CreateIcon(title, FluentIcons.Common.Icon.BoxEdit, new Thickness(4, 0, 0, 0), column: 4);
             edited.Bind(Visual.IsVisibleProperty, new Binding(nameof(StateViewModel.IncludesVariablesForSelectedInstance)));
             ToolTip.SetTip(edited, "Sets variables on the selected instance");
             row.Children.Add(edited);
         }
 
         return row;
+    }
+
+    // A dot in the category's palette color, before the category icon.
+    private static Border CreateColorDot(TextBlock title, Control host)
+    {
+        Border dot = new Border
+        {
+            CornerRadius = new CornerRadius(100),
+            Margin = new Thickness(0, 0, 5, 0),
+            VerticalAlignment = VerticalAlignment.Center,
+        };
+        dot.Bind(Layoutable.WidthProperty, new Binding(nameof(TextBlock.FontSize)) { Source = title, Converter = ColorDotSize });
+        dot.Bind(Layoutable.HeightProperty, new Binding(nameof(TextBlock.FontSize)) { Source = title, Converter = ColorDotSize });
+        CategoryColorBrushes.Follow(host, dot, Border.BackgroundProperty, nameof(CategoryViewModel.ColorName),
+            context => (context as CategoryViewModel)?.ColorName);
+        Grid.SetColumn(dot, 0);
+        return dot;
     }
 
     private static FluentIcon CreateIcon(TextBlock title, FluentIcons.Common.Icon icon, Thickness margin, int column)

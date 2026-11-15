@@ -11,13 +11,15 @@ namespace Gum.Tests.Shared;
 /// </summary>
 public sealed class GraphicalUiElementState
 {
-    private readonly MissingFileBehavior _missingFileBehavior;
+    private readonly MissingFileBehavior? _missingFileBehavior;
     private readonly float _canvasWidth;
     private readonly float _canvasHeight;
 
     private GraphicalUiElementState()
     {
-        _missingFileBehavior = GraphicalUiElement.MissingFileBehavior;
+        // The raw value, so a test that started with nothing assigned leaves nothing assigned and the next
+        // runtime Initialize still applies its ThrowException default (#7963).
+        _missingFileBehavior = GraphicalUiElement.AssignedMissingFileBehavior;
         _canvasWidth = GraphicalUiElement.CanvasWidth;
         _canvasHeight = GraphicalUiElement.CanvasHeight;
     }
@@ -26,7 +28,7 @@ public sealed class GraphicalUiElementState
 
     public void Restore()
     {
-        GraphicalUiElement.MissingFileBehavior = _missingFileBehavior;
+        GraphicalUiElement.AssignedMissingFileBehavior = _missingFileBehavior;
         GraphicalUiElement.CanvasWidth = _canvasWidth;
         GraphicalUiElement.CanvasHeight = _canvasHeight;
     }

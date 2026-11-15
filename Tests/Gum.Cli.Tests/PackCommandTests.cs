@@ -128,7 +128,7 @@ public class PackCommandTests : BaseTestClass
         bytes[1].ShouldBe((byte)0x55);
         bytes[2].ShouldBe((byte)0x4D);
         bytes[3].ShouldBe((byte)0x50);
-        bytes[4].ShouldBe((byte)0x01);
+        bytes[4].ShouldBe(GumBundleFormat.CurrentVersion);
     }
 
     [Fact]
@@ -318,6 +318,92 @@ public class PackCommandTests : BaseTestClass
         localization.Translate("T_Hello").ShouldBe("Hola");
     }
 
+    // 3x2 straight RGBA texels: (10,20,30,0) (200,100,50,1) (255,100,3,127) / (255,255,255,128) (255,200,1,254) (9,8,7,255).
+    private const string AlphaRampPngBase64 =
+        "iVBORw0KGgoAAAANSUhEUgAAAAMAAAACCAYAAACddGYaAAAAI0lEQVR4nGPgEpFjOJFixPg/hbme4f///w3/TzD+4+Rg/w8AeQgK2zFeG9AAAAAASUVORK5CYII=";
+
+    [Fact]
+    public void Pack_stores_png_as_raw_straight_pixels_with_edge_bleed_baked()
+    {
+        string projectPath = CreateProjectWithSpriteAndFont("RawPng");
+        string outputPath = Path.Combine(Path.GetDirectoryName(projectPath)!, "out.gumpkg");
+
+        CliTestHelper result = CliTestHelper.Run("pack", projectPath, "-o", outputPath);
+
+        result.ExitCode.ShouldBe(0, result.StandardError);
+        byte[] entry = ReadBundleEntries(outputPath)["Textures/bg.png"];
+        GumRawTexture.IsRawTexture(entry).ShouldBeTrue();
+        GumRawTextureHeader header = GumRawTexture.ReadHeader(entry);
+        header.Width.ShouldBe(3);
+        header.Height.ShouldBe(2);
+        header.PixelFormat.ShouldBe(GumRawTexturePixelFormat.Rgba8);
+        header.IsPremultiplied.ShouldBeFalse();
+        // The transparent texel takes the average of its three visible neighbors; the rest stay straight.
+        entry.AsSpan(GumRawTexture.HeaderLength).ToArray().ShouldBe(new byte[]
+        {
+            236, 185, 102, 0,  200, 100, 50, 1,  255, 100, 3, 127,
+            255, 255, 255, 128,  255, 200, 1, 254,  9, 8, 7, 255,
+        });
+    }
+
+    [Fact]
+    public void Pack_with_premultiplied_alpha_stores_png_as_raw_premultiplied_pixels()
+    {
+        string projectPath = CreateProjectWithSpriteAndFont("RawPngPremultiplied");
+        string outputPath = Path.Combine(Path.GetDirectoryName(projectPath)!, "out.gumpkg");
+
+        CliTestHelper result = CliTestHelper.Run("pack", projectPath, "-o", outputPath, "--premultiplied-alpha");
+
+        result.ExitCode.ShouldBe(0, result.StandardError);
+        byte[] entry = ReadBundleEntries(outputPath)["Textures/bg.png"];
+        GumRawTextureHeader header = GumRawTexture.ReadHeader(entry);
+        header.Width.ShouldBe(3);
+        header.Height.ShouldBe(2);
+        header.IsPremultiplied.ShouldBeTrue();
+        // Each color channel is multiplied by alpha (rounded to nearest); the transparent texel is all zero.
+        entry.AsSpan(GumRawTexture.HeaderLength).ToArray().ShouldBe(new byte[]
+        {
+            0, 0, 0, 0,  1, 0, 0, 1,  127, 50, 1, 127,
+            128, 128, 128, 128,  254, 199, 1, 254,  9, 8, 7, 255,
+        });
+    }
+
+    [Fact]
+    public void Pack_stores_jpeg_bytes_unchanged()
+    {
+        string projectPath = CreateCleanProject("Jpeg");
+        string projectDir = Path.GetDirectoryName(projectPath)!;
+        WriteSpriteHolderComponent(projectDir, sourceFileRelative: "Textures/photo.jpg");
+        Directory.CreateDirectory(Path.Combine(projectDir, "Textures"));
+        byte[] jpeg = { 0xFF, 0xD8, 0xFF, 0xE0, 1, 2, 3, 0xFF, 0xD9 };
+        File.WriteAllBytes(Path.Combine(projectDir, "Textures", "photo.jpg"), jpeg);
+        AppendComponentReference(projectPath, "SpriteHolder");
+        string outputPath = Path.Combine(projectDir, "out.gumpkg");
+
+        CliTestHelper result = CliTestHelper.Run("pack", projectPath, "-o", outputPath);
+
+        result.ExitCode.ShouldBe(0, result.StandardError);
+        ReadBundleEntries(outputPath)["Textures/photo.jpg"].ShouldBe(jpeg);
+    }
+
+    [Fact]
+    public void Pack_exits_1_and_names_the_file_when_a_png_cannot_be_decoded()
+    {
+        string projectPath = CreateCleanProject("BadPng");
+        string projectDir = Path.GetDirectoryName(projectPath)!;
+        WriteSpriteHolderComponent(projectDir, sourceFileRelative: "Textures/bad.png");
+        Directory.CreateDirectory(Path.Combine(projectDir, "Textures"));
+        File.WriteAllBytes(Path.Combine(projectDir, "Textures", "bad.png"), new byte[] { 0x89, 0x50, 0x4E, 0x47 });
+        AppendComponentReference(projectPath, "SpriteHolder");
+        string outputPath = Path.Combine(projectDir, "out.gumpkg");
+
+        CliTestHelper result = CliTestHelper.Run("pack", projectPath, "-o", outputPath);
+
+        result.ExitCode.ShouldBe(1);
+        result.StandardError.ShouldContain("Textures/bad.png");
+        File.Exists(outputPath).ShouldBeFalse();
+    }
+
     [Fact]
     public void Pack_with_shake_bundles_only_reachable_elements_and_records_the_trimmed_ones()
     {
@@ -449,6 +535,133 @@ public class PackCommandTests : BaseTestClass
         entries["NoShake.gumx"].ShouldBe(File.ReadAllBytes(projectPath));
     }
 
+    [Fact]
+    public void Pack_with_skip_debug_only_leaves_out_debug_elements_and_the_files_only_they_use()
+    {
+        string projectPath = CreateDebugOnlyProject("DebugSkip");
+        string bundlePath = Path.Combine(Path.GetDirectoryName(projectPath)!, "out.gumpkg");
+
+        CliTestHelper result = CliTestHelper.Run("pack", projectPath, "-o", bundlePath, "--skip-debug-only");
+
+        result.ExitCode.ShouldBe(0, result.StandardError);
+        result.StandardOutput.ShouldContain("trimmed 3: DebugChild, DebugComp, DebugScreen");
+        Dictionary<string, byte[]> entries = ReadBundleEntries(bundlePath);
+        entries.Keys.ShouldContain("Screens/Game.gusx");
+        entries.Keys.ShouldContain("Components/Kept.gucx");
+        entries.Keys.ShouldContain("Textures/shared.png");
+        entries.Keys.ShouldNotContain("Screens/DebugScreen.gusx");
+        entries.Keys.ShouldNotContain("Components/DebugComp.gucx");
+        entries.Keys.ShouldNotContain("Components/DebugChild.gucx");
+        entries.Keys.ShouldNotContain("Textures/only.png");
+    }
+
+    [Fact]
+    public void Pack_without_skip_debug_only_keeps_debug_elements()
+    {
+        string projectPath = CreateDebugOnlyProject("DebugKept");
+        string bundlePath = Path.Combine(Path.GetDirectoryName(projectPath)!, "out.gumpkg");
+
+        CliTestHelper result = CliTestHelper.Run("pack", projectPath, "-o", bundlePath);
+
+        result.ExitCode.ShouldBe(0, result.StandardError);
+        Dictionary<string, byte[]> entries = ReadBundleEntries(bundlePath);
+        entries.Keys.ShouldContain("Screens/DebugScreen.gusx");
+        entries.Keys.ShouldContain("Components/DebugComp.gucx");
+        entries.Keys.ShouldContain("Textures/only.png");
+    }
+
+    [Fact]
+    public void Pack_with_skip_debug_only_exits_with_2_when_a_kept_element_uses_a_debug_element()
+    {
+        string projectPath = CreateDebugOnlyProject("DebugReferenced");
+        string projectDir = Path.GetDirectoryName(projectPath)!;
+        WriteElementXml(projectDir, "Screens/Game.gusx", "ScreenSave", "Game", baseType: null,
+            instances: new[] { ("KeptInstance", "Kept"), ("DebugInstance", "DebugComp") });
+        string bundlePath = Path.Combine(projectDir, "out.gumpkg");
+
+        CliTestHelper result = CliTestHelper.Run("pack", projectPath, "-o", bundlePath, "--skip-debug-only");
+
+        result.ExitCode.ShouldBe(2);
+        result.StandardError.ShouldContain("Game");
+        result.StandardError.ShouldContain("DebugComp");
+        File.Exists(bundlePath).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void Pack_with_skip_debug_only_and_shake_leaves_out_debug_elements_and_unreached_ones()
+    {
+        string projectPath = CreateDebugOnlyProject("DebugShake");
+        string projectDir = Path.GetDirectoryName(projectPath)!;
+        WriteElementXml(projectDir, "Components/Unused.gucx", "ComponentSave", "Unused", "Container");
+        AppendComponentReference(projectPath, "Unused");
+        string bundlePath = Path.Combine(projectDir, "out.gumpkg");
+
+        CliTestHelper result = CliTestHelper.Run("pack", projectPath, "-o", bundlePath, "--skip-debug-only", "--shake");
+
+        result.ExitCode.ShouldBe(0, result.StandardError);
+        Dictionary<string, byte[]> entries = ReadBundleEntries(bundlePath);
+        entries.Keys.ShouldContain("Components/Kept.gucx");
+        entries.Keys.ShouldNotContain("Components/Unused.gucx");
+        entries.Keys.ShouldNotContain("Components/DebugComp.gucx");
+    }
+
+    // Game (a Kept instance) and Kept use Textures/shared.png. DebugScreen is flagged Debug Only and also
+    // uses shared.png, DebugComp is flagged and uses Textures/only.png, DebugChild derives from DebugComp
+    // and is not flagged itself.
+    private string CreateDebugOnlyProject(string name)
+    {
+        string projectPath = CreateCleanProject(name);
+        string projectDir = Path.GetDirectoryName(projectPath)!;
+        Directory.CreateDirectory(Path.Combine(projectDir, "Textures"));
+        foreach (string texture in new[] { "shared.png", "only.png" })
+        {
+            File.WriteAllBytes(Path.Combine(projectDir, "Textures", texture), Convert.FromBase64String(AlphaRampPngBase64));
+        }
+
+        WriteElementXml(projectDir, "Components/Kept.gucx", "ComponentSave", "Kept", "Container", "Textures/shared.png");
+        WriteElementXml(projectDir, "Components/DebugComp.gucx", "ComponentSave", "DebugComp", "Container", "Textures/only.png");
+        WriteElementXml(projectDir, "Components/DebugChild.gucx", "ComponentSave", "DebugChild", "DebugComp");
+        WriteElementXml(projectDir, "Screens/Game.gusx", "ScreenSave", "Game", baseType: null,
+            instances: new[] { ("KeptInstance", "Kept") });
+        WriteElementXml(projectDir, "Screens/DebugScreen.gusx", "ScreenSave", "DebugScreen", baseType: null,
+            sourceFile: "Textures/shared.png", instances: new[] { ("DebugInstance", "DebugComp") });
+        File.WriteAllText(Path.Combine(projectDir, "Components", "DebugComp.codsj"), "{\"DebugOnly\":true}");
+        File.WriteAllText(Path.Combine(projectDir, "Screens", "DebugScreen.codsj"), "{\"DebugOnly\":true}");
+
+        foreach (string component in new[] { "Kept", "DebugComp", "DebugChild" })
+        {
+            AppendComponentReference(projectPath, component);
+        }
+        File.WriteAllText(projectPath, File.ReadAllText(projectPath).Replace("</GumProjectSave>",
+            "  <ScreenReference Name=\"Game\" />\n  <ScreenReference Name=\"DebugScreen\" />\n</GumProjectSave>"));
+        return projectPath;
+    }
+
+    private static void WriteElementXml(string projectDir, string relativePath, string rootElement, string name,
+        string? baseType, string? sourceFile = null, (string Name, string BaseType)[]? instances = null)
+    {
+        string baseTypeXml = baseType == null ? "" : $"  <BaseType>{baseType}</BaseType>\n";
+        string variableXml = sourceFile == null ? "" :
+            $"""
+                <Variable IsFile="true" Type="string" Name="Sprite.SourceFile" SetsValue="true">
+                  <Value xsi:type="xsd:string">{sourceFile}</Value>
+                </Variable>
+            """;
+        string instanceXml = string.Concat((instances ?? Array.Empty<(string, string)>())
+            .Select(instance => $"  <Instance Name=\"{instance.Name}\" BaseType=\"{instance.BaseType}\" />\n"));
+        string spriteInstance = sourceFile == null ? "" : "  <Instance Name=\"Sprite\" BaseType=\"Sprite\" />\n";
+        string xml =
+            "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
+            $"<{rootElement} xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">\n" +
+            $"  <Name>{name}</Name>\n" + baseTypeXml +
+            "  <State>\n    <Name>Default</Name>\n" + variableXml + "\n  </State>\n" +
+            spriteInstance + instanceXml +
+            $"</{rootElement}>\n";
+        string fullPath = Path.Combine(projectDir, relativePath.Replace('/', Path.DirectorySeparatorChar));
+        Directory.CreateDirectory(Path.GetDirectoryName(fullPath)!);
+        File.WriteAllText(fullPath, xml);
+    }
+
     // A Game screen holding a Kept instance, two components reachable only as roots (FromRootsFile,
     // FromKeep), and SpriteHolder, which nothing reaches and which references Textures/bg.png.
     private string CreateShakeProject(string name, params string[] extraComponents)
@@ -543,7 +756,7 @@ public class PackCommandTests : BaseTestClass
 
         string textureDir = Path.Combine(projectDir, "Textures");
         Directory.CreateDirectory(textureDir);
-        File.WriteAllBytes(Path.Combine(textureDir, "bg.png"), new byte[] { 0x89, 0x50, 0x4E, 0x47 });
+        File.WriteAllBytes(Path.Combine(textureDir, "bg.png"), Convert.FromBase64String(AlphaRampPngBase64));
 
         AppendComponentReference(filePath, "SpriteHolder");
         return filePath;

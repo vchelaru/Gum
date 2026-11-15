@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -35,6 +35,7 @@ public class NewProjectRecommendedPackagesDialogTests
     // always the creation's; the resolved project given to CreateFilesAsync is.
     private readonly List<ResolvedNewProject> _created = new List<ResolvedNewProject>();
     private bool LastCreationAddsPackages => _created.Last().RecommendedPackages.Count > 0;
+    private bool LastCreationLinksAddOns => _created.Last().LinkedAddOns.Count > 0;
     private readonly Queue<AddPackagesResult> _addResults = new Queue<AddPackagesResult>();
     private readonly Queue<RestoreResult> _restoreResults = new Queue<RestoreResult>();
     private IReadOnlyList<string> _resolvedPackages = new[] { "Gum.Shapes.MonoGame", "Gum.Expressions" };
@@ -52,7 +53,8 @@ public class NewProjectRecommendedPackagesDialogTests
                 Resolved = new ResolvedNewProject
                 {
                     Name = "MyGame", CsprojPath = Csproj,
-                    RecommendedPackages = request.IncludeRecommendedPackages ? _resolvedPackages : new string[0]
+                    RecommendedPackages = request.IncludeRecommendedPackages && !request.SourceLinked ? _resolvedPackages : new string[0],
+                    LinkedAddOns = request.IncludeRecommendedPackages && request.SourceLinked ? _resolvedPackages : new string[0]
                 }
             };
         });
@@ -91,7 +93,7 @@ public class NewProjectRecommendedPackagesDialogTests
     {
         NewProjectDialogViewModel viewModel = new NewProjectDialogViewModel(
             new ThemeSelectionViewModel(_formsFileService.Object, _projectState.Object),
-            _service.Object, _detector.Object, new Mock<IDialogService>().Object, new Mock<INewProjectLocationSettings>().Object)
+            _service.Object, _detector.Object, new Mock<IDialogService>().Object, new Mock<INewProjectLocationSettings>().Object, runChecksInline: true)
         {
             ProjectName = "MyGame",
             Location = Folder,
@@ -99,6 +101,15 @@ public class NewProjectRecommendedPackagesDialogTests
             GenerateCodeChoice = false,
         };
         configure?.Invoke(viewModel);
+        // The checks refresh runs on the thread pool and writes view-model properties when it finishes; wait for it so
+        // that write cannot race the test's reads (the property store is not thread-safe, so a read can come back empty).
+        System.Threading.Tasks.Task latest;
+        do
+        {
+            latest = viewModel.ChecksRefresh;
+            latest.GetAwaiter().GetResult();
+        }
+        while (!ReferenceEquals(latest, viewModel.ChecksRefresh));
         return viewModel;
     }
 
@@ -129,8 +140,8 @@ public class NewProjectRecommendedPackagesDialogTests
     public void IsRecommendedPackagesVisible_RaisesWhenTheCodeProjectIsToggled()
     {
         NewProjectDialogViewModel viewModel = Create();
-        List<string?> raised = new List<string?>();
-        viewModel.PropertyChanged += (_, e) => raised.Add(e.PropertyName);
+        System.Collections.Concurrent.ConcurrentQueue<string?> raised = new System.Collections.Concurrent.ConcurrentQueue<string?>();
+        viewModel.PropertyChanged += (_, e) => raised.Enqueue(e.PropertyName);
 
         viewModel.IncludeCodeProject = true;
 
@@ -158,7 +169,7 @@ public class NewProjectRecommendedPackagesDialogTests
     }
 
     [Fact]
-    public void AddsRecommendedPackages_IsOff_WhenLinkingGumSource()
+    public void AddsRecommendedPackages_StaysOn_WhenLinkingGumSource_AndTheNoteSaysWhatGetsLinked()
     {
         NewProjectDialogViewModel viewModel = Create(vm =>
         {
@@ -166,9 +177,30 @@ public class NewProjectRecommendedPackagesDialogTests
             vm.SourceLinked = true;
         });
 
-        viewModel.IsRecommendedPackagesEnabled.ShouldBeFalse();
-        viewModel.RecommendedPackagesChecked.ShouldBeFalse();
-        viewModel.CommandLine.ShouldNotContain("dotnet add");
+        viewModel.IsRecommendedPackagesEnabled.ShouldBeTrue();
+        viewModel.RecommendedPackagesChecked.ShouldBeTrue();
+        viewModel.RecommendedPackagesNote.ShouldBe(NewProjectDialogText.RecommendedPackagesNote);
+        viewModel.CommandLine.ShouldNotContain(" package ");
+    }
+
+    [Fact]
+    public void CommandLine_WhenLinkingGumSource_AddsAProjectReferencePerAddOn_FromTheCheckout()
+    {
+        string checkout = Path.Combine(Path.GetTempPath(), "GumCheckout");
+        _service.Setup(x => x.FindGumSourceDirectory()).Returns(checkout);
+        NewProjectDialogViewModel viewModel = Create(vm =>
+        {
+            vm.IncludeCodeProject = true;
+            vm.SourceLinked = true;
+        });
+
+        viewModel.CommandLine.ShouldContain("--source-linked --no-restore");
+        foreach (string package in RecommendedPackages.ForSourceLinked(HostPlatform.MonoGame))
+        {
+            string project = NewProjectDisplayPath.Normalize(Path.Combine(checkout, RecommendedPackages.GetSourceProject(package)));
+            viewModel.CommandLine.ShouldContain($"dotnet add \"{Csproj}\" reference \"{project}\"");
+        }
+        viewModel.CommandLine.ShouldContain($"dotnet restore \"{Csproj}\"");
     }
 
     [Fact]
@@ -182,10 +214,10 @@ public class NewProjectRecommendedPackagesDialogTests
     }
 
     [Theory]
-    [InlineData("monogame", "KernSmith.MonoGameGum, Gum.Expressions")]
-    [InlineData("raylib", "KernSmith.RaylibGum, Gum.Expressions")]
-    [InlineData("stride", "Gum.Expressions")]
-    public void RecommendedPackagesNote_ListsThePackagesTheCheckboxAdds(string platform, string expected)
+    [InlineData("monogame")]
+    [InlineData("raylib")]
+    [InlineData("stride")]
+    public void RecommendedPackagesNote_IsTheGeneralNote_NotAListOfPackages(string platform)
     {
         NewProjectDialogViewModel viewModel = Create(vm =>
         {
@@ -193,7 +225,7 @@ public class NewProjectRecommendedPackagesDialogTests
             vm.PlatformName = platform;
         });
 
-        viewModel.RecommendedPackagesNote.ShouldContain(expected);
+        viewModel.RecommendedPackagesNote.ShouldBe(NewProjectDialogText.RecommendedPackagesNote);
     }
 
     #endregion
@@ -211,7 +243,7 @@ public class NewProjectRecommendedPackagesDialogTests
 
         viewModel.CommandLine.ShouldBe(
             $"gumcli new \"{GameFolder}\" --platform monogame --no-restore"
-            + $" && {Add("KernSmith.MonoGameGum")} && {Add("Gum.Expressions")}"
+            + $" && {Add("Gum.Shapes.MonoGame")} && {Add("KernSmith.MonoGameGum")} && {Add("Gum.MonoGame.ShadowDusk")} && {Add("Gum.Expressions")}"
             + $" && dotnet restore \"{Csproj}\"");
     }
 
@@ -225,7 +257,7 @@ public class NewProjectRecommendedPackagesDialogTests
             vm.RunRestore = false;
         });
 
-        viewModel.CommandLine.ShouldBe($"gumcli new \"{GameFolder}\" --platform stride --no-restore && {Add("Gum.Expressions")}");
+        viewModel.CommandLine.ShouldBe($"gumcli new \"{GameFolder}\" --platform stride --no-restore && {Add("Gum.SkiaSharp.ShadowDusk")} && {Add("Gum.Expressions")}");
     }
 
     [Fact]
@@ -272,7 +304,7 @@ public class NewProjectRecommendedPackagesDialogTests
 
     #region Request and run
     [Fact]
-    public async Task Run_WithSourceLinked_RequestsNoPackages()
+    public async Task Run_WithSourceLinked_LinksTheAddOns_AndAddsNoPackage()
     {
         NewProjectDialogViewModel viewModel = Create(vm =>
         {
@@ -282,7 +314,24 @@ public class NewProjectRecommendedPackagesDialogTests
 
         await viewModel.RunCreationAsync();
 
+        LastCreationLinksAddOns.ShouldBeTrue();
         LastCreationAddsPackages.ShouldBeFalse();
+        _calls.ShouldNotContain(call => call.StartsWith("add "));
+    }
+
+    [Fact]
+    public async Task Run_WithSourceLinkedAndTheBoxUnticked_LinksNothing()
+    {
+        NewProjectDialogViewModel viewModel = Create(vm =>
+        {
+            vm.IncludeCodeProject = true;
+            vm.SourceLinked = true;
+            vm.IncludeRecommendedPackages = false;
+        });
+
+        await viewModel.RunCreationAsync();
+
+        LastCreationLinksAddOns.ShouldBeFalse();
     }
 
     [Fact]
@@ -301,15 +350,17 @@ public class NewProjectRecommendedPackagesDialogTests
     }
 
     [Fact]
-    public void SourceLinkedThenBackToNuGet_ReChecksTheBox_WithTheChainBack()
+    public void SourceLinkedThenBackToNuGet_KeepsTheBoxChecked_WithThePackageChainBack()
     {
         NewProjectDialogViewModel viewModel = Create(vm => vm.IncludeCodeProject = true);
 
         viewModel.SourceLinked = true;
+        viewModel.RecommendedPackagesChecked.ShouldBeTrue();
         viewModel.SourceLinked = false;
 
         viewModel.RecommendedPackagesChecked.ShouldBeTrue();
-        viewModel.CommandLine.ShouldContain("dotnet add");
+        viewModel.CommandLine.ShouldContain("package KernSmith.MonoGameGum");
+        viewModel.RecommendedPackagesNote.ShouldBe(NewProjectDialogText.RecommendedPackagesNote);
     }
 
 

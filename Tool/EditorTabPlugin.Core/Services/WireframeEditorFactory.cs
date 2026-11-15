@@ -33,6 +33,7 @@ public class WireframeEditorFactory : IWireframeEditorFactory
     private readonly IPluginManager _pluginManager;
     private readonly IProjectManager _projectManager;
     private readonly ICanvasDisplayScale _displayScale;
+    private readonly IProjectRestrictions _projectRestrictions;
 
     public WireframeEditorFactory(
         IHotkeyManager hotkeyManager,
@@ -48,8 +49,10 @@ public class WireframeEditorFactory : IWireframeEditorFactory
         IToolFontService toolFontService,
         IPluginManager pluginManager,
         IProjectManager projectManager,
-        ICanvasDisplayScale displayScale)
+        ICanvasDisplayScale displayScale,
+        IProjectRestrictions projectRestrictions)
     {
+        _projectRestrictions = projectRestrictions;
         _displayScale = displayScale;
         _hotkeyManager = hotkeyManager;
         _selectedState = selectedState;
@@ -95,7 +98,8 @@ public class WireframeEditorFactory : IWireframeEditorFactory
             cursor,
             _toolFontService,
             _pluginManager,
-            _displayScale);
+            _displayScale,
+            _projectRestrictions);
     }
 
     public WireframeEditor CreatePolygonEditor(ISelectionManager selectionManager, Layer layer, Camera camera, IGumCursorState cursor)

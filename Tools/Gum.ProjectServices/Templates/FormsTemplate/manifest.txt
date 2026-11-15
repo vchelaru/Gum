@@ -25,6 +25,9 @@ Behaviors/SettingsViewBehavior.behx
 Behaviors/SliderBehavior.behx
 Behaviors/SplitterBehavior.behx
 Behaviors/StackPanelBehavior.behx
+Behaviors/TabControlBehavior.behx
+Behaviors/TabItemBehavior.behx
+Behaviors/TabPageBehavior.behx
 Behaviors/TextBoxBehavior.behx
 Behaviors/ToastBehavior.behx
 Behaviors/ToggleBehavior.behx
@@ -62,10 +65,14 @@ Components/Controls/SettingsView.gucx
 Components/Controls/Slider.gucx
 Components/Controls/SplitterStandard.gucx
 Components/Controls/StackPanel.gucx
+Components/Controls/TabControl.gucx
+Components/Controls/TabItem.gucx
+Components/Controls/TabPage.gucx
 Components/Controls/TextBox.gucx
 Components/Controls/ScrollBarThumb.gucx
 Components/Controls/SliderThumb.gucx
 Components/Controls/Toast.gucx
+Components/Controls/ToggleButton.gucx
 Components/Controls/TreeView.gucx
 Components/Controls/TreeViewItem.gucx
 Components/Controls/TreeViewToggle.gucx

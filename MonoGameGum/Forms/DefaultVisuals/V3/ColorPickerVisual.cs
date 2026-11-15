@@ -118,6 +118,7 @@ public class ColorPickerVisual : InteractiveGue
     {
         ContainerRuntime indicator = new ContainerRuntime();
         indicator.Name = "SaturationValueIndicator";
+        indicator.HasEvents = false;
         indicator.Width = 11;
         indicator.Height = 11;
         indicator.XOrigin = HorizontalAlignment.Center;
@@ -131,6 +132,7 @@ public class ColorPickerVisual : InteractiveGue
     {
         ContainerRuntime indicator = new ContainerRuntime();
         indicator.Name = "HueIndicator";
+        indicator.HasEvents = false;
         indicator.Width = HueBarWidth;
         indicator.Height = 5;
         indicator.YOrigin = VerticalAlignment.Center;

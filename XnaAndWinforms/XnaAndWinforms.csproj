@@ -18,8 +18,8 @@
 
 	</PropertyGroup>
 	<ItemGroup>
-		<PackageReference Include="nkast.Xna.Framework" Version="4.2.9001" />
-		<PackageReference Include="nkast.Xna.Framework.Graphics" Version="4.2.9001" />
+		<PackageReference Include="nkast.Xna.Framework" Version="4.3.9001" />
+		<PackageReference Include="nkast.Xna.Framework.Graphics" Version="4.3.9001" />
 	</ItemGroup>
 	<ItemGroup>
 		<EmbeddedResource Include="Content\Font18LiberationSans.fnt" />

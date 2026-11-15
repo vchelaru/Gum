@@ -1081,4 +1081,59 @@ public class ProjectLoaderTests
             Directory.Delete(tempDir, recursive: true);
         }
     }
+
+    // A standard type with no registered default state (e.g. one a tool plugin contributes) must not
+    // reject the project: the tool opens it with tolerateMissingDefaultStates, so check must too (#7967).
+    [Fact]
+    public void Load_ShouldLoadProject_WhenInstanceUsesStandardWithoutRegisteredDefaultState()
+    {
+        string tempDir = Path.Combine(Path.GetTempPath(), "GumLoaderTest_" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(tempDir);
+        string gumxPath = Path.Combine(tempDir, "Test.gumx");
+        try
+        {
+            ProjectCreator creator = new ProjectCreator();
+            creator.Create(gumxPath);
+
+            File.WriteAllText(Path.Combine(tempDir, "Standards", "PluginStandard.gutx"), """
+                <?xml version="1.0" encoding="utf-8"?>
+                <StandardElementSave xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+                  <Name>PluginStandard</Name>
+                  <State>
+                    <Name>Default</Name>
+                  </State>
+                </StandardElementSave>
+                """);
+            File.WriteAllText(Path.Combine(tempDir, "Components", "UsesPlugin.gucx"), """
+                <?xml version="1.0" encoding="utf-8"?>
+                <ComponentSave xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+                  <Name>UsesPlugin</Name>
+                  <BaseType>Container</BaseType>
+                  <State>
+                    <Name>Default</Name>
+                  </State>
+                  <Instance>
+                    <Name>PluginChild</Name>
+                    <BaseType>PluginStandard</BaseType>
+                  </Instance>
+                </ComponentSave>
+                """);
+
+            string gumxContent = File.ReadAllText(gumxPath);
+            gumxContent = gumxContent.Replace("</GumProjectSave>",
+                """  <StandardElementReference Name="PluginStandard" />""" + "\n" +
+                """  <ComponentReference Name="UsesPlugin" />""" + "\n</GumProjectSave>");
+            File.WriteAllText(gumxPath, gumxContent);
+
+            ProjectLoadResult result = _sut.Load(gumxPath);
+
+            result.ErrorMessage.ShouldBeNull();
+            result.Success.ShouldBeTrue();
+            result.Project!.Components.ShouldContain(c => c.Name == "UsesPlugin");
+        }
+        finally
+        {
+            Directory.Delete(tempDir, recursive: true);
+        }
+    }
 }

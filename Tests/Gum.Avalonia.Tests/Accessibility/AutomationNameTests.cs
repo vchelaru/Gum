@@ -10,6 +10,7 @@ using Gum.Avalonia.Dialogs.Views;
 using Gum.Avalonia.Panels;
 using Gum.Avalonia.Plugins.EditorTab;
 using Gum.Avalonia.Plugins.TreeView;
+using Gum.Avalonia.Settings;
 using Gum.Avalonia.Shell;
 using Gum.Managers;
 using Gum.Plugins;

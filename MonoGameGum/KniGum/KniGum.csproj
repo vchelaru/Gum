@@ -197,12 +197,16 @@
 		<Compile Remove="..\Forms\Controls\PasswordBox.cs" />
 		<Compile Remove="..\Forms\Controls\Primitives\ButtonBase.cs" />
 		<Compile Remove="..\Forms\Controls\Primitives\RangeBase.cs" />
+		<Compile Remove="..\Forms\Controls\Primitives\ItemSelection.cs" />
 		<Compile Remove="..\Forms\Controls\RadioButton.cs" />
 		<Compile Remove="..\Forms\Controls\RowDefinition.cs" />
 		<Compile Remove="..\Forms\Controls\ScrollBar.cs" />
 		<Compile Remove="..\Forms\Controls\ScrollViewer.cs" />
 		<Compile Remove="..\Forms\Controls\Slider.cs" />
 		<Compile Remove="..\Forms\Controls\Splitter.cs" />
+		<Compile Remove="..\Forms\Controls\TabControl.cs" />
+		<Compile Remove="..\Forms\Controls\TabItem.cs" />
+		<Compile Remove="..\Forms\Controls\TabPage.cs" />
 		<Compile Remove="..\Forms\Controls\StackPanel.cs" />
 		<Compile Remove="..\Forms\Controls\TextBox.cs" />
 		<Compile Remove="..\Forms\Controls\TextBoxBase.cs" />
@@ -259,16 +263,16 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="nkast.Xna.Framework" Version="4.2.9001" PrivateAssets="All" />
-		<PackageReference Include="nkast.Xna.Framework.Content" Version="4.2.9001" PrivateAssets="All" />
-		<PackageReference Include="nkast.Xna.Framework.Graphics" Version="4.2.9001" PrivateAssets="All" />
-		<PackageReference Include="nkast.Xna.Framework.Audio" Version="4.2.9001" PrivateAssets="All" />
-		<PackageReference Include="nkast.Xna.Framework.Media" Version="4.2.9001" PrivateAssets="All" />
-		<PackageReference Include="nkast.Xna.Framework.Input" Version="4.2.9001" PrivateAssets="All" />
-		<PackageReference Include="nkast.Xna.Framework.Game" Version="4.2.9001" PrivateAssets="All" />
-		<PackageReference Include="nkast.Xna.Framework.Devices" Version="4.2.9001" PrivateAssets="All" />
-		<PackageReference Include="nkast.Xna.Framework.Storage" Version="4.2.9001" PrivateAssets="All" />
-		<PackageReference Include="nkast.Xna.Framework.XR" Version="4.2.9001" PrivateAssets="All" />
+		<PackageReference Include="nkast.Xna.Framework" Version="4.3.9001" PrivateAssets="All" />
+		<PackageReference Include="nkast.Xna.Framework.Content" Version="4.3.9001" PrivateAssets="All" />
+		<PackageReference Include="nkast.Xna.Framework.Graphics" Version="4.3.9001" PrivateAssets="All" />
+		<PackageReference Include="nkast.Xna.Framework.Audio" Version="4.3.9001" PrivateAssets="All" />
+		<PackageReference Include="nkast.Xna.Framework.Media" Version="4.3.9001" PrivateAssets="All" />
+		<PackageReference Include="nkast.Xna.Framework.Input" Version="4.3.9001" PrivateAssets="All" />
+		<PackageReference Include="nkast.Xna.Framework.Game" Version="4.3.9001" PrivateAssets="All" />
+		<PackageReference Include="nkast.Xna.Framework.Devices" Version="4.3.9001" PrivateAssets="All" />
+		<PackageReference Include="nkast.Xna.Framework.Storage" Version="4.3.9001" PrivateAssets="All" />
+		<PackageReference Include="nkast.Xna.Framework.XR" Version="4.3.9001" PrivateAssets="All" />
 
 		<PackageReference Include="TextCopy" Version="6.2.1" />
 		<!-- Browser texture decode in ContentLoader (#6522). KniGum is one build for every KNI platform, so desktop gets it too. -->

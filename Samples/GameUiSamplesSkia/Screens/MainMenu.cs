@@ -16,6 +16,8 @@ namespace GameUiSamples.Screens;
 
 partial class MainMenu
 {
+    GumService GumUI => GumService.Default;
+
     partial void CustomInitialize()
     {
         ListBoxInstance.SelectedIndex = 0;
@@ -62,13 +64,13 @@ partial class MainMenu
 
     private void GoToScreen(FrameworkElement newScreen)
     {
-        GumService.Default.Root.Children.Clear();
+        GumUI.Root.Children.Clear();
         newScreen.AddToRoot();
     }
 
     private void GoToScreen(GraphicalUiElement newScreen)
     {
-        GumService.Default.Root.Children.Clear();
+        GumUI.Root.Children.Clear();
         newScreen.AddToRoot();
     }
 }

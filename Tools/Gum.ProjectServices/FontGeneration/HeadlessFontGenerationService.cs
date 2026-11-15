@@ -1,4 +1,5 @@
 ﻿using Gum.Bundle;
+using Gum.Localization;
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using Gum.Managers;
@@ -251,7 +252,10 @@ public class HeadlessFontGenerationService : IHeadlessFontGenerationService
     internal Dictionary<string, BmfcSave> CollectRequiredFonts(GumProjectSave project, IEnumerable<ElementSave> elements)
     {
         FontReferenceCollector collector = new FontReferenceCollector(
-            instance => ObjectFinder.Self.GetElementSave(instance));
+            instance => ObjectFinder.Self.GetElementSave(instance))
+        {
+            TranslationsOf = ProjectTranslations.CreateLookup(project)
+        };
 
         // The collector resolves every instance's BaseType through the injected resolver above,
         // which falls back to an O(n) linear scan of Screens/Components/StandardElements per call

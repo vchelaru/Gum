@@ -58,6 +58,12 @@ public class NeonColors
     /// <summary>Accent translucent fill (<c>--accd</c>, <c>rgba(0,229,255,.12)</c>) — used for selected rows and pushed states.</summary>
     public Color AccentDim { get; set; } = new Color(0, 229, 255, 31);
 
+    /// <summary>
+    /// Selected tab fill: <see cref="AccentDim"/> composited over <see cref="Background"/>, opaque. A translucent fill
+    /// drawn in a selected tab renders nearly opaque, so the tab carries the blended result instead.
+    /// </summary>
+    public Color SelectedTab { get; set; } = new Color(5, 33, 46);
+
     /// <summary>Primary text — pale cyan-white (<c>--txt</c>, <c>#C8FAFF</c>).</summary>
     public Color Text { get; set; } = new Color(200, 250, 255);
 

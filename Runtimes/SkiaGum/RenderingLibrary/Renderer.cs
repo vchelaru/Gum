@@ -114,10 +114,16 @@ namespace RenderingLibrary.Graphics
         // once per frame via RenderTargetServiceBase, exactly like the raylib/MonoGame renderers.
         readonly SkiaRenderTargetService _renderTargetService = new SkiaRenderTargetService();
 
-        // This frame's baked snapshots, keyed by the same contained-renderable owner. Rebuilt each
-        // top-level Draw (old snapshots disposed first) and read by both the composite pass and a
-        // Sprite pulling its RenderTargetTextureSource.
+        // This frame's baked surfaces, keyed by the same contained-renderable owner. Rebuilt each
+        // top-level Draw. The composite pass draws a surface directly; a snapshot is only made when
+        // something needs an image (a Sprite pulling its RenderTargetTextureSource, or an effect).
+        readonly Dictionary<IRenderableIpso, SKSurface> _bakedSurfaces = new Dictionary<IRenderableIpso, SKSurface>();
+
+        // Snapshots of the baked surfaces made on demand this frame, disposed with them.
         readonly Dictionary<IRenderableIpso, SKImage> _bakedImages = new Dictionary<IRenderableIpso, SKImage>();
+
+        // Reused for every composite so a frame without effects allocates no paint.
+        readonly SKPaint _compositePaint = new SKPaint();
 
         // The camera zoom each baked image was drawn at. An image is zoom times larger than its
         // container in pixels, so the composite shrinks it back to the container's canvas-unit
@@ -206,8 +212,40 @@ namespace RenderingLibrary.Graphics
             }
         }
 
+        /// <summary>
+        /// Counters for the last host frame's draw calls, the same API the MonoGame and raylib renderers
+        /// expose. Reset once per host frame (each full-scene <c>Draw</c>, or the first GumBatch call
+        /// after <c>GumService.Update</c>), so GumBatch cycles within one frame add up.
+        /// </summary>
+        public RenderStateChangeStatistics RenderStateChangeStatistics { get; } = new RenderStateChangeStatistics();
+
+        SpriteAtlasBatch? _spriteBatch;
+
+        // Consecutive same-image sprites draw through one DrawAtlas call (#7826).
+        internal SpriteAtlasBatch SpriteBatch => _spriteBatch ??= new SpriteAtlasBatch(RenderStateChangeStatistics);
+
+        // Greater than zero while a public draw entry point runs. Sprites batch only then, and the outermost
+        // entry point flushes before returning, so no sprite is left pending when control goes back to the
+        // host (a host draw in between, a sprite's Render called directly, a Draw outside a cycle).
+        int _drawScopeDepth;
+
+        // The batch sprites add to, or null outside a draw entry point, where a sprite draws on its own.
+        internal SpriteAtlasBatch? ActiveSpriteBatch => _drawScopeDepth > 0 ? SpriteBatch : null;
+
+        private void EnterDrawScope() => _drawScopeDepth++;
+
+        private void ExitDrawScope()
+        {
+            _drawScopeDepth--;
+            if (_drawScopeDepth == 0)
+            {
+                _spriteBatch?.Flush();
+            }
+        }
+
         private void StartHostFrameRenderTargets()
         {
+            RenderStateChangeStatistics.Reset();
             DisposeBakedImages();
             _referencedRenderTargetOwners.Clear();
             _renderTargetService.ClearUnusedRenderTargetsLastFrame();
@@ -219,19 +257,27 @@ namespace RenderingLibrary.Graphics
         private void DrawTopLevel(IList<IRenderableIpso> whatToRender, SystemManagers managers, Layer? layer)
         {
             _referencedRenderTargetOwners.Clear();
-            // Before the camera transform is applied to the screen canvas.
-            BakeRenderTargets(whatToRender, managers, layer);
-
-            ApplyCamera(managers.Canvas, layer, matrix: null);
+            EnterDrawScope();
             try
             {
-                DrawList(whatToRender, managers, layer);
+                // Before the camera transform is applied to the screen canvas.
+                BakeRenderTargets(whatToRender, managers, layer);
+
+                ApplyCamera(managers.Canvas, layer, matrix: null);
+                try
+                {
+                    DrawList(whatToRender, managers, layer);
+                }
+                finally
+                {
+                    // Undoes this layer's camera so the next layer (or the next frame) starts from a
+                    // clean matrix (#4330), even when a Render throws.
+                    RestoreCamera(managers.Canvas);
+                }
             }
             finally
             {
-                // Undoes this layer's camera so the next layer (or the next frame) starts from a
-                // clean matrix (#4330), even when a Render throws.
-                RestoreCamera(managers.Canvas);
+                ExitDrawScope();
             }
         }
 
@@ -361,7 +407,17 @@ namespace RenderingLibrary.Graphics
             }
             else if (renderable.Visible)
             {
-                DrawRenderable(renderable, OwnManagers);
+                // Immediate mode and a Draw outside a cycle draw before returning, so a host draw
+                // between two calls lands between them.
+                EnterDrawScope();
+                try
+                {
+                    DrawRenderable(renderable, OwnManagers);
+                }
+                finally
+                {
+                    ExitDrawScope();
+                }
             }
         }
 
@@ -371,6 +427,7 @@ namespace RenderingLibrary.Graphics
         /// </summary>
         public void End()
         {
+            EnterDrawScope();
             try
             {
                 if (_deferredRoots.Count > 0)
@@ -391,6 +448,7 @@ namespace RenderingLibrary.Graphics
             }
             finally
             {
+                ExitDrawScope();
                 // Cleared and restored even when a Render throws, so the next cycle neither redraws
                 // this cycle's roots (#4584) nor inherits its matrix.
                 _deferredRoots.Clear();
@@ -422,6 +480,7 @@ namespace RenderingLibrary.Graphics
         {
             _preRenderRootsBuffer.Clear();
             _preRenderRootsBuffer.AddRange(roots);
+            EnterDrawScope();
             try
             {
                 TryStartHostFrameForBatch();
@@ -431,6 +490,7 @@ namespace RenderingLibrary.Graphics
             }
             finally
             {
+                ExitDrawScope();
                 _preRenderRootsBuffer.Clear();
             }
         }
@@ -482,6 +542,7 @@ namespace RenderingLibrary.Graphics
             // hidden one is skipped by the caller's Visible check, so no stale texture ghosts.
             if (renderable.IsRenderTarget)
             {
+                SpriteBatch.Flush();
                 CompositeRenderTarget(renderable, managers);
                 return;
             }
@@ -490,6 +551,14 @@ namespace RenderingLibrary.Graphics
 
             var isOnScreen = true;
 
+            // Only a container that clips its children is culled here, and that is deliberate. A clipper's
+            // rectangle is a hard limit on where its subtree can draw, so a clipper outside the current clip
+            // hides everything under it. A renderable that does not clip has no known visible extent: its own
+            // bounds miss drop shadows, strokes and text overflow, and its children can spill outside it.
+            // Culling those would need every descendant's real drawn extent, computed per frame (more CPU than
+            // the skipped draws save) or cached and invalidated on every property change. Skia already rejects
+            // the off-screen pixels through the clip. For long lists, skip the items at the control level
+            // (virtualization) rather than here.
             if (renderable.ClipsChildren)
             {
                 var bounds = renderable.GetClipTransform(out SKRect localRect).MapRect(localRect);
@@ -502,28 +571,46 @@ namespace RenderingLibrary.Graphics
 
                 if (isOnScreen)
                 {
+                    SpriteBatch.Flush();
                     canvas.Save();
                     canvas.ClipTo(renderable);
-                    renderable.Render(managers);
+                    RenderOne(renderable, managers);
                 }
             }
             else
             {
-                renderable.Render(managers);
+                RenderOne(renderable, managers);
             }
 
             if (isOnScreen)
             {
                 if (RenderUsingHierarchy)
                 {
-                    DrawList(renderable.Children, managers);
+                    // The list this one belongs to was already pre-rendered with its whole subtree. Pre-rendering
+                    // again at every depth called PreRender several times per node per frame.
+                    DrawList(renderable.Children, managers, prerender: false);
                 }
 
                 if (renderable.ClipsChildren)
                 {
+                    SpriteBatch.Flush();
                     canvas.Restore();
                 }
             }
+        }
+
+        // Sprites add themselves to SpriteBatch; anything else that draws flushes it first so draw order holds.
+        // Containers draw nothing, so sprites in separate containers still share a batch.
+        private void RenderOne(IRenderableIpso renderable, SystemManagers managers)
+        {
+            IRenderableIpso inner = renderable is GraphicalUiElement element && element.RenderableComponent is IRenderableIpso contained
+                ? contained
+                : renderable;
+            if (inner is not Sprite && inner is not InvisibleRenderable)
+            {
+                SpriteBatch.Flush();
+            }
+            renderable.Render(managers);
         }
 
         private void PreRender(IList<IRenderableIpso> renderables)
@@ -585,7 +672,7 @@ namespace RenderingLibrary.Graphics
         /// Resolves the container's cache owner internally. Intended for tests and diagnostics.
         /// </summary>
         public bool HasBakedRenderTargetFor(IRenderableIpso container)
-            => _bakedImages.ContainsKey(ResolveRenderTargetCacheOwner(container));
+            => _bakedSurfaces.ContainsKey(ResolveRenderTargetCacheOwner(container));
 
         /// <summary>
         /// The offscreen texture baked for the given render-target container this frame, or null if
@@ -593,9 +680,37 @@ namespace RenderingLibrary.Graphics
         /// <c>RenderTargetTextureSource</c>, and by tests.
         /// </summary>
         public SKImage? TryGetBakedRenderTargetFor(IRenderableIpso container)
-            => _bakedImages.TryGetValue(ResolveRenderTargetCacheOwner(container), out SKImage? image)
-                ? image
-                : null;
+            => GetBakedImage(ResolveRenderTargetCacheOwner(container));
+
+        // The snapshot of the owner's baked surface, made the first time it is asked for this frame.
+        // The snapshot stays valid across the frame via SkiaSharp copy-on-write; the persistent
+        // surface is only re-cleared next frame, after DisposeBakedImages frees this snapshot.
+        private SKImage? GetBakedImage(IRenderableIpso owner)
+        {
+            if (_bakedImages.TryGetValue(owner, out SKImage? image))
+            {
+                return image;
+            }
+
+            if (!_bakedSurfaces.TryGetValue(owner, out SKSurface? surface))
+            {
+                return null;
+            }
+
+            image = surface.Snapshot();
+            _bakedImages[owner] = image;
+            return image;
+        }
+
+        /// <summary>
+        /// For tests: how many container bakes (children rendered into a container's surface) this
+        /// renderer has run. A manual-mode refresh with an effect counts once; its effect pass is part of the bake.
+        /// </summary>
+        internal int RenderTargetBakeCount { get; private set; }
+
+        // For tests: whether a manual-mode cached image is held for the container.
+        internal bool HasManualRenderTargetImage(IRenderableIpso container)
+            => _renderTargetService.HasImage(ResolveRenderTargetCacheOwner(container));
 
         // The cached offscreen surface for a render-target container, for tests.
         internal SKSurface? TryGetRenderTargetSurfaceFor(IRenderableIpso container)
@@ -608,6 +723,7 @@ namespace RenderingLibrary.Graphics
                 image?.Dispose();
             }
             _bakedImages.Clear();
+            _bakedSurfaces.Clear();
             _bakedZooms.Clear();
         }
 
@@ -683,7 +799,8 @@ namespace RenderingLibrary.Graphics
                     continue;
                 }
 
-                if (renderable.Children != null)
+                // A valid manual cache draws as one image, so its children are neither baked nor drawn this frame.
+                if (renderable.Children != null && !HasValidManualImage(renderable, zoom))
                 {
                     BakeRenderTargetsInSubtree(renderable.Children, managers, zoom);
                 }
@@ -706,6 +823,19 @@ namespace RenderingLibrary.Graphics
                 return;
             }
 
+            IRenderableIpso owner = ResolveRenderTargetCacheOwner(container);
+            if (TryGetManualBakePlan(container, owner, zoom, out ManualBakePlan plan))
+            {
+                BakeManualRenderTarget(container, managers, plan);
+                return;
+            }
+
+            // A container that left manual mode drops its cached image, so the surface is rebuilt for this path.
+            if (_renderTargetService.HasImage(owner))
+            {
+                _renderTargetService.Remove(owner);
+            }
+
             // The surface holds the container at the camera's zoom, so it is zoom times its size in
             // canvas units (rounded up so the last partial pixel is not cut off).
             // The fraction keeps the container's fractional device-pixel offset inside the surface so
@@ -714,17 +844,25 @@ namespace RenderingLibrary.Graphics
             int width = (int)System.Math.Ceiling(container.Width * zoom + fractionX);
             int height = (int)System.Math.Ceiling(container.Height * zoom + fractionY);
 
-            IRenderableIpso owner = ResolveRenderTargetCacheOwner(container);
             SkiaRenderTarget? renderTarget = _renderTargetService.GetFor(owner, width, height);
             if (renderTarget == null)
             {
                 return;
             }
 
+            RenderTargetBakeCount++;
+            BakeChildrenInto(container, managers, renderTarget.Surface, zoom, fractionX, fractionY);
+            RegisterBakedSurface(owner, renderTarget.Surface, zoom);
+        }
+
+        // Renders the container's children into the surface, in the surface's local pixel space.
+        private void BakeChildrenInto(IRenderableIpso container, SystemManagers managers, SKSurface surface,
+            float zoom, float fractionX, float fractionY)
+        {
             float left = container.GetAbsoluteX();
             float top = container.GetAbsoluteY();
 
-            SKCanvas offscreenCanvas = renderTarget.Surface.Canvas;
+            SKCanvas offscreenCanvas = surface.Canvas;
             offscreenCanvas.Clear(SKColors.Transparent);
             offscreenCanvas.Save();
             offscreenCanvas.Translate(fractionX, fractionY);
@@ -747,20 +885,140 @@ namespace RenderingLibrary.Graphics
             }
             finally
             {
+                SpriteBatch.Flush();
                 _bakeDepth--;
                 managers.Canvas = screenCanvas;
                 offscreenCanvas.Restore();
             }
+        }
 
-            // The snapshot stays valid across the frame via SkiaSharp copy-on-write; the persistent
-            // surface is only re-cleared next frame, after DisposeBakedImages frees this snapshot.
-            // A second bake in the same frame (PreRenderRoots then a full-scene Draw) replaces it.
+        private bool HasValidManualImage(IRenderableIpso renderable, float zoom)
+        {
+            if (!renderable.IsRenderTarget)
+            {
+                return false;
+            }
+
+            IRenderableIpso owner = ResolveRenderTargetCacheOwner(renderable);
+            return TryGetManualBakePlan(renderable, owner, zoom, out ManualBakePlan plan) &&
+                _renderTargetService.GetValidImageTarget(owner, plan.ContainerWidth, plan.ContainerHeight, plan.Zoom, plan.RefreshVersion) != null;
+        }
+
+        // Records the surface as this frame's baked result for the owner. A second bake in the same frame
+        // (PreRenderRoots then a full-scene Draw) replaces the first, so a snapshot made from it is dropped.
+        private void RegisterBakedSurface(IRenderableIpso owner, SKSurface surface, float zoom)
+        {
             if (_bakedImages.TryGetValue(owner, out SKImage? previous))
             {
-                previous?.Dispose();
+                previous.Dispose();
+                _bakedImages.Remove(owner);
             }
-            _bakedImages[owner] = renderTarget.Surface.Snapshot();
+            _bakedSurfaces[owner] = surface;
             _bakedZooms[owner] = zoom;
+        }
+
+        /// <summary>What a manual-mode container needs this frame: its pixel size, the zoom and the refresh version.</summary>
+        private readonly struct ManualBakePlan
+        {
+            public ManualBakePlan(IRenderTargetRenderable settings, IRenderableIpso owner, int width, int height, float containerWidth, float containerHeight, float zoom)
+            {
+                Settings = settings;
+                Owner = owner;
+                Width = width;
+                Height = height;
+                ContainerWidth = containerWidth;
+                ContainerHeight = containerHeight;
+                Zoom = zoom;
+            }
+
+            public IRenderTargetRenderable Settings { get; }
+            public IRenderableIpso Owner { get; }
+            public int Width { get; }
+            public int Height { get; }
+            public float ContainerWidth { get; }
+            public float ContainerHeight { get; }
+            public float Zoom { get; }
+            public int RefreshVersion => Settings.RenderTargetRefreshVersion;
+        }
+
+        // Past this many pixels on a side a whole-container cache is not attempted (the same side the MonoGame
+        // renderer allows on its HiDef profile), and the container keeps the every-frame behavior.
+        private const int MaxManualRenderTargetSize = 4096;
+
+        // True when the container is in manual mode and small enough to cache whole.
+        private static bool TryGetManualBakePlan(IRenderableIpso container, IRenderableIpso owner, float zoom, out ManualBakePlan plan)
+        {
+            plan = default;
+            if (owner is not IRenderTargetRenderable settings || settings.RenderTargetRefreshMode != RenderTargetRefreshMode.Manual)
+            {
+                return false;
+            }
+
+            int width = MathFunctions.RoundToInt(container.Width);
+            int height = MathFunctions.RoundToInt(container.Height);
+            if (MathFunctions.RoundToInt(container.Width * zoom) > MaxManualRenderTargetSize ||
+                MathFunctions.RoundToInt(container.Height * zoom) > MaxManualRenderTargetSize)
+            {
+                return false;
+            }
+
+            plan = new ManualBakePlan(settings, owner, width, height, container.Width, container.Height, zoom);
+            return true;
+        }
+
+        // Bakes a manual container once into its cached surface and reuses it until the size, zoom or refresh
+        // version changes. A reused cache is registered as this frame's baked result without drawing the children.
+        // With a render-target effect the children go into a scratch surface and the effect writes the final
+        // image once, so the composite draws the cache as it is.
+        private void BakeManualRenderTarget(IRenderableIpso container, SystemManagers managers, in ManualBakePlan plan)
+        {
+            IRenderableIpso owner = plan.Owner;
+            SkiaRenderTarget? cached = _renderTargetService.GetValidImageTarget(
+                owner, plan.ContainerWidth, plan.ContainerHeight, plan.Zoom, plan.RefreshVersion);
+            if (cached != null)
+            {
+                _renderTargetService.MarkUsed(owner);
+                RegisterBakedSurface(owner, cached.Surface, plan.Zoom);
+                return;
+            }
+
+            float zoom = plan.Zoom;
+            GetDevicePixelFraction(container, zoom, out float fractionX, out float fractionY);
+            int width = (int)System.Math.Ceiling(container.Width * zoom + fractionX);
+            int height = (int)System.Math.Ceiling(container.Height * zoom + fractionY);
+            SkiaRenderTarget? image = _renderTargetService.GetFor(owner, width, height);
+            if (image == null)
+            {
+                return;
+            }
+
+            RenderTargetBakeCount++;
+            if (plan.Settings.RenderTargetEffect is SKRuntimeEffect)
+            {
+                using SKSurface scratch = SKSurface.Create(new SKImageInfo(width, height, SKColorType.Rgba8888, SKAlphaType.Premul));
+                BakeChildrenInto(container, managers, scratch, zoom, fractionX, fractionY);
+                using SKImage source = scratch.Snapshot();
+
+                SKCanvas canvas = image.Surface.Canvas;
+                canvas.Clear(SKColors.Transparent);
+                canvas.Save();
+                if (zoom != 1)
+                {
+                    canvas.Scale(zoom);
+                }
+                using SKPaint paint = new SKPaint();
+                SKRect destination = new SKRect(0, 0, width / zoom, height / zoom);
+                DrawRenderTargetImage(null, destination, paint, owner, 0, 0, plan.Width, plan.Height, zoom, canvas, source);
+                canvas.Restore();
+            }
+            else
+            {
+                BakeChildrenInto(container, managers, image.Surface, zoom, fractionX, fractionY);
+            }
+
+            _renderTargetService.CommitImage(owner,
+                new SkiaCachedImage(plan.ContainerWidth, plan.ContainerHeight, zoom, plan.RefreshVersion, fractionX, fractionY));
+            RegisterBakedSurface(owner, image.Surface, zoom);
         }
 
         // Bakes every render-target container's subtree under whatToRender into its offscreen
@@ -788,7 +1046,7 @@ namespace RenderingLibrary.Graphics
         private void CompositeRenderTarget(IRenderableIpso container, SystemManagers managers)
         {
             IRenderableIpso owner = ResolveRenderTargetCacheOwner(container);
-            if (!_bakedImages.TryGetValue(owner, out SKImage? image) || image == null)
+            if (!_bakedSurfaces.TryGetValue(owner, out SKSurface? surface))
             {
                 return;
             }
@@ -809,17 +1067,35 @@ namespace RenderingLibrary.Graphics
             // unconfigured or unrecognized BlendState composites as Normal. Group alpha tints the
             // whole texture via the paint's alpha channel either way.
             byte alpha = (byte)System.Math.Clamp(container.Alpha, 0, 255);
-            using SKPaint paint = new SKPaint();
+            // The paint is shared across composites, so clear what the last one set that this one may not.
+            SKPaint paint = _compositePaint;
+            paint.Shader = null;
+            paint.Blender = null;
             paint.Color = new SKColor(255, 255, 255, alpha);
             paint.ApplyBlend(Gum.RenderingLibrary.BlendExtensions.ToBlend(owner.BlendState)
                 ?? Gum.RenderingLibrary.Blend.Normal);
 
             float left = container.GetAbsoluteX();
             float top = container.GetAbsoluteY();
-            GetDevicePixelFraction(container, zoom, out float fractionX, out float fractionY);
+
+            // A manual container's surface was baked offset by the fraction of the position it had then; a
+            // moved container is composited with that same fraction, not its current one.
+            bool isManual = _renderTargetService.TryGetImage(owner, out SkiaCachedImage? cachedImage);
+            float fractionX;
+            float fractionY;
+            if (isManual)
+            {
+                fractionX = cachedImage!.FractionX;
+                fractionY = cachedImage.FractionY;
+            }
+            else
+            {
+                GetDevicePixelFraction(container, zoom, out fractionX, out fractionY);
+            }
             float imageLeft = left - fractionX / zoom;
             float imageTop = top - fractionY / zoom;
-            SKRect destination = new SKRect(imageLeft, imageTop, imageLeft + image.Width / zoom, imageTop + image.Height / zoom);
+            SKRectI surfaceBounds = surface.Canvas.DeviceClipBounds;
+            SKRect destination = new SKRect(imageLeft, imageTop, imageLeft + surfaceBounds.Width / zoom, imageTop + surfaceBounds.Height / zoom);
 
             // The bake is upright, so turn the composite by the container's absolute rotation about
             // its origin (#6588). The shaded path's child shader stays in this local space too.
@@ -828,7 +1104,10 @@ namespace RenderingLibrary.Graphics
             canvas.RotateDegrees(-container.GetAbsoluteRotation(), left, top);
             try
             {
-                DrawRenderTargetImage(image, destination, paint, owner, imageLeft, imageTop, width, height, zoom, canvas);
+                // The effect of a manual container is already in its cached image.
+                DrawRenderTargetImage(surface, destination, paint, owner, imageLeft, imageTop, width, height, zoom, canvas,
+                    sourceImage: null, applyEffect: !isManual);
+                RenderStateChangeStatistics.RecordDrawCall();
             }
             finally
             {
@@ -853,20 +1132,31 @@ namespace RenderingLibrary.Graphics
             fractionY = deviceY - (float)System.Math.Floor(deviceY);
         }
 
-        private static void DrawRenderTargetImage(SKImage image, SKRect destination, SKPaint paint,
-            IRenderableIpso owner, float left, float top, int width, int height, float zoom, SKCanvas canvas)
+        // sourceImage is the image the effect reads, or null to snapshot the owner's baked surface; surface is
+        // only drawn directly when there is no effect to apply.
+        private void DrawRenderTargetImage(SKSurface? surface, SKRect destination, SKPaint paint,
+            IRenderableIpso owner, float left, float top, int width, int height, float zoom, SKCanvas canvas,
+            SKImage? sourceImage = null, bool applyEffect = true)
         {
             // Optional post-process shader (ContainerRuntime.RenderTargetEffect / SourceShaderFile,
             // #3998). The effect is image-independent (declares a `uniform shader SpriteTexture`
             // child, the same texture name MonoGame .fx/.slang shaders use) -- the baked image is
             // only known here, at composite time, so it is bound as that child shader input on this
             // call rather than cached on the effect.
-            SKRuntimeEffect? effect = (owner as IRenderTargetRenderable)?.RenderTargetEffect as SKRuntimeEffect;
+            SKRuntimeEffect? effect = applyEffect ? (owner as IRenderTargetRenderable)?.RenderTargetEffect as SKRuntimeEffect : null;
             if (effect == null)
             {
-                canvas.DrawImage(image, destination, SKSamplingOptions.Default, paint);
+                // The surface is drawn as it stands, so no image is made; mapping its pixels onto the
+                // destination is the same translate and shrink DrawImage does with a destination rect.
+                canvas.Save();
+                canvas.Translate(destination.Left, destination.Top);
+                canvas.Scale(1 / zoom);
+                surface!.Draw(canvas, 0, 0, SKSamplingOptions.Default, paint);
+                canvas.Restore();
                 return;
             }
+
+            SKImage image = sourceImage ?? GetBakedImage(owner)!;
 
             // SKCanvas.DrawImage ignores paint.Shader -- a paint's shader only takes effect on a
             // shape-drawing call, so the shaded path switches to DrawRect and feeds the baked image
@@ -1040,6 +1330,7 @@ namespace RenderingLibrary.Graphics
 
         private void RestoreCamera(SKCanvas canvas)
         {
+            SpriteBatch.Flush();
             canvas.Restore();
             _cameraBaseMatrix = null;
             _cameraCallerMatrix = null;
@@ -1058,7 +1349,20 @@ namespace RenderingLibrary.Graphics
                 return;
             }
 
-            SystemManagers skiaManagers = (SystemManagers)managers;
+            // A host may call this directly, so it flushes before returning when it is the outermost draw.
+            EnterDrawScope();
+            try
+            {
+                RenderLayerInScope((SystemManagers)managers, layer, prerender);
+            }
+            finally
+            {
+                ExitDrawScope();
+            }
+        }
+
+        private void RenderLayerInScope(SystemManagers skiaManagers, Layer layer, bool prerender)
+        {
             SKCanvas canvas = skiaManagers.Canvas;
             SKMatrix? outerBaseMatrix = _cameraBaseMatrix;
             SKMatrix? outerCallerMatrix = _cameraCallerMatrix;
@@ -1089,6 +1393,7 @@ namespace RenderingLibrary.Graphics
             }
             finally
             {
+                SpriteBatch.Flush();
                 canvas.Restore();
                 canvas.Restore();
                 _cameraBaseMatrix = outerBaseMatrix;

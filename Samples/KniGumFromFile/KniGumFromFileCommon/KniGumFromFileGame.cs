@@ -27,6 +27,8 @@ namespace KniGumFromFile;
 
 public class KniGumFromFileGame : Game
 {
+    GumService GumUI => GumService.Default;
+
     public static KniGumFromFileGame Self
     {
         get; private set;
@@ -60,7 +62,11 @@ public class KniGumFromFileGame : Game
     {
         try
         {
-            GumService.Default.Initialize(this, "GumProject.gumx");
+            GumUI.Initialize(this, "GumProject.gumx");
+
+            GumUI.UseKeyboardDefaults();
+
+            GumUI.UseGamepadDefaults();
 
             ShowScreen("StartScreen");
             InitializeStartScreen();
@@ -305,7 +311,7 @@ public class KniGumFromFileGame : Game
     {
         MouseState mouseState = Mouse.GetState();
 
-        GumService.Default.Update(this, gameTime, currentScreenGue);
+        GumUI.Update(this, gameTime, currentScreenGue);
 
         var cursor = FormsUtilities.Cursor;
         var output =

@@ -48,9 +48,12 @@ public class ButtonVisual : BaseButtonVisual
         TextInstance.Parent = null;
 
         Width = 120;
-        Height = 36;
+        Height = 12;
         WidthUnits = DimensionUnitType.Absolute;
-        HeightUnits = DimensionUnitType.Absolute;
+        // The button is as tall as its label: 12 of chrome padding plus the 24 px line of the
+        // theme font is the old fixed height for one line, and wrapped lines grow it.
+        HeightUnits = DimensionUnitType.RelativeToChildren;
+        TextInstance.Height = 0;
 
         _focusRing = CreateFocusRing();
         AddChild(_focusRing);

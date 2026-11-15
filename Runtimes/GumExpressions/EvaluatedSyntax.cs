@@ -358,6 +358,21 @@ public class EvaluatedSyntax
                     return FromSyntaxAndValue(syntaxNode, !b);
                 }
             }
+            else if (prefixUnary.OperatorToken.IsKind(Microsoft.CodeAnalysis.CSharp.SyntaxKind.MinusToken)
+                || prefixUnary.OperatorToken.IsKind(Microsoft.CodeAnalysis.CSharp.SyntaxKind.PlusToken))
+            {
+                // Leading sign on a numeric operand. Strings, bools and unresolved references stay
+                // unevaluated so the stored value is kept.
+                var operand = Evaluate(prefixUnary.Operand, stateForUnqualifiedRightSide, fallback, liveRoot);
+                if (operand?.Value is { } operandValue && TryGetNumericType(operandValue, out _))
+                {
+                    object? signed = ApplySign(operandValue, prefixUnary.OperatorToken);
+                    if (signed != null)
+                    {
+                        return FromSyntaxAndValue(syntaxNode, signed);
+                    }
+                }
+            }
             return null;
         }
         else if (syntaxNode is LiteralExpressionSyntax literalExpression)
@@ -767,6 +782,23 @@ public class EvaluatedSyntax
         }
 
         return null;
+    }
+
+    // Follows C# unary rules (a negated byte becomes an int). Null when C# has no such operator,
+    // e.g. negating a ulong.
+    private static object? ApplySign(object numericValue, SyntaxToken operatorToken)
+    {
+        dynamic dynamicValue = numericValue;
+        try
+        {
+            return operatorToken.IsKind(Microsoft.CodeAnalysis.CSharp.SyntaxKind.MinusToken)
+                ? -dynamicValue
+                : +dynamicValue;
+        }
+        catch (RuntimeBinderException)
+        {
+            return null;
+        }
     }
 
     private static void GetDynamicValues(object obj1, object obj2, out dynamic? dynamicValue1, out dynamic? dynamicValue2)

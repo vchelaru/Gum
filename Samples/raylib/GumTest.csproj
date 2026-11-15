@@ -33,6 +33,14 @@
     <Compile Include="..\MonoGameGumInCode\MonoGameGumInCode\Screens\ZoomScreen.cs" Link="Screens\ZoomScreen.cs" />
     <Compile Include="..\MonoGameGumInCode\MonoGameGumInCode\Screens\LayerCameraSettingsScreen.cs" Link="Screens\LayerCameraSettingsScreen.cs" />
     <Compile Include="..\MonoGameGumInCode\MonoGameGumInCode\Screens\SpriteScreen.cs" Link="Screens\SpriteScreen.cs" />
+    <Compile Include="..\MonoGameGumInCode\MonoGameGumInCode\Screens\FormsScreen.cs" Link="Screens\FormsScreen.cs" />
+    <Compile Include="..\MonoGameGumInCode\MonoGameGumInCode\Screens\NineSliceScreen.cs" Link="Screens\NineSliceScreen.cs" />
+    <Compile Include="..\MonoGameGumInCode\MonoGameGumInCode\Screens\StandardsScreen.cs" Link="Screens\StandardsScreen.cs" />
+    <Compile Include="..\MonoGameGumInCode\MonoGameGumInCode\Screens\GradientScreen.cs" Link="Screens\GradientScreen.cs" />
+    <Compile Include="..\MonoGameGumInCode\MonoGameGumInCode\Screens\MixedScreen.cs" Link="Screens\MixedScreen.cs" />
+    <Compile Include="..\MonoGameGumInCode\MonoGameGumInCode\Screens\InvisibleScreen.cs" Link="Screens\InvisibleScreen.cs" />
+    <Compile Include="..\MonoGameGumInCode\MonoGameGumInCode\Screens\ClippingScreen.cs" Link="Screens\ClippingScreen.cs" />
+    <Compile Include="..\Shared\GumGallery.cs" Link="GumGallery.cs" />
   </ItemGroup>
 
   <ItemGroup>
@@ -41,6 +49,10 @@
     </None>
     <!-- The one Outline.slang that MonoGameGumInCode, raylib and SilkNetGum all run. -->
     <None Include="..\..\Gum\Content\Shaders\Outline.slang" Link="resources\Outline.slang">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <!-- The grayscale, blur and sepia Slang shaders MonoGameGumInCode runs; ShadowDusk converts them. -->
+    <None Include="..\MonoGameGumInCode\MonoGameGumInCode\Content\*.slang" Link="resources\%(Filename)%(Extension)">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>

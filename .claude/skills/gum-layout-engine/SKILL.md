@@ -37,8 +37,10 @@ Entry point: `UpdateLayout(ParentUpdateType, int childrenUpdateDepth, XOrY?)`
 
 2. **Early out — suspended or invisible** — if layout is suspended
    (`mIsLayoutSuspended` or `IsAllLayoutSuspended`) OR the element is invisible
-   and not needed for parent update, call `MakeDirty()` and return. Invisible
-   elements also exit if parent is invisible (unless render target).
+   and not needed for parent update, call `MakeDirty()` and return. "Invisible" is
+   `IsHiddenWithinRenderTarget()`: the element or an ancestor below the nearest render target is not
+   visible. A render target (hidden or not) is never hidden, and its own `Visible` does not hide its
+   content, but elements hidden inside it are skipped like anywhere else (#7240).
 
 3. **Propagate to parent (originating call only)** — if `updateParent` AND
    `GetIfShouldCallUpdateOnParent()`, the *originating* call (the element that
@@ -216,7 +218,9 @@ Accumulates into `currentDirtyState`:
 
 ### ResumeLayoutUpdateIfDirtyRecursive
 
-Called when layout is resumed after suspension. Walks the tree:
+Called when layout is resumed after suspension. `ResumeLayout(recursive: true)` first clears every descendant's
+suspension (`ClearLayoutSuspensionRecursive`), so the first layout covers the subtree; resuming them one at a time
+laid a parent out again per child (rows squared, #7239). Then it walks the tree:
 1. Clear `mIsLayoutSuspended`
 2. If `currentDirtyState != null`, call `UpdateLayout` with accumulated state
 3. Recurse into children

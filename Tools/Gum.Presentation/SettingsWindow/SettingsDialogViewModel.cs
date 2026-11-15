@@ -67,20 +67,22 @@ public class SettingsDialogViewModel : DialogViewModel
         {
             new SettingsPage(SettingsPageIds.General, "General", SettingsSection.Application, general, GeneralOrder)
             {
-                Keywords = new[] { "Auto save", "autosave", "Standards palette", "Open settings folder", "settings folder" },
+                Keywords = new[] { "autosave", "Open settings folder" },
+                SearchTerms = () => new GeneralRows(general).SearchTerms(),
             },
             new SettingsPage(SettingsPageIds.Appearance, "Appearance", SettingsSection.Application, theming, AppearanceOrder)
             {
                 Keywords = new[]
                 {
                     "Theme Mode", "theme", "dark", "light", "Accent Color", "Editor Background", "Checker Color",
-                    "Outline Color", "Guide Line Color", "Guide Text Color", "Reset All", "color",
+                    "Outline Color", "Guide Line Color", "Guide Text Color", "reset", "default", "color",
                 },
+                SearchTerms = () => new AppearanceRows(theming).SearchTerms(),
             },
             new SettingsPage(SettingsPageIds.Plugins, "Plugins", SettingsSection.Application, plugins, PluginsOrder)
             {
                 Keywords = new[] { "enable", "disable", "Folder scan", "Copy Scan" },
-                SearchTerms = () => plugins.Plugins.Select(plugin => plugin.DisplayText),
+                SearchTerms = () => new PluginsRows(plugins).SearchTerms(),
             },
         };
         _allPages.AddRange(registry.Pages.Where(page => hasProject || page.Section == SettingsSection.Application));

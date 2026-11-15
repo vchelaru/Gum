@@ -25,7 +25,7 @@
     <PackageReference Include="xunit.v3" VersionOverride="3.2.2" />
     <PackageReference Include="xunit.runner.visualstudio" VersionOverride="3.1.5" />
 	<PackageReference Include="Raylib-cs" VersionOverride="8.0.0" />
-    <PackageReference Include="ShadowDusk.Compiler" VersionOverride="0.22.1" />
+    <PackageReference Include="ShadowDusk.Compiler" VersionOverride="0.25.0" />
   </ItemGroup>
 
   <ItemGroup>
@@ -40,6 +40,8 @@
     <!-- Referenced so the in-memory font creator can be exercised end-to-end (KernSmith atlas
          generation -> raylib Texture2D upload -> Raylib_cs.Font). -->
     <ProjectReference Include="..\..\Integrations\KernSmith\KernSmith.RaylibGum\KernSmith.RaylibGum.csproj" />
+    <!-- The Gum.Expressions package: GumService.UseExpressions() (#7765). -->
+    <ProjectReference Include="..\..\Runtimes\GumExpressions\GumExpressions.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -71,6 +73,7 @@
     <Compile Include="..\TestOrdering\TestShuffle.cs" Link="TestOrdering\TestShuffle.cs" />
     <Compile Include="..\Shared\FontContainerTestWriter.cs" Link="Shared\FontContainerTestWriter.cs" />
     <Compile Include="..\Shared\CrossRuntime\NineSliceOutlineOracle.cs" Link="Shared\CrossRuntime\NineSliceOutlineOracle.cs" />
+    <Compile Include="..\Shared\CrossRuntime\NineSliceSeamSweep.cs" Link="Shared\CrossRuntime\NineSliceSeamSweep.cs" />
     <Compile Include="..\Shared\FileManagerState.cs" Link="Shared\FileManagerState.cs" />
     <Compile Include="..\Shared\FileManagerStateAssert.cs" Link="Shared\FileManagerStateAssert.cs" />
     <Compile Include="..\Shared\ObjectFinderState.cs" Link="Shared\ObjectFinderState.cs" />

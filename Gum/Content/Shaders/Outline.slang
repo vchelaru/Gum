@@ -19,8 +19,6 @@ float OutlineBlue;
 // The compiled shader keeps this default, and the tool's Variables tab shows it.
 float Thickness = 1.0;
 float PixelSize;
-// Set to 1 by Gum when Thickness was set, so a Thickness of 0 (no outline) differs from an unset one.
-float ThicknessIsSet;
 
 struct VertexShaderOutput
 {
@@ -34,9 +32,8 @@ float4 MainPS(VertexShaderOutput input) : COLOR0
 {
     float4 sprite = SpriteTexture.Sample(SpriteTextureSampler, input.TextureCoordinates);
 
-    // Unset parameters read as zero on some backends, so an unset Thickness counts as 1 and a PixelSize
-    // below 1 counts as 1.
-    float reach = ThicknessIsSet > 0.5 ? clamp(floor(Thickness + 0.5), 0.0, 8.0) : 1.0;
+    // An unset Thickness reads its declared default of 1 on every backend; a PixelSize below 1 counts as 1.
+    float reach = clamp(floor(Thickness + 0.5), 0.0, 8.0);
     float2 step = TexelSize * max(1.0, floor(PixelSize + 0.5));
 
     float neighborAlpha = 0.0;

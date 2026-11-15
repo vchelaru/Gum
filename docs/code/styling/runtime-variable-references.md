@@ -18,11 +18,11 @@ For information on setting up variable references in the Gum tool, see the [Vari
 Available in November 2026, or now if building Gum from source.
 {% endhint %}
 
-After loading a Gum project, you can modify style variables and call `ApplyAllVariableReferences` to propagate changes across all elements in dependency order. Elements that are referenced by others are applied first, so downstream references always pick up the latest values.
+After [loading a Gum project](../getting-started/setup/loading-a-gum-project-.gumx.md), you can modify style variables and call `ApplyAllVariableReferences` to propagate changes across all elements in dependency order. Elements that are referenced by others are applied first, so downstream references always pick up the latest values.
 
 ```csharp
 // Initialize
-var project = GumUI.Initialize(this, "GumProject/GumProject.gumj");
+var project = ObjectFinder.Self.GumProjectSave;
 
 // Find your style component and change values
 var styles = project.Components.First(item => item.Name == "Styles");
@@ -76,6 +76,25 @@ References to another component, such as a shared `Styles` component, do not upd
 Available in November 2026, or now if building Gum from source.
 {% endhint %}
 
+## References in Animation Keyframes
+
+A state used as an animation keyframe can hold a variable reference. Gum evaluates the reference against the component every time the animation updates, then interpolates between the evaluated values of the two surrounding keyframes. This lets code offset an animation without editing it.
+
+For example, a component has a custom `float` variable named `OffsetX`. Its `Hidden` state sets `X` to `0` and its `Shown` state sets `X` to `200`, and both states have the reference `X = OffsetX`. Both keyframes then resolve to the current `OffsetX`, so the animation lands wherever `OffsetX` says.
+
+```csharp
+// Initialize
+component.SetProperty("OffsetX", 50f);
+component.PlayAnimation("Show");
+```
+
+Changing `OffsetX` while the animation plays takes effect on the next update.
+
+* A keyframe variable with a stored value and no reference behaves as it always has. A keyframe can mix both.
+* A plain reference such as `X = OffsetX` works without extra packages. Arithmetic such as `X = 100 + OffsetX` needs [Gum.Expressions](#expression-support-optional).
+* A reference that cannot be evaluated leaves the variable at its stored value and is reported once, like any other broken reference.
+* Only the keyframe states of the animation that is playing on the component are resolved. Animations of child instances are not.
+
 ## Refreshing Live Visuals After Style Changes
 
 If your UI is already on screen and you change style values, you can push those changes to live visuals without re-creating controls. After calling `ApplyAllVariableReferences`, call `RefreshStyles` to re-apply all default state values and Forms visual states recursively.
@@ -95,7 +114,7 @@ styles.DefaultState.SetValue("Primary.Blue", 255);
 ObjectFinder.Self.GumProjectSave.ApplyAllVariableReferences();
 
 // Push updated values to all live visuals
-GumService.Default.RefreshStyles();
+GumUI.RefreshStyles();
 ```
 
 You can also target a specific subtree if you know which part of the UI changed:
@@ -105,7 +124,7 @@ You can also target a specific subtree if you know which part of the UI changed:
 ObjectFinder.Self.GumProjectSave.ApplyAllVariableReferences();
 
 // Only refresh visuals under a specific element
-GumService.Default.RefreshStyles(myScreenGue);
+GumUI.RefreshStyles(myScreenGue);
 ```
 
 `RefreshStyles` re-applies default state values on every element in the tree and then re-applies the current Forms categorical state (such as Highlighted or Disabled) on each Forms control. This means controls retain their current interaction and runtime state while picking up the new style values.
@@ -214,13 +233,16 @@ Add the NuGet package:
 dotnet add package Gum.Expressions
 ```
 
-Then call `GumExpressionService.Initialize()` at startup:
+Then call `UseExpressions` at startup:
 
 ```csharp
 // Initialize
-var project = GumUI.Initialize(this, "GumProject/GumProject.gumj");
-GumExpressionService.Initialize();
+GumUI.UseExpressions();
 ```
+
+{% hint style="info" %}
+Available in preview NuGet packages (use a `-preview` version), or now if building Gum from source.
+{% endhint %}
 
 {% hint style="info" %}
 The `Gum.Expressions` package uses Microsoft Roslyn for expression parsing, which adds approximately 10 MB to your build output. If your variable references only use simple assignments between variables of the same type (no arithmetic), you do not need this package. See [Casting and Type Considerations](#casting-and-type-considerations).
@@ -228,7 +250,7 @@ The `Gum.Expressions` package uses Microsoft Roslyn for expression parsing, whic
 
 The same `Gum.Expressions` package also enables runtime evaluation of arithmetic (including modulo `%`), conditional (ternary), comparison (`==`, `!=`, `<`, `>`, `<=`, `>=`), and logical (`&&`, `||`, `!`) operators, plus math functions such as `Sin`, `Max`, and `Clamp`, in variable references. Position among siblings (`Index`) and the `Absolute` variables (such as `AbsoluteWidth`) also need the package. See the [Variable References](../../gum-tool/gum-elements/general-properties/variable-references.md) page for the full list of supported syntax.
 
-Live updates within a component work without the package for plain references such as `Y = Progress`. Rows with expressions need `GumExpressionService.Initialize()` to update live.
+Live updates within a component work without the package for plain references such as `Y = Progress`. Rows with expressions need `UseExpressions()` to update live.
 
 A reference which reads `global::Localization.CurrentLanguage` re-evaluates on live visuals when `CurrentLanguage` changes, so a row such as `Width = global::Localization.CurrentLanguage == 2 ? 220 : 160` follows a language switch without extra code. See [Localization](../localization.md) for switching languages.
 
@@ -255,7 +277,7 @@ The error tells you to add `Gum.Expressions` when it converts that pair: `int`, 
 
 ### With Gum.Expressions
 
-After you call `GumExpressionService.Initialize()`, Gum evaluates the right side of every reference, plain ones included, and converts the result to the type of the variable on the left. The same conversion applies when you call `ApplyAllVariableReferences`.
+After you call `UseExpressions()`, Gum evaluates the right side of every reference, plain ones included, and converts the result to the type of the variable on the left. The same conversion applies when you call `ApplyAllVariableReferences`.
 
 | Right side result | Left side variable | What happens |
 | --- | --- | --- |

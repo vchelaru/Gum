@@ -17,6 +17,7 @@ public class UndoComparison
     // Null means the comparison found nothing of that kind (or couldn't compare it).
     public List<StateSaveCategory>? AddedCategories;
     public List<StateSaveCategory>? RemovedCategories;
+    public List<StateSaveCategory>? RecoloredCategories;
 
     public List<ElementBehaviorReference>? AddedBehaviors;
     public List<ElementBehaviorReference>? RemovedBehaviors;
@@ -82,6 +83,11 @@ public class UndoComparison
         {
             if (!string.IsNullOrEmpty(toReturn)) toReturn += newlinePrefix;
             toReturn += $"Remove categories: {string.Join(", ", RemovedCategories.Select(item => item.Name))}";
+        }
+        if (RecoloredCategories?.Count > 0)
+        {
+            if (!string.IsNullOrEmpty(toReturn)) toReturn += newlinePrefix;
+            toReturn += $"Change color of category: {string.Join(", ", RecoloredCategories.Select(item => item.Name))}";
         }
 
         if (AddedStates?.Count > 0)
@@ -279,6 +285,7 @@ public class UndoSnapshot
 
         undoComparison.AddedCategories = null;
         undoComparison.RemovedCategories = null;
+        undoComparison.RecoloredCategories = null;
 
         if(currentCategories != null && categoriesToApply != null)
         {
@@ -288,6 +295,10 @@ public class UndoSnapshot
             undoComparison.AddedCategories = categoriesToApply.Where(item => !currentCategoryNames.Contains(item.Name)).ToList();
 
             undoComparison.RemovedCategories = currentCategories.Where(item => !toApplyCategoryNames.Contains(item.Name)).ToList();
+
+            undoComparison.RecoloredCategories = categoriesToApply
+                .Where(item => currentCategories.Any(current => current.Name == item.Name && (current.ColorName ?? "") != (item.ColorName ?? "")))
+                .ToList();
         }
     }
 

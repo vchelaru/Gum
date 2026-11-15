@@ -1,0 +1,34 @@
+using Brutal.GlfwApi;
+using Gum;
+using Gum.Forms.Controls;
+using Gum.GueDeriving;
+using Gum.Wireframe;
+{{HostUsings}}
+using System.Diagnostics;
+
+Glfw.Init();
+Glfw.WindowHint(GlfwWindowHint.ContextVersionMajor, 3);
+Glfw.WindowHint(GlfwWindowHint.ContextVersionMinor, 3);
+Glfw.WindowHint(GlfwWindowHint.OpenGlProfile, 0x32001 /* GLFW_OPENGL_CORE_PROFILE */);
+using GlfwWindow window = Glfw.CreateWindow(new GlfwWindow.CreateInfo { Title = "{{ProjectName}}", Size = new Brutal.Numerics.int2(800, 450) });
+window.MakeContextCurrent();
+Glfw.SwapInterval(1);
+
+GumService GumUI = GumService.Default;
+GumUI.Initialize(window, "Content/GumProject/{{GumProjectFile}}");
+GumUI.UseKeyboardDefaults();
+GumUI.UseGamepadDefaults();
+{{InitLines}}
+{{ScreenLines}}
+
+Stopwatch clock = Stopwatch.StartNew();
+while (!window.ShouldClose)
+{
+    Glfw.PollEvents();
+    double gameTime = clock.Elapsed.TotalSeconds;
+    GumUI.Update(gameTime);
+    GumUI.Draw();
+    window.SwapBuffers();
+}
+
+Glfw.Terminate();

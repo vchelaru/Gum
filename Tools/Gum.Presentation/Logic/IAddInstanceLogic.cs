@@ -30,4 +30,11 @@ public interface IAddInstanceLogic
     /// instance of the selected behavior (also when a behavior's required instance is selected).
     /// </summary>
     InstanceSave? AddInstanceAtDestination(ElementSave elementToAdd, string? name = null);
+
+    /// <summary>
+    /// The reason the loaded project's restrictions do not allow an instance of
+    /// <paramref name="elementToAdd"/> (an unlisted standard type, a component while components are
+    /// disabled, or a child while hierarchy is unsupported), or null when they allow it.
+    /// </summary>
+    string? GetRestrictionMessage(ElementSave elementToAdd, bool asChild);
 }

@@ -25,8 +25,8 @@ public class ImportFromGumxFixedSourceScreenshotTests
         IServiceProvider services = TestAppBuilder.Services;
         // The project already has a Button that differs and a Label that is identical to the theme's.
         StubImportService importService = new StubImportService(new ImportDestinationStatus(
-            new HashSet<ImportItemKey> { new ImportItemKey(ElementItemType.Component, "Neon/Controls/Button") },
-            new HashSet<ImportItemKey> { new ImportItemKey(ElementItemType.Component, "Neon/Controls/Label") }));
+            new HashSet<ImportItemKey> { new ImportItemKey(ElementItemType.Component, "Neon/Button") },
+            new HashSet<ImportItemKey> { new ImportItemKey(ElementItemType.Component, "Neon/Label") }));
         ImportFromGumxViewModel viewModel = new ImportFromGumxViewModel(
             new GumxSourceService(),
             new GumxDependencyResolver(),

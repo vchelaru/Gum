@@ -1,4 +1,6 @@
 using Gum.DataTypes;
+using System.IO;
+using System.Linq;
 
 namespace Gum.ProjectServices.Screenshot;
 
@@ -46,5 +48,25 @@ public class ScreenshotRequest
         int width = Width ?? (project.DefaultCanvasWidth > 0 ? project.DefaultCanvasWidth : 800);
         int height = Height ?? (project.DefaultCanvasHeight > 0 ? project.DefaultCanvasHeight : 600);
         return (width, height);
+    }
+
+    /// <summary>
+    /// The project's Screen or Component named <see cref="ElementName"/>, or null when there is none.
+    /// </summary>
+    public ElementSave? FindElement(GumProjectSave project) =>
+        project.AllElements.FirstOrDefault(e => e.Name == ElementName);
+
+    /// <summary>
+    /// Resolves <see cref="OutputPath"/> to a full path and creates its folder.
+    /// </summary>
+    public string PrepareOutputPath()
+    {
+        string outputPath = Path.GetFullPath(OutputPath);
+        string? outputDir = Path.GetDirectoryName(outputPath);
+        if (outputDir != null)
+        {
+            Directory.CreateDirectory(outputDir);
+        }
+        return outputPath;
     }
 }

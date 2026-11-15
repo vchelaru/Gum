@@ -6,6 +6,16 @@ type: skill
 
 # Gum Docs Writing Reference
 
+## Readers Are People With Little Attention
+
+Docs are for people who want to get something done and will not read more than they must. Skills are for agents, who read fast, so a skill can hold many details as long as it does not overload context. Both stay short, for different reasons.
+
+**For every sentence, section and screenshot, ask: is this absolutely critical for getting the task done? If not, cut it.** Detail the tool, a warning message or the code already shows is not critical.
+
+**Write the page, then cut it in half before committing: a property page says what it does in one or two sentences and when to change it in one, and repeats nothing the tool already shows in a label, tooltip or subtext. If a sentence would not change what the reader does, delete it.**
+
+**XML doc comments in the C# runtimes are docs too, with the same readers.** Say what the member does and its one precondition; do not add advice about other members.
+
 ## Before You Write and Before You Commit
 
 1. **Before writing prose:** read the page you are editing and one or two sibling pages in the same folder, and match their sentence length and voice.
@@ -166,7 +176,7 @@ Then flag accordingly in a `{% hint style="info" %}` block (same pattern as date
 
 A `docs/gum-tool/upgrading/migrating-to-<year>-<month>.md` page needs **What Changed at a Glance** only when one point is critical and wide-reaching, such as a hard break most readers hit (`migrating-to-2026-october.md` is the model). Otherwise leave the section out: the `###` headings under **Breaking Changes and Migrations** already list each change, so a summary of them adds nothing. Never use a stock lead-in over a bullet list ("Two changes need your attention:").
 
-Each entry lists only what a user must do after upgrading. Leave out descriptions of internal or generated-code changes that need no action.
+Each entry lists only what a user must do after upgrading. Leave out descriptions of internal or generated-code changes that need no action, and leave out additions: new members, new APIs and new options are release-notes material, never a migration entry. Before keeping a section, ask what the reader would do differently; if nothing, delete it.
 
 ## Prose Style: Clarity Beats Brevity
 
@@ -193,7 +203,10 @@ Three habits that cost words without buying understanding:
 - **Bold** UI element names: menu items, button labels, tab names, category names shown in the tool (e.g., **Source** category, **Variables** tab).
 - Backticks for property names, variable names, property values, file names, and code: `Width Units`, `Relative To Children`, `Is Tiling Middle Sections`.
 - Avoid passive voice, prefer "Gum displays a label" over "a label is displayed."
+- Never mix informing and instructing. A sentence either says what something is or shows (no imperative, no "you can ... to ..."), or it is a numbered step that names where to act and what the reader then sees.
 - Screenshots (`.png`) for single states; animated GIFs (`.gif`) for multi-step interactions. Use them liberally.
+- **Do not document error and warning states or every dialog option.** The tool's own tooltips and messages own that. Use one screenshot per distinct task step, two at most per page, and match the length of the sibling pages.
+- **Do not copy a list of values the tool or code owns into prose** (platforms, themes, file formats, dialog options, version limits). Name the control and let the tool show the values, or link to the one page that owns the list.
 - **Never use an em dash (—).** Use a comma, period, or parenthetical instead. Check new/edited text for the character before finishing a doc pass.
 - Prefer plain language over jargon when a plainer phrasing says the same thing; keep Gum's own terms (control names, property names) since those are what readers need to look up.
 - Avoid hyphenated compound phrases where a plainer wording works.
@@ -208,33 +221,41 @@ Every `\`\`\`csharp` block must have a placement comment as its first line so re
 
 | Comment | Meaning |
 |---|---|
-| `// Initialize` | General initialization — could be `Initialize()`, `CustomInitialize()`, a constructor, etc. Use this by default. |
+| `// Initialize` | Runs once right after `GumUI.Initialize`. Use this by default. |
 | `// Update` | Code that runs each frame in the update loop. |
 | `// Draw` | Code that runs each frame in the draw loop. |
 | `// Class scope` | Field or property declarations at class level. |
 | `// In CustomInitialize` | Code specifically in a generated partial `CustomInitialize()` method. |
 
 **When to omit the comment:**
-- Tutorial pages that show a complete Game/app class — leave as-is.
 - Non-game types shown as their own type definition (ViewModels, enums, partial generated classes).
 - `using` statements — self-evident, no comment needed.
 
-**Mixed-scope snippets** (class members + method bodies): use `// Class scope` for the member declarations, then show the actual method block(s) with full signatures and indented bodies — no outer class wrapper:
+**Mixed-scope snippets** get one marker per part, with no class wrapper and no method signatures:
 
 ```csharp
 // Class scope
 int clickCount;
 
-protected override void Initialize()
-{
-    var button = new Button();
-    button.Click += (_, _) => clickCount++;
-}
+// Initialize
+var button = new Button();
+button.Click += (_, _) => clickCount++;
+
+// Update
+GumUI.Update(gameTime);
 ```
 
-**Platform-agnostic by default:** prefer `// Initialize` over MonoGame-specific phrasing unless the page is explicitly MonoGame-only. This supports Raylib and other runtimes.
+## Runtime-Neutral Snippets
 
-**Irreducible per-platform syntax → tabs, don't ask.** First try to collapse a sample to a single platform-neutral form. When the syntax genuinely *cannot* collapse — most often because a host skeleton differs (a `Game` subclass vs a `Program.Main` loop) — wrap just those blocks in GitBook `{% tabs %}` with one `{% tab %}` per platform (e.g. `MonoGame` / `Raylib`). This is the standard, expected treatment for irreducible divergence; use it without asking. Keep the surrounding prose shared above/below the tabs — only the code that truly differs goes inside. Don't assume a member's type differs per backend from memory (e.g. `KeyCombo.PushedKey`, `KeyEventArgs.Key`) — check current source, since Gum has been steadily unifying input types onto `Gum.Forms.Input.Keys` across backends.
+Snippets outside MonoGame-only pages show no `Game` class, no `override` methods and no `GumUI.Initialize` call; they start after Gum is initialized and use the markers above. The markers are defined for readers in `docs/code/getting-started/setup/adding-initializing-gum/README.md`. Per-frame calls are written `GumUI.Update(gameTime);` and `GumUI.Draw();`. A page that needs a Gum project loaded links to `getting-started/setup/loading-a-gum-project-.gumx.md` (or reads `ObjectFinder.Self.GumProjectSave`) instead of showing the load call. Host setup never gets per-runtime tabs; it lives only on the runtime setup pages.
+
+A page may stay MonoGame-only when it is a runtime setup page or uses MonoGame-only types (`SpriteBatch`, `GraphicsDevice`, `RenderTarget2D`, `GumBatch`, `Window`). Its title, intro or the line before the sample says so.
+
+**Irreducible per-platform syntax → tabs, don't ask.** First try to collapse a sample to a single platform-neutral form. When an API genuinely differs per runtime (for example opening bundled content with `TitleContainer`), wrap just those blocks in GitBook `{% tabs %}` with one `{% tab %}` per platform (e.g. `MonoGame` / `Raylib`). This is the standard, expected treatment for irreducible divergence; use it without asking. Keep the surrounding prose shared above/below the tabs — only the code that truly differs goes inside. Don't assume a member's type differs per backend from memory (e.g. `KeyCombo.PushedKey`, `KeyEventArgs.Key`) — check current source, since Gum has been steadily unifying input types onto `Gum.Forms.Input.Keys` across backends.
+
+## Runtime Setup Pages
+
+Each page in `docs/code/getting-started/setup/adding-initializing-gum/` has the same shape, with `monogame-kni-fna/README.md` as the model: a **Starting From a New Project** section on platforms `gumcli new --platform` supports, a complete program that builds with only the base package and loads no `.gumj`, then an **Optional Extras** table (package plus the one `Use*()` line per extra) and a **Loading Your Gum Project** section (the `.gumj` `Initialize` line plus the csproj copy rule). Never put optional `Use*()` calls or a `.gumj` path in the complete program, since a reader who skipped a package must still get a build that runs.
 
 ## XnaFiddle Links
 
@@ -242,6 +263,7 @@ For adding or updating XnaFiddle interactive links, see [xnafiddle.md](xnafiddle
 
 ## Code Sample Rules
 
+- **Values a sample reads from outside the code block get a comment showing what they contain.** That covers translation keys, content files, project assets and configuration, so the code block makes sense without reading the prose.
 - **Parallel samples share one design.** When a page shows the same task in two forms (code-only vs. a generated screen, MonoGame vs. raylib), a design change to one sample (where navigation lives, how the classes are split up) gets applied to the others in the same pass, or the page explains why they differ.
 
 - **One-time initialization goes first, never mid-sample** — put all startup/registration calls (e.g. `GumUI.UseKeyboardDefaults()`, `GumUI.UseGamepadDefaults()`, input-device registration, service configuration) at the **top** of the sample, right under the `// Initialize` comment where `GumUI` is set up — before the feature code. Readers copy a sample as one block, so a setup call buried between feature lines reads as part of the feature logic and is confusing. Group setup first, then the feature it enables. Bad: create the control, add items, *then* `UseKeyboardDefaults()`, then wire focus. Good: `UseKeyboardDefaults()` first, then create the control and wire focus.

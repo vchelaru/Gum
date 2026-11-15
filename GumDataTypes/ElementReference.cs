@@ -166,7 +166,7 @@ namespace Gum.DataTypes
                 {
                     // The file name doesn't match the name of the element.  This can cause errors
                     // at runtime so let's tell the user:
-                    result.ErrorMessage += "\nThe project references an element named " + Name + ", but the XML for this element has its name set to " + elementSave.Name + "\n";
+                    result.ErrorMessage += "\nThe project references an element named " + Name + ", but the file for this element has its name set to " + elementSave.Name + "\n";
                 }
 
                 return elementSave;

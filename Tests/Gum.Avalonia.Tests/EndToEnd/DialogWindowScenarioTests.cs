@@ -280,7 +280,7 @@ public class DialogWindowScenarioTests
             Launch(folder, dialogs);
 
             message.ShouldContain("1 diagnostic files");
-            reveal.Requests.ShouldBe(new[] { "OpenFolder: " + folder });
+            reveal.Requests.ShouldBe(new[] { "OpenFolder: " + Path.Combine(folder, "Reported") });
             File.Exists(dump).ShouldBeFalse("the reported dump moves out of the inbox");
             File.Exists(Path.Combine(folder, "Reported", "freeze-1.txt")).ShouldBeTrue();
 

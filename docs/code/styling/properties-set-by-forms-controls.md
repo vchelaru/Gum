@@ -186,10 +186,11 @@ Required children: `TextInstance` (its renderable must be text) and `CaretInstan
 | `CaretInstance` | `Y` | Multi-line text only. In single-line mode the control never assigns the caret's `Y`. |
 | `CaretInstance` | `Visible` | Focus changes and selection changes. It is true when the control is focused (or `IsCaretVisibleWhenNotFocused` is true) and nothing is selected. |
 | `SelectionInstance` | `Visible`, `X`, `Y`, `Width`, `XUnits` | The selection changes. `Y` adds the `Y` the instance had when the Visual was assigned. `WidthUnits` is never written. |
+| `SelectionInstance` | `Height` | Multi-line text only, and only when the instance's `HeightUnits` is `Absolute`. It is set to the font's line height. |
 | `PlaceholderTextInstance` | `Text` | You set `Placeholder`. |
 | `PlaceholderTextInstance` | `Visible` | The text changes. It is true when the text is empty. |
 
-The caret math assumes `CaretInstance` and `TextInstance` share a parent. The control never writes the caret's or the selection's `Height`, `Color`, or `Alpha`.
+The caret math assumes `CaretInstance` and `TextInstance` share a parent. The control never writes the caret's `Height`, `Color`, or `Alpha`, or the selection's `Color` or `Alpha`. The selection's `Height` is written only as listed above.
 
 For multi-line selections, the control clones `SelectionInstance` and inserts one clone after it for each wrapped line. The clones are removed again when the template refreshes, so the number of children under the selection's parent changes at runtime.
 

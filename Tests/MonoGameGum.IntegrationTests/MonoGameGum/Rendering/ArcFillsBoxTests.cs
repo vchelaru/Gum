@@ -221,6 +221,39 @@ public class ArcFillsBoxTests : BaseTestClass
         ((int)afterTransition.B).ShouldBeGreaterThan(afterTransition.R);
     }
 
+    [Theory]
+    [InlineData(0.0)]
+    [InlineData(45.0)]
+    [InlineData(90.0)]
+    public void FullSweepArc_In2To1Box_StrokeAlongTheNormalIsTheStretchedCircles(double degrees)
+    {
+        // Characterization of the Apos.Shapes limit (no elliptical arc): stretching a circle's ring by k
+        // along x makes its normal thickness t / sqrt(cos^2/k^2 + sin^2) of the parametric angle, so the
+        // stroke is 2t on the long axis and t on the short one. Skia's stays t everywhere (#7384).
+        const float stroke = 10;
+        Scene scene = RenderArc(arc => arc.Thickness = stroke, 20, 20, 200, 100);
+
+        double t = degrees * Math.PI / 180;
+        double cx = 120 + (200 / 2 - stroke / 2) * Math.Cos(t);
+        double cy = 70 - (100 / 2 - stroke / 2) * Math.Sin(t);
+        double mx = Math.Cos(t) / 2;
+        double my = -Math.Sin(t);
+        double length = Math.Sqrt((mx * mx) + (my * my));
+        mx /= length;
+        my /= length;
+
+        double sum = 0;
+        for (double s = -16; s <= 16; s += 0.25)
+        {
+            int px = (int)Math.Floor(cx + (mx * s));
+            int py = (int)Math.Floor(cy + (my * s));
+            sum += Math.Max(0, Coverage(scene.Pixels, px, py)) * 0.25;
+        }
+
+        double expected = stroke / Math.Sqrt((Math.Cos(t) * Math.Cos(t) / 4) + (Math.Sin(t) * Math.Sin(t)));
+        sum.ShouldBe(expected, 1.5);
+    }
+
     [Fact]
     public void SquareArc_PaysNoExtraShapeBatchFlushes_AndNonSquarePaysTwo()
     {

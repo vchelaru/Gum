@@ -23,5 +23,8 @@ public enum HostPlatform
     /// <summary>
     /// KNI DesktopGL drawing Gum through Skia (SkiaGameRendering), referencing the <c>Gum.KniSkia</c> package.
     /// </summary>
-    KniSkia
+    KniSkia,
+
+    /// <summary>BRUTAL (GLFW and Vulkan bindings, Windows and Linux) drawing Gum through Skia on OpenGL 3.3, referencing the <c>Gum.Brutal.OGL</c> package. The Vulkan twin, <c>Gum.Brutal.Vulkan</c>, is a sample path with no scaffolder platform.</summary>
+    Brutal
 }

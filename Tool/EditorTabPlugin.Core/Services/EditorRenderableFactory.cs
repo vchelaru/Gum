@@ -6,6 +6,7 @@ using RenderingLibrary.Math.Geometry;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Runtime.CompilerServices;
 
 namespace Gum.Plugins.InternalPlugins.EditorTab.Services;
 
@@ -19,6 +20,7 @@ public class EditorRenderableFactory
     private readonly IProjectState _projectState;
     private readonly List<WeakReference<LineRectangle>> _outlines = new();
     private bool _areOutlinesHiddenForExport;
+    private readonly ConditionalWeakTable<LineRectangle, object> _outlinesOfOtherElements = new();
 
     public EditorRenderableFactory(IProjectState projectState)
     {
@@ -41,9 +43,45 @@ public class EditorRenderableFactory
             {
                 if (reference.TryGetTarget(out LineRectangle? outline))
                 {
-                    outline.LocalVisible = !value;
+                    outline.LocalVisible = IsOutlineShown(outline);
                 }
             }
+        }
+    }
+
+    private bool IsOutlineShown(LineRectangle outline) =>
+        !_areOutlinesHiddenForExport && !_outlinesOfOtherElements.TryGetValue(outline, out _);
+
+    /// <summary>
+    /// Shows only the outlines of containers defined in the element being edited (<paramref name="root"/>
+    /// itself, or an instance whose ElementGueContainingThis is <paramref name="root"/>). A container
+    /// that lives inside a nested component instance (the clipping container inside a TextBox on a
+    /// screen) is hidden, so it only outlines while that component is the one being edited. Call after
+    /// every build of a root; export hiding still wins.
+    /// </summary>
+    public void ShowOnlyOutlinesOwnedBy(GraphicalUiElement root)
+    {
+        ApplyOwnership(root, root);
+    }
+
+    private void ApplyOwnership(GraphicalUiElement root, GraphicalUiElement current)
+    {
+        if (current.RenderableComponent is LineRectangle outline)
+        {
+            bool owned = current == root || current.ElementGueContainingThis == root;
+            _outlinesOfOtherElements.Remove(outline);
+            if (!owned)
+            {
+                _outlinesOfOtherElements.Add(outline, this);
+            }
+            if (_outlines.Exists(reference => reference.TryGetTarget(out LineRectangle? tracked) && tracked == outline))
+            {
+                outline.LocalVisible = IsOutlineShown(outline);
+            }
+        }
+        foreach (GraphicalUiElement contained in current.ContainedElements)
+        {
+            ApplyOwnership(root, contained);
         }
     }
 
@@ -60,7 +98,7 @@ public class EditorRenderableFactory
                 _projectState.OutlineColorR,
                 _projectState.OutlineColorG,
                 _projectState.OutlineColorB);
-            outline.LocalVisible = !_areOutlinesHiddenForExport;
+            outline.LocalVisible = IsOutlineShown(outline);
             _outlines.Add(new WeakReference<LineRectangle>(outline));
         }
 

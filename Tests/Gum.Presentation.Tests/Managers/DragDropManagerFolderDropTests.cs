@@ -121,5 +121,6 @@ public class DragDropManagerFolderDropTests
             Mock.Of<IReorderLogic>(),
             projectManager,
             projectState,
-            new PathCaseSensitivity());
+            new PathCaseSensitivity(),
+            Mock.Of<IProjectRestrictions>());
 }

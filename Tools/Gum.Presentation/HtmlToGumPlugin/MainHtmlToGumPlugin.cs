@@ -33,6 +33,7 @@ public class MainHtmlToGumPlugin : PluginBase
     private readonly IProjectState _projectState;
     private readonly IImportLogic _importLogic;
     private readonly ISelectedState _selectedState;
+    private readonly IProjectRestrictions _projectRestrictions;
 
     [ImportingConstructor]
     public MainHtmlToGumPlugin(
@@ -41,8 +42,10 @@ public class MainHtmlToGumPlugin : PluginBase
         IFileCommands fileCommands,
         ISelectedState selectedState,
         IDialogService dialogService,
-        IGuiCommands guiCommands)
+        IGuiCommands guiCommands,
+        IProjectRestrictions projectRestrictions)
     {
+        _projectRestrictions = projectRestrictions;
         _projectState = projectState;
         _importLogic = importLogic;
         _fileCommands = fileCommands;
@@ -89,6 +92,13 @@ public class MainHtmlToGumPlugin : PluginBase
 
     private async void HandleImportHtml()
     {
+        // Imported HTML becomes arbitrary standard types and components.
+        if (_projectRestrictions.AreComponentsDisabled || _projectRestrictions.SupportedStandardTypes.Count > 0)
+        {
+            _dialogService.ShowMessage("This project restricts the object types it supports, so HTML cannot be imported.");
+            return;
+        }
+
         if (_projectState.NeedsToSaveProject)
         {
             _dialogService.ShowMessage("Save the Gum project before importing HTML.");

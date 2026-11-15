@@ -44,17 +44,19 @@ public class FreezeDiagnosticsPromptService : IFreezeDiagnosticsPromptService
                 "Gum did not shut down cleanly last time, and its freeze watchdog captured " +
                 $"{files.Count} diagnostic files that can help find the cause.\n\n" +
                 "Please attach them to a GitHub issue at github.com/vchelaru/Gum/issues, or share " +
-                "them on the FlatRedBall Discord. They are in:\n" + _inbox.DirectoryPath,
+                "them on the FlatRedBall Discord. They are moved to this folder when you close " +
+                "this prompt:\n" + _inbox.ReportedDirectoryPath,
         };
 
         bool openFolder = _dialogService.Show(viewModel);
 
+        // Move first, so the folder the user is sent to already holds the files.
+        _inbox.MarkReported(files);
+
         if (openFolder)
         {
-            _revealService.OpenFolder(_inbox.DirectoryPath);
+            _revealService.OpenFolder(_inbox.ReportedDirectoryPath);
         }
-
-        _inbox.MarkReported(files);
 
         if (viewModel.IsDoNotAskAgainChecked)
         {

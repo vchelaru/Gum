@@ -9,6 +9,7 @@
     <ResourceDictionary>
       <Color x:Key="Frb.Colors.Foreground">#c8ffffff</Color>
       <Color x:Key="Frb.Colors.Foreground.Subtle">#ffb2b2b2</Color>
+      <Color x:Key="Frb.Colors.Foreground.Muted">#ff929292</Color>
 
       <Color x:Key="Frb.Colors.Border">#454545</Color>
       <Color x:Key="Frb.Colors.Border.Secondary">#12ffffff</Color>
@@ -22,6 +23,7 @@
 
       <Color x:Key="Frb.Colors.Error">#EF9A9A</Color>
       <Color x:Key="Frb.Colors.Success">#81C784</Color>
+      <Color x:Key="Frb.Colors.Warning">#FFB74D</Color>
       <Color x:Key="Frb.Colors.Link">#64B5F6</Color>
 
       <Color x:Key="Frb.Colors.ThemeContrast">White</Color>
@@ -53,6 +55,7 @@
   <!--  Keeps the WpfDataUi row-detail-text color in sync with this theme instead of the library's own hardcoded default.  -->
   <SolidColorBrush x:Key="{x:Static wpfdataui:Keys.DetailTextForegroundKey}" Color="{StaticResource Frb.Colors.Foreground}" />
   <SolidColorBrush x:Key="Frb.Brushes.Foreground.Subtle" Color="{StaticResource Frb.Colors.Foreground.Subtle}" />
+  <SolidColorBrush x:Key="Frb.Brushes.Foreground.Muted" Color="{StaticResource Frb.Colors.Foreground.Muted}" />
   <SolidColorBrush
     x:Key="Frb.Brushes.Foreground.Disabled"
     Opacity="0.5"
@@ -87,6 +90,7 @@
 
   <SolidColorBrush x:Key="Frb.Brushes.Error" Color="{StaticResource Frb.Colors.Error}" />
   <SolidColorBrush x:Key="Frb.Brushes.Success" Color="{StaticResource Frb.Colors.Success}" />
+  <SolidColorBrush x:Key="Frb.Brushes.Warning" Color="{StaticResource Frb.Colors.Warning}" />
   <SolidColorBrush x:Key="Frb.Brushes.Link" Color="{StaticResource Frb.Colors.Link}" />
 
   <SolidColorBrush x:Key="Frb.Brushes.Field.Background" Color="{StaticResource Frb.Colors.Field.Background}" />
@@ -100,4 +104,17 @@
   <SolidColorBrush x:Key="Frb.Brushes.Icon.Blue" Color="{StaticResource Frb.Colors.Icon.Blue}" />
   <SolidColorBrush x:Key="Frb.Brushes.Icon.Red" Color="{StaticResource Frb.Colors.Icon.Red}" />
   <SolidColorBrush x:Key="Frb.Brushes.Icon.Purple" Color="{StaticResource Frb.Colors.Icon.Purple}" />
+  <!-- State category palette (#7591): names are saved in the project, the color is per theme. Each color keeps at least 3:1 against the Variables header and States rows of this theme. -->
+  <SolidColorBrush x:Key="Frb.CategoryColor.Indigo" Color="#6F7DF0" />
+  <SolidColorBrush x:Key="Frb.CategoryColor.Violet" Color="#A06AE0" />
+  <SolidColorBrush x:Key="Frb.CategoryColor.Magenta" Color="#CE57C6" />
+  <SolidColorBrush x:Key="Frb.CategoryColor.Pink" Color="#F08AC0" />
+  <SolidColorBrush x:Key="Frb.CategoryColor.Rose" Color="#E0577F" />
+  <SolidColorBrush x:Key="Frb.CategoryColor.Brown" Color="#A8744A" />
+  <SolidColorBrush x:Key="Frb.CategoryColor.Green" Color="#35924F" />
+  <SolidColorBrush x:Key="Frb.CategoryColor.Mint" Color="#4CC99A" />
+  <SolidColorBrush x:Key="Frb.CategoryColor.Teal" Color="#12958F" />
+  <SolidColorBrush x:Key="Frb.CategoryColor.Slate" Color="#74859D" />
+  <SolidColorBrush x:Key="Frb.CategoryColor.Orange" Color="#E8803A" />
+  <SolidColorBrush x:Key="Frb.CategoryColor.Sky" Color="#3FA9D6" />
 </ResourceDictionary>

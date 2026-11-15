@@ -922,6 +922,11 @@ public class BitmapFont : IDisposable
             {
                 renderTarget = new RenderTarget2D(managers.Renderer.GraphicsDevice, requiredWidth, requiredHeight);
             }
+            // Return to whatever was bound (the back buffer or a user render target) afterwards,
+            // not unconditionally to the back buffer (#8046).
+            Texture? oldRenderTarget = managers.Renderer.GetBoundRenderTarget();
+            managers.Renderer.TryReportDiscardingRestoreTarget(oldRenderTarget);
+
             // render target has to be set before setting the viewport
             managers.Renderer.GraphicsDevice.SetRenderTarget(renderTarget);
 
@@ -946,7 +951,7 @@ public class BitmapFont : IDisposable
 
             spriteRenderer.End();
 
-            managers.Renderer.GraphicsDevice.SetRenderTarget(null);
+            managers.Renderer.GraphicsDevice.SetRenderTarget(oldRenderTarget as RenderTarget2D);
             managers.Renderer.GraphicsDevice.Viewport = oldViewport;
 
         }
@@ -1043,7 +1048,7 @@ public class BitmapFont : IDisposable
         float yOffsetRoundedToZoom = MathFunctions.RoundFloat(yOffset, scaleY);
 
         // Custom effect already does premultiply alpha on the shader so we skip that in this case
-        if (!Renderer.UseCustomEffectRendering && Renderer.NormalBlendState == BlendState.AlphaBlend)
+        if (Renderer.ShouldPremultiplyColor(objectRequestingChange))
         {
             // this is premultiplied, so premulitply the color value
             float multiple = color.A / 255.0f;
@@ -1067,10 +1072,17 @@ public class BitmapFont : IDisposable
             // If rotated, need free floating positions since sprite positions will likely not line up with pixels
             rotationDegrees != 0;
 
+        // Glyphs drawn at exactly one screen pixel per source pixel (oversampled text, #6814) have whole-pixel
+        // offsets from the block, so they snap like unscaled text. Snapping each glyph's scaled position on its
+        // own lets float noise round glyphs of one line to different pixels (#7683). The tolerance only absorbs
+        // the float error of 1/3 * 3; any other scale keeps drawing each glyph on its own.
+        bool glyphsAtOneScreenPixelPerSourcePixel =
+            System.Math.Abs(zoom * scaleX - 1) < 1e-4f && System.Math.Abs(zoom * scaleY - 1) < 1e-4f;
+
         if (!isFreeFloating)
         {
-            // If scaled up/down, don't use free floating
-            isFreeFloating = scaleX != 1;
+            // Any other scale up/down uses free floating
+            isFreeFloating = scaleX != 1 && !glyphsAtOneScreenPixelPerSourcePixel;
         }
         float finalRotation;
         if (isFreeFloating)
@@ -1154,6 +1166,12 @@ public class BitmapFont : IDisposable
                         if (effectiveTextRenderingMode == TextRenderingPositionMode.SnapToPixel)
                         {
                             lineOffset = firstLetterDestinationX - firstLetterDestinationXInt;
+                            if (scaleX != 1)
+                            {
+                                // The line start is a fraction of a screen pixel (centered or right-aligned
+                                // text), not of a world unit.
+                                lineOffset = firstLetterDestinationX - MathFunctions.RoundToInt(firstLetterDestinationX * zoom) / zoom;
+                            }
                         }
                     }
 

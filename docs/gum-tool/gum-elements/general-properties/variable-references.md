@@ -506,6 +506,16 @@ Add a screenshot of the Variables tab showing the **Set by** link and the **Unli
 Available in November 2026, or now if building Gum from source.
 {% endhint %}
 
+### Not Following Its Reference
+
+A reference can be valid but have no value right now. For example, `Width = 100 / Leader.Width` has no value while `Leader.Width` is `0`. The variable keeps its last value, and a second line appears under **Set by**, such as `Not updating: Leader.Width is 0, so the reference can't divide by it.`.
+
+The line is a note, not an error: it does not appear in the Errors tab and does not stop you from editing anything. It goes away as soon as the right side has a value again, including when the variable it reads belongs to a different component and changed while this element was closed.
+
+{% hint style="info" %}
+Available in December 2026, or now if building Gum from source.
+{% endhint %}
+
 ## Obtaining a Qualified Variable Name
 
 Typing a variable name can be tedious, especially when referencing a variable in a different Screen or Component. Qualified variable names can be obtained by right-clicking on the variable name in Gum and selecting the **Copy Qualified Variable Name** option. This can then be pasted in the Variable References box of any other object.

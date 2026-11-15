@@ -1,3 +1,4 @@
+using RaylibGum.Tests.Helpers;
 using Gum.Graphics.Animation;
 using Gum.GueDeriving;
 using Raylib_cs;
@@ -62,28 +63,14 @@ public class SpriteAnimationOffsetTests : BaseTestClass
         return Renderer.Self.TryGetBakedRenderTargetFor(container)!.Value;
     }
 
-    // A render texture is stored bottom-up in GL, so rows are flipped relative to draw space.
-    private static Color ReadPixel(RenderTexture2D renderTexture, int x, int y)
-    {
-        Image image = LoadImageFromTexture(renderTexture.Texture);
-        try
-        {
-            return GetImageColor(image, x, renderTexture.Texture.Height - 1 - y);
-        }
-        finally
-        {
-            UnloadImage(image);
-        }
-    }
-
     [Fact]
     public void Render_FrameOffset_ShiftsSpriteRightAndUp()
     {
         RenderTexture2D target = Render(relativeX: 10, relativeY: 5, rotation: 0);
 
         // Un-offset the sprite would cover x 20..30, y 40..50; the offset moves it to x 30..40, y 35..45.
-        ReadPixel(target, 35, 37).R.ShouldBe((byte)255);
-        ReadPixel(target, 22, 47).A.ShouldBe((byte)0);
+        RaylibPixelHarness.ReadPixel(target, 35, 37).R.ShouldBe((byte)255);
+        RaylibPixelHarness.ReadPixel(target, 22, 47).A.ShouldBe((byte)0);
     }
 
     [Fact]
@@ -93,7 +80,7 @@ public class SpriteAnimationOffsetTests : BaseTestClass
 
         // Un-offset, a 90 degree sprite covers x 20..30, y 30..40; its own +X axis points up, so
         // the offset moves it to y 20..30.
-        ReadPixel(target, 25, 25).R.ShouldBe((byte)255);
-        ReadPixel(target, 25, 35).A.ShouldBe((byte)0);
+        RaylibPixelHarness.ReadPixel(target, 25, 25).R.ShouldBe((byte)255);
+        RaylibPixelHarness.ReadPixel(target, 25, 35).A.ShouldBe((byte)0);
     }
 }

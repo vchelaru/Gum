@@ -66,6 +66,12 @@ Preview's window starts at your project's canvas size, and resizes again when yo
 
 Preview renders with the same sibling order the tool's canvas uses. If **Sort by batch** is selected in the **Performance** tab, Preview sorts by batch too, so what you see matches the tool.
 
+If your project has [localization](localization.md) files, Preview shows the language selected in the tool in its window title, for example `Gum Preview - MainMenu (Spanish)`, and translates its text into that language.
+
+{% hint style="info" %}
+Available in December 2026, or now if building Gum from source.
+{% endhint %}
+
 If your project has a component with the `TooltipBehavior`, Preview shows that component when you hover over a control that has a `ToolTip`, the same as a game loading the project does. See [Tooltip](../code/controls/tooltip.md).
 
 Because Preview loads your project the same way a shipped game would, missing texture or font files show up as the same errors a player would see. If a font looks wrong, generate its `FontCache` in the tool first, the same way you would before running your own game. Texture changes need Preview restarted; only font changes are picked up live.

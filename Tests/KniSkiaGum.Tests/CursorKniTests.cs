@@ -9,8 +9,37 @@ namespace KniSkiaGum.Tests;
 /// Tests for the KNI cursor: position, buttons and wheel come from KNI's mouse state, read through
 /// the cursor's public surface after <c>Activity</c>.
 /// </summary>
-public class CursorKniTests
+public class CursorKniTests : SkiaHostTests.CursorTestsBase
 {
+    private sealed class KniCursorRig : SkiaHostTests.IHostCursorRig
+    {
+        private readonly Cursor _cursor;
+        private int _x;
+        private int _y;
+        private int _wheel;
+        private XnaButtonState _left = XnaButtonState.Released;
+
+        public KniCursorRig()
+        {
+            _cursor = new Cursor { ReadMouse = () => Mouse(x: _x, y: _y, wheel: _wheel, left: _left) };
+        }
+
+        public Gum.Wireframe.ICursor Cursor => _cursor;
+
+        public void SetPosition(int x, int y)
+        {
+            _x = x;
+            _y = y;
+        }
+
+        public void SetPrimaryDown(bool isDown) => _left = isDown ? XnaButtonState.Pressed : XnaButtonState.Released;
+
+        // KNI's wheel value is a running total in 120-per-notch units.
+        public void Scroll(int notches) => _wheel += notches * 120;
+    }
+
+    protected override SkiaHostTests.IHostCursorRig CreateRig() => new KniCursorRig();
+
     private static XnaMouseState Mouse(
         int x = 0,
         int y = 0,
@@ -19,17 +48,6 @@ public class CursorKniTests
         XnaButtonState middle = XnaButtonState.Released,
         XnaButtonState right = XnaButtonState.Released) =>
         new XnaMouseState(x, y, wheel, left, middle, right, XnaButtonState.Released, XnaButtonState.Released);
-
-    [Fact]
-    public void Activity_MapsMousePosition()
-    {
-        Cursor cursor = new Cursor { ReadMouse = () => Mouse(x: 37, y: 52) };
-
-        cursor.Activity(0);
-
-        cursor.X.ShouldBe(37);
-        cursor.Y.ShouldBe(52);
-    }
 
     [Fact]
     public void Activity_MapsEachButtonToItsOwnState()
@@ -44,16 +62,6 @@ public class CursorKniTests
         cursor.PrimaryDown.ShouldBeFalse();
         cursor.SecondaryDown.ShouldBeTrue();
         cursor.MiddleDown.ShouldBeTrue();
-    }
-
-    [Fact]
-    public void Activity_MapsPrimaryButtonDown()
-    {
-        Cursor cursor = new Cursor { ReadMouse = () => Mouse(left: XnaButtonState.Pressed) };
-
-        cursor.Activity(0);
-
-        cursor.PrimaryDown.ShouldBeTrue();
     }
 
     [Fact]

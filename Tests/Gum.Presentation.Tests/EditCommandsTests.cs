@@ -65,6 +65,22 @@ public class EditCommandsTests : BaseTestClass
     }
 
     [Fact]
+    public void AddComponentAndBehavior_ShowMessageInsteadOfPrompting_WhenProjectDisablesThem()
+    {
+        _mocker.GetMock<IProjectState>().Setup(p => p.NeedsToSaveProject).Returns(false);
+        _mocker.GetMock<IProjectRestrictions>().Setup(r => r.AreComponentsDisabled).Returns(true);
+        _mocker.GetMock<IProjectRestrictions>().Setup(r => r.AreBehaviorsDisabled).Returns(true);
+
+        _editCommands.ShowAddComponentDialog();
+        _editCommands.AddBehavior();
+
+        _dialogService.Verify(d => d.ShowMessage(It.IsAny<string>(), null, null), Times.Exactly(2));
+        _dialogService.Verify(d => d.Show(
+            It.IsAny<Action<Gum.Dialogs.AddComponentDialogViewModel>?>(),
+            out It.Ref<Gum.Dialogs.AddComponentDialogViewModel>.IsAny), Times.Never);
+    }
+
+    [Fact]
     public void ShowAddScreenDialog_ShowsDialog_WhenProjectIsSaved()
     {
         _mocker.GetMock<IProjectState>().Setup(p => p.NeedsToSaveProject).Returns(false);

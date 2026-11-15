@@ -9,28 +9,10 @@ Gum for Unity draws Gum UI (layout, Forms controls, and `.gumj` projects) with S
 ## Quick Start
 
 1. Install the two packages (see **Install the Packages** below). Gum requires Unity 6 or newer.
-2. In your scene, create an empty GameObject (**GameObject > Create Empty**) and name it `Gum`.
-3. Select the `Gum` GameObject. In the Inspector, click **Add Component** and add `GumRenderer`, then add `GumInput`.
-4. With the `Gum` GameObject still selected, click **Add Component > New script**, name it `GumExample`, and replace its contents with:
+2. In the Project window, create a C# script (**Assets > Create > Scripting > MonoBehaviour Script**) named `GumExample`, and replace its contents with the script under **Full Script** below. It is the whole setup: it creates the `Gum` GameObject with `GumRenderer` and `GumInput`, so you don't add anything to your scene.
+3. Press **Play**. A button labeled "Click me" appears in the Game view.
 
-```csharp
-using Gum.Forms.Controls;
-using UnityEngine;
-
-public class GumExample : MonoBehaviour
-{
-    void Start()
-    {
-        var button = new Button();
-        button.Text = "Click me";
-        button.AddToRoot();
-    }
-}
-```
-
-5. Press **Play**. A button labeled "Click me" appears in the Game view.
-
-`GumRenderer` sets up Gum in `Awake`, so your own code can create UI from `Start` or later.
+`GumRenderer` sets up Gum in `Awake`, so your own code can create UI from `Start` or later. Gum updates and draws itself, so the script has no `Update` or `Draw`.
 
 ## Install the Packages
 
@@ -66,13 +48,9 @@ To stay on a specific Gum version, end the Gum URL with `#upm/v<version>` instea
 
 ## Input
 
-{% hint style="info" %}
-Available in November 2026, or now if building Gum from source.
-{% endhint %}
-
 The Input System package is optional. If your project uses it and **Edit > Project Settings > Player > Active Input Handling** is **Input System Package (New)** or **Both**, `GumInput` reads it for the mouse, touch, keyboard, and gamepads. If **Active Input Handling** is **Input Manager (Old)**, `GumInput` reads Unity's legacy `Input` class for the mouse, touch, and keyboard. Gamepads are not available with the legacy Input Manager.
 
-Mouse and touch work right away. To move between Forms controls with the keyboard or a gamepad, call `GumService.Default.UseKeyboardDefaults()` or `GumService.Default.UseGamepadDefaults()` in your script.
+Mouse and touch work right away. To move between Forms controls with the keyboard or a gamepad, call `GumUI.UseKeyboardDefaults()` or `GumUI.UseGamepadDefaults()` in your script.
 
 ## Using the Code Samples in These Docs
 
@@ -81,7 +59,7 @@ Most code samples on other pages are written for a `Game` class. In Unity, adapt
 * Code under a `// Initialize` comment goes in your script's `Start` method.
 * Code under a `// Update` comment goes in your script's `Update` method. Skip any `GumUI.Update` call, since `GumRenderer` already updates Gum.
 * Skip any `GumUI.Draw` call, since `GumRenderer` already draws Gum.
-* `GumUI` in the samples is `GumService.Default`.
+* Add `GumService GumUI => GumService.Default;` to your script, as in **Full Script**.
 
 Samples that use MonoGame types such as `GameTime`, `GraphicsDevice`, or `Microsoft.Xna.Framework.Color` do not apply to Unity.
 
@@ -94,7 +72,17 @@ If you add the components from code, add them to an inactive GameObject, set `Pr
 
 ## Rendering
 
-Gum draws on the GPU through SkiaGameRendering on every graphics API it supports, including Direct3D 11 and Metal. On any other API, Gum draws on the CPU and uploads a texture each frame, and the console logs a warning explaining why. `GumRenderer.Texture` holds the result either way. Turn off `GumRenderer.DrawToScreen` to display the texture yourself.
+Gum draws on the GPU through SkiaGameRendering on every graphics API it supports, including Direct3D 11 and Metal. On any other API, such as WebGL, `GumRenderer` logs an error and disables itself; there is no CPU fallback. `GumRenderer.Texture` holds the result. Turn off `GumRenderer.DrawToScreen` to display the texture yourself.
+
+## IL2CPP
+
+If you build with IL2CPP, add an `Assets/link.xml` file that keeps `netstandard`:
+
+```xml
+<linker>
+  <assembly fullname="netstandard" preserve="all" />
+</linker>
+```
 
 ## Generated Code in an Assembly With No Engine References
 
@@ -107,18 +95,51 @@ Unity does not run `[ModuleInitializer]` methods, so call the registration yours
 * Each generated element's `RegisterRuntimeType()` method.
 * `StandardElementsCodeGenRegistration.RegisterFallbackStandardElements()`, which the tool generates into your project's root namespace. It is `internal`, so call it from the same assembly. Without it, standard element states and categories assigned by generated code silently do nothing.
 
-{% hint style="info" %}
-Available in November 2026, or now if building Gum from source.
-{% endhint %}
+## Full Script
 
-## IL2CPP
+```csharp
+using Gum;
+using Gum.Forms;
+using Gum.Forms.Controls;
+using Gum.GueDeriving;
+using Gum.Unity;
+using UnityEngine;
 
-If you build with IL2CPP, add an `Assets/link.xml` file to your project that keeps `netstandard`:
+public class GumExample : MonoBehaviour
+{
+    GumService GumUI => GumService.Default;
 
-```xml
-<linker>
-  <assembly fullname="netstandard" preserve="all" />
-</linker>
+    // Optional: a Gum project copied into Assets/StreamingAssets (see Loading a Gum Project below).
+    // Leave empty to build the UI in code only.
+    const string ProjectFile = "";
+
+    // Runs once after the first scene loads, so the script does not need to be on a GameObject.
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
+    static void Bootstrap()
+    {
+        // Inactive while it is set up: GumRenderer initializes Gum in Awake, which runs as soon as
+        // the GameObject becomes active.
+        var host = new GameObject("Gum");
+        host.SetActive(false);
+
+        var renderer = host.AddComponent<GumRenderer>();
+        renderer.ProjectFile = ProjectFile;
+        host.AddComponent<GumInput>(); // Passes Unity's mouse, touch, keyboard, and gamepad input to Gum
+
+        host.AddComponent<GumExample>();
+        host.SetActive(true);
+    }
+
+    void Start()
+    {
+        // Optional: move between Forms controls with the keyboard or a gamepad (see Input).
+        GumUI.UseKeyboardDefaults();
+        GumUI.UseGamepadDefaults();
+
+        var button = new Button();
+        button.Text = "Click me";
+        button.AddToRoot();
+        button.Click += (_, _) => button.Text = $"Clicked\n{System.DateTime.Now}";
+    }
+}
 ```
-
-The `Samples/UnityGum` project in the Gum repository has one.

@@ -65,9 +65,12 @@ public class ButtonVisual : BaseButtonVisual
         TextInstance.Parent = null;
 
         Width = 120;
-        Height = 36;
+        Height = 16;
         WidthUnits = DimensionUnitType.Absolute;
-        HeightUnits = DimensionUnitType.Absolute;
+        // The button is as tall as its label: 16 of chrome padding plus the 20 px line of the
+        // theme font is the old fixed height for one line, and wrapped lines grow it.
+        HeightUnits = DimensionUnitType.RelativeToChildren;
+        TextInstance.Height = 0;
 
         _focusRing = BubblegumShapes.FocusRing(
             color: new Color(255, 107, 157, 90), // translucent accent

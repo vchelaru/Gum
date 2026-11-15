@@ -27,6 +27,11 @@ namespace MonoGameGumCodeGeneration
         protected override void Initialize()
         {
             GumUI.Initialize(this, "GumProject/GumProject.gumx");
+
+            GumUI.UseKeyboardDefaults();
+
+            GumUI.UseGamepadDefaults();
+
             _mainMenu = new MainMenuFullGeneration
             {
                 Name = "MainMenu"

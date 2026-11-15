@@ -86,11 +86,11 @@ public class HotReloadMatchesRestartTests : BaseTestClass
 
     [Fact]
     public void BaseComponentGainsAnInstance_WhileADerivedComponentIsShown() =>
-        AssertHonest(new SweepSpec(), new SweepSpec { BaseInstance = true }, expectDifference: true);
+        AssertHonest(new SweepSpec(), new SweepSpec { BaseInstance = true }, expectDifference: false);
 
     [Fact]
     public void BaseComponentLosesAnInstance_WhileADerivedComponentIsShown() =>
-        AssertHonest(new SweepSpec { BaseInstance = true }, new SweepSpec(), expectDifference: true);
+        AssertHonest(new SweepSpec { BaseInstance = true }, new SweepSpec(), expectDifference: false);
 
     [Fact]
     public void BaseComponentVariableEdited_WhileADerivedComponentIsShown() =>

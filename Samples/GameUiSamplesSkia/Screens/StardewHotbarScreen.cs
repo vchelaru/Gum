@@ -19,6 +19,8 @@ namespace GameUiSamples.Screens;
 
 partial class StardewHotbarScreen : IUpdateScreen
 {
+    GumService GumUI => GumService.Default;
+
     private InventoryService _inventoryService;
 
     partial void CustomInitialize()
@@ -31,7 +33,7 @@ partial class StardewHotbarScreen : IUpdateScreen
         {
             SetZoom(1);
 
-            GumService.Default.Root.Children.Clear();
+            GumUI.Root.Children.Clear();
             var mainMenu = new MainMenu();
             mainMenu.AddToRoot();
         };

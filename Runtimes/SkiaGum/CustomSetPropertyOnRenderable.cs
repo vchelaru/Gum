@@ -1288,8 +1288,26 @@ public partial class CustomSetPropertyOnRenderable
     /// <c>SourceShaderFile</c> into a graceful no-op (issue #3998). A resolver that returns null for a
     /// file is a load failure that names the package (#7053).
     /// </summary>
-    public static Func<string, SKRuntimeEffect?>? RenderTargetEffectResolver { get; set; } =
-        SkiaGum.Content.SkSlRuntimeEffectLoader.Load;
+    public static Func<string, SKRuntimeEffect?>? RenderTargetEffectResolver
+    {
+        get => _renderTargetEffectResolvers.PathResolver;
+        set => _renderTargetEffectResolvers.PathResolver = value;
+    }
+
+    /// <summary>
+    /// The same resolver as <see cref="RenderTargetEffectResolver"/>, but handed a <see cref="Gum.ShaderSource"/> (the
+    /// logical name plus a way to open the bytes) instead of a path, so a shader served from a stream or a
+    /// <c>.gumpkg</c> bundle resolves like a loose file. Return null to decline. The last of the two properties
+    /// assigned wins, and each reads back as an adapter of the other.
+    /// </summary>
+    public static Func<Gum.ShaderSource, SKRuntimeEffect?>? RenderTargetEffectSourceResolver
+    {
+        get => _renderTargetEffectResolvers.SourceResolver;
+        set => _renderTargetEffectResolvers.SourceResolver = value;
+    }
+
+    private static readonly Gum.ShaderResolverSlot<SKRuntimeEffect> _renderTargetEffectResolvers =
+        new Gum.ShaderResolverSlot<SKRuntimeEffect> { SourceResolver = SkiaGum.Content.SkSlRuntimeEffectLoader.Load };
 
     private const string ShadowDuskPackageId = "Gum.SkiaSharp.ShadowDusk";
 
@@ -1318,7 +1336,7 @@ public partial class CustomSetPropertyOnRenderable
 
         // Unlike the other runtimes, null here is a choice, not a missing package: the default resolver
         // compiles .sksl, so the game that clears it opted out of SourceShaderFile (issue #3998).
-        if (RenderTargetEffectResolver == null)
+        if (!_renderTargetEffectResolvers.HasResolver)
         {
             return;
         }
@@ -1353,7 +1371,7 @@ public partial class CustomSetPropertyOnRenderable
         Exception? resolveException = null;
         try
         {
-            resolvedEffect = RenderTargetEffectResolver(value);
+            resolvedEffect = _renderTargetEffectResolvers.Resolve(Gum.ShaderSource.FromFile(value));
         }
         catch (Exception ex)
         {

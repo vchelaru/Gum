@@ -132,6 +132,9 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
     internal SelectionManager CanvasSelectionManager => _selectionManager;
 
     private readonly IElementCommands _elementCommands;
+    private readonly IAddInstanceLogic _addInstanceLogic;
+    // The app-wide service, resolved here instead of widening every head's constructor.
+    private readonly IProjectRestrictions _projectRestrictions = Locator.GetRequiredService<IProjectRestrictions>();
     private readonly INameVerifier _nameVerifier;
     private readonly SinglePixelTextureService _singlePixelTextureService;
     private readonly IFileDropTargetFilter _fileDropTargetFilter;
@@ -237,6 +240,13 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
 
     #endregion
 
+    /// <summary>
+    /// Foregrounds the running preview's window when Preview is clicked again; null leaves it to
+    /// the preview raising its own window. Read while the base constructor runs, so an override
+    /// must not depend on its own fields.
+    /// </summary>
+    protected virtual IPreviewWindowActivator? PreviewWindowActivator => null;
+
     protected EditorTabPluginBase(
         ISelectedState selectedState,
         IProjectManager projectManager,
@@ -267,6 +277,7 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
         INameVerifier nameVerifier)
     {
         _nameVerifier = nameVerifier;
+        _addInstanceLogic = addInstanceLogic;
         _selectedState = selectedState;
         _undoManager = undoManager;
         _projectManager = projectManager;
@@ -300,7 +311,8 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
             _selectedState,
             _circularReferenceManager,
             _favoriteComponentManager,
-            _hotkeyManager
+            _hotkeyManager,
+            _projectRestrictions
             );
 
         _layerService = new Services.LayerService();
@@ -325,7 +337,8 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
             _toolFontService,
             _pluginManager,
             _projectManager,
-            _canvasDisplayScale);
+            _canvasDisplayScale,
+            _projectRestrictions);
 
         _selectionManager = new SelectionManager(
             _selectedState,
@@ -353,7 +366,7 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
             _projectManager,
             _outputManager,
             previewGumxProjectionService,
-            new PreviewProcessStarter(AppContext.BaseDirectory),
+            new PreviewProcessStarter(AppContext.BaseDirectory, PreviewWindowActivator),
             isSortByBatchKey: () => ReferenceEquals(Renderer.SiblingOrdering, BatchKeyGroupedOrderer.Instance));
 
         _editorViewModel = new EditorViewModel(
@@ -555,6 +568,7 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
         var toReturn = elementSave.ToGraphicalUiElement(SystemManagers.Default, addToManagers: false);
         toReturn.AddToManagers(SystemManagers.Default, _layerService.MainEditorLayer);
         UpdateTextOutlines(toReturn);
+        _editorRenderableFactory.ShowOnlyOutlinesOwnedBy(toReturn);
         return toReturn;
     }
 
@@ -887,6 +901,9 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
         // to do it one by one:
         var handledByDirectSet = false;
 
+        // True when the edited file was already cached, so the rebuild reloads the whole cache from disk.
+        var fileWasCached = false;
+
         var supportsIncrementalChange = PropertiesSupportingIncrementalChange.Contains(unqualifiedMember);
 
         // A Forms-promoted alias (e.g. Spacing, Orientation) is not itself a visual property, but a
@@ -907,6 +924,17 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
         // Update January 19, 2025 - actually for incrmeental changes just use it, it will be fast
         if (!areSame || canIncrementallyUpdate)
         {
+            // A file already in the cache is reloaded from disk, so the rebuild below drops the whole cache.
+            // Disposing only this file's entry would leave other cached content (an animation chain list's
+            // frames, other elements' sprites) holding the disposed texture, which crashes the canvas when
+            // they are drawn.
+            VariableSave? editedVariable = element != null ? ObjectFinder.Self.GetRootVariable(qualifiedName, element) : null;
+            fileWasCached = EditedFileReload.IsCachedFileEdit(editedVariable, value,
+                key => global::RenderingLibrary.Content.LoaderManager.Self.GetDisposable(key) != null);
+            if (editedVariable?.IsFile == true)
+            {
+                Gum.Wireframe.TextureDiagnostics.Note($"SourceFile edit: value='{value}' cachedBefore={fileWasCached}");
+            }
 
             // if a deep reference is set, then this is more complicated than a single variable assignment, so we should
             // force everything. This makes debugging a little more difficult, but it keeps the wireframe accurate without having to track individual assignments.
@@ -931,40 +959,11 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
                     gue = _wireframeObjectManager.GetSelectedRepresentation();
                 }
 
-                // If we dispose a file, we should re-create the screen for sure!
-                var disposedFile = false;
+                // A file that was already loaded is reloaded from disk, so the whole screen is rebuilt for sure.
+                var disposedFile = fileWasCached;
 
                 if (gue != null)
                 {
-                    VariableSave? variable = null;
-                    if(element != null)
-                    {
-                        variable = ObjectFinder.Self.GetRootVariable(qualifiedName, element);
-                    }
-
-                    if(variable?.IsFile == true && value is string asString)
-                    {
-                        try
-                        {
-                            var standardized =  ToolsUtilities.FileManager.Standardize(asString, preserveCase:true, makeAbsolute:true);
-                            standardized = ToolsUtilities.FileManager.RemoveDotDotSlash(standardized);
-                            // invalidate files...
-                            var loaderManager = global::RenderingLibrary.Content.LoaderManager.Self;
-
-                            var existing = loaderManager.GetDisposable(standardized);
-
-                            disposedFile = existing != null;
-
-                            loaderManager.Dispose(standardized);
-
-                        }
-
-                        catch
-                        {
-                            // this could be an invalid file name, so tolerate crashes
-                        }
-                    }
-
                     // The directly-changed member maps to a visual property only when it is itself
                     // incrementally supported; a Forms alias (e.g. Spacing) has no matching GUE property,
                     // so pushing it would be a no-op - skip it and push the underlying member(s) instead.
@@ -991,15 +990,34 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
                     }
 
                     _wireframeObjectManager.RootGue?.ApplyVariableReferences(state);
+                    _wireframeObjectManager.ResetRestrictedVariables();
                     //gue.ApplyVariableReferences(_selectedState.SelectedStateSave);
 
                     handledByDirectSet = didPush && !disposedFile;
+
+                    if (unqualifiedMember == "SourceFile")
+                    {
+                        gue.TryGetTexture(out object? shownTexture);
+                        Gum.Wireframe.TextureDiagnostics.Note(
+                            $"SourceFile set on {qualifiedName} value='{value}' relativeDirectory='{ToolsUtilities.FileManager.RelativeDirectory}' " +
+                            $"disposedCachedFile={disposedFile} handledByDirectSet={handledByDirectSet} " +
+                            $"gueType={gue.GetType().Name} textureAfterSet={Gum.Wireframe.TextureDiagnostics.Describe(shownTexture)}");
+                    }
                 }
             }
 
             if (!handledByDirectSet)
             {
-                _wireframeObjectManager.RefreshAll(true, forceReloadTextures: false);
+                _wireframeObjectManager.RefreshAll(true, forceReloadTextures: fileWasCached);
+
+                if (unqualifiedMember == "SourceFile")
+                {
+                    GraphicalUiElement? rebuilt = instance != null ? _wireframeObjectManager.GetRepresentation(instance) : null;
+                    object? rebuiltTexture = null;
+                    rebuilt?.TryGetTexture(out rebuiltTexture);
+                    Gum.Wireframe.TextureDiagnostics.Note(
+                        $"SourceFile {qualifiedName} value='{value}' went through RefreshAll; textureAfterRefresh={Gum.Wireframe.TextureDiagnostics.Describe(rebuiltTexture)}");
+                }
             }
 
 
@@ -1348,7 +1366,14 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
             return;
         }
 
-        string nameToAdd = _nameVerifier.MakeValidInstanceName(
+        ElementSave? typeToAdd = ObjectFinder.Self.GetElementSave(baseType);
+        if (typeToAdd != null && _addInstanceLogic.GetRestrictionMessage(typeToAdd, asChild: false) is { } restrictionMessage)
+        {
+            _dialogService.ShowMessage(restrictionMessage);
+            return;
+        }
+
+        string nameToAdd =_nameVerifier.MakeValidInstanceName(
             FileManager.RemovePath(FileManager.RemoveExtension(fileName)), baseType + "Instance", element);
 
         InstanceSave? instance =

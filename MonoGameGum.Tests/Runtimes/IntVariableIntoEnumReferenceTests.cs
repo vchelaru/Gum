@@ -130,7 +130,7 @@ public class IntVariableIntoEnumReferenceTests : BaseTestClass
             project.StandardElements.Add(standardElement);
         }
         ObjectFinder.Self.GumProjectSave = project;
-        ElementSaveExtensions.RegisterGueInstantiation("Text", () => new TextRuntime());
+        StandardRuntimeRegistrations.Register();
         GraphicalUiElement root = card.ToGraphicalUiElement();
         return ((TextRuntime)root.GetGraphicalUiElementByName("Source")!, (TextRuntime)root.GetGraphicalUiElementByName("Target")!);
     }

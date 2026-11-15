@@ -8,6 +8,9 @@ namespace Gum.Plugins.InternalPlugins.VariableGrid;
 /// </summary>
 public static class GumDisplayers
 {
+    /// <summary>The Fonts page's per-font character ranges: one compact line per font, with Add. Avalonia head only.</summary>
+    public sealed class FontRanges { private FontRanges() { } }
+
     /// <summary>A color swatch for the Red/Green/Blue composite.</summary>
     public sealed class Color { private Color() { } }
 
@@ -16,6 +19,9 @@ public static class GumDisplayers
 
     /// <summary>The linked/unlinked NineSlice border-scale composite.</summary>
     public sealed class BorderScale { private BorderScale() { } }
+
+    /// <summary>The X, Y, Z and W fields of a float vector shader parameter, side by side in one row.</summary>
+    public sealed class ShaderVector { private ShaderVector() { } }
 
     /// <summary>A button that removes the row's variable from its category.</summary>
     public sealed class RemoveButton { private RemoveButton() { } }

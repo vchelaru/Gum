@@ -2,6 +2,8 @@
 using SkiaSharp;
 using SkiaSharp.Skottie;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using ToolsUtilities;
 using SKSvg = Svg.Skia.SKSvg;
@@ -26,6 +28,19 @@ namespace RenderingLibrary.Content;
 /// </remarks>
 public sealed class ContentLoader : IContentLoader
 {
+    // The formats SKBitmap.Decode reads.
+    private static readonly string[] BuiltInImageExtensions =
+        { "png", "jpg", "jpeg", "gif", "bmp", "webp", "ico", "wbmp" };
+
+    /// <summary>
+    /// The image file extensions (lower case, without the dot) this loader decodes for a Sprite or
+    /// NineSlice: the formats SkiaSharp decodes, plus the extensions the registered
+    /// <see cref="LoaderManager.ImageDecoders"/> declare. SVG and Lottie files load through their own
+    /// elements and are not listed.
+    /// </summary>
+    public static IReadOnlyCollection<string> SupportedImageExtensions =>
+        BuiltInImageExtensions.Union(LoaderManager.Self.ImageDecoders.DeclaredExtensions).ToArray();
+
     /// <summary>
     /// The assembly searched for embedded resources when a file is not found on disk or through
     /// <see cref="FileManager.CustomGetStreamFromFile"/>. Defaults to the SkiaGum assembly.

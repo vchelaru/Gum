@@ -21,7 +21,8 @@ internal class InstanceSaveJson
 /// <summary>JSON-serializable shape of a <see cref="BehaviorInstanceSave"/>.</summary>
 internal sealed class BehaviorInstanceSaveJson : InstanceSaveJson
 {
-    public List<BehaviorReferenceJson> Behaviors { get; set; } = new List<BehaviorReferenceJson>();
+    private List<BehaviorReferenceJson> _behaviors = new List<BehaviorReferenceJson>();
+    public List<BehaviorReferenceJson> Behaviors { get => _behaviors; set => _behaviors = value ?? throw JsonNullCollection.For(nameof(Behaviors)); }
 }
 
 internal static class InstanceSaveJsonMapper

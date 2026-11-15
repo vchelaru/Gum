@@ -47,12 +47,11 @@ namespace MonoGameGumInCode.Screens;
 /// (no compiler dependency, <c>resources/Grayscale.fs</c>) and takes <c>.slang</c> through
 /// Gum.raylib.ShadowDusk; Skia compiles hand-authored SkSL via
 /// <c>SKRuntimeEffect.CreateShader</c> (<c>resources/Grayscale.sksl</c>). Left is the unmodified
-/// bear for comparison. A fourth, MonoGame-only cell (<c>Content/Grayscale.slang</c>) repeats the
-/// SourceShaderFile wiring style for Slang input instead of raw HLSL (issue #4677) — ShadowDusk's
-/// Slang frontend converts it to <c>.fx</c> text before compiling. A second, MonoGame-only row
-/// (issue #4679) adds two more single-pass Slang examples the same way: <c>Content/Blur.slang</c>
-/// (fixed radius — Gum's render-target-effect blit sets no shader parameters, so the blur amount
-/// is a compile-time constant, not host-adjustable) and <c>Content/Sepia.slang</c>.
+/// bear for comparison. A fourth cell (<c>Grayscale.slang</c>) repeats the SourceShaderFile wiring
+/// style for Slang input instead of raw HLSL (issue #4677) — ShadowDusk's Slang frontend converts it
+/// for each backend. A last row (issue #4679) adds two more single-pass Slang examples the same way:
+/// <c>Blur.slang</c> (fixed radius — Gum's render-target-effect blit sets no shader parameters, so the
+/// blur amount is a compile-time constant, not host-adjustable) and <c>Sepia.slang</c>.
 /// <para>The second row, on all three backends, runs one Slang file (<c>Outline.slang</c>) that
 /// outlines whatever the container draws. ShadowDusk converts it for each backend and
 /// <see cref="ContainerRuntime.SetShaderParameter(string, float)"/> sets its thickness and color (the pixel size is filled in by Gum).</para>
@@ -69,24 +68,24 @@ internal class RenderTargetShaderScreen : FrameworkElement
 #else
     // Relative to FileManager.RelativeDirectory (set to "Content/" by GumService.Initialize).
     private const string ShaderFileName = "Grayscale.fx";
-    // Same effect authored in Slang instead of raw HLSL (issue #4677) — no per-shader-model
-    // boilerplate, no technique/pass block. ShadowDusk's Slang frontend converts it to .fx text
-    // before compiling; see RenderTargetShaderResolver.ResolveFxSource for the tool-side twin.
-    private const string SlangShaderFileName = "Grayscale.slang";
+#endif
+
+    // The same Slang files on every backend; only the folder they are copied to differs.
+#if RAYLIB || SKIA
+    private const string SlangFolder = "resources/";
+#else
+    private const string SlangFolder = "";
+#endif
+    private const string OutlineShaderFileName = SlangFolder + "Outline.slang";
+    // Same grayscale effect authored in Slang instead of raw HLSL (issue #4677) — no per-shader-model
+    // boilerplate, no technique/pass block. ShadowDusk's Slang frontend converts it for each backend.
+    private const string SlangShaderFileName = SlangFolder + "Grayscale.slang";
     // Two more single-pass, parameterless Slang examples (issue #4679). Blur's radius is a
     // constant baked into the shader itself, sized for this demo's 128x128 cells — Gum's
     // render-target-effect blit sets no shader parameters and runs a single pass, so an
     // adjustable blur isn't possible without new engine work.
-    private const string BlurSlangShaderFileName = "Blur.slang";
-    private const string SepiaSlangShaderFileName = "Sepia.slang";
-#endif
-
-    // The same Outline.slang on every backend; only the folder it is copied to differs.
-#if RAYLIB || SKIA
-    private const string OutlineShaderFileName = "resources/Outline.slang";
-#else
-    private const string OutlineShaderFileName = "Outline.slang";
-#endif
+    private const string BlurSlangShaderFileName = SlangFolder + "Blur.slang";
+    private const string SepiaSlangShaderFileName = SlangFolder + "Sepia.slang";
 
     public RenderTargetShaderScreen() : base(new ContainerRuntime())
     {
@@ -158,13 +157,11 @@ internal class RenderTargetShaderScreen : FrameworkElement
         outlineRow.AddChild(BuildOutlineCell("Outline.slang (6 px, cyan)", thickness: 6, red: 0.1f, green: 0.9f, blue: 1f));
         outlineRow.AddChild(BuildOutlineCell("Bear + circle (follows cursor), slider sets thickness", thickness: 3, red: 1f, green: 1f, blue: 1f, interactive: true));
 
-#if !RAYLIB && !SKIA
-        // Fourth cell, XNA-like only: the same effect authored in Slang (Content/Grayscale.slang)
-        // instead of raw HLSL, referenced the same way via SourceShaderFile — proves the Slang
-        // frontend wiring (issue #4677) end to end, not just that .fx still works.
+        // Fourth cell: the same effect authored in Slang instead of raw HLSL, referenced the same
+        // way via SourceShaderFile — proves the Slang frontend wiring (issue #4677) end to end.
         row.AddChild(BuildSlangSourceShaderFileCell("SourceShaderFile (.slang)", SlangShaderFileName));
 
-        // Second row, XNA-like only: two more example shaders (issue #4679), same wiring style.
+        // Third row: two more example shaders (issue #4679), same wiring style.
         var effectsRow = new ContainerRuntime();
         effectsRow.ChildrenLayout = ChildrenLayout.LeftToRightStack;
         effectsRow.StackSpacing = 48;
@@ -176,19 +173,20 @@ internal class RenderTargetShaderScreen : FrameworkElement
 
         effectsRow.AddChild(BuildSlangSourceShaderFileCell("Blur (.slang, fixed radius)", BlurSlangShaderFileName));
         effectsRow.AddChild(BuildSlangSourceShaderFileCell("Sepia (.slang)", SepiaSlangShaderFileName));
-#endif
     }
 
-#if !RAYLIB && !SKIA
-    // Compiles a .slang shader (relative to FileManager.RelativeDirectory) and wires it up via
-    // SourceShaderFile, gating on a known-good compile the same way the .fx cell above does.
+    // Wires a .slang shader up via SourceShaderFile. On MonoGame it compiles first (relative to
+    // FileManager.RelativeDirectory), gating on a known-good compile the same way the .fx cell above does.
     private static ContainerRuntime BuildSlangSourceShaderFileCell(string caption, string slangFileName)
     {
+#if RAYLIB || SKIA
+        return BuildCell(caption, effect: null, sourceShaderFile: slangFileName);
+#else
         string effectPath = ToolsUtilities.FileManager.RelativeDirectory + slangFileName;
         EffectType? effect = CompileEffectFromFile(effectPath, out _);
         return BuildCell(caption, effect: null, sourceShaderFile: effect != null ? slangFileName : null);
-    }
 #endif
+    }
 
     // A bear in a render target container, outlined by the shipped Outline.slang. Thickness is in
     // render target pixels; the pixel size comes from Gum. The interactive cell also draws a circle overlapping
@@ -339,7 +337,14 @@ internal class RenderTargetShaderScreen : FrameworkElement
         else if (!string.IsNullOrEmpty(sourceShaderFile))
         {
             holder.IsRenderTarget = true;
-            holder.SourceShaderFile = sourceShaderFile;
+            try
+            {
+                holder.SourceShaderFile = sourceShaderFile;
+            }
+            catch (System.Exception e)
+            {
+                AddLabel(cell, "SHADER FAILED: " + e.Message);
+            }
         }
 
         cell.AddChild(holder);

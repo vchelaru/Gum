@@ -149,7 +149,7 @@ public class CodeOutputPluginSettingsPageTests : BaseTestClass
             IDispatcher dispatcher,
             ICodeOutputTabHost tabHost)
             : base(guiCommands, dialogService, nameVerifier, localizationService, projectState, typeManager,
-                outputManager, selectedState, retryService, messenger, fileCommands, dispatcher)
+                outputManager, selectedState, retryService, messenger, fileCommands, dispatcher, new Mock<IProjectRestrictions>().Object)
         {
             _tabHost = tabHost;
         }

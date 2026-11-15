@@ -165,8 +165,11 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
         get => _typeface;
         set
         {
-            _typeface = value;
-            _cachedTextBlock = null;
+            if (_typeface != value)
+            {
+                _typeface = value;
+                _cachedTextBlock = null;
+            }
         }
     }
 
@@ -183,8 +186,11 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
         get => _fontName; 
         set
         {
-            _fontName = value;
-            _cachedTextBlock = null;
+            if (_fontName != value)
+            {
+                _fontName = value;
+                _cachedTextBlock = null;
+            }
 
         }
     }
@@ -193,8 +199,11 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
         get => _fontSize;
         set
         {
-            _fontSize = value;
-            _cachedTextBlock = null;
+            if (_fontSize != value)
+            {
+                _fontSize = value;
+                _cachedTextBlock = null;
+            }
         }
     }
     public float FontScale
@@ -202,8 +211,11 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
         get => _fontScale; 
         set
         {
-            _fontScale = value;
-            _cachedTextBlock = null;
+            if (_fontScale != value)
+            {
+                _fontScale = value;
+                _cachedTextBlock = null;
+            }
         }
     }
 
@@ -212,8 +224,11 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
         get => _boldWeight; 
         set
         {
-            _boldWeight = value;
-            _cachedTextBlock = null;
+            if (_boldWeight != value)
+            {
+                _boldWeight = value;
+                _cachedTextBlock = null;
+            }
         }
     }
     // I don't know if this should be a skia, XamForms, or XNA color...
@@ -222,8 +237,11 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
         get => _color;
         set
         {
-            _color = value;
-            _cachedTextBlock = null;
+            if (_color != value)
+            {
+                _color = value;
+                _cachedTextBlock = null;
+            }
         }
     }
 
@@ -271,8 +289,11 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
     {
         get => _maximumNumberOfLines; set
         {
-            _maximumNumberOfLines = value;
-            _cachedTextBlock = null;
+            if (_maximumNumberOfLines != value)
+            {
+                _maximumNumberOfLines = value;
+                _cachedTextBlock = null;
+            }
         }
     }
 
@@ -288,8 +309,11 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
         get => _isTruncatingWithEllipsisOnLastLine;
         set
         {
-            _isTruncatingWithEllipsisOnLastLine = value;
-            _cachedTextBlock = null;
+            if (_isTruncatingWithEllipsisOnLastLine != value)
+            {
+                _isTruncatingWithEllipsisOnLastLine = value;
+                _cachedTextBlock = null;
+            }
         }
     }
 
@@ -327,7 +351,36 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
             return fullWrapped;
         }
 
-        var revealed = new List<string>();
+        var lengths = new List<int>();
+        FillVisibleLineLengths(lengths);
+        var revealed = new List<string>(lengths.Count);
+        for (int i = 0; i < lengths.Count; i++)
+        {
+            string line = fullWrapped[i];
+            revealed.Add(lengths[i] == line.Length ? line : line.Substring(0, lengths[i]));
+        }
+
+        return revealed;
+    }
+
+    /// <summary>
+    /// How many chars of each wrapped line <see cref="MaxLettersToShow"/> reveals, one entry per revealed line, so the
+    /// reveal can slice the styled runs without building the truncated lines (<see cref="GetVisibleWrappedText"/>
+    /// builds them from the same lengths).
+    /// </summary>
+    private void FillVisibleLineLengths(List<int> lengths)
+    {
+        lengths.Clear();
+        List<string> fullWrapped = WrappedText;
+        if (MaxLettersToShow == null)
+        {
+            foreach (string wrappedLine in fullWrapped)
+            {
+                lengths.Add(wrappedLine.Length);
+            }
+            return;
+        }
+
         int remaining = MaxLettersToShow.Value;
         foreach (var line in fullWrapped)
         {
@@ -338,7 +391,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
 
             if (line.Length <= remaining)
             {
-                revealed.Add(line);
+                lengths.Add(line.Length);
                 remaining -= line.Length;
             }
             else
@@ -348,12 +401,10 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
                 {
                     remaining++;
                 }
-                revealed.Add(line.Substring(0, remaining));
+                lengths.Add(remaining);
                 remaining = 0;
             }
         }
-
-        return revealed;
     }
 
     /// <inheritdoc/>
@@ -487,11 +538,9 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
     {
         get
         {
-            var textBlock = new TextBlock();
-            textBlock.AddText("My", GetRawMeasurementStyle());
-            return textBlock.Lines.Count > 0
-                ? (int)MathF.Ceiling(textBlock.Lines[0].Height)
-                : (int)MathF.Ceiling(FontSize);
+            // One probe per distinct font, kept with the font line metrics (#7863): the TextBox asks for this on
+            // every caret and selection update, and it depends only on the font.
+            return GetRawLineHeight(GetRawMeasurementFontKey(), FontSize);
         }
     }
 
@@ -499,8 +548,11 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
     {
         get => _isItalic; set
         {
-            _isItalic = value;
-            _cachedTextBlock = null;
+            if (_isItalic != value)
+            {
+                _isItalic = value;
+                _cachedTextBlock = null;
+            }
         }
     }
 
@@ -517,8 +569,11 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
         get => _outlineThickness;
         set
         {
-            _outlineThickness = value;
-            _cachedTextBlock = null;
+            if (_outlineThickness != value)
+            {
+                _outlineThickness = value;
+                _cachedTextBlock = null;
+            }
         }
     }
 
@@ -533,8 +588,11 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
         get => _outlineColor;
         set
         {
-            _outlineColor = value;
-            _cachedTextBlock = null;
+            if (_outlineColor != value)
+            {
+                _outlineColor = value;
+                _cachedTextBlock = null;
+            }
         }
     }
 
@@ -571,14 +629,29 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
     /// No Raylib-style TextPositionRoundingMode (Floor/Ceiling) knob here -- away-from-zero is
     /// hardcoded and no one has reported spacing jitter needing it. Raylib-only is fine (#3708).
     /// </remarks>
-    internal (float X, float Y) GetSnappedOrigin(float x, float y)
+    internal (float X, float Y) GetSnappedOrigin(float x, float y) => GetSnappedOrigin(x, y, SKMatrix.Identity);
+
+    /// <summary>
+    /// Snaps in device pixels: the origin is mapped through <paramref name="canvasMatrix"/> (camera zoom, device
+    /// density), rounded, and mapped back, so the text lands on the same pixel grid as every other renderable. Rounding
+    /// the Gum-unit value instead moved text up to half a unit (a whole pixel at zoom 2) away from a nine-slice at the
+    /// same position (#7101).
+    /// </summary>
+    internal (float X, float Y) GetSnappedOrigin(float x, float y, SKMatrix canvasMatrix)
     {
         if (EffectiveTextRenderingPositionMode != TextRenderingPositionMode.SnapToPixel)
         {
             return (x, y);
         }
 
-        return (MathFunctions.RoundToInt(x), MathFunctions.RoundToInt(y));
+        if (!canvasMatrix.TryInvert(out SKMatrix inverse))
+        {
+            return (MathFunctions.RoundToInt(x), MathFunctions.RoundToInt(y));
+        }
+
+        SKPoint device = canvasMatrix.MapPoint(x, y);
+        SKPoint snapped = inverse.MapPoint(MathFunctions.RoundToInt(device.X), MathFunctions.RoundToInt(device.Y));
+        return (snapped.X, snapped.Y);
     }
 
     #region Dropshadow
@@ -686,7 +759,11 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
     /// drop-shadow setters, this is a live render-time effect and intentionally does not invalidate
     /// the cached <see cref="TextBlock"/>.
     /// </summary>
-    public Gum.RenderingLibrary.Blend? Blend { get; set; }
+    public Gum.RenderingLibrary.Blend? Blend { get; set; } = Gum.RenderingLibrary.Blend.Normal;
+
+    // Normal is SrcOver, the canvas default, so it needs no layer or paint; only another blend does.
+
+    private bool HasActiveBlend => Blend.HasValue && Blend.Value != Gum.RenderingLibrary.Blend.Normal;
 
     Vector2 Position;
     IRenderableIpso? mParent;
@@ -821,8 +898,11 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
         get => _horizontalAlignment;
         set
         {
-            _horizontalAlignment = value;
-            _cachedTextBlock = null;
+            if (_horizontalAlignment != value)
+            {
+                _horizontalAlignment = value;
+                _cachedTextBlock = null;
+            }
         }
     }
 
@@ -892,8 +972,11 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
         get => _lineHeightMultiplier;
         set
         {
-            _lineHeightMultiplier = value;
-            _cachedTextBlock = null;
+            if (_lineHeightMultiplier != value)
+            {
+                _lineHeightMultiplier = value;
+                _cachedTextBlock = null;
+            }
         }
     }
     public float WrappedTextHeight
@@ -953,8 +1036,11 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
         get => _textOverflowVerticalMode;
         set
         {
-            _textOverflowVerticalMode = value;
-            _cachedTextBlock = null;
+            if (_textOverflowVerticalMode != value)
+            {
+                _textOverflowVerticalMode = value;
+                _cachedTextBlock = null;
+            }
         }
     }
 
@@ -987,6 +1073,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
     public void Render(ISystemManagers managers)
     {
         var canvas = ((SystemManagers)managers).Canvas;
+        var statistics = ((SystemManagers)managers).RenderStatisticsIfInitialized;
 
         if (Visible)
         {
@@ -1000,7 +1087,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
             SKPoint verticalOffset = rotationMatrix.MapVector(0, GetVerticalAlignmentOffset(textBlock));
             var absoluteX = this.GetAbsoluteX() + verticalOffset.X;
             var absoluteY = this.GetAbsoluteY() + verticalOffset.Y;
-            (absoluteX, absoluteY) = GetSnappedOrigin(absoluteX, absoluteY);
+            (absoluteX, absoluteY) = GetSnappedOrigin(absoluteX, absoluteY, canvas.TotalMatrix);
 
             SKMatrix translateMatrix = SKMatrix.CreateTranslation(absoluteX, absoluteY);
             // Continue to apply the previou matrix in case there is scaling
@@ -1015,6 +1102,10 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
             canvas.Save();
 
             // set the clip rect *after* save so it gets undone and restored
+            // This clip looks redundant, because Renderer.DrawRenderable already clips to every ancestor that
+            // clips its children, but it is not. GumBatch.Draw(text) draws only this renderable and never walks
+            // its ancestors, and a render-target bake draws into an offscreen canvas that carries none of the
+            // ancestor clips. Text.Render is then the only thing applying the clip, so removing it changes pixels.
             var clipper = this.GetEffectiveClipper();
             if(clipper != null)
             {
@@ -1032,31 +1123,61 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
             // text into an offscreen layer whose paint carries the ImageFilter (shadow) and/or
             // BlendMode (blend) so both compose when the layer is composited back on Restore. Same
             // primitive/blur convention as the Skia shapes.
-            var renderPaint = GetRenderPaint();
-            if (renderPaint != null)
+            SKPaint? renderPaint = GetCachedRenderPaint();
+            if (renderPaint != null && HasDropshadow && CanDrawShadowAsPaint)
+            {
+                if (HasActiveBlend)
+                {
+                    // The blend applies to shadow and text together, so they still compose in a layer; the layer
+                    // carries only the blend (no blur filter), the shadow is the text drawn tinted and blurred.
+                    canvas.Save();
+                    canvas.ClipRect(GetBlendLayerBounds(paintBlock));
+                    canvas.SaveLayer(GetBlendOnlyPaint());
+                    DrawShadowPass(canvas, paintBlock);
+                    PaintTextBlockCached(canvas, paintBlock);
+                    canvas.Restore();
+                    canvas.Restore();
+                    statistics?.RecordDrawCall();
+                }
+                else
+                {
+                    // The text drawn once tinted and blurred (RichTextKit's ConfigurePaint), then once normally:
+                    // two draws, no offscreen layer.
+                    DrawShadowPass(canvas, paintBlock);
+                    statistics?.RecordDrawCall();
+                    PaintTextBlockCached(canvas, paintBlock);
+                }
+            }
+            else if (renderPaint != null)
             {
                 // A blend that writes alpha (ReplaceAlpha, MinAlpha, Replace) would otherwise act on the
                 // whole clip, erasing everything the text does not cover. Clip to the text first.
-                if (Blend.HasValue)
+                if (HasActiveBlend)
                 {
                     canvas.Save();
                     canvas.ClipRect(GetBlendLayerBounds(paintBlock));
                 }
 
+                if (HasDropshadow)
+                {
+                    LayerShadowDrawCount++;
+                }
                 canvas.SaveLayer(renderPaint);
-                PaintTextBlock(canvas, paintBlock);
+                PaintTextBlockCached(canvas, paintBlock);
                 canvas.Restore();
-                if (Blend.HasValue)
+                // Restoring the layer composites it onto the canvas, one more draw.
+                statistics?.RecordDrawCall();
+                if (HasActiveBlend)
                 {
                     canvas.Restore();
                 }
-
-                renderPaint.Dispose();
             }
             else
             {
-                PaintTextBlock(canvas, paintBlock);
+                PaintTextBlockCached(canvas, paintBlock);
             }
+            // The block paints (or replays its recorded picture) as one draw.
+            statistics?.RecordDrawCall();
             canvas.Restore();
         }
     }
@@ -1121,11 +1242,23 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
 
     /// <summary>
     /// The tags found in the markup text, with indexes into <see cref="_layoutText"/>. Null when the text has no
-    /// markup. Replaced, never mutated, each time the text is parsed. Read by <c>TextRuntime.GetTagAtIndex</c>.
+    /// markup. Cleared and refilled each time the text is parsed, so read it, do not keep it. Read by <c>TextRuntime.GetTagAtIndex</c>.
     /// </summary>
     internal List<FoundTag>? ParsedBbCodeTags { get; private set; }
     private List<InlineVariable> _inlineVariables = new();
-    private readonly StyledSubstringSplitter _styledSubstringSplitter = new();
+
+    // Reused by every change of the text or the reveal; null until the first one that needs it (#7846).
+    private TextMarkupBuffers? _markupBuffers;
+    private TextMarkupBuffers MarkupBuffers => _markupBuffers ??= new TextMarkupBuffers();
+
+    /// <summary>The buffers this Text has built so far, or null; reading it creates none. For unit tests of what a Text keeps.</summary>
+    internal TextMarkupBuffers? RetainedMarkupBuffers => _markupBuffers;
+
+    /// <summary>The array size the Text keeps for its inline variables.</summary>
+    internal int RetainedInlineVariableCapacity => _inlineVariables.Capacity;
+
+    /// <summary>How many inline variables the current text has.</summary>
+    internal int InlineVariableCount => _inlineVariables.Count;
 
     // The subset of BbCodeParser.KnownTags SkiaGum honors. Most map onto a RichTextKit Style override;
     // "custom" (issue #3692) instead produces one single-character InlineVariable per letter, resolved
@@ -1141,20 +1274,20 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
     // Unrecognized tags are left as literal characters, matching the parser.
     private static readonly HashSet<string> SupportedTags = new(StringComparer.OrdinalIgnoreCase)
     {
-        "color",
-        "red",
-        "green",
-        "blue",
-        "font",
-        "fontsize",
-        "fontscale",
-        "isbold",
-        "isitalic",
-        "outlinethickness",
-        "custom",
-        "hasdropshadow",
+        "Color",
+        "Red",
+        "Green",
+        "Blue",
+        "Font",
+        "FontSize",
+        "FontScale",
+        "IsBold",
+        "IsItalic",
+        "OutlineThickness",
+        "Custom",
+        "HasDropshadow",
         // [Link=id]: kept as a range for TextRuntime.GetTagAtIndex, no styling.
-        "link",
+        "Link",
     };
 
     public TextBlock GetCachedTextBlock(float? forcedWidth = null)
@@ -1169,7 +1302,12 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
             || _lastScreenDensity != GlobalTextScale
             || effectiveMaxHeight != _lastEffectiveMaxHeight)
         {
-            _cachedTextBlock = null;
+            if (!IsUnboundedBlockValidAtWidth(effectiveWidth)
+                || _lastScreenDensity != GlobalTextScale
+                || effectiveMaxHeight != _lastEffectiveMaxHeight)
+            {
+                _cachedTextBlock = null;
+            }
             _lastEffectiveWidth = effectiveWidth;
             _lastScreenDensity = GlobalTextScale;
             _lastEffectiveMaxHeight = effectiveMaxHeight;
@@ -1177,9 +1315,76 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
 
         if(_cachedTextBlock == null)
         {
-            _cachedTextBlock = GetTextBlock(effectiveWidth);
+            _cachedTextBlock = _hasMarkup ? GetTextBlock(effectiveWidth) : BuildReusedPlainTextBlock(effectiveWidth);
+            _isCachedTextBlockUnbounded = effectiveWidth == null;
+            _hasUnboundedLineEndingInWhitespace = _isCachedTextBlockUnbounded
+                && HorizontalAlignment != HorizontalAlignment.Left
+                && HasLineEndingInWhitespace(_layoutText);
         }
         return _cachedTextBlock;
+    }
+
+    // True when _cachedTextBlock was laid out with no width limit.
+    private bool _isCachedTextBlockUnbounded;
+
+    // True when that block is center or right aligned and a line before the last ends in whitespace.
+    private bool _hasUnboundedLineEndingInWhitespace;
+
+    /// <summary>
+    /// Whether a line of <paramref name="text"/> other than the last ends in whitespace. RichTextKit counts that
+    /// whitespace in the line's width in a block with no width limit and not in a block of a set width, so the two
+    /// place center and right lines differently.
+    /// </summary>
+    private static bool HasLineEndingInWhitespace(string? text)
+    {
+        if (text == null)
+        {
+            return false;
+        }
+
+        for (int i = 1; i < text.Length; i++)
+        {
+            if (IsLineBreak(text[i]) && !IsLineBreak(text[i - 1])
+                && (char.IsWhiteSpace(text[i - 1]) || char.GetUnicodeCategory(text[i - 1]) == System.Globalization.UnicodeCategory.Format))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static bool IsLineBreak(char c) =>
+        c == '\n' || c == '\r' || c == '\v' || c == '\f' || c == '\u0085' || c == '\u2028' || c == '\u2029';
+
+    /// <summary>
+    /// Whether the cached block, laid out with no width limit, is also the layout at <paramref name="width"/>.
+    /// Layout measures a size-to-children text unbounded (<see cref="Width"/> null) and then sets
+    /// <see cref="Width"/> to the measured width, on every layout. A block that fits wraps nowhere, so it is the
+    /// layout at no limit, at a left-aligned width it fits in (#7818), and at exactly its measured width where the
+    /// lines are placed the same way: always when left aligned, and when center or right aligned unless a line before
+    /// the last ends in whitespace (<see cref="HasLineEndingInWhitespace"/>). A wider width places center and right
+    /// lines further over.
+    /// </summary>
+    private bool IsUnboundedBlockValidAtWidth(float? width)
+    {
+        if (_cachedTextBlock == null || !_isCachedTextBlockUnbounded)
+        {
+            return false;
+        }
+
+        if (width == null)
+        {
+            return true;
+        }
+
+        float measuredWidth = _cachedTextBlock.MeasuredWidth;
+        if (HorizontalAlignment == HorizontalAlignment.Left)
+        {
+            return width.Value >= measuredWidth;
+        }
+
+        return width.Value == measuredWidth && !_hasUnboundedLineEndingInWhitespace;
     }
 
     /// <summary>
@@ -1212,11 +1417,65 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
             return BuildTextBlockFromRuns(new List<StyledTextRun> { new StyledTextRun(textToRender ?? string.Empty, GetStyle()) }, forcedWidth);
         }
 
-        List<StyledTextRun> runs = GetStyledRuns();
-        TextBlock textBlock = BuildTextBlockFromRuns(runs, forcedWidth);
-        return FitsRunsPerLine
-            ? BuildTextBlockFromRuns(FitRunsToLines(runs, textBlock), forcedWidth)
-            : textBlock;
+        TextMarkupBuffers buffers = MarkupBuffers;
+        List<StyledTextRun> runs = buffers.Runs;
+        FillStyledRuns(runs);
+        TextBlock block;
+        if (!FitsRunsPerLine)
+        {
+            block = BuildTextBlockFromRuns(runs, forcedWidth);
+        }
+        else
+        {
+            // The first layout only supplies the line breaks, so it is laid out into a block this Text keeps and
+            // clears for the next change instead of a new one (#7818).
+            _lineBreakLayout = BuildTextBlockFromRuns(runs, forcedWidth, _lineBreakLayout);
+            block = BuildTextBlockFromRuns(FitRunsToLines(runs, _lineBreakLayout, buffers.FittedRuns, buffers.LineRuns), forcedWidth);
+        }
+
+        buffers.ReleaseBlockRuns();
+        return block;
+    }
+
+    // The block GetTextBlock lays the runs out into to find the line breaks FitRunsToLines fits to. Never painted.
+    private TextBlock? _lineBreakLayout;
+
+    // The two plain-text blocks GetCachedTextBlock alternates between, each cleared and laid out again (#7846).
+    private TextBlock?[] _plainBlocks = new TextBlock?[2];
+    private int _nextPlainBlock;
+    private List<StyledTextRun> _plainRuns = new(1);
+
+    /// <summary>
+    /// Lays plain text out into a block built for an earlier text instead of a new one, the way the reveal block
+    /// is reused (#7846). Two blocks alternate, so a rebuild still returns a different object than the block it
+    /// replaces and a caller holding that block can read it until the next rebuild. A reused block keeps its
+    /// identity, so every cache keyed on it is dropped first.
+    /// </summary>
+    private TextBlock BuildReusedPlainTextBlock(float? width)
+    {
+        TextBlock? reuse = _plainBlocks[_nextPlainBlock];
+        if (reuse != null)
+        {
+            if (ReferenceEquals(_wrappedTextSourceBlock, reuse))
+            {
+                _wrappedTextSourceBlock = null;
+            }
+            if (ReferenceEquals(_revealBlockSource, reuse))
+            {
+                _revealBlockSource = null;
+            }
+            if (ReferenceEquals(_pictureCache.Block, reuse))
+            {
+                DropCachedPicture();
+            }
+        }
+
+        _plainRuns.Clear();
+        _plainRuns.Add(new StyledTextRun(_layoutText ?? string.Empty, GetStyle()));
+        TextBlock built = BuildTextBlockFromRuns(_plainRuns, width, reuse);
+        _plainBlocks[_nextPlainBlock] = built;
+        _nextPlainBlock = 1 - _nextPlainBlock;
+        return built;
     }
 
     /// <summary>Whether the styled runs are refit line by line (<see cref="FitRunsToLines"/>) after a first layout.</summary>
@@ -1228,9 +1487,23 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
     /// and the <see cref="MaxLettersToShow"/> reveal path (<see cref="GetPaintTextBlock"/>) so both honor
     /// per-run BBCode styling (issue #3679) and the <c>[Custom]</c> glyph-offset callback (issue #3692).
     /// </summary>
-    private TextBlock BuildTextBlockFromRuns(List<StyledTextRun> runs, float? forcedWidth)
+    /// <param name="runs">The styled runs, one <c>AddText</c> each.</param>
+    /// <param name="forcedWidth">The wrap width. When null, this Text's <see cref="Width"/> is used.</param>
+    /// <param name="reuse">A block to clear and lay out into instead of a new one. RichTextKit keeps its buffers
+    /// across <c>Clear</c>, so a block rebuilt every change allocates far less than a new block.</param>
+    private TextBlock BuildTextBlockFromRuns(List<StyledTextRun> runs, float? forcedWidth, TextBlock? reuse = null)
     {
-        var textBlock = new TextBlock();
+        TextBlock textBlock;
+        if (reuse != null)
+        {
+            reuse.Clear();
+            _transformedLetters.Remove(reuse);
+            textBlock = reuse;
+        }
+        else
+        {
+            textBlock = new TextBlock();
+        }
         // Code-point start index (in the added-text stream, which lines up with _layoutText since
         // ReplacementCharacter substitution keeps a run's length at 1) -> the glyph offset a [Custom]
         // callback produced for that run (issue #3692). Applied once, after Alignment/MaxLines/MaxHeight
@@ -1379,11 +1652,39 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
             return fullBlock;
         }
 
+        // A reveal paused partway (a typewriter waiting for input) keeps its block instead of building
+        // one per frame (#7818). The full block changes with every input the reveal depends on.
+        if (_revealBlock != null
+            && ReferenceEquals(_revealBlockSource, fullBlock)
+            && _revealBlockLetters == MaxLettersToShow.Value
+            && _revealBlockWidth == this.Width)
+        {
+            return _revealBlock;
+        }
+
         // Reveal keeps per-run BBCode styling (issue #3701): GetVisibleStyledRuns slices the same
         // styled runs GetTextBlock uses for the full layout down to the revealed prefix. Plain text is
         // one run, so it takes the same path.
-        return BuildTextBlockFromRuns(GetVisibleStyledRuns(fullBlock), this.Width);
+        // An advancing reveal rebuilds every frame, so the reveal block is cleared and laid out again rather than
+        // replaced (#7818). It is the same object afterwards, so the picture recorded from it is dropped.
+        if (_revealBlock != null && ReferenceEquals(_pictureCache.Block, _revealBlock))
+        {
+            DropCachedPicture();
+        }
+        TextMarkupBuffers buffers = MarkupBuffers;
+        FillVisibleStyledRuns(fullBlock, buffers.VisibleRuns, buffers.VisibleSourceRuns, buffers.VisibleFittedRuns);
+        _revealBlock = BuildTextBlockFromRuns(buffers.VisibleRuns, this.Width, _revealBlock);
+        buffers.ReleaseVisibleRuns();
+        _revealBlockSource = fullBlock;
+        _revealBlockLetters = MaxLettersToShow.Value;
+        _revealBlockWidth = this.Width;
+        return _revealBlock;
     }
+
+    private TextBlock? _revealBlock;
+    private TextBlock? _revealBlockSource;
+    private int _revealBlockLetters;
+    private float? _revealBlockWidth;
 
 
     internal Style GetStyle() => BuildRunStyle(string.Empty, null).Style;
@@ -1498,10 +1799,133 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
     // layout is unchanged. Keyed by block so the cached block and a MaxLettersToShow reveal block each carry their own.
     private static readonly System.Runtime.CompilerServices.ConditionalWeakTable<TextBlock, List<TransformedLetter>> _transformedLetters = new();
 
-    /// <summary>Paints <paramref name="block"/>, then its scaled or rotated <c>[Custom]</c> letters.</summary>
-    private static void PaintTextBlock(SKCanvas canvas, TextBlock block)
+    // RichTextKit's TextBlock.Paint allocates on every call, so the cached block is recorded once into a
+    // picture and replayed while the block is unchanged. The block (the full block, or a MaxLettersToShow reveal
+    // block) is recorded the second frame it is painted, so text that changes every frame is painted directly and
+    // never pays for a recording it would not replay (#7818). Native memory is released when the picture is
+    // replaced or finalized.
+    private BlockPictureCache _pictureCache = new();
+    private BlockPictureCache _shadowPictureCache = new();
+
+    // Larger than any text the picture is replayed into, so recording never culls a line.
+    private static readonly SKRect _pictureCullRect = new SKRect(-100000, -100000, 100000, 100000);
+
+    private void DropCachedPicture()
     {
-        block.Paint(canvas, new SKPoint(0, 0));
+        _pictureCache.Drop();
+        _shadowPictureCache.Drop();
+    }
+
+    // The drop shadow is the text drawn a second time, underneath, with its paint tinted to the shadow color and
+    // blurred by a mask filter (RichTextKit's TextPaintOptions.ConfigurePaint), so no offscreen layer is needed (#7944).
+    private SKMaskFilter? _shadowMaskFilter;
+    private (SKColor Color, float Sigma) _shadowPassKey;
+    private bool _hasShadowPassKey;
+    private TextPaintOptions? _shadowPaintOptions;
+
+    /// <summary>Test hook: always use the offscreen-layer shadow, to compare against the paint-based shadow.</summary>
+    internal bool ForceLayerShadow { get; set; }
+
+    /// <summary>Test hook: how many draws composed the shadow through an offscreen layer.</summary>
+    internal int LayerShadowDrawCount { get; private set; }
+
+    // A mask filter has one sigma, so unequal X and Y blur (and a non-finite value) keep the layer's drop-shadow filter.
+    private bool CanDrawShadowAsPaint =>
+        !ForceLayerShadow && DropshadowBlurX == DropshadowBlurY
+        && float.IsFinite(global::Gum.Wireframe.DropshadowBlur.GetSigma(DropshadowBlurX))
+        && float.IsFinite(DropshadowOffsetX) && float.IsFinite(DropshadowOffsetY);
+
+    private void DrawShadowPass(SKCanvas canvas, TextBlock block)
+    {
+        float sigma = global::Gum.Wireframe.DropshadowBlur.GetSigma(DropshadowBlurX);
+        (SKColor, float) key = (DropshadowColor, sigma);
+        if (!_hasShadowPassKey || _shadowPassKey != key)
+        {
+            // The recorded shadow picture bakes in the color and the filter, so it is rebuilt when either changes.
+            _shadowPictureCache.Drop();
+            _shadowMaskFilter?.Dispose();
+            _shadowMaskFilter = sigma > 0 ? SKMaskFilter.CreateBlur(SKBlurStyle.Normal, sigma) : null;
+            _shadowPassKey = key;
+            _hasShadowPassKey = true;
+        }
+
+        _shadowPaintOptions ??= new TextPaintOptions { ConfigurePaint = ConfigureShadowPaint };
+        canvas.Save();
+        canvas.Translate(DropshadowOffsetX, DropshadowOffsetY);
+        _shadowPictureCache.Paint(canvas, block, _shadowPaintOptions);
+        canvas.Restore();
+    }
+
+    // Keeps the run's own alpha, so translucent text casts a translucent shadow as the layer's drop-shadow filter did.
+    private void ConfigureShadowPaint(SKPaint paint, IStyle style, bool isHalo)
+    {
+        SKColor shadow = DropshadowColor;
+        byte alpha = (byte)(shadow.Alpha * paint.Color.Alpha / 255);
+        paint.Color = shadow.WithAlpha(alpha);
+        paint.MaskFilter = _shadowMaskFilter;
+    }
+
+    private SKPaint? _blendOnlyPaint;
+    private Gum.RenderingLibrary.Blend? _blendOnlyPaintBlend;
+
+    // The layer paint for the cached-shadow path: the blend alone, rebuilt only when the blend changes.
+    private SKPaint GetBlendOnlyPaint()
+    {
+        if (_blendOnlyPaint == null || _blendOnlyPaintBlend != Blend)
+        {
+            _blendOnlyPaint ??= new SKPaint();
+            _blendOnlyPaint.Reset();
+            _blendOnlyPaint.ApplyBlend(Blend!.Value);
+            _blendOnlyPaintBlend = Blend;
+        }
+        return _blendOnlyPaint;
+    }
+
+    private void PaintTextBlockCached(SKCanvas canvas, TextBlock block) => _pictureCache.Paint(canvas, block, null);
+
+    /// <summary>
+    /// A block recorded into a picture once it has been painted two frames in a row (see the note on
+    /// <c>_pictureCache</c>). The text and its drop shadow each keep one, since they paint with different options.
+    /// </summary>
+    private sealed class BlockPictureCache
+    {
+        private SKPicture? _picture;
+        // The block painted last frame, recorded into _picture once it is painted again.
+        public TextBlock? Block { get; private set; }
+
+        public void Drop()
+        {
+            _picture?.Dispose();
+            _picture = null;
+            Block = null;
+        }
+
+        public void Paint(SKCanvas canvas, TextBlock block, TextPaintOptions? options)
+        {
+            if (!ReferenceEquals(Block, block))
+            {
+                Drop();
+                Block = block;
+                PaintTextBlock(canvas, block, options);
+                return;
+            }
+
+            if (_picture == null)
+            {
+                using SKPictureRecorder recorder = new SKPictureRecorder();
+                SKCanvas recordingCanvas = recorder.BeginRecording(_pictureCullRect);
+                PaintTextBlock(recordingCanvas, block, options);
+                _picture = recorder.EndRecording();
+            }
+
+            canvas.DrawPicture(_picture);
+        }
+    }
+
+    /// <summary>Paints <paramref name="block"/>, then its scaled or rotated <c>[Custom]</c> letters.</summary>
+    private static void PaintTextBlock(SKCanvas canvas, TextBlock block, TextPaintOptions? options)
+    {
+        block.Paint(canvas, new SKPoint(0, 0), options);
         if (!_transformedLetters.TryGetValue(block, out List<TransformedLetter>? letters))
         {
             return;
@@ -1510,7 +1934,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
         {
             canvas.Save();
             canvas.Concat(letter.Matrix);
-            letter.Block.Paint(canvas, letter.PaintOffset);
+            letter.Block.Paint(canvas, letter.PaintOffset, options);
             canvas.Restore();
         }
     }
@@ -1523,28 +1947,41 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
     internal List<StyledTextRun> GetStyledRuns()
     {
         var runs = new List<StyledTextRun>();
+        FillStyledRuns(runs);
+        return runs;
+    }
+
+    /// <summary><see cref="GetStyledRuns"/> into a list the caller owns and reuses, which is cleared first.</summary>
+    internal void FillStyledRuns(List<StyledTextRun> runs)
+    {
+        runs.Clear();
 
         if (!_hasMarkup || string.IsNullOrEmpty(_layoutText))
         {
             runs.Add(new StyledTextRun(_layoutText ?? string.Empty, GetStyle()));
-            return runs;
+            return;
         }
 
-        var substrings = _styledSubstringSplitter.GetStyledSubstrings(0, _layoutText, _inlineVariables);
+        TextMarkupBuffers buffers = MarkupBuffers;
+        List<StyledSubstring> substrings = buffers.Substrings;
+        buffers.Splitter.GetStyledSubstringsReusing(0, _layoutText, _inlineVariables, substrings);
         if (substrings.Count == 0)
         {
             runs.Add(new StyledTextRun(_layoutText, GetStyle()));
-            return runs;
+            buffers.TrimToBounds();
+            return;
         }
 
-        foreach (var substring in substrings)
+        for (int i = 0; i < substrings.Count; i++)
         {
+            StyledSubstring substring = substrings[i];
             var (style, text, letter, isHeightRun) = BuildRunStyle(substring.Substring, substring.Variables);
             runs.Add(new StyledTextRun(text, style, letter, isHeightRun));
         }
 
+        // The runs are built; the split's own runs and lists are not kept for the next change.
+        buffers.TrimToBounds();
         AttachLineBreaksToPrecedingRun(runs);
-        return runs;
     }
 
     /// <summary>
@@ -1590,20 +2027,35 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
     /// the cached block when null.</param>
     internal List<StyledTextRun> GetVisibleStyledRuns(TextBlock? fullBlock = null)
     {
-        List<string> visibleLines = GetVisibleWrappedText();
-        List<StyledTextRun> fullRuns = GetStyledRuns();
+        var result = new List<StyledTextRun>();
+        FillVisibleStyledRuns(fullBlock, result, new List<StyledTextRun>(), new List<StyledTextRun>());
+        return result;
+    }
+
+    /// <summary><see cref="GetVisibleStyledRuns"/> into <paramref name="result"/>, which is cleared first, with the two lists the runs
+    /// are built and fit in passed in so a reveal that advances every frame builds no list.</summary>
+    private void FillVisibleStyledRuns(TextBlock? fullBlock, List<StyledTextRun> result, List<StyledTextRun> sourceRuns, List<StyledTextRun> fittedRuns)
+    {
+        TextMarkupBuffers buffers = MarkupBuffers;
+        List<string> fullWrapped = WrappedText;
+        List<int> visibleLengths = buffers.VisibleLineLengths;
+        FillVisibleLineLengths(visibleLengths);
+        FillStyledRuns(sourceRuns);
+        List<StyledTextRun> fullRuns = sourceRuns;
         if (FitsRunsPerLine)
         {
-            fullRuns = FitRunsToLines(fullRuns, fullBlock ?? GetCachedTextBlock());
+            fullRuns = FitRunsToLines(sourceRuns, fullBlock ?? GetCachedTextBlock(), fittedRuns, buffers.LineRuns);
         }
-        var result = new List<StyledTextRun>();
+        result.Clear();
 
         int runIndex = 0;
         int runOffset = 0;
 
-        for (int lineIndex = 0; lineIndex < visibleLines.Count; lineIndex++)
+        for (int lineIndex = 0; lineIndex < visibleLengths.Count; lineIndex++)
         {
-            int remaining = CountCodePoints(visibleLines[lineIndex]);
+            string wrappedLine = fullWrapped[lineIndex];
+            int visibleLength = visibleLengths[lineIndex];
+            int remaining = CountCodePoints(wrappedLine, visibleLength);
             Style? lineStyle = null;
             while (remaining > 0 && runIndex < fullRuns.Count)
             {
@@ -1638,15 +2090,13 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
             }
 
             // A line ending in a hard break already carries its '\n'; a second one would add an empty line (#6484).
-            if (lineIndex < visibleLines.Count - 1 && !visibleLines[lineIndex].EndsWith('\n'))
+            if (lineIndex < visibleLengths.Count - 1 && !(visibleLength > 0 && wrappedLine[visibleLength - 1] == '\n'))
             {
                 // The break sizes the line it ends (see AttachLineBreaksToPrecedingRun), so it takes that line's style.
                 Style breakStyle = lineStyle ?? (runIndex < fullRuns.Count ? fullRuns[runIndex].Style : GetStyle());
                 result.Add(new StyledTextRun("\n", breakStyle));
             }
         }
-
-        return result;
     }
 
     /// <summary>
@@ -1706,11 +2156,28 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
 
     private readonly record struct FontLineMetricsKey(string? Family, float Size, int Weight, bool Italic);
 
+    private readonly record struct StringWidthKey(FontLineMetricsKey Font, string Text);
+
     /// <summary>The metrics probed so far for one font mapper. Guarded by its own lock.</summary>
     private sealed class FontLineMetricsCache
     {
         public readonly Dictionary<FontLineMetricsKey, FontLineMetrics> Entries = new();
+        public readonly Dictionary<FontLineMetricsKey, int> RawLineHeights = new();
+        public readonly Dictionary<StringWidthKey, float> StringWidths = new();
         public int RegistrationVersion;
+
+        /// <summary>Drops every entry when a font was registered since they were stored. Call with the lock held.</summary>
+        public void DropEntriesIfFontsWereRegistered()
+        {
+            int version = Content.Fonts.GumFontMapper.RegistrationVersion;
+            if (RegistrationVersion != version)
+            {
+                Entries.Clear();
+                RawLineHeights.Clear();
+                StringWidths.Clear();
+                RegistrationVersion = version;
+            }
+        }
     }
 
     // The metrics depend only on the font a style resolves to, so one probe per distinct font serves every
@@ -1725,25 +2192,22 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
     /// <summary>How many one-glyph probes have been laid out, so tests can assert a font is probed once.</summary>
     internal static int FontLineMetricsProbeCount => System.Threading.Volatile.Read(ref _fontLineMetricsProbeCount);
 
-    private static FontLineMetrics GetFontLineMetrics(Style style)
+    private static FontLineMetrics GetFontLineMetrics(Style style) =>
+        GetFontLineMetrics(new FontLineMetricsKey(style.FontFamily, style.FontSize, style.FontWeight, style.FontItalic));
+
+    private static FontLineMetrics GetFontLineMetrics(FontLineMetricsKey key)
     {
         FontLineMetricsCache cache = _fontLineMetricsCaches.GetValue(FontMapper.Default, static _ => new FontLineMetricsCache());
-        var key = new FontLineMetricsKey(style.FontFamily, style.FontSize, style.FontWeight, style.FontItalic);
         lock (cache)
         {
-            int version = Content.Fonts.GumFontMapper.RegistrationVersion;
-            if (cache.RegistrationVersion != version)
-            {
-                cache.Entries.Clear();
-                cache.RegistrationVersion = version;
-            }
+            cache.DropEntriesIfFontsWereRegistered();
 
             if (cache.Entries.TryGetValue(key, out FontLineMetrics cached))
             {
                 return cached;
             }
 
-            FontLineMetrics metrics = ProbeFontLineMetrics(style);
+            FontLineMetrics metrics = ProbeFontLineMetrics(key);
             if (cache.Entries.Count >= MaxCachedFontLineMetrics)
             {
                 cache.Entries.Clear();
@@ -1753,7 +2217,48 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
         }
     }
 
-    private static FontLineMetrics ProbeFontLineMetrics(Style style)
+    /// <summary>
+    /// The height of a plain line of the font in <paramref name="key"/>, in whole pixels, as <see cref="LineHeightInPixels"/>
+    /// reports it: a probe of "My" at the default line height, ceiled, or <paramref name="fallbackSize"/> when the
+    /// probe lays out no line. Probed once per font; the entries go with the other font metrics.
+    /// </summary>
+    private static int GetRawLineHeight(FontLineMetricsKey key, float fallbackSize)
+    {
+        FontLineMetricsCache cache = _fontLineMetricsCaches.GetValue(FontMapper.Default, static _ => new FontLineMetricsCache());
+        lock (cache)
+        {
+            cache.DropEntriesIfFontsWereRegistered();
+
+            if (cache.RawLineHeights.TryGetValue(key, out int cached))
+            {
+                return cached;
+            }
+
+            var probe = new TextBlock();
+            probe.AddText("My", new Style()
+            {
+                FontFamily = key.Family,
+                FontSize = key.Size,
+                FontWeight = key.Weight,
+                FontItalic = key.Italic,
+            });
+            if (probe.Lines.Count == 0)
+            {
+                // The fallback depends on the Text's FontSize rather than the font, so it is never stored.
+                return (int)MathF.Ceiling(fallbackSize);
+            }
+
+            int height = (int)MathF.Ceiling(probe.Lines[0].Height);
+            if (cache.RawLineHeights.Count >= MaxCachedFontLineMetrics)
+            {
+                cache.RawLineHeights.Clear();
+            }
+            cache.RawLineHeights[key] = height;
+            return height;
+        }
+    }
+
+    private static FontLineMetrics ProbeFontLineMetrics(FontLineMetricsKey key)
     {
         System.Threading.Interlocked.Increment(ref _fontLineMetricsProbeCount);
 
@@ -1761,10 +2266,10 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
         var probe = new TextBlock();
         probe.AddText("x", new Style()
         {
-            FontFamily = style.FontFamily,
-            FontSize = style.FontSize,
-            FontWeight = style.FontWeight,
-            FontItalic = style.FontItalic,
+            FontFamily = key.Family,
+            FontSize = key.Size,
+            FontWeight = key.Weight,
+            FontItalic = key.Italic,
         });
         return probe.FontRuns.Count == 0
             ? default
@@ -1779,16 +2284,16 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
     /// <paramref name="lineHeightFactor"/> times the plain line height of <paramref name="style"/>, matching the
     /// other runtimes. A factor of 1 is already exact and is returned untouched.
     /// </summary>
-    /// <param name="style">The run's style; its own <see cref="Style.LineHeight"/> must still be the default 1.</param>
-    /// <param name="lineHeightFactor">The wanted line height in plain lines of <paramref name="style"/>.</param>
-    private static float GetLeadingCompensatedLineHeight(Style style, float lineHeightFactor)
+    /// <param name="font">The run's font.</param>
+    /// <param name="lineHeightFactor">The wanted line height in plain lines of <paramref name="font"/>.</param>
+    private static float GetLeadingCompensatedLineHeight(FontLineMetricsKey font, float lineHeightFactor)
     {
         if (lineHeightFactor == 1 || float.IsNaN(lineHeightFactor) || float.IsInfinity(lineHeightFactor))
         {
             return lineHeightFactor;
         }
 
-        FontLineMetrics metrics = GetFontLineMetrics(style);
+        FontLineMetrics metrics = GetFontLineMetrics(font);
         if (!metrics.IsValid)
         {
             return lineHeightFactor;
@@ -1803,10 +2308,14 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
     private static int CodePointLength(string text, int index) =>
         char.IsHighSurrogate(text[index]) && index + 1 < text.Length ? 2 : 1;
 
-    private static int CountCodePoints(string text)
+    private static int CountCodePoints(string text) => CountCodePoints(text, text.Length);
+
+    /// <summary>The code points in the first <paramref name="length"/> chars of <paramref name="text"/>, counted as the whole
+    /// text would count them (a high surrogate at the end of the prefix takes the char after it).</summary>
+    private static int CountCodePoints(string text, int length)
     {
         int count = 0;
-        for (int i = 0; i < text.Length; i += CodePointLength(text, i))
+        for (int i = 0; i < length; i += CodePointLength(text, i))
         {
             count++;
         }
@@ -1822,7 +2331,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
     /// fits each line: its tallest font is set to the line's height, and every other run on the line is lowered
     /// until it reaches no higher and no lower than that one.
     /// </summary>
-    private List<StyledTextRun> FitRunsToLines(List<StyledTextRun> runs, TextBlock layout)
+    private List<StyledTextRun> FitRunsToLines(List<StyledTextRun> runs, TextBlock layout, List<StyledTextRun> result, List<StyledTextRun> lineRuns)
     {
         IReadOnlyList<TextLine> lines = layout.Lines;
         if (lines.Count < 1)
@@ -1836,8 +2345,8 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
             return runs;
         }
 
-        var result = new List<StyledTextRun>(runs.Count + lines.Count);
-        var lineRuns = new List<StyledTextRun>();
+        result.Clear();
+        lineRuns.Clear();
         int lineIndex = 0;
         int lineEnd = lines[0].Start + lines[0].Length;
         int position = 0;
@@ -1909,17 +2418,44 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
     }
 
     /// <summary>A copy of a style built by <see cref="BuildRunStyle"/> with another <see cref="Style.LineHeight"/>.</summary>
-    private static Style WithLineHeight(Style style, float lineHeight) => new Style()
+    private Style WithLineHeight(Style style, float lineHeight) => GetCachedStyle(new StyleKey(
+        style.FontFamily, style.FontSize, style.TextColor, style.FontItalic, style.FontWeight, style.HaloWidth, style.HaloColor, lineHeight));
+
+    /// <summary>The values of a <see cref="Style"/> this Text builds.</summary>
+    private readonly record struct StyleKey(string? FontFamily, float FontSize, SKColor TextColor, bool FontItalic,
+        int FontWeight, float HaloWidth, SKColor HaloColor, float LineHeight);
+
+    // Text that changes every frame builds the same few styles again on each change, so they are kept by value and
+    // shared by the blocks built from them (#7818). Nothing changes a Style once it is built, so sharing one is safe.
+    private Dictionary<StyleKey, Style> _styleCache = new();
+    private const int MaxCachedStyles = 64;
+
+    private Style GetCachedStyle(StyleKey key)
     {
-        FontFamily = style.FontFamily,
-        FontSize = style.FontSize,
-        TextColor = style.TextColor,
-        FontItalic = style.FontItalic,
-        FontWeight = style.FontWeight,
-        HaloWidth = style.HaloWidth,
-        HaloColor = style.HaloColor,
-        LineHeight = lineHeight,
-    };
+        if (_styleCache.TryGetValue(key, out Style? cached))
+        {
+            return cached;
+        }
+
+        if (_styleCache.Count >= MaxCachedStyles)
+        {
+            _styleCache.Clear();
+        }
+
+        var style = new Style()
+        {
+            FontFamily = key.FontFamily,
+            FontSize = key.FontSize,
+            TextColor = key.TextColor,
+            FontItalic = key.FontItalic,
+            FontWeight = key.FontWeight,
+            HaloWidth = key.HaloWidth,
+            HaloColor = key.HaloColor,
+            LineHeight = key.LineHeight,
+        };
+        _styleCache[key] = style;
+        return style;
+    }
 
     /// <summary>
     /// Builds the RichTextKit <see cref="Style"/> for one run: the base font/color/weight/italic from
@@ -2029,13 +2565,21 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
             }
         }
 
-        var style = new Style()
-        {
-            FontFamily = fontFamily,
-            FontSize = fontSizePixels * (float)GlobalTextScale * fontScale,
-            TextColor = color,
-            FontItalic = italic,
-            FontWeight = weight,
+        float scaledFontSize = fontSizePixels * (float)GlobalTextScale * fontScale;
+
+        // Style.LineHeight multiplies a run's ascent and descent but not its leading, so the factor is
+        // adjusted until the line is exactly the multiplier times a plain line of this run (#6467). In text with a
+        // size or font run, every factor is replaced line by line in FitRunsToLines (#6475).
+        float lineHeight = isSizeRun
+            ? GetSizeRunLineHeightMultiplier(fontSizePixels * fontScale / FontSize)
+            : GetLeadingCompensatedLineHeight(new FontLineMetricsKey(fontFamily, scaledFontSize, weight, italic), LineHeightMultiplier);
+
+        Style style = GetCachedStyle(new StyleKey(
+            fontFamily,
+            scaledFontSize,
+            color,
+            italic,
+            weight,
             // HaloWidth is a stroke centered on the glyph edge, so at width N the fill covers the
             // inner half and only ~N/2 shows -- doubled here so the requested thickness shows in
             // full outward. That doubling used to hit RichTextKit's hardcoded miter join and spike
@@ -2045,21 +2589,14 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
             // possible (issue #4037) -- RichTextKit paints per-run halo natively in one pass.
             // The thickness is stretched by the scale the glyphs get (GlobalTextScale and the run's FontScale)
             // and not by FontSize, as on MonoGame and Raylib where the outline is baked into the font (#6669).
-            HaloWidth = outlineThickness > 0 ? outlineThickness * 2f * (float)GlobalTextScale * fontScale : 0f,
+            outlineThickness > 0 ? outlineThickness * 2f * (float)GlobalTextScale * fontScale : 0f,
             // RichTextKit's halo gate (`Style.HaloColor != SKColor.Empty`) ignores HaloWidth, and a
             // Stroke-style SKPaint with StrokeWidth 0 draws as a 1px hairline instead of nothing -- so
             // passing OutlineColor through unconditionally drew a thin outline on every glyph whenever
             // OutlineColor was non-transparent, even with no outline requested (issue #4077 follow-up).
             // Suppress to Empty whenever there's no actual outline thickness.
-            HaloColor = outlineThickness > 0 ? OutlineColor : SKColor.Empty,
-        };
-
-        // Style.LineHeight multiplies a run's ascent and descent but not its leading, so the factor is
-        // adjusted until the line is exactly the multiplier times a plain line of this run (#6467). In text with a
-        // size or font run, every factor is replaced line by line in FitRunsToLines (#6475).
-        style.LineHeight = isSizeRun
-            ? GetSizeRunLineHeightMultiplier(fontSizePixels * fontScale / FontSize)
-            : GetLeadingCompensatedLineHeight(style, LineHeightMultiplier);
+            outlineThickness > 0 ? OutlineColor : SKColor.Empty,
+            lineHeight));
 
         return (style, text, letter, isSizeRun || isFontRun);
     }
@@ -2078,6 +2615,27 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
         text == null ? null : ControlCharacterBlanker.Blank(text, expandTabs: false).Replace("\r\n", " \n");
 
     private void ParseMarkup()
+    {
+        ParseMarkupCore();
+
+        // The one exit of every parse (plain, empty, no recognized tag, or markup): what the parse left is brought down to
+        // its bound, and a text without tags keeps none of the last one's. A Text that never had markup has no buffers to create.
+        if (_hasMarkup)
+        {
+            _markupBuffers?.TrimToBounds();
+        }
+        else
+        {
+            _markupBuffers?.DiscardParse();
+        }
+
+        if (_inlineVariables.Capacity > TextMarkupBuffers.MaxRetainedRuns)
+        {
+            _inlineVariables.Capacity = _inlineVariables.Count;
+        }
+    }
+
+    private void ParseMarkupCore()
     {
         _inlineVariables.Clear();
         _hasHeightRun = false;
@@ -2098,7 +2656,9 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
         // mirroring the MonoGame/Raylib SetBbCodeText path. Parsing and stripping from the same
         // normalized string keeps InlineVariable indexes aligned with the layout text.
         var normalized = withGlyphs.Replace("\r\n", "\n");
-        var tags = BbCodeParser.Parse(normalized, SupportedTags);
+        TextMarkupBuffers buffers = MarkupBuffers;
+        List<FoundTag> tags = buffers.Tags;
+        BbCodeParser.Parse(normalized, SupportedTags, tags, buffers.ActiveTags);
         ParsedBbCodeTags = tags;
         if (tags.Count == 0)
         {
@@ -2108,7 +2668,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
         }
 
         _hasMarkup = true;
-        _layoutText = BlankControlCharacters(BbCodeParser.RemoveTags(normalized, tags));
+        _layoutText = BlankControlCharacters(BbCodeParser.RemoveTags(normalized, tags, ref buffers.SortScratch, buffers.Builder));
         BuildInlineVariables(tags);
         foreach (InlineVariable variable in _inlineVariables)
         {
@@ -2132,58 +2692,62 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
             var argument = tag.Open.Argument;
             string variableName;
             object? value;
+            InlineVariable slot = MarkupBuffers.GetInlineVariable(_inlineVariables.Count);
+            object? existing = slot.Value;
 
-            switch (tag.Name.ToLowerInvariant())
+            // Every tag that was parsed is in SupportedTags, so Name is the PascalCase spelling listed there.
+            switch (tag.Name)
             {
-                case "font":
+                case "Font":
                     variableName = "Font";
                     value = string.IsNullOrEmpty(argument)
                         ? null
                         : Content.Fonts.GumFontMapper.ResolveFontFamily(useCustomFont: false, customFontFile: null, font: argument);
                     break;
-                case "color":
+                case "Color":
                     variableName = "Color";
-                    value = ParseColor(argument);
+                    System.Drawing.Color? parsedColor = ParseColor(argument);
+                    value = parsedColor.HasValue ? Box(existing, parsedColor.Value) : null;
                     break;
-                case "red":
+                case "Red":
                     variableName = "Red";
-                    value = byte.TryParse(argument, out var red) ? red : (byte?)null;
+                    value = byte.TryParse(argument, out var red) ? Box(existing, red) : null;
                     break;
-                case "green":
+                case "Green":
                     variableName = "Green";
-                    value = byte.TryParse(argument, out var green) ? green : (byte?)null;
+                    value = byte.TryParse(argument, out var green) ? Box(existing, green) : null;
                     break;
-                case "blue":
+                case "Blue":
                     variableName = "Blue";
-                    value = byte.TryParse(argument, out var blue) ? blue : (byte?)null;
+                    value = byte.TryParse(argument, out var blue) ? Box(existing, blue) : null;
                     break;
-                case "fontsize":
+                case "FontSize":
                     variableName = "FontSize";
                     value = float.TryParse(argument, NumberStyles.Float, CultureInfo.InvariantCulture, out var size)
-                        ? size
-                        : (float?)null;
+                        ? Box(existing, size)
+                        : null;
                     break;
-                case "fontscale":
+                case "FontScale":
                     variableName = "FontScale";
                     value = float.TryParse(argument, NumberStyles.Float, CultureInfo.InvariantCulture, out var scale)
-                        ? scale
-                        : (float?)null;
+                        ? Box(existing, scale)
+                        : null;
                     break;
-                case "isbold":
+                case "IsBold":
                     variableName = "IsBold";
-                    value = bool.TryParse(argument, out var bold) ? bold : (bool?)null;
+                    value = bool.TryParse(argument, out var bold) ? Box(existing, bold) : null;
                     break;
-                case "isitalic":
+                case "IsItalic":
                     variableName = "IsItalic";
-                    value = bool.TryParse(argument, out var italic) ? italic : (bool?)null;
+                    value = bool.TryParse(argument, out var italic) ? Box(existing, italic) : null;
                     break;
-                case "outlinethickness":
+                case "OutlineThickness":
                     variableName = "OutlineThickness";
                     value = int.TryParse(argument, NumberStyles.Integer, CultureInfo.InvariantCulture, out var outlineThickness)
-                        ? outlineThickness
-                        : (int?)null;
+                        ? Box(existing, outlineThickness)
+                        : null;
                     break;
-                case "custom":
+                case "Custom":
                     // A [Custom=Name] callback applies per letter (issue #3692), so -- unlike every other
                     // tag above, which adds a single InlineVariable spanning the whole tagged range --
                     // this adds one InlineVariable per character, each with its own CharacterIndex/
@@ -2203,18 +2767,17 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
                                 letterLength = char.IsHighSurrogate(taggedSubstring[i])
                                     && i + 1 < taggedSubstring.Length
                                     && char.IsLowSurrogate(taggedSubstring[i + 1]) ? 2 : 1;
-                                _inlineVariables.Add(new InlineVariable
+                                InlineVariable letterVariable = MarkupBuffers.GetInlineVariable(_inlineVariables.Count);
+                                letterVariable.VariableName = "Custom";
+                                letterVariable.StartIndex = startStripped + i;
+                                letterVariable.CharacterCount = letterLength;
+                                letterVariable.Value = new ParameterizedLetterCustomizationCall
                                 {
-                                    VariableName = "Custom",
-                                    StartIndex = startStripped + i,
-                                    CharacterCount = letterLength,
-                                    Value = new ParameterizedLetterCustomizationCall
-                                    {
-                                        FunctionName = argument,
-                                        CharacterIndex = startStripped + i,
-                                        TextBlock = taggedSubstring,
-                                    },
-                                });
+                                    FunctionName = argument,
+                                    CharacterIndex = startStripped + i,
+                                    TextBlock = taggedSubstring,
+                                };
+                                _inlineVariables.Add(letterVariable);
                             }
                         }
                     }
@@ -2228,15 +2791,20 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
                 continue;
             }
 
-            _inlineVariables.Add(new InlineVariable
-            {
-                VariableName = variableName,
-                StartIndex = tag.Open.StartStrippedIndex,
-                CharacterCount = tag.Close.StartStrippedIndex - tag.Open.StartStrippedIndex,
-                Value = value,
-            });
+            slot.VariableName = variableName;
+            slot.StartIndex = tag.Open.StartStrippedIndex;
+            slot.CharacterCount = tag.Close.StartStrippedIndex - tag.Open.StartStrippedIndex;
+            slot.Value = value;
+            _inlineVariables.Add(slot);
         }
     }
+
+    /// <summary>
+    /// <paramref name="value"/> as an object, which is <paramref name="existing"/> itself when it already boxes an equal value,
+    /// so a variable parsed again with the same value (a tag whose text did not change) boxes nothing.
+    /// </summary>
+    private static object Box<T>(object? existing, T value) where T : struct =>
+        existing is T current && EqualityComparer<T>.Default.Equals(current, value) ? existing : value;
 
     /// <summary>
     /// Parses a <c>[Color=..]</c> argument, honoring both a hex form (<c>0xAARRGGBB</c>) and a named
@@ -2306,30 +2874,66 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
     /// unchanged. The caller owns the returned paint and must dispose it. The blur values are
     /// converted to a sigma with <see cref="DropshadowBlur.GetSigma"/>, the same convention <see cref="RenderableShapeBase"/> uses for Skia shapes.
     /// </summary>
-    internal SKPaint? GetRenderPaint()
+    private SKPaint? _cachedRenderPaint;
+    private bool _hasCachedRenderPaint;
+    private (bool HasDropshadow, float OffsetX, float OffsetY, float BlurX, float BlurY, SKColor Color, Gum.RenderingLibrary.Blend? Blend) _cachedRenderPaintKey;
+
+    /// <summary>
+    /// <see cref="GetRenderPaint"/>, kept until one of the values it reads changes. The renderable owns
+    /// the returned paint; callers must not dispose it.
+    /// </summary>
+    private SKPaint? GetCachedRenderPaint()
     {
-        if (!HasDropshadow && !Blend.HasValue)
+        (bool, float, float, float, float, SKColor, Gum.RenderingLibrary.Blend?) key =
+            (HasDropshadow, DropshadowOffsetX, DropshadowOffsetY, DropshadowBlurX, DropshadowBlurY, DropshadowColor, Blend);
+
+        if (!_hasCachedRenderPaint || _cachedRenderPaintKey != key)
         {
-            return null;
+            // The paint object is rebuilt in place, so animating a shadow value allocates no new paint.
+            _cachedRenderPaintKey = key;
+            _hasCachedRenderPaint = true;
+            _hasActiveRenderPaint = HasDropshadow || HasActiveBlend;
+            if (_hasActiveRenderPaint)
+            {
+                _cachedRenderPaint ??= new SKPaint();
+                _cachedRenderPaint.Reset();
+                ConfigureRenderPaint(_cachedRenderPaint);
+            }
         }
 
-        var paint = new SKPaint();
+        return _hasActiveRenderPaint ? _cachedRenderPaint : null;
+    }
 
+    private bool _hasActiveRenderPaint;
+
+    private void ConfigureRenderPaint(SKPaint paint)
+    {
         if (HasDropshadow)
         {
-            paint.ImageFilter = SKImageFilter.CreateDropShadow(
+            using SKImageFilter dropshadow = SKImageFilter.CreateDropShadow(
                 DropshadowOffsetX,
                 DropshadowOffsetY,
                 global::Gum.Wireframe.DropshadowBlur.GetSigma(DropshadowBlurX),
                 global::Gum.Wireframe.DropshadowBlur.GetSigma(DropshadowBlurY),
                 DropshadowColor);
+            paint.ImageFilter = dropshadow;
         }
 
-        if (Blend.HasValue)
+        if (HasActiveBlend)
         {
             paint.ApplyBlend(Blend.Value);
         }
+    }
 
+    internal SKPaint? GetRenderPaint()
+    {
+        if (!HasDropshadow && !HasActiveBlend)
+        {
+            return null;
+        }
+
+        SKPaint paint = new SKPaint();
+        ConfigureRenderPaint(paint);
         return paint;
     }
 
@@ -2340,17 +2944,20 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
     /// and <see cref="LineHeightInPixels"/> return raw glyph-pixel values that callers (e.g.
     /// <c>TextBoxBase</c>) scale by those factors themselves.
     /// </summary>
-    private Style GetRawMeasurementStyle()
-    {
-        return new Style()
-        {
-            FontFamily = EffectiveFontFamily,
-            FontSize = FontSize * (float)GlobalTextScale,
-            TextColor = this.Color,
-            FontItalic = this.IsItalic,
-            FontWeight = (int)(400 * BoldWeight),
-        };
-    }
+    private FontLineMetricsKey GetRawMeasurementFontKey() =>
+        new FontLineMetricsKey(EffectiveFontFamily, FontSize * (float)GlobalTextScale, (int)(400 * BoldWeight), this.IsItalic);
+
+    // The block and style every MeasureString call lays its text out into, one pair per thread (#7863). Each call
+    // clears the block and sets every style value it uses, so a call never sees an earlier one's text or font, and
+    // no Text holds a block of its own. A text longer than MaxScratchMeasureLength gets a block of its own, so the
+    // shared one never keeps buffers sized for a long text.
+    [ThreadStatic] private static TextBlock? _scratchMeasureBlock;
+    [ThreadStatic] private static Style? _scratchMeasureStyle;
+    private const int MaxScratchMeasureLength = 512;
+    // The widths kept per font mapper: strings up to this long, this many at most (a line of a wrapped TextBox and
+    // its prefixes), so what is retained stays small whatever is measured.
+    private const int MaxMemoizedMeasureLength = 128;
+    private const int MaxMemoizedMeasures = 512;
 
     /// <inheritdoc/>
     public float MeasureString(string text)
@@ -2360,10 +2967,89 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
             return 0;
         }
 
-        var textBlock = new TextBlock();
-        textBlock.AddText(text, GetRawMeasurementStyle());
+        FontLineMetricsKey font = GetRawMeasurementFontKey();
+        if (text.Length > MaxMemoizedMeasureLength)
+        {
+            return LayOutAndMeasure(text, font);
+        }
+
+        // A TextBox measures the same prefixes of its lines on every caret move and drag frame, and a width depends
+        // only on the font values and the text, so a repeat is a lookup instead of a layout (#7872).
+        StringWidthKey key = new StringWidthKey(font, text);
+        FontLineMetricsCache cache = _fontLineMetricsCaches.GetValue(FontMapper.Default, static _ => new FontLineMetricsCache());
+        int version;
+        lock (cache)
+        {
+            cache.DropEntriesIfFontsWereRegistered();
+            if (cache.StringWidths.TryGetValue(key, out float cached))
+            {
+                return cached;
+            }
+            version = cache.RegistrationVersion;
+        }
+
+        float width = LayOutAndMeasure(text, font);
+        lock (cache)
+        {
+            cache.DropEntriesIfFontsWereRegistered();
+            // A font registered while the text was measured may have changed the answer, so it is not kept.
+            if (cache.RegistrationVersion == version)
+            {
+                if (cache.StringWidths.Count >= MaxMemoizedMeasures)
+                {
+                    cache.StringWidths.Clear();
+                }
+                cache.StringWidths[key] = width;
+            }
+        }
+        return width;
+    }
+
+    private float LayOutAndMeasure(string text, FontLineMetricsKey font)
+    {
+        bool useScratch = text.Length <= MaxScratchMeasureLength;
+        Style style = useScratch ? (_scratchMeasureStyle ??= new Style()) : new Style();
+        style.FontFamily = font.Family;
+        style.FontSize = font.Size;
+        style.TextColor = this.Color;
+        style.FontItalic = font.Italic;
+        style.FontWeight = font.Weight;
+
+        TextBlock textBlock;
+        if (useScratch)
+        {
+            textBlock = _scratchMeasureBlock ??= new TextBlock();
+            textBlock.Clear();
+        }
+        else
+        {
+            textBlock = new TextBlock();
+        }
+        textBlock.AddText(text, style);
         return textBlock.MeasuredWidth;
     }
+
+    // One string per Latin-1 character, so asking for a character's advance builds no string.
+    private static readonly string[] _latin1Strings = BuildLatin1Strings();
+
+    private static string[] BuildLatin1Strings()
+    {
+        string[] strings = new string[256];
+        for (int i = 0; i < strings.Length; i++)
+        {
+            strings[i] = ((char)i).ToString();
+        }
+        return strings;
+    }
+
+    /// <summary>
+    /// The advance of one character, which is <see cref="MeasureString(string)"/> of the one-character string, so it
+    /// is measured once per font and character and a repeat is a lookup. A click or a drag on a TextBox adds up one
+    /// of these per character of a line (#7872), and each used to be a RichTextKit layout of its own. A surrogate half
+    /// is measured on its own like any other char, as the hit test asks for it.
+    /// </summary>
+    public float GetCharacterAdvance(char character) =>
+        MeasureString(character < _latin1Strings.Length ? _latin1Strings[character] : character.ToString());
 
     /// <summary>
     /// Measures <paramref name="text"/> using this Text's active font. The
@@ -2414,9 +3100,43 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
         newInstance.mParent = null;
         newInstance.mChildren = new();
         newInstance._cachedTextBlock = null;
+        // The copied picture, reveal block and render paint belong to the source.
+        newInstance._pictureCache = new();
+        newInstance._shadowPictureCache = new();
+        newInstance._shadowMaskFilter = null;
+        newInstance._hasShadowPassKey = false;
+        newInstance._shadowPaintOptions = null;
+        newInstance._blendOnlyPaint = null;
+        newInstance._revealBlock = null;
+        newInstance._revealBlockSource = null;
+        newInstance._lineBreakLayout = null;
+        newInstance._plainBlocks = new TextBlock?[2];
+        newInstance._plainRuns = new(1);
+        newInstance._cachedRenderPaint = null;
+        newInstance._hasCachedRenderPaint = false;
+        newInstance._hasActiveRenderPaint = false;
         // MemberwiseClone shares the list reference; give the clone its own copy so re-parsing markup
         // on one instance (via RawText) doesn't mutate the other's inline-styling runs (issue #3679).
-        newInstance._inlineVariables = new List<InlineVariable>(_inlineVariables);
+        // The variables themselves are reused by the next parse of the source, so the clone gets copies, with
+        // its own buffers and its own list of tags.
+        newInstance._markupBuffers = null;
+        newInstance._inlineVariables = new List<InlineVariable>(_inlineVariables.Count);
+        foreach (InlineVariable variable in _inlineVariables)
+        {
+            newInstance._inlineVariables.Add(new InlineVariable
+            {
+                VariableName = variable.VariableName,
+                StartIndex = variable.StartIndex,
+                CharacterCount = variable.CharacterCount,
+                Value = variable.Value,
+            });
+        }
+        if (ParsedBbCodeTags != null)
+        {
+            newInstance.ParsedBbCodeTags = new List<FoundTag>(ParsedBbCodeTags);
+        }
+        // A Dictionary is not safe to share between Texts that may be built on different threads.
+        newInstance._styleCache = new Dictionary<StyleKey, Style>();
 
         return newInstance;
     }

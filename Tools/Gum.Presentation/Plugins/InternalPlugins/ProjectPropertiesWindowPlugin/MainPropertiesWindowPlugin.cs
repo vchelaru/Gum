@@ -32,6 +32,7 @@ class MainPropertiesWindowPlugin : CorePriorityPlugin
     private readonly IPluginManager _pluginManager;
     private readonly IProjectManager _projectManager;
     private readonly LocalizationService _localizationService;
+    private readonly IProjectRestrictions _projectRestrictions;
 
     private ProjectPropertiesViewModel _viewModel = null!;
     private ProjectPropertiesChangeLogic _changeLogic = null!;
@@ -45,7 +46,8 @@ class MainPropertiesWindowPlugin : CorePriorityPlugin
         IProjectState projectState,
         IPluginManager pluginManager,
         IProjectManager projectManager,
-        LocalizationService localizationService)
+        LocalizationService localizationService,
+        IProjectRestrictions projectRestrictions)
     {
         _wireframeCommands = wireframeCommands;
         _wireframeObjectManager = wireframeObjectManager;
@@ -53,6 +55,7 @@ class MainPropertiesWindowPlugin : CorePriorityPlugin
         _pluginManager = pluginManager;
         _projectManager = projectManager;
         _localizationService = localizationService;
+        _projectRestrictions = projectRestrictions;
     }
 
     public override void StartUp()
@@ -64,7 +67,9 @@ class MainPropertiesWindowPlugin : CorePriorityPlugin
             _fileCommands,
             _wireframeCommands,
             _pluginManager,
-            _localizationService);
+            _localizationService,
+            _projectRestrictions,
+            _guiCommands);
 
         _viewModel = new ProjectPropertiesViewModel();
         _viewModel.PropertyChanged += HandlePropertyChanged;
@@ -78,8 +83,8 @@ class MainPropertiesWindowPlugin : CorePriorityPlugin
             new ProjectPropertiesPageViewModel(_viewModel, ProjectPropertiesSection.General), order: 0)
         {
             Activated = Reload,
-            Keywords = new[] { "texture filter", "unit values", "android", "file names", "single pixel texture" },
-            SearchTerms = () => ProjectPropertiesGridPresenter.RowLabels(_viewModel, ProjectPropertiesSection.General),
+            Keywords = new[] { "texture filter", "unit values", "android", "file names", "single pixel texture", "engine profile", "gumengine", "restrict" },
+            SearchTerms = () => new ProjectGeneralRows(_viewModel).SearchTerms(),
         });
         AddSettingsPage(new SettingsPage(
             SettingsPageIds.Canvas, "Canvas", SettingsSection.Project,
@@ -87,7 +92,7 @@ class MainPropertiesWindowPlugin : CorePriorityPlugin
         {
             Activated = Reload,
             Keywords = new[] { "width", "height", "size", "guides", "outlines", "checker" },
-            SearchTerms = () => ProjectPropertiesGridPresenter.RowLabels(_viewModel, ProjectPropertiesSection.Canvas),
+            SearchTerms = () => new CanvasRows(_viewModel).SearchTerms(),
         });
         AddSettingsPage(new SettingsPage(
             SettingsPageIds.Localization, "Localization", SettingsSection.Project,
@@ -95,7 +100,7 @@ class MainPropertiesWindowPlugin : CorePriorityPlugin
         {
             Activated = Reload,
             Keywords = new[] { "language", "csv", "resx", "translation" },
-            SearchTerms = () => ProjectPropertiesGridPresenter.RowLabels(_viewModel, ProjectPropertiesSection.Localization),
+            SearchTerms = () => new LocalizationRows(_viewModel).SearchTerms(),
         });
     }
 

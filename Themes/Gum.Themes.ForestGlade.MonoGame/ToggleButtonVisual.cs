@@ -28,9 +28,12 @@ public class ToggleButtonVisual : BaseToggleButtonVisual
         FocusedIndicator.Parent = null;
 
         Width = 96;
-        Height = 32;
+        Height = 12;
         WidthUnits = DimensionUnitType.Absolute;
-        HeightUnits = DimensionUnitType.Absolute;
+        // The button is as tall as its label: 12 of chrome padding plus the 20 px line of the
+        // 14 px theme font is the 32 it always was for one line, and wrapped lines grow it.
+        HeightUnits = DimensionUnitType.RelativeToChildren;
+        TextInstance.Height = 0;
 
         // ApplyState BEFORE constructing the chrome so the text-shadow's
         // seeded font is the theme's font, not TextRuntime's Arial-18 default.

@@ -1,3 +1,4 @@
+using RaylibGum.Tests.Helpers;
 using Gum.GueDeriving;
 using Gum.RenderingLibrary;
 using Raylib_cs;
@@ -26,24 +27,8 @@ public class RenderTargetTests : BaseTestClass
 
     private static Color ReadRenderTargetCenter(RenderTexture2D renderTexture)
     {
-        return ReadRenderTargetPixel(renderTexture,
+        return RaylibPixelHarness.ReadPixel(renderTexture,
             renderTexture.Texture.Width / 2, renderTexture.Texture.Height / 2);
-    }
-
-    // Reads a pixel in top-left-origin draw space. A render texture is stored bottom-up in GL, so
-    // LoadImageFromTexture yields an image whose rows are flipped relative to draw space — hence the
-    // (height - 1 - y) flip here.
-    private static Color ReadRenderTargetPixel(RenderTexture2D renderTexture, int x, int y)
-    {
-        Image image = LoadImageFromTexture(renderTexture.Texture);
-        try
-        {
-            return GetImageColor(image, x, renderTexture.Texture.Height - 1 - y);
-        }
-        finally
-        {
-            UnloadImage(image);
-        }
     }
 
     private static int DrawAndCountDrawCalls()
@@ -309,8 +294,8 @@ public class RenderTargetTests : BaseTestClass
         DrawOnce();
 
         RenderTexture2D outerRenderTexture = Renderer.Self.TryGetBakedRenderTargetFor(outer)!.Value;
-        Color innerRegion = ReadRenderTargetPixel(outerRenderTexture, 25, 50);
-        Color siblingRegion = ReadRenderTargetPixel(outerRenderTexture, 75, 50);
+        Color innerRegion = RaylibPixelHarness.ReadPixel(outerRenderTexture, 25, 50);
+        Color siblingRegion = RaylibPixelHarness.ReadPixel(outerRenderTexture, 75, 50);
 
         // Inner RT still composited its red.
         innerRegion.R.ShouldBeGreaterThan((byte)200);
@@ -442,10 +427,10 @@ public class RenderTargetTests : BaseTestClass
 
         RenderTexture2D outerRenderTexture = Renderer.Self.TryGetBakedRenderTargetFor(outer)!.Value;
         // Center of the 50x50 clip window (x in [0,50), y in [25,75)).
-        Color insideClip = ReadRenderTargetPixel(outerRenderTexture, 25, 50);
-        Color rightOfClip = ReadRenderTargetPixel(outerRenderTexture, 75, 50);
-        Color aboveClip = ReadRenderTargetPixel(outerRenderTexture, 25, 10);
-        Color belowClip = ReadRenderTargetPixel(outerRenderTexture, 25, 90);
+        Color insideClip = RaylibPixelHarness.ReadPixel(outerRenderTexture, 25, 50);
+        Color rightOfClip = RaylibPixelHarness.ReadPixel(outerRenderTexture, 75, 50);
+        Color aboveClip = RaylibPixelHarness.ReadPixel(outerRenderTexture, 25, 10);
+        Color belowClip = RaylibPixelHarness.ReadPixel(outerRenderTexture, 25, 90);
 
         // Inside the clip window: the red child shows. Beyond it on every side: clipped to transparent.
         insideClip.R.ShouldBeGreaterThan((byte)200);
@@ -568,7 +553,7 @@ public class RenderTargetTests : BaseTestClass
         renderTexture.Texture.Height.ShouldBe(90);
 
         // The center cell (row/col 2, even -> green) baked as an opaque cell color.
-        Color mid = ReadRenderTargetPixel(renderTexture, 45, 45);
+        Color mid = RaylibPixelHarness.ReadPixel(renderTexture, 45, 45);
         mid.A.ShouldBeGreaterThan((byte)200);
         mid.G.ShouldBeGreaterThan((byte)150);
         mid.R.ShouldBeLessThan((byte)150);
@@ -640,8 +625,8 @@ public class RenderTargetTests : BaseTestClass
         DrawOnce();
 
         RenderTexture2D outerRenderTexture = Renderer.Self.TryGetBakedRenderTargetFor(readableOuter)!.Value;
-        Color topPixel = ReadRenderTargetPixel(outerRenderTexture, 32, 10);
-        Color bottomPixel = ReadRenderTargetPixel(outerRenderTexture, 32, 54);
+        Color topPixel = RaylibPixelHarness.ReadPixel(outerRenderTexture, 32, 10);
+        Color bottomPixel = RaylibPixelHarness.ReadPixel(outerRenderTexture, 32, 54);
 
         topPixel.R.ShouldBeGreaterThan((byte)200);
         bottomPixel.G.ShouldBeGreaterThan((byte)200);

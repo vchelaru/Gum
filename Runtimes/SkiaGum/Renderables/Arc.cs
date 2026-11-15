@@ -47,8 +47,11 @@ public class Arc : RenderableShapeBase
         get => _isEndRounded;
         set
         {
-            _isEndRounded = value;
-            ClearCachedPaint();
+            if (_isEndRounded != value)
+            {
+                _isEndRounded = value;
+                ClearCachedPaint();
+            }
         }
     }
 
@@ -70,12 +73,69 @@ public class Arc : RenderableShapeBase
 
     protected override bool BlendsWholeBounds => true;
 
+    SKPath? _cachedPath;
+    SKRect _cachedPathBounds;
+    float _cachedPathStartAngle;
+    float _cachedPathSweepAngle;
+
     public override void DrawBound(SKRect boundingRect, SKCanvas canvas, float absoluteRotation)
     {
         var paint = GetCachedPaint(boundingRect, absoluteRotation);
+
+        if (_cachedPath == null
+            || _cachedPathBounds != boundingRect
+            || _cachedPathStartAngle != StartAngle
+            || _cachedPathSweepAngle != SweepAngle)
+        {
+            _cachedPath?.Dispose();
+            _cachedPath = CreatePath(boundingRect);
+            _cachedPathBounds = boundingRect;
+            _cachedPathStartAngle = StartAngle;
+            _cachedPathSweepAngle = SweepAngle;
+        }
+
+        canvas.DrawPath(_cachedPath, paint);
+    }
+
+    /// <inheritdoc cref="RenderableShapeBase.Clone"/>
+    public override object Clone()
+    {
+        Arc clone = (Arc)base.Clone();
+        // The copied path belongs to the source.
+        clone._cachedPath = null;
+        return clone;
+    }
+
+    public override void Dispose()
+    {
+        _cachedPath?.Dispose();
+        _cachedPath = null;
+        base.Dispose();
+    }
+
+    private SKPath CreatePath(SKRect boundingRect)
+    {
         using var builder = new SKPathBuilder();
+        if (System.Math.Abs(SweepAngle) >= 360)
+        {
+            // A full sweep is a ring. AddArc with a full sweep is empty or seamed at most start
+            // angles (#7394), and arcs split at an arbitrary angle stroke with visible edge error,
+            // so draw the same oval a circle uses, turned so it begins at the start angle (the
+            // dash phase follows it).
+            builder.AddOval(
+                new SKRect(-1, -1, 1, 1),
+                SweepAngle > 0 ? SKPathDirection.CounterClockwise : SKPathDirection.Clockwise);
+            SKMatrix matrix = SKMatrix.Concat(
+                SKMatrix.CreateTranslation(boundingRect.MidX, boundingRect.MidY),
+                SKMatrix.Concat(
+                    SKMatrix.CreateScale(boundingRect.Width / 2, boundingRect.Height / 2),
+                    SKMatrix.CreateRotationDegrees(-StartAngle)));
+            SKPath ring = builder.Detach();
+            ring.Transform(matrix);
+            return ring;
+        }
+
         builder.AddArc(boundingRect, -StartAngle, -SweepAngle);
-        using SKPath path = builder.Detach();
-        canvas.DrawPath(path, paint);
+        return builder.Detach();
     }
 }

@@ -70,7 +70,7 @@ All backends flip the whole drawn nine-slice, flipping first and then transposin
 | `Add` | `Add` | 0 (add identity) |
 | none | resets `Add` → `Modulate` | color untouched |
 
-`Add` draws the texture untinted and adds `Color` on top: a second additive pass on XNA/raylib (`Renderer.DrawAdditiveColorOverlay`, raylib's `AdditiveColorOverlayShader`), and a single-pass `SKColorFilter.CreateColorMatrix` offset on Skia. It works on both `Sprite` and `NineSlice` across XNA/raylib/Skia. There is **no** separate additive color field — an earlier `AdditiveTintColor` was folded into `Color` + `ColorOperation.Add`.
+`Add` draws the texture untinted and adds `Color` on top: a second additive pass on XNA (`Renderer.DrawAdditiveColorOverlay`), and a single pass on raylib (`ColorOperationShader.CreateAdd`) and Skia (`SKColorFilter.CreateColorMatrix` offset), both faded by the tint alpha. It works on both `Sprite` and `NineSlice` across XNA/raylib/Skia. There is **no** separate additive color field — an earlier `AdditiveTintColor` was folded into `Color` + `ColorOperation.Add`.
 
 A separate nullable field, `AnimationFrame.RenderColorOperation`/`AnimationFrameSave.RenderColorOperation`, also picks the renderable's `ColorOperation` (its original purpose was the `Modulate`/`ColorTextureAlpha` technique selector). It writes the **same field** as the table above, so when a frame authors both, the `AnimationFrameColorOperation` wins — it is applied second. Applied in `Sprite.ApplyAnimationFrame` only, on every backend's Sprite.
 

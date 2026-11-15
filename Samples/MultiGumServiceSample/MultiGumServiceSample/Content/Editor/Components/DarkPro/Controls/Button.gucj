@@ -324,6 +324,12 @@
           "ValueAsInt": 1
         },
         {
+          "Name": "TextInstance.Width",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
           "Name": "TextInstance.WidthUnits",
           "Type": "DimensionUnitType",
           "SetsValue": true,

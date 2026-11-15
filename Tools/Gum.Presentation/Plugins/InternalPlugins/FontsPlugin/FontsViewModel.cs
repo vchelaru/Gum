@@ -178,7 +178,7 @@ public partial class FontsViewModel : ViewModel
         foreach (FontRangeEntryViewModel entry in Entries.Skip(1))
         {
             entry.WarningText = unmatched.Contains(entry.FontFamily.Trim())
-                ? $"No Text in this project uses {entry.FontFamily.Trim()}, so this row does nothing."
+                ? $"No Text in this project uses {entry.FontFamily.Trim()} right now."
                 : "";
         }
     }

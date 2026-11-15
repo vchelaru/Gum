@@ -24,6 +24,7 @@
 
   <ItemGroup>
     <Compile Include="..\KernSmith.MonoGameGum\KernSmithFontCreator.cs" Link="KernSmithFontCreator.cs" />
+    <Compile Include="..\KernSmith.MonoGameGum\GumServiceKernSmithExtensions.cs" Link="GumServiceKernSmithExtensions.cs" />
   </ItemGroup>
 
   <ItemGroup>

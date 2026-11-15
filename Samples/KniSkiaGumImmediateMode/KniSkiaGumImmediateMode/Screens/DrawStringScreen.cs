@@ -1,3 +1,4 @@
+using Microsoft.Xna.Framework.Graphics;
 using RenderingLibrary.Graphics;
 using SkiaSharp;
 
@@ -12,11 +13,11 @@ public class DrawStringScreen : IImmediateModeScreen
     private const string FontName = "Arial";
     private const float FontSize = 18;
 
-    public void Initialize()
+    public void Initialize(GraphicsDevice graphicsDevice)
     {
     }
 
-    public void Draw(GumBatch gumBatch, SKCanvas canvas)
+    public void Draw(GumBatch gumBatch, SpriteBatch spriteBatch)
     {
         gumBatch.Begin();
 

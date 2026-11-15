@@ -25,19 +25,25 @@ public sealed class FreezeDiagnosticsInbox : IFreezeDiagnosticsInbox
     public string DirectoryPath { get; }
 
     /// <inheritdoc/>
+    public string ReportedDirectoryPath => Path.Combine(DirectoryPath, ReportedFolderName);
+
+    /// <inheritdoc/>
     public bool ArePromptsSuppressed => File.Exists(_suppressPath);
 
     /// <inheritdoc/>
     public bool BeginSession()
     {
         bool wasDirty = File.Exists(_sentinelPath);
-        Directory.CreateDirectory(DirectoryPath);
-        File.WriteAllText(_sentinelPath, "");
+        BestEffortFile.TryRun(() =>
+        {
+            Directory.CreateDirectory(DirectoryPath);
+            File.WriteAllText(_sentinelPath, "");
+        });
         return wasDirty;
     }
 
     /// <inheritdoc/>
-    public void EndSessionCleanly() => File.Delete(_sentinelPath);
+    public void EndSessionCleanly() => BestEffortFile.TryRun(() => File.Delete(_sentinelPath));
 
     /// <inheritdoc/>
     public IReadOnlyList<string> GetUnreportedFiles()
@@ -55,7 +61,7 @@ public sealed class FreezeDiagnosticsInbox : IFreezeDiagnosticsInbox
     /// <inheritdoc/>
     public void MarkReported(IEnumerable<string> files)
     {
-        string reportedFolder = Path.Combine(DirectoryPath, ReportedFolderName);
+        string reportedFolder = ReportedDirectoryPath;
         Directory.CreateDirectory(reportedFolder);
         foreach (string file in files)
         {

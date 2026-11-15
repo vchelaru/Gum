@@ -8,7 +8,7 @@ Loads a Gum project and reports all errors, including malformed XML in element f
 
 ## Options
 
-- `<project.gumj>` — Path to the `.gumj` or `.gumx` project file
+- `<project.gumj>` — Path to the `.gumj` or `.gumx` project file. An element file (such as `.gucj` or `.gusx`) is rejected with exit code 2 and a message naming the project file. Available in December 2026, or now if building Gum from source.
 - `--json` — Output errors as a JSON array instead of human-readable text
 
 ## Examples
@@ -45,18 +45,23 @@ Each line follows the format: `<severity>: <element>: <message>`
     "element": "ButtonComponent",
     "message": "ButtonComponent has a base type of ButtonBase which does not exist",
     "severity": "Error",
-    "code": null
+    "code": "GUM0030",
+    "details": null
   },
   {
     "element": "SliderComponent",
     "message": "SliderComponent references \"Textures/Thumb.png\", which was not found on disk.",
     "severity": "Warning",
-    "code": "GUM0006"
+    "code": "GUM0006",
+    "details": {
+      "referencedFrom": "SliderComponent",
+      "referencedPath": "Textures/Thumb.png"
+    }
   }
 ]
 ```
 
-`code` is the error's stable code, such as `GUM0006`. Match on `code` rather than `message` in scripts, because message wording can change between releases. Errors that have no code yet report `null`.
+`code` is the error's stable code, such as `GUM0006`. `details` holds the values the error is about, with fields that depend on the code, or `null` when the code has none. Match on `code` and `details` rather than `message` in scripts, because message wording can change between releases.
 
 ## Exit Codes
 

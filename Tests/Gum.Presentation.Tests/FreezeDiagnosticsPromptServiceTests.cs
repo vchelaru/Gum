@@ -20,6 +20,7 @@ public class FreezeDiagnosticsPromptServiceTests
         _dialogService = new Mock<IDialogService>();
         _revealService = new Mock<IFileSystemRevealService>();
         _inbox.SetupGet(x => x.DirectoryPath).Returns(@"C:\Users\someone\AppData\Roaming\Gum\FreezeDiagnostics");
+        _inbox.SetupGet(x => x.ReportedDirectoryPath).Returns(@"C:\Users\someone\AppData\Roaming\Gum\FreezeDiagnostics\Reported");
         _inbox.Setup(x => x.GetUnreportedFiles()).Returns(new List<string> { "freeze-a.dmp", "freeze-a.txt" });
         _dialogService
             .Setup(x => x.Show(It.IsAny<FreezeDiagnosticsPromptViewModel>()))
@@ -79,8 +80,32 @@ public class FreezeDiagnosticsPromptServiceTests
 
         _service.PromptIfNeeded(previousSessionEndedDirty: true);
 
-        _revealService.Verify(x => x.OpenFolder(@"C:\Users\someone\AppData\Roaming\Gum\FreezeDiagnostics"), Times.Once);
+        _revealService.Verify(x => x.OpenFolder(@"C:\Users\someone\AppData\Roaming\Gum\FreezeDiagnostics\Reported"), Times.Once);
         _inbox.Verify(x => x.MarkReported(new List<string> { "freeze-a.dmp", "freeze-a.txt" }), Times.Once);
+    }
+
+    [Fact]
+    public void PromptIfNeeded_Affirmed_OpensFolderOnlyAfterFilesAreMovedIntoIt()
+    {
+        List<string> calls = new List<string>();
+        _dialogService
+            .Setup(x => x.Show(It.IsAny<FreezeDiagnosticsPromptViewModel>()))
+            .Returns(true);
+        _inbox.Setup(x => x.MarkReported(It.IsAny<IEnumerable<string>>())).Callback(() => calls.Add("move"));
+        _revealService.Setup(x => x.OpenFolder(It.IsAny<string>())).Callback<string>(_ => calls.Add("open"));
+
+        _service.PromptIfNeeded(previousSessionEndedDirty: true);
+
+        calls.ShouldBe(new[] { "move", "open" });
+    }
+
+    [Fact]
+    public void PromptIfNeeded_Message_SaysTheFilesWillBeInTheReportedFolder()
+    {
+        _service.PromptIfNeeded(previousSessionEndedDirty: true);
+
+        _shownViewModel.ShouldNotBeNull();
+        _shownViewModel.Message.ShouldContain(@"FreezeDiagnostics\Reported");
     }
 
     [Fact]

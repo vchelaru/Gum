@@ -44,11 +44,14 @@ public class NewProjectDialogViewModelTests
         Resolved = new ResolvedNewProject { Name = "MyGame", CsprojPath = Path.Combine(Folder, "MyGame", "MyGame.csproj") },
     };
 
-    private NewProjectDialogViewModel Create(Action<NewProjectDialogViewModel>? configure = null)
+    // Folder checks run on the calling thread by default: off-thread they resume on a pool thread and mutate the
+    // view model while the test does (#7710). A test of the asynchronous checks passes runChecksInline: false.
+    private NewProjectDialogViewModel Create(Action<NewProjectDialogViewModel>? configure = null, bool runChecksInline = true)
     {
         NewProjectDialogViewModel viewModel = new NewProjectDialogViewModel(
             new ThemeSelectionViewModel(_formsFileService.Object, _projectState.Object),
-            _service.Object, _detector.Object, _dialogService.Object, new Mock<INewProjectLocationSettings>().Object)
+            _service.Object, _detector.Object, _dialogService.Object, new Mock<INewProjectLocationSettings>().Object,
+            runChecksInline)
         {
             ProjectName = "MyGame",
             Location = Folder,
@@ -89,7 +92,8 @@ public class NewProjectDialogViewModelTests
     [InlineData("kni", true, true, true, "--platform kni --source-linked")]
     [InlineData("kni", false, true, false, "--platform kni --no-restore")]
     [InlineData("monogame", true, false, false, "--platform monogame --template empty --source-linked --no-restore")]
-    [InlineData("kniskia", false, true, true, "--platform kniskia --source-linked")]
+    [InlineData("kniskia", false, true, true, "--platform kniskia --preview")]
+    [InlineData("kniskia", true, true, true, "--platform kniskia --source-linked")]
     public void CommandLine_WithACodeProject_OrdersTheOptions(
         string platform, bool sourceLinked, bool forms, bool restore, string expectedOptions)
     {
@@ -185,7 +189,23 @@ public class NewProjectDialogViewModelTests
     }
 
     [Fact]
-    public void SourceLinked_IsForcedOnAndLocked_ForKniSkia()
+    public void Brutal_OffersPreviewAndLocalSource_ButNotStable_WithANote()
+    {
+        NewProjectDialogViewModel viewModel = Create(vm =>
+        {
+            vm.IncludeCodeProject = true;
+            vm.PlatformName = "brutal";
+        });
+
+        viewModel.IsPreview.ShouldBeTrue();
+        viewModel.IsStableChannelEnabled.ShouldBeFalse();
+        viewModel.IsPreviewChannelEnabled.ShouldBeTrue();
+        viewModel.PlatformNote.ShouldContain("Gum.Brutal.OGL has no stable release yet, so Stable is unavailable.");
+        viewModel.CommandLine.ShouldContain("--preview");
+    }
+
+    [Fact]
+    public void KniSkia_OffersPreviewAndLocalSource_ButNotStable_WithANote()
     {
         NewProjectDialogViewModel viewModel = Create(vm =>
         {
@@ -193,9 +213,12 @@ public class NewProjectDialogViewModelTests
             vm.PlatformName = "kniskia";
         });
 
-        viewModel.SourceLinked.ShouldBeTrue();
-        viewModel.IsSourceLinkedEnabled.ShouldBeFalse();
-        viewModel.PlatformNote.ShouldBe("Gum.KniSkia is not on NuGet yet, so the local Gum source is required.");
+        viewModel.SourceLinked.ShouldBeFalse();
+        viewModel.IsPreview.ShouldBeTrue();
+        viewModel.IsSourceLinkedEnabled.ShouldBeTrue();
+        viewModel.IsPreviewChannelEnabled.ShouldBeTrue();
+        viewModel.IsStableChannelEnabled.ShouldBeFalse();
+        viewModel.PlatformNote.ShouldBe("Gum.KniSkia has no stable release yet, so Stable is unavailable.");
     }
 
     [Fact]
@@ -214,7 +237,7 @@ public class NewProjectDialogViewModelTests
     }
 
     [Fact]
-    public void KniSkia_WithoutAGumCheckout_ExplainsWhyOkIsOff()
+    public void KniSkia_WithoutAGumCheckout_StillAllowsOk_WithPreview()
     {
         _service.Setup(x => x.IsSourceLinkedAvailable).Returns(false);
 
@@ -224,8 +247,8 @@ public class NewProjectDialogViewModelTests
             vm.PlatformName = "kniskia";
         });
 
-        viewModel.ValidationMessage.ShouldBe("Use local Gum source needs the Gum source code on this computer, and none was found.");
-        viewModel.CanExecuteAffirmative().ShouldBeFalse();
+        viewModel.ValidationMessage.ShouldBeEmpty();
+        viewModel.CanExecuteAffirmative().ShouldBeTrue();
     }
 
     [Fact]
@@ -314,9 +337,9 @@ public class NewProjectDialogViewModelTests
     [InlineData("My Game", true, "Not a valid C# name.")]
     [InlineData("1Game", true, "Not a valid C# name.")]
     [InlineData("My_Game2", true, "")]
-    [InlineData("a|b", false, "The name has characters a folder name can't have.")]
-    [InlineData("CON", false, "The name has characters a folder name can't have.")]
-    [InlineData("a.", false, "The name has characters a folder name can't have.")]
+    [InlineData("a|b", false, "Invalid character '|' in the name.")]
+    [InlineData("CON", false, "CON is a reserved Windows name. Choose another name.")]
+    [InlineData("a.", false, "A folder name cannot end with a dot or a space.")]
     public void ValidationMessage_FollowsTheNameRules(string name, bool codeProject, string expected)
     {
         NewProjectDialogViewModel viewModel = Create(vm =>
@@ -346,8 +369,70 @@ public class NewProjectDialogViewModelTests
     }
 
     [Theory]
+    [InlineData("CON")]
+    [InlineData("Game<")]
+    [InlineData("Game.")]
+    [InlineData("")]
+    public void ANameProblem_GoesUnderTheNameBox_AndNotBesideOk(string name)
+    {
+        NewProjectDialogViewModel viewModel = Create(vm => vm.ProjectName = name);
+
+        viewModel.NameMessage.ShouldNotBeEmpty();
+        viewModel.NameMessage.ShouldBe(viewModel.ValidationMessage);
+        viewModel.BottomMessage.ShouldBeEmpty();
+    }
+
+    [Theory]
+    [InlineData("COM\u00B9")]
+    [InlineData("lpt\u00B3.txt")]
+    public void ASuperscriptDeviceName_IsRefusedWithTheSameMessageAsTheRules(string name)
+    {
+        NewProjectDialogViewModel viewModel = Create(vm => vm.ProjectName = name);
+
+        viewModel.NameMessage.ShouldBe(NewProjectNameRules.GetProblem(name, false));
+        viewModel.NameMessage.ShouldContain("reserved Windows name");
+    }
+
+    [Theory]
+    [InlineData("Program", "is reserved")]
+    [InlineData("MonoGameGum", "is a Gum package name")]
+    [InlineData("GumCommon", "is a Gum package name")]
+    [InlineData("gumcommon", "is a Gum package name")]
+    public void ACodeProjectNameTheServiceWouldRefuse_TurnsOkOffUnderTheNameBox(string name, string expectedText)
+    {
+        NewProjectDialogViewModel viewModel = Create(vm =>
+        {
+            vm.IncludeCodeProject = true;
+            vm.PlatformName = "monogame";
+            vm.ProjectName = name;
+        });
+
+        viewModel.NameMessage.ShouldContain(expectedText);
+        viewModel.NameMessage.ShouldBe(viewModel.ValidationMessage);
+        viewModel.BottomMessage.ShouldBeEmpty();
+        viewModel.CanExecuteAffirmative().ShouldBeFalse();
+    }
+
+    [Fact]
+    public void AClashingNameWithoutACodeProject_IsAccepted()
+    {
+        NewProjectDialogViewModel viewModel = Create(vm => vm.ProjectName = "MonoGameGum");
+
+        viewModel.NameMessage.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void ALocationProblem_StaysBesideOk_AndLeavesTheNameBoxClean()
+    {
+        NewProjectDialogViewModel viewModel = Create(vm => vm.Location = "Projects");
+
+        viewModel.NameMessage.ShouldBeEmpty();
+        viewModel.BottomMessage.ShouldBe("The location must be a full path.");
+    }
+
+    [Theory]
     [InlineData(125, "")]
-    [InlineData(126, "The name is too long.")]
+    [InlineData(126, "The name is too long: 250 bytes at most.")]
     public void ValidationMessage_CountsTheNameInBytes_NotCharacters(int length, string expected)
     {
         NewProjectDialogViewModel viewModel = Create(vm => vm.ProjectName = new string('\u00e9', length));
@@ -362,7 +447,7 @@ public class NewProjectDialogViewModelTests
         viewModel.ValidationMessage.ShouldBeEmpty();
 
         viewModel.IncludeCodeProject = true;
-        viewModel.ValidationMessage.ShouldBe("The name is too long.");
+        viewModel.ValidationMessage.ShouldBe("The name is too long: 248 bytes at most.");
 
         viewModel.IncludeCodeProject = false;
         viewModel.ValidationMessage.ShouldBeEmpty();
@@ -384,9 +469,9 @@ public class NewProjectDialogViewModelTests
 
     [Theory]
     [InlineData(250, false, "")]
-    [InlineData(251, false, "The name is too long.")]
+    [InlineData(251, false, "The name is too long: 250 bytes at most.")]
     [InlineData(248, true, "")]
-    [InlineData(249, true, "The name is too long.")]
+    [InlineData(249, true, "The name is too long: 248 bytes at most.")]
     public void ValidationMessage_LimitsTheNameToWhatFitsAsAFileNameWithItsExtension(int length, bool codeProject, string expected)
     {
         NewProjectDialogViewModel viewModel = Create(vm =>
@@ -433,6 +518,13 @@ public class NewProjectDialogViewModelTests
     [InlineData("NUL", false)]
     [InlineData("Aux.txt", false)]
     [InlineData("COM1", false)]
+    [InlineData("COM\u00B9", false)]
+    [InlineData("com\u00B2", false)]
+    [InlineData("COM\u00B3", false)]
+    [InlineData("LPT\u00B9", false)]
+    [InlineData("lpt\u00B2", false)]
+    [InlineData("LPT\u00B3", false)]
+    [InlineData("Com\u00B2.txt", false)]
     [InlineData("lpt9", false)]
     [InlineData("COM10", true)]
     [InlineData("Console", true)]
@@ -623,6 +715,29 @@ public class NewProjectDialogViewModelTests
     }
 
     [Fact]
+    public void Create_RunsTheFolderChecksOnTheCallingThread_SoNoPoolThreadMutatesTheViewModelDuringATest()
+    {
+        int callingThread = Environment.CurrentManagedThreadId;
+        List<int> checkThreads = new List<int>();
+        _detector.Setup(x => x.FindExistingCodeProject(It.IsAny<string>())).Returns(() =>
+        {
+            lock (checkThreads)
+            {
+                checkThreads.Add(Environment.CurrentManagedThreadId);
+            }
+            return null;
+        });
+
+        Create(vm => vm.IncludeCodeProject = true);
+
+        lock (checkThreads)
+        {
+            checkThreads.ShouldNotBeEmpty();
+            checkThreads.ShouldAllBe(thread => thread == callingThread);
+        }
+    }
+
+    [Fact]
     public async Task Checks_DoNotBlockTyping()
     {
         using ManualResetEventSlim release = new ManualResetEventSlim();
@@ -631,7 +746,7 @@ public class NewProjectDialogViewModelTests
             release.Wait(TimeSpan.FromSeconds(30));
             return Path.Combine(Folder, "Other.csproj");
         });
-        NewProjectDialogViewModel viewModel = Create(vm => vm.IncludeCodeProject = true);
+        NewProjectDialogViewModel viewModel = Create(vm => vm.IncludeCodeProject = true, runChecksInline: false);
 
         viewModel.ProjectName = "Typed";
 
@@ -646,17 +761,22 @@ public class NewProjectDialogViewModelTests
     public async Task Checks_KeepOnlyTheLatestResult()
     {
         using ManualResetEventSlim release = new ManualResetEventSlim();
+        using ManualResetEventSlim entered = new ManualResetEventSlim();
         int calls = 0;
         _detector.Setup(x => x.FindExistingCodeProject(It.IsAny<string>())).Returns(() =>
         {
             if (Interlocked.Increment(ref calls) == 1)
             {
+                entered.Set();
                 release.Wait(TimeSpan.FromSeconds(30));
                 return Path.Combine(Folder, "Stale.csproj");
             }
             return Path.Combine(Folder, "Fresh.csproj");
         });
-        NewProjectDialogViewModel viewModel = Create(vm => vm.IncludeCodeProject = true);
+        NewProjectDialogViewModel viewModel = Create(vm => vm.IncludeCodeProject = true, runChecksInline: false);
+        // Two refreshes can be in flight at once, so wait until the blocked call is really running; otherwise
+        // the call that counts as "first" may belong to the later refresh and block the very result under test.
+        entered.Wait(TimeSpan.FromSeconds(30)).ShouldBeTrue();
         Task first = viewModel.ChecksRefresh;
 
         viewModel.ProjectName = "Second";
@@ -788,7 +908,7 @@ public class NewProjectDialogViewModelTests
 
         viewModel.IsRefused.ShouldBeTrue();
         viewModel.RefusalText.ShouldBe("Project already exists: " + GumOnlyPath());
-        viewModel.IsTargetNotEmptyWarningVisible.ShouldBeTrue();
+        viewModel.IsTargetNotEmptyWarningVisible.ShouldBeFalse();
         viewModel.CanExecuteAffirmative().ShouldBeFalse();
     }
 
@@ -947,7 +1067,7 @@ public class NewProjectDialogViewModelTests
 
         viewModel.IsBusy.ShouldBeTrue();
         viewModel.IsEditable.ShouldBeFalse();
-        viewModel.ProgressText.ShouldBe("Creating files...");
+        viewModel.ProgressText.ShouldBe("Step 1 of 2: Creating files...");
         viewModel.CanExecuteAffirmative().ShouldBeFalse();
         files.SetResult(FilesOk());
         await viewModel.CreationTask;
@@ -1068,7 +1188,7 @@ public class NewProjectDialogViewModelTests
             });
         NewProjectDialogViewModel viewModel = Create(vm => vm.IncludeCodeProject = true);
         viewModel.AffirmativeCommand.Execute(null);
-        await WaitUntil(() => viewModel.ProgressText == "Running dotnet restore...");
+        await WaitUntil(() => viewModel.ProgressText == "Step 2 of 2: Running dotnet restore...");
 
         viewModel.NegativeCommand.Execute(null);
         await viewModel.CreationTask;
@@ -1221,7 +1341,7 @@ public class NewProjectDialogViewModelTests
         viewModel.AffirmativeCommand.Execute(null);
         await WaitUntil(() => viewModel.ProgressDetail == "Determining projects to restore...");
 
-        viewModel.ProgressText.ShouldBe("Running dotnet restore...");
+        viewModel.ProgressText.ShouldBe("Step 2 of 2: Running dotnet restore...");
         restore.SetResult(RestoreOk());
         await viewModel.CreationTask;
     }

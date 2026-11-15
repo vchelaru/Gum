@@ -65,6 +65,10 @@ Gum needs a desktop session (X11 or Wayland), a graphics driver with OpenGL 3.0 
 * **macOS:** an Apple Silicon or Intel Mac. Download the file that matches your Mac's processor.
 * **Linux:** 64-bit (x64), with a desktop session and graphics driver as described in the Linux steps above.
 
+## Creating a project
+
+Select **File** > **New Project** to create a project. Gum shows the same dialog on startup when there is no project to reopen. See [Creating a Project](creating-a-project.md).
+
 ## Opening a project
 
 Gum reopens the project you had open last time. To open a different one, select **File** > **Load Project...**. Gum also opens a project whose path you pass when you start it, which is how a file association or a script can open a specific project:
@@ -110,7 +114,7 @@ Gum generates bitmap fonts with KernSmith on every operating system. A project w
 
 ## Settings
 
-Gum keeps its settings, including the last project and the recent project list, in a per-user folder. Select **Help** > **Open Settings Folder...** (or **Open settings folder** on the **General** page of **Edit** > **Settings...**) to open it. On Windows the folder is `%APPDATA%\Gum`, the same folder the older WPF tool used, so your recent projects carry over when you upgrade.
+Gum keeps its settings, including the last project and the recent project list, in a per-user folder. Select **Help** > **Open Settings Folder...** (or **Open folder** on the **General** page of **Edit** > **Settings...**) to open it. On Windows the folder is `%APPDATA%\Gum`, the same folder the older WPF tool used, so your recent projects carry over when you upgrade.
 
 ## Older releases (the WPF tool)
 

@@ -12,7 +12,7 @@ namespace Gum.Input;
 /// <see cref="PolledKeyboard"/> times held-key repeat (Stride has no repeat-rate poll) and latches
 /// typed text, which arrives through a <see cref="TextInputEvent"/> listener.
 /// </summary>
-public class Keyboard : PolledKeyboard, IInputEventListener<TextInputEvent>
+public class Keyboard : TablePolledKeyboard<StrideKeys>, IInputEventListener<TextInputEvent>
 {
     private readonly IKeyboardDevice? _keyboard;
 
@@ -21,7 +21,7 @@ public class Keyboard : PolledKeyboard, IInputEventListener<TextInputEvent>
     /// <see cref="InputManager.Keyboards"/>). Registers with <paramref name="inputManager"/> for
     /// <see cref="TextInputEvent"/> typed-text capture, and enables text input on the device.
     /// </summary>
-    public Keyboard(IKeyboardDevice keyboard, InputManager inputManager)
+    public Keyboard(IKeyboardDevice keyboard, InputManager inputManager) : base(GumToStride)
     {
         _keyboard = keyboard;
         inputManager.AddListener(this);
@@ -37,7 +37,7 @@ public class Keyboard : PolledKeyboard, IInputEventListener<TextInputEvent>
     /// <see cref="KeyDown"/>/<see cref="KeyPushed"/>/<see cref="KeyReleased"/> seams without a live
     /// Stride device.
     /// </summary>
-    internal Keyboard()
+    internal Keyboard() : base(GumToStride)
     {
     }
 
@@ -50,7 +50,7 @@ public class Keyboard : PolledKeyboard, IInputEventListener<TextInputEvent>
     /// Stride has no distinct member for) are intentionally omitted -- queries for those return
     /// <c>false</c>.
     /// </summary>
-    private static readonly Dictionary<GumKeys, StrideKeys> _gumToStride = new()
+    internal static readonly IReadOnlyDictionary<GumKeys, StrideKeys> GumToStride = new Dictionary<GumKeys, StrideKeys>
     {
         { GumKeys.Back, StrideKeys.Back },
         { GumKeys.Tab, StrideKeys.Tab },
@@ -177,20 +177,17 @@ public class Keyboard : PolledKeyboard, IInputEventListener<TextInputEvent>
     }
 
     /// <inheritdoc/>
-    protected override IEnumerable<GumKeys> SupportedKeys => _gumToStride.Keys;
-
-    /// <inheritdoc/>
-    protected override bool IsDeviceKeyDown(GumKeys key) => KeyDown(key);
+    protected override bool IsDeviceKeyPressed(StrideKeys key) => _keyboard?.DownKeys.Contains(key) == true;
 
     /// <inheritdoc/>
     public override bool KeyDown(GumKeys key) =>
-        _gumToStride.TryGetValue(key, out var strideKey) && _keyboard?.DownKeys.Contains(strideKey) == true;
+        TryGetDeviceKey(key, out StrideKeys strideKey) && IsDeviceKeyPressed(strideKey);
 
     /// <inheritdoc/>
     public override bool KeyPushed(GumKeys key) =>
-        _gumToStride.TryGetValue(key, out var strideKey) && _keyboard?.PressedKeys.Contains(strideKey) == true;
+        TryGetDeviceKey(key, out StrideKeys strideKey) && _keyboard?.PressedKeys.Contains(strideKey) == true;
 
     /// <inheritdoc/>
     public override bool KeyReleased(GumKeys key) =>
-        _gumToStride.TryGetValue(key, out var strideKey) && _keyboard?.ReleasedKeys.Contains(strideKey) == true;
+        TryGetDeviceKey(key, out StrideKeys strideKey) && _keyboard?.ReleasedKeys.Contains(strideKey) == true;
 }

@@ -12,7 +12,8 @@ namespace MonoGameGum.Tests.Runtimes;
 /// <summary>
 /// Text hit testing measures in drawn units, so it follows FontScale and the oversampling
 /// compensation scale (#7159). Expected positions come from the raw font measurement times the
-/// scale, and the drawn left edge from <see cref="Text.UpdateIpsoForRenderingForTests"/>.
+/// scale, and the drawn left edge from <see cref="Text.UpdateIpsoForRenderingForTests"/>. A pinned
+/// measurement font is covered by <see cref="OversampledTextPositionTests"/>.
 /// </summary>
 public class TextHitTestFontScaleTests : BaseTestClass
 {
@@ -204,30 +205,6 @@ public class TextHitTestFontScaleTests : BaseTestClass
             {
                 contained.GetCharacterIndexAtPosition(x, y).ShouldBe(textBox.GetCaretIndexAtPosition(x, y), $"line {line} x {x}");
             }
-        }
-    }
-
-    // While oversampling pins a measurement font, layout (and the drawn box) is measured at the scale
-    // without the compensation, so the hit test follows the layout width and agrees with a text box.
-    [Fact]
-    public void GetCharacterIndexAtPosition_WithMeasurementFont_ShouldFollowLayoutWidth()
-    {
-        TextBox textBox = new();
-        textBox.Width = 400;
-        textBox.Visual.X = 20;
-        textBox.Visual.Y = 30;
-        TextRuntime textInstance = ((TextBoxBaseVisual)textBox.Visual).TextInstance;
-        textBox.Text = SingleLine;
-        Text contained = (Text)textInstance.RenderableComponent!;
-        contained.MeasurementFont = contained.BitmapFont;
-        contained.OversampleCompensationScale = 0.5f;
-        float y = contained.GetAbsoluteTop() + 1;
-
-        contained.GetCharacterIndexAtPosition(contained.GetAbsoluteLeft() + contained.WrappedTextWidth - 1, y)
-            .ShouldBeInRange(SingleLine.Length - 1, SingleLine.Length);
-        for (float x = contained.GetAbsoluteLeft(); x < contained.GetAbsoluteLeft() + contained.WrappedTextWidth + 20; x += 1.5f)
-        {
-            contained.GetCharacterIndexAtPosition(x, y).ShouldBe(textBox.GetCaretIndexAtPosition(x, y), $"x {x}");
         }
     }
 

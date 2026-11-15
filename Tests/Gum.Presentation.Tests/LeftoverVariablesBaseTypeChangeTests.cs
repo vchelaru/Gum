@@ -17,11 +17,12 @@ using Shouldly;
 namespace Gum.Presentation.Tests;
 
 /// <summary>
-/// Changing the base type of an element or instance never removes or converts the variables it had
-/// (default state, category states, exposed variables, VariableReferences). The tool keeps them on purpose, so
-/// switching back after an accidental change restores every value. The Variables tab hides the ones the
-/// current type does not use, except exposed ones, which belong to the container's interface.
-/// A base type handler that prunes or converts variables, or a grid that lists leftovers, turns these red.
+/// Changing the base type of an element or instance removes the variables its new type cannot have (#7191;
+/// before that the tool kept them, in case the change was accidental, and these tests pinned it). Undo restores
+/// them (<see cref="BaseTypeChangePrunesVariablesTests"/>); switching back by hand does not. The Variables tab
+/// lists the rows of the current type, and an exposed variable the new type cannot have no longer appears.
+/// Projects that already hold leftovers from an earlier Gum are pinned by the Gum.Cli tests, which load them
+/// and check that nothing new is reported.
 /// </summary>
 public class LeftoverVariablesBaseTypeChangeTests : BaseTestClass
 {
@@ -47,12 +48,20 @@ public class LeftoverVariablesBaseTypeChangeTests : BaseTestClass
         var typeManager = new Gum.Reflection.TypeManager();
         typeManager.Initialize();
         _mocker.Use(typeManager);
-        _mocker.Use<IVariableSaveLogic>(_mocker.CreateInstance<VariableSaveLogic>());
+        VariableSaveLogic variableSaveLogic = _mocker.CreateInstance<VariableSaveLogic>();
+        _mocker.Use<IVariableSaveLogic>(variableSaveLogic);
+        _mocker.Use<IVariableDefinedByTypeLogic>(variableSaveLogic);
 
+        _mocker.GetMock<IReferenceFinderProjectProvider>().Setup(x => x.GumProjectSave).Returns(_project);
+        _mocker.GetMock<IRenameProjectProvider>().Setup(x => x.GumProjectSave).Returns(_project);
+        _mocker.Use<IReferenceFinder>(_mocker.CreateInstance<ReferenceFinder>());
+        _mocker.Use<IRenameLogic>(_mocker.CreateInstance<RenameLogic>());
+        _mocker.Use<IInstanceOverrideRemover>(_mocker.CreateInstance<InstanceOverrideRemover>());
         _inheritanceLogic = new InheritanceLogic(
             new Mock<IFileCommands>().Object,
             new Mock<IGuiCommands>().Object,
-            new Mock<IStandardElementsManagerGumTool>().Object);
+            new Mock<IStandardElementsManagerGumTool>().Object,
+            _mocker.CreateInstance<BaseTypeVariablePruner>());
         // The real check: the mock answers false, which makes the tool revert an instance's base type.
         _mocker.Use<ICircularReferenceManager>(new CircularReferenceManager(ObjectFinder.Self));
         _setVariableLogic = _mocker.CreateInstance<SetVariableLogic>();
@@ -92,8 +101,11 @@ public class LeftoverVariablesBaseTypeChangeTests : BaseTestClass
             .ToList();
     }
 
+    private static List<string> Without(List<string> snapshot, params string[] linePrefixes) =>
+        snapshot.Where(line => !linePrefixes.Any(prefix => line.StartsWith(prefix, StringComparison.Ordinal))).ToList();
+
     [Fact]
-    public void ChangingElementBaseType_KeepsEveryVariable_AndSwitchingBackRestoresThem()
+    public void ChangingElementBaseType_PrunesVariablesTheNewTypeLacks_AndSwitchingBackDoesNotRestoreThem()
     {
         List<string> before = LeftoverVariablesProject.Snapshot(_project);
         ComponentSave label = Component("Label");
@@ -104,19 +116,20 @@ public class LeftoverVariablesBaseTypeChangeTests : BaseTestClass
         ChangeElementBaseType(Component("Reader"), "Container");
 
         label.BaseType.ShouldBe("Container");
-        LeftoverVariablesProject.Snapshot(_project).ShouldBe(before);
-        label.DefaultState!.GetVariableSave("Text")!.Value.ShouldBe(LeftoverVariablesProject.LabelText);
-        label.DefaultState.GetVariableSave("FontSize")!.Value.ShouldBe(33);
-        label.Categories.Single().States.Single().GetVariableSave("Text")!.Value.ShouldBe(LeftoverVariablesProject.LabelBigText);
+        List<string> pruned = Without(before, "Label/Default|Text|", "Label/Default|FontSize|", "Label/Big|Text|",
+            "Reader/Default|Text|", "Reader/Default|VariableReferences|");
+        pruned.Count.ShouldBeLessThan(before.Count);
+        LeftoverVariablesProject.Snapshot(_project).ShouldBe(pruned);
+        label.DefaultState!.GetVariableSave("Width")!.Value.ShouldBe(77f);
 
         ChangeElementBaseType(label, "Text");
         ChangeElementBaseType(Component("Reader"), "Text");
 
-        LeftoverVariablesProject.Snapshot(_project).ShouldBe(before);
+        LeftoverVariablesProject.Snapshot(_project).ShouldBe(pruned);
     }
 
     [Fact]
-    public void ChangingInstanceBaseType_KeepsEveryVariable_ExposedVariablesAndTheirConsumers_AndReferences()
+    public void ChangingInstanceBaseType_PrunesVariablesTheNewTypeLacks_ExposureAndConsumers_AndSwitchingBackDoesNotRestoreThem()
     {
         List<string> before = LeftoverVariablesProject.Snapshot(_project);
         ComponentSave card = Component("Card");
@@ -125,22 +138,22 @@ public class LeftoverVariablesBaseTypeChangeTests : BaseTestClass
         ChangeInstanceBaseType(card, caption, "Container");
 
         caption.BaseType.ShouldBe("Container");
-        LeftoverVariablesProject.Snapshot(_project).ShouldBe(before);
-        card.DefaultState!.GetVariableSave("Caption.Text")!.Value.ShouldBe(LeftoverVariablesProject.CaptionTextValue);
-        card.DefaultState.GetVariableSave("Caption.FontSize")!.Value.ShouldBe(44);
-        card.Categories.Single().States.Single().GetVariableSave("Caption.Text")!.Value.ShouldBe(LeftoverVariablesProject.CaptionAltText);
-        card.DefaultState.GetVariableSave("Caption.Text")!.ExposedAsName.ShouldBe("CaptionText");
-        Component("Outer").DefaultState!.GetVariableSave("Card1.CaptionText")!.Value.ShouldBe(LeftoverVariablesProject.OuterCaptionText);
+        List<string> pruned = Without(before, "Card/Default|Caption.Text|", "Card/Default|Caption.FontSize|",
+            "Card/Alt|Caption.Text|", "Outer/Default|Card1.CaptionText|");
+        pruned.Count.ShouldBeLessThan(before.Count);
+        LeftoverVariablesProject.Snapshot(_project).ShouldBe(pruned);
+        card.DefaultState!.GetVariableSave("Caption.Width")!.Value.ShouldBe(55f);
+        // The line that reads the removed exposed variable is untouched; the existing GUM0009 warning reports it.
         ((VariableListSave<string>)Component("Reader").DefaultState!.GetVariableListSave("VariableReferences")!).Value
             .ShouldBe(new[] { LeftoverVariablesProject.ReferenceLine });
 
         ChangeInstanceBaseType(card, caption, "Text");
 
-        LeftoverVariablesProject.Snapshot(_project).ShouldBe(before);
+        LeftoverVariablesProject.Snapshot(_project).ShouldBe(pruned);
     }
 
     [Fact]
-    public void VariablesTab_HidesLeftoversOfTheCurrentType_ButKeepsExposedOnes_AndShowsThemAgainWhenSwitchedBack()
+    public void VariablesTab_ListsTheRowsOfTheCurrentType_AndNoLongerTheExposedVariableThePruneRemoved()
     {
         ComponentSave label = Component("Label");
         ComponentSave card = Component("Card");
@@ -148,6 +161,7 @@ public class LeftoverVariablesBaseTypeChangeTests : BaseTestClass
         InstanceSave card1 = Component("Outer").Instances.Single();
         GridRowNames(label, null, label.DefaultState!).ShouldContain("Text");
         GridRowNames(card, caption, card.DefaultState!).ShouldContain("Caption.FontSize");
+        GridRowNames(card, null, card.DefaultState!).ShouldContain("CaptionText");
 
         ChangeElementBaseType(label, "Container");
         ChangeInstanceBaseType(card, caption, "Container");
@@ -160,8 +174,8 @@ public class LeftoverVariablesBaseTypeChangeTests : BaseTestClass
         captionRows.ShouldContain("Caption.Width");
         captionRows.ShouldNotContain("Caption.Text");
         captionRows.ShouldNotContain("Caption.FontSize");
-        GridRowNames(card, null, card.DefaultState!).ShouldContain("CaptionText");
-        GridRowNames(Component("Outer"), card1, Component("Outer").DefaultState!).ShouldContain("Card1.CaptionText");
+        GridRowNames(card, null, card.DefaultState!).ShouldNotContain("CaptionText");
+        GridRowNames(Component("Outer"), card1, Component("Outer").DefaultState!).ShouldNotContain("Card1.CaptionText");
 
         ChangeElementBaseType(label, "Text");
         ChangeInstanceBaseType(card, caption, "Text");
@@ -169,5 +183,6 @@ public class LeftoverVariablesBaseTypeChangeTests : BaseTestClass
         GridRowNames(label, null, label.DefaultState!).ShouldContain("Text");
         GridRowNames(label, null, label.DefaultState!).ShouldContain("FontSize");
         GridRowNames(card, caption, card.DefaultState!).ShouldContain("Caption.Text");
+        label.DefaultState!.GetVariableSave("Text").ShouldBeNull();
     }
 }

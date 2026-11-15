@@ -1,3 +1,4 @@
+using RaylibGum.Tests.Helpers;
 using Gum.GueDeriving;
 using Gum.Managers;
 using Gum.RenderingLibrary;
@@ -26,21 +27,6 @@ public class SpriteFlipTests : BaseTestClass
         BeginDrawing();
         Gum.GumService.Default.Draw();
         EndDrawing();
-    }
-
-    // Reads a pixel in top-left-origin draw space. A render texture is stored bottom-up in GL, so
-    // LoadImageFromTexture yields an image whose rows are flipped relative to draw space.
-    private static Color ReadRenderTargetPixel(RenderTexture2D renderTexture, int x, int y)
-    {
-        Image image = LoadImageFromTexture(renderTexture.Texture);
-        try
-        {
-            return GetImageColor(image, x, renderTexture.Texture.Height - 1 - y);
-        }
-        finally
-        {
-            UnloadImage(image);
-        }
     }
 
     // A 4-texel strip (horizontal or vertical): Green, Green, Red, Blue. The Red/Blue pair at
@@ -115,8 +101,8 @@ public class SpriteFlipTests : BaseTestClass
             flipHorizontal: true, flipVertical: false, wrap: false);
 
         // Unflipped the cell reads Red, Blue left-to-right; flipped it reads Blue, Red.
-        ShouldBe(ReadRenderTargetPixel(renderTexture, 5, 5), PureBlue);
-        ShouldBe(ReadRenderTargetPixel(renderTexture, 15, 5), PureRed);
+        ShouldBe(RaylibPixelHarness.ReadPixel(renderTexture, 5, 5), PureBlue);
+        ShouldBe(RaylibPixelHarness.ReadPixel(renderTexture, 15, 5), PureRed);
 
         Gum.GumService.Default.Root.Children.Clear();
         UnloadTexture(texture);
@@ -131,8 +117,8 @@ public class SpriteFlipTests : BaseTestClass
             flipHorizontal: false, flipVertical: true, wrap: false);
 
         // Unflipped the cell reads Red, Blue top-to-bottom; flipped it reads Blue, Red.
-        ShouldBe(ReadRenderTargetPixel(renderTexture, 5, 5), PureBlue);
-        ShouldBe(ReadRenderTargetPixel(renderTexture, 5, 15), PureRed);
+        ShouldBe(RaylibPixelHarness.ReadPixel(renderTexture, 5, 5), PureBlue);
+        ShouldBe(RaylibPixelHarness.ReadPixel(renderTexture, 5, 15), PureRed);
 
         Gum.GumService.Default.Root.Children.Clear();
         UnloadTexture(texture);
@@ -147,8 +133,8 @@ public class SpriteFlipTests : BaseTestClass
             flipHorizontal: true, flipVertical: false, wrap: true);
 
         // The tiled path flips each tile's source rect the same way as the plain path.
-        ShouldBe(ReadRenderTargetPixel(renderTexture, 5, 5), PureBlue);
-        ShouldBe(ReadRenderTargetPixel(renderTexture, 15, 5), PureRed);
+        ShouldBe(RaylibPixelHarness.ReadPixel(renderTexture, 5, 5), PureBlue);
+        ShouldBe(RaylibPixelHarness.ReadPixel(renderTexture, 15, 5), PureRed);
 
         Gum.GumService.Default.Root.Children.Clear();
         UnloadTexture(texture);

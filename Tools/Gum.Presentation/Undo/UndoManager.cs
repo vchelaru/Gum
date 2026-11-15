@@ -123,6 +123,10 @@ public class UndoManager : IUndoManager
     public void RecordCrossElementVariableChanges(IEnumerable<CrossElementVariableChange> changes)
         => _elementStrategy.RecordCrossElementVariableChanges(changes);
 
+    /// <inheritdoc/>
+    public void RecordAnimationRename(string oldName, string newName)
+        => _elementStrategy.RecordAnimationRename(oldName, newName);
+
     public UndoLock RequestLock()
     {
         // UndoLock lives in the headless Gum.Presentation assembly and can no longer reach back

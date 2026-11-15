@@ -97,14 +97,14 @@ public class HeadCommandLineScenarioTests
         string select = HeadOptions.Parse(new[] { "--select", "Controls/Button#Label" }).SelectPath!;
         fixture.SelectedState.SelectedElement = null;
 
-        App.SelectStartupPath("Missing#Label", fixture.SelectedState);
+        App.SelectStartupPath("Missing#Label", fixture.SelectedState).ShouldBeFalse();
         fixture.SelectedState.SelectedElement.ShouldBeNull();
 
-        App.SelectStartupPath("Controls/Button#Missing", fixture.SelectedState);
+        App.SelectStartupPath("Controls/Button#Missing", fixture.SelectedState).ShouldBeFalse();
         fixture.SelectedState.SelectedElement.ShouldBeSameAs(button);
         fixture.SelectedState.SelectedInstance.ShouldBeNull();
 
-        App.SelectStartupPath(select, fixture.SelectedState);
+        App.SelectStartupPath(select, fixture.SelectedState).ShouldBeTrue();
         fixture.SelectedState.SelectedElement.ShouldBeSameAs(button);
         fixture.SelectedState.SelectedInstance.ShouldBeSameAs(label);
     }
@@ -233,7 +233,8 @@ public class HeadCommandLineScenarioTests
         CopyProject(fixture.ProjectFolder, otherFolder);
         string otherProject = Path.Combine(otherFolder, Path.GetFileName(fixture.ProjectFilePath));
         ProjectOpenRequestRouter router = new ProjectOpenRequestRouter(fixture.SelectedState,
-            new Lazy<IFileCommands>(() => Services.GetRequiredService<IFileCommands>()));
+            new Lazy<IFileCommands>(() => Services.GetRequiredService<IFileCommands>()),
+            new Lazy<Gum.ToolStates.IProjectState>(() => Services.GetRequiredService<Gum.ToolStates.IProjectState>()));
         FileActivationHandler handler = new FileActivationHandler(new Lazy<IProjectOpenRequestRouter>(() => router));
 
         handler.HandleActivated(null, Activation(otherProject));

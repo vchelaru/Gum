@@ -39,12 +39,19 @@ public static class ShaderParameterRows
             {
                 for (int i = 0; i < info.Count; i++)
                 {
-                    rows.Add(CreateRow(info, i, info.Name + " " + ComponentNames[i], getText, setText));
+                    rows.Add(CreateRow(info, i, GetComponentRowName(info, i), getText, setText));
                 }
             }
         }
         return rows;
     }
+
+    /// <summary>The label of the row for one component of a vector parameter, such as <c>Tint X</c>.</summary>
+    internal static string GetComponentRowName(ShaderParameterInfo info, int componentIndex) =>
+        info.Name + " " + GetComponentLabel(componentIndex);
+
+    /// <summary>The label of one component's field inside a vector's row: <c>X</c>, <c>Y</c>, <c>Z</c> or <c>W</c>.</summary>
+    internal static string GetComponentLabel(int componentIndex) => ComponentNames[componentIndex];
 
     /// <summary>Whether Gum fills the parameter in itself (the texel size and the &lt;Name&gt;IsSet markers), so there is nothing to set.</summary>
     internal static bool IsHiddenParameter(ShaderParameterInfo info) =>
@@ -95,7 +102,7 @@ public static class ShaderParameterRows
         return collection.TryGetValue(info.Name, out ShaderParameterValue stored) ? stored : info.DefaultValue;
     }
 
-    private static float GetComponent(ShaderParameterValue value, int index) => index switch
+    internal static float GetComponent(ShaderParameterValue value, int index) => index switch
     {
         0 => value.X,
         1 => value.Y,

@@ -1,6 +1,7 @@
 using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
 using Gum.Undo;
+using System;
 using System.Collections.Generic;
 using Gum.DataTypes.Variables;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -71,4 +72,11 @@ public interface IVariableReferenceLogic
     StoredValueChange[] ReapplyToolOnlyReferences(ElementSave element, ElementSave? previous, bool trySave);
 
     void ReactIfChangedMemberIsVariableReference(InstanceSave? instance, StateSave stateSave, string changedMember, object? oldValue);
+
+    /// <summary>
+    /// Opens a batch (a multi-select commit). While open, <see cref="DoVariableReferenceReaction"/> checks the
+    /// edited value as usual but defers the state-wide work (re-applying every reference of the state, the
+    /// cascade into other elements, the save) until the outermost scope is disposed, where it runs once.
+    /// </summary>
+    IDisposable BeginReferenceBatch();
 }

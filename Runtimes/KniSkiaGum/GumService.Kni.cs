@@ -4,8 +4,9 @@
 // accessors from Runtimes/SkiaHost/GumService.SkiaHost.cs. Rendering, .gumx loading, hot reload and
 // the rest come from GumServiceSkiaBase. It follows MonoGameGum's shape: Initialize(game) reads the
 // size from the game and needs no canvas, Update takes a GameTime, and GameTime exposes the last one.
-// The caller draws Skia into its own canvas (typically a SkiaGameRendering SkiaRenderTarget2D) and
-// passes that SKCanvas to Draw each frame.
+// Draw() has no arguments either: the service owns the SkiaGameRendering render target (see
+// KniSkiaTarget), recreates it when the back buffer size changes, and composites it onto the back
+// buffer, so a game never touches a Skia or SkiaGameRendering type.
 //
 // Not mirrored from KniGum: Initialize(game, SystemManagers). Skia has one global
 // SystemManagers.Default, so there is no SystemManagers to pass in.
@@ -21,6 +22,8 @@ using Gum.Input;
 using Gum.Managers;
 using Gum.Wireframe;
 using RenderingLibrary;
+using BatchGraphics = global::RenderingLibrary.Graphics;
+using SkiaGum.Helpers;
 using SkiaSharp;
 using XnaGame = Microsoft.Xna.Framework.Game;
 using XnaGameTime = Microsoft.Xna.Framework.GameTime;
@@ -30,12 +33,14 @@ using ICursor = Gum.Wireframe.ICursor;
 
 namespace Gum;
 
-public partial class GumService : GumServiceSkiaInteractiveBase, IGumService
+public partial class GumService : GumServiceSkiaInteractiveBase, IGumService, BatchGraphics.IGumBatchFrameHost
 {
     private XnaGameWindow? _window;
     private XnaGame? _game;
     private readonly List<GraphicalUiElement> _gameTimeRoots = new();
     private XnaGraphicsDevice? _graphicsDevice;
+    private SkiaTargetHolder<IKniSkiaTarget>? _targetHolder;
+    private bool _managesTarget;
 
     /// <summary>
     /// The GameTime of the most recent Update call, or null before the first Update.
@@ -76,9 +81,9 @@ public partial class GumService : GumServiceSkiaInteractiveBase, IGumService
 
     /// <summary>
     /// Initializes Gum for a KNI desktop game, optionally loading a Gum project. The size comes from the
-    /// game's graphics device and no canvas is needed, so call this from <c>Game.Initialize</c> or later
-    /// and build the first screen right away. The canvas is supplied by the first
-    /// <see cref="GumServiceSkiaBase.Draw(SKCanvas)"/>.
+    /// game's graphics device, so call this from <c>Game.Initialize</c>
+    /// or later and build the first screen right away. <see cref="Draw()"/> creates and resizes the
+    /// Skia render target itself, and the service releases it when the game exits.
     /// </summary>
     /// <param name="game">The game, used for its graphics device and its window's typed-text events.</param>
     /// <param name="gumProjectFile">An optional .gumx project file to load.</param>
@@ -118,47 +123,6 @@ public partial class GumService : GumServiceSkiaInteractiveBase, IGumService
         _graphicsDevice = graphicsDevice;
         return InitializeHost(null, null, null, width, height, gumProjectFile);
     }
-
-    /// <summary>
-    /// Initializes Gum for a KNI desktop game with an explicit size, such as the fixed resolution of a
-    /// render target, instead of the size of the game's graphics device. No canvas is needed.
-    /// </summary>
-    /// <param name="game">The game, used for its window's typed-text events.</param>
-    /// <param name="width">The width to use for the root container and canvas coordinate space.</param>
-    /// <param name="height">The height to use for the root container and canvas coordinate space.</param>
-    /// <param name="gumProjectFile">An optional .gumx project file to load.</param>
-    /// <returns>The loaded project, or null if no project is loaded.</returns>
-    public GumProjectSave? Initialize(XnaGame game, int width, int height, string? gumProjectFile = null) =>
-        InitializeHost(game, game.Window, null, width, height, gumProjectFile);
-
-    /// <summary>
-    /// Initializes Gum for a KNI desktop game and draws into a canvas that already exists. The canvas
-    /// size is read from <see cref="SKCanvas.DeviceClipBounds"/>; use the explicit-size overload if that
-    /// does not match the window. Most games should use <see cref="Initialize(XnaGame, string?)"/>
-    /// instead, which needs no canvas.
-    /// </summary>
-    /// <param name="game">The game, used for its window's typed-text events.</param>
-    /// <param name="canvas">The SkiaSharp canvas Gum should render to.</param>
-    /// <param name="gumProjectFile">An optional .gumx project file to load.</param>
-    /// <returns>The loaded project, or null if no project is loaded.</returns>
-    public GumProjectSave? Initialize(XnaGame game, SKCanvas canvas, string? gumProjectFile = null)
-    {
-        SKRectI bounds = canvas.DeviceClipBounds;
-        return Initialize(game, canvas, bounds.Width, bounds.Height, gumProjectFile);
-    }
-
-    /// <summary>
-    /// Initializes Gum for a KNI desktop game with an explicit canvas size, optionally loading a Gum
-    /// project.
-    /// </summary>
-    /// <param name="game">The game, used for its window's typed-text events.</param>
-    /// <param name="canvas">The SkiaSharp canvas Gum should render to.</param>
-    /// <param name="width">The width to use for the root container and canvas coordinate space.</param>
-    /// <param name="height">The height to use for the root container and canvas coordinate space.</param>
-    /// <param name="gumProjectFile">An optional .gumx project file to load.</param>
-    /// <returns>The loaded project, or null if no project is loaded.</returns>
-    public GumProjectSave? Initialize(XnaGame game, SKCanvas canvas, int width, int height, string? gumProjectFile = null) =>
-        InitializeHost(game, game.Window, canvas, width, height, gumProjectFile);
 
     /// <summary>
     /// Initializes without a game, so no typed text arrives. A KNI <c>Game</c> needs a platform
@@ -209,16 +173,21 @@ public partial class GumService : GumServiceSkiaInteractiveBase, IGumService
         XnaGame? game, XnaGameWindow? window, SKCanvas? canvas, int width, int height, string? gumProjectFile,
         DefaultVisualsVersion visualsVersion = DefaultVisualsVersion.Newest)
     {
-        // Before any state changes, so an unsupported version leaves the service uninitialized.
-        ResolveVisualsVersion(visualsVersion);
-
-        // Stored before InitializeCore, which calls FormsUtilities.InitializeDefaults, which
-        // dispatches back to this instance's CreateCursor/CreateKeyboard overrides above.
-        _game = game;
-        _window = window;
-        Clipboard = new global::Gum.Clipboard.MonoGameGumClipboard();
-
-        InitializeCore(canvas, width, height, gumProjectFile, visualsVersion);
+        InitializeWithDevices(canvas, width, height, gumProjectFile, () =>
+        {
+            ReleaseGame();
+            _game = game;
+            _window = window;
+            // No canvas means the service owns the render target. A test that hands in a canvas keeps
+            // drawing into it.
+            _managesTarget = canvas == null;
+            BatchGraphics.GumBatch.FrameHost = _managesTarget ? this : null;
+            if (game != null)
+            {
+                game.Exiting += OnGameExiting;
+            }
+            Clipboard = new global::Gum.Clipboard.MonoGameGumClipboard();
+        }, visualsVersion);
 
         return string.IsNullOrEmpty(gumProjectFile) ? null : ObjectFinder.Self.GumProjectSave;
     }
@@ -328,11 +297,159 @@ public partial class GumService : GumServiceSkiaInteractiveBase, IGumService
 
     #endregion
 
+    #region Draw
+
+    /// <summary>
+    /// Creates the render target. Replaced in tests, which have no graphics device.
+    /// </summary>
+    internal Func<int, int, IKniSkiaTarget>? TargetFactoryOverride { get; set; }
+
+    /// <summary>
+    /// Draws Gum and composites it onto the back buffer, as <c>GumService.Draw()</c> does in MonoGameGum.
+    /// The service creates its SkiaGameRendering render target on the first call, recreates it (and
+    /// re-runs layout through <see cref="GumServiceSkiaBase.HandleResize"/>) whenever the back buffer
+    /// size changes, and clears it to transparent each frame, so clear the back buffer first.
+    /// </summary>
+    /// <remarks>
+    /// Initialized with a canvas (an internal test path), this draws into that canvas instead, as the
+    /// base does.
+    /// </remarks>
+    public override void Draw()
+    {
+        if (_frameOpen)
+        {
+            // Recover for the next frame instead of drawing nothing.
+            CloseFrame(present: false);
+            throw new InvalidOperationException(
+                "GumService.Draw() was called while a GumBatch pass was open: call GumBatch.End before Draw.");
+        }
+
+        if (!TryOpenFrame(out SKCanvas? _))
+        {
+            if (!_managesTarget || !HasGraphicsDevice())
+            {
+                base.Draw();
+            }
+            return;
+        }
+
+        try
+        {
+            base.Draw();
+        }
+        catch
+        {
+            CloseFrame(present: false);
+            throw;
+        }
+
+        // Composites the target onto the back buffer at the origin, at native size.
+        CloseFrame(present: true);
+    }
+
+    private bool _frameOpen;
+
+    private bool HasGraphicsDevice() =>
+        (_game?.GraphicsDevice ?? _graphicsDevice) != null || TargetFactoryOverride != null;
+
+    // Creates or resizes the target and begins a pass on it. False when the service does not own the
+    // target, a pass is already open, or the window has no size (minimized).
+    private bool TryOpenFrame(out SKCanvas? frameCanvas)
+    {
+        frameCanvas = null;
+        XnaGraphicsDevice? graphicsDevice = _game?.GraphicsDevice ?? _graphicsDevice;
+        if (!_managesTarget || _frameOpen || (graphicsDevice == null && TargetFactoryOverride == null))
+        {
+            return false;
+        }
+
+        (int width, int height) = GetWindowSize();
+        _targetHolder ??= CreateTargetHolder(graphicsDevice);
+
+        if (_targetHolder.Target == null)
+        {
+            // The first target matches the size Gum was initialized with, so there is nothing to re-layout.
+            if (!_targetHolder.Create(width, height))
+            {
+                return false;
+            }
+        }
+        else
+        {
+            _targetHolder.EnsureSize(width, height);
+        }
+
+        frameCanvas = _targetHolder.BeginFrame();
+        _frameOpen = frameCanvas != null;
+        return _frameOpen;
+    }
+
+    // Separate from TryOpenFrame so the lambdas' capture of graphicsDevice allocates only when the holder
+    // is created, not on every frame.
+    private SkiaTargetHolder<IKniSkiaTarget> CreateTargetHolder(XnaGraphicsDevice? graphicsDevice) =>
+        new SkiaTargetHolder<IKniSkiaTarget>(
+            (w, h) => TargetFactoryOverride != null
+                ? TargetFactoryOverride(w, h)
+                : new KniSkiaTarget(graphicsDevice!, w, h),
+            canvas => SystemManagers.Default.Canvas = canvas,
+            HandleResize);
+
+    private void CloseFrame(bool present)
+    {
+        if (!_frameOpen)
+        {
+            return;
+        }
+
+        _frameOpen = false;
+        if (present)
+        {
+            _targetHolder!.Target!.End();
+        }
+        else
+        {
+            _targetHolder!.Target!.EndWithoutDrawing();
+        }
+    }
+
+    // GumBatch.Begin/End outside Draw: each cycle is its own pass, composited in call order.
+    bool BatchGraphics.IGumBatchFrameHost.TryBeginFrame() => TryOpenFrame(out SKCanvas? _);
+
+    void BatchGraphics.IGumBatchFrameHost.EndFrame(bool present) => CloseFrame(present);
+
+    private void OnGameExiting(object? sender, EventArgs e) => ReleaseRenderTarget();
+
+    private void ReleaseGame()
+    {
+        if (_game != null)
+        {
+            _game.Exiting -= OnGameExiting;
+        }
+    }
+
+    // The shared SkiaRenderer backend goes with the target, since the service is what created both.
+    private void ReleaseRenderTarget()
+    {
+        bool hadTarget = _targetHolder?.Target != null;
+        _targetHolder?.Dispose();
+        _targetHolder = null;
+        if (hadTarget && TargetFactoryOverride == null)
+        {
+            SkiaGameRendering.SkiaRenderer.Dispose();
+        }
+    }
+
+    #endregion
+
     /// <inheritdoc/>
     public override void Uninitialize()
     {
         base.Uninitialize();
 
+        ReleaseRenderTarget();
+        ReleaseGame();
+        _managesTarget = false;
+        BatchGraphics.GumBatch.FrameHost = null;
         GameTime = null;
         _game = null;
         _graphicsDevice = null;

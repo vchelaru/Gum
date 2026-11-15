@@ -57,7 +57,6 @@ public sealed unsafe class BatchDrawCallCounter
 
     // GL blend factor / equation constants for the render-target premultiply pass. Kept here so
     // the raw-GL dependency stays contained to the one place that owns blend state.
-    private const int GlZero = 0;
     private const int GlOne = 1;
     private const int GlSrcAlpha = 0x0302;
     private const int GlOneMinusSrcAlpha = 0x0303;
@@ -70,6 +69,31 @@ public sealed unsafe class BatchDrawCallCounter
     // straight alpha — reintroducing the double-blend dark fringe. With this flag set, EndBlendMode
     // re-establishes the premultiply pass instead (issue #3434).
     private bool _renderTargetBlendActive;
+
+    // Whether this counter last left raylib in straight-alpha blending. A Normal blend then changes
+    // nothing, so it needs no native call and Bank must not count the pending slots a second time.
+    // Only trusted while a pass is active: BeginPass resets raylib to straight alpha, and every change
+    // Gum makes goes through this class. Anything else (a mode the game sets between passes, a pass that
+    // threw before restoring) is cleared by the next BeginPass.
+    private bool _straightAlphaBlendActive = true;
+
+    /// <summary>
+    /// How many times this counter has called raylib's <c>BeginBlendMode</c>/<c>EndBlendMode</c>.
+    /// Diagnostic for tests: equal blends in a row should not each pay for a native call.
+    /// </summary>
+    internal int NativeBlendModeCallCount { get; private set; }
+
+    private void NativeBeginBlendMode(BlendMode mode)
+    {
+        NativeBlendModeCallCount++;
+        Raylib.BeginBlendMode(mode);
+    }
+
+    private void NativeEndBlendMode()
+    {
+        NativeBlendModeCallCount++;
+        Raylib.EndBlendMode();
+    }
 
     /// <summary>
     /// Activates the owned batch for a render pass and routes subsequent <see cref="Bank"/> calls
@@ -88,9 +112,14 @@ public sealed unsafe class BatchDrawCallCounter
 
         _statistics = statistics;
         _active = true;
+        // Reset the game's own blend mode once per pass, and forget anything a pass that was cut short
+        // left behind, so the per-item Normal blends below can skip their native calls.
+        _renderTargetBlendActive = false;
+        _straightAlphaBlendActive = true;
         // Switching to our batch flushes whatever was queued in the previous (default) batch, so
         // any draws issued before the Gum pass are accounted to the default batch, not ours.
         Rlgl.SetRenderBatchActive(_batch);
+        NativeBeginBlendMode(BlendMode.Alpha);
     }
 
     /// <summary>
@@ -128,7 +157,8 @@ public sealed unsafe class BatchDrawCallCounter
     public void BeginBlendMode(BlendMode mode)
     {
         Bank();
-        Raylib.BeginBlendMode(mode);
+        NativeBeginBlendMode(mode);
+        _straightAlphaBlendActive = mode == BlendMode.Alpha;
     }
 
     /// <summary>
@@ -151,6 +181,15 @@ public sealed unsafe class BatchDrawCallCounter
     /// </summary>
     public void BeginBlendMode(global::Gum.RenderingLibrary.Blend blend)
     {
+        if (_active
+            && !_renderTargetBlendActive
+            && _straightAlphaBlendActive
+            && blend == global::Gum.RenderingLibrary.Blend.Normal)
+        {
+            // Already straight alpha since BeginPass reset it: nothing to change, so no native call.
+            return;
+        }
+
         Bank();
 
         // raylib's canned Normal/Additive modes square the source alpha when written into
@@ -158,14 +197,16 @@ public sealed unsafe class BatchDrawCallCounter
         // fall through to the premultiply-consistent custom-separate factors below instead.
         if (!_renderTargetBlendActive && blend.TryGetSimpleRaylibBlendMode(out BlendMode mode))
         {
-            Raylib.BeginBlendMode(mode);
+            NativeBeginBlendMode(mode);
+            _straightAlphaBlendActive = mode == BlendMode.Alpha;
             return;
         }
 
         (int srcRgb, int dstRgb, int srcAlpha, int dstAlpha, int eqRgb, int eqAlpha) =
             blend.ToGlBlendFactorsSeparate(isPremultiplyingContext: _renderTargetBlendActive);
         Rlgl.SetBlendFactorsSeparate(srcRgb, dstRgb, srcAlpha, dstAlpha, eqRgb, eqAlpha);
-        Raylib.BeginBlendMode(BlendMode.CustomSeparate);
+        NativeBeginBlendMode(BlendMode.CustomSeparate);
+        _straightAlphaBlendActive = false;
     }
 
     /// <summary>
@@ -180,6 +221,7 @@ public sealed unsafe class BatchDrawCallCounter
     {
         Bank();
         _renderTargetBlendActive = true;
+        _straightAlphaBlendActive = false;
         ApplyRenderTargetBlend();
     }
 
@@ -191,7 +233,8 @@ public sealed unsafe class BatchDrawCallCounter
     {
         Bank();
         _renderTargetBlendActive = false;
-        Raylib.EndBlendMode();
+        _straightAlphaBlendActive = true;
+        NativeEndBlendMode();
     }
 
     /// <summary>
@@ -205,22 +248,8 @@ public sealed unsafe class BatchDrawCallCounter
     {
         Bank();
         Rlgl.SetBlendFactorsSeparate(GlOne, GlOne, GlOne, GlOne, GlFuncAdd, GlFuncAdd);
-        Raylib.BeginBlendMode(BlendMode.CustomSeparate);
-    }
-
-    /// <summary>
-    /// Enters an additive blend that adds color onto the destination while leaving destination
-    /// alpha untouched (color factors ONE/ONE, alpha factors ZERO/ONE) - the raylib equivalent of
-    /// MonoGame's <c>BlendState.AddColorPreserveDestinationAlpha</c>, used for the
-    /// <see cref="global::Gum.Content.AnimationChain.AnimationFrameColorOperation.Add"/> overlay pass
-    /// (#4821 gap 2) so the overlay brightens the sprite without widening or punching its silhouette
-    /// alpha. Pair with <see cref="EndBlendMode"/>.
-    /// </summary>
-    public void BeginBlendModeAddColorPreserveDestinationAlpha()
-    {
-        Bank();
-        Rlgl.SetBlendFactorsSeparate(GlOne, GlOne, GlZero, GlOne, GlFuncAdd, GlFuncAdd);
-        Raylib.BeginBlendMode(BlendMode.CustomSeparate);
+        NativeBeginBlendMode(BlendMode.CustomSeparate);
+        _straightAlphaBlendActive = false;
     }
 
     /// <summary>
@@ -230,6 +259,12 @@ public sealed unsafe class BatchDrawCallCounter
     /// </summary>
     public void EndBlendMode()
     {
+        if (_active && !_renderTargetBlendActive && _straightAlphaBlendActive)
+        {
+            // Nothing to restore, so no native call and nothing to bank.
+            return;
+        }
+
         Bank();
         if (_renderTargetBlendActive)
         {
@@ -237,7 +272,8 @@ public sealed unsafe class BatchDrawCallCounter
         }
         else
         {
-            Raylib.EndBlendMode();
+            NativeEndBlendMode();
+            _straightAlphaBlendActive = true;
         }
     }
 
@@ -245,7 +281,7 @@ public sealed unsafe class BatchDrawCallCounter
     {
         Rlgl.SetBlendFactorsSeparate(
             GlSrcAlpha, GlOneMinusSrcAlpha, GlOne, GlOneMinusSrcAlpha, GlFuncAdd, GlFuncAdd);
-        Raylib.BeginBlendMode(BlendMode.CustomSeparate);
+        NativeBeginBlendMode(BlendMode.CustomSeparate);
     }
 
     /// <summary>Counted wrapper for <see cref="Raylib.BeginTextureMode"/>.</summary>

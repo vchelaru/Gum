@@ -1,9 +1,5 @@
 using Gum;
-using Gum.Forms;
-using Gum.Forms.Controls;
-using Gum.Input;
 using Moq;
-using Shouldly;
 using SkiaHostTests;
 using SkiaSharp;
 using Stride.Core.Collections;
@@ -19,10 +15,10 @@ namespace StrideGum.Tests;
 /// <summary>
 /// The keyboard and cursor register as <see cref="InputManager"/> listeners, and the manager outlives
 /// the service, so Uninitialize and a second Initialize must unregister them. The events travel
-/// through a real <see cref="InputManager"/> fed by fake devices. These tests re-initialize the
-/// assembly-wide service, so each one puts it back.
+/// through a real <see cref="InputManager"/> fed by fake devices. The cases live in
+/// <see cref="InputSubscriptionTestsBase"/>; this supplies the Stride devices.
 /// </summary>
-public class InputSubscriptionTests : BaseTestClass
+public class InputSubscriptionTests : InputSubscriptionTestsBase
 {
     private sealed class FakeSource : IInputSource
     {
@@ -36,7 +32,7 @@ public class InputSubscriptionTests : BaseTestClass
     }
 
     // A real InputManager with a mouse and keyboard whose events the test queues and Update delivers.
-    private sealed class Devices
+    private sealed class Devices : IHostInputRig
     {
         private readonly List<InputEvent> _pending = new List<InputEvent>();
 
@@ -73,7 +69,9 @@ public class InputSubscriptionTests : BaseTestClass
             source.Devices.Add(device.Object.Id, device.Object);
         }
 
-        public void ScrollNotches(float notches)
+        public void Initialize() => InitializeService(Manager);
+
+        public void Scroll(float notches)
         {
             MouseWheelEvent wheel = InputEventPool<MouseWheelEvent>.GetOrCreate(Mouse.Object);
             wheel.WheelDelta = notches;
@@ -91,107 +89,17 @@ public class InputSubscriptionTests : BaseTestClass
         }
     }
 
-    private static void Initialize(InputManager manager)
+    private static void InitializeService(InputManager manager)
     {
         SKSurface surface = SKSurface.Create(new SKImageInfo(SkiaHostTestFramework.CanvasWidth, SkiaHostTestFramework.CanvasHeight));
         GumService.Default.InitializeCore(surface.Canvas, manager, SkiaHostTestFramework.CanvasWidth, SkiaHostTestFramework.CanvasHeight, null);
     }
 
-    private static void RestoreSharedService()
+    protected override IHostInputRig CreateRig() => new Devices();
+
+    protected override void RestoreSharedService()
     {
         GumService.Default.Uninitialize();
-        Initialize(new InputManager());
-        SkiaHostTestBase.CaptureRenderableBaseline();
-        FrameworkElement.KeyboardsForUiControl.Clear();
-    }
-
-    [Fact]
-    public void Uninitialize_StopsTheOldKeyboardReceivingTypedText()
-    {
-        Devices devices = new Devices();
-        try
-        {
-            GumService.Default.Uninitialize();
-            Initialize(devices.Manager);
-            Keyboard oldKeyboard = GumService.Default.Keyboard;
-
-            GumService.Default.Uninitialize();
-            devices.Type("x");
-            oldKeyboard.Activity(0);
-
-            oldKeyboard.GetStringTyped().ShouldBe("");
-        }
-        finally
-        {
-            RestoreSharedService();
-        }
-    }
-
-    [Fact]
-    public void Uninitialize_StopsTheOldCursorReceivingScroll()
-    {
-        Devices devices = new Devices();
-        try
-        {
-            GumService.Default.Uninitialize();
-            Initialize(devices.Manager);
-            Cursor oldCursor = GumService.Default.Cursor;
-
-            GumService.Default.Uninitialize();
-            devices.ScrollNotches(2);
-            oldCursor.Activity(0);
-
-            oldCursor.ScrollWheelChange.ShouldBe(0);
-        }
-        finally
-        {
-            RestoreSharedService();
-        }
-    }
-
-    [Fact]
-    public void SecondInitialize_StopsThePreviousKeyboardReceivingTypedText()
-    {
-        Devices devices = new Devices();
-        try
-        {
-            GumService.Default.Uninitialize();
-            Initialize(devices.Manager);
-            Keyboard firstKeyboard = GumService.Default.Keyboard;
-
-            Initialize(devices.Manager);
-            devices.Type("x");
-            firstKeyboard.Activity(0);
-
-            firstKeyboard.GetStringTyped().ShouldBe("");
-        }
-        finally
-        {
-            RestoreSharedService();
-        }
-    }
-
-    [Fact]
-    public void LiveCursorAndKeyboard_ReceiveTheEvents()
-    {
-        // Guards the tests above: with the service still initialized, the same events do arrive.
-        Devices devices = new Devices();
-        try
-        {
-            GumService.Default.Uninitialize();
-            Initialize(devices.Manager);
-
-            devices.Type("x");
-            devices.ScrollNotches(2);
-            GumService.Default.Keyboard.Activity(0);
-            GumService.Default.Cursor.Activity(0);
-
-            GumService.Default.Keyboard.GetStringTyped().ShouldBe("x");
-            GumService.Default.Cursor.ScrollWheelChange.ShouldBe(2);
-        }
-        finally
-        {
-            RestoreSharedService();
-        }
+        InitializeService(new InputManager());
     }
 }

@@ -4,6 +4,12 @@
 
 This page assumes you have an existing Stride project. This can be an empty project or an existing game.
 
+## Starting From a New Project
+
+If you plan to use a Gum project, the easiest start is a new game that Gum creates for you. In the Gum tool, select **File** > **New Project**, check **Create C# project**, and choose Stride in **Platform**. Or run [`gumcli new MyGame --platform stride`](../../../../cli/new.md). The game already references Gum, loads the Gum project and copies it to the output folder, so you can skip the rest of this page. See [Creating a Project](../../../../gum-tool/setup/creating-a-project.md).
+
+The rest of this page adds Gum to a game you already have.
+
 ## Adding Gum NuGet package
 
 The easiest way to add Gum to your project is to use the NuGet package. Open your project in your preferred IDE, or add Gum through the command line.
@@ -22,6 +28,8 @@ Or add through command line:
 dotnet add package Gum.Stride
 ```
 
+Extra features come as separate packages, listed in [Optional Extras](#optional-extras).
+
 `Gum.Stride` renders through SkiaSharp and adds real Forms input (mouse, keyboard, gamepad, focus) through `Stride.Input`. Stride owns the window and the render pipeline, and Gum draws into the frame Stride composites.
 
 `Gum.Stride` leaves the choice of window backend to you, so your project also needs a Stride host package. The Gum sample uses the Community Toolkit's Windows host:
@@ -30,7 +38,7 @@ dotnet add package Gum.Stride
 <PackageReference Include="Stride.CommunityToolkit.Windows" Version="1.0.0-preview.66" />
 ```
 
-Your project must target `net10.0` at minimum, since Stride's own packages ship `net10.0` builds only. Targeting `net10.0-windows7.0` instead unlocks GPU-accelerated rendering on Direct3D11; see [Skia Render Path](#skia-render-path) below.
+Your project must target `net10.0` at minimum, since Stride's own packages ship `net10.0` builds only. Direct3D11 and Direct3D12 need `net10.0-windows7.0` instead; see [Skia Render Path](#skia-render-path) below.
 
 {% hint style="warning" %}
 Don't name your project `StrideGum`, that's the assembly name inside the `Gum.Stride` package. A same-named project produces a same-named output DLL that silently overwrites the runtime's copy in your `bin` folder, causing a `TypeLoadException` at runtime with no build warning. Gum's build now catches this for you: if your `AssemblyName` collides, the build fails with an error telling you to change it.
@@ -42,42 +50,17 @@ Don't name your project `StrideGum`, that's the assembly name inside the `Gum.St
 Available in October 2026, or now if building Gum from source.
 {% endhint %}
 
-Gum renders Stride's UI through SkiaSharp, and it can hand that drawing to the GPU two different ways. Which one you get depends on the graphics API your Stride project already builds against, chosen independently of Gum through Stride's own `StrideGraphicsApi` property (`Direct3D11` is Stride's Windows default):
+Gum renders Stride's UI through SkiaSharp, drawn directly into a GPU texture with no CPU round trip. It uses the graphics API your Stride project already builds against, chosen independently of Gum through Stride's own `StrideGraphicsApi` property (`Direct3D11` is Stride's Windows default). Direct3D11, Direct3D12 and Vulkan are supported. There is no CPU fallback: any other graphics API makes `Initialize` throw a `NotSupportedException`.
 
-{% tabs %}
-{% tab title="Direct3D11" %}
-Gum renders directly into a GPU texture, with no CPU round trip. To use it, target `net10.0-windows7.0` instead of plain `net10.0`:
+Direct3D11 and Direct3D12 require your project to target `net10.0-windows7.0`:
 
 ```xml
 <TargetFramework>net10.0-windows7.0</TargetFramework>
 ```
 
-That TFM change is the only setup step. The `Gum.Stride` NuGet package brings in the GPU renderer automatically; you don't add a separate package reference.
-{% endtab %}
+Vulkan works from plain `net10.0`, which Vulkan on Linux and macOS requires anyway, since `net10.0-windows7.0` is a Windows-only TFM.
 
-{% tab title="Direct3D12" %}
-Gum rasterizes with Skia on the CPU and uploads the result to a GPU texture every frame. There's no GPU-direct render path for Direct3D12 yet, and no TFM change unlocks one, so stay on plain `net10.0`.
-{% endtab %}
-
-{% tab title="Vulkan" %}
-Gum rasterizes with Skia on the CPU and uploads the result to a GPU texture every frame, the same as Direct3D12. A GPU-direct render path for Vulkan exists but isn't wired into Gum yet. Stay on plain `net10.0`, which Vulkan on Linux and macOS requires anyway, since `net10.0-windows7.0` is a Windows-only TFM.
-{% endtab %}
-{% endtabs %}
-
-Check `GumService.Default.IsUsingGpuPath` at runtime to confirm which path is active:
-
-```csharp
-// Initialize
-GumService.Default.Initialize(game);
-
-var renderPathLabel = new Label
-{
-    Text = GumService.Default.IsUsingGpuPath ? "GPU path" : "CPU path",
-};
-renderPathLabel.AddToRoot();
-```
-
-`Label` comes from `Gum.Forms.Controls`.
+The `Gum.Stride` NuGet package brings in the GPU renderers automatically; you don't add a separate package reference.
 
 ## Adding Source (Optional)
 
@@ -93,31 +76,67 @@ Add the following project to your solution:
 
 `StrideGum.csproj` already references `GumCommon` and `SkiaGum` itself, so you do not need to add either separately.
 
-Next, add StrideGum as a project reference in your game project. Your project might look like this depending on the location of the Gum repository relative to your game project:
+Next, add a project reference in your game project. Your project might look like this depending on the location of the Gum repository relative to your game project:
 
 ```xml
 <ProjectReference Include="..\Gum\Runtimes\StrideGum\StrideGum.csproj" />
 ```
 
+To link an extra from [Optional Extras](#optional-extras), add its project instead of its package:
+
+* ShadowDusk: \<Gum Root>/Runtimes/SkiaGum.ShadowDusk/SkiaGum.ShadowDusk.csproj
+* Expressions: \<Gum Root>/Runtimes/GumExpressions/GumExpressions.csproj
+
+## Placing the Scene Renderer Yourself (Optional)
+
+`Initialize` registers one `GumSceneRenderer`, which is all a single UI layer needs. Pass `registerSceneRenderer: false` to place `GumSceneRenderer` instances yourself, either to control where Gum draws among your other renderers or to add more than one Gum draw pass:
+
+```csharp
+// Initialize
+GumUI.Initialize(game, registerSceneRenderer: false);
+game.AddSceneRenderer(new GumSceneRenderer());
+```
+
+For more detail, see the documentation on `GumService.Initialize` in your IDE.
+
 ## Initializing Gum
 
-Stride draws through a `GraphicsCompositor`, and Gum draws as part of that pipeline, so create the compositor before calling `Initialize`. Stride also renders the scene through a camera, so add one or the window stays empty:
+Stride draws through a `GraphicsCompositor`, and Gum draws as part of that pipeline, so create the compositor before calling `Initialize`. Stride also renders the scene through a camera, so add one or the window stays empty. The following is a complete `Program.cs` that also shows a button. It needs only `Gum.Stride` and the Stride host package, and builds its UI in code, so it runs without a Gum project.
+
+{% hint style="info" %}
+Available in preview NuGet packages (use a `-preview` version), or now if building Gum from source.
+{% endhint %}
 
 ```csharp
 using Gum;
+using Gum.Forms.Controls;
+using Gum.GueDeriving;
+using Gum.Wireframe;
 using Stride.CommunityToolkit.Engine;
 using Stride.CommunityToolkit.Rendering.Compositing;
 using Stride.Engine;
 
-using var game = new Game();
+using Game game = new Game();
 
 game.Run(start: Start);
 
 void Start(Scene rootScene)
 {
+    // Stride draws through a GraphicsCompositor and a camera, so both must exist before Gum initializes.
     game.AddGraphicsCompositor().AddCleanUIStage();
     game.Add2DCamera();
-    GumService.Default.Initialize(game);
+
+    GumService GumUI = GumService.Default;
+
+    GumUI.Initialize(game);
+    GumUI.UseKeyboardDefaults();
+    GumUI.UseGamepadDefaults();
+
+    var button = new Button();
+    button.AddToRoot();
+    button.Width = 200;
+    button.Anchor(Anchor.Center);
+    button.Click += (_, _) => button.Text = $"Clicked\n{System.DateTime.Now}";
 }
 ```
 
@@ -125,91 +144,57 @@ void Start(Scene rootScene)
 
 `Initialize` adds Gum's scene renderer to the compositor, and Stride runs Gum's update and draw every frame from there. Stride is the one runtime where you never call `Update` and `Draw` yourself, so the per-frame calls the other setup pages show have no equivalent here.
 
-You can add controls as soon as `Initialize` returns.
+You can add controls as soon as `Initialize` returns. The button in the center of the window confirms Gum works. Delete it once you start building your game.
 
-To load a Gum project (a `.gumj` file) at the same time, pass its path:
+## Optional Extras
 
-```csharp
-// Initialize
-GumService.Default.Initialize(game, "Content/GumProject/GumProject.gumj");
-```
+Each extra is a separate package. Add the package, then add its line right after `GumUI.Initialize`.
 
-### Placing the Scene Renderer Yourself (Optional)
-
-`Initialize` registers one `GumSceneRenderer`, which is all a single UI layer needs. Pass `registerSceneRenderer: false` to place `GumSceneRenderer` instances yourself, either to control where Gum draws among your other renderers or to add more than one Gum draw pass:
-
-```csharp
-// Initialize
-GumService.Default.Initialize(game, registerSceneRenderer: false);
-game.AddSceneRenderer(new GumSceneRenderer());
-```
-
-For more detail, see the documentation on `GumService.Initialize` in your IDE.
-
-## Adding Shader Support (Optional)
-
-`Gum.SkiaSharp.ShadowDusk` lets a render target container's `SourceShaderFile` point at an `.fx` or `.slang` shader file.
-
-Add the NuGet package:
-
-```bash
-dotnet add package Gum.SkiaSharp.ShadowDusk
-```
-
-Then call `UseShadowDusk` after `GumService.Default.Initialize`:
-
-```csharp
-// Initialize
-GumService.Default.Initialize(game, "Content/GumProject/GumProject.gumj");
-GumService.Default.UseShadowDusk();
-```
-
-If linking to source instead of NuGet, add `<Gum Root>/Runtimes/SkiaGum.ShadowDusk/SkiaGum.ShadowDusk.csproj` to your solution.
-
-For loading, errors, and examples, see [Render Target Shaders on SkiaSharp](../../../standard-visuals/containerruntime.md#render-target-shaders-on-skiasharp).
+| Extra | Package | Line after `Initialize` |
+| --- | --- | --- |
+| [ShadowDusk](../../../standard-visuals/containerruntime.md#render-target-shaders-on-skiasharp): `.fx` and `.slang` shader files | `Gum.SkiaSharp.ShadowDusk` | `GumUI.UseShadowDusk();` |
+| [Expressions](../../../styling/runtime-variable-references.md): arithmetic in variable references | `Gum.Expressions` | `GumUI.UseExpressions();` |
+| [Themes](../../../styling/themes/README.md): restyles Forms controls created in code | One package per theme, such as `Gum.Themes.DarkPro.Skia` (add with `--prerelease`) | `Gum.Themes.DarkPro.DarkProTheme.Apply();` |
 
 {% hint style="info" %}
-`Gum.SkiaSharp.ShadowDusk` is available in November 2026, or now if building Gum from source.
+The `.Skia` theme packages are available in December 2026, or now if building Gum from source.
 {% endhint %}
 
-## Adding Expression Support (Optional)
+## Colors
 
-If your Gum project uses arithmetic expressions in variable references (such as `Width = OtherInstance.Width + 20`), you can add the `Gum.Expressions` NuGet package for full expression evaluation at runtime. Without this package, simple variable references like `Width = OtherInstance.Width` still work.
+Gum visuals take a Skia color, which Stride's `Color` is not. Add this line to a file that sets visual colors, and `Color.Red` and `new Color(255, 0, 0)` work as they do in the rest of these docs. `Gum.Color` converts to and from Stride's `Color`, so the file can still pass it to Stride.
 
-Add the NuGet package:
-
-```bash
-dotnet add package Gum.Expressions
+```csharp
+using Color = Gum.XnaCompat.Color;
 ```
 
-Then call `GumExpressionService.Initialize()` after `GumService.Default.Initialize`. Expression support is typically used with a Gum project that has variable references defined in the tool:
+{% hint style="info" %}
+`Gum.Color` is available in December 2026, or now if building Gum from source.
+{% endhint %}
+
+## Loading Your Gum Project
+
+To load a Gum project, pass its `.gumj` path to `Initialize`:
 
 ```csharp
 // Initialize
-GumService.Default.Initialize(game, "Content/GumProject/GumProject.gumj");
-Gum.Expressions.GumExpressionService.Initialize();
+GumUI.Initialize(game, "Content/GumProject/GumProject.gumj");
 ```
 
-If linking to source instead of NuGet, add `<Gum Root>/Runtimes/GumExpressions/GumExpressions.csproj` to your solution.
+Then copy the Gum project to the output folder by adding this to your `.csproj`:
 
-For more information, see the [Runtime Variable References](../../../styling/runtime-variable-references.md) page.
-
-## Adding a Button (Testing the Setup)
-
-Gum can be tested by adding a Button after Gum is initialized. To do so, add code to create a `Button` as shown in the following block of code after Gum is initialized:
-
-```csharp
-// Initialize
-GumService.Default.Initialize(game);
-
-var button = new Button();
-button.AddToRoot();
-button.Width = 200;
-button.Anchor(Anchor.Center);
-button.Click += (_, _) => button.Text = $"Clicked\n{System.DateTime.Now}";
+```xml
+<ItemGroup>
+    <None Update="Content\GumProject\**\*.*">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+</ItemGroup>
 ```
 
-`Button` comes from `Gum.Forms.Controls`, `Anchor` from `Gum.Wireframe`.
+To create the Gum project and show its screens, see [Loading a Gum Project](../loading-a-gum-project-.gumx.md).
+
+## Sample Project
+
 
 For a working project with a larger demo (`Label`, `TextBox`, `CheckBox`, and `ListBox` in a `StackPanel`), see the Gum Stride sample:
 

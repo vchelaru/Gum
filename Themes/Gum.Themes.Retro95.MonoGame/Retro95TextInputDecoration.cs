@@ -43,7 +43,7 @@ internal sealed class Retro95TextInputDecoration
             caret: Retro95Styling.ActiveStyle.Colors.Text, selection: Retro95Styling.ActiveStyle.Colors.TextBoxSelection);
 
         _host.States.Highlighted.Apply = () => Apply(
-            fill: Retro95Styling.ActiveStyle.Colors.WhiteHover, text: Retro95Styling.ActiveStyle.Colors.Text,
+            fill: Retro95Styling.ActiveStyle.Colors.WhiteFill, text: Retro95Styling.ActiveStyle.Colors.Text,
             placeholder: Retro95Styling.ActiveStyle.Colors.DisabledText,
             caret: Retro95Styling.ActiveStyle.Colors.Text, selection: Retro95Styling.ActiveStyle.Colors.TextBoxSelection);
 

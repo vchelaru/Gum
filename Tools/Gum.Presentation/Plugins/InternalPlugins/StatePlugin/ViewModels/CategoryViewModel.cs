@@ -47,6 +47,12 @@ public class CategoryViewModel : StateTreeViewItem
 
     public override string Title => Data.Name;
 
+    /// <summary>The palette name of the category's color, or null when it has none or one this build does not know.</summary>
+    public string? ColorName => CategoryColors.GetName(Data);
+
+    /// <summary>Re-reads <see cref="ColorName"/> from <see cref="Data"/> after the color was set or cleared.</summary>
+    internal void RefreshColor() => NotifyPropertyChanged(nameof(ColorName));
+
     /// <summary>
     /// Raised when the user clicks this category's "+" button. The owning <see cref="StateTreeViewModel"/>
     /// subscribes to this to select the category and show the Add State dialog, since this view model

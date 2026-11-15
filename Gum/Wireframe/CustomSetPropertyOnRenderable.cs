@@ -178,6 +178,9 @@ public partial class CustomSetPropertyOnRenderable
 
     private static FontCreatorType? _inMemoryFontCreator;
 
+    /// <summary>Bumped on every assignment of <see cref="InMemoryFontCreator"/>, so per-creator memos (issue #8035) go stale.</summary>
+    internal static int InMemoryFontCreatorVersion { get; private set; }
+
     /// <summary>
     /// Optional in-memory font creator. When set, font generation bypasses disk entirely. On the
     /// XNA-family backends the creator produces a <c>BitmapFont</c> directly from raw pixel
@@ -192,6 +195,7 @@ public partial class CustomSetPropertyOnRenderable
         set
         {
             _inMemoryFontCreator = value;
+            InMemoryFontCreatorVersion++;
 #if !RAYLIB
             // #4563: same reasoning as FontService's setter above -- a new (or removed) creator gets
             // a fresh attempt at any signature previously marked unresolvable.
@@ -257,7 +261,7 @@ public partial class CustomSetPropertyOnRenderable
 
     /// <summary>
     /// Optional resolver that turns a render-target shader file reference (e.g. an <c>.fx</c> path on
-    /// the XNA-family backends, or a <c>.fs</c>/<c>.glsl</c> path on raylib, assigned via
+    /// the XNA-family backends or raylib, assigned via
     /// <c>ContainerRuntime.SourceShaderFile</c>) into a platform effect object, which is stored in
     /// <see cref="RenderableBase.RenderTargetEffect"/>. Gum core ships no shader loader; the consumer
     /// (or an opt-in library, the shader equivalent of Gum.Shapes) registers this — typically
@@ -271,7 +275,26 @@ public partial class CustomSetPropertyOnRenderable
     /// honors <see cref="GraphicalUiElement.MissingFileBehavior"/>, mirroring sprite source-file
     /// handling.
     /// </summary>
-    public static Func<string, object?>? RenderTargetEffectResolver { get; set; }
+    public static Func<string, object?>? RenderTargetEffectResolver
+    {
+        get => _renderTargetEffectResolvers.PathResolver;
+        set => _renderTargetEffectResolvers.PathResolver = value;
+    }
+
+    /// <summary>
+    /// The same resolver as <see cref="RenderTargetEffectResolver"/>, but handed a <see cref="ShaderSource"/> (the
+    /// logical name plus a way to open the bytes) instead of a path, so a shader served from a stream or a
+    /// <c>.gumpkg</c> bundle resolves like a loose file, and a resolver decides what it can load from the
+    /// content rather than the file name. Return null to decline. The last of the two properties assigned wins,
+    /// and each reads back as an adapter of the other.
+    /// </summary>
+    public static Func<global::Gum.ShaderSource, object?>? RenderTargetEffectSourceResolver
+    {
+        get => _renderTargetEffectResolvers.SourceResolver;
+        set => _renderTargetEffectResolvers.SourceResolver = value;
+    }
+
+    private static readonly global::Gum.ShaderResolverSlot<object> _renderTargetEffectResolvers = new global::Gum.ShaderResolverSlot<object>();
 
 #if RAYLIB
     private const string ShadowDuskPackageId = "Gum.raylib.ShadowDusk";
@@ -511,7 +534,7 @@ public partial class CustomSetPropertyOnRenderable
 
     /// <summary>
     /// Resolves a render-target shader file reference (e.g. an <c>.fx</c> path on the XNA-family
-    /// backends, or a <c>.fs</c>/<c>.glsl</c> path on raylib) into a platform effect via
+    /// backends or raylib) into a platform effect via
     /// <see cref="RenderTargetEffectResolver"/> and stores it in the container's
     /// <see cref="RenderableBase.RenderTargetEffect"/> slot. Mirrors
     /// <see cref="AssignSourceFileOnSprite"/>: the resolved effect is cached in
@@ -535,7 +558,7 @@ public partial class CustomSetPropertyOnRenderable
         // No resolver registered: a shader that cannot load fails like a missing file (#7053) rather than
         // silently rendering unshaded. The consumer registers a resolver (the ShadowDusk package for the
         // runtime, or their own, e.g. Raylib.LoadShader on raylib).
-        if (RenderTargetEffectResolver == null)
+        if (!_renderTargetEffectResolvers.HasResolver)
         {
             string noResolverMessage = ShaderResolverRequirement.BuildNoResolverMessage(value, graphicalUiElement.Tag, ShadowDuskPackageId);
             if (GraphicalUiElement.MissingFileBehavior == MissingFileBehavior.ThrowException)
@@ -573,7 +596,7 @@ public partial class CustomSetPropertyOnRenderable
         Exception? resolveException = null;
         try
         {
-            resolvedEffect = RenderTargetEffectResolver(value);
+            resolvedEffect = _renderTargetEffectResolvers.Resolve(global::Gum.ShaderSource.FromFile(value));
         }
         catch (Exception ex)
         {
@@ -1075,29 +1098,57 @@ public partial class CustomSetPropertyOnRenderable
     // TrySetPropertyOnText below. Public so both call sites can reach it (#3706).
     public static void SetText(Text textRenderable, GraphicalUiElement graphicalUiElement, string propertyName, object? value)
     {
-        var widthBefore = textRenderable.WrappedTextWidth;
-        var heightBefore = textRenderable.WrappedTextHeight;
+        string? valueAsString = value as string;
+        string? displayText = GetDisplayText(graphicalUiElement, propertyName, valueAsString);
 
-        if (graphicalUiElement.WidthUnits == DimensionUnitType.RelativeToChildren)
+        // Setting what a tagged text already shows changes nothing, so skip the parse and the
+        // measure-and-wrap below, matching how Text.RawText ignores an equal plain string (#7779).
+        // This compares the translated result, so a key whose translation is tagged skips too (#7786).
+        if (displayText != null && displayText.Contains("[") && IsBbCodeAlreadyParsed(textRenderable, graphicalUiElement, displayText))
         {
-            if (graphicalUiElement.EffectiveMaxWidth == null)
-            {
-                // make it have no line wrap width before assignign the text:
-                textRenderable.Width = null;
-            }
-            else
-            {
-                textRenderable.Width = graphicalUiElement.EffectiveMaxWidth;
-            }
+            TrackLocalizationKey(graphicalUiElement, propertyName, valueAsString);
+            return;
         }
 
-        var valueAsString = value as string;
+        // Measures the new text unwrapped when RelativeToChildren, then lays out or restores the renderable's width.
+        graphicalUiElement.AssignTextAndUpdateLayout(textRenderable,
+            (textRenderable, graphicalUiElement, propertyName, valueAsString, displayText), AssignText);
+    }
 
-        // Track the original (untranslated) value so RefreshLocalization can
-        // re-translate this element if CurrentLanguage changes later.
-        // - "Text" with an active LocalizationService stores the raw input.
-        // - "TextNoTranslate" always clears any previously-stored key so user
-        //   input or explicitly-untranslated values aren't re-translated later.
+    // The string a Text assignment ends up showing: a value that already contains markup is used as-is,
+    // otherwise the "Text" property is translated (the translation may itself contain markup).
+    private static string? GetDisplayText(GraphicalUiElement graphicalUiElement, string propertyName, string? valueAsString)
+    {
+        if (valueAsString == null || valueAsString.Contains("["))
+        {
+            return valueAsString;
+        }
+
+#if !FRB
+        // TextRuntime doesn't exist under FRB (see Guard symmetry in coder.md), so a bare
+        // GraphicalUiElement(Text) - not possible outside FRB per TrySetPropertyOnText above -
+        // is treated as translatable, matching pre-LocalizeText behavior.
+        var shouldTranslate = graphicalUiElement is not Gum.GueDeriving.TextRuntime textRuntimeForLocalization
+            || textRuntimeForLocalization.LocalizeText;
+#else
+        var shouldTranslate = true;
+#endif
+        // A null Text stays null; translating it would display the service placeholder.
+        if (LocalizationService != null && propertyName == "Text" && shouldTranslate)
+        {
+            return LocalizationService.Translate(valueAsString);
+        }
+
+        return valueAsString;
+    }
+
+    // Track the original (untranslated) value so RefreshLocalization can
+    // re-translate this element if CurrentLanguage changes later.
+    // - "Text" with an active LocalizationService stores the raw input.
+    // - "TextNoTranslate" always clears any previously-stored key so user
+    //   input or explicitly-untranslated values aren't re-translated later.
+    private static void TrackLocalizationKey(GraphicalUiElement graphicalUiElement, string propertyName, string? valueAsString)
+    {
         if (propertyName == "TextNoTranslate")
         {
             _localizationKeys.Remove(graphicalUiElement);
@@ -1110,52 +1161,142 @@ public partial class CustomSetPropertyOnRenderable
         {
             _localizationKeys.Remove(graphicalUiElement);
         }
+    }
+
+    // What the last SetBbCodeText read besides the markup's tags: the stripped text it produced and the base
+    // font and dropshadow values it seeded the per-run fonts from. Width is not here: the Text re-wraps itself
+    // when its width changes, and a font change re-parses in ReactToFontValueChange.
+    private sealed class BbCodeParseRecord
+    {
+        public string? Markup;
+        public string? StrippedText;
+        public HashSet<string> KnownTagsSnapshot = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        public string? FontName;
+        public float FontSize;
+        public int OutlineThickness;
+        public bool UseFontSmoothing;
+        public bool IsItalic;
+        public bool IsBold;
+        public bool UseCustomFont;
+        public bool HasDropshadow;
+        public float DropshadowOffsetX;
+        public float DropshadowOffsetY;
+        public float DropshadowBlur;
+        public int DropshadowRed;
+        public int DropshadowGreen;
+        public int DropshadowBlue;
+        public int DropshadowAlpha;
+    }
+
+    private static readonly ConditionalWeakTable<Text, BbCodeParseRecord> _bbCodeParseRecords = new();
+
+    // Compares (and, when write is true, copies) the owner values SetBbCodeText reads. True when any differed.
+    private static bool UpdateRecordFromOwner(BbCodeParseRecord record, GraphicalUiElement graphicalUiElement, bool write)
+    {
+#if FRB
+        var textRuntime = graphicalUiElement;
+#else
+        var textRuntime = graphicalUiElement as Gum.GueDeriving.TextRuntime;
+#endif
+        if (textRuntime == null)
+        {
+            return false;
+        }
+
+        string? fontName = textRuntime.UseCustomFont ? textRuntime.CustomFontFile : textRuntime.Font;
+#if FRB
+        bool hasDropshadow = false;
+        float dsX = 0, dsY = 0, dsBlur = 0;
+        int dsR = 0, dsG = 0, dsB = 0, dsA = 0;
+#else
+        bool hasDropshadow = textRuntime.HasDropshadow;
+        float dsX = textRuntime.DropshadowOffsetX, dsY = textRuntime.DropshadowOffsetY, dsBlur = textRuntime.DropshadowBlur;
+        int dsR = textRuntime.DropshadowRed, dsG = textRuntime.DropshadowGreen, dsB = textRuntime.DropshadowBlue, dsA = textRuntime.DropshadowAlpha;
+#endif
+        bool differs =
+            record.FontName != fontName ||
+            record.FontSize != textRuntime.FontSize ||
+            record.OutlineThickness != textRuntime.OutlineThickness ||
+            record.UseFontSmoothing != textRuntime.UseFontSmoothing ||
+            record.IsItalic != textRuntime.IsItalic ||
+            record.IsBold != textRuntime.IsBold ||
+            record.UseCustomFont != textRuntime.UseCustomFont ||
+            record.HasDropshadow != hasDropshadow ||
+            record.DropshadowOffsetX != dsX || record.DropshadowOffsetY != dsY || record.DropshadowBlur != dsBlur ||
+            record.DropshadowRed != dsR || record.DropshadowGreen != dsG ||
+            record.DropshadowBlue != dsB || record.DropshadowAlpha != dsA;
+
+        if (write)
+        {
+            record.FontName = fontName;
+            record.FontSize = textRuntime.FontSize;
+            record.OutlineThickness = textRuntime.OutlineThickness;
+            record.UseFontSmoothing = textRuntime.UseFontSmoothing;
+            record.IsItalic = textRuntime.IsItalic;
+            record.IsBold = textRuntime.IsBold;
+            record.UseCustomFont = textRuntime.UseCustomFont;
+            record.HasDropshadow = hasDropshadow;
+            record.DropshadowOffsetX = dsX;
+            record.DropshadowOffsetY = dsY;
+            record.DropshadowBlur = dsBlur;
+            record.DropshadowRed = dsR;
+            record.DropshadowGreen = dsG;
+            record.DropshadowBlue = dsB;
+            record.DropshadowAlpha = dsA;
+        }
+        return differs;
+    }
+
+    // True when parsing this markup again would rebuild exactly what the text already holds.
+    private static bool IsBbCodeAlreadyParsed(Text textRenderable, GraphicalUiElement graphicalUiElement, string markup)
+    {
+        if (!_bbCodeParseRecords.TryGetValue(textRenderable, out BbCodeParseRecord? record) ||
+            record.Markup != markup ||
+            textRenderable.StoredMarkupText != markup ||
+            textRenderable.RawText != record.StrippedText ||
+            !record.KnownTagsSnapshot.SetEquals(Tags))
+        {
+            return false;
+        }
+
+        // [state=Name] expands from the element's states, which can change without the string changing.
+        if (markup.IndexOf("[state", StringComparison.OrdinalIgnoreCase) >= 0)
+        {
+            return false;
+        }
+
+        return !UpdateRecordFromOwner(record, graphicalUiElement, write: false);
+    }
+
+    private static void RememberBbCodeParse(Text asText, GraphicalUiElement graphicalUiElement, string bbcode)
+    {
+        BbCodeParseRecord record = _bbCodeParseRecords.GetValue(asText, static _ => new BbCodeParseRecord());
+        record.Markup = bbcode;
+        record.StrippedText = asText.RawText;
+        record.KnownTagsSnapshot.Clear();
+        record.KnownTagsSnapshot.UnionWith(Tags);
+        UpdateRecordFromOwner(record, graphicalUiElement, write: true);
+    }
+
+    private static void AssignText((Text textRenderable, GraphicalUiElement graphicalUiElement, string propertyName, string? valueAsString, string? displayText) state)
+    {
+        var (textRenderable, graphicalUiElement, propertyName, valueAsString, displayText) = state;
+
+        TrackLocalizationKey(graphicalUiElement, propertyName, valueAsString);
 
         textRenderable.InlineVariables.Clear();
 #if !FRB
         textRenderable.ParsedBbCodeTags = null;
 #endif
-        if (valueAsString?.Contains("[") == true)
+        if (displayText?.Contains("[") == true)
         {
-            textRenderable.StoredMarkupText = valueAsString;
+            textRenderable.StoredMarkupText = displayText;
             SetBbCodeText(textRenderable, graphicalUiElement, textRenderable.StoredMarkupText);
         }
         else
         {
             textRenderable.StoredMarkupText = null;
-            var rawText = valueAsString;
-#if !FRB
-            // TextRuntime doesn't exist under FRB (see Guard symmetry in coder.md), so a bare
-            // GraphicalUiElement(Text) - not possible outside FRB per TrySetPropertyOnText above -
-            // is treated as translatable, matching pre-LocalizeText behavior.
-            var shouldTranslate = graphicalUiElement is not Gum.GueDeriving.TextRuntime textRuntimeForLocalization
-                || textRuntimeForLocalization.LocalizeText;
-#else
-            var shouldTranslate = true;
-#endif
-            // A null Text stays null; translating it would display the service placeholder.
-            if(LocalizationService != null && rawText != null && propertyName == "Text" && shouldTranslate)
-            {
-                rawText = LocalizationService.Translate(rawText);
-            }
-
-            if(rawText?.Contains("[") == true)
-            {
-                textRenderable.StoredMarkupText = rawText;
-                SetBbCodeText(textRenderable, graphicalUiElement, textRenderable.StoredMarkupText);
-            }
-            else
-            {
-                textRenderable.RawText = rawText;
-            }
-        }
-        // we want to update if the text's size actually changed (the letters it contains)
-        var shouldUpdate = widthBefore != textRenderable.WrappedTextWidth || heightBefore != textRenderable.WrappedTextHeight;
-        if (shouldUpdate)
-        {
-            graphicalUiElement.UpdateLayout(
-                GraphicalUiElement.ParentUpdateType.IfParentWidthHeightDependOnChildren |
-                GraphicalUiElement.ParentUpdateType.IfParentStacks, int.MaxValue / 2);
+            textRenderable.RawText = displayText;
         }
     }
 
@@ -1770,103 +1911,15 @@ public partial class CustomSetPropertyOnRenderable
     private static string CanonicalTagName(string name) => BbCodeFontStacks.CanonicalTagName(name);
 
     /// <summary>
-    /// Variable names a <c>[state=Name]</c> BBCode tag is allowed to apply to the substring it wraps -
-    /// exactly the set already wired for per-run application elsewhere in this file (the direct-value
-    /// cases in <see cref="SetBbCodeText"/> plus the font-stack cases in <see cref="ApplyFontVariables"/>).
-    /// A state can hold arbitrary variables (X, Y, Width, etc.), but only these have per-run meaning, so
-    /// anything else on the state is silently skipped rather than applied to the whole element.
-    /// </summary>
-    private static readonly HashSet<string> StateBbCodeAllowlist = new HashSet<string>
-    {
-        "Color", "Red", "Green", "Blue", "FontScale",
-        "Font", "FontSize", "OutlineThickness", "IsItalic", "IsBold", "UseCustomFont", "HasDropshadow",
-    };
-
-    /// <summary>
-    /// Formats an already-typed <see cref="Gum.DataTypes.Variables.VariableSave.Value"/> back into the
-    /// string <see cref="TagInfo.Argument"/> form the existing per-tag parsing (in
-    /// <see cref="SetBbCodeText"/> and <see cref="ApplyFontVariables"/>) expects, so a decomposed state
-    /// variable can be re-dispatched through that unchanged parsing without a bespoke typed-value path.
-    /// Lossless for every allowlisted type: bool/int/float format invariantly, and Color round-trips
-    /// through 8-digit ARGB hex (not <see cref="System.Drawing.Color.Name"/>, which is lossy for
-    /// non-named colors).
-    /// </summary>
-    private static string? FormatStateVariableArgument(object? value)
-    {
-        if (value == null)
-        {
-            return null;
-        }
-
-        if (value is System.Drawing.Color color)
-        {
-            return "0x" + color.ToArgb().ToString("X8", CultureInfo.InvariantCulture);
-        }
-
-        return Convert.ToString(value, CultureInfo.InvariantCulture);
-    }
-
-    /// <summary>
-    /// Expands every <c>[state=Name]</c> <see cref="FoundTag"/> in <paramref name="results"/> into one
-    /// synthetic <see cref="FoundTag"/> per allowlisted variable on the named state (looked up via
+    /// Expands every <c>[state=Name]</c> tag into the allowlisted variables of the named state (see
+    /// <see cref="BbCodeFontStacks.ExpandStateTags"/>), looked up via
     /// <see cref="GraphicalUiElementExtensions.TryGetStateByName"/> - the same States-then-Categories
     /// resolution <see cref="GraphicalUiElement.ApplyState(string)"/> uses, so a state defined in the
-    /// Gum tool's States tab, inside a categorized state, or added in code all resolve identically),
-    /// each spanning the state tag's own open/close range. An unknown state name, or a state with no
-    /// allowlisted variables, contributes nothing - a no-op, not an error. Must run AFTER
-    /// <see cref="BbCodeParser.RemoveTags"/> has already stripped the source text using the original
-    /// (unexpanded) <paramref name="results"/>: the synthetic entries share character ranges with each
-    /// other (and with the original state tag), so stripping with them in play would remove the same
-    /// range more than once.
+    /// Gum tool's States tab, inside a categorized state, or added in code all resolve identically.
     /// </summary>
-    private static List<FoundTag> ExpandStateTags(List<FoundTag> results, GraphicalUiElement graphicalUiElement)
-    {
-        List<FoundTag>? expanded = null;
-
-        foreach (FoundTag tag in results)
-        {
-            if (CanonicalTagName(tag.Name) == "State")
-            {
-                expanded ??= new List<FoundTag>(results.Where(item => CanonicalTagName(item.Name) != "State"));
-
-                if (graphicalUiElement.TryGetStateByName(tag.Open.Argument ?? string.Empty,
-                        out Gum.DataTypes.Variables.StateSave? state))
-                {
-                    foreach (Gum.DataTypes.Variables.VariableSave variable in state.Variables)
-                    {
-                        if (variable.SetsValue && StateBbCodeAllowlist.Contains(variable.Name))
-                        {
-                            string? argument = FormatStateVariableArgument(variable.Value);
-                            if (argument != null)
-                            {
-                                expanded.Add(new FoundTag
-                                {
-                                    Name = variable.Name,
-                                    Open = new TagInfo
-                                    {
-                                        StartIndex = tag.Open.StartIndex,
-                                        Count = tag.Open.Count,
-                                        StartStrippedIndex = tag.Open.StartStrippedIndex,
-                                        Argument = argument,
-                                        Name = variable.Name,
-                                    },
-                                    Close = new TagInfo
-                                    {
-                                        StartIndex = tag.Close.StartIndex,
-                                        Count = tag.Close.Count,
-                                        StartStrippedIndex = tag.Close.StartStrippedIndex,
-                                        Name = variable.Name,
-                                    },
-                                });
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        return expanded ?? results;
-    }
+    private static List<FoundTag> ExpandStateTags(List<FoundTag> results, GraphicalUiElement graphicalUiElement) =>
+        BbCodeFontStacks.ExpandStateTags(results, name =>
+            graphicalUiElement.TryGetStateByName(name, out Gum.DataTypes.Variables.StateSave? state) ? state : null);
 
     /// <summary>
     /// Parses BBCode markup, assigns the tag-stripped text to <see cref="Text.RawText"/>, and populates
@@ -2063,6 +2116,8 @@ public partial class CustomSetPropertyOnRenderable
         // unconditionally (the text must wrap whether or not per-run fonts were resolved).
         asText.UpdateWrappedText();
         asText.UpdatePreRenderDimensions();
+
+        RememberBbCodeParse(asText, graphicalUiElement, bbcode);
     }
 
     /// <summary>
@@ -2530,9 +2585,17 @@ public partial class CustomSetPropertyOnRenderable
 
         font = loaderManager.GetDisposable(fullFileName) as BitmapFont;
 
-        // Attempt to load from Embedded Resource
+        // Attempt to load from Embedded Resource, unless the project has its own font file for these
+        // properties (#7604): the embedded fonts are Latin-1 only, so they would hide a generated font
+        // that holds more glyphs. The disk load below picks the project's file up.
+#if KNI
+        // KNI may run in a browser without File.Exists, so the embedded font keeps precedence there.
+        bool projectHasFontFile = false;
+#else
+        bool projectHasFontFile = ToolsUtilities.FileManager.FileExists(fullFileName);
+#endif
 
-        if (fontName != null && font == null)
+        if (fontName != null && font == null && !projectHasFontFile)
         {
             font = GetFontDisposable(fontName);
         }
@@ -3651,31 +3714,43 @@ public partial class CustomSetPropertyOnRenderable
 #if RAYLIB
     private static bool TrySetPropertyOnArcRuntime(Gum.GueDeriving.ArcRuntime arcRuntime, string propertyName, object value)
     {
-        // The gradient *Units variables arrive as PositionUnitType (endpoints) or DimensionUnitType
-        // (radii). With no dispatch they fell to SetPropertyThroughReflection and were lost, so a
-        // percent-authored gradient was read as raw pixels (#7306).
+        if (propertyName == "Thickness")
+        {
+            arcRuntime.Thickness = System.Convert.ToSingle(value);
+            return true;
+        }
+        return TrySetGradientUnit(arcRuntime.RenderableComponent as Gum.Renderables.GradientShapeRenderable, propertyName, value);
+    }
+
+    // The gradient *Units variables arrive as PositionUnitType (endpoints) or DimensionUnitType
+    // (radii). With no dispatch they fell to SetPropertyThroughReflection and were lost, so a
+    // percent-authored gradient was read as raw pixels (#7306, #7312). Shared by Arc, Circle and
+    // Rectangle: all three renderables resolve the units the same way.
+    private static bool TrySetGradientUnit(Gum.Renderables.GradientShapeRenderable? renderable, string propertyName, object value)
+    {
+        if (renderable == null)
+        {
+            return false;
+        }
         switch (propertyName)
         {
-            case "Thickness":
-                arcRuntime.Thickness = System.Convert.ToSingle(value);
-                return true;
             case "GradientX1Units":
-                arcRuntime.GradientX1Units = Gum.Converters.UnitConverter.ConvertToGeneralUnit(value);
+                renderable.GradientX1Units = Gum.Converters.UnitConverter.ConvertToGeneralUnit(value);
                 return true;
             case "GradientY1Units":
-                arcRuntime.GradientY1Units = Gum.Converters.UnitConverter.ConvertToGeneralUnit(value);
+                renderable.GradientY1Units = Gum.Converters.UnitConverter.ConvertToGeneralUnit(value);
                 return true;
             case "GradientX2Units":
-                arcRuntime.GradientX2Units = Gum.Converters.UnitConverter.ConvertToGeneralUnit(value);
+                renderable.GradientX2Units = Gum.Converters.UnitConverter.ConvertToGeneralUnit(value);
                 return true;
             case "GradientY2Units":
-                arcRuntime.GradientY2Units = Gum.Converters.UnitConverter.ConvertToGeneralUnit(value);
+                renderable.GradientY2Units = Gum.Converters.UnitConverter.ConvertToGeneralUnit(value);
                 return true;
             case "GradientInnerRadiusUnits":
-                arcRuntime.GradientInnerRadiusUnits = (DimensionUnitType)value;
+                renderable.GradientInnerRadiusUnits = (DimensionUnitType)value;
                 return true;
             case "GradientOuterRadiusUnits":
-                arcRuntime.GradientOuterRadiusUnits = (DimensionUnitType)value;
+                renderable.GradientOuterRadiusUnits = (DimensionUnitType)value;
                 return true;
         }
         return false;
@@ -3829,7 +3904,11 @@ public partial class CustomSetPropertyOnRenderable
                 circleRuntime.DropshadowBlur = System.Convert.ToSingle(value);
                 return true;
         }
+#if RAYLIB
+        return TrySetGradientUnit(circleRuntime.RenderableComponent as Gum.Renderables.GradientShapeRenderable, propertyName, value);
+#else
         return false;
+#endif
 #pragma warning restore CS0618
     }
 
@@ -3987,7 +4066,11 @@ public partial class CustomSetPropertyOnRenderable
                 rectangleRuntime.DropshadowBlur = System.Convert.ToSingle(value);
                 return true;
         }
+#if RAYLIB
+        return TrySetGradientUnit(rectangleRuntime.RenderableComponent as Gum.Renderables.GradientShapeRenderable, propertyName, value);
+#else
         return false;
+#endif
 #pragma warning restore CS0618
     }
 #endif

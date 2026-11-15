@@ -25,4 +25,10 @@ public class ScreenshotResult
     /// </summary>
     public static ScreenshotResult Failed(string errorMessage) =>
         new() { Success = false, ErrorMessage = errorMessage };
+
+    /// <summary>
+    /// Creates the failed result for a project that has no element named <paramref name="elementName"/>.
+    /// </summary>
+    public static ScreenshotResult ElementNotFound(string elementName) =>
+        Failed($"Element '{elementName}' not found in project.");
 }

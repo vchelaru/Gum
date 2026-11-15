@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-# Re-runs a workflow run's failed jobs once when GitHub never gave a job a runner (#6282). Such a job
+# Re-runs a workflow run's failed jobs, up to 3 attempts in total, when GitHub never gave a job a runner (#6282). Such a job
 # sits in the queue for about 15 minutes and is then cancelled with an empty runner name
 # ("The job was not acquired by Runner of type hosted"); it is a hosted-runner outage, not a test
-# result. A job that ran and failed, a run cancelled by a newer push, and any attempt after the first
+# result. A job that ran and failed, a run cancelled by a newer push, and the third attempt
 # are left alone.
 #
 # Usage: rerun-unacquired.sh <run-id> <attempt> [--dry-run]
@@ -21,6 +21,6 @@ unacquired="$(gh api "repos/$repo/actions/runs/$run/attempts/$attempt/jobs?per_p
 if [ -z "$unacquired" ]; then echo "Run $run attempt $attempt: no unacquired jobs."; exit 0; fi
 echo "Run $run attempt $attempt has jobs that never got a runner:"; echo "$unacquired" | sed 's/^/  /'
 
-if [ "$attempt" != "1" ]; then echo "Already a re-run (attempt $attempt); not re-running again."; exit 0; fi
+if [ "$attempt" -ge 3 ]; then echo "Already attempt $attempt; not re-running again."; exit 0; fi
 if [ "$dry" = "--dry-run" ]; then echo "Dry run: would re-run the failed jobs."; exit 0; fi
 gh run rerun "$run" --failed --repo "$repo"

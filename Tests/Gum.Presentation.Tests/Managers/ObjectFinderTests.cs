@@ -41,7 +41,11 @@ public class ObjectFinderTests : BaseTestClass
         using (ObjectFinder.UseOnThisThread(own))
         {
             ObjectFinder.Self.ShouldBeSameAs(own);
-            Task.Run(() => seenElsewhere = ObjectFinder.Self).Wait();
+            // A dedicated thread: Task.Run(...).Wait() may inline the task on this very thread
+            // when the pool has not started it yet, which would see the override.
+            Thread other = new(() => seenElsewhere = ObjectFinder.Self);
+            other.Start();
+            other.Join();
         }
 
         seenElsewhere.ShouldNotBeNull().ShouldNotBeSameAs(own);

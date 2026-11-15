@@ -110,6 +110,7 @@ All Forms controls with displayable text follow the same pattern:
 | TextBox | `Text` | `SetTextNoTranslate()` |
 | TextBoxBase | `Placeholder` | `SetPlaceholderNoTranslate()` |
 | MenuItem | `Header` | `SetHeaderNoTranslate()` |
+| TabItem | `Header` | `SetHeaderNoTranslate()` |
 
 Internally, all no-translate methods call `SetProperty("TextNoTranslate", value)` on the underlying text component.
 
@@ -118,6 +119,8 @@ Internally, all no-translate methods call `SetProperty("TextNoTranslate", value)
 **ComboBox** — `Text` and the selected item's text go through `SetProperty("TextNoTranslate", value)`, which skips translation but still re-lays out text-dependent layout. This is because ComboBox text comes from `SelectedItem.ToString()`, which is data-driven.
 
 **ListBoxItem** — `UpdateToObject(object o)` sets `coreText.RawText = o?.ToString()` directly. Same reason: items come from a data collection.
+
+`TabControl` data items (non-`TabItem` entries in `Items`) set their `TabItem` header through `SetHeaderNoTranslate(item.ToString())`, so they are never translated.
 
 To localize data-driven controls, pre-translate values before adding them to the `Items` collection.
 

@@ -43,8 +43,11 @@ public class Game1 : Game
         ServiceContainer = Services;
 
         var gumProject = GumUI.Initialize(this, "GumProject/GameUiSamplesgumProject.gumx");
-        // This allows the keyboard to control the game (tabbing)
-        FrameworkElement.KeyboardsForUiControl.Add(GumUI.Keyboard);
+
+        GumUI.UseKeyboardDefaults();
+
+        GumUI.UseGamepadDefaults();
+
         FrameworkElement.TabKeyCombos.Add(new KeyCombo { PushedKey = Gum.Forms.Input.Keys.Down });
         FrameworkElement.TabReverseKeyCombos.Add(new KeyCombo { PushedKey = Gum.Forms.Input.Keys.Up });
 
@@ -68,7 +71,7 @@ public class Game1 : Game
     {
         GumUI.Update(gameTime);
 
-        foreach(var item in GumService.Default.Root.Children)
+        foreach(var item in GumUI.Root.Children)
         {
             if(item is InteractiveGue asInteractiveGue)
             {
@@ -76,9 +79,9 @@ public class Game1 : Game
             }
         }
 
-        if(GumService.Default.Keyboard.KeyPushed(Gum.Forms.Input.Keys.F1))
+        if(GumUI.Keyboard.KeyPushed(Gum.Forms.Input.Keys.F1))
         {
-            GumService.Default.ExportSnapshot("MyTestSnapshot.gumx");
+            GumUI.ExportSnapshot("MyTestSnapshot.gumx");
         }
 
         base.Update(gameTime);

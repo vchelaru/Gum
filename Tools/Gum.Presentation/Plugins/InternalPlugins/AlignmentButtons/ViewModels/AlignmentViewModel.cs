@@ -39,6 +39,13 @@ public class AlignmentViewModel : ViewModel
         set => Set(value);
     }
 
+    /// <summary>The palette name of the edited state's category color, or null; the Variables and Alignment banners draw it in that color's theme variant.</summary>
+    public string? StateCategoryColorName
+    {
+        get => Get<string?>();
+        set => Set(value);
+    }
+
     public float DockMargin
     {
         get => Get<float>();
@@ -83,6 +90,7 @@ public class AlignmentViewModel : ViewModel
         HasStateInformation = info.HasStateInformation;
         StateInformation = info.StateInformation;
         StateBackground = info.StateBackground;
+        StateCategoryColorName = info.CategoryColorName;
     }
 
     // When DockMargin is 0, the expression `NormalizeNegativeZero(-DockMargin * 2)` evaluates to IEEE 754

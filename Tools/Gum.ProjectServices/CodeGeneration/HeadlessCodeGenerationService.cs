@@ -45,6 +45,12 @@ public class HeadlessCodeGenerationService : IHeadlessCodeGenerationService
     public bool GenerateCodeForElement(ElementSave element, CodeOutputElementSettings elementSettings,
         CodeOutputProjectSettings projectSettings, bool checkForMissing = true)
     {
+        // An element the engine profile does not support is dormant: it gets no code.
+        if (_codeGenerator.IsElementBlockedByEngineProfile(element))
+        {
+            return false;
+        }
+
         var visualApi = _codeGenerator.GetVisualApiForElement(element);
         var generatedFileName = _fileLocationsService.GetGeneratedFileName(
             element, elementSettings, projectSettings, visualApi);
@@ -111,6 +117,11 @@ public class HeadlessCodeGenerationService : IHeadlessCodeGenerationService
         {
             foreach (ElementSave element in elements)
             {
+                if (_codeGenerator.IsElementBlockedByEngineProfile(element))
+                {
+                    continue;
+                }
+
                 CodeOutputElementSettings settings = _elementSettingsManager.LoadOrCreateSettingsFor(element);
                 if (settings.GenerationBehavior == GenerationBehavior.NeverGenerate)
                 {
@@ -175,7 +186,7 @@ public class HeadlessCodeGenerationService : IHeadlessCodeGenerationService
             .OfType<ElementSave>()
             .Where(item =>
             {
-                if (item is StandardElementSave)
+                if (item is StandardElementSave || _codeGenerator.IsElementBlockedByEngineProfile(item))
                 {
                     return false;
                 }

@@ -12,6 +12,10 @@ If you are interested in using raylib, please join the discord channel and provi
 
 ## Creating an New Project
 
+{% hint style="info" %}
+To skip these steps, create the project in the Gum tool: select **File** > **New Project**, check **Create C# project**, and pick raylib as the platform. The project already references Gum and loads a Gum project. See [Creating a Project](../../../../gum-tool/setup/creating-a-project.md).
+{% endhint %}
+
 Before using Gum, you should first verify that you can create a normal raylib-cs project. For more information see the raylib-cs readme: [https://github.com/raylib-cs/raylib-cs](https://github.com/raylib-cs/raylib-cs).
 
 If you are starting a branch new raylib project from scratch, you can follow these steps:

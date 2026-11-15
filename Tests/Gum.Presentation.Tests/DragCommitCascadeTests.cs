@@ -31,6 +31,87 @@ public class DragCommitCascadeTests : BaseTestClass
     }
 
     [Fact]
+    public void Tick_ShouldUpdateSameElementFollowers_ButNotOtherElements_UntilTheFullCommit()
+    {
+        using DragWorld world = new DragWorld();
+        world.BuildSameElement();
+        world.WidthOf(world.Comp, "Default", "F0").ShouldBe(51);
+        world.WidthOf(world.Component("Other"), "Default", "O0").ShouldBe(50);
+        int savesBefore = world.SaveCount;
+        int historyBefore = world.HistoryCount;
+
+        world.Tick("S0", "Default", 80);
+        world.Tick("S0", "Default", 90);
+
+        world.WidthOf(world.Comp, "Default", "F0").ShouldBe(91);
+        world.WidthOf(world.Component("Other"), "Default", "O0").ShouldBe(50);
+        world.SaveCount.ShouldBe(savesBefore);
+        world.HistoryCount.ShouldBe(historyBefore);
+
+        world.Commit("S0", "Default", 90);
+
+        world.WidthOf(world.Comp, "Default", "F0").ShouldBe(91);
+        world.WidthOf(world.Component("Other"), "Default", "O0").ShouldBe(90);
+        world.HistoryCount.ShouldBe(historyBefore + 1);
+        world.MemoryEqualsDisk().ShouldBeTrue();
+    }
+
+    [Fact]
+    public void Tick_OfUnrelatedVariable_ShouldNotTouchButtonStates_Nor_CostPerButton()
+    {
+        using DragWorld world = new DragWorld();
+        world.BuildButtons(200);
+        world.ButtonStateWrites.ShouldBe(0);
+        world.Tick("S0", "Default", 59);
+
+        List<double> milliseconds = new List<double>();
+        for (int i = 0; i < 7; i++)
+        {
+            Stopwatch watch = Stopwatch.StartNew();
+            world.Tick("S0", "Default", 60 + i);
+            watch.Stop();
+            milliseconds.Add(watch.Elapsed.TotalMilliseconds);
+        }
+        milliseconds.Sort();
+
+        world.ButtonStateWrites.ShouldBe(0);
+        milliseconds[3].ShouldBeLessThan(3.0);
+    }
+
+    [Fact]
+    public void Tick_OfIsEnabled_ShouldUpdateOnlyThatButtonsState()
+    {
+        using DragWorld world = new DragWorld();
+        world.BuildButtons(20);
+
+        world.TickIsEnabled(3, false);
+
+        world.ButtonCategoryStateOf(3).ShouldBe("Disabled");
+        world.ButtonStateWrites.ShouldBe(1);
+    }
+
+    [Fact]
+    public void Tick_ShouldWriteToolOnlyBehaviorReferences_WithoutSavingOrRecordingUndo()
+    {
+        using DragWorld world = new DragWorld();
+        world.BuildSameElement();
+        int savesBefore = world.SaveCount;
+        int historyBefore = world.HistoryCount;
+
+        world.TickSpacing(12);
+
+        // What the editor reads for a StackPanel (StackSpacing = Spacing) while the value is dragged.
+        Convert.ToSingle(world.StackSpacing).ShouldBe(12f);
+        world.SaveCount.ShouldBe(savesBefore);
+        world.HistoryCount.ShouldBe(historyBefore);
+
+        world.CommitSpacing(12);
+
+        Convert.ToSingle(world.StackSpacing).ShouldBe(12f);
+        world.HistoryCount.ShouldBe(historyBefore + 1);
+    }
+
+    [Fact]
     public void FullCommit_ShouldUpdateReadersAndSaveThem_WithoutAnyTicksBefore()
     {
         using DragWorld world = new DragWorld();

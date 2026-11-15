@@ -6,55 +6,45 @@
 
 ## Code Example - Printing Letters One at a Time
 
-The following code can be used to print letters out one at a time.
+The following code can be used to print letters out one at a time. `deltaSeconds` is your framework's frame time in seconds.
 
 ```csharp
 // Class scope
 TextRuntime textRuntime;
 bool isPrinting = false;
 float numberOfCharacters;
-protected override void Initialize()
+
+// Initialize
+textRuntime = new TextRuntime();
+textRuntime.AddToRoot();
+textRuntime.Text = "This is longer text which is used to " +
+    "create word wrapping. Notice that when this prints out, " +
+    "it prints one letter at a time and wraps according to the " +
+    "TextRuntime's bounds";
+
+textRuntime.Anchor(Anchor.Center);
+textRuntime.Width = 200;
+textRuntime.WidthUnits = Gum.DataTypes.DimensionUnitType.Absolute;
+textRuntime.Height = 0;
+textRuntime.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+textRuntime.MaxLettersToShow = 0;
+
+// Update
+GumUI.Update(gameTime);
+
+if(GumUI.Keyboard.KeyPushed(Gum.Forms.Input.Keys.Space))
 {
-    GumUI.Initialize(this);
-
-    textRuntime = new TextRuntime();
-    textRuntime.AddToRoot();
-    textRuntime.Text = "This is longer text which is used to " +
-        "create word wrapping. Notice that when this prints out, " +
-        "it prints one letter at a time and wraps according to the " +
-        "TextRuntime's bounds";
-
-    textRuntime.Anchor(Anchor.Center);
-    textRuntime.Width = 200;
-    textRuntime.WidthUnits = Gum.DataTypes.DimensionUnitType.Absolute;
-    textRuntime.Height = 0;
-    textRuntime.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
-    textRuntime.MaxLettersToShow = 0;
-
-    base.Initialize();
+    isPrinting = true;
+    numberOfCharacters = 0;
 }
 
-
-protected override void Update(GameTime gameTime)
+if(isPrinting)
 {
-    GumUI.Update(gameTime);
+    const int charactersPerSecond = 20;
+    numberOfCharacters += 
+        (float)deltaSeconds * charactersPerSecond;
 
-    if(GumUI.Keyboard.KeyPushed(Gum.Forms.Input.Keys.Space))
-    {
-        isPrinting = true;
-        numberOfCharacters = 0;
-    }
-
-    if(isPrinting)
-    {
-        const int charactersPerSecond = 20;
-        numberOfCharacters += 
-            (float)gameTime.ElapsedGameTime.TotalSeconds * charactersPerSecond;
-
-        textRuntime.MaxLettersToShow = (int)numberOfCharacters;
-    }
-
-    base.Update(gameTime);
+    textRuntime.MaxLettersToShow = (int)numberOfCharacters;
 }
 
 ```

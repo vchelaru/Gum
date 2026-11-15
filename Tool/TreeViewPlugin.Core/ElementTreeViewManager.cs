@@ -182,6 +182,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
     private readonly ICopyPasteLogic _copyPasteLogic;
     private readonly IMessenger _messenger;
     private readonly IAddDestinationTracker _addDestinationTracker;
+    private readonly IProjectRestrictions _projectRestrictions;
     private readonly IDeleteLogic _deleteLogic;
     private readonly IUndoManager _undoManager;
     private readonly IWireframeObjectManager _wireframeObjectManager;
@@ -224,8 +225,11 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         IClipboardService clipboardService,
         IElementTreeViewFactory viewFactory,
         IAddInstanceLogic addInstanceLogic,
-        IAddDestinationTracker addDestinationTracker)
+        IAddDestinationTracker addDestinationTracker,
+        IProjectRestrictions projectRestrictions)
     {
+        _projectRestrictions = projectRestrictions;
+        _projectRestrictions.Changed += (_, _) => HandleRestrictionsChanged();
         _fileSystemRevealService = fileSystemRevealService;
         _selectedState = selectedState;
         _editCommands = editCommands;
@@ -363,7 +367,13 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         }
         else if (e.StandardElementTypeName != null)
         {
-            e.Accepted = GetChipDropTargetNode(e.TargetNode) != null;
+            ChipDrop? chipDrop = ResolveChipDrop(e.TargetNode, e.Kind);
+            e.Accepted = chipDrop != null;
+            if (chipDrop != null)
+            {
+                // Draw what the drop will really do (an element row is always "add to it").
+                e.Kind = chipDrop.Kind;
+            }
         }
 
         if (e.TargetNode is { } hovered)
@@ -379,10 +389,10 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
             _dragDropManager.OnFilesDroppedInTreeView(e.Files, e.TargetNode);
         }
         else if (e.StandardElementTypeName is { } standardTypeName
-            && GetChipDropTargetNode(e.TargetNode) is { } targetNode
+            && ResolveChipDrop(e.TargetNode, e.Kind) is { } chipDrop
             && ObjectFinder.Self.GetStandardElement(standardTypeName) is { } standardElement)
         {
-            _addInstanceLogic.AddInstance(standardElement, targetNode.Tag);
+            _addInstanceLogic.AddInstance(standardElement, chipDrop.Container, position: chipDrop.Position);
         }
     }
 
@@ -464,6 +474,51 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         }
     }
 
+    // The engine profile was re-read from disk: refilter the tree and rebuild the palette and root folders.
+    private void HandleRestrictionsChanged()
+    {
+        if (_view == null)
+        {
+            return;
+        }
+        RefreshUi();
+        ApplyStandardsPaletteMode();
+        ApplyElementKindVisibility();
+    }
+
+    /// <summary>
+    /// Removes or restores the Components and Behaviors root folders to match the project's engine profile
+    /// (<see cref="IProjectRestrictions.AreComponentsDisabled"/>, <see cref="IProjectRestrictions.AreBehaviorsDisabled"/>).
+    /// Call whenever a project loads.
+    /// </summary>
+    public void ApplyElementKindVisibility()
+    {
+        // Screens come first, so Components goes right after them; Behaviors goes last.
+        SetRootFolderVisible(mComponentsTreeNode, !_projectRestrictions.AreComponentsDisabled, afterNode: mScreensTreeNode);
+        SetRootFolderVisible(mBehaviorsTreeNode, !_projectRestrictions.AreBehaviorsDisabled, afterNode: null);
+    }
+
+    private void SetRootFolderVisible(ITreeNodeMutable? rootNode, bool shouldBeVisible, ITreeNodeMutable? afterNode)
+    {
+        if (rootNode == null)
+        {
+            return;
+        }
+
+        GumTreeNode node = (GumTreeNode)rootNode;
+        bool isInTree = View.Nodes.Contains(node);
+
+        if (!shouldBeVisible && isInTree)
+        {
+            View.Nodes.Remove(node);
+        }
+        else if (shouldBeVisible && !isInTree)
+        {
+            int insertIndex = afterNode == null ? View.Nodes.Count : View.Nodes.IndexOf((GumTreeNode)afterNode) + 1;
+            View.Nodes.Insert(insertIndex, node);
+        }
+    }
+
     /// <summary>
     /// Highlights the palette chip matching the selected element when it is a standard (so the chip
     /// being edited via "Edit defaults..." is visibly indicated), or clears the highlight otherwise.
@@ -476,7 +531,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
 
     private void RefreshStandardsPaletteChips()
     {
-        var typeNames = GetAvailableStandardInstanceTypes(_projectState.GumProjectSave);
+        var typeNames = GetAvailableStandardInstanceTypes(_projectState.GumProjectSave, _projectRestrictions);
 
         View.RefreshStandardsPaletteChips(typeNames);
     }
@@ -535,6 +590,42 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         {
             SuppressNextEnsureVisible = false;
         }
+    }
+
+    /// <summary>Where a dropped Standards chip lands: the container, the place in its flat list, and the drop kind that names it.</summary>
+    internal sealed record ChipDrop(object Container, DropPosition? Position, TreeDropKind Kind);
+
+    /// <summary>
+    /// Resolves a Standards-chip drop on <paramref name="target"/> the way a node drop is resolved
+    /// (<see cref="ProcessDrop"/>), so a chip can land between rows and as a first child, not only
+    /// at the end of the row under the pointer. Null when the chip cannot be dropped there.
+    /// </summary>
+    internal static ChipDrop? ResolveChipDrop(GumTreeNode? target, TreeDropKind kind)
+    {
+        if (target == null)
+        {
+            return null;
+        }
+
+        // An element row has no siblings to insert beside; anywhere on it means "add to it".
+        if (target.Tag is ElementSave)
+        {
+            kind = TreeDropKind.Into;
+        }
+
+        (GumTreeNode TreeTarget, DropTarget? Drop)? resolved = ProcessDrop(target, kind);
+        if (resolved is { Drop: { } drop })
+        {
+            return GetChipDropTargetNode(resolved.Value.TreeTarget) is { Tag: { } container }
+                ? new ChipDrop(container, drop.Position, kind)
+                : null;
+        }
+
+        // No flat-list meaning (an instance the tree cannot place, e.g. a behavior's required
+        // instance): onto the row still adds to it, as before.
+        return kind == TreeDropKind.Into && GetChipDropTargetNode(target) is { Tag: { } rowTag }
+            ? new ChipDrop(rowTag, null, kind)
+            : null;
     }
 
     /// <summary>
@@ -860,7 +951,14 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
 
     bool ShouldShow(ScreenSave screen) => string.IsNullOrEmpty(filterText) || screen.Name.ToLower().Contains(filterText.ToLower());
     bool ShouldShow(ComponentSave component) => string.IsNullOrEmpty(filterText) || component.Name.ToLower().Contains(filterText.ToLower());
-    bool ShouldShow(StandardElementSave standardElementSave) => string.IsNullOrEmpty(filterText) || standardElementSave.Name.ToLower().Contains(filterText.ToLower());
+    bool ShouldShow(StandardElementSave standardElementSave)
+    {
+        if (_projectRestrictions.IsStandardTypeBlocked(standardElementSave.Name))
+        {
+            return false;
+        }
+        return string.IsNullOrEmpty(filterText) || standardElementSave.Name.ToLower().Contains(filterText.ToLower());
+    }
     bool ShouldShow(BehaviorSave behavior) => string.IsNullOrEmpty(filterText) || behavior.Name?.ToLower().Contains(filterText.ToLower()) == true;
 
     private void AddAndRemoveScreensComponentsStandardsAndBehaviors()

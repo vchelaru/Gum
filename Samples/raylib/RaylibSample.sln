@@ -15,6 +15,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KernSmith.RaylibGum", "..\.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KernSmith.GumCommon", "..\..\Integrations\KernSmith\KernSmith.GumCommon\KernSmith.GumCommon.csproj", "{82BFF1D7-6CD1-46DC-96FB-94C728759E6D}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RaylibGum.ShadowDusk", "..\..\Runtimes\RaylibGum.ShadowDusk\RaylibGum.ShadowDusk.csproj", "{0758289E-97E8-4229-ACA6-AB045D9F9309}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -85,6 +87,18 @@ Global
 		{82BFF1D7-6CD1-46DC-96FB-94C728759E6D}.Release|x64.Build.0 = Release|Any CPU
 		{82BFF1D7-6CD1-46DC-96FB-94C728759E6D}.Release|x86.ActiveCfg = Release|Any CPU
 		{82BFF1D7-6CD1-46DC-96FB-94C728759E6D}.Release|x86.Build.0 = Release|Any CPU
+		{0758289E-97E8-4229-ACA6-AB045D9F9309}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0758289E-97E8-4229-ACA6-AB045D9F9309}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0758289E-97E8-4229-ACA6-AB045D9F9309}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{0758289E-97E8-4229-ACA6-AB045D9F9309}.Debug|x64.Build.0 = Debug|Any CPU
+		{0758289E-97E8-4229-ACA6-AB045D9F9309}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{0758289E-97E8-4229-ACA6-AB045D9F9309}.Debug|x86.Build.0 = Debug|Any CPU
+		{0758289E-97E8-4229-ACA6-AB045D9F9309}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0758289E-97E8-4229-ACA6-AB045D9F9309}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0758289E-97E8-4229-ACA6-AB045D9F9309}.Release|x64.ActiveCfg = Release|Any CPU
+		{0758289E-97E8-4229-ACA6-AB045D9F9309}.Release|x64.Build.0 = Release|Any CPU
+		{0758289E-97E8-4229-ACA6-AB045D9F9309}.Release|x86.ActiveCfg = Release|Any CPU
+		{0758289E-97E8-4229-ACA6-AB045D9F9309}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

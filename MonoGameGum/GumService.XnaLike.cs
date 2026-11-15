@@ -130,7 +130,9 @@ public partial class GumService
     /// <c>GumService.Default</c> (or <c>IGumService.Default</c>) yourself.
     /// </remarks>
     /// <param name="game">The game instance.</param>
-    /// <param name="gumProjectFile">An optional project to load. If not specified, no project is loaded and Gum can be used "code only".</param>
+    /// <param name="gumProjectFile">An optional project to load. If not specified, no project is loaded and Gum can be used "code only".
+    /// A missing screen, component or standard file throws, unless <see cref="GraphicalUiElement.MissingFileBehavior"/> is
+    /// ConsumeSilently; then the project loads and <see cref="LastLoadResult"/> lists the missing files.</param>
     /// <returns>The loaded project, or null if no project is loaded</returns>
     public GumProjectSave? Initialize(Game game, string? gumProjectFile = null)
     {

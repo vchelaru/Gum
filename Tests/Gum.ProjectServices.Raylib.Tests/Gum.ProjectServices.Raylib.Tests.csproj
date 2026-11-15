@@ -27,4 +27,7 @@
     <Using Include="Xunit" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Include="..\Shared\CrossRuntime\ScreenshotAlphaScene.cs" Link="Shared\CrossRuntime\ScreenshotAlphaScene.cs" />
+  </ItemGroup>
 </Project>

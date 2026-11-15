@@ -6,7 +6,7 @@ name: Test Runtimes
 # does not skip the check, it prevents the check from ever being reported, so
 # any PR matching the filter (a docs-only PR) is stuck at BLOCKED permanently
 # with no way to re-run it into a passing state. Docs-only CI savings are instead
-# restored inside the Build-and-Test job itself: its "Detect docs-only PR" step
+# restored inside the Build-and-Test job itself: its Plan step, fed by the Changes job,
 # guards every expensive step so the job still runs and reports green, it just
 # does no work. Required contexts must always report.
 # push is safe to filter: pushes to main are not gated on required checks.
@@ -39,7 +39,7 @@ jobs:
   # Whether the PR touches anything but docs. The jobs below that are not required checks skip
   # themselves on a docs-only PR (about 40 runner-minutes of nothing). The required Build-and-Test
   # legs cannot skip at job level (their matrix names would not report), so they guard their own
-  # steps instead - see "Detect docs-only PR" there. Not a path filter on the trigger, for the reason
+  # steps instead - see the Plan step there. Not a path filter on the trigger, for the reason
   # in the top-of-file comment. Outputs 'true' for every event other than pull_request.
   #
   # It also outputs `scope`: 'fast' when the PR carries the `fast-ci` label, else 'full' (and always
@@ -56,10 +56,60 @@ jobs:
       aot: ${{ steps.jobpaths.outputs.aot }}
       gencode: ${{ steps.jobpaths.outputs.gencode }}
     steps:
+      # The `fast-ci` label must never skip tests that can observe the change (#7589: a PR that edited
+      # Outline.slang carried the label, the Mesa stream with RaylibGum.Tests was skipped, and 8 Raylib
+      # tests went red on main unnoticed). Rule: anything the skipped Mesa streams (the `mesa-*` lines in
+      # .github/scripts/windows-test-groups.txt) can observe forces full scope, label or not. Derived from
+      # those projects' references: the Mesa test projects themselves and what they share, every runtime
+      # and host (Runtimes, MonoGameGum), the shared rendering/layout core, integrations and themes they
+      # load, shipped shader files wherever they live, and CI plumbing. Tool, Tools, Gum (editor), docs
+      # and the headless test projects stay eligible for fast scope.
+      - name: Paths the skipped Mesa streams can observe
+        if: github.event_name == 'pull_request'
+        id: mesa
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            mesa:
+              - '**/*.slang'
+              - '**/*.fx'
+              - 'Gum/Content/**'
+              - 'Runtimes/**'
+              - 'MonoGameGum/**'
+              - 'GumCommon/**'
+              - 'GumDataTypes/**'
+              - 'GumRuntime/**'
+              - 'RenderingLibrary/**'
+              - 'InputLibrary/**'
+              - 'Integrations/**'
+              - 'Themes/**'
+              - 'ToolsUtilities/**'
+              - 'Tools/Gum.ProjectServices*/**'
+              - 'Tests/MonoGameGum.IntegrationTests/**'
+              - 'Tests/MonoGameGum.Shapes.Tests/**'
+              - 'Tests/GumShadowDusk.Tests.*/**'
+              - 'Tests/SkiaGum.GpuTests/**'
+              - 'Tests/Gum.Cli.Tests/**'
+              - 'Tests/RaylibGum.Tests/**'
+              - 'Tests/BrutalGum.OGL.Tests/**'
+              - 'Tests/SkiaHost.TestsCommon/**'
+              - 'Tests/Gum.ProjectServices.*.Tests/**'
+              - 'Tests/Gum.Automation/**'
+              - 'Tests/Shared/**'
+              - 'Tests/TestOrdering/**'
+              - 'Tests/CiTestProjects.slnf'
+              - 'GumCoreShared.projitems'
+              - '*.props'
+              - '*.targets'
+              - 'global.json'
+              - 'NuGet.config'
+              - '.github/**'
+
       - name: Scope (fast-ci label)
         id: scope
         shell: bash
         env:
+          FORCE_FULL: ${{ steps.mesa.outputs.mesa }}
           GH_TOKEN: ${{ github.token }}
           EVENT: ${{ github.event_name }}
           PR: ${{ github.event.pull_request.number }}
@@ -71,7 +121,14 @@ jobs:
               echo "Could not read the PR labels from the API; using the event payload."
               labels="$(echo "$PAYLOAD_LABELS" | tr ' ' '\n')"
             fi
-            if echo "$labels" | grep -qx 'fast-ci'; then scope=fast; fi
+            if echo "$labels" | grep -qx 'fast-ci'; then
+              if [ "$FORCE_FULL" = "true" ]; then
+                echo "fast-ci label ignored: the diff touches paths the Mesa streams observe (#7589)."
+                echo "fast-ci ignored (diff touches Mesa-observable paths)" >> "$GITHUB_STEP_SUMMARY"
+              else
+                scope=fast
+              fi
+            fi
           fi
           echo "scope=$scope" >> "$GITHUB_OUTPUT"
           echo "Scope: $scope"
@@ -207,7 +264,7 @@ jobs:
         if: runner.os == 'macOS'
         run: tccutil reset AppleEvents
       # The runners have no GPU, so the KNI device tests (CanvasHostTests, TextureCoordinateTab*,
-      # CanvasScenarioTests) skip themselves here
+      # CanvasScenarioTests, ExportAsImageAlphaTests) skip themselves here
       # unless GUM_RUN_CANVAS_DEVICE_TESTS=1 opts in; they run in the Xvfb step below instead.
       # --no-build runs against the Release build above; a rebuild here can hit a parallel-build
       # file lock (MSB3248). --blame names the test that was running if the test host crashes.
@@ -229,13 +286,13 @@ jobs:
           GUM_RUN_CANVAS_DEVICE_TESTS: "1"
           LIBGL_ALWAYS_SOFTWARE: "1"
         run: |
-          xvfb-run -a -s "-screen 0 1600x1000x24" dotnet test Tests/Gum.Avalonia.Tests/Gum.Avalonia.Tests.csproj --configuration Release --no-build --blame --blame-hang-timeout 8m --blame-hang-dump-type mini --logger "trx;LogFileName=head-process.trx" --results-directory TestResults --filter "FullyQualifiedName~HeadProcessTests|FullyQualifiedName~CanvasHostTests|FullyQualifiedName~TextureCoordinateTab|FullyQualifiedName~CanvasScenarioTests|FullyQualifiedName~CanvasMenuAndToolbarScenarioTests|FullyQualifiedName~DragDropScenarioTests"
+          xvfb-run -a -s "-screen 0 1600x1000x24" dotnet test Tests/Gum.Avalonia.Tests/Gum.Avalonia.Tests.csproj --configuration Release --no-build --blame --blame-hang-timeout 8m --blame-hang-dump-type mini --logger "trx;LogFileName=head-process.trx" --results-directory TestResults --filter "FullyQualifiedName~HeadProcessTests|FullyQualifiedName~CanvasHostTests|FullyQualifiedName~TextureCoordinateTab|FullyQualifiedName~CanvasScenarioTests|FullyQualifiedName~CanvasMenuAndToolbarScenarioTests|FullyQualifiedName~DragDropScenarioTests|FullyQualifiedName~ExportAsImageAlphaTests"
       # The logic shared by both heads (Gum.Presentation.Tests) is what the Avalonia head runs on
       # macOS and Linux, so it must pass there, not only on the Windows runner in the main job.
       # Windows already runs it in Build-and-Test, so it is not repeated here.
       - name: Gum.Presentation.Tests (shared logic on every OS)
         if: runner.os != 'Windows'
-        run: dotnet test Tests/Gum.Presentation.Tests/Gum.Presentation.Tests.csproj --configuration Release --logger "trx" --results-directory "TestResults"
+        run: dotnet test Tests/Gum.Presentation.Tests/Gum.Presentation.Tests.csproj --configuration Release --logger "trx" --results-directory "TestResults" --blame-hang --blame-hang-timeout 5m --blame-hang-dump-type none
       # Save byte-parity (ProjectSaveParityTests) must hold on every OS; Windows runs it in the main
       # test job, so only macOS and Linux run it here.
       - name: Gum.ProjectServices.Tests (save parity on every OS)
@@ -454,42 +511,27 @@ jobs:
         with:
           submodules: false
 
-      # Required contexts must always report (see the top-of-file comment), so this
-      # trigger stays unfiltered. This step instead detects a docs-only PR so every
-      # expensive step below can skip its work while the job still runs and reports
-      # green. Uses the GitHub API (no local diff/full-history checkout needed) for
-      # pull_request events; irrelevant for push/workflow_dispatch, which don't gate
-      # on this output.
-      - name: Detect docs-only PR
-        if: github.event_name == 'pull_request'
-        id: docs-only
-        uses: dorny/paths-filter@v3
-        with:
-          # predicate-quantifier: every is required for the '!'-prefixed excludes below to
-          # actually exclude. The default ('some'/OR) matches a file against '**' alone and
-          # short-circuits true, so every PR — docs-only or not — reported non-docs=true and
-          # this guard never actually skipped the expensive steps it gates.
-          predicate-quantifier: every
-          filters: |
-            non-docs:
-              - '**'
-              - '!docs/**'
-              - '!**/*.md'
-              - '!.gitbook/**'
-
       # Whether this leg has anything to do. Every later step keys off this instead of repeating the
-      # event logic. A docs-only PR does nothing; a push to main only seeds the macOS workload cache
-      # (Windows installs no workloads, so its leg is a no-op on push); in fast scope the macOS leg is a
-      # no-op and the Windows leg runs only the headless test stream.
+      # event logic. A docs-only PR does nothing (the Changes job's non-docs output; required contexts
+      # must always report, so the trigger stays unfiltered and the steps skip instead); a push to main
+      # only seeds the macOS workload cache (Windows installs no workloads, so its leg is a no-op on
+      # push); in fast scope the macOS leg is a no-op and the Windows leg runs only the headless test
+      # stream. A failed Changes job fails the leg: its outputs would otherwise read as docs-only and
+      # turn real work into a green no-op.
       - name: Plan
         id: plan
         shell: bash
         env:
           EVENT: ${{ github.event_name }}
-          NON_DOCS: ${{ steps.docs-only.outputs.non-docs }}
+          CHANGES_RESULT: ${{ needs.Changes.result }}
+          NON_DOCS: ${{ needs.Changes.outputs.non-docs }}
           SCOPE: ${{ needs.Changes.outputs.scope }}
           MATRIX_OS: ${{ matrix.os }}
         run: |
+          if [ "$CHANGES_RESULT" != "success" ]; then
+            echo "::error::The Changes job ended '$CHANGES_RESULT', so this leg cannot tell what the PR touches."
+            exit 1
+          fi
           active=true
           if [ "$EVENT" = "pull_request" ] && [ "$NON_DOCS" != "true" ]; then active=false; fi
           if [ "$EVENT" = "push" ] && [ "$MATRIX_OS" != "macos-15" ]; then active=false; fi
@@ -669,6 +711,28 @@ jobs:
       - name: Restore test projects (Windows)
         if: runner.os == 'Windows' && steps.plan.outputs.active == 'true'
         run: dotnet restore "Tests/CiTestProjects.slnf" --verbosity quiet
+
+      # Stride's build target copies its AssemblyProcessor into %TEMP%\stride\... only when the processor
+      # dll is missing, once per project. Projects building in parallel (StrideGum's two TFMs, its tests)
+      # all see it missing, copy over each other, and one fails MSB3027 because another node already
+      # loaded a half-copied dll (run 43027961402). Copying it once before the build makes every project
+      # skip the copy.
+      - name: Prime Stride AssemblyProcessor (Windows)
+        if: runner.os == 'Windows' && steps.plan.outputs.active == 'true'
+        continue-on-error: true
+        shell: pwsh
+        run: |
+          foreach ($dir in Get-ChildItem "$env:NUGET_PACKAGES\stride.core\*\tools\AssemblyProcessor\netstandard2.0" -Directory -ErrorAction SilentlyContinue) {
+            try {
+              $hash = (Get-Content -Raw "$dir\Stride.Core.AssemblyProcessor.dll.hash").Trim()
+              $dest = Join-Path $env:TEMP "stride\AssemblyProcessor\netstandard2.0\$hash"
+              New-Item -ItemType Directory -Force $dest | Out-Null
+              Copy-Item "$dir\*" $dest -Force
+              Write-Host "Primed Stride AssemblyProcessor from $dir into $dest"
+            } catch {
+              Write-Warning "SKIPPED priming Stride AssemblyProcessor from ${dir}: $_"
+            }
+          }
 
       - name: Compile test projects (Windows)
         if: runner.os == 'Windows' && steps.plan.outputs.active == 'true'
@@ -869,10 +933,18 @@ jobs:
         run: dotnet test "Tests/UnityGum.Tests" --configuration Release --no-build --logger "trx" --results-directory "TestResults"
 
       # StrideGum.Tests is the Gum.Stride runtime (SkiaGum renderer + Stride.Input host). It tests the
-      # net10.0 build: CPU raster SKSurface and mocked Stride input, no D3D11 device, so it runs headless.
+      # net10.0 build: Gum logic against an in-memory test canvas (Stride itself renders on the GPU
+      # only), backend selection and mocked Stride input, no GPU device, so it runs headless.
       - name: StrideGum.Tests
         if: runner.os != 'Windows' && steps.plan.outputs.active == 'true' && (github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true')
         run: dotnet test "Tests/StrideGum.Tests" --configuration Release --no-build --logger "trx" --results-directory "TestResults"
+
+      # BrutalGum.OGL.Tests is the Gum.Brutal.OGL runtime (SkiaGum renderer + BRUTAL GLFW input host). Gum logic
+      # against an in-memory test canvas and a fake window, so it runs headless. Its GL compositing tests skip here (no GL
+      # driver); the Windows Mesa stream (mesa-2) runs them for real with GUM_REQUIRE_GL=1.
+      - name: BrutalGum.OGL.Tests
+        if: runner.os != 'Windows' && steps.plan.outputs.active == 'true' && (github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true')
+        run: dotnet test "Tests/BrutalGum.OGL.Tests" --configuration Release --no-build --logger "trx" --results-directory "TestResults"
 
       # SkiaGum-backed SVG export service (gumcli svg / tool File ▸ Export). Drives
       # SkiaGumSvgExportService end-to-end via SKSvgCanvas — CPU-only, fully headless
@@ -905,6 +977,7 @@ jobs:
         with:
           dest-dirs: |
             Tests/RaylibGum.Tests/bin/Release/net8.0
+            Tests/BrutalGum.OGL.Tests/bin/Release/net10.0
             Tests/Gum.ProjectServices.Raylib.Tests/bin/Release/net10.0
             Tests/Gum.Cli.Tests/bin/Release/net10.0
             Tests/MonoGameGum.IntegrationTests/bin/Release/net8.0

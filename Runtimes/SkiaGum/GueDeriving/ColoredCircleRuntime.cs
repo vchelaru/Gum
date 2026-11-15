@@ -65,6 +65,7 @@ public class ColoredCircleRuntime : SkiaShapeRuntime
             // Dropshadow is false, but let's keep the alpha at 255 so if the user sets it to true, it "just works"
             DropshadowAlpha = 255;
             DropshadowOffsetY = 3;
+            DropshadowBlurX = 3;
             DropshadowBlurY = 3;
         }
     }

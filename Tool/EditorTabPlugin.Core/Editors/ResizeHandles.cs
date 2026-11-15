@@ -1,4 +1,4 @@
-﻿using Gum.Services;
+using Gum.Services;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -38,10 +38,17 @@ namespace Gum.Wireframe
         Color _color;
         readonly ICanvasDisplayScale _displayScale;
         bool _originDisplaysVisible = true;
+        bool _showOrigin;
+        bool _showXOffsetLine = true;
+        bool _showYOffsetLine = true;
 
         readonly ResizeHandleLayout _layout;
 
         const float WidthAtNoZoom = ResizeHandleLayout.HandleSize;
+
+        bool _visible = true;
+        bool _widthEnabled = true;
+        bool _heightEnabled = true;
 
         #endregion
 
@@ -91,28 +98,72 @@ namespace Gum.Wireframe
         {
             get
             {
-                return mHandles[0].Visible;
+                return _visible;
             }
             set
             {
-                for (int i = 0; i < mHandles.Length; i++)
-                {
-                    mHandles[i].Visible = value;
-                    mInnerHandles[i].Visible = value;
-                }
+                _visible = value;
+                ApplyHandleVisibility();
 
                 _originDisplaysVisible = value;
-                foreach (var display in _originDisplays)
-                {
-                    display.Visible = value && ShowOrigin;
-                }
+                ApplyOriginVisibility();
             }
         }
 
+        /// <summary>
+        /// Whether the origin marker draws while the handles are visible. Independent of which
+        /// resize handles are available.
+        /// </summary>
         public bool ShowOrigin
         {
-            get;
-            set;
+            get => _showOrigin;
+            set
+            {
+                _showOrigin = value;
+                ApplyOriginVisibility();
+            }
+        }
+
+        /// <summary>
+        /// Whether the red X offset line and its dotted connector draw while the handles are visible.
+        /// </summary>
+        public bool ShowXOffsetLine
+        {
+            get => _showXOffsetLine;
+            set
+            {
+                _showXOffsetLine = value;
+                ApplyOriginVisibility();
+            }
+        }
+
+        /// <summary>
+        /// Whether the green Y offset line and its dotted connector draw while the handles are visible.
+        /// </summary>
+        public bool ShowYOffsetLine
+        {
+            get => _showYOffsetLine;
+            set
+            {
+                _showYOffsetLine = value;
+                ApplyOriginVisibility();
+            }
+        }
+
+        private void ApplyOriginVisibility()
+        {
+            foreach (OriginDisplay display in _originDisplays)
+            {
+                ApplyOriginVisibility(display);
+            }
+        }
+
+        private void ApplyOriginVisibility(OriginDisplay display)
+        {
+            display.ShowOriginMarker = _showOrigin;
+            display.ShowXOffsetLine = _showXOffsetLine;
+            display.ShowYOffsetLine = _showYOffsetLine;
+            display.Visible = _originDisplaysVisible;
         }
 
         #endregion
@@ -160,11 +211,37 @@ namespace Gum.Wireframe
             _originDisplays.Clear();
         }
 
+        /// <summary>
+        /// Limits the drawn and hit-tested handles to those that can resize along an enabled axis
+        /// (see <see cref="ResizeHandleLayout.IsSideAvailable"/>).
+        /// </summary>
+        public void SetAvailableAxes(bool widthEnabled, bool heightEnabled)
+        {
+            _widthEnabled = widthEnabled;
+            _heightEnabled = heightEnabled;
+            ApplyHandleVisibility();
+        }
+
+        private void ApplyHandleVisibility()
+        {
+            for (int i = 0; i < mHandles.Length; i++)
+            {
+                bool isShown = _visible && IsAvailable(i);
+                mHandles[i].Visible = isShown;
+                mInnerHandles[i].Visible = isShown;
+            }
+        }
+
+        private bool IsAvailable(int handleIndex)
+        {
+            return ResizeHandleLayout.IsSideAvailable((ResizeSide)handleIndex, _widthEnabled, _heightEnabled);
+        }
+
         public ResizeSide GetSideOver(float x, float y)
         {
             for (int i = 0; i < this.mHandles.Length; i++)
             {
-                if (mHandles[i].HasCursorOver(x, y))
+                if (IsAvailable(i) && mHandles[i].HasCursorOver(x, y))
                 {
                     return (ResizeSide)i;
                 }
@@ -200,6 +277,7 @@ namespace Gum.Wireframe
                 AdjustOriginDisplayCount(0);
             }
 
+            ApplyOriginVisibility();
             UpdateToProperties();
         }
 
@@ -263,6 +341,8 @@ namespace Gum.Wireframe
                 }
             }
 
+            // UpdateTo turns the origin lines on; reapply the handles' own origin visibility.
+            ApplyOriginVisibility();
             UpdateToProperties();
         }
 
@@ -296,7 +376,7 @@ namespace Gum.Wireframe
             {
                 var display = new OriginDisplay(_layer, _displayScale);
                 display.SetColor(_color);
-                display.Visible = _originDisplaysVisible && ShowOrigin;
+                ApplyOriginVisibility(display);
                 _originDisplays.Add(display);
             }
         }

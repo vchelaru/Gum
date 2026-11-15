@@ -1,4 +1,4 @@
-﻿using Gum.DataTypes;
+using Gum.DataTypes;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -116,7 +116,8 @@ namespace Gum.ProjectServices.CodeGeneration
         /// <see cref="CodeOutputProjectSettings.InheritanceLocation"/> puts it; null when there is none.
         /// </summary>
         public string? GetBaseClass(ElementSave element, CodeOutputProjectSettings projectSettings) =>
-            CodeGenerator.GetInheritance(element, projectSettings, _codeGenerator.ResolveSyntaxVersion(projectSettings), _nameVerifier);
+            CodeGenerator.GetInheritance(element, projectSettings, _codeGenerator.ResolveSyntaxVersion(projectSettings), _nameVerifier,
+                _codeGenerator.AreBehaviorsDisabledByEngineProfile);
 
         private static string ToTabs(int tabCount) => new string(' ', tabCount * 4);
 

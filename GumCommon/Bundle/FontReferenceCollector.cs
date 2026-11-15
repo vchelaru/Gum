@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
+using Gum.Managers;
 using Gum.Wireframe;
 using GumRuntime;
 using RenderingLibrary.Graphics.Fonts;
@@ -53,6 +54,14 @@ public class FontReferenceCollector
     };
 
     private readonly Func<InstanceSave, ElementSave?> _resolveInstanceElement;
+
+    /// <summary>
+    /// Maps a Text value to every translation of it, one per language the project's localization data
+    /// holds (#7398). The runtime translates a localization key before it reads BBCode, so tags that live
+    /// only in a translation are scanned too. Null (the default) scans the raw value only. Returns
+    /// nothing for a value that is not a key.
+    /// </summary>
+    public Func<string, IEnumerable<string>>? TranslationsOf { get; set; }
 
     /// <summary>
     /// Creates a collector that resolves an instance's referenced element via
@@ -123,7 +132,7 @@ public class FontReferenceCollector
 
         if (isDefaultState || StateSetsAnythingFor(state, ownerName: null))
         {
-            foreach (BmfcSave bmfcSave in CollectAllBmfcSavesFor(instance: null, state, project, spacingHorizontal, spacingVertical))
+            foreach (BmfcSave bmfcSave in CollectAllBmfcSavesFor(instance: null, element, state, project, spacingHorizontal, spacingVertical))
             {
                 bitmapFonts[bmfcSave.FontCacheFileName] = bmfcSave;
             }
@@ -136,9 +145,18 @@ public class FontReferenceCollector
                 continue;
             }
 
-            foreach (BmfcSave bmfcSaveInner in CollectAllBmfcSavesFor(instance, state, project, spacingHorizontal, spacingVertical))
+            ElementSave? instanceElement = _resolveInstanceElement(instance);
+            foreach (BmfcSave bmfcSaveInner in CollectAllBmfcSavesFor(instance, instanceElement, state, project, spacingHorizontal, spacingVertical))
             {
                 bitmapFonts[bmfcSaveInner.FontCacheFileName] = bmfcSaveInner;
+            }
+
+            // A non-default state reaches a nested Text only through what it sets on this instance
+            // that the component passes down; walking every Text of every nested component again for a
+            // state that moves or hides the instance is the cost of selecting a large screen (#7623).
+            if (!isDefaultState && !StateMayChangeNestedFonts(element, state, instance, instanceElement))
+            {
+                continue;
             }
 
             // Direct read on the instance only finds font properties set on this element
@@ -148,6 +166,87 @@ public class FontReferenceCollector
             CollectFontsFromNestedTextInstancesAllBranches(element, state, instance,
                 bitmapFonts, project, spacingHorizontal, spacingVertical);
         }
+    }
+
+    /// <summary>
+    /// Whether <paramref name="state"/> can change a font inside <paramref name="component"/>, the
+    /// element <paramref name="instance"/> is an instance of. The nested lookup (<see cref="RecursiveVariableFinder"/>)
+    /// reads the outer state only through <c>Instance.Name</c> for a name the component exposes, or a
+    /// categorized state assigned to the instance or to the element itself, and a conditional
+    /// <c>VariableReferences</c> row on the instance enumerates its branches. A state setting none of
+    /// those resolves every nested Text as the default state does, which is always collected.
+    /// </summary>
+    private bool StateMayChangeNestedFonts(ElementSave element, StateSave state, InstanceSave instance, ElementSave? component)
+    {
+        if (component == null)
+        {
+            return false;
+        }
+
+        if (state.VariableLists.Any(vl => vl.SourceObject == instance.Name))
+        {
+            return true;
+        }
+
+        // The default state's references are applied around its own walk and rolled back, so a state that
+        // does not repeat them sees the component's own values for what they set, which only this walk collects.
+        if (element.DefaultState != null && element.DefaultState.VariableLists.Any(vl =>
+                vl.ValueAsIList is { Count: > 0 } && (vl.SourceObject == instance.Name || string.IsNullOrEmpty(vl.SourceObject))))
+        {
+            return true;
+        }
+
+        HashSet<string>? exposedNames = null;
+        foreach (VariableSave variable in state.Variables)
+        {
+            bool onInstance = variable.SourceObject == instance.Name;
+            if (!onInstance && !string.IsNullOrEmpty(variable.SourceObject))
+            {
+                continue;
+            }
+
+            string rootName = variable.GetRootName();
+            if (rootName.EndsWith("State", StringComparison.Ordinal))
+            {
+                return true;
+            }
+
+            if (onInstance)
+            {
+                exposedNames ??= GetExposedNames(component);
+                if (exposedNames.Contains(rootName))
+                {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    /// <summary>The names <paramref name="component"/> and the components it derives from expose to their instances.</summary>
+    private static HashSet<string> GetExposedNames(ElementSave component)
+    {
+        HashSet<string> names = new HashSet<string>(StringComparer.Ordinal);
+        HashSet<ElementSave> visited = new HashSet<ElementSave>();
+        for (ElementSave? current = component; current != null && visited.Add(current);
+            current = ObjectFinder.Self.GetBaseElement(current))
+        {
+            if (current.DefaultState == null)
+            {
+                continue;
+            }
+
+            foreach (VariableSave variable in current.DefaultState.Variables)
+            {
+                if (!string.IsNullOrEmpty(variable.ExposedAsName))
+                {
+                    names.Add(variable.ExposedAsName);
+                }
+            }
+        }
+
+        return names;
     }
 
     /// <summary>
@@ -327,13 +426,13 @@ public class FontReferenceCollector
             || stateSave.VariableLists.Any(vl => vl.SourceObject == ownerName);
     }
 
-    private static IEnumerable<BmfcSave> GetBmfcSavesFor(InstanceSave? instance, StateSave stateSave,
-        GumProjectSave project, int spacingHorizontal, int spacingVertical)
+    private IEnumerable<BmfcSave> GetBmfcSavesFor(InstanceSave? instance, ElementSave? textElement,
+        StateSave stateSave, GumProjectSave project, int spacingHorizontal, int spacingVertical)
     {
         string prefix = instance != null ? instance.Name + "." : "";
         Func<string, object?> getValue = name => stateSave.GetValueRecursive(prefix + name);
         return WithBbCodeRunFonts(BuildBmfcSave(getValue, project, spacingHorizontal, spacingVertical),
-            getValue, project, spacingHorizontal, spacingVertical);
+            getValue, textElement, project, spacingHorizontal, spacingVertical);
     }
 
     /// <summary>
@@ -345,8 +444,8 @@ public class FontReferenceCollector
     /// applied) when none of the owner's font-affecting properties are set via a conditional
     /// reference. See #4042.
     /// </summary>
-    private static IEnumerable<BmfcSave> CollectAllBmfcSavesFor(InstanceSave? instance, StateSave stateSave,
-        GumProjectSave project, int spacingHorizontal, int spacingVertical)
+    private IEnumerable<BmfcSave> CollectAllBmfcSavesFor(InstanceSave? instance, ElementSave? textElement,
+        StateSave stateSave, GumProjectSave project, int spacingHorizontal, int spacingVertical)
     {
         string prefix = instance != null ? instance.Name + "." : "";
         string? ownerName = instance?.Name;
@@ -388,7 +487,7 @@ public class FontReferenceCollector
 
         if (branchValuesByProperty.Count == 0)
         {
-            foreach (BmfcSave baseline in GetBmfcSavesFor(instance, stateSave, project, spacingHorizontal, spacingVertical))
+            foreach (BmfcSave baseline in GetBmfcSavesFor(instance, textElement, stateSave, project, spacingHorizontal, spacingVertical))
             {
                 yield return baseline;
             }
@@ -403,7 +502,7 @@ public class FontReferenceCollector
 
             foreach (BmfcSave bmfcSave in WithBbCodeRunFonts(
                 BuildBmfcSave(Lookup, project, spacingHorizontal, spacingVertical),
-                Lookup, project, spacingHorizontal, spacingVertical))
+                Lookup, textElement, project, spacingHorizontal, spacingVertical))
             {
                 yield return bmfcSave;
             }
@@ -538,8 +637,8 @@ public class FontReferenceCollector
     /// displayed yet has none of them. Replays <see cref="BbCodeFontStacks"/>, the same stack model the
     /// renderers use, seeded from the Text's own font. Nothing for a null <paramref name="baseSave"/>.
     /// </summary>
-    private static IEnumerable<BmfcSave> WithBbCodeRunFonts(BmfcSave? baseSave, Func<string, object?> getValue,
-        GumProjectSave project, int spacingHorizontal, int spacingVertical)
+    private IEnumerable<BmfcSave> WithBbCodeRunFonts(BmfcSave? baseSave, Func<string, object?> getValue,
+        ElementSave? textElement, GumProjectSave project, int spacingHorizontal, int spacingVertical)
     {
         if (baseSave == null)
         {
@@ -548,7 +647,33 @@ public class FontReferenceCollector
 
         yield return baseSave;
 
-        if (getValue("Text") is not string text || !text.Contains('['))
+        if (getValue("Text") is not string rawText)
+        {
+            yield break;
+        }
+
+        // The runtime reads BBCode from the raw value first and only translates a value without a '['
+        // (CustomSetPropertyOnRenderable.TrySetPropertyOnText), so a value with tags is never a key.
+        List<string> texts = new List<string> { rawText };
+        if (!rawText.Contains('[') && TranslationsOf != null)
+        {
+            texts.AddRange(TranslationsOf(rawText));
+        }
+
+        foreach (string text in texts)
+        {
+            foreach (BmfcSave bmfcSave in BbCodeRunFontsOf(text, baseSave, getValue, textElement, project,
+                spacingHorizontal, spacingVertical))
+            {
+                yield return bmfcSave;
+            }
+        }
+    }
+
+    private static IEnumerable<BmfcSave> BbCodeRunFontsOf(string text, BmfcSave baseSave,
+        Func<string, object?> getValue, ElementSave? textElement, GumProjectSave project, int spacingHorizontal, int spacingVertical)
+    {
+        if (!text.Contains('['))
         {
             yield break;
         }
@@ -560,6 +685,10 @@ public class FontReferenceCollector
         {
             yield break;
         }
+
+        // A [state=Name] tag is expanded into the state's font variables, resolved on the Text's own
+        // element like the runtime does (#7204).
+        tags = BbCodeFontStacks.ExpandStateTags(tags, stateName => FindStateByName(textElement, stateName));
 
         BbCodeFontStacks stacks = new BbCodeFontStacks();
         stacks.Seed(baseSave.FontFile ?? baseSave.FontName, baseSave.FontSize, baseSave.OutlineThickness,
@@ -583,10 +712,68 @@ public class FontReferenceCollector
                 continue;
             }
 
+            // While a state has UseCustomFont on, the renderer loads a pre-baked "<name>.fnt" for the run
+            // instead of generating one.
+            if (stacks.UseCustomFont.Peek())
+            {
+                continue;
+            }
+
             yield return CreateBmfcSave(getValue, fontName, stacks.FontSize.Peek(), stacks.OutlineThickness.Peek(),
                 stacks.UseFontSmoothing.Peek(), stacks.IsItalic.Peek(), stacks.IsBold.Peek(),
                 stacks.HasDropshadow.Peek(), project, spacingHorizontal, spacingVertical);
         }
+    }
+
+    /// <summary>
+    /// Finds a state by its bare name the way the runtime does for a <c>[state=Name]</c> tag
+    /// (<c>TryGetStateByName</c> on the Text's <c>GraphicalUiElement</c>): the uncategorized states first,
+    /// then each category's states, across <paramref name="textElement"/> and its base types, where a
+    /// derived element's state or category replaces the base's of the same name.
+    /// </summary>
+    private static StateSave? FindStateByName(ElementSave? textElement, string stateName)
+    {
+        Dictionary<string, StateSave> states = new Dictionary<string, StateSave>();
+        Dictionary<string, StateSaveCategory> categories = new Dictionary<string, StateSaveCategory>();
+
+        // Base first so the derived element overrides it. A base-type cycle is invalid, but a malformed
+        // project shouldn't hang collection.
+        List<ElementSave> chain = new List<ElementSave>();
+        HashSet<ElementSave> visited = new HashSet<ElementSave>();
+        for (ElementSave? current = textElement; current != null && visited.Add(current);
+            current = ObjectFinder.Self.GetBaseElement(current))
+        {
+            chain.Insert(0, current);
+        }
+
+        foreach (ElementSave element in chain)
+        {
+            foreach (StateSaveCategory category in element.Categories)
+            {
+                categories[category.Name] = category;
+            }
+
+            foreach (StateSave state in element.States)
+            {
+                states[state.Name] = state;
+            }
+        }
+
+        if (states.TryGetValue(stateName, out StateSave? found))
+        {
+            return found;
+        }
+
+        foreach (StateSaveCategory category in categories.Values)
+        {
+            found = category.States.FirstOrDefault(item => item.Name == stateName);
+            if (found != null)
+            {
+                return found;
+            }
+        }
+
+        return null;
     }
 
     private void CollectFontsFromNestedTextInstances(ElementSave outerElement, StateSave outerState,
@@ -676,13 +863,13 @@ public class FontReferenceCollector
         }
     }
 
-    private static IEnumerable<BmfcSave> GetBmfcSavesFromStack(List<ElementWithState> elementStack,
+    private IEnumerable<BmfcSave> GetBmfcSavesFromStack(List<ElementWithState> elementStack,
         GumProjectSave project, int spacingHorizontal, int spacingVertical)
     {
         RecursiveVariableFinder rfv = new RecursiveVariableFinder(elementStack);
         Func<string, object?> getValue = name => rfv.GetValueByBottomName(name);
 
         return WithBbCodeRunFonts(BuildBmfcSave(getValue, project, spacingHorizontal, spacingVertical),
-            getValue, project, spacingHorizontal, spacingVertical);
+            getValue, elementStack[elementStack.Count - 1].Element, project, spacingHorizontal, spacingVertical);
     }
 }

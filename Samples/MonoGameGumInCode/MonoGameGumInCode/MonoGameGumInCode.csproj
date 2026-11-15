@@ -11,6 +11,7 @@
     <ApplicationIcon>Icon.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="..\..\Shared\GumGallery.cs" Link="GumGallery.cs" />
     <Compile Remove="Content\obj\**" />
     <EmbeddedResource Remove="Content\obj\**" />
     <None Remove="Content\obj\**" />

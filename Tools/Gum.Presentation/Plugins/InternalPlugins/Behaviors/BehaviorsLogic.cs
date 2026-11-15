@@ -29,6 +29,7 @@ public class BehaviorsLogic
     private readonly IFileCommands _fileCommands;
     private readonly BehaviorsViewModel _viewModel;
     private readonly ITabVisibility _tab;
+    private readonly IProjectRestrictions _projectRestrictions;
 
     private bool _isApplyingChanges;
 
@@ -40,8 +41,10 @@ public class BehaviorsLogic
         IGuiCommands guiCommands,
         IFileCommands fileCommands,
         BehaviorsViewModel viewModel,
-        ITabVisibility tab)
+        ITabVisibility tab,
+        IProjectRestrictions projectRestrictions)
     {
+        _projectRestrictions = projectRestrictions;
         _selectedState = selectedState;
         _elementCommands = elementCommands;
         _undoManager = undoManager;
@@ -164,7 +167,7 @@ public class BehaviorsLogic
         }
         HandleElementSelected(element);
 
-        if (element == _selectedState.SelectedElement)
+        if (element == _selectedState.SelectedElement && !_projectRestrictions.AreBehaviorsDisabled)
         {
             _tab.Show();
         }
@@ -181,7 +184,7 @@ public class BehaviorsLogic
     {
         ComponentSave? asComponent = _selectedState.SelectedComponent;
 
-        bool shouldShow = asComponent != null &&
+        bool shouldShow = asComponent != null && !_projectRestrictions.AreBehaviorsDisabled &&
             // Don't show behaviors if an instance is selected since that can be confusing
             // Only show it on the element to be clear that behaviors are element-wide.
             _selectedState.SelectedInstance == null;

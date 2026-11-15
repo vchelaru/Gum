@@ -94,30 +94,13 @@ namespace Gum.CommandLine
                     }
                     else
                     {
-                        string argExtension = FileManager.GetExtension(arg);
-
-                        if (argExtension == GumProjectSave.ProjectExtension || argExtension == GumProjectSave.ProjectJsonExtension)
+                        if (TryResolveStartupFile(arg, out string? project, out string? elementName))
                         {
-                            GlueProjectToLoad = arg;
-                        }
-                        else if (argExtension == GumProjectSave.ComponentExtension ||
-                            argExtension == GumProjectSave.ComponentJsonExtension ||
-                            argExtension == GumProjectSave.ScreenExtension ||
-                            argExtension == GumProjectSave.ScreenJsonExtension ||
-                            argExtension == GumProjectSave.StandardExtension ||
-                            argExtension == GumProjectSave.StandardJsonExtension)
-                        {
-                            ElementName = FileManager.RemovePath(FileManager.RemoveExtension(arg));
-
-                            // A relative path is relative to the working directory; a one-folder one such as
-                            // Components/Foo.gucx has no directory above its folder to find without this (#7134).
-                            string elementPath = System.IO.Path.IsPathRooted(arg) ? arg : System.IO.Path.GetFullPath(arg);
-                            string gluxDirectory = FileManager.GetDirectory(FileManager.GetDirectory(elementPath));
-
-                            // The containing project may itself be XML or JSON-formatted (issue #4182) -
-                            // whichever project file sits next to the element wins.
-                            GlueProjectToLoad = System.IO.Directory.GetFiles(gluxDirectory)
-                                .FirstOrDefault(GumProjectSave.IsProjectFile);
+                            GlueProjectToLoad = project;
+                            if (elementName != null)
+                            {
+                                ElementName = elementName;
+                            }
                         }
 
                     }
@@ -129,6 +112,75 @@ namespace Gum.CommandLine
             {
                 ReportUsageError("--generatecode requires a project file");
             }
+        }
+
+        /// <summary>
+        /// The one reading of a command-line file argument, shared with the Avalonia head's check of
+        /// an unattended run. False when <paramref name="arg"/> is not a project or element file.
+        /// A project file is the project to load. An element file names the element and loads the
+        /// project next to its folder, which is null when none is there or the folder is missing.
+        /// </summary>
+        public static bool TryResolveStartupFile(string arg, out string? projectToLoad, out string? elementName)
+        {
+            projectToLoad = null;
+            elementName = null;
+            string argExtension = FileManager.GetExtension(arg);
+
+            if (argExtension == GumProjectSave.ProjectExtension || argExtension == GumProjectSave.ProjectJsonExtension)
+            {
+                projectToLoad = arg;
+                return true;
+            }
+
+            if (argExtension == GumProjectSave.ComponentExtension ||
+                argExtension == GumProjectSave.ComponentJsonExtension ||
+                argExtension == GumProjectSave.ScreenExtension ||
+                argExtension == GumProjectSave.ScreenJsonExtension ||
+                argExtension == GumProjectSave.StandardExtension ||
+                argExtension == GumProjectSave.StandardJsonExtension)
+            {
+                elementName = FileManager.RemovePath(FileManager.RemoveExtension(arg));
+
+                // A relative path is relative to the working directory; a one-folder one such as
+                // Components/Foo.gucx has no directory above its folder to find without this (#7134).
+                string elementPath = System.IO.Path.IsPathRooted(arg) ? arg : System.IO.Path.GetFullPath(arg);
+                string gluxDirectory = FindProjectDirectory(elementPath);
+
+                // The containing project may itself be XML or JSON-formatted (issue #4182) -
+                // whichever project file sits next to the element wins.
+                projectToLoad = System.IO.Directory.Exists(gluxDirectory)
+                    ? System.IO.Directory.GetFiles(gluxDirectory).FirstOrDefault(GumProjectSave.IsProjectFile)
+                    : null;
+                if (projectToLoad != null)
+                {
+                    // Below Screens, Components or Standards the name includes the subfolder.
+                    elementName = Startup.SingleInstance.InstanceIdentity.ElementNameFor(projectToLoad, elementPath) ?? elementName;
+                }
+                return true;
+            }
+
+            return false;
+        }
+
+        // The folder above the Screens, Components or Standards folder the element sits in, at any depth;
+        // for a file outside those folders, the folder above its own.
+        private static string FindProjectDirectory(string elementPath)
+        {
+            string? directory = System.IO.Path.GetDirectoryName(elementPath);
+            while (directory != null)
+            {
+                string name = System.IO.Path.GetFileName(directory);
+                if (name.Equals("Screens", StringComparison.OrdinalIgnoreCase) ||
+                    name.Equals("Components", StringComparison.OrdinalIgnoreCase) ||
+                    name.Equals("Standards", StringComparison.OrdinalIgnoreCase))
+                {
+                    return System.IO.Path.GetDirectoryName(directory) ?? directory;
+                }
+
+                directory = System.IO.Path.GetDirectoryName(directory);
+            }
+
+            return FileManager.GetDirectory(FileManager.GetDirectory(elementPath));
         }
 
         private void ReportUsageError(string message)

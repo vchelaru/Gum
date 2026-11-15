@@ -14,17 +14,79 @@ public class Sprite : RenderableShapeBase, IAspectRatio, ITextureCoordinate, IAn
     /// <summary>
     /// The bitmap this sprite draws. Setting it builds a new <see cref="Image"/> that the sprite owns
     /// and disposes when it is replaced. The bitmap itself is never disposed here, since it usually
-    /// comes from the shared content cache.
+    /// comes from the shared content cache. A bitmap that was already disposed (content unload) is
+    /// treated as no texture, since Skia aborts the process when it builds an image from one.
+    /// <para>
+    /// The pixels are copied into an <see cref="SKImage"/> on purpose; the sprite never draws the SKBitmap
+    /// directly. Measured 2026-11-11 (256x256 bitmap drawn 200 times per frame on a 1280x720 surface,
+    /// NotifyPixelsChanged once per frame, 60 frames after warmup): on a GPU surface (NVIDIA RTX 5060 Laptop)
+    /// DrawBitmap took 37.8 ms per frame against 0.46 ms for DrawImage (about 80x slower); on a CPU raster
+    /// surface 6.7 ms against 4.3 ms (about 1.5x). Pixels written to the bitmap after assignment therefore do
+    /// not show until the Texture is assigned again, which is the explicit refresh path for edits.
+    /// </para>
     /// </summary>
     public SKBitmap? Texture
     {
         get => _texture;
         set
         {
-            _texture = value;
-            SetImage(value != null ? SKImage.FromBitmap(value) : null, ownsImage: true);
+            SKImage? image = CreateImage(value);
+            _texture = image != null ? value : null;
+            SetImage(image, ownsImage: true);
         }
     }
+
+    /// <summary>
+    /// Copies the pixels of <see cref="Texture"/> into the image again, so pixels written to the bitmap since it was
+    /// assigned show. Does nothing when the bitmap is null or disposed, when an <see cref="Image"/> was assigned over
+    /// it, or when <paramref name="onlyBitmap"/> is given and is not the texture.
+    /// </summary>
+    internal void RefreshTexture(SKBitmap? onlyBitmap = null)
+    {
+        if (!_ownsImage || !IsUsable(_texture) || (onlyBitmap != null && !ReferenceEquals(onlyBitmap, _texture)))
+        {
+            return;
+        }
+        SetImage(CreateImage(_texture), ownsImage: true);
+    }
+
+    private bool HasOwnedImageFor(SKBitmap? bitmap) =>
+        bitmap != null && ReferenceEquals(bitmap, _texture) && _ownsImage && _image?.Handle != IntPtr.Zero && IsUsable(bitmap);
+
+    internal static bool IsUsable(SKBitmap? bitmap) => bitmap != null && bitmap.Handle != IntPtr.Zero;
+
+    // Skia aborts the whole process on SKImage.FromBitmap of a disposed bitmap, so it never sees one.
+    internal static SKImage? CreateImage(SKBitmap? bitmap) => IsUsable(bitmap) ? SKImage.FromBitmap(bitmap!) : null;
+
+    /// <summary>
+    /// Builds an image a clone can own: from <paramref name="bitmap"/> when it is still alive, otherwise (the
+    /// content cache disposed it) from a copy of the pixels of <paramref name="image"/>, which outlives its bitmap.
+    /// </summary>
+    internal static SKImage? CreateOwnedCopy(SKBitmap? bitmap, SKImage? image)
+    {
+        if (IsUsable(bitmap))
+        {
+            return SKImage.FromBitmap(bitmap!);
+        }
+        if (image == null || image.Handle == IntPtr.Zero)
+        {
+            return null;
+        }
+        using SKBitmap? copy = SKBitmap.FromImage(image);
+        if (copy == null)
+        {
+            return null;
+        }
+        // Immutable, so the image shares the copy's pixels, which stay alive after the copy is disposed.
+        copy.SetImmutable();
+        return SKImage.FromBitmap(copy);
+    }
+
+    /// <summary>
+    /// Identifies the pixels this sprite draws. An image built from the Texture has the same pixels as any other
+    /// built from it, so the bitmap identifies it; an image assigned over the Texture is its own pixels.
+    /// </summary>
+    private object? BatchKey => _ownsImage ? _texture : _image;
 
     /// <summary>
     /// The image this sprite draws. An image assigned here stays owned by the caller: the sprite never
@@ -128,9 +190,10 @@ public class Sprite : RenderableShapeBase, IAspectRatio, ITextureCoordinate, IAn
         clone.AnimationLogic = AnimationLogic.Clone(clone.ApplyAnimationFrame, clone.ApplyKeyframeColor);
         // An owned image would be disposed by whichever side changes texture first, so the clone
         // builds its own. A caller-assigned image is shared, since neither side disposes it.
-        if (_ownsImage && _texture != null)
+        if (_ownsImage)
         {
-            clone._image = SKImage.FromBitmap(_texture);
+            clone._image = CreateOwnedCopy(_texture, _image);
+            clone._ownsImage = clone._image != null;
         }
         return clone;
     }
@@ -148,10 +211,15 @@ public class Sprite : RenderableShapeBase, IAspectRatio, ITextureCoordinate, IAn
 
     void ApplyAnimationFrame(Gum.Graphics.Animation.AnimationFrame frame)
     {
-        Texture = frame.Texture;
+        // Frames cut from one spritesheet share a bitmap, so assigning it would rebuild an identical image on every
+        // frame change (#7943). Texture itself still rebuilds on a repeat assignment, which is how edits are refreshed.
+        if (!HasOwnedImageFor(frame.Texture))
+        {
+            Texture = frame.Texture;
+        }
         FlipDiagonal = frame.FlipDiagonal;
 
-        if (frame.Texture != null)
+        if (IsUsable(frame.Texture))
         {
             var tex = frame.Texture;
             var left = MathFunctions.RoundToInt(frame.LeftCoordinate * tex.Width);
@@ -244,35 +312,33 @@ public class Sprite : RenderableShapeBase, IAspectRatio, ITextureCoordinate, IAn
 
         // Modulate/ColorTextureAlpha (#4821, matching MonoGame/raylib's SpriteRuntime.ColorOperation):
         // Modulate multiplies the image's texels by Color; ColorTextureAlpha instead uses the image
-        // only as an alpha mask and fills with Color (SrcIn: result = tint * dst.Alpha). Mirrors
-        // NineSlice.GetPaint — the base paint's Color is set too, but that only matters for
-        // non-image draws; DrawImage needs a ColorFilter. White (the default Color, see the
-        // constructor) is the Modulate identity, so this is a no-op for sprites that never touch
-        // Red/Green/Blue.
-        // Add draws the texture untinted and adds Color as a single-pass color-matrix offset,
-        // rather than a second draw pass like RenderingLibrary.Graphics.Renderer.
-        // DrawAdditiveColorOverlay. The offset is added in unpremultiplied space and gets scaled by
-        // the pixel's own alpha when Skia premultiplies for compositing, so it's naturally masked by
-        // the drawn image's silhouette.
-        if (ColorOperation == ColorOperation.Add)
+        // only as an alpha mask and fills with Color (SrcIn: result = tint * dst.Alpha). White (the
+        // default Color, see the constructor) is the Modulate identity, so this is a no-op for
+        // sprites that never touch Red/Green/Blue. Add draws the texture untinted and adds Color as a
+        // single-pass color-matrix offset, rather than a second draw pass like
+        // RenderingLibrary.Graphics.Renderer.DrawAdditiveColorOverlay.
+        if (_defersTint)
         {
-            float[] addMatrix =
-            {
-                1, 0, 0, 0, Color.Red / 255f,
-                0, 1, 0, 0, Color.Green / 255f,
-                0, 0, 1, 0, Color.Blue / 255f,
-                0, 0, 0, 1, 0,
-            };
-            paint.ColorFilter = SKColorFilter.CreateColorMatrix(addMatrix);
+            _isTintPending = true;
         }
         else
         {
-            paint.ColorFilter = SKColorFilter.CreateBlendMode(Color,
-                ColorOperation == ColorOperation.ColorTextureAlpha ? SKBlendMode.SrcIn : SKBlendMode.Modulate);
+            ApplyTint(paint);
         }
 
         return paint;
     }
+
+    private void ApplyTint(SKPaint paint) => ApplyTextureTint(paint,
+        ColorOperation == ColorOperation.ColorTextureAlpha ? SKBlendMode.SrcIn : SKBlendMode.Modulate);
+
+    // Set while the draw path rebuilds the cached paint. A sprite that joins a DrawAtlas batch passes its tint
+    // as a per-sprite color, so the paint is built without the tint filter and an animated Color builds no
+    // filter (#7826).
+    bool _defersTint;
+
+    // True when the cached paint was built without its tint filter; the next draw that does not batch adds it.
+    bool _isTintPending;
 
     public override void DrawBound(SKRect boundingRect, SKCanvas canvas, float absoluteRotation)
     {
@@ -388,12 +454,7 @@ public class Sprite : RenderableShapeBase, IAspectRatio, ITextureCoordinate, IAn
     /// </summary>
     private void DrawSourceRectangle(SKCanvas canvas, SKRect sourceRectangle, SKRect boundingRect, SKPaint paint)
     {
-        if (Renderer.TextureFilter == SKFilterMode.Nearest)
-        {
-            float insetX = GetPointSamplingInset(canvas, sourceRectangle.Width, boundingRect.Width, 1, 0);
-            float insetY = GetPointSamplingInset(canvas, sourceRectangle.Height, boundingRect.Height, 0, 1);
-            sourceRectangle.Inflate(-insetX, -insetY);
-        }
+        sourceRectangle = GetSampledSource(canvas, sourceRectangle, boundingRect);
 
         if (Image != null)
         {
@@ -403,6 +464,56 @@ public class Sprite : RenderableShapeBase, IAspectRatio, ITextureCoordinate, IAn
         {
             canvas.DrawBitmap(Texture, sourceRectangle, boundingRect, Renderer.TextureSampling, paint);
         }
+    }
+
+    private static SKRect GetSampledSource(SKCanvas canvas, SKRect sourceRectangle, SKRect boundingRect)
+    {
+        if (Renderer.TextureFilter == SKFilterMode.Nearest)
+        {
+            float insetX = GetPointSamplingInset(canvas, sourceRectangle.Width, boundingRect.Width, 1, 0);
+            float insetY = GetPointSamplingInset(canvas, sourceRectangle.Height, boundingRect.Height, 0, 1);
+            sourceRectangle.Inflate(-insetX, -insetY);
+        }
+        return sourceRectangle;
+    }
+
+    // Every draw path below records its own draw call; a batched sprite is counted when its batch flushes.
+    private protected override bool RecordsOwnDrawCalls => true;
+
+    // Adds the sprite to the renderer's DrawAtlas batch when its paint carries nothing a batch cannot: a Modulate
+    // tint (passed per sprite) and an alpha are fine; a blend, shader, filter or another color operation is not.
+    // Returns false when the sprite must draw on its own.
+    private bool TryAddToBatch(SKCanvas canvas, SKRect boundingRect, SKPaint paint, SKRect sourceRectangle)
+    {
+        SpriteAtlasBatch? batch = AtlasBatch;
+        SKImage? image = Image;
+        if (batch == null || image == null ||
+            ColorOperation != ColorOperation.Modulate ||
+            paint.Shader != null || paint.ImageFilter != null || paint.MaskFilter != null ||
+            paint.Blender != null || paint.BlendMode != SKBlendMode.SrcOver || paint.PathEffect != null ||
+            // Measured: a translucent sprite under linear sampling differs from DrawImage by up to 4 at its
+            // edge when drawn through DrawAtlas, so it draws alone to keep the output identical.
+            (paint.Color.Alpha != 255 && Renderer.TextureFilter != SKFilterMode.Nearest))
+        {
+            return false;
+        }
+
+        SKRect source;
+        if (EffectiveRectangle != null)
+        {
+            if (Wrap && ExtendsPastTexture(sourceRectangle))
+            {
+                return false;
+            }
+            source = GetSampledSource(canvas, sourceRectangle, boundingRect);
+        }
+        else
+        {
+            source = new SKRect(0, 0, image.Width, image.Height);
+        }
+
+        return batch.TryAdd(canvas, BatchKey ?? image, image, source, boundingRect,
+            Color.WithAlpha(255), paint.Color.Alpha, Renderer.TextureSampling);
     }
 
     private static float GetPointSamplingInset(SKCanvas canvas, float sourceLength, float destinationLength, float axisX, float axisY)
@@ -429,21 +540,17 @@ public class Sprite : RenderableShapeBase, IAspectRatio, ITextureCoordinate, IAn
         // Render-target pull (#3988): display the baked texture of the referenced container instead of
         // an assigned Texture/Image. A null bake (degenerate size, or off-screen) draws nothing rather
         // than stale content, matching the raylib/MonoGame pull model.
+        SKImage? bakedImage = null;
         if (RenderTargetTextureSource != null)
         {
-            SKImage? bakedImage = Renderer.Self.TryGetBakedRenderTargetFor(RenderTargetTextureSource);
+            bakedImage = Renderer.Self.TryGetBakedRenderTargetFor(RenderTargetTextureSource);
             if (bakedImage == null)
             {
                 return;
             }
-
-            SKPaint renderTargetPaint = base.GetCachedPaint(boundingRect, absoluteRotation);
-            canvas.DrawImage(bakedImage, boundingRect, Renderer.TextureSampling, renderTargetPaint);
-            return;
         }
-
         ////////////Early Out/////////////
-        if (Texture == null && Image == null)
+        else if (Texture == null && Image == null)
         {
             return;
         }
@@ -455,68 +562,92 @@ public class Sprite : RenderableShapeBase, IAspectRatio, ITextureCoordinate, IAn
         // here would double it (a 25 deg Sprite would render at 50 deg) — see the
         // matching fix in NineSlice.DrawBound.
 
-        var paint = base.GetCachedPaint(boundingRect, absoluteRotation);
-
-        if(EffectiveRectangle != null)
+        _defersTint = true;
+        SKPaint paint;
+        try
         {
+            paint = base.GetCachedPaint(boundingRect, absoluteRotation);
+        }
+        finally
+        {
+            _defersTint = false;
+        }
 
-            var sourceRectangle = new SKRect(EffectiveRectangle.Value.Left, EffectiveRectangle.Value.Top, EffectiveRectangle.Value.Right, EffectiveRectangle.Value.Bottom);
+        // A flip comes from FlipHorizontal/FlipVertical, as on MonoGame, or from a source rectangle
+        // whose edges are swapped (how an animation frame's flip was encoded). Either one mirrors.
+        bool isSourceSwappedHorizontal = false;
+        bool isSourceSwappedVertical = false;
+        SKRect sourceRectangle = default;
+        if (bakedImage == null && EffectiveRectangle != null)
+        {
+            var effective = EffectiveRectangle.Value;
+            isSourceSwappedHorizontal = effective.Left > effective.Right;
+            isSourceSwappedVertical = effective.Top > effective.Bottom;
+            sourceRectangle = new SKRect(
+                Math.Min(effective.Left, effective.Right),
+                Math.Min(effective.Top, effective.Bottom),
+                Math.Max(effective.Left, effective.Right),
+                Math.Max(effective.Top, effective.Bottom));
+        }
 
-            var isFlippedHorizontal =
-                sourceRectangle.Left > sourceRectangle.Right;
+        // Horizontal flips also combine with every parent's, as on MonoGame; vertical ones do not.
+        bool isFlippedHorizontal = global::RenderingLibrary.IPositionedSizedObjectExtensionMethods.GetAbsoluteFlipHorizontal(this) != isSourceSwappedHorizontal;
+        bool isFlippedVertical = FlipVertical != isSourceSwappedVertical;
 
-            var isFlippedVertical =
-                sourceRectangle.Top > sourceRectangle.Bottom;
+        // Saved and restored by hand: an SKAutoCanvasRestore would allocate on every unflipped draw.
+        bool isFlipped = isFlippedHorizontal || isFlippedVertical;
 
-            if (Wrap && !isFlippedHorizontal && !isFlippedVertical && ExtendsPastTexture(sourceRectangle))
+        // A flip needs its own canvas matrix, which an RSXform cannot hold, so a flipped sprite draws alone.
+        if (!isFlipped && bakedImage == null && TryAddToBatch(canvas, boundingRect, paint, sourceRectangle))
+        {
+            return;
+        }
+        AtlasBatch?.Flush();
+        if (_isTintPending)
+        {
+            ApplyTint(paint);
+            _isTintPending = false;
+        }
+        int saveCount = isFlipped ? canvas.Save() : 0;
+        if (isFlipped)
+        {
+            // Mirror about the center of the rectangle being drawn into, so the flipped
+            // sprite stays inside its own bounds.
+            canvas.Scale(
+                isFlippedHorizontal ? -1 : 1,
+                isFlippedVertical ? -1 : 1,
+                boundingRect.MidX,
+                boundingRect.MidY);
+        }
+
+        if (bakedImage != null)
+        {
+            canvas.DrawImage(bakedImage, boundingRect, Renderer.TextureSampling, paint);
+        }
+        else if (EffectiveRectangle != null)
+        {
+            if (Wrap && !isSourceSwappedHorizontal && !isSourceSwappedVertical && ExtendsPastTexture(sourceRectangle))
             {
                 DrawTiled(canvas, sourceRectangle, boundingRect, paint);
-                return;
-            }
-
-            if (isFlippedHorizontal || isFlippedVertical)
-            {
-                using (new SKAutoCanvasRestore(canvas, true))
-                {
-                    // Mirror about the center of the rectangle being drawn into, so the flipped
-                    // sprite stays inside its own bounds.
-                    canvas.Scale(
-                        isFlippedHorizontal ? -1 : 1,
-                        isFlippedVertical ? -1 : 1,
-                        boundingRect.MidX,
-                        boundingRect.MidY);
-
-                    var left = Math.Min(EffectiveRectangle.Value.Left, EffectiveRectangle.Value.Right);
-                    var right = Math.Max(EffectiveRectangle.Value.Left, EffectiveRectangle.Value.Right);
-                    var top = Math.Min(EffectiveRectangle.Value.Top, EffectiveRectangle.Value.Bottom);
-                    var bottom = Math.Max(EffectiveRectangle.Value.Top, EffectiveRectangle.Value.Bottom);
-
-                    sourceRectangle = new SKRect(
-                        left, 
-                        top, 
-                        right, 
-                        bottom);
-
-                    DrawSourceRectangle(canvas, sourceRectangle, boundingRect, paint);
-                }
-
             }
             else
             {
                 DrawSourceRectangle(canvas, sourceRectangle, boundingRect, paint);
             }
-
+        }
+        else if (Image != null)
+        {
+            canvas.DrawImage(Image, boundingRect, Renderer.TextureSampling, paint);
         }
         else
         {
-            if (Image != null)
-            {
-                canvas.DrawImage(Image, boundingRect, Renderer.TextureSampling, paint);
-            }
-            else
-            {
-                canvas.DrawBitmap(Texture, boundingRect, Renderer.TextureSampling, paint);
-            }
+            canvas.DrawBitmap(Texture, boundingRect, Renderer.TextureSampling, paint);
+        }
+        DrawStatistics?.RecordDrawCall();
+
+        if (isFlipped)
+        {
+            canvas.RestoreToCount(saveCount);
         }
     }
 

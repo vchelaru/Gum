@@ -34,6 +34,9 @@ public abstract class TextureCoordinatePluginBase : PluginBase, IRecipient<UiBas
     MainControlViewModel _viewModel;
     ExposedTextureCoordinateLogic _exposedCoordinateLogic;
 
+    /// <summary>The tab's display logic, exposed so tests can see what it draws.</summary>
+    public TextureCoordinateDisplayController DisplayController => _displayController;
+
     public override string FriendlyName
     {
         get
@@ -52,6 +55,9 @@ public abstract class TextureCoordinatePluginBase : PluginBase, IRecipient<UiBas
     /// <summary>Builds the head's view of the tab: toolbar, canvas control, and scroll bars.</summary>
     protected abstract ITextureCoordinateView CreateView();
 
+    // Stateless (reads the loaded project), so the base creates it instead of widening every head's constructor.
+    private readonly IProjectRestrictions _projectRestrictions = Locator.GetRequiredService<IProjectRestrictions>();
+
     protected TextureCoordinatePluginBase(
         ISelectedState selectedState,
         IWireframeCommands wireframeCommands,
@@ -64,7 +70,8 @@ public abstract class TextureCoordinatePluginBase : PluginBase, IRecipient<UiBas
         IProjectManager projectManager,
         IFileWatchManager fileWatchManager,
         IMessenger messenger,
-        IThemingService themingService)
+        IThemingService themingService,
+        IPluginManager? pluginManager = null)
     {
         _selectedState = selectedState;
         _wireframeCommands = wireframeCommands;
@@ -80,7 +87,8 @@ public abstract class TextureCoordinatePluginBase : PluginBase, IRecipient<UiBas
             hotkeyManager,
             new CameraScrollBarBinder(new ScrollBarLogic()),
             messenger,
-            themingService);
+            themingService,
+            pluginManager);
 
         _viewModel = new (
             projectManager,
@@ -153,11 +161,14 @@ public abstract class TextureCoordinatePluginBase : PluginBase, IRecipient<UiBas
         this.WireframePropertyChanged += HandleWireframePropertyChanged;
 
         this.ProjectLoad += HandleProjectLoaded;
+        // A source file edited elsewhere may have new regions.
+        this.ReactToFileChanged += _ => _displayController.ClearRegionCache();
     }
 
     private void HandleProjectLoaded(GumProjectSave save)
     {
         _viewModel.LoadSettings();
+        _displayController.ClearRegionCache();
         _displayController.SetCheckerboardVisible(save.ShowCheckerBackground);
     }
 
@@ -188,6 +199,13 @@ public abstract class TextureCoordinatePluginBase : PluginBase, IRecipient<UiBas
         else
         {
             _viewModel.UpdateExposedSources(new List<ExposedTextureCoordinateSet>(), preserveSelection: false);
+        }
+
+        // A project that hides every texture variable has nothing for the tab to edit.
+        if (hasTextureCoordinates && element != null &&
+            _projectRestrictions.IsEveryVariableHidden(element, "TextureLeft", "TextureTop", "TextureWidth", "TextureHeight", "TextureAddress"))
+        {
+            hasTextureCoordinates = false;
         }
 
         if (hasTextureCoordinates)

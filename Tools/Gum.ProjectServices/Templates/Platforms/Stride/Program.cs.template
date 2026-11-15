@@ -1,5 +1,8 @@
 using System;
 using Gum;
+using Gum.Forms.Controls;
+using Gum.GueDeriving;
+using Gum.Wireframe;
 {{HostUsings}}
 using Stride.CommunityToolkit.Engine;
 using Stride.CommunityToolkit.Rendering.Compositing;
@@ -15,7 +18,11 @@ void Start(Scene rootScene)
     game.AddGraphicsCompositor().AddCleanUIStage();
     game.Add2DCamera();
 
-    GumService.Default.Initialize(game, "Content/GumProject/{{GumProjectFile}}");
+    GumService GumUI = GumService.Default;
+
+    GumUI.Initialize(game, "Content/GumProject/{{GumProjectFile}}");
+    GumUI.UseKeyboardDefaults();
+    GumUI.UseGamepadDefaults();
     {{InitLines}}
     {{ScreenLines}}
 

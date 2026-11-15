@@ -74,7 +74,7 @@ public class BubblegumTemplateTests
         GumProjectSave formsTemplate = LoadFormsTemplate();
 
         bubblegum.Behaviors.Single(b => b.Name == "ButtonBehavior").DefaultImplementation
-            .ShouldBe("Bubblegum/Controls/Button");
+            .ShouldBe("Bubblegum/Button");
         formsTemplate.Behaviors.Single(b => b.Name == "ButtonBehavior").DefaultImplementation
             .ShouldBe("Controls/ButtonStandard");
     }
@@ -215,7 +215,7 @@ public class BubblegumTemplateTests
             // black/white contrast pair that must stay legible against any user-picked hue),
             // matching the code-only ColorPickerVisual, which hardcodes the same colors rather
             // than reading them from a theme's Colors class.
-            if (component.Name == "Bubblegum/Controls/ColorPicker")
+            if (component.Name == "Bubblegum/ColorPicker")
             {
                 continue;
             }

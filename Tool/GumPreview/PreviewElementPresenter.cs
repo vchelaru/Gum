@@ -20,15 +20,18 @@ internal static class PreviewElementPresenter
     /// </summary>
     public static bool Show(PreviewSelectionMessage selection)
     {
-        GumService.Default.Root.Children.Clear();
-
         ElementSave? element = ObjectFinder.Self.GetElementSave(selection.ElementName);
         if (element == null)
         {
+            GumService.Default.Root.Children.Clear();
             return false;
         }
 
-        element.ToGraphicalUiElement().AddToRoot();
+        // Built before the root is cleared, so an element that throws while building leaves the last
+        // good frame showing.
+        GraphicalUiElement built = element.ToGraphicalUiElement();
+        GumService.Default.Root.Children.Clear();
+        built.AddToRoot();
         ApplySelectedState(selection);
         return true;
     }

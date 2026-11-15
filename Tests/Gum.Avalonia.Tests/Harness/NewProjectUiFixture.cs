@@ -45,7 +45,8 @@ internal sealed class NewProjectUiFixture : IDisposable
         _scale = services.GetRequiredService<IAppScaleProvider>();
         _originalFontSize = _scale.BaseFontSize;
 
-        IExistingCodeProjectDetector checksDetector = detector ?? services.GetRequiredService<IExistingCodeProjectDetector>();
+        IExistingCodeProjectDetector checksDetector = detector
+            ?? new RootBoundedExistingCodeProjectDetector(services.GetRequiredService<IExistingCodeProjectDetector>(), Root);
         TimeSpan? slow = SlowExistingCodeProjectDetector.DelayFromEnvironment();
         if (slow != null && checksDetector is not SlowExistingCodeProjectDetector)
         {
@@ -247,7 +248,7 @@ internal sealed class NewProjectUiFixture : IDisposable
             "path: " + viewModel.GumProjectPath,
             "platformNote: " + viewModel.PlatformNote,
             "validation: " + viewModel.ValidationMessage,
-            "sourceLinked: " + viewModel.SourceLinked + "/" + viewModel.IsSourceLinkedForced + "/" + viewModel.IsSourceLinkedEnabled,
+            "sourceLinked: " + viewModel.SourceLinked + "/" + viewModel.IsSourceLinkedEnabled,
         };
         foreach (NewProjectLayoutNode root in viewModel.FolderTree)
         {

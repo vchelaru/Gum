@@ -326,15 +326,23 @@ public class FrameworkElement : INotifyPropertyChanged
     // visibility and parent changes, so nothing runs per frame.
     List<GraphicalUiElement>? _visibilityWatched;
 
+    // A method group converts to a new delegate at every use, and focus is gained and lost often
+    // (a ComboBox focuses its drop-down on every open); created once, on first use (#7870).
+    EventHandler? _focusedVisibilityChangedHandler;
+    EventHandler<GraphicalUiElement.ParentChangedEventArgs>? _focusedParentChangedHandler;
+
     void WatchVisibilityWhileFocused()
     {
         StopWatchingVisibility();
         _visibilityWatched ??= new List<GraphicalUiElement>();
+        EventHandler visibilityChanged = _focusedVisibilityChangedHandler ??= HandleFocusedVisibilityChanged;
+        EventHandler<GraphicalUiElement.ParentChangedEventArgs> parentChanged =
+            _focusedParentChangedHandler ??= HandleFocusedParentChanged;
         GraphicalUiElement? current = Visual;
         while (current != null)
         {
-            current.VisibleChanged += HandleFocusedVisibilityChanged;
-            current.ParentChanged += HandleFocusedParentChanged;
+            current.VisibleChanged += visibilityChanged;
+            current.ParentChanged += parentChanged;
             _visibilityWatched.Add(current);
             current = current.Parent;
         }
@@ -345,8 +353,8 @@ public class FrameworkElement : INotifyPropertyChanged
         if (_visibilityWatched == null) return;
         for (int i = 0; i < _visibilityWatched.Count; i++)
         {
-            _visibilityWatched[i].VisibleChanged -= HandleFocusedVisibilityChanged;
-            _visibilityWatched[i].ParentChanged -= HandleFocusedParentChanged;
+            _visibilityWatched[i].VisibleChanged -= _focusedVisibilityChangedHandler;
+            _visibilityWatched[i].ParentChanged -= _focusedParentChangedHandler;
         }
         _visibilityWatched.Clear();
     }
@@ -552,6 +560,19 @@ public class FrameworkElement : INotifyPropertyChanged
     public void Anchor(Anchor anchor) => Visual.Anchor(anchor);
     public void Dock(Dock dock) => Visual.Dock(dock);
 
+    /// <summary>
+    /// Tells the variable references that read a Forms-only property of this control (<c>Text = Slider.Minimum</c>) that a
+    /// declared setter just changed it, so they re-evaluate like they do for a visual property (#8029). Call it once from
+    /// the setter, after the value is final. Nothing is read or boxed unless a reference reads the property.
+    /// </summary>
+    /// <param name="propertyName">The property, filled in by the compiler with the calling setter.</param>
+    protected void ReportFormsPropertyChanged([CallerMemberName] string propertyName = "")
+    {
+#if !FRB
+        Visual?.ReportFormsPropertyChanged(propertyName);
+#endif
+    }
+
     bool isEnabled = true;
     /// <summary>
     /// Whether the element is enabled or not. When disabled, the element does
@@ -583,6 +604,7 @@ public class FrameworkElement : INotifyPropertyChanged
                 Visual.IsEnabled = value;
 
                 UpdateState();
+                ReportFormsPropertyChanged();
             }
         }
     }
@@ -613,33 +635,15 @@ public class FrameworkElement : INotifyPropertyChanged
         get => _toolTip;
         set
         {
-            if (value != null && value is not string && value is not Tooltip)
-            {
-                throw new NotSupportedException(
-                    $"FrameworkElement.ToolTip currently supports only string (or Tooltip) values. " +
-                    $"Got {value.GetType().FullName}. Non-string content is reserved for a future release.");
-            }
+            Tooltip? tooltip = ToolTipService.ToTooltip(value, memberName: "FrameworkElement.ToolTip");
 
+            object? previous = _toolTip;
             _toolTip = value;
-
-            if (value == null)
-            {
-                ToolTipService.RegisterTooltip(this, null);
-                return;
-            }
-
-            Tooltip tooltip;
-            if (value is Tooltip existing)
-            {
-                tooltip = existing;
-            }
-            else
-            {
-                tooltip = new Tooltip();
-                tooltip.Content = value;
-            }
-
             ToolTipService.RegisterTooltip(this, tooltip);
+            if (!Equals(previous, value))
+            {
+                ReportFormsPropertyChanged();
+            }
         }
     }
 
@@ -813,7 +817,16 @@ public class FrameworkElement : INotifyPropertyChanged
 
     private void OnVisualBindingContextChanged(object? sender, BindingContextChangedEventArgs args)
     {
-        BindingContextChanged?.Invoke(sender, args);
+        _isRelayingBindingContextChange = true;
+        try
+        {
+            BindingContextChanged?.Invoke(sender, args);
+        }
+        finally
+        {
+            _isRelayingBindingContextChange = false;
+        }
+        OnBindingContextRelayed();
         OnPropertyChanged(nameof(BindingContext));
         OnBindingContextChanged(sender, args);
     }
@@ -856,6 +869,96 @@ public class FrameworkElement : INotifyPropertyChanged
     public static Dictionary<Type, VisualTemplate> DefaultFormsTemplates => GumContext.Own?.DefaultFormsTemplates ?? _defaultFormsTemplates;
 
     static readonly Dictionary<Type, VisualTemplate> _defaultFormsTemplates = new Dictionary<Type, VisualTemplate>();
+
+    /// <summary>
+    /// The visual template (and obsolete component type) registered for each control type that
+    /// <see cref="GetGraphicalUiElementForFrameworkElement"/> looked up while a log was active. A caller that
+    /// keeps what it built asks <see cref="StillResolvesTheSame"/> before reusing it, so a template registered or
+    /// swapped for any control the build created (not only the ones the caller knows about) is noticed (#7864).
+    /// </summary>
+    internal sealed class TemplateLookupLog
+    {
+        private readonly List<Type> _types = new List<Type>();
+        private readonly List<VisualTemplate?> _templates = new List<VisualTemplate?>();
+        private readonly List<Type?> _components = new List<Type?>();
+
+        // Keeps the first template seen for a type: a row built later in the same popup's life cannot hide that an
+        // earlier one was built from a template that has since been replaced.
+        internal void Record(Type type)
+        {
+            if (_types.Contains(type))
+            {
+                return;
+            }
+            DefaultFormsTemplates.TryGetValue(type, out VisualTemplate? template);
+#pragma warning disable CS0618 // The obsolete registry still decides which visual a type gets.
+            DefaultFormsComponents.TryGetValue(type, out Type? component);
+#pragma warning restore CS0618
+            _types.Add(type);
+            _templates.Add(template);
+            _components.Add(component);
+        }
+
+        // True when every recorded type resolves to the same registration now. Allocates nothing.
+        internal bool StillResolvesTheSame()
+        {
+            for (int i = 0; i < _types.Count; i++)
+            {
+                DefaultFormsTemplates.TryGetValue(_types[i], out VisualTemplate? template);
+#pragma warning disable CS0618
+                DefaultFormsComponents.TryGetValue(_types[i], out Type? component);
+#pragma warning restore CS0618
+                if (!ReferenceEquals(template, _templates[i]) || component != _components[i])
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+    }
+
+    // The log that records the lookups made now, or null when nothing is recording.
+    internal static TemplateLookupLog? ActiveTemplateLookupLog;
+
+    /// <summary>
+    /// Which objects the active <c>Styling</c> is made of (the style and the Colors, NineSlice, Icons, Text and
+    /// sprite sheet it holds), by reference. The default visuals read them when they are built, so a caller that
+    /// keeps what it built compares this before reusing it (#7864). Values changed in place are not seen.
+    /// </summary>
+    internal readonly struct StyleIdentity : IEquatable<StyleIdentity>
+    {
+        private readonly object? _style;
+        private readonly object? _colors;
+        private readonly object? _nineSlice;
+        private readonly object? _icons;
+        private readonly object? _text;
+        private readonly object? _spriteSheet;
+
+        internal StyleIdentity(object? style, object? colors, object? nineSlice, object? icons, object? text, object? spriteSheet)
+        {
+            _style = style;
+            _colors = colors;
+            _nineSlice = nineSlice;
+            _icons = icons;
+            _text = text;
+            _spriteSheet = spriteSheet;
+        }
+
+        public bool Equals(StyleIdentity other) =>
+            ReferenceEquals(_style, other._style) && ReferenceEquals(_colors, other._colors)
+            && ReferenceEquals(_nineSlice, other._nineSlice) && ReferenceEquals(_icons, other._icons)
+            && ReferenceEquals(_text, other._text) && ReferenceEquals(_spriteSheet, other._spriteSheet);
+
+        public override bool Equals(object? obj) => obj is StyleIdentity other && Equals(other);
+
+        public override int GetHashCode() => _style?.GetHashCode() ?? 0;
+    }
+
+    // Set by Styling, which lives in the platform assemblies. Stays null, and every identity equal, in a host that
+    // never touches Styling.
+    internal static Func<StyleIdentity>? ReadActiveStyleIdentity;
+
+    internal static StyleIdentity GetActiveStyleIdentity() => ReadActiveStyleIdentity?.Invoke() ?? default;
 #endif
 
     protected static InteractiveGue? GetGraphicalUiElementFor(FrameworkElement element)
@@ -870,6 +973,9 @@ public class FrameworkElement : INotifyPropertyChanged
             "which constructs content without reflection.")]
     public static InteractiveGue? GetGraphicalUiElementForFrameworkElement(Type type)
     {
+#if !FRB
+        ActiveTemplateLookupLog?.Record(type);
+#endif
         if (DefaultFormsTemplates.ContainsKey(type))
         {
             return DefaultFormsTemplates[type].CreateContent(null, createFormsInternally:false) as InteractiveGue;
@@ -1054,7 +1160,13 @@ public class FrameworkElement : INotifyPropertyChanged
             }
         }
         Visual.RemoveFromManagers();
+        ReactToClosed();
     }
+
+    /// <summary>
+    /// Called after <see cref="Close"/> has removed this element's Visual from the managers.
+    /// </summary>
+    protected virtual void ReactToClosed() { }
 
     /// <summary>
     /// Displays this element visually and adds it to the underlying managers for Cursor interaction.
@@ -1104,6 +1216,14 @@ public class FrameworkElement : INotifyPropertyChanged
         else
 #endif
         {
+#if !FRB
+            // A visual under an already managed ancestor is drawn through that ancestor. Registering
+            // its renderable as a top-level layer item too draws it twice, on the default layer.
+            if (Visual.EffectiveManagers != null)
+            {
+                return;
+            }
+#endif
             Visual.AddToManagers(global::RenderingLibrary.ISystemManagers.Default,
 #if FRB
                 gumLayer);
@@ -1730,10 +1850,10 @@ public class FrameworkElement : INotifyPropertyChanged
         }
         /////////////////End Early Out/////////////////
 
-        var parentGue = requestingElement.Visual.Parent as InteractiveGue;
+        var parentGue = requestingElement.Visual.Parent;
         var requestingElementVisual = requestingElement.Visual;
 
-        HandleTab(tabDirection, requestingElementVisual, parentGue, shouldAskParent: true, loop:loop);
+        HandleTabCore(tabDirection, requestingElementVisual, parentGue, shouldAskParent: true, loop:loop);
     }
 
     /// <summary>
@@ -1750,9 +1870,17 @@ public class FrameworkElement : INotifyPropertyChanged
     public static bool HandleTab(TabDirection tabDirection, InteractiveGue? requestingVisual,
         InteractiveGue? parentVisual, bool shouldAskParent, bool loop)
     {
+        return HandleTabCore(tabDirection, requestingVisual, parentVisual, shouldAskParent, loop);
+    }
+
+    // Works on GraphicalUiElement because a screen loaded from a file is a plain GraphicalUiElement (not an
+    // InteractiveGue), and its instances have that screen as their Parent.
+    private static bool HandleTabCore(TabDirection tabDirection, GraphicalUiElement? requestingVisual,
+        GraphicalUiElement? parentVisual, bool shouldAskParent, bool loop)
+    {
         void UnFocusRequestingVisual()
         {
-            if (requestingVisual?.FormsControlAsObject is FrameworkElement requestingFrameworkElement && 
+            if ((requestingVisual as InteractiveGue)?.FormsControlAsObject is FrameworkElement requestingFrameworkElement && 
                 // this can happen if the only input receiver requests next tab and it loops back on itself.
                 InteractiveGue.CurrentInputReceiver != requestingFrameworkElement)
             {
@@ -1824,8 +1952,8 @@ public class FrameworkElement : INotifyPropertyChanged
             }
             else
             {
-                var childAtI = requestingVisualSiblings[newIndex] as InteractiveGue;
-                var elementAtI = childAtI?.FormsControlAsObject as FrameworkElement;
+                var childAtI = requestingVisualSiblings[newIndex];
+                var elementAtI = (childAtI as InteractiveGue)?.FormsControlAsObject as FrameworkElement;
 
                 if (CanElementBeFocused(elementAtI))
                 {
@@ -1838,10 +1966,10 @@ public class FrameworkElement : INotifyPropertyChanged
                 }
                 else
                 {
-                    if (childAtI?.Visible == true && childAtI.IsEnabled && (elementAtI == null || elementAtI.IsEnabled))
+                    if (childAtI.Visible && (childAtI is not InteractiveGue childInteractive || childInteractive.IsEnabled) && (elementAtI == null || elementAtI.IsEnabled))
                     {
                         // let this try to handle it:
-                        didChildHandle = HandleTab(tabDirection, null, childAtI, shouldAskParent: false, loop:loop);
+                        didChildHandle = HandleTabCore(tabDirection, null, childAtI, shouldAskParent: false, loop:loop);
 
                         if (didChildHandle)
                         {
@@ -1891,19 +2019,19 @@ public class FrameworkElement : INotifyPropertyChanged
                             // input, which is routed only to the top-most modal.
                             if (loop)
                             {
-                                didFocusNewItem = HandleTab(tabDirection, null, parentVisual, shouldAskParent: false, loop: false);
+                                didFocusNewItem = HandleTabCore(tabDirection, null, parentVisual, shouldAskParent: false, loop: false);
                             }
                         }
                         else
 #endif
                         if (parentVisual?.Parent != null)
                         {
-                            var grandparentVisual = parentVisual.Parent as InteractiveGue;
-                            didFocusNewItem = HandleTab(tabDirection, parentVisual, grandparentVisual, shouldAskParent: true, loop:loop);
+                            var grandparentVisual = parentVisual.Parent;
+                            didFocusNewItem = HandleTabCore(tabDirection, parentVisual, grandparentVisual, shouldAskParent: true, loop:loop);
                         }
                         else
                         {
-                            didFocusNewItem = HandleTab(tabDirection, parentVisual, null, shouldAskParent: true, loop: loop);
+                            didFocusNewItem = HandleTabCore(tabDirection, parentVisual, null, shouldAskParent: true, loop: loop);
 
                             if(didFocusNewItem == false && didReachEndOfChildren && loop)
                             {
@@ -1914,11 +2042,11 @@ public class FrameworkElement : INotifyPropertyChanged
                                 // Going Down we enter at the first visible child and going Up at the last, so the search
                                 // continues in the direction of travel when that child holds nothing focusable (for example
                                 // a background).
-                                InteractiveGue? entryChild = null;
+                                GraphicalUiElement? entryChild = null;
                                 for (int i = 0; i < requestingVisualSiblings.Count; i++)
                                 {
                                     int siblingIndex = tabDirection == TabDirection.Down ? i : requestingVisualSiblings.Count - 1 - i;
-                                    if (requestingVisualSiblings[siblingIndex] is InteractiveGue ig && ig.Visible && ig.IsEnabled)
+                                    if (requestingVisualSiblings[siblingIndex] is { Visible: true } ig && (ig is not InteractiveGue igi || igi.IsEnabled))
                                     {
                                         entryChild = ig;
                                         break;
@@ -1926,7 +2054,7 @@ public class FrameworkElement : INotifyPropertyChanged
                                 }
                                 entryChild = entryChild ?? requestingVisual;
 
-                                didFocusNewItem = HandleTab(tabDirection, null, entryChild, shouldAskParent: true, loop: false);
+                                didFocusNewItem = HandleTabCore(tabDirection, null, entryChild, shouldAskParent: true, loop: false);
                             }
                         }
                     }
@@ -1943,7 +2071,16 @@ public class FrameworkElement : INotifyPropertyChanged
 
     private static bool AreAncestorsEnabled(InteractiveGue visual)
     {
-        return visual.Parent is not InteractiveGue parent || parent.IsEnabledRecursively;
+        // Walk every GraphicalUiElement ancestor: a plain GraphicalUiElement (such as a screen loaded
+        // from a file) can sit between InteractiveGue ancestors.
+        for (GraphicalUiElement? current = visual.Parent; current != null; current = current.Parent)
+        {
+            if (current is InteractiveGue { IsEnabled: false })
+            {
+                return false;
+            }
+        }
+        return true;
     }
 
     /// <summary>
@@ -2370,7 +2507,7 @@ public class FrameworkElement : INotifyPropertyChanged
     /// navigation cannot fall through to background modals, mirroring the way mouse input is routed
     /// only to the top-most modal.
     /// </summary>
-    static bool IsTopMostModal(InteractiveGue? visual)
+    static bool IsTopMostModal(GraphicalUiElement? visual)
     {
         var modalRoot = ModalRoot;
         if (visual == null || modalRoot == null || visual.Parent != modalRoot)
@@ -2742,6 +2879,13 @@ public class FrameworkElement : INotifyPropertyChanged
     /// </summary>
     internal virtual bool KeepsPushedStateWhenCursorLeaves => false;
 
+    /// <summary>
+    /// Offered a value the project defines for a Forms property when the control is built, before the
+    /// element that owns it has put its children in. Returns true when the control keeps the value to
+    /// apply once it can, so the caller does not write it now.
+    /// </summary>
+    internal virtual bool TryDeferDesignDefault(string propertyName, object value) => false;
+
     protected virtual bool GetIfPushInputIsHeld() =>
         GetIfGamepadOrKeyboardPrimaryPushInputIsHeld();
 
@@ -2839,4 +2983,41 @@ public class FrameworkElement : INotifyPropertyChanged
     }
 
     public bool IsDataBound(string propertyName) => PropertyRegistry.GetBindingExpression(propertyName) != null;
+
+    // True while a BindingContext change is being relayed to this control's bindings, before
+    // OnBindingContextChanged runs.
+    bool _isRelayingBindingContextChange;
+
+    /// <summary>
+    /// True while a BindingContext change is relayed to the bindings of a selector (ListBox, ComboBox)
+    /// whose SelectedObject and SelectedIndex are both bound. The selector holds its view-model pushes
+    /// until <see cref="ApplySelectionBindingsAfterRebind"/>, because the new view model's two values
+    /// can disagree and SelectedObject wins whatever the bind order (#7856).
+    /// </summary>
+    internal bool IsRebindingBothSelectionBindings =>
+        _isRelayingBindingContextChange &&
+        IsDataBound("SelectedObject") &&
+        IsDataBound("SelectedIndex");
+
+    /// <summary>
+    /// Runs once a BindingContext change has reached every binding, before PropertyChanged and
+    /// OnBindingContextChanged. Internal so a subclass overriding OnBindingContextChanged can't skip it.
+    /// </summary>
+    internal virtual void OnBindingContextRelayed() { }
+
+    /// <summary>
+    /// After a BindingContext change, re-applies the bound SelectedObject when SelectedIndex is also
+    /// bound, so SelectedObject wins. Returns whether it did; the caller then pushes both values.
+    /// </summary>
+    internal bool ApplySelectionBindingsAfterRebind()
+    {
+        if (!IsDataBound("SelectedIndex") ||
+            PropertyRegistry.GetBindingExpression("SelectedObject") is not NpcBindingExpression selectedObjectBinding)
+        {
+            return false;
+        }
+
+        selectedObjectBinding.RefreshTarget();
+        return true;
+    }
 }

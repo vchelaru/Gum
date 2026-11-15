@@ -191,4 +191,28 @@ public class CommandLineManagerTests
             Directory.Delete(tempDirectory, recursive: true);
         }
     }
+
+    [Fact]
+    public void TryResolveStartupFile_ElementInASubfolder_FindsTheProjectAndNamesTheElementWithItsFolder()
+    {
+        string tempDirectory = Path.Combine(Path.GetTempPath(), "CommandLineManagerTests_" + Guid.NewGuid().ToString("N"));
+        string menus = Path.Combine(tempDirectory, "Screens", "Menus");
+        Directory.CreateDirectory(menus);
+        string projectPath = Path.Combine(tempDirectory, "MyProject.gumx");
+        File.WriteAllText(projectPath, "<GumProjectSave />");
+        string screenPath = Path.Combine(menus, "Main.gusx");
+        File.WriteAllText(screenPath, "<ScreenSave />");
+
+        try
+        {
+            CommandLineManager.TryResolveStartupFile(screenPath, out string? project, out string? elementName).ShouldBeTrue();
+
+            project.ShouldBe(projectPath);
+            elementName.ShouldBe("Menus/Main");
+        }
+        finally
+        {
+            Directory.Delete(tempDirectory, recursive: true);
+        }
+    }
 }

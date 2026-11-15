@@ -66,6 +66,7 @@ public interface IPluginManager
     void CategoryRename(StateSaveCategory category, string oldName);
     void CategoryAdd(StateSaveCategory category);
     void CategoryDelete(StateSaveCategory category);
+    void CategoryColorChange(StateSaveCategory category);
     DeleteResponse GetDeleteStateCategoryResponse(StateSaveCategory stateSaveCategory, IStateContainer element);
     DeleteResponse GetDeleteStateResponse(StateSave stateSave, IStateContainer element);
     void ReactToStateSaveCategorySelected(StateSaveCategory? category);
@@ -89,6 +90,17 @@ public interface IPluginManager
     /// </summary>
     void VariableSetThroughReference(ElementSave? parentElement, InstanceSave? instance, string unqualifiedChangedMemberName,
         object? oldValue, bool isFullCommit = true);
+
+    /// <summary>
+    /// Opens a batch of <see cref="VariableSet"/> calls, as a multi-select edit makes (one per selected
+    /// instance). Plugins still hear every call, but those whose reaction covers the whole element
+    /// (the error check, code generation) wait for the scope's disposal, when each affected element
+    /// is announced once through the plugin base's VariableSetBatchCompleted event.
+    /// </summary>
+    IDisposable BeginVariableSetBatch();
+
+    /// <summary>True between <see cref="BeginVariableSetBatch"/> and the disposal of its scope.</summary>
+    bool IsInVariableSetBatch { get; }
     void VariableSelected(IStateContainer? container, VariableSave? variable);
     void VariableRemovedFromCategory(string variableName, StateSaveCategory category);
     void InstanceRename(ElementSave? element, InstanceSave instanceSave, string oldName);
@@ -173,6 +185,15 @@ public interface IPluginManager
     void RefreshVariableView(bool force);
     void WireframePropertyChanged(string propertyName);
     IRenderableIpso? CreateRenderableForType(string type);
+
+    /// <summary>
+    /// The named regions every plugin reports for <paramref name="file"/> (concatenated in plugin order; a
+    /// plugin that throws is disabled and contributes none). Empty when no plugin knows the file.
+    /// </summary>
+    IReadOnlyList<TextureRegion> GetTextureRegions(FilePath file);
+
+    /// <summary>Tells every plugin that the user chose <paramref name="region"/> of <paramref name="file"/> in the Texture Coordinates tab, after it was applied.</summary>
+    void TextureRegionChosen(FilePath file, TextureRegion region);
     void WireframeRefreshed();
     // Sealed to object (not System.Windows.Forms.TreeNode) per the WinForms/WPF interface-leak ratchet
     // (UiDecouplingRatchetTests) -- same pattern as ITabManager.AddControl.

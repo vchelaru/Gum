@@ -1,13 +1,13 @@
 ---
 name: gum-forms-behaviors
-description: Gum's behaviors system and the design-time → runtime Forms wrapping lifecycle. Triggers: BehaviorSave, ElementBehaviorReference, StandardFormsBehaviorNames, FormsUtilities.RegisterFromFileFormRuntimeDefaults, DefaultFromFile*Runtime classes, Forms properties not settable at design time.
+description: "Gum behaviors and the design-time to runtime Forms wrapping lifecycle, including FormsProperties (Forms-only properties shown as behavior variables on a visual in the tool). Triggers: BehaviorSave, FormsProperties, ElementBehaviorReference, BehaviorFormsPropertyApplier, StandardFormsBehaviorNames, RegisterFromFileFormRuntimeDefaults, DefaultFromFile*Runtime, Behavior category in the Variables tab, referencing a Forms property from a variable reference."
 ---
 
 # Gum Forms Behaviors
 
 ## What Behaviors Are
 
-Behaviors are named capability contracts stored as `.behx` XML files in the project's `Behaviors/` folder. Each behavior (`BehaviorSave`) declares:
+Behaviors are named capability contracts stored as `.behx` XML files in the project's `Behaviors/` folder. Each behavior (`BehaviorSave`) declares: The Forms, visual and Renderable layers are in **gum-architecture-layers**; a variable reference that reads a FormsProperty is in "Two Layers in One Variable List" below.
 - A `Name` (e.g. `"ButtonBehavior"`)
 - Required visual state `Categories` (with state names like Enabled/Disabled/Highlighted/Pushed)
   - A control assigns its logical state names on purpose and chooses which states it implements; the visual state for an unimplemented one is thrown away as intended, so a state name that does not exist is never reported.
@@ -59,6 +59,13 @@ The `DefaultFromFileXxxRuntime` classes exist solely to bridge the file-loading 
 
 The Gum tool operates at the visual layer — layout, colors, fonts, dimensions saved as `VariableSave` entries. The Forms behavioral layer (state, data, interaction) is added at runtime. Two mechanisms now bridge the save model into Forms semantics: **`FormsProperties`** for the value-on-the-control half, and **`ToolOnlyVariableReferences`** for the design-time visual-state preview half.
 
+### Two Layers in One Variable List
+
+- Selecting an instance in the tool lists every visual variable (X, XUnits, origins, ...) and, in a "Behavior" category, the `FormsProperties` of its behaviors. In code a `Button` is only the Forms control and the visual is `button.Visual`, so the tool's list mixes the two layers.
+- A FormsProperty is not a variable of the visual. It lives on the `FrameworkElement` and `BehaviorFormsPropertyApplier` sets it by reflection. The tool still stores an edit as an `Instance.Name` variable in the owner's state (`Slider.Minimum`), and a `VariableReferences` line can read it.
+- A user `VariableReferences` line reads a FormsProperty of an instance of its own element: in a game from the live Forms control, in the tool from the stored variable, else the behavior default (`FormsBehaviorChain.BuildFormsPropertyDefaultsFallback`, the same three tiers). `Text = Slider.Minimum` gives `"1"` when 1 is stored and `"0"` when only the default exists. A read through an exposed name, a nested instance or another element still needs a stored value. At runtime a double into a float or string variable arrives only with expression evaluation on (`GumExpressionService.Initialize()`); without it the type mismatch is reported and the line is not applied.
+- GUM0009 (`HeadlessErrorChecker`) resolves `Instance.Var` through the same chain as the evaluator: a variable stored under that exact name on the owner or its base components with `SetsValue` true and no `ExposedAsName`, an exposed entry that has a stored `Value` and names a FormsProperty declared on the instance type chain, then the instance type and its bases. It has no behavior-default fallback, so a line that reads only a default is reported, matching what the tool applies. The layers themselves are in **gum-architecture-layers**.
+
 ### `BehaviorSave.FormsProperties` (v1)
 
 A `List<VariableSave>` declaring design-time properties that flow through to the wrapped `FrameworkElement` at runtime via reflection. Each entry's `Name` must match a property on the control (e.g. `ToolTip`, `IsEnabled`); `Value` is the **declared default** (used as a fallback tier — see below).
@@ -98,6 +105,7 @@ Tier 3 is **virtual** — never written to state, never appears in `.gusx`. Stat
 - `BehaviorFormsPropertyApplier.Apply` adds the third tier inline: `ReadEffectiveValue(...) ?? declaration.Value`.
 
 **Each tier-2/3 default is applied once, at the control's own build, never re-applied by an ancestor.** `SetGraphicalUiElement` calls `InitialFormsPropertiesNotifier(built, true)` for the element it just built (all three tiers) and `(instance, false)` for that element's own instances only (`Apply(..., authoredOverridesOnly: true)`: just a value the container's default state, or a base of it, explicitly authors for the instance; no fall-through to the instance's component and no declared default). An instance owned by a nested element is skipped, so code that ran in that element's `CustomInitialize` (which runs in `AfterFullCreation`, after the control exists) keeps what it set, at any nesting depth. A value the container authors still wins over `CustomInitialize`, since the container's pass runs after it. `InitialStateAppliedNotifier` (the `UpdateState` re-sync) still walks every descendant. The built element's own control gets its values where it is created: every `DefaultFromFile*Runtime.AfterFullCreation` calls `BehaviorFormsPropertyApplier.ApplyToCreatedControl(this)` right after `FormsControlAsObject = new X(this)`, and `ApplyOnceAtBuild` (a `ConditionalWeakTable` mark) makes the build's root pass a no-op for that control. So a custom runtime deriving a `DefaultFromFile*Runtime` that sets a Forms property after `base.AfterFullCreation()` keeps it. A runtime type that creates its own control instead of deriving one gets no creation-time apply and keeps the old behavior (the root pass applies after its `AfterFullCreation`).
+- A control whose children the owning screen parents in after the control is built can defer a default it cannot take yet: `Apply` offers each non-authored value to `FrameworkElement.TryDeferDesignDefault`, and `TabControl` keeps `SelectedIndex` 0 until its first tab arrives (the tool previews tab 0 selected; a code-created control keeps -1).
 - `StateReferencingInstanceMember.DefaultValueFallback` lets the variable grid show the declared default in the checkbox/text without writing into state. `IsDefault` still returns true (state empty), preserving the grid's italic/grey styling.
 
 Codegen (FullyInCode GumForms) mirrors tiers 1 and 2 only (and a Forms property authored in a category state, which `ApplyState` also writes onto the control): it assigns authored values on the control and relies on tier 3 equalling the control's code default (see `CodeGenerator.FillWithFormsPropertyAssignments`, gum-tool-codegen).

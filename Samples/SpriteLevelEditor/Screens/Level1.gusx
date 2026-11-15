@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScreenSave xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <Name>Level1</Name>
+  <State>
+    <Name>Default</Name>
+    <Variable IsFile="true" Type="string" Name="Coin.SourceFile" SetsValue="true">
+      <Value xsi:type="xsd:string">Items.png</Value>
+    </Variable>
+    <Variable Type="float" Name="Coin.X" SetsValue="true">
+      <Value xsi:type="xsd:float">365</Value>
+    </Variable>
+    <Variable Type="HorizontalAlignment" Name="Coin.XOrigin" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="float" Name="Coin.Y" SetsValue="true">
+      <Value xsi:type="xsd:float">58</Value>
+    </Variable>
+    <Variable Type="float" Name="Player.Rotation" SetsValue="true">
+      <Value xsi:type="xsd:float">30</Value>
+    </Variable>
+    <Variable Type="string" Name="Player.SourceFile" SetsValue="true">
+      <Value xsi:type="xsd:string">ExampleSpriteFrame.png</Value>
+    </Variable>
+    <Variable Type="float" Name="Player.X" SetsValue="true">
+      <Value xsi:type="xsd:float">261</Value>
+    </Variable>
+    <Variable Type="float" Name="Player.Y" SetsValue="true">
+      <Value xsi:type="xsd:float">99</Value>
+    </Variable>
+  </State>
+  <Instance Name="Player" BaseType="Sprite" />
+  <Instance Name="Coin" BaseType="Sprite" />
+  <Behaviors />
+</ScreenSave>

@@ -135,9 +135,10 @@ public static class GumBundleLoader
         FileManager.CustomGetStreamFromFile = incomingPath =>
         {
             string? relative = TryMakeRelative(incomingPath, projectRoot);
-            if (relative != null && provider.Exists(relative))
+            if (relative != null && bundle.Entries.TryGetValue(relative, out byte[]? entryBytes))
             {
-                return provider.OpenRead(relative);
+                // Tagged with the package so a texture loader can name it in the alpha-mismatch warning.
+                return new GumBundleEntryStream(entryBytes, resolvedPath);
             }
 
             if (previousHook != null)
@@ -241,6 +242,20 @@ public static class GumBundleLoader
         }
         return sb.ToString();
     }
+}
+
+/// <summary>
+/// A read-only stream over one bundle entry, carrying the path of the package it came from
+/// (<see cref="GumBundleLoader"/>'s file hook returns these).
+/// </summary>
+internal sealed class GumBundleEntryStream : MemoryStream
+{
+    public GumBundleEntryStream(byte[] entry, string packagePath) : base(entry, writable: false)
+    {
+        PackagePath = packagePath;
+    }
+
+    public string PackagePath { get; }
 }
 
 /// <summary>

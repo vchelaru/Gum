@@ -1,4 +1,5 @@
 using Gum.GueDeriving;
+using Microsoft.Xna.Framework.Graphics;
 using RenderingLibrary.Graphics;
 using SkiaSharp;
 
@@ -13,13 +14,15 @@ public class ParentChildScreen : IImmediateModeScreen
 {
     private RectangleRuntime _buttonRectangle = null!;
 
-    public void Initialize()
+    public void Initialize(GraphicsDevice graphicsDevice)
     {
         _buttonRectangle = new RectangleRuntime();
         _buttonRectangle.Width = 200;
         _buttonRectangle.Height = 48;
         _buttonRectangle.IsFilled = true;
         _buttonRectangle.FillColor = SKColors.DarkBlue;
+        _buttonRectangle.StrokeWidth = 0;
+        _buttonRectangle.IsAntialiased = false;
         _buttonRectangle.X = 60;
         _buttonRectangle.Y = 120;
 
@@ -42,7 +45,7 @@ public class ParentChildScreen : IImmediateModeScreen
         _buttonRectangle.Children.Add(buttonText);
     }
 
-    public void Draw(GumBatch gumBatch, SKCanvas canvas)
+    public void Draw(GumBatch gumBatch, SpriteBatch spriteBatch)
     {
         gumBatch.Begin();
         // Only the parent is drawn - the child TextRuntime is rendered automatically as part of the

@@ -26,6 +26,22 @@ public static class GradientUnitResolver
         }
     }
 
+    /// <summary>
+    /// Outer radius, in pixels, a radial gradient uses when the authored one resolves to 0 or less.
+    /// Matches Skia's and MonoGame's fallback.
+    /// </summary>
+    public const float DefaultOuterRadius = 100f;
+
+    /// <summary>
+    /// Resolves a radial gradient's outer radius like <see cref="ResolveRadius"/>, falling back to
+    /// <see cref="DefaultOuterRadius"/> when the result is 0 or less (as Skia does).
+    /// </summary>
+    public static float ResolveOuterRadius(float value, DimensionUnitType units, float width)
+    {
+        float resolved = ResolveRadius(value, units, width);
+        return resolved > 0f ? resolved : DefaultOuterRadius;
+    }
+
     /// <summary>Resolves a radial gradient radius against the element's width (as Skia does).</summary>
     public static float ResolveRadius(float value, DimensionUnitType units, float width)
     {

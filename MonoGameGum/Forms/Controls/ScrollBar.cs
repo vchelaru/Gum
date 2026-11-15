@@ -260,6 +260,16 @@ public class ScrollBar : RangeBase
                 downButton = downButtonVisual.FormsControlAsObject as Button;
             }
         }
+
+        // Internal parts of the scroll bar, never tab stops of their own (#7422).
+        if (upButton != null)
+        {
+            upButton.GamepadTabbingFocusBehavior = TabbingFocusBehavior.SkipOnTab;
+        }
+        if (downButton != null)
+        {
+            downButton.GamepadTabbingFocusBehavior = TabbingFocusBehavior.SkipOnTab;
+        }
     }
 
 #endregion

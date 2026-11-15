@@ -2,6 +2,7 @@ using RenderingLibrary.Graphics.Fonts;
 using SkiaSharp;
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Threading;
@@ -41,8 +42,16 @@ public class GumFontMapper : FontMapper
     /// Embedded fonts registered via <see cref="RegisterFont"/>, keyed by family name + style slot
     /// (as opposed to <see cref="registry"/>, which is keyed by file path or typeface instance).
     /// </summary>
-    private static readonly ConcurrentDictionary<string, SKTypeface> embeddedFontRegistry =
-        new ConcurrentDictionary<string, SKTypeface>(StringComparer.OrdinalIgnoreCase);
+    private static readonly ConcurrentDictionary<EmbeddedFontKey, SKTypeface> embeddedFontRegistry =
+        new ConcurrentDictionary<EmbeddedFontKey, SKTypeface>(EmbeddedFontKeyComparer.Instance);
+
+    /// <summary>
+    /// Typefaces the base RichTextKit resolution found among the system fonts, so rebuilding text does not call
+    /// <see cref="SKTypeface.FromFamilyName(string?, SKFontStyleWeight, SKFontStyleWidth, SKFontStyleSlant)"/> once
+    /// per run (#7846). Entries are never disposed, because text blocks keep using a typeface after resolving it.
+    /// Registered fonts are looked up before this cache, so a font registered later still wins over a cached one.
+    /// </summary>
+    private readonly ConcurrentDictionary<SystemTypefaceKey, SKTypeface> systemTypefaces = new();
 
     /// <summary>
     /// Font weight above which <see cref="TypefaceFromStyle"/> treats a run as bold when resolving
@@ -186,7 +195,7 @@ public class GumFontMapper : FontMapper
             return null;
         }
 
-        embeddedFontRegistry[GetEmbeddedFontKey(familyName, style)] = typeface;
+        embeddedFontRegistry[new EmbeddedFontKey(familyName, style ?? string.Empty)] = typeface;
         Interlocked.Increment(ref registrationVersion);
         return typeface;
     }
@@ -220,7 +229,7 @@ public class GumFontMapper : FontMapper
         if (style.FontFamily != null)
         {
             string styleSlot = GetStyleSlot(isBold: style.FontWeight > RegularFontWeight, isItalic: style.FontItalic);
-            if (embeddedFontRegistry.TryGetValue(GetEmbeddedFontKey(style.FontFamily, styleSlot), out SKTypeface? embeddedTypeface))
+            if (embeddedFontRegistry.TryGetValue(new EmbeddedFontKey(style.FontFamily, styleSlot), out SKTypeface? embeddedTypeface))
             {
                 return embeddedTypeface;
             }
@@ -229,7 +238,7 @@ public class GumFontMapper : FontMapper
             // default cut rather than dropping straight to a system font, so a theme that only
             // bundled one weight still renders with it instead of silently swapping typefaces.
             if (styleSlot.Length > 0
-                && embeddedFontRegistry.TryGetValue(GetEmbeddedFontKey(style.FontFamily, null), out embeddedTypeface))
+                && embeddedFontRegistry.TryGetValue(new EmbeddedFontKey(style.FontFamily, string.Empty), out embeddedTypeface))
             {
                 return embeddedTypeface;
             }
@@ -240,11 +249,35 @@ public class GumFontMapper : FontMapper
             }
         }
 
-        return base.TypefaceFromStyle(style, ignoreFontVariants);
+        SystemTypefaceKey key = new SystemTypefaceKey(
+            style.FontFamily, style.FontWeight, style.FontWidth, style.FontItalic,
+            ignoreFontVariants ? FontVariant.Normal : style.FontVariant);
+        if (!systemTypefaces.TryGetValue(key, out SKTypeface? systemTypeface))
+        {
+            systemTypeface = systemTypefaces.GetOrAdd(key, base.TypefaceFromStyle(style, ignoreFontVariants));
+        }
+        return systemTypeface;
     }
 
-    private static string GetEmbeddedFontKey(string familyName, string? style) =>
-        $"{familyName}\0{style}";
+    /// <summary>A family name plus style slot ("Bold", "Italic", "BoldItalic" or empty), both compared ignoring case.</summary>
+    private readonly record struct EmbeddedFontKey(string FamilyName, string StyleSlot);
+
+    private sealed class EmbeddedFontKeyComparer : IEqualityComparer<EmbeddedFontKey>
+    {
+        public static readonly EmbeddedFontKeyComparer Instance = new();
+
+        public bool Equals(EmbeddedFontKey x, EmbeddedFontKey y) =>
+            StringComparer.OrdinalIgnoreCase.Equals(x.FamilyName, y.FamilyName)
+            && StringComparer.OrdinalIgnoreCase.Equals(x.StyleSlot, y.StyleSlot);
+
+        public int GetHashCode(EmbeddedFontKey key) => HashCode.Combine(
+            StringComparer.OrdinalIgnoreCase.GetHashCode(key.FamilyName),
+            StringComparer.OrdinalIgnoreCase.GetHashCode(key.StyleSlot));
+    }
+
+    /// <summary>Every <see cref="IStyle"/> value the base resolution can read.</summary>
+    private readonly record struct SystemTypefaceKey(
+        string? FamilyName, int Weight, SKFontStyleWidth Width, bool Italic, FontVariant Variant);
 
     private static string GetStyleSlot(bool isBold, bool isItalic) => (isBold, isItalic) switch
     {

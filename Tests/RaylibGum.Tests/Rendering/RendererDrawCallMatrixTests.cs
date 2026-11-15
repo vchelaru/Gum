@@ -362,13 +362,16 @@ public class RendererDrawCallMatrixTests : BaseTestClass
 
         CountResult firstFrame = DrawAndCount();
         CountResult secondFrame = DrawAndCount();
+        CountResult thirdFrame = DrawAndCount();
 
         GumService.Default.Root.Children.Clear();
         UnloadTexture(texture);
 
         firstFrame.Count.ShouldBeGreaterThan(0, firstFrame.Diagnostics);
-        // Per-frame Reset means the count must not accumulate frame-over-frame.
-        secondFrame.Count.ShouldBe(firstFrame.Count, Diagnostics(firstFrame, secondFrame));
+        // Per-frame Reset means the count must not accumulate frame-over-frame. Frame 2 may be cheaper
+        // than frame 1: the shadow's blur is computed once and then cached (#7303).
+        secondFrame.Count.ShouldBeLessThanOrEqualTo(firstFrame.Count, Diagnostics(firstFrame, secondFrame));
+        thirdFrame.Count.ShouldBe(secondFrame.Count, Diagnostics(secondFrame, thirdFrame));
     }
 
     [Fact]
