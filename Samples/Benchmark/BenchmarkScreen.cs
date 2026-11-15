@@ -19,6 +19,8 @@ internal class BenchmarkScreen : FrameworkElement
     public const int NineSlicePairCount = 100;
 
     private readonly ListBox _listBox;
+    private readonly StackPanel _column;
+    private readonly List<GraphicalUiElement> _pairs = new List<GraphicalUiElement>();
 
     public BenchmarkScreen() : base(new ContainerRuntime())
     {
@@ -31,6 +33,7 @@ internal class BenchmarkScreen : FrameworkElement
         column.Visual.Width = 380;
         column.Visual.Height = 700;
         column.Visual.StackSpacing = 6;
+        _column = column;
         this.AddChild(column);
 
         var menu = new Menu();
@@ -101,12 +104,26 @@ internal class BenchmarkScreen : FrameworkElement
             nineSlice.Width = cellWidth - 4;
             nineSlice.Height = cellHeight - 4;
             this.AddChild(nineSlice);
+            _pairs.Add(nineSlice);
 
             var text = new TextRuntime();
             text.Text = i.ToString();
             text.X = nineSlice.X + 8;
             text.Y = nineSlice.Y + 8;
             this.AddChild(text);
+            _pairs.Add(text);
+        }
+    }
+
+    /// <summary>Shows only one region ("forms", "list", "pairs"; "empty" shows none; anything else shows all) so a run can attribute cost per region.</summary>
+    public void ShowOnly(string? region)
+    {
+        bool all = region is not ("forms" or "list" or "pairs" or "empty");
+        _column.Visual.Visible = all || region == "forms";
+        _listBox.Visual.Visible = all || region == "list";
+        foreach (GraphicalUiElement pair in _pairs)
+        {
+            pair.Visible = all || region == "pairs";
         }
     }
 

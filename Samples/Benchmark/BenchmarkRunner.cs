@@ -24,6 +24,15 @@ internal static class BenchmarkRunner
     public const int WarmupFrames = 30;
     public const int MeasuredFrames = 300;
 
+    /// <summary>A Debug build measures unoptimized code, not Gum, so a benchmark refuses to run in one.</summary>
+    public static void RequireRelease()
+    {
+#if DEBUG
+        Console.Error.WriteLine("Benchmark refused: this is a Debug build. Run: dotnet build -c Release, then the Release exe.");
+        Environment.Exit(2);
+#endif
+    }
+
     public static string Run(string runtimeName, BenchmarkScreen screen, Action<double> update, Action draw, Action sync,
         IGpuTimer? gpuTimer, string? outputPath)
     {

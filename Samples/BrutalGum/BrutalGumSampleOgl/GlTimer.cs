@@ -31,6 +31,12 @@ sealed unsafe class GlTimer : IGpuTimer
         _query = id;
     }
 
+    [UnmanagedFunctionPointer(CallingConvention.Winapi)] delegate IntPtr GetString(int name);
+
+    /// <summary>GL_RENDERER, so a run records which GPU (or software rasterizer) produced the numbers.</summary>
+    public static string Renderer(Func<string, IntPtr> getProc) =>
+        Marshal.PtrToStringAnsi(Marshal.GetDelegateForFunctionPointer<GetString>(getProc("glGetString"))(0x1F01)) ?? "unknown";
+
     public void Begin() => _begin(GL_TIME_ELAPSED, _query);
 
     public void End() => _end(GL_TIME_ELAPSED);
