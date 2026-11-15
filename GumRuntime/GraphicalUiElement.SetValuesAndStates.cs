@@ -455,7 +455,17 @@ public partial class GraphicalUiElement
                 // Children may not have been created yet
                 if (containedGue != null)
                 {
-                    containedGue.SetProperty(variable, value);
+                    // SetProperty reports the write under the exposed name, so the instance must not
+                    // report that name for this element as well (it would evaluate the rows twice).
+                    _exposedForwardDepth++;
+                    try
+                    {
+                        containedGue.SetProperty(variable, value);
+                    }
+                    finally
+                    {
+                        _exposedForwardDepth--;
+                    }
                 }
             }
         }
@@ -931,8 +941,38 @@ public partial class GraphicalUiElement
             {
                 audience |= ReferenceAudience.Container;
             }
+
+            // The container may expose this variable under its own name (IsMyButtonVisible for
+            // MyButton.Visible). That is the same value, so rows reading the exposed name follow a write
+            // through the instance. A write made through the exposed name is reported under it already.
+            if (container.mExposedVariables.Count > 0 && container._exposedForwardDepth == 0 &&
+                container.FindExposedNameOf(instance.Name, propertyName) is string exposedName &&
+                container.GetReferenceAudience(exposedName, forFormsProperty) != ReferenceAudience.None)
+            {
+                audience |= ReferenceAudience.ExposedName;
+            }
         }
         return audience;
+    }
+
+    // Greater than zero while this element forwards a write made through an exposed name to an instance.
+    private int _exposedForwardDepth;
+
+    // The name this element exposes instanceName.memberName under, or null. Allocates nothing.
+    private string? FindExposedNameOf(string instanceName, string memberName)
+    {
+        foreach (KeyValuePair<string, string> exposed in mExposedVariables)
+        {
+            string underlying = exposed.Value;
+            if (underlying.Length == instanceName.Length + 1 + memberName.Length
+                && underlying[instanceName.Length] == '.'
+                && string.CompareOrdinal(underlying, 0, instanceName, 0, instanceName.Length) == 0
+                && string.CompareOrdinal(underlying, instanceName.Length + 1, memberName, 0, memberName.Length) == 0)
+            {
+                return exposed.Key;
+            }
+        }
+        return null;
     }
 
     [Flags]
@@ -940,7 +980,8 @@ public partial class GraphicalUiElement
     {
         None = 0,
         Self = 1,
-        Container = 2
+        Container = 2,
+        ExposedName = 4
     }
 
     // The typed properties report their own changes so that code such as element.X = 5 updates the
@@ -1003,6 +1044,11 @@ public partial class GraphicalUiElement
         if ((audience & ReferenceAudience.Container) != 0)
         {
             QueueReferenceChange(mWhatContainsThis!, ((InstanceSave)Tag!).Name + "." + propertyName, value);
+        }
+        if ((audience & ReferenceAudience.ExposedName) != 0)
+        {
+            GraphicalUiElement container = mWhatContainsThis!;
+            container.ReportReferenceSourceChanged(container.FindExposedNameOf(((InstanceSave)Tag!).Name, propertyName)!, value);
         }
     }
 
