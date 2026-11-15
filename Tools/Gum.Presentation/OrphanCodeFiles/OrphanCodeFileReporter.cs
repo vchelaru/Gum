@@ -2,6 +2,7 @@ using CommunityToolkit.Mvvm.Input;
 using Gum.Commands;
 using Gum.DataTypes;
 using Gum.Managers;
+using Gum.ProjectServices;
 using Gum.ProjectServices.CodeGeneration;
 using Gum.Services;
 using Gum.Services.Dialogs;
@@ -22,12 +23,6 @@ namespace OrphanCodeFilePlugin;
 /// </summary>
 public class OrphanCodeFileReporter
 {
-    /// <summary>
-    /// Error code for an orphaned code file, registered in the docs registry so the Errors tab can
-    /// link to the explanation of what orphans are and why the scan is best effort.
-    /// </summary>
-    public const string ErrorCode = "GUM0005";
-
     private readonly IOrphanCodeFileScanService _scanService;
     private readonly IFileCommands _fileCommands;
     private readonly IDialogService _dialogService;
@@ -152,23 +147,27 @@ public class OrphanCodeFileReporter
     /// whose file has since vanished (deleted outside the tool) is left out, since the scan result
     /// is only a snapshot (#6167).
     /// </summary>
-    public IEnumerable<ErrorViewModel> CreateErrors() =>
-        _orphans.ToList().Where(orphan => orphan.FilePath.Exists()).Select(orphan =>
+    public IEnumerable<ErrorViewModel> CreateErrors()
+    {
+        List<OrphanCodeFile> existing = _orphans.ToList().Where(orphan => orphan.FilePath.Exists()).ToList();
+        List<ErrorResult> results = OrphanCodeFileErrors.Create(existing);
+        List<ErrorViewModel> errors = new List<ErrorViewModel>();
+        for (int i = 0; i < existing.Count; i++)
         {
+            OrphanCodeFile orphan = existing[i];
             Action? migrate = MigrateAction;
-            bool isMigratable = migrate != null && orphan.ElementName != null
-                && ObjectFinder.Self.GetElementSave(orphan.ElementName) != null;
-            return new ErrorViewModel
+            bool isMigratable = migrate != null && ((OrphanCodeFileDetails)results[i].Details!).ElementExists;
+            errors.Add(new ErrorViewModel
             {
-                Code = ErrorCode,
-                ElementName = orphan.ElementName ?? string.Empty,
-                Message = isMigratable
-                    ? $"{Capitalized(GetKindDescription(orphan.Kind))} left at an old path by a code settings change: {orphan.FilePath.FullPath}"
-                    : $"Orphaned {GetKindDescription(orphan.Kind)}, no matching element in the project: {orphan.FilePath.FullPath}",
+                Code = results[i].Code,
+                ElementName = results[i].ElementName,
+                Message = results[i].Message,
                 ActionName = isMigratable ? "Migrate Code Files" : "Delete File",
                 ActionCommand = isMigratable ? new RelayCommand(migrate!) : new RelayCommand(() => Resolve(orphan))
-            };
-        });
+            });
+        }
+        return errors;
+    }
 
     /// <summary>
     /// Moves an orphaned file to the Recycle Bin and drops it from <see cref="Orphans"/>. A generated
@@ -206,13 +205,4 @@ public class OrphanCodeFileReporter
         _orphans.Remove(orphan);
         OrphansChanged?.Invoke();
     }
-
-    private static string Capitalized(string text) => char.ToUpperInvariant(text[0]) + text.Substring(1);
-
-    private static string GetKindDescription(OrphanCodeFileKind kind) => kind switch
-    {
-        OrphanCodeFileKind.Generated => "generated code file",
-        OrphanCodeFileKind.CustomCode => "custom code file",
-        _ => "element code settings file"
-    };
 }

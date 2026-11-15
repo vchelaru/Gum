@@ -4,6 +4,7 @@ using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
 using Gum.Managers;
+using Gum.ProjectServices.CodeGeneration;
 using Gum.StateAnimation.SaveClasses;
 using GumRuntime;
 using RenderingLibrary.Graphics;
@@ -40,18 +41,21 @@ public partial class HeadlessErrorChecker : IHeadlessErrorChecker
     private readonly Dictionary<string, Type?> _enumTypesByName;
     // Shared across calls so a check doesn't re-list every directory an element references.
     private readonly IFileNameCaseChecker _caseChecker;
+    private readonly IOrphanCodeFileProvider? _orphanCodeFileProvider;
 
     public HeadlessErrorChecker(ITypeResolver typeResolver)
         : this(typeResolver, Array.Empty<IAdditionalErrorSource>())
     {
     }
 
-    public HeadlessErrorChecker(ITypeResolver typeResolver, IEnumerable<IAdditionalErrorSource> additionalErrorSources)
+    public HeadlessErrorChecker(ITypeResolver typeResolver, IEnumerable<IAdditionalErrorSource> additionalErrorSources,
+        IOrphanCodeFileProvider? orphanCodeFileProvider = null)
     {
         _typeResolver = typeResolver;
         _additionalErrorSources = new List<IAdditionalErrorSource>(additionalErrorSources);
         _enumTypesByName = new Dictionary<string, Type?>();
         _caseChecker = new FileNameCaseChecker();
+        _orphanCodeFileProvider = orphanCodeFileProvider;
     }
 
     // ObjectFinder.Self is the project of the current GumService (or the tool), which other threads keep
@@ -106,6 +110,7 @@ public partial class HeadlessErrorChecker : IHeadlessErrorChecker
             errors.AddRange(GetMissingComponentBaseTypeErrors(project));
             errors.AddRange(GetMissingBehaviorFileErrors(project, caseMismatchPaths));
             errors.AddRange(GetDuplicateReferenceErrors(project));
+            errors.AddRange(GetOrphanCodeFileErrors(project));
         }
         finally
         {
@@ -136,12 +141,21 @@ public partial class HeadlessErrorChecker : IHeadlessErrorChecker
             errors.AddRange(GetMissingComponentBaseTypeErrors(project));
             errors.AddRange(GetMissingBehaviorFileErrors(project, caseMismatchPaths));
             errors.AddRange(GetDuplicateReferenceErrors(project));
+            errors.AddRange(GetOrphanCodeFileErrors(project));
             return errors;
         }
         finally
         {
             ObjectFinder.Self.DisableCache();
         }
+    }
+
+    // GUM0005: code files no element accounts for. Only when the caller supplied a provider, since finding
+    // them walks the code output folder.
+    private List<ErrorResult> GetOrphanCodeFileErrors(GumProjectSave project)
+    {
+        OrphanCodeFileScanResult? scan = _orphanCodeFileProvider?.GetOrphans(project);
+        return scan == null ? new List<ErrorResult>() : OrphanCodeFileErrors.Create(scan.Orphans);
     }
 
     /// <summary>

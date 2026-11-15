@@ -294,3 +294,19 @@ public class KeyframeMissingAnimationDetails : ErrorDetails
     /// <summary>The missing animation, as the keyframe names it.</summary>
     public string MissingAnimationName { get; set; } = "";
 }
+
+/// <summary>GUM0005: a code file on disk that no element accounts for.</summary>
+public class OrphanCodeFileDetails : ErrorDetails
+{
+    /// <summary>The full path of the file.</summary>
+    public string FilePath { get; set; } = "";
+
+    /// <summary>Whether it is a generated file, a custom code file or an element code settings file.</summary>
+    public CodeGeneration.OrphanCodeFileKind Kind { get; set; }
+
+    /// <summary>
+    /// True when the element the file belongs to still exists, so the file was left at an old path by a code
+    /// settings change rather than orphaned by a deleted element.
+    /// </summary>
+    public bool ElementExists { get; set; }
+}
