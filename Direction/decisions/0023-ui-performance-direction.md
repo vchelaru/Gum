@@ -23,8 +23,9 @@ and `glFinish`, which are not UI cost. Draw time is the UI number.
 
 1. The target is sub-millisecond UI draw with a full redraw every frame. Skipping unchanged frames or
    replaying a retained recording is not the solution.
-2. Temporary textures and cached-layer render targets are not the performance fix. They add overhead and
-   hurt most when content changes. They are a last resort, used only if the maintainer says so.
+2. No temporary textures or cached-layer render targets, and no render caching of any kind yet (replayed
+   frames, textures, retained layers). It is considered only after every other option is exhausted, and
+   only if the maintainer says so.
 3. Gum draws directly to the back buffer, with no intermediary texture.
 4. Every layer is open to change: Gum, SkiaGum, the BRUTAL host, SkiaGameRendering and RichTextKit. "That
    is fixed overhead" is not an accepted answer. The 0.26 ms empty-scene draw is ours to fix.
@@ -33,15 +34,14 @@ and `glFinish`, which are not UI cost. Draw time is the UI number.
 6. Performance work is directed by the maintainer. No investigation starts without that direction.
    Measure first, in Release builds only, change one thing at a time, and record before and after numbers.
 7. Report honest numbers: draw time, not the frame column.
-8. Judge by the worst user-behavior case, not hardware hiccups or percentiles. The claim is the frame rate
-   while the user does the most demanding things: resizing the window, scrolling, editing text, anything
-   that makes much of the UI change. Caching that helps only unchanged frames does not count, because those
-   changes happen at unpredictable times and the rate must stay high through them.
+8. The number is the steady-state cost of rendering a full frame, every frame, with nothing skipped.
+   Layout is not part of it: layout results are already cached, and layout calls are reduced as a separate
+   effort.
 
 ## Consequences
 
 - Retained-mode and frame-skipping designs are ruled out as the answer, as are render-target layer caches
-  (last resort only).
+  (not allowed yet).
 - Fixes may land in SkiaGameRendering and RichTextKit, not only in this repo.
 - Open questions, not decided here: batching, and caching text blobs.
 - Out of scope for now: ListBox culling, the Width layout short-circuit, shader warm-up (#8053), and more
