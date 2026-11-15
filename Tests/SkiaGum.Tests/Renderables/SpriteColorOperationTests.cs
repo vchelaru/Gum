@@ -96,7 +96,8 @@ public class SpriteColorOperationTests
     {
         using SKSurface surface = SKSurface.Create(new SKImageInfo(4, 4, SKColorType.Rgba8888, SKAlphaType.Premul));
         surface.Canvas.Clear(new SKColor(10, 20, 30, 255));
-        surface.Canvas.DrawBitmap(source, 0, 0, paint);
+        using SKImage sourceImage = SKImage.FromBitmap(source);
+        surface.Canvas.DrawImage(sourceImage, 0, 0, new SKSamplingOptions(), paint);
         using SKImage image = surface.Snapshot();
         using SKBitmap readback = SKBitmap.FromImage(image);
         return readback.Bytes;
