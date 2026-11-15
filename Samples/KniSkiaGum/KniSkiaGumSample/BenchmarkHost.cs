@@ -14,6 +14,26 @@ internal static class BenchmarkHost
 
     private static FinishDelegate? _finish;
 
+    // KNI ships SDL2 as SDL2.dll on Windows, libSDL2-2.0.so.0 on Linux and libSDL2-2.0.0.dylib on macOS,
+    // so the plain name "SDL2" only resolves on Windows.
+    static BenchmarkHost()
+    {
+        NativeLibrary.SetDllImportResolver(typeof(BenchmarkHost).Assembly, (name, assembly, path) =>
+        {
+            if (name == "SDL2")
+            {
+                foreach (string candidate in new[] { "SDL2", "libSDL2-2.0.so.0", "libSDL2-2.0.0.dylib" })
+                {
+                    if (NativeLibrary.TryLoad(candidate, assembly, path, out IntPtr handle))
+                    {
+                        return handle;
+                    }
+                }
+            }
+            return IntPtr.Zero;
+        });
+    }
+
     public static void Finish()
     {
         _finish ??= Marshal.GetDelegateForFunctionPointer<FinishDelegate>(SDL_GL_GetProcAddress("glFinish"));

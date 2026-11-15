@@ -38,7 +38,7 @@ public class Game1 : Game
         _hidden = args.Contains("--hidden");
         // Resolved against the launch directory, which is where the caller expects the file.
         _benchmarkPath = _benchmark && benchmarkIndex + 1 < args.Length && !args[benchmarkIndex + 1].StartsWith("--")
-            ? Path.GetFullPath(args[benchmarkIndex + 1]) : null;
+            ? Path.GetFullPath(args[benchmarkIndex + 1]) : Path.GetFullPath("benchmark-result.md"); // the exe is WinExe, so stdout is invisible: with no path the row goes to benchmark-result.md in the launch directory
 
         _graphics = new GraphicsDeviceManager(this)
         {
