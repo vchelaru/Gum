@@ -177,6 +177,19 @@ public class DisplayScaleCanvasScenarioTests
         canvas.FramePresented += ObservePresentedFrame;
         try
         {
+            // The canvas and its cursor outlive each test, but SetTimeProvider restarts the clock at zero, so
+            // the previous test's last click can sit "in the future" at the same spot and read as a double
+            // click with this test's first click. A click well away from both points records a fresh last
+            // click on this test's clock first.
+            Point away = new Point(first.X + 100, first.Y + 100);
+            window.MouseMove(away, RawInputModifiers.None);
+            Step();
+            window.MouseDown(away, MouseButton.Left, RawInputModifiers.None);
+            Step();
+            window.MouseUp(away, MouseButton.Left, RawInputModifiers.None);
+            Step();
+            sawDoubleClick = false;
+
             window.MouseMove(first, RawInputModifiers.None);
             Step();
             window.MouseDown(first, MouseButton.Left, RawInputModifiers.None);
