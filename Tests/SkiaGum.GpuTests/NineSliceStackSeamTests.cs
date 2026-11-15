@@ -10,7 +10,7 @@ using System.Text;
 namespace SkiaGum.GpuTests;
 
 /// <summary>
-/// #8052: a scrollbar hands a ListBox fractional scroll positions, and stacked Forms NineSlices sit at fractional Y
+/// #8069: a scrollbar hands a ListBox fractional scroll positions, and stacked Forms NineSlices sit at fractional Y
 /// (a line height such as 30.698242). Adjacent items must never show a seam: no background through a touching
 /// edge, no pixel off the texture's palette (a blended hairline), no outline row doubled or missing, and no
 /// flicker between two scroll positions 0.05 px apart. Real Forms theme tiles (UISpriteSheet) and synthetic

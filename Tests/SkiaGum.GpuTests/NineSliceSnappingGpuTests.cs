@@ -7,7 +7,7 @@ using SkiaSharp;
 namespace SkiaGum.GpuTests;
 
 /// <summary>
-/// #8052: a NineSlice rounds each of its four edges to a whole device pixel (Nearest sampling). Real Forms theme
+/// #8069: a NineSlice rounds each of its four edges to a whole device pixel (Nearest sampling). Real Forms theme
 /// tiles on a GPU surface: nothing changes when the edges already sit on whole pixels, and at fractional edges only
 /// the rows and columns along the edges may change.
 /// </summary>

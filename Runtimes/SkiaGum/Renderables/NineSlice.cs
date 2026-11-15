@@ -289,7 +289,7 @@ public class NineSlice : RenderableShapeBase, IAnimatable, IAnimationChainRender
     /// <summary>Test hook: draws every section with its own DrawImage, as before the lattice fast path.</summary>
     internal bool DisableLatticeFastPath { get; set; }
 
-    /// <summary>Test hook: draws at the exact fractional edges, as before the edges were snapped to device pixels (#8052).</summary>
+    /// <summary>Test hook: draws at the exact fractional edges, as before the edges were snapped to device pixels (#8069).</summary>
     internal bool DisableDeviceSnapping { get; set; }
 
     // Up to nine sections, more when tiling; each DrawImage records itself.
@@ -349,7 +349,7 @@ public class NineSlice : RenderableShapeBase, IAnimatable, IAnimationChainRender
     // Nearest sampling picks a texel by where a pixel center falls, and a non-antialiased rectangle covers the pixels
     // whose centers it contains. At a fractional edge the two can disagree (a scroll position within a few thousandths
     // of a pixel of a tie covers a row the outline texel does not reach), so a one-texel outline vanishes for a frame
-    // and the line between two touching items loses or gains a pixel row (#8052). Each edge is therefore rounded to a
+    // and the line between two touching items loses or gains a pixel row (#8069). Each edge is therefore rounded to a
     // whole device pixel on its own, never position and size separately, so two items that share an edge round it to
     // the same pixel and cannot leave a gap or overlap.
     private static SKRect SnapToDevicePixels(SKCanvas canvas, SKRect rect)
