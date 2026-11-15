@@ -61,6 +61,13 @@ try
 
     if (benchmark)
     {
+        SkiaGum.Renderables.PerfAblation.StagesOn = Environment.GetEnvironmentVariable("PERDRAW_STAGES") == "1";
+        SkiaGum.Renderables.PerfAblation.ResetAtFrame = BenchmarkRunner.WarmupFrames;
+        if (Environment.GetEnvironmentVariable("PERDRAW_AFFINITY") is string benchAffinity)
+        {
+            Process.GetCurrentProcess().ProcessorAffinity = (IntPtr)Convert.ToInt64(benchAffinity, 16);
+            Console.WriteLine("affinity " + benchAffinity);
+        }
         BenchmarkRunner.RequireRelease();
         BenchmarkScreen benchmarkScreen = new BenchmarkScreen();
         benchmarkScreen.AddToRoot();
@@ -72,6 +79,7 @@ try
             update: seconds => GumUI.Update(seconds),
             draw: () =>
             {
+                SkiaGum.Renderables.PerfAblation.Start();
                 GlClear.ToColor(GetProc, 100 / 255f, 149 / 255f, 237 / 255f);
                 GumUI.Draw();
             },
@@ -81,6 +89,16 @@ try
                 glHost.Sync();
             },
             benchmarkPath);
+        if (SkiaGum.Renderables.PerfAblation.StagesOn)
+        {
+            int frames = BenchmarkRunner.MeasuredFrames;
+            string[] names = { "GlClear (sample)", "EnsureSize+BeginFrame", "Brutal->Renderer.Draw entry", "StartHostFrameRenderTargets", "canvas.Clear",
+                "(unused)", "ApplyCamera", "top PreRender walk+sort", "render walk (incl nested PreRender)", "RestoreCamera+ExitDrawScope", "target.End", "Present",
+                "bake: CollectReferenced walk", "bake: HasAnyRenderTarget walk", "bake: BakeRenderTargetsInSubtree", "bake: both walks again, same frame (warm)" };
+            for (int s = 0; s < 16; s++)
+                Console.WriteLine($"  stage {names[s],-40} {SkiaGum.Renderables.PerfAblation.StageTicks[s] * 1e3 / Stopwatch.Frequency / frames:F4} ms/frame");
+            Console.WriteLine($"  PreRender calls/frame {SkiaGum.Renderables.PerfAblation.PreRenderCalls / (double)frames:F0}  bake frames {SkiaGum.Renderables.PerfAblation.BakedCount} collect visits/frame {SkiaGum.Renderables.PerfAblation.CollectVisits / (double)frames:F0}   RenderOne calls/frame {SkiaGum.Renderables.PerfAblation.RenderCalls / (double)frames:F0}");
+        }
         return;
     }
 

@@ -197,6 +197,7 @@ namespace RenderingLibrary.Graphics
         // keeps earlier layers of the same frame.
         private void BeginHostFrame(SystemManagers managers)
         {
+            global::SkiaGum.Renderables.PerfAblation.Mark(2);
             if (_batchStartedHostFrame)
             {
                 _batchStartedHostFrame = false;
@@ -206,10 +207,12 @@ namespace RenderingLibrary.Graphics
                 StartHostFrameRenderTargets();
             }
 
+            global::SkiaGum.Renderables.PerfAblation.Mark(3);
             if (ClearsCanvas)
             {
                 managers.Canvas.Clear();
             }
+            global::SkiaGum.Renderables.PerfAblation.Mark(4);
         }
 
         /// <summary>
@@ -262,11 +265,14 @@ namespace RenderingLibrary.Graphics
             {
                 // Before the camera transform is applied to the screen canvas.
                 BakeRenderTargets(whatToRender, managers, layer);
+                global::SkiaGum.Renderables.PerfAblation.Mark(5);
 
                 ApplyCamera(managers.Canvas, layer, matrix: null);
                 try
                 {
+                    global::SkiaGum.Renderables.PerfAblation.Mark(6);
                     DrawList(whatToRender, managers, layer);
+                    global::SkiaGum.Renderables.PerfAblation.Mark(8);
                 }
                 finally
                 {
@@ -521,6 +527,7 @@ namespace RenderingLibrary.Graphics
                 PreRender(whatToRender);
             }
             layerToSort?.SortRenderables();
+            if (layerToSort != null) global::SkiaGum.Renderables.PerfAblation.Mark(7);
 
             var count = whatToRender.Count;
 
@@ -586,7 +593,9 @@ namespace RenderingLibrary.Graphics
             {
                 if (RenderUsingHierarchy)
                 {
-                    DrawList(renderable.Children, managers);
+                    // The top-level DrawList already pre-rendered the whole visible tree; pre-rendering again at
+                    // every depth called PreRender 4608 times a frame for 718 nodes in the benchmark scene.
+                    DrawList(renderable.Children, managers, prerender: global::SkiaGum.Renderables.PerfAblation.NestedPreRender);
                 }
 
                 if (renderable.ClipsChildren)
@@ -601,6 +610,7 @@ namespace RenderingLibrary.Graphics
         // Containers draw nothing, so sprites in separate containers still share a batch.
         private void RenderOne(IRenderableIpso renderable, SystemManagers managers)
         {
+            global::SkiaGum.Renderables.PerfAblation.RenderCalls++;
             IRenderableIpso inner = renderable is GraphicalUiElement element && element.RenderableComponent is IRenderableIpso contained
                 ? contained
                 : renderable;
@@ -626,6 +636,7 @@ namespace RenderingLibrary.Graphics
                 var renderable = renderables[i];
                 if (renderable.Visible)
                 {
+                    global::SkiaGum.Renderables.PerfAblation.PreRenderCalls++;
                     renderable.PreRender();
 
                     // Some Gum objects, like GraphicalUiElements, may not have children if the object hasn't
@@ -653,6 +664,7 @@ namespace RenderingLibrary.Graphics
                 var renderable = renderables[i];
                 if (renderable.Visible)
                 {
+                    global::SkiaGum.Renderables.PerfAblation.PreRenderCalls++;
                     renderable.PreRender();
 
                     // Some Gum objects, like GraphicalUiElements, may not have children if the object hasn't
@@ -735,6 +747,7 @@ namespace RenderingLibrary.Graphics
             for (int i = 0; i < renderables.Count; i++)
             {
                 IRenderableIpso renderable = renderables[i];
+                global::SkiaGum.Renderables.PerfAblation.CollectVisits++;
                 if (!renderable.Visible)
                 {
                     continue;
@@ -1025,9 +1038,21 @@ namespace RenderingLibrary.Graphics
         // bakes (#1643). Each bake swaps managers.Canvas to its own offscreen canvas and restores it.
         private void BakeRenderTargets(IList<IRenderableIpso> whatToRender, SystemManagers managers, Layer? layer)
         {
+            global::SkiaGum.Renderables.PerfAblation.Mark(5);
             CollectReferencedRenderTargets(whatToRender);
-            if (HasAnyRenderTarget(whatToRender))
+            global::SkiaGum.Renderables.PerfAblation.Mark(12);
+            bool perfHasAny = HasAnyRenderTarget(whatToRender);
+            global::SkiaGum.Renderables.PerfAblation.Mark(13);
+            if (global::SkiaGum.Renderables.PerfAblation.WalkTwice)
             {
+                _referencedRenderTargetOwners.Clear();
+                CollectReferencedRenderTargets(whatToRender);
+                HasAnyRenderTarget(whatToRender);
+                global::SkiaGum.Renderables.PerfAblation.Mark(15);
+            }
+            if (perfHasAny)
+            {
+                global::SkiaGum.Renderables.PerfAblation.BakedCount++;
                 // The zoom the layer will draw at, so the bake has one pixel per screen pixel.
                 float zoom = Camera.Zoom;
                 if (layer != null)
@@ -1035,6 +1060,7 @@ namespace RenderingLibrary.Graphics
                     layer.GetEffectiveCamera(Camera, out _, out _, out zoom);
                 }
                 BakeRenderTargetsInSubtree(whatToRender, managers, zoom > 0 ? zoom : 1);
+                global::SkiaGum.Renderables.PerfAblation.Mark(14);
             }
         }
 

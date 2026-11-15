@@ -20,6 +20,30 @@ public class RendererFrameLifecycleTests
         GraphicalUiElement.SetPropertyOnRenderable = CustomSetPropertyOnRenderable.SetPropertyOnRenderable;
     }
 
+    private sealed class PreRenderCounter : InvisibleRenderable
+    {
+        public int PreRenderCount;
+        public override void PreRender() => PreRenderCount++;
+    }
+
+    [Fact]
+    public void Draw_NestedChild_PreRendersOncePerFrame()
+    {
+        using SKSurface surface = SKSurface.Create(new SKImageInfo(32, 32));
+        GumService.Default.Initialize(surface.Canvas, 32, 32);
+        ContainerRuntime outer = new();
+        ContainerRuntime middle = new();
+        PreRenderCounter counter = new();
+        GraphicalUiElement leaf = new(counter);
+        middle.Children.Add(leaf);
+        outer.Children.Add(middle);
+        GumService.Default.Root.Children.Add(outer);
+
+        GumService.Default.Draw();
+
+        counter.PreRenderCount.ShouldBe(1);
+    }
+
     [Fact]
     public void Draw_ClearsCanvas_ErasesPreviousFramePixels()
     {

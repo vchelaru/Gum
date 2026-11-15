@@ -92,8 +92,10 @@ public partial class GumService : GumServiceSkiaInteractiveBase, IGumService
             _backend.WaitForGpu();
         }
 
+        global::SkiaGum.Renderables.PerfAblation.Mark(0);
         _targetHolder.EnsureSize(width, height);
         SKCanvas? canvas = _targetHolder.BeginFrame();
+        global::SkiaGum.Renderables.PerfAblation.Mark(1);
         IBrutalTarget? target = _targetHolder.Target;
         if (canvas == null || target == null)
         {
@@ -101,8 +103,11 @@ public partial class GumService : GumServiceSkiaInteractiveBase, IGumService
         }
 
         base.Draw();
+        global::SkiaGum.Renderables.PerfAblation.Mark(9);
         target.End();
+        global::SkiaGum.Renderables.PerfAblation.Mark(10);
         _backend.Present(target, _targetHolder.Width, _targetHolder.Height);
+        global::SkiaGum.Renderables.PerfAblation.Mark(11);
     }
 
     /// <summary>
