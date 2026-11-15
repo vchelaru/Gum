@@ -49,6 +49,16 @@ try
     // Demo the auto-fit helpers. Flip via the Zoom/Expand radios in the nav strip.
     GumUI.EnableZoomToWindow();
 
+    if (args.Contains("--perdraw"))
+    {
+        var host = new GumSamples.Benchmark.PerDrawRenderable();
+        host.Work = (sm, canvas) => GumSamples.Benchmark.PerDrawBench.Run(sm, canvas, "");
+        var gue = new Gum.Wireframe.GraphicalUiElement(host);
+        gue.AddToRoot();
+        for (int f = 0; f < 5 && host.Work != null; f++) { GumUI.Update(f / 60.0); GumUI.Draw(); window.SwapBuffers(); }
+        return;
+    }
+
     if (benchmark)
     {
         BenchmarkRunner.RequireRelease();
