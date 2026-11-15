@@ -1,4 +1,5 @@
 using Gum.ProjectServices;
+using Gum.ProjectServices.CodeGeneration;
 using Shouldly;
 using System.Text.Json;
 
@@ -62,6 +63,22 @@ public class CheckOrphanedCodeFilesTests : BaseTestClass
         CliTestHelper result = CliTestHelper.Run("check", gumxPath, "--json");
 
         result.StandardOutput.ShouldNotContain("GUM0005");
+    }
+
+    [Fact]
+    public void Check_CodeRootWithMoreFoldersThanTheScanLimit_ShouldWarnOnStandardErrorAndKeepTheExitCode()
+    {
+        string gumxPath = CreateProjectWithCodeSettings();
+        string manyFolders = Path.Combine(TempDirectory, "Many");
+        for (int i = 0; i <= OrphanCodeFileScanService.MaxCodeRootDirectories; i++)
+        {
+            Directory.CreateDirectory(Path.Combine(manyFolders, "d" + i));
+        }
+
+        CliTestHelper result = CliTestHelper.Run("check", gumxPath);
+
+        result.ExitCode.ShouldBe(0, customMessage: result.StandardOutput);
+        result.StandardError.ShouldContain("orphaned code file scan stopped");
     }
 
     [Fact]
