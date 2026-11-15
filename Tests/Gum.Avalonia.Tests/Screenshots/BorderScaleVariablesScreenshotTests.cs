@@ -14,7 +14,7 @@ namespace Gum.Avalonia.Tests.Screenshots;
 [Trait("Category", PrScreenshot.Category)]
 public class BorderScaleVariablesScreenshotTests
 {
-    [SkippableFact]
+    [Fact]
     public void BorderScaleLinked() => PrScreenshot.Run(() =>
     {
         using VariableGridHarness grid = new VariableGridHarness();
@@ -26,7 +26,7 @@ public class BorderScaleVariablesScreenshotTests
         PrScreenshot.SaveWindowAtZoomLevels(grid.Input.Window, "6983-border-scale-linked-zoomfix");
     });
 
-    [SkippableFact]
+    [Fact]
     public void BorderScaleBrokenApart() => PrScreenshot.Run(() =>
     {
         using VariableGridHarness grid = new VariableGridHarness();
@@ -48,7 +48,7 @@ public class BorderScaleVariablesScreenshotTests
         PrScreenshot.SaveWindowAtZoomLevels(grid.Input.Window, "6983-border-scale-broken-apart-zoomfix");
     });
 
-    [SkippableFact]
+    [Fact]
     public void CornerRadiusLinked() => PrScreenshot.Run(() =>
     {
         using VariableGridHarness grid = new VariableGridHarness();
@@ -60,7 +60,7 @@ public class BorderScaleVariablesScreenshotTests
         PrScreenshot.SaveWindowAtZoomLevels(grid.Input.Window, "6983-corner-radius-linked-zoomfix");
     });
 
-    [SkippableFact]
+    [Fact]
     public void CornerRadiusBrokenApart() => PrScreenshot.Run(() =>
     {
         using VariableGridHarness grid = new VariableGridHarness();

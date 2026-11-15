@@ -4,7 +4,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using Avalonia.Threading;
 using Gum.Diagnostics;
-using Tmds.DBus.Protocol;
 
 namespace Gum.Avalonia.Diagnostics;
 
@@ -63,7 +62,7 @@ public static class UnhandledExceptionHooks
     // and nothing the user can act on.
     internal static void ReportUnobservedTask(ICrashReporter reporter, AggregateException exception)
     {
-        bool isOnlyIgnorable = exception.Flatten().InnerExceptions.All(inner => inner is DBusException or IOException);
+        bool isOnlyIgnorable = exception.Flatten().InnerExceptions.All(inner => inner.GetType().Namespace == "Tmds.DBus.Protocol" || inner is IOException);
         if (isOnlyIgnorable)
         {
             reporter.LogRecoverable(exception, "Unobserved task");

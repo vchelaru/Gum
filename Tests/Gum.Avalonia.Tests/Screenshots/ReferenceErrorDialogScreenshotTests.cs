@@ -27,7 +27,7 @@ public class ReferenceErrorDialogScreenshotTests
         return label;
     }
 
-    [SkippableFact]
+    [Fact]
     public void BadLineTypedInTheTextbox() => PrScreenshot.Run(() =>
     {
         using VariableGridHarness grid = new VariableGridHarness();
@@ -41,10 +41,10 @@ public class ReferenceErrorDialogScreenshotTests
         }
     });
 
-    [SkippableFact]
+    [Fact]
     public void UnknownNameDialog() => ShowDialogFor("Text = Typo", "reference-dialog-unknown-name");
 
-    [SkippableFact]
+    [Fact]
     public void UnknownElementDialog() => ShowDialogFor("Width = Components/Nope.Width", "reference-dialog-unknown-element");
 
     private static void ShowDialogFor(string line, string name) => PrScreenshot.Run(() =>

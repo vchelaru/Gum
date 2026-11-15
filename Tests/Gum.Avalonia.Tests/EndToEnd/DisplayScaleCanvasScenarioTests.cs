@@ -19,10 +19,10 @@ namespace Gum.Avalonia.Tests.EndToEnd;
 [Trait("Category", "EndToEnd")]
 public class DisplayScaleCanvasScenarioTests
 {
-    [SkippableFact]
+    [Fact]
     public void EditorCanvas_At200Percent_ASecondClick8PixelsAway_IsADoubleClick()
     {
-        Skip.IfNot(CanvasHarness.CanRun, CanvasHarness.SkipReason);
+        Assert.SkipUnless(CanvasHarness.CanRun, CanvasHarness.SkipReason);
         CanvasHarness.OnUiThread(() =>
         {
             using CanvasHarness canvas = new CanvasHarness();
@@ -55,10 +55,10 @@ public class DisplayScaleCanvasScenarioTests
         });
     }
 
-    [SkippableFact]
+    [Fact]
     public void TextureCoordinatesCanvas_At200Percent_ASecondClick8PixelsAway_IsADoubleClick()
     {
-        Skip.IfNot(TextureCoordinateTabHarness.CanRun, TextureCoordinateTabHarness.SkipReason);
+        Assert.SkipUnless(TextureCoordinateTabHarness.CanRun, TextureCoordinateTabHarness.SkipReason);
         TextureCoordinateTabHarness.OnUiThread(() =>
         {
             using TextureCoordinateTabHarness tab = new TextureCoordinateTabHarness();
@@ -92,10 +92,10 @@ public class DisplayScaleCanvasScenarioTests
         });
     }
 
-    [SkippableFact]
+    [Fact]
     public void TextureCoordinatesCanvas_AnExtraFrameAfterTheSecondClick_StillReadsADoubleClick()
     {
-        Skip.IfNot(TextureCoordinateTabHarness.CanRun, TextureCoordinateTabHarness.SkipReason);
+        Assert.SkipUnless(TextureCoordinateTabHarness.CanRun, TextureCoordinateTabHarness.SkipReason);
         TextureCoordinateTabHarness.OnUiThread(() =>
         {
             using TextureCoordinateTabHarness tab = new TextureCoordinateTabHarness();
@@ -124,10 +124,10 @@ public class DisplayScaleCanvasScenarioTests
         });
     }
 
-    [SkippableFact]
+    [Fact]
     public void TextureCoordinatesCanvas_ASecondClickAfterTheDoubleClickWindow_IsNotADoubleClick()
     {
-        Skip.IfNot(TextureCoordinateTabHarness.CanRun, TextureCoordinateTabHarness.SkipReason);
+        Assert.SkipUnless(TextureCoordinateTabHarness.CanRun, TextureCoordinateTabHarness.SkipReason);
         TextureCoordinateTabHarness.OnUiThread(() =>
         {
             using TextureCoordinateTabHarness tab = new TextureCoordinateTabHarness();

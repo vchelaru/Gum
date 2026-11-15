@@ -19,7 +19,7 @@ namespace Gum.Avalonia.Tests.Screenshots;
 [Trait("Category", PrScreenshot.Category)]
 public class DebugOnlyElementScreenshotTests
 {
-    [SkippableFact]
+    [Fact]
     public void DebugOnlyRow() => PrScreenshot.Run(() =>
     {
         using CodeTabHarness code = new CodeTabHarness(projectFolder => File.WriteAllText(

@@ -296,7 +296,7 @@ public class DataUiGrid : UserControl, IDataUiGrid
         if (extentChangedWithoutScroll
             && _anchorRow != null
             && _anchorRow.IsVisible
-            && _anchorRow.GetVisualRoot() != null
+            && TopLevel.GetTopLevel(_anchorRow) != null
             && _anchorRow.TranslatePoint(new Point(0, 0), _categories) is Point anchorTop)
         {
             double desiredOffset = anchorTop.Y - _anchorViewportTop;
@@ -319,7 +319,7 @@ public class DataUiGrid : UserControl, IDataUiGrid
         double bestTop = double.MaxValue;
         foreach (SingleDataUiContainer container in _liveContainers)
         {
-            if (!container.IsVisible || container.GetVisualRoot() == null)
+            if (!container.IsVisible || TopLevel.GetTopLevel(container) == null)
             {
                 continue;
             }

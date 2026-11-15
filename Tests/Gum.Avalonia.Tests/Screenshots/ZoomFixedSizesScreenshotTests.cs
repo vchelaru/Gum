@@ -24,7 +24,7 @@ public class ZoomFixedSizesScreenshotTests
 {
     private static readonly double[] Sizes = { 6d, 12d, 24d };
 
-    [SkippableFact]
+    [Fact]
     public void MainWindowTabs() => PrScreenshot.Run(() =>
     {
         using ProjectTreeHarness tree = new ProjectTreeHarness();
@@ -60,7 +60,7 @@ public class ZoomFixedSizesScreenshotTests
         }
     });
 
-    [SkippableFact]
+    [Fact]
     public void AnimationsTab() => PrScreenshot.Run(() =>
     {
         using Animations.AnimationEditorHarness editor = new Animations.AnimationEditorHarness();
@@ -72,7 +72,7 @@ public class ZoomFixedSizesScreenshotTests
         SaveAtSizes(editor.Window, "animations");
     });
 
-    [SkippableFact]
+    [Fact]
     public void Dialogs() => PrScreenshot.Run(() =>
     {
         using ProjectTreeHarness tree = new ProjectTreeHarness();

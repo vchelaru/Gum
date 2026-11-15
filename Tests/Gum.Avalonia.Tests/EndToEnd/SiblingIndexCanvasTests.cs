@@ -17,10 +17,10 @@ namespace Gum.Avalonia.Tests.EndToEnd;
 [Trait("Category", "EndToEnd")]
 public class SiblingIndexCanvasTests
 {
-    [SkippableFact]
+    [Fact]
     public void Index_OfInstancesInTheShownElement_IsThePositionAmongSiblings()
     {
-        Skip.IfNot(CanvasHarness.CanRun, CanvasHarness.SkipReason);
+        Assert.SkipUnless(CanvasHarness.CanRun, CanvasHarness.SkipReason);
         CanvasHarness.OnUiThread(() =>
         {
             using CanvasHarness canvas = new CanvasHarness();
@@ -62,10 +62,10 @@ public class SiblingIndexCanvasTests
         return button;
     }
 
-    [SkippableFact]
+    [Fact]
     public void Reorder_OfAnIndexDrivenSibling_ReappliesTheirIndexRows()
     {
-        Skip.IfNot(CanvasHarness.CanRun, CanvasHarness.SkipReason);
+        Assert.SkipUnless(CanvasHarness.CanRun, CanvasHarness.SkipReason);
         CanvasHarness.OnUiThread(() =>
         {
             using CanvasHarness canvas = new CanvasHarness();
@@ -82,10 +82,10 @@ public class SiblingIndexCanvasTests
         });
     }
 
-    [SkippableFact]
+    [Fact]
     public void Delete_OfAnIndexDrivenSibling_ReappliesTheRemainingIndexRows()
     {
-        Skip.IfNot(CanvasHarness.CanRun, CanvasHarness.SkipReason);
+        Assert.SkipUnless(CanvasHarness.CanRun, CanvasHarness.SkipReason);
         CanvasHarness.OnUiThread(() =>
         {
             using CanvasHarness canvas = new CanvasHarness();
@@ -98,10 +98,10 @@ public class SiblingIndexCanvasTests
         });
     }
 
-    [SkippableFact]
+    [Fact]
     public void ParentChange_OfAnIndexDrivenSibling_ReappliesTheRemainingSiblingsIndexRows()
     {
-        Skip.IfNot(CanvasHarness.CanRun, CanvasHarness.SkipReason);
+        Assert.SkipUnless(CanvasHarness.CanRun, CanvasHarness.SkipReason);
         CanvasHarness.OnUiThread(() =>
         {
             using CanvasHarness canvas = new CanvasHarness();
@@ -118,10 +118,10 @@ public class SiblingIndexCanvasTests
         });
     }
 
-    [SkippableFact]
+    [Fact]
     public void Paste_OfAnIndexDrivenInstance_EvaluatesThePastedInstanceAtItsNewPosition()
     {
-        Skip.IfNot(CanvasHarness.CanRun, CanvasHarness.SkipReason);
+        Assert.SkipUnless(CanvasHarness.CanRun, CanvasHarness.SkipReason);
         CanvasHarness.OnUiThread(() =>
         {
             using CanvasHarness canvas = new CanvasHarness();
@@ -140,14 +140,14 @@ public class SiblingIndexCanvasTests
         });
     }
 
-    [SkippableTheory]
+    [Theory]
     [InlineData(false, false)]
     [InlineData(true, false)]
     [InlineData(false, true)]
     [InlineData(true, true)]
     public void AtIndexRow_AppliedThroughTheVariableReferenceReaction_ResolvesAgainstTheShownElement(bool inScreen, bool inHolder)
     {
-        Skip.IfNot(CanvasHarness.CanRun, CanvasHarness.SkipReason);
+        Assert.SkipUnless(CanvasHarness.CanRun, CanvasHarness.SkipReason);
         CanvasHarness.OnUiThread(() =>
         {
             using CanvasHarness canvas = new CanvasHarness();

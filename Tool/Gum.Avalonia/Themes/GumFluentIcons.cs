@@ -18,7 +18,7 @@ public static class GumFluentIcons
         new FluentIcon { Icon = icon, FontSize = size, Width = size, Height = size };
 
     /// <summary>An icon whose size follows <paramref name="size"/> (a font-size binding, say).</summary>
-    public static FluentIcon Create(Icon icon, IBinding size)
+    public static FluentIcon Create(Icon icon, BindingBase size)
     {
         FluentIcon result = new FluentIcon { Icon = icon };
         result.Bind(FluentIcon.FontSizeProperty, size);

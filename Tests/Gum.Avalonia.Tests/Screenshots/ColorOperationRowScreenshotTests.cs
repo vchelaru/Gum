@@ -12,7 +12,7 @@ namespace Gum.Avalonia.Tests.Screenshots;
 [Trait("Category", PrScreenshot.Category)]
 public class ColorOperationRowScreenshotTests
 {
-    [SkippableFact]
+    [Fact]
     public void ColorOperationRow_ForASprite() => PrScreenshot.Run(() =>
     {
         using VariableGridHarness grid = new VariableGridHarness();

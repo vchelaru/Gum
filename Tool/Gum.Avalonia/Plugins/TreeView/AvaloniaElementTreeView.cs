@@ -343,6 +343,7 @@ public sealed class AvaloniaElementTreeView : IElementTreeView
 
         _results.AddHandler(InputElement.PointerPressedEvent, (_, e) =>
         {
+            _resultPressEvent = e;
             _resultPressPoint = e.GetPosition(_results);
             _resultDragCandidate = SearchItemFrom(e.Source);
         }, RoutingStrategies.Tunnel);
@@ -366,13 +367,15 @@ public sealed class AvaloniaElementTreeView : IElementTreeView
                 return;
             }
             _resultDragCandidate = null;
-            StartResultDrag(e, candidate);
+            StartResultDrag(_resultPressEvent!, candidate);
         }, RoutingStrategies.Tunnel);
     }
 
     // A search result stands for an element, instance or behavior that may not be realized in the
     // tree, so it travels as a tag with no node behind it.
-    private static async void StartResultDrag(PointerEventArgs e, SearchItemViewModel item)
+    private PointerPressedEventArgs? _resultPressEvent;
+
+    private static async void StartResultDrag(PointerPressedEventArgs e, SearchItemViewModel item)
     {
         try
         {

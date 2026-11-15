@@ -41,7 +41,7 @@ public class SettingsWindowScreenshotTests
         (SettingsPageIds.CodeGeneration, "project-code-generation"),
     };
 
-    [SkippableFact]
+    [Fact]
     public void EveryPage_Dark() => PrScreenshot.Run(() =>
     {
         using ProjectTreeHarness tree = new ProjectTreeHarness();
@@ -55,7 +55,7 @@ public class SettingsWindowScreenshotTests
         }
     });
 
-    [SkippableFact]
+    [Fact]
     public void FirstPage_Light() => PrScreenshot.Run(() =>
     {
         using ProjectTreeHarness tree = new ProjectTreeHarness();
@@ -66,7 +66,7 @@ public class SettingsWindowScreenshotTests
         window.Save("settings-project-canvas-light");
     });
 
-    [SkippableTheory]
+    [Theory]
     [InlineData("Dark")]
     [InlineData("Light")]
     public void SearchMarksMatchingRows(string theme) => PrScreenshot.Run(() =>
@@ -80,7 +80,7 @@ public class SettingsWindowScreenshotTests
         PrScreenshot.SaveContactSheet(window.Window, $"settings-search-marks-{theme.ToLowerInvariant()}");
     });
 
-    [SkippableFact]
+    [Fact]
     public void CodeGeneration_Light()=> PrScreenshot.Run(() =>
     {
         using ProjectTreeHarness tree = new ProjectTreeHarness();
@@ -91,7 +91,7 @@ public class SettingsWindowScreenshotTests
         window.Save("settings-project-code-generation-light");
     });
 
-    [SkippableFact]
+    [Fact]
     public void CodeGeneration_ScrolledToTheEnd_Dark() => PrScreenshot.Run(() =>
     {
         using ProjectTreeHarness tree = new ProjectTreeHarness();
@@ -103,7 +103,7 @@ public class SettingsWindowScreenshotTests
         PrScreenshot.SaveWindowAtZoomLevels(window.Window, "settings-project-code-generation-end");
     });
 
-    [SkippableFact]
+    [Fact]
     public void CodeGeneration_LegacyLibrary_ShowsTheCollapsedAndExpandedLegacySection() => PrScreenshot.Run(() =>
     {
         using ProjectTreeHarness tree = new ProjectTreeHarness();
@@ -122,7 +122,7 @@ public class SettingsWindowScreenshotTests
         window.Save("settings-project-code-generation-legacy-expanded");
     });
 
-    [SkippableFact]
+    [Fact]
     public void CodeGeneration_WithFolders_ShowsWhereFilesResolve() => PrScreenshot.Run(() =>
     {
         using ProjectTreeHarness tree = new ProjectTreeHarness();
@@ -141,7 +141,7 @@ public class SettingsWindowScreenshotTests
         window.Save("settings-project-code-generation-resolves");
     });
 
-    [SkippableTheory]
+    [Theory]
     [InlineData(true)]
     [InlineData(false)]
     public void CodeGeneration_MarkGeneratedFolderRow_ShowsEnabledAndDisabled(bool dark) => PrScreenshot.Run(() =>
@@ -167,7 +167,7 @@ public class SettingsWindowScreenshotTests
         PrScreenshot.SaveWindowAtZoomLevels(window.Window, "settings-mark-generated-folder-disabled-" + theme);
     });
 
-    [SkippableFact]
+    [Fact]
     public void ProjectGeneral_Light() => PrScreenshot.Run(() =>
     {
         using ProjectTreeHarness tree = new ProjectTreeHarness();
@@ -178,7 +178,7 @@ public class SettingsWindowScreenshotTests
         PrScreenshot.SaveWindowAtZoomLevels(window.Window, "settings-project-general-light");
     });
 
-    [SkippableFact]
+    [Fact]
     public void ProjectGeneral_WithCustomBounds_Dark() => PrScreenshot.Run(() =>
     {
         using ProjectTreeHarness tree = new ProjectTreeHarness();
@@ -242,7 +242,7 @@ public class SettingsWindowScreenshotTests
         }
     }
 
-    [SkippableFact]
+    [Fact]
     public void Search_NarrowsThePageList() => PrScreenshot.Run(() =>
     {
         using ProjectTreeHarness tree = new ProjectTreeHarness();
@@ -253,7 +253,7 @@ public class SettingsWindowScreenshotTests
         window.Save("settings-search");
     });
 
-    [SkippableFact]
+    [Fact]
     public void WithoutAProject_ListsOnlyTheApplicationPages() => PrScreenshot.Run(() =>
     {
         SettingsDialogViewModel viewModel = TestAppBuilder.Services.GetRequiredService<SettingsDialogViewModel>();

@@ -16,7 +16,7 @@ namespace Gum.Avalonia.Tests.Screenshots;
 [Trait("Category", PrScreenshot.Category)]
 public class Gum0002ErrorRowScreenshotTests
 {
-    [SkippableFact]
+    [Fact]
     public void ErrorsTabWithGum0002Row() => PrScreenshot.Run(() =>
     {
         using ProjectTreeHarness tree = new ProjectTreeHarness();

@@ -45,10 +45,10 @@ public class HeadProcessTests
         text.ShouldContain("7000 ms");
     }
 
-    [SkippableFact]
+    [Fact]
     public async Task UnattendedRun_LoadsAProject_AndExitsOnceReady()
     {
-        Skip.IfNot(CanRunTheHead, SkipReason);
+        Assert.SkipUnless(CanRunTheHead, SkipReason);
         using ScratchProject scratch = ScratchProject.Create();
 
         // --exit-after is only the upper bound (#5170): the run ends once the project has loaded
@@ -62,10 +62,10 @@ public class HeadProcessTests
         File.Exists(Path.Combine(scratch.UserData, "GeneralSettings.xml")).ShouldBeTrue("the run's settings must be written under its own folder");
     }
 
-    [SkippableFact]
+    [Fact]
     public async Task UnattendedRun_NotReadyByExitAfter_FailsWithoutAScreenshot()
     {
-        Skip.IfNot(CanRunTheHead, SkipReason);
+        Assert.SkipUnless(CanRunTheHead, SkipReason);
         using ScratchProject scratch = ScratchProject.Create();
 
         // No startup loads plugins, the canvas and a project in 0.2 s.
@@ -76,10 +76,10 @@ public class HeadProcessTests
         File.Exists(scratch.Screenshot).ShouldBeFalse("a screenshot taken before the project loaded is the bug (#5170)");
     }
 
-    [SkippableFact]
+    [Fact]
     public async Task UnattendedRun_ZoomToFit_FramesContentFarFromTheOrigin()
     {
-        Skip.IfNot(CanRunTheHead, SkipReason);
+        Assert.SkipUnless(CanRunTheHead, SkipReason);
         using ScratchProject scratch = ScratchProject.Create();
         // A 200x100 rectangle at (2400, 1600): far outside the default top-left view (#5142).
         scratch.AddScreen("FarScreen", "RectangleInstance", "Rectangle", x: 2400, y: 1600, width: 200, height: 100);
@@ -103,10 +103,10 @@ public class HeadProcessTests
         File.Exists(scratch.Screenshot).ShouldBeTrue();
     }
 
-    [SkippableFact]
+    [Fact]
     public async Task RebuildFontsWithoutAProject_ReportsUsageAndFails()
     {
-        Skip.IfNot(CanRunTheHead, SkipReason);
+        Assert.SkipUnless(CanRunTheHead, SkipReason);
         using ScratchProject scratch = ScratchProject.Create();
 
         HeadRun run = await RunHead("--user-data", scratch.UserData, "--rebuildfonts");
@@ -117,12 +117,12 @@ public class HeadProcessTests
     }
 
     // The tool's device caps texture size; a sprite whose image is within the 8192 px cap must load (#6838).
-    [SkippableTheory]
+    [Theory]
     [InlineData(5000)]
     [InlineData(8192)]
     public async Task UnattendedRun_SpriteWithATextureUpTo8192Pixels_LoadsWithoutAnError(int textureWidth)
     {
-        Skip.IfNot(CanRunTheHead, SkipReason);
+        Assert.SkipUnless(CanRunTheHead, SkipReason);
         using ScratchProject scratch = ScratchProject.Create();
         scratch.AddSpriteScreen("BigTextureScreen", "SpriteInstance", "BigTexture.png", textureWidth, 8);
 
@@ -134,10 +134,10 @@ public class HeadProcessTests
     }
 
     // Above the cap the sprite cannot load, and the error names the file and the limit instead of failing silently (#6838).
-    [SkippableFact]
+    [Fact]
     public async Task UnattendedRun_SpriteWithATextureOver8192Pixels_ReportsTheLimit()
     {
-        Skip.IfNot(CanRunTheHead, SkipReason);
+        Assert.SkipUnless(CanRunTheHead, SkipReason);
         using ScratchProject scratch = ScratchProject.Create();
         scratch.AddSpriteScreen("BigTextureScreen", "SpriteInstance", "BigTexture.png", 8193, 8);
 
@@ -152,12 +152,12 @@ public class HeadProcessTests
     // Taskbar tools that close windows (7+ Taskbar Tweaker's middle-click Close) post SC_CLOSE only
     // when Close is enabled in the window's system menu, and Avalonia greys it for a window that draws
     // into its title bar, again on every maximize and restore (#7499).
-    [SkippableFact]
+    [Fact]
     [System.Runtime.Versioning.SupportedOSPlatform("windows")]
     public async Task MainWindow_SystemMenuClose_StaysEnabledAndClosesTheWindow()
     {
-        Skip.IfNot(OperatingSystem.IsWindows(), "the system menu is Windows-only");
-        Skip.IfNot(CanRunTheHead, SkipReason);
+        Assert.SkipUnless(OperatingSystem.IsWindows(), "the system menu is Windows-only");
+        Assert.SkipUnless(CanRunTheHead, SkipReason);
         using ScratchProject scratch = ScratchProject.Create();
 
         // No --exit-after: an unattended run exits as soon as the project has loaded.

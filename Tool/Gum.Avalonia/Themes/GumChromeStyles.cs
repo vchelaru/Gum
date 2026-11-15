@@ -504,7 +504,7 @@ public static class GumChromeStyles
     // The WPF SubmenuItemTemplate's check: a 13px box in the text color, crossed when checked.
     private static Control CheckGlyph(bool checkedMark)
     {
-        IBinding foreground = new Binding(nameof(MenuItem.Foreground))
+        BindingBase foreground = new Binding(nameof(MenuItem.Foreground))
         {
             RelativeSource = new RelativeSource(RelativeSourceMode.FindAncestor) { AncestorType = typeof(MenuItem) },
         };
@@ -721,13 +721,13 @@ public static class GumChromeStyles
     private static ScaleTransform FollowsFontSize(Control source)
     {
         ScaleTransform transform = new ScaleTransform();
-        IBinding scale = new Binding(nameof(TemplatedControl.FontSize)) { Source = source, Converter = FontSizeToScale };
+        BindingBase scale = new Binding(nameof(TemplatedControl.FontSize)) { Source = source, Converter = FontSizeToScale };
         transform.Bind(ScaleTransform.ScaleXProperty, scale);
         transform.Bind(ScaleTransform.ScaleYProperty, scale);
         return transform;
     }
 
-    private static IBinding FontSizeTimes(Control source, double factor) =>
+    private static BindingBase FontSizeTimes(Control source, double factor) =>
         new Binding(nameof(TemplatedControl.FontSize)) { Source = source, Converter = new FuncValueConverter<double, double>(size => size * factor) };
-    private static IBinding Resource(string key) => new DynamicResourceExtension(key);
+    private static BindingBase Resource(string key) => new DynamicResourceExtension(key);
 }

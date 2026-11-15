@@ -13,13 +13,13 @@ namespace Gum.Avalonia.Tests.Screenshots;
 [Trait("Category", PrScreenshot.Category)]
 public class ContainerStructureVariablesScreenshotTests
 {
-    [SkippableFact]
+    [Fact]
     public void ItemsControlInstance_VariablesTab() => SaveVariablesTab("ItemsControlInstance", "Controls/ItemsControl", "items-control");
 
-    [SkippableFact]
+    [Fact]
     public void WindowInstance_VariablesTab() => SaveVariablesTab("WindowInstance", "Controls/Window", "window");
 
-    [SkippableFact]
+    [Fact]
     public void PanelInstance_VariablesTab() => SaveVariablesTab("PanelInstance", "Controls/Panel", "panel");
 
     private static void SaveVariablesTab(string instanceName, string type, string fileName) => PrScreenshot.Run(() =>

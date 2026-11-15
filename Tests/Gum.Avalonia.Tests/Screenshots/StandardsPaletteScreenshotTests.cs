@@ -18,7 +18,7 @@ namespace Gum.Avalonia.Tests.Screenshots;
 [Trait("Category", PrScreenshot.Category)]
 public class StandardsPaletteScreenshotTests
 {
-    [SkippableFact]
+    [Fact]
     public void StandardsPalette() => PrScreenshot.Run(() =>
     {
         using ProjectTreeHarness tree = new ProjectTreeHarness();
@@ -27,7 +27,7 @@ public class StandardsPaletteScreenshotTests
         PrScreenshot.SaveWindow(tree.Input.Window, "standards-palette");
     });
 
-    [SkippableFact]
+    [Fact]
     public void StandardsPaletteAtZoomLevels() => PrScreenshot.Run(() =>
     {
         using ProjectTreeHarness tree = new ProjectTreeHarness();

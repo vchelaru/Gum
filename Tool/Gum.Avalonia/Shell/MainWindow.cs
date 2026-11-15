@@ -184,7 +184,7 @@ public sealed class MainWindow : Window, IRecipient<CloseMainWindowMessage>
                 WindowsSystemMenuClose.KeepEnabled(this);
             }
             ExtendClientAreaToDecorationsHint = true;
-            ExtendClientAreaChromeHints = ExtendClientAreaChromeHints.PreferSystemChrome;
+            WindowDecorations = WindowDecorations.Full;
             this.Bind(ExtendClientAreaTitleBarHeightHintProperty, ScaledWithFont(TitleBarHeight));
         }
 

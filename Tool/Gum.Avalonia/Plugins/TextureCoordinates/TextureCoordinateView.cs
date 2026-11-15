@@ -43,7 +43,7 @@ public sealed class TextureCoordinateView : DockPanel, ITextureCoordinateView
             MouseUp?.Invoke(e.ToGumMouseEventArgs(_canvasControl, e.GetCurrentPoint(_canvasControl).Properties.PointerUpdateKind));
         _canvasControl.PointerWheelChanged += HandleCanvasPointerWheelChanged;
         _canvasControl.AttachedToVisualTree += (_, _) => AvaloniaMouseMapping.EnableTouchpadDetection(_canvasControl);
-        Gestures.AddPointerTouchPadGestureMagnifyHandler(_canvasControl, HandleCanvasPinch);
+        _canvasControl.AddHandler(InputElement.PointerTouchPadGestureMagnifyEvent, HandleCanvasPinch);
 
         VerticalScrollBarControl = new ScrollBar { Orientation = Orientation.Vertical, AllowAutoHide = false };
         HorizontalScrollBarControl = new ScrollBar { Orientation = Orientation.Horizontal, AllowAutoHide = false };

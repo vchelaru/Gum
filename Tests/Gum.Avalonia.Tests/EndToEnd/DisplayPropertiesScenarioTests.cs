@@ -393,7 +393,7 @@ public class DisplayPropertiesScenarioTests
         (GraphicalUiElement.CanvasWidth, GraphicalUiElement.CanvasHeight).ShouldBe((1024f, 600f), "the canvas size applies at once");
     }
 
-    [SkippableFact]
+    [Fact]
     [Trait("Feature", "PROP-003")]
     [Trait("Feature", "PROP-004")]
     [Trait("Feature", "PROP-005")]
@@ -848,7 +848,7 @@ public class DisplayPropertiesScenarioTests
         tree.AssertOracles();
     }
 
-    [SkippableFact]
+    [Fact]
     [Trait("Feature", "PAL-005")]
     public void ChipDroppedOnTheCanvas_AddsThatStandardWhereItFell()
     {
@@ -952,7 +952,7 @@ public class DisplayPropertiesScenarioTests
 
     private static void OnCanvas(Action<CanvasHarness> scenario)
     {
-        Skip.IfNot(CanvasHarness.CanRun, CanvasHarness.SkipReason);
+        Assert.SkipUnless(CanvasHarness.CanRun, CanvasHarness.SkipReason);
         CanvasHarness.OnUiThread(() =>
         {
             using CanvasHarness canvas = new CanvasHarness();

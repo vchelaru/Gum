@@ -12,7 +12,7 @@ namespace Gum.Avalonia.Tests.Screenshots;
 [Trait("Category", PrScreenshot.Category)]
 public class UnreadableCodeSettingsScreenshotTests
 {
-    [SkippableFact]
+    [Fact]
     public void UnreadableCodeSettings() => PrScreenshot.Run(() =>
     {
         using CodeTabHarness code = new CodeTabHarness(projectFolder => File.WriteAllText(

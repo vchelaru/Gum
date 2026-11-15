@@ -35,7 +35,7 @@ public class CanvasMenuAndToolbarScenarioTests
 
     #region Right-click menu
 
-    [SkippableFact]
+    [Fact]
     [Trait("Feature", "CANV-015")]
     [Trait("Feature", "CANV-031")]
     [Trait("Feature", "CANV-032")]
@@ -115,7 +115,7 @@ public class CanvasMenuAndToolbarScenarioTests
         });
     }
 
-    [SkippableFact]
+    [Fact]
     [Trait("Feature", "CANV-036")]
     [Trait("Feature", "CANV-037")]
     public void RightClickMenu_AddsAStandardChildOrAFavoritedComponent_ToTheInstance()
@@ -159,7 +159,7 @@ public class CanvasMenuAndToolbarScenarioTests
 
     #region Toolbar
 
-    [SkippableFact]
+    [Fact]
     public void GridSize_PickingAPresetFromTheToolbar_SavesThatGridSize()
     {
         OnCanvas(canvas =>
@@ -173,7 +173,7 @@ public class CanvasMenuAndToolbarScenarioTests
         });
     }
 
-    [SkippableFact]
+    [Fact]
     [Trait("Feature", "CANV-017")]
     [Trait("Feature", "CANV-018")]
     [Trait("Feature", "CANV-019")]
@@ -215,7 +215,7 @@ public class CanvasMenuAndToolbarScenarioTests
         });
     }
 
-    [SkippableFact]
+    [Fact]
     [Trait("Feature", "CANV-014")]
     [Trait("Feature", "CANV-018")]
     public void SnapToGrid_OnAPolygonOffTheGrid_LandsTheDraggedPointOnTheGrid_AndMovesLandThePolygonOnTheGrid()
@@ -252,7 +252,7 @@ public class CanvasMenuAndToolbarScenarioTests
         });
     }
 
-    [SkippableFact]
+    [Fact]
     [Trait("Feature", "CANV-014")]
     [Trait("Feature", "CANV-018")]
     public void SnapToGrid_ScalingAPolygonFromItsHandles_SavesCleanValues()
@@ -291,7 +291,7 @@ public class CanvasMenuAndToolbarScenarioTests
         });
     }
 
-    [SkippableFact]
+    [Fact]
     public void SnapToGridNote_FollowsTheUnitsAsTheyAreEdited_NotTheEditBefore()
     {
         OnCanvas(canvas =>
@@ -319,7 +319,7 @@ public class CanvasMenuAndToolbarScenarioTests
         });
     }
 
-    [SkippableFact]
+    [Fact]
     [Trait("Feature", "CANV-024")]
     [Trait("Feature", "CANV-025")]
     [Trait("Feature", "CANV-030")]
@@ -403,7 +403,7 @@ public class CanvasMenuAndToolbarScenarioTests
         });
     }
 
-    [SkippableFact]
+    [Fact]
     [Trait("Feature", "CANV-040")]
     public void FocusOnSelection_FHotkeyAndTreeDoubleClick_CenterTheSelectedInstance_ZoomingInPast100Percent()
     {
@@ -460,7 +460,7 @@ public class CanvasMenuAndToolbarScenarioTests
 
     #region Resizing
 
-    [SkippableFact]
+    [Fact]
     [Trait("Feature", "CANV-010")]
     [Trait("Feature", "CANV-011")]
     [Trait("Feature", "CANV-016")]
@@ -526,7 +526,7 @@ public class CanvasMenuAndToolbarScenarioTests
 
     #region What the canvas shows
 
-    [SkippableFact]
+    [Fact]
     [Trait("Feature", "CANV-004")]
     [Trait("Feature", "CANV-041")]
     [Trait("Feature", "CANV-042")]
@@ -577,7 +577,7 @@ public class CanvasMenuAndToolbarScenarioTests
         });
     }
 
-    [SkippableFact]
+    [Fact]
     public void MissingSinglePixelTextureFile_FallsBackToTheWhitePixel_SoFillsStillDraw()
     {
         OnCanvas(canvas =>
@@ -657,7 +657,7 @@ public class CanvasMenuAndToolbarScenarioTests
 
     #region Preview
 
-    [SkippableFact]
+    [Fact]
     [Trait("Feature", "CANV-026")]
     public void PreviewButton_LaunchesThePreviewOnce_ThenFollowsTheSelection()
     {
@@ -712,7 +712,7 @@ public class CanvasMenuAndToolbarScenarioTests
         });
     }
 
-    [SkippableFact]
+    [Fact]
     [Trait("Feature", "CANV-026")]
     public void ClosingTheTool_ClosesTheRunningPreview()
     {
@@ -748,7 +748,7 @@ public class CanvasMenuAndToolbarScenarioTests
         });
     }
 
-    [SkippableFact]
+    [Fact]
     [Trait("Feature", "CANV-044")]
     public void PinButton_KeepsThePreviewOnItsElement_UntilUnpinned()
     {
@@ -789,7 +789,7 @@ public class CanvasMenuAndToolbarScenarioTests
 
     private static void OnCanvas(Action<CanvasHarness> scenario)
     {
-        Skip.IfNot(CanvasHarness.CanRun, CanvasHarness.SkipReason);
+        Assert.SkipUnless(CanvasHarness.CanRun, CanvasHarness.SkipReason);
         CanvasHarness.OnUiThread(() =>
         {
             using CanvasHarness canvas = new CanvasHarness();

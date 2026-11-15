@@ -14,10 +14,10 @@ namespace Gum.Avalonia.Tests.Screenshots;
 [Trait("Category", PrScreenshot.Category)]
 public class InheritedCategorySetByScreenshotTests
 {
-    [SkippableFact]
+    [Fact]
     public void Light() => PrScreenshot.Run(() => Capture(ThemeVariant.Light, "7657-inherited-set-by-light"));
 
-    [SkippableFact]
+    [Fact]
     public void Dark() => PrScreenshot.Run(() => Capture(ThemeVariant.Dark, "7657-inherited-set-by-dark"));
 
     private static void Capture(ThemeVariant theme, string name)

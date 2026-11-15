@@ -14,7 +14,7 @@ namespace Gum.Avalonia.Tests.Screenshots;
 [Trait("Category", PrScreenshot.Category)]
 public class GeneralSettingsScreenshotTests
 {
-    [SkippableTheory]
+    [Theory]
     [InlineData(true, true)]
     [InlineData(false, true)]
     [InlineData(true, false)]
@@ -45,7 +45,7 @@ public class GeneralSettingsScreenshotTests
         }
     });
 
-    [SkippableTheory]
+    [Theory]
     [InlineData(true)]
     [InlineData(false)]
     public void GeneralPageWithSearch(bool dark) => PrScreenshot.Run(() =>

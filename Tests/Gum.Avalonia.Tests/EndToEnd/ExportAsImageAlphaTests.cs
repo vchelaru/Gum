@@ -18,13 +18,13 @@ public class ExportAsImageAlphaTests
 {
     private static IServiceProvider Services => TestAppBuilder.Services;
 
-    [SkippableTheory]
+    [Theory]
     [InlineData(false)]
     [InlineData(true)]
     [Trait("Feature", "FILE-007")]
     public void ExportAsImage_TranslucentElements_WriteStraightAlphaPng(bool premultiplied)
     {
-        Skip.IfNot(CanvasHarness.CanRun, CanvasHarness.SkipReason);
+        Assert.SkipUnless(CanvasHarness.CanRun, CanvasHarness.SkipReason);
         CanvasHarness.OnUiThread(() =>
         {
             // Set before anything loads, so textures and fonts are premultiplied on load.

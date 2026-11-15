@@ -12,7 +12,7 @@ namespace Gum.Avalonia.Tests.Screenshots;
 [Trait("Category", PrScreenshot.Category)]
 public class CompositeColorBarScreenshotTests
 {
-    [SkippableFact]
+    [Fact]
     public void CompositeRowsColorBar() => PrScreenshot.Run(() =>
     {
         using VariableGridHarness grid = new VariableGridHarness();

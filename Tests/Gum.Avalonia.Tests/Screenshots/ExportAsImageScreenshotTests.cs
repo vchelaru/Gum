@@ -14,10 +14,10 @@ namespace Gum.Avalonia.Tests.Screenshots;
 [Trait("Category", PrScreenshot.Category)]
 public class ExportAsImageScreenshotTests
 {
-    [SkippableFact]
+    [Fact]
     public void ExportedImage() => PrScreenshot.Run(() =>
     {
-        Skip.IfNot(CanvasHarness.CanRun, CanvasHarness.SkipReason);
+        Assert.SkipUnless(CanvasHarness.CanRun, CanvasHarness.SkipReason);
         using CanvasHarness canvas = new CanvasHarness();
         // The project's Show Outlines setting; a Container has no outline without it.
         GraphicalUiElement.ShowLineRectangles = true;

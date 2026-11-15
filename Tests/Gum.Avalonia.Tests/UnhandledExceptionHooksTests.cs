@@ -63,7 +63,7 @@ public class UnhandledExceptionHooksTests
     public void UnobservedTask_DBusFault_IsLoggedWithoutTellingTheUser()
     {
         Mock<ICrashReporter> reporter = new Mock<ICrashReporter>();
-        AggregateException fault = new AggregateException(new DBusException(
+        AggregateException fault = new AggregateException(new DBusErrorReplyException(
             "org.freedesktop.DBus.Error.ServiceUnknown",
             "The name com.canonical.AppMenu.Registrar was not provided by any .service files"));
 
@@ -93,7 +93,7 @@ public class UnhandledExceptionHooksTests
     {
         Mock<ICrashReporter> reporter = new Mock<ICrashReporter>();
         AggregateException fault = new AggregateException(
-            new DBusException("org.freedesktop.DBus.Error.ServiceUnknown", "missing"),
+            new DBusErrorReplyException("org.freedesktop.DBus.Error.ServiceUnknown", "missing"),
             new InvalidOperationException("from Gum"));
 
         UnhandledExceptionHooks.ReportUnobservedTask(reporter.Object, fault);

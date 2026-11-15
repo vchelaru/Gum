@@ -25,7 +25,7 @@ namespace Gum.Avalonia.Tests.Screenshots;
 [Trait("Category", PrScreenshot.Category)]
 public class CategoryAllStatesScreenshotTests
 {
-    [SkippableFact]
+    [Fact]
     public void CategoryVariablesAtZoomLevels() => PrScreenshot.Run(() =>
     {
         using ProjectTreeHarness tree = new ProjectTreeHarness();

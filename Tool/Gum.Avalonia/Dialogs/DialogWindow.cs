@@ -1,3 +1,4 @@
+using Avalonia.Input.Platform;
 using System;
 using System.Linq;
 using Avalonia;
@@ -139,7 +140,7 @@ public sealed class DialogWindow : Window
         ShowInTaskbar = false;
         // The WPF DialogWindow's chrome: no system frame, a rounded bordered surface, and the title
         // as a bold caption row that drags the window.
-        SystemDecorations = SystemDecorations.None;
+        WindowDecorations = WindowDecorations.None;
         TransparencyLevelHint = new[] { WindowTransparencyLevel.Transparent };
         Background = Brushes.Transparent;
         if (GetDialogTitle(content) is { } fixedTitle)
@@ -317,7 +318,7 @@ public sealed class DialogWindow : Window
 
     private bool IsCopyGesture(KeyEventArgs e)
     {
-        if (PlatformSettings?.HotkeyConfiguration.Copy is { Count: > 0 } gestures)
+        if (this.GetPlatformSettings()?.HotkeyConfiguration.Copy is { Count: > 0 } gestures)
         {
             return gestures.Any(gesture => gesture.Matches(e));
         }

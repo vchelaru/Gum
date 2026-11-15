@@ -30,10 +30,10 @@ public class AvaloniaRecycleBinServiceMacOSTests : IDisposable
         Directory.Delete(_folder, recursive: true);
     }
 
-    [SkippableFact]
+    [Fact]
     public void MoveToRecycleBin_OnMacOS_RemovesTheFileFromItsFolder()
     {
-        Skip.IfNot(OperatingSystem.IsMacOS(), SkipReason);
+        Assert.SkipUnless(OperatingSystem.IsMacOS(), SkipReason);
         string path = Path.Combine(_folder, "Trash Me.gucx");
         File.WriteAllText(path, "<ComponentSave />");
 
@@ -42,10 +42,10 @@ public class AvaloniaRecycleBinServiceMacOSTests : IDisposable
         File.Exists(path).ShouldBeFalse();
     }
 
-    [SkippableFact]
+    [Fact]
     public void MoveToRecycleBin_OnMacOS_WithAMissingFile_TrashesTheRestAndThrowsIOException()
     {
-        Skip.IfNot(OperatingSystem.IsMacOS(), SkipReason);
+        Assert.SkipUnless(OperatingSystem.IsMacOS(), SkipReason);
         string missing = Path.Combine(_folder, "Missing.gucx");
         string present = Path.Combine(_folder, "Present.gucx");
         File.WriteAllText(present, "<ComponentSave />");
@@ -57,11 +57,11 @@ public class AvaloniaRecycleBinServiceMacOSTests : IDisposable
         File.Exists(present).ShouldBeFalse();
     }
 
-    [SkippableFact]
+    [Fact]
     [SupportedOSPlatform("macos")]
     public void MoveToTrash_OnMacOS_PutsTheFileInTheTrash()
     {
-        Skip.IfNot(OperatingSystem.IsMacOS(), SkipReason);
+        Assert.SkipUnless(OperatingSystem.IsMacOS(), SkipReason);
         string path = Path.Combine(_folder, "In The Trash.gucx");
         File.WriteAllText(path, "<ComponentSave />");
 

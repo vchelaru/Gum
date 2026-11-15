@@ -15,7 +15,7 @@ public class TextureCoordinateReferenceLockTests
 {
     #region Pinned exposure behavior
 
-    [SkippableFact]
+    [Fact]
     public void AnInstanceExposingOnlyTop_ADragMovesOnlyTop()
     {
         OnTab(tab =>
@@ -44,7 +44,7 @@ public class TextureCoordinateReferenceLockTests
 
     #region Direct sprite
 
-    [SkippableFact]
+    [Fact]
     public void ALeftSetByAReference_ABodyDragMovesOnlyTheFreeCoordinates_AndNeverSnapsBack()
     {
         OnTab(tab =>
@@ -64,7 +64,7 @@ public class TextureCoordinateReferenceLockTests
         });
     }
 
-    [SkippableFact]
+    [Fact]
     public void ALeftSetByAReference_MatchesWhatAnUnexposedLeftDoes()
     {
         OnTab(tab =>
@@ -99,7 +99,7 @@ public class TextureCoordinateReferenceLockTests
         });
     }
 
-    [SkippableFact]
+    [Fact]
     public void AWidthSetByAReference_DraggingTheRightEdgeDoesNotResizeIt_ButTheHeightStillResizes()
     {
         OnTab(tab =>
@@ -118,7 +118,7 @@ public class TextureCoordinateReferenceLockTests
         });
     }
 
-    [SkippableFact]
+    [Fact]
     public void ALeftSetByAReference_ClickingARegionAppliesTheFreeCoordinatesOnly()
     {
         OnTab(tab =>
@@ -145,7 +145,7 @@ public class TextureCoordinateReferenceLockTests
         });
     }
 
-    [SkippableFact]
+    [Fact]
     public void AReferenceOnAnotherInstanceOrAnotherVariable_LocksNothing()
     {
         OnTab(tab =>
@@ -165,7 +165,7 @@ public class TextureCoordinateReferenceLockTests
         });
     }
 
-    [SkippableFact]
+    [Fact]
     public void ClearingTheReference_UnlocksTheCoordinate()
     {
         OnTab(tab =>
@@ -189,7 +189,7 @@ public class TextureCoordinateReferenceLockTests
 
     #region Exposed through an instance
 
-    [SkippableFact]
+    [Fact]
     public void AnExposedLeftSetByAReferenceOnTheInstance_IsLocked_AndTheOtherExposedOnesStillMove()
     {
         OnTab(tab =>
@@ -249,7 +249,7 @@ public class TextureCoordinateReferenceLockTests
 
     private static void OnTab(Action<TextureCoordinateTabHarness> scenario)
     {
-        Skip.IfNot(TextureCoordinateTabHarness.CanRun, TextureCoordinateTabHarness.SkipReason);
+        Assert.SkipUnless(TextureCoordinateTabHarness.CanRun, TextureCoordinateTabHarness.SkipReason);
         TextureCoordinateTabHarness.OnUiThread(() =>
         {
             using TextureCoordinateTabHarness tab = new TextureCoordinateTabHarness();

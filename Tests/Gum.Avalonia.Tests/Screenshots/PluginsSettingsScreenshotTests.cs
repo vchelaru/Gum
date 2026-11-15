@@ -22,7 +22,7 @@ namespace Gum.Avalonia.Tests.Screenshots;
 [Trait("Category", PrScreenshot.Category)]
 public class PluginsSettingsScreenshotTests
 {
-    [SkippableTheory]
+    [Theory]
     [InlineData(true)]
     [InlineData(false)]
     public void RealPlugins(bool dark) => PrScreenshot.Run(() =>
@@ -32,7 +32,7 @@ public class PluginsSettingsScreenshotTests
     });
 
     // One of every kind of plugin: required, running, turned off, crashed, and found but never loaded.
-    [SkippableTheory]
+    [Theory]
     [InlineData(true)]
     [InlineData(false)]
     public void MixedStates(bool dark) => PrScreenshot.Run(() =>
@@ -61,7 +61,7 @@ public class PluginsSettingsScreenshotTests
         Save(viewModel, dark, $"settings-plugins-mixed-{(dark ? "dark" : "light")}");
     });
 
-    [SkippableTheory]
+    [Theory]
     [InlineData(true)]
     [InlineData(false)]
     public void WithSearch(bool dark) => PrScreenshot.Run(() =>

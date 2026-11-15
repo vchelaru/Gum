@@ -358,13 +358,13 @@ public class DragDropScenarioTests
 
     #region Onto the canvas
 
-    [SkippableFact]
+    [Fact]
     [Trait("Feature", "DRAG-009")]
     [Trait("Feature", "DRAG-011")]
     [Trait("Feature", "DRAG-014")]
     public void TreeRowsSearchResultsAndAnimationFiles_DroppedOnTheCanvas_AddInstancesWhereTheyLand()
     {
-        Skip.IfNot(CanvasHarness.CanRun, CanvasHarness.SkipReason);
+        Assert.SkipUnless(CanvasHarness.CanRun, CanvasHarness.SkipReason);
         CanvasHarness.OnUiThread(() =>
         {
             using CanvasHarness canvas = new CanvasHarness();
@@ -429,7 +429,7 @@ public class DragDropScenarioTests
         });
     }
 
-    [SkippableTheory]
+    [Theory]
     [InlineData("Hero.ttf")]
     [InlineData("Hero.otf")]
     [InlineData("Hero.ttc")]
@@ -437,7 +437,7 @@ public class DragDropScenarioTests
     public void FontFileDroppedOnTheCanvas_AddsATextShowingThatFont_ForEveryFontFormat(string fontFileName)
     {
         // Every font format the generator can rasterize drops the same way a .ttf does.
-        Skip.IfNot(CanvasHarness.CanRun, CanvasHarness.SkipReason);
+        Assert.SkipUnless(CanvasHarness.CanRun, CanvasHarness.SkipReason);
         CanvasHarness.OnUiThread(() =>
         {
             using CanvasHarness canvas = new CanvasHarness();

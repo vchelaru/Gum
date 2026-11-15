@@ -22,13 +22,13 @@ public class BuiltInShaderReplaceDialogScreenshotTests
     // delegate whose signature mirrors the method.
     private delegate void ShowChoiceCallback(Action<ChoiceDialogViewModel>? initializer, out ChoiceDialogViewModel viewModel);
 
-    [SkippableFact]
+    [Fact]
     public void ReplaceDialog_Dark() => PrScreenshot.Run(() => CaptureReplaceDialog(ThemeVariant.Dark, "builtin-shader-replace-dark"));
 
-    [SkippableFact]
+    [Fact]
     public void ReplaceDialog_Light() => PrScreenshot.Run(() => CaptureReplaceDialog(ThemeVariant.Light, "builtin-shader-replace-light"));
 
-    [SkippableFact]
+    [Fact]
     public void OldYesNoBox_Dark() => PrScreenshot.Run(() =>
     {
         MessageDialogStyle style = MessageDialogStyle.YesNo;

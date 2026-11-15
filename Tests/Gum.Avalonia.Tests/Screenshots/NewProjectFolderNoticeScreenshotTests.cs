@@ -22,29 +22,29 @@ public class NewProjectFolderNoticeScreenshotTests
 {
     private static readonly string Parent = OperatingSystem.IsWindows() ? @"C:\Users\You\Documents\GumProjects" : "/Users/You/Documents/GumProjects";
 
-    [SkippableTheory]
+    [Theory]
     [InlineData("dark")]
     [InlineData("light")]
     public void NewFolder(string theme) => Capture("new-folder", theme, viewModel => viewModel.Location = Parent, folderExists: false);
 
-    [SkippableTheory]
+    [Theory]
     [InlineData("dark")]
     [InlineData("light")]
     public void ExistingFolder(string theme) => Capture("existing-folder", theme, viewModel => viewModel.Location = Parent, folderExists: true);
 
-    [SkippableTheory]
+    [Theory]
     [InlineData("dark")]
     [InlineData("light")]
     public void LocationIsProjectFolder(string theme) => Capture("location-is-project-folder", theme,
         viewModel => viewModel.Location = Path.Combine(Parent, "CodeProj3"), folderExists: true);
 
-    [SkippableTheory]
+    [Theory]
     [InlineData("dark")]
     [InlineData("light")]
     public void LocationIsProjectFolderNotYetCreated(string theme) => Capture("location-is-project-folder-new", theme,
         viewModel => viewModel.Location = Path.Combine(Parent, "CodeProj3"), folderExists: false);
 
-    [SkippableTheory]
+    [Theory]
     [InlineData("dark")]
     [InlineData("light")]
     public void LongPathWraps(string theme) => Capture("long-path", theme,
@@ -52,7 +52,7 @@ public class NewProjectFolderNoticeScreenshotTests
         folderExists: false);
 
     /// <summary>The path beside the command line, the style reference, with the Folders summary above it.</summary>
-    [SkippableTheory]
+    [Theory]
     [InlineData("dark")]
     [InlineData("light")]
     public void BesideTheCommandLine(string theme) => Capture("beside-command-line", theme,

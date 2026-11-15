@@ -15,7 +15,7 @@ namespace Gum.Avalonia.Tests.Screenshots;
 [Trait("Category", PrScreenshot.Category)]
 public class ViewMenuZoomRowScreenshotTests
 {
-    [SkippableFact]
+    [Fact]
     public void ZoomRow() => PrScreenshot.Run(() =>
     {
         MenuModel model = TestAppBuilder.Services.GetRequiredService<StandardMenuModelBuilder>().Build();

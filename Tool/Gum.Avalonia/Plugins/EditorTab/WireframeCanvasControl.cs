@@ -31,7 +31,7 @@ public sealed class WireframeCanvasControl : AvaloniaGraphicsDeviceControl
 
         Core = new WireframeCanvasCore(this, dialogService, outputManager, pluginManager);
         KeyboardInputLost += Core.HandleFocusLost;
-        Gestures.AddPointerTouchPadGestureMagnifyHandler(this, HandlePinch);
+        this.AddHandler(InputElement.PointerTouchPadGestureMagnifyEvent, HandlePinch);
     }
 
     /// <inheritdoc/>
