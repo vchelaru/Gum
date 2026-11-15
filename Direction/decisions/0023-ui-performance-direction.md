@@ -33,9 +33,10 @@ and `glFinish`, which are not UI cost. Draw time is the UI number.
 6. Performance work is directed by the maintainer. No investigation starts without that direction.
    Measure first, in Release builds only, change one thing at a time, and record before and after numbers.
 7. Report honest numbers: draw time, not the frame column.
-8. Judge by the worst case. Caching that helps only unchanged frames does not count: users change the UI at
-   unpredictable times (scrolling, resizing, text edits), and the frame rate must not collapse 10x then.
-   The claim is the worst-case frame (p95, p99, max) with content changing, not the median of a static scene.
+8. Judge by the worst user-behavior case, not hardware hiccups or percentiles. The claim is the frame rate
+   while the user does the most demanding things: resizing the window, scrolling, editing text, anything
+   that makes much of the UI change. Caching that helps only unchanged frames does not count, because those
+   changes happen at unpredictable times and the rate must stay high through them.
 
 ## Consequences
 
