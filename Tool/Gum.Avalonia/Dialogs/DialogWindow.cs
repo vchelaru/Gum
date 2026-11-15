@@ -248,6 +248,16 @@ public sealed class DialogWindow : Window
                 e.Handled = true;
             }
         };
+        // Avalonia 12's list box items take Enter themselves, so it never reaches the default button
+        // (#5558: the choice prompt confirms the picked option with Enter, as the WPF one does).
+        AddHandler(KeyDownEvent, (_, e) =>
+        {
+            if (e.Key == Key.Enter && e.Handled && e.Source is ListBoxItem && affirmative.IsEffectivelyVisible
+                && _viewModel.AffirmativeCommand.CanExecute(null))
+            {
+                _viewModel.AffirmativeCommand.Execute(null);
+            }
+        }, RoutingStrategies.Bubble, handledEventsToo: true);
         // Tunnel, so the copy gesture reaches the window before a focused button or text block.
         AddHandler(KeyDownEvent, HandleCopyGesture, RoutingStrategies.Tunnel);
 

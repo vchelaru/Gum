@@ -15,7 +15,7 @@ public class DialogWindowDriverTests
         viewModel.SetOptions(new Dictionary<int, string> { [0] = "Skip" });
         using DialogWindowDriver dialog = new DialogWindowDriver(viewModel);
         // Enter accepts through a dispatcher job, not synchronously inside the key press.
-        dialog.Window.KeyDown += (_, _) => Dispatcher.UIThread.Post(dialog.Window.Close, DispatcherPriority.ApplicationIdle);
+        dialog.Window.AddHandler(InputElement.KeyDownEvent, (_, _) => Dispatcher.UIThread.Post(dialog.Window.Close, DispatcherPriority.ApplicationIdle), global::Avalonia.Interactivity.RoutingStrategies.Tunnel);
 
         dialog.Press(Key.Enter, PhysicalKey.Enter);
 
