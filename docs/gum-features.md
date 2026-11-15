@@ -10,7 +10,7 @@ Build your UI in the visual editor, in C# only, or a mix of both.
 
 ### [Runs Everywhere](code/about/runtimes.md)
 
-Run the same UI on MonoGame, KNI (including web), FNA, raylib, and SkiaSharp hosts such as WPF, .NET MAUI, and Stride, on desktop and mobile, with an editor for Windows, macOS, and Linux.
+Run the same UI on desktop, mobile, and web, with an editor for Windows, macOS, and Linux.
 
 <figure><img src=".gitbook/assets/image (29).png" alt=""><figcaption><p>Gum UI in game</p></figcaption></figure>
 
