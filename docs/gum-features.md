@@ -136,7 +136,7 @@ Generate C# classes for your screens and components so your code works with type
 
 Bind controls to a view model so your UI stays in sync with your game data.
 
-<figure><img src=".gitbook/assets/BubblegumThemeScreenshot.png" alt=""><figcaption><p>A settings screen bound to a view model</p></figcaption></figure>
+<figure><img src=".gitbook/assets/BubblegumThemeScreenshot.png" alt=""><figcaption><p>A settings screen in the Bubblegum theme</p></figcaption></figure>
 
 ### [Native AOT Ready](code/performance-and-optimization/native-aot-and-trimming.md)
 
