@@ -95,6 +95,9 @@ internal class BenchmarkScreen : FrameworkElement
         const int columns = 10;
         const int cellWidth = 56;
         const int cellHeight = 40;
+        // SPIKE: GUM_PAIRS_GROUPED=1 adds all NineSlices first, then all Texts (pixel-identical: cells do not overlap).
+        bool grouped = System.Environment.GetEnvironmentVariable("GUM_PAIRS_GROUPED") == "1";
+        var deferredTexts = new List<GraphicalUiElement>();
         for (int i = 0; i < NineSlicePairCount; i++)
         {
             var nineSlice = new NineSliceRuntime();
@@ -110,8 +113,12 @@ internal class BenchmarkScreen : FrameworkElement
             text.Text = i.ToString();
             text.X = nineSlice.X + 8;
             text.Y = nineSlice.Y + 8;
-            this.AddChild(text);
+            if (grouped) deferredTexts.Add(text); else this.AddChild(text);
             _pairs.Add(text);
+        }
+        foreach (GraphicalUiElement text in deferredTexts)
+        {
+            this.AddChild(text);
         }
     }
 
