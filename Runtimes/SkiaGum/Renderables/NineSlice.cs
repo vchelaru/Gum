@@ -273,7 +273,7 @@ public class NineSlice : RenderableShapeBase, IAnimatable, IAnimationChainRender
         // Modulate the image's texels by Color so the unified runtime's Color
         // property tints the nine-slice.
         SKPaint paint = base.GetPaint(boundingRect, absoluteRotation);
-        ApplyTextureTint(paint, SKBlendMode.Modulate);
+        ApplyTextureTint(paint, SKBlendMode.Modulate, skipOpaqueWhite: true);
         // Antialias on DrawImage anti-aliases the destination rect's edges. When
         // two sections of the nine-slice abut at a fractional pixel boundary
         // (because layout placed the whole NineSlice at a non-integer position),
