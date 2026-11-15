@@ -400,3 +400,54 @@ Then copy the Gum project to the output folder by adding this to your `.csproj`:
 ```
 
 To create the Gum project and show its screens, see [Loading a Gum Project](../loading-a-gum-project-.gumx.md).
+
+## Supplying Input From Your Own Window
+
+By default Gum reads the mouse, keyboard, clipboard and gamepad from the `GlfwWindow` you pass to `Initialize`. If your game owns the window and its events itself, such as with SDL3, implement `IBrutalInput` and pass it in place of the window. Gum then never touches GLFW. `IBrutalInput` uses Gum's own `Keys`, `MouseButton` and `Cursors` types.
+
+```csharp
+public class MyHostInput : Gum.Input.IBrutalInput
+{
+    // Update these from your window's events.
+    public double CursorX { get; set; }
+    public double CursorY { get; set; }
+    public int WindowWidth { get; set; }
+    public int WindowHeight { get; set; }
+    public int FramebufferWidth { get; set; }
+    public int FramebufferHeight { get; set; }
+    public string? ClipboardText { get; set; }
+
+    // Raise these from your event loop.
+    public event System.Action<double>? Scrolled;
+    public event System.Action<uint>? CharTyped;
+
+    // Return what is held right now.
+    public bool IsMouseButtonDown(Gum.Input.MouseButton button) => false;
+    public bool IsKeyDown(Gum.Forms.Input.Keys key) => false;
+
+    public void SetCursorShape(Gum.Wireframe.Cursors shape) { }
+    public bool TryReadGamepad(int index, out Gum.Input.GamePadSnapshot snapshot) { snapshot = default; return false; }
+}
+```
+
+Pass the input to `Initialize` where the window would go:
+
+{% tabs %}
+{% tab title="OpenGL" %}
+```csharp
+// Initialize
+GumUI.Initialize(new MyHostInput());
+```
+{% endtab %}
+
+{% tab title="Vulkan" %}
+```csharp
+// Initialize
+GumUI.Initialize(new MyHostInput(), instance, physicalDevice, device, queue, queueFamily, surface);
+```
+{% endtab %}
+{% endtabs %}
+
+{% hint style="info" %}
+`IBrutalInput` is available in December 2026, or now if building Gum from source.
+{% endhint %}

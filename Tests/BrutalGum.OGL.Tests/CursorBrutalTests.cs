@@ -1,4 +1,3 @@
-using Brutal.GlfwApi;
 using Gum;
 using Gum.Input;
 using Gum.Wireframe;
@@ -31,8 +30,8 @@ public class CursorBrutalTests : SkiaHostTests.CursorTestsBase
 
         public void SetPrimaryDown(bool isDown)
         {
-            if (isDown) _input.HeldButtons.Add(GlfwMouseButton.Left);
-            else _input.HeldButtons.Remove(GlfwMouseButton.Left);
+            if (isDown) _input.HeldButtons.Add(MouseButton.Left);
+            else _input.HeldButtons.Remove(MouseButton.Left);
         }
 
         public void Scroll(int notches) => _input.RaiseScroll(notches);
@@ -41,11 +40,11 @@ public class CursorBrutalTests : SkiaHostTests.CursorTestsBase
     protected override SkiaHostTests.IHostCursorRig CreateRig() => new BrutalCursorRig();
 
     [Theory]
-    [InlineData(Cursors.SizeNS, GlfwStandardCursor.ResizeNs)]
-    [InlineData(Cursors.SizeWE, GlfwStandardCursor.ResizeEw)]
-    [InlineData(Cursors.SizeNWSE, GlfwStandardCursor.ResizeNwse)]
-    [InlineData(Cursors.SizeNESW, GlfwStandardCursor.ResizeNesw)]
-    public void CustomCursor_ResizeShape_SetsMatchingGlfwShape(Cursors shape, GlfwStandardCursor expected)
+    [InlineData(Cursors.SizeNS, Cursors.SizeNS)]
+    [InlineData(Cursors.SizeWE, Cursors.SizeWE)]
+    [InlineData(Cursors.SizeNWSE, Cursors.SizeNWSE)]
+    [InlineData(Cursors.SizeNESW, Cursors.SizeNESW)]
+    public void CustomCursor_ResizeShape_SetsMatchingShape(Cursors shape, Cursors expected)
     {
         FakeBrutalInput input = new();
         Gum.Input.Cursor cursor = new();
@@ -65,7 +64,7 @@ public class CursorBrutalTests : SkiaHostTests.CursorTestsBase
 
         cursor.CustomCursor = null;
 
-        input.LastCursorShape.ShouldBe(GlfwStandardCursor.Arrow);
+        input.LastCursorShape.ShouldBe(Cursors.Arrow);
     }
 
     [Fact]
@@ -84,7 +83,7 @@ public class CursorBrutalTests : SkiaHostTests.CursorTestsBase
     public void Activity_IsMobile_IgnoresMouse()
     {
         FakeBrutalInput input = new() { CursorX = 37, CursorY = 52 };
-        input.HeldButtons.Add(GlfwMouseButton.Left);
+        input.HeldButtons.Add(MouseButton.Left);
         Gum.Input.Cursor cursor = new();
         cursor.AttachBrutalInput(input);
         cursor.IsMobile = true;
@@ -96,10 +95,10 @@ public class CursorBrutalTests : SkiaHostTests.CursorTestsBase
     }
 
     [Theory]
-    [InlineData(GlfwMouseButton.Left, true, false, false)]
-    [InlineData(GlfwMouseButton.Middle, false, true, false)]
-    [InlineData(GlfwMouseButton.Right, false, false, true)]
-    public void Activity_HeldButton_SetsOnlyTheMatchingDownFlag(GlfwMouseButton held, bool primary, bool middle, bool secondary)
+    [InlineData(MouseButton.Left, true, false, false)]
+    [InlineData(MouseButton.Middle, false, true, false)]
+    [InlineData(MouseButton.Right, false, false, true)]
+    public void Activity_HeldButton_SetsOnlyTheMatchingDownFlag(MouseButton held, bool primary, bool middle, bool secondary)
     {
         FakeBrutalInput input = new();
         input.HeldButtons.Add(held);

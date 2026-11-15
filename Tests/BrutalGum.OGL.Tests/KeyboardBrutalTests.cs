@@ -1,4 +1,3 @@
-using Brutal.GlfwApi;
 using Gum.Input;
 using Shouldly;
 using GumKeys = Gum.Forms.Input.Keys;
@@ -24,7 +23,7 @@ public class KeyboardBrutalTests : SkiaHostTests.PolledKeyboardTestsBase
             _input.HeldKeys.Clear();
             foreach (GumKeys key in keys)
             {
-                _input.HeldKeys.Add(Gum.Input.Keyboard.GumToGlfw[key]);
+                _input.HeldKeys.Add(key);
             }
         }
 
