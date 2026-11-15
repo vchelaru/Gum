@@ -11,7 +11,14 @@ namespace CrossRuntimeTests;
 /// True when Skia's own result depends on the platform, so the cell may also match the baseline exactly
 /// and the stale check must not require it to differ.
 /// </param>
-public sealed record KnownDifference(string Reason, bool RasterizerDependent, bool MayMatch = false);
+/// <param name="MaxDifferingPixels">
+/// The most pixels of this cell that may differ from the baseline, or null for no cap. A MayMatch cell
+/// always has one, so a real regression in it is not hidden by the allowance.
+/// </param>
+/// <param name="MaxChannelDifference">The largest per-channel difference accepted in this cell, or null for no cap.</param>
+public sealed record KnownDifference(
+    string Reason, bool RasterizerDependent, bool MayMatch = false,
+    int? MaxDifferingPixels = null, int? MaxChannelDifference = null);
 
 /// <summary>
 /// The cells where Skia is known to differ from the MonoGame baselines and the right answer is
@@ -63,17 +70,26 @@ public static class NineSliceKnownDifferences
                 known[$"{sheet}/{name}"] = new KnownDifference(reason, rasterizerDependent);
             }
         }
-        void AddMayMatch(string sheet, string reason, params string[] cases)
+        // The caps are the values measured on macOS arm64 (the CI run before the filter was skipped),
+        // with no margin: Skia's CPU raster is deterministic. Another platform may differ less or not at all.
+        void AddMayMatch(string sheet, string reason, string name, int maxDifferingPixels, int maxChannelDifference)
         {
-            foreach (string name in cases)
-            {
-                known[$"{sheet}/{name}"] = new KnownDifference(reason, RasterizerDependent: false, MayMatch: true);
-            }
+            known[$"{sheet}/{name}"] = new KnownDifference(
+                reason, RasterizerDependent: false, MayMatch: true, maxDifferingPixels, maxChannelDifference);
         }
 
         Add("frame1-3x16", SamplingTie, true, "1x3", "2x3", "3x3", "5x3", "1x5", "2x5", "3x5", "5x5");
-        AddMayMatch("frame2-6x6", FilterlessSamplingTie,
-            "9x1", "9x2", "9x3", "9x4", "9x6", "1x9", "2x9", "3x9", "4x9", "6x9", "9x9");
+        AddMayMatch("frame2-6x6", FilterlessSamplingTie, "9x1", 1, 53);
+        AddMayMatch("frame2-6x6", FilterlessSamplingTie, "9x2", 2, 53);
+        AddMayMatch("frame2-6x6", FilterlessSamplingTie, "9x3", 3, 53);
+        AddMayMatch("frame2-6x6", FilterlessSamplingTie, "9x4", 4, 53);
+        AddMayMatch("frame2-6x6", FilterlessSamplingTie, "9x6", 6, 121);
+        AddMayMatch("frame2-6x6", FilterlessSamplingTie, "1x9", 1, 37);
+        AddMayMatch("frame2-6x6", FilterlessSamplingTie, "2x9", 2, 37);
+        AddMayMatch("frame2-6x6", FilterlessSamplingTie, "3x9", 3, 37);
+        AddMayMatch("frame2-6x6", FilterlessSamplingTie, "4x9", 4, 37);
+        AddMayMatch("frame2-6x6", FilterlessSamplingTie, "6x9", 6, 121);
+        AddMayMatch("frame2-6x6", FilterlessSamplingTie, "9x9", 17, 121);
         Add("frame2-6x6", SamplingTie, true, "5x1", "5x2", "5x3", "5x4", "1x5", "2x5", "3x5", "4x5", "5x5", "6x5", "9x5", "5x6", "5x9");
         Add("frame3-9x9", SamplingTie, true, "5x1", "3x6", "5x6", "3x7", "5x7", "3x12", "5x12");
         Add("frame3-9x9", SamplingTieWithOddHeight, true, "5x3", "3x5", "5x5");
