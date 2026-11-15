@@ -110,7 +110,7 @@ Publish with Native AOT or trimming after converting your project to the JSON fi
 **TODO:** Screenshot of a Native AOT published game.
 {% endhint %}
 
-### [Infinitely Customizable](code/styling/code-only-styling/adding-and-removing-visual-children.md)
+### [Customizable Down to the Renderer](code/styling/code-only-styling/adding-and-removing-visual-children.md)
 
 Replace the visuals behind any control, down to adding your own renderable types, when styling is not enough.
 
