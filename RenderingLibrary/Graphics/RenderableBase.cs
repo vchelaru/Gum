@@ -12,6 +12,12 @@ public abstract class RenderableBase : IVisible, IRenderableIpso,
 {
     private RenderTargetUsageHandle? _renderTargetUsage;
 
+    // A MemberwiseClone copies the source's handle; the clone must hold its own.
+    private protected void ReacquireRenderTargetUsageAfterClone()
+    {
+        _renderTargetUsage = _renderTargetUsage != null ? RenderTargetUsageHandle.Acquire() : null;
+    }
+
     public bool IsRenderTarget
     {
         get => _renderTargetUsage != null;

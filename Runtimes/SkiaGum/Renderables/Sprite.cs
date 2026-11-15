@@ -127,27 +127,7 @@ public class Sprite : RenderableShapeBase, IAspectRatio, ITextureCoordinate, IAn
     /// directly-assigned <see cref="Texture"/>/<see cref="Image"/> (#3988). When set, the sprite pulls
     /// the baked <see cref="SKImage"/> from the renderer at draw time; a null bake draws nothing.
     /// </summary>
-    public IRenderableIpso? RenderTargetTextureSource
-    {
-        get => _renderTargetTextureSource;
-        set
-        {
-            _renderTargetTextureSource = value;
-            // Keeps the renderer's render-target scans on while a source is set.
-            if (value != null)
-            {
-                _renderTargetUsage ??= RenderTargetUsageHandle.Acquire();
-            }
-            else if (_renderTargetUsage != null)
-            {
-                _renderTargetUsage.Release();
-                _renderTargetUsage = null;
-            }
-        }
-    }
-
-    private IRenderableIpso? _renderTargetTextureSource;
-    private RenderTargetUsageHandle? _renderTargetUsage;
+    public IRenderableIpso? RenderTargetTextureSource { get; set; }
 
     // Image draws in preference to Texture (see DrawBound), so its size wins.
     public float? TextureWidth => RenderTargetTextureSource?.Width ?? _image?.Width ?? _texture?.Width;

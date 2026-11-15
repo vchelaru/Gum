@@ -1030,7 +1030,7 @@ namespace RenderingLibrary.Graphics
         // bakes (#1643). Each bake swaps managers.Canvas to its own offscreen canvas and restores it.
         private void BakeRenderTargets(IList<IRenderableIpso> whatToRender, SystemManagers managers, Layer? layer)
         {
-            // No renderable is a render target or references one, so both scans below would find nothing.
+            // No renderable is a render target (a Sprite can only reference one that is), so both scans below would find nothing.
             if (!RenderTargetUsageHandle.AnyLive)
             {
                 return;

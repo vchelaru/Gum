@@ -28,12 +28,8 @@ public class RenderTargetScanSkipTests
         GumService.Default.Initialize(surface.Canvas, 64, 64);
         GumService.Default.Root.Children.Clear();
 
-        // Handles of earlier tests' abandoned containers are released by their finalizers.
-        for (int i = 0; i < 2; i++)
-        {
-            GC.Collect();
-            GC.WaitForPendingFinalizers();
-        }
+        // The live count is process-wide; start each test from "nothing live" whatever ran before.
+        RenderTargetUsageHandle.ResetForTests();
 
         return surface;
     }
@@ -204,6 +200,37 @@ public class RenderTargetScanSkipTests
         layer.Add(renderTarget);
 
         SkiaRenderer.RenderLayer(SystemManagers.Default, layer);
+
+        SkiaRenderer.HasBakedRenderTargetFor(renderTarget).ShouldBeTrue();
+    }
+
+    [Fact]
+    public void Draw_ClonedRenderTargetAfterSourceTurnedOff_StillBakes()
+    {
+        using SKSurface surface = InitializeSurface();
+        ContainerRuntime original = CreateRenderTarget();
+        ContainerRuntime clone = (ContainerRuntime)original.Clone();
+        original.IsRenderTarget = false;
+        GumService.Default.Root.Children.Add(clone);
+
+        GumService.Default.Draw();
+
+        SkiaRenderer.HasBakedRenderTargetFor(clone).ShouldBeTrue();
+    }
+
+    [Fact]
+    public void Draw_ClonedSpriteAfterSourceCleared_StillBakesItsReferencedTarget()
+    {
+        using SKSurface surface = InitializeSurface();
+        ContainerRuntime renderTarget = CreateRenderTarget();
+        renderTarget.Visible = false;
+        GumService.Default.Root.Children.Add(renderTarget);
+        SpriteRuntime original = new() { RenderTargetTextureSource = renderTarget, Width = 20, Height = 20 };
+        SpriteRuntime clone = (SpriteRuntime)original.Clone();
+        original.RenderTargetTextureSource = null;
+        GumService.Default.Root.Children.Add(clone);
+
+        GumService.Default.Draw();
 
         SkiaRenderer.HasBakedRenderTargetFor(renderTarget).ShouldBeTrue();
     }
