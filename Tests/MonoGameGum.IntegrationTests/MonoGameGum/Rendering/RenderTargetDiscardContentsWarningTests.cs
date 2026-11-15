@@ -152,6 +152,102 @@ public class RenderTargetDiscardContentsWarningTests : BaseTestClass
         captured.ToString().ShouldContain("[Gum] An IsRenderTarget container");
     }
 
+    // #8046: the opt-in TextRenderingMode.RenderTarget path switches targets mid-draw too.
+    [Fact]
+    public void TextRenderTarget_RestoresTheUserRenderTarget()
+    {
+        using MinimalGame game = new();
+        game.RunOneFrame();
+        using RenderTarget2D target = CreateTarget(game.GraphicsDevice, RenderTargetUsage.PreserveContents);
+
+        RenderTargetBinding[] bound = RealizeTextWith(game.GraphicsDevice, target, out _);
+
+        bound.Length.ShouldBe(1);
+        bound[0].RenderTarget.ShouldBeSameAs(target);
+    }
+
+    [Fact]
+    public void TextRenderTarget_RestoresTheViewport()
+    {
+        using MinimalGame game = new();
+        game.RunOneFrame();
+        using RenderTarget2D target = CreateTarget(game.GraphicsDevice, RenderTargetUsage.PreserveContents);
+
+        game.GraphicsDevice.SetRenderTarget(target);
+        Viewport before = game.GraphicsDevice.Viewport;
+        game.GraphicsDevice.SetRenderTarget(null);
+
+        RealizeTextWith(game.GraphicsDevice, target, out _);
+
+        game.GraphicsDevice.SetRenderTarget(target);
+        game.GraphicsDevice.Viewport.Width.ShouldBe(before.Width);
+        game.GraphicsDevice.SetRenderTarget(null);
+    }
+
+    [Fact]
+    public void TextRenderTarget_WithBackBuffer_LeavesTheBackBufferBound()
+    {
+        using MinimalGame game = new();
+        game.RunOneFrame();
+
+        RealizeTextWith(game.GraphicsDevice, null, out _).Length.ShouldBe(0);
+    }
+
+    [Fact]
+    public void TextRenderTarget_UserTargetDiscardContents_WarnsOnce()
+    {
+        using MinimalGame game = new();
+        game.RunOneFrame();
+        using RenderTarget2D target = CreateTarget(game.GraphicsDevice, RenderTargetUsage.DiscardContents);
+
+        RealizeTextWith(game.GraphicsDevice, target, out List<string> warnings);
+
+        warnings.Count.ShouldBe(1);
+        warnings[0].ShouldContain("TextRenderingMode.RenderTarget");
+    }
+
+    [Fact]
+    public void TextRenderTarget_UserTargetPreserveContents_DoesNotWarn()
+    {
+        using MinimalGame game = new();
+        game.RunOneFrame();
+        using RenderTarget2D target = CreateTarget(game.GraphicsDevice, RenderTargetUsage.PreserveContents);
+
+        RealizeTextWith(game.GraphicsDevice, target, out List<string> warnings);
+
+        warnings.ShouldBeEmpty();
+    }
+
+    private static RenderTargetBinding[] RealizeTextWith(
+        GraphicsDevice device, RenderTarget2D? target, out List<string> warnings)
+    {
+        List<string> captured = new();
+        void Handler(string message) => captured.Add(message);
+        TextRenderingMode originalMode = Text.TextRenderingMode;
+        Text.TextRenderingMode = TextRenderingMode.RenderTarget;
+        CustomSetPropertyOnRenderable.PropertyAssignmentError += Handler;
+        try
+        {
+            Text text = new Text();
+            text.BitmapFont = Text.DefaultBitmapFont;
+            text.Width = null;
+            text.RawText = "Realize this text";
+
+            device.SetRenderTarget(target);
+            text.SetNeedsRefreshToTrue();
+            text.TryUpdateTextureToRender();
+            RenderTargetBinding[] bound = device.GetRenderTargets();
+            warnings = captured.Where(message => message.Contains("RenderTargetUsage")).ToList();
+            return bound;
+        }
+        finally
+        {
+            CustomSetPropertyOnRenderable.PropertyAssignmentError -= Handler;
+            Text.TextRenderingMode = originalMode;
+            device.SetRenderTarget(null);
+        }
+    }
+
     private static RenderTarget2D CreateTarget(GraphicsDevice device, RenderTargetUsage usage) =>
         new(device, Size * 2, Size * 2, false, SurfaceFormat.Color, DepthFormat.None, 0, usage);
 

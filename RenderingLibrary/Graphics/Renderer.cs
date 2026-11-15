@@ -1428,6 +1428,12 @@ public class Renderer : IRenderer
     /// the game's), so this reports it, once, through the same channel as Gum's other runtime
     /// warnings. Returns true only for the call that reported.
     /// </summary>
+    internal bool TryReportDiscardingRestoreTarget(Texture? restoreTarget) =>
+        TryReportDiscardingRestoreTarget(
+            restoreTarget is RenderTarget2D boundTarget
+                ? boundTarget.RenderTargetUsage
+                : InitializedGraphicsDevice.PresentationParameters.RenderTargetUsage);
+
     internal bool TryReportDiscardingRestoreTarget(RenderTargetUsage restoreTargetUsage)
     {
         if (_hasReportedDiscardingRestoreTarget || restoreTargetUsage != RenderTargetUsage.DiscardContents)
@@ -1437,7 +1443,7 @@ public class Renderer : IRenderer
 
         _hasReportedDiscardingRestoreTarget = true;
         CustomSetPropertyOnRenderable.RaisePropertyAssignmentError(
-            "An IsRenderTarget container is being drawn while the render target Gum returns to " +
+            "An IsRenderTarget container (or TextRenderingMode.RenderTarget text) is being drawn while the render target Gum returns to " +
             "discards its contents, so anything drawn before Gum in this frame will be cleared. " +
             "Set RenderTargetUsage.PreserveContents on the back buffer " +
             "(graphics.PreparingDeviceSettings, PresentationParameters.RenderTargetUsage) or on " +
@@ -1457,7 +1463,7 @@ public class Renderer : IRenderer
     /// <summary>
     /// The first render target currently bound to the device, or null when the back buffer is.
     /// </summary>
-    private Texture? GetBoundRenderTarget()
+    internal Texture? GetBoundRenderTarget()
     {
         GraphicsDevice device = InitializedGraphicsDevice;
 #if MONOGAME
@@ -1556,10 +1562,7 @@ public class Renderer : IRenderer
 
         // The target restored after the bake is the one currently bound: a user render target,
         // or the back buffer when none is.
-        TryReportDiscardingRestoreTarget(
-            oldRenderTarget is RenderTarget2D boundTarget
-                ? boundTarget.RenderTargetUsage
-                : InitializedGraphicsDevice.PresentationParameters.RenderTargetUsage);
+        TryReportDiscardingRestoreTarget(oldRenderTarget);
 
         InitializedGraphicsDevice.SetRenderTarget(renderTarget);
 
