@@ -257,6 +257,7 @@ namespace RenderingLibrary.Graphics
         private void DrawTopLevel(IList<IRenderableIpso> whatToRender, SystemManagers managers, Layer? layer)
         {
             _referencedRenderTargetOwners.Clear();
+            if (ClipMode == "time") _clipFrames++;
             EnterDrawScope();
             try
             {
@@ -646,17 +647,60 @@ namespace RenderingLibrary.Graphics
                                 bounds.Left < canvas.LocalClipBounds.Right;
                             if (!onScreen) { i = op.End; break; }
                             SpriteBatch.Flush();
-                            canvas.Save();
-                            canvas.ClipTo(op.R);
+                            ClipPush(canvas, op.R);
                             RenderOne(op.R, managers);
                             break;
                         }
                     case 2:
                         SpriteBatch.Flush();
-                        canvas.Restore();
+                        ClipPop(canvas);
                         break;
                 }
             }
+        }
+
+        // SPIKE (GUM_CLIP): off = skip Save/ClipTo/Restore; time = accumulate Stopwatch time and counts.
+        static readonly string ClipMode = Environment.GetEnvironmentVariable("GUM_CLIP") ?? "";
+        static long _clipSaveTicks, _clipClipTicks, _clipRestoreTicks, _clipPushes, _clipPops, _clipFrames, _drawsInClip, _drawsTotal;
+        static int _clipDepth;
+        static bool _clipHooked;
+
+        static void ClipPush(SKCanvas canvas, IRenderableIpso r)
+        {
+            if (ClipMode == "off") return;
+            if (ClipMode == "time")
+            {
+                if (!_clipHooked) { _clipHooked = true; AppDomain.CurrentDomain.ProcessExit += (_, _) => ClipReport(); }
+                long t0 = System.Diagnostics.Stopwatch.GetTimestamp();
+                canvas.Save();
+                long t1 = System.Diagnostics.Stopwatch.GetTimestamp();
+                canvas.ClipTo(r);
+                long t2 = System.Diagnostics.Stopwatch.GetTimestamp();
+                _clipSaveTicks += t1 - t0; _clipClipTicks += t2 - t1; _clipPushes++; _clipDepth++;
+                return;
+            }
+            canvas.Save();
+            canvas.ClipTo(r);
+        }
+
+        static void ClipPop(SKCanvas canvas)
+        {
+            if (ClipMode == "off") return;
+            if (ClipMode == "time")
+            {
+                long t0 = System.Diagnostics.Stopwatch.GetTimestamp();
+                canvas.Restore();
+                _clipRestoreTicks += System.Diagnostics.Stopwatch.GetTimestamp() - t0; _clipPops++; _clipDepth--;
+                return;
+            }
+            canvas.Restore();
+        }
+
+        static void ClipReport()
+        {
+            double ms = 1000.0 / System.Diagnostics.Stopwatch.Frequency;
+            double f = System.Math.Max(1, _clipFrames);
+            Console.WriteLine($"CLIPTIME frames {_clipFrames}: per frame save {_clipSaveTicks * ms / f:F4} ms, clip {_clipClipTicks * ms / f:F4} ms, restore {_clipRestoreTicks * ms / f:F4} ms; pushes {_clipPushes / f:F1}, pops {_clipPops / f:F1}; RenderOne calls {_drawsTotal / f:F1}, of which inside a clip {_drawsInClip / f:F1}");
         }
 
         // Draws one visible renderable and (with RenderUsingHierarchy) its children.
@@ -697,8 +741,7 @@ namespace RenderingLibrary.Graphics
                 if (isOnScreen)
                 {
                     SpriteBatch.Flush();
-                    canvas.Save();
-                    canvas.ClipTo(renderable);
+                    ClipPush(canvas, renderable);
                     RenderOne(renderable, managers);
                 }
             }
@@ -719,7 +762,7 @@ namespace RenderingLibrary.Graphics
                 if (renderable.ClipsChildren)
                 {
                     SpriteBatch.Flush();
-                    canvas.Restore();
+                    ClipPop(canvas);
                 }
             }
         }
@@ -732,6 +775,7 @@ namespace RenderingLibrary.Graphics
                 ? contained
                 : renderable;
             if (WalkMode == 1 && inner.GetType() == typeof(InvisibleRenderable)) return;
+            if (ClipMode == "time") { _drawsTotal++; if (_clipDepth > 0) _drawsInClip++; }
             if (inner is not Sprite && inner is not InvisibleRenderable)
             {
                 if (WalkMode != 2 || SpriteBatch.PendingCount != 0) SpriteBatch.Flush();
