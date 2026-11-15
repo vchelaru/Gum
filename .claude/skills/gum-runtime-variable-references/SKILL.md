@@ -87,6 +87,10 @@ All three work in a game that calls `GumExpressionService.Initialize()`. The `Gr
 - `RefreshStyles` re-applies authored data over code-set values, by design.
 - The GUM0009 check accepts exactly what the resolver finds: a read of an instance's own FormsProperty that declares a default.
 
+## An exposed variable and the variable it exposes
+
+A component's exposed name (`IsMyButtonVisible`) and the inner variable it exposes (`MyButton.Visible`) both notify rows that read either name. A write through the exposed name is forwarded to the instance and reported under the exposed name by `SetProperty`. A write on the instance reports `MyButton.Visible` and also the exposed name (`ReferenceAudience.ExposedName`, `FindExposedNameOf`). `_exposedForwardDepth` stops a forwarded write from reporting the exposed name twice. An exposed name is not reported again for the value it was last reported with, except inside `ApplyState`, where earlier reports are still queued. Test: `ExposedVariableReferenceTests`.
+
 ## Circular references (#6871)
 
 Rows that read each other (or their own result) never freeze or overflow on any path (`ReferenceCycleFreezeTests`, `ReferenceCycleToolFreezeTests`). One rule for the tool, creation and `ApplyAllVariableReferences`: cyclic rows (`VariableReferenceGraph.CyclicRows`) are skipped everywhere and keep their stored values, so applying again is idempotent. The tool reports the loop as GUM0013 (`HeadlessErrorChecker`). The runtime reports it under `FULL_DIAGNOSTICS` only, once per loop: each separate loop in each state gets its own message, deduped per `ElementSave` by state and rows (`ReportCyclicRows`, from both apply overloads, through the shared `RaiseReferenceError` channel; a reloaded project has new elements and reports again). The message names the element and the state holding the loop (`in Panel (Default):`, like GUM0013). A loop made only of one base's rows (`ReferenceRow.DeclaredIn`) is reported on that base, once, not again on each derived element; a loop mixing base and derived rows is reported on the derived element, and stays silent and allocation-free otherwise. Test: `ReferenceCycleDiagnosticTests`.
