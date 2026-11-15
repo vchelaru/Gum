@@ -80,6 +80,7 @@ internal static class BenchmarkRunner
         if (outputPath != null)
         {
             File.AppendAllText(outputPath, text.ToString());
+            Console.WriteLine("Appended to " + outputPath);
         }
         return text.ToString();
     }
