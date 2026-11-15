@@ -7540,6 +7540,8 @@ public class LayoutUnitTests : BaseTestClass
         child.WidthUnits = DimensionUnitType.Absolute;
         child.Height = 100;
         child.HeightUnits = DimensionUnitType.Absolute;
+        // A centered origin reads the width, so each Width change still lays out (an absolute width on its own skips layout, #8059).
+        child.XOrigin = RenderingLibrary.Graphics.HorizontalAlignment.Center;
         parent.AddChild(child);
 
         // Measure unsuspended changes

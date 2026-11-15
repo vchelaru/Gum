@@ -494,7 +494,11 @@ public partial class GraphicalUiElement
 #endif
                 mWidth = value;
 
-                if (Rotation == 0)
+                if (TryApplyAbsoluteWidthWithoutLayout())
+                {
+                    // Nothing but this element's own width changed.
+                }
+                else if (Rotation == 0)
                 {
                     UpdateLayout(
                         ParentUpdateType.IfParentWidthHeightDependOnChildren |
@@ -517,6 +521,62 @@ public partial class GraphicalUiElement
         }
     }
 
+
+    /// <summary>
+    /// Applies <see cref="mWidth"/> to the renderable without a layout when nothing but this element's own
+    /// width can change (#8059): an absolute width on a childless element that no other element reads the
+    /// width of. Anything else (children, a stacking or content-sized parent, an origin or text/texture
+    /// behavior that reads the width) returns false so the caller lays out.
+    /// </summary>
+    private bool TryApplyAbsoluteWidthWithoutLayout()
+    {
+        var renderable = mContainedObjectAsIpso;
+        if (renderable == null ||
+            mWidthUnit != DimensionUnitType.Absolute ||
+            // The origin reads the width, as does a flipped parent (it turns Left into Right):
+            mXOrigin != HorizontalAlignment.Left ||
+            mRotation != 0 ||
+            // Text wraps to its width and a texture can tile to it:
+            renderable is IText ||
+            renderable is ITextureCoordinate ||
+            // Height follows width:
+            IsSizedFromOtherDimension(mHeightUnit) ||
+            Children.Count != 0 ||
+            // Suspended or pending work has to be recorded by a layout call:
+            mIsLayoutSuspended || IsAllLayoutSuspended || currentDirtyState != null ||
+            GetIfShouldCallUpdateOnParent())
+        {
+            return false;
+        }
+
+        if (EffectiveParentGue?.GetAbsoluteFlipHorizontal() == true)
+        {
+            return false;
+        }
+
+        float widthBefore = renderable.Width;
+        renderable.Width = ClampToMinMax(ToFiniteSize(mWidth), _minWidth, _maxWidth);
+
+        if (renderable.Width != widthBefore)
+        {
+            // What a layout records, so a later layout in a session does not trust a visit this skipped.
+            _settledSession = -1;
+            s_layoutChangeCount++;
+            if (!isInSizeChange)
+            {
+                isInSizeChange = true;
+                try
+                {
+                    SizeChanged?.Invoke(this, EventArgs.Empty);
+                }
+                finally
+                {
+                    isInSizeChange = false;
+                }
+            }
+        }
+        return true;
+    }
 
     float? _maxHeight;
     public float? MaxHeight

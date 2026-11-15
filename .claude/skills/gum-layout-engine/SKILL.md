@@ -118,6 +118,10 @@ layout was suspended (`isFontDirty`, set under `IsAllLayoutSuspended`). This is 
 size changed; that call is suppressed here (`SuppressLayoutFromFontChange`) because this pass already
 sizes the element. See the **gum-property-assignment** skill for the full cascade.
 
+### Width skips layout when only its own width can change
+
+The `Width` setter (`TryApplyAbsoluteWidthWithoutLayout`, `.LayoutProperties.cs`) writes the renderable directly, with no `UpdateLayout`, for an `Absolute` width on a childless, unrotated, left-origin element that is not text or a texture and whose parent does not read its size (`GetIfShouldCallUpdateOnParent`) or flip. Any new way an element's width feeds another value needs a condition there and a test in `LayoutWidthSetterShortCircuitTests`.
+
 ### Renderable-reported size changes
 
 A setter that changes what the renderable reports (texture size, aspect ratio, text measure,
