@@ -19,7 +19,7 @@ internal class BenchmarkGame : Game
         int index = Array.IndexOf(args, "--benchmark");
         _hidden = args.Contains("--hidden");
         // Resolved against the launch directory, which is where the caller expects the file.
-        _outputPath = index + 1 < args.Length && !args[index + 1].StartsWith("--") ? Path.GetFullPath(args[index + 1]) : null;
+        _outputPath = index + 1 < args.Length && !args[index + 1].StartsWith("--") ? Path.GetFullPath(args[index + 1]) : Path.GetFullPath("benchmark-result.md"); // WinExe: stdout is invisible, so with no path the row goes to benchmark-result.md in the launch directory
         _graphics = new GraphicsDeviceManager(this)
         {
             PreferredBackBufferWidth = 1280,
