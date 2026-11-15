@@ -71,6 +71,7 @@ public class NineSliceCrossRuntimeTests : BaseTestClass
 
         string[] stale = KnownDifferences.Keys
             .Where(key => key.StartsWith(sheetName + "/", StringComparison.Ordinal))
+            .Where(key => !KnownDifferences[key].MayMatch)
             .Where(key => !differences.Any(difference => $"{sheetName}/{difference.Name}" == key))
             .ToArray();
         stale.ShouldBeEmpty("These known differences no longer differ; remove them from KnownDifferences.");
