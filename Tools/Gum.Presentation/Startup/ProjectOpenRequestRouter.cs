@@ -23,6 +23,12 @@ public class ProjectOpenRequestRouter : IProjectOpenRequestRouter
     private string? _pendingElement;
     private bool _isStartupComplete;
 
+    /// <inheritdoc/>
+    public event Action<string?>? ProjectPathChanged;
+
+    /// <inheritdoc/>
+    public void NotifyProjectPathChanged(string? projectPath) => ProjectPathChanged?.Invoke(projectPath);
+
     /// <summary>Creates the router.</summary>
     public ProjectOpenRequestRouter(ISelectedState selectedState, Lazy<IFileCommands> fileCommands, Lazy<IProjectState> projectState)
     {

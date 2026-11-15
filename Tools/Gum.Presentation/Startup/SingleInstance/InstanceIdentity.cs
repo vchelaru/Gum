@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 
@@ -42,15 +43,56 @@ public static class InstanceIdentity
     /// <summary>The lock file for <paramref name="key"/> inside <paramref name="instanceDirectory"/>.</summary>
     public static string LockFilePath(string instanceDirectory, string key) => Path.Combine(instanceDirectory, key + ".lock");
 
+    /// <summary>Where lock files live for the current user; see <see cref="InstanceDirectoryFor"/>.</summary>
+    public static string DefaultInstanceDirectory() => InstanceDirectoryFor(
+        Environment.GetEnvironmentVariable("XDG_RUNTIME_DIR"), Path.GetTempPath(), Environment.UserName, OperatingSystem.IsLinux());
+
     /// <summary>
-    /// Where lock files live: a per-user folder. Linux prefers <c>XDG_RUNTIME_DIR</c> (private to
-    /// the user); elsewhere the user's temp folder, which is already per user.
+    /// The folder for lock files. Linux prefers <paramref name="runtimeDirectory"/>
+    /// (<c>XDG_RUNTIME_DIR</c>, private to the user). Otherwise a folder named for
+    /// <paramref name="userName"/> inside <paramref name="tempPath"/>, because /tmp is shared on Linux.
     /// </summary>
-    public static string DefaultInstanceDirectory()
+    public static string InstanceDirectoryFor(string? runtimeDirectory, string tempPath, string userName, bool isLinux)
     {
-        string? runtimeDirectory = Environment.GetEnvironmentVariable("XDG_RUNTIME_DIR");
-        string root = OperatingSystem.IsLinux() && !string.IsNullOrEmpty(runtimeDirectory) ? runtimeDirectory : Path.GetTempPath();
-        return Path.Combine(root, "Gum", "Instances");
+        if (isLinux && !string.IsNullOrEmpty(runtimeDirectory))
+        {
+            return Path.Combine(runtimeDirectory, "Gum", "Instances");
+        }
+
+        char[] invalid = Path.GetInvalidFileNameChars();
+        string safeUser = string.Concat(userName.Select(c => invalid.Contains(c) ? '_' : c));
+        return Path.Combine(tempPath, "Gum-" + safeUser, "Instances");
+    }
+
+    /// <summary>
+    /// Creates <paramref name="directory"/> and its parent so that only the current user can use them
+    /// on macOS and Linux (mode 0700), tightening one that already exists. Throws
+    /// <see cref="UnauthorizedAccessException"/> or <see cref="IOException"/> when a folder
+    /// belongs to someone else. On Windows the user's temp folder is already private.
+    /// </summary>
+    public static void EnsurePrivateDirectory(string directory)
+    {
+        if (OperatingSystem.IsWindows())
+        {
+            Directory.CreateDirectory(directory);
+            return;
+        }
+
+        const UnixFileMode privateMode = UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute;
+        string? parent = Path.GetDirectoryName(directory);
+        foreach (string? folder in new[] { parent, directory })
+        {
+            if (folder == null)
+            {
+                continue;
+            }
+
+            Directory.CreateDirectory(folder, privateMode);
+            if (File.GetUnixFileMode(folder) != privateMode)
+            {
+                File.SetUnixFileMode(folder, privateMode);
+            }
+        }
     }
 
     /// <summary>

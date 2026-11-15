@@ -1,4 +1,4 @@
-using Gum.Commands;
+﻿using Gum.Commands;
 using Gum.DataTypes;
 using Gum.Managers;
 using Gum.Startup;
@@ -173,5 +173,17 @@ public class ProjectOpenRequestRouterTests : BaseTestClass
         await _router.CompleteStartupAsync();
 
         _selectedState.VerifySet(s => s.SelectedElement = second);
+    }
+
+    [Fact]
+    public void NotifyProjectPathChanged_RaisesTheEventWithThePath()
+    {
+        List<string?> seen = new List<string?>();
+        _router.ProjectPathChanged += seen.Add;
+
+        _router.NotifyProjectPathChanged("/Users/me/Game/Game.gumx");
+        _router.NotifyProjectPathChanged(null);
+
+        seen.ShouldBe(new string?[] { "/Users/me/Game/Game.gumx", null });
     }
 }

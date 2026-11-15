@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.IO;
 using System.Collections.Generic;
 using System.Linq;
@@ -588,6 +588,36 @@ public class ProjectManagerTests : BaseTestClass
         }
 
         deserializedAfterCallerReturned.ShouldBe(true);
+    }
+
+    [Fact]
+    public async Task LoadProjectAsync_ByFilePath_TellsTheRouterWhichProjectIsNowOpen()
+    {
+        string gumxPath = SaveMinimalProjectToTempFile(out string tempDirectory);
+
+        try
+        {
+            await _projectManager.LoadProjectAsync(gumxPath);
+        }
+        finally
+        {
+            Directory.Delete(tempDirectory, recursive: true);
+        }
+
+        _projectOpenRequests.Verify(
+            r => r.NotifyProjectPathChanged(It.Is<string?>(path => path != null && new FilePath(path) == new FilePath(gumxPath))),
+            Times.AtLeastOnce);
+    }
+
+    [Fact]
+    public void CreateNewProject_TellsTheRouterThereIsNoProjectFile()
+    {
+        StandardElementsManager.Self.Initialize();
+        StandardElementsManager.Self.RegisterExtendedDefaultStates();
+
+        _projectManager.CreateNewProject();
+
+        _projectOpenRequests.Verify(r => r.NotifyProjectPathChanged(null), Times.Once);
     }
 
     [Fact]

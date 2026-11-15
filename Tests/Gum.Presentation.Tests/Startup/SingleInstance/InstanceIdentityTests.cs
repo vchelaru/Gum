@@ -89,4 +89,69 @@ public class InstanceIdentityTests
 
         InstanceIdentity.ElementNameFor(project, Path.Combine(_root, "Ui", "Screens", "notes.txt")).ShouldBeNull();
     }
+
+    [Fact]
+    public void InstanceDirectoryFor_LinuxWithRuntimeDirectory_UsesIt()
+    {
+        string directory = InstanceIdentity.InstanceDirectoryFor("/run/user/1000", "/tmp", "vic", isLinux: true);
+
+        directory.ShouldBe(Path.Combine("/run/user/1000", "Gum", "Instances"));
+    }
+
+    [Fact]
+    public void InstanceDirectoryFor_NoRuntimeDirectory_UsesAFolderNamedForTheUserInsideTemp()
+    {
+        string alice = InstanceIdentity.InstanceDirectoryFor(null, "/tmp", "alice", isLinux: true);
+        string bob = InstanceIdentity.InstanceDirectoryFor(null, "/tmp", "bob", isLinux: true);
+
+        alice.ShouldBe(Path.Combine("/tmp", "Gum-alice", "Instances"));
+        bob.ShouldNotBe(alice);
+    }
+
+    [Fact]
+    public void InstanceDirectoryFor_RuntimeDirectoryOutsideLinux_IsIgnored()
+    {
+        string directory = InstanceIdentity.InstanceDirectoryFor("/run/user/1000", "/tmp", "vic", isLinux: false);
+
+        directory.ShouldBe(Path.Combine("/tmp", "Gum-vic", "Instances"));
+    }
+
+    [Fact]
+    public void InstanceDirectoryFor_UserNameWithPathCharacters_StaysOneFolder()
+    {
+        string directory = InstanceIdentity.InstanceDirectoryFor(null, "/tmp", "DOMAIN/vic", isLinux: false);
+
+        Path.GetFileName(Path.GetDirectoryName(directory)!).ShouldBe("Gum-DOMAIN_vic");
+    }
+
+    // On macOS and Linux an existing open folder is tightened to the user alone; Windows has no mode bits.
+    [Fact]
+    public void EnsurePrivateDirectory_CreatesTheFolder_AndOnUnixLeavesOnlyTheUserAccess()
+    {
+        string root = Path.Combine(Path.GetTempPath(), "GumPrivate-" + Guid.NewGuid().ToString("N"));
+        string directory = Path.Combine(root, "Instances");
+        try
+        {
+            if (!OperatingSystem.IsWindows())
+            {
+                Directory.CreateDirectory(directory);
+                File.SetUnixFileMode(directory, (UnixFileMode)0b111_111_111);
+            }
+
+            InstanceIdentity.EnsurePrivateDirectory(directory);
+            InstanceIdentity.EnsurePrivateDirectory(directory);
+
+            Directory.Exists(directory).ShouldBeTrue();
+            if (!OperatingSystem.IsWindows())
+            {
+                UnixFileMode expected = UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute;
+                File.GetUnixFileMode(directory).ShouldBe(expected);
+                File.GetUnixFileMode(root).ShouldBe(expected);
+            }
+        }
+        finally
+        {
+            Directory.Delete(root, true);
+        }
+    }
 }

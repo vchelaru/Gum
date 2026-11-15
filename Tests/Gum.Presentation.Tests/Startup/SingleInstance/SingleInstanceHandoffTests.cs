@@ -118,15 +118,135 @@ public class SingleInstanceHandoffTests : IDisposable
     }
 
     [Fact]
-    public async Task Enter_OwnerRefusesTheRequest_ReportsRejectedWithoutBecomingOwner()
+    public async Task Server_RequestForAnotherProject_IsRefused()
     {
         SingleInstanceGate owner = Enter();
-        owner.Inbox!.Validate = _ => "busy";
+        string key = InstanceIdentity.KeyFor(_project, _user, false);
+        string other = Path.Combine(Path.GetDirectoryName(_project)!, "Other", "Other.gumx");
 
-        SingleInstanceGate second = await Task.Run(() => Enter());
+        using System.IO.Pipes.NamedPipeClientStream client = new System.IO.Pipes.NamedPipeClientStream(".", InstanceIdentity.PipeName(key),
+            System.IO.Pipes.PipeDirection.InOut, System.IO.Pipes.PipeOptions.CurrentUserOnly);
+        await client.ConnectAsync(2000);
+        using StreamReader reader = new StreamReader(client);
+        using StreamWriter writer = new StreamWriter(client) { AutoFlush = true };
+        await reader.ReadLineAsync();
+        await writer.WriteLineAsync(OpenRequestMessage.Serialize(new OpenRequest(other, null)));
+        OpenRequestMessage.TryParse((await reader.ReadLineAsync())!, out OpenResponse? response).ShouldBeTrue();
 
-        second.Outcome.ShouldBe(GateOutcome.Unclaimed);
-        second.Message!.ShouldContain("busy");
+        response!.Ok.ShouldBeFalse();
+        response.Error!.ShouldContain("different project");
+    }
+
+    [Fact]
+    public async Task Reclaim_ToAnotherProject_OldProjectIsFreeAndNewProjectHandsOff()
+    {
+        SingleInstanceGate owner = Enter();
+        string other = Path.Combine(Path.GetDirectoryName(_project)!, "Other", "Other.gumx");
+
+        owner.Reclaim(other).ShouldBeTrue();
+
+        (await Task.Run(() => Enter(other))).Outcome.ShouldBe(GateOutcome.HandedOff);
+        (await Task.Run(() => Enter())).Outcome.ShouldBe(GateOutcome.Owner);
+    }
+
+    [Fact]
+    public async Task Reclaim_KeepsTheHandlerAndQueueAcrossTheSwitch()
+    {
+        SingleInstanceGate owner = Enter();
+        string other = Path.Combine(Path.GetDirectoryName(_project)!, "Other", "Other.gumx");
+        List<OpenRequest> received = new List<OpenRequest>();
+        owner.Inbox!.Attach(request =>
+        {
+            lock (received)
+            {
+                received.Add(request);
+            }
+            return Task.CompletedTask;
+        });
+        (await Task.Run(() => Enter())).Outcome.ShouldBe(GateOutcome.HandedOff);
+
+        owner.Reclaim(other);
+        (await Task.Run(() => Enter(other))).Outcome.ShouldBe(GateOutcome.HandedOff);
+
+        await WaitUntilAsync(() => received.Count == 2);
+        received[0].Project.ShouldBe(_project);
+        received[1].Project.ShouldBe(other);
+    }
+
+    [Fact]
+    public async Task Reclaim_ToNull_ReleasesTheClaim()
+    {
+        SingleInstanceGate owner = Enter();
+
+        owner.Reclaim(null).ShouldBeTrue();
+
+        (await Task.Run(() => Enter())).Outcome.ShouldBe(GateOutcome.Owner);
+    }
+
+    [Fact]
+    public async Task Reclaim_SameProject_StaysTheOwner()
+    {
+        SingleInstanceGate owner = Enter();
+
+        owner.Reclaim(_project).ShouldBeTrue();
+
+        (await Task.Run(() => Enter())).Outcome.ShouldBe(GateOutcome.HandedOff);
+    }
+
+    [Fact]
+    public async Task Reclaim_ProjectAnotherGumOwns_ClaimsNothingAndDropsTheOldClaim()
+    {
+        SingleInstanceGate first = Enter();
+        string other = Path.Combine(Path.GetDirectoryName(_project)!, "Other", "Other.gumx");
+        SingleInstanceGate second = await Task.Run(() => Enter(other));
+        second.Outcome.ShouldBe(GateOutcome.Owner);
+
+        first.Reclaim(other).ShouldBeFalse();
+
+        // The first Gum no longer holds its old project, so a launch for it starts a new owner.
+        (await Task.Run(() => Enter())).Outcome.ShouldBe(GateOutcome.Owner);
+    }
+
+    [Fact]
+    public async Task StartUnclaimed_ClaimsNothingUntilReclaim()
+    {
+        SingleInstanceGate gate = SingleInstanceGate.StartUnclaimed(_instanceDirectory, _user, caseSensitive: false);
+        _disposables.Add(gate);
+        gate.Outcome.ShouldBe(GateOutcome.Unclaimed);
+        gate.Inbox.ShouldNotBeNull();
+
+        gate.Reclaim(_project).ShouldBeTrue();
+
+        (await Task.Run(() => Enter())).Outcome.ShouldBe(GateOutcome.HandedOff);
+    }
+
+    [Fact]
+    public async Task Enter_InstanceFolderCannotBeUsed_StartsUnclaimedWithoutWaiting()
+    {
+        // A file where the folder must be.
+        string blocked = Path.Combine(_instanceDirectory, "blocked");
+        Directory.CreateDirectory(_instanceDirectory);
+        File.WriteAllText(blocked, "x");
+
+        SingleInstanceGate gate = await Task.Run(() => SingleInstanceGate.Enter(
+            new OpenRequest(_project, null), blocked, _user, false, TimeSpan.FromSeconds(5), onServerPid: null));
+        _disposables.Add(gate);
+
+        gate.Outcome.ShouldBe(GateOutcome.Unclaimed);
+    }
+
+    [Fact]
+    public void DeleteStaleSocket_RemovesTheLeftoverFileOfACrashedOwner()
+    {
+        Directory.CreateDirectory(_instanceDirectory);
+        string socket = Path.Combine(_instanceDirectory, "CoreFxPipe_gum-open-test");
+        File.WriteAllText(socket, "stale");
+
+        OpenRequestServer.DeleteStaleSocket(socket);
+        OpenRequestServer.DeleteStaleSocket(socket);
+
+        File.Exists(socket).ShouldBeFalse();
+        OpenRequestServer.SocketFilePath("gum-open-test").ShouldEndWith("CoreFxPipe_gum-open-test");
     }
 
     [Fact]

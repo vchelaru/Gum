@@ -8,6 +8,7 @@
   * [Opening Gum on macOS](gum-tool/setup/opening-gum-on-macos.md)
   * [Creating a Project](gum-tool/setup/creating-a-project.md)
   * [Running from Source](gum-tool/setup/running-from-source.md)
+  * [Launching Gum with a Project](gum-tool/setup/launching-gum-with-a-project.md)
 * [Showcase](gum-tool/showcase.md)
 * [Tutorials and Examples](gum-tool/tutorials-and-examples/README.md)
   * [Working with Gum](gum-tool/tutorials-and-examples/working-with-gum/README.md)

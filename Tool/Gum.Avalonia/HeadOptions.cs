@@ -90,11 +90,11 @@ public sealed class HeadOptions
     public OpenRequest? HandoffRequest { get; }
 
     /// <summary>
-    /// True when this launch takes part in the single-instance handoff: it names a project, was not
-    /// started with <c>--no-handoff</c>, and is not an unattended run (parallel screenshot runs of one
-    /// project must not hand off to each other) unless <see cref="AwaitOpenRequests"/> asks for it.
+    /// True when this launch claims the project it ends up with open so later launches can reach it:
+    /// not started with <c>--no-handoff</c>, and not an unattended run unless
+    /// <see cref="AwaitOpenRequests"/> asks for it.
     /// </summary>
-    public bool UsesSingleInstance => HandoffRequest != null && !NoHandoff && (ExitAfterSeconds == null || AwaitOpenRequests != null);
+    public bool TakesPartInHandoff => !NoHandoff && (ExitAfterSeconds == null || AwaitOpenRequests != null);
 
     /// <summary>
     /// <c>--no-handoff</c>: start a new Gum even when another one owns the project, and claim nothing.

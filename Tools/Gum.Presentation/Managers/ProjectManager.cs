@@ -342,6 +342,8 @@ public class ProjectManager : IProjectManager, IDeleteProjectProvider, ICopyPast
         {
             IsNotifyingProjectLoad = false;
         }
+
+        _projectOpenRequests.NotifyProjectPathChanged(string.IsNullOrEmpty(project.FullFileName) ? null : project.FullFileName);
     }
 
     // made public so that File commands can access this function
@@ -776,6 +778,7 @@ public class ProjectManager : IProjectManager, IDeleteProjectProvider, ICopyPast
                 if (succeeded)
                 {
                     _pluginManager.ProjectSave(project);
+                    _projectOpenRequests.NotifyProjectPathChanged(project.FullFileName);
                     GeneralSettingsFile.AddToRecentFilesIfNew(project.FullFileName);
                     GeneralSettingsFile.LastProject = project.FullFileName;
                     GeneralSettingsFile.Save();

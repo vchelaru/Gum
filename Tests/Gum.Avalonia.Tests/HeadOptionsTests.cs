@@ -177,16 +177,17 @@ public class HeadOptionsTests
     }
 
     [Fact]
-    public void UsesSingleInstance_OnlyForAttendedLaunchesWithAProject()
+    public void TakesPartInHandoff_OnlyForAttendedLaunchesOrOnesThatAwaitRequests()
     {
         string folder = MakeProjectFolder(out string project, out _);
         try
         {
-            HeadOptions.Parse(new[] { project }).UsesSingleInstance.ShouldBeTrue();
-            HeadOptions.Parse(new[] { project, "--no-handoff" }).UsesSingleInstance.ShouldBeFalse();
-            HeadOptions.Parse(new[] { project, "--exit-after", "5" }).UsesSingleInstance.ShouldBeFalse();
-            HeadOptions.Parse(new[] { project, "--exit-after", "5", "--await-open-requests", "1" }).UsesSingleInstance.ShouldBeTrue();
-            HeadOptions.Parse(new[] { "--exit-after", "5" }).UsesSingleInstance.ShouldBeFalse();
+            HeadOptions.Parse(new[] { project }).TakesPartInHandoff.ShouldBeTrue();
+            HeadOptions.Parse(new[] { project, "--no-handoff" }).TakesPartInHandoff.ShouldBeFalse();
+            HeadOptions.Parse(new[] { project, "--exit-after", "5" }).TakesPartInHandoff.ShouldBeFalse();
+            HeadOptions.Parse(new[] { project, "--exit-after", "5", "--await-open-requests", "1" }).TakesPartInHandoff.ShouldBeTrue();
+            HeadOptions.Parse(new[] { "--exit-after", "5" }).TakesPartInHandoff.ShouldBeFalse();
+            HeadOptions.Parse(Array.Empty<string>()).TakesPartInHandoff.ShouldBeTrue();
         }
         finally
         {

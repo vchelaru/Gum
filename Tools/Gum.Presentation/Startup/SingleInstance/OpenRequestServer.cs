@@ -19,38 +19,15 @@ public interface IOpenRequestInbox
 }
 
 /// <summary>
-/// Listens on a per-user named pipe and queues each valid <see cref="OpenRequest"/> until a handler
-/// is attached. Create it before the tool starts loading so a launch during startup connects and
-/// queues. The pipe is restricted to the current user (<see cref="PipeOptions.CurrentUserOnly"/>).
+/// Holds the requests that reached this Gum until a handler is attached, then hands each to it in
+/// arrival order. It outlives the pipe servers that feed it, so switching the claimed project
+/// loses neither the handler nor a queued request.
 /// </summary>
-public sealed class OpenRequestServer : IOpenRequestInbox, IDisposable
+public sealed class OpenRequestInbox : IOpenRequestInbox
 {
-    private static readonly Encoding _utf8 = new UTF8Encoding(false);
-
-    private readonly string _pipeName;
-    // Cancelled but never disposed: the accept loop and in-flight clients may still read its token.
-    private readonly CancellationTokenSource _cancellation = new CancellationTokenSource();
     private readonly object _gate = new object();
     private readonly Queue<OpenRequest> _queued = new Queue<OpenRequest>();
     private Func<OpenRequest, Task>? _handler;
-    private NamedPipeServerStream _waiting;
-    private Task _acceptLoop = Task.CompletedTask;
-
-    /// <summary>
-    /// Returns an error to refuse a request, or null to accept it. Runs before the request is queued.
-    /// </summary>
-    public Func<OpenRequest, string?> Validate { get; set; } = _ => null;
-
-    /// <summary>Opens the pipe, so a client that connects from now on waits instead of failing.</summary>
-    public OpenRequestServer(string pipeName)
-    {
-        _pipeName = pipeName;
-        DeleteStaleSocket(pipeName);
-        _waiting = CreateStream();
-    }
-
-    /// <summary>Starts accepting connections.</summary>
-    public void Start() => _acceptLoop = Task.Run(AcceptLoopAsync);
 
     /// <inheritdoc/>
     public void Attach(Func<OpenRequest, Task> handler)
@@ -64,6 +41,77 @@ public sealed class OpenRequestServer : IOpenRequestInbox, IDisposable
             }
         }
     }
+
+    /// <summary>Delivers <paramref name="request"/> to the handler, or queues it until one is attached.</summary>
+    internal void Post(OpenRequest request)
+    {
+        lock (_gate)
+        {
+            if (_handler is { } handler)
+            {
+                Deliver(handler, request);
+            }
+            else
+            {
+                _queued.Enqueue(request);
+            }
+        }
+    }
+
+    // Called in arrival order, under the lock; the handler hops to the UI thread itself.
+    private static void Deliver(Func<OpenRequest, Task> handler, OpenRequest request)
+    {
+        try
+        {
+            Task task = handler(request);
+            _ = task.ContinueWith(
+                failed => Console.Error.WriteLine("Handling an open request failed: " + failed.Exception),
+                TaskContinuationOptions.OnlyOnFaulted);
+        }
+        catch (Exception exception)
+        {
+            Console.Error.WriteLine("Handling an open request failed: " + exception);
+        }
+    }
+}
+
+/// <summary>
+/// Listens on a per-user named pipe and posts each valid <see cref="OpenRequest"/> to an
+/// <see cref="OpenRequestInbox"/>. Create it before the tool starts loading so a launch during
+/// startup connects and queues. The pipe is restricted to the current user
+/// (<see cref="PipeOptions.CurrentUserOnly"/>).
+/// </summary>
+public sealed class OpenRequestServer : IDisposable
+{
+    private static readonly Encoding _utf8 = new UTF8Encoding(false);
+
+    private readonly string _pipeName;
+    // Cancelled but never disposed: the accept loop and in-flight clients may still read its token.
+    private readonly CancellationTokenSource _cancellation = new CancellationTokenSource();
+    private readonly OpenRequestInbox _inbox;
+    private NamedPipeServerStream _waiting;
+    private Task _acceptLoop = Task.CompletedTask;
+
+    /// <summary>
+    /// Returns an error to refuse a request, or null to accept it. Runs before the request is queued.
+    /// </summary>
+    public Func<OpenRequest, string?> Validate { get; set; } = _ => null;
+
+    /// <summary>Opens the pipe, so a client that connects from now on waits instead of failing.</summary>
+    public OpenRequestServer(string pipeName, OpenRequestInbox inbox)
+    {
+        _pipeName = pipeName;
+        _inbox = inbox;
+        if (!OperatingSystem.IsWindows())
+        {
+            DeleteStaleSocket(SocketFilePath(pipeName));
+        }
+
+        _waiting = CreateStream();
+    }
+
+    /// <summary>Starts accepting connections.</summary>
+    public void Start() => _acceptLoop = Task.Run(AcceptLoopAsync);
 
     /// <inheritdoc/>
     public void Dispose()
@@ -80,18 +128,16 @@ public sealed class OpenRequestServer : IOpenRequestInbox, IDisposable
 
     }
 
+    /// <summary>Where .NET puts the socket file of a pipe on macOS and Linux.</summary>
+    internal static string SocketFilePath(string pipeName) => Path.Combine(Path.GetTempPath(), "CoreFxPipe_" + pipeName);
+
     // The socket file of a crashed owner stays behind on macOS and Linux; the caller holds the
     // instance lock, so nobody is listening on it.
-    private static void DeleteStaleSocket(string pipeName)
+    internal static void DeleteStaleSocket(string socketFile)
     {
-        if (OperatingSystem.IsWindows())
-        {
-            return;
-        }
-
         try
         {
-            File.Delete(Path.Combine(Path.GetTempPath(), "CoreFxPipe_" + pipeName));
+            File.Delete(socketFile);
         }
         catch (IOException)
         {
@@ -171,34 +217,8 @@ public sealed class OpenRequestServer : IOpenRequestInbox, IDisposable
             return new OpenResponse(false, refusal);
         }
 
-        lock (_gate)
-        {
-            if (_handler is { } handler)
-            {
-                Deliver(handler, request!);
-            }
-            else
-            {
-                _queued.Enqueue(request!);
-            }
-        }
+        _inbox.Post(request!);
 
         return new OpenResponse(true, null);
-    }
-
-    // Called in arrival order, under the lock; the handler hops to the UI thread itself.
-    private static void Deliver(Func<OpenRequest, Task> handler, OpenRequest request)
-    {
-        try
-        {
-            Task task = handler(request);
-            _ = task.ContinueWith(
-                failed => Console.Error.WriteLine("Handling an open request failed: " + failed.Exception),
-                TaskContinuationOptions.OnlyOnFaulted);
-        }
-        catch (Exception exception)
-        {
-            Console.Error.WriteLine("Handling an open request failed: " + exception);
-        }
     }
 }
