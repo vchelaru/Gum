@@ -12,6 +12,7 @@ using Brutal.VulkanApi;
 using Brutal.VulkanApi.Abstractions;
 using Gum;
 using GumSamples;
+using SkiaGameRendering.Core.VK;
 using System.Diagnostics;
 
 SampleArgs sample = new SampleArgs(args);
@@ -39,13 +40,24 @@ try
         }
     }
 
-    using Instance instance = Vulkan.CreateInstance(new Instance.CreateInfo
+    // macOS (MoltenVK): Skia draws through Metal into the MTLTexture behind Gum's VkImage, so the instance is created
+    // for exporting the MTLDevice and the MTLCommandQueue, and the device enables VK_EXT_metal_objects (below).
+    bool isMac = OperatingSystem.IsMacOS();
+    Instance instance;
+    unsafe
     {
-        AppInfo = new VkApplicationInfo { ApiVersion = (int)VulkanHelpers.Api.VERSION_1_3 },
-        Flags = VulkanHelpers.GetPlatformRequiredInstanceCreateFlags(),
-        EnabledExtensions = instanceExtensions,
-        EnabledLayers = [],
-    });
+        var exportQueue = VkMetalObjectExport.ExportMetalObjectCreateInfo.For(VkMetalObjectExport.ExportObjectTypeMetalCommandQueue);
+        var exportDevice = VkMetalObjectExport.ExportMetalObjectCreateInfo.For(VkMetalObjectExport.ExportObjectTypeMetalDevice, (IntPtr)(&exportQueue));
+        instance = Vulkan.CreateInstance(new Instance.CreateInfo
+        {
+            AppInfo = new VkApplicationInfo { ApiVersion = (int)VulkanHelpers.Api.VERSION_1_3 },
+            Flags = VulkanHelpers.GetPlatformRequiredInstanceCreateFlags(), // includes the portability enumeration flag on macOS
+            EnabledExtensions = instanceExtensions,
+            EnabledLayers = [],
+            Next = isMac ? &exportDevice : null,
+        });
+    }
+    using Instance instanceScope = instance;
 
     if (Glfw.CreateWindowSurface(instance.VkHandle, window, out var surfaceHandle) != (int)VkResult.Success)
     {
@@ -75,7 +87,11 @@ try
 
     HashSet<string> deviceExtensions = new HashSet<string>();
     VulkanHelpers.AddSwapchainExtensions(deviceExtensions);
-    VulkanHelpers.AddMandatoryIfSupportedDeviceExtensions(deviceExtensions, physicalDevice);
+    VulkanHelpers.AddMandatoryIfSupportedDeviceExtensions(deviceExtensions, physicalDevice); // VK_KHR_portability_subset on macOS
+    if (isMac)
+    {
+        deviceExtensions.Add(VkMetalObjectExport.ExtensionName);
+    }
     float priority = 1.0f;
     VkPhysicalDeviceVulkan13Features features13 = new VkPhysicalDeviceVulkan13Features { DynamicRendering = true };
     Device device;

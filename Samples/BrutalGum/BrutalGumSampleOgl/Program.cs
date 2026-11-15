@@ -28,9 +28,7 @@ Directory.SetCurrentDirectory(AppContext.BaseDirectory);
 Glfw.Init();
 try
 {
-    Glfw.WindowHint(GlfwWindowHint.ContextVersionMajor, 3);
-    Glfw.WindowHint(GlfwWindowHint.ContextVersionMinor, 3);
-    Glfw.WindowHint(GlfwWindowHint.OpenGlProfile, 0x32001 /* GLFW_OPENGL_CORE_PROFILE */);
+    SampleSupport.ApplyOpenGlHints();
     SampleSupport.ApplyWindowHints(sample);
     using GlfwWindow window = Glfw.CreateWindow(new GlfwWindow.CreateInfo { Title = "Gum.Brutal.OGL sample", Size = benchmark ? new int2(1280, 720) : new int2(1400, 900) });
     SampleSupport.PlaceWindow(window, sample);
