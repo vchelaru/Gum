@@ -65,6 +65,52 @@ public class SettingsDialogViewTests
     }
 
     [AvaloniaFact]
+    public void SettingsWindow_EnterOnAFocusedPageListItem_DoesNotCloseTheWindow()
+    {
+        SettingsDialogViewModel viewModel = TestAppBuilder.Services.GetRequiredService<SettingsDialogViewModel>();
+        DialogWindow window = Open(viewModel);
+        ListBoxItem appearance = window.GetVisualDescendants().OfType<ListBoxItem>()
+            .Single(item => (item.DataContext as SettingsNavigationEntry)?.Title == "Appearance");
+        Click(window, appearance);
+        appearance.Focus();
+
+        window.KeyPress(Key.Enter, RawInputModifiers.None, PhysicalKey.Enter, "\r");
+        Dispatcher.UIThread.RunJobs();
+
+        window.IsVisible.ShouldBeTrue("Enter on a page list item must not press Close");
+        window.Result.ShouldBeNull();
+        window.Close();
+    }
+
+    [AvaloniaFact]
+    public void SettingsWindow_CloseButtonClick_ClosesTheWindow()
+    {
+        SettingsDialogViewModel viewModel = TestAppBuilder.Services.GetRequiredService<SettingsDialogViewModel>();
+        DialogWindow window = Open(viewModel);
+        Button close = window.GetVisualDescendants().OfType<Button>().Single(button => button.Name == DialogWindow.AffirmativeButtonName);
+
+        Click(window, close);
+
+        window.IsVisible.ShouldBeFalse();
+        window.Result.ShouldBe(true);
+    }
+
+    [AvaloniaFact]
+    public void SettingsWindow_Escape_ClosesTheWindow()
+    {
+        SettingsDialogViewModel viewModel = TestAppBuilder.Services.GetRequiredService<SettingsDialogViewModel>();
+        DialogWindow window = Open(viewModel);
+        ListBoxItem appearance = window.GetVisualDescendants().OfType<ListBoxItem>()
+            .Single(item => (item.DataContext as SettingsNavigationEntry)?.Title == "Appearance");
+        appearance.Focus();
+
+        window.KeyPress(Key.Escape, RawInputModifiers.None, PhysicalKey.Escape, null);
+        Dispatcher.UIThread.RunJobs();
+
+        window.IsVisible.ShouldBeFalse();
+    }
+
+    [AvaloniaFact]
     public void AppearancePage_ShowsEachColorAsARow_WithAResetOnlyWhileItIsCustom()
     {
         Gum.Dialogs.IThemingService theming = TestAppBuilder.Services.GetRequiredService<Gum.Dialogs.IThemingService>();

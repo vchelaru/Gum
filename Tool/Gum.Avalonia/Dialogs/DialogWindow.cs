@@ -152,7 +152,7 @@ public sealed class DialogWindow : Window
         }
 
         Button affirmative = CreateFooterButton(AffirmativeButtonName, nameof(DialogViewModel.AffirmativeText), nameof(DialogViewModel.AffirmativeCommand));
-        affirmative.IsDefault = true;
+        affirmative.IsDefault = viewModel.AffirmativeIsDefault;
         affirmative.IsVisible = viewModel.AffirmativeText != null;
 
         Button negative = CreateFooterButton(NegativeButtonName, nameof(DialogViewModel.NegativeText), nameof(DialogViewModel.NegativeCommand));

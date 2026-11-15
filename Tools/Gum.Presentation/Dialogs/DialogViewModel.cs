@@ -43,6 +43,12 @@ public abstract class DialogViewModel : ViewModel
     protected bool AnswersOnAccessKeyAlone { get; set; }
 
     /// <summary>
+    /// Whether Enter presses the affirmative button. A close-only dialog with lists (Settings) sets
+    /// this false so an Enter on a list item cannot dismiss it.
+    /// </summary>
+    public bool AffirmativeIsDefault { get; protected set; } = true;
+
+    /// <summary>
     /// Runs the affirmative or negative command whose access key is <paramref name="letter"/>
     /// (case-insensitive), if this dialog opted in through <see cref="AnswersOnAccessKeyAlone"/>.
     /// Returns whether the dialog was answered.
