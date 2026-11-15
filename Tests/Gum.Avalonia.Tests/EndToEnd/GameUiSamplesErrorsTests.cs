@@ -5,6 +5,8 @@ using Gum.Avalonia.Shell;
 using Gum.Avalonia.Tests.Harness;
 using Gum.DataTypes;
 using Gum.Managers;
+using CommunityToolkit.Mvvm.Messaging;
+using Gum.Messages;
 using Gum.Plugins.Errors;
 using Gum.Services;
 using Microsoft.Extensions.DependencyInjection;
@@ -25,14 +27,32 @@ public class GameUiSamplesErrorsTests
         CopyDirectory(source, target);
         fixture.FollowProjectFile(Path.Combine(target, "Content", "GumProject", "GameUiSamplesGumProject.gumx"));
         IProjectManager projectManager = TestAppBuilder.Services.GetRequiredService<IProjectManager>();
-        Task load = projectManager.LoadProjectAsync(new FilePath(fixture.ProjectFilePath));
-        System.Diagnostics.Stopwatch waited = System.Diagnostics.Stopwatch.StartNew();
-        while (waited.Elapsed < TimeSpan.FromSeconds(8))
+        IMessenger messenger = TestAppBuilder.Services.GetRequiredService<IMessenger>();
+        object recipient = new object();
+        bool orphanScanApplied = false;
+        // The orphan code file scan runs off the UI thread and posts its result back, and it always
+        // asks for an error refresh when it does, even with nothing to report.
+        messenger.Register<RequestErrorRefreshMessage>(recipient, (_, message) =>
         {
-            Thread.Sleep(20);
+            orphanScanApplied |= message.RequestingPlugin?.FriendlyName == "Orphan Code File Plugin";
+        });
+        try
+        {
+            Task load = projectManager.LoadProjectAsync(new FilePath(fixture.ProjectFilePath));
+            System.Diagnostics.Stopwatch waited = System.Diagnostics.Stopwatch.StartNew();
+            while (!(load.IsCompleted && orphanScanApplied))
+            {
+                waited.Elapsed.ShouldBeLessThan(TimeSpan.FromSeconds(60), "the project load and orphan scan did not finish");
+                Thread.Sleep(5);
+                Dispatcher.UIThread.RunJobs();
+            }
+            load.GetAwaiter().GetResult();
             Dispatcher.UIThread.RunJobs();
         }
-        load.IsCompleted.ShouldBeTrue();
+        finally
+        {
+            messenger.UnregisterAll(recipient);
+        }
 
         AvaloniaPluginTab tab = TestAppBuilder.Services.GetRequiredService<AvaloniaTabManager>().AllTabs.Single(item => item.Title == "Errors");
         AllErrorsViewModel errors = tab.Content as AllErrorsViewModel ?? (AllErrorsViewModel)((Control)tab.Content).DataContext!;
