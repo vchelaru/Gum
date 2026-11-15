@@ -384,7 +384,7 @@ public class NineSlice : RenderableShapeBase, IAnimatable, IAnimationChainRender
 
     // Quantized to 1/256 pixel first so a one-ulp difference between two items' copies of a shared edge cannot round
     // it two ways at an exact half pixel.
-    private static float SnapEdge(float device) => MathF.Floor(MathF.Round(device * 256f) / 256f + 0.5f);
+    internal static float SnapEdge(float device) => MathF.Floor(MathF.Round(device * 256f) / 256f + 0.5f);
 
     private bool _movedBySnapping;
 
