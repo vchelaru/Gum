@@ -92,6 +92,8 @@ Now that we have these exposed variables, we can also customize them per-instanc
 
 <figure><img src="../../../.gitbook/assets/14_05_43_20.png" alt=""><figcaption><p>Two LevelUpItem instances with different exposed variable values</p></figcaption></figure>
 
+For more, see [Exposed Variables](../../gum-elements/component/exposed-variables.md).
+
 ### Hiding Variables
 
 Gum also supports hiding variables at the component level. Hiding variables makes it easier to work with component instances by only displaying variables which should be modified for each instance.
