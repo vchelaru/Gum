@@ -922,6 +922,11 @@ public class BitmapFont : IDisposable
             {
                 renderTarget = new RenderTarget2D(managers.Renderer.GraphicsDevice, requiredWidth, requiredHeight);
             }
+            // Return to whatever was bound (the back buffer or a user render target) afterwards,
+            // not unconditionally to the back buffer (#8046).
+            Texture? oldRenderTarget = managers.Renderer.GetBoundRenderTarget();
+            managers.Renderer.TryReportDiscardingRestoreTarget(oldRenderTarget);
+
             // render target has to be set before setting the viewport
             managers.Renderer.GraphicsDevice.SetRenderTarget(renderTarget);
 
@@ -946,7 +951,7 @@ public class BitmapFont : IDisposable
 
             spriteRenderer.End();
 
-            managers.Renderer.GraphicsDevice.SetRenderTarget(null);
+            managers.Renderer.GraphicsDevice.SetRenderTarget(oldRenderTarget as RenderTarget2D);
             managers.Renderer.GraphicsDevice.Viewport = oldViewport;
 
         }
