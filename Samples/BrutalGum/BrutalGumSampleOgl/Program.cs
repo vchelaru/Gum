@@ -68,6 +68,7 @@ try
                 glHost.Sync();
             },
             benchmarkPath);
+        FlushProbe.Report(BenchmarkRunner.MeasuredFrames);
         return;
     }
 
