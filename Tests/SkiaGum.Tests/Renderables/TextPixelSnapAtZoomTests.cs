@@ -49,15 +49,30 @@ public class TextPixelSnapAtZoomTests : BaseTestClass
         (fractionTop - wholeTop).ShouldBe(expectedShift, $"zoom {zoom}, Y {y}");
     }
 
+    // Unrotated text takes the arithmetic-and-Translate path; a rotation too small to move any pixel takes the
+    // matrix-inversion path. Both must paint the same pixels.
+    [Theory]
+    [InlineData(1f, 6.5f, 10.25f)]
+    [InlineData(1.5f, 6.5f, 10.4f)]
+    [InlineData(2f, 6.25f, 10.75f)]
+    [InlineData(3f, 7.3f, 9.6f)]
+    public void Render_UnrotatedText_PaintsSamePixelsAsMatrixPath(float zoom, float x, float y)
+    {
+        using SKBitmap simple = RenderText(zoom, x, y, rotation: 0f);
+        using SKBitmap matrixPath = RenderText(zoom, x, y, rotation: 0.0001f);
+
+        simple.Bytes.ShouldBe(matrixPath.Bytes, $"zoom {zoom}, X {x}, Y {y}");
+    }
+
     static int DeviceRound(float value) => (int)MathF.Round(value, MidpointRounding.AwayFromZero);
 
-    static SKBitmap RenderText(float zoom, float x, float y)
+    static SKBitmap RenderText(float zoom, float x, float y, float rotation = 0f)
     {
         using SKSurface surface = SKSurface.Create(new SKImageInfo(Size, Size));
         surface.Canvas.Clear(SKColors.Transparent);
         Gum.GumService.Default.Initialize(surface.Canvas, Size, Size);
         Gum.GumService.Default.SystemManagers.Renderer.Camera.Zoom = zoom;
-        TextRuntime text = new() { Text = "HI", X = x, Y = y };
+        TextRuntime text = new() { Text = "HI", X = x, Y = y, Rotation = rotation };
         Gum.GumService.Default.Root.Children.Add(text);
 
         Gum.GumService.Default.Draw();
