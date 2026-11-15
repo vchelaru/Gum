@@ -50,7 +50,26 @@ namespace RenderingLibrary.Graphics
             SKMatrix toWorld = clipper.GetClipTransform(out SKRect localRect);
             if (clipper.GetAbsoluteRotation() == 0)
             {
-                canvas.ClipRect(toWorld.MapRect(localRect));
+                SKRect worldRect = toWorld.MapRect(localRect);
+                SKMatrix matrix = canvas.TotalMatrix;
+                if (matrix.SkewX == 0 && matrix.SkewY == 0 && matrix.Persp0 == 0 && matrix.Persp1 == 0
+                    && matrix.ScaleX > 0 && matrix.ScaleY > 0)
+                {
+                    // Round the clip edges to device pixels exactly as NineSlice rounds its own, so a clip edge that
+                    // coincides with a fractional item edge cannot land on the other side of it (#8071).
+                    var deviceRect = new SKRect(
+                        SkiaGum.Renderables.NineSlice.SnapEdge(matrix.ScaleX * worldRect.Left + matrix.TransX),
+                        SkiaGum.Renderables.NineSlice.SnapEdge(matrix.ScaleY * worldRect.Top + matrix.TransY),
+                        SkiaGum.Renderables.NineSlice.SnapEdge(matrix.ScaleX * worldRect.Right + matrix.TransX),
+                        SkiaGum.Renderables.NineSlice.SnapEdge(matrix.ScaleY * worldRect.Bottom + matrix.TransY));
+                    canvas.SetMatrix(SKMatrix.Identity);
+                    canvas.ClipRect(deviceRect);
+                    canvas.SetMatrix(matrix);
+                }
+                else
+                {
+                    canvas.ClipRect(worldRect);
+                }
             }
             else
             {

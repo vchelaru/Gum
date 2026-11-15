@@ -58,7 +58,7 @@ public class NineSliceStackSeamTests
     }
 
     /// <summary>The geometry of a stack, in world units. Items touch when spacing is 0.</summary>
-    record Layout(float Left, float BaseTop, float Width, float ItemHeight, float Spacing, int Count, float Scroll, float Zoom)
+    record Layout(float Left, float BaseTop, float Width, float ItemHeight, float Spacing, int Count, float Scroll, float Zoom, bool ClipToItems = false)
     {
         public float ItemTop(int i) => BaseTop - Scroll + i * (ItemHeight + Spacing);
     }
@@ -94,21 +94,25 @@ public class NineSliceStackSeamTests
                 canvas.Clear(Background);
 
                 // A ListBox's shape: a viewport that clips, holding a stack moved by the scroll offset.
+                // With ClipToItems the clip rectangle is exactly the stack's rectangle (#8071), so every clip edge
+                // coincides with an item edge at whatever fraction the layout lands on.
+                float stackHeight = layout.Count * layout.ItemHeight + (layout.Count - 1) * layout.Spacing;
                 var viewport = new ContainerRuntime
                 {
-                    X = layout.Left - 3, // wider than the items, so the clip never crops an item edge
-                    Y = 0,
+                    // Otherwise wider than the items, so the clip never crops an item edge.
+                    X = layout.ClipToItems ? layout.Left : layout.Left - 3,
+                    Y = layout.ClipToItems ? layout.BaseTop - layout.Scroll : 0,
                     WidthUnits = DimensionUnitType.Absolute,
                     HeightUnits = DimensionUnitType.Absolute,
-                    Width = layout.Width + 6,
-                    Height = pixelHeight / layout.Zoom,
+                    Width = layout.ClipToItems ? layout.Width : layout.Width + 6,
+                    Height = layout.ClipToItems ? stackHeight : pixelHeight / layout.Zoom,
                     ClipsChildren = true,
                 };
                 viewport.AddToManagers(managers, null);
                 var stack = new ContainerRuntime
                 {
-                    X = 3,
-                    Y = layout.BaseTop - layout.Scroll,
+                    X = layout.ClipToItems ? 0 : 3,
+                    Y = layout.ClipToItems ? 0 : layout.BaseTop - layout.Scroll,
                     WidthUnits = DimensionUnitType.Absolute,
                     HeightUnits = DimensionUnitType.RelativeToChildren,
                     Width = layout.Width,
@@ -701,6 +705,35 @@ public class NineSliceStackSeamTests
             CountSeams(pixels, spec, layout, counts, $"{spec.Name} left {left:F4} base {baseTop:F4} scroll {scroll:F4} height {height:F4}");
         }
         WriteSummary($"random, zoom {zoom}, spacing {spacing}", counts.ToString());
+        counts.Total.ShouldBe(0, counts.ToString());
+    }
+
+    /// <summary>
+    /// #8071: a clipping viewport whose edges are the stack's edges (a ListBox whose clip edge lines up with a row
+    /// edge) at fractional positions. The clip must not crop a border row or column of the first or last item.
+    /// </summary>
+    [Theory]
+    [InlineData(1f, 0f)]
+    [InlineData(1f, 6f)]
+    [InlineData(2f, 0f)]
+    [InlineData(2f, 6f)]
+    public void Draw_ClipEdgeOnFractionalItemEdges_AtRandomOffsets_ShouldNotCropBorder(float zoom, float spacing)
+    {
+        var random = new Random(8071 + (int)zoom * 10 + (int)spacing);
+        var counts = new SeamCounts();
+        TextureSpec[] specs = SweepSpecs().ToArray();
+        for (int i = 0; i < 800; i++)
+        {
+            TextureSpec spec = specs[i % specs.Length];
+            float baseTop = 8.698242f + random.Next(0, 160) * 0.0126123f;
+            float scroll = (float)(random.NextDouble() * 2);
+            float left = 4f + (float)random.NextDouble() * 6f;
+            float height = i % 3 == 0 ? 30.698242f : 18f + (float)random.NextDouble() * 16f;
+            var layout = new Layout(left, baseTop, 40f + (float)random.NextDouble() * 20f, height, spacing, 4, scroll, zoom, ClipToItems: true);
+            using SKBitmap pixels = Render(spec, layout, SKFilterMode.Nearest);
+            CountSeams(pixels, spec, layout, counts, $"{spec.Name} left {left:F4} base {baseTop:F4} scroll {scroll:F4} height {height:F4}");
+        }
+        WriteSummary($"clip edge, random, zoom {zoom}, spacing {spacing}", counts.ToString());
         counts.Total.ShouldBe(0, counts.ToString());
     }
 }
