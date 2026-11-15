@@ -1146,6 +1146,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
             // vertical alignment above was computed from the full block so the revealed letters stay in
             // their final positions (typewriter reveal). Null MaxLettersToShow returns the full block.
             var paintBlock = GetPaintTextBlock(textBlock);
+            _blobCache.BeginFrame(paintBlock);
 
             // Drop shadow and Blend are canvas effects (not RichTextKit Style properties): paint the
             // text into an offscreen layer whose paint carries the ImageFilter (shadow) and/or
@@ -1204,7 +1205,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
             {
                 PaintTextBlockCached(canvas, paintBlock);
             }
-            // The block paints (or replays its recorded picture) as one draw.
+            // The block's cached runs count as one draw.
             statistics?.RecordDrawCall();
             canvas.Restore();
         }
@@ -1492,9 +1493,9 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
             {
                 _revealBlockSource = null;
             }
-            if (ReferenceEquals(_pictureCache.Block, reuse))
+            if (IsCachedBlock(reuse))
             {
-                DropCachedPicture();
+                DropCachedBlobs();
             }
         }
 
@@ -1694,10 +1695,10 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
         // styled runs GetTextBlock uses for the full layout down to the revealed prefix. Plain text is
         // one run, so it takes the same path.
         // An advancing reveal rebuilds every frame, so the reveal block is cleared and laid out again rather than
-        // replaced (#7818). It is the same object afterwards, so the picture recorded from it is dropped.
-        if (_revealBlock != null && ReferenceEquals(_pictureCache.Block, _revealBlock))
+        // replaced (#7818). It is the same object afterwards, so the blobs built from it are dropped.
+        if (_revealBlock != null && IsCachedBlock(_revealBlock))
         {
-            DropCachedPicture();
+            DropCachedBlobs();
         }
         TextMarkupBuffers buffers = MarkupBuffers;
         FillVisibleStyledRuns(fullBlock, buffers.VisibleRuns, buffers.VisibleSourceRuns, buffers.VisibleFittedRuns);
@@ -1827,21 +1828,312 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
     // layout is unchanged. Keyed by block so the cached block and a MaxLettersToShow reveal block each carry their own.
     private static readonly System.Runtime.CompilerServices.ConditionalWeakTable<TextBlock, List<TransformedLetter>> _transformedLetters = new();
 
-    // RichTextKit's TextBlock.Paint allocates on every call, so the cached block is recorded once into a
-    // picture and replayed while the block is unchanged. The block (the full block, or a MaxLettersToShow reveal
-    // block) is recorded the second frame it is painted, so text that changes every frame is painted directly and
-    // never pays for a recording it would not replay (#7818). Native memory is released when the picture is
-    // replaced or finalized.
-    private BlockPictureCache _pictureCache = new();
-    private BlockPictureCache _shadowPictureCache = new();
+    // The cached block's shaped runs are built into text blobs the second frame the block is painted and drawn
+    // directly while the block is unchanged; text that changes every frame paints through RichTextKit and never
+    // builds blobs it would not draw again (#7818).
+    private BlockBlobCache _blobCache = new();
 
-    // Larger than any text the picture is replayed into, so recording never culls a line.
-    private static readonly SKRect _pictureCullRect = new SKRect(-100000, -100000, 100000, 100000);
+    /// <summary>Test hook: the last block was drawn from its cached blobs, not through RichTextKit.</summary>
+    internal bool IsDrawingDirectBlobs => _blobCache.IsDrawingBlobs;
 
-    private void DropCachedPicture()
+    private bool IsCachedBlock(TextBlock block) =>
+        ReferenceEquals(_blobCache.Block, block);
+
+    private void DropCachedBlobs()
     {
-        _pictureCache.Drop();
-        _shadowPictureCache.Drop();
+        _blobCache.Drop();
+    }
+
+    /// <summary>
+    /// The shaped runs of a block as one text blob each, built the second frame the block is painted and drawn with
+    /// the paints RichTextKit's FontRun.Paint would use, in the same order (halo, then fill, run by run). Colors and
+    /// paint options are read at draw time, so only the glyphs and positions are cached. A block using a feature
+    /// this does not draw (underline, strikethrough, background, blurred halo) paints through RichTextKit.
+    /// </summary>
+    private sealed class BlockBlobCache
+    {
+        private struct BlobRun
+        {
+            public SKTextBlob Blob;
+            public IStyle Style;
+            public float VerticalOffset;
+        }
+
+        private struct BlobSegment
+        {
+            public bool HasMatrix;
+            public SKMatrix Matrix;
+            public SKPoint Offset;
+            public int RunStart;
+            public int RunCount;
+        }
+
+        private readonly List<BlobRun> _runs = new();
+        private readonly List<BlobSegment> _segments = new();
+        private bool _isBuilt;
+        private bool _isUnsupported;
+
+        public bool IsDrawingBlobs => _isBuilt && !_isUnsupported;
+
+        [ThreadStatic] private static SKTextBlobBuilder? _builder;
+        [ThreadStatic] private static SKFont? _font;
+
+        public TextBlock? Block { get; private set; }
+
+        public void Drop()
+        {
+            foreach (BlobRun run in _runs)
+            {
+                run.Blob.Dispose();
+            }
+            _runs.Clear();
+            _segments.Clear();
+            _isBuilt = false;
+            _isUnsupported = false;
+            Block = null;
+        }
+
+        // True during the first frame a block is painted.
+        private bool _isFirstFrame;
+
+        /// <summary>
+        /// Called once per frame before the block's passes paint. The first frame of a block paints through
+        /// RichTextKit, so text that changes every frame never pays for building blobs it would not draw again (#7818).
+        /// </summary>
+        public void BeginFrame(TextBlock block)
+        {
+            if (!ReferenceEquals(Block, block))
+            {
+                Drop();
+                Block = block;
+                _isFirstFrame = true;
+            }
+            else
+            {
+                _isFirstFrame = false;
+            }
+        }
+
+        public void Paint(SKCanvas canvas, TextBlock block, TextPaintOptions? options)
+        {
+            if (_isFirstFrame || !ReferenceEquals(Block, block))
+            {
+                PaintTextBlock(canvas, block, options);
+                return;
+            }
+
+            TextPaintOptions resolved = options ?? TextPaintOptions.Default;
+            if (!_isBuilt)
+            {
+                Build(block, resolved);
+            }
+
+            if (_isUnsupported || !HasBuildFontSettings(resolved))
+            {
+                PaintTextBlock(canvas, block, options);
+                return;
+            }
+
+            Action<SKPaint, IStyle, bool>? configure = resolved.ConfigurePaint;
+            for (int s = 0; s < _segments.Count; s++)
+            {
+                BlobSegment segment = _segments[s];
+                if (segment.HasMatrix)
+                {
+                    canvas.Save();
+                    canvas.Concat(segment.Matrix);
+                    canvas.Translate(segment.Offset.X, segment.Offset.Y);
+                }
+                int end = segment.RunStart + segment.RunCount;
+                for (int i = segment.RunStart; i < end; i++)
+                {
+                    DrawRun(canvas, _runs[i], configure);
+                }
+                if (segment.HasMatrix)
+                {
+                    canvas.Restore();
+                }
+            }
+        }
+
+        // The fill and halo paints are kept between draws and only their color and width are set when they change,
+        // so each holds exactly what RichTextKit's freshly reset paint holds after the same setters.
+        private SKPaint? _fill;
+        private SKPaint? _halo;
+        private bool _isFillKnown;
+        private SKColor _fillColor;
+        private bool _isHaloKnown;
+        private SKColor _haloColor;
+        private float _haloWidth;
+
+        private void DrawRun(SKCanvas canvas, BlobRun run, Action<SKPaint, IStyle, bool>? configure)
+        {
+            IStyle style = run.Style;
+            bool hasHalo = style.HaloColor != SKColor.Empty;
+            SKPaint fill = _fill ??= new SKPaint();
+            if (configure != null)
+            {
+                // A paint the callback may change starts reset and is reset after, as in RichTextKit.
+                SKPaint configured = _halo ??= new SKPaint();
+                if (_isFillKnown)
+                {
+                    fill.Reset();
+                    _isFillKnown = false;
+                }
+                if (_isHaloKnown)
+                {
+                    configured.Reset();
+                    _isHaloKnown = false;
+                }
+                fill.Color = style.TextColor;
+                if (hasHalo)
+                {
+                    SetHaloStroke(configured, style);
+                }
+                configure(fill, style, false);
+                if (hasHalo)
+                {
+                    configure(configured, style, true);
+                    canvas.DrawText(run.Blob, 0, run.VerticalOffset, configured);
+                }
+                canvas.DrawText(run.Blob, 0, run.VerticalOffset, fill);
+                fill.Reset();
+                configured.Reset();
+                return;
+            }
+
+            if (hasHalo)
+            {
+                SKPaint halo = _halo ??= new SKPaint();
+                if (!_isHaloKnown)
+                {
+                    SetHaloStroke(halo, style);
+                    _haloColor = style.HaloColor;
+                    _haloWidth = style.HaloWidth;
+                    _isHaloKnown = true;
+                }
+                else
+                {
+                    if (_haloColor != style.HaloColor)
+                    {
+                        halo.Color = _haloColor = style.HaloColor;
+                    }
+                    if (_haloWidth != style.HaloWidth)
+                    {
+                        halo.StrokeWidth = _haloWidth = style.HaloWidth;
+                    }
+                }
+                canvas.DrawText(run.Blob, 0, run.VerticalOffset, halo);
+            }
+            if (!_isFillKnown || _fillColor != style.TextColor)
+            {
+                fill.Color = _fillColor = style.TextColor;
+                _isFillKnown = true;
+            }
+            canvas.DrawText(run.Blob, 0, run.VerticalOffset, fill);
+        }
+
+        private static void SetHaloStroke(SKPaint halo, IStyle style)
+        {
+            halo.Color = style.HaloColor;
+            halo.Style = SKPaintStyle.Stroke;
+            halo.StrokeWidth = style.HaloWidth;
+            halo.StrokeCap = SKStrokeCap.Square;
+            halo.StrokeJoin = SKStrokeJoin.Round;
+        }
+
+        private SKFontHinting _builtHinting;
+        private SKFontEdging _builtEdging;
+        private bool _builtSubpixel;
+
+        private bool HasBuildFontSettings(TextPaintOptions options) =>
+            options.Hinting == _builtHinting && options.Edging == _builtEdging && options.SubpixelPositioning == _builtSubpixel;
+
+        private void Build(TextBlock block, TextPaintOptions options)
+        {
+            _isBuilt = true;
+            _builtHinting = options.Hinting;
+            _builtEdging = options.Edging;
+            _builtSubpixel = options.SubpixelPositioning;
+
+            AddSegment(block, hasMatrix: false, default, default, options);
+            if (!_isUnsupported && _transformedLetters.TryGetValue(block, out List<TransformedLetter>? letters))
+            {
+                foreach (TransformedLetter letter in letters)
+                {
+                    AddSegment(letter.Block, hasMatrix: true, letter.Matrix, letter.PaintOffset, options);
+                    if (_isUnsupported)
+                    {
+                        break;
+                    }
+                }
+            }
+        }
+
+        private void AddSegment(TextBlock block, bool hasMatrix, SKMatrix matrix, SKPoint offset, TextPaintOptions options)
+        {
+            int start = _runs.Count;
+            SKTextBlobBuilder builder = _builder ??= new SKTextBlobBuilder();
+            SKFont font = _font ??= new SKFont();
+            foreach (TextLine line in block.Lines)
+            {
+                foreach (FontRun run in line.Runs)
+                {
+                    if (run.RunKind == FontRunKind.TrailingWhitespace)
+                    {
+                        continue;
+                    }
+                    IStyle style = run.Style;
+                    if (style.Underline != UnderlineStyle.None || style.StrikeThrough != StrikeThroughStyle.None
+                        || style.BackgroundColor != SKColor.Empty || (style.HaloColor != SKColor.Empty && style.HaloBlur > 0))
+                    {
+                        _isUnsupported = true;
+                        return;
+                    }
+                    if (run.Glyphs.Length == 0)
+                    {
+                        continue;
+                    }
+
+                    float glyphScale = 1;
+                    float verticalOffset = 0;
+                    if (style.FontVariant == FontVariant.SuperScript)
+                    {
+                        glyphScale = 0.65f;
+                        verticalOffset = -style.FontSize * 0.35f;
+                    }
+                    else if (style.FontVariant == FontVariant.SubScript)
+                    {
+                        glyphScale = 0.65f;
+                        verticalOffset = style.FontSize * 0.1f;
+                    }
+
+                    font.Typeface = run.Typeface;
+                    font.Size = style.FontSize * glyphScale;
+                    font.Hinting = options.Hinting;
+                    font.Edging = options.Edging;
+                    font.Subpixel = options.SubpixelPositioning;
+
+                    SKPositionedRunBuffer buffer = builder.AllocatePositionedRun(font, run.Glyphs.Length);
+                    buffer.SetGlyphs(run.Glyphs.AsSpan());
+                    buffer.SetPositions(run.GlyphPositions.AsSpan());
+                    SKTextBlob? blob = builder.Build();
+                    if (blob == null)
+                    {
+                        continue;
+                    }
+                    _runs.Add(new BlobRun { Blob = blob, Style = style, VerticalOffset = verticalOffset });
+                }
+            }
+            _segments.Add(new BlobSegment
+            {
+                HasMatrix = hasMatrix,
+                Matrix = matrix,
+                Offset = offset,
+                RunStart = start,
+                RunCount = _runs.Count - start,
+            });
+        }
     }
 
     // The drop shadow is the text drawn a second time, underneath, with its paint tinted to the shadow color and
@@ -1869,8 +2161,6 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
         (SKColor, float) key = (DropshadowColor, sigma);
         if (!_hasShadowPassKey || _shadowPassKey != key)
         {
-            // The recorded shadow picture bakes in the color and the filter, so it is rebuilt when either changes.
-            _shadowPictureCache.Drop();
             _shadowMaskFilter?.Dispose();
             _shadowMaskFilter = sigma > 0 ? SKMaskFilter.CreateBlur(SKBlurStyle.Normal, sigma) : null;
             _shadowPassKey = key;
@@ -1880,7 +2170,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
         _shadowPaintOptions ??= new TextPaintOptions { ConfigurePaint = ConfigureShadowPaint };
         canvas.Save();
         canvas.Translate(DropshadowOffsetX, DropshadowOffsetY);
-        _shadowPictureCache.Paint(canvas, block, _shadowPaintOptions);
+        _blobCache.Paint(canvas, block, _shadowPaintOptions);
         canvas.Restore();
     }
 
@@ -1909,46 +2199,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
         return _blendOnlyPaint;
     }
 
-    private void PaintTextBlockCached(SKCanvas canvas, TextBlock block) => _pictureCache.Paint(canvas, block, null);
-
-    /// <summary>
-    /// A block recorded into a picture once it has been painted two frames in a row (see the note on
-    /// <c>_pictureCache</c>). The text and its drop shadow each keep one, since they paint with different options.
-    /// </summary>
-    private sealed class BlockPictureCache
-    {
-        private SKPicture? _picture;
-        // The block painted last frame, recorded into _picture once it is painted again.
-        public TextBlock? Block { get; private set; }
-
-        public void Drop()
-        {
-            _picture?.Dispose();
-            _picture = null;
-            Block = null;
-        }
-
-        public void Paint(SKCanvas canvas, TextBlock block, TextPaintOptions? options)
-        {
-            if (!ReferenceEquals(Block, block))
-            {
-                Drop();
-                Block = block;
-                PaintTextBlock(canvas, block, options);
-                return;
-            }
-
-            if (_picture == null)
-            {
-                using SKPictureRecorder recorder = new SKPictureRecorder();
-                SKCanvas recordingCanvas = recorder.BeginRecording(_pictureCullRect);
-                PaintTextBlock(recordingCanvas, block, options);
-                _picture = recorder.EndRecording();
-            }
-
-            canvas.DrawPicture(_picture);
-        }
-    }
+    private void PaintTextBlockCached(SKCanvas canvas, TextBlock block) => _blobCache.Paint(canvas, block, null);
 
     /// <summary>Paints <paramref name="block"/>, then its scaled or rotated <c>[Custom]</c> letters.</summary>
     private static void PaintTextBlock(SKCanvas canvas, TextBlock block, TextPaintOptions? options)
@@ -3128,9 +3379,8 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
         newInstance.mParent = null;
         newInstance.mChildren = new();
         newInstance._cachedTextBlock = null;
-        // The copied picture, reveal block and render paint belong to the source.
-        newInstance._pictureCache = new();
-        newInstance._shadowPictureCache = new();
+        // The copied blobs, reveal block and render paint belong to the source.
+        newInstance._blobCache = new();
         newInstance._shadowMaskFilter = null;
         newInstance._hasShadowPassKey = false;
         newInstance._shadowPaintOptions = null;
