@@ -1,6 +1,6 @@
 # Setup
 
-Gum Forms gives you a full set of UI controls in code, and a single line restyles **every** control with a built-in theme — so your game's UI can look like any of these without changing a line of control code:
+Gum Forms gives you a full set of UI controls in code, and a single line restyles **every** control with a built-in theme; your game's UI can look like any of these without changing a line of control code:
 
 <table><thead><tr><th align="center">DarkPro</th><th align="center">Bubblegum</th><th align="center">Neon</th></tr></thead><tbody><tr><td><img src="../../../../.gitbook/assets/DarkProThemeScreenshot.png" alt="DarkPro theme" data-size="original"></td><td><img src="../../../../.gitbook/assets/BubblegumThemeScreenshot.png" alt="Bubblegum theme" data-size="original"></td><td><img src="../../../../.gitbook/assets/NeonThemeScreenshot.png" alt="Neon theme" data-size="original"></td></tr></tbody></table>
 

@@ -160,10 +160,6 @@ Each extra is a separate package. Add the package, then add its line right after
 | [Themes](../../../styling/themes/README.md): restyles Forms controls created in code | One package per theme, such as `Gum.Themes.DarkPro.Skia` (add with `--prerelease`) | `Gum.Themes.DarkPro.DarkProTheme.Apply();` |
 
 {% hint style="info" %}
-`Gum.SkiaSharp.ShadowDusk` is available in November 2026, or now if building Gum from source.
-{% endhint %}
-
-{% hint style="info" %}
 The `.Skia` theme packages are available in December 2026, or now if building Gum from source.
 {% endhint %}
 
@@ -211,3 +207,5 @@ For a working project, see the Gum Silk.NET sample:
 {% embed url="https://github.com/vchelaru/Gum/tree/main/Samples/SilkNetGum" %}
 
 <figure><img src="../../../../.gitbook/assets/22_12 20 45.png" alt=""><figcaption><p>Gum running in a Silk.NET project</p></figcaption></figure>
+
+To start building UI, continue with the [code-only Forms tutorial](../../tutorials/code-only-gum-forms-tutorial/README.md).
