@@ -38,6 +38,7 @@ public static class UnattendedRun
     /// <param name="output">Where the zoom-to-fit description goes.</param>
     /// <param name="error">Where a failure's reason goes.</param>
     /// <param name="describeCanvas">Describes the canvas's frame state; appended to a failure that waited on a frame (#5680).</param>
+    /// <param name="settle">Completes once the window's UI has stopped changing (loaded-event work such as icon glyphs done and drawn); awaited just before the capture (#8091).</param>
     public static async Task<int?> RunAsync(
         Task<UnattendedStartupOutcome> startup,
         Task deadline,
@@ -47,7 +48,8 @@ public static class UnattendedRun
         Action? capture,
         TextWriter output,
         TextWriter error,
-        Func<string?>? describeCanvas = null)
+        Func<string?>? describeCanvas = null,
+        Func<Task>? settle = null)
     {
         if (!await CompletesBefore(startup, deadline))
         {
@@ -75,6 +77,13 @@ public static class UnattendedRun
             {
                 return Fail(error, exitAfterSeconds, "the canvas had not drawn a frame after zooming to fit", describeCanvas);
             }
+        }
+
+        // Controls such as FluentIcon fill in their content from Loaded handlers that run after the
+        // canvas's first frames, so a capture right here would miss every icon (#8091).
+        if (settle != null && !await CompletesBefore(settle(), deadline))
+        {
+            return Fail(error, exitAfterSeconds, "the window's UI had not settled (icons and other loaded content were still changing)", describeCanvas);
         }
 
         capture?.Invoke();
