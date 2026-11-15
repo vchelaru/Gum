@@ -1536,13 +1536,13 @@ public partial class GraphicalUiElement
 
         string path = instance.Name;
         GraphicalUiElement? container = ElementGueContainingThis;
-        StateSave? containerState = container?.ElementSave?.DefaultState ?? instance.ParentContainer?.DefaultState;
-        while (containerState != null)
+        ElementSave? containerElement = container?.ElementSave ?? instance.ParentContainer;
+        while (containerElement != null)
         {
             foreach (VariableSave variable in state.Variables)
             {
                 if (variable.SetsValue && variable.Value != null
-                    && containerState.GetValueRecursive(path + "." + variable.Name) is { } overridden)
+                    && FindExplicitValue(containerElement, path + "." + variable.Name) is { } overridden)
                 {
                     SetProperty(variable.Name, overridden);
                 }
@@ -1554,8 +1554,26 @@ public partial class GraphicalUiElement
             }
             path = containerInstance.Name + "." + path;
             container = container.ElementGueContainingThis;
-            containerState = container?.ElementSave?.DefaultState ?? containerInstance.ParentContainer?.DefaultState;
+            containerElement = container?.ElementSave ?? containerInstance.ParentContainer;
         }
+    }
+
+    // Only a value an element (or one of its base types) writes for the path counts as an override. The
+    // instance's own base component default, which GetValueRecursive falls back to, is not one: putting it
+    // back would replace what the instance's state set (a standalone ScrollBar's Vertical Height).
+    private static object? FindExplicitValue(ElementSave element, string name)
+    {
+        for (ElementSave? current = element; current != null; current = ObjectFinder.Self.GetBaseElement(current))
+        {
+            foreach (VariableSave variable in current.DefaultState?.Variables ?? new List<VariableSave>())
+            {
+                if (variable.SetsValue && variable.Value != null && variable.Name == name)
+                {
+                    return variable.Value;
+                }
+            }
+        }
+        return null;
     }
 
     HashSet<StateSave> statesInStack = new HashSet<StateSave>();
