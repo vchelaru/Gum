@@ -169,10 +169,6 @@ public sealed class MainWindow : Window, IRecipient<CloseMainWindowMessage>
         panel.Margin = hasInnerResizeBorder ? new Thickness(0, 0, ResizeBorderThickness, 0) : new Thickness(0);
     }
 
-    // As the WPF head's window chrome: the Gum logo, the menu, and the project file's name share the
-    // title bar, beside the system's caption buttons. Where the platform cannot draw into the title
-    // bar (Linux), the system title bar stays and this row sits under it. On macOS the menu is in
-    // the system menu bar instead, so the row has no menu column.
     // With the client area extended, Avalonia 12 draws the caption buttons itself, plus the window's
     // title text and (where the platform allows it) a full-screen button. The title row above already
     // shows the project name, so the drawn title is hidden and the full-screen button dropped, which
@@ -196,6 +192,10 @@ public sealed class MainWindow : Window, IRecipient<CloseMainWindowMessage>
         return theme;
     }
 
+    // As the WPF head's window chrome: the Gum logo, the menu, and the project file's name share the
+    // title bar, beside the system's caption buttons. Where the platform cannot draw into the title
+    // bar (Linux), the system title bar stays and this row sits under it. On macOS the menu is in
+    // the system menu bar instead, so the row has no menu column.
     private Control CreateTitleRow(Menu? menu)
     {
         bool drawsInTitleBar = OperatingSystem.IsWindows() || OperatingSystem.IsMacOS();
