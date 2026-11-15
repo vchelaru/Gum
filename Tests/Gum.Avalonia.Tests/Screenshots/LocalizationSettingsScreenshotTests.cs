@@ -19,7 +19,7 @@ namespace Gum.Avalonia.Tests.Screenshots;
 [Trait("Category", PrScreenshot.Category)]
 public class LocalizationSettingsScreenshotTests
 {
-    [SkippableTheory]
+    [Theory]
     [InlineData(true)]
     [InlineData(false)]
     public void Empty(bool dark) => PrScreenshot.Run(() =>
@@ -29,7 +29,7 @@ public class LocalizationSettingsScreenshotTests
     });
 
     // Two files, three languages, one of them picked.
-    [SkippableTheory]
+    [Theory]
     [InlineData(true)]
     [InlineData(false)]
     public void FewLanguages(bool dark) => PrScreenshot.Run(() =>
@@ -49,7 +49,7 @@ public class LocalizationSettingsScreenshotTests
     });
 
     // Eight files, to judge how fast one is found in a longer list.
-    [SkippableTheory]
+    [Theory]
     [InlineData(true)]
     [InlineData(false)]
     public void ManyFiles(bool dark) => PrScreenshot.Run(() =>
@@ -69,7 +69,7 @@ public class LocalizationSettingsScreenshotTests
     });
 
     // Two CSVs: not supported, so loading is skipped (reported in the Output tab) and no language is offered.
-    [SkippableTheory]
+    [Theory]
     [InlineData(true)]
     [InlineData(false)]
     public void Problems(bool dark) => PrScreenshot.Run(() =>
@@ -90,7 +90,7 @@ public class LocalizationSettingsScreenshotTests
         }
     });
 
-    [SkippableTheory]
+    [Theory]
     [InlineData(true)]
     [InlineData(false)]
     public void WithSearch(bool dark) => PrScreenshot.Run(() =>

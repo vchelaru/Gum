@@ -14,7 +14,7 @@ namespace Gum.Avalonia.Tests.Screenshots;
 [Trait("Category", PrScreenshot.Category)]
 public class ScrollBarOrientationScreenshotTests
 {
-    [SkippableFact]
+    [Fact]
     public void ScrollBarInstance_VariablesTab() => PrScreenshot.Run(() =>
     {
         using VariableGridHarness grid = new VariableGridHarness();

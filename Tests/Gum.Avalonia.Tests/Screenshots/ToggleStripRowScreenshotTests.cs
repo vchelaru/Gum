@@ -11,7 +11,7 @@ namespace Gum.Avalonia.Tests.Screenshots;
 [Trait("Category", PrScreenshot.Category)]
 public class ToggleStripRowScreenshotTests
 {
-    [SkippableTheory]
+    [Theory]
     [InlineData(400)]
     [InlineData(300)]
     [InlineData(240)]
@@ -29,7 +29,7 @@ public class ToggleStripRowScreenshotTests
         PrScreenshot.SaveWindowAtZoomLevels(grid.Input.Window, $"toggle-strip-rows-width-{width}");
     });
 
-    [SkippableFact]
+    [Fact]
     public void VariableReferencesRow_LabelOnOneLine() => PrScreenshot.Run(() =>
     {
         using VariableGridHarness grid = new VariableGridHarness();

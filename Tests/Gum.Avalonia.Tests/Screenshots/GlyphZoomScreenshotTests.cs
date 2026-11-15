@@ -20,7 +20,7 @@ namespace Gum.Avalonia.Tests.Screenshots;
 [Trait("Category", PrScreenshot.Category)]
 public class GlyphZoomScreenshotTests
 {
-    [SkippableFact]
+    [Fact]
     public void Dark() => Capture(ThemeVariant.Dark, "glyph-zoom-dark");
 
     private static void Capture(ThemeVariant theme, string name) => PrScreenshot.Run(() =>

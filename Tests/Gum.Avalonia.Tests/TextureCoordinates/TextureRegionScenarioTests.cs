@@ -17,7 +17,7 @@ public class TextureRegionScenarioTests
 {
     #region Today's double-click (characterization)
 
-    [SkippableFact]
+    [Fact]
     public void DoubleClick_WithoutSnap_SetsA64x64RectangleCenteredOnTheCursor_AsOneUndoStep()
     {
         OnTab(tab =>
@@ -43,7 +43,7 @@ public class TextureRegionScenarioTests
         });
     }
 
-    [SkippableFact]
+    [Fact]
     public void DoubleClick_WithSnapToGrid_SetsTheGridCellUnderTheCursor()
     {
         OnTab(tab =>
@@ -68,7 +68,7 @@ public class TextureRegionScenarioTests
 
     #region Plugin regions
 
-    [SkippableFact]
+    [Fact]
     public void ARegionPlugin_GivesTheOverlayEveryRegion_AndNamesOnlyTheHoveredOne()
     {
         OnTab(tab =>
@@ -89,7 +89,7 @@ public class TextureRegionScenarioTests
         });
     }
 
-    [SkippableFact]
+    [Fact]
     public void TwoRegionsWithTheSameName_AreBothDrawn_AndEachClickAppliesItsOwnRectangle()
     {
         OnTab(tab =>
@@ -116,7 +116,7 @@ public class TextureRegionScenarioTests
         });
     }
 
-    [SkippableFact]
+    [Fact]
     public void AClickInsideARegion_RaisesTextureRegionChosenOnce_AfterTheRegionIsApplied()
     {
         OnTab(tab =>
@@ -137,7 +137,7 @@ public class TextureRegionScenarioTests
         });
     }
 
-    [SkippableFact]
+    [Fact]
     public void TextureRegionChosen_CarriesTheKeyOfTheRegionClicked_WhenNamesRepeat()
     {
         OnTab(tab =>
@@ -156,7 +156,7 @@ public class TextureRegionScenarioTests
         });
     }
 
-    [SkippableFact]
+    [Fact]
     public void AClickOutsideEveryRegion_DoesNotRaiseTextureRegionChosen()
     {
         OnTab(tab =>
@@ -171,7 +171,7 @@ public class TextureRegionScenarioTests
         });
     }
 
-    [SkippableFact]
+    [Fact]
     public void ADragEndingInsideARegion_DoesNotRaiseTextureRegionChosen()
     {
         OnTab(tab =>
@@ -188,7 +188,7 @@ public class TextureRegionScenarioTests
         });
     }
 
-    [SkippableFact]
+    [Fact]
     public void ADoubleClickInsideARegion_RaisesTextureRegionChosenOnce()
     {
         OnTab(tab =>
@@ -203,7 +203,7 @@ public class TextureRegionScenarioTests
         });
     }
 
-    [SkippableFact]
+    [Fact]
     public void WithNoRegionPlugin_ThereIsNoOverlay()
     {
         OnTab(tab =>
@@ -215,7 +215,7 @@ public class TextureRegionScenarioTests
         });
     }
 
-    [SkippableFact]
+    [Fact]
     public void AClickInsideARegion_SetsThatRegionAsOneUndoStep_AndOneUndoRestoresIt()
     {
         OnTab(tab =>
@@ -243,7 +243,7 @@ public class TextureRegionScenarioTests
         });
     }
 
-    [SkippableFact]
+    [Fact]
     public void AClickInsideARegion_DoesNotMoveTheCamera()
     {
         OnTab(tab =>
@@ -265,7 +265,7 @@ public class TextureRegionScenarioTests
         });
     }
 
-    [SkippableFact]
+    [Fact]
     public void AClickOutsideEveryRegion_ChangesNothing_AndDoesNotMoveTheCamera()
     {
         OnTab(tab =>
@@ -286,7 +286,7 @@ public class TextureRegionScenarioTests
         });
     }
 
-    [SkippableFact]
+    [Fact]
     public void ADoubleClickInsideARegion_KeepsTheRegion_AndDoesNotMoveTheCamera()
     {
         OnTab(tab =>
@@ -308,7 +308,7 @@ public class TextureRegionScenarioTests
         });
     }
 
-    [SkippableFact]
+    [Fact]
     public void AClickThatBecomesADrag_DoesNotApplyTheRegionUnderTheRelease()
     {
         OnTab(tab =>
@@ -327,7 +327,7 @@ public class TextureRegionScenarioTests
         });
     }
 
-    [SkippableFact]
+    [Fact]
     public void TheHoverLabel_SitsAboveItsRegionWithAGap_AndTheSameSizeAtEveryZoom()
     {
         OnTab(tab =>
@@ -358,7 +358,7 @@ public class TextureRegionScenarioTests
         });
     }
 
-    [SkippableFact]
+    [Fact]
     public void TheHoverLabel_FallsBelowItsRegion_WhenThereIsNoRoomAbove()
     {
         OnTab(tab =>
@@ -381,7 +381,7 @@ public class TextureRegionScenarioTests
         });
     }
 
-    [SkippableFact]
+    [Fact]
     public void ADoubleClickOutsideEveryRegion_StillMakesTheDefaultRectangle()
     {
         OnTab(tab =>
@@ -399,7 +399,7 @@ public class TextureRegionScenarioTests
         });
     }
 
-    [SkippableFact]
+    [Fact]
     public void WhereRegionsOverlap_TheSmallestOneWins()
     {
         OnTab(tab =>
@@ -420,7 +420,7 @@ public class TextureRegionScenarioTests
         });
     }
 
-    [SkippableFact]
+    [Fact]
     public void ARegionPluginThatThrows_DoesNotBreakTheTab_AndOtherPluginsRegionsStillShow()
     {
         OnTab(tab =>
@@ -438,7 +438,7 @@ public class TextureRegionScenarioTests
         });
     }
 
-    [SkippableFact]
+    [Fact]
     public void ThreeHundredThirtyNineRegions_AreOneQueryAndOneOutlineEach_NoMatterHowOftenTheTabRefreshes()
     {
         OnTab(tab =>
@@ -531,7 +531,7 @@ public class TextureRegionScenarioTests
 
     private static void OnTab(Action<TextureCoordinateTabHarness> scenario)
     {
-        Skip.IfNot(TextureCoordinateTabHarness.CanRun, TextureCoordinateTabHarness.SkipReason);
+        Assert.SkipUnless(TextureCoordinateTabHarness.CanRun, TextureCoordinateTabHarness.SkipReason);
         TextureCoordinateTabHarness.OnUiThread(() =>
         {
             using TextureCoordinateTabHarness tab = new TextureCoordinateTabHarness();

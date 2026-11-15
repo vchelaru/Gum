@@ -11,7 +11,7 @@ namespace Gum.Avalonia.Tests.Screenshots;
 [Trait("Category", PrScreenshot.Category)]
 public class HasEventsSubtextScreenshotTests
 {
-    [SkippableFact]
+    [Fact]
     public void HasEventsRow() => PrScreenshot.Run(() =>
     {
         using VariableGridHarness grid = new VariableGridHarness();

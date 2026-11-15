@@ -19,19 +19,19 @@ namespace Gum.Avalonia.Tests.TextureCoordinates;
 [Trait("Category", PrScreenshot.Category)]
 public class TextureRegionsScreenshotTests
 {
-    [SkippableFact]
+    [Fact]
     public void EmptyCase() => PrScreenshot.Run(() =>
     {
-        Skip.IfNot(TextureCoordinateTabHarness.CanRun, TextureCoordinateTabHarness.SkipReason);
+        Assert.SkipUnless(TextureCoordinateTabHarness.CanRun, TextureCoordinateTabHarness.SkipReason);
         using TextureCoordinateTabHarness tab = new TextureCoordinateTabHarness();
         SelectSheetSprite(tab);
         SaveInMainWindow(tab, "texture-regions-empty");
     });
 
-    [SkippableFact]
+    [Fact]
     public void FewRegions() => PrScreenshot.Run(() =>
     {
-        Skip.IfNot(TextureCoordinateTabHarness.CanRun, TextureCoordinateTabHarness.SkipReason);
+        Assert.SkipUnless(TextureCoordinateTabHarness.CanRun, TextureCoordinateTabHarness.SkipReason);
         using TextureCoordinateTabHarness tab = new TextureCoordinateTabHarness();
         using IDisposable registration = TextureRegionScenarioTests.Register(
             tab, new SampleRegionPlugin("Sheet.png", SampleRegionPlugin.FromSheet(SampleSpriteSheet.Few)));
@@ -41,10 +41,10 @@ public class TextureRegionsScreenshotTests
             tab.Plugin.DisplayController.RegionOverlay.Hovered = new TextureRegion("Coin", "Coin", 128, 12, 24, 24));
     });
 
-    [SkippableFact]
+    [Fact]
     public void PixelSheet() => PrScreenshot.Run(() =>
     {
-        Skip.IfNot(TextureCoordinateTabHarness.CanRun, TextureCoordinateTabHarness.SkipReason);
+        Assert.SkipUnless(TextureCoordinateTabHarness.CanRun, TextureCoordinateTabHarness.SkipReason);
         using TextureCoordinateTabHarness tab = new TextureCoordinateTabHarness();
         using IDisposable registration = TextureRegionScenarioTests.Register(
             tab, new SampleRegionPlugin("Sheet.png", SampleRegionPlugin.FromSheet(PixelSpriteSheet.Frames)));
@@ -62,10 +62,10 @@ public class TextureRegionsScreenshotTests
         }, PixelSpriteSheet.Width, PixelSpriteSheet.Height, 400);
     });
 
-    [SkippableFact]
+    [Fact]
     public void SixtyRegions() => PrScreenshot.Run(() =>
     {
-        Skip.IfNot(TextureCoordinateTabHarness.CanRun, TextureCoordinateTabHarness.SkipReason);
+        Assert.SkipUnless(TextureCoordinateTabHarness.CanRun, TextureCoordinateTabHarness.SkipReason);
         using TextureCoordinateTabHarness tab = new TextureCoordinateTabHarness();
         using IDisposable registration = TextureRegionScenarioTests.Register(
             tab, new SampleRegionPlugin("Sheet.png", SampleRegionPlugin.FromSheet(SampleSpriteSheet.Sixty())));

@@ -22,7 +22,7 @@ namespace Gum.Avalonia.Tests.Screenshots;
 [Trait("Category", PrScreenshot.Category)]
 public class FontsSettingsScreenshotTests
 {
-    [SkippableTheory]
+    [Theory]
     [InlineData(true)]
     [InlineData(false)]
     public void Typical(bool dark) => PrScreenshot.Run(() =>
@@ -33,7 +33,7 @@ public class FontsSettingsScreenshotTests
     });
 
     // The character file in use, an empty row, a duplicate row, and a row for a font no Text uses.
-    [SkippableTheory]
+    [Theory]
     [InlineData(true)]
     [InlineData(false)]
     public void WithProblems(bool dark) => PrScreenshot.Run(() =>
@@ -50,7 +50,7 @@ public class FontsSettingsScreenshotTests
         Save(fonts, dark, $"settings-fonts-problems-{(dark ? "dark" : "light")}");
     });
 
-    [SkippableTheory]
+    [Theory]
     [InlineData(true)]
     [InlineData(false)]
     public void WithSearch(bool dark) => PrScreenshot.Run(() =>

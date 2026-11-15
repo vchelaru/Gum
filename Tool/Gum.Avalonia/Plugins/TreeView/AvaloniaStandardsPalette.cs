@@ -172,6 +172,7 @@ public sealed class AvaloniaStandardsPalette : Border
     {
         Point startPoint = default;
         bool pressed = false;
+        PointerPressedEventArgs? pressEvent = null;
 
         chip.PointerPressed += (_, e) =>
         {
@@ -180,6 +181,7 @@ public sealed class AvaloniaStandardsPalette : Border
                 return;
             }
             pressed = true;
+            pressEvent = e;
             startPoint = e.GetPosition(null);
         };
         // A left release that no drag took is a click: it adds an instance of this standard at the
@@ -219,7 +221,7 @@ public sealed class AvaloniaStandardsPalette : Border
             {
                 DataTransfer data = new DataTransfer();
                 data.Add(DataTransferItem.Create(AvaloniaDragFormats.StandardElementName, typeName));
-                await AvaloniaDragSource.Start(e, data, DragDropEffects.Copy);
+                await AvaloniaDragSource.Start(pressEvent!, data, DragDropEffects.Copy);
             }
             catch (Exception)
             {

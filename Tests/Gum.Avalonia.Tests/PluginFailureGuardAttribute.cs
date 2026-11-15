@@ -3,7 +3,8 @@ using System.Text;
 using Gum.Plugins;
 using Gum.Plugins.BaseClasses;
 using Microsoft.Extensions.DependencyInjection;
-using Xunit.Sdk;
+using Xunit;
+using Xunit.v3;
 
 [assembly: Gum.Avalonia.Tests.PluginFailureGuard]
 
@@ -43,7 +44,7 @@ public sealed class PluginFailureGuardAttribute : BeforeAfterTestAttribute
     private List<PluginBase>? _pluginsBefore;
 
     /// <summary>Records the plugin set and which guarded plugins an earlier test already disabled.</summary>
-    public override void Before(MethodInfo methodUnderTest)
+    public override void Before(MethodInfo methodUnderTest, IXunitTest test)
     {
         PluginManager pluginManager = PluginManagerInstance;
         _pluginsBefore = pluginManager.Plugins?.ToList();
@@ -62,7 +63,7 @@ public sealed class PluginFailureGuardAttribute : BeforeAfterTestAttribute
     /// Restores the plugin set, then throws if this test's body disabled a guarded plugin, with the
     /// plugin's exception.
     /// </summary>
-    public override void After(MethodInfo methodUnderTest)
+    public override void After(MethodInfo methodUnderTest, IXunitTest test)
     {
         StringBuilder message = new();
         foreach ((string name, PluginContainer container) in FailedGuardedPlugins())

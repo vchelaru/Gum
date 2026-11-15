@@ -11,7 +11,7 @@ namespace Gum.Avalonia.Tests.Screenshots;
 [Trait("Category", PrScreenshot.Category)]
 public class ChoiceDialogScreenshotTests
 {
-    [SkippableFact]
+    [Fact]
     public void ChoiceDialogWithLongOption() => PrScreenshot.Run(() =>
     {
         ChoiceDialogViewModel viewModel = new ChoiceDialogViewModel

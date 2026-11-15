@@ -15,7 +15,7 @@ namespace Gum.Avalonia.Tests.Screenshots;
 [Trait("Category", PrScreenshot.Category)]
 public class MainTitleRowScreenshotTests
 {
-    [SkippableFact]
+    [Fact]
     public void TitleRow() => PrScreenshot.Run(() =>
     {
         MainWindow window = TestAppBuilder.Services.GetRequiredService<MainWindow>();

@@ -14,7 +14,7 @@ namespace Gum.Avalonia.Tests.Screenshots;
 [Trait("Category", PrScreenshot.Category)]
 public class InheritedExposureScreenshotTests
 {
-    [SkippableFact]
+    [Fact]
     public void ExposedByBase_SelectedOnDerived() => PrScreenshot.Run(() =>
     {
         using VariableGridHarness grid = new VariableGridHarness();

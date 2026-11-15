@@ -15,7 +15,7 @@ namespace Gum.Avalonia.Tests.Screenshots;
 [Trait("Category", PrScreenshot.Category)]
 public class DerivedFormsBehaviorScreenshotTests
 {
-    [SkippableFact]
+    [Fact]
     public void DerivedComponentAndItsInstance() => PrScreenshot.Run(() =>
     {
         using VariableGridHarness grid = new VariableGridHarness();

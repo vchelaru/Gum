@@ -13,7 +13,7 @@ namespace Gum.Avalonia.Tests.Screenshots;
 [Trait("Category", PrScreenshot.Category)]
 public class ShaderDropdownScreenshotTests
 {
-    [SkippableFact]
+    [Fact]
     public void ListOpen_ProjectShaderAndBuiltIns() => PrScreenshot.Run(() =>
     {
         using VariableGridHarness grid = new VariableGridHarness();
@@ -27,7 +27,7 @@ public class ShaderDropdownScreenshotTests
         PrScreenshot.SaveWindowAtZoomLevels(grid.Input.Window, "shader-list-open");
     });
 
-    [SkippableFact]
+    [Fact]
     public void ListOpen_NothingInTheProjectYet() => PrScreenshot.Run(() =>
     {
         using VariableGridHarness grid = new VariableGridHarness();

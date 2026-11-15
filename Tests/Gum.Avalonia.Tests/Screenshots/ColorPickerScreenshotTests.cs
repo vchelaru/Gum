@@ -21,22 +21,22 @@ namespace Gum.Avalonia.Tests.Screenshots;
 [Trait("Category", PrScreenshot.Category)]
 public class ColorPickerScreenshotTests
 {
-    [SkippableFact]
+    [Fact]
     public void ColorPicker_Normal() => PrScreenshot.Run(() =>
         CaptureStates("picker", Color.FromRgb(61, 155, 214), null));
 
-    [SkippableFact]
+    [Fact]
     public void ColorPicker_PurpleAndOrange() => PrScreenshot.Run(() =>
     {
         CaptureStates("purple", Color.FromRgb(163, 71, 217), null);
         CaptureStates("orange", Color.FromRgb(255, 136, 0), null);
     });
 
-    [SkippableFact]
+    [Fact]
     public void ColorPicker_InvalidHexError() => PrScreenshot.Run(() =>
         CaptureStates("error", Color.FromRgb(61, 155, 214), picker => picker.HexTextBox.Text = "#12G4"));
 
-    [SkippableFact]
+    [Fact]
     public void ColorPicker_AlphaIgnoredWarning() => PrScreenshot.Run(() =>
         CaptureStates("warning", Color.FromRgb(61, 155, 214), picker => picker.HexTextBox.Text = "#FF880080"));
 

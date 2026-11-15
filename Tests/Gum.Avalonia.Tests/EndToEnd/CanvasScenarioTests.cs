@@ -24,7 +24,7 @@ public class CanvasScenarioTests
 {
     #region Selecting
 
-    [SkippableFact]
+    [Fact]
     [Trait("Feature", "CANV-001")]
     [Trait("Feature", "CANV-002")]
     [Trait("Feature", "TREE-007")]
@@ -60,7 +60,7 @@ public class CanvasScenarioTests
         });
     }
 
-    [SkippableFact]
+    [Fact]
     [Trait("Feature", "CANV-003")]
     public void MarqueeDrag_SelectsTheInstancesItTouches()
     {
@@ -84,7 +84,7 @@ public class CanvasScenarioTests
 
     #region Moving
 
-    [SkippableFact]
+    [Fact]
     [Trait("Feature", "CANV-005")]
     [Trait("Feature", "CANV-006")]
     [Trait("Feature", "KEY-001")]
@@ -129,7 +129,7 @@ public class CanvasScenarioTests
         });
     }
 
-    [SkippableFact]
+    [Fact]
     [Trait("Feature", "CANV-002")]
     [Trait("Feature", "CANV-006")]
     public void ShiftHeldBeforeTheDrag_LocksTheMoveToAnAxis_OnASelectedInstance_AndAddsOtherwise()
@@ -166,7 +166,7 @@ public class CanvasScenarioTests
         });
     }
 
-    [SkippableFact]
+    [Fact]
     [Trait("Feature", "CANV-005")]
     public void CtrlOrAltHeldBeforeTheDrag_StillMovesTheSelectedInstance()
     {
@@ -196,7 +196,7 @@ public class CanvasScenarioTests
         });
     }
 
-    [SkippableFact]
+    [Fact]
     [Trait("Feature", "CANV-005")]
     [Trait("Feature", "CANV-007")]
     [Trait("Feature", "CANV-014")]
@@ -239,7 +239,7 @@ public class CanvasScenarioTests
         });
     }
 
-    [SkippableFact]
+    [Fact]
     [Trait("Feature", "KEY-012")]
     [Trait("Feature", "KEY-013")]
     public void ArrowKeys_NudgeTheSelectedInstance_ByOneOrWithShiftFivePixels()
@@ -271,7 +271,7 @@ public class CanvasScenarioTests
 
     #region Resizing and rotating
 
-    [SkippableFact]
+    [Fact]
     [Trait("Feature", "CANV-007")]
     [Trait("Feature", "CANV-008")]
     [Trait("Feature", "CANV-009")]
@@ -316,7 +316,7 @@ public class CanvasScenarioTests
         });
     }
 
-    [SkippableFact]
+    [Fact]
     [Trait("Feature", "CANV-012")]
     [Trait("Feature", "CANV-013")]
     public void RotationHandle_RotatesAroundTheOrigin_AndShiftSnapsTo15Degrees()
@@ -354,7 +354,7 @@ public class CanvasScenarioTests
 
     #region Polygon points
 
-    [SkippableFact]
+    [Fact]
     [Trait("Feature", "CANV-014")]
     public void PolygonPoints_DragAddAndDelete_SaveThePoints()
     {
@@ -386,7 +386,7 @@ public class CanvasScenarioTests
         });
     }
 
-    [SkippableFact]
+    [Fact]
     [Trait("Feature", "CANV-014")]
     public void PolygonScaleHandles_ScaleThePoints_MoveThePositionToKeepTheAnchor_AndUndoIsOneStep()
     {
@@ -421,7 +421,7 @@ public class CanvasScenarioTests
         });
     }
 
-    [SkippableFact]
+    [Fact]
     [Trait("Feature", "CANV-014")]
     public void PolygonDrag_HidesTheAddPointMarker_WhetherMovingThePolygonOrOnePoint()
     {
@@ -465,7 +465,7 @@ public class CanvasScenarioTests
 
     #region Camera
 
-    [SkippableFact]
+    [Fact]
     [Trait("Feature", "CANV-020")]
     [Trait("Feature", "CANV-021")]
     [Trait("Feature", "CANV-022")]
@@ -532,7 +532,7 @@ public class CanvasScenarioTests
         });
     }
 
-    [SkippableFact]
+    [Fact]
     [Trait("Feature", "CANV-043")]
     public void SwitchingElements_RestoresTheCameraTheUserLeftEachMovedElementAt()
     {
@@ -582,7 +582,7 @@ public class CanvasScenarioTests
 
     // #5540: a Space released after focus left the canvas never reached it, so the next left drag
     // panned the camera instead of moving the selection.
-    [SkippableFact]
+    [Fact]
     [Trait("Feature", "CANV-022")]
     public void SpaceReleasedAfterFocusLeftTheCanvas_DoesNotTurnTheNextDragIntoAPan()
     {
@@ -612,7 +612,7 @@ public class CanvasScenarioTests
         });
     }
 
-    [SkippableFact]
+    [Fact]
     [Trait("Feature", "CANV-027")]
     [Trait("Feature", "CANV-028")]
     public void RulerClick_AddsAGuide_ThatDragsAndIsRemovedWhenDraggedOffTheCanvas()
@@ -647,7 +647,7 @@ public class CanvasScenarioTests
 
     #region Drops
 
-    [SkippableFact]
+    [Fact]
     [Trait("Feature", "DRAG-016")]
     [Trait("Feature", "DRAG-012")]
     public void StandardChipDrop_AddsAnInstanceWhereItLands_AndParentsItToAContainerUnderIt()
@@ -688,7 +688,7 @@ public class CanvasScenarioTests
         });
     }
 
-    [SkippableFact]
+    [Fact]
     [Trait("Feature", "DRAG-013")]
     public void TextureFileDrop_AddsASpriteShowingIt_AndOnASpriteSetsItsTexture()
     {
@@ -721,7 +721,7 @@ public class CanvasScenarioTests
         });
     }
 
-    [SkippableFact]
+    [Fact]
     [Trait("Feature", "DRAG-013")]
     public void TextureFileDrop_FileNameWithDotsAndSpaces_AddsASpriteWithAValidName()
     {
@@ -767,7 +767,7 @@ public class CanvasScenarioTests
 
     private static void OnCanvas(Action<CanvasHarness> scenario)
     {
-        Skip.IfNot(CanvasHarness.CanRun, CanvasHarness.SkipReason);
+        Assert.SkipUnless(CanvasHarness.CanRun, CanvasHarness.SkipReason);
         CanvasHarness.OnUiThread(() =>
         {
             using CanvasHarness canvas = new CanvasHarness();

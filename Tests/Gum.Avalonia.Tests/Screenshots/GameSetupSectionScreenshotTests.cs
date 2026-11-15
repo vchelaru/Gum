@@ -64,7 +64,7 @@ public class GameSetupSectionScreenshotTests
     }
 
     /// <summary>The Object tab, which is also what the "before" side shows.</summary>
-    [SkippableFact]
+    [Fact]
     public void CodeTabWithAScreen() => PrScreenshot.Run(() =>
     {
         using CodeTabHarness code = ScreenSelected(DefaultSettings, manualSetup: true);
@@ -73,7 +73,7 @@ public class GameSetupSectionScreenshotTests
     });
 
     /// <summary>The State tab, unchanged by the Game tab.</summary>
-    [SkippableFact]
+    [Fact]
     public void CodeTabStateTab() => PrScreenshot.Run(() =>
     {
         using CodeTabHarness code = ScreenSelected(DefaultSettings, manualSetup: true);
@@ -84,7 +84,7 @@ public class GameSetupSectionScreenshotTests
     });
 
     /// <summary>The Game tab, in both themes.</summary>
-    [SkippableFact]
+    [Fact]
     public void CodeTabGameTab() => PrScreenshot.Run(() =>
     {
         using CodeTabHarness code = ScreenSelected(DefaultSettings, manualSetup: true);
@@ -100,7 +100,7 @@ public class GameSetupSectionScreenshotTests
     });
 
     /// <summary>A Raylib project: the Game tab is a note with no code.</summary>
-    [SkippableFact]
+    [Fact]
     public void CodeTabForARaylibProject() => PrScreenshot.Run(() =>
     {
         using CodeTabHarness code = ScreenSelected(RaylibSettings, manualSetup: false);

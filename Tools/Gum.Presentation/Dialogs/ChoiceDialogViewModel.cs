@@ -38,6 +38,7 @@ public class ChoiceDialogViewModel : DialogViewModel
     {
         OptionValues = new ReadOnlyObservableCollection<string>(_optionValues);
         AffirmativeText = "Confirm";
+        AffirmsOnEnterFromListItem = true;
         NegativeText = null;
         CanCancel = false;
     }

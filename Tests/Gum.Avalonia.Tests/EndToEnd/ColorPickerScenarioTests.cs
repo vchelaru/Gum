@@ -197,7 +197,7 @@ public class ColorPickerScenarioTests
         ProjectFileSnapshot start = tree.SnapshotFiles();
 
         picker.HexTextBox.Text = "#12G4";
-        picker.HexTextBox.RaiseEvent(new global::Avalonia.Interactivity.RoutedEventArgs(InputElement.LostFocusEvent));
+        picker.HexTextBox.RaiseEvent(new FocusChangedEventArgs(InputElement.LostFocusEvent));
         CloseFlyout(grid);
 
         VariableGridHarness.StoredValue(Component(tree), "Label.Red").ShouldBeNull();

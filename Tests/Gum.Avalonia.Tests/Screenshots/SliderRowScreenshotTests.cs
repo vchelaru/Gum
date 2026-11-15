@@ -13,7 +13,7 @@ namespace Gum.Avalonia.Tests.Screenshots;
 [Trait("Category", PrScreenshot.Category)]
 public class SliderRowScreenshotTests
 {
-    [SkippableFact]
+    [Fact]
     public void SliderRow_WithMinAndMaxLabels() => PrScreenshot.Run(() =>
     {
         EditorFixture fixture = new EditorFixture { Number = 255 };

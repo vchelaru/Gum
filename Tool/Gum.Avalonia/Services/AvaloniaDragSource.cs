@@ -11,11 +11,11 @@ namespace Gum.Avalonia.Services;
 /// </summary>
 public static class AvaloniaDragSource
 {
-    private static readonly Func<PointerEventArgs, IDataTransfer, DragDropEffects, Task<DragDropEffects>> Platform =
+    private static readonly Func<PointerPressedEventArgs, IDataTransfer, DragDropEffects, Task<DragDropEffects>> Platform =
         (triggerEvent, data, allowedEffects) => DragDrop.DoDragDropAsync(triggerEvent, data, allowedEffects);
 
     /// <summary>Runs a drag of <c>data</c> started by the pointer event; completes when it is dropped or cancelled.</summary>
-    internal static Func<PointerEventArgs, IDataTransfer, DragDropEffects, Task<DragDropEffects>> Start { get; set; } = Platform;
+    internal static Func<PointerPressedEventArgs, IDataTransfer, DragDropEffects, Task<DragDropEffects>> Start { get; set; } = Platform;
 
     /// <summary>Puts back the platform's drag, after a test replaced <see cref="Start"/>.</summary>
     internal static void RestorePlatform() => Start = Platform;

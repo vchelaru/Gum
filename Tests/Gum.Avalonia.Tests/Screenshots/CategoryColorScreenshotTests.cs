@@ -32,7 +32,7 @@ namespace Gum.Avalonia.Tests.Screenshots;
 [Trait("Category", PrScreenshot.Category)]
 public class CategoryColorScreenshotTests
 {
-    [SkippableFact]
+    [Fact]
     public void CategoryColorsAtZoomLevels() => PrScreenshot.Run(() =>
     {
         using ProjectTreeHarness tree = new ProjectTreeHarness();
@@ -157,7 +157,7 @@ public class CategoryColorScreenshotTests
     /// component with one category per palette color, so the States tab shows every category mark, with the
     /// Color submenu open; one tile per zoom level.
     /// </summary>
-    [SkippableFact]
+    [Fact]
     public void PaletteContactSheets() => PrScreenshot.Run(() =>
     {
         using ProjectTreeHarness tree = new ProjectTreeHarness();

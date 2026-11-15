@@ -15,7 +15,7 @@ namespace Gum.Avalonia.Tests.Screenshots;
 [Trait("Category", PrScreenshot.Category)]
 public class AlignmentSubtextScreenshotTests
 {
-    [SkippableFact]
+    [Fact]
     public void AlignmentTab() => PrScreenshot.Run(() =>
     {
         using ProjectTreeHarness tree = new ProjectTreeHarness();

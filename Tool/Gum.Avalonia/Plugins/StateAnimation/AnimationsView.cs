@@ -263,7 +263,7 @@ public sealed class AnimationsView : Grid
     {
         global::Avalonia.Threading.Dispatcher.UIThread.Post(() =>
         {
-            if (list.IsKeyboardFocusWithin || list.GetVisualRoot() == null)
+            if (list.IsKeyboardFocusWithin || TopLevel.GetTopLevel(list) == null)
             {
                 return;
             }

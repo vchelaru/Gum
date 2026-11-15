@@ -12,7 +12,7 @@ namespace Gum.Avalonia.Tests.Screenshots;
 [Trait("Category", PrScreenshot.Category)]
 public class ReferenceFailureNoteScreenshotTests
 {
-    [SkippableFact]
+    [Fact]
     public void DividesByZeroRow() => PrScreenshot.Run(() =>
     {
         using VariableGridHarness grid = new VariableGridHarness();
@@ -35,7 +35,7 @@ public class ReferenceFailureNoteScreenshotTests
         }
     });
 
-    [SkippableFact]
+    [Fact]
     public void ValidReferenceRowHasNoNote() => PrScreenshot.Run(() =>
     {
         using VariableGridHarness grid = new VariableGridHarness();
@@ -55,7 +55,7 @@ public class ReferenceFailureNoteScreenshotTests
         }
     });
 
-    [SkippableFact]
+    [Fact]
     public void MissingInstanceRow() => PrScreenshot.Run(() =>
     {
         using VariableGridHarness grid = new VariableGridHarness();

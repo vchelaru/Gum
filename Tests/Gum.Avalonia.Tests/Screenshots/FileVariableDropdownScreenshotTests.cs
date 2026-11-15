@@ -14,7 +14,7 @@ namespace Gum.Avalonia.Tests.Screenshots;
 [Trait("Category", PrScreenshot.Category)]
 public class FileVariableDropdownScreenshotTests
 {
-    [SkippableFact]
+    [Fact]
     public void SourceFileRow() => PrScreenshot.Run(() =>
     {
         using VariableGridHarness grid = new VariableGridHarness();
@@ -27,7 +27,7 @@ public class FileVariableDropdownScreenshotTests
         PrScreenshot.SaveWindowAtZoomLevels(grid.Input.Window, "source-file-row");
     });
 
-    [SkippableFact]
+    [Fact]
     public void SourceFileRowTypedAUrl() => PrScreenshot.Run(() =>
     {
         using VariableGridHarness grid = new VariableGridHarness();
@@ -41,7 +41,7 @@ public class FileVariableDropdownScreenshotTests
         PrScreenshot.SaveWindowAtZoomLevels(grid.Input.Window, "source-file-typed-url");
     });
 
-    [SkippableFact]
+    [Fact]
     public void SourceFileRowWithTheListOpen() => PrScreenshot.Run(() =>
     {
         using VariableGridHarness grid = new VariableGridHarness();
@@ -55,7 +55,7 @@ public class FileVariableDropdownScreenshotTests
         PrScreenshot.SaveWindowAtZoomLevels(grid.Input.Window, "source-file-list-open");
     });
 
-    [SkippableFact]
+    [Fact]
     public void SourceFileRowWithAWrappedLabel() => PrScreenshot.Run(() =>
     {
         using VariableGridHarness grid = new VariableGridHarness();

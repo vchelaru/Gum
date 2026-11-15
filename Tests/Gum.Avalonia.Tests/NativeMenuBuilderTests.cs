@@ -32,10 +32,10 @@ public class NativeMenuBuilderTests
         NativeMenu fileMenu = fileItem.Menu.ShouldNotBeNull();
         NativeMenuItem saveItem = (NativeMenuItem)fileMenu.Items[0];
         saveItem.IsEnabled.ShouldBeFalse();
-        saveItem.ToggleType.ShouldBe(NativeMenuItemToggleType.None);
+        saveItem.ToggleType.ShouldBe(MenuItemToggleType.None);
         fileMenu.Items[1].ShouldBeOfType<NativeMenuItemSeparator>();
         NativeMenuItem gridItem = (NativeMenuItem)fileMenu.Items[2];
-        gridItem.ToggleType.ShouldBe(NativeMenuItemToggleType.CheckBox);
+        gridItem.ToggleType.ShouldBe(MenuItemToggleType.CheckBox);
         gridItem.IsChecked.ShouldBeTrue();
 
         save.Header = "Save Project";

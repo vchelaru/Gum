@@ -13,7 +13,7 @@ namespace Gum.Avalonia.Tests.Screenshots;
 [Trait("Category", PrScreenshot.Category)]
 public class UnsavedChangesPromptScreenshotTests
 {
-    [SkippableFact]
+    [Fact]
     public void UnsavedChangesPrompt() => PrScreenshot.Run(() =>
     {
         foreach ((ThemeVariant theme, string suffix) in new[] { (ThemeVariant.Light, "light"), (ThemeVariant.Dark, "dark") })
@@ -23,7 +23,7 @@ public class UnsavedChangesPromptScreenshotTests
     });
 
     /// <summary>The same prompt before a behavior or the whole project reloads (#5388).</summary>
-    [SkippableFact]
+    [Fact]
     public void UnsavedChangesPromptForBehaviorAndProject() => PrScreenshot.Run(() =>
     {
         Save("Clickable", "Behaviors/Clickable.behx", ThemeVariant.Light, "unsaved-changes-prompt-behavior");

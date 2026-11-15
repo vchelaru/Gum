@@ -426,7 +426,7 @@ public class FormsAndImportScenarioTests
         tree.AssertOracles();
     }
 
-    [SkippableFact]
+    [Fact]
     [Trait("Feature", "CONT-008")]
     [Trait("Feature", "EDIT-001")]
     public void ImportGumx_AStandardWhoseFileIsUnchangedButWhoseAnimationsAreNot_UndoKeepsTheImportedAnimations()

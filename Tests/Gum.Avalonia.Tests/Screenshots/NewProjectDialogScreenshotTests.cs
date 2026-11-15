@@ -24,37 +24,37 @@ public class NewProjectDialogScreenshotTests
 {
     private static readonly string Location = OperatingSystem.IsWindows() ? @"C:\Users\You\Projects" : "/Users/You/Projects";
 
-    [SkippableTheory]
+    [Theory]
     [InlineData("dark")]
     [InlineData("light")]
     public void Default(string theme) => Capture("default", theme, (_, _) => { });
 
-    [SkippableTheory]
+    [Theory]
     [InlineData("dark")]
     [InlineData("light")]
     public void FormsUnchecked(string theme) => Capture("forms-unchecked", theme, (viewModel, _) => viewModel.IsIncludeFormsControls = false);
 
-    [SkippableTheory]
+    [Theory]
     [InlineData("dark")]
     [InlineData("light")]
     public void DeviceNameRefused(string theme) => Capture("device-name-refused", theme, (viewModel, _) => viewModel.ProjectName = "CON");
 
-    [SkippableTheory]
+    [Theory]
     [InlineData("dark")]
     [InlineData("light")]
     public void TrailingDotRefused(string theme) => Capture("trailing-dot-refused", theme, (viewModel, _) => viewModel.ProjectName = "Game.");
 
-    [SkippableTheory]
+    [Theory]
     [InlineData("dark")]
     [InlineData("light")]
     public void TooLongNameRefused(string theme) => Capture("too-long-name-refused", theme, (viewModel, _) => viewModel.ProjectName = new string('a', 260));
 
-    [SkippableTheory]
+    [Theory]
     [InlineData("dark")]
     [InlineData("light")]
     public void ForbiddenCharacterRefused(string theme) => Capture("forbidden-character-refused", theme, (viewModel, _) => viewModel.ProjectName = "Game<");
 
-    [SkippableTheory]
+    [Theory]
     [InlineData("dark")]
     [InlineData("light")]
     public void CodeProjectChecked(string theme) => Capture("code-project", theme, (viewModel, _) =>
@@ -63,7 +63,7 @@ public class NewProjectDialogScreenshotTests
         viewModel.PlatformName = "kniskia";
     });
 
-    [SkippableTheory]
+    [Theory]
     [InlineData("dark")]
     [InlineData("light")]
     public void CodeProjectStride(string theme) => Capture("code-project-stride", theme, (viewModel, _) =>
@@ -72,7 +72,7 @@ public class NewProjectDialogScreenshotTests
         viewModel.PlatformName = "stride";
     });
 
-    [SkippableTheory]
+    [Theory]
     [InlineData("dark")]
     [InlineData("light")]
     public void CodeProjectBrutal(string theme) => Capture("code-project-brutal", theme, (viewModel, _) =>
@@ -81,7 +81,7 @@ public class NewProjectDialogScreenshotTests
         viewModel.PlatformName = "brutal";
     });
 
-    [SkippableTheory]
+    [Theory]
     [InlineData("dark")]
     [InlineData("light")]
     public void CodeProjectSilkNet(string theme) => Capture("code-project-silknet", theme, (viewModel, _) =>
@@ -90,7 +90,7 @@ public class NewProjectDialogScreenshotTests
         viewModel.PlatformName = "silknet";
     });
 
-    [SkippableTheory]
+    [Theory]
     [InlineData("dark")]
     [InlineData("light")]
     public void CodeProjectMonoGame(string theme) => Capture("code-project-monogame", theme, (viewModel, _) =>
@@ -99,7 +99,7 @@ public class NewProjectDialogScreenshotTests
         viewModel.PlatformName = "monogame";
     });
 
-    [SkippableTheory]
+    [Theory]
     [InlineData("dark")]
     [InlineData("light")]
     public void CodeProjectMonoGameLocalSource(string theme) => Capture("code-project-monogame-local-source", theme, (viewModel, _) =>
@@ -110,7 +110,7 @@ public class NewProjectDialogScreenshotTests
         viewModel.IncludeRecommendedPackages = true;
     });
 
-    [SkippableTheory]
+    [Theory]
     [InlineData("dark")]
     [InlineData("light")]
     public void CodeProjectRaylibLocalSource(string theme) => Capture("code-project-raylib-local-source", theme, (viewModel, _) =>
@@ -121,7 +121,7 @@ public class NewProjectDialogScreenshotTests
         viewModel.IncludeRecommendedPackages = true;
     });
 
-    [SkippableTheory]
+    [Theory]
     [InlineData("dark")]
     public void PackagesStable(string theme) => Capture("packages-stable", theme, (viewModel, _) =>
     {
@@ -129,7 +129,7 @@ public class NewProjectDialogScreenshotTests
         viewModel.PlatformName = "monogame";
     });
 
-    [SkippableTheory]
+    [Theory]
     [InlineData("dark")]
     public void PackagesPreview(string theme) => Capture("packages-preview", theme, (viewModel, _) =>
     {
@@ -138,7 +138,7 @@ public class NewProjectDialogScreenshotTests
         viewModel.IsPreviewChannelChecked = true;
     });
 
-    [SkippableTheory]
+    [Theory]
     [InlineData("dark")]
     public void PackagesLocalSource(string theme) => Capture("packages-local-source", theme, (viewModel, _) =>
     {
@@ -147,7 +147,7 @@ public class NewProjectDialogScreenshotTests
         viewModel.IsLocalSourceChannelChecked = true;
     });
 
-    [SkippableTheory]
+    [Theory]
     [InlineData("dark")]
     [InlineData("light")]
     public void CodeProjectMonoGameCommandLine(string theme) => Capture("code-project-monogame-command-line", theme, (viewModel, window) =>
@@ -157,12 +157,12 @@ public class NewProjectDialogScreenshotTests
         window.Find<NewProjectDialogView.Disclosure>(expander => expander.Name == NewProjectDialogView.CommandLineExpanderName).IsExpanded = true;
     });
 
-    [SkippableTheory]
+    [Theory]
     [InlineData("dark")]
     [InlineData("light")]
     public void WarningShowing(string theme) => Capture("warning", theme, (viewModel, _) => viewModel.IncludeCodeProject = true, existingProject: true);
 
-    [SkippableTheory]
+    [Theory]
     [InlineData("dark")]
     [InlineData("light")]
     public void TooltipOpen(string theme) => Capture("tooltip", theme, (viewModel, window) =>
@@ -171,7 +171,7 @@ public class NewProjectDialogScreenshotTests
         window.HoverForToolTip(window.Find<FluentIcons.Avalonia.FluentIcon>(icon => icon.Name == NewProjectDialogView.WarningInfoName), 2000);
     }, existingProject: true);
 
-    [SkippableTheory]
+    [Theory]
     [InlineData("dark")]
     [InlineData("light")]
     public void CopiedCheck(string theme) => Capture("copied", theme, (viewModel, window) =>
@@ -186,13 +186,13 @@ public class NewProjectDialogScreenshotTests
         }
     });
 
-    [SkippableTheory]
+    [Theory]
     [InlineData("dark")]
     [InlineData("light")]
     public void NonEmptyFolder(string theme) => Capture("not-empty", theme, (viewModel, _) => viewModel.IncludeCodeProject = true,
         existingProject: true, targetNotEmpty: true);
 
-    [SkippableTheory]
+    [Theory]
     [InlineData("dark")]
     [InlineData("light")]
     public void FoldersExpanded(string theme) => Capture("folders-expanded", theme, (viewModel, window) =>
@@ -202,13 +202,13 @@ public class NewProjectDialogScreenshotTests
         window.Find<NewProjectDialogView.Disclosure>(expander => expander.Name == NewProjectDialogView.FoldersExpanderName).IsExpanded = true;
     });
 
-    [SkippableTheory]
+    [Theory]
     [InlineData("dark")]
     [InlineData("light")]
     public void FoldersExpandedGumOnly(string theme) => Capture("folders-gum-only", theme, (_, window) =>
         window.Find<NewProjectDialogView.Disclosure>(expander => expander.Name == NewProjectDialogView.FoldersExpanderName).IsExpanded = true);
 
-    [SkippableTheory]
+    [Theory]
     [InlineData("dark")]
     [InlineData("light")]
     public void FoldersWithScrollBars(string theme) => Capture("folders-scrollbars", theme, (viewModel, window) =>
@@ -219,7 +219,7 @@ public class NewProjectDialogScreenshotTests
         viewModel.SetFolderTreeExpanded(true);
     });
 
-    [SkippableTheory]
+    [Theory]
     [InlineData("dark")]
     [InlineData("light")]
     public void CommandLineExpanded(string theme) => Capture("command-line", theme, (viewModel, window) =>
@@ -229,7 +229,7 @@ public class NewProjectDialogScreenshotTests
         window.Find<NewProjectDialogView.Disclosure>(expander => expander.Name == NewProjectDialogView.CommandLineExpanderName).IsExpanded = true;
     });
 
-    [SkippableTheory]
+    [Theory]
     [InlineData("dark")]
     [InlineData("light")]
     public void CodeProjectWithDemoScreen(string theme) => Capture("code-project-demo", theme, (viewModel, window) =>
@@ -239,7 +239,7 @@ public class NewProjectDialogScreenshotTests
         window.Find<NewProjectDialogView.Disclosure>(expander => expander.Name == NewProjectDialogView.CommandLineExpanderName).IsExpanded = true;
     });
 
-    [SkippableTheory]
+    [Theory]
     [InlineData("dark")]
     [InlineData("light")]
     public void Busy(string theme) => Capture("busy", theme, (viewModel, _) =>
@@ -248,7 +248,7 @@ public class NewProjectDialogScreenshotTests
         viewModel.AffirmativeCommand.Execute(null);
     }, filesResult: null);
 
-    [SkippableTheory]
+    [Theory]
     [InlineData("dark")]
     [InlineData("light")]
     public void RestoreFailure(string theme) => Capture("restore-failure", theme, (viewModel, _) =>

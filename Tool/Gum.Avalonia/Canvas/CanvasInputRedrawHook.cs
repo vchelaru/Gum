@@ -29,9 +29,9 @@ public static class CanvasInputRedrawHook
             AddTunnel(InputElement.TextInputEvent, scheduler),
             AddBubble(DragDrop.DragOverEvent, scheduler),
             AddBubble(DragDrop.DropEvent, scheduler),
-            AddBubble(Gestures.PointerTouchPadGestureMagnifyEvent, scheduler),
-            AddBubble(Gestures.PointerTouchPadGestureRotateEvent, scheduler),
-            AddBubble(Gestures.PointerTouchPadGestureSwipeEvent, scheduler),
+            AddBubble(InputElement.PointerTouchPadGestureMagnifyEvent, scheduler),
+            AddBubble(InputElement.PointerTouchPadGestureRotateEvent, scheduler),
+            AddBubble(InputElement.PointerTouchPadGestureSwipeEvent, scheduler),
         };
         return new HandlerSet(handlers);
     }

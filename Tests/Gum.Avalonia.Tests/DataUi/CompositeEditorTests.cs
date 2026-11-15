@@ -132,7 +132,7 @@ public class CompositeEditorTests : IDisposable
         display.ApplyButton.IsVisible.ShouldBeFalse();
 
         display.EditorTextBox.Text = "three";
-        display.EditorTextBox.RaiseEvent(new RoutedEventArgs(InputElement.LostFocusEvent));
+        display.EditorTextBox.RaiseEvent(new FocusChangedEventArgs(InputElement.LostFocusEvent));
 
         fixture.Lines.ShouldBe(new List<string> { "three" });
         display.ApplyButton.IsVisible.ShouldBeFalse();
@@ -424,7 +424,7 @@ public class CompositeEditorTests : IDisposable
         fixture.File.ShouldBe("https://example.com/typed.png");
 
         display.ChoiceBox.Text = "other/typed.png";
-        display.ChoiceBox.RaiseEvent(new RoutedEventArgs(InputElement.LostFocusEvent));
+        display.ChoiceBox.RaiseEvent(new FocusChangedEventArgs(InputElement.LostFocusEvent));
         fixture.File.ShouldBe("other/typed.png");
 
         display.ChoiceBox.Text = "";
@@ -442,7 +442,7 @@ public class CompositeEditorTests : IDisposable
 
         display.ChoiceBox.Text = "half-typed";
         display.ChoiceBox.RaiseEvent(new KeyEventArgs { RoutedEvent = InputElement.KeyDownEvent, Key = Key.Escape });
-        display.ChoiceBox.RaiseEvent(new RoutedEventArgs(InputElement.LostFocusEvent));
+        display.ChoiceBox.RaiseEvent(new FocusChangedEventArgs(InputElement.LostFocusEvent));
 
         display.ChoiceBox.Text.ShouldBe("old.png");
         fixture.File.ShouldBe("old.png");
@@ -484,7 +484,7 @@ public class CompositeEditorTests : IDisposable
         display.ChoiceBox.RaiseEvent(new KeyEventArgs { RoutedEvent = InputElement.KeyDownEvent, Key = key });
 
     private static void LoseFocus(FileSelectionDisplay display) =>
-        display.ChoiceBox.RaiseEvent(new RoutedEventArgs(InputElement.LostFocusEvent));
+        display.ChoiceBox.RaiseEvent(new FocusChangedEventArgs(InputElement.LostFocusEvent));
 
     [AvaloniaFact]
     public void FileSelectionDisplay_WithChoices_RefreshWhileTheListIsOpen_LeavesTheListAndWritesNothing()

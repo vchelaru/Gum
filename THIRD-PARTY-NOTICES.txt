@@ -77,8 +77,8 @@ MIT License
 Avalonia — Copyright (c) AvaloniaUI OÜ
     https://github.com/AvaloniaUI/Avalonia
     NuGet: Avalonia, Avalonia.Controls.ColorPicker, Avalonia.Desktop,
-        Avalonia.Fonts.Inter, Avalonia.FreeDesktop, Avalonia.Native,
-        Avalonia.Remote.Protocol, Avalonia.Skia, Avalonia.Themes.Fluent,
+        Avalonia.Fonts.Inter, Avalonia.FreeDesktop, Avalonia.FreeDesktop.AtSpi,
+        Avalonia.HarfBuzz, Avalonia.Native, Avalonia.Remote.Protocol, Avalonia.Skia, Avalonia.Themes.Fluent,
         Avalonia.Win32, Avalonia.X11
     Includes the native libAvaloniaNative.dylib (macOS). Avalonia's own
     third-party notices (code it incorporates from WPF, the Silverlight
@@ -110,7 +110,8 @@ FlatRedBall.InterpolationCore — Copyright (c) 2016 FlatRedBall, LLC
 
 FluentIcons.Avalonia / FluentIcons.Common — Copyright (c) 2022 davidxuang
     https://github.com/davidxuang/FluentIcons
-    NuGet: FluentIcons.Avalonia, FluentIcons.Common
+    NuGet: FluentIcons.Avalonia, FluentIcons.Common,
+        FluentIcons.Resources.Avalonia
     Embeds the Fluent UI System Icons font — Copyright (c) 2020 Microsoft
     Corporation, MIT (https://github.com/microsoft/fluentui-system-icons).
 

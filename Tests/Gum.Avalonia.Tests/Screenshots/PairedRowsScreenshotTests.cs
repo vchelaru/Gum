@@ -12,7 +12,7 @@ namespace Gum.Avalonia.Tests.Screenshots;
 [Trait("Category", PrScreenshot.Category)]
 public class PairedRowsScreenshotTests
 {
-    [SkippableFact]
+    [Fact]
     public void PositionAndSizeRows_SomeEditedAndOneSetByAReference() => PrScreenshot.Run(() =>
     {
         using VariableGridHarness grid = new VariableGridHarness();
@@ -31,7 +31,7 @@ public class PairedRowsScreenshotTests
         PrScreenshot.SaveWindowAtZoomLevels(grid.Input.Window, "position-and-size-rows");
     });
 
-    [SkippableFact]
+    [Fact]
     public void TextureRectangleRows() => PrScreenshot.Run(() =>
     {
         using VariableGridHarness grid = new VariableGridHarness();
@@ -48,7 +48,7 @@ public class PairedRowsScreenshotTests
         PrScreenshot.SaveWindowAtZoomLevels(grid.Input.Window, "texture-rectangle-rows");
     });
 
-    [SkippableTheory]
+    [Theory]
     [InlineData(300)]
     [InlineData(220)]
     [InlineData(160)]
@@ -69,7 +69,7 @@ public class PairedRowsScreenshotTests
         PrScreenshot.SaveWindowAtZoomLevels(grid.Input.Window, $"texture-rectangle-rows-width-{width}");
     });
 
-    [SkippableFact]
+    [Fact]
     public void GradientRows_OnACircle() => PrScreenshot.Run(() =>
     {
         using VariableGridHarness grid = new VariableGridHarness();
@@ -86,7 +86,7 @@ public class PairedRowsScreenshotTests
         PrScreenshot.SaveWindowAtZoomLevels(grid.Input.Window, "gradient-rows");
     });
 
-    [SkippableFact]
+    [Fact]
     public void PositionAndSizeRows_NothingEdited() => PrScreenshot.Run(() =>
     {
         using VariableGridHarness grid = new VariableGridHarness();

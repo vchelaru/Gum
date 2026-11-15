@@ -15,7 +15,7 @@ public class GridSnapNoteScreenshotTests
         public string GridSnapWarningText => "Snap to Grid: one or more selected objects use non-pixel units and won't fully snap";
     }
 
-    [SkippableFact]
+    [Fact]
     public void NoteDark() => PrScreenshot.Run(() =>
     {
         TextBlock note = AvaloniaEditorTabPlugin.CreateGridSnapNote();
@@ -24,7 +24,7 @@ public class GridSnapNoteScreenshotTests
         window.Save("grid-snap-note-dark");
     });
 
-    [SkippableFact]
+    [Fact]
     public void NoteLight() => PrScreenshot.Run(() =>
     {
         TextBlock note = AvaloniaEditorTabPlugin.CreateGridSnapNote();

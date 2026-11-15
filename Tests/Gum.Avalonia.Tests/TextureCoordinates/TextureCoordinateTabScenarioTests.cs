@@ -23,7 +23,7 @@ namespace Gum.Avalonia.Tests.TextureCoordinates;
 [Trait("Category", "EndToEnd")]
 public class TextureCoordinateTabScenarioTests
 {
-    [SkippableFact]
+    [Fact]
     [Trait("Feature", "TEX-001")]
     [Trait("Feature", "TEX-002")]
     public void SelectingASprite_ShowsItsTextureAndRegion_AndDraggingTheRegionSavesTheNewCoordinates()
@@ -64,7 +64,7 @@ public class TextureCoordinateTabScenarioTests
         });
     }
 
-    [SkippableFact]
+    [Fact]
     [Trait("Feature", "TEX-001")]
     public void TurningThePluginOffAndOn_LeavesTheTabWorking()
     {
@@ -91,7 +91,7 @@ public class TextureCoordinateTabScenarioTests
         });
     }
 
-    [SkippableFact]
+    [Fact]
     [Trait("Feature", "TEX-003")]
     public void DraggingTheCornerHandle_ResizesTheRegion_AndKeepsItsTopLeft()
     {
@@ -113,7 +113,7 @@ public class TextureCoordinateTabScenarioTests
         });
     }
 
-    [SkippableFact]
+    [Fact]
     [Trait("Feature", "TEX-004")]
     public void SnapToGrid_MovesTheRegionInGridSteps_AndIsSavedWithTheProject()
     {
@@ -139,7 +139,7 @@ public class TextureCoordinateTabScenarioTests
         });
     }
 
-    [SkippableFact]
+    [Fact]
     [Trait("Feature", "TEX-005")]
     public void ZoomingIn_ShowsTheTextureLarger_AndADragMovesTheRegionByTexturePixels()
     {
@@ -165,7 +165,7 @@ public class TextureCoordinateTabScenarioTests
         });
     }
 
-    [SkippableFact]
+    [Fact]
     [Trait("Feature", "TEX-006")]
     public void AnInstanceExposingItsSpritesCoordinates_ShowsThatRegion_AndADragSetsTheExposedVariables()
     {
@@ -203,7 +203,7 @@ public class TextureCoordinateTabScenarioTests
         });
     }
 
-    [SkippableFact]
+    [Fact]
     [Trait("Feature", "TEX-001")]
     public void ResizingTheTab_SizesTheScrollBarsToTheCanvas()
     {
@@ -226,7 +226,7 @@ public class TextureCoordinateTabScenarioTests
         });
     }
 
-    [SkippableFact]
+    [Fact]
     [Trait("Feature", "TEX-001")]
     public void ASpriteWithNoTexture_ShowsANoTextureMessage_InsteadOfAnEmptyCanvas()
     {
@@ -253,7 +253,7 @@ public class TextureCoordinateTabScenarioTests
         });
     }
 
-    [SkippableFact]
+    [Fact]
     [Trait("Feature", "TEX-007")]
     public void Background_FollowsTheThemesCheckerColors_AndTheProjectsCheckerSetting()
     {
@@ -306,7 +306,7 @@ public class TextureCoordinateTabScenarioTests
 
     // #5540: a Space released while focus was elsewhere never reached the canvas, so its next
     // left drag panned the camera instead of moving the region.
-    [SkippableFact]
+    [Fact]
     [Trait("Feature", "TEX-002")]
     public void SpaceReleasedAfterFocusLeftTheCanvas_DoesNotTurnTheNextDragIntoAPan()
     {
@@ -340,7 +340,7 @@ public class TextureCoordinateTabScenarioTests
 
     // #5540: the double click that replaces the region with an auto-detected one follows the
     // canvas cursor's rules, where a release that ended a drag is not a click (#5286).
-    [SkippableFact]
+    [Fact]
     [Trait("Feature", "TEX-002")]
     public void AQuickClickAfterADrag_IsNotADoubleClick_ButTwoQuickClicksAre()
     {
@@ -371,7 +371,7 @@ public class TextureCoordinateTabScenarioTests
 
     private static void OnTab(Action<TextureCoordinateTabHarness> scenario)
     {
-        Skip.IfNot(TextureCoordinateTabHarness.CanRun, TextureCoordinateTabHarness.SkipReason);
+        Assert.SkipUnless(TextureCoordinateTabHarness.CanRun, TextureCoordinateTabHarness.SkipReason);
         TextureCoordinateTabHarness.OnUiThread(() =>
         {
             using TextureCoordinateTabHarness tab = new TextureCoordinateTabHarness();

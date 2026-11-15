@@ -48,7 +48,7 @@ public class DialogWindowChromeTests
         window.Show();
         Dispatcher.UIThread.RunJobs();
 
-        window.SystemDecorations.ShouldBe(SystemDecorations.None);
+        window.WindowDecorations.ShouldBe(WindowDecorations.None);
         window.Title.ShouldBe("Delete Instance?");
         TextBlock caption = window.GetVisualDescendants().OfType<TextBlock>().First(text => text.Name == DialogWindow.CaptionName);
         caption.Text.ShouldBe("Delete Instance?");

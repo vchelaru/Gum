@@ -13,7 +13,7 @@ namespace Gum.Avalonia.Tests.Screenshots;
 [Trait("Category", PrScreenshot.Category)]
 public class GradientUnitsScreenshotTests
 {
-    [SkippableFact]
+    [Fact]
     public void GradientUnitRows_ForARadialCircle() => PrScreenshot.Run(() =>
     {
         using VariableGridHarness grid = new VariableGridHarness();

@@ -38,12 +38,12 @@ public class TextureCoordinateTabTests
 
     private static void OnUiThread(Action action) => DeviceTestThread.Run(action);
 
-    [SkippableFact]
+    [Fact]
     public void SelectingASpriteWithNoTexture_LeavesNoRegionToDrag()
     {
         // #5101: the region selector of the previously selected sprite stayed live when the next
         // sprite had no texture, so dragging where it was wrote texture coordinates to that sprite.
-        Skip.IfNot(HasDisplay, SkipReason);
+        Assert.SkipUnless(HasDisplay, SkipReason);
 
         OnUiThread(() =>
         {
@@ -97,12 +97,12 @@ public class TextureCoordinateTabTests
         });
     }
 
-    [SkippableFact]
+    [Fact]
     public void ARegionEventThatRemovesTheSelector_LeavesTheFrameDrawing()
     {
         // A region event reaches the display controller, whose refresh can remove the selectors
         // while the canvas is still walking them; the frame threw "Collection was modified".
-        Skip.IfNot(HasDisplay, SkipReason);
+        Assert.SkipUnless(HasDisplay, SkipReason);
 
         OnUiThread(() =>
         {

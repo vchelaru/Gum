@@ -17,10 +17,10 @@ namespace Gum.Avalonia.Tests.Screenshots;
 [Trait("Category", PrScreenshot.Category)]
 public class EditorToolbarZoomScreenshotTests
 {
-    [SkippableFact]
+    [Fact]
     public void Dark() => Capture(ThemeVariant.Dark, "editor-toolbar-dark");
 
-    [SkippableFact]
+    [Fact]
     public void Light() => Capture(ThemeVariant.Light, "editor-toolbar-light");
 
     private static void Capture(ThemeVariant theme, string name) => PrScreenshot.Run(() =>

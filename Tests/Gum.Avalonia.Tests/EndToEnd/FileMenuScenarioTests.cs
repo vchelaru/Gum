@@ -265,11 +265,11 @@ public class FileMenuScenarioTests
 
     // Normal builds leave gumcli out (Gum.Cli is not in Gum.slnx); CI publishes it into the test
     // output's GumCli folder, where the export looks for it, before running these tests.
-    [SkippableFact]
+    [Fact]
     [Trait("Feature", "FILE-008")]
     public void ExportToSvg_WritesAnSvgOfTheSelectedElement()
     {
-        Skip.IfNot(File.Exists(Path.Combine(AppContext.BaseDirectory, "GumCli", "gumcli.dll")),
+        Assert.SkipUnless(File.Exists(Path.Combine(AppContext.BaseDirectory, "GumCli", "gumcli.dll")),
             "gumcli is not in the test output's GumCli folder; publish Tools/Gum.Cli there (--self-contained false -o <test output>/GumCli) to run this");
         DeviceTestThread.Run(() =>
         {
@@ -300,7 +300,7 @@ public class FileMenuScenarioTests
         });
     }
 
-    [SkippableFact]
+    [Fact]
     [Trait("Feature", "FILE-007")]
     public void ExportAsImage_WritesTheCanvasToAPng_AndPutsTheEditorsGuidesBack() =>
         ExportButtonAsImage(inRenderTarget: false, gridOverlay: false, (canvas, image, box) =>
@@ -313,7 +313,7 @@ public class FileMenuScenarioTests
     // The export shows only the element: the editor's solid background color and checkerboard are
     // left out, and so is the snap grid overlay, including when the element draws through its own
     // render target.
-    [SkippableTheory]
+    [Theory]
     [InlineData(false, false)]
     [InlineData(true, false)]
     [InlineData(false, true)]
@@ -331,7 +331,7 @@ public class FileMenuScenarioTests
     // with gridOverlay the snap grid is drawn on the canvas, as when the project snaps to a grid.
     private static void ExportButtonAsImage(bool inRenderTarget, bool gridOverlay, Action<CanvasHarness, SkiaSharp.SKBitmap, SkiaSharp.SKRectI> check)
     {
-        Skip.IfNot(CanvasHarness.CanRun, CanvasHarness.SkipReason);
+        Assert.SkipUnless(CanvasHarness.CanRun, CanvasHarness.SkipReason);
         CanvasHarness.OnUiThread(() =>
         {
             using CanvasHarness canvas = new CanvasHarness();
@@ -390,11 +390,11 @@ public class FileMenuScenarioTests
 
     // The dotted Container outline is editor-only chrome, so it is left out of the export and is
     // back on the canvas afterward.
-    [SkippableFact]
+    [Fact]
     [Trait("Feature", "FILE-007")]
     public void ExportAsImage_LeavesOutContainerOutlines_AndRestoresThem()
     {
-        Skip.IfNot(CanvasHarness.CanRun, CanvasHarness.SkipReason);
+        Assert.SkipUnless(CanvasHarness.CanRun, CanvasHarness.SkipReason);
         CanvasHarness.OnUiThread(() =>
         {
             using CanvasHarness canvas = new CanvasHarness();
