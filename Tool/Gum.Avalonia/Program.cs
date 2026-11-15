@@ -106,6 +106,21 @@ public static class Program
             return null;
         }
 
+        // Gum always starts: a claim that fails for any reason leaves this Gum unclaimed.
+        try
+        {
+            return EnterSingleInstanceGateCore(options);
+        }
+        catch (Exception exception)
+        {
+            Console.Error.WriteLine("The single-instance claim failed (" + exception.Message + "). Starting a new Gum.");
+            ToolLog.WriteException("single-instance gate", exception);
+            return null;
+        }
+    }
+
+    private static SingleInstanceGate EnterSingleInstanceGateCore(HeadOptions options)
+    {
         string instanceDirectory = InstanceIdentity.DefaultInstanceDirectory();
         string userName = Environment.UserName;
         bool caseSensitive = InstanceIdentity.IsFileSystemCaseSensitive();

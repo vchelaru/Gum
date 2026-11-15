@@ -249,6 +249,58 @@ public class SingleInstanceHandoffTests : IDisposable
         OpenRequestServer.SocketFilePath("gum-open-test").ShouldEndWith("CoreFxPipe_gum-open-test");
     }
 
+    private static OpenRequestServer ThrowingServer(string pipeName, OpenRequestInbox inbox) =>
+        throw new System.Net.Sockets.SocketException();
+
+    [Fact]
+    public void Enter_ServerCannotStart_StartsUnclaimedInsteadOfThrowing()
+    {
+        SingleInstanceGate gate = SingleInstanceGate.Enter(new OpenRequest(_project, null), _instanceDirectory, _user, false,
+            TimeSpan.FromSeconds(5), onServerPid: null, createServer: ThrowingServer);
+        _disposables.Add(gate);
+
+        gate.Outcome.ShouldBe(GateOutcome.Unclaimed);
+        gate.Message!.ShouldContain("claim");
+        gate.Inbox.ShouldNotBeNull();
+    }
+
+    [Fact]
+    public void Enter_ServerCannotStart_ReleasesTheLockSoAnotherGumCanOwnTheProject()
+    {
+        SingleInstanceGate gate = SingleInstanceGate.Enter(new OpenRequest(_project, null), _instanceDirectory, _user, false,
+            TimeSpan.FromSeconds(5), onServerPid: null, createServer: ThrowingServer);
+        _disposables.Add(gate);
+
+        ProjectInstanceLock.IsHeld(_instanceDirectory, InstanceIdentity.KeyFor(_project, _user, false)).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void Reclaim_ServerCannotStart_ReturnsFalseInsteadOfThrowing()
+    {
+        SingleInstanceGate gate = SingleInstanceGate.StartUnclaimed(_instanceDirectory, _user, false, createServer: ThrowingServer);
+        _disposables.Add(gate);
+
+        gate.Reclaim(_project).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void Reclaim_PathThatCannotBeNormalized_ReturnsFalseInsteadOfThrowing()
+    {
+        SingleInstanceGate gate = Enter();
+
+        gate.Reclaim("bad path.gumx").ShouldBeFalse();
+    }
+
+    [Fact]
+    public void Enter_PathThatCannotBeNormalized_StartsUnclaimedInsteadOfThrowing()
+    {
+        SingleInstanceGate gate = SingleInstanceGate.Enter(new OpenRequest("bad path.gumx", null), _instanceDirectory, _user, false,
+            TimeSpan.FromSeconds(5), onServerPid: null);
+        _disposables.Add(gate);
+
+        gate.Outcome.ShouldBe(GateOutcome.Unclaimed);
+    }
+
     [Fact]
     public async Task Enter_LockHeldButNobodyListening_TimesOutAndStartsUnclaimed()
     {

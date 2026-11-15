@@ -51,7 +51,7 @@ public static class UnattendedRun
     {
         if (!await CompletesBefore(startup, deadline))
         {
-            return Fail(error, exitAfterSeconds, "the project had not finished loading");
+            return Fail(error, exitAfterSeconds, "the project had not finished loading, or the --await-open-requests requests had not arrived");
         }
 
         switch (await startup)

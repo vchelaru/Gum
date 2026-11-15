@@ -1,4 +1,5 @@
 using System;
+using Gum.Diagnostics;
 using System.IO;
 using System.IO.Pipes;
 using System.Text;
@@ -38,10 +39,13 @@ public sealed class SingleInstanceGate : IDisposable
     private ProjectInstanceLock? _lock;
     private OpenRequestServer? _server;
     private string? _claimedKey;
+    private readonly Func<string, OpenRequestInbox, OpenRequestServer> _createServer;
 
     private SingleInstanceGate(GateOutcome outcome, string? message, OpenRequestInbox? inbox,
-        string instanceDirectory, string userName, bool caseSensitive)
+        string instanceDirectory, string userName, bool caseSensitive,
+        Func<string, OpenRequestInbox, OpenRequestServer>? createServer = null)
     {
+        _createServer = createServer ?? ((pipeName, requestInbox) => new OpenRequestServer(pipeName, requestInbox));
         Outcome = outcome;
         Message = message;
         Inbox = inbox;
@@ -69,17 +73,31 @@ public sealed class SingleInstanceGate : IDisposable
     /// the caller can let that process take the foreground (Windows).
     /// </summary>
     public static SingleInstanceGate Enter(OpenRequest request, string instanceDirectory, string userName, bool caseSensitive,
-        TimeSpan ownerWait, Action<int>? onServerPid)
+        TimeSpan ownerWait, Action<int>? onServerPid, Func<string, OpenRequestInbox, OpenRequestServer>? createServer = null)
+    {
+        // A claim is never allowed to stop Gum from starting: any failure leaves it unclaimed.
+        try
+        {
+            return EnterCore(request, instanceDirectory, userName, caseSensitive, ownerWait, onServerPid, createServer);
+        }
+        catch (Exception exception)
+        {
+            return StartUnclaimed(instanceDirectory, userName, caseSensitive, "The claim failed: " + exception.Message, createServer);
+        }
+    }
+
+    private static SingleInstanceGate EnterCore(OpenRequest request, string instanceDirectory, string userName, bool caseSensitive,
+        TimeSpan ownerWait, Action<int>? onServerPid, Func<string, OpenRequestInbox, OpenRequestServer>? createServer)
     {
         if (TryPrepareDirectory(instanceDirectory) is { } directoryProblem)
         {
-            return StartUnclaimed(instanceDirectory, userName, caseSensitive, directoryProblem);
+            return StartUnclaimed(instanceDirectory, userName, caseSensitive, directoryProblem, createServer);
         }
 
         string key = InstanceIdentity.KeyFor(request.Project, userName, caseSensitive);
         string pipeName = InstanceIdentity.PipeName(key);
         DateTime deadline = DateTime.UtcNow + ownerWait;
-        SingleInstanceGate gate = StartUnclaimed(instanceDirectory, userName, caseSensitive, null);
+        SingleInstanceGate gate = StartUnclaimed(instanceDirectory, userName, caseSensitive, null, createServer);
 
         while (true)
         {
@@ -87,6 +105,11 @@ public sealed class SingleInstanceGate : IDisposable
             {
                 gate.Outcome = GateOutcome.Owner;
                 return gate;
+            }
+
+            if (gate.ClaimFailure != null)
+            {
+                return StartUnclaimed(instanceDirectory, userName, caseSensitive, gate.ClaimFailure, createServer);
             }
 
             ExchangeResult result = TryExchange(pipeName, request, onServerPid);
@@ -97,13 +120,13 @@ public sealed class SingleInstanceGate : IDisposable
 
             if (result.Refusal != null)
             {
-                return StartUnclaimed(instanceDirectory, userName, caseSensitive, "The running Gum refused: " + result.Refusal);
+                return StartUnclaimed(instanceDirectory, userName, caseSensitive, "The running Gum refused: " + result.Refusal, createServer);
             }
 
             if (DateTime.UtcNow >= deadline)
             {
                 return StartUnclaimed(instanceDirectory, userName, caseSensitive,
-                    "The running Gum did not answer" + (result.Problem == null ? "." : ": " + result.Problem));
+                    "The running Gum did not answer" + (result.Problem == null ? "." : ": " + result.Problem), createServer);
             }
 
             Thread.Sleep(50);
@@ -114,8 +137,9 @@ public sealed class SingleInstanceGate : IDisposable
     /// A gate that claims nothing yet but receives requests once <see cref="Reclaim"/> claims a
     /// project. Used by a launch that names no project, and by one that could not hand off.
     /// </summary>
-    public static SingleInstanceGate StartUnclaimed(string instanceDirectory, string userName, bool caseSensitive, string? message = null) =>
-        new SingleInstanceGate(GateOutcome.Unclaimed, message, new OpenRequestInbox(), instanceDirectory, userName, caseSensitive);
+    public static SingleInstanceGate StartUnclaimed(string instanceDirectory, string userName, bool caseSensitive, string? message = null,
+        Func<string, OpenRequestInbox, OpenRequestServer>? createServer = null) =>
+        new SingleInstanceGate(GateOutcome.Unclaimed, message, new OpenRequestInbox(), instanceDirectory, userName, caseSensitive, createServer);
 
     /// <summary>
     /// Makes <paramref name="projectPath"/> the project this process owns, after letting go of the
@@ -127,14 +151,24 @@ public sealed class SingleInstanceGate : IDisposable
     {
         lock (_claimGate)
         {
-            string? key = projectPath == null ? null : InstanceIdentity.KeyFor(projectPath, _userName, _caseSensitive);
-            if (key != null && key == _claimedKey)
+            try
             {
-                return true;
-            }
+                string? key = projectPath == null ? null : InstanceIdentity.KeyFor(projectPath, _userName, _caseSensitive);
+                if (key != null && key == _claimedKey)
+                {
+                    return true;
+                }
 
-            Release();
-            return key == null || (TryPrepareDirectory(_instanceDirectory) == null && TryClaim(key));
+                Release();
+                return key == null || (TryPrepareDirectory(_instanceDirectory) == null && TryClaim(key));
+            }
+            catch (Exception exception)
+            {
+                // Never let a claim break loading a project; the Gum simply owns nothing.
+                Release();
+                ToolLog.WriteException("single-instance reclaim", exception);
+                return false;
+            }
         }
     }
 
@@ -147,25 +181,38 @@ public sealed class SingleInstanceGate : IDisposable
         }
     }
 
+    // Set when the claim failed for a reason other than another Gum holding the lock.
+    private string? ClaimFailure { get; set; }
+
     private bool TryClaim(string key)
     {
-        ProjectInstanceLock? instanceLock = ProjectInstanceLock.TryAcquire(_instanceDirectory, key);
-        if (instanceLock == null)
+        ClaimFailure = null;
+        ProjectInstanceLock? instanceLock = null;
+        try
         {
+            instanceLock = ProjectInstanceLock.TryAcquire(_instanceDirectory, key);
+            if (instanceLock == null)
+            {
+                return false;
+            }
+
+            OpenRequestServer server = _createServer(InstanceIdentity.PipeName(key), Inbox!);
+            server.Validate = incoming => InstanceIdentity.KeyFor(incoming.Project, _userName, _caseSensitive) == key
+                ? null
+                : "This Gum has a different project open.";
+            server.Start();
+            _lock = instanceLock;
+            _server = server;
+            _claimedKey = key;
+            return true;
+        }
+        catch (Exception exception)
+        {
+            instanceLock?.Dispose();
+            ClaimFailure = "The claim failed: " + exception.Message;
+            ToolLog.WriteException("single-instance claim", exception);
             return false;
         }
-
-        OpenRequestServer server = new OpenRequestServer(InstanceIdentity.PipeName(key), Inbox!)
-        {
-            Validate = incoming => InstanceIdentity.KeyFor(incoming.Project, _userName, _caseSensitive) == key
-                ? null
-                : "This Gum has a different project open.",
-        };
-        server.Start();
-        _lock = instanceLock;
-        _server = server;
-        _claimedKey = key;
-        return true;
     }
 
     // The pipe closes before the lock opens the project to another Gum.
