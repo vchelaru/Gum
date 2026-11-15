@@ -24,8 +24,9 @@ and `glFinish`, which are not UI cost. Draw time is the UI number.
 1. The target is sub-millisecond UI draw with a full redraw every frame. Skipping unchanged frames or
    replaying a retained recording is not the solution.
 2. No temporary textures or cached-layer render targets, and no render caching of any kind yet (replayed
-   frames, textures, retained layers). It is considered only after every other option is exhausted, and
-   only if the maintainer says so.
+   frames, textures, retained layers, recorded pictures such as SKPicture). It is considered only after
+   every other option is exhausted, and only if the maintainer says so. The reason for refusing texture
+   caching is to avoid introducing render state changes.
 3. Gum draws directly to the back buffer, with no intermediary texture.
 4. Every layer is open to change: Gum, SkiaGum, the BRUTAL host, SkiaGameRendering and RichTextKit. "That
    is fixed overhead" is not an accepted answer. The 0.26 ms empty-scene draw is ours to fix.
@@ -43,6 +44,7 @@ and `glFinish`, which are not UI cost. Draw time is the UI number.
 - Retained-mode and frame-skipping designs are ruled out as the answer, as are render-target layer caches
   (not allowed yet).
 - Fixes may land in SkiaGameRendering and RichTextKit, not only in this repo.
-- Open questions, not decided here: batching, and caching text blobs.
+- Caching shaped text blobs is allowed: it is layout work, not rendering.
+- Open question, not decided here: batching draws into fewer Skia calls.
 - Out of scope for now: ListBox culling, the Width layout short-circuit, shader warm-up (#8053), and more
   benchmark hosts (BRUTAL Vulkan, Stride, raylib, FNA).
