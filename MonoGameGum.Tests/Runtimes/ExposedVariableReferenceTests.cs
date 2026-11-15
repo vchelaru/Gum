@@ -300,4 +300,29 @@ public class ExposedVariableReferenceTests : BaseTestClass
             other.Visible.ShouldBe(value);
         }
     }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void Visible_WrittenAwayAndBackInsideOneApplyState_RowReadingTheExposedNameEndsWithTheLastValue(bool useExpressions)
+    {
+        GraphicalUiElement card = BuildCard(Reader.ExposedName, useExpressions, "IsMyButtonVisible", "Visible", "Container", "bool", false,
+            "Visible", "bool");
+        GraphicalUiElement other = card.GetGraphicalUiElementByName("Other")!;
+        GraphicalUiElement button = card.GetGraphicalUiElementByName("MyButton")!;
+        button.Visible = true;
+        other.Visible.ShouldBeTrue();
+
+        card.ApplyState(new StateSave
+        {
+            Name = "Batch",
+            Apply = () =>
+            {
+                button.Visible = false;
+                button.Visible = true;
+            }
+        });
+
+        other.Visible.ShouldBeTrue();
+    }
 }

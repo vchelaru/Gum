@@ -1051,8 +1051,8 @@ public partial class GraphicalUiElement
             string exposedName = container.FindExposedNameOf(((InstanceSave)Tag!).Name, propertyName)!;
 
             // SetProperty reports even when the value is the same, and a Forms control sets its visual that
-            // way, so a value the exposed name was last reported with is not reported again.
-            bool unchanged = container._referenceInputs != null &&
+            // way, so a value the exposed name was last reported with is not reported again. Not inside a state batch, where the last report is still queued.
+            bool unchanged = _stateBatchDepth == 0 && container._referenceInputs != null &&
                 container._referenceInputs.TryGetValue(exposedName, out object? last) && Equals(last, value);
             if (!unchanged)
             {

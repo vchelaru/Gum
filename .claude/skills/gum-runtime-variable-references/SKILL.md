@@ -89,7 +89,7 @@ All three work in a game that calls `GumExpressionService.Initialize()`. The `Gr
 
 ## Exposed variables are one value with the instance variable (#8066)
 
-A component's exposed name (`IsMyButtonVisible`) and the variable it exposes (`MyButton.Visible`) report to rows reading either name. A write through the exposed name is forwarded to the instance and reported under the exposed name by `SetProperty`; a write on the instance reports `MyButton.Visible` and, via `ReferenceAudience.ExposedName` / `FindExposedNameOf`, the exposed name too. `_exposedForwardDepth` stops the forwarded write reporting the exposed name twice. Test: `ExposedVariableReferenceTests`.
+A component's exposed name (`IsMyButtonVisible`) and the variable it exposes (`MyButton.Visible`) report to rows reading either name. A write through the exposed name is forwarded to the instance and reported under the exposed name by `SetProperty`; a write on the instance reports `MyButton.Visible` and, via `ReferenceAudience.ExposedName` / `FindExposedNameOf`, the exposed name too. `_exposedForwardDepth` stops the forwarded write reporting the exposed name twice, and an exposed name is not reported again for the value it was last reported with, except inside `ApplyState` where earlier reports are still queued. Test: `ExposedVariableReferenceTests`.
 
 ## Circular references (#6871)
 
