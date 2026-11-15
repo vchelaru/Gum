@@ -123,7 +123,7 @@ public class ExportAsImageAlphaTests
 
             string name = premultiplied ? "premultiplied" : "straight";
             ExportedPixelChecks.Check(png, samples, new SkiaSharp.SKRectI(left, top, right, bottom), name,
-                Environment.GetEnvironmentVariable("GUM_EXPORT_ALPHA_DIR"));
+                Environment.GetEnvironmentVariable("GUM_EXPORT_ALPHA_DIR"), DescribeFontAlpha());
         }
         finally
         {
@@ -138,6 +138,16 @@ public class ExportAsImageAlphaTests
         }
 
         canvas.AssertOracles();
+    }
+
+    // What decides whether the glyph atlas is premultiplied, for a failure message.
+    private static string DescribeFontAlpha()
+    {
+        object? creator = global::Gum.Wireframe.CustomSetPropertyOnRenderable.InMemoryFontCreator;
+        string creatorAlpha = creator is global::RenderingLibrary.Graphics.Fonts.IPremultipliableFontCreator premultipliable
+            ? premultipliable.PremultiplyAlpha.ToString()
+            : "n/a";
+        return $"Renderer.UsePremultipliedAlpha {Renderer.UsePremultipliedAlpha}; font creator {creator?.GetType().Name ?? "none"}, PremultiplyAlpha {creatorAlpha}";
     }
 
     // 60 x 40, the sprite's default size (100% of its file).
@@ -169,7 +179,7 @@ internal static class ExportedPixelChecks
     /// fully covered glyph pixels are (255,0,0,128), so the most opaque pixel there must be exactly that,
     /// and every pixel at alpha 64 or more must still be pure red after un-premultiplying (within 3).
     /// </summary>
-    public static void Check(string png, Sample[] samples, SkiaSharp.SKRectI text, string runName, string? keepFolder)
+    public static void Check(string png, Sample[] samples, SkiaSharp.SKRectI text, string runName, string? keepFolder, string fontState)
     {
         // Decode into an unpremultiplied bitmap so the PNG's own straight-alpha bytes are read as stored.
         using SkiaSharp.SKCodec codec = SkiaSharp.SKCodec.Create(png);
@@ -222,6 +232,7 @@ internal static class ExportedPixelChecks
         report.Add($"text, most opaque glyph pixel: expected (255,0,0,128) actual " +
                    $"({densest.Red},{densest.Green},{densest.Blue},{densest.Alpha}) delta {textDelta}");
         report.Add($"text, worst color off pure red at alpha >= 64: {worstColor} (limit 3)");
+        report.Add($"font state: {fontState}");
         report.Add($"text, worst pixel {worstPixel}; {offColorPixels} pixels off pure red by more than 3; text region {text}");
 
         if (!string.IsNullOrEmpty(keepFolder))
