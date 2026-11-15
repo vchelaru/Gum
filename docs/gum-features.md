@@ -48,7 +48,7 @@ panel.AddChild(listBox);
 
 Run the same UI on desktop, mobile, and web, with an editor for Windows, macOS, and Linux.
 
-<figure><img src=".gitbook/assets/15_10 06 52.png" alt=""><figcaption><p>The same screen at browser and portrait sizes</p></figcaption></figure>
+<figure><img src=".gitbook/assets/15_10 48 05.webp" alt=""><figcaption><p>The same game UI on a TV, laptop, and tablet</p></figcaption></figure>
 
 ### [Full UI Controls, Themed](code/controls/README.md)
 
