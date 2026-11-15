@@ -51,7 +51,7 @@ internal sealed class HeadlessDeviceGame : Game
         // A native crash (SIGSEGV) leaves no stderr, so the log is the only record of which GL driver was in use.
         if (ToolLog.IsEnabled)
         {
-            ToolLog.Write("device.ready", detail: $"adapter '{GraphicsDevice.Adapter.Description}', profile {GraphicsDevice.GraphicsProfile}");
+            ToolLog.Write("device.ready", detail: $"adapter '{GraphicsDevice.Adapter.Description}', profile {GraphicsDevice.GraphicsProfile}, {OpenGlInfo.Describe()}");
         }
     }
 

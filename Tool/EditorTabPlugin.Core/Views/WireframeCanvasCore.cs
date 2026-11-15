@@ -225,7 +225,7 @@ public sealed class WireframeCanvasCore
 
         try
         {
-            LoaderManager.Self.ContentLoader = new ContentLoader();
+            LoaderManager.Self.ContentLoader = new LoggingContentLoader(new ContentLoader());
 
             // The initialization sequence below only depends on the render-host contract, not on
             // the host control type.

@@ -27,9 +27,22 @@ public class HeadProcessTests
         /// What an assertion on this run prints. A native crash (exit 139 is SIGSEGV, 128 + signal on Linux)
         /// leaves stderr empty, so this adds the exit code and the tail of the head's own log (GL adapter, stages).
         /// </summary>
-        public string Diagnosis => $"exit code {ExitCode} after {Elapsed.TotalMilliseconds:F0} ms"
-            + (ExitCode > 128 && !OperatingSystem.IsWindows() ? $" (signal {ExitCode - 128})" : "")
-            + $"\nstderr: {Errors}\nhead log tail:\n{LogTail}";
+        public string Diagnosis => FormatDiagnosis(ExitCode, Elapsed, Errors, LogTail, !OperatingSystem.IsWindows());
+    }
+
+    private static string FormatDiagnosis(int exitCode, TimeSpan elapsed, string errors, string logTail, bool exitCodeIsShellStyle) =>
+        $"exit code {exitCode} after {elapsed.TotalMilliseconds:F0} ms"
+        + (exitCodeIsShellStyle && exitCode > 128 ? $" (signal {exitCode - 128})" : "")
+        + $"\nstderr: {errors}\nhead log tail:\n{logTail}";
+
+    [Fact]
+    public void FormatDiagnosis_ExitCode139_NamesSignal11AndKeepsTheLogTail()
+    {
+        string text = FormatDiagnosis(139, TimeSpan.FromMilliseconds(7000), "", "device.ready renderer 'llvmpipe'", exitCodeIsShellStyle: true);
+
+        text.ShouldContain("signal 11");
+        text.ShouldContain("device.ready renderer 'llvmpipe'");
+        text.ShouldContain("7000 ms");
     }
 
     [SkippableFact]
