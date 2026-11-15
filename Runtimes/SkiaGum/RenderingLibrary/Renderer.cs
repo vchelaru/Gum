@@ -708,6 +708,9 @@ namespace RenderingLibrary.Graphics
         /// </summary>
         internal int RenderTargetBakeCount { get; private set; }
 
+        /// <summary>For tests: how many times the render-target tree scans ran (they are skipped when nothing can be a render target).</summary>
+        internal int RenderTargetScanCount { get; private set; }
+
         // For tests: whether a manual-mode cached image is held for the container.
         internal bool HasManualRenderTargetImage(IRenderableIpso container)
             => _renderTargetService.HasImage(ResolveRenderTargetCacheOwner(container));
@@ -1027,6 +1030,13 @@ namespace RenderingLibrary.Graphics
         // bakes (#1643). Each bake swaps managers.Canvas to its own offscreen canvas and restores it.
         private void BakeRenderTargets(IList<IRenderableIpso> whatToRender, SystemManagers managers, Layer? layer)
         {
+            // No renderable is a render target or references one, so both scans below would find nothing.
+            if (!RenderTargetUsageHandle.AnyLive)
+            {
+                return;
+            }
+
+            RenderTargetScanCount++;
             CollectReferencedRenderTargets(whatToRender);
             if (HasAnyRenderTarget(whatToRender))
             {
