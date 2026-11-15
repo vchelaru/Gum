@@ -8,8 +8,8 @@ using Topten.RichTextKit;
 namespace SkiaGum.Tests.Renderables;
 
 /// <summary>
-/// <see cref="Text.Render"/> replays a recorded picture of its text block and keeps its effect paint
-/// between frames. These pin that the replay draws what a direct paint draws and that every input the
+/// <see cref="Text.Render"/> draws cached text blobs of its text block and keeps its effect paint
+/// between frames. These pin that the cached blobs draw what a direct paint draws and that every input the
 /// caches depend on still reaches the screen.
 /// </summary>
 public class TextRenderCacheTests
@@ -52,7 +52,7 @@ public class TextRenderCacheTests
     [Theory]
     [InlineData(1f)]
     [InlineData(1.5f)]
-    public void Render_ReplayedPicture_MatchesPaintingTheBlockDirectly(float canvasScale)
+    public void Render_CachedBlobs_MatchesPaintingTheBlockDirectly(float canvasScale)
     {
         Text text = CreateText("Hello world, wrapped over lines");
         using SKSurface direct = SKSurface.Create(new SKImageInfo(240, 100));
