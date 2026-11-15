@@ -78,7 +78,7 @@ Build a component once and place customized instances of it inside other compone
 
 Save sets of variable values as named states, then switch between them or animate between them on a timeline.
 
-<figure><img src=".gitbook/assets/07_08 04 36.png" alt=""><figcaption><p>States in a category</p></figcaption></figure>
+<figure><img src=".gitbook/assets/15_14 52 15.gif" alt=""><figcaption><p>Scrubbing a GrowIn animation between the Small and Big states in the Animations tab</p></figcaption></figure>
 
 ### [Layouts That Adapt](gum-tool/gum-elements/general-properties/x-units.md)
 
