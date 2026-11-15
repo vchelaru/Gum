@@ -66,7 +66,7 @@ Open any screen or component in its own window running the real runtime, where b
 
 Point any variable at another variable, like a spreadsheet formula, to keep sizes and colors consistent across a project.
 
-<figure><img src=".gitbook/assets/01_07 20 13.png" alt=""><figcaption><p>Height set to follow Width</p></figcaption></figure>
+<figure><img src=".gitbook/assets/15_15 03 44.png" alt=""><figcaption><p>Variable references drive each square's size, position, and rotation from its index</p></figcaption></figure>
 
 ### [Components with Has-A and Is-A](gum-tool/gum-elements/component/README.md)
 
