@@ -12,7 +12,7 @@ namespace Gum.Avalonia.Tests.Screenshots;
 [Trait("Category", PrScreenshot.Category)]
 public class TextRowApplyButtonScreenshotTests
 {
-    [SkippableFact]
+    [Fact]
     public void TextRow_WithAnUnappliedEdit() => PrScreenshot.Run(() =>
     {
         using VariableGridHarness grid = new VariableGridHarness();

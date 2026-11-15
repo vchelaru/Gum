@@ -19,10 +19,10 @@ namespace Gum.Avalonia.Tests.EndToEnd;
 [Trait("Category", "EndToEnd")]
 public class DisplayScaleCanvasScenarioTests
 {
-    [SkippableFact]
+    [Fact]
     public void EditorCanvas_At200Percent_ASecondClick8PixelsAway_IsADoubleClick()
     {
-        Skip.IfNot(CanvasHarness.CanRun, CanvasHarness.SkipReason);
+        Assert.SkipUnless(CanvasHarness.CanRun, CanvasHarness.SkipReason);
         CanvasHarness.OnUiThread(() =>
         {
             using CanvasHarness canvas = new CanvasHarness();
@@ -55,10 +55,10 @@ public class DisplayScaleCanvasScenarioTests
         });
     }
 
-    [SkippableFact]
+    [Fact]
     public void TextureCoordinatesCanvas_At200Percent_ASecondClick8PixelsAway_IsADoubleClick()
     {
-        Skip.IfNot(TextureCoordinateTabHarness.CanRun, TextureCoordinateTabHarness.SkipReason);
+        Assert.SkipUnless(TextureCoordinateTabHarness.CanRun, TextureCoordinateTabHarness.SkipReason);
         TextureCoordinateTabHarness.OnUiThread(() =>
         {
             using TextureCoordinateTabHarness tab = new TextureCoordinateTabHarness();
@@ -92,10 +92,10 @@ public class DisplayScaleCanvasScenarioTests
         });
     }
 
-    [SkippableFact]
+    [Fact]
     public void TextureCoordinatesCanvas_AnExtraFrameAfterTheSecondClick_StillReadsADoubleClick()
     {
-        Skip.IfNot(TextureCoordinateTabHarness.CanRun, TextureCoordinateTabHarness.SkipReason);
+        Assert.SkipUnless(TextureCoordinateTabHarness.CanRun, TextureCoordinateTabHarness.SkipReason);
         TextureCoordinateTabHarness.OnUiThread(() =>
         {
             using TextureCoordinateTabHarness tab = new TextureCoordinateTabHarness();
@@ -124,10 +124,10 @@ public class DisplayScaleCanvasScenarioTests
         });
     }
 
-    [SkippableFact]
+    [Fact]
     public void TextureCoordinatesCanvas_ASecondClickAfterTheDoubleClickWindow_IsNotADoubleClick()
     {
-        Skip.IfNot(TextureCoordinateTabHarness.CanRun, TextureCoordinateTabHarness.SkipReason);
+        Assert.SkipUnless(TextureCoordinateTabHarness.CanRun, TextureCoordinateTabHarness.SkipReason);
         TextureCoordinateTabHarness.OnUiThread(() =>
         {
             using TextureCoordinateTabHarness tab = new TextureCoordinateTabHarness();
@@ -142,10 +142,16 @@ public class DisplayScaleCanvasScenarioTests
             {
                 Point first = tab.WindowPointOf(200, 200);
 
+                List<string> trace = new List<string>();
                 bool isDoubleClick = ClickTwice(tab.Input.Window, tab.CanvasControl, first, first, tab.Frame,
-                    time, TimeSpan.FromMilliseconds(500), () => tab.Canvas.XnaCursor.PrimaryDoubleClick);
+                    time, TimeSpan.FromMilliseconds(500), () => tab.Canvas.XnaCursor.PrimaryDoubleClick,
+                    () =>
+                    {
+                        InputLibrary.Cursor cursor = tab.Canvas.XnaCursor;
+                        trace.Add($"t={tab.Canvas.TimeManager.CurrentTime:0.###} ({cursor.X}, {cursor.Y}) in {cursor.IsInWindow} click {cursor.PrimaryClick} double {cursor.PrimaryDoubleClick}");
+                    });
 
-                isDoubleClick.ShouldBeFalse(tab.Describe());
+                isDoubleClick.ShouldBeFalse(tab.Describe() + "; per frame: " + string.Join(" | ", trace));
             }
             finally
             {
@@ -177,6 +183,20 @@ public class DisplayScaleCanvasScenarioTests
         canvas.FramePresented += ObservePresentedFrame;
         try
         {
+            // The canvas and its cursor outlive each test, but SetTimeProvider restarts the clock at zero, so
+            // the previous test's last click can sit within the double-click window of this test's first
+            // click and read as a double click. Click once at the same spot first, then move the clock a
+            // second on, so the cursor's last click is this test's own and long past.
+            window.MouseMove(first, RawInputModifiers.None);
+            Step();
+            window.MouseDown(first, MouseButton.Left, RawInputModifiers.None);
+            Step();
+            window.MouseUp(first, MouseButton.Left, RawInputModifiers.None);
+            Step();
+            time.Advance(TimeSpan.FromSeconds(1));
+            Step();
+            sawDoubleClick = false;
+
             window.MouseMove(first, RawInputModifiers.None);
             Step();
             window.MouseDown(first, MouseButton.Left, RawInputModifiers.None);

@@ -18,21 +18,21 @@ namespace Gum.Avalonia.Tests;
 [Trait("Category", PrScreenshot.Category)]
 public class EditorToolbarScreenshotTests
 {
-    [SkippableFact]
+    [Fact]
     public void NarrowToolbar() => PrScreenshot.Run(() =>
     {
         using ScreenshotWindow window = PrScreenshot.Show(new EditorToolbar(), 560, 44, ThemeVariant.Dark);
         window.Save("editor-toolbar-narrow");
     });
 
-    [SkippableFact]
+    [Fact]
     public void GridSizeToolbar() => PrScreenshot.Run(() =>
     {
         using ScreenshotWindow window = PrScreenshot.Show(new EditorToolbar(), 1000, 44, ThemeVariant.Dark);
         window.Save("editor-toolbar-grid-size");
     });
 
-    [SkippableFact]
+    [Fact]
     public void PinnedPreview() => PrScreenshot.Run(() =>
     {
         Mock<IPreviewLauncher> launcher = new Mock<IPreviewLauncher>();

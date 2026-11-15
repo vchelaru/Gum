@@ -16,16 +16,16 @@ namespace Gum.Avalonia.Tests.Screenshots;
 [Trait("Category", PrScreenshot.Category)]
 public class NarrowRowsScreenshotTests
 {
-    [SkippableFact]
+    [Fact]
     public void Rows_AtWidth220() => PrScreenshot.Run(() => Capture(220));
 
-    [SkippableFact]
+    [Fact]
     public void Rows_AtWidth180() => PrScreenshot.Run(() => Capture(180));
 
-    [SkippableFact]
+    [Fact]
     public void Rows_AtWidth150() => PrScreenshot.Run(() => Capture(150));
 
-    [SkippableFact]
+    [Fact]
     public void Rows_AtWidth120() => PrScreenshot.Run(() => Capture(120));
 
     private static void Capture(int width)

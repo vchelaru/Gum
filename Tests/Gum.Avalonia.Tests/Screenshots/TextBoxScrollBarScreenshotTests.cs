@@ -13,7 +13,7 @@ namespace Gum.Avalonia.Tests.Screenshots;
 [Trait("Category", PrScreenshot.Category)]
 public class TextBoxScrollBarScreenshotTests
 {
-    [SkippableFact]
+    [Fact]
     public void StringListEditor_WithAnOverlongLineAndAnUnappliedEdit() => PrScreenshot.Run(() =>
     {
         EditorFixture fixture = new EditorFixture
@@ -32,7 +32,7 @@ public class TextBoxScrollBarScreenshotTests
         window.Save("string-list-editor");
     });
 
-    [SkippableFact]
+    [Fact]
     public void MultiLineEditor_WithAnUnappliedEdit() => PrScreenshot.Run(() =>
     {
         EditorFixture fixture = new EditorFixture { Text = "Press start\nto play" };

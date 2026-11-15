@@ -19,7 +19,7 @@ namespace Gum.Avalonia.Tests.Screenshots;
 [Trait("Category", PrScreenshot.Category)]
 public class ImportFromGumxFixedSourceScreenshotTests
 {
-    [SkippableFact]
+    [Fact]
     public void PickWhatToImport() => PrScreenshot.Run(() =>
     {
         IServiceProvider services = TestAppBuilder.Services;

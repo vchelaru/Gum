@@ -133,7 +133,7 @@ internal sealed class DialogWindowDriver : IDisposable
     /// <summary>The platform's copy gesture (Ctrl+C, or Cmd+C on macOS).</summary>
     public void PressCopy()
     {
-        KeyGesture copy = Window.PlatformSettings?.HotkeyConfiguration.Copy.FirstOrDefault() ?? new KeyGesture(Key.C, KeyModifiers.Control);
+        KeyGesture copy = Window.GetPlatformSettings()?.HotkeyConfiguration.Copy.FirstOrDefault() ?? new KeyGesture(Key.C, KeyModifiers.Control);
         Press(copy.Key, PhysicalKey.C, (RawInputModifiers)copy.KeyModifiers, "c");
     }
 

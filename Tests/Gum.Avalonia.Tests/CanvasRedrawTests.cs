@@ -104,9 +104,9 @@ public class CanvasRedrawTests
         Window window = new Window { Content = canvas };
         window.Show();
         // The canvas handles the pinch itself (it zooms), so the hook must see handled events too.
-        canvas.AddHandler(Gestures.PointerTouchPadGestureMagnifyEvent, (_, e) => e.Handled = true);
+        canvas.AddHandler(InputElement.PointerTouchPadGestureMagnifyEvent, (_, e) => e.Handled = true);
 
-        canvas.RaiseEvent(new PointerDeltaEventArgs(Gestures.PointerTouchPadGestureMagnifyEvent, canvas,
+        canvas.RaiseEvent(new PointerDeltaEventArgs(InputElement.PointerTouchPadGestureMagnifyEvent, canvas,
             new Pointer(Pointer.GetNextFreeId(), PointerType.Mouse, isPrimary: true), window, default, 0,
             new PointerPointProperties(), KeyModifiers.None, new global::Avalonia.Vector(0.1, 0)));
 

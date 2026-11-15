@@ -18,7 +18,7 @@ namespace Gum.Avalonia.Tests.Screenshots;
 [Trait("Category", PrScreenshot.Category)]
 public class ManagePluginsScreenshotTests
 {
-    [SkippableFact]
+    [Fact]
     public void ManagePlugins() => PrScreenshot.Run(() =>
     {
         foreach ((ThemeVariant theme, string suffix) in new[] { (ThemeVariant.Light, "light"), (ThemeVariant.Dark, "dark") })
@@ -28,7 +28,7 @@ public class ManagePluginsScreenshotTests
         }
     });
 
-    [SkippableFact]
+    [Fact]
     public void ManagePlugins_HoveringACorePlugin() => PrScreenshot.Run(() =>
     {
         using ScreenshotWindow window = PrScreenshot.ShowDialog(CreateViewModel());
@@ -40,7 +40,7 @@ public class ManagePluginsScreenshotTests
     });
 
     // A plugin built for the WPF tool dropped into the Plugins folder: found, but refused.
-    [SkippableFact]
+    [Fact]
     public void ManagePlugins_WithARefusedPlugin() => PrScreenshot.Run(() =>
     {
         IPluginManager real = TestAppBuilder.Services.GetRequiredService<IPluginManager>();

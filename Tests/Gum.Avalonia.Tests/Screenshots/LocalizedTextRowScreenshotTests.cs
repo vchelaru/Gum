@@ -15,7 +15,7 @@ namespace Gum.Avalonia.Tests.Screenshots;
 [Trait("Category", PrScreenshot.Category)]
 public class LocalizedTextRowScreenshotTests
 {
-    [SkippableFact]
+    [Fact]
     public void TextRow_RightAfterAddingALocalizationFile() => PrScreenshot.Run(() =>
     {
         LocalizationService localization = TestAppBuilder.Services.GetRequiredService<LocalizationService>();

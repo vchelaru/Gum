@@ -50,6 +50,13 @@ public abstract class DialogViewModel : ViewModel
     public bool AffirmativeIsDefault { get => Get<bool>(); protected set => Set(value); }
 
     /// <summary>
+    /// When true, Enter on a focused list item answers the dialog affirmatively. A list item takes
+    /// Enter itself, so only a dialog that is a pick-one prompt (the choice prompt) opts in; in any
+    /// other dialog a list is navigation, and Enter on it must not close the window.
+    /// </summary>
+    public bool AffirmsOnEnterFromListItem { get; protected set; }
+
+    /// <summary>
     /// Runs the affirmative or negative command whose access key is <paramref name="letter"/>
     /// (case-insensitive), if this dialog opted in through <see cref="AnswersOnAccessKeyAlone"/>.
     /// Returns whether the dialog was answered.

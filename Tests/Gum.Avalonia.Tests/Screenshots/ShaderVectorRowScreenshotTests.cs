@@ -29,19 +29,19 @@ public class ShaderVectorRowScreenshotTests : IDisposable
 {
     public void Dispose() => ShaderParameterReader.Reader = null;
 
-    [SkippableFact]
+    [Fact]
     public void VectorRows_NothingSaved() => PrScreenshot.Run(() => Capture("shader-vectors-default", edit: false));
 
-    [SkippableFact]
+    [Fact]
     public void VectorRows_MenuOnAnUnexposedRow() => PrScreenshot.Run(() => Capture("shader-vectors-menu", edit: true, menu: true));
 
-    [SkippableFact]
+    [Fact]
     public void VectorRows_ExposedWithItsMenu() => PrScreenshot.Run(() => Capture("shader-vectors-exposed", edit: true, expose: true, menu: true));
 
-    [SkippableFact]
+    [Fact]
     public void VectorRows_Exposed() => PrScreenshot.Run(() => Capture("shader-vectors-exposed-row", edit: true, expose: true));
 
-    [SkippableFact]
+    [Fact]
     public void VectorRows_SomeEdited() => PrScreenshot.Run(() => Capture("shader-vectors-edited", edit: true));
 
     private static void Capture(string name, bool edit, bool expose = false, bool menu = false)

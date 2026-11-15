@@ -15,7 +15,7 @@ namespace Gum.Avalonia.Tests.Screenshots;
 [Trait("Category", PrScreenshot.Category)]
 public class HideToolsScreenshotTests
 {
-    [SkippableFact]
+    [Fact]
     public void ToolsShownAndHidden() => PrScreenshot.Run(() =>
     {
         using ProjectTreeHarness tree = new ProjectTreeHarness();

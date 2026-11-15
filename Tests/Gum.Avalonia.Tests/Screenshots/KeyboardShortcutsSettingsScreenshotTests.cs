@@ -16,13 +16,13 @@ namespace Gum.Avalonia.Tests.Screenshots;
 [Trait("Category", PrScreenshot.Category)]
 public class KeyboardShortcutsSettingsScreenshotTests
 {
-    [SkippableTheory]
+    [Theory]
     [InlineData(true)]
     [InlineData(false)]
     public void RealShortcuts(bool dark) => PrScreenshot.Run(() =>
         Save(dark, $"settings-shortcuts-real-{(dark ? "dark" : "light")}", search: ""));
 
-    [SkippableTheory]
+    [Theory]
     [InlineData(true)]
     [InlineData(false)]
     public void WithSearch(bool dark) => PrScreenshot.Run(() =>

@@ -20,7 +20,7 @@ public class ComboCanvasScenarioTests
 {
     private static IServiceProvider Services => TestAppBuilder.Services;
 
-    [SkippableFact]
+    [Fact]
     [Trait("Feature", "COMBO-036")]
     public void ALockedInstance_StaysPutForCanvasDragsAndNudges_AndATreeDragStillReordersIt()
     {
@@ -80,7 +80,7 @@ public class ComboCanvasScenarioTests
         });
     }
 
-    [SkippableFact]
+    [Fact]
     [Trait("Feature", "COMBO-033")]
     public void ChangingTheLanguage_ThenPickingATextsStringId_ShowsItsTranslationOnTheCanvas()
     {
@@ -145,7 +145,7 @@ public class ComboCanvasScenarioTests
 
     private static void OnCanvas(Action<CanvasHarness> scenario)
     {
-        Skip.IfNot(CanvasHarness.CanRun, CanvasHarness.SkipReason);
+        Assert.SkipUnless(CanvasHarness.CanRun, CanvasHarness.SkipReason);
         CanvasHarness.OnUiThread(() =>
         {
             using CanvasHarness canvas = new CanvasHarness();

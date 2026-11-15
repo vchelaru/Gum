@@ -12,10 +12,10 @@ namespace Gum.Avalonia.Tests.Screenshots;
 [Trait("Category", PrScreenshot.Category)]
 public class SetByAnyStateScreenshotTests
 {
-    [SkippableFact]
+    [Fact]
     public void VariableReferencesRow() => Capture("Variable References", "variable-references");
 
-    [SkippableFact]
+    [Fact]
     public void PlainRow() => Capture("Width", "width");
 
     private static void Capture(string filter, string name) => PrScreenshot.Run(() =>

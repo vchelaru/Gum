@@ -16,7 +16,7 @@ public class DemoBeatsScreenshotTests
 {
     private static IServiceProvider Services => TestAppBuilder.Services;
 
-    [SkippableFact]
+    [Fact]
     public void NewProjectDialog() => PrScreenshot.Run(() =>
     {
         ToolStartup.EnsureInitialized();
@@ -25,7 +25,7 @@ public class DemoBeatsScreenshotTests
         window.Save("demo-new-project");
     });
 
-    [SkippableFact]
+    [Fact]
     public void AddFormsDialog() => PrScreenshot.Run(() =>
     {
         ToolStartup.EnsureInitialized();
@@ -34,7 +34,7 @@ public class DemoBeatsScreenshotTests
         window.Save("demo-add-forms");
     });
 
-    [SkippableFact]
+    [Fact]
     public void CodeTabOffersSetup() => PrScreenshot.Run(() =>
     {
         using CodeTabHarness code = new CodeTabHarness(beforeLoad: folder => File.WriteAllText(Path.Combine(folder, "MyGame.csproj"),
@@ -46,7 +46,7 @@ public class DemoBeatsScreenshotTests
         PrScreenshot.SaveWindow(code.Input.Window, "demo-code-tab-setup-offer");
     });
 
-    [SkippableFact]
+    [Fact]
     public void TreeAfterAddForms() => PrScreenshot.Run(() =>
     {
         using ProjectTreeHarness tree = new ProjectTreeHarness();

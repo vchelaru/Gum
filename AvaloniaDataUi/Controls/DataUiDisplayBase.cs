@@ -644,7 +644,7 @@ public static class DataUiValueStateBrushes
     /// </summary>
     internal static bool DeferUntilInTree(Control control, System.Action apply)
     {
-        if (Avalonia.VisualTree.VisualExtensions.GetVisualRoot(control) != null)
+        if (TopLevel.GetTopLevel(control) != null)
         {
             return false;
         }

@@ -18,26 +18,37 @@ public class ExportAsImageAlphaTests
 {
     private static IServiceProvider Services => TestAppBuilder.Services;
 
-    [SkippableTheory]
-    [InlineData(false)]
-    [InlineData(true)]
+    [Fact]
     [Trait("Feature", "FILE-007")]
-    public void ExportAsImage_TranslucentElements_WriteStraightAlphaPng(bool premultiplied)
+    public void ExportAsImage_TranslucentElements_WriteStraightAlphaPng()
     {
-        Skip.IfNot(CanvasHarness.CanRun, CanvasHarness.SkipReason);
+        Assert.SkipUnless(CanvasHarness.CanRun, CanvasHarness.SkipReason);
         CanvasHarness.OnUiThread(() =>
         {
-            // Set before anything loads, so textures and fonts are premultiplied on load.
-            Renderer.UsePremultipliedAlpha = premultiplied;
-            try
-            {
-                ExportAndCheck(premultiplied);
-            }
-            finally
-            {
-                Renderer.UsePremultipliedAlpha = false;
-            }
+            // One test, in this order, on purpose. Renderer.UsePremultipliedAlpha is meant to be set before
+            // anything loads; switching it back from true leaves the shared font atlas premultiplied, so the
+            // straight run after a premultiplied one reads glyph edges at half color (reproduced by running
+            // the true run first; clearing LoaderManager does not help). Separate theory rows left the order
+            // to the test runner and failed on CI when it put the premultiplied row first. Switching the
+            // setting back is unsupported, and this test leaves the process with premultiplied font state
+            // (no other Gum.Avalonia.Tests class sets or reads UsePremultipliedAlpha).
+            RunWithAlphaMode(premultiplied: false);
+            RunWithAlphaMode(premultiplied: true);
         });
+    }
+
+    private static void RunWithAlphaMode(bool premultiplied)
+    {
+        // Set before anything loads, so textures and fonts are premultiplied on load.
+        Renderer.UsePremultipliedAlpha = premultiplied;
+        try
+        {
+            ExportAndCheck(premultiplied);
+        }
+        finally
+        {
+            Renderer.UsePremultipliedAlpha = false;
+        }
     }
 
     private static void ExportAndCheck(bool premultiplied)
@@ -123,7 +134,7 @@ public class ExportAsImageAlphaTests
 
             string name = premultiplied ? "premultiplied" : "straight";
             ExportedPixelChecks.Check(png, samples, new SkiaSharp.SKRectI(left, top, right, bottom), name,
-                Environment.GetEnvironmentVariable("GUM_EXPORT_ALPHA_DIR"));
+                Environment.GetEnvironmentVariable("GUM_EXPORT_ALPHA_DIR"), DescribeFontAlpha());
         }
         finally
         {
@@ -138,6 +149,16 @@ public class ExportAsImageAlphaTests
         }
 
         canvas.AssertOracles();
+    }
+
+    // What decides whether the glyph atlas is premultiplied, for a failure message.
+    private static string DescribeFontAlpha()
+    {
+        object? creator = global::Gum.Wireframe.CustomSetPropertyOnRenderable.InMemoryFontCreator;
+        string creatorAlpha = creator is global::RenderingLibrary.Graphics.Fonts.IPremultipliableFontCreator premultipliable
+            ? premultipliable.PremultiplyAlpha.ToString()
+            : "n/a";
+        return $"Renderer.UsePremultipliedAlpha {Renderer.UsePremultipliedAlpha}; font creator {creator?.GetType().Name ?? "none"}, PremultiplyAlpha {creatorAlpha}";
     }
 
     // 60 x 40, the sprite's default size (100% of its file).
@@ -169,7 +190,7 @@ internal static class ExportedPixelChecks
     /// fully covered glyph pixels are (255,0,0,128), so the most opaque pixel there must be exactly that,
     /// and every pixel at alpha 64 or more must still be pure red after un-premultiplying (within 3).
     /// </summary>
-    public static void Check(string png, Sample[] samples, SkiaSharp.SKRectI text, string runName, string? keepFolder)
+    public static void Check(string png, Sample[] samples, SkiaSharp.SKRectI text, string runName, string? keepFolder, string fontState)
     {
         // Decode into an unpremultiplied bitmap so the PNG's own straight-alpha bytes are read as stored.
         using SkiaSharp.SKCodec codec = SkiaSharp.SKCodec.Create(png);
@@ -193,6 +214,8 @@ internal static class ExportedPixelChecks
 
         SkiaSharp.SKColor densest = default;
         int worstColor = 0;
+        string worstPixel = "none";
+        int offColorPixels = 0;
         for (int y = text.Top; y < text.Bottom; y++)
         {
             for (int x = text.Left; x < text.Right; x++)
@@ -204,7 +227,13 @@ internal static class ExportedPixelChecks
                 }
                 if (pixel.Alpha >= 64)
                 {
-                    worstColor = Math.Max(worstColor, Math.Max(255 - pixel.Red, Math.Max(pixel.Green, pixel.Blue)));
+                    int off = Math.Max(255 - pixel.Red, Math.Max(pixel.Green, pixel.Blue));
+                    offColorPixels += off > 3 ? 1 : 0;
+                    if (off > worstColor)
+                    {
+                        worstColor = off;
+                        worstPixel = $"({x},{y}) = ({pixel.Red},{pixel.Green},{pixel.Blue},{pixel.Alpha})";
+                    }
                 }
             }
         }
@@ -214,6 +243,8 @@ internal static class ExportedPixelChecks
         report.Add($"text, most opaque glyph pixel: expected (255,0,0,128) actual " +
                    $"({densest.Red},{densest.Green},{densest.Blue},{densest.Alpha}) delta {textDelta}");
         report.Add($"text, worst color off pure red at alpha >= 64: {worstColor} (limit 3)");
+        report.Add($"font state: {fontState}");
+        report.Add($"text, worst pixel {worstPixel}; {offColorPixels} pixels off pure red by more than 3; text region {text}");
 
         if (!string.IsNullOrEmpty(keepFolder))
         {

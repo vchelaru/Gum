@@ -12,7 +12,7 @@ namespace Gum.Avalonia.Tests.Screenshots;
 [Trait("Category", PrScreenshot.Category)]
 public class CodeSettingsScreenshotTests
 {
-    [SkippableFact]
+    [Fact]
     public void CodeSettings() => PrScreenshot.Run(() =>
     {
         // A pinned syntax version keeps the detection row from showing the temp folder's path.

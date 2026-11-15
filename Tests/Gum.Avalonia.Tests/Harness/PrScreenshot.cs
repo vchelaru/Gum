@@ -11,7 +11,7 @@ namespace Gum.Avalonia.Tests.Harness;
 
 /// <summary>
 /// Captures tool UI as PNGs for a pull request's before/after table (<c>Tools/pr-screenshots.ps1</c>).
-/// A screenshot test is a <c>[SkippableFact]</c> tagged <c>[Trait("Category", PrScreenshot.Category)]</c>
+/// A screenshot test is a <c>[Fact]</c> tagged <c>[Trait("Category", PrScreenshot.Category)]</c>
 /// whose body goes through <see cref="Run"/>: it skips unless <see cref="DirectoryVariable"/> names
 /// an output folder, so normal and CI runs report it as skipped rather than passed.
 /// </summary>
@@ -33,7 +33,7 @@ internal static class PrScreenshot
     /// </summary>
     public static void Run(Action capture)
     {
-        Skip.If(OutputDirectory == null, $"screenshot test; set {DirectoryVariable} to an output folder to run it (Tools/pr-screenshots.ps1 does)");
+        Assert.SkipWhen(OutputDirectory == null, $"screenshot test; set {DirectoryVariable} to an output folder to run it (Tools/pr-screenshots.ps1 does)");
         DeviceTestThread.Run(capture);
     }
 

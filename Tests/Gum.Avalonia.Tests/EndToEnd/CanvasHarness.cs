@@ -30,7 +30,7 @@ namespace Gum.Avalonia.Tests.EndToEnd;
 /// a headless window next to the <see cref="ProjectTreeHarness"/> over a temp project. The canvas
 /// polls its input once per frame, so every pointer or key event is followed by one drawn frame.
 /// Needs a display and a GL driver (see <see cref="TestEnvironment.CanCreateDeviceInProcess"/>);
-/// scenarios are <c>[SkippableFact]</c>s that skip where there is none and run on the Avalonia UI
+/// scenarios are <c>[Fact]</c>s that skip where there is none and run on the Avalonia UI
 /// thread through <see cref="OnUiThread"/>.
 /// </summary>
 internal sealed class CanvasHarness : IDisposable

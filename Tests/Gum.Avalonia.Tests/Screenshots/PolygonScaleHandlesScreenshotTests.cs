@@ -12,10 +12,10 @@ namespace Gum.Avalonia.Tests.Screenshots;
 [Trait("Category", PrScreenshot.Category)]
 public class PolygonScaleHandlesScreenshotTests
 {
-    [SkippableFact]
+    [Fact]
     public void SelectedPolygon() => PrScreenshot.Run(() =>
     {
-        Skip.IfNot(CanvasHarness.CanRun, CanvasHarness.SkipReason);
+        Assert.SkipUnless(CanvasHarness.CanRun, CanvasHarness.SkipReason);
         using CanvasHarness canvas = new CanvasHarness();
 
         ComponentSave shapes = canvas.Project.AddComponent("Shapes");

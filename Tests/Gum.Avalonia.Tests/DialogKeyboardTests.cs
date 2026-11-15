@@ -165,7 +165,7 @@ public class DialogKeyboardTests
     // The platform's own copy gesture: Ctrl+C, or Cmd+C on macOS.
     private static void PressCopy(DialogWindow window)
     {
-        KeyGesture copy = window.PlatformSettings?.HotkeyConfiguration.Copy.FirstOrDefault() ?? new KeyGesture(Key.C, KeyModifiers.Control);
+        KeyGesture copy = window.GetPlatformSettings()?.HotkeyConfiguration.Copy.FirstOrDefault() ?? new KeyGesture(Key.C, KeyModifiers.Control);
         RawInputModifiers modifiers = (RawInputModifiers)copy.KeyModifiers;
         window.KeyPress(copy.Key, modifiers, PhysicalKey.C, "c");
         window.KeyRelease(copy.Key, modifiers, PhysicalKey.C, "c");

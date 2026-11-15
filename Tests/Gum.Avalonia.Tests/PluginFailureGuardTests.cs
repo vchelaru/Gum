@@ -19,9 +19,9 @@ public class PluginFailureGuardTests
         MethodInfo method = typeof(PluginFailureGuardTests).GetMethod(nameof(After_APluginTheTestTurnedOff_IsOnAgainWithoutRunningStartUpAgain))!;
         PluginFailureGuardAttribute guard = new PluginFailureGuardAttribute();
 
-        guard.Before(method);
+        guard.Before(method, null!);
         pluginManager.DisableUserPlugin(container);
-        guard.After(method);
+        guard.After(method, null!);
 
         PluginContainer restored = pluginManager.PluginContainers[container.Plugin];
         restored.IsEnabled.ShouldBeTrue();

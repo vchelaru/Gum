@@ -21,7 +21,7 @@ namespace Gum.Avalonia.Tests.Screenshots;
 [Trait("Category", PrScreenshot.Category)]
 public class CanvasSettingsScreenshotTests
 {
-    [SkippableTheory]
+    [Theory]
     [InlineData(true)]
     [InlineData(false)]
     public void CanvasPage(bool dark) => PrScreenshot.Run(() =>

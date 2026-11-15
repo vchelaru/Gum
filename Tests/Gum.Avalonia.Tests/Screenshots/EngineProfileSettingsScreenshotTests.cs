@@ -19,7 +19,7 @@ namespace Gum.Avalonia.Tests.Screenshots;
 [Trait("Category", PrScreenshot.Category)]
 public class EngineProfileSettingsScreenshotTests
 {
-    [SkippableTheory]
+    [Theory]
     [InlineData(true)]
     [InlineData(false)]
     public void NoProfile(bool dark) => PrScreenshot.Run(() =>
@@ -29,7 +29,7 @@ public class EngineProfileSettingsScreenshotTests
     });
 
     // A profile outside the project folder, stored with "../" segments, and the Standards palette limited by it.
-    [SkippableTheory]
+    [Theory]
     [InlineData(true)]
     [InlineData(false)]
     public void WithProfile(bool dark) => PrScreenshot.Run(() =>

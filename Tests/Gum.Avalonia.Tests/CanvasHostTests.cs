@@ -57,10 +57,10 @@ public class CanvasHostTests
         public void ReportError(Exception exception) => LastError = exception.ToString();
     }
 
-    [SkippableFact]
+    [Fact]
     public void FrameLoop_DrawsIntoTheSharedDevice_AndReadsBack()
     {
-        Skip.IfNot(HasDisplay, SkipReason);
+        Assert.SkipUnless(HasDisplay, SkipReason);
 
         OnUiThread(() =>
         {
@@ -82,10 +82,10 @@ public class CanvasHostTests
         });
     }
 
-    [SkippableFact]
+    [Fact]
     public void TwoHosts_ShareOneDevice()
     {
-        Skip.IfNot(HasDisplay, SkipReason);
+        Assert.SkipUnless(HasDisplay, SkipReason);
 
         OnUiThread(() =>
         {
@@ -100,10 +100,10 @@ public class CanvasHostTests
     // #5259: disposing the device runs SDL_Quit and tears down the GL context, which sometimes
     // never returns under Xvfb and Mesa. The device lives for the process, so releasing the last
     // host must leave it for the next one.
-    [SkippableFact]
+    [Fact]
     public void ReleasingTheLastHost_KeepsTheSharedDevice()
     {
-        Skip.IfNot(HasDisplay, SkipReason);
+        Assert.SkipUnless(HasDisplay, SkipReason);
 
         OnUiThread(() =>
         {
@@ -182,10 +182,10 @@ public class CanvasHostTests
     // The Texture Coordinates canvas draws a texture over its opaque background, so its frames must
     // be shown opaque or the window bleeds through translucent texels (#5171). With no texture it
     // draws nothing, and forcing that transparent frame opaque would show black.
-    [SkippableFact]
+    [Fact]
     public void ImageRegionCanvas_DrawsOpaqueFrames_OnlyWhileShowingATexture()
     {
-        Skip.IfNot(HasDisplay, SkipReason);
+        Assert.SkipUnless(HasDisplay, SkipReason);
 
         OnUiThread(() =>
         {

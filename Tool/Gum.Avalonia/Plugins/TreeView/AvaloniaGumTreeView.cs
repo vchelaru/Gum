@@ -413,6 +413,7 @@ public sealed class AvaloniaGumTreeView : UserControl
         if (button == TreePointerButton.Left && node != null)
         {
             _pressPoint = position;
+            _pressEvent = e;
             _dragCandidate = node;
         }
         e.Handled = true;
@@ -472,7 +473,7 @@ public sealed class AvaloniaGumTreeView : UserControl
         if (_dragCandidate != null && !_isDragging && e.GetCurrentPoint(this).Properties.IsLeftButtonPressed &&
             (Math.Abs(position.X - _pressPoint.X) >= DragThreshold || Math.Abs(position.Y - _pressPoint.Y) >= DragThreshold))
         {
-            StartDrag(e, _dragCandidate);
+            StartDrag(_pressEvent!, _dragCandidate);
         }
     }
 
@@ -609,7 +610,9 @@ public sealed class AvaloniaGumTreeView : UserControl
 
     #region Drag and drop
 
-    private async void StartDrag(PointerEventArgs e, GumTreeNode node)
+    private PointerPressedEventArgs? _pressEvent;
+
+    private async void StartDrag(PointerPressedEventArgs e, GumTreeNode node)
     {
         _dragCandidate = null;
         _isDragging = true;

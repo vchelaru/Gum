@@ -1,3 +1,4 @@
+using Avalonia.Input.Platform;
 using System;
 using System.Linq;
 using Avalonia;
@@ -139,7 +140,7 @@ public sealed class DialogWindow : Window
         ShowInTaskbar = false;
         // The WPF DialogWindow's chrome: no system frame, a rounded bordered surface, and the title
         // as a bold caption row that drags the window.
-        SystemDecorations = SystemDecorations.None;
+        WindowDecorations = WindowDecorations.None;
         TransparencyLevelHint = new[] { WindowTransparencyLevel.Transparent };
         Background = Brushes.Transparent;
         if (GetDialogTitle(content) is { } fixedTitle)
@@ -247,6 +248,18 @@ public sealed class DialogWindow : Window
                 e.Handled = true;
             }
         };
+        // Avalonia 12's list box items take Enter themselves, so it never reaches the default button
+        // (#5558: the choice prompt confirms the picked option with Enter, as the WPF one does).
+        // Only a dialog that opts in: elsewhere (the Settings page list) Enter on an item must not close.
+        AddHandler(KeyDownEvent, (_, e) =>
+        {
+            if (e.Key == Key.Enter && e.Handled && e.Source is ListBoxItem && _viewModel.AffirmsOnEnterFromListItem
+                && affirmative.IsEffectivelyVisible
+                && _viewModel.AffirmativeCommand.CanExecute(null))
+            {
+                _viewModel.AffirmativeCommand.Execute(null);
+            }
+        }, RoutingStrategies.Bubble, handledEventsToo: true);
         // Tunnel, so the copy gesture reaches the window before a focused button or text block.
         AddHandler(KeyDownEvent, HandleCopyGesture, RoutingStrategies.Tunnel);
 
@@ -317,7 +330,7 @@ public sealed class DialogWindow : Window
 
     private bool IsCopyGesture(KeyEventArgs e)
     {
-        if (PlatformSettings?.HotkeyConfiguration.Copy is { Count: > 0 } gestures)
+        if (this.GetPlatformSettings()?.HotkeyConfiguration.Copy is { Count: > 0 } gestures)
         {
             return gestures.Any(gesture => gesture.Matches(e));
         }

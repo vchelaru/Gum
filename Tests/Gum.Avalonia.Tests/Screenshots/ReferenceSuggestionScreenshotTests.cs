@@ -23,7 +23,7 @@ namespace Gum.Avalonia.Tests.Screenshots;
 [Trait("Category", PrScreenshot.Category)]
 public class ReferenceSuggestionScreenshotTests
 {
-    [SkippableFact]
+    [Fact]
     public void SuggestionList() => PrScreenshot.Run(() =>
     {
         using DiscardingScope scope = new DiscardingScope(new VariableGridHarness());

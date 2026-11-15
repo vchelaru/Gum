@@ -15,7 +15,7 @@ namespace Gum.Avalonia.Tests.Screenshots;
 [Trait("Category", PrScreenshot.Category)]
 public class ExposedFormsPropertyScreenshotTests
 {
-    [SkippableFact]
+    [Fact]
     public void ExposedIsEnabledRow() => PrScreenshot.Run(() =>
     {
         using VariableGridHarness grid = new VariableGridHarness();

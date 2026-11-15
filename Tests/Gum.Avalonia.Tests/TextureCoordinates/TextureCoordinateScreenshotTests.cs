@@ -7,10 +7,10 @@ namespace Gum.Avalonia.Tests.TextureCoordinates;
 [Trait("Category", PrScreenshot.Category)]
 public class TextureCoordinateScreenshotTests
 {
-    [SkippableFact]
+    [Fact]
     public void SpriteWithNoTexture() => PrScreenshot.Run(() =>
     {
-        Skip.IfNot(TextureCoordinateTabHarness.CanRun, TextureCoordinateTabHarness.SkipReason);
+        Assert.SkipUnless(TextureCoordinateTabHarness.CanRun, TextureCoordinateTabHarness.SkipReason);
         using TextureCoordinateTabHarness tab = new TextureCoordinateTabHarness();
         ComponentSave button = tab.Project.AddComponent("Button");
         InstanceSave plain = tab.Project.AddInstance(button, "Plain", "Sprite");

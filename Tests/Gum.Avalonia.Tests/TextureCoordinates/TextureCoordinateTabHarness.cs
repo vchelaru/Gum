@@ -25,7 +25,7 @@ namespace Gum.Avalonia.Tests.TextureCoordinates;
 /// and Project tree over the same temp project. Selecting through the tree gives the tab the same
 /// visual, texture and plugin events it gets in the tool. The canvas polls its input once per
 /// frame, so every pointer event is followed by one drawn frame. Needs a display and a GL driver;
-/// scenarios are <c>[SkippableFact]</c>s run through <see cref="OnUiThread"/>.
+/// scenarios are <c>[Fact]</c>s run through <see cref="OnUiThread"/>.
 /// </summary>
 internal sealed class TextureCoordinateTabHarness : IDisposable
 {

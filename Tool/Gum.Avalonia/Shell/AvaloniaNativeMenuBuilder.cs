@@ -93,7 +93,7 @@ public static class AvaloniaNativeMenuBuilder
         {
             Header = model.Header,
             IsEnabled = model.IsEnabled,
-            ToggleType = model.IsCheckable ? NativeMenuItemToggleType.CheckBox : NativeMenuItemToggleType.None,
+            ToggleType = model.IsCheckable ? MenuItemToggleType.CheckBox : MenuItemToggleType.None,
             IsChecked = model.IsChecked,
             ToolTip = model.ToolTip,
         };

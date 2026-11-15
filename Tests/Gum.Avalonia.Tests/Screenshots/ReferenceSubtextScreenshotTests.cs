@@ -11,7 +11,7 @@ namespace Gum.Avalonia.Tests.Screenshots;
 [Trait("Category", PrScreenshot.Category)]
 public class ReferenceSubtextScreenshotTests
 {
-    [SkippableFact]
+    [Fact]
     public void ReferenceDrivenRow() => PrScreenshot.Run(() =>
     {
         using VariableGridHarness grid = new VariableGridHarness();
@@ -27,7 +27,7 @@ public class ReferenceSubtextScreenshotTests
         PrScreenshot.SaveWindowAtZoomLevels(grid.Input.Window, "reference-driven-row");
     });
 
-    [SkippableFact]
+    [Fact]
     public void ReferenceDrivenColorRow() => PrScreenshot.Run(() =>
     {
         using VariableGridHarness grid = new VariableGridHarness();

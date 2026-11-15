@@ -13,10 +13,10 @@ namespace Gum.Avalonia.Tests.EndToEnd;
 [Trait("Category", "EndToEnd")]
 public class MissingComponentCanvasTests
 {
-    [SkippableFact]
+    [Fact]
     public void InstanceOfMissingComponent_IsAnEmptyContainer_AndSelectsOnClick()
     {
-        Skip.IfNot(CanvasHarness.CanRun, CanvasHarness.SkipReason);
+        Assert.SkipUnless(CanvasHarness.CanRun, CanvasHarness.SkipReason);
         CanvasHarness.OnUiThread(() =>
         {
             using CanvasHarness canvas = new CanvasHarness();
