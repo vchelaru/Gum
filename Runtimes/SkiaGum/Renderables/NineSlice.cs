@@ -289,6 +289,9 @@ public class NineSlice : RenderableShapeBase, IAnimatable, IAnimationChainRender
     /// <summary>Test hook: draws every section with its own DrawImage, as before the lattice fast path.</summary>
     internal bool DisableLatticeFastPath { get; set; }
 
+    /// <summary>Test hook: draws at the exact fractional edges, as before the edges were snapped to device pixels (#8052).</summary>
+    internal bool DisableDeviceSnapping { get; set; }
+
     // Up to nine sections, more when tiling; each DrawImage records itself.
     private protected override bool RecordsOwnDrawCalls => true;
 
@@ -343,9 +346,53 @@ public class NineSlice : RenderableShapeBase, IAnimatable, IAnimationChainRender
         }
     }
 
+    // Nearest sampling picks a texel by where a pixel center falls, and a non-antialiased rectangle covers the pixels
+    // whose centers it contains. At a fractional edge the two can disagree (a scroll position within a few thousandths
+    // of a pixel of a tie covers a row the outline texel does not reach), so a one-texel outline vanishes for a frame
+    // and the line between two touching items loses or gains a pixel row (#8052). Each edge is therefore rounded to a
+    // whole device pixel on its own, never position and size separately, so two items that share an edge round it to
+    // the same pixel and cannot leave a gap or overlap.
+    private static SKRect SnapToDevicePixels(SKCanvas canvas, SKRect rect)
+    {
+        if (global::RenderingLibrary.Graphics.Renderer.TextureSampling.Filter != SKFilterMode.Nearest)
+        {
+            return rect;
+        }
+
+        SKMatrix matrix = canvas.TotalMatrix;
+        if (matrix.SkewX != 0 || matrix.SkewY != 0 || matrix.Persp0 != 0 || matrix.Persp1 != 0
+            || matrix.ScaleX == 0 || matrix.ScaleY == 0)
+        {
+            return rect;
+        }
+
+        float deviceA = SnapEdge(matrix.ScaleX * rect.Left + matrix.TransX);
+        float deviceB = SnapEdge(matrix.ScaleX * rect.Right + matrix.TransX);
+        float deviceC = SnapEdge(matrix.ScaleY * rect.Top + matrix.TransY);
+        float deviceD = SnapEdge(matrix.ScaleY * rect.Bottom + matrix.TransY);
+        if (deviceA == deviceB || deviceC == deviceD)
+        {
+            return rect;
+        }
+
+        float xa = (deviceA - matrix.TransX) / matrix.ScaleX;
+        float xb = (deviceB - matrix.TransX) / matrix.ScaleX;
+        float ya = (deviceC - matrix.TransY) / matrix.ScaleY;
+        float yb = (deviceD - matrix.TransY) / matrix.ScaleY;
+        return new SKRect(MathF.Min(xa, xb), MathF.Min(ya, yb), MathF.Max(xa, xb), MathF.Max(ya, yb));
+    }
+
+    // Quantized to 1/256 pixel first so a one-ulp difference between two items' copies of a shared edge cannot round
+    // it two ways at an exact half pixel.
+    private static float SnapEdge(float device) => MathF.Floor(MathF.Round(device * 256f) / 256f + 0.5f);
+
     private void DrawBoundAtOrigin(SKRect boundingRect, SKCanvas canvas, float absoluteRotation)
     {
         SKPaint paint = base.GetCachedPaint(boundingRect, absoluteRotation);
+        if (!DisableDeviceSnapping)
+        {
+            boundingRect = SnapToDevicePixels(canvas, boundingRect);
+        }
 
         int srcLeft;
         int srcTop;

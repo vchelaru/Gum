@@ -181,14 +181,15 @@ public class NineSliceLatticeTests : BaseTestClass
     }
 
     [Fact]
-    public void Render_EdgeOnHalfPixel_KeepsPerSectionDraws()
+    public void Render_EdgeOnHalfPixel_SnapsToAWholePixelAndDrawsOneOperation()
     {
-        // GPU surfaces round a lattice edge on a half pixel differently from a rectangle's edge.
+        // A GPU surface rounds a lattice edge on a half pixel differently from a rectangle's edge, so the nine-slice
+        // rounds each edge to a whole device pixel first (#8052) and both paths then draw the same rectangle.
         using SKBitmap texture = Texture(false);
 
         (Result fast, Result old) = DrawBoth(texture, 10.5f, 10, 64, 40);
 
-        fast.DrawCalls.ShouldBe(old.DrawCalls);
+        fast.DrawCalls.ShouldBe(1);
         old.DrawCalls.ShouldBeGreaterThan(1);
         MaxDifference(fast.Pixels, old.Pixels).ShouldBe(0);
     }
