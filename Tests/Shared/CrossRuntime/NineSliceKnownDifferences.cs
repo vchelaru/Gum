@@ -7,7 +7,18 @@ namespace CrossRuntimeTests;
 /// come from versus Mesa llvmpipe, the software OpenGL the Windows CI uses), so the MonoGame sheet test
 /// cannot compare it exactly.
 /// </param>
-public sealed record KnownDifference(string Reason, bool RasterizerDependent);
+/// <param name="MayMatch">
+/// True when Skia's own result depends on the platform, so the cell may also match the baseline exactly
+/// and the stale check must not require it to differ.
+/// </param>
+/// <param name="MaxDifferingPixels">
+/// The most pixels of this cell that may differ from the baseline, or null for no cap. A MayMatch cell
+/// always has one, so a real regression in it is not hidden by the allowance.
+/// </param>
+/// <param name="MaxChannelDifference">The largest per-channel difference accepted in this cell, or null for no cap.</param>
+public sealed record KnownDifference(
+    string Reason, bool RasterizerDependent, bool MayMatch = false,
+    int? MaxDifferingPixels = null, int? MaxChannelDifference = null);
 
 /// <summary>
 /// The cells where Skia is known to differ from the MonoGame baselines and the right answer is
@@ -22,6 +33,11 @@ public static class NineSliceKnownDifferences
     // Skia's CPU raster do not all agree. Read from the pictures and from the CI run; not isolated to
     // a setting of any of them.
     private const string SamplingTie = "Nearest sampling tie on a texel boundary";
+
+    // The draw has no color filter (opaque white tint). Skia's CPU nearest sampling then resolves a pixel center on a
+    // texel boundary by float rounding that differs from its filtered path, and by platform: macOS arm64 picks the
+    // lower texel where the baseline has the upper one; other platforms may match the baseline.
+    private const string FilterlessSamplingTie = "Nearest sampling tie on a texel boundary; Skia's unfiltered path rounds it down on macOS";
 
     // MonoGame's odd-height rule (NineSlice.cs: Height <= 2 * frame && Height % 2 == 1 makes the bottom
     // band one texel row shorter) counts world units, not pixels, and fires for any odd Height up to
@@ -54,8 +70,26 @@ public static class NineSliceKnownDifferences
                 known[$"{sheet}/{name}"] = new KnownDifference(reason, rasterizerDependent);
             }
         }
+        // The caps are the values measured on macOS arm64 (the CI run before the filter was skipped),
+        // with no margin: Skia's CPU raster is deterministic. Another platform may differ less or not at all.
+        void AddMayMatch(string sheet, string reason, string name, int maxDifferingPixels, int maxChannelDifference)
+        {
+            known[$"{sheet}/{name}"] = new KnownDifference(
+                reason, RasterizerDependent: false, MayMatch: true, maxDifferingPixels, maxChannelDifference);
+        }
 
         Add("frame1-3x16", SamplingTie, true, "1x3", "2x3", "3x3", "5x3", "1x5", "2x5", "3x5", "5x5");
+        AddMayMatch("frame2-6x6", FilterlessSamplingTie, "9x1", 1, 53);
+        AddMayMatch("frame2-6x6", FilterlessSamplingTie, "9x2", 2, 53);
+        AddMayMatch("frame2-6x6", FilterlessSamplingTie, "9x3", 3, 53);
+        AddMayMatch("frame2-6x6", FilterlessSamplingTie, "9x4", 4, 53);
+        AddMayMatch("frame2-6x6", FilterlessSamplingTie, "9x6", 6, 121);
+        AddMayMatch("frame2-6x6", FilterlessSamplingTie, "1x9", 1, 37);
+        AddMayMatch("frame2-6x6", FilterlessSamplingTie, "2x9", 2, 37);
+        AddMayMatch("frame2-6x6", FilterlessSamplingTie, "3x9", 3, 37);
+        AddMayMatch("frame2-6x6", FilterlessSamplingTie, "4x9", 4, 37);
+        AddMayMatch("frame2-6x6", FilterlessSamplingTie, "6x9", 6, 121);
+        AddMayMatch("frame2-6x6", FilterlessSamplingTie, "9x9", 17, 121);
         Add("frame2-6x6", SamplingTie, true, "5x1", "5x2", "5x3", "5x4", "1x5", "2x5", "3x5", "4x5", "5x5", "6x5", "9x5", "5x6", "5x9");
         Add("frame3-9x9", SamplingTie, true, "5x1", "3x6", "5x6", "3x7", "5x7", "3x12", "5x12");
         Add("frame3-9x9", SamplingTieWithOddHeight, true, "5x3", "3x5", "5x5");

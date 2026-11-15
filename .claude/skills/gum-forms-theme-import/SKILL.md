@@ -314,3 +314,5 @@ silently renders as the default embedded font with no glyph and no error. Fix by
 folder (not a scratch copy) — it only fills in missing entries, so existing cached fonts are
 untouched — then delete any `FontCache` entry whose exact name/size key is no longer referenced
 anywhere in the theme.
+
+**A `VerticalScrollBarInstance` placed in a theme's ScrollViewer, ListBox or ItemsControl must set both `Height` and `HeightUnits` (RelativeToParent) on the instance.** The theme's ScrollBar Vertical state sets `Height = 128` Absolute, and an instance `Height` without `HeightUnits` resolves as Absolute: ItemsControl got a 128 px bar floating mid-list and ScrollViewer a 0 px bar. The same goes for `HorizontalScrollBarInstance.WidthUnits`. `ThemedScrollThumbTravelTests` covers every theme and every scrolling control; a new theme or scrolling component joins its list.

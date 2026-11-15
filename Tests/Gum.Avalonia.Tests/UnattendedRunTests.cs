@@ -18,7 +18,7 @@ public class UnattendedRunTests
         public StringWriter Output { get; } = new();
         public StringWriter Error { get; } = new();
 
-        public Task<int?> Run(bool zoomToFit = false, bool screenshot = true, Func<string?>? describeCanvas = null) =>
+        public Task<int?> Run(bool zoomToFit = false, bool screenshot = true, Func<string?>? describeCanvas = null, Func<Task>? settle = null) =>
             UnattendedRun.RunAsync(
                 Startup.Task,
                 Deadline.Task,
@@ -34,7 +34,8 @@ public class UnattendedRunTests
                 capture: screenshot ? () => Events.Add("capture") : null,
                 Output,
                 Error,
-                describeCanvas);
+                describeCanvas,
+                settle);
 
         public void PresentFrame() => FrameRequests[^1].SetResult();
     }
@@ -56,6 +57,24 @@ public class UnattendedRunTests
 
         (await run.WaitAsync(TimeSpan.FromSeconds(10))).ShouldBe(0);
         probe.Events.ShouldBe(new[] { "frame requested", "capture" });
+    }
+
+    [Fact]
+    public async Task Capture_WaitsForTheUiToSettle_AfterTheLastFrame()
+    {
+        Probe probe = new Probe();
+        TaskCompletionSource settled = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        Task<int?> run = probe.Run(settle: () => { probe.Events.Add("settle"); return settled.Task; });
+        probe.Startup.SetResult(UnattendedStartupOutcome.Ready);
+        await WaitUntil(() => probe.FrameRequests.Count == 1);
+        probe.PresentFrame();
+        await WaitUntil(() => probe.Events.Contains("settle"));
+        probe.Events.ShouldNotContain("capture", "icons are still being filled in");
+        settled.SetResult();
+
+        (await run.WaitAsync(TimeSpan.FromSeconds(10))).ShouldBe(0);
+        probe.Events.ShouldBe(new[] { "frame requested", "settle", "capture" });
     }
 
     [Fact]

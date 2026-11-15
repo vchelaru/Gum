@@ -246,7 +246,8 @@ public sealed class App : Application
                 capture: _options.ScreenshotPath is { } path ? () => CaptureWindow(window, path) : null,
                 Console.Out,
                 Console.Error,
-                describeCanvas: () => messenger.Send(new EditorCanvasStateRequestMessage()).Response);
+                describeCanvas: () => messenger.Send(new EditorCanvasStateRequestMessage()).Response,
+                settle: () => UiSettle.SettleAsync(window));
         }
         catch (Exception exception)
         {

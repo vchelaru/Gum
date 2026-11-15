@@ -63,17 +63,40 @@ public class NineSliceCrossRuntimeTests : BaseTestClass
         SheetComparer.WriteReports(sheetName, expected, actual, names, differences,
             NineSliceCases.CellSize, NineSliceCases.Columns);
 
-        string[] unexpected = differences
-            .Select(difference => $"{difference.Name} ({difference.DifferingPixels} px differ, max channel difference {difference.MaxChannelDifference})")
-            .Where(description => !KnownDifferences.ContainsKey($"{sheetName}/{description.Split(' ')[0]}"))
-            .ToArray();
+        string[] unexpected = FindUnexpected(sheetName, differences, KnownDifferences);
         unexpected.ShouldBeEmpty();
 
         string[] stale = KnownDifferences.Keys
             .Where(key => key.StartsWith(sheetName + "/", StringComparison.Ordinal))
+            .Where(key => !KnownDifferences[key].MayMatch)
             .Where(key => !differences.Any(difference => $"{sheetName}/{difference.Name}" == key))
             .ToArray();
         stale.ShouldBeEmpty("These known differences no longer differ; remove them from KnownDifferences.");
+    }
+
+    /// <summary>
+    /// The differing cells that are not accepted: those with no known-difference entry, and those whose
+    /// entry has a cap (<see cref="KnownDifference.MaxDifferingPixels"/> and
+    /// <see cref="KnownDifference.MaxChannelDifference"/>) that the difference exceeds.
+    /// </summary>
+    internal static string[] FindUnexpected(
+        string sheetName, IEnumerable<CellDifference> differences, IReadOnlyDictionary<string, KnownDifference> known)
+    {
+        List<string> unexpected = new();
+        foreach (CellDifference difference in differences)
+        {
+            string description = $"{difference.Name} ({difference.DifferingPixels} px differ, max channel difference {difference.MaxChannelDifference})";
+            if (!known.TryGetValue($"{sheetName}/{difference.Name}", out KnownDifference? entry))
+            {
+                unexpected.Add(description);
+            }
+            else if (difference.DifferingPixels > entry.MaxDifferingPixels
+                || difference.MaxChannelDifference > entry.MaxChannelDifference)
+            {
+                unexpected.Add($"{description} exceeds the cap of {entry.MaxDifferingPixels} px / max channel difference {entry.MaxChannelDifference}");
+            }
+        }
+        return unexpected.ToArray();
     }
 
     /// <summary>Draws one case into a <see cref="NineSliceCases.CellSize"/> square CPU surface.</summary>
