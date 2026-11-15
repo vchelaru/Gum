@@ -389,10 +389,6 @@ public class NineSlice : RenderableShapeBase, IAnimatable, IAnimationChainRender
     private void DrawBoundAtOrigin(SKRect boundingRect, SKCanvas canvas, float absoluteRotation)
     {
         SKPaint paint = base.GetCachedPaint(boundingRect, absoluteRotation);
-        if (!DisableDeviceSnapping)
-        {
-            boundingRect = SnapToDevicePixels(canvas, boundingRect);
-        }
 
         int srcLeft;
         int srcTop;
@@ -435,6 +431,20 @@ public class NineSlice : RenderableShapeBase, IAnimatable, IAnimationChainRender
 
         int insideTextureW = usedWidth - (fullOutsideW * 2);
         int insideTextureH = usedHeight - (fullOutsideH * 2);
+
+        if (!DisableDeviceSnapping)
+        {
+            SKRect snapped = SnapToDevicePixels(canvas, boundingRect);
+            // A nine-slice smaller than its borders squeezes them; that squeeze matches the other runtimes at the exact
+            // rectangle, so only a nine-slice that fits its borders, before and after snapping, is moved.
+            float minWidth = fullOutsideW * (EffectiveBorderScaleLeft + EffectiveBorderScaleRight);
+            float minHeight = fullOutsideH * (EffectiveBorderScaleTop + EffectiveBorderScaleBottom);
+            if (boundingRect.Width >= minWidth && boundingRect.Height >= minHeight
+                && snapped.Width >= minWidth && snapped.Height >= minHeight)
+            {
+                boundingRect = snapped;
+            }
+        }
 
         // Per-side destination thickness (clamped so opposing bands never overlap) and the texels
         // each band samples, shared with every other runtime.
