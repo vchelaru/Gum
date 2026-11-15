@@ -1079,31 +1079,48 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
         {
             var textBlock = SkiaGum.Renderables.PerfAblation.TextSkipBlockCheck ? (_cachedTextBlock ?? GetCachedTextBlock()) : GetCachedTextBlock();
 
-            // Gum uses counterclockwise rotation, Skia uses clockwise, so invert. The absolute rotation
-            // includes every parent's, as on MonoGame.
-            SKMatrix rotationMatrix = SkiaGum.Renderables.PerfAblation.TextSkipRotation ? SKMatrix.Identity : SKMatrix.CreateRotationDegrees(-this.GetAbsoluteRotation());
-            // The text turns about its top-left, so the vertical alignment offset turns with it, as on
-            // MonoGame and Raylib. Horizontal alignment is already inside the block's own layout.
-            SKPoint verticalOffset = SkiaGum.Renderables.PerfAblation.TextSkipRotation ? new SKPoint(0, GetVerticalAlignmentOffset(textBlock)) : rotationMatrix.MapVector(0, GetVerticalAlignmentOffset(textBlock));
-            var absoluteX = this.GetAbsoluteX() + verticalOffset.X;
-            var absoluteY = this.GetAbsoluteY() + verticalOffset.Y;
-            if (!SkiaGum.Renderables.PerfAblation.TextSkipSnap)
-            {
-                (absoluteX, absoluteY) = GetSnappedOrigin(absoluteX, absoluteY, canvas.TotalMatrix);
-            }
+            float absoluteRotation = SkiaGum.Renderables.PerfAblation.TextSkipRotation ? 0 : this.GetAbsoluteRotation();
+            SKMatrix canvasMatrix = canvas.TotalMatrix;
+            // Unrotated text under a scale-and-translate canvas (the usual case) snaps and positions with plain
+            // arithmetic and one Translate, instead of inverting the canvas matrix and concatenating three matrices
+            // (measured 0.28 us per draw). The result is the same origin and the same canvas matrix.
+            bool isSimple = !SkiaGum.Renderables.PerfAblation.TextOldTransformPath && absoluteRotation == 0
+                && canvasMatrix.SkewX == 0 && canvasMatrix.SkewY == 0 && canvasMatrix.Persp0 == 0 && canvasMatrix.Persp1 == 0
+                && canvasMatrix.Persp2 == 1 && canvasMatrix.ScaleX != 0 && canvasMatrix.ScaleY != 0;
 
+            float absoluteX;
+            float absoluteY;
             SKMatrix result = default;
-            if (!SkiaGum.Renderables.PerfAblation.TextSkipMatrixChain)
+            if (isSimple)
             {
-                SKMatrix translateMatrix = SKMatrix.CreateTranslation(absoluteX, absoluteY);
-                // Continue to apply the previou matrix in case there is scaling
-                // for device density
-                result = rotationMatrix;
+                absoluteX = this.GetAbsoluteX();
+                absoluteY = this.GetAbsoluteY() + GetVerticalAlignmentOffset(textBlock);
+                if (!SkiaGum.Renderables.PerfAblation.TextSkipSnap && EffectiveTextRenderingPositionMode == TextRenderingPositionMode.SnapToPixel)
+                {
+                    absoluteX = (MathFunctions.RoundToInt(canvasMatrix.ScaleX * absoluteX + canvasMatrix.TransX) - canvasMatrix.TransX) / canvasMatrix.ScaleX;
+                    absoluteY = (MathFunctions.RoundToInt(canvasMatrix.ScaleY * absoluteY + canvasMatrix.TransY) - canvasMatrix.TransY) / canvasMatrix.ScaleY;
+                }
+            }
+            else
+            {
+                // Gum uses counterclockwise rotation, Skia uses clockwise, so invert. The absolute rotation
+                // includes every parent's, as on MonoGame.
+                SKMatrix rotationMatrix = SKMatrix.CreateRotationDegrees(-absoluteRotation);
+                // The text turns about its top-left, so the vertical alignment offset turns with it, as on
+                // MonoGame and Raylib. Horizontal alignment is already inside the block's own layout.
+                SKPoint verticalOffset = rotationMatrix.MapVector(0, GetVerticalAlignmentOffset(textBlock));
+                absoluteX = this.GetAbsoluteX() + verticalOffset.X;
+                absoluteY = this.GetAbsoluteY() + verticalOffset.Y;
+                if (!SkiaGum.Renderables.PerfAblation.TextSkipSnap)
+                {
+                    (absoluteX, absoluteY) = GetSnappedOrigin(absoluteX, absoluteY, canvasMatrix);
+                }
 
-                SKMatrix.Concat(
-                    ref result, translateMatrix, result);
-                SKMatrix.Concat(
-                    ref result, canvas.TotalMatrix, result);
+                SKMatrix translateMatrix = SKMatrix.CreateTranslation(absoluteX, absoluteY);
+                // Continue to apply the previous matrix in case there is scaling for device density.
+                result = rotationMatrix;
+                SKMatrix.Concat(ref result, translateMatrix, result);
+                SKMatrix.Concat(ref result, canvasMatrix, result);
             }
 
             canvas.Save();
@@ -1119,7 +1136,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
                 canvas.ClipTo(clipper);
             }
 
-            if (SkiaGum.Renderables.PerfAblation.TextSkipMatrixChain)
+            if (isSimple)
             {
                 canvas.Translate(absoluteX, absoluteY);
             }

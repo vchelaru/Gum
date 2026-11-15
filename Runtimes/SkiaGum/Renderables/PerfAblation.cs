@@ -7,6 +7,7 @@ public static class PerfAblation
     public static bool TextSkipRotation;
     public static bool TextSkipSnap;
     public static bool TextSkipMatrixChain;
+    public static readonly bool TextOldTransformPath = System.Environment.GetEnvironmentVariable("PERDRAW_OLDTEXT") == "1";
     public static bool TextSkipRenderPaint;
     public static bool TextSkipClipper;
     public static bool TextDirectBlob;
