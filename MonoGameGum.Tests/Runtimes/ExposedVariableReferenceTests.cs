@@ -22,8 +22,7 @@ public class ExposedVariableReferenceTests : BaseTestClass
     {
         ExposedSetProperty,
         ExplicitSetProperty,
-        TypedOnInstance,
-        TypedOnComponent
+        TypedOnInstance
     }
 
     public enum Reader
@@ -191,5 +190,114 @@ public class ExposedVariableReferenceTests : BaseTestClass
         card.SetProperty("ButtonWidth", 75f);
 
         other.Width.ShouldBe(75f);
+    }
+
+    public enum NestedWriter
+    {
+        OuterExposedName,
+        OuterDottedInnerExposedName,
+        InnerExposedName,
+        InnerDottedInstanceName,
+        TypedOnInstance
+    }
+
+    // Outer exposes Card1.IsMyButtonVisible as Deep, and Card exposes MyButton.Visible as IsMyButtonVisible.
+    private static GraphicalUiElement BuildOuter(bool readDeepName, bool useExpressions)
+    {
+        if (useExpressions)
+        {
+            GumExpressionService.Initialize();
+        }
+
+        GumProjectSave project = new GumProjectSave();
+        StandardElementSave standardElement = new StandardElementSave { Name = "Container" };
+        standardElement.States.Add(StandardElementsManager.Self.GetDefaultStateFor("Container")!);
+        standardElement.DefaultState!.ParentContainer = standardElement;
+        project.StandardElements.Add(standardElement);
+        ObjectFinder.Self.GumProjectSave = project;
+        StandardRuntimeRegistrations.Register();
+
+        ComponentSave card = new ComponentSave { Name = "Card", BaseType = "Container" };
+        StateSave cardState = new StateSave { Name = "Default", ParentContainer = card };
+        card.States.Add(cardState);
+        card.Instances.Add(new InstanceSave { Name = "MyButton", BaseType = "Container", ParentContainer = card });
+        cardState.Variables.Add(new VariableSave
+        {
+            Name = "MyButton.Visible", Type = "bool", Value = false, SetsValue = true, ExposedAsName = "IsMyButtonVisible"
+        });
+        project.Components.Add(card);
+
+        ComponentSave outer = new ComponentSave { Name = "Outer", BaseType = "Container" };
+        StateSave outerState = new StateSave { Name = "Default", ParentContainer = outer };
+        outer.States.Add(outerState);
+        outer.Instances.Add(new InstanceSave { Name = "Card1", BaseType = "Card", ParentContainer = outer });
+        outer.Instances.Add(new InstanceSave { Name = "Other", BaseType = "Container", ParentContainer = outer });
+        outerState.Variables.Add(new VariableSave
+        {
+            Name = "Card1.IsMyButtonVisible", Type = "bool", Value = false, SetsValue = true, ExposedAsName = "Deep"
+        });
+        VariableListSave<string> list = new VariableListSave<string> { Type = "string", Name = "Other.VariableReferences" };
+        list.Value.Add("Visible = " + (readDeepName ? "Deep" : "Card1.IsMyButtonVisible"));
+        outerState.VariableLists.Add(list);
+        project.Components.Add(outer);
+
+        ScreenSave screen = new ScreenSave { Name = "TestScreen" };
+        screen.States.Add(new StateSave { Name = "Default", ParentContainer = screen });
+        screen.Instances.Add(new InstanceSave { Name = "Outer1", BaseType = "Outer", ParentContainer = screen });
+        project.Screens.Add(screen);
+
+        return screen.ToGraphicalUiElement().GetGraphicalUiElementByName("Outer1")!;
+    }
+
+    [Theory]
+    [InlineData(true, NestedWriter.OuterExposedName, false)]
+    [InlineData(true, NestedWriter.OuterDottedInnerExposedName, false)]
+    [InlineData(true, NestedWriter.InnerExposedName, false)]
+    [InlineData(true, NestedWriter.InnerDottedInstanceName, false)]
+    [InlineData(true, NestedWriter.TypedOnInstance, false)]
+    [InlineData(false, NestedWriter.OuterExposedName, false)]
+    [InlineData(false, NestedWriter.OuterDottedInnerExposedName, false)]
+    [InlineData(false, NestedWriter.InnerExposedName, false)]
+    [InlineData(false, NestedWriter.InnerDottedInstanceName, false)]
+    [InlineData(false, NestedWriter.TypedOnInstance, false)]
+    [InlineData(true, NestedWriter.OuterExposedName, true)]
+    [InlineData(true, NestedWriter.OuterDottedInnerExposedName, true)]
+    [InlineData(true, NestedWriter.InnerExposedName, true)]
+    [InlineData(true, NestedWriter.InnerDottedInstanceName, true)]
+    [InlineData(true, NestedWriter.TypedOnInstance, true)]
+    [InlineData(false, NestedWriter.OuterExposedName, true)]
+    [InlineData(false, NestedWriter.OuterDottedInnerExposedName, true)]
+    [InlineData(false, NestedWriter.InnerExposedName, true)]
+    [InlineData(false, NestedWriter.InnerDottedInstanceName, true)]
+    [InlineData(false, NestedWriter.TypedOnInstance, true)]
+    public void Visible_ExposedOfExposed_RowsReadingEitherNameFollowAnyWriter(bool readDeepName, NestedWriter writer, bool useExpressions)
+    {
+        GraphicalUiElement outer = BuildOuter(readDeepName, useExpressions);
+        GraphicalUiElement card = outer.GetGraphicalUiElementByName("Card1")!;
+        GraphicalUiElement other = outer.GetGraphicalUiElementByName("Other")!;
+        other.Visible.ShouldBeFalse();
+
+        foreach (bool value in new[] { true, false })
+        {
+            switch (writer)
+            {
+                case NestedWriter.OuterExposedName:
+                    outer.SetProperty("Deep", value);
+                    break;
+                case NestedWriter.OuterDottedInnerExposedName:
+                    outer.SetProperty("Card1.IsMyButtonVisible", value);
+                    break;
+                case NestedWriter.InnerExposedName:
+                    card.SetProperty("IsMyButtonVisible", value);
+                    break;
+                case NestedWriter.InnerDottedInstanceName:
+                    card.SetProperty("MyButton.Visible", value);
+                    break;
+                case NestedWriter.TypedOnInstance:
+                    card.GetGraphicalUiElementByName("MyButton")!.Visible = value;
+                    break;
+            }
+            other.Visible.ShouldBe(value);
+        }
     }
 }
