@@ -289,6 +289,9 @@ public class NineSlice : RenderableShapeBase, IAnimatable, IAnimationChainRender
     /// <summary>Test hook: draws every section with its own DrawImage, as before the lattice fast path.</summary>
     internal bool DisableLatticeFastPath { get; set; }
 
+    /// <summary>Test hook: draws at the exact fractional edges, as before the edges were snapped to device pixels (#8069).</summary>
+    internal bool DisableDeviceSnapping { get; set; }
+
     // Up to nine sections, more when tiling; each DrawImage records itself.
     private protected override bool RecordsOwnDrawCalls => true;
 
@@ -343,8 +346,51 @@ public class NineSlice : RenderableShapeBase, IAnimatable, IAnimationChainRender
         }
     }
 
+    // Nearest sampling picks a texel by where a pixel center falls, and a non-antialiased rectangle covers the pixels
+    // whose centers it contains. At a fractional edge the two can disagree (a scroll position within a few thousandths
+    // of a pixel of a tie covers a row the outline texel does not reach), so a one-texel outline vanishes for a frame
+    // and the line between two touching items loses or gains a pixel row (#8069). Each edge is therefore rounded to a
+    // whole device pixel on its own, never position and size separately, so two items that share an edge round it to
+    // the same pixel and cannot leave a gap or overlap.
+    private static SKRect SnapToDevicePixels(SKCanvas canvas, SKRect rect)
+    {
+        if (global::RenderingLibrary.Graphics.Renderer.TextureSampling.Filter != SKFilterMode.Nearest)
+        {
+            return rect;
+        }
+
+        SKMatrix matrix = canvas.TotalMatrix;
+        if (matrix.SkewX != 0 || matrix.SkewY != 0 || matrix.Persp0 != 0 || matrix.Persp1 != 0
+            || matrix.ScaleX == 0 || matrix.ScaleY == 0)
+        {
+            return rect;
+        }
+
+        float deviceA = SnapEdge(matrix.ScaleX * rect.Left + matrix.TransX);
+        float deviceB = SnapEdge(matrix.ScaleX * rect.Right + matrix.TransX);
+        float deviceC = SnapEdge(matrix.ScaleY * rect.Top + matrix.TransY);
+        float deviceD = SnapEdge(matrix.ScaleY * rect.Bottom + matrix.TransY);
+        if (deviceA == deviceB || deviceC == deviceD)
+        {
+            return rect;
+        }
+
+        float xa = (deviceA - matrix.TransX) / matrix.ScaleX;
+        float xb = (deviceB - matrix.TransX) / matrix.ScaleX;
+        float ya = (deviceC - matrix.TransY) / matrix.ScaleY;
+        float yb = (deviceD - matrix.TransY) / matrix.ScaleY;
+        return new SKRect(MathF.Min(xa, xb), MathF.Min(ya, yb), MathF.Max(xa, xb), MathF.Max(ya, yb));
+    }
+
+    // Quantized to 1/256 pixel first so a one-ulp difference between two items' copies of a shared edge cannot round
+    // it two ways at an exact half pixel.
+    private static float SnapEdge(float device) => MathF.Floor(MathF.Round(device * 256f) / 256f + 0.5f);
+
+    private bool _movedBySnapping;
+
     private void DrawBoundAtOrigin(SKRect boundingRect, SKCanvas canvas, float absoluteRotation)
     {
+        _movedBySnapping = false;
         SKPaint paint = base.GetCachedPaint(boundingRect, absoluteRotation);
 
         int srcLeft;
@@ -388,6 +434,21 @@ public class NineSlice : RenderableShapeBase, IAnimatable, IAnimationChainRender
 
         int insideTextureW = usedWidth - (fullOutsideW * 2);
         int insideTextureH = usedHeight - (fullOutsideH * 2);
+
+        if (!DisableDeviceSnapping)
+        {
+            SKRect snapped = SnapToDevicePixels(canvas, boundingRect);
+            // A nine-slice smaller than its borders squeezes them; that squeeze matches the other runtimes at the exact
+            // rectangle, so only a nine-slice that fits its borders, before and after snapping, is moved.
+            float minWidth = fullOutsideW * (EffectiveBorderScaleLeft + EffectiveBorderScaleRight);
+            float minHeight = fullOutsideH * (EffectiveBorderScaleTop + EffectiveBorderScaleBottom);
+            if (boundingRect.Width >= minWidth && boundingRect.Height >= minHeight
+                && snapped.Width >= minWidth && snapped.Height >= minHeight)
+            {
+                _movedBySnapping = snapped != boundingRect;
+                boundingRect = snapped;
+            }
+        }
 
         // Per-side destination thickness (clamped so opposing bands never overlap) and the texels
         // each band samples, shared with every other runtime.
@@ -575,19 +636,24 @@ public class NineSlice : RenderableShapeBase, IAnimatable, IAnimationChainRender
         // per-section draws have different noise, so they can pick different texels. That happens when a cell
         // of n texels covers D device pixels with n/gcd even and D/gcd odd. Exact arithmetic (border scale 1 and a
         // canvas scale of 1) has no noise, so only then is such a cell allowed.
-        bool exactArithmetic = scale == 1f && Math.Abs(matrix.ScaleX) == 1f && Math.Abs(matrix.ScaleY) == 1f;
+        // A rectangle that snapping moved is never trusted as exact: the rasterizers disagree at a texel boundary there (Mesa llvmpipe, #8069).
+        bool exactArithmetic = !_movedBySnapping && scale == 1f && Math.Abs(matrix.ScaleX) == 1f && Math.Abs(matrix.ScaleY) == 1f;
         if (!exactArithmetic)
         {
             float deviceScaleX = Math.Abs(matrix.ScaleX);
             float deviceScaleY = Math.Abs(matrix.ScaleY);
             int insideTexelsW = usedWidth - (fullOutsideW * 2);
             int insideTexelsH = usedHeight - (fullOutsideH * 2);
-            if (CanSampleOnTexelBoundary(fullOutsideW, MathF.Round(deviceScaleX * borders.DestLeft))
-                || CanSampleOnTexelBoundary(insideTexelsW, MathF.Round(deviceScaleX * (boundingRect.Width - borders.DestLeft - borders.DestRight)))
+            bool borderTie = CanSampleOnTexelBoundary(fullOutsideW, MathF.Round(deviceScaleX * borders.DestLeft))
                 || CanSampleOnTexelBoundary(fullOutsideW, MathF.Round(deviceScaleX * borders.DestRight))
                 || CanSampleOnTexelBoundary(fullOutsideH, MathF.Round(deviceScaleY * borders.DestTop))
-                || CanSampleOnTexelBoundary(insideTexelsH, MathF.Round(deviceScaleY * (boundingRect.Height - borders.DestTop - borders.DestBottom)))
-                || CanSampleOnTexelBoundary(fullOutsideH, MathF.Round(deviceScaleY * borders.DestBottom)))
+                || CanSampleOnTexelBoundary(fullOutsideH, MathF.Round(deviceScaleY * borders.DestBottom));
+            bool middleTieX = CanSampleOnTexelBoundary(insideTexelsW, MathF.Round(deviceScaleX * (boundingRect.Width - borders.DestLeft - borders.DestRight)));
+            bool middleTieY = CanSampleOnTexelBoundary(insideTexelsH, MathF.Round(deviceScaleY * (boundingRect.Height - borders.DestTop - borders.DestBottom)));
+            // A tie in the stretched middle only matters when the texels either side of it differ: where the middle is the
+            // same color along that axis (a flat fill, an outline row), either choice draws the same pixel.
+            if (borderTie || ((middleTieX || middleTieY)
+                && !IsMiddleUniform(middleTieX, middleTieY, srcLeft, srcTop, usedWidth, usedHeight, fullOutsideW, fullOutsideH)))
             {
                 return false;
             }
@@ -610,6 +676,60 @@ public class NineSlice : RenderableShapeBase, IAnimatable, IAnimationChainRender
         canvas.Restore();
         DrawStatistics?.RecordDrawCall();
         return true;
+    }
+
+    // Whether the texels of the stretched middle are the same along the axes asked for: across the columns between the
+    // two side borders for X, across the rows between the top and bottom borders for Y, over the whole source rectangle.
+    // Cached per image and source rectangle. Without the bitmap (an image assigned directly) it answers false.
+    private (SKImage? Image, int Left, int Top, int Width, int Height, int OutsideW, int OutsideH, bool X, bool Y) _uniformity;
+
+    private bool IsMiddleUniform(bool needX, bool needY, int srcLeft, int srcTop, int usedWidth, int usedHeight, int outsideW, int outsideH)
+    {
+        var u = _uniformity;
+        if (!ReferenceEquals(u.Image, _image) || u.Left != srcLeft || u.Top != srcTop || u.Width != usedWidth
+            || u.Height != usedHeight || u.OutsideW != outsideW || u.OutsideH != outsideH)
+        {
+            bool uniformX = false;
+            bool uniformY = false;
+            SKBitmap? bitmap = _texture;
+            if (bitmap != null && Sprite.IsUsable(bitmap)
+                && srcLeft >= 0 && srcTop >= 0 && srcLeft + usedWidth <= bitmap.Width && srcTop + usedHeight <= bitmap.Height)
+            {
+                int firstColumn = srcLeft + outsideW;
+                int lastColumn = srcLeft + usedWidth - outsideW - 1;
+                int firstRow = srcTop + outsideH;
+                int lastRow = srcTop + usedHeight - outsideH - 1;
+                uniformX = true;
+                for (int y = srcTop; y < srcTop + usedHeight && uniformX; y++)
+                {
+                    SKColor first = bitmap.GetPixel(firstColumn, y);
+                    for (int x = firstColumn + 1; x <= lastColumn; x++)
+                    {
+                        if (bitmap.GetPixel(x, y) != first)
+                        {
+                            uniformX = false;
+                            break;
+                        }
+                    }
+                }
+                uniformY = true;
+                for (int x = srcLeft; x < srcLeft + usedWidth && uniformY; x++)
+                {
+                    SKColor first = bitmap.GetPixel(x, firstRow);
+                    for (int y = firstRow + 1; y <= lastRow; y++)
+                    {
+                        if (bitmap.GetPixel(x, y) != first)
+                        {
+                            uniformY = false;
+                            break;
+                        }
+                    }
+                }
+            }
+            u = (_image, srcLeft, srcTop, usedWidth, usedHeight, outsideW, outsideH, uniformX, uniformY);
+            _uniformity = u;
+        }
+        return (!needX || u.X) && (!needY || u.Y);
     }
 
     // True when some pixel center of a cell of texelCount texels drawn over devicePixels pixels sits exactly on a

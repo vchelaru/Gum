@@ -217,4 +217,18 @@ public class NineSliceLatticeGpuTests
 
         MaxDifference(fast, old).ShouldBe(0);
     }
+
+    [Fact]
+    public void Render_SnappedCellOnATexelBoundaryOfANoisyTexture_KeepsPerSectionDraws()
+    {
+        // Snapping moved this rectangle (y 22.1 to 22), and its 8 middle texels cover 19 and 33 pixels, so a pixel center
+        // lands exactly on a texel boundary between texels that differ. Mesa llvmpipe picks a different texel there for the
+        // lattice than for the sections (#8069), so the sections are drawn.
+        RenderingLibrary.Graphics.Renderer.TextureFilter = SKFilterMode.Nearest;
+        using SKBitmap texture = Texture(true, 22);
+
+        using SKBitmap pixels = Render(texture, 16f, 18.1f, 33f, 47.02f, 1f, false, false, out int drawCalls, flipVertical: true, offsetY: 4f);
+
+        drawCalls.ShouldBeGreaterThan(1);
+    }
 }
