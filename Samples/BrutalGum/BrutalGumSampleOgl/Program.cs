@@ -6,14 +6,21 @@
 //   add --capture <png>      saves the window's pixels (glReadPixels on the default framebuffer) before exiting
 //   add --resize 900x500     resizes the window once, halfway through the run
 //   BrutalGumSampleOgl --hidden --batch-stats <txt>       appends each screen's same-image draw runs, then exits (#7826)
+//   BrutalGumSampleOgl --benchmark [out.md] [--region forms|list|pairs|empty]   RELEASE ONLY (dotnet build -c Release); Debug refuses. 600 warmup + 300 measured
+//                                                         prints a markdown row of CPU ms per frame, then exits (#8052)
 using Brutal.GlfwApi;
 using Brutal.Numerics;
 using Gum;
+using Gum.Forms.Controls;
 using GumSamples;
+using GumSamples.Benchmark;
 using System.Diagnostics;
 using System.Text;
 
 SampleArgs sample = new SampleArgs(args);
+int benchmarkIndex = Array.IndexOf(args, "--benchmark");
+bool benchmark = benchmarkIndex >= 0;
+string? benchmarkPath = benchmark && benchmarkIndex + 1 < args.Length && !args[benchmarkIndex + 1].StartsWith("--") ? Path.GetFullPath(args[benchmarkIndex + 1]) : null; // resolved now, before the working directory moves to the exe folder
 
 // The Gum project loads relative to the working directory, so run from the build output whatever the caller's folder is.
 Directory.SetCurrentDirectory(AppContext.BaseDirectory);
@@ -25,10 +32,10 @@ try
     Glfw.WindowHint(GlfwWindowHint.ContextVersionMinor, 3);
     Glfw.WindowHint(GlfwWindowHint.OpenGlProfile, 0x32001 /* GLFW_OPENGL_CORE_PROFILE */);
     SampleSupport.ApplyWindowHints(sample);
-    using GlfwWindow window = Glfw.CreateWindow(new GlfwWindow.CreateInfo { Title = "Gum.Brutal.OGL sample", Size = new int2(1400, 900) });
+    using GlfwWindow window = Glfw.CreateWindow(new GlfwWindow.CreateInfo { Title = "Gum.Brutal.OGL sample", Size = benchmark ? new int2(1280, 720) : new int2(1400, 900) });
     SampleSupport.PlaceWindow(window, sample);
     window.MakeContextCurrent();
-    Glfw.SwapInterval(1);
+    Glfw.SwapInterval(benchmark ? 0 : 1);
 
     GumService GumUI = GumService.Default;
 
@@ -41,6 +48,31 @@ try
 
     // Demo the auto-fit helpers. Flip via the Zoom/Expand radios in the nav strip.
     GumUI.EnableZoomToWindow();
+
+    if (benchmark)
+    {
+        BenchmarkRunner.RequireRelease();
+        BenchmarkScreen benchmarkScreen = new BenchmarkScreen();
+        benchmarkScreen.AddToRoot();
+        string? region = args.SkipWhile(a => a != "--region").Skip(1).FirstOrDefault();
+        benchmarkScreen.ShowOnly(region);
+        Console.WriteLine("GL_RENDERER: " + GlHost.Renderer(GetProc) + (region == null ? "" : "  region: " + region));
+        GlHost glHost = new GlHost(GetProc);
+        BenchmarkRunner.Run("BRUTAL OpenGL 3.3", benchmarkScreen,
+            update: seconds => GumUI.Update(seconds),
+            draw: () =>
+            {
+                GlClear.ToColor(GetProc, 100 / 255f, 149 / 255f, 237 / 255f);
+                GumUI.Draw();
+            },
+            sync: () =>
+            {
+                window.SwapBuffers();
+                glHost.Sync();
+            },
+            benchmarkPath);
+        return;
+    }
 
     GumGallery gallery = new GumGallery();
     gallery.Build();
