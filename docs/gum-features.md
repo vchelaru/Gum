@@ -84,7 +84,7 @@ Save sets of variable values as named states, then switch between them or animat
 
 Position and size objects in pixels, percentages, or relative to their children, then stack, wrap, or arrange them in a grid so the layout fits any resolution.
 
-<figure><img src=".gitbook/assets/30_06 50 51.png" alt=""><figcaption><p>Position and size units</p></figcaption></figure>
+<figure><img src=".gitbook/assets/15_15 58 30.png" alt=""><figcaption><p>Position and size units in the Variables tab</p></figcaption></figure>
 
 ### [Gradients, Drop Shadows, and Rounded Rectangles](gum-tool/gum-elements/rectangle.md)
 
