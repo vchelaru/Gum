@@ -166,11 +166,26 @@ public class DisplayScaleCanvasScenarioTests
         Action? afterFrame = null, int extraFramesAfterSecondClick = 0)
     {
         bool sawDoubleClick = false;
-        void ObservePresentedFrame() => sawDoubleClick |= isDoubleClick();
+        int presentedFrames = 0;
+        void ObservePresentedFrame()
+        {
+            presentedFrames++;
+            sawDoubleClick |= isDoubleClick();
+        }
 
         void Step()
         {
-            frame();
+            // A frame that does not render never reads the input, so the click would be read after the clock
+            // moved on; draw until one is presented.
+            for (int attempt = 0; attempt < 10; attempt++)
+            {
+                int before = presentedFrames;
+                frame();
+                if (presentedFrames > before)
+                {
+                    break;
+                }
+            }
             afterFrame?.Invoke();
         }
 
