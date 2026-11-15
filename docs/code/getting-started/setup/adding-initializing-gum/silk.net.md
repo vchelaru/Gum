@@ -160,10 +160,6 @@ Each extra is a separate package. Add the package, then add its line right after
 | [Themes](../../../styling/themes/README.md): restyles Forms controls created in code | One package per theme, such as `Gum.Themes.DarkPro.Skia` (add with `--prerelease`) | `Gum.Themes.DarkPro.DarkProTheme.Apply();` |
 
 {% hint style="info" %}
-`Gum.SkiaSharp.ShadowDusk` is available in November 2026, or now if building Gum from source.
-{% endhint %}
-
-{% hint style="info" %}
 The `.Skia` theme packages are available in December 2026, or now if building Gum from source.
 {% endhint %}
 

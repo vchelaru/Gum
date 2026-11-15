@@ -6,7 +6,7 @@ This page assumes you have an existing WPF project. This can be a new or existin
 
 ## Adding Source
 
-As of November 2025 there is not a Gum NuGet package for WPF, so projects must link directly to source.
+There is no Gum NuGet package for WPF, so projects must link directly to source.
 
 To add source, first clone the Gum repository: [https://github.com/vchelaru/Gum](https://github.com/vchelaru/Gum)
 
@@ -18,7 +18,7 @@ Add the following projects to your solution:
 * \<Gum Root>/SkiaGum/SkiaGum.csproj
 * \<GumRoot>/GumCommon/GumCommon.csproj
 
-Next, add SkiaGum.Maui as a project reference in your game project. Your project might look like this depending on the location of the Gum repository relative to your game project:
+Next, add SkiaGum.Wpf as a project reference in your game project. Your project might look like this depending on the location of the Gum repository relative to your game project:
 
 ```xml
 <ProjectReference Include="..\Gum\Runtimes\SkiaGum.Wpf.csproj" />

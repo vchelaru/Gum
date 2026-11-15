@@ -46,10 +46,6 @@ Don't name your project `StrideGum`, that's the assembly name inside the `Gum.St
 
 ## Skia Render Path
 
-{% hint style="info" %}
-Available in October 2026, or now if building Gum from source.
-{% endhint %}
-
 Gum renders Stride's UI through SkiaSharp, drawn directly into a GPU texture with no CPU round trip. It uses the graphics API your Stride project already builds against, chosen independently of Gum through Stride's own `StrideGraphicsApi` property (`Direct3D11` is Stride's Windows default). Direct3D11, Direct3D12 and Vulkan are supported. There is no CPU fallback: any other graphics API makes `Initialize` throw a `NotSupportedException`.
 
 Direct3D11 and Direct3D12 require your project to target `net10.0-windows7.0`:
