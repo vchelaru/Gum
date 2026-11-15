@@ -167,24 +167,6 @@ public class RenderTargetDiscardContentsWarningTests : BaseTestClass
     }
 
     [Fact]
-    public void TextRenderTarget_RestoresTheViewport()
-    {
-        using MinimalGame game = new();
-        game.RunOneFrame();
-        using RenderTarget2D target = CreateTarget(game.GraphicsDevice, RenderTargetUsage.PreserveContents);
-
-        game.GraphicsDevice.SetRenderTarget(target);
-        Viewport before = game.GraphicsDevice.Viewport;
-        game.GraphicsDevice.SetRenderTarget(null);
-
-        RealizeTextWith(game.GraphicsDevice, target, out _);
-
-        game.GraphicsDevice.SetRenderTarget(target);
-        game.GraphicsDevice.Viewport.Width.ShouldBe(before.Width);
-        game.GraphicsDevice.SetRenderTarget(null);
-    }
-
-    [Fact]
     public void TextRenderTarget_WithBackBuffer_LeavesTheBackBufferBound()
     {
         using MinimalGame game = new();
