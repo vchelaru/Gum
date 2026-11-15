@@ -15,6 +15,7 @@ public static class PerfAblation
 
     public static bool ShapeDirectDrawBound;
     public static bool SkipWhiteTintFilter;
+    public static readonly bool KeepWhiteTintFilter = System.Environment.GetEnvironmentVariable("PERDRAW_KEEPWHITE") == "1";
 
     public static bool NsSkipRenderOffset;
     public static bool NsSkipSnap;

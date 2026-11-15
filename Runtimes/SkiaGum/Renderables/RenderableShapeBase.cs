@@ -1268,7 +1268,9 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
     /// </summary>
     protected void ApplyTextureTint(SKPaint paint, SKBlendMode tintBlendMode)
     {
-        if (PerfAblation.SkipWhiteTintFilter && ColorOperation != ColorOperation.Add && tintBlendMode == SKBlendMode.Modulate
+        // Modulate by white is the identity, but Skia still runs a color filter for it: measured 0.75 us per
+        // DrawImageLattice and 0.86 us per DrawImage on a GPU canvas. White is every sprite's and nine-slice's default.
+        if (!PerfAblation.KeepWhiteTintFilter && ColorOperation != ColorOperation.Add && tintBlendMode == SKBlendMode.Modulate
             && Color.Red == 255 && Color.Green == 255 && Color.Blue == 255)
         {
             return;

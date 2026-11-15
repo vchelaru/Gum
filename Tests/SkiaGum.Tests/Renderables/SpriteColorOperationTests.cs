@@ -56,6 +56,17 @@ public class SpriteColorOperationTests
     }
 
     [Fact]
+    public void GetPaint_ModulateWhite_HasNoColorFilter()
+    {
+        TestableSprite sut = new() { Color = new SKColor(255, 255, 255, 128) };
+
+        using SKPaint paint = sut.InvokeGetPaint(new SKRect(0, 0, 10, 10), absoluteRotation: 0);
+
+        paint.ColorFilter.ShouldBeNull();
+        paint.Color.Alpha.ShouldBe((byte)128);
+    }
+
+    [Fact]
     public void GetPaint_Modulate_MultipliesTextureRgbByTint()
     {
         TestableSprite sut = new() { Color = new SKColor(255, 0, 0, 255) };
