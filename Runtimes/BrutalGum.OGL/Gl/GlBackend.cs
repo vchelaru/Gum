@@ -84,6 +84,14 @@ internal sealed class GlBackend : IBrutalGpuBackend
     public GlBackend()
     {
         _context = new SkiaGlContext(GetProc);
+        if (GlCallCounter.Enabled)
+        {
+            // SPIKE: replace the GRContext with one whose GL interface goes through the counting wrappers.
+            var field = typeof(SkiaGlContext).GetField("_grContext", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!;
+            ((GRContext)field.GetValue(_context)!).Dispose();
+            var glInterface = GRGlInterface.Create(name => GlCallCounter.Wrap(name, GetProc(name)))!;
+            field.SetValue(_context, GRContext.CreateGl(glInterface));
+        }
         _direct = new SkiaDirectCanvas(_context);
     }
 
