@@ -165,3 +165,5 @@ To create the Gum project and show its screens, see [Loading a Gum Project](../l
 For a working project, see the Gum KNI with Skia sample:
 
 {% embed url="https://github.com/vchelaru/Gum/tree/main/Samples/KniSkiaGum" %}
+
+To start building UI, continue with the [code-only Forms tutorial](../../tutorials/code-only-gum-forms-tutorial/README.md).

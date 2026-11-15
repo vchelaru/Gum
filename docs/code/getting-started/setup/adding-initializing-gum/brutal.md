@@ -421,6 +421,8 @@ Then copy the Gum project to the output folder by adding this to your `.csproj`:
 
 To create the Gum project and show its screens, see [Loading a Gum Project](../loading-a-gum-project-.gumx.md).
 
+To start building UI, continue with the [code-only Forms tutorial](../../tutorials/code-only-gum-forms-tutorial/README.md).
+
 ## Supplying Input From Your Own Window
 
 By default Gum reads the mouse, keyboard, clipboard and gamepad from the `GlfwWindow` you pass to `Initialize`. If your game owns the window and its events itself, such as with SDL3, implement `IBrutalInput` and pass it in place of the window. Gum then never touches GLFW. `IBrutalInput` uses Gum's own `Keys`, `MouseButton` and `Cursors` types.

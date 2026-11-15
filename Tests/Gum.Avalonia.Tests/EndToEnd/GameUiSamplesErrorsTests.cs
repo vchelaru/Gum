@@ -15,7 +15,7 @@ using ToolsUtilities;
 
 namespace Gum.Avalonia.Tests.EndToEnd;
 
-/// <summary>Opening the GameUiSamples project in the tool lists no errors (#8094: four stale code files at old paths showed as GUM0005 rows, which only the tool reports).</summary>
+/// <summary>Opening the GameUiSamples project in the tool lists no errors (#8094: four stale code files at old paths showed as GUM0005 rows).</summary>
 public class GameUiSamplesErrorsTests
 {
     [AvaloniaFact]

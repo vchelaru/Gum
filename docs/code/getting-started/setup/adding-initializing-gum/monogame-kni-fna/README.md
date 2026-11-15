@@ -306,34 +306,4 @@ Then copy the Gum project to the output folder by adding this to your `.csproj`:
 
 To create the Gum project, load it on Android or web, and show its screens, see [Loading a Gum Project](../../loading-a-gum-project-.gumx.md).
 
-## Troubleshooting
-
-{% tabs %}
-{% tab title="Nez" %}
-Could not load file or assembly 'MonoGame.Framework, Version=3.8.1.303
-
-If you add the Gum code to your project, you may experience this exception internally from Nez:
-
-<figure><img src="../../../../../.gitbook/assets/image (71).png" alt=""><figcaption></figcaption></figure>
-
-The reason this is happening is because currently (as of July 2024) Nez links MonoGame 3.8.0 instead of 3.8.1 (the latest).
-
-To solve this problem, your project must explicitly link MonoGame 3.8.1 or else you will have this exception.
-
-To do this:
-
-1. Open your project in Visual Studio
-2. Expand the Dependencies item
-3.  Right-click on Packages and select Manage NuGet Packages\\
-
-    <figure><img src="../../../../../.gitbook/assets/image (73).png" alt=""><figcaption><p>Right-click Manage NuGet Packages... option</p></figcaption></figure>
-4. Click on the Browse tab
-5. Search for MonoGame.Framework
-6.  Select the MonoGame.Framework NuGet package for your particular project type. This is most likely MonoGame.Framework.DesktopGL, but it may be different if you are targeting another platform.\\
-
-    <figure><img src="../../../../../.gitbook/assets/image (74).png" alt=""><figcaption><p>MonoGame.Framework NuGet packages</p></figcaption></figure>
-7. Click the Install button to add the NuGet package
-
-After adding MonoGame, your NuGet packages should similar to the following image:
-{% endtab %}
-{% endtabs %}
+To start building UI, continue with the [code-only Forms tutorial](../../../tutorials/code-only-gum-forms-tutorial/README.md).

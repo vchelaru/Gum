@@ -4,7 +4,7 @@
 gumcli check <project.gumj> [--json]
 ```
 
-Loads a Gum project and reports all errors, including malformed XML in element files, missing referenced files, and semantic errors such as invalid base types and missing behavior instances.
+Loads a Gum project and reports all errors, including malformed XML in element files, missing referenced files, and semantic errors such as invalid base types and missing behavior instances. Code files left behind by deleted elements are reported as `GUM0005` warnings (see [Orphaned Code Files](../gum-tool/code-tab/orphaned-code-files.md)). Available in December 2026, or now if building Gum from source.
 
 ## Options
 

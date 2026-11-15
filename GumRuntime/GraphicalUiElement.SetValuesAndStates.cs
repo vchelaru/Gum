@@ -1487,6 +1487,10 @@ public partial class GraphicalUiElement
     {
         _appliedCategoryStates ??= new Dictionary<string, string>();
         _appliedCategoryStates[categoryName] = stateName;
+        // A state applied before the instance joined its container is part of the build, which the container's values then override.
+        _buildTimeCategoryStates ??= new HashSet<string>();
+        if (ElementGueContainingThis == null) { _buildTimeCategoryStates.Add(categoryName); }
+        else { _buildTimeCategoryStates.Remove(categoryName); }
     }
 
     /// <summary>
@@ -1505,9 +1509,71 @@ public partial class GraphicalUiElement
         {
             foreach (KeyValuePair<string, string> applied in _appliedCategoryStates.ToArray())
             {
+                // Re-applying is not a new decision about the state, so a build-time state stays one.
+                bool isBuildTime = _buildTimeCategoryStates?.Contains(applied.Key) == true;
                 ApplyState(applied.Key, applied.Value);
+                if (isBuildTime) { _buildTimeCategoryStates!.Add(applied.Key); }
+                ReassertContainerOverrides(applied.Key, applied.Value);
             }
         }
+    }
+
+    // A state applied by name overwrites the values the containing elements gave this instance (a ListBox
+    // sizing its ScrollBar, a screen sizing the ListBox). Building applies the state first and the
+    // containers' values after it, so re-applying the state must put those values back, innermost
+    // container first so the outermost one wins.
+    private HashSet<string>? _buildTimeCategoryStates;
+
+    private void ReassertContainerOverrides(string categoryName, string stateName)
+    {
+        if (Tag is not InstanceSave instance
+            || _buildTimeCategoryStates?.Contains(categoryName) != true
+            || !mCategories.TryGetValue(categoryName, out StateSaveCategory? category)
+            || category.States.FindByName(stateName) is not { } state)
+        {
+            return;
+        }
+
+        string path = instance.Name;
+        GraphicalUiElement? container = ElementGueContainingThis;
+        ElementSave? containerElement = container?.ElementSave ?? instance.ParentContainer;
+        while (containerElement != null)
+        {
+            foreach (VariableSave variable in state.Variables)
+            {
+                if (variable.SetsValue && variable.Value != null
+                    && FindExplicitValue(containerElement, path + "." + variable.Name) is { } overridden)
+                {
+                    SetProperty(variable.Name, overridden);
+                }
+            }
+
+            if (container?.Tag is not InstanceSave containerInstance)
+            {
+                break;
+            }
+            path = containerInstance.Name + "." + path;
+            container = container.ElementGueContainingThis;
+            containerElement = container?.ElementSave ?? containerInstance.ParentContainer;
+        }
+    }
+
+    // Only a value an element (or one of its base types) writes for the path counts as an override. The
+    // instance's own base component default, which GetValueRecursive falls back to, is not one: putting it
+    // back would replace what the instance's state set (a standalone ScrollBar's Vertical Height).
+    private static object? FindExplicitValue(ElementSave element, string name)
+    {
+        for (ElementSave? current = element; current != null; current = ObjectFinder.Self.GetBaseElement(current))
+        {
+            foreach (VariableSave variable in current.DefaultState?.Variables ?? new List<VariableSave>())
+            {
+                if (variable.SetsValue && variable.Value != null && variable.Name == name)
+                {
+                    return variable.Value;
+                }
+            }
+        }
+        return null;
     }
 
     HashSet<StateSave> statesInStack = new HashSet<StateSave>();

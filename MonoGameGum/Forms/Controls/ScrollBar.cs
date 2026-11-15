@@ -419,6 +419,8 @@ public class ScrollBar : RangeBase
     /// <inheritdoc/>
     public override void ApplyRuntimeProperties()
     {
+        // A reload re-applies the Orientation state over the size the thumb was given from the viewport.
+        UpdateThumbSize();
         UpdateThumbPositionAccordingToValue();
         base.ApplyRuntimeProperties();
     }
