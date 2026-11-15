@@ -193,6 +193,8 @@ internal static class ExportedPixelChecks
 
         SkiaSharp.SKColor densest = default;
         int worstColor = 0;
+        string worstPixel = "none";
+        int offColorPixels = 0;
         for (int y = text.Top; y < text.Bottom; y++)
         {
             for (int x = text.Left; x < text.Right; x++)
@@ -204,7 +206,13 @@ internal static class ExportedPixelChecks
                 }
                 if (pixel.Alpha >= 64)
                 {
-                    worstColor = Math.Max(worstColor, Math.Max(255 - pixel.Red, Math.Max(pixel.Green, pixel.Blue)));
+                    int off = Math.Max(255 - pixel.Red, Math.Max(pixel.Green, pixel.Blue));
+                    offColorPixels += off > 3 ? 1 : 0;
+                    if (off > worstColor)
+                    {
+                        worstColor = off;
+                        worstPixel = $"({x},{y}) = ({pixel.Red},{pixel.Green},{pixel.Blue},{pixel.Alpha})";
+                    }
                 }
             }
         }
@@ -214,6 +222,7 @@ internal static class ExportedPixelChecks
         report.Add($"text, most opaque glyph pixel: expected (255,0,0,128) actual " +
                    $"({densest.Red},{densest.Green},{densest.Blue},{densest.Alpha}) delta {textDelta}");
         report.Add($"text, worst color off pure red at alpha >= 64: {worstColor} (limit 3)");
+        report.Add($"text, worst pixel {worstPixel}; {offColorPixels} pixels off pure red by more than 3; text region {text}");
 
         if (!string.IsNullOrEmpty(keepFolder))
         {
