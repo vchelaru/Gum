@@ -7,7 +7,7 @@
 //   add --resize 900x500     resizes the window once, halfway through the run
 //   BrutalGumSampleOgl --hidden --batch-stats <txt>       appends each screen's same-image draw runs, then exits (#7826)
 //   BrutalGumSampleOgl --benchmark [out.md] [--region forms|list|pairs|empty]   RELEASE ONLY (dotnet build -c Release); Debug refuses. 600 warmup + 300 measured
-//                                                         prints a markdown row of CPU and GPU ms per frame, then exits (#8052)
+//                                                         prints a markdown row of CPU ms per frame, then exits (#8052)
 using Brutal.GlfwApi;
 using Brutal.Numerics;
 using Gum;
@@ -56,10 +56,8 @@ try
         benchmarkScreen.AddToRoot();
         string? region = args.SkipWhile(a => a != "--region").Skip(1).FirstOrDefault();
         benchmarkScreen.ShowOnly(region);
-        Console.WriteLine("GL_RENDERER: " + GlTimer.Renderer(GetProc) + (region == null ? "" : "  region: " + region));
-        GlTimer timer = new GlTimer(GetProc);
-        GumUI.FlushStarting += timer.Begin;
-        GumUI.FlushFinished += timer.End;
+        Console.WriteLine("GL_RENDERER: " + GlHost.Renderer(GetProc) + (region == null ? "" : "  region: " + region));
+        GlHost glHost = new GlHost(GetProc);
         BenchmarkRunner.Run("BRUTAL OpenGL 3.3", benchmarkScreen,
             update: seconds => GumUI.Update(seconds),
             draw: () =>
@@ -70,9 +68,9 @@ try
             sync: () =>
             {
                 window.SwapBuffers();
-                timer.Sync();
+                glHost.Sync();
             },
-            timer, benchmarkPath);
+            benchmarkPath);
         return;
     }
 
