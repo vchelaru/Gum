@@ -95,12 +95,15 @@ internal class BenchmarkScreen : FrameworkElement
         const int columns = 10;
         const int cellWidth = 56;
         const int cellHeight = 40;
-        for (int i = 0; i < NineSlicePairCount; i++)
+        // SPIKE (#8098): GUM_PAIRS=N scales the grid; cells past 100 overlap the first 100 (wrap), so every pair is on screen.
+        int pairCount = int.TryParse(System.Environment.GetEnvironmentVariable("GUM_PAIRS"), out int n) ? n : NineSlicePairCount;
+        for (int i = 0; i < pairCount; i++)
         {
             var nineSlice = new NineSliceRuntime();
             nineSlice.SourceFileName = "Frame.png";
             nineSlice.X = 712 + (i % columns) * cellWidth;
-            nineSlice.Y = 8 + (i / columns) * cellHeight;
+            int cellIndex = i % 100;
+            nineSlice.Y = 8 + (cellIndex / columns) * cellHeight;
             nineSlice.Width = cellWidth - 4;
             nineSlice.Height = cellHeight - 4;
             this.AddChild(nineSlice);
