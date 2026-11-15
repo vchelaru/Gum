@@ -250,9 +250,11 @@ public sealed class DialogWindow : Window
         };
         // Avalonia 12's list box items take Enter themselves, so it never reaches the default button
         // (#5558: the choice prompt confirms the picked option with Enter, as the WPF one does).
+        // Only a dialog that opts in: elsewhere (the Settings page list) Enter on an item must not close.
         AddHandler(KeyDownEvent, (_, e) =>
         {
-            if (e.Key == Key.Enter && e.Handled && e.Source is ListBoxItem && affirmative.IsEffectivelyVisible
+            if (e.Key == Key.Enter && e.Handled && e.Source is ListBoxItem && _viewModel.AffirmsOnEnterFromListItem
+                && affirmative.IsEffectivelyVisible
                 && _viewModel.AffirmativeCommand.CanExecute(null))
             {
                 _viewModel.AffirmativeCommand.Execute(null);

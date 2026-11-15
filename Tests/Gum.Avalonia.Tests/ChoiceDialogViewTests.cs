@@ -4,6 +4,8 @@ using Avalonia.Input;
 using Gum.Avalonia.Dialogs.Views;
 using Gum.Avalonia.Tests.Harness;
 using Gum.Services.Dialogs;
+using Gum.SettingsWindow;
+using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
 
 namespace Gum.Avalonia.Tests;
@@ -55,5 +57,19 @@ public class ChoiceDialogViewTests
 
         dialog.Result.ShouldBe(true);
         viewModel.SelectedKey.ShouldBe(1);
+    }
+
+    [AvaloniaFact]
+    public void EnterOnASettingsPageListItem_DoesNotCloseTheSettingsWindow()
+    {
+        SettingsDialogViewModel viewModel = TestAppBuilder.Services.GetRequiredService<SettingsDialogViewModel>();
+        using DialogWindowDriver dialog = new DialogWindowDriver(viewModel);
+        ListBoxItem item = dialog.Find<ListBoxItem>(candidate => candidate.IsVisible);
+        item.Focus();
+
+        dialog.Press(Key.Enter, PhysicalKey.Enter);
+
+        dialog.IsOpen.ShouldBeTrue();
+        dialog.Result.ShouldBeNull();
     }
 }
