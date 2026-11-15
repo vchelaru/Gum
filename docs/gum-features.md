@@ -48,19 +48,19 @@ panel.AddChild(listBox);
 
 Run the same UI on desktop, mobile, and web, with an editor for Windows, macOS, and Linux.
 
-<figure><img src=".gitbook/assets/image (29).png" alt=""><figcaption><p>Gum UI in game</p></figcaption></figure>
+<figure><img src=".gitbook/assets/15_10 06 52.png" alt=""><figcaption><p>The same screen at browser and portrait sizes</p></figcaption></figure>
 
 ### [Full UI Controls, Themed](code/controls/README.md)
 
 Use ready-made controls such as Button, ListBox, TextBox, and Slider, restyle them with a built-in theme or your own styles, and operate them with a mouse, touch screen, keyboard, or gamepad.
 
-<figure><img src=".gitbook/assets/15_09 12 05.png" alt=""><figcaption><p>Forms controls</p></figcaption></figure>
+<figure><img src=".gitbook/assets/15_10 02 11.png" alt=""><figcaption><p>Forms controls in the Hazard theme</p></figcaption></figure>
 
 ### [Live Preview](gum-tool/editor-tab.md#preview)
 
 Open any screen or component in its own window running the real runtime, where buttons click, lists scroll, and text boxes take input.
 
-<figure><img src=".gitbook/assets/15_09 10 41.png" alt=""><figcaption><p>A screen shown in Preview</p></figcaption></figure>
+<figure><img src=".gitbook/assets/15_10 04 27.png" alt=""><figcaption><p>An inventory screen shown in Preview</p></figcaption></figure>
 
 ### [Variable References](gum-tool/gum-elements/general-properties/variable-references.md)
 
@@ -136,7 +136,7 @@ Generate C# classes for your screens and components so your code works with type
 
 Bind controls to a view model so your UI stays in sync with your game data.
 
-<figure><img src=".gitbook/assets/14_08 03 38.png" alt=""><figcaption><p>A settings screen bound to a view model</p></figcaption></figure>
+<figure><img src=".gitbook/assets/BubblegumThemeScreenshot.png" alt=""><figcaption><p>A settings screen bound to a view model</p></figcaption></figure>
 
 ### [Native AOT Ready](code/performance-and-optimization/native-aot-and-trimming.md)
 
