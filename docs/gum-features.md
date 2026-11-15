@@ -6,7 +6,43 @@ Gum is a UI toolkit for C# game developers. This page is a tour of what it can d
 
 Build your UI in the visual editor, in C# only, or a mix of both.
 
-<figure><img src=".gitbook/assets/30_06 53 41.png" alt=""><figcaption><p>The Gum editor</p></figcaption></figure>
+{% tabs %}
+{% tab title="Editor" %}
+<figure><img src=".gitbook/assets/15_09 45 30.png" alt=""><figcaption><p>A screen built in the Gum editor</p></figcaption></figure>
+{% endtab %}
+
+{% tab title="Code" %}
+```csharp
+// Initialize
+var panel = new StackPanel();
+panel.Spacing = 8;
+panel.Visual.X = 16;
+panel.Visual.Y = 90;
+panel.AddToRoot();
+
+var button = new Button();
+button.Text = "Click Me";
+button.Width = 200;
+panel.AddChild(button);
+
+var textBox = new TextBox();
+textBox.Placeholder = "Enter text here...";
+textBox.Width = 200;
+panel.AddChild(textBox);
+
+var checkBox = new CheckBox();
+checkBox.Text = "Check me";
+panel.AddChild(checkBox);
+
+var listBox = new ListBox();
+listBox.Visual.Width = 200;
+listBox.Visual.Height = 120;
+for (int i = 0; i < 10; i++)
+    listBox.Items.Add($"Item {i}");
+panel.AddChild(listBox);
+```
+{% endtab %}
+{% endtabs %}
 
 ### [Runs Everywhere](code/about/runtimes.md)
 
