@@ -3,6 +3,7 @@
 ## Gum Tool
 
 * [Introduction](README.md)
+  * [Gum Features](gum-features.md)
   * [For Figma Users](gum-tool/readme/for-figma-users.md)
 * [Setup](gum-tool/setup/README.md)
   * [Opening Gum on macOS](gum-tool/setup/opening-gum-on-macos.md)
