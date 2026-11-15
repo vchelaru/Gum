@@ -1487,6 +1487,10 @@ public partial class GraphicalUiElement
     {
         _appliedCategoryStates ??= new Dictionary<string, string>();
         _appliedCategoryStates[categoryName] = stateName;
+        // A state applied before the instance joined its container is part of the build, which the container's values then override.
+        _buildTimeCategoryStates ??= new HashSet<string>();
+        if (ElementGueContainingThis == null) { _buildTimeCategoryStates.Add(categoryName); }
+        else { _buildTimeCategoryStates.Remove(categoryName); }
     }
 
     /// <summary>
@@ -1505,7 +1509,10 @@ public partial class GraphicalUiElement
         {
             foreach (KeyValuePair<string, string> applied in _appliedCategoryStates.ToArray())
             {
+                // Re-applying is not a new decision about the state, so a build-time state stays one.
+                bool isBuildTime = _buildTimeCategoryStates?.Contains(applied.Key) == true;
                 ApplyState(applied.Key, applied.Value);
+                if (isBuildTime) { _buildTimeCategoryStates!.Add(applied.Key); }
                 ReassertContainerOverrides(applied.Key, applied.Value);
             }
         }
@@ -1515,9 +1522,12 @@ public partial class GraphicalUiElement
     // sizing its ScrollBar, a screen sizing the ListBox). Building applies the state first and the
     // containers' values after it, so re-applying the state must put those values back, innermost
     // container first so the outermost one wins.
+    private HashSet<string>? _buildTimeCategoryStates;
+
     private void ReassertContainerOverrides(string categoryName, string stateName)
     {
         if (Tag is not InstanceSave instance
+            || _buildTimeCategoryStates?.Contains(categoryName) != true
             || !mCategories.TryGetValue(categoryName, out StateSaveCategory? category)
             || category.States.FindByName(stateName) is not { } state)
         {
