@@ -81,6 +81,7 @@
   * [ColoredRectangle](gum-tool/gum-elements/coloredrectangle.md)
   * [Component](gum-tool/gum-elements/component/README.md)
     * [Default Slot](gum-tool/gum-elements/component/default-child-container.md)
+    * [Exposed Variables](gum-tool/gum-elements/component/exposed-variables.md)
   * [Container](gum-tool/gum-elements/container/README.md)
     * [Children Layout](gum-tool/gum-elements/container/children-layout.md)
     * [Contained Type](gum-tool/gum-elements/container/contained-type.md)
