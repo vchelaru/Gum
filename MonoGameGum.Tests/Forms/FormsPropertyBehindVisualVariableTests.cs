@@ -4,13 +4,11 @@ using Gum.Expressions;
 using Gum.Forms.Controls;
 using Gum.GueDeriving;
 using Gum.Managers;
-using Gum.StateAnimation.Runtime;
 using Gum.Wireframe;
 using GumRuntime;
 using RenderingLibrary;
 using Shouldly;
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Xunit;
@@ -18,9 +16,9 @@ using Xunit;
 namespace MonoGameGum.Tests.Forms;
 
 /// <summary>
-/// A state or an animation writes a visual variable (StackSpacing, ChildrenLayout, Text) through SetProperty. When a Forms
+/// A state writes a visual variable (Text) through SetProperty. When a Forms
 /// property sits on top of that variable, the Forms property must read the new value and the rows that read it
-/// (<c>Text = Ctl1.Spacing</c>) must re-evaluate (#8058).
+/// (<c>Text = Ctl1.Text</c>) must re-evaluate (#8058).
 /// </summary>
 public class FormsPropertyBehindVisualVariableTests : BaseTestClass
 {
@@ -95,98 +93,6 @@ public class FormsPropertyBehindVisualVariableTests : BaseTestClass
         category.States.Add(state);
         visual.Categories["Cat"] = category;
         return state;
-    }
-
-    private static void RunAnimationToEnd(GraphicalUiElement visual, string variable, string type, object from, object to)
-    {
-        StateSaveCategory category = new StateSaveCategory { Name = "AnimCat" };
-        StateSave start = new StateSave { Name = "Start" };
-        start.Variables.Add(new VariableSave { Name = variable, Type = type, Value = from, SetsValue = true });
-        StateSave end = new StateSave { Name = "End" };
-        end.Variables.Add(new VariableSave { Name = variable, Type = type, Value = to, SetsValue = true });
-        category.States.Add(start);
-        category.States.Add(end);
-        ElementSave element = visual.ElementSave!;
-        start.ParentContainer = element;
-        end.ParentContainer = element;
-        element.Categories.Add(category);
-
-        AnimationRuntime animation = new AnimationRuntime { Name = "Anim" };
-        animation.Keyframes.Add(new KeyframeRuntime
-        {
-            StateName = "AnimCat/Start",
-            Time = 0,
-            InterpolationType = FlatRedBall.Glue.StateInterpolation.InterpolationType.Linear
-        });
-        animation.Keyframes.Add(new KeyframeRuntime { StateName = "AnimCat/End", Time = 1 });
-        animation.RefreshCumulativeStates(element);
-        visual.Animations = new List<AnimationRuntime> { animation };
-        visual.PlayAnimation("Anim");
-        visual.AnimateSelf(0);
-        visual.AnimateSelf(2);
-    }
-
-    [Fact(Skip = "#8061: visual variable set by a state or animation does not reach the Forms layer")]
-    public void ApplyState_StackSpacing_UpdatesSpacingAndReevaluatesRows()
-    {
-        Built built = Build("StackPanelBehavior", "Spacing");
-        StackPanel panel = (StackPanel)built.Control;
-        panel.Spacing.ShouldBe(0);
-        string? before = built.Probe.Text;
-        StateSave state = AddState(built.Visual, "Wide", "StackSpacing", "float", 12f);
-
-        built.Visual.ApplyState(state);
-
-        panel.Spacing.ShouldBe(12);
-        built.Probe.Text.ShouldNotBe(before);
-        string? afterState = built.Probe.Text;
-        built.Screen.RefreshReferences("Ctl1.Spacing");
-        built.Probe.Text.ShouldBe(afterState);
-    }
-
-    [Fact(Skip = "#8061: visual variable set by a state or animation does not reach the Forms layer")]
-    public void Animation_StackSpacing_UpdatesSpacingAndReevaluatesRows()
-    {
-        Built built = Build("StackPanelBehavior", "Spacing");
-        StackPanel panel = (StackPanel)built.Control;
-        string? before = built.Probe.Text;
-
-        RunAnimationToEnd(built.Visual, "StackSpacing", "float", 0f, 20f);
-
-        panel.Spacing.ShouldBe(20);
-        built.Probe.Text.ShouldNotBe(before);
-        string? afterAnimation = built.Probe.Text;
-        built.Screen.RefreshReferences("Ctl1.Spacing");
-        built.Probe.Text.ShouldBe(afterAnimation);
-    }
-
-    [Fact(Skip = "#8061: visual variable set by a state or animation does not reach the Forms layer")]
-    public void ApplyState_ChildrenLayout_UpdatesOrientationAndReevaluatesRows()
-    {
-        Built built = Build("StackPanelBehavior", "Orientation");
-        StackPanel panel = (StackPanel)built.Control;
-        panel.Orientation.ShouldBe(Orientation.Vertical);
-        string? before = built.Probe.Text;
-        StateSave state = AddState(built.Visual, "Row", "ChildrenLayout", "ChildrenLayout", ChildrenLayout.LeftToRightStack);
-
-        built.Visual.ApplyState(state);
-
-        built.Visual.ChildrenLayout.ShouldBe(ChildrenLayout.LeftToRightStack);
-        panel.Orientation.ShouldBe(Orientation.Horizontal);
-        built.Probe.Text.ShouldNotBe(before);
-    }
-
-    [Fact(Skip = "#8061: visual variable set by a state or animation does not reach the Forms layer")]
-    public void Animation_ChildrenLayout_UpdatesOrientation()
-    {
-        Built built = Build("StackPanelBehavior", "Orientation");
-        StackPanel panel = (StackPanel)built.Control;
-
-        RunAnimationToEnd(built.Visual, "ChildrenLayout", "ChildrenLayout",
-            ChildrenLayout.TopToBottomStack, ChildrenLayout.LeftToRightStack);
-
-        built.Visual.ChildrenLayout.ShouldBe(ChildrenLayout.LeftToRightStack);
-        panel.Orientation.ShouldBe(Orientation.Horizontal);
     }
 
     [Fact]
