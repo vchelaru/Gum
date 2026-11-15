@@ -2140,6 +2140,7 @@ public class GraphicalUiElementTests : BaseTestClass
         "mStates",
         "mCategories",
         "_appliedCategoryStates",
+        "_buildTimeCategoryStates",
         "<StackedRowOrColumnDimensions>k__BackingField",
         "<Animations>k__BackingField",
         "_animationController",

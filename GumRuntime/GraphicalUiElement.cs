@@ -662,6 +662,9 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         newClone._appliedCategoryStates = _appliedCategoryStates == null
             ? null
             : new Dictionary<string, string>(_appliedCategoryStates);
+        newClone._buildTimeCategoryStates = _buildTimeCategoryStates == null
+            ? null
+            : new HashSet<string>(_buildTimeCategoryStates);
 #if !FRB
         newClone.Animations = Animations == null ? null : new List<AnimationRuntime>(Animations);
 #endif

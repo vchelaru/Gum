@@ -21,6 +21,15 @@ public class ThemedScrollBarHotReloadTests : FileThemeInputTestBase
     private const float ControlHeight = 150;
     private const float MaxEdgeGap = 8;
 
+    // Initialize() sorts the screen list, so the base class's "drop the last screens" trim would remove a theme's own screen.
+    private (GumProjectSave Project, ScreenSave Screen)? added;
+
+    public override void Dispose()
+    {
+        added?.Project.Screens.Remove(added.Value.Screen);
+        base.Dispose();
+    }
+
     public static IEnumerable<object[]> ThemeAndControl() =>
         AllThemes().Select(row => (string)row[0]).SelectMany(theme =>
             new[] { "ListBox", "ItemsControl", "ScrollViewer" }.Select(control => new object[] { theme, control }));
@@ -77,6 +86,7 @@ public class ThemedScrollBarHotReloadTests : FileThemeInputTestBase
         int rows = 0;
         for (; rows < 3; rows++) { AddRow(screen, rowType, rows); }
         project.Screens.Add(screen);
+        added = (project, screen);
         project.Initialize();
         GraphicalUiElement screenVisual = screen.ToGraphicalUiElement();
         screenVisual.AddToRoot();
@@ -114,6 +124,7 @@ public class ThemedScrollBarHotReloadTests : FileThemeInputTestBase
         string rowType = ComponentName(project, "ListBoxItem");
         for (int i = 0; i < 30; i++) { AddRow(screen, rowType, i); }
         project.Screens.Add(screen);
+        added = (project, screen);
         project.Initialize();
         GraphicalUiElement screenVisual = screen.ToGraphicalUiElement();
         screenVisual.AddToRoot();
