@@ -58,6 +58,7 @@ public class InvisibleRenderable : RenderableBase, ICloneable, IRenderableIpso
         ((IRenderableIpso)newInstance).SetParentDirect(null);
 
         newInstance._children = new ();
+        newInstance.ReacquireRenderTargetUsageAfterClone();
 
         return newInstance;
     }

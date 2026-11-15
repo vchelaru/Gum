@@ -10,7 +10,35 @@ namespace RenderingLibrary.Graphics;
 public abstract class RenderableBase : IVisible, IRenderableIpso,
     ISetClipsChildren, IRenderTargetRenderable
 {
-    public bool IsRenderTarget { get; set; }
+    private RenderTargetUsageHandle? _renderTargetUsage;
+
+    // A MemberwiseClone copies the source's handle; the clone must hold its own.
+    private protected void ReacquireRenderTargetUsageAfterClone()
+    {
+        _renderTargetUsage = _renderTargetUsage != null ? RenderTargetUsageHandle.Acquire() : null;
+    }
+
+    public bool IsRenderTarget
+    {
+        get => _renderTargetUsage != null;
+        set
+        {
+            if (value == (_renderTargetUsage != null))
+            {
+                return;
+            }
+
+            if (value)
+            {
+                _renderTargetUsage = RenderTargetUsageHandle.Acquire();
+            }
+            else
+            {
+                _renderTargetUsage!.Release();
+                _renderTargetUsage = null;
+            }
+        }
+    }
 
     /// <inheritdoc/>
     /// <remarks>
