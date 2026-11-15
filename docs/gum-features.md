@@ -142,6 +142,4 @@ Replace the visuals behind any control, down to adding your own renderable types
 
 Create projects, check for errors, and generate code from the command line with GumCli, extend the editor with plugins, and give an AI assistant the Gum documentation.
 
-{% hint style="warning" %}
-**TODO:** Screenshot of GumCli output.
-{% endhint %}
+<figure><img src=".gitbook/assets/15_15 45 12.png" alt=""><figcaption><p>Creating a new Gum project with GumCli</p></figcaption></figure>
