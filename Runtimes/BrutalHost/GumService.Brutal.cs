@@ -67,6 +67,12 @@ public partial class GumService : GumServiceSkiaInteractiveBase, IGumService
         }
     }
 
+    /// <summary>Raised inside <see cref="Draw"/> just before Skia flushes the recorded frame to the GPU, so a host can start a GPU timer that covers only the flush.</summary>
+    public event Action? FlushStarting;
+
+    /// <summary>Raised inside <see cref="Draw"/> right after Skia's flush has been submitted.</summary>
+    public event Action? FlushFinished;
+
     /// <summary>
     /// Draws Gum into the render target Gum created and puts the frame on the window. If the framebuffer
     /// size changed since the last call, the target is recreated at the new size first. Does nothing while
@@ -103,7 +109,9 @@ public partial class GumService : GumServiceSkiaInteractiveBase, IGumService
         }
 
         base.Draw();
+        FlushStarting?.Invoke();
         target.End();
+        FlushFinished?.Invoke();
         _backend.Present(target, _targetHolder.Width, _targetHolder.Height);
     }
 

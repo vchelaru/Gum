@@ -4,7 +4,7 @@ using System.Text;
 
 namespace GumSamples.Benchmark;
 
-/// <summary>Reads the GPU time of the work between <see cref="Begin"/> and <see cref="End"/>. A host that cannot measure it passes null.</summary>
+/// <summary>Reads the GPU time of the work between <see cref="Begin"/> and <see cref="End"/>, which the host calls around only Skia's flush (not the CPU recording of the frame, which would count as GPU time). A host that cannot measure it passes null.</summary>
 internal interface IGpuTimer
 {
     void Begin();
@@ -54,10 +54,8 @@ internal static class BenchmarkRunner
             long start = Stopwatch.GetTimestamp();
             update(step * frame);
             long afterUpdate = Stopwatch.GetTimestamp();
-            gpuTimer?.Begin();
             draw();
             long afterDraw = Stopwatch.GetTimestamp();
-            gpuTimer?.End();
             sync();
             long end = Stopwatch.GetTimestamp();
             double gpu = gpuTimer?.ReadMilliseconds() ?? double.NaN;
@@ -81,7 +79,7 @@ internal static class BenchmarkRunner
 
         string gpuText = gpuTimer == null ? "n/a" : $"{Median(gpuMs):F2} / {Percentile95(gpuMs):F2}";
         StringBuilder text = new StringBuilder();
-        text.AppendLine("| runtime | update ms (med / p95) | draw ms (med / p95) | frame incl. GPU wait ms (med / p95) | GPU ms (med / p95) | first frame ms | halves differ >10% |");
+        text.AppendLine("| runtime | update ms (med / p95) | draw ms: CPU record + flush submit (med / p95) | frame incl. GPU wait ms (med / p95) | GPU ms: flush only (med / p95) | first frame ms | halves differ >10% |");
         text.AppendLine("|---|---|---|---|---|---|---|");
         text.AppendLine($"| {runtimeName} | {Median(updateMs):F2} / {Percentile95(updateMs):F2} | {Median(drawMs):F2} / {Percentile95(drawMs):F2} | " +
             $"{Median(totalMs):F2} / {Percentile95(totalMs):F2} | {gpuText} | {firstFrameMs:F1} | {(unstable ? "YES, rerun" : "no")} |");

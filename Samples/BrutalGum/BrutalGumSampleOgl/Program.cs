@@ -58,6 +58,8 @@ try
         benchmarkScreen.ShowOnly(region);
         Console.WriteLine("GL_RENDERER: " + GlTimer.Renderer(GetProc) + (region == null ? "" : "  region: " + region));
         GlTimer timer = new GlTimer(GetProc);
+        GumUI.FlushStarting += timer.Begin;
+        GumUI.FlushFinished += timer.End;
         BenchmarkRunner.Run("BRUTAL OpenGL 3.3", benchmarkScreen,
             update: seconds => GumUI.Update(seconds),
             draw: () =>
