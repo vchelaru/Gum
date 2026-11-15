@@ -1048,7 +1048,16 @@ public partial class GraphicalUiElement
         if ((audience & ReferenceAudience.ExposedName) != 0)
         {
             GraphicalUiElement container = mWhatContainsThis!;
-            container.ReportReferenceSourceChanged(container.FindExposedNameOf(((InstanceSave)Tag!).Name, propertyName)!, value);
+            string exposedName = container.FindExposedNameOf(((InstanceSave)Tag!).Name, propertyName)!;
+
+            // SetProperty reports even when the value is the same, and a Forms control sets its visual that
+            // way, so a value the exposed name was last reported with is not reported again.
+            bool unchanged = container._referenceInputs != null &&
+                container._referenceInputs.TryGetValue(exposedName, out object? last) && Equals(last, value);
+            if (!unchanged)
+            {
+                container.ReportReferenceSourceChanged(exposedName, value);
+            }
         }
     }
 
