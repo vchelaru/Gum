@@ -266,7 +266,17 @@ namespace RenderingLibrary.Graphics
                 ApplyCamera(managers.Canvas, layer, matrix: null);
                 try
                 {
-                    DrawList(whatToRender, managers, layer);
+                    if (GroupAll)
+                    {
+                        // SPIKE (GUM_GROUP_ALL=1): NOT z-order or clip safe. Draws the whole scene grouped by type.
+                        PreRender(whatToRender);
+                        layer?.SortRenderables();
+                        GroupAllDraw(whatToRender, managers);
+                    }
+                    else
+                    {
+                        DrawList(whatToRender, managers, layer);
+                    }
                 }
                 finally
                 {
@@ -278,6 +288,38 @@ namespace RenderingLibrary.Graphics
             finally
             {
                 ExitDrawScope();
+            }
+        }
+
+        // SPIKE
+        static readonly bool GroupAll = Environment.GetEnvironmentVariable("GUM_GROUP_ALL") is "1" or "2";
+        static readonly bool GroupFlat = Environment.GetEnvironmentVariable("GUM_GROUP_ALL") == "2"; // control: same flatten, DFS order
+        readonly List<IRenderableIpso>[] _groups = { new(), new(), new(), new() };
+
+        void GroupAllCollect(IList<IRenderableIpso> list)
+        {
+            for (int i = 0; i < list.Count; i++)
+            {
+                var r = list[i];
+                if (!r.Visible) continue;
+                IRenderableIpso inner = r is GraphicalUiElement e && e.RenderableComponent is IRenderableIpso c ? c : r;
+                if (GroupFlat) { if (inner is not InvisibleRenderable) _groups[0].Add(r); }
+                else if (inner is NineSlice) _groups[0].Add(r);
+                else if (inner is Sprite) _groups[1].Add(r);
+                else if (inner is SkiaGum.Text) _groups[3].Add(r);
+                else if (inner is not InvisibleRenderable) _groups[2].Add(r);
+                GroupAllCollect(r.Children);
+            }
+        }
+
+        void GroupAllDraw(IList<IRenderableIpso> roots, SystemManagers managers)
+        {
+            foreach (var g in _groups) g.Clear();
+            GroupAllCollect(roots);
+            foreach (var g in _groups)
+            {
+                for (int i = 0; i < g.Count; i++) g[i].Render(managers);
+                SpriteBatch.Flush();
             }
         }
 
