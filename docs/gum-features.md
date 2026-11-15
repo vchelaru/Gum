@@ -90,7 +90,7 @@ Position and size objects in pixels, percentages, or relative to their children,
 
 Draw rectangles and circles with fills, outlines, gradients, drop shadows, and rounded corners.
 
-<figure><img src=".gitbook/assets/30_05 03 56.png" alt=""><figcaption><p>Rectangles with outline, corner radius, and gradient</p></figcaption></figure>
+<figure><img src=".gitbook/assets/15_16 12 40.png" alt=""><figcaption><p>An item card built from Gum rectangles, with a gradient, a drop shadow, and rounded corners</p></figcaption></figure>
 
 ### [Shaders and Effects](code/standard-visuals/containerruntime.md#render-target-shaders-rendertargeteffect)
 
