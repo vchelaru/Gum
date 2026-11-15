@@ -10,6 +10,11 @@ Glfw.Init();
 Glfw.WindowHint(GlfwWindowHint.ContextVersionMajor, 3);
 Glfw.WindowHint(GlfwWindowHint.ContextVersionMinor, 3);
 Glfw.WindowHint(GlfwWindowHint.OpenGlProfile, 0x32001 /* GLFW_OPENGL_CORE_PROFILE */);
+if (OperatingSystem.IsMacOS())
+{
+    // macOS creates a core profile context only with the forward compatibility hint, and then provides OpenGL 4.1.
+    Glfw.WindowHint((GlfwWindowHint)0x22006 /* GLFW_OPENGL_FORWARD_COMPAT */, Glfw.Constants.GLFW_TRUE);
+}
 using GlfwWindow window = Glfw.CreateWindow(new GlfwWindow.CreateInfo { Title = "{{ProjectName}}", Size = new Brutal.Numerics.int2(800, 450) });
 window.MakeContextCurrent();
 Glfw.SwapInterval(1);

@@ -195,6 +195,19 @@ public class PlatformProjectScaffolderTests : IDisposable
     }
 
     [Fact]
+    public void Create_Brutal_ShouldSetForwardCompatHintOnMacOs()
+    {
+        // macOS creates a core profile OpenGL context only with GLFW_OPENGL_FORWARD_COMPAT (0x22006).
+        string projectDirectory = Path.Combine(_tempDirectory, "MyGame");
+
+        _sut.Create(projectDirectory, HostPlatform.Brutal, includeFormsTemplate: true);
+
+        string program = File.ReadAllText(Path.Combine(projectDirectory, "Program.cs"));
+        program.ShouldContain("if (OperatingSystem.IsMacOS())");
+        program.ShouldContain("(GlfwWindowHint)0x22006");
+    }
+
+    [Fact]
     public void Create_SilkNet_ShouldReferenceSdlWindowingAndInputButNoAngleNatives()
     {
         // Desktop OpenGL needs no ANGLE natives, so the project restores and runs on Windows, macOS and
