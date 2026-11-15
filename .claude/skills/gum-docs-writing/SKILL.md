@@ -12,6 +12,8 @@ Docs are for people who want to get something done and will not read more than t
 
 **For every sentence, section and screenshot, ask: is this absolutely critical for getting the task done? If not, cut it.** Detail the tool, a warning message or the code already shows is not critical.
 
+**Write the page, then cut it in half before committing: a property page says what it does in one or two sentences and when to change it in one, and repeats nothing the tool already shows in a label, tooltip or subtext. If a sentence would not change what the reader does, delete it.**
+
 **XML doc comments in the C# runtimes are docs too, with the same readers.** Say what the member does and its one precondition; do not add advice about other members.
 
 ## Before You Write and Before You Commit
