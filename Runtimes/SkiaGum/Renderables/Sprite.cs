@@ -330,7 +330,7 @@ public class Sprite : RenderableShapeBase, IAspectRatio, ITextureCoordinate, IAn
     }
 
     private void ApplyTint(SKPaint paint) => ApplyTextureTint(paint,
-        ColorOperation == ColorOperation.ColorTextureAlpha ? SKBlendMode.SrcIn : SKBlendMode.Modulate);
+        ColorOperation == ColorOperation.ColorTextureAlpha ? SKBlendMode.SrcIn : SKBlendMode.Modulate, skipOpaqueWhite: true);
 
     // Set while the draw path rebuilds the cached paint. A sprite that joins a DrawAtlas batch passes its tint
     // as a per-sprite color, so the paint is built without the tint filter and an animated Color builds no

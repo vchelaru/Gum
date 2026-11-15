@@ -1,4 +1,4 @@
-using Gum.Converters;
+﻿using Gum.Converters;
 using Gum.DataTypes;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
@@ -1262,13 +1262,13 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
     /// which Skia applies to every image draw, already carries <see cref="Alpha"/>; an Alpha of 128
     /// draws at half opacity, as on MonoGame.
     /// </summary>
-    protected void ApplyTextureTint(SKPaint paint, SKBlendMode tintBlendMode)
+    protected void ApplyTextureTint(SKPaint paint, SKBlendMode tintBlendMode, bool skipOpaqueWhite = false)
     {
-        if (ColorOperation != ColorOperation.Add && tintBlendMode == SKBlendMode.Modulate && Color.Alpha == 255
+        if (skipOpaqueWhite && ColorOperation != ColorOperation.Add && tintBlendMode == SKBlendMode.Modulate && Color.Alpha == 255
             && Color.Red == 255 && Color.Green == 255 && Color.Blue == 255)
         {
             // Opaque Modulate by white is the identity, but Skia still runs a color filter for it (about 0.0008 ms per
-            // image draw). White is the default for every sprite and nine-slice.
+            // image draw). White is the default for every sprite. NineSlice keeps the filter: without it macOS draws one lattice texel per cell up to 121 levels from MonoGame.
             return;
         }
 

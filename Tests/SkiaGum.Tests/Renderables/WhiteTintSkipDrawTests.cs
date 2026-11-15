@@ -1,6 +1,7 @@
 using Gum;
 using Gum.Wireframe;
-using RenderingLibrary;using RenderingLibrary.Graphics;
+using RenderingLibrary;
+using RenderingLibrary.Graphics;
 using Shouldly;
 using SkiaGum.Renderables;
 using SkiaSharp;
