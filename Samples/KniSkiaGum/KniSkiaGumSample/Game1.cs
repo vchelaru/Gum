@@ -23,12 +23,28 @@ public class Game1 : Game
     private int _clicks;
     private Label? _sizeLabel;
 
-    public Game1()
+    private readonly bool _benchmark;
+    private readonly bool _hidden;
+    private readonly string? _benchmarkPath;
+
+    public Game1() : this(Array.Empty<string>())
     {
+    }
+
+    public Game1(string[] args)
+    {
+        int benchmarkIndex = Array.IndexOf(args, "--benchmark");
+        _benchmark = benchmarkIndex >= 0;
+        _hidden = args.Contains("--hidden");
+        // Resolved against the launch directory, which is where the caller expects the file.
+        _benchmarkPath = _benchmark && benchmarkIndex + 1 < args.Length && !args[benchmarkIndex + 1].StartsWith("--")
+            ? Path.GetFullPath(args[benchmarkIndex + 1]) : Path.GetFullPath("benchmark-result.md"); // the exe is WinExe, so stdout is invisible: with no path the row goes to benchmark-result.md in the launch directory
+
         _graphics = new GraphicsDeviceManager(this)
         {
-            PreferredBackBufferWidth = 1024,
-            PreferredBackBufferHeight = 640,
+            PreferredBackBufferWidth = _benchmark ? 1280 : 1024,
+            PreferredBackBufferHeight = _benchmark ? 720 : 640,
+            SynchronizeWithVerticalRetrace = !_benchmark,
         };
         IsMouseVisible = true;
         Window.AllowUserResizing = true;
@@ -42,6 +58,13 @@ public class Game1 : Game
 
         GumUI.UseGamepadDefaults();
 
+        if (_benchmark)
+        {
+            RunBenchmark();
+            Exit();
+            return;
+        }
+
         BuildUi();
 
         base.Initialize();
@@ -49,6 +72,11 @@ public class Game1 : Game
 
     protected override void Update(GameTime gameTime)
     {
+        if (_benchmark)
+        {
+            return; // the run finished inside Initialize; Exit() takes effect after the first loop pass
+        }
+
         GumUI.Update(gameTime);
 
         // Gum's canvas size should always equal the back buffer size, including after a resize.
@@ -61,9 +89,39 @@ public class Game1 : Game
 
     protected override void Draw(GameTime gameTime)
     {
+        if (_benchmark)
+        {
+            return;
+        }
+
         GraphicsDevice.Clear(Color.CornflowerBlue);
         GumUI.Draw();
         base.Draw(gameTime);
+    }
+
+    private void RunBenchmark()
+    {
+        GumSamples.Benchmark.BenchmarkRunner.RequireRelease();
+        if (_hidden)
+        {
+            GumSamples.Benchmark.BenchmarkHost.HideWindow(Window.Handle);
+        }
+        GumSamples.Benchmark.BenchmarkScreen screen = new GumSamples.Benchmark.BenchmarkScreen();
+        screen.AddToRoot();
+        Console.WriteLine("GL_RENDERER: " + GumSamples.Benchmark.BenchmarkHost.Renderer());
+        GumSamples.Benchmark.BenchmarkRunner.Run("KNI Skia (DesktopGL)", screen,
+            update: seconds => GumUI.Update(seconds),
+            draw: () =>
+            {
+                GraphicsDevice.Clear(Color.CornflowerBlue);
+                GumUI.Draw();
+            },
+            sync: () =>
+            {
+                GraphicsDevice.Present();
+                GumSamples.Benchmark.BenchmarkHost.Finish();
+            },
+            _benchmarkPath);
     }
 
     private void BuildUi()

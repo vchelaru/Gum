@@ -26,6 +26,16 @@
 		<PackageReference Include="nkast.Kni.Platform.SDL2.GL" Version="[4.3.9001]" />
 	</ItemGroup>
 
+	<!-- The shared benchmark scene and runner (#8052). -->
+	<ItemGroup>
+		<Compile Include="..\..\Benchmark\*.cs" Link="Benchmark\%(Filename)%(Extension)" />
+		<Compile Include="..\..\BenchmarkSdl\BenchmarkHost.cs" Link="Benchmark\BenchmarkHost.cs" />
+		<!-- The nine-slice texture BenchmarkScreen loads, next to the exe (this sample loads no .gumx). -->
+		<None Include="..\..\SilkNetGum\SilkNetGumSample\Content\GumProject\Frame.png" Link="Frame.png">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+	</ItemGroup>
+
 	<ItemGroup>
 		<ProjectReference Include="..\..\..\Runtimes\KniSkiaGum\KniSkiaGum.csproj" />
 	</ItemGroup>
