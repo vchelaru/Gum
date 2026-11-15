@@ -21,7 +21,29 @@ public class HeadProcessTests
 
     private static bool CanRunTheHead => TestEnvironment.CanUseDisplay("GUM_RUN_HEAD_PROCESS_TEST");
 
-    private sealed record HeadRun(int ExitCode, string Output, string Errors, TimeSpan Elapsed);
+    private sealed record HeadRun(int ExitCode, string Output, string Errors, TimeSpan Elapsed, string LogTail)
+    {
+        /// <summary>
+        /// What an assertion on this run prints. A native crash (exit 139 is SIGSEGV, 128 + signal on Linux)
+        /// leaves stderr empty, so this adds the exit code and the tail of the head's own log (GL adapter, stages).
+        /// </summary>
+        public string Diagnosis => FormatDiagnosis(ExitCode, Elapsed, Errors, LogTail, !OperatingSystem.IsWindows());
+    }
+
+    private static string FormatDiagnosis(int exitCode, TimeSpan elapsed, string errors, string logTail, bool exitCodeIsShellStyle) =>
+        $"exit code {exitCode} after {elapsed.TotalMilliseconds:F0} ms"
+        + (exitCodeIsShellStyle && exitCode > 128 ? $" (signal {exitCode - 128})" : "")
+        + $"\nstderr: {errors}\nhead log tail:\n{logTail}";
+
+    [Fact]
+    public void FormatDiagnosis_ExitCode139_NamesSignal11AndKeepsTheLogTail()
+    {
+        string text = FormatDiagnosis(139, TimeSpan.FromMilliseconds(7000), "", "device.ready renderer 'llvmpipe'", exitCodeIsShellStyle: true);
+
+        text.ShouldContain("signal 11");
+        text.ShouldContain("device.ready renderer 'llvmpipe'");
+        text.ShouldContain("7000 ms");
+    }
 
     [SkippableFact]
     public async Task UnattendedRun_LoadsAProject_AndExitsOnceReady()
@@ -107,7 +129,7 @@ public class HeadProcessTests
         HeadRun run = await RunHead(scratch.Project, "--exit-after", "90", "--select", "BigTextureScreen#SpriteInstance",
             "--screenshot", scratch.Screenshot, "--user-data", scratch.UserData);
 
-        run.ExitCode.ShouldBe(0, run.Errors);
+        run.ExitCode.ShouldBe(0, run.Diagnosis);
         run.Errors.ShouldNotContain("Error setting SourceFile");
     }
 
@@ -122,7 +144,7 @@ public class HeadProcessTests
         HeadRun run = await RunHead(scratch.Project, "--exit-after", "90", "--select", "BigTextureScreen#SpriteInstance",
             "--screenshot", scratch.Screenshot, "--user-data", scratch.UserData);
 
-        run.ExitCode.ShouldBe(0, run.Errors);
+        run.ExitCode.ShouldBe(0, run.Diagnosis);
         run.Errors.ShouldContain("BigTexture.png");
         run.Errors.ShouldContain("maximum Texture2D size of 8192");
     }
@@ -240,10 +262,25 @@ public class HeadProcessTests
         return startInfo;
     }
 
+    private static string ReadLogTail(string logPath)
+    {
+        try
+        {
+            return string.Join('\n', File.ReadLines(logPath).TakeLast(25));
+        }
+        catch (IOException)
+        {
+            return "(no head log)";
+        }
+    }
+
     private static async Task<HeadRun> RunHead(params string[] arguments)
     {
         Stopwatch stopwatch = Stopwatch.StartNew();
-        using Process process = Process.Start(HeadStartInfo(arguments))!;
+        string logPath = Path.Combine(Path.GetTempPath(), "GumHeadLog_" + Guid.NewGuid().ToString("N") + ".log");
+        ProcessStartInfo startInfo = HeadStartInfo(arguments);
+        startInfo.Environment["GUM_TOOL_LOG"] = logPath;
+        using Process process = Process.Start(startInfo)!;
         Task<string> output = process.StandardOutput.ReadToEndAsync();
         Task<string> errors = process.StandardError.ReadToEndAsync();
         using CancellationTokenSource timeout = new CancellationTokenSource(TimeSpan.FromMinutes(3));
@@ -257,7 +294,9 @@ public class HeadProcessTests
             throw new TimeoutException("The head did not exit within three minutes, although --exit-after should force an exit well before then.");
         }
         stopwatch.Stop();
-        return new HeadRun(process.ExitCode, await output, await errors, stopwatch.Elapsed);
+        HeadRun result = new HeadRun(process.ExitCode, await output, await errors, stopwatch.Elapsed, ReadLogTail(logPath));
+        try { File.Delete(logPath); } catch (IOException) { }
+        return result;
     }
 
     private static string FindRepositoryRoot()
