@@ -64,7 +64,7 @@ public class NineSliceCrossRuntimeTests : BaseTestClass
             NineSliceCases.CellSize, NineSliceCases.Columns);
 
         string[] unexpected = differences
-            .Select(difference => $"{difference.Name} ({difference.DifferingPixels} px differ)")
+            .Select(difference => $"{difference.Name} ({difference.DifferingPixels} px differ, max channel difference {difference.MaxChannelDifference})")
             .Where(description => !KnownDifferences.ContainsKey($"{sheetName}/{description.Split(' ')[0]}"))
             .ToArray();
         unexpected.ShouldBeEmpty();
