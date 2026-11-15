@@ -19,6 +19,7 @@ public abstract class DialogViewModel : ViewModel
     protected DialogViewModel()
     {
         AffirmativeText = "OK";
+        AffirmativeIsDefault = true;
         NegativeText = "Cancel";
         
         AffirmativeCommand = new RelayCommand(OnAffirmative, CanExecuteAffirmative);
@@ -41,6 +42,12 @@ public abstract class DialogViewModel : ViewModel
     /// without Alt. Only for dialogs with nothing to type into, such as the delete confirmation.
     /// </summary>
     protected bool AnswersOnAccessKeyAlone { get; set; }
+
+    /// <summary>
+    /// Whether Enter presses the affirmative button. A close-only dialog with lists (Settings) sets
+    /// this false so an Enter on a list item cannot dismiss it.
+    /// </summary>
+    public bool AffirmativeIsDefault { get => Get<bool>(); protected set => Set(value); }
 
     /// <summary>
     /// When true, Enter on a focused list item answers the dialog affirmatively. A list item takes

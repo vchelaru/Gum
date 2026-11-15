@@ -323,6 +323,7 @@ public class ImportFromGumxViewModel : DialogViewModel
             else if (result.SkippedElements.Count > 0)
             {
                 AffirmativeText = "Close";
+                AffirmativeIsDefault = false;
                 List<string> skippedLines = result.DescribeSkipped();
                 string elementList = ImportResult.CapLines(skippedLines);
                 WarningMessage = $"{skippedLines.Count} item(s) were not imported:\n{elementList}";

@@ -57,6 +57,7 @@ public class SettingsDialogViewModel : DialogViewModel
     {
         Title = "Settings";
         AffirmativeText = "Close";
+        AffirmativeIsDefault = false;
         NegativeText = null;
         _searchText = "";
         ClearSearchCommand = new RelayCommand(() => SearchText = "", () => HasSearchText);

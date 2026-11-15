@@ -8,6 +8,7 @@ using Avalonia.VisualTree;
 using Gum.Avalonia.Dialogs;
 using Gum.Diagnostics;
 using Gum.Services.Dialogs;
+using ImportFromGumxPlugin.ViewModels;
 using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
 
@@ -86,6 +87,69 @@ public class DialogKeyboardTests
         PressCopy(window);
 
         ClipboardText(window).ShouldNotBeNull().ShouldContain("Delete Button?");
+        window.Close();
+    }
+
+    [AvaloniaFact]
+    public void PluginsDialog_Enter_DoesNotCloseTheWindow()
+    {
+        Moq.Mock<Gum.Plugins.IPluginManager> pluginManager = new Moq.Mock<Gum.Plugins.IPluginManager>();
+        pluginManager.Setup(manager => manager.GetAllPluginSummaries()).Returns(new List<Gum.Plugins.PluginSummary>
+        {
+            new Gum.Plugins.PluginSummary("A", "A", IsEnabled: true, HasFailureDetails: false, PluginHandle: new object()),
+        });
+        pluginManager.Setup(manager => manager.GetPluginScanReport())
+            .Returns(new Gum.Plugins.PluginScanReport("/plugins", FolderExists: true, Files: Array.Empty<Gum.Plugins.PluginFileScan>()));
+        PluginsDialogViewModel viewModel = new PluginsDialogViewModel(
+            Moq.Mock.Of<IDialogService>(), pluginManager.Object, Moq.Mock.Of<Gum.Services.IClipboardService>());
+
+        AssertEnterOnAFocusedControlKeepsOpen(viewModel);
+    }
+
+    [AvaloniaFact]
+    public void StandardDiffDetailsDialog_CloseButton_IsNotTheDefaultButton()
+    {
+        StandardDiffDetailsViewModel viewModel = new StandardDiffDetailsViewModel(
+            "Sprite", new[] { new StandardDiffRowViewModel("Variable", "Width differs") });
+        DialogWindow window = Open(viewModel);
+
+        AffirmativeButton(window).IsDefault.ShouldBeFalse();
+        window.Close();
+    }
+
+    [AvaloniaFact]
+    public void AffirmativeIsDefault_ChangedWhileOpen_UpdatesTheButtonsDefaultState()
+    {
+        ToggleableDefaultViewModel viewModel = new ToggleableDefaultViewModel();
+        DialogWindow window = Open(viewModel);
+        AffirmativeButton(window).IsDefault.ShouldBeTrue();
+
+        viewModel.TurnOffDefault();
+        Dispatcher.UIThread.RunJobs();
+
+        AffirmativeButton(window).IsDefault.ShouldBeFalse();
+        window.Close();
+    }
+
+    private static Button AffirmativeButton(DialogWindow window) =>
+        window.GetVisualDescendants().OfType<Button>().Single(button => button.Name == DialogWindow.AffirmativeButtonName);
+
+    private sealed class ToggleableDefaultViewModel : DialogViewModel
+    {
+        public void TurnOffDefault() => AffirmativeIsDefault = false;
+    }
+
+    private static void AssertEnterOnAFocusedControlKeepsOpen(DialogViewModel viewModel)
+    {
+        DialogWindow window = Open(viewModel);
+        Control? target = window.GetVisualDescendants().OfType<Control>()
+            .FirstOrDefault(control => control.Focusable && control.IsEffectivelyVisible && control is not Button);
+        (target ?? window).Focus();
+
+        window.KeyPress(Key.Enter, RawInputModifiers.None, PhysicalKey.Enter, "\r");
+        Dispatcher.UIThread.RunJobs();
+
+        window.IsVisible.ShouldBeTrue("Enter must not press a Close button");
         window.Close();
     }
 
