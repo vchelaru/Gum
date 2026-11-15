@@ -29,7 +29,9 @@ public class ExportAsImageAlphaTests
             // anything loads; switching it back from true leaves the shared font atlas premultiplied, so the
             // straight run after a premultiplied one reads glyph edges at half color (reproduced by running
             // the true run first; clearing LoaderManager does not help). Separate theory rows left the order
-            // to the test runner and failed on CI when it put the premultiplied row first.
+            // to the test runner and failed on CI when it put the premultiplied row first. Switching the
+            // setting back is unsupported, and this test leaves the process with premultiplied font state
+            // (no other Gum.Avalonia.Tests class sets or reads UsePremultipliedAlpha).
             RunWithAlphaMode(premultiplied: false);
             RunWithAlphaMode(premultiplied: true);
         });
