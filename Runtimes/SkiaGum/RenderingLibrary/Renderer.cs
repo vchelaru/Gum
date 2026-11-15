@@ -586,7 +586,9 @@ namespace RenderingLibrary.Graphics
             {
                 if (RenderUsingHierarchy)
                 {
-                    DrawList(renderable.Children, managers);
+                    // The list this one belongs to was already pre-rendered with its whole subtree. Pre-rendering
+                    // again at every depth called PreRender several times per node per frame.
+                    DrawList(renderable.Children, managers, prerender: false);
                 }
 
                 if (renderable.ClipsChildren)
