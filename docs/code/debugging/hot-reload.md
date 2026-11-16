@@ -44,7 +44,11 @@ Localization files are reloaded too. Hot reload reacts to the files in the proje
 
 Animation chain files (`.achx`, `.achj`) are reloaded when a Sprite or NineSlice uses one as its `SourceFile`: Gum drops the cached chains, reads the file again and assigns it to every visual using it, except those whose chains your code replaced. A chain file no visual uses is ignored. The playing chain is found again by name, so reordering chains is fine. If the chain was renamed or deleted, the visual keeps its last frame and Gum reports a `ReloadFailed` issue (`MatchesRestart` is `false`), since a restart would show nothing. Chains your code assigned to the visual's `AnimationChains` after the file was assigned are left alone.
 
-Images are reloaded when you replace an image file that a Sprite or NineSlice shows, or one that an animation chain file names for its frames, with an image of the same size. Gum writes the new pixels into the texture it already loaded, with the same premultiplied alpha and edge handling as a first load. The texture itself stays the same object, so everything drawing it shows the new art, including visuals your code created and other `GumService`s in the same process. Available in December 2026, or now if building Gum from source.
+Images are reloaded when you replace an image file that a Sprite or NineSlice shows, or one that an animation chain file names for its frames, with an image of the same size. Everything that draws the image shows the new art, including visuals your code created and other `GumService`s in the same process.
+
+{% hint style="info" %}
+Image reloading is available in December 2026, or now if building Gum from source.
+{% endhint %}
 
 When a reload is triggered, Gum automatically copies each changed `.fnt` and the texture pages it names from the source project to the same place in the bin-side folder (`FontCache/` for generated fonts, any folder for a `CustomFontFile`), and evicts cached fonts so they are reloaded from disk. Every `Text` then resolves its font again, so a font regenerated under the same name, or one that is written after the project was saved, shows on `Text` that is already on screen.
 
@@ -60,11 +64,11 @@ An instance whose component was renamed, moved to another folder, or changed to 
 
 Hot reload is focused on Gum element definitions. The following are **not** automatically reloaded:
 
-* **Shader files** — When a file that a container's `SourceShaderFile` points at changes (any extension), the shader is compiled again and assigned to every container using it. The element tree is not rebuilt. A file the shader `#include`s reloads it too, when the shader loads through `UseShadowDusk()` on MonoGame, KNI, FNA or Skia (raylib and Slang `import` are not tracked). Available in December 2026, or now if building Gum from source.
-* **Images that changed size** — A loaded texture cannot change size, so an image replaced with one of another size keeps showing the old art until the game restarts. The same holds for a texture Gum cannot write to (for example a compressed `.dds`, or a raylib image whose pixel format changed) and for an image that was not cached because `LoaderManager.Self.CacheTextures` is `false`. Gum reports the file as a `ReloadFailed` issue, so `MatchesRestart` is `false`, and lists it in every later result until the game restarts.
-* **SVG and Lottie files (Skia)** — A changed `.svg` that an SvgRuntime shows, or a Lottie `.json` that a LottieAnimationRuntime plays, keeps showing the old document until the game restarts. Gum reports it as a `ReloadFailed` issue.
-* **Animation files** — `.ganx` animation definitions are not reloaded.
-* **Runtime state on existing instances** — A reload applies the variables the project changed and leaves the rest alone, so a value your code set (e.g., `Text` or `Width`) stays unless the project changed that variable. See [Preserving Runtime State](#preserving-runtime-state) below.
+* **Shader files**: when a file that a container's `SourceShaderFile` points at changes (any extension), the shader is compiled again and assigned to every container using it. The element tree is not rebuilt. A file the shader `#include`s reloads it too, when the shader loads through `UseShadowDusk()` on MonoGame, KNI, FNA or Skia (raylib and Slang `import` are not tracked). Available in December 2026, or now if building Gum from source.
+* **Images that changed size**: an image replaced with one of another size keeps showing the old art until the game restarts. So does a compressed image such as `.dds`, and any image when `LoaderManager.Self.CacheTextures` is `false`. Gum reports the file as a `ReloadFailed` issue, so `MatchesRestart` is `false`, and lists it in every later result until the game restarts.
+* **SVG and Lottie files (Skia)**: a changed `.svg` that an SvgRuntime shows, or a Lottie `.json` that a LottieAnimationRuntime plays, keeps showing the old document until the game restarts. Gum reports it as a `ReloadFailed` issue.
+* **Animation files**: `.ganx` animation definitions are not reloaded.
+* **Runtime state on existing instances**: a reload applies the variables the project changed and leaves the rest alone, so a value your code set (e.g., `Text` or `Width`) stays unless the project changed that variable. See [Preserving Runtime State](#preserving-runtime-state) below.
 
 
 ### Known Limitation: Cleared Tags
