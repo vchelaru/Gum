@@ -111,6 +111,7 @@ public class NineSliceVertexBatchGpuTests : IDisposable
             {
                 beforeFrame?.Invoke(frame);
                 surface.Canvas.Clear(SKColors.Black);
+                managers.Renderer.NotifyHostFrameAdvanced();
                 managers.Draw();
             }
             drawCalls = managers.Renderer.RenderStateChangeStatistics.DrawCallCount;
@@ -584,5 +585,29 @@ public class NineSliceVertexBatchGpuTests : IDisposable
         allocated.ShouldBe(0);
         // Moving the scene changes both batches' vertices, so both are rebuilt.
         movedBuilds.ShouldBe(2);
+    }
+    [Fact]
+    public void Draw_BatchedNineSliceMovedThenResized_DrawsItsNewRectangle()
+    {
+        NineSliceRuntime? moving = null;
+        AssertBatchedMatchesUnbatched((root, _) =>
+        {
+            root.AddChild(Frame(_textureA, 10, 10, 60, 40));
+            moving = Frame(_textureA, 90, 10, 60, 40);
+            root.AddChild(moving);
+            root.AddChild(Frame(_textureA, 10, 80, 60, 40));
+        }, frame =>
+        {
+            if (frame == 1)
+            {
+                moving!.X = 100;
+                moving.Y = 20;
+            }
+            if (frame == 2)
+            {
+                moving!.Width = 80;
+                moving.Height = 70;
+            }
+        });
     }
 }
