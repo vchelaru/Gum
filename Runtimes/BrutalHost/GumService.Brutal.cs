@@ -93,6 +93,7 @@ public partial class GumService : GumServiceSkiaInteractiveBase, IGumService
         }
 
         _targetHolder.EnsureSize(width, height);
+        _backend.BeginFrame();
         SKCanvas? canvas = _targetHolder.BeginFrame();
         IBrutalTarget? target = _targetHolder.Target;
         if (canvas == null || target == null)

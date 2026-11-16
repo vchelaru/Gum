@@ -96,6 +96,8 @@ internal sealed class GlBackend : IBrutalGpuBackend
     public void Present(IBrutalTarget target, int width, int height) { }
 
     // Everything is in GL command order; nothing to wait for.
+    public void BeginFrame() { }
+
     public void WaitForGpu() { }
 
     public void Dispose()

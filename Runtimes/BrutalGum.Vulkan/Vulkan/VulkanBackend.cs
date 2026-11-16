@@ -9,12 +9,12 @@ using System;
 
 namespace Gum;
 
-/// <summary><see cref="IBrutalTarget"/> over a SkiaGameRendering.Brutal Vulkan render target.</summary>
-internal sealed class VulkanTarget : IBrutalTarget
+/// <summary>Gum's own image: <see cref="IBrutalTarget"/> over a SkiaGameRendering.Brutal Vulkan render target.</summary>
+internal sealed class VulkanTextureTarget : IBrutalTarget
 {
     private readonly SkiaRenderTarget2D _target;
 
-    public VulkanTarget(SkiaVulkanContext context, int width, int height) =>
+    public VulkanTextureTarget(SkiaVulkanContext context, int width, int height) =>
         _target = new SkiaRenderTarget2D(context, width, height);
 
     public SKCanvas Canvas => _target.Canvas;
@@ -34,7 +34,13 @@ internal sealed class VulkanTarget : IBrutalTarget
 
 /// <summary>Owns the SkiaVulkanContext over the game's Vulkan objects and, unless turned off, the swapchain presenter.</summary>
 internal sealed class VulkanBackend : IBrutalGpuBackend
+#if BRUTAL_VULKAN_DIRECT
+    , IBrutalDirectPass
+#endif
 {
+    private const uint ImageLayoutColorAttachmentOptimal = 2;
+    private const uint ImageLayoutPresentSrcKhr = 1000001002;
+
     private readonly PhysicalDevice _physicalDevice;
     private readonly Device _device;
     private readonly Queue _queue;
@@ -42,9 +48,14 @@ internal sealed class VulkanBackend : IBrutalGpuBackend
     private readonly VkSurfaceKHR _surface;
     private readonly SkiaVulkanContext _context;
     private VulkanPresenter? _presenter;
-    private VulkanTarget? _presentedTarget;
+    private VulkanTextureTarget? _presentedTexture;
     private int _presentedWidth;
     private int _presentedHeight;
+    private bool _framePending;
+#if BRUTAL_VULKAN_DIRECT
+    private SkiaDirectCanvas? _direct;
+    private bool _directConfigured;
+#endif
 
     private readonly Func<IDisposable>? _acquireQueueLock;
 
@@ -74,7 +85,70 @@ internal sealed class VulkanBackend : IBrutalGpuBackend
 
     public void WaitForGpu() => _device.WaitIdle();
 
-    public IBrutalTarget CreateTarget(int width, int height) => new VulkanTarget(_context, width, height);
+    public void BeginFrame() => _framePending = true;
+
+    /// <summary>True when Draw announced this Begin with <see cref="BeginFrame"/>; clears the flag.</summary>
+    internal bool TakeFrame()
+    {
+        bool pending = _framePending;
+        _framePending = false;
+        return pending;
+    }
+
+    public IBrutalTarget CreateTarget(int width, int height) =>
+        new PresentOrTextureTarget(
+            () => PresentToWindow, TakeFrame,
+#if BRUTAL_VULKAN_DIRECT
+            this,
+#else
+            null,
+#endif
+            () => new VulkanTextureTarget(_context, width, height),
+            WaitForGpuLocked, width, height);
+
+    // Called from inside a pass, where Gum holds no queue lock of its own; vkDeviceWaitIdle needs every queue synchronized.
+    private void WaitForGpuLocked()
+    {
+        using (_acquireQueueLock?.Invoke())
+        {
+            _device.WaitIdle();
+        }
+    }
+
+    private VulkanPresenter EnsurePresenter() =>
+        _presenter ??= new VulkanPresenter(
+            _physicalDevice, _device, _queue, _queueFamily, _surface, _acquireQueueLock
+#if BRUTAL_VULKAN_DIRECT
+            , releaseSwapchainImageUsers: () => _direct?.ReleaseCachedSurfaces()
+#endif
+            );
+
+#if BRUTAL_VULKAN_DIRECT
+    SKCanvas IBrutalDirectPass.Canvas => _direct!.Canvas;
+
+    /// <summary>Acquires the next swapchain image (rebuilding the swapchain on a size change) and begins drawing into it.</summary>
+    void IBrutalDirectPass.Begin(int width, int height)
+    {
+        VulkanPresenter presenter = EnsurePresenter();
+        _direct ??= new SkiaDirectCanvas(_context, cacheSurfaces: true);
+        if (!_directConfigured || _presentedWidth != width || _presentedHeight != height)
+        {
+            presenter.Configure(width, height, null, default);
+            _directConfigured = true;
+            _presentedTexture = null;
+            _presentedWidth = width;
+            _presentedHeight = height;
+        }
+        VkImage image = presenter.AcquireForDirect();
+        (int swapchainWidth, int swapchainHeight) = presenter.SwapchainSize;
+        // Transparent, like Gum's own image starts each pass; the opaque window shows it as black.
+        _direct.Begin(
+            (ulong)(nint)image.VkHandle, (uint)presenter.SwapchainFormat, swapchainWidth, swapchainHeight,
+            ImageLayoutColorAttachmentOptimal, clear: true, imageUsage: (uint)presenter.SwapchainUsage);
+    }
+
+    void IBrutalDirectPass.End() => _direct!.End(finalLayout: ImageLayoutPresentSrcKhr);
+#endif
 
     public void Present(IBrutalTarget target, int width, int height)
     {
@@ -83,23 +157,37 @@ internal sealed class VulkanBackend : IBrutalGpuBackend
             return;
         }
 
-        VulkanTarget vulkanTarget = (VulkanTarget)target;
-        _presenter ??= new VulkanPresenter(_physicalDevice, _device, _queue, _queueFamily, _surface, _acquireQueueLock);
-        if (!ReferenceEquals(_presentedTarget, vulkanTarget) || _presentedWidth != width || _presentedHeight != height)
+        PresentOrTextureTarget switching = (PresentOrTextureTarget)target;
+        VulkanPresenter presenter = EnsurePresenter();
+#if BRUTAL_VULKAN_DIRECT
+        if (switching.IsDirectPass)
         {
-            _presenter.Configure(width, height, vulkanTarget.Image, vulkanTarget.Format);
-            _presentedTarget = vulkanTarget;
+            presenter.PresentDirect();
+            return;
+        }
+        _directConfigured = false;
+#endif
+        VulkanTextureTarget texture = (VulkanTextureTarget)switching.Texture!;
+        if (!ReferenceEquals(_presentedTexture, texture) || _presentedWidth != width || _presentedHeight != height)
+        {
+            presenter.Configure(width, height, texture.Image, texture.Format);
+            _presentedTexture = texture;
             _presentedWidth = width;
             _presentedHeight = height;
         }
-        _presenter.Present();
+        presenter.Present();
     }
 
     public void Dispose()
     {
+        // The presenter releases the direct canvas's cached surfaces before it destroys the swapchain.
         _presenter?.Dispose();
         _presenter = null;
-        _presentedTarget = null;
+        _presentedTexture = null;
+#if BRUTAL_VULKAN_DIRECT
+        _direct?.Dispose();
+        _direct = null;
+#endif
         _context.Dispose();
     }
 }

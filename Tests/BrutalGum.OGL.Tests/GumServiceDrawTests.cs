@@ -63,6 +63,24 @@ public class GumServiceDrawTests : BaseTestClass
     }
 
     [Fact]
+    public void BeginFrame_PrecedesOnlyTheDrawnPass_NotTheCanvasCapturePasses()
+    {
+        // Gum.Brutal.Vulkan acquires a swapchain image on a Begin that follows BeginFrame, so the
+        // capture pass a new target gets (at Initialize and on resize) must not be preceded by it.
+        FakeBrutalInput input = new() { FramebufferWidth = 320, FramebufferHeight = 200 };
+
+        WithBackend(input, backend =>
+        {
+            backend.FrameEvents.ShouldBe(new[] { "Begin" });
+
+            input.FramebufferWidth = 640;
+            GumService.Default.Draw();
+
+            backend.FrameEvents.ShouldBe(new[] { "Begin", "Begin", "BeginFrame", "Begin" });
+        });
+    }
+
+    [Fact]
     public void Draw_AfterTheFramebufferSizeChanges_RecreatesTheTargetAndResizesGum()
     {
         FakeBrutalInput input = new() { FramebufferWidth = 320, FramebufferHeight = 200 };

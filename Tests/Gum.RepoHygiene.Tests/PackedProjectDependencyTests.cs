@@ -22,6 +22,19 @@ public class PackedProjectDependencyTests
         EnumerateSolutionProjects().Count(IsPackable).ShouldBeGreaterThan(20);
     }
 
+    [Theory]
+    [InlineData("'$(SgrSource)' != ''", true)]
+    [InlineData("'$(SgrSource)' == ''", false)]
+    [InlineData("'$(Configuration)' != 'Debug'", false)]
+    public void IsOptInOnly_SkipsOnlyAReferenceAPropertyMustSwitchOn(string condition, bool expected)
+    {
+        XElement onItemGroup = XElement.Parse($"<ItemGroup Condition=\"{condition}\"><ProjectReference Include=\"a.csproj\" /></ItemGroup>");
+        XElement onReference = XElement.Parse($"<ItemGroup><ProjectReference Include=\"a.csproj\" Condition=\"{condition}\" /></ItemGroup>");
+
+        IsOptInOnly(onItemGroup.Elements().Single()).ShouldBe(expected);
+        IsOptInOnly(onReference.Elements().Single()).ShouldBe(expected);
+    }
+
     [Fact]
     public void EveryProjectReferencedByAPackedProject_IsAlsoPacked()
     {
@@ -80,13 +93,21 @@ public class PackedProjectDependencyTests
                 reference.Elements("ReferenceOutputAssembly").Any(e => e.Value.Trim().Equals("false", StringComparison.OrdinalIgnoreCase))
                 || reference.Elements("PrivateAssets").Any(e => e.Value.Trim().Equals("all", StringComparison.OrdinalIgnoreCase));
             string? include = (string?)reference.Attribute("Include");
-            if (notAFlowingDependency || include is null)
+            if (notAFlowingDependency || include is null || IsOptInOnly(reference))
             {
                 continue;
             }
             yield return Path.GetFullPath(Path.Combine(directory, include.Replace('\\', Path.DirectorySeparatorChar)));
         }
     }
+
+    // A reference switched on only by passing a property (Condition="'$(X)' != ''" on it or its ItemGroup) is a
+    // local build-from-source switch: the pack passes no such property, so it never becomes a dependency.
+    internal static bool IsOptInOnly(XElement reference) =>
+        new[] { reference, reference.Parent }.Any(element =>
+            element?.Attribute("Condition")?.Value is string condition && OptInCondition.IsMatch(condition));
+
+    private static readonly Regex OptInCondition = new(@"^\s*'\$\(\w+\)'\s*!=\s*''\s*$");
 
     private static string Relative(string path) => Path.GetRelativePath(RepoPaths.RepoRoot, path);
 }

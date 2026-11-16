@@ -21,6 +21,13 @@ internal interface IBrutalGpuBackend : System.IDisposable
     /// <summary>Creates a render target of the given size on the backend's context.</summary>
     IBrutalTarget CreateTarget(int width, int height);
 
+    /// <summary>
+    /// Called by Draw right before the target's Begin for the pass it draws and presents. A Begin without it is the
+    /// canvas-capture pass a new target gets when it is created, which must not touch the window (Vulkan acquires a
+    /// swapchain image on a drawn pass while Gum presents).
+    /// </summary>
+    void BeginFrame();
+
     /// <summary>Blocks until the GPU has finished every frame already submitted. Called before the current target is replaced, so its memory is not freed while a presented frame still samples it.</summary>
     void WaitForGpu();
 

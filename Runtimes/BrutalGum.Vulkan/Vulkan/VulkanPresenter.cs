@@ -48,11 +48,15 @@ internal sealed unsafe class VulkanPresenter : IDisposable
     private VkDescriptorPool _pool;
     private readonly VkDescriptorSet[] _sets = new VkDescriptorSet[1];
     private VkPipeline _pipeline;
+    private bool _hasBlit;
+    private int _acquiredIndex;
+    private readonly Action? _releaseSwapchainImageUsers;
 
     public VulkanPresenter(
         PhysicalDevice physicalDevice, Device device, Queue queue, int queueFamily, VkSurfaceKHR surface,
-        Func<IDisposable>? acquireQueueLock = null)
+        Func<IDisposable>? acquireQueueLock = null, Action? releaseSwapchainImageUsers = null)
     {
+        _releaseSwapchainImageUsers = releaseSwapchainImageUsers;
         _physicalDevice = physicalDevice;
         _device = device;
         _queue = queue;
@@ -111,9 +115,10 @@ internal sealed unsafe class VulkanPresenter : IDisposable
     /// <summary>
     /// (Re)builds everything that depends on the window size or on Gum's image: the swapchain at
     /// <paramref name="width"/> by <paramref name="height"/> (the surface's current extent wins when it has one),
-    /// and the descriptor that samples <paramref name="source"/>.
+    /// and the descriptor that samples <paramref name="source"/>. With no source the swapchain alone is built, for a
+    /// caller that draws into its images itself (<see cref="AcquireForDirect"/>, <see cref="PresentDirect"/>).
     /// </summary>
-    public void Configure(int width, int height, VkImage source, VkFormat sourceFormat)
+    public void Configure(int width, int height, VkImage? source, VkFormat sourceFormat)
     {
         // vkDeviceWaitIdle needs every queue externally synchronized.
         using (_acquireQueueLock?.Invoke())
@@ -160,6 +165,10 @@ internal sealed unsafe class VulkanPresenter : IDisposable
             }
         }
 
+        // TransferSrc lets a test read the presented pixels back; it costs nothing when unused.
+        var usage = VkImageUsageFlags.ColorAttachmentBit
+            | ((capabilities.SupportedUsageFlags & VkImageUsageFlags.TransferSrcBit) != 0 ? VkImageUsageFlags.TransferSrcBit : 0);
+        SwapchainUsage = usage;
         _swapchain = _device.CreateSwapchainKHR(
             new VkSwapchainCreateInfoKHR
             {
@@ -169,9 +178,7 @@ internal sealed unsafe class VulkanPresenter : IDisposable
                 ImageColorSpace = surfaceFormat.ColorSpace,
                 ImageExtent = _extent,
                 ImageArrayLayers = 1,
-                // TransferSrc lets a test read the presented pixels back; it costs nothing when unused.
-                ImageUsage = VkImageUsageFlags.ColorAttachmentBit
-                    | ((capabilities.SupportedUsageFlags & VkImageUsageFlags.TransferSrcBit) != 0 ? VkImageUsageFlags.TransferSrcBit : 0),
+                ImageUsage = usage,
                 ImageSharingMode = VkSharingMode.Exclusive,
                 PreTransform = capabilities.CurrentTransform,
                 CompositeAlpha = compositeAlpha,
@@ -196,9 +203,16 @@ internal sealed unsafe class VulkanPresenter : IDisposable
         }
         _renderFinished = _images.Select(_ => _device.CreateSemaphore(new VkSemaphoreCreateInfo(), null)).ToArray();
 
+        _hasBlit = source is not null;
+        if (source is not VkImage sourceImage)
+        {
+            _configured = true;
+            return;
+        }
+
         // The Gum image, as a combined image sampler in descriptor set 0.
         _sourceView = _device.CreateImageView(
-            new VkImageViewCreateInfo { Image = source, ViewType = VkImageViewType._2D, Format = sourceFormat, SubresourceRange = _colorRange },
+            new VkImageViewCreateInfo { Image = sourceImage, ViewType = VkImageViewType._2D, Format = sourceFormat, SubresourceRange = _colorRange },
             null);
         var poolSize = new VkDescriptorPoolSize { Type = VkDescriptorType.CombinedImageSampler, DescriptorCount = 1 };
         _pool = _device.CreateDescriptorPool(new VkDescriptorPoolCreateInfo { MaxSets = 1, PoolSizeCount = 1, PoolSizes = &poolSize }, null);
@@ -283,6 +297,56 @@ internal sealed unsafe class VulkanPresenter : IDisposable
         LastPresentedImage = image;
     }
 
+    /// <summary>
+    /// Acquires the next swapchain image for a caller that draws into it itself (Configure with no source), and queues
+    /// its move to COLOR_ATTACHMENT_OPTIMAL in a submit that waits for the acquire. Skia submits to the queue on its own
+    /// and cannot wait on the acquire semaphore, so this submit does; Skia's later barrier is ordered after it.
+    /// Follow with the caller's draw and <see cref="PresentDirect"/>.
+    /// </summary>
+    public VkImage AcquireForDirect()
+    {
+        _device.WaitForFence(_frameFence, -1);
+        _device.AcquireNextImageKHR(_swapchain, -1, _imageAvailable, VkFence.NullHandle, out var imageIndex);
+        _acquiredIndex = imageIndex;
+        var image = _images[imageIndex];
+
+        _commandBuffer.Reset();
+        _commandBuffer.Begin(VkCommandBufferUsageFlags.OneTimeSubmitBit);
+        Transition(image, VkImageLayout.Undefined, VkImageLayout.ColorAttachmentOptimal,
+            VkPipelineStageFlags.ColorAttachmentOutputBit, VkPipelineStageFlags.ColorAttachmentOutputBit,
+            VkAccessFlags.None, VkAccessFlags.ColorAttachmentWriteBit);
+        _commandBuffer.End();
+        using (_acquireQueueLock?.Invoke())
+        {
+            _queue.Submit([_imageAvailable], [VkPipelineStageFlags.ColorAttachmentOutputBit], [_commandBuffer], [], VkFence.NullHandle);
+        }
+        return image;
+    }
+
+    /// <summary>
+    /// Presents the image <see cref="AcquireForDirect"/> returned, which the caller has moved to PRESENT_SRC_KHR. An empty
+    /// submit signals the present semaphore and the frame fence; both cover every command submitted before it, Skia's included.
+    /// </summary>
+    public void PresentDirect()
+    {
+        var imageIndex = _acquiredIndex;
+        var signal = _renderFinished[imageIndex];
+        var swapchain = _swapchain;
+        _device.ResetFences([_frameFence]);
+        using (_acquireQueueLock?.Invoke())
+        {
+            _queue.Submit([], [], [], [signal], _frameFence);
+            _queue.PresentKHR(new VkPresentInfoKHR
+            {
+                WaitSemaphoreCount = 1, WaitSemaphores = &signal, SwapchainCount = 1, Swapchains = &swapchain, ImageIndices = &imageIndex,
+            });
+        }
+        LastPresentedImage = _images[imageIndex];
+    }
+
+    /// <summary>The usage the swapchain's images were created with.</summary>
+    public VkImageUsageFlags SwapchainUsage { get; private set; }
+
     /// <summary>The swapchain image last handed to the presentation engine (PRESENT_SRC_KHR), for test readback.</summary>
     public VkImage? LastPresentedImage { get; private set; }
 
@@ -314,9 +378,12 @@ internal sealed unsafe class VulkanPresenter : IDisposable
         }
 
         _configured = false;
-        _device.DestroyPipeline(_pipeline, null);
-        _device.DestroyDescriptorPool(_pool, null);
-        _device.DestroyImageView(_sourceView, null);
+        if (_hasBlit)
+        {
+            _device.DestroyPipeline(_pipeline, null);
+            _device.DestroyDescriptorPool(_pool, null);
+            _device.DestroyImageView(_sourceView, null);
+        }
         foreach (var semaphore in _renderFinished)
         {
             _device.DestroySemaphore(semaphore, null);
@@ -325,6 +392,8 @@ internal sealed unsafe class VulkanPresenter : IDisposable
         {
             _device.DestroyImageView(view, null);
         }
+        // Whatever wrapped the old images (the direct canvas's cached Skia surfaces) goes first: a new image can reuse a handle.
+        _releaseSwapchainImageUsers?.Invoke();
         _device.DestroySwapchainKHR(_swapchain, null);
     }
 

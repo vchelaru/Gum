@@ -18,9 +18,7 @@ using System.Diagnostics;
 using System.Text;
 
 SampleArgs sample = new SampleArgs(args);
-int benchmarkIndex = Array.IndexOf(args, "--benchmark");
-bool benchmark = benchmarkIndex >= 0;
-string? benchmarkPath = benchmark && benchmarkIndex + 1 < args.Length && !args[benchmarkIndex + 1].StartsWith("--") ? Path.GetFullPath(args[benchmarkIndex + 1]) : null; // resolved now, before the working directory moves to the exe folder
+var (benchmark, benchmarkPath, region) = BenchmarkRunner.ParseArgs(args); // before the working directory moves to the exe folder
 
 // The Gum project loads relative to the working directory, so run from the build output whatever the caller's folder is.
 Directory.SetCurrentDirectory(AppContext.BaseDirectory);
@@ -54,7 +52,6 @@ try
         BenchmarkRunner.RequireRelease();
         BenchmarkScreen benchmarkScreen = new BenchmarkScreen();
         benchmarkScreen.AddToRoot();
-        string? region = args.SkipWhile(a => a != "--region").Skip(1).FirstOrDefault();
         benchmarkScreen.ShowOnly(region);
         Console.WriteLine("GL_RENDERER: " + GlHost.Renderer(GetProc) + (region == null ? "" : "  region: " + region));
         GlHost glHost = new GlHost(GetProc);

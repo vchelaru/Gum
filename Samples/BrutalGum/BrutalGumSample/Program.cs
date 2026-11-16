@@ -6,16 +6,21 @@
 //   BrutalGumSample --hidden --exit-after 5         same, invisible, closes after 5 seconds
 //   add --capture <png>     saves the presented swapchain image (the window's pixels) before exiting
 //   add --resize 900x500    resizes the window once, halfway through the run
+//   BrutalGumSample --hidden --benchmark [out.md] [--region forms|list|pairs|empty]   RELEASE ONLY; the BRUTAL OpenGL
+//                                                   sample's busy scene at 1280x720, prints a markdown row of CPU ms per frame
 using Brutal.GlfwApi;
 using Brutal.Numerics;
 using Brutal.VulkanApi;
 using Brutal.VulkanApi.Abstractions;
 using Gum;
+using Gum.Forms.Controls;
 using GumSamples;
+using GumSamples.Benchmark;
 using SkiaGameRendering.Core.VK;
 using System.Diagnostics;
 
 SampleArgs sample = new SampleArgs(args);
+var (benchmark, benchmarkPath, region) = BenchmarkRunner.ParseArgs(args); // before the working directory moves to the exe folder
 
 // The Gum project loads relative to the working directory, so run from the build output whatever the caller's folder is.
 Directory.SetCurrentDirectory(AppContext.BaseDirectory);
@@ -26,7 +31,7 @@ try
     // Vulkan draws to the window itself, so GLFW creates no graphics API context.
     Glfw.WindowHint(GlfwWindowHint.ClientApi, Glfw.Constants.GLFW_NO_API);
     SampleSupport.ApplyWindowHints(sample);
-    using GlfwWindow window = Glfw.CreateWindow(new GlfwWindow.CreateInfo { Title = "Gum.Brutal.Vulkan sample", Size = new int2(1400, 900) });
+    using GlfwWindow window = Glfw.CreateWindow(new GlfwWindow.CreateInfo { Title = "Gum.Brutal.Vulkan sample", Size = benchmark ? new int2(1280, 720) : new int2(1400, 900) });
     SampleSupport.PlaceWindow(window, sample);
 
     HashSet<string> instanceExtensions = new HashSet<string>();
@@ -118,6 +123,28 @@ try
 
     // Demo the auto-fit helpers. Flip via the Zoom/Expand radios in the nav strip.
     GumUI.EnableZoomToWindow();
+
+    if (benchmark)
+    {
+        BenchmarkRunner.RequireRelease();
+        BenchmarkScreen benchmarkScreen = new BenchmarkScreen();
+        benchmarkScreen.AddToRoot();
+        benchmarkScreen.ShowOnly(region);
+        // Draw includes Gum's present (acquire, submit, present); sync waits for the GPU like the OpenGL host's glFinish.
+        BenchmarkRunner.Run("BRUTAL Vulkan 1.3", benchmarkScreen,
+            update: seconds => GumUI.Update(seconds),
+            draw: () => GumUI.Draw(),
+            sync: () =>
+            {
+                Glfw.PollEvents();
+                device.WaitIdle();
+            },
+            benchmarkPath);
+        device.WaitIdle();
+        GumUI.Uninitialize();
+        instance.DestroySurfaceKHR(surface, null);
+        return;
+    }
 
     GumGallery gallery = new GumGallery();
     gallery.Build();

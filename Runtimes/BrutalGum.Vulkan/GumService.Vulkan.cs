@@ -134,7 +134,7 @@ public partial class GumService
     /// bytes are sRGB in a UNORM format (<see cref="RenderTargetFormat"/>): a pass that writes to an sRGB target
     /// must not decode them again. Null before Initialize.
     /// </summary>
-    public VkImage? RenderTargetImage => (QueueLockedBackend.Unwrap(_targetHolder?.Target) as VulkanTarget)?.Image;
+    public VkImage? RenderTargetImage => ((QueueLockedBackend.Unwrap(_targetHolder?.Target) as PresentOrTextureTarget)?.Texture as VulkanTextureTarget)?.Image;
 
     // Read by reflection from the sample's --capture mode, which proves a frame reached the window by reading
     // the swapchain image back: { handle, VkFormat, width, height }, or null before the first present.
@@ -144,6 +144,6 @@ public partial class GumService
             : null;
 
     /// <summary>The format of <see cref="RenderTargetImage"/>.</summary>
-    public VkFormat? RenderTargetFormat => (QueueLockedBackend.Unwrap(_targetHolder?.Target) as VulkanTarget)?.Format;
+    public VkFormat? RenderTargetFormat => ((QueueLockedBackend.Unwrap(_targetHolder?.Target) as PresentOrTextureTarget)?.Texture as VulkanTextureTarget)?.Format;
 }
 #endif

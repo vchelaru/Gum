@@ -42,6 +42,9 @@ internal sealed class QueueLockedBackend : IBrutalGpuBackend
         new LockedTarget(Inner.CreateTarget(width, height), _acquireQueueLock);
 
     /// <inheritdoc/>
+    public void BeginFrame() => Inner.BeginFrame();
+
+    /// <inheritdoc/>
     public void WaitForGpu()
     {
         using (_acquireQueueLock())
