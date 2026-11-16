@@ -47,7 +47,7 @@ public class BatchKeyGroupedOrdererDrawnBoundsTests : BaseTestClass
 
         // The layout box ends at y=12, the drawn lines reach past y=30 into the second background.
         (text.GetAbsoluteTop() + text.AbsoluteHeight).ShouldBeLessThan(30f);
-        (text.GetAbsoluteTop() + ((Text)text.RenderableComponent).WrappedTextHeight).ShouldBeGreaterThan(30f);
+        (text.GetAbsoluteTop() + ((Text)text.RenderableComponent!).WrappedTextHeight).ShouldBeGreaterThan(30f);
 
         List<DrawCommand> commands = Build(first, text, second);
 
@@ -65,7 +65,7 @@ public class BatchKeyGroupedOrdererDrawnBoundsTests : BaseTestClass
         OrdererFake second = Background("bg1", 8, 0, 50, 30);
 
         (text.GetAbsoluteLeft() + text.AbsoluteWidth).ShouldBeLessThan(8f);
-        (text.GetAbsoluteLeft() + ((Text)text.RenderableComponent).WrappedTextWidth).ShouldBeGreaterThan(8f);
+        (text.GetAbsoluteLeft() + ((Text)text.RenderableComponent!).WrappedTextWidth).ShouldBeGreaterThan(8f);
 
         List<DrawCommand> commands = Build(first, text, second);
 
@@ -77,7 +77,7 @@ public class BatchKeyGroupedOrdererDrawnBoundsTests : BaseTestClass
     {
         OrdererFake first = Background("bg0", 0, 0, 100, 30);
         TextRuntime text = CreateText(4, 0, 90, 0, "shadowed");
-        Text renderable = (Text)text.RenderableComponent;
+        Text renderable = (Text)text.RenderableComponent!;
         float lineHeight = renderable.WrappedTextHeight;
         text.Height = lineHeight;
         text.Y = 28 - lineHeight;
@@ -142,7 +142,7 @@ public class BatchKeyGroupedOrdererDrawnBoundsTests : BaseTestClass
             WidthUnits = DimensionUnitType.Absolute, HeightUnits = DimensionUnitType.Absolute,
         };
         // A source region far larger than (and partly left of) any texture still lands on the box.
-        ((Sprite)sprite.RenderableComponent).SourceRectangle = new System.Drawing.Rectangle(-500, -500, 2000, 2000);
+        ((Sprite)sprite.RenderableComponent!).SourceRectangle = new System.Drawing.Rectangle(-500, -500, 2000, 2000);
         OrdererFake second = Background("bg1", 0, 30, 100, 30);
 
         List<DrawCommand> commands = Build(first, sprite, second);
