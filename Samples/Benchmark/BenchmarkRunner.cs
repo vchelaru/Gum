@@ -27,6 +27,11 @@ internal static class BenchmarkRunner
     public static string Run(string runtimeName, BenchmarkScreen screen, Action<double> update, Action draw, Action sync,
         string? outputPath)
     {
+        if (Environment.GetCommandLineArgs().Contains("--first-frame"))
+        {
+            return RunFirstFrame(runtimeName, screen, update, draw, sync, outputPath);
+        }
+
         const double step = 1.0 / 60;
         double firstFrameMs = 0;
         double[] updateMs = new double[MeasuredFrames];
@@ -70,6 +75,59 @@ internal static class BenchmarkRunner
         text.AppendLine("|---|---|---|---|---|---|");
         text.AppendLine($"| {runtimeName} | {Median(updateMs):F2} / {Percentile95(updateMs):F2} | {Median(drawMs):F2} / {Percentile95(drawMs):F2} | " +
             $"{Median(totalMs):F2} / {Percentile95(totalMs):F2} | {firstFrameMs:F1} | {(unstable ? "YES, rerun" : "no")} |");
+        Console.Write(text.ToString());
+        if (outputPath != null)
+        {
+            File.AppendAllText(outputPath, text.ToString());
+            Console.WriteLine("Appended to " + outputPath);
+        }
+        return text.ToString();
+    }
+
+    public const int FirstFrameRunFrames = 60;
+    private const int FirstFrameSteadyStart = 20; // frames 21-60 are "steady"
+
+    /// <summary>
+    /// --first-frame (#8053): no warm-up, so frame 1 is captured cold. Prints frame 1, 2, 3 and the median of the
+    /// later frames. One process per run: run it a few times to see variance.
+    /// </summary>
+    private static string RunFirstFrame(string runtimeName, BenchmarkScreen screen, Action<double> update, Action draw,
+        Action sync, string? outputPath)
+    {
+        double[] updateMs = new double[FirstFrameRunFrames];
+        double[] drawMs = new double[FirstFrameRunFrames];
+        double[] totalMs = new double[FirstFrameRunFrames];
+        double toMs = 1000.0 / Stopwatch.Frequency;
+        double jitUpdateMs = 0; // main-thread .NET JIT time inside frame 1's update / draw+sync, so JIT is not mistaken for Skia work
+        double jitDrawMs = 0;
+        for (int frame = 0; frame < FirstFrameRunFrames; frame++)
+        {
+            screen.SetScroll(0);
+            TimeSpan jit0 = System.Runtime.JitInfo.GetCompilationTime(currentThread: true);
+            long start = Stopwatch.GetTimestamp();
+            update(frame / 60.0);
+            long afterUpdate = Stopwatch.GetTimestamp();
+            TimeSpan jit1 = System.Runtime.JitInfo.GetCompilationTime(currentThread: true);
+            draw();
+            long afterDraw = Stopwatch.GetTimestamp();
+            sync();
+            long end = Stopwatch.GetTimestamp();
+            if (frame == 0)
+            {
+                jitUpdateMs = (jit1 - jit0).TotalMilliseconds;
+                jitDrawMs = (System.Runtime.JitInfo.GetCompilationTime(currentThread: true) - jit1).TotalMilliseconds;
+            }
+            updateMs[frame] = (afterUpdate - start) * toMs;
+            drawMs[frame] = (afterDraw - afterUpdate) * toMs;
+            totalMs[frame] = (end - start) * toMs;
+        }
+
+        double steadyTotal = Median(totalMs[FirstFrameSteadyStart..]);
+        StringBuilder text = new StringBuilder();
+        text.AppendLine("| runtime | frame 1 ms (update / draw / total) | frame 2 total ms | frame 3 total ms | steady total ms (median, frames 21-60) | steady draw ms (median) | frame 1 minus steady ms | frame 1 JIT ms (update / draw) |");
+        text.AppendLine("|---|---|---|---|---|---|---|---|");
+        text.AppendLine($"| {runtimeName} | {updateMs[0]:F2} / {drawMs[0]:F2} / {totalMs[0]:F2} | {totalMs[1]:F2} | {totalMs[2]:F2} | " +
+            $"{steadyTotal:F2} | {Median(drawMs[FirstFrameSteadyStart..]):F2} | {totalMs[0] - steadyTotal:F2} | {jitUpdateMs:F2} / {jitDrawMs:F2} |");
         Console.Write(text.ToString());
         if (outputPath != null)
         {
