@@ -9,6 +9,10 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+    <!-- The allocation tests assert 0 bytes on the test thread. With tiered compilation, a method's tier-up (Dynamic
+         PGO) allocates on the thread that calls it, at a moment set by timing, so a busy CI runner could land it
+         inside a measured window (#8167). Fully optimized JIT on first call leaves nothing to promote later. -->
+    <TieredCompilation>false</TieredCompilation>
   </PropertyGroup>
 
   <ItemGroup>

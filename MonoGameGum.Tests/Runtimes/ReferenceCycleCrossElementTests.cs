@@ -426,24 +426,22 @@ public class ReferenceCycleCrossElementTests : BaseTestClass
     }
 
     [Fact]
-    public void ApplyAll_AChainOf3200Elements_CostsAboutTheSameWithLoopDetectionAsWithout()
+    public void ApplyAll_AChainOf3200Elements_DetectsLoopsInStepsLinearInTheElements()
     {
-        GumProjectSave chain = BuildChains(3200, 3200);
+        const int elementCount = 3200;
+        GumProjectSave chain = BuildChains(elementCount, elementCount);
 
-        VariableReferenceGraph.DetectCrossElementLoops = false;
-        double without;
-        try
-        {
-            without = MedianMilliseconds(() => chain.ApplyAllVariableReferences());
-        }
-        finally
-        {
-            VariableReferenceGraph.DetectCrossElementLoops = true;
-        }
-        double with = MedianMilliseconds(() => chain.ApplyAllVariableReferences());
+        // Counted steps instead of wall-clock time, so a busy machine cannot fail it. The first pass builds
+        // the index (a node and an edge per row, a Tarjan step per edge); the second only checks it once.
+        VariableReferenceGraph.CrossLoopSteps = 0;
+        chain.ApplyAllVariableReferences();
+        long building = VariableReferenceGraph.CrossLoopSteps;
+        VariableReferenceGraph.CrossLoopSteps = 0;
+        chain.ApplyAllVariableReferences();
+        long reusing = VariableReferenceGraph.CrossLoopSteps;
 
-        // Measured 362 against 385 ms; the pass itself is not linear, so compare the two, not the size.
-        with.ShouldBeLessThan(without * 1.6 + 20);
+        building.ShouldBeLessThan(elementCount * 10L, "steps to build the index");
+        reusing.ShouldBeLessThan(elementCount * 3L, "steps to reuse the index");
     }
 
     [Fact]
