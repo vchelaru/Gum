@@ -54,7 +54,7 @@ public static unsafe class FlushProbe
     public static void FrameDone()
     {
         Frames.Add(new[] { (BeginEnd - BeginStart) * ToMs, (FlushStart - BeginEnd) * ToMs, (FlushEnd - FlushStart) * ToMs,
-            (SubmitEnd - FlushEnd) * ToMs, (EndEnd - SubmitEnd) * ToMs });
+            (SubmitEnd - FlushEnd) * ToMs, (EndEnd - SubmitEnd) * ToMs, RawScene.RecordTicks * ToMs });
         if (GlTime)
         {
             for (int i = 0; i < Count; i++) { FrameTicks[i].Add(Ticks[i]); FrameCalls[i].Add(Calls[i]); Ticks[i] = 0; Calls[i] = 0; }
@@ -67,7 +67,7 @@ public static unsafe class FlushProbe
     {
         if (Frames.Count == 0) return;
         var last = Frames.GetRange(Math.Max(0, Frames.Count - lastFrames), Math.Min(lastFrames, Frames.Count));
-        string[] names = { "Begin(reset+query)", "record", "gr.Flush(no submit)", "gr.Submit", "SGR End rest" };
+        string[] names = { "Begin(reset+query)", "record", "gr.Flush(no submit)", "gr.Submit", "SGR End rest", "rawScene record" };
         for (int s = 0; s < names.Length; s++)
             Console.WriteLine($"PROBE {names[s]}: median {Median(last.ConvertAll(f => f[s])):F3} ms");
         if (!GlTime) return;

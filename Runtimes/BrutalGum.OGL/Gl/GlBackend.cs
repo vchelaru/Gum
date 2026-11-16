@@ -77,6 +77,7 @@ internal sealed unsafe class GlTarget : IBrutalTarget
     public void End()
     {
         if (FlushProbe.Raw > 0) { FlushProbe.GlTargetGr = Gr; FlushProbe.DrawRaw(Canvas); }
+        if (RawScene.Mode > 0) RawScene.Draw(Canvas, Gr);
         FlushProbe.FlushStart = System.Diagnostics.Stopwatch.GetTimestamp();
         if (FlushProbe.Enabled)
         {
