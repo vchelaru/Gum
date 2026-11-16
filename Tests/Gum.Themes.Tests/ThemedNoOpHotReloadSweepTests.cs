@@ -41,7 +41,7 @@ public class ThemedNoOpHotReloadSweepTests
             case "ComboBox":
             {
                 ComboBox combo = new();
-                for (int i = 0; i < 6; i++) { combo.Items.Add("choice " + i); }
+                for (int i = 0; i < 6; i++) { combo.Items!.Add("choice " + i); }
                 combo.SelectedIndex = 1;
                 return combo;
             }
@@ -59,7 +59,7 @@ public class ThemedNoOpHotReloadSweepTests
             case "ItemsControl":
             {
                 ItemsControl items = new();
-                for (int i = 0; i < 30; i++) { items.Items.Add("item " + i); }
+                for (int i = 0; i < 30; i++) { items.Items!.Add("item " + i); }
                 return items;
             }
             case "TabControl":
@@ -110,7 +110,7 @@ public class ThemedNoOpHotReloadSweepTests
 
     private static ListBox FillList(ListBox list, int count)
     {
-        for (int i = 0; i < count; i++) { list.Items.Add("item " + i); }
+        for (int i = 0; i < count; i++) { list.Items!.Add("item " + i); }
         return list;
     }
 

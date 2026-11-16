@@ -68,16 +68,16 @@ public class ThemedNoOpHotReloadTests
             GraphicalUiElement thumb = bar.GetGraphicalUiElementByName("ThumbInstance")!;
             DimensionUnitType unitsBefore = bar.HeightUnits;
             float heightBefore = bar.Height;
-            float absoluteBefore = bar.GetAbsoluteHeight();
-            float thumbBefore = thumb.GetAbsoluteHeight();
+            float absoluteBefore = bar.AbsoluteHeight;
+            float thumbBefore = thumb.AbsoluteHeight;
 
             NoOpReload(host);
             host.UpdateLayout();
 
             bar.HeightUnits.ShouldBe(unitsBefore, theme);
             bar.Height.ShouldBe(heightBefore, theme);
-            bar.GetAbsoluteHeight().ShouldBe(absoluteBefore, theme);
-            thumb.GetAbsoluteHeight().ShouldBe(thumbBefore, theme);
+            bar.AbsoluteHeight.ShouldBe(absoluteBefore, theme);
+            thumb.AbsoluteHeight.ShouldBe(thumbBefore, theme);
         });
     }
 }

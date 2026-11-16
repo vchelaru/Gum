@@ -201,7 +201,7 @@ public class ThemedNoOpHotReloadTests : FileThemeInputTestBase
                 "SliderNested" => new Slider { Minimum = 0, Maximum = 10, Value = 4 },
                 _ => new TabControl { Width = 200, Height = 100 },
             };
-            if (made is ItemsControl items) { for (int i = 0; i < 12; i++) { items.Items.Add("entry " + i); } }
+            if (made is ItemsControl items) { for (int i = 0; i < 12; i++) { items.Items!.Add("entry " + i); } }
             if (made is TabControl tabs) { tabs.AddTab("One", new Label { Text = "first" }); tabs.AddTab("Two", new Label { Text = "second" }); }
             ((ScrollViewer)box).AddChild(made);
         }
