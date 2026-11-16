@@ -159,3 +159,4 @@ Gum is actively maintained and provides lots of ways to get answers:
 * Check the rest of the documentation
 * Join the [Discord chat](https://discord.gg/EvqwmSQuBz) (shared discord with FlatRedBall)
 * Create an [issue on GitHub](https://github.com/vchelaru/Gum/issues)
+
