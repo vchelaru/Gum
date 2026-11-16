@@ -25,6 +25,7 @@ public class NineSlice : RenderableShapeBase, IAnimatable, IAnimationChainRender
         clone.AnimationLogic = AnimationLogic.Clone(clone.ApplyAnimationFrame, clone.ApplyKeyframeColor);
         // Each side disposes its own section images, so the clone builds its own.
         clone._sectionImages = null;
+        clone._batchShader = null;
         // An owned image would be disposed by whichever side changes texture first, so the clone
         // builds its own. A caller-assigned image is shared, since neither side disposes it.
         if (_ownsImage)
@@ -202,6 +203,8 @@ public class NineSlice : RenderableShapeBase, IAnimatable, IAnimationChainRender
             return;
         }
         ClearSectionImages();
+        _batchShader?.Dispose();
+        _batchShader = null;
         if (_ownsImage)
         {
             _image?.Dispose();
@@ -479,6 +482,8 @@ public class NineSlice : RenderableShapeBase, IAnimatable, IAnimationChainRender
             return;
         }
 
+        VertexBatch?.Flush();
+
         float destLeft = boundingRect.Left;
         float destTop = boundingRect.Top;
         float destRight = boundingRect.Right;
@@ -669,12 +674,70 @@ public class NineSlice : RenderableShapeBase, IAnimatable, IAnimationChainRender
             lattice.Bounds = SKRectI.Create(srcLeft, srcTop, usedWidth, usedHeight);
         }
 
+        if (TryAddToVertexBatch(canvas, paint, matrix, boundingRect, scale, srcLeft, srcTop, usedWidth, usedHeight, fullOutsideW, fullOutsideH))
+        {
+            return true;
+        }
+        VertexBatch?.Flush();
+
         canvas.Save();
         canvas.Translate(boundingRect.Left, boundingRect.Top);
         canvas.Scale(scale);
         canvas.DrawImageLattice(Image, lattice, new SKRect(0, 0, boundingRect.Width / scale, boundingRect.Height / scale), paint);
         canvas.Restore();
         DrawStatistics?.RecordDrawCall();
+        return true;
+    }
+
+    // The image as a Nearest, clamped shader for the renderer's vertex batch; rebuilt when the image changes.
+    private SKShader? _batchShader;
+
+    // Adds the lattice TryDrawLattice is about to draw to the renderer's vertex batch instead (#8153), as the same nine
+    // cells in device space. Only an untinted, opaque, default-blend NineSlice under a translate-and-positive-scale
+    // matrix batches; a flip, rotation, tint, alpha, blend, shadow or filter keeps the lattice.
+    private bool TryAddToVertexBatch(SKCanvas canvas, SKPaint paint, SKMatrix matrix, SKRect boundingRect, float scale,
+        int srcLeft, int srcTop, int usedWidth, int usedHeight, int fullOutsideW, int fullOutsideH)
+    {
+        NineSliceVertexBatch? batch = VertexBatch;
+        if (batch == null || !batch.IsGpuCanvas(canvas) || HasDropshadow
+            || paint.ColorFilter != null || paint.Shader != null || paint.ImageFilter != null || paint.MaskFilter != null
+            || paint.Blender != null || paint.BlendMode != SKBlendMode.SrcOver || paint.PathEffect != null
+            || paint.Color.Alpha != 255
+            || matrix.ScaleX <= 0 || matrix.ScaleY <= 0
+            || matrix.Persp0 != 0 || matrix.Persp1 != 0 || matrix.Persp2 != 1)
+        {
+            return false;
+        }
+
+        // The lattice's cells: bands of fullOutside texels drawn at `scale`, and a stretched middle, under
+        // matrix * translate(boundingRect.Left, Top) * scale(scale).
+        float localWidth = boundingRect.Width / scale;
+        float localHeight = boundingRect.Height / scale;
+        Span<float> xs = stackalloc float[4];
+        Span<float> ys = stackalloc float[4];
+        Span<float> us = stackalloc float[4];
+        Span<float> vs = stackalloc float[4];
+        xs[0] = matrix.ScaleX * boundingRect.Left + matrix.TransX;
+        xs[1] = matrix.ScaleX * (boundingRect.Left + scale * fullOutsideW) + matrix.TransX;
+        xs[2] = matrix.ScaleX * (boundingRect.Left + scale * (localWidth - fullOutsideW)) + matrix.TransX;
+        xs[3] = matrix.ScaleX * (boundingRect.Left + scale * localWidth) + matrix.TransX;
+        ys[0] = matrix.ScaleY * boundingRect.Top + matrix.TransY;
+        ys[1] = matrix.ScaleY * (boundingRect.Top + scale * fullOutsideH) + matrix.TransY;
+        ys[2] = matrix.ScaleY * (boundingRect.Top + scale * (localHeight - fullOutsideH)) + matrix.TransY;
+        ys[3] = matrix.ScaleY * (boundingRect.Top + scale * localHeight) + matrix.TransY;
+        us[0] = srcLeft;
+        us[1] = srcLeft + fullOutsideW;
+        us[2] = srcLeft + usedWidth - fullOutsideW;
+        us[3] = srcLeft + usedWidth;
+        vs[0] = srcTop;
+        vs[1] = srcTop + fullOutsideH;
+        vs[2] = srcTop + usedHeight - fullOutsideH;
+        vs[3] = srcTop + usedHeight;
+
+        SKShader shader = _batchShader ??= Image!.ToShader(SKShaderTileMode.Clamp, SKShaderTileMode.Clamp, new SKSamplingOptions(SKFilterMode.Nearest));
+        // Images that each wrap the same loaded bitmap draw the same pixels, so they share a batch.
+        object key = (_ownsImage ? _texture : null) ?? (object)Image!;
+        batch.Add(canvas, key, shader, xs, ys, us, vs);
         return true;
     }
 
