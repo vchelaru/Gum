@@ -42,6 +42,8 @@ internal sealed class TextBlobBatch
         public Item[] Items = Array.Empty<Item>();
         public int Count;
         public SKTextBlob? Merged;
+        // Flushes in a row that matched the kept items.
+        public int StillFlushes;
     }
 
     private readonly RenderStateChangeStatistics _statistics;
@@ -78,6 +80,13 @@ internal sealed class TextBlobBatch
     /// still reject a part that is outside the clip. Settable for tests.
     /// </summary>
     internal int MaxBatchLength { get; set; } = 16;
+
+    /// <summary>
+    /// How many flushes in a row a run must match before it merges (30, half a second at 60 fps). A list scrolling
+    /// slower than a pixel a frame changes its rows' relative offsets only every few frames, and a run that merged in
+    /// between would rebuild its blob each time.
+    /// </summary>
+    internal const int StillFlushesBeforeMerge = 30;
 
     /// <summary>Whether texts are waiting for <see cref="Flush"/>.</summary>
     public bool HasPending => _count > 0;
@@ -151,24 +160,25 @@ internal sealed class TextBlobBatch
             canvas.SetMatrix(_matrix);
         }
         _paint.Color = _color;
-        if (count == 1)
+        SKTextBlob? merged = count == 1 ? null : GetSlotBlob(count);
+        if (merged != null)
         {
-            ref Item only = ref _items[0];
-            canvas.DrawText(only.Blob, only.X, only.Y, _paint);
+            canvas.DrawText(merged, _items[0].X, _items[0].Y, _paint);
+            _statistics.RecordDrawCall();
         }
         else
         {
-            SKTextBlob? merged = GetSlotBlob(count);
-            if (merged != null)
+            for (int i = 0; i < count; i++)
             {
-                canvas.DrawText(merged, _items[0].X, _items[0].Y, _paint);
+                ref Item item = ref _items[i];
+                canvas.DrawText(item.Blob, item.X, item.Y, _paint);
+                _statistics.RecordDrawCall();
             }
         }
         if (isOtherMatrix)
         {
             canvas.Restore();
         }
-        _statistics.RecordDrawCall();
 
         // The pending items reference blobs the texts own; drop them so a removed text is not kept alive.
         Array.Clear(_items, 0, count);
@@ -195,22 +205,32 @@ internal sealed class TextBlobBatch
 
         float x0 = _items[0].X;
         float y0 = _items[0].Y;
-        bool isHit = slot.Merged != null && slot.Count == count;
-        for (int i = 0; isHit && i < count; i++)
+        bool isSame = slot.Count == count;
+        for (int i = 0; isSame && i < count; i++)
         {
             ref Item item = ref _items[i];
             ref Item kept = ref slot.Items[i];
-            isHit = ReferenceEquals(item.Blob, kept.Blob) && item.X - x0 == kept.X && item.Y - y0 == kept.Y;
+            isSame = ReferenceEquals(item.Blob, kept.Blob) && item.X - x0 == kept.X && item.Y - y0 == kept.Y;
         }
-        if (isHit)
+        if (!isSame)
+        {
+            // A run that changes (a list scrolling rows that snap to whole pixels on their own, a text being edited)
+            // draws each text on its own, which allocates nothing, until it holds still.
+            KeepItems(slot, count, x0, y0);
+            slot.Merged?.Dispose();
+            slot.Merged = null;
+            slot.StillFlushes = 0;
+            return null;
+        }
+        if (slot.Merged != null)
         {
             return slot.Merged;
         }
-
-        if (slot.Items.Length < count)
+        if (++slot.StillFlushes < StillFlushesBeforeMerge)
         {
-            slot.Items = new Item[System.Math.Max(count, MaxBatchLength)];
+            return null;
         }
+
         _font.Hinting = _hinting;
         _font.Edging = _edging;
         _font.Subpixel = _subpixel;
@@ -240,9 +260,6 @@ internal sealed class TextBlobBatch
                 ref Item item = ref _items[i];
                 float relativeX = item.X - x0;
                 float relativeY = item.Y - y0;
-                slot.Items[i] = item;
-                slot.Items[i].X = relativeX;
-                slot.Items[i].Y = relativeY;
                 item.Glyphs.CopyTo(_glyphs, glyph);
                 for (int g = 0; g < item.Positions.Length; g++)
                 {
@@ -258,12 +275,26 @@ internal sealed class TextBlobBatch
             buffer.SetPositions(_positions.AsSpan(0, glyphCount));
             groupStart = groupEnd;
         }
-        // Items past the count would keep blobs of texts that left the run alive.
-        Array.Clear(slot.Items, count, slot.Items.Length - count);
-        slot.Count = count;
-        slot.Merged?.Dispose();
         slot.Merged = _builder.Build();
         MergedBuildCount++;
         return slot.Merged;
+    }
+
+    // Keeps the pending items, relative to the first, as what the slot compares the next flush against.
+    private void KeepItems(Slot slot, int count, float x0, float y0)
+    {
+        if (slot.Items.Length < count)
+        {
+            slot.Items = new Item[System.Math.Max(count, MaxBatchLength)];
+        }
+        for (int i = 0; i < count; i++)
+        {
+            slot.Items[i] = _items[i];
+            slot.Items[i].X -= x0;
+            slot.Items[i].Y -= y0;
+        }
+        // Items past the count would keep blobs of texts that left the run alive.
+        Array.Clear(slot.Items, count, slot.Items.Length - count);
+        slot.Count = count;
     }
 }

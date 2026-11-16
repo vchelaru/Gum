@@ -16,6 +16,9 @@ public class TextBlobBatchGpuTests : IDisposable
 {
     const int Size = 220;
 
+    // Text draws its cached blobs from the second frame on, and a run merges once it has matched that many flushes.
+    const int MergedFrames = RenderingLibrary.Graphics.TextBlobBatch.StillFlushesBeforeMerge + 2;
+
     readonly WglGpuContext _gpu;
     readonly SKBitmap _texture;
     readonly SKFilterMode _previousFilter;
@@ -77,7 +80,7 @@ public class TextBlobBatchGpuTests : IDisposable
         ClipsChildren = clips,
     };
 
-    // Draws `frames` frames (text draws its cached blobs from the second frame on, and only those merge) and returns
+    // Draws `frames` frames and returns
     // the last frame's pixels and draw calls. `batch` turns both the text and the NineSlice batches on or off.
     (byte[] Pixels, int DrawCalls) Render(Action<ContainerRuntime> build, bool batch, Action<int>? beforeFrame, int frames, float zoom)
     {
@@ -131,7 +134,7 @@ public class TextBlobBatchGpuTests : IDisposable
     }
 
     // Returns the merged and unmerged draw calls of the last frame after asserting both draw the same bytes.
-    (int Merged, int Unmerged) AssertMergedMatchesUnmerged(Action<ContainerRuntime> build, Action<int>? beforeFrame = null, int frames = 3, float zoom = 1)
+    (int Merged, int Unmerged) AssertMergedMatchesUnmerged(Action<ContainerRuntime> build, Action<int>? beforeFrame = null, int frames = MergedFrames, float zoom = 1)
     {
         (byte[] mergedPixels, int merged) = Render(build, batch: true, beforeFrame, frames, zoom);
         (byte[] unmergedPixels, int unmerged) = Render(build, batch: false, beforeFrame, frames, zoom);
@@ -235,15 +238,15 @@ public class TextBlobBatchGpuTests : IDisposable
             }
         }, frame =>
         {
-            if (frame == 2)
+            if (frame == MergedFrames)
             {
                 changing!.Text = "Changed text";
             }
-            if (frame == 4)
+            if (frame == MergedFrames + 2)
             {
                 changing!.Text = "Again";
             }
-        }, frames: 7);
+        }, frames: 2 * MergedFrames + 2);
     }
 
     [Fact]
@@ -333,7 +336,7 @@ public class TextBlobBatchGpuTests : IDisposable
             root.AddToManagers(managers, null);
             RenderingLibrary.Graphics.TextBlobBatch batch = managers.Renderer.TextBatch;
 
-            for (int frame = 0; frame < 5; frame++)
+            for (int frame = 0; frame < MergedFrames; frame++)
             {
                 managers.Renderer.NotifyHostFrameAdvanced();
                 managers.Draw();
@@ -351,7 +354,7 @@ public class TextBlobBatchGpuTests : IDisposable
             // A changed text paints through RichTextKit its first frame, then draws new blobs, so its run rebuilds
             // once; the clip's run is untouched.
             first!.Text = "Changed";
-            for (int frame = 0; frame < 3; frame++)
+            for (int frame = 0; frame < MergedFrames; frame++)
             {
                 managers.Renderer.NotifyHostFrameAdvanced();
                 managers.Draw();
@@ -363,6 +366,80 @@ public class TextBlobBatchGpuTests : IDisposable
 
         builds.ShouldBe(0);
         allocated.ShouldBe(0);
-        changedBuilds.ShouldBe(2);
+        // The changed run draws each text on its own while it changes, then merges once it holds still a frame.
+        changedBuilds.ShouldBe(1);
+    }
+
+    [Fact]
+    public void Draw_SteadyScroll_DrawsMovingTextsSinglyWithoutAllocating()
+    {
+        int scrollDrawCalls = -1;
+        int scrollBuilds = -1;
+        long allocated = -1;
+        int stoppedDrawCalls = -1;
+        _gpu.WithSurface(Size, Size, (surface, context) =>
+        {
+            GraphicalUiElement.SetPropertyOnRenderable = global::SkiaGum.CustomSetPropertyOnRenderable.SetPropertyOnRenderable;
+            SystemManagers managers = new SystemManagers();
+            managers.Initialize();
+            SystemManagers.Default = managers;
+            managers.Canvas = surface.Canvas;
+            ContainerRuntime root = Container(0, 0, Size, Size);
+            // Rows 20.7 px apart snap to whole pixels on their own, so their offsets relative to the first row change
+            // as the list scrolls.
+            ContainerRuntime list = Container(0, 0, 120, 400);
+            for (int i = 0; i < 8; i++)
+            {
+                list.AddChild(Label("Row " + i, 4, i * 20.7f));
+            }
+            root.AddChild(list);
+            root.AddChild(Frame(130, 10, 80, 80));
+            for (int i = 0; i < 4; i++)
+            {
+                root.AddChild(Label("Static " + i, 130, 100 + i * 18));
+            }
+            root.AddToManagers(managers, null);
+            RenderingLibrary.Graphics.TextBlobBatch batch = managers.Renderer.TextBatch;
+            int frame = 0;
+            void DrawFrame()
+            {
+                list.Y = -frame * 0.37f;
+                frame++;
+                managers.Renderer.NotifyHostFrameAdvanced();
+                managers.Draw();
+            }
+
+            // Long enough for the static run to merge.
+            for (int i = 0; i < MergedFrames; i++)
+            {
+                DrawFrame();
+            }
+            int buildsBefore = batch.MergedBuildCount;
+            long bytesBefore = GC.GetAllocatedBytesForCurrentThread();
+            for (int i = 0; i < 50; i++)
+            {
+                DrawFrame();
+            }
+            allocated = GC.GetAllocatedBytesForCurrentThread() - bytesBefore;
+            scrollBuilds = batch.MergedBuildCount - buildsBefore;
+            scrollDrawCalls = managers.Renderer.RenderStateChangeStatistics.DrawCallCount;
+
+            // Stopped: the list holds still for a frame, then merges again.
+            frame--;
+            for (int i = 0; i < MergedFrames; i++)
+            {
+                managers.Renderer.NotifyHostFrameAdvanced();
+                managers.Draw();
+            }
+            stoppedDrawCalls = managers.Renderer.RenderStateChangeStatistics.DrawCallCount;
+            context.Flush(true, true);
+            root.RemoveFromManagers();
+        });
+
+        // 8 moving rows drawn singly, one NineSlice draw, the static run merged into one.
+        scrollDrawCalls.ShouldBe(8 + 1 + 1);
+        scrollBuilds.ShouldBe(0);
+        allocated.ShouldBe(0);
+        stoppedDrawCalls.ShouldBe(1 + 1 + 1);
     }
 }
