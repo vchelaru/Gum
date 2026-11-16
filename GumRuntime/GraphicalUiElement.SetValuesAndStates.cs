@@ -1483,14 +1483,21 @@ public partial class GraphicalUiElement
         return false;
     }
 
+    /// <summary>Greater than zero while <c>SetGraphicalUiElement</c> is building an element on this thread.</summary>
+    [System.ThreadStatic]
+    internal static int BuildDepth;
+
     private void RecordAppliedCategoryState(string categoryName, string stateName)
     {
         _appliedCategoryStates ??= new Dictionary<string, string>();
+        bool sameAsBefore = _appliedCategoryStates.TryGetValue(categoryName, out string? before) && before == stateName;
         _appliedCategoryStates[categoryName] = stateName;
-        // A state applied before the instance joined its container is part of the build, which the container's values then override.
+        // A state applied before the instance joined its container, or while an element is still being built
+        // (a Forms control setting its ScrollBar's orientation), is part of the build, which the container's values then override.
+        // Applying the same state again later (a control refreshing its orientation) is not a new decision.
         _buildTimeCategoryStates ??= new HashSet<string>();
-        if (ElementGueContainingThis == null) { _buildTimeCategoryStates.Add(categoryName); }
-        else { _buildTimeCategoryStates.Remove(categoryName); }
+        if (ElementGueContainingThis == null || BuildDepth > 0) { _buildTimeCategoryStates.Add(categoryName); }
+        else if (!sameAsBefore) { _buildTimeCategoryStates.Remove(categoryName); }
     }
 
     /// <summary>
