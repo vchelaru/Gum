@@ -92,6 +92,9 @@ namespace RenderingLibrary
         // Null outside a Renderer draw entry point, so a sprite rendered by hand draws immediately.
         internal RenderingLibrary.Graphics.SpriteAtlasBatch? ActiveSpriteBatch => _renderer?.ActiveSpriteBatch;
 
+        // Null outside a Renderer walk, so a renderable drawn by hand applies its own clip.
+        internal IRenderableIpso? ClipAppliedByWalk => _renderer?.ClipAppliedByWalk;
+
         #endregion
 
         static bool HasInitializedGlobal = false;

@@ -574,30 +574,46 @@ namespace RenderingLibrary.Graphics
                     SpriteBatch.Flush();
                     canvas.Save();
                     canvas.ClipTo(renderable);
-                    RenderOne(renderable, managers);
+                    IRenderableIpso? outerClipper = ClipAppliedByWalk;
+                    ClipAppliedByWalk = renderable;
+                    try
+                    {
+                        RenderOne(renderable, managers);
+                        DrawChildren(renderable, managers);
+                    }
+                    finally
+                    {
+                        ClipAppliedByWalk = outerClipper;
+                    }
+                    SpriteBatch.Flush();
+                    canvas.Restore();
                 }
             }
             else
             {
                 RenderOne(renderable, managers);
-            }
-
-            if (isOnScreen)
-            {
-                if (RenderUsingHierarchy)
-                {
-                    // The list this one belongs to was already pre-rendered with its whole subtree. Pre-rendering
-                    // again at every depth called PreRender several times per node per frame.
-                    DrawList(renderable.Children, managers, prerender: false);
-                }
-
-                if (renderable.ClipsChildren)
-                {
-                    SpriteBatch.Flush();
-                    canvas.Restore();
-                }
+                DrawChildren(renderable, managers);
             }
         }
+
+        private void DrawChildren(IRenderableIpso renderable, SystemManagers managers)
+        {
+            if (RenderUsingHierarchy)
+            {
+                // The list this one belongs to was already pre-rendered with its whole subtree. Pre-rendering
+                // again at every depth called PreRender several times per node per frame.
+                DrawList(renderable.Children, managers, prerender: false);
+            }
+        }
+
+        /// <summary>
+        /// The clipper whose clip this renderer's walk has put on the canvas for the renderable being drawn: the
+        /// nearest renderable at or above it, inside the walk, that clips its children. Null when the walk applied
+        /// none, which includes a renderable drawn outside any walk, the root of a GumBatch draw, and the children
+        /// of a render-target bake (the offscreen canvas carries no clip from above the target). Text compares it
+        /// with its own effective clipper to skip re-applying a clip that is already there (#8148).
+        /// </summary>
+        internal IRenderableIpso? ClipAppliedByWalk { get; private set; }
 
         // Sprites add themselves to SpriteBatch; anything else that draws flushes it first so draw order holds.
         // Containers draw nothing, so sprites in separate containers still share a batch.
@@ -882,12 +898,15 @@ namespace RenderingLibrary.Graphics
             SKCanvas screenCanvas = managers.Canvas;
             managers.Canvas = offscreenCanvas;
             _bakeDepth++;
+            IRenderableIpso? screenClipper = ClipAppliedByWalk;
+            ClipAppliedByWalk = null;
             try
             {
                 DrawList(container.Children, managers);
             }
             finally
             {
+                ClipAppliedByWalk = screenClipper;
                 SpriteBatch.Flush();
                 _bakeDepth--;
                 managers.Canvas = screenCanvas;
