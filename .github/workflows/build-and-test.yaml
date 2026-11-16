@@ -252,6 +252,8 @@ jobs:
       matrix:
         os: ${{ fromJSON(github.event_name == 'pull_request' && '["ubuntu-latest"]' || '["windows-latest","macos-latest","ubuntu-latest"]') }}
     runs-on: ${{ matrix.os }}
+    # Final net; slowest normal run is about 11 minutes.
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
         with:
@@ -318,6 +320,10 @@ jobs:
           path: "TestResults/*.trx"
           reporter: dotnet-trx
           fail-on-error: true
+      - name: Show test processes (Linux)
+        if: failure() && runner.os == 'Linux'
+        continue-on-error: true
+        run: ps aux | grep -E 'dotnet|testhost|vstest' | grep -v grep || true
       - name: Upload hang dumps
         if: failure() && runner.os == 'Linux'
         uses: actions/upload-artifact@v4
@@ -326,6 +332,8 @@ jobs:
           path: |
             TestResults/**/*.dmp
             TestResults/**/Sequence_*.xml
+            TestResults/shard-*.log
+            TestResults/*.trx
           if-no-files-found: ignore
 
   # End-to-end Native AOT smoke test for issue #4105: RegisterRuntimeTypesThroughReflection walked
@@ -349,6 +357,8 @@ jobs:
     needs: Changes
     if: github.event_name != 'push' && github.event_name != 'schedule' && needs.Changes.outputs.non-docs == 'true' && (needs.Changes.outputs.scope != 'fast' || needs.Changes.outputs.aot == 'true')
     runs-on: windows-latest
+    # Final net; slowest normal run is under 3 minutes.
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
         with:
@@ -402,6 +412,8 @@ jobs:
     needs: Changes
     if: github.event_name != 'schedule' && github.event_name != 'push' && needs.Changes.outputs.non-docs == 'true' && (needs.Changes.outputs.scope != 'fast' || needs.Changes.outputs.gencode == 'true')
     runs-on: windows-latest
+    # Final net; slowest normal run is about 5 minutes.
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
         with:
@@ -504,6 +516,8 @@ jobs:
       # We used to have ubuntu-latest here, but it can't build iOS, and it's easier to just use macos
         os: [windows-latest, macos-15]
     runs-on: ${{ ((github.event_name == 'pull_request' && needs.Changes.outputs.non-docs == 'false') || (github.event_name == 'push' && matrix.os == 'windows-latest') || (github.event_name == 'pull_request' && needs.Changes.outputs.scope == 'fast' && matrix.os == 'macos-15')) && 'ubuntu-latest' || matrix.os }}
+    # Final net; slowest normal run is about 20 minutes.
+    timeout-minutes: 60
     steps:
       # actions/checkout's `submodules: recursive` does shallow (--depth=1)
       # submodule fetches, which fail outright whenever a nested submodule pins a
