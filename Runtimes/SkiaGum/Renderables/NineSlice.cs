@@ -276,7 +276,11 @@ public class NineSlice : RenderableShapeBase, IAnimatable, IAnimationChainRender
         // Modulate the image's texels by Color so the unified runtime's Color
         // property tints the nine-slice.
         SKPaint paint = base.GetPaint(boundingRect, absoluteRotation);
-        ApplyTextureTint(paint, SKBlendMode.Modulate, skipOpaqueWhite: true);
+        bool isTinted = ApplyTextureTint(paint, SKBlendMode.Modulate, skipOpaqueWhite: true);
+        // The vertex batch can draw no filter or the Modulate tint filter as a vertex color; Add cannot batch.
+        _paintBatchTint = !isTinted ? SKColors.White
+            : ColorOperation == ColorOperation.Modulate ? Color.WithAlpha(255)
+            : null;
         // Antialias on DrawImage anti-aliases the destination rect's edges. When
         // two sections of the nine-slice abut at a fractional pixel boundary
         // (because layout placed the whole NineSlice at a non-integer position),
@@ -692,17 +696,21 @@ public class NineSlice : RenderableShapeBase, IAnimatable, IAnimationChainRender
     // The image as a Nearest, clamped shader for the renderer's vertex batch; rebuilt when the image changes.
     private SKShader? _batchShader;
 
+    // The opaque tint the cached paint's color filter multiplies by (white without a filter), or null when the filter
+    // is one the vertex batch cannot reproduce. Set with the paint, so the two always agree.
+    private SKColor? _paintBatchTint;
+
     // Adds the lattice TryDrawLattice is about to draw to the renderer's vertex batch instead (#8153), as the same nine
-    // cells in device space. Only an untinted, opaque, default-blend NineSlice under a translate-and-positive-scale
-    // matrix batches; a flip, rotation, tint, alpha, blend, shadow or filter keeps the lattice.
+    // cells in device space. Only a default-blend NineSlice with no tint or a Modulate tint (a per-vertex color) under a
+    // translate-and-positive-scale matrix batches; a flip, rotation, Add color operation, blend, shadow or filter keeps
+    // the lattice. Alpha stays on the paint, so NineSlices of different alpha draw in separate batches.
     private bool TryAddToVertexBatch(SKCanvas canvas, SKPaint paint, SKMatrix matrix, SKRect boundingRect, float scale,
         int srcLeft, int srcTop, int usedWidth, int usedHeight, int fullOutsideW, int fullOutsideH)
     {
         NineSliceVertexBatch? batch = VertexBatch;
         if (batch == null || !batch.IsGpuCanvas(canvas) || HasDropshadow
-            || paint.ColorFilter != null || paint.Shader != null || paint.ImageFilter != null || paint.MaskFilter != null
+            || _paintBatchTint is not SKColor tint || paint.Shader != null || paint.ImageFilter != null || paint.MaskFilter != null
             || paint.Blender != null || paint.BlendMode != SKBlendMode.SrcOver || paint.PathEffect != null
-            || paint.Color.Alpha != 255
             || matrix.ScaleX <= 0 || matrix.ScaleY <= 0
             || matrix.Persp0 != 0 || matrix.Persp1 != 0 || matrix.Persp2 != 1)
         {
@@ -737,7 +745,7 @@ public class NineSlice : RenderableShapeBase, IAnimatable, IAnimationChainRender
         SKShader shader = _batchShader ??= Image!.ToShader(SKShaderTileMode.Clamp, SKShaderTileMode.Clamp, new SKSamplingOptions(SKFilterMode.Nearest));
         // Images that each wrap the same loaded bitmap draw the same pixels, so they share a batch.
         object key = (_ownsImage ? _texture : null) ?? (object)Image!;
-        batch.Add(canvas, key, shader, xs, ys, us, vs);
+        batch.Add(canvas, key, shader, tint, paint.Color.Alpha, xs, ys, us, vs);
         return true;
     }
 
