@@ -1070,6 +1070,9 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
     /// </summary>
     public Text(SystemManagers managers) : this() { }
 
+    internal static readonly int SpikeTextNoSave = int.TryParse(Environment.GetEnvironmentVariable("GUM_TEXTNOSAVE"), out int spikeValue) ? spikeValue : 0;
+    private bool _spikeSkipBeginFrame;
+
     public void Render(ISystemManagers managers)
     {
         var canvas = ((SystemManagers)managers).Canvas;
@@ -1120,6 +1123,26 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
                 SKMatrix.Concat(ref result, canvasMatrix, result);
             }
 
+            // SPIKE #8116 walk: GUM_TEXTNOSAVE=1 draws plain unclipped text at its offset with no Save/Translate/Restore;
+            // =2 also skips the text's own clip when the hierarchy walk already applied every ancestor clip.
+            if (isSimple && SpikeTextNoSave != 0)
+            {
+                var spikeClipper = this.GetEffectiveClipper();
+                if ((spikeClipper == null || (SpikeTextNoSave == 2 && global::RenderingLibrary.Graphics.Renderer.SpikeWalkDepth > 0))
+                    && GetCachedRenderPaint() == null)
+                {
+                    var spikeBlock = GetPaintTextBlock(textBlock);
+                    _blobCache.BeginFrame(spikeBlock);
+                    if (_blobCache.TryPaintAt(canvas, spikeBlock, absoluteX, absoluteY))
+                    {
+                        statistics?.RecordDrawCall();
+                        return;
+                    }
+                    // First frame or unsupported block: the normal path below, without a second BeginFrame (it would end the first frame).
+                    _spikeSkipBeginFrame = true;
+                }
+            }
+
             canvas.Save();
 
             // set the clip rect *after* save so it gets undone and restored
@@ -1146,7 +1169,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
             // vertical alignment above was computed from the full block so the revealed letters stay in
             // their final positions (typewriter reveal). Null MaxLettersToShow returns the full block.
             var paintBlock = GetPaintTextBlock(textBlock);
-            _blobCache.BeginFrame(paintBlock);
+            if (_spikeSkipBeginFrame) { _spikeSkipBeginFrame = false; } else { _blobCache.BeginFrame(paintBlock); }
 
             // Drop shadow and Blend are canvas effects (not RichTextKit Style properties): paint the
             // text into an offscreen layer whose paint carries the ImageFilter (shadow) and/or
@@ -1914,6 +1937,30 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
             }
         }
 
+        // SPIKE #8116 walk: draws the cached blobs at (x, y) without touching the canvas matrix. False when the block
+        // must go through RichTextKit (first frame, unsupported) or has transformed letters; nothing is drawn then.
+        public bool TryPaintAt(SKCanvas canvas, TextBlock block, float x, float y)
+        {
+            if (_isFirstFrame || !ReferenceEquals(Block, block))
+            {
+                return false;
+            }
+            TextPaintOptions resolved = TextPaintOptions.Default;
+            if (!_isBuilt)
+            {
+                Build(block, resolved);
+            }
+            if (_isUnsupported || !HasBuildFontSettings(resolved) || _segments.Count != 1 || _segments[0].HasMatrix)
+            {
+                return false;
+            }
+            for (int i = 0; i < _runs.Count; i++)
+            {
+                DrawRun(canvas, _runs[i], null, x, y);
+            }
+            return true;
+        }
+
         public void Paint(SKCanvas canvas, TextBlock block, TextPaintOptions? options)
         {
             if (_isFirstFrame || !ReferenceEquals(Block, block))
@@ -1966,7 +2013,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
         private SKColor _haloColor;
         private float _haloWidth;
 
-        private void DrawRun(SKCanvas canvas, BlobRun run, Action<SKPaint, IStyle, bool>? configure)
+        private void DrawRun(SKCanvas canvas, BlobRun run, Action<SKPaint, IStyle, bool>? configure, float ox = 0, float oy = 0)
         {
             IStyle style = run.Style;
             bool hasHalo = style.HaloColor != SKColor.Empty;
@@ -2023,14 +2070,14 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
                         halo.StrokeWidth = _haloWidth = style.HaloWidth;
                     }
                 }
-                canvas.DrawText(run.Blob, 0, run.VerticalOffset, halo);
+                canvas.DrawText(run.Blob, ox, oy + run.VerticalOffset, halo);
             }
             if (!_isFillKnown || _fillColor != style.TextColor)
             {
                 fill.Color = _fillColor = style.TextColor;
                 _isFillKnown = true;
             }
-            canvas.DrawText(run.Blob, 0, run.VerticalOffset, fill);
+            canvas.DrawText(run.Blob, ox, oy + run.VerticalOffset, fill);
         }
 
         private static void SetHaloStroke(SKPaint halo, IStyle style)

@@ -601,7 +601,16 @@ namespace RenderingLibrary.Graphics
 
         // Sprites add themselves to SpriteBatch; anything else that draws flushes it first so draw order holds.
         // Containers draw nothing, so sprites in separate containers still share a batch.
+        // SPIKE #8116 walk: >0 while the hierarchy walk draws, so every ancestor clip is already on the canvas.
+        public static int SpikeWalkDepth;
+
         private void RenderOne(IRenderableIpso renderable, SystemManagers managers)
+        {
+            SpikeWalkDepth++;
+            try { RenderOneCore(renderable, managers); } finally { SpikeWalkDepth--; }
+        }
+
+        private void RenderOneCore(IRenderableIpso renderable, SystemManagers managers)
         {
             IRenderableIpso inner = renderable is GraphicalUiElement element && element.RenderableComponent is IRenderableIpso contained
                 ? contained
