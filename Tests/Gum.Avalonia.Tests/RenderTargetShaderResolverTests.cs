@@ -87,44 +87,46 @@ public class RenderTargetShaderResolverTests
     }
 
     // What the Output tab shows for a .sksl file that does not compile: the dispatcher's report around the
-    // compiler's own text, with no advice to check that the file exists.
+    // compiler's own text, with no advice to check that the file exists. Uses the dispatcher's message builder
+    // directly, not the static PropertyAssignmentError event: earlier tests leave tool plugins subscribed to it,
+    // and their Output handler waits on a UI thread that no longer pumps (a hang on Linux CI).
     [Fact]
-    public void SkslThatDoesNotCompile_ReportsTheCodeLineAndSupportedForm_WithoutTheMissingFileAdvice()
+    public void SkslThatDoesNotCompile_IsReportedAsACompileFailure_WithTheCodeLineAndSupportedForm()
     {
-        string path = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "GumSkslOutput_" + System.Guid.NewGuid().ToString("N") + ".sksl");
-        File.WriteAllText(path, "half4 main(float2 coord) { return half4(sk_FragCoord.x); }");
-        List<string> output = new List<string>();
-        Action<string> capture = output.Add;
-        Func<string, object?>? previousResolver = Gum.Wireframe.CustomSetPropertyOnRenderable.RenderTargetEffectResolver;
-        Gum.Wireframe.MissingFileBehavior previousBehavior = Gum.Wireframe.GraphicalUiElement.MissingFileBehavior;
-        try
-        {
-            Gum.Wireframe.GraphicalUiElement.SetPropertyOnRenderable = Gum.Wireframe.CustomSetPropertyOnRenderable.SetPropertyOnRenderable;
-            Gum.Wireframe.GraphicalUiElement.MissingFileBehavior = Gum.Wireframe.MissingFileBehavior.ConsumeSilently;
-            Gum.Wireframe.CustomSetPropertyOnRenderable.RenderTargetEffectResolver = absolute =>
-            {
-                RenderTargetShaderResolver.Compile(File.ReadAllText(absolute), PlatformTarget.OpenGL, absolute);
-                return new object();
-            };
-            Gum.Wireframe.CustomSetPropertyOnRenderable.PropertyAssignmentError += capture;
+        InvalidOperationException failure = Should.Throw<InvalidOperationException>(
+            () => RenderTargetShaderResolver.Compile("half4 main(float2 coord) { return half4(sk_FragCoord.x); }", PlatformTarget.OpenGL, "Bad.sksl"));
 
-            new Gum.GueDeriving.ContainerRuntime().SetProperty("SourceShaderFile", path);
-        }
-        finally
-        {
-            Gum.Wireframe.CustomSetPropertyOnRenderable.PropertyAssignmentError -= capture;
-            Gum.Wireframe.CustomSetPropertyOnRenderable.RenderTargetEffectResolver = previousResolver;
-            Gum.Wireframe.GraphicalUiElement.MissingFileBehavior = previousBehavior;
-            File.Delete(path);
-        }
+        global::RenderingLibrary.Graphics.ShaderResolverRequirement.IsCompileFailure(failure).ShouldBeTrue();
+        string output = global::RenderingLibrary.Graphics.ShaderResolverRequirement.BuildCompileFailureMessage("Bad.sksl", "Box", failure);
 
-        output.Count.ShouldBe(1);
-        output[0].ShouldStartWith("Could not compile the SourceShaderFile");
-        output[0].ShouldContain("SD0666");
-        output[0].ShouldContain(".sksl(1,");
-        output[0].ShouldContain("uniform shader SpriteTexture");
-        output[0].ShouldNotContain("Check if the file exists");
+        output.ShouldStartWith("Could not compile the SourceShaderFile Bad.sksl on Container in Box:");
+        output.ShouldContain("SD0666");
+        output.ShouldContain("Bad.sksl(1,");
+        output.ShouldContain("uniform shader SpriteTexture");
+        output.ShouldNotContain("Check if the file exists");
     }
+
+    // A file that cannot be read is still a missing file, whatever the extension.
+    [Fact]
+    public void AMissingShaderFile_IsNotReportedAsACompileFailure()
+    {
+        global::RenderingLibrary.Graphics.ShaderResolverRequirement.IsCompileFailure(new FileNotFoundException("x")).ShouldBeFalse();
+    }
+
+    // Order independence: nothing above may leave the static dispatcher state changed for the next test.
+    [Fact]
+    public void TheSkslTests_LeaveTheDispatcherStateAsTheyFoundIt()
+    {
+        Func<string, object?>? resolver = Gum.Wireframe.CustomSetPropertyOnRenderable.RenderTargetEffectResolver;
+        Gum.Wireframe.MissingFileBehavior behavior = Gum.Wireframe.GraphicalUiElement.MissingFileBehavior;
+
+        Should.Throw<InvalidOperationException>(
+            () => RenderTargetShaderResolver.Compile("half4 main(float2 coord) { return half4(sk_FragCoord.x); }", PlatformTarget.OpenGL, "Bad.sksl"));
+
+        Gum.Wireframe.CustomSetPropertyOnRenderable.RenderTargetEffectResolver.ShouldBe(resolver);
+        Gum.Wireframe.GraphicalUiElement.MissingFileBehavior.ShouldBe(behavior);
+    }
+
 
     // #7104: ShadowDusk tells Slang from .fx by the text, so a Slang shader compiles under any name.
     private const string GrayscaleSlang = """
