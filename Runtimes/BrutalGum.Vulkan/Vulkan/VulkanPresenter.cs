@@ -20,6 +20,7 @@ internal sealed unsafe class VulkanPresenter : IDisposable
     private readonly PhysicalDevice _physicalDevice;
     private readonly Device _device;
     private readonly Queue _queue;
+    private readonly Func<IDisposable>? _acquireQueueLock;
     private readonly VkSurfaceKHR _surface;
     private readonly VkSampler _sampler;
     private readonly VkDescriptorSetLayout _setLayout;
@@ -48,11 +49,14 @@ internal sealed unsafe class VulkanPresenter : IDisposable
     private readonly VkDescriptorSet[] _sets = new VkDescriptorSet[1];
     private VkPipeline _pipeline;
 
-    public VulkanPresenter(PhysicalDevice physicalDevice, Device device, Queue queue, int queueFamily, VkSurfaceKHR surface)
+    public VulkanPresenter(
+        PhysicalDevice physicalDevice, Device device, Queue queue, int queueFamily, VkSurfaceKHR surface,
+        Func<IDisposable>? acquireQueueLock = null)
     {
         _physicalDevice = physicalDevice;
         _device = device;
         _queue = queue;
+        _acquireQueueLock = acquireQueueLock;
         _surface = surface;
 
         _sampler = device.CreateSampler(
@@ -111,7 +115,11 @@ internal sealed unsafe class VulkanPresenter : IDisposable
     /// </summary>
     public void Configure(int width, int height, VkImage source, VkFormat sourceFormat)
     {
-        _device.WaitIdle();
+        // vkDeviceWaitIdle needs every queue externally synchronized.
+        using (_acquireQueueLock?.Invoke())
+        {
+            _device.WaitIdle();
+        }
         DestroySizeDependent();
 
         var capabilities = _physicalDevice.GetSurfaceCapabilitiesKHR(_surface);
@@ -262,12 +270,16 @@ internal sealed unsafe class VulkanPresenter : IDisposable
         _commandBuffer.End();
 
         var signal = _renderFinished[imageIndex];
-        _queue.Submit([_imageAvailable], [VkPipelineStageFlags.ColorAttachmentOutputBit], [_commandBuffer], [signal], _frameFence);
         var swapchain = _swapchain;
-        _queue.PresentKHR(new VkPresentInfoKHR
+        // Only the queue calls hold the host's lock; the fence wait above and the recording stay outside it.
+        using (_acquireQueueLock?.Invoke())
         {
-            WaitSemaphoreCount = 1, WaitSemaphores = &signal, SwapchainCount = 1, Swapchains = &swapchain, ImageIndices = &imageIndex,
-        });
+            _queue.Submit([_imageAvailable], [VkPipelineStageFlags.ColorAttachmentOutputBit], [_commandBuffer], [signal], _frameFence);
+            _queue.PresentKHR(new VkPresentInfoKHR
+            {
+                WaitSemaphoreCount = 1, WaitSemaphores = &signal, SwapchainCount = 1, Swapchains = &swapchain, ImageIndices = &imageIndex,
+            });
+        }
         LastPresentedImage = image;
     }
 

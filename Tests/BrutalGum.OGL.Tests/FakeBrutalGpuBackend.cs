@@ -10,20 +10,33 @@ internal sealed class FakeBrutalGpuBackend : IBrutalGpuBackend
     public List<(FakeBrutalTarget Target, int Width, int Height)> Presents { get; } = new();
     public bool Disposed { get; private set; }
 
+    /// <summary>Reads whether the host's queue lock is held; set by the queue-lock tests and recorded at each WaitForGpu, target Dispose and backend Dispose.</summary>
+    public Func<bool>? IsLockHeld { get; set; }
+    public List<bool> WaitForGpuLockStates { get; } = new();
+    public bool? DisposedWhileLocked { get; private set; }
+
     public IBrutalTarget CreateTarget(int width, int height)
     {
-        FakeBrutalTarget target = new FakeBrutalTarget(width, height);
+        FakeBrutalTarget target = new FakeBrutalTarget(width, height) { IsLockHeld = IsLockHeld };
         Targets.Add(target);
         return target;
     }
 
     public int WaitForGpuCount { get; private set; }
 
-    public void WaitForGpu() => WaitForGpuCount++;
+    public void WaitForGpu()
+    {
+        WaitForGpuCount++;
+        WaitForGpuLockStates.Add(IsLockHeld?.Invoke() ?? false);
+    }
 
     public void Present(IBrutalTarget target, int width, int height) => Presents.Add(((FakeBrutalTarget)target, width, height));
 
-    public void Dispose() => Disposed = true;
+    public void Dispose()
+    {
+        Disposed = true;
+        DisposedWhileLocked = IsLockHeld?.Invoke() ?? false;
+    }
 }
 
 internal sealed class FakeBrutalTarget : IBrutalTarget
@@ -42,6 +55,8 @@ internal sealed class FakeBrutalTarget : IBrutalTarget
     public int BeginCount { get; private set; }
     public int EndCount { get; private set; }
     public bool Disposed { get; private set; }
+    public Func<bool>? IsLockHeld { get; init; }
+    public bool? DisposedWhileLocked { get; private set; }
 
     public SKCanvas Canvas => _surface.Canvas;
 
@@ -65,6 +80,7 @@ internal sealed class FakeBrutalTarget : IBrutalTarget
     public void Dispose()
     {
         Disposed = true;
+        DisposedWhileLocked = IsLockHeld?.Invoke() ?? false;
         _surface.Dispose();
     }
 }

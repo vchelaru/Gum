@@ -218,6 +218,31 @@ Things to know:
 
 OpenGL has no equivalent switch. `Draw` writes the whole default framebuffer, so anything of yours must be drawn after it.
 
+### Sharing the Queue With Other Threads (Vulkan)
+
+Vulkan requires a queue to be used by one thread at a time. If another thread of your game also submits to the queue you passed to `Initialize` (a texture upload worker, for example), pass the lock that thread uses as `acquireQueueLock`. It is a function that takes the lock and returns an `IDisposable` that releases it:
+
+```csharp
+// Class scope
+readonly object _queueLock = new object();
+
+sealed class QueueLockRelease(object queueLock) : System.IDisposable
+{
+    public void Dispose() => System.Threading.Monitor.Exit(queueLock);
+}
+
+// Initialize
+var release = new QueueLockRelease(_queueLock);
+GumUI.Initialize(window, instance, physicalDevice, device, queue, queueFamily, surface,
+    acquireQueueLock: () =>
+    {
+        System.Threading.Monitor.Enter(_queueLock);
+        return release;
+    });
+```
+
+Your other threads take the same `_queueLock` around their own submits. Gum takes it around its submits, presenting, waiting for the GPU after a window resize, and freeing its images on `Uninitialize`. Gum never takes it while it already holds it, so the lock does not need to be re-entrant. Returning one cached `IDisposable`, as above, keeps `Draw` free of allocations. Leave `acquireQueueLock` out if only the thread that calls Gum uses the queue.
+
 ## Full Program
 
 The following is a complete `Program.cs` that opens a window, initializes Gum, shows a button and runs the game loop. It needs only the Gum package and builds its UI in code, so it runs without a Gum project.

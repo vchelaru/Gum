@@ -12,8 +12,7 @@ namespace Gum;
 
 public partial class GumService
 {
-    private VulkanBackend? VulkanBackend => _backend as VulkanBackend;
-
+    private VulkanBackend? VulkanBackend => QueueLockedBackend.Unwrap(_backend) as VulkanBackend;
     /// <summary>
     /// Initializes Gum for a BRUTAL application drawing with Vulkan 1.3, optionally loading a Gum project.
     /// Gum creates its Skia context on the objects you pass, a render target at the framebuffer size
@@ -29,10 +28,11 @@ public partial class GumService
     /// <param name="queueFamily">The family index <paramref name="queue"/> belongs to. It must be able to present to <paramref name="surface"/> when presenting.</param>
     /// <param name="surface">The surface of <paramref name="window"/>. May be default when <see cref="PresentToWindow"/> is set to false before the first <see cref="Draw"/>.</param>
     /// <param name="gumProjectFile">An optional .gumx or .gumj project file to load.</param>
+    /// <param name="acquireQueueLock">Takes your queue lock; see the <see cref="IBrutalInput"/> overload.</param>
     public void Initialize(
         GlfwWindow window, Instance instance, PhysicalDevice physicalDevice, Device device, Queue queue, int queueFamily,
-        VkSurfaceKHR surface, string? gumProjectFile = null) =>
-        Initialize(new BrutalGlfwInput(window), instance, physicalDevice, device, queue, queueFamily, surface, gumProjectFile);
+        VkSurfaceKHR surface, string? gumProjectFile = null, Func<IDisposable>? acquireQueueLock = null) =>
+        Initialize(new BrutalGlfwInput(window), instance, physicalDevice, device, queue, queueFamily, surface, gumProjectFile, acquireQueueLock);
 
     /// <summary>
     /// Initializes Gum like the overload without <paramref name="visualsVersion"/>, with an explicit set of default Forms
@@ -47,10 +47,12 @@ public partial class GumService
     /// <param name="surface">The surface of <paramref name="window"/>.</param>
     /// <param name="visualsVersion">The default Forms visuals to register.</param>
     /// <param name="gumProjectFile">An optional .gumx or .gumj project file to load.</param>
+    /// <param name="acquireQueueLock">Takes your queue lock; see the <see cref="IBrutalInput"/> overload.</param>
     public void Initialize(
         GlfwWindow window, Instance instance, PhysicalDevice physicalDevice, Device device, Queue queue, int queueFamily,
-        VkSurfaceKHR surface, DefaultVisualsVersion visualsVersion, string? gumProjectFile = null) =>
-        Initialize(new BrutalGlfwInput(window), instance, physicalDevice, device, queue, queueFamily, surface, visualsVersion, gumProjectFile);
+        VkSurfaceKHR surface, DefaultVisualsVersion visualsVersion, string? gumProjectFile = null,
+        Func<IDisposable>? acquireQueueLock = null) =>
+        Initialize(new BrutalGlfwInput(window), instance, physicalDevice, device, queue, queueFamily, surface, visualsVersion, gumProjectFile, acquireQueueLock);
 
     /// <summary>
     /// Initializes Gum for a BRUTAL application drawing with Vulkan 1.3 whose window and events are not
@@ -65,10 +67,18 @@ public partial class GumService
     /// <param name="queueFamily">The family index <paramref name="queue"/> belongs to. It must be able to present to <paramref name="surface"/> when presenting.</param>
     /// <param name="surface">The surface of the host's window. May be default when <see cref="PresentToWindow"/> is set to false before the first <see cref="Draw"/>.</param>
     /// <param name="gumProjectFile">An optional .gumx or .gumj project file to load.</param>
+    /// <param name="acquireQueueLock">
+    /// Optional. Vulkan needs a <c>VkQueue</c> externally synchronized, and Gum submits to <paramref name="queue"/>.
+    /// If your game also submits to it (or waits on the device) from another thread, pass a function that takes
+    /// the lock you use for those calls and returns an <see cref="IDisposable"/> that releases it. Gum calls it
+    /// around its own queue work and never takes it while already holding it, so a non-re-entrant lock is fine.
+    /// Return a cached disposable to keep the draw loop free of allocations. Leave it null for a game that only
+    /// touches the queue from the thread that calls Gum.
+    /// </param>
     public void Initialize(
         IBrutalInput input, Instance instance, PhysicalDevice physicalDevice, Device device, Queue queue, int queueFamily,
-        VkSurfaceKHR surface, string? gumProjectFile = null) =>
-        Initialize(input, new VulkanBackend(instance, physicalDevice, device, queue, queueFamily, surface), gumProjectFile);
+        VkSurfaceKHR surface, string? gumProjectFile = null, Func<IDisposable>? acquireQueueLock = null) =>
+        Initialize(input, CreateBackend(instance, physicalDevice, device, queue, queueFamily, surface, acquireQueueLock), gumProjectFile);
 
     /// <summary>
     /// Initializes Gum like the <see cref="IBrutalInput"/> overload without <paramref name="visualsVersion"/>, with an explicit
@@ -83,10 +93,19 @@ public partial class GumService
     /// <param name="surface">The surface of the host's window.</param>
     /// <param name="visualsVersion">The default Forms visuals to register.</param>
     /// <param name="gumProjectFile">An optional .gumx or .gumj project file to load.</param>
+    /// <param name="acquireQueueLock">Takes your queue lock; see the overload without <paramref name="visualsVersion"/>.</param>
     public void Initialize(
         IBrutalInput input, Instance instance, PhysicalDevice physicalDevice, Device device, Queue queue, int queueFamily,
-        VkSurfaceKHR surface, DefaultVisualsVersion visualsVersion, string? gumProjectFile = null) =>
-        Initialize(input, new VulkanBackend(instance, physicalDevice, device, queue, queueFamily, surface), gumProjectFile, visualsVersion);
+        VkSurfaceKHR surface, DefaultVisualsVersion visualsVersion, string? gumProjectFile = null,
+        Func<IDisposable>? acquireQueueLock = null) =>
+        Initialize(input, CreateBackend(instance, physicalDevice, device, queue, queueFamily, surface, acquireQueueLock), gumProjectFile, visualsVersion);
+
+    private static IBrutalGpuBackend CreateBackend(
+        Instance instance, PhysicalDevice physicalDevice, Device device, Queue queue, int queueFamily,
+        VkSurfaceKHR surface, Func<IDisposable>? acquireQueueLock) =>
+        QueueLockedBackend.Wrap(
+            new VulkanBackend(instance, physicalDevice, device, queue, queueFamily, surface, acquireQueueLock),
+            acquireQueueLock);
 
     /// <summary>
     /// True (the default) to have <see cref="Draw"/> present Gum's image to the window. Set false when your
@@ -114,7 +133,7 @@ public partial class GumService
     /// bytes are sRGB in a UNORM format (<see cref="RenderTargetFormat"/>): a pass that writes to an sRGB target
     /// must not decode them again. Null before Initialize.
     /// </summary>
-    public VkImage? RenderTargetImage => (_targetHolder?.Target as VulkanTarget)?.Image;
+    public VkImage? RenderTargetImage => (QueueLockedBackend.Unwrap(_targetHolder?.Target) as VulkanTarget)?.Image;
 
     // Read by reflection from the sample's --capture mode, which proves a frame reached the window by reading
     // the swapchain image back: { handle, VkFormat, width, height }, or null before the first present.
@@ -124,6 +143,6 @@ public partial class GumService
             : null;
 
     /// <summary>The format of <see cref="RenderTargetImage"/>.</summary>
-    public VkFormat? RenderTargetFormat => (_targetHolder?.Target as VulkanTarget)?.Format;
+    public VkFormat? RenderTargetFormat => (QueueLockedBackend.Unwrap(_targetHolder?.Target) as VulkanTarget)?.Format;
 }
 #endif
