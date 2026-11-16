@@ -86,6 +86,46 @@ public class RenderTargetShaderResolverTests
         message.ShouldContain("uniform shader SpriteTexture");
     }
 
+    // What the Output tab shows for a .sksl file that does not compile: the dispatcher's report around the
+    // compiler's own text, with no advice to check that the file exists.
+    [Fact]
+    public void SkslThatDoesNotCompile_ReportsTheCodeLineAndSupportedForm_WithoutTheMissingFileAdvice()
+    {
+        string path = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "GumSkslOutput_" + System.Guid.NewGuid().ToString("N") + ".sksl");
+        File.WriteAllText(path, "half4 main(float2 coord) { return half4(sk_FragCoord.x); }");
+        List<string> output = new List<string>();
+        Action<string> capture = output.Add;
+        Func<string, object?>? previousResolver = Gum.Wireframe.CustomSetPropertyOnRenderable.RenderTargetEffectResolver;
+        Gum.Wireframe.MissingFileBehavior previousBehavior = Gum.Wireframe.GraphicalUiElement.MissingFileBehavior;
+        try
+        {
+            Gum.Wireframe.GraphicalUiElement.SetPropertyOnRenderable = Gum.Wireframe.CustomSetPropertyOnRenderable.SetPropertyOnRenderable;
+            Gum.Wireframe.GraphicalUiElement.MissingFileBehavior = Gum.Wireframe.MissingFileBehavior.ConsumeSilently;
+            Gum.Wireframe.CustomSetPropertyOnRenderable.RenderTargetEffectResolver = absolute =>
+            {
+                RenderTargetShaderResolver.Compile(File.ReadAllText(absolute), PlatformTarget.OpenGL, absolute);
+                return new object();
+            };
+            Gum.Wireframe.CustomSetPropertyOnRenderable.PropertyAssignmentError += capture;
+
+            new Gum.GueDeriving.ContainerRuntime().SetProperty("SourceShaderFile", path);
+        }
+        finally
+        {
+            Gum.Wireframe.CustomSetPropertyOnRenderable.PropertyAssignmentError -= capture;
+            Gum.Wireframe.CustomSetPropertyOnRenderable.RenderTargetEffectResolver = previousResolver;
+            Gum.Wireframe.GraphicalUiElement.MissingFileBehavior = previousBehavior;
+            File.Delete(path);
+        }
+
+        output.Count.ShouldBe(1);
+        output[0].ShouldStartWith("Could not compile the SourceShaderFile");
+        output[0].ShouldContain("SD0666");
+        output[0].ShouldContain(".sksl(1,");
+        output[0].ShouldContain("uniform shader SpriteTexture");
+        output[0].ShouldNotContain("Check if the file exists");
+    }
+
     // #7104: ShadowDusk tells Slang from .fx by the text, so a Slang shader compiles under any name.
     private const string GrayscaleSlang = """
         Texture2D SpriteTexture;

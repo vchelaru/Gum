@@ -44,6 +44,58 @@ public class PreviewShaderResolverTests : BaseTestClass
         }
     }
 
+    // #7955: the Preview resolves a .sksl file, and reports one that does not compile with the ShadowDusk code
+    // and line instead of the missing-file advice.
+    [Theory]
+    [InlineData("uniform shader SpriteTexture;\nhalf4 main(float2 c) { return SpriteTexture.eval(c); }", true)]
+    [InlineData("half4 main(float2 c) { return half4(sk_FragCoord.x); }", false)]
+    public void SourceShaderFile_Sksl_ResolvesOrReportsTheCompilerError(string sksl, bool compiles)
+    {
+        using MinimalGame game = new();
+        game.RunOneFrame();
+        string path = Path.Combine(Path.GetTempPath(), "GumPreview7955_" + Path.GetRandomFileName() + ".sksl");
+        File.WriteAllText(path, sksl);
+        System.Collections.Generic.List<string> reported = new();
+        Action<string> capture = reported.Add;
+        MissingFileBehavior previousBehavior = GraphicalUiElement.MissingFileBehavior;
+
+        try
+        {
+            GraphicalUiElement.MissingFileBehavior = MissingFileBehavior.ConsumeSilently;
+            CustomSetPropertyOnRenderable.PropertyAssignmentError += capture;
+            PreviewShaderResolver.Register(game.GraphicsDevice);
+            ContainerRuntime container = new();
+            container.Width = 64;
+            container.Height = 64;
+            container.IsRenderTarget = true;
+            container.AddToManagers(SystemManagers.Default, null);
+
+            container.SourceShaderFile = path;
+
+            if (compiles)
+            {
+                container.RenderTargetEffect.ShouldNotBeNull();
+                reported.ShouldBeEmpty();
+            }
+            else
+            {
+                container.RenderTargetEffect.ShouldBeNull();
+                reported.Count.ShouldBe(1);
+                reported[0].ShouldStartWith("Could not compile the SourceShaderFile");
+                reported[0].ShouldContain("SD0666");
+                reported[0].ShouldContain(".sksl(1,");
+                reported[0].ShouldNotContain("Check if the file exists");
+            }
+        }
+        finally
+        {
+            CustomSetPropertyOnRenderable.PropertyAssignmentError -= capture;
+            CustomSetPropertyOnRenderable.RenderTargetEffectResolver = null;
+            GraphicalUiElement.MissingFileBehavior = previousBehavior;
+            File.Delete(path);
+        }
+    }
+
     // #7034: a relative #include resolves against the shader's own folder.
     private const string GrayscaleFxIncludingLuma = """
         #include "Luma.hlsli"

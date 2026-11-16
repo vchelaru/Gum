@@ -23,6 +23,30 @@ internal static class ShaderResolverRequirement
     }
 
     /// <summary>
+    /// Whether <paramref name="exception"/> from a resolver means the shader was read but did not compile, as opposed
+    /// to a file that could not be read or a format the resolver does not support.
+    /// </summary>
+    public static bool IsCompileFailure(System.Exception? exception) =>
+        exception != null
+        && exception is not System.IO.IOException
+        && exception is not System.UnauthorizedAccessException
+        && exception is not System.NotSupportedException;
+
+    /// <summary>
+    /// The message for a shader that was read but did not compile. The exception's message carries the compiler's
+    /// own errors (code, file, line), so nothing here suggests the file is missing.
+    /// </summary>
+    public static string BuildCompileFailureMessage(string file, object? tag, System.Exception exception)
+    {
+        string message = $"Could not compile the SourceShaderFile {file} on Container";
+        if (tag != null)
+        {
+            message += $" in {tag}";
+        }
+        return message + ":\n" + exception.Message;
+    }
+
+    /// <summary>
     /// The text to append when a registered resolver returned nothing for the file, so it did not handle it.
     /// </summary>
     public static string BuildDeclinedHint(string packageId)

@@ -1382,6 +1382,19 @@ public partial class CustomSetPropertyOnRenderable
         {
             // Resolver registered but couldn't produce an effect (missing file or compile error).
             // Mirror Sprite source-file handling: honor MissingFileBehavior, else report the error.
+            if (RenderingLibrary.Graphics.ShaderResolverRequirement.IsCompileFailure(resolveException))
+            {
+                // The file was read and the compiler rejected it, so "check if the file exists" would mislead.
+                string compileMessage = RenderingLibrary.Graphics.ShaderResolverRequirement.BuildCompileFailureMessage(value, graphicalUiElement.Tag, resolveException!);
+                if (GraphicalUiElement.MissingFileBehavior == MissingFileBehavior.ThrowException)
+                {
+                    throw new System.IO.FileNotFoundException(compileMessage, resolveException);
+                }
+                effectOwner.RenderTargetEffect = null;
+                PropertyAssignmentError?.Invoke(compileMessage);
+                return;
+            }
+
             string message = "Error setting SourceShaderFile on Container";
             if (graphicalUiElement.Tag != null)
             {

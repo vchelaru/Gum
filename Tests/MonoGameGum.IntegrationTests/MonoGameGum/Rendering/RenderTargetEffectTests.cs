@@ -611,6 +611,31 @@ technique SpriteDrawing
         return RenderToCapture(gd, renderer, managers, background);
     }
 
+    // #7955: what the tool's parameter rows are built from for an SkSL shader. Gum's host parameters are listed
+    // (the rows hide them), and the uniforms the author declared come out as float parameters, an int and a bool
+    // included, because ShadowDusk lowers them for the OpenGL target.
+    [Fact]
+    public void EffectShaderParameters_Read_OfAnSkslShader_ListsTheHostParametersAndTheDeclaredUniformsAsFloats()
+    {
+        using MinimalGame game = new();
+        game.RunOneFrame();
+        Result<CompiledShader, ShaderError[]> compiled = ShaderConverter.Compile(
+            new EffectCompiler(),
+            "uniform shader SpriteTexture;\nuniform float4 tint;\nuniform int steps;\nuniform bool flag;\nhalf4 main(float2 c) { return SpriteTexture.eval(c) * tint * half(steps) * half(flag ? 1 : 0); }",
+            new CompilerOptions { Target = PlatformTarget.OpenGL },
+            "Params.sksl");
+        compiled.IsSuccess.ShouldBeTrue(compiled.IsFailure ? string.Join("\n", compiled.Error.Select(e => e.Code + " " + e.Message)) : "");
+        using Effect effect = new(game.GraphicsDevice, compiled.Value.Data);
+
+        System.Collections.Generic.IReadOnlyList<ShaderParameterInfo> parameters = EffectShaderParameters.Read(effect);
+
+        parameters.Select(p => p.Name).ShouldContain(ShaderParameterCollection.SpriteTextureTexelSizeName);
+        parameters.Select(p => p.Name).ShouldContain(ShaderParameterCollection.ResolutionName);
+        parameters.Single(p => p.Name == "tint").Count.ShouldBe(4);
+        parameters.Single(p => p.Name == "steps").Kind.ShouldBe(ShaderParameterKind.Float);
+        parameters.Single(p => p.Name == "flag").Kind.ShouldBe(ShaderParameterKind.Float);
+    }
+
     // The tool lists a shader's parameters from the compiled effect, so the names, kinds and sizes
     // must come out as the shader declared them (Outline.slang declares TexelSize, Thickness,
     // PixelSize and the three color channels besides the texture it samples).

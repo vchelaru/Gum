@@ -38,6 +38,10 @@ If you are managing a render target yourself in code instead of using `Is Render
 
 A container with `Is Render Target` can set `Source Shader File` to apply a shader to everything inside it. The tool picks and previews `.fx`, `.slang` and `.sksl` files.
 
+{% hint style="info" %}
+Picking and previewing `.sksl` files is available in December 2026, or now if building Gum from source.
+{% endhint %}
+
 ## Shader Parameters
 
 Available in December 2026, or now if building Gum from source.

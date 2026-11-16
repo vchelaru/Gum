@@ -125,6 +125,21 @@ public class SourceShaderFileResolverTests : IDisposable
     }
 
     [Fact]
+    public void SourceShaderFile_ReportsACompileFailureAsOne_WithoutTheMissingFileAdvice()
+    {
+        CustomSetPropertyOnRenderable.RenderTargetEffectResolver =
+            _ => throw new InvalidOperationException("Bad.sksl: error: unknown identifier");
+        ContainerRuntime container = new();
+
+        container.SetProperty("SourceShaderFile", "Shaders/Bad.sksl");
+
+        _reported.Count.ShouldBe(1);
+        _reported[0].ShouldStartWith("Could not compile the SourceShaderFile");
+        _reported[0].ShouldContain("unknown identifier");
+        _reported[0].ShouldNotContain("Check if the file exists");
+    }
+
+    [Fact]
     public void SourceShaderFile_ReportsFailureWithTheException_WhenResolverThrows()
     {
         CustomSetPropertyOnRenderable.RenderTargetEffectResolver = _ => throw new InvalidOperationException("compile failed");

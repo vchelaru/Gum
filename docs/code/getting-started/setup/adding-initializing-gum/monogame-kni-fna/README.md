@@ -259,7 +259,7 @@ Each extra is a separate package. Add the package, then add its line right after
 | --- | --- | --- | --- | --- |
 | [Shapes](../../../../standard-visuals/shapes-apos.shapes.md) (**Recommended**): circle fill, rounded corners, gradient, drop shadow | `Gum.Shapes.MonoGame` | `Gum.Shapes.KNI` | none | `GumUI.UseShapes();` |
 | [KernSmith](../../../../files-and-fonts/font-strategies.md#dynamic-kernsmith-generation) (**Recommended**): fonts built at runtime, no .fnt files | `KernSmith.MonoGameGum` | `KernSmith.KniGum` | none | `GumUI.UseKernSmith();` |
-| [ShadowDusk](../../../../standard-visuals/containerruntime.md#loading-shader-files-with-sourceshaderfile): `.fx`, `.slang` and `.sksl` shader files | `Gum.MonoGame.ShadowDusk` | `Gum.KNI.ShadowDusk` | `Gum.FNA.ShadowDusk` | `GumUI.UseShadowDusk();` |
+| [ShadowDusk](../../../../standard-visuals/containerruntime.md#loading-shader-files-with-sourceshaderfile): `.fx` and `.slang` shader files | `Gum.MonoGame.ShadowDusk` | `Gum.KNI.ShadowDusk` | `Gum.FNA.ShadowDusk` | `GumUI.UseShadowDusk();` |
 | [Expressions](../../../../styling/runtime-variable-references.md): arithmetic in variable references | `Gum.Expressions` | `Gum.Expressions` | `Gum.Expressions` | `GumUI.UseExpressions();` |
 
 Shapes also needs the HiDef graphics profile. Add this line to the `Game1` constructor, right after `_graphics` is created:

@@ -155,6 +155,10 @@ Gum fills in the pixel coordinate and the size of the texture, so `SpriteTexture
 
 A file that uses something ShadowDusk cannot convert, such as `sk_FragCoord`, `layout(color)` or a color filter, throws an exception with the ShadowDusk error code, the line and the supported form of an SkSL shader.
 
+{% hint style="info" %}
+Loading `.sksl` files on MonoGame, KNI and FNA is available in December 2026, or now if building Gum from source.
+{% endhint %}
+
 On raylib, call `UseShadowDusk` after the window exists. ShadowDusk converts the shader to GLSL, and any default values the shader declares (such as `float Thickness = 1.0;`) apply to containers that do not set that parameter with `SetShaderParameter`.
 
 If no resolver handles the file, assigning `SourceShaderFile` fails like a missing file, and the message names the package to add. It follows `GraphicalUiElement.MissingFileBehavior`: by default the exception stops the screen or project from loading, and a call to `UseShadowDusk` made afterward does not retry the file. To render the container without the shader instead, set `MissingFileBehavior` to `ConsumeSilently` after Gum initializes. Gum then reports the error through `PropertyAssignmentError`:
