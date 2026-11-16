@@ -148,6 +148,10 @@ Create projects, check for errors, and generate code from the command line with 
 
 Gum has been used in commercial projects of all sizes. See them on the [Showcase](gum-tool/showcase.md) page.
 
+### Completely Open Source
+
+The Gum tool and every runtime are open source under the MIT license. Use them in commercial projects, read the code, and contribute on [GitHub](https://github.com/vchelaru/Gum).
+
 ### Need Help?
 
 Gum is actively maintained and provides lots of ways to get answers:
