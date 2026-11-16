@@ -69,6 +69,7 @@ try
             },
             benchmarkPath);
         FlushProbe.Report(BenchmarkRunner.MeasuredFrames);
+        ImgBench.Report();
         return;
     }
 

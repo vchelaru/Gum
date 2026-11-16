@@ -672,6 +672,8 @@ public class NineSlice : RenderableShapeBase, IAnimatable, IAnimationChainRender
         canvas.Save();
         canvas.Translate(boundingRect.Left, boundingRect.Top);
         canvas.Scale(scale);
+        if (ImageDrawCapture.Active) ImageDrawCapture.Add(ImageDrawCapture.DrawKind.Lattice, canvas, Image, default, new SKRect(0, 0, boundingRect.Width / scale, boundingRect.Height / scale),
+            new SKSamplingOptions(SKFilterMode.Nearest), paint, _latticeXDivs, _latticeYDivs, lattice.Bounds);
         canvas.DrawImageLattice(Image, lattice, new SKRect(0, 0, boundingRect.Width / scale, boundingRect.Height / scale), paint);
         canvas.Restore();
         DrawStatistics?.RecordDrawCall();
@@ -850,6 +852,7 @@ public class NineSlice : RenderableShapeBase, IAnimatable, IAnimationChainRender
         {
             SKRect src = new SKRect(srcX, srcY, srcX + srcW, srcY + srcH);
             SKRect dest = new SKRect(destX, destY, destX + destW, destY + destH);
+            if (ImageDrawCapture.Active) ImageDrawCapture.Add(ImageDrawCapture.DrawKind.NineSliceSection, draw.Canvas, sourceImage, src, dest, draw.Sampling, draw.Paint);
             draw.Canvas.DrawImage(sourceImage, src, dest, draw.Sampling, draw.Paint);
             DrawStatistics?.RecordDrawCall();
             return;
@@ -894,6 +897,7 @@ public class NineSlice : RenderableShapeBase, IAnimatable, IAnimationChainRender
                     destY + currentY,
                     destX + currentX + thisTileDestW,
                     destY + currentY + thisTileDestH);
+                if (ImageDrawCapture.Active) ImageDrawCapture.Add(ImageDrawCapture.DrawKind.NineSliceSection, draw.Canvas, sourceImage, src, dest, draw.Sampling, draw.Paint);
                 draw.Canvas.DrawImage(sourceImage, src, dest, draw.Sampling, draw.Paint);
                 DrawStatistics?.RecordDrawCall();
 

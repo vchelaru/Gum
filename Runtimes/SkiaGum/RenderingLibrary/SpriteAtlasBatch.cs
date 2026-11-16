@@ -189,10 +189,12 @@ internal sealed class SpriteAtlasBatch
         if (_hasTint)
         {
             Array.Copy(_colors, exact.Colors, count);
+            if (ImageDrawCapture.Active) ImageDrawCapture.AddAtlas(canvas, _image, exact.Sources, exact.Transforms, exact.Colors, _sampling, _paint);
             canvas.DrawAtlas(_image, exact.Sources, exact.Transforms, exact.Colors, SKBlendMode.Modulate, _sampling, _paint);
         }
         else
         {
+            if (ImageDrawCapture.Active) ImageDrawCapture.AddAtlas(canvas, _image, exact.Sources, exact.Transforms, null, _sampling, _paint);
             canvas.DrawAtlas(_image, exact.Sources, exact.Transforms, _sampling, _paint);
         }
         canvas.Restore();

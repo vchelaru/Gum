@@ -458,6 +458,7 @@ public class Sprite : RenderableShapeBase, IAspectRatio, ITextureCoordinate, IAn
 
         if (Image != null)
         {
+            if (ImageDrawCapture.Active) ImageDrawCapture.Add(ImageDrawCapture.DrawKind.SpriteRect, canvas, Image, sourceRectangle, boundingRect, Renderer.TextureSampling, paint);
             canvas.DrawImage(Image, sourceRectangle, boundingRect, Renderer.TextureSampling, paint);
         }
         else
@@ -622,6 +623,7 @@ public class Sprite : RenderableShapeBase, IAspectRatio, ITextureCoordinate, IAn
 
         if (bakedImage != null)
         {
+            if (ImageDrawCapture.Active) ImageDrawCapture.Add(ImageDrawCapture.DrawKind.SpriteWhole, canvas, bakedImage, SKRect.Create(bakedImage.Width, bakedImage.Height), boundingRect, Renderer.TextureSampling, paint);
             canvas.DrawImage(bakedImage, boundingRect, Renderer.TextureSampling, paint);
         }
         else if (EffectiveRectangle != null)
@@ -637,6 +639,7 @@ public class Sprite : RenderableShapeBase, IAspectRatio, ITextureCoordinate, IAn
         }
         else if (Image != null)
         {
+            if (ImageDrawCapture.Active) ImageDrawCapture.Add(ImageDrawCapture.DrawKind.SpriteWhole, canvas, Image, SKRect.Create(Image.Width, Image.Height), boundingRect, Renderer.TextureSampling, paint);
             canvas.DrawImage(Image, boundingRect, Renderer.TextureSampling, paint);
         }
         else
