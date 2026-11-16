@@ -1134,12 +1134,11 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
 
             // The Renderer's walk has already clipped to this clipper when it is the one the walk applied last. A
             // GumBatch.Draw(text) never walks the text's ancestors and a render-target bake draws into an offscreen
-            // canvas with no clip from above the target, so the text clips itself there. A rotated clipper's clip is
-            // antialiased, and applying it a second time darkens its edge, so that one is still applied again to keep
-            // today's pixels.
+            // canvas with no clip from above the target, so the text clips itself there. Re-applying a rotated
+            // clipper's antialiased clip would darken its edge (#8151).
             var clipper = this.GetEffectiveClipper();
             bool isClipOnCanvas = clipper == null
-                || (ReferenceEquals(clipper, ((SystemManagers)managers).ClipAppliedByWalk) && clipper.GetAbsoluteRotation() == 0);
+                || ReferenceEquals(clipper, ((SystemManagers)managers).ClipAppliedByWalk);
 
             // While NineSlices wait in the renderer's vertex batch, text that draws its cached blobs goes after the
             // batch instead of flushing it (#8153); the batch keeps later NineSlices that overlap it out of the batch.

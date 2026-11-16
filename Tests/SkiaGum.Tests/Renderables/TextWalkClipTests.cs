@@ -9,7 +9,8 @@ namespace SkiaGum.Tests.Renderables;
 /// <summary>
 /// Text drawn by the Renderer skips the clip the walk already put on the canvas and, unrotated and unclipped by
 /// anything else, draws its cached blobs at its offset with no Save/Translate/Restore (#8148). Every path must
-/// give the same bytes as Text clipping itself, which is what a Text drawn outside any walk still does.
+/// give the same bytes as Text clipping itself, which is what a Text drawn outside any walk still does, with each
+/// clip applied once.
 /// </summary>
 public class TextWalkClipTests
 {
@@ -29,6 +30,7 @@ public class TextWalkClipTests
         new object[] { "RotatedText", 1f },
         new object[] { "RotatedClipper", 1f },
         new object[] { "RotatedClipper", 1.5f },
+        new object[] { "RotatedOwnClip", 1f },
     };
 
     // Builds a scene whose only drawing is the text; the containers are invisible renderables.
@@ -68,6 +70,12 @@ public class TextWalkClipTests
                 parent = AddClipper(root, 10.3f, 20.7f, 120, 80, 0);
                 text.Rotation = 17;
                 break;
+            case "RotatedOwnClip":
+                text.Width = 45.5f;
+                text.Height = 15.25f;
+                text.Rotation = 17;
+                text.ClipsChildren = true;
+                break;
             case "RotatedClipper":
                 parent = AddClipper(root, 30.3f, 20.7f, 80, 40, 10);
                 break;
@@ -90,8 +98,9 @@ public class TextWalkClipTests
         return bitmap.Bytes;
     }
 
-    // What the walk drew before #8148: every clip the walk applies (the text's clipping ancestors and the text
-    // itself when it clips), then Text.Render outside any walk, which clips itself and translates the canvas.
+    // Every clip applied once: the walk's clips above the text's nearest clipper, then Text.Render outside any walk,
+    // which applies the nearest clip itself and translates the canvas. A rotated clipper's clip is antialiased, so
+    // applying it twice would darken its edge (#8151).
     static byte[] RenderReference(string kind, float scale, bool nearestClipOnly = false)
     {
         (IRenderableIpso _, Text text) = CreateScene(kind);
@@ -99,15 +108,21 @@ public class TextWalkClipTests
         surface.Canvas.Scale(scale);
         SystemManagers managers = new() { Canvas = surface.Canvas };
         List<IRenderableIpso> clippers = new();
+        bool isNearestClipper = true;
         for (IRenderableIpso? current = text; current != null; current = current.Parent)
         {
             if (current.ClipsChildren)
             {
-                clippers.Insert(0, current);
+                if (isNearestClipper)
+                {
+                    isNearestClipper = false;
+                    continue;
+                }
                 if (nearestClipOnly)
                 {
                     break;
                 }
+                clippers.Insert(0, current);
             }
         }
         for (int i = 0; i < Frames; i++)
@@ -170,6 +185,8 @@ public class TextWalkClipTests
     [InlineData("ParentClips", true)]
     [InlineData("NestedClips", false)]
     [InlineData("RotatedClipper", true)]
+    [InlineData("RotatedOwnClip", false)]
+    [InlineData("RotatedOwnClip", true)]
     [InlineData("Unclipped", false)]
     public void GumBatchDraw_TextOrItsRoot_MatchesTextClippingItself(string kind, bool drawRoot)
     {
