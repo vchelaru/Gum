@@ -36,7 +36,7 @@ If you are managing a render target yourself in code instead of using `Is Render
 
 ## Source Shader File
 
-A container with `Is Render Target` can set `Source Shader File` to apply a shader to everything inside it. The tool picks and previews `.fx` and `.slang` files.
+A container with `Is Render Target` can set `Source Shader File` to apply a shader to everything inside it. The tool picks and previews `.fx`, `.slang` and `.sksl` files.
 
 ## Shader Parameters
 

@@ -2,7 +2,7 @@
 
 	<!--
 		Gum.MonoGame.ShadowDusk: opt-in package that lets a MonoGame render-target container's
-		SourceShaderFile point at an .fx (HLSL) or .slang file, which ShadowDusk compiles at runtime
+		SourceShaderFile point at an .fx (HLSL), .slang or .sksl file, which ShadowDusk compiles at runtime
 		into an Effect. MonoGameGum itself loads no shader files and carries no ShadowDusk dependency,
 		because ShadowDusk brings native shader-compiler binaries most games do not need. Call
 		GumService.UseShadowDusk() once at startup (issue #7053). The same sources build the KNI and FNA

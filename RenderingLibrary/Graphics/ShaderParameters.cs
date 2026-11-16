@@ -157,6 +157,20 @@ public class ShaderParameterCollection
     /// </summary>
     public const string TexelSizeName = "TexelSize";
 
+    /// <summary>
+    /// The name of the <c>float2</c> parameter a shader ShadowDusk converted from SkSL declares for its
+    /// <c>SpriteTexture</c> child: one texel of the baked render target in canvas pixels
+    /// (<c>child.eval(p)</c> samples at <c>p * SpriteTextureTexelSize</c>). Gum fills it in when the effect declares it.
+    /// </summary>
+    public const string SpriteTextureTexelSizeName = "SpriteTextureTexelSize";
+
+    /// <summary>
+    /// The name of the <c>float3</c> parameter of a shader converted from SkSL that holds the drawn size of the
+    /// container in canvas pixels (<c>x</c> and <c>y</c>; <c>z</c> is 1), which is what <c>main</c>'s coordinate
+    /// is relative to. Gum fills it in when the effect declares it.
+    /// </summary>
+    public const string ResolutionName = "iResolution";
+
     private readonly Dictionary<string, ShaderParameterValue> _values;
 
     /// <summary>Creates an empty collection.</summary>

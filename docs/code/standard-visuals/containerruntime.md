@@ -121,7 +121,7 @@ To instead display a container's render target as a regular Sprite (so it can be
 
 #### Loading Shader Files With SourceShaderFile
 
-Setting `SourceShaderFile` to a shader file (for example `.fx` or `.slang`) makes Gum compile the shader at runtime and assign the result to the container. ShadowDusk detects the format from the file's contents, not its extension. Gum loads no shader files by itself. A shader resolver must handle the file, and the optional ShadowDusk package for your runtime provides one:
+Setting `SourceShaderFile` to a shader file (for example `.fx` or `.slang`) makes Gum compile the shader at runtime and assign the result to the container. ShadowDusk detects the format from the file's contents, not its extension, except for SkSL, which is recognized by the `.sksl` extension. Gum loads no shader files by itself. A shader resolver must handle the file, and the optional ShadowDusk package for your runtime provides one:
 
 | Runtime | Package |
 |---|---|
@@ -143,6 +143,17 @@ container.IsRenderTarget = true;
 container.SourceShaderFile = "Shaders/Grayscale.fx";
 container.AddToRoot();
 ```
+
+On MonoGame, KNI and FNA, ShadowDusk also reads `.sksl` files, the same format SkiaGum loads, so one SkSL shader can run on all of these runtimes. The shader declares its input as `uniform shader SpriteTexture;`, takes a `float2` coordinate in pixels of the container, and returns a `half4`:
+
+```csharp
+// Initialize
+container.SourceShaderFile = "Shaders/Grayscale.sksl";
+```
+
+Gum fills in the pixel coordinate and the size of the texture, so `SpriteTexture.eval(coord)` samples the container's pixels. Parameters the shader declares are set with `SetShaderParameter`. A `uniform int` or `uniform bool` reads as a number, so set it to a whole number, or 0 or 1 for a bool. Gum sets no time value; declare a `uniform float` and set it yourself each frame.
+
+A file that uses something ShadowDusk cannot convert, such as `sk_FragCoord`, `layout(color)` or a color filter, throws an exception with the ShadowDusk error code, the line and the supported form of an SkSL shader.
 
 On raylib, call `UseShadowDusk` after the window exists. ShadowDusk converts the shader to GLSL, and any default values the shader declares (such as `float Thickness = 1.0;`) apply to containers that do not set that parameter with `SetShaderParameter`.
 

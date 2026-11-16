@@ -6,6 +6,7 @@ using ShadowDusk.Compiler;
 
 using ShadowDusk.Core;
 using ShadowDusk.Core.Preprocessor;
+using ShadowDusk.SkSL;
 
 namespace EditorTabPlugin_XNA.Services;
 
@@ -26,6 +27,13 @@ internal static class ShaderSourceCompiler
     /// </summary>
     public static byte[] Compile(string source, PlatformTarget target, string sourcePath, Action<string>? onInclude = null)
     {
+        if (sourcePath.EndsWith(".sksl", StringComparison.OrdinalIgnoreCase))
+        {
+            // The text of an SkSL shader does not identify it, so the extension decides (the compile below
+            // gets it as a name hint). Registering also covers a trimmed host.
+            SkSLFrontend.Register();
+        }
+
         Result<CompiledShader, ShaderError[]> result = ShaderConverter.Compile(
             new EffectCompiler(),
             source,
@@ -40,9 +48,27 @@ internal static class ShaderSourceCompiler
         {
             throw new InvalidOperationException(
                 "ShadowDusk could not compile the render-target shader '" + sourcePath + "':\n" +
-                string.Join("\n", result.Error.Select(error => error.Message)));
+                FormatErrors(result.Error));
         }
         return result.Value.Data;
+    }
+
+    // SD0660 to SD0673 are the codes of ShadowDusk's SkSL input frontend.
+    internal const string SkslHint =
+        "Gum reads SkSL shaders of the form 'uniform shader SpriteTexture; half4 main(float2 coord)'. " +
+        "sk_FragCoord, layout(color), color filters and blenders are not supported.";
+
+    /// <summary>One line per error with its file, line, column and ShadowDusk code, plus what to change for an SkSL error.</summary>
+    internal static string FormatErrors(IEnumerable<ShaderError> errors)
+    {
+        ShaderError[] list = errors.ToArray();
+        string text = string.Join("\n", list.Select(
+            error => string.IsNullOrEmpty(error.Code)
+                ? error.Message
+                : error.File + "(" + error.Line + "," + error.Column + "): " + error.Code + ": " + error.Message));
+        bool isSksl = list.Any(error =>
+            string.CompareOrdinal(error.Code, "SD0660") >= 0 && string.CompareOrdinal(error.Code, "SD0673") <= 0);
+        return isSksl ? text + "\n" + SkslHint : text;
     }
 
     /// <summary>

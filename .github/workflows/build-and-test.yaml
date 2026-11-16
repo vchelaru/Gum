@@ -72,6 +72,7 @@ jobs:
           filters: |
             mesa:
               - '**/*.slang'
+              - '**/*.sksl'
               - '**/*.fx'
               - 'Gum/Content/**'
               - 'Runtimes/**'

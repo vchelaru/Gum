@@ -152,11 +152,11 @@ NVorbis — Copyright (c) 2020 Andrew Ward
     https://github.com/NVorbis/NVorbis
     NuGet: NVorbis
 
-ShadowDusk (Compiler / Core / GLSL / HLSL) — Copyright (c) 2026 ShadowDusk
+ShadowDusk (Compiler / Core / GLSL / HLSL / ShaderToy / SkSL) — Copyright (c) 2026 ShadowDusk
     Contributors
     https://github.com/kaltinril/ShadowDusk
     NuGet: ShadowDusk.Compiler, ShadowDusk.Core, ShadowDusk.GLSL,
-        ShadowDusk.HLSL
+        ShadowDusk.HLSL, ShadowDusk.ShaderToy, ShadowDusk.SkSL
     Managed code only. ShadowDusk.HLSL bundles the native vkd3d-shader library
     (LGPL-2.1-or-later, see below).
 

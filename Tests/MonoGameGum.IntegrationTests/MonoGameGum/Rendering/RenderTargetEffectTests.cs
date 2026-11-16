@@ -502,6 +502,66 @@ technique SpriteDrawing
         OutlineWidthLeftOf(data, 76).ShouldBe(1);
     }
 
+    // #7955: a shader ShadowDusk converted from SkSL gets its host contract from Gum. main()'s coordinate is
+    // local to the container (it is derived from iResolution), and child.eval(p) samples at p * SpriteTextureTexelSize.
+    private Color[] RenderSkslSquare(string sksl, float zoom = 1f)
+    {
+        using MinimalGame game = new();
+        game.RunOneFrame();
+
+        GraphicsDevice gd = game.GraphicsDevice;
+        SystemManagers managers = SystemManagers.Default;
+        Renderer renderer = managers.Renderer;
+
+        Result<CompiledShader, ShaderError[]> compileResult = ShaderConverter.Compile(
+            new EffectCompiler(), sksl, new CompilerOptions { Target = PlatformTarget.OpenGL }, "Test.sksl");
+        compileResult.IsSuccess.ShouldBeTrue(
+            compileResult.IsFailure ? string.Join("\n", compileResult.Error.Select(e => e.Code + " " + e.Message)) : "");
+        using Effect effect = new(gd, compileResult.Value.Data);
+
+        ContainerRuntime container = new() { X = 0, Y = 0, Width = 48, Height = 48, IsRenderTarget = true };
+#pragma warning disable CS0618
+        ColoredRectangleRuntime square = new();
+#pragma warning restore CS0618
+        square.X = 12;
+        square.Y = 12;
+        square.Width = 24;
+        square.Height = 24;
+        square.Color = Color.Red;
+        container.AddChild(square);
+        container.RenderTargetEffect = effect;
+        renderer.Camera.Zoom = zoom;
+
+        container.AddToManagers(managers, null);
+        container.UpdateLayout();
+
+        return RenderToCapture(gd, renderer, managers, Color.White);
+    }
+
+    [Fact]
+    public void Sksl_MainCoordinate_IsLocalToTheContainer()
+    {
+        Color[] data = RenderSkslSquare(
+            "uniform shader SpriteTexture;\nhalf4 main(float2 c) { half4 s = SpriteTexture.eval(c); return half4(c.x / 48.0 * s.a, c.y / 48.0 * s.a, 0, s.a); }");
+
+        Color center = data[(24 * CaptureSize) + 24];
+        center.R.ShouldBeInRange((byte)120, (byte)140);
+        center.G.ShouldBeInRange((byte)120, (byte)140);
+    }
+
+    [Fact]
+    public void Sksl_ChildEval_SamplesInCanvasPixels()
+    {
+        // Sampling 12 pixels to the left moves the square 12 pixels to the right (24 to 48).
+        Color[] data = RenderSkslSquare(
+            "uniform shader SpriteTexture;\nhalf4 main(float2 c) { return SpriteTexture.eval(c + float2(-12, 0)); }");
+
+        Color shifted = data[(24 * CaptureSize) + 40];
+        shifted.R.ShouldBe((byte)255);
+        shifted.G.ShouldBeLessThan((byte)20);
+        data[(24 * CaptureSize) + 18].G.ShouldBe((byte)255);
+    }
+
     private Color[] RenderOutlinedSquare(System.Action<ContainerRuntime>? setParameters, Color? background = null, float zoom = 1f)
     {
         using MinimalGame game = new();

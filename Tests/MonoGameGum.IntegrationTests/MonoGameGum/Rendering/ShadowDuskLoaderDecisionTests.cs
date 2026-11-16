@@ -31,4 +31,27 @@ technique T { pass P0 { PixelShader = compile ps_3_0 MainPS(); } };
         Should.Throw<InvalidOperationException>(
             () => ShadowDuskEffectLoader.TryLoad(null!, "broken", BrokenFx, PlatformTarget.OpenGL));
     }
+
+    [Fact]
+    public void CanLoad_ReadsAnSkslFileByItsName_WhoseTextAloneIsUnrecognized()
+    {
+        const string sksl = "uniform shader SpriteTexture;\nhalf4 main(float2 c) { return SpriteTexture.eval(c); }";
+
+        ShadowDuskEffectLoader.CanLoad(sksl, "Tint.sksl").ShouldBeTrue();
+        ShadowDuskEffectLoader.CanLoad(sksl, "Tint.txt").ShouldBeFalse();
+    }
+
+    [Fact]
+    public void TryLoad_UnsupportedSkSL_ThrowsWithTheShadowDuskCodeTheLineAndTheSupportedForm()
+    {
+        const string sksl = "uniform shader SpriteTexture;\nhalf4 main(float2 c) {\n    return half4(sk_FragCoord.x);\n}";
+
+        InvalidOperationException error = Should.Throw<InvalidOperationException>(
+            () => ShadowDuskEffectLoader.TryLoad(null!, "Bad.sksl", sksl, PlatformTarget.OpenGL));
+
+        error.Message.ShouldContain("Bad.sksl(3,");
+        error.Message.ShouldContain("SD0666");
+        error.Message.ShouldContain("sk_FragCoord");
+        error.Message.ShouldContain("uniform shader SpriteTexture");
+    }
 }

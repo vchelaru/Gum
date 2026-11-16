@@ -61,6 +61,31 @@ public class RenderTargetShaderResolverTests
         bytecode.Length.ShouldBeGreaterThan(0);
     }
 
+    // #7955: a .sksl file is read by ShadowDusk's SkSL frontend; the text alone does not identify it.
+    [Fact]
+    public void Compile_SkslFile_ProducesOpenGlBytecode()
+    {
+        const string sksl = "uniform shader SpriteTexture;\nhalf4 main(float2 coord) { return SpriteTexture.eval(coord); }";
+
+        byte[] bytecode = RenderTargetShaderResolver.Compile(sksl, PlatformTarget.OpenGL, "Tint.sksl");
+
+        bytecode.Length.ShouldBeGreaterThan(0);
+    }
+
+    [Fact]
+    public void Compile_SkslWithFragCoord_ThrowsNamingSkFragCoord()
+    {
+        const string sksl = "half4 main(float2 coord) { return half4(sk_FragCoord.x); }";
+
+        string message = Should.Throw<InvalidOperationException>(
+            () => RenderTargetShaderResolver.Compile(sksl, PlatformTarget.OpenGL, "Bad.sksl")).Message;
+
+        message.ShouldContain("sk_FragCoord");
+        message.ShouldContain("SD0666");
+        message.ShouldContain("Bad.sksl(1,");
+        message.ShouldContain("uniform shader SpriteTexture");
+    }
+
     // #7104: ShadowDusk tells Slang from .fx by the text, so a Slang shader compiles under any name.
     private const string GrayscaleSlang = """
         Texture2D SpriteTexture;

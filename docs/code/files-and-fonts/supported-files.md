@@ -78,9 +78,13 @@ A render target container loads a shader file through `SourceShaderFile`. See [C
 | --- | --- | --- | --- | --- | --- |
 | `.fx` | `Gum.MonoGame.ShadowDusk` | `Gum.FNA.ShadowDusk` | `Gum.KNI.ShadowDusk` | `Gum.raylib.ShadowDusk` | `Gum.SkiaSharp.ShadowDusk` |
 | `.slang` | `Gum.MonoGame.ShadowDusk` | `Gum.FNA.ShadowDusk` | `Gum.KNI.ShadowDusk` | `Gum.raylib.ShadowDusk` | `Gum.SkiaSharp.ShadowDusk` |
-| `.sksl` |  |  |  |  | ✓ |
+| `.sksl` | `Gum.MonoGame.ShadowDusk` | `Gum.FNA.ShadowDusk` | `Gum.KNI.ShadowDusk` |  | ✓ |
 
-SkiaGum is the only runtime that loads a shader file without a package, and only `.sksl`. On MonoGame, KNI, FNA and raylib, you can register your own shader resolver to load another format.
+SkiaGum is the only runtime that loads a shader file without a package, and only `.sksl`. On raylib, you can register your own shader resolver to load another format.
+
+{% hint style="info" %}
+Loading `.sksl` files through the MonoGame, FNA and KNI ShadowDusk packages is available in December 2026, or now if building Gum from source.
+{% endhint %}
 
 ## SVG
 

@@ -18,7 +18,7 @@
 
 	<ItemGroup>
 		<!-- 0.22.1 reports the declared defaults on the raylib route (RaylibUniform.DefaultValue); 0.25.0 adds ShaderConverter, which detects the format from the source text. -->
-		<PackageReference Include="ShadowDusk.Compiler" Version="0.25.0" />
+		<PackageReference Include="ShadowDusk.Compiler" Version="0.26.0" />
 	</ItemGroup>
 
 	<ItemGroup>
