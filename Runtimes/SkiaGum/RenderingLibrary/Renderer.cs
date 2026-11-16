@@ -232,6 +232,17 @@ namespace RenderingLibrary.Graphics
         // The batch sprites add to, or null outside a draw entry point, where a sprite draws on its own.
         internal SpriteAtlasBatch? ActiveSpriteBatch => _drawScopeDepth > 0 ? SpriteBatch : null;
 
+        NineSliceVertexBatch? _nineSliceBatch;
+
+        // Same-image NineSlices draw through one DrawVertices call on a GPU canvas (#8153).
+        internal NineSliceVertexBatch NineSliceBatch => _nineSliceBatch ??= new NineSliceVertexBatch(RenderStateChangeStatistics);
+
+        /// <summary>Test hook: false draws every NineSlice with its own lattice, as before #8153.</summary>
+        internal bool BatchesNineSlices { get; set; } = true;
+
+        // The batch NineSlices add to and texts defer into, or null outside a draw entry point.
+        internal NineSliceVertexBatch? ActiveNineSliceBatch => _drawScopeDepth > 0 && BatchesNineSlices ? NineSliceBatch : null;
+
         private void EnterDrawScope() => _drawScopeDepth++;
 
         private void ExitDrawScope()
@@ -239,8 +250,15 @@ namespace RenderingLibrary.Graphics
             _drawScopeDepth--;
             if (_drawScopeDepth == 0)
             {
-                _spriteBatch?.Flush();
+                FlushBatches();
             }
+        }
+
+        // Draws whatever the NineSlice and sprite batches hold. At most one of them is pending at a time.
+        private void FlushBatches()
+        {
+            _nineSliceBatch?.Flush();
+            _spriteBatch?.Flush();
         }
 
         private void StartHostFrameRenderTargets()
@@ -542,7 +560,7 @@ namespace RenderingLibrary.Graphics
             // hidden one is skipped by the caller's Visible check, so no stale texture ghosts.
             if (renderable.IsRenderTarget)
             {
-                SpriteBatch.Flush();
+                FlushBatches();
                 CompositeRenderTarget(renderable, managers);
                 return;
             }
@@ -571,7 +589,7 @@ namespace RenderingLibrary.Graphics
 
                 if (isOnScreen)
                 {
-                    SpriteBatch.Flush();
+                    FlushBatches();
                     canvas.Save();
                     canvas.ClipTo(renderable);
                     IRenderableIpso? outerClipper = ClipAppliedByWalk;
@@ -585,7 +603,7 @@ namespace RenderingLibrary.Graphics
                     {
                         ClipAppliedByWalk = outerClipper;
                     }
-                    SpriteBatch.Flush();
+                    FlushBatches();
                     canvas.Restore();
                 }
             }
@@ -615,16 +633,25 @@ namespace RenderingLibrary.Graphics
         /// </summary>
         internal IRenderableIpso? ClipAppliedByWalk { get; private set; }
 
-        // Sprites add themselves to SpriteBatch; anything else that draws flushes it first so draw order holds.
-        // Containers draw nothing, so sprites in separate containers still share a batch.
+        // Sprites add themselves to SpriteBatch and NineSlices to NineSliceBatch; anything else that draws flushes them
+        // first so draw order holds. A NineSlice or Text decides itself whether it joins (or defers past) the pending
+        // NineSlice batch or flushes it. Containers draw nothing, so draws in separate containers still share a batch.
         private void RenderOne(IRenderableIpso renderable, SystemManagers managers)
         {
             IRenderableIpso inner = renderable is GraphicalUiElement element && element.RenderableComponent is IRenderableIpso contained
                 ? contained
                 : renderable;
-            if (inner is not Sprite && inner is not InvisibleRenderable)
+            if (inner is Sprite)
             {
-                SpriteBatch.Flush();
+                _nineSliceBatch?.Flush();
+            }
+            else if (inner is not InvisibleRenderable)
+            {
+                if (inner is not NineSlice && inner is not global::SkiaGum.Text)
+                {
+                    _nineSliceBatch?.Flush();
+                }
+                _spriteBatch?.Flush();
             }
             renderable.Render(managers);
         }
@@ -881,6 +908,8 @@ namespace RenderingLibrary.Graphics
             float left = container.GetAbsoluteX();
             float top = container.GetAbsoluteY();
 
+            // Whatever is pending belongs to the canvas drawn before the bake.
+            FlushBatches();
             SKCanvas offscreenCanvas = surface.Canvas;
             offscreenCanvas.Clear(SKColors.Transparent);
             offscreenCanvas.Save();
@@ -907,7 +936,7 @@ namespace RenderingLibrary.Graphics
             finally
             {
                 ClipAppliedByWalk = screenClipper;
-                SpriteBatch.Flush();
+                FlushBatches();
                 _bakeDepth--;
                 managers.Canvas = screenCanvas;
                 offscreenCanvas.Restore();
@@ -1359,7 +1388,7 @@ namespace RenderingLibrary.Graphics
 
         private void RestoreCamera(SKCanvas canvas)
         {
-            SpriteBatch.Flush();
+            FlushBatches();
             canvas.Restore();
             _cameraBaseMatrix = null;
             _cameraCallerMatrix = null;
@@ -1422,7 +1451,7 @@ namespace RenderingLibrary.Graphics
             }
             finally
             {
-                SpriteBatch.Flush();
+                FlushBatches();
                 canvas.Restore();
                 canvas.Restore();
                 _cameraBaseMatrix = outerBaseMatrix;

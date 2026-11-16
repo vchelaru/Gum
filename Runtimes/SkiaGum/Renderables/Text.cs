@@ -1141,6 +1141,23 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
             bool isClipOnCanvas = clipper == null
                 || (ReferenceEquals(clipper, ((SystemManagers)managers).ClipAppliedByWalk) && clipper.GetAbsoluteRotation() == 0);
 
+            // While NineSlices wait in the renderer's vertex batch, text that draws its cached blobs goes after the
+            // batch instead of flushing it (#8153); the batch keeps later NineSlices that overlap it out of the batch.
+            // Any other text flushes the batch first.
+            RenderingLibrary.Graphics.NineSliceVertexBatch? vertexBatch = ((SystemManagers)managers).ActiveNineSliceBatch;
+            if (vertexBatch != null && vertexBatch.HasPending)
+            {
+                if (isSimple && isClipOnCanvas && renderPaint == null
+                    && _blobCache.TryGetDrawnBounds(paintBlock, out SKRect drawnBounds)
+                    && vertexBatch.TryDefer(canvas, this, absoluteX, absoluteY, canvasMatrix,
+                        GetDeviceBounds(drawnBounds, absoluteX, absoluteY, canvasMatrix)))
+                {
+                    statistics?.RecordDrawCall();
+                    return;
+                }
+                vertexBatch.Flush();
+            }
+
             // Unrotated text with nothing left to clip draws its cached blobs at its offset, with no
             // Save/Translate/Restore (#8148).
             if (isSimple && isClipOnCanvas && renderPaint == null
@@ -1223,6 +1240,25 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
             canvas.Restore();
         }
     }
+
+    // Local drawn bounds placed at (x, y) and mapped through a scale-and-translate canvas matrix, plus a device pixel
+    // for antialiasing.
+    private static SKRect GetDeviceBounds(SKRect local, float x, float y, SKMatrix matrix)
+    {
+        float left = matrix.ScaleX * (local.Left + x) + matrix.TransX;
+        float right = matrix.ScaleX * (local.Right + x) + matrix.TransX;
+        float top = matrix.ScaleY * (local.Top + y) + matrix.TransY;
+        float bottom = matrix.ScaleY * (local.Bottom + y) + matrix.TransY;
+        return new SKRect(
+            MathF.Min(left, right) - 1, MathF.Min(top, bottom) - 1,
+            MathF.Max(left, right) + 1, MathF.Max(top, bottom) + 1);
+    }
+
+    /// <summary>
+    /// Draws the cached blobs a deferred <see cref="Render"/> left with the renderer's NineSlice batch, at
+    /// (<paramref name="x"/>, <paramref name="y"/>) under the canvas's current matrix. Called by the batch's flush.
+    /// </summary>
+    internal void DrawDeferredBlobs(SKCanvas canvas, float x, float y) => _blobCache.PaintRunsAt(canvas, x, y);
 
     /// <summary>
     /// The vertical shift applied to <c>GetAbsoluteY</c> before positioning <paramref name="textBlock"/>
@@ -1870,6 +1906,8 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
             public SKTextBlob Blob;
             public IStyle Style;
             public float VerticalOffset;
+            // The blob's conservative bounds, read once since a blob never changes.
+            public SKRect Bounds;
         }
 
         private struct BlobSegment
@@ -1947,11 +1985,57 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
             {
                 return false;
             }
+            PaintRunsAt(canvas, x, y);
+            return true;
+        }
+
+        /// <summary>
+        /// The local rectangle, relative to the block's origin, that holds every pixel <see cref="TryPaintAt"/> draws:
+        /// each run's blob bounds (Skia's conservative glyph bounds) at its vertical offset, grown by the run's halo
+        /// (outline) stroke. False when <see cref="TryPaintAt"/> would draw nothing for <paramref name="block"/>.
+        /// </summary>
+        public bool TryGetDrawnBounds(TextBlock block, out SKRect bounds)
+        {
+            bounds = SKRect.Empty;
+            if (_isFirstFrame || !ReferenceEquals(Block, block))
+            {
+                return false;
+            }
+            TextPaintOptions resolved = TextPaintOptions.Default;
+            if (!_isBuilt)
+            {
+                Build(block, resolved);
+            }
+            if (_isUnsupported || !HasBuildFontSettings(resolved) || _segments.Count != 1 || _segments[0].HasMatrix)
+            {
+                return false;
+            }
+
+            bool any = false;
+            for (int i = 0; i < _runs.Count; i++)
+            {
+                BlobRun run = _runs[i];
+                SKRect runBounds = run.Bounds;
+                runBounds.Offset(0, run.VerticalOffset);
+                IStyle style = run.Style;
+                if (style.HaloColor != SKColor.Empty && style.HaloWidth > 0)
+                {
+                    // A square-capped stroke reaches at most HaloWidth / 2 * sqrt(2) past the outline.
+                    runBounds.Inflate(style.HaloWidth, style.HaloWidth);
+                }
+                bounds = any ? SKRect.Union(bounds, runBounds) : runBounds;
+                any = true;
+            }
+            return true;
+        }
+
+        /// <summary>Draws the built runs with their origin at (<paramref name="x"/>, <paramref name="y"/>).</summary>
+        public void PaintRunsAt(SKCanvas canvas, float x, float y)
+        {
             for (int i = 0; i < _runs.Count; i++)
             {
                 DrawRun(canvas, _runs[i], null, x, y);
             }
-            return true;
         }
 
         public void Paint(SKCanvas canvas, TextBlock block, TextPaintOptions? options)
@@ -2162,7 +2246,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
                     {
                         continue;
                     }
-                    _runs.Add(new BlobRun { Blob = blob, Style = style, VerticalOffset = verticalOffset });
+                    _runs.Add(new BlobRun { Blob = blob, Style = style, VerticalOffset = verticalOffset, Bounds = blob.Bounds });
                 }
             }
             _segments.Add(new BlobSegment
