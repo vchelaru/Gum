@@ -34,7 +34,7 @@ internal static class ShadowDuskEffectLoader
     /// Compiles <paramref name="text"/>, or returns null when ShadowDusk reports the input unsupported
     /// (nothing was attempted). A real compile error throws.
     /// </summary>
-    public static Effect? TryLoad(GraphicsDevice graphicsDevice, string name, string text, PlatformTarget target)
+    public static Effect? TryLoad(GraphicsDevice graphicsDevice, string name, string text, PlatformTarget target, CapabilityProfile? profile = null)
     {
         // ShadowDusk.SkSL brings ShadowDusk.ShaderToy with it, which would also compile GLSL text. Gum does not
         // route GLSL here (it belongs to the next resolver, e.g. raylib's), so it is declined as before.
@@ -48,7 +48,7 @@ internal static class ShadowDuskEffectLoader
         Result<CompiledShader, ShaderError[]> result = ShaderConverter.Compile(
             new EffectCompiler(),
             text,
-            new CompilerOptions { Target = target, SourceFileName = name, IncludeResolver = includes },
+            new CompilerOptions { Target = target, Profile = profile, SourceFileName = name, IncludeResolver = includes },
             name);
         // Also when the compile failed, so fixing an included file reloads the shader.
         includes.Record();

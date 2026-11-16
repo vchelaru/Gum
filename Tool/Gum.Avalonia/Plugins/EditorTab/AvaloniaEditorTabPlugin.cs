@@ -254,9 +254,11 @@ public class AvaloniaEditorTabPlugin : EditorTabPluginBase, IRecipient<EditorCan
     internal bool IsCanvasContextMenuPending => _isContextMenuPending;
 
     /// <inheritdoc/>
-    // This head renders through KNI's SDL2/GL backend, so shaders compile to the OpenGL target.
+    // This head renders through KNI's SDL2/GL backend, so shaders compile to the OpenGL target, as the KNIFX
+    // version the loaded KNI takes without its "older version of KNI" message (#8137).
     protected override Func<string, object?>? CreateRenderTargetShaderResolver() =>
-        RenderTargetShaderResolver.For(ShadowDusk.Core.PlatformTarget.OpenGL, ReportShaderError, ShaderIncludes);
+        RenderTargetShaderResolver.For(
+            ShadowDusk.Core.PlatformTarget.OpenGL, ReportShaderError, ShaderIncludes, RenderTargetShaderResolver.KniOpenGlProfile());
 
     /// <inheritdoc/>
     protected override bool IsContextMenuOpen => _contextMenu.IsOpen;

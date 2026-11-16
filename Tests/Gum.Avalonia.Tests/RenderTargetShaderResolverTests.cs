@@ -363,6 +363,73 @@ public class RenderTargetShaderResolverTests
         }
     }
 
+    // #8137: plain OpenGL output is MGFX v10, which KNI 4.3 reports as an older version; the head asks for the
+    // KNIFX version the KNI it loads takes.
+    [Fact]
+    public void KniOpenGlProfile_IsTheKnifxVersionTheReferencedKniLoads()
+    {
+        CapabilityProfile profile = RenderTargetShaderResolver.KniOpenGlProfile();
+
+        profile.GraphicsTarget.ShouldBe(PlatformTarget.OpenGL);
+        profile.KnifxVersion.ShouldBe((short)12);
+    }
+
+    [Fact]
+    public void Compile_WithTheKniProfile_WritesKnifxV12_InsteadOfMgfx()
+    {
+        byte[] knifx = RenderTargetShaderResolver.Compile(
+            GrayscaleFx, PlatformTarget.OpenGL, "Grayscale.fx", profile: RenderTargetShaderResolver.KniOpenGlProfile());
+        byte[] mgfx = RenderTargetShaderResolver.Compile(GrayscaleFx, PlatformTarget.OpenGL, "Grayscale.fx");
+
+        System.Text.Encoding.ASCII.GetString(knifx, 0, 4).ShouldBe("KNIF");
+        BitConverter.ToInt16(knifx, 4).ShouldBe((short)12);
+        System.Text.Encoding.ASCII.GetString(mgfx, 0, 4).ShouldNotBe("KNIF");
+    }
+
+    [Fact]
+    public void KniLoadsTheHeadsBytecode_WithoutTheOlderVersionMessage()
+    {
+        Assert.SkipUnless(
+            TestEnvironment.CanCreateDeviceInProcess("GUM_RUN_CANVAS_DEVICE_TESTS"),
+            "needs a display and a GL driver, and not macOS; set GUM_RUN_CANVAS_DEVICE_TESTS=1 to run on CI");
+
+        string defaultOutput = "";
+        string profileOutput = "";
+        DeviceTestThread.Run(() =>
+        {
+            using Gum.Avalonia.Canvas.GameRenderDeviceHost host = new Gum.Avalonia.Canvas.GameRenderDeviceHost();
+            byte[] mgfx = RenderTargetShaderResolver.Compile(GrayscaleFx, PlatformTarget.OpenGL, "Grayscale.fx");
+            byte[] knifx = RenderTargetShaderResolver.Compile(
+                GrayscaleFx, PlatformTarget.OpenGL, "Grayscale.fx", profile: RenderTargetShaderResolver.KniOpenGlProfile());
+
+            // The plain MGFX is the control: it proves the capture sees the message at all.
+            defaultOutput = CaptureConsole(() => new Microsoft.Xna.Framework.Graphics.Effect(host.GraphicsDevice, mgfx).Dispose());
+            profileOutput = CaptureConsole(() => new Microsoft.Xna.Framework.Graphics.Effect(host.GraphicsDevice, knifx).Dispose());
+        });
+
+        defaultOutput.ShouldContain("older version of KNI");
+        profileOutput.ShouldNotContain("older version");
+    }
+
+    private static string CaptureConsole(Action action)
+    {
+        TextWriter originalOut = Console.Out;
+        TextWriter originalError = Console.Error;
+        StringWriter captured = new StringWriter();
+        Console.SetOut(captured);
+        Console.SetError(captured);
+        try
+        {
+            action();
+        }
+        finally
+        {
+            Console.SetOut(originalOut);
+            Console.SetError(originalError);
+        }
+        return captured.ToString();
+    }
+
     [Fact]
     public void Compile_NamesTheFileAndTheErrors_WhenTheShaderIsInvalid()
     {

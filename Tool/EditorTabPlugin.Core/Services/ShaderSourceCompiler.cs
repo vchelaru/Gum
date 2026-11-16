@@ -23,9 +23,10 @@ internal static class ShaderSourceCompiler
     /// the text, so the file name plays no part; <paramref name="sourcePath"/> is the shader's own path, which
     /// is what a relative <c>#include</c> resolves against. Input ShadowDusk does not read throws too. Each file the
     /// shader includes, nested includes too, is passed to <paramref name="onInclude"/> as ShadowDusk looks for it,
-    /// a file that does not exist yet included, so creating it later can be noticed.
+    /// a file that does not exist yet included, so creating it later can be noticed. A <paramref name="profile"/>
+    /// overrides <paramref name="target"/> with a whole (runtime, container) contract, null keeps the default MGFX output.
     /// </summary>
-    public static byte[] Compile(string source, PlatformTarget target, string sourcePath, Action<string>? onInclude = null)
+    public static byte[] Compile(string source, PlatformTarget target, string sourcePath, Action<string>? onInclude = null, CapabilityProfile? profile = null)
     {
         if (sourcePath.EndsWith(".sksl", StringComparison.OrdinalIgnoreCase))
         {
@@ -40,6 +41,7 @@ internal static class ShaderSourceCompiler
             new CompilerOptions
             {
                 Target = target,
+                Profile = profile,
                 SourceFileName = sourcePath,
                 IncludeResolver = new ReportingIncludeResolver(sourcePath, onInclude),
             },
