@@ -93,7 +93,10 @@ Required checks are `Build-and-Test (windows-latest)` and `Build-and-Test (macos
 ### Scopes
 - **full** (default): no label, `workflow_dispatch`, push to main. Every job runs on real runners, including the Mesa test streams, Avalonia on three OSes (dispatch), Native-AOT and Build-Generated-Code.
 - **fast**: the PR has the `fast-ci` label. Windows still compiles every test project but runs only the headless test projects (3 concurrent streams). The macOS leg is a no-op on `ubuntu-latest`. Avalonia, Native-AOT and Build-Generated-Code run only if the PR touches their paths (the lists are in the `Changes` job). Adding or removing the label re-runs the PR's run (`fast-ci-label.yaml`); the scope is read from the label when the `Changes` job runs.
-- Docs-only PRs and the Windows leg of a push to main are no-ops on `ubuntu-latest` (about 10 s).
+- Docs-only PRs and the Windows leg of a push to main or the nightly run are no-ops on `ubuntu-latest` (about 10 s).
+
+### macOS leg on PRs
+In full scope a PR runs the macOS leg only when it touches a path in the `Changes` job's `macos` filter (what only that leg builds, code that branches on macOS, build plumbing, `.github/**`). Otherwise the leg is a green no-op on `ubuntu-latest`. The nightly run (`schedule`) runs the macOS leg in full, so a Mac-only break in a PR that skipped it shows up within a day.
 
 ### What fast mode does not run
 Mesa projects (IntegrationTests, Shapes, Cli, RaylibGum, ProjectServices.Raylib/MonoGame), the macOS-only steps (iOS/Android builds, `.app` bundle check, Cli tests on macOS), and Avalonia/AOT/GenCode when their paths are untouched. A break only one of those would catch is found by the full run, so every fast session ends with one.
