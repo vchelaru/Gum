@@ -47,6 +47,8 @@ try
     // Demo the auto-fit helpers. Flip via the Zoom/Expand radios in the nav strip.
     GumUI.EnableZoomToWindow();
 
+    GlClear glClear = new GlClear(GetProc);
+
     if (benchmark)
     {
         BenchmarkRunner.RequireRelease();
@@ -60,7 +62,7 @@ try
             update: seconds => GumUI.Update(seconds),
             draw: () =>
             {
-                GlClear.ToColor(GetProc, 100 / 255f, 149 / 255f, 237 / 255f);
+                glClear.ToColor(100 / 255f, 149 / 255f, 237 / 255f);
                 GumUI.Draw();
             },
             sync: () =>
@@ -104,7 +106,7 @@ try
         GumUI.Update(gameTime);
         gallery.Tick(gameTime - previousSeconds);
         previousSeconds = gameTime;
-        GlClear.ToColor(GetProc, 100 / 255f, 149 / 255f, 237 / 255f); // the game's own background; Gum draws over it
+        glClear.ToColor(100 / 255f, 149 / 255f, 237 / 255f); // the game's own background; Gum draws over it
         GumUI.Draw();
 
         if (sample.ExitAfterSeconds > 0 && gameTime >= sample.ExitAfterSeconds)

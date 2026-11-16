@@ -30,21 +30,30 @@ static unsafe class GlReadback
     }
 }
 
-/// <summary>The game's own background: clears the window's default framebuffer before Gum draws over it.</summary>
-static class GlClear
+/// <summary>
+/// The game's own background: clears the window's default framebuffer before Gum draws over it. The GL entry
+/// points are looked up once, so clearing each frame allocates nothing.
+/// </summary>
+sealed unsafe class GlClear
 {
     const int GL_FRAMEBUFFER = 0x8D40;
     const int GL_COLOR_BUFFER_BIT = 0x4000;
 
-    [UnmanagedFunctionPointer(CallingConvention.Winapi)] delegate void BindFramebuffer(int target, int id);
-    [UnmanagedFunctionPointer(CallingConvention.Winapi)] delegate void ClearColor(float r, float g, float b, float a);
-    [UnmanagedFunctionPointer(CallingConvention.Winapi)] delegate void Clear(int mask);
+    readonly delegate* unmanaged[Stdcall]<int, int, void> _bindFramebuffer;
+    readonly delegate* unmanaged[Stdcall]<float, float, float, float, void> _clearColor;
+    readonly delegate* unmanaged[Stdcall]<int, void> _clear;
 
-    public static void ToColor(Func<string, IntPtr> getProc, float r, float g, float b)
+    public GlClear(Func<string, IntPtr> getProc)
     {
-        T Load<T>(string name) where T : Delegate => Marshal.GetDelegateForFunctionPointer<T>(getProc(name));
-        Load<BindFramebuffer>("glBindFramebuffer")(GL_FRAMEBUFFER, 0);
-        Load<ClearColor>("glClearColor")(r, g, b, 1f);
-        Load<Clear>("glClear")(GL_COLOR_BUFFER_BIT);
+        _bindFramebuffer = (delegate* unmanaged[Stdcall]<int, int, void>)getProc("glBindFramebuffer");
+        _clearColor = (delegate* unmanaged[Stdcall]<float, float, float, float, void>)getProc("glClearColor");
+        _clear = (delegate* unmanaged[Stdcall]<int, void>)getProc("glClear");
+    }
+
+    public void ToColor(float r, float g, float b)
+    {
+        _bindFramebuffer(GL_FRAMEBUFFER, 0);
+        _clearColor(r, g, b, 1f);
+        _clear(GL_COLOR_BUFFER_BIT);
     }
 }
