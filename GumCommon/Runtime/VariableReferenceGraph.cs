@@ -854,6 +854,12 @@ public sealed class VariableReferenceGraph
     private static readonly object CrossLoopLock = new object();
 
     /// <summary>
+    /// Work done finding loops through other elements (elements checked, rows and edges indexed, edges walked),
+    /// so tests can assert it stays linear without timing it. Only changed under <see cref="CrossLoopLock"/>.
+    /// </summary>
+    internal static long CrossLoopSteps;
+
+    /// <summary>
     /// Holds the project's loop index fixed until <see cref="EndBatch"/>, so a pass that applies every
     /// element (rows are not edited during it) checks the index once instead of once per element.
     /// </summary>
@@ -933,6 +939,7 @@ public sealed class VariableReferenceGraph
         }
         for (int i = 0; i < index.Elements.Length; i++)
         {
+            CrossLoopSteps++;
             ElementSave element = ProjectElementAt(project, i);
             if (!ReferenceEquals(index.Elements[i], element) || !ReferenceEquals(GetFor(element), index.Graphs[i]))
             {
@@ -987,6 +994,7 @@ public sealed class VariableReferenceGraph
                     {
                         continue;
                     }
+                    CrossLoopSteps++;
                     int node = nodeElement.Count;
                     nodeElement.Add(e);
                     nodeKey.Add(key);
@@ -1009,6 +1017,7 @@ public sealed class VariableReferenceGraph
             HashSet<int> targets = new HashSet<int>();
             edges.Add(targets);
             ReferenceRow row = nodeRows[node];
+            CrossLoopSteps += row.Reads.Count + row.ElementReads.Count;
             int element = nodeElement[node];
             foreach (string read in row.Reads)
             {
@@ -1076,6 +1085,7 @@ public sealed class VariableReferenceGraph
                 (int node, IEnumerator<int> targets) = work.Peek();
                 if (targets.MoveNext())
                 {
+                    CrossLoopSteps++;
                     int target = targets.Current;
                     if (order[target] == 0)
                     {
