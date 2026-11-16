@@ -567,6 +567,9 @@ namespace RenderingLibrary.Graphics
             var count = whatToRender.Count;
             var nb = NineSliceBatcher.Spike;
             bool nbTop = NineSliceBatcher.Enabled && prerender && !nb.Active;
+            bool tcTop = TextBlobBatch.Enabled && prerender && !TextBlobBatch.Active; // SPIKE #8116 textops
+            if (tcTop) TextBlobBatch.BeginFrame(managers.Canvas);
+            if (prerender) LeafCull.ClipValid = false;
             if (nbTop)
             {
                 nb.Active = true;
@@ -589,6 +592,7 @@ namespace RenderingLibrary.Graphics
                 nb.Active = false;
                 NineSliceBatcher.StatFrames++;
             }
+            if (tcTop) TextBlobBatch.EndFrame();
         }
 
         // Draws one visible renderable and (with RenderUsingHierarchy) its children.
@@ -599,7 +603,7 @@ namespace RenderingLibrary.Graphics
             // hidden one is skipped by the caller's Visible check, so no stale texture ghosts.
             if (renderable.IsRenderTarget)
             {
-                if (NineSliceBatcher.Enabled) NineSliceBatcher.Spike.Flush();
+                if (NineSliceBatcher.Enabled) NineSliceBatcher.Spike.Flush(); if (TextBlobBatch.Enabled) TextBlobBatch.Flush();
                 SpriteBatch.Flush();
                 CompositeRenderTarget(renderable, managers);
                 return;
@@ -629,10 +633,11 @@ namespace RenderingLibrary.Graphics
 
                 if (isOnScreen)
                 {
-                    if (NineSliceBatcher.Enabled) NineSliceBatcher.Spike.Flush();
+                    if (NineSliceBatcher.Enabled) NineSliceBatcher.Spike.Flush(); if (TextBlobBatch.Enabled) TextBlobBatch.Flush();
                     SpriteBatch.Flush();
                     canvas.Save();
                     canvas.ClipTo(renderable);
+                    LeafCull.ClipValid = false; // SPIKE #8116 textops
                     IRenderableIpso? outerClipper = ClipAppliedByWalk;
                     ClipAppliedByWalk = renderable;
                     try
@@ -644,9 +649,10 @@ namespace RenderingLibrary.Graphics
                     {
                         ClipAppliedByWalk = outerClipper;
                     }
-                    if (NineSliceBatcher.Enabled) NineSliceBatcher.Spike.Flush();
+                    if (NineSliceBatcher.Enabled) NineSliceBatcher.Spike.Flush(); if (TextBlobBatch.Enabled) TextBlobBatch.Flush();
                     SpriteBatch.Flush();
                     canvas.Restore();
+                    LeafCull.ClipValid = false; // SPIKE #8116 textops
                 }
             }
             else
@@ -682,6 +688,7 @@ namespace RenderingLibrary.Graphics
             IRenderableIpso inner = renderable is GraphicalUiElement element && element.RenderableComponent is IRenderableIpso contained
                 ? contained
                 : renderable;
+            if (LeafCull.Enabled && LeafCull.IsOutside(inner, managers.Canvas)) return; // SPIKE #8116 textops
             if (NineSliceBatcher.Enabled)
             {
                 var nb = NineSliceBatcher.Spike;
@@ -695,6 +702,7 @@ namespace RenderingLibrary.Graphics
                     nb.Flush();
                 }
             }
+            if (TextBlobBatch.Enabled && TextBlobBatch.HasPending && inner is not global::SkiaGum.Text && inner is not InvisibleRenderable) TextBlobBatch.Flush(); // SPIKE #8116 textops
             if (inner is not Sprite && inner is not InvisibleRenderable)
             {
                 SpriteBatch.Flush();
@@ -1667,6 +1675,7 @@ namespace RenderingLibrary.Graphics
                 }
                 d.R = null!;
             }
+            if (TextBlobBatch.Enabled) TextBlobBatch.Flush(); // SPIKE #8116 textops: deferred texts land before whatever follows
         }
 
         // Conservative device bounds of an unrotated Text under a scale+translate matrix; false when it cannot be deferred.
@@ -1692,6 +1701,51 @@ namespace RenderingLibrary.Graphics
             const float pad = 4;
             dev = m.MapRect(new SKRect(l - pad, tp - pad, r + pad, bt + pad));
             return true;
+        }
+    }
+}
+
+namespace RenderingLibrary.Graphics
+{
+    /// <summary>SPIKE #8116 textops (GUM_LEAFCULL=1): skips a leaf Text or NineSlice whose conservative device bounds lie fully
+    /// outside the current device clip, before any SkiaSharp call. The device clip is read once per clip push/pop.</summary>
+    internal static class LeafCull
+    {
+        public static readonly bool Enabled = System.Environment.GetEnvironmentVariable("GUM_LEAFCULL") == "1";
+        public static bool ClipValid;
+        static SKRect _clip; static SKCanvas? _canvas;
+        public static long StatTested, StatCulled, StatFrames;
+
+        static LeafCull()
+        {
+            string? path = System.Environment.GetEnvironmentVariable("GUM_CULL_STATS");
+            if (path != null && Enabled)
+                System.AppDomain.CurrentDomain.ProcessExit += (_, _) => System.IO.File.WriteAllText(path, $"leafcull tested {StatTested} culled {StatCulled}\n");
+        }
+
+        public static bool IsOutside(IRenderableIpso inner, SKCanvas canvas)
+        {
+            SKRect dev;
+            if (inner is global::SkiaGum.Text t)
+            {
+                if (t.HasDropshadow) return false;
+                SKMatrix m = canvas.TotalMatrix;
+                if (!NineSliceBatcher.TryTextBounds(t, m, out dev)) return false;
+            }
+            else if (inner is NineSlice ns)
+            {
+                if (ns.GetAbsoluteRotation() != 0) return false;
+                SKMatrix m = canvas.TotalMatrix;
+                if (m.SkewX != 0 || m.SkewY != 0 || m.Persp0 != 0 || m.Persp1 != 0) return false;
+                float x = ns.GetAbsoluteLeft(), y = ns.GetAbsoluteTop();
+                dev = m.MapRect(new SKRect(x - 4, y - 4, x + ns.Width + 4, y + ns.Height + 4));
+            }
+            else return false;
+            if (!ClipValid || !ReferenceEquals(canvas, _canvas)) { _canvas = canvas; var c = canvas.DeviceClipBounds; _clip = new SKRect(c.Left, c.Top, c.Right, c.Bottom); ClipValid = true; }
+            StatTested++;
+            bool outside = dev.Right <= _clip.Left || dev.Left >= _clip.Right || dev.Bottom <= _clip.Top || dev.Top >= _clip.Bottom;
+            if (outside) StatCulled++;
+            return outside;
         }
     }
 }

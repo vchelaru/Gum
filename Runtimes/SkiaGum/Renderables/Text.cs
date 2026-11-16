@@ -1144,7 +1144,8 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
             // Unrotated text with nothing left to clip draws its cached blobs at its offset, with no
             // Save/Translate/Restore (#8148).
             if (isSimple && isClipOnCanvas && renderPaint == null
-                && _blobCache.TryPaintAt(canvas, paintBlock, absoluteX, absoluteY))
+                && ((TextBlobBatch.Enabled && TextBlobBatch.Active && canvas == TextBlobBatch.Canvas && _blobCache.TryBatchAt(canvas, paintBlock, absoluteX, absoluteY))
+                || _blobCache.TryPaintAt(canvas, paintBlock, absoluteX, absoluteY)))
             {
                 statistics?.RecordDrawCall();
                 return;
@@ -1870,6 +1871,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
             public SKTextBlob Blob;
             public IStyle Style;
             public float VerticalOffset;
+            public ushort[]? CapGlyphs; public SKPoint[]? CapPos; public SKTypeface? CapTf; public float CapSize; // SPIKE #8116 textops
         }
 
         private struct BlobSegment
@@ -1950,6 +1952,27 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
             for (int i = 0; i < _runs.Count; i++)
             {
                 DrawRun(canvas, _runs[i], null, x, y);
+            }
+            return true;
+        }
+
+        // SPIKE #8116 textops GUM_TEXTCACHE: hand the runs to the merged-blob batch when every run is a plain fill of one color.
+        public bool TryBatchAt(SKCanvas canvas, TextBlock block, float x, float y)
+        {
+            if (_isFirstFrame || !ReferenceEquals(Block, block) || !_isBuilt || _isUnsupported || _runs.Count == 0) return false;
+            TextPaintOptions o = TextPaintOptions.Default;
+            if (!HasBuildFontSettings(o) || _segments.Count != 1 || _segments[0].HasMatrix) return false;
+            SKColor color = _runs[0].Style.TextColor;
+            for (int i = 0; i < _runs.Count; i++)
+            {
+                IStyle s = _runs[i].Style;
+                if (s.HaloColor != SKColor.Empty || s.TextColor != color || _runs[i].CapGlyphs == null) return false;
+            }
+            SKMatrix m = canvas.TotalMatrix;
+            for (int i = 0; i < _runs.Count; i++)
+            {
+                BlobRun r = _runs[i];
+                TextBlobBatch.Add(m, color, o.Hinting, o.Edging, o.SubpixelPositioning, new TextBlobBatch.Item { Blob = r.Blob, Glyphs = r.CapGlyphs!, Positions = r.CapPos!, Typeface = r.CapTf!, Size = r.CapSize, X = x, Y = y + r.VerticalOffset });
             }
             return true;
         }
@@ -2063,6 +2086,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
                         halo.StrokeWidth = _haloWidth = style.HaloWidth;
                     }
                 }
+                Cap(canvas, run, x, y, halo);
                 canvas.DrawText(run.Blob, x, y + run.VerticalOffset, halo);
             }
             if (!_isFillKnown || _fillColor != style.TextColor)
@@ -2070,7 +2094,14 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
                 fill.Color = _fillColor = style.TextColor;
                 _isFillKnown = true;
             }
+            Cap(canvas, run, x, y, fill);
             canvas.DrawText(run.Blob, x, y + run.VerticalOffset, fill);
+        }
+
+        private void Cap(SKCanvas canvas, BlobRun run, float x, float y, SKPaint paint)
+        {
+            if (TextDrawCapture.Active && run.CapGlyphs != null)
+                TextDrawCapture.Add(canvas, run.Blob, x, y + run.VerticalOffset, paint, Block!, run.CapGlyphs, run.CapPos!, run.CapTf!, run.CapSize, _builtEdging, _builtHinting, _builtSubpixel);
         }
 
         private static void SetHaloStroke(SKPaint halo, IStyle style)
@@ -2162,7 +2193,8 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
                     {
                         continue;
                     }
-                    _runs.Add(new BlobRun { Blob = blob, Style = style, VerticalOffset = verticalOffset });
+                    _runs.Add(new BlobRun { Blob = blob, Style = style, VerticalOffset = verticalOffset,
+                        CapGlyphs = TextDrawCapture.Enabled || TextBlobBatch.Enabled ? run.Glyphs.AsSpan().ToArray() : null, CapPos = TextDrawCapture.Enabled || TextBlobBatch.Enabled ? run.GlyphPositions.AsSpan().ToArray() : null, CapTf = run.Typeface, CapSize = font.Size });
                 }
             }
             _segments.Add(new BlobSegment

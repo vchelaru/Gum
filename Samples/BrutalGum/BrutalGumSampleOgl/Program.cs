@@ -74,6 +74,7 @@ try
             benchmarkPath);
         FlushProbe.Report(BenchmarkRunner.MeasuredFrames);
         ImgBench.Report();
+        TextBench.Report();
         return;
     }
 

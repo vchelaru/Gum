@@ -72,6 +72,7 @@ internal sealed unsafe class GlTarget : IBrutalTarget
         }
         else _direct.Begin();
         ImgBench.Begin(); // SPIKE #8116 img agent
+        TextBench.Begin(); // SPIKE #8116 textops
         if (_recorder != null) _picCanvas = _recorder.BeginRecording(new SKRect(0, 0, _width, _height));
         FlushProbe.BeginEnd = System.Diagnostics.Stopwatch.GetTimestamp();
     }
@@ -108,6 +109,7 @@ internal sealed unsafe class GlTarget : IBrutalTarget
             if (_picFrame == 700) FlushProbe.OpHistogram(_variant ?? pic);
         }
         if (ImgBench.Enabled) ImgBench.End(_direct.Canvas, Gr); // SPIKE #8116 img agent
+        if (TextBench.Enabled) TextBench.End(_direct.Canvas, Gr); // SPIKE #8116 textops
         FlushProbe.FlushStart = System.Diagnostics.Stopwatch.GetTimestamp();
         if (FlushProbe.Enabled)
         {
