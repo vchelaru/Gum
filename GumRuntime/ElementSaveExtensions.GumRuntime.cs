@@ -2359,6 +2359,7 @@ namespace GumRuntime
             // The flag is thread-wide, so it must be cleared even when the build throws (a component
             // constructor, a custom variable setter). Otherwise every later build on this thread
             // skips its own layout flush and no layout is applied again (#6066).
+            GraphicalUiElement.BuildDepth++;
             try
             {
                 // We need to set categories and states first since those are used below;
@@ -2408,6 +2409,7 @@ namespace GumRuntime
             }
             finally
             {
+                GraphicalUiElement.BuildDepth--;
                 if (!wasSuspended)
                 {
                     GraphicalUiElement.IsAllLayoutSuspended = false;

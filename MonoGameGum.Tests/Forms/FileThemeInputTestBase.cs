@@ -98,7 +98,7 @@ public abstract class FileThemeInputTestBase : BeginnerDriverTestBase
         return entry.Project;
     }
 
-    private static string LocateRepoRoot()
+    protected static string LocateRepoRoot()
     {
         string? directory = AppContext.BaseDirectory;
         while (directory != null && !File.Exists(Path.Combine(directory, "GumFull.sln")))

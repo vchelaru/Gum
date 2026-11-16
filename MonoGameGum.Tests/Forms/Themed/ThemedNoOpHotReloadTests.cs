@@ -1,4 +1,6 @@
 using Gum.DataTypes;
+using Gum.Managers;
+using GumRuntime;
 using Gum.DataTypes.Variables;
 using Gum.Forms.Controls;
 using Gum.GueDeriving;
@@ -29,9 +31,9 @@ public class ThemedNoOpHotReloadTests : FileThemeInputTestBase
 
     public static IEnumerable<object[]> ThemeAndControl() =>
         AllThemes().Select(row => (string)row[0]).SelectMany(theme =>
-            new[] { "ScrollBar", "ScrollBarHorizontalInCode", "ScrollBarHorizontalAuthored", "ScrollBarHorizontalMoved", "ScrollViewerHorizontal", "ListBoxHorizontal", "Slider", "ComboBox", "TextBoxMultiLine", "ListBox", "ScrollViewer", "ItemsControl" }
-                // ForestGlade and Retro95 reset the horizontal bar width of a ScrollViewer shown from code: #8125.
-                .Where(control => !(control == "ScrollViewerHorizontal" && theme is "ForestGlade" or "Retro95"))
+            new[] { "ScrollBar", "ScrollBarHorizontalInCode", "ScrollBarHorizontalAuthored", "ScrollBarHorizontalMoved", "ScrollViewerHorizontal", "ListBoxHorizontal", "Slider", "ComboBox", "TextBoxMultiLine", "ListBox", "ScrollViewer", "ItemsControl", "ScrollViewerBoth", "ScrollViewerVertical", "ScrollViewerHiddenThenShown", "ScrollViewerBothHiddenThenVertical", "ListBoxVertical", "ItemsControlItems", "TextBoxManyLines" }
+                // The vertical thumb of a ScrollViewer showing both bars changes length on reload: #8128.
+                .Where(control => control is not ("ScrollViewerHiddenThenShown" or "ScrollViewerBothHiddenThenVertical"))
                 .Select(control => new object[] { theme, control }));
 
     private static void Snapshot(GraphicalUiElement element, string path, Dictionary<string, string> into)
@@ -80,7 +82,57 @@ public class ThemedNoOpHotReloadTests : FileThemeInputTestBase
     public void ReloadWithNoEdit_ShouldNotMoveOrResizeAnything(string theme, string control)
     {
         GumProjectSave project = LoadTheme(theme);
-        string component = control.StartsWith("ScrollBar") ? "ScrollBar" : control.StartsWith("TextBox") ? "TextBox" : control.StartsWith("ScrollViewer") ? "ScrollViewer" : control.StartsWith("ListBox") ? "ListBox" : control;
+        ScreenSave screen = CreateScreen(project, control);
+        project.Screens.Add(screen);
+        addedScreen = screen;
+        addedTo = project;
+        GraphicalUiElement screenVisual = BuildScreen(screen, control);
+        Dictionary<string, string> before = new Dictionary<string, string>();
+        Snapshot(screenVisual, "", before);
+
+        Gum.GumHotReloadManager.ApplyDiff(new[] { screenVisual }, project, RenderingLibrary.SystemManagers.Default);
+        Driver.Step(2);
+        AssertUnchanged(before, screenVisual, theme, control);
+    }
+
+    /// <summary>
+    /// The same reload as a running game does it: the new project is a separate object read from the same files,
+    /// not the project the visuals were built from. #8125
+    /// </summary>
+    [Theory]
+    [MemberData(nameof(ThemeAndControl))]
+    public void ReloadFromFreshProject_ShouldNotMoveOrResizeAnything(string theme, string control)
+    {
+        GumProjectSave oldProject = LoadFresh(theme);
+        ScreenSave screen = CreateScreen(oldProject, control);
+        oldProject.Screens.Add(screen);
+        GraphicalUiElement screenVisual = BuildScreen(screen, control);
+        Dictionary<string, string> before = new Dictionary<string, string>();
+        Snapshot(screenVisual, "", before);
+
+        GumProjectSave newProject = LoadFresh(theme);
+        newProject.Screens.Add(CreateScreen(newProject, control));
+        Gum.GumHotReloadManager.ApplyDiff(new[] { screenVisual }, newProject, RenderingLibrary.SystemManagers.Default, oldProject);
+        Driver.Step(2);
+        AssertUnchanged(before, screenVisual, theme, control);
+    }
+
+    private static GumProjectSave LoadFresh(string theme)
+    {
+        string themeFolder = theme.Length == 0 ? "FormsTemplate" : System.IO.Path.Combine("FormsThemes", theme);
+        string gumx = System.IO.Path.Combine(LocateRepoRoot(), "Tools", "Gum.ProjectServices", "Templates", themeFolder, "GumProject.gumx");
+        GumProjectSave loaded = GumProjectSave.Load(gumx, out _)!;
+        loaded.Initialize();
+        ObjectFinder.Self.GumProjectSave = loaded;
+        loaded.ApplyAllVariableReferences();
+        StandardRuntimeRegistrations.Register();
+        Gum.Forms.FormsUtilities.RegisterFromFileFormRuntimeDefaults();
+        return loaded;
+    }
+
+    private static ScreenSave CreateScreen(GumProjectSave project, string control)
+    {
+        string component = control.StartsWith("ScrollBar") ? "ScrollBar" : control.StartsWith("TextBox") ? "TextBox" : control.StartsWith("ScrollViewer") ? "ScrollViewer" : control.StartsWith("ListBox") ? "ListBox" : control.StartsWith("ItemsControl") ? "ItemsControl" : control;
         ScreenSave screen = new ScreenSave { Name = "AloneScreen" };
         screen.States.Add(new StateSave { Name = "Default", ParentContainer = screen });
         screen.Instances.Add(new InstanceSave { Name = "Box", BaseType = ComponentName(project, component), ParentContainer = screen });
@@ -88,9 +140,11 @@ public class ThemedNoOpHotReloadTests : FileThemeInputTestBase
         {
             screen.DefaultState.Variables.Add(new VariableSave { Name = "Box.OrientationCategoryState", Type = "OrientationCategory", Value = "Horizontal", SetsValue = true });
         }
-        project.Screens.Add(screen);
-        addedScreen = screen;
-        addedTo = project;
+        return screen;
+    }
+
+    private GraphicalUiElement BuildScreen(ScreenSave screen, string control)
+    {
         GraphicalUiElement screenVisual = screen.ToGraphicalUiElement();
         screenVisual.AddToRoot();
         Driver.Step(2);
@@ -111,14 +165,34 @@ public class ThemedNoOpHotReloadTests : FileThemeInputTestBase
             if (box is ListBox list) { for (int i = 0; i < 40; i++) { list.Items.Add("an item with fairly long text number " + i); } }
             else { for (int i = 0; i < 10; i++) { viewer.AddChild(new Button { Width = 400, Text = "wide " + i }); } }
         }
+        if (control is "ScrollViewerBoth" or "ScrollViewerVertical" or "ScrollViewerHiddenThenShown" or "ScrollViewerBothHiddenThenVertical")
+        {
+            ScrollViewer viewer = (ScrollViewer)box;
+            for (int i = 0; i < 30; i++) { viewer.AddChild(new Button { Width = 400, Text = "item " + i }); }
+            if (control == "ScrollViewerBoth") { viewer.HorizontalScrollBarVisibility = ScrollBarVisibility.Visible; viewer.VerticalScrollBarVisibility = ScrollBarVisibility.Visible; }
+            if (control == "ScrollViewerVertical") { viewer.VerticalScrollBarVisibility = ScrollBarVisibility.Visible; }
+            if (control == "ScrollViewerHiddenThenShown")
+            {
+                viewer.HorizontalScrollBarVisibility = ScrollBarVisibility.Visible; Driver.Step(2);
+                viewer.HorizontalScrollBarVisibility = ScrollBarVisibility.Hidden; Driver.Step(2);
+                viewer.HorizontalScrollBarVisibility = ScrollBarVisibility.Visible;
+            }
+            if (control == "ScrollViewerBothHiddenThenVertical")
+            {
+                viewer.HorizontalScrollBarVisibility = ScrollBarVisibility.Visible; viewer.VerticalScrollBarVisibility = ScrollBarVisibility.Visible; Driver.Step(2);
+                viewer.HorizontalScrollBarVisibility = ScrollBarVisibility.Hidden;
+            }
+        }
+        if (control == "ListBoxVertical") { ListBox list = (ListBox)box; for (int i = 0; i < 40; i++) { list.Items.Add("item " + i); } }
+        if (control == "ItemsControlItems") { ItemsControl items = (ItemsControl)box; for (int i = 0; i < 40; i++) { items.Items.Add("item " + i); } }
+        if (control == "TextBoxManyLines") { TextBox text = (TextBox)box; text.TextWrapping = Gum.Forms.TextWrapping.Wrap; text.AcceptsReturn = true; text.Text = string.Join("\n", Enumerable.Range(0, 30)); }
         if (control == "TextBoxMultiLine") { ((TextBox)box).TextWrapping = Gum.Forms.TextWrapping.Wrap; ((TextBox)box).AcceptsReturn = true; ((TextBox)box).Text = "a\nb\nc"; }
         Driver.Step(2);
-        Dictionary<string, string> before = new Dictionary<string, string>();
-        Snapshot(screenVisual, "", before);
+        return screenVisual;
+    }
 
-        Gum.GumHotReloadManager.ApplyDiff(new[] { screenVisual }, project, RenderingLibrary.SystemManagers.Default);
-        Driver.Step(2);
-
+    private static void AssertUnchanged(Dictionary<string, string> before, GraphicalUiElement screenVisual, string theme, string control)
+    {
         Dictionary<string, string> after = new Dictionary<string, string>();
         Snapshot(screenVisual, "", after);
         string[] changed = before.Where(pair => !after.TryGetValue(pair.Key, out string? value) || value != pair.Value)
