@@ -264,6 +264,7 @@ namespace RenderingLibrary.Graphics
         private void StartHostFrameRenderTargets()
         {
             RenderStateChangeStatistics.Reset();
+            _nineSliceBatch?.BeginFrame();
             DisposeBakedImages();
             _referencedRenderTargetOwners.Clear();
             _renderTargetService.ClearUnusedRenderTargetsLastFrame();

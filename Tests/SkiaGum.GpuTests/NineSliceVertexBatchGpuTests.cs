@@ -64,7 +64,7 @@ public class NineSliceVertexBatchGpuTests : IDisposable
         HeightUnits = DimensionUnitType.Absolute,
     };
 
-    static TextRuntime Label(string text, float x, float y, float width = 40, float height = 12) => new()
+    static TextRuntime Label(string text, float x, float y, float width = 40, float height = 12, float fontSize = 14) => new()
     {
         Text = text,
         X = x,
@@ -74,7 +74,7 @@ public class NineSliceVertexBatchGpuTests : IDisposable
         WidthUnits = DimensionUnitType.Absolute,
         HeightUnits = DimensionUnitType.Absolute,
         Color = SKColors.White,
-        FontSize = 14,
+        FontSize = fontSize,
     };
 
     static ContainerRuntime Container(float x, float y, float width, float height, bool clips = false) => new()
@@ -90,7 +90,7 @@ public class NineSliceVertexBatchGpuTests : IDisposable
 
     // Draws three frames (text draws its cached blobs from the second frame on, and only those defer) and returns
     // the last frame's pixels and draw calls.
-    (byte[] Pixels, int DrawCalls) Render(Action<ContainerRuntime> build, bool batch)
+    (byte[] Pixels, int DrawCalls) Render(Action<ContainerRuntime, SystemManagers> build, bool batch, Action<int>? beforeFrame)
     {
         byte[] pixels = Array.Empty<byte>();
         int drawCalls = 0;
@@ -104,11 +104,12 @@ public class NineSliceVertexBatchGpuTests : IDisposable
             managers.Renderer.BatchesNineSlices = batch;
 
             ContainerRuntime root = Container(0, 0, Size, Size);
-            build(root);
+            build(root, managers);
             root.AddToManagers(managers, null);
 
             for (int frame = 0; frame < 3; frame++)
             {
+                beforeFrame?.Invoke(frame);
                 surface.Canvas.Clear(SKColors.Black);
                 managers.Draw();
             }
@@ -138,10 +139,14 @@ public class NineSliceVertexBatchGpuTests : IDisposable
     }
 
     // Returns the batched and unbatched draw calls after asserting both draw the same bytes.
-    (int Batched, int Unbatched) AssertBatchedMatchesUnbatched(Action<ContainerRuntime> build)
+    (int Batched, int Unbatched) AssertBatchedMatchesUnbatched(Action<ContainerRuntime> build) =>
+        AssertBatchedMatchesUnbatched((root, _) => build(root));
+
+    // beforeFrame runs before each of the three frames, given the frame index.
+    (int Batched, int Unbatched) AssertBatchedMatchesUnbatched(Action<ContainerRuntime, SystemManagers> build, Action<int>? beforeFrame = null)
     {
-        (byte[] batchedPixels, int batched) = Render(build, batch: true);
-        (byte[] unbatchedPixels, int unbatched) = Render(build, batch: false);
+        (byte[] batchedPixels, int batched) = Render(build, batch: true, beforeFrame);
+        (byte[] unbatchedPixels, int unbatched) = Render(build, batch: false, beforeFrame);
         CountDifferentBytes(batchedPixels, unbatchedPixels).ShouldBe(0);
         return (batched, unbatched);
     }
@@ -359,5 +364,225 @@ public class NineSliceVertexBatchGpuTests : IDisposable
             root.AddChild(Frame(_textureA, 80, 80, 80, 80));
             root.AddChild(Frame(_textureA, 150, 10, 60, 60));
         });
+    }
+    [Fact]
+    public void Draw_OtherTextureOverPendingBatchAndDeferredText_KeepsZOrder()
+    {
+        AssertBatchedMatchesUnbatched(root =>
+        {
+            root.AddChild(Frame(_textureA, 10, 10, 80, 80));
+            root.AddChild(Label("Deferred", 20, 20, 100, 30));
+            root.AddChild(Frame(_textureB, 15, 15, 80, 80));
+            root.AddChild(Frame(_textureA, 120, 10, 80, 80));
+            root.AddChild(Label("Second", 125, 20, 100, 30));
+            root.AddChild(Frame(_textureB, 110, 15, 80, 80));
+        });
+    }
+
+    [Fact]
+    public void Draw_SpriteAndShapesAfterPendingBatch_KeepZOrder()
+    {
+        AssertBatchedMatchesUnbatched(root =>
+        {
+            root.AddChild(Frame(_textureA, 10, 10, 80, 80));
+            root.AddChild(Label("t", 20, 20));
+            root.AddChild(new SpriteRuntime
+            {
+                Texture = _textureB, X = 30, Y = 30, Width = 60, Height = 60,
+                WidthUnits = DimensionUnitType.Absolute, HeightUnits = DimensionUnitType.Absolute,
+            });
+            root.AddChild(Frame(_textureA, 50, 50, 80, 80));
+            root.AddChild(new ColoredRectangleRuntime
+            {
+                X = 70, Y = 70, Width = 60, Height = 60, Color = new SKColor(0, 255, 255, 128),
+                WidthUnits = DimensionUnitType.Absolute, HeightUnits = DimensionUnitType.Absolute,
+            });
+            root.AddChild(Frame(_textureA, 100, 100, 80, 80));
+            root.AddChild(new ColoredCircleRuntime
+            {
+                X = 120, Y = 120, Width = 60, Height = 60, Color = SKColors.Magenta,
+                WidthUnits = DimensionUnitType.Absolute, HeightUnits = DimensionUnitType.Absolute,
+            });
+        });
+    }
+
+    [Fact]
+    public void Draw_BoldItalicGlyphsOverhangingIntoNextCell_StayUnderIt()
+    {
+        AssertBatchedMatchesUnbatched(root =>
+        {
+            for (int i = 0; i < 5; i++)
+            {
+                root.AddChild(Frame(_textureA, 10, 10 + i * 30, 150, 26));
+                root.AddChild(Label("[IsItalic=true][IsBold=true]fjWfjW[/IsBold][/IsItalic]", 12, 4 + i * 30, 150, 8, fontSize: 40));
+            }
+        });
+    }
+
+    [Fact]
+    public void Draw_BBCodeLargerFontRunIntoNextCell_StaysUnderIt()
+    {
+        AssertBatchedMatchesUnbatched(root =>
+        {
+            for (int i = 0; i < 5; i++)
+            {
+                root.AddChild(Frame(_textureA, 10, 10 + i * 30, 150, 26));
+                root.AddChild(Label("a [FontSize=60]Big[/FontSize] gj", 12, 12 + i * 30, 150, 8));
+            }
+        });
+    }
+
+    [Fact]
+    public void Draw_ChildrenOutsideNineSliceParent_KeepZOrder()
+    {
+        AssertBatchedMatchesUnbatched(root =>
+        {
+            NineSliceRuntime parent = Frame(_textureA, 10, 10, 60, 60);
+            parent.AddChild(Label("child text far out", 70, 70, 120, 20));
+            parent.AddChild(Frame(_textureA, 80, 60, 60, 60));
+            root.AddChild(parent);
+            root.AddChild(Frame(_textureA, 60, 60, 60, 60));
+        });
+    }
+
+    [Fact]
+    public void Draw_ClipEndingWhileBatchPending_KeepsZOrder()
+    {
+        AssertBatchedMatchesUnbatched(root =>
+        {
+            root.AddChild(Frame(_textureA, 5, 5, 60, 60));
+            ContainerRuntime clip = Container(20, 20, 60, 60, clips: true);
+            clip.AddChild(Frame(_textureA, 0, 0, 100, 100));
+            clip.AddChild(Label("clipped text spills far", 5, 5, 200, 40));
+            root.AddChild(clip);
+            root.AddChild(Label("after clip", 30, 30, 120, 20));
+            root.AddChild(Frame(_textureA, 50, 50, 100, 100));
+        });
+    }
+
+    [Fact]
+    public void Draw_TextureSwappedBetweenFrames_DrawsTheNewTexture()
+    {
+        NineSliceRuntime? first = null;
+        NineSliceRuntime? second = null;
+        AssertBatchedMatchesUnbatched((root, _) =>
+        {
+            first = Frame(_textureA, 10, 10, 80, 80);
+            second = Frame(_textureA, 50, 50, 80, 80);
+            root.AddChild(first);
+            root.AddChild(Label("x", 60, 60));
+            root.AddChild(second);
+        }, frame =>
+        {
+            if (frame == 1)
+            {
+                first!.Texture = _textureB;
+            }
+            if (frame == 2)
+            {
+                second!.Texture = _textureB;
+                first!.Texture = _textureA;
+            }
+        });
+    }
+
+    [Fact]
+    public void GumBatch_NineSliceUnderCallerMatrixThenOutsideCycle_MatchesLattice()
+    {
+        byte[] Draw(bool batch)
+        {
+            byte[] result = Array.Empty<byte>();
+            _gpu.WithSurface(Size, Size, (surface, context) =>
+            {
+                GraphicalUiElement.SetPropertyOnRenderable = global::SkiaGum.CustomSetPropertyOnRenderable.SetPropertyOnRenderable;
+                SystemManagers managers = new SystemManagers();
+                managers.Initialize();
+                SystemManagers.Default = managers;
+                managers.Canvas = surface.Canvas;
+                managers.Renderer.BatchesNineSlices = batch;
+                NineSliceRuntime frame = Frame(_textureB, 10, 10, 60, 60);
+                surface.Canvas.Clear(SKColors.Black);
+                managers.Renderer.Begin(SKMatrix.CreateScale(1.5f, 1.25f));
+                managers.Renderer.Draw(frame);
+                managers.Renderer.End();
+                managers.Renderer.Draw(frame);
+                context.Flush(true, true);
+                using SKBitmap bitmap = new SKBitmap(Size, Size);
+                surface.ReadPixels(bitmap.Info, bitmap.GetPixels(), bitmap.RowBytes, 0, 0);
+                result = bitmap.Bytes;
+            });
+            return result;
+        }
+
+        CountDifferentBytes(Draw(true), Draw(false)).ShouldBe(0);
+    }
+
+    [Fact]
+    public void Draw_TwoOverlappingLayers_KeepZOrder()
+    {
+        AssertBatchedMatchesUnbatched((root, managers) =>
+        {
+            root.AddChild(Frame(_textureA, 10, 10, 80, 80));
+            root.AddChild(Label("under layer", 20, 20, 100, 20));
+            RenderingLibrary.Graphics.Layer top = managers.Renderer.AddLayer();
+            NineSliceRuntime overlay = Frame(_textureA, 30, 30, 80, 80);
+            overlay.AddToManagers(managers, top);
+            TextRuntime overlayText = Label("layer text", 35, 35, 100, 20);
+            overlayText.AddToManagers(managers, top);
+            root.AddChild(Frame(_textureA, 60, 60, 80, 80));
+        });
+    }
+    [Fact]
+    public void Draw_StaticScene_ReusesBatchVerticesWithoutAllocating()
+    {
+        int builds = -1;
+        long allocated = -1;
+        int movedBuilds = -1;
+        _gpu.WithSurface(Size, Size, (surface, context) =>
+        {
+            GraphicalUiElement.SetPropertyOnRenderable = global::SkiaGum.CustomSetPropertyOnRenderable.SetPropertyOnRenderable;
+            SystemManagers managers = new SystemManagers();
+            managers.Initialize();
+            SystemManagers.Default = managers;
+            managers.Canvas = surface.Canvas;
+            ContainerRuntime root = Container(0, 0, Size, Size);
+            for (int i = 0; i < 4; i++)
+            {
+                root.AddChild(Frame(_textureA, 10, 10 + i * 40, 100, 36));
+                root.AddChild(Label("Item " + i, 16, 18 + i * 40));
+            }
+            ContainerRuntime clip = Container(120, 10, 90, 90, clips: true);
+            clip.AddChild(Frame(_textureB, 4, 4, 60, 60));
+            root.AddChild(clip);
+            root.AddToManagers(managers, null);
+            RenderingLibrary.Graphics.NineSliceVertexBatch batch = managers.Renderer.NineSliceBatch;
+
+            for (int frame = 0; frame < 5; frame++)
+            {
+                managers.Renderer.NotifyHostFrameAdvanced();
+                managers.Draw();
+            }
+            int buildsBefore = batch.VerticesBuildCount;
+            long bytesBefore = GC.GetAllocatedBytesForCurrentThread();
+            for (int frame = 0; frame < 50; frame++)
+            {
+                managers.Renderer.NotifyHostFrameAdvanced();
+                managers.Draw();
+            }
+            allocated = GC.GetAllocatedBytesForCurrentThread() - bytesBefore;
+            builds = batch.VerticesBuildCount - buildsBefore;
+
+            root.Y = 3;
+            managers.Renderer.NotifyHostFrameAdvanced();
+            managers.Draw();
+            movedBuilds = batch.VerticesBuildCount - buildsBefore;
+            context.Flush(true, true);
+            root.RemoveFromManagers();
+        });
+
+        builds.ShouldBe(0);
+        allocated.ShouldBe(0);
+        // Moving the scene changes both batches' vertices, so both are rebuilt.
+        movedBuilds.ShouldBe(2);
     }
 }

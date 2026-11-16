@@ -1,6 +1,7 @@
 using SkiaSharp;
 using System;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 
 namespace RenderingLibrary.Graphics;
 
@@ -20,45 +21,48 @@ namespace RenderingLibrary.Graphics;
 /// conservative drawn bounds is not deferred and flushes the batch. Anything else that draws flushes the batch
 /// first (the Renderer does it at every other renderable, clip change, render target and the end of each draw
 /// entry point), so the clip and the canvas a deferred text sees are the ones it was deferred under.</para>
-/// <para>SkiaSharp's SKVertices takes whole arrays only, so the flush copies into a pooled array set of the
-/// exact batch length, as <see cref="SpriteAtlasBatch"/> does; the SKVertices wrapper itself is one small
-/// allocation per flush.</para>
+/// <para>SkiaSharp's SKVertices takes whole arrays only and cannot be refilled, so each flush of a frame has a
+/// slot (the first flush the first slot, and so on) that keeps its SKVertices and a copy of the vertex data it was
+/// built from. A flush whose vertices match its slot's draws the kept SKVertices, so a scene that does not move
+/// allocates nothing; one that moves builds a new SKVertices for each batch that changed.</para>
 /// </remarks>
 internal sealed class NineSliceVertexBatch
 {
     private const int VerticesPerNineSlice = 16;
     private const int IndicesPerNineSlice = 54;
+    private const int MaxSlots = 64;
 
-    private sealed class ExactArrays
+    // One flush's kept vertices, built from Positions and TexCoords, which hold exactly its vertex count.
+    private sealed class Slot
     {
-        public readonly SKPoint[] Positions;
-        public readonly SKPoint[] TexCoords;
-        public readonly ushort[] Indices;
+        public SKPoint[] Positions = Array.Empty<SKPoint>();
+        public SKPoint[] TexCoords = Array.Empty<SKPoint>();
+        public SKVertices? Vertices;
+    }
 
-        public ExactArrays(int nineSliceCount)
+    // Two triangles per cell for nineSliceCount 4x4 vertex grids.
+    private static ushort[] BuildIndices(int nineSliceCount)
+    {
+        ushort[] indices = new ushort[nineSliceCount * IndicesPerNineSlice];
+        int index = 0;
+        for (int n = 0; n < nineSliceCount; n++)
         {
-            Positions = new SKPoint[nineSliceCount * VerticesPerNineSlice];
-            TexCoords = new SKPoint[nineSliceCount * VerticesPerNineSlice];
-            Indices = new ushort[nineSliceCount * IndicesPerNineSlice];
-            int index = 0;
-            for (int n = 0; n < nineSliceCount; n++)
+            int first = n * VerticesPerNineSlice;
+            for (int row = 0; row < 3; row++)
             {
-                int first = n * VerticesPerNineSlice;
-                for (int row = 0; row < 3; row++)
+                for (int column = 0; column < 3; column++)
                 {
-                    for (int column = 0; column < 3; column++)
-                    {
-                        ushort topLeft = (ushort)(first + (row * 4) + column);
-                        Indices[index++] = topLeft;
-                        Indices[index++] = (ushort)(topLeft + 1);
-                        Indices[index++] = (ushort)(topLeft + 4);
-                        Indices[index++] = (ushort)(topLeft + 1);
-                        Indices[index++] = (ushort)(topLeft + 5);
-                        Indices[index++] = (ushort)(topLeft + 4);
-                    }
+                    ushort topLeft = (ushort)(first + (row * 4) + column);
+                    indices[index++] = topLeft;
+                    indices[index++] = (ushort)(topLeft + 1);
+                    indices[index++] = (ushort)(topLeft + 4);
+                    indices[index++] = (ushort)(topLeft + 1);
+                    indices[index++] = (ushort)(topLeft + 5);
+                    indices[index++] = (ushort)(topLeft + 4);
                 }
             }
         }
+        return indices;
     }
 
     private struct DeferredText
@@ -72,7 +76,9 @@ internal sealed class NineSliceVertexBatch
 
     private readonly RenderStateChangeStatistics _statistics;
     private readonly SKPaint _paint;
-    private readonly Dictionary<int, ExactArrays> _exactArrays;
+    private readonly Dictionary<int, ushort[]> _indicesByCount;
+    private readonly List<Slot> _slots;
+    private int _nextSlot;
 
     private SKPoint[] _positions;
     private SKPoint[] _texCoords;
@@ -92,7 +98,8 @@ internal sealed class NineSliceVertexBatch
     {
         _statistics = statistics;
         _paint = new SKPaint { IsAntialias = false, Color = SKColors.White };
-        _exactArrays = new Dictionary<int, ExactArrays>();
+        _indicesByCount = new Dictionary<int, ushort[]>();
+        _slots = new List<Slot>();
         _positions = new SKPoint[16 * VerticesPerNineSlice];
         _texCoords = new SKPoint[16 * VerticesPerNineSlice];
         _deferred = new DeferredText[16];
@@ -105,8 +112,8 @@ internal sealed class NineSliceVertexBatch
     public int PendingCount => _count;
 
     /// <summary>
-    /// The most NineSlices one DrawVertices call draws (256). A longer run splits into several calls in order, so the
-    /// exact-length pool holds at most this many lengths. Settable for tests.
+    /// The most NineSlices one DrawVertices call draws (256). A longer run splits into several calls in order, so at
+    /// most this many index arrays are kept. Settable for tests.
     /// </summary>
     internal int MaxBatchLength { get; set; } = 256;
 
@@ -198,22 +205,12 @@ internal sealed class NineSliceVertexBatch
         int count = _count;
         _count = 0;
 
-        if (!_exactArrays.TryGetValue(count, out ExactArrays? exact))
-        {
-            exact = new ExactArrays(count);
-            _exactArrays[count] = exact;
-        }
-        int vertexCount = count * VerticesPerNineSlice;
-        Array.Copy(_positions, exact.Positions, vertexCount);
-        Array.Copy(_texCoords, exact.TexCoords, vertexCount);
+        SKVertices vertices = GetSlotVertices(count);
 
         _paint.Shader = _shader;
         canvas.Save();
         canvas.ResetMatrix();
-        using (SKVertices vertices = SKVertices.CreateCopy(SKVertexMode.Triangles, exact.Positions, exact.TexCoords, null, exact.Indices))
-        {
-            canvas.DrawVertices(vertices, SKBlendMode.Modulate, _paint);
-        }
+        canvas.DrawVertices(vertices, SKBlendMode.Modulate, _paint);
         canvas.Restore();
         _paint.Shader = null;
         _statistics.RecordDrawCall();
@@ -246,6 +243,56 @@ internal sealed class NineSliceVertexBatch
         _canvas = null;
         _key = null;
         _shader = null;
+    }
+
+    /// <summary>
+    /// Starts a host frame: the next flush uses the first slot again. Called once per host frame by the Renderer.
+    /// </summary>
+    public void BeginFrame() => _nextSlot = 0;
+
+    /// <summary>The SKVertices builds since this batch was made. Test hook.</summary>
+    internal int VerticesBuildCount { get; private set; }
+
+    // The pending vertices as this flush's slot's SKVertices, rebuilt only when they differ from what the slot drew last.
+    private SKVertices GetSlotVertices(int count)
+    {
+        // A host that never starts a frame (no Update) reuses the slots in a ring instead of growing them.
+        if (_nextSlot == MaxSlots)
+        {
+            _nextSlot = 0;
+        }
+        if (_nextSlot == _slots.Count)
+        {
+            _slots.Add(new Slot());
+        }
+        Slot slot = _slots[_nextSlot++];
+
+        int vertexCount = count * VerticesPerNineSlice;
+        ReadOnlySpan<SKPoint> positions = _positions.AsSpan(0, vertexCount);
+        ReadOnlySpan<SKPoint> texCoords = _texCoords.AsSpan(0, vertexCount);
+        if (slot.Vertices != null
+            && MemoryMarshal.AsBytes(positions).SequenceEqual(MemoryMarshal.AsBytes(slot.Positions.AsSpan()))
+            && MemoryMarshal.AsBytes(texCoords).SequenceEqual(MemoryMarshal.AsBytes(slot.TexCoords.AsSpan())))
+        {
+            return slot.Vertices;
+        }
+
+        if (slot.Positions.Length != vertexCount)
+        {
+            slot.Positions = new SKPoint[vertexCount];
+            slot.TexCoords = new SKPoint[vertexCount];
+        }
+        positions.CopyTo(slot.Positions);
+        texCoords.CopyTo(slot.TexCoords);
+        if (!_indicesByCount.TryGetValue(count, out ushort[]? indices))
+        {
+            indices = BuildIndices(count);
+            _indicesByCount[count] = indices;
+        }
+        slot.Vertices?.Dispose();
+        slot.Vertices = SKVertices.CreateCopy(SKVertexMode.Triangles, slot.Positions, slot.TexCoords, null, indices);
+        VerticesBuildCount++;
+        return slot.Vertices;
     }
 
     private bool OverlapsDeferred(SKRect bounds)
