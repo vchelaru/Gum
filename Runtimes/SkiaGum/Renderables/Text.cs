@@ -1070,6 +1070,31 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
     /// </summary>
     public Text(SystemManagers managers) : this() { }
 
+    // SPIKE GUM_TEXTBATCH: inside the hierarchy walk every ancestor clip is applied, so a plain text's own clip is redundant.
+    private bool SpikeTryBatch(SKCanvas canvas, SKMatrix canvasMatrix, bool isSimple, float absoluteX, float absoluteY, TextBlock textBlock, RenderStateChangeStatistics? statistics)
+    {
+        var batch = global::RenderingLibrary.Graphics.SpikeBatches.Text;
+        if (!batch.Active || canvas != batch.Canvas) return false;
+        TextBlock paintBlock = GetPaintTextBlock(textBlock);
+        if (isSimple && GetCachedRenderPaint() == null && !HasDropshadow && !HasActiveBlend && _blobCache.CanBatch(paintBlock, out SKColor color)
+            && global::RenderingLibrary.Graphics.SpikeBounds.TryTextBounds(this, canvasMatrix, out SKRect bounds))
+        {
+            _blobCache.BeginFrame(paintBlock);
+            var o = TextPaintOptions.Default;
+            batch.BeginItem(canvasMatrix, color, o.Hinting, o.Edging, o.SubpixelPositioning, bounds);
+            _blobCache.AppendRuns(batch, absoluteX, absoluteY);
+            statistics?.RecordDrawCall();
+            return true;
+        }
+        batch.StatFallback++;
+        if (batch.HasPending)
+        {
+            if (global::RenderingLibrary.Graphics.SpikeBounds.TryTextBounds(this, canvasMatrix, out SKRect b)) batch.BeforeImmediate(b);
+            else { batch.StatFlushUnknown++; batch.Flush(); }
+        }
+        return false;
+    }
+
     public void Render(ISystemManagers managers)
     {
         var canvas = ((SystemManagers)managers).Canvas;
@@ -1118,6 +1143,11 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
                 result = rotationMatrix;
                 SKMatrix.Concat(ref result, translateMatrix, result);
                 SKMatrix.Concat(ref result, canvasMatrix, result);
+            }
+
+            if (global::RenderingLibrary.Graphics.SpikeBatches.TextEnabled && SpikeTryBatch(canvas, canvasMatrix, isSimple, absoluteX, absoluteY, textBlock, statistics))
+            {
+                return;
             }
 
             canvas.Save();
@@ -1857,6 +1887,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
             public SKTextBlob Blob;
             public IStyle Style;
             public float VerticalOffset;
+            public ushort[] Glyphs; public SKPoint[] Positions; public SKTypeface Typeface; public float Size; // SPIKE GUM_TEXTBATCH
         }
 
         private struct BlobSegment
@@ -1911,6 +1942,30 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
             else
             {
                 _isFirstFrame = false;
+            }
+        }
+
+        // SPIKE GUM_TEXTBATCH: the block is built from blobs, one plain segment, no halo, one fill color.
+        public bool CanBatch(TextBlock block, out SKColor color)
+        {
+            color = default;
+            if (!ReferenceEquals(Block, block) || !_isBuilt || _isUnsupported || _runs.Count == 0 || !HasBuildFontSettings(TextPaintOptions.Default)) return false;
+            if (_segments.Count != 1 || _segments[0].HasMatrix) return false;
+            color = _runs[0].Style.TextColor;
+            for (int i = 0; i < _runs.Count; i++)
+            {
+                IStyle s = _runs[i].Style;
+                if (s.HaloColor != SKColor.Empty || s.TextColor != color) return false;
+            }
+            return true;
+        }
+
+        public void AppendRuns(global::RenderingLibrary.Graphics.SpikeTextBatch batch, float x, float y)
+        {
+            for (int i = 0; i < _runs.Count; i++)
+            {
+                BlobRun r = _runs[i];
+                batch.AddRun(r.Typeface, r.Size, r.Glyphs, r.Positions, x, y + r.VerticalOffset);
             }
         }
 
@@ -2122,7 +2177,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
                     {
                         continue;
                     }
-                    _runs.Add(new BlobRun { Blob = blob, Style = style, VerticalOffset = verticalOffset });
+                    _runs.Add(new BlobRun { Blob = blob, Style = style, VerticalOffset = verticalOffset, Glyphs = run.Glyphs.ToArray(), Positions = run.GlyphPositions.ToArray(), Typeface = run.Typeface, Size = font.Size });
                 }
             }
             _segments.Add(new BlobSegment

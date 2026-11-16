@@ -944,6 +944,10 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
             SKRect blendBounds = boundingRect;
             boundingRect = GetStrokeAdjustedBounds(boundingRect);
 
+            if (global::RenderingLibrary.Graphics.SpikeBatches.RectEnabled && SpikeTryRectBatch(canvas, boundingRect, applyRotation))
+            {
+                return;
+            }
             if (UsesBoundsLayer)
             {
                 // The layer's clip must not reach sprites queued before this shape.
@@ -982,6 +986,35 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
         }
     }
 #endif
+
+    // SPIKE GUM_RECTBATCH: an unrotated solid-fill SolidRectangle joins one colored DrawVertices.
+    public static long SpikeAaRects;
+    private bool SpikeTryRectBatch(SKCanvas canvas, SKRect boundingRect, bool applyRotation)
+    {
+        var batch = global::RenderingLibrary.Graphics.SpikeBatches.Rect;
+        if (this is not SolidRectangle || !batch.Active || canvas != batch.Canvas) return false;
+        SKMatrix m = canvas.TotalMatrix;
+        if (!applyRotation && !UsesBoundsLayer && IsFilled && !HasDropshadow && PairedStrokeInLayer == null
+            && m.SkewX == 0 && m.SkewY == 0 && m.Persp0 == 0 && m.Persp1 == 0)
+        {
+            SKPaint paint = GetCachedPaint(boundingRect, 0);
+            if (paint.Shader == null && paint.ColorFilter == null && paint.ImageFilter == null && paint.MaskFilter == null
+                && paint.BlendMode == SKBlendMode.SrcOver && paint.Style == SKPaintStyle.Fill && !UsesBlurredShadowDraw)
+            {
+                if (paint.IsAntialias) SpikeAaRects++;
+                batch.Add(m, m.MapRect(boundingRect), paint.Color);
+                DrawStatistics?.RecordDrawCall();
+                return true;
+            }
+        }
+        batch.StatFallback++;
+        if (batch.HasPending)
+        {
+            if (!applyRotation && global::RenderingLibrary.Graphics.SpikeBounds.TryGet(this, m, out SKRect b)) batch.BeforeImmediate(b);
+            else { batch.StatFlushUnknown++; batch.Flush(); }
+        }
+        return false;
+    }
 
     private bool CanRender =>
         Visible &&

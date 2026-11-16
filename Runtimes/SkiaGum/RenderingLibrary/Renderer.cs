@@ -523,6 +523,7 @@ namespace RenderingLibrary.Graphics
             layerToSort?.SortRenderables();
 
             var count = whatToRender.Count;
+            bool spikeTop = prerender && SpikeBatches.Begin(managers.Canvas);
 
             for (int i = 0; i < count; i++)
             {
@@ -532,6 +533,7 @@ namespace RenderingLibrary.Graphics
                     DrawRenderable(renderable, managers);
                 }
             }
+            if (spikeTop) SpikeBatches.End();
         }
 
         // Draws one visible renderable and (with RenderUsingHierarchy) its children.
@@ -542,6 +544,7 @@ namespace RenderingLibrary.Graphics
             // hidden one is skipped by the caller's Visible check, so no stale texture ghosts.
             if (renderable.IsRenderTarget)
             {
+                if (SpikeBatches.AnyEnabled) SpikeBatches.FlushForClip();
                 SpriteBatch.Flush();
                 CompositeRenderTarget(renderable, managers);
                 return;
@@ -571,6 +574,7 @@ namespace RenderingLibrary.Graphics
 
                 if (isOnScreen)
                 {
+                    if (SpikeBatches.AnyEnabled) SpikeBatches.FlushForClip();
                     SpriteBatch.Flush();
                     canvas.Save();
                     canvas.ClipTo(renderable);
@@ -593,6 +597,7 @@ namespace RenderingLibrary.Graphics
 
                 if (renderable.ClipsChildren)
                 {
+                    if (SpikeBatches.AnyEnabled) SpikeBatches.FlushForClip();
                     SpriteBatch.Flush();
                     canvas.Restore();
                 }
@@ -606,6 +611,7 @@ namespace RenderingLibrary.Graphics
             IRenderableIpso inner = renderable is GraphicalUiElement element && element.RenderableComponent is IRenderableIpso contained
                 ? contained
                 : renderable;
+            if (SpikeBatches.AnyEnabled) SpikeBatches.BeforeRenderOne(inner, managers.Canvas);
             if (inner is not Sprite && inner is not InvisibleRenderable)
             {
                 SpriteBatch.Flush();
