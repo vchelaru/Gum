@@ -138,8 +138,15 @@ internal sealed class GlBackend : IBrutalGpuBackend
                 case "nomap": options.BufferMapThreshold = int.MaxValue; break;
                 case "nostencil": options.AvoidStencilBuffers = true; break;
                 case "atlas": options.GlyphCacheTextureMaximumBytes = 64 * 1024 * 1024; break;
+                // SPIKE #8116 flush agent: knobs not tried before
+                case "pathmask": options.AllowPathMaskCaching = true; break;
+                case "mip": options.DoManualMipmapping = true; break;
+                case "prog": options.RuntimeProgramCacheSize = 4096; break;
+                case "smallatlas": options.GlyphCacheTextureMaximumBytes = 512 * 1024; break;
             }
-            field.SetValue(_context, GRContext.CreateGl(glInterface, options));
+            var gr = GRContext.CreateGl(glInterface, options);
+            if (FlushProbe.CtxOpt == "rescache") gr.SetResourceCacheLimit(1L << 30);
+            field.SetValue(_context, gr);
         }
         _direct = new SkiaDirectCanvas(_context);
     }
