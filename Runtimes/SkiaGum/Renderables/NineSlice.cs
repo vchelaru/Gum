@@ -483,6 +483,7 @@ public class NineSlice : RenderableShapeBase, IAnimatable, IAnimationChainRender
         }
 
         VertexBatch?.Flush();
+        ImgProbe.Log($"  nineslice: lattice refused, section draws (sectionImages={draw.UseSectionImages}, disableLattice={DisableLatticeFastPath})");
 
         float destLeft = boundingRect.Left;
         float destTop = boundingRect.Top;
@@ -568,7 +569,7 @@ public class NineSlice : RenderableShapeBase, IAnimatable, IAnimationChainRender
     {
         if (DisableLatticeFastPath || sampling.Filter != SKFilterMode.Nearest || IsTilingMiddleSections)
         {
-            return false;
+            { ImgProbe.Log("  lattice refused: disabled/linear/tiling"); return false; }
         }
 
         float scale = EffectiveBorderScaleLeft;
@@ -578,18 +579,18 @@ public class NineSlice : RenderableShapeBase, IAnimatable, IAnimationChainRender
             || EffectiveBorderScaleBottom != scale
             || BorderScale != scale)
         {
-            return false;
+            { ImgProbe.Log("  lattice refused: unequal border scales"); return false; }
         }
 
         if (srcLeft < 0 || srcTop < 0 || srcLeft + usedWidth > Image!.Width || srcTop + usedHeight > Image.Height)
         {
-            return false;
+            { ImgProbe.Log("  lattice refused: source outside image"); return false; }
         }
 
         if (fullOutsideW <= 0 || fullOutsideH <= 0
             || usedWidth - (fullOutsideW * 2) <= 0 || usedHeight - (fullOutsideH * 2) <= 0)
         {
-            return false;
+            { ImgProbe.Log("  lattice refused: no middle texels"); return false; }
         }
 
         // The bands must be exactly the texels' size times the scale (no clamping), with room left in the middle.
@@ -600,7 +601,7 @@ public class NineSlice : RenderableShapeBase, IAnimatable, IAnimationChainRender
             || boundingRect.Width <= borders.DestLeft + borders.DestRight
             || boundingRect.Height <= borders.DestTop + borders.DestBottom)
         {
-            return false;
+            { ImgProbe.Log("  lattice refused: bands clamped (too small)"); return false; }
         }
 
         // The lattice and the per-section draws only agree when every edge lands exactly on a device pixel; at a
@@ -617,7 +618,7 @@ public class NineSlice : RenderableShapeBase, IAnimatable, IAnimationChainRender
             || !IsOnDevicePixel(matrix.ScaleY * (boundingRect.Bottom - borders.DestBottom) + matrix.TransY)
             || !IsOnDevicePixel(matrix.ScaleY * boundingRect.Bottom + matrix.TransY))
         {
-            return false;
+            { ImgProbe.Log("  lattice refused: edge off device pixel"); return false; }
         }
 
         // A clip with a fractional edge crops the lattice's triangles differently from the sections' rectangles
@@ -633,7 +634,7 @@ public class NineSlice : RenderableShapeBase, IAnimatable, IAnimationChainRender
             || Math.Min(deviceTop, deviceBottom) < clip.Top + 1
             || Math.Max(deviceTop, deviceBottom) > clip.Bottom - 1)
         {
-            return false;
+            { ImgProbe.Log("  lattice refused: within 1px of clip"); return false; }
         }
 
         // Nearest sampling picks a texel by where a pixel center falls. When a pixel center lands exactly on a
@@ -660,7 +661,7 @@ public class NineSlice : RenderableShapeBase, IAnimatable, IAnimationChainRender
             if (borderTie || ((middleTieX || middleTieY)
                 && !IsMiddleUniform(middleTieX, middleTieY, srcLeft, srcTop, usedWidth, usedHeight, fullOutsideW, fullOutsideH)))
             {
-                return false;
+                { ImgProbe.Log("  lattice refused: texel-boundary tie"); return false; }
             }
         }
 
@@ -679,6 +680,7 @@ public class NineSlice : RenderableShapeBase, IAnimatable, IAnimationChainRender
             return true;
         }
         VertexBatch?.Flush();
+        ImgProbe.Log($"OP NineSlice DrawImageLattice img={ImgProbe.Img(Image, Image)} color={paint.Color} (vertex batch refused)");
 
         canvas.Save();
         canvas.Translate(boundingRect.Left, boundingRect.Top);
@@ -699,6 +701,15 @@ public class NineSlice : RenderableShapeBase, IAnimatable, IAnimationChainRender
         int srcLeft, int srcTop, int usedWidth, int usedHeight, int fullOutsideW, int fullOutsideH)
     {
         NineSliceVertexBatch? batch = VertexBatch;
+        if (ImgProbe.Active) // SPIKE #8116 image ops
+        {
+            string why = batch == null ? "null batch" : !batch.IsGpuCanvas(canvas) ? "not GPU canvas" : HasDropshadow ? "dropshadow" :
+                paint.ColorFilter != null ? $"ColorFilter (tint {Color})" : paint.Shader != null ? "shader" : paint.ImageFilter != null ? "image filter" :
+                paint.MaskFilter != null ? "mask filter" : paint.Blender != null || paint.BlendMode != SKBlendMode.SrcOver ? "blend" :
+                paint.PathEffect != null ? "path effect" : paint.Color.Alpha != 255 ? $"alpha {paint.Color.Alpha}" :
+                matrix.ScaleX <= 0 || matrix.ScaleY <= 0 ? "non-positive scale" : "";
+            if (why != "") ImgProbe.Log("  vertex batch refused: " + why);
+        }
         if (batch == null || !batch.IsGpuCanvas(canvas) || HasDropshadow
             || paint.ColorFilter != null || paint.Shader != null || paint.ImageFilter != null || paint.MaskFilter != null
             || paint.Blender != null || paint.BlendMode != SKBlendMode.SrcOver || paint.PathEffect != null
@@ -914,6 +925,7 @@ public class NineSlice : RenderableShapeBase, IAnimatable, IAnimationChainRender
             SKRect src = new SKRect(srcX, srcY, srcX + srcW, srcY + srcH);
             SKRect dest = new SKRect(destX, destY, destX + destW, destY + destH);
             draw.Canvas.DrawImage(sourceImage, src, dest, draw.Sampling, draw.Paint);
+            ImgProbe.Log($"OP NineSlice section DrawImage(src,dst) img={ImgProbe.Img(sourceImage, sourceImage)}");
             DrawStatistics?.RecordDrawCall();
             return;
         }
@@ -958,6 +970,7 @@ public class NineSlice : RenderableShapeBase, IAnimatable, IAnimationChainRender
                     destX + currentX + thisTileDestW,
                     destY + currentY + thisTileDestH);
                 draw.Canvas.DrawImage(sourceImage, src, dest, draw.Sampling, draw.Paint);
+            ImgProbe.Log($"OP NineSlice section DrawImage(src,dst) img={ImgProbe.Img(sourceImage, sourceImage)}");
                 DrawStatistics?.RecordDrawCall();
 
                 currentX += thisTileDestW;

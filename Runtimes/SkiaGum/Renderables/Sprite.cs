@@ -430,6 +430,7 @@ public class Sprite : RenderableShapeBase, IAspectRatio, ITextureCoordinate, IAn
             using SKPaint tiledPaint = paint.Clone();
             tiledPaint.Shader = shader;
             canvas.DrawRect(destination, tiledPaint);
+            ImgProbe.Log("OP Sprite tiled DrawRect(shader)");
         }
         finally
         {
@@ -487,6 +488,16 @@ public class Sprite : RenderableShapeBase, IAspectRatio, ITextureCoordinate, IAn
     {
         SpriteAtlasBatch? batch = AtlasBatch;
         SKImage? image = Image;
+        if (ImgProbe.Active) // SPIKE #8116 image ops
+        {
+            string why = batch == null ? "null batch" : image == null ? "null Image (Texture only)" :
+                ColorOperation != ColorOperation.Modulate ? $"ColorOperation {ColorOperation}" :
+                paint.Shader != null ? "paint shader" : paint.ImageFilter != null ? "image filter" : paint.MaskFilter != null ? "mask filter" :
+                paint.Blender != null || paint.BlendMode != SKBlendMode.SrcOver ? $"blend {paint.BlendMode}" : paint.PathEffect != null ? "path effect" :
+                (paint.Color.Alpha != 255 && Renderer.TextureFilter != SKFilterMode.Nearest) ? $"alpha {paint.Color.Alpha} + linear" :
+                (EffectiveRectangle != null && Wrap && ExtendsPastTexture(sourceRectangle)) ? "Wrap past texture" : "";
+            ImgProbe.Log($"  sprite img={ImgProbe.Img(image, BatchKey)} color={Color} alpha={paint.Color.Alpha} srcRect={(EffectiveRectangle != null)} " + (why == "" ? "-> TryAdd" : "reject: " + why));
+        }
         if (batch == null || image == null ||
             ColorOperation != ColorOperation.Modulate ||
             paint.Shader != null || paint.ImageFilter != null || paint.MaskFilter != null ||
@@ -602,6 +613,7 @@ public class Sprite : RenderableShapeBase, IAspectRatio, ITextureCoordinate, IAn
         {
             return;
         }
+        if (ImgProbe.Active) ImgProbe.Log($"  sprite draws alone: flipped={isFlipped} baked={bakedImage != null}" + (AtlasBatch != null && AtlasBatch.PendingCount > 0 ? " (flushes pending)" : ""));
         AtlasBatch?.Flush();
         if (_isTintPending)
         {
@@ -623,6 +635,7 @@ public class Sprite : RenderableShapeBase, IAspectRatio, ITextureCoordinate, IAn
         if (bakedImage != null)
         {
             canvas.DrawImage(bakedImage, boundingRect, Renderer.TextureSampling, paint);
+            ImgProbe.Log("OP Sprite DrawImage(baked)");
         }
         else if (EffectiveRectangle != null)
         {
@@ -633,15 +646,18 @@ public class Sprite : RenderableShapeBase, IAspectRatio, ITextureCoordinate, IAn
             else
             {
                 DrawSourceRectangle(canvas, sourceRectangle, boundingRect, paint);
+                ImgProbe.Log($"OP Sprite DrawImage(src,dst) img={ImgProbe.Img(Image, BatchKey)} texOnly={Image == null}");
             }
         }
         else if (Image != null)
         {
             canvas.DrawImage(Image, boundingRect, Renderer.TextureSampling, paint);
+            ImgProbe.Log($"OP Sprite DrawImage(dst) img={ImgProbe.Img(Image, BatchKey)}");
         }
         else
         {
             canvas.DrawBitmap(Texture, boundingRect, Renderer.TextureSampling, paint);
+            ImgProbe.Log("OP Sprite DrawBitmap(dst)");
         }
         DrawStatistics?.RecordDrawCall();
 

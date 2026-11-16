@@ -102,6 +102,7 @@ internal sealed class SpriteAtlasBatch
     {
         if (source.Width <= 0 || source.Height <= 0)
         {
+            ImgProbe.Log("  batch reject: empty source");
             return false;
         }
 
@@ -120,6 +121,7 @@ internal sealed class SpriteAtlasBatch
         float edgeErrorY = System.Math.Abs(scale - scaleY) * source.Height * deviceScale;
         if (!(edgeErrorX <= MaxEdgeErrorPixels && edgeErrorY <= MaxEdgeErrorPixels))
         {
+            ImgProbe.Log($"  batch reject: non-uniform scale sx={scaleX} sy={scaleY} err={edgeErrorX:F4},{edgeErrorY:F4}");
             return false;
         }
 
@@ -128,12 +130,14 @@ internal sealed class SpriteAtlasBatch
         if (device.Persp0 != 0 || device.Persp1 != 0 || device.Persp2 != 1 ||
             device.ScaleX != device.ScaleY || device.SkewX != -device.SkewY)
         {
+            ImgProbe.Log($"  batch reject: not RSXform sx={device.ScaleX} sy={device.ScaleY} kx={device.SkewX} ky={device.SkewY}");
             return false;
         }
 
         if (_count > 0 && (!ReferenceEquals(canvas, _canvas) || !ReferenceEquals(key, _key) ||
             !sampling.Equals(_sampling) || alpha != _alpha || _count >= MaxBatchLength))
         {
+            ImgProbe.Log($"  cause: TryAdd mismatch canvas={!ReferenceEquals(canvas, _canvas)} key={!ReferenceEquals(key, _key)} sampling={!sampling.Equals(_sampling)} alpha={alpha != _alpha} max={_count >= MaxBatchLength}");
             Flush();
         }
 
@@ -154,6 +158,7 @@ internal sealed class SpriteAtlasBatch
             Array.Resize(ref _colors, _count * 2);
         }
 
+        ImgProbe.Log($"  batched (pending n={_count + 1}) img={ImgProbe.Img(image, key)}");
         _sources[_count] = source;
         _transforms[_count] = new SKRotationScaleMatrix(device.ScaleX, device.SkewY, device.TransX, device.TransY);
         _colors[_count] = tint;
@@ -172,6 +177,7 @@ internal sealed class SpriteAtlasBatch
 
         SKCanvas canvas = _canvas!;
         int count = _count;
+        ImgProbe.Log($"OP DrawAtlas n={count} img={ImgProbe.Img(_image, _key)} tint={_hasTint} alpha={_alpha}");
         _count = 0;
 
         if (!_exactArrays.TryGetValue(count, out ExactArrays? exact))

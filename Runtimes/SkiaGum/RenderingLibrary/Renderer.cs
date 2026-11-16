@@ -272,6 +272,7 @@ namespace RenderingLibrary.Graphics
         // Draws whatever the NineSlice, text and sprite batches hold. At most one of them is pending at a time.
         private void FlushBatches()
         {
+            if (ImgProbe.Active && _spriteBatch != null && _spriteBatch.PendingCount > 0) ImgProbe.Log("  cause: FlushBatches (clip push/pop, render target or scope end)"); // SPIKE #8116
             _nineSliceBatch?.Flush();
             _textBatch?.Flush();
             _spriteBatch?.Flush();
@@ -279,6 +280,7 @@ namespace RenderingLibrary.Graphics
 
         private void StartHostFrameRenderTargets()
         {
+            ImgProbe.FrameStart(); // SPIKE #8116 image ops
             RenderStateChangeStatistics.Reset();
             _nineSliceBatch?.BeginFrame();
             _textBatch?.BeginFrame();
@@ -660,6 +662,13 @@ namespace RenderingLibrary.Graphics
             IRenderableIpso inner = renderable is GraphicalUiElement element && element.RenderableComponent is IRenderableIpso contained
                 ? contained
                 : renderable;
+            if (ImgProbe.Active) // SPIKE #8116 image ops
+            {
+                bool pending = _spriteBatch != null && _spriteBatch.PendingCount > 0;
+                if (inner is Sprite || inner is NineSlice) ImgProbe.Log($"ENTER {inner.GetType().Name} {ImgProbe.Owner(renderable)}");
+                if (pending && inner is NineSlice) ImgProbe.Log("  cause: next renderable NineSlice (above)");
+                else if (pending && inner is not InvisibleRenderable) ImgProbe.Log($"  cause: next renderable {inner.GetType().Name} {ImgProbe.Owner(renderable)}");
+            }
             if (inner is Sprite)
             {
                 _nineSliceBatch?.Flush();
