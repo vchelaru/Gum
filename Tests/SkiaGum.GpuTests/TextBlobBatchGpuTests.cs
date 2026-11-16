@@ -198,7 +198,7 @@ public class TextBlobBatchGpuTests : IDisposable
             for (int i = 0; i < 12; i++)
             {
                 TextRuntime label = Label("Floating " + i, 10.6f + i * 0.17f, i * 15.4f);
-                ((global::SkiaGum.Text)label.RenderableComponent).OverrideTextRenderingPositionMode =
+                label.RenderableComponent.ShouldBeOfType<global::SkiaGum.Text>().OverrideTextRenderingPositionMode =
                     global::SkiaGum.TextRenderingPositionMode.FreeFloating;
                 list.AddChild(label);
             }
