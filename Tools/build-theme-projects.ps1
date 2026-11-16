@@ -1,11 +1,13 @@
 <#
 .SYNOPSIS
-    Creates a project from every bundled Forms theme with gumcli, generates its code, and compiles it.
+    Creates a project for every theme and platform pair with gumcli, generates its code, and compiles it.
 
 .DESCRIPTION
-    Each theme goes through `gumcli new --theme <name> --platform <Platform> --source-linked`, is switched to
-    FullyInCode (the mode that emits per-variable assignments), is generated with `gumcli codegen`, and is
-    built against this checkout's runtime projects. Exits 1 when any theme fails at any step.
+    Each pair goes through `gumcli new --theme <name> --platform <platform> --source-linked`, is switched to
+    FullyInCode (the mode that emits per-variable assignments) unless -DefaultCodegenSettings is passed, is
+    generated with `gumcli codegen`, and is built against this checkout's runtime projects. It is source-linked
+    because the templates on main target the runtime code beside them, not the last release on NuGet.
+    Exits 1 when any project fails at any step.
 
 .PARAMETER Cli
     Path to a built gumcli executable.
@@ -14,20 +16,26 @@
     Folder the projects are created in. Defaults to a new temp folder, deleted afterwards.
 
 .PARAMETER Platform
-    The `gumcli new --platform` host. Defaults to monogame. CI also runs kniskia, which has no output library
-    of its own and generates with Gum Forms like every other runtime.
+    The `gumcli new --platform` hosts. Defaults to monogame. CI also runs kniskia for every theme, and every
+    platform with the Standard theme so a platform template that does not compile fails the PR that broke it.
+
+.PARAMETER DefaultCodegenSettings
+    Keep the code settings `gumcli new` writes (FindByName) instead of switching to FullyInCode, so each project
+    is the one a user gets.
 
 .PARAMETER Configuration
     Build configuration. CI passes the one the runtime projects were already built in, so they are not compiled twice.
 
 .PARAMETER Theme
     Names of the themes to run. Defaults to every theme under Tools/Gum.ProjectServices/Templates/FormsThemes.
+    Standard is the plain Forms template.
 #>
 param(
     [Parameter(Mandatory = $true)][string]$Cli,
     [string]$OutputRoot = "",
     [string[]]$Theme = @(),
-    [string]$Platform = "monogame",
+    [string[]]$Platform = @("monogame"),
+    [switch]$DefaultCodegenSettings,
     [string]$Configuration = "Debug"
 )
 
@@ -47,26 +55,38 @@ if ($OutputRoot -eq "") {
 
 $failures = @()
 
-# Phase 1: create and generate every theme project. gumcli runs are independent processes, so they overlap.
-$created = $Theme | ForEach-Object -ThrottleLimit 4 -Parallel {
-    $name = $_
+# `pwsh <script> -Platform a,b` from another process passes "a,b" as one string, so split it here.
+$Theme = @($Theme | ForEach-Object { $_ -split ',' } | Where-Object { $_ })
+$Platform = @($Platform | ForEach-Object { $_ -split ',' } | Where-Object { $_ })
+
+$pairs = foreach ($themeName in $Theme) {
+    foreach ($platformName in $Platform) { [pscustomobject]@{ Theme = $themeName; Platform = $platformName } }
+}
+
+# Phase 1: create and generate every project. gumcli runs are independent processes, so they overlap.
+$created = $pairs | ForEach-Object -ThrottleLimit 4 -Parallel {
+    $themeName = $_.Theme
+    $platformName = $_.Platform
+    $name = "$themeName ($platformName)"
     $cli = $using:Cli
     # Named apart from the theme: a project called Bubblegum would put the theme's own Bubblegum namespace inside itself.
-    $projectName = "${name}Game"
+    $projectName = "${themeName}$($platformName -replace '[^A-Za-z0-9]', '')Game"
     $project = Join-Path $using:OutputRoot $projectName
     $steps = "new"
     $log = ""
 
     try {
         # 2>&1: gumcli's stderr banner would otherwise reach the parent's error stream, where "Stop" makes it fatal.
-        $log += (& $cli new $project --theme $name --platform $using:Platform --source-linked --no-restore 2>&1 | Out-String)
+        $log += (& $cli new $project --theme $themeName --platform $platformName --source-linked --no-restore 2>&1 | Out-String)
         if ($LASTEXITCODE -ne 0) { throw "gumcli new exited $LASTEXITCODE" }
 
         $gumFolder = Join-Path $project "Content/GumProject"
         $settingsPath = Join-Path $gumFolder "ProjectCodeSettings.codsj"
         $settings = Get-Content $settingsPath -Raw
         if ($settings -notmatch '"ObjectInstantiationType":\s*1') { throw "scaffolded settings no longer default to FindByName" }
-        $settings -replace '"ObjectInstantiationType":\s*1', '"ObjectInstantiationType": 0' | Set-Content $settingsPath
+        if (-not $using:DefaultCodegenSettings) {
+            $settings -replace '"ObjectInstantiationType":\s*1', '"ObjectInstantiationType": 0' | Set-Content $settingsPath
+        }
 
         $steps = "codegen"
         $log += (& $cli codegen (Join-Path $gumFolder "GumProject.gumj") 2>&1 | Out-String)
@@ -85,11 +105,11 @@ foreach ($result in $created | Where-Object { $_.Error }) {
     $failures += $result.Name
 }
 
-# Phase 2: one restore and one parallel build over every theme project, so the shared runtime projects
+# Phase 2: one restore and one parallel build over every project, so the shared runtime projects
 # they all reference build once.
 $built = @($created | Where-Object { -not $_.Error })
 if ($built.Count -gt 0) {
-    $solution = Join-Path $OutputRoot "Themes.slnx"
+    $solution = Join-Path $OutputRoot "NewProjects.slnx"
     $entries = ($built | ForEach-Object { "  <Project Path=`"$($_.Csproj)`" />" }) -join "`n"
     Set-Content $solution "<Solution>`n$entries`n</Solution>"
 
@@ -104,7 +124,7 @@ if ($built.Count -gt 0) {
         foreach ($result in $built) { Write-Host "ok   $($result.Name)" }
     }
     else {
-        # Name the failing themes: rebuild each one alone (the shared projects are already built, so this is quick).
+        # Name the failing projects: rebuild each one alone (the shared projects are already built, so this is quick).
         foreach ($result in $built) {
             dotnet build $result.Csproj --configuration $Configuration --no-restore --verbosity quiet -p:WarningLevel=0
             if ($LASTEXITCODE -eq 0) { Write-Host "ok   $($result.Name)" }
@@ -119,6 +139,6 @@ if ($deleteOutput -and (Test-Path $OutputRoot)) {
 }
 
 if ($failures.Count -gt 0) {
-    Write-Host "::error::Theme projects failed: $($failures -join ', ')"
+    Write-Host "::error::gumcli new projects failed: $($failures -join ', ')"
     exit 1
 }
