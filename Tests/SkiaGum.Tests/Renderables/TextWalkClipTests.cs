@@ -30,6 +30,7 @@ public class TextWalkClipTests
         new object[] { "RotatedText", 1f },
         new object[] { "RotatedClipper", 1f },
         new object[] { "RotatedClipper", 1.5f },
+        new object[] { "RotatedOwnClip", 1f },
     };
 
     // Builds a scene whose only drawing is the text; the containers are invisible renderables.
@@ -68,6 +69,12 @@ public class TextWalkClipTests
             case "RotatedText":
                 parent = AddClipper(root, 10.3f, 20.7f, 120, 80, 0);
                 text.Rotation = 17;
+                break;
+            case "RotatedOwnClip":
+                text.Width = 45.5f;
+                text.Height = 15.25f;
+                text.Rotation = 17;
+                text.ClipsChildren = true;
                 break;
             case "RotatedClipper":
                 parent = AddClipper(root, 30.3f, 20.7f, 80, 40, 10);
@@ -178,6 +185,8 @@ public class TextWalkClipTests
     [InlineData("ParentClips", true)]
     [InlineData("NestedClips", false)]
     [InlineData("RotatedClipper", true)]
+    [InlineData("RotatedOwnClip", false)]
+    [InlineData("RotatedOwnClip", true)]
     [InlineData("Unclipped", false)]
     public void GumBatchDraw_TextOrItsRoot_MatchesTextClippingItself(string kind, bool drawRoot)
     {
