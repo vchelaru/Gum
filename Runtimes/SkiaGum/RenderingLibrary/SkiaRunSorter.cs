@@ -21,8 +21,9 @@ public sealed class SkiaRunSorter
 
     const int Barrier = -1;
 
-    struct Item { public IRenderableIpso R; public SKRect B; public int Next; }
-    struct Group { public int Key; public SKRect Union; public int First; public int Last; }
+    struct Item { public IRenderableIpso R; public SKRect B; public int Next; public SKRect ChunkUnion; public int ChunkCount; public int NextChunk; }
+    public static int Chunk = int.TryParse(Environment.GetEnvironmentVariable("GUM_SORT_CHUNK"), out int ch) ? ch : 8;
+    struct Group { public int Key; public SKRect Union; public int First; public int Last; public int ChunkHead; }
 
     Item[] _items = new Item[1024];
     int _itemCount;
@@ -42,7 +43,7 @@ public sealed class SkiaRunSorter
         _dest = destination;
         _itemCount = 0;
         _groupCount = 0;
-        for (int i = 0; i < roots.Count; i++) Process(roots[i]);
+        for (int i = 0; i < roots.Count; i++) ProcessRoot(roots[i]);
         FlushWindow();
         StatFrames++;
     }
@@ -56,33 +57,56 @@ public sealed class SkiaRunSorter
         return _keyCount++;
     }
 
-    void Process(IRenderableIpso r)
+    // GUM_SORT_POS=chain uses GetAbsoluteX/Y per draw (the first version); default passes the parent's
+    // absolute position down the walk. GUM_SORT_CHECK=1 counts mismatches between the two.
+    static readonly bool ChainPos = Environment.GetEnvironmentVariable("GUM_SORT_POS") == "chain";
+    static readonly bool CheckPos = Environment.GetEnvironmentVariable("GUM_SORT_CHECK") == "1";
+    public static long StatPosMismatch;
+
+    void ProcessRoot(IRenderableIpso r)
+    {
+        IRenderableIpso? p = r.Parent;
+        bool rot = false;
+        for (var q = p; q != null; q = q.Parent) if (q.Rotation != 0) { rot = true; break; }
+        Process(r, p?.GetAbsoluteX() ?? 0, p?.GetAbsoluteY() ?? 0, rot);
+    }
+
+    void Process(IRenderableIpso r, float px, float py, bool rotated)
     {
         if (!r.Visible) return;
+        float x = px + r.X, y = py + r.Y;
+        bool rot = rotated || r.Rotation != 0;
         if (r.ClipsChildren)
         {
             FlushWindow();
             _dest.Add(new DrawCommand(DrawCommandKind.BeginClip, r));
-            Add(r);
+            Add(r, x, y, rot);
             if (Renderer.RenderUsingHierarchy && !r.IsRenderTarget && r.Children != null)
-                for (int i = 0; i < r.Children.Count; i++) Process(r.Children[i]);
+                for (int i = 0; i < r.Children.Count; i++) Process(r.Children[i], x, y, rot);
             FlushWindow();
             _dest.Add(new DrawCommand(DrawCommandKind.EndClip, r));
             return;
         }
-        Add(r);
+        Add(r, x, y, rot);
         if (Renderer.RenderUsingHierarchy && !r.IsRenderTarget && r.Children != null)
-            for (int i = 0; i < r.Children.Count; i++) Process(r.Children[i]);
+            for (int i = 0; i < r.Children.Count; i++) Process(r.Children[i], x, y, rot);
     }
 
-    void Add(IRenderableIpso r)
+    void Add(IRenderableIpso r, float x, float y, bool rotated)
     {
         IRenderableIpso inner = r is GraphicalUiElement e && e.RenderableComponent is IRenderableIpso c ? c : r;
         if (!r.IsRenderTarget && inner.GetType() == typeof(InvisibleRenderable)) return; // draws nothing
 
+        if (ChainPos || CheckPos)
+        {
+            float cx = inner.GetAbsoluteX(), cy = inner.GetAbsoluteY();
+            if (CheckPos && (MathF.Abs(cx - x) > 0.001f || MathF.Abs(cy - y) > 0.001f)) StatPosMismatch++;
+            if (ChainPos) { x = cx; y = cy; }
+        }
+
         int key;
         SKRect b;
-        if (r.IsRenderTarget || !TryBounds(inner, out b))
+        if (r.IsRenderTarget || rotated || !TryBounds(inner, x, y, out b))
         {
             key = Barrier;
             b = default;
@@ -94,7 +118,7 @@ public sealed class SkiaRunSorter
 
         if (_itemCount == _items.Length) Array.Resize(ref _items, _items.Length * 2);
         int idx = _itemCount++;
-        _items[idx] = new Item { R = r, B = b, Next = -1 };
+        _items[idx] = new Item { R = r, B = b, Next = -1, ChunkUnion = b, ChunkCount = 1, NextChunk = -1 };
         StatItems++;
 
         if (key != Barrier)
@@ -108,6 +132,9 @@ public sealed class SkiaRunSorter
                     _items[grp.Last].Next = idx;
                     grp.Last = idx;
                     grp.Union = SKRect.Union(grp.Union, b);
+                    ref Item head = ref _items[grp.ChunkHead];
+                    if (Chunk > 0 && head.ChunkCount < Chunk) { head.ChunkCount++; head.ChunkUnion = SKRect.Union(head.ChunkUnion, b); }
+                    else { head.NextChunk = idx; grp.ChunkHead = idx; }
                     return;
                 }
                 if (grp.Key == Barrier || Overlaps(ref grp, b)) break;
@@ -115,17 +142,33 @@ public sealed class SkiaRunSorter
         }
 
         if (_groupCount == _groups.Length) Array.Resize(ref _groups, _groups.Length * 2);
-        _groups[_groupCount++] = new Group { Key = key, Union = b, First = idx, Last = idx };
+        _groups[_groupCount++] = new Group { Key = key, Union = b, First = idx, Last = idx, ChunkHead = idx };
     }
 
     bool Overlaps(ref Group grp, SKRect b)
     {
         StatPairTests++;
         if (!Intersects(grp.Union, b)) return false;
-        for (int i = grp.First; i >= 0; i = _items[i].Next)
+        if (Chunk <= 0)
         {
+            for (int i = grp.First; i >= 0; i = _items[i].Next)
+            {
+                StatPairTests++;
+                if (Intersects(_items[i].B, b)) return true;
+            }
+            return false;
+        }
+        for (int h = grp.First; h >= 0; h = _items[h].NextChunk)
+        {
+            ref Item head = ref _items[h];
             StatPairTests++;
-            if (Intersects(_items[i].B, b)) return true;
+            if (!Intersects(head.ChunkUnion, b)) continue;
+            int i = h;
+            for (int k = 0; k < head.ChunkCount; k++, i = _items[i].Next)
+            {
+                StatPairTests++;
+                if (Intersects(_items[i].B, b)) return true;
+            }
         }
         return false;
     }
@@ -134,18 +177,40 @@ public sealed class SkiaRunSorter
     // snapped NineSlices and padded text bounds already cover.
     static bool Intersects(SKRect a, SKRect b) => a.Left < b.Right && b.Left < a.Right && a.Top < b.Bottom && b.Top < a.Bottom;
 
-    static bool TryBounds(IRenderableIpso inner, out SKRect b)
+    // World-space conservative text bounds by arithmetic: same rule as NineSliceBatcher.TryTextBounds under an
+    // identity matrix, without the GetAbsoluteX/Y parent-chain walks and the MapRect P/Invoke.
+    public static SKRect TextBounds(global::SkiaGum.Text t, float x, float y)
+    {
+        float w = t.EffectiveWidth, h = t.Height, ww = t.WrappedTextWidth, wh = t.WrappedTextHeight;
+        float l, r, tp, bt;
+        switch (t.HorizontalAlignment)
+        {
+            case HorizontalAlignment.Center: l = MathF.Min(x, x + (w - ww) / 2); r = MathF.Max(x + w, x + (w + ww) / 2); break;
+            case HorizontalAlignment.Right: l = MathF.Min(x, x + w - ww); r = x + w; break;
+            default: l = x; r = x + MathF.Max(w, ww); break;
+        }
+        switch (t.VerticalAlignment)
+        {
+            case VerticalAlignment.Center: tp = MathF.Min(y, y + (h - wh) / 2); bt = MathF.Max(y + h, y + (h + wh) / 2); break;
+            case VerticalAlignment.Bottom: tp = MathF.Min(y, y + h - wh); bt = y + h; break;
+            default: tp = y; bt = y + MathF.Max(h, wh); break;
+        }
+        const float pad = 4;
+        return new SKRect(l - pad, tp - pad, r + pad, bt + pad);
+    }
+
+    static bool TryBounds(IRenderableIpso inner, float x, float y, out SKRect b)
     {
         b = default;
         switch (inner)
         {
             case global::SkiaGum.Text t:
-                return NineSliceBatcher.TryTextBounds(t, SKMatrix.Identity, out b);
+                b = TextBounds(t, x, y);
+                return true;
             case NineSlice:
             case Sprite:
                 {
-                    if (inner.GetAbsoluteRotation() != 0) return false;
-                    float x = inner.GetAbsoluteX(), y = inner.GetAbsoluteY(), w = inner.Width, h = inner.Height;
+                    float w = inner.Width, h = inner.Height;
                     const float pad = 1;
                     b = new SKRect(MathF.Min(x, x + w) - pad, MathF.Min(y, y + h) - pad, MathF.Max(x, x + w) + pad, MathF.Max(y, y + h) + pad);
                     return true;
@@ -183,6 +248,6 @@ public static class SortProbe
         a.Sort();
         double toMs = 1000.0 / System.Diagnostics.Stopwatch.Frequency;
         double f = System.Math.Max(1, SkiaRunSorter.StatFrames);
-        return $"SORT step median {a[a.Count / 2] * toMs:F4} ms (frames {a.Count}); runSorter per frame: items {SkiaRunSorter.StatItems / f:F1} groups {SkiaRunSorter.StatGroups / f:F1} pairTests {SkiaRunSorter.StatPairTests / f:F1}; orderer pairTests {BatchKeyGroupedOrderer.Instance.PairTestCount}";
+        return $"SORT step median {a[a.Count / 2] * toMs:F4} ms (frames {a.Count}); runSorter per frame: items {SkiaRunSorter.StatItems / f:F1} groups {SkiaRunSorter.StatGroups / f:F1} pairTests {SkiaRunSorter.StatPairTests / f:F1}; orderer pairTests {BatchKeyGroupedOrderer.Instance.PairTestCount}; posMismatch {SkiaRunSorter.StatPosMismatch / f:F1}";
     }
 }

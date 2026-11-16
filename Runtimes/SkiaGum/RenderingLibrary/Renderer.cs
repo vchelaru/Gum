@@ -540,6 +540,7 @@ namespace RenderingLibrary.Graphics
 
             if (SortMode != 0 && prerender && RenderUsingHierarchy)
             {
+                for (int rep = 1; rep < SortRepeat; rep++) { if (SortMode == 1) { BatchKeyGroupedOrderer.BoundsOverride ??= SortBounds; BatchKeyGroupedOrderer.Instance.BuildDrawList(whatToRender, _sortCommands); } else SkiaRunSorter.Instance.Build(whatToRender, _sortCommands); }
                 long t0 = System.Diagnostics.Stopwatch.GetTimestamp();
                 if (SortMode == 1)
                 {
@@ -736,7 +737,9 @@ namespace RenderingLibrary.Graphics
         internal IRenderableIpso? ClipAppliedByWalk { get; private set; }
 
         // SPIKE #8116 (sort3): GUM_SORT=1 shared BatchKeyGroupedOrderer copy, GUM_SORT=2 SkiaRunSorter.
-        internal static readonly int SortMode = int.TryParse(Environment.GetEnvironmentVariable("GUM_SORT"), out int sm) ? sm : 0;
+        internal static int SortMode = int.TryParse(Environment.GetEnvironmentVariable("GUM_SORT"), out int sm) ? sm : 0;
+        static readonly int SortRepeat = int.TryParse(Environment.GetEnvironmentVariable("GUM_SORT_REPEAT"), out int sr) ? sr : 1; // trace aid only
+        internal static string? SortHook = Environment.GetEnvironmentVariable("GUM_SORT_HOOK"); // off = original orderer bounds, slow = TryTextBounds, default cheap text bounds
         readonly List<DrawCommand> _sortCommands = new();
         readonly Stack<IRenderableIpso?> _clipStack = new();
 
@@ -744,6 +747,14 @@ namespace RenderingLibrary.Graphics
         {
             bounds = default;
             IRenderableIpso inner = r is GraphicalUiElement e && e.RenderableComponent is IRenderableIpso c ? c : r;
+            if (SortHook == "off") return false;
+            if (SortHook != "slow" && inner is global::SkiaGum.Text ct && ct.Rotation == 0)
+            {
+                SKRect cb = SkiaRunSorter.TextBounds(ct, ct.GetAbsoluteX(), ct.GetAbsoluteY());
+                int cl = (int)MathF.Floor(cb.Left), ctp = (int)MathF.Floor(cb.Top);
+                bounds = new System.Drawing.Rectangle(cl, ctp, (int)MathF.Ceiling(cb.Right) - cl, (int)MathF.Ceiling(cb.Bottom) - ctp);
+                return true;
+            }
             if (inner is global::SkiaGum.Text t && NineSliceBatcher.TryTextBounds(t, SKMatrix.Identity, out SKRect b))
             {
                 int l = (int)MathF.Floor(b.Left), tp = (int)MathF.Floor(b.Top);
@@ -1647,9 +1658,9 @@ namespace RenderingLibrary.Graphics
     // change, render target, non-Text/non-NineSlice draw, and at the end of each top-level DrawList.
     internal sealed class NineSliceBatcher
     {
-        public static readonly bool Enabled = Environment.GetEnvironmentVariable("GUM_NSBATCH") == "1";
+        public static bool Enabled = Environment.GetEnvironmentVariable("GUM_NSBATCH") == "1";
         public static readonly NineSliceBatcher Spike = new();
-        public static readonly bool DeferText = Environment.GetEnvironmentVariable("GUM_NSDEFER") != "0";
+        public static bool DeferText = Environment.GetEnvironmentVariable("GUM_NSDEFER") != "0";
         public static long StatNsBatched, StatNsLattice, StatBatches, StatDeferred, StatFrames, StatFlushOverlap, StatFlushKey;
 
         static NineSliceBatcher()
