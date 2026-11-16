@@ -183,6 +183,31 @@ public unsafe class GlCompositingTests : BaseTestClass
     }
 
     [SkippableFact]
+    public void Draw_InSteadyState_AllocatesNothing()
+    {
+        WithWindow(window =>
+        {
+            const int WarmupFrames = 30, MeasuredFrames = 300;
+            RectangleRuntime rectangle = new() { X = 0, Y = 0, Width = Size, Height = Size / 2, FillColor = SKColors.Red };
+            GumService.Default.Root.AddChild(rectangle);
+            GumService.Default.Update(0.016);
+            for (int i = 0; i < WarmupFrames; i++)
+            {
+                GumService.Default.Draw();
+            }
+
+            long before = GC.GetAllocatedBytesForCurrentThread();
+            for (int i = 0; i < MeasuredFrames; i++)
+            {
+                GumService.Default.Draw();
+            }
+            long allocated = GC.GetAllocatedBytesForCurrentThread() - before;
+
+            allocated.ShouldBe(0L);
+        });
+    }
+
+    [SkippableFact]
     public void Draw_LeavesTheFramebufferBindingTheGameHad()
     {
         WithWindow(window =>

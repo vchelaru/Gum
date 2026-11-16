@@ -34,9 +34,7 @@ internal sealed class VulkanTextureTarget : IBrutalTarget
 
 /// <summary>Owns the SkiaVulkanContext over the game's Vulkan objects and, unless turned off, the swapchain presenter.</summary>
 internal sealed class VulkanBackend : IBrutalGpuBackend
-#if BRUTAL_VULKAN_DIRECT
     , IBrutalDirectPass
-#endif
 {
     private const uint ImageLayoutColorAttachmentOptimal = 2;
     private const uint ImageLayoutPresentSrcKhr = 1000001002;
@@ -52,10 +50,8 @@ internal sealed class VulkanBackend : IBrutalGpuBackend
     private int _presentedWidth;
     private int _presentedHeight;
     private bool _framePending;
-#if BRUTAL_VULKAN_DIRECT
     private SkiaDirectCanvas? _direct;
     private bool _directConfigured;
-#endif
 
     private readonly Func<IDisposable>? _acquireQueueLock;
 
@@ -98,11 +94,7 @@ internal sealed class VulkanBackend : IBrutalGpuBackend
     public IBrutalTarget CreateTarget(int width, int height) =>
         new PresentOrTextureTarget(
             () => PresentToWindow, TakeFrame,
-#if BRUTAL_VULKAN_DIRECT
             this,
-#else
-            null,
-#endif
             () => new VulkanTextureTarget(_context, width, height),
             WaitForGpuLocked, width, height);
 
@@ -118,12 +110,9 @@ internal sealed class VulkanBackend : IBrutalGpuBackend
     private VulkanPresenter EnsurePresenter() =>
         _presenter ??= new VulkanPresenter(
             _physicalDevice, _device, _queue, _queueFamily, _surface, _acquireQueueLock
-#if BRUTAL_VULKAN_DIRECT
             , releaseSwapchainImageUsers: () => _direct?.ReleaseCachedSurfaces()
-#endif
             );
 
-#if BRUTAL_VULKAN_DIRECT
     SKCanvas IBrutalDirectPass.Canvas => _direct!.Canvas;
 
     /// <summary>Acquires the next swapchain image (rebuilding the swapchain on a size change) and begins drawing into it.</summary>
@@ -148,7 +137,6 @@ internal sealed class VulkanBackend : IBrutalGpuBackend
     }
 
     void IBrutalDirectPass.End() => _direct!.End(finalLayout: ImageLayoutPresentSrcKhr);
-#endif
 
     public void Present(IBrutalTarget target, int width, int height)
     {
@@ -159,14 +147,12 @@ internal sealed class VulkanBackend : IBrutalGpuBackend
 
         PresentOrTextureTarget switching = (PresentOrTextureTarget)target;
         VulkanPresenter presenter = EnsurePresenter();
-#if BRUTAL_VULKAN_DIRECT
         if (switching.IsDirectPass)
         {
             presenter.PresentDirect();
             return;
         }
         _directConfigured = false;
-#endif
         VulkanTextureTarget texture = (VulkanTextureTarget)switching.Texture!;
         if (!ReferenceEquals(_presentedTexture, texture) || _presentedWidth != width || _presentedHeight != height)
         {
@@ -184,10 +170,8 @@ internal sealed class VulkanBackend : IBrutalGpuBackend
         _presenter?.Dispose();
         _presenter = null;
         _presentedTexture = null;
-#if BRUTAL_VULKAN_DIRECT
         _direct?.Dispose();
         _direct = null;
-#endif
         _context.Dispose();
     }
 }
