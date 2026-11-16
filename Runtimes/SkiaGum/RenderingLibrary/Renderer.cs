@@ -1526,7 +1526,7 @@ namespace RenderingLibrary.Graphics
                 {
                     double f = System.Math.Max(1, StatFrames);
                     System.IO.File.WriteAllText(path,
-                        $"frames {StatFrames} perFrame: nsBatched {StatNsBatched / f:F1} nsLattice {StatNsLattice / f:F1} batches {StatBatches / f:F1} deferredText {StatDeferred / f:F1} flushOverlap {StatFlushOverlap / f:F1} flushKey {StatFlushKey / f:F1}\n");
+                        $"frames {StatFrames} perFrame: nsBatched {StatNsBatched / f:F1} nsLattice {StatNsLattice / f:F1} batches {StatBatches / f:F1} deferredText {StatDeferred / f:F1} single {StatSingle / f:F1} sections {StatSections / f:F1} flushOverlap {StatFlushOverlap / f:F1} flushKey {StatFlushKey / f:F1}\n");
                 };
         }
 
@@ -1540,6 +1540,8 @@ namespace RenderingLibrary.Graphics
         SKPoint[] _pos = new SKPoint[16 * 256];
         SKPoint[] _tex = new SKPoint[16 * 256];
         SKColor[] _col = new SKColor[16 * 256];
+        bool _hasTint, _fbIsLattice; public static readonly bool Sections = Environment.GetEnvironmentVariable("GUM_NSSECT") == "1"; public static long StatSections; readonly int[] _fbX = new int[2], _fbY = new int[2]; SKRectI? _fbBounds; SKRect _fbDst; SKMatrix _fbMatrix; SKPaint? _fbPaint;
+        public static long StatSingle;
         ushort[] _idx = new ushort[54 * 256];
         struct Deferred { public IRenderableIpso R; public SKMatrix M; public SKRect B; }
         Deferred[] _def = new Deferred[256];
@@ -1554,7 +1556,7 @@ namespace RenderingLibrary.Graphics
             p.ColorFilter == null && p.Shader == null && p.ImageFilter == null && p.MaskFilter == null && p.BlendMode == SKBlendMode.SrcOver;
 
         // xs/ys: 4 device edges each; us/vs: 4 texel edges each.
-        public void Append(SKImage image, object keyObj, byte alpha, SKColor tint, ReadOnlySpan<float> xs, ReadOnlySpan<float> ys, ReadOnlySpan<float> us, ReadOnlySpan<float> vs)
+        public void Append(SKImage image, object keyObj, byte alpha, SKColor tint, SKLattice? lattice, SKRect localDst, SKMatrix full, SKPaint? paint, ReadOnlySpan<float> xs, ReadOnlySpan<float> ys, ReadOnlySpan<float> us, ReadOnlySpan<float> vs)
         {
             var dev = new SKRect(MathF.Min(xs[0], xs[3]), MathF.Min(ys[0], ys[3]), MathF.Max(xs[0], xs[3]), MathF.Max(ys[0], ys[3]));
             if (_ns > 0)
@@ -1571,6 +1573,8 @@ namespace RenderingLibrary.Graphics
                 }
             }
             if (_ns == 0) { _image = image; _key = keyObj; } _alpha = alpha;
+            if (_ns == 0) { _hasTint = false; _fbIsLattice = lattice != null; if (lattice is SKLattice lt) { _fbX[0] = lt.XDivs[0]; _fbX[1] = lt.XDivs[1]; _fbY[0] = lt.YDivs[0]; _fbY[1] = lt.YDivs[1]; _fbBounds = lt.Bounds; } _fbDst = localDst; _fbMatrix = full; _fbPaint = paint; }
+            if (tint != SKColors.White) _hasTint = true;
             if ((_ns + 1) * 16 > _pos.Length)
             {
                 Array.Resize(ref _pos, _pos.Length * 2); Array.Resize(ref _tex, _tex.Length * 2); Array.Resize(ref _col, _col.Length * 2); Array.Resize(ref _idx, _idx.Length * 2);
@@ -1595,6 +1599,14 @@ namespace RenderingLibrary.Graphics
             StatNsBatched++;
         }
 
+        // SPIKE #8116 img: one NineSlice section (device rect l,t,r,b from texels u0,v0,u1,v1) as a degenerate 4x4 grid; only cell (0,0) has area.
+        public void AppendQuad(SKImage image, object keyObj, byte alpha, SKColor tint, float l, float t, float r, float b, float u0, float v0, float u1, float v1)
+        {
+            Span<float> xs = stackalloc float[] { l, r, r, r }, ys = stackalloc float[] { t, b, b, b }, us = stackalloc float[] { u0, u1, u1, u1 }, vs = stackalloc float[] { v0, v1, v1, v1 };
+            Append(image, keyObj, alpha, tint, null, default, default, null, xs, ys, us, vs);
+            StatSections++; StatNsBatched--;
+        }
+
         public void Defer(IRenderableIpso r, SKMatrix m, SKRect deviceBounds)
         {
             if (_defCount == _def.Length) Array.Resize(ref _def, _def.Length * 2);
@@ -1611,7 +1623,7 @@ namespace RenderingLibrary.Graphics
                 a = (new SKPoint[_ns * 16], new SKPoint[_ns * 16], new ushort[_ns * 54], new SKColor[_ns * 16]);
                 _exact[_ns] = a;
             }
-            Array.Copy(_pos, a.P, _ns * 16); Array.Copy(_tex, a.T, _ns * 16); Array.Copy(_idx, a.I, _ns * 54); if (Tint) Array.Copy(_col, a.C, _ns * 16);
+            Array.Copy(_pos, a.P, _ns * 16); Array.Copy(_tex, a.T, _ns * 16); Array.Copy(_idx, a.I, _ns * 54); if (_hasTint) Array.Copy(_col, a.C, _ns * 16);
             if (!_shaders.TryGetValue(_image!, out var shader))
             {
                 shader = _image!.ToShader(SKShaderTileMode.Clamp, SKShaderTileMode.Clamp, new SKSamplingOptions(SKFilterMode.Nearest));
@@ -1620,11 +1632,22 @@ namespace RenderingLibrary.Graphics
             _paint.Shader = shader;
             _paint.Color = new SKColor(255, 255, 255, _alpha);
             _ns = 0;
+            if (Tint && a.P.Length == 16 && _fbIsLattice)
+            {
+                StatSingle++;
+                canvas.Save();
+                canvas.SetMatrix(_fbMatrix);
+                canvas.DrawImageLattice(_image!, new SKLattice { XDivs = _fbX, YDivs = _fbY, Bounds = _fbBounds }, _fbDst, _fbPaint);
+                canvas.Restore();
+            }
+            else
+            {
             canvas.Save();
             canvas.ResetMatrix();
-            using (var verts = SKVertices.CreateCopy(SKVertexMode.Triangles, a.P, a.T, Tint ? a.C : null, a.I))
+            using (var verts = SKVertices.CreateCopy(SKVertexMode.Triangles, a.P, a.T, _hasTint ? a.C : null, a.I))
                 canvas.DrawVertices(verts, SKBlendMode.Modulate, _paint);
             canvas.Restore();
+            }
             StatBatches++;
             int count = _defCount;
             _defCount = 0;

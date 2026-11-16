@@ -478,7 +478,7 @@ public class NineSlice : RenderableShapeBase, IAnimatable, IAnimationChainRender
         {
             return;
         }
-        if (global::RenderingLibrary.Graphics.NineSliceBatcher.Enabled && canvas == global::RenderingLibrary.Graphics.NineSliceBatcher.Spike.Canvas)
+        if (global::RenderingLibrary.Graphics.NineSliceBatcher.Enabled && !(global::RenderingLibrary.Graphics.NineSliceBatcher.Sections && !IsTilingMiddleSections) && canvas == global::RenderingLibrary.Graphics.NineSliceBatcher.Spike.Canvas)
         {
             global::RenderingLibrary.Graphics.NineSliceBatcher.StatNsLattice++;
             global::RenderingLibrary.Graphics.NineSliceBatcher.Spike.Flush();
@@ -561,6 +561,15 @@ public class NineSlice : RenderableShapeBase, IAnimatable, IAnimationChainRender
     //    texels, so a scale s draws the lattice into a rectangle 1/s the size under a canvas scale of s.
     //  - Axis aligned, with all eight section edges on whole device pixels (anything else rounds differently), and not touched by the canvas clip.
     //  - Borders that fit: when NineSliceBorders clamps a band the sections are no longer the texels' size.
+    // SPIKE #8116 img: GUM_NSWHY=1 prints, once per NineSlice, the TryDrawLattice line that refused the lattice.
+    static readonly bool SpikeWhy = Environment.GetEnvironmentVariable("GUM_NSWHY") == "1";
+    static readonly HashSet<NineSlice> SpikeWhySeen = new();
+    bool SpikeFail(SKRect r, [System.Runtime.CompilerServices.CallerLineNumber] int line = 0)
+    {
+        if (SpikeWhy && SpikeWhySeen.Add(this)) Console.WriteLine($"NSWHY line {line} rect {r} tex {Image?.Width}x{Image?.Height} scale {BorderScale} tiling {IsTilingMiddleSections}");
+        return false;
+    }
+
     private bool TryDrawLattice(
         SKCanvas canvas, SKPaint paint, SKSamplingOptions sampling, SKRect boundingRect,
         int srcLeft, int srcTop, int usedWidth, int usedHeight, int fullOutsideW, int fullOutsideH,
@@ -568,7 +577,7 @@ public class NineSlice : RenderableShapeBase, IAnimatable, IAnimationChainRender
     {
         if (DisableLatticeFastPath || sampling.Filter != SKFilterMode.Nearest || IsTilingMiddleSections)
         {
-            return false;
+            return SpikeFail(boundingRect);
         }
 
         float scale = EffectiveBorderScaleLeft;
@@ -578,18 +587,18 @@ public class NineSlice : RenderableShapeBase, IAnimatable, IAnimationChainRender
             || EffectiveBorderScaleBottom != scale
             || BorderScale != scale)
         {
-            return false;
+            return SpikeFail(boundingRect);
         }
 
         if (srcLeft < 0 || srcTop < 0 || srcLeft + usedWidth > Image!.Width || srcTop + usedHeight > Image.Height)
         {
-            return false;
+            return SpikeFail(boundingRect);
         }
 
         if (fullOutsideW <= 0 || fullOutsideH <= 0
             || usedWidth - (fullOutsideW * 2) <= 0 || usedHeight - (fullOutsideH * 2) <= 0)
         {
-            return false;
+            return SpikeFail(boundingRect);
         }
 
         // The bands must be exactly the texels' size times the scale (no clamping), with room left in the middle.
@@ -600,7 +609,7 @@ public class NineSlice : RenderableShapeBase, IAnimatable, IAnimationChainRender
             || boundingRect.Width <= borders.DestLeft + borders.DestRight
             || boundingRect.Height <= borders.DestTop + borders.DestBottom)
         {
-            return false;
+            return SpikeFail(boundingRect);
         }
 
         // The lattice and the per-section draws only agree when every edge lands exactly on a device pixel; at a
@@ -617,7 +626,7 @@ public class NineSlice : RenderableShapeBase, IAnimatable, IAnimationChainRender
             || !IsOnDevicePixel(matrix.ScaleY * (boundingRect.Bottom - borders.DestBottom) + matrix.TransY)
             || !IsOnDevicePixel(matrix.ScaleY * boundingRect.Bottom + matrix.TransY))
         {
-            return false;
+            return SpikeFail(boundingRect);
         }
 
         // A clip with a fractional edge crops the lattice's triangles differently from the sections' rectangles
@@ -633,7 +642,7 @@ public class NineSlice : RenderableShapeBase, IAnimatable, IAnimationChainRender
             || Math.Min(deviceTop, deviceBottom) < clip.Top + 1
             || Math.Max(deviceTop, deviceBottom) > clip.Bottom - 1)
         {
-            return false;
+            return SpikeFail(boundingRect);
         }
 
         // Nearest sampling picks a texel by where a pixel center falls. When a pixel center lands exactly on a
@@ -660,7 +669,7 @@ public class NineSlice : RenderableShapeBase, IAnimatable, IAnimationChainRender
             if (borderTie || ((middleTieX || middleTieY)
                 && !IsMiddleUniform(middleTieX, middleTieY, srcLeft, srcTop, usedWidth, usedHeight, fullOutsideW, fullOutsideH)))
             {
-                return false;
+                return SpikeFail(boundingRect);
             }
         }
 
@@ -694,7 +703,7 @@ public class NineSlice : RenderableShapeBase, IAnimatable, IAnimationChainRender
                 ys[3] = matrix.ScaleY * (boundingRect.Top + scale * lh) + matrix.TransY;
                 us[0] = srcLeft; us[1] = srcLeft + fullOutsideW; us[2] = srcLeft + usedWidth - fullOutsideW; us[3] = srcLeft + usedWidth;
                 vs[0] = srcTop; vs[1] = srcTop + fullOutsideH; vs[2] = srcTop + usedHeight - fullOutsideH; vs[3] = srcTop + usedHeight;
-                nb.Append(Image, (object?)(_ownsImage ? _texture : null) ?? Image, paint.Color.Alpha, paint.ColorFilter != null ? paint.Color.WithAlpha(255) : SKColors.White, xs, ys, us, vs);
+                nb.Append(Image, (object?)(_ownsImage ? _texture : null) ?? Image, paint.Color.Alpha, paint.ColorFilter != null ? paint.Color.WithAlpha(255) : SKColors.White, lattice, new SKRect(0, 0, boundingRect.Width / scale, boundingRect.Height / scale), matrix.PreConcat(SKMatrix.CreateTranslation(boundingRect.Left, boundingRect.Top)).PreConcat(SKMatrix.CreateScale(scale, scale)), paint, xs, ys, us, vs);
                 DrawStatistics?.RecordDrawCall();
                 return true;
             }
@@ -885,6 +894,23 @@ public class NineSlice : RenderableShapeBase, IAnimatable, IAnimationChainRender
         {
             SKRect src = new SKRect(srcX, srcY, srcX + srcW, srcY + srcH);
             SKRect dest = new SKRect(destX, destY, destX + destW, destY + destH);
+            var nbs = global::RenderingLibrary.Graphics.NineSliceBatcher.Spike;
+            if (global::RenderingLibrary.Graphics.NineSliceBatcher.Enabled && global::RenderingLibrary.Graphics.NineSliceBatcher.Sections && nbs.Active && draw.Canvas == nbs.Canvas
+                && !draw.UseSectionImages && ReferenceEquals(sourceImage, Image) && draw.Sampling.Filter == SKFilterMode.Nearest && ColorOperation != ColorOperation.Add
+                && draw.Paint.Shader == null && draw.Paint.ImageFilter == null && draw.Paint.MaskFilter == null && draw.Paint.BlendMode == SKBlendMode.SrcOver)
+            {
+                SKMatrix sm = draw.Canvas.TotalMatrix;
+                if (sm.SkewX == 0 && sm.SkewY == 0 && sm.Persp0 == 0 && sm.Persp1 == 0 && sm.Persp2 == 1)
+                {
+                    nbs.AppendQuad(Image!, (object?)(_ownsImage ? _texture : null) ?? Image!, draw.Paint.Color.Alpha,
+                        draw.Paint.ColorFilter != null ? draw.Paint.Color.WithAlpha(255) : SKColors.White,
+                        sm.ScaleX * dest.Left + sm.TransX, sm.ScaleY * dest.Top + sm.TransY, sm.ScaleX * dest.Right + sm.TransX, sm.ScaleY * dest.Bottom + sm.TransY,
+                        src.Left, src.Top, src.Right, src.Bottom);
+                    DrawStatistics?.RecordDrawCall();
+                    return;
+                }
+            }
+            if (global::RenderingLibrary.Graphics.NineSliceBatcher.Enabled && global::RenderingLibrary.Graphics.NineSliceBatcher.Sections && nbs.Active && draw.Canvas == nbs.Canvas) nbs.Flush();
             if (ImageDrawCapture.Active) ImageDrawCapture.Add(ImageDrawCapture.DrawKind.NineSliceSection, draw.Canvas, sourceImage, src, dest, draw.Sampling, draw.Paint);
             draw.Canvas.DrawImage(sourceImage, src, dest, draw.Sampling, draw.Paint);
             DrawStatistics?.RecordDrawCall();
