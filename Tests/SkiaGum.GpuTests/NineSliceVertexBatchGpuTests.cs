@@ -102,6 +102,7 @@ public class NineSliceVertexBatchGpuTests : IDisposable
             SystemManagers.Default = managers;
             managers.Canvas = surface.Canvas;
             managers.Renderer.BatchesNineSlices = batch;
+            managers.Renderer.BatchesTexts = batch;
 
             ContainerRuntime root = Container(0, 0, Size, Size);
             build(root, managers);
@@ -200,9 +201,9 @@ public class NineSliceVertexBatchGpuTests : IDisposable
             }
         });
 
-        // Four frames in one batch plus four texts, against eight separate draws.
+        // Four frames in one batch plus the four texts merged, against eight separate draws.
         unbatched.ShouldBe(8);
-        batched.ShouldBe(5);
+        batched.ShouldBe(2);
     }
 
     [Fact]
@@ -501,6 +502,7 @@ public class NineSliceVertexBatchGpuTests : IDisposable
                 SystemManagers.Default = managers;
                 managers.Canvas = surface.Canvas;
                 managers.Renderer.BatchesNineSlices = batch;
+                managers.Renderer.BatchesTexts = batch;
                 NineSliceRuntime frame = Frame(_textureB, 10, 10, 60, 60);
                 surface.Canvas.Clear(SKColors.Black);
                 managers.Renderer.Begin(SKMatrix.CreateScale(1.5f, 1.25f));

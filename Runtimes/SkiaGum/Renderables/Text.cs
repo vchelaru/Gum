@@ -1151,10 +1151,23 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
                     && vertexBatch.TryDefer(canvas, this, absoluteX, absoluteY, canvasMatrix,
                         GetDeviceBounds(drawnBounds, absoluteX, absoluteY, canvasMatrix)))
                 {
-                    statistics?.RecordDrawCall();
+                    // The batch counts the draw when it draws the text.
                     return;
                 }
                 vertexBatch.Flush();
+            }
+
+            // Plain text joins the renderer's text batch, which draws consecutive plain texts as one merged blob
+            // (#8156). Any other text flushes the batch first.
+            RenderingLibrary.Graphics.TextBlobBatch? textBatch = ((SystemManagers)managers).ActiveTextBatch;
+            if (textBatch != null)
+            {
+                if (isSimple && isClipOnCanvas && renderPaint == null
+                    && _blobCache.TryAddTo(textBatch, canvas, paintBlock, absoluteX, absoluteY, canvasMatrix))
+                {
+                    return;
+                }
+                textBatch.Flush();
             }
 
             // Unrotated text with nothing left to clip draws its cached blobs at its offset, with no
@@ -1258,6 +1271,14 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
     /// (<paramref name="x"/>, <paramref name="y"/>) under the canvas's current matrix. Called by the batch's flush.
     /// </summary>
     internal void DrawDeferredBlobs(SKCanvas canvas, float x, float y) => _blobCache.PaintRunsAt(canvas, x, y);
+
+    /// <summary>
+    /// Adds the cached blobs a deferred <see cref="Render"/> left with the renderer's NineSlice batch to
+    /// <paramref name="textBatch"/>, to draw at (<paramref name="x"/>, <paramref name="y"/>) under
+    /// <paramref name="matrix"/>. False, adding nothing, when the text is not plain. Called by the NineSlice batch's flush.
+    /// </summary>
+    internal bool TryAddDeferredBlobs(RenderingLibrary.Graphics.TextBlobBatch textBatch, SKCanvas canvas, float x, float y, SKMatrix matrix) =>
+        _blobCache.Block != null && _blobCache.TryAddTo(textBatch, canvas, _blobCache.Block, x, y, matrix);
 
     /// <summary>
     /// The vertical shift applied to <c>GetAbsoluteY</c> before positioning <paramref name="textBlock"/>
@@ -1907,6 +1928,11 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
             public float VerticalOffset;
             // The blob's conservative bounds, read once since a blob never changes.
             public SKRect Bounds;
+            // What the blob was built from, so the renderer's text batch can build a merged blob (#8156).
+            public ushort[] Glyphs;
+            public SKPoint[] Positions;
+            public SKTypeface Typeface;
+            public float FontSize;
         }
 
         private struct BlobSegment
@@ -2024,6 +2050,55 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
                 }
                 bounds = any ? SKRect.Union(bounds, runBounds) : runBounds;
                 any = true;
+            }
+            return true;
+        }
+
+        /// <summary>
+        /// Adds the cached blobs, with their origin at (<paramref name="x"/>, <paramref name="y"/>) under
+        /// <paramref name="matrix"/>, to <paramref name="batch"/> when <see cref="TryPaintAt"/> would draw them and every
+        /// run is a plain fill of one color on a GPU canvas. False, with nothing added, otherwise.
+        /// </summary>
+        public bool TryAddTo(RenderingLibrary.Graphics.TextBlobBatch batch, SKCanvas canvas, TextBlock block, float x, float y, SKMatrix matrix)
+        {
+            if (_isFirstFrame || !ReferenceEquals(Block, block) || !batch.IsGpuCanvas(canvas))
+            {
+                return false;
+            }
+            TextPaintOptions resolved = TextPaintOptions.Default;
+            if (!_isBuilt)
+            {
+                Build(block, resolved);
+            }
+            if (_isUnsupported || !HasBuildFontSettings(resolved) || _segments.Count != 1 || _segments[0].HasMatrix
+                || _runs.Count == 0)
+            {
+                return false;
+            }
+            SKColor color = _runs[0].Style.TextColor;
+            for (int i = 0; i < _runs.Count; i++)
+            {
+                IStyle style = _runs[i].Style;
+                if (style.HaloColor != SKColor.Empty || style.TextColor != color)
+                {
+                    return false;
+                }
+            }
+
+            batch.Begin(canvas, matrix, color, _builtHinting, _builtEdging, _builtSubpixel, _runs.Count);
+            for (int i = 0; i < _runs.Count; i++)
+            {
+                BlobRun run = _runs[i];
+                batch.Add(new RenderingLibrary.Graphics.TextBlobBatch.Item
+                {
+                    Blob = run.Blob,
+                    Glyphs = run.Glyphs,
+                    Positions = run.Positions,
+                    Typeface = run.Typeface,
+                    FontSize = run.FontSize,
+                    X = x,
+                    Y = y + run.VerticalOffset,
+                });
             }
             return true;
         }
@@ -2245,7 +2320,17 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
                     {
                         continue;
                     }
-                    _runs.Add(new BlobRun { Blob = blob, Style = style, VerticalOffset = verticalOffset, Bounds = blob.Bounds });
+                    _runs.Add(new BlobRun
+                    {
+                        Blob = blob,
+                        Style = style,
+                        VerticalOffset = verticalOffset,
+                        Bounds = blob.Bounds,
+                        Glyphs = run.Glyphs.AsSpan().ToArray(),
+                        Positions = run.GlyphPositions.AsSpan().ToArray(),
+                        Typeface = run.Typeface,
+                        FontSize = font.Size,
+                    });
                 }
             }
             _segments.Add(new BlobSegment

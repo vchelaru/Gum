@@ -235,13 +235,28 @@ namespace RenderingLibrary.Graphics
         NineSliceVertexBatch? _nineSliceBatch;
 
         // Same-image NineSlices draw through one DrawVertices call on a GPU canvas (#8153).
-        internal NineSliceVertexBatch NineSliceBatch => _nineSliceBatch ??= new NineSliceVertexBatch(RenderStateChangeStatistics);
+        internal NineSliceVertexBatch NineSliceBatch => _nineSliceBatch ??= new NineSliceVertexBatch(RenderStateChangeStatistics, TextBatch);
 
         /// <summary>Test hook: false draws every NineSlice with its own lattice, as before #8153.</summary>
         internal bool BatchesNineSlices { get; set; } = true;
 
         // The batch NineSlices add to and texts defer into, or null outside a draw entry point.
         internal NineSliceVertexBatch? ActiveNineSliceBatch => _drawScopeDepth > 0 && BatchesNineSlices ? NineSliceBatch : null;
+
+        TextBlobBatch? _textBatch;
+
+        // Consecutive plain texts draw as one merged text blob on a GPU canvas (#8156).
+        internal TextBlobBatch TextBatch => _textBatch ??= new TextBlobBatch(RenderStateChangeStatistics);
+
+        /// <summary>Test hook: false draws every text on its own, as before #8156.</summary>
+        internal bool BatchesTexts
+        {
+            get => TextBatch.IsEnabled;
+            set => TextBatch.IsEnabled = value;
+        }
+
+        // The batch plain texts add to, or null outside a draw entry point.
+        internal TextBlobBatch? ActiveTextBatch => _drawScopeDepth > 0 && BatchesTexts ? TextBatch : null;
 
         private void EnterDrawScope() => _drawScopeDepth++;
 
@@ -254,10 +269,11 @@ namespace RenderingLibrary.Graphics
             }
         }
 
-        // Draws whatever the NineSlice and sprite batches hold. At most one of them is pending at a time.
+        // Draws whatever the NineSlice, text and sprite batches hold. At most one of them is pending at a time.
         private void FlushBatches()
         {
             _nineSliceBatch?.Flush();
+            _textBatch?.Flush();
             _spriteBatch?.Flush();
         }
 
@@ -265,6 +281,7 @@ namespace RenderingLibrary.Graphics
         {
             RenderStateChangeStatistics.Reset();
             _nineSliceBatch?.BeginFrame();
+            _textBatch?.BeginFrame();
             DisposeBakedImages();
             _referencedRenderTargetOwners.Clear();
             _renderTargetService.ClearUnusedRenderTargetsLastFrame();
@@ -634,9 +651,10 @@ namespace RenderingLibrary.Graphics
         /// </summary>
         internal IRenderableIpso? ClipAppliedByWalk { get; private set; }
 
-        // Sprites add themselves to SpriteBatch and NineSlices to NineSliceBatch; anything else that draws flushes them
-        // first so draw order holds. A NineSlice or Text decides itself whether it joins (or defers past) the pending
-        // NineSlice batch or flushes it. Containers draw nothing, so draws in separate containers still share a batch.
+        // Sprites add themselves to SpriteBatch, NineSlices to NineSliceBatch and plain texts to TextBatch; anything else
+        // that draws flushes them first so draw order holds. A NineSlice or Text decides itself whether it joins (or
+        // defers past) the pending NineSlice batch or flushes it, and a Text whether it joins the text batch. Containers
+        // draw nothing, so draws in separate containers still share a batch.
         private void RenderOne(IRenderableIpso renderable, SystemManagers managers)
         {
             IRenderableIpso inner = renderable is GraphicalUiElement element && element.RenderableComponent is IRenderableIpso contained
@@ -645,12 +663,18 @@ namespace RenderingLibrary.Graphics
             if (inner is Sprite)
             {
                 _nineSliceBatch?.Flush();
+                _textBatch?.Flush();
             }
             else if (inner is not InvisibleRenderable)
             {
-                if (inner is not NineSlice && inner is not global::SkiaGum.Text)
+                if (inner is not global::SkiaGum.Text)
                 {
-                    _nineSliceBatch?.Flush();
+                    if (inner is not NineSlice)
+                    {
+                        _nineSliceBatch?.Flush();
+                    }
+                    // A NineSlice draws over the texts before it, whether it batches or not.
+                    _textBatch?.Flush();
                 }
                 _spriteBatch?.Flush();
             }
