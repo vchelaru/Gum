@@ -60,6 +60,7 @@ internal sealed class TextBlobBatch
     private SKFontEdging _edging;
     private bool _subpixel;
     private SKPoint[] _positions = new SKPoint[64];
+    private ushort[] _glyphs = new ushort[64];
 
     private SKCanvas? _lastCheckedCanvas;
     private bool _isLastCheckedCanvasGpu;
@@ -213,30 +214,49 @@ internal sealed class TextBlobBatch
         _font.Hinting = _hinting;
         _font.Edging = _edging;
         _font.Subpixel = _subpixel;
-        for (int i = 0; i < count; i++)
+        // Consecutive items with the same typeface and size go into one positioned run, in order, since SkiaSharp
+        // allocates a managed run buffer for each run.
+        int groupStart = 0;
+        while (groupStart < count)
         {
-            ref Item item = ref _items[i];
-            float relativeX = item.X - x0;
-            float relativeY = item.Y - y0;
-            slot.Items[i] = item;
-            slot.Items[i].X = relativeX;
-            slot.Items[i].Y = relativeY;
-
-            _font.Typeface = item.Typeface;
-            _font.Size = item.FontSize;
-            int glyphCount = item.Glyphs.Length;
+            SKTypeface typeface = _items[groupStart].Typeface;
+            float fontSize = _items[groupStart].FontSize;
+            int groupEnd = groupStart;
+            int glyphCount = 0;
+            while (groupEnd < count && ReferenceEquals(_items[groupEnd].Typeface, typeface) && _items[groupEnd].FontSize == fontSize)
+            {
+                glyphCount += _items[groupEnd].Glyphs.Length;
+                groupEnd++;
+            }
             if (_positions.Length < glyphCount)
             {
                 _positions = new SKPoint[glyphCount * 2];
+                _glyphs = new ushort[glyphCount * 2];
             }
-            for (int g = 0; g < glyphCount; g++)
+
+            int glyph = 0;
+            for (int i = groupStart; i < groupEnd; i++)
             {
-                SKPoint position = item.Positions[g];
-                _positions[g] = new SKPoint(position.X + relativeX, position.Y + relativeY);
+                ref Item item = ref _items[i];
+                float relativeX = item.X - x0;
+                float relativeY = item.Y - y0;
+                slot.Items[i] = item;
+                slot.Items[i].X = relativeX;
+                slot.Items[i].Y = relativeY;
+                item.Glyphs.CopyTo(_glyphs, glyph);
+                for (int g = 0; g < item.Positions.Length; g++)
+                {
+                    SKPoint position = item.Positions[g];
+                    _positions[glyph++] = new SKPoint(position.X + relativeX, position.Y + relativeY);
+                }
             }
+
+            _font.Typeface = typeface;
+            _font.Size = fontSize;
             SKPositionedRunBuffer buffer = _builder.AllocatePositionedRun(_font, glyphCount);
-            buffer.SetGlyphs(item.Glyphs.AsSpan());
+            buffer.SetGlyphs(_glyphs.AsSpan(0, glyphCount));
             buffer.SetPositions(_positions.AsSpan(0, glyphCount));
+            groupStart = groupEnd;
         }
         // Items past the count would keep blobs of texts that left the run alive.
         Array.Clear(slot.Items, count, slot.Items.Length - count);
