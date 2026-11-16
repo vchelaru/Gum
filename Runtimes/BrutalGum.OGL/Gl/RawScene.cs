@@ -14,7 +14,10 @@ public static class RawScene
     static readonly string? Only = Environment.GetEnvironmentVariable("GUM_RAWONLY");
     public static long RecordTicks;
 
-    const int NsCount = 131, RectCount = 198, SpriteCount = 12, Cols = 22;
+    const int NsCount = 131, RectCount = 198, SpriteCount = 12;
+    // GUM_RAWWIDE=1: cells spaced so no text spills into the next cell (default layout: "Item N" overruns the 52 px cell into its neighbour).
+    static readonly bool Wide = Environment.GetEnvironmentVariable("GUM_RAWWIDE") == "1";
+    static readonly int Cols = Wide ? 15 : 22; static readonly float StepX = Wide ? 82 : 58, StepY = Wide ? 32 : 40, CellH = Wide ? 28 : 36, Base = Wide ? 20 : 24;
     static SKImage? _image;
     static SKTextBlob[] _blobs = null!;
     static ushort[][] _glyphs = null!;
@@ -26,7 +29,7 @@ public static class RawScene
     static readonly SKLattice Lattice = new() { XDivs = new[] { 8, 16 }, YDivs = new[] { 8, 16 } };
     static readonly SKSamplingOptions Linear = new(SKFilterMode.Linear);
 
-    static SKRect Cell(int k) { float x = 4 + (k % Cols) * 58, y = 4 + (k / Cols) * 40; return new SKRect(x, y, x + 52, y + 36); }
+    static SKRect Cell(int k) { float x = 4 + (k % Cols) * StepX, y = 4 + (k / Cols) * StepY; return new SKRect(x, y, x + 52, y + CellH); }
 
     static void Init(GRContext gr)
     {
@@ -88,13 +91,13 @@ public static class RawScene
         if (sprite)
             for (int s = 0; s < SpriteCount; s++)
             {
-                float x = 1200, y = 10 + s * 50;
+                float x = 1250, y = 10 + s * 50;
                 canvas.DrawImage(_image!, new SKRect(0, 0, 24, 24), new SKRect(x, y, x + 24, y + 24), Linear, _imgPaint);
             }
         RecordTicks = Stopwatch.GetTimestamp() - t0;
     }
 
-    static void DrawText(SKCanvas canvas, int k) { var r = Cell(k); canvas.DrawText(_blobs[k], r.Left + 8, r.Top + 24, _textPaint); }
+    static void DrawText(SKCanvas canvas, int k) { var r = Cell(k); canvas.DrawText(_blobs[k], r.Left + 8, r.Top + Base, _textPaint); }
 
     static readonly float[] Src = { 0, 8, 16, 24 };
     static void DstEdges(SKRect d, Span<float> xs, Span<float> ys)
@@ -195,7 +198,7 @@ public static class RawScene
         {
             var r = Cell(k); var rel = _glyphPos[k];
             if (_posScratch.Length < rel.Length) _posScratch = new SKPoint[rel.Length];
-            for (int g = 0; g < rel.Length; g++) _posScratch[g] = new SKPoint(rel[g].X + r.Left + 8, rel[g].Y + r.Top + 24);
+            for (int g = 0; g < rel.Length; g++) _posScratch[g] = new SKPoint(rel[g].X + r.Left + 8, rel[g].Y + r.Top + Base);
             _builder.AddPositionedRun(_glyphs[k], _font, _posScratch.AsSpan(0, rel.Length));
         }
         using var blob = _builder.Build();

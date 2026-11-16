@@ -610,8 +610,17 @@ namespace RenderingLibrary.Graphics
             {
                 SpriteBatch.Flush();
             }
+            if (SpikeCountCull && inner is not InvisibleRenderable)
+            {
+                // SPIKE #8116: how many draws does Skia's clip reject before they become GPU ops?
+                SpikeDraws++;
+                float l = inner.GetAbsoluteLeft(), t = inner.GetAbsoluteTop();
+                if (managers.Canvas.QuickReject(new SKRect(l, t, l + inner.Width, t + inner.Height))) SpikeRejected++;
+            }
             renderable.Render(managers);
         }
+        public static readonly bool SpikeCountCull = System.Environment.GetEnvironmentVariable("GUM_COUNTCULL") == "1";
+        public static long SpikeDraws, SpikeRejected;
 
         private void PreRender(IList<IRenderableIpso> renderables)
         {

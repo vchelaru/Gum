@@ -70,6 +70,7 @@ try
             },
             benchmarkPath);
         FlushProbe.Report(BenchmarkRunner.MeasuredFrames);
+        if (RenderingLibrary.Graphics.Renderer.SpikeCountCull) Console.WriteLine($"COUNTCULL draws {RenderingLibrary.Graphics.Renderer.SpikeDraws} rejected {RenderingLibrary.Graphics.Renderer.SpikeRejected} (all frames)");
         return;
     }
 
