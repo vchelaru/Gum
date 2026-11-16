@@ -41,7 +41,14 @@ internal sealed unsafe class GlTarget : IBrutalTarget
         _height = height;
     }
 
-    public SKCanvas Canvas => FlushProbe.NoDraw ? (_noDraw ??= new SKNoDrawCanvas(_width, _height)) : _ownActive ? _ownSurface!.Canvas : _direct.Canvas;
+    public SKCanvas Canvas => _picCanvas ?? (FlushProbe.NoDraw ? (_noDraw ??= new SKNoDrawCanvas(_width, _height)) : _ownActive ? _ownSurface!.Canvas : _direct.Canvas);
+    // SPIKE #8116 sgr agent: GUM_PIC=1 records Gum into an SKPictureRecorder, then plays the picture onto a no-op canvas and the
+    // real back buffer: splits managed walk+wrapper (record into SkRecord) from native Ganesh op creation (GPU playback).
+    private static readonly string? Pic = Environment.GetEnvironmentVariable("GUM_PIC");
+    private readonly SKPictureRecorder? _recorder = Environment.GetEnvironmentVariable("GUM_PIC") != null ? new SKPictureRecorder() : null;
+    private SKCanvas? _picCanvas;
+    private SKPicture? _variant;
+    private int _picFrame;
     private SKNoDrawCanvas? _noDraw; // SPIKE #8116: GUM_NODRAW=1 sends every Gum draw to a no-op canvas (walk-only cost)
 
     public void Begin()
@@ -64,6 +71,7 @@ internal sealed unsafe class GlTarget : IBrutalTarget
             _ownActive = true;
         }
         else _direct.Begin();
+        if (_recorder != null) _picCanvas = _recorder.BeginRecording(new SKRect(0, 0, _width, _height));
         FlushProbe.BeginEnd = System.Diagnostics.Stopwatch.GetTimestamp();
     }
 
@@ -77,6 +85,21 @@ internal sealed unsafe class GlTarget : IBrutalTarget
     public void End()
     {
         if (FlushProbe.Raw > 0) { FlushProbe.GlTargetGr = Gr; FlushProbe.DrawRaw(Canvas); }
+        if (_recorder != null)
+        {
+            long a = System.Diagnostics.Stopwatch.GetTimestamp();
+            _picCanvas = null;
+            using var pic = _recorder.EndRecording();
+            long b = System.Diagnostics.Stopwatch.GetTimestamp();
+            // GUM_PICNOOP=3,28,30 / none: from frame 300 on, play a frozen copy of that frame with the listed op codes turned into NOOPs
+            if (++_picFrame == 300 && FlushProbe.PicNoop != null) _variant = FlushProbe.MakeVariant(pic, FlushProbe.PicNoop);
+            long c = System.Diagnostics.Stopwatch.GetTimestamp();
+            if (Pic != "nogpu") _direct.Canvas.DrawPicture(_variant ?? pic);
+            long d = System.Diagnostics.Stopwatch.GetTimestamp();
+            FlushProbe.PicRec = a - FlushProbe.BeginEnd; FlushProbe.PicEnd = b - a; FlushProbe.PicNd = c - b; FlushProbe.PicGpu = d - c;
+            FlushProbe.PicOps = pic.ApproximateOperationCount; FlushProbe.PicBytes = pic.ApproximateBytesUsed;
+            if (_picFrame == 700) FlushProbe.OpHistogram(_variant ?? pic);
+        }
         FlushProbe.FlushStart = System.Diagnostics.Stopwatch.GetTimestamp();
         if (FlushProbe.Enabled)
         {

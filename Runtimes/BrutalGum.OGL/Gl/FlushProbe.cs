@@ -49,12 +49,55 @@ public static unsafe class FlushProbe
     // per frame: begin, record, flush, submit, endRest
     public static readonly List<double[]> Frames = new();
     public static long BeginStart, BeginEnd, FlushStart, FlushEnd, SubmitEnd, EndEnd;
+    public static long PicRec, PicEnd, PicNd, PicGpu, PicOps, PicBytes; // SPIKE #8116 sgr agent (GUM_PIC)
+
+    public static readonly string? PicNoop = Environment.GetEnvironmentVariable("GUM_PICNOOP");
+
+    public static SKPicture MakeVariant(SKPicture pic, string noop)
+    {
+        var codes = new HashSet<int>();
+        foreach (var s in noop.Split(',')) if (int.TryParse(s, out int c)) codes.Add(c);
+        byte[] b = pic.Serialize().ToArray();
+        int at = -1;
+        for (int i = 0; i + 8 <= b.Length; i++) if (BitConverter.ToUInt32(b, i) == 0x72656164) { at = i; break; }
+        int len = (int)BitConverter.ToUInt32(b, at + 4), p = at + 8, end = p + len, n = 0;
+        while (p < end)
+        {
+            uint w = BitConverter.ToUInt32(b, p); int op = (int)(w >> 24), size = (int)(w & 0xFFFFFF);
+            if (size == 0xFFFFFF) size = (int)BitConverter.ToUInt32(b, p + 4);
+            if (codes.Contains(op) && (w & 0xFFFFFF) != 0xFFFFFF) { BitConverter.GetBytes((36u << 24) | (w & 0xFFFFFF)).CopyTo(b, p); n++; }
+            p += size;
+        }
+        var v = SKPicture.Deserialize(b)!;
+        Console.WriteLine($"PICVAR noop'd {n} ops ({noop}); variant ops {v.ApproximateOperationCount}");
+        return v;
+    }
+
+    // Histogram of one frame's canvas ops: serialize the picture to SKP and walk the 'read' op stream (SkPictureFlat.h DrawType).
+    public static void OpHistogram(SKPicture pic)
+    {
+        byte[] b = pic.Serialize().ToArray();
+        int at = -1;
+        for (int i = 0; i + 8 <= b.Length; i++) if (BitConverter.ToUInt32(b, i) == 0x72656164) { at = i; break; }
+        if (at < 0) { Console.WriteLine("OPHIST no read tag"); return; }
+        int len = (int)BitConverter.ToUInt32(b, at + 4), p = at + 8, end = p + len;
+        var hist = new SortedDictionary<int, int>();
+        while (p < end)
+        {
+            uint w = BitConverter.ToUInt32(b, p); int op = (int)(w >> 24), size = (int)(w & 0xFFFFFF);
+            if (size == 0xFFFFFF) size = (int)BitConverter.ToUInt32(b, p + 4);
+            hist[op] = hist.TryGetValue(op, out int n) ? n + 1 : 1;
+            if (size <= 0) { Console.WriteLine($"OPHIST bad size at {p}"); break; }
+            p += size;
+        }
+        foreach (var kv in hist) Console.WriteLine($"OPHIST op {kv.Key}: {kv.Value}");
+    }
     public static double ToMs = 1000.0 / Stopwatch.Frequency;
 
     public static void FrameDone()
     {
         Frames.Add(new[] { (BeginEnd - BeginStart) * ToMs, (FlushStart - BeginEnd) * ToMs, (FlushEnd - FlushStart) * ToMs,
-            (SubmitEnd - FlushEnd) * ToMs, (EndEnd - SubmitEnd) * ToMs });
+            (SubmitEnd - FlushEnd) * ToMs, (EndEnd - SubmitEnd) * ToMs, PicRec * ToMs, PicEnd * ToMs, PicNd * ToMs, PicGpu * ToMs, PicOps, PicBytes });
         if (GlTime)
         {
             for (int i = 0; i < Count; i++) { FrameTicks[i].Add(Ticks[i]); FrameCalls[i].Add(Calls[i]); Ticks[i] = 0; Calls[i] = 0; }
@@ -67,7 +110,8 @@ public static unsafe class FlushProbe
     {
         if (Frames.Count == 0) return;
         var last = Frames.GetRange(Math.Max(0, Frames.Count - lastFrames), Math.Min(lastFrames, Frames.Count));
-        string[] names = { "Begin(reset+query)", "record", "gr.Flush(no submit)", "gr.Submit", "SGR End rest" };
+        string[] names = { "Begin(reset+query)", "record", "gr.Flush(no submit)", "gr.Submit", "SGR End rest",
+            "PIC gum->recorder", "PIC EndRecording", "PIC play->nodraw", "PIC play->gpu", "PIC ops", "PIC bytes" };
         for (int s = 0; s < names.Length; s++)
             Console.WriteLine($"PROBE {names[s]}: median {Median(last.ConvertAll(f => f[s])):F3} ms");
         if (!GlTime) return;
