@@ -1269,16 +1269,17 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
     /// single pass; otherwise Color is blended with <paramref name="tintBlendMode"/> (Modulate, or
     /// SrcIn for ColorTextureAlpha). The filter's tint is opaque because the paint's own alpha,
     /// which Skia applies to every image draw, already carries <see cref="Alpha"/>; an Alpha of 128
-    /// draws at half opacity, as on MonoGame.
+    /// draws at half opacity, as on MonoGame. Returns whether it set a filter; reading
+    /// <see cref="SKPaint.ColorFilter"/> back instead allocates a managed wrapper on every call.
     /// </summary>
-    protected void ApplyTextureTint(SKPaint paint, SKBlendMode tintBlendMode, bool skipOpaqueWhite = false)
+    protected bool ApplyTextureTint(SKPaint paint, SKBlendMode tintBlendMode, bool skipOpaqueWhite = false)
     {
         if (skipOpaqueWhite && ColorOperation != ColorOperation.Add && tintBlendMode == SKBlendMode.Modulate && Color.Alpha == 255
             && Color.Red == 255 && Color.Green == 255 && Color.Blue == 255)
         {
             // Opaque Modulate by white is the identity, but Skia still runs a color filter for it (about 0.0008 ms per
             // image draw). White is the default for every sprite and nine-slice.
-            return;
+            return false;
         }
 
         if (ColorOperation == ColorOperation.Add)
@@ -1300,6 +1301,7 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
             using SKColorFilter blendFilter = SKColorFilter.CreateBlendMode(Color.WithAlpha(255), tintBlendMode);
             paint.ColorFilter = blendFilter;
         }
+        return true;
     }
 
     /// <summary>

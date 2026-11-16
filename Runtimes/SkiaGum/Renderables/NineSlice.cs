@@ -276,9 +276,9 @@ public class NineSlice : RenderableShapeBase, IAnimatable, IAnimationChainRender
         // Modulate the image's texels by Color so the unified runtime's Color
         // property tints the nine-slice.
         SKPaint paint = base.GetPaint(boundingRect, absoluteRotation);
-        ApplyTextureTint(paint, SKBlendMode.Modulate, skipOpaqueWhite: true);
+        bool isTinted = ApplyTextureTint(paint, SKBlendMode.Modulate, skipOpaqueWhite: true);
         // The vertex batch can draw no filter or the Modulate tint filter as a vertex color; Add cannot batch.
-        _paintBatchTint = paint.ColorFilter == null ? SKColors.White
+        _paintBatchTint = !isTinted ? SKColors.White
             : ColorOperation == ColorOperation.Modulate ? Color.WithAlpha(255)
             : null;
         // Antialias on DrawImage anti-aliases the destination rect's edges. When
