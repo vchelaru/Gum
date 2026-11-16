@@ -5,9 +5,20 @@ using RenderingLibrary.Graphics;
 
 namespace MonoGameGum.Tests.RenderingLibraries;
 
-/// <summary>Minimal renderable with settable absolute-style bounds, batch key and sort key.</summary>
-internal sealed class OrdererFake : IRenderableIpso
+/// <summary>
+/// Minimal renderable with settable absolute-style bounds, batch key and sort key. It draws inside
+/// its box unless <see cref="ReportsDrawnBounds"/> is false, which makes its drawn area unknown.
+/// </summary>
+internal sealed class OrdererFake : IRenderableIpso, IDrawnBoundsRenderable
 {
+    public bool ReportsDrawnBounds { get; set; } = true;
+
+    public bool TryGetLocalDrawnBounds(out float left, out float top, out float right, out float bottom)
+    {
+        this.GetLocalLayoutBounds(out left, out top, out right, out bottom);
+        return ReportsDrawnBounds;
+    }
+
     public OrdererFake(string name, string batchKey = "SpriteBatch")
     {
         Name = name;
@@ -56,6 +67,14 @@ internal static class BatchOrdererScenes
     public const string Sprites = "SpriteBatch";
     public const string Shapes = "Apos.Shapes";
 
+    /// <summary>
+    /// <see cref="AddChild"/> with <paramref name="x"/>, <paramref name="y"/> given in absolute
+    /// coordinates and stored relative to <paramref name="parent"/>, as a real position is.
+    /// </summary>
+    public static OrdererFake AddChildAtAbsolute(
+        OrdererFake parent, string name, string batchKey, float x, float y, float width, float height, object? sortKey = null) =>
+        AddChild(parent, name, batchKey, x - parent.GetAbsoluteX(), y - parent.GetAbsoluteY(), width, height, sortKey);
+
     public static OrdererFake AddChild(
         OrdererFake parent, string name, string batchKey, float x, float y, float width, float height, object? sortKey = null)
     {
@@ -101,10 +120,10 @@ internal static class BatchOrdererScenes
         {
             float y = i * 30;
             OrdererFake row = new OrdererFake($"row{i}", "") { X = 0, Y = y, Width = 300, Height = 28 };
-            AddChild(row, $"bg{i}", Shapes, 0, y, 300, 28);
-            AddChild(row, $"icon{i}", Sprites, 4, y + 4, 20, 20, iconTexture);
-            AddChild(row, $"label{i}", Sprites, 30, y + 6, 180, 16, fontTexture);
-            AddChild(row, $"badge{i}", Shapes, 250, y + 6, 40, 16);
+            AddChildAtAbsolute(row, $"bg{i}", Shapes, 0, y, 300, 28);
+            AddChildAtAbsolute(row, $"icon{i}", Sprites, 4, y + 4, 20, 20, iconTexture);
+            AddChildAtAbsolute(row, $"label{i}", Sprites, 30, y + 6, 180, 16, fontTexture);
+            AddChildAtAbsolute(row, $"badge{i}", Shapes, 250, y + 6, 40, 16);
             roots.Add(row);
         }
         return roots;
@@ -118,10 +137,10 @@ internal static class BatchOrdererScenes
         {
             float x = i * 60;
             OrdererFake column = new OrdererFake($"col{i}", "") { X = x, Y = 0, Width = 58, Height = 200 };
-            AddChild(column, $"bg{i}", Shapes, x, 0, 58, 200);
-            AddChild(column, $"icon{i}", Sprites, x + 4, 4, 20, 20, iconTexture);
-            AddChild(column, $"label{i}", Sprites, x + 4, 30, 50, 16, fontTexture);
-            AddChild(column, $"badge{i}", Shapes, x + 4, 150, 40, 16);
+            AddChildAtAbsolute(column, $"bg{i}", Shapes, x, 0, 58, 200);
+            AddChildAtAbsolute(column, $"icon{i}", Sprites, x + 4, 4, 20, 20, iconTexture);
+            AddChildAtAbsolute(column, $"label{i}", Sprites, x + 4, 30, 50, 16, fontTexture);
+            AddChildAtAbsolute(column, $"badge{i}", Shapes, x + 4, 150, 40, 16);
             roots.Add(column);
         }
         return roots;

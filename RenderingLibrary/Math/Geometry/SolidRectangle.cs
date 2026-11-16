@@ -213,6 +213,13 @@ public class SolidRectangle : SpriteBatchRenderableBase, IRenderableIpso, IVisib
         }
     }
 
+    /// <summary>The layout box, which is exactly what <see cref="Render"/> fills.</summary>
+    public override bool TryGetLocalDrawnBounds(out float left, out float top, out float right, out float bottom)
+    {
+        this.GetLocalLayoutBounds(out left, out top, out right, out bottom);
+        return true;
+    }
+
     /// <inheritdoc/>
     public bool Visible
     {

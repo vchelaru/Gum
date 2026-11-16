@@ -447,6 +447,23 @@ public partial class GraphicalUiElement
 
     public virtual object? BatchSortKey => mContainedObjectAsIpso?.BatchSortKey;
 
+    // The contained renderable is what draws, and this wrapper's position and size are its own.
+    // With no renderable nothing draws, so the box alone is accurate.
+    bool IDrawnBoundsRenderable.TryGetLocalDrawnBounds(out float left, out float top, out float right, out float bottom)
+    {
+        if (mContainedObjectAsIpso == null)
+        {
+            ((IPositionedSizedObject)this).GetLocalLayoutBounds(out left, out top, out right, out bottom);
+            return true;
+        }
+        if (mContainedObjectAsIpso is IDrawnBoundsRenderable drawnBounds)
+        {
+            return drawnBounds.TryGetLocalDrawnBounds(out left, out top, out right, out bottom);
+        }
+        left = top = right = bottom = 0;
+        return false;
+    }
+
     public virtual void StartBatch(ISystemManagers systemManagers) => mContainedObjectAsIpso?.StartBatch(systemManagers);
     public virtual void EndBatch(ISystemManagers systemManagers) => mContainedObjectAsIpso?.EndBatch(systemManagers);
 

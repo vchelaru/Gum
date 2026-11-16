@@ -19,8 +19,14 @@ namespace MonoGameGum.Tests.RenderingLibraries;
 /// </summary>
 public class BatchKeyGroupedOrdererTests : BaseTestClass
 {
-    private sealed class FakeRenderable : IRenderableIpso
+    private sealed class FakeRenderable : IRenderableIpso, IDrawnBoundsRenderable
     {
+        public bool TryGetLocalDrawnBounds(out float left, out float top, out float right, out float bottom)
+        {
+            this.GetLocalLayoutBounds(out left, out top, out right, out bottom);
+            return true;
+        }
+
         public FakeRenderable(string name, string batchKey = "SpriteBatch")
         {
             Name = name;
@@ -687,7 +693,8 @@ public class BatchKeyGroupedOrdererTests : BaseTestClass
 
         FakeRenderable container = new FakeRenderable("container", "") { X = 50, Y = 0, Width = 10, Height = 10 };
         FakeRenderable containerChild = AddChild(container, "containerChild");
-        containerChild.X = 50; containerChild.Y = 0; containerChild.Width = 10; containerChild.Height = 10;
+        // Positions are relative to the parent, so the child sits exactly on the container.
+        containerChild.X = 0; containerChild.Y = 0; containerChild.Width = 10; containerChild.Height = 10;
 
         BatchKeyGroupedOrderer.Instance.ResetBreakTally();
         Layer layer = BuildLayer(clip, container);
@@ -866,22 +873,21 @@ public class BatchKeyGroupedOrdererTests : BaseTestClass
     }
 
     [Fact]
-    public void BuildDrawList_ChildBoundsOutsideParent_FallsBackToParentBoundsForOverlap()
+    public void BuildDrawList_TurnedChildWhoseUnturnedBoxIsOutsideParent_StaysAboveTheBackground()
     {
-        // Reproduces the scrollbar arrow icon bug: a child renderable whose computed bounds
-        // sit outside its parent's bounds (because of rotation/origin/units the orderer
-        // can't model directly). Without the parent-fallback, the icon has no precedence
-        // edges to anything in its subtree — the topological sort's "stay on the current
-        // batch key" tiebreaker then pulls it forward, ahead of the background it should
-        // paint on top of. With the fallback, icon's effective bounds become the parent's,
-        // restoring painter's order.
+        // The scrollbar arrow icon shape: a turned child whose position (its turned top-left)
+        // puts its unturned box outside the parent, while the turned draw lands on the parent's
+        // background. The orderer turns the drawn bounds about the top-left, so the icon keeps
+        // its edge from the background; without it the "stay on the current batch key"
+        // tiebreaker would pull the icon ahead of the background it paints on.
         //
-        // Setup mirrors the real-world shape:
+        // Setup:
         //   - previousSpriteBatch establishes currentBucket=SpriteBatch.
-        //   - buttonContainer is an empty-key parent (mimicking a ButtonInstance whose own
-        //     visible draw is none — only its children paint).
+        //   - buttonContainer is an empty-key parent (a ButtonInstance whose own visible draw is
+        //     none; only its children paint).
         //   - background is the button's SB-keyed painted background.
-        //   - icon's computed bounds sit far outside buttonContainer.
+        //   - icon's unturned box (x 60..92) misses buttonContainer (x 0..50); turned 90 degrees
+        //     about its top-left it covers x 28..60, over the background.
         FakeRenderable previousSpriteBatch = new FakeRenderable("previous", "SpriteBatch")
         {
             X = 0, Y = 0, Width = 100, Height = 30,
@@ -896,10 +902,11 @@ public class BatchKeyGroupedOrdererTests : BaseTestClass
         background.Width = 50;
         background.Height = 50;
         FakeRenderable icon = AddChild(buttonContainer, "icon", "SpriteBatch");
-        icon.X = 500;
-        icon.Y = 500;
+        icon.X = 60;
+        icon.Y = 10;
         icon.Width = 32;
         icon.Height = 32;
+        icon.Rotation = 90;
 
         Layer layer = BuildLayer(previousSpriteBatch, buttonContainer);
         List<DrawCommand> commands = new List<DrawCommand>();

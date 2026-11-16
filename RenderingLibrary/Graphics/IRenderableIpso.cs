@@ -46,6 +46,22 @@ public interface IHasRenderableComponent
 }
 
 /// <summary>
+/// Reports the area a renderable draws to, which can be larger than its layout box: text lines past
+/// <c>Height</c>, a drop shadow, anti-aliasing, a line's stroke. <c>BatchKeyGroupedOrderer</c> reads it
+/// to decide which draws overlap and so must keep their order. A renderable that does not implement
+/// this, or returns false, is treated as overlapping every other draw.
+/// </summary>
+public interface IDrawnBoundsRenderable
+{
+    /// <summary>
+    /// Writes a rectangle that contains every pixel this renderable draws, in world units relative to
+    /// its absolute top-left before rotation (the caller applies the absolute rotation), and returns
+    /// true. Returns false when the drawn area is not known.
+    /// </summary>
+    bool TryGetLocalDrawnBounds(out float left, out float top, out float right, out float bottom);
+}
+
+/// <summary>
 /// Implemented by renderables that can act as a render target: their children are drawn into an
 /// offscreen texture which is then blitted back to the screen, optionally post-processed. This is
 /// the shared home for render-target state that is NOT universal to every renderable, so the

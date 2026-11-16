@@ -1310,6 +1310,59 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
     public bool RequiresStencilBuffer =>
         TextRenderingMode == TextRenderingMode.CharacterByCharacter && Renderer.IsAlphaOnlyBlend(BlendState);
 
+    /// <summary>
+    /// The layout box joined with the block the lines draw in, placed by the alignment the way
+    /// <see cref="UpdateIpsoForRendering"/> places it, so lines past <see cref="Height"/> or wider than
+    /// the box count. Padded by 2 pixels for glyphs that overhang their cell, plus the drop shadow
+    /// offset, plus a twentieth of the width when a pinned measurement font lets the drawn width
+    /// differ from the measured one.
+    /// </summary>
+    public override bool TryGetLocalDrawnBounds(out float left, out float top, out float right, out float bottom)
+    {
+        float boxWidth = EffectiveWidth;
+        float boxHeight = EffectiveHeight;
+        float textWidth = WrappedTextWidth;
+        float textHeight = WrappedTextHeight;
+
+        float textLeft = 0;
+        if (HorizontalAlignment == HorizontalAlignment.Center)
+        {
+            textLeft = (boxWidth - textWidth) / 2.0f;
+        }
+        else if (HorizontalAlignment == HorizontalAlignment.Right)
+        {
+            textLeft = boxWidth - textWidth;
+        }
+        float textTop = TextHitTesting.GetVerticalAlignmentOffset(VerticalAlignment, boxHeight, textHeight);
+
+        left = System.Math.Min(System.Math.Min(0, boxWidth), textLeft);
+        right = System.Math.Max(System.Math.Max(0, boxWidth), textLeft + textWidth);
+        top = System.Math.Min(System.Math.Min(0, boxHeight), textTop);
+        bottom = System.Math.Max(System.Math.Max(0, boxHeight), textTop + textHeight);
+
+        float horizontalPadding = 2;
+        if (mMeasurementFont != null)
+        {
+            horizontalPadding += textWidth / 20;
+        }
+        float verticalPadding = 2;
+        left -= horizontalPadding;
+        right += horizontalPadding;
+        top -= verticalPadding;
+        bottom += verticalPadding;
+
+        if (HasDropshadow)
+        {
+            float shadowX = DropshadowOffsetX * EffectiveFontScale;
+            float shadowY = DropshadowOffsetY * EffectiveFontScale;
+            left += System.Math.Min(0, shadowX);
+            right += System.Math.Max(0, shadowX);
+            top += System.Math.Min(0, shadowY);
+            bottom += System.Math.Max(0, shadowY);
+        }
+        return true;
+    }
+
     // The block the alpha-only blends apply to: the measured text plus 2 pixels, plus the drop shadow
     // offset, matching the clip Skia's Text uses. The origin and rotation are the ones DrawTextLines uses.
     private void GetAlphaMaskBounds(out Vector2 topLeft, out Vector2 size, out float rotationRadians)

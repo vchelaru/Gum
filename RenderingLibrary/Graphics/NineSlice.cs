@@ -590,6 +590,29 @@ public class NineSlice : SpriteBatchRenderableBase,
         RefreshSpriteDimensions();
     }
 
+    /// <summary>
+    /// The layout box, moved by the animation frame's offset, when one texture holds every piece:
+    /// its borders shrink to fit a small box. Unknown when each piece has its own texture, because
+    /// those pieces keep their texture size and spill out of a box smaller than they are.
+    /// </summary>
+    public override bool TryGetLocalDrawnBounds(out float left, out float top, out float right, out float bottom)
+    {
+        this.GetLocalLayoutBounds(out left, out top, out right, out bottom);
+
+        bool usesMulti = mSprites[(int)NineSliceSections.TopLeft].Texture != mSprites[(int)NineSliceSections.Top].Texture;
+        if (usesMulti)
+        {
+            return false;
+        }
+
+        (float offsetX, float offsetY) = AnimationLogic.GetRenderOffset(0);
+        left += System.Math.Min(0, offsetX);
+        right += System.Math.Max(0, offsetX);
+        top += System.Math.Min(0, offsetY);
+        bottom += System.Math.Max(0, offsetY);
+        return true;
+    }
+
     public override void Render(ISystemManagers managers)
     {
         //if (AbsoluteVisible && Width > 0 && Height > 0)

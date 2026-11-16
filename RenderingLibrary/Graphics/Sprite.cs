@@ -550,6 +550,25 @@ public class Sprite : SpriteBatchRenderableBase,
         }
     }
 
+    /// <summary>
+    /// The layout box (texture regions, tiling and flips all land inside it), moved by the current
+    /// animation frame's offset when one is playing.
+    /// </summary>
+    public override bool TryGetLocalDrawnBounds(out float left, out float top, out float right, out float bottom)
+    {
+        this.GetLocalLayoutBounds(out left, out top, out right, out bottom);
+        if (this.CurrentFrameIndex < CurrentChain?.Count)
+        {
+            (float offsetX, float offsetY) = AnimationLogic.CurrentOffset;
+            left += System.Math.Min(0, offsetX);
+            right += System.Math.Max(0, offsetX);
+            // GetRenderOffset negates Y: a positive offset moves the frame up.
+            top += System.Math.Min(0, -offsetY);
+            bottom += System.Math.Max(0, -offsetY);
+        }
+        return true;
+    }
+
     private void RenderTiledSprite(SpriteRenderer spriteRenderer, SystemManagers managers)
     {
         if(SourceRectangle == null || SourceRectangle.Value.Width <= 0 || SourceRectangle.Value.Height <= 0 || Texture == null)

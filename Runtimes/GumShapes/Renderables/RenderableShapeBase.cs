@@ -564,6 +564,36 @@ public abstract class RenderableShapeBase : RenderableBase, Gum.GueDeriving.IBle
     public bool HasVisibleOutput => IsFilled || StrokeWidth > 0;
 
     /// <summary>
+    /// How far past the layout box the body draws. A rectangle, circle or arc is inset to its box,
+    /// so only a pixel of anti-aliasing reaches past it.
+    /// </summary>
+    protected virtual float DrawnOutsetPastBox => 1;
+
+    /// <summary>
+    /// The layout box grown by <see cref="DrawnOutsetPastBox"/>, joined with the drop shadow: the
+    /// box moved by the shadow offset and grown by the blur, which reaches that far past the edge.
+    /// </summary>
+    public override bool TryGetLocalDrawnBounds(out float left, out float top, out float right, out float bottom)
+    {
+        this.GetLocalLayoutBounds(out float boxLeft, out float boxTop, out float boxRight, out float boxBottom);
+        float outset = DrawnOutsetPastBox;
+        left = boxLeft - outset;
+        top = boxTop - outset;
+        right = boxRight + outset;
+        bottom = boxBottom + outset;
+
+        if (HasDropshadow)
+        {
+            float shadowOutset = outset + System.Math.Max(System.Math.Abs(DropshadowBlurX), System.Math.Abs(DropshadowBlurY));
+            left = System.Math.Min(left, boxLeft + DropshadowOffsetX - shadowOutset);
+            top = System.Math.Min(top, boxTop + DropshadowOffsetY - shadowOutset);
+            right = System.Math.Max(right, boxRight + DropshadowOffsetX + shadowOutset);
+            bottom = System.Math.Max(bottom, boxBottom + DropshadowOffsetY + shadowOutset);
+        }
+        return true;
+    }
+
+    /// <summary>
     /// Returns the (effectiveRadius_world, effectiveAaSize_screenPx, alphaScale) trio to hand
     /// to Apos.Shapes' <c>DrawCircle</c> for a shadow centered on a circular shape of nominal
     /// radius <paramref name="hostRadius"/>. Anchors the smoothstep falloff so α = 0.5 sits

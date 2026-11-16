@@ -44,6 +44,22 @@ public class InvisibleRenderable : RenderableBase, ICloneable, IRenderableIpso
 
     }
 
+    /// <summary>
+    /// The layout box. It draws nothing itself, but a container's box is what keeps its children
+    /// after it in <c>BatchKeyGroupedOrderer</c>. A derived class may draw in <see cref="Render"/>,
+    /// so it stays unknown unless it overrides this.
+    /// </summary>
+    public override bool TryGetLocalDrawnBounds(out float left, out float top, out float right, out float bottom)
+    {
+        if (GetType() != typeof(InvisibleRenderable))
+        {
+            return base.TryGetLocalDrawnBounds(out left, out top, out right, out bottom);
+        }
+
+        this.GetLocalLayoutBounds(out left, out top, out right, out bottom);
+        return true;
+    }
+
     object ICloneable.Clone()
     {
         return Clone();

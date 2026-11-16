@@ -71,11 +71,11 @@ public class BatchKeyGroupedOrdererPinTests : BaseTestClass
             // Cards 0-2 are spread out; card 3 overlaps card 2.
             float dx = card < 3 ? card * 100 : 2 * 100 + 40;
             OrdererFake container = new OrdererFake($"card{card}", "") { X = dx, Y = 0, Width = 80, Height = 112 };
-            AddChild(container, $"bg{card}", Shapes, dx, 0, 80, 112);
-            OrdererFake inner = AddChild(container, $"inner{card}", "", dx + 2, 2, 76, 108);
-            AddChild(inner, $"rank{card}", Sprites, dx + 5, 4, 14, 30, font);
-            AddChild(inner, $"suit{card}", Sprites, dx + 10, 40, 40, 40, icon);
-            AddChild(container, $"border{card}", Shapes, dx, 0, 80, 112);
+            AddChildAtAbsolute(container, $"bg{card}", Shapes, dx, 0, 80, 112);
+            OrdererFake inner = AddChildAtAbsolute(container, $"inner{card}", "", dx + 2, 2, 76, 108);
+            AddChildAtAbsolute(inner, $"rank{card}", Sprites, dx + 5, 4, 14, 30, font);
+            AddChildAtAbsolute(inner, $"suit{card}", Sprites, dx + 10, 40, 40, 40, icon);
+            AddChildAtAbsolute(container, $"border{card}", Shapes, dx, 0, 80, 112);
             roots.Add(container);
         }
         return BuildLayer(roots);
@@ -103,13 +103,13 @@ public class BatchKeyGroupedOrdererPinTests : BaseTestClass
         items.Add(new OrdererFake("b", Sprites) { X = 20, Y = 0, Width = 10, Height = 10, BatchSortKey = tex });
 
         OrdererFake clip = new OrdererFake("clip", Sprites) { X = 100, Y = 0, Width = 80, Height = 80, ClipsChildren = true };
-        AddChild(clip, "c1", Shapes, 105, 5, 20, 20);
-        AddChild(clip, "c2", Sprites, 140, 5, 20, 20, tex);
-        AddChild(clip, "c3", Shapes, 105, 40, 20, 20);
-        OrdererFake nestedClip = AddChild(clip, "nestedClip", Sprites, 130, 30, 40, 40);
+        AddChildAtAbsolute(clip, "c1", Shapes, 105, 5, 20, 20);
+        AddChildAtAbsolute(clip, "c2", Sprites, 140, 5, 20, 20, tex);
+        AddChildAtAbsolute(clip, "c3", Shapes, 105, 40, 20, 20);
+        OrdererFake nestedClip = AddChildAtAbsolute(clip, "nestedClip", Sprites, 130, 30, 40, 40);
         nestedClip.ClipsChildren = true;
-        AddChild(nestedClip, "n1", Shapes, 132, 32, 10, 10);
-        AddChild(nestedClip, "n2", Sprites, 150, 32, 10, 10, tex);
+        AddChildAtAbsolute(nestedClip, "n1", Shapes, 132, 32, 10, 10);
+        AddChildAtAbsolute(nestedClip, "n2", Sprites, 150, 32, 10, 10, tex);
         items.Add(clip);
 
         items.Add(new OrdererFake("d", Shapes) { X = 200, Y = 0, Width = 10, Height = 10 });
@@ -153,8 +153,8 @@ public class BatchKeyGroupedOrdererPinTests : BaseTestClass
     [Fact]
     public void NestedCards_Pinned()
     {
-        Run(NestedCards(), out string tallies).ShouldBe("card0,card1,bg0,bg1,inner0,inner1,border1,rank0,rank1,rank2,rank3,suit0,suit1,suit2,suit3,card2,border0,bg2,inner2,border2,card3,bg3,inner3,border3");
-        tallies.ShouldBe("1/2/0");
+        Run(NestedCards(), out string tallies).ShouldBe("card0,card1,card2,bg0,bg1,bg2,inner0,inner1,inner2,rank0,rank1,rank2,suit0,suit1,suit2,border0,border1,border2,card3,bg3,inner3,rank3,suit3,border3");
+        tallies.ShouldBe("4/2/0");
     }
 
     [Fact]
@@ -167,8 +167,8 @@ public class BatchKeyGroupedOrdererPinTests : BaseTestClass
     [Fact]
     public void WindowBoundaries_Pinned()
     {
-        Run(WindowBoundaries(), out string tallies).ShouldBe("a,b,BeginClip:clip,clip,c1,c2,c3,BeginClip:nestedClip,nestedClip,n1,n2,EndClip:nestedClip,EndClip:clip,e,d,f,target");
-        tallies.ShouldBe("1/6/4");
+        Run(WindowBoundaries(), out string tallies).ShouldBe("a,b,BeginClip:clip,clip,c2,c1,c3,BeginClip:nestedClip,nestedClip,n2,n1,EndClip:nestedClip,EndClip:clip,d,f,target,e");
+        tallies.ShouldBe("0/5/5");
     }
 
     [Fact]
@@ -183,8 +183,8 @@ public class BatchKeyGroupedOrdererPinTests : BaseTestClass
     {
         string order = Run(VerticalList165(), out string tallies);
         order.Split(',').Length.ShouldBe(165);
-        Digest(order).ShouldBe(324826963u);
-        tallies.ShouldBe("1/2/0");
+        Digest(order).ShouldBe(1316084461u);
+        tallies.ShouldBe("0/2/0");
     }
 
     [Fact]
@@ -192,7 +192,7 @@ public class BatchKeyGroupedOrdererPinTests : BaseTestClass
     {
         string order = Run(HorizontalList165(), out string tallies);
         order.Split(',').Length.ShouldBe(165);
-        Digest(order).ShouldBe(784091185u);
-        tallies.ShouldBe("1/2/0");
+        Digest(order).ShouldBe(3922243555u);
+        tallies.ShouldBe("0/2/0");
     }
 }

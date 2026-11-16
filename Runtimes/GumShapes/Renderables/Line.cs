@@ -20,6 +20,10 @@ internal class Line : RenderableShapeBase
         set;
     }
 
+    // The stroke is centered on the segment between the box's corners, and a round cap or the
+    // anti-alias fringe reaches past the endpoints by up to half the stroke.
+    protected override float DrawnOutsetPastBox => System.Math.Max(0, StrokeWidth) / 2 + 1;
+
     public override void Render(ISystemManagers managers)
     {
         // Issue #2937 — re-open the shared ShapeBatch with this shape's blend if it differs.
