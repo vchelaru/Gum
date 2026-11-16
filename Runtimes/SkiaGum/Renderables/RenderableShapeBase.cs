@@ -925,8 +925,10 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
 
             var rotation = this.GetAbsoluteRotation();
             var applyRotation = rotation != 0;
+            bool spikeWasValid = global::RenderingLibrary.Graphics.Renderer.SpikeMatrixValid;
             if (applyRotation)
             {
+                global::RenderingLibrary.Graphics.Renderer.SpikeMatrixValid = false;
                 var oldX = boundingRect.Left;
                 var oldY = boundingRect.Top;
 
@@ -978,6 +980,7 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
             if (applyRotation)
             {
                 canvas.Restore();
+                global::RenderingLibrary.Graphics.Renderer.SpikeMatrixValid = spikeWasValid;
             }
         }
     }

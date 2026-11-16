@@ -318,6 +318,10 @@ public class NineSlice : RenderableShapeBase, IAnimatable, IAnimationChainRender
             return;
         }
 
+        bool spikeWasValid = global::RenderingLibrary.Graphics.Renderer.SpikeMatrixValid;
+        global::RenderingLibrary.Graphics.Renderer.SpikeMatrixValid = false;
+        try
+        {
         using (new SKAutoCanvasRestore(canvas, true))
         {
             if (hasOffset)
@@ -344,6 +348,8 @@ public class NineSlice : RenderableShapeBase, IAnimatable, IAnimationChainRender
 
             DrawBoundAtOrigin(boundingRect, canvas, absoluteRotation);
         }
+        }
+        finally { global::RenderingLibrary.Graphics.Renderer.SpikeMatrixValid = spikeWasValid; }
     }
 
     // Nearest sampling picks a texel by where a pixel center falls, and a non-antialiased rectangle covers the pixels
@@ -359,7 +365,7 @@ public class NineSlice : RenderableShapeBase, IAnimatable, IAnimationChainRender
             return rect;
         }
 
-        SKMatrix matrix = canvas.TotalMatrix;
+        SKMatrix matrix = global::RenderingLibrary.Graphics.Renderer.SpikeTotalMatrix(canvas);
         if (matrix.SkewX != 0 || matrix.SkewY != 0 || matrix.Persp0 != 0 || matrix.Persp1 != 0
             || matrix.ScaleX == 0 || matrix.ScaleY == 0)
         {
@@ -388,6 +394,20 @@ public class NineSlice : RenderableShapeBase, IAnimatable, IAnimationChainRender
 
     private bool _movedBySnapping;
 
+    // SPIKE #8116 walk2: GUM_NSNOSAVE=1 draws an unscaled lattice at its destination without Save/Translate/Scale/Restore,
+    // and reads the image size from a managed cache instead of two P/Invokes per read.
+    internal static readonly bool SpikeNsNoSave = Environment.GetEnvironmentVariable("GUM_NSNOSAVE") == "1";
+    private SKImage? _spikeSizeImage;
+    private int _spikeImageW, _spikeImageH;
+    private int SpikeImageWidth { get { SpikeEnsureSize(); return _spikeImageW; } }
+    private int SpikeImageHeight { get { SpikeEnsureSize(); return _spikeImageH; } }
+    private void SpikeEnsureSize()
+    {
+        SKImage image = Image!;
+        if (!SpikeNsNoSave) { _spikeImageW = image.Width; _spikeImageH = image.Height; return; }
+        if (!ReferenceEquals(_spikeSizeImage, image)) { _spikeSizeImage = image; _spikeImageW = image.Width; _spikeImageH = image.Height; }
+    }
+
     private void DrawBoundAtOrigin(SKRect boundingRect, SKCanvas canvas, float absoluteRotation)
     {
         _movedBySnapping = false;
@@ -408,8 +428,8 @@ public class NineSlice : RenderableShapeBase, IAnimatable, IAnimationChainRender
         {
             srcLeft = 0;
             srcTop = 0;
-            srcRight = Image!.Width;
-            srcBottom = Image.Height;
+            srcRight = SpikeImageWidth;
+            srcBottom = SpikeImageHeight;
         }
 
         int usedWidth = srcRight - srcLeft;
@@ -576,7 +596,7 @@ public class NineSlice : RenderableShapeBase, IAnimatable, IAnimationChainRender
             return false;
         }
 
-        if (srcLeft < 0 || srcTop < 0 || srcLeft + usedWidth > Image!.Width || srcTop + usedHeight > Image.Height)
+        if (srcLeft < 0 || srcTop < 0 || srcLeft + usedWidth > SpikeImageWidth || srcTop + usedHeight > SpikeImageHeight)
         {
             return false;
         }
@@ -601,7 +621,7 @@ public class NineSlice : RenderableShapeBase, IAnimatable, IAnimationChainRender
         // The lattice and the per-section draws only agree when every edge lands exactly on a device pixel; at a
         // fractional edge the two round differently, on CPU and GPU surfaces. Rotated or skewed canvases are not
         // axis aligned, so their edges cannot be checked.
-        SKMatrix matrix = canvas.TotalMatrix;
+        SKMatrix matrix = global::RenderingLibrary.Graphics.Renderer.SpikeTotalMatrix(canvas);
         if (matrix.SkewX != 0 || matrix.SkewY != 0
             || !IsOnDevicePixel(matrix.ScaleX * boundingRect.Left + matrix.TransX)
             || !IsOnDevicePixel(matrix.ScaleX * (boundingRect.Left + borders.DestLeft) + matrix.TransX)
@@ -664,16 +684,23 @@ public class NineSlice : RenderableShapeBase, IAnimatable, IAnimationChainRender
         _latticeYDivs[0] = srcTop + fullOutsideH;
         _latticeYDivs[1] = srcTop + usedHeight - fullOutsideH;
         SKLattice lattice = new() { XDivs = _latticeXDivs, YDivs = _latticeYDivs };
-        if (srcLeft != 0 || srcTop != 0 || usedWidth != Image.Width || usedHeight != Image.Height)
+        if (srcLeft != 0 || srcTop != 0 || usedWidth != SpikeImageWidth || usedHeight != SpikeImageHeight)
         {
             lattice.Bounds = SKRectI.Create(srcLeft, srcTop, usedWidth, usedHeight);
         }
 
+        if (SpikeNsNoSave && scale == 1f)
+        {
+            canvas.DrawImageLattice(Image, lattice, boundingRect, paint);
+        }
+        else
+        {
         canvas.Save();
         canvas.Translate(boundingRect.Left, boundingRect.Top);
         canvas.Scale(scale);
         canvas.DrawImageLattice(Image, lattice, new SKRect(0, 0, boundingRect.Width / scale, boundingRect.Height / scale), paint);
         canvas.Restore();
+        }
         DrawStatistics?.RecordDrawCall();
         return true;
     }

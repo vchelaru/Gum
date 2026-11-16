@@ -13,7 +13,7 @@ namespace GumSamples.Benchmark;
 internal static class BenchmarkRunner
 {
     public const int WarmupFrames = 600; // a laptop GPU idles at a low clock; 30 frames measured the ramp-up (#8052)
-    public const int MeasuredFrames = 300;
+    public static readonly int MeasuredFrames = int.TryParse(Environment.GetEnvironmentVariable("GUM_BENCH_FRAMES"), out int spikeFrames) ? spikeFrames : 300; // SPIKE #8116 walk2: longer runs for tracing
 
     /// <summary>A Debug build measures unoptimized code, not Gum, so a benchmark refuses to run in one.</summary>
     public static void RequireRelease()

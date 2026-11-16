@@ -74,6 +74,8 @@ try
             },
             benchmarkPath);
         FlushProbe.Report(BenchmarkRunner.MeasuredFrames);
+        int spikeAllFrames = BenchmarkRunner.WarmupFrames + BenchmarkRunner.MeasuredFrames;
+        Console.WriteLine($"SPIKE matrix per frame: TotalMatrix reads {RenderingLibrary.Graphics.Renderer.SpikeMatrixReads / (double)spikeAllFrames:F1}, cached {RenderingLibrary.Graphics.Renderer.SpikeMatrixCached / (double)spikeAllFrames:F1}");
         return;
     }
 

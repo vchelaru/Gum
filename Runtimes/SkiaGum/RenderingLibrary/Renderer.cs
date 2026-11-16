@@ -266,10 +266,12 @@ namespace RenderingLibrary.Graphics
                 ApplyCamera(managers.Canvas, layer, matrix: null);
                 try
                 {
+                    if (SpikeMatCache) { SpikeMatrix = managers.Canvas.TotalMatrix; SpikeMatrixValid = true; }
                     DrawList(whatToRender, managers, layer);
                 }
                 finally
                 {
+                    SpikeMatrixValid = false;
                     // Undoes this layer's camera so the next layer (or the next frame) starts from a
                     // clean matrix (#4330), even when a Render throws.
                     RestoreCamera(managers.Canvas);
@@ -603,6 +605,19 @@ namespace RenderingLibrary.Graphics
         // Containers draw nothing, so sprites in separate containers still share a batch.
         // SPIKE #8116 walk: >0 while the hierarchy walk draws, so every ancestor clip is already on the canvas.
         public static int SpikeWalkDepth;
+        // SPIKE #8116 walk2: GUM_MATCACHE=1 reads the canvas matrix once per layer walk instead of once per draw.
+        // Valid because during the walk only a renderable's own draw changes the matrix (and restores it).
+        public static readonly bool SpikeMatCache = Environment.GetEnvironmentVariable("GUM_MATCACHE") == "1";
+        public static bool SpikeMatrixValid;
+        public static SKMatrix SpikeMatrix;
+        public static long SpikeMatrixReads;
+        public static long SpikeMatrixCached;
+        public static SKMatrix SpikeTotalMatrix(SKCanvas canvas)
+        {
+            if (SpikeMatrixValid && SpikeWalkDepth > 0) { SpikeMatrixCached++; return SpikeMatrix; }
+            SpikeMatrixReads++;
+            return canvas.TotalMatrix;
+        }
 
         private void RenderOne(IRenderableIpso renderable, SystemManagers managers)
         {

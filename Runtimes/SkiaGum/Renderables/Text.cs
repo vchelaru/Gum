@@ -1083,7 +1083,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
             var textBlock = GetCachedTextBlock();
             
             float absoluteRotation = this.GetAbsoluteRotation();
-            SKMatrix canvasMatrix = canvas.TotalMatrix;
+            SKMatrix canvasMatrix = global::RenderingLibrary.Graphics.Renderer.SpikeTotalMatrix(canvas);
             // Unrotated text under a scale-and-translate canvas (the usual case) snaps and positions with plain
             // arithmetic and one Translate, instead of inverting the canvas matrix and concatenating three
             // matrices (about 0.0003 ms per draw). It snaps to the same device pixel (the unrounded floats can differ slightly).
