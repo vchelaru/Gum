@@ -262,5 +262,42 @@ public partial class GumService
         renderCamera.Zoom = camera.Zoom;
         Draw();
     }
+
+    // Hot reload's ReplaceCachedImage: loads the changed file through the content loader (so it gets the
+    // load-time handling) and writes its pixels into the cached texture, which keeps its GPU id.
+    internal static unsafe CachedImageReplacement ReplaceCachedTexture(string path)
+    {
+        if (!LoaderManager.Self.TryLoadBesideCache<Texture2D>(path,
+            (entry, loaded) => entry is ManagedTexture managed && managed.Texture.Id == loaded.Id,
+            out IDisposable? cachedEntry, out IDisposable? freshEntry))
+        {
+            return CachedImageReplacement.NotReplaced;
+        }
+
+        using (freshEntry)
+        {
+            Texture2D cached = ((ManagedTexture)cachedEntry!).Texture;
+            Texture2D fresh = ((ManagedTexture)freshEntry!).Texture;
+            if (cached.Width != fresh.Width || cached.Height != fresh.Height)
+            {
+                return CachedImageReplacement.SizeChanged;
+            }
+            if (cached.Format != fresh.Format || cached.Mipmaps != 1)
+            {
+                return CachedImageReplacement.NotReplaced;
+            }
+
+            Image image = Raylib.LoadImageFromTexture(fresh);
+            try
+            {
+                Raylib.UpdateTexture(cached, image.Data);
+            }
+            finally
+            {
+                Raylib.UnloadImage(image);
+            }
+            return CachedImageReplacement.Replaced;
+        }
+    }
 }
 #endif

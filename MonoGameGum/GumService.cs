@@ -409,7 +409,8 @@ public partial class GumService : IGumService
         _hotReloadManager = new GumHotReloadManager(
             ApplyProjectTextureFilter, GumAnimationLoader.LoadAnimationsFromProvider, path => LoaderManager.Self.Dispose(path))
         {
-            LocalizationServiceProvider = () => CustomSetPropertyOnRenderable.LocalizationService
+            LocalizationServiceProvider = () => CustomSetPropertyOnRenderable.LocalizationService,
+            ReplaceCachedImage = ReplaceCachedTexture
         };
         _hotReloadManager.ReloadCompleted += () => HotReloadCompleted?.Invoke();
         _hotReloadManager.ReloadFinished += result => HotReloadFinished?.Invoke(result);

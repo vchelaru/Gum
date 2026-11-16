@@ -344,6 +344,29 @@ internal sealed class PreviewAccuracy2World : IDisposable
         public override string ToString() => Normalize(Path);
     }
 
+    /// <summary>
+    /// GumService.ReplaceCachedTexture without the pixel copy, which needs a graphics device: the loader's
+    /// textures hold only a size. Counts the textures it would have written to.
+    /// </summary>
+    internal static CachedImageReplacement ReplaceCachedTextureBySize(string path)
+    {
+        if (!LoaderManager.Self.TryLoadBesideCache<Texture2D>(path, (entry, loaded) => ReferenceEquals(entry, loaded),
+            out IDisposable? cachedEntry, out IDisposable? freshEntry))
+        {
+            return CachedImageReplacement.NotReplaced;
+        }
+        Texture2D cached = (Texture2D)cachedEntry!;
+        Texture2D fresh = (Texture2D)freshEntry!;
+        if (cached.Width != fresh.Width || cached.Height != fresh.Height)
+        {
+            return CachedImageReplacement.SizeChanged;
+        }
+        ReplacedTextures.Add(cached);
+        return CachedImageReplacement.Replaced;
+    }
+
+    internal static readonly List<Texture2D> ReplacedTextures = new List<Texture2D>();
+
     /// <summary>A PNG signature and header naming the size. The test loader only reads the size.</summary>
     internal static void WritePng(string path, int width, int height)
     {
@@ -440,7 +463,8 @@ internal sealed class PreviewAccuracy2World : IDisposable
             path => LoaderManager.Self.Dispose(path),
             () => Now)
         {
-            LocalizationServiceProvider = () => CustomSetPropertyOnRenderable.LocalizationService
+            LocalizationServiceProvider = () => CustomSetPropertyOnRenderable.LocalizationService,
+            ReplaceCachedImage = ReplaceCachedTextureBySize
         };
         Manager.ReloadFinished += Results.Add;
         Manager.Start(Gumx);

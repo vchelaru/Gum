@@ -9,8 +9,10 @@ using Gum.Mvvm;
 using Gum.Wireframe;
 using RenderingLibrary.Content;
 using Shouldly;
+using System;
 using System.IO;
 using System.Linq;
+using ToolsUtilities;
 using Xunit;
 using static MonoGameGum.Tests.Hot.PreviewAccuracy2World;
 
@@ -108,9 +110,10 @@ public partial class PreviewAccuracy2Tests
         verdict.Hot.ShouldContain("SourceRectangle={X:2_Y:3_Width:8_Height:6}");
     }
 
-    // Documented: a texture replaced on disk keeps its cached copy until the game restarts, and the result says so.
+    // A texture keeps its size in place, so an image replaced at another size keeps its cached copy until the
+    // game restarts, and the result says so.
     [Fact]
-    public void Texture_ImageReplacedOnDiskUnderTheSameName_ReportsThatARestartIsNeeded()
+    public void Texture_ImageReplacedOnDiskAtAnotherSize_ReportsThatARestartIsNeeded()
     {
         PreviewAccuracy2World world = Boot();
         WritePng(Content(world.Dir, "red.png"), 32, 32);
@@ -119,9 +122,68 @@ public partial class PreviewAccuracy2Tests
         verdict.Reloaded.ShouldBeTrue("a .png a visual shows is reported");
         verdict.MatchesRestart.ShouldBeFalse();
         verdict.Kinds.ShouldBe("ReloadFailed");
+        verdict.Result!.Issues[0].Message.ShouldContain("size changed");
         verdict.Result!.Issues[0].Message.ShouldContain("restarts");
         verdict.Hot.ShouldContain("r.tex=16x16");
         verdict.Fresh.ShouldContain("r.tex=32x32");
+    }
+
+    [Fact]
+    public void Texture_ImageReplacedOnDiskAtTheSameSize_IsWrittenIntoTheCachedTexture()
+    {
+        PreviewAccuracy2World world = Boot();
+        ReplacedTextures.Clear();
+        string key = FileManager.Standardize(Content(world.Bin, "red.png"), preserveCase: true, makeAbsolute: true);
+        IDisposable cachedBefore = LoaderManager.Self.GetDisposable(key).ShouldNotBeNull();
+
+        WritePng(Content(world.Dir, "red.png"), 16, 16);
+        PreviewVerdict2 verdict = world.Reload(Content(world.Dir, "red.png"));
+
+        verdict.Reloaded.ShouldBeTrue("a replaced image is applied, which raises a result");
+        verdict.MatchesRestart.ShouldBeTrue(verdict.Explain());
+        verdict.Result!.Issues.ShouldBeEmpty();
+        ReplacedTextures.ShouldHaveSingleItem().ShouldBeSameAs(cachedBefore);
+        LoaderManager.Self.GetDisposable(key).ShouldBeSameAs(cachedBefore);
+        ShouldBeCorrect(verdict);
+    }
+
+    [Fact]
+    public void Texture_ImageReplacedAtAnotherSizeThenBackAtTheCachedSize_IsNoLongerListed()
+    {
+        PreviewAccuracy2World world = Boot();
+        WritePng(Content(world.Dir, "red.png"), 32, 32);
+        world.Reload(Content(world.Dir, "red.png")).MatchesRestart.ShouldBeFalse();
+
+        WritePng(Content(world.Dir, "red.png"), 16, 16);
+        PreviewVerdict2 verdict = world.Reload(Content(world.Dir, "red.png"));
+
+        verdict.MatchesRestart.ShouldBeTrue(verdict.Explain());
+        verdict.Result!.Issues.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void Texture_ImageReplacedOnDisk_WithoutAReplaceHook_ReportsThatARestartIsNeeded()
+    {
+        PreviewAccuracy2World world = Boot();
+        world.Manager.ReplaceCachedImage = null;
+        WritePng(Content(world.Dir, "red.png"), 16, 16);
+        PreviewVerdict2 verdict = world.Reload(Content(world.Dir, "red.png"));
+
+        verdict.MatchesRestart.ShouldBeFalse();
+        verdict.Result!.Issues[0].Message.ShouldContain("images stay cached until the game restarts");
+    }
+
+    [Fact]
+    public void Texture_ImageReplacedOnDisk_HookThrows_ReportsThatARestartIsNeeded()
+    {
+        PreviewAccuracy2World world = Boot();
+        world.Manager.ReplaceCachedImage = _ => throw new InvalidOperationException("cannot decode");
+        WritePng(Content(world.Dir, "red.png"), 16, 16);
+        PreviewVerdict2 verdict = world.Reload(Content(world.Dir, "red.png"));
+
+        verdict.MatchesRestart.ShouldBeFalse();
+        verdict.Kinds.ShouldBe("ReloadFailed");
+        verdict.Result!.Issues[0].Message.ShouldContain("cannot decode");
     }
 
     // A file that did not exist when the sprite asked for it, and does now.
@@ -301,6 +363,26 @@ public partial class PreviewAccuracy2Tests
             dir => WriteChain(dir, "run.achx", "red.png", 0.1f));
         WriteChain(world.Dir, "run.achx", "other.png", 0.5f, frames: 3);
         ShouldBeCorrect(world.Reload(Content(world.Dir, "run.achx")));
+    }
+
+    [Fact]
+    public void Texture_ImageOnlyAnimationChainFramesUse_ReplacedAtTheSameSize_IsWrittenIntoTheCachedTexture()
+    {
+        PreviewAccuracy2World world = Boot();
+        WritePng(Content(world.Dir, "frames.png"), 16, 16);
+        world.Save(
+            project =>
+            {
+                Std(MainScreen(project), "Pic", "SourceFile", "Content/run.achx");
+                Std(MainScreen(project), "Pic", "CurrentChainName", "Run");
+            },
+            dir => WriteChains(dir, "run.achx", ("Run", "frames.png")));
+        ReplacedTextures.Clear();
+        WritePng(Content(world.Dir, "frames.png"), 16, 16);
+        PreviewVerdict2 verdict = world.Reload(Content(world.Dir, "frames.png"));
+
+        verdict.MatchesRestart.ShouldBeTrue(verdict.Explain());
+        ReplacedTextures.ShouldHaveSingleItem();
     }
 
     [Fact]

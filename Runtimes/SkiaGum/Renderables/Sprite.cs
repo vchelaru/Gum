@@ -23,6 +23,7 @@ public class Sprite : RenderableShapeBase, IAspectRatio, ITextureCoordinate, IAn
     /// DrawBitmap took 37.8 ms per frame against 0.46 ms for DrawImage (about 80x slower); on a CPU raster
     /// surface 6.7 ms against 4.3 ms (about 1.5x). Pixels written to the bitmap after assignment therefore do
     /// not show until the Texture is assigned again, which is the explicit refresh path for edits.
+    /// Hot reload rewriting a cached bitmap is the exception: the next draw makes a new image (BitmapPixelVersion).
     /// </para>
     /// </summary>
     public SKBitmap? Texture
@@ -94,12 +95,19 @@ public class Sprite : RenderableShapeBase, IAspectRatio, ITextureCoordinate, IAn
     /// </summary>
     public SKImage? Image
     {
-        get => _image;
+        get
+        {
+            RefreshIfPixelsRewritten();
+            return _image;
+        }
         set => SetImage(value, ownsImage: false);
     }
 
     private SKImage? _image;
     private bool _ownsImage;
+    // The BitmapPixelVersion of the Texture when the owned image was made from it, and the global change count then.
+    private int _imageVersion;
+    private int _seenChanges;
 
     private void SetImage(SKImage? image, bool ownsImage)
     {
@@ -113,6 +121,23 @@ public class Sprite : RenderableShapeBase, IAspectRatio, ITextureCoordinate, IAn
         }
         _image = image;
         _ownsImage = ownsImage && image != null;
+        _seenChanges = global::SkiaGum.Content.BitmapPixelVersion.Changes;
+        _imageVersion = global::SkiaGum.Content.BitmapPixelVersion.Of(_texture);
+    }
+
+    // Gum rewrote the Texture's pixels in place (hot reload); the image is a copy of the old ones.
+    private void RefreshIfPixelsRewritten()
+    {
+        int changes = global::SkiaGum.Content.BitmapPixelVersion.Changes;
+        if (changes == _seenChanges)
+        {
+            return;
+        }
+        _seenChanges = changes;
+        if (_ownsImage && IsUsable(_texture) && global::SkiaGum.Content.BitmapPixelVersion.Of(_texture) != _imageVersion)
+        {
+            SetImage(CreateImage(_texture), ownsImage: true);
+        }
     }
 
     /// <inheritdoc/>
