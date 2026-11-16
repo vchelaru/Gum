@@ -1120,28 +1120,6 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
                 SKMatrix.Concat(ref result, canvasMatrix, result);
             }
 
-            canvas.Save();
-
-            // set the clip rect *after* save so it gets undone and restored
-            // This clip looks redundant, because Renderer.DrawRenderable already clips to every ancestor that
-            // clips its children, but it is not. GumBatch.Draw(text) draws only this renderable and never walks
-            // its ancestors, and a render-target bake draws into an offscreen canvas that carries none of the
-            // ancestor clips. Text.Render is then the only thing applying the clip, so removing it changes pixels.
-            var clipper = this.GetEffectiveClipper();
-            if(clipper != null)
-            {
-                canvas.ClipTo(clipper);
-            }
-
-            if (isSimple)
-            {
-                canvas.Translate(absoluteX, absoluteY);
-            }
-            else
-            {
-                canvas.SetMatrix(result);
-            }
-
             // MaxLettersToShow (issue #3678): the paint block reveals only the first N letters, but
             // vertical alignment above was computed from the full block so the revealed letters stay in
             // their final positions (typewriter reveal). Null MaxLettersToShow returns the full block.
@@ -1153,6 +1131,41 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
             // BlendMode (blend) so both compose when the layer is composited back on Restore. Same
             // primitive/blur convention as the Skia shapes.
             SKPaint? renderPaint = GetCachedRenderPaint();
+
+            // The Renderer's walk has already clipped to this clipper when it is the one the walk applied last. A
+            // GumBatch.Draw(text) never walks the text's ancestors and a render-target bake draws into an offscreen
+            // canvas with no clip from above the target, so the text clips itself there. A rotated clipper's clip is
+            // antialiased, and applying it a second time darkens its edge, so that one is still applied again to keep
+            // today's pixels.
+            var clipper = this.GetEffectiveClipper();
+            bool isClipOnCanvas = clipper == null
+                || (ReferenceEquals(clipper, ((SystemManagers)managers).ClipAppliedByWalk) && clipper.GetAbsoluteRotation() == 0);
+
+            // Unrotated text with nothing left to clip draws its cached blobs at its offset, with no
+            // Save/Translate/Restore (#8148).
+            if (isSimple && isClipOnCanvas && renderPaint == null
+                && _blobCache.TryPaintAt(canvas, paintBlock, absoluteX, absoluteY))
+            {
+                statistics?.RecordDrawCall();
+                return;
+            }
+
+            canvas.Save();
+
+            // set the clip rect *after* save so it gets undone and restored
+            if (!isClipOnCanvas)
+            {
+                canvas.ClipTo(clipper!);
+            }
+
+            if (isSimple)
+            {
+                canvas.Translate(absoluteX, absoluteY);
+            }
+            else
+            {
+                canvas.SetMatrix(result);
+            }
             if (renderPaint != null && HasDropshadow && CanDrawShadowAsPaint)
             {
                 if (HasActiveBlend)
@@ -1914,6 +1927,33 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
             }
         }
 
+        /// <summary>
+        /// Draws the cached blobs with their origin at (<paramref name="x"/>, <paramref name="y"/>), leaving the
+        /// canvas matrix alone. False, with nothing drawn, when the block paints through RichTextKit this frame
+        /// (its first frame, or a feature the blobs do not draw) or has letters with their own transform.
+        /// </summary>
+        public bool TryPaintAt(SKCanvas canvas, TextBlock block, float x, float y)
+        {
+            if (_isFirstFrame || !ReferenceEquals(Block, block))
+            {
+                return false;
+            }
+            TextPaintOptions resolved = TextPaintOptions.Default;
+            if (!_isBuilt)
+            {
+                Build(block, resolved);
+            }
+            if (_isUnsupported || !HasBuildFontSettings(resolved) || _segments.Count != 1 || _segments[0].HasMatrix)
+            {
+                return false;
+            }
+            for (int i = 0; i < _runs.Count; i++)
+            {
+                DrawRun(canvas, _runs[i], null, x, y);
+            }
+            return true;
+        }
+
         public void Paint(SKCanvas canvas, TextBlock block, TextPaintOptions? options)
         {
             if (_isFirstFrame || !ReferenceEquals(Block, block))
@@ -1947,7 +1987,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
                 int end = segment.RunStart + segment.RunCount;
                 for (int i = segment.RunStart; i < end; i++)
                 {
-                    DrawRun(canvas, _runs[i], configure);
+                    DrawRun(canvas, _runs[i], configure, 0, 0);
                 }
                 if (segment.HasMatrix)
                 {
@@ -1966,7 +2006,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
         private SKColor _haloColor;
         private float _haloWidth;
 
-        private void DrawRun(SKCanvas canvas, BlobRun run, Action<SKPaint, IStyle, bool>? configure)
+        private void DrawRun(SKCanvas canvas, BlobRun run, Action<SKPaint, IStyle, bool>? configure, float x, float y)
         {
             IStyle style = run.Style;
             bool hasHalo = style.HaloColor != SKColor.Empty;
@@ -1994,9 +2034,9 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
                 if (hasHalo)
                 {
                     configure(configured, style, true);
-                    canvas.DrawText(run.Blob, 0, run.VerticalOffset, configured);
+                    canvas.DrawText(run.Blob, x, y + run.VerticalOffset, configured);
                 }
-                canvas.DrawText(run.Blob, 0, run.VerticalOffset, fill);
+                canvas.DrawText(run.Blob, x, y + run.VerticalOffset, fill);
                 fill.Reset();
                 configured.Reset();
                 return;
@@ -2023,14 +2063,14 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
                         halo.StrokeWidth = _haloWidth = style.HaloWidth;
                     }
                 }
-                canvas.DrawText(run.Blob, 0, run.VerticalOffset, halo);
+                canvas.DrawText(run.Blob, x, y + run.VerticalOffset, halo);
             }
             if (!_isFillKnown || _fillColor != style.TextColor)
             {
                 fill.Color = _fillColor = style.TextColor;
                 _isFillKnown = true;
             }
-            canvas.DrawText(run.Blob, 0, run.VerticalOffset, fill);
+            canvas.DrawText(run.Blob, x, y + run.VerticalOffset, fill);
         }
 
         private static void SetHaloStroke(SKPaint halo, IStyle style)
