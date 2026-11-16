@@ -8,7 +8,7 @@ using BlendState = Gum.BlendState;
 namespace RenderingLibrary.Graphics;
 
 public abstract class RenderableBase : IVisible, IRenderableIpso,
-    ISetClipsChildren, IRenderTargetRenderable
+    ISetClipsChildren, IRenderTargetRenderable, IDrawnBoundsRenderable
 {
     private RenderTargetUsageHandle? _renderTargetUsage;
 
@@ -176,6 +176,16 @@ public abstract class RenderableBase : IVisible, IRenderableIpso,
     public virtual void PreRender() { }
 
     public abstract void Render(ISystemManagers managers);
+
+    /// <summary>
+    /// Unknown by default, so a derived renderable that draws outside its box is never reordered
+    /// past a draw it overlaps. Override it for a renderable whose drawn area is known.
+    /// </summary>
+    public virtual bool TryGetLocalDrawnBounds(out float left, out float top, out float right, out float bottom)
+    {
+        left = top = right = bottom = 0;
+        return false;
+    }
 
 
     void IRenderableIpso.SetParentDirect(IRenderableIpso? parent)

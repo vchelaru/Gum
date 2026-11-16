@@ -88,7 +88,7 @@ public enum Dock
 /// by name through reflection, so they would silently stop working if they were trimmed.
 /// </remarks>
 [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)]
-public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyPropertyChanged, IHasRenderableComponent
+public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyPropertyChanged, IHasRenderableComponent, IDrawnBoundsRenderable
 {
     #region Enums/Internal Classes
 

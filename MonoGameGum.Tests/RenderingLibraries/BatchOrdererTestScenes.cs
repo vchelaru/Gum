@@ -5,9 +5,20 @@ using RenderingLibrary.Graphics;
 
 namespace MonoGameGum.Tests.RenderingLibraries;
 
-/// <summary>Minimal renderable with settable absolute-style bounds, batch key and sort key.</summary>
-internal sealed class OrdererFake : IRenderableIpso
+/// <summary>
+/// Minimal renderable with settable absolute-style bounds, batch key and sort key. It draws inside
+/// its box unless <see cref="ReportsDrawnBounds"/> is false, which makes its drawn area unknown.
+/// </summary>
+internal sealed class OrdererFake : IRenderableIpso, IDrawnBoundsRenderable
 {
+    public bool ReportsDrawnBounds { get; set; } = true;
+
+    public bool TryGetLocalDrawnBounds(out float left, out float top, out float right, out float bottom)
+    {
+        this.GetLocalLayoutBounds(out left, out top, out right, out bottom);
+        return ReportsDrawnBounds;
+    }
+
     public OrdererFake(string name, string batchKey = "SpriteBatch")
     {
         Name = name;

@@ -91,6 +91,14 @@ internal class Svg : RenderableShapeBase, IAspectRatio
             * Matrix.CreateTranslation(topLeft.X, topLeft.Y, 0);
     }
 
+    // An SVG may draw outside its viewBox (overflowing paths, wide strokes), so where it draws
+    // is unknown and it keeps its place against every other draw.
+    public override bool TryGetLocalDrawnBounds(out float left, out float top, out float right, out float bottom)
+    {
+        left = top = right = bottom = 0;
+        return false;
+    }
+
     public override void Render(ISystemManagers managers)
     {
         if (Texture == null)

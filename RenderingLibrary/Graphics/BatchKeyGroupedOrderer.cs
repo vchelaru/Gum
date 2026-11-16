@@ -9,8 +9,9 @@ namespace RenderingLibrary.Graphics;
 /// windows so that runs of same-key draws become contiguous, keyed first by
 /// <see cref="IRenderable.BatchKey"/> and, within that, by the finer
 /// <see cref="IRenderable.BatchSortKey"/> (e.g. a Texture2D reference). Pixel-correct: any two
-/// draws whose <see cref="IPositionedSizedObjectExtensionMethods.GetAbsoluteBounds"/> intersect
-/// maintain their original DFS-relative order, so the painter's algorithm result is unchanged.
+/// draws whose drawn bounds (<see cref="IDrawnBoundsRenderable"/>, not the layout box) intersect
+/// maintain their original DFS-relative order, so the painter's algorithm result is unchanged. A
+/// renderable that cannot report its drawn bounds keeps its order against every other draw.
 /// Opt in by setting <c>Renderer.SiblingOrdering = BatchKeyGroupedOrderer.Instance</c>.
 /// </summary>
 /// <remarks>
@@ -317,6 +318,12 @@ public sealed class BatchKeyGroupedOrderer : IRenderableOrderer
     {
         public IRenderableIpso Item;
         public System.Drawing.Rectangle Bounds;
+
+        /// <summary>
+        /// True when the renderable cannot say where it draws (<see cref="IDrawnBoundsRenderable"/>);
+        /// it then overlaps every other entry and <see cref="Bounds"/> is unused.
+        /// </summary>
+        public bool OverlapsAll;
         public string BatchKey;
         public object? BatchSortKey;
 
@@ -702,10 +709,12 @@ public sealed class BatchKeyGroupedOrderer : IRenderableOrderer
     {
         string batchKey = renderable.BatchKey ?? string.Empty;
         bool isRenderTarget = renderable.IsRenderTarget;
+        bool knowsBounds = TryGetDrawnBounds(renderable, out System.Drawing.Rectangle bounds);
         window.Add(new Entry
         {
             Item = renderable,
-            Bounds = GetEffectiveBounds(renderable),
+            Bounds = bounds,
+            OverlapsAll = !knowsBounds,
             BatchKey = batchKey,
             BatchSortKey = renderable.BatchSortKey,
             IsFreeContainer = batchKey.Length == 0 && !isRenderTarget && !renderable.ClipsChildren,
@@ -714,28 +723,60 @@ public sealed class BatchKeyGroupedOrderer : IRenderableOrderer
     }
 
     /// <summary>
-    /// Returns the renderable's absolute bounds, with a conservative fallback for cases
-    /// where the computed bounds don't reflect the visible footprint. The common offender
-    /// is a renderable with non-default <c>XOrigin/YOrigin/Rotation</c> (e.g. a sprite
-    /// centered on its parent with <c>XOrigin=Center, XUnits=PixelsFromMiddle, Rotation=90</c>):
-    /// the contained renderable's X/Y reflect a pre-rotation reference point that can sit
-    /// outside the parent, even though the visible draw lands inside it. If the computed
-    /// bounds don't intersect the parent's, fall back to the parent's bounds — it's a
-    /// safe over-estimate that keeps the overlap test honest.
+    /// The absolute area <paramref name="renderable"/> draws to (#8152), from its
+    /// <see cref="IDrawnBoundsRenderable"/> local bounds rather than its layout box, since text
+    /// lines, shadows and strokes can reach past the box. Returns false when the renderable cannot
+    /// say, and the caller treats it as overlapping everything.
     /// </summary>
-    private static System.Drawing.Rectangle GetEffectiveBounds(IRenderableIpso renderable)
+    /// <remarks>
+    /// A turned renderable draws turned about its absolute top-left, but a shadow offset is added in
+    /// world space, so a drawn point is a world offset plus a turned point, both inside the local
+    /// bounds. Either is at most the farthest local corner's distance from the top-left, so the
+    /// point lies within twice that distance; the bounds become that square, plus a pixel for the
+    /// renderer's snapping.
+    /// </remarks>
+    private static bool TryGetDrawnBounds(IRenderableIpso renderable, out System.Drawing.Rectangle bounds)
     {
-        System.Drawing.Rectangle bounds = renderable.GetAbsoluteBounds();
+        if (renderable is not IDrawnBoundsRenderable drawnBounds
+            || !drawnBounds.TryGetLocalDrawnBounds(out float left, out float top, out float right, out float bottom))
+        {
+            bounds = default;
+            return false;
+        }
+
+        float rotation = renderable.GetAbsoluteRotation();
+        if (rotation != 0)
+        {
+            float farX = System.Math.Max(System.Math.Abs(left), System.Math.Abs(right));
+            float farY = System.Math.Max(System.Math.Abs(top), System.Math.Abs(bottom));
+            float reach = (2 * (float)System.Math.Sqrt((farX * farX) + (farY * farY))) + 1;
+            left = -reach;
+            top = -reach;
+            right = reach;
+            bottom = reach;
+        }
+
+        float x = renderable.GetAbsoluteX();
+        float y = renderable.GetAbsoluteY();
+        int ix = (int)System.MathF.Floor(x + left);
+        int iy = (int)System.MathF.Floor(y + top);
+        int iright = (int)System.MathF.Ceiling(x + right);
+        int ibottom = (int)System.MathF.Ceiling(y + bottom);
+        bounds = new System.Drawing.Rectangle(ix, iy, iright - ix, ibottom - iy);
+
+        // A renderable with non-default XOrigin/YOrigin/Rotation can report a position outside its
+        // parent while the visible draw lands inside it, so bounds that miss the parent entirely
+        // fall back to the parent's box.
         IRenderableIpso? parent = renderable.Parent;
         if (parent != null)
         {
             System.Drawing.Rectangle parentBounds = parent.GetAbsoluteBounds();
             if (parentBounds.Width > 0 && parentBounds.Height > 0 && !bounds.IntersectsWith(parentBounds))
             {
-                return parentBounds;
+                bounds = parentBounds;
             }
         }
-        return bounds;
+        return true;
     }
 
     private void EnsureGraphCapacity(int n)
@@ -768,6 +809,7 @@ public sealed class BatchKeyGroupedOrderer : IRenderableOrderer
     private int[] _bottom = Array.Empty<int>();
     private int[] _sweepKeys = Array.Empty<int>();
     private int[] _sweepOrder = Array.Empty<int>();
+    private int[] _overlapsAllIndexes = Array.Empty<int>();
 
     private void EnsureSweepCapacity(int n)
     {
@@ -783,6 +825,7 @@ public sealed class BatchKeyGroupedOrderer : IRenderableOrderer
         _bottom = new int[newSize];
         _sweepKeys = new int[newSize];
         _sweepOrder = new int[newSize];
+        _overlapsAllIndexes = new int[newSize];
     }
 
     /// <summary>
@@ -802,6 +845,12 @@ public sealed class BatchKeyGroupedOrderer : IRenderableOrderer
         int[] top = _top;
         int[] bottom = _bottom;
 
+        int[] overlapsAll = _overlapsAllIndexes;
+        int overlapsAllCount = 0;
+        int[] keys = _sweepKeys;
+        int[] order = _sweepOrder;
+        int swept = 0;
+
         int minLeft = int.MaxValue;
         int maxRight = int.MinValue;
         int minTop = int.MaxValue;
@@ -810,6 +859,13 @@ public sealed class BatchKeyGroupedOrderer : IRenderableOrderer
         long heightSum = 0;
         for (int i = 0; i < n; i++)
         {
+            if (window[i].OverlapsAll)
+            {
+                overlapsAll[overlapsAllCount++] = i;
+                continue;
+            }
+
+            order[swept++] = i;
             System.Drawing.Rectangle bounds = window[i].Bounds;
             left[i] = bounds.Left;
             right[i] = bounds.Right;
@@ -834,21 +890,18 @@ public sealed class BatchKeyGroupedOrderer : IRenderableOrderer
         int[] otherLo = sweepX ? top : left;
         int[] otherHi = sweepX ? bottom : right;
 
-        int[] keys = _sweepKeys;
-        int[] order = _sweepOrder;
-        for (int i = 0; i < n; i++)
+        for (int s = 0; s < swept; s++)
         {
-            keys[i] = lo[i];
-            order[i] = i;
+            keys[s] = lo[order[s]];
         }
-        Array.Sort(keys, order, 0, n);
+        Array.Sort(keys, order, 0, swept);
 
         int pairTests = 0;
-        for (int a = 0; a < n; a++)
+        for (int a = 0; a < swept; a++)
         {
             int ia = order[a];
             int hiA = hi[ia];
-            for (int b = a + 1; b < n; b++)
+            for (int b = a + 1; b < swept; b++)
             {
                 int ib = order[b];
                 if (lo[ib] >= hiA)
@@ -867,6 +920,25 @@ public sealed class BatchKeyGroupedOrderer : IRenderableOrderer
             }
         }
         PairTestCount += pairTests;
+
+        // An entry with unknown drawn bounds keeps its depth-first place against every other
+        // entry. A pair of them gets its edge once, from the earlier one's pass.
+        for (int u = 0; u < overlapsAllCount; u++)
+        {
+            int unknown = overlapsAll[u];
+            for (int j = 0; j < n; j++)
+            {
+                if (j == unknown || (j < unknown && window[j].OverlapsAll))
+                {
+                    continue;
+                }
+
+                int first = j < unknown ? j : unknown;
+                int second = j < unknown ? unknown : j;
+                successors[first].Add(second);
+                indegree[second]++;
+            }
+        }
     }
 
     private void EnsurePickCapacity(int n)

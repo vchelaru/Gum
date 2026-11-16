@@ -19,8 +19,14 @@ namespace MonoGameGum.Tests.RenderingLibraries;
 /// </summary>
 public class BatchKeyGroupedOrdererTests : BaseTestClass
 {
-    private sealed class FakeRenderable : IRenderableIpso
+    private sealed class FakeRenderable : IRenderableIpso, IDrawnBoundsRenderable
     {
+        public bool TryGetLocalDrawnBounds(out float left, out float top, out float right, out float bottom)
+        {
+            this.GetLocalLayoutBounds(out left, out top, out right, out bottom);
+            return true;
+        }
+
         public FakeRenderable(string name, string batchKey = "SpriteBatch")
         {
             Name = name;

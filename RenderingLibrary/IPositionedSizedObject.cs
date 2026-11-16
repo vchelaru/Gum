@@ -161,6 +161,22 @@ namespace RenderingLibrary
             return new System.Drawing.Rectangle(ix, iy, iright - ix, ibottom - iy);
         }
 
+        /// <summary>
+        /// The layout box relative to the object's own top-left, with negative sizes normalized: the
+        /// drawn bounds of a renderable that draws exactly inside its box
+        /// (<see cref="Graphics.IDrawnBoundsRenderable"/>).
+        /// </summary>
+        public static void GetLocalLayoutBounds(this IPositionedSizedObject ipso,
+            out float left, out float top, out float right, out float bottom)
+        {
+            float width = ipso.Width;
+            float height = ipso.Height;
+            left = System.Math.Min(0, width);
+            right = System.Math.Max(0, width);
+            top = System.Math.Min(0, height);
+            bottom = System.Math.Max(0, height);
+        }
+
         public static bool HasCursorOver(this IRenderableIpso ipso, float x, float y)
         {
             float absoluteX = ipso.GetAbsoluteX();
