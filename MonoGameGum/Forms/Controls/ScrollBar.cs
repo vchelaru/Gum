@@ -1,4 +1,4 @@
-using Gum.Wireframe;
+﻿using Gum.Wireframe;
 using System;
 
 
@@ -629,6 +629,7 @@ public class ScrollBar : RangeBase
         visual.XOrigin = _thumbXOrigin;
         visual.YOrigin = _thumbYOrigin;
     }
+
     private void UpdateOrientationState()
     {
         RestoreThumbAxisLayout();
