@@ -1665,7 +1665,7 @@ public class GumHotReloadManager : IGumHotReloadManager
         // which work out their own state (disabled, hovered, checked) and restore what code assigned.
         foreach (GraphicalUiElement root in rootList)
         {
-            root.ReapplyAppliedCategoryStatesRecursive();
+            root.ReapplyAppliedCategoryStatesRecursive(skipCodeCreated: true);
         }
 
         // A Forms property the reload edited or removed (Placeholder, AcceptsReturn) is a control property, not a
