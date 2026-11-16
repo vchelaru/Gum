@@ -42,6 +42,18 @@ for ((i = 0; i < shards; i++)); do
   pids+=($!)
 done
 
+# An interrupt or cancel sends SIGINT/SIGTERM; show what each shard printed so far, since the logs are
+# otherwise only printed after the shards finish. This may not fire when the runner kills the step on
+# its timeout; the uploaded shard-*.log artifact is the reliable record.
+dump_logs() {
+  for log in "${logs[@]}"; do
+    echo "::group::Shard log on interrupt: $log"
+    cat "$log"
+    echo "::endgroup::"
+  done
+}
+trap 'dump_logs; exit 143' INT TERM
+
 failed=0
 for idx in "${!pids[@]}"; do
   wait "${pids[$idx]}" || failed=1
