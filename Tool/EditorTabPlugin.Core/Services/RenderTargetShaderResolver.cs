@@ -32,8 +32,24 @@ public static class RenderTargetShaderResolver
     /// error goes to the callback instead of being thrown. With <paramref name="includes"/>, the files each
     /// shader <c>#include</c>s are recorded there, so an edit of one reloads the shader.
     /// </summary>
-    public static Func<string, object?> For(PlatformTarget target, Action<string>? reportError = null, IShaderIncludeMap? includes = null) =>
-        path => Resolve(path, target, reportError, includes);
+    public static Func<string, object?> For(PlatformTarget target, Action<string>? reportError = null, IShaderIncludeMap? includes = null, CapabilityProfile? profile = null) =>
+        path => Resolve(path, target, reportError, includes, profile);
+
+    /// <summary>
+    /// The KNIFX profile for the KNI this tool loads, for a head whose device is KNI's SDL2/GL backend. Plain
+    /// OpenGL output is MGFX v10, which KNI 4.3 loads but reports with "This effect is for an older version of KNI
+    /// and needs to be rebuilt" (#8137); this is the container version KNI 4.3 takes without the message.
+    /// </summary>
+    public static CapabilityProfile? KniOpenGlProfile() => KniOpenGlProfile(typeof(GraphicsDevice).Assembly.GetName().Version);
+
+    /// <summary>
+    /// The profile for a KNI of <paramref name="kniVersion"/>: null (plain OpenGL) below 4.3, where KNI 4.2 loads
+    /// that silently and 4.1 and older cannot read KNIFX at all.
+    /// </summary>
+    internal static CapabilityProfile? KniOpenGlProfile(Version? kniVersion) =>
+        kniVersion != null && (kniVersion.Major > 4 || (kniVersion.Major == 4 && kniVersion.Minor >= 3))
+            ? RuntimeProfileDetector.RecommendKnifx(kniVersion)
+            : null;
 
     /// <summary>
     /// Compiles the <c>.fx</c>/<c>.slang</c> file at <paramref name="absolutePath"/> (already made
@@ -47,7 +63,7 @@ public static class RenderTargetShaderResolver
     /// way: GraphicsDevice not ready, file missing, ShadowDusk conversion/compile errors, and KNI
     /// rejecting the compiled bytecode (or a native compiler binary failing to load).
     /// </summary>
-    public static object? Resolve(string absolutePath, PlatformTarget target, Action<string>? reportError = null, IShaderIncludeMap? includes = null)
+    public static object? Resolve(string absolutePath, PlatformTarget target, Action<string>? reportError = null, IShaderIncludeMap? includes = null, CapabilityProfile? profile = null)
     {
         // The GraphicsDevice only exists once the wireframe is initialized; the resolver is invoked
         // during rendering, so it is normally present.
@@ -69,7 +85,7 @@ public static class RenderTargetShaderResolver
         // resulting exception propagates and is surfaced by the caller just like a compile error.
         return CreateKeepingLastGood(
             absolutePath,
-            () => CompileFile(absolutePath, target, includes),
+            () => CompileFile(absolutePath, target, includes, profile),
             bytecode => new Effect(graphicsDevice, bytecode),
             reportError);
     }
@@ -116,21 +132,22 @@ public static class RenderTargetShaderResolver
     /// is also what a relative <c>#include</c> resolves against, and each file included is passed to
     /// <paramref name="onInclude"/>.
     /// </summary>
-    public static byte[] Compile(string source, PlatformTarget target, string describedPath, Action<string>? onInclude = null) =>
-        ShaderSourceCompiler.Compile(source, target, describedPath, onInclude);
+    public static byte[] Compile(string source, PlatformTarget target, string describedPath, Action<string>? onInclude = null, CapabilityProfile? profile = null) =>
+        ShaderSourceCompiler.Compile(source, target, describedPath, onInclude, profile);
 
     /// <summary>
     /// Compiles the shader file at <paramref name="absolutePath"/> and records in <paramref name="includes"/> what it
     /// <c>#include</c>d, even when the compile fails, so fixing a broken include reloads the shader.
     /// </summary>
-    public static byte[] CompileFile(string absolutePath, PlatformTarget target, IShaderIncludeMap? includes)
+    public static byte[] CompileFile(string absolutePath, PlatformTarget target, IShaderIncludeMap? includes, CapabilityProfile? profile = null)
     {
         List<FilePath> included = new List<FilePath>();
         try
         {
             return Compile(
                 File.ReadAllText(absolutePath), target, absolutePath,
-                includes == null ? null : path => included.Add(new FilePath(path)));
+                includes == null ? null : path => included.Add(new FilePath(path)),
+                profile);
         }
         finally
         {

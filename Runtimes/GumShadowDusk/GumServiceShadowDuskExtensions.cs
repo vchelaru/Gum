@@ -29,6 +29,7 @@ public static class GumServiceShadowDuskExtensions
 
         Func<ShaderSource, object?>? previousResolver = CustomSetPropertyOnRenderable.RenderTargetEffectSourceResolver;
         PlatformTarget? target = null;
+        CapabilityProfile? profile = null;
 
         // ShadowDusk goes first and decides from the content whether it reads the shader; an input it does not
         // read (for example a .glsl file) falls through to the resolver registered before this call.
@@ -51,8 +52,12 @@ public static class GumServiceShadowDuskExtensions
             }
 
             GraphicsDevice graphicsDevice = GetGraphicsDevice(gumService);
-            target ??= ShadowDuskTargetDetector.Detect(graphicsDevice);
-            return ShadowDuskEffectLoader.TryLoad(graphicsDevice, source.Name, text, target.Value)
+            if (target == null)
+            {
+                target = ShadowDuskTargetDetector.Detect(graphicsDevice);
+                profile = ShadowDuskTargetDetector.RecommendProfile(graphicsDevice, target.Value);
+            }
+            return ShadowDuskEffectLoader.TryLoad(graphicsDevice, source.Name, text, target.Value, profile)
                 ?? previousResolver?.Invoke(source);
         };
 

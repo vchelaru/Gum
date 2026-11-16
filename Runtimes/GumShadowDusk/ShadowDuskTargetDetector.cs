@@ -25,6 +25,32 @@ internal static class ShadowDuskTargetDetector
     }
 
     /// <summary>
+    /// The capability profile to compile with, or null to compile for <paramref name="target"/> alone. On KNI's
+    /// desktop OpenGL backend this is the KNIFX version the loaded KNI accepts without printing "This effect is for
+    /// an older version of KNI and needs to be rebuilt", which the default MGFX v10 output does on KNI 4.3 (#8137).
+    /// Other backends (GLES, WebGL, DirectX) keep the default: KNIFX has not been checked on them, and ShadowDusk has
+    /// no DirectX profile. Only KNI 4.3 and later get a profile: KNI 4.2 loads the default silently, and KNI 4.1 and
+    /// older cannot read KNIFX at all.
+    /// </summary>
+    internal static CapabilityProfile? RecommendProfile(GraphicsDevice graphicsDevice, PlatformTarget target)
+    {
+#if KNI
+        string backend = (graphicsDevice.Adapter ?? GraphicsAdapter.DefaultAdapter).Backend.ToString();
+        // The version is read here, never an assembly handed to ShadowDusk, which throws for one that is not KNI.
+        return RecommendProfile(backend, target, typeof(GraphicsDevice).Assembly.GetName().Version);
+#else
+        return null;
+#endif
+    }
+
+    internal static CapabilityProfile? RecommendProfile(string backendName, PlatformTarget target, Version? kniVersion)
+    {
+        bool isDesktopGl = target == PlatformTarget.OpenGL && backendName == "OpenGL";
+        bool kniLoadsKnifx12 = kniVersion != null && (kniVersion.Major > 4 || (kniVersion.Major == 4 && kniVersion.Minor >= 3));
+        return isDesktopGl && kniLoadsKnifx12 ? RuntimeProfileDetector.RecommendKnifx(kniVersion) : null;
+    }
+
+    /// <summary>
     /// Maps the name of MonoGame's <c>PlatformInfo.GraphicsBackend</c> or KNI's <c>GraphicsAdapter.Backend</c>
     /// to a compile target. A backend ShadowDusk cannot compile for throws, naming it, so a shader never
     /// compiles for the wrong one.

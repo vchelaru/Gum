@@ -149,6 +149,58 @@ technique SpriteDrawing
         }
     }
 
+    // KNI 4.3 prints this when it loads an effect container older than its own, which is what ShadowDusk writes
+    // for OpenGL unless the KNIFX version KNI loads is asked for (#8137).
+    [Theory]
+    [InlineData(".fx", GrayscaleFx)]
+    [InlineData(".slang", GrayscaleSlang)]
+    [InlineData(".sksl", GrayscaleSksl)]
+    public void UseShadowDusk_SourceShaderFile_PrintsNoOlderVersionWarning(string extension, string source)
+    {
+        // ShadowDusk has no KNIFX profile for DirectX, so KNI WindowsDX keeps printing it.
+        Assert.SkipWhen(
+            ExpectedTarget == PlatformTarget.DirectX && typeof(GraphicsDevice).Assembly.GetName().Name == "Xna.Framework.Graphics",
+            "No KNIFX profile exists for DirectX.");
+        using DeviceHost host = DeviceHost.CreateOrSkip();
+        GumService service = new GumService();
+        string shaderPath = Path.Combine(Path.GetTempPath(), "GumShadowDuskWarn_" + Guid.NewGuid().ToString("N") + extension);
+        File.WriteAllText(shaderPath, source);
+        TextWriter originalOut = Console.Out;
+        TextWriter originalError = Console.Error;
+        StringWriter captured = new StringWriter();
+        System.Diagnostics.TextWriterTraceListener listener = new System.Diagnostics.TextWriterTraceListener(captured);
+        try
+        {
+            service.Initialize(host.GraphicsDevice);
+            GumServiceShadowDuskExtensions.UseShadowDusk(service);
+
+            ContainerRuntime container = new();
+            container.IsRenderTarget = true;
+            container.AddToManagers(service.SystemManagers, null);
+
+            Console.SetOut(captured);
+            Console.SetError(captured);
+            System.Diagnostics.Trace.Listeners.Add(listener);
+            container.SourceShaderFile = shaderPath;
+            container.RenderTargetEffect.ShouldNotBeNull();
+        }
+        finally
+        {
+            System.Diagnostics.Trace.Listeners.Remove(listener);
+            Console.SetOut(originalOut);
+            Console.SetError(originalError);
+            Gum.Wireframe.CustomSetPropertyOnRenderable.RenderTargetEffectResolver = null;
+            File.Delete(shaderPath);
+            if (service.IsInitialized)
+            {
+                service.Uninitialize();
+            }
+        }
+
+        listener.Flush();
+        captured.ToString().ShouldNotContain("older version");
+    }
+
     private static Color RenderAndSample(GraphicsDevice graphicsDevice, GumService service)
     {
         using RenderTarget2D capture = new(graphicsDevice, CaptureSize, CaptureSize, false, SurfaceFormat.Color,
