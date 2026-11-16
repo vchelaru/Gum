@@ -368,10 +368,30 @@ public class RenderTargetShaderResolverTests
     [Fact]
     public void KniOpenGlProfile_IsTheKnifxVersionTheReferencedKniLoads()
     {
-        CapabilityProfile profile = RenderTargetShaderResolver.KniOpenGlProfile();
+        CapabilityProfile? profile = RenderTargetShaderResolver.KniOpenGlProfile();
 
+        profile.ShouldNotBeNull();
         profile.GraphicsTarget.ShouldBe(PlatformTarget.OpenGL);
         profile.KnifxVersion.ShouldBe((short)12);
+    }
+
+    // KNI 4.2 loads plain OpenGL silently and 4.1 and older cannot read KNIFX at all, so only 4.3 and later get it.
+    [Theory]
+    [InlineData("4.0.9001.0", false)]
+    [InlineData("4.1.9001.0", false)]
+    [InlineData("4.2.9001.0", false)]
+    [InlineData("4.3.9001.0", true)]
+    [InlineData("4.4.0.0", true)]
+    [InlineData("5.0.0.0", true)]
+    public void KniOpenGlProfile_OnlyForKni43AndLater(string version, bool expectsProfile)
+    {
+        (RenderTargetShaderResolver.KniOpenGlProfile(new Version(version)) != null).ShouldBe(expectsProfile);
+    }
+
+    [Fact]
+    public void KniOpenGlProfile_UnknownVersion_IsPlainOpenGl()
+    {
+        RenderTargetShaderResolver.KniOpenGlProfile(null).ShouldBeNull();
     }
 
     [Fact]

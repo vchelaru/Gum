@@ -40,8 +40,16 @@ public static class RenderTargetShaderResolver
     /// OpenGL output is MGFX v10, which KNI 4.3 loads but reports with "This effect is for an older version of KNI
     /// and needs to be rebuilt" (#8137); this is the container version KNI 4.3 takes without the message.
     /// </summary>
-    public static CapabilityProfile KniOpenGlProfile() =>
-        RuntimeProfileDetector.RecommendKnifx(typeof(GraphicsDevice).Assembly);
+    public static CapabilityProfile? KniOpenGlProfile() => KniOpenGlProfile(typeof(GraphicsDevice).Assembly.GetName().Version);
+
+    /// <summary>
+    /// The profile for a KNI of <paramref name="kniVersion"/>: null (plain OpenGL) below 4.3, where KNI 4.2 loads
+    /// that silently and 4.1 and older cannot read KNIFX at all.
+    /// </summary>
+    internal static CapabilityProfile? KniOpenGlProfile(Version? kniVersion) =>
+        kniVersion != null && (kniVersion.Major > 4 || (kniVersion.Major == 4 && kniVersion.Minor >= 3))
+            ? RuntimeProfileDetector.RecommendKnifx(kniVersion)
+            : null;
 
     /// <summary>
     /// Compiles the <c>.fx</c>/<c>.slang</c> file at <paramref name="absolutePath"/> (already made
