@@ -31,7 +31,9 @@ public class ThemedNoOpHotReloadTests : FileThemeInputTestBase
 
     public static IEnumerable<object[]> ThemeAndControl() =>
         AllThemes().Select(row => (string)row[0]).SelectMany(theme =>
-            new[] { "ScrollBar", "ScrollBarHorizontalInCode", "ScrollBarHorizontalAuthored", "ScrollBarHorizontalMoved", "ScrollViewerHorizontal", "ListBoxHorizontal", "Slider", "ComboBox", "TextBoxMultiLine", "ListBox", "ScrollViewer", "ItemsControl" }
+            new[] { "ScrollBar", "ScrollBarHorizontalInCode", "ScrollBarHorizontalAuthored", "ScrollBarHorizontalMoved", "ScrollViewerHorizontal", "ListBoxHorizontal", "Slider", "ComboBox", "TextBoxMultiLine", "ListBox", "ScrollViewer", "ItemsControl", "ScrollViewerBoth", "ScrollViewerVertical", "ScrollViewerHiddenThenShown", "ScrollViewerBothHiddenThenVertical", "ListBoxVertical", "ItemsControlItems", "TextBoxManyLines" }
+                // The vertical thumb of a ScrollViewer showing both bars changes length on reload: #8128.
+                .Where(control => control is not ("ScrollViewerHiddenThenShown" or "ScrollViewerBothHiddenThenVertical"))
                 .Select(control => new object[] { theme, control }));
 
     private static void Snapshot(GraphicalUiElement element, string path, Dictionary<string, string> into)
@@ -130,7 +132,7 @@ public class ThemedNoOpHotReloadTests : FileThemeInputTestBase
 
     private static ScreenSave CreateScreen(GumProjectSave project, string control)
     {
-        string component = control.StartsWith("ScrollBar") ? "ScrollBar" : control.StartsWith("TextBox") ? "TextBox" : control.StartsWith("ScrollViewer") ? "ScrollViewer" : control.StartsWith("ListBox") ? "ListBox" : control;
+        string component = control.StartsWith("ScrollBar") ? "ScrollBar" : control.StartsWith("TextBox") ? "TextBox" : control.StartsWith("ScrollViewer") ? "ScrollViewer" : control.StartsWith("ListBox") ? "ListBox" : control.StartsWith("ItemsControl") ? "ItemsControl" : control;
         ScreenSave screen = new ScreenSave { Name = "AloneScreen" };
         screen.States.Add(new StateSave { Name = "Default", ParentContainer = screen });
         screen.Instances.Add(new InstanceSave { Name = "Box", BaseType = ComponentName(project, component), ParentContainer = screen });
@@ -163,6 +165,27 @@ public class ThemedNoOpHotReloadTests : FileThemeInputTestBase
             if (box is ListBox list) { for (int i = 0; i < 40; i++) { list.Items.Add("an item with fairly long text number " + i); } }
             else { for (int i = 0; i < 10; i++) { viewer.AddChild(new Button { Width = 400, Text = "wide " + i }); } }
         }
+        if (control is "ScrollViewerBoth" or "ScrollViewerVertical" or "ScrollViewerHiddenThenShown" or "ScrollViewerBothHiddenThenVertical")
+        {
+            ScrollViewer viewer = (ScrollViewer)box;
+            for (int i = 0; i < 30; i++) { viewer.AddChild(new Button { Width = 400, Text = "item " + i }); }
+            if (control == "ScrollViewerBoth") { viewer.HorizontalScrollBarVisibility = ScrollBarVisibility.Visible; viewer.VerticalScrollBarVisibility = ScrollBarVisibility.Visible; }
+            if (control == "ScrollViewerVertical") { viewer.VerticalScrollBarVisibility = ScrollBarVisibility.Visible; }
+            if (control == "ScrollViewerHiddenThenShown")
+            {
+                viewer.HorizontalScrollBarVisibility = ScrollBarVisibility.Visible; Driver.Step(2);
+                viewer.HorizontalScrollBarVisibility = ScrollBarVisibility.Hidden; Driver.Step(2);
+                viewer.HorizontalScrollBarVisibility = ScrollBarVisibility.Visible;
+            }
+            if (control == "ScrollViewerBothHiddenThenVertical")
+            {
+                viewer.HorizontalScrollBarVisibility = ScrollBarVisibility.Visible; viewer.VerticalScrollBarVisibility = ScrollBarVisibility.Visible; Driver.Step(2);
+                viewer.HorizontalScrollBarVisibility = ScrollBarVisibility.Hidden;
+            }
+        }
+        if (control == "ListBoxVertical") { ListBox list = (ListBox)box; for (int i = 0; i < 40; i++) { list.Items.Add("item " + i); } }
+        if (control == "ItemsControlItems") { ItemsControl items = (ItemsControl)box; for (int i = 0; i < 40; i++) { items.Items.Add("item " + i); } }
+        if (control == "TextBoxManyLines") { TextBox text = (TextBox)box; text.TextWrapping = Gum.Forms.TextWrapping.Wrap; text.AcceptsReturn = true; text.Text = string.Join("\n", Enumerable.Range(0, 30)); }
         if (control == "TextBoxMultiLine") { ((TextBox)box).TextWrapping = Gum.Forms.TextWrapping.Wrap; ((TextBox)box).AcceptsReturn = true; ((TextBox)box).Text = "a\nb\nc"; }
         Driver.Step(2);
         return screenVisual;
