@@ -55,12 +55,16 @@ try
         benchmarkScreen.ShowOnly(region);
         Console.WriteLine("GL_RENDERER: " + GlHost.Renderer(GetProc) + (region == null ? "" : "  region: " + region));
         GlHost glHost = new GlHost(GetProc);
+        int spikeFrame = 0;
         BenchmarkRunner.Run("BRUTAL OpenGL 3.3", benchmarkScreen,
             update: seconds => GumUI.Update(seconds),
             draw: () =>
             {
                 glClear.ToColor(100 / 255f, 149 / 255f, 237 / 255f);
                 GumUI.Draw();
+                if (++spikeFrame == 400 && Environment.GetEnvironmentVariable("GUM_BENCH_CAPTURE") is { } capturePath)
+                    SampleSupport.SavePng(GlReadback.ReadDefaultFramebuffer(GetProc, window.FramebufferSize.X, window.FramebufferSize.Y),
+                        window.FramebufferSize.X, window.FramebufferSize.Y, capturePath);
             },
             sync: () =>
             {

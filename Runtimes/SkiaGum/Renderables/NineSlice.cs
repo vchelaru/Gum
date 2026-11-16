@@ -478,6 +478,11 @@ public class NineSlice : RenderableShapeBase, IAnimatable, IAnimationChainRender
         {
             return;
         }
+        if (global::RenderingLibrary.Graphics.NineSliceBatcher.Enabled && canvas == global::RenderingLibrary.Graphics.NineSliceBatcher.Spike.Canvas)
+        {
+            global::RenderingLibrary.Graphics.NineSliceBatcher.StatNsLattice++;
+            global::RenderingLibrary.Graphics.NineSliceBatcher.Spike.Flush();
+        }
 
         float destLeft = boundingRect.Left;
         float destTop = boundingRect.Top;
@@ -667,6 +672,34 @@ public class NineSlice : RenderableShapeBase, IAnimatable, IAnimationChainRender
         if (srcLeft != 0 || srcTop != 0 || usedWidth != Image.Width || usedHeight != Image.Height)
         {
             lattice.Bounds = SKRectI.Create(srcLeft, srcTop, usedWidth, usedHeight);
+        }
+
+        var nb = global::RenderingLibrary.Graphics.NineSliceBatcher.Spike;
+        if (global::RenderingLibrary.Graphics.NineSliceBatcher.Enabled && nb.Active && canvas == nb.Canvas)
+        {
+            bool tintable = global::RenderingLibrary.Graphics.NineSliceBatcher.Tint && ColorOperation != ColorOperation.Add && paint.Shader == null && paint.ImageFilter == null && paint.MaskFilter == null && paint.BlendMode == SKBlendMode.SrcOver;
+            if ((global::RenderingLibrary.Graphics.NineSliceBatcher.CanBatchPaint(paint) || tintable) && matrix.Persp0 == 0 && matrix.Persp1 == 0)
+            {
+                // Same cells as the lattice: fixed bands of fullOutside texels scaled by `scale`, stretched middle.
+                Span<float> xs = stackalloc float[4], ys = stackalloc float[4], us = stackalloc float[4], vs = stackalloc float[4];
+                float lw = boundingRect.Width / scale, lh = boundingRect.Height / scale;
+                float lx1 = fullOutsideW, lx2 = lw - fullOutsideW, ly1 = fullOutsideH, ly2 = lh - fullOutsideH;
+                xs[0] = matrix.ScaleX * boundingRect.Left + matrix.TransX;
+                xs[1] = matrix.ScaleX * (boundingRect.Left + scale * lx1) + matrix.TransX;
+                xs[2] = matrix.ScaleX * (boundingRect.Left + scale * lx2) + matrix.TransX;
+                xs[3] = matrix.ScaleX * (boundingRect.Left + scale * lw) + matrix.TransX;
+                ys[0] = matrix.ScaleY * boundingRect.Top + matrix.TransY;
+                ys[1] = matrix.ScaleY * (boundingRect.Top + scale * ly1) + matrix.TransY;
+                ys[2] = matrix.ScaleY * (boundingRect.Top + scale * ly2) + matrix.TransY;
+                ys[3] = matrix.ScaleY * (boundingRect.Top + scale * lh) + matrix.TransY;
+                us[0] = srcLeft; us[1] = srcLeft + fullOutsideW; us[2] = srcLeft + usedWidth - fullOutsideW; us[3] = srcLeft + usedWidth;
+                vs[0] = srcTop; vs[1] = srcTop + fullOutsideH; vs[2] = srcTop + usedHeight - fullOutsideH; vs[3] = srcTop + usedHeight;
+                nb.Append(Image, (object?)(_ownsImage ? _texture : null) ?? Image, paint.Color.Alpha, paint.ColorFilter != null ? paint.Color.WithAlpha(255) : SKColors.White, xs, ys, us, vs);
+                DrawStatistics?.RecordDrawCall();
+                return true;
+            }
+            global::RenderingLibrary.Graphics.NineSliceBatcher.StatNsLattice++;
+            nb.Flush();
         }
 
         canvas.Save();

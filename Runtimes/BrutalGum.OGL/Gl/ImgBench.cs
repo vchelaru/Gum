@@ -128,7 +128,7 @@ public static class ImgBench
         {
             if (onlyLattices && e.Kind != K.Lattice) continue;
             bool batchable = e.Kind == K.Lattice && (tinted || e.Paint == null || e.Paint.ColorFilter == null);
-            if (curClip == null || curClip.Value != e.Clip || (batchable && batchImage != null && batchImage != e.Image) || !batchable)
+            if (curClip == null || curClip.Value != e.Clip || (batchable && batchImage != null && batchImage.UniqueId != e.Image.UniqueId) || !batchable)
             {
                 if (curClip == null || curClip.Value != e.Clip)
                 {
