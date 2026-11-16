@@ -31,9 +31,7 @@ public class ThemedNoOpHotReloadTests : FileThemeInputTestBase
 
     public static IEnumerable<object[]> ThemeAndControl() =>
         AllThemes().Select(row => (string)row[0]).SelectMany(theme =>
-            new[] { "ScrollBar", "ScrollBarHorizontalInCode", "ScrollBarHorizontalAuthored", "ScrollBarHorizontalMoved", "ScrollViewerHorizontal", "ListBoxHorizontal", "Slider", "ComboBox", "TextBoxMultiLine", "ListBox", "ScrollViewer", "ItemsControl", "ScrollViewerBoth", "ScrollViewerVertical", "ScrollViewerHiddenThenShown", "ScrollViewerBothHiddenThenVertical", "ScrollViewerNested", "ListBoxNested", "ComboBoxNested", "TextBoxNested", "SliderNested", "TabControlNested", "ListBoxVertical", "ItemsControlItems", "TextBoxManyLines" }
-                // The vertical thumb of a ScrollViewer showing both bars changes length on reload: #8128.
-                .Where(control => control is not ("ScrollViewerHiddenThenShown" or "ScrollViewerBothHiddenThenVertical"))
+            new[] { "ScrollBar", "ScrollBarHorizontalInCode", "ScrollBarHorizontalAuthored", "ScrollBarHorizontalMoved", "ScrollViewerHorizontal", "ListBoxHorizontal", "Slider", "ComboBox", "TextBoxMultiLine", "ListBox", "ScrollViewer", "ItemsControl", "ScrollViewerBoth", "ScrollViewerVertical", "ScrollViewerHiddenThenShown", "ScrollViewerBothHiddenThenVertical", "ScrollViewerNested", "ListBoxNested", "ComboBoxNested", "TextBoxNested", "SliderNested", "TabControlNested", "ScrollViewerHorizontalTall", "ScrollViewerAutoWide", "ScrollViewerScrolled", "ItemsControlHorizontal", "ListBoxVertical", "ItemsControlItems", "TextBoxManyLines" }
                 .Select(control => new object[] { theme, control }));
 
     private static void Snapshot(GraphicalUiElement element, string path, Dictionary<string, string> into)
@@ -75,6 +73,30 @@ public class ThemedNoOpHotReloadTests : FileThemeInputTestBase
         Snapshot(screenVisual, "", roundTrip);
         roundTrip.Where(pair => never[pair.Key] != pair.Value).Select(pair => $"{pair.Key}: {never[pair.Key]} -> {pair.Value}")
             .ToArray().ShouldBeEmpty(theme);
+    }
+
+    /// <summary>
+    /// Showing or hiding the horizontal bar resizes the clip container; the vertical bar's viewport and
+    /// maximum follow it at once, so the thumb is already the right length before any reload. #8128
+    /// </summary>
+    [Theory]
+    [MemberData(nameof(Themes))]
+    public void ScrollViewer_HorizontalBarToggled_ShouldMeasureVerticalBarFromCurrentClip(string theme)
+    {
+        GumProjectSave project = LoadTheme(theme);
+        ScreenSave screen = CreateScreen(project, "ScrollViewerHiddenThenShown");
+        project.Screens.Add(screen);
+        addedScreen = screen;
+        addedTo = project;
+        GraphicalUiElement screenVisual = BuildScreen(screen, "ScrollViewerHiddenThenShown");
+
+        GraphicalUiElement box = screenVisual.GetGraphicalUiElementByName("Box")!;
+        ScrollViewer viewer = (ScrollViewer)((InteractiveGue)box).FormsControlAsObject!;
+        GraphicalUiElement clip = box.GetGraphicalUiElementByName("ClipContainerInstance")!;
+        GraphicalUiElement panel = box.GetGraphicalUiElementByName("InnerPanelInstance")!;
+        ScrollBar bar = viewer.VerticalScrollBar!;
+        bar.ViewportSize.ShouldBe(clip.AbsoluteHeight, theme);
+        bar.Maximum.ShouldBe(System.Math.Max(0, panel.AbsoluteHeight - clip.AbsoluteHeight), theme);
     }
 
     [Theory]
@@ -165,11 +187,12 @@ public class ThemedNoOpHotReloadTests : FileThemeInputTestBase
             if (box is ListBox list) { for (int i = 0; i < 40; i++) { list.Items.Add("an item with fairly long text number " + i); } }
             else { for (int i = 0; i < 10; i++) { viewer.AddChild(new Button { Width = 400, Text = "wide " + i }); } }
         }
-        if (control is "ScrollViewerBoth" or "ScrollViewerVertical" or "ScrollViewerHiddenThenShown" or "ScrollViewerBothHiddenThenVertical")
+        if (control is "ScrollViewerBoth" or "ScrollViewerVertical" or "ScrollViewerHiddenThenShown" or "ScrollViewerBothHiddenThenVertical" or "ScrollViewerHorizontalTall")
         {
             ScrollViewer viewer = (ScrollViewer)box;
             for (int i = 0; i < 30; i++) { viewer.AddChild(new Button { Width = 400, Text = "item " + i }); }
             if (control == "ScrollViewerBoth") { viewer.HorizontalScrollBarVisibility = ScrollBarVisibility.Visible; viewer.VerticalScrollBarVisibility = ScrollBarVisibility.Visible; }
+            if (control == "ScrollViewerHorizontalTall") { viewer.HorizontalScrollBarVisibility = ScrollBarVisibility.Visible; }
             if (control == "ScrollViewerVertical") { viewer.VerticalScrollBarVisibility = ScrollBarVisibility.Visible; }
             if (control == "ScrollViewerHiddenThenShown")
             {
@@ -204,6 +227,24 @@ public class ThemedNoOpHotReloadTests : FileThemeInputTestBase
             if (made is ItemsControl items) { for (int i = 0; i < 12; i++) { items.Items!.Add("entry " + i); } }
             if (made is TabControl tabs) { tabs.AddTab("One", new Label { Text = "first" }); tabs.AddTab("Two", new Label { Text = "second" }); }
             ((ScrollViewer)box).AddChild(made);
+        }
+        if (control == "ScrollViewerAutoWide")
+        {
+            ScrollViewer viewer = (ScrollViewer)box;
+            for (int i = 0; i < 30; i++) { viewer.AddChild(new Button { Width = 400, Text = "item " + i }); }
+        }
+        if (control == "ScrollViewerScrolled")
+        {
+            ScrollViewer viewer = (ScrollViewer)box;
+            for (int i = 0; i < 30; i++) { viewer.AddChild(new Button { Width = 400, Text = "item " + i }); }
+            viewer.HorizontalScrollBarVisibility = ScrollBarVisibility.Visible; viewer.VerticalScrollBarVisibility = ScrollBarVisibility.Visible; Driver.Step(2);
+            viewer.VerticalScrollBarValue = 150; viewer.HorizontalScrollBar!.Value = 40;
+        }
+        if (control == "ItemsControlHorizontal")
+        {
+            ItemsControl items = (ItemsControl)box;
+            items.HorizontalScrollBarVisibility = ScrollBarVisibility.Visible;
+            for (int i = 0; i < 40; i++) { items.Items.Add("an item with fairly long text number " + i); }
         }
         if (control == "ListBoxVertical") { ListBox list = (ListBox)box; for (int i = 0; i < 40; i++) { list.Items.Add("item " + i); } }
         if (control == "ItemsControlItems") { ItemsControl items = (ItemsControl)box; for (int i = 0; i < 40; i++) { items.Items.Add("item " + i); } }

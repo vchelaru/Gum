@@ -98,6 +98,13 @@ public class ScrollViewer :
 
     bool reactToInnerPanelPositionOrSizeChanged = true;
 
+    // Showing or hiding one bar resizes the clip container the other bar measures its viewport from, and the clip
+    // raises no event the bars hear. The size each bar last measured is kept so the other bar's update can notice
+    // it is stale and recompute (#8128).
+    float _verticalViewportMeasuredFrom = float.NaN;
+    float _horizontalViewportMeasuredFrom = float.NaN;
+    bool _isRefreshingStaleBars;
+
     protected ScrollBar? verticalScrollBar;
     protected ScrollBar? horizontalScrollBar;
 
@@ -1479,6 +1486,7 @@ public class ScrollViewer :
         void SetVerticalScrollBarValuesFromVisuals()
         {
             scrollBar.Minimum = 0;
+            _verticalViewportMeasuredFrom = clip.AbsoluteHeight;
             scrollBar.ViewportSize = clip.AbsoluteHeight;
 
             var innerPanelHeight = panel.AbsoluteHeight;
@@ -1495,6 +1503,42 @@ public class ScrollViewer :
         UpdateToSizeMode();
 
         reactToInnerPanelPositionOrSizeChanged = oldReact;
+
+        RefreshStaleBars();
+    }
+
+    private void RefreshStaleBars()
+    {
+        if (_isRefreshingStaleBars || clipContainer is not { } clip)
+        {
+            return;
+        }
+
+        _isRefreshingStaleBars = true;
+        try
+        {
+            // Each pass can show or hide a bar and so resize the clip again; three passes settle every
+            // combination of two bars, and an Auto pair that would flip forever stops there.
+            for (int i = 0; i < 3; i++)
+            {
+                if (verticalScrollBar != null && clip.AbsoluteHeight != _verticalViewportMeasuredFrom)
+                {
+                    UpdateVerticalScrollBarValues();
+                }
+                else if (horizontalScrollBar != null && clip.AbsoluteWidth != _horizontalViewportMeasuredFrom)
+                {
+                    UpdateHorizontalScrollBarValues();
+                }
+                else
+                {
+                    break;
+                }
+            }
+        }
+        finally
+        {
+            _isRefreshingStaleBars = false;
+        }
     }
 
     private void SetScrollBarState()
@@ -1555,6 +1599,7 @@ public class ScrollViewer :
         void SetHorizontalSrollBarValuesFromVisuals()
         {
             scrollBar.Minimum = 0;
+            _horizontalViewportMeasuredFrom = clip.AbsoluteWidth;
             scrollBar.ViewportSize = clip.AbsoluteWidth;
 
             var innerPanelWidth = panel.AbsoluteWidth;
@@ -1565,6 +1610,8 @@ public class ScrollViewer :
 
             scrollBar.Maximum = maxValue;
         }
+
+        RefreshStaleBars();
     }
 
     public override void UpdateState()
