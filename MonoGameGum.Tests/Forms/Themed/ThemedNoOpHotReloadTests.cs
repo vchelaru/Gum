@@ -31,7 +31,7 @@ public class ThemedNoOpHotReloadTests : FileThemeInputTestBase
 
     public static IEnumerable<object[]> ThemeAndControl() =>
         AllThemes().Select(row => (string)row[0]).SelectMany(theme =>
-            new[] { "ScrollBar", "ScrollBarHorizontalInCode", "ScrollBarHorizontalAuthored", "ScrollBarHorizontalMoved", "ScrollViewerHorizontal", "ListBoxHorizontal", "Slider", "ComboBox", "TextBoxMultiLine", "ListBox", "ScrollViewer", "ItemsControl", "ScrollViewerBoth", "ScrollViewerVertical", "ScrollViewerHiddenThenShown", "ScrollViewerBothHiddenThenVertical", "ListBoxVertical", "ItemsControlItems", "TextBoxManyLines" }
+            new[] { "ScrollBar", "ScrollBarHorizontalInCode", "ScrollBarHorizontalAuthored", "ScrollBarHorizontalMoved", "ScrollViewerHorizontal", "ListBoxHorizontal", "Slider", "ComboBox", "TextBoxMultiLine", "ListBox", "ScrollViewer", "ItemsControl", "ScrollViewerBoth", "ScrollViewerVertical", "ScrollViewerHiddenThenShown", "ScrollViewerBothHiddenThenVertical", "ScrollViewerNested", "ListBoxNested", "ComboBoxNested", "TextBoxNested", "SliderNested", "TabControlNested", "ListBoxVertical", "ItemsControlItems", "TextBoxManyLines" }
                 // The vertical thumb of a ScrollViewer showing both bars changes length on reload: #8128.
                 .Where(control => control is not ("ScrollViewerHiddenThenShown" or "ScrollViewerBothHiddenThenVertical"))
                 .Select(control => new object[] { theme, control }));
@@ -132,7 +132,7 @@ public class ThemedNoOpHotReloadTests : FileThemeInputTestBase
 
     private static ScreenSave CreateScreen(GumProjectSave project, string control)
     {
-        string component = control.StartsWith("ScrollBar") ? "ScrollBar" : control.StartsWith("TextBox") ? "TextBox" : control.StartsWith("ScrollViewer") ? "ScrollViewer" : control.StartsWith("ListBox") ? "ListBox" : control.StartsWith("ItemsControl") ? "ItemsControl" : control;
+        string component = control.EndsWith("Nested") ? "ScrollViewer" : control.StartsWith("ScrollBar") ? "ScrollBar" : control.StartsWith("TextBox") ? "TextBox" : control.StartsWith("ScrollViewer") ? "ScrollViewer" : control.StartsWith("ListBox") ? "ListBox" : control.StartsWith("ItemsControl") ? "ItemsControl" : control;
         ScreenSave screen = new ScreenSave { Name = "AloneScreen" };
         screen.States.Add(new StateSave { Name = "Default", ParentContainer = screen });
         screen.Instances.Add(new InstanceSave { Name = "Box", BaseType = ComponentName(project, component), ParentContainer = screen });
@@ -182,6 +182,28 @@ public class ThemedNoOpHotReloadTests : FileThemeInputTestBase
                 viewer.HorizontalScrollBarVisibility = ScrollBarVisibility.Visible; viewer.VerticalScrollBarVisibility = ScrollBarVisibility.Visible; Driver.Step(2);
                 viewer.HorizontalScrollBarVisibility = ScrollBarVisibility.Hidden;
             }
+        }
+        if (control == "ScrollViewerNested")
+        {
+            // A ScrollViewer made in code and added to another one's content: a runtime child, not a project instance. #8130
+            ScrollViewer inner = new ScrollViewer { Width = 150, Height = 80 };
+            for (int i = 0; i < 20; i++) { inner.AddChild(new Button { Width = 400, Text = "inner " + i }); }
+            ((ScrollViewer)box).AddChild(inner);
+        }
+        if (control is "ListBoxNested" or "ComboBoxNested" or "TextBoxNested" or "SliderNested" or "TabControlNested")
+        {
+            // Controls made in code inside a tool-authored ScrollViewer: runtime children, not project instances.
+            FrameworkElement made = control switch
+            {
+                "ListBoxNested" => new ListBox { Width = 150, Height = 80 },
+                "ComboBoxNested" => new ComboBox(),
+                "TextBoxNested" => new TextBox { Width = 150, Height = 60, TextWrapping = Gum.Forms.TextWrapping.Wrap, AcceptsReturn = true, Text = "a b c d e f g" },
+                "SliderNested" => new Slider { Minimum = 0, Maximum = 10, Value = 4 },
+                _ => new TabControl { Width = 200, Height = 100 },
+            };
+            if (made is ItemsControl items) { for (int i = 0; i < 12; i++) { items.Items.Add("entry " + i); } }
+            if (made is TabControl tabs) { tabs.AddTab("One", new Label { Text = "first" }); tabs.AddTab("Two", new Label { Text = "second" }); }
+            ((ScrollViewer)box).AddChild(made);
         }
         if (control == "ListBoxVertical") { ListBox list = (ListBox)box; for (int i = 0; i < 40; i++) { list.Items.Add("item " + i); } }
         if (control == "ItemsControlItems") { ItemsControl items = (ItemsControl)box; for (int i = 0; i < 40; i++) { items.Items.Add("item " + i); } }

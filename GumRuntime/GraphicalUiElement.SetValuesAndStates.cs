@@ -1512,7 +1512,11 @@ public partial class GraphicalUiElement
             Children[i].ReapplyAppliedCategoryStatesRecursive();
         }
 
-        if (_appliedCategoryStates != null)
+        // A visual made in code (no element, no instance) took its states from code, which a reload does not touch.
+        // Re-applying one would replace the values its container gave it (a ScrollViewer sizing its bars), and no
+        // project value can have changed for it (#8130, #8131).
+        bool isCodeCreated = ElementSave == null && Tag is not InstanceSave;
+        if (_appliedCategoryStates != null && !isCodeCreated)
         {
             foreach (KeyValuePair<string, string> applied in _appliedCategoryStates.ToArray())
             {
