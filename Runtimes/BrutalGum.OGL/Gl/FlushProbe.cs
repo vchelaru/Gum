@@ -28,7 +28,7 @@ public static unsafe class FlushProbe
         {
             using var bmp = new SKBitmap(24, 24);
             using (var c = new SKCanvas(bmp)) { c.Clear(SKColors.DarkSlateGray); using var p = new SKPaint { Color = SKColors.LightGray }; c.DrawRect(4, 4, 16, 16, p); }
-            _rawImage = SKImage.FromBitmap(bmp).ToTextureImage(GlTargetGr!);
+            _rawImage = Environment.GetEnvironmentVariable("GUM_RAWRASTER") == "1" ? SKImage.FromBitmap(bmp) : SKImage.FromBitmap(bmp).ToTextureImage(GlTargetGr!); // SPIKE sgr: raster (what Gum uses) vs texture-backed
             using var font = new SKFont(SKTypeface.Default, 16);
             _rawBlobs = new SKTextBlob?[100];
             for (int i = 0; i < 100; i++) _rawBlobs[i] = SKTextBlob.Create(i.ToString(), font);
@@ -71,6 +71,96 @@ public static unsafe class FlushProbe
         var v = SKPicture.Deserialize(b)!;
         Console.WriteLine($"PICVAR noop'd {n} ops ({noop}); variant ops {v.ApproximateOperationCount}");
         return v;
+    }
+
+    public static void ComparePixels(GRContext gr, SKPicture a, SKPicture b, int w, int h)
+    {
+        var info = new SKImageInfo(w, h, SKColorType.Rgba8888, SKAlphaType.Premul);
+        byte[] Render(SKPicture p)
+        {
+            using var s = SKSurface.Create(gr, false, info)!;
+            s.Canvas.Clear(new SKColor(100, 149, 237)); s.Canvas.DrawPicture(p); s.Flush();
+            var px = new byte[w * h * 4];
+            fixed (byte* q = px) s.ReadPixels(info, (IntPtr)q, w * 4, 0, 0);
+            return px;
+        }
+        byte[] x = Render(a), y = Render(b);
+        int diff = 0; for (int i = 0; i < x.Length; i += 4) if (x[i] != y[i] || x[i + 1] != y[i + 1] || x[i + 2] != y[i + 2] || x[i + 3] != y[i + 3]) diff++;
+        Console.WriteLine($"PICVAR pixels differing: {diff} of {w * h}");
+    }
+
+    static float[] Mul(float[] a, float[] b) // column-major 4x4: a*b
+    {
+        var r = new float[16];
+        for (int c = 0; c < 4; c++) for (int rr = 0; rr < 4; rr++)
+        { float s = 0; for (int k = 0; k < 4; k++) s += a[k * 4 + rr] * b[c * 4 + k]; r[c * 4 + rr] = s; }
+        return r;
+    }
+    static bool Same(float[] a, float[] b) { for (int i = 0; i < 16; i++) if (a[i] != b[i]) return false; return true; }
+    static float[] Read16(byte[] b, int p) { var m = new float[16]; for (int i = 0; i < 16; i++) m[i] = BitConverter.ToSingle(b, p + 4 * i); return m; }
+    static readonly float[] Identity = { 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1 };
+
+    // MonoGame-style op stream from one Gum frame: every draw verbatim, a SetM44 only when the draw's matrix differs from the last one
+    // emitted, and Restore/Save + the active ClipRect chain only when the clip chain differs. Also counts redundant state ops.
+    public static SKPicture MakeMinimal(SKPicture pic)
+    {
+        byte[] b = pic.Serialize().ToArray();
+        int at = -1;
+        for (int i = 0; i + 8 <= b.Length; i++) if (BitConverter.ToUInt32(b, i) == 0x72656164) { at = i; break; }
+        int len = (int)BitConverter.ToUInt32(b, at + 4), p = at + 8, end = p + len;
+        var mStack = new Stack<float[]>(); var cStack = new Stack<List<(float[] m, int off, int size)>>(); var drewStack = new Stack<bool>();
+        float[] m = Identity; var chain = new List<(float[] m, int off, int size)>(); bool drew = false;
+        int setSame = 0, concatIdentity = 0, emptySaves = 0, saves = 0, draws = 0;
+        var outOps = new List<byte>();
+        float[]? emittedM = null; var emittedChain = new List<(float[] m, int off, int size)>();
+        int matrixChanges = 0, clipChanges = 0;
+        void Emit(int off, int size) { for (int i = 0; i < size; i++) outOps.Add(b[off + i]); }
+        void EmitWord(uint v) { outOps.AddRange(BitConverter.GetBytes(v)); }
+        void EmitM(float[] mm) { EmitWord((71u << 24) | 68); foreach (var f in mm) outOps.AddRange(BitConverter.GetBytes(f)); }
+        static bool SameChain(List<(float[] m, int off, int size)> x, List<(float[] m, int off, int size)> y)
+        { if (x.Count != y.Count) return false; for (int i = 0; i < x.Count; i++) if (x[i].off != y[i].off) return false; return true; }
+        bool saved = false;
+        while (p < end)
+        {
+            uint w = BitConverter.ToUInt32(b, p); int op = (int)(w >> 24), size = (int)(w & 0xFFFFFF);
+            if (size == 0xFFFFFF) size = (int)BitConverter.ToUInt32(b, p + 4);
+            switch (op)
+            {
+                case 30: saves++; mStack.Push(m); cStack.Push(chain); drewStack.Push(drew); chain = new List<(float[], int, int)>(chain); drew = false; break;
+                case 28: { if (!drew) emptySaves++; bool d2 = drew; m = mStack.Pop(); chain = cStack.Pop(); drew = drewStack.Pop() | d2; break; }
+                case 71: { var nm = Read16(b, p + 4); if (Same(nm, m)) setSame++; m = nm; break; }
+                case 68: { var cm = Read16(b, p + 4); if (Same(cm, Identity)) concatIdentity++; m = Mul(m, cm); break; }
+                case 3: chain.Add((m, p, size)); break;
+                case 45: case 48: case 73: case 74:
+                    draws++; drew = true;
+                    if (!SameChain(chain, emittedChain))
+                    {
+                        clipChanges++;
+                        if (saved) EmitWord((28u << 24) | 4);
+                        EmitWord((30u << 24) | 4); saved = true;
+                        foreach (var (cm, off, csz) in chain)
+                        {
+                            EmitM(cm);
+                            int start = outOps.Count; Emit(off, csz);
+                            for (int i = 0; i < 4; i++) outOps[start + csz - 4 + i] = 0; // restore offset: never skip ahead
+                        }
+                        emittedChain = chain; emittedM = null;
+                    }
+                    if (emittedM == null || !Same(emittedM, m)) { matrixChanges++; EmitM(m); emittedM = m; }
+                    Emit(p, size);
+                    break;
+                default: Console.WriteLine($"PICMIN unexpected op {op}"); Emit(p, size); break;
+            }
+            p += size;
+        }
+        if (saved) EmitWord((28u << 24) | 4);
+        var nb = new List<byte>(b.Length + outOps.Count);
+        for (int i = 0; i < at + 4; i++) nb.Add(b[i]);
+        nb.AddRange(BitConverter.GetBytes(outOps.Count)); nb.AddRange(outOps);
+        for (int i = at + 8 + len; i < b.Length; i++) nb.Add(b[i]);
+        var v = SKPicture.Deserialize(nb.ToArray());
+        Console.WriteLine($"PICMIN draws {draws}, saves {saves} (empty {emptySaves}), SetM44 same-as-current {setSame}, Concat identity {concatIdentity}; minimal: matrix changes {matrixChanges}, clip-chain changes {clipChanges}, ops {v?.ApproximateOperationCount}");
+        return v!;
     }
 
     // Histogram of one frame's canvas ops: serialize the picture to SKP and walk the 'read' op stream (SkPictureFlat.h DrawType).
