@@ -18,6 +18,7 @@ public class SpikeSortZOrderTests : IDisposable
     const int Size = 200;
     readonly SKSurface _surface;
     readonly SKBitmap _texture;
+    static bool Fuse = true; // run sorter pre-renders in its own walk (GUM_SORT_FUSE)
 
     public SpikeSortZOrderTests()
     {
@@ -56,6 +57,7 @@ public class SpikeSortZOrderTests : IDisposable
     byte[] Draw(int sortMode, bool nsBatch, bool deferText)
     {
         RenderingLibrary.Graphics.Renderer.SortMode = sortMode;
+        RenderingLibrary.Graphics.SkiaRunSorter.Fuse = Fuse;
         NineSliceBatcher.Enabled = nsBatch;
         NineSliceBatcher.DeferText = deferText;
         _surface.Canvas.Clear(SKColors.Black);

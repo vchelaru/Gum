@@ -23,6 +23,8 @@ public sealed class SkiaRunSorter
 
     struct Item { public IRenderableIpso R; public SKRect B; public int Next; public SKRect ChunkUnion; public int ChunkCount; public int NextChunk; }
     public static int Chunk = int.TryParse(Environment.GetEnvironmentVariable("GUM_SORT_CHUNK"), out int ch) ? ch : 8;
+    public static bool Fuse = Environment.GetEnvironmentVariable("GUM_SORT_FUSE") == "1";
+    public static Action<System.Collections.ObjectModel.ObservableCollection<IRenderableIpso>>? PreRenderSubtree;
     struct Group { public int Key; public SKRect Union; public int First; public int Last; public int ChunkHead; }
 
     Item[] _items = new Item[1024];
@@ -74,6 +76,12 @@ public sealed class SkiaRunSorter
     void Process(IRenderableIpso r, float px, float py, bool rotated)
     {
         if (!r.Visible) return;
+        if (Fuse)
+        {
+            r.PreRender();
+            if (!r.Visible) return;
+            if (r.IsRenderTarget && r.Children != null) PreRenderSubtree!(r.Children);
+        }
         float x = px + r.X, y = py + r.Y;
         bool rot = rotated || r.Rotation != 0;
         if (r.ClipsChildren)

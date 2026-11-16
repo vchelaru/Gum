@@ -516,7 +516,7 @@ namespace RenderingLibrary.Graphics
         // sorts on the moved value. Children are never sorted.
         void DrawList(IList<IRenderableIpso> whatToRender, SystemManagers managers, Layer? layerToSort = null, bool prerender = true)
         {
-            if (prerender)
+            if (prerender && !(SortMode == 2 && SkiaRunSorter.Fuse && RenderUsingHierarchy)) // fused: the sorter pre-renders as it visits
             {
                 PreRender(whatToRender);
             }
@@ -549,6 +549,7 @@ namespace RenderingLibrary.Graphics
                 }
                 else
                 {
+                    SkiaRunSorter.PreRenderSubtree ??= PreRender;
                     SkiaRunSorter.Instance.Build(whatToRender, _sortCommands);
                 }
                 SortProbe.Add(System.Diagnostics.Stopwatch.GetTimestamp() - t0);
