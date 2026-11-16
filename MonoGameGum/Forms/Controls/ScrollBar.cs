@@ -431,6 +431,7 @@ public class ScrollBar : RangeBase
         {
             return;
         }
+        RememberThumbAxisLayout();
         var ratioDown = (Value - Minimum) / (Maximum - Minimum);
         ratioDown = System.Math.Max(0, ratioDown);
         ratioDown = System.Math.Min(1, ratioDown);
@@ -545,6 +546,7 @@ public class ScrollBar : RangeBase
 
     private void UpdateThumbSize()
     {
+        RememberThumbAxisLayout();
         var desiredHeight = MinimumThumbSize;
         // Track falls back to the thumb's parent, so a thumb exists whenever Track does.
         if (ViewportSize != 0 && Track is { } track && thumb != null)
@@ -591,8 +593,46 @@ public class ScrollBar : RangeBase
         }
     }
 
+    // The position and size updates above rewrite the units and origin of the thumb on the axis the bar runs along.
+    // After an orientation change that axis is the cross axis, which keeps the rewritten values unless they are
+    // put back first (a thumb centered across the bar, as its default state authored, would sit at the top). The
+    // layout is read before the first rewrite, once per thumb.
+    private GraphicalUiElement? _thumbLayoutOwner;
+    private global::Gum.Converters.GeneralUnitType _thumbXUnits;
+    private global::Gum.Converters.GeneralUnitType _thumbYUnits;
+    private global::RenderingLibrary.Graphics.HorizontalAlignment _thumbXOrigin;
+    private global::RenderingLibrary.Graphics.VerticalAlignment _thumbYOrigin;
+
+    private void RememberThumbAxisLayout()
+    {
+        if (thumb?.Visual is not { } visual || ReferenceEquals(_thumbLayoutOwner, visual))
+        {
+            return;
+        }
+
+        _thumbLayoutOwner = visual;
+        _thumbXUnits = visual.XUnits;
+        _thumbYUnits = visual.YUnits;
+        _thumbXOrigin = visual.XOrigin;
+        _thumbYOrigin = visual.YOrigin;
+    }
+
+    private void RestoreThumbAxisLayout()
+    {
+        if (thumb?.Visual is not { } visual || !ReferenceEquals(_thumbLayoutOwner, visual))
+        {
+            return;
+        }
+
+        visual.XUnits = _thumbXUnits;
+        visual.YUnits = _thumbYUnits;
+        visual.XOrigin = _thumbXOrigin;
+        visual.YOrigin = _thumbYOrigin;
+    }
+
     private void UpdateOrientationState()
     {
+        RestoreThumbAxisLayout();
         ApplyOrientationStateToVisual();
 
         UpdateThumbSize();
