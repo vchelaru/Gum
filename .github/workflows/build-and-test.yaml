@@ -272,7 +272,10 @@ jobs:
       # splits the classes across 3 concurrent processes to use the runner's other cores.
       - name: Gum.Avalonia.Tests (headless, 3 concurrent processes)
         shell: bash
-        run: bash .github/scripts/test-sharded.sh Tests/Gum.Avalonia.Tests/Gum.Avalonia.Tests.csproj 3 avalonia-head --blame
+        # A hang here once ran past an hour with no log; the step takes about 10 minutes, so fail fast and
+        # leave a dump of the stuck test host for the 'Upload hang dumps' step.
+        timeout-minutes: 25
+        run: bash .github/scripts/test-sharded.sh Tests/Gum.Avalonia.Tests/Gum.Avalonia.Tests.csproj 3 avalonia-head --blame --blame-hang-timeout 8m --blame-hang-dump-type mini
       # The full-startup layer (phase 100): the real head executable on a fixture project, plus the
       # KNI device tests and the canvas end-to-end scenarios. Only Linux has a cheap virtual display
       # plus software GL on the runner (Xvfb + Mesa llvmpipe), so it is the one OS where CI proves
@@ -292,11 +295,13 @@ jobs:
       # Windows already runs it in Build-and-Test, so it is not repeated here.
       - name: Gum.Presentation.Tests (shared logic on every OS)
         if: runner.os != 'Windows'
+        timeout-minutes: 15
         run: dotnet test Tests/Gum.Presentation.Tests/Gum.Presentation.Tests.csproj --configuration Release --logger "trx" --results-directory "TestResults" --blame-hang --blame-hang-timeout 5m --blame-hang-dump-type none
       # Save byte-parity (ProjectSaveParityTests) must hold on every OS; Windows runs it in the main
       # test job, so only macOS and Linux run it here.
       - name: Gum.ProjectServices.Tests (save parity on every OS)
         if: runner.os != 'Windows'
+        timeout-minutes: 15
         run: dotnet test Tests/Gum.ProjectServices.Tests/Gum.ProjectServices.Tests.csproj --configuration Release --logger "trx" --results-directory "TestResults"
       # Slowest classes and tests in the job summary, so this job's minutes can be explained from the
       # run page alone (#6092).
@@ -370,6 +375,7 @@ jobs:
           dest-dirs: Tests/NativeAotSmoke.Harness/bin/Release/net8.0/win-x64/publish
 
       - name: Run harness (exit code is the assertion)
+        timeout-minutes: 10
         env:
           GALLIUM_DRIVER: llvmpipe
         run: |
