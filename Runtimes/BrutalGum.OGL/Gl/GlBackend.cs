@@ -41,7 +41,8 @@ internal sealed unsafe class GlTarget : IBrutalTarget
         _height = height;
     }
 
-    public SKCanvas Canvas => _ownActive ? _ownSurface!.Canvas : _direct.Canvas;
+    public SKCanvas Canvas => FlushProbe.NoDraw ? (_noDraw ??= new SKNoDrawCanvas(_width, _height)) : _ownActive ? _ownSurface!.Canvas : _direct.Canvas;
+    private SKNoDrawCanvas? _noDraw; // SPIKE #8116: GUM_NODRAW=1 sends every Gum draw to a no-op canvas (walk-only cost)
 
     public void Begin()
     {

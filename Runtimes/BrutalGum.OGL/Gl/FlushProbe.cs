@@ -10,6 +10,7 @@ namespace Gum;
 public static unsafe class FlushProbe
 {
     public static readonly bool Enabled = Environment.GetEnvironmentVariable("GUM_FLUSHPROBE") == "1";
+    public static readonly bool NoDraw = Environment.GetEnvironmentVariable("GUM_NODRAW") == "1";
     public static readonly bool GlTime = Environment.GetEnvironmentVariable("GUM_GLTIME") == "1";
     public static readonly string? CtxOpt = Environment.GetEnvironmentVariable("GUM_CTXOPT");
     public static readonly bool OwnPass = Environment.GetEnvironmentVariable("GUM_OWNPASS") == "1";
