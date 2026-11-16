@@ -763,19 +763,6 @@ public sealed class BatchKeyGroupedOrderer : IRenderableOrderer
         int iright = (int)System.MathF.Ceiling(x + right);
         int ibottom = (int)System.MathF.Ceiling(y + bottom);
         bounds = new System.Drawing.Rectangle(ix, iy, iright - ix, ibottom - iy);
-
-        // A renderable with non-default XOrigin/YOrigin/Rotation can report a position outside its
-        // parent while the visible draw lands inside it, so bounds that miss the parent entirely
-        // fall back to the parent's box.
-        IRenderableIpso? parent = renderable.Parent;
-        if (parent != null)
-        {
-            System.Drawing.Rectangle parentBounds = parent.GetAbsoluteBounds();
-            if (parentBounds.Width > 0 && parentBounds.Height > 0 && !bounds.IntersectsWith(parentBounds))
-            {
-                bounds = parentBounds;
-            }
-        }
         return true;
     }
 

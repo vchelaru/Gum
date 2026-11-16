@@ -120,6 +120,30 @@ public class BatchKeyGroupedOrdererDrawnBoundsTests : BaseTestClass
     }
 
     [Fact]
+    public void BuildDrawList_TextWhollyOutsideItsParent_StaysUnderTheNextBackground()
+    {
+        // A child placed outside its parent (a caption below a panel, a badge above a button)
+        // draws where it is, not inside the parent's box.
+        OrdererFake first = Background("bg0", 0, 0, 100, 30);
+        ContainerRuntime container = new()
+        {
+            X = 0, Y = 0, Width = 100, Height = 10,
+            WidthUnits = DimensionUnitType.Absolute, HeightUnits = DimensionUnitType.Absolute,
+        };
+        TextRuntime text = CreateText(4, 35, 90, 10, "label below its parent");
+        container.AddChild(text);
+        OrdererFake second = Background("bg1", 0, 30, 100, 30);
+
+        text.GetAbsoluteTop().ShouldBeGreaterThan(30f);
+
+        List<DrawCommand> commands = Build(first, container, second);
+
+        IndexOf(commands, text).ShouldBeGreaterThanOrEqualTo(0);
+        IndexOf(commands, text).ShouldBeLessThan(IndexOf(commands, second),
+            "the text overlaps the second background, which must draw over it as in depth-first order");
+    }
+
+    [Fact]
     public void BuildDrawList_RenderableWithUnknownDrawnBounds_OverlapsEverything()
     {
         OrdererFake first = Background("bg0", 0, 0, 100, 30);

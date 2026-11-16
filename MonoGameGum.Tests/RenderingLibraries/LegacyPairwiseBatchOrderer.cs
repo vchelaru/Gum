@@ -122,16 +122,9 @@ internal sealed class LegacyPairwiseBatchOrderer
     private static void Add(IRenderableIpso renderable, List<Entry> window)
     {
         string batchKey = renderable.BatchKey ?? string.Empty;
+        // The differential scenes are unrotated fakes that draw inside their boxes, so the layout
+        // box is what the orderer under test uses too.
         System.Drawing.Rectangle bounds = renderable.GetAbsoluteBounds();
-        IRenderableIpso? parent = renderable.Parent;
-        if (parent != null)
-        {
-            System.Drawing.Rectangle parentBounds = parent.GetAbsoluteBounds();
-            if (parentBounds.Width > 0 && parentBounds.Height > 0 && !bounds.IntersectsWith(parentBounds))
-            {
-                bounds = parentBounds;
-            }
-        }
 
         window.Add(new Entry
         {
