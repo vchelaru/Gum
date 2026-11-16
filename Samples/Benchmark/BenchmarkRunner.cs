@@ -24,6 +24,20 @@ internal static class BenchmarkRunner
 #endif
     }
 
+    /// <summary>
+    /// Reads <c>--benchmark [out.md] [--region forms|list|pairs|empty]</c>. Call it before changing the working
+    /// directory: the output path is resolved against the caller's folder.
+    /// </summary>
+    public static (bool Enabled, string? OutputPath, string? Region) ParseArgs(string[] args)
+    {
+        int index = Array.IndexOf(args, "--benchmark");
+        string? outputPath = index >= 0 && index + 1 < args.Length && !args[index + 1].StartsWith("--")
+            ? Path.GetFullPath(args[index + 1])
+            : null;
+        string? region = args.SkipWhile(a => a != "--region").Skip(1).FirstOrDefault();
+        return (index >= 0, outputPath, region);
+    }
+
     public static string Run(string runtimeName, BenchmarkScreen screen, Action<double> update, Action draw, Action sync,
         string? outputPath)
     {
