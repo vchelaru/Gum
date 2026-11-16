@@ -474,6 +474,12 @@ jobs:
       - name: Build Theme Projects (KNI Skia)
         run: pwsh Tools/build-theme-projects.ps1 -Cli "Tools/Gum.Cli/bin/Release/net10.0/GumCli.exe" -Platform kniskia
 
+      # Every `gumcli new --platform` host, as a user gets it (Standard theme, default code settings), so a
+      # platform template that does not compile fails the PR that broke it (#8136). Source-linked: main's
+      # templates target this checkout's runtimes, not the last release on NuGet.
+      - name: Build gumcli new Platform Projects
+        run: pwsh Tools/build-theme-projects.ps1 -Cli "Tools/Gum.Cli/bin/Release/net10.0/GumCli.exe" -Theme Standard -Platform monogame,kni,kniskia,raylib,stride,silknet,brutal -DefaultCodegenSettings
+
   # Saves the Windows NuGet package cache on pushes to main (#6282). PR runs only restore it, so a PR
   # never pays the save. Separate from Build-and-Test so the push-to-main run's Windows leg stays a no-op
   # and no required context is affected. A hit means the packages are already cached, so it does nothing.
