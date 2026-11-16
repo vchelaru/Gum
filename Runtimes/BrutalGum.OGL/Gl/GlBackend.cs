@@ -92,7 +92,7 @@ internal sealed unsafe class GlTarget : IBrutalTarget
             using var pic = _recorder.EndRecording();
             long b = System.Diagnostics.Stopwatch.GetTimestamp();
             // GUM_PICNOOP=3,28,30 / none: from frame 300 on, play a frozen copy of that frame with the listed op codes turned into NOOPs
-            if (++_picFrame == 300 && FlushProbe.PicNoop != null)
+            if (++_picFrame == (int.TryParse(Environment.GetEnvironmentVariable("GUM_PICFRAME"), out int pf) ? pf : 300) && FlushProbe.PicNoop != null)
             {
                 _variant = FlushProbe.PicNoop == "min" ? FlushProbe.MakeMinimal(pic) : FlushProbe.MakeVariant(pic, FlushProbe.PicNoop);
                 FlushProbe.ComparePixels(Gr, pic, _variant, _width, _height);
