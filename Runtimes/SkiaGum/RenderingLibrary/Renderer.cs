@@ -529,7 +529,32 @@ namespace RenderingLibrary.Graphics
             }
 
             var count = whatToRender.Count;
+            var nb = NineSliceBatcher.Spike;
+            bool nbTop = NineSliceBatcher.Enabled && prerender && !nb.Active;
+            if (nbTop)
+            {
+                nb.Active = true;
+                nb.Canvas = managers.Canvas;
+                nb.Managers = managers;
+            }
 
+            if (SortMode != 0 && prerender && RenderUsingHierarchy)
+            {
+                long t0 = System.Diagnostics.Stopwatch.GetTimestamp();
+                if (SortMode == 1)
+                {
+                    BatchKeyGroupedOrderer.BoundsOverride ??= SortBounds;
+                    BatchKeyGroupedOrderer.Instance.BuildDrawList(whatToRender, _sortCommands);
+                }
+                else
+                {
+                    SkiaRunSorter.Instance.Build(whatToRender, _sortCommands);
+                }
+                SortProbe.Add(System.Diagnostics.Stopwatch.GetTimestamp() - t0);
+                ExecuteCommands(_sortCommands, managers);
+            }
+            else
+            {
             for (int i = 0; i < count; i++)
             {
                 var renderable = whatToRender[i];
@@ -537,6 +562,14 @@ namespace RenderingLibrary.Graphics
                 {
                     DrawRenderable(renderable, managers);
                 }
+            }
+            }
+
+            if (nbTop)
+            {
+                nb.Flush();
+                nb.Active = false;
+                NineSliceBatcher.StatFrames++;
             }
         }
 
@@ -625,6 +658,7 @@ namespace RenderingLibrary.Graphics
             // hidden one is skipped by the caller's Visible check, so no stale texture ghosts.
             if (renderable.IsRenderTarget)
             {
+                if (NineSliceBatcher.Enabled) NineSliceBatcher.Spike.Flush();
                 SpriteBatch.Flush();
                 CompositeRenderTarget(renderable, managers);
                 return;
@@ -654,6 +688,7 @@ namespace RenderingLibrary.Graphics
 
                 if (isOnScreen)
                 {
+                    if (NineSliceBatcher.Enabled) NineSliceBatcher.Spike.Flush();
                     SpriteBatch.Flush();
                     canvas.Save();
                     canvas.ClipTo(renderable);
@@ -663,6 +698,8 @@ namespace RenderingLibrary.Graphics
                     {
                         RenderOne(renderable, managers);
                         DrawChildren(renderable, managers);
+                        // Deferred text still belongs inside this clip; flush while ClipAppliedByWalk is set.
+                        if (NineSliceBatcher.Enabled) NineSliceBatcher.Spike.Flush();
                     }
                     finally
                     {
@@ -698,6 +735,79 @@ namespace RenderingLibrary.Graphics
         /// </summary>
         internal IRenderableIpso? ClipAppliedByWalk { get; private set; }
 
+        // SPIKE #8116 (sort3): GUM_SORT=1 shared BatchKeyGroupedOrderer copy, GUM_SORT=2 SkiaRunSorter.
+        internal static readonly int SortMode = int.TryParse(Environment.GetEnvironmentVariable("GUM_SORT"), out int sm) ? sm : 0;
+        readonly List<DrawCommand> _sortCommands = new();
+        readonly Stack<IRenderableIpso?> _clipStack = new();
+
+        internal static bool SortBounds(IRenderableIpso r, out System.Drawing.Rectangle bounds)
+        {
+            bounds = default;
+            IRenderableIpso inner = r is GraphicalUiElement e && e.RenderableComponent is IRenderableIpso c ? c : r;
+            if (inner is global::SkiaGum.Text t && NineSliceBatcher.TryTextBounds(t, SKMatrix.Identity, out SKRect b))
+            {
+                int l = (int)MathF.Floor(b.Left), tp = (int)MathF.Floor(b.Top);
+                bounds = new System.Drawing.Rectangle(l, tp, (int)MathF.Ceiling(b.Right) - l, (int)MathF.Ceiling(b.Bottom) - tp);
+                return true;
+            }
+            return false;
+        }
+
+        void ExecuteCommands(List<DrawCommand> cmds, SystemManagers managers)
+        {
+            var canvas = managers.Canvas;
+            int n = cmds.Count;
+            for (int i = 0; i < n; i++)
+            {
+                DrawCommand cmd = cmds[i];
+                IRenderableIpso r = cmd.Target;
+                switch (cmd.Kind)
+                {
+                    case DrawCommandKind.DrawRenderable:
+                        if (r.IsRenderTarget)
+                        {
+                            if (NineSliceBatcher.Enabled) NineSliceBatcher.Spike.Flush();
+                            SpriteBatch.Flush();
+                            CompositeRenderTarget(r, managers);
+                        }
+                        else
+                        {
+                            RenderOne(r, managers);
+                        }
+                        break;
+                    case DrawCommandKind.BeginClip:
+                        {
+                            var bounds = r.GetClipTransform(out SKRect localRect).MapRect(localRect);
+                            var lc = canvas.LocalClipBounds;
+                            bool onScreen = bounds.Bottom > lc.Top && bounds.Top < lc.Bottom && bounds.Right > lc.Left && bounds.Left < lc.Right;
+                            if (!onScreen)
+                            {
+                                int depth = 1;
+                                while (depth > 0 && ++i < n)
+                                {
+                                    if (cmds[i].Kind == DrawCommandKind.BeginClip) depth++;
+                                    else if (cmds[i].Kind == DrawCommandKind.EndClip) depth--;
+                                }
+                                break;
+                            }
+                            if (NineSliceBatcher.Enabled) NineSliceBatcher.Spike.Flush();
+                            SpriteBatch.Flush();
+                            canvas.Save();
+                            canvas.ClipTo(r);
+                            _clipStack.Push(ClipAppliedByWalk);
+                            ClipAppliedByWalk = r;
+                            break;
+                        }
+                    case DrawCommandKind.EndClip:
+                        if (NineSliceBatcher.Enabled) NineSliceBatcher.Spike.Flush();
+                        ClipAppliedByWalk = _clipStack.Pop();
+                        SpriteBatch.Flush();
+                        canvas.Restore();
+                        break;
+                }
+            }
+        }
+
         // Sprites add themselves to SpriteBatch; anything else that draws flushes it first so draw order holds.
         // Containers draw nothing, so sprites in separate containers still share a batch.
         private void RenderOne(IRenderableIpso renderable, SystemManagers managers)
@@ -706,6 +816,19 @@ namespace RenderingLibrary.Graphics
                 ? contained
                 : renderable;
             if (WalkMode == 1 && inner.GetType() == typeof(InvisibleRenderable)) return;
+            if (NineSliceBatcher.Enabled)
+            {
+                var nb = NineSliceBatcher.Spike;
+                if (nb.HasPending && inner is not NineSlice && inner is not InvisibleRenderable)
+                {
+                    if (NineSliceBatcher.DeferText && inner is global::SkiaGum.Text t && NineSliceBatcher.TryTextBounds(t, managers.Canvas.TotalMatrix, out SKRect tb))
+                    {
+                        nb.Defer(renderable, managers.Canvas.TotalMatrix, tb);
+                        return;
+                    }
+                    nb.Flush();
+                }
+            }
             if (inner is not Sprite && inner is not InvisibleRenderable)
             {
                 if (WalkMode != 2 || SpriteBatch.PendingCount != 0) SpriteBatch.Flush();
@@ -1512,6 +1635,172 @@ namespace RenderingLibrary.Graphics
                 _cameraBaseMatrix = outerBaseMatrix;
                 _cameraCallerMatrix = outerCallerMatrix;
             }
+        }
+    }
+}
+
+namespace RenderingLibrary.Graphics
+{
+    // SPIKE #8116 (GUM_NSBATCH=1): NineSlices that would take the lattice path append their 9 cells, in device space,
+    // to one DrawVertices batch. Plain unrotated Text drawn while a batch is pending is deferred (replayed in order right
+    // after the batch), so a NineSlice can join the batch only when it overlaps no deferred Text. Flushed at every clip
+    // change, render target, non-Text/non-NineSlice draw, and at the end of each top-level DrawList.
+    internal sealed class NineSliceBatcher
+    {
+        public static readonly bool Enabled = Environment.GetEnvironmentVariable("GUM_NSBATCH") == "1";
+        public static readonly NineSliceBatcher Spike = new();
+        public static readonly bool DeferText = Environment.GetEnvironmentVariable("GUM_NSDEFER") != "0";
+        public static long StatNsBatched, StatNsLattice, StatBatches, StatDeferred, StatFrames, StatFlushOverlap, StatFlushKey;
+
+        static NineSliceBatcher()
+        {
+            string? path = Environment.GetEnvironmentVariable("GUM_NSBATCH_STATS");
+            if (path != null)
+                AppDomain.CurrentDomain.ProcessExit += (_, _) =>
+                {
+                    double f = System.Math.Max(1, StatFrames);
+                    System.IO.File.WriteAllText(path,
+                        $"frames {StatFrames} perFrame: nsBatched {StatNsBatched / f:F1} nsLattice {StatNsLattice / f:F1} batches {StatBatches / f:F1} deferredText {StatDeferred / f:F1} flushOverlap {StatFlushOverlap / f:F1} flushKey {StatFlushKey / f:F1}\n");
+                };
+        }
+
+        public SKCanvas? Canvas;
+        public ISystemManagers? Managers;
+        public bool Active;
+
+        SKImage? _image; object? _key;
+        byte _alpha;
+        int _ns;
+        SKPoint[] _pos = new SKPoint[16 * 256];
+        SKPoint[] _tex = new SKPoint[16 * 256];
+        ushort[] _idx = new ushort[54 * 256];
+        struct Deferred { public IRenderableIpso R; public SKMatrix M; public SKRect B; }
+        Deferred[] _def = new Deferred[256];
+        int _defCount;
+        readonly SKPaint _paint = new() { IsAntialias = false };
+        readonly Dictionary<SKImage, SKShader> _shaders = new();
+        readonly Dictionary<int, (SKPoint[] P, SKPoint[] T, ushort[] I)> _exact = new();
+
+        public bool HasPending => _ns > 0;
+
+        public static bool CanBatchPaint(SKPaint p) =>
+            p.ColorFilter == null && p.Shader == null && p.ImageFilter == null && p.MaskFilter == null && p.BlendMode == SKBlendMode.SrcOver;
+
+        // xs/ys: 4 device edges each; us/vs: 4 texel edges each.
+        public void Append(SKImage image, object keyObj, byte alpha, ReadOnlySpan<float> xs, ReadOnlySpan<float> ys, ReadOnlySpan<float> us, ReadOnlySpan<float> vs)
+        {
+            var dev = new SKRect(MathF.Min(xs[0], xs[3]), MathF.Min(ys[0], ys[3]), MathF.Max(xs[0], xs[3]), MathF.Max(ys[0], ys[3]));
+            if (_ns > 0)
+            {
+                bool key = !ReferenceEquals(keyObj, _key) || alpha != _alpha;
+                bool overlap = false;
+                if (!key)
+                    for (int i = 0; i < _defCount; i++)
+                        if (_def[i].B.IntersectsWith(dev)) { overlap = true; break; }
+                if (key || overlap || _ns == 4095)
+                {
+                    if (key) StatFlushKey++; else StatFlushOverlap++;
+                    Flush();
+                }
+            }
+            if (_ns == 0) { _image = image; _key = keyObj; } _alpha = alpha;
+            if ((_ns + 1) * 16 > _pos.Length)
+            {
+                Array.Resize(ref _pos, _pos.Length * 2); Array.Resize(ref _tex, _tex.Length * 2); Array.Resize(ref _idx, _idx.Length * 2);
+            }
+            int b = _ns * 16;
+            for (int r = 0; r < 4; r++)
+                for (int c = 0; c < 4; c++)
+                {
+                    _pos[b + r * 4 + c] = new SKPoint(xs[c], ys[r]);
+                    _tex[b + r * 4 + c] = new SKPoint(us[c], vs[r]);
+                }
+            int ii = _ns * 54;
+            for (int r = 0; r < 3; r++)
+                for (int c = 0; c < 3; c++)
+                {
+                    ushort v = (ushort)(b + r * 4 + c);
+                    _idx[ii++] = v; _idx[ii++] = (ushort)(v + 1); _idx[ii++] = (ushort)(v + 4);
+                    _idx[ii++] = (ushort)(v + 1); _idx[ii++] = (ushort)(v + 5); _idx[ii++] = (ushort)(v + 4);
+                }
+            _ns++;
+            StatNsBatched++;
+        }
+
+        public void Defer(IRenderableIpso r, SKMatrix m, SKRect deviceBounds)
+        {
+            if (_defCount == _def.Length) Array.Resize(ref _def, _def.Length * 2);
+            _def[_defCount++] = new Deferred { R = r, M = m, B = deviceBounds };
+            StatDeferred++;
+        }
+
+        public void Flush()
+        {
+            if (_ns == 0) return;
+            var canvas = Canvas!;
+            if (!_exact.TryGetValue(_ns, out var a))
+            {
+                a = (new SKPoint[_ns * 16], new SKPoint[_ns * 16], new ushort[_ns * 54]);
+                _exact[_ns] = a;
+            }
+            Array.Copy(_pos, a.P, _ns * 16); Array.Copy(_tex, a.T, _ns * 16); Array.Copy(_idx, a.I, _ns * 54);
+            if (!_shaders.TryGetValue(_image!, out var shader))
+            {
+                shader = _image!.ToShader(SKShaderTileMode.Clamp, SKShaderTileMode.Clamp, new SKSamplingOptions(SKFilterMode.Nearest));
+                _shaders[_image!] = shader;
+            }
+            _paint.Shader = shader;
+            _paint.Color = new SKColor(255, 255, 255, _alpha);
+            _ns = 0;
+            canvas.Save();
+            canvas.ResetMatrix();
+            using (var verts = SKVertices.CreateCopy(SKVertexMode.Triangles, a.P, a.T, null, a.I))
+                canvas.DrawVertices(verts, SKBlendMode.Modulate, _paint);
+            canvas.Restore();
+            StatBatches++;
+            int count = _defCount;
+            _defCount = 0;
+            for (int i = 0; i < count; i++)
+            {
+                ref Deferred d = ref _def[i];
+                if (canvas.TotalMatrix == d.M)
+                {
+                    d.R.Render(Managers!);
+                }
+                else
+                {
+                    canvas.Save();
+                    canvas.SetMatrix(d.M);
+                    d.R.Render(Managers!);
+                    canvas.Restore();
+                }
+                d.R = null!;
+            }
+        }
+
+        // Conservative device bounds of an unrotated Text under a scale+translate matrix; false when it cannot be deferred.
+        public static bool TryTextBounds(global::SkiaGum.Text t, SKMatrix m, out SKRect dev)
+        {
+            dev = default;
+            if (m.SkewX != 0 || m.SkewY != 0 || m.Persp0 != 0 || m.Persp1 != 0 || t.GetAbsoluteRotation() != 0) return false;
+            float x = t.GetAbsoluteX(), y = t.GetAbsoluteY();
+            float w = t.EffectiveWidth, h = t.Height, ww = t.WrappedTextWidth, wh = t.WrappedTextHeight;
+            float l, r, tp, bt;
+            switch (t.HorizontalAlignment)
+            {
+                case HorizontalAlignment.Center: l = MathF.Min(x, x + (w - ww) / 2); r = MathF.Max(x + w, x + (w + ww) / 2); break;
+                case HorizontalAlignment.Right: l = MathF.Min(x, x + w - ww); r = x + w; break;
+                default: l = x; r = x + MathF.Max(w, ww); break;
+            }
+            switch (t.VerticalAlignment)
+            {
+                case VerticalAlignment.Center: tp = MathF.Min(y, y + (h - wh) / 2); bt = MathF.Max(y + h, y + (h + wh) / 2); break;
+                case VerticalAlignment.Bottom: tp = MathF.Min(y, y + h - wh); bt = y + h; break;
+                default: tp = y; bt = y + MathF.Max(h, wh); break;
+            }
+            const float pad = 4;
+            dev = m.MapRect(new SKRect(l - pad, tp - pad, r + pad, bt + pad));
+            return true;
         }
     }
 }

@@ -1,0 +1,1213 @@
+using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+
+namespace RenderingLibrary.Graphics;
+
+/// <summary>
+/// <see cref="IRenderableOrderer"/> that reorders DFS draws within layer- and clip-bounded
+/// windows so that runs of same-key draws become contiguous, keyed first by
+/// <see cref="IRenderable.BatchKey"/> and, within that, by the finer
+/// <see cref="IRenderable.BatchSortKey"/> (e.g. a Texture2D reference). Pixel-correct: any two
+/// draws whose <see cref="IPositionedSizedObjectExtensionMethods.GetAbsoluteBounds"/> intersect
+/// maintain their original DFS-relative order, so the painter's algorithm result is unchanged.
+/// Opt in by setting <c>Renderer.SiblingOrdering = BatchKeyGroupedOrderer.Instance</c>.
+/// </summary>
+/// <remarks>
+/// Two motivating cases. Cross-batch-type: a list whose items mix <c>SpriteBatch</c>-using and
+/// <c>Apos.Shapes</c>-using renderables — in DFS order the renderer flushes on every batch-type
+/// alternation, so BatchKey grouping alone collapses flushes from ~one-per-item to
+/// one-per-distinct-key. Same-batch-type, different texture (#2697): a StackPanel mixing frame
+/// images and text all report the same BatchKey ("SpriteBatch"), so BatchOrchestrator never
+/// transitions between them, but SpriteBatch's own consecutive-same-texture batching still can't
+/// merge non-adjacent same-texture draws — BatchSortKey grouping is what collapses that case.
+/// </remarks>
+public sealed class BatchKeyGroupedOrderer
+{
+    // SPIKE #8116 (sort3): copy of RenderingLibrary/Graphics/BatchKeyGroupedOrderer.cs for SkiaGum, no camera cull.
+    public delegate bool BoundsHook(IRenderableIpso r, out System.Drawing.Rectangle bounds);
+    public static BoundsHook? BoundsOverride;
+    private static bool SpikeIsFullyOutside(System.Drawing.Rectangle a, System.Drawing.Rectangle b, int m) => false;
+    /// <summary>Shared stateless instance.</summary>
+    public static readonly BatchKeyGroupedOrderer Instance = new BatchKeyGroupedOrderer();
+
+    /// <summary>
+    /// Number of times <see cref="FlushWindow"/> had to switch away from the running
+    /// (<see cref="IRenderable.BatchKey"/>, <see cref="IRenderable.BatchSortKey"/>) even though
+    /// another item still in the window shared it - the switch happened because overlap forced
+    /// that item to wait behind something else, not because reordering couldn't have merged them.
+    /// Accumulates across every <see cref="BuildDrawList(Layer, List{DrawCommand}, Camera?)"/> call
+    /// until <see cref="ResetBreakTally"/> runs - <see cref="Renderer"/> calls that once per host
+    /// frame (immediate-mode) or once per <c>Draw(SystemManagers)</c> call (layered), matching
+    /// <see cref="RenderStateChangeStatistics"/>'s own reset cadence on each path. A caller driving
+    /// this orderer directly (outside <see cref="Renderer"/>, e.g. a unit test) must call
+    /// <see cref="ResetBreakTally"/> itself between builds it wants measured independently
+    /// (issue #4575).
+    /// </summary>
+    public int MergeBlockedByOverlapCount { get; private set; }
+
+    /// <summary>
+    /// Number of times <see cref="FlushWindow"/> had to switch away from the running
+    /// (<see cref="IRenderable.BatchKey"/>, <see cref="IRenderable.BatchSortKey"/>) because no
+    /// remaining window entry shared it at all - genuine content alternation (or the window simply
+    /// ran out), not something reordering could have fixed. Same reset cadence as
+    /// <see cref="MergeBlockedByOverlapCount"/> (issue #4575).
+    /// </summary>
+    public int NoCandidateInWindowBreakCount { get; private set; }
+
+    /// <summary>
+    /// Number of times entering or exiting a <see cref="IRenderableIpso.ClipsChildren"/> renderable
+    /// or a <see cref="IRenderableIpso.IsRenderTarget"/> renderable forced a real flush -
+    /// unconditionally, regardless of whether the surrounding <see cref="IRenderable.BatchKey"/>/
+    /// <see cref="IRenderable.BatchSortKey"/> happened to match. <c>Renderer.AdjustRenderStates</c>
+    /// restarts <c>SpriteBatch</c> on every clip change, and <c>SubmitDrawRenderable</c>/
+    /// <c>DrawRenderTargetToScreen</c> give a render target its own flush + bind/restore cycle - no
+    /// amount of reordering can avoid either, so these are never <see cref="MergeBlockedByOverlapCount"/>
+    /// candidates. Same reset cadence as <see cref="MergeBlockedByOverlapCount"/> (issue #4575
+    /// follow-up - the first cut of this diagnostic missed these entirely, since clip/render-target
+    /// boundaries don't flow through the normal same-window key comparison).
+    /// </summary>
+    public int HardBoundaryTransitionCount { get; private set; }
+
+    /// <summary>
+    /// Number of bounds-intersection tests <see cref="FlushWindow"/> performed building precedence
+    /// graphs during the last <see cref="BuildDrawList(Layer, List{DrawCommand}, Camera?)"/> call.
+    /// A deterministic stand-in for the cost of that step (#6179).
+    /// </summary>
+    internal int PairTestCount { get; private set; }
+
+    /// <summary>
+    /// Number of window entries <see cref="FlushWindow"/> examined while picking the next draw
+    /// (candidate comparisons, heap steps, blocked-candidate checks) during the last
+    /// <see cref="BuildDrawList(Layer, List{DrawCommand}, Camera?)"/> call. A deterministic
+    /// stand-in for the cost of the Kahn loop (#6302).
+    /// </summary>
+    internal int PickStepCount => _pickSteps;
+
+    private int _pickSteps;
+
+    /// <summary>Why a <see cref="BatchBreakGroup"/> break happened.</summary>
+    public enum BreakReason
+    {
+        /// <summary>A same-key item was still pending, blocked by an overlap edge.</summary>
+        BlockedByOverlap,
+
+        /// <summary>Nothing pending shared the outgoing key at all.</summary>
+        NoCandidateInWindow,
+
+        /// <summary>
+        /// A clip or render-target boundary forced this transition unconditionally - see
+        /// <see cref="HardBoundaryTransitionCount"/>.
+        /// </summary>
+        HardBoundary,
+
+        /// <summary>
+        /// The first non-transparent item this build has emitted with nothing running yet to
+        /// compare it against - no reordering choice was even possible, but it is still a real,
+        /// separately-submitted draw call. Fires at the start of a top-level
+        /// <see cref="BuildDrawList(Layer, List{DrawCommand}, Camera?)"/> call, a
+        /// <see cref="Layer.SecondarySortOnY"/> row, or a clip subtree, whichever comes first -
+        /// there is no single structural concept ("layer", "cycle") this lines up with, only "no
+        /// predecessor existed yet." Without this reason a caller summing
+        /// <see cref="BatchBreakGroup.Count"/> across <see cref="GetBreakGroups"/> to reconcile
+        /// against the frame's total draw-call count would silently undercount by one per reset.
+        /// </summary>
+        NoPredecessor,
+    }
+
+    /// <summary>
+    /// Sentinel <see cref="BatchBreakGroup.FromRenderableType"/>/<see cref="BatchBreakTypeGroup.FromRenderableType"/>
+    /// used for a <see cref="BreakReason.NoPredecessor"/> break, whose "from" side has no real
+    /// predecessor renderable. Named distinctly from <see cref="BreakReason.NoPredecessor"/> itself
+    /// to avoid a same-named type/enum-value pair in this class's public surface.
+    /// </summary>
+    public sealed class NoPredecessorMarker
+    {
+        private NoPredecessorMarker() { }
+    }
+
+    /// <summary>
+    /// One distinct kind of batch break and how many times it happened since the last
+    /// <see cref="ResetBreakTally"/> - e.g. "46 times: SpriteRuntime (SpriteBatch/&lt;texture
+    /// A&gt;) -&gt; RectangleRuntime (Apos.Shapes), blocked by overlap".
+    /// <see cref="FromSortKey"/>/<see cref="ToSortKey"/> are raw <see cref="IRenderable.BatchSortKey"/>
+    /// values (e.g. a <c>Texture2D</c> reference) - Gum core doesn't know the backend type, so a
+    /// caller that does (FRB2, a sample) formats them (e.g. <c>((Texture2D)key)?.Name</c>) rather
+    /// than Gum guessing a generic description. See <see cref="BatchBreakTypeGroup"/> for a
+    /// coarser, renderable-type-only rollup that needs no such formatting.
+    /// </summary>
+    public readonly struct BatchBreakGroup
+    {
+        public string FromBatchKey { get; init; }
+        public object? FromSortKey { get; init; }
+        public Type FromRenderableType { get; init; }
+        public string ToBatchKey { get; init; }
+        public object? ToSortKey { get; init; }
+        public Type ToRenderableType { get; init; }
+        public BreakReason Reason { get; init; }
+        public int Count { get; init; }
+    }
+
+    /// <summary>
+    /// A break rollup keyed only by the two renderable types involved - drops <c>BatchKey</c>,
+    /// <c>BatchSortKey</c>, and the overlap/no-candidate distinction that <see cref="BatchBreakGroup"/>
+    /// carries. This is the "what's alternating, at a glance" view: <c>ToString()</c> prints e.g.
+    /// <c>"Sprite-&gt;RoundedRectangle (14)"</c>, trimming the conventional "Runtime" suffix, ready
+    /// to print with no caller-side formatting or aggregation.
+    /// </summary>
+    public readonly struct BatchBreakTypeGroup
+    {
+        public Type FromRenderableType { get; init; }
+        public Type ToRenderableType { get; init; }
+        public int Count { get; init; }
+
+        public override string ToString() =>
+            $"{TrimRuntimeSuffix(FromRenderableType.Name)}->{TrimRuntimeSuffix(ToRenderableType.Name)} ({Count})";
+
+        private static string TrimRuntimeSuffix(string typeName) =>
+            typeName.EndsWith("Runtime", StringComparison.Ordinal)
+                ? typeName.Substring(0, typeName.Length - "Runtime".Length)
+                : typeName;
+    }
+
+    private readonly struct TypeGroupKey : IEquatable<TypeGroupKey>
+    {
+        public readonly Type FromRenderableType;
+        public readonly Type ToRenderableType;
+
+        public TypeGroupKey(Type fromRenderableType, Type toRenderableType)
+        {
+            FromRenderableType = fromRenderableType;
+            ToRenderableType = toRenderableType;
+        }
+
+        public bool Equals(TypeGroupKey other) =>
+            FromRenderableType == other.FromRenderableType && ToRenderableType == other.ToRenderableType;
+
+        public override bool Equals(object? obj) => obj is TypeGroupKey other && Equals(other);
+
+        public override int GetHashCode() => HashCode.Combine(FromRenderableType, ToRenderableType);
+    }
+
+    private readonly Dictionary<TypeGroupKey, int> _breakTypeGroupCounts = new();
+
+    /// <summary>
+    /// Every distinct (fromType, toType) break pair since the last <see cref="ResetBreakTally"/>,
+    /// most-frequent first. Coarser than <see cref="GetBreakGroups"/> - use this for "what's
+    /// alternating" at a glance, and <see cref="GetBreakGroups"/> when you need to know which
+    /// specific texture/key is involved (issue #4575).
+    /// </summary>
+    public IReadOnlyList<BatchBreakTypeGroup> GetBreakGroupsByType()
+    {
+        List<BatchBreakTypeGroup> result = new(_breakTypeGroupCounts.Count);
+        foreach (KeyValuePair<TypeGroupKey, int> pair in _breakTypeGroupCounts)
+        {
+            result.Add(new BatchBreakTypeGroup
+            {
+                FromRenderableType = pair.Key.FromRenderableType,
+                ToRenderableType = pair.Key.ToRenderableType,
+                Count = pair.Value,
+            });
+        }
+        result.Sort((a, b) => b.Count.CompareTo(a.Count));
+        return result;
+    }
+
+    /// <summary>
+    /// Clears <see cref="MergeBlockedByOverlapCount"/>, <see cref="NoCandidateInWindowBreakCount"/>,
+    /// <see cref="HardBoundaryTransitionCount"/>, and every tally behind
+    /// <see cref="GetBreakGroups"/>/<see cref="GetBreakGroupsByType"/>.
+    /// <see cref="Renderer"/> calls this at the same points it resets
+    /// <see cref="RenderStateChangeStatistics"/>; call it yourself if you drive this orderer
+    /// directly (issue #4575).
+    /// </summary>
+    public void ResetBreakTally()
+    {
+        MergeBlockedByOverlapCount = 0;
+        NoCandidateInWindowBreakCount = 0;
+        HardBoundaryTransitionCount = 0;
+        _breakGroupCounts.Clear();
+        _breakTypeGroupCounts.Clear();
+    }
+
+    private readonly struct BreakGroupKey : IEquatable<BreakGroupKey>
+    {
+        public readonly string FromBatchKey;
+        public readonly object? FromSortKey;
+        public readonly Type FromRenderableType;
+        public readonly string ToBatchKey;
+        public readonly object? ToSortKey;
+        public readonly Type ToRenderableType;
+        public readonly BreakReason Reason;
+
+        public BreakGroupKey(string fromBatchKey, object? fromSortKey, Type fromRenderableType,
+            string toBatchKey, object? toSortKey, Type toRenderableType, BreakReason reason)
+        {
+            FromBatchKey = fromBatchKey;
+            FromSortKey = fromSortKey;
+            FromRenderableType = fromRenderableType;
+            ToBatchKey = toBatchKey;
+            ToSortKey = toSortKey;
+            ToRenderableType = toRenderableType;
+            Reason = reason;
+        }
+
+        public bool Equals(BreakGroupKey other) =>
+            FromBatchKey == other.FromBatchKey && Equals(FromSortKey, other.FromSortKey) &&
+            FromRenderableType == other.FromRenderableType && ToBatchKey == other.ToBatchKey &&
+            Equals(ToSortKey, other.ToSortKey) && ToRenderableType == other.ToRenderableType &&
+            Reason == other.Reason;
+
+        public override bool Equals(object? obj) => obj is BreakGroupKey other && Equals(other);
+
+        public override int GetHashCode() => HashCode.Combine(
+            FromBatchKey, FromSortKey, FromRenderableType, ToBatchKey, ToSortKey, ToRenderableType, Reason);
+    }
+
+    private readonly Dictionary<BreakGroupKey, int> _breakGroupCounts = new();
+
+    /// <summary>Placeholder "from" batch key for a <see cref="BreakReason.NoPredecessor"/> break.</summary>
+    private const string NoPredecessorBatchKey = "(none)";
+
+    /// <summary>Placeholder "from" renderable type for a <see cref="BreakReason.NoPredecessor"/> break.</summary>
+    private static readonly Type NoPredecessorType = typeof(NoPredecessorMarker);
+
+    /// <summary>
+    /// Tallies one break into both <see cref="_breakGroupCounts"/> (identity-level) and
+    /// <see cref="_breakTypeGroupCounts"/> (type-level rollup) - shared by every call site that
+    /// records a break (<see cref="FlushWindow"/>'s per-item loop and
+    /// <see cref="RecordHardBoundaryTransition"/>) so both dictionaries stay in sync.
+    /// </summary>
+    private void RecordBreak(
+        string fromBatchKey, object? fromSortKey, Type fromRenderableType,
+        string toBatchKey, object? toSortKey, Type toRenderableType, BreakReason reason)
+    {
+        BreakGroupKey groupKey = new(
+            fromBatchKey, fromSortKey, fromRenderableType, toBatchKey, toSortKey, toRenderableType, reason);
+        _breakGroupCounts[groupKey] = _breakGroupCounts.TryGetValue(groupKey, out int existing) ? existing + 1 : 1;
+
+        TypeGroupKey typeKey = new(fromRenderableType, toRenderableType);
+        _breakTypeGroupCounts[typeKey] = _breakTypeGroupCounts.TryGetValue(typeKey, out int existingTypeCount) ? existingTypeCount + 1 : 1;
+    }
+
+    /// <summary>
+    /// Every distinct break since the last <see cref="ResetBreakTally"/>, most-frequent first -
+    /// "what's alternating," not just a count of how often something did. Recomputed from the
+    /// current tallies each call; cheap unless you're calling it every frame in a hot loop
+    /// (issue #4575).
+    /// </summary>
+    public IReadOnlyList<BatchBreakGroup> GetBreakGroups()
+    {
+        List<BatchBreakGroup> result = new(_breakGroupCounts.Count);
+        foreach (KeyValuePair<BreakGroupKey, int> pair in _breakGroupCounts)
+        {
+            result.Add(new BatchBreakGroup
+            {
+                FromBatchKey = pair.Key.FromBatchKey,
+                FromSortKey = pair.Key.FromSortKey,
+                FromRenderableType = pair.Key.FromRenderableType,
+                ToBatchKey = pair.Key.ToBatchKey,
+                ToSortKey = pair.Key.ToSortKey,
+                ToRenderableType = pair.Key.ToRenderableType,
+                Reason = pair.Key.Reason,
+                Count = pair.Value,
+            });
+        }
+        result.Sort((a, b) => b.Count.CompareTo(a.Count));
+        return result;
+    }
+
+    private struct Entry
+    {
+        public IRenderableIpso Item;
+        public System.Drawing.Rectangle Bounds;
+        public string BatchKey;
+        public object? BatchSortKey;
+
+        /// <summary>
+        /// True for a plain wrapper (empty <see cref="IRenderable.BatchKey"/>, not a render target,
+        /// not a clip) — the shape a Gum component instance's root takes.
+        /// <c>BatchOrchestrator.OnRenderable</c> treats an empty BatchKey as a complete
+        /// no-op (no flush, no StartBatch/EndBatch, running key left alone) and
+        /// <c>InvisibleRenderable.Render</c> submits no vertices, so emitting one costs nothing at
+        /// the GPU level. That makes it both exempt from break accounting and a free choice for
+        /// the topological sort — see the free-container tier in <see cref="FlushWindow"/>.
+        /// Computed once per entry rather than per selection: <see cref="FlushWindow"/>'s tiebreak
+        /// scans it on every pick.
+        /// </summary>
+        public bool IsFreeContainer;
+
+        /// <summary>Cached <see cref="IRenderableIpso.IsRenderTarget"/>, read by the run-count passes.</summary>
+        public bool IsRenderTarget;
+    }
+
+    // Scratch state pooled on the instance (#4200) so a build does not allocate after warm-up,
+    // mirroring HierarchicalOrderer (#4190) and Renderer's own DrawCommand buffers. Safe to pool
+    // here because BuildDrawList is never re-entrant on this instance: Renderer's render-target
+    // bakes (the only other caller besides the main pass) run post-order in PreRender and fully
+    // return before the next BuildDrawList call starts (see Renderer._bakeCommands' comment) --
+    // so at most one BuildDrawList call is ever "in flight" on this instance at a time.
+
+    // Reorder-window Entry lists. A window is rented when a new window starts (top-level, a
+    // same-Y run, or a ClipsChildren subtree) and returned once FlushWindow has consumed it.
+    // Nested clip windows are used in strict LIFO order matching the recursion, so a stack works.
+    private readonly Stack<List<Entry>> _windowPool = new Stack<List<Entry>>();
+
+    // FlushWindow's precedence-graph scratch, resized to fit the largest window seen so far.
+    // FlushWindow calls never overlap (windows are flushed one at a time, depth-first), so a
+    // single reusable set of buffers serves every call.
+    private int[] _indegreeBuffer = Array.Empty<int>();
+    private List<int>[] _successorsBuffer = Array.Empty<List<int>>();
+    private bool[] _drawnBuffer = Array.Empty<bool>();
+
+    // Pick-next scratch (#6302). Entries are bucketed by (BatchKey, BatchSortKey) and by BatchKey
+    // alone; each bucket, the free containers and the whole window keep a min-heap of the
+    // available entries' DFS indexes, so a pick is a peek instead of a scan of every available
+    // entry. Heaps drop already-drawn entries lazily when they reach the top.
+    private readonly Dictionary<BucketKey, int> _bucketIds = new Dictionary<BucketKey, int>();
+    private readonly Dictionary<string, int> _keyIds = new Dictionary<string, int>();
+    private readonly List<IndexHeap> _bucketHeaps = new List<IndexHeap>();
+    private readonly List<IndexHeap> _keyHeaps = new List<IndexHeap>();
+    private readonly IndexHeap _freeContainerHeap = new IndexHeap();
+    private readonly IndexHeap _allHeap = new IndexHeap();
+    private int[] _bucketOfEntry = Array.Empty<int>();
+    private int[] _keyOfBucket = Array.Empty<int>();
+    private int[] _undrawnInBucket = Array.Empty<int>();
+
+    // The order FlushWindow settled on (window indexes), filled by the greedy pick and then
+    // either kept or overwritten with the depth-first order (#7051).
+    private int[] _pickOrder = Array.Empty<int>();
+
+    private readonly struct BucketKey : IEquatable<BucketKey>
+    {
+        public readonly string BatchKey;
+        public readonly object? BatchSortKey;
+
+        public BucketKey(string batchKey, object? batchSortKey)
+        {
+            BatchKey = batchKey;
+            BatchSortKey = batchSortKey;
+        }
+
+        public bool Equals(BucketKey other) =>
+            BatchKey == other.BatchKey && object.Equals(BatchSortKey, other.BatchSortKey);
+
+        public override bool Equals(object? obj) => obj is BucketKey other && Equals(other);
+
+        public override int GetHashCode() => HashCode.Combine(BatchKey, BatchSortKey);
+    }
+
+    /// <summary>Min-heap of window indexes whose operations are tallied into a step count.</summary>
+    private sealed class IndexHeap
+    {
+        private int[] _items = new int[8];
+        private int _count;
+
+        public void Clear()
+        {
+            _count = 0;
+        }
+
+        public void Push(int value, ref int steps)
+        {
+            if (_count == _items.Length)
+            {
+                Array.Resize(ref _items, _count * 2);
+            }
+
+            int i = _count++;
+            while (i > 0)
+            {
+                int parent = (i - 1) >> 1;
+                steps++;
+                if (_items[parent] <= value)
+                {
+                    break;
+                }
+                _items[i] = _items[parent];
+                i = parent;
+            }
+            _items[i] = value;
+        }
+
+        /// <summary>
+        /// Returns the smallest index not yet drawn, discarding drawn ones from the top, or -1
+        /// when none remain.
+        /// </summary>
+        public int PeekUndrawn(bool[] drawn, ref int steps)
+        {
+            steps++;
+            while (_count > 0 && drawn[_items[0]])
+            {
+                RemoveTop(ref steps);
+            }
+            return _count > 0 ? _items[0] : -1;
+        }
+
+        private void RemoveTop(ref int steps)
+        {
+            int value = _items[--_count];
+            int i = 0;
+            while (true)
+            {
+                int child = (i << 1) + 1;
+                if (child >= _count)
+                {
+                    break;
+                }
+
+                steps++;
+                if (child + 1 < _count && _items[child + 1] < _items[child])
+                {
+                    child++;
+                }
+                if (value <= _items[child])
+                {
+                    break;
+                }
+                _items[i] = _items[child];
+                i = child;
+            }
+            if (_count > 0)
+            {
+                _items[i] = value;
+            }
+        }
+    }
+
+    // The "running" batch key/sort key/type, and whether the next comparison against it must be
+    // treated as a forced break regardless of key equality. Unlike the per-window Entry/indegree
+    // scratch above, these must be INSTANCE state rather than FlushWindow locals: a clip boundary
+    // splits one BuildDrawList call into several independent FlushWindow calls (Renderer.cs and
+    // ProcessRenderable's clip branch each start a fresh window), and entering/exiting a clip is a
+    // real cost that must be attributed against whatever was running *before* that window split,
+    // not lost because each FlushWindow call used to start fresh with a local set to null. Reset
+    // once per BuildDrawList call (a fresh pass over the render list), not once per host frame -
+    // that's what MergeBlockedByOverlapCount/etc do, via ResetBreakTally.
+    private string? _runningBatchKey;
+    private object? _runningSortKey;
+    private Type? _runningRenderableType;
+    private bool _forceNextTransition;
+
+    /// <inheritdoc/>
+    public void BuildDrawList(
+        IList<IRenderableIpso> roots,
+        List<DrawCommand> destination,
+        ClipBoundsSource clipBounds = default)
+    {
+        destination.Clear();
+        PairTestCount = 0;
+        _pickSteps = 0;
+        _runningBatchKey = null;
+        _runningSortKey = null;
+        _runningRenderableType = null;
+        _forceNextTransition = false;
+        ProcessWindow(roots, clipBounds, destination);
+    }
+
+    private List<Entry> RentWindow()
+    {
+        return _windowPool.Count > 0 ? _windowPool.Pop() : new List<Entry>();
+    }
+
+    private void ReturnWindow(List<Entry> window)
+    {
+        _windowPool.Push(window);
+    }
+
+
+    private void ProcessWindow(
+        IList<IRenderableIpso> renderables,
+        ClipBoundsSource clipBounds,
+        List<DrawCommand> destination)
+    {
+        int count = renderables.Count;
+        if (count == 0)
+        {
+            return;
+        }
+
+        List<Entry> window = RentWindow();
+        for (int i = 0; i < count; i++)
+        {
+            ProcessRenderable(renderables[i], clipBounds, null, window, destination);
+        }
+        FlushWindow(window, destination);
+        ReturnWindow(window);
+    }
+
+    private void ProcessRenderable(
+        IRenderableIpso renderable,
+        ClipBoundsSource clipBounds,
+        System.Drawing.Rectangle? activeClip,
+        List<Entry> currentWindow,
+        List<DrawCommand> destination)
+    {
+        if (!renderable.Visible)
+        {
+            return;
+        }
+
+        // #2998 off-screen cull: skip a renderable (and its subtree) fully outside the active
+        // clip. Gated on a resolvable mapping, mirroring HierarchicalOrderer -- see its rationale.
+        if (clipBounds.CanResolveCullTestBounds
+            && activeClip.HasValue
+            && false
+            && SpikeIsFullyOutside(
+                clipBounds.GetCullTestBounds(renderable),
+                activeClip.Value,
+                0))
+        {
+            return;
+        }
+
+        bool clips = renderable.ClipsChildren;
+        if (clips)
+        {
+            // The clip is a hard boundary: flush everything the parent window has accumulated
+            // so it lands before BeginClip, then enter a fresh window for the clipped subtree
+            // (the clip-bearing node itself draws inside its own clip, matching the legacy
+            // walk in HierarchicalOrderer).
+            FlushWindow(currentWindow, destination);
+
+            // #4575 follow-up: entering a clip always forces a real flush
+            // (Renderer.AdjustRenderStates restarts SpriteBatch on any clip change) -
+            // unconditionally, regardless of whether this renderable's own BatchKey happens to
+            // match whatever was running. Consume any already-pending forced transition (e.g.
+            // from exiting a prior sibling clip) into this same recording instead of double-
+            // counting it separately.
+            _forceNextTransition = false;
+            RecordHardBoundaryTransition(renderable.BatchKey, renderable.BatchSortKey, renderable.GetType());
+
+            destination.Add(new DrawCommand(DrawCommandKind.BeginClip, renderable));
+
+            List<Entry> innerWindow = RentWindow();
+            AddEntry(renderable, innerWindow);
+
+            // Entering a clipper narrows the active clip for descendants (intersect).
+            System.Drawing.Rectangle? childClip = activeClip;
+            if (clipBounds.CanResolveScissorRectangle)
+            {
+                System.Drawing.Rectangle thisClip = clipBounds.GetScissorRectangle(renderable);
+                childClip = activeClip.HasValue ? System.Drawing.Rectangle.Intersect(activeClip.Value, thisClip) : thisClip;
+            }
+
+            if (Renderer.RenderUsingHierarchy && !renderable.IsRenderTarget)
+            {
+                ObservableCollection<IRenderableIpso> children = renderable.Children;
+                if (children != null)
+                {
+                    int childCount = children.Count;
+                    for (int i = 0; i < childCount; i++)
+                    {
+                        ProcessRenderable(children[i], clipBounds, childClip, innerWindow, destination);
+                    }
+                }
+            }
+
+            FlushWindow(innerWindow, destination);
+            ReturnWindow(innerWindow);
+            destination.Add(new DrawCommand(DrawCommandKind.EndClip, renderable));
+
+            // Exiting a clip ALSO forces a flush (Renderer.Draw's didClipChange exit branch) -
+            // whatever gets chosen next, in this window or a sibling one, must be treated as a
+            // forced break too, regardless of what its own key turns out to be.
+            _forceNextTransition = true;
+        }
+        else
+        {
+            AddEntry(renderable, currentWindow);
+
+            if (Renderer.RenderUsingHierarchy && !renderable.IsRenderTarget)
+            {
+                ObservableCollection<IRenderableIpso> children = renderable.Children;
+                if (children != null)
+                {
+                    int childCount = children.Count;
+                    for (int i = 0; i < childCount; i++)
+                    {
+                        ProcessRenderable(children[i], clipBounds, activeClip, currentWindow, destination);
+                    }
+                }
+            }
+        }
+    }
+
+    private static void AddEntry(IRenderableIpso renderable, List<Entry> window)
+    {
+        string batchKey = renderable.BatchKey ?? string.Empty;
+        bool isRenderTarget = renderable.IsRenderTarget;
+        window.Add(new Entry
+        {
+            Item = renderable,
+            Bounds = GetEffectiveBounds(renderable),
+            BatchKey = batchKey,
+            BatchSortKey = renderable.BatchSortKey,
+            IsFreeContainer = batchKey.Length == 0 && !isRenderTarget && !renderable.ClipsChildren,
+            IsRenderTarget = isRenderTarget,
+        });
+    }
+
+    /// <summary>
+    /// Returns the renderable's absolute bounds, with a conservative fallback for cases
+    /// where the computed bounds don't reflect the visible footprint. The common offender
+    /// is a renderable with non-default <c>XOrigin/YOrigin/Rotation</c> (e.g. a sprite
+    /// centered on its parent with <c>XOrigin=Center, XUnits=PixelsFromMiddle, Rotation=90</c>):
+    /// the contained renderable's X/Y reflect a pre-rotation reference point that can sit
+    /// outside the parent, even though the visible draw lands inside it. If the computed
+    /// bounds don't intersect the parent's, fall back to the parent's bounds — it's a
+    /// safe over-estimate that keeps the overlap test honest.
+    /// </summary>
+    private static System.Drawing.Rectangle GetEffectiveBounds(IRenderableIpso renderable)
+    {
+        if (BoundsOverride != null && BoundsOverride(renderable, out System.Drawing.Rectangle ob)) return ob;
+        System.Drawing.Rectangle bounds = renderable.GetAbsoluteBounds();
+        IRenderableIpso? parent = renderable.Parent;
+        if (parent != null)
+        {
+            System.Drawing.Rectangle parentBounds = parent.GetAbsoluteBounds();
+            if (parentBounds.Width > 0 && parentBounds.Height > 0 && !bounds.IntersectsWith(parentBounds))
+            {
+                return parentBounds;
+            }
+        }
+        return bounds;
+    }
+
+    private void EnsureGraphCapacity(int n)
+    {
+        if (_indegreeBuffer.Length >= n)
+        {
+            return;
+        }
+
+        int newSize = System.Math.Max(n, _indegreeBuffer.Length * 2);
+        int oldSize = _successorsBuffer.Length;
+
+        _indegreeBuffer = new int[newSize];
+        _drawnBuffer = new bool[newSize];
+
+        List<int>[] newSuccessors = new List<int>[newSize];
+        Array.Copy(_successorsBuffer, newSuccessors, oldSize);
+        for (int i = oldSize; i < newSize; i++)
+        {
+            newSuccessors[i] = new List<int>();
+        }
+        _successorsBuffer = newSuccessors;
+    }
+
+    // BuildPrecedenceEdges scratch: each entry's bounds edges split into int arrays (a cheap inner
+    // test, no struct copies), plus the sweep's sorted keys and index order. Sized like the graph.
+    private int[] _left = Array.Empty<int>();
+    private int[] _right = Array.Empty<int>();
+    private int[] _top = Array.Empty<int>();
+    private int[] _bottom = Array.Empty<int>();
+    private int[] _sweepKeys = Array.Empty<int>();
+    private int[] _sweepOrder = Array.Empty<int>();
+
+    private void EnsureSweepCapacity(int n)
+    {
+        if (_left.Length >= n)
+        {
+            return;
+        }
+
+        int newSize = System.Math.Max(n, _left.Length * 2);
+        _left = new int[newSize];
+        _right = new int[newSize];
+        _top = new int[newSize];
+        _bottom = new int[newSize];
+        _sweepKeys = new int[newSize];
+        _sweepOrder = new int[newSize];
+    }
+
+    /// <summary>
+    /// Adds the edge i -> j (i before j in DFS order) to <paramref name="successors"/> for every
+    /// pair of window entries whose bounds intersect, and counts each target's incoming edges in
+    /// <paramref name="indegree"/>. A sweep-and-prune over the axis the entries cover more sparsely:
+    /// entries are sorted by their start on that axis, and each is only tested against the following
+    /// entries that start before it ends, since any later one cannot intersect it. The test applied
+    /// to those candidates is the same strict-inequality test as
+    /// <see cref="System.Drawing.Rectangle.IntersectsWith"/>, so the edge set is exactly the all-pairs one.
+    /// </summary>
+    private void BuildPrecedenceEdges(List<Entry> window, int n, int[] indegree, List<int>[] successors)
+    {
+        EnsureSweepCapacity(n);
+        int[] left = _left;
+        int[] right = _right;
+        int[] top = _top;
+        int[] bottom = _bottom;
+
+        int minLeft = int.MaxValue;
+        int maxRight = int.MinValue;
+        int minTop = int.MaxValue;
+        int maxBottom = int.MinValue;
+        long widthSum = 0;
+        long heightSum = 0;
+        for (int i = 0; i < n; i++)
+        {
+            System.Drawing.Rectangle bounds = window[i].Bounds;
+            left[i] = bounds.Left;
+            right[i] = bounds.Right;
+            top[i] = bounds.Top;
+            bottom[i] = bounds.Bottom;
+            minLeft = System.Math.Min(minLeft, left[i]);
+            maxRight = System.Math.Max(maxRight, right[i]);
+            minTop = System.Math.Min(minTop, top[i]);
+            maxBottom = System.Math.Max(maxBottom, bottom[i]);
+            widthSum += (long)right[i] - left[i];
+            heightSum += (long)bottom[i] - top[i];
+        }
+
+        // Fewer candidates on the axis where entries fill less of the total extent:
+        // widthSum / xExtent < heightSum / yExtent, cross-multiplied.
+        long xExtent = (long)maxRight - minLeft;
+        long yExtent = (long)maxBottom - minTop;
+        bool sweepX = widthSum * yExtent <= heightSum * xExtent;
+
+        int[] lo = sweepX ? left : top;
+        int[] hi = sweepX ? right : bottom;
+        int[] otherLo = sweepX ? top : left;
+        int[] otherHi = sweepX ? bottom : right;
+
+        int[] keys = _sweepKeys;
+        int[] order = _sweepOrder;
+        for (int i = 0; i < n; i++)
+        {
+            keys[i] = lo[i];
+            order[i] = i;
+        }
+        Array.Sort(keys, order, 0, n);
+
+        int pairTests = 0;
+        for (int a = 0; a < n; a++)
+        {
+            int ia = order[a];
+            int hiA = hi[ia];
+            for (int b = a + 1; b < n; b++)
+            {
+                int ib = order[b];
+                if (lo[ib] >= hiA)
+                {
+                    break;
+                }
+
+                pairTests++;
+                if (lo[ia] < hi[ib] && otherLo[ia] < otherHi[ib] && otherHi[ia] > otherLo[ib])
+                {
+                    int first = ia < ib ? ia : ib;
+                    int second = ia < ib ? ib : ia;
+                    successors[first].Add(second);
+                    indegree[second]++;
+                }
+            }
+        }
+        PairTestCount += pairTests;
+    }
+
+    private void EnsurePickCapacity(int n)
+    {
+        if (_bucketOfEntry.Length >= n)
+        {
+            return;
+        }
+
+        int newSize = System.Math.Max(n, _bucketOfEntry.Length * 2);
+        _bucketOfEntry = new int[newSize];
+        _keyOfBucket = new int[newSize];
+        _undrawnInBucket = new int[newSize];
+        _pickOrder = new int[newSize];
+    }
+
+    /// <summary>
+    /// Groups the window's entries into (BatchKey, BatchSortKey) buckets nested in BatchKey groups
+    /// and seeds the heaps with the entries that have no incoming edge. Also looks up the bucket
+    /// and key group of the running (BatchKey, BatchSortKey), which may carry over from an earlier
+    /// window; each is -1 when the window has none.
+    /// </summary>
+    private void AssignBuckets(List<Entry> window, int n, int[] indegree, out int runningBucket, out int runningKey)
+    {
+        _bucketIds.Clear();
+        _keyIds.Clear();
+        _freeContainerHeap.Clear();
+        _allHeap.Clear();
+
+        for (int i = 0; i < n; i++)
+        {
+            BucketKey bucketKey = new BucketKey(window[i].BatchKey, window[i].BatchSortKey);
+            if (!_bucketIds.TryGetValue(bucketKey, out int bucket))
+            {
+                bucket = _bucketIds.Count;
+                _bucketIds.Add(bucketKey, bucket);
+
+                if (!_keyIds.TryGetValue(bucketKey.BatchKey, out int key))
+                {
+                    key = _keyIds.Count;
+                    _keyIds.Add(bucketKey.BatchKey, key);
+                    if (key == _keyHeaps.Count)
+                    {
+                        _keyHeaps.Add(new IndexHeap());
+                    }
+                    _keyHeaps[key].Clear();
+                }
+
+                if (bucket == _bucketHeaps.Count)
+                {
+                    _bucketHeaps.Add(new IndexHeap());
+                }
+                _bucketHeaps[bucket].Clear();
+                _keyOfBucket[bucket] = key;
+                _undrawnInBucket[bucket] = 0;
+            }
+
+            _bucketOfEntry[i] = bucket;
+            _undrawnInBucket[bucket]++;
+        }
+        _pickSteps += n;
+
+        for (int i = 0; i < n; i++)
+        {
+            if (indegree[i] == 0)
+            {
+                MakeAvailable(window, i);
+            }
+        }
+
+        runningBucket = -1;
+        runningKey = -1;
+        if (_runningBatchKey != null)
+        {
+            if (_bucketIds.TryGetValue(new BucketKey(_runningBatchKey, _runningSortKey), out int bucket))
+            {
+                runningBucket = bucket;
+            }
+            if (_keyIds.TryGetValue(_runningBatchKey, out int key))
+            {
+                runningKey = key;
+            }
+        }
+    }
+
+    private void MakeAvailable(List<Entry> window, int index)
+    {
+        int bucket = _bucketOfEntry[index];
+        _bucketHeaps[bucket].Push(index, ref _pickSteps);
+        _keyHeaps[_keyOfBucket[bucket]].Push(index, ref _pickSteps);
+        _allHeap.Push(index, ref _pickSteps);
+        if (window[index].IsFreeContainer)
+        {
+            _freeContainerHeap.Push(index, ref _pickSteps);
+        }
+    }
+
+    private void FlushWindow(List<Entry> window, List<DrawCommand> destination)
+    {
+        int n = window.Count;
+        if (n == 0)
+        {
+            return;
+        }
+
+        // Build the precedence graph: edge i -> j when i precedes j in DFS AND their bounds
+        // intersect. Same-key pairs still need edges — alpha-blending order matters even
+        // within a batch, and the topological sort that follows handles them as a tie.
+        EnsureGraphCapacity(n);
+        int[] indegree = _indegreeBuffer;
+        List<int>[] successors = _successorsBuffer;
+        bool[] drawn = _drawnBuffer;
+        Array.Clear(indegree, 0, n);
+        Array.Clear(drawn, 0, n);
+        for (int i = 0; i < n; i++)
+        {
+            successors[i].Clear();
+        }
+
+        BuildPrecedenceEdges(window, n, indegree, successors);
+
+        // Kahn's topological sort with a "stay on the current batch key" tiebreaker.
+        // Among items with indegree 0, prefer one whose (BatchKey, BatchSortKey) matches the
+        // last emitted exactly (keeps same-texture runs contiguous); failing that, a free
+        // container (Entry.IsFreeContainer) — emitting one submits nothing and leaves the
+        // running key alone, so it is strictly better than committing to a real key change, and
+        // it unblocks the container's children while the running key may still be worth
+        // continuing; failing that, one whose BatchKey alone matches (keeps the coarser
+        // SpriteBatch/Apos.Shapes grouping BatchOrchestrator relies on, even when BatchSortKey
+        // differs or is unset). Ties within a tier break by smallest DFS index for determinism.
+        // No match at all → smallest DFS overall.
+        //
+        // The free-container tier is what makes same-key runs merge across sibling instances of
+        // the same Gum component (#4579): each instance's root is a transparent wrapper whose
+        // bounds encompass its children, so those children have a precedence edge from it and stay
+        // unavailable until it is chosen. It sits above the BatchKey-only tier (#7032): on
+        // MonoGame every sprite, nine-slice and text reports the same BatchKey, so a key-only
+        // match is nearly always available and, ahead of the wrappers, committed the run to the
+        // font texture before the next instance's background could join the running one.
+        EnsurePickCapacity(n);
+        AssignBuckets(window, n, indegree, out int runningBucket, out int runningKey);
+
+        int[] order = _pickOrder;
+        PickGreedyOrder(window, n, indegree, successors, drawn, runningBucket, runningKey, order);
+
+        // The greedy pick has no lookahead, so committing to a run early can split a later, bigger
+        // one and leave more key runs than the depth-first order the window arrived in (#7051).
+        // The window's entries are already in depth-first order, and that order is always a valid
+        // topological order (every precedence edge points from a lower to a higher index), so
+        // count the runs of both and emit the cheaper. Ties keep the greedy order. Both counts are
+        // linear scans over ints, and the depth-first order costs nothing to materialize.
+        int greedyBreaks = CountBreaks(window, n, order, runningBucket);
+        int hierarchicalBreaks = CountBreaks(window, n, null, runningBucket);
+        if (hierarchicalBreaks < greedyBreaks)
+        {
+            for (int i = 0; i < n; i++)
+            {
+                order[i] = i;
+            }
+        }
+
+        EmitOrder(window, n, order, runningBucket, destination);
+
+        window.Clear();
+    }
+
+    /// <summary>
+    /// Kahn's topological sort with the "stay on the current batch key" tiebreaker, writing the
+    /// chosen window indexes into <paramref name="order"/>. Mutates <paramref name="indegree"/>
+    /// and <paramref name="drawn"/>.
+    /// </summary>
+    private void PickGreedyOrder(
+        List<Entry> window, int n, int[] indegree, List<int>[] successors, bool[] drawn,
+        int runningBucket, int runningKey, int[] order)
+    {
+        for (int emitted = 0; emitted < n; emitted++)
+        {
+            int chosen = -1;
+            if (runningBucket != -1)
+            {
+                chosen = _bucketHeaps[runningBucket].PeekUndrawn(drawn, ref _pickSteps);
+            }
+            if (chosen == -1)
+            {
+                chosen = _freeContainerHeap.PeekUndrawn(drawn, ref _pickSteps);
+            }
+            if (chosen == -1 && runningKey != -1)
+            {
+                chosen = _keyHeaps[runningKey].PeekUndrawn(drawn, ref _pickSteps);
+            }
+            if (chosen == -1)
+            {
+                chosen = _allHeap.PeekUndrawn(drawn, ref _pickSteps);
+            }
+
+            order[emitted] = chosen;
+            drawn[chosen] = true;
+            if (!window[chosen].IsFreeContainer)
+            {
+                runningBucket = _bucketOfEntry[chosen];
+                runningKey = _keyOfBucket[runningBucket];
+            }
+
+            List<int> succ = successors[chosen];
+            for (int k = 0; k < succ.Count; k++)
+            {
+                int s = succ[k];
+                if (--indegree[s] == 0)
+                {
+                    MakeAvailable(window, s);
+                }
+            }
+        }
+    }
+
+    /// <summary>
+    /// Number of key runs (the breaks <see cref="EmitOrder"/> would record) emitting the window in
+    /// <paramref name="order"/> would cost, or in index (depth-first) order when it is null.
+    /// Mirrors <see cref="EmitOrder"/>'s accounting: a free container costs nothing and leaves
+    /// the running bucket and the pending forced transition alone; anything else costs one when
+    /// nothing is running, a transition is forced, it is a render target, or its bucket differs.
+    /// </summary>
+    private int CountBreaks(List<Entry> window, int n, int[]? order, int runningBucket)
+    {
+        int bucket = runningBucket;
+        bool forcedPending = _forceNextTransition;
+        int breaks = 0;
+        for (int i = 0; i < n; i++)
+        {
+            int index = order == null ? i : order[i];
+            Entry entry = window[index];
+            if (entry.IsFreeContainer)
+            {
+                continue;
+            }
+
+            bool forced = forcedPending || entry.IsRenderTarget;
+            forcedPending = entry.IsRenderTarget;
+            int entryBucket = _bucketOfEntry[index];
+            if (forced || bucket == -1 || bucket != entryBucket)
+            {
+                breaks++;
+            }
+            bucket = entryBucket;
+        }
+        _pickSteps += n;
+        return breaks;
+    }
+
+    /// <summary>
+    /// Appends the window in <paramref name="order"/> to <paramref name="destination"/> and
+    /// records the #4575 diagnostics for every key change.
+    /// </summary>
+    private void EmitOrder(List<Entry> window, int n, int[] order, int runningBucket, List<DrawCommand> destination)
+    {
+        int bucketCount = _bucketIds.Count;
+        Array.Clear(_undrawnInBucket, 0, bucketCount);
+        for (int i = 0; i < n; i++)
+        {
+            _undrawnInBucket[_bucketOfEntry[i]]++;
+        }
+
+        for (int emitted = 0; emitted < n; emitted++)
+        {
+            int chosen = order[emitted];
+
+            // #4575 diagnostics: classify a key change (BatchKey and/or BatchSortKey differs from
+            // the last emitted item) as either overlap-blocked (a same-key item is still pending,
+            // just not yet unblocked) or a genuine break (nothing pending shares the old key).
+            // Skipped on the very first emission - there's no prior run to have broken yet.
+            //
+            // Also skipped for a free container (Entry.IsFreeContainer) - it is free at the real
+            // GPU level, so counting it here would be a false positive.
+            //
+            // A render target or a pending forced transition (set when we just entered/exited a
+            // clip, or just drew a render target) is UNCONDITIONALLY a break, regardless of
+            // whether the key happens to match - HardBoundaryTransitionCount, never
+            // MergeBlockedByOverlapCount/NoCandidateInWindowBreakCount, since no reordering could
+            // ever have avoided it (issue #4575 follow-up).
+            bool chosenIsFreeContainer = window[chosen].IsFreeContainer;
+            bool forced = _forceNextTransition || window[chosen].IsRenderTarget;
+
+            // A free container is exempt from break accounting, so it must not CONSUME a pending
+            // forced transition either - the real renderable after it is the one the GPU actually
+            // flushes for, and the hard boundary belongs to it. Leaving the flag set keeps the
+            // break groups reconciling against the frame's true draw-call count.
+            if (!chosenIsFreeContainer)
+            {
+                _forceNextTransition = false;
+            }
+
+            if (!chosenIsFreeContainer)
+            {
+                Type toRenderableType = window[chosen].Item.GetType();
+
+                if (_runningBatchKey == null)
+                {
+                    // Nothing preceded this item in the window - no reordering choice was even
+                    // possible - but it is still a real draw call, so it gets its own break entry
+                    // rather than being silently exempted (see BreakReason.NoPredecessor).
+                    RecordBreak(
+                        NoPredecessorBatchKey, null, NoPredecessorType,
+                        window[chosen].BatchKey, window[chosen].BatchSortKey, toRenderableType,
+                        BreakReason.NoPredecessor);
+                }
+                else
+                {
+                    bool exactMatch = window[chosen].BatchKey == _runningBatchKey &&
+                        Equals(window[chosen].BatchSortKey, _runningSortKey);
+
+                    if (forced)
+                    {
+                        HardBoundaryTransitionCount++;
+                        RecordBreak(
+                            _runningBatchKey, _runningSortKey, _runningRenderableType!,
+                            window[chosen].BatchKey, window[chosen].BatchSortKey, toRenderableType,
+                            BreakReason.HardBoundary);
+                    }
+                    else if (!exactMatch)
+                    {
+                        // Chosen is not in the running bucket (this is not an exact match), so any
+                        // undrawn entry left there is one overlap is keeping unavailable.
+                        _pickSteps++;
+                        bool blockedCandidateExists = runningBucket != -1 && _undrawnInBucket[runningBucket] > 0;
+
+                        BreakReason reason;
+                        if (blockedCandidateExists)
+                        {
+                            MergeBlockedByOverlapCount++;
+                            reason = BreakReason.BlockedByOverlap;
+                        }
+                        else
+                        {
+                            NoCandidateInWindowBreakCount++;
+                            reason = BreakReason.NoCandidateInWindow;
+                        }
+
+                        RecordBreak(
+                            _runningBatchKey, _runningSortKey, _runningRenderableType!,
+                            window[chosen].BatchKey, window[chosen].BatchSortKey, toRenderableType, reason);
+                    }
+                }
+            }
+
+            destination.Add(new DrawCommand(DrawCommandKind.DrawRenderable, window[chosen].Item));
+            _undrawnInBucket[_bucketOfEntry[chosen]]--;
+            if (!chosenIsFreeContainer)
+            {
+                _runningBatchKey = window[chosen].BatchKey;
+                _runningSortKey = window[chosen].BatchSortKey;
+                _runningRenderableType = window[chosen].Item.GetType();
+                runningBucket = _bucketOfEntry[chosen];
+            }
+            if (window[chosen].IsRenderTarget)
+            {
+                // Drawing the target is only half the cost - DrawRenderTargetToScreen also
+                // restores the normal effect afterward (its own BeginSpriteBatch with no
+                // override), so whatever comes next is forced too, regardless of its own key.
+                _forceNextTransition = true;
+            }
+        }
+    }
+
+    /// <summary>
+    /// Unconditionally records a <see cref="BreakReason.HardBoundary"/> transition from whatever
+    /// is currently running to <paramref name="toBatchKey"/>/<paramref name="toSortKey"/>/
+    /// <paramref name="toRenderableType"/>, then makes that the new running state - used when
+    /// entering a <see cref="IRenderableIpso.ClipsChildren"/> renderable, where the transition
+    /// happens outside <see cref="FlushWindow"/>'s own per-item loop (issue #4575 follow-up).
+    /// </summary>
+    private void RecordHardBoundaryTransition(string toBatchKey, object? toSortKey, Type toRenderableType)
+    {
+        if (_runningBatchKey != null)
+        {
+            HardBoundaryTransitionCount++;
+            RecordBreak(
+                _runningBatchKey, _runningSortKey, _runningRenderableType!,
+                toBatchKey, toSortKey, toRenderableType, BreakReason.HardBoundary);
+        }
+        else
+        {
+            // The clip is the very first thing in this window - nothing to force away from, but
+            // still a real draw call (see BreakReason.NoPredecessor).
+            RecordBreak(NoPredecessorBatchKey, null, NoPredecessorType, toBatchKey, toSortKey, toRenderableType, BreakReason.NoPredecessor);
+        }
+
+        _runningBatchKey = toBatchKey;
+        _runningSortKey = toSortKey;
+        _runningRenderableType = toRenderableType;
+    }
+}
+
+public readonly struct ClipBoundsSource
+{
+    public bool CanResolveScissorRectangle => false;
+    public bool CanResolveCullTestBounds => false;
+    public System.Drawing.Rectangle GetScissorRectangle(IRenderableIpso renderable) => default;
+    public System.Drawing.Rectangle GetCullTestBounds(IRenderableIpso renderable) => default;
+}
+
+public enum DrawCommandKind { DrawRenderable, BeginClip, EndClip }
+
+public readonly struct DrawCommand
+{
+    public DrawCommand(DrawCommandKind kind, IRenderableIpso target) { Kind = kind; Target = target; }
+    public DrawCommandKind Kind { get; }
+    public IRenderableIpso Target { get; }
+}

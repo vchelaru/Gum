@@ -86,7 +86,9 @@ public class Sprite : RenderableShapeBase, IAspectRatio, ITextureCoordinate, IAn
     /// Identifies the pixels this sprite draws. An image built from the Texture has the same pixels as any other
     /// built from it, so the bitmap identifies it; an image assigned over the Texture is its own pixels.
     /// </summary>
-    private object? BatchKey => _ownsImage ? _texture : _image;
+    private object? BatchKeyObj => _ownsImage ? _texture : _image;
+    public override string BatchKey => "SkiaImage"; // SPIKE sort3
+    public override object? BatchSortKey => BatchKeyObj;
 
     /// <summary>
     /// The image this sprite draws. An image assigned here stays owned by the caller: the sprite never
@@ -512,7 +514,7 @@ public class Sprite : RenderableShapeBase, IAspectRatio, ITextureCoordinate, IAn
             source = new SKRect(0, 0, image.Width, image.Height);
         }
 
-        return batch.TryAdd(canvas, BatchKey ?? image, image, source, boundingRect,
+        return batch.TryAdd(canvas, BatchKeyObj ?? image, image, source, boundingRect,
             Color.WithAlpha(255), paint.Color.Alpha, Renderer.TextureSampling);
     }
 

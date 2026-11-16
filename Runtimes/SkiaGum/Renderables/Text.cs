@@ -3408,7 +3408,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
     /// <inheritdoc/>
     IVisible? IVisible.Parent =>((IRenderableIpso)this).Parent as IVisible;
 
-    public string BatchKey => string.Empty;
+    public string BatchKey => "SkiaText"; // SPIKE sort3
     public object? BatchSortKey => null;
 
     #endregion

@@ -73,6 +73,7 @@ try
             },
             benchmarkPath);
         FlushProbe.Report(BenchmarkRunner.MeasuredFrames);
+        Console.WriteLine(RenderingLibrary.Graphics.SortProbe.Report(BenchmarkRunner.MeasuredFrames));
         return;
     }
 

@@ -1400,8 +1400,8 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
     /// <inheritdoc/>
     IVisible? IVisible.Parent => ((IRenderableIpso)this).Parent as IVisible;
 
-    public string BatchKey => string.Empty;
-    public object? BatchSortKey => null;
+    public virtual string BatchKey => "SkiaShape"; // SPIKE sort3
+    public virtual object? BatchSortKey => null;
 
     #endregion
 
