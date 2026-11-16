@@ -632,4 +632,145 @@ public class NineSliceVertexBatchGpuTests : IDisposable
             }
         });
     }
+
+    static NineSliceRuntime Tinted(SKBitmap texture, float x, float y, SKColor color)
+    {
+        NineSliceRuntime frame = Frame(texture, x, y, 44, 36);
+        frame.Color = color;
+        return frame;
+    }
+
+    [Fact]
+    public void Draw_ModulateTintedNineSlices_BatchAndMatchLattice()
+    {
+        (int batched, int unbatched) = AssertBatchedMatchesUnbatched(root =>
+        {
+            for (int i = 0; i < 5; i++)
+            {
+                root.AddChild(Tinted(_textureA, 10 + i * 40, 10, new SKColor(0x06, 0x9f, 0xb1)));
+            }
+        });
+
+        unbatched.ShouldBe(5);
+        batched.ShouldBe(1);
+    }
+
+    [Fact]
+    public void Draw_TintedNineSlicesWithAlpha_BatchAndMatchLattice()
+    {
+        (int batched, int unbatched) = AssertBatchedMatchesUnbatched(root =>
+        {
+            for (int i = 0; i < 4; i++)
+            {
+                root.AddChild(Tinted(_textureA, 10 + i * 30, 10 + i * 20, new SKColor(0x82, 0x82, 0x82, 128)));
+            }
+        });
+
+        unbatched.ShouldBe(4);
+        batched.ShouldBe(1);
+    }
+
+    [Fact]
+    public void Draw_DifferentTints_ShareOneBatch()
+    {
+        SKColor[] tints = { new(0x06, 0x9f, 0xb1), new(0x4a, 0x4a, 0x4a), new(0x82, 0x82, 0x82), new(255, 10, 128) };
+        (int batched, int unbatched) = AssertBatchedMatchesUnbatched(root =>
+        {
+            for (int i = 0; i < tints.Length; i++)
+            {
+                root.AddChild(Tinted(_textureB, 10 + i * 50, 10 + i * 10, tints[i]));
+            }
+        });
+
+        unbatched.ShouldBe(4);
+        batched.ShouldBe(1);
+    }
+
+    [Fact]
+    public void Draw_TintedNextToUntinted_ShareOneBatch()
+    {
+        (int batched, int unbatched) = AssertBatchedMatchesUnbatched(root =>
+        {
+            root.AddChild(Frame(_textureA, 10, 10, 44, 36));
+            root.AddChild(Tinted(_textureA, 60, 10, new SKColor(0x4a, 0x4a, 0x4a)));
+            root.AddChild(Frame(_textureA, 110, 10, 44, 36));
+            root.AddChild(Tinted(_textureA, 30, 30, new SKColor(0x06, 0x9f, 0xb1)));
+        });
+
+        unbatched.ShouldBe(4);
+        batched.ShouldBe(1);
+    }
+
+    [Fact]
+    public void Draw_DifferentAlphas_SplitTheBatchInOrder()
+    {
+        (int batched, int unbatched) = AssertBatchedMatchesUnbatched(root =>
+        {
+            root.AddChild(Tinted(_textureA, 10, 10, new SKColor(200, 100, 50, 255)));
+            root.AddChild(Tinted(_textureA, 30, 20, new SKColor(200, 100, 50, 100)));
+            root.AddChild(Tinted(_textureA, 50, 30, new SKColor(200, 100, 50, 100)));
+            root.AddChild(Tinted(_textureA, 70, 40, new SKColor(200, 100, 50, 255)));
+            // Untinted at an alpha: a batch with no vertex colors, drawn at the paint's alpha.
+            root.AddChild(Tinted(_textureB, 90, 50, SKColors.White.WithAlpha(60)));
+            root.AddChild(Tinted(_textureB, 110, 60, SKColors.White.WithAlpha(60)));
+        });
+
+        unbatched.ShouldBe(6);
+        batched.ShouldBe(4);
+    }
+
+    [Fact]
+    public void Draw_AddColorOperation_KeepsTheLattice()
+    {
+        (int batched, int unbatched) = AssertBatchedMatchesUnbatched(root =>
+        {
+            root.AddChild(Frame(_textureA, 10, 10, 44, 36));
+            NineSliceRuntime added = Tinted(_textureA, 60, 10, new SKColor(60, 20, 0));
+            ((global::SkiaGum.Renderables.NineSlice)added.RenderableComponent!).ColorOperation = RenderingLibrary.Graphics.ColorOperation.Add;
+            root.AddChild(added);
+            root.AddChild(Frame(_textureA, 110, 10, 44, 36));
+        });
+
+        unbatched.ShouldBe(3);
+        // The Add NineSlice draws alone and splits the two untinted ones.
+        batched.ShouldBe(3);
+    }
+
+    [Fact]
+    public void Draw_ThemeBuiltForms_TintedBackgroundsJoinTheBatch()
+    {
+        int added = -1;
+        SKColor buttonColor = SKColors.White;
+        SKColor checkBoxColor = SKColors.White;
+        _gpu.WithSurface(Size, Size, (surface, context) =>
+        {
+            global::Gum.GumService.Default.Initialize(surface.Canvas, Size, Size);
+            try
+            {
+                RenderingLibrary.Graphics.Renderer.TextureFilter = SKFilterMode.Nearest;
+                global::Gum.Forms.Controls.Button button = new() { X = 10, Y = 10 };
+                global::Gum.Forms.Controls.CheckBox checkBox = new() { X = 10, Y = 60 };
+                global::Gum.Forms.Controls.FrameworkElementExt.AddToRoot(button);
+                global::Gum.Forms.Controls.FrameworkElementExt.AddToRoot(checkBox);
+                buttonColor = ((global::Gum.Forms.DefaultVisuals.V3.ButtonVisual)button.Visual).Background.Color;
+                checkBoxColor = ((global::Gum.Forms.DefaultVisuals.V3.CheckBoxVisual)checkBox.Visual).CheckBoxBackground.Color;
+
+                RenderingLibrary.Graphics.NineSliceVertexBatch batch = SystemManagers.Default.Renderer.NineSliceBatch;
+                global::Gum.GumService.Default.Draw();
+                int before = batch.AddedCount;
+                global::Gum.GumService.Default.Draw();
+                added = batch.AddedCount - before;
+                context.Flush(true, true);
+            }
+            finally
+            {
+                global::Gum.GumService.Default.Uninitialize();
+            }
+        });
+
+        // The theme tints both backgrounds, and both join the vertex batch instead of drawing their own lattice.
+        buttonColor.ShouldNotBe(SKColors.White);
+        checkBoxColor.ShouldNotBe(SKColors.White);
+        added.ShouldBeGreaterThanOrEqualTo(2);
+    }
 }

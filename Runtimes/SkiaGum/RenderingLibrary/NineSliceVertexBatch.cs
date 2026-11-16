@@ -37,6 +37,8 @@ internal sealed class NineSliceVertexBatch
     {
         public SKPoint[] Positions = Array.Empty<SKPoint>();
         public SKPoint[] TexCoords = Array.Empty<SKPoint>();
+        // Empty when the slot's vertices carry no colors (every NineSlice untinted).
+        public SKColor[] Colors = Array.Empty<SKColor>();
         public SKVertices? Vertices;
     }
 
@@ -82,6 +84,9 @@ internal sealed class NineSliceVertexBatch
 
     private SKPoint[] _positions;
     private SKPoint[] _texCoords;
+    private SKColor[] _colors;
+    private bool _hasTint;
+    private byte _alpha;
     private int _count;
 
     private DeferredText[] _deferred;
@@ -105,6 +110,7 @@ internal sealed class NineSliceVertexBatch
         _slots = new List<Slot>();
         _positions = new SKPoint[16 * VerticesPerNineSlice];
         _texCoords = new SKPoint[16 * VerticesPerNineSlice];
+        _colors = new SKColor[16 * VerticesPerNineSlice];
         _deferred = new DeferredText[16];
     }
 
@@ -123,18 +129,24 @@ internal sealed class NineSliceVertexBatch
     /// <summary>
     /// Adds a NineSlice whose four device-space column edges are <paramref name="xs"/> and row edges
     /// <paramref name="ys"/>, sampling the texel edges <paramref name="us"/> and <paramref name="vs"/> of the image
-    /// <paramref name="shader"/> draws. Flushes first when the pending batch has another canvas or key, is full, or
+    /// <paramref name="shader"/> draws, multiplied by the opaque <paramref name="tint"/> (white for none) and drawn at
+    /// <paramref name="alpha"/>. Flushes first when the pending batch has another canvas, key or alpha, is full, or
     /// has a deferred text the NineSlice overlaps. Call it only for a canvas <see cref="IsGpuCanvas"/> accepts.
     /// <paramref name="key"/> decides whether two NineSlices draw the same pixels (their shared bitmap).
     /// </summary>
-    public void Add(SKCanvas canvas, object key, SKShader shader,
+    /// <remarks>
+    /// The tint is a per-vertex color the flush modulates with the texels, the same multiply the NineSlice's Modulate
+    /// color filter does. Alpha stays on the paint, as the lattice applies it, so it splits batches instead of riding
+    /// on the vertex color.
+    /// </remarks>
+    public void Add(SKCanvas canvas, object key, SKShader shader, SKColor tint, byte alpha,
         ReadOnlySpan<float> xs, ReadOnlySpan<float> ys, ReadOnlySpan<float> us, ReadOnlySpan<float> vs)
     {
         if (_count > 0)
         {
             SKRect bounds = new SKRect(
                 MathF.Min(xs[0], xs[3]), MathF.Min(ys[0], ys[3]), MathF.Max(xs[0], xs[3]), MathF.Max(ys[0], ys[3]));
-            if (!ReferenceEquals(canvas, _canvas) || !ReferenceEquals(key, _key) || _count >= MaxBatchLength
+            if (!ReferenceEquals(canvas, _canvas) || !ReferenceEquals(key, _key) || alpha != _alpha || _count >= MaxBatchLength
                 || OverlapsDeferred(bounds))
             {
                 Flush();
@@ -146,6 +158,8 @@ internal sealed class NineSliceVertexBatch
             _canvas = canvas;
             _key = key;
             _shader = shader;
+            _alpha = alpha;
+            _hasTint = false;
         }
 
         int first = _count * VerticesPerNineSlice;
@@ -153,7 +167,9 @@ internal sealed class NineSliceVertexBatch
         {
             Array.Resize(ref _positions, _positions.Length * 2);
             Array.Resize(ref _texCoords, _texCoords.Length * 2);
+            Array.Resize(ref _colors, _colors.Length * 2);
         }
+        _hasTint |= tint != SKColors.White;
         for (int row = 0; row < 4; row++)
         {
             for (int column = 0; column < 4; column++)
@@ -161,9 +177,11 @@ internal sealed class NineSliceVertexBatch
                 int vertex = first + (row * 4) + column;
                 _positions[vertex] = new SKPoint(xs[column], ys[row]);
                 _texCoords[vertex] = new SKPoint(us[column], vs[row]);
+                _colors[vertex] = tint;
             }
         }
         _count++;
+        AddedCount++;
     }
 
     /// <summary>
@@ -213,6 +231,7 @@ internal sealed class NineSliceVertexBatch
         SKVertices vertices = GetSlotVertices(count);
 
         _paint.Shader = _shader;
+        _paint.Color = SKColors.White.WithAlpha(_alpha);
         canvas.Save();
         canvas.ResetMatrix();
         canvas.DrawVertices(vertices, SKBlendMode.Modulate, _paint);
@@ -266,6 +285,9 @@ internal sealed class NineSliceVertexBatch
     /// </summary>
     public void BeginFrame() => _nextSlot = 0;
 
+    /// <summary>The NineSlices added since this batch was made. Test hook.</summary>
+    internal int AddedCount { get; private set; }
+
     /// <summary>The SKVertices builds since this batch was made. Test hook.</summary>
     internal int VerticesBuildCount { get; private set; }
 
@@ -286,9 +308,12 @@ internal sealed class NineSliceVertexBatch
         int vertexCount = count * VerticesPerNineSlice;
         ReadOnlySpan<SKPoint> positions = _positions.AsSpan(0, vertexCount);
         ReadOnlySpan<SKPoint> texCoords = _texCoords.AsSpan(0, vertexCount);
+        // An untinted batch passes no colors, so it draws exactly as before tints could batch.
+        ReadOnlySpan<SKColor> colors = _hasTint ? _colors.AsSpan(0, vertexCount) : ReadOnlySpan<SKColor>.Empty;
         if (slot.Vertices != null
             && MemoryMarshal.AsBytes(positions).SequenceEqual(MemoryMarshal.AsBytes(slot.Positions.AsSpan()))
-            && MemoryMarshal.AsBytes(texCoords).SequenceEqual(MemoryMarshal.AsBytes(slot.TexCoords.AsSpan())))
+            && MemoryMarshal.AsBytes(texCoords).SequenceEqual(MemoryMarshal.AsBytes(slot.TexCoords.AsSpan()))
+            && MemoryMarshal.AsBytes(colors).SequenceEqual(MemoryMarshal.AsBytes(slot.Colors.AsSpan())))
         {
             return slot.Vertices;
         }
@@ -300,13 +325,19 @@ internal sealed class NineSliceVertexBatch
         }
         positions.CopyTo(slot.Positions);
         texCoords.CopyTo(slot.TexCoords);
+        if (slot.Colors.Length != colors.Length)
+        {
+            slot.Colors = colors.Length == 0 ? Array.Empty<SKColor>() : new SKColor[colors.Length];
+        }
+        colors.CopyTo(slot.Colors);
         if (!_indicesByCount.TryGetValue(count, out ushort[]? indices))
         {
             indices = BuildIndices(count);
             _indicesByCount[count] = indices;
         }
         slot.Vertices?.Dispose();
-        slot.Vertices = SKVertices.CreateCopy(SKVertexMode.Triangles, slot.Positions, slot.TexCoords, null, indices);
+        slot.Vertices = SKVertices.CreateCopy(SKVertexMode.Triangles, slot.Positions, slot.TexCoords,
+            slot.Colors.Length == 0 ? null : slot.Colors, indices);
         VerticesBuildCount++;
         return slot.Vertices;
     }
