@@ -16,7 +16,7 @@ namespace RenderingLibrary.Graphics;
 /// semi-transparent texels one step differently from the lattice, so raster, SVG and picture canvases keep the
 /// lattice.</para>
 /// <para>Text drawn while a batch is pending is deferred: it draws right after the batch, in order, instead of
-/// flushing it. That moves the text above the NineSlices that join the batch after it, so a NineSlice joins only
+/// flushing it, through the text batch when it is plain (#8156). That moves the text above the NineSlices that join the batch after it, so a NineSlice joins only
 /// when it overlaps no deferred text's drawn bounds; otherwise the batch flushes first. A text that cannot give
 /// conservative drawn bounds is not deferred and flushes the batch. Anything else that draws flushes the batch
 /// first (the Renderer does it at every other renderable, clip change, render target and the end of each draw
@@ -94,9 +94,12 @@ internal sealed class NineSliceVertexBatch
     private SKCanvas? _lastCheckedCanvas;
     private bool _isLastCheckedCanvasGpu;
 
-    public NineSliceVertexBatch(RenderStateChangeStatistics statistics)
+    private readonly TextBlobBatch _textBatch;
+
+    public NineSliceVertexBatch(RenderStateChangeStatistics statistics, TextBlobBatch textBatch)
     {
         _statistics = statistics;
+        _textBatch = textBatch;
         _paint = new SKPaint { IsAntialias = false, Color = SKColors.White };
         _indicesByCount = new Dictionary<int, ushort[]>();
         _slots = new List<Slot>();
@@ -205,6 +208,8 @@ internal sealed class NineSliceVertexBatch
         int count = _count;
         _count = 0;
 
+        // Texts queued before these NineSlices draw under them.
+        _textBatch.Flush();
         SKVertices vertices = GetSlotVertices(count);
 
         _paint.Shader = _shader;
@@ -223,6 +228,15 @@ internal sealed class NineSliceVertexBatch
             for (int i = 0; i < deferredCount; i++)
             {
                 ref DeferredText deferred = ref _deferred[i];
+                // Plain texts merge into one text-blob draw (#8156), which puts the deferred matrix back itself.
+                if (_textBatch.IsEnabled
+                    && deferred.Text.TryAddDeferredBlobs(_textBatch, canvas, deferred.X, deferred.Y, deferred.Matrix))
+                {
+                    deferred.Text = null!;
+                    continue;
+                }
+                _textBatch.Flush();
+                _statistics.RecordDrawCall();
                 // A NineSlice that cannot batch flushes under its own flip or rotation, so the text's own matrix is
                 // put back for it.
                 bool isOtherMatrix = deferred.Matrix != current;
@@ -238,6 +252,8 @@ internal sealed class NineSliceVertexBatch
                 }
                 deferred.Text = null!;
             }
+            // Whatever draws next (a NineSlice's own lattice, say) goes over these texts.
+            _textBatch.Flush();
         }
 
         _canvas = null;

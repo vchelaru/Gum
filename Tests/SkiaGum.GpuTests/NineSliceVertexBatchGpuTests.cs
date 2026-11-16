@@ -14,6 +14,8 @@ namespace SkiaGum.GpuTests;
 [Collection(GpuCollection.Name)]
 public class NineSliceVertexBatchGpuTests : IDisposable
 {
+    // Texts merge once their run has matched TextBlobBatch.StillFlushesBeforeMerge flushes.
+    const int MergedFrames = RenderingLibrary.Graphics.TextBlobBatch.StillFlushesBeforeMerge + 2;
     const int Size = 220;
 
     readonly WglGpuContext _gpu;
@@ -88,9 +90,9 @@ public class NineSliceVertexBatchGpuTests : IDisposable
         ClipsChildren = clips,
     };
 
-    // Draws three frames (text draws its cached blobs from the second frame on, and only those defer) and returns
+    // Draws `frames` frames (text draws its cached blobs from the second frame on, and only those defer) and returns
     // the last frame's pixels and draw calls.
-    (byte[] Pixels, int DrawCalls) Render(Action<ContainerRuntime, SystemManagers> build, bool batch, Action<int>? beforeFrame)
+    (byte[] Pixels, int DrawCalls) Render(Action<ContainerRuntime, SystemManagers> build, bool batch, Action<int>? beforeFrame, int frames, bool batchTexts)
     {
         byte[] pixels = Array.Empty<byte>();
         int drawCalls = 0;
@@ -102,12 +104,13 @@ public class NineSliceVertexBatchGpuTests : IDisposable
             SystemManagers.Default = managers;
             managers.Canvas = surface.Canvas;
             managers.Renderer.BatchesNineSlices = batch;
+            managers.Renderer.BatchesTexts = batch && batchTexts;
 
             ContainerRuntime root = Container(0, 0, Size, Size);
             build(root, managers);
             root.AddToManagers(managers, null);
 
-            for (int frame = 0; frame < 3; frame++)
+            for (int frame = 0; frame < frames; frame++)
             {
                 beforeFrame?.Invoke(frame);
                 surface.Canvas.Clear(SKColors.Black);
@@ -140,14 +143,15 @@ public class NineSliceVertexBatchGpuTests : IDisposable
     }
 
     // Returns the batched and unbatched draw calls after asserting both draw the same bytes.
-    (int Batched, int Unbatched) AssertBatchedMatchesUnbatched(Action<ContainerRuntime> build) =>
-        AssertBatchedMatchesUnbatched((root, _) => build(root));
+    (int Batched, int Unbatched) AssertBatchedMatchesUnbatched(Action<ContainerRuntime> build, int frames = 3, bool batchTexts = true) =>
+        AssertBatchedMatchesUnbatched((root, _) => build(root), frames: frames, batchTexts: batchTexts);
 
-    // beforeFrame runs before each of the three frames, given the frame index.
-    (int Batched, int Unbatched) AssertBatchedMatchesUnbatched(Action<ContainerRuntime, SystemManagers> build, Action<int>? beforeFrame = null)
+    // beforeFrame runs before each frame, given the frame index. batchTexts false leaves text batching off, so the
+    // NineSlice batch draws its deferred texts itself.
+    (int Batched, int Unbatched) AssertBatchedMatchesUnbatched(Action<ContainerRuntime, SystemManagers> build, Action<int>? beforeFrame = null, int frames = 3, bool batchTexts = true)
     {
-        (byte[] batchedPixels, int batched) = Render(build, batch: true, beforeFrame);
-        (byte[] unbatchedPixels, int unbatched) = Render(build, batch: false, beforeFrame);
+        (byte[] batchedPixels, int batched) = Render(build, batch: true, beforeFrame, frames, batchTexts);
+        (byte[] unbatchedPixels, int unbatched) = Render(build, batch: false, beforeFrame, frames, batchTexts);
         CountDifferentBytes(batchedPixels, unbatchedPixels).ShouldBe(0);
         return (batched, unbatched);
     }
@@ -198,11 +202,28 @@ public class NineSliceVertexBatchGpuTests : IDisposable
                 root.AddChild(Frame(_textureA, 10, 10 + i * 40, 100, 36));
                 root.AddChild(Label("Item " + i, 16, 18 + i * 40));
             }
-        });
+        }, batchTexts: false);
 
         // Four frames in one batch plus four texts, against eight separate draws.
         unbatched.ShouldBe(8);
         batched.ShouldBe(5);
+    }
+
+    [Fact]
+    public void Draw_TextBetweenNineSlicesWithTextBatching_MergesTheTextsAfterTheBatch()
+    {
+        (int batched, int unbatched) = AssertBatchedMatchesUnbatched(root =>
+        {
+            for (int i = 0; i < 4; i++)
+            {
+                root.AddChild(Frame(_textureA, 10, 10 + i * 40, 100, 36));
+                root.AddChild(Label("Item " + i, 16, 18 + i * 40));
+            }
+        }, frames: MergedFrames);
+
+        // Four frames in one batch plus the four texts merged, against eight separate draws.
+        unbatched.ShouldBe(8);
+        batched.ShouldBe(2);
     }
 
     [Fact]
@@ -501,6 +522,7 @@ public class NineSliceVertexBatchGpuTests : IDisposable
                 SystemManagers.Default = managers;
                 managers.Canvas = surface.Canvas;
                 managers.Renderer.BatchesNineSlices = batch;
+                managers.Renderer.BatchesTexts = batch;
                 NineSliceRuntime frame = Frame(_textureB, 10, 10, 60, 60);
                 surface.Canvas.Clear(SKColors.Black);
                 managers.Renderer.Begin(SKMatrix.CreateScale(1.5f, 1.25f));
@@ -558,7 +580,7 @@ public class NineSliceVertexBatchGpuTests : IDisposable
             root.AddToManagers(managers, null);
             RenderingLibrary.Graphics.NineSliceVertexBatch batch = managers.Renderer.NineSliceBatch;
 
-            for (int frame = 0; frame < 5; frame++)
+            for (int frame = 0; frame < MergedFrames; frame++)
             {
                 managers.Renderer.NotifyHostFrameAdvanced();
                 managers.Draw();
