@@ -41,7 +41,15 @@ internal sealed unsafe class GlTarget : IBrutalTarget
         _height = height;
     }
 
-    public SKCanvas Canvas => _direct.Canvas;
+    public SKCanvas Canvas => _picCanvas ?? (FlushProbe.NoDraw ? (_noDraw ??= new SKNoDrawCanvas(_width, _height)) : _ownActive ? _ownSurface!.Canvas : _direct.Canvas);
+    // SPIKE #8116 sgr agent: GUM_PIC=1 records Gum into an SKPictureRecorder, then plays the picture onto a no-op canvas and the
+    // real back buffer: splits managed walk+wrapper (record into SkRecord) from native Ganesh op creation (GPU playback).
+    private static readonly string? Pic = Environment.GetEnvironmentVariable("GUM_PIC");
+    private readonly SKPictureRecorder? _recorder = Environment.GetEnvironmentVariable("GUM_PIC") != null ? new SKPictureRecorder() : null;
+    private SKCanvas? _picCanvas;
+    private SKPicture? _variant;
+    private int _picFrame;
+    private SKNoDrawCanvas? _noDraw; // SPIKE #8116: GUM_NODRAW=1 sends every Gum draw to a no-op canvas (walk-only cost)
 
     public void Begin()
     {
@@ -54,13 +62,75 @@ internal sealed unsafe class GlTarget : IBrutalTarget
         (_gameX, _gameY, _gameWidth, _gameHeight) = (viewport[0], viewport[1], viewport[2], viewport[3]);
         _bindFramebuffer(GL_FRAMEBUFFER, 0);
         _viewport(0, 0, _width, _height);
-        _direct.Begin();
+        FlushProbe.BeginStart = System.Diagnostics.Stopwatch.GetTimestamp();
+        if (FlushProbe.OwnPass && _ownSurface != null)
+        {
+            // SPIKE: SGR's Begin minus the GL queries, with a chosen reset mask.
+            if (FlushProbe.Reset != "none") Gr.ResetContext();
+            _ownSave = _ownSurface.Canvas.Save();
+            _ownActive = true;
+        }
+        else _direct.Begin();
+        if (_recorder != null) _picCanvas = _recorder.BeginRecording(new SKRect(0, 0, _width, _height));
+        FlushProbe.BeginEnd = System.Diagnostics.Stopwatch.GetTimestamp();
     }
+
+    private static GRContext? _gr;
+    private GRContext Gr => _gr ??= (GRContext)typeof(SkiaGlContext).GetField("_grContext", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!
+        .GetValue(typeof(SkiaDirectCanvas).GetField("_context", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!.GetValue(_direct))!;
+    private SKSurface? _ownSurface;
+    private int _ownSave;
+    private bool _ownActive;
 
     public void End()
     {
-        _direct.End();
+        if (FlushProbe.Raw > 0) { FlushProbe.GlTargetGr = Gr; FlushProbe.DrawRaw(Canvas); }
+        if (_recorder != null)
+        {
+            long a = System.Diagnostics.Stopwatch.GetTimestamp();
+            _picCanvas = null;
+            using var pic = _recorder.EndRecording();
+            long b = System.Diagnostics.Stopwatch.GetTimestamp();
+            // GUM_PICNOOP=3,28,30 / none: from frame 300 on, play a frozen copy of that frame with the listed op codes turned into NOOPs
+            if (++_picFrame == 300 && FlushProbe.PicNoop != null)
+            {
+                _variant = FlushProbe.PicNoop == "min" ? FlushProbe.MakeMinimal(pic) : FlushProbe.MakeVariant(pic, FlushProbe.PicNoop);
+                FlushProbe.ComparePixels(Gr, pic, _variant, _width, _height);
+                using var roundTrip = FlushProbe.MakeVariant(pic, "none"); // serialization itself changes some pixels; compare against it too
+                FlushProbe.ComparePixels(Gr, roundTrip, _variant, _width, _height);
+            }
+            long c = System.Diagnostics.Stopwatch.GetTimestamp();
+            if (Pic != "nogpu") _direct.Canvas.DrawPicture(_variant ?? pic);
+            long d = System.Diagnostics.Stopwatch.GetTimestamp();
+            FlushProbe.PicRec = a - FlushProbe.BeginEnd; FlushProbe.PicEnd = b - a; FlushProbe.PicNd = c - b; FlushProbe.PicGpu = d - c;
+            FlushProbe.PicOps = pic.ApproximateOperationCount; FlushProbe.PicBytes = pic.ApproximateBytesUsed;
+            if (_picFrame == 700) FlushProbe.OpHistogram(_variant ?? pic);
+        }
+        FlushProbe.FlushStart = System.Diagnostics.Stopwatch.GetTimestamp();
+        if (FlushProbe.Enabled)
+        {
+            if (_ownActive) _ownSurface!.Canvas.RestoreToCount(_ownSave);
+            else _direct.Canvas.RestoreToCount(1);
+            Gr.Flush(false);
+            FlushProbe.FlushEnd = System.Diagnostics.Stopwatch.GetTimestamp();
+            if (!FlushProbe.Defer) Gr.Submit(false);
+        }
+        else FlushProbe.FlushEnd = System.Diagnostics.Stopwatch.GetTimestamp();
+        FlushProbe.SubmitEnd = System.Diagnostics.Stopwatch.GetTimestamp();
+        if (_ownActive)
+        {
+            _ownActive = false;
+            if (!FlushProbe.Enabled) { _ownSurface!.Canvas.RestoreToCount(_ownSave); _ownSurface.Flush(); }
+        }
+        else
+        {
+            _direct.End();
+            if (FlushProbe.OwnPass && _ownSurface == null)
+                _ownSurface = (SKSurface?)typeof(SkiaDirectCanvas).GetField("_backBufferSurface", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!.GetValue(_direct);
+        }
         RestoreGameState();
+        FlushProbe.EndEnd = System.Diagnostics.Stopwatch.GetTimestamp();
+        if (FlushProbe.Enabled) FlushProbe.FrameDone();
     }
 
     public void EndWithoutDrawing() => End();
@@ -84,6 +154,29 @@ internal sealed class GlBackend : IBrutalGpuBackend
     public GlBackend()
     {
         _context = new SkiaGlContext(GetProc);
+        if (FlushProbe.GlTime || FlushProbe.CtxOpt != null)
+        {
+            // SPIKE (#8098): rebuild the GRContext with timing wrappers and/or options variants.
+            var field = typeof(SkiaGlContext).GetField("_grContext", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!;
+            ((GRContext)field.GetValue(_context)!).Dispose();
+            var glInterface = GRGlInterface.Create(name => FlushProbe.Wrap(name, GetProc(name)))!;
+            var options = new GRContextOptions();
+            switch (FlushProbe.CtxOpt)
+            {
+                case "map0": options.BufferMapThreshold = 0; break;
+                case "nomap": options.BufferMapThreshold = int.MaxValue; break;
+                case "nostencil": options.AvoidStencilBuffers = true; break;
+                case "atlas": options.GlyphCacheTextureMaximumBytes = 64 * 1024 * 1024; break;
+                // SPIKE #8116 flush agent: knobs not tried before
+                case "pathmask": options.AllowPathMaskCaching = true; break;
+                case "mip": options.DoManualMipmapping = true; break;
+                case "prog": options.RuntimeProgramCacheSize = 4096; break;
+                case "smallatlas": options.GlyphCacheTextureMaximumBytes = 512 * 1024; break;
+            }
+            var gr = GRContext.CreateGl(glInterface, options);
+            if (FlushProbe.CtxOpt == "rescache") gr.SetResourceCacheLimit(1L << 30);
+            field.SetValue(_context, gr);
+        }
         _direct = new SkiaDirectCanvas(_context);
     }
 

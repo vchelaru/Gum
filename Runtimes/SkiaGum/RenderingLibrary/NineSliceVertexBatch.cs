@@ -334,7 +334,7 @@ internal sealed class NineSliceVertexBatch
         if (!ReferenceEquals(canvas, _lastCheckedCanvas))
         {
             _lastCheckedCanvas = canvas;
-            _isLastCheckedCanvasGpu = canvas.Context != null;
+            _isLastCheckedCanvasGpu = canvas.Context != null || System.Environment.GetEnvironmentVariable("GUM_FORCEGPU") == "1"; // SPIKE #8116 arc: batch on probe canvases (GUM_PIC, GUM_NODRAW)
         }
         return _isLastCheckedCanvasGpu;
     }

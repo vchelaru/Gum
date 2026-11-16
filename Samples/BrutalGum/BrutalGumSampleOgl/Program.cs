@@ -59,8 +59,12 @@ try
             update: seconds => GumUI.Update(seconds),
             draw: () =>
             {
+                long spikeAlloc0 = GC.GetAllocatedBytesForCurrentThread();
+                long spikeC0 = System.Diagnostics.Stopwatch.GetTimestamp();
                 glClear.ToColor(100 / 255f, 149 / 255f, 237 / 255f);
+                FlushProbe.ClearTicks = System.Diagnostics.Stopwatch.GetTimestamp() - spikeC0;
                 GumUI.Draw();
+                FlushProbe.AllocBytes = GC.GetAllocatedBytesForCurrentThread() - spikeAlloc0;
             },
             sync: () =>
             {
@@ -68,6 +72,7 @@ try
                 glHost.Sync();
             },
             benchmarkPath);
+        FlushProbe.Report(BenchmarkRunner.MeasuredFrames);
         return;
     }
 
