@@ -7,7 +7,7 @@ using ShadowDusk.Core;
 namespace GumPreview;
 
 /// <summary>
-/// Resolves a container's <c>SourceShaderFile</c> (a <c>.fx</c> or <c>.slang</c> path) into an
+/// Resolves a container's <c>SourceShaderFile</c> (a <c>.fx</c>, <c>.slang</c> or <c>.sksl</c> path) into an
 /// <see cref="Effect"/> for the Preview window by compiling it at runtime with ShadowDusk for
 /// OpenGL. Gum core ships no shader loader, so without this the Preview renders a shaded container
 /// unshaded while the editor canvas shows the effect. Failures throw with the reason, which

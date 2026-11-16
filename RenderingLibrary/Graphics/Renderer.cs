@@ -1952,6 +1952,18 @@ public class Renderer : IRenderer
                 renderTargetEffect?.Parameters[ShaderParameterCollection.TexelSizeName]?.SetValue(
                     new Vector2(Camera.Zoom / renderTarget.Width, Camera.Zoom / renderTarget.Height));
             }
+            // A shader ShadowDusk converted from SkSL declares its host contract: the child's texel size and
+            // iResolution, the drawn size in canvas pixels. A user-set value of either wins.
+            if (effectOwner?.ShaderParameters?.TryGetValue(ShaderParameterCollection.SpriteTextureTexelSizeName, out _) != true)
+            {
+                renderTargetEffect?.Parameters[ShaderParameterCollection.SpriteTextureTexelSizeName]?.SetValue(
+                    new Vector2(Camera.Zoom / renderTarget.Width, Camera.Zoom / renderTarget.Height));
+            }
+            if (effectOwner?.ShaderParameters?.TryGetValue(ShaderParameterCollection.ResolutionName, out _) != true)
+            {
+                renderTargetEffect?.Parameters[ShaderParameterCollection.ResolutionName]?.SetValue(
+                    new Vector3(renderTargetRenderableSprite.Width, renderTargetRenderableSprite.Height, 1));
+            }
 
             spriteRenderer.BeginSpriteBatch(mRenderStateVariables, layer, BeginType.Begin, mCamera, renderable, effectOverride: renderTargetEffect);
             Sprite.Render(managers, spriteRenderer, renderTargetRenderableSprite, renderTarget, color, sourceRectangle, rotationInDegrees: rotation, objectCausingRendering: renderable);

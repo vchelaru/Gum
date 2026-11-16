@@ -6,13 +6,13 @@ using Gum.Wireframe;
 namespace Gum;
 
 /// <summary>
-/// Adds <c>.fx</c> and <c>.slang</c> shader loading to a render-target container's
+/// Adds <c>.fx</c>, <c>.slang</c> and <c>.sksl</c> shader loading to a render-target container's
 /// <c>SourceShaderFile</c>.
 /// </summary>
 public static class GumServiceShadowDuskExtensions
 {
     /// <summary>
-    /// Lets <c>SourceShaderFile</c> point at an <c>.fx</c> or <c>.slang</c> file, which ShadowDusk compiles
+    /// Lets <c>SourceShaderFile</c> point at an <c>.fx</c>, <c>.slang</c> or <c>.sksl</c> file, which ShadowDusk compiles
     /// at runtime into an <see cref="Effect"/> on the service's <see cref="GraphicsDevice"/>, for the graphics
     /// backend that device uses. Call once at startup. A shader ShadowDusk does not read keeps loading through whatever resolver
     /// was registered before this call.
@@ -31,7 +31,7 @@ public static class GumServiceShadowDuskExtensions
         PlatformTarget? target = null;
 
         // ShadowDusk goes first and decides from the content whether it reads the shader; an input it does not
-        // read (for example an .sksl or .glsl file) falls through to the resolver registered before this call.
+        // read (for example a .glsl file) falls through to the resolver registered before this call.
         CustomSetPropertyOnRenderable.RenderTargetEffectSourceResolver = source =>
         {
             // ShadowDusk cannot decide about bytes it cannot read; the previous resolver gets the source.

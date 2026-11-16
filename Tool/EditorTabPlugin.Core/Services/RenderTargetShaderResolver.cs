@@ -11,7 +11,7 @@ using ToolsUtilities;
 namespace EditorTabPlugin_XNA.Services;
 
 /// <summary>
-/// Resolves a render-target Container's <c>SourceShaderFile</c> (a <c>.fx</c> or <c>.slang</c> path)
+/// Resolves a render-target Container's <c>SourceShaderFile</c> (a <c>.fx</c>, <c>.slang</c> or <c>.sksl</c> path)
 /// into a KNI/XNA <see cref="Effect"/> for the tool's WYSIWYG preview, compiling the shader at
 /// runtime with ShadowDusk (no content pipeline). Each head registers it through
 /// <see cref="EditorTabPluginBase.CreateRenderTargetShaderResolver"/> for the bytecode its device

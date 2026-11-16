@@ -51,6 +51,8 @@ float4 MainPS(VertexShaderOutput input) : COLOR0
 }
 ";
 
+    private const string GrayscaleSksl = "uniform shader SpriteTexture; half4 main(float2 coord) { half4 c = SpriteTexture.eval(coord); half g = dot(c.rgb, half3(0.299, 0.587, 0.114)); return half4(g, g, g, c.a); }";
+
     // The standard MonoGame header, so one .fx compiles for both OpenGL and DirectX (DirectX refuses ps_3_0).
     private const string GrayscaleFx = @"
 #if OPENGL
@@ -100,6 +102,7 @@ technique SpriteDrawing
     [Theory]
     [InlineData(".fx", GrayscaleFx)]
     [InlineData(".slang", GrayscaleSlang)]
+    [InlineData(".sksl", GrayscaleSksl)]
     public void UseShadowDusk_SourceShaderFile_GraysThePixels(string extension, string source)
     {
         using DeviceHost host = DeviceHost.CreateOrSkip();

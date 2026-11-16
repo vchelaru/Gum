@@ -61,6 +61,73 @@ public class RenderTargetShaderResolverTests
         bytecode.Length.ShouldBeGreaterThan(0);
     }
 
+    // #7955: a .sksl file is read by ShadowDusk's SkSL frontend; the text alone does not identify it.
+    [Fact]
+    public void Compile_SkslFile_ProducesOpenGlBytecode()
+    {
+        const string sksl = "uniform shader SpriteTexture;\nhalf4 main(float2 coord) { return SpriteTexture.eval(coord); }";
+
+        byte[] bytecode = RenderTargetShaderResolver.Compile(sksl, PlatformTarget.OpenGL, "Tint.sksl");
+
+        bytecode.Length.ShouldBeGreaterThan(0);
+    }
+
+    [Fact]
+    public void Compile_SkslWithFragCoord_ThrowsNamingSkFragCoord()
+    {
+        const string sksl = "half4 main(float2 coord) { return half4(sk_FragCoord.x); }";
+
+        string message = Should.Throw<InvalidOperationException>(
+            () => RenderTargetShaderResolver.Compile(sksl, PlatformTarget.OpenGL, "Bad.sksl")).Message;
+
+        message.ShouldContain("sk_FragCoord");
+        message.ShouldContain("SD0666");
+        message.ShouldContain("Bad.sksl(1,");
+        message.ShouldContain("uniform shader SpriteTexture");
+    }
+
+    // What the Output tab shows for a .sksl file that does not compile: the dispatcher's report around the
+    // compiler's own text, with no advice to check that the file exists. Uses the dispatcher's message builder
+    // directly, not the static PropertyAssignmentError event: earlier tests leave tool plugins subscribed to it,
+    // and their Output handler waits on a UI thread that no longer pumps (a hang on Linux CI).
+    [Fact]
+    public void SkslThatDoesNotCompile_IsReportedAsACompileFailure_WithTheCodeLineAndSupportedForm()
+    {
+        InvalidOperationException failure = Should.Throw<InvalidOperationException>(
+            () => RenderTargetShaderResolver.Compile("half4 main(float2 coord) { return half4(sk_FragCoord.x); }", PlatformTarget.OpenGL, "Bad.sksl"));
+
+        global::RenderingLibrary.Graphics.ShaderResolverRequirement.IsCompileFailure(failure).ShouldBeTrue();
+        string output = global::RenderingLibrary.Graphics.ShaderResolverRequirement.BuildCompileFailureMessage("Bad.sksl", "Box", failure);
+
+        output.ShouldStartWith("Could not compile the SourceShaderFile Bad.sksl on Container in Box:");
+        output.ShouldContain("SD0666");
+        output.ShouldContain("Bad.sksl(1,");
+        output.ShouldContain("uniform shader SpriteTexture");
+        output.ShouldNotContain("Check if the file exists");
+    }
+
+    // A file that cannot be read is still a missing file, whatever the extension.
+    [Fact]
+    public void AMissingShaderFile_IsNotReportedAsACompileFailure()
+    {
+        global::RenderingLibrary.Graphics.ShaderResolverRequirement.IsCompileFailure(new FileNotFoundException("x")).ShouldBeFalse();
+    }
+
+    // Order independence: nothing above may leave the static dispatcher state changed for the next test.
+    [Fact]
+    public void TheSkslTests_LeaveTheDispatcherStateAsTheyFoundIt()
+    {
+        Func<string, object?>? resolver = Gum.Wireframe.CustomSetPropertyOnRenderable.RenderTargetEffectResolver;
+        Gum.Wireframe.MissingFileBehavior behavior = Gum.Wireframe.GraphicalUiElement.MissingFileBehavior;
+
+        Should.Throw<InvalidOperationException>(
+            () => RenderTargetShaderResolver.Compile("half4 main(float2 coord) { return half4(sk_FragCoord.x); }", PlatformTarget.OpenGL, "Bad.sksl"));
+
+        Gum.Wireframe.CustomSetPropertyOnRenderable.RenderTargetEffectResolver.ShouldBe(resolver);
+        Gum.Wireframe.GraphicalUiElement.MissingFileBehavior.ShouldBe(behavior);
+    }
+
+
     // #7104: ShadowDusk tells Slang from .fx by the text, so a Slang shader compiles under any name.
     private const string GrayscaleSlang = """
         Texture2D SpriteTexture;

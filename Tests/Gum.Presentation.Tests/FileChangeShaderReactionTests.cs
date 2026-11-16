@@ -101,6 +101,7 @@ public class FileChangeShaderReactionTests : BaseTestClass
     [InlineData("Shaders/Blur.slang")]
     [InlineData("Shaders/Blur.fx")]
     [InlineData("Shaders/Blur.SLANG")]
+    [InlineData("Shaders/Tint.sksl")]
     public void ReactToFileChanged_RebuildsTheCanvas_WhenTheSelectedElementUsesTheShader(string shader)
     {
         ScreenSave screen = AddScreenWithShader("Main", shader);

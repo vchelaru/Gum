@@ -1426,7 +1426,7 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
         rootVariableName switch
         {
             "CustomFontFile" => "Bitmap Font Generator Font|*.fnt",
-            "SourceShaderFile" => "Effect File (*.fx;*.slang)|*.fx;*.slang",
+            "SourceShaderFile" => "Effect File (*.fx;*.slang;*.sksl)|*.fx;*.slang;*.sksl",
             _ => null
         };
 

@@ -33,6 +33,15 @@ public class ShaderParameterRowsTests
         rows.Select(row => row.Name).ShouldBe(new[] { "Thickness", "PixelSize" });
     }
 
+    [Fact]
+    public void Build_SkslHostParameters_AreHiddenBecauseGumFillsThemIn()
+    {
+        List<SyntheticVariableRow> rows = Build(
+            FloatInfo("Strength"), VectorInfo("SpriteTextureTexelSize", 2), VectorInfo("iResolution", 3));
+
+        rows.Select(row => row.Name).ShouldBe(new[] { "Strength" });
+    }
+
     [Theory]
     [InlineData(0f)]
     [InlineData(-1f)]

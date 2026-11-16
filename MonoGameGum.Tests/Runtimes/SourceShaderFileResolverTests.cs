@@ -168,6 +168,37 @@ public class SourceShaderFileResolverTests : BaseTestClass
         _reported[0].ShouldNotContain("did not handle this file");
     }
 
+    // A shader that was read but did not compile is not a missing file, so the report must not tell the author to
+    // check that the file exists; it carries the compiler's own text (ShadowDusk code, file, line).
+    [Fact]
+    public void SourceShaderFile_ReportsACompileFailureAsOne_WithoutTheMissingFileAdvice()
+    {
+        CustomSetPropertyOnRenderable.RenderTargetEffectResolver =
+            _ => throw new InvalidOperationException("Bad.sksl(3,5): SD0666: sk_FragCoord is not supported");
+        ContainerRuntime container = CreateContainer();
+
+        container.SourceShaderFile = "Shaders/Bad.sksl";
+
+        _reported.Count.ShouldBe(1);
+        _reported[0].ShouldStartWith("Could not compile the SourceShaderFile");
+        _reported[0].ShouldContain("Bad.sksl");
+        _reported[0].ShouldContain("Bad.sksl(3,5): SD0666");
+        _reported[0].ShouldNotContain("Check if the file exists");
+    }
+
+    [Fact]
+    public void SourceShaderFile_StillAdvisesCheckingTheFile_WhenTheResolverCannotReadIt()
+    {
+        CustomSetPropertyOnRenderable.RenderTargetEffectResolver = path => throw new FileNotFoundException("not found", path);
+        ContainerRuntime container = CreateContainer();
+
+        container.SourceShaderFile = "Shaders/Missing.sksl";
+
+        _reported.Count.ShouldBe(1);
+        _reported[0].ShouldStartWith("Error setting SourceShaderFile");
+        _reported[0].ShouldContain("Check if the file exists");
+    }
+
     [Fact]
     public void SourceShaderFile_Throws_WhenResolverThrowsAndMissingFileBehaviorIsThrow()
     {

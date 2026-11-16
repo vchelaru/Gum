@@ -53,9 +53,12 @@ public static class ShaderParameterRows
     /// <summary>The label of one component's field inside a vector's row: <c>X</c>, <c>Y</c>, <c>Z</c> or <c>W</c>.</summary>
     internal static string GetComponentLabel(int componentIndex) => ComponentNames[componentIndex];
 
-    /// <summary>Whether Gum fills the parameter in itself (the texel size and the &lt;Name&gt;IsSet markers), so there is nothing to set.</summary>
+    /// <summary>Whether Gum fills the parameter in itself (the texel sizes, iResolution and the &lt;Name&gt;IsSet markers), so there is nothing to set.</summary>
     internal static bool IsHiddenParameter(ShaderParameterInfo info) =>
-        info.Name == ShaderParameterCollection.TexelSizeName || ShaderParameterCollection.IsIsSetName(info.Name);
+        info.Name == ShaderParameterCollection.TexelSizeName ||
+        info.Name == ShaderParameterCollection.SpriteTextureTexelSizeName ||
+        info.Name == ShaderParameterCollection.ResolutionName ||
+        ShaderParameterCollection.IsIsSetName(info.Name);
 
     private static SyntheticVariableRow CreateRow(
         ShaderParameterInfo info, int componentIndex, string rowName, Func<string?> getText, Action<string> setText)

@@ -153,6 +153,18 @@ public class ReferencedFileChoicesTests : BaseTestClass
     }
 
     [Theory]
+    [InlineData("shaders/blur.fx", true)]
+    [InlineData("shaders/blur.slang", true)]
+    [InlineData("shaders/Tint.SKSL", true)]
+    [InlineData("shaders/blur.png", false)]
+    public void SourceShaderFilePicker_AcceptsFxSlangAndSksl(string path, bool expected)
+    {
+        string? filter = PropertyGridManager.GetFileFilterForRootVariableName("SourceShaderFile");
+
+        ReferencedFileChoices.AcceptingExtensions(filter!)(path).ShouldBe(expected);
+    }
+
+    [Theory]
     [InlineData("Effect File (*.fx;*.slang)|*.fx;*.slang", "shaders/blur.fx", true)]
     [InlineData("Effect File (*.fx;*.slang)|*.fx;*.slang", "shaders/blur.SLANG", true)]
     [InlineData("Effect File (*.fx;*.slang)|*.fx;*.slang", "shaders/blur.png", false)]

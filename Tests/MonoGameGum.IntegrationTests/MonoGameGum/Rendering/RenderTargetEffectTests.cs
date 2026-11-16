@@ -502,6 +502,66 @@ technique SpriteDrawing
         OutlineWidthLeftOf(data, 76).ShouldBe(1);
     }
 
+    // #7955: a shader ShadowDusk converted from SkSL gets its host contract from Gum. main()'s coordinate is
+    // local to the container (it is derived from iResolution), and child.eval(p) samples at p * SpriteTextureTexelSize.
+    private Color[] RenderSkslSquare(string sksl, float zoom = 1f)
+    {
+        using MinimalGame game = new();
+        game.RunOneFrame();
+
+        GraphicsDevice gd = game.GraphicsDevice;
+        SystemManagers managers = SystemManagers.Default;
+        Renderer renderer = managers.Renderer;
+
+        Result<CompiledShader, ShaderError[]> compileResult = ShaderConverter.Compile(
+            new EffectCompiler(), sksl, new CompilerOptions { Target = PlatformTarget.OpenGL }, "Test.sksl");
+        compileResult.IsSuccess.ShouldBeTrue(
+            compileResult.IsFailure ? string.Join("\n", compileResult.Error.Select(e => e.Code + " " + e.Message)) : "");
+        using Effect effect = new(gd, compileResult.Value.Data);
+
+        ContainerRuntime container = new() { X = 0, Y = 0, Width = 48, Height = 48, IsRenderTarget = true };
+#pragma warning disable CS0618
+        ColoredRectangleRuntime square = new();
+#pragma warning restore CS0618
+        square.X = 12;
+        square.Y = 12;
+        square.Width = 24;
+        square.Height = 24;
+        square.Color = Color.Red;
+        container.AddChild(square);
+        container.RenderTargetEffect = effect;
+        renderer.Camera.Zoom = zoom;
+
+        container.AddToManagers(managers, null);
+        container.UpdateLayout();
+
+        return RenderToCapture(gd, renderer, managers, Color.White);
+    }
+
+    [Fact]
+    public void Sksl_MainCoordinate_IsLocalToTheContainer()
+    {
+        Color[] data = RenderSkslSquare(
+            "uniform shader SpriteTexture;\nhalf4 main(float2 c) { half4 s = SpriteTexture.eval(c); return half4(c.x / 48.0 * s.a, c.y / 48.0 * s.a, 0, s.a); }");
+
+        Color center = data[(24 * CaptureSize) + 24];
+        center.R.ShouldBeInRange((byte)120, (byte)140);
+        center.G.ShouldBeInRange((byte)120, (byte)140);
+    }
+
+    [Fact]
+    public void Sksl_ChildEval_SamplesInCanvasPixels()
+    {
+        // Sampling 12 pixels to the left moves the square 12 pixels to the right (24 to 48).
+        Color[] data = RenderSkslSquare(
+            "uniform shader SpriteTexture;\nhalf4 main(float2 c) { return SpriteTexture.eval(c + float2(-12, 0)); }");
+
+        Color shifted = data[(24 * CaptureSize) + 40];
+        shifted.R.ShouldBe((byte)255);
+        shifted.G.ShouldBeLessThan((byte)20);
+        data[(24 * CaptureSize) + 18].G.ShouldBe((byte)255);
+    }
+
     private Color[] RenderOutlinedSquare(System.Action<ContainerRuntime>? setParameters, Color? background = null, float zoom = 1f)
     {
         using MinimalGame game = new();
@@ -549,6 +609,31 @@ technique SpriteDrawing
         container.UpdateLayout();
 
         return RenderToCapture(gd, renderer, managers, background);
+    }
+
+    // #7955: what the tool's parameter rows are built from for an SkSL shader. Gum's host parameters are listed
+    // (the rows hide them), and the uniforms the author declared come out as float parameters, an int and a bool
+    // included, because ShadowDusk lowers them for the OpenGL target.
+    [Fact]
+    public void EffectShaderParameters_Read_OfAnSkslShader_ListsTheHostParametersAndTheDeclaredUniformsAsFloats()
+    {
+        using MinimalGame game = new();
+        game.RunOneFrame();
+        Result<CompiledShader, ShaderError[]> compiled = ShaderConverter.Compile(
+            new EffectCompiler(),
+            "uniform shader SpriteTexture;\nuniform float4 tint;\nuniform int steps;\nuniform bool flag;\nhalf4 main(float2 c) { return SpriteTexture.eval(c) * tint * half(steps) * half(flag ? 1 : 0); }",
+            new CompilerOptions { Target = PlatformTarget.OpenGL },
+            "Params.sksl");
+        compiled.IsSuccess.ShouldBeTrue(compiled.IsFailure ? string.Join("\n", compiled.Error.Select(e => e.Code + " " + e.Message)) : "");
+        using Effect effect = new(game.GraphicsDevice, compiled.Value.Data);
+
+        System.Collections.Generic.IReadOnlyList<ShaderParameterInfo> parameters = EffectShaderParameters.Read(effect);
+
+        parameters.Select(p => p.Name).ShouldContain(ShaderParameterCollection.SpriteTextureTexelSizeName);
+        parameters.Select(p => p.Name).ShouldContain(ShaderParameterCollection.ResolutionName);
+        parameters.Single(p => p.Name == "tint").Count.ShouldBe(4);
+        parameters.Single(p => p.Name == "steps").Kind.ShouldBe(ShaderParameterKind.Float);
+        parameters.Single(p => p.Name == "flag").Kind.ShouldBe(ShaderParameterKind.Float);
     }
 
     // The tool lists a shader's parameters from the compiled effect, so the names, kinds and sizes
