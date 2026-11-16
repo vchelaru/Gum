@@ -366,7 +366,7 @@ public class TextBlobBatchGpuTests : IDisposable
 
         builds.ShouldBe(0);
         allocated.ShouldBe(0);
-        // The changed run draws each text on its own while it changes, then merges once it holds still a frame.
+        // The changed run draws each text on its own while it changes, then merges once it has matched for 30 flushes.
         changedBuilds.ShouldBe(1);
     }
 
@@ -424,7 +424,7 @@ public class TextBlobBatchGpuTests : IDisposable
             scrollBuilds = batch.MergedBuildCount - buildsBefore;
             scrollDrawCalls = managers.Renderer.RenderStateChangeStatistics.DrawCallCount;
 
-            // Stopped: the list holds still for a frame, then merges again.
+            // Stopped: the list merges again once it has held still for 30 flushes.
             frame--;
             for (int i = 0; i < MergedFrames; i++)
             {
@@ -441,5 +441,140 @@ public class TextBlobBatchGpuTests : IDisposable
         scrollBuilds.ShouldBe(0);
         allocated.ShouldBe(0);
         stoppedDrawCalls.ShouldBe(1 + 1 + 1);
+    }
+
+    // Draws eight rows 20 px apart in one run; drawFrames gets the managers, the fourth row and the batch.
+    void WithEightRows(Action<SystemManagers, TextRuntime, RenderingLibrary.Graphics.TextBlobBatch> drawFrames)
+    {
+        _gpu.WithSurface(Size, Size, (surface, context) =>
+        {
+            GraphicalUiElement.SetPropertyOnRenderable = global::SkiaGum.CustomSetPropertyOnRenderable.SetPropertyOnRenderable;
+            SystemManagers managers = new SystemManagers();
+            managers.Initialize();
+            SystemManagers.Default = managers;
+            managers.Canvas = surface.Canvas;
+            ContainerRuntime root = Container(0, 0, Size, Size);
+            TextRuntime? moving = null;
+            for (int i = 0; i < 8; i++)
+            {
+                TextRuntime label = Label("Row " + i, 4, i * 20);
+                if (i == 3)
+                {
+                    moving = label;
+                }
+                root.AddChild(label);
+            }
+            root.AddToManagers(managers, null);
+            drawFrames(managers, moving!, managers.Renderer.TextBatch);
+            context.Flush(true, true);
+            root.RemoveFromManagers();
+        });
+    }
+
+    static void DrawFrame(SystemManagers managers)
+    {
+        managers.Renderer.NotifyHostFrameAdvanced();
+        managers.Draw();
+    }
+
+    [Fact]
+    public void Draw_RunChangingEveryTenFlushes_StaysUnmergedWithoutAllocating()
+    {
+        int builds = -1;
+        long allocated = -1;
+        int drawCalls = -1;
+        WithEightRows((managers, moving, batch) =>
+        {
+            // A row moves 1 px every 10 frames, the pace of a list scrolling slower than a pixel a frame.
+            void DrawFrames(int count)
+            {
+                for (int frame = 0; frame < count; frame++)
+                {
+                    if (frame % 10 == 0)
+                    {
+                        moving.Y = moving.Y == 60 ? 61 : 60;
+                    }
+                    DrawFrame(managers);
+                }
+            }
+
+            DrawFrames(40);
+            int buildsBefore = batch.MergedBuildCount;
+            long bytesBefore = GC.GetAllocatedBytesForCurrentThread();
+            DrawFrames(200);
+            allocated = GC.GetAllocatedBytesForCurrentThread() - bytesBefore;
+            builds = batch.MergedBuildCount - buildsBefore;
+            drawCalls = managers.Renderer.RenderStateChangeStatistics.DrawCallCount;
+        });
+
+        builds.ShouldBe(0);
+        allocated.ShouldBe(0);
+        drawCalls.ShouldBe(8);
+    }
+
+    [Fact]
+    public void Draw_RunHeldStillThirtyFlushes_Merges()
+    {
+        int drawCallsAfter29 = -1;
+        int buildsAfter29 = -1;
+        int drawCallsAfter30 = -1;
+        int buildsAfter30 = -1;
+        WithEightRows((managers, moving, batch) =>
+        {
+            for (int frame = 0; frame < MergedFrames; frame++)
+            {
+                DrawFrame(managers);
+            }
+            moving.Y = 61;
+            DrawFrame(managers);
+            int buildsBefore = batch.MergedBuildCount;
+            for (int frame = 0; frame < 29; frame++)
+            {
+                DrawFrame(managers);
+            }
+            drawCallsAfter29 = managers.Renderer.RenderStateChangeStatistics.DrawCallCount;
+            buildsAfter29 = batch.MergedBuildCount - buildsBefore;
+            DrawFrame(managers);
+            drawCallsAfter30 = managers.Renderer.RenderStateChangeStatistics.DrawCallCount;
+            buildsAfter30 = batch.MergedBuildCount - buildsBefore;
+        });
+
+        drawCallsAfter29.ShouldBe(8);
+        buildsAfter29.ShouldBe(0);
+        drawCallsAfter30.ShouldBe(1);
+        buildsAfter30.ShouldBe(1);
+    }
+
+    [Fact]
+    public void Draw_HiddenSpriteRotatedTranslucentAndNineSliceInRun_KeepOrder()
+    {
+        AssertMergedMatchesUnmerged(root =>
+        {
+            root.AddChild(Label("one one one", 10, 10));
+            TextRuntime hidden = Label("HIDDEN", 12, 12, SKColors.Red);
+            hidden.Visible = false;
+            root.AddChild(hidden);
+            root.AddChild(Label("two two two", 12, 14));
+            root.AddChild(new SpriteRuntime
+            {
+                Texture = _texture,
+                X = 14,
+                Y = 8,
+                Width = 30,
+                Height = 20,
+                WidthUnits = DimensionUnitType.Absolute,
+                HeightUnits = DimensionUnitType.Absolute,
+            });
+            root.AddChild(Label("three over sprite", 14, 12));
+            root.AddChild(Label("four", 16, 16));
+            TextRuntime rotated = Label("rotated mid", 18, 18);
+            rotated.Rotation = 20;
+            root.AddChild(rotated);
+            root.AddChild(Label("five", 20, 20));
+            root.AddChild(Label("translucent", 22, 22, new SKColor(255, 255, 255, 128)));
+            root.AddChild(Label("six", 24, 24));
+            root.AddChild(Frame(10, 10, 40, 30));
+            root.AddChild(Label("seven", 26, 26));
+        });
     }
 }
