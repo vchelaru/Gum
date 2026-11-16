@@ -9,83 +9,34 @@ using System;
 
 namespace Gum;
 
-/// <summary>
-/// <see cref="IBrutalTarget"/> for Vulkan. While Gum presents (and the build has BRUTAL_VULKAN_DIRECT), a drawn pass
-/// goes straight into the swapchain image through the backend's <c>SkiaDirectCanvas</c> and no image of Gum's own
-/// exists. Otherwise a pass draws into a SkiaGameRendering.Brutal render target, created at the first such pass.
-/// </summary>
-internal sealed class VulkanTarget : IBrutalTarget
+/// <summary>Gum's own image: <see cref="IBrutalTarget"/> over a SkiaGameRendering.Brutal Vulkan render target.</summary>
+internal sealed class VulkanTextureTarget : IBrutalTarget
 {
-    private readonly VulkanBackend _backend;
-    private readonly SkiaVulkanContext _context;
-    private readonly int _width;
-    private readonly int _height;
-    private SkiaRenderTarget2D? _texture;
-    private bool _capturePass;
+    private readonly SkiaRenderTarget2D _target;
 
-    public VulkanTarget(VulkanBackend backend, SkiaVulkanContext context, int width, int height)
-    {
-        _backend = backend;
-        _context = context;
-        _width = width;
-        _height = height;
-    }
+    public VulkanTextureTarget(SkiaVulkanContext context, int width, int height) =>
+        _target = new SkiaRenderTarget2D(context, width, height);
 
-    /// <summary>True when the current or last pass drew into the swapchain image.</summary>
-    public bool IsDirectPass { get; private set; }
+    public SKCanvas Canvas => _target.Canvas;
 
-    // A capture pass while Gum presents has no image to draw into; Gum gets its canvas at the first drawn pass.
-    public SKCanvas Canvas => IsDirectPass ? _backend.DirectCanvas : _capturePass ? null! : _texture!.Canvas;
+    public VkImage Image => new VkImage((nint)_target.VkImage);
 
-    /// <summary>Gum's own image, or null while Gum draws straight into the swapchain (or before its first pass).</summary>
-    public VkImage? Image => _texture is null ? null : new VkImage((nint)_texture.VkImage);
+    public VkFormat Format => (VkFormat)_target.VkFormat;
 
-    public VkFormat? Format => _texture is null ? null : (VkFormat)_texture.VkFormat;
+    public void Begin() => _target.Begin();
 
-    public void Begin()
-    {
-        bool isFrame = _backend.TakeFrame();
-        IsDirectPass = false;
-        _capturePass = false;
-#if BRUTAL_VULKAN_DIRECT
-        if (_backend.PresentToWindow)
-        {
-            if (isFrame)
-            {
-                _backend.BeginDirect(_width, _height);
-                IsDirectPass = true;
-            }
-            else
-            {
-                // The holder's capture pass at create time: acquiring a swapchain image here would leave it unpresented.
-                _capturePass = true;
-            }
-            return;
-        }
-#endif
-        _texture ??= new SkiaRenderTarget2D(_context, _width, _height);
-        _texture.Begin();
-    }
+    public void End() => _target.End();
 
-    public void End()
-    {
-        if (IsDirectPass)
-        {
-            _backend.EndDirect();
-        }
-        else if (!_capturePass)
-        {
-            _texture!.End();
-        }
-    }
+    public void EndWithoutDrawing() => _target.End();
 
-    public void EndWithoutDrawing() => End();
-
-    public void Dispose() => _texture?.Dispose();
+    public void Dispose() => _target.Dispose();
 }
 
 /// <summary>Owns the SkiaVulkanContext over the game's Vulkan objects and, unless turned off, the swapchain presenter.</summary>
 internal sealed class VulkanBackend : IBrutalGpuBackend
+#if BRUTAL_VULKAN_DIRECT
+    , IBrutalDirectPass
+#endif
 {
     private const uint ImageLayoutColorAttachmentOptimal = 2;
     private const uint ImageLayoutPresentSrcKhr = 1000001002;
@@ -97,7 +48,7 @@ internal sealed class VulkanBackend : IBrutalGpuBackend
     private readonly VkSurfaceKHR _surface;
     private readonly SkiaVulkanContext _context;
     private VulkanPresenter? _presenter;
-    private VulkanTarget? _presentedTarget;
+    private VulkanTextureTarget? _presentedTexture;
     private int _presentedWidth;
     private int _presentedHeight;
     private bool _framePending;
@@ -144,7 +95,25 @@ internal sealed class VulkanBackend : IBrutalGpuBackend
         return pending;
     }
 
-    public IBrutalTarget CreateTarget(int width, int height) => new VulkanTarget(this, _context, width, height);
+    public IBrutalTarget CreateTarget(int width, int height) =>
+        new PresentOrTextureTarget(
+            () => PresentToWindow, TakeFrame,
+#if BRUTAL_VULKAN_DIRECT
+            this,
+#else
+            null,
+#endif
+            () => new VulkanTextureTarget(_context, width, height),
+            WaitForGpuLocked, width, height);
+
+    // Called from inside a pass, where Gum holds no queue lock of its own; vkDeviceWaitIdle needs every queue synchronized.
+    private void WaitForGpuLocked()
+    {
+        using (_acquireQueueLock?.Invoke())
+        {
+            _device.WaitIdle();
+        }
+    }
 
     private VulkanPresenter EnsurePresenter() =>
         _presenter ??= new VulkanPresenter(
@@ -155,10 +124,10 @@ internal sealed class VulkanBackend : IBrutalGpuBackend
             );
 
 #if BRUTAL_VULKAN_DIRECT
-    internal SKCanvas DirectCanvas => _direct!.Canvas;
+    SKCanvas IBrutalDirectPass.Canvas => _direct!.Canvas;
 
     /// <summary>Acquires the next swapchain image (rebuilding the swapchain on a size change) and begins drawing into it.</summary>
-    internal void BeginDirect(int width, int height)
+    void IBrutalDirectPass.Begin(int width, int height)
     {
         VulkanPresenter presenter = EnsurePresenter();
         _direct ??= new SkiaDirectCanvas(_context, cacheSurfaces: true);
@@ -166,7 +135,7 @@ internal sealed class VulkanBackend : IBrutalGpuBackend
         {
             presenter.Configure(width, height, null, default);
             _directConfigured = true;
-            _presentedTarget = null;
+            _presentedTexture = null;
             _presentedWidth = width;
             _presentedHeight = height;
         }
@@ -178,11 +147,7 @@ internal sealed class VulkanBackend : IBrutalGpuBackend
             ImageLayoutColorAttachmentOptimal, clear: true, imageUsage: (uint)presenter.SwapchainUsage);
     }
 
-    internal void EndDirect() => _direct!.End(finalLayout: ImageLayoutPresentSrcKhr);
-#else
-    internal SKCanvas DirectCanvas => throw new InvalidOperationException("Built without BRUTAL_VULKAN_DIRECT.");
-
-    internal void EndDirect() => throw new InvalidOperationException("Built without BRUTAL_VULKAN_DIRECT.");
+    void IBrutalDirectPass.End() => _direct!.End(finalLayout: ImageLayoutPresentSrcKhr);
 #endif
 
     public void Present(IBrutalTarget target, int width, int height)
@@ -192,20 +157,21 @@ internal sealed class VulkanBackend : IBrutalGpuBackend
             return;
         }
 
-        VulkanTarget vulkanTarget = (VulkanTarget)target;
+        PresentOrTextureTarget switching = (PresentOrTextureTarget)target;
         VulkanPresenter presenter = EnsurePresenter();
 #if BRUTAL_VULKAN_DIRECT
-        if (vulkanTarget.IsDirectPass)
+        if (switching.IsDirectPass)
         {
             presenter.PresentDirect();
             return;
         }
         _directConfigured = false;
 #endif
-        if (!ReferenceEquals(_presentedTarget, vulkanTarget) || _presentedWidth != width || _presentedHeight != height)
+        VulkanTextureTarget texture = (VulkanTextureTarget)switching.Texture!;
+        if (!ReferenceEquals(_presentedTexture, texture) || _presentedWidth != width || _presentedHeight != height)
         {
-            presenter.Configure(width, height, vulkanTarget.Image, vulkanTarget.Format ?? default);
-            _presentedTarget = vulkanTarget;
+            presenter.Configure(width, height, texture.Image, texture.Format);
+            _presentedTexture = texture;
             _presentedWidth = width;
             _presentedHeight = height;
         }
@@ -217,7 +183,7 @@ internal sealed class VulkanBackend : IBrutalGpuBackend
         // The presenter releases the direct canvas's cached surfaces before it destroys the swapchain.
         _presenter?.Dispose();
         _presenter = null;
-        _presentedTarget = null;
+        _presentedTexture = null;
 #if BRUTAL_VULKAN_DIRECT
         _direct?.Dispose();
         _direct = null;
