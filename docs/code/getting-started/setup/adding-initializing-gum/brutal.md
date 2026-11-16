@@ -241,7 +241,7 @@ GumUI.Initialize(window, instance, physicalDevice, device, queue, queueFamily, s
     });
 ```
 
-Your other threads take the same `_queueLock` around their own submits. Gum takes it around its submits, presenting, waiting for the GPU after a window resize, and freeing its images on `Uninitialize`. Gum never takes it while it already holds it, so the lock does not need to be re-entrant. Returning one cached `IDisposable`, as above, keeps `Draw` free of allocations. Leave `acquireQueueLock` out if only the thread that calls Gum uses the queue.
+Your other threads take the same `_queueLock` around their own submits. Gum holds it while it draws a frame, around presenting, while it waits for the GPU after a window resize, and while it frees images (on a resize and in `Uninitialize`). Gum never takes it while it already holds it, so the lock does not need to be re-entrant. Do not hold the lock yourself while calling `Draw`, `Initialize` or `Uninitialize`, since Gum takes it inside them. Returning one cached `IDisposable`, as above, keeps `Draw` free of allocations. Leave `acquireQueueLock` out if only the thread that calls Gum uses the queue.
 
 ## Full Program
 

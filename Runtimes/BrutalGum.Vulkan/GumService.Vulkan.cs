@@ -13,6 +13,7 @@ namespace Gum;
 public partial class GumService
 {
     private VulkanBackend? VulkanBackend => QueueLockedBackend.Unwrap(_backend) as VulkanBackend;
+
     /// <summary>
     /// Initializes Gum for a BRUTAL application drawing with Vulkan 1.3, optionally loading a Gum project.
     /// Gum creates its Skia context on the objects you pass, a render target at the framebuffer size

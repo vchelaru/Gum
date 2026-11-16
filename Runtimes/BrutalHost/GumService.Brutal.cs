@@ -100,8 +100,15 @@ public partial class GumService : GumServiceSkiaInteractiveBase, IGumService
             return;
         }
 
-        base.Draw();
-        target.End();
+        try
+        {
+            base.Draw();
+        }
+        finally
+        {
+            // End also releases the host's queue lock that Begin took, so it runs when drawing throws too.
+            target.End();
+        }
         _backend.Present(target, _targetHolder.Width, _targetHolder.Height);
     }
 

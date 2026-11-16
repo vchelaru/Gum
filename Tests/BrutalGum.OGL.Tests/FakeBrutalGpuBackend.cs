@@ -15,9 +15,13 @@ internal sealed class FakeBrutalGpuBackend : IBrutalGpuBackend
     public List<bool> WaitForGpuLockStates { get; } = new();
     public bool? DisposedWhileLocked { get; private set; }
 
+    /// <summary>Stand-ins for SkiaGameRendering taking the host lock in Begin and releasing it in End.</summary>
+    public Action? OnTargetBegin { get; set; }
+    public Action? OnTargetEnd { get; set; }
+
     public IBrutalTarget CreateTarget(int width, int height)
     {
-        FakeBrutalTarget target = new FakeBrutalTarget(width, height) { IsLockHeld = IsLockHeld };
+        FakeBrutalTarget target = new FakeBrutalTarget(width, height) { IsLockHeld = IsLockHeld, OnBegin = OnTargetBegin, OnEnd = OnTargetEnd };
         Targets.Add(target);
         return target;
     }
@@ -56,6 +60,8 @@ internal sealed class FakeBrutalTarget : IBrutalTarget
     public int EndCount { get; private set; }
     public bool Disposed { get; private set; }
     public Func<bool>? IsLockHeld { get; init; }
+    public Action? OnBegin { get; init; }
+    public Action? OnEnd { get; init; }
     public bool? DisposedWhileLocked { get; private set; }
 
     public SKCanvas Canvas => _surface.Canvas;
@@ -70,12 +76,17 @@ internal sealed class FakeBrutalTarget : IBrutalTarget
     public void Begin()
     {
         BeginCount++;
+        OnBegin?.Invoke();
         _surface.Canvas.Clear(SKColors.Transparent);
     }
 
-    public void End() => EndCount++;
+    public void End()
+    {
+        EndCount++;
+        OnEnd?.Invoke();
+    }
 
-    public void EndWithoutDrawing() { }
+    public void EndWithoutDrawing() => OnEnd?.Invoke();
 
     public void Dispose()
     {

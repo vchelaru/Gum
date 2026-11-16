@@ -36,6 +36,12 @@ public class QueueLockTests : BaseTestClass
         void IDisposable.Dispose() => Released++;
     }
 
+    private sealed class ThrowingShape : SkiaGum.Renderables.RenderableShapeBase
+    {
+        public override void DrawBound(SKRect boundingRect, SKCanvas canvas, float absoluteRotation) =>
+            throw new InvalidOperationException("draw failed");
+    }
+
     private readonly ITestOutputHelper _output;
 
     public QueueLockTests(ITestOutputHelper output) => _output = output;
@@ -145,6 +151,38 @@ public class QueueLockTests : BaseTestClass
         queueLock.Held.ShouldBeFalse();
 
         RestoreCanvasInitialization();
+    }
+
+    [Fact]
+    public void Draw_WhenDrawingThrows_EndsTheTargetSoTheHostLockIsReleased()
+    {
+        FakeBrutalInput input = new() { FramebufferWidth = 320, FramebufferHeight = 200 };
+        FakeQueueLock queueLock = new FakeQueueLock();
+        FakeBrutalGpuBackend backend = new FakeBrutalGpuBackend
+        {
+            // What SkiaGameRendering does: Begin takes the host lock and End releases it.
+            OnTargetBegin = () => queueLock.Acquire(),
+            OnTargetEnd = () => ((IDisposable)queueLock).Dispose(),
+        };
+        GumService.Default.Uninitialize();
+        try
+        {
+            GumService.Default.Initialize(input, QueueLockedBackend.Wrap(backend, queueLock.Acquire));
+            Gum.Wireframe.GraphicalUiElement element = new Gum.Wireframe.GraphicalUiElement(new ThrowingShape());
+            element.Width = 50;
+            element.Height = 50;
+            element.AddToRoot();
+
+            Should.Throw<InvalidOperationException>(() => GumService.Default.Draw());
+
+            queueLock.Held.ShouldBeFalse();
+            backend.Presents.ShouldBeEmpty();
+        }
+        finally
+        {
+            GumService.Default.Root.Children.Clear();
+            RestoreCanvasInitialization();
+        }
     }
 
     [Fact]
