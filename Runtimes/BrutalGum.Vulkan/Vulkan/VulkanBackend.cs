@@ -5,6 +5,7 @@ using Brutal.VulkanApi.Abstractions;
 using SkiaGameRendering;
 using SkiaGameRendering.Core.VK;
 using SkiaSharp;
+using System;
 
 namespace Gum;
 
@@ -45,14 +46,21 @@ internal sealed class VulkanBackend : IBrutalGpuBackend
     private int _presentedWidth;
     private int _presentedHeight;
 
-    public VulkanBackend(Instance instance, PhysicalDevice physicalDevice, Device device, Queue queue, int queueFamily, VkSurfaceKHR surface)
+    private readonly Func<IDisposable>? _acquireQueueLock;
+
+    // acquireQueueLock is the host's queue lock. It goes to Skia (its submits) and the presenter (its submit and
+    // present); the device wait and the disposals are locked by QueueLockedBackend, which wraps this backend.
+    public VulkanBackend(
+        Instance instance, PhysicalDevice physicalDevice, Device device, Queue queue, int queueFamily, VkSurfaceKHR surface,
+        Func<IDisposable>? acquireQueueLock = null)
     {
+        _acquireQueueLock = acquireQueueLock;
         _physicalDevice = physicalDevice;
         _device = device;
         _queue = queue;
         _queueFamily = queueFamily;
         _surface = surface;
-        _context = new SkiaVulkanContext(instance.VkHandle, physicalDevice.VkHandle, device.VkHandle, queue.VkHandle, (uint)queueFamily);
+        _context = new SkiaVulkanContext(instance.VkHandle, physicalDevice.VkHandle, device.VkHandle, queue.VkHandle, (uint)queueFamily, acquireQueueLock);
     }
 
     /// <summary>When false, <see cref="Present"/> leaves the image for the game's own renderer.</summary>
@@ -76,7 +84,7 @@ internal sealed class VulkanBackend : IBrutalGpuBackend
         }
 
         VulkanTarget vulkanTarget = (VulkanTarget)target;
-        _presenter ??= new VulkanPresenter(_physicalDevice, _device, _queue, _queueFamily, _surface);
+        _presenter ??= new VulkanPresenter(_physicalDevice, _device, _queue, _queueFamily, _surface, _acquireQueueLock);
         if (!ReferenceEquals(_presentedTarget, vulkanTarget) || _presentedWidth != width || _presentedHeight != height)
         {
             _presenter.Configure(width, height, vulkanTarget.Image, vulkanTarget.Format);
