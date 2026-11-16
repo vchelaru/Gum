@@ -214,6 +214,7 @@ Things to know:
 
 * After `Draw` returns, the image is in `SHADER_READ_ONLY_OPTIMAL` on the queue you passed to `Initialize`. Sample it from a later submission on that queue. From another queue, add your own synchronization.
 * Read `RenderTargetImage` again after every `Draw`. The image is replaced when the window size changes, and the old one is freed after the GPU finishes the last frame.
+* `RenderTargetImage` is null until the first `Draw` with `PresentToWindow` false. While Gum presents, it draws straight into the window's swapchain image and has no image of its own.
 * The image is plain UNORM and holds sRGB bytes. If your pass writes to an sRGB target without decoding the sampled value first, colors are encoded twice and look washed out.
 
 OpenGL has no equivalent switch. `Draw` writes the whole default framebuffer, so anything of yours must be drawn after it.

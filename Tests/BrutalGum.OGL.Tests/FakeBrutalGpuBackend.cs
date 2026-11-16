@@ -19,9 +19,20 @@ internal sealed class FakeBrutalGpuBackend : IBrutalGpuBackend
     public Action? OnTargetBegin { get; set; }
     public Action? OnTargetEnd { get; set; }
 
+    /// <summary>"BeginFrame" for each <see cref="BeginFrame"/> and "Begin" for each target Begin, in call order.</summary>
+    public List<string> FrameEvents { get; } = new();
+
+    public void BeginFrame() => FrameEvents.Add("BeginFrame");
+
     public IBrutalTarget CreateTarget(int width, int height)
     {
-        FakeBrutalTarget target = new FakeBrutalTarget(width, height) { IsLockHeld = IsLockHeld, OnBegin = OnTargetBegin, OnEnd = OnTargetEnd };
+        Action? onTargetBegin = OnTargetBegin;
+        FakeBrutalTarget target = new FakeBrutalTarget(width, height)
+        {
+            IsLockHeld = IsLockHeld,
+            OnBegin = () => { FrameEvents.Add("Begin"); onTargetBegin?.Invoke(); },
+            OnEnd = OnTargetEnd,
+        };
         Targets.Add(target);
         return target;
     }

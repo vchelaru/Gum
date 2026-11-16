@@ -9,32 +9,87 @@ using System;
 
 namespace Gum;
 
-/// <summary><see cref="IBrutalTarget"/> over a SkiaGameRendering.Brutal Vulkan render target.</summary>
+/// <summary>
+/// <see cref="IBrutalTarget"/> for Vulkan. While Gum presents (and the build has BRUTAL_VULKAN_DIRECT), a drawn pass
+/// goes straight into the swapchain image through the backend's <c>SkiaDirectCanvas</c> and no image of Gum's own
+/// exists. Otherwise a pass draws into a SkiaGameRendering.Brutal render target, created at the first such pass.
+/// </summary>
 internal sealed class VulkanTarget : IBrutalTarget
 {
-    private readonly SkiaRenderTarget2D _target;
+    private readonly VulkanBackend _backend;
+    private readonly SkiaVulkanContext _context;
+    private readonly int _width;
+    private readonly int _height;
+    private SkiaRenderTarget2D? _texture;
+    private bool _capturePass;
 
-    public VulkanTarget(SkiaVulkanContext context, int width, int height) =>
-        _target = new SkiaRenderTarget2D(context, width, height);
+    public VulkanTarget(VulkanBackend backend, SkiaVulkanContext context, int width, int height)
+    {
+        _backend = backend;
+        _context = context;
+        _width = width;
+        _height = height;
+    }
 
-    public SKCanvas Canvas => _target.Canvas;
+    /// <summary>True when the current or last pass drew into the swapchain image.</summary>
+    public bool IsDirectPass { get; private set; }
 
-    public VkImage Image => new VkImage((nint)_target.VkImage);
+    // A capture pass while Gum presents has no image to draw into; Gum gets its canvas at the first drawn pass.
+    public SKCanvas Canvas => IsDirectPass ? _backend.DirectCanvas : _capturePass ? null! : _texture!.Canvas;
 
-    public VkFormat Format => (VkFormat)_target.VkFormat;
+    /// <summary>Gum's own image, or null while Gum draws straight into the swapchain (or before its first pass).</summary>
+    public VkImage? Image => _texture is null ? null : new VkImage((nint)_texture.VkImage);
 
-    public void Begin() => _target.Begin();
+    public VkFormat? Format => _texture is null ? null : (VkFormat)_texture.VkFormat;
 
-    public void End() => _target.End();
+    public void Begin()
+    {
+        bool isFrame = _backend.TakeFrame();
+        IsDirectPass = false;
+        _capturePass = false;
+#if BRUTAL_VULKAN_DIRECT
+        if (_backend.PresentToWindow)
+        {
+            if (isFrame)
+            {
+                _backend.BeginDirect(_width, _height);
+                IsDirectPass = true;
+            }
+            else
+            {
+                // The holder's capture pass at create time: acquiring a swapchain image here would leave it unpresented.
+                _capturePass = true;
+            }
+            return;
+        }
+#endif
+        _texture ??= new SkiaRenderTarget2D(_context, _width, _height);
+        _texture.Begin();
+    }
 
-    public void EndWithoutDrawing() => _target.End();
+    public void End()
+    {
+        if (IsDirectPass)
+        {
+            _backend.EndDirect();
+        }
+        else if (!_capturePass)
+        {
+            _texture!.End();
+        }
+    }
 
-    public void Dispose() => _target.Dispose();
+    public void EndWithoutDrawing() => End();
+
+    public void Dispose() => _texture?.Dispose();
 }
 
 /// <summary>Owns the SkiaVulkanContext over the game's Vulkan objects and, unless turned off, the swapchain presenter.</summary>
 internal sealed class VulkanBackend : IBrutalGpuBackend
 {
+    private const uint ImageLayoutColorAttachmentOptimal = 2;
+    private const uint ImageLayoutPresentSrcKhr = 1000001002;
+
     private readonly PhysicalDevice _physicalDevice;
     private readonly Device _device;
     private readonly Queue _queue;
@@ -45,6 +100,11 @@ internal sealed class VulkanBackend : IBrutalGpuBackend
     private VulkanTarget? _presentedTarget;
     private int _presentedWidth;
     private int _presentedHeight;
+    private bool _framePending;
+#if BRUTAL_VULKAN_DIRECT
+    private SkiaDirectCanvas? _direct;
+    private bool _directConfigured;
+#endif
 
     private readonly Func<IDisposable>? _acquireQueueLock;
 
@@ -74,7 +134,56 @@ internal sealed class VulkanBackend : IBrutalGpuBackend
 
     public void WaitForGpu() => _device.WaitIdle();
 
-    public IBrutalTarget CreateTarget(int width, int height) => new VulkanTarget(_context, width, height);
+    public void BeginFrame() => _framePending = true;
+
+    /// <summary>True when Draw announced this Begin with <see cref="BeginFrame"/>; clears the flag.</summary>
+    internal bool TakeFrame()
+    {
+        bool pending = _framePending;
+        _framePending = false;
+        return pending;
+    }
+
+    public IBrutalTarget CreateTarget(int width, int height) => new VulkanTarget(this, _context, width, height);
+
+    private VulkanPresenter EnsurePresenter() =>
+        _presenter ??= new VulkanPresenter(
+            _physicalDevice, _device, _queue, _queueFamily, _surface, _acquireQueueLock
+#if BRUTAL_VULKAN_DIRECT
+            , releaseSwapchainImageUsers: () => _direct?.ReleaseCachedSurfaces()
+#endif
+            );
+
+#if BRUTAL_VULKAN_DIRECT
+    internal SKCanvas DirectCanvas => _direct!.Canvas;
+
+    /// <summary>Acquires the next swapchain image (rebuilding the swapchain on a size change) and begins drawing into it.</summary>
+    internal void BeginDirect(int width, int height)
+    {
+        VulkanPresenter presenter = EnsurePresenter();
+        _direct ??= new SkiaDirectCanvas(_context, cacheSurfaces: true);
+        if (!_directConfigured || _presentedWidth != width || _presentedHeight != height)
+        {
+            presenter.Configure(width, height, null, default);
+            _directConfigured = true;
+            _presentedTarget = null;
+            _presentedWidth = width;
+            _presentedHeight = height;
+        }
+        VkImage image = presenter.AcquireForDirect();
+        (int swapchainWidth, int swapchainHeight) = presenter.SwapchainSize;
+        // Transparent, like Gum's own image starts each pass; the opaque window shows it as black.
+        _direct.Begin(
+            (ulong)(nint)image.VkHandle, (uint)presenter.SwapchainFormat, swapchainWidth, swapchainHeight,
+            ImageLayoutColorAttachmentOptimal, clear: true, imageUsage: (uint)presenter.SwapchainUsage);
+    }
+
+    internal void EndDirect() => _direct!.End(finalLayout: ImageLayoutPresentSrcKhr);
+#else
+    internal SKCanvas DirectCanvas => throw new InvalidOperationException("Built without BRUTAL_VULKAN_DIRECT.");
+
+    internal void EndDirect() => throw new InvalidOperationException("Built without BRUTAL_VULKAN_DIRECT.");
+#endif
 
     public void Present(IBrutalTarget target, int width, int height)
     {
@@ -84,22 +193,35 @@ internal sealed class VulkanBackend : IBrutalGpuBackend
         }
 
         VulkanTarget vulkanTarget = (VulkanTarget)target;
-        _presenter ??= new VulkanPresenter(_physicalDevice, _device, _queue, _queueFamily, _surface, _acquireQueueLock);
+        VulkanPresenter presenter = EnsurePresenter();
+#if BRUTAL_VULKAN_DIRECT
+        if (vulkanTarget.IsDirectPass)
+        {
+            presenter.PresentDirect();
+            return;
+        }
+        _directConfigured = false;
+#endif
         if (!ReferenceEquals(_presentedTarget, vulkanTarget) || _presentedWidth != width || _presentedHeight != height)
         {
-            _presenter.Configure(width, height, vulkanTarget.Image, vulkanTarget.Format);
+            presenter.Configure(width, height, vulkanTarget.Image, vulkanTarget.Format ?? default);
             _presentedTarget = vulkanTarget;
             _presentedWidth = width;
             _presentedHeight = height;
         }
-        _presenter.Present();
+        presenter.Present();
     }
 
     public void Dispose()
     {
+        // The presenter releases the direct canvas's cached surfaces before it destroys the swapchain.
         _presenter?.Dispose();
         _presenter = null;
         _presentedTarget = null;
+#if BRUTAL_VULKAN_DIRECT
+        _direct?.Dispose();
+        _direct = null;
+#endif
         _context.Dispose();
     }
 }

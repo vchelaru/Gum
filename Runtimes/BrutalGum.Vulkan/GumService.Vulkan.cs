@@ -132,7 +132,8 @@ public partial class GumService
     /// transitions and submit on that queue). Sample it from a later submission on that same queue; from another
     /// queue, add your own synchronization. Do not write to it, and do not keep views of it across a resize. The
     /// bytes are sRGB in a UNORM format (<see cref="RenderTargetFormat"/>): a pass that writes to an sRGB target
-    /// must not decode them again. Null before Initialize.
+    /// must not decode them again. Null before Initialize and before the first Draw. Null while
+    /// <see cref="PresentToWindow"/> is true: Gum then draws straight into the swapchain image and has no image of its own.
     /// </summary>
     public VkImage? RenderTargetImage => (QueueLockedBackend.Unwrap(_targetHolder?.Target) as VulkanTarget)?.Image;
 

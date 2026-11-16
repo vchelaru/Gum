@@ -32,8 +32,21 @@
 		<PackageReference Include="Ahwoo.Brutal.Vulkan.Abstractions" Version="2026.10.3" />
 		<PackageReference Include="Ahwoo.Brutal.ShaderC" Version="2026.10.3" />
 		<!-- Skia on Vulkan. Never reference SkiaGameRendering.Brutal.OGL here: both declare SkiaRenderTarget2D. -->
-		<PackageReference Include="SkiaGameRendering.Brutal" Version="0.24.0" />
+		<PackageReference Include="SkiaGameRendering.Brutal" Version="0.24.0" Condition="'$(SkiaGameRenderingBrutalSource)' == ''" />
 	</ItemGroup>
+
+	<!--
+		Temporary, until a SkiaGameRendering.Brutal release has SkiaDirectCanvas(context, cacheSurfaces: true)
+		(SkiaGameRendering PR #410). -p:SkiaGameRenderingBrutalSource=<path to SkiaGameRendering.Brutal.csproj>
+		builds against SGR source and turns on drawing straight into the swapchain (BRUTAL_VULKAN_DIRECT).
+		Without it the package is used and Gum always draws into its own image.
+	-->
+	<ItemGroup Condition="'$(SkiaGameRenderingBrutalSource)' != ''">
+		<ProjectReference Include="$(SkiaGameRenderingBrutalSource)" />
+	</ItemGroup>
+	<PropertyGroup Condition="'$(SkiaGameRenderingBrutalSource)' != ''">
+		<DefineConstants>$(DefineConstants);BRUTAL_VULKAN_DIRECT</DefineConstants>
+	</PropertyGroup>
 
 	<ItemGroup>
 		<ProjectReference Include="..\..\GumCommon\GumCommon.csproj" />
