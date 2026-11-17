@@ -1674,7 +1674,8 @@ public class GumHotReloadManager : IGumHotReloadManager
         // swatch) leaves the readers holding the value they were saved with. A reference sets the final
         // value, so the rows are evaluated in dependency order against the new project first, the way
         // a tool save does, and a reference that reads another reference sees the end of the chain (#6853).
-        newProject.ApplyAllVariableReferences();
+        // Only the elements the new files can change, and what reads them, are applied; the result is the full pass's.
+        ReloadReferenceScope.Apply(newProject, oldProject);
 
         Dictionary<string, ElementSave> byName = new Dictionary<string, ElementSave>(StringComparer.OrdinalIgnoreCase);
         foreach (ElementSave element in newProject.AllElements)

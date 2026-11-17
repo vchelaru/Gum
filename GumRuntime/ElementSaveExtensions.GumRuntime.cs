@@ -747,18 +747,25 @@ namespace GumRuntime
         /// </summary>
         public static void ApplyAllVariableReferences(this GumProjectSave project)
         {
-            lock (ReportedWithoutOwner)
-            {
-                ReportedWithoutOwner.Clear();
-            }
-
             List<ElementSave> allElements = new List<ElementSave>();
             allElements.AddRange(project.StandardElements);
             allElements.AddRange(project.Components);
             allElements.AddRange(project.Screens);
 
             // An element that reads another is applied after it. Elements in a cycle keep project order.
-            List<ElementSave> sorted = ReferenceDependencies.OrderByDependency(allElements);
+            ApplyVariableReferencesInOrder(ReferenceDependencies.OrderByDependency(allElements));
+        }
+
+        /// <summary>
+        /// Applies the rows of every state of each element, in the given order: the order
+        /// <see cref="ReferenceDependencies.OrderByDependency"/> returns, or a subsequence of it.
+        /// </summary>
+        internal static void ApplyVariableReferencesInOrder(IEnumerable<ElementSave> sorted)
+        {
+            lock (ReportedWithoutOwner)
+            {
+                ReportedWithoutOwner.Clear();
+            }
 
             // The rows do not change during the pass, so loops through other elements are looked up once.
             VariableReferenceGraph.BeginBatch();
@@ -2269,27 +2276,33 @@ namespace GumRuntime
                 var lastDot = right.LastIndexOf('.');
                 var firstDot = right.IndexOf('.');
 
-                var elementNameToFind = right.Substring(0, firstDot);
-
-                ElementSave? element = null;
-                if (TryStripPrefix(elementNameToFind, ElementReference.ComponentSubfolder, out var componentName))
-                {
-                    element = ObjectFinder.Self.GetComponent(componentName);
-                }
-                else if (TryStripPrefix(elementNameToFind, ElementReference.ScreenSubfolder, out var screenName))
-                {
-                    element = ObjectFinder.Self.GetScreen(screenName);
-                }
-                else if (TryStripPrefix(elementNameToFind, ElementReference.StandardSubfolder, out var standardName))
-                {
-                    element = ObjectFinder.Self.GetStandardElement(standardName);
-                }
-
+                ElementSave? element = GetElementByQualifiedName(right.Substring(0, firstDot));
                 if (element != null)
                 {
                     stateSave = GetRightSide(ref right, firstDot, element);
                 }
             }
+        }
+
+        /// <summary>
+        /// The element a reference's element segment, such as <c>Components/Styles</c>, names, found the way
+        /// rows are evaluated (through <see cref="ObjectFinder"/>), or null.
+        /// </summary>
+        internal static ElementSave? GetElementByQualifiedName(string qualifiedElementName)
+        {
+            if (TryStripPrefix(qualifiedElementName, ElementReference.ComponentSubfolder, out var componentName))
+            {
+                return ObjectFinder.Self.GetComponent(componentName);
+            }
+            if (TryStripPrefix(qualifiedElementName, ElementReference.ScreenSubfolder, out var screenName))
+            {
+                return ObjectFinder.Self.GetScreen(screenName);
+            }
+            if (TryStripPrefix(qualifiedElementName, ElementReference.StandardSubfolder, out var standardName))
+            {
+                return ObjectFinder.Self.GetStandardElement(standardName);
+            }
+            return null;
         }
 
         private static bool TryStripPrefix(string qualifiedElementName, string subfolder, out string elementName)
