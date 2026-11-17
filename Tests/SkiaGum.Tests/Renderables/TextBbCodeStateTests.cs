@@ -78,6 +78,30 @@ public class TextBbCodeStateTests
     }
 
     [Fact]
+    public void Text_OnClonedRuntime_AppliesStateTag()
+    {
+        TextRuntime original = new();
+        original.AddStates(new List<StateSave> { ColorState("Highlighted", 10, 20, 30) });
+        TextRuntime clone = (TextRuntime)original.Clone();
+
+        clone.Text = "a[State=Highlighted]b[/State]c";
+
+        RunsOf(clone)[1].Style.TextColor.ShouldBe(new SKColor(10, 20, 30, 255));
+    }
+
+    [Fact]
+    public void Text_OnRuntimeWithoutFullInstantiation_AppliesStateTagOnceRenderableAttached()
+    {
+        TextRuntime runtime = new(fullInstantiation: false);
+        runtime.SetContainedObject(new Text());
+        runtime.AddStates(new List<StateSave> { ColorState("Highlighted", 10, 20, 30) });
+
+        runtime.Text = "a[State=Highlighted]b[/State]c";
+
+        RunsOf(runtime)[1].Style.TextColor.ShouldBe(new SKColor(10, 20, 30, 255));
+    }
+
+    [Fact]
     public void Text_WithUnknownStateTag_StripsTagAndDoesNotThrow()
     {
         TextRuntime textRuntime = new();

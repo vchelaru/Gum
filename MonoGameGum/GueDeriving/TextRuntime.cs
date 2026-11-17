@@ -1797,6 +1797,19 @@ public class TextRuntime : InteractiveGue
     }
 #endif
 
+#if SKIA
+    // Every path that attaches a renderable (ctor, Clone, a fullInstantiation:false runtime given one later)
+    // goes through SetContainedObject, so this one place gives the Text its owner for [State=Name] (#8176).
+    protected override void OnContainedObjectSet(global::RenderingLibrary.Graphics.IRenderable? containedObject)
+    {
+        base.OnContainedObjectSet(containedObject);
+        if (containedObject is Text text)
+        {
+            text.Owner = this;
+        }
+    }
+#endif
+
     public override GraphicalUiElement Clone()
     {
         var toReturn = (TextRuntime)base.Clone();
@@ -1942,9 +1955,6 @@ public class TextRuntime : InteractiveGue
             // normally-constructed TextRuntime, since ContainedText's lazy-init getter never runs
             // again once _containedText is assigned directly below.
             textRenderable.OnGlyphGrowthCheck = CheckAndGrowFont;
-#endif
-#if SKIA
-            textRenderable.Owner = this;
 #endif
             _containedText = textRenderable;
 
