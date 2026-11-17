@@ -61,7 +61,7 @@ run_stream() {
   export TMPDIR="$tmp" TMP="$tmp" TEMP="$tmp"
   # LP_NUM_THREADS caps llvmpipe's rasterizer threads (default: one per core), so two Mesa streams do not
   # take every core from the headless stream, which runs serially and sets the wall time (#8169).
-  case "$stream" in mesa*) export GALLIUM_DRIVER=llvmpipe GUM_REQUIRE_GL=1 LP_NUM_THREADS=2 ;; esac
+  case "$stream" in mesa*) export GALLIUM_DRIVER=llvmpipe GUM_REQUIRE_GL=1 LP_NUM_THREADS=1 ;; esac
   local failed=0 line project minutes
   while read -r line; do
     set -- $line   # stream project [minutes] [extra...] (word-split on purpose; quotes are kept for eval)
