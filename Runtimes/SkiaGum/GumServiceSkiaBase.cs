@@ -735,6 +735,8 @@ public abstract class GumServiceSkiaBase : IGumService
         _windowFit?.Reset();
         _hostWindowSize = null;
 
+        SystemManagers.Default?.ReleaseRenderTargets();
+
         SystemManagers.Default = null!;
         IGumService.Default = null;
 

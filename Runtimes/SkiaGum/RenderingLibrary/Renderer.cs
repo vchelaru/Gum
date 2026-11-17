@@ -787,6 +787,15 @@ namespace RenderingLibrary.Graphics
         internal SKSurface? TryGetRenderTargetSurfaceFor(IRenderableIpso container)
             => _renderTargetService.TryGetExisting(ResolveRenderTargetCacheOwner(container))?.Surface;
 
+        // Shutdown: frees every cached render-target surface and drops the context references. The GL context
+        // must still be current for GPU surfaces.
+        internal void ReleaseRenderTargets()
+        {
+            DisposeBakedImages();
+            _referencedRenderTargetOwners.Clear();
+            _renderTargetService.DisposeAll();
+        }
+
         private void DisposeBakedImages()
         {
             foreach (SKImage image in _bakedImages.Values)
@@ -1111,6 +1120,8 @@ namespace RenderingLibrary.Graphics
                 return;
             }
 
+            // Selects the cache of the canvas being drawn to before any manual-cache validity check.
+            _renderTargetService.UseContext(managers.CanvasOrNull?.Context);
             RenderTargetScanCount++;
             CollectReferencedRenderTargets(whatToRender);
             if (HasAnyRenderTarget(whatToRender))

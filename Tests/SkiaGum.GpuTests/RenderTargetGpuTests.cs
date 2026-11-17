@@ -262,23 +262,82 @@ public class RenderTargetGpuTests
     }
 
     [Fact]
-    public void UseContext_ContextChanges_DropsSurfacesAndCreatesForTheNewContext()
+    public void UseContext_AlternatingCanvases_KeepsBothCaches()
     {
         SkiaRenderTargetService service = new();
         _gpu.WithSurface(8, 8, (surface, context) =>
         {
             InvisibleRenderable owner = new();
             service.UseContext(surface.Canvas.Context);
-            service.GetFor(owner, 16, 16)!.Surface.Canvas.Context.ShouldNotBeNull();
+            SkiaRenderTarget gpuTarget = service.GetFor(owner, 16, 16)!;
+            gpuTarget.Surface.Canvas.Context.ShouldNotBeNull();
+
+            service.UseContext(null);
+            SkiaRenderTarget cpuTarget = service.GetFor(owner, 16, 16)!;
+            cpuTarget.Surface.Canvas.Context.ShouldBeNull();
+            service.CachedCount.ShouldBe(2);
 
             service.UseContext(surface.Canvas.Context);
-            service.CachedCount.ShouldBe(1);
-
-            // The host lost its context, or drew to a raster canvas next.
+            service.GetFor(owner, 16, 16).ShouldBeSameAs(gpuTarget);
             service.UseContext(null);
-            service.CachedCount.ShouldBe(0);
-            service.GetFor(owner, 16, 16)!.Surface.Canvas.Context.ShouldBeNull();
+            service.GetFor(owner, 16, 16).ShouldBeSameAs(cpuTarget);
             service.DisposeAll();
         });
+    }
+
+    [Fact]
+    public void DisposeAll_DropsSurfacesAndContextReference()
+    {
+        SkiaRenderTargetService service = new();
+        _gpu.WithSurface(8, 8, (surface, context) =>
+        {
+            service.UseContext(surface.Canvas.Context);
+            service.GetFor(new InvisibleRenderable(), 16, 16);
+
+            service.DisposeAll();
+
+            service.CachedCount.ShouldBe(0);
+            service.Context.ShouldBeNull();
+        });
+    }
+
+    [Fact]
+    public void Draw_AlternatingGpuAndRasterCanvas_ManualContainerKeepsBothCachesAndStaysCorrect()
+    {
+        ContainerRuntime container = BuildScene();
+        container.RenderTargetRefreshMode = RenderTargetRefreshMode.Manual;
+        RenderOnCpu(BuildScene(), 1).Dispose();
+        SKBitmap? reference = null;
+        OnGpu(BuildScene(), 1, (_, surface, _) => reference = ReadBack(surface));
+
+        _gpu.WithSurface(Width, Height, (surface, _) =>
+        {
+            using SKBitmap bitmap = new(new SKImageInfo(Width, Height, SKColorType.Rgba8888, SKAlphaType.Premul));
+            using SKCanvas rasterCanvas = new(bitmap);
+            SystemManagers managers = CreateManagers(surface.Canvas);
+            container.AddToManagers(managers, null);
+
+            // Two frames on each canvas, alternating every frame.
+            for (int frame = 0; frame < 4; frame++)
+            {
+                managers.Canvas = frame % 2 == 0 ? surface.Canvas : rasterCanvas;
+                managers.Canvas.Clear(new SKColor(20, 20, 20));
+                managers.Draw();
+            }
+            managers.Canvas = surface.Canvas;
+            surface.Canvas.Clear(new SKColor(20, 20, 20));
+            managers.Draw();
+
+            // One bake per canvas, never one per switch.
+            managers.Renderer.RenderTargetBakeCount.ShouldBe(2);
+            using SKBitmap gpuPixels = ReadBack(surface);
+            MaxChannelDifference(gpuPixels, reference!).ShouldBeLessThanOrEqualTo(SameBackendTolerance);
+            MaxChannelDifference(bitmap, reference!).ShouldBeLessThanOrEqualTo(CpuGpuTolerance);
+
+            managers.ReleaseRenderTargets();
+            managers.Renderer.TryGetRenderTargetSurfaceFor((IRenderableIpso)container.RenderableComponent).ShouldBeNull();
+            container.RemoveFromManagers();
+        });
+        reference!.Dispose();
     }
 }
