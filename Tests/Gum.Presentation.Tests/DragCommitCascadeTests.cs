@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using MonoGameGum.Tests;
 using Shouldly;
 
@@ -59,23 +58,22 @@ public class DragCommitCascadeTests : BaseTestClass
     [Fact]
     public void Tick_OfUnrelatedVariable_ShouldNotTouchButtonStates_Nor_CostPerButton()
     {
+        // One world at a time: each installs its project in ObjectFinder.
+        int oneButtonWork;
+        using (DragWorld oneButton = new DragWorld())
+        {
+            oneButton.BuildButtons(1);
+            oneButtonWork = oneButton.TickScanCount("S0", "Default", 60);
+        }
         using DragWorld world = new DragWorld();
         world.BuildButtons(200);
         world.ButtonStateWrites.ShouldBe(0);
-        world.Tick("S0", "Default", 59);
 
-        List<double> milliseconds = new List<double>();
-        for (int i = 0; i < 7; i++)
-        {
-            Stopwatch watch = Stopwatch.StartNew();
-            world.Tick("S0", "Default", 60 + i);
-            watch.Stop();
-            milliseconds.Add(watch.Elapsed.TotalMilliseconds);
-        }
-        milliseconds.Sort();
+        int work = world.TickScanCount("S0", "Default", 60);
 
         world.ButtonStateWrites.ShouldBe(0);
-        milliseconds[3].ShouldBeLessThan(3.0);
+        // Counted, not timed: a tick that evaluated every button's behavior lines would count 199 more.
+        work.ShouldBe(oneButtonWork);
     }
 
     [Fact]
@@ -129,22 +127,20 @@ public class DragCommitCascadeTests : BaseTestClass
     [InlineData(0, 1000)]
     public void Tick_ShouldCostTheSameWhateverTheProjectSize(int readers, int bystanders)
     {
+        // One world at a time: each installs its project in ObjectFinder.
+        int smallWork;
+        using (DragWorld small = new DragWorld())
+        {
+            small.BuildScale(readers: 0, bystanders: 0);
+            smallWork = small.TickScanCount("S0", "Default", 60);
+        }
         using DragWorld world = new DragWorld();
         world.BuildScale(readers, bystanders);
-        world.Tick("S0", "Default", 59);
 
-        List<double> milliseconds = new List<double>();
-        for (int i = 0; i < 7; i++)
-        {
-            Stopwatch watch = Stopwatch.StartNew();
-            world.Tick("S0", "Default", 60 + i);
-            watch.Stop();
-            milliseconds.Add(watch.Elapsed.TotalMilliseconds);
-        }
-        milliseconds.Sort();
+        int work = world.TickScanCount("S0", "Default", 60);
 
-        // A wide margin: with a thousand elements reading the value a tick re-evaluated them all.
-        milliseconds[3].ShouldBeLessThan(20.0);
+        // Counted, not timed: a tick that scanned the project for readers would scan a thousand more elements.
+        work.ShouldBe(smallWork);
     }
 
     [Fact]
