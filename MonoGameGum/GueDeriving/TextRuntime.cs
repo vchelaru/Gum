@@ -1943,6 +1943,9 @@ public class TextRuntime : InteractiveGue
             // again once _containedText is assigned directly below.
             textRenderable.OnGlyphGrowthCheck = CheckAndGrowFont;
 #endif
+#if SKIA
+            textRenderable.Owner = this;
+#endif
             _containedText = textRenderable;
 
             SetContainedObject(textRenderable);
