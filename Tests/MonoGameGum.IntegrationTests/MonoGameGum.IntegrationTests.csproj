@@ -4,6 +4,10 @@
 		<TargetFramework>net8.0</TargetFramework>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
+		<!-- Allocation tests read the per-thread counter after a warm-up. Tiered compilation promotes a method at a
+		     moment set by timing and can allocate on the calling thread inside a measured window (#8167, #8181).
+		     Fully optimized JIT on first call leaves nothing to promote later. -->
+		<TieredCompilation>false</TieredCompilation>
 		<!-- The linked generated sample component uses the obsolete MonoGameGum.GueDeriving shims. -->
 		<NoWarn>$(NoWarn);CS0618</NoWarn>
 

@@ -4,6 +4,10 @@
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <!-- Allocation tests read the per-thread counter after a warm-up. Tiered compilation promotes a method at a
+         moment set by timing and can allocate on the calling thread inside a measured window (#8167, #8181).
+         Fully optimized JIT on first call leaves nothing to promote later. -->
+    <TieredCompilation>false</TieredCompilation>
     <DefineConstants>$(DefineConstants);SKIA_LINKED_TESTS</DefineConstants>
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
   </PropertyGroup>

@@ -363,12 +363,16 @@ public class LineArc : GradientShapeRenderable
             float dashStartRl = AngleAt(at);
             float dashEndRl = AngleAt(System.MathF.Min(at + StrokeDashLength, total));
             int segmentsPerDash = System.Math.Max(1, (int)(System.MathF.Abs(dashEndRl - dashStartRl) / 4f));
+            DashesDrawn++;
             DrawContinuous(band, false, 0f, 0f, dashStartRl, dashEndRl, segmentsPerDash, IsEndRounded, color);
         }
     }
 
     // Shared by every arc: the renderer draws on one thread, and dashes are drawn one arc at a time.
     private static float[] s_dashLengths = new float[1025];
+
+    /// <summary>Dashes drawn by every arc so far, so tests can check the dash cap without timing a frame.</summary>
+    internal static long DashesDrawn;
     private const int MaxDashTableSteps = 4096;
 
     /// <summary>Dash plus gap, in pixels, at or below which Skia's antialiased dashes read as an average coverage.</summary>
@@ -460,6 +464,7 @@ public class LineArc : GradientShapeRenderable
             float dashEndGum = StartAngle + sweepSign * dashEnd;
             float dashStartRl = -dashStartGum;
             float dashEndRl = -dashEndGum;
+            DashesDrawn++;
             DrawRing(center, innerRadius, outerRadius, dashStartRl - rotationDegrees, dashEndRl - rotationDegrees,
                 segmentsPerDash, strokeColor);
             // Per-dash rounded caps — Skia parity: SKStrokeCap.Round + SKPathEffect.CreateDash
