@@ -93,10 +93,12 @@ public class ThemedScrollBarHotReloadTests : FileThemeInputTestBase
         Driver.Step(2);
         ScrollViewer viewer = (ScrollViewer)((InteractiveGue)screenVisual.GetGraphicalUiElementByName("Box")!).FormsControlAsObject!;
 
-        // The editor adds one row at a time; the bar appears once they overflow, then keeps growing the list.
-        while (rows < 30)
+        // The editor adds one row at a time; the bar appears once they overflow (by 8 rows), then a reload of a
+        // list that already scrolls grows it. Each further one-row reload repeats that path, so one reload adds the rest.
+        while (rows < 29)
         {
-            AddRow(screen, rowType, rows++);
+            int target = rows < 8 ? rows + 1 : 29;
+            while (rows < target) { AddRow(screen, rowType, rows++); }
             project.Initialize();
             Gum.GumHotReloadManager.ApplyDiff(new[] { screenVisual }, project, RenderingLibrary.SystemManagers.Default);
             Driver.Step(2);
