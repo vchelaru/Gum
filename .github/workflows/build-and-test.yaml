@@ -565,12 +565,22 @@ jobs:
   Build-and-Test:
     needs: Changes
     if: ${{ !cancelled() }}
-    name: Build-and-Test (${{ matrix.os }})
+    name: Build-and-Test (${{ matrix.leg }})
     strategy:
       matrix:
-      # We used to have ubuntu-latest here, but it can't build iOS, and it's easier to just use macos
-        os: [windows-latest, macos-15]
-    runs-on: ${{ ((github.event_name == 'pull_request' && needs.Changes.outputs.non-docs == 'false') || ((github.event_name == 'push' || github.event_name == 'schedule') && matrix.os == 'windows-latest') || (github.event_name == 'pull_request' && (needs.Changes.outputs.scope == 'fast' || needs.Changes.outputs.macos == 'false') && matrix.os == 'macos-15')) && 'ubuntu-latest' || matrix.os }}
+      # We used to have ubuntu-latest here, but it can't build iOS, and it's easier to just use macos.
+      # Windows has two legs (#8169): the headless test stream, and the Mesa streams on a second runner,
+      # because the three streams together saturate one 4-core runner. The `leg` values keep the
+      # required check names Build-and-Test (windows-latest) and (macos-15).
+        include:
+          - os: windows-latest
+            leg: windows-latest
+          - os: windows-latest
+            leg: windows-latest-mesa
+            mesa: true
+          - os: macos-15
+            leg: macos-15
+    runs-on: ${{ ((github.event_name == 'pull_request' && needs.Changes.outputs.non-docs == 'false') || (matrix.mesa && needs.Changes.outputs.scope == 'fast') || ((github.event_name == 'push' || github.event_name == 'schedule') && matrix.os == 'windows-latest') || (github.event_name == 'pull_request' && (needs.Changes.outputs.scope == 'fast' || needs.Changes.outputs.macos == 'false') && matrix.os == 'macos-15')) && 'ubuntu-latest' || matrix.os }}
     # Final net; slowest normal run is about 19.5 minutes.
     timeout-minutes: 60
     steps:
@@ -604,6 +614,7 @@ jobs:
           SCOPE: ${{ needs.Changes.outputs.scope }}
           MACOS: ${{ needs.Changes.outputs.macos }}
           MATRIX_OS: ${{ matrix.os }}
+          MESA_LEG: ${{ matrix.mesa && 'true' || 'false' }}
         run: |
           if [ "$CHANGES_RESULT" != "success" ]; then
             echo "::error::The Changes job ended '$CHANGES_RESULT', so this leg cannot tell what the PR touches."
@@ -617,6 +628,7 @@ jobs:
             active=false
             echo "macOS leg skipped: the PR touches no path in the Changes job's macos filter (#8164)." >> "$GITHUB_STEP_SUMMARY"
           fi
+          if [ "$SCOPE" = "fast" ] && [ "$MESA_LEG" = "true" ]; then active=false; fi
           echo "active=$active" >> "$GITHUB_OUTPUT"
 
       # Cache the submodule object stores (.git/modules) + working trees, keyed on
@@ -1053,7 +1065,7 @@ jobs:
       # trx now lands in the shared TestResults dir so the "Publish Test Results"
       # reporter gates on it like every other suite.
       - name: "Install Mesa llvmpipe (Windows, #3250)"
-        if: runner.os == 'Windows' && steps.plan.outputs.active == 'true' && needs.Changes.outputs.scope != 'fast'
+        if: runner.os == 'Windows' && steps.plan.outputs.active == 'true' && matrix.mesa
         uses: ./.github/actions/install-mesa-llvmpipe
         with:
           dest-dirs: |
@@ -1093,10 +1105,10 @@ jobs:
         timeout-minutes: 25
         shell: bash
         env:
-          # Fast scope runs only the headless stream; the Mesa streams need the Mesa install above.
-          STREAMS: ${{ needs.Changes.outputs.scope == 'fast' && 'headless' || '' }}
-          # ...split three ways, because the Mesa streams are not there to share the four cores.
-          SPLIT: ${{ needs.Changes.outputs.scope == 'fast' && 'headless=3' || '' }}
+          # The Mesa leg runs the two Mesa streams; the other Windows leg runs the headless stream, split
+          # three ways because the Mesa streams are on their own runner (#8169). Fast scope skips the Mesa leg.
+          STREAMS: ${{ matrix.mesa && 'mesa-1 mesa-2' || 'headless' }}
+          SPLIT: ${{ !matrix.mesa && 'headless=3' || '' }}
         run: bash .github/scripts/test-concurrent.sh
 
       # Slowest classes and tests in the job summary, so a slow suite can be explained from the run
@@ -1112,7 +1124,7 @@ jobs:
         if: always() && steps.plan.outputs.active == 'true' && (github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true')
         uses: dorny/test-reporter@v2
         with:
-          name: Tests ${{ matrix.os }}
+          name: Tests ${{ matrix.leg }}
           path: "TestResults/*.trx"
           reporter: dotnet-trx
           fail-on-error: true
