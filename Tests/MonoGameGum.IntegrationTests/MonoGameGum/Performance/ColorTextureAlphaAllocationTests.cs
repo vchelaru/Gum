@@ -53,11 +53,13 @@ public class ColorTextureAlphaAllocationTests : BaseTestClass
         {
             // Bytes per call and per step, so a Mesa-only reading says which frame and which call allocated.
             // Allocated before the window starts; reading the counter allocates nothing.
-            const int Warmup = 30;
+            const int Warmup = 60;
             const int Measured = 200;
             long[] targetBytes = new long[Warmup + Measured];
             long[] drawBytes = new long[Warmup + Measured];
             long[] restoreBytes = new long[Warmup + Measured];
+            long[] callTimestamps = new long[Warmup + Measured];
+            long firstTimestamp = System.Diagnostics.Stopwatch.GetTimestamp();
             int call = 0;
             int gcsBefore = GC.CollectionCount(0);
             AllocationResult result = AllocationMeasurer.Measure(
@@ -76,15 +78,16 @@ public class ColorTextureAlphaAllocationTests : BaseTestClass
                         targetBytes[call] = drawStart - start;
                         drawBytes[call] = restoreStart - drawStart;
                         restoreBytes[call] = end - restoreStart;
+                        callTimestamps[call] = System.Diagnostics.Stopwatch.GetTimestamp();
                     }
                     call++;
                 },
                 warmupIterations: Warmup,
                 measuredIterations: Measured);
             int gcs = GC.CollectionCount(0) - gcsBefore;
-            string detail = $"gen0 GCs: {gcs}; calls that allocated (0..{Warmup - 1} are warm-up): " + string.Join(", ",
+            string detail = $"gen0 GCs: {gcs}; calls that allocated (0..{Warmup - 1} are warm-up; {(System.Diagnostics.Stopwatch.GetTimestamp() - firstTimestamp) * 1000 / System.Diagnostics.Stopwatch.Frequency} ms in all): " + string.Join(", ",
                 Enumerable.Range(0, Warmup + Measured).Where(i => targetBytes[i] != 0 || drawBytes[i] != 0 || restoreBytes[i] != 0)
-                    .Select(i => $"#{i} target={targetBytes[i]} draw={drawBytes[i]} restore={restoreBytes[i]}"));
+                    .Select(i => $"#{i} at {(callTimestamps[i] - firstTimestamp) * 1000 / System.Diagnostics.Stopwatch.Frequency} ms target={targetBytes[i]} draw={drawBytes[i]} restore={restoreBytes[i]}"));
 
             _output.WriteLine($"ColorTextureAlpha + Modulate sprite: {result.BytesPerIteration:N0} bytes/frame");
 
