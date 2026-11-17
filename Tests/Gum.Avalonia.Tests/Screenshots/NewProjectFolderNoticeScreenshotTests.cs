@@ -77,7 +77,7 @@ public class NewProjectFolderNoticeScreenshotTests
 
             NewProjectDialogViewModel viewModel = new NewProjectDialogViewModel(
                 TestAppBuilder.Services.GetRequiredService<ThemeSelectionViewModel>(),
-                service.Object, detector.Object, new Mock<IDialogService>().Object, new Mock<INewProjectLocationSettings>().Object)
+                service.Object, detector.Object, new Mock<IDialogService>().Object, new Mock<INewProjectLocationSettings>().Object, runChecksInline: true)
             {
                 ProjectName = "CodeProj3",
             };
