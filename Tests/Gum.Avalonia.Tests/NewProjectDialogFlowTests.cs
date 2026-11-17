@@ -45,7 +45,7 @@ public class NewProjectDialogFlowTests
         });
         viewModel = new NewProjectDialogViewModel(
             TestAppBuilder.Services.GetRequiredService<ThemeSelectionViewModel>(),
-            _service.Object, new Mock<IExistingCodeProjectDetector>().Object, new Mock<IDialogService>().Object, new Mock<INewProjectLocationSettings>().Object)
+            _service.Object, new Mock<IExistingCodeProjectDetector>().Object, new Mock<IDialogService>().Object, new Mock<INewProjectLocationSettings>().Object, runChecksInline: true)
         {
             Location = ProjectsFolder,
             IncludeCodeProject = true,
