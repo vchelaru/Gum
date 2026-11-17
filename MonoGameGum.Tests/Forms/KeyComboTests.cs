@@ -238,4 +238,165 @@ public class KeyComboTests : BaseTestClass
         bool result = sut.IsComboReleased();
         result.ShouldBeTrue();
     }
+
+    private static Mock<IInputReceiverKeyboard> AddKeyboard()
+    {
+        Mock<IInputReceiverKeyboardMonoGame> mockKeyboard = CreateKeyboardMock();
+        FrameworkElement.KeyboardsForUiControl.Add(mockKeyboard.Object);
+        return mockKeyboard.As<IInputReceiverKeyboard>();
+    }
+
+    [Fact]
+    public void IsComboPushed_ExcludedKeyDown_ReturnsFalse()
+    {
+        KeyCombo sut = new() { PushedKey = Keys.Tab, ExcludedHeldKeys = new[] { Keys.LeftShift } };
+        Mock<IInputReceiverKeyboard> keyboard = AddKeyboard();
+        keyboard.Setup(k => k.KeyPushed(Keys.Tab)).Returns(true);
+        keyboard.Setup(k => k.KeyDown(Keys.LeftShift)).Returns(true);
+
+        sut.IsComboPushed().ShouldBeFalse();
+    }
+
+    [Fact]
+    public void IsComboPushed_ExcludedKeyNotDown_ReturnsTrue()
+    {
+        KeyCombo sut = new() { PushedKey = Keys.Tab, ExcludedHeldKeys = new[] { Keys.LeftShift } };
+        Mock<IInputReceiverKeyboard> keyboard = AddKeyboard();
+        keyboard.Setup(k => k.KeyPushed(Keys.Tab)).Returns(true);
+
+        sut.IsComboPushed().ShouldBeTrue();
+    }
+
+    [Fact]
+    public void IsComboPushed_SecondExcludedKeyDown_ReturnsFalse()
+    {
+        KeyCombo sut = new() { PushedKey = Keys.Tab, ExcludedHeldKeys = new[] { Keys.LeftShift, Keys.RightAlt } };
+        Mock<IInputReceiverKeyboard> keyboard = AddKeyboard();
+        keyboard.Setup(k => k.KeyPushed(Keys.Tab)).Returns(true);
+        keyboard.Setup(k => k.KeyDown(Keys.RightAlt)).Returns(true);
+
+        sut.IsComboPushed().ShouldBeFalse();
+    }
+
+    [Fact]
+    public void IsComboPushed_EmptyExcludedList_BehavesLikeNoExclusion()
+    {
+        KeyCombo sut = new() { PushedKey = Keys.Tab, ExcludedHeldKeys = new Keys[0] };
+        Mock<IInputReceiverKeyboard> keyboard = AddKeyboard();
+        keyboard.Setup(k => k.KeyPushed(Keys.Tab)).Returns(true);
+        keyboard.Setup(k => k.KeyDown(Keys.LeftShift)).Returns(true);
+
+        sut.IsComboPushed().ShouldBeTrue();
+    }
+
+    [Fact]
+    public void IsComboPushed_NoExclusionAndOtherKeyHeld_StillMatches()
+    {
+        KeyCombo sut = new() { PushedKey = Keys.Tab };
+        Mock<IInputReceiverKeyboard> keyboard = AddKeyboard();
+        keyboard.Setup(k => k.KeyPushed(Keys.Tab)).Returns(true);
+        keyboard.Setup(k => k.KeyDown(Keys.LeftShift)).Returns(true);
+
+        sut.IsComboPushed().ShouldBeTrue();
+    }
+
+    [Fact]
+    public void IsComboPushed_HeldKeyDownAndExcludedKeyDown_ReturnsFalse()
+    {
+        KeyCombo sut = new() { PushedKey = Keys.Tab, HeldKey = Keys.LeftControl, ExcludedHeldKeys = new[] { Keys.LeftShift } };
+        Mock<IInputReceiverKeyboard> keyboard = AddKeyboard();
+        keyboard.Setup(k => k.KeyPushed(Keys.Tab)).Returns(true);
+        keyboard.Setup(k => k.KeyDown(Keys.LeftControl)).Returns(true);
+        keyboard.Setup(k => k.KeyDown(Keys.LeftShift)).Returns(true);
+
+        sut.IsComboPushed().ShouldBeFalse();
+    }
+
+    [Fact]
+    public void IsComboPushed_HeldKeyDownAndExcludedKeyUp_ReturnsTrue()
+    {
+        KeyCombo sut = new() { PushedKey = Keys.Tab, HeldKey = Keys.LeftControl, ExcludedHeldKeys = new[] { Keys.LeftShift } };
+        Mock<IInputReceiverKeyboard> keyboard = AddKeyboard();
+        keyboard.Setup(k => k.KeyPushed(Keys.Tab)).Returns(true);
+        keyboard.Setup(k => k.KeyDown(Keys.LeftControl)).Returns(true);
+
+        sut.IsComboPushed().ShouldBeTrue();
+    }
+
+    [Fact]
+    public void IsComboPushed_RepeatTypedWithExcludedKeyDown_ReturnsFalse()
+    {
+        KeyCombo sut = new() { PushedKey = Keys.Tab, IsTriggeredOnRepeat = true, ExcludedHeldKeys = new[] { Keys.LeftShift } };
+        Mock<IInputReceiverKeyboard> keyboard = AddKeyboard();
+        keyboard.Setup(k => k.KeysTyped).Returns(new List<Keys> { Keys.Tab });
+        keyboard.Setup(k => k.KeyDown(Keys.LeftShift)).Returns(true);
+
+        sut.IsComboPushed().ShouldBeFalse();
+    }
+
+    [Fact]
+    public void IsComboPushed_RepeatTypedWithExcludedKeyUp_ReturnsTrue()
+    {
+        KeyCombo sut = new() { PushedKey = Keys.Tab, IsTriggeredOnRepeat = true, ExcludedHeldKeys = new[] { Keys.LeftShift } };
+        Mock<IInputReceiverKeyboard> keyboard = AddKeyboard();
+        keyboard.Setup(k => k.KeysTyped).Returns(new List<Keys> { Keys.Tab });
+
+        sut.IsComboPushed().ShouldBeTrue();
+    }
+
+    [Fact]
+    public void IsComboDown_ExcludedKeyDown_ReturnsFalse()
+    {
+        KeyCombo sut = new() { PushedKey = Keys.Space, ExcludedHeldKeys = new[] { Keys.LeftControl } };
+        Mock<IInputReceiverKeyboard> keyboard = AddKeyboard();
+        keyboard.Setup(k => k.KeyDown(Keys.Space)).Returns(true);
+        keyboard.Setup(k => k.KeyDown(Keys.LeftControl)).Returns(true);
+
+        sut.IsComboDown().ShouldBeFalse();
+    }
+
+    [Fact]
+    public void IsComboDown_ExcludedKeyNotDown_ReturnsTrue()
+    {
+        KeyCombo sut = new() { PushedKey = Keys.Space, ExcludedHeldKeys = new[] { Keys.LeftControl } };
+        Mock<IInputReceiverKeyboard> keyboard = AddKeyboard();
+        keyboard.Setup(k => k.KeyDown(Keys.Space)).Returns(true);
+
+        sut.IsComboDown().ShouldBeTrue();
+    }
+
+    [Fact]
+    public void IsComboReleased_ExcludedKeyDown_ReturnsFalse()
+    {
+        KeyCombo sut = new() { PushedKey = Keys.Space, ExcludedHeldKeys = new[] { Keys.LeftControl } };
+        Mock<IInputReceiverKeyboard> keyboard = AddKeyboard();
+        keyboard.Setup(k => k.KeyReleased(Keys.Space)).Returns(true);
+        keyboard.Setup(k => k.KeyDown(Keys.LeftControl)).Returns(true);
+
+        sut.IsComboReleased().ShouldBeFalse();
+    }
+
+    [Fact]
+    public void IsComboReleased_ExcludedKeyNotDown_ReturnsTrue()
+    {
+        KeyCombo sut = new() { PushedKey = Keys.Space, ExcludedHeldKeys = new[] { Keys.LeftControl } };
+        Mock<IInputReceiverKeyboard> keyboard = AddKeyboard();
+        keyboard.Setup(k => k.KeyReleased(Keys.Space)).Returns(true);
+
+        sut.IsComboReleased().ShouldBeTrue();
+    }
+
+    [Fact]
+    public void DefaultTabKeyCombos_DoNotMatchTabWithAnyModifierHeld()
+    {
+        foreach (Keys modifier in new[] { Keys.LeftShift, Keys.RightShift, Keys.LeftControl, Keys.RightControl, Keys.LeftAlt, Keys.RightAlt })
+        {
+            FrameworkElement.KeyboardsForUiControl.Clear();
+            Mock<IInputReceiverKeyboard> keyboard = AddKeyboard();
+            keyboard.Setup(k => k.KeyPushed(Keys.Tab)).Returns(true);
+            keyboard.Setup(k => k.KeyDown(modifier)).Returns(true);
+
+            FrameworkElement.TabKeyCombos.Any(combo => combo.IsComboPushed()).ShouldBeFalse(modifier.ToString());
+        }
+    }
 }
