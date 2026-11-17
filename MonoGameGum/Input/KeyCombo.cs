@@ -43,9 +43,11 @@ public static class KeyComboExtensions
         {
             return false;
         }
-        foreach (var excluded in keyCombo.ExcludedHeldKeys)
+        // Indexed loop: foreach over the interface would box its enumerator on every frame.
+        IReadOnlyList<Keys> excludedKeys = keyCombo.ExcludedHeldKeys;
+        for (int i = 0; i < excludedKeys.Count; i++)
         {
-            if (keyboard.KeyDown(ToGumKey(excluded)))
+            if (keyboard.KeyDown(ToGumKey(excludedKeys[i])))
             {
                 return true;
             }
