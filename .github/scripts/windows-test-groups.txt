@@ -8,15 +8,17 @@
 #
 # Keep the streams roughly balanced when adding a project; the slowest stream sets the wall time.
 
+# SPLIT deals the headless projects round-robin in this order, so the slowest go first and land in
+# different streams (MonoGameGum.Tests ~330 s, ProjectServices ~180 s, Presentation and SkiaGum ~70 s).
 headless MonoGameGum.Tests
-headless Tests/Gum.Bundle.Tests
 headless Tests/Gum.ProjectServices.Tests
-headless Tests/Gum.ImageDiff.Tests
 headless Tests/Gum.Presentation.Tests
+headless Tests/SkiaGum.Tests
+headless Tests/Gum.Bundle.Tests
+headless Tests/Gum.ImageDiff.Tests
 headless Tests/Gum.AssemblyNameGuard.Tests
 headless Tests/Gum.RepoHygiene.Tests
 headless Tests/Gum.Analyzers.Tests
-headless Tests/SkiaGum.Tests
 headless Tests/Gum.NetStandard.Tests
 headless Tests/SilkNetGum.Tests
 headless Tests/KniSkiaGum.Tests
