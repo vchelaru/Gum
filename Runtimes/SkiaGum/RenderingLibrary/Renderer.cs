@@ -787,6 +787,15 @@ namespace RenderingLibrary.Graphics
         internal SKSurface? TryGetRenderTargetSurfaceFor(IRenderableIpso container)
             => _renderTargetService.TryGetExisting(ResolveRenderTargetCacheOwner(container))?.Surface;
 
+        // Shutdown: frees every cached render-target surface and drops the context references. The GL context
+        // must still be current for GPU surfaces.
+        internal void ReleaseRenderTargets()
+        {
+            DisposeBakedImages();
+            _referencedRenderTargetOwners.Clear();
+            _renderTargetService.DisposeAll();
+        }
+
         private void DisposeBakedImages()
         {
             foreach (SKImage image in _bakedImages.Values)
@@ -915,6 +924,7 @@ namespace RenderingLibrary.Graphics
             int width = (int)System.Math.Ceiling(container.Width * zoom + fractionX);
             int height = (int)System.Math.Ceiling(container.Height * zoom + fractionY);
 
+            _renderTargetService.UseContext(managers.Canvas.Context);
             SkiaRenderTarget? renderTarget = _renderTargetService.GetFor(owner, width, height);
             if (renderTarget == null)
             {
@@ -1062,6 +1072,7 @@ namespace RenderingLibrary.Graphics
             GetDevicePixelFraction(container, zoom, out float fractionX, out float fractionY);
             int width = (int)System.Math.Ceiling(container.Width * zoom + fractionX);
             int height = (int)System.Math.Ceiling(container.Height * zoom + fractionY);
+            _renderTargetService.UseContext(managers.Canvas.Context);
             SkiaRenderTarget? image = _renderTargetService.GetFor(owner, width, height);
             if (image == null)
             {
@@ -1071,7 +1082,7 @@ namespace RenderingLibrary.Graphics
             RenderTargetBakeCount++;
             if (plan.Settings.RenderTargetEffect is SKRuntimeEffect)
             {
-                using SKSurface scratch = SKSurface.Create(new SKImageInfo(width, height, SKColorType.Rgba8888, SKAlphaType.Premul));
+                using SKSurface scratch = _renderTargetService.CreateSurface(width, height);
                 BakeChildrenInto(container, managers, scratch, zoom, fractionX, fractionY);
                 using SKImage source = scratch.Snapshot();
 
@@ -1109,6 +1120,8 @@ namespace RenderingLibrary.Graphics
                 return;
             }
 
+            // Selects the cache of the canvas being drawn to before any manual-cache validity check.
+            _renderTargetService.UseContext(managers.CanvasOrNull?.Context);
             RenderTargetScanCount++;
             CollectReferencedRenderTargets(whatToRender);
             if (HasAnyRenderTarget(whatToRender))
