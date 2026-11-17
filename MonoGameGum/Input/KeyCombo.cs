@@ -19,6 +19,13 @@ public struct KeyCombo
 {
     public Keys PushedKey;
     public Keys? HeldKey;
+
+    /// <summary>
+    /// Keys that must NOT be down for this combo to match. A combo with no <see cref="HeldKey"/>
+    /// otherwise matches while any other key is held, so Tab also matches Shift+Tab; list the
+    /// modifiers here to make the combo match only the exact chord.
+    /// </summary>
+    public IReadOnlyList<Keys>? ExcludedHeldKeys;
     public bool IsTriggeredOnRepeat;
 }
 
@@ -30,11 +37,27 @@ public static class KeyComboExtensions
     // Values align across both enums, so an int round-trip is safe.
     private static Gum.Forms.Input.Keys ToGumKey(Keys key) => (Gum.Forms.Input.Keys)(int)key;
 
+    private static bool IsExcludedKeyDown(this KeyCombo keyCombo, IInputReceiverKeyboard keyboard)
+    {
+        if (keyCombo.ExcludedHeldKeys == null)
+        {
+            return false;
+        }
+        foreach (var excluded in keyCombo.ExcludedHeldKeys)
+        {
+            if (keyboard.KeyDown(ToGumKey(excluded)))
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public static bool IsComboPushed(this KeyCombo keyCombo)
     {
         foreach (var keyboard in FrameworkElement.KeyboardsForUiControl)
         {
-            var isHeld = keyCombo.HeldKey == null || keyboard.KeyDown(ToGumKey(keyCombo.HeldKey.Value));
+            var isHeld = (keyCombo.HeldKey == null || keyboard.KeyDown(ToGumKey(keyCombo.HeldKey.Value))) && !keyCombo.IsExcludedKeyDown(keyboard);
             if (isHeld)
             {
                 return keyboard.KeyPushed(ToGumKey(keyCombo.PushedKey)) ||
@@ -48,6 +71,10 @@ public static class KeyComboExtensions
     {
         foreach (var keyboard in FrameworkElement.KeyboardsForUiControl)
         {
+            if (keyCombo.IsExcludedKeyDown(keyboard))
+            {
+                continue;
+            }
             if (keyCombo.HeldKey == null)
             {
                 // see if the normal key was just released:
@@ -72,7 +99,7 @@ public static class KeyComboExtensions
     {
         foreach (var keyboard in FrameworkElement.KeyboardsForUiControl)
         {
-            var isHeld = keyCombo.HeldKey == null || keyboard.KeyDown(ToGumKey(keyCombo.HeldKey.Value));
+            var isHeld = (keyCombo.HeldKey == null || keyboard.KeyDown(ToGumKey(keyCombo.HeldKey.Value))) && !keyCombo.IsExcludedKeyDown(keyboard);
 
             return isHeld && keyboard.KeyDown(ToGumKey(keyCombo.PushedKey));
         }

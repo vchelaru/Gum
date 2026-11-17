@@ -1748,7 +1748,18 @@ public class FrameworkElement : INotifyPropertyChanged
     /// </summary>
     public static List<KeyCombo> TabKeyCombos { get; set; } = new ()
     {
-        new KeyCombo { PushedKey = Keys.Tab, IsTriggeredOnRepeat = true }
+        new KeyCombo
+        {
+            PushedKey = Keys.Tab,
+            IsTriggeredOnRepeat = true,
+            // Without these, Tab also matches Shift+Tab (a reverse combo) and Ctrl/Alt+Tab.
+            ExcludedHeldKeys = new[]
+            {
+                Keys.LeftShift, Keys.RightShift,
+                Keys.LeftControl, Keys.RightControl,
+                Keys.LeftAlt, Keys.RightAlt
+            }
+        }
     };
 
     /// <summary>
@@ -1801,19 +1812,10 @@ public class FrameworkElement : INotifyPropertyChanged
     {
         foreach (var keyboard in KeyboardsForUiControl)
         {
-            foreach(var tabKeyCombo in TabKeyCombos)
-            {
-                if(tabKeyCombo.IsComboPushed())
-                {
-                    // This allows TextBoes to set AcceptsTab to true
-                    if(IsTabNavigationEnabled == true || tabKeyCombo.PushedKey != Keys.Tab)
-                    {
-                        this.HandleTab(TabDirection.Down, this, loop: true);
-                        break; // one tab per frame
-                    }
-                }
-            }
-
+            // The reverse combos are the more specific chord (Shift+Tab), so they are checked first
+            // and a match suppresses the forward combos. Otherwise a forward combo without
+            // ExcludedHeldKeys (such as a custom one) also matches and tabs forward first.
+            bool tabbedReverse = false;
             foreach(var tabReverseKeyCombo in TabReverseKeyCombos)
             {
                 if(tabReverseKeyCombo.IsComboPushed())
@@ -1822,7 +1824,24 @@ public class FrameworkElement : INotifyPropertyChanged
                     if (IsTabNavigationEnabled == true || tabReverseKeyCombo.PushedKey != Keys.Tab)
                     {
                         this.HandleTab(TabDirection.Up, this, loop: true);
+                        tabbedReverse = true;
                         break;
+                    }
+                }
+            }
+
+            if (!tabbedReverse)
+            {
+                foreach(var tabKeyCombo in TabKeyCombos)
+                {
+                    if(tabKeyCombo.IsComboPushed())
+                    {
+                        // This allows TextBoes to set AcceptsTab to true
+                        if(IsTabNavigationEnabled == true || tabKeyCombo.PushedKey != Keys.Tab)
+                        {
+                            this.HandleTab(TabDirection.Down, this, loop: true);
+                            break; // one tab per frame
+                        }
                     }
                 }
             }

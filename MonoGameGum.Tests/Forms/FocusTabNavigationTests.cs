@@ -91,4 +91,82 @@ public class FocusTabNavigationTests : BaseTestClass
         textBox2.IsFocused.ShouldBeFalse();
         textBox1.IsFocused.ShouldBeTrue();
     }
+
+    private static void AddKeyboard(Keys pushed, params Keys[] held)
+    {
+        Mock<IInputReceiverKeyboardMonoGame> keyboard = new Mock<IInputReceiverKeyboardMonoGame>();
+        keyboard.As<IInputReceiverKeyboard>().Setup(k => k.KeyPushed(pushed)).Returns(true);
+        foreach (Keys key in held)
+        {
+            keyboard.As<IInputReceiverKeyboard>().Setup(k => k.KeyDown(key)).Returns(true);
+        }
+        keyboard.As<IInputReceiverKeyboard>().Setup(k => k.KeysTyped).Returns(new List<Keys>());
+        FrameworkElement.KeyboardsForUiControl.Add(keyboard.Object);
+    }
+
+    private static (List<Button> Buttons, List<string> Log) CreateLoggedButtons(int count)
+    {
+        StackPanel stackPanel = new StackPanel();
+        stackPanel.AddToRoot();
+        List<string> log = new List<string>();
+        List<Button> buttons = new List<Button>();
+        for (int i = 0; i < count; i++)
+        {
+            Button button = new Button();
+            int n = i;
+            button.GotFocus += (_, _) => log.Add("got" + n);
+            button.LostFocus += (_, _) => log.Add("lost" + n);
+            stackPanel.AddChild(button);
+            buttons.Add(button);
+        }
+        return (buttons, log);
+    }
+
+    [Theory]
+    [InlineData(Keys.LeftShift)]
+    [InlineData(Keys.RightShift)]
+    public void HandleKeyboardFocusUpdate_ShiftTab_FocusesOnlyThePreviousElement(Keys shift)
+    {
+        var (buttons, log) = CreateLoggedButtons(3);
+        buttons[1].IsFocused = true;
+        log.Clear();
+        AddKeyboard(Keys.Tab, shift);
+
+        buttons[1].OnFocusUpdate();
+
+        buttons[0].IsFocused.ShouldBeTrue();
+        log.ShouldBe(new[] { "lost1", "got0" });
+    }
+
+    [Fact]
+    public void HandleKeyboardFocusUpdate_Tab_FocusesOnlyTheNextElement()
+    {
+        var (buttons, log) = CreateLoggedButtons(3);
+        buttons[1].IsFocused = true;
+        log.Clear();
+        AddKeyboard(Keys.Tab);
+
+        buttons[1].OnFocusUpdate();
+
+        buttons[2].IsFocused.ShouldBeTrue();
+        log.ShouldBe(new[] { "lost1", "got2" });
+    }
+
+    [Theory]
+    [InlineData(Keys.LeftControl)]
+    [InlineData(Keys.RightControl)]
+    [InlineData(Keys.LeftAlt)]
+    [InlineData(Keys.RightAlt)]
+    public void HandleKeyboardFocusUpdate_TabWithControlOrAlt_DoesNotMoveFocus(Keys modifier)
+    {
+        var (buttons, log) = CreateLoggedButtons(3);
+        buttons[1].IsFocused = true;
+        log.Clear();
+        AddKeyboard(Keys.Tab, modifier);
+
+        buttons[1].OnFocusUpdate();
+
+        buttons[1].IsFocused.ShouldBeTrue();
+        log.ShouldBeEmpty();
+    }
 }
