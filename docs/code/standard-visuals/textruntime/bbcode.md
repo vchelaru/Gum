@@ -7,23 +7,14 @@ TextRuntime supports using BBCode-like syntax for formatting individual words an
 Using BBCode for TextRuntimes supports all of the functionality outlined in the Text documentation which can be found here: [https://docs.flatredball.com/gum/gum-tool/gum-elements/text/text#using-bbcode-for-inline-styling](https://docs.flatredball.com/gum/gum-tool/gum-elements/text/text#using-bbcode-for-inline-styling)
 
 {% hint style="info" %}
-The following BBCode variables require font generation:
+`Color`, `Red`, `Green`, `Blue`, `FontScale`, and `Custom` need no font setup on any runtime.
 
-* IsBold
-* IsItalic
-* Font
-* FontSize
-* OutlineThickness
-* HasDropshadow
+`Font`, `FontSize`, `IsBold`, `IsItalic`, `OutlineThickness`, and `HasDropshadow` draw text in a different font than the rest of the TextRuntime, so that font has to exist. How it gets made depends on the runtime:
 
-The Gum tool generates these fonts into the FontCache folder when it displays the text. `gumcli fonts` generates the ones used by BBCode tags in the Text values of your project's elements, so a fresh checkout or CI build has them without opening the tool. BBCode text set from code is not in the project, so bake those fonts with the `--font` options of [gumcli fonts](../../../cli/fonts.md). For code-only projects, the recommended approach is to use [dynamic font generation via KernSmith](fonts.md#dynamic-font-generation-recommended), which handles font creation at runtime with no extra setup. Without the Gum tool or KernSmith, you must provide pre-built `.fnt` files for each font combination your BBCode text uses.
+* **MonoGame, KNI, FNA, and raylib** draw with bitmap fonts (`.fnt` files). With [KernSmith](../../files-and-fonts/font-strategies.md#dynamic-kernsmith-generation), Gum generates the font the first time a tag asks for it, with no extra setup. This is the recommended approach for code-only projects. Without KernSmith, you must provide a pre-built `.fnt` file for each font combination your BBCode text uses. The Gum tool generates these into the FontCache folder when it displays the text. `gumcli fonts` generates the ones used by BBCode tags in the Text values of your project's elements, so a fresh checkout or CI build has them without opening the tool. BBCode text set from code is not in the project, so bake those fonts with the `--font` options of [gumcli fonts](../../../cli/fonts.md).
+* **[SkiaSharp-based runtimes](../../about/runtimes.md)** need no font files and no KernSmith. `Font` takes an installed font family, a registered family, or a `.ttf` path, and `IsBold` and `IsItalic` pick the matching style of that family. See [Dynamic Generation on SkiaGum](../../files-and-fonts/font-strategies.md#dynamic-generation-on-skiagum) and [Bold and Italic on SkiaGum](../../files-and-fonts/font-strategies.md#bold-and-italic-on-skiagum). `HasDropshadow` is the exception, see below.
 
-The following variables work without any font setup:
-
-* Color
-* Red/Green/Blue
-* FontScale
-* Custom (see below)
+For help choosing a font strategy, see the [Fonts hub](../../files-and-fonts/fonts.md).
 {% endhint %}
 
 ## Code Example: Basic BBCode Styling
@@ -39,7 +30,7 @@ text.AddToRoot();
 
 [Try on XnaFiddle.NET](https://xnafiddle.net/#snippet=H4sIAAAAAAAACkWOTQvCMAyG7_sVoSeF4cCjsoMfODx4mbt1PXQ2zEDXQtdOUfzvdoMphECe5CHvOwFg574IHduAdwHTEZAhT1LTCyNlg3Tg8ekhB4MPuFhjC9lhdFZFwCM6Gsi0qyqelMF46nCx3NZmVCYYvZpVd-ohFj9YbV1eohIOFc-mUaQz3-uAoontv5FGAT9Z4683qTFfi4Zanv2AmLLVbP64U6qypbU-hmDJ5wu5H0Ud4QAAAA)
 
-BBCode tags can be nested and combined. Tags are written as `[TagName=Value]text[/TagName]`. The supported tags include `Color`, `Red`, `Green`, `Blue`, `FontScale`, `Font`, `FontSize`, `IsBold`, `IsItalic`, `OutlineThickness`, `HasDropshadow`, `Custom`, `Glyph` (see [Inline Glyphs](#inline-glyphs)), and `Link` (see [Links](#links)).
+BBCode tags can be nested and combined. Tags are written as `[TagName=Value]text[/TagName]`. The supported tags include `Color`, `Red`, `Green`, `Blue`, `FontScale`, `Font`, `FontSize`, `IsBold`, `IsItalic`, `OutlineThickness`, `HasDropshadow`, `Custom`, `Glyph` (see [Inline Glyphs](#inline-glyphs)), `Link` (see [Links](#links)), and `State` (see [States](#states)).
 
 Tag names are not case sensitive, and a closing tag matches its opening tag whatever the case, so `[color=Red]red[/COLOR]` works the same as `[Color=Red]red[/Color]`.
 
@@ -64,7 +55,7 @@ text.AddToRoot();
 ```
 
 {% hint style="info" %}
-`HasDropshadow` toggles the shadow on MonoGame, KNI, FNA, and raylib. On [SkiaSharp-based runtimes](../../about/runtimes.md) the tag is parsed and stripped from the text but has no effect - the shadow always follows the TextRuntime's own `HasDropshadow` value there.
+`HasDropshadow` toggles the shadow on MonoGame, KNI, FNA, and raylib. On [SkiaSharp-based runtimes](../../about/runtimes.md) the tag is parsed and stripped from the text but has no effect. The shadow always follows the TextRuntime's own `HasDropshadow` value there.
 {% endhint %}
 
 ## Inline Glyphs
@@ -133,6 +124,36 @@ For the index math behind `GetCharacterIndexAtPosition`, see [GetCharacterIndexA
 Available in November 2026, or now if building Gum from source.
 {% endhint %}
 
+## States
+
+The `State` tag applies a named state of the TextRuntime to the text it wraps. This lets you define a style once, in the Gum tool's **States** tab or in code, and reuse it by name. Only these variables apply to the wrapped text: `Color`, `Red`, `Green`, `Blue`, `FontScale`, `Font`, `FontSize`, `OutlineThickness`, `IsBold`, `IsItalic`, `UseCustomFont`, and `HasDropshadow`. Any other variable in the state, such as `X` or `Width`, is skipped. A state name that does not exist is ignored.
+
+The following code defines a `Highlighted` state in code and uses it in a tag:
+
+```csharp
+// Initialize
+var highlighted = new Gum.DataTypes.Variables.StateSave { Name = "Highlighted" };
+highlighted.Variables.Add(new Gum.DataTypes.Variables.VariableSave
+{
+    Name = "Color",
+    Value = System.Drawing.Color.Gold
+});
+highlighted.Variables.Add(new Gum.DataTypes.Variables.VariableSave
+{
+    Name = "IsBold",
+    Value = true
+});
+
+var text = new TextRuntime();
+text.AddStates(new System.Collections.Generic.List<Gum.DataTypes.Variables.StateSave> { highlighted });
+text.Text = "Plain text with a [State=Highlighted]bold gold run[/State] in it.";
+text.AddToRoot();
+```
+
+{% hint style="info" %}
+`State` is not supported on [SkiaSharp-based runtimes](../../about/runtimes.md). The tag is not recognized there, so it draws as literal text.
+{% endhint %}
+
 ## Custom Functions
 
 TextRuntime instances can use the `Custom` tag to define a custom function to be used when rendering a Text. This tag can be used to customize letters in a TextRuntime using custom code, allowing for effects such as wavy, rainbow, or shaking text.
@@ -152,7 +173,7 @@ To use the Custom tag, the following must be performed:
 1. A function must be declared which is of one of the following types:
    * `Func<int, string, LetterCustomization>` - the int value is the index of the letter in the whole displayed text, with all BBCode tags removed. The string represents the text inside the custom block. The returned LetterCustomization instance includes the desired modifications to the letter. Register with `Text.Customizations`.
    * `Func<int, string, LetterCustomization, LetterCustomization>` - same as above, but the third parameter is a LetterCustomization containing the letter's current state (color, offset, scale) as set by prior BBCode tags. This allows relative modifications such as darkening the current color. Register with `Text.ContextCustomizations`.
-2. This function must be registered with the `RenderingLibrary.Graphics.Text` type using the appropriate dictionary.
+2. This function must be registered with the `RenderingLibrary.Graphics.Text` type using the appropriate dictionary. On SkiaSharp-based runtimes, register with `SkiaGum.Text` and return a `SkiaGum.LetterCustomization`, which has the same fields. On raylib, use `Gum.Renderables.Text` and `Gum.Renderables.LetterCustomization`.
 3. A Custom tag must be included in the text string.
 
 The int index counts displayed characters from the start of the whole text, not from the start of the block. In `"Gold: [Custom=Wave]50[/Custom]"` the function receives 6 for `5` and 7 for `0`, because `Gold: ` is six characters. The index is a UTF-16 index with the BBCode tags removed, so an emoji counts as two. The string parameter is only the text inside the block, so its `Length` is the block's length.
