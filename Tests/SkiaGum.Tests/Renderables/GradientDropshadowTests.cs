@@ -169,4 +169,80 @@ public class GradientDropshadowTests
         int tolerance = alpha1 == alpha2 ? 2 : 0;
         DropshadowBlendTests.MaxDifference(actual, expected).ShouldBeLessThanOrEqualTo(tolerance);
     }
+
+    // The shape with the blurred draw turned off: the image filter path every gradient shape took before.
+    private sealed class ImageFilterCircle : Circle
+    {
+        protected override bool DrawsBlurredShadow => false;
+    }
+
+    private sealed class ImageFilterRectangle : RoundedRectangle
+    {
+        protected override bool DrawsBlurredShadow => false;
+    }
+
+    private static void ConfigureCircle(Circle circle)
+    {
+        circle.X = 30;
+        circle.Y = 30;
+        circle.Width = 110;
+        circle.Height = 110;
+        circle.UseGradient = true;
+        circle.Red1 = 250; circle.Green1 = 60; circle.Blue1 = 40; circle.Alpha1 = 255;
+        circle.Red2 = 30; circle.Green2 = 80; circle.Blue2 = 240; circle.Alpha2 = 255;
+        circle.GradientX1 = 0; circle.GradientY1 = 0;
+        circle.GradientX2 = 0; circle.GradientY2 = 110;
+        circle.HasDropshadow = true;
+        circle.DropshadowOffsetX = 5;
+        circle.DropshadowOffsetY = 8;
+        circle.DropshadowBlurX = 16;
+        circle.DropshadowBlurY = 16;
+        circle.DropshadowColor = DropColor;
+    }
+
+    private static SKBitmap Draw(RenderableShapeBase shape)
+    {
+        SKBitmap bitmap = new SKBitmap(Size, Size);
+        using SKCanvas canvas = new SKCanvas(bitmap);
+        canvas.Clear(new SKColor(60, 120, 200, 255));
+        SystemManagers managers = new SystemManagers();
+        managers.Canvas = canvas;
+        shape.Render(managers);
+        return bitmap;
+    }
+
+    [Fact]
+    public void Render_CircleGradientDropshadow_MatchesTheImageFilterOutput()
+    {
+        Circle actual = new Circle();
+        ConfigureCircle(actual);
+        ImageFilterCircle expected = new ImageFilterCircle();
+        ConfigureCircle(expected);
+
+        using SKBitmap actualBitmap = Draw(actual);
+        using SKBitmap expectedBitmap = Draw(expected);
+
+        DropshadowBlendTests.MaxDifference(actualBitmap, expectedBitmap).ShouldBeLessThanOrEqualTo(2);
+    }
+
+    private static void ConfigureStroke(RoundedRectangle shape)
+    {
+        ConfigureGradient(shape, 255, 255);
+        shape.IsFilled = false;
+        shape.StrokeWidth = 10;
+    }
+
+    [Fact]
+    public void Render_StrokeOnlyGradientDropshadow_MatchesTheImageFilterOutput()
+    {
+        RoundedRectangle actual = new RoundedRectangle();
+        ConfigureStroke(actual);
+        ImageFilterRectangle expected = new ImageFilterRectangle();
+        ConfigureStroke(expected);
+
+        using SKBitmap actualBitmap = Draw(actual);
+        using SKBitmap expectedBitmap = Draw(expected);
+
+        DropshadowBlendTests.MaxDifference(actualBitmap, expectedBitmap).ShouldBeLessThanOrEqualTo(2);
+    }
 }
