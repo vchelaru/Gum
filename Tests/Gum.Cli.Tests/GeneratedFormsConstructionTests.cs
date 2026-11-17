@@ -21,8 +21,40 @@ namespace Gum.Cli.Tests;
 /// before they exist, builds them in the wrong order, or creates a second Forms control on one
 /// visual fails here rather than in a game. Gum Forms FullyInCode and legacy MonoGame FindByName.
 /// </summary>
-public partial class GeneratedFormsConstructionTests : BaseTestClass
+public partial class GeneratedFormsConstructionTests : BaseTestClass, IClassFixture<GeneratedFormsConstructionTests.SharedBuilds>
 {
+    private readonly SharedBuilds _sharedBuilds;
+
+    // Where the last GenerateAndCompile wrote its project and generated code.
+    private string _generatedDirectory;
+
+    public GeneratedFormsConstructionTests(SharedBuilds sharedBuilds)
+    {
+        _sharedBuilds = sharedBuilds;
+        _generatedDirectory = TempDirectory;
+    }
+
+    /// <summary>
+    /// The unedited template's generated and compiled output, built once per output library and shared by
+    /// the tests that only construct from it. Generating and compiling takes ~2 s a test (#8169).
+    /// </summary>
+    public sealed class SharedBuilds : IDisposable
+    {
+        public string Root { get; } = Path.Combine(Path.GetTempPath(), "GumCliTests", "GeneratedFormsShared_" + Guid.NewGuid().ToString("N"));
+
+        public Dictionary<(OutputLibrary, ObjectInstantiationType), (Assembly Assembly, string Directory)> Builds { get; } = new();
+
+        public void Dispose()
+        {
+            try
+            {
+                Directory.Delete(Root, recursive: true);
+            }
+            catch (IOException) { }
+            catch (UnauthorizedAccessException) { }
+        }
+    }
+
     [Fact]
     public void Constructor_EveryGeneratedFormsControl_DoesNotThrow()
     {
@@ -107,7 +139,7 @@ public partial class GeneratedFormsConstructionTests : BaseTestClass
     public void Constructor_DerivedButton_AppliesStateAfterDerivedDefaults()
     {
         object button = Construct(GenerateAndCompile(), "ButtonCloseDerived");
-        File.ReadAllText(Directory.GetFiles(TempDirectory, "ButtonCloseDerived.Generated.cs", SearchOption.AllDirectories).Single())
+        File.ReadAllText(Directory.GetFiles(_generatedDirectory, "ButtonCloseDerived.Generated.cs", SearchOption.AllDirectories).Single())
             .ShouldContain("this.FocusedIndicator.Visible = true;");
 
         // The derived default shows FocusedIndicator; the Enabled state, applied after the defaults, hides it.
@@ -600,7 +632,7 @@ public partial class GeneratedFormsConstructionTests : BaseTestClass
     [InlineData(OutputLibrary.Silk)]
     public void Generate_LegacyFindByNameDerived_PassesFullInstantiationFalseToBase(OutputLibrary outputLibrary)
     {
-        Generate(outputLibrary, ObjectInstantiationType.FindByName, editProject: null);
+        Generate(TempDirectory, outputLibrary, ObjectInstantiationType.FindByName, editProject: null);
 
         string derived = File.ReadAllText(Directory.GetFiles(TempDirectory, "ButtonCloseDerivedRuntime.Generated.cs", SearchOption.AllDirectories).Single());
         derived.ShouldContain("public ButtonCloseDerivedRuntime(bool fullInstantiation = true, bool tryCreateFormsObject = true) : base(fullInstantiation: false, tryCreateFormsObject: tryCreateFormsObject)");
@@ -655,7 +687,7 @@ public partial class GeneratedFormsConstructionTests : BaseTestClass
     [Fact]
     public void FormsControlConstructor_LegacyMonoGameFindByName_UsesGeneratedVisualWithoutSecondControl()
     {
-        Assembly generated = GenerateAndCompile(OutputLibrary.MonoGame, ObjectInstantiationType.FindByName);
+        Assembly generated = GenerateAndCompile(OutputLibrary.MonoGame, ObjectInstantiationType.FindByName, freshAssembly: true);
         LoadProjectForFindByName();
         Type frameworkElementType = GumCommon.GetType("Gum.Forms.Controls.FrameworkElement", throwOnError: true)!;
         IDictionary templates = (IDictionary)frameworkElementType.GetProperty("DefaultFormsTemplates")!.GetValue(null)!;
@@ -699,7 +731,7 @@ public partial class GeneratedFormsConstructionTests : BaseTestClass
         Type systemManagersType = MonoGameGum.GetType("RenderingLibrary.SystemManagers", throwOnError: true)!;
         systemManagersType.GetMethod("RegisterComponentRuntimeInstantiations", BindingFlags.NonPublic | BindingFlags.Instance)!
             .Invoke(systemManagersType.GetProperty("Default")!.GetValue(null), new object[] { true });
-        GumProjectSave project = GumProjectSave.Load(Path.Combine(TempDirectory, "MyProject.gumx"), out _)!;
+        GumProjectSave project = GumProjectSave.Load(Path.Combine(_generatedDirectory, "MyProject.gumx"), out _)!;
         Gum.Managers.ObjectFinder.Self.GumProjectSave = project;
         Gum.Managers.StandardElementsManager.Self.RegisterExtendedDefaultStates();
         project.Initialize();
@@ -715,24 +747,44 @@ public partial class GeneratedFormsConstructionTests : BaseTestClass
         Action<GumProjectSave>? editProject = null,
         Action<CodeOutputProjectSettings>? editSettings = null,
         Action? afterCodegen = null,
-        string? theme = null)
+        string? theme = null,
+        bool freshAssembly = false)
     {
-        Generate(outputLibrary, instantiationType, editProject, editSettings, theme);
+        // A test that runs the module initializer itself needs an assembly no earlier test has touched.
+        bool shareable = !freshAssembly && !obsoleteUseIsError && editProject == null && editSettings == null
+            && afterCodegen == null && theme == null;
+        if (shareable && _sharedBuilds.Builds.TryGetValue((outputLibrary, instantiationType), out var shared))
+        {
+            _generatedDirectory = shared.Directory;
+            InstallHeadlessRuntime();
+            return shared.Assembly;
+        }
+
+        _generatedDirectory = shareable
+            ? Path.Combine(_sharedBuilds.Root, $"{outputLibrary}_{instantiationType}")
+            : TempDirectory;
+        Directory.CreateDirectory(_generatedDirectory);
+        Generate(_generatedDirectory, outputLibrary, instantiationType, editProject, editSettings, theme);
         afterCodegen?.Invoke();
 
-        Assembly generated = Compile(Directory.GetFiles(TempDirectory, "*.cs", SearchOption.AllDirectories), obsoleteUseIsError);
+        Assembly generated = Compile(Directory.GetFiles(_generatedDirectory, "*.cs", SearchOption.AllDirectories), obsoleteUseIsError);
+        if (shareable)
+        {
+            _sharedBuilds.Builds[(outputLibrary, instantiationType)] = (generated, _generatedDirectory);
+        }
         InstallHeadlessRuntime();
         return generated;
     }
 
     private void Generate(
+        string directory,
         OutputLibrary outputLibrary,
         ObjectInstantiationType instantiationType,
         Action<GumProjectSave>? editProject,
         Action<CodeOutputProjectSettings>? editSettings = null,
         string? theme = null)
     {
-        string gumxPath = Path.Combine(TempDirectory, "MyProject.gumx");
+        string gumxPath = Path.Combine(directory, "MyProject.gumx");
         if (theme == null)
         {
             new FormsTemplateCreator().Create(gumxPath);
@@ -744,7 +796,7 @@ public partial class GeneratedFormsConstructionTests : BaseTestClass
                 .FindThemeDirectory(theme).ShouldNotBeNull(theme);
             new FormsTemplateCreator().CreateFromTheme(gumxPath, themeDirectory);
         }
-        File.WriteAllText(Path.Combine(TempDirectory, "MyGame.csproj"),
+        File.WriteAllText(Path.Combine(directory, "MyGame.csproj"),
             "<Project Sdk=\"Microsoft.NET.Sdk\"><ItemGroup>" +
             "<PackageReference Include=\"MonoGame.Framework.DesktopGL\" Version=\"3.8.4\" />" +
             "</ItemGroup></Project>");
@@ -752,7 +804,7 @@ public partial class GeneratedFormsConstructionTests : BaseTestClass
         // codegen replaces settings without a CodeProjectRoot with auto-detected FindByName ones.
         CliTestHelper.Run("codegen-init", gumxPath).ExitCode.ShouldBe(0);
         CodeOutputProjectSettingsManager settingsManager = new CodeOutputProjectSettingsManager(
-            new SilentLogger(), new FixedProjectDirectoryProvider(TempDirectory + Path.DirectorySeparatorChar));
+            new SilentLogger(), new FixedProjectDirectoryProvider(directory + Path.DirectorySeparatorChar));
         CodeOutputProjectSettings settings = settingsManager.CreateOrLoadSettingsForProject();
         settings.OutputLibrary = outputLibrary;
         settings.ObjectInstantiationType = instantiationType;
