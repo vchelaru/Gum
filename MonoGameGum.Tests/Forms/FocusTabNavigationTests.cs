@@ -403,7 +403,7 @@ public class FocusTabNavigationTests : BaseTestClass
     }
 
     [Fact]
-    public void HandleKeyboardFocusUpdate_CustomForwardComboWithoutExclusion_ShiftTabStillMovesOnlyBack()
+    public void HandleKeyboardFocusUpdate_CustomForwardComboWithoutHeldKey_ShiftTabStillMovesOnlyBack()
     {
         var (buttons, log) = CreateLoggedButtons(3);
         buttons[1].IsFocused = true;

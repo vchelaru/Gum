@@ -18,14 +18,12 @@ namespace Gum.Forms.Controls;
 public struct KeyCombo
 {
     public Keys PushedKey;
-    public Keys? HeldKey;
 
     /// <summary>
-    /// Keys that must NOT be down for this combo to match. A combo with no <see cref="HeldKey"/>
-    /// otherwise matches while any other key is held, so Tab also matches Shift+Tab; list the
-    /// modifiers here to make the combo match only the exact chord.
+    /// A key that must be down for the combo to match. When null, the combo matches only while no
+    /// modifier (Shift, Control or Alt) is down, so a plain Tab combo does not also match Shift+Tab.
     /// </summary>
-    public IReadOnlyList<Keys>? ExcludedHeldKeys;
+    public Keys? HeldKey;
     public bool IsTriggeredOnRepeat;
 }
 
@@ -37,29 +35,40 @@ public static class KeyComboExtensions
     // Values align across both enums, so an int round-trip is safe.
     private static Gum.Forms.Input.Keys ToGumKey(Keys key) => (Gum.Forms.Input.Keys)(int)key;
 
-    private static bool IsExcludedKeyDown(this KeyCombo keyCombo, IInputReceiverKeyboard keyboard)
+    private static readonly Gum.Forms.Input.Keys[] ModifierKeys = new[]
     {
-        if (keyCombo.ExcludedHeldKeys == null)
+        Gum.Forms.Input.Keys.LeftShift, Gum.Forms.Input.Keys.RightShift,
+        Gum.Forms.Input.Keys.LeftControl, Gum.Forms.Input.Keys.RightControl,
+        Gum.Forms.Input.Keys.LeftAlt, Gum.Forms.Input.Keys.RightAlt
+    };
+
+    // A combo with no HeldKey requires that no modifier is down. A modifier that is the combo's own
+    // PushedKey is ignored so a combo on Shift itself can still match. Indexed loop: this runs per
+    // frame and must not allocate.
+    private static bool IsHeldRequirementMet(KeyCombo keyCombo, IInputReceiverKeyboard keyboard)
+    {
+        if (keyCombo.HeldKey != null)
         {
-            return false;
+            return keyboard.KeyDown(ToGumKey(keyCombo.HeldKey.Value));
         }
-        // Indexed loop: foreach over the interface would box its enumerator on every frame.
-        IReadOnlyList<Keys> excludedKeys = keyCombo.ExcludedHeldKeys;
-        for (int i = 0; i < excludedKeys.Count; i++)
+
+        Gum.Forms.Input.Keys pushedKey = ToGumKey(keyCombo.PushedKey);
+        for (int i = 0; i < ModifierKeys.Length; i++)
         {
-            if (keyboard.KeyDown(ToGumKey(excludedKeys[i])))
+            Gum.Forms.Input.Keys modifier = ModifierKeys[i];
+            if (modifier != pushedKey && keyboard.KeyDown(modifier))
             {
-                return true;
+                return false;
             }
         }
-        return false;
+        return true;
     }
 
     public static bool IsComboPushed(this KeyCombo keyCombo)
     {
         foreach (var keyboard in FrameworkElement.KeyboardsForUiControl)
         {
-            var isHeld = (keyCombo.HeldKey == null || keyboard.KeyDown(ToGumKey(keyCombo.HeldKey.Value))) && !keyCombo.IsExcludedKeyDown(keyboard);
+            var isHeld = IsHeldRequirementMet(keyCombo, keyboard);
             if (isHeld)
             {
                 return keyboard.KeyPushed(ToGumKey(keyCombo.PushedKey)) ||
@@ -73,14 +82,10 @@ public static class KeyComboExtensions
     {
         foreach (var keyboard in FrameworkElement.KeyboardsForUiControl)
         {
-            if (keyCombo.IsExcludedKeyDown(keyboard))
-            {
-                continue;
-            }
             if (keyCombo.HeldKey == null)
             {
                 // see if the normal key was just released:
-                if (keyboard.KeyReleased(ToGumKey(keyCombo.PushedKey)))
+                if (IsHeldRequirementMet(keyCombo, keyboard) && keyboard.KeyReleased(ToGumKey(keyCombo.PushedKey)))
                 {
                     return true;
                 }
@@ -101,7 +106,7 @@ public static class KeyComboExtensions
     {
         foreach (var keyboard in FrameworkElement.KeyboardsForUiControl)
         {
-            var isHeld = (keyCombo.HeldKey == null || keyboard.KeyDown(ToGumKey(keyCombo.HeldKey.Value))) && !keyCombo.IsExcludedKeyDown(keyboard);
+            var isHeld = IsHeldRequirementMet(keyCombo, keyboard);
 
             return isHeld && keyboard.KeyDown(ToGumKey(keyCombo.PushedKey));
         }

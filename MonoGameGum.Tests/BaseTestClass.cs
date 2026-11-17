@@ -19,13 +19,6 @@ using MonoGameGum.TestsCommon;
 namespace MonoGameGum.Tests;
 public class BaseTestClass : IDisposable
 {
-    private static readonly KeyCombo[] _productionTabKeyCombos = FrameworkElement.TabKeyCombos.ToArray();
-    private static readonly KeyCombo[] _productionTabReverseKeyCombos = FrameworkElement.TabReverseKeyCombos.ToArray();
-
-    // An explicit static constructor makes the snapshot above run before the first test, not lazily
-    // on first use inside Dispose, after the lists were cleared.
-    static BaseTestClass() { }
-
     // Captured before the constructor body runs, so it is the state the previous test left.
     private readonly FileManagerState _fileManagerState = FileManagerState.Capture();
     private readonly GraphicalUiElementState _graphicalUiElementState = GraphicalUiElementState.Capture();
@@ -125,13 +118,27 @@ public class BaseTestClass : IDisposable
             IsTriggeredOnRepeat = false
         });
 
-        // Restore the production defaults (captured before any test could change them) so tests
-        // exercise the real Tab/Shift+Tab chords instead of a hand-copied approximation.
         FrameworkElement.TabKeyCombos.Clear();
-        FrameworkElement.TabKeyCombos.AddRange(_productionTabKeyCombos);
+        FrameworkElement.TabKeyCombos.Add(new KeyCombo
+        {
+            PushedKey = Gum.Forms.Input.Keys.Tab,
+            HeldKey = null,
+            IsTriggeredOnRepeat = true
+        });
 
         FrameworkElement.TabReverseKeyCombos.Clear();
-        FrameworkElement.TabReverseKeyCombos.AddRange(_productionTabReverseKeyCombos);
+        FrameworkElement.TabReverseKeyCombos.Add(new KeyCombo
+        {
+            PushedKey = Gum.Forms.Input.Keys.Tab,
+            HeldKey = Gum.Forms.Input.Keys.LeftShift,
+            IsTriggeredOnRepeat = true
+        });
+        FrameworkElement.TabReverseKeyCombos.Add(new KeyCombo
+        {
+            PushedKey = Gum.Forms.Input.Keys.Tab,
+            HeldKey = Gum.Forms.Input.Keys.RightShift,
+            IsTriggeredOnRepeat = true
+        });
 
         // Empty is the true default (opt-in, unlike Tab/Click above) -- just clear, don't re-seed.
         FrameworkElement.UpKeyCombos.Clear();

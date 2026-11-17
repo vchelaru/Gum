@@ -19,12 +19,6 @@ namespace SkiaGum.Tests.Forms.Linked;
 /// </summary>
 public class SkiaFormsTestBase : IDisposable
 {
-    private static readonly KeyCombo[] _productionTabKeyCombos = FrameworkElement.TabKeyCombos.ToArray();
-    private static readonly KeyCombo[] _productionTabReverseKeyCombos = FrameworkElement.TabReverseKeyCombos.ToArray();
-
-    // Explicit static constructor so the snapshot runs before the first test, not lazily in Dispose.
-    static SkiaFormsTestBase() { }
-
     private static readonly SKSurface Surface = SKSurface.Create(new SKImageInfo(800, 600));
 
     private readonly FileManagerState _fileManagerState = FileManagerState.Capture();
@@ -91,11 +85,11 @@ public class SkiaFormsTestBase : IDisposable
         FrameworkElement.GamePadsForUiControl.Clear();
         FrameworkElement.ClickCombos.Clear();
         FrameworkElement.ClickCombos.Add(new KeyCombo { PushedKey = Keys.Enter, HeldKey = null, IsTriggeredOnRepeat = false });
-        // Production defaults (snapshotted before any test could change them), not a hand copy.
         FrameworkElement.TabKeyCombos.Clear();
-        FrameworkElement.TabKeyCombos.AddRange(_productionTabKeyCombos);
+        FrameworkElement.TabKeyCombos.Add(new KeyCombo { PushedKey = Keys.Tab, HeldKey = null, IsTriggeredOnRepeat = true });
         FrameworkElement.TabReverseKeyCombos.Clear();
-        FrameworkElement.TabReverseKeyCombos.AddRange(_productionTabReverseKeyCombos);
+        FrameworkElement.TabReverseKeyCombos.Add(new KeyCombo { PushedKey = Keys.Tab, HeldKey = Keys.LeftShift, IsTriggeredOnRepeat = true });
+        FrameworkElement.TabReverseKeyCombos.Add(new KeyCombo { PushedKey = Keys.Tab, HeldKey = Keys.RightShift, IsTriggeredOnRepeat = true });
         FrameworkElement.UpKeyCombos.Clear();
         FrameworkElement.DownKeyCombos.Clear();
         FrameworkElement.LeftKeyCombos.Clear();
