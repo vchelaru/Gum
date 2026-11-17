@@ -51,16 +51,40 @@ public class ColorTextureAlphaAllocationTests : BaseTestClass
             RenderTargetUsage.PreserveContents);
         try
         {
+            // Bytes per call and per step, so a Mesa-only reading says which frame and which call allocated.
+            // Allocated before the window starts; reading the counter allocates nothing.
+            const int Warmup = 30;
+            const int Measured = 200;
+            long[] targetBytes = new long[Warmup + Measured];
+            long[] drawBytes = new long[Warmup + Measured];
+            long[] restoreBytes = new long[Warmup + Measured];
+            int call = 0;
+            int gcsBefore = GC.CollectionCount(0);
             AllocationResult result = AllocationMeasurer.Measure(
                 () =>
                 {
+                    long start = GC.GetAllocatedBytesForCurrentThread();
                     gd.SetRenderTarget(scene);
                     gd.Clear(Color.Black);
+                    long drawStart = GC.GetAllocatedBytesForCurrentThread();
                     managers.Renderer.Draw(managers);
+                    long restoreStart = GC.GetAllocatedBytesForCurrentThread();
                     gd.SetRenderTarget(null);
+                    long end = GC.GetAllocatedBytesForCurrentThread();
+                    if (call < targetBytes.Length)
+                    {
+                        targetBytes[call] = drawStart - start;
+                        drawBytes[call] = restoreStart - drawStart;
+                        restoreBytes[call] = end - restoreStart;
+                    }
+                    call++;
                 },
-                warmupIterations: 30,
-                measuredIterations: 200);
+                warmupIterations: Warmup,
+                measuredIterations: Measured);
+            int gcs = GC.CollectionCount(0) - gcsBefore;
+            string detail = $"gen0 GCs: {gcs}; calls that allocated (0..{Warmup - 1} are warm-up): " + string.Join(", ",
+                Enumerable.Range(0, Warmup + Measured).Where(i => targetBytes[i] != 0 || drawBytes[i] != 0 || restoreBytes[i] != 0)
+                    .Select(i => $"#{i} target={targetBytes[i]} draw={drawBytes[i]} restore={restoreBytes[i]}"));
 
             _output.WriteLine($"ColorTextureAlpha + Modulate sprite: {result.BytesPerIteration:N0} bytes/frame");
 
@@ -70,7 +94,7 @@ public class ColorTextureAlphaAllocationTests : BaseTestClass
             states.Any(state => state.BlendState?.ColorSourceBlend == global::Gum.Blend.One).ShouldBeTrue();
             states.Any(state => state.BlendState?.ColorSourceBlend == global::Gum.Blend.SourceAlpha).ShouldBeTrue();
 
-            result.BytesPerIteration.ShouldBeLessThanOrEqualTo(0, $"measured {result.BytesPerIteration:N0} bytes/frame");
+            result.BytesPerIteration.ShouldBeLessThanOrEqualTo(0, $"measured {result.BytesPerIteration:N0} bytes/frame; {detail}");
         }
         finally
         {
