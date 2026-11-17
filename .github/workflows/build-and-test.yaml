@@ -1101,9 +1101,10 @@ jobs:
 
       # Slowest classes and tests in the job summary, so a slow suite can be explained from the run
       # page alone (#6092).
-      # Skipped on PR runs to save its few seconds; push and nightly runs keep it (#6282).
+      # Skipped on macOS PR runs to save its few seconds; Windows PRs keep it so slow classes in the
+      # concurrent streams can be found (#8169), and push and nightly runs keep it (#6282).
       - name: Slowest tests
-        if: always() && github.event_name != 'pull_request' && steps.plan.outputs.active == 'true' && (github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true')
+        if: always() && (github.event_name != 'pull_request' || runner.os == 'Windows') && steps.plan.outputs.active == 'true' && (github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true')
         continue-on-error: true
         shell: pwsh
         run: ./.github/scripts/trx-slowest.ps1 -ResultsDirectory TestResults
