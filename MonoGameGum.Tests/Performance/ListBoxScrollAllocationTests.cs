@@ -69,17 +69,15 @@ public class ListBoxScrollAllocationTests : BaseTestClass
         listBox.ScrollChanged += (_, _) => scrollChangedCount++;
 
         const int measuredIterations = 500;
-        const int attempts = 3;
 
         bool atTop = true;
 
-        AllocationResult result = AllocationMeasurer.MeasureMinimum(
+        AllocationResult result = AllocationMeasurer.Measure(
             () =>
             {
                 listBox.VerticalScrollBarValue = atTop ? midpoint : 0;
                 atTop = !atTop;
             },
-            attempts: attempts,
             warmupIterations: 50,
             measuredIterations: measuredIterations);
 
@@ -87,9 +85,8 @@ public class ListBoxScrollAllocationTests : BaseTestClass
             $"{result.BytesPerIteration:N0} bytes/frame ({result.TotalBytes:N0} bytes over {result.Iterations} frames)");
 
         // Liveness: prove every scroll actually repositioned content (ScrollChanged only fires when
-        // innerPanel.Y changes), so a silent no-op cannot fake a zero-allocation result. Scaled by
-        // attempts because MeasureMinimum runs the action across all of them, not just one.
-        scrollChangedCount.ShouldBeGreaterThanOrEqualTo(measuredIterations * attempts);
+        // innerPanel.Y changes), so a silent no-op cannot fake a zero-allocation result.
+        scrollChangedCount.ShouldBeGreaterThanOrEqualTo(measuredIterations);
 
         // Scrolling a ListBox with persistent (non-recycled) item visuals allocates nothing in steady
         // state; this guards against a regression reintroducing per-frame allocations (#1934).

@@ -11,9 +11,7 @@ namespace SkiaGum.Tests.Performance;
 /// <summary>
 /// Per-frame allocation guards for the layout engine on the Skia runtime, ported from
 /// MonoGameGum.Tests (issue #1934). Layout is shared code, but Skia hosts it through its own
-/// <c>GumService</c> and renderables, so the guarantee is checked here too. The zero-allocation
-/// guards use <see cref="AllocationMeasurer.MeasureMinimum"/> so a one-off blip on a slow CI
-/// runner does not fail them.
+/// <c>GumService</c> and renderables, so the guarantee is checked here too.
 /// </summary>
 public class LayoutAllocationTests : BaseTestClass
 {
@@ -78,7 +76,7 @@ public class LayoutAllocationTests : BaseTestClass
     {
         (ContainerRuntime stack, _) = BuildContentSizedStack(itemCount: 20);
 
-        AllocationResult result = AllocationMeasurer.MeasureMinimum(
+        AllocationResult result = AllocationMeasurer.Measure(
             () => stack.UpdateLayout(),
             warmupIterations: 50,
             measuredIterations: 500);
@@ -95,16 +93,14 @@ public class LayoutAllocationTests : BaseTestClass
 
         float height = 30;
         const int measuredIterations = 500;
-        const int attempts = 3;
         int layoutCallsBefore = GraphicalUiElement.UpdateLayoutCallCount;
 
-        AllocationResult result = AllocationMeasurer.MeasureMinimum(
+        AllocationResult result = AllocationMeasurer.Measure(
             () =>
             {
                 height = height == 30 ? 31 : 30;
                 firstItem.Height = height;
             },
-            attempts: attempts,
             warmupIterations: 50,
             measuredIterations: measuredIterations);
 
@@ -112,8 +108,7 @@ public class LayoutAllocationTests : BaseTestClass
 
         _output.WriteLine($"Height change on a content-sized stack: {result.BytesPerIteration:N0} bytes/frame");
 
-        // MeasureMinimum runs the action on every attempt, so the liveness threshold scales with it.
-        layoutCalls.ShouldBeGreaterThanOrEqualTo(measuredIterations * attempts);
+        layoutCalls.ShouldBeGreaterThanOrEqualTo(measuredIterations);
         result.TotalBytes.ShouldBe(0);
     }
 
@@ -124,16 +119,14 @@ public class LayoutAllocationTests : BaseTestClass
 
         float height = 200;
         const int measuredIterations = 500;
-        const int attempts = 3;
         int layoutCallsBefore = GraphicalUiElement.UpdateLayoutCallCount;
 
-        AllocationResult result = AllocationMeasurer.MeasureMinimum(
+        AllocationResult result = AllocationMeasurer.Measure(
             () =>
             {
                 height = height == 200 ? 201 : 200;
                 window.Height = height;
             },
-            attempts: attempts,
             warmupIterations: 50,
             measuredIterations: measuredIterations);
 
@@ -142,7 +135,7 @@ public class LayoutAllocationTests : BaseTestClass
         _output.WriteLine($"Window height change [{SkiaSceneHost.RealisticFormsSceneDescription}]: " +
             $"{result.BytesPerIteration:N0} bytes/frame");
 
-        layoutCalls.ShouldBeGreaterThanOrEqualTo(measuredIterations * attempts);
+        layoutCalls.ShouldBeGreaterThanOrEqualTo(measuredIterations);
         result.TotalBytes.ShouldBe(0);
     }
 
@@ -151,7 +144,7 @@ public class LayoutAllocationTests : BaseTestClass
     {
         SkiaSceneHost.BuildRealisticFormsScene();
 
-        AllocationResult result = AllocationMeasurer.MeasureMinimum(
+        AllocationResult result = AllocationMeasurer.Measure(
             () => _host.Update(),
             warmupIterations: 50,
             measuredIterations: 500);

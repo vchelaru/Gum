@@ -61,13 +61,12 @@ public class AnimationTickAllocationTests : BaseTestClass
         double time = 0;
         int appliedBefore = element.StatesApplied;
 
-        AllocationResult result = AllocationMeasurer.MeasureMinimum(
+        AllocationResult result = AllocationMeasurer.Measure(
             () =>
             {
                 time = (time + 0.05) % 1;
                 animation.ApplyAtTimeTo(time, element);
             },
-            attempts: 3,
             warmupIterations: 50,
             measuredIterations: 900);
 

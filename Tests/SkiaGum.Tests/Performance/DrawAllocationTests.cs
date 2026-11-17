@@ -161,7 +161,7 @@ public class DrawAllocationTests : BaseTestClass
     {
         Create(kind).AddToRoot();
 
-        AllocationResult result = AllocationMeasurer.MeasureMinimum(
+        AllocationResult result = AllocationMeasurer.Measure(
             () =>
             {
                 _host.Update();
@@ -250,7 +250,7 @@ public class DrawAllocationTests : BaseTestClass
         element.AddToRoot();
         int frame = 0;
 
-        AllocationResult result = AllocationMeasurer.MeasureMinimum(
+        AllocationResult result = AllocationMeasurer.Measure(
             () =>
             {
                 frame++;
@@ -281,7 +281,7 @@ public class DrawAllocationTests : BaseTestClass
         second.AddToRoot();
         int frame = 0;
 
-        AllocationResult result = AllocationMeasurer.MeasureMinimum(
+        AllocationResult result = AllocationMeasurer.Measure(
             () =>
             {
                 frame++;
@@ -394,7 +394,7 @@ public class DrawAllocationTests : BaseTestClass
         };
         text.AddToRoot();
 
-        AllocationResult result = AllocationMeasurer.MeasureMinimum(
+        AllocationResult result = AllocationMeasurer.Measure(
             () =>
             {
                 _host.Update();
@@ -414,7 +414,7 @@ public class DrawAllocationTests : BaseTestClass
     {
         SkiaSceneHost.BuildRealisticFormsScene();
 
-        AllocationResult result = AllocationMeasurer.MeasureMinimum(
+        AllocationResult result = AllocationMeasurer.Measure(
             () =>
             {
                 _host.Update();

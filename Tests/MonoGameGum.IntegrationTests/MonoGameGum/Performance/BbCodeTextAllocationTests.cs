@@ -12,7 +12,7 @@ namespace MonoGameGum.IntegrationTests.MonoGameGum.Performance;
 /// <summary>
 /// Issue #6419: drawing a BBCode-coloured <see cref="Text"/> whose text, colours and wrap width did not
 /// change must allocate nothing per frame, like plain text does. Each guard draws a warmed-up scene a
-/// fixed small number of frames and uses <see cref="AllocationMeasurer.MeasureMinimum"/>.
+/// fixed small number of frames and uses <see cref="AllocationMeasurer.Measure"/>.
 /// </summary>
 [Collection(SharedGame.CollectionName)]
 public class BbCodeTextAllocationTests : BaseTestClass
@@ -88,9 +88,8 @@ public class BbCodeTextAllocationTests : BaseTestClass
                 renderable.InlineVariables.Count.ShouldBeGreaterThan(0);
             }
 
-            return AllocationMeasurer.MeasureMinimum(
+            return AllocationMeasurer.Measure(
                 () => global::Gum.GumService.Default.Draw(),
-                attempts: 3,
                 warmupIterations: 30,
                 measuredIterations: 20);
         }

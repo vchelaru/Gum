@@ -86,9 +86,8 @@ public class RealisticLayoutAllocationTests : BaseTestClass
         BuildRealisticTree();
         global::Gum.GumService.Default.Root.UpdateLayout();
 
-        AllocationResult result = AllocationMeasurer.MeasureMinimum(
+        AllocationResult result = AllocationMeasurer.Measure(
             () => global::Gum.GumService.Default.Root.UpdateLayout(),
-            attempts: 3,
             warmupIterations: 50,
             measuredIterations: 500);
 

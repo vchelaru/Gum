@@ -192,12 +192,12 @@ public class QueueLockTests : BaseTestClass
 
         GumService.Default.Uninitialize();
         GumService.Default.Initialize(input, new FakeBrutalGpuBackend());
-        long unlocked = AllocationMeasurer.MeasureMinimum(() => GumService.Default.Draw(), 3, 100, 500).TotalBytes;
+        long unlocked = AllocationMeasurer.Measure(() => GumService.Default.Draw(), 100, 500).TotalBytes;
 
         FakeQueueLock queueLock = new FakeQueueLock();
         GumService.Default.Uninitialize();
         GumService.Default.Initialize(input, QueueLockedBackend.Wrap(new FakeBrutalGpuBackend(), queueLock.Acquire));
-        long locked = AllocationMeasurer.MeasureMinimum(() => GumService.Default.Draw(), 3, 100, 500).TotalBytes;
+        long locked = AllocationMeasurer.Measure(() => GumService.Default.Draw(), 100, 500).TotalBytes;
 
         _output.WriteLine($"Draw allocation over 500 frames: no lock {unlocked} bytes, cached lock {locked} bytes");
         unlocked.ShouldBe(0);

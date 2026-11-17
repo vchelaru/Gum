@@ -45,7 +45,7 @@ public class TextMarkupChangeAllocationTests : BaseTestClass
         text.RawText = strings[0];
         int frame = 0;
 
-        AllocationResult result = AllocationMeasurer.MeasureMinimum(
+        AllocationResult result = AllocationMeasurer.Measure(
             () =>
             {
                 frame++;
@@ -68,7 +68,7 @@ public class TextMarkupChangeAllocationTests : BaseTestClass
         text.AddToRoot();
         int frame = 0;
 
-        AllocationResult result = AllocationMeasurer.MeasureMinimum(
+        AllocationResult result = AllocationMeasurer.Measure(
             () =>
             {
                 frame++;

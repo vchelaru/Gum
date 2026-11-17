@@ -226,7 +226,7 @@ public class FormsInputAllocationTests : BaseTestClass
     {
         InputCase inputCase = CreateCase(kind);
 
-        AllocationResult result = AllocationMeasurer.MeasureMinimum(
+        AllocationResult result = AllocationMeasurer.Measure(
             () =>
             {
                 inputCase.Act(0);
@@ -254,7 +254,7 @@ public class FormsInputAllocationTests : BaseTestClass
         InputCase inputCase = CreateCase(kind);
         int frame = 0;
 
-        AllocationResult result = AllocationMeasurer.MeasureMinimum(
+        AllocationResult result = AllocationMeasurer.Measure(
             () =>
             {
                 frame++;

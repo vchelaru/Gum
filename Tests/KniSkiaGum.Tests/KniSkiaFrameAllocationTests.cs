@@ -120,16 +120,16 @@ public class KniSkiaFrameAllocationTests : BaseTestClass
     {
         AddScene();
         // A KNI Game advances one GameTime in place, but its setters are internal, so the frames' times
-        // are built before measuring: 3 attempts of 50 warmup plus 300 measured frames.
+        // are built before measuring: 50 warmup plus 300 measured frames.
         TimeSpan frame = TimeSpan.FromTicks(TimeSpan.TicksPerSecond / 60);
-        XnaGameTime[] gameTimes = new XnaGameTime[3 * (50 + 300)];
+        XnaGameTime[] gameTimes = new XnaGameTime[50 + 300];
         for (int i = 0; i < gameTimes.Length; i++)
         {
             gameTimes[i] = new XnaGameTime(frame * (i + 1), frame);
         }
         int frameIndex = 0;
 
-        AllocationResult result = AllocationMeasurer.MeasureMinimum(
+        AllocationResult result = AllocationMeasurer.Measure(
             () =>
             {
                 GumService.Default.Update(gameTimes[frameIndex++]);
@@ -153,7 +153,7 @@ public class KniSkiaFrameAllocationTests : BaseTestClass
         AddScene();
         double totalSeconds = 0;
 
-        AllocationResult result = AllocationMeasurer.MeasureMinimum(
+        AllocationResult result = AllocationMeasurer.Measure(
             () =>
             {
                 totalSeconds += 1.0 / 60.0;

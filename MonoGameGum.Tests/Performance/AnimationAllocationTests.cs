@@ -16,7 +16,7 @@ namespace MonoGameGum.Tests.Performance;
 /// Per-frame allocation baselines and regression guards for active AnimationChain (.achx) playback
 /// driven through <see cref="GraphicalUiElement.AnimateSelf(double)"/>. Part of the runtime
 /// allocation pass, issue #1934: animated content advances every frame, so any allocation here is
-/// paid continuously. Each guard uses <see cref="AllocationMeasurer.MeasureMinimum"/> and a liveness
+/// paid continuously. Each guard uses <see cref="AllocationMeasurer.Measure"/> and a liveness
 /// assertion proving the animation actually advanced during the measured window.
 /// </summary>
 public class AnimationAllocationTests : BaseTestClass
@@ -72,11 +72,9 @@ public class AnimationAllocationTests : BaseTestClass
         // full loop (proving playback is live), rather than a single big jump.
         const double secondsPerFrame = frameLength / 2.0;
         const int measuredIterations = 500;
-        const int attempts = 3;
 
-        AllocationResult result = AllocationMeasurer.MeasureMinimum(
+        AllocationResult result = AllocationMeasurer.Measure(
             () => root.AnimateSelf(secondsPerFrame),
-            attempts: attempts,
             warmupIterations: 50,
             measuredIterations: measuredIterations);
 
@@ -141,11 +139,9 @@ public class AnimationAllocationTests : BaseTestClass
         // moving and the animation (which loops) never stops.
         const double secondsPerFrame = 0.05;
         const int measuredIterations = 500;
-        const int attempts = 3;
 
-        AllocationResult result = AllocationMeasurer.MeasureMinimum(
+        AllocationResult result = AllocationMeasurer.Measure(
             () => root.AnimateSelf(secondsPerFrame),
-            attempts: attempts,
             warmupIterations: 50,
             measuredIterations: measuredIterations);
 

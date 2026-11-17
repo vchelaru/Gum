@@ -3,7 +3,7 @@ using MonoGameGum.TestsCommon;
 namespace SkiaGum.Tests.Performance;
 
 /// <summary>
-/// <see cref="AllocationMeasurer.MeasureMinimum"/> for Skia workloads whose per-frame reading must not depend on
+/// <see cref="AllocationMeasurer.Measure"/> for Skia workloads whose per-frame reading must not depend on
 /// what ran before the test or on how often the garbage collector runs (#7860).
 /// </summary>
 /// <remarks>

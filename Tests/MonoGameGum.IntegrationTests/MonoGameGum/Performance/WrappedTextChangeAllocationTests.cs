@@ -54,14 +54,13 @@ public class WrappedTextChangeAllocationTests : BaseTestClass
             long lineBytesB = LineStringBytes(renderable.WrappedText);
 
             bool flip = false;
-            AllocationResult result = AllocationMeasurer.MeasureMinimum(
+            AllocationResult result = AllocationMeasurer.Measure(
                 () =>
                 {
                     flip = !flip;
                     text.Text = flip ? a : b;
                     global::Gum.GumService.Default.Draw();
                 },
-                attempts: 3,
                 warmupIterations: 30,
                 measuredIterations: 20);
 

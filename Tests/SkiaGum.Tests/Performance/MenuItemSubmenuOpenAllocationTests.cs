@@ -91,7 +91,7 @@ public class MenuItemSubmenuOpenAllocationTests : BaseTestClass
         long closeBytes = 0;
         int cycles = 0;
 
-        AllocationResult result = AllocationMeasurer.MeasureMinimum(
+        AllocationResult result = AllocationMeasurer.Measure(
             () =>
             {
                 long start = GC.GetAllocatedBytesForCurrentThread();
@@ -106,7 +106,6 @@ public class MenuItemSubmenuOpenAllocationTests : BaseTestClass
                 closeBytes += afterClose - afterOpen;
                 cycles++;
             },
-            attempts: 1,
             warmupIterations: 20,
             measuredIterations: 100);
 

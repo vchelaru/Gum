@@ -88,7 +88,7 @@ public class ShaderParameterCollectionTests
         sut.Set("Thickness", ShaderParameterValue.FromFloat(0f));
         float next = 0f;
 
-        AllocationResult result = AllocationMeasurer.MeasureMinimum(() =>
+        AllocationResult result = AllocationMeasurer.Measure(() =>
         {
             next += 1f;
             sut.Set("Thickness", ShaderParameterValue.FromFloat(next));
@@ -105,7 +105,7 @@ public class ShaderParameterCollectionTests
         sut.Set("B", ShaderParameterValue.FromVector3(1f, 2f, 3f));
         float sum = 0f;
 
-        AllocationResult result = AllocationMeasurer.MeasureMinimum(() =>
+        AllocationResult result = AllocationMeasurer.Measure(() =>
         {
             foreach (System.Collections.Generic.KeyValuePair<string, ShaderParameterValue> pair in sut)
             {

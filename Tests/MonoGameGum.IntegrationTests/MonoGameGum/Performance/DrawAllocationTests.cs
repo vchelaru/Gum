@@ -42,9 +42,8 @@ public class DrawAllocationTests : BaseTestClass
         // only the Update walk itself (the FormsUtilities input/cursor pass) with Draw excluded.
         GameTime gameTime = new GameTime(TimeSpan.Zero, TimeSpan.FromSeconds(1.0 / 60.0));
 
-        AllocationResult result = AllocationMeasurer.MeasureMinimum(
+        AllocationResult result = AllocationMeasurer.Measure(
             () => global::Gum.GumService.Default.Update(gameTime),
-            attempts: 3,
             warmupIterations: 50,
             measuredIterations: 500);
 
@@ -84,16 +83,12 @@ public class DrawAllocationTests : BaseTestClass
         // only the Update/Draw walk itself.
         GameTime gameTime = new GameTime(TimeSpan.Zero, TimeSpan.FromSeconds(1.0 / 60.0));
 
-        // MeasureMinimum, matching IdleUpdate above: this suite runs on a shared CI runner, where a
-        // single measured window can catch unrelated GC/JIT work and red the build spuriously.
-        // Taking the best of several attempts keeps the ratchet honest without making it flaky.
-        AllocationResult result = AllocationMeasurer.MeasureMinimum(
+        AllocationResult result = AllocationMeasurer.Measure(
             () =>
             {
                 global::Gum.GumService.Default.Update(gameTime);
                 global::Gum.GumService.Default.Draw();
             },
-            attempts: 3,
             warmupIterations: 50,
             measuredIterations: 500);
 

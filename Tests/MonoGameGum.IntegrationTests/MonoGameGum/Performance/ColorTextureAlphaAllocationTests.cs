@@ -51,7 +51,7 @@ public class ColorTextureAlphaAllocationTests : BaseTestClass
             RenderTargetUsage.PreserveContents);
         try
         {
-            AllocationResult result = AllocationMeasurer.MeasureMinimum(
+            AllocationResult result = AllocationMeasurer.Measure(
                 () =>
                 {
                     gd.SetRenderTarget(scene);
@@ -59,7 +59,6 @@ public class ColorTextureAlphaAllocationTests : BaseTestClass
                     managers.Renderer.Draw(managers);
                     gd.SetRenderTarget(null);
                 },
-                attempts: 3,
                 warmupIterations: 30,
                 measuredIterations: 200);
 

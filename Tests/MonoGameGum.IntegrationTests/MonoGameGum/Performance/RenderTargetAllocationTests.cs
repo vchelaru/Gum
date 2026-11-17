@@ -93,7 +93,7 @@ public class RenderTargetAllocationTests : BaseTestClass
         using RenderTarget2D scene = new(gd, 256, 256, false, SurfaceFormat.Color, DepthFormat.None, 0,
             RenderTargetUsage.PreserveContents);
 
-        AllocationResult result = AllocationMeasurer.MeasureMinimum(
+        AllocationResult result = AllocationMeasurer.Measure(
             () =>
             {
                 gd.SetRenderTarget(scene);
@@ -101,7 +101,6 @@ public class RenderTargetAllocationTests : BaseTestClass
                 renderer.Draw(managers);
                 gd.SetRenderTarget(null);
             },
-            attempts: 3,
             warmupIterations: 30,
             measuredIterations: 100);
 

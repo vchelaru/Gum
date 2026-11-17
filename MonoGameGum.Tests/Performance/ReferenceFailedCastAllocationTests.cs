@@ -86,14 +86,13 @@ public class ReferenceFailedCastAllocationTests : BaseTestClass
         GraphicalUiElement source = gue.GetGraphicalUiElementByName("Source")!;
         bool toggle = false;
 
-        AllocationResult result = AllocationMeasurer.MeasureMinimum(
+        AllocationResult result = AllocationMeasurer.Measure(
             () =>
             {
                 source.Width = toggle ? 10 : 20;
                 source.Visible = toggle;
                 toggle = !toggle;
             },
-            attempts: 5,
             warmupIterations: 100,
             measuredIterations: 500);
 

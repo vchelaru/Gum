@@ -70,13 +70,12 @@ public class FormsPropertyReferenceAllocationTests : BaseTestClass
     {
         (GraphicalUiElement slider, GraphicalUiElement target) = Build(row);
         bool toggle = false;
-        AllocationResult result = AllocationMeasurer.MeasureMinimum(
+        AllocationResult result = AllocationMeasurer.Measure(
             () =>
             {
                 slider.Width = toggle ? 10 : 20;
                 toggle = !toggle;
             },
-            attempts: 3,
             warmupIterations: 50,
             measuredIterations: 500);
         target.Width.ShouldNotBe(0f);
@@ -98,13 +97,12 @@ public class FormsPropertyReferenceAllocationTests : BaseTestClass
         (GraphicalUiElement slider, GraphicalUiElement target) = Build(row);
         Slider control = (Slider)((InteractiveGue)slider).FormsControlAsObject!;
         bool toggle = false;
-        AllocationResult result = AllocationMeasurer.MeasureMinimum(
+        AllocationResult result = AllocationMeasurer.Measure(
             () =>
             {
                 control.Maximum = toggle ? 50 : 60;
                 toggle = !toggle;
             },
-            attempts: 3,
             warmupIterations: 50,
             measuredIterations: 500);
         target.Width.ShouldNotBe(0f);
@@ -117,9 +115,8 @@ public class FormsPropertyReferenceAllocationTests : BaseTestClass
         (GraphicalUiElement slider, _) = Build("Width = Slider.Minimum + Slider.Height");
         Slider control = (Slider)((InteractiveGue)slider).FormsControlAsObject!;
         control.Minimum = 5;
-        AllocationResult result = AllocationMeasurer.MeasureMinimum(
+        AllocationResult result = AllocationMeasurer.Measure(
             () => control.Minimum = 5,
-            attempts: 3,
             warmupIterations: 50,
             measuredIterations: 500);
 

@@ -94,7 +94,7 @@ public class VectorRenderableAllocationTests : BaseTestClass
     {
         Create(kind).AddToRoot();
 
-        AllocationResult result = AllocationMeasurer.MeasureMinimum(
+        AllocationResult result = AllocationMeasurer.Measure(
             () =>
             {
                 _host.Update();

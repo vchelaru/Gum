@@ -19,7 +19,7 @@ public class TextTagQueryAllocationTests : BaseTestClass
         textRuntime.Text = "Click [Link=shop]here[/Link] or [Link=bag]there[/Link] now";
 
         int hits = 0;
-        AllocationResult result = AllocationMeasurer.MeasureMinimum(
+        AllocationResult result = AllocationMeasurer.Measure(
             () =>
             {
                 if (textRuntime.GetTagAtIndex("Link", 7) != null)
@@ -31,12 +31,11 @@ public class TextTagQueryAllocationTests : BaseTestClass
                     hits++;
                 }
             },
-            attempts: 3,
             warmupIterations: 50,
             measuredIterations: 200);
 
         // Liveness: proves the query found the link (and missed the plain text) on every iteration.
-        hits.ShouldBeGreaterThanOrEqualTo(2 * 200 * 3);
+        hits.ShouldBeGreaterThanOrEqualTo(2 * 200);
         result.TotalBytes.ShouldBe(0);
     }
 }

@@ -78,13 +78,12 @@ public class ReferenceRejectedByTargetAllocationTests : BaseTestClass
         GraphicalUiElement source = gue.GetGraphicalUiElementByName("Source")!;
         bool toggle = false;
 
-        AllocationResult result = AllocationMeasurer.MeasureMinimum(
+        AllocationResult result = AllocationMeasurer.Measure(
             () =>
             {
                 source.SetProperty("StackSpacing", toggle ? first : second);
                 toggle = !toggle;
             },
-            attempts: 5,
             warmupIterations: 100,
             measuredIterations: 500);
 
