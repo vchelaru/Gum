@@ -238,4 +238,189 @@ public class KeyComboTests : BaseTestClass
         bool result = sut.IsComboReleased();
         result.ShouldBeTrue();
     }
+
+    private static Mock<IInputReceiverKeyboard> AddKeyboard()
+    {
+        Mock<IInputReceiverKeyboardMonoGame> mockKeyboard = CreateKeyboardMock();
+        FrameworkElement.KeyboardsForUiControl.Add(mockKeyboard.Object);
+        return mockKeyboard.As<IInputReceiverKeyboard>();
+    }
+
+    private static Button CreateFocusedButtonWithClickCombos(out Func<int> getClicks)
+    {
+        Button button = new Button();
+        button.AddToRoot();
+        button.IsFocused = true;
+        int clicks = 0;
+        button.Click += (_, _) => clicks++;
+        getClicks = () => clicks;
+        FrameworkElement.ClickCombos.Clear();
+        FrameworkElement.ClickCombos.Add(new KeyCombo { PushedKey = Keys.Enter });
+        FrameworkElement.ClickCombos.Add(new KeyCombo { PushedKey = Keys.Space });
+        return button;
+    }
+
+    [Theory]
+    [InlineData(Keys.LeftShift)]
+    [InlineData(Keys.RightShift)]
+    [InlineData(Keys.LeftControl)]
+    [InlineData(Keys.RightControl)]
+    [InlineData(Keys.LeftAlt)]
+    [InlineData(Keys.RightAlt)]
+    public void IsComboPushed_NoHeldKeyAndModifierDown_ReturnsFalse(Keys modifier)
+    {
+        KeyCombo sut = new() { PushedKey = Keys.Tab };
+        Mock<IInputReceiverKeyboard> keyboard = AddKeyboard();
+        keyboard.Setup(k => k.KeyPushed(Keys.Tab)).Returns(true);
+        keyboard.Setup(k => k.KeyDown(modifier)).Returns(true);
+
+        sut.IsComboPushed().ShouldBeFalse();
+    }
+
+    [Fact]
+    public void IsComboPushed_NoHeldKeyAndNonModifierDown_ReturnsTrue()
+    {
+        KeyCombo sut = new() { PushedKey = Keys.Tab };
+        Mock<IInputReceiverKeyboard> keyboard = AddKeyboard();
+        keyboard.Setup(k => k.KeyPushed(Keys.Tab)).Returns(true);
+        keyboard.Setup(k => k.KeyDown(Keys.A)).Returns(true);
+
+        sut.IsComboPushed().ShouldBeTrue();
+    }
+
+    [Fact]
+    public void IsComboPushed_NoHeldKeyAndPushedKeyIsTheModifier_ReturnsTrue()
+    {
+        KeyCombo sut = new() { PushedKey = Keys.LeftShift };
+        Mock<IInputReceiverKeyboard> keyboard = AddKeyboard();
+        keyboard.Setup(k => k.KeyPushed(Keys.LeftShift)).Returns(true);
+        keyboard.Setup(k => k.KeyDown(Keys.LeftShift)).Returns(true);
+
+        sut.IsComboPushed().ShouldBeTrue();
+    }
+
+    [Fact]
+    public void IsComboPushed_HeldKeyDownAndOtherModifierDown_StillReturnsTrue()
+    {
+        KeyCombo sut = new() { PushedKey = Keys.C, HeldKey = Keys.LeftControl };
+        Mock<IInputReceiverKeyboard> keyboard = AddKeyboard();
+        keyboard.Setup(k => k.KeyPushed(Keys.C)).Returns(true);
+        keyboard.Setup(k => k.KeyDown(Keys.LeftControl)).Returns(true);
+        keyboard.Setup(k => k.KeyDown(Keys.LeftShift)).Returns(true);
+
+        sut.IsComboPushed().ShouldBeTrue();
+    }
+
+    [Fact]
+    public void IsComboPushed_RepeatTypedNoHeldKeyAndModifierDown_ReturnsFalse()
+    {
+        KeyCombo sut = new() { PushedKey = Keys.Tab, IsTriggeredOnRepeat = true };
+        Mock<IInputReceiverKeyboard> keyboard = AddKeyboard();
+        keyboard.Setup(k => k.KeysTyped).Returns(new List<Keys> { Keys.Tab });
+        keyboard.Setup(k => k.KeyDown(Keys.LeftShift)).Returns(true);
+
+        sut.IsComboPushed().ShouldBeFalse();
+    }
+
+    [Fact]
+    public void IsComboPushed_RepeatTypedNoHeldKeyAndNoModifier_ReturnsTrue()
+    {
+        KeyCombo sut = new() { PushedKey = Keys.Tab, IsTriggeredOnRepeat = true };
+        Mock<IInputReceiverKeyboard> keyboard = AddKeyboard();
+        keyboard.Setup(k => k.KeysTyped).Returns(new List<Keys> { Keys.Tab });
+
+        sut.IsComboPushed().ShouldBeTrue();
+    }
+
+    [Fact]
+    public void IsComboDown_NoHeldKeyAndModifierDownedAfterPush_ReturnsTrue()
+    {
+        KeyCombo sut = new() { PushedKey = Keys.Space };
+        Mock<IInputReceiverKeyboard> keyboard = AddKeyboard();
+        keyboard.Setup(k => k.KeyDown(Keys.Space)).Returns(true);
+        keyboard.Setup(k => k.KeyDown(Keys.LeftControl)).Returns(true);
+
+        sut.IsComboDown().ShouldBeTrue();
+    }
+
+    [Fact]
+    public void IsComboReleased_NoHeldKeyAndModifierDownedAfterPush_ReturnsTrue()
+    {
+        KeyCombo sut = new() { PushedKey = Keys.Space };
+        Mock<IInputReceiverKeyboard> keyboard = AddKeyboard();
+        keyboard.Setup(k => k.KeyReleased(Keys.Space)).Returns(true);
+        keyboard.Setup(k => k.KeyDown(Keys.LeftControl)).Returns(true);
+
+        sut.IsComboReleased().ShouldBeTrue();
+    }
+
+    [Fact]
+    public void IsComboReleased_NoHeldKeyAndNoModifierDown_ReturnsTrue()
+    {
+        KeyCombo sut = new() { PushedKey = Keys.Space };
+        Mock<IInputReceiverKeyboard> keyboard = AddKeyboard();
+        keyboard.Setup(k => k.KeyReleased(Keys.Space)).Returns(true);
+
+        sut.IsComboReleased().ShouldBeTrue();
+    }
+
+    [Fact]
+    public void DefaultTabKeyCombos_DoNotMatchTabWithAnyModifierHeld()
+    {
+        foreach (Keys modifier in new[] { Keys.LeftShift, Keys.RightShift, Keys.LeftControl, Keys.RightControl, Keys.LeftAlt, Keys.RightAlt })
+        {
+            FrameworkElement.KeyboardsForUiControl.Clear();
+            Mock<IInputReceiverKeyboard> keyboard = AddKeyboard();
+            keyboard.Setup(k => k.KeyPushed(Keys.Tab)).Returns(true);
+            keyboard.Setup(k => k.KeyDown(modifier)).Returns(true);
+
+            FrameworkElement.TabKeyCombos.Any(combo => combo.IsComboPushed()).ShouldBeFalse(modifier.ToString());
+        }
+    }
+
+    [Theory]
+    [InlineData(Keys.Enter)]
+    [InlineData(Keys.Space)]
+    public void ClickCombos_PlainKey_Clicks(Keys key)
+    {
+        Button button = CreateFocusedButtonWithClickCombos(out Func<int> getClicks);
+        Mock<IInputReceiverKeyboard> keyboard = AddKeyboard();
+        keyboard.Setup(k => k.KeyPushed(key)).Returns(true);
+
+        button.OnFocusUpdate();
+
+        getClicks().ShouldBe(1);
+    }
+
+    [Theory]
+    [InlineData(Keys.Enter, Keys.LeftControl)]
+    [InlineData(Keys.Enter, Keys.RightAlt)]
+    [InlineData(Keys.Space, Keys.LeftShift)]
+    [InlineData(Keys.Space, Keys.RightControl)]
+    public void ClickCombos_KeyWithModifierHeld_DoesNotClick(Keys key, Keys modifier)
+    {
+        Button button = CreateFocusedButtonWithClickCombos(out Func<int> getClicks);
+        Mock<IInputReceiverKeyboard> keyboard = AddKeyboard();
+        keyboard.Setup(k => k.KeyPushed(key)).Returns(true);
+        keyboard.Setup(k => k.KeyDown(modifier)).Returns(true);
+
+        button.OnFocusUpdate();
+
+        getClicks().ShouldBe(0);
+    }
+
+    [Fact]
+    public void ClickCombos_ExplicitCtrlHeldKey_ClicksOnCtrlEnter()
+    {
+        Button button = CreateFocusedButtonWithClickCombos(out Func<int> getClicks);
+        FrameworkElement.ClickCombos.Clear();
+        FrameworkElement.ClickCombos.Add(new KeyCombo { PushedKey = Keys.Enter, HeldKey = Keys.LeftControl });
+        Mock<IInputReceiverKeyboard> keyboard = AddKeyboard();
+        keyboard.Setup(k => k.KeyPushed(Keys.Enter)).Returns(true);
+        keyboard.Setup(k => k.KeyDown(Keys.LeftControl)).Returns(true);
+
+        button.OnFocusUpdate();
+
+        getClicks().ShouldBe(1);
+    }
 }

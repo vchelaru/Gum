@@ -90,6 +90,12 @@ FrameworkElement.TabKeyCombos.Add(new KeyCombo { PushedKey = Gum.Forms.Input.Key
 FrameworkElement.TabReverseKeyCombos.Add(new KeyCombo { PushedKey = Gum.Forms.Input.Keys.Up, IsTriggeredOnRepeat = true });
 ```
 
+{% hint style="info" %}
+A `KeyCombo` without a `HeldKey` only matches while no modifier (Shift, Control or Alt) is held. The modifier is checked when the combo starts, so a key already held keeps working if a modifier is pressed later. This is why Tab does not also move focus forward on Shift+Tab, and why Ctrl+Enter does not start a click. Set `HeldKey` to match a chord, such as Shift+Tab.
+
+Available in December 2026, or now if building Gum from source.
+{% endhint %}
+
 {% hint style="warning" %}
 Only combos whose `PushedKey` is Tab respect a control's `IsTabNavigationEnabled` (the property backing `AcceptsTab` on `TextBox` and `PasswordBox`, described above). A combo bound to any other key always moves focus, even on a control with `AcceptsTab` set to `true`.
 {% endhint %}
