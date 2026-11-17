@@ -7,25 +7,14 @@ TextRuntime supports using BBCode-like syntax for formatting individual words an
 Using BBCode for TextRuntimes supports all of the functionality outlined in the Text documentation which can be found here: [https://docs.flatredball.com/gum/gum-tool/gum-elements/text/text#using-bbcode-for-inline-styling](https://docs.flatredball.com/gum/gum-tool/gum-elements/text/text#using-bbcode-for-inline-styling)
 
 {% hint style="info" %}
-On [SkiaSharp-based runtimes](../../about/runtimes.md) BBCode tags need no font files or font generation. `Font` takes an installed font family, a registered family, or a `.ttf` path, and `IsBold` and `IsItalic` pick the matching style of that family. See [Dynamic Generation on SkiaGum](../../files-and-fonts/font-strategies.md#dynamic-generation-on-skiagum) and [Bold and Italic on SkiaGum](../../files-and-fonts/font-strategies.md#bold-and-italic-on-skiagum).
+`Color`, `Red`, `Green`, `Blue`, `FontScale`, and `Custom` need no font setup on any runtime.
 
-On the other runtimes, the following BBCode variables require font generation:
+`Font`, `FontSize`, `IsBold`, `IsItalic`, `OutlineThickness`, and `HasDropshadow` draw text in a different font than the rest of the TextRuntime, so that font has to exist. How it gets made depends on the runtime:
 
-* IsBold
-* IsItalic
-* Font
-* FontSize
-* OutlineThickness
-* HasDropshadow
+* **MonoGame, KNI, FNA, and raylib** draw with bitmap fonts (`.fnt` files). With [KernSmith](../../files-and-fonts/font-strategies.md#dynamic-kernsmith-generation), Gum generates the font the first time a tag asks for it, with no extra setup. This is the recommended approach for code-only projects. Without KernSmith, you must provide a pre-built `.fnt` file for each font combination your BBCode text uses. The Gum tool generates these into the FontCache folder when it displays the text. `gumcli fonts` generates the ones used by BBCode tags in the Text values of your project's elements, so a fresh checkout or CI build has them without opening the tool. BBCode text set from code is not in the project, so bake those fonts with the `--font` options of [gumcli fonts](../../../cli/fonts.md).
+* **[SkiaSharp-based runtimes](../../about/runtimes.md)** need no font files and no KernSmith. `Font` takes an installed font family, a registered family, or a `.ttf` path, and `IsBold` and `IsItalic` pick the matching style of that family. See [Dynamic Generation on SkiaGum](../../files-and-fonts/font-strategies.md#dynamic-generation-on-skiagum) and [Bold and Italic on SkiaGum](../../files-and-fonts/font-strategies.md#bold-and-italic-on-skiagum). `HasDropshadow` is the exception, see below.
 
-The Gum tool generates these fonts into the FontCache folder when it displays the text. `gumcli fonts` generates the ones used by BBCode tags in the Text values of your project's elements, so a fresh checkout or CI build has them without opening the tool. BBCode text set from code is not in the project, so bake those fonts with the `--font` options of [gumcli fonts](../../../cli/fonts.md). For code-only projects, the recommended approach is to use [dynamic font generation via KernSmith](fonts.md#dynamic-font-generation-recommended), which handles font creation at runtime with no extra setup. Without the Gum tool or KernSmith, you must provide pre-built `.fnt` files for each font combination your BBCode text uses.
-
-The following variables work without any font setup:
-
-* Color
-* Red/Green/Blue
-* FontScale
-* Custom (see below)
+For help choosing a font strategy, see the [Fonts hub](../../files-and-fonts/fonts.md).
 {% endhint %}
 
 ## Code Example: Basic BBCode Styling
@@ -66,7 +55,7 @@ text.AddToRoot();
 ```
 
 {% hint style="info" %}
-`HasDropshadow` toggles the shadow on MonoGame, KNI, FNA, and raylib. On [SkiaSharp-based runtimes](../../about/runtimes.md) the tag is parsed and stripped from the text but has no effect - the shadow always follows the TextRuntime's own `HasDropshadow` value there.
+`HasDropshadow` toggles the shadow on MonoGame, KNI, FNA, and raylib. On [SkiaSharp-based runtimes](../../about/runtimes.md) the tag is parsed and stripped from the text but has no effect. The shadow always follows the TextRuntime's own `HasDropshadow` value there.
 {% endhint %}
 
 ## Inline Glyphs
@@ -154,7 +143,7 @@ To use the Custom tag, the following must be performed:
 1. A function must be declared which is of one of the following types:
    * `Func<int, string, LetterCustomization>` - the int value is the index of the letter in the whole displayed text, with all BBCode tags removed. The string represents the text inside the custom block. The returned LetterCustomization instance includes the desired modifications to the letter. Register with `Text.Customizations`.
    * `Func<int, string, LetterCustomization, LetterCustomization>` - same as above, but the third parameter is a LetterCustomization containing the letter's current state (color, offset, scale) as set by prior BBCode tags. This allows relative modifications such as darkening the current color. Register with `Text.ContextCustomizations`.
-2. This function must be registered with the `RenderingLibrary.Graphics.Text` type using the appropriate dictionary.
+2. This function must be registered with the `RenderingLibrary.Graphics.Text` type using the appropriate dictionary. On SkiaSharp-based runtimes, register with `SkiaGum.Text` and return a `SkiaGum.LetterCustomization`, which has the same fields. On raylib, use `Gum.Renderables.Text` and `Gum.Renderables.LetterCustomization`.
 3. A Custom tag must be included in the text string.
 
 The int index counts displayed characters from the start of the whole text, not from the start of the block. In `"Gold: [Custom=Wave]50[/Custom]"` the function receives 6 for `5` and 7 for `0`, because `Gold: ` is six characters. The index is a UTF-16 index with the BBCode tags removed, so an emoji counts as two. The string parameter is only the text inside the block, so its `Length` is the block's length.
