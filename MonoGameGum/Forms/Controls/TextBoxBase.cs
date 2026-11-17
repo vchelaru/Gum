@@ -901,7 +901,7 @@ public abstract class TextBoxBase :
     // Per-character advance comes from IFormsText.GetDrawnCharacterAdvance: the XNA-family Text reads it
     // allocation-free off the drawn BitmapFont (#3542); other backends measure a one-character string.
     private int GetIndex(float cursorOffset, string? textToUse) =>
-        TextHitTesting.GetIndexInLine(textToUse, cursorOffset, coreTextObject.GetDrawnCharacterAdvance);
+        TextHitTesting.GetIndexInLine(textToUse, cursorOffset, coreTextObject.GetDrawnCharacterAdvance, coreTextObject.GetDrawnKerning);
 
     /// <summary>
     /// Handles special situations only like [LEFT, HOME, END, BACK (Backspace), RIGHT, UP, DOWN, DELETE, CTRL+C, CTRL+X, CTRL+V, CTRL+A]

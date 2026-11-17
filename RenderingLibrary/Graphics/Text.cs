@@ -1145,6 +1145,10 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
         return (drawnFont.GetCharacterInfo(character)?.XAdvance ?? 0) * EffectiveFontScale;
     }
 
+    /// <inheritdoc/>
+    public float GetDrawnKerning(char first, char second) =>
+        (DrawnFont?.GetKerning(first, second) ?? 0) * EffectiveFontScale;
+
     // made public so that objects that need to position based off of the texture can force call this
     public void TryUpdateTextureToRender()
     {

@@ -122,13 +122,21 @@ internal static class TextHitTesting
     /// <param name="text">The line.</param>
     /// <param name="cursorOffset">The x offset from the line's start, in drawn units.</param>
     /// <param name="getCharacterAdvance">The drawn advance of one character; a surrogate pair sums its halves.</param>
-    public static int GetIndexInLine(string? text, float cursorOffset, Func<char, float> getCharacterAdvance) =>
+    /// <param name="getKerning">The drawn kerning between a character and the next one on the line, added to the
+    /// first character's advance so each character starts where it is drawn; null when the font has no kerning.</param>
+    public static int GetIndexInLine(string? text, float cursorOffset, Func<char, float> getCharacterAdvance,
+        Func<char, char, float>? getKerning = null) =>
         GetIndexInLine(text, cursorOffset, (line, start, length) =>
         {
             float advance = 0;
             for (int i = 0; i < length; i++)
             {
                 advance += getCharacterAdvance(line[start + i]);
+            }
+            int next = start + length;
+            if (getKerning != null && next < line.Length)
+            {
+                advance += getKerning(line[next - 1], line[next]);
             }
             return advance;
         });

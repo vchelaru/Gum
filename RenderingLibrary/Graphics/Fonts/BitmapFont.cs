@@ -476,6 +476,22 @@ public class BitmapFont : IDisposable
         return GetCharacterInfo(asciiNumber);
     }
 
+    /// <summary>
+    /// Returns the kerning adjustment, in font pixels, added to the pen between <paramref name="first"/> and
+    /// the <paramref name="second"/> that follows it on the same line, or 0 when the font has no such pair.
+    /// Measurement, drawing and hit testing all step the pen by XAdvance plus this value.
+    /// </summary>
+    public int GetKerning(char first, char second)
+    {
+        // Only a glyph the font really has carries pairs; a missing character's slot can share another glyph's info.
+        if (first >= mCharacterInfo.Length || !mKnownCharacterIds.Contains(first))
+        {
+            return 0;
+        }
+        Dictionary<int, int> pairs = mCharacterInfo[first].SecondLetterKearning;
+        return pairs.Count != 0 && pairs.TryGetValue(second, out int amount) ? amount : 0;
+    }
+
     public float GetCharacterHeight(int asciiNumber)
     {
         if (asciiNumber < mCharacterInfo.Length)
@@ -1154,6 +1170,10 @@ public class BitmapFont : IDisposable
                 for (int charIndex = 0; charIndex < lineBoundExclusive; charIndex++)
                 {
                     char c = line[charIndex];
+                    if (charIndex > 0)
+                    {
+                        currentLetterOrigin.X += GetKerning(line[charIndex - 1], c) * scaleX;
+                    }
                     var sourceRect =
                         GetCharacterRect(c, lineNumber, ref currentLetterOrigin, out destRect, out pageIndex, scaleX, scaleY, lineHeightMultiplier);
 
@@ -1479,6 +1499,11 @@ public class BitmapFont : IDisposable
         {
             char character = line[i];
             BitmapCharacterInfo? characterInfo = GetCharacterInfo(character);
+
+            if (i > 0)
+            {
+                toReturn += GetKerning(line[i - 1], character);
+            }
 
             if (characterInfo != null)
             {
