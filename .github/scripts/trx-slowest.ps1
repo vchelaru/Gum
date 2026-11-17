@@ -13,6 +13,8 @@ foreach ($file in Get-ChildItem -Path $ResultsDirectory -Filter *.trx -ErrorActi
     $ns = New-Object System.Xml.XmlNamespaceManager($trx.NameTable)
     $ns.AddNamespace("t", "http://microsoft.com/schemas/VisualStudio/TeamTest/2010")
     foreach ($result in $trx.SelectNodes("//t:UnitTestResult", $ns)) {
+        # A test that never ran (skipped, or its run aborted) has no start time or duration.
+        if (-not $result.startTime -or -not $result.duration) { continue }
         $name = $result.testName
         $dot = $name.LastIndexOf(".")
         $paren = $name.IndexOf("(")
