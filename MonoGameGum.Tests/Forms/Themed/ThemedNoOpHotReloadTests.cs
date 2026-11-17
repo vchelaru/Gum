@@ -125,31 +125,44 @@ public class ThemedNoOpHotReloadTests : FileThemeInputTestBase
     [MemberData(nameof(ThemeAndControl))]
     public void ReloadFromFreshProject_ShouldNotMoveOrResizeAnything(string theme, string control)
     {
-        GumProjectSave oldProject = LoadFresh(theme);
+        GumProjectSave oldProject = LoadFresh(theme, isNew: false);
         ScreenSave screen = CreateScreen(oldProject, control);
         oldProject.Screens.Add(screen);
         GraphicalUiElement screenVisual = BuildScreen(screen, control);
         Dictionary<string, string> before = new Dictionary<string, string>();
         Snapshot(screenVisual, "", before);
 
-        GumProjectSave newProject = LoadFresh(theme);
+        GumProjectSave newProject = LoadFresh(theme, isNew: true);
         newProject.Screens.Add(CreateScreen(newProject, control));
         Gum.GumHotReloadManager.ApplyDiff(new[] { screenVisual }, newProject, RenderingLibrary.SystemManagers.Default, oldProject);
         Driver.Step(2);
         AssertUnchanged(before, screenVisual, theme, control);
     }
 
-    private static GumProjectSave LoadFresh(string theme)
+    // Two projects per theme read from the same files, each loaded once: the old one the visuals are built from and
+    // the new one the reload reads. Loading both from disk for every case was most of this class's run time.
+    private static readonly Dictionary<(string Theme, bool IsNew), (GumProjectSave Project, int ScreenCount)> Fresh =
+        new Dictionary<(string Theme, bool IsNew), (GumProjectSave Project, int ScreenCount)>();
+
+    private static GumProjectSave LoadFresh(string theme, bool isNew)
     {
-        string themeFolder = theme.Length == 0 ? "FormsTemplate" : System.IO.Path.Combine("FormsThemes", theme);
-        string gumx = System.IO.Path.Combine(LocateRepoRoot(), "Tools", "Gum.ProjectServices", "Templates", themeFolder, "GumProject.gumx");
-        GumProjectSave loaded = GumProjectSave.Load(gumx, out _)!;
-        loaded.Initialize();
-        ObjectFinder.Self.GumProjectSave = loaded;
-        loaded.ApplyAllVariableReferences();
+        if (!Fresh.TryGetValue((theme, isNew), out (GumProjectSave Project, int ScreenCount) entry))
+        {
+            string themeFolder = theme.Length == 0 ? "FormsTemplate" : System.IO.Path.Combine("FormsThemes", theme);
+            string gumx = System.IO.Path.Combine(LocateRepoRoot(), "Tools", "Gum.ProjectServices", "Templates", themeFolder, "GumProject.gumx");
+            GumProjectSave loaded = GumProjectSave.Load(gumx, out _)!;
+            loaded.Initialize();
+            ObjectFinder.Self.GumProjectSave = loaded;
+            loaded.ApplyAllVariableReferences();
+            entry = (loaded, loaded.Screens.Count);
+            Fresh[(theme, isNew)] = entry;
+        }
+        GumProjectSave project = entry.Project;
+        while (project.Screens.Count > entry.ScreenCount) { project.Screens.RemoveAt(project.Screens.Count - 1); }
+        ObjectFinder.Self.GumProjectSave = project;
         StandardRuntimeRegistrations.Register();
         Gum.Forms.FormsUtilities.RegisterFromFileFormRuntimeDefaults();
-        return loaded;
+        return project;
     }
 
     private static ScreenSave CreateScreen(GumProjectSave project, string control)
