@@ -25,6 +25,9 @@ internal sealed class SlowExistingCodeProjectDetector : IExistingCodeProjectDete
 
     public TimeSpan Delay { get; set; }
 
+    /// <summary>What a check pass sleeps with; a test replaces it to record the delay instead of timing it.</summary>
+    public Action<TimeSpan> Sleep { get; set; } = Thread.Sleep;
+
     /// <summary>Held reset to block the checks; starts set.</summary>
     public ManualResetEventSlim Gate { get; } = new ManualResetEventSlim(initialState: true);
 
@@ -50,7 +53,7 @@ internal sealed class SlowExistingCodeProjectDetector : IExistingCodeProjectDete
         Gate.Wait(GateLimit);
         if (Delay > TimeSpan.Zero)
         {
-            Thread.Sleep(Delay);
+            Sleep(Delay);
         }
     }
 }

@@ -58,13 +58,17 @@ public class NewProjectUiAsyncStateGuardTests
     {
         SlowExistingCodeProjectDetector detector = SlowDetector();
         detector.Delay = TimeSpan.FromMilliseconds(300);
+        System.Collections.Concurrent.ConcurrentQueue<TimeSpan> sleeps = new System.Collections.Concurrent.ConcurrentQueue<TimeSpan>();
+        detector.Sleep = sleeps.Enqueue;
         using NewProjectUiFixture fixture = new NewProjectUiFixture(detector: detector);
+        sleeps.Clear();
 
-        System.Diagnostics.Stopwatch stopwatch = System.Diagnostics.Stopwatch.StartNew();
         fixture.Dialog.TypeName("Other");
         fixture.Settle();
 
-        stopwatch.ElapsedMilliseconds.ShouldBeGreaterThanOrEqualTo(250);
+        // The sleeps are recorded, not timed, so a fast or loaded machine gives the same answer.
+        sleeps.ShouldNotBeEmpty();
+        sleeps.ShouldAllBe(sleep => sleep == TimeSpan.FromMilliseconds(300));
     }
 
     [AvaloniaFact]
