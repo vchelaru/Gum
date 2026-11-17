@@ -42,6 +42,8 @@ public static class KeyComboExtensions
         Gum.Forms.Input.Keys.LeftAlt, Gum.Forms.Input.Keys.RightAlt
     };
 
+    // Only the start of a combo (IsComboPushed) is gated by this: a key that was already pushed
+    // still reads as down and released when a modifier arrives later, so a pushed state can end.
     // A combo with no HeldKey requires that no modifier is down. A modifier that is the combo's own
     // PushedKey is ignored so a combo on Shift itself can still match. Indexed loop: this runs per
     // frame and must not allocate.
@@ -85,7 +87,7 @@ public static class KeyComboExtensions
             if (keyCombo.HeldKey == null)
             {
                 // see if the normal key was just released:
-                if (IsHeldRequirementMet(keyCombo, keyboard) && keyboard.KeyReleased(ToGumKey(keyCombo.PushedKey)))
+                if (keyboard.KeyReleased(ToGumKey(keyCombo.PushedKey)))
                 {
                     return true;
                 }
@@ -106,7 +108,7 @@ public static class KeyComboExtensions
     {
         foreach (var keyboard in FrameworkElement.KeyboardsForUiControl)
         {
-            var isHeld = IsHeldRequirementMet(keyCombo, keyboard);
+            var isHeld = keyCombo.HeldKey == null || keyboard.KeyDown(ToGumKey(keyCombo.HeldKey.Value));
 
             return isHeld && keyboard.KeyDown(ToGumKey(keyCombo.PushedKey));
         }

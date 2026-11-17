@@ -333,25 +333,25 @@ public class KeyComboTests : BaseTestClass
     }
 
     [Fact]
-    public void IsComboDown_NoHeldKeyAndModifierDown_ReturnsFalse()
+    public void IsComboDown_NoHeldKeyAndModifierDownedAfterPush_ReturnsTrue()
     {
         KeyCombo sut = new() { PushedKey = Keys.Space };
         Mock<IInputReceiverKeyboard> keyboard = AddKeyboard();
         keyboard.Setup(k => k.KeyDown(Keys.Space)).Returns(true);
         keyboard.Setup(k => k.KeyDown(Keys.LeftControl)).Returns(true);
 
-        sut.IsComboDown().ShouldBeFalse();
+        sut.IsComboDown().ShouldBeTrue();
     }
 
     [Fact]
-    public void IsComboReleased_NoHeldKeyAndModifierDown_ReturnsFalse()
+    public void IsComboReleased_NoHeldKeyAndModifierDownedAfterPush_ReturnsTrue()
     {
         KeyCombo sut = new() { PushedKey = Keys.Space };
         Mock<IInputReceiverKeyboard> keyboard = AddKeyboard();
         keyboard.Setup(k => k.KeyReleased(Keys.Space)).Returns(true);
         keyboard.Setup(k => k.KeyDown(Keys.LeftControl)).Returns(true);
 
-        sut.IsComboReleased().ShouldBeFalse();
+        sut.IsComboReleased().ShouldBeTrue();
     }
 
     [Fact]
