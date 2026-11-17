@@ -81,7 +81,7 @@ public class ComboBoxOpenAllocationTests : BaseTestClass
         comboBox.DropDownOpened += (_, _) => opened++;
 
         // Even frames open and run a frame, odd frames close and run a frame; each phase is read on its own.
-        SkiaAllocationMeasurer.Measure(
+        AllocationMeasurer.MeasureReplayed(
             frame =>
             {
                 if (frame == warmup)
@@ -90,10 +90,10 @@ public class ComboBoxOpenAllocationTests : BaseTestClass
                     close = 0;
                 }
 
-                long before = GC.GetAllocatedBytesForCurrentThread();
+                long before = AllocationMeasurer.ThreadBytes;
                 comboBox.IsDropDownOpen = frame % 2 == 0;
                 RunFrame();
-                long used = GC.GetAllocatedBytesForCurrentThread() - before;
+                long used = AllocationMeasurer.ThreadBytes - before;
 
                 if (frame >= warmup)
                 {

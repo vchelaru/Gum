@@ -1,3 +1,4 @@
+using MonoGameGum.TestsCommon;
 using Gum.DataTypes;
 using Gum.GueDeriving;
 using Gum.Wireframe;
@@ -581,6 +582,7 @@ public class NineSliceVertexBatchGpuTests : IDisposable
             root.AddChild(clip);
             root.AddToManagers(managers, null);
             RenderingLibrary.Graphics.NineSliceVertexBatch batch = managers.Renderer.NineSliceBatch;
+            AllocationMeasurer.Drain();
 
             for (int frame = 0; frame < MergedFrames; frame++)
             {
@@ -593,17 +595,17 @@ public class NineSliceVertexBatchGpuTests : IDisposable
             long[] drawBytes = new long[50];
             int gcsBefore = GC.CollectionCount(0);
             int buildsBefore = batch.VerticesBuildCount;
-            long bytesBefore = GC.GetAllocatedBytesForCurrentThread();
+            long bytesBefore = AllocationMeasurer.ThreadBytes;
             for (int frame = 0; frame < 50; frame++)
             {
-                long frameStart = GC.GetAllocatedBytesForCurrentThread();
+                long frameStart = AllocationMeasurer.ThreadBytes;
                 managers.Renderer.NotifyHostFrameAdvanced();
-                long drawStart = GC.GetAllocatedBytesForCurrentThread();
+                long drawStart = AllocationMeasurer.ThreadBytes;
                 managers.Draw();
                 notifyBytes[frame] = drawStart - frameStart;
-                drawBytes[frame] = GC.GetAllocatedBytesForCurrentThread() - drawStart;
+                drawBytes[frame] = AllocationMeasurer.ThreadBytes - drawStart;
             }
-            allocated = GC.GetAllocatedBytesForCurrentThread() - bytesBefore;
+            allocated = AllocationMeasurer.ThreadBytes - bytesBefore;
             builds = batch.VerticesBuildCount - buildsBefore;
             int gcs = GC.CollectionCount(0) - gcsBefore;
             allocationDetail = $"gen0 GCs in window: {gcs}; frames that allocated: " + string.Join(", ",

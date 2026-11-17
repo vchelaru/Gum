@@ -1,3 +1,4 @@
+using MonoGameGum.TestsCommon;
 using Gum.Input;
 using Gum.Wireframe;
 using Shouldly;
@@ -48,6 +49,7 @@ public class KeysTypedAllocationTests : IDisposable
     [Fact]
     public void KeysTyped_ReadTwiceInARow_YieldsTheSameKeysEachTime()
     {
+        AllocationMeasurer.Drain();
         Press(GumKeys.Left);
 
         KeysTyped.ToList().ShouldBe(new[] { GumKeys.Left });
@@ -107,7 +109,7 @@ public class KeysTypedAllocationTests : IDisposable
             }
         }
 
-        long before = GC.GetAllocatedBytesForCurrentThread();
+        long before = AllocationMeasurer.ThreadBytes;
         for (int i = 0; i < 1000; i++)
         {
             foreach (GumKeys key in KeysTyped)
@@ -115,7 +117,7 @@ public class KeysTypedAllocationTests : IDisposable
                 seen++;
             }
         }
-        long allocated = GC.GetAllocatedBytesForCurrentThread() - before;
+        long allocated = AllocationMeasurer.ThreadBytes - before;
 
         seen.ShouldBe(1100);
         allocated.ShouldBe(0L);

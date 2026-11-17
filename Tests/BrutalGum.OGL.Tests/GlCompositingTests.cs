@@ -1,3 +1,4 @@
+using MonoGameGum.TestsCommon;
 using Brutal.GlfwApi;
 using Brutal.Numerics;
 using Gum;
@@ -191,17 +192,18 @@ public unsafe class GlCompositingTests : BaseTestClass
             RectangleRuntime rectangle = new() { X = 0, Y = 0, Width = Size, Height = Size / 2, FillColor = SKColors.Red };
             GumService.Default.Root.AddChild(rectangle);
             GumService.Default.Update(0.016);
+            AllocationMeasurer.Drain();
             for (int i = 0; i < WarmupFrames; i++)
             {
                 GumService.Default.Draw();
             }
 
-            long before = GC.GetAllocatedBytesForCurrentThread();
+            long before = AllocationMeasurer.ThreadBytes;
             for (int i = 0; i < MeasuredFrames; i++)
             {
                 GumService.Default.Draw();
             }
-            long allocated = GC.GetAllocatedBytesForCurrentThread() - before;
+            long allocated = AllocationMeasurer.ThreadBytes - before;
 
             allocated.ShouldBe(0L);
         });

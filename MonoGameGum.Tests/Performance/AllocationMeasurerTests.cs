@@ -97,3 +97,62 @@ public class AllocationMeasurerPendingFinalizerTests
         result.TotalBytes.ShouldBe(0);
     }
 }
+
+/// <summary>
+/// The measured iterations run as several windows and the lowest wins, so a real allocation still fails and a
+/// one-off burst does not (#8190).
+/// </summary>
+public class AllocationMeasurerWindowTests
+{
+    private static byte[]? _sink;
+
+    [Fact]
+    public void Measure_RealAllocationEveryIteration_ReportedByEveryWindow()
+    {
+        string? noise = null;
+        AllocationMeasurer.NoiseSink = line => noise = line;
+        try
+        {
+            AllocationResult result = AllocationMeasurer.Measure(
+                () => _sink = new byte[1000], warmupIterations: 10, measuredIterations: 300);
+
+            result.BytesPerIteration.ShouldBeGreaterThanOrEqualTo(1000);
+            noise.ShouldBeNull();
+        }
+        finally
+        {
+            AllocationMeasurer.NoiseSink = null;
+        }
+    }
+
+    [Fact]
+    public void Measure_BurstInOneWindow_ReadsZeroAndReportsNoise()
+    {
+        string? noise = null;
+        AllocationMeasurer.NoiseSink = line => noise = line;
+        try
+        {
+            int call = 0;
+            AllocationResult result = AllocationMeasurer.Measure(
+                () =>
+                {
+                    call++;
+                    if (call == 10 + 150) // inside the second of three windows
+                    {
+                        _sink = new byte[4096];
+                    }
+                },
+                warmupIterations: 10,
+                measuredIterations: 300);
+
+            result.TotalBytes.ShouldBe(0);
+            noise.ShouldNotBeNull();
+            noise!.ShouldStartWith("ALLOCATION-NOISE:");
+            noise.ShouldContain("Measure_BurstInOneWindow_ReadsZeroAndReportsNoise");
+        }
+        finally
+        {
+            AllocationMeasurer.NoiseSink = null;
+        }
+    }
+}

@@ -1,3 +1,4 @@
+using MonoGameGum.TestsCommon;
 using Gum.DataTypes;
 using Gum.GueDeriving;
 using Shouldly;
@@ -31,16 +32,17 @@ public class TextBbCodeSameStringSetTests : BaseTestClass
     [Fact]
     public void Text_SameTaggedString_AllocatesNothing()
     {
+        AllocationMeasurer.Drain();
         TextRuntime runtime = Make(Tagged);
         runtime.Text = Tagged;
-        long before = GC.GetAllocatedBytesForCurrentThread();
+        long before = AllocationMeasurer.ThreadBytes;
 
         for (int i = 0; i < 300; i++)
         {
             runtime.Text = Tagged;
         }
 
-        ((GC.GetAllocatedBytesForCurrentThread() - before) / 300).ShouldBeLessThan(64);
+        ((AllocationMeasurer.ThreadBytes - before) / 300).ShouldBeLessThan(64);
     }
 
     [Fact]

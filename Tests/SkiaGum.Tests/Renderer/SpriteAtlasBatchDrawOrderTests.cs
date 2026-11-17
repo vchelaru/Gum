@@ -1,3 +1,4 @@
+using MonoGameGum.TestsCommon;
 using Gum;
 using Gum.DataTypes;
 using Gum.GueDeriving;
@@ -222,11 +223,12 @@ public class SpriteAtlasBatchDrawOrderTests : IDisposable
         {
             GumService.Default.Root.Children.Add(Sprite(_red, i % 8 * 8, i / 8 * 8));
         }
+        AllocationMeasurer.Drain();
         for (int i = 0; i < 20; i++) GumService.Default.Draw();
 
-        long before = GC.GetAllocatedBytesForCurrentThread();
+        long before = AllocationMeasurer.ThreadBytes;
         for (int i = 0; i < 100; i++) GumService.Default.Draw();
-        long bytes = GC.GetAllocatedBytesForCurrentThread() - before;
+        long bytes = AllocationMeasurer.ThreadBytes - before;
 
         DrawCalls.ShouldBe(1);
         bytes.ShouldBe(0);
@@ -295,18 +297,19 @@ public class SpriteAtlasBatchDrawOrderTests : IDisposable
             }
             batch.Flush();
         }
+        AllocationMeasurer.Drain();
         for (int length = 1; length <= 64; length++)
         {
             DrawBatch(length);
         }
         Random random = new(1234);
 
-        long before = GC.GetAllocatedBytesForCurrentThread();
+        long before = AllocationMeasurer.ThreadBytes;
         for (int frame = 0; frame < 300; frame++)
         {
             DrawBatch(random.Next(1, 65));
         }
-        long bytes = GC.GetAllocatedBytesForCurrentThread() - before;
+        long bytes = AllocationMeasurer.ThreadBytes - before;
 
         bytes.ShouldBe(0);
     }

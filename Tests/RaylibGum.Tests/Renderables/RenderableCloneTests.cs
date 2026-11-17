@@ -1,3 +1,4 @@
+using MonoGameGum.TestsCommon;
 using Gum.Renderables;
 using RenderingLibrary;
 using Shouldly;
@@ -172,18 +173,19 @@ public class RenderableCloneTests : BaseTestClass
         });
         const string line = "abcdefghij";
 
+        AllocationMeasurer.Drain();
         for (int i = 0; i < 10; i++)
         {
             original.GetCachedStyledSubstrings(0, 0, line);
             clone.GetCachedStyledSubstrings(0, 0, line);
         }
-        long before = GC.GetAllocatedBytesForCurrentThread();
+        long before = AllocationMeasurer.ThreadBytes;
         for (int i = 0; i < 20; i++)
         {
             original.GetCachedStyledSubstrings(0, 0, line);
             clone.GetCachedStyledSubstrings(0, 0, line);
         }
-        long allocated = GC.GetAllocatedBytesForCurrentThread() - before;
+        long allocated = AllocationMeasurer.ThreadBytes - before;
 
         allocated.ShouldBe(0);
     }

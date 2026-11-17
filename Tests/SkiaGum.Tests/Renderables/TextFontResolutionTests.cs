@@ -1,3 +1,4 @@
+using MonoGameGum.TestsCommon;
 using RenderingLibrary;
 using Shouldly;
 using SkiaGum.Content.Fonts;
@@ -91,13 +92,14 @@ public class TextFontResolutionTests : BaseTestClass
     [Fact]
     public void TypefaceFromStyle_SystemFamilyResolvedTwice_SecondResolutionAllocatesNothing()
     {
+        AllocationMeasurer.Drain();
         GumFontMapper mapper = new();
         Style style = new() { FontFamily = "Arial", FontWeight = 700, FontItalic = true };
         SKTypeface first = mapper.TypefaceFromStyle(style, ignoreFontVariants: false);
 
-        long before = GC.GetAllocatedBytesForCurrentThread();
+        long before = AllocationMeasurer.ThreadBytes;
         SKTypeface second = mapper.TypefaceFromStyle(style, ignoreFontVariants: false);
-        long allocated = GC.GetAllocatedBytesForCurrentThread() - before;
+        long allocated = AllocationMeasurer.ThreadBytes - before;
 
         allocated.ShouldBe(0);
         second.ShouldBeSameAs(first);
