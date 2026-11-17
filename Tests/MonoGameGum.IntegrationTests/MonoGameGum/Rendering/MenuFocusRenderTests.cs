@@ -80,7 +80,7 @@ public class MenuFocusRenderTests : BaseTestClass
     [MemberData(nameof(Pairs))]
     public void Tool_HighlightedMenuItem_MatchesCodeOnly(string themeName, Action? applyTheme, string templateFolder, string componentPrefix, XnaColor background)
     {
-        MenuMeasure codeOnly = RunScenario(themeName + "-codeonly", gumxPath: null, applyTheme, background, componentPrefix: null);
+        MenuMeasure codeOnly = RunCodeOnly(themeName, applyTheme, background);
         MenuMeasure tool = RunTool(themeName, templateFolder, componentPrefix, background);
 
         tool.HeaderInset.ShouldBe(codeOnly.HeaderInset, 1f, $"{themeName}: space before the header");
@@ -95,7 +95,7 @@ public class MenuFocusRenderTests : BaseTestClass
     [MemberData(nameof(Pairs))]
     public void Tool_OpenMenuItem_MatchesCodeOnly(string themeName, Action? applyTheme, string templateFolder, string componentPrefix, XnaColor background)
     {
-        MenuMeasure codeOnly = RunScenario(themeName + "-codeonly", gumxPath: null, applyTheme, background, componentPrefix: null);
+        MenuMeasure codeOnly = RunCodeOnly(themeName, applyTheme, background);
         MenuMeasure tool = RunTool(themeName, templateFolder, componentPrefix, background);
 
         tool.ShouldSatisfyAllConditions(
@@ -128,7 +128,7 @@ public class MenuFocusRenderTests : BaseTestClass
     [MemberData(nameof(StandardAndEditorPairs))]
     public void Tool_MenuBar_MatchesCodeOnly(string themeName, Action? applyTheme, string templateFolder, string componentPrefix, XnaColor background)
     {
-        MenuMeasure codeOnly = RunScenario(themeName + "-codeonly", gumxPath: null, applyTheme, background, componentPrefix: null);
+        MenuMeasure codeOnly = RunCodeOnly(themeName, applyTheme, background);
         MenuMeasure tool = RunTool(themeName, templateFolder, componentPrefix, background);
 
         tool.ShouldSatisfyAllConditions(
@@ -164,7 +164,7 @@ public class MenuFocusRenderTests : BaseTestClass
     [MemberData(nameof(StandardAndEditorPairs))]
     public void Tool_RestingMenuItemRow_MatchesCodeOnly(string themeName, Action? applyTheme, string templateFolder, string componentPrefix, XnaColor background)
     {
-        MenuMeasure codeOnly = RunScenario(themeName + "-codeonly", gumxPath: null, applyTheme, background, componentPrefix: null);
+        MenuMeasure codeOnly = RunCodeOnly(themeName, applyTheme, background);
         MenuMeasure tool = RunTool(themeName, templateFolder, componentPrefix, background);
 
         tool.ShouldSatisfyAllConditions(
@@ -179,7 +179,7 @@ public class MenuFocusRenderTests : BaseTestClass
     [MemberData(nameof(Pairs))]
     public void Tool_SubmenuPopup_MatchesCodeOnly(string themeName, Action? applyTheme, string templateFolder, string componentPrefix, XnaColor background)
     {
-        MenuMeasure codeOnly = RunScenario(themeName + "-codeonly", gumxPath: null, applyTheme, background, componentPrefix: null);
+        MenuMeasure codeOnly = RunCodeOnly(themeName, applyTheme, background);
         MenuMeasure tool = RunTool(themeName, templateFolder, componentPrefix, background);
 
         tool.ShouldSatisfyAllConditions(
@@ -439,7 +439,7 @@ public class MenuFocusRenderTests : BaseTestClass
     [MemberData(nameof(CodeOnlyThemes))]
     public void CodeOnly_SubmenuPopup_SizedToRows(string themeName, Action? applyTheme, XnaColor background)
     {
-        MenuMeasure codeOnly = RunScenario(themeName + "-codeonly", gumxPath: null, applyTheme, background, componentPrefix: null);
+        MenuMeasure codeOnly = RunCodeOnly(themeName, applyTheme, background);
 
         codeOnly.PopupElementName.ShouldBeNull(themeName);
         codeOnly.PopupGrowthPerRow.ShouldBe(codeOnly.AddedRowHeight, 1f, $"{themeName}: popup height change when a row is added");
@@ -463,7 +463,7 @@ public class MenuFocusRenderTests : BaseTestClass
     [MemberData(nameof(OutlinedHighlightPairs))]
     public void HighlightedMenuItem_HasEdgeDistinctFromFill(string themeName, Action? applyTheme, string templateFolder, string componentPrefix, XnaColor background)
     {
-        MenuMeasure codeOnly = RunScenario(themeName + "-codeonly", gumxPath: null, applyTheme, background, componentPrefix: null);
+        MenuMeasure codeOnly = RunCodeOnly(themeName, applyTheme, background);
         MenuMeasure tool = RunTool(themeName, templateFolder, componentPrefix, background);
 
         ColorDistance(codeOnly.HighlightEdge, codeOnly.HighlightFill).ShouldBeGreaterThan(60, $"{themeName} code-only: edge {codeOnly.HighlightEdge} vs fill {codeOnly.HighlightFill}");
@@ -485,23 +485,8 @@ public class MenuFocusRenderTests : BaseTestClass
     [MemberData(nameof(Pairs))]
     public void Tool_MenuItemFont_MatchesCodeOnly(string themeName, Action? applyTheme, string templateFolder, string componentPrefix, XnaColor background)
     {
-        _ = background;
-        MenuFontMeasure codeOnly = MeasureMenuFont(gumxPath: null, applyTheme, componentPrefix: null);
-
-        string root = Path.Combine(Path.GetTempPath(), "GumMenuFont_" + Guid.NewGuid().ToString("N"));
-        MenuFontMeasure tool;
-        try
-        {
-            string templates = FindTemplatesDirectory();
-            CopyDirectory(Path.Combine(templates, "FormsBehaviors"), Path.Combine(root, "FormsBehaviors"));
-            string projectDir = Path.Combine(root, templateFolder.Replace('/', Path.DirectorySeparatorChar));
-            CopyDirectory(Path.Combine(templates, templateFolder.Replace('/', Path.DirectorySeparatorChar)), projectDir);
-            tool = MeasureMenuFont(Path.Combine(projectDir, "GumProject.gumx"), applyTheme: null, componentPrefix);
-        }
-        finally
-        {
-            try { Directory.Delete(root, recursive: true); } catch { /* best effort */ }
-        }
+        MenuFontMeasure codeOnly = RunCodeOnly(themeName, applyTheme, background).Font;
+        MenuFontMeasure tool = RunTool(themeName, templateFolder, componentPrefix, background).Font;
 
         tool.TopLevelLineHeight.ShouldBe(codeOnly.TopLevelLineHeight, $"{themeName}: top-level row line height");
         ((float)tool.TopLevelWidth).ShouldBe(codeOnly.TopLevelWidth, 1f, $"{themeName}: top-level row header width");
@@ -511,43 +496,14 @@ public class MenuFocusRenderTests : BaseTestClass
 
     private sealed record MenuFontMeasure(int TopLevelLineHeight, int TopLevelWidth, int SubmenuLineHeight, int SubmenuWidth);
 
-    private static MenuFontMeasure MeasureMenuFont(string? gumxPath, Action? applyTheme, string? componentPrefix)
+    // The "File" header of a top-level row and the "New" header of a submenu row, before the menu is focused.
+    private static MenuFontMeasure MeasureMenuFont(MenuItem file, MenuItem newItem)
     {
-        Dictionary<Type, VisualTemplate> previousTemplates = new(FrameworkElement.DefaultFormsTemplates);
-        V3Styling previousStyle = V3Styling.ActiveStyle;
-        var previousFontCreator = CustomSetPropertyOnRenderable.InMemoryFontCreator;
-        using MenuLease game = new MenuLease(gumxPath);
-        try
-        {
-            applyTheme?.Invoke();
-            MenuItem Item(string header)
-            {
-                MenuItem item = componentPrefix == null ? new MenuItem() : FromComponent<MenuItem>(componentPrefix + "MenuItem");
-                item.Header = header;
-                return item;
-            }
-            Menu menu = componentPrefix == null ? new Menu() : FromComponent<Menu>(componentPrefix + "Menu");
-            MenuItem file = Item("File");
-            MenuItem newItem = Item("New");
-            file.Items!.Add(newItem);
-            menu.Items!.Add(file);
-
-            global::RenderingLibrary.Graphics.Text TextOf(MenuItem item) =>
-                (item.Visual.GetGraphicalUiElementByName("TextInstance")?.RenderableComponent as global::RenderingLibrary.Graphics.Text).ShouldNotBeNull();
-            var fileFont = TextOf(file).BitmapFont.ShouldNotBeNull();
-            var newFont = TextOf(newItem).BitmapFont.ShouldNotBeNull();
-            return new MenuFontMeasure(fileFont.LineHeightInPixels, fileFont.MeasureString("File"), newFont.LineHeightInPixels, newFont.MeasureString("New"));
-        }
-        finally
-        {
-            FrameworkElement.DefaultFormsTemplates.Clear();
-            foreach (KeyValuePair<Type, VisualTemplate> pair in previousTemplates)
-            {
-                FrameworkElement.DefaultFormsTemplates[pair.Key] = pair.Value;
-            }
-            V3Styling.ActiveStyle = previousStyle;
-            CustomSetPropertyOnRenderable.InMemoryFontCreator = previousFontCreator;
-        }
+        global::RenderingLibrary.Graphics.Text TextOf(MenuItem item) =>
+            (item.Visual.GetGraphicalUiElementByName("TextInstance")?.RenderableComponent as global::RenderingLibrary.Graphics.Text).ShouldNotBeNull();
+        var fileFont = TextOf(file).BitmapFont.ShouldNotBeNull();
+        var newFont = TextOf(newItem).BitmapFont.ShouldNotBeNull();
+        return new MenuFontMeasure(fileFont.LineHeightInPixels, fileFont.MeasureString("File"), newFont.LineHeightInPixels, newFont.MeasureString("New"));
     }
 
     // HighlightCorner is the highlighted item's pixel one in from its top-left corner, which a rounded
@@ -556,13 +512,13 @@ public class MenuFocusRenderTests : BaseTestClass
         XnaColor OpenHeaderColor, XnaColor? OpenIndicatorColor, XnaColor OpenCorner,
         XnaColor PopupFill, XnaColor PopupBorder, XnaColor PopupRowTextColor, string? PopupElementName, string? PopupVisualName, float PopupGrowthPerRow, float AddedRowHeight,
         XnaColor[] BarColumn, XnaColor[] FocusedItemColumn, int MenuBottom,
-        XnaColor BarFill, float BarHeight, XnaColor RestingRowFill, XnaColor DisabledRowFill, XnaColor FocusedRowFill);
+        XnaColor BarFill, float BarHeight, XnaColor RestingRowFill, XnaColor DisabledRowFill, XnaColor FocusedRowFill, MenuFontMeasure Font);
 
     [Theory]
     [MemberData(nameof(CodeOnlyThemes))]
     public void CodeOnly_Focus_ChangesOnlyTheFirstItem(string themeName, Action? applyTheme, XnaColor background)
     {
-        RunScenario(themeName + "-codeonly", gumxPath: null, applyTheme, background, componentPrefix: null);
+        RunCodeOnly(themeName, applyTheme, background);
     }
 
     [Theory]
@@ -572,7 +528,33 @@ public class MenuFocusRenderTests : BaseTestClass
         RunTool(themeName, templateFolder, componentPrefix, background);
     }
 
-    private static MenuMeasure RunTool(string themeName, string templateFolder, string componentPrefix, XnaColor background, Action? afterInitialize = null)
+    // A scenario's inputs are fixed per theme, so it renders once and every test that compares it reads the same
+    // measure. The scenario's own assertions run on that first render; a scenario that throws is not kept and
+    // throws again for the next test.
+    private static readonly Dictionary<string, MenuMeasure> CodeOnlyMeasures = new();
+    private static readonly Dictionary<string, MenuMeasure> ToolMeasures = new();
+
+    private static MenuMeasure RunCodeOnly(string themeName, Action? applyTheme, XnaColor background)
+    {
+        if (!CodeOnlyMeasures.TryGetValue(themeName, out MenuMeasure? measure))
+        {
+            measure = RunScenario(themeName + "-codeonly", gumxPath: null, applyTheme, background, componentPrefix: null);
+            CodeOnlyMeasures[themeName] = measure;
+        }
+        return measure;
+    }
+
+    private static MenuMeasure RunTool(string themeName, string templateFolder, string componentPrefix, XnaColor background)
+    {
+        if (!ToolMeasures.TryGetValue(themeName, out MenuMeasure? measure))
+        {
+            measure = RunTool(themeName, templateFolder, componentPrefix, background, afterInitialize: null);
+            ToolMeasures[themeName] = measure;
+        }
+        return measure;
+    }
+
+    private static MenuMeasure RunTool(string themeName, string templateFolder, string componentPrefix, XnaColor background, Action? afterInitialize)
     {
         string root = Path.Combine(Path.GetTempPath(), "GumMenuFocus_" + Guid.NewGuid().ToString("N"));
         try
@@ -645,6 +627,7 @@ public class MenuFocusRenderTests : BaseTestClass
             menu.Items!.Add(helpItem);
             menu.AddToRoot();
             menu.Visual.UpdateLayout();
+            MenuFontMeasure font = MeasureMenuFont(file, newItem);
 
             XnaColor[] unfocused = Capture(game, background, $"{pngPrefix}-unfocused.png");
             // The bar right of its last item, and a resting item inside its padding, clear of the header.
@@ -766,7 +749,7 @@ public class MenuFocusRenderTests : BaseTestClass
                 popupFill, popupBorder, rowTextColor, popupElementName, popup.Name, growth, addedRowHeight,
                 Column(unfocused, CaptureWidth - 8), Column(focused, (int)(file.Visual.AbsoluteLeft + file.Visual.GetAbsoluteWidth() / 2)),
                 (int)(menu.Visual.AbsoluteTop + menu.Visual.GetAbsoluteHeight()),
-                barFill, barHeight, restingRowFill, disabledRowFill, focusedRowFill);
+                barFill, barHeight, restingRowFill, disabledRowFill, focusedRowFill, font);
         }
         finally
         {
@@ -830,7 +813,7 @@ public class MenuFocusRenderTests : BaseTestClass
     [MemberData(nameof(SeparatorPairs))]
     public void Tool_MenuBottomSeparator_MatchesCodeOnly(string themeName, Action? applyTheme, string templateFolder, string componentPrefix, XnaColor background)
     {
-        MenuMeasure codeOnly = RunScenario(themeName + "-codeonly", gumxPath: null, applyTheme, background, componentPrefix: null);
+        MenuMeasure codeOnly = RunCodeOnly(themeName, applyTheme, background);
         MenuMeasure tool = RunTool(themeName, templateFolder, componentPrefix, background);
 
         BottomEdgesShouldMatch(tool.BarColumn, tool.MenuBottom, codeOnly.BarColumn, codeOnly.MenuBottom,
@@ -842,7 +825,7 @@ public class MenuFocusRenderTests : BaseTestClass
     [MemberData(nameof(SeparatorPairs))]
     public void Tool_MenuBottomSeparator_UnderHighlightedItem_MatchesCodeOnly(string themeName, Action? applyTheme, string templateFolder, string componentPrefix, XnaColor background)
     {
-        MenuMeasure codeOnly = RunScenario(themeName + "-codeonly", gumxPath: null, applyTheme, background, componentPrefix: null);
+        MenuMeasure codeOnly = RunCodeOnly(themeName, applyTheme, background);
         MenuMeasure tool = RunTool(themeName, templateFolder, componentPrefix, background);
 
         BottomEdgesShouldMatch(tool.FocusedItemColumn, tool.MenuBottom, codeOnly.FocusedItemColumn, codeOnly.MenuBottom,
