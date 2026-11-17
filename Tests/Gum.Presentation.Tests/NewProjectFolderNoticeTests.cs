@@ -243,7 +243,7 @@ public class NewProjectFolderNoticeTests
     [Fact]
     public async Task FastChecks_NeverHideTheNotice_WhileTyping()
     {
-        NewProjectDialogViewModel viewModel = Create(Parent);
+        NewProjectDialogViewModel viewModel = Create(Parent, backgroundChecks: true);
         await viewModel.ChecksRefresh;
         viewModel.FolderNoticeHideDelay = TimeSpan.FromSeconds(30);
         int hides = 0;
@@ -256,10 +256,21 @@ public class NewProjectFolderNoticeTests
             }
         };
 
+        // Each check is held pending while the notice is read, so the pool never mutates the view model during the read.
+        ManualResetEventSlim gate = new ManualResetEventSlim(false);
+        _detector.Setup(x => x.TargetExists(It.IsAny<string>(), It.IsAny<string>())).Returns((string folder, string name) =>
+        {
+            ManualResetEventSlim current = gate;
+            current.Wait(TimeSpan.FromSeconds(20));
+            return false;
+        });
+
         for (int i = 0; i < 10; i++)
         {
+            gate = new ManualResetEventSlim(false);
             viewModel.ProjectName = "Name" + i;
             viewModel.IsFolderNoticeVisible.ShouldBeTrue("the previous notice stays up while the check runs");
+            gate.Set();
             await viewModel.ChecksRefresh;
         }
 
