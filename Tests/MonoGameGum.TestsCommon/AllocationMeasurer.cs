@@ -37,17 +37,44 @@ public static class AllocationMeasurer
             throw new ArgumentOutOfRangeException(nameof(measuredIterations), "Must run at least one measured iteration.");
         }
 
+        // #8190: with GUM_ALLOCATION_EVENTS=1 (the Mesa CI leg), an allocating window prints which calls allocated and
+        // what the runtime did inside them (JIT, type loads, exceptions) to the test's output. All arrays and the
+        // recorder exist before the window starts.
+        bool explain = Environment.GetEnvironmentVariable("GUM_ALLOCATION_EVENTS") == "1";
+        using RuntimeEventRecorder recorder = explain ? new RuntimeEventRecorder() : null!;
+        long testThreadId = RuntimeEventRecorder.CurrentOsThreadId();
+        long[] warmupBytes = new long[warmupIterations];
+        long[] measuredBytes = new long[measuredIterations];
+        DateTime[] starts = new DateTime[measuredIterations];
+        DateTime[] ends = new DateTime[measuredIterations];
+
         for (int i = 0; i < warmupIterations; i++)
         {
+            long callBefore = GC.GetAllocatedBytesForCurrentThread();
             action();
+            warmupBytes[i] = GC.GetAllocatedBytesForCurrentThread() - callBefore;
         }
 
         long before = GC.GetAllocatedBytesForCurrentThread();
         for (int i = 0; i < measuredIterations; i++)
         {
+            starts[i] = DateTime.UtcNow;
+            long callBefore = GC.GetAllocatedBytesForCurrentThread();
             action();
+            measuredBytes[i] = GC.GetAllocatedBytesForCurrentThread() - callBefore;
+            ends[i] = DateTime.UtcNow;
         }
         long after = GC.GetAllocatedBytesForCurrentThread();
+
+        if (explain && after - before != 0 && Array.FindIndex(measuredBytes, bytes => bytes != 0) >= 0)
+        {
+            int first = Array.FindIndex(measuredBytes, bytes => bytes != 0);
+            int last = Array.FindLastIndex(measuredBytes, bytes => bytes != 0);
+            string warmups = string.Join(", ", Enumerable.Range(0, warmupIterations).Where(i => warmupBytes[i] != 0).Select(i => $"w{i}={warmupBytes[i]}"));
+            string measured = string.Join(", ", Enumerable.Range(0, measuredIterations).Where(i => measuredBytes[i] != 0).Select(i => $"m{i}={measuredBytes[i]}"));
+            Console.WriteLine($"[#8190 allocation detail] warm-up calls that allocated: [{warmups}]; measured calls that allocated: [{measured}]; "
+                + recorder.Describe(starts[first].AddMilliseconds(-2), ends[last].AddMilliseconds(2), testThreadId));
+        }
 
         return new AllocationResult(after - before, measuredIterations);
     }
