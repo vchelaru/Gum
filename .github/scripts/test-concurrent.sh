@@ -59,7 +59,9 @@ run_stream() {
   local stream="$1" log="$results/stream-$1.log" tmp
   tmp="$(mktemp -d)"; if command -v cygpath >/dev/null 2>&1; then tmp="$(cygpath -w "$tmp")"; fi
   export TMPDIR="$tmp" TMP="$tmp" TEMP="$tmp"
-  case "$stream" in mesa*) export GALLIUM_DRIVER=llvmpipe GUM_REQUIRE_GL=1 ;; esac
+  # LP_NUM_THREADS caps llvmpipe's rasterizer threads (default: one per core), so two Mesa streams do not
+  # take every core from the headless stream, which runs serially and sets the wall time (#8169).
+  case "$stream" in mesa*) export GALLIUM_DRIVER=llvmpipe GUM_REQUIRE_GL=1 LP_NUM_THREADS=2 ;; esac
   local failed=0 line project minutes
   while read -r line; do
     set -- $line   # stream project [minutes] [extra...] (word-split on purpose; quotes are kept for eval)
