@@ -365,7 +365,7 @@ public class DrawAllocationTests : BaseTestClass
 
         // SkiaAllocationMeasurer replays the same frames in every window and keeps SkiaSharp's handle table
         // resize and the collector's timing out of the reading (#7860).
-        AllocationResult result = SkiaAllocationMeasurer.MeasureMinimum(
+        AllocationResult result = SkiaAllocationMeasurer.Measure(
             frame =>
             {
                 change(frame);

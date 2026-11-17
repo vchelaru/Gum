@@ -81,7 +81,7 @@ public class ComboBoxOpenAllocationTests : BaseTestClass
         comboBox.DropDownOpened += (_, _) => opened++;
 
         // Even frames open and run a frame, odd frames close and run a frame; each phase is read on its own.
-        SkiaAllocationMeasurer.MeasureMinimum(
+        SkiaAllocationMeasurer.Measure(
             frame =>
             {
                 if (frame == warmup)

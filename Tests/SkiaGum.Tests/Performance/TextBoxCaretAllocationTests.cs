@@ -97,7 +97,7 @@ public class TextBoxCaretAllocationTests : BaseTestClass
     private double Measure(string label, Action<int> act, out int frames)
     {
         int count = 0;
-        AllocationResult result = SkiaAllocationMeasurer.MeasureMinimum(
+        AllocationResult result = SkiaAllocationMeasurer.Measure(
             frame =>
             {
                 count++;

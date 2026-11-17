@@ -8,7 +8,7 @@ namespace SkiaGum.Tests.Performance;
 public class SkiaAllocationMeasurerTests
 {
     [Fact]
-    public void MeasureMinimum_HandleTableAlreadyLarge_ReadsSameAsWhenSmall()
+    public void Measure_HandleTableAlreadyLarge_ReadsSameAsWhenSmall()
     {
         // Like RichTextKit, each frame creates SKFonts it never disposes, so SkiaSharp's handle table grows until
         // finalizers run (#7860).
@@ -20,7 +20,7 @@ public class SkiaAllocationMeasurerTests
             }
         }
 
-        AllocationResult first = SkiaAllocationMeasurer.MeasureMinimum(Frame, attempts: 1, warmupIterations: 10, measuredIterations: 300);
+        AllocationResult first = SkiaAllocationMeasurer.Measure(Frame, warmupIterations: 10, measuredIterations: 300);
 
         // Leaves the handle table with room for far more handles than the workload creates.
         List<SKFont> held = new List<SKFont>();
@@ -33,7 +33,7 @@ public class SkiaAllocationMeasurerTests
             font.Dispose();
         }
 
-        AllocationResult second = SkiaAllocationMeasurer.MeasureMinimum(Frame, attempts: 1, warmupIterations: 10, measuredIterations: 300);
+        AllocationResult second = SkiaAllocationMeasurer.Measure(Frame, warmupIterations: 10, measuredIterations: 300);
 
         first.TotalBytes.ShouldBe(second.TotalBytes);
         first.BytesPerIteration.ShouldBeGreaterThan(0);
@@ -43,7 +43,7 @@ public class SkiaAllocationMeasurerTests
     [Theory]
     [InlineData(1)]
     [InlineData(35)]
-    public void MeasureMinimum_FrameThrows_PropagatesAndLeavesNoGcRegionOpen(int throwOnCall)
+    public void Measure_FrameThrows_PropagatesAndLeavesNoGcRegionOpen(int throwOnCall)
     {
         int callCount = 0;
         void ThrowingFrame(int frameNumber)
@@ -58,13 +58,13 @@ public class SkiaAllocationMeasurerTests
         try
         {
             Should.Throw<InvalidOperationException>(() =>
-                SkiaAllocationMeasurer.MeasureMinimum(ThrowingFrame, attempts: 1, warmupIterations: 5, measuredIterations: 20))
+                SkiaAllocationMeasurer.Measure(ThrowingFrame, warmupIterations: 5, measuredIterations: 20))
                 .Message.ShouldBe("frame failed");
 
             GCSettings.LatencyMode.ShouldNotBe(GCLatencyMode.NoGCRegion);
 
-            AllocationResult next = SkiaAllocationMeasurer.MeasureMinimum(
-                frame => { }, attempts: 1, warmupIterations: 5, measuredIterations: 20);
+            AllocationResult next = SkiaAllocationMeasurer.Measure(
+                frame => { }, warmupIterations: 5, measuredIterations: 20);
             next.Iterations.ShouldBe(20);
         }
         finally
@@ -78,22 +78,20 @@ public class SkiaAllocationMeasurerTests
     }
 
     [Fact]
-    public void MeasureMinimum_EveryAttempt_ReplaysTheSameFrameNumbers()
+    public void Measure_ReplaysTheSameFrameNumbers_InThePeakPassAndTheWindow()
     {
-        const int Attempts = 3;
         const int Warmup = 5;
         const int Measured = 20;
         Dictionary<int, int> calls = new Dictionary<int, int>();
 
-        SkiaAllocationMeasurer.MeasureMinimum(
+        SkiaAllocationMeasurer.Measure(
             frame => calls[frame] = calls.GetValueOrDefault(frame) + 1,
-            attempts: Attempts,
             warmupIterations: Warmup,
             measuredIterations: Measured);
 
-        // Each attempt runs frames 0..24 in a pass that grows the handle table and again as warm-up plus window.
+        // Frames 0..24 run in a pass that grows the handle table and again as warm-up plus window.
         calls.Keys.Min().ShouldBe(0);
         calls.Keys.Max().ShouldBe(Warmup + Measured - 1);
-        calls.Values.ShouldAllBe(count => count == 2 * Attempts);
+        calls.Values.ShouldAllBe(count => count == 2);
     }
 }

@@ -190,13 +190,20 @@ public class QueueLockTests : BaseTestClass
     {
         FakeBrutalInput input = new() { FramebufferWidth = 320, FramebufferHeight = 200 };
 
+        // The fake records every Present and frame event in lists; sized up front so their growth is not counted as Draw's.
+        FakeBrutalGpuBackend unlockedBackend = new FakeBrutalGpuBackend();
+        unlockedBackend.Presents.Capacity = 1024;
+        unlockedBackend.FrameEvents.Capacity = 2048;
         GumService.Default.Uninitialize();
-        GumService.Default.Initialize(input, new FakeBrutalGpuBackend());
+        GumService.Default.Initialize(input, unlockedBackend);
         long unlocked = AllocationMeasurer.Measure(() => GumService.Default.Draw(), 100, 500).TotalBytes;
 
         FakeQueueLock queueLock = new FakeQueueLock();
+        FakeBrutalGpuBackend lockedBackend = new FakeBrutalGpuBackend();
+        lockedBackend.Presents.Capacity = 1024;
+        lockedBackend.FrameEvents.Capacity = 2048;
         GumService.Default.Uninitialize();
-        GumService.Default.Initialize(input, QueueLockedBackend.Wrap(new FakeBrutalGpuBackend(), queueLock.Acquire));
+        GumService.Default.Initialize(input, QueueLockedBackend.Wrap(lockedBackend, queueLock.Acquire));
         long locked = AllocationMeasurer.Measure(() => GumService.Default.Draw(), 100, 500).TotalBytes;
 
         _output.WriteLine($"Draw allocation over 500 frames: no lock {unlocked} bytes, cached lock {locked} bytes");
