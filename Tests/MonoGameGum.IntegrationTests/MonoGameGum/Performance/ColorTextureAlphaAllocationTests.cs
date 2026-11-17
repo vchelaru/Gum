@@ -17,7 +17,6 @@ namespace MonoGameGum.IntegrationTests.MonoGameGum.Performance;
 /// original on each frame, and must allocate nothing once warm.
 /// </summary>
 [Collection(SharedGame.CollectionName)]
-[Trait("Quarantine", "MesaAllocation")]
 public class ColorTextureAlphaAllocationTests : BaseTestClass
 {
     private readonly ITestOutputHelper _output;

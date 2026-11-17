@@ -49,7 +49,7 @@ public static class AllocationMeasurer
 
         Drain();
 
-        // #8190: with GUM_ALLOCATION_EVENTS=1 (the Mesa CI steps) the runtime's own events (JIT, type loads, exceptions)
+        // #8190: with GUM_ALLOCATION_EVENTS=1 (the Windows CI test step) the runtime's own events (JIT, type loads, exceptions)
         // are recorded from here, so a window that allocated can say what ran inside it. Started before any window.
         bool explain = RecordsRuntimeEvents ?? Environment.GetEnvironmentVariable("GUM_ALLOCATION_EVENTS") == "1";
         using RuntimeEventRecorder recorder = explain ? new RuntimeEventRecorder() : null!;

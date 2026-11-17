@@ -22,7 +22,6 @@ namespace MonoGameGum.IntegrationTests.MonoGameGum.Performance;
 /// count; the guard is bytes per container per frame.
 /// </summary>
 [Collection(SharedGame.CollectionName)]
-[Trait("Quarantine", "MesaAllocation")]
 public class RenderTargetAllocationTests : BaseTestClass
 {
     private const int ContainerCount = 20;

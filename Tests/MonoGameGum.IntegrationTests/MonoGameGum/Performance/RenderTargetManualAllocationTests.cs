@@ -18,7 +18,6 @@ namespace MonoGameGum.IntegrationTests.MonoGameGum.Performance;
 /// <see cref="RenderTargetAllocationTests"/>.
 /// </summary>
 [Collection(SharedGame.CollectionName)]
-[Trait("Quarantine", "MesaAllocation")]
 public class RenderTargetManualAllocationTests : BaseTestClass
 {
     private const int ContainerCount = 1000;
