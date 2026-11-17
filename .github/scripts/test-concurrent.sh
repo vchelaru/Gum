@@ -115,6 +115,10 @@ if [ "${QUARANTINE:-}" = "only" ]; then
   msg="Quarantined allocation tests: $nfailed failed (non-blocking, issue 8190)"
   echo "$msg"
   if [ "$nfailed" -gt 0 ]; then echo "::warning::$msg"; fi
+  if [ "$failed" -ne 0 ] && [ "$nfailed" -eq 0 ]; then
+    msg="Quarantined allocation tests: step failed but no trx failures counted (testhost crash or timeout?) (non-blocking, issue 8190)"
+    echo "::warning::$msg"
+  fi
   [ -z "${GITHUB_STEP_SUMMARY:-}" ] || echo "$msg" >> "$GITHUB_STEP_SUMMARY"
 fi
 exit $failed

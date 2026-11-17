@@ -13,7 +13,6 @@ namespace RaylibGum.Tests.Rendering;
 /// a fixed number of frames through the real draw pass (the hidden test window supplies the GL context)
 /// and keeps the lowest of a few attempts, so a one-off blip cannot fail it.
 /// </summary>
-[Trait("Quarantine", "MesaAllocation")]
 public class StyledTextAllocationTests : BaseTestClass
 {
     private const string ColoredSingleLine = "ab[Color=Red]cdef[/Color]ghij";
