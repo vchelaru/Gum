@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Gum.Forms;
 using Gum.Forms.Controls;
+using Gum.Wireframe;
 using RenderingLibrary.Graphics;
 using Shouldly;
 using Xunit;
@@ -57,7 +59,29 @@ public class MenuNestedSubmenuSizeTests : BaseTestClass
         sizes.ShouldBe(Expected.GetValueOrDefault(themeName), themeName);
     }
 
-    private string MeasureNestedPopups(Action? applyTheme)
+    // The kerning sum of the More popup's widest header in each theme's font, which is how much narrower
+    // its pinned width is than before bitmap fonts kerned (#8208).
+    [Theory]
+    [MemberData(nameof(Themes))]
+    public void OpenThreeLevels_WidestHeaderKerning_MatchesTheRepinnedWidth(string themeName, Action? applyTheme)
+    {
+        float kerningSum = 0;
+        MeasureNestedPopups(applyTheme, more =>
+        {
+            MenuItem widest = (MenuItem)more.Items![1]!;
+            string header = (string)widest.Header!;
+            Text text = (Text)widest.Visual.Descendants().OfType<global::Gum.GueDeriving.TextRuntime>().Single().RenderableComponent!;
+            for (int i = 1; i < header.Length; i++)
+            {
+                kerningSum += text.GetKerning(header[i - 1], header[i]);
+            }
+        });
+
+        float expected = themeName is "standard" or "editor" ? -1 : 0;
+        kerningSum.ShouldBe(expected, themeName);
+    }
+
+    private string MeasureNestedPopups(Action? applyTheme, Action<MenuItem>? inspectMore = null)
     {
         Dictionary<Type, VisualTemplate> previousTemplates = new(FrameworkElement.DefaultFormsTemplates);
         V3Styling previousStyle = V3Styling.ActiveStyle;
@@ -85,6 +109,7 @@ public class MenuNestedSubmenuSizeTests : BaseTestClass
             file.TryShowPopup();
             recent.TryShowPopup();
             more.TryShowPopup();
+            inspectMore?.Invoke(more);
 
             return string.Join(", ", Size(file), Size(recent), Size(more));
         }
