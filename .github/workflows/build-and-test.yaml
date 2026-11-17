@@ -689,7 +689,11 @@ jobs:
           WORKLOADS: wasm-tools ios android maui
         run: |
           echo "workloads=$WORKLOADS" >> "$GITHUB_OUTPUT"
-          echo "key=workloads-${RUNNER_OS}-$(dotnet --version)-${WORKLOADS// /-}-${{ hashFiles('.github/scripts/install-workloads.sh') }}" >> "$GITHUB_OUTPUT"
+          # Keyed on the feature band (10.0.404 -> 10.0.400), not the patch: the hosted image rolls the SDK
+          # patch across runners over days, and an exact-version key missed on every runner that differed
+          # from the one main seeded, costing ~260-310 s of install per run (#8169).
+          band="$(dotnet --version | sed -E 's/^([0-9]+\.[0-9]+\.)([0-9])[0-9]{2}.*/\1\200/')"
+          echo "key=workloads-${RUNNER_OS}-${band}-${WORKLOADS// /-}-${{ hashFiles('.github/scripts/install-workloads.sh') }}" >> "$GITHUB_OUTPUT"
 
       - name: Cache .NET workloads (main only)
         id: cache-workloads
