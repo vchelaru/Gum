@@ -567,6 +567,8 @@ jobs:
     if: ${{ !cancelled() }}
     name: Build-and-Test (${{ matrix.leg }})
     strategy:
+      # A red leg must not cancel the others: macOS results are lost whenever Windows fails (#8169).
+      fail-fast: false
       matrix:
       # We used to have ubuntu-latest here, but it can't build iOS, and it's easier to just use macos.
       # Windows has two legs (#8169): the headless test stream, and the Mesa streams on a second runner,
