@@ -7,7 +7,9 @@ TextRuntime supports using BBCode-like syntax for formatting individual words an
 Using BBCode for TextRuntimes supports all of the functionality outlined in the Text documentation which can be found here: [https://docs.flatredball.com/gum/gum-tool/gum-elements/text/text#using-bbcode-for-inline-styling](https://docs.flatredball.com/gum/gum-tool/gum-elements/text/text#using-bbcode-for-inline-styling)
 
 {% hint style="info" %}
-The following BBCode variables require font generation:
+On [SkiaSharp-based runtimes](../../about/runtimes.md) BBCode tags need no font files or font generation. `Font` takes an installed font family, a registered family, or a `.ttf` path, and `IsBold` and `IsItalic` pick the matching style of that family. See [Dynamic Generation on SkiaGum](../../files-and-fonts/font-strategies.md#dynamic-generation-on-skiagum) and [Bold and Italic on SkiaGum](../../files-and-fonts/font-strategies.md#bold-and-italic-on-skiagum).
+
+On the other runtimes, the following BBCode variables require font generation:
 
 * IsBold
 * IsItalic
