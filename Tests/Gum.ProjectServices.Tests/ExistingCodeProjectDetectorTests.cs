@@ -1,4 +1,4 @@
-using System.Diagnostics;
+using Microsoft.Extensions.Time.Testing;
 using Shouldly;
 
 namespace Gum.ProjectServices.Tests;
@@ -107,27 +107,24 @@ public class ExistingCodeProjectDetectorTests : IDisposable
     }
 
     // Backslash UNC paths are only UNC on Windows; elsewhere they are a relative file name.
+    // How long it takes is bounded by the search timeout, which SearchThatNeverFinishes_ReturnsNullAtTheBound covers.
     [SkippableFact]
-    public void FindExistingCodeProject_UncPathToAnUnreachableServer_ReturnsWithinABoundedTime()
+    public void FindExistingCodeProject_UncPathToAnUnreachableServer_ReturnsNull()
     {
         Skip.IfNot(OperatingSystem.IsWindows(), "UNC paths are Windows-only");
-        Stopwatch stopwatch = Stopwatch.StartNew();
 
         string? found = _detector.FindExistingCodeProject(@"\\gum-no-such-server-7208\share\x");
 
-        stopwatch.Elapsed.TotalSeconds.ShouldBeLessThan(10);
         found.ShouldBeNull();
     }
 
     [Fact]
-    public void FindExistingCodeProject_AbsolutePathUnderTheRootThatDoesNotExist_ReturnsWithinABoundedTime()
+    public void FindExistingCodeProject_AbsolutePathUnderTheRootThatDoesNotExist_DoesNotReturnOneInside()
     {
         string missing = Path.Combine(Path.GetPathRoot(_root)!, "gum-nonexistent-7208", "share", "x");
-        Stopwatch stopwatch = Stopwatch.StartNew();
 
         string? found = _detector.FindExistingCodeProject(missing);
 
-        stopwatch.Elapsed.TotalSeconds.ShouldBeLessThan(10);
         (found == null || !found.StartsWith(missing)).ShouldBeTrue();
     }
 
@@ -169,44 +166,59 @@ public class ExistingCodeProjectDetectorTests : IDisposable
     public void FindExistingCodeProject_SearchThatNeverFinishes_ReturnsNullAtTheBound()
     {
         using ManualResetEventSlim release = new ManualResetEventSlim();
+        TimeSpan bound = TimeSpan.FromSeconds(2);
+        TimerSignalingTimeProvider clock = new TimerSignalingTimeProvider();
         ExistingCodeProjectDetector detector = new ExistingCodeProjectDetector(
-            TimeSpan.FromMilliseconds(200),
+            bound,
             _ =>
             {
                 release.Wait();
                 return "never";
-            });
+            },
+            clock);
 
-        Stopwatch stopwatch = Stopwatch.StartNew();
-        string? found = detector.FindExistingCodeProject(_root);
-        stopwatch.Stop();
+        Task<string?> find = Task.Run(() => detector.FindExistingCodeProject(_root));
+        // Hang deadlines only: the result depends on the test's clock, never on how fast the machine is.
+        clock.TimerCreated.Wait(TimeSpan.FromSeconds(60)).ShouldBeTrue("the search never started its timeout");
+        clock.Advance(bound - TimeSpan.FromTicks(1));
+        bool finishedBeforeTheBound = find.IsCompleted;
+        clock.Advance(TimeSpan.FromTicks(1));
+        bool finishedAtTheBound = find.Wait(TimeSpan.FromSeconds(60));
         release.Set();
 
-        found.ShouldBeNull();
-        stopwatch.ElapsedMilliseconds.ShouldBeGreaterThanOrEqualTo(150);
-        stopwatch.ElapsedMilliseconds.ShouldBeLessThan(1500);
+        finishedBeforeTheBound.ShouldBeFalse();
+        finishedAtTheBound.ShouldBeTrue();
+        find.Result.ShouldBeNull();
     }
 
     [Fact]
-    public async Task FindExistingCodeProject_TwentyTimedOutSearches_LeaveTheThreadPoolAvailable()
+    public void FindExistingCodeProject_RunsTheSearchOffTheThreadPool()
     {
-        using ManualResetEventSlim release = new ManualResetEventSlim();
+        bool? ranOnThreadPool = null;
         ExistingCodeProjectDetector detector = new ExistingCodeProjectDetector(
-            TimeSpan.FromMilliseconds(20),
+            TimeSpan.FromSeconds(60),
             _ =>
             {
-                release.Wait();
+                ranOnThreadPool = Thread.CurrentThread.IsThreadPoolThread;
                 return null;
             });
 
-        for (int i = 0; i < 20; i++)
-        {
-            detector.FindExistingCodeProject(_root).ShouldBeNull();
-        }
+        detector.FindExistingCodeProject(_root);
 
-        Task poolWork = Task.Run(() => 1 + 1);
-        (await Task.WhenAny(poolWork, Task.Delay(2000))).ShouldBe(poolWork);
-        release.Set();
+        // A search that hangs on a pool thread holds that thread forever; enough of them starve the pool.
+        ranOnThreadPool.ShouldBe(false);
+    }
+
+    private sealed class TimerSignalingTimeProvider : FakeTimeProvider
+    {
+        public ManualResetEventSlim TimerCreated { get; } = new ManualResetEventSlim();
+
+        public override ITimer CreateTimer(TimerCallback callback, object? state, TimeSpan dueTime, TimeSpan period)
+        {
+            ITimer timer = base.CreateTimer(callback, state, dueTime, period);
+            TimerCreated.Set();
+            return timer;
+        }
     }
 
     [Fact]
