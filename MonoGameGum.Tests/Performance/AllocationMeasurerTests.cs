@@ -36,3 +36,64 @@ public class AllocationMeasurerTests
         result.TotalBytes.ShouldBe(0);
     }
 }
+
+/// <summary>
+/// Finalizers of garbage left by earlier tests run on the finalizer thread and can hand work to the
+/// measuring thread (a resource-release queue the next frame drains). If that lands in the measured
+/// window, the window reads non-zero for code that allocates nothing (#8190).
+/// </summary>
+[Collection("AllocationMeasurerPendingFinalizer")]
+public class AllocationMeasurerPendingFinalizerTests
+{
+    private static readonly System.Collections.Concurrent.ConcurrentQueue<int> ReleaseQueue = new();
+    private static readonly System.Threading.ManualResetEventSlim FinalizerGate = new(false);
+
+    private sealed class Releasable
+    {
+        // Stands in for a GraphicsResource: its finalizer queues a release the next frame performs.
+        ~Releasable()
+        {
+            FinalizerGate.Wait(TimeSpan.FromMilliseconds(500));
+            ReleaseQueue.Enqueue(1);
+        }
+    }
+
+    [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.NoInlining)]
+    private static void CreateGarbage() => GC.KeepAlive(new Releasable());
+
+    [Fact]
+    public void Measure_FinalizerQueuedBeforeMeasuring_DoesNotLeakIntoWindow()
+    {
+        while (ReleaseQueue.TryDequeue(out _)) { }
+        FinalizerGate.Reset();
+        CreateGarbage();
+        GC.Collect(); // finalizer thread now holds the object, blocked on the gate
+
+        int call = 0;
+        byte[]? sink = null;
+        AllocationResult result = AllocationMeasurer.Measure(
+            () =>
+            {
+                call++;
+                if (call == 102)
+                {
+                    // First measured call: let the lagging finalizer finish inside the window.
+                    FinalizerGate.Set();
+                    long deadline = Environment.TickCount64 + 2000;
+                    while (ReleaseQueue.IsEmpty && Environment.TickCount64 < deadline)
+                    {
+                        System.Threading.Thread.Yield();
+                    }
+                }
+                if (ReleaseQueue.TryDequeue(out _))
+                {
+                    sink = new byte[4096]; // the release work, charged to the measuring thread
+                }
+            },
+            warmupIterations: 100,
+            measuredIterations: 200);
+        GC.KeepAlive(sink);
+
+        result.TotalBytes.ShouldBe(0);
+    }
+}
