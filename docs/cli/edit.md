@@ -39,7 +39,7 @@ Available in December 2026, or now if building Gum from source.
 { "op": "addComponent", "name": "Controls/Counter", "baseType": "Text" }
 ```
 
-`baseType` is optional and defaults to `Container`.
+`baseType` applies only to `addComponent`. It is optional and defaults to `Container`.
 
 ### addInstance
 
