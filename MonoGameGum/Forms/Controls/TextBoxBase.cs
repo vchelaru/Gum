@@ -901,7 +901,7 @@ public abstract class TextBoxBase :
     // Per-character advance comes from IFormsText.GetDrawnCharacterAdvance: the XNA-family Text reads it
     // allocation-free off the drawn BitmapFont (#3542); other backends measure a one-character string.
     private int GetIndex(float cursorOffset, string? textToUse) =>
-        TextHitTesting.GetIndexInLine(textToUse, cursorOffset, coreTextObject.GetDrawnCharacterAdvance);
+        TextHitTesting.GetIndexInLine(textToUse, cursorOffset, coreTextObject.GetDrawnCharacterAdvance, coreTextObject.GetDrawnKerning);
 
     /// <summary>
     /// Handles special situations only like [LEFT, HOME, END, BACK (Backspace), RIGHT, UP, DOWN, DELETE, CTRL+C, CTRL+X, CTRL+V, CTRL+A]
@@ -1111,8 +1111,7 @@ public abstract class TextBoxBase :
             if (lineNumber >= 0)
             {
                 string line = lines[lineNumber];
-                string beforeCaret = line.Substring(0, System.Math.Min(relativeIndexOnLine, line.Length));
-                caretXOffset = GetDrawnWidth(beforeCaret)
+                caretXOffset = GetDrawnCaretOffsetInLine(line, relativeIndexOnLine)
                     + GetLineXOffsetForHorizontalAlignment(line);
             }
             float targetTop = coreTextObject.GetDrawnLineTop(targetLine);
@@ -2524,13 +2523,23 @@ public abstract class TextBoxBase :
 
     private float GetXCaretPositionForLineRelativeToTextParent(string stringToMeasure, int indexIntoLine)
     {
-        indexIntoLine = System.Math.Min(indexIntoLine, stringToMeasure.Length);
-        var substring = stringToMeasure.Substring(0, indexIntoLine);
+        return GetDrawnCaretOffsetInLine(stringToMeasure, indexIntoLine) + this.textComponent.X + GetLineXOffsetForHorizontalAlignment(stringToMeasure);
+    }
 
+    // Where a caret before line[index] is drawn, from the line's start: the drawn width of the characters
+    // before it plus the kerning pair it shares with the previous character, which is where that glyph's pen
+    // starts and where hit testing puts the boundary (#8208).
+    private float GetDrawnCaretOffsetInLine(string line, int index)
+    {
+        index = System.Math.Min(index, line.Length);
         // MeasureDrawnString handles the no-font case (falling back to
         // DefaultBitmapFont, or zero under TEST).
-        var measure = GetDrawnWidth(substring);
-        return measure + this.textComponent.X + GetLineXOffsetForHorizontalAlignment(stringToMeasure);
+        float offset = GetDrawnWidth(line.Substring(0, index));
+        if (index > 0 && index < line.Length)
+        {
+            offset += coreTextObject.GetDrawnKerning(line[index - 1], line[index]);
+        }
+        return offset;
     }
 
     public float GetLineXOffsetForHorizontalAlignment(string stringToMeasure)

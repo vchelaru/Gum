@@ -67,7 +67,7 @@ public static class TextExtensions
                 textInstance.MeasureDrawnString(line.Substring(0, start + length), HorizontalMeasurementStyle.Full)
                 - textInstance.MeasureDrawnString(line.Substring(0, start), HorizontalMeasurementStyle.Full));
 #else
-        return TextHitTesting.GetIndexInLine(textToUse, cursorOffset, textInstance.GetDrawnCharacterAdvance);
+        return TextHitTesting.GetIndexInLine(textToUse, cursorOffset, textInstance.GetDrawnCharacterAdvance, textInstance.GetDrawnKerning);
 #endif
     }
 

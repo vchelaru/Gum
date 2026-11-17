@@ -65,6 +65,13 @@ public interface IWrappedText : IText
     /// <summary>Span form of <see cref="MeasureStringFullAdvance(string)"/>. Default: -1 (opt out).</summary>
     float MeasureStringFullAdvance(ReadOnlySpan<char> text) => -1;
 
+    /// <summary>
+    /// The kerning between <paramref name="first"/> and the <paramref name="second"/> that follows it, in the
+    /// units of <see cref="MeasureStringFullAdvance(string)"/>. The wrapping loop adds it at the join between a
+    /// line's full advance and the next word, so the sum equals measuring the joined text. Default: 0.
+    /// </summary>
+    float GetKerning(char first, char second) => 0;
+
     bool IsMidWordLineBreakEnabled { get; }
 
     /// <summary>
@@ -265,7 +272,10 @@ public static class IWrappedTextExtensions
                 {
                     // No inline run active: the candidate width is the committed line's full advance (its
                     // last glyph isn't trimmed because the word follows it) plus the word's own width.
-                    linePlusWordWidth = lineFullAdvance + textInstance.MeasureString(stringToUse.AsSpan(wordStart, wordLength));
+                    // An empty word (a trailing or doubled space) has no first character, so no pair at the join.
+                    linePlusWordWidth = lineFullAdvance
+                        + (wordLength > 0 ? textInstance.GetKerning(stringToUse[currentLineStart + currentLineLength - 1], stringToUse[wordStart]) : 0)
+                        + textInstance.MeasureString(stringToUse.AsSpan(wordStart, wordLength));
                 }
                 else
                 {

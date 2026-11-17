@@ -511,6 +511,8 @@ public class Text : IVisible, IRenderableIpso,
         }
     }
 
+    // raylib's text functions take no kerning input, so .fnt kerning pairs are not applied on raylib by design.
+    // See https://github.com/vchelaru/Gum/issues/8210.
     private static Vector2 MeasureBlankedText(Font font, string text, float fontSize, float spacing) =>
         MeasureTextEx(font, ControlCharacterBlanker.Blank(text, expandTabs: !RaylibFontMetricsRegistry.HasTabGlyph(font)), fontSize, spacing);
 

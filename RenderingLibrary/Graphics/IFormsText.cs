@@ -88,6 +88,13 @@ namespace RenderingLibrary.Graphics
         float GetDrawnCharacterAdvance(char character) => GetCharacterAdvance(character) * WordWrapFontScale;
 
         /// <summary>
+        /// The kerning between <paramref name="first"/> and the <paramref name="second"/> that follows it on a line,
+        /// as this Text draws it, in the units the Text is positioned in. Hit testing adds it to
+        /// <see cref="GetDrawnCharacterAdvance"/>. Backends without per-pair metrics return 0.
+        /// </summary>
+        float GetDrawnKerning(char first, char second) => 0;
+
+        /// <summary>
         /// The distance from the top of the first drawn line to the top of line <paramref name="lineIndex"/>
         /// (<c>WrappedText.Count</c> gives the drawn height), in the units the Text is positioned in. A Text
         /// returns where it draws each line (its measurement font and <see cref="LineHeightMultiplier"/>, and a
