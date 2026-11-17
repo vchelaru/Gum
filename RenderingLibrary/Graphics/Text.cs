@@ -2222,6 +2222,10 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
 
         return bitmapFontToUse.MeasureString(whatToMeasure, HorizontalMeasurementStyle.Full);
     }
+
+    /// <inheritdoc/>
+    public float GetKerning(char first, char second) =>
+        (EffectiveMeasurementFont ?? DefaultBitmapFont)?.GetKerning(first, second) ?? 0;
     #endregion
 
     void IRenderableIpso.SetParentDirect(IRenderableIpso? parent)
