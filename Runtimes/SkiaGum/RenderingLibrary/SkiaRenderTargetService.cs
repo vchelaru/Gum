@@ -71,6 +71,33 @@ internal sealed class SkiaRenderTargetService
         _current = _raster;
     }
 
+    // The lost/disposed verdict is taken once per frame (reset in ClearUnusedRenderTargetsLastFrame), so a context
+    // abandoned mid-frame never frees a surface that frame's bakes still reference and costs one native call per frame.
+    private GRRecordingContext? _verdictContext;
+    private bool _verdictUnusable;
+
+    // Caches of lost contexts, freed at the next frame start once nothing references their surfaces.
+    private readonly List<SkiaContextRenderTargets> _pendingDispose = new List<SkiaContextRenderTargets>();
+
+    private bool IsUnusableThisFrame(GRRecordingContext context)
+    {
+        if (!ReferenceEquals(context, _verdictContext))
+        {
+            _verdictContext = context;
+            _verdictUnusable = SkiaContextRenderTargets.IsUnusable(context);
+        }
+        return _verdictUnusable;
+    }
+
+    private void FreePending()
+    {
+        for (int i = 0; i < _pendingDispose.Count; i++)
+        {
+            _pendingDispose[i].DisposeAll();
+        }
+        _pendingDispose.Clear();
+    }
+
     /// <summary>The context new surfaces are created from; null when they are CPU raster.</summary>
     internal GRRecordingContext? Context => _current.Context;
 
@@ -86,11 +113,14 @@ internal sealed class SkiaRenderTargetService
         {
             _current = _raster;
         }
-        else if (SkiaContextRenderTargets.IsUnusable(context))
+        else if (IsUnusableThisFrame(context))
         {
             if (_gpu.TryGetValue(context, out SkiaContextRenderTargets? lost))
             {
-                Forget(context, lost);
+                // Surfaces of this frame's bakes may still be composited, so they are freed at the next frame start.
+                _pendingDispose.Add(lost);
+                _all.Remove(lost);
+                _gpu.Remove(context);
             }
             _current = _raster;
         }
@@ -218,6 +248,8 @@ internal sealed class SkiaRenderTargetService
     /// <summary>Frame-boundary sweep of every canvas's cache; a context whose cache emptied is forgotten, as is one whose context was disposed.</summary>
     public void ClearUnusedRenderTargetsLastFrame()
     {
+        _verdictContext = null;
+        FreePending();
         _raster.ClearUnusedRenderTargetsLastFrame();
         List<GRRecordingContext>? emptied = null;
         foreach (KeyValuePair<GRRecordingContext, SkiaContextRenderTargets> entry in _gpu)
@@ -251,6 +283,8 @@ internal sealed class SkiaRenderTargetService
     /// </summary>
     public void DisposeAll()
     {
+        FreePending();
+        _verdictContext = null;
         for (int i = 0; i < _all.Count; i++)
         {
             SkiaContextRenderTargets targets = _all[i];

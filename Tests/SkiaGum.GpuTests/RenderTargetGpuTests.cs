@@ -6,6 +6,7 @@ using RenderingLibrary;
 using RenderingLibrary.Graphics;
 using Shouldly;
 using SkiaSharp;
+using SkiaGum.Renderables;
 using Xunit;
 
 #pragma warning disable CS0618
@@ -390,6 +391,7 @@ public class RenderTargetGpuTests
             service.GetFor(new InvisibleRenderable(), 16, 16)!.Surface.Canvas.Context.ShouldNotBeNull();
 
             context.AbandonContext();
+            service.ClearUnusedRenderTargetsLastFrame(); // the next frame start
             service.UseContext(context);
 
             service.Context.ShouldBeNull();
@@ -433,6 +435,37 @@ public class RenderTargetGpuTests
             Should.NotThrow(() => managers.Draw());
             Should.NotThrow(() => managers.ReleaseRenderTargets());
             container.RemoveFromManagers();
+        });
+    }
+
+    [Fact]
+    public void Draw_ContextAbandonedBetweenTwoBakes_NeverTouchesADisposedSurface()
+    {
+        ContainerRuntime first = BuildScene();
+        ContainerRuntime second = BuildScene();
+        second.X = 20;
+        using WglGpuContext own = new();
+        own.WithSurface(Width, Height, (surface, context) =>
+        {
+            SystemManagers managers = CreateManagers(surface.Canvas);
+            CanvasRenderable abandoner = new();
+            abandoner.CustomRender += _ => context.AbandonContext();
+            first.Children.Add(new GraphicalUiElement(abandoner));
+            first.AddToManagers(managers, null);
+            second.AddToManagers(managers, null);
+
+            Should.NotThrow(() => managers.Draw());
+            SKSurface? firstSurface = managers.Renderer.TryGetRenderTargetSurfaceFor((IRenderableIpso)first.RenderableComponent!);
+            firstSurface.ShouldNotBeNull();
+            firstSurface.Handle.ShouldNotBe(IntPtr.Zero);
+
+            // The next frame notices the lost context and bakes on the CPU.
+            Should.NotThrow(() => managers.Draw());
+            managers.Renderer.TryGetRenderTargetSurfaceFor((IRenderableIpso)second.RenderableComponent!)!
+                .Canvas.Context.ShouldBeNull();
+            managers.ReleaseRenderTargets();
+            first.RemoveFromManagers();
+            second.RemoveFromManagers();
         });
     }
 }
