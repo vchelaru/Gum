@@ -83,7 +83,11 @@ public sealed class RuntimeEventRecorder : EventListener
         List<RecordedEvent> inRange;
         lock (_lock)
         {
-            inRange = _events.Where(e => e.Time >= from && e.Time <= to).OrderBy(e => e.Time).ToList();
+            // Test-thread events and exceptions first, so the cap never cuts them behind a flood of ready-to-run entries on other threads.
+            inRange = _events.Where(e => e.Time >= from && e.Time <= to)
+                .OrderByDescending(e => e.ThreadId == testThreadId)
+                .ThenByDescending(e => e.Text.StartsWith("ExceptionThrown", StringComparison.Ordinal))
+                .ThenBy(e => e.Time).ToList();
         }
         string lines = string.Join(" | ", inRange.Take(maxEvents).Select(e =>
             $"{(e.ThreadId == testThreadId ? "TEST" : "other " + e.ThreadId)} +{(e.Time - from).TotalMilliseconds:F1}ms {e.Text}"));
