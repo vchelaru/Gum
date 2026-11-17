@@ -556,7 +556,6 @@ public class NineSliceVertexBatchGpuTests : IDisposable
             root.AddChild(Frame(_textureA, 60, 60, 80, 80));
         });
     }
-    [Trait("Quarantine", "MesaAllocation")]
     [Fact]
     public void Draw_StaticScene_ReusesBatchVerticesWithoutAllocating()
     {

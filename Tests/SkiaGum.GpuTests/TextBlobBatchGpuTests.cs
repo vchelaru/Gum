@@ -308,7 +308,6 @@ public class TextBlobBatchGpuTests : IDisposable
         });
     }
 
-    [Trait("Quarantine", "MesaAllocation")]
     [Fact]
     public void Draw_StaticScene_ReusesMergedBlobsWithoutAllocating()
     {
@@ -373,7 +372,6 @@ public class TextBlobBatchGpuTests : IDisposable
         changedBuilds.ShouldBe(1);
     }
 
-    [Trait("Quarantine", "MesaAllocation")]
     [Fact]
     public void Draw_SteadyScroll_DrawsMovingTextsSinglyWithoutAllocating()
     {
@@ -482,7 +480,6 @@ public class TextBlobBatchGpuTests : IDisposable
         managers.Draw();
     }
 
-    [Trait("Quarantine", "MesaAllocation")]
     [Fact]
     public void Draw_RunChangingEveryTenFlushes_StaysUnmergedWithoutAllocating()
     {

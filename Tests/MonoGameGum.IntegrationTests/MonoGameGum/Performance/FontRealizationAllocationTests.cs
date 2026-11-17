@@ -20,7 +20,6 @@ namespace MonoGameGum.IntegrationTests.MonoGameGum.Performance;
 /// sources are removed.
 /// </summary>
 [Collection(SharedGame.CollectionName)]
-[Trait("Quarantine", "MesaAllocation")]
 public class FontRealizationAllocationTests : BaseTestClass
 {
     private readonly ITestOutputHelper _output;

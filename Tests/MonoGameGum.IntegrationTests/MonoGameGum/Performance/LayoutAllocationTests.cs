@@ -22,7 +22,6 @@ namespace MonoGameGum.IntegrationTests.MonoGameGum.Performance;
 /// optimization PR.
 /// </summary>
 [Collection(SharedGame.CollectionName)]
-[Trait("Quarantine", "MesaAllocation")]
 public class RealisticLayoutAllocationTests : BaseTestClass
 {
     private const string TreeDescription =
