@@ -747,18 +747,25 @@ namespace GumRuntime
         /// </summary>
         public static void ApplyAllVariableReferences(this GumProjectSave project)
         {
-            lock (ReportedWithoutOwner)
-            {
-                ReportedWithoutOwner.Clear();
-            }
-
             List<ElementSave> allElements = new List<ElementSave>();
             allElements.AddRange(project.StandardElements);
             allElements.AddRange(project.Components);
             allElements.AddRange(project.Screens);
 
             // An element that reads another is applied after it. Elements in a cycle keep project order.
-            List<ElementSave> sorted = ReferenceDependencies.OrderByDependency(allElements);
+            ApplyVariableReferencesInOrder(ReferenceDependencies.OrderByDependency(allElements));
+        }
+
+        /// <summary>
+        /// Applies the rows of every state of each element, in the given order: the order
+        /// <see cref="ReferenceDependencies.OrderByDependency"/> returns, or a subsequence of it.
+        /// </summary>
+        internal static void ApplyVariableReferencesInOrder(IEnumerable<ElementSave> sorted)
+        {
+            lock (ReportedWithoutOwner)
+            {
+                ReportedWithoutOwner.Clear();
+            }
 
             // The rows do not change during the pass, so loops through other elements are looked up once.
             VariableReferenceGraph.BeginBatch();
