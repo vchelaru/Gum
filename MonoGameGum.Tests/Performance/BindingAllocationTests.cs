@@ -12,8 +12,7 @@ namespace MonoGameGum.Tests.Performance;
 /// Per-notification allocation baseline and regression guard for the runtime data-binding path
 /// (issue #1934): a <see cref="ViewModel"/> raising <c>INotifyPropertyChanged</c> that propagates
 /// through <see cref="GraphicalUiElement.SetBinding(string, string, string)"/> to a bound visual
-/// property. The zero-allocation guards use <see cref="AllocationMeasurer.MeasureMinimum"/> so a
-/// one-off environmental blip does not fail the guard.
+/// property. The guards use <see cref="AllocationMeasurer.Measure"/>.
 /// </summary>
 public class BindingAllocationTests : BaseTestClass
 {
@@ -43,17 +42,15 @@ public class BindingAllocationTests : BaseTestClass
 
         int value = 0;
         const int measuredIterations = 500;
-        const int attempts = 3;
 
         // Alternate the value every notification so each Set genuinely changes the VM and fires
         // PropertyChanged (a no-op Set would notify nothing and make the result meaningless).
-        AllocationResult result = AllocationMeasurer.MeasureMinimum(
+        AllocationResult result = AllocationMeasurer.Measure(
             () =>
             {
                 value = value == 1 ? 2 : 1;
                 vm.IntProperty = value;
             },
-            attempts: attempts,
             warmupIterations: 50,
             measuredIterations: measuredIterations);
 

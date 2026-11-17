@@ -50,9 +50,8 @@ public class RenderTargetManualAllocationTests : BaseTestClass
         scene.DrawFrames(3);
         int bakesBefore = scene.BakeCount;
 
-        AllocationResult result = AllocationMeasurer.MeasureMinimum(
+        AllocationResult result = AllocationMeasurer.Measure(
             () => scene.DrawFrame(),
-            attempts: 3,
             warmupIterations: 10,
             measuredIterations: 30);
 

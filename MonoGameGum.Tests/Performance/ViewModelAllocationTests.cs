@@ -15,7 +15,6 @@ public class ViewModelAllocationTests : BaseTestClass
 {
     private const int WarmupIterations = 200;
     private const int MeasuredIterations = 2000;
-    private const int Attempts = 3;
 
     // A boxed float/int on a 64-bit runtime: 16-byte header plus the value, rounded up.
     private const int BoxedValueBytes = 24;
@@ -80,9 +79,8 @@ public class ViewModelAllocationTests : BaseTestClass
 
     private static AllocationResult Measure(System.Action action)
     {
-        return AllocationMeasurer.MeasureMinimum(
+        return AllocationMeasurer.Measure(
             action,
-            attempts: Attempts,
             warmupIterations: WarmupIterations,
             measuredIterations: MeasuredIterations);
     }

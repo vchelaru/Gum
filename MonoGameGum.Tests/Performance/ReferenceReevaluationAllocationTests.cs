@@ -48,7 +48,7 @@ public class ReferenceReevaluationAllocationTests : BaseTestClass
         object rotation = 15f;
         bool toggle = false;
 
-        AllocationResult result = AllocationMeasurer.MeasureMinimum(
+        AllocationResult result = AllocationMeasurer.Measure(
             () =>
             {
                 gue.SetProperty("Rotation", rotation);
@@ -58,7 +58,6 @@ public class ReferenceReevaluationAllocationTests : BaseTestClass
                 child.Rotation = toggle ? 10 : 20;
                 toggle = !toggle;
             },
-            attempts: 3,
             warmupIterations: 50,
             measuredIterations: 500);
 
@@ -96,13 +95,12 @@ public class ReferenceReevaluationAllocationTests : BaseTestClass
         GraphicalUiElement target = gue.GetGraphicalUiElementByName("Target")!;
         bool toggle = false;
 
-        AllocationResult result = AllocationMeasurer.MeasureMinimum(
+        AllocationResult result = AllocationMeasurer.Measure(
             () =>
             {
                 source.Width = toggle ? 10 : 20;
                 toggle = !toggle;
             },
-            attempts: 3,
             warmupIterations: 50,
             measuredIterations: 500);
 

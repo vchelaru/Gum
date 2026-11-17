@@ -161,7 +161,7 @@ public class DrawAllocationTests : BaseTestClass
     {
         Create(kind).AddToRoot();
 
-        AllocationResult result = AllocationMeasurer.MeasureMinimum(
+        AllocationResult result = AllocationMeasurer.Measure(
             () =>
             {
                 _host.Update();
@@ -250,7 +250,7 @@ public class DrawAllocationTests : BaseTestClass
         element.AddToRoot();
         int frame = 0;
 
-        AllocationResult result = AllocationMeasurer.MeasureMinimum(
+        AllocationResult result = AllocationMeasurer.Measure(
             () =>
             {
                 frame++;
@@ -281,7 +281,7 @@ public class DrawAllocationTests : BaseTestClass
         second.AddToRoot();
         int frame = 0;
 
-        AllocationResult result = AllocationMeasurer.MeasureMinimum(
+        AllocationResult result = AllocationMeasurer.Measure(
             () =>
             {
                 frame++;
@@ -365,7 +365,7 @@ public class DrawAllocationTests : BaseTestClass
 
         // SkiaAllocationMeasurer replays the same frames in every window and keeps SkiaSharp's handle table
         // resize and the collector's timing out of the reading (#7860).
-        AllocationResult result = SkiaAllocationMeasurer.MeasureMinimum(
+        AllocationResult result = SkiaAllocationMeasurer.Measure(
             frame =>
             {
                 change(frame);
@@ -394,7 +394,7 @@ public class DrawAllocationTests : BaseTestClass
         };
         text.AddToRoot();
 
-        AllocationResult result = AllocationMeasurer.MeasureMinimum(
+        AllocationResult result = AllocationMeasurer.Measure(
             () =>
             {
                 _host.Update();
@@ -414,7 +414,7 @@ public class DrawAllocationTests : BaseTestClass
     {
         SkiaSceneHost.BuildRealisticFormsScene();
 
-        AllocationResult result = AllocationMeasurer.MeasureMinimum(
+        AllocationResult result = AllocationMeasurer.Measure(
             () =>
             {
                 _host.Update();

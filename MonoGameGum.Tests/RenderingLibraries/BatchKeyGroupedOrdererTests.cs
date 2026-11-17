@@ -230,9 +230,8 @@ public class BatchKeyGroupedOrdererTests : BaseTestClass
         Layer layer = BuildLayer(topLevel.ToArray());
         List<DrawCommand> commands = new List<DrawCommand>();
 
-        AllocationResult result = AllocationMeasurer.MeasureMinimum(
+        AllocationResult result = AllocationMeasurer.Measure(
             () => BatchKeyGroupedOrderer.Instance.BuildDrawList(layer, commands),
-            attempts: 3,
             warmupIterations: 50,
             measuredIterations: 500);
 

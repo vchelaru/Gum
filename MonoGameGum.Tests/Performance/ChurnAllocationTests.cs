@@ -56,27 +56,25 @@ public class ChurnAllocationTests : BaseTestClass
         (ContainerRuntime stack, ContainerRuntime child) = BuildStackAndChild();
 
         const int measuredIterations = 500;
-        const int attempts = 3;
 
         int addRemoveCount = 0;
 
-        AllocationResult result = AllocationMeasurer.MeasureMinimum(
+        AllocationResult result = AllocationMeasurer.Measure(
             () =>
             {
                 stack.AddChild(child);
                 stack.RemoveChild(child);
                 addRemoveCount += 2;
             },
-            attempts: attempts,
             warmupIterations: 50,
             measuredIterations: measuredIterations);
 
         _output.WriteLine($"Add+remove child churn on a content-sized stack: " +
             $"{result.BytesPerIteration:N0} bytes/cycle ({result.TotalBytes:N0} bytes over {result.Iterations} cycles)");
 
-        // Liveness: prove the add/remove actually ran on every measured iteration of every attempt
+        // Liveness: prove the add/remove actually ran on every measured iteration
         // (a silently no-op mutation would make the byte count meaningless).
-        addRemoveCount.ShouldBeGreaterThanOrEqualTo(measuredIterations * attempts * 2);
+        addRemoveCount.ShouldBeGreaterThanOrEqualTo(measuredIterations * 2);
         // Ratchet. Suppressing the inner collection's redundant notifications and de-boxing the
         // HandleCollectionChanged enumerators took this from ~560 to ~336 B/cycle. The residual is
         // the outer wrapper's own ObservableCollection event args (one NotifyCollectionChangedEventArgs

@@ -88,14 +88,13 @@ public class TextStackLayoutAllocationTests : BaseTestClass
         const int measured = 300;
         int before = GraphicalUiElement.UpdateLayoutCallCount;
 
-        AllocationResult result = SkiaAllocationMeasurer.MeasureMinimum(
+        AllocationResult result = SkiaAllocationMeasurer.Measure(
             frame =>
             {
                 change(frame);
                 _host.Update();
                 _host.Draw();
             },
-            attempts: 3,
             warmupIterations: warmup,
             measuredIterations: measured);
 
@@ -103,10 +102,10 @@ public class TextStackLayoutAllocationTests : BaseTestClass
         return result;
     }
 
-    // The action ran and laid out on every frame of every attempt, so a low figure is not a stack that stopped changing.
+    // The action ran and laid out on every frame of the peak pass, the warm-up and the window, so a low figure is not a stack that stopped changing.
     private static void LayoutShouldHaveRunEveryFrame(int layoutCalls)
     {
-        layoutCalls.ShouldBeGreaterThanOrEqualTo(3 * (360 + 60 + 300));
+        layoutCalls.ShouldBeGreaterThanOrEqualTo(360 + 60 + 300);
     }
 
     [Theory]

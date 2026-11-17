@@ -43,13 +43,12 @@ public class TextCloneSplitterCacheTests
     {
         Text original = CreateOriginalAndClone(out Text clone);
 
-        AllocationResult result = AllocationMeasurer.MeasureMinimum(
+        AllocationResult result = AllocationMeasurer.Measure(
             () =>
             {
                 original.GetCachedStyledSubstrings(0, 0, Line);
                 clone.GetCachedStyledSubstrings(0, 0, Line);
             },
-            attempts: 3,
             warmupIterations: 10,
             measuredIterations: 20);
 

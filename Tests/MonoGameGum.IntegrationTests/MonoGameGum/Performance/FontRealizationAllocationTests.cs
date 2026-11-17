@@ -63,7 +63,7 @@ public class FontRealizationAllocationTests : BaseTestClass
 
             Renderer renderer = SystemManagers.Default.Renderer;
 
-            AllocationResult result = AllocationMeasurer.MeasureMinimum(
+            AllocationResult result = AllocationMeasurer.Measure(
                 () =>
                 {
                     // Reset the per-frame render-state recording so the SpriteBatch machinery (pooled

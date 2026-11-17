@@ -447,9 +447,8 @@ public class HierarchicalOrdererTests : BaseTestClass
         Layer layer = BuildLayer(clipParent);
         List<DrawCommand> commands = new List<DrawCommand>();
 
-        AllocationResult result = AllocationMeasurer.MeasureMinimum(
+        AllocationResult result = AllocationMeasurer.Measure(
             () => HierarchicalOrderer.Instance.BuildDrawList(layer, commands, camera),
-            attempts: 3,
             warmupIterations: 50,
             measuredIterations: 500);
 

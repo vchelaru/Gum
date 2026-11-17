@@ -3,7 +3,7 @@ using MonoGameGum.TestsCommon;
 namespace SkiaGum.Tests.Performance;
 
 /// <summary>
-/// <see cref="AllocationMeasurer.MeasureMinimum"/> for Skia workloads whose per-frame reading must not depend on
+/// <see cref="AllocationMeasurer.Measure"/> for Skia workloads whose per-frame reading must not depend on
 /// what ran before the test or on how often the garbage collector runs (#7860).
 /// </summary>
 /// <remarks>
@@ -11,7 +11,7 @@ namespace SkiaGum.Tests.Performance;
 /// registers each one in a <c>Dictionary&lt;IntPtr, WeakReference&gt;</c> until a finalizer removes it, and that
 /// dictionary doubles whenever the number of live handles passes its capacity. The capacity never shrinks, so a
 /// resize (115 KB and more) lands in whichever measured window first reaches a new peak, and which window that is
-/// depends on how many handles earlier tests left and how often a collection ran. Each attempt therefore (1) runs
+/// depends on how many handles earlier tests left and how often a collection ran. The measurement therefore (1) runs
 /// the identical frames once inside a no-GC region so the table reaches the capacity the window needs, (2) lets
 /// finalizers empty it again, and (3) measures the same frames, again inside a no-GC region, so the reading does not
 /// depend on collection frequency either. Every pass replays the same frame numbers, so each window draws the same
@@ -24,28 +24,9 @@ internal static class SkiaAllocationMeasurer
 
     /// <summary>
     /// Runs <paramref name="frame"/> with the frame numbers <c>0 .. warmupIterations + measuredIterations - 1</c>
-    /// on every attempt, and returns the attempt with the fewest bytes allocated in frames
-    /// <c>warmupIterations ..</c> (the measured window).
+    /// and returns the bytes allocated in frames <c>warmupIterations ..</c> (the measured window).
     /// </summary>
-    public static AllocationResult MeasureMinimum(
-        Action<int> frame,
-        int attempts = 3,
-        int warmupIterations = 50,
-        int measuredIterations = 300)
-    {
-        AllocationResult best = default;
-        for (int attempt = 0; attempt < attempts; attempt++)
-        {
-            AllocationResult result = MeasureOnce(frame, warmupIterations, measuredIterations);
-            if (attempt == 0 || result.TotalBytes < best.TotalBytes)
-            {
-                best = result;
-            }
-        }
-        return best;
-    }
-
-    private static AllocationResult MeasureOnce(Action<int> frame, int warmupIterations, int measuredIterations)
+    public static AllocationResult Measure(Action<int> frame, int warmupIterations = 50, int measuredIterations = 300)
     {
         int total = warmupIterations + measuredIterations;
 

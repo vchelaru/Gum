@@ -51,19 +51,58 @@ public class ColorTextureAlphaAllocationTests : BaseTestClass
             RenderTargetUsage.PreserveContents);
         try
         {
-            AllocationResult result = AllocationMeasurer.MeasureMinimum(
+            // Bytes per call and per step, so a Mesa-only reading says which frame and which call allocated.
+            // Allocated before the window starts; reading the counter allocates nothing.
+            const int Warmup = 30;
+            const int Measured = 200;
+            long[] targetBytes = new long[Warmup + Measured];
+            long[] drawBytes = new long[Warmup + Measured];
+            long[] restoreBytes = new long[Warmup + Measured];
+            long[] callTimestamps = new long[Warmup + Measured];
+            long firstTimestamp = System.Diagnostics.Stopwatch.GetTimestamp();
+            int call = 0;
+            // Diagnostic: an exception thrown and caught inside a draw allocates its object and trace.
+            List<string> exceptions = new List<string>();
+            int testThread = Environment.CurrentManagedThreadId;
+            EventHandler<System.Runtime.ExceptionServices.FirstChanceExceptionEventArgs> onException = (_, args) =>
+            {
+                if (Environment.CurrentManagedThreadId == testThread)
+                {
+                    exceptions.Add($"call {call}: {args.Exception.GetType().FullName}: {args.Exception.Message} at {args.Exception.StackTrace}");
+                }
+            };
+            AppDomain.CurrentDomain.FirstChanceException += onException;
+            int gcsBefore = GC.CollectionCount(0);
+            AllocationResult result = AllocationMeasurer.Measure(
                 () =>
                 {
+                    long start = GC.GetAllocatedBytesForCurrentThread();
                     gd.SetRenderTarget(scene);
                     gd.Clear(Color.Black);
+                    long drawStart = GC.GetAllocatedBytesForCurrentThread();
                     managers.Renderer.Draw(managers);
+                    long restoreStart = GC.GetAllocatedBytesForCurrentThread();
                     gd.SetRenderTarget(null);
+                    long end = GC.GetAllocatedBytesForCurrentThread();
+                    if (call < targetBytes.Length)
+                    {
+                        targetBytes[call] = drawStart - start;
+                        drawBytes[call] = restoreStart - drawStart;
+                        restoreBytes[call] = end - restoreStart;
+                        callTimestamps[call] = System.Diagnostics.Stopwatch.GetTimestamp();
+                    }
+                    call++;
                 },
-                attempts: 3,
-                warmupIterations: 30,
-                measuredIterations: 200);
+                warmupIterations: Warmup,
+                measuredIterations: Measured);
+            int gcs = GC.CollectionCount(0) - gcsBefore;
+            AppDomain.CurrentDomain.FirstChanceException -= onException;
+            string detail = $"first-chance exceptions: [{string.Join(" | ", exceptions)}]; gen0 GCs: {gcs};calls that allocated (0..{Warmup - 1} are warm-up; {(System.Diagnostics.Stopwatch.GetTimestamp() - firstTimestamp) * 1000 / System.Diagnostics.Stopwatch.Frequency} ms in all): " + string.Join(", ",
+                Enumerable.Range(0, Warmup + Measured).Where(i => targetBytes[i] != 0 || drawBytes[i] != 0 || restoreBytes[i] != 0)
+                    .Select(i => $"#{i} at {(callTimestamps[i] - firstTimestamp) * 1000 / System.Diagnostics.Stopwatch.Frequency} ms target={targetBytes[i]} draw={drawBytes[i]} restore={restoreBytes[i]}"));
 
             _output.WriteLine($"ColorTextureAlpha + Modulate sprite: {result.BytesPerIteration:N0} bytes/frame");
+            Console.WriteLine($"[#8181 diagnostic] ColorTextureAlpha: {result.BytesPerIteration:N0} bytes/frame; {detail}");
 
             // Liveness: the fog pass ran with the swapped copy (color source One), and the Modulate sprite
             // with the original blend (color source SourceAlpha), so both Begins were measured.
@@ -71,7 +110,7 @@ public class ColorTextureAlphaAllocationTests : BaseTestClass
             states.Any(state => state.BlendState?.ColorSourceBlend == global::Gum.Blend.One).ShouldBeTrue();
             states.Any(state => state.BlendState?.ColorSourceBlend == global::Gum.Blend.SourceAlpha).ShouldBeTrue();
 
-            result.BytesPerIteration.ShouldBeLessThanOrEqualTo(0, $"measured {result.BytesPerIteration:N0} bytes/frame");
+            result.BytesPerIteration.ShouldBeLessThanOrEqualTo(0, $"measured {result.BytesPerIteration:N0} bytes/frame; {detail}");
         }
         finally
         {

@@ -39,13 +39,12 @@ public class AnimationKeyframeReferenceAllocationTests : BaseTestClass
         GraphicalUiElement gue = element.ToGraphicalUiElement();
         double time = 0;
 
-        AllocationResult result = AllocationMeasurer.MeasureMinimum(
+        AllocationResult result = AllocationMeasurer.Measure(
             () =>
             {
                 time = (time + 0.05) % 1;
                 animation.ApplyAtTimeTo(time, gue);
             },
-            attempts: 3,
             warmupIterations: 50,
             measuredIterations: 500);
 

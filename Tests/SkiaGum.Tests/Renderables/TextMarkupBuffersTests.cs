@@ -70,7 +70,7 @@ public class TextMarkupBuffersTests : BaseTestClass
         text.FontSize = 24;
         List<Text.StyledTextRun> runs = new List<Text.StyledTextRun>();
 
-        AllocationResult result = AllocationMeasurer.MeasureMinimum(() => text.FillStyledRuns(runs), warmupIterations: 50, measuredIterations: 300);
+        AllocationResult result = AllocationMeasurer.Measure(() => text.FillStyledRuns(runs), warmupIterations: 50, measuredIterations: 300);
 
         runs.Count.ShouldBe(7);
         result.BytesPerIteration.ShouldBeLessThanOrEqualTo(400);

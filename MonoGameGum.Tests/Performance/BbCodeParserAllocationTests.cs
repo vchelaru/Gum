@@ -31,7 +31,7 @@ public class BbCodeParserAllocationTests : BaseTestClass
         List<FoundTag> results = new List<FoundTag>();
         List<BbCodeParser.Tag> activeTags = new List<BbCodeParser.Tag>();
 
-        AllocationResult result = AllocationMeasurer.MeasureMinimum(
+        AllocationResult result = AllocationMeasurer.Measure(
             () =>
             {
                 results.Clear();
