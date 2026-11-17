@@ -188,4 +188,61 @@ public class HotReloadScopedReferenceVerifyTests : BaseTestClass
             return project;
         });
     }
+
+    [Fact]
+    public void StandardElementDefaultChanged_ReaderOfStandardInstanceUpdates()
+    {
+        // Only the Container standard's default Width changes; the reader's instance of it sets nothing.
+        AssertMatchesFullPass(width =>
+        {
+            GumProjectSave project = Start();
+            project.StandardElements[0].DefaultState!.SetValue("Width", width, "float");
+            ComponentSave reader = Add<ComponentSave>(project, "Reader");
+            reader.Instances.Add(new InstanceSave { Name = "R", BaseType = "Container", ParentContainer = reader });
+            Rows(reader, "Height = R.Width");
+            Set(reader, "Height", 10);
+            project.Initialize();
+            return project;
+        });
+    }
+
+    [Fact]
+    public void BaseElementVariableChanged_ReaderOfDerivedPathUpdates()
+    {
+        // Reader names Derived; the value lives on Derived's base, the only file that changes.
+        AssertMatchesFullPass(width =>
+        {
+            GumProjectSave project = Start();
+            ComponentSave reader = Add<ComponentSave>(project, "Reader");
+            Rows(reader, "Width = Components/Derived.Width");
+            Set(reader, "Width", 10);
+            ComponentSave derived = Add<ComponentSave>(project, "Derived");
+            derived.BaseType = "Base";
+            ComponentSave baseElement = Add<ComponentSave>(project, "Base");
+            Set(baseElement, "Width", width);
+            project.Initialize();
+            return project;
+        });
+    }
+
+    [Fact]
+    public void BaseInstanceVariableChanged_ReaderOfInheritedInstanceUpdates()
+    {
+        // Inner is defined in Base; only Base's Inner.Width changes, and Reader reads it through Derived.
+        AssertMatchesFullPass(width =>
+        {
+            GumProjectSave project = Start();
+            ComponentSave reader = Add<ComponentSave>(project, "Reader");
+            Rows(reader, "Width = Components/Derived.Inner.Width");
+            Set(reader, "Width", 10);
+            ComponentSave derived = Add<ComponentSave>(project, "Derived");
+            derived.BaseType = "Base";
+            derived.Instances.Add(new InstanceSave { Name = "Inner", BaseType = "Container", DefinedByBase = true, ParentContainer = derived });
+            ComponentSave baseElement = Add<ComponentSave>(project, "Base");
+            baseElement.Instances.Add(new InstanceSave { Name = "Inner", BaseType = "Container", ParentContainer = baseElement });
+            Set(baseElement, "Inner.Width", width);
+            project.Initialize();
+            return project;
+        });
+    }
 }
