@@ -127,6 +127,7 @@
     * [Font Scale](gum-tool/gum-elements/text/font-scale.md)
     * [Font Size](gum-tool/gum-elements/text/font-size.md)
     * [Green](gum-tool/gum-elements/text/green.md)
+    * [Has Dropshadow](gum-tool/gum-elements/text/has-dropshadow.md)
     * [Is Bold](gum-tool/gum-elements/text/is-bold.md)
     * [Is Italic](gum-tool/gum-elements/text/is-italic.md)
     * [Line Height Multiplier](gum-tool/gum-elements/text/line-height-multiplier.md)
