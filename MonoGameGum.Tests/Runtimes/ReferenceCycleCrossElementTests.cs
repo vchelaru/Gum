@@ -7,7 +7,6 @@ using GumRuntime;
 using Shouldly;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using Xunit;
 
@@ -88,36 +87,34 @@ public class ReferenceCycleCrossElementTests : BaseTestClass
         return project;
     }
 
-    private static double MedianMilliseconds(Action action)
+    private static long CountSteps(Action action)
     {
+        VariableReferenceGraph.CrossLoopSteps = 0;
         action();
-        List<double> runs = new List<double>();
-        for (int i = 0; i < 5; i++)
-        {
-            Stopwatch stopwatch = Stopwatch.StartNew();
-            action();
-            runs.Add(stopwatch.Elapsed.TotalMilliseconds);
-        }
-        runs.Sort();
-        return runs[runs.Count / 2];
+        return VariableReferenceGraph.CrossLoopSteps;
     }
 
     [Theory]
     [InlineData(400)]
     [InlineData(100)]
-    public void Chains_OfElementsReadingEachOther_AreAppliedInTimeLinearInTheElements(int chainLength)
+    public void Chains_OfElementsReadingEachOther_AreAppliedInStepsLinearInTheElements(int chainLength)
     {
-        GumProjectSave project = BuildChains(400, chainLength);
+        const int elementCount = 400;
+        GumProjectSave project = BuildChains(elementCount, chainLength);
+        long projectElements = elementCount + project.StandardElements.Count;
 
-        double applyAll = MedianMilliseconds(() => project.ApplyAllVariableReferences());
-        double perElement = MedianMilliseconds(() =>
+        // Counted steps instead of wall-clock time, so a busy machine cannot fail it. Building the index costs
+        // a step per element, row and edge. Every later element only checks the index is still current (a step
+        // per project element) and reuses it, however long the chain it sits in.
+        long building = CountSteps(() => project.ApplyAllVariableReferences());
+        long perElement = CountSteps(() =>
         {
             foreach (ComponentSave component in project.Components)
             {
                 component.ApplyVariableReferences(component.DefaultState);
             }
         });
-        double create = MedianMilliseconds(() =>
+        long create = CountSteps(() =>
         {
             foreach (ComponentSave component in project.Components)
             {
@@ -125,10 +122,9 @@ public class ReferenceCycleCrossElementTests : BaseTestClass
             }
         });
 
-        // Generous budgets: about 5 to 10 times what the same project took before loops were detected.
-        applyAll.ShouldBeLessThan(120, "ApplyAllVariableReferences, ms");
-        perElement.ShouldBeLessThan(100, "ApplyVariableReferences on every element, ms");
-        create.ShouldBeLessThan(200, "ToGraphicalUiElement on every element, ms");
+        building.ShouldBeLessThan(elementCount * 10L, "steps to build the index");
+        perElement.ShouldBeLessThanOrEqualTo(elementCount * projectElements, "ApplyVariableReferences on every element");
+        create.ShouldBeLessThanOrEqualTo(elementCount * projectElements, "ToGraphicalUiElement on every element");
     }
 
     // ---- Which rows ----

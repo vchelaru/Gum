@@ -1,6 +1,5 @@
 using Gum.GueDeriving;
 using Shouldly;
-using System.Diagnostics;
 using static Raylib_cs.Raylib;
 
 namespace RaylibGum.Tests.Runtimes;
@@ -36,16 +35,30 @@ public class ArcDashPerformanceTests : BaseTestClass
     [Theory]
     [InlineData(200f, 100f)]
     [InlineData(200f, 200f)]
-    public void TinyDashes_DrawAFrameQuickly(float width, float height)
+    public void TinyDashes_AreDrawnSolidInsteadOfDashByDash(float width, float height)
     {
+        // Counts dashes instead of timing the frame, so a busy machine cannot fail it. Millions of dashes
+        // past the cap are drawn as one solid stroke.
         AddArc(width, height, dash: 0.0001f, gap: 0.0001f);
+        Gum.Renderables.LineArc.DashesDrawn = 0;
+
         DrawFrame();
 
-        Stopwatch stopwatch = Stopwatch.StartNew();
-        DrawFrame();
-        stopwatch.Stop();
+        Gum.Renderables.LineArc.DashesDrawn.ShouldBe(0);
+        Gum.GumService.Default.Root.Children.Clear();
+    }
 
-        stopwatch.Elapsed.TotalMilliseconds.ShouldBeLessThan(100);
+    [Theory]
+    [InlineData(200f, 100f)]
+    [InlineData(200f, 200f)]
+    public void Dashes_UnderTheCap_AreDrawnOneByOne(float width, float height)
+    {
+        AddArc(width, height, dash: 12, gap: 8);
+        Gum.Renderables.LineArc.DashesDrawn = 0;
+
+        DrawFrame();
+
+        Gum.Renderables.LineArc.DashesDrawn.ShouldBeGreaterThan(0);
         Gum.GumService.Default.Root.Children.Clear();
     }
 

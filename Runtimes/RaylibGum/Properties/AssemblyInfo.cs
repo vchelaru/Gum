@@ -5,3 +5,4 @@ using System.Runtime.CompilerServices;
 // GenerateAssemblyInfo=false, so this attribute is declared in source rather than via the csproj
 // <InternalsVisibleTo> item (which the SDK only emits when assembly-info generation is enabled).
 [assembly: InternalsVisibleTo("KernSmith.RaylibGum")]
+[assembly: InternalsVisibleTo("RaylibGum.Tests")]
