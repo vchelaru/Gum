@@ -1,3 +1,4 @@
+using MonoGameGum.TestsCommon;
 using Gum.DataTypes;
 using Gum.GueDeriving;
 using Gum.Wireframe;
@@ -355,9 +356,10 @@ public class RenderTargetGpuTests
             service.GetFor(owner, 16, 16);
             service.ClearUnusedRenderTargetsLastFrame();
 
+            AllocationMeasurer.Drain();
             for (int pass = 0; pass < 2; pass++)
             {
-                long before = GC.GetAllocatedBytesForCurrentThread();
+                long before = AllocationMeasurer.ThreadBytes;
                 for (int i = 0; i < 100; i++)
                 {
                     service.ClearUnusedRenderTargetsLastFrame();
@@ -367,7 +369,7 @@ public class RenderTargetGpuTests
                     service.HasImage(owner);
                     service.TryGetExisting(owner);
                 }
-                long allocated = GC.GetAllocatedBytesForCurrentThread() - before;
+                long allocated = AllocationMeasurer.ThreadBytes - before;
                 if (pass == 1)
                 {
                     allocated.ShouldBe(0);

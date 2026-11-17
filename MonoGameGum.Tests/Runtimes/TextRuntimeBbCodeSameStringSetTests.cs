@@ -1,3 +1,4 @@
+using MonoGameGum.TestsCommon;
 using Gum.DataTypes;
 using Gum.GueDeriving;
 using Gum.Localization;
@@ -57,14 +58,15 @@ public class TextRuntimeBbCodeSameStringSetTests : BaseTestClass
 
     private static long AllocatedBySets(TextRuntime runtime, string value, int count = 300)
     {
+        AllocationMeasurer.Drain();
         runtime.Text = value;
         runtime.Text = value;
-        long before = GC.GetAllocatedBytesForCurrentThread();
+        long before = AllocationMeasurer.ThreadBytes;
         for (int i = 0; i < count; i++)
         {
             runtime.Text = value;
         }
-        return (GC.GetAllocatedBytesForCurrentThread() - before) / count;
+        return (AllocationMeasurer.ThreadBytes - before) / count;
     }
 
     #region The fix: same string

@@ -1,3 +1,4 @@
+using MonoGameGum.TestsCommon;
 using System.Diagnostics;
 using System.Text;
 using Gum.Converters;
@@ -163,13 +164,14 @@ public class DrawAtlasInvestigationTests
     // Microseconds per frame and managed bytes per frame. finish waits for the work to complete (GPU flush + sync).
     static (double Microseconds, double Bytes) Measure(SKCanvas canvas, SKImage image, Workload work, Mode mode, Action finish)
     {
+        AllocationMeasurer.Drain();
         for (int i = 0; i < 20; i++)
         {
             DrawFrame(canvas, image, work, mode);
             finish();
         }
         int frames = 0;
-        long bytesBefore = GC.GetAllocatedBytesForCurrentThread();
+        long bytesBefore = AllocationMeasurer.ThreadBytes;
         var watch = Stopwatch.StartNew();
         while (watch.ElapsedMilliseconds < 300 && frames < 2000)
         {
@@ -178,7 +180,7 @@ public class DrawAtlasInvestigationTests
             frames++;
         }
         watch.Stop();
-        long bytes = GC.GetAllocatedBytesForCurrentThread() - bytesBefore;
+        long bytes = AllocationMeasurer.ThreadBytes - bytesBefore;
         return (watch.Elapsed.TotalMilliseconds * 1000 / frames, (double)bytes / frames);
     }
 

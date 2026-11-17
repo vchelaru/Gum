@@ -1,3 +1,4 @@
+using MonoGameGum.TestsCommon;
 using RaylibGum.Tests.Helpers;
 using Gum.Content.AnimationChain;
 using Gum.DataTypes;
@@ -82,13 +83,14 @@ public class SpriteColorOperationPathTests : BaseTestClass
             }
             Gum.GumService.Default.Root.UpdateLayout();
 
+            AllocationMeasurer.Drain();
             long best = long.MaxValue;
             for (int attempt = 0; attempt < 3; attempt++)
             {
                 for (int i = 0; i < 20; i++) Frame();
-                long before = GC.GetAllocatedBytesForCurrentThread();
+                long before = AllocationMeasurer.ThreadBytes;
                 for (int i = 0; i < 30; i++) Frame();
-                best = Math.Min(best, GC.GetAllocatedBytesForCurrentThread() - before);
+                best = Math.Min(best, AllocationMeasurer.ThreadBytes - before);
             }
 
             Assert.Equal(0, best);

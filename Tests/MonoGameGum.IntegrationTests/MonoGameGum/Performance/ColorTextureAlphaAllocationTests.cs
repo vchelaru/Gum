@@ -77,14 +77,14 @@ public class ColorTextureAlphaAllocationTests : BaseTestClass
             AllocationResult result = AllocationMeasurer.Measure(
                 () =>
                 {
-                    long start = GC.GetAllocatedBytesForCurrentThread();
+                    long start = AllocationMeasurer.ThreadBytes;
                     gd.SetRenderTarget(scene);
                     gd.Clear(Color.Black);
-                    long drawStart = GC.GetAllocatedBytesForCurrentThread();
+                    long drawStart = AllocationMeasurer.ThreadBytes;
                     managers.Renderer.Draw(managers);
-                    long restoreStart = GC.GetAllocatedBytesForCurrentThread();
+                    long restoreStart = AllocationMeasurer.ThreadBytes;
                     gd.SetRenderTarget(null);
-                    long end = GC.GetAllocatedBytesForCurrentThread();
+                    long end = AllocationMeasurer.ThreadBytes;
                     if (call < targetBytes.Length)
                     {
                         targetBytes[call] = drawStart - start;

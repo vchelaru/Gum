@@ -1,3 +1,7 @@
+using System.Collections.Generic;
+using System.Linq;
+using System.Runtime.CompilerServices;
+
 namespace MonoGameGum.TestsCommon;
 
 /// <summary>
@@ -22,7 +26,12 @@ public static class AllocationMeasurer
     /// <param name="warmupIterations">Runs performed before measuring, to settle JIT and lazy init.</param>
     /// <param name="measuredIterations">Runs performed inside the measured window.</param>
     /// <returns>The allocation result, including total bytes and bytes per iteration.</returns>
-    public static AllocationResult Measure(Action action, int warmupIterations = 100, int measuredIterations = 1000)
+    public static AllocationResult Measure(
+        Action action,
+        int warmupIterations = 100,
+        int measuredIterations = 1000,
+        [CallerMemberName] string testName = "",
+        [CallerFilePath] string filePath = "")
     {
         if (action == null)
         {
@@ -37,27 +46,184 @@ public static class AllocationMeasurer
             throw new ArgumentOutOfRangeException(nameof(measuredIterations), "Must run at least one measured iteration.");
         }
 
-        // Garbage from earlier tests can still be queued for finalization. A finalizer that runs inside the
-        // window can hand work to this thread, such as a resource release the next frame performs, and that
-        // reads as an allocation in code that allocates nothing (#8190). Finish them before the warm-up, so
-        // the warm-up frames absorb the work they hand over. The second pass takes what they released.
-        GC.Collect();
-        GC.WaitForPendingFinalizers();
-        GC.Collect();
+        Drain();
 
         for (int i = 0; i < warmupIterations; i++)
         {
             action();
         }
 
-        long before = GC.GetAllocatedBytesForCurrentThread();
-        for (int i = 0; i < measuredIterations; i++)
+        // One full-size window, exactly as before. If it allocated nothing it is the answer and nothing more runs.
+        // If it allocated, up to two more full-size windows run, each after a fresh drain, and the lowest wins: code
+        // that allocates does so in every window (periodic or not), so a real allocation still fails at the same
+        // bound, while a one-off burst (a GC, a finalizer, a driver thread handing work to this thread) lands in one
+        // window and is dropped. The extra cost is paid only when a window allocated.
+        List<long> windowBytes = new();
+        List<long[]> windowCalls = new();
+        for (int window = 0; window < MaxWindows; window++)
         {
-            action();
+            if (window > 0)
+            {
+                Drain();
+            }
+            long[] perCall = new long[measuredIterations];
+            long windowStart = GC.GetAllocatedBytesForCurrentThread();
+            for (int i = 0; i < measuredIterations; i++)
+            {
+                long callStart = GC.GetAllocatedBytesForCurrentThread();
+                action();
+                perCall[i] = GC.GetAllocatedBytesForCurrentThread() - callStart;
+            }
+            long bytes = GC.GetAllocatedBytesForCurrentThread() - windowStart;
+            windowBytes.Add(bytes);
+            windowCalls.Add(perCall);
+            if (bytes == 0)
+            {
+                break;
+            }
         }
-        long after = GC.GetAllocatedBytesForCurrentThread();
+
+        if (windowBytes.Count > 1 && windowBytes.Min() == 0 && windowBytes.Max() > 0)
+        {
+            ReportDisagreement(testName, filePath, windowBytes, windowCalls);
+        }
+
+        return new AllocationResult(windowBytes.Min(), measuredIterations);
+    }
+
+    private const int MaxWindows = 3;
+
+    /// <summary>
+    /// Receives the <c>ALLOCATION-NOISE:</c> line when measured windows disagree, on the measuring thread. Unset, the
+    /// line goes to the console. The hook for richer diagnostics (the runtime event recorder) is
+    /// <see cref="DisagreementHook"/>.
+    /// </summary>
+    [ThreadStatic]
+    public static Action<string>? NoiseSink;
+
+    /// <summary>
+    /// Called with the line and the per-call bytes of every measured iteration when the windows disagree, so a
+    /// recorder can attach runtime events for the allocating window (the diagnostics PR plugs in here).
+    /// </summary>
+    [ThreadStatic]
+    public static Action<string, long[]>? DisagreementHook;
+
+    private static void ReportDisagreement(string testName, string filePath, List<long> windowBytes, List<long[]> windowCalls)
+    {
+        string file = System.IO.Path.GetFileNameWithoutExtension(filePath);
+        string windows = string.Join(", ", windowBytes.Select((bytes, i) => $"w{i}={bytes}B"));
+        string allocating = string.Join(" | ", windowCalls.Select((calls, window) =>
+            $"w{window}: " + string.Join(" ", calls.Select((bytes, i) => (Call: i, Bytes: bytes))
+                .Where(c => c.Bytes != 0).Take(20).Select(c => $"#{c.Call}:{c.Bytes}"))));
+        string line = $"ALLOCATION-NOISE: {file}.{testName} windows [{windows}]; allocating calls (first 20 per window): {allocating}";
+        (NoiseSink ?? Console.WriteLine)(line);
+        DisagreementHook?.Invoke(line, windowCalls.OrderByDescending(calls => calls.Sum()).First());
+    }
+
+    /// <summary>
+    /// Bytes allocated so far on the current thread. The only place a test reads the counter, so a test that
+    /// needs a per-phase reading inside a measured action, or one that runs its own warm-up and window, still
+    /// goes through this class. A test with its own warm-up calls <see cref="Drain"/> before that warm-up.
+    /// </summary>
+    public static long ThreadBytes => GC.GetAllocatedBytesForCurrentThread();
+
+    /// <summary>
+    /// Finishes the finalizers queued by earlier tests. Garbage from earlier tests can still be waiting for
+    /// finalization, and a finalizer that runs inside a window can hand work to this thread, such as a resource
+    /// release the next frame performs, which reads as an allocation in code that allocates nothing (#8190).
+    /// Call it before the warm-up so the warm-up frames absorb the work handed over. The second pass takes what
+    /// the finalizers released.
+    /// </summary>
+    public static void Drain()
+    {
+        GC.Collect();
+        GC.WaitForPendingFinalizers();
+        GC.Collect();
+    }
+
+    // Generous for the few hundred frames a window runs (each allocates a few tens of KB).
+    private const long NoGcRegionBytes = 64_000_000;
+
+    /// <summary>
+    /// Like <see cref="Measure"/> for workloads whose per-frame reading must not depend on what ran before the
+    /// test or on how often the garbage collector runs (#7860). Runs <paramref name="frame"/> with the frame
+    /// numbers <c>0 .. warmupIterations + measuredIterations - 1</c> and returns the bytes allocated in frames
+    /// <c>warmupIterations ..</c> (the measured window).
+    /// </summary>
+    /// <remarks>
+    /// RichTextKit creates <c>SKFont</c> objects it never disposes (2 to 21 per frame for the text cases). SkiaSharp
+    /// registers each one in a <c>Dictionary&lt;IntPtr, WeakReference&gt;</c> until a finalizer removes it, and that
+    /// dictionary doubles whenever the number of live handles passes its capacity. The capacity never shrinks, so a
+    /// resize (115 KB and more) lands in whichever measured window first reaches a new peak, and which window that is
+    /// depends on how many handles earlier tests left and how often a collection ran. The measurement therefore (1) runs
+    /// the identical frames once inside a no-GC region so the table reaches the capacity the window needs, (2) lets
+    /// finalizers empty it again, and (3) measures the same frames, again inside a no-GC region, so the reading does not
+    /// depend on collection frequency either. Every pass replays the same frame numbers, so each window draws the same
+    /// strings. The figure is the steady-state managed bytes per frame between collections.
+    /// </remarks>
+    public static AllocationResult MeasureReplayed(Action<int> frame, int warmupIterations = 50, int measuredIterations = 300)
+    {
+        int total = warmupIterations + measuredIterations;
+
+        // Peak pass: the table grows to the capacity a window needs.
+        bool inRegion = StartNoGcRegion();
+        try
+        {
+            for (int i = 0; i < total; i++)
+            {
+                frame(i);
+            }
+        }
+        finally
+        {
+            EndNoGcRegion(inRegion);
+        }
+        Drain();
+
+        for (int i = 0; i < warmupIterations; i++)
+        {
+            frame(i);
+        }
+        Drain();
+
+        inRegion = StartNoGcRegion();
+        long before;
+        long after;
+        try
+        {
+            before = GC.GetAllocatedBytesForCurrentThread();
+            for (int i = warmupIterations; i < total; i++)
+            {
+                frame(i);
+            }
+            after = GC.GetAllocatedBytesForCurrentThread();
+        }
+        finally
+        {
+            EndNoGcRegion(inRegion);
+        }
 
         return new AllocationResult(after - before, measuredIterations);
+    }
+
+    private static bool StartNoGcRegion()
+    {
+        try
+        {
+            return GC.TryStartNoGCRegion(NoGcRegionBytes);
+        }
+        catch (ArgumentOutOfRangeException)
+        {
+            return false;
+        }
+    }
+
+    private static void EndNoGcRegion(bool started)
+    {
+        if (started && System.Runtime.GCSettings.LatencyMode == System.Runtime.GCLatencyMode.NoGCRegion)
+        {
+            GC.EndNoGCRegion();
+        }
     }
 }
 

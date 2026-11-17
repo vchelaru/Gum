@@ -20,7 +20,7 @@ public class SkiaAllocationMeasurerTests
             }
         }
 
-        AllocationResult first = SkiaAllocationMeasurer.Measure(Frame, warmupIterations: 10, measuredIterations: 300);
+        AllocationResult first = AllocationMeasurer.MeasureReplayed(Frame, warmupIterations: 10, measuredIterations: 300);
 
         // Leaves the handle table with room for far more handles than the workload creates.
         List<SKFont> held = new List<SKFont>();
@@ -33,7 +33,7 @@ public class SkiaAllocationMeasurerTests
             font.Dispose();
         }
 
-        AllocationResult second = SkiaAllocationMeasurer.Measure(Frame, warmupIterations: 10, measuredIterations: 300);
+        AllocationResult second = AllocationMeasurer.MeasureReplayed(Frame, warmupIterations: 10, measuredIterations: 300);
 
         first.TotalBytes.ShouldBe(second.TotalBytes);
         first.BytesPerIteration.ShouldBeGreaterThan(0);
@@ -58,12 +58,12 @@ public class SkiaAllocationMeasurerTests
         try
         {
             Should.Throw<InvalidOperationException>(() =>
-                SkiaAllocationMeasurer.Measure(ThrowingFrame, warmupIterations: 5, measuredIterations: 20))
+                AllocationMeasurer.MeasureReplayed(ThrowingFrame, warmupIterations: 5, measuredIterations: 20))
                 .Message.ShouldBe("frame failed");
 
             GCSettings.LatencyMode.ShouldNotBe(GCLatencyMode.NoGCRegion);
 
-            AllocationResult next = SkiaAllocationMeasurer.Measure(
+            AllocationResult next = AllocationMeasurer.MeasureReplayed(
                 frame => { }, warmupIterations: 5, measuredIterations: 20);
             next.Iterations.ShouldBe(20);
         }
@@ -84,7 +84,7 @@ public class SkiaAllocationMeasurerTests
         const int Measured = 20;
         Dictionary<int, int> calls = new Dictionary<int, int>();
 
-        SkiaAllocationMeasurer.Measure(
+        AllocationMeasurer.MeasureReplayed(
             frame => calls[frame] = calls.GetValueOrDefault(frame) + 1,
             warmupIterations: Warmup,
             measuredIterations: Measured);

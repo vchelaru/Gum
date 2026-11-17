@@ -363,9 +363,9 @@ public class DrawAllocationTests : BaseTestClass
         Action<int> change = CreateChangingText(kind, out TextRuntime text);
         text.AddToRoot();
 
-        // SkiaAllocationMeasurer replays the same frames in every window and keeps SkiaSharp's handle table
+        // AllocationMeasurer.MeasureReplayed replays the same frames in every window and keeps SkiaSharp's handle table
         // resize and the collector's timing out of the reading (#7860).
-        AllocationResult result = SkiaAllocationMeasurer.Measure(
+        AllocationResult result = AllocationMeasurer.MeasureReplayed(
             frame =>
             {
                 change(frame);

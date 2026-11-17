@@ -93,7 +93,7 @@ public class TextBoxClickAllocationTests : BaseTestClass
 
     private double Measure(string label, Action<int> act)
     {
-        AllocationResult result = SkiaAllocationMeasurer.Measure(
+        AllocationResult result = AllocationMeasurer.MeasureReplayed(
             frame =>
             {
                 act(frame);

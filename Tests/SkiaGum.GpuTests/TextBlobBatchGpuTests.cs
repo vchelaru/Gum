@@ -1,3 +1,4 @@
+using MonoGameGum.TestsCommon;
 using Gum.DataTypes;
 using Gum.GueDeriving;
 using Gum.Wireframe;
@@ -336,6 +337,7 @@ public class TextBlobBatchGpuTests : IDisposable
             root.AddChild(clip);
             root.AddToManagers(managers, null);
             RenderingLibrary.Graphics.TextBlobBatch batch = managers.Renderer.TextBatch;
+            AllocationMeasurer.Drain();
 
             for (int frame = 0; frame < MergedFrames; frame++)
             {
@@ -343,13 +345,13 @@ public class TextBlobBatchGpuTests : IDisposable
                 managers.Draw();
             }
             int buildsBefore = batch.MergedBuildCount;
-            long bytesBefore = GC.GetAllocatedBytesForCurrentThread();
+            long bytesBefore = AllocationMeasurer.ThreadBytes;
             for (int frame = 0; frame < 50; frame++)
             {
                 managers.Renderer.NotifyHostFrameAdvanced();
                 managers.Draw();
             }
-            allocated = GC.GetAllocatedBytesForCurrentThread() - bytesBefore;
+            allocated = AllocationMeasurer.ThreadBytes - bytesBefore;
             builds = batch.MergedBuildCount - buildsBefore;
 
             // A changed text paints through RichTextKit its first frame, then draws new blobs, so its run rebuilds
@@ -411,18 +413,19 @@ public class TextBlobBatchGpuTests : IDisposable
                 managers.Draw();
             }
 
+            AllocationMeasurer.Drain();
             // Long enough for the static run to merge.
             for (int i = 0; i < MergedFrames; i++)
             {
                 DrawFrame();
             }
             int buildsBefore = batch.MergedBuildCount;
-            long bytesBefore = GC.GetAllocatedBytesForCurrentThread();
+            long bytesBefore = AllocationMeasurer.ThreadBytes;
             for (int i = 0; i < 50; i++)
             {
                 DrawFrame();
             }
-            allocated = GC.GetAllocatedBytesForCurrentThread() - bytesBefore;
+            allocated = AllocationMeasurer.ThreadBytes - bytesBefore;
             scrollBuilds = batch.MergedBuildCount - buildsBefore;
             scrollDrawCalls = managers.Renderer.RenderStateChangeStatistics.DrawCallCount;
 
@@ -501,11 +504,12 @@ public class TextBlobBatchGpuTests : IDisposable
                 }
             }
 
+            AllocationMeasurer.Drain();
             DrawFrames(40);
             int buildsBefore = batch.MergedBuildCount;
-            long bytesBefore = GC.GetAllocatedBytesForCurrentThread();
+            long bytesBefore = AllocationMeasurer.ThreadBytes;
             DrawFrames(200);
-            allocated = GC.GetAllocatedBytesForCurrentThread() - bytesBefore;
+            allocated = AllocationMeasurer.ThreadBytes - bytesBefore;
             builds = batch.MergedBuildCount - buildsBefore;
             drawCalls = managers.Renderer.RenderStateChangeStatistics.DrawCallCount;
         });
