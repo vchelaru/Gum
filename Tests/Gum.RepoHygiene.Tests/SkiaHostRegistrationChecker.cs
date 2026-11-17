@@ -14,6 +14,8 @@ internal static class SkiaHostRegistrationChecker
     // to be in AllLibraries.sln, and shares the other's test project, sample and docs page.
     private static readonly HashSet<string> SharedSourceVariants = new() { "BrutalGum.Vulkan" };
 
+    private const string MacosGroupsFile = ".github/scripts/macos-test-groups.txt";
+
     private const string DocsFolder = "docs/code/getting-started/setup/adding-initializing-gum";
 
     // KniSkiaGum is deliberately kept out of the docs for now (no page, card, SUMMARY entry or README row), so it
@@ -46,7 +48,7 @@ internal static class SkiaHostRegistrationChecker
         List<string> missing = new();
         string allLibraries = ReadOrEmpty(repoRoot, "AllLibraries.sln");
         string slnf = ReadOrEmpty(repoRoot, "Tests/CiTestProjects.slnf");
-        string workflow = StripComments(ReadOrEmpty(repoRoot, ".github/workflows/build-and-test.yaml"));
+        string macosGroups = StripComments(ReadOrEmpty(repoRoot, MacosGroupsFile));
         string readme = ReadOrEmpty(repoRoot, "README.md");
         string summary = ReadOrEmpty(repoRoot, "docs/SUMMARY.md");
         string docsReadme = ReadOrEmpty(repoRoot, DocsFolder + "/README.md");
@@ -80,13 +82,12 @@ internal static class SkiaHostRegistrationChecker
                 missing.Add($"Skia host {host} is missing from Tests/CiTestProjects.slnf (the Windows --no-build test step fails without it). Add \"{slnfEntry}\" to its projects list.");
             }
 
-            if (!workflow.Contains($"dotnet test \"Tests/{tests}\""))
+            if (!ListsProject(macosGroups, tests))
             {
-                string example = host == "SilkNetGum" ? "StrideGum" : "SilkNetGum";
-                missing.Add($"Skia host {host} has no test step in .github/workflows/build-and-test.yaml. Add a step running: dotnet test \"Tests/{tests}\" --configuration Release --no-build --logger \"trx\" --results-directory \"TestResults\" (copy the {example}.Tests step).");
+                missing.Add($"Skia host {host} is missing from {MacosGroupsFile}, so the macOS CI leg never runs its tests. Add a line \"macos-3 Tests/{tests}\" to it.");
             }
 
-            if (windowsGroups is not null && !Regex.IsMatch(windowsGroups, $@"^\s*\S+\s+Tests/{Regex.Escape(tests)}(\s|$)", RegexOptions.Multiline))
+            if (windowsGroups is not null && !ListsProject(windowsGroups, tests))
             {
                 missing.Add($"Skia host {host} is missing from .github/scripts/windows-test-groups.txt (the Windows CI script fails fast without it). Add a line \"headless Tests/{tests}\" to it.");
             }
@@ -158,6 +159,12 @@ internal static class SkiaHostRegistrationChecker
         }
         string stem = host.EndsWith("Gum") ? host.Substring(0, host.Length - 3) : host;
         return (stem.ToLowerInvariant() + ".md", stem);
+    }
+
+    // A test-groups manifest line is "<stream> <project directory> [...]" (read by .github/scripts/test-concurrent.sh).
+    private static bool ListsProject(string groups, string tests)
+    {
+        return Regex.IsMatch(groups, $@"^\s*\S+\s+Tests/{Regex.Escape(tests)}(\s|$)", RegexOptions.Multiline);
     }
 
     private static string StripComments(string yaml)
