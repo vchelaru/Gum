@@ -406,14 +406,7 @@ technique SpriteDrawing
         SystemManagers managers = SystemManagers.Default;
         Renderer renderer = managers.Renderer;
 
-        Result<SlangFxConversion, ShaderError[]> conversion = SlangFrontend.ConvertToFx(
-            File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "Outline.slang")), new SlangConvertOptions { SourceName = "Outline.slang" });
-        conversion.IsSuccess.ShouldBeTrue();
-        EffectCompiler compiler = new();
-        Result<CompiledShader, ShaderError[]> compileResult =
-            compiler.Compile(conversion.Value.FxText, new CompilerOptions { Target = PlatformTarget.OpenGL }, TestContext.Current.CancellationToken);
-        compileResult.IsSuccess.ShouldBeTrue();
-        using Effect outline = new(gd, compileResult.Value.Data);
+        using Effect outline = new(gd, _outlineEffectBytes.Value);
 
         ContainerRuntime Build(float x, System.Action<ContainerRuntime> set)
         {
@@ -562,6 +555,21 @@ technique SpriteDrawing
         data[(24 * CaptureSize) + 18].G.ShouldBe((byte)255);
     }
 
+    // Outline.slang converted and compiled once; each test still builds its own Effect from the bytes.
+    private static readonly Lazy<byte[]> _outlineEffectBytes = new(() =>
+    {
+        Result<SlangFxConversion, ShaderError[]> conversion = SlangFrontend.ConvertToFx(
+            File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "Outline.slang")), new SlangConvertOptions { SourceName = "Outline.slang" });
+        conversion.IsSuccess.ShouldBeTrue(
+            conversion.IsFailure ? string.Join("\n", conversion.Error.Select(e => e.Message)) : "");
+
+        Result<CompiledShader, ShaderError[]> compileResult =
+            new EffectCompiler().Compile(conversion.Value.FxText, new CompilerOptions { Target = PlatformTarget.OpenGL }, TestContext.Current.CancellationToken);
+        compileResult.IsSuccess.ShouldBeTrue(
+            compileResult.IsFailure ? string.Join("\n", compileResult.Error.Select(e => e.Message)) : "");
+        return compileResult.Value.Data;
+    });
+
     private Color[] RenderOutlinedSquare(System.Action<ContainerRuntime>? setParameters, Color? background = null, float zoom = 1f)
     {
         using MinimalGame game = new();
@@ -571,17 +579,7 @@ technique SpriteDrawing
         SystemManagers managers = SystemManagers.Default;
         Renderer renderer = managers.Renderer;
 
-        Result<SlangFxConversion, ShaderError[]> conversion = SlangFrontend.ConvertToFx(
-            File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "Outline.slang")), new SlangConvertOptions { SourceName = "Outline.slang" });
-        conversion.IsSuccess.ShouldBeTrue(
-            conversion.IsFailure ? string.Join("\n", conversion.Error.Select(e => e.Message)) : "");
-
-        EffectCompiler compiler = new();
-        Result<CompiledShader, ShaderError[]> compileResult =
-            compiler.Compile(conversion.Value.FxText, new CompilerOptions { Target = PlatformTarget.OpenGL }, TestContext.Current.CancellationToken);
-        compileResult.IsSuccess.ShouldBeTrue(
-            compileResult.IsFailure ? string.Join("\n", compileResult.Error.Select(e => e.Message)) : "");
-        using Effect outline = new(gd, compileResult.Value.Data);
+        using Effect outline = new(gd, _outlineEffectBytes.Value);
 
         // A 24x24 red square in the middle of a 48x48 render target, outlined in blue.
         ContainerRuntime container = new();
@@ -645,14 +643,7 @@ technique SpriteDrawing
         using MinimalGame game = new();
         game.RunOneFrame();
 
-        Result<SlangFxConversion, ShaderError[]> conversion = SlangFrontend.ConvertToFx(
-            File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "Outline.slang")), new SlangConvertOptions { SourceName = "Outline.slang" });
-        conversion.IsSuccess.ShouldBeTrue();
-        EffectCompiler compiler = new();
-        Result<CompiledShader, ShaderError[]> compileResult =
-            compiler.Compile(conversion.Value.FxText, new CompilerOptions { Target = PlatformTarget.OpenGL }, TestContext.Current.CancellationToken);
-        compileResult.IsSuccess.ShouldBeTrue();
-        using Effect outline = new(game.GraphicsDevice, compileResult.Value.Data);
+        using Effect outline = new(game.GraphicsDevice, _outlineEffectBytes.Value);
 
         System.Collections.Generic.IReadOnlyList<ShaderParameterInfo> parameters = EffectShaderParameters.Read(outline);
 
