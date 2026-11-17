@@ -54,6 +54,22 @@ kerningLines;
     }
 
     [Fact]
+    public void WrappedText_EndingInASpace_KeepsTheEmptyLastWordWithoutAJoinPair()
+    {
+        // "LT LT " wraps, and splitting it leaves an empty last word at the string's end: that join has no second character.
+        TextRuntime textRuntime = new();
+        textRuntime.WidthUnits = DimensionUnitType.Absolute;
+        textRuntime.Width = 25;
+        Text text = (Text)textRuntime.RenderableComponent!;
+        text.BitmapFont = CreateFont("kernings count=1\nkerning first=84 second=32 amount=-3\n");
+
+        textRuntime.Text = "LT LT ";
+
+        // Matches the unkerned wrap of a trailing space (TextWrapCharacterizationTests "trailing-space-wrapped").
+        text.WrappedText.ShouldBe(new[] { "LT ", "LT ", "" });
+    }
+
+    [Fact]
     public void GetCharacterIndexAtPosition_UsesTheKernedPenPosition()
     {
         // Kerned, V spans 7 to 17 so 13 is past its middle; unkerned it spans 10 to 20.

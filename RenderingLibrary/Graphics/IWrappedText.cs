@@ -272,8 +272,9 @@ public static class IWrappedTextExtensions
                 {
                     // No inline run active: the candidate width is the committed line's full advance (its
                     // last glyph isn't trimmed because the word follows it) plus the word's own width.
+                    // An empty word (a trailing or doubled space) has no first character, so no pair at the join.
                     linePlusWordWidth = lineFullAdvance
-                        + textInstance.GetKerning(stringToUse[currentLineStart + currentLineLength - 1], stringToUse[wordStart])
+                        + (wordLength > 0 ? textInstance.GetKerning(stringToUse[currentLineStart + currentLineLength - 1], stringToUse[wordStart]) : 0)
                         + textInstance.MeasureString(stringToUse.AsSpan(wordStart, wordLength));
                 }
                 else

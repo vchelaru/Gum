@@ -12,7 +12,9 @@ namespace MonoGameGum.IntegrationTests.MonoGameGum.Rendering;
 /// <summary>
 /// The size of each nested submenu popup (File, File > Recent, File > Recent > More) for the V3 visuals
 /// and every code-only theme. Pinned to the sizes these popups had before themes moved their popup to
-/// MenuItem.DefaultSubmenuPopupTemplate (#6741).
+/// MenuItem.DefaultSubmenuPopupTemplate (#6741), except the More popup of "standard" and "editor", which is
+/// 1 pixel narrower since bitmap fonts kern (#8208): its widest header, "A much longer entry", has the "A "
+/// pair at -1 in both fonts, and no other theme's font has a pair in it.
 /// </summary>
 [Collection(SharedGame.CollectionName)]
 public class MenuNestedSubmenuSizeTests : BaseTestClass
@@ -34,10 +36,10 @@ public class MenuNestedSubmenuSizeTests : BaseTestClass
     // "width x height" of the File, Recent and More popups.
     private static readonly Dictionary<string, string> Expected = new()
     {
-        ["standard"] = "85x44, 69x44, 165x65",
+        ["standard"] = "85x44, 69x44, 164x65",
         ["bubblegum"] = "107x78, 96x78, 168x116",
         ["darkpro"] = "111x64, 96x64, 192x95",
-        ["editor"] = "76x36, 62x36, 136x53",
+        ["editor"] = "76x36, 62x36, 135x53",
         ["forestglade"] = "101x72, 90x72, 162x110",
         ["hazard"] = "99x74, 91x74, 146x110",
         ["meadow"] = "114x84, 99x84, 185x125",
