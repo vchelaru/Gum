@@ -6,6 +6,7 @@ using RenderingLibrary;
 using RenderingLibrary.Graphics;
 using Shouldly;
 using SkiaSharp;
+using SkiaGum.Renderables;
 using Xunit;
 
 #pragma warning disable CS0618
@@ -376,6 +377,95 @@ public class RenderTargetGpuTests
                 }
             }
             service.DisposeAll();
+        });
+    }
+
+    [Fact]
+    public void UseContext_AbandonedContext_ReleasesItsCacheAndFallsBackToRaster()
+    {
+        SkiaRenderTargetService service = new();
+        using WglGpuContext own = new();
+        own.WithSurface(8, 8, (surface, context) =>
+        {
+            service.UseContext(context);
+            service.GetFor(new InvisibleRenderable(), 16, 16)!.Surface.Canvas.Context.ShouldNotBeNull();
+
+            context.AbandonContext();
+            service.ClearUnusedRenderTargetsLastFrame(); // the next frame start
+            service.UseContext(context);
+
+            service.Context.ShouldBeNull();
+            service.CachedCount.ShouldBe(0);
+            service.GetFor(new InvisibleRenderable(), 16, 16)!.Surface.Canvas.Context.ShouldBeNull();
+            service.DisposeAll();
+        });
+    }
+
+    [Fact]
+    public void DisposeAll_AbandonedContext_DoesNotThrow()
+    {
+        SkiaRenderTargetService service = new();
+        using WglGpuContext own = new();
+        own.WithSurface(8, 8, (surface, context) =>
+        {
+            service.UseContext(context);
+            service.GetFor(new InvisibleRenderable(), 16, 16);
+            service.GetFor(new InvisibleRenderable(), 16, 16);
+            context.AbandonContext();
+
+            Should.NotThrow(() => service.DisposeAll());
+            service.CachedCount.ShouldBe(0);
+        });
+    }
+
+    [Fact]
+    public void Draw_ContextAbandonedMidRun_KeepsDrawingAndReleasesCleanly()
+    {
+        ContainerRuntime container = BuildScene();
+        using WglGpuContext own = new();
+        own.WithSurface(Width, Height, (surface, context) =>
+        {
+            SystemManagers managers = CreateManagers(surface.Canvas);
+            container.AddToManagers(managers, null);
+            managers.Draw();
+            managers.Renderer.RenderTargetBakeCount.ShouldBe(1);
+
+            context.AbandonContext();
+
+            Should.NotThrow(() => managers.Draw());
+            Should.NotThrow(() => managers.ReleaseRenderTargets());
+            container.RemoveFromManagers();
+        });
+    }
+
+    [Fact]
+    public void Draw_ContextAbandonedBetweenTwoBakes_NeverTouchesADisposedSurface()
+    {
+        ContainerRuntime first = BuildScene();
+        ContainerRuntime second = BuildScene();
+        second.X = 20;
+        using WglGpuContext own = new();
+        own.WithSurface(Width, Height, (surface, context) =>
+        {
+            SystemManagers managers = CreateManagers(surface.Canvas);
+            CanvasRenderable abandoner = new();
+            abandoner.CustomRender += _ => context.AbandonContext();
+            first.Children.Add(new GraphicalUiElement(abandoner));
+            first.AddToManagers(managers, null);
+            second.AddToManagers(managers, null);
+
+            Should.NotThrow(() => managers.Draw());
+            SKSurface? firstSurface = managers.Renderer.TryGetRenderTargetSurfaceFor((IRenderableIpso)first.RenderableComponent!);
+            firstSurface.ShouldNotBeNull();
+            firstSurface.Handle.ShouldNotBe(IntPtr.Zero);
+
+            // The next frame notices the lost context and bakes on the CPU.
+            Should.NotThrow(() => managers.Draw());
+            managers.Renderer.TryGetRenderTargetSurfaceFor((IRenderableIpso)second.RenderableComponent!)!
+                .Canvas.Context.ShouldBeNull();
+            managers.ReleaseRenderTargets();
+            first.RemoveFromManagers();
+            second.RemoveFromManagers();
         });
     }
 }

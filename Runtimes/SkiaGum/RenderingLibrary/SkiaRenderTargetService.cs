@@ -71,18 +71,57 @@ internal sealed class SkiaRenderTargetService
         _current = _raster;
     }
 
+    // The lost/disposed verdict is taken once per frame (reset in ClearUnusedRenderTargetsLastFrame), so a context
+    // abandoned mid-frame never frees a surface that frame's bakes still reference and costs one native call per frame.
+    private GRRecordingContext? _verdictContext;
+    private bool _verdictUnusable;
+
+    // Caches of lost contexts, freed at the next frame start once nothing references their surfaces.
+    private readonly List<SkiaContextRenderTargets> _pendingDispose = new List<SkiaContextRenderTargets>();
+
+    private bool IsUnusableThisFrame(GRRecordingContext context)
+    {
+        if (!ReferenceEquals(context, _verdictContext))
+        {
+            _verdictContext = context;
+            _verdictUnusable = SkiaContextRenderTargets.IsUnusable(context);
+        }
+        return _verdictUnusable;
+    }
+
+    private void FreePending()
+    {
+        for (int i = 0; i < _pendingDispose.Count; i++)
+        {
+            _pendingDispose[i].DisposeAll();
+        }
+        _pendingDispose.Clear();
+    }
+
     /// <summary>The context new surfaces are created from; null when they are CPU raster.</summary>
     internal GRRecordingContext? Context => _current.Context;
 
     /// <summary>
     /// Selects the cache for the draw canvas's <c>Context</c> (null for a raster canvas). A context is recognized by
     /// reference, so a host that recreates its context after a loss gets fresh surfaces and the old context's cache is
-    /// released once its owners stop being drawn. A lost context that keeps the same wrapper object cannot be noticed.
+    /// released once its owners stop being drawn. A context that was abandoned (lost) or disposed is unusable: its
+    /// cache is released and drawing falls back to raster, so the same wrapper object can never serve stale surfaces.
     /// </summary>
     internal void UseContext(GRRecordingContext? context)
     {
         if (context == null)
         {
+            _current = _raster;
+        }
+        else if (IsUnusableThisFrame(context))
+        {
+            if (_gpu.TryGetValue(context, out SkiaContextRenderTargets? lost))
+            {
+                // Surfaces of this frame's bakes may still be composited, so they are freed at the next frame start.
+                _pendingDispose.Add(lost);
+                _all.Remove(lost);
+                _gpu.Remove(context);
+            }
             _current = _raster;
         }
         else
@@ -119,7 +158,7 @@ internal sealed class SkiaRenderTargetService
         for (int i = 0; i < _all.Count; i++)
         {
             SkiaContextRenderTargets targets = _all[i];
-            if (!ReferenceEquals(targets, _current) && !targets.IsContextDisposed && targets.HasCachedRenderTarget(owner))
+            if (!ReferenceEquals(targets, _current) && !targets.IsContextUnusable && targets.HasCachedRenderTarget(owner))
             {
                 targets.MarkUsed(owner);
             }
@@ -209,12 +248,14 @@ internal sealed class SkiaRenderTargetService
     /// <summary>Frame-boundary sweep of every canvas's cache; a context whose cache emptied is forgotten, as is one whose context was disposed.</summary>
     public void ClearUnusedRenderTargetsLastFrame()
     {
+        _verdictContext = null;
+        FreePending();
         _raster.ClearUnusedRenderTargetsLastFrame();
         List<GRRecordingContext>? emptied = null;
         foreach (KeyValuePair<GRRecordingContext, SkiaContextRenderTargets> entry in _gpu)
         {
             entry.Value.ClearUnusedRenderTargetsLastFrame();
-            if (!ReferenceEquals(entry.Value, _current) && (entry.Value.CachedCount == 0 || entry.Value.IsContextDisposed))
+            if (!ReferenceEquals(entry.Value, _current) && (entry.Value.CachedCount == 0 || entry.Value.IsContextUnusable))
             {
                 (emptied ??= new List<GRRecordingContext>()).Add(entry.Key);
             }
@@ -223,15 +264,27 @@ internal sealed class SkiaRenderTargetService
         {
             foreach (GRRecordingContext context in emptied)
             {
-                _all.Remove(_gpu[context]);
-                _gpu.Remove(context);
+                Forget(context, _gpu[context]);
             }
         }
     }
 
-    /// <summary>Disposes every surface and drops every context reference. Call on shutdown, with the GL context current.</summary>
+    private void Forget(GRRecordingContext context, SkiaContextRenderTargets targets)
+    {
+        targets.DisposeAll();
+        _all.Remove(targets);
+        _gpu.Remove(context);
+    }
+
+    /// <summary>
+    /// Disposes every surface and drops every context reference. Call on shutdown, ideally with the GL context current;
+    /// surfaces of a context that is already disposed are leaked on purpose (see <see cref="SkiaContextRenderTargets"/>),
+    /// and nothing here throws.
+    /// </summary>
     public void DisposeAll()
     {
+        FreePending();
+        _verdictContext = null;
         for (int i = 0; i < _all.Count; i++)
         {
             SkiaContextRenderTargets targets = _all[i];
@@ -255,8 +308,10 @@ internal sealed class SkiaContextRenderTargets : RenderTargetServiceBase<SkiaRen
         Context = context;
     }
 
-    /// <summary>The host disposed this context (a lost context it recreated), so nothing drawn through it is current.</summary>
-    public bool IsContextDisposed => Context != null && Context.Handle == System.IntPtr.Zero;
+    /// <summary>The host disposed or abandoned this context (a lost context), so nothing drawn through it is current.</summary>
+    public bool IsContextUnusable => Context != null && IsUnusable(Context);
+
+    internal static bool IsUnusable(GRRecordingContext context) => context.Handle == System.IntPtr.Zero || context.IsAbandoned;
 
     /// <summary>A premultiplied RGBA surface: GPU-backed when a context is set, CPU raster otherwise.</summary>
     internal SKSurface CreateSurface(int width, int height)
@@ -271,9 +326,24 @@ internal sealed class SkiaContextRenderTargets : RenderTargetServiceBase<SkiaRen
         return new SkiaRenderTarget(CreateSurface(width, height), width, height);
     }
 
+    // Shutdown must never crash a game. A surface of a disposed context cannot be freed safely (the GL objects are
+    // gone), so it is leaked and its finalizer suppressed; an abandoned context frees without touching GL. A host
+    // that destroyed its GL context but not the GRContext wrapper cannot be detected: call Uninitialize first.
     protected override void Destroy(SkiaRenderTarget renderTarget)
     {
-        renderTarget.Surface.Dispose();
+        try
+        {
+            if (Context != null && Context.Handle == System.IntPtr.Zero)
+            {
+                System.GC.SuppressFinalize(renderTarget.Surface);
+                return;
+            }
+            renderTarget.Surface.Dispose();
+        }
+        catch (System.Exception)
+        {
+            // A teardown failure leaves a leaked surface at worst; it must not take the game down at exit.
+        }
     }
 
     // Cached results of manual-mode containers, by owner. The surface itself lives in the base class's
