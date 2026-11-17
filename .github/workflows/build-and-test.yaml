@@ -23,8 +23,9 @@ on:
     branches: [main, 'release/**']
     paths-ignore: ['docs/**', '**/*.md', '.gitbook/**']
   pull_request:
-  # The nightly run covers what pull requests may skip to save runner time: the Avalonia head on
-  # macOS (see Build-Avalonia-Head) and the macOS Build-and-Test leg (#8164). The other jobs skip
+  # The nightly run covers what pull requests skip to save runner time: the Avalonia head on
+  # macOS (see Build-Avalonia-Head) and the macOS Build-and-Test leg, which never runs on a PR
+  # (#8164). A failed nightly macOS leg files an issue (Report-macOS-Nightly). The other jobs skip
   # the schedule event.
   schedule:
     - cron: '17 3 * * *'
@@ -56,7 +57,6 @@ jobs:
       avalonia: ${{ steps.jobpaths.outputs.avalonia }}
       aot: ${{ steps.jobpaths.outputs.aot }}
       gencode: ${{ steps.jobpaths.outputs.gencode }}
-      macos: ${{ github.event_name != 'pull_request' || steps.macos.outputs.macos == 'true' }}
     steps:
       # The `fast-ci` label must never skip tests that can observe the change (#7589: a PR that edited
       # Outline.slang carried the label, the Mesa stream with RaylibGum.Tests was skipped, and 8 Raylib
@@ -106,50 +106,6 @@ jobs:
               - '*.targets'
               - 'global.json'
               - 'NuGet.config'
-              - '.github/**'
-
-      # Whether a PR needs the macOS Build-and-Test leg (#8164). Hosted macOS runners are often slow to
-      # acquire, so a PR runs that leg only when it touches something the leg sees differently from
-      # Windows: projects and TFMs only it builds (AllLibraries with the iOS/Android workloads: the mobile
-      # TFMs and the sources MonoGameGum/KniGum link into them, FnaGum and the fna submodule, SkiaGum.Maui,
-      # BrutalGum.Vulkan, KernSmith, 25 of the theme projects, a few test projects), code that branches on
-      # macOS at run time, the .app bundle harness, and build plumbing. Not the Avalonia head (Tool/**):
-      # this leg never builds it; its macOS coverage is the nightly Build-Avalonia-Head run. Push, nightly
-      # and manual runs always run the leg. A Mac-only break in a PR that skips it shows up in the nightly.
-      - name: Paths the macOS leg sees differently
-        if: github.event_name == 'pull_request'
-        id: macos
-        uses: dorny/paths-filter@v3
-        with:
-          filters: |
-            macos:
-              - 'MonoGameGum/**'
-              - 'RenderingLibrary/**'
-              - 'Gum/RenderingLibrary/**'
-              - 'Gum/Wireframe/**'
-              - 'Runtimes/**'
-              - 'Integrations/**'
-              - 'Themes/**'
-              - 'fna'
-              - 'GumCommon/HostServices/**'
-              - 'GumCommon/Input/**'
-              - 'ToolsUtilities/**'
-              - 'Tools/Gum.Presentation/Services/**'
-              - 'Tools/Gum.Presentation/Managers/KeyCombinationFormatter.cs'
-              - 'Tests/MacOSBundle.Harness/**'
-              - 'Tests/Gum.Automation.KniSkia/**'
-              - 'Tests/Gum.Layout.Benchmarks/**'
-              - 'Tests/Gum.Mvvm.Benchmarks/**'
-              - 'Tests/Gum.Themes.Tests/**'
-              - 'Tests/GumExpressions.Tests/**'
-              - 'Tests/MonoGameGum.Tests.V3/**'
-              - '**/*.csproj'
-              - '*.props'
-              - '*.targets'
-              - 'global.json'
-              - 'NuGet.config'
-              - 'AllLibraries.sln'
-              - 'Tests/CiTestProjects.slnf'
               - '.github/**'
 
       - name: Scope (fast-ci label)
@@ -290,8 +246,7 @@ jobs:
   # Linux leg also runs the Xvfb head and device tests. Windows and macOS get their coverage from
   # the nightly run and workflow_dispatch, which run all three, so a Windows- or macOS-only break
   # shows up within a day. The shared logic (Gum.Presentation.Tests, Gum.ProjectServices.Tests)
-  # still runs on Windows in Build-and-Test on every PR, and on macOS when the PR matches the
-  # Changes job's `macos` filter.
+  # still runs on Windows in Build-and-Test on every PR, and on macOS in the nightly run.
   Build-Avalonia-Head:
     needs: Changes
     if: github.event_name != 'push' && needs.Changes.outputs.non-docs == 'true' && (needs.Changes.outputs.scope != 'fast' || needs.Changes.outputs.avalonia == 'true')
@@ -557,11 +512,12 @@ jobs:
 
   # The required contexts are `Build-and-Test (windows-latest)` and `Build-and-Test (macos-15)`, so the
   # name is pinned here and the legs always run; a leg with nothing to do (docs-only PR, the Windows
-  # leg on a push to main or the nightly run, the macOS leg in fast scope or on a PR that misses the
-  # Changes job's `macos` filter) runs on ubuntu-latest and goes green in seconds
-  # instead of waiting for a Windows or macOS runner (#6282). A leg is only sent to ubuntu on an explicit
-  # `false`/`fast` from Changes, so a failed Changes job can never turn real work into a no-op. The
-  # steps below are gated on `steps.plan.outputs.active`, never on runner.os alone.
+  # leg on a push to main or the nightly run, the macOS leg on every PR) runs on ubuntu-latest and goes
+  # green in seconds instead of waiting for a Windows or macOS runner (#6282). macOS runs only on push,
+  # the nightly run and workflow_dispatch (#8164): hosted macOS runners took 15-30 minutes to acquire,
+  # holding up PRs. A Windows leg is only sent to ubuntu on an explicit `false`/`fast` from Changes, so a
+  # failed Changes job can never turn real work into a no-op. The steps below are gated on
+  # `steps.plan.outputs.active`, never on runner.os alone.
   Build-and-Test:
     needs: Changes
     if: ${{ !cancelled() }}
@@ -582,7 +538,7 @@ jobs:
             mesa: true
           - os: macos-15
             leg: macos-15
-    runs-on: ${{ ((github.event_name == 'pull_request' && needs.Changes.outputs.non-docs == 'false') || (matrix.mesa && needs.Changes.outputs.scope == 'fast') || ((github.event_name == 'push' || github.event_name == 'schedule') && matrix.os == 'windows-latest') || (github.event_name == 'pull_request' && (needs.Changes.outputs.scope == 'fast' || needs.Changes.outputs.macos == 'false') && matrix.os == 'macos-15')) && 'ubuntu-latest' || matrix.os }}
+    runs-on: ${{ ((github.event_name == 'pull_request' && needs.Changes.outputs.non-docs == 'false') || (matrix.mesa && needs.Changes.outputs.scope == 'fast') || ((github.event_name == 'push' || github.event_name == 'schedule') && matrix.os == 'windows-latest') || (github.event_name == 'pull_request' && matrix.os == 'macos-15')) && 'ubuntu-latest' || matrix.os }}
     # Final net; slowest normal run is about 19.5 minutes.
     timeout-minutes: 60
     steps:
@@ -602,10 +558,9 @@ jobs:
       # event logic. A docs-only PR does nothing (the Changes job's non-docs output; required contexts
       # must always report, so the trigger stays unfiltered and the steps skip instead); a push to main
       # only seeds the macOS workload cache (Windows installs no workloads, so its leg is a no-op on
-      # push); the nightly run is macOS only (the net for PRs that skipped it); on a PR the macOS leg
-      # is a no-op in fast scope or when the PR misses the `macos` filter, and in fast scope the Windows
-      # leg runs only the headless test stream. A failed Changes job fails the leg: its outputs would
-      # otherwise read as docs-only and turn real work into a green no-op.
+      # push); the nightly run is macOS only; on a PR the macOS leg is always a no-op (#8164), and in
+      # fast scope the Windows leg runs only the headless test stream. A failed Changes job fails the
+      # leg: its outputs would otherwise read as docs-only and turn real work into a green no-op.
       - name: Plan
         id: plan
         shell: bash
@@ -614,7 +569,6 @@ jobs:
           CHANGES_RESULT: ${{ needs.Changes.result }}
           NON_DOCS: ${{ needs.Changes.outputs.non-docs }}
           SCOPE: ${{ needs.Changes.outputs.scope }}
-          MACOS: ${{ needs.Changes.outputs.macos }}
           MATRIX_OS: ${{ matrix.os }}
           MESA_LEG: ${{ matrix.mesa && 'true' || 'false' }}
         run: |
@@ -625,10 +579,9 @@ jobs:
           active=true
           if [ "$EVENT" = "pull_request" ] && [ "$NON_DOCS" != "true" ]; then active=false; fi
           if { [ "$EVENT" = "push" ] || [ "$EVENT" = "schedule" ]; } && [ "$MATRIX_OS" != "macos-15" ]; then active=false; fi
-          if [ "$EVENT" = "pull_request" ] && [ "$SCOPE" = "fast" ] && [ "$MATRIX_OS" = "macos-15" ]; then active=false; fi
-          if [ "$EVENT" = "pull_request" ] && [ "$MACOS" != "true" ] && [ "$MATRIX_OS" = "macos-15" ]; then
+          if [ "$EVENT" = "pull_request" ] && [ "$MATRIX_OS" = "macos-15" ]; then
             active=false
-            echo "macOS leg skipped: the PR touches no path in the Changes job's macos filter (#8164)." >> "$GITHUB_STEP_SUMMARY"
+            echo "macOS leg skipped: pull requests never run it; the nightly run does (#8164)." >> "$GITHUB_STEP_SUMMARY"
           fi
           if [ "$SCOPE" = "fast" ] && [ "$MESA_LEG" = "true" ]; then active=false; fi
           echo "active=$active" >> "$GITHUB_OUTPUT"
@@ -1045,10 +998,8 @@ jobs:
 
       # Slowest classes and tests in the job summary, so a slow suite can be explained from the run
       # page alone (#6092).
-      # Skipped on macOS PR runs to save its few seconds; Windows PRs keep it so slow classes in the
-      # concurrent streams can be found (#8169), and push and nightly runs keep it (#6282).
       - name: Slowest tests
-        if: always() && (github.event_name != 'pull_request' || runner.os == 'Windows') && steps.plan.outputs.active == 'true' && (github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true')
+        if: always() && steps.plan.outputs.active == 'true' && (github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true')
         continue-on-error: true
         shell: pwsh
         run: ./.github/scripts/trx-slowest.ps1 -ResultsDirectory TestResults
@@ -1096,3 +1047,22 @@ jobs:
 
           echo "Running harness from inside the .app bundle (its exit code is the assertion)..."
           "$APP/Contents/MacOS/MacOSBundle.Harness"
+
+  # Pull requests never run the macOS leg (#8164), so a nightly macOS failure files an issue labeled
+  # `macos-nightly`, or comments on the open one, for the maintainer to see the next morning.
+  Report-macOS-Nightly:
+    needs: Build-and-Test
+    if: ${{ always() && github.event_name == 'schedule' && needs.Build-and-Test.result != 'success' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: read
+      issues: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: .github/scripts
+      - name: File or update the macos-nightly issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: bash .github/scripts/report-macos-nightly-failure.sh
