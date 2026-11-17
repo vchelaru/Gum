@@ -15,13 +15,17 @@ public class ExistingCodeProjectDetector : IExistingCodeProjectDetector
 
     private readonly TimeSpan _searchTimeout;
     private readonly Func<string, string?> _search;
+    private readonly TimeProvider _timeProvider;
 
     /// <param name="searchTimeout">How long a search may take before it gives up with null. Defaults to 2 seconds.</param>
     /// <param name="search">The folder walk, for tests. Defaults to the real one.</param>
-    public ExistingCodeProjectDetector(TimeSpan? searchTimeout = null, Func<string, string?>? search = null)
+    /// <param name="timeProvider">The clock that measures <paramref name="searchTimeout"/>, for tests. Defaults to the system clock.</param>
+    public ExistingCodeProjectDetector(TimeSpan? searchTimeout = null, Func<string, string?>? search = null,
+        TimeProvider? timeProvider = null)
     {
         _searchTimeout = searchTimeout ?? DefaultSearchTimeout;
         _search = search ?? Search;
+        _timeProvider = timeProvider ?? TimeProvider.System;
     }
 
     /// <inheritdoc/>
@@ -47,7 +51,14 @@ public class ExistingCodeProjectDetector : IExistingCodeProjectDetector
         };
         thread.Start();
 
-        return completion.Task.Wait(_searchTimeout) ? completion.Task.Result : null;
+        try
+        {
+            return completion.Task.WaitAsync(_searchTimeout, _timeProvider).GetAwaiter().GetResult();
+        }
+        catch (TimeoutException)
+        {
+            return null;
+        }
     }
 
     private static string? Search(string folder)

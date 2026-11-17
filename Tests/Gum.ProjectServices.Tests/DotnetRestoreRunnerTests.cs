@@ -50,9 +50,10 @@ public class DotnetRestoreRunnerTests
         lines.ShouldNotBeEmpty();
     }
 
-    // pwsh is installed on the GitHub ubuntu, macOS and Windows runners; skipped where it is not.
+    // pwsh is installed on the GitHub ubuntu, macOS and Windows runners; skipped where it is not. That the
+    // process is killed is covered by RestoreAsync_CanceledWhileRunning_KillsTheChildProcessTooNotJustTheParent.
     [SkippableFact]
-    public async Task RestoreAsync_CanceledWhileRunning_KillsTheProcessAndReturnsCanceled()
+    public async Task RestoreAsync_CanceledWhileRunning_ReturnsCanceled()
     {
         Skip.IfNot(IsPwshOnPath(), "pwsh is not installed");
         DotnetRestoreRunner runner = new DotnetRestoreRunner(_ =>
@@ -65,14 +66,12 @@ public class DotnetRestoreRunnerTests
         });
         using CancellationTokenSource cancellation = new CancellationTokenSource();
 
-        Stopwatch stopwatch = Stopwatch.StartNew();
         Task<RestoreResult> restore = runner.RestoreAsync("x.csproj", null, cancellation.Token);
         await Task.Delay(1500);
         cancellation.Cancel();
         RestoreResult result = await restore;
 
         result.Status.ShouldBe(RestoreStatus.Canceled);
-        stopwatch.Elapsed.TotalSeconds.ShouldBeLessThan(30);
     }
 
     [SkippableFact]
