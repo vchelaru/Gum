@@ -1,6 +1,8 @@
 using Gum.DataTypes;
+using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
 using Gum.Localization;
+using Gum.Managers;
 using GumRuntime;
 using System;
 using System.Collections;
@@ -27,7 +29,9 @@ internal static class ReloadReferenceScope
 
     private sealed class Snapshot
     {
-        public Dictionary<string, Shape> ByName = new(StringComparer.OrdinalIgnoreCase);
+        // Snapshots are matched across projects by qualified name, exact case: a screen and a component
+        // can share a name, and a renamed element is a new one.
+        public Dictionary<string, Shape> ByName = new(StringComparer.Ordinal);
         public object? Evaluator;
         public ILocalizationService? Localization;
         public int Language;
@@ -43,7 +47,8 @@ internal static class ReloadReferenceScope
 
     /// <summary>
     /// Applies the rows of <paramref name="project"/>, comparing with its own last pass when it had one,
-    /// else with <paramref name="previous"/>'s. Returns how many elements were applied.
+    /// else with <paramref name="previous"/>'s. <see cref="ObjectFinder"/> must hold <paramref name="project"/>,
+    /// since what a row reads is found the way rows are evaluated. Returns how many elements were applied.
     /// </summary>
     public static int Apply(GumProjectSave project, GumProjectSave? previous)
     {
@@ -52,14 +57,6 @@ internal static class ReloadReferenceScope
         all.AddRange(project.Components);
         all.AddRange(project.Screens);
         List<ElementSave> sorted = ReferenceDependencies.OrderByDependency(all);
-
-        Dictionary<string, ElementSave> byName = new(StringComparer.OrdinalIgnoreCase);
-        Dictionary<string, ElementSave> byQualifiedName = new();
-        foreach (ElementSave element in all)
-        {
-            byName[element.Name] = element;
-            byQualifiedName[ElementReference.GetQualifiedName(element, element.Name)] = element;
-        }
 
         Snapshot? baseline;
         if (!Snapshots.TryGetValue(project, out baseline) && previous != null && previous != project)
@@ -71,6 +68,7 @@ internal static class ReloadReferenceScope
             baseline = null;
         }
 
+        HashSet<ElementSave> inProject = new HashSet<ElementSave>(all);
         Dictionary<ElementSave, HashSet<string>> reads = new();
         Dictionary<ElementSave, List<ElementSave>> sources = new();
         Dictionary<ElementSave, List<ElementSave>> readers = new();
@@ -78,12 +76,11 @@ internal static class ReloadReferenceScope
         HashSet<ElementSave> dirty = new();
         foreach (ElementSave element in all)
         {
-            HashSet<string> elementReads = GetReads(element, byQualifiedName);
-            reads[element] = elementReads;
+            HashSet<string> elementReads = new HashSet<string>(StringComparer.Ordinal);
             List<ElementSave> elementSources = new List<ElementSave>();
-            foreach (string read in elementReads)
+            foreach (ElementSave? source in GetSources(element, elementReads))
             {
-                if (byName.TryGetValue(read, out ElementSave? source) && source != element)
+                if (source != null && source != element && inProject.Contains(source))
                 {
                     elementSources.Add(source);
                     if (!readers.TryGetValue(source, out List<ElementSave>? list))
@@ -93,12 +90,13 @@ internal static class ReloadReferenceScope
                     list.Add(element);
                 }
             }
+            reads[element] = elementReads;
             sources[element] = elementSources;
 
             List<object?> elementTokens = Capture(element);
             tokens[element] = elementTokens;
             if (baseline == null
-                || !baseline.ByName.TryGetValue(element.Name, out Shape? shape)
+                || !baseline.ByName.TryGetValue(KeyOf(element), out Shape? shape)
                 || !shape.Settled
                 || !shape.Reads.SetEquals(elementReads)
                 || !TokensEqual(shape.Tokens, elementTokens))
@@ -160,7 +158,7 @@ internal static class ReloadReferenceScope
         foreach (ElementSave element in all)
         {
             bool applied = after.TryGetValue(element, out List<object?>? captured);
-            snapshot.ByName[element.Name] = new Shape
+            snapshot.ByName[KeyOf(element)] = new Shape
             {
                 Tokens = applied ? captured! : tokens[element],
                 Reads = reads[element],
@@ -205,28 +203,35 @@ internal static class ReloadReferenceScope
         && ReferenceEquals(snapshot.Localization, LocalizationRuntimeState.Current)
         && snapshot.Language == (LocalizationRuntimeState.Current?.CurrentLanguage ?? 0);
 
-    // Every element whose values a row of this element can read: the elements its rows name, its base
-    // type, and its instances' types (an instance's value falls back to its type's). Names that resolve
-    // to no element are kept too, so one appearing or disappearing counts as a change.
-    private static HashSet<string> GetReads(ElementSave element, Dictionary<string, ElementSave> byQualifiedName)
+    private static string KeyOf(ElementSave element) => ElementReference.GetQualifiedName(element, element.Name);
+
+    // Every element whose values a row of this element can read, found with the evaluator's own lookups:
+    // the elements its rows name, its base type, and its instances' types (an instance's value falls back
+    // to its type's, and a Forms property to its behaviors'). Each is recorded in reads by qualified name,
+    // or as the name written when it finds nothing, so one appearing or disappearing counts as a change.
+    private static IEnumerable<ElementSave?> GetSources(ElementSave element, HashSet<string> reads)
     {
-        HashSet<string> result = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         foreach (string qualified in ReferenceDependencies.GetElementsRead(element))
         {
-            result.Add(byQualifiedName.TryGetValue(qualified, out ElementSave? source) ? source.Name : "?" + qualified);
+            yield return Record(ElementSaveExtensions.GetElementByQualifiedName(qualified), qualified, reads);
         }
         if (!string.IsNullOrEmpty(element.BaseType))
         {
-            result.Add(element.BaseType);
+            yield return Record(ObjectFinder.Self.GetElementSave(element.BaseType), element.BaseType!, reads);
         }
         foreach (InstanceSave instance in element.Instances)
         {
             if (!string.IsNullOrEmpty(instance.BaseType))
             {
-                result.Add(instance.BaseType);
+                yield return Record(ObjectFinder.Self.GetElementSave(instance.BaseType), instance.BaseType, reads);
             }
         }
-        return result;
+    }
+
+    private static ElementSave? Record(ElementSave? found, string written, HashSet<string> reads)
+    {
+        reads.Add(found != null ? KeyOf(found) : "?" + written);
+        return found;
     }
 
     // Everything of an element a row reads or writes, flattened in order.
@@ -238,6 +243,23 @@ internal static class ReloadReferenceScope
             tokens.Add(instance.Name);
             tokens.Add(instance.BaseType);
             tokens.Add(instance.DefinedByBase);
+        }
+        // A row reading an instance's Forms property it does not set reads the behavior's declared default.
+        tokens.Add(element.Behaviors.Count);
+        foreach (ElementBehaviorReference reference in element.Behaviors)
+        {
+            tokens.Add(reference.BehaviorName);
+            BehaviorSave? behavior = ObjectFinder.Self.GetBehavior(reference);
+            tokens.Add(behavior?.FormsProperties.Count ?? -1);
+            if (behavior != null)
+            {
+                foreach (VariableSave property in behavior.FormsProperties)
+                {
+                    tokens.Add(property.Name);
+                    tokens.Add(property.Type);
+                    AddValue(property.Value, tokens);
+                }
+            }
         }
         List<StateSave> states = element.States ?? new List<StateSave>();
         tokens.Add(states.Count);
