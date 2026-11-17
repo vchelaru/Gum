@@ -68,7 +68,8 @@ public class AllocationMeasurerPendingFinalizerTests
         FinalizerGate.Reset();
         CreateGarbage();
         GC.Collect(); // finalizer thread now holds the object, blocked on the gate
-
+        string? noise = null;
+        AllocationMeasurer.NoiseSink = line => noise = line;
         int call = 0;
         byte[]? sink = null;
         AllocationResult result = AllocationMeasurer.Measure(
@@ -92,32 +93,32 @@ public class AllocationMeasurerPendingFinalizerTests
             },
             warmupIterations: 100,
             measuredIterations: 200);
+        AllocationMeasurer.NoiseSink = null;
         GC.KeepAlive(sink);
 
         result.TotalBytes.ShouldBe(0);
+        noise.ShouldBeNull("the pre-window drain finishes the finalizer, so the first window is clean and no retry runs");
     }
 }
 
 /// <summary>
-/// The measured iterations run as several windows and the lowest wins, so a real allocation still fails and a
-/// one-off burst does not (#8190).
+/// A window that allocated is re-run (up to two more full-size windows) and the lowest wins, so a real allocation
+/// still fails, periodic or not, and a one-off burst does not (#8190).
 /// </summary>
 public class AllocationMeasurerWindowTests
 {
     private static byte[]? _sink;
 
-    [Fact]
-    public void Measure_RealAllocationEveryIteration_ReportedByEveryWindow()
+    private static AllocationResult MeasureCapturing(Action action, int measured, out string? noise,
+        [System.Runtime.CompilerServices.CallerMemberName] string testName = "")
     {
-        string? noise = null;
-        AllocationMeasurer.NoiseSink = line => noise = line;
+        string? captured = null;
+        AllocationMeasurer.NoiseSink = line => captured = line;
         try
         {
-            AllocationResult result = AllocationMeasurer.Measure(
-                () => _sink = new byte[1000], warmupIterations: 10, measuredIterations: 300);
-
-            result.BytesPerIteration.ShouldBeGreaterThanOrEqualTo(1000);
-            noise.ShouldBeNull();
+            AllocationResult result = AllocationMeasurer.Measure(action, warmupIterations: 10, measuredIterations: measured, testName: testName);
+            noise = captured;
+            return result;
         }
         finally
         {
@@ -126,33 +127,56 @@ public class AllocationMeasurerWindowTests
     }
 
     [Fact]
-    public void Measure_BurstInOneWindow_ReadsZeroAndReportsNoise()
+    public void Measure_RealAllocationEveryIteration_FailsInEveryWindow()
     {
-        string? noise = null;
-        AllocationMeasurer.NoiseSink = line => noise = line;
-        try
-        {
-            int call = 0;
-            AllocationResult result = AllocationMeasurer.Measure(
-                () =>
-                {
-                    call++;
-                    if (call == 10 + 150) // inside the second of three windows
-                    {
-                        _sink = new byte[4096];
-                    }
-                },
-                warmupIterations: 10,
-                measuredIterations: 300);
+        AllocationResult result = MeasureCapturing(() => _sink = new byte[1000], 300, out string? noise);
 
-            result.TotalBytes.ShouldBe(0);
-            noise.ShouldNotBeNull();
-            noise!.ShouldStartWith("ALLOCATION-NOISE:");
-            noise.ShouldContain("Measure_BurstInOneWindow_ReadsZeroAndReportsNoise");
-        }
-        finally
-        {
-            AllocationMeasurer.NoiseSink = null;
-        }
+        result.BytesPerIteration.ShouldBeGreaterThanOrEqualTo(1000);
+        noise.ShouldBeNull();
+    }
+
+    [Theory]
+    [InlineData(50)]
+    [InlineData(400)]
+    [InlineData(600)]
+    public void Measure_PeriodicAllocation_StillFails(int period)
+    {
+        int call = 0;
+        AllocationResult result = MeasureCapturing(
+            () =>
+            {
+                call++;
+                if (call % period == 0)
+                {
+                    _sink = new byte[4096];
+                }
+            },
+            1000,
+            out string? noise);
+
+        result.TotalBytes.ShouldBeGreaterThan(0);
+        noise.ShouldBeNull();
+    }
+
+    [Fact]
+    public void Measure_BurstInFirstWindowWithCleanRetry_ReadsZeroAndReportsNoise()
+    {
+        int call = 0;
+        AllocationResult result = MeasureCapturing(
+            () =>
+            {
+                call++;
+                if (call == 10 + 150) // inside the first measured window only
+                {
+                    _sink = new byte[4096];
+                }
+            },
+            300,
+            out string? noise);
+
+        result.TotalBytes.ShouldBe(0);
+        noise.ShouldNotBeNull();
+        noise!.ShouldStartWith("ALLOCATION-NOISE:");
+        noise.ShouldContain("Measure_BurstInFirstWindowWithCleanRetry_ReadsZeroAndReportsNoise");
     }
 }

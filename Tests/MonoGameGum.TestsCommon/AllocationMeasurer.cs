@@ -53,51 +53,45 @@ public static class AllocationMeasurer
             action();
         }
 
-        // The measured iterations are split into WindowCount back-to-back windows (same total cost as one window)
-        // and the lowest bytes per iteration wins. Code that allocates does so in every window, so a real
-        // allocation still fails at the same bound; a one-off burst (a GC, a finalizer, a driver thread handing work
-        // to this thread) lands in one window and is dropped. Too few iterations to split stay one window.
-        int windowCount = measuredIterations >= MinIterationsToSplit ? WindowCount : 1;
-        int baseSize = measuredIterations / windowCount;
-        long[] perCall = new long[measuredIterations];
-        long[] windowBytes = new long[windowCount];
-        int[] windowSizes = new int[windowCount];
-
-        int index = 0;
-        for (int window = 0; window < windowCount; window++)
+        // One full-size window, exactly as before. If it allocated nothing it is the answer and nothing more runs.
+        // If it allocated, up to two more full-size windows run, each after a fresh drain, and the lowest wins: code
+        // that allocates does so in every window (periodic or not), so a real allocation still fails at the same
+        // bound, while a one-off burst (a GC, a finalizer, a driver thread handing work to this thread) lands in one
+        // window and is dropped. The extra cost is paid only when a window allocated.
+        List<long> windowBytes = new();
+        List<long[]> windowCalls = new();
+        for (int window = 0; window < MaxWindows; window++)
         {
-            int size = window == windowCount - 1 ? measuredIterations - index : baseSize;
-            windowSizes[window] = size;
+            if (window > 0)
+            {
+                Drain();
+            }
+            long[] perCall = new long[measuredIterations];
             long windowStart = GC.GetAllocatedBytesForCurrentThread();
-            for (int i = 0; i < size; i++)
+            for (int i = 0; i < measuredIterations; i++)
             {
                 long callStart = GC.GetAllocatedBytesForCurrentThread();
                 action();
-                perCall[index++] = GC.GetAllocatedBytesForCurrentThread() - callStart;
+                perCall[i] = GC.GetAllocatedBytesForCurrentThread() - callStart;
             }
-            windowBytes[window] = GC.GetAllocatedBytesForCurrentThread() - windowStart;
-        }
-
-        int best = 0;
-        for (int window = 1; window < windowCount; window++)
-        {
-            if ((double)windowBytes[window] / windowSizes[window] < (double)windowBytes[best] / windowSizes[best])
+            long bytes = GC.GetAllocatedBytesForCurrentThread() - windowStart;
+            windowBytes.Add(bytes);
+            windowCalls.Add(perCall);
+            if (bytes == 0)
             {
-                best = window;
+                break;
             }
         }
 
-        if (windowBytes.Any(bytes => bytes != windowBytes[0]))
+        if (windowBytes.Count > 1 && windowBytes.Min() == 0 && windowBytes.Max() > 0)
         {
-            ReportDisagreement(testName, filePath, windowBytes, windowSizes, perCall);
+            ReportDisagreement(testName, filePath, windowBytes, windowCalls);
         }
 
-        long total = (long)Math.Round((double)windowBytes[best] / windowSizes[best] * measuredIterations);
-        return new AllocationResult(total, measuredIterations);
+        return new AllocationResult(windowBytes.Min(), measuredIterations);
     }
 
-    private const int WindowCount = 3;
-    private const int MinIterationsToSplit = 30;
+    private const int MaxWindows = 3;
 
     /// <summary>
     /// Receives the <c>ALLOCATION-NOISE:</c> line when measured windows disagree, on the measuring thread. Unset, the
@@ -114,21 +108,16 @@ public static class AllocationMeasurer
     [ThreadStatic]
     public static Action<string, long[]>? DisagreementHook;
 
-    private static void ReportDisagreement(string testName, string filePath, long[] windowBytes, int[] windowSizes, long[] perCall)
+    private static void ReportDisagreement(string testName, string filePath, List<long> windowBytes, List<long[]> windowCalls)
     {
         string file = System.IO.Path.GetFileNameWithoutExtension(filePath);
-        string windows = string.Join(", ", windowBytes.Select((bytes, i) => $"w{i}={bytes}B/{windowSizes[i]}"));
-        List<string> allocating = new();
-        for (int i = 0; i < perCall.Length && allocating.Count < 20; i++)
-        {
-            if (perCall[i] != 0)
-            {
-                allocating.Add($"#{i}:{perCall[i]}");
-            }
-        }
-        string line = $"ALLOCATION-NOISE: {file}.{testName} windows [{windows}]; allocating calls (first 20): {string.Join(" ", allocating)}";
+        string windows = string.Join(", ", windowBytes.Select((bytes, i) => $"w{i}={bytes}B"));
+        string allocating = string.Join(" | ", windowCalls.Select((calls, window) =>
+            $"w{window}: " + string.Join(" ", calls.Select((bytes, i) => (Call: i, Bytes: bytes))
+                .Where(c => c.Bytes != 0).Take(20).Select(c => $"#{c.Call}:{c.Bytes}"))));
+        string line = $"ALLOCATION-NOISE: {file}.{testName} windows [{windows}]; allocating calls (first 20 per window): {allocating}";
         (NoiseSink ?? Console.WriteLine)(line);
-        DisagreementHook?.Invoke(line, perCall);
+        DisagreementHook?.Invoke(line, windowCalls.OrderByDescending(calls => calls.Sum()).First());
     }
 
     /// <summary>
