@@ -59,6 +59,11 @@ public class ColorTextureAlphaAllocationTests : BaseTestClass
             long[] drawBytes = new long[Warmup + Measured];
             long[] restoreBytes = new long[Warmup + Measured];
             long[] callTimestamps = new long[Warmup + Measured];
+            DateTime[] callStarts = new DateTime[Warmup + Measured];
+            DateTime[] callEnds = new DateTime[Warmup + Measured];
+            // #8190: the runtime's own events (JIT, type loads, exceptions), to say what ran inside an allocating call.
+            using RuntimeEventRecorder recorder = new();
+            long testThreadId = RuntimeEventRecorder.CurrentOsThreadId();
             long firstTimestamp = System.Diagnostics.Stopwatch.GetTimestamp();
             int call = 0;
             // Diagnostic: an exception thrown and caught inside a draw allocates its object and trace.
@@ -76,6 +81,7 @@ public class ColorTextureAlphaAllocationTests : BaseTestClass
             AllocationResult result = AllocationMeasurer.Measure(
                 () =>
                 {
+                    DateTime callStart = DateTime.UtcNow;
                     long start = GC.GetAllocatedBytesForCurrentThread();
                     gd.SetRenderTarget(scene);
                     gd.Clear(Color.Black);
@@ -90,6 +96,8 @@ public class ColorTextureAlphaAllocationTests : BaseTestClass
                         drawBytes[call] = restoreStart - drawStart;
                         restoreBytes[call] = end - restoreStart;
                         callTimestamps[call] = System.Diagnostics.Stopwatch.GetTimestamp();
+                        callStarts[call] = callStart;
+                        callEnds[call] = DateTime.UtcNow;
                     }
                     call++;
                 },
@@ -100,6 +108,14 @@ public class ColorTextureAlphaAllocationTests : BaseTestClass
             string detail = $"first-chance exceptions: [{string.Join(" | ", exceptions)}]; gen0 GCs: {gcs};calls that allocated (0..{Warmup - 1} are warm-up; {(System.Diagnostics.Stopwatch.GetTimestamp() - firstTimestamp) * 1000 / System.Diagnostics.Stopwatch.Frequency} ms in all): " + string.Join(", ",
                 Enumerable.Range(0, Warmup + Measured).Where(i => targetBytes[i] != 0 || drawBytes[i] != 0 || restoreBytes[i] != 0)
                     .Select(i => $"#{i} at {(callTimestamps[i] - firstTimestamp) * 1000 / System.Diagnostics.Stopwatch.Frequency} ms target={targetBytes[i]} draw={drawBytes[i]} restore={restoreBytes[i]}"));
+
+            int[] allocatingCalls = Enumerable.Range(Warmup, Measured)
+                .Where(i => targetBytes[i] != 0 || drawBytes[i] != 0 || restoreBytes[i] != 0).ToArray();
+            if (allocatingCalls.Length > 0)
+            {
+                detail += $"; runtime events from call {allocatingCalls[0]} to {allocatingCalls[^1]}: " + recorder.Describe(
+                    callStarts[allocatingCalls[0]].AddMilliseconds(-2), callEnds[allocatingCalls[^1]].AddMilliseconds(2), testThreadId);
+            }
 
             _output.WriteLine($"ColorTextureAlpha + Modulate sprite: {result.BytesPerIteration:N0} bytes/frame");
             Console.WriteLine($"[#8181 diagnostic] ColorTextureAlpha: {result.BytesPerIteration:N0} bytes/frame; {detail}");
