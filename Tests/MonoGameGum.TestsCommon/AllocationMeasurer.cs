@@ -37,6 +37,14 @@ public static class AllocationMeasurer
             throw new ArgumentOutOfRangeException(nameof(measuredIterations), "Must run at least one measured iteration.");
         }
 
+        // Garbage from earlier tests can still be queued for finalization. A finalizer that runs inside the
+        // window can hand work to this thread, such as a resource release the next frame performs, and that
+        // reads as an allocation in code that allocates nothing (#8190). Finish them before the warm-up, so
+        // the warm-up frames absorb the work they hand over. The second pass takes what they released.
+        GC.Collect();
+        GC.WaitForPendingFinalizers();
+        GC.Collect();
+
         for (int i = 0; i < warmupIterations; i++)
         {
             action();
