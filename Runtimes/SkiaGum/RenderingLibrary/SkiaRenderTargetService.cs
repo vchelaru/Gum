@@ -50,17 +50,40 @@ internal sealed class SkiaCachedImage
 
 /// <summary>
 /// Per-render-target-container offscreen surface cache for SkiaGum (#3988), keyed by the container's
-/// contained renderable. Allocates CPU raster (premultiplied) surfaces — no <c>GRContext</c> — so it
-/// works in every Skia host regardless of GPU backing. A GPU-backed surface would be faster on GPU
-/// hosts but requires threading the host's <c>GRContext</c> into the renderer; deferred (#3989).
+/// contained renderable. Surfaces are GPU-backed from the host's <c>GRContext</c>, taken from the canvas the
+/// renderer draws to (see <see cref="UseContext"/>), so baking and compositing stay on the GPU (#8202). A raster
+/// canvas has no context and gets CPU raster surfaces as the fallback.
 /// </summary>
 internal sealed class SkiaRenderTargetService : RenderTargetServiceBase<SkiaRenderTarget>
 {
+    /// <summary>The context the cached surfaces were created from; null when they are CPU raster.</summary>
+    internal GRRecordingContext? Context { get; private set; }
+
+    /// <summary>
+    /// Sets the context new surfaces are created from (the draw canvas's <c>Context</c>, null for a raster canvas).
+    /// A different context than the cached surfaces were made from (the host recreated it after a loss, or moved
+    /// between a GPU and a raster canvas) drops every cached surface, since a surface only draws on its own context.
+    /// </summary>
+    internal void UseContext(GRRecordingContext? context)
+    {
+        if (!ReferenceEquals(Context, context))
+        {
+            DisposeAll();
+            Context = context;
+        }
+    }
+
+    /// <summary>A premultiplied RGBA surface: GPU-backed when a context is set, CPU raster otherwise.</summary>
+    internal SKSurface CreateSurface(int width, int height)
+    {
+        SKImageInfo info = new SKImageInfo(width, height, SKColorType.Rgba8888, SKAlphaType.Premul);
+        SKSurface? gpuSurface = Context != null ? SKSurface.Create(Context, false, info) : null;
+        return gpuSurface ?? SKSurface.Create(info);
+    }
+
     protected override SkiaRenderTarget Create(int width, int height)
     {
-        SKSurface surface = SKSurface.Create(
-            new SKImageInfo(width, height, SKColorType.Rgba8888, SKAlphaType.Premul));
-        return new SkiaRenderTarget(surface, width, height);
+        return new SkiaRenderTarget(CreateSurface(width, height), width, height);
     }
 
     protected override void Destroy(SkiaRenderTarget renderTarget)
