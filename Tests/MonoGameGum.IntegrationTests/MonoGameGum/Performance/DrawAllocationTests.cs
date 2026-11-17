@@ -20,6 +20,7 @@ namespace MonoGameGum.IntegrationTests.MonoGameGum.Performance;
 /// that tightens as allocation sources are removed in follow-up optimization PRs.
 /// </summary>
 [Collection(SharedGame.CollectionName)]
+[Trait("Quarantine", "MesaAllocation")]
 public class DrawAllocationTests : BaseTestClass
 {
     private readonly ITestOutputHelper _output;

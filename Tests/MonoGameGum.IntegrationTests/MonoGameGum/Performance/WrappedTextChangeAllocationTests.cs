@@ -18,6 +18,7 @@ namespace MonoGameGum.IntegrationTests.MonoGameGum.Performance;
 /// remains per frame is the string of every wrapped line whose content changed.
 /// </summary>
 [Collection(SharedGame.CollectionName)]
+[Trait("Quarantine", "MesaAllocation")]
 public class WrappedTextChangeAllocationTests : BaseTestClass
 {
     [Theory]
