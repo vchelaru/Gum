@@ -645,5 +645,35 @@ public partial class GumService
     }
 
     #endregion
+
+    // Hot reload's ReplaceCachedImage: loads the changed file through the content loader (so it gets the
+    // load-time fix-up) and writes its pixels into the cached texture, which stays the same instance.
+    internal static CachedImageReplacement ReplaceCachedTexture(string path)
+    {
+        if (!LoaderManager.Self.TryLoadBesideCache<Texture2D>(path, (entry, loaded) => ReferenceEquals(entry, loaded),
+            out IDisposable? cachedEntry, out IDisposable? freshEntry))
+        {
+            return CachedImageReplacement.NotReplaced;
+        }
+
+        using (freshEntry)
+        {
+            Texture2D cached = (Texture2D)cachedEntry!;
+            Texture2D fresh = (Texture2D)freshEntry!;
+            if (cached.Width != fresh.Width || cached.Height != fresh.Height)
+            {
+                return CachedImageReplacement.SizeChanged;
+            }
+            if (cached.Format != SurfaceFormat.Color || fresh.Format != SurfaceFormat.Color || cached.LevelCount != 1)
+            {
+                return CachedImageReplacement.NotReplaced;
+            }
+
+            Color[] pixels = new Color[fresh.Width * fresh.Height];
+            fresh.GetData(pixels);
+            cached.SetData(pixels);
+            return CachedImageReplacement.Replaced;
+        }
+    }
 }
 #endif

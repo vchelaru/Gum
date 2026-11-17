@@ -185,6 +185,14 @@ public class GumHotReloadManager : IGumHotReloadManager
     /// </summary>
     public Func<ILocalizationService?>? LocalizationServiceProvider { get; set; }
 
+    /// <summary>
+    /// Writes a changed image's new pixels into the texture the host cached for it, given the path the
+    /// game loads it by. The texture is never disposed: a Sprite holds it directly, and code that loaded
+    /// it through the content cache, or another GumService in the process, still draws it. Without it a
+    /// changed image is reported as needing a restart.
+    /// </summary>
+    public Func<string, CachedImageReplacement>? ReplaceCachedImage { get; set; }
+
     /// <inheritdoc/>
     public event Action? ReloadCompleted;
 
@@ -1233,8 +1241,9 @@ public class GumHotReloadManager : IGumHotReloadManager
 
     // Applies the files that changed beside the project to the visuals showing them. An animation chain
     // file is evicted from the content cache and assigned again, so every Sprite and NineSlice playing it
-    // picks up the new frames. An image is not: a replaced image keeps its cached copy until a restart,
-    // which the result says. A file that no visual showed before this reload (one the same save just
+    // picks up the new frames. An image's new pixels are written into its cached texture (ReplaceCachedImage);
+    // one that changed size, or a host without that hook, keeps the cached copy until a restart, which the
+    // result says. A file that no visual showed before this reload (one the same save just
     // pointed a visual at) was loaded fresh by it and needs nothing: pass what FindChangedReferences found
     // before the reload as shownBefore. Returns whether any visual was changed.
     private bool ApplyChangedFiles(
@@ -1287,18 +1296,54 @@ public class GumHotReloadManager : IGumHotReloadManager
                         $"Hot reload could not load the changed animation file {reference.ChangedFile}: {exception.Message}"));
                 }
             }
-            else if (handled.Add(reference.Standardized) && !_staleImages.ContainsKey(reference.Standardized))
+            else if (handled.Add(reference.Standardized))
             {
-                // Listed in every later result too: the game keeps showing the old image until it restarts.
-                HotReloadIssue issue = new HotReloadIssue(
-                    HotReloadIssueKind.ReloadFailed,
-                    $"Hot reload cannot apply the changed file {reference.ChangedFile}: images stay cached until the game restarts.");
-                _staleImages[reference.Standardized] = issue;
-                Report(issues, issue);
+                string? reason = ReplaceImage(reference, issues);
+                if (reason == null)
+                {
+                    _staleImages.Remove(reference.Standardized);
+                    applied = true;
+                }
+                else if (!_staleImages.ContainsKey(reference.Standardized))
+                {
+                    // Listed in every later result too: the game keeps showing the old image until it restarts.
+                    HotReloadIssue issue = new HotReloadIssue(
+                        HotReloadIssueKind.ReloadFailed,
+                        $"Hot reload cannot apply the changed file {reference.ChangedFile}: {reason}");
+                    _staleImages[reference.Standardized] = issue;
+                    Report(issues, issue);
+                }
             }
         }
 
         return applied;
+    }
+
+    // Puts the changed image's pixels into the cached texture. Returns null when it did, otherwise why not.
+    private string? ReplaceImage(ChangedReference reference, List<HotReloadIssue> issues)
+    {
+        if (ReplaceCachedImage == null)
+        {
+            return "images stay cached until the game restarts.";
+        }
+
+        CopyToBin(reference.ChangedFile, issues);
+        CachedImageReplacement replacement;
+        try
+        {
+            replacement = ReplaceCachedImage(reference.CacheKey);
+        }
+        catch (Exception exception) when (exception is not OutOfMemoryException)
+        {
+            return $"{exception.Message} The old image shows until the game restarts.";
+        }
+
+        return replacement switch
+        {
+            CachedImageReplacement.Replaced => null,
+            CachedImageReplacement.SizeChanged => "its size changed, and a cached image keeps its size until the game restarts.",
+            _ => "the cached image cannot be replaced, so the old one shows until the game restarts.",
+        };
     }
 
     // The file and, when the game loads from a copy of the project (bin) apart from the source folder

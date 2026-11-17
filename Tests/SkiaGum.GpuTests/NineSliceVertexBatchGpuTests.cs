@@ -560,6 +560,7 @@ public class NineSliceVertexBatchGpuTests : IDisposable
     {
         int builds = -1;
         long allocated = -1;
+        string allocationDetail = "";
         int movedBuilds = -1;
         _gpu.WithSurface(Size, Size, (surface, context) =>
         {
@@ -585,15 +586,28 @@ public class NineSliceVertexBatchGpuTests : IDisposable
                 managers.Renderer.NotifyHostFrameAdvanced();
                 managers.Draw();
             }
+            // Per-frame bytes and GC count, so a CI-only failure (Mesa, #8162) says which frame and phase allocated
+            // and whether a GC ran in the window. Allocated before the window starts.
+            long[] notifyBytes = new long[50];
+            long[] drawBytes = new long[50];
+            int gcsBefore = GC.CollectionCount(0);
             int buildsBefore = batch.VerticesBuildCount;
             long bytesBefore = GC.GetAllocatedBytesForCurrentThread();
             for (int frame = 0; frame < 50; frame++)
             {
+                long frameStart = GC.GetAllocatedBytesForCurrentThread();
                 managers.Renderer.NotifyHostFrameAdvanced();
+                long drawStart = GC.GetAllocatedBytesForCurrentThread();
                 managers.Draw();
+                notifyBytes[frame] = drawStart - frameStart;
+                drawBytes[frame] = GC.GetAllocatedBytesForCurrentThread() - drawStart;
             }
             allocated = GC.GetAllocatedBytesForCurrentThread() - bytesBefore;
             builds = batch.VerticesBuildCount - buildsBefore;
+            int gcs = GC.CollectionCount(0) - gcsBefore;
+            allocationDetail = $"gen0 GCs in window: {gcs}; frames that allocated: " + string.Join(", ",
+                Enumerable.Range(0, 50).Where(f => notifyBytes[f] != 0 || drawBytes[f] != 0)
+                    .Select(f => $"#{f} notify={notifyBytes[f]} draw={drawBytes[f]}"));
 
             root.Y = 3;
             managers.Renderer.NotifyHostFrameAdvanced();
@@ -604,7 +618,7 @@ public class NineSliceVertexBatchGpuTests : IDisposable
         });
 
         builds.ShouldBe(0);
-        allocated.ShouldBe(0);
+        allocated.ShouldBe(0, allocationDetail);
         // Moving the scene changes both batches' vertices, so both are rebuilt.
         movedBuilds.ShouldBe(2);
     }

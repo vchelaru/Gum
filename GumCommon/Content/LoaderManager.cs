@@ -244,6 +244,83 @@ public class LoaderManager
     }
 
     /// <summary>
+    /// Loads <paramref name="contentName"/> from its file again while the cache keeps the copy it holds, so
+    /// hot reload can write a changed image's pixels into the cached texture without disposing it. The new
+    /// copy goes through the active <see cref="ContentLoader"/>, so it gets the same fix-up as any load
+    /// (premultiplied alpha, edge bleeding). The caller owns <paramref name="freshEntry"/> and disposes it.
+    /// </summary>
+    /// <param name="contentName">The name the game loads the file by.</param>
+    /// <param name="isEntryFor">True when a cache entry is the one holding the loaded value (a backend
+    /// may cache a wrapper around what <see cref="LoadContent{T}"/> returns).</param>
+    /// <param name="cachedEntry">The cache entry, still cached afterwards.</param>
+    /// <param name="freshEntry">The entry the new load produced; not cached.</param>
+    /// <returns>False when caching is off or nothing was cached for the file; the cache is left as it was.</returns>
+    public bool TryLoadBesideCache<T>(string contentName, Func<IDisposable, T, bool> isEntryFor,
+        out IDisposable? cachedEntry, out IDisposable? freshEntry)
+    {
+        cachedEntry = null;
+        freshEntry = null;
+        if (!CacheTextures)
+        {
+            return false;
+        }
+
+        // The cache keys belong to the loader, so the cached entry is found by loading the name: an entry
+        // that was not cached before that load is one nobody holds, and is dropped again.
+        HashSet<IDisposable> cachedBefore;
+        lock (mCacheLock)
+        {
+            cachedBefore = new HashSet<IDisposable>(mCachedDisposables.Values);
+        }
+        T? current = LoadContent<T>(contentName);
+        string? key = null;
+        lock (mCacheLock)
+        {
+            if (current != null)
+            {
+                foreach (KeyValuePair<string, IDisposable> entry in mCachedDisposables)
+                {
+                    if (isEntryFor(entry.Value, current))
+                    {
+                        key = entry.Key;
+                        cachedEntry = entry.Value;
+                        break;
+                    }
+                }
+            }
+            if (key != null && !cachedBefore.Contains(cachedEntry!))
+            {
+                mCachedDisposables.Remove(key);
+                cachedEntry!.Dispose();
+                cachedEntry = null;
+                return false;
+            }
+            if (key == null)
+            {
+                return false;
+            }
+            mCachedDisposables.Remove(key);
+        }
+
+        try
+        {
+            LoadContent<T>(contentName);
+        }
+        finally
+        {
+            lock (mCacheLock)
+            {
+                if (mCachedDisposables.TryGetValue(key, out IDisposable? loaded) && !ReferenceEquals(loaded, cachedEntry))
+                {
+                    freshEntry = loaded;
+                }
+                mCachedDisposables[key] = cachedEntry!;
+            }
+        }
+        return freshEntry != null;
+    }
+
+    /// <summary>
     /// Removes the given asset from the cache without disposing it. Useful for long-lived assets (such
     /// as a default font) that should survive a cache clear and remain owned by the caller.
     /// </summary>

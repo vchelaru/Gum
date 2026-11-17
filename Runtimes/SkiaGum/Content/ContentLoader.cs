@@ -124,5 +124,11 @@ public sealed class ContentLoader : IContentLoader
     /// </summary>
     internal static void MarkInitialized() => global::SkiaGum.Content.SkiaResourceManager.Initialize(null);
 
+    /// <summary>
+    /// Hot reload: writes the file's new pixels into the bitmap cached for it, keeping the same instance.
+    /// </summary>
+    internal static Gum.CachedImageReplacement ReplaceCachedBitmap(string contentName) =>
+        global::SkiaGum.Content.SkiaResourceManager.ReplaceCachedBitmap(Adjust(contentName));
+
     private static string Adjust(string contentName) => AdjustContentName?.Invoke(contentName) ?? contentName;
 }

@@ -121,6 +121,35 @@ public static class SkiaResourceManager
 
     public static bool IsCached(string resourceName) => TryGetCachedBitmap(GetBitmapCacheKey(resourceName), out _);
 
+    // Decodes the file as a load does and writes its pixels into the cached bitmap, converted to the cached
+    // bitmap's color and alpha type. MarkChanged makes every Sprite and NineSlice
+    // drawing it make a new image on its next draw.
+    internal static Gum.CachedImageReplacement ReplaceCachedBitmap(string resourceName)
+    {
+        string cacheKey = GetBitmapCacheKey(resourceName);
+        lock (bitmapLoadLocks.GetOrAdd(cacheKey, _ => new object()))
+        {
+            if (!TryGetCachedBitmap(cacheKey, out SKBitmap cached))
+            {
+                return Gum.CachedImageReplacement.NotReplaced;
+            }
+
+            using SKBitmap fresh = LoadBitmap(resourceName);
+            if (fresh.Width != cached.Width || fresh.Height != cached.Height)
+            {
+                return Gum.CachedImageReplacement.SizeChanged;
+            }
+
+            using SKPixmap? pixels = fresh.PeekPixels();
+            if (pixels == null || !pixels.ReadPixels(cached.Info, cached.GetPixels(), cached.RowBytes))
+            {
+                return Gum.CachedImageReplacement.NotReplaced;
+            }
+            BitmapPixelVersion.MarkChanged(cached);
+            return Gum.CachedImageReplacement.Replaced;
+        }
+    }
+
     // A bitmap the caller disposed is a miss, so a later load reads the file again instead of handing back a
     // bitmap that can no longer be drawn (#7886). The disposed entry is replaced by the reload.
     private static bool TryGetCachedBitmap(string cacheKey, out SKBitmap bitmap)

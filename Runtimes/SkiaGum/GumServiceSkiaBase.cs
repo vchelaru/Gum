@@ -371,7 +371,8 @@ public abstract class GumServiceSkiaBase : IGumService
             loadAnimationsFromProvider: GumAnimationLoader.LoadAnimationsFromProvider,
             disposeCachedAsset: path => LoaderManager.Self.Dispose(path))
         {
-            LocalizationServiceProvider = () => CustomSetPropertyOnRenderable.LocalizationService
+            LocalizationServiceProvider = () => CustomSetPropertyOnRenderable.LocalizationService,
+            ReplaceCachedImage = global::RenderingLibrary.Content.ContentLoader.ReplaceCachedBitmap
         };
         _hotReloadManager.ReloadCompleted += () => HotReloadCompleted?.Invoke();
         _hotReloadManager.ReloadFinished += result => HotReloadFinished?.Invoke(result);
