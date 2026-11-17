@@ -291,7 +291,9 @@ public class ShadowBlurCacheTests : BaseTestClass
     public void Draw_LargeShadowedElements_CacheCutsBlurPassesAndReportsTiming()
     {
         const int elementCount = 4;
-        const int frames = 120;
+        // Four frames show the cache: uncached blurs every frame, cached only the first. More frames only
+        // lengthen the timing printout, at ~1.4 s a frame on CI's software GL (#8169).
+        const int frames = 4;
         for (int i = 0; i < elementCount; i++)
         {
             RectangleRuntime rectangle = new();
