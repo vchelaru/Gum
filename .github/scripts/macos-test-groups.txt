@@ -1,0 +1,29 @@
+# The macOS CI test projects and the stream each runs in (read by test-concurrent.sh; #8169).
+# Format: <stream> <project directory> [timeout-minutes] [extra dotnet test args...]
+#
+# Streams run at the same time; projects inside one stream run one after another. Every project here
+# disables xUnit test parallelization, so each uses about one core, and the macos-15 runner has 3
+# vCPUs: three streams. Balance them by the per-project times in the job log ("finished in N s");
+# the slowest stream sets the wall time. There is no slnf check: Build AllLibraries builds them all.
+# These projects already run concurrently on Windows (windows-test-groups.txt), and each stream gets
+# its own temp folder.
+
+macos-1 MonoGameGum.Tests 20
+
+macos-2 Tests/Gum.Cli.Tests 15
+macos-2 Tests/Gum.Presentation.Tests 15
+
+macos-3 Tests/Gum.ProjectServices.Tests 15
+macos-3 Tests/SkiaGum.Tests 15
+macos-3 Tests/Gum.Bundle.Tests
+macos-3 Tests/Gum.ImageDiff.Tests
+macos-3 Tests/Gum.AssemblyNameGuard.Tests
+macos-3 Tests/Gum.RepoHygiene.Tests
+macos-3 Tests/Gum.Analyzers.Tests
+macos-3 Tests/Gum.NetStandard.Tests
+macos-3 Tests/SilkNetGum.Tests
+macos-3 Tests/KniSkiaGum.Tests
+macos-3 Tests/UnityGum.Tests
+macos-3 Tests/StrideGum.Tests
+macos-3 Tests/BrutalGum.OGL.Tests
+macos-3 Tests/Gum.ProjectServices.SkiaGum.Tests
