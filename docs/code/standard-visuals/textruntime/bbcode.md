@@ -30,7 +30,7 @@ text.AddToRoot();
 
 [Try on XnaFiddle.NET](https://xnafiddle.net/#snippet=H4sIAAAAAAAACkWOTQvCMAyG7_sVoSeF4cCjsoMfODx4mbt1PXQ2zEDXQtdOUfzvdoMphECe5CHvOwFg574IHduAdwHTEZAhT1LTCyNlg3Tg8ekhB4MPuFhjC9lhdFZFwCM6Gsi0qyqelMF46nCx3NZmVCYYvZpVd-ohFj9YbV1eohIOFc-mUaQz3-uAoontv5FGAT9Z4683qTFfi4Zanv2AmLLVbP64U6qypbU-hmDJ5wu5H0Ud4QAAAA)
 
-BBCode tags can be nested and combined. Tags are written as `[TagName=Value]text[/TagName]`. The supported tags include `Color`, `Red`, `Green`, `Blue`, `FontScale`, `Font`, `FontSize`, `IsBold`, `IsItalic`, `OutlineThickness`, `HasDropshadow`, `Custom`, `Glyph` (see [Inline Glyphs](#inline-glyphs)), and `Link` (see [Links](#links)).
+BBCode tags can be nested and combined. Tags are written as `[TagName=Value]text[/TagName]`. The supported tags include `Color`, `Red`, `Green`, `Blue`, `FontScale`, `Font`, `FontSize`, `IsBold`, `IsItalic`, `OutlineThickness`, `HasDropshadow`, `Custom`, `Glyph` (see [Inline Glyphs](#inline-glyphs)), `Link` (see [Links](#links)), and `State` (see [States](#states)).
 
 Tag names are not case sensitive, and a closing tag matches its opening tag whatever the case, so `[color=Red]red[/COLOR]` works the same as `[Color=Red]red[/Color]`.
 
@@ -122,6 +122,36 @@ For the index math behind `GetCharacterIndexAtPosition`, see [GetCharacterIndexA
 
 {% hint style="info" %}
 Available in November 2026, or now if building Gum from source.
+{% endhint %}
+
+## States
+
+The `State` tag applies a named state of the TextRuntime to the text it wraps. This lets you define a style once, in the Gum tool's **States** tab or in code, and reuse it by name. Only these variables apply to the wrapped text: `Color`, `Red`, `Green`, `Blue`, `FontScale`, `Font`, `FontSize`, `OutlineThickness`, `IsBold`, `IsItalic`, `UseCustomFont`, and `HasDropshadow`. Any other variable in the state, such as `X` or `Width`, is skipped. A state name that does not exist is ignored.
+
+The following code defines a `Highlighted` state in code and uses it in a tag:
+
+```csharp
+// Initialize
+var highlighted = new Gum.DataTypes.Variables.StateSave { Name = "Highlighted" };
+highlighted.Variables.Add(new Gum.DataTypes.Variables.VariableSave
+{
+    Name = "Color",
+    Value = System.Drawing.Color.Gold
+});
+highlighted.Variables.Add(new Gum.DataTypes.Variables.VariableSave
+{
+    Name = "IsBold",
+    Value = true
+});
+
+var text = new TextRuntime();
+text.AddStates(new System.Collections.Generic.List<Gum.DataTypes.Variables.StateSave> { highlighted });
+text.Text = "Plain text with a [State=Highlighted]bold gold run[/State] in it.";
+text.AddToRoot();
+```
+
+{% hint style="info" %}
+`State` is not supported on [SkiaSharp-based runtimes](../../about/runtimes.md). The tag is not recognized there, so it draws as literal text.
 {% endhint %}
 
 ## Custom Functions
