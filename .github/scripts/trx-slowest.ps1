@@ -9,7 +9,8 @@ $ErrorActionPreference = "Stop"
 
 $rows = @()
 foreach ($file in Get-ChildItem -Path $ResultsDirectory -Filter *.trx -ErrorAction SilentlyContinue) {
-    [xml]$trx = Get-Content -Path $file.FullName
+    # -LiteralPath: a name like "..._net10.0[1].trx" is a wildcard pattern to -Path.
+    [xml]$trx = Get-Content -LiteralPath $file.FullName
     $ns = New-Object System.Xml.XmlNamespaceManager($trx.NameTable)
     $ns.AddNamespace("t", "http://microsoft.com/schemas/VisualStudio/TeamTest/2010")
     foreach ($result in $trx.SelectNodes("//t:UnitTestResult", $ns)) {
