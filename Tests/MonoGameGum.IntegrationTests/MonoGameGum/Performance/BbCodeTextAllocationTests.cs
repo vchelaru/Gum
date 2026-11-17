@@ -15,6 +15,7 @@ namespace MonoGameGum.IntegrationTests.MonoGameGum.Performance;
 /// fixed small number of frames and uses <see cref="AllocationMeasurer.Measure"/>.
 /// </summary>
 [Collection(SharedGame.CollectionName)]
+[Trait("Quarantine", "MesaAllocation")]
 public class BbCodeTextAllocationTests : BaseTestClass
 {
     private const string ColoredSingleLine = "ab[Color=Red]cdef[/Color]ghij";

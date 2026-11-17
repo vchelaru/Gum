@@ -1109,6 +1109,24 @@ jobs:
           # three ways because the Mesa streams are on their own runner (#8169). Fast scope skips the Mesa leg.
           STREAMS: ${{ matrix.mesa && 'mesa-1 mesa-2' || 'headless' }}
           SPLIT: ${{ !matrix.mesa && 'headless=3' || '' }}
+          # #8190: the Mesa streams skip the allocation tests tagged Quarantine=MesaAllocation; the step below runs them.
+          QUARANTINE: ${{ matrix.mesa && 'exclude' || '' }}
+        run: bash .github/scripts/test-concurrent.sh
+
+      # Quarantine (#8190): the zero-allocation tests tagged [Trait("Quarantine", "MesaAllocation")] flake on
+      # Mesa llvmpipe (a few KB over the bound) though they pass on a real GPU and headless. The step above
+      # leaves them out; this one still runs them and reports failures (warning + job summary) without failing
+      # the job. A build error cannot hide here: the build steps are blocking and earlier.
+      # Remove this step, QUARANTINE in the step above and the traits once the cause is fixed (#8190).
+      - name: Quarantined allocation tests (Mesa, non-blocking, #8190)
+        if: "!cancelled() && runner.os == 'Windows' && steps.plan.outputs.active == 'true' && matrix.mesa"
+        continue-on-error: true
+        timeout-minutes: 15
+        shell: bash
+        env:
+          STREAMS: mesa-1 mesa-2
+          QUARANTINE: only
+          RESULTS_DIR: TestResults-quarantine
         run: bash .github/scripts/test-concurrent.sh
 
       # Slowest classes and tests in the job summary, so a slow suite can be explained from the run

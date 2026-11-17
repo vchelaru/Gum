@@ -185,6 +185,7 @@ public class QueueLockTests : BaseTestClass
         }
     }
 
+    [Trait("Quarantine", "MesaAllocation")]
     [Fact]
     public void Draw_WithACachedLockDisposable_AllocatesNothing()
     {

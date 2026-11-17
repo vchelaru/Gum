@@ -62,6 +62,7 @@ public class ArcDashPerformanceTests : BaseTestClass
         Gum.GumService.Default.Root.Children.Clear();
     }
 
+    [Trait("Quarantine", "MesaAllocation")]
     [Fact]
     public void DashedArc_AllocatesNoMoreThanASolidOne()
     {

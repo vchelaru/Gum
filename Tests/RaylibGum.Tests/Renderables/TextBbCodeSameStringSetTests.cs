@@ -28,6 +28,7 @@ public class TextBbCodeSameStringSetTests : BaseTestClass
         return runtime;
     }
 
+    [Trait("Quarantine", "MesaAllocation")]
     [Fact]
     public void Text_SameTaggedString_AllocatesNothing()
     {

@@ -157,6 +157,7 @@ public class RenderableCloneTests : BaseTestClass
 
     // Issue #6419: the styled-run cache belongs to one Text; shared, an original and its clone drawing with
     // different inline variables would rebuild each other's runs (and allocate) every frame.
+    [Trait("Quarantine", "MesaAllocation")]
     [Fact]
     public void Text_Clone_DoesNotShareTheStyledRunCache()
     {

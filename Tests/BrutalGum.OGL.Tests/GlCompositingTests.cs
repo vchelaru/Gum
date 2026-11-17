@@ -182,6 +182,7 @@ public unsafe class GlCompositingTests : BaseTestClass
         });
     }
 
+    [Trait("Quarantine", "MesaAllocation")]
     [SkippableFact]
     public void Draw_InSteadyState_AllocatesNothing()
     {

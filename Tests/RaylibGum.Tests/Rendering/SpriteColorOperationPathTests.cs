@@ -64,6 +64,7 @@ public class SpriteColorOperationPathTests : BaseTestClass
         }
     }
 
+    [Trait("Quarantine", "MesaAllocation")]
     [Fact]
     public void Draw_AddOnEveryPath_AllocatesNothingPerFrame()
     {
