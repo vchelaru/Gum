@@ -340,4 +340,40 @@ public class RenderTargetGpuTests
         });
         reference!.Dispose();
     }
+
+    [Fact]
+    public void Draw_GpuRenderTarget_ServiceWalksAllocateNothingPerFrame()
+    {
+        // The per-frame cache bookkeeping (context selection, sweep, owner lookups) must not allocate. Measured
+        // around the service only, since a full GPU draw allocates in Skia and the text path.
+        SkiaRenderTargetService service = new();
+        _gpu.WithSurface(8, 8, (surface, _) =>
+        {
+            InvisibleRenderable owner = new();
+            GRRecordingContext? context = surface.Canvas.Context;
+            service.UseContext(context);
+            service.GetFor(owner, 16, 16);
+            service.ClearUnusedRenderTargetsLastFrame();
+
+            for (int pass = 0; pass < 2; pass++)
+            {
+                long before = GC.GetAllocatedBytesForCurrentThread();
+                for (int i = 0; i < 100; i++)
+                {
+                    service.ClearUnusedRenderTargetsLastFrame();
+                    service.UseContext(context);
+                    service.GetFor(owner, 16, 16);
+                    service.MarkUsed(owner);
+                    service.HasImage(owner);
+                    service.TryGetExisting(owner);
+                }
+                long allocated = GC.GetAllocatedBytesForCurrentThread() - before;
+                if (pass == 1)
+                {
+                    allocated.ShouldBe(0);
+                }
+            }
+            service.DisposeAll();
+        });
+    }
 }

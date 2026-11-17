@@ -62,8 +62,12 @@ internal sealed class SkiaRenderTargetService
     private readonly Dictionary<GRRecordingContext, SkiaContextRenderTargets> _gpu = new Dictionary<GRRecordingContext, SkiaContextRenderTargets>();
     private SkiaContextRenderTargets _current;
 
+    // Raster first, then each context's cache; indexed so the per-frame walks allocate nothing.
+    private readonly List<SkiaContextRenderTargets> _all = new List<SkiaContextRenderTargets>();
+
     public SkiaRenderTargetService()
     {
+        _all.Add(_raster);
         _current = _raster;
     }
 
@@ -87,6 +91,7 @@ internal sealed class SkiaRenderTargetService
             {
                 targets = new SkiaContextRenderTargets(context);
                 _gpu[context] = targets;
+                _all.Add(targets);
             }
             _current = targets;
         }
@@ -111,8 +116,9 @@ internal sealed class SkiaRenderTargetService
     // now and then must not cost the GPU canvas its manual cache), unless that canvas's context was disposed.
     private void MarkUsedOnOtherCanvases(IRenderableIpso owner)
     {
-        foreach (SkiaContextRenderTargets targets in AllTargets())
+        for (int i = 0; i < _all.Count; i++)
         {
+            SkiaContextRenderTargets targets = _all[i];
             if (!ReferenceEquals(targets, _current) && !targets.IsContextDisposed && targets.HasCachedRenderTarget(owner))
             {
                 targets.MarkUsed(owner);
@@ -133,8 +139,9 @@ internal sealed class SkiaRenderTargetService
         {
             return target;
         }
-        foreach (SkiaContextRenderTargets targets in AllTargets())
+        for (int i = 0; i < _all.Count; i++)
         {
+            SkiaContextRenderTargets targets = _all[i];
             target = targets.TryGetExisting(owner);
             if (target != null)
             {
@@ -147,8 +154,9 @@ internal sealed class SkiaRenderTargetService
     /// <summary>Whether <paramref name="owner"/> holds a manual-mode cached image on any canvas.</summary>
     public bool HasImage(IRenderableIpso owner)
     {
-        foreach (SkiaContextRenderTargets targets in AllTargets())
+        for (int i = 0; i < _all.Count; i++)
         {
+            SkiaContextRenderTargets targets = _all[i];
             if (targets.HasImage(owner))
             {
                 return true;
@@ -163,8 +171,9 @@ internal sealed class SkiaRenderTargetService
         {
             return true;
         }
-        foreach (SkiaContextRenderTargets targets in AllTargets())
+        for (int i = 0; i < _all.Count; i++)
         {
+            SkiaContextRenderTargets targets = _all[i];
             if (targets.TryGetImage(owner, out image))
             {
                 return true;
@@ -175,8 +184,9 @@ internal sealed class SkiaRenderTargetService
 
     public void Remove(IRenderableIpso owner)
     {
-        foreach (SkiaContextRenderTargets targets in AllTargets())
+        for (int i = 0; i < _all.Count; i++)
         {
+            SkiaContextRenderTargets targets = _all[i];
             targets.Remove(owner);
         }
     }
@@ -187,8 +197,9 @@ internal sealed class SkiaRenderTargetService
         get
         {
             int count = 0;
-            foreach (SkiaContextRenderTargets targets in AllTargets())
+            for (int i = 0; i < _all.Count; i++)
             {
+                SkiaContextRenderTargets targets = _all[i];
                 count += targets.CachedCount;
             }
             return count;
@@ -212,6 +223,7 @@ internal sealed class SkiaRenderTargetService
         {
             foreach (GRRecordingContext context in emptied)
             {
+                _all.Remove(_gpu[context]);
                 _gpu.Remove(context);
             }
         }
@@ -220,22 +232,17 @@ internal sealed class SkiaRenderTargetService
     /// <summary>Disposes every surface and drops every context reference. Call on shutdown, with the GL context current.</summary>
     public void DisposeAll()
     {
-        foreach (SkiaContextRenderTargets targets in AllTargets())
+        for (int i = 0; i < _all.Count; i++)
         {
+            SkiaContextRenderTargets targets = _all[i];
             targets.DisposeAll();
         }
         _gpu.Clear();
+        _all.Clear();
+        _all.Add(_raster);
         _current = _raster;
     }
 
-    private IEnumerable<SkiaContextRenderTargets> AllTargets()
-    {
-        yield return _raster;
-        foreach (SkiaContextRenderTargets targets in _gpu.Values)
-        {
-            yield return targets;
-        }
-    }
 }
 
 /// <summary>The render targets and manual-mode cached images created from one context (null: CPU raster).</summary>
