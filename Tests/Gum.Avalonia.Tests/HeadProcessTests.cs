@@ -46,18 +46,17 @@ public class HeadProcessTests
     }
 
     [Fact]
-    public async Task UnattendedRun_LoadsAProject_AndExitsOnceReady()
+    public async Task UnattendedRun_LoadsAProject_AndCaptures()
     {
         Assert.SkipUnless(CanRunTheHead, SkipReason);
         using ScratchProject scratch = ScratchProject.Create();
 
-        // --exit-after is only the upper bound (#5170): the run ends once the project has loaded
-        // and the canvas has drawn, well before the bound.
+        // --exit-after is only the upper bound (#5170). That the run ends once ready rather than at the bound is
+        // UnattendedRunTests.Capture_WaitsForStartup_ThenForACanvasFrame, whose deadline never completes.
         HeadRun run = await RunHead(scratch.Project, "--exit-after", "90", "--screenshot", scratch.Screenshot, "--user-data", scratch.UserData);
 
         run.ExitCode.ShouldBe(0, run.Errors);
         run.Errors.ShouldNotContain("Startup failed");
-        run.Elapsed.ShouldBeLessThan(TimeSpan.FromSeconds(80), "the run should end once ready, not when --exit-after runs out");
         File.Exists(scratch.Screenshot).ShouldBeTrue();
         File.Exists(Path.Combine(scratch.UserData, "GeneralSettings.xml")).ShouldBeTrue("the run's settings must be written under its own folder");
     }

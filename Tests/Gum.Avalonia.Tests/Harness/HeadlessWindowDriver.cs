@@ -154,6 +154,9 @@ internal sealed class HeadlessWindowDriver : IDisposable
     }
 
     private int _rightClickAttempts;
+
+    /// <summary>How many presses the last <see cref="RightClick"/> made.</summary>
+    internal int RightClickAttempts => _rightClickAttempts;
     private Control? _rightClickTarget;
 
     private void RightClickOnce(Control control)

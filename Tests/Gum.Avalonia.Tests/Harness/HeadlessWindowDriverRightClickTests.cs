@@ -52,16 +52,16 @@ public class HeadlessWindowDriverRightClickTests
     }
 
     [AvaloniaFact]
-    public void RightClick_OnAControlWithNoMenu_ReturnsAtOnceAndLeavesNoMenuOpen()
+    public void RightClick_OnAControlWithNoMenu_PressesOnceAndLeavesNoMenuOpen()
     {
         Border target = new Border { Background = Brushes.Transparent };
         using HeadlessWindowDriver driver = Host(target);
-        System.Diagnostics.Stopwatch watch = System.Diagnostics.Stopwatch.StartNew();
 
         driver.RightClick(target);
 
         driver.OpenContextMenu.ShouldBeNull();
-        watch.Elapsed.ShouldBeLessThan(TimeSpan.FromSeconds(2));
+        // A request nobody took ends the gesture: one press, not repeats until the menu timeout.
+        driver.RightClickAttempts.ShouldBe(1);
     }
 
     private static ContextMenu NewMenu() => new ContextMenu { ItemsSource = new[] { new MenuItem { Header = "First" } } };

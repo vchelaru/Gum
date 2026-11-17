@@ -10,7 +10,6 @@ using Gum.Commands;
 using Gum.DataTypes.Variables;
 using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
-using System.Diagnostics;
 
 namespace Gum.Avalonia.Tests.EndToEnd;
 
@@ -25,8 +24,9 @@ public class ToolSaveHotReloadScenarioTests
 {
     private static IServiceProvider Services => TestAppBuilder.Services;
 
-    // The debounce is 200 ms; the rest is the watcher's event and the reload itself.
-    private static readonly TimeSpan _reloadBudget = TimeSpan.FromMilliseconds(1500);
+    // A hang deadline, not a budget: how soon a change reloads is the 200 ms debounce, which
+    // GumHotReloadDebounceTests pins with an injected clock.
+    private static readonly TimeSpan _reloadDeadline = TimeSpan.FromSeconds(30);
 
     /// <summary>A Card component (a Text and a rectangle) and a screen that shows one, a heading and a spacer.</summary>
     private static (ComponentSave Card, ScreenSave Main) Build(ProjectTreeHarness tree)
@@ -42,11 +42,9 @@ public class ToolSaveHotReloadScenarioTests
         return (card, main);
     }
 
-    private static void ShouldReloadWithinTheDebounceBudget(ToolSaveRuntimeWorld world, string what)
+    private static void ShouldReload(ToolSaveRuntimeWorld world, string what)
     {
-        Stopwatch stopwatch = Stopwatch.StartNew();
-        world.WaitForReload(_reloadBudget).ShouldBeTrue($"{what} should reach the running game");
-        stopwatch.Elapsed.ShouldBeLessThan(_reloadBudget);
+        world.WaitForReload(_reloadDeadline).ShouldBeTrue($"{what} should reach the running game");
     }
 
     [AvaloniaFact]
@@ -63,20 +61,20 @@ public class ToolSaveHotReloadScenarioTests
         // Text typed in the tool
         tree.Click(tree.NodeFor(main.GetInstance("Heading")!));
         tree.Grid.TypeAndLeave("Text", "Hello Gum");
-        ShouldReloadWithinTheDebounceBudget(world, "a Text edit");
+        ShouldReload(world, "a Text edit");
         world.TextOf("Heading").ShouldBe("Hello Gum");
         world.Find("Heading").ShouldBeSameAs(heading);
 
         // Width typed in the tool
         tree.Click(tree.NodeFor(main.GetInstance("Spacer")!));
         tree.Grid.TypeAndEnter("Width", "123");
-        ShouldReloadWithinTheDebounceBudget(world, "a Width edit");
+        ShouldReload(world, "a Width edit");
         world.Find("Spacer")!.Width.ShouldBe(123f);
 
         // A color typed inside the component reaches the Card instance's child
         tree.Click(tree.NodeFor(card.GetInstance("Title")!));
         tree.Grid.Input.TypeAndEnter(tree.Grid.Editor<ColorDisplay>("Color").HexTextBox, "C86400");
-        ShouldReloadWithinTheDebounceBudget(world, "a color edit in a component");
+        ShouldReload(world, "a color edit in a component");
         ((RecordingRenderable)world.Find("Card1")!.GetGraphicalUiElementByName("Title")!.RenderableComponent).Red.ShouldBe(200);
 
         // What the game did stays: its own child, and a value the project never changed
@@ -99,14 +97,14 @@ public class ToolSaveHotReloadScenarioTests
 
         // Add an instance
         InstanceSave extra = tree.Project.AddInstance(main, "Extra", "Text");
-        ShouldReloadWithinTheDebounceBudget(world, "an added instance");
+        ShouldReload(world, "an added instance");
         world.Find("Extra").ShouldNotBeNull();
 
         // Rename it
         tree.Click(tree.NodeFor(extra));
         tree.Dialogs.AnswerNextUserString("Subtitle");
         tree.Press(Key.F2, PhysicalKey.F2);
-        ShouldReloadWithinTheDebounceBudget(world, "a renamed instance");
+        ShouldReload(world, "a renamed instance");
         world.Find("Subtitle").ShouldNotBeNull();
         world.Find("Extra").ShouldBeNull();
 
@@ -114,7 +112,7 @@ public class ToolSaveHotReloadScenarioTests
         tree.Click(tree.NodeFor(main.GetInstance("Subtitle")!));
         tree.Dialogs.AnswerNext<DeleteOptionsDialogViewModel>(_ => true);
         tree.Press(Key.Delete, PhysicalKey.Delete);
-        ShouldReloadWithinTheDebounceBudget(world, "a deleted instance");
+        ShouldReload(world, "a deleted instance");
         world.Find("Subtitle").ShouldBeNull();
 
         // The instances nobody touched are the same objects
@@ -136,7 +134,7 @@ public class ToolSaveHotReloadScenarioTests
         ComponentSave badge = tree.Project.AddComponent("Badge");
         tree.Project.AddInstance(badge, "Label", "Text");
         tree.Project.AddInstance(main, "Badge1", "Badge");
-        world.WaitForReload(_reloadBudget).ShouldBeTrue("a new component and its first instance should reach the running game");
+        world.WaitForReload(_reloadDeadline).ShouldBeTrue("a new component and its first instance should reach the running game");
         world.ReloadsDuring(TimeSpan.FromMilliseconds(500));
         world.Find("Badge1")!.ElementSave!.Name.ShouldBe("Badge");
         world.Find("Badge1")!.GetGraphicalUiElementByName("Label").ShouldNotBeNull();
@@ -146,7 +144,7 @@ public class ToolSaveHotReloadScenarioTests
         tree.Dialogs.AnswerNext<RenameElementDialogViewModel>(dialog => { dialog.Value = "Tag"; return true; });
         tree.Dialogs.AnswerNextMessage(MessageDialogResult.Affirmative);
         tree.Press(Key.F2, PhysicalKey.F2);
-        world.WaitForReload(_reloadBudget).ShouldBeTrue("a component rename should reach the running game");
+        world.WaitForReload(_reloadDeadline).ShouldBeTrue("a component rename should reach the running game");
         world.ReloadsDuring(TimeSpan.FromMilliseconds(500));
         world.Find("Badge1")!.ElementSave!.Name.ShouldBe("Tag");
         world.Find("Badge1")!.GetGraphicalUiElementByName("Label").ShouldNotBeNull();
@@ -155,7 +153,7 @@ public class ToolSaveHotReloadScenarioTests
         tree.Dialogs.AnswerNextMessage(MessageDialogResult.Affirmative);
         tree.BeginDrag(tree.NodeFor(badge));
         tree.DropOn(tree.FolderNode("Components", "Controls"));
-        world.WaitForReload(_reloadBudget).ShouldBeTrue("a component moved into a folder should reach the running game");
+        world.WaitForReload(_reloadDeadline).ShouldBeTrue("a component moved into a folder should reach the running game");
         world.ReloadsDuring(TimeSpan.FromMilliseconds(500));
         world.Find("Badge1")!.ElementSave!.Name.ShouldBe("Controls/Tag");
         world.Find("Badge1")!.GetGraphicalUiElementByName("Label").ShouldNotBeNull();
@@ -178,7 +176,7 @@ public class ToolSaveHotReloadScenarioTests
         tree.Dialogs.AnswerNext<RenameElementDialogViewModel>(dialog => { dialog.Value = "Panel"; return true; });
         tree.Dialogs.AnswerNextMessage(MessageDialogResult.Affirmative);
         tree.Press(Key.F2, PhysicalKey.F2);
-        world.WaitForReload(_reloadBudget).ShouldBeTrue("a component rename should reach the running game");
+        world.WaitForReload(_reloadDeadline).ShouldBeTrue("a component rename should reach the running game");
         world.ReloadsDuring(TimeSpan.FromMilliseconds(500));
 
         List<HotReloadIssue> issues = world.Results.SelectMany(result => result.Issues).ToList();
@@ -195,7 +193,7 @@ public class ToolSaveHotReloadScenarioTests
         // An ordinary edit afterwards is clean again
         tree.Click(tree.NodeFor(main.GetInstance("Heading")!));
         tree.Grid.TypeAndLeave("Text", "After");
-        ShouldReloadWithinTheDebounceBudget(world, "a Text edit");
+        ShouldReload(world, "a Text edit");
         world.Results[world.Results.Count - 1].IsClean.ShouldBeTrue();
         tree.AssertOracles();
     }
@@ -216,7 +214,7 @@ public class ToolSaveHotReloadScenarioTests
 
         card.BaseType = "Container";
         tree.SaveAll();
-        world.WaitForReload(_reloadBudget).ShouldBeTrue("a base type change should reach the running game");
+        world.WaitForReload(_reloadDeadline).ShouldBeTrue("a base type change should reach the running game");
         world.ReloadsDuring(TimeSpan.FromMilliseconds(500));
 
         ToolSaveRuntimeWorld.Describe(world.Screen).ShouldNotBe(world.DescribeAFreshLoad(), "sanity: the visual keeps what it inherited");
@@ -246,7 +244,7 @@ public class ToolSaveHotReloadScenarioTests
         tree.Dialogs.AnswerNext<RenameElementDialogViewModel>(dialog => { dialog.Value = "Control"; return true; });
         tree.Dialogs.AnswerNextMessage(MessageDialogResult.Affirmative);
         tree.Press(Key.F2, PhysicalKey.F2);
-        world.WaitForReload(_reloadBudget).ShouldBeTrue("a base component rename should reach the running game");
+        world.WaitForReload(_reloadDeadline).ShouldBeTrue("a base component rename should reach the running game");
         world.ReloadsDuring(TimeSpan.FromMilliseconds(500));
 
         gadget.BaseType.ShouldBe("Control", "sanity: the tool updated the derived component");
@@ -259,7 +257,7 @@ public class ToolSaveHotReloadScenarioTests
         // A later edit is clean again, not a repeat of the rename
         tree.Click(tree.NodeFor(main.GetInstance("Heading")!));
         tree.Grid.TypeAndLeave("Text", "After");
-        ShouldReloadWithinTheDebounceBudget(world, "a Text edit");
+        ShouldReload(world, "a Text edit");
         world.Results[world.Results.Count - 1].IsClean.ShouldBeTrue();
         ToolSaveRuntimeWorld.Describe(world.Screen, 0, sortSiblings: true).ShouldBe(world.DescribeAFreshLoad(sortSiblings: true), "the running tree should match what a restart would show");
         // No AssertOracles: the fixture's derived component is saved without its inherited instances, as the tool would add them.
@@ -281,7 +279,7 @@ public class ToolSaveHotReloadScenarioTests
         tree.Grid.TypeAndLeave("Text", "Quick");
         tree.SaveAll();
         tree.SaveAll();
-        world.WaitForReload(_reloadBudget).ShouldBeTrue("a burst of saves should reach the running game");
+        world.WaitForReload(_reloadDeadline).ShouldBeTrue("a burst of saves should reach the running game");
         world.ReloadsDuring(TimeSpan.FromMilliseconds(600)).ShouldBe(0, "the burst should have been one reload, not a trailing second one");
         world.Find("Spacer")!.Width.ShouldBe(30f);
         world.TextOf("Heading").ShouldBe("Quick");
@@ -300,7 +298,7 @@ public class ToolSaveHotReloadScenarioTests
         tree.Click(tree.NodeFor(main.GetInstance("Heading")!));
         tree.Grid.TypeAndLeave("Text", "With spaces");
 
-        ShouldReloadWithinTheDebounceBudget(world, "an edit in a folder with a space");
+        ShouldReload(world, "an edit in a folder with a space");
         world.TextOf("Heading").ShouldBe("With spaces");
         world.ErrorOutput.ShouldBeEmpty();
     }
@@ -317,7 +315,7 @@ public class ToolSaveHotReloadScenarioTests
         big.SetValue("Title.Text", "Big!", "string");
         Services.GetRequiredService<IFileCommands>().TryAutoSaveElement(card);
 
-        world.WaitForReload(_reloadBudget).ShouldBeTrue("a new state should reach the running game");
+        world.WaitForReload(_reloadDeadline).ShouldBeTrue("a new state should reach the running game");
         world.Find("Card1")!.ApplyState("Look", "Big");
         ((RecordingRenderable)world.Find("Card1")!.GetGraphicalUiElementByName("Title")!.RenderableComponent).Text.ShouldBe("Big!");
         world.ErrorOutput.ShouldBeEmpty();
