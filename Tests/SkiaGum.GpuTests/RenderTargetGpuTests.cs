@@ -166,7 +166,7 @@ public class RenderTargetGpuTests
 
         OnGpu(container, 1, (managers, _, context) =>
         {
-            SKSurface? target = managers.Renderer.TryGetRenderTargetSurfaceFor((IRenderableIpso)container.RenderableComponent);
+            SKSurface? target = managers.Renderer.TryGetRenderTargetSurfaceFor((IRenderableIpso)container.RenderableComponent!);
             target.ShouldNotBeNull();
             target.Canvas.Context.ShouldNotBeNull();
         });
@@ -182,7 +182,7 @@ public class RenderTargetGpuTests
         container.AddToManagers(managers, null);
         managers.Draw();
 
-        SKSurface? target = managers.Renderer.TryGetRenderTargetSurfaceFor((IRenderableIpso)container.RenderableComponent);
+        SKSurface? target = managers.Renderer.TryGetRenderTargetSurfaceFor((IRenderableIpso)container.RenderableComponent!);
 
         target.ShouldNotBeNull();
         target.Canvas.Context.ShouldBeNull();
@@ -247,7 +247,7 @@ public class RenderTargetGpuTests
 
         OnGpu(container, 1, (managers, surface, _) =>
         {
-            IRenderableIpso renderable = (IRenderableIpso)container.RenderableComponent;
+            IRenderableIpso renderable = (IRenderableIpso)container.RenderableComponent!;
             SKSurface first = managers.Renderer.TryGetRenderTargetSurfaceFor(renderable)!;
             first.Canvas.DeviceClipBounds.Width.ShouldBe(160);
 
@@ -335,7 +335,7 @@ public class RenderTargetGpuTests
             MaxChannelDifference(bitmap, reference!).ShouldBeLessThanOrEqualTo(CpuGpuTolerance);
 
             managers.ReleaseRenderTargets();
-            managers.Renderer.TryGetRenderTargetSurfaceFor((IRenderableIpso)container.RenderableComponent).ShouldBeNull();
+            managers.Renderer.TryGetRenderTargetSurfaceFor((IRenderableIpso)container.RenderableComponent!).ShouldBeNull();
             container.RemoveFromManagers();
         });
         reference!.Dispose();
