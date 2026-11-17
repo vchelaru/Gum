@@ -800,7 +800,14 @@ namespace RenderingLibrary.Graphics
         {
             foreach (SKImage image in _bakedImages.Values)
             {
-                image?.Dispose();
+                try
+                {
+                    image?.Dispose();
+                }
+                catch (System.Exception)
+                {
+                    // Shutdown must not throw; a GPU image of a dead context is leaked instead.
+                }
             }
             _bakedImages.Clear();
             _bakedSurfaces.Clear();

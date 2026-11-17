@@ -378,4 +378,61 @@ public class RenderTargetGpuTests
             service.DisposeAll();
         });
     }
+
+    [Fact]
+    public void UseContext_AbandonedContext_ReleasesItsCacheAndFallsBackToRaster()
+    {
+        SkiaRenderTargetService service = new();
+        using WglGpuContext own = new();
+        own.WithSurface(8, 8, (surface, context) =>
+        {
+            service.UseContext(context);
+            service.GetFor(new InvisibleRenderable(), 16, 16)!.Surface.Canvas.Context.ShouldNotBeNull();
+
+            context.AbandonContext();
+            service.UseContext(context);
+
+            service.Context.ShouldBeNull();
+            service.CachedCount.ShouldBe(0);
+            service.GetFor(new InvisibleRenderable(), 16, 16)!.Surface.Canvas.Context.ShouldBeNull();
+            service.DisposeAll();
+        });
+    }
+
+    [Fact]
+    public void DisposeAll_AbandonedContext_DoesNotThrow()
+    {
+        SkiaRenderTargetService service = new();
+        using WglGpuContext own = new();
+        own.WithSurface(8, 8, (surface, context) =>
+        {
+            service.UseContext(context);
+            service.GetFor(new InvisibleRenderable(), 16, 16);
+            service.GetFor(new InvisibleRenderable(), 16, 16);
+            context.AbandonContext();
+
+            Should.NotThrow(() => service.DisposeAll());
+            service.CachedCount.ShouldBe(0);
+        });
+    }
+
+    [Fact]
+    public void Draw_ContextAbandonedMidRun_KeepsDrawingAndReleasesCleanly()
+    {
+        ContainerRuntime container = BuildScene();
+        using WglGpuContext own = new();
+        own.WithSurface(Width, Height, (surface, context) =>
+        {
+            SystemManagers managers = CreateManagers(surface.Canvas);
+            container.AddToManagers(managers, null);
+            managers.Draw();
+            managers.Renderer.RenderTargetBakeCount.ShouldBe(1);
+
+            context.AbandonContext();
+
+            Should.NotThrow(() => managers.Draw());
+            Should.NotThrow(() => managers.ReleaseRenderTargets());
+            container.RemoveFromManagers();
+        });
+    }
 }
