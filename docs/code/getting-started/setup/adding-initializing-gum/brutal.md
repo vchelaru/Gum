@@ -22,10 +22,10 @@ The rest of this page adds Gum to a game you already have.
 
 Gum has one package per graphics API. Add only one of them:
 
-| Graphics API | Gum package |
-| --- | --- |
-| OpenGL 3.3 | `Gum.Brutal.OGL` |
-| Vulkan 1.3 | `Gum.Brutal.Vulkan` |
+| Graphics API | Gum package         |
+| ------------ | ------------------- |
+| OpenGL 3.3   | `Gum.Brutal.OGL`    |
+| Vulkan 1.3   | `Gum.Brutal.Vulkan` |
 
 {% tabs %}
 {% tab title="OpenGL" %}
@@ -55,7 +55,7 @@ Or add through command line:
 dotnet add package Gum.Brutal.Vulkan --prerelease
 ```
 
-The Vulkan program in [Full Program](#full-program) uses `unsafe` blocks, so also allow them in your csproj:
+The Vulkan program in [Full Program](brutal.md#full-program) uses `unsafe` blocks, so also allow them in your csproj:
 
 ```xml
 <PropertyGroup>
@@ -65,7 +65,7 @@ The Vulkan program in [Full Program](#full-program) uses `unsafe` blocks, so als
 {% endtab %}
 {% endtabs %}
 
-Both packages read mouse, keyboard and gamepad input from your BRUTAL `GlfwWindow` and draw Gum to it, so you never write rendering code for Gum. They work on Windows, Linux and macOS (see [macOS](#macos)).
+Both packages read mouse, keyboard and gamepad input from your BRUTAL `GlfwWindow` and draw Gum to it, so you never write rendering code for Gum. They work on Windows, Linux and macOS (see [macOS](brutal.md#macos)).
 
 Do not reference both packages in one project. They declare the same `GumService` type.
 
@@ -95,7 +95,7 @@ Vulkan runs on MoltenVK. Install the Vulkan loader and MoltenVK:
 brew install molten-vk vulkan-loader
 ```
 
-Skia draws with Metal on macOS, so the instance must export the Metal device and queue, and the device must enable `VK_EXT_metal_objects`. [Full Program](#full-program) does not include this; the [Vulkan sample](https://github.com/vchelaru/Gum/tree/main/Samples/BrutalGum/BrutalGumSample) shows it. Retina displays need nothing extra, since Gum scales the cursor to the framebuffer.
+Skia draws with Metal on macOS, so the instance must export the Metal device and queue, and the device must enable `VK_EXT_metal_objects`. [Full Program](brutal.md#full-program) does not include this; the [Vulkan sample](../../../../../Samples/BrutalGum/BrutalGumSample/) shows it. Retina displays need nothing extra, since Gum scales the cursor to the framebuffer.
 
 ## Adding Source (Optional)
 
@@ -118,7 +118,7 @@ Next, add it as a project reference in your game project. Your project might loo
 <ProjectReference Include="..\Gum\Runtimes\BrutalGum.OGL\BrutalGum.OGL.csproj" />
 ```
 
-To link an extra from [Optional Extras](#optional-extras), add its project instead of its package:
+To link an extra from [Optional Extras](brutal.md#optional-extras), add its project instead of its package:
 
 * ShadowDusk: \<Gum Root>/Runtimes/SkiaGum.ShadowDusk/SkiaGum.ShadowDusk.csproj
 * Expressions: \<Gum Root>/Runtimes/GumExpressions/GumExpressions.csproj
@@ -162,7 +162,7 @@ Gum never destroys the objects you pass. Destroy them after `GumUI.Uninitialize(
 {% endtab %}
 {% endtabs %}
 
-You can add controls as soon as `Initialize` returns. To load a Gum project too, see [Loading Your Gum Project](#loading-your-gum-project).
+You can add controls as soon as `Initialize` returns. To load a Gum project too, see [Loading Your Gum Project](brutal.md#loading-your-gum-project).
 
 ## Updating and Drawing Gum
 
@@ -404,11 +404,11 @@ The button in the center of the window confirms Gum works. Delete it once you st
 
 Each extra is a separate package. Add the package, then add its line right after `GumUI.Initialize`.
 
-| Extra | Package | Line after `Initialize` |
-| --- | --- | --- |
-| [ShadowDusk](../../../standard-visuals/containerruntime.md#render-target-shaders-on-skiasharp): `.fx` and `.slang` shader files | `Gum.SkiaSharp.ShadowDusk` | `GumUI.UseShadowDusk();` |
-| [Expressions](../../../styling/runtime-variable-references.md): arithmetic in variable references | `Gum.Expressions` | `GumUI.UseExpressions();` |
-| [Themes](../../../styling/themes/README.md): restyles Forms controls created in code | One package per theme, such as `Gum.Themes.DarkPro.Skia` (add with `--prerelease`) | `Gum.Themes.DarkPro.DarkProTheme.Apply();` |
+| Extra                                                                                                                           | Package                                                                            | Line after `Initialize`                    |
+| ------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- | ------------------------------------------ |
+| [ShadowDusk](../../../standard-visuals/containerruntime.md#render-target-shaders-on-skiasharp): `.fx` and `.slang` shader files | `Gum.SkiaSharp.ShadowDusk`                                                         | `GumUI.UseShadowDusk();`                   |
+| [Expressions](../../../styling/runtime-variable-references.md): arithmetic in variable references                               | `Gum.Expressions`                                                                  | `GumUI.UseExpressions();`                  |
+| [Themes](../../../styling/themes/): restyles Forms controls created in code                                                     | One package per theme, such as `Gum.Themes.DarkPro.Skia` (add with `--prerelease`) | `Gum.Themes.DarkPro.DarkProTheme.Apply();` |
 
 {% hint style="info" %}
 The `.Skia` theme packages are available in December 2026, or now if building Gum from source.
@@ -446,7 +446,7 @@ Then copy the Gum project to the output folder by adding this to your `.csproj`:
 
 To create the Gum project and show its screens, see [Loading a Gum Project](../loading-a-gum-project-.gumx.md).
 
-To start building UI, continue with the [code-only Forms tutorial](../../tutorials/code-only-gum-forms-tutorial/README.md).
+To start building UI, continue with the [code-only Forms tutorial](../../tutorials/code-only-gum-forms-tutorial/).
 
 ## Supplying Input From Your Own Window
 
