@@ -20,22 +20,30 @@ dotnet tool install -g GumCli
 
 ## The agent loop
 
-A typical agent workflow for building or modifying a Gum UI follows three stages.
+A typical agent workflow for building or modifying a Gum UI follows four stages.
 
-### 1. Generate code
+### 1. Edit the project
+
+Make changes with [`edit`](../cli/edit.md) instead of writing `.gusx` or `.gucx` XML by hand. `edit` adds screens, components, instances, states and categories, and sets variables through the same code the **Gum** tool uses, then saves in the tool's format. `setVariable` fails on a variable name the element does not have, so a misspelled name is caught right away. Use `addVariable` when the element needs a new variable.
+
+{% hint style="info" %}
+Available in December 2026, or now if building Gum from source.
+{% endhint %}
+
+### 2. Generate code
 
 If the project uses code generation, initialize the settings once, then generate strongly-typed C# for the project's screens and components. This eliminates magic strings and lets the agent reference UI elements by name.
 
 * [`codegen-init`](../cli/codegen-init.md) — write the code-generation settings into the project.
 * [`codegen`](../cli/codegen.md) — generate C# for the project's elements. Pass `--prune` to also delete generated files left behind by elements that were deleted or renamed.
 
-### 2. Validate
+### 3. Validate
 
-After editing project XML — whether by hand, with custom tooling, or via an assistant — validate it before trusting it. `check` catches the silent mistakes that are easy for an agent to make, such as misspelled element names that Gum would otherwise drop without error.
+After editing a project by hand or with other tools, validate it before trusting it (`edit` already refuses changes that add errors). `check` catches the silent mistakes that are easy for an agent to make, such as misspelled element names that Gum would otherwise drop without error.
 
 * [`check`](../cli/check.md) — validate a project and report errors. A non-zero exit code tells the agent to stop and fix the problem before continuing.
 
-### 3. Verify visually
+### 4. Verify visually
 
 Generated code that compiles is not proof the UI looks right. Rendering the result to an image gives the agent something concrete to inspect — and, with a multimodal model, to actually "see."
 

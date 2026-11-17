@@ -69,6 +69,7 @@ If you run a preview version of the **Gum** tool, use the `gumcli` that matches 
 | `diff-standards` | Report how a project's Standard elements differ from the defaults |
 | `import-screen` | Import a Screen file into an existing project |
 | `resave` | Load and save a project with no edits to check round trips |
+| `edit` | Apply a list of changes from a JSON file to a project |
 | `stage-forms-behaviors` | Write a Forms theme's resolved behaviors into one folder |
 | `codegen-init` | Initialize code generation settings |
 | `codegen` | Generate C# code for project elements |
@@ -93,5 +94,5 @@ When debugging, capture both streams with `2>&1`.
 | Code | Meaning |
 |------|---------|
 | 0 | Success |
-| 1 | Errors found (`check`) or elements blocked by errors (`codegen`) or font generation error (`fonts`) |
+| 1 | Errors found (`check`), an edit that could not apply or added errors (`edit`), or elements blocked by errors (`codegen`) or font generation error (`fonts`) |
 | 2 | Project could not be loaded, invalid arguments, or settings already exist |
