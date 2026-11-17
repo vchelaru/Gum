@@ -1111,6 +1111,8 @@ jobs:
           # three ways because the Mesa streams are on their own runner (#8169). Fast scope skips the Mesa leg.
           STREAMS: ${{ matrix.mesa && 'mesa-1 mesa-2' || 'headless' }}
           SPLIT: ${{ !matrix.mesa && 'headless=3' || '' }}
+          # #8190: allocation tests append the runtime events inside an allocating call to their failure output.
+          GUM_ALLOCATION_EVENTS: "1"
           # #8190: the Mesa streams skip the allocation tests tagged Quarantine=MesaAllocation; the step below runs them.
           QUARANTINE: ${{ matrix.mesa && 'exclude' || '' }}
         run: bash .github/scripts/test-concurrent.sh
@@ -1129,6 +1131,7 @@ jobs:
           STREAMS: mesa-1 mesa-2
           QUARANTINE: only
           RESULTS_DIR: TestResults-quarantine
+          GUM_ALLOCATION_EVENTS: "1"
         run: bash .github/scripts/test-concurrent.sh
 
       # Slowest classes and tests in the job summary, so a slow suite can be explained from the run

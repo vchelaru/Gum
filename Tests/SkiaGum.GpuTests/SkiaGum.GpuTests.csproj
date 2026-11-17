@@ -29,6 +29,7 @@
   <ItemGroup>
     <Compile Include="..\..\MonoGameGum.Tests\SweepScale.cs" Link="SweepScale.cs" />
     <Compile Include="..\MonoGameGum.TestsCommon\AllocationMeasurer.cs" Link="Shared\AllocationMeasurer.cs" />
+    <Compile Include="..\MonoGameGum.TestsCommon\RuntimeEventRecorder.cs" Link="Shared\RuntimeEventRecorder.cs" />
   </ItemGroup>
 
   <ItemGroup>

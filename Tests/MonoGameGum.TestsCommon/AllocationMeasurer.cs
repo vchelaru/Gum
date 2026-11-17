@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 
@@ -48,6 +49,13 @@ public static class AllocationMeasurer
 
         Drain();
 
+        // #8190: with GUM_ALLOCATION_EVENTS=1 (the Mesa CI steps) the runtime's own events (JIT, type loads, exceptions)
+        // are recorded from here, so a window that allocated can say what ran inside it. Started before any window.
+        bool explain = RecordsRuntimeEvents ?? Environment.GetEnvironmentVariable("GUM_ALLOCATION_EVENTS") == "1";
+        using RuntimeEventRecorder recorder = explain ? new RuntimeEventRecorder() : null!;
+        long testThreadId = RuntimeEventRecorder.CurrentOsThreadId();
+        List<(DateTime Start, DateTime End)> windowTimes = new();
+
         for (int i = 0; i < warmupIterations; i++)
         {
             action();
@@ -67,6 +75,7 @@ public static class AllocationMeasurer
                 Drain();
             }
             long[] perCall = new long[measuredIterations];
+            DateTime windowStartTime = DateTime.UtcNow;
             long windowStart = GC.GetAllocatedBytesForCurrentThread();
             for (int i = 0; i < measuredIterations; i++)
             {
@@ -75,6 +84,7 @@ public static class AllocationMeasurer
                 perCall[i] = GC.GetAllocatedBytesForCurrentThread() - callStart;
             }
             long bytes = GC.GetAllocatedBytesForCurrentThread() - windowStart;
+            windowTimes.Add((windowStartTime, DateTime.UtcNow));
             windowBytes.Add(bytes);
             windowCalls.Add(perCall);
             if (bytes == 0)
@@ -88,10 +98,31 @@ public static class AllocationMeasurer
             ReportDisagreement(testName, filePath, windowBytes, windowCalls);
         }
 
+        // The events of the first window that allocated, on the console (a failing test's output shows it) and through
+        // NoiseSink. Reported also when every window allocated, which is the failure case.
+        if (explain && windowBytes.Max() > 0)
+        {
+            int worst = windowBytes.IndexOf(windowBytes.Max());
+            string events = "ALLOCATION-EVENTS: " + Path.GetFileNameWithoutExtension(filePath) + "." + testName + " window w" + worst + ": "
+                + recorder.Describe(windowTimes[worst].Start.AddMilliseconds(-2), windowTimes[worst].End.AddMilliseconds(2), testThreadId);
+            (EventsSink ?? Console.WriteLine)(events);
+        }
+
         return new AllocationResult(windowBytes.Min(), measuredIterations);
     }
 
     private const int MaxWindows = 3;
+
+    /// <summary>
+    /// Overrides the <c>GUM_ALLOCATION_EVENTS</c> environment variable for the calling thread: tests of the measurer
+    /// itself set it to false so CI's setting cannot change what they assert (#8190). Null follows the variable.
+    /// </summary>
+    [ThreadStatic]
+    public static bool? RecordsRuntimeEvents;
+
+    /// <summary>Receives the <c>ALLOCATION-EVENTS:</c> line, on the measuring thread. Unset, it goes to the console.</summary>
+    [ThreadStatic]
+    public static Action<string>? EventsSink;
 
     /// <summary>
     /// Receives the <c>ALLOCATION-NOISE:</c> line when measured windows disagree, on the measuring thread. Unset, the

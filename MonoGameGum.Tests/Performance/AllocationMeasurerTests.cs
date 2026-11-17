@@ -70,6 +70,7 @@ public class AllocationMeasurerPendingFinalizerTests
         GC.Collect(); // finalizer thread now holds the object, blocked on the gate
         string? noise = null;
         AllocationMeasurer.NoiseSink = line => noise = line;
+        AllocationMeasurer.RecordsRuntimeEvents = false;
         int call = 0;
         byte[]? sink = null;
         AllocationResult result = AllocationMeasurer.Measure(
@@ -94,6 +95,7 @@ public class AllocationMeasurerPendingFinalizerTests
             warmupIterations: 100,
             measuredIterations: 200);
         AllocationMeasurer.NoiseSink = null;
+        AllocationMeasurer.RecordsRuntimeEvents = null;
         GC.KeepAlive(sink);
 
         result.TotalBytes.ShouldBe(0);
@@ -114,6 +116,7 @@ public class AllocationMeasurerWindowTests
     {
         string? captured = null;
         AllocationMeasurer.NoiseSink = line => captured = line;
+        AllocationMeasurer.RecordsRuntimeEvents = false;
         try
         {
             AllocationResult result = AllocationMeasurer.Measure(action, warmupIterations: 10, measuredIterations: measured, testName: testName);
@@ -123,6 +126,7 @@ public class AllocationMeasurerWindowTests
         finally
         {
             AllocationMeasurer.NoiseSink = null;
+            AllocationMeasurer.RecordsRuntimeEvents = null;
         }
     }
 

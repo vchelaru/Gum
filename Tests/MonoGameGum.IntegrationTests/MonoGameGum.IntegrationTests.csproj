@@ -59,6 +59,7 @@
 	<ItemGroup>
 		<!-- Linked rather than referencing MonoGameGum.TestsCommon, which pulls in xunit v2. -->
 		<Compile Include="..\MonoGameGum.TestsCommon\AllocationMeasurer.cs" Link="AllocationMeasurer.cs" />
+		<Compile Include="../MonoGameGum.TestsCommon/RuntimeEventRecorder.cs" Link="RuntimeEventRecorder.cs" />
 		<!-- Seed-driven test order for the weekly shuffled-order workflow (#6106). The xunit v3 orderers, not the v2 ones. -->
 		<Compile Include="..\TestOrdering\TestShuffle.cs" Link="TestOrdering\TestShuffle.cs" />
 		<Compile Include="..\TestOrdering\Xunit3\ShuffledTestCaseOrderer.cs" Link="TestOrdering\ShuffledTestCaseOrderer.cs" />
