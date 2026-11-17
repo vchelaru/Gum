@@ -36,7 +36,8 @@ public class NewProjectFolderNoticeTests
         });
     }
 
-    private NewProjectDialogViewModel Create(string location, string name = "CodeProj3", bool code = false)
+    /// <param name="backgroundChecks">Only for the two tests about a check that outlasts a delay; every other test runs the checks inline so nothing mutates the view model off the test thread (#8200).</param>
+    private NewProjectDialogViewModel Create(string location, string name = "CodeProj3", bool code = false, bool backgroundChecks = false)
     {
         Mock<IFormsFileService> forms = new();
         forms.Setup(x => x.DefaultThemeName).Returns("Standard");
@@ -44,7 +45,8 @@ public class NewProjectFolderNoticeTests
         forms.Setup(x => x.GetThemeDirectory(It.IsAny<string>())).Returns("C:/nonexistent-theme/");
         return new NewProjectDialogViewModel(
             new ThemeSelectionViewModel(forms.Object, new Mock<IProjectState>().Object),
-            _service.Object, _detector.Object, new Mock<IDialogService>().Object, new Mock<INewProjectLocationSettings>().Object)
+            _service.Object, _detector.Object, new Mock<IDialogService>().Object, new Mock<INewProjectLocationSettings>().Object,
+            runChecksInline: !backgroundChecks)
         {
             ProjectName = name,
             Location = location,
@@ -204,7 +206,7 @@ public class NewProjectFolderNoticeTests
     [Fact]
     public async Task UntilTheCheckForTheCurrentInputsIsBack_NothingIsShown_ThenTheLastInputsAnswer()
     {
-        NewProjectDialogViewModel viewModel = Create(Parent);
+        NewProjectDialogViewModel viewModel = Create(Parent, backgroundChecks: true);
         await viewModel.ChecksRefresh;
         viewModel.FolderNoticeHeading.ShouldBe("Creates a new folder");
         viewModel.FolderNoticeHideDelay = TimeSpan.Zero;
@@ -241,7 +243,7 @@ public class NewProjectFolderNoticeTests
     [Fact]
     public async Task FastChecks_NeverHideTheNotice_WhileTyping()
     {
-        NewProjectDialogViewModel viewModel = Create(Parent);
+        NewProjectDialogViewModel viewModel = Create(Parent, backgroundChecks: true);
         await viewModel.ChecksRefresh;
         viewModel.FolderNoticeHideDelay = TimeSpan.FromSeconds(30);
         int hides = 0;
@@ -254,10 +256,21 @@ public class NewProjectFolderNoticeTests
             }
         };
 
+        // Each check is held pending while the notice is read, so the pool never mutates the view model during the read.
+        ManualResetEventSlim gate = new ManualResetEventSlim(false);
+        _detector.Setup(x => x.TargetExists(It.IsAny<string>(), It.IsAny<string>())).Returns((string folder, string name) =>
+        {
+            ManualResetEventSlim current = gate;
+            current.Wait(TimeSpan.FromSeconds(20));
+            return false;
+        });
+
         for (int i = 0; i < 10; i++)
         {
+            gate = new ManualResetEventSlim(false);
             viewModel.ProjectName = "Name" + i;
             viewModel.IsFolderNoticeVisible.ShouldBeTrue("the previous notice stays up while the check runs");
+            gate.Set();
             await viewModel.ChecksRefresh;
         }
 
@@ -268,9 +281,9 @@ public class NewProjectFolderNoticeTests
     [Fact]
     public async Task ASlowCheck_HidesTheNoticeAfterTheDelay_KeepingItsRoom_ThenShowsTheLastInputs()
     {
-        NewProjectDialogViewModel viewModel = Create(Parent);
+        NewProjectDialogViewModel viewModel = Create(Parent, backgroundChecks: true);
         await viewModel.ChecksRefresh;
-        viewModel.FolderNoticeHideDelay = TimeSpan.FromMilliseconds(50);
+        viewModel.FolderNoticeHideDelay = TimeSpan.FromMilliseconds(250);
         using ManualResetEventSlim gate = new ManualResetEventSlim(false);
         _detector.Setup(x => x.TargetExists(It.IsAny<string>(), It.IsAny<string>())).Returns((string folder, string name) =>
         {
@@ -278,17 +291,26 @@ public class NewProjectFolderNoticeTests
             return false;
         });
 
+        // The hide runs on a timer thread, so the test records the state from the hide's own PropertyChanged call (same
+        // thread as the writer) instead of polling the view model from this thread while it is written (#8200).
+        TaskCompletionSource<(bool Visible, bool Reserved, string Summary)> hidden =
+            new TaskCompletionSource<(bool, bool, string)>(TaskCreationOptions.RunContinuationsAsynchronously);
+        viewModel.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName == nameof(NewProjectDialogViewModel.FoldersSummary) && viewModel.FoldersSummary.Length == 0)
+            {
+                hidden.TrySetResult((viewModel.IsFolderNoticeVisible, viewModel.IsFolderNoticeSpaceReserved, viewModel.FoldersSummary));
+            }
+        };
+
         viewModel.ProjectName = "Slow1";
         viewModel.ProjectName = "Slow2";
         viewModel.IsFolderNoticeVisible.ShouldBeTrue("not hidden before the delay");
-        for (int i = 0; i < 400 && viewModel.IsFolderNoticeVisible; i++)
-        {
-            await Task.Delay(10);
-        }
+        (bool visible, bool reserved, string summary) = await hidden.Task.WaitAsync(TimeSpan.FromSeconds(20));
 
-        viewModel.IsFolderNoticeVisible.ShouldBeFalse("hidden once the check outlasts the delay");
-        viewModel.IsFolderNoticeSpaceReserved.ShouldBeTrue("but its room stays");
-        viewModel.FoldersSummary.ShouldBe("");
+        visible.ShouldBeFalse("hidden once the check outlasts the delay");
+        reserved.ShouldBeTrue("but its room stays");
+        summary.ShouldBe("");
 
         gate.Set();
         await viewModel.ChecksRefresh;

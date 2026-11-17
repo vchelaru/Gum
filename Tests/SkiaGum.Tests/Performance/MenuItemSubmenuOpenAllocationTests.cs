@@ -94,14 +94,14 @@ public class MenuItemSubmenuOpenAllocationTests : BaseTestClass
         AllocationResult result = AllocationMeasurer.Measure(
             () =>
             {
-                long start = GC.GetAllocatedBytesForCurrentThread();
+                long start = AllocationMeasurer.ThreadBytes;
                 file.IsSelected = true;
                 RunFrame();
-                long afterOpen = GC.GetAllocatedBytesForCurrentThread();
+                long afterOpen = AllocationMeasurer.ThreadBytes;
                 everOpen |= file.IsPopupVisible;
                 file.IsSelected = false;
                 RunFrame();
-                long afterClose = GC.GetAllocatedBytesForCurrentThread();
+                long afterClose = AllocationMeasurer.ThreadBytes;
                 openBytes += afterOpen - start;
                 closeBytes += afterClose - afterOpen;
                 cycles++;

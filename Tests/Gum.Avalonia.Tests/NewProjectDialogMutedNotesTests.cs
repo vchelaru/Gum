@@ -25,7 +25,7 @@ public class NewProjectDialogMutedNotesTests
         service.Setup(x => x.IsSourceLinkedAvailable).Returns(true);
         NewProjectDialogViewModel viewModel = new NewProjectDialogViewModel(
             TestAppBuilder.Services.GetRequiredService<ThemeSelectionViewModel>(),
-            service.Object, new Mock<IExistingCodeProjectDetector>().Object, new Mock<IDialogService>().Object, new Mock<INewProjectLocationSettings>().Object)
+            service.Object, new Mock<IExistingCodeProjectDetector>().Object, new Mock<IDialogService>().Object, new Mock<INewProjectLocationSettings>().Object, runChecksInline: true)
         {
             Location = ProjectsFolder,
             IncludeCodeProject = true,

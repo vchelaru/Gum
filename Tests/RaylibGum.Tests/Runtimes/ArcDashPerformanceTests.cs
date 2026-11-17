@@ -1,3 +1,4 @@
+using MonoGameGum.TestsCommon;
 using Gum.GueDeriving;
 using Shouldly;
 using static Raylib_cs.Raylib;
@@ -67,12 +68,13 @@ public class ArcDashPerformanceTests : BaseTestClass
     {
         long Allocated(float dash, float gap)
         {
+            AllocationMeasurer.Drain();
             AddArc(4000, 2000, dash, gap);
             DrawFrame();
             DrawFrame();
-            long before = System.GC.GetAllocatedBytesForCurrentThread();
+            long before = AllocationMeasurer.ThreadBytes;
             DrawFrame();
-            long bytes = System.GC.GetAllocatedBytesForCurrentThread() - before;
+            long bytes = AllocationMeasurer.ThreadBytes - before;
             Gum.GumService.Default.Root.Children.Clear();
             return bytes;
         }

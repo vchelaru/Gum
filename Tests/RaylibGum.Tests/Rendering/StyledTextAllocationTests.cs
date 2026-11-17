@@ -1,3 +1,4 @@
+using MonoGameGum.TestsCommon;
 using Gum.DataTypes;
 using Gum.GueDeriving;
 using Gum.Renderables;
@@ -107,6 +108,7 @@ public class StyledTextAllocationTests : BaseTestClass
         Gum.GumService.Default.Root.Children.Add(text);
         Gum.GumService.Default.Root.UpdateLayout();
 
+        AllocationMeasurer.Drain();
         long best = long.MaxValue;
         for (int attempt = 0; attempt < 3; attempt++)
         {
@@ -116,13 +118,13 @@ public class StyledTextAllocationTests : BaseTestClass
                 DrawFrame();
             }
 
-            long before = GC.GetAllocatedBytesForCurrentThread();
+            long before = AllocationMeasurer.ThreadBytes;
             for (int frame = 0; frame < 20; frame++)
             {
                 SetCount(text, maxLettersForFrame, frame);
                 DrawFrame();
             }
-            best = Math.Min(best, GC.GetAllocatedBytesForCurrentThread() - before);
+            best = Math.Min(best, AllocationMeasurer.ThreadBytes - before);
         }
         return best;
     }

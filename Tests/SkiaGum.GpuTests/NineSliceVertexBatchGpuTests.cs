@@ -1,3 +1,4 @@
+using MonoGameGum.TestsCommon;
 using Gum.DataTypes;
 using Gum.GueDeriving;
 using Gum.Wireframe;
@@ -581,6 +582,7 @@ public class NineSliceVertexBatchGpuTests : IDisposable
             root.AddChild(clip);
             root.AddToManagers(managers, null);
             RenderingLibrary.Graphics.NineSliceVertexBatch batch = managers.Renderer.NineSliceBatch;
+            AllocationMeasurer.Drain();
 
             for (int frame = 0; frame < MergedFrames; frame++)
             {
@@ -591,38 +593,24 @@ public class NineSliceVertexBatchGpuTests : IDisposable
             // and whether a GC ran in the window. Allocated before the window starts.
             long[] notifyBytes = new long[50];
             long[] drawBytes = new long[50];
-            DateTime[] frameStarts = new DateTime[50];
-            DateTime[] frameEnds = new DateTime[50];
-            // #8190: the runtime's own events (JIT, type loads, exceptions), to say what ran inside an allocating frame.
-            using MonoGameGum.TestsCommon.RuntimeEventRecorder recorder = new();
-            long testThreadId = MonoGameGum.TestsCommon.RuntimeEventRecorder.CurrentOsThreadId();
             int gcsBefore = GC.CollectionCount(0);
             int buildsBefore = batch.VerticesBuildCount;
-            long bytesBefore = GC.GetAllocatedBytesForCurrentThread();
+            long bytesBefore = AllocationMeasurer.ThreadBytes;
             for (int frame = 0; frame < 50; frame++)
             {
-                DateTime frameStartTime = DateTime.UtcNow;
-                long frameStart = GC.GetAllocatedBytesForCurrentThread();
+                long frameStart = AllocationMeasurer.ThreadBytes;
                 managers.Renderer.NotifyHostFrameAdvanced();
-                long drawStart = GC.GetAllocatedBytesForCurrentThread();
+                long drawStart = AllocationMeasurer.ThreadBytes;
                 managers.Draw();
                 notifyBytes[frame] = drawStart - frameStart;
-                drawBytes[frame] = GC.GetAllocatedBytesForCurrentThread() - drawStart;
-                frameStarts[frame] = frameStartTime;
-                frameEnds[frame] = DateTime.UtcNow;
+                drawBytes[frame] = AllocationMeasurer.ThreadBytes - drawStart;
             }
-            allocated = GC.GetAllocatedBytesForCurrentThread() - bytesBefore;
+            allocated = AllocationMeasurer.ThreadBytes - bytesBefore;
             builds = batch.VerticesBuildCount - buildsBefore;
             int gcs = GC.CollectionCount(0) - gcsBefore;
             allocationDetail = $"gen0 GCs in window: {gcs}; frames that allocated: " + string.Join(", ",
                 Enumerable.Range(0, 50).Where(f => notifyBytes[f] != 0 || drawBytes[f] != 0)
                     .Select(f => $"#{f} notify={notifyBytes[f]} draw={drawBytes[f]}"));
-            int[] allocatingFrames = Enumerable.Range(0, 50).Where(f => notifyBytes[f] != 0 || drawBytes[f] != 0).ToArray();
-            if (allocatingFrames.Length > 0)
-            {
-                allocationDetail += $"; runtime events from frame {allocatingFrames[0]} to {allocatingFrames[^1]}: " + recorder.Describe(
-                    frameStarts[allocatingFrames[0]].AddMilliseconds(-2), frameEnds[allocatingFrames[^1]].AddMilliseconds(2), testThreadId);
-            }
 
             root.Y = 3;
             managers.Renderer.NotifyHostFrameAdvanced();

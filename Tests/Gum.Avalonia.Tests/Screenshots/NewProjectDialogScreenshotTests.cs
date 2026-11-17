@@ -296,7 +296,7 @@ public class NewProjectDialogScreenshotTests
 
             NewProjectDialogViewModel viewModel = new NewProjectDialogViewModel(
                 TestAppBuilder.Services.GetRequiredService<ThemeSelectionViewModel>(),
-                service.Object, detector.Object, new Mock<IDialogService>().Object, new Mock<INewProjectLocationSettings>().Object)
+                service.Object, detector.Object, new Mock<IDialogService>().Object, new Mock<INewProjectLocationSettings>().Object, runChecksInline: true)
             {
                 Location = Location,
             };

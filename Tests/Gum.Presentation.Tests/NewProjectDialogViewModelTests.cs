@@ -166,7 +166,7 @@ public class NewProjectDialogViewModelTests
         // No fixture overrides: the view model's own defaults.
         NewProjectDialogViewModel viewModel = new NewProjectDialogViewModel(
             new ThemeSelectionViewModel(_formsFileService.Object, _projectState.Object),
-            _service.Object, _detector.Object, _dialogService.Object, new Mock<INewProjectLocationSettings>().Object);
+            _service.Object, _detector.Object, _dialogService.Object, new Mock<INewProjectLocationSettings>().Object, runChecksInline: true);
 
         viewModel.SelectedFileFormat.ShouldBe(NewProjectDialogViewModel.JsonFormat);
         viewModel.UseXmlFormat.ShouldBeFalse();

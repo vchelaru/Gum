@@ -88,7 +88,7 @@ public class TextStackLayoutAllocationTests : BaseTestClass
         const int measured = 300;
         int before = GraphicalUiElement.UpdateLayoutCallCount;
 
-        AllocationResult result = SkiaAllocationMeasurer.Measure(
+        AllocationResult result = AllocationMeasurer.MeasureReplayed(
             frame =>
             {
                 change(frame);

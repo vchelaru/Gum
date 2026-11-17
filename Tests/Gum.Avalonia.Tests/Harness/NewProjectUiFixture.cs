@@ -58,7 +58,8 @@ internal sealed class NewProjectUiFixture : IDisposable
             service ?? _switchable,
             checksDetector,
             services.GetRequiredService<IDialogService>(),
-            new Mock<INewProjectLocationSettings>().Object)
+            new Mock<INewProjectLocationSettings>().Object,
+            runChecksInline: false) // Deliberate: this fixture drives the asynchronous checks (see AsyncStateGuard), resumed on the UI thread as in the app.
         {
             Location = Location,
             IncludeRecommendedPackages = false,
