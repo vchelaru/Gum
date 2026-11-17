@@ -599,6 +599,12 @@ public class VariableReferenceLogic : IVariableReferenceLogic
     private List<PendingReaction>? _pendingReactions;
     private int _batchDepth;
 
+    /// <summary>
+    /// Elements scanned for readers plus components whose behavior lines were evaluated, summed over every
+    /// reaction so far. Tests compare it across project sizes instead of timing a drag tick.
+    /// </summary>
+    internal int ScanCount { get; private set; }
+
     /// <inheritdoc/>
     public IDisposable BeginReferenceBatch()
     {
@@ -745,12 +751,12 @@ public class VariableReferenceLogic : IVariableReferenceLogic
         // runtime, since the Forms control's own setter owns the visual at runtime.
         if (isWide)
         {
-            BehaviorToolOnlyReferencesApplier.Apply(parentElement, stateSave);
+            ScanCount += BehaviorToolOnlyReferencesApplier.Apply(parentElement, stateSave);
         }
         else
         {
             // A tick touches only the lines that read the dragged member, on the instance dragged.
-            BehaviorToolOnlyReferencesApplier.ApplyDrivenBy(parentElement, leftSideInstance, unqualifiedMember, stateSave);
+            ScanCount += BehaviorToolOnlyReferencesApplier.ApplyDrivenBy(parentElement, leftSideInstance, unqualifiedMember, stateSave);
         }
 
         // A categorized state's rows read the same instances, so they follow too (#6886).
@@ -1145,6 +1151,7 @@ public class VariableReferenceLogic : IVariableReferenceLogic
         allElements.AddRange(project.StandardElements);
         allElements.AddRange(project.Components);
         allElements.AddRange(project.Screens);
+        ScanCount += allElements.Count;
 
         HashSet<string> changedElementNames = new HashSet<string> { ObjectFinder.Self.GetQualifiedElementName(element) };
         HashSet<ElementSave> elementsToSave = new HashSet<ElementSave>();

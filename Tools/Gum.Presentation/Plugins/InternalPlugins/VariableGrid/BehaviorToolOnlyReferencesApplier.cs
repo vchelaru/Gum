@@ -32,7 +32,8 @@ public static class BehaviorToolOnlyReferencesApplier
 {
     private static readonly BehaviorAncestorFinder AncestorFinder = new BehaviorAncestorFinder();
 
-    public static void Apply(ElementSave element, StateSave stateSave)
+    /// <returns>How many components' behavior lines were evaluated, so a caller can count its work.</returns>
+    public static int Apply(ElementSave element, StateSave stateSave)
     {
         // Tool-only references exist solely to drive the element's resting design-time
         // wireframe preview from FormsProperty values, and that resting preview is the
@@ -45,12 +46,14 @@ public static class BehaviorToolOnlyReferencesApplier
         // to the default state loses nothing.
         if (element.DefaultState == null || stateSave != element.DefaultState)
         {
-            return;
+            return 0;
         }
 
+        int passes = 0;
         if (element is ComponentSave component)
         {
             ApplyBehaviorsOf(component, instance: null, stateSave);
+            passes++;
         }
 
         foreach (InstanceSave instance in element.Instances)
@@ -58,8 +61,10 @@ public static class BehaviorToolOnlyReferencesApplier
             if (ObjectFinder.Self.GetElementSave(instance.BaseType) is ComponentSave instanceComponent)
             {
                 ApplyBehaviorsOf(instanceComponent, instance, stateSave);
+                passes++;
             }
         }
+        return passes;
     }
 
     /// <summary>
@@ -67,21 +72,24 @@ public static class BehaviorToolOnlyReferencesApplier
     /// the element itself) can change, so a drag tick costs what the one edited instance costs, not every
     /// behavior instance of the element. Same writes as <see cref="Apply"/> for that instance.
     /// </summary>
-    public static void ApplyDrivenBy(ElementSave element, InstanceSave? instance, string changedMember, StateSave stateSave)
+    /// <returns>How many components' behavior lines were evaluated: 0 or 1.</returns>
+    public static int ApplyDrivenBy(ElementSave element, InstanceSave? instance, string changedMember, StateSave stateSave)
     {
         if (element.DefaultState == null || stateSave != element.DefaultState ||
             GetUnderlyingMembersDrivenBy(element, instance, changedMember).Count == 0)
         {
-            return;
+            return 0;
         }
 
         ComponentSave? component = instance != null
             ? ObjectFinder.Self.GetElementSave(instance.BaseType) as ComponentSave
             : element as ComponentSave;
-        if (component != null)
+        if (component == null)
         {
-            ApplyBehaviorsOf(component, instance, stateSave);
+            return 0;
         }
+        ApplyBehaviorsOf(component, instance, stateSave);
+        return 1;
     }
 
     /// <summary>

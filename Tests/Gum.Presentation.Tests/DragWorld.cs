@@ -306,6 +306,14 @@ public sealed class DragWorld : BaseTestClass
 
     public int ButtonStateWrites => _comp.DefaultState!.Variables.Count(item => item.Name.EndsWith(".ButtonCategoryState"));
 
+    /// <summary>The work a tick does, counted by the reference logic: elements scanned and behavior passes.</summary>
+    public int TickScanCount(string instance, string state, float value)
+    {
+        int before = _logic.ScanCount;
+        Tick(instance, state, value);
+        return _logic.ScanCount - before;
+    }
+
     private void Finish(bool materialize)
     {
         GumProjectSave project = new GumProjectSave();
