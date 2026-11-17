@@ -84,33 +84,22 @@ public class SkiaHostRegistrationTests : IDisposable
     }
 
     [Fact]
-    public void MissingWorkflowStep_NamesHostAndFile()
+    public void MissingMacosTestGroup_NamesGroupsFile()
     {
-        BuildFakeRepo("FooGum", inWorkflow: false);
+        BuildFakeRepo("FooGum", inMacosGroups: false);
 
         string message = Single();
 
-        message.ShouldContain(".github/workflows/build-and-test.yaml");
-        message.ShouldContain("dotnet test \"Tests/FooGum.Tests\"");
+        message.ShouldContain(".github/scripts/macos-test-groups.txt");
+        message.ShouldContain("Tests/FooGum.Tests");
     }
 
     [Fact]
-    public void CommentedOutWorkflowStep_IsReportedAsMissing()
+    public void CommentedOutMacosTestGroup_IsReportedAsMissing()
     {
-        BuildFakeRepo("FooGum", commentedWorkflowStepOnly: true);
+        BuildFakeRepo("FooGum", commentedMacosGroupOnly: true);
 
-        Single().ShouldContain("no test step");
-    }
-
-    [Fact]
-    public void MissingWorkflowStep_ForSilkNetGum_DoesNotTellYouToCopyItself()
-    {
-        BuildFakeRepo("SilkNetGum", inWorkflow: false);
-
-        string message = Single();
-
-        message.ShouldNotContain("copy the SilkNetGum.Tests step");
-        message.ShouldContain("copy the StrideGum.Tests step");
+        Single().ShouldContain(".github/scripts/macos-test-groups.txt");
     }
 
     [Fact]
@@ -219,7 +208,7 @@ public class SkiaHostRegistrationTests : IDisposable
     [Fact]
     public void SeveralMisses_AreNumberedInOneMessage()
     {
-        BuildFakeRepo("FooGum", inAllLibraries: false, inSlnf: false, inWorkflow: false);
+        BuildFakeRepo("FooGum", inAllLibraries: false, inSlnf: false, inMacosGroups: false);
 
         IReadOnlyList<string> problems = SkiaHostRegistrationChecker.Check(_root);
 
@@ -245,7 +234,7 @@ public class SkiaHostRegistrationTests : IDisposable
         string host,
         bool inAllLibraries = true,
         bool inSlnf = true,
-        bool inWorkflow = true,
+        bool inMacosGroups = true,
         bool testProject = true,
         bool testsCommonReference = true,
         bool docsPage = true,
@@ -254,7 +243,7 @@ public class SkiaHostRegistrationTests : IDisposable
         bool readmeRow = true,
         bool sample = true,
         bool testGroup = true,
-        bool commentedWorkflowStepOnly = false)
+        bool commentedMacosGroupOnly = false)
     {
         // A fake host "FooGum" gets the conventional docs page "foo.md" and display name "Foo".
         string stem = host.EndsWith("Gum") ? host.Substring(0, host.Length - 3) : host;
@@ -285,10 +274,10 @@ public class SkiaHostRegistrationTests : IDisposable
         Write("Tests/CiTestProjects.slnf", inSlnf
             ? $"\"Tests\\\\{host}.Tests\\\\{host}.Tests.csproj\","
             : "{}");
-        string step = $"dotnet test \"Tests/{host}.Tests\" --configuration Release --no-build\n";
-        Write(".github/workflows/build-and-test.yaml", commentedWorkflowStepOnly
-            ? $"        # run: {step}"
-            : inWorkflow ? $"        run: {step}" : "steps:\n");
+        string groupLine = $"macos-3 Tests/{host}.Tests\n";
+        Write(".github/scripts/macos-test-groups.txt", commentedMacosGroupOnly
+            ? $"# {groupLine}"
+            : inMacosGroups ? groupLine : "# groups\n");
         if (testProject)
         {
             Write($"Tests/{host}.Tests/{host}.Tests.csproj", testsCommonReference
