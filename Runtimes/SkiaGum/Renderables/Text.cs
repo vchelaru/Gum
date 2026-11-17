@@ -955,6 +955,12 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
 
     public object? Tag { get; set; }
 
+    /// <summary>The TextRuntime wrapping this Text, used to resolve a <c>[State=Name]</c> tag (#8176). Null for a bare Text, where such a tag is a no-op.</summary>
+    internal GraphicalUiElement? Owner { get; set; }
+
+    private Gum.DataTypes.Variables.StateSave? FindState(string name) =>
+        Owner != null && Owner.TryGetStateByName(name, out Gum.DataTypes.Variables.StateSave? state) ? state : null;
+
     public bool FlipHorizontal
     {
         get;
@@ -1384,6 +1390,8 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
         "OutlineThickness",
         "Custom",
         "HasDropshadow",
+        // [State=Name]: expanded into the named state's allowlisted variables before BuildInlineVariables (#8176).
+        "State",
         // [Link=id]: kept as a range for TextRuntime.GetTagAtIndex, no styling.
         "Link",
     };
@@ -3156,7 +3164,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
 
         _hasMarkup = true;
         _layoutText = BlankControlCharacters(BbCodeParser.RemoveTags(normalized, tags, ref buffers.SortScratch, buffers.Builder));
-        BuildInlineVariables(tags);
+        BuildInlineVariables(BbCodeFontStacks.ExpandStateTags(tags, FindState));
         foreach (InlineVariable variable in _inlineVariables)
         {
             _hasHeightRun |= variable.VariableName == "FontSize" || variable.VariableName == "FontScale" || variable.VariableName == "Font";
@@ -3606,6 +3614,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
         // The variables themselves are reused by the next parse of the source, so the clone gets copies, with
         // its own buffers and its own list of tags.
         newInstance._markupBuffers = null;
+        newInstance.Owner = null;
         newInstance._inlineVariables = new List<InlineVariable>(_inlineVariables.Count);
         foreach (InlineVariable variable in _inlineVariables)
         {

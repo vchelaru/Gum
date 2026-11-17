@@ -47,9 +47,7 @@ namespace MonoGameGumInCode.Screens;
 // section goes in the SAME position for every backend, not just present), and carry NO descriptive
 // section labels — each demo's own text shows AND names what it is. Only genuinely backend-specific
 // things differ here, gated `#if RAYLIB` / `#elif SKIA` / `#else`: the namespace, the
-// Color/Text/LetterCustomization/TextRenderingPositionMode aliases above, and the [State=Name] BBCode
-// tag (MonoGame/raylib only — SkiaGum owns a separate CustomSetPropertyOnRenderable.cs that doesn't
-// implement it yet, excluded on Skia).
+// Color/Text/LetterCustomization/TextRenderingPositionMode aliases above.
 //
 // Tick(elapsedSeconds) (#3701) drives the animated typewriter section and must be called once per
 // frame by the host while this screen is active — see Game1.Update / Program.cs's main loop
@@ -101,12 +99,10 @@ internal class TextScreen : FrameworkElement
             "[Font=Courier New]a different font[/Font] runs, all styled inline in one Text.";
         container.Children.Add(bbcode);
 
-        // [State=Name] BBCode tag. Gated #if !SKIA: the Skia BBCode parser has no [State=] support and
-        // prints the tag literally. The state is defined in code via AddStates (no Gum project needed) with a Color +
+        // [State=Name] BBCode tag. The state is defined in code via AddStates (no Gum project needed) with a Color +
         // IsBold pair; only variables already wired for per-run application (like these two) apply to
         // the wrapped substring -- a state can hold anything, including layout properties like
         // X/Width, but those are silently skipped rather than applied to the whole element.
-#if !SKIA
         var stateBbcode = new TextRuntime();
         stateBbcode.Font = "Arial";
         stateBbcode.FontSize = 24;
@@ -118,7 +114,6 @@ internal class TextScreen : FrameworkElement
         stateBbcode.AddStates(new List<StateSave> { highlightedState });
         stateBbcode.Text = "Plain text with a [State=Highlighted]bold gold run[/State] applied from a code-defined state.";
         container.Children.Add(stateBbcode);
-#endif
 
         Text.Customizations["Wave"] = (int index, string block) => new LetterCustomization
         {

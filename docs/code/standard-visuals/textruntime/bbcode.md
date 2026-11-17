@@ -150,10 +150,6 @@ text.Text = "Plain text with a [State=Highlighted]bold gold run[/State] in it.";
 text.AddToRoot();
 ```
 
-{% hint style="info" %}
-`State` is not supported on [SkiaSharp-based runtimes](../../about/runtimes.md). The tag is not recognized there, so it draws as literal text.
-{% endhint %}
-
 ## Custom Functions
 
 TextRuntime instances can use the `Custom` tag to define a custom function to be used when rendering a Text. This tag can be used to customize letters in a TextRuntime using custom code, allowing for effects such as wavy, rainbow, or shaking text.
