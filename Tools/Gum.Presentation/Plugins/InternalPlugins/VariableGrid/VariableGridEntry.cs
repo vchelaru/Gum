@@ -4,6 +4,7 @@ using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
 using Gum.Input;
 using Gum.Managers;
+using Gum.ProjectServices.Editing;
 using Gum.PropertyGridHelpers;
 using Gum.PropertyGridHelpers.Converters;
 using Gum.Reflection;
@@ -47,6 +48,7 @@ public class VariableGridEntry
     private readonly IEditVariableService _editVariableService;
     private readonly ITypeManager _typeManager;
     private readonly IClipboardService _clipboardService;
+    private readonly IStateVariableWriter _stateVariableWriter;
 
     private readonly IStateContainer? _stateListCategoryContainer;
     private readonly StateSave? _stateSave;
@@ -353,6 +355,8 @@ public class VariableGridEntry
         _editVariableService = editVariableService;
         _typeManager = typeManager;
         _clipboardService = clipboardService;
+        // Pure data logic shared with gumcli; no tool state, so the entry owns one.
+        _stateVariableWriter = new StateVariableWriter();
 
         _stateListCategoryContainer = stateListCategoryContainer;
         _stateSave = stateSave;
@@ -745,23 +749,7 @@ public class VariableGridEntry
             }
             else if (stateSave != null && elementSave != null)
             {
-                // If we are creating a new variable, we need to make sure it carries the same exposed
-                // name as the variable in base that defines it. We need to first get that variable...
-                VariableSave? variableDefinedInThisOrBase = null;
-                var existingVariable = GetVariableFromThisOrBase(elementSave, Name);
-                if (!string.IsNullOrEmpty(existingVariable?.ExposedAsName))
-                {
-                    variableDefinedInThisOrBase = GetVariableDefinedInThisOrBase(existingVariable);
-                }
-                string? variableType = existingVariable?.Type ?? GetVariableFromThisOrBase(elementSave, Name)?.Type;
-                if (string.IsNullOrEmpty(variableType))
-                {
-                    var rootVariable = ObjectFinder.Self.GetRootVariable(Name, elementSave);
-                    variableType = rootVariable?.Type;
-                }
-                variableType ??= ShaderBinding?.VariableType;
-                // ...set variable after getting it from base, or else we'd get the variable we just set...
-                stateSave.SetValue(Name, newValue, instanceSave, variableType);
+                _stateVariableWriter.SetVariable(elementSave, stateSave, Name, newValue, instanceSave, ShaderBinding?.VariableType);
                 if (ShaderBinding != null)
                 {
                     // The runtime needs the whole vector, so the other components are saved too, and shown now.
@@ -773,12 +761,6 @@ public class VariableGridEntry
                         }
                     }
                     ShaderBinding.AfterWrite(stateSave, Name);
-                }
-                if (existingVariable?.ExposedAsName is { Length: > 0 } exposedAsName && variableDefinedInThisOrBase != null &&
-                    stateSave.GetVariableSave(Name) is { } variable)
-                {
-                    //... then assign it here if we found it:
-                    variable.ExposedAsName = exposedAsName;
                 }
             }
 
@@ -1056,39 +1038,6 @@ public class VariableGridEntry
     }
 
     #endregion
-
-    private VariableSave? GetVariableDefinedInThisOrBase(VariableSave? existingVariable)
-    {
-        VariableSave? variableDefinedInThisOrBase = null;
-
-        if (!string.IsNullOrEmpty(existingVariable?.ExposedAsName))
-        {
-            // need to set the exposed name on the variable, but only if it is defined in this component or in
-            // a base component:
-            var selectedStateSave = _selectedState.SelectedStateSave!;
-            var selectedElement = _selectedState.SelectedElement!;
-            variableDefinedInThisOrBase = selectedStateSave.GetVariableSave(Name);
-            if (variableDefinedInThisOrBase == null && selectedStateSave != selectedElement.DefaultState)
-            {
-                variableDefinedInThisOrBase = selectedElement.GetDefaultStateOrThrow().GetVariableSave(Name);
-            }
-
-            if (variableDefinedInThisOrBase == null)
-            {
-                var allBase = ObjectFinder.Self.GetBaseElements(selectedElement);
-                foreach (var baseElement in allBase)
-                {
-                    variableDefinedInThisOrBase = baseElement.GetDefaultStateOrThrow().GetVariableSave(Name);
-                    if (variableDefinedInThisOrBase != null)
-                    {
-                        break;
-                    }
-                }
-            }
-        }
-
-        return variableDefinedInThisOrBase;
-    }
 
     /// <summary>
     /// Reacts to a variable value having changed - resolving exposed/tunneled variables, deciding

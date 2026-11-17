@@ -10,6 +10,7 @@ using Gum.RenderingLibrary;
 using Gum.Services;
 using Gum.ToolStates;
 using Gum.Wireframe;
+using Gum.ProjectServices.Editing;
 using GumRuntime;
 using RenderingLibrary;
 using System;
@@ -32,6 +33,8 @@ public class ElementCommands : IElementCommands
     private readonly IPluginManager _pluginManager;
     private readonly IProjectManager _projectManager;
     private readonly IProjectState _projectState;
+    private readonly IInstanceCreationLogic _instanceCreationLogic;
+    private readonly IStateCreationLogic _stateCreationLogic;
 
     #endregion
 
@@ -42,7 +45,9 @@ public class ElementCommands : IElementCommands
         IWireframeObjectManager wireframeObjectManager,
         IPluginManager pluginManager,
         IProjectManager projectManager,
-        IProjectState projectState)
+        IProjectState projectState,
+        IInstanceCreationLogic instanceCreationLogic,
+        IStateCreationLogic stateCreationLogic)
     {
         _selectedState = selectedState;
         _guiCommands = guiCommands;
@@ -52,6 +57,8 @@ public class ElementCommands : IElementCommands
         _pluginManager = pluginManager;
         _projectManager = projectManager;
         _projectState = projectState;
+        _instanceCreationLogic = instanceCreationLogic;
+        _stateCreationLogic = stateCreationLogic;
     }
 
     #region Instance
@@ -73,25 +80,12 @@ public class ElementCommands : IElementCommands
             throw new Exception("Could not add instance named " + instanceSave.Name + " because no element is selected");
         }
 
-        if(desiredIndex == null)
-        {
-            elementToAddTo.Instances.Add(instanceSave);
-        }
-        else
-        {
-            elementToAddTo.Instances.Insert(desiredIndex.Value, instanceSave);
-        }
+        // The parent is set before plugins hear of the instance, in case they want to reject its creation.
+        _instanceCreationLogic.AddInstance(elementToAddTo, instanceSave, parentName, desiredIndex);
 
         _guiCommands.RefreshElementTreeView(elementToAddTo);
 
         _wireframeObjectManager.RefreshAll(true);
-        //_selectedState.SelectedInstance = instanceSave;
-
-        // Set the parent before adding the instance in case plugins want to reject the creation of the object...
-        if (!string.IsNullOrEmpty(parentName))
-        {
-            elementToAddTo.GetDefaultStateOrThrow().SetValue($"{instanceSave.Name}.Parent", parentName, "string");
-        }
 
         // We need to call InstanceAdd before we select the new object - the Undo manager expects it
         _pluginManager.InstanceAdd(elementToAddTo, instanceSave);
@@ -169,7 +163,7 @@ public class ElementCommands : IElementCommands
 
     public void AddState(IStateContainer stateContainer, StateSaveCategory? category, StateSave stateSave, int? desiredIndex = null)
     {
-        AddStateInternal(stateContainer, category, stateSave, desiredIndex);
+        _stateCreationLogic.AddState(stateContainer, category, stateSave, desiredIndex);
 
         if (stateContainer is ElementSave elementSave)
         {
@@ -188,35 +182,6 @@ public class ElementCommands : IElementCommands
         else
         {
             _fileCommands.TryAutoSaveElement(stateContainer as ElementSave);
-        }
-    }
-
-    private void AddStateInternal(IStateContainer stateContainer, StateSaveCategory? category, StateSave stateSave, int? desiredIndex = null)
-    {
-        // A behavior's states have no element, so their ParentContainer stays null.
-        stateSave.ParentContainer = (stateContainer as ElementSave)!;
-
-        if (category == null)
-        {
-            if(desiredIndex != null)
-            {
-                stateContainer.UncategorizedStates.Insert(desiredIndex.Value, stateSave);
-            }
-            else
-            {
-                stateContainer.UncategorizedStates.Add(stateSave);
-            }
-        }
-        else
-        {
-            if (desiredIndex != null)
-            {
-                category.States.Insert(desiredIndex.Value, stateSave);
-            }
-            else
-            {
-                category.States.Add(stateSave);
-            }
         }
     }
 
@@ -244,13 +209,8 @@ public class ElementCommands : IElementCommands
     /// Sorts every state's variables by name, the order a project save writes them in. Every
     /// element write goes through this, so a file's bytes do not depend on which save wrote it.
     /// </summary>
-    internal static void SortStateVariables(IStateContainer container)
-    {
-        foreach (var stateSave in container.AllStates)
-        {
-            stateSave.Variables.Sort((first, second) => GumProjectSave.CompareNames(first.Name, second.Name));
-        }
-    }
+    internal static void SortStateVariables(IStateContainer container) =>
+        new StateVariableSorter().SortStateVariables(container);
 
     public bool MoveSelectedObjectsBy(float xToMoveBy, float yToMoveBy)
     {
@@ -677,11 +637,7 @@ public class ElementCommands : IElementCommands
 
 
 
-        StateSaveCategory category = new StateSaveCategory();
-        category.Name = name;
-
-        objectToAddTo.Categories.Add(category);
-
+        StateSaveCategory category = _stateCreationLogic.AddCategory(objectToAddTo, name);
 
         // September 20, 2018
         // Not sure why we have
@@ -723,21 +679,10 @@ public class ElementCommands : IElementCommands
     /// <inheritdoc/>
     public void AddCategoryStateVariable(ElementSave element, string categoryName)
     {
-        StateSave defaultState = element.GetDefaultStateOrThrow();
-        if (defaultState.Variables.Any(variable => variable.Name == categoryName + "State"))
+        if (_stateCreationLogic.AddCategoryStateVariable(element, categoryName) is { } variable)
         {
-            return;
+            variable.CustomTypeConverter = new Gum.PropertyGridHelpers.Converters.AvailableStatesConverter(categoryName, _selectedState);
         }
-        defaultState.Variables.Add(new VariableSave()
-        {
-            Name = categoryName + "State",
-            // We used to set the type with the word "State" appended but why? Gum seems to not do this everywhere, and this can add confusion, so let's omit the "State" suffix
-            Type = categoryName,
-            Value = null,
-            CustomTypeConverter = new Gum.PropertyGridHelpers.Converters.AvailableStatesConverter(categoryName, _selectedState)
-        });
-
-        defaultState.Variables.Sort((first, second) => GumProjectSave.CompareNames(first.Name, second.Name));
     }
 
     #endregion

@@ -25,7 +25,8 @@ public class VariableInCategoryPropagationLogicTests : BaseTestClass
             _guiCommandsMock.Object,
             new Mock<IFileCommands>().Object,
             new Mock<IDialogService>().Object,
-            new Mock<IPluginManager>().Object);
+            new Mock<IPluginManager>().Object,
+            new Gum.ProjectServices.Editing.CategoryVariablePropagator());
 
         ObjectFinder.Self.GumProjectSave = new GumProjectSave();
         ObjectFinder.Self.GumProjectSave.StandardElements.Add(new StandardElementSave()

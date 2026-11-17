@@ -56,7 +56,8 @@ public class AddVariableViewModelTests : BaseTestClass
             _nameVerifier.Object,
             _selectedState.Object,
             _pluginManager.Object,
-            new Mock<IRenameLogic>().Object);
+            new Mock<IRenameLogic>().Object,
+            new Gum.ProjectServices.Editing.CustomVariableLogic(new Gum.ProjectServices.Editing.StateVariableSorter()));
 
         GumProjectSave gumProject = new GumProjectSave();
         gumProject.Components.Add(_component);
