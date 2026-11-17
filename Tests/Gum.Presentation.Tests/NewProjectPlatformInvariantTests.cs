@@ -41,7 +41,7 @@ public class NewProjectPlatformInvariantTests
         detector.Setup(x => x.FindExistingCodeProject(It.IsAny<string>())).Returns(Path.Combine(Path.GetTempPath(), "Other.csproj"));
         NewProjectDialogViewModel viewModel = new NewProjectDialogViewModel(
             new ThemeSelectionViewModel(formsFileService.Object, new Mock<IProjectState>().Object),
-            service.Object, detector.Object, new Mock<IDialogService>().Object, new Mock<INewProjectLocationSettings>().Object)
+            service.Object, detector.Object, new Mock<IDialogService>().Object, new Mock<INewProjectLocationSettings>().Object, runChecksInline: true)
         {
             ProjectName = "MyGame",
             Location = Path.Combine(Path.GetTempPath(), "GumPlatformInvariant"),

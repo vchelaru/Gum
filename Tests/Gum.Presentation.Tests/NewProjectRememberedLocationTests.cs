@@ -42,7 +42,7 @@ public class NewProjectRememberedLocationTests : IDisposable
         Mock<INewProjectService> service = new();
         return new NewProjectDialogViewModel(
             new ThemeSelectionViewModel(forms.Object, new Mock<IProjectState>().Object),
-            service.Object, new Mock<IExistingCodeProjectDetector>().Object, _dialogService.Object, _settings.Object);
+            service.Object, new Mock<IExistingCodeProjectDetector>().Object, _dialogService.Object, _settings.Object, runChecksInline: true);
     }
 
     [Fact]

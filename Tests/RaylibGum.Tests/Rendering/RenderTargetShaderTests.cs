@@ -2,6 +2,7 @@ using RaylibGum.Tests.Helpers;
 using Gum;
 using System;
 using System.IO;
+using System.Threading;
 using Gum.GueDeriving;
 using Gum.Wireframe;
 using System.Linq;
@@ -42,6 +43,17 @@ void main()
     finalColor = vec4(gray, gray, gray, texel.a) * fragColor * colDiffuse;
 }
 ";
+
+    // Outline.slang converted once for the class: the conversion is pure (no GL) and costs about a second,
+    // and every outline test used to repeat it. Each test still loads its own Shader from the converted source.
+    private static readonly Lazy<RaylibShader> OutlineConversion = new(() =>
+    {
+        Result<RaylibShader, ShaderError[]> conversion = RaylibConverter.ConvertSlang(
+            File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "Outline.slang")), new RaylibConvertOptions(), CancellationToken.None);
+        conversion.IsSuccess.ShouldBeTrue(
+            conversion.IsFailure ? string.Join("\n", conversion.Error.Select(e => e.Message)) : "");
+        return conversion.Value;
+    });
 
     private static void DrawOnce()
     {
@@ -164,10 +176,7 @@ void main()
     [Fact]
     public void Draw_OutlineSampleSlang_DrawsTheColorJustOutsideTheContent_AndStopsAtThickness()
     {
-        Result<RaylibShader, ShaderError[]> conversion = RaylibConverter.ConvertSlang(
-            File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "Outline.slang")), new RaylibConvertOptions(), TestContext.Current.CancellationToken);
-        conversion.IsSuccess.ShouldBeTrue(
-            conversion.IsFailure ? string.Join("\n", conversion.Error.Select(e => e.Message)) : "");
+        RaylibShader converted = OutlineConversion.Value;
 
         // A 24x24 red square in the middle of a 48x48 render target, outlined in blue.
         ContainerRuntime outer = new();
@@ -193,7 +202,7 @@ void main()
         GumService.Default.Root.Children.Add(outer);
         GumService.Default.Root.UpdateLayout();
 
-        Shader outline = LoadOutlineShader(conversion.Value);
+        Shader outline = LoadOutlineShader(converted);
         try
         {
             inner.RenderTargetEffect = outline;
@@ -228,10 +237,7 @@ void main()
     [Fact]
     public void Draw_OutlineSampleSlang_WithNothingSet_DrawsAOnePixelBlackOutline()
     {
-        Result<RaylibShader, ShaderError[]> conversion = RaylibConverter.ConvertSlang(
-            File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "Outline.slang")), new RaylibConvertOptions(), TestContext.Current.CancellationToken);
-        conversion.IsSuccess.ShouldBeTrue(
-            conversion.IsFailure ? string.Join("\n", conversion.Error.Select(e => e.Message)) : "");
+        RaylibShader converted = OutlineConversion.Value;
 
         // A 24x24 red square in the middle of a 48x48 render target, outlined in blue.
         ContainerRuntime outer = new();
@@ -257,7 +263,7 @@ void main()
         Gum.GumService.Default.Root.Children.Add(outer);
         Gum.GumService.Default.Root.UpdateLayout();
 
-        Shader outline = LoadOutlineShader(conversion.Value);
+        Shader outline = LoadOutlineShader(converted);
         try
         {
             inner.RenderTargetEffect = outline;
@@ -316,10 +322,7 @@ void main()
     private static void WithOutlinedSquare(
         System.Action<ContainerRuntime> setParameters, float zoom, int alpha, System.Action<System.Func<int, int, Color>> check)
     {
-        Result<RaylibShader, ShaderError[]> conversion = RaylibConverter.ConvertSlang(
-            File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "Outline.slang")), new RaylibConvertOptions(), TestContext.Current.CancellationToken);
-        conversion.IsSuccess.ShouldBeTrue(
-            conversion.IsFailure ? string.Join(", ", conversion.Error.Select(e => e.Message)) : "");
+        RaylibShader converted = OutlineConversion.Value;
 
         ContainerRuntime outer = new() { Width = 48, Height = 48, IsRenderTarget = true };
         ContainerRuntime inner = new() { Width = 48, Height = 48, IsRenderTarget = true, Alpha = alpha };
@@ -336,7 +339,7 @@ void main()
         Gum.GumService.Default.Root.Children.Add(outer);
         Gum.GumService.Default.Root.UpdateLayout();
 
-        Shader outline = LoadOutlineShader(conversion.Value);
+        Shader outline = LoadOutlineShader(converted);
         global::RenderingLibrary.SystemManagers.Default.Renderer.Camera.Zoom = zoom;
         try
         {
@@ -435,9 +438,7 @@ void main()
         System.Action<ContainerRuntime> setA, System.Action<ContainerRuntime> setB,
         System.Action<ContainerRuntime>? changeAfterFirstFrame, System.Action<int, int> check)
     {
-        Result<RaylibShader, ShaderError[]> conversion = RaylibConverter.ConvertSlang(
-            File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "Outline.slang")), new RaylibConvertOptions(), TestContext.Current.CancellationToken);
-        conversion.IsSuccess.ShouldBeTrue();
+        RaylibShader converted = OutlineConversion.Value;
 
         (ContainerRuntime outer, ContainerRuntime inner) Build(float x)
         {
@@ -461,7 +462,7 @@ void main()
         (ContainerRuntime outerB, ContainerRuntime innerB) = Build(64);
         Gum.GumService.Default.Root.UpdateLayout();
 
-        Shader outline = LoadOutlineShader(conversion.Value);
+        Shader outline = LoadOutlineShader(converted);
         try
         {
             innerA.RenderTargetEffect = outline;
@@ -541,9 +542,7 @@ void main()
     [InlineData(true)]
     public void Draw_OutlineSampleSlang_OfASpriteTouchingTheRightAndBottomEdges_DrawsNothingOnTheOppositeEdges(bool forceRepeat)
     {
-        Result<RaylibShader, ShaderError[]> conversion = RaylibConverter.ConvertSlang(
-            File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "Outline.slang")), new RaylibConvertOptions(), TestContext.Current.CancellationToken);
-        conversion.IsSuccess.ShouldBeTrue();
+        RaylibShader converted = OutlineConversion.Value;
 
         ContainerRuntime outer = new() { Width = 48, Height = 48, IsRenderTarget = true };
         ContainerRuntime inner = new() { Width = 48, Height = 48, IsRenderTarget = true };
@@ -560,7 +559,7 @@ void main()
         Gum.GumService.Default.Root.Children.Add(outer);
         Gum.GumService.Default.Root.UpdateLayout();
 
-        Shader outline = LoadOutlineShader(conversion.Value);
+        Shader outline = LoadOutlineShader(converted);
         try
         {
             inner.RenderTargetEffect = outline;
