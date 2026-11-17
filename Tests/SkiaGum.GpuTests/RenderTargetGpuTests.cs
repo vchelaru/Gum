@@ -166,7 +166,7 @@ public class RenderTargetGpuTests
 
         OnGpu(container, 1, (managers, _, context) =>
         {
-            SKSurface? target = managers.Renderer.TryGetRenderTargetSurfaceFor(container.RenderableComponent as IRenderableIpso);
+            SKSurface? target = managers.Renderer.TryGetRenderTargetSurfaceFor((IRenderableIpso)container.RenderableComponent);
             target.ShouldNotBeNull();
             target.Canvas.Context.ShouldNotBeNull();
         });
@@ -182,7 +182,7 @@ public class RenderTargetGpuTests
         container.AddToManagers(managers, null);
         managers.Draw();
 
-        SKSurface? target = managers.Renderer.TryGetRenderTargetSurfaceFor(container.RenderableComponent as IRenderableIpso);
+        SKSurface? target = managers.Renderer.TryGetRenderTargetSurfaceFor((IRenderableIpso)container.RenderableComponent);
 
         target.ShouldNotBeNull();
         target.Canvas.Context.ShouldBeNull();
