@@ -163,7 +163,7 @@ public class ExistingCodeProjectDetectorTests : IDisposable
     }
 
     [Fact]
-    public void FindExistingCodeProject_SearchThatNeverFinishes_ReturnsNullAtTheBound()
+    public async Task FindExistingCodeProject_SearchThatNeverFinishes_ReturnsNullAtTheBound()
     {
         using ManualResetEventSlim release = new ManualResetEventSlim();
         TimeSpan bound = TimeSpan.FromSeconds(2);
@@ -183,12 +183,12 @@ public class ExistingCodeProjectDetectorTests : IDisposable
         clock.Advance(bound - TimeSpan.FromTicks(1));
         bool finishedBeforeTheBound = find.IsCompleted;
         clock.Advance(TimeSpan.FromTicks(1));
-        bool finishedAtTheBound = find.Wait(TimeSpan.FromSeconds(60));
+        bool finishedAtTheBound = await Task.WhenAny(find, Task.Delay(TimeSpan.FromSeconds(60))) == find;
         release.Set();
 
         finishedBeforeTheBound.ShouldBeFalse();
         finishedAtTheBound.ShouldBeTrue();
-        find.Result.ShouldBeNull();
+        (await find).ShouldBeNull();
     }
 
     [Fact]
