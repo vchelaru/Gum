@@ -52,7 +52,7 @@ public class NewProjectLocationIsProjectFolderTests : IDisposable
         NewProjectService service = new NewProjectService(themes.Object, new Mock<IRestoreRunner>().Object, Array.Empty<string>());
         return new NewProjectDialogViewModel(
             new ThemeSelectionViewModel(forms.Object, new Mock<IProjectState>().Object),
-            service, new ExistingCodeProjectDetector(), _dialogService.Object, _settings.Object)
+            service, new ExistingCodeProjectDetector(), _dialogService.Object, _settings.Object, runChecksInline: true)
         {
             ProjectName = name,
             Location = location,

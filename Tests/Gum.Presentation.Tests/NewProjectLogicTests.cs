@@ -104,7 +104,7 @@ public class NewProjectLogicTests
     {
         Mock<INewProjectService> service = new();
         Mock<IExistingCodeProjectDetector> detector = new();
-        return new NewProjectDialogViewModel(themeSelection, service.Object, detector.Object, _dialogService.Object, _locationSettings.Object)
+        return new NewProjectDialogViewModel(themeSelection, service.Object, detector.Object, _dialogService.Object, _locationSettings.Object, runChecksInline: true)
         {
             ProjectName = "Chosen",
             Location = ChosenFolder,
