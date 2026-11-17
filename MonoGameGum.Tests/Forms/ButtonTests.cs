@@ -311,4 +311,37 @@ public class ButtonTests : BaseTestClass
             };
         }
     }
+
+    [Fact]
+    public void ClickCombo_ModifierPressedAfterPush_StillLeavesPushedStateOnRelease()
+    {
+        string lastStateSet = string.Empty;
+        Button button = new();
+        button.IsFocused = true;
+        foreach (string stateName in new[] { FrameworkElement.EnabledStateName, FrameworkElement.HighlightedStateName, FrameworkElement.PushedStateName, FrameworkElement.FocusedStateName })
+        {
+            StateSave stateSave = button.GetState(stateName);
+            stateSave.Apply = () => lastStateSet = stateSave.Name;
+        }
+        var mockKeyboard = new Mock<IInputReceiverKeyboardMonoGame>();
+        var keyboard = mockKeyboard.As<Gum.Wireframe.IInputReceiverKeyboard>();
+        FrameworkElement.KeyboardsForUiControl.Add(mockKeyboard.Object);
+        keyboard.Setup(k => k.KeyPushed(Gum.Forms.Input.Keys.Enter)).Returns(true);
+        keyboard.Setup(k => k.KeyDown(Gum.Forms.Input.Keys.Enter)).Returns(true);
+
+        button.OnFocusUpdate();
+        lastStateSet.ShouldBe(FrameworkElement.PushedStateName);
+
+        // Ctrl arrives while Enter is still held, then Enter is released.
+        keyboard.Setup(k => k.KeyPushed(Gum.Forms.Input.Keys.Enter)).Returns(false);
+        keyboard.Setup(k => k.KeyDown(Gum.Forms.Input.Keys.LeftControl)).Returns(true);
+        button.UpdateState();
+        lastStateSet.ShouldBe(FrameworkElement.PushedStateName);
+
+        keyboard.Setup(k => k.KeyDown(Gum.Forms.Input.Keys.Enter)).Returns(false);
+        keyboard.Setup(k => k.KeyReleased(Gum.Forms.Input.Keys.Enter)).Returns(true);
+        button.OnFocusUpdate();
+
+        lastStateSet.ShouldBe(FrameworkElement.FocusedStateName);
+    }
 }

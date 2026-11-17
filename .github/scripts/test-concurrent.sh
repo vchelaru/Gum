@@ -12,13 +12,17 @@
 #
 # Usage: test-concurrent.sh [manifest] [slnf]
 # Expects every project already built in Release (it passes --no-build).
+#
+# QUARANTINE=exclude|only (#8190): the Mesa streams leave out (exclude) or run only (only) the tests
+# tagged [Trait("Quarantine", "MesaAllocation")], the zero-allocation tests that flake on llvmpipe. In "only"
+# mode the script also prints how many of them failed; the workflow step is continue-on-error.
 set -uo pipefail
 
 manifest_file="${1:-.github/scripts/windows-test-groups.txt}"
 # A Windows checkout turns the manifest's LF into CRLF (core.autocrlf), so read a copy without the CRs.
 manifest="$(mktemp)"; tr -d '\015' < "$manifest_file" > "$manifest"
 slnf="${2:-Tests/CiTestProjects.slnf}"
-results="TestResults"
+results="${RESULTS_DIR:-TestResults}"
 
 # The manifest must list exactly the projects the build step compiles (the slnf), each once.
 slnf_projects="$(grep -o '"[^"]*\.csproj"' "$slnf" | tr -d '"' | sed -E 's#\\+#/#g; s#/[^/]*$##' | sort)"
@@ -59,7 +63,14 @@ run_stream() {
   local stream="$1" log="$results/stream-$1.log" tmp
   tmp="$(mktemp -d)"; if command -v cygpath >/dev/null 2>&1; then tmp="$(cygpath -w "$tmp")"; fi
   export TMPDIR="$tmp" TMP="$tmp" TEMP="$tmp"
-  case "$stream" in mesa*) export GALLIUM_DRIVER=llvmpipe GUM_REQUIRE_GL=1 ;; esac
+  local qfilter=""
+  case "$stream" in mesa*)
+    export GALLIUM_DRIVER=llvmpipe GUM_REQUIRE_GL=1
+    case "${QUARANTINE:-}" in
+      exclude) qfilter="--filter \"Quarantine!=MesaAllocation\"" ;;
+      only) qfilter="--filter \"Quarantine=MesaAllocation\"" ;;
+    esac ;;
+  esac
   local failed=0 line project minutes
   while read -r line; do
     set -- $line   # stream project [minutes] [extra...] (word-split on purpose; quotes are kept for eval)
@@ -69,7 +80,7 @@ run_stream() {
     local start=$SECONDS rc=0
     echo "=== $project (stream $stream, limit ${minutes} min) ===" >> "$log"
     eval timeout "$((minutes * 60))" dotnet test "\"$project\"" --configuration Release --no-build \
-      --logger '"trx"' --results-directory "$results" "$@" >> "$log" 2>&1 < /dev/null || rc=$?
+      --logger '"trx"' --results-directory "$results" $qfilter "$@" >> "$log" 2>&1 < /dev/null || rc=$?
     echo "=== $project finished in $((SECONDS - start)) s, exit $rc ===" >> "$log"
     [ "$rc" -eq 0 ] || failed=1
   done < <(grep -vE '^\s*(#|$)' "$manifest")
@@ -98,5 +109,16 @@ echo "Wall time $((SECONDS - total_start)) s across $(echo $streams | wc -w) str
 echo "$summary"
 if [ -n "${GITHUB_STEP_SUMMARY:-}" ]; then
   { echo "### Windows test streams (wall $((SECONDS - total_start)) s)"; echo '```'; echo "$summary"; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+fi
+if [ "${QUARANTINE:-}" = "only" ]; then
+  nfailed=$(cat "$results"/*.trx 2>/dev/null | grep -o '<UnitTestResult [^>]*outcome="Failed"' | wc -l)
+  msg="Quarantined allocation tests: $nfailed failed (non-blocking, issue 8190)"
+  echo "$msg"
+  if [ "$nfailed" -gt 0 ]; then echo "::warning::$msg"; fi
+  if [ "$failed" -ne 0 ] && [ "$nfailed" -eq 0 ]; then
+    msg="Quarantined allocation tests: step failed but no trx failures counted (testhost crash or timeout?) (non-blocking, issue 8190)"
+    echo "::warning::$msg"
+  fi
+  [ -z "${GITHUB_STEP_SUMMARY:-}" ] || echo "$msg" >> "$GITHUB_STEP_SUMMARY"
 fi
 exit $failed

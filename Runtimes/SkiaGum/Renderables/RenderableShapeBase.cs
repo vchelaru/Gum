@@ -1125,7 +1125,7 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
     /// </summary>
     protected virtual bool DrawsBlurredShadow => false;
 
-    // The mask filter takes one sigma and ignores a gradient's per-stop alpha, so a gradient shape keeps the image filter. So does a Replace (Src) blend: the image filter replaces the whole shadow-and-shape bounds, which a blurred draw does not (it replaces only where it has coverage), so that output stays as it was. A rotated shape keeps it
+    // The mask filter takes one sigma and ignores a gradient's per-stop alpha, so a gradient whose stops differ in alpha keeps the image filter; stops that share one alpha give a uniform silhouette alpha, like a solid fill (#8192). So does a Replace (Src) blend: the image filter replaces the whole shadow-and-shape bounds, which a blurred draw does not (it replaces only where it has coverage), so that output stays as it was. A rotated shape keeps it
     // too: the image filter offsets the shadow in unrotated surface space, which the rotated canvas would not match. So does a shape
     // that crosses the edge of a clip (or lies outside it): rendered side by side, the two draws differ by up to 31 levels along
     // the cut rim. A shape inside its clips, whose blur may still cross
@@ -1134,7 +1134,7 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
     {
         get
         {
-            if (!DrawsBlurredShadow || !HasDropshadow || UseGradient || Blend == Gum.RenderingLibrary.Blend.Replace || this.GetAbsoluteRotation() != 0 || _replacesPaintBelow || !IsInsideEveryClip())
+            if (!DrawsBlurredShadow || !HasDropshadow || (UseGradient && Alpha1 != Alpha2) || Blend == Gum.RenderingLibrary.Blend.Replace || this.GetAbsoluteRotation() != 0 || _replacesPaintBelow || !IsInsideEveryClip())
             {
                 return false;
             }
@@ -1201,8 +1201,10 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
             shadow.PathEffect = shapePaint.PathEffect;
         }
         // The image filter shadow takes its alpha from the shape's silhouette, so a translucent fill
-        // gives a proportionally fainter shadow.
-        byte alpha = (byte)Math.Round(DropshadowColor.Alpha * shapePaint.Color.Alpha / 255f);
+        // gives a proportionally fainter shadow. A gradient's paint is forced opaque, so its silhouette alpha
+        // is the stops' common alpha (UsesBlurredShadowDraw requires them equal).
+        int silhouetteAlpha = UseGradient ? Alpha1 : shapePaint.Color.Alpha;
+        byte alpha = (byte)Math.Round(DropshadowColor.Alpha * silhouetteAlpha / 255f);
         shadow.Color = DropshadowColor.WithAlpha(alpha);
         // The shadow blends like the shape. A whole-bounds blend is applied once to the layer around both draws.
         if (Blend.HasValue && !UsesBoundsLayer)

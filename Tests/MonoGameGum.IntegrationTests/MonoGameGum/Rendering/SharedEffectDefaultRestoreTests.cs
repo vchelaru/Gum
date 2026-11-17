@@ -260,6 +260,7 @@ float4 MainPS(VertexShaderOutput input) : COLOR0
 
     // ApplyShaderParameters runs for every container with an effect on every draw: once the baselines are
     // captured, applying and restoring must not allocate.
+    [Trait("Quarantine", "MesaAllocation")]
     [Fact]
     public void ApplyShaderParameters_InTheSteadyState_DoesNotAllocate()
     {
