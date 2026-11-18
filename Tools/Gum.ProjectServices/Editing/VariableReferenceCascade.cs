@@ -35,8 +35,8 @@ public interface IVariableReferenceCascade
     /// <summary>
     /// Re-applies every state that reads <paramref name="element"/> or an element downstream of it, in dependency
     /// order, including <paramref name="element"/>'s own states that read it through its qualified name.
+    /// <paramref name="liveRootFor"/> returns an element's displayed tree, or null when nothing is displayed.
     /// </summary>
-    /// <param name="liveRootFor">The displayed tree of an element, or null when nothing is displayed.</param>
     ReferenceCascadeResult ApplyToElementsReading(ElementSave element, Func<ElementSave, GraphicalUiElement?> liveRootFor,
         bool isFullCommit);
 

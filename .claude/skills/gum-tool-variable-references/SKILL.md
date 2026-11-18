@@ -57,6 +57,7 @@ SetVariableLogic (variable change entry point)
 |-------|----------|------|
 | `VariableReferenceLogic` | `Tools/Gum.Presentation/Plugins/InternalPlugins/VariableGrid/` | Tool-side orchestration: reaction to changes, commenting out and reporting bad lines |
 | `VariableReferenceValidator` | `Tools/Gum.ProjectServices/Editing/` | Line checks (`GetFailures`) and shorthand expansion (`NormalizeLines`), shared by the tool and `gumcli edit`'s `setVariableReferences` |
+| `VariableReferenceCascade` | `Tools/Gum.ProjectServices/Editing/` | The reaction after an edit: other states reading the change, elements reading this one (`ApplyToElementsReading`), and instance internals; `VariableReferenceLogic` adds saving and refresh around it |
 | `EvaluatedSyntax` | `Runtimes/GumExpressions/` | Roslyn-based expression parser/evaluator (shared `Gum.Expressions` package); resolves right-side values via `RecursiveVariableFinder`, or via a live `GraphicalUiElement` for Absolute* identifiers (see below) |
 | `ElementSaveExtensions` (partial) | `GumRuntime/ElementSaveExtensions.GumRuntime.cs` | `ApplyVariableReferences` — two overloads: one for `ElementSave` (save-class, tool-time), one for `GraphicalUiElement` (runtime) |
 | `MainVariableGridPlugin` | `Tools/Gum.Presentation/Plugins/InternalPlugins/VariableGrid/` | Calls `GumExpressionService.Initialize()` so the tool uses Roslyn evaluation |
