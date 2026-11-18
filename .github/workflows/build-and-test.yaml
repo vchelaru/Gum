@@ -52,7 +52,7 @@ jobs:
   Changes:
     runs-on: ubuntu-latest
     outputs:
-      non-docs: ${{ github.event_name != 'pull_request' || steps.filter.outputs.non-docs == 'true' }}
+      non-docs: ${{ github.event_name != 'pull_request' || (steps.filter.outputs.non-docs || steps.filter-retry.outputs.non-docs) == 'true' }}
       scope: ${{ steps.scope.outputs.scope }}
       avalonia: ${{ steps.jobpaths.outputs.avalonia }}
       aot: ${{ steps.jobpaths.outputs.aot }}
@@ -137,9 +137,41 @@ jobs:
           echo "Scope: $scope"
           echo "### Scope: $scope" >> "$GITHUB_STEP_SUMMARY"
 
+      # Retried once, only when GitHub's PR-files API answered "diff temporarily unavailable"
+      # (code not_available, read from this job's error annotations). Any other failure fails the job.
       - name: Detect docs-only PR
         if: github.event_name == 'pull_request'
         id: filter
+        continue-on-error: true
+        uses: dorny/paths-filter@v3
+        with:
+          predicate-quantifier: every
+          filters: |
+            non-docs:
+              - '**'
+              - '!docs/**'
+              - '!**/*.md'
+              - '!.gitbook/**'
+
+      - name: Check the docs-only filter failed with GitHub's not_available error
+        if: github.event_name == 'pull_request' && steps.filter.outcome == 'failure'
+        id: filter-unavailable
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          sleep 20
+          job_id="$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID/attempts/$GITHUB_RUN_ATTEMPT/jobs" --paginate --jq '.jobs[] | select(.name == "Changes") | .id')"
+          if gh api "repos/$GITHUB_REPOSITORY/check-runs/$job_id/annotations" --jq '.[].message' | grep -q '"code":"not_available"'; then
+            echo "retry=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::error::Detect docs-only PR failed with something other than GitHub's not_available error; not retrying."
+            exit 1
+          fi
+
+      - name: Detect docs-only PR (retry)
+        if: github.event_name == 'pull_request' && steps.filter-unavailable.outputs.retry == 'true'
+        id: filter-retry
         uses: dorny/paths-filter@v3
         with:
           predicate-quantifier: every
