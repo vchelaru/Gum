@@ -372,39 +372,39 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
     // A color is its channels: assigning Color changes Red, Green, Blue and Alpha, which are variables, so the
     // references that read a channel must follow a color assigned in code (#6410). The same holds for the
-    // shape and text colors whose channels are prefixed (FillColor: FillRed, ...).
+    // shape and text colors whose channels are prefixed (FillColor: FillRed, ...). The names are literals so a
+    // color set builds no strings (#8218).
     private void ReportColorChannels(string propertyName)
     {
         switch (propertyName)
         {
             case "FillColor":
+                ReportChannels("FillRed", "FillGreen", "FillBlue", "FillAlpha");
+                break;
             case "StrokeColor":
+                ReportChannels("StrokeRed", "StrokeGreen", "StrokeBlue", "StrokeAlpha");
+                break;
             case "DropshadowColor":
-                string prefix = propertyName.Substring(0, propertyName.Length - "Color".Length);
-                ReportTypedPropertyChanged(prefix + "Red");
-                ReportTypedPropertyChanged(prefix + "Green");
-                ReportTypedPropertyChanged(prefix + "Blue");
-                ReportTypedPropertyChanged(prefix + "Alpha");
+                ReportChannels("DropshadowRed", "DropshadowGreen", "DropshadowBlue", "DropshadowAlpha");
                 break;
             case "Color":
-                ReportTypedPropertyChanged("Red");
-                ReportTypedPropertyChanged("Green");
-                ReportTypedPropertyChanged("Blue");
-                ReportTypedPropertyChanged("Alpha");
+                ReportChannels("Red", "Green", "Blue", "Alpha");
                 break;
             case "Color1":
-                ReportTypedPropertyChanged("Red1");
-                ReportTypedPropertyChanged("Green1");
-                ReportTypedPropertyChanged("Blue1");
-                ReportTypedPropertyChanged("Alpha1");
+                ReportChannels("Red1", "Green1", "Blue1", "Alpha1");
                 break;
             case "Color2":
-                ReportTypedPropertyChanged("Red2");
-                ReportTypedPropertyChanged("Green2");
-                ReportTypedPropertyChanged("Blue2");
-                ReportTypedPropertyChanged("Alpha2");
+                ReportChannels("Red2", "Green2", "Blue2", "Alpha2");
                 break;
         }
+    }
+
+    private void ReportChannels(string red, string green, string blue, string alpha)
+    {
+        ReportTypedPropertyChanged(red);
+        ReportTypedPropertyChanged(green);
+        ReportTypedPropertyChanged(blue);
+        ReportTypedPropertyChanged(alpha);
     }
 
     public static Action<IText, GraphicalUiElement>? UpdateFontFromProperties;
