@@ -70,4 +70,48 @@ public class ApplyStateInstanceVariableTests : BaseTestClass
 
         child.X.ShouldBe(6);
     }
+
+    // No renderable and a list property on a type more derived than GraphicalUiElement, so SetProperty reaches it by reflection.
+    private class ListRuntime : Gum.Wireframe.GraphicalUiElement
+    {
+        public System.Collections.Generic.List<string>? Items { get; set; }
+    }
+
+    private static (ContainerRuntime Root, ListRuntime Child, StateSave State) CreateWithLists()
+    {
+        ComponentSave component = new() { Name = "ListComponent" };
+        ContainerRuntime root = new() { ElementSave = component };
+        ListRuntime child = new() { Name = "Child" };
+        root.Children.Add(child);
+        return (root, child, new StateSave { Name = "Applied", ParentContainer = component });
+    }
+
+    [Fact]
+    public void ApplyState_InstanceVariableList_ReachesTheInstance()
+    {
+        (ContainerRuntime root, ListRuntime child, StateSave state) = CreateWithLists();
+        VariableListSave<string> list = new() { Name = "Child.Items", Type = "string" };
+        list.Value.Add("a");
+        state.VariableLists.Add(list);
+
+        root.ApplyState(state);
+
+        child.Items.ShouldBeSameAs(list.ValueAsIList);
+    }
+
+    [Fact]
+    public void ApplyState_NamesWithAnEmptyInstancePart_SetNothing()
+    {
+        (ContainerRuntime root, ListRuntime child, StateSave state) = CreateWithLists();
+        state.Variables.Add(new VariableSave { Name = ".X", Type = "float", Value = 5f, SetsValue = true });
+        VariableListSave<string> list = new() { Name = ".Items", Type = "string" };
+        list.Value.Add("a");
+        state.VariableLists.Add(list);
+
+        root.ApplyState(state);
+
+        root.X.ShouldBe(0);
+        child.X.ShouldBe(0);
+        child.Items.ShouldBeNull();
+    }
 }
