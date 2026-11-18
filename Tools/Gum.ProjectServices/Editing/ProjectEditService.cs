@@ -408,10 +408,6 @@ public class ProjectEditService : IProjectEditService
         {
             throw new EditException(whyNotValid);
         }
-        if (_variableDefinedByType.GetIfVariableIsDefinedByType(name, element))
-        {
-            throw new EditException($"{element.Name} already has a variable named {name}; use setVariable to set it.");
-        }
 
         object? value = operation.TryGetProperty("value", out JsonElement valueElement)
             ? _values.ConvertValue(valueElement, type, name)

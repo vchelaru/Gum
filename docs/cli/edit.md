@@ -89,7 +89,7 @@ Enum values such as `ChildrenLayout` take the value's name, for example `"TopToB
 { "op": "exposeVariable", "element": "Hud", "instance": "Counter1", "variable": "Text", "name": "Counter1Text" }
 ```
 
-Exposes `Counter1.Text` on `Hud` as `Counter1Text`, so instances of `Hud` can set it. The op fails if `name` is `Name`, `BaseType`, `Locked` or `IsSlot`, since every instance already has those properties.
+Exposes `Counter1.Text` on `Hud` as `Counter1Text`, so instances of `Hud` can set it. The op fails if `name` is already a variable or property of `Hud`, such as `Width` or `Name`, ignoring case.
 
 ## Removing
 

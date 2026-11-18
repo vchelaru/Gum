@@ -16,8 +16,7 @@ namespace Gum.Presentation.Tests;
 /// </summary>
 public class NameVerifierSharedRulesTests : BaseTestClass
 {
-    private readonly NameVerifier _nameVerifier = new NameVerifier(
-        new Mock<IVariableSaveLogic>().Object, new Mock<IPluginManager>().Object, new Mock<ISelectedState>().Object);
+    private readonly NameVerifier _nameVerifier = new NameVerifier(new Mock<IPluginManager>().Object);
     private readonly NameRules _rules = new NameRules();
 
     public static TheoryData<string> Names => new TheoryData<string>
