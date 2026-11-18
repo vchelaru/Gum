@@ -1,7 +1,6 @@
 using System;
 using System.CommandLine;
 using System.CommandLine.Invocation;
-using Gum.Expressions;
 using Gum.ProjectServices;
 using Gum.ProjectServices.CodeGeneration;
 
@@ -52,6 +51,6 @@ public static class CodegenCommand
     }
 
     private static int Execute(string projectPath, string[]? elementNames, bool prune) =>
-        new HeadlessCodegenRunner(GumExpressionService.Initialize, Program.GetCliVersion())
+        new HeadlessCodegenRunner(Program.GetCliVersion())
             .Run(projectPath, elementNames, prune, Console.Out, Console.Error);
 }

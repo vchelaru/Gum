@@ -7,7 +7,6 @@ using System.Linq;
 using System.Text.Json;
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
-using Gum.Expressions;
 using Gum.Managers;
 using Gum.ProjectServices;
 
@@ -75,11 +74,6 @@ public static class CheckReferencesCommand
             Console.Error.WriteLine(loadResult.ErrorMessage);
             return 2;
         }
-
-        // Wire the Roslyn-based right-side evaluator so literals and expressions
-        // resolve during --fix (mirrors what the Gum tool does at startup via
-        // MainVariableGridPlugin.Initialize).
-        GumExpressionService.Initialize();
 
         // ObjectFinder lookups inside ApplyVariableReferences (cross-element refs,
         // GetRootVariable for type inference) require the singleton to point at

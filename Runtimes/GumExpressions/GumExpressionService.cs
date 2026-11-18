@@ -1,6 +1,7 @@
 using Gum.DataTypes.Variables;
 using Gum.Wireframe;
 using GumRuntime;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System.Collections.Generic;
 
 namespace Gum.Expressions;
@@ -30,9 +31,15 @@ public static class GumExpressionService
 
         if (syntax != null)
         {
+            EvaluatedSyntax.Failure = null;
             var evaluatedSyntax = EvaluatedSyntax.FromSyntaxNode(syntax, stateSave, liveRoot: liveRoot);
             // CastTo converts Value in place when it succeeds, so keep what was evaluated for the report if it fails.
             object? uncast = evaluatedSyntax?.Value;
+
+            if (uncast == null)
+            {
+                ElementSaveExtensions.EvaluationFailure = DescribeFailure(syntax);
+            }
 
             if (evaluatedSyntax?.CastTo(desiredType) == true)
             {
@@ -42,6 +49,14 @@ public static class GumExpressionService
             ElementSaveExtensions.RejectedCastValue = uncast;
         }
         return null;
+    }
+
+    // "is not a valid expression", "divides by zero" or "cannot be evaluated"; null for a missing name, which is silent.
+    private static string? DescribeFailure(ExpressionSyntax syntax)
+    {
+        string? failure = syntax.ContainsDiagnostics ? "is not a valid expression" : EvaluatedSyntax.Failure;
+        EvaluatedSyntax.Failure = null;
+        return failure;
     }
 
     /// <summary>

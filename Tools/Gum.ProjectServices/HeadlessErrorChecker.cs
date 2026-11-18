@@ -379,6 +379,7 @@ public partial class HeadlessErrorChecker : IHeadlessErrorChecker
             {
                 // The evaluator leaves a refused value here for TryReadReference; nothing reads it in this check.
                 ElementSaveExtensions.RejectedCastValue = null;
+                ElementSaveExtensions.EvaluationFailure = null;
             }
         }
         var rfv = new RecursiveVariableFinder(ownerState);
@@ -602,6 +603,21 @@ public partial class HeadlessErrorChecker : IHeadlessErrorChecker
                         .FirstOrDefault(found => found != null);
                     if (problem == null)
                     {
+                        // Every name exists, so Gum.Expressions gives no value only when it cannot evaluate the line.
+                        string? evaluationProblem = ElementSaveExtensions.ExpandCompositeReferenceLine(line, channelOwner)
+                            .Select(expanded => FindEvaluationProblem(element, state, variableList.SourceObject, expanded))
+                            .FirstOrDefault(found => found != null);
+                        if (evaluationProblem != null)
+                        {
+                            errors.Add(new ErrorResult
+                            {
+                                ElementName = element.Name,
+                                Code = "GUM0047",
+                                Severity = ErrorSeverity.Warning,
+                                Message = $"{state.Name}: the {variableList.Name} line \"{line}\" {evaluationProblem}, so it never applies.",
+                                Details = new VariableReferenceLineDetails { StateName = state.Name, VariableListName = variableList.Name, Line = line }
+                            });
+                        }
                         continue;
                     }
                     errors.Add(new ErrorResult
@@ -616,6 +632,20 @@ public partial class HeadlessErrorChecker : IHeadlessErrorChecker
             }
         }
         return errors;
+    }
+
+    // GUM0047: why Gum.Expressions cannot evaluate the right side of a line whose names all exist, read against the
+    // state that holds it, or null. The runtime reports the same failure when it applies the line.
+    private static string? FindEvaluationProblem(ElementSave owner, StateSave state, string? ownerInstanceName, string line)
+    {
+        int equalsIndex = line.IndexOf('=');
+        if (equalsIndex <= 0 || equalsIndex + 1 >= line.Length || line[equalsIndex + 1] == '=' || "!<>".IndexOf(line[equalsIndex - 1]) >= 0)
+        {
+            return null;
+        }
+        string rightSide = ElementSaveExtensions.ResolveOwnerPrefix(line.Substring(equalsIndex + 1).Trim(), ownerInstanceName,
+            ElementSaveExtensions.GetReferencableInstanceNames(owner));
+        return ElementSaveExtensions.FindEvaluationProblem(state, rightSide);
     }
 
     /// <summary>

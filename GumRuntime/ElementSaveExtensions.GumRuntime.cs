@@ -50,6 +50,32 @@ namespace GumRuntime
 #nullable enable
         [ThreadStatic]
         internal static object? RejectedCastValue;
+
+        // Why Gum.Expressions gave no value for a right side whose names all exist ("is not a valid expression", "divides
+        // by zero"), the same kind of side channel as RejectedCastValue.
+        [ThreadStatic]
+        internal static string? EvaluationFailure;
+
+        /// <summary>
+        /// Says why the evaluator behind <see cref="CustomEvaluateExpression"/> gives no value for
+        /// <paramref name="rightSide"/> read against <paramref name="stateSave"/> although every name it reads exists
+        /// ("is not a valid expression", "divides by zero"). Null when it has a value, reads a missing name, or no
+        /// evaluator is wired. A variable reference that fails this way keeps its value and is reported.
+        /// </summary>
+        public static string? FindEvaluationProblem(StateSave stateSave, string rightSide)
+        {
+            if (CustomEvaluateExpression == null)
+            {
+                return null;
+            }
+            EvaluationFailure = null;
+            RejectedCastValue = null;
+            object? value = CustomEvaluateExpression(stateSave, rightSide, null, null);
+            string? failure = value == null ? EvaluationFailure : null;
+            EvaluationFailure = null;
+            RejectedCastValue = null;
+            return failure;
+        }
 #nullable restore
 
         /// <summary>
@@ -1789,24 +1815,48 @@ namespace GumRuntime
             if (CustomEvaluateExpression == null && !IsNegation(right))
             {
                 value = ReadPlainReference(readState, right, findSourceType: true, out sourceType);
+                if (value == null && !IsPlainPath(right))
+                {
+                    // Arithmetic, a comparison or a literal: only Gum.Expressions evaluates it. Never silent.
+                    if (IsFirstReport(liveRoot, stateSave, referenceString, leftVariableName))
+                    {
+                        ReportNotApplied(referenceString, leftVariableName, stateSave, liveRoot,
+                            $"{DecodeOwnerName(right)} is an expression. Add the Gum.Expressions package and call " +
+                            "GumExpressionService.Initialize() to evaluate it.");
+                    }
+                    mismatchReported = true;
+                }
             }
             else
             {
                 RejectedCastValue = null;
+                EvaluationFailure = null;
                 value = GetRightSideValue(readState, right, leftSideType, liveRoot);
                 sourceType = CustomEvaluateExpression == null ? "bool" : null;
                 object? rejectedValue = RejectedCastValue;
+                string? evaluationFailure = EvaluationFailure;
                 RejectedCastValue = null;
+                EvaluationFailure = null;
                 if (value == null && CustomEvaluateExpression != null && rejectedValue != null && leftSideType != null
                     && ReportedRejectedCast(referenceString, right, leftVariableName, leftSideType, rejectedValue, stateSave, liveRoot))
                 {
                     // Gum.Expressions evaluated the right side but refused to cast it to the left side's type.
                     mismatchReported = true;
                 }
+                else if (value == null && CustomEvaluateExpression != null && evaluationFailure != null)
+                {
+                    // Gum.Expressions could not evaluate it (a parse error, a division by zero). Never silent.
+                    if (IsFirstReport(liveRoot, stateSave, referenceString, leftVariableName))
+                    {
+                        ReportNotApplied(referenceString, leftVariableName, stateSave, liveRoot,
+                            $"{DecodeOwnerName(right)} {evaluationFailure}.");
+                    }
+                    mismatchReported = true;
+                }
             }
 
             // With Gum.Expressions the evaluator converts what it can and refuses the rest (reported above).
-            if (CustomEvaluateExpression == null
+            if (CustomEvaluateExpression == null && !mismatchReported
                 && ReportedMismatch(referenceString, right, left, leftVariableName, leftSideType, sourceType, value, leftVariableOnState, instanceLeft, stateSave, liveRoot))
             {
                 value = null;
@@ -1936,7 +1986,28 @@ namespace GumRuntime
         {
             object? owner = liveRoot?.Tag ?? stateSave.ParentContainer;
             string where = owner == null ? string.Empty : $" in {owner}";
-            RaiseReferenceError($"Variable reference '{referenceString}' was not applied{where}: {detail} {leftVariableName} keeps its current value.");
+            string message = $"Variable reference '{referenceString}' was not applied{where}: {detail} {leftVariableName} keeps its current value.";
+
+            // A project loaded from files is applied as data first, then each built element applies the same rows live. A
+            // live owner does not repeat the exact message the data pass already printed for that element; one with a
+            // different value does.
+            ElementSave? element = stateSave.ParentContainer;
+            if (element != null)
+            {
+                HashSet<string> printed = PrintedWithoutOwner.GetOrCreateValue(element);
+                lock (printed)
+                {
+                    if (liveRoot == null)
+                    {
+                        printed.Add(message);
+                    }
+                    else if (printed.Contains(message))
+                    {
+                        return;
+                    }
+                }
+            }
+            RaiseReferenceError(message);
         }
 
         private static string TypeNameOf(object value)
@@ -1953,6 +2024,25 @@ namespace GumRuntime
         // bounds are exclusive (2^31 and -2^31 - 1) so a fraction such as -2147483648.5 still truncates to int.MinValue. NaN
         // fails both comparisons. A float widens to a double exactly, so one overload serves both.
         internal static bool IsInIntRange(double value) => value > -2147483649.0 && value < 2147483648.0;
+
+        // True for what the plain lookup reads by name: a variable path such as Other.Width or Components/Styles.Red,
+        // or a reserved global:: name. Anything else (an operator, a literal, a call) needs Gum.Expressions.
+        private static bool IsPlainPath(string right)
+        {
+            if (right.Length == 0 || !(char.IsLetter(right[0]) || right[0] == '_'))
+            {
+                return false;
+            }
+            for (int i = 1; i < right.Length; i++)
+            {
+                char c = right[i];
+                if (!(char.IsLetterOrDigit(c) || c == '_' || c == '.' || c == '/' || c == ':'))
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
 
         private static bool IsNegation(string right)
         {
@@ -2049,12 +2139,26 @@ namespace GumRuntime
         private static readonly HashSet<(string Owner, string Line, string Variable)> ReportedWithoutOwner =
             new HashSet<(string Owner, string Line, string Variable)>();
 
+        // The messages the owner-less (data) reports printed, per element. A reloaded project has new elements, so it
+        // reports again.
+        private static readonly ConditionalWeakTable<ElementSave, HashSet<string>> PrintedWithoutOwner =
+            new ConditionalWeakTable<ElementSave, HashSet<string>>();
+
         // Set by each platform's SystemManagers to CustomSetPropertyOnRenderable.RaisePropertyAssignmentError, which
         // writes the [Gum] line to Console.Error and raises PropertyAssignmentError. GumRuntime sits below that class.
         internal static Action<string>? ReportPropertyAssignmentError;
 
+        // Above zero while a caller applies references only to read the result and roll it back (FontReferenceCollector).
+        // Such a read reports nothing and records nothing, so the real apply still reports.
+        [ThreadStatic]
+        internal static int QuietReadDepth;
+
         private static bool IsFirstReport(GraphicalUiElement? liveRoot, StateSave stateSave, string referenceString, string variableName)
         {
+            if (QuietReadDepth > 0)
+            {
+                return false;
+            }
             if (liveRoot != null)
             {
                 return IsFirstReport(liveRoot, referenceString, variableName);
@@ -2273,8 +2377,12 @@ namespace GumRuntime
 
             if (isExternalElement)
             {
-                var lastDot = right.LastIndexOf('.');
                 var firstDot = right.IndexOf('.');
+                if (firstDot < 0)
+                {
+                    // A division such as "10 / 2", or an element path naming no variable: nothing to look up.
+                    return;
+                }
 
                 ElementSave? element = GetElementByQualifiedName(right.Substring(0, firstDot));
                 if (element != null)

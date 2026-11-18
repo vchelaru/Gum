@@ -20,6 +20,15 @@ public class EvaluatedSyntax
 {
     #region Fields/Properties
 
+    private const string DividesByZero = "divides by zero";
+
+    /// <summary>
+    /// Why the last evaluation on this thread produced no value although every name it read exists (a division by
+    /// zero, an operator the operands do not support), or null. Callers clear it before evaluating.
+    /// </summary>
+    [ThreadStatic]
+    internal static string? Failure;
+
     public string? EvaluatedType { get; set; }
     public SyntaxNode? SyntaxNode { get; set; }
 
@@ -733,10 +742,12 @@ public class EvaluatedSyntax
                 // Float/double division by zero returns Infinity/NaN instead of throwing
                 if (result is float f && (float.IsInfinity(f) || float.IsNaN(f)))
                 {
+                    Failure = DividesByZero;
                     return null;
                 }
                 if (result is double d && (double.IsInfinity(d) || double.IsNaN(d)))
                 {
+                    Failure = DividesByZero;
                     return null;
                 }
                 return result;
@@ -747,10 +758,12 @@ public class EvaluatedSyntax
                 // Float/double modulo by zero returns NaN instead of throwing
                 if (result is float f && float.IsNaN(f))
                 {
+                    Failure = DividesByZero;
                     return null;
                 }
                 if (result is double d && double.IsNaN(d))
                 {
+                    Failure = DividesByZero;
                     return null;
                 }
                 return result;
@@ -774,11 +787,14 @@ public class EvaluatedSyntax
         }
         catch(RuntimeBinderException)
         {
-            // This can happen if someone does something like tries to subtract strings ("A" - "B")
+            // This can happen if someone does something like tries to subtract strings ("A" - "B"). Both operands have
+            // values here; a missing one returned null above and stays silent.
+            Failure = "cannot be evaluated";
         }
         catch(DivideByZeroException)
         {
             // Division by zero returns null rather than crashing
+            Failure = DividesByZero;
         }
 
         return null;

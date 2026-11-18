@@ -99,6 +99,8 @@ public class FontReferenceCollector
                 List<(object? Value, bool SetsValue)> originalValues =
                     originalVariables.Select(v => (v.Value, v.SetsValue)).ToList();
 
+                // A rolled-back read: a row that cannot apply is reported by the real apply, not here.
+                ElementSaveExtensions.QuietReadDepth++;
                 try
                 {
                     element.ApplyVariableReferences(state, notifyChanges: false);
@@ -106,6 +108,7 @@ public class FontReferenceCollector
                 }
                 finally
                 {
+                    ElementSaveExtensions.QuietReadDepth--;
                     state.Variables.Clear();
                     state.Variables.AddRange(originalVariables);
                     for (int i = 0; i < originalVariables.Count; i++)

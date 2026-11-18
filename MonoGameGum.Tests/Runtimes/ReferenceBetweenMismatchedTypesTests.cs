@@ -676,6 +676,27 @@ public class ReferenceBetweenMismatchedTypesTests : BaseTestClass
         _errors.ShouldBeEmpty();
     }
 
+    // A "/" made the plain lookup take the right side for an element path (Components/X.Y) and cut it at a dot it
+    // does not have.
+    [Theory]
+    [InlineData("Width = 10 / 2")]
+    [InlineData("Width = Source.FontSize * 2")]
+    public void Create_ExpressionWithoutGumExpressions_KeepsTheOldValueAndReportsOnce(string row)
+    {
+        GraphicalUiElement target = null!;
+
+        Should.NotThrow(() => target = CreatePair(row, out _, ("Width", 77f), ("FontSize", 24)));
+
+        Read(target, "Width").ShouldBe(77f);
+        string right = row.Substring(row.IndexOf('=') + 1).Trim();
+        _errors.ShouldBe(new[]
+        {
+            $"Variable reference '{row}' was not applied in Pair (Container): {right} is an expression. " +
+            "Add the Gum.Expressions package and call GumExpressionService.Initialize() to evaluate it. " +
+            "Target.Width keeps its current value."
+        });
+    }
+
     private static object? Read(GraphicalUiElement element, string name)
     {
         element.TryGetProperty(name, out object? value).ShouldBeTrue();

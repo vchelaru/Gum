@@ -15,17 +15,15 @@ namespace Gum.ProjectServices.CodeGeneration;
 /// </summary>
 public class HeadlessCodegenRunner : IHeadlessCodegenRunner
 {
-    private readonly Action? _initializeExpressions;
     private readonly string? _toolVersion;
 
-    /// <param name="initializeExpressions">
-    /// Registers the Gum.Expressions evaluator (<c>GumExpressionService.Initialize</c>), which the GUM0002 check needs; this
-    /// project does not reference it. May be null.
-    /// </param>
+    /// <remarks>
+    /// The GUM0002 and GUM0047 checks evaluate references through the Gum.Expressions evaluator, which the host
+    /// registers (<c>GumExpressionService.Initialize</c>) at startup, as the tool and gumcli do.
+    /// </remarks>
     /// <param name="toolVersion">The running tool's version, for the stale-tool warning; null skips the warning.</param>
-    public HeadlessCodegenRunner(Action? initializeExpressions = null, string? toolVersion = null)
+    public HeadlessCodegenRunner(string? toolVersion = null)
     {
-        _initializeExpressions = initializeExpressions;
         _toolVersion = toolVersion;
     }
 
@@ -203,8 +201,6 @@ public class HeadlessCodegenRunner : IHeadlessCodegenRunner
         var codeGenService = new HeadlessCodeGenerationService(
             codeGenerator, customCodeGenerator, fileLocationsService, elementSettingsManager, generationLogger);
 
-        // GUM0002 evaluates reference right-hand sides (including cross-element ones) with the Roslyn evaluator.
-        _initializeExpressions?.Invoke();
         ITypeResolver typeResolver = new DefaultTypeResolver();
         IHeadlessErrorChecker errorChecker = new HeadlessErrorChecker(
             typeResolver, new IAdditionalErrorSource[]
