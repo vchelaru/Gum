@@ -19,7 +19,7 @@ Renders a Gum Screen or Component to a PNG file. The element is laid out and dra
 - `--backend`: Rendering backend to use: `monogame` (default, DesktopGL), `raylib`, or `skia` (SkiaGum, for games that draw with Skia).
 - `--background`: Background color to clear to before rendering, as 6-digit (`RRGGBB`) or 8-digit (`RRGGBBAA`) hex, with or without a leading `#`. Defaults to fully transparent.
 - `--scale`: Whole number of 1 or more that enlarges the finished image with nearest-neighbor sampling, so pixel art stays sharp. The element lays out at the canvas size (or `--width` and `--height`) first, so `--width 256 --scale 3` writes a 768-pixel-wide image. Defaults to `1`.
-- `--set`: Sets a variable for this render only, as `Name=Value`. Repeat it to set several. Use `Instance.Variable` for an instance's variable and the bare name for the rendered element's own (`Width=300`). States work the same way: `Hud.BossState=Visible` sets the `Boss` category's state on `Hud`. Values convert like [`edit`](edit.md)'s `setVariable`. Variable references that read an overridden variable update. Nothing is saved to the project.
+- `--set`: Sets a variable for this render only, as `Name=Value`. Repeat it to set several. Use `Instance.Variable` for an instance's variable and the bare name for the rendered element's own (`Width=300`). A longer path reaches an instance inside a component instance: `Hud.Bar.Visible=false` hides `Bar` inside `Hud`. States work the same way: `Hud.BossState=Visible` sets the `Boss` category's state on `Hud`. Values convert like [`edit`](edit.md)'s `setVariable`. Variable references that read an overridden variable update. Nothing is saved to the project.
 
 ## Examples
 
@@ -30,7 +30,7 @@ gumcli screenshot MyProject/MyProject.gumj MainMenu --width 1920 --height 1080
 gumcli screenshot MyProject/MyProject.gumj MainMenu --backend raylib
 gumcli screenshot MyProject/MyProject.gumj MainMenu --background 1E2A38
 gumcli screenshot MyProject/MyProject.gumj GameScreen --scale 3
-gumcli screenshot MyProject/MyProject.gumj GameScreen --set Hud.Score=99999 --set Hud.BossState=Visible
+gumcli screenshot MyProject/MyProject.gumj GameScreen --set Hud.Score=99999 --set Hud.BossState=Visible --set Hud.Bar.Visible=false
 ```
 
 Output on success:

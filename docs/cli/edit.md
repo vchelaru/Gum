@@ -66,7 +66,7 @@ Adds a new variable to a Screen or Component, like **Add Variable** in the **Var
 { "op": "setVariable", "element": "Hud", "category": "Size", "state": "Big", "name": "Width", "value": 200 }
 ```
 
-Sets a variable the element already has. [describe](describe.md) lists the names it accepts. An instance's variable is written `InstanceName.VariableName`. Without `state`, the value goes in the default state. `state` alone names an uncategorized state, and `category` with `state` names a state in a category.
+Sets a variable the element already has. [describe](describe.md) lists the names it accepts. An instance's variable is written `InstanceName.VariableName`. A path through nested instances, such as `Hud.Bar.Visible`, fails, since an element stores values only for its own instances; set `Bar.Visible` on `Hud`'s component instead. Without `state`, the value goes in the default state. `state` alone names an uncategorized state, and `category` with `state` names a state in a category.
 
 Enum values such as `ChildrenLayout` take the value's name, for example `"TopToBottomStack"`. A category's state variable, such as `SizeState`, takes the state's name.
 

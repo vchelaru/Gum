@@ -23,18 +23,58 @@ internal class VariableValueConverter
         _typeResolver = typeResolver;
     }
 
+    /// <summary>
+    /// Resolves <paramref name="requestedName"/> on <paramref name="element"/>: one of its own variables, or
+    /// <c>Instance.Variable</c> for one of its instances. A path through nested instances
+    /// (<c>Hud.Bar.Visible</c>) is refused: the tool stores no variable on an instance inside another instance.
+    /// </summary>
     public (string VariableName, InstanceSave? Instance) ResolveVariable(ElementSave element, string requestedName, string verb)
+    {
+        string? instanceName = VariableSave.GetSourceObject(requestedName);
+        if (instanceName != null && VariableSave.GetSourceObject(VariableSave.GetRootName(requestedName)) is { } innerName)
+        {
+            ElementSave typeElement = GetInstanceType(element, instanceName);
+            string innerVariable = VariableSave.GetRootName(requestedName);
+            throw new EditException($"{requestedName} cannot be {verb}: {innerName} is an instance inside {instanceName}. "
+                + $"To change it for every {typeElement.Name}, set {innerVariable} on {typeElement.Name}.");
+        }
+        return ResolveOnElement(element, requestedName, requestedName, verb);
+    }
+
+    /// <summary>
+    /// Resolves <paramref name="requestedName"/> like <see cref="ResolveVariable"/>, but also through nested
+    /// instances: each segment before the last two names an instance in the element the previous segment's
+    /// instance is a type of (<c>Hud.Bar.Visible</c> is Bar's Visible inside Hud's component). Returns that
+    /// innermost element and the variable name relative to it.
+    /// </summary>
+    public (ElementSave Owner, string VariableName, InstanceSave? Instance) ResolveNestedVariable(
+        ElementSave element, string requestedName, string verb)
+    {
+        ElementSave owner = element;
+        string remaining = requestedName;
+        while (VariableSave.GetSourceObject(remaining) is { } instanceName
+            && VariableSave.GetSourceObject(VariableSave.GetRootName(remaining)) != null)
+        {
+            owner = GetInstanceType(owner, instanceName);
+            remaining = VariableSave.GetRootName(remaining);
+        }
+        (string variableName, InstanceSave? instance) = ResolveOnElement(owner, remaining, requestedName, verb);
+        return (owner, variableName, instance);
+    }
+
+    // requestedName has at most one dot; fullName is the path as the user typed it, for messages.
+    private (string VariableName, InstanceSave? Instance) ResolveOnElement(
+        ElementSave element, string requestedName, string fullName, string verb)
     {
         string? instanceName = VariableSave.GetSourceObject(requestedName);
         if (!string.IsNullOrEmpty(instanceName))
         {
-            InstanceSave instance = element.GetInstance(instanceName)
-                ?? throw new EditException($"{element.Name} has no instance named {instanceName}.");
-            ElementSave typeElement = ObjectFinder.Self.GetElementSave(instance.BaseType)
-                ?? throw new EditException($"{instanceName}'s type {instance.BaseType} is not in the project.");
-            if (!_variableDefinedByType.GetIfVariableIsDefinedByType(VariableSave.GetRootName(requestedName), typeElement))
+            InstanceSave instance = GetInstance(element, instanceName);
+            ElementSave typeElement = GetInstanceType(element, instanceName);
+            string rootName = VariableSave.GetRootName(requestedName);
+            if (!_variableDefinedByType.GetIfVariableIsDefinedByType(rootName, typeElement))
             {
-                throw new EditException($"{typeElement.Name} has no variable named {VariableSave.GetRootName(requestedName)}, so {requestedName} cannot be {verb}.");
+                throw new EditException($"{typeElement.Name} has no variable named {rootName}, so {fullName} cannot be {verb}.");
             }
             return (requestedName, instance);
         }
@@ -50,6 +90,16 @@ internal class VariableValueConverter
             return (exposed.Name, element.GetInstance(exposed.SourceObject!));
         }
         return (requestedName, null);
+    }
+
+    private static InstanceSave GetInstance(ElementSave element, string instanceName) =>
+        element.GetInstance(instanceName) ?? throw new EditException($"{element.Name} has no instance named {instanceName}.");
+
+    private static ElementSave GetInstanceType(ElementSave element, string instanceName)
+    {
+        InstanceSave instance = GetInstance(element, instanceName);
+        return ObjectFinder.Self.GetElementSave(instance.BaseType)
+            ?? throw new EditException($"{instanceName}'s type {instance.BaseType} is not in the project.");
     }
 
     public object? ConvertValue(JsonElement value, string type, string variableName)
