@@ -51,10 +51,10 @@ testing after the fact. Sequence a new theme port like this:
    the controls to Styles" below for what it does and doesn't catch.
 6. After every batch of edits: `gumcli check`/`check-references`/`diff-standards`, **and** a
    rebuild plus fresh-project Add Forms import in the actual tool — `gumcli` never exercises the
-   postbuild-copy path where duplicate-import bugs live. `gumcli check`'s summary line reads "N
-   error(s) found" even when every listed line is `warning:` severity, so a pre-existing warning
+   postbuild-copy path where duplicate-import bugs live. `gumcli check`'s summary line starts
+   "No errors found." when every listed line is `warning:` severity, so a pre-existing warning
    inherited from the clone (e.g. a `Category` state illegally selecting its own category) is easy
-   to mistake for a pass — read the lines, not just the count.
+   to mistake for a pass — read the lines, not just the summary.
 7. **A swatch-name recolor pass never touches geometry, and geometry is where the worst-looking bugs hide.** Ring/indicator `X`/`Y`/`Width`/`Height`/`CornerRadius` literals are carried over from the clone verbatim by every rename/recolor script — nothing about "fix the colors" touches them. Diff each focus-ring/indicator explicitly against the code-only theme's actual constants: a ring built `RelativeToParent` + Center-anchored (`X=Y=0`) can only be wrong in *size* (its Width/Height delta must equal the code's `FocusRingInset*2`, its CornerRadius must equal body-radius+inset — not whatever the clone had); one built `Absolute` + edge-anchored (a Left/Bottom-anchored circle or box — CheckBox/RadioButton's pattern) can *also* be positionally asymmetric, since the clone's edge offset doesn't automatically rescale to a different inset — diff its X/Y against `-Inset` and its Width/Height against `bodySize + 2*Inset` by hand.
 8. **Don't cut a visual feature (a glow, a border, a state-specific effect) as a silent scope-reduction call.** If the code-only theme's `*Visual.cs` sets it (`HasDropshadow`, a stroke, anything state-conditional), port it or flag the omission explicitly to the user — folding "skipped for time" into a summary aside is not the same as getting a decision. Missing a whole control this way (not just a wrong value) is the most visually obvious kind of incomplete port.
 9. **The rebuild in step 6 can silently no-op.** `GumFormsPlugin`'s postbuild `xcopy` only runs

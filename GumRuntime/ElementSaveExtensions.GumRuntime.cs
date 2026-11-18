@@ -1815,6 +1815,17 @@ namespace GumRuntime
             if (CustomEvaluateExpression == null && !IsNegation(right))
             {
                 value = ReadPlainReference(readState, right, findSourceType: true, out sourceType);
+                if (value == null && !IsPlainPath(right))
+                {
+                    // Arithmetic, a comparison or a literal: only Gum.Expressions evaluates it. Never silent.
+                    if (IsFirstReport(liveRoot, stateSave, referenceString, leftVariableName))
+                    {
+                        ReportNotApplied(referenceString, leftVariableName, stateSave, liveRoot,
+                            $"{DecodeOwnerName(right)} is an expression. Add the Gum.Expressions package and call " +
+                            "GumExpressionService.Initialize() to evaluate it.");
+                    }
+                    mismatchReported = true;
+                }
             }
             else
             {
@@ -1845,7 +1856,7 @@ namespace GumRuntime
             }
 
             // With Gum.Expressions the evaluator converts what it can and refuses the rest (reported above).
-            if (CustomEvaluateExpression == null
+            if (CustomEvaluateExpression == null && !mismatchReported
                 && ReportedMismatch(referenceString, right, left, leftVariableName, leftSideType, sourceType, value, leftVariableOnState, instanceLeft, stateSave, liveRoot))
             {
                 value = null;
@@ -2014,6 +2025,25 @@ namespace GumRuntime
         // fails both comparisons. A float widens to a double exactly, so one overload serves both.
         internal static bool IsInIntRange(double value) => value > -2147483649.0 && value < 2147483648.0;
 
+        // True for what the plain lookup reads by name: a variable path such as Other.Width or Components/Styles.Red,
+        // or a reserved global:: name. Anything else (an operator, a literal, a call) needs Gum.Expressions.
+        private static bool IsPlainPath(string right)
+        {
+            if (right.Length == 0 || !(char.IsLetter(right[0]) || right[0] == '_'))
+            {
+                return false;
+            }
+            for (int i = 1; i < right.Length; i++)
+            {
+                char c = right[i];
+                if (!(char.IsLetterOrDigit(c) || c == '_' || c == '.' || c == '/' || c == ':'))
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+
         private static bool IsNegation(string right)
         {
             int index = 0;
@@ -2118,8 +2148,17 @@ namespace GumRuntime
         // writes the [Gum] line to Console.Error and raises PropertyAssignmentError. GumRuntime sits below that class.
         internal static Action<string>? ReportPropertyAssignmentError;
 
+        // Above zero while a caller applies references only to read the result and roll it back (FontReferenceCollector).
+        // Such a read reports nothing and records nothing, so the real apply still reports.
+        [ThreadStatic]
+        internal static int QuietReadDepth;
+
         private static bool IsFirstReport(GraphicalUiElement? liveRoot, StateSave stateSave, string referenceString, string variableName)
         {
+            if (QuietReadDepth > 0)
+            {
+                return false;
+            }
             if (liveRoot != null)
             {
                 return IsFirstReport(liveRoot, referenceString, variableName);
@@ -2338,8 +2377,12 @@ namespace GumRuntime
 
             if (isExternalElement)
             {
-                var lastDot = right.LastIndexOf('.');
                 var firstDot = right.IndexOf('.');
+                if (firstDot < 0)
+                {
+                    // A division such as "10 / 2", or an element path naming no variable: nothing to look up.
+                    return;
+                }
 
                 ElementSave? element = GetElementByQualifiedName(right.Substring(0, firstDot));
                 if (element != null)

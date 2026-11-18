@@ -83,6 +83,9 @@ public class ScreenshotVariableReferenceTests : BaseTestClass
 
         result.StandardOutput.ShouldContain(
             $"warning: SegmentBar: Default: the Total.VariableReferences line \"Width = {rightSide}\" {problem}, so it never applies.");
+        // Reported once, as GUM0047, and the summary counts it.
+        result.StandardError.ShouldNotContain("[Gum]");
+        result.StandardOutput.ShouldContain("No errors found. 1 warning(s) found.");
     }
 
     private CliTestHelper RenderScreen(string projectPath, out SKBitmap bitmap)

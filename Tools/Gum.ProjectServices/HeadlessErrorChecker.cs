@@ -379,6 +379,7 @@ public partial class HeadlessErrorChecker : IHeadlessErrorChecker
             {
                 // The evaluator leaves a refused value here for TryReadReference; nothing reads it in this check.
                 ElementSaveExtensions.RejectedCastValue = null;
+                ElementSaveExtensions.EvaluationFailure = null;
             }
         }
         var rfv = new RecursiveVariableFinder(ownerState);

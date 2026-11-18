@@ -178,7 +178,7 @@ public static class CheckCommand
     {
         if (errorCount == 0)
         {
-            return "No errors found.";
+            return warningCount == 0 ? "No errors found." : $"No errors found. {warningCount} warning(s) found.";
         }
 
         if (warningCount == 0)

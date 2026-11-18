@@ -26,6 +26,14 @@ gumcli check MyProject/MyProject.gumj --json
 No errors found.
 ```
 
+**Only warnings (human-readable):**
+
+```
+warning: SliderComponent: SliderComponent references "Textures/Thumb.png", which was not found on disk.
+
+No errors found. 1 warning(s) found.
+```
+
 **Errors found (human-readable):**
 
 ```

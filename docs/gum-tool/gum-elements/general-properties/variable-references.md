@@ -474,9 +474,9 @@ A component can still list an exposed variable after its instance changed type, 
 
 ## Reference That Cannot Be Evaluated (GUM0047)
 
-A variable reference can read only names that exist and still give no value: the right side is not a valid expression (`Width = TotalHealth *`), or it divides by zero with the stored values (`Width = TotalHealth / 0`). The variable keeps its current value.
+A variable reference whose names all exist can still fail to give a value: the right side is not a valid expression (`Width = TotalHealth *`), or it divides by zero with the stored values (`Width = TotalHealth / 0`). The variable keeps its current value.
 
-Gum reports a **GUM0047** warning in the [Errors tab](../../editor-tab.md) and in `gumcli check`, naming the element, the state, the line and the problem. A game that uses Gum.Expressions writes the same problem to the console when it applies the line. To resolve it, fix the expression.
+Gum reports a **GUM0047** warning in the **Errors** tab and in `gumcli check`. A game that uses Gum.Expressions writes the same problem to the console when it applies the line. To fix it, correct the expression.
 
 ## Circular References (GUM0013)
 
