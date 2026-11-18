@@ -300,13 +300,6 @@ public static class StateSaveExtensionMethods
     }
 
 
-    /// <summary>
-    /// Returns the first instance of an existing VariableSave recursively. Returns null if not found.
-    /// </summary>
-    /// <param name="stateSave">The possible state that contains the variable. 
-    /// If it doesn't, then the code will recursively go to base types.</param>
-    /// <param name="variableName"></param>
-    /// <returns></returns>
     // A loop, not FirstOrDefault with a lambda capturing the name: GetVariableRecursive runs for every
     // VariableReferences list of a state applied at run time (#8218). Unlike ElementSave.GetInstance this
     // returns the first match and matches a null name, as the FirstOrDefault it replaces did.
@@ -323,6 +316,13 @@ public static class StateSaveExtensionMethods
         return null;
     }
 
+    /// <summary>
+    /// Returns the first instance of an existing VariableSave recursively. Returns null if not found.
+    /// </summary>
+    /// <param name="stateSave">The possible state that contains the variable.
+    /// If it doesn't, then the code will recursively go to base types.</param>
+    /// <param name="variableName"></param>
+    /// <returns></returns>
     public static VariableSave? GetVariableRecursive(this StateSave stateSave, string variableName)
     {
         VariableSave? variableSave = stateSave.GetVariableSave(variableName);
