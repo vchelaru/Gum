@@ -1,4 +1,7 @@
 using System.Linq;
+using Gum.GueDeriving;
+using Gum.Wireframe;
+using RenderingLibrary;
 using RenderingLibrary.Graphics;
 using Shouldly;
 using Xunit;
@@ -96,4 +99,70 @@ public class BlendStateXnaConversionTests : BaseTestClass
             Should.NotThrow(() => System.Threading.Tasks.Task.WaitAll(tasks));
         }
     }
+
+    [Fact]
+    public void ToGum_ReturnsTheSourceState_ForACustomStateConvertedByToXNA()
+    {
+        Gum.BlendState custom = CreateStraightAlphaOver();
+
+        custom.ToXNA().ToGum().ShouldBeSameAs(custom);
+    }
+
+    [Fact]
+    public void ToGum_ReturnsANewState_WhenTheSourceWasEditedAfterConversion()
+    {
+        Gum.BlendState custom = new Gum.BlendState
+        {
+            ColorSourceBlend = Gum.Blend.One,
+            ColorDestinationBlend = Gum.Blend.Zero,
+        };
+        XnaBlendState xna = custom.ToXNA();
+
+        custom.ColorSourceBlend = Gum.Blend.SourceAlpha;
+        Gum.BlendState roundTripped = xna.ToGum();
+
+        roundTripped.ShouldNotBeSameAs(custom);
+        roundTripped.ColorSourceBlend.ShouldBe(Gum.Blend.One);
+    }
+
+    // Blend.Normal maps to Renderer.NormalBlendState, and the runtimes' Blend setters round-trip it
+    // through XNA. Every element must hold NormalBlendState itself: the renderer compares blend
+    // states by reference and restarts the SpriteBatch on any difference (#8253).
+    [Theory]
+    [InlineData(nameof(ContainerRuntime))]
+    [InlineData(nameof(SpriteRuntime))]
+    [InlineData(nameof(NineSliceRuntime))]
+    [InlineData(nameof(ColoredRectangleRuntime))]
+    [InlineData(nameof(TextRuntime))]
+    public void BlendNormal_HoldsTheNormalBlendStateInstance_WhenNormalBlendStateIsCustom(string runtimeType)
+    {
+        Gum.BlendState previous = Renderer.NormalBlendState;
+        Gum.BlendState custom = CreateStraightAlphaOver();
+        try
+        {
+            Renderer.NormalBlendState = custom;
+            GraphicalUiElement element = runtimeType switch
+            {
+                nameof(ContainerRuntime) => new ContainerRuntime { Blend = Gum.RenderingLibrary.Blend.Normal },
+                nameof(SpriteRuntime) => new SpriteRuntime { Blend = Gum.RenderingLibrary.Blend.Normal },
+                nameof(NineSliceRuntime) => new NineSliceRuntime { Blend = Gum.RenderingLibrary.Blend.Normal },
+                nameof(ColoredRectangleRuntime) => new ColoredRectangleRuntime { Blend = Gum.RenderingLibrary.Blend.Normal },
+                _ => new TextRuntime { Blend = Gum.RenderingLibrary.Blend.Normal },
+            };
+
+            ((IRenderableIpso)element.RenderableComponent).BlendState.ShouldBeSameAs(custom);
+        }
+        finally
+        {
+            Renderer.NormalBlendState = previous;
+        }
+    }
+
+    private static Gum.BlendState CreateStraightAlphaOver() => new Gum.BlendState
+    {
+        ColorSourceBlend = Gum.Blend.SourceAlpha,
+        ColorDestinationBlend = Gum.Blend.InverseSourceAlpha,
+        AlphaSourceBlend = Gum.Blend.One,
+        AlphaDestinationBlend = Gum.Blend.InverseSourceAlpha,
+    };
 }
