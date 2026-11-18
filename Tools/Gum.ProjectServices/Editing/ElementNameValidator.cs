@@ -248,6 +248,11 @@ public class ElementNameValidator : IElementNameValidator
             whyNotValid = "Variable names cannot contain spaces";
         }
 
+        if (string.IsNullOrEmpty(whyNotValid) && InstancePropertyNames.Contains(name))
+        {
+            whyNotValid = $"{name} cannot be used because every instance already has a {name} property";
+        }
+
         if (string.IsNullOrEmpty(whyNotValid) && element != null)
         {
             IsNameAlreadyUsed(name, variable, element, out whyNotValid);
@@ -260,6 +265,13 @@ public class ElementNameValidator : IElementNameValidator
 
         return string.IsNullOrEmpty(whyNotValid);
     }
+
+    // The InstanceSave's own properties, which every instance shows in the Variables tab. A variable of the same
+    // name on an instance would be read or set as the property instead (setting Name renames the instance).
+    private static readonly HashSet<string> InstancePropertyNames = new HashSet<string>
+    {
+        "Name", "BaseType", "Locked", "IsSlot"
+    };
 
     private void IsNameUsedByStandardVariables(string nameToCheck, out string? whyNotValid)
     {

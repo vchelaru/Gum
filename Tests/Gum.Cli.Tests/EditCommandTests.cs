@@ -603,6 +603,7 @@ public class EditCommandTests : BaseTestClass
     [InlineData("""{ "op": "setVariable", "element": "Hud", "name": "Width", "value": "wide" }""", "wide")]
     [InlineData("""{ "op": "setVariable", "element": "Hud", "state": "Huge", "name": "Width", "value": 1 }""", "Huge")]
     [InlineData("""{ "op": "exposeVariable", "element": "Hud", "instance": "Label", "variable": "Nope", "name": "LabelNope" }""", "Nope")]
+    [InlineData("""{ "op": "exposeVariable", "element": "Hud", "instance": "Label", "variable": "Text", "name": "Name" }""", "every instance already has a Name property")]
     [InlineData("""{ "op": "addVariable", "element": "Hud", "name": "Width", "type": "float" }""", "Width")]
     [InlineData("""{ "op": "addVariable", "element": "Hud", "name": "Speed", "type": "Vector2" }""", "Vector2")]
     [InlineData("""{ "op": "setVariable", "element": "Hud", "name": "Label.Widht", "value": 1 }""", "Label.Widht")]

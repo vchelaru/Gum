@@ -52,4 +52,19 @@ public class ElementNameValidatorTests : BaseTestClass
         validator.IsStateNameValid("Big", size, null, out _).ShouldBeFalse();
         validator.IsStateNameValid("Small", size, null, out _).ShouldBeTrue();
     }
+
+    [Theory]
+    [InlineData("Name")]
+    [InlineData("BaseType")]
+    [InlineData("Locked")]
+    [InlineData("IsSlot")]
+    public void IsVariableNameValid_RejectsAnInstancesOwnPropertyName(string name)
+    {
+        ComponentSave hud = EditingTestProject.AddComponent(Project, "Hud");
+        ElementNameValidator validator = new ElementNameValidator(topLevelNameSource: null);
+
+        validator.IsVariableNameValid(name, hud, null, out string? whyNotValid).ShouldBeFalse();
+        whyNotValid.ShouldContain(name);
+        validator.IsVariableNameValid(name + "Text", hud, null, out _).ShouldBeTrue();
+    }
 }
