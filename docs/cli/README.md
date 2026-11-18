@@ -70,6 +70,7 @@ If you run a preview version of the **Gum** tool, use the `gumcli` that matches 
 | `import-screen` | Import a Screen file into an existing project |
 | `resave` | Load and save a project with no edits to check round trips |
 | `edit` | Apply a list of changes from a JSON file to a project |
+| `describe` | List the variables an element or instance can set, and its states and categories |
 | `stage-forms-behaviors` | Write a Forms theme's resolved behaviors into one folder |
 | `codegen-init` | Initialize code generation settings |
 | `codegen` | Generate C# code for project elements |

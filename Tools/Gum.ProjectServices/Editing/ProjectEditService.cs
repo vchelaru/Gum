@@ -39,6 +39,14 @@ public class ProjectEditResult
 }
 
 /// <summary>
+/// An operation the operations file accepts and its fields.
+/// </summary>
+/// <param name="Op">The operation's <c>op</c> value.</param>
+/// <param name="Required">The fields the operation must have.</param>
+/// <param name="Optional">The fields the operation may have.</param>
+public record EditOperationSchema(string Op, IReadOnlyList<string> Required, IReadOnlyList<string> Optional);
+
+/// <summary>
 /// Applies an operations file (<c>{ "version": 1, "operations": [ { "op": ..., ... } ] }</c>) to a loaded project,
 /// through the same logic the tool uses for each change. The project must be the one
 /// <see cref="ObjectFinder"/> resolves. On failure the project may be partly changed, so the caller discards it.
@@ -49,6 +57,11 @@ public interface IProjectEditService
     /// Validates the whole file, then applies its operations in order, stopping at the first that fails.
     /// </summary>
     ProjectEditResult Apply(GumProjectSave project, string operationsJson);
+
+    /// <summary>
+    /// Every operation <see cref="Apply"/> accepts, with its required and optional fields.
+    /// </summary>
+    IReadOnlyList<EditOperationSchema> GetOperationSchemas();
 }
 
 /// <inheritdoc/>
@@ -132,6 +145,10 @@ public class ProjectEditService : IProjectEditService
             ["clearVariable"] = new(new[] { "element", "name" }, new[] { "state", "category" }, ClearVariable),
         };
     }
+
+    /// <inheritdoc/>
+    public IReadOnlyList<EditOperationSchema> GetOperationSchemas() =>
+        _operations.Select(pair => new EditOperationSchema(pair.Key, pair.Value.Required, pair.Value.Optional)).ToList();
 
     /// <inheritdoc/>
     public ProjectEditResult Apply(GumProjectSave project, string operationsJson)

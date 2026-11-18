@@ -2,6 +2,7 @@
 
 ```
 gumcli edit <project.gumj> <operations.json> [--json]
+gumcli edit --schema [--json]
 ```
 
 Applies a list of changes from a JSON file to a project and saves it in the same format the **Gum** tool writes. Each change goes through the same code the tool runs when you make that change by hand, so a misspelled variable name fails instead of writing a file Gum cannot use.
@@ -15,6 +16,7 @@ Available in December 2026, or now if building Gum from source.
 - `<project.gumj>`: Path to the `.gumj` or `.gumx` project file
 - `<operations.json>`: Path to the operations file
 - `--json`: Report new errors as a JSON array, in the same format as [check](check.md)
+- `--schema`: Print every operation with its required and optional fields instead of editing. It takes no project or operations file. With `--json` it prints `{ "version": 1, "operations": [ { "op": "setVariable", "required": [ ... ], "optional": [ ... ] } ] }`.
 
 ## The Operations File
 
@@ -64,7 +66,7 @@ Adds a new variable to a Screen or Component, like **Add Variable** in the **Var
 { "op": "setVariable", "element": "Hud", "category": "Size", "state": "Big", "name": "Width", "value": 200 }
 ```
 
-Sets a variable the element already has. An instance's variable is written `InstanceName.VariableName`. Without `state`, the value goes in the default state. `state` alone names an uncategorized state, and `category` with `state` names a state in a category.
+Sets a variable the element already has. [describe](describe.md) lists the names it accepts. An instance's variable is written `InstanceName.VariableName`. Without `state`, the value goes in the default state. `state` alone names an uncategorized state, and `category` with `state` names a state in a category.
 
 Enum values such as `ChildrenLayout` take the value's name, for example `"TopToBottomStack"`. A category's state variable, such as `SizeState`, takes the state's name.
 
