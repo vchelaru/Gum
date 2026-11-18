@@ -78,7 +78,7 @@ public class SelectedStateReferenceMerger
     /// Removes from <paramref name="state"/> everything that sets one of <paramref name="names"/>: its plain
     /// variables and its reference rows (a composite row such as <c>Color</c> keeps the channels that are not named).
     /// </summary>
-    internal static void RemoveSettersOf(StateSave state, ICollection<string> names)
+    public static void RemoveSettersOf(StateSave state, ICollection<string> names)
     {
         state.Variables.RemoveAll(variable => names.Contains(variable.Name));
         FilterReferenceRows(state, (qualifiedLeft, _) => qualifiedLeft == null || !names.Contains(qualifiedLeft));
@@ -122,7 +122,7 @@ public class SelectedStateReferenceMerger
     }
 
     /// <summary>Identifies a reference row by the variable it writes and its (channel-expanded) line.</summary>
-    internal static string GetRowKey(string writtenName, string line) => writtenName + "=" + line;
+    public static string GetRowKey(string writtenName, string line) => writtenName + "=" + line;
 
     /// <summary>
     /// A state that sets an exposed name (<c>BackgroundWidth</c>) sets the inner variable it exposes
@@ -139,7 +139,7 @@ public class SelectedStateReferenceMerger
         }
     }
 
-    internal static HashSet<string> GetVariablesSetBy(StateSave state)
+    public static HashSet<string> GetVariablesSetBy(StateSave state)
     {
         HashSet<string> names = new HashSet<string>();
 

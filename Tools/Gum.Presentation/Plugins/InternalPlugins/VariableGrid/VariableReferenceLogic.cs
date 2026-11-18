@@ -294,14 +294,7 @@ public class VariableReferenceLogic : IVariableReferenceLogic
         }
 
         // A categorized state's rows read the same instances, so they follow too (#6886).
-        HashSet<string> changedNames = new HashSet<string>(edits.Select(item => item.QualifiedName));
-        foreach (VariableSave variable in stateSave.Variables)
-        {
-            if (!valuesBefore.TryGetValue(variable.Name, out object? oldValue) || !ElementSaveExtensions.ValueEquality(oldValue, variable.Value))
-            {
-                changedNames.Add(variable.Name);
-            }
-        }
+        HashSet<string> changedNames = _cascade.GetChangedNames(stateSave, valuesBefore, edits.Select(item => item.QualifiedName));
         using (ToolLog.Begin("ApplyOtherStatesReading", count: changedNames.Count))
         {
             _cascade.ApplyOtherStatesReading(parentElement, stateSave, changedNames, liveRoot, isFullCommit);

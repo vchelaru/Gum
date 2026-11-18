@@ -80,7 +80,7 @@ A `List<string>` of variable-reference assignments evaluated **only at design ti
 ButtonCategoryState = IsEnabled ? "Enabled" : "Disabled"
 ```
 
-Tool-time apply (`BehaviorToolOnlyReferencesApplier`, in the variable-grid plugin) walks every linked behavior's `ToolOnlyVariableReferences`, evaluates the RHS via `EvaluatedSyntax` against the component's effective state, and writes the resolved value back into the state via `SetValue`. For instances, bare RHS identifiers are auto-qualified with the instance name. Hooked into `VariableReferenceLogic.DoVariableReferenceReaction` immediately after the existing state-level apply.
+Tool-time apply (`BehaviorToolOnlyReferencesApplier`, in `Tools/Gum.ProjectServices/Editing/`) walks every linked behavior's `ToolOnlyVariableReferences`, evaluates the RHS via `EvaluatedSyntax` against the component's effective state, and writes the resolved value back into the state via `SetValue`. For instances, bare RHS identifiers are auto-qualified with the instance name. Hooked into `VariableReferenceLogic.DoVariableReferenceReaction` and `gumcli edit`'s `setVariableReferences`, immediately after the state-level apply.
 
 **The runtime apply path never traverses this list** — that's what the `ToolOnly` name encodes structurally. At runtime, the Forms control's own setter (e.g. `FrameworkElement.IsEnabled` → `UpdateState()`) owns the visual; applying the reference again would double-write.
 
@@ -158,7 +158,7 @@ Reflection apply is generic, so any new logical-only `FormsProperty` declaration
 | `MonoGameGum/Forms/FormsUtilities.cs` | `RegisterFromFileFormRuntimeDefaults()` — drives the mapping; sets `InitialFormsPropertiesNotifier` (invokes `BehaviorFormsPropertyApplier`) and `InitialStateAppliedNotifier` (`UpdateState`) |
 | `MonoGameGum/Forms/DefaultFromFileVisuals/` | `DefaultFromFileXxxRuntime` classes — `AfterFullCreation()` creates Forms objects |
 | `MonoGameGum/Forms/BehaviorFormsPropertyApplier.cs` | Reflects `BehaviorSave.FormsProperties` values onto the wrapped `FrameworkElement` (with three-tier default resolution) |
-| `Gum/Plugins/InternalPlugins/VariableGrid/BehaviorToolOnlyReferencesApplier.cs` | Tool-only design-time apply pass for `ToolOnlyVariableReferences`. Strictly tool-only — never invoked from runtime / generated code. |
+| `Tools/Gum.ProjectServices/Editing/BehaviorToolOnlyReferencesApplier.cs` | Tool-only design-time apply pass for `ToolOnlyVariableReferences`. Strictly tool-only — never invoked from runtime / generated code. |
 | `Gum/Plugins/InternalPlugins/VariableGrid/ElementSaveDisplayer.cs` | `AddBehaviorFormsPropertyMembers` — surfaces FormsProperties in the variable grid; sets `DefaultValueFallback` on each SRIM so the grid shows the declared default; seeds `srim.DetailText` from the FormsProperty's `Description`. |
 | `GumDataTypes/Variables/VariableSave.cs` | `Description` (persisted, XML-serialized) and `DetailText` (`[XmlIgnore]`, transient) fields with cross-referencing XML docs. |
 | `Gum/Plugins/InternalPlugins/VariableGrid/StateReferencingInstanceMember.cs` | `DefaultValueFallback` final tier in the value getter for grid display. |

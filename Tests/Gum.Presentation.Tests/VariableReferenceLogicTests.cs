@@ -1,6 +1,7 @@
 using Gum.ProjectServices.Editing;
 using Gum.Commands;
 using Gum.DataTypes;
+using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
 using Gum.Expressions;
 using GumRuntime;
@@ -1456,6 +1457,55 @@ public class VariableReferenceLogicTests : BaseTestClass
             trySave: false);
 
         varList.Value[0].ShouldStartWith("//");
+    }
+
+    [Fact]
+    public void DoVariableReferenceReaction_InstanceCategoryStateReadingAFormsProperty_TheBehaviorLineWins()
+    {
+        // The row reads the slider's Minimum (a behavior default of 0) and gives Disabled, but the button's
+        // behavior line derives Enabled from IsEnabled at its default, so the instance's Forms value wins
+        // and the stored category state is removed.
+        GumExpressionService.Initialize();
+        BehaviorSave buttonBehavior = new BehaviorSave { Name = "ButtonBehavior" };
+        buttonBehavior.FormsProperties.Add(new VariableSave { Type = "bool", Name = "IsEnabled", Value = true });
+        buttonBehavior.ToolOnlyVariableReferences.Add("ButtonCategoryState = IsEnabled ? \"Enabled\" : \"Disabled\"");
+        BehaviorSave sliderBehavior = new BehaviorSave { Name = "SliderBehavior" };
+        sliderBehavior.FormsProperties.Add(new VariableSave { Type = "double", Name = "Minimum", Value = 0.0 });
+
+        ComponentSave button = BuildButtonComponentWithCategory("ButtonCategory", "Enabled", "Disabled");
+        button.Behaviors.Add(new ElementBehaviorReference { BehaviorName = "ButtonBehavior" });
+        ComponentSave slider = new ComponentSave { Name = "Slider" };
+        slider.States.Add(new StateSave { Name = "Default", ParentContainer = slider });
+        slider.Behaviors.Add(new ElementBehaviorReference { BehaviorName = "SliderBehavior" });
+
+        ScreenSave screen = new ScreenSave { Name = "Game" };
+        StateSave defaultState = new StateSave { Name = "Default", ParentContainer = screen };
+        screen.States.Add(defaultState);
+        InstanceSave play = new InstanceSave { Name = "Play", BaseType = "Button", ParentContainer = screen };
+        screen.Instances.Add(new InstanceSave { Name = "Volume", BaseType = "Slider", ParentContainer = screen });
+        screen.Instances.Add(play);
+        VariableListSave<string> varList = new VariableListSave<string> { Type = "string", Name = "Play.VariableReferences" };
+        varList.Value.Add("ButtonCategoryState = Volume.Minimum < 0 ? \"Enabled\" : \"Disabled\"");
+        defaultState.VariableLists.Add(varList);
+
+        GumProjectSave project = new GumProjectSave();
+        project.Components.Add(button);
+        project.Components.Add(slider);
+        project.Screens.Add(screen);
+        project.Behaviors.Add(buttonBehavior);
+        project.Behaviors.Add(sliderBehavior);
+        ObjectFinder.Self.GumProjectSave = project;
+
+        _sut.DoVariableReferenceReaction(
+            parentElement: screen,
+            leftSideInstance: play,
+            unqualifiedMember: "VariableReferences",
+            stateSave: defaultState,
+            qualifiedName: "Play.VariableReferences",
+            trySave: false);
+
+        varList.Value[0].ShouldBe("ButtonCategoryState = Volume.Minimum < 0 ? \"Enabled\" : \"Disabled\"");
+        defaultState.GetVariableSave("Play.ButtonCategoryState").ShouldBeNull();
     }
 
     #endregion

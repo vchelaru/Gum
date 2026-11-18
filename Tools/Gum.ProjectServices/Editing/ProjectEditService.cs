@@ -667,18 +667,17 @@ public class ProjectEditService : IProjectEditService
             Value = lines,
         });
 
-        // The same reaction the tool runs after a typed edit, without the canvas: this state, the element's other
-        // states, the elements that read this one, and references inside the instance's type.
+        // The same reaction the tool runs after a typed edit, without the canvas: this state, its behaviors'
+        // tool-only lines, the element's other states, the elements that read this one, and references inside
+        // the instance's type.
         Dictionary<string, object?> valuesBefore = new Dictionary<string, object?>();
         foreach (VariableSave variable in state.Variables)
         {
             valuesBefore[variable.Name] = variable.Value;
         }
         ElementSaveExtensions.ApplyVariableReferences(element, state);
-        HashSet<string> changedNames = new HashSet<string> { listName };
-        changedNames.UnionWith(state.Variables
-            .Where(item => !valuesBefore.TryGetValue(item.Name, out object? before) || !ElementSaveExtensions.ValueEquality(before, item.Value))
-            .Select(item => item.Name));
+        BehaviorToolOnlyReferencesApplier.Apply(element, state);
+        HashSet<string> changedNames = _referenceCascade.GetChangedNames(state, valuesBefore, new[] { listName });
         _referenceCascade.ApplyOtherStatesReading(element, state, changedNames, liveRoot: null, isFullCommit: true);
         _referenceCascade.ApplyToElementsReading(element, _ => null, isFullCommit: true);
         _referenceCascade.ApplyToInstanceInternals(element, instance, state, "VariableReferences", state.GetValueRecursive(listName));

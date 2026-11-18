@@ -14,7 +14,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Gum.Plugins.InternalPlugins.VariableGrid;
+namespace Gum.ProjectServices.Editing;
 
 /// <summary>
 /// Tool-only apply pass for <see cref="BehaviorSave.ToolOnlyVariableReferences"/>.
@@ -179,7 +179,9 @@ public static class BehaviorToolOnlyReferencesApplier
         return result;
     }
 
-    /// <param name="suppliedValues">Holds the values the owner of <paramref name="component"/>'s instance sets, by exposed name behind <paramref name="suppliedPrefix"/>.</param>
+    /// <summary>
+    /// <paramref name="suppliedValues"/> holds the values the owner of <paramref name="component"/>'s instance sets, by exposed name behind <paramref name="suppliedPrefix"/>.
+    /// </summary>
     private static void CollectValuesThroughExposedVariables(StateSave suppliedValues, string suppliedPrefix, ComponentSave component,
         string outputPrefix, StateSave result, int depth)
     {

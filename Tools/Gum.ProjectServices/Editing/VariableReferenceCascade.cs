@@ -26,6 +26,12 @@ public record ReferenceCascadeResult(StoredValueChange[] Changes, IReadOnlyColle
 public interface IVariableReferenceCascade
 {
     /// <summary>
+    /// What an edit changed in <paramref name="state"/>: <paramref name="editedNames"/> plus every variable whose
+    /// value differs from <paramref name="valuesBefore"/>, the names <see cref="ApplyOtherStatesReading"/> takes.
+    /// </summary>
+    HashSet<string> GetChangedNames(StateSave state, IReadOnlyDictionary<string, object?> valuesBefore, IEnumerable<string> editedNames);
+
+    /// <summary>
     /// Re-reads the rows of <paramref name="element"/>'s other states that read <paramref name="changedNames"/>.
     /// A row that reads nothing that changed is left alone, and a row in a loop is never evaluated.
     /// </summary>
@@ -64,6 +70,20 @@ public class VariableReferenceCascade : IVariableReferenceCascade
         List<ReferenceRow> affected = new List<ReferenceRow>();
         graph.FindAffectedRows(names, affected, includeLiveLayoutRows: false);
         return new HashSet<ReferenceRow>(seedRows.Concat(affected));
+    }
+
+    /// <inheritdoc/>
+    public HashSet<string> GetChangedNames(StateSave state, IReadOnlyDictionary<string, object?> valuesBefore, IEnumerable<string> editedNames)
+    {
+        HashSet<string> changedNames = new HashSet<string>(editedNames);
+        foreach (VariableSave variable in state.Variables)
+        {
+            if (!valuesBefore.TryGetValue(variable.Name, out object? oldValue) || !ElementSaveExtensions.ValueEquality(oldValue, variable.Value))
+            {
+                changedNames.Add(variable.Name);
+            }
+        }
+        return changedNames;
     }
 
     /// <inheritdoc/>

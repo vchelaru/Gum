@@ -469,6 +469,32 @@ public class EditCommandTests : BaseTestClass
     }
 
     [Fact]
+    public void Edit_SetVariableReferences_ReadingAFormsProperty_AppliesTheBehaviorLinesLikeTheTool()
+    {
+        // The row reads the slider's Minimum (its behavior default, 0) and gives Disabled, but the button
+        // behavior's tool-only line derives Enabled from IsEnabled at its default. As in the tool, the
+        // instance's Forms value wins, so no category state is stored.
+        string projectPath = Path.Combine(TempDirectory, "MyProject", "MyProject.gumx");
+        CliTestHelper.Run("new", projectPath).ExitCode.ShouldBe(0);
+        string operations = WriteOperations("""
+            { "version": 1, "operations": [
+              { "op": "addScreen", "name": "Game" },
+              { "op": "addInstance", "element": "Game", "name": "Volume", "type": "Controls/Slider" },
+              { "op": "addInstance", "element": "Game", "name": "Play", "type": "Controls/ButtonStandard" },
+              { "op": "setVariableReferences", "element": "Game", "instance": "Play",
+                "lines": [ "ButtonCategoryState = Volume.Minimum < 0 ? \"Enabled\" : \"Disabled\"" ] }
+            ] }
+            """);
+
+        CliTestHelper result = CliTestHelper.Run("edit", projectPath, operations);
+
+        result.ExitCode.ShouldBe(0, result.StandardOutput + result.StandardError);
+        StateSave game = new ProjectLoader().Load(projectPath).Project!.Screens.Single(item => item.Name == "Game").DefaultState!;
+        game.GetVariableListSave("Play.VariableReferences").ShouldNotBeNull();
+        game.GetVariableSave("Play.ButtonCategoryState").ShouldBeNull();
+    }
+
+    [Fact]
     public void Edit_VariableTheTypeDoesNotDefine_FailsAndWritesNothing()
     {
         string projectPath = CreateEmptyProject();
