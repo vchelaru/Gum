@@ -340,7 +340,8 @@ public partial class HeadlessErrorChecker : IHeadlessErrorChecker
         // The Roslyn evaluator (GumExpressionService) returns null when desiredType is null
         // because its CastTo(null) returns false. Pass the materialized scalar's type so
         // type-aware evaluation succeeds for cross-element refs and literal RHSes.
-        object? evaluated = EvaluateRightSide(referenceOwnerState, right, materialized.Type);
+        object? evaluated = EvaluateRightSide(referenceOwnerState, right,
+            ElementSaveExtensions.GetReferenceCastType(materialized.Type, qualifiedLeft, element));
         if (evaluated == null) return;
 
         if (ValuesEqual(materialized.Value, evaluated)) return;

@@ -462,5 +462,40 @@ public class ApplyVariableReferencesElementSaveTests : BaseTestClass
         screen.DefaultState.GetValue("ChildrenLayout").ShouldBe(ChildrenLayout.LeftToRightStack);
     }
 
+    /// <summary>Generated code nests an enum like this one, named after a state category, in each element's class.</summary>
+    public enum NestedCategoryLikeGeneratedCode
+    {
+        Wide,
+        Narrow
+    }
+
+    [Theory]
+    [InlineData("Orientation", "Wide")]
+    [InlineData(nameof(NestedCategoryLikeGeneratedCode), "Narrow")]
+    public void ApplyVariableReferences_CategoryNamedLikeAnEnum_StoresTheStateName(string categoryName, string stateName)
+    {
+        // Each category is named like a loaded enum: Gum's Orientation, or one a game's generated code nests. A
+        // category state's value is the state's name, so the row stores that string and never an enum.
+        ComponentSave panel = new ComponentSave { Name = "Panel" };
+        StateSave state = new StateSave { Name = "Default", ParentContainer = panel };
+        panel.States.Add(state);
+        StateSaveCategory category = new StateSaveCategory { Name = categoryName };
+        category.States.Add(new StateSave { Name = "Wide", ParentContainer = panel });
+        category.States.Add(new StateSave { Name = "Narrow", ParentContainer = panel });
+        panel.Categories.Add(category);
+        string variableName = categoryName + "State";
+        state.Variables.Add(new VariableSave { Name = variableName, Type = categoryName, Value = "Other", SetsValue = true });
+        VariableListSave<string> rows = new VariableListSave<string> { Type = "string", Name = "VariableReferences" };
+        rows.Value.Add($"{variableName} = \"{stateName}\"");
+        state.VariableLists.Add(rows);
+        GumProjectSave project = new GumProjectSave();
+        project.Components.Add(panel);
+        ObjectFinder.Self.GumProjectSave = project;
+
+        panel.ApplyVariableReferences(state);
+
+        state.GetValue(variableName).ShouldBe(stateName);
+    }
+
     #endregion
 }

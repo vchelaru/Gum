@@ -555,7 +555,8 @@ public static class BehaviorToolOnlyReferencesApplier
         // ApplyVariableReferencesOnSpecificOwner). The tool-only applier evaluates the RHS directly, so
         // without this an enum-typed target like ChildrenLayout would store the raw string a ternary
         // produces instead of the boxed enum (which the typed wireframe setter and int-on-disk serializer require).
-        string? leftSideType = ResolveLeftSideType(effectiveLeft, instance, stateSave);
+        string? leftSideType = ElementSaveExtensions.GetReferenceCastType(ResolveLeftSideType(effectiveLeft, instance, stateSave),
+            effectiveLeft, instance?.ParentContainer ?? stateSave.ParentContainer);
         if (leftSideType != null)
         {
             evaluated.CastTo(leftSideType);

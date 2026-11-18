@@ -228,25 +228,6 @@ public class EvaluatedSyntaxTests : BaseTestClass
 
     #region CastTo
 
-    /// <summary>Generated code nests an enum like this one, named after a state category, in each element's class.</summary>
-    public enum NestedCategoryLikeGeneratedCode
-    {
-        Enabled,
-        Disabled
-    }
-
-    [Fact]
-    public void CastTo_StateCategoryNamedLikeANestedEnum_KeepsTheStateNameString()
-    {
-        // A state category's value is the state's name. A loaded assembly (a game's generated code) nesting an enum
-        // with the category's name must not turn it into that enum, which no reader of the state expects.
-        EvaluatedSyntax result = Evaluate("\"Disabled\"", BuildState());
-
-        result.CastTo(nameof(NestedCategoryLikeGeneratedCode)).ShouldBeTrue();
-
-        result.Value.ShouldBe("Disabled");
-    }
-
     [Fact]
     public void CastTo_StringToGumEnum_ParsesTheEnum()
     {
