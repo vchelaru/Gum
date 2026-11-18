@@ -139,7 +139,7 @@ Removes a variable added with `addVariable`, and the values instances set for it
 { "op": "unexposeVariable", "element": "Hud", "name": "Counter1Text" }
 ```
 
-Un-exposes the variable `Hud` exposes as `Counter1Text`, like the tool's **Un-expose Variable** with **Un-expose and clear values**. The values other elements set for `Counter1Text` are removed, and `Counter1.Text` keeps its own value. A variable used by a variable reference cannot be un-exposed.
+Un-exposes the variable `Hud` exposes as `Counter1Text`, like the tool's **Un-expose Variable** with **Un-expose and clear values**. Gum removes the values other elements set for `Counter1Text`, and `Counter1.Text` keeps its own value. The op fails if a variable reference uses `Counter1Text`.
 
 ### clearVariable
 
