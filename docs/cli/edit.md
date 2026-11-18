@@ -166,6 +166,21 @@ Makes a new component from `Panel`, like **Create Component** in the tool's righ
 
 `replace` is the tool's checkbox. With `true`, `Panel` and the instances attached to it leave `Hud`, and an instance of the new component named `Panel` takes its place, with the same position and draw order. Values other states set on `Panel` stay on the new instance. Values, variable references and exposed variables that named one of the attached instances are removed, and a removed variable reference leaves its last value behind. With `false`, `Hud` does not change.
 
+## Variable References
+
+{% hint style="info" %}
+Available in December 2026, or now if building Gum from source.
+{% endhint %}
+
+### setVariableReferences
+
+```json
+{ "op": "setVariableReferences", "element": "SegmentBar", "instance": "Total", "lines": [ "Width = TotalHealth * 4" ] }
+{ "op": "setVariableReferences", "element": "SegmentBar", "lines": [ "Height = Total.Width" ] }
+```
+
+Replaces the variable references of `Total`, or of `SegmentBar` itself when `instance` is left out, like typing them in the **Variable References** box. Gum checks each line the way the tool does and writes the values the lines set, so `Total.Width` becomes `40` when `TotalHealth` is `10`. Gum also updates other states and elements whose references read a changed value. A line that does not parse, names a variable that does not exist, or has a right side of the wrong type fails the edit with the line and the reason. `state` and `category` work as in `setVariable`. An empty `lines` list removes the references and leaves the values they set.
+
 ## All or Nothing
 
 `edit` writes nothing unless every operation applies and the edit adds no errors. It runs the same check as [check](check.md) before and after the operations. Errors the project already had do not block the edit, and only errors the edit adds are reported, in the same format as `check`.

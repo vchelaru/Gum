@@ -1,3 +1,4 @@
+using Gum.ProjectServices.Editing;
 using Gum.Commands;
 using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
@@ -147,7 +148,7 @@ public class FileChangeReloadBehaviorTests : BaseTestClass
             new Mock<IWireframeCommands>().Object,
             new Mock<IDialogService>().Object,
             _fileCommands.Object,
-            new Mock<ICompositeMemberRegistry>().Object,
+            new VariableReferenceValidator(), new VariableReferenceCascade(),
             new Mock<IDispatcher>().Object,
             _wireframe.Object);
 

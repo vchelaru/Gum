@@ -385,6 +385,69 @@ public class EditCommandTests : BaseTestClass
     }
 
     [Fact]
+    public void Edit_SetVariableReferences_StoresTheLinesAppliesThemAndAnEmptyListRemovesThem()
+    {
+        string projectPath = CreateEmptyProject();
+        string operations = WriteOperations("""
+            { "version": 1, "operations": [
+              { "op": "addComponent", "name": "SegmentBar" },
+              { "op": "addVariable", "element": "SegmentBar", "name": "TotalHealth", "type": "int", "value": 10 },
+              { "op": "addInstance", "element": "SegmentBar", "name": "Total", "type": "Sprite" },
+              { "op": "setVariableReferences", "element": "SegmentBar", "instance": "Total", "lines": [ "Width = TotalHealth * 4" ] },
+              { "op": "setVariableReferences", "element": "SegmentBar", "lines": [ "Height = Total.Width" ] }
+            ] }
+            """);
+
+        CliTestHelper result = CliTestHelper.Run("edit", projectPath, operations);
+
+        result.ExitCode.ShouldBe(0, result.StandardOutput + result.StandardError);
+        CliTestHelper.Run("check", projectPath).ExitCode.ShouldBe(0);
+        StateSave state = new ProjectLoader().Load(projectPath).Project!.Components.Single(item => item.Name == "SegmentBar").DefaultState!;
+        state.GetVariableListSave("Total.VariableReferences")!.ValueAsIList.ShouldBe(new[] { "Width = TotalHealth * 4" });
+        state.GetValue("Total.Width").ShouldBe(40f);
+        state.GetVariableListSave("VariableReferences")!.ValueAsIList.ShouldBe(new[] { "Height = Total.Width" });
+        state.GetValue("Height").ShouldBe(40f);
+
+        string remove = WriteOperations("""
+            { "version": 1, "operations": [
+              { "op": "setVariableReferences", "element": "SegmentBar", "instance": "Total", "lines": [ ] }
+            ] }
+            """);
+        CliTestHelper removeResult = CliTestHelper.Run("edit", projectPath, remove);
+        removeResult.ExitCode.ShouldBe(0, removeResult.StandardOutput + removeResult.StandardError);
+        state = new ProjectLoader().Load(projectPath).Project!.Components.Single(item => item.Name == "SegmentBar").DefaultState!;
+        state.GetVariableListSave("Total.VariableReferences").ShouldBeNull();
+        state.GetVariableListSave("VariableReferences").ShouldNotBeNull();
+    }
+
+    [Fact]
+    public void Edit_SetVariableReferences_UpdatesOtherStatesAndElementsThatReadTheChangedValue()
+    {
+        string projectPath = CreateEmptyProject();
+        string operations = WriteOperations("""
+            { "version": 1, "operations": [
+              { "op": "addComponent", "name": "SegmentBar" },
+              { "op": "addVariable", "element": "SegmentBar", "name": "TotalHealth", "type": "int", "value": 10 },
+              { "op": "addInstance", "element": "SegmentBar", "name": "Total", "type": "Sprite" },
+              { "op": "addCategory", "element": "SegmentBar", "name": "Size" },
+              { "op": "addState", "element": "SegmentBar", "category": "Size", "name": "Big" },
+              { "op": "setVariableReferences", "element": "SegmentBar", "category": "Size", "state": "Big", "lines": [ "Height = Total.Width" ] },
+              { "op": "addComponent", "name": "Hud" },
+              { "op": "setVariableReferences", "element": "Hud", "lines": [ "Width = Components/SegmentBar.Total.Width" ] },
+              { "op": "setVariableReferences", "element": "SegmentBar", "instance": "Total", "lines": [ "Width = TotalHealth * 4" ] }
+            ] }
+            """);
+
+        CliTestHelper result = CliTestHelper.Run("edit", projectPath, operations);
+
+        result.ExitCode.ShouldBe(0, result.StandardOutput + result.StandardError);
+        GumProjectSave project = new ProjectLoader().Load(projectPath).Project!;
+        project.Components.Single(item => item.Name == "SegmentBar").Categories.Single().States.Single()
+            .GetValue("Height").ShouldBe(40f);
+        project.Components.Single(item => item.Name == "Hud").DefaultState!.GetValue("Width").ShouldBe(40f);
+    }
+
+    [Fact]
     public void Edit_VariableTheTypeDoesNotDefine_FailsAndWritesNothing()
     {
         string projectPath = CreateEmptyProject();
@@ -473,6 +536,8 @@ public class EditCommandTests : BaseTestClass
     [InlineData("""not json""", "operations file")]
     [InlineData("""{ "version": 1, "operations": [ { "op": "extractToComponent", "element": "Hud", "instance": "Label", "name": "LabelComponent", "replace": "yes" } ] }""", "true or false")]
     [InlineData("""{ "version": 1, "operations": [ { "op": "extractToComponent", "element": "Hud", "instance": "Label", "name": "LabelComponent" } ] }""", "replace")]
+    [InlineData("""{ "version": 1, "operations": [ { "op": "setVariableReferences", "element": "Hud", "lines": "Width = 4" } ] }""", "\"lines\"")]
+    [InlineData("""{ "version": 1, "operations": [ { "op": "setVariableReferences", "element": "Hud", "lines": [ 4 ] } ] }""", "\"lines\"")]
     public void Edit_InvalidOperationsFile_ExitsWith2AndWritesNothing(string json, string expectedInMessage)
     {
         string projectPath = CreateEmptyProject();
@@ -504,6 +569,11 @@ public class EditCommandTests : BaseTestClass
     [InlineData("""{ "op": "unexposeVariable", "element": "Hud", "name": "Nope" }""", "no variable exposed as Nope")]
     [InlineData("""{ "op": "extractToComponent", "element": "Hud", "instance": "Nope", "name": "NopeComponent", "replace": true }""", "Nope")]
     [InlineData("""{ "op": "extractToComponent", "element": "Hud", "instance": "Label", "name": "Text", "replace": true }""", "Text")]
+    [InlineData("""{ "op": "setVariableReferences", "element": "Hud", "instance": "Label", "lines": [ "Widht = 4" ] }""", "Widht")]
+    [InlineData("""{ "op": "setVariableReferences", "element": "Hud", "instance": "Label", "lines": [ "Width = Nope.Width" ] }""", "Nope")]
+    [InlineData("""{ "op": "setVariableReferences", "element": "Hud", "instance": "Label", "lines": [ "Width = \"wide\"" ] }""", "Width = \"wide\"")]
+    [InlineData("""{ "op": "setVariableReferences", "element": "Hud", "instance": "Label", "lines": [ "Width +" ] }""", "Width +")]
+    [InlineData("""{ "op": "setVariableReferences", "element": "Hud", "instance": "Nope", "lines": [ "Width = 4" ] }""", "Nope")]
     public void Edit_OperationThatCannotApply_ExitsWith1AndNamesTheProblem(string operation, string expectedInMessage)
     {
         string projectPath = CreateEmptyProject();

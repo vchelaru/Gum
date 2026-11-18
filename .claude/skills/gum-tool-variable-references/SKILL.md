@@ -42,7 +42,7 @@ The syntax is parsed as C# via Roslyn. Slashes in element paths are converted to
 ```
 SetVariableLogic (variable change entry point)
   ├─ calls VariableReferenceLogic.DoVariableReferenceReaction()
-  │    ├─ Validates lines (GetIndividualFailures)
+  │    ├─ Validates lines (VariableReferenceValidator.GetFailures)
   │    ├─ ElementSaveExtensions.ApplyVariableReferences() — writes hard values to StateSave
   │    ├─ Finds all elements that reference this element (via ObjectFinder.GetElementReferencesToThis)
   │    ├─ Applies references on those elements too (cascade)
@@ -55,7 +55,9 @@ SetVariableLogic (variable change entry point)
 
 | Class | Location | Role |
 |-------|----------|------|
-| `VariableReferenceLogic` | `Tools/Gum.Presentation/Plugins/InternalPlugins/VariableGrid/` | Tool-side orchestration: validation, reaction to changes, line expansion |
+| `VariableReferenceLogic` | `Tools/Gum.Presentation/Plugins/InternalPlugins/VariableGrid/` | Tool-side orchestration: reaction to changes, commenting out and reporting bad lines |
+| `VariableReferenceValidator` | `Tools/Gum.ProjectServices/Editing/` | Line checks (`GetFailures`) and shorthand expansion (`NormalizeLines`), shared by the tool and `gumcli edit`'s `setVariableReferences` |
+| `VariableReferenceCascade` | `Tools/Gum.ProjectServices/Editing/` | The reaction after an edit: other states reading the change, elements reading this one (`ApplyToElementsReading`), and instance internals; `VariableReferenceLogic` adds saving and refresh around it |
 | `EvaluatedSyntax` | `Runtimes/GumExpressions/` | Roslyn-based expression parser/evaluator (shared `Gum.Expressions` package); resolves right-side values via `RecursiveVariableFinder`, or via a live `GraphicalUiElement` for Absolute* identifiers (see below) |
 | `ElementSaveExtensions` (partial) | `GumRuntime/ElementSaveExtensions.GumRuntime.cs` | `ApplyVariableReferences` — two overloads: one for `ElementSave` (save-class, tool-time), one for `GraphicalUiElement` (runtime) |
 | `MainVariableGridPlugin` | `Tools/Gum.Presentation/Plugins/InternalPlugins/VariableGrid/` | Calls `GumExpressionService.Initialize()` so the tool uses Roslyn evaluation |
@@ -94,7 +96,7 @@ Reserved identifier resolving the current language index — see the **gum-runti
 
 Before the evaluated right side is written, it is coerced to the left variable's declared type via `EvaluatedSyntax.CastTo(desiredType)` (`desiredType` resolved from the existing state variable, else `ObjectFinder.GetRootVariable`). `CastTo` handles numeric widening/narrowing, `ToString` for string targets, **and enum targets** — a string (e.g. a ternary result `"LeftToRightStack"`) is parsed via `Enum.Parse`, an int via `Enum.ToObject`. The boxed enum is required: typed consumers like `GraphicalUiElement`'s `ChildrenLayout` setter and int-on-disk serialization reject a raw string. The enum CLR type is resolved by a cached reflection scan (`EvaluatedSyntax.ResolveEnumType`), overridable via the static `EvaluatedSyntax.TypeResolver`.
 
-`CastTo` is the single coercion point shared by three callers: state-level apply (`GetRightSideValue`/`GumExpressionService`), grid **validation** (`VariableReferenceLogic.AddFailureForLine`, so a valid enum reference is not auto-commented), and the behavior tool-only applier (`BehaviorToolOnlyReferencesApplier`). The behavior applier evaluates the RHS directly rather than via `GetRightSideValue`, so it resolves the left type and calls `CastTo` itself — without that an enum-typed behavior reference would store a raw string.
+`CastTo` is the single coercion point shared by three callers: state-level apply (`GetRightSideValue`/`GumExpressionService`), grid **validation** (`VariableReferenceValidator.AddFailureForLine`, so a valid enum reference is not auto-commented), and the behavior tool-only applier (`BehaviorToolOnlyReferencesApplier`). The behavior applier evaluates the RHS directly rather than via `GetRightSideValue`, so it resolves the left type and calls `CastTo` itself — without that an enum-typed behavior reference would store a raw string.
 
 ### Author-Time Materialization Is The Model
 
@@ -129,11 +131,11 @@ Rows in a loop are skipped by the canvas and by `ApplyVariableReferences` and ke
 
 ## Row Note for a Reference With No Value
 
-A valid right side can have no value right now (`100 / Y` with `Y = 0`); the left variable keeps its last value. `VariableReferenceStatusLogic.GetNote` computes a "Not updating: ..." line from current values, and `ElementSaveDisplayer` appends it under "Set by" (no Errors-tab entry; it would flicker while `Y` is dragged). Reason wording comes from `VariableReferenceLogic.DescribeRightSideFailure`, shared with the edit-time dialog. Lines reading `Index`/Absolute* are skipped: they need the live canvas.
+A valid right side can have no value right now (`100 / Y` with `Y = 0`); the left variable keeps its last value. `VariableReferenceStatusLogic.GetNote` computes a "Not updating: ..." line from current values, and `ElementSaveDisplayer` appends it under "Set by" (no Errors-tab entry; it would flicker while `Y` is dragged). Reason wording comes from `VariableReferenceValidator.DescribeRightSideFailure`, shared with the edit-time dialog. Lines reading `Index`/Absolute* are skipped: they need the live canvas.
 
 ## Validation
 
-`GetIndividualFailures` checks each line for:
+`VariableReferenceValidator.GetFailures` checks each line for:
 - Parseable assignment syntax
 - Forbidden left-side names (`Name`, `BaseType`, `DefaultChildContainer`)
 - Left-side variable existence

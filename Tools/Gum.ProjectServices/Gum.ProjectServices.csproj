@@ -70,6 +70,8 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\..\GumCommon\GumCommon.csproj" />
+		<!-- VariableReferenceValidator parses and evaluates reference lines with Roslyn, for the tool and gumcli edit. -->
+		<ProjectReference Include="..\..\Runtimes\GumExpressions\GumExpressions.csproj" />
 		<!-- ScreenshotDiffService (#4174) decodes/diffs rendered PNGs via the shared, dependency-free
 		     PixelComparer rather than duplicating pixel-comparison logic. -->
 		<ProjectReference Include="..\Gum.ImageDiff\Gum.ImageDiff.csproj" />

@@ -142,6 +142,10 @@ public class DescribeCommandTests : BaseTestClass
             .Single(item => item.GetProperty("op").GetString() == "extractToComponent");
         ReadFields(extract, "required")
             .ShouldBe(new[] { ("element", "string"), ("instance", "string"), ("name", "string"), ("replace", "bool") });
+        JsonElement references = document.RootElement.GetProperty("operations").EnumerateArray()
+            .Single(item => item.GetProperty("op").GetString() == "setVariableReferences");
+        ReadFields(references, "required").ShouldBe(new[] { ("element", "string"), ("lines", "string[]") });
+        ReadFields(references, "optional").ShouldBe(new[] { ("instance", "string"), ("state", "string"), ("category", "string") });
     }
 
     [Fact]
@@ -150,8 +154,8 @@ public class DescribeCommandTests : BaseTestClass
         CliTestHelper schema = CliTestHelper.Run("edit", "--schema", "--json");
         schema.ExitCode.ShouldBe(0, schema.StandardError);
         using JsonDocument document = JsonDocument.Parse(schema.StandardOutput);
-        Dictionary<string, object?> validValues = new() { ["string"] = "x", ["bool"] = true, ["any"] = null };
-        Dictionary<string, object> wrongValues = new() { ["string"] = 5, ["bool"] = "true" };
+        Dictionary<string, object?> validValues = new() { ["string"] = "x", ["bool"] = true, ["any"] = null, ["string[]"] = new[] { "x" } };
+        Dictionary<string, object> wrongValues = new() { ["string"] = 5, ["bool"] = "true", ["string[]"] = new[] { 5 } };
         int checkedFields = 0;
 
         foreach (JsonElement operation in document.RootElement.GetProperty("operations").EnumerateArray())

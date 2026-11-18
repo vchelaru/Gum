@@ -1,3 +1,4 @@
+using Gum.ProjectServices.Editing;
 using Gum.Commands;
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
@@ -59,12 +60,10 @@ public sealed class DragWorld : BaseTestClass
         _fileCommands.Setup(x => x.TryAutoSaveElement(It.IsAny<ElementSave?>())).Callback<ElementSave?>(SaveToFakeDisk);
         _fileCommands.Setup(x => x.TryAutoSaveCurrentElement()).Callback(() => SaveToFakeDisk(_comp));
 
-        Mock<ICompositeMemberRegistry> registry = new Mock<ICompositeMemberRegistry>();
-        registry.Setup(x => x.Descriptors).Returns(new List<CompositeMemberDescriptor>());
         Mock<IWireframeObjectManager> wireframe = new Mock<IWireframeObjectManager>();
         wireframe.Setup(x => x.AllIpsos).Returns(new List<GraphicalUiElement>());
         _logic = new VariableReferenceLogic(new Mock<IGuiCommands>().Object, new Mock<IWireframeCommands>().Object,
-            new Mock<IDialogService>().Object, _fileCommands.Object, registry.Object,
+            new Mock<IDialogService>().Object, _fileCommands.Object, new VariableReferenceValidator(), new VariableReferenceCascade(),
             new Mock<IDispatcher>().Object, wireframe.Object);
 
         Mock<IReferenceFinderProjectProvider> projectProvider = new Mock<IReferenceFinderProjectProvider>();

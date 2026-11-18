@@ -1,3 +1,4 @@
+using Gum.ProjectServices.Editing;
 using Gum.Commands;
 using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
@@ -63,7 +64,7 @@ public class VariableReferenceLogicDerivedBehaviorTests : BaseTestClass
             new Mock<IWireframeCommands>().Object,
             new Mock<IDialogService>().Object,
             new Mock<IFileCommands>().Object,
-            new Mock<ICompositeMemberRegistry>().Object,
+            new VariableReferenceValidator(), new VariableReferenceCascade(),
             new Mock<IDispatcher>().Object,
             new Mock<IWireframeObjectManager>().Object);
 

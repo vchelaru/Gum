@@ -1,3 +1,4 @@
+using Gum.ProjectServices.Editing;
 using Gum.Commands;
 using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
@@ -431,11 +432,9 @@ public class ElementCommandsTests : BaseTestClass
         var dialogServiceMock = new Mock<IDialogService>();
         var fileCommandsMock = new Mock<IFileCommands>();
         var dispatcherMock = new Mock<IDispatcher>();
-        var registryMock = new Mock<ICompositeMemberRegistry>();
-        registryMock.Setup(x => x.Descriptors).Returns(new List<CompositeMemberDescriptor>());
         var variableReferenceLogic = new VariableReferenceLogic(
             _guiCommands.Object, wireframeCommandsMock.Object, dialogServiceMock.Object,
-            fileCommandsMock.Object, registryMock.Object, dispatcherMock.Object, _wireframeObjectManager.Object);
+            fileCommandsMock.Object, new VariableReferenceValidator(), new VariableReferenceCascade(), dispatcherMock.Object, _wireframeObjectManager.Object);
 
         foreach (var possiblyChangedVariable in defaultState.Variables.ToList())
         {
