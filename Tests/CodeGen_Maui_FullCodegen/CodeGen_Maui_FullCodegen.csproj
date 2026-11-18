@@ -3,8 +3,6 @@
 	<PropertyGroup>
 		<TargetFrameworks>net9.0-android</TargetFrameworks>
 		<TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('windows'))">$(TargetFrameworks);net9.0-windows10.0.19041.0</TargetFrameworks>
-		<!-- CI passes -p:MauiWindowsOnly=true to build only the Windows head, so it needs just the maui-windows workload (no Android packs). -->
-		<TargetFrameworks Condition="'$(MauiWindowsOnly)' == 'true'">net9.0-windows10.0.19041.0</TargetFrameworks>
 
 		<!-- Uncomment to also build the tizen app. You will need to install tizen by following this: https://github.com/Samsung/Tizen.NET -->
 		<!-- <TargetFrameworks>$(TargetFrameworks);net9.0-tizen</TargetFrameworks> -->
@@ -40,6 +38,21 @@
 		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</SupportedOSPlatformVersion>
 		<TargetPlatformMinVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</TargetPlatformMinVersion>
 	</PropertyGroup>
+
+	<!-- CI passes -p:GeneratedCodeOnly=true to compile only the generated code and its partials, as a
+	     plain net9.0 library (SkiaGum.Maui's TFM). That needs no MAUI workload, so the build does not
+	     depend on which workloads the runner image installs for which SDK band. -->
+	<PropertyGroup Condition="'$(GeneratedCodeOnly)' == 'true'">
+		<TargetFrameworks>net9.0</TargetFrameworks>
+		<UseMaui>false</UseMaui>
+		<SingleProject>false</SingleProject>
+		<OutputType>Library</OutputType>
+		<EnableDefaultItems>false</EnableDefaultItems>
+	</PropertyGroup>
+
+	<ItemGroup Condition="'$(GeneratedCodeOnly)' == 'true'">
+		<Compile Include="Components\**\*.cs;Screens\**\*.cs;StandardElements.Generated.cs" />
+	</ItemGroup>
 
 	<ItemGroup>
 		<!-- App Icon -->
