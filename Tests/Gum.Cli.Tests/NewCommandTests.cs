@@ -20,6 +20,47 @@ public class NewCommandTests : BaseTestClass
         result.StandardOutput.ShouldContain("Created project:");
     }
 
+    [Theory]
+    [InlineData(null)]
+    [InlineData("monogame")]
+    public void New_WithCanvas_SetsTheProjectCanvasSize(string? platform)
+    {
+        string projectDir = Path.Combine(TempDirectory, "MyGame");
+        List<string> arguments = new List<string> { "new", projectDir, "--template", "empty", "--canvas", "256x224" };
+        if (platform != null)
+        {
+            arguments.AddRange(new[] { "--platform", platform, "--no-restore" });
+        }
+
+        CliTestHelper result = CliTestHelper.Run(arguments.ToArray());
+
+        result.ExitCode.ShouldBe(0, result.StandardOutput + result.StandardError);
+        string gumProjectPath = platform == null
+            ? Path.Combine(projectDir, "MyGame.gumj")
+            : Path.Combine(projectDir, "Content", "GumProject", "GumProject.gumj");
+        Gum.DataTypes.GumProjectSave project = new ProjectLoader().Load(gumProjectPath).Project!;
+        project.DefaultCanvasWidth.ShouldBe(256);
+        project.DefaultCanvasHeight.ShouldBe(224);
+    }
+
+    [Theory]
+    [InlineData("256")]
+    [InlineData("256x")]
+    [InlineData("widextall")]
+    [InlineData("0x224")]
+    [InlineData("256x-1")]
+    public void New_WithAnInvalidCanvas_ExitsWith2AndCreatesNothing(string canvas)
+    {
+        string projectDir = Path.Combine(TempDirectory, "MyGame");
+
+        CliTestHelper result = CliTestHelper.Run("new", projectDir, "--canvas", canvas);
+
+        result.ExitCode.ShouldBe(2);
+        result.StandardError.ShouldContain("--canvas");
+        result.StandardError.ShouldContain(canvas);
+        Directory.Exists(projectDir).ShouldBeFalse();
+    }
+
     [Fact]
     public void New_WithDirectoryName_ShouldCreateProjectInsideDirectory()
     {

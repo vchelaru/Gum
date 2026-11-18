@@ -73,4 +73,10 @@ public class NewProjectRequest
     /// project instead of the default <c>.gumj</c> (JSON). A path ending in <c>.gumx</c>/<c>.gumj</c> decides by itself.
     /// </summary>
     public bool UseXmlFormat { get; init; }
+
+    /// <summary>
+    /// The project's canvas size (<see cref="Gum.DataTypes.GumProjectSave.DefaultCanvasWidth"/> and height), or
+    /// <see langword="null"/> to keep the template's. Both values are positive.
+    /// </summary>
+    public (int Width, int Height)? CanvasSize { get; init; }
 }

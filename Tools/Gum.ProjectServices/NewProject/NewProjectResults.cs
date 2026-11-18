@@ -78,6 +78,9 @@ public class ResolvedNewProject
 
     /// <summary>The project name: the game folder's name with a platform, otherwise the Gum project file's name.</summary>
     public string Name { get; init; } = "";
+
+    /// <summary>The canvas size the new project gets, or <see langword="null"/> to keep the template's.</summary>
+    public (int Width, int Height)? CanvasSize { get; init; }
 }
 
 /// <summary>Outcome of validating a request: either an <see cref="Error"/> or a <see cref="Resolved"/> project.</summary>

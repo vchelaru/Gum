@@ -1,6 +1,7 @@
 using System;
 using System.CommandLine;
 using System.CommandLine.Invocation;
+using System.Globalization;
 using System.IO;
 using System.Threading;
 using Gum.ProjectServices;
@@ -62,6 +63,10 @@ public static class NewCommand
             "With --platform, reference the newest preview (prerelease) Gum NuGet packages instead of the stable ones. " +
             "Preview packages may be unstable. Cannot be combined with --source-linked.");
 
+        var canvasOption = new Option<string?>(
+            "--canvas",
+            "The project's canvas size as WIDTHxHEIGHT in pixels, for example 256x224. Omit it to keep the template's size.");
+
         var command = new Command("new", "Create a new Gum project.")
         {
             pathArgument,
@@ -70,7 +75,8 @@ public static class NewCommand
             platformOption,
             noRestoreOption,
             sourceLinkedOption,
-            previewOption
+            previewOption,
+            canvasOption
         };
 
         command.SetHandler((InvocationContext context) =>
@@ -82,19 +88,32 @@ public static class NewCommand
             bool noRestore = context.ParseResult.GetValueForOption(noRestoreOption);
             bool sourceLinked = context.ParseResult.GetValueForOption(sourceLinkedOption);
             bool preview = context.ParseResult.GetValueForOption(previewOption);
-            context.ExitCode = Execute(path, template, theme, platform, noRestore, sourceLinked, preview);
+            string? canvas = context.ParseResult.GetValueForOption(canvasOption);
+            context.ExitCode = Execute(path, template, theme, platform, noRestore, sourceLinked, preview, canvas);
         });
 
         return command;
     }
 
     private static int Execute(
-        string? path, string template, string? theme, string? platform, bool noRestore, bool sourceLinked, bool preview)
+        string? path, string template, string? theme, string? platform, bool noRestore, bool sourceLinked, bool preview,
+        string? canvas)
     {
         if (preview && sourceLinked)
         {
             Console.Error.WriteLine("--preview and --source-linked can't be combined: pick one. Use --preview for the preview NuGet packages, or --source-linked for the local Gum source.");
             return 2;
+        }
+
+        (int Width, int Height)? canvasSize = null;
+        if (canvas != null)
+        {
+            canvasSize = ParseCanvasSize(canvas);
+            if (canvasSize == null)
+            {
+                Console.Error.WriteLine($"--canvas \"{canvas}\" is not a size: use WIDTHxHEIGHT with two positive whole numbers, for example 256x224.");
+                return 2;
+            }
         }
 
         INewProjectService service = new NewProjectService(
@@ -111,7 +130,8 @@ public static class NewCommand
             PackageChannel = sourceLinked
                 ? NewProjectPackageChannel.LocalSource
                 : preview ? NewProjectPackageChannel.Preview : NewProjectPackageChannel.Stable,
-            Restore = !noRestore
+            Restore = !noRestore,
+            CanvasSize = canvasSize
         });
 
         if (validation.Resolved == null)
@@ -143,6 +163,20 @@ public static class NewCommand
         }
 
         return 0;
+    }
+
+    // WIDTHxHEIGHT, both positive; null for anything else.
+    private static (int Width, int Height)? ParseCanvasSize(string text)
+    {
+        string[] parts = text.Split('x', 'X');
+        if (parts.Length == 2
+            && int.TryParse(parts[0], NumberStyles.None, CultureInfo.InvariantCulture, out int width)
+            && int.TryParse(parts[1], NumberStyles.None, CultureInfo.InvariantCulture, out int height)
+            && width > 0 && height > 0)
+        {
+            return (width, height);
+        }
+        return null;
     }
 
     // Code generation reads the Gum version from the restored package, so restoring now makes the

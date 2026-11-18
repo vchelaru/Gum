@@ -1,7 +1,7 @@
 # new
 
 ```
-gumcli new [<path>] [--template <name>] [--theme <name>] [--platform <name>] [--source-linked] [--preview] [--no-restore]
+gumcli new [<path>] [--template <name>] [--theme <name>] [--platform <name>] [--source-linked] [--preview] [--no-restore] [--canvas <width>x<height>]
 ```
 
 Creates a new Gum project. The path is optional — when omitted, a `GumProject` subdirectory is created in the current directory.
@@ -19,6 +19,11 @@ The New Project dialog in the Gum tool shows the matching command under **Comman
 - `--source-linked`: With `--platform`, references the platform's runtime project in a Gum source checkout instead of the NuGet package. See [Linking to Gum Source](#linking-to-gum-source).
 - `--preview`: With `--platform`, references the newest preview (prerelease) Gum NuGet packages instead of the stable ones. Preview packages may be unstable. Cannot be combined with `--source-linked`.
 - `--no-restore`: With `--platform`, skips the `dotnet restore` that otherwise runs after the project is created.
+- `--canvas`: Sets the project's canvas size in pixels, written as width `x` height, for example `256x224`. Without it, the project keeps the template's canvas size.
+
+{% hint style="info" %}
+`--canvas` is available in December 2026, or now if building Gum from source.
+{% endhint %}
 
 ## Templates
 
@@ -103,6 +108,7 @@ gumcli new MyGame -p raylib -t empty
 gumcli new MyGame -p silknet
 gumcli new MyGame -p silknet --source-linked
 gumcli new MyGame -p monogame --no-restore
+gumcli new MyGame -p monogame --canvas 256x224
 ```
 
 Output on success:
@@ -122,6 +128,7 @@ Created Gum project: /full/path/to/MyGame/Content/GumProject/GumProject.gumj
 
 - Exits with code 2 if the project file already exists (including when invoked with no path and a `GumProject/GumProject.gumj` is already present in the current directory).
 - Exits with code 2 if an unknown template name is given.
+- Exits with code 2 if `--canvas` is not two positive whole numbers joined by `x`.
 - Exits with code 2 if an unknown platform name is given. FNA is not offered because it is not published to NuGet.
 - With `--platform`, exits with code 2 if `<path>` ends in `.gumj` or `.gumx`, because the path names a folder. It also exits with code 2 for a project name that is not a valid C# project name or that matches a Gum runtime assembly name such as `MonoGameGum`.
 - `--source-linked` without `--platform` exits with code 2. It also exits with code 2 when no Gum checkout is found.

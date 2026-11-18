@@ -213,6 +213,7 @@ public class ProjectEditService : IProjectEditService
                 None, ExtractToComponent),
             ["setVariableReferences"] = new(Fields(Str("element"), new EditField("lines", EditFieldType.StringArray)),
                 Strings("instance", "state", "category"), SetVariableReferences),
+            ["setProjectProperty"] = new(Fields(Str("name"), new EditField("value", EditFieldType.Any)), None, SetProjectProperty),
         };
     }
 
@@ -681,6 +682,39 @@ public class ProjectEditService : IProjectEditService
         _referenceCascade.ApplyOtherStatesReading(element, state, changedNames, liveRoot: null, isFullCommit: true);
         _referenceCascade.ApplyToElementsReading(element, _ => null, isFullCommit: true);
         _referenceCascade.ApplyToInstanceInternals(element, instance, state, "VariableReferences", state.GetValueRecursive(listName));
+    }
+
+    // The Project Properties settings a game reads. Editor-only view settings (outlines, checkerboard) are left out.
+    private static readonly Dictionary<string, Action<GumProjectSave, JsonElement>> ProjectProperties = new()
+    {
+        [nameof(GumProjectSave.DefaultCanvasWidth)] = (project, value) => project.DefaultCanvasWidth = GetPositiveInt(value),
+        [nameof(GumProjectSave.DefaultCanvasHeight)] = (project, value) => project.DefaultCanvasHeight = GetPositiveInt(value),
+        [nameof(GumProjectSave.TextureFilter)] = (project, value) => project.TextureFilter =
+            value.ValueKind == JsonValueKind.String && value.GetString() is "Point" or "Linear"
+                ? value.GetString()!
+                : throw new EditException($"{value.GetRawText()} is not a TextureFilter: use \"Point\" or \"Linear\"."),
+    };
+
+    private static int GetPositiveInt(JsonElement value) =>
+        value.ValueKind == JsonValueKind.Number && value.TryGetInt32(out int number) && number > 0
+            ? number
+            : throw new EditException($"{value.GetRawText()} is not a positive whole number.");
+
+    private void SetProjectProperty(GumProjectSave project, JsonElement operation)
+    {
+        string name = GetString(operation, "name");
+        if (!ProjectProperties.TryGetValue(name, out Action<GumProjectSave, JsonElement>? apply))
+        {
+            throw new EditException($"{name} is not a project property setProjectProperty sets. It sets: {string.Join(", ", ProjectProperties.Keys)}.");
+        }
+        try
+        {
+            apply(project, operation.GetProperty("value"));
+        }
+        catch (EditException ex)
+        {
+            throw new EditException($"{name}: {ex.Message}");
+        }
     }
 
     #endregion

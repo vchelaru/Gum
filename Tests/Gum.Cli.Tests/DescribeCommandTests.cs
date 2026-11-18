@@ -146,6 +146,9 @@ public class DescribeCommandTests : BaseTestClass
             .Single(item => item.GetProperty("op").GetString() == "setVariableReferences");
         ReadFields(references, "required").ShouldBe(new[] { ("element", "string"), ("lines", "string[]") });
         ReadFields(references, "optional").ShouldBe(new[] { ("instance", "string"), ("state", "string"), ("category", "string") });
+        JsonElement projectProperty = document.RootElement.GetProperty("operations").EnumerateArray()
+            .Single(item => item.GetProperty("op").GetString() == "setProjectProperty");
+        ReadFields(projectProperty, "required").ShouldBe(new[] { ("name", "string"), ("value", "any") });
     }
 
     [Fact]
