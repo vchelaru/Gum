@@ -1,7 +1,7 @@
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using Gum.ProjectServices;
-using GumRuntime;
+using Gum.Cli.Tests.EndToEnd;
 using Shouldly;
 using SkiaSharp;
 
@@ -10,22 +10,21 @@ namespace Gum.Cli.Tests;
 /// <summary>
 /// Render commands evaluate variable references the way the tool does (#8240): arithmetic on the
 /// right side goes through Gum.Expressions, and a reference that still cannot apply prints a warning.
+/// The renders run gumcli as its own process, as a script does: a render loads one backend per process, and an
+/// in-process render here would build its visuals from whatever runtime types another backend's test registered.
 /// </summary>
 public class ScreenshotVariableReferenceTests : BaseTestClass
 {
     [Fact]
     public void Screenshot_ArithmeticReferenceReadingParentOverride_RendersEvaluatedWidth()
     {
-        // Other commands in this process wire the evaluator, so start unwired: screenshot must not
-        // depend on anything having initialized it.
-        ElementSaveExtensions.CustomEvaluateExpression = null;
         string projectPath = CreateSegmentBarProject("TotalHealth * SegmentWidth");
 
-        CliTestHelper result = RenderScreen(projectPath, out SKBitmap bitmap);
+        GumCliProcess result = RenderScreen(projectPath, out SKBitmap bitmap);
 
         using (bitmap)
         {
-            result.ExitCode.ShouldBe(0, result.StandardError);
+            result.ExitCode.ShouldBe(0, result.Transcript);
             // 23 * 4 = 92 wide. The stored width is 32.
             bitmap.GetPixel(90, 8).ShouldBe(SKColors.White);
             bitmap.GetPixel(94, 8).ShouldBe(SKColors.Black);
@@ -35,14 +34,13 @@ public class ScreenshotVariableReferenceTests : BaseTestClass
     [Fact]
     public void Screenshot_ExpressionThatCannotApply_PrintsWarningAndKeepsStoredWidth()
     {
-        ElementSaveExtensions.CustomEvaluateExpression = null;
         string projectPath = CreateSegmentBarProject("TotalHealth > 3");
 
-        CliTestHelper result = RenderScreen(projectPath, out SKBitmap bitmap);
+        GumCliProcess result = RenderScreen(projectPath, out SKBitmap bitmap);
 
         using (bitmap)
         {
-            result.ExitCode.ShouldBe(0, result.StandardError);
+            result.ExitCode.ShouldBe(0, result.Transcript);
             // Once, although both the project's data pass and the built Bar apply the row.
             string warning = "Variable reference 'Width = TotalHealth > 3' was not applied in SegmentBar (Container): "
                 + "TotalHealth > 3 is a bool and Total.Width is a float, which cannot be converted.";
@@ -59,11 +57,11 @@ public class ScreenshotVariableReferenceTests : BaseTestClass
     {
         string projectPath = CreateSegmentBarProject(rightSide);
 
-        CliTestHelper result = RenderScreen(projectPath, out SKBitmap bitmap);
+        GumCliProcess result = RenderScreen(projectPath, out SKBitmap bitmap);
 
         using (bitmap)
         {
-            result.ExitCode.ShouldBe(0, result.StandardError);
+            result.ExitCode.ShouldBe(0, result.Transcript);
             string warning = $"Variable reference 'Width = {rightSide}' was not applied in SegmentBar (Container): "
                 + $"{rightSide} {problem}. Total.Width keeps its current value.";
             result.StandardError.Split('\n').Count(line => line.Contains(warning)).ShouldBe(1, result.StandardError);
@@ -88,11 +86,11 @@ public class ScreenshotVariableReferenceTests : BaseTestClass
         result.StandardOutput.ShouldContain("No errors found. 1 warning(s) found.");
     }
 
-    private CliTestHelper RenderScreen(string projectPath, out SKBitmap bitmap)
+    private GumCliProcess RenderScreen(string projectPath, out SKBitmap bitmap)
     {
         string outputPath = Path.Combine(TempDirectory, "Screen.png");
 
-        CliTestHelper result = CliTestHelper.Run(
+        GumCliProcess result = GumCliProcess.Run(TempDirectory,
             "screenshot", projectPath, "Screen", "--output", outputPath,
             "--backend", "skia", "--background", "000000", "--width", "128", "--height", "16");
 
