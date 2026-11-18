@@ -322,9 +322,32 @@ namespace Gum.DataTypes
         public static StateSaveCategory? GetStateSaveCategoryRecursively(this IStateContainer element, string? categoryName) =>
             GetStateSaveCategoryRecursively(element, categoryName, out IStateContainer? _);
 
-        public static StateSaveCategory? GetStateSaveCategoryRecursively(this IStateContainer element, string? categoryName, out IStateContainer? categoryContainer) => 
-            GetStateSaveCategoryRecursively(element, item => item.Name == categoryName, out categoryContainer);
-        
+        // A loop instead of the Func overload: VariableSaveExtensionMethods.IsState calls this for every
+        // variable of a state applied at run time, and a lambda capturing categoryName allocated each call.
+        public static StateSaveCategory? GetStateSaveCategoryRecursively(this IStateContainer element, string? categoryName, out IStateContainer? categoryContainer)
+        {
+            IStateContainer? current = element;
+            while (current != null)
+            {
+                IList<StateSaveCategory> categories = current.Categories;
+                for (int i = 0; i < categories.Count; i++)
+                {
+                    if (categories[i].Name == categoryName)
+                    {
+                        categoryContainer = current;
+                        return categories[i];
+                    }
+                }
+
+                current = current is ElementSave elementSave && !string.IsNullOrEmpty(elementSave.BaseType)
+                    ? ObjectFinder.Self.GetBaseElement(elementSave)
+                    : null;
+            }
+
+            categoryContainer = null;
+            return null;
+        }
+
         /// <returns>
         /// The first category of this element that meets the given <paramref name="condition"/>.
         /// </returns>
