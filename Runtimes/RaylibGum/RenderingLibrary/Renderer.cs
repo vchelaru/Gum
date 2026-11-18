@@ -781,9 +781,14 @@ public class Renderer : IRenderer
         Color tint = new Color(alpha, alpha, alpha, alpha);
 
         BatchDrawCallCounter counter = BatchDrawCallCounter;
-        if (IsAdditiveComposite(cacheOwner))
+        Gum.RenderingLibrary.Blend? compositeBlend = GetCompositeBlend(cacheOwner);
+        if (compositeBlend == Gum.RenderingLibrary.Blend.Additive)
         {
             counter.BeginBlendModeAdditivePremultiplied();
+        }
+        else if (compositeBlend == Gum.RenderingLibrary.Blend.Subtract)
+        {
+            counter.BeginBlendModeSubtractPremultiplied();
         }
         else
         {
@@ -956,15 +961,14 @@ public class Renderer : IRenderer
         return source;
     }
 
-    // Whether the container's blend is Additive. The baked texture is premultiplied, so an additive
-    // composite must add the premultiplied color directly (see BeginBlendModeAdditivePremultiplied)
-    // rather than raylib's BlendMode.Additive, which would multiply by source alpha a second time and
-    // render the glow too dim. Non-additive blends composite premultiplied-over for v1.
-    private static bool IsAdditiveComposite(IRenderableIpso cacheOwner)
+    // The container's blend. The baked texture is premultiplied, so Additive and Subtract composite
+    // the premultiplied color directly (BeginBlendModeAdditivePremultiplied/SubtractPremultiplied)
+    // rather than weighting it by source alpha a second time. Other blends composite premultiplied-over.
+    private static Gum.RenderingLibrary.Blend? GetCompositeBlend(IRenderableIpso cacheOwner)
     {
         return cacheOwner is RenderableBase renderable
-            && Gum.RenderingLibrary.BlendExtensions.ToBlend(renderable.BlendState)
-                == Gum.RenderingLibrary.Blend.Additive;
+            ? Gum.RenderingLibrary.BlendExtensions.ToBlend(renderable.BlendState)
+            : null;
     }
 
     /// <summary>

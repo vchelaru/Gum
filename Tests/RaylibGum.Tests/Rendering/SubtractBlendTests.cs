@@ -34,6 +34,31 @@ public class SubtractBlendTests : BaseTestClass
         pixel.A.ShouldBe((byte)255, message);
     }
 
+    // The container composites its premultiplied bake, so its Subtract must subtract that color once.
+    [Fact]
+    public void Subtract_OnRenderTargetContainer_WithTranslucentContent_SubtractsOnce()
+    {
+        PixelGrid pixels = RaylibPixelHarness.Render(Size, Size, new Color((byte)255, (byte)255, (byte)255, (byte)255), outer =>
+        {
+            ContainerRuntime container = new();
+            container.Width = Size;
+            container.Height = Size;
+            container.IsRenderTarget = true;
+            container.Blend = Blend.Subtract;
+            SpriteRuntime sprite = GraySprite(128);
+            sprite.Blend = Blend.Normal;
+            container.Children.Add(sprite);
+            outer.Children.Add(container);
+        });
+
+        Color pixel = pixels[Size / 2, Size / 2];
+        string message = $"was {pixel.R},{pixel.G},{pixel.B},{pixel.A}";
+        System.Math.Abs(pixel.R - 189).ShouldBeLessThanOrEqualTo(1, message);
+        System.Math.Abs(pixel.G - 189).ShouldBeLessThanOrEqualTo(1, message);
+        System.Math.Abs(pixel.B - 189).ShouldBeLessThanOrEqualTo(1, message);
+        pixel.A.ShouldBe((byte)255, message);
+    }
+
     [Theory]
     [InlineData(false)]
     [InlineData(true)]

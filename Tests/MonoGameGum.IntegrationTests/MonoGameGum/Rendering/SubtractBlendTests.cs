@@ -48,6 +48,30 @@ public class SubtractBlendTests : BaseTestClass
         AssertGray(pixel, expected);
     }
 
+    // The container composites its premultiplied bake, so its Subtract must not weight it by alpha again.
+    [Fact]
+    public void Subtract_OnRenderTargetContainer_WithTranslucentContent_SubtractsOnce()
+    {
+        using ShapeGameLease game = new ShapeGameLease();
+
+        ContainerRuntime root = new() { Width = CaptureSize, Height = CaptureSize };
+        ContainerRuntime container = new()
+        {
+            Width = CaptureSize, Height = CaptureSize, IsRenderTarget = true,
+            Blend = Gum.RenderingLibrary.Blend.Subtract,
+        };
+#pragma warning disable CS0618
+        root.AddChild(new ColoredRectangleRuntime { Width = CaptureSize, Height = CaptureSize, Color = XnaColor.White });
+        container.AddChild(new ColoredRectangleRuntime
+        {
+            Width = CaptureSize, Height = CaptureSize, Color = new XnaColor((byte)132, (byte)132, (byte)132, (byte)128),
+        });
+#pragma warning restore CS0618
+        root.AddChild(container);
+
+        AssertGray(Capture(game.GraphicsDevice, SystemManagers.Default, root), 189);
+    }
+
     private static void AssertGray(XnaColor pixel, int expected)
     {
         string message = $"was {pixel.R},{pixel.G},{pixel.B},{pixel.A}";
@@ -93,6 +117,11 @@ public class SubtractBlendTests : BaseTestClass
             });
         }
 #pragma warning restore CS0618
+        return Capture(gd, managers, root);
+    }
+
+    private static XnaColor Capture(GraphicsDevice gd, SystemManagers managers, ContainerRuntime root)
+    {
         root.AddToManagers(managers, null);
         root.UpdateLayout();
 
