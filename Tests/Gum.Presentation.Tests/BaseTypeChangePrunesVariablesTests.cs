@@ -52,6 +52,7 @@ public class BaseTypeChangePrunesVariablesTests : BaseTestClass
         mocker.Use(new Lazy<IUndoManager>(() => _undoManager));
         mocker.Use<IReferenceFinder>(mocker.CreateInstance<ReferenceFinder>());
         mocker.Use<IRenameLogic>(mocker.CreateInstance<RenameLogic>());
+        mocker.Use<Gum.ProjectServices.Editing.IVariableOverrideRemover>(new Gum.ProjectServices.Editing.VariableOverrideRemover());
         mocker.Use<IInstanceOverrideRemover>(mocker.CreateInstance<InstanceOverrideRemover>());
         mocker.Use<IVariableDefinedByTypeLogic>(new VariableDefinedByTypeLogic());
         mocker.Use<IBaseTypeVariablePruner>(mocker.CreateInstance<BaseTypeVariablePruner>());

@@ -3,6 +3,7 @@ using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
 using Gum.Logic;
+using Gum.ProjectServices.Editing;
 using Gum.Services;
 using Gum.Services.Dialogs;
 using Gum.ToolStates;
@@ -27,6 +28,8 @@ public class DeleteLogic : IDeleteLogic
     private readonly IWireframeObjectManager _wireframeObjectManager;
     private readonly IDeleteProjectProvider _deleteProjectProvider;
     private readonly IReferenceFinder _referenceFinder;
+    private readonly IInstanceRemovalLogic _instanceRemovalLogic;
+    private readonly IStateRemovalLogic _stateRemovalLogic;
     // Lazy: the remover needs IPluginManager, which depends on this class.
     private readonly Lazy<IInstanceOverrideRemover> _instanceOverrideRemover;
     // Lazy: UndoManager depends on RenameLogic, which depends on this class.
@@ -46,6 +49,8 @@ public class DeleteLogic : IDeleteLogic
         IWireframeObjectManager wireframeObjectManager,
         IDeleteProjectProvider deleteProjectProvider,
         IReferenceFinder referenceFinder,
+        IInstanceRemovalLogic instanceRemovalLogic,
+        IStateRemovalLogic stateRemovalLogic,
         Lazy<IInstanceOverrideRemover> instanceOverrideRemover,
         Lazy<IUndoManager> undoManager)
     {
@@ -58,6 +63,8 @@ public class DeleteLogic : IDeleteLogic
         _wireframeObjectManager = wireframeObjectManager;
         _deleteProjectProvider = deleteProjectProvider;
         _referenceFinder = referenceFinder;
+        _instanceRemovalLogic = instanceRemovalLogic;
+        _stateRemovalLogic = stateRemovalLogic;
         _instanceOverrideRemover = instanceOverrideRemover;
         _undoManager = undoManager;
     }
@@ -693,9 +700,7 @@ public class DeleteLogic : IDeleteLogic
     {
         var isRemovingSelectedCategory = _selectedState.SelectedStateCategorySave == category;
 
-        RemoveReferencesToStateCategory(category, stateCategoryListContainer);
-
-        stateCategoryListContainer.Categories.Remove(category);
+        RecordAndSaveRemovedVariables(_stateRemovalLogic.RemoveCategory(category, stateCategoryListContainer));
 
         if (isRemovingSelectedCategory)
         {
@@ -714,27 +719,8 @@ public class DeleteLogic : IDeleteLogic
         _deletePluginNotifier.CategoryDelete(category);
     }
 
-    public List<BehaviorSave> GetBehaviorsNeedingCategory(StateSaveCategory category, ComponentSave? componentSave)
-    {
-        List<BehaviorSave> behaviors = new List<BehaviorSave>();
-
-        if (componentSave != null)
-        {
-            var behaviorNames = componentSave.Behaviors.Select(item => item.BehaviorName);
-
-            foreach (var behavior in LoadedProject.Behaviors.Where(item => behaviorNames.Contains(item.Name)))
-            {
-                bool needsCategory = behavior.Categories.Any(item => item.Name == category.Name);
-
-                if (needsCategory)
-                {
-                    behaviors.Add(behavior);
-                }
-            }
-        }
-
-        return behaviors;
-    }
+    public List<BehaviorSave> GetBehaviorsNeedingCategory(StateSaveCategory category, ComponentSave? componentSave) =>
+        _stateRemovalLogic.GetBehaviorsNeedingCategory(category, componentSave);
 
     public void Remove(StateSave stateSave)
     {
@@ -818,69 +804,11 @@ public class DeleteLogic : IDeleteLogic
 
     private void RemoveInstanceFromElement(InstanceSave instance, ElementSave element)
     {
-        RemoveValuesSetOnExposedVariablesOf(instance, element);
-        element.Instances.Remove(instance);
-        element.Events.RemoveAll(item => item.GetSourceObject() == instance.Name);
-        RemoveReferencesToInstance(instance, element);
+        _instanceOverrideRemover.Value.RecordRemoved(_instanceRemovalLogic.RemoveInstance(instance, element));
     }
 
-    /// <summary>
-    /// Removing an instance removes the variables the element exposes from it, so the values other
-    /// elements set for those exposed names (RowA.Caption, a derived component's own value) would be
-    /// orphans. Removes them and records them for the delete's undo step. Must run before the
-    /// instance's exposed variables are removed.
-    /// </summary>
-    private void RemoveValuesSetOnExposedVariablesOf(InstanceSave instance, ElementSave element)
-    {
-        List<VariableChange> valuesToClear = new List<VariableChange>();
-        foreach (VariableSave exposed in element.DefaultState.Variables
-            .Where(v => v.SourceObject == instance.Name && !string.IsNullOrEmpty(v.ExposedAsName))
-            .ToList())
-        {
-            VariableChangeResponse? references =
-                _referenceFinder.GetReferencesToVariable(element, exposed.Name, exposed.ExposedAsName!);
-            if (references != null)
-            {
-                valuesToClear.AddRange(references.VariableChanges.Where(c => c.IsRemovableValue));
-            }
-        }
-
-        _instanceOverrideRemover.Value.RemoveAndRecordForUndo(valuesToClear);
-    }
-
-    public void RemoveReferencesToInstance(InstanceSave instanceToRemove, ElementSave elementToRemoveFrom)
-    {
-        foreach (StateSave stateSave in elementToRemoveFrom.AllStates)
-        {
-            for (int i = stateSave.Variables.Count - 1; i > -1; i--)
-            {
-                var variable = stateSave.Variables[i];
-
-                if (variable.SourceObject == instanceToRemove.Name)
-                {
-                    // this is a variable that assigns a value on the removed object. The object
-                    // is gone, so the variable should be removed too.
-                    stateSave.Variables.RemoveAt(i);
-                }
-                else if ((variable.GetRootName() == "Parent" || variable.GetRootName() == "RenderTargetTextureSource") &&
-                         variable.Value is string valueAsString &&
-                         (valueAsString == instanceToRemove.Name || valueAsString.StartsWith(instanceToRemove.Name + ".")))
-                {
-                    // This is a variable whose value references the removed object by name — either a Parent
-                    // assignment (or a dotted reference like "Parent.Container") or a Sprite's render-target
-                    // source. Since the object is gone, the reference shouldn't be assigned anymore.
-                    stateSave.Variables.RemoveAt(i);
-                }
-            }
-            for (int i = stateSave.VariableLists.Count - 1; i > -1; i--)
-            {
-                if (stateSave.VariableLists[i].SourceObject == instanceToRemove.Name)
-                {
-                    stateSave.VariableLists.RemoveAt(i);
-                }
-            }
-        }
-    }
+    public void RemoveReferencesToInstance(InstanceSave instanceToRemove, ElementSave elementToRemoveFrom) =>
+        _instanceRemovalLogic.RemoveReferencesToInstance(instanceToRemove, elementToRemoveFrom);
 
 
     public void RemoveInstances(List<InstanceSave> instances, ElementSave elementToRemoveFrom)
@@ -898,14 +826,7 @@ public class DeleteLogic : IDeleteLogic
 
     public void RemoveState(StateSave stateSave, IStateContainer elementToRemoveFrom)
     {
-        RemoveReferencesToState(stateSave, elementToRemoveFrom);
-
-        elementToRemoveFrom.UncategorizedStates.Remove(stateSave);
-
-        foreach (var category in elementToRemoveFrom.Categories.Where(item => item.States.Contains(stateSave)))
-        {
-            category.States.Remove(stateSave);
-        }
+        RecordAndSaveRemovedVariables(_stateRemovalLogic.RemoveState(stateSave, elementToRemoveFrom));
 
         if (elementToRemoveFrom is BehaviorSave behaviorSave)
         {
@@ -918,62 +839,17 @@ public class DeleteLogic : IDeleteLogic
     }
 
     /// <summary>
-    /// Removes every variable that sets a state of the category - the same set the delete dialog
-    /// lists: the owner's own, those on elements deriving from it, and those on instances of either.
+    /// Records variables a state or category removal took out of other elements, so undo restores them, and saves
+    /// those elements. Their own undo snapshots cover only their selected state, so each removal is recorded as a
+    /// cross-element change.
     /// </summary>
-    private void RemoveReferencesToStateCategory(StateSaveCategory category, IStateContainer owner)
+    private void RecordAndSaveRemovedVariables(IReadOnlyList<RemovedVariable> removed)
     {
-        CategoryReferences references = _referenceFinder.GetReferencesToStateCategory(owner, category, category.Name);
+        _undoManager.Value.RecordCrossElementVariableChanges(removed
+            .Select(item => CrossElementVariableChange.CaptureBefore(item.Container, item.State, item.Variable))
+            .ToList());
 
-        var elementsToSave = new HashSet<ElementSave>();
-        var removals = new List<CrossElementVariableChange>();
-        foreach (var change in references.VariableChanges)
-        {
-            if (change.Container is ElementSave referencingElement)
-            {
-                // The element's own undo snapshot covers only its selected state and its
-                // categories, so every removal is recorded as a cross-element change.
-                removals.Add(CrossElementVariableChange.CaptureBefore(referencingElement, change.State, change.Variable));
-                change.State.Variables.Remove(change.Variable);
-                elementsToSave.Add(referencingElement);
-            }
-        }
-
-        _undoManager.Value.RecordCrossElementVariableChanges(removals);
-
-        foreach (var elementToSave in elementsToSave)
-        {
-            _fileCommands.TryAutoSaveElement(elementToSave);
-        }
-    }
-
-    /// <summary>
-    /// Removes variables in other elements that set the state, so they fall back to their
-    /// inherited value instead of naming a state that no longer exists.
-    /// </summary>
-    private void RemoveReferencesToState(StateSave stateSave, IStateContainer container)
-    {
-        var category = container.Categories.FirstOrDefault(item => item.States.Contains(stateSave));
-        StateReferences references = _referenceFinder.GetReferencesToState(stateSave, stateSave.Name, container, category);
-
-        var elementsToSave = new HashSet<ElementSave>();
-        var removals = new List<CrossElementVariableChange>();
-        foreach (var (referencingElement, variable) in references.VariablesToUpdate)
-        {
-            foreach (var state in referencingElement.AllStates)
-            {
-                if (state.Variables.Contains(variable))
-                {
-                    removals.Add(CrossElementVariableChange.CaptureBefore(referencingElement, state, variable));
-                    state.Variables.Remove(variable);
-                    elementsToSave.Add(referencingElement);
-                }
-            }
-        }
-
-        _undoManager.Value.RecordCrossElementVariableChanges(removals);
-
-        foreach (var elementToSave in elementsToSave)
+        foreach (ElementSave elementToSave in removed.Select(item => item.Container).Distinct())
         {
             _fileCommands.TryAutoSaveElement(elementToSave);
         }

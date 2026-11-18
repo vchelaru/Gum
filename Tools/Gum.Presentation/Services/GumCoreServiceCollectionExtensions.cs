@@ -230,6 +230,10 @@ public static class GumCoreServiceCollectionExtensions
         services.AddSingleton<IStateVariableSorter, StateVariableSorter>();
         services.AddSingleton<ICustomVariableLogic, CustomVariableLogic>();
         services.AddSingleton<IExposeVariableLogic, ExposeVariableLogic>();
+        services.AddSingleton<IVariableOverrideRemover, VariableOverrideRemover>();
+        services.AddSingleton<IInstanceRemovalLogic, InstanceRemovalLogic>();
+        services.AddSingleton<IStateRemovalLogic, StateRemovalLogic>();
+        services.AddSingleton<IVariableRemovalLogic, VariableRemovalLogic>();
         services.AddSingleton<IVariableReferenceLogic, VariableReferenceLogic>();
         services.AddSingleton<IVariableReferenceConflictFixer, VariableReferenceConflictFixer>();
         services.AddSingleton<IReferenceFinder, ReferenceFinder>();

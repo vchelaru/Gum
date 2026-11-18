@@ -36,7 +36,7 @@ Used for screens, components, behaviors, and instances. All go through one share
 | Class | Responsibility |
 |-------|---------------|
 | `IEditCommands` / `EditCommands` | All user-triggered deletes. Shows dialogs, acquires undo locks, then delegates to `IDeleteLogic`. Only entry point callers should use. |
-| `IDeleteLogic` / `DeleteLogic` | Pure data mutation after confirmation. `Remove*` methods do not show dialogs. `HandleDeleteCommand` is the exception — it orchestrates the DeleteOptionsWindow flow and is only called from `EditCommands.DeleteSelection`. |
+| `IDeleteLogic` / `DeleteLogic` | Pure data mutation after confirmation. `Remove*` methods do not show dialogs; their data change is in `Tools/Gum.ProjectServices/Editing/` (`InstanceRemovalLogic`, `StateRemovalLogic`), shared with `gumcli edit`, and `DeleteLogic` adds undo records and saves. `HandleDeleteCommand` is the exception — it orchestrates the DeleteOptionsWindow flow and is only called from `EditCommands.DeleteSelection`. |
 
 ## Contributing an option to DeleteOptionsWindow
 
@@ -85,8 +85,8 @@ A key handler that deletes matches through `IHotkeyManager.IsDeletePressed` (or 
 | `Tools/Gum.Presentation/Managers/DeleteLogic.cs` | Data mutation + delete-dialog orchestration via `IDeleteDialogService` |
 | `Gum/Services/Dialogs/DeleteDialogService.cs` | WPF shell (frozen): creates/shows `DeleteOptionsWindow`, calls the concrete `PluginManager` |
 | `Tool/Gum.Avalonia/Dialogs/AvaloniaDeleteDialogService.cs` | Avalonia head: shows `DeleteOptionsDialogViewModel` through `IDialogService` |
-| `Tools/Gum.Presentation/Logic/ReferenceTypes.cs` | `ElementReferences` class; `GetDeleteImpactDetails()` and `ExcludeContainersBeingDeleted()` used to build impact warnings in the delete dialog |
-| `Tools/Gum.Presentation/Logic/ReferenceFinder.cs` | `GetReferencesToVariable()` — enumerates every instance-level assignment of a variable project-wide, including through the inheritance chain; used by `DeleteVariableService.GetIfCanDeleteVariable` to block variable deletes today |
+| `Tools/Gum.ProjectServices/Editing/ReferenceTypes.cs` | `ElementReferences` class; `GetDeleteImpactDetails()` and `ExcludeContainersBeingDeleted()` used to build impact warnings in the delete dialog |
+| `Tools/Gum.ProjectServices/Editing/ReferenceFinder.cs` | `GetReferencesToVariable()` — enumerates every instance-level assignment of a variable project-wide, including through the inheritance chain; used by `VariableRemovalLogic.GetWhyCannotRemoveCustomVariable` to block variable deletes |
 | `Gum/Plugins/InternalPlugins/Delete/DeleteObjectPlugin.cs` | Contributes "Delete XML?" and "Delete children?" to DeleteOptionsWindow |
 | `Gum/Plugins/InternalPlugins/StatePlugin/StateTreeViewRightClickService.cs` | State/category right-click menu; calls AskTo* methods |
 | `Gum/Plugins/InternalPlugins/TreeView/ElementTreeViewManager.RightClick.cs` | Element tree right-click; calls DeleteSelection |

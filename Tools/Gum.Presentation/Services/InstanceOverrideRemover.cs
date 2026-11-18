@@ -2,8 +2,10 @@ using Gum.Commands;
 using Gum.DataTypes;
 using Gum.Logic;
 using Gum.Plugins;
+using Gum.ProjectServices.Editing;
 using Gum.Undo;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Gum.Services;
 
@@ -17,12 +19,18 @@ namespace Gum.Services;
 public interface IInstanceOverrideRemover
 {
     /// <summary>
-    /// Removes each override from its state, saves its element and notifies plugins. The caller must
-    /// hold an undo lock, since the recorded removals attach to the action recorded when it releases.
-    /// An override whose container is not an element, or an instance value whose instance no longer
-    /// exists, is skipped.
+    /// Removes each override from its state (<see cref="IVariableOverrideRemover"/>), then
+    /// <see cref="RecordRemoved"/>. The caller must hold an undo lock, since the recorded removals attach to the
+    /// action recorded when it releases. An override whose container is not an element, or an instance value whose
+    /// instance no longer exists, is skipped.
     /// </summary>
     void RemoveAndRecordForUndo(IEnumerable<VariableChange> overrides);
+
+    /// <summary>
+    /// Records overrides already removed for undo, saves their elements and notifies plugins. The caller must hold
+    /// an undo lock.
+    /// </summary>
+    void RecordRemoved(IReadOnlyList<RemovedVariable> removed);
 }
 
 /// <inheritdoc/>
@@ -31,49 +39,42 @@ public class InstanceOverrideRemover : IInstanceOverrideRemover
     private readonly IUndoManager _undoManager;
     private readonly IFileCommands _fileCommands;
     private readonly IPluginManager _pluginManager;
+    private readonly IVariableOverrideRemover _overrideRemover;
 
-    public InstanceOverrideRemover(IUndoManager undoManager, IFileCommands fileCommands, IPluginManager pluginManager)
+    public InstanceOverrideRemover(IUndoManager undoManager, IFileCommands fileCommands, IPluginManager pluginManager,
+        IVariableOverrideRemover overrideRemover)
     {
         _undoManager = undoManager;
         _fileCommands = fileCommands;
         _pluginManager = pluginManager;
+        _overrideRemover = overrideRemover;
     }
 
     /// <inheritdoc/>
-    public void RemoveAndRecordForUndo(IEnumerable<VariableChange> overrides)
+    public void RemoveAndRecordForUndo(IEnumerable<VariableChange> overrides) =>
+        RecordRemoved(_overrideRemover.Remove(overrides));
+
+    /// <inheritdoc/>
+    public void RecordRemoved(IReadOnlyList<RemovedVariable> removed)
     {
-        List<CrossElementVariableChange> removals = new List<CrossElementVariableChange>();
-        foreach (VariableChange change in overrides)
+        foreach (RemovedVariable item in removed)
         {
-            if (change.Container is not ElementSave element)
-            {
-                continue;
-            }
-
-            InstanceSave? instance = string.IsNullOrEmpty(change.Variable.SourceObject)
+            InstanceSave? instance = string.IsNullOrEmpty(item.Variable.SourceObject)
                 ? null
-                : element.GetInstance(change.Variable.SourceObject);
-
-            // An inheriting element's own value may name no instance, or one it inherits without a copy.
-            if (instance == null && !change.IsInheritingElementValue)
-            {
-                continue;
-            }
-
+                : item.Container.GetInstance(item.Variable.SourceObject);
             string notifiedName = instance == null
-                ? change.Variable.ExposedAsName ?? change.Variable.GetRootName()
-                : change.Variable.GetRootName();
+                ? item.Variable.ExposedAsName ?? item.Variable.GetRootName()
+                : item.Variable.GetRootName();
 
-            removals.Add(CrossElementVariableChange.CaptureBefore(element, change.State, change.Variable));
-
-            change.State.Variables.Remove(change.Variable);
-            _fileCommands.TryAutoSaveElement(element);
-            _pluginManager.VariableSet(element, instance, notifiedName, null);
+            _fileCommands.TryAutoSaveElement(item.Container);
+            _pluginManager.VariableSet(item.Container, instance, notifiedName, null);
         }
 
-        if (removals.Count > 0)
+        if (removed.Count > 0)
         {
-            _undoManager.RecordCrossElementVariableChanges(removals);
+            _undoManager.RecordCrossElementVariableChanges(removed
+                .Select(item => CrossElementVariableChange.CaptureBefore(item.Container, item.State, item.Variable))
+                .ToList());
         }
     }
 }

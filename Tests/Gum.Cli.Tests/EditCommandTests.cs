@@ -77,6 +77,69 @@ public class EditCommandTests : BaseTestClass
     }
 
     [Fact]
+    public void Edit_RemoveOperations_RemoveWhatTheToolRemovesAndPassCheck()
+    {
+        string projectPath = CreateEmptyProject();
+        string setup = WriteOperations("""
+            { "version": 1, "operations": [
+              { "op": "addComponent", "name": "Hud" },
+              { "op": "addInstance", "element": "Hud", "name": "Stack", "type": "Container" },
+              { "op": "addInstance", "element": "Hud", "name": "Panel", "type": "Container", "parent": "Stack" },
+              { "op": "addInstance", "element": "Hud", "name": "Child", "type": "Text", "parent": "Panel" },
+              { "op": "setVariable", "element": "Hud", "name": "Child.Text", "value": "Hi" },
+              { "op": "exposeVariable", "element": "Hud", "instance": "Child", "variable": "Text", "name": "ChildText" },
+              { "op": "addVariable", "element": "Hud", "name": "Score", "type": "int" },
+              { "op": "setVariable", "element": "Hud", "name": "Width", "value": 300 },
+              { "op": "addCategory", "element": "Hud", "name": "Size" },
+              { "op": "addState", "element": "Hud", "category": "Size", "name": "Big" },
+              { "op": "addState", "element": "Hud", "category": "Size", "name": "Normal" },
+              { "op": "addCategory", "element": "Hud", "name": "Mood" },
+              { "op": "addState", "element": "Hud", "category": "Mood", "name": "Happy" },
+              { "op": "addScreen", "name": "Game" },
+              { "op": "addInstance", "element": "Game", "name": "HudInstance", "type": "Hud" },
+              { "op": "setVariable", "element": "Game", "name": "HudInstance.SizeState", "value": "Big" },
+              { "op": "setVariable", "element": "Game", "name": "HudInstance.MoodState", "value": "Happy" },
+              { "op": "setVariable", "element": "Game", "name": "HudInstance.Score", "value": 5 },
+              { "op": "setVariable", "element": "Game", "name": "HudInstance.ChildText", "value": "Yo" }
+            ] }
+            """);
+        CliTestHelper.Run("edit", projectPath, setup).ExitCode.ShouldBe(0);
+        string operations = WriteOperations("""
+            { "version": 1, "operations": [
+              { "op": "removeInstance", "element": "Hud", "name": "Panel" },
+              { "op": "removeState", "element": "Hud", "category": "Size", "name": "Big" },
+              { "op": "removeCategory", "element": "Hud", "name": "Mood" },
+              { "op": "removeVariable", "element": "Hud", "name": "Score" },
+              { "op": "clearVariable", "element": "Hud", "name": "Width" },
+              { "op": "clearVariable", "element": "Hud", "name": "ChildText" }
+            ] }
+            """);
+
+        CliTestHelper result = CliTestHelper.Run("edit", projectPath, operations);
+
+        result.ExitCode.ShouldBe(0, result.StandardOutput + result.StandardError);
+        CliTestHelper.Run("check", projectPath).ExitCode.ShouldBe(0);
+        GumProjectSave project = new ProjectLoader().Load(projectPath).Project!;
+        ObjectFinder.Self.GumProjectSave = project;
+        ComponentSave hud = project.Components.Single(item => item.Name == "Hud");
+        hud.Instances.Select(item => item.Name).ShouldBe(new[] { "Stack", "Child" });
+        hud.GetDefaultStateOrThrow().GetValue("Child.Parent").ShouldBe("Stack");
+        hud.Categories.Select(item => item.Name).ShouldBe(new[] { "Size" });
+        hud.Categories[0].States.Select(item => item.Name).ShouldBe(new[] { "Normal" });
+        hud.GetDefaultStateOrThrow().GetVariableSave("MoodState").ShouldBeNull();
+        hud.GetDefaultStateOrThrow().GetVariableSave("Score").ShouldBeNull();
+        hud.GetDefaultStateOrThrow().GetVariableSave("Width").ShouldBeNull();
+        VariableSave childText = hud.GetDefaultStateOrThrow().GetVariableSave("Child.Text")!;
+        childText.ExposedAsName.ShouldBe("ChildText");
+        childText.SetsValue.ShouldBeFalse();
+        ScreenSave game = project.Screens.Single(item => item.Name == "Game");
+        game.GetDefaultStateOrThrow().GetVariableSave("HudInstance.SizeState").ShouldBeNull();
+        game.GetDefaultStateOrThrow().GetVariableSave("HudInstance.MoodState").ShouldBeNull();
+        game.GetDefaultStateOrThrow().GetVariableSave("HudInstance.Score").ShouldBeNull();
+        game.GetDefaultStateOrThrow().GetValue("HudInstance.ChildText").ShouldBe("Yo");
+    }
+
+    [Fact]
     public void Edit_VariableTheTypeDoesNotDefine_FailsAndWritesNothing()
     {
         string projectPath = CreateEmptyProject();
@@ -184,6 +247,11 @@ public class EditCommandTests : BaseTestClass
     [InlineData("""{ "op": "addVariable", "element": "Hud", "name": "Width", "type": "float" }""", "Width")]
     [InlineData("""{ "op": "addVariable", "element": "Hud", "name": "Speed", "type": "Vector2" }""", "Vector2")]
     [InlineData("""{ "op": "setVariable", "element": "Hud", "name": "Label.Widht", "value": 1 }""", "Label.Widht")]
+    [InlineData("""{ "op": "removeInstance", "element": "Hud", "name": "Nope" }""", "Nope")]
+    [InlineData("""{ "op": "removeState", "element": "Hud", "name": "Default" }""", "default state")]
+    [InlineData("""{ "op": "removeCategory", "element": "Hud", "name": "Size" }""", "Size")]
+    [InlineData("""{ "op": "removeVariable", "element": "Hud", "name": "Width" }""", "custom variable")]
+    [InlineData("""{ "op": "clearVariable", "element": "Hud", "name": "Height" }""", "Height")]
     public void Edit_OperationThatCannotApply_ExitsWith1AndNamesTheProblem(string operation, string expectedInMessage)
     {
         string projectPath = CreateEmptyProject();

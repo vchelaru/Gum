@@ -57,6 +57,7 @@ public class LeftoverVariablesBaseTypeChangeTests : BaseTestClass
         _mocker.GetMock<IRenameProjectProvider>().Setup(x => x.GumProjectSave).Returns(_project);
         _mocker.Use<IReferenceFinder>(_mocker.CreateInstance<ReferenceFinder>());
         _mocker.Use<IRenameLogic>(_mocker.CreateInstance<RenameLogic>());
+        _mocker.Use<Gum.ProjectServices.Editing.IVariableOverrideRemover>(new Gum.ProjectServices.Editing.VariableOverrideRemover());
         _mocker.Use<IInstanceOverrideRemover>(_mocker.CreateInstance<InstanceOverrideRemover>());
         _inheritanceLogic = new InheritanceLogic(
             new Mock<IFileCommands>().Object,

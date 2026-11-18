@@ -46,6 +46,8 @@ public class EditCommandsTests : BaseTestClass
             .Setup(r => r.GetReferencesToBehavior(It.IsAny<BehaviorSave>(), It.IsAny<string>()))
             .Returns(new BehaviorReferences());
 
+        _mocker.Use<Gum.ProjectServices.Editing.IStateRemovalLogic>(new Gum.ProjectServices.Editing.StateRemovalLogic(
+            _referenceFinder.Object, new Gum.ProjectServices.Editing.ObjectFinderProjectProvider()));
         _editCommands = _mocker.CreateInstance<EditCommands>();
     }
 

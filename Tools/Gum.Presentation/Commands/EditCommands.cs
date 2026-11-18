@@ -19,6 +19,7 @@ using Gum.Services;
 using Gum.Services.Dialogs;
 using ToolsUtilities;
 using Gum.Plugins.InternalPlugins.VariableGrid;
+using Gum.ProjectServices.Editing;
 
 namespace Gum.Commands;
 
@@ -47,6 +48,7 @@ public class EditCommands : IEditCommands
     private readonly IProjectRestrictions _projectRestrictions;
     private readonly IElementDuplicateRestrictions _elementDuplicateRestrictions;
     private readonly BehaviorRenamer _behaviorRenamer;
+    private readonly IStateRemovalLogic _stateRemovalLogic;
 
     public EditCommands(ISelectedState selectedState,
         INameVerifier nameVerifier,
@@ -64,8 +66,10 @@ public class EditCommands : IEditCommands
         IStandardElementsManagerGumTool standardElementsManagerGumTool,
         IReferenceFinder referenceFinder,
         IProjectRestrictions projectRestrictions,
-        IElementDuplicateRestrictions elementDuplicateRestrictions)
+        IElementDuplicateRestrictions elementDuplicateRestrictions,
+        IStateRemovalLogic stateRemovalLogic)
     {
+        _stateRemovalLogic = stateRemovalLogic;
         _projectRestrictions = projectRestrictions;
         _elementDuplicateRestrictions = elementDuplicateRestrictions;
         _selectedState = selectedState;
@@ -96,28 +100,12 @@ public class EditCommands : IEditCommands
         deleteResponse.ShouldDelete = true;
         deleteResponse.ShouldShowMessage = false;
 
-        var behaviorsNeedingState = GetBehaviorsNeedingState(stateSave);
-
-        if (behaviorsNeedingState.Any())
+        if (_stateRemovalLogic.GetWhyCannotRemoveState(stateSave, stateContainer) is { } whyNot)
         {
             deleteResponse.ShouldDelete = false;
-            deleteResponse.ShouldShowMessage = true;
-            string message =
-                $"The state {stateSave.Name} cannot be removed because it is needed by the following behavior(s):";
-
-            foreach (var behavior in behaviorsNeedingState)
-            {
-                message += "\n" + behavior.Name;
-            }
-
-            deleteResponse.Message = message;
-        }
-
-        if (deleteResponse.ShouldDelete && stateSave.ParentContainer?.DefaultState == stateSave)
-        {
-            deleteResponse.ShouldDelete = false;
-            deleteResponse.Message = "This state cannot be removed because it is the default state.";
-            deleteResponse.ShouldShowMessage = false;
+            deleteResponse.Message = whyNot;
+            // Refusing to delete the default state is silent.
+            deleteResponse.ShouldShowMessage = (stateContainer as ElementSave)?.DefaultState != stateSave;
         }
 
         if (deleteResponse.ShouldDelete)
@@ -321,22 +309,11 @@ public class EditCommands : IEditCommands
         deleteResponse.ShouldDelete = true;
         deleteResponse.ShouldShowMessage = false;
 
-        var behaviorsNeedingCategory = _deleteLogic.GetBehaviorsNeedingCategory(category, stateCategoryListContainer as ComponentSave);
-
-        if (behaviorsNeedingCategory.Any())
+        if (_stateRemovalLogic.GetWhyCannotRemoveCategory(category, stateCategoryListContainer) is { } whyNot)
         {
             deleteResponse.ShouldDelete = false;
             deleteResponse.ShouldShowMessage = true;
-
-            string message =
-                $"The category {category.Name} cannot be removed because it is needed by the following behavior(s):";
-
-            foreach (var behavior in behaviorsNeedingCategory)
-            {
-                message += "\n" + behavior.Name;
-            }
-
-            deleteResponse.Message = message;
+            deleteResponse.Message = whyNot;
         }
 
         if (deleteResponse.ShouldDelete)
@@ -383,50 +360,9 @@ public class EditCommands : IEditCommands
 
     #region Behavior
 
-    private List<BehaviorSave> GetBehaviorsNeedingState(StateSave stateSave)
-    {
-        List<BehaviorSave> toReturn = new List<BehaviorSave>();
-        // Try to get the parent container from the state...
-        var element = stateSave.ParentContainer;
-        if (element == null)
-        {
-            // ... if we can't find it for some reason, assume it's the current element (is this bad?)
-            element = _selectedState.SelectedElement;
-        }
-
-        var componentSave = element as ComponentSave;
-
-        if (element != null)
-        {
-            // uncategorized states can't come from behaviors:
-            bool isUncategorized = element.States.Contains(stateSave);
-            StateSaveCategory? elementCategory = null;
-
-            if (!isUncategorized)
-            {
-                elementCategory = element.Categories.FirstOrDefault(item => item.States.Contains(stateSave));
-            }
-
-            if (elementCategory != null)
-            {
-                var allBehaviorsNeedingCategory = _deleteLogic.GetBehaviorsNeedingCategory(elementCategory, componentSave);
-
-                foreach (var behavior in allBehaviorsNeedingCategory)
-                {
-                    var behaviorCategory = behavior.Categories.First(item => item.Name == elementCategory.Name);
-
-                    bool isStateReferencedInCategory = behaviorCategory.States.Any(item => item.Name == stateSave.Name);
-
-                    if (isStateReferencedInCategory)
-                    {
-                        toReturn.Add(behavior);
-                    }
-                }
-            }
-        }
-
-        return toReturn;
-    }
+    // A state without a ParentContainer is assumed to belong to the selected element.
+    private List<BehaviorSave> GetBehaviorsNeedingState(StateSave stateSave) =>
+        _stateRemovalLogic.GetBehaviorsNeedingState(stateSave, stateSave.ParentContainer ?? _selectedState.SelectedElement);
 
     public void RemoveBehaviorVariable(BehaviorSave container, VariableSave variable)
     {

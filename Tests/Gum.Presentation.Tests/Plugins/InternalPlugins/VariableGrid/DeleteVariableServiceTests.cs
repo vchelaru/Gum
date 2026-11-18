@@ -17,7 +17,7 @@ public class DeleteVariableServiceTests : BaseTestClass
     private readonly Mock<IUndoManager> _undoManager;
     private readonly Mock<IFileCommands> _fileCommands;
     private readonly Mock<IGuiCommands> _guiCommands;
-    private readonly Mock<IRenameLogic> _renameLogic;
+    private readonly Mock<IReferenceFinder> _referenceFinder;
     private readonly Mock<IDialogService> _dialogService;
     private readonly Mock<IPluginManager> _pluginManager;
     private readonly DeleteVariableService _service;
@@ -28,7 +28,7 @@ public class DeleteVariableServiceTests : BaseTestClass
         _undoManager.Setup(x => x.RequestLock()).Returns(new UndoLock(() => { }));
         _fileCommands = new Mock<IFileCommands>();
         _guiCommands = new Mock<IGuiCommands>();
-        _renameLogic = new Mock<IRenameLogic>();
+        _referenceFinder = new Mock<IReferenceFinder>();
         _dialogService = new Mock<IDialogService>();
         _pluginManager = new Mock<IPluginManager>();
 
@@ -36,10 +36,10 @@ public class DeleteVariableServiceTests : BaseTestClass
             _undoManager.Object,
             _fileCommands.Object,
             _guiCommands.Object,
-            _renameLogic.Object,
             _dialogService.Object,
             _pluginManager.Object,
-            new InstanceOverrideRemover(_undoManager.Object, _fileCommands.Object, _pluginManager.Object));
+            new InstanceOverrideRemover(_undoManager.Object, _fileCommands.Object, _pluginManager.Object, new Gum.ProjectServices.Editing.VariableOverrideRemover()),
+            new Gum.ProjectServices.Editing.VariableRemovalLogic(_referenceFinder.Object));
     }
 
     private static (ComponentSave Owner, VariableSave Variable) MakeOwnerWithCustomVariable()
@@ -58,7 +58,7 @@ public class DeleteVariableServiceTests : BaseTestClass
         // must never record an empty/pointless entry.
         var (owner, variable) = MakeOwnerWithCustomVariable();
 
-        _renameLogic.Setup(x => x.GetChangesForRenamedVariable(owner, variable.Name, variable.GetRootName()))
+        _referenceFinder.Setup(x => x.GetReferencesToVariable(owner, variable.Name, variable.GetRootName()))
             .Returns(new VariableChangeResponse());
 
         _service.DeleteVariable(variable, owner);
@@ -79,7 +79,7 @@ public class DeleteVariableServiceTests : BaseTestClass
         var instanceVariable = new VariableSave { Name = "Variable1Instance.Variable1", Type = "float", Value = 7f };
         otherScreen.DefaultState.Variables.Add(instanceVariable);
 
-        _renameLogic.Setup(x => x.GetChangesForRenamedVariable(owner, variable.Name, variable.GetRootName()))
+        _referenceFinder.Setup(x => x.GetReferencesToVariable(owner, variable.Name, variable.GetRootName()))
             .Returns(new VariableChangeResponse
             {
                 VariableChanges =
@@ -107,7 +107,7 @@ public class DeleteVariableServiceTests : BaseTestClass
         var instanceVariable = new VariableSave { Name = "Variable1Instance.Variable1", Type = "float", Value = 7f };
         otherScreen.DefaultState.Variables.Add(instanceVariable);
 
-        _renameLogic.Setup(x => x.GetChangesForRenamedVariable(owner, variable.Name, variable.GetRootName()))
+        _referenceFinder.Setup(x => x.GetReferencesToVariable(owner, variable.Name, variable.GetRootName()))
             .Returns(new VariableChangeResponse
             {
                 VariableChanges =
@@ -140,7 +140,7 @@ public class DeleteVariableServiceTests : BaseTestClass
         var instanceVariable = new VariableSave { Name = "Variable1Instance.Variable1", Type = "float", Value = 7f };
         otherScreen.DefaultState.Variables.Add(instanceVariable);
 
-        _renameLogic.Setup(x => x.GetChangesForRenamedVariable(owner, variable.Name, variable.GetRootName()))
+        _referenceFinder.Setup(x => x.GetReferencesToVariable(owner, variable.Name, variable.GetRootName()))
             .Returns(new VariableChangeResponse
             {
                 VariableChanges =
@@ -176,7 +176,7 @@ public class DeleteVariableServiceTests : BaseTestClass
         var variableReferenceList = new VariableListSave<string> { Name = "VariableReferences" };
         variableReferenceList.ValueAsIList.Add("SomeInstance.X = Components/Component1.Variable1");
 
-        _renameLogic.Setup(x => x.GetChangesForRenamedVariable(owner, variable.Name, variable.GetRootName()))
+        _referenceFinder.Setup(x => x.GetReferencesToVariable(owner, variable.Name, variable.GetRootName()))
             .Returns(new VariableChangeResponse
             {
                 VariableReferenceChanges =
@@ -207,7 +207,7 @@ public class DeleteVariableServiceTests : BaseTestClass
         var exposedVariable = new VariableSave { Name = "InnerButton.X", Type = "float", ExposedAsName = "Variable1" };
         defaultStateDerived.Variables.Add(exposedVariable);
 
-        _renameLogic.Setup(x => x.GetChangesForRenamedVariable(owner, variable.Name, variable.GetRootName()))
+        _referenceFinder.Setup(x => x.GetReferencesToVariable(owner, variable.Name, variable.GetRootName()))
             .Returns(new VariableChangeResponse
             {
                 VariableChanges =
@@ -242,7 +242,7 @@ public class DeleteVariableServiceTests : BaseTestClass
         var variableReferenceList = new VariableListSave<string> { Name = "VariableReferences" };
         variableReferenceList.ValueAsIList.Add("SomeInstance.X = Components/Component1.Variable1");
 
-        _renameLogic.Setup(x => x.GetChangesForRenamedVariable(owner, variable.Name, variable.GetRootName()))
+        _referenceFinder.Setup(x => x.GetReferencesToVariable(owner, variable.Name, variable.GetRootName()))
             .Returns(new VariableChangeResponse
             {
                 VariableChanges =
@@ -281,7 +281,7 @@ public class DeleteVariableServiceTests : BaseTestClass
         var variableB = new VariableSave { Name = "InstanceB.Variable1", Type = "float", Value = 2f };
         screenB.DefaultState.Variables.Add(variableB);
 
-        _renameLogic.Setup(x => x.GetChangesForRenamedVariable(owner, variable.Name, variable.GetRootName()))
+        _referenceFinder.Setup(x => x.GetReferencesToVariable(owner, variable.Name, variable.GetRootName()))
             .Returns(new VariableChangeResponse
             {
                 VariableChanges =
@@ -322,7 +322,7 @@ public class DeleteVariableServiceTests : BaseTestClass
         var instanceVariable = new VariableSave { Name = "Variable1Instance.Variable1", Type = "float", Value = 7f };
         categoryState.Variables.Add(instanceVariable);
 
-        _renameLogic.Setup(x => x.GetChangesForRenamedVariable(owner, variable.Name, variable.GetRootName()))
+        _referenceFinder.Setup(x => x.GetReferencesToVariable(owner, variable.Name, variable.GetRootName()))
             .Returns(new VariableChangeResponse
             {
                 VariableChanges =
@@ -351,7 +351,7 @@ public class DeleteVariableServiceTests : BaseTestClass
         var requiredVariable = new VariableSave { Name = "RequiredVar", Type = "float", IsCustomVariable = true };
         behavior.RequiredVariables.Variables.Add(requiredVariable);
 
-        _renameLogic.Setup(x => x.GetChangesForRenamedVariable(behavior, requiredVariable.Name, requiredVariable.GetRootName()))
+        _referenceFinder.Setup(x => x.GetReferencesToVariable(behavior, requiredVariable.Name, requiredVariable.GetRootName()))
             .Returns(new VariableChangeResponse());
 
         _service.DeleteVariable(requiredVariable, behavior);
@@ -371,7 +371,7 @@ public class DeleteVariableServiceTests : BaseTestClass
 
         _dialogService.Verify(x => x.ShowMessage(It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<MessageDialogStyle?>()), Times.Once);
         _undoManager.Verify(x => x.RequestLock(), Times.Never);
-        _renameLogic.Verify(x => x.GetChangesForRenamedVariable(
+        _referenceFinder.Verify(x => x.GetReferencesToVariable(
             It.IsAny<IStateContainer>(), It.IsAny<string>(), It.IsAny<string>()), Times.Never);
     }
 }
