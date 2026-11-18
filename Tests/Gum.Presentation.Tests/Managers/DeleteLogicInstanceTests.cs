@@ -32,6 +32,7 @@ public class DeleteLogicInstanceTests : BaseTestClass
         _mocker.Use<IReferenceFinder>(_mocker.CreateInstance<ReferenceFinder>());
         _mocker.Use<IVariableOverrideRemover>(new VariableOverrideRemover());
         _mocker.Use<IInstanceRemovalLogic>(_mocker.CreateInstance<InstanceRemovalLogic>());
+        _mocker.Use<IElementRemovalLogic>(new ElementRemovalLogic());
         _mocker.Use<IInstanceOverrideRemover>(_mocker.CreateInstance<InstanceOverrideRemover>());
 
         _deleteLogic = _mocker.CreateInstance<DeleteLogic>();

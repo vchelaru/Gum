@@ -30,6 +30,7 @@ public class DeleteLogic : IDeleteLogic
     private readonly IReferenceFinder _referenceFinder;
     private readonly IInstanceRemovalLogic _instanceRemovalLogic;
     private readonly IStateRemovalLogic _stateRemovalLogic;
+    private readonly IElementRemovalLogic _elementRemovalLogic;
     // Lazy: the remover needs IPluginManager, which depends on this class.
     private readonly Lazy<IInstanceOverrideRemover> _instanceOverrideRemover;
     // Lazy: UndoManager depends on RenameLogic, which depends on this class.
@@ -51,6 +52,7 @@ public class DeleteLogic : IDeleteLogic
         IReferenceFinder referenceFinder,
         IInstanceRemovalLogic instanceRemovalLogic,
         IStateRemovalLogic stateRemovalLogic,
+        IElementRemovalLogic elementRemovalLogic,
         Lazy<IInstanceOverrideRemover> instanceOverrideRemover,
         Lazy<IUndoManager> undoManager)
     {
@@ -65,6 +67,7 @@ public class DeleteLogic : IDeleteLogic
         _referenceFinder = referenceFinder;
         _instanceRemovalLogic = instanceRemovalLogic;
         _stateRemovalLogic = stateRemovalLogic;
+        _elementRemovalLogic = elementRemovalLogic;
         _instanceOverrideRemover = instanceOverrideRemover;
         _undoManager = undoManager;
     }
@@ -857,24 +860,7 @@ public class DeleteLogic : IDeleteLogic
 
     public void RemoveElement(ElementSave element)
     {
-        var gps = LoadedProject;
-        var name = element.Name;
-        var removed = false;
-
-        if (element is ScreenSave asScreenSave)
-        {
-            RemoveElementReferencesFromList(name, gps.ScreenReferences);
-            gps.Screens.Remove(asScreenSave);
-            removed = true;
-        }
-        else if (element is ComponentSave asComponentSave)
-        {
-            RemoveElementReferencesFromList(name, gps.ComponentReferences);
-            gps.Components.Remove(asComponentSave);
-            removed = true;
-        }
-
-        if (removed)
+        if (_elementRemovalLogic.RemoveElement(LoadedProject, element))
         {
             if (_selectedState.SelectedElements.Contains(element))
             {
@@ -882,18 +868,6 @@ public class DeleteLogic : IDeleteLogic
             }
             _deletePluginNotifier.ElementDelete(element);
             _fileCommands.TryAutoSaveProject();
-        }
-    }
-
-    private static void RemoveElementReferencesFromList(string name, List<ElementReference> references)
-    {
-        for (int i = 0; i < references.Count; i++)
-        {
-            if (references[i].Name == name)
-            {
-                references.RemoveAt(i);
-                break;
-            }
         }
     }
 

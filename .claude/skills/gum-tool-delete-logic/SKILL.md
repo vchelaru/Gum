@@ -36,7 +36,7 @@ Used for screens, components, behaviors, and instances. All go through one share
 | Class | Responsibility |
 |-------|---------------|
 | `IEditCommands` / `EditCommands` | All user-triggered deletes. Shows dialogs, acquires undo locks, then delegates to `IDeleteLogic`. Only entry point callers should use. |
-| `IDeleteLogic` / `DeleteLogic` | Pure data mutation after confirmation. `Remove*` methods do not show dialogs; their data change is in `Tools/Gum.ProjectServices/Editing/` (`InstanceRemovalLogic`, `StateRemovalLogic`), shared with `gumcli edit`, and `DeleteLogic` adds undo records and saves. `HandleDeleteCommand` is the exception — it orchestrates the DeleteOptionsWindow flow and is only called from `EditCommands.DeleteSelection`. |
+| `IDeleteLogic` / `DeleteLogic` | Pure data mutation after confirmation. `Remove*` methods do not show dialogs; their data change is in `Tools/Gum.ProjectServices/Editing/` (`ElementRemovalLogic`, `InstanceRemovalLogic`, `StateRemovalLogic`), shared with `gumcli edit`, and `DeleteLogic` adds undo records and saves. `HandleDeleteCommand` is the exception — it orchestrates the DeleteOptionsWindow flow and is only called from `EditCommands.DeleteSelection`. |
 
 ## Contributing an option to DeleteOptionsWindow
 

@@ -12,6 +12,7 @@ using Gum.Managers;
 using Gum.ProjectServices;
 using Gum.ProjectServices.Editing;
 using Gum.Services;
+using ToolsUtilities;
 
 namespace Gum.Cli.Commands;
 
@@ -109,6 +110,7 @@ public static class EditCommand
 
         // The editing logic resolves types and base elements through ObjectFinder.
         ObjectFinder.Self.GumProjectSave = project;
+        HashSet<FilePath> elementFilesBefore = GetElementFiles(project, fullPath);
         ProjectEditResult editResult = CreateEditService().Apply(project, operationsJson);
         if (!editResult.Succeeded)
         {
@@ -131,6 +133,14 @@ public static class EditCommand
                 sorter.SortStateVariables(element);
             }
             project.Save(fullPath, saveElements: true);
+
+            // Removed elements' files go only once the saved project no longer references them, so a failed save
+            // leaves every file in place. A file a later operation wrote again (remove, then add the same name) stays.
+            elementFilesBefore.ExceptWith(GetElementFiles(project, fullPath));
+            foreach (FilePath removedFile in elementFilesBefore)
+            {
+                File.Delete(removedFile.FullPath);
+            }
         }
         catch (Exception ex)
         {
@@ -143,6 +153,16 @@ public static class EditCommand
             Console.WriteLine($"Saved {fullPath}");
         }
         return 0;
+    }
+
+    // The files GumProjectSave.Save writes for the project's Screens and Components.
+    private static HashSet<FilePath> GetElementFiles(GumProjectSave project, string projectPath)
+    {
+        string directory = FileManager.GetDirectory(projectPath);
+        bool isJsonFormat = GumProjectSave.IsJsonFormat(projectPath);
+        return project.Screens.Concat<ElementSave>(project.Components)
+            .Select(element => new FilePath(directory + element.Subfolder + "/" + element.Name + "." + element.GetFileExtension(isJsonFormat)))
+            .ToHashSet();
     }
 
     private static int WriteSchema(bool json)
@@ -202,7 +222,8 @@ public static class EditCommand
             overrideRemover,
             new VariableClearLogic(),
             new ComponentExtractionLogic(elementCreation),
-            new MovedInstanceReferenceDropLogic(referenceFinder));
+            new MovedInstanceReferenceDropLogic(referenceFinder),
+            new ElementRemovalLogic());
     }
 
     /// <summary>
