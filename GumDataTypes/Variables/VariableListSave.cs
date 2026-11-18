@@ -29,20 +29,24 @@ namespace Gum.DataTypes.Variables
             set;
         } = string.Empty;
 
+        // The split is stored when the name is set, as VariableSave does: ApplyState reads it on every
+        // state change (#8218).
+        string name = string.Empty;
+        string rootName = string.Empty;
+        string? sourceObject;
         public string Name
         {
-            get;
-            set;
-        } = string.Empty;
-
-        [XmlIgnore]
-        public string? SourceObject
-        {
-            get
+            get => name;
+            set
             {
-                return VariableSave.GetSourceObject(Name);
+                name = value;
+                sourceObject = value == null ? null : VariableSave.GetSourceObject(value);
+                rootName = string.IsNullOrEmpty(sourceObject) ? value! : value!.Substring(1 + value.IndexOf('.'));
             }
         }
+
+        [XmlIgnore]
+        public string? SourceObject => sourceObject;
 
         public string Category
         {
@@ -64,18 +68,7 @@ namespace Gum.DataTypes.Variables
         [XmlIgnore]
         public string DetailText { get; set; } = string.Empty;
 
-        public string GetRootName()
-        {
-
-            if (string.IsNullOrEmpty(SourceObject))
-            {
-                return Name;
-            }
-            else
-            {
-                return Name.Substring(1 + Name.IndexOf('.'));
-            }
-        }
+        public string GetRootName() => rootName;
 
         public bool IsHiddenInPropertyGrid
         {

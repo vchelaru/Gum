@@ -292,14 +292,19 @@ public partial class GraphicalUiElement
     /// </summary>
     /// <param name="propertyName">The name of the variable on this object such as X or Height. If the property is a state, then the name should be "{CategoryName}State".</param>
     /// <param name="value">The value, casted to the correct type.</param>
-    public void SetProperty(string propertyName, object? value)
+    public void SetProperty(string propertyName, object? value) =>
+        SetProperty(propertyName, instanceName: null, instanceVariable: null, value);
+
+    // ApplyState passes a VariableSave's own split of a dotted name (its SourceObject and root name) so
+    // the name is not split again on every state change (#8218). Both are null for any other caller.
+    private void SetProperty(string propertyName, string? instanceName, string? instanceVariable, object? value)
     {
         if (propertyName == "SourceFile")
         {
             ReleaseChainsFromPreviousSourceFile(value as string);
         }
 
-        SetPropertyCore(propertyName, value);
+        SetPropertyCore(propertyName, instanceName, instanceVariable, value);
 
         if (propertyName == "SourceFile")
         {
@@ -433,31 +438,7 @@ public partial class GraphicalUiElement
         }
     }
 
-    // "Background.Blue" splits into "Background" and "Blue" on every state change that sets it, so the
-    // two strings are kept per name. The split depends only on the name, so nothing invalidates it; the
-    // cap bounds a program that builds dotted names on the fly.
-    private static readonly System.Collections.Concurrent.ConcurrentDictionary<string, (string Instance, string Variable)> _dottedNameSplits =
-        new System.Collections.Concurrent.ConcurrentDictionary<string, (string Instance, string Variable)>(StringComparer.Ordinal);
-    private const int MaxCachedDottedNameSplits = 4096;
-    // Counted separately: ConcurrentDictionary.Count takes every lock, and past the cap each miss would pay it.
-    private static int _dottedNameSplitCount;
-
-    private static (string Instance, string Variable) SplitAtFirstDot(string name, int indexOfDot)
-    {
-        if (_dottedNameSplits.TryGetValue(name, out (string Instance, string Variable) split))
-        {
-            return split;
-        }
-        split = (name.Substring(0, indexOfDot), name.Substring(indexOfDot + 1));
-        if (System.Threading.Volatile.Read(ref _dottedNameSplitCount) < MaxCachedDottedNameSplits
-            && _dottedNameSplits.TryAdd(name, split))
-        {
-            System.Threading.Interlocked.Increment(ref _dottedNameSplitCount);
-        }
-        return split;
-    }
-
-    private void SetPropertyCore(string propertyName, object? value)
+    private void SetPropertyCore(string propertyName, string? splitInstanceName, string? splitInstanceVariable, object? value)
     {
 
         if (mExposedVariables.ContainsKey(propertyName))
@@ -472,8 +453,9 @@ public partial class GraphicalUiElement
             // of bad values below).
             if (indexOfDot >= 0)
             {
-                (string instanceName, string variable) = SplitAtFirstDot(underlyingProperty, indexOfDot);
+                string instanceName = underlyingProperty.Substring(0, indexOfDot);
                 GraphicalUiElement? containedGue = GetGraphicalUiElementByName(instanceName);
+                string variable = underlyingProperty.Substring(indexOfDot + 1);
 
                 // Children may not have been created yet
                 if (containedGue != null)
@@ -494,8 +476,19 @@ public partial class GraphicalUiElement
         }
         else if (ToolsUtilities.StringFunctions.ContainsNoAlloc(propertyName, '.'))
         {
-            int indexOfDot = propertyName.IndexOf('.');
-            (string instanceName, string variable) = SplitAtFirstDot(propertyName, indexOfDot);
+            string instanceName;
+            string variable;
+            if (!string.IsNullOrEmpty(splitInstanceName) && splitInstanceVariable != null)
+            {
+                instanceName = splitInstanceName;
+                variable = splitInstanceVariable;
+            }
+            else
+            {
+                int indexOfDot = propertyName.IndexOf('.');
+                instanceName = propertyName.Substring(0, indexOfDot);
+                variable = propertyName.Substring(indexOfDot + 1);
+            }
             GraphicalUiElement? containedGue = GetGraphicalUiElementByName(instanceName);
 
             // instances may not have been set yet
@@ -1688,13 +1681,14 @@ public partial class GraphicalUiElement
                 var variable = ordered[i];
                 if (variable.Value != null)
                 {
-                    this.SetProperty(variable.Name, variable.Value);
+                    // SourceObject and the root name are the halves SetPropertyCore would cut from Name.
+                    this.SetProperty(variable.Name, variable.SourceObject, variable.GetRootName(), variable.Value);
                 }
             }
 
             foreach (var variableList in state.VariableLists)
             {
-                this.SetProperty(variableList.Name, variableList.ValueAsIList);
+                this.SetProperty(variableList.Name, variableList.SourceObject, variableList.GetRootName(), variableList.ValueAsIList);
             }
 
             appliedAllVariables = true;
