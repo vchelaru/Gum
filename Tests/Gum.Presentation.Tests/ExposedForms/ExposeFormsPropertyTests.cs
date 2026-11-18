@@ -46,7 +46,7 @@ public class ExposeFormsPropertyTests : BaseTestClass
             _dialogService.Object,
             variableSaveLogic.Object,
             _pluginManager.Object,
-            new InstanceOverrideRemover(undoManager.Object, fileCommands.Object, _pluginManager.Object),
+            new InstanceOverrideRemover(undoManager.Object, fileCommands.Object, _pluginManager.Object, new Gum.ProjectServices.Editing.VariableOverrideRemover()),
             new Gum.ProjectServices.Editing.ExposeVariableLogic());
     }
 

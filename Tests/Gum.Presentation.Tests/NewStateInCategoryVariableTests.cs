@@ -51,8 +51,6 @@ public class NewStateInCategoryVariableTests : BaseTestClass
             new Gum.ProjectServices.Editing.StateCreationLogic());
 
         Mock<IDeleteLogic> deleteLogic = new();
-        deleteLogic.Setup(x => x.GetBehaviorsNeedingCategory(It.IsAny<StateSaveCategory>(), It.IsAny<ComponentSave?>()))
-            .Returns(new List<BehaviorSave>());
 
         _editCommands = new EditCommands(
             _selectedState.Object,
@@ -71,7 +69,8 @@ public class NewStateInCategoryVariableTests : BaseTestClass
             new Mock<IStandardElementsManagerGumTool>().Object,
             new Mock<IReferenceFinder>().Object,
             new Mock<Gum.Managers.IProjectRestrictions>().Object,
-            new Mock<Gum.Logic.IElementDuplicateRestrictions>().Object);
+            new Mock<Gum.Logic.IElementDuplicateRestrictions>().Object,
+            new Gum.ProjectServices.Editing.StateRemovalLogic(new Mock<IReferenceFinder>().Object, new Gum.ProjectServices.Editing.ObjectFinderProjectProvider()));
 
         ObjectFinder.Self.GumProjectSave = new GumProjectSave();
         StandardElementSave sprite = new() { Name = "Sprite" };

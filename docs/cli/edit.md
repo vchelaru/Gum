@@ -89,6 +89,48 @@ Enum values such as `ChildrenLayout` take the value's name, for example `"TopToB
 
 Exposes `Counter1.Text` on `Hud` as `Counter1Text`, so instances of `Hud` can set it.
 
+## Removing
+
+{% hint style="info" %}
+Available in December 2026, or now if building Gum from source.
+{% endhint %}
+
+The remove operations take out what the tool's delete commands take out, including the values other elements set for what is removed. A remove the tool refuses fails the edit with the tool's message.
+
+### removeInstance
+
+```json
+{ "op": "removeInstance", "element": "Hud", "name": "Panel" }
+```
+
+Removes the instance and every variable that sets or names it. Its children move to the instance's own parent, like the tool's default **Delete only parent(s)**. An instance defined in a base element cannot be removed.
+
+### removeState and removeCategory
+
+```json
+{ "op": "removeState", "element": "Hud", "category": "Size", "name": "Big" }
+{ "op": "removeCategory", "element": "Hud", "name": "Mood" }
+```
+
+`category` is optional on `removeState`. Variables that set the removed state, in this element or others, are removed so they fall back to their inherited value. The default state, and a state or category a behavior needs, cannot be removed.
+
+### removeVariable
+
+```json
+{ "op": "removeVariable", "element": "Hud", "name": "Score" }
+```
+
+Removes a variable added with `addVariable`, and the values instances set for it. A variable used by a variable reference cannot be removed.
+
+### clearVariable
+
+```json
+{ "op": "clearVariable", "element": "Hud", "name": "Width" }
+{ "op": "clearVariable", "element": "Hud", "category": "Size", "state": "Big", "name": "Width" }
+```
+
+Removes a set value so the variable falls back to its inherited value, like **Make Default** in the **Variables** tab. `name`, `state` and `category` work as in `setVariable`. An exposed variable stays exposed. In a category state the variable takes the default state's value instead, since every state in a category sets it.
+
 ## All or Nothing
 
 `edit` writes nothing unless every operation applies and the edit adds no errors. It runs the same check as [check](check.md) before and after the operations. Errors the project already had do not block the edit, and only errors the edit adds are reported, in the same format as `check`.

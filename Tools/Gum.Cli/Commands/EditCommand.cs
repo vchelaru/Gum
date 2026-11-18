@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using Gum.DataTypes;
 using Gum.Expressions;
+using Gum.Logic;
 using Gum.Managers;
 using Gum.ProjectServices;
 using Gum.ProjectServices.Editing;
@@ -119,18 +120,29 @@ public static class EditCommand
         return 0;
     }
 
-    private static IProjectEditService CreateEditService() => new ProjectEditService(
-        new ElementCreationLogic(),
-        new InstanceCreationLogic(),
-        new InstanceAddRules(new CircularReferenceManager(ObjectFinder.Self)),
-        new StateCreationLogic(),
-        new CategoryVariablePropagator(),
-        new CustomVariableLogic(new StateVariableSorter()),
-        new ExposeVariableLogic(),
-        new StateVariableWriter(),
-        new VariableDefinedByTypeLogic(),
-        new ElementNameValidator(topLevelNameSource: null),
-        new DefaultTypeResolver());
+    private static IProjectEditService CreateEditService()
+    {
+        ReferenceFinder referenceFinder = new ReferenceFinder(new ObjectFinderProjectProvider());
+        VariableOverrideRemover overrideRemover = new VariableOverrideRemover();
+        return new ProjectEditService(
+            new ElementCreationLogic(),
+            new InstanceCreationLogic(),
+            new InstanceAddRules(new CircularReferenceManager(ObjectFinder.Self)),
+            new StateCreationLogic(),
+            new CategoryVariablePropagator(),
+            new CustomVariableLogic(new StateVariableSorter()),
+            new ExposeVariableLogic(),
+            new StateVariableWriter(),
+            new VariableDefinedByTypeLogic(),
+            new ElementNameValidator(topLevelNameSource: null),
+            new DefaultTypeResolver(),
+            new InstanceRemovalLogic(referenceFinder, overrideRemover),
+            new InstanceChildDetacher(),
+            new StateRemovalLogic(referenceFinder, new ObjectFinderProjectProvider()),
+            new VariableRemovalLogic(referenceFinder),
+            overrideRemover,
+            new VariableClearLogic());
+    }
 
     /// <summary>
     /// The errors in <paramref name="after"/> that <paramref name="before"/> did not have, compared by element,

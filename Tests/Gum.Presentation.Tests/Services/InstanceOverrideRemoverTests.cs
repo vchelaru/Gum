@@ -24,7 +24,7 @@ public class InstanceOverrideRemoverTests : BaseTestClass
         _undoManager = new Mock<IUndoManager>();
         _fileCommands = new Mock<IFileCommands>();
         _pluginManager = new Mock<IPluginManager>();
-        _remover = new InstanceOverrideRemover(_undoManager.Object, _fileCommands.Object, _pluginManager.Object);
+        _remover = new InstanceOverrideRemover(_undoManager.Object, _fileCommands.Object, _pluginManager.Object, new Gum.ProjectServices.Editing.VariableOverrideRemover());
     }
 
     [Fact]

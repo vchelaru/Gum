@@ -337,7 +337,7 @@ public class PropertyGridManagerShaderParameterVariableRowsTests : BaseTestClass
             undoManager, _mocker.Get<IGuiCommands>(), fileCommands.Object, renameLogic.Object,
             _mocker.Get<ISelectedState>(), new Mock<INameVerifier>().Object, dialogService.Object,
             new Mock<IVariableSaveLogic>().Object, pluginManager.Object,
-            new InstanceOverrideRemover(undoManager, fileCommands.Object, pluginManager.Object),
+            new InstanceOverrideRemover(undoManager, fileCommands.Object, pluginManager.Object, new Gum.ProjectServices.Editing.VariableOverrideRemover()),
             new Gum.ProjectServices.Editing.ExposeVariableLogic());
         _mocker.Use<IExposeVariableService>(service);
     }

@@ -4,7 +4,9 @@ using System.Linq;
 using System.Text.Json;
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
+using Gum.Logic;
 using Gum.Managers;
+using GumRuntime;
 
 namespace Gum.ProjectServices.Editing;
 
@@ -69,6 +71,12 @@ public class ProjectEditService : IProjectEditService
     private readonly IVariableDefinedByTypeLogic _variableDefinedByType;
     private readonly IElementNameValidator _nameValidator;
     private readonly ITypeResolver _typeResolver;
+    private readonly IInstanceRemovalLogic _instanceRemoval;
+    private readonly IInstanceChildDetacher _childDetacher;
+    private readonly IStateRemovalLogic _stateRemoval;
+    private readonly IVariableRemovalLogic _variableRemoval;
+    private readonly IVariableOverrideRemover _overrideRemover;
+    private readonly IVariableClearLogic _variableClear;
 
     public ProjectEditService(
         IElementCreationLogic elementCreation,
@@ -81,7 +89,13 @@ public class ProjectEditService : IProjectEditService
         IStateVariableWriter variableWriter,
         IVariableDefinedByTypeLogic variableDefinedByType,
         IElementNameValidator nameValidator,
-        ITypeResolver typeResolver)
+        ITypeResolver typeResolver,
+        IInstanceRemovalLogic instanceRemoval,
+        IInstanceChildDetacher childDetacher,
+        IStateRemovalLogic stateRemoval,
+        IVariableRemovalLogic variableRemoval,
+        IVariableOverrideRemover overrideRemover,
+        IVariableClearLogic variableClear)
     {
         _elementCreation = elementCreation;
         _instanceCreation = instanceCreation;
@@ -94,6 +108,12 @@ public class ProjectEditService : IProjectEditService
         _variableDefinedByType = variableDefinedByType;
         _nameValidator = nameValidator;
         _typeResolver = typeResolver;
+        _instanceRemoval = instanceRemoval;
+        _childDetacher = childDetacher;
+        _stateRemoval = stateRemoval;
+        _variableRemoval = variableRemoval;
+        _overrideRemover = overrideRemover;
+        _variableClear = variableClear;
 
         _operations = new Dictionary<string, OperationSpec>
         {
@@ -105,6 +125,11 @@ public class ProjectEditService : IProjectEditService
             ["addCategory"] = new(new[] { "element", "name" }, Array.Empty<string>(), AddCategory),
             ["addState"] = new(new[] { "element", "name" }, new[] { "category" }, AddState),
             ["exposeVariable"] = new(new[] { "element", "instance", "variable", "name" }, Array.Empty<string>(), ExposeVariable),
+            ["removeInstance"] = new(new[] { "element", "name" }, Array.Empty<string>(), RemoveInstance),
+            ["removeState"] = new(new[] { "element", "name" }, new[] { "category" }, RemoveState),
+            ["removeCategory"] = new(new[] { "element", "name" }, Array.Empty<string>(), RemoveCategory),
+            ["removeVariable"] = new(new[] { "element", "name" }, Array.Empty<string>(), RemoveVariable),
+            ["clearVariable"] = new(new[] { "element", "name" }, new[] { "state", "category" }, ClearVariable),
         };
     }
 
@@ -302,34 +327,7 @@ public class ProjectEditService : IProjectEditService
         string requestedName = GetString(operation, "name");
         (StateSave state, StateSaveCategory? category) = GetState(element, operation);
 
-        InstanceSave? instance = null;
-        string variableName = requestedName;
-        string? instanceName = VariableSave.GetSourceObject(requestedName);
-        if (!string.IsNullOrEmpty(instanceName))
-        {
-            instance = element.GetInstance(instanceName)
-                ?? throw new EditException($"{element.Name} has no instance named {instanceName}.");
-            ElementSave typeElement = ObjectFinder.Self.GetElementSave(instance.BaseType)
-                ?? throw new EditException($"{instanceName}'s type {instance.BaseType} is not in the project.");
-            if (!_variableDefinedByType.GetIfVariableIsDefinedByType(VariableSave.GetRootName(requestedName), typeElement))
-            {
-                throw new EditException($"{typeElement.Name} has no variable named {VariableSave.GetRootName(requestedName)}, so {requestedName} cannot be set.");
-            }
-        }
-        else
-        {
-            if (!_variableDefinedByType.GetIfVariableIsDefinedByType(requestedName, element))
-            {
-                throw new EditException($"{element.Name} has no variable named {requestedName}.");
-            }
-            // An element's own exposed variable is stored under its instance's name.
-            if (element.DefaultState?.Variables.FirstOrDefault(item => item.ExposedAsName == requestedName
-                    && !string.IsNullOrEmpty(item.SourceObject)) is { } exposed)
-            {
-                variableName = exposed.Name;
-                instance = element.GetInstance(exposed.SourceObject!);
-            }
-        }
+        (string variableName, InstanceSave? instance) = ResolveVariable(element, requestedName, "set");
 
         string type = _variableWriter.ResolveVariableType(element, state, variableName)
             ?? throw new EditException($"The type of {requestedName} could not be found.");
@@ -397,9 +395,123 @@ public class ProjectEditService : IProjectEditService
         _exposeVariables.Expose(element, instance, rootName, exposedName);
     }
 
+    private void RemoveInstance(GumProjectSave project, JsonElement operation)
+    {
+        ElementSave element = GetElement(project, operation);
+        string name = GetString(operation, "name");
+        InstanceSave instance = element.GetInstance(name)
+            ?? throw new EditException($"{element.Name} has no instance named {name}.");
+        if (_instanceRemoval.GetWhyCannotRemove(instance) is { } whyNot)
+        {
+            throw new EditException(whyNot);
+        }
+
+        // The tool's default "Delete only parent(s)": children move up to the removed instance's parent.
+        _childDetacher.DetachChildren(instance, element);
+        _instanceRemoval.RemoveInstance(instance, element);
+    }
+
+    private void RemoveState(GumProjectSave project, JsonElement operation)
+    {
+        ElementSave element = GetElement(project, operation);
+        string name = GetString(operation, "name");
+        StateSave state;
+        if (GetOptionalString(operation, "category") is { } categoryName)
+        {
+            state = GetCategory(element, categoryName).States.FirstOrDefault(item => item.Name == name)
+                ?? throw new EditException($"{element.Name}'s category {categoryName} has no state named {name}.");
+        }
+        else
+        {
+            state = element.States.FirstOrDefault(item => item.Name == name)
+                ?? throw new EditException($"{element.Name} has no uncategorized state named {name}.");
+        }
+        if (_stateRemoval.GetWhyCannotRemoveState(state, element) is { } whyNot)
+        {
+            throw new EditException(whyNot);
+        }
+
+        _stateRemoval.RemoveState(state, element);
+    }
+
+    private void RemoveCategory(GumProjectSave project, JsonElement operation)
+    {
+        ElementSave element = GetElement(project, operation);
+        StateSaveCategory category = GetCategory(element, GetString(operation, "name"));
+        if (_stateRemoval.GetWhyCannotRemoveCategory(category, element) is { } whyNot)
+        {
+            throw new EditException(whyNot);
+        }
+
+        _stateRemoval.RemoveCategory(category, element);
+    }
+
+    private void RemoveVariable(GumProjectSave project, JsonElement operation)
+    {
+        ElementSave element = GetElement(project, operation);
+        string name = GetString(operation, "name");
+        VariableSave variable = element.GetDefaultStateOrThrow().Variables
+            .FirstOrDefault(item => item.Name == name && item.IsCustomVariable)
+            ?? throw new EditException($"{element.Name} has no custom variable named {name}.");
+        if (_variableRemoval.GetWhyCannotRemoveCustomVariable(variable, element, out List<VariableChange> cascading) is { } whyNot)
+        {
+            throw new EditException(whyNot);
+        }
+
+        _variableRemoval.RemoveCustomVariable(variable, element);
+        _overrideRemover.Remove(cascading);
+    }
+
+    private void ClearVariable(GumProjectSave project, JsonElement operation)
+    {
+        ElementSave element = GetElement(project, operation);
+        string requestedName = GetString(operation, "name");
+        (StateSave state, StateSaveCategory? category) = GetState(element, operation);
+        (string variableName, _) = ResolveVariable(element, requestedName, "cleared");
+
+        VariableSave variable = state.GetVariableSave(variableName)
+            ?? throw new EditException($"{element.Name}'s state {state.Name} does not set {requestedName}.");
+        _variableClear.ClearVariable(element, state, variable, isPartOfCategory: category != null);
+        ElementSaveExtensions.ApplyVariableReferences(element, state);
+    }
+
     #endregion
 
     #region Lookups and values
+
+    /// <summary>
+    /// The stored name of <paramref name="requestedName"/> on <paramref name="element"/>, and the instance it sets:
+    /// <c>Instance.Var</c> for an instance's variable, or the element's own variable, where an exposed name maps to
+    /// the instance variable it exposes. Fails for a name the type does not define.
+    /// </summary>
+    private (string VariableName, InstanceSave? Instance) ResolveVariable(ElementSave element, string requestedName, string verb)
+    {
+        string? instanceName = VariableSave.GetSourceObject(requestedName);
+        if (!string.IsNullOrEmpty(instanceName))
+        {
+            InstanceSave instance = element.GetInstance(instanceName)
+                ?? throw new EditException($"{element.Name} has no instance named {instanceName}.");
+            ElementSave typeElement = ObjectFinder.Self.GetElementSave(instance.BaseType)
+                ?? throw new EditException($"{instanceName}'s type {instance.BaseType} is not in the project.");
+            if (!_variableDefinedByType.GetIfVariableIsDefinedByType(VariableSave.GetRootName(requestedName), typeElement))
+            {
+                throw new EditException($"{typeElement.Name} has no variable named {VariableSave.GetRootName(requestedName)}, so {requestedName} cannot be {verb}.");
+            }
+            return (requestedName, instance);
+        }
+
+        if (!_variableDefinedByType.GetIfVariableIsDefinedByType(requestedName, element))
+        {
+            throw new EditException($"{element.Name} has no variable named {requestedName}.");
+        }
+        // An element's own exposed variable is stored under its instance's name.
+        if (element.DefaultState?.Variables.FirstOrDefault(item => item.ExposedAsName == requestedName
+                && !string.IsNullOrEmpty(item.SourceObject)) is { } exposed)
+        {
+            return (exposed.Name, element.GetInstance(exposed.SourceObject!));
+        }
+        return (requestedName, null);
+    }
 
     private void ValidateNewElementName(string name)
     {

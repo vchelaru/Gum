@@ -49,6 +49,7 @@ public class VariableGridEntry
     private readonly ITypeManager _typeManager;
     private readonly IClipboardService _clipboardService;
     private readonly IStateVariableWriter _stateVariableWriter;
+    private readonly IVariableClearLogic _variableClearLogic;
 
     private readonly IStateContainer? _stateListCategoryContainer;
     private readonly StateSave? _stateSave;
@@ -355,8 +356,9 @@ public class VariableGridEntry
         _editVariableService = editVariableService;
         _typeManager = typeManager;
         _clipboardService = clipboardService;
-        // Pure data logic shared with gumcli; no tool state, so the entry owns one.
+        // Pure data logic shared with gumcli; no tool state, so the entry owns these.
         _stateVariableWriter = new StateVariableWriter();
+        _variableClearLogic = new VariableClearLogic();
 
         _stateListCategoryContainer = stateListCategoryContainer;
         _stateSave = stateSave;
@@ -649,10 +651,10 @@ public class VariableGridEntry
         // it; preview that value, not what removal would resolve to.
         if (StateSaveCategory != null && VariableSave is { } categoryVariable && ElementSave is { } element)
         {
-            return GetCategoryResetValue(element, categoryVariable).Value;
+            return _variableClearLogic.GetCategoryResetValue(element, categoryVariable).Value;
         }
 
-        if (VariableSave is { } customVariable && IsCustomVariableDefinition(customVariable, _stateSave))
+        if (VariableSave is { } customVariable && _variableClearLogic.IsCustomVariableDefinition(customVariable, _stateSave))
         {
             return TypeZeroValue.For(customVariable.Type);
         }
@@ -885,65 +887,10 @@ public class VariableGridEntry
             // aren't state variables.
             if (variable != null && selectedElement != null)
             {
-                // Don't remove the variable if it's part of an element - we still want it there
-                // so it can be set, we just don't want it to set a value. Also, don't remove it if
-                // it's an exposed variable, this un-exposes things.
-                bool shouldRemove = string.IsNullOrEmpty(variable.ExposedAsName) && !isPartOfCategory && !variable.IsCustomVariable;
-
-                // Any variable can be removed so long as the current state isn't the "base definition"
-                // for it. For elements, no variables are the base variable definitions except for
-                // variables that are categorized state variables for categories defined in this element.
-                if (shouldRemove)
+                VariableClearResult result = _variableClearLogic.ClearVariable(selectedElement, state!, variable, isPartOfCategory);
+                if (result.Message != null)
                 {
-                    var isState = variable.IsState(selectedElement, out ElementSave? categoryContainer, out StateSaveCategory? categoryForVariable);
-
-                    if (isState)
-                    {
-                        var isDefinedHere = categoryForVariable != null && categoryContainer == selectedElement;
-
-                        shouldRemove = !isDefinedHere;
-                    }
-                }
-
-                if (shouldRemove)
-                {
-                    state!.Variables.Remove(variable);
-                }
-                else if (isPartOfCategory)
-                {
-                    var reset = GetCategoryResetValue(selectedElement, variable);
-                    switch (reset.Source)
-                    {
-                        case CategoryResetSource.DefaultState:
-                            _guiCommands.PrintOutput(
-                                $"The variable {variable.Name} is part of the category {StateSaveCategory!.Name} so it cannot be removed. Instead, the value has been set to the value in the default state");
-                            variable.Value = reset.Value;
-                            break;
-                        case CategoryResetSource.ClearedState:
-                            variable.Value = null;
-                            variable.SetsValue = true;
-                            break;
-                        case CategoryResetSource.Inherited:
-                            _guiCommands.PrintOutput(
-                                $"The variable {variable.Name} is part of the category {StateSaveCategory!.Name} so it cannot be removed. Instead, the value has been set to the value the default state inherits");
-                            variable.Value = reset.Value;
-                            break;
-                        default:
-                            _guiCommands.PrintOutput(
-                                $"Could not set {variable.Name} to default because neither the default state nor its base types set this value");
-                            break;
-                    }
-                }
-                else if (IsCustomVariableDefinition(variable, state))
-                {
-                    // The default state holds the definition of a custom variable, so there is no base
-                    // value to fall back to. Leave it a number rather than blank.
-                    variable.Value = TypeZeroValue.For(variable.Type);
-                }
-                else
-                {
-                    variable.Value = null;
-                    variable.SetsValue = false;
+                    _guiCommands.PrintOutput(result.Message);
                 }
 
                 wasChangeMade = true;
@@ -997,44 +944,6 @@ public class VariableGridEntry
         }
 
         NotifyVariableLogic(Instance, VariablePropertyCommitType.Full, trySave: true);
-    }
-
-    private static bool IsCustomVariableDefinition(VariableSave variable, StateSave? state) =>
-        variable.IsCustomVariable && state != null && state == state.ParentContainer?.DefaultState;
-
-    private enum CategoryResetSource { DefaultState, ClearedState, Inherited, NotFound }
-
-    private readonly record struct CategoryResetValue(CategoryResetSource Source, object? Value);
-
-    /// <summary>
-    /// The value Make Default gives <paramref name="variable"/> in a category state. Every state in a
-    /// category sets the variable, so it can't be removed; it takes the default state's value, falling
-    /// back to what the default state inherits (base type, standard element), which is also the value
-    /// <c>VariableInCategoryPropagationLogic</c> gives the category's other states. A state variable
-    /// the default state doesn't set is cleared instead. Shared by <see cref="ResetToDefault"/> and
-    /// <see cref="GetMakeDefaultPreviewValue"/> so the menu label shows what the action sets.
-    /// </summary>
-    private static CategoryResetValue GetCategoryResetValue(ElementSave element, VariableSave variable)
-    {
-        var defaultState = element.GetDefaultStateOrThrow();
-        var variableInDefault = defaultState.GetVariableSave(variable.Name);
-        if (variableInDefault != null)
-        {
-            // A custom variable saved with no default value still has to leave the state holding a number.
-            object? value = variableInDefault.Value
-                ?? (variableInDefault.IsCustomVariable ? TypeZeroValue.For(variableInDefault.Type) : null);
-            return new CategoryResetValue(CategoryResetSource.DefaultState, value);
-        }
-
-        if (variable.IsState(element))
-        {
-            return new CategoryResetValue(CategoryResetSource.ClearedState, null);
-        }
-
-        var inheritedValue = defaultState.GetValueRecursive(variable.Name);
-        return inheritedValue != null
-            ? new CategoryResetValue(CategoryResetSource.Inherited, inheritedValue)
-            : new CategoryResetValue(CategoryResetSource.NotFound, null);
     }
 
     #endregion

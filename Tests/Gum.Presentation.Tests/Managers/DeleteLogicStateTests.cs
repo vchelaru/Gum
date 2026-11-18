@@ -27,6 +27,7 @@ public class DeleteLogicStateTests : BaseTestClass
             .Setup(x => x.GumProjectSave)
             .Returns(_project);
         _mocker.Use<IReferenceFinder>(_mocker.CreateInstance<ReferenceFinder>());
+        _mocker.Use<Gum.ProjectServices.Editing.IStateRemovalLogic>(_mocker.CreateInstance<Gum.ProjectServices.Editing.StateRemovalLogic>());
 
         _deleteLogic = _mocker.CreateInstance<DeleteLogic>();
     }

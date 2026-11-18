@@ -58,7 +58,7 @@ public class ExposeVariableServiceTests : BaseTestClass
             _dialogService.Object,
             _variableSaveLogic.Object,
             _pluginManager.Object,
-            new InstanceOverrideRemover(_undoManager.Object, _fileCommands.Object, _pluginManager.Object),
+            new InstanceOverrideRemover(_undoManager.Object, _fileCommands.Object, _pluginManager.Object, new Gum.ProjectServices.Editing.VariableOverrideRemover()),
             new Gum.ProjectServices.Editing.ExposeVariableLogic());
     }
 
