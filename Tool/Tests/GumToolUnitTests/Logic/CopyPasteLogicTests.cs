@@ -52,6 +52,8 @@ public class CopyPasteLogicTests : BaseTestClass
 
         // A mocked manager would refuse every paste as circular.
         _mocker.Use<ICircularReferenceManager>(new CircularReferenceManager(ObjectFinder.Self));
+        _mocker.Use<Gum.ProjectServices.Editing.IComponentExtractionLogic>(
+            new Gum.ProjectServices.Editing.ComponentExtractionLogic(new Gum.ProjectServices.Editing.ElementCreationLogic()));
         _copyPasteLogic = _mocker.CreateInstance<CopyPasteLogic>();
 
         _selectedState = _mocker.GetMock<ISelectedState>();
