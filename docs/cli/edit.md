@@ -16,7 +16,7 @@ Available in December 2026, or now if building Gum from source.
 - `<project.gumj>`: Path to the `.gumj` or `.gumx` project file
 - `<operations.json>`: Path to the operations file
 - `--json`: Report new errors as a JSON array, in the same format as [check](check.md)
-- `--schema`: Print every operation with its required and optional fields instead of editing. It takes no project or operations file. With `--json` it prints `{ "version": 1, "operations": [ { "op": "setVariable", "required": [ ... ], "optional": [ ... ] } ] }`.
+- `--schema`: Print every operation with its required and optional fields and the JSON type each field takes (`string`, `bool`, or `any` for a field such as `value` that takes any JSON value) instead of editing. It takes no project or operations file. With `--json` it prints `{ "version": 1, "operations": [ { "op": "setVariable", "required": [ { "name": "element", "type": "string" }, ... ], "optional": [ ... ] } ] }`.
 
 ## The Operations File
 

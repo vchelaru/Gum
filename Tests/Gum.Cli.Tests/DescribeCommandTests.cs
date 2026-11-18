@@ -119,8 +119,13 @@ public class DescribeCommandTests : BaseTestClass
         result.StandardError.ShouldContain(expectedInMessage);
     }
 
+    private static (string Name, string Type)[] ReadFields(JsonElement operation, string list) =>
+        operation.GetProperty(list).EnumerateArray()
+            .Select(field => (field.GetProperty("name").GetString()!, field.GetProperty("type").GetString()!))
+            .ToArray();
+
     [Fact]
-    public void EditSchema_Json_ListsEveryOpWithItsFields()
+    public void EditSchema_Json_ListsEveryOpWithItsTypedFields()
     {
         CliTestHelper result = CliTestHelper.Run("edit", "--schema", "--json");
 
@@ -129,24 +134,61 @@ public class DescribeCommandTests : BaseTestClass
         document.RootElement.GetProperty("version").GetInt32().ShouldBe(1);
         JsonElement setVariable = document.RootElement.GetProperty("operations").EnumerateArray()
             .Single(item => item.GetProperty("op").GetString() == "setVariable");
-        setVariable.GetProperty("required").EnumerateArray().Select(item => item.GetString()).ShouldBe(new[] { "element", "name", "value" });
-        setVariable.GetProperty("optional").EnumerateArray().Select(item => item.GetString()).ShouldBe(new[] { "state", "category" });
+        ReadFields(setVariable, "required").ShouldBe(new[] { ("element", "string"), ("name", "string"), ("value", "any") });
+        ReadFields(setVariable, "optional").ShouldBe(new[] { ("state", "string"), ("category", "string") });
         document.RootElement.GetProperty("operations").EnumerateArray()
             .Select(item => item.GetProperty("op").GetString()).ShouldContain("removeInstance");
         JsonElement extract = document.RootElement.GetProperty("operations").EnumerateArray()
             .Single(item => item.GetProperty("op").GetString() == "extractToComponent");
-        extract.GetProperty("required").EnumerateArray().Select(item => item.GetString())
-            .ShouldBe(new[] { "element", "instance", "name", "replace" });
+        ReadFields(extract, "required")
+            .ShouldBe(new[] { ("element", "string"), ("instance", "string"), ("name", "string"), ("replace", "bool") });
     }
 
     [Fact]
-    public void EditSchema_HumanOutput_ListsOpsAndFields()
+    public void EditSchema_EveryTypedField_RejectsAValueOfAnotherType()
+    {
+        CliTestHelper schema = CliTestHelper.Run("edit", "--schema", "--json");
+        schema.ExitCode.ShouldBe(0, schema.StandardError);
+        using JsonDocument document = JsonDocument.Parse(schema.StandardOutput);
+        Dictionary<string, object?> validValues = new() { ["string"] = "x", ["bool"] = true, ["any"] = null };
+        Dictionary<string, object> wrongValues = new() { ["string"] = 5, ["bool"] = "true" };
+        int checkedFields = 0;
+
+        foreach (JsonElement operation in document.RootElement.GetProperty("operations").EnumerateArray())
+        {
+            string op = operation.GetProperty("op").GetString()!;
+            (string Name, string Type)[] required = ReadFields(operation, "required");
+            (string Name, string Type)[] fields = required.Concat(ReadFields(operation, "optional")).ToArray();
+            foreach ((string name, string type) in fields.Where(field => field.Type != "any"))
+            {
+                Dictionary<string, object?> body = new() { ["op"] = op };
+                foreach ((string requiredName, string requiredType) in required)
+                {
+                    body[requiredName] = validValues[requiredType];
+                }
+                body[name] = wrongValues[type];
+
+                ProjectEditResult result = EditCommand.CreateEditService().Apply(new GumProjectSave(),
+                    JsonSerializer.Serialize(new { version = 1, operations = new[] { body } }));
+
+                result.Failure.ShouldBe(ProjectEditFailure.InvalidFile, $"{op}.{name} ({type}) accepted {body[name]}");
+                result.Message.ShouldContain($"\"{name}\"");
+                checkedFields++;
+            }
+        }
+        checkedFields.ShouldBeGreaterThan(0);
+    }
+
+    [Fact]
+    public void EditSchema_HumanOutput_ListsOpsAndTypedFields()
     {
         CliTestHelper result = CliTestHelper.Run("edit", "--schema");
 
         result.ExitCode.ShouldBe(0, result.StandardError);
         result.StandardOutput.ShouldContain("setVariable");
-        result.StandardOutput.ShouldContain("[state]");
+        result.StandardOutput.ShouldContain("value: any");
+        result.StandardOutput.ShouldContain("[state: string]");
+        result.StandardOutput.ShouldContain("replace: bool");
     }
 
     [Fact]
