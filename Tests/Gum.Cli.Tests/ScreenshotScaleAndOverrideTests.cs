@@ -87,12 +87,23 @@ public class ScreenshotScaleAndOverrideTests : BaseTestClass
     [Fact]
     public void Screenshot_WithSetNumberOnStringVariable_AppliesItAsText()
     {
-        string projectPath = CreatePanelProject(withReference: true);
+        string projectPath = CreatePanelProject(withReference: true, label: "");
+        CliTestHelper overridden = RenderWithSets(projectPath, "Panel", out SKBitmap overriddenBitmap, "Label=123");
+        CliTestHelper empty = RenderWithSets(projectPath, "Panel", out SKBitmap emptyBitmap);
+        CreatePanelProject(withReference: true, label: "123");
+        CliTestHelper stored = RenderWithSets(projectPath, "Panel", out SKBitmap storedBitmap);
 
-        CliTestHelper result = RenderWithSets(projectPath, "Panel", out SKBitmap bitmap, "Label=123");
-
-        bitmap.Dispose();
-        result.ExitCode.ShouldBe(0, result.StandardError);
+        using (overriddenBitmap)
+        using (emptyBitmap)
+        using (storedBitmap)
+        {
+            overridden.ExitCode.ShouldBe(0, overridden.StandardError);
+            empty.ExitCode.ShouldBe(0, empty.StandardError);
+            stored.ExitCode.ShouldBe(0, stored.StandardError);
+            // Label is exposed as Caption.Text, so the override must draw the same text a stored "123" draws.
+            overriddenBitmap.Bytes.ShouldBe(storedBitmap.Bytes);
+            overriddenBitmap.Bytes.ShouldNotBe(emptyBitmap.Bytes);
+        }
     }
 
     [Theory]
@@ -153,9 +164,10 @@ public class ScreenshotScaleAndOverrideTests : BaseTestClass
     /// Builds component Panel (Width 32, Height 16, a white filled Rectangle Fill that fills its width, and a
     /// category Size whose state Big sets Width to 80) and a Screen with a Panel instance. With
     /// <paramref name="withReference"/>, Panel also has a float custom variable BarWidth = 32 with the reference
-    /// <c>Width = BarWidth</c>, and an empty string custom variable Label.
+    /// <c>Width = BarWidth</c>, and a Text instance Caption at X 64 whose Text is exposed as Label, set to
+    /// <paramref name="label"/>.
     /// </summary>
-    private string CreatePanelProject(bool withReference)
+    private string CreatePanelProject(bool withReference, string label = "")
     {
         string projectPath = Path.Combine(TempDirectory, "Project.gumx");
         GumProjectSave project = new ProjectCreator().Create(projectPath);
@@ -179,9 +191,11 @@ public class ScreenshotScaleAndOverrideTests : BaseTestClass
             {
                 Name = "BarWidth", Type = "float", Value = 32f, IsCustomVariable = true, SetsValue = true,
             });
+            panel.Instances.Add(new InstanceSave { Name = "Caption", BaseType = "Text", ParentContainer = panel });
+            panelState.Variables.Add(new VariableSave { Name = "Caption.X", Type = "float", Value = 64f, SetsValue = true });
             panelState.Variables.Add(new VariableSave
             {
-                Name = "Label", Type = "string", Value = "", IsCustomVariable = true, SetsValue = true,
+                Name = "Caption.Text", Type = "string", Value = label, ExposedAsName = "Label", SetsValue = true,
             });
             panelState.VariableLists.Add(new VariableListSave<string>
             {
