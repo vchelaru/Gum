@@ -220,6 +220,7 @@ public static class EditCommand
             new StateRemovalLogic(referenceFinder, new ObjectFinderProjectProvider()),
             new VariableRemovalLogic(referenceFinder),
             overrideRemover,
+            referenceFinder,
             new VariableClearLogic(),
             new ComponentExtractionLogic(elementCreation),
             new MovedInstanceReferenceDropLogic(referenceFinder),
