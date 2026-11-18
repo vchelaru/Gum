@@ -78,6 +78,43 @@ public class EditCommandTests : BaseTestClass
     }
 
     [Fact]
+    public void Edit_UnexposeVariable_ClearsTheExposedNameAndTheValuesSetThroughIt()
+    {
+        string projectPath = CreateEmptyProject();
+        string setup = WriteOperations("""
+            { "version": 1, "operations": [
+              { "op": "addComponent", "name": "Hud" },
+              { "op": "addInstance", "element": "Hud", "name": "Label", "type": "Text" },
+              { "op": "setVariable", "element": "Hud", "name": "Label.Text", "value": "Hi" },
+              { "op": "exposeVariable", "element": "Hud", "instance": "Label", "variable": "Text", "name": "LabelText" },
+              { "op": "addScreen", "name": "Game" },
+              { "op": "addInstance", "element": "Game", "name": "HudInstance", "type": "Hud" },
+              { "op": "setVariable", "element": "Game", "name": "HudInstance.LabelText", "value": "Yo" },
+              { "op": "setVariable", "element": "Game", "name": "HudInstance.Width", "value": 50 }
+            ] }
+            """);
+        CliTestHelper.Run("edit", projectPath, setup).ExitCode.ShouldBe(0);
+        string operations = WriteOperations("""
+            { "version": 1, "operations": [
+              { "op": "unexposeVariable", "element": "Hud", "name": "LabelText" }
+            ] }
+            """);
+
+        CliTestHelper result = CliTestHelper.Run("edit", projectPath, operations);
+
+        result.ExitCode.ShouldBe(0, result.StandardOutput + result.StandardError);
+        CliTestHelper.Run("check", projectPath).ExitCode.ShouldBe(0);
+        GumProjectSave project = new ProjectLoader().Load(projectPath).Project!;
+        ObjectFinder.Self.GumProjectSave = project;
+        VariableSave label = project.Components.Single(item => item.Name == "Hud").DefaultState.GetVariableSave("Label.Text")!;
+        label.ExposedAsName.ShouldBeNull();
+        label.Value.ShouldBe("Hi");
+        ScreenSave game = project.Screens.Single(item => item.Name == "Game");
+        game.DefaultState.GetVariableSave("HudInstance.LabelText").ShouldBeNull();
+        game.DefaultState.GetValue("HudInstance.Width").ShouldBe(50f);
+    }
+
+    [Fact]
     public void Edit_RemoveOperations_RemoveWhatTheToolRemovesAndPassCheck()
     {
         string projectPath = CreateEmptyProject();
@@ -464,6 +501,7 @@ public class EditCommandTests : BaseTestClass
     [InlineData("""{ "op": "removeCategory", "element": "Hud", "name": "Size" }""", "Size")]
     [InlineData("""{ "op": "removeVariable", "element": "Hud", "name": "Width" }""", "custom variable")]
     [InlineData("""{ "op": "clearVariable", "element": "Hud", "name": "Height" }""", "Height")]
+    [InlineData("""{ "op": "unexposeVariable", "element": "Hud", "name": "Nope" }""", "no variable exposed as Nope")]
     [InlineData("""{ "op": "extractToComponent", "element": "Hud", "instance": "Nope", "name": "NopeComponent", "replace": true }""", "Nope")]
     [InlineData("""{ "op": "extractToComponent", "element": "Hud", "instance": "Label", "name": "Text", "replace": true }""", "Text")]
     public void Edit_OperationThatCannotApply_ExitsWith1AndNamesTheProblem(string operation, string expectedInMessage)

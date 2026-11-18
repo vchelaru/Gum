@@ -255,6 +255,30 @@ public class ExposeVariableServiceTests : BaseTestClass
     }
 
     [Fact]
+    public void HandleUnexposeVariableClick_WhenVariableIsReferenced_NamesEachReferencingLine()
+    {
+        ComponentSave component = new ComponentSave { Name = "MyComponent" };
+        VariableSave variable = new VariableSave { Name = "MyInstance.Visible", ExposedAsName = "MyExposedVisible" };
+        VariableChangeResponse changes = new VariableChangeResponse();
+        changes.VariableReferenceChanges.Add(new VariableReferenceChange
+        {
+            Container = component,
+            LineIndex = 0,
+            VariableReferenceList = new VariableListSave<string> { Name = "SomeVariableReferences", Value = new List<string> { "SomeInstance.Visible = true" } }
+        });
+        _renameLogic
+            .Setup(x => x.GetChangesForRenamedVariable(component, variable.Name, "MyExposedVisible"))
+            .Returns(changes);
+
+        _service.HandleUnexposeVariableClick(variable, component);
+
+        _dialogService.Verify(x => x.ShowMessage(
+            "Cannot unexpose variable MyExposedVisible because it is referenced by:\n\n" +
+            "SomeInstance.Visible = true in SomeVariableReferences (MyComponent)\n",
+            It.IsAny<string?>(), It.IsAny<MessageDialogStyle?>()), Times.Once);
+    }
+
+    [Fact]
     public void HandleUnexposeVariableClick_ClearChosen_UnexposesAndRemovesInstanceValuesInOneUndo()
     {
         (ComponentSave button, VariableSave exposed, ScreenSave title, VariableSave instanceValue) = MakeExposedVariableSetOnAnInstance();

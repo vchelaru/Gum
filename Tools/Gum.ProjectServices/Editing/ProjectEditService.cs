@@ -131,6 +131,7 @@ public class ProjectEditService : IProjectEditService
     private readonly IStateRemovalLogic _stateRemoval;
     private readonly IVariableRemovalLogic _variableRemoval;
     private readonly IVariableOverrideRemover _overrideRemover;
+    private readonly IReferenceFinder _referenceFinder;
     private readonly IVariableClearLogic _variableClear;
     private readonly IComponentExtractionLogic _componentExtraction;
     private readonly IMovedInstanceReferenceDropLogic _movedReferenceDrop;
@@ -153,6 +154,7 @@ public class ProjectEditService : IProjectEditService
         IStateRemovalLogic stateRemoval,
         IVariableRemovalLogic variableRemoval,
         IVariableOverrideRemover overrideRemover,
+        IReferenceFinder referenceFinder,
         IVariableClearLogic variableClear,
         IComponentExtractionLogic componentExtraction,
         IMovedInstanceReferenceDropLogic movedReferenceDrop,
@@ -174,6 +176,7 @@ public class ProjectEditService : IProjectEditService
         _stateRemoval = stateRemoval;
         _variableRemoval = variableRemoval;
         _overrideRemover = overrideRemover;
+        _referenceFinder = referenceFinder;
         _variableClear = variableClear;
         _componentExtraction = componentExtraction;
         _movedReferenceDrop = movedReferenceDrop;
@@ -189,6 +192,7 @@ public class ProjectEditService : IProjectEditService
             ["addCategory"] = new(Strings("element", "name"), None, AddCategory),
             ["addState"] = new(Strings("element", "name"), Strings("category"), AddState),
             ["exposeVariable"] = new(Strings("element", "instance", "variable", "name"), None, ExposeVariable),
+            ["unexposeVariable"] = new(Strings("element", "name"), None, UnexposeVariable),
             ["removeScreen"] = new(Strings("name"), None, RemoveScreen),
             ["removeComponent"] = new(Strings("name"), None, RemoveComponent),
             ["removeInstance"] = new(Strings("element", "name"), None, RemoveInstance),
@@ -470,6 +474,25 @@ public class ProjectEditService : IProjectEditService
         }
 
         _exposeVariables.Expose(element, instance, rootName, exposedName);
+    }
+
+    // Like the tool's Un-expose with "clear values": the values other elements set through the exposed name go too.
+    private void UnexposeVariable(GumProjectSave project, JsonElement operation)
+    {
+        ElementSave element = GetElement(project, operation);
+        string exposedName = GetString(operation, "name");
+        VariableSave variable = element.GetDefaultStateOrThrow().Variables
+            .FirstOrDefault(item => item.ExposedAsName == exposedName)
+            ?? throw new EditException($"{element.Name} has no variable exposed as {exposedName}.");
+
+        VariableChangeResponse references = _referenceFinder.GetReferencesToVariable(element, variable.Name, exposedName);
+        if (_exposeVariables.GetWhyCannotUnexpose(references, exposedName, out List<VariableChange> valuesToClear) is { } whyNot)
+        {
+            throw new EditException(whyNot);
+        }
+
+        _exposeVariables.Unexpose(element, variable);
+        _overrideRemover.Remove(valuesToClear);
     }
 
     // An element still in use (an instance of it, or one deriving from it) is left to the error check, which names
