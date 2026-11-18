@@ -11,6 +11,7 @@ using Gum.Commands;
 using Gum.Services.Dialogs;
 using Gum.Undo;
 using Gum.ProjectServices;
+using Gum.ProjectServices.Editing;
 using ToolsUtilities;
 
 namespace Gum.Services;
@@ -27,6 +28,7 @@ public class ExposeVariableService : IExposeVariableService
     private readonly IVariableSaveLogic _variableSaveLogic;
     private readonly IPluginManager _pluginManager;
     private readonly IInstanceOverrideRemover _instanceOverrideRemover;
+    private readonly IExposeVariableLogic _exposeVariableLogic;
 
     public ExposeVariableService(
         IUndoManager undoManager,
@@ -38,8 +40,10 @@ public class ExposeVariableService : IExposeVariableService
         IDialogService dialogService,
         IVariableSaveLogic variableSaveLogic,
         IPluginManager pluginManager,
-        IInstanceOverrideRemover instanceOverrideRemover)
+        IInstanceOverrideRemover instanceOverrideRemover,
+        IExposeVariableLogic exposeVariableLogic)
     {
+        _exposeVariableLogic = exposeVariableLogic;
         _undoManager = undoManager;
         _guiCommands = guiCommands;
         _fileCommands = fileCommands;
@@ -88,7 +92,7 @@ public class ExposeVariableService : IExposeVariableService
 
         if (_dialogService.GetUserString(message, title, options) is { } result)
         {
-            return ApplyExposure(elementSave, instanceSave, rootVariableName, variableSave, result);
+            return ApplyExposure(elementSave, instanceSave, rootVariableName, result);
         }
 
         // User cancelled the prompt: attempted, but nothing exposed.
@@ -111,7 +115,7 @@ public class ExposeVariableService : IExposeVariableService
             return OptionallyAttemptedGeneralResponse<VariableSave>.SuccessfulWithoutAttempt;
         }
 
-        return ApplyExposure(elementSave, instanceSave, rootVariableName, variableSave, exposedName);
+        return ApplyExposure(elementSave, instanceSave, rootVariableName, exposedName);
     }
 
     /// <summary>
@@ -119,10 +123,8 @@ public class ExposeVariableService : IExposeVariableService
     /// <see cref="HandleExposeVariableClick"/> and the name-supplied <see cref="ExposeVariable"/>.
     /// </summary>
     private OptionallyAttemptedGeneralResponse<VariableSave> ApplyExposure(ElementSave elementSave, InstanceSave instanceSave,
-        string rootVariableName, VariableSave? variableSave, string exposedName)
+        string rootVariableName, string exposedName)
     {
-        var fullVariableName = instanceSave.Name + "." + rootVariableName;
-
         // if there is an inactive variable, we should get rid of it:
         var existingVariable = GetVariableFromThisOrBase(elementSave, exposedName);
 
@@ -145,29 +147,7 @@ public class ExposeVariableService : IExposeVariableService
             }
         }
 
-        if (variableSave == null)
-        {
-            StateSave stateToExposeOn = elementSave.GetDefaultStateOrThrow();
-
-            // GetIfCanExpose only succeeds for an instance in an element.
-            string? variableType = GetUnauthoredVariableType(instanceSave, rootVariableName, instanceSave.ParentContainer!);
-
-            if (variableType == null)
-            {
-                throw new Exception($"Error getting root variable for {fullVariableName} in {instanceSave.ParentContainer}");
-            }
-
-            stateToExposeOn.SetValue(fullVariableName, null, instanceSave, variableType);
-
-            // SetValue just added the variable.
-            variableSave = stateToExposeOn.GetVariableSave(fullVariableName)!;
-
-            // Not sure if we need this, but setting SetsValue to false matches the old behavior when
-            // this code used to be part of validation
-            variableSave.SetsValue = false;
-        }
-
-        variableSave.ExposedAsName = exposedName;
+        VariableSave variableSave = _exposeVariableLogic.Expose(elementSave, instanceSave, rootVariableName, exposedName);
 
         _pluginManager.VariableAdd(elementSave, exposedName);
 
@@ -197,28 +177,6 @@ public class ExposeVariableService : IExposeVariableService
         return stateToPullFrom.GetVariableRecursive(variable);
     }
 
-    /// <summary>
-    /// The type of a variable nobody has set on <paramref name="instanceSave"/>, found on its base type, through the
-    /// variable's root, or as a Forms property one of its behaviors declares. Null when none define it.
-    /// </summary>
-    private static string? GetUnauthoredVariableType(InstanceSave instanceSave, string rootVariableName, ElementSave parentContainer)
-    {
-        // An instance of a missing type has no base variables.
-        ElementSave? elementForInstance = ObjectFinder.Self.GetElementSave(instanceSave.BaseType);
-
-        VariableSave? variable = elementForInstance?.GetDefaultStateOrThrow().GetVariableSave(rootVariableName)
-            ?? ObjectFinder.Self.GetRootVariable(instanceSave.Name + "." + rootVariableName, parentContainer);
-
-        if (variable != null)
-        {
-            return variable.Type;
-        }
-
-        return elementForInstance == null
-            ? null
-            : FormsBehaviorChain.GetFormsPropertyDeclarations(elementForInstance).FirstOrDefault(item => item.Name == rootVariableName)?.Type;
-    }
-
     private GeneralResponse GetIfCanExpose(InstanceSave instanceSave, ElementSave? selectedElement, VariableSave? variableSave, string rootVariableName)
     {
         if (instanceSave == null)
@@ -235,7 +193,7 @@ public class ExposeVariableService : IExposeVariableService
         if (variableSave == null)
         {
             // This variable hasn't been assigned yet.  Let's make a new variable with a null value
-            if (GetUnauthoredVariableType(instanceSave, rootVariableName, parentContainer) == null)
+            if (_exposeVariableLogic.GetUnauthoredVariableType(instanceSave, rootVariableName, parentContainer) == null)
             {
                 return GeneralResponse.UnsuccessfulWith("This variable cannot be exposed.");
             }

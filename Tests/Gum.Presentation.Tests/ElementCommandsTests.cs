@@ -55,7 +55,9 @@ public class ElementCommandsTests : BaseTestClass
             _wireframeObjectManager.Object,
             _pluginManager.Object,
             _projectManager.Object,
-            _projectState.Object);
+            _projectState.Object,
+            new Gum.ProjectServices.Editing.InstanceCreationLogic(),
+            new Gum.ProjectServices.Editing.StateCreationLogic());
     }
 
     [Fact]
@@ -118,6 +120,22 @@ public class ElementCommandsTests : BaseTestClass
         component.Instances.Count.ShouldBe(1);
         component.Instances[0].Name.ShouldBe("NewInstanceName");
         component.Instances[0].BaseType.ShouldBe("Sprite");
+    }
+
+    [Fact]
+    public void AddInstance_WithParent_ParentIsSetBeforeTheTreeAndCanvasRefresh()
+    {
+        ComponentSave component = new();
+        component.States.Add(new StateSave { Name = "Default", ParentContainer = component });
+        List<object?> parentsSeenByRefresh = new List<object?>();
+        _guiCommands.Setup(x => x.RefreshElementTreeView(component))
+            .Callback(() => parentsSeenByRefresh.Add(component.DefaultState.GetValue("Child.Parent")));
+        _wireframeObjectManager.Setup(x => x.RefreshAll(true, It.IsAny<bool>()))
+            .Callback(() => parentsSeenByRefresh.Add(component.DefaultState.GetValue("Child.Parent")));
+
+        _sut.AddInstance(component, "Child", "Sprite", parentName: "Holder");
+
+        parentsSeenByRefresh.ShouldBe(new object?[] { "Holder", "Holder" });
     }
 
     [Fact]

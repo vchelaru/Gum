@@ -3,6 +3,7 @@ using Gum.DataTypes.Behaviors;
 using Gum.Managers;
 using Gum.Plugins.InternalPlugins.TreeView;
 using Gum.Plugins.InternalPlugins.VariableGrid;
+using Gum.ProjectServices.Editing;
 using Gum.Services;
 using Gum.Services.Dialogs;
 using Gum.ToolCommands;
@@ -18,7 +19,7 @@ public class AddInstanceLogic : IAddInstanceLogic
     private readonly ISelectedState _selectedState;
     private readonly IElementCommands _elementCommands;
     private readonly IDialogService _dialogService;
-    private readonly ICircularReferenceManager _circularReferenceManager;
+    private readonly IInstanceAddRules _instanceAddRules;
     private readonly IUndoManager _undoManager;
     private readonly ISetVariableLogic _setVariableLogic;
     private readonly IAddDestinationTracker _addDestinationTracker;
@@ -40,7 +41,7 @@ public class AddInstanceLogic : IAddInstanceLogic
         _selectedState = selectedState;
         _elementCommands = elementCommands;
         _dialogService = dialogService;
-        _circularReferenceManager = circularReferenceManager;
+        _instanceAddRules = new InstanceAddRules(circularReferenceManager);
         _undoManager = undoManager;
         _setVariableLogic = setVariableLogic;
         _addDestinationTracker = addDestinationTracker;
@@ -126,21 +127,9 @@ public class AddInstanceLogic : IAddInstanceLogic
         {
             return "No Screen or Component selected";
         }
-        if (target is StandardElementSave)
+        if (_instanceAddRules.GetWhyCannotAdd(elementToAdd, target) is { } ruleMessage)
         {
-            return $"Standard type {target} cannot contain objects instances, so {elementToAdd} cannot be added here";
-        }
-        if (elementToAdd is ScreenSave)
-        {
-            return "Screens can't be added to other Screens or Components";
-        }
-        if (!_circularReferenceManager.CanTypeBeAddedToElement(target, elementToAdd.Name))
-        {
-            return $"Cannot add {elementToAdd.Name} to {target.Name} because it would create a circular reference";
-        }
-        if (target.IsSourceFileMissing)
-        {
-            return $"The source file for {target.Name} is missing, so it cannot be edited";
+            return ruleMessage;
         }
         if (target == _selectedState.SelectedElement && _selectedState.SelectedStateSave != target.DefaultState)
         {

@@ -1,3 +1,4 @@
+using Gum.ProjectServices.Editing;
 using Gum.Commands;
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
@@ -50,7 +51,7 @@ public class LeftoverVariablesBaseTypeChangeTests : BaseTestClass
         _mocker.Use(typeManager);
         VariableSaveLogic variableSaveLogic = _mocker.CreateInstance<VariableSaveLogic>();
         _mocker.Use<IVariableSaveLogic>(variableSaveLogic);
-        _mocker.Use<IVariableDefinedByTypeLogic>(variableSaveLogic);
+        _mocker.Use<IVariableDefinedByTypeLogic>(new VariableDefinedByTypeLogic());
 
         _mocker.GetMock<IReferenceFinderProjectProvider>().Setup(x => x.GumProjectSave).Returns(_project);
         _mocker.GetMock<IRenameProjectProvider>().Setup(x => x.GumProjectSave).Returns(_project);

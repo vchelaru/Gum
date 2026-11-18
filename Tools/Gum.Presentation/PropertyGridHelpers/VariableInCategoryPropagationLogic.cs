@@ -9,6 +9,7 @@ using System.Linq;
 using Gum.Commands;
 using Gum.Services.Dialogs;
 using System.Collections.Generic;
+using Gum.ProjectServices.Editing;
 
 namespace Gum.PropertyGridHelpers;
 
@@ -19,18 +20,21 @@ public class VariableInCategoryPropagationLogic : IVariableInCategoryPropagation
     private readonly IFileCommands _fileCommands;
     private readonly IDialogService _dialogService;
     private readonly IPluginManager _pluginManager;
+    private readonly ICategoryVariablePropagator _propagator;
 
     public VariableInCategoryPropagationLogic(IUndoManager undoManager,
         IGuiCommands guiCommands,
         IFileCommands fileCommands,
         IDialogService dialogService,
-        IPluginManager pluginManager)
+        IPluginManager pluginManager,
+        ICategoryVariablePropagator propagator)
     {
         _undoManager = undoManager;
         _guiCommands = guiCommands;
         _fileCommands = fileCommands;
         _dialogService = dialogService;
         _pluginManager = pluginManager;
+        _propagator = propagator;
     }
 
     public void PropagateVariablesInCategory(string memberName, ElementSave? element, StateSaveCategory? categoryToPropagate)
@@ -52,161 +56,24 @@ public class VariableInCategoryPropagationLogic : IVariableInCategoryPropagation
             return;
         }
 
-        // Tools and hand-edited files leave variables set in only some states, so take the union
-        // of every state's names, not just the first state's.
-        HashSet<string> names = new HashSet<string>();
-        foreach (StateSave state in category.States)
-        {
-            foreach (VariableSave variable in state.Variables)
-            {
-                names.Add(variable.Name);
-            }
-            foreach (VariableListSave variableList in state.VariableLists)
-            {
-                names.Add(variableList.Name);
-            }
-        }
-
-        foreach (string name in names)
-        {
-            PropagateVariablesInCategory(name, element, category.States);
-        }
+        PrintAdditions(_propagator.PropagateAllVariablesInCategory(element, category));
     }
 
     public void PropagateVariablesInCategory(string memberName, ElementSave? element, List<StateSave> states)
     {
-        /////////////////////Early Out//////////////////////////
         if (element == null)
         {
             return;
         }
-        ///////////////////End Early Out////////////////////////
 
-        var defaultState = element.GetDefaultStateOrThrow();
-        var defaultVariable = defaultState.GetVariableSave(memberName);
-        if (defaultVariable == null)
+        PrintAdditions(_propagator.PropagateVariablesInCategory(memberName, element, states));
+    }
+
+    private void PrintAdditions(IReadOnlyList<PropagatedVariable> added)
+    {
+        foreach (PropagatedVariable addition in added)
         {
-            defaultVariable = defaultState.GetVariableRecursive(memberName);
-        }
-        if(defaultVariable == null)
-        {
-            defaultVariable = ObjectFinder.Self.GetRootVariable(memberName, element);
-        }
-        var defaultVariableList = defaultState.GetVariableListSave(memberName);
-        if(defaultVariableList == null && defaultVariable == null)
-        {
-            defaultVariableList = defaultState.GetVariableListRecursive(memberName);
-        }
-
-        // If the user is setting a variable that is a categorized state, the
-        // default may be null. If so, then we need to select the first value
-        // as the default so that values are always set:
-        if(defaultVariable != null && defaultVariable.Value == null)
-        {
-            var variableContainer = element;
-
-
-            var sourceObjectName = VariableSave.GetSourceObject(memberName);
-
-            if(!string.IsNullOrEmpty(sourceObjectName))
-            {
-                var nos = variableContainer.GetInstance(sourceObjectName);
-
-                if(nos != null)
-                {
-                    variableContainer = ObjectFinder.Self.GetElementSave(nos);
-                }
-            }
-
-            StateSaveCategory? category = null;
-            var isState = false;
-            
-            if(variableContainer != null)
-            {
-                isState = defaultVariable.IsState(variableContainer, out _, out category);
-            }
-
-            if(isState)
-            {
-                // we're going to assign a value on the variable, but we don't want to modify the original one so, 
-                // let's clone it:
-                defaultVariable = defaultVariable.Clone();
-                if(category != null)
-                {
-                    defaultVariable.Value = category.States.FirstOrDefault()?.Name;
-                }
-                // isState is only set when there is a container.
-                else if (variableContainer != null)
-                {
-                    defaultVariable.Value = variableContainer.DefaultState?.Name;
-
-                }
-
-            }
-        }
-        // variable lists cannot be states, so no need to do anything here:
-        if(defaultVariableList != null && defaultVariableList.ValueAsIList == null)
-        {
-            // do nothing...
-        }
-
-        var defaultValue = defaultVariable?.Value ?? defaultVariableList?.ValueAsIList;
-
-        if(defaultValue == null)
-        {
-            defaultValue = element.GetDefaultStateOrThrow().GetValueRecursive(memberName);
-        }
-
-        // A custom variable has no default value until one is typed in, but every state in the category
-        // must hold an explicit value, or interpolating between its states has nothing to start from.
-        if (defaultValue == null && defaultVariable != null)
-        {
-            defaultValue = TypeZeroValue.For(defaultVariable.Type);
-        }
-
-        foreach (var state in states)
-        {
-
-            if(defaultVariable != null)
-            {
-                var existingVariable = state.GetVariableSave(memberName);
-                if (existingVariable == null)
-                {
-                    if(defaultVariable != null)
-                    {
-                        VariableSave newVariable = defaultVariable.Clone();
-                        newVariable.Value = defaultValue;
-                        newVariable.SetsValue = true;
-                        newVariable.Name = memberName;
-
-                        state.Variables.Add(newVariable);
-
-                        _guiCommands.PrintOutput(
-                            $"Adding {memberName} to {state.Name}");
-                    }
-                }
-                else if (existingVariable.SetsValue == false)
-                {
-                    existingVariable.SetsValue = true;
-                }
-            }
-            else if(defaultVariableList != null)
-            {
-                var existingVariableList = state.GetVariableListSave(memberName);
-                if(existingVariableList == null)
-                {
-                    if(defaultVariableList != null)
-                    {
-                        var newVariableList = defaultVariableList.Clone();
-                        // handled by clone:
-                        //newVariableList.ValueAsIList = defaultVariableList.ValueAsIList;
-                        newVariableList.Name = memberName;
-                        state.VariableLists.Add(newVariableList);
-                        _guiCommands.PrintOutput(
-                            $"Adding {memberName} to {state.Name}");
-                    }
-                }
-            }
+            _guiCommands.PrintOutput($"Adding {addition.Name} to {addition.State.Name}");
         }
     }
 

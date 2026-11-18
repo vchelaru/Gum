@@ -463,6 +463,7 @@
   * [diff-standards](cli/diff-standards.md)
   * [import-screen](cli/import-screen.md)
   * [resave](cli/resave.md)
+  * [edit](cli/edit.md)
   * [stage-forms-behaviors](cli/stage-forms-behaviors.md)
   * [codegen-init](cli/codegen-init.md)
   * [codegen](cli/codegen.md)

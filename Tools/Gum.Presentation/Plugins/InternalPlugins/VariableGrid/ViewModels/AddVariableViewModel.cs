@@ -12,6 +12,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Gum.Services;
 using Gum.Services.Dialogs;
+using Gum.ProjectServices.Editing;
 using ToolsUtilities;
 
 namespace Gum.Plugins.InternalPlugins.VariableGrid.ViewModels;
@@ -53,6 +54,7 @@ public class AddVariableViewModel : DialogViewModel
     private readonly INameVerifier _nameVerifier;
     private readonly IPluginManager _pluginManager;
     private readonly IRenameLogic _renameLogic;
+    private readonly ICustomVariableLogic _customVariableLogic;
 
     public List<string> AvailableTypes
     {
@@ -66,25 +68,7 @@ public class AddVariableViewModel : DialogViewModel
     }
 
     [DependsOn(nameof(SelectedItem))]
-    public object? DefaultValue
-    {
-        get
-        {
-            switch (SelectedItem)
-            {
-                case "float":
-                    return 1.0f;
-                case "int":
-                    return 10;
-                case "string":
-                    return "Hello";
-                case "bool":
-                    return true;
-                default:
-                    return null;
-            }
-        }
-    }
+    public object? DefaultValue => _customVariableLogic.GetDefaultValue(SelectedItem);
 
     public ElementSave? Element { get; set; }
     public VariableSave? Variable { get; set; }
@@ -113,7 +97,8 @@ public class AddVariableViewModel : DialogViewModel
         INameVerifier nameVerifier,
         ISelectedState selectedState,
         IPluginManager pluginManager,
-        IRenameLogic renameLogic)
+        IRenameLogic renameLogic,
+        ICustomVariableLogic customVariableLogic)
     {
         _guiCommands = guiCommands;
         _undoManager = undoManager;
@@ -123,12 +108,9 @@ public class AddVariableViewModel : DialogViewModel
         _selectedState = selectedState;
         _pluginManager = pluginManager;
         _renameLogic = renameLogic;
+        _customVariableLogic = customVariableLogic;
 
-        AvailableTypes = new List<string>();
-        AvailableTypes.Add("float");
-        AvailableTypes.Add("int");
-        AvailableTypes.Add("string");
-        AvailableTypes.Add("bool");
+        AvailableTypes = new List<string>(customVariableLogic.AvailableTypes);
 
         SelectedItem = "float";
 
@@ -211,27 +193,23 @@ public class AddVariableViewModel : DialogViewModel
 
         var behavior = _selectedState.SelectedBehavior;
 
-        var newVariable = new VariableSave
-        {
-            Name = name,
-            Type = type,
-            Value = DefaultValue
-        };
-
         using var undoLock = _undoManager.RequestLock();
 
         var element = _selectedState.SelectedElement;
         if (behavior != null)
         {
-            behavior.RequiredVariables.Variables.Add(newVariable);
+            behavior.RequiredVariables.Variables.Add(new VariableSave
+            {
+                Name = name,
+                Type = type,
+                Value = DefaultValue
+            });
             _elementCommands.SortVariables(behavior);
             _fileCommands.TryAutoSaveBehavior(behavior);
         }
         else if (element != null)
         {
-            newVariable.IsCustomVariable = true;
-            element.GetDefaultStateOrThrow().Variables.Add(newVariable);
-            _elementCommands.SortVariables(element);
+            _customVariableLogic.AddCustomVariable(element, name, type, DefaultValue);
             _fileCommands.TryAutoSaveElement(element);
         }
         _guiCommands.RefreshVariables(force: true);

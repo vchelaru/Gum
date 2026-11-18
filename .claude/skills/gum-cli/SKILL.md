@@ -1,6 +1,6 @@
 ---
 name: gum-cli
-description: GumCli — headless CLI for Gum projects. Triggers: gumcli commands (new, add-forms, check, diff-standards, codegen, codegen-init, fonts, screenshot, svg), Gum.ProjectServices, HeadlessErrorChecker, ProjectLoader, HeadlessCodeGenerationService, CodeGenerationAutoSetupService, FormsTemplateCreator, DiffStandardsService.
+description: GumCli — headless CLI for Gum projects. Triggers: gumcli commands (new, add-forms, check, edit, diff-standards, codegen, codegen-init, fonts, screenshot, svg), Gum.ProjectServices, ProjectEditService, HeadlessErrorChecker, ProjectLoader, HeadlessCodeGenerationService, CodeGenerationAutoSetupService, FormsTemplateCreator, DiffStandardsService.
 ---
 
 # GumCli Reference
@@ -23,6 +23,7 @@ description: GumCli — headless CLI for Gum projects. Triggers: gumcli commands
 | `gumcli diff-standards <project.gumx> [--json]` | Compare the project's Standards against `StandardElementsManager.Self`'s programmatic defaults (the same source the Gum tool's File → New uses) and report variable-level drift. Exits 1 on drift, 0 on clean. Theme authors and CI use it to enforce the "Standards must match Default" invariant. |
 | `gumcli convert-to-json <project.gumx>` | Write a `.gumj` sibling plus a JSON sibling for every referenced element/behavior/animation file, leaving the XML untouched. Required for Native AOT / `PublishTrimmed`. Backed by `ConvertProjectToJsonService`. |
 | `gumcli resave <project.gumx> [--raw]` | Load and save with no edits. Default loads like the tool (runs the standard-element back-fill in `GumProjectSave.Initialize`); `--raw` skips it so only the serializers run. `Tools/project-sweep.ps1` uses both to sweep real projects. |
+| `gumcli edit <project.gumx> <ops.json> [--json]` | Apply an operations file (`{ "version": 1, "operations": [ { "op": ... } ] }`; ops `addScreen`, `addComponent`, `addInstance`, `addVariable`, `setVariable`, `addCategory`, `addState`, `exposeVariable`, defined in `ProjectEditService`) and save like `resave`. All or nothing: an invalid file exits 2, an op that cannot apply exits 1, and an error `check` finds only after the edit is reported as `check` reports it and exits 1; nothing is written in any of these cases. `setVariable` accepts only names `IVariableDefinedByTypeLogic` says the type defines (`Instance.Var` for an instance's variable). |
 | `gumcli codegen <project.gumx> [--element <name>...] [--prune]` | Generate C# code. Requires `ProjectCodeSettings.codsj`. Per-element error check gates generation. `--prune` additionally deletes generated files with no matching element; it only ever removes `.Generated.cs`, and lists orphaned custom `.cs`/`.codsj` files for you to decide on. |
 | `gumcli codegen-init <project.gumx> [--force] [--csproj <path>]` | Auto-detect `.csproj`, derive namespace and output library, write `ProjectCodeSettings.codsj`. `--csproj` also records the path as `CsprojPath`, which detection then reads ahead of the search. A Unity csproj (`Assembly-CSharp.csproj` beside `Assets/`) sets `GeneratedCodeFolder = Assets/`. |
 | `gumcli fonts <project.gumx> [--font <name> --size <n>... [--bold] [--italic] [--outline <n>]]` | Generate missing bitmap font files (.fnt + .png). `--font`/`--size` also bakes fonts no element uses (BBCode runs, oversampled sizes) through `ExtraFontRequest`; one style per run, invalid combinations exit 2. bmfont.exe is Windows-only; other OSes use KernSmith. |
@@ -41,6 +42,7 @@ Program.cs
   ├── NewCommand      → ProjectCreator / FormsTemplateCreator
   ├── AddFormsCommand → AddFormsToProjectService (loads target, extracts FormsTemplateCreator into a throwaway temp project, merges in anything not already referenced)
   ├── CheckCommand    → ProjectLoader → HeadlessErrorChecker
+  ├── EditCommand     → ProjectLoader → HeadlessErrorChecker (before) → ProjectEditService → HeadlessErrorChecker (after, diffed) → GumProjectSave.Save
   ├── CheckReferencesCommand → ProjectLoader → ReferencePropagationService (Detect / PropagateReferences). Wires GumExpressionService so literal/expression RHSes evaluate; sets ObjectFinder.Self.GumProjectSave so cross-element refs resolve.
   ├── DiffStandardsCommand → ProjectLoader → DiffStandardsService (project Standards vs StandardElementsManager.Self defaults)
   ├── CodegenCommand  → ProjectLoader → HeadlessErrorChecker (gates) → HeadlessCodeGenerationService
@@ -78,7 +80,9 @@ The headless service library GumCli depends on. All logic lives here; the CLI ju
 
 **Non-obvious:** `HeadlessErrorChecker` is not a duplicate of the tool's `ErrorChecker` — the tool's `ErrorChecker` **delegates to** `HeadlessErrorChecker`. Zero duplication by design.
 
-Any command that runs `HeadlessErrorChecker` must call `GumExpressionService.Initialize()` first (`check` and `codegen` do). GUM0002 evaluates cross-element reference right-hand sides through it and silently reports nothing when it is unwired. Tests that cover this reset `ElementSaveExtensions.CustomEvaluateExpression = null` first, because other commands in the same test process leave it wired.
+Any command that runs `HeadlessErrorChecker` must call `GumExpressionService.Initialize()` first (`check`, `edit` and `codegen` do). GUM0002 evaluates cross-element reference right-hand sides through it and silently reports nothing when it is unwired. Tests that cover this reset `ElementSaveExtensions.CustomEvaluateExpression = null` first, because other commands in the same test process leave it wired.
+
+**`Editing/` holds the tool's edit logic, not a copy of it.** Each `gumcli edit` op calls the same class the tool calls (`ElementCreationLogic`, `InstanceCreationLogic`, `InstanceAddRules`, `StateCreationLogic`, `CategoryVariablePropagator`, `CustomVariableLogic`, `ExposeVariableLogic`, `StateVariableWriter`, `ElementNameValidator`, `VariableDefinedByTypeLogic`); the tool wraps them with undo, selection, plugin events and saving. A new op extracts the tool's data change into `Editing/` first and switches the tool to it.
 
 `HeadlessErrorChecker` accepts a second constructor overload taking `IEnumerable<IAdditionalErrorSource>` for extensibility; the CLI uses the single-argument overload.
 

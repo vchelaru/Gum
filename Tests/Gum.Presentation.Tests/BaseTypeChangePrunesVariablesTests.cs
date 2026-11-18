@@ -1,3 +1,4 @@
+using Gum.ProjectServices.Editing;
 using Gum.Commands;
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
@@ -52,7 +53,7 @@ public class BaseTypeChangePrunesVariablesTests : BaseTestClass
         mocker.Use<IReferenceFinder>(mocker.CreateInstance<ReferenceFinder>());
         mocker.Use<IRenameLogic>(mocker.CreateInstance<RenameLogic>());
         mocker.Use<IInstanceOverrideRemover>(mocker.CreateInstance<InstanceOverrideRemover>());
-        mocker.Use<IVariableDefinedByTypeLogic>(mocker.CreateInstance<VariableSaveLogic>());
+        mocker.Use<IVariableDefinedByTypeLogic>(new VariableDefinedByTypeLogic());
         mocker.Use<IBaseTypeVariablePruner>(mocker.CreateInstance<BaseTypeVariablePruner>());
 
         _inheritanceLogic = mocker.CreateInstance<InheritanceLogic>();

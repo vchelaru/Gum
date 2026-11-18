@@ -6,6 +6,7 @@ using Gum.Commands;
 using Gum.Services;
 using Gum.Plugins;
 using Gum.Plugins.InternalPlugins.VariableGrid;
+using Gum.ProjectServices.Editing;
 
 namespace Gum.ToolCommands;
 
@@ -20,6 +21,7 @@ public class ProjectCommands : ICopyPasteProjectCommands
     private readonly IProjectState _projectState;
     private readonly IStandardElementsManagerGumTool _standardElementsManagerGumTool;
     private readonly IPluginManager _pluginManager;
+    private readonly IElementCreationLogic _elementCreationLogic;
 
     #endregion
 
@@ -29,7 +31,8 @@ public class ProjectCommands : ICopyPasteProjectCommands
         IProjectManager projectManager,
         IProjectState projectState,
         IStandardElementsManagerGumTool standardElementsManagerGumTool,
-        IPluginManager pluginManager)
+        IPluginManager pluginManager,
+        IElementCreationLogic elementCreationLogic)
     {
         _selectedState = selectedState;
         _guiCommands = guiCommands;
@@ -38,6 +41,7 @@ public class ProjectCommands : ICopyPasteProjectCommands
         _projectState = projectState;
         _standardElementsManagerGumTool = standardElementsManagerGumTool;
         _pluginManager = pluginManager;
+        _elementCreationLogic = elementCreationLogic;
     }
     
     #region Screens
@@ -58,13 +62,8 @@ public class ProjectCommands : ICopyPasteProjectCommands
 
     public void AddScreen(ScreenSave screenSave)
     {
-        screenSave.Initialize(StandardElementsManager.Self.GetDefaultStateFor("Screen"));
+        _elementCreationLogic.AddScreen(_projectManager.GetLoadedProject(), screenSave);
         _standardElementsManagerGumTool.FixCustomTypeConverters(screenSave);
-        var gumProject = _projectManager.GetLoadedProject();
-        gumProject.ScreenReferences.Add(new ElementReference { Name = screenSave.Name, ElementType = ElementType.Screen });
-        gumProject.Screens.Add(screenSave);
-        gumProject.SortElementsAndReferencesByName();
-
 
         _fileCommands.TryAutoSaveProject();
         _fileCommands.TryAutoSaveElement(screenSave);
@@ -74,24 +73,11 @@ public class ProjectCommands : ICopyPasteProjectCommands
 
     #endregion
 
-    #region Element (Screen/Component/Standard)
-
-    #endregion
-
-    #region Behaviors
-
-    #endregion
-
     #region Component
-
 
     public void AddComponent(ComponentSave componentSave)
     {
-        var gumProject = _projectState.GetLoadedProject();
-        gumProject.ComponentReferences.Add(new ElementReference { Name = componentSave.Name, ElementType = ElementType.Component });
-        gumProject.Components.Add(componentSave);
-        gumProject.SortElementsAndReferencesByName();
-
+        _elementCreationLogic.AddComponent(_projectState.GetLoadedProject(), componentSave);
 
         _fileCommands.TryAutoSaveProject();
         _fileCommands.TryAutoSaveElement(componentSave);
@@ -102,37 +88,9 @@ public class ProjectCommands : ICopyPasteProjectCommands
 
     public void PrepareNewComponentSave(ComponentSave componentSave, string componentName, string baseType = "Container")
     {
-        componentSave.Name = componentName;
-
-        componentSave.BaseType = baseType;
-
-        componentSave.InitializeDefaultAndComponentVariables();
+        _elementCreationLogic.PrepareNewComponent(componentSave, componentName, baseType);
         _standardElementsManagerGumTool.FixCustomTypeConverters(componentSave);
-
-
-        // components shouldn't set their positions to 0 by default, so if the
-        // default state sets those values, we should null them out:
-        var xVariable = componentSave.GetDefaultStateOrThrow().GetVariableSave("X");
-        var yVariable = componentSave.GetDefaultStateOrThrow().GetVariableSave("Y");
-
-        if (xVariable != null)
-        {
-            xVariable.Value = null;
-            xVariable.SetsValue = false;
-        }
-        if (yVariable != null)
-        {
-            yVariable.Value = null;
-            yVariable.SetsValue = false;
-        }
-
-        var hasEventsVariable = componentSave.GetDefaultStateOrThrow().GetVariableSave("HasEvents");
-        if (hasEventsVariable != null)
-        {
-            hasEventsVariable.Value = true;
-        }
     }
-
 
     #endregion
 }
