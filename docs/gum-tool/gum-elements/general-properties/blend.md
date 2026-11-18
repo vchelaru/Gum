@@ -87,9 +87,9 @@ A `Subtract` `Blend` Sprite with an `Alpha` of `255` subtracts the photo from th
 
 <figure><img src="../../../.gitbook/assets/subtract-blend-alpha-255.png" alt=""><figcaption><p>Subtract Blend Sprite with an Alpha of 255</p></figcaption></figure>
 
-As `Alpha` is reduced, less color is subtracted. A Sprite with an `Alpha` of `128` subtracts roughly half as much.
+As `Alpha` is reduced, less color is subtracted. A Sprite with an `Alpha` of `64` (roughly 25%) subtracts roughly a quarter as much.
 
-<figure><img src="../../../.gitbook/assets/subtract-blend-alpha-128.png" alt=""><figcaption><p>Subtract Blend Sprite with an Alpha of 128</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/subtract-blend-alpha-64.png" alt=""><figcaption><p>Subtract Blend Sprite with an Alpha of 64</p></figcaption></figure>
 
 {% hint style="info" %}
 `Subtract` `Blend` is available in December 2026, or now if building Gum from source.
