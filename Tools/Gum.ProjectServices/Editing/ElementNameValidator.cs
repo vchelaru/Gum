@@ -54,8 +54,8 @@ public interface IElementNameValidator
     bool IsNameValidTopLevel(string name, ElementSave element, object? objectToIgnore, [NotNullWhen(false)] out string? whyNotValid);
 
     /// <summary>
-    /// Whether a custom or exposed variable may be named <paramref name="name"/> on <paramref name="element"/>. It
-    /// does not check whether the element's type already has a variable of that name; callers add that.
+    /// Whether a custom or exposed variable may be named <paramref name="name"/> on <paramref name="element"/>,
+    /// where <paramref name="variable"/> is the variable being renamed (its own name stays valid), or null.
     /// </summary>
     bool IsVariableNameValid(string name, ElementSave? element, VariableSave? variable, [NotNullWhen(false)] out string? whyNotValid);
 }
@@ -65,6 +65,7 @@ public class ElementNameValidator : IElementNameValidator
 {
     private readonly NameRules _rules;
     private readonly ITopLevelNameSource? _topLevelNameSource;
+    private readonly VariableDefinedByTypeLogic _variableDefinedByType = new VariableDefinedByTypeLogic();
 
     /// <param name="topLevelNameSource">Adds names beyond the element's own, or null for none.</param>
     public ElementNameValidator(ITopLevelNameSource? topLevelNameSource)
@@ -248,6 +249,23 @@ public class ElementNameValidator : IElementNameValidator
             whyNotValid = "Variable names cannot contain spaces";
         }
 
+        string standardizedName = _rules.Standardize(name);
+        string? editedName = variable == null ? null
+            : _rules.Standardize(string.IsNullOrEmpty(variable.ExposedAsName) ? variable.Name : variable.ExposedAsName);
+        bool isEditedVariablesOwnName = standardizedName == editedName;
+
+        if (string.IsNullOrEmpty(whyNotValid) && !isEditedVariablesOwnName && BuiltInPropertyNames.Contains(standardizedName))
+        {
+            whyNotValid = $"{name} cannot be used because it is a built-in Gum property";
+        }
+
+        // An instance of the element already has every variable its type defines, standard ones included.
+        if (string.IsNullOrEmpty(whyNotValid) && !isEditedVariablesOwnName && element != null &&
+            _variableDefinedByType.GetVariablesDefinedByType(element).Any(item => _rules.Standardize(item.Name) == standardizedName))
+        {
+            whyNotValid = $"The variable name {name} is already used";
+        }
+
         if (string.IsNullOrEmpty(whyNotValid) && element != null)
         {
             IsNameAlreadyUsed(name, variable, element, out whyNotValid);
@@ -260,6 +278,14 @@ public class ElementNameValidator : IElementNameValidator
 
         return string.IsNullOrEmpty(whyNotValid);
     }
+
+    // Standardized names of the properties the Variables tab shows for an instance (InstanceSave's own) or a
+    // component (DefaultChildContainer). A variable of the same name would be read or set as the property instead,
+    // so setting Name on an instance renames it.
+    private static readonly HashSet<string> BuiltInPropertyNames = new HashSet<string>
+    {
+        "name", "basetype", "locked", "isslot", "defaultchildcontainer"
+    };
 
     private void IsNameUsedByStandardVariables(string nameToCheck, out string? whyNotValid)
     {

@@ -11,29 +11,18 @@ using Shouldly;
 namespace Gum.Presentation.Tests;
 
 /// <summary>
-/// Pins <see cref="NameVerifier"/>'s name-validation logic after its relocation to
-/// Gum.Presentation (ADR-0005, #3889) — the class had no WPF/WinForms-typed members; every
-/// dependency (<see cref="IVariableSaveLogic"/>, <see cref="IPluginManager"/>,
-/// <see cref="StandardElementsManager"/>, <see cref="ObjectFinder"/>) was already headless. The one
-/// wrinkle: <see cref="NameVerifier.IsVariableNameValid"/> used to resolve <see cref="ISelectedState"/>
-/// via an ambient tool-only extension method (<c>ElementSaveExtensionMethodsGumTool.GetVariableFromThisOrBase</c>,
-/// which called <c>Locator</c> internally) instead of taking it as a dependency; it is now a real
-/// constructor parameter, which is also what makes the "existing active variable" branch below
-/// testable for the first time (it previously required a live <c>Locator</c> container).
+/// Pins <see cref="NameVerifier"/>'s name-validation logic, which delegates to the headless
+/// <see cref="Gum.ProjectServices.Editing.ElementNameValidator"/> the CLI also uses.
 /// </summary>
 public class NameVerifierTests : BaseTestClass
 {
     private readonly NameVerifier _nameVerifier;
     private readonly Mock<IPluginManager> _pluginManager;
-    private readonly Mock<IVariableSaveLogic> _variableSaveLogic;
-    private readonly Mock<ISelectedState> _selectedState;
 
     public NameVerifierTests()
     {
         _pluginManager = new Mock<IPluginManager>();
-        _variableSaveLogic = new Mock<IVariableSaveLogic>();
-        _selectedState = new Mock<ISelectedState>();
-        _nameVerifier = new NameVerifier(_variableSaveLogic.Object, _pluginManager.Object, _selectedState.Object);
+        _nameVerifier = new NameVerifier(_pluginManager.Object);
     }
 
     #region ElementSave
@@ -92,58 +81,30 @@ public class NameVerifierTests : BaseTestClass
     }
 
     [Fact]
-    public void IsVariableNameValid_ShouldReturnFalse_ForExistingActiveVariable_InDefaultState_WhenElementIsNotSelected()
+    public void IsVariableNameValid_ShouldReturnFalse_ForExistingCustomVariable()
+    {
+        ComponentSave element = new ComponentSave { Name = "MyComponent" };
+        element.States.Add(new StateSave { Name = "Default", ParentContainer = element });
+        VariableSave existingVariable = new VariableSave { Name = "ExistingVar", Type = "int", IsCustomVariable = true };
+        element.DefaultState.Variables.Add(existingVariable);
+
+        bool isValid = _nameVerifier.IsVariableNameValid("ExistingVar", element, new VariableSave(), out string whyNotValid);
+
+        isValid.ShouldBeFalse("Because the element's type already defines the variable.");
+        whyNotValid.ShouldBe("The variable name ExistingVar is already used");
+    }
+
+    [Fact]
+    public void IsVariableNameValid_ShouldReturnTrue_WhenExistingVariableIsNotDefinedByTheType()
     {
         ComponentSave element = new ComponentSave { Name = "MyComponent" };
         element.States.Add(new StateSave { Name = "Default", ParentContainer = element });
         VariableSave existingVariable = new VariableSave { Name = "ExistingVar" };
         element.DefaultState.Variables.Add(existingVariable);
 
-        _selectedState.SetupGet(x => x.SelectedElement).Returns((ElementSave?)null);
-        _selectedState.SetupGet(x => x.SelectedStateSave).Returns((StateSave?)null);
-        _variableSaveLogic.Setup(x => x.GetIfVariableIsActive(existingVariable, element, null)).Returns(true);
-
         bool isValid = _nameVerifier.IsVariableNameValid("ExistingVar", element, new VariableSave(), out string whyNotValid);
 
-        isValid.ShouldBeFalse("Because the element is not the selected element, so the default state (not any selected state) should be searched.");
-        whyNotValid.ShouldBe("The variable name ExistingVar is already used");
-    }
-
-    [Fact]
-    public void IsVariableNameValid_ShouldReturnFalse_ForExistingActiveVariable_InSelectedState_WhenElementIsSelected()
-    {
-        ComponentSave element = new ComponentSave { Name = "MyComponent" };
-        StateSave selectedStateSave = new StateSave();
-        VariableSave existingVariable = new VariableSave { Name = "ExistingVar" };
-        selectedStateSave.Variables.Add(existingVariable);
-        // Deliberately NOT added to element.DefaultState, to prove the selected state (not the
-        // default state) is what gets searched when the element is currently selected.
-
-        _selectedState.SetupGet(x => x.SelectedElement).Returns(element);
-        _selectedState.SetupGet(x => x.SelectedStateSave).Returns(selectedStateSave);
-        _variableSaveLogic.Setup(x => x.GetIfVariableIsActive(existingVariable, element, null)).Returns(true);
-
-        bool isValid = _nameVerifier.IsVariableNameValid("ExistingVar", element, new VariableSave(), out string whyNotValid);
-
-        isValid.ShouldBeFalse("Because the element is the selected element with a selected state, so that state should be searched.");
-        whyNotValid.ShouldBe("The variable name ExistingVar is already used");
-    }
-
-    [Fact]
-    public void IsVariableNameValid_ShouldReturnTrue_WhenExistingVariableIsNotActive()
-    {
-        ComponentSave element = new ComponentSave { Name = "MyComponent" };
-        element.States.Add(new StateSave { Name = "Default", ParentContainer = element });
-        VariableSave existingVariable = new VariableSave { Name = "ExistingVar" };
-        element.DefaultState.Variables.Add(existingVariable);
-
-        _selectedState.SetupGet(x => x.SelectedElement).Returns((ElementSave?)null);
-        _selectedState.SetupGet(x => x.SelectedStateSave).Returns((StateSave?)null);
-        _variableSaveLogic.Setup(x => x.GetIfVariableIsActive(existingVariable, element, null)).Returns(false);
-
-        bool isValid = _nameVerifier.IsVariableNameValid("ExistingVar", element, new VariableSave(), out string whyNotValid);
-
-        isValid.ShouldBeTrue("Because an inactive variable (e.g. a leftover from a type change) should not block reuse of its name.");
+        isValid.ShouldBeTrue("Because a leftover variable (e.g. from a type change) should not block reuse of its name.");
     }
 
     [Fact]
@@ -154,32 +115,9 @@ public class NameVerifierTests : BaseTestClass
         VariableSave editedVariable = new VariableSave { Name = "EditedVar", Type = "int", IsCustomVariable = true };
         element.DefaultState.Variables.Add(editedVariable);
 
-        _selectedState.SetupGet(x => x.SelectedElement).Returns((ElementSave?)null);
-        _variableSaveLogic.Setup(x => x.GetIfVariableIsActive(editedVariable, element, null)).Returns(true);
-
         bool isValid = _nameVerifier.IsVariableNameValid("EditedVar", element, editedVariable, out string whyNotValid);
 
         isValid.ShouldBeTrue("Because keeping a variable's own name (e.g. to change only its type) is not a duplicate.");
-    }
-
-    [Fact]
-    public void IsVariableNameValid_ShouldReturnTrue_WhenSelectedStateHoldsACopyOfTheVariableBeingEdited()
-    {
-        ComponentSave element = new ComponentSave { Name = "MyComponent" };
-        element.States.Add(new StateSave { Name = "Default", ParentContainer = element });
-        VariableSave editedVariable = new VariableSave { Name = "EditedVar", Type = "int", IsCustomVariable = true };
-        element.DefaultState.Variables.Add(editedVariable);
-        StateSave selectedStateSave = new StateSave { Name = "Highlighted" };
-        VariableSave stateCopy = new VariableSave { Name = "EditedVar", Type = "int" };
-        selectedStateSave.Variables.Add(stateCopy);
-
-        _selectedState.SetupGet(x => x.SelectedElement).Returns(element);
-        _selectedState.SetupGet(x => x.SelectedStateSave).Returns(selectedStateSave);
-        _variableSaveLogic.Setup(x => x.GetIfVariableIsActive(stateCopy, element, null)).Returns(true);
-
-        bool isValid = _nameVerifier.IsVariableNameValid("EditedVar", element, editedVariable, out string whyNotValid);
-
-        isValid.ShouldBeTrue("Because the selected state's value for the edited variable is the same variable, not a duplicate.");
     }
 
     #endregion

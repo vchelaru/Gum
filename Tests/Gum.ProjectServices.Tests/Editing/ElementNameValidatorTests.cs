@@ -52,4 +52,51 @@ public class ElementNameValidatorTests : BaseTestClass
         validator.IsStateNameValid("Big", size, null, out _).ShouldBeFalse();
         validator.IsStateNameValid("Small", size, null, out _).ShouldBeTrue();
     }
+
+    [Theory]
+    [InlineData("Name")]
+    [InlineData("BaseType")]
+    [InlineData("Locked")]
+    [InlineData("IsSlot")]
+    [InlineData("name")]
+    [InlineData("locked")]
+    [InlineData("DefaultChildContainer")]
+    public void IsVariableNameValid_RejectsABuiltInPropertyName(string name)
+    {
+        ComponentSave hud = EditingTestProject.AddComponent(Project, "Hud");
+        ElementNameValidator validator = new ElementNameValidator(topLevelNameSource: null);
+
+        validator.IsVariableNameValid(name, hud, null, out string? whyNotValid).ShouldBeFalse();
+        whyNotValid.ShouldContain(name);
+        validator.IsVariableNameValid(name + "Text", hud, null, out _).ShouldBeTrue();
+    }
+
+    [Theory]
+    [InlineData("Parent")]
+    [InlineData("Width")]
+    [InlineData("x")]
+    [InlineData("Visible")]
+    [InlineData("State")]
+    public void IsVariableNameValid_RejectsAVariableTheElementsTypeDefines(string name)
+    {
+        ComponentSave hud = EditingTestProject.AddComponent(Project, "Hud");
+        ElementNameValidator validator = new ElementNameValidator(topLevelNameSource: null);
+
+        validator.IsVariableNameValid(name, hud, null, out string? whyNotValid).ShouldBeFalse();
+        whyNotValid.ShouldBe($"The variable name {name} is already used");
+    }
+
+    [Theory]
+    [InlineData("Locked")]
+    [InlineData("Speed")]
+    public void IsVariableNameValid_AcceptsTheEditedVariablesOwnName(string name)
+    {
+        ComponentSave hud = EditingTestProject.AddComponent(Project, "Hud");
+        VariableSave edited = new VariableSave { Name = name, Type = "float", IsCustomVariable = true };
+        hud.DefaultState.Variables.Add(edited);
+        ElementNameValidator validator = new ElementNameValidator(topLevelNameSource: null);
+
+        validator.IsVariableNameValid(name, hud, edited, out string? whyNotValid).ShouldBeTrue(whyNotValid);
+        validator.IsVariableNameValid(name, hud, null, out _).ShouldBeFalse();
+    }
 }

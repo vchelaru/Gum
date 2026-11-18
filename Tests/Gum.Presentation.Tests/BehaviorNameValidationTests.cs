@@ -16,8 +16,7 @@ namespace Gum.Presentation.Tests;
 /// </summary>
 public class BehaviorNameValidationTests : BaseTestClass
 {
-    private readonly NameVerifier _nameVerifier = new NameVerifier(
-        new Mock<IVariableSaveLogic>().Object, new Mock<IPluginManager>().Object, new Mock<ISelectedState>().Object);
+    private readonly NameVerifier _nameVerifier = new NameVerifier(new Mock<IPluginManager>().Object);
     private readonly BehaviorSave _clickable = new BehaviorSave { Name = "Clickable" };
     private readonly BehaviorSave _other = new BehaviorSave { Name = "Other" };
 

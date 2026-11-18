@@ -404,13 +404,14 @@ public class ProjectEditService : IProjectEditService
         {
             throw new EditException($"\"{type}\" is not a type a custom variable can have.");
         }
-        if (!_nameValidator.IsVariableNameValid(name, element, null, out string? whyNotValid))
-        {
-            throw new EditException(whyNotValid);
-        }
+        // Checked before the name rules, which refuse the same name without saying the variable can be set.
         if (_variableDefinedByType.GetIfVariableIsDefinedByType(name, element))
         {
             throw new EditException($"{element.Name} already has a variable named {name}; use setVariable to set it.");
+        }
+        if (!_nameValidator.IsVariableNameValid(name, element, null, out string? whyNotValid))
+        {
+            throw new EditException(whyNotValid);
         }
 
         object? value = operation.TryGetProperty("value", out JsonElement valueElement)
