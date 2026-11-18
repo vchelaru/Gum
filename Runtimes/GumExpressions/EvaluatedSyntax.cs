@@ -1403,7 +1403,10 @@ public class EvaluatedSyntax
             {
                 try
                 {
-                    found = assembly.GetTypes().FirstOrDefault(t => t.IsEnum && t.Name == typeName);
+                    // Generated code nests an enum named after each state category inside its element's
+                    // class (ButtonStandard.ButtonCategory). A category's value is the state's name, so a
+                    // nested enum is never the type a Gum variable names; Gum's own enums are top level.
+                    found = assembly.GetTypes().FirstOrDefault(t => t.IsEnum && !t.IsNested && t.Name == typeName);
                 }
                 catch
                 {
