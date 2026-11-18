@@ -5192,8 +5192,8 @@ public class CodeGenerator
 
     private static string? GetUnsupportedValueComment(VariableSave variable, CodeGenerationContext context)
     {
+        // Keyed on the value, not the name: an exposed variable carries it under its own name.
         if (context.ResolvedSyntaxVersion < BlendSubtractMinimumSyntaxVersion
-            && variable.GetRootName() == "Blend"
             && variable.Value is global::Gum.RenderingLibrary.Blend.Subtract)
         {
             return $"// Blend.Subtract needs runtime syntax version {BlendSubtractMinimumSyntaxVersion}; update the Gum runtime NuGet package to generate this assignment.";

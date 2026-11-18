@@ -78,6 +78,57 @@ public class CodeGeneratorBlendSubtractTests : BaseTestClass
         return CreateCodeGenerator().GetGeneratedCodeForElement(main, new CodeOutputElementSettings(), settings);
     }
 
+    // An exposed variable carries the value under its own name, so the gate keys on the value.
+    private string GenerateWithExposedBlend(int syntaxVersion)
+    {
+        DeclareBlendOnSprite();
+        ComponentSave inner = new ComponentSave { Name = "InnerComponent", BaseType = "Container" };
+        inner.States.Add(new StateSave { Name = "Default", ParentContainer = inner });
+        inner.Instances.Add(new InstanceSave { Name = "Instance", BaseType = "Sprite", ParentContainer = inner });
+        inner.DefaultState.Variables.Add(new VariableSave
+        {
+            Name = "Instance.Blend", Type = "Blend", Value = RenderBlend.Normal, SetsValue = true, ExposedAsName = "MyBlend",
+        });
+
+        ComponentSave outer = new ComponentSave { Name = "OuterComponent", BaseType = "Container" };
+        outer.States.Add(new StateSave { Name = "Default", ParentContainer = outer });
+        outer.Instances.Add(new InstanceSave { Name = "InnerInstance", BaseType = "InnerComponent", ParentContainer = outer });
+        outer.DefaultState.Variables.Add(new VariableSave
+        {
+            Name = "InnerInstance.MyBlend", Type = "Blend", Value = RenderBlend.Subtract, SetsValue = true,
+        });
+
+        Project.Components.Add(inner);
+        Project.Components.Add(outer);
+        ObjectFinder.Self.GumProjectSave = Project;
+
+        CodeOutputProjectSettings settings = new CodeOutputProjectSettings
+        {
+            OutputLibrary = OutputLibrary.MonoGame,
+            RootNamespace = "MyGame",
+            SyntaxVersion = syntaxVersion.ToString(),
+        };
+
+        return CreateCodeGenerator().GetGeneratedCodeForElement(outer, new CodeOutputElementSettings(), settings);
+    }
+
+    [Fact]
+    public void GetGeneratedCodeForElement_ExposedSubtract_IsCommentedOutBelowSyntaxVersion8()
+    {
+        string code = GenerateWithExposedBlend(syntaxVersion: 7);
+
+        code.ShouldNotContain("Blend.Subtract;");
+        code.ShouldContain("// Blend.Subtract needs runtime syntax version 8");
+    }
+
+    [Fact]
+    public void GetGeneratedCodeForElement_ExposedSubtract_IsEmittedAtSyntaxVersion8()
+    {
+        string code = GenerateWithExposedBlend(syntaxVersion: 8);
+
+        code.ShouldContain("InnerInstance.MyBlend = global::Gum.RenderingLibrary.Blend.Subtract;");
+    }
+
     [Theory]
     [InlineData(false)]
     [InlineData(true)]
