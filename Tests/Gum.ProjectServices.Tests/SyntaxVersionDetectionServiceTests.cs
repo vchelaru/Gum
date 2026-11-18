@@ -773,13 +773,13 @@ $@"<Project Sdk=""Microsoft.NET.Sdk"">
     // moves one makes that output stale (CI's Codegen Drift Check): rerun
     // Tests/GenerateAllCodeGenProjects.bat, commit the diff, then update the pin here.
     [Theory]
-    [InlineData("CodeGen_Maui_FullCodegen/Content/GumProject", 7)]
-    [InlineData("CodeGen_MonoGame_ByReference/Content/GumProject", 7)]
-    [InlineData("CodeGen_MonoGameForms_ByReference/Content/GumProject", 7)]
-    [InlineData("CodeGen_MonoGameForms_Localization_ByReference/Content/GumProject", 7)]
-    [InlineData("CodeGen_MonoGameForms_FullCodegen/Content", 7)]
-    [InlineData("CodeGen_Raylib_ByReference/Content/GumProject", 7)]
-    [InlineData("CodeGen_Skia_ByReference/Content/GumProject", 7)]
+    [InlineData("CodeGen_Maui_FullCodegen/Content/GumProject", 8)]
+    [InlineData("CodeGen_MonoGame_ByReference/Content/GumProject", 8)]
+    [InlineData("CodeGen_MonoGameForms_ByReference/Content/GumProject", 8)]
+    [InlineData("CodeGen_MonoGameForms_Localization_ByReference/Content/GumProject", 8)]
+    [InlineData("CodeGen_MonoGameForms_FullCodegen/Content", 8)]
+    [InlineData("CodeGen_Raylib_ByReference/Content/GumProject", 8)]
+    [InlineData("CodeGen_Skia_ByReference/Content/GumProject", 8)]
     public void Detect_CodeGenHarnessProject_MatchesTheVersionItsOutputWasGeneratedAt(string gumProjectRelativePath, int expectedVersion)
     {
         string gumProjectDir = Path.Combine(FindRepoRoot(), "Tests", gumProjectRelativePath);

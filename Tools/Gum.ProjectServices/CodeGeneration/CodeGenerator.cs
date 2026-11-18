@@ -5186,6 +5186,22 @@ public class CodeGenerator
         ["ColorOperation"] = 5,
     };
 
+    // #8263: Blend.Subtract exists only from runtime syntax version 8 on. Older runtimes get a comment
+    // in place of the assignment, so the value is not dropped without a trace.
+    private const int BlendSubtractMinimumSyntaxVersion = 8;
+
+    private static string? GetUnsupportedValueComment(VariableSave variable, CodeGenerationContext context)
+    {
+        if (context.ResolvedSyntaxVersion < BlendSubtractMinimumSyntaxVersion
+            && variable.GetRootName() == "Blend"
+            && variable.Value is global::Gum.RenderingLibrary.Blend.Subtract)
+        {
+            return $"// Blend.Subtract needs runtime syntax version {BlendSubtractMinimumSyntaxVersion}; update the Gum runtime NuGet package to generate this assignment.";
+        }
+
+        return null;
+    }
+
     private static bool GetIfVariableSupportedBySyntaxVersion(VariableSave variable, CodeGenerationContext context)
     {
         return !MinimumSyntaxVersionByVariableRootName.TryGetValue(variable.GetRootName(), out int minimumVersion) ||
@@ -5464,6 +5480,12 @@ public class CodeGenerator
     /// </summary>
     private string GetCodeLine(VariableSave variable, ElementSave container, VisualApi visualApi, StateSave state, CodeGenerationContext context)
     {
+        string? unsupportedValueComment = GetUnsupportedValueComment(variable, context);
+        if (unsupportedValueComment != null)
+        {
+            return unsupportedValueComment;
+        }
+
         if (visualApi == VisualApi.Gum)
         {
             var fullLineReplacement = TryGetFullGumLineReplacement(variable, context);
