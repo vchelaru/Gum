@@ -300,10 +300,26 @@ public static class StateSaveExtensionMethods
     }
 
 
+    // A loop, not FirstOrDefault with a lambda capturing the name: GetVariableRecursive runs for every
+    // VariableReferences list of a state applied at run time (#8218). Unlike ElementSave.GetInstance this
+    // returns the first match and matches a null name, as the FirstOrDefault it replaces did.
+    private static InstanceSave? FirstInstanceNamed(ElementSave element, string? instanceName)
+    {
+        List<InstanceSave> instances = element.Instances;
+        for (int i = 0; i < instances.Count; i++)
+        {
+            if (instances[i].Name == instanceName)
+            {
+                return instances[i];
+            }
+        }
+        return null;
+    }
+
     /// <summary>
     /// Returns the first instance of an existing VariableSave recursively. Returns null if not found.
     /// </summary>
-    /// <param name="stateSave">The possible state that contains the variable. 
+    /// <param name="stateSave">The possible state that contains the variable.
     /// If it doesn't, then the code will recursively go to base types.</param>
     /// <param name="variableName"></param>
     /// <returns></returns>
@@ -338,7 +354,7 @@ public static class StateSaveExtensionMethods
                 var isVariableDefinedOnThisInheritanceLevel = false;
 
                 var instanceName = VariableSave.GetSourceObject(variableName);
-                instance = elementContainingState.Instances.FirstOrDefault(item => item.Name == instanceName);
+                instance = FirstInstanceNamed(elementContainingState, instanceName);
 
                 if (isVariableOnInstance && hasBaseType)
                 {
@@ -483,7 +499,7 @@ public static class StateSaveExtensionMethods
                 var isVariableDefinedOnThisInheritanceLevel = false;
 
                 var instanceName = VariableSave.GetSourceObject(variableName);
-                instance = elementContainingState.Instances.FirstOrDefault(item => item.Name == instanceName);
+                instance = FirstInstanceNamed(elementContainingState, instanceName);
 
                 if (isVariableOnInstance && hasBaseType)
                 {

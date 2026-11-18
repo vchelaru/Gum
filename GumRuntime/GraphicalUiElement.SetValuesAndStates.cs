@@ -292,14 +292,19 @@ public partial class GraphicalUiElement
     /// </summary>
     /// <param name="propertyName">The name of the variable on this object such as X or Height. If the property is a state, then the name should be "{CategoryName}State".</param>
     /// <param name="value">The value, casted to the correct type.</param>
-    public void SetProperty(string propertyName, object? value)
+    public void SetProperty(string propertyName, object? value) =>
+        SetProperty(propertyName, instanceName: null, instanceVariable: null, value);
+
+    // ApplyState passes a VariableSave's own split of a dotted name (its SourceObject and root name) so
+    // the name is not split again on every state change (#8218). Both are null for any other caller.
+    private void SetProperty(string propertyName, string? instanceName, string? instanceVariable, object? value)
     {
         if (propertyName == "SourceFile")
         {
             ReleaseChainsFromPreviousSourceFile(value as string);
         }
 
-        SetPropertyCore(propertyName, value);
+        SetPropertyCore(propertyName, instanceName, instanceVariable, value);
 
         if (propertyName == "SourceFile")
         {
@@ -433,7 +438,7 @@ public partial class GraphicalUiElement
         }
     }
 
-    private void SetPropertyCore(string propertyName, object? value)
+    private void SetPropertyCore(string propertyName, string? splitInstanceName, string? splitInstanceVariable, object? value)
     {
 
         if (mExposedVariables.ContainsKey(propertyName))
@@ -471,10 +476,20 @@ public partial class GraphicalUiElement
         }
         else if (ToolsUtilities.StringFunctions.ContainsNoAlloc(propertyName, '.'))
         {
-            int indexOfDot = propertyName.IndexOf('.');
-            string instanceName = propertyName.Substring(0, indexOfDot);
+            string instanceName;
+            string variable;
+            if (!string.IsNullOrEmpty(splitInstanceName) && splitInstanceVariable != null)
+            {
+                instanceName = splitInstanceName;
+                variable = splitInstanceVariable;
+            }
+            else
+            {
+                int indexOfDot = propertyName.IndexOf('.');
+                instanceName = propertyName.Substring(0, indexOfDot);
+                variable = propertyName.Substring(indexOfDot + 1);
+            }
             GraphicalUiElement? containedGue = GetGraphicalUiElementByName(instanceName);
-            string variable = propertyName.Substring(indexOfDot + 1);
 
             // instances may not have been set yet
             if (containedGue != null)
@@ -1654,65 +1669,33 @@ public partial class GraphicalUiElement
         // (a custom setter, an event handler), none of them may stay suspended: every later
         // UpdateLayout early-outs for a suspended element, so it would never lay out again.
         bool appliedAllVariables = false;
+        ApplyStateScratch scratch = ApplyStateScratch.Rent();
         try
         {
-            var variablesWithoutStatesOnParent =
-                state.Variables.Where(item =>
-                {
-                    if (item.SetsValue)
-                    {
-                        // We can set the variable if it's not setting a state (to prevent recursive setting).
-                        // Update May 4, 2023 - But if you have a base element that defines a state, and the derived
-                        // element sets that state, then we want to allow it.  But should we just allow all states?
-                        // Or should we check if it's defined by the base...
-                        //return (item.IsState(state.ParentContainer) == false ||
-                        //    // If it is setting a state we'll allow it if it's on a child.
-                        //    !string.IsNullOrEmpty(item.SourceObject));
-                        // let's test this out:
-                        return true;
+            List<VariableSave> ordered = scratch.Ordered;
+            FillInApplyOrder(state, scratch);
 
-                    }
-                    return false;
-                }).ToArray();
-
-
-            var parentSettingVariables =
-                variablesWithoutStatesOnParent
-                    .Where(item => item.GetRootName() == "Parent")
-                    .OrderBy(item => GetOrderedIndexForParentVariable(item))
-                    .ToArray();
-
-            var nonParentSettingVariables =
-                variablesWithoutStatesOnParent
-                    .Except(parentSettingVariables)
-                    // Even though we removed state-setting variables on the parent, we still allow setting
-                    // states on the contained objects
-                    .OrderBy(item => state.ParentContainer == null || !item.IsState(state.ParentContainer))
-                    .ToArray();
-
-            var variablesToConsider =
-                parentSettingVariables.Concat(nonParentSettingVariables)
-                .ToArray();
-
-            int variableCount = variablesToConsider.Length;
+            int variableCount = ordered.Count;
             for (int i = 0; i < variableCount; i++)
             {
-                var variable = variablesToConsider[i];
-                if (variable.SetsValue && variable.Value != null)
+                var variable = ordered[i];
+                if (variable.Value != null)
                 {
-                    this.SetProperty(variable.Name, variable.Value);
+                    // SourceObject and the root name are the halves SetPropertyCore would cut from Name.
+                    this.SetProperty(variable.Name, variable.SourceObject, variable.GetRootName(), variable.Value);
                 }
             }
 
             foreach (var variableList in state.VariableLists)
             {
-                this.SetProperty(variableList.Name, variableList.ValueAsIList);
+                this.SetProperty(variableList.Name, variableList.SourceObject, variableList.GetRootName(), variableList.ValueAsIList);
             }
 
             appliedAllVariables = true;
         }
         finally
         {
+            ApplyStateScratch.Return(scratch);
             if (didSuspend)
             {
                 if (appliedAllVariables)
@@ -1727,6 +1710,99 @@ public partial class GraphicalUiElement
                     this.ClearLayoutSuspensionRecursive();
                 }
             }
+        }
+    }
+
+    // Fills scratch.Ordered with the state's value-setting variables in the order they apply: Parent
+    // variables first, by the index of the instance they move (stable), so children are added in
+    // instance order; then every other variable once (a variable object listed twice applies at its
+    // first position), with category-state variables ahead of the rest (stable), so a plain variable
+    // overrides what a state it is listed with sets.
+    private void FillInApplyOrder(StateSave state, ApplyStateScratch scratch)
+    {
+        List<VariableSave> ordered = scratch.Ordered;
+        List<int> parentKeys = scratch.ParentKeys;
+        List<VariableSave> variables = state.Variables;
+
+        for (int i = 0; i < variables.Count; i++)
+        {
+            VariableSave variable = variables[i];
+            if (variable.SetsValue && variable.GetRootName() == "Parent")
+            {
+                // Insertion sort keeps equal keys in list order, as OrderBy did. Each key is an
+                // O(instances) scan, so it is computed once and kept beside its variable.
+                int key = GetOrderedIndexForParentVariable(variable);
+                int insertAt = ordered.Count;
+                while (insertAt > 0 && parentKeys[insertAt - 1] > key)
+                {
+                    insertAt--;
+                }
+                ordered.Insert(insertAt, variable);
+                parentKeys.Insert(insertAt, key);
+            }
+        }
+
+        // Even though state-setting variables on the parent are allowed, states on the contained
+        // objects are set too; both go before the plain variables.
+        ElementSave? container = state.ParentContainer;
+        List<VariableSave> plain = scratch.Plain;
+        HashSet<VariableSave> seen = scratch.Seen;
+        for (int i = 0; i < variables.Count; i++)
+        {
+            VariableSave variable = variables[i];
+            if (!variable.SetsValue || variable.GetRootName() == "Parent" || !seen.Add(variable))
+            {
+                continue;
+            }
+            if (container != null && variable.IsState(container))
+            {
+                ordered.Add(variable);
+            }
+            else
+            {
+                plain.Add(variable);
+            }
+        }
+
+        for (int i = 0; i < plain.Count; i++)
+        {
+            ordered.Add(plain[i]);
+        }
+    }
+
+    // ApplyState re-enters through a state variable (a category state that sets another category
+    // state), so each nesting level takes its own scratch. ThreadStatic because screens can be
+    // built on a loading thread while the game thread changes states.
+    private sealed class ApplyStateScratch
+    {
+        public readonly List<VariableSave> Ordered = new List<VariableSave>();
+        public readonly List<VariableSave> Plain = new List<VariableSave>();
+        public readonly List<int> ParentKeys = new List<int>();
+        public readonly HashSet<VariableSave> Seen = new HashSet<VariableSave>();
+
+        [ThreadStatic]
+        private static List<ApplyStateScratch>? _pool;
+        [ThreadStatic]
+        private static int _depth;
+
+        public static ApplyStateScratch Rent()
+        {
+            List<ApplyStateScratch> pool = _pool ??= new List<ApplyStateScratch>();
+            if (_depth == pool.Count)
+            {
+                pool.Add(new ApplyStateScratch());
+            }
+            return pool[_depth++];
+        }
+
+        public static void Return(ApplyStateScratch scratch)
+        {
+            // Cleared so the pool does not keep a removed element's variables alive.
+            scratch.Ordered.Clear();
+            scratch.Plain.Clear();
+            scratch.ParentKeys.Clear();
+            scratch.Seen.Clear();
+            _depth--;
         }
     }
 
