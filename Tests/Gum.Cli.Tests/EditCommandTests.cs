@@ -611,7 +611,7 @@ public class EditCommandTests : BaseTestClass
     [InlineData("""{ "op": "exposeVariable", "element": "Hud", "instance": "Label", "variable": "Text", "name": "Visible" }""", "The variable name Visible is already used")]
     [InlineData("""{ "op": "exposeVariable", "element": "Hud", "instance": "Label", "variable": "Text", "name": "State" }""", "The variable name State is already used")]
     [InlineData("""{ "op": "exposeVariable", "element": "Hud", "instance": "Label", "variable": "Text", "name": "DefaultChildContainer" }""", "DefaultChildContainer cannot be used because it is a built-in Gum property")]
-    [InlineData("""{ "op": "addVariable", "element": "Hud", "name": "Width", "type": "float" }""", "Width")]
+    [InlineData("""{ "op": "addVariable", "element": "Hud", "name": "Width", "type": "float" }""", "Hud already has a variable named Width; use setVariable to set it.")]
     [InlineData("""{ "op": "addVariable", "element": "Hud", "name": "Speed", "type": "Vector2" }""", "Vector2")]
     [InlineData("""{ "op": "setVariable", "element": "Hud", "name": "Label.Widht", "value": 1 }""", "Label.Widht")]
     [InlineData("""{ "op": "removeInstance", "element": "Hud", "name": "Nope" }""", "Nope")]
