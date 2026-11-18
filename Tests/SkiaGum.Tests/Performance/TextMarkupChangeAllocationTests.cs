@@ -58,8 +58,8 @@ public class TextMarkupChangeAllocationTests : BaseTestClass
         result.BytesPerIteration.ShouldBeLessThanOrEqualTo(1000);
     }
 
-    // The whole frame includes RichTextKit's own allocations, which upstream pull requests are removing, so the limit
-    // only guards Gum's share.
+    // The whole frame includes RichTextKit's own allocations, so the limit only guards Gum's share. RichTextKit 0.6.174
+    // reads 7,168 on macOS Debug (#8237).
     [Fact]
     public void UpdateAndDraw_BbCodeChangedEveryFrame_AllocationBaseline()
     {
@@ -81,6 +81,6 @@ public class TextMarkupChangeAllocationTests : BaseTestClass
 
         _output.WriteLine($"BBCode changed every frame: {result.BytesPerIteration:N0} bytes/frame");
         _host.CountPaintedSamples().ShouldBeGreaterThan(0);
-        result.BytesPerIteration.ShouldBeLessThanOrEqualTo(18000);
+        result.BytesPerIteration.ShouldBeLessThanOrEqualTo(9500);
     }
 }
