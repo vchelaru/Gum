@@ -10,37 +10,67 @@ namespace Gum.ProjectServices.Editing;
 public class VariableDefinedByTypeLogic : IVariableDefinedByTypeLogic
 {
     /// <inheritdoc/>
-    public bool GetIfVariableIsDefinedByType(string variableName, ElementSave typeElement)
-    {
-        if (variableName == "State")
-        {
-            return true;
-        }
-
-        bool isCategorySelector = variableName.Length > "State".Length && variableName.EndsWith("State");
-        foreach (ElementSave inChain in GetSelfAndBaseElements(typeElement))
-        {
-            if (isCategorySelector && inChain.Categories.Any(category => category.Name + "State" == variableName))
-            {
-                return true;
-            }
-
-            // A custom variable is declared by the element that owns it. An exposed variable is declared by name
-            // on the element that exposes it, and a derived element or an instance of it uses that name.
-            if (inChain.DefaultState?.Variables.Any(variable => string.IsNullOrEmpty(variable.SourceObject)
-                    ? variable.IsCustomVariable && variable.Name == variableName
-                    : variable.ExposedAsName == variableName) == true)
-            {
-                return true;
-            }
-        }
-
-        return GetDefaultStatesDefiningType(typeElement).Any(state => state.Variables.Any(variable => variable.Name == variableName));
-    }
+    public bool GetIfVariableIsDefinedByType(string variableName, ElementSave typeElement) =>
+        GetCandidates(typeElement).Any(candidate => candidate.Name == variableName);
 
     /// <inheritdoc/>
     public bool GetIfVariableListIsDefinedByType(string variableListName, ElementSave typeElement) =>
         GetDefaultStatesDefiningType(typeElement).Any(state => state.VariableLists.Any(list => list.Name == variableListName));
+
+    /// <inheritdoc/>
+    public IEnumerable<DefinedVariable> GetVariablesDefinedByType(ElementSave typeElement)
+    {
+        HashSet<string> listed = new HashSet<string>();
+        foreach (DefinedVariable candidate in GetCandidates(typeElement))
+        {
+            if (listed.Add(candidate.Name))
+            {
+                yield return candidate;
+            }
+        }
+    }
+
+    /// <summary>
+    /// Every variable the type defines, in lookup order; a name can repeat (a standard variable is in both the
+    /// project's file and the built-in defaults).
+    /// </summary>
+    private static IEnumerable<DefinedVariable> GetCandidates(ElementSave typeElement)
+    {
+        yield return new DefinedVariable("State", "State", null);
+
+        foreach (ElementSave inChain in GetSelfAndBaseElements(typeElement))
+        {
+            foreach (StateSaveCategory category in inChain.Categories)
+            {
+                yield return new DefinedVariable(category.Name + "State", category.Name, category);
+            }
+
+            // A custom variable is declared by the element that owns it. An exposed variable is declared by name
+            // on the element that exposes it, and a derived element or an instance of it uses that name.
+            foreach (VariableSave variable in inChain.DefaultState?.Variables ?? Enumerable.Empty<VariableSave>())
+            {
+                if (string.IsNullOrEmpty(variable.SourceObject))
+                {
+                    if (variable.IsCustomVariable)
+                    {
+                        yield return new DefinedVariable(variable.Name, variable.Type ?? "", null);
+                    }
+                }
+                else if (!string.IsNullOrEmpty(variable.ExposedAsName))
+                {
+                    yield return new DefinedVariable(variable.ExposedAsName, variable.Type ?? "", null);
+                }
+            }
+        }
+
+        foreach (StateSave state in GetDefaultStatesDefiningType(typeElement))
+        {
+            foreach (VariableSave variable in state.Variables)
+            {
+                yield return new DefinedVariable(variable.Name, variable.Type ?? "", null);
+            }
+        }
+    }
 
     private static IEnumerable<ElementSave> GetSelfAndBaseElements(ElementSave element)
     {

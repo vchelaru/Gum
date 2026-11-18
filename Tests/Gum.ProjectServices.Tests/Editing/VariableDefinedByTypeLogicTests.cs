@@ -37,4 +37,24 @@ public class VariableDefinedByTypeLogicTests : BaseTestClass
         _logic.GetIfVariableIsDefinedByType("Width", component).ShouldBeTrue();
         _logic.GetIfVariableIsDefinedByType("Widht", component).ShouldBeFalse();
     }
+    [Fact]
+    public void GetVariablesDefinedByType_DerivedComponent_ListsEachKindOnceWithItsType()
+    {
+        ComponentSave baseComponent = EditingTestProject.AddComponent(Project, "Base");
+        baseComponent.Categories.Add(new StateSaveCategory { Name = "Size" });
+        baseComponent.DefaultState.Variables.Add(new VariableSave { Name = "Score", Type = "int", IsCustomVariable = true });
+        EditingTestProject.AddInstance(baseComponent, "Label", "Text");
+        baseComponent.DefaultState.Variables.Add(new VariableSave { Name = "Label.Text", Type = "string", ExposedAsName = "LabelText" });
+        ComponentSave derived = EditingTestProject.AddComponent(Project, "Derived", baseType: "Base");
+
+        List<DefinedVariable> variables = _logic.GetVariablesDefinedByType(derived).ToList();
+
+        variables.Select(item => item.Name).ShouldBeUnique();
+        variables.ShouldContain(item => item.Name == "State" && item.Type == "State");
+        variables.ShouldContain(item => item.Name == "SizeState" && item.Type == "Size" && item.Category!.Name == "Size");
+        variables.ShouldContain(item => item.Name == "Score" && item.Type == "int");
+        variables.ShouldContain(item => item.Name == "LabelText" && item.Type == "string");
+        variables.ShouldContain(item => item.Name == "Width" && item.Type == "float");
+        variables.ShouldNotContain(item => item.Name == "Label.Text");
+    }
 }
