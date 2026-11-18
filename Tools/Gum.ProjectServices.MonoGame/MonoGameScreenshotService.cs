@@ -100,6 +100,11 @@ public class MonoGameScreenshotService : IScreenshotService
 
                 var element = elementSave.ToGraphicalUiElement(SystemManagers.Default);
                 element.AddToManagers(SystemManagers.Default);
+                if (_request.ApplyVariableOverrides(elementSave, element) is { } overrideError)
+                {
+                    Result = ScreenshotResult.Failed(overrideError);
+                    return;
+                }
                 element.UpdateLayout();
 
                 Color clearColor = _request.BackgroundColor is { } background

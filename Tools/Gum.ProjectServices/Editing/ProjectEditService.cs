@@ -128,7 +128,7 @@ public class ProjectEditService : IProjectEditService
     private readonly IStateVariableWriter _variableWriter;
     private readonly IVariableDefinedByTypeLogic _variableDefinedByType;
     private readonly IElementNameValidator _nameValidator;
-    private readonly ITypeResolver _typeResolver;
+    private readonly VariableValueConverter _values;
     private readonly IInstanceRemovalLogic _instanceRemoval;
     private readonly IInstanceChildDetacher _childDetacher;
     private readonly IStateRemovalLogic _stateRemoval;
@@ -177,7 +177,7 @@ public class ProjectEditService : IProjectEditService
         _variableWriter = variableWriter;
         _variableDefinedByType = variableDefinedByType;
         _nameValidator = nameValidator;
-        _typeResolver = typeResolver;
+        _values = new VariableValueConverter(variableDefinedByType, typeResolver);
         _instanceRemoval = instanceRemoval;
         _childDetacher = childDetacher;
         _stateRemoval = stateRemoval;
@@ -414,7 +414,7 @@ public class ProjectEditService : IProjectEditService
         }
 
         object? value = operation.TryGetProperty("value", out JsonElement valueElement)
-            ? ConvertValue(valueElement, type, name)
+            ? _values.ConvertValue(valueElement, type, name)
             : _customVariables.GetDefaultValue(type);
         _customVariables.AddCustomVariable(element, name, type, value);
     }
@@ -425,11 +425,11 @@ public class ProjectEditService : IProjectEditService
         string requestedName = GetString(operation, "name");
         (StateSave state, StateSaveCategory? category) = GetState(element, operation);
 
-        (string variableName, InstanceSave? instance) = ResolveVariable(element, requestedName, "set");
+        (string variableName, InstanceSave? instance) = _values.ResolveVariable(element, requestedName, "set");
 
         string type = _variableWriter.ResolveVariableType(element, state, variableName)
             ?? throw new EditException($"The type of {requestedName} could not be found.");
-        object? value = ConvertValue(operation.GetProperty("value"), type, requestedName);
+        object? value = _values.ConvertValue(operation.GetProperty("value"), type, requestedName);
 
         _variableWriter.SetVariable(element, state, variableName, value, instance, fallbackType: null);
         if (category != null)
@@ -602,7 +602,7 @@ public class ProjectEditService : IProjectEditService
         ElementSave element = GetElement(project, operation);
         string requestedName = GetString(operation, "name");
         (StateSave state, StateSaveCategory? category) = GetState(element, operation);
-        (string variableName, _) = ResolveVariable(element, requestedName, "cleared");
+        (string variableName, _) = _values.ResolveVariable(element, requestedName, "cleared");
 
         VariableSave variable = state.GetVariableSave(variableName)
             ?? throw new EditException($"{element.Name}'s state {state.Name} does not set {requestedName}.");
@@ -726,35 +726,6 @@ public class ProjectEditService : IProjectEditService
     /// <c>Instance.Var</c> for an instance's variable, or the element's own variable, where an exposed name maps to
     /// the instance variable it exposes. Fails for a name the type does not define.
     /// </summary>
-    private (string VariableName, InstanceSave? Instance) ResolveVariable(ElementSave element, string requestedName, string verb)
-    {
-        string? instanceName = VariableSave.GetSourceObject(requestedName);
-        if (!string.IsNullOrEmpty(instanceName))
-        {
-            InstanceSave instance = element.GetInstance(instanceName)
-                ?? throw new EditException($"{element.Name} has no instance named {instanceName}.");
-            ElementSave typeElement = ObjectFinder.Self.GetElementSave(instance.BaseType)
-                ?? throw new EditException($"{instanceName}'s type {instance.BaseType} is not in the project.");
-            if (!_variableDefinedByType.GetIfVariableIsDefinedByType(VariableSave.GetRootName(requestedName), typeElement))
-            {
-                throw new EditException($"{typeElement.Name} has no variable named {VariableSave.GetRootName(requestedName)}, so {requestedName} cannot be {verb}.");
-            }
-            return (requestedName, instance);
-        }
-
-        if (!_variableDefinedByType.GetIfVariableIsDefinedByType(requestedName, element))
-        {
-            throw new EditException($"{element.Name} has no variable named {requestedName}.");
-        }
-        // An element's own exposed variable is stored under its instance's name.
-        if (element.DefaultState?.Variables.FirstOrDefault(item => item.ExposedAsName == requestedName
-                && !string.IsNullOrEmpty(item.SourceObject)) is { } exposed)
-        {
-            return (exposed.Name, element.GetInstance(exposed.SourceObject!));
-        }
-        return (requestedName, null);
-    }
-
     private void ValidateNewElementName(string name)
     {
         int slash = name.LastIndexOf('/');
@@ -804,59 +775,10 @@ public class ProjectEditService : IProjectEditService
         return (state, null);
     }
 
-    private object? ConvertValue(JsonElement value, string type, string variableName)
-    {
-        if (value.ValueKind == JsonValueKind.Null)
-        {
-            return null;
-        }
-
-        // A null value is handled above, so a nullable type ("float?", "Orientation?") converts as its underlying type.
-        string valueType = type.EndsWith('?') ? type.Substring(0, type.Length - 1) : type;
-        object? converted = valueType switch
-        {
-            "float" => value.ValueKind == JsonValueKind.Number && value.TryGetSingle(out float single) ? single : null,
-            "double" => value.ValueKind == JsonValueKind.Number && value.TryGetDouble(out double number) ? number : null,
-            "int" => value.ValueKind == JsonValueKind.Number && value.TryGetInt32(out int integer) ? integer : null,
-            "bool" => value.ValueKind is JsonValueKind.True or JsonValueKind.False ? value.GetBoolean() : null,
-            "string" => value.ValueKind == JsonValueKind.String ? value.GetString() : null,
-            _ => ConvertOtherType(value, valueType)
-        };
-
-        return converted ?? throw new EditException($"{value.GetRawText()} is not a valid {type} value for {variableName}.");
-    }
-
-    private object? ConvertOtherType(JsonElement value, string type)
-    {
-        Type? resolved = _typeResolver.GetTypeFromString(type);
-        if (resolved != null && resolved.IsEnum)
-        {
-            if (value.ValueKind == JsonValueKind.String && Enum.GetNames(resolved).Contains(value.GetString()))
-            {
-                return Enum.Parse(resolved, value.GetString()!);
-            }
-            if (value.ValueKind == JsonValueKind.Number && value.TryGetInt32(out int number) && Enum.IsDefined(resolved, number))
-            {
-                return Enum.ToObject(resolved, number);
-            }
-            return null;
-        }
-
-        // States, file names and other text-valued variables.
-        return value.ValueKind == JsonValueKind.String ? value.GetString() : null;
-    }
-
     private static string GetString(JsonElement operation, string field) => operation.GetProperty(field).GetString()!;
 
     private static string? GetOptionalString(JsonElement operation, string field) =>
         operation.TryGetProperty(field, out JsonElement value) ? value.GetString() : null;
 
     #endregion
-
-    private sealed class EditException : Exception
-    {
-        public EditException(string message) : base(message)
-        {
-        }
-    }
 }

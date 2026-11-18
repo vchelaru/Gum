@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.CommandLine;
 using System.CommandLine.Invocation;
 using System.IO;
@@ -63,6 +64,19 @@ public static class ScreenshotCommand
             "Background color to clear to before rendering, as 6-digit (RRGGBB) or 8-digit "
                 + "(RRGGBBAA) hex, with or without a leading '#'. Defaults to fully transparent.");
 
+        Option<string?> scaleOption = new Option<string?>(
+            "--scale",
+            "Whole number (1 or more) to enlarge the finished image by, with nearest-neighbor sampling. "
+                + "The element still lays out at the canvas size or --width/--height. Defaults to 1.");
+
+        Option<string[]> setOption = new Option<string[]>(
+            "--set",
+            "Override a variable for this render only, as Name=Value (Width=300, Hud.Text=Hello, "
+                + "Hud.BossState=Visible). Repeatable; nothing is saved.")
+        {
+            AllowMultipleArgumentsPerToken = false,
+        };
+
         Command command = new Command("screenshot", "Render a Gum Screen or Component to a PNG file.")
         {
             projectArgument,
@@ -72,6 +86,8 @@ public static class ScreenshotCommand
             heightOption,
             backendOption,
             backgroundOption,
+            scaleOption,
+            setOption,
         };
 
         command.SetHandler((InvocationContext context) =>
@@ -83,10 +99,12 @@ public static class ScreenshotCommand
             int? height = context.ParseResult.GetValueForOption(heightOption);
             string backend = context.ParseResult.GetValueForOption(backendOption) ?? MonoGameBackend;
             string? background = context.ParseResult.GetValueForOption(backgroundOption);
+            string? scale = context.ParseResult.GetValueForOption(scaleOption);
+            string[] sets = context.ParseResult.GetValueForOption(setOption) ?? Array.Empty<string>();
 
             string outputPath = output ?? $"{elementName}.png";
 
-            context.ExitCode = Execute(projectPath, elementName, outputPath, width, height, backend, background);
+            context.ExitCode = Execute(projectPath, elementName, outputPath, width, height, backend, background, scale, sets);
         });
 
         return command;
@@ -94,8 +112,26 @@ public static class ScreenshotCommand
 
     private static int Execute(
         string projectPath, string elementName, string outputPath, int? width, int? height, string backend,
-        string? background)
+        string? background, string? scaleText, string[] sets)
     {
+        int scale = 1;
+        if (scaleText != null && (!int.TryParse(scaleText, out scale) || scale < 1))
+        {
+            Console.Error.WriteLine($"error: Invalid --scale value '{scaleText}'. Expected a whole number of 1 or more.");
+            return 2;
+        }
+
+        List<ScreenshotVariableOverride> overrides = new List<ScreenshotVariableOverride>();
+        foreach (string set in sets)
+        {
+            if (!ScreenshotVariableOverride.TryParse(set, out ScreenshotVariableOverride? variableOverride))
+            {
+                Console.Error.WriteLine($"error: Invalid --set value '{set}'. Expected Name=Value, such as Width=300.");
+                return 2;
+            }
+            overrides.Add(variableOverride!);
+        }
+
         ScreenshotColor? backgroundColor = null;
         if (background != null)
         {
@@ -144,6 +180,7 @@ public static class ScreenshotCommand
             Width = width,
             Height = height,
             BackgroundColor = backgroundColor,
+            VariableOverrides = overrides,
         };
 
         ScreenshotResult result = service.TakeScreenshot(request);
@@ -153,6 +190,9 @@ public static class ScreenshotCommand
             Console.Error.WriteLine($"error: {result.ErrorMessage}");
             return 1;
         }
+
+        // Scaling the finished PNG works the same for every backend.
+        PngUpscaler.ScaleFile(result.OutputPath!, scale);
 
         Console.WriteLine($"Screenshot written to: {result.OutputPath}");
         return 0;
