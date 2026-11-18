@@ -18,8 +18,8 @@ public class HeadlessCodegenRunner : IHeadlessCodegenRunner
     private readonly string? _toolVersion;
 
     /// <remarks>
-    /// The GUM0002 check evaluates references through the Gum.Expressions evaluator, which this project does not
-    /// reference; the host registers it (<c>GumExpressionService.Initialize</c>) at startup, as the tool and gumcli do.
+    /// The GUM0002 and GUM0047 checks evaluate references through the Gum.Expressions evaluator, which the host
+    /// registers (<c>GumExpressionService.Initialize</c>) at startup, as the tool and gumcli do.
     /// </remarks>
     /// <param name="toolVersion">The running tool's version, for the stale-tool warning; null skips the warning.</param>
     public HeadlessCodegenRunner(string? toolVersion = null)
