@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Xml.Linq;
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using Gum.Managers;
@@ -137,6 +138,56 @@ public class EditCommandTests : BaseTestClass
         game.GetDefaultStateOrThrow().GetVariableSave("HudInstance.MoodState").ShouldBeNull();
         game.GetDefaultStateOrThrow().GetVariableSave("HudInstance.Score").ShouldBeNull();
         game.GetDefaultStateOrThrow().GetValue("HudInstance.ChildText").ShouldBe("Yo");
+    }
+
+    [Theory]
+    // The tool's Variables tab hands an enum or a number to the state, which saves as a number, so an edit
+    // must store the same, and null for a nullable type. No standard element defines a nullable enum or a
+    // double?, so Hud declares Direction (Orientation?) and Spacing (double?) itself.
+    [InlineData("Stack.ChildrenLayout", "\"LeftToRightStack\"", "ChildrenLayout", "xsd:int", "2")]
+    [InlineData("Direction", "\"Vertical\"", "Orientation?", "xsd:int", "1")]
+    [InlineData("Direction", "1", "Orientation?", "xsd:int", "1")]
+    [InlineData("Spacing", "2.5", "double?", "xsd:double", "2.5")]
+    [InlineData("Label.MaxWidth", "100", "float?", "xsd:float", "100")]
+    [InlineData("Label.MaxWidth", "null", "float?", null, null)]
+    [InlineData("Label.MaxLettersToShow", "5", "int?", "xsd:int", "5")]
+    public void Edit_SetVariable_StoresTheValueAsTheToolDoes(string name, string jsonValue, string expectedType,
+        string? expectedXsiType, string? expectedText)
+    {
+        string projectPath = CreateEmptyProject();
+        string setup = WriteOperations("""
+            { "version": 1, "operations": [
+              { "op": "addComponent", "name": "Hud" },
+              { "op": "addInstance", "element": "Hud", "name": "Stack", "type": "Container" },
+              { "op": "addInstance", "element": "Hud", "name": "Label", "type": "Text" }
+            ] }
+            """);
+        CliTestHelper.Run("edit", projectPath, setup).ExitCode.ShouldBe(0);
+        string hudPath = Path.Combine(Path.GetDirectoryName(projectPath)!, "Components", "Hud.gucx");
+        XDocument hud = XDocument.Load(hudPath);
+        XNamespace xsi = "http://www.w3.org/2001/XMLSchema-instance";
+        // A set MaxWidth, so the null case shows null clearing it.
+        hud.Root!.Element("State")!.AddFirst(
+            new XElement("Variable", new XAttribute("Type", "float?"), new XAttribute("Name", "Label.MaxWidth"), new XAttribute("SetsValue", "true"),
+                new XElement("Value", new XAttribute(xsi + "type", "xsd:float"), "50")),
+            new XElement("Variable", new XAttribute("Type", "Orientation?"), new XAttribute("Name", "Direction"), new XAttribute("SetsValue", "true"), new XAttribute("IsCustomVariable", "true")),
+            new XElement("Variable", new XAttribute("Type", "double?"), new XAttribute("Name", "Spacing"), new XAttribute("SetsValue", "true"), new XAttribute("IsCustomVariable", "true")));
+        hud.Save(hudPath);
+        string operations = WriteOperations($$"""
+            { "version": 1, "operations": [
+              { "op": "setVariable", "element": "Hud", "name": "{{name}}", "value": {{jsonValue}} }
+            ] }
+            """);
+
+        CliTestHelper result = CliTestHelper.Run("edit", projectPath, operations);
+
+        result.ExitCode.ShouldBe(0, result.StandardOutput + result.StandardError);
+        XElement variable = XDocument.Load(hudPath)
+            .Descendants("Variable").Single(item => (string?)item.Attribute("Name") == name);
+        ((string?)variable.Attribute("Type")).ShouldBe(expectedType);
+        XElement? value = variable.Element("Value");
+        ((string?)value?.Attribute(xsi + "type")).ShouldBe(expectedXsiType);
+        value?.Value.ShouldBe(expectedText);
     }
 
     [Fact]

@@ -586,14 +586,16 @@ public class ProjectEditService : IProjectEditService
             return null;
         }
 
-        object? converted = type switch
+        // A null value is handled above, so a nullable type ("float?", "Orientation?") converts as its underlying type.
+        string valueType = type.EndsWith('?') ? type.Substring(0, type.Length - 1) : type;
+        object? converted = valueType switch
         {
             "float" => value.ValueKind == JsonValueKind.Number && value.TryGetSingle(out float single) ? single : null,
             "double" => value.ValueKind == JsonValueKind.Number && value.TryGetDouble(out double number) ? number : null,
             "int" => value.ValueKind == JsonValueKind.Number && value.TryGetInt32(out int integer) ? integer : null,
             "bool" => value.ValueKind is JsonValueKind.True or JsonValueKind.False ? value.GetBoolean() : null,
             "string" => value.ValueKind == JsonValueKind.String ? value.GetString() : null,
-            _ => ConvertOtherType(value, type)
+            _ => ConvertOtherType(value, valueType)
         };
 
         return converted ?? throw new EditException($"{value.GetRawText()} is not a valid {type} value for {variableName}.");
