@@ -1,4 +1,4 @@
-using RenderingLibrary.Graphics;
+using MonoGameGum.TestsCommon;
 using Shouldly;
 
 namespace SkiaGum.Tests.Renderables;
@@ -19,9 +19,9 @@ public class TextWrappedTextTests : BaseTestClass
 
     private static long MeasureAllocatedBytes(Action action)
     {
-        long before = GC.GetAllocatedBytesForCurrentThread();
+        long before = AllocationMeasurer.ThreadBytes;
         action();
-        return GC.GetAllocatedBytesForCurrentThread() - before;
+        return AllocationMeasurer.ThreadBytes - before;
     }
 
     [Fact]
@@ -53,6 +53,7 @@ public class TextWrappedTextTests : BaseTestClass
     [Fact]
     public void WrappedText_ReadTwiceWithNoChange_AllocatesNothing()
     {
+        AllocationMeasurer.Drain();
         Text text = CreateText(WrappingText);
         _ = text.WrappedText;
 
@@ -68,6 +69,7 @@ public class TextWrappedTextTests : BaseTestClass
     [Fact]
     public void WrappedText_ReadAfterSingleLineTextChange_AllocatesNothingBeyondLayout()
     {
+        AllocationMeasurer.Drain();
         // Single-line texts, so each line is the whole layout string and needs no Substring.
         Text text = CreateText("Score: 1", width: null);
         for (int i = 0; i < 4; i++)
