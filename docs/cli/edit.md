@@ -99,6 +99,15 @@ Available in December 2026, or now if building Gum from source.
 
 The remove operations take out what the tool's delete commands take out, including the values other elements set for what is removed. A remove the tool refuses fails the edit with the tool's message.
 
+### removeScreen and removeComponent
+
+```json
+{ "op": "removeScreen", "name": "Game" }
+{ "op": "removeComponent", "name": "Controls/Hud" }
+```
+
+Removes the element from the project and deletes its file, like the tool's delete with **Delete file** checked. `name` includes the folder. A component that another element still uses, as an instance or as its base type, cannot be removed: the edit fails and reports what uses it.
+
 ### removeInstance
 
 ```json

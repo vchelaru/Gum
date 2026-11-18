@@ -140,6 +140,94 @@ public class EditCommandTests : BaseTestClass
         game.GetDefaultStateOrThrow().GetValue("HudInstance.ChildText").ShouldBe("Yo");
     }
 
+    [Fact]
+    public void Edit_RemoveScreenAndComponent_RemovesThemAndDeletesTheirFiles()
+    {
+        string projectPath = CreateEmptyProject();
+        string projectDirectory = Path.GetDirectoryName(projectPath)!;
+        string setup = WriteOperations("""
+            { "version": 1, "operations": [
+              { "op": "addComponent", "name": "Controls/Hud" },
+              { "op": "addComponent", "name": "Kept" },
+              { "op": "addScreen", "name": "Game" }
+            ] }
+            """);
+        CliTestHelper.Run("edit", projectPath, setup).ExitCode.ShouldBe(0);
+        string hudFile = Path.Combine(projectDirectory, "Components", "Controls", "Hud.gucx");
+        string gameFile = Path.Combine(projectDirectory, "Screens", "Game.gusx");
+        File.Exists(hudFile).ShouldBeTrue();
+        File.Exists(gameFile).ShouldBeTrue();
+        string operations = WriteOperations("""
+            { "version": 1, "operations": [
+              { "op": "removeComponent", "name": "Controls/Hud" },
+              { "op": "removeScreen", "name": "Game" }
+            ] }
+            """);
+
+        CliTestHelper result = CliTestHelper.Run("edit", projectPath, operations);
+
+        result.ExitCode.ShouldBe(0, result.StandardOutput + result.StandardError);
+        CliTestHelper.Run("check", projectPath).ExitCode.ShouldBe(0);
+        File.Exists(hudFile).ShouldBeFalse();
+        File.Exists(gameFile).ShouldBeFalse();
+        File.Exists(Path.Combine(projectDirectory, "Components", "Kept.gucx")).ShouldBeTrue();
+        GumProjectSave project = new ProjectLoader().Load(projectPath).Project!;
+        project.Components.Select(item => item.Name).ShouldBe(new[] { "Kept" });
+        project.ComponentReferences.Select(item => item.Name).ShouldBe(new[] { "Kept" });
+        project.Screens.ShouldBeEmpty();
+        project.ScreenReferences.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void Edit_RemoveComponentThenAddItAgain_KeepsTheNewFile()
+    {
+        string projectPath = CreateEmptyProject();
+        string setup = WriteOperations("""
+            { "version": 1, "operations": [ { "op": "addComponent", "name": "Hud", "baseType": "Text" } ] }
+            """);
+        CliTestHelper.Run("edit", projectPath, setup).ExitCode.ShouldBe(0);
+        string operations = WriteOperations("""
+            { "version": 1, "operations": [
+              { "op": "removeComponent", "name": "Hud" },
+              { "op": "addComponent", "name": "Hud" }
+            ] }
+            """);
+
+        CliTestHelper result = CliTestHelper.Run("edit", projectPath, operations);
+
+        result.ExitCode.ShouldBe(0, result.StandardOutput + result.StandardError);
+        File.Exists(Path.Combine(Path.GetDirectoryName(projectPath)!, "Components", "Hud.gucx")).ShouldBeTrue();
+        GumProjectSave project = new ProjectLoader().Load(projectPath).Project!;
+        project.Components.ShouldHaveSingleItem().BaseType.ShouldBe("Container");
+    }
+
+    [Theory]
+    [InlineData("""{ "op": "addInstance", "element": "Game", "name": "HudInstance", "type": "Hud" }""", "Game")]
+    [InlineData("""{ "op": "addComponent", "name": "BigHud", "baseType": "Hud" }""", "BigHud")]
+    public void Edit_RemoveComponentStillInUse_FailsAndKeepsItsFile(string usingOperation, string usingElement)
+    {
+        string projectPath = CreateEmptyProject();
+        string setup = WriteOperations($$"""
+            { "version": 1, "operations": [
+              { "op": "addComponent", "name": "Hud" },
+              { "op": "addScreen", "name": "Game" },
+              {{usingOperation}}
+            ] }
+            """);
+        CliTestHelper.Run("edit", projectPath, setup).ExitCode.ShouldBe(0);
+        Dictionary<string, string> before = ReadProjectFiles(projectPath);
+        string operations = WriteOperations("""
+            { "version": 1, "operations": [ { "op": "removeComponent", "name": "Hud" } ] }
+            """);
+
+        CliTestHelper result = CliTestHelper.Run("edit", projectPath, operations);
+
+        result.ExitCode.ShouldBe(1, result.StandardOutput + result.StandardError);
+        result.StandardOutput.ShouldContain($"error: {usingElement}:");
+        result.StandardOutput.ShouldContain("Hud");
+        ReadProjectFiles(projectPath).ShouldBe(before);
+    }
+
     [Theory]
     // The tool's Variables tab hands an enum or a number to the state, which saves as a number, so an edit
     // must store the same, and null for a nullable type. No standard element defines a nullable enum or a
@@ -370,6 +458,8 @@ public class EditCommandTests : BaseTestClass
     [InlineData("""{ "op": "addVariable", "element": "Hud", "name": "Speed", "type": "Vector2" }""", "Vector2")]
     [InlineData("""{ "op": "setVariable", "element": "Hud", "name": "Label.Widht", "value": 1 }""", "Label.Widht")]
     [InlineData("""{ "op": "removeInstance", "element": "Hud", "name": "Nope" }""", "Nope")]
+    [InlineData("""{ "op": "removeScreen", "name": "Hud" }""", "no Screen named Hud")]
+    [InlineData("""{ "op": "removeComponent", "name": "Nope" }""", "no Component named Nope")]
     [InlineData("""{ "op": "removeState", "element": "Hud", "name": "Default" }""", "default state")]
     [InlineData("""{ "op": "removeCategory", "element": "Hud", "name": "Size" }""", "Size")]
     [InlineData("""{ "op": "removeVariable", "element": "Hud", "name": "Width" }""", "custom variable")]

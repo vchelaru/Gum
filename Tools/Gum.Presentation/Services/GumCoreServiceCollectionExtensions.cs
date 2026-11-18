@@ -233,6 +233,7 @@ public static class GumCoreServiceCollectionExtensions
         services.AddSingleton<IVariableOverrideRemover, VariableOverrideRemover>();
         services.AddSingleton<IInstanceRemovalLogic, InstanceRemovalLogic>();
         services.AddSingleton<IStateRemovalLogic, StateRemovalLogic>();
+        services.AddSingleton<IElementRemovalLogic, ElementRemovalLogic>();
         services.AddSingleton<IVariableRemovalLogic, VariableRemovalLogic>();
         services.AddSingleton<IVariableReferenceLogic, VariableReferenceLogic>();
         services.AddSingleton<IVariableReferenceConflictFixer, VariableReferenceConflictFixer>();

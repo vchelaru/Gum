@@ -134,6 +134,7 @@ public class ProjectEditService : IProjectEditService
     private readonly IVariableClearLogic _variableClear;
     private readonly IComponentExtractionLogic _componentExtraction;
     private readonly IMovedInstanceReferenceDropLogic _movedReferenceDrop;
+    private readonly IElementRemovalLogic _elementRemoval;
 
     public ProjectEditService(
         IElementCreationLogic elementCreation,
@@ -154,7 +155,8 @@ public class ProjectEditService : IProjectEditService
         IVariableOverrideRemover overrideRemover,
         IVariableClearLogic variableClear,
         IComponentExtractionLogic componentExtraction,
-        IMovedInstanceReferenceDropLogic movedReferenceDrop)
+        IMovedInstanceReferenceDropLogic movedReferenceDrop,
+        IElementRemovalLogic elementRemoval)
     {
         _elementCreation = elementCreation;
         _instanceCreation = instanceCreation;
@@ -175,6 +177,7 @@ public class ProjectEditService : IProjectEditService
         _variableClear = variableClear;
         _componentExtraction = componentExtraction;
         _movedReferenceDrop = movedReferenceDrop;
+        _elementRemoval = elementRemoval;
 
         _operations = new Dictionary<string, OperationSpec>
         {
@@ -186,6 +189,8 @@ public class ProjectEditService : IProjectEditService
             ["addCategory"] = new(Strings("element", "name"), None, AddCategory),
             ["addState"] = new(Strings("element", "name"), Strings("category"), AddState),
             ["exposeVariable"] = new(Strings("element", "instance", "variable", "name"), None, ExposeVariable),
+            ["removeScreen"] = new(Strings("name"), None, RemoveScreen),
+            ["removeComponent"] = new(Strings("name"), None, RemoveComponent),
             ["removeInstance"] = new(Strings("element", "name"), None, RemoveInstance),
             ["removeState"] = new(Strings("element", "name"), Strings("category"), RemoveState),
             ["removeCategory"] = new(Strings("element", "name"), None, RemoveCategory),
@@ -465,6 +470,24 @@ public class ProjectEditService : IProjectEditService
         }
 
         _exposeVariables.Expose(element, instance, rootName, exposedName);
+    }
+
+    // An element still in use (an instance of it, or one deriving from it) is left to the error check, which names
+    // what uses it, like check does.
+    private void RemoveScreen(GumProjectSave project, JsonElement operation)
+    {
+        string name = GetString(operation, "name");
+        ScreenSave screen = project.Screens.FirstOrDefault(item => item.Name == name)
+            ?? throw new EditException($"The project has no Screen named {name}.");
+        _elementRemoval.RemoveElement(project, screen);
+    }
+
+    private void RemoveComponent(GumProjectSave project, JsonElement operation)
+    {
+        string name = GetString(operation, "name");
+        ComponentSave component = project.Components.FirstOrDefault(item => item.Name == name)
+            ?? throw new EditException($"The project has no Component named {name}.");
+        _elementRemoval.RemoveElement(project, component);
     }
 
     private void RemoveInstance(GumProjectSave project, JsonElement operation)
