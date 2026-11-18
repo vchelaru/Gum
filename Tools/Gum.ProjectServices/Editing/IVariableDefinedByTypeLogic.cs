@@ -1,4 +1,6 @@
+using System.Collections.Generic;
 using Gum.DataTypes;
+using Gum.DataTypes.Variables;
 
 namespace Gum.ProjectServices.Editing;
 
@@ -24,4 +26,18 @@ public interface IVariableDefinedByTypeLogic
     /// The variable list counterpart of <see cref="GetIfVariableIsDefinedByType"/>.
     /// </summary>
     bool GetIfVariableListIsDefinedByType(string variableListName, ElementSave typeElement);
+
+    /// <summary>
+    /// Lists every variable <see cref="GetIfVariableIsDefinedByType"/> accepts for <paramref name="typeElement"/>,
+    /// each name once, with its type.
+    /// </summary>
+    IEnumerable<DefinedVariable> GetVariablesDefinedByType(ElementSave typeElement);
 }
+
+/// <summary>
+/// A variable an element's type defines, as <see cref="IVariableDefinedByTypeLogic.GetVariablesDefinedByType"/> lists it.
+/// </summary>
+/// <param name="Name">The variable name without an instance prefix.</param>
+/// <param name="Type">The variable's type, such as <c>float</c> or an enum name; a category selector's type is the category name.</param>
+/// <param name="Category">The category a selector variable (<c>{Category}State</c>) picks a state of, or null.</param>
+public record DefinedVariable(string Name, string Type, StateSaveCategory? Category);

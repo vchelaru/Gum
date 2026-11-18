@@ -4,6 +4,7 @@ using System.CommandLine;
 using System.CommandLine.Invocation;
 using System.IO;
 using System.Linq;
+using System.Text.Json;
 using Gum.DataTypes;
 using Gum.Expressions;
 using Gum.Logic;
@@ -26,17 +27,28 @@ public static class EditCommand
     /// </summary>
     public static Command Create()
     {
-        Argument<string> projectArgument = new Argument<string>(
+        // Both are optional only so that --schema can run without them; Execute requires them otherwise.
+        Argument<string?> projectArgument = new Argument<string?>(
             "project",
-            "Path to the .gumx or .gumj project file.");
+            "Path to the .gumx or .gumj project file.")
+        {
+            Arity = ArgumentArity.ZeroOrOne
+        };
 
-        Argument<string> operationsArgument = new Argument<string>(
+        Argument<string?> operationsArgument = new Argument<string?>(
             "operations",
-            "Path to the JSON operations file.");
+            "Path to the JSON operations file.")
+        {
+            Arity = ArgumentArity.ZeroOrOne
+        };
 
         Option<bool> jsonOption = new Option<bool>(
             "--json",
-            "Report new errors as a JSON array, as check --json does.");
+            "Report new errors (or the --schema output) as JSON.");
+
+        Option<bool> schemaOption = new Option<bool>(
+            "--schema",
+            "Print every operation and its required and optional fields instead of editing. Takes no project.");
 
         Command command = new Command(
             "edit",
@@ -44,15 +56,28 @@ public static class EditCommand
         {
             projectArgument,
             operationsArgument,
-            jsonOption
+            jsonOption,
+            schemaOption
         };
 
         command.SetHandler((InvocationContext context) =>
         {
-            string projectPath = context.ParseResult.GetValueForArgument(projectArgument);
-            string operationsPath = context.ParseResult.GetValueForArgument(operationsArgument);
+            string? projectPath = context.ParseResult.GetValueForArgument(projectArgument);
+            string? operationsPath = context.ParseResult.GetValueForArgument(operationsArgument);
             bool json = context.ParseResult.GetValueForOption(jsonOption);
-            context.ExitCode = Execute(projectPath, operationsPath, json);
+            if (context.ParseResult.GetValueForOption(schemaOption))
+            {
+                context.ExitCode = WriteSchema(json);
+            }
+            else if (projectPath == null || operationsPath == null)
+            {
+                Console.Error.WriteLine("edit needs a project and an operations file, or --schema.");
+                context.ExitCode = 2;
+            }
+            else
+            {
+                context.ExitCode = Execute(projectPath, operationsPath, json);
+            }
         });
 
         return command;
@@ -120,7 +145,34 @@ public static class EditCommand
         return 0;
     }
 
-    private static IProjectEditService CreateEditService()
+    private static int WriteSchema(bool json)
+    {
+        IReadOnlyList<EditOperationSchema> schemas = CreateEditService().GetOperationSchemas();
+        if (json)
+        {
+            var document = new
+            {
+                version = ProjectEditService.SupportedVersion,
+                operations = schemas.Select(schema => new { op = schema.Op, required = schema.Required, optional = schema.Optional })
+            };
+            Console.WriteLine(JsonSerializer.Serialize(document, new JsonSerializerOptions { WriteIndented = true }));
+            return 0;
+        }
+
+        Console.WriteLine($"Operations file version {ProjectEditService.SupportedVersion}. Fields in [brackets] are optional.");
+        int width = schemas.Max(schema => schema.Op.Length);
+        foreach (EditOperationSchema schema in schemas)
+        {
+            IEnumerable<string> fields = schema.Required.Concat(schema.Optional.Select(field => $"[{field}]"));
+            Console.WriteLine($"  {schema.Op.PadRight(width)}  {string.Join(", ", fields)}");
+        }
+        return 0;
+    }
+
+    /// <summary>
+    /// Builds the edit service with the headless implementations of the tool's editing logic.
+    /// </summary>
+    public static IProjectEditService CreateEditService()
     {
         ReferenceFinder referenceFinder = new ReferenceFinder(new ObjectFinderProjectProvider());
         VariableOverrideRemover overrideRemover = new VariableOverrideRemover();
