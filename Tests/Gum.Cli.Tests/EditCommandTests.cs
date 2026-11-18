@@ -139,6 +139,75 @@ public class EditCommandTests : BaseTestClass
         game.GetDefaultStateOrThrow().GetValue("HudInstance.ChildText").ShouldBe("Yo");
     }
 
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void Edit_ExtractToComponent_DoesWhatTheToolsCreateComponentDoesAndPassesCheck(bool replace)
+    {
+        string projectPath = CreateEmptyProject();
+        string setup = WriteOperations("""
+            { "version": 1, "operations": [
+              { "op": "addComponent", "name": "Hud" },
+              { "op": "addInstance", "element": "Hud", "name": "Panel", "type": "Container" },
+              { "op": "addInstance", "element": "Hud", "name": "Label", "type": "Text", "parent": "Panel" },
+              { "op": "addInstance", "element": "Hud", "name": "Caption", "type": "Text" },
+              { "op": "setVariable", "element": "Hud", "name": "Panel.X", "value": 50 },
+              { "op": "setVariable", "element": "Hud", "name": "Panel.Width", "value": 200 },
+              { "op": "setVariable", "element": "Hud", "name": "Label.Text", "value": "Hi" },
+              { "op": "exposeVariable", "element": "Hud", "instance": "Label", "variable": "Text", "name": "LabelText" },
+              { "op": "addCategory", "element": "Hud", "name": "Size" },
+              { "op": "addState", "element": "Hud", "category": "Size", "name": "Big" },
+              { "op": "setVariable", "element": "Hud", "category": "Size", "state": "Big", "name": "Panel.Width", "value": 300 },
+              { "op": "setVariable", "element": "Hud", "category": "Size", "state": "Big", "name": "Label.Text", "value": "Big" },
+              { "op": "addScreen", "name": "Game" },
+              { "op": "addInstance", "element": "Game", "name": "HudInstance", "type": "Hud" },
+              { "op": "setVariable", "element": "Game", "name": "HudInstance.LabelText", "value": "Yo" }
+            ] }
+            """);
+        CliTestHelper.Run("edit", projectPath, setup).ExitCode.ShouldBe(0);
+        string operations = WriteOperations("{ \"version\": 1, \"operations\": [ { \"op\": \"extractToComponent\", "
+            + "\"element\": \"Hud\", \"instance\": \"Panel\", \"name\": \"Controls/PanelComponent\", \"replace\": "
+            + (replace ? "true" : "false") + " } ] }");
+
+        CliTestHelper result = CliTestHelper.Run("edit", projectPath, operations);
+
+        result.ExitCode.ShouldBe(0, result.StandardOutput + result.StandardError);
+        CliTestHelper.Run("check", projectPath).ExitCode.ShouldBe(0);
+        GumProjectSave project = new ProjectLoader().Load(projectPath).Project!;
+        ObjectFinder.Self.GumProjectSave = project;
+        ComponentSave panelComponent = project.Components.Single(item => item.Name == "Controls/PanelComponent");
+        panelComponent.BaseType.ShouldBe("Container");
+        panelComponent.Instances.Select(item => item.Name).ShouldBe(new[] { "Label" });
+        StateSave panelDefault = panelComponent.GetDefaultStateOrThrow();
+        panelDefault.GetValue("Width").ShouldBe(200f);
+        panelDefault.GetVariableSave("X")?.SetsValue.ShouldNotBe(true);
+        panelDefault.GetVariableSave("Label.Parent").ShouldBeNull();
+        panelDefault.GetValue("Label.Text").ShouldBe("Hi");
+        panelDefault.GetVariableSave("Label.Text")!.ExposedAsName.ShouldBeNull();
+        ComponentSave hud = project.Components.Single(item => item.Name == "Hud");
+        StateSave hudDefault = hud.GetDefaultStateOrThrow();
+        StateSave big = hud.Categories.Single().States.Single();
+        StateSave gameDefault = project.Screens.Single(item => item.Name == "Game").GetDefaultStateOrThrow();
+        if (replace)
+        {
+            hud.Instances.Select(item => item.Name + ":" + item.BaseType)
+                .ShouldBe(new[] { "Panel:Controls/PanelComponent", "Caption:Text" });
+            hudDefault.GetValue("Panel.X").ShouldBe(50f);
+            hudDefault.GetVariableSave("Panel.Width").ShouldBeNull();
+            hudDefault.Variables.ShouldNotContain(item => item.ExposedAsName == "LabelText");
+            big.GetValue("Panel.Width").ShouldBe(300f);
+            big.GetVariableSave("Label.Text").ShouldBeNull();
+            gameDefault.GetVariableSave("HudInstance.LabelText").ShouldBeNull();
+        }
+        else
+        {
+            hud.Instances.Select(item => item.Name).ShouldBe(new[] { "Panel", "Label", "Caption" });
+            hudDefault.GetVariableSave("Label.Text")!.ExposedAsName.ShouldBe("LabelText");
+            big.GetValue("Label.Text").ShouldBe("Big");
+            gameDefault.GetValue("HudInstance.LabelText").ShouldBe("Yo");
+        }
+    }
+
     [Fact]
     public void Edit_VariableTheTypeDoesNotDefine_FailsAndWritesNothing()
     {
@@ -226,6 +295,8 @@ public class EditCommandTests : BaseTestClass
     [InlineData("""{ "version": 1, "operations": [ { "op": "addScreen" } ] }""", "name")]
     [InlineData("""{ "version": 1, "operations": [ ], "extra": 1 }""", "extra")]
     [InlineData("""not json""", "operations file")]
+    [InlineData("""{ "version": 1, "operations": [ { "op": "extractToComponent", "element": "Hud", "instance": "Label", "name": "LabelComponent", "replace": "yes" } ] }""", "true or false")]
+    [InlineData("""{ "version": 1, "operations": [ { "op": "extractToComponent", "element": "Hud", "instance": "Label", "name": "LabelComponent" } ] }""", "replace")]
     public void Edit_InvalidOperationsFile_ExitsWith2AndWritesNothing(string json, string expectedInMessage)
     {
         string projectPath = CreateEmptyProject();
@@ -252,6 +323,8 @@ public class EditCommandTests : BaseTestClass
     [InlineData("""{ "op": "removeCategory", "element": "Hud", "name": "Size" }""", "Size")]
     [InlineData("""{ "op": "removeVariable", "element": "Hud", "name": "Width" }""", "custom variable")]
     [InlineData("""{ "op": "clearVariable", "element": "Hud", "name": "Height" }""", "Height")]
+    [InlineData("""{ "op": "extractToComponent", "element": "Hud", "instance": "Nope", "name": "NopeComponent", "replace": true }""", "Nope")]
+    [InlineData("""{ "op": "extractToComponent", "element": "Hud", "instance": "Label", "name": "Text", "replace": true }""", "Text")]
     public void Edit_OperationThatCannotApply_ExitsWith1AndNamesTheProblem(string operation, string expectedInMessage)
     {
         string projectPath = CreateEmptyProject();

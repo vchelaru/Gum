@@ -133,6 +133,22 @@ Removes a variable added with `addVariable`, and the values instances set for it
 
 Removes a set value so the variable falls back to its inherited value, like **Make Default** in the **Variables** tab. `name`, `state` and `category` work as in `setVariable`. An exposed variable stays exposed. A variable added with `addVariable` goes back to its type's zero value, such as `0` or `false`. In a category state the variable takes the default state's value instead, since every state in a category sets it.
 
+## Creating a Component From an Instance
+
+{% hint style="info" %}
+Available in December 2026, or now if building Gum from source.
+{% endhint %}
+
+### extractToComponent
+
+```json
+{ "op": "extractToComponent", "element": "Hud", "instance": "Panel", "name": "Controls/PanelComponent", "replace": true }
+```
+
+Makes a new component from `Panel`, like **Create Component** in the tool's right-click menu. The component's base type is `Panel`'s type, the instances attached to `Panel` become its instances, and the variables `Panel` sets, other than its position, become the component's. The attached instances keep their positions, which were already relative to `Panel`.
+
+`replace` is the tool's checkbox. With `true`, `Panel` and the instances attached to it leave `Hud`, and an instance of the new component named `Panel` takes its place, with the same position and draw order. Values other states set on `Panel` stay on the new instance. Values, variable references and exposed variables that named one of the attached instances are removed, and a removed variable reference leaves its last value behind. With `false`, `Hud` does not change.
+
 ## All or Nothing
 
 `edit` writes nothing unless every operation applies and the edit adds no errors. It runs the same check as [check](check.md) before and after the operations. Errors the project already had do not block the edit, and only errors the edit adds are reported, in the same format as `check`.

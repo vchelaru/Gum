@@ -70,6 +70,8 @@ public class ProjectEditService : IProjectEditService
     /// <summary>The operations file format version this service reads.</summary>
     public const int SupportedVersion = 1;
 
+    private static readonly HashSet<string> BooleanFields = new HashSet<string>(StringComparer.Ordinal) { "replace" };
+
     private sealed record OperationSpec(string[] Required, string[] Optional, Action<GumProjectSave, JsonElement> Apply);
 
     private readonly Dictionary<string, OperationSpec> _operations;
@@ -90,6 +92,8 @@ public class ProjectEditService : IProjectEditService
     private readonly IVariableRemovalLogic _variableRemoval;
     private readonly IVariableOverrideRemover _overrideRemover;
     private readonly IVariableClearLogic _variableClear;
+    private readonly IComponentExtractionLogic _componentExtraction;
+    private readonly IMovedInstanceReferenceDropLogic _movedReferenceDrop;
 
     public ProjectEditService(
         IElementCreationLogic elementCreation,
@@ -108,7 +112,9 @@ public class ProjectEditService : IProjectEditService
         IStateRemovalLogic stateRemoval,
         IVariableRemovalLogic variableRemoval,
         IVariableOverrideRemover overrideRemover,
-        IVariableClearLogic variableClear)
+        IVariableClearLogic variableClear,
+        IComponentExtractionLogic componentExtraction,
+        IMovedInstanceReferenceDropLogic movedReferenceDrop)
     {
         _elementCreation = elementCreation;
         _instanceCreation = instanceCreation;
@@ -127,6 +133,8 @@ public class ProjectEditService : IProjectEditService
         _variableRemoval = variableRemoval;
         _overrideRemover = overrideRemover;
         _variableClear = variableClear;
+        _componentExtraction = componentExtraction;
+        _movedReferenceDrop = movedReferenceDrop;
 
         _operations = new Dictionary<string, OperationSpec>
         {
@@ -143,6 +151,7 @@ public class ProjectEditService : IProjectEditService
             ["removeCategory"] = new(new[] { "element", "name" }, Array.Empty<string>(), RemoveCategory),
             ["removeVariable"] = new(new[] { "element", "name" }, Array.Empty<string>(), RemoveVariable),
             ["clearVariable"] = new(new[] { "element", "name" }, new[] { "state", "category" }, ClearVariable),
+            ["extractToComponent"] = new(new[] { "element", "instance", "name", "replace" }, Array.Empty<string>(), ExtractToComponent),
         };
     }
 
@@ -261,7 +270,14 @@ public class ProjectEditService : IProjectEditService
             {
                 return $"{op} has an unknown field \"{property.Name}\".";
             }
-            if (property.Name != "value" && property.Value.ValueKind != JsonValueKind.String)
+            if (BooleanFields.Contains(property.Name))
+            {
+                if (property.Value.ValueKind is not (JsonValueKind.True or JsonValueKind.False))
+                {
+                    return $"{op}'s \"{property.Name}\" must be true or false.";
+                }
+            }
+            else if (property.Name != "value" && property.Value.ValueKind != JsonValueKind.String)
             {
                 return $"{op}'s \"{property.Name}\" must be a string.";
             }
@@ -490,6 +506,31 @@ public class ProjectEditService : IProjectEditService
             ?? throw new EditException($"{element.Name}'s state {state.Name} does not set {requestedName}.");
         _variableClear.ClearVariable(element, state, variable, isPartOfCategory: category != null);
         ElementSaveExtensions.ApplyVariableReferences(element, state);
+    }
+
+    private void ExtractToComponent(GumProjectSave project, JsonElement operation)
+    {
+        ElementSave element = GetElement(project, operation);
+        string instanceName = GetString(operation, "instance");
+        string name = GetString(operation, "name");
+        bool replace = operation.GetProperty("replace").GetBoolean();
+        InstanceSave instance = element.GetInstance(instanceName)
+            ?? throw new EditException($"{element.Name} has no instance named {instanceName}.");
+        ValidateNewElementName(name);
+
+        ComponentExtraction extraction = _componentExtraction.CreateComponent(instance, name);
+        if (replace && extraction.MovedInstances.Prepend(instance)
+            .Select(_instanceRemoval.GetWhyCannotRemove).FirstOrDefault(item => item != null) is { } whyNot)
+        {
+            throw new EditException(whyNot);
+        }
+        _elementCreation.AddComponent(project, extraction.Component);
+        if (replace)
+        {
+            // Runs while the moved instances are still in the element, so their references still resolve.
+            _movedReferenceDrop.Drop(_movedReferenceDrop.Find(element, instance, extraction.MovedInstances, animations: null));
+            _componentExtraction.ReplaceWithComponentInstance(extraction, moved => _instanceRemoval.RemoveInstance(moved, element));
+        }
     }
 
     #endregion

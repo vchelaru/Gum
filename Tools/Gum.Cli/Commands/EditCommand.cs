@@ -176,8 +176,9 @@ public static class EditCommand
     {
         ReferenceFinder referenceFinder = new ReferenceFinder(new ObjectFinderProjectProvider());
         VariableOverrideRemover overrideRemover = new VariableOverrideRemover();
+        ElementCreationLogic elementCreation = new ElementCreationLogic();
         return new ProjectEditService(
-            new ElementCreationLogic(),
+            elementCreation,
             new InstanceCreationLogic(),
             new InstanceAddRules(new CircularReferenceManager(ObjectFinder.Self)),
             new StateCreationLogic(),
@@ -193,7 +194,9 @@ public static class EditCommand
             new StateRemovalLogic(referenceFinder, new ObjectFinderProjectProvider()),
             new VariableRemovalLogic(referenceFinder),
             overrideRemover,
-            new VariableClearLogic());
+            new VariableClearLogic(),
+            new ComponentExtractionLogic(elementCreation),
+            new MovedInstanceReferenceDropLogic(referenceFinder));
     }
 
     /// <summary>

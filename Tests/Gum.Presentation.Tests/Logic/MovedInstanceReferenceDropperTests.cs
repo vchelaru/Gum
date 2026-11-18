@@ -4,6 +4,7 @@ using Gum.DataTypes.Variables;
 using Gum.Logic;
 using Gum.Managers;
 using Gum.ProjectServices;
+using Gum.ProjectServices.Editing;
 using Gum.StateAnimation.SaveClasses;
 using Gum.ToolStates;
 using Gum.Undo;
@@ -36,6 +37,7 @@ public class MovedInstanceReferenceDropperTests : BaseTestClass
         ObjectFinder.Self.GumProjectSave = _project;
         _mocker.GetMock<IReferenceFinderProjectProvider>().Setup(x => x.GumProjectSave).Returns(_project);
         _mocker.Use<IReferenceFinder>(_mocker.CreateInstance<ReferenceFinder>());
+        _mocker.Use<IMovedInstanceReferenceDropLogic>(_mocker.CreateInstance<MovedInstanceReferenceDropLogic>());
 
         _undoManager = _mocker.CreateInstance<UndoManager>();
         _mocker.Use<IUndoManager>(_undoManager);
