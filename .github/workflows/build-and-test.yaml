@@ -404,11 +404,11 @@ jobs:
   # instead of adding to its critical path.
   #
   # None of the CodeGen_* projects reference FnaGum, so this job skips
-  # submodule init entirely. It also installs no workloads: the windows-latest image already
-  # has maui-windows, which is all the Windows-only Maui harness needs (MauiWindowsOnly drops
-  # that project's Android head, the only reason it wanted the full maui workload). Installing
-  # or restoring a cached `maui` set cost 3-5 minutes and added nothing (#6092). It uses the
-  # image's .NET SDK for the same reason: global.json only needs 10.0.100 or newer.
+  # submodule init entirely. It also installs no workloads: GeneratedCodeOnly builds the Maui
+  # harness as a plain net9.0 library of just its generated code, which needs no MAUI workload.
+  # Installing or restoring a cached `maui` set cost 3-5 minutes (#6092), and relying on the
+  # image's preinstalled maui-windows broke when the image moved it to the SDK 11 band. It uses
+  # the image's .NET SDK for the same reason: global.json only needs 10.0.100 or newer.
   #
   # The job does nothing on a push to main (it used to seed a workload cache).
   Build-Generated-Code:
@@ -456,14 +456,14 @@ jobs:
           }
 
       # One restore and one parallel build over all seven harnesses (Tests/CodeGen_Harnesses.slnx)
-      # so the shared runtime projects build once. MauiWindowsOnly is a global property that
-      # only CodeGen_Maui_FullCodegen reads: it keeps that project to its Windows TFM. (A
+      # so the shared runtime projects build once. GeneratedCodeOnly is a global property that
+      # only CodeGen_Maui_FullCodegen reads: it compiles just that project's generated code. (A
       # -p:TargetFrameworks override would reach GumCommon and break the reference chain.)
       - name: Build Generated Code Projects
         run: |
-          dotnet restore "Tests/CodeGen_Harnesses.slnx" --verbosity quiet -p:MauiWindowsOnly=true
+          dotnet restore "Tests/CodeGen_Harnesses.slnx" --verbosity quiet -p:GeneratedCodeOnly=true
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          dotnet build "Tests/CodeGen_Harnesses.slnx" --configuration Debug --no-restore -m --verbosity quiet -p:WarningLevel=0 -p:MauiWindowsOnly=true
+          dotnet build "Tests/CodeGen_Harnesses.slnx" --configuration Debug --no-restore -m --verbosity quiet -p:WarningLevel=0 -p:GeneratedCodeOnly=true
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
       # Every bundled Forms theme, created and generated through gumcli (new --theme, codegen)
@@ -709,7 +709,7 @@ jobs:
       # macOS only: it has the iOS toolchain, so one leg builds every TFM. Windows used to build
       # AllLibraries too, behind a ~200 s workload restore and a ~257 s build, only to run the tests;
       # it now builds just the projects it tests (next step), with no workloads and no submodules
-      # (#6092). The Windows-only TFM (SkiaGum.Maui's net9.0-windows) is built by Build-Generated-Code.
+      # (#6092).
       # timeout-minutes (#6673): one run sat here for 44 minutes with no output and no retrievable log.
       # The last 17 macOS runs took 82-153 s, so 15 minutes fails a hang fast with room for a cold cache.
       # The file logger writes as it goes, so the diagnostics step below can tail it after a timeout.
