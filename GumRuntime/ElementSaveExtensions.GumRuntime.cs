@@ -1936,7 +1936,28 @@ namespace GumRuntime
         {
             object? owner = liveRoot?.Tag ?? stateSave.ParentContainer;
             string where = owner == null ? string.Empty : $" in {owner}";
-            RaiseReferenceError($"Variable reference '{referenceString}' was not applied{where}: {detail} {leftVariableName} keeps its current value.");
+            string message = $"Variable reference '{referenceString}' was not applied{where}: {detail} {leftVariableName} keeps its current value.";
+
+            // A project loaded from files is applied as data first, then each built element applies the same rows live. A
+            // live owner does not repeat the exact message the data pass already printed for that element; one with a
+            // different value does.
+            ElementSave? element = stateSave.ParentContainer;
+            if (element != null)
+            {
+                HashSet<string> printed = PrintedWithoutOwner.GetOrCreateValue(element);
+                lock (printed)
+                {
+                    if (liveRoot == null)
+                    {
+                        printed.Add(message);
+                    }
+                    else if (printed.Contains(message))
+                    {
+                        return;
+                    }
+                }
+            }
+            RaiseReferenceError(message);
         }
 
         private static string TypeNameOf(object value)
@@ -2048,6 +2069,11 @@ namespace GumRuntime
 
         private static readonly HashSet<(string Owner, string Line, string Variable)> ReportedWithoutOwner =
             new HashSet<(string Owner, string Line, string Variable)>();
+
+        // The messages the owner-less (data) reports printed, per element. A reloaded project has new elements, so it
+        // reports again.
+        private static readonly ConditionalWeakTable<ElementSave, HashSet<string>> PrintedWithoutOwner =
+            new ConditionalWeakTable<ElementSave, HashSet<string>>();
 
         // Set by each platform's SystemManagers to CustomSetPropertyOnRenderable.RaisePropertyAssignmentError, which
         // writes the [Gum] line to Console.Error and raises PropertyAssignmentError. GumRuntime sits below that class.

@@ -43,9 +43,10 @@ public class ScreenshotVariableReferenceTests : BaseTestClass
         using (bitmap)
         {
             result.ExitCode.ShouldBe(0, result.StandardError);
-            result.StandardError.ShouldContain(
-                "Variable reference 'Width = TotalHealth > 3' was not applied in SegmentBar (Container): "
-                + "TotalHealth > 3 is a bool and Total.Width is a float, which cannot be converted.");
+            // Once, although both the project's data pass and the built Bar apply the row.
+            string warning = "Variable reference 'Width = TotalHealth > 3' was not applied in SegmentBar (Container): "
+                + "TotalHealth > 3 is a bool and Total.Width is a float, which cannot be converted.";
+            result.StandardError.Split('\n').Count(line => line.Contains(warning)).ShouldBe(1, result.StandardError);
             bitmap.GetPixel(30, 8).ShouldBe(SKColors.White);
             bitmap.GetPixel(34, 8).ShouldBe(SKColors.Black);
         }
