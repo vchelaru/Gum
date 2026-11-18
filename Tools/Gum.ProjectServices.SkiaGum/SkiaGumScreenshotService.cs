@@ -56,6 +56,10 @@ public class SkiaGumScreenshotService : IScreenshotService
             GraphicalUiElement element = elementSave.ToGraphicalUiElement(
                 SystemManagers.Default, addToManagers: false);
             element.AddToManagers(SystemManagers.Default);
+            if (request.ApplyVariableOverrides(elementSave, element) is { } overrideError)
+            {
+                return ScreenshotResult.Failed(overrideError);
+            }
             element.UpdateLayout();
 
             SKImageInfo info = new SKImageInfo(width, height, SKColorType.Rgba8888, SKAlphaType.Premul);

@@ -1,4 +1,7 @@
 using Gum.DataTypes;
+using Gum.Wireframe;
+using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
@@ -38,6 +41,19 @@ public class ScreenshotRequest
     /// Background color to clear to before rendering. Defaults to fully transparent when null.
     /// </summary>
     public ScreenshotColor? BackgroundColor { get; init; }
+
+    /// <summary>
+    /// Variable values set on the rendered element after it loads and before it is laid out and drawn. Nothing is
+    /// saved to the project.
+    /// </summary>
+    public IReadOnlyList<ScreenshotVariableOverride> VariableOverrides { get; init; } = Array.Empty<ScreenshotVariableOverride>();
+
+    /// <summary>
+    /// Applies <see cref="VariableOverrides"/> to <paramref name="element"/>, built from <paramref name="elementSave"/>.
+    /// Returns why one could not apply, or null when all applied.
+    /// </summary>
+    public string? ApplyVariableOverrides(ElementSave elementSave, GraphicalUiElement element) =>
+        ScreenshotVariableOverride.ApplyAll(VariableOverrides, elementSave, element);
 
     /// <summary>
     /// The size to render at: <see cref="Width"/>/<see cref="Height"/> when set, otherwise the

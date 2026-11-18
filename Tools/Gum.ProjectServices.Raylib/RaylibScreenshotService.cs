@@ -64,6 +64,10 @@ public class RaylibScreenshotService : IScreenshotService
 
             var element = elementSave.ToGraphicalUiElement(SystemManagers.Default);
             element.AddToManagers(SystemManagers.Default);
+            if (request.ApplyVariableOverrides(elementSave, element) is { } overrideError)
+            {
+                return ScreenshotResult.Failed(overrideError);
+            }
             element.UpdateLayout();
 
             Color clearColor = request.BackgroundColor is { } background
