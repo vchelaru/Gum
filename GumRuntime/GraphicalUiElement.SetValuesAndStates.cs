@@ -439,6 +439,8 @@ public partial class GraphicalUiElement
     private static readonly System.Collections.Concurrent.ConcurrentDictionary<string, (string Instance, string Variable)> _dottedNameSplits =
         new System.Collections.Concurrent.ConcurrentDictionary<string, (string Instance, string Variable)>(StringComparer.Ordinal);
     private const int MaxCachedDottedNameSplits = 4096;
+    // Counted separately: ConcurrentDictionary.Count takes every lock, and past the cap each miss would pay it.
+    private static int _dottedNameSplitCount;
 
     private static (string Instance, string Variable) SplitAtFirstDot(string name, int indexOfDot)
     {
@@ -447,9 +449,10 @@ public partial class GraphicalUiElement
             return split;
         }
         split = (name.Substring(0, indexOfDot), name.Substring(indexOfDot + 1));
-        if (_dottedNameSplits.Count < MaxCachedDottedNameSplits)
+        if (System.Threading.Volatile.Read(ref _dottedNameSplitCount) < MaxCachedDottedNameSplits
+            && _dottedNameSplits.TryAdd(name, split))
         {
-            _dottedNameSplits.TryAdd(name, split);
+            System.Threading.Interlocked.Increment(ref _dottedNameSplitCount);
         }
         return split;
     }
@@ -1724,6 +1727,7 @@ public partial class GraphicalUiElement
     private void FillInApplyOrder(StateSave state, ApplyStateScratch scratch)
     {
         List<VariableSave> ordered = scratch.Ordered;
+        List<int> parentKeys = scratch.ParentKeys;
         List<VariableSave> variables = state.Variables;
 
         for (int i = 0; i < variables.Count; i++)
@@ -1731,14 +1735,16 @@ public partial class GraphicalUiElement
             VariableSave variable = variables[i];
             if (variable.SetsValue && variable.GetRootName() == "Parent")
             {
-                // Insertion sort keeps equal keys in list order, as OrderBy did.
+                // Insertion sort keeps equal keys in list order, as OrderBy did. Each key is an
+                // O(instances) scan, so it is computed once and kept beside its variable.
                 int key = GetOrderedIndexForParentVariable(variable);
                 int insertAt = ordered.Count;
-                while (insertAt > 0 && GetOrderedIndexForParentVariable(ordered[insertAt - 1]) > key)
+                while (insertAt > 0 && parentKeys[insertAt - 1] > key)
                 {
                     insertAt--;
                 }
                 ordered.Insert(insertAt, variable);
+                parentKeys.Insert(insertAt, key);
             }
         }
 
@@ -1777,6 +1783,7 @@ public partial class GraphicalUiElement
     {
         public readonly List<VariableSave> Ordered = new List<VariableSave>();
         public readonly List<VariableSave> Plain = new List<VariableSave>();
+        public readonly List<int> ParentKeys = new List<int>();
         public readonly HashSet<VariableSave> Seen = new HashSet<VariableSave>();
 
         [ThreadStatic]
@@ -1799,6 +1806,7 @@ public partial class GraphicalUiElement
             // Cleared so the pool does not keep a removed element's variables alive.
             scratch.Ordered.Clear();
             scratch.Plain.Clear();
+            scratch.ParentKeys.Clear();
             scratch.Seen.Clear();
             _depth--;
         }

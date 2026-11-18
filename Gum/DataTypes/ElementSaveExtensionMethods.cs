@@ -322,17 +322,31 @@ namespace Gum.DataTypes
         public static StateSaveCategory? GetStateSaveCategoryRecursively(this IStateContainer element, string? categoryName) =>
             GetStateSaveCategoryRecursively(element, categoryName, out IStateContainer? _);
 
-        // A loop instead of the Func overload: VariableSaveExtensionMethods.IsState calls this for every
-        // variable of a state applied at run time, and a lambda capturing categoryName allocated each call.
-        public static StateSaveCategory? GetStateSaveCategoryRecursively(this IStateContainer element, string? categoryName, out IStateContainer? categoryContainer)
+        public static StateSaveCategory? GetStateSaveCategoryRecursively(this IStateContainer element, string? categoryName, out IStateContainer? categoryContainer) =>
+            FindCategoryRecursively(element, categoryName, static (category, name) => category.Name == name, out categoryContainer);
+
+        /// <returns>
+        /// The first category of this element that meets the given <paramref name="condition"/>.
+        /// </returns>
+        public static StateSaveCategory? GetStateSaveCategoryRecursively(this IStateContainer stateContainer, Func<StateSaveCategory, bool> condition,
+            out IStateContainer? foundStateContainer) =>
+            FindCategoryRecursively(stateContainer, condition, static (category, match) => match(category), out foundStateContainer);
+
+        // Deeper than any real inheritance chain; a BaseType cycle (A : B, B : A) ends here instead of looping forever.
+        private const int MaxBaseTypeDepth = 256;
+
+        // The match takes its argument separately so the string overload, which IsState calls for every variable of a
+        // state applied at run time, passes a static lambda and allocates nothing (#8218).
+        private static StateSaveCategory? FindCategoryRecursively<TArg>(IStateContainer element, TArg arg,
+            Func<StateSaveCategory, TArg, bool> matches, out IStateContainer? categoryContainer)
         {
             IStateContainer? current = element;
-            while (current != null)
+            for (int depth = 0; current != null && depth < MaxBaseTypeDepth; depth++)
             {
                 IList<StateSaveCategory> categories = current.Categories;
                 for (int i = 0; i < categories.Count; i++)
                 {
-                    if (categories[i].Name == categoryName)
+                    if (matches(categories[i], arg))
                     {
                         categoryContainer = current;
                         return categories[i];
@@ -347,38 +361,5 @@ namespace Gum.DataTypes
             categoryContainer = null;
             return null;
         }
-
-        /// <returns>
-        /// The first category of this element that meets the given <paramref name="condition"/>.
-        /// </returns>
-        public static StateSaveCategory? GetStateSaveCategoryRecursively(this IStateContainer stateContainer, Func<StateSaveCategory, bool> condition, 
-            out IStateContainer? foundStateContainer)
-        {
-            StateSaveCategory? foundCategory = stateContainer.Categories.FirstOrDefault(condition);
-
-            if (foundCategory != null)
-            {
-                foundStateContainer = stateContainer;
-                return foundCategory;
-            }
-
-            if (stateContainer is ElementSave elementSave && !string.IsNullOrEmpty(elementSave.BaseType))
-            {
-                var baseElement = ObjectFinder.Self.GetBaseElement(elementSave);
-
-                if(baseElement == null)
-                {
-                    foundStateContainer = null;
-                    return null;
-                }
-                else
-                {
-                    return baseElement.GetStateSaveCategoryRecursively(condition, out foundStateContainer);
-                }
-            }
-
-            foundStateContainer = null;
-            return null;
-        }        
     }
 }
