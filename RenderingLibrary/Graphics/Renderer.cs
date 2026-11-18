@@ -2184,7 +2184,7 @@ public class Renderer : IRenderer
     // drawn opts out through IRenderable.SkipColorPremultiply (not available before .NET 8).
     internal static bool ShouldPremultiplyColor(object? renderable)
     {
-        if (UseCustomEffectRendering || NormalBlendState != BlendState.AlphaBlend)
+        if (UseCustomEffectRendering || !IsPremultipliedPipeline)
         {
             return false;
         }
@@ -2222,7 +2222,7 @@ public class Renderer : IRenderer
             return BlendState.AlphaBlend;
         }
 
-        if (blendState != null && NormalBlendState != BlendState.AlphaBlend && IsFieldEquivalent(blendState, BlendState.Additive))
+        if (blendState != null && !IsPremultipliedPipeline && IsFieldEquivalent(blendState, BlendState.Additive))
         {
             return BlendState.AdditivePremultiplied;
         }
@@ -2237,7 +2237,7 @@ public class Renderer : IRenderer
     // blit read the default as a deliberately custom blend and drew the premultiplied target with
     // straight alpha, multiplying its color by alpha a second time (a 50% target came out at 25%).
     public static bool IsUnconfiguredRenderTargetCompositeBlend(BlendState? blendState) =>
-        blendState == Renderer.NormalBlendState
+        (blendState != null && IsFieldEquivalent(blendState, Renderer.NormalBlendState))
         || blendState == _bakeToRenderTargetBlendState
         || blendState == BlendState.NonPremultiplied;
 
@@ -2277,7 +2277,7 @@ public class Renderer : IRenderer
             return renderBlendState;
         }
 
-        if (Renderer.NormalBlendState == BlendState.AlphaBlend)
+        if (IsPremultipliedPipeline)
         {
             // Premultiplied pipeline (FRB): ToBlendState hands out the *Premultiplied mask states, and
             // SubtractAlphaPremultiplied already is a destination-out. ReplaceAlphaPremultiplied and
@@ -2297,7 +2297,7 @@ public class Renderer : IRenderer
             return renderBlendState;
         }
 
-        if (renderBlendState == Renderer.NormalBlendState)
+        if (IsFieldEquivalent(renderBlendState, Renderer.NormalBlendState))
         {
             return _bakeToRenderTargetBlendState;
         }
@@ -2320,17 +2320,13 @@ public class Renderer : IRenderer
         return renderBlendState;
     }
 
-    // A Sprite's Blend setter round-trips MinAlpha/SubtractAlpha through XNA's BlendState and back
-    // (Gum -> XNA -> Gum), and only the four core presets (Opaque/AlphaBlend/Additive/
-    // NonPremultiplied) survive that round-trip as the same static reference — they arrive here as
-    // field-identical but distinct instances. So detect them structurally instead of by reference.
+    // Blend states arrive here as field-identical but distinct instances (an XNA round trip, a
+    // hand-built copy, a custom NormalBlendState), so they are compared by value, never by reference.
     private static bool IsFieldEquivalent(BlendState blendState, BlendState preset) =>
-        blendState.ColorSourceBlend == preset.ColorSourceBlend
-        && blendState.ColorBlendFunction == preset.ColorBlendFunction
-        && blendState.ColorDestinationBlend == preset.ColorDestinationBlend
-        && blendState.AlphaSourceBlend == preset.AlphaSourceBlend
-        && blendState.AlphaBlendFunction == preset.AlphaBlendFunction
-        && blendState.AlphaDestinationBlend == preset.AlphaDestinationBlend;
+        Gum.RenderingLibrary.BlendExtensions.IsSameBlend(blendState, preset);
+
+    // A premultiplied pipeline (FRB, UsePremultipliedAlpha) is one whose Normal blend is AlphaBlend.
+    private static bool IsPremultipliedPipeline => IsFieldEquivalent(NormalBlendState, BlendState.AlphaBlend);
 
     /// <summary>
     /// True for ReplaceAlpha and MinAlpha, on either pipeline: the blends that rewrite the destination's
@@ -2345,7 +2341,7 @@ public class Renderer : IRenderer
 
         // Same split as AdjustBlendStateForRenderTargetBake: the premultiplied pipeline hands out the
         // *Premultiplied states, and ReplaceAlphaPremultiplied is field-identical to Opaque.
-        return NormalBlendState == BlendState.AlphaBlend
+        return IsPremultipliedPipeline
             ? IsFieldEquivalent(blendState, BlendState.ReplaceAlphaPremultiplied)
                 || IsFieldEquivalent(blendState, BlendState.MinAlphaPremultiplied)
             : IsFieldEquivalent(blendState, BlendState.ReplaceAlpha)
