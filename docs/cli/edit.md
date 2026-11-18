@@ -179,7 +179,7 @@ Available in December 2026, or now if building Gum from source.
 { "op": "setVariableReferences", "element": "SegmentBar", "lines": [ "Height = Total.Width" ] }
 ```
 
-Replaces the variable references of `Total`, or of `SegmentBar` itself when `instance` is left out, like typing them in the **Variable References** box. Gum checks each line the way the tool does and writes the values the lines set, so `Total.Width` becomes `40` when `TotalHealth` is `10`. Gum also updates other states and elements whose references read a changed value. A line that does not parse, names a variable that does not exist, or has a right side of the wrong type fails the edit with the line and the reason. `state` and `category` work as in `setVariable`. An empty `lines` list removes the references and leaves the values they set.
+Replaces the variable references of `Total`, or of `SegmentBar` itself when `instance` is left out, like typing them in the **Variable References** box. Gum checks each line the way the tool does and writes the values the lines set, so `Total.Width` becomes `40` when `TotalHealth` is `10`. Gum also updates other states and elements whose references read a changed value. On a Forms control instance, the control's own values win over a line that sets its visual state, as in the tool: on a button whose `IsEnabled` is at its default, a line that sets `ButtonCategoryState` stores no value. A line that does not parse, names a variable that does not exist, or has a right side of the wrong type fails the edit with the line and the reason. `state` and `category` work as in `setVariable`. An empty `lines` list removes the references and leaves the values they set.
 
 ## Project Properties
 

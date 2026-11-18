@@ -36,6 +36,8 @@ description: GumCli — headless CLI for Gum projects. Triggers: gumcli commands
 
 **Exit codes:** 0 = success, 1 = errors found / generation blocked, 2 = load failure, bad args, or non-Windows (fonts).
 
+**Docs:** Every user-visible gumcli change (a new command, option, op or behavior) updates its page under `docs/cli/` in the same PR.
+
 ## Architecture
 
 ```
