@@ -2,6 +2,7 @@ using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using Gum.Managers;
 using Gum.ProjectServices;
+using Gum.Cli.Tests.EndToEnd;
 using Shouldly;
 using SkiaSharp;
 
@@ -9,6 +10,8 @@ namespace Gum.Cli.Tests;
 
 /// <summary>
 /// <c>gumcli screenshot --scale</c> (#8246) and <c>--set</c> (#8247), rendered through the headless skia backend.
+/// Renders run gumcli as its own process: an in-process render builds its visuals from whatever runtime
+/// types another backend's test registered earlier in this process.
 /// </summary>
 public class ScreenshotScaleAndOverrideTests : BaseTestClass
 {
@@ -18,7 +21,7 @@ public class ScreenshotScaleAndOverrideTests : BaseTestClass
         string projectPath = CreatePanelProject(withReference: false);
         string outputPath = Path.Combine(TempDirectory, "Panel.png");
 
-        CliTestHelper result = CliTestHelper.Run(
+        GumCliProcess result = GumCliProcess.Run(TempDirectory,
             "screenshot", projectPath, "Panel", "--output", outputPath, "--backend", "skia",
             "--background", "000000", "--width", "40", "--height", "16", "--scale", "3");
 
@@ -57,7 +60,7 @@ public class ScreenshotScaleAndOverrideTests : BaseTestClass
         string projectPath = CreatePanelProject(withReference: false);
         Dictionary<string, string> filesBefore = ReadProjectFiles();
 
-        CliTestHelper result = RenderWithSets(projectPath, element, out SKBitmap bitmap, set);
+        GumCliProcess result = RenderWithSets(projectPath, element, out SKBitmap bitmap, set);
 
         using (bitmap)
         {
@@ -73,7 +76,7 @@ public class ScreenshotScaleAndOverrideTests : BaseTestClass
     {
         string projectPath = CreatePanelProject(withReference: true);
 
-        CliTestHelper result = RenderWithSets(projectPath, "Panel", out SKBitmap bitmap, "BarWidth=60");
+        GumCliProcess result = RenderWithSets(projectPath, "Panel", out SKBitmap bitmap, "BarWidth=60");
 
         using (bitmap)
         {
@@ -88,10 +91,10 @@ public class ScreenshotScaleAndOverrideTests : BaseTestClass
     public void Screenshot_WithSetNumberOnStringVariable_AppliesItAsText()
     {
         string projectPath = CreatePanelProject(withReference: true, label: "");
-        CliTestHelper overridden = RenderWithSets(projectPath, "Panel", out SKBitmap overriddenBitmap, "Label=123");
-        CliTestHelper empty = RenderWithSets(projectPath, "Panel", out SKBitmap emptyBitmap);
+        GumCliProcess overridden = RenderWithSets(projectPath, "Panel", out SKBitmap overriddenBitmap, "Label=123");
+        GumCliProcess empty = RenderWithSets(projectPath, "Panel", out SKBitmap emptyBitmap);
         CreatePanelProject(withReference: true, label: "123");
-        CliTestHelper stored = RenderWithSets(projectPath, "Panel", out SKBitmap storedBitmap);
+        GumCliProcess stored = RenderWithSets(projectPath, "Panel", out SKBitmap storedBitmap);
 
         using (overriddenBitmap)
         using (emptyBitmap)
@@ -117,7 +120,7 @@ public class ScreenshotScaleAndOverrideTests : BaseTestClass
     {
         string projectPath = CreatePanelProject(withReference: false);
 
-        CliTestHelper result = RenderWithSets(projectPath, "Panel", out SKBitmap? bitmap, set);
+        GumCliProcess result = RenderWithSets(projectPath, "Panel", out SKBitmap? bitmap, set);
 
         bitmap?.Dispose();
         result.ExitCode.ShouldBe(1);
@@ -136,7 +139,7 @@ public class ScreenshotScaleAndOverrideTests : BaseTestClass
         result.StandardError.ShouldContain("Invalid --set value 'Width'");
     }
 
-    private CliTestHelper RenderWithSets(string projectPath, string element, out SKBitmap bitmap, params string[] sets)
+    private GumCliProcess RenderWithSets(string projectPath, string element, out SKBitmap bitmap, params string[] sets)
     {
         string outputPath = Path.Combine(TempDirectory, "Render.png");
         List<string> args = new List<string>
@@ -150,7 +153,7 @@ public class ScreenshotScaleAndOverrideTests : BaseTestClass
             args.Add(set);
         }
 
-        CliTestHelper result = CliTestHelper.Run(args.ToArray());
+        GumCliProcess result = GumCliProcess.Run(TempDirectory, args.ToArray());
         bitmap = File.Exists(outputPath) ? SKBitmap.Decode(outputPath) : null!;
         return result;
     }
