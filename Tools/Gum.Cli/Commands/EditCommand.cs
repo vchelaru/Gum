@@ -6,7 +6,6 @@ using System.IO;
 using System.Linq;
 using System.Text.Json;
 using Gum.DataTypes;
-using Gum.Expressions;
 using Gum.Logic;
 using Gum.Managers;
 using Gum.ProjectServices;
@@ -103,8 +102,6 @@ public static class EditCommand
         }
         GumProjectSave project = loadResult.Project!;
 
-        // GUM0002 evaluates reference right-hand sides (including cross-element ones) with the Roslyn evaluator.
-        GumExpressionService.Initialize();
         HeadlessErrorChecker checker = CheckCommand.CreateChecker();
         IReadOnlyList<ErrorResult> errorsBefore = checker.GetAllErrors(project);
 

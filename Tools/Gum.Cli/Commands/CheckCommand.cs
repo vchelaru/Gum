@@ -7,7 +7,6 @@ using System.Linq;
 using System.Text.Json;
 using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
-using Gum.Expressions;
 using Gum.ProjectServices;
 using Gum.ProjectServices.CodeGeneration;
 
@@ -74,9 +73,6 @@ public static class CheckCommand
             Console.Error.WriteLine(loadResult.ErrorMessage);
             return 2;
         }
-
-        // GUM0002 evaluates reference right-hand sides (including cross-element ones) with the Roslyn evaluator.
-        GumExpressionService.Initialize();
 
         IReadOnlyList<ErrorResult> checkerErrors = CreateChecker().GetAllErrors(loadResult.Project!);
 

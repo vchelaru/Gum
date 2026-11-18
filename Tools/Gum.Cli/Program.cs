@@ -1,6 +1,7 @@
 using System.CommandLine;
 using System.Reflection;
 using Gum.Cli.Commands;
+using Gum.Expressions;
 
 namespace Gum.Cli;
 
@@ -23,6 +24,10 @@ public class Program
         // (e.g. `gumcli check foo.gumx --json | jq .`). This matches the convention
         // used by gh/aws/kubectl: informational chrome on stderr, command output on stdout.
         System.Console.Error.WriteLine($"gumcli v{version}");
+
+        // Every command evaluates variable references the way the tool does: check's GUM0002, edit, codegen,
+        // fonts and pack read them, and screenshot, svg and diff-screenshots apply them while rendering.
+        GumExpressionService.Initialize();
 
         var rootCommand = new RootCommand($"gumcli v{version} - create projects, check for errors, and generate code.");
 
