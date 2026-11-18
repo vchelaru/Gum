@@ -15,17 +15,17 @@ public class VariableRemovalLogicTests : BaseTestClass
     {
         ComponentSave hud = EditingTestProject.AddComponent(Project, "Hud");
         VariableSave score = new VariableSave { Name = "Score", Type = "int", Value = 0, IsCustomVariable = true };
-        hud.DefaultState.Variables.Add(score);
+        hud.GetDefaultStateOrThrow().Variables.Add(score);
         ScreenSave game = EditingTestProject.AddScreen(Project, "Game");
         EditingTestProject.AddInstance(game, "HudInstance", "Hud");
         VariableSave instanceValue = new VariableSave { Name = "HudInstance.Score", Type = "int", Value = 5 };
-        game.DefaultState.Variables.Add(instanceValue);
+        game.GetDefaultStateOrThrow().Variables.Add(instanceValue);
         VariableRemovalLogic logic = CreateLogic();
 
         logic.GetWhyCannotRemoveCustomVariable(score, hud, out List<VariableChange> cascading).ShouldBeNull();
         cascading.ShouldHaveSingleItem().Variable.ShouldBe(instanceValue);
 
-        hud.DefaultState.VariableLists.Add(new VariableListSave<string> { Name = "VariableReferences", Type = "string", Value = new List<string> { "Width = Score" } });
+        hud.GetDefaultStateOrThrow().VariableLists.Add(new VariableListSave<string> { Name = "VariableReferences", Type = "string", Value = new List<string> { "Width = Score" } });
 
         string? whyNot = logic.GetWhyCannotRemoveCustomVariable(score, hud, out cascading);
         whyNot.ShouldNotBeNull();
@@ -38,10 +38,10 @@ public class VariableRemovalLogicTests : BaseTestClass
     {
         ComponentSave hud = EditingTestProject.AddComponent(Project, "Hud");
         VariableSave score = new VariableSave { Name = "Score", Type = "int", Value = 0, IsCustomVariable = true };
-        hud.DefaultState.Variables.Add(score);
+        hud.GetDefaultStateOrThrow().Variables.Add(score);
 
         CreateLogic().RemoveCustomVariable(score, hud);
 
-        hud.DefaultState.Variables.ShouldBeEmpty();
+        hud.GetDefaultStateOrThrow().Variables.ShouldBeEmpty();
     }
 }

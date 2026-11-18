@@ -15,17 +15,17 @@ public class VariableOverrideRemoverTests : BaseTestClass
         EditingTestProject.AddInstance(game, "HudInstance", "Hud");
         VariableSave kept = new VariableSave { Name = "Missing.Score", Type = "int", Value = 1 };
         VariableSave removedValue = new VariableSave { Name = "HudInstance.Score", Type = "int", Value = 5 };
-        game.DefaultState.Variables.Add(kept);
-        game.DefaultState.Variables.Add(removedValue);
+        game.GetDefaultStateOrThrow().Variables.Add(kept);
+        game.GetDefaultStateOrThrow().Variables.Add(removedValue);
         List<VariableChange> overrides = new List<VariableChange>
         {
-            new VariableChange { Container = game, State = game.DefaultState, Variable = kept },
-            new VariableChange { Container = game, State = game.DefaultState, Variable = removedValue },
+            new VariableChange { Container = game, State = game.GetDefaultStateOrThrow(), Variable = kept },
+            new VariableChange { Container = game, State = game.GetDefaultStateOrThrow(), Variable = removedValue },
         };
 
         IReadOnlyList<RemovedVariable> removed = new VariableOverrideRemover().Remove(overrides);
 
-        removed.ShouldHaveSingleItem().ShouldBe(new RemovedVariable(game, game.DefaultState, removedValue));
-        game.DefaultState.Variables.ShouldBe(new[] { kept });
+        removed.ShouldHaveSingleItem().ShouldBe(new RemovedVariable(game, game.GetDefaultStateOrThrow(), removedValue));
+        game.GetDefaultStateOrThrow().Variables.ShouldBe(new[] { kept });
     }
 }

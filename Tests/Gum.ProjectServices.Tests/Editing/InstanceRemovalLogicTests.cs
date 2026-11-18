@@ -17,25 +17,25 @@ public class InstanceRemovalLogicTests : BaseTestClass
         InstanceSave counter = EditingTestProject.AddInstance(hud, "Counter1", "Text");
         EditingTestProject.AddInstance(hud, "Label", "Text");
         StateSaveCategory size = EditingTestProject.AddCategory(hud, "Size", "Big");
-        hud.DefaultState.Variables.Add(new VariableSave { Name = "Counter1.Text", Type = "string", Value = "0", ExposedAsName = "Counter1Text" });
-        hud.DefaultState.Variables.Add(new VariableSave { Name = "Label.Parent", Type = "string", Value = "Counter1" });
+        hud.GetDefaultStateOrThrow().Variables.Add(new VariableSave { Name = "Counter1.Text", Type = "string", Value = "0", ExposedAsName = "Counter1Text" });
+        hud.GetDefaultStateOrThrow().Variables.Add(new VariableSave { Name = "Label.Parent", Type = "string", Value = "Counter1" });
         size.States[0].Variables.Add(new VariableSave { Name = "Counter1.X", Type = "float", Value = 5f });
-        hud.DefaultState.VariableLists.Add(new VariableListSave<string> { Name = "Counter1.VariableReferences", Type = "string" });
+        hud.GetDefaultStateOrThrow().VariableLists.Add(new VariableListSave<string> { Name = "Counter1.VariableReferences", Type = "string" });
         hud.Events.Add(new EventSave { Name = "Counter1.Click" });
         ScreenSave game = EditingTestProject.AddScreen(Project, "Game");
         EditingTestProject.AddInstance(game, "HudInstance", "Hud");
         VariableSave gameValue = new VariableSave { Name = "HudInstance.Counter1Text", Type = "string", Value = "5" };
-        game.DefaultState.Variables.Add(gameValue);
+        game.GetDefaultStateOrThrow().Variables.Add(gameValue);
 
         IReadOnlyList<RemovedVariable> removed = CreateLogic().RemoveInstance(counter, hud);
 
         hud.Instances.Select(item => item.Name).ShouldBe(new[] { "Label" });
-        hud.DefaultState.Variables.ShouldBeEmpty();
+        hud.GetDefaultStateOrThrow().Variables.ShouldBeEmpty();
         size.States[0].Variables.ShouldBeEmpty();
-        hud.DefaultState.VariableLists.ShouldBeEmpty();
+        hud.GetDefaultStateOrThrow().VariableLists.ShouldBeEmpty();
         hud.Events.ShouldBeEmpty();
-        game.DefaultState.Variables.ShouldBeEmpty();
-        removed.ShouldHaveSingleItem().ShouldBe(new RemovedVariable(game, game.DefaultState, gameValue));
+        game.GetDefaultStateOrThrow().Variables.ShouldBeEmpty();
+        removed.ShouldHaveSingleItem().ShouldBe(new RemovedVariable(game, game.GetDefaultStateOrThrow(), gameValue));
     }
 
     [Fact]

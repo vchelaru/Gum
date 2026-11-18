@@ -44,21 +44,21 @@ public class DeleteLogicInstanceTests : BaseTestClass
         hud.States.Add(new StateSave { Name = "Default", ParentContainer = hud });
         InstanceSave counter = new InstanceSave { Name = "Counter1", BaseType = "Text", ParentContainer = hud };
         hud.Instances.Add(counter);
-        hud.DefaultState.Variables.Add(new VariableSave { Name = "Counter1.Text", Type = "string", ExposedAsName = "Counter1Text" });
+        hud.GetDefaultStateOrThrow().Variables.Add(new VariableSave { Name = "Counter1.Text", Type = "string", ExposedAsName = "Counter1Text" });
         _project.Components.Add(hud);
         ScreenSave game = new ScreenSave { Name = "Game" };
         game.States.Add(new StateSave { Name = "Default", ParentContainer = game });
         InstanceSave hudInstance = new InstanceSave { Name = "HudInstance", BaseType = "Hud", ParentContainer = game };
         game.Instances.Add(hudInstance);
         VariableSave gameValue = new VariableSave { Name = "HudInstance.Counter1Text", Type = "string", Value = "5" };
-        game.DefaultState.Variables.Add(gameValue);
+        game.GetDefaultStateOrThrow().Variables.Add(gameValue);
         _project.Screens.Add(game);
 
         _deleteLogic.RemoveInstance(counter, hud);
 
         hud.Instances.ShouldBeEmpty();
-        hud.DefaultState.Variables.ShouldBeEmpty();
-        game.DefaultState.Variables.ShouldBeEmpty();
+        hud.GetDefaultStateOrThrow().Variables.ShouldBeEmpty();
+        game.GetDefaultStateOrThrow().Variables.ShouldBeEmpty();
         _mocker.GetMock<IFileCommands>().Verify(x => x.TryAutoSaveElement(game), Times.Once);
         _mocker.GetMock<IPluginManager>().Verify(x => x.VariableSet(game, hudInstance, "Counter1Text", null, It.IsAny<bool>()), Times.Once);
         _mocker.GetMock<IUndoManager>().Verify(x => x.RecordCrossElementVariableChanges(

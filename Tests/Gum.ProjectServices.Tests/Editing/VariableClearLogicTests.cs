@@ -17,20 +17,20 @@ public class VariableClearLogicTests : BaseTestClass
         VariableSave exposed = new VariableSave { Name = "Label.Text", Type = "string", Value = "Hi", ExposedAsName = "LabelText" };
         VariableSave custom = new VariableSave { Name = "Score", Type = "int", Value = 7, IsCustomVariable = true };
         VariableSave height = new VariableSave { Name = "Height", Type = "float", Value = 50f };
-        hud.DefaultState.Variables.AddRange(new[] { width, exposed, custom, height });
+        hud.GetDefaultStateOrThrow().Variables.AddRange(new[] { width, exposed, custom, height });
         VariableSave bigHeight = new VariableSave { Name = "Height", Type = "float", Value = 80f };
         size.States[0].Variables.Add(bigHeight);
         VariableClearLogic logic = new VariableClearLogic();
 
-        logic.ClearVariable(hud, hud.DefaultState, width, isPartOfCategory: false).Message.ShouldBeNull();
-        logic.ClearVariable(hud, hud.DefaultState, exposed, isPartOfCategory: false);
-        logic.ClearVariable(hud, hud.DefaultState, custom, isPartOfCategory: false);
+        logic.ClearVariable(hud, hud.GetDefaultStateOrThrow(), width, isPartOfCategory: false).Message.ShouldBeNull();
+        logic.ClearVariable(hud, hud.GetDefaultStateOrThrow(), exposed, isPartOfCategory: false);
+        logic.ClearVariable(hud, hud.GetDefaultStateOrThrow(), custom, isPartOfCategory: false);
         VariableClearResult categoryResult = logic.ClearVariable(hud, size.States[0], bigHeight, isPartOfCategory: true);
 
-        hud.DefaultState.Variables.ShouldNotContain(width);
+        hud.GetDefaultStateOrThrow().Variables.ShouldNotContain(width);
         exposed.SetsValue.ShouldBeFalse();
         exposed.Value.ShouldBeNull();
-        hud.DefaultState.Variables.ShouldContain(exposed);
+        hud.GetDefaultStateOrThrow().Variables.ShouldContain(exposed);
         custom.Value.ShouldBe(0);
         bigHeight.Value.ShouldBe(50f);
         size.States[0].Variables.ShouldContain(bigHeight);

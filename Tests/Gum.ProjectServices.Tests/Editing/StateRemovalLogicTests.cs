@@ -22,14 +22,14 @@ public class StateRemovalLogicTests : BaseTestClass
         EditingTestProject.AddInstance(game, "CancelButton", "Button");
         VariableSave setsHidden = new VariableSave { Name = "OkButton.VisibilityState", Type = "Visibility", Value = "Hidden" };
         VariableSave setsShown = new VariableSave { Name = "CancelButton.VisibilityState", Type = "Visibility", Value = "Shown" };
-        game.DefaultState.Variables.Add(setsHidden);
-        game.DefaultState.Variables.Add(setsShown);
+        game.GetDefaultStateOrThrow().Variables.Add(setsHidden);
+        game.GetDefaultStateOrThrow().Variables.Add(setsShown);
 
         IReadOnlyList<RemovedVariable> removed = CreateLogic().RemoveState(hidden, button);
 
         visibility.States.Select(item => item.Name).ShouldBe(new[] { "Shown" });
-        game.DefaultState.Variables.ShouldBe(new[] { setsShown });
-        removed.ShouldHaveSingleItem().ShouldBe(new RemovedVariable(game, game.DefaultState, setsHidden));
+        game.GetDefaultStateOrThrow().Variables.ShouldBe(new[] { setsShown });
+        removed.ShouldHaveSingleItem().ShouldBe(new RemovedVariable(game, game.GetDefaultStateOrThrow(), setsHidden));
     }
 
     [Fact]
@@ -38,17 +38,17 @@ public class StateRemovalLogicTests : BaseTestClass
         ComponentSave button = EditingTestProject.AddComponent(Project, "Button");
         StateSaveCategory visibility = EditingTestProject.AddCategory(button, "Visibility", "Shown", "Hidden");
         VariableSave ownSelector = new VariableSave { Name = "VisibilityState", Type = "Visibility", Value = "Shown" };
-        button.DefaultState.Variables.Add(ownSelector);
+        button.GetDefaultStateOrThrow().Variables.Add(ownSelector);
         ScreenSave game = EditingTestProject.AddScreen(Project, "Game");
         EditingTestProject.AddInstance(game, "OkButton", "Button");
         VariableSave instanceValue = new VariableSave { Name = "OkButton.VisibilityState", Type = "Visibility", Value = "Hidden" };
-        game.DefaultState.Variables.Add(instanceValue);
+        game.GetDefaultStateOrThrow().Variables.Add(instanceValue);
 
         IReadOnlyList<RemovedVariable> removed = CreateLogic().RemoveCategory(visibility, button);
 
         button.Categories.ShouldBeEmpty();
-        button.DefaultState.Variables.ShouldBeEmpty();
-        game.DefaultState.Variables.ShouldBeEmpty();
+        button.GetDefaultStateOrThrow().Variables.ShouldBeEmpty();
+        game.GetDefaultStateOrThrow().Variables.ShouldBeEmpty();
         removed.Select(item => item.Variable).ShouldBe(new[] { instanceValue, ownSelector }, ignoreOrder: true);
     }
 
@@ -64,7 +64,7 @@ public class StateRemovalLogicTests : BaseTestClass
         StateSaveCategory looks = EditingTestProject.AddCategory(button, "Looks", "Plain");
         StateRemovalLogic logic = CreateLogic();
 
-        logic.GetWhyCannotRemoveState(button.DefaultState, button)
+        logic.GetWhyCannotRemoveState(button.GetDefaultStateOrThrow(), button)
             .ShouldBe("This state cannot be removed because it is the default state.");
         logic.GetWhyCannotRemoveState(buttonCategory.States[0], button)
             .ShouldBe("The state Pushed cannot be removed because it is needed by the following behavior(s):\nButtonBehavior");

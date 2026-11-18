@@ -123,20 +123,20 @@ public class EditCommandTests : BaseTestClass
         ObjectFinder.Self.GumProjectSave = project;
         ComponentSave hud = project.Components.Single(item => item.Name == "Hud");
         hud.Instances.Select(item => item.Name).ShouldBe(new[] { "Stack", "Child" });
-        hud.DefaultState.GetValue("Child.Parent").ShouldBe("Stack");
+        hud.GetDefaultStateOrThrow().GetValue("Child.Parent").ShouldBe("Stack");
         hud.Categories.Select(item => item.Name).ShouldBe(new[] { "Size" });
         hud.Categories[0].States.Select(item => item.Name).ShouldBe(new[] { "Normal" });
-        hud.DefaultState.GetVariableSave("MoodState").ShouldBeNull();
-        hud.DefaultState.GetVariableSave("Score").ShouldBeNull();
-        hud.DefaultState.GetVariableSave("Width").ShouldBeNull();
-        VariableSave childText = hud.DefaultState.GetVariableSave("Child.Text")!;
+        hud.GetDefaultStateOrThrow().GetVariableSave("MoodState").ShouldBeNull();
+        hud.GetDefaultStateOrThrow().GetVariableSave("Score").ShouldBeNull();
+        hud.GetDefaultStateOrThrow().GetVariableSave("Width").ShouldBeNull();
+        VariableSave childText = hud.GetDefaultStateOrThrow().GetVariableSave("Child.Text")!;
         childText.ExposedAsName.ShouldBe("ChildText");
         childText.SetsValue.ShouldBeFalse();
         ScreenSave game = project.Screens.Single(item => item.Name == "Game");
-        game.DefaultState.GetVariableSave("HudInstance.SizeState").ShouldBeNull();
-        game.DefaultState.GetVariableSave("HudInstance.MoodState").ShouldBeNull();
-        game.DefaultState.GetVariableSave("HudInstance.Score").ShouldBeNull();
-        game.DefaultState.GetValue("HudInstance.ChildText").ShouldBe("Yo");
+        game.GetDefaultStateOrThrow().GetVariableSave("HudInstance.SizeState").ShouldBeNull();
+        game.GetDefaultStateOrThrow().GetVariableSave("HudInstance.MoodState").ShouldBeNull();
+        game.GetDefaultStateOrThrow().GetVariableSave("HudInstance.Score").ShouldBeNull();
+        game.GetDefaultStateOrThrow().GetValue("HudInstance.ChildText").ShouldBe("Yo");
     }
 
     [Fact]
