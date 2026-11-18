@@ -4,10 +4,7 @@ using Gum.DataTypes.Variables;
 
 namespace Gum.Logic;
 
-// These rename-change data types were relocated out of the tool assembly's Gum/Logic/RenameLogic.cs
-// into the headless Gum.Presentation assembly (ADR-0005 Phase 3) so the undo subsystem's narrow
-// IUndoRenameLogic port can reference them without depending on the tool. They are framework-neutral
-// (GumDataTypes/ToolsUtilities only). The namespace is intentionally kept as Gum.Logic so the many
+// Rename and delete impact types, shared by the tool and gumcli edit. The namespace stays Gum.Logic so
 // tool-side consumers compile unchanged.
 
 #region Enums

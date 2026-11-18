@@ -12,7 +12,7 @@ using ToolsUtilities;
 
 namespace Gum.Plugins;
 
-public interface IPluginManager
+public interface IPluginManager : Gum.ProjectServices.Editing.ITopLevelNameSource
 {
     // todo - interface this...
     void BeforeSavingElementSave(ElementSave savedElement);
@@ -163,7 +163,6 @@ public interface IPluginManager
     /// omit it to run every plugin's error check.
     /// </summary>
     void FillWithErrors(List<ErrorViewModel> errors, object? plugin = null);
-    void FillTopLevelNames(ElementSave element, List<TopLevelName> names);
     bool GetIfShouldSuppressRemoveEditorHighlight();
     void FocusSearch();
     void FocusVariableFilter();

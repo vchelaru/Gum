@@ -78,30 +78,42 @@ public static class CheckCommand
         // GUM0002 evaluates reference right-hand sides (including cross-element ones) with the Roslyn evaluator.
         GumExpressionService.Initialize();
 
-        ITypeResolver typeResolver = new DefaultTypeResolver();
-        HeadlessErrorChecker checker = new HeadlessErrorChecker(
-            typeResolver,
-            new IAdditionalErrorSource[] { new AnimationKeyframeErrorSource(new FileElementAnimationsProvider()) },
-            new HeadlessOrphanCodeFileProvider(Console.Error))
-        {
-            ReportsLeftoverInstanceVariables = true
-        };
-        IReadOnlyList<ErrorResult> checkerErrors = checker.GetAllErrors(loadResult.Project!);
+        IReadOnlyList<ErrorResult> checkerErrors = CreateChecker().GetAllErrors(loadResult.Project!);
 
         var allErrors = new List<ErrorResult>();
         allErrors.AddRange(loadResult.LoadErrors);
         allErrors.AddRange(checkerErrors);
 
+        WriteReport(allErrors, json);
+
+        return allErrors.Any(e => e.Severity == ErrorSeverity.Error) ? 1 : 0;
+    }
+
+    /// <summary>
+    /// The checker <c>check</c> runs, which <c>edit</c> also runs before and after its changes.
+    /// </summary>
+    internal static HeadlessErrorChecker CreateChecker() =>
+        new HeadlessErrorChecker(
+            new DefaultTypeResolver(),
+            new IAdditionalErrorSource[] { new AnimationKeyframeErrorSource(new FileElementAnimationsProvider()) },
+            new HeadlessOrphanCodeFileProvider(Console.Error))
+        {
+            ReportsLeftoverInstanceVariables = true
+        };
+
+    /// <summary>
+    /// Writes <paramref name="errors"/> to stdout the way <c>check</c> reports them.
+    /// </summary>
+    internal static void WriteReport(IReadOnlyList<ErrorResult> errors, bool json)
+    {
         if (json)
         {
-            WriteJson(allErrors);
+            WriteJson(errors);
         }
         else
         {
-            WriteHumanReadable(allErrors);
+            WriteHumanReadable(errors);
         }
-
-        return allErrors.Any(e => e.Severity == ErrorSeverity.Error) ? 1 : 0;
     }
 
     private static readonly HashSet<string> ElementFileExtensions = new HashSet<string>

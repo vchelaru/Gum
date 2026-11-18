@@ -28,6 +28,7 @@ public class ProjectCommandsTests : BaseTestClass
         _gumProject = new GumProjectSave();
         _projectManager.Setup(m => m.GumProjectSave).Returns(_gumProject);
 
+        _mocker.Use<Gum.ProjectServices.Editing.IElementCreationLogic>(new Gum.ProjectServices.Editing.ElementCreationLogic());
         _sut = _mocker.CreateInstance<ProjectCommands>();
     }
 

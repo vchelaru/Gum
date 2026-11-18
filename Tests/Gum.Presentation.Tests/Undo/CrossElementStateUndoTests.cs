@@ -77,6 +77,7 @@ public class CrossElementStateUndoTests : BaseTestClass
         _mocker.Use(new Lazy<IUndoManager>(() => _undoManager));
 
         _mocker.Use<IReferenceFinder>(_mocker.CreateInstance<ReferenceFinder>());
+        _mocker.Use<Gum.ProjectServices.Editing.IStateRemovalLogic>(_mocker.CreateInstance<Gum.ProjectServices.Editing.StateRemovalLogic>());
         _mocker.Use<IDeleteLogic>(_mocker.CreateInstance<DeleteLogic>());
         _mocker.Use<IRenameLogic>(_mocker.CreateInstance<RenameLogic>());
 

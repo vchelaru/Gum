@@ -109,7 +109,9 @@ public class ResizeInputHandlerNonPixelUnitTests : BaseTestClass
             wireframeObjectManager.Object,
             Mock.Of<IPluginManager>(),
             Mock.Of<IProjectManager>(),
-            Mock.Of<IProjectState>());
+            Mock.Of<IProjectState>(),
+            new Gum.ProjectServices.Editing.InstanceCreationLogic(),
+            new Gum.ProjectServices.Editing.StateCreationLogic());
 
         Mock<IResizeHandlesVisual> handlesVisual = new();
         handlesVisual.SetupGet(x => x.Visible).Returns(true);

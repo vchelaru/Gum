@@ -1,4 +1,4 @@
-namespace Gum.PropertyGridHelpers;
+namespace Gum.ProjectServices.Editing;
 
 /// <summary>
 /// The value a numeric or bool variable holds when nothing else gives it one, such as a custom variable

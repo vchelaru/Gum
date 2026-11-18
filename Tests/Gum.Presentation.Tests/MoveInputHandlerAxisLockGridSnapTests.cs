@@ -139,7 +139,9 @@ public class MoveInputHandlerAxisLockGridSnapTests : BaseTestClass
             wireframeObjectManager.Object,
             Mock.Of<IPluginManager>(),
             Mock.Of<IProjectManager>(),
-            Mock.Of<IProjectState>());
+            Mock.Of<IProjectState>(),
+            new Gum.ProjectServices.Editing.InstanceCreationLogic(),
+            new Gum.ProjectServices.Editing.StateCreationLogic());
 
         KeyCombination shift = KeyCombination.Shift();
         Mock<IHotkeyManager> hotkeyManager = new();

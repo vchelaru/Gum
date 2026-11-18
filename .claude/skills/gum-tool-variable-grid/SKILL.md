@@ -63,7 +63,7 @@ Numeric drag-scrub reports every intermediate tick as `VariablePropertyCommitTyp
 
 ## Deleting a Custom Variable
 
-`DeleteVariableService` (`Tools/Gum.Presentation/Plugins/InternalPlugins/VariableGrid/DeleteVariableService.cs`) handles the right-click delete. It still blocks when the variable is referenced through a `VariableReferences` binding, or when an inheriting element exposes a *different* inner variable under the same name. An instance-level value elsewhere in the project, or an inheriting element's own value for the variable, is instead cascaded through `InstanceOverrideRemover`: removed there too, and recorded via `IUndoManager.RecordCrossElementVariableChanges` so undo restores it there as well. See ADR 0016 and the `gum-tool-undo` skill's cross-element exception.
+`DeleteVariableService` (`Tools/Gum.Presentation/Plugins/InternalPlugins/VariableGrid/DeleteVariableService.cs`) handles the right-click delete; the rules and the data change are in `VariableRemovalLogic` (`Tools/Gum.ProjectServices/Editing/`), shared with `gumcli edit`. It blocks when the variable is referenced through a `VariableReferences` binding, or when an inheriting element exposes a *different* inner variable under the same name. An instance-level value elsewhere in the project, or an inheriting element's own value for the variable, is instead cascaded through `InstanceOverrideRemover`: removed there too, and recorded via `IUndoManager.RecordCrossElementVariableChanges` so undo restores it there as well. See ADR 0016 and the `gum-tool-undo` skill's cross-element exception.
 
 ---
 

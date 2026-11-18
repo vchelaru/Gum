@@ -1,11 +1,12 @@
 using Gum.DataTypes;
 
-namespace Gum.Logic;
+namespace Gum.ProjectServices.Editing;
 
 /// <summary>
-/// Answers whether an element's type defines a variable, the "does the type have it" half of
-/// <see cref="IVariableSaveLogic.GetIfVariableIsActive"/> without the selection and plugin exclusions that only
-/// decide what the Variables tab shows. A base type change prunes by it (<see cref="IBaseTypeVariablePruner"/>).
+/// Answers whether an element's type defines a variable, the "does the type have it" half of the tool's
+/// <c>IVariableSaveLogic.GetIfVariableIsActive</c> without the selection and plugin exclusions that only
+/// decide what the Variables tab shows. A base type change prunes by it, and <c>gumcli edit</c> sets only
+/// variables it defines.
 /// </summary>
 public interface IVariableDefinedByTypeLogic
 {
