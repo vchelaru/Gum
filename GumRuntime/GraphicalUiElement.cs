@@ -128,6 +128,8 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     public static float GlobalFontScale = 1;
 
     private DirtyState? currentDirtyState;
+    // The instance MakeDirty reuses for currentDirtyState; never shared with another element.
+    private DirtyState? _spareDirtyState;
     private ParentUpdateType EffectiveDirtyStateParentUpdateType
     {
         get
@@ -643,6 +645,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
             ChildrenUpdateDepth = currentDirtyState.ChildrenUpdateDepth,
             XOrY = currentDirtyState.XOrY
         };
+        newClone._spareDirtyState = newClone.currentDirtyState;
         newClone.fullyUpdatedChildren = new HashSet<GraphicalUiElement>();
         newClone.statesInStack = new HashSet<StateSave>();
         newClone.StackedRowOrColumnDimensions = null;

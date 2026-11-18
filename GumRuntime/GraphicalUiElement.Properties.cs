@@ -235,8 +235,11 @@ public partial class GraphicalUiElement
 
                 if(this.Parent != null)
                 {
-                    foreach(var child in this.Parent.Children)
+                    // Indexed: foreach over the ObservableCollection boxes its enumerator (#8218).
+                    var siblings = this.Parent.Children;
+                    for (int i = 0; i < siblings.Count; i++)
                     {
+                        var child = siblings[i];
                         if(child.WidthUnits == DimensionUnitType.Ratio || child.HeightUnits == DimensionUnitType.Ratio)
                         {
                             return true;

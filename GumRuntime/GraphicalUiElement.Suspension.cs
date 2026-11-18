@@ -48,8 +48,11 @@ public partial class GraphicalUiElement
         RecordGlobalDeferral();
         if (currentDirtyState == null)
         {
-            currentDirtyState = new DirtyState();
-
+            // A resolved record is dropped by nulling currentDirtyState, so the instance is kept and
+            // reset here instead of allocating one per hide or suspend (#8218).
+            currentDirtyState = _spareDirtyState ??= new DirtyState();
+            currentDirtyState.ParentUpdateType = ParentUpdateType.None;
+            currentDirtyState.ChildrenUpdateDepth = 0;
             currentDirtyState.XOrY = xOrY;
         }
 
