@@ -79,6 +79,22 @@ Changing the `Alpha` on a Sprite with `Replace` `Blend` does not affect how it i
 
 <figure><img src="../../../.gitbook/assets/image (9).png" alt=""><figcaption><p>Normal and Replace Blend on the same source file.</p></figcaption></figure>
 
+## Subtract Blend
+
+`Subtract` `Blend` subtracts the color of an instance from whatever is below. Each channel drops by the same amount and stops at black, so dark colors clip to black first. It leaves alpha unchanged. `Subtract` can darken a whole scene with one rectangle, such as a retro HUD dimming the playfield behind a menu.
+
+The following image shows a gray (132, 132, 132) Rectangle with `Subtract` `Blend` covering the lower half of the photo and the upper half of the color bars. White becomes gray, the colored bars darken, and black stays black.
+
+<figure><img src="../../../.gitbook/assets/subtract-blend-alpha-255.png" alt=""><figcaption><p>Subtract Blend Rectangle with a Fill Alpha of 255</p></figcaption></figure>
+
+As alpha is reduced, less color is subtracted. A Rectangle with a `Fill Alpha` of `128` subtracts roughly half as much.
+
+<figure><img src="../../../.gitbook/assets/subtract-blend-alpha-128.png" alt=""><figcaption><p>Subtract Blend Rectangle with a Fill Alpha of 128</p></figcaption></figure>
+
+{% hint style="info" %}
+`Subtract` `Blend` is available in December 2026, or now if building Gum from source.
+{% endhint %}
+
 ## Alpha-Only Blends
 
 Gum supports **Blend** modes which modify the alpha (opacity) of whatever is under the instance using the alpha-only `Blend` . Alpha-only `Blend` modes ignore the color of the instance using the `Blend` - only the alpha matters (see note below about premultiplied alpha). Therefore, the following three circles would behave the same despite having different colors:

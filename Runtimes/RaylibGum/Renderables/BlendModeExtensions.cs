@@ -120,7 +120,7 @@ internal static class BlendModeExtensions
     // Raylib-specific color factors that keep a bake's premultiplied-storage invariant intact — see
     // the class remarks. Each scales color down in lockstep with however that mode changes alpha,
     // rather than reusing ToBlendState's MonoGame-oriented "leave color untouched" factors. Every
-    // case (Add) is a plain scale-and-keep, never a subtraction, so the equation is always Add.
+    // case but Subtract is a plain scale-and-keep, so its equation is Add.
     //
     // Known limitation: ReplaceAlpha/MinAlpha's color scale (Dst*SrcAlpha) is only exactly correct
     // when the destination was already fully opaque going in — fixed-function blending can't divide
@@ -152,6 +152,9 @@ internal static class BlendModeExtensions
         // Alpha is reverse-subtracted by SrcAlpha (Dst - Src); scale destination color by the
         // complementary (1 - SrcAlpha) so it shrinks toward zero exactly as alpha does.
         global::Gum.RenderingLibrary.Blend.SubtractAlpha => (GlZero, GlOneMinusSrcAlpha, GlFuncAdd),
+        // Color is Dst - Src*SrcAlpha and alpha is kept, so color only shrinks and the pixel stays
+        // validly premultiplied: the same factors as outside a bake (#8263).
+        global::Gum.RenderingLibrary.Blend.Subtract => (GlSrcAlpha, GlOne, GlFuncReverseSubtract),
         _ => throw new System.ArgumentOutOfRangeException(nameof(blend), blend, message: null),
     };
 

@@ -180,4 +180,56 @@ public class BlendExtensionsTests : BaseTestClass
     {
         Blend.SubtractAlpha.ToBlendState().ShouldBeSameAs(Gum.BlendState.SubtractAlpha);
     }
+
+    // #8263: rgb = dest - src * srcAlpha (straight source), alpha keeps dest.
+    [Fact]
+    public void Subtract_ReverseSubtractsSourceColorWeightedByAlpha_AndKeepsDestinationAlpha()
+    {
+        Gum.BlendState state = Gum.BlendState.Subtract;
+
+        state.ColorSourceBlend.ShouldBe(Gum.Blend.SourceAlpha);
+        state.ColorDestinationBlend.ShouldBe(Gum.Blend.One);
+        state.ColorBlendFunction.ShouldBe(Gum.BlendFunction.ReverseSubtract);
+        state.AlphaSourceBlend.ShouldBe(Gum.Blend.Zero);
+        state.AlphaDestinationBlend.ShouldBe(Gum.Blend.One);
+        state.AlphaBlendFunction.ShouldBe(Gum.BlendFunction.Add);
+    }
+
+    // A premultiplied source already carries its alpha in its color, so it is subtracted as-is.
+    [Fact]
+    public void SubtractPremultiplied_ReverseSubtractsSourceColorUnscaled_AndKeepsDestinationAlpha()
+    {
+        Gum.BlendState state = Gum.BlendState.SubtractPremultiplied;
+
+        state.ColorSourceBlend.ShouldBe(Gum.Blend.One);
+        state.ColorDestinationBlend.ShouldBe(Gum.Blend.One);
+        state.ColorBlendFunction.ShouldBe(Gum.BlendFunction.ReverseSubtract);
+        state.AlphaSourceBlend.ShouldBe(Gum.Blend.Zero);
+        state.AlphaDestinationBlend.ShouldBe(Gum.Blend.One);
+        state.AlphaBlendFunction.ShouldBe(Gum.BlendFunction.Add);
+    }
+
+    [Fact]
+    public void ToBlendState_ReturnsSubtract_WhenBlendIsSubtract()
+    {
+        Blend.Subtract.ToBlendState().ShouldBeSameAs(Gum.BlendState.Subtract);
+    }
+
+    [Fact]
+    public void ToBlendState_ReturnsSubtractPremultiplied_WhenBlendIsSubtractAndPremultiplied()
+    {
+        Blend.Subtract.ToBlendState(isUsingPremultipliedAlpha: true).ShouldBeSameAs(Gum.BlendState.SubtractPremultiplied);
+    }
+
+    [Fact]
+    public void ToBlend_ReturnsSubtract_WhenBlendStateIsSubtract()
+    {
+        Gum.BlendState.Subtract.ToBlend().ShouldBe(Blend.Subtract);
+    }
+
+    [Fact]
+    public void ToBlend_ReturnsSubtract_WhenBlendStateIsSubtractPremultiplied()
+    {
+        Gum.BlendState.SubtractPremultiplied.ToBlend().ShouldBe(Blend.Subtract);
+    }
 }

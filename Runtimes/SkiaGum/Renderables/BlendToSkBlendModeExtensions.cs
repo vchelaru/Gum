@@ -9,8 +9,8 @@ internal static class BlendToSkBlendModeExtensions
     // factors MonoGame and raylib use for MinAlpha on a baked render target
     // (BlendState.MinAlphaOnPremultipliedTarget). It equals min(srcA, dstA) wherever either is 0 or
     // 1, which covers the masking use (a mask sprite over an opaque layer).
-    // ReplaceAlpha has no SKBlendMode; use ApplyBlend, which gives it a custom blender. The SrcOver
-    // returned here for it is only the fallback for a caller that reads the mode alone.
+    // ReplaceAlpha and Subtract have no SKBlendMode; use ApplyBlend, which gives them a custom blender.
+    // The SrcOver returned here for them is only the fallback for a caller that reads the mode alone.
     public static SKBlendMode ToSKBlendMode(this Gum.RenderingLibrary.Blend blend)
     {
         return blend switch
@@ -38,7 +38,7 @@ half4 main(half4 src, half4 dst) {
 
     /// <summary>
     /// Sets the blend on <paramref name="paint"/>: the matching <see cref="SKBlendMode"/>, plus a
-    /// custom blender for <c>ReplaceAlpha</c>.
+    /// custom blender for <c>ReplaceAlpha</c> and <c>Subtract</c>.
     /// </summary>
     public static void ApplyBlend(this SKPaint paint, Gum.RenderingLibrary.Blend blend)
     {
@@ -48,6 +48,34 @@ half4 main(half4 src, half4 dst) {
         {
             paint.Blender = GetReplaceAlphaBlender();
         }
+        else if (blend == Gum.RenderingLibrary.Blend.Subtract)
+        {
+            paint.Blender = GetSubtractBlender();
+        }
+    }
+
+    // #8263: no SKBlendMode is dest - src clamped (Difference is |dest - src|). Skia's inputs are
+    // premultiplied, so src.rgb is the straight color times its alpha, matching MonoGame's
+    // SourceAlpha/One/ReverseSubtract. Keeping dst.a leaves the result validly premultiplied.
+    // A runtime blender costs more per pixel than a fixed SKBlendMode.
+    private const string SubtractSksl = @"
+half4 main(half4 src, half4 dst) {
+    return half4(max(dst.rgb - src.rgb, 0), dst.a);
+}";
+
+    private static SKBlender? _subtractBlender;
+    private static bool _subtractBlenderFailed;
+
+    private static SKBlender? GetSubtractBlender()
+    {
+        if (_subtractBlender == null && !_subtractBlenderFailed)
+        {
+            using SKRuntimeEffect? effect = SKRuntimeEffect.CreateBlender(SubtractSksl, out string _);
+            _subtractBlender = effect?.ToBlender();
+            _subtractBlenderFailed = _subtractBlender == null;
+        }
+
+        return _subtractBlender;
     }
 
     private static SKBlender? GetReplaceAlphaBlender()
