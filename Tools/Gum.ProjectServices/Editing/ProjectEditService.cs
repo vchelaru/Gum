@@ -140,6 +140,7 @@ public class ProjectEditService : IProjectEditService
     private readonly IMovedInstanceReferenceDropLogic _movedReferenceDrop;
     private readonly IElementRemovalLogic _elementRemoval;
     private readonly IVariableReferenceValidator _referenceValidator;
+    private readonly IVariableReferenceCascade _referenceCascade;
 
     public ProjectEditService(
         IElementCreationLogic elementCreation,
@@ -163,7 +164,8 @@ public class ProjectEditService : IProjectEditService
         IComponentExtractionLogic componentExtraction,
         IMovedInstanceReferenceDropLogic movedReferenceDrop,
         IElementRemovalLogic elementRemoval,
-        IVariableReferenceValidator referenceValidator)
+        IVariableReferenceValidator referenceValidator,
+        IVariableReferenceCascade referenceCascade)
     {
         _elementCreation = elementCreation;
         _instanceCreation = instanceCreation;
@@ -187,6 +189,7 @@ public class ProjectEditService : IProjectEditService
         _movedReferenceDrop = movedReferenceDrop;
         _elementRemoval = elementRemoval;
         _referenceValidator = referenceValidator;
+        _referenceCascade = referenceCascade;
 
         _operations = new Dictionary<string, OperationSpec>
         {
@@ -652,16 +655,32 @@ public class ProjectEditService : IProjectEditService
         }
 
         state.VariableLists.RemoveAll(item => item.Name == listName);
-        if (lines.Count > 0)
+        if (lines.Count == 0)
         {
-            state.VariableLists.Add(new VariableListSave<string>
-            {
-                Name = listName,
-                Type = "string",
-                Value = lines,
-            });
-            ElementSaveExtensions.ApplyVariableReferences(element, state);
+            return;
         }
+        state.VariableLists.Add(new VariableListSave<string>
+        {
+            Name = listName,
+            Type = "string",
+            Value = lines,
+        });
+
+        // The same reaction the tool runs after a typed edit, without the canvas: this state, the element's other
+        // states, the elements that read this one, and references inside the instance's type.
+        Dictionary<string, object?> valuesBefore = new Dictionary<string, object?>();
+        foreach (VariableSave variable in state.Variables)
+        {
+            valuesBefore[variable.Name] = variable.Value;
+        }
+        ElementSaveExtensions.ApplyVariableReferences(element, state);
+        HashSet<string> changedNames = new HashSet<string> { listName };
+        changedNames.UnionWith(state.Variables
+            .Where(item => !valuesBefore.TryGetValue(item.Name, out object? before) || !ElementSaveExtensions.ValueEquality(before, item.Value))
+            .Select(item => item.Name));
+        _referenceCascade.ApplyOtherStatesReading(element, state, changedNames, liveRoot: null, isFullCommit: true);
+        _referenceCascade.ApplyToElementsReading(element, _ => null, isFullCommit: true);
+        _referenceCascade.ApplyToInstanceInternals(element, instance, state, "VariableReferences", state.GetValueRecursive(listName));
     }
 
     #endregion

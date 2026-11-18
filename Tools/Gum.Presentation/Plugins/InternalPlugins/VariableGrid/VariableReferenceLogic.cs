@@ -34,6 +34,7 @@ public class VariableReferenceLogic : IVariableReferenceLogic
     private readonly IDialogService _dialogService;
     private readonly IFileCommands _fileCommands;
     private readonly IVariableReferenceValidator _validator;
+    private readonly IVariableReferenceCascade _cascade;
     private readonly IDispatcher _dispatcher;
     private readonly IWireframeObjectManager _wireframeObjectManager;
 
@@ -44,6 +45,7 @@ public class VariableReferenceLogic : IVariableReferenceLogic
         IDialogService dialogService,
         IFileCommands fileCommands,
         IVariableReferenceValidator validator,
+        IVariableReferenceCascade cascade,
         IDispatcher dispatcher,
         IWireframeObjectManager wireframeObjectManager)
     {
@@ -52,6 +54,7 @@ public class VariableReferenceLogic : IVariableReferenceLogic
         _dialogService =  dialogService;
         _fileCommands = fileCommands;
         _validator = validator;
+        _cascade = cascade;
         _dispatcher = dispatcher;
         _wireframeObjectManager = wireframeObjectManager;
     }
@@ -301,7 +304,7 @@ public class VariableReferenceLogic : IVariableReferenceLogic
         }
         using (ToolLog.Begin("ApplyOtherStatesReading", count: changedNames.Count))
         {
-            ApplyOtherStatesReading(parentElement, stateSave, changedNames, liveRoot, isFullCommit);
+            _cascade.ApplyOtherStatesReading(parentElement, stateSave, changedNames, liveRoot, isFullCommit);
         }
 
         if (containsReferencesEdit)
@@ -328,7 +331,7 @@ public class VariableReferenceLogic : IVariableReferenceLogic
             var newValue = stateSave.GetValueRecursive(edit.QualifiedName);
 
             // this could be a tunneled variable. If so, we may need to propagate the value to other instances one level deeper
-            didSetDeepReference |= DoVariableReferenceReactionOnInstanceVariableSet(parentElement, edit.Instance, stateSave, edit.UnqualifiedMember, newValue);
+            didSetDeepReference |= _cascade.ApplyToInstanceInternals(parentElement, edit.Instance, stateSave, edit.UnqualifiedMember, newValue);
         }
 
         // now force save it if it's a variable reference:
@@ -422,7 +425,7 @@ public class VariableReferenceLogic : IVariableReferenceLogic
                 List<ReferenceRow> rows = graph.OrderedRows.Concat(graph.CyclicRows)
                     .Where(row => restored.AddedRows.Contains(RestoredChanges.RowKey(row.SourceObject, row.Line)))
                     .ToList();
-                HashSet<ReferenceRow> toApply = FindRowsToApply(graph, restored.VariableNames, rows);
+                HashSet<ReferenceRow> toApply = VariableReferenceCascade.FindRowsToApply(graph, restored.VariableNames, rows);
                 if (toApply.Count > 0)
                 {
                     // A row whose source is gone or null writes nothing, and the variable keeps its last value:
@@ -443,49 +446,6 @@ public class VariableReferenceLogic : IVariableReferenceLogic
         }
 
         return ApplyReferencesToElement(element, trySave: true);
-    }
-
-    /// <summary>
-    /// The rows to re-read when <paramref name="changedNames"/> changed: <paramref name="seedRows"/> (rows that
-    /// were added) and every row that reads a changed variable or the result of an affected row.
-    /// </summary>
-    private static HashSet<ReferenceRow> FindRowsToApply(VariableReferenceGraph graph, IEnumerable<string> changedNames,
-        List<ReferenceRow> seedRows)
-    {
-        HashSet<string> names = new HashSet<string>(changedNames);
-        names.UnionWith(seedRows.Select(row => row.WrittenName));
-        List<ReferenceRow> affected = new List<ReferenceRow>();
-        graph.FindAffectedRows(names, affected, includeLiveLayoutRows: false);
-        return new HashSet<ReferenceRow>(seedRows.Concat(affected));
-    }
-
-    /// <summary>
-    /// After a typed edit changed <paramref name="changedNames"/> in <paramref name="editedState"/>, re-reads the
-    /// rows of the element's other states that read them, as undo does. A row that reads nothing that changed
-    /// is left alone, and a row in a loop is never evaluated, so it keeps its stored value.
-    /// </summary>
-    private static void ApplyOtherStatesReading(ElementSave element, StateSave editedState, ICollection<string> changedNames,
-        GraphicalUiElement? liveRoot, bool isFullCommit)
-    {
-        foreach (StateSave state in element.AllStates)
-        {
-            if (state == editedState)
-            {
-                continue;
-            }
-
-            VariableReferenceGraph graph = VariableReferenceGraph.GetForState(element, state);
-            if (!graph.HasRows)
-            {
-                continue;
-            }
-
-            HashSet<ReferenceRow> toApply = FindRowsToApply(graph, changedNames, new List<ReferenceRow>());
-            if (toApply.Count > 0)
-            {
-                ElementSaveExtensions.ApplyVariableReferences(element, state, liveRoot, isFullCommit, onlyRows: toApply);
-            }
-        }
     }
 
     private static void KeepHeldValue(StateSave state, StateSave? held, StateSave? otherSide, string variableName)
@@ -669,149 +629,18 @@ public class VariableReferenceLogic : IVariableReferenceLogic
     /// <inheritdoc/>
     public StoredValueChange[] ApplyReferencesToElement(ElementSave element, bool trySave, bool isFullCommit = true)
     {
-        GumProjectSave? project = ObjectFinder.Self.GumProjectSave;
-        if (project == null)
-        {
-            return Array.Empty<StoredValueChange>();
-        }
-
-        // Every state that reads this element or an element downstream of it, whichever of its values
-        // changed; simpler than tracking which references read the changed variable. Elements are
-        // applied in dependency order, so a reader of two changed elements sees both new values.
-        List<ElementSave> allElements = new List<ElementSave>();
-        allElements.AddRange(project.StandardElements);
-        allElements.AddRange(project.Components);
-        allElements.AddRange(project.Screens);
-        ScanCount += allElements.Count;
-
-        HashSet<string> changedElementNames = new HashSet<string> { ObjectFinder.Self.GetQualifiedElementName(element) };
-        HashSet<ElementSave> elementsToSave = new HashSet<ElementSave>();
-        List<StoredValueChange> changes = new List<StoredValueChange>();
-
-        // The edited element can read itself through its qualified name.
-        ApplyStatesReading(element, changedElementNames, elementsToSave, changes, isFullCommit);
-        List<ElementSave> dependents = ReferenceDependencies.GetDependentsInOrder(allElements, element);
-        foreach (ElementSave dependent in dependents)
-        {
-            ApplyStatesReading(dependent, changedElementNames, elementsToSave, changes, isFullCommit);
-            changedElementNames.Add(ObjectFinder.Self.GetQualifiedElementName(dependent));
-        }
+        ReferenceCascadeResult result = _cascade.ApplyToElementsReading(element, _wireframeObjectManager.GetRepresentation, isFullCommit);
+        ScanCount += result.ElementsScanned;
 
         if (trySave)
         {
-            foreach (var elementToSave in elementsToSave)
+            foreach (var elementToSave in result.ChangedElements)
             {
                 _fileCommands.TryAutoSaveElement(elementToSave);
             }
         }
 
-        return changes.ToArray();
-    }
-
-    private void ApplyStatesReading(ElementSave owner, HashSet<string> elementNames, HashSet<ElementSave> elementsToSave,
-        List<StoredValueChange> changes, bool isFullCommit)
-    {
-        foreach (StateSave state in owner.AllStates)
-        {
-            if (ReferenceDependencies.StateReadsAny(state, elementNames))
-            {
-                Dictionary<string, object?> before = new Dictionary<string, object?>();
-                foreach (VariableSave variable in state.Variables)
-                {
-                    before[variable.Name] = variable.Value;
-                }
-
-                ElementSaveExtensions.ApplyVariableReferences(owner, state,
-                    _wireframeObjectManager.GetRepresentation(owner), isFullCommit);
-                elementsToSave.Add(owner);
-
-                string? categoryName = owner.Categories.FirstOrDefault(item => item.States.Contains(state))?.Name;
-                foreach (VariableSave variable in state.Variables)
-                {
-                    if (!before.TryGetValue(variable.Name, out object? oldValue) || !Equals(oldValue, variable.Value))
-                    {
-                        changes.Add(new StoredValueChange(owner, categoryName, state.Name, variable.Name, variable.Type, variable.Value));
-                    }
-                }
-            }
-        }
-    }
-
-    private static bool DoVariableReferenceReactionOnInstanceVariableSet(ElementSave container, InstanceSave? instance, StateSave stateSave, string unqualifiedVariableName, object? newValue)
-    {
-        var didAssignDeepReference = false;
-        ElementSave? instanceElement = null;
-        if (instance != null)
-        {
-            instanceElement = ObjectFinder.Self.GetElementSave(instance.BaseType);
-        }
-        if (instance != null && instanceElement != null)
-        {
-            // Equivalent to the tool-only ElementSaveExtensionMethodsGumTool.GetVariableFromThisOrBase(element,
-            // variable, forceDefault: true) expansion, without depending on that Locator-touching, Gum-only file.
-            var variableOnInstance = instanceElement.GetDefaultStateOrThrow().GetVariableRecursive(unqualifiedVariableName);
-
-            List<TypedElementReference> references = ObjectFinder.Self.GetElementReferencesToThis(instanceElement);
-            var filteredReferences = references
-                .Where(item => item.ReferenceType == ReferenceType.VariableReference)
-                .ToArray();
-
-            if (variableOnInstance != null)
-            {
-                foreach (var reference in filteredReferences)
-                {
-                    if (reference.ReferencingObject is VariableListSave variableListSave &&
-                        variableListSave.ValueAsIList is List<string> stringList)
-                    {
-                        foreach (var assignment in stringList)
-                        {
-                            if (assignment.Contains("="))
-                            {
-                                var leftSide = assignment.Substring(0, assignment.IndexOf("=")).Trim();
-                                var rightSide = assignment.Substring(assignment.IndexOf("=") + 1).Trim();
-
-                                var simplifiedRightSide = rightSide;
-
-                                var instanceElementQualified = ObjectFinder.Self.GetQualifiedElementName(instanceElement);
-
-                                if (rightSide.StartsWith(instanceElementQualified + "."))
-                                {
-                                    simplifiedRightSide = rightSide.Substring(instanceElementQualified.Length
-                                        // +1 to take off the period before the variable name
-                                        + 1);
-                                }
-
-                                var didAssignReferencedVariable = simplifiedRightSide == variableOnInstance.Name ||
-                                    simplifiedRightSide == variableOnInstance.ExposedAsName;
-
-                                if (didAssignReferencedVariable)
-                                {
-                                    var ownerOfVariableReferenceName = variableListSave.SourceObject;
-
-                                    var ownerOfVariableReferenceInstanceSave = instanceElement.GetInstance(ownerOfVariableReferenceName);
-
-                                    if (ownerOfVariableReferenceInstanceSave != null)
-                                    {
-                                        // Setting this variable results in ownerOfVariableReferenceInstanceSave.leftSide also being assigned
-                                        // but ownerOfVariableReferenceInstanceSave is inside of instanceElement, so we need to find all instances
-                                        // of instanceElement in container, and assign those.
-                                        var qualifiedNameInInstanceElement = ownerOfVariableReferenceInstanceSave.Name + "." + leftSide;
-                                        //didAssignDeepReference = AssignInstanceValues(container, instanceElement, stateSave, qualifiedNameInInstanceElement, newValue) ||
-                                        //    didAssignDeepReference;
-
-                                        var deepQualifiedName = instance.Name + "." + qualifiedNameInInstanceElement;
-
-                                        stateSave.SetValue(deepQualifiedName, newValue);
-                                        didAssignDeepReference = true;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        return didAssignDeepReference;
+        return result.Changes;
     }
 
     public void ReactIfChangedMemberIsVariableReference(InstanceSave? instance, StateSave stateSave, string changedMember, object? oldValue)

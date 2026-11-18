@@ -41,7 +41,7 @@ public class ReferenceCycleToolFreezeTests : BaseTestClass
             new Mock<IWireframeCommands>().Object,
             new Mock<IDialogService>().Object,
             new Mock<IFileCommands>().Object,
-            new VariableReferenceValidator(),
+            new VariableReferenceValidator(), new VariableReferenceCascade(),
             new Mock<IDispatcher>().Object,
             wireframe.Object);
     }

@@ -34,7 +34,7 @@ public class VariableReferenceBatchTests : BaseTestClass
             Mock.Of<IWireframeCommands>(),
             Mock.Of<IDialogService>(),
             _fileCommands.Object,
-            new VariableReferenceValidator(),
+            new VariableReferenceValidator(), new VariableReferenceCascade(),
             Mock.Of<IDispatcher>(),
             Mock.Of<IWireframeObjectManager>());
         ElementSaveExtensions.VariableChangedThroughReference = (_, _, name, _, _) => _notifications.Add((name, null));

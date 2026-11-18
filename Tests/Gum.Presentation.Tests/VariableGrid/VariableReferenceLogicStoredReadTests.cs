@@ -31,7 +31,7 @@ public class VariableReferenceLogicStoredReadTests : BaseTestClass
             Mock.Of<IWireframeCommands>(),
             Mock.Of<IDialogService>(),
             Mock.Of<IFileCommands>(),
-            new VariableReferenceValidator(),
+            new VariableReferenceValidator(), new VariableReferenceCascade(),
             Mock.Of<IDispatcher>(),
             _wireframe.Object);
     }

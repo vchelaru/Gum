@@ -434,7 +434,7 @@ public class ElementCommandsTests : BaseTestClass
         var dispatcherMock = new Mock<IDispatcher>();
         var variableReferenceLogic = new VariableReferenceLogic(
             _guiCommands.Object, wireframeCommandsMock.Object, dialogServiceMock.Object,
-            fileCommandsMock.Object, new VariableReferenceValidator(), dispatcherMock.Object, _wireframeObjectManager.Object);
+            fileCommandsMock.Object, new VariableReferenceValidator(), new VariableReferenceCascade(), dispatcherMock.Object, _wireframeObjectManager.Object);
 
         foreach (var possiblyChangedVariable in defaultState.Variables.ToList())
         {

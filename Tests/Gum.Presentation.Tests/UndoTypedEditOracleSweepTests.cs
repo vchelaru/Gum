@@ -72,7 +72,7 @@ public sealed class UndoOracleWorld : BaseTestClass
         Mock<IWireframeObjectManager> wireframe = new();
         wireframe.Setup(x => x.AllIpsos).Returns(new List<GraphicalUiElement>());
         _logic = new VariableReferenceLogic(new Mock<IGuiCommands>().Object, new Mock<IWireframeCommands>().Object,
-            new Mock<IDialogService>().Object, _fileCommands.Object, new VariableReferenceValidator(),
+            new Mock<IDialogService>().Object, _fileCommands.Object, new VariableReferenceValidator(), new VariableReferenceCascade(),
             new Mock<IDispatcher>().Object, wireframe.Object);
 
         Mock<IReferenceFinderProjectProvider> projectProvider = new();

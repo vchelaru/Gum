@@ -102,7 +102,7 @@ public class FileChangeReloadDependentsTests : BaseTestClass
             new Mock<IWireframeCommands>().Object,
             new Mock<IDialogService>().Object,
             _fileCommands.Object,
-            new VariableReferenceValidator(),
+            new VariableReferenceValidator(), new VariableReferenceCascade(),
             new Mock<IDispatcher>().Object,
             _wireframe.Object);
 

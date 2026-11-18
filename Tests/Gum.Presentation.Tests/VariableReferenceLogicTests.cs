@@ -36,7 +36,7 @@ public class VariableReferenceLogicTests : BaseTestClass
             new Mock<IWireframeCommands>().Object,
             _dialogServiceMock.Object,
             new Mock<IFileCommands>().Object,
-            new VariableReferenceValidator(),
+            new VariableReferenceValidator(), new VariableReferenceCascade(),
             _dispatcherMock.Object,
             _wireframeObjectManagerMock.Object);
     }

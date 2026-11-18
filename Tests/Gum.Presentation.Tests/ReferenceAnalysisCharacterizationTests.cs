@@ -256,7 +256,7 @@ public class ReferenceAnalysisCharacterizationTests : BaseTestClass
             new Mock<IWireframeCommands>().Object,
             new Mock<IDialogService>().Object,
             new Mock<IFileCommands>().Object,
-            new VariableReferenceValidator(),
+            new VariableReferenceValidator(), new VariableReferenceCascade(),
             new Mock<IDispatcher>().Object,
             new Mock<IWireframeObjectManager>().Object);
     }

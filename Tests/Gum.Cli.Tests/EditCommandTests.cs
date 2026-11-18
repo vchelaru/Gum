@@ -421,6 +421,33 @@ public class EditCommandTests : BaseTestClass
     }
 
     [Fact]
+    public void Edit_SetVariableReferences_UpdatesOtherStatesAndElementsThatReadTheChangedValue()
+    {
+        string projectPath = CreateEmptyProject();
+        string operations = WriteOperations("""
+            { "version": 1, "operations": [
+              { "op": "addComponent", "name": "SegmentBar" },
+              { "op": "addVariable", "element": "SegmentBar", "name": "TotalHealth", "type": "int", "value": 10 },
+              { "op": "addInstance", "element": "SegmentBar", "name": "Total", "type": "Sprite" },
+              { "op": "addCategory", "element": "SegmentBar", "name": "Size" },
+              { "op": "addState", "element": "SegmentBar", "category": "Size", "name": "Big" },
+              { "op": "setVariableReferences", "element": "SegmentBar", "category": "Size", "state": "Big", "lines": [ "Height = Total.Width" ] },
+              { "op": "addComponent", "name": "Hud" },
+              { "op": "setVariableReferences", "element": "Hud", "lines": [ "Width = Components/SegmentBar.Total.Width" ] },
+              { "op": "setVariableReferences", "element": "SegmentBar", "instance": "Total", "lines": [ "Width = TotalHealth * 4" ] }
+            ] }
+            """);
+
+        CliTestHelper result = CliTestHelper.Run("edit", projectPath, operations);
+
+        result.ExitCode.ShouldBe(0, result.StandardOutput + result.StandardError);
+        GumProjectSave project = new ProjectLoader().Load(projectPath).Project!;
+        project.Components.Single(item => item.Name == "SegmentBar").Categories.Single().States.Single()
+            .GetValue("Height").ShouldBe(40f);
+        project.Components.Single(item => item.Name == "Hud").DefaultState!.GetValue("Width").ShouldBe(40f);
+    }
+
+    [Fact]
     public void Edit_VariableTheTypeDoesNotDefine_FailsAndWritesNothing()
     {
         string projectPath = CreateEmptyProject();

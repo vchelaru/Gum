@@ -203,7 +203,7 @@ public class BehaviorValueReferenceGum0009Tests : BaseTestClass
         dialogs.Setup(x => x.ShowMessage(It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<MessageDialogStyle?>()))
             .Callback<string, string?, MessageDialogStyle?>((message, _, _) => shown = message);
         VariableReferenceLogic logic = new VariableReferenceLogic(new Mock<IGuiCommands>().Object, new Mock<IWireframeCommands>().Object,
-            dialogs.Object, new Mock<IFileCommands>().Object, new VariableReferenceValidator(), dispatcher.Object, new Mock<IWireframeObjectManager>().Object);
+            dialogs.Object, new Mock<IFileCommands>().Object, new VariableReferenceValidator(), new VariableReferenceCascade(), dispatcher.Object, new Mock<IWireframeObjectManager>().Object);
 
         logic.DoVariableReferenceReaction(_component, _component.GetInstance("MinText"), "VariableReferences", _defaultState,
             "MinText.VariableReferences", trySave: false);

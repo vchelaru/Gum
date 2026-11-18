@@ -236,6 +236,7 @@ public static class GumCoreServiceCollectionExtensions
         services.AddSingleton<IElementRemovalLogic, ElementRemovalLogic>();
         services.AddSingleton<IVariableRemovalLogic, VariableRemovalLogic>();
         services.AddSingleton<IVariableReferenceValidator, VariableReferenceValidator>();
+        services.AddSingleton<IVariableReferenceCascade, VariableReferenceCascade>();
         services.AddSingleton<IVariableReferenceLogic, VariableReferenceLogic>();
         services.AddSingleton<IVariableReferenceConflictFixer, VariableReferenceConflictFixer>();
         services.AddSingleton<IReferenceFinder, ReferenceFinder>();

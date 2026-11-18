@@ -352,7 +352,7 @@ public class BehaviorFindAncestorReferenceTests : BaseTestClass
     {
         return new VariableReferenceLogic(
             new Mock<IGuiCommands>().Object, new Mock<IWireframeCommands>().Object, new Mock<IDialogService>().Object,
-            new Mock<IFileCommands>().Object, new VariableReferenceValidator(), new Mock<IDispatcher>().Object,
+            new Mock<IFileCommands>().Object, new VariableReferenceValidator(), new VariableReferenceCascade(), new Mock<IDispatcher>().Object,
             new Mock<IWireframeObjectManager>().Object);
     }
 
