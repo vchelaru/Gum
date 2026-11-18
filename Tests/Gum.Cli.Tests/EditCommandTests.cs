@@ -448,6 +448,27 @@ public class EditCommandTests : BaseTestClass
     }
 
     [Fact]
+    public void Edit_SetProjectProperty_SavesTheCanvasSizeAndTextureFilter()
+    {
+        string projectPath = CreateEmptyProject();
+        string operations = WriteOperations("""
+            { "version": 1, "operations": [
+              { "op": "setProjectProperty", "name": "DefaultCanvasWidth", "value": 256 },
+              { "op": "setProjectProperty", "name": "DefaultCanvasHeight", "value": 224 },
+              { "op": "setProjectProperty", "name": "TextureFilter", "value": "Linear" }
+            ] }
+            """);
+
+        CliTestHelper result = CliTestHelper.Run("edit", projectPath, operations);
+
+        result.ExitCode.ShouldBe(0, result.StandardOutput + result.StandardError);
+        GumProjectSave project = new ProjectLoader().Load(projectPath).Project!;
+        project.DefaultCanvasWidth.ShouldBe(256);
+        project.DefaultCanvasHeight.ShouldBe(224);
+        project.TextureFilter.ShouldBe("Linear");
+    }
+
+    [Fact]
     public void Edit_VariableTheTypeDoesNotDefine_FailsAndWritesNothing()
     {
         string projectPath = CreateEmptyProject();
@@ -574,6 +595,12 @@ public class EditCommandTests : BaseTestClass
     [InlineData("""{ "op": "setVariableReferences", "element": "Hud", "instance": "Label", "lines": [ "Width = \"wide\"" ] }""", "Width = \"wide\"")]
     [InlineData("""{ "op": "setVariableReferences", "element": "Hud", "instance": "Label", "lines": [ "Width +" ] }""", "Width +")]
     [InlineData("""{ "op": "setVariableReferences", "element": "Hud", "instance": "Nope", "lines": [ "Width = 4" ] }""", "Nope")]
+    [InlineData("""{ "op": "setProjectProperty", "name": "ShowRuler", "value": true }""", "DefaultCanvasWidth, DefaultCanvasHeight, TextureFilter")]
+    [InlineData("""{ "op": "setProjectProperty", "name": "DefaultCanvasWidth", "value": 0 }""", "DefaultCanvasWidth")]
+    [InlineData("""{ "op": "setProjectProperty", "name": "DefaultCanvasHeight", "value": -5 }""", "-5")]
+    [InlineData("""{ "op": "setProjectProperty", "name": "DefaultCanvasWidth", "value": "wide" }""", "wide")]
+    [InlineData("""{ "op": "setProjectProperty", "name": "DefaultCanvasWidth", "value": 12.5 }""", "12.5")]
+    [InlineData("""{ "op": "setProjectProperty", "name": "TextureFilter", "value": "Blurry" }""", "Blurry")]
     public void Edit_OperationThatCannotApply_ExitsWith1AndNamesTheProblem(string operation, string expectedInMessage)
     {
         string projectPath = CreateEmptyProject();

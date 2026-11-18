@@ -181,6 +181,22 @@ Available in December 2026, or now if building Gum from source.
 
 Replaces the variable references of `Total`, or of `SegmentBar` itself when `instance` is left out, like typing them in the **Variable References** box. Gum checks each line the way the tool does and writes the values the lines set, so `Total.Width` becomes `40` when `TotalHealth` is `10`. Gum also updates other states and elements whose references read a changed value. A line that does not parse, names a variable that does not exist, or has a right side of the wrong type fails the edit with the line and the reason. `state` and `category` work as in `setVariable`. An empty `lines` list removes the references and leaves the values they set.
 
+## Project Properties
+
+{% hint style="info" %}
+Available in December 2026, or now if building Gum from source.
+{% endhint %}
+
+### setProjectProperty
+
+```json
+{ "op": "setProjectProperty", "name": "DefaultCanvasWidth", "value": 256 }
+{ "op": "setProjectProperty", "name": "DefaultCanvasHeight", "value": 224 }
+{ "op": "setProjectProperty", "name": "TextureFilter", "value": "Point" }
+```
+
+Sets a project property, like the **Canvas** and **General** pages of the tool's **Project Properties**. `DefaultCanvasWidth` and `DefaultCanvasHeight` set the canvas size and take a positive whole number. `TextureFilter` takes `"Point"` or `"Linear"`. Any other name fails the edit, and the message lists the names it accepts.
+
 ## All or Nothing
 
 `edit` writes nothing unless every operation applies and the edit adds no errors. It runs the same check as [check](check.md) before and after the operations. Errors the project already had do not block the edit, and only errors the edit adds are reported, in the same format as `check`.

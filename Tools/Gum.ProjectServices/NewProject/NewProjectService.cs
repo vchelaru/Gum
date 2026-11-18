@@ -178,6 +178,7 @@ public class NewProjectService : INewProjectService
                 GumProjectPath = targets.GumProjectPath,
                 CsprojPath = targets.CsprojPath,
                 Name = targets.Name,
+                CanvasSize = request.CanvasSize,
                 GenerateCode = request.GenerateCode,
                 PackageChannel = request.PackageChannel,
                 // Local source: the add-ons are linked as projects while the files are written, so no package is added.
@@ -401,6 +402,11 @@ public class NewProjectService : INewProjectService
         try
         {
             result = WriteFiles(options, targets, project.GumSourceDirectory, project.LinkedAddOns, project.UsesPrerelease);
+
+            if (result.Success && project.CanvasSize is { } canvasSize)
+            {
+                NewProjectDefaults.ApplyCanvasSizeToFile(result.GumProjectPath!, canvasSize.Width, canvasSize.Height);
+            }
 
             if (result.Success && cancellationToken.IsCancellationRequested)
             {

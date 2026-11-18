@@ -14,17 +14,31 @@ internal static class NewProjectDefaults
     /// <summary>Resets the owned settings of the project at <paramref name="gumProjectPath"/> and re-saves it if any changed.</summary>
     internal static void ApplyToFile(string gumProjectPath)
     {
+        GumProjectSave project = Load(gumProjectPath);
+        if (Apply(project))
+        {
+            project.Save(gumProjectPath, saveElements: false);
+        }
+    }
+
+    /// <summary>Sets the canvas size of the project at <paramref name="gumProjectPath"/> and re-saves it.</summary>
+    internal static void ApplyCanvasSizeToFile(string gumProjectPath, int width, int height)
+    {
+        GumProjectSave project = Load(gumProjectPath);
+        project.DefaultCanvasWidth = width;
+        project.DefaultCanvasHeight = height;
+        project.Save(gumProjectPath, saveElements: false);
+    }
+
+    private static GumProjectSave Load(string gumProjectPath)
+    {
         ProjectLoadResult loadResult = new ProjectLoader().Load(gumProjectPath);
         if (!loadResult.Success || loadResult.Project == null)
         {
             throw new InvalidOperationException(
                 $"Failed to load the new project to apply default settings: {loadResult.ErrorMessage}");
         }
-
-        if (Apply(loadResult.Project))
-        {
-            loadResult.Project.Save(gumProjectPath, saveElements: false);
-        }
+        return loadResult.Project;
     }
 
     /// <returns>True when a value changed.</returns>
