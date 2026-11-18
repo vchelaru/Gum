@@ -402,7 +402,7 @@ public class EditCommandTests : BaseTestClass
 
         result.ExitCode.ShouldBe(0, result.StandardOutput + result.StandardError);
         CliTestHelper.Run("check", projectPath).ExitCode.ShouldBe(0);
-        StateSave state = new ProjectLoader().Load(projectPath).Project!.Components.Single(item => item.Name == "SegmentBar").DefaultState;
+        StateSave state = new ProjectLoader().Load(projectPath).Project!.Components.Single(item => item.Name == "SegmentBar").DefaultState!;
         state.GetVariableListSave("Total.VariableReferences")!.ValueAsIList.ShouldBe(new[] { "Width = TotalHealth * 4" });
         state.GetValue("Total.Width").ShouldBe(40f);
         state.GetVariableListSave("VariableReferences")!.ValueAsIList.ShouldBe(new[] { "Height = Total.Width" });
@@ -415,7 +415,7 @@ public class EditCommandTests : BaseTestClass
             """);
         CliTestHelper removeResult = CliTestHelper.Run("edit", projectPath, remove);
         removeResult.ExitCode.ShouldBe(0, removeResult.StandardOutput + removeResult.StandardError);
-        state = new ProjectLoader().Load(projectPath).Project!.Components.Single(item => item.Name == "SegmentBar").DefaultState;
+        state = new ProjectLoader().Load(projectPath).Project!.Components.Single(item => item.Name == "SegmentBar").DefaultState!;
         state.GetVariableListSave("Total.VariableReferences").ShouldBeNull();
         state.GetVariableListSave("VariableReferences").ShouldNotBeNull();
     }

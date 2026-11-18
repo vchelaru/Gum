@@ -196,7 +196,7 @@ public class VariableReferenceLogic : IVariableReferenceLogic
                 List<(string, GeneralResponse)> failures;
                 using (ToolLog.Begin("GetFailures", count: newDirectValue.ValueAsIList?.Count ?? 0))
                 {
-                    failures = _validator.GetFailures(parentElement, leftSideInstance, newDirectValue.ValueAsIList.Cast<string>(), liveRoot);
+                    failures = _validator.GetFailures(parentElement, leftSideInstance, newDirectValue.ValueAsIList?.Cast<string>() ?? Enumerable.Empty<string>(), liveRoot);
                 }
 
                 if (failures.Count > 0)

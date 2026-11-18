@@ -10,7 +10,7 @@ public class VariableReferenceValidatorTests : BaseTestClass
     [Fact]
     public void GetFailures_ReportsOnlyTheInvalidLines_AndValidatesACompositeLineByItsChannels()
     {
-        List<VariableSave> rectangleVariables = Project.StandardElements.Single(item => item.Name == "ColoredRectangle").DefaultState.Variables;
+        List<VariableSave> rectangleVariables = Project.StandardElements.Single(item => item.Name == "ColoredRectangle").DefaultState!.Variables;
         rectangleVariables.Add(new VariableSave { Name = "Width", Type = "float", Value = 10f });
         foreach (string channel in new[] { "Red", "Green", "Blue" })
         {
