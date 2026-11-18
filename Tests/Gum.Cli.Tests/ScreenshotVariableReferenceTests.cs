@@ -52,6 +52,39 @@ public class ScreenshotVariableReferenceTests : BaseTestClass
         }
     }
 
+    [Theory]
+    [InlineData("TotalHealth *", "is not a valid expression")]
+    [InlineData("TotalHealth / 0", "divides by zero")]
+    public void Screenshot_ExpressionThatCannotEvaluate_PrintsWarningOnce(string rightSide, string problem)
+    {
+        string projectPath = CreateSegmentBarProject(rightSide);
+
+        CliTestHelper result = RenderScreen(projectPath, out SKBitmap bitmap);
+
+        using (bitmap)
+        {
+            result.ExitCode.ShouldBe(0, result.StandardError);
+            string warning = $"Variable reference 'Width = {rightSide}' was not applied in SegmentBar (Container): "
+                + $"{rightSide} {problem}. Total.Width keeps its current value.";
+            result.StandardError.Split('\n').Count(line => line.Contains(warning)).ShouldBe(1, result.StandardError);
+            bitmap.GetPixel(30, 8).ShouldBe(SKColors.White);
+            bitmap.GetPixel(34, 8).ShouldBe(SKColors.Black);
+        }
+    }
+
+    [Theory]
+    [InlineData("TotalHealth *", "is not a valid expression")]
+    [InlineData("TotalHealth / 0", "divides by zero")]
+    public void Check_ExpressionThatCannotEvaluate_ReportsGum0047(string rightSide, string problem)
+    {
+        string projectPath = CreateSegmentBarProject(rightSide);
+
+        CliTestHelper result = CliTestHelper.Run("check", projectPath);
+
+        result.StandardOutput.ShouldContain(
+            $"warning: SegmentBar: Default: the Total.VariableReferences line \"Width = {rightSide}\" {problem}, so it never applies.");
+    }
+
     private CliTestHelper RenderScreen(string projectPath, out SKBitmap bitmap)
     {
         string outputPath = Path.Combine(TempDirectory, "Screen.png");

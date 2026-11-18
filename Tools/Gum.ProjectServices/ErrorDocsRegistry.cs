@@ -57,6 +57,7 @@ public class ErrorDocsRegistry : IErrorDocsRegistry
             ["GUM0044"] = "gum-tool/project-files#animation-keyframe-that-uses-a-missing-state-or-animation-gum0043-gum0044",
             ["GUM0045"] = "gum-tool/project-files#category-name-collision-in-generated-code-gum0045",
             ["GUM0046"] = "gum-tool/project-files#forms-component-with-an-unsupported-base-type-gum0046",
+            ["GUM0047"] = "gum-tool/gum-elements/general-properties/variable-references#reference-that-cannot-be-evaluated-gum0047",
         };
     }
 

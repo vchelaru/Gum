@@ -50,6 +50,32 @@ namespace GumRuntime
 #nullable enable
         [ThreadStatic]
         internal static object? RejectedCastValue;
+
+        // Why Gum.Expressions gave no value for a right side whose names all exist ("is not a valid expression", "divides
+        // by zero"), the same kind of side channel as RejectedCastValue.
+        [ThreadStatic]
+        internal static string? EvaluationFailure;
+
+        /// <summary>
+        /// Says why the evaluator behind <see cref="CustomEvaluateExpression"/> gives no value for
+        /// <paramref name="rightSide"/> read against <paramref name="stateSave"/> although every name it reads exists
+        /// ("is not a valid expression", "divides by zero"). Null when it has a value, reads a missing name, or no
+        /// evaluator is wired. A variable reference that fails this way keeps its value and is reported.
+        /// </summary>
+        public static string? FindEvaluationProblem(StateSave stateSave, string rightSide)
+        {
+            if (CustomEvaluateExpression == null)
+            {
+                return null;
+            }
+            EvaluationFailure = null;
+            RejectedCastValue = null;
+            object? value = CustomEvaluateExpression(stateSave, rightSide, null, null);
+            string? failure = value == null ? EvaluationFailure : null;
+            EvaluationFailure = null;
+            RejectedCastValue = null;
+            return failure;
+        }
 #nullable restore
 
         /// <summary>
@@ -1793,14 +1819,27 @@ namespace GumRuntime
             else
             {
                 RejectedCastValue = null;
+                EvaluationFailure = null;
                 value = GetRightSideValue(readState, right, leftSideType, liveRoot);
                 sourceType = CustomEvaluateExpression == null ? "bool" : null;
                 object? rejectedValue = RejectedCastValue;
+                string? evaluationFailure = EvaluationFailure;
                 RejectedCastValue = null;
+                EvaluationFailure = null;
                 if (value == null && CustomEvaluateExpression != null && rejectedValue != null && leftSideType != null
                     && ReportedRejectedCast(referenceString, right, leftVariableName, leftSideType, rejectedValue, stateSave, liveRoot))
                 {
                     // Gum.Expressions evaluated the right side but refused to cast it to the left side's type.
+                    mismatchReported = true;
+                }
+                else if (value == null && CustomEvaluateExpression != null && evaluationFailure != null)
+                {
+                    // Gum.Expressions could not evaluate it (a parse error, a division by zero). Never silent.
+                    if (IsFirstReport(liveRoot, stateSave, referenceString, leftVariableName))
+                    {
+                        ReportNotApplied(referenceString, leftVariableName, stateSave, liveRoot,
+                            $"{DecodeOwnerName(right)} {evaluationFailure}.");
+                    }
                     mismatchReported = true;
                 }
             }
