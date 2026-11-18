@@ -655,4 +655,34 @@ public class EditCommandTests : BaseTestClass
         result.StandardError.ShouldContain(expectedInMessage);
         ReadProjectFiles(projectPath).ShouldBe(before);
     }
+
+    [Fact]
+    public void Edit_SetVariableThroughNestedInstance_ExitsWith1AndWritesNothing()
+    {
+        string projectPath = CreateEmptyProject();
+        string setup = WriteOperations("""
+            { "version": 1, "operations": [
+              { "op": "addComponent", "name": "Hud" },
+              { "op": "addInstance", "element": "Hud", "name": "Label", "type": "Text" },
+              { "op": "setVariable", "element": "Hud", "name": "Label.Text", "value": "Hi" },
+              { "op": "addScreen", "name": "Game" },
+              { "op": "addInstance", "element": "Game", "name": "HudInstance", "type": "Hud" }
+            ] }
+            """);
+        CliTestHelper.Run("edit", projectPath, setup).ExitCode.ShouldBe(0);
+        Dictionary<string, string> before = ReadProjectFiles(projectPath);
+        string operations = WriteOperations("""
+            { "version": 1, "operations": [
+              { "op": "setVariable", "element": "Game", "name": "HudInstance.Label.Text", "value": "Yo" }
+            ] }
+            """);
+
+        CliTestHelper result = CliTestHelper.Run("edit", projectPath, operations);
+
+        // A variable on an instance inside another instance is not something the tool stores, so it is refused.
+        result.ExitCode.ShouldBe(1);
+        result.StandardError.ShouldContain("HudInstance.Label.Text");
+        result.StandardError.ShouldContain("set Label.Text on Hud");
+        ReadProjectFiles(projectPath).ShouldBe(before);
+    }
 }

@@ -55,6 +55,8 @@ public class ScreenshotScaleAndOverrideTests : BaseTestClass
     [InlineData("Screen", "Panel.Width=50", 50)]
     [InlineData("Panel", "SizeState=Big", 80)]
     [InlineData("Screen", "Panel.SizeState=Big", 80)]
+    [InlineData("FrameScreen", "Frame.Inner.SizeState=Big", 80)]
+    [InlineData("FrameScreen", "Frame.Inner.Fill.Width=8", 40)]
     public void Screenshot_WithSet_RendersOverriddenValueWithoutSaving(string element, string set, int expectedWidth)
     {
         string projectPath = CreatePanelProject(withReference: false);
@@ -69,6 +71,47 @@ public class ScreenshotScaleAndOverrideTests : BaseTestClass
             bitmap.GetPixel(expectedWidth + 2, 8).ShouldBe(SKColors.Black);
         }
         ReadProjectFiles().ShouldBe(filesBefore);
+    }
+
+    [Theory]
+    [InlineData("Screen", "Panel.Fill.Visible=false")]
+    [InlineData("Frame", "Inner.Fill.Visible=false")]
+    [InlineData("FrameScreen", "Frame.Inner.Fill.Visible=false")]
+    public void Screenshot_WithSetThroughNestedInstances_RendersOverriddenValueWithoutSaving(string element, string set)
+    {
+        string projectPath = CreatePanelProject(withReference: false);
+        Dictionary<string, string> filesBefore = ReadProjectFiles();
+
+        GumCliProcess plain = RenderWithSets(projectPath, element, out SKBitmap plainBitmap);
+        using (plainBitmap)
+        {
+            plain.ExitCode.ShouldBe(0, plain.StandardError);
+            plainBitmap.GetPixel(10, 8).ShouldBe(SKColors.White);
+        }
+        GumCliProcess result = RenderWithSets(projectPath, element, out SKBitmap bitmap, set);
+        using (bitmap)
+        {
+            result.ExitCode.ShouldBe(0, result.StandardError);
+            bitmap.GetPixel(10, 8).ShouldBe(SKColors.Black);
+        }
+        ReadProjectFiles().ShouldBe(filesBefore);
+    }
+
+    [Theory]
+    [InlineData("Frame.Missing.Fill.Visible=false", "Frame has no instance named Missing.")]
+    [InlineData("Frame.Inner.Missing.Visible=false", "Panel has no instance named Missing.")]
+    [InlineData("Frame.Inner.Fill.Bogus=5", "Rectangle has no variable named Bogus, so Frame.Inner.Fill.Bogus cannot be set.")]
+    [InlineData("Frame.Inner.Bogus=5", "Panel has no variable named Bogus, so Frame.Inner.Bogus cannot be set.")]
+    [InlineData("Frame.Inner.SizeState=Huge", "Huge is not a state of category Size, so Frame.Inner.SizeState cannot be set.")]
+    public void Screenshot_WithNestedSetThatCannotApply_NamesTheBadSegment(string set, string expectedError)
+    {
+        string projectPath = CreatePanelProject(withReference: false);
+
+        GumCliProcess result = RenderWithSets(projectPath, "FrameScreen", out SKBitmap? bitmap, set);
+
+        bitmap?.Dispose();
+        result.ExitCode.ShouldBe(1);
+        result.StandardError.ShouldContain($"--set {set}: {expectedError}");
     }
 
     [Fact]
@@ -168,7 +211,8 @@ public class ScreenshotScaleAndOverrideTests : BaseTestClass
     /// category Size whose state Big sets Width to 80) and a Screen with a Panel instance. With
     /// <paramref name="withReference"/>, Panel also has a float custom variable BarWidth = 32 with the reference
     /// <c>Width = BarWidth</c>, and a Text instance Caption at X 64 whose Text is exposed as Label, set to
-    /// <paramref name="label"/>.
+    /// <paramref name="label"/>. Component Frame holds a Panel instance Inner, and Screen FrameScreen holds a Frame
+    /// instance Frame, for paths through nested instances.
     /// </summary>
     private string CreatePanelProject(bool withReference, string label = "")
     {
@@ -217,10 +261,24 @@ public class ScreenshotScaleAndOverrideTests : BaseTestClass
         screen.States.Add(screenState);
         screen.Instances.Add(new InstanceSave { Name = "Panel", BaseType = "Panel", ParentContainer = screen });
 
-        project.Components.Add(panel);
-        project.ComponentReferences.Add(new ElementReference { Name = panel.Name, ElementType = ElementType.Component });
-        project.Screens.Add(screen);
-        project.ScreenReferences.Add(new ElementReference { Name = screen.Name, ElementType = ElementType.Screen });
+        ComponentSave frame = new ComponentSave { Name = "Frame", BaseType = "Container" };
+        frame.States.Add(new StateSave { Name = "Default", ParentContainer = frame });
+        frame.Instances.Add(new InstanceSave { Name = "Inner", BaseType = "Panel", ParentContainer = frame });
+
+        ScreenSave frameScreen = new ScreenSave { Name = "FrameScreen" };
+        frameScreen.States.Add(new StateSave { Name = "Default", ParentContainer = frameScreen });
+        frameScreen.Instances.Add(new InstanceSave { Name = "Frame", BaseType = "Frame", ParentContainer = frameScreen });
+
+        foreach (ComponentSave component in new[] { panel, frame })
+        {
+            project.Components.Add(component);
+            project.ComponentReferences.Add(new ElementReference { Name = component.Name, ElementType = ElementType.Component });
+        }
+        foreach (ScreenSave screenSave in new[] { screen, frameScreen })
+        {
+            project.Screens.Add(screenSave);
+            project.ScreenReferences.Add(new ElementReference { Name = screenSave.Name, ElementType = ElementType.Screen });
+        }
         project.Save(projectPath, saveElements: true);
 
         return projectPath;

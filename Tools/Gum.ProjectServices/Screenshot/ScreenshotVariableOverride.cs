@@ -11,9 +11,10 @@ namespace Gum.ProjectServices.Screenshot;
 
 /// <summary>
 /// A variable value set on the rendered element for one screenshot only, as typed after <c>--set</c>
-/// (<c>Width=300</c>, <c>Hud.BossState=Visible</c>). Nothing is written to the project.
+/// (<c>Width=300</c>, <c>Hud.BossState=Visible</c>, or through nested instances, <c>Hud.Bar.Visible=false</c>).
+/// Nothing is written to the project.
 /// </summary>
-/// <param name="Name">The variable name, prefixed with the instance name for an instance variable.</param>
+/// <param name="Name">The variable name, prefixed with the instance path (dot-separated) for an instance variable.</param>
 /// <param name="Value">The value text, converted to the variable's type as <c>gumcli edit setVariable</c> does.</param>
 public record ScreenshotVariableOverride(string Name, string Value)
 {
@@ -57,13 +58,13 @@ public record ScreenshotVariableOverride(string Name, string Value)
     private object? Convert(ElementSave elementSave, IVariableDefinedByTypeLogic variableDefinedByType,
         VariableValueConverter converter, IStateVariableWriter writer)
     {
-        (string variableName, InstanceSave? instance) = converter.ResolveVariable(elementSave, Name, "set");
-        string type = writer.ResolveVariableType(elementSave, elementSave.GetDefaultStateOrThrow(), variableName)
+        (ElementSave owner, string variableName, InstanceSave? instance) = converter.ResolveNestedVariable(elementSave, Name, "set");
+        string type = writer.ResolveVariableType(owner, owner.GetDefaultStateOrThrow(), variableName)
             ?? throw new EditException($"The type of {Name} could not be found.");
 
         object? value = ConvertText(converter, type);
-        ElementSave typeElement = instance == null ? elementSave : ObjectFinder.Self.GetElementSave(instance.BaseType)!;
-        ThrowIfUnknownState(typeElement, variableDefinedByType, value);
+        ElementSave typeElement = instance == null ? owner : ObjectFinder.Self.GetElementSave(instance.BaseType)!;
+        ThrowIfUnknownState(typeElement, variableDefinedByType, VariableSave.GetRootName(variableName), value);
         return value;
     }
 
@@ -86,13 +87,13 @@ public record ScreenshotVariableOverride(string Name, string Value)
     }
 
     // A state name that does not exist would render nothing different, which is easy to miss in a screenshot.
-    private void ThrowIfUnknownState(ElementSave typeElement, IVariableDefinedByTypeLogic variableDefinedByType, object? value)
+    private void ThrowIfUnknownState(ElementSave typeElement, IVariableDefinedByTypeLogic variableDefinedByType,
+        string rootName, object? value)
     {
         if (value is not string stateName)
         {
             return;
         }
-        string rootName = VariableSave.GetRootName(Name);
         DefinedVariable? defined = variableDefinedByType.GetVariablesDefinedByType(typeElement)
             .FirstOrDefault(variable => variable.Name == rootName);
         if (defined?.Category is { } category && category.States.All(state => state.Name != stateName))
