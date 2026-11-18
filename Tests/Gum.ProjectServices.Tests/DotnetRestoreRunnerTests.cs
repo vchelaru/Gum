@@ -85,8 +85,9 @@ public class DotnetRestoreRunnerTests
             string pidFile = Path.Combine(folder, "child.pid");
             string childScript = Path.Combine(folder, "child.ps1");
             string parentScript = Path.Combine(folder, "parent.ps1");
-            File.WriteAllText(childScript, $"$PID | Set-Content '{pidFile}'; Start-Sleep -Seconds 60");
-            File.WriteAllText(parentScript, $"& pwsh -NoProfile -File '{childScript}'");
+            File.WriteAllText(childScript, $"'child started'; $PID | Set-Content '{pidFile}'; Start-Sleep -Seconds 60");
+            File.WriteAllText(parentScript,
+                $"'parent started'; & pwsh -NoProfile -File '{childScript}'; \"parent: child exited with $LASTEXITCODE\"");
             DotnetRestoreRunner runner = new DotnetRestoreRunner(_ =>
             {
                 ProcessStartInfo info = new ProcessStartInfo("pwsh");
@@ -96,13 +97,49 @@ public class DotnetRestoreRunnerTests
                 return info;
             });
             using CancellationTokenSource cancellation = new CancellationTokenSource();
-
-            Task<RestoreResult> restore = runner.RestoreAsync("x.csproj", null, cancellation.Token);
-            for (int i = 0; i < 100 && !File.Exists(pidFile); i++)
+            Stopwatch elapsed = Stopwatch.StartNew();
+            List<string> output = new List<string>();
+            void OnLine(string line)
             {
-                await Task.Delay(200);
+                lock (output)
+                {
+                    output.Add($"{elapsed.Elapsed.TotalSeconds:F1}s {line}");
+                }
             }
-            File.Exists(pidFile).ShouldBeTrue("the grandchild process never started");
+
+            // Cancel only once the grandchild exists, so the test proves the tree kill. The deadline only stops a
+            // hang; the failure message says which process got how far.
+            Task<RestoreResult> restore = runner.RestoreAsync("x.csproj", OnLine, cancellation.Token);
+            TimeSpan deadline = TimeSpan.FromSeconds(60);
+            while (!File.Exists(pidFile) && !restore.IsCompleted && elapsed.Elapsed < deadline)
+            {
+                await Task.Delay(100);
+            }
+
+            if (!File.Exists(pidFile))
+            {
+                string ending = "was still running";
+                if (restore.IsCompleted)
+                {
+                    RestoreResult early = await restore;
+                    ending = $"ended first with {early.Status}, exit code {early.ExitCode}";
+                }
+                else
+                {
+                    cancellation.Cancel();
+                    await restore;
+                }
+
+                string lines;
+                lock (output)
+                {
+                    lines = string.Join(Environment.NewLine, output);
+                }
+
+                throw new ShouldAssertException(
+                    $"The grandchild never wrote its pid file within {elapsed.Elapsed.TotalSeconds:F1}s; " +
+                    $"the parent {ending}. Output:{Environment.NewLine}{lines}");
+            }
             string pidText = "";
             for (int i = 0; i < 20 && pidText.Trim().Length == 0; i++)
             {
