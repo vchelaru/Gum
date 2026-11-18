@@ -9,6 +9,8 @@ namespace Gum.RenderingLibrary
         Replace,
         SubtractAlpha,
         ReplaceAlpha,
-        MinAlpha
+        MinAlpha,
+        // #8263 spike: rgb = max(dst - src, 0), dst alpha kept. Wired on Skia only.
+        Subtract
     }
 }

@@ -48,7 +48,25 @@ half4 main(half4 src, half4 dst) {
         {
             paint.Blender = GetReplaceAlphaBlender();
         }
+        else if (blend == Gum.RenderingLibrary.Blend.Subtract)
+        {
+            if (_subtractBlender == null)
+            {
+                using SKRuntimeEffect? effect = SKRuntimeEffect.CreateBlender(SubtractSksl, out string _);
+                _subtractBlender = effect?.ToBlender();
+            }
+            paint.Blender = _subtractBlender;
+        }
     }
+
+    // #8263 spike. Inputs are premultiplied, so src.rgb is the straight color times its alpha,
+    // the same as MonoGame's SourceAlpha/One/ReverseSubtract. The result stays validly premultiplied.
+    private const string SubtractSksl = @"
+half4 main(half4 src, half4 dst) {
+    return half4(max(dst.rgb - src.rgb, 0), dst.a);
+}";
+
+    private static SKBlender? _subtractBlender;
 
     private static SKBlender? GetReplaceAlphaBlender()
     {
