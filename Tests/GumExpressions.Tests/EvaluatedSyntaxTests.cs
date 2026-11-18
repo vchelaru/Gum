@@ -229,6 +229,16 @@ public class EvaluatedSyntaxTests : BaseTestClass
     #region CastTo
 
     [Fact]
+    public void CastTo_StringToGumEnum_ParsesTheEnum()
+    {
+        EvaluatedSyntax result = Evaluate("\"LeftToRightStack\"", BuildState());
+
+        result.CastTo("ChildrenLayout").ShouldBeTrue();
+
+        result.Value.ShouldBe(ChildrenLayout.LeftToRightStack);
+    }
+
+    [Fact]
     public void CastTo_DoubleToFloat_CastsCorrectly()
     {
         StateSave state = BuildState(("Instance.Width", 3.14, "double"));

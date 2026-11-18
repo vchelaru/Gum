@@ -14,7 +14,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Gum.Plugins.InternalPlugins.VariableGrid;
+namespace Gum.ProjectServices.Editing;
 
 /// <summary>
 /// Tool-only apply pass for <see cref="BehaviorSave.ToolOnlyVariableReferences"/>.
@@ -179,7 +179,9 @@ public static class BehaviorToolOnlyReferencesApplier
         return result;
     }
 
-    /// <param name="suppliedValues">Holds the values the owner of <paramref name="component"/>'s instance sets, by exposed name behind <paramref name="suppliedPrefix"/>.</param>
+    /// <summary>
+    /// <paramref name="suppliedValues"/> holds the values the owner of <paramref name="component"/>'s instance sets, by exposed name behind <paramref name="suppliedPrefix"/>.
+    /// </summary>
     private static void CollectValuesThroughExposedVariables(StateSave suppliedValues, string suppliedPrefix, ComponentSave component,
         string outputPrefix, StateSave result, int depth)
     {
@@ -553,7 +555,8 @@ public static class BehaviorToolOnlyReferencesApplier
         // ApplyVariableReferencesOnSpecificOwner). The tool-only applier evaluates the RHS directly, so
         // without this an enum-typed target like ChildrenLayout would store the raw string a ternary
         // produces instead of the boxed enum (which the typed wireframe setter and int-on-disk serializer require).
-        string? leftSideType = ResolveLeftSideType(effectiveLeft, instance, stateSave);
+        string? leftSideType = ElementSaveExtensions.GetReferenceCastType(ResolveLeftSideType(effectiveLeft, instance, stateSave),
+            effectiveLeft, instance?.ParentContainer ?? stateSave.ParentContainer);
         if (leftSideType != null)
         {
             evaluated.CastTo(leftSideType);

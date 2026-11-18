@@ -6,7 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 
-namespace Gum.Plugins.InternalPlugins.VariableGrid;
+namespace Gum.ProjectServices.Editing;
 
 /// <summary>
 /// Resolves <c>FindAncestor&lt;BehaviorName&gt;()</c> in a behavior's tool-only reference line to the name of the

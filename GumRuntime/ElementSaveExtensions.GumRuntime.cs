@@ -1582,6 +1582,25 @@ namespace GumRuntime
         {
             return leftVariableOnState?.Type ?? GetRootVariableType(leftVariableName, instanceLeft, stateSave);
         }
+
+        private static string? GetCastType(string? leftSideType, string leftVariableName, InstanceSave? instanceLeft, StateSave stateSave) =>
+            GetReferenceCastType(leftSideType, leftVariableName, instanceLeft?.ParentContainer ?? stateSave.ParentContainer);
+
+        /// <summary>
+        /// The type a reference's evaluated right side is cast to when it writes <paramref name="qualifiedLeftName"/>
+        /// (declared as <paramref name="declaredType"/>) in <paramref name="owner"/>. A category state's value is the
+        /// state's name, so it is a string whatever the category is called: a category can share its name with an enum
+        /// (Orientation, or one that generated code nests in its element's class), which must not turn the name into that enum.
+        /// </summary>
+        public static string? GetReferenceCastType(string? declaredType, string qualifiedLeftName, ElementSave? owner)
+        {
+            if (owner == null || !qualifiedLeftName.EndsWith("State", StringComparison.Ordinal))
+            {
+                return declaredType;
+            }
+
+            return new VariableSave { Name = qualifiedLeftName }.IsState(owner) ? "string" : declaredType;
+        }
 #nullable restore
 
         public struct VariableReferenceAssignmentResult
@@ -1831,7 +1850,7 @@ namespace GumRuntime
             {
                 RejectedCastValue = null;
                 EvaluationFailure = null;
-                value = GetRightSideValue(readState, right, leftSideType, liveRoot);
+                value = GetRightSideValue(readState, right, GetCastType(leftSideType, leftVariableName, instanceLeft, stateSave), liveRoot);
                 sourceType = CustomEvaluateExpression == null ? "bool" : null;
                 object? rejectedValue = RejectedCastValue;
                 string? evaluationFailure = EvaluationFailure;
@@ -2366,7 +2385,7 @@ namespace GumRuntime
             string? leftSideType = GetLeftSideType(variableOnState, leftVariableName, instanceLeft, stateSave);
 
             var right = ResolveOwnerPrefix(split[1], instanceLeft?.Name, GetReferencableInstanceNames(stateSave.ParentContainer));
-            var values =GetAllRightSideValues(stateSave, right, leftSideType, liveRoot).ToList();
+            var values = GetAllRightSideValues(stateSave, right, GetCastType(leftSideType, leftVariableName, instanceLeft, stateSave), liveRoot).ToList();
 
             return (leftVariableName, values);
         }

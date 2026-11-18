@@ -1,3 +1,4 @@
+using Gum.ProjectServices.Editing;
 using CommunityToolkit.Mvvm.Messaging;
 using EditorTabPlugin_XNA.Services;
 using EditorTabPlugin_XNA.ViewModels;
