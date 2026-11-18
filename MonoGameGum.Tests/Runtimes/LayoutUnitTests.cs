@@ -6,6 +6,7 @@ using Shouldly;
 using System.Collections.ObjectModel;
 using Gum.DataTypes;
 using Gum.Wireframe;
+using XOrY = Gum.Converters.XOrY;
 using Xunit;
 
 namespace MonoGameGum.Tests.Runtimes;
@@ -5037,6 +5038,44 @@ public class LayoutUnitTests : BaseTestClass
         // All changes applied at once
         child.AbsoluteWidth.ShouldBe(300);
         child.AbsoluteHeight.ShouldBe(400);
+    }
+
+    [Fact]
+    public void SuspendLayout_DirtyRecord_StartsEmptyAfterAPreviousRecordWasResolved()
+    {
+        ContainerRuntime element = new();
+        element.UpdateLayout();
+
+        element.SuspendLayout();
+        element.UpdateLayout(GraphicalUiElement.ParentUpdateType.All, int.MaxValue / 2, xOrY: null);
+        element.ResumeLayout();
+        ReadDirtyRecord(element).ShouldBeNull();
+
+        element.SuspendLayout();
+        element.UpdateLayout(GraphicalUiElement.ParentUpdateType.IfParentStacks, 1, XOrY.X);
+
+        (GraphicalUiElement.ParentUpdateType ParentUpdateType, int ChildrenUpdateDepth, XOrY? XOrY)? record =
+            ReadDirtyRecord(element);
+        record.ShouldNotBeNull();
+        record.Value.ParentUpdateType.ShouldBe(GraphicalUiElement.ParentUpdateType.IfParentStacks);
+        record.Value.ChildrenUpdateDepth.ShouldBe(1);
+        record.Value.XOrY.ShouldBe(XOrY.X);
+    }
+
+    private static (GraphicalUiElement.ParentUpdateType ParentUpdateType, int ChildrenUpdateDepth, XOrY? XOrY)?
+        ReadDirtyRecord(GraphicalUiElement element)
+    {
+        const System.Reflection.BindingFlags flags =
+            System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Public;
+        object? record = typeof(GraphicalUiElement).GetField("currentDirtyState", flags)!.GetValue(element);
+        if (record == null)
+        {
+            return null;
+        }
+        System.Type recordType = record.GetType();
+        return ((GraphicalUiElement.ParentUpdateType)recordType.GetField("ParentUpdateType", flags)!.GetValue(record)!,
+            (int)recordType.GetField("ChildrenUpdateDepth", flags)!.GetValue(record)!,
+            (XOrY?)recordType.GetField("XOrY", flags)!.GetValue(record));
     }
 
     [Fact]

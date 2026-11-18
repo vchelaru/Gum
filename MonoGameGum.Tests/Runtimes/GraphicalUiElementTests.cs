@@ -2132,6 +2132,7 @@ public class GraphicalUiElementTests : BaseTestClass
     private static readonly HashSet<string> FieldsOwnedByEachElement = new()
     {
         "currentDirtyState",
+        "_spareDirtyState",
         "fullyUpdatedChildren",
         "statesInStack",
         "_pendingCustomVariables",
