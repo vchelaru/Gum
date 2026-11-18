@@ -1,3 +1,4 @@
+using Gum.ProjectServices.Editing;
 using Gum.Commands;
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
@@ -30,7 +31,7 @@ public class VariableReferenceLogicStoredReadTests : BaseTestClass
             Mock.Of<IWireframeCommands>(),
             Mock.Of<IDialogService>(),
             Mock.Of<IFileCommands>(),
-            Mock.Of<ICompositeMemberRegistry>(),
+            new VariableReferenceValidator(),
             Mock.Of<IDispatcher>(),
             _wireframe.Object);
     }

@@ -49,6 +49,8 @@ public enum EditFieldType
     Bool,
     /// <summary>Any JSON value.</summary>
     Any,
+    /// <summary>A JSON array of strings.</summary>
+    StringArray,
 }
 
 /// <summary>
@@ -63,6 +65,7 @@ public record EditField(string Name, EditFieldType Type)
     {
         EditFieldType.String => "string",
         EditFieldType.Bool => "bool",
+        EditFieldType.StringArray => "string[]",
         _ => "any",
     };
 }
@@ -136,6 +139,7 @@ public class ProjectEditService : IProjectEditService
     private readonly IComponentExtractionLogic _componentExtraction;
     private readonly IMovedInstanceReferenceDropLogic _movedReferenceDrop;
     private readonly IElementRemovalLogic _elementRemoval;
+    private readonly IVariableReferenceValidator _referenceValidator;
 
     public ProjectEditService(
         IElementCreationLogic elementCreation,
@@ -158,7 +162,8 @@ public class ProjectEditService : IProjectEditService
         IVariableClearLogic variableClear,
         IComponentExtractionLogic componentExtraction,
         IMovedInstanceReferenceDropLogic movedReferenceDrop,
-        IElementRemovalLogic elementRemoval)
+        IElementRemovalLogic elementRemoval,
+        IVariableReferenceValidator referenceValidator)
     {
         _elementCreation = elementCreation;
         _instanceCreation = instanceCreation;
@@ -181,6 +186,7 @@ public class ProjectEditService : IProjectEditService
         _componentExtraction = componentExtraction;
         _movedReferenceDrop = movedReferenceDrop;
         _elementRemoval = elementRemoval;
+        _referenceValidator = referenceValidator;
 
         _operations = new Dictionary<string, OperationSpec>
         {
@@ -202,6 +208,8 @@ public class ProjectEditService : IProjectEditService
             ["clearVariable"] = new(Strings("element", "name"), Strings("state", "category"), ClearVariable),
             ["extractToComponent"] = new(Fields(Str("element"), Str("instance"), Str("name"), new EditField("replace", EditFieldType.Bool)),
                 None, ExtractToComponent),
+            ["setVariableReferences"] = new(Fields(Str("element"), new EditField("lines", EditFieldType.StringArray)),
+                Strings("instance", "state", "category"), SetVariableReferences),
         };
     }
 
@@ -328,6 +336,11 @@ public class ProjectEditService : IProjectEditService
             if (field.Type == EditFieldType.String && property.Value.ValueKind != JsonValueKind.String)
             {
                 return $"{op}'s \"{property.Name}\" must be a string.";
+            }
+            if (field.Type == EditFieldType.StringArray && (property.Value.ValueKind != JsonValueKind.Array
+                || property.Value.EnumerateArray().Any(item => item.ValueKind != JsonValueKind.String)))
+            {
+                return $"{op}'s \"{property.Name}\" must be an array of strings.";
             }
         }
         foreach (EditField required in spec.Required)
@@ -615,6 +628,39 @@ public class ProjectEditService : IProjectEditService
             // Runs while the moved instances are still in the element, so their references still resolve.
             _movedReferenceDrop.Drop(_movedReferenceDrop.Find(element, instance, extraction.MovedInstances, animations: null));
             _componentExtraction.ReplaceWithComponentInstance(extraction, moved => _instanceRemoval.RemoveInstance(moved, element));
+        }
+    }
+
+    private void SetVariableReferences(GumProjectSave project, JsonElement operation)
+    {
+        ElementSave element = GetElement(project, operation);
+        string? instanceName = GetOptionalString(operation, "instance");
+        InstanceSave? instance = null;
+        if (instanceName != null)
+        {
+            instance = element.GetInstance(instanceName)
+                ?? throw new EditException($"{element.Name} has no instance named {instanceName}.");
+        }
+        (StateSave state, _) = GetState(element, operation);
+        string listName = instance == null ? "VariableReferences" : instance.Name + ".VariableReferences";
+
+        List<string> lines = operation.GetProperty("lines").EnumerateArray().Select(item => item.GetString()!).ToList();
+        _referenceValidator.NormalizeLines(lines);
+        if (_referenceValidator.GetFailures(element, instance, lines, liveRoot: null).FirstOrDefault() is { Line: { } badLine } failure)
+        {
+            throw new EditException($"line \"{badLine}\": {failure.Response.Message}");
+        }
+
+        state.VariableLists.RemoveAll(item => item.Name == listName);
+        if (lines.Count > 0)
+        {
+            state.VariableLists.Add(new VariableListSave<string>
+            {
+                Name = listName,
+                Type = "string",
+                Value = lines,
+            });
+            ElementSaveExtensions.ApplyVariableReferences(element, state);
         }
     }
 

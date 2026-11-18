@@ -1,3 +1,4 @@
+using Gum.ProjectServices.Editing;
 using Gum.Commands;
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
@@ -35,30 +36,9 @@ public class VariableReferenceLogicTests : BaseTestClass
             new Mock<IWireframeCommands>().Object,
             _dialogServiceMock.Object,
             new Mock<IFileCommands>().Object,
-            BuildCompositeMemberRegistry(),
+            new VariableReferenceValidator(),
             _dispatcherMock.Object,
             _wireframeObjectManagerMock.Object);
-    }
-
-    /// <summary>
-    /// The concrete CompositeMemberRegistry stays tool-side (it references WPF displayer control
-    /// types), so composite-expansion tests here stand in a minimal registry with just the color
-    /// descriptor these tests exercise - Displayer/CompositeType/Compose/Decompose are never invoked
-    /// by VariableReferenceLogic's channel-name matching, so placeholders are fine.
-    /// </summary>
-    private static ICompositeMemberRegistry BuildCompositeMemberRegistry()
-    {
-        var colorDescriptor = new CompositeMemberDescriptor(
-            ChannelRootNames: new[] { "Red", "Green", "Blue" },
-            CompositeNameFormat: "{prefix}Color{suffix}",
-            Displayer: typeof(object),
-            CompositeType: typeof(object),
-            Compose: _ => null!,
-            Decompose: _ => Array.Empty<object?>());
-
-        var registryMock = new Mock<ICompositeMemberRegistry>();
-        registryMock.Setup(x => x.Descriptors).Returns(new List<CompositeMemberDescriptor> { colorDescriptor });
-        return registryMock.Object;
     }
 
     #region GetAssignmentSyntax

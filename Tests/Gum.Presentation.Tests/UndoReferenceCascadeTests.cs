@@ -1,3 +1,4 @@
+using Gum.ProjectServices.Editing;
 using CommunityToolkit.Mvvm.Messaging;
 using Gum.Commands;
 using Gum.DataTypes;
@@ -61,10 +62,8 @@ public class UndoReferenceCascadeTests : BaseTestClass
 
         Mock<IWireframeObjectManager> wireframe = new();
         wireframe.Setup(x => x.AllIpsos).Returns(new List<GraphicalUiElement>());
-        Mock<ICompositeMemberRegistry> compositeRegistry = new();
-        compositeRegistry.Setup(x => x.Descriptors).Returns(new List<CompositeMemberDescriptor>());
         _logic = new VariableReferenceLogic(new Mock<IGuiCommands>().Object, new Mock<IWireframeCommands>().Object,
-            new Mock<IDialogService>().Object, _fileCommands.Object, compositeRegistry.Object,
+            new Mock<IDialogService>().Object, _fileCommands.Object, new VariableReferenceValidator(),
             new Mock<IDispatcher>().Object, wireframe.Object);
 
         Mock<IReferenceFinderProjectProvider> projectProvider = new();

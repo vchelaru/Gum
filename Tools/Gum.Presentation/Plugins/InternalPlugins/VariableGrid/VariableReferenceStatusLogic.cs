@@ -2,6 +2,7 @@ using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using Gum.Expressions;
 using Gum.Managers;
+using Gum.ProjectServices.Editing;
 using GumRuntime;
 using System.Collections;
 using System.Linq;
@@ -57,7 +58,7 @@ public class VariableReferenceStatusLogic : IVariableReferenceStatusLogic
 
                 string resolved = ElementSaveExtensions.ResolveOwnerPrefix(expanded, instance?.Name,
                     ElementSaveExtensions.GetReferencableInstanceNames(owner));
-                var assignment = VariableReferenceLogic.ParseAssignment(resolved);
+                var assignment = VariableReferenceValidator.ParseAssignment(resolved);
                 if (assignment == null || EvaluatedSyntax.GetFunctionCallProblem(assignment.Right) != null)
                 {
                     continue;
@@ -73,7 +74,7 @@ public class VariableReferenceStatusLogic : IVariableReferenceStatusLogic
                 EvaluatedSyntax? evaluated = EvaluatedSyntax.FromSyntaxNode(assignment.Right, ElementSaveExtensions.WithFormsPropertyInputs(state, assignment.Right.ToString(), null));
                 if (evaluated != null && evaluated.EvaluatedType == null)
                 {
-                    return Prefix + VariableReferenceLogic.DescribeRightSideFailure(assignment.Right, state, null, owner, instance?.Name, expanded).NoteReason + ".";
+                    return Prefix + VariableReferenceValidator.DescribeRightSideFailure(assignment.Right, state, null, owner, instance?.Name, expanded).NoteReason + ".";
                 }
             }
         }

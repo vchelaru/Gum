@@ -1,3 +1,4 @@
+using Gum.ProjectServices.Editing;
 using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
@@ -349,11 +350,9 @@ public class BehaviorFindAncestorReferenceTests : BaseTestClass
 
     private static VariableReferenceLogic CreateLogic()
     {
-        Mock<ICompositeMemberRegistry> registry = new Mock<ICompositeMemberRegistry>();
-        registry.Setup(x => x.Descriptors).Returns(new List<CompositeMemberDescriptor>());
         return new VariableReferenceLogic(
             new Mock<IGuiCommands>().Object, new Mock<IWireframeCommands>().Object, new Mock<IDialogService>().Object,
-            new Mock<IFileCommands>().Object, registry.Object, new Mock<IDispatcher>().Object,
+            new Mock<IFileCommands>().Object, new VariableReferenceValidator(), new Mock<IDispatcher>().Object,
             new Mock<IWireframeObjectManager>().Object);
     }
 

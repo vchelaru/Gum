@@ -1,3 +1,4 @@
+using Gum.ProjectServices.Editing;
 // Undo and redo compared with typing, one rule: an undo or redo has the same effect on the rest of the app as
 // typing the old (or new) value. Each step must leave the element and the element reading it with the variables
 // and reference rows that typing the inverse (or the same) edit gives; undoing a row add instead matches the world
@@ -68,12 +69,10 @@ public sealed class UndoOracleWorld : BaseTestClass
         _fileCommands.Setup(x => x.TryAutoSaveElement(It.IsAny<ElementSave?>())).Callback<ElementSave?>(SaveToFakeDisk);
         _fileCommands.Setup(x => x.TryAutoSaveCurrentElement()).Callback(() => SaveToFakeDisk(_selectedElement));
 
-        Mock<ICompositeMemberRegistry> registry = new();
-        registry.Setup(x => x.Descriptors).Returns(new List<CompositeMemberDescriptor>());
         Mock<IWireframeObjectManager> wireframe = new();
         wireframe.Setup(x => x.AllIpsos).Returns(new List<GraphicalUiElement>());
         _logic = new VariableReferenceLogic(new Mock<IGuiCommands>().Object, new Mock<IWireframeCommands>().Object,
-            new Mock<IDialogService>().Object, _fileCommands.Object, registry.Object,
+            new Mock<IDialogService>().Object, _fileCommands.Object, new VariableReferenceValidator(),
             new Mock<IDispatcher>().Object, wireframe.Object);
 
         Mock<IReferenceFinderProjectProvider> projectProvider = new();

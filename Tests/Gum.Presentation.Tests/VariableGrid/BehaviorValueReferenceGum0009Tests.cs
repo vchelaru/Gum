@@ -1,3 +1,4 @@
+using Gum.ProjectServices.Editing;
 using Gum.Commands;
 using Gum.DataTypes;
 using Gum.Services;
@@ -201,10 +202,8 @@ public class BehaviorValueReferenceGum0009Tests : BaseTestClass
         string? shown = null;
         dialogs.Setup(x => x.ShowMessage(It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<MessageDialogStyle?>()))
             .Callback<string, string?, MessageDialogStyle?>((message, _, _) => shown = message);
-        Mock<ICompositeMemberRegistry> registry = new Mock<ICompositeMemberRegistry>();
-        registry.Setup(x => x.Descriptors).Returns(new List<CompositeMemberDescriptor>());
         VariableReferenceLogic logic = new VariableReferenceLogic(new Mock<IGuiCommands>().Object, new Mock<IWireframeCommands>().Object,
-            dialogs.Object, new Mock<IFileCommands>().Object, registry.Object, dispatcher.Object, new Mock<IWireframeObjectManager>().Object);
+            dialogs.Object, new Mock<IFileCommands>().Object, new VariableReferenceValidator(), dispatcher.Object, new Mock<IWireframeObjectManager>().Object);
 
         logic.DoVariableReferenceReaction(_component, _component.GetInstance("MinText"), "VariableReferences", _defaultState,
             "MinText.VariableReferences", trySave: false);
