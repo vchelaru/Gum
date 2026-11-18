@@ -55,6 +55,80 @@ public class BlendExtensionsTests : BaseTestClass
     }
 
     [Fact]
+    public void ToBlend_ReturnsNormal_WhenBlendStateIsACustomNormalBlendState()
+    {
+        Gum.BlendState previous = global::RenderingLibrary.Graphics.Renderer.NormalBlendState;
+        try
+        {
+            Gum.BlendState custom = new Gum.BlendState
+            {
+                ColorSourceBlend = Gum.Blend.SourceAlpha,
+                ColorDestinationBlend = Gum.Blend.InverseSourceAlpha,
+                AlphaSourceBlend = Gum.Blend.One,
+                AlphaDestinationBlend = Gum.Blend.InverseSourceAlpha,
+            };
+            global::RenderingLibrary.Graphics.Renderer.NormalBlendState = custom;
+
+            custom.ToBlend().ShouldBe(Blend.Normal);
+            Gum.BlendState.NonPremultiplied.ToBlend().ShouldBe(Blend.Normal);
+        }
+        finally
+        {
+            global::RenderingLibrary.Graphics.Renderer.NormalBlendState = previous;
+        }
+    }
+
+    [Fact]
+    public void ToBlend_ReturnsNormal_WhenBlendStateIsAFieldEqualCopyOfNormalBlendState()
+    {
+        Gum.BlendState copy = new Gum.BlendState
+        {
+            ColorSourceBlend = Gum.Blend.SourceAlpha,
+            ColorDestinationBlend = Gum.Blend.InverseSourceAlpha,
+            AlphaSourceBlend = Gum.Blend.SourceAlpha,
+            AlphaDestinationBlend = Gum.Blend.InverseSourceAlpha,
+        };
+
+        copy.ToBlend().ShouldBe(Blend.Normal);
+    }
+
+    [Fact]
+    public void ToBlend_ReturnsNormal_WhenBlendStateIsAlphaBlendOnAPremultipliedPipeline()
+    {
+        Gum.BlendState previous = global::RenderingLibrary.Graphics.Renderer.NormalBlendState;
+        try
+        {
+            global::RenderingLibrary.Graphics.Renderer.NormalBlendState = Gum.BlendState.AlphaBlend;
+
+            Gum.BlendState.AlphaBlend.ToBlend().ShouldBe(Blend.Normal);
+        }
+        finally
+        {
+            global::RenderingLibrary.Graphics.Renderer.NormalBlendState = previous;
+        }
+    }
+
+    [Fact]
+    public void ToBlend_ReturnsNull_WhenBlendStateIsAlphaBlendOnAStraightAlphaPipeline()
+    {
+        Gum.BlendState.AlphaBlend.ToBlend().ShouldBeNull();
+    }
+
+    [Fact]
+    public void ToBlend_ReturnsTheMaskBlend_ForThePremultipliedMaskStates()
+    {
+        Gum.BlendState.SubtractAlphaPremultiplied.ToBlend().ShouldBe(Blend.SubtractAlpha);
+        Gum.BlendState.ReplaceAlphaPremultiplied.ToBlend().ShouldBe(Blend.ReplaceAlpha);
+        Gum.BlendState.MinAlphaPremultiplied.ToBlend().ShouldBe(Blend.MinAlpha);
+    }
+
+    [Fact]
+    public void ToBlend_ReturnsNull_WhenBlendStateIsNull()
+    {
+        ((Gum.BlendState?)null).ToBlend().ShouldBeNull();
+    }
+
+    [Fact]
     public void ToBlend_ReturnsNull_WhenBlendStateIsUnknown()
     {
         new Gum.BlendState().ToBlend().ShouldBeNull();

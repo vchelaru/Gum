@@ -425,6 +425,187 @@ public class RenderTargetBakeBlendStateTests : BaseTestClass
         }
     }
 
+    // A Normal child holds NormalBlendState, or a field-equal copy of it (a BlendState built by hand or
+    // read back from XNA); either way it is unconfigured and must get the premultiply-on-bake blend.
+    [Fact]
+    public void AdjustBlendStateForRenderTargetBake_PremultipliesOnBake_ForAFieldEqualCopyOfNormalBlendState()
+    {
+        BlendState result = Renderer.AdjustBlendStateForRenderTargetBake(
+            CopyOf(BlendState.NonPremultiplied), isBakingRenderTarget: true);
+
+        result.AlphaSourceBlend.ShouldBe(Blend.One);
+        result.ColorSourceBlend.ShouldBe(Blend.SourceAlpha);
+    }
+
+    [Fact]
+    public void AdjustBlendStateForRenderTargetBake_PremultipliesOnBake_ForACustomNormalBlendState()
+    {
+        var previous = Renderer.NormalBlendState;
+        try
+        {
+            BlendState custom = CopyOf(BlendState.NonPremultiplied);
+            Renderer.NormalBlendState = custom;
+
+            BlendState result = Renderer.AdjustBlendStateForRenderTargetBake(custom, isBakingRenderTarget: true);
+
+            result.ShouldNotBeSameAs(custom);
+            result.AlphaSourceBlend.ShouldBe(Blend.One);
+        }
+        finally
+        {
+            Renderer.NormalBlendState = previous;
+        }
+    }
+
+    // A NormalBlendState built to AlphaBlend's fields is the same premultiplied pipeline as
+    // BlendState.AlphaBlend itself, so the bake must keep the ambient blend.
+    [Fact]
+    public void AdjustBlendStateForRenderTargetBake_KeepsAmbientBlend_WhenNormalBlendStateIsAFieldEqualCopyOfAlphaBlend()
+    {
+        var previous = Renderer.NormalBlendState;
+        try
+        {
+            BlendState custom = CopyOf(BlendState.AlphaBlend);
+            Renderer.NormalBlendState = custom;
+
+            Renderer.AdjustBlendStateForRenderTargetBake(custom, isBakingRenderTarget: true).ShouldBeSameAs(custom);
+            Renderer.AdjustBlendStateForRenderTargetBake(BlendState.MinAlphaPremultiplied, isBakingRenderTarget: true)
+                .ShouldBeSameAs(BlendState.MinAlphaOnPremultipliedTarget);
+        }
+        finally
+        {
+            Renderer.NormalBlendState = previous;
+        }
+    }
+
+    [Fact]
+    public void AdjustBlendStateForRenderTargetBake_SwapsMaskBlends_WhenNormalBlendStateIsCustomStraightAlpha()
+    {
+        var previous = Renderer.NormalBlendState;
+        try
+        {
+            Renderer.NormalBlendState = CopyOf(BlendState.NonPremultiplied);
+
+            Renderer.AdjustBlendStateForRenderTargetBake(BlendState.MinAlpha, isBakingRenderTarget: true)
+                .ShouldBeSameAs(BlendState.MinAlphaOnPremultipliedTarget);
+            Renderer.AdjustBlendStateForRenderTargetBake(BlendState.ReplaceAlpha, isBakingRenderTarget: true)
+                .ShouldBeSameAs(BlendState.ReplaceAlphaOnPremultipliedTarget);
+            Renderer.AdjustBlendStateForRenderTargetBake(BlendState.SubtractAlpha, isBakingRenderTarget: true)
+                .ShouldBeSameAs(BlendState.SubtractAlphaFromPremultipliedTarget);
+        }
+        finally
+        {
+            Renderer.NormalBlendState = previous;
+        }
+    }
+
+    [Fact]
+    public void IsUnconfiguredRenderTargetCompositeBlend_IsTrue_ForAFieldEqualCopyOfNormalBlendState()
+    {
+        var previous = Renderer.NormalBlendState;
+        try
+        {
+            Renderer.NormalBlendState = BlendState.AlphaBlend;
+
+            Renderer.IsUnconfiguredRenderTargetCompositeBlend(CopyOf(BlendState.AlphaBlend)).ShouldBeTrue();
+        }
+        finally
+        {
+            Renderer.NormalBlendState = previous;
+        }
+    }
+
+    [Fact]
+    public void IsUnconfiguredRenderTargetCompositeBlend_IsTrue_ForACustomNormalBlendState()
+    {
+        var previous = Renderer.NormalBlendState;
+        try
+        {
+            BlendState custom = CopyOf(BlendState.AlphaBlend);
+            custom.AlphaSourceBlend = Blend.SourceAlpha;
+            Renderer.NormalBlendState = custom;
+
+            Renderer.IsUnconfiguredRenderTargetCompositeBlend(custom).ShouldBeTrue();
+            Renderer.IsUnconfiguredRenderTargetCompositeBlend(null).ShouldBeFalse();
+        }
+        finally
+        {
+            Renderer.NormalBlendState = previous;
+        }
+    }
+
+    [Fact]
+    public void IsAlphaOnlyBlend_UsesThePremultipliedMasks_WhenNormalBlendStateIsAFieldEqualCopyOfAlphaBlend()
+    {
+        var previous = Renderer.NormalBlendState;
+        try
+        {
+            Renderer.NormalBlendState = CopyOf(BlendState.AlphaBlend);
+
+            Renderer.IsAlphaOnlyBlend(BlendState.MinAlphaPremultiplied).ShouldBeTrue();
+            Renderer.IsAlphaOnlyBlend(BlendState.ReplaceAlphaPremultiplied).ShouldBeTrue();
+            Renderer.IsAlphaOnlyBlend(BlendState.MinAlpha).ShouldBeFalse();
+        }
+        finally
+        {
+            Renderer.NormalBlendState = previous;
+        }
+    }
+
+    [Fact]
+    public void CreateRenderTargetCompositeTint_IsStraightWhite_WhenNormalBlendStateIsAFieldEqualCopyOfAlphaBlend()
+    {
+        var previous = Renderer.NormalBlendState;
+        try
+        {
+            Renderer.NormalBlendState = CopyOf(BlendState.AlphaBlend);
+
+            System.Drawing.Color tint = Renderer.CreateRenderTargetCompositeTint(128);
+
+            tint.R.ShouldBe((byte)255);
+            tint.A.ShouldBe((byte)128);
+        }
+        finally
+        {
+            Renderer.NormalBlendState = previous;
+        }
+    }
+
+    [Fact]
+    public void GetRenderTargetCompositeBlendState_KeepsAdditive_WhenNormalBlendStateIsAFieldEqualCopyOfAlphaBlend()
+    {
+        var previous = Renderer.NormalBlendState;
+        try
+        {
+            Renderer.NormalBlendState = CopyOf(BlendState.AlphaBlend);
+
+            Renderer.GetRenderTargetCompositeBlendState(BlendState.Additive).ShouldBeNull();
+        }
+        finally
+        {
+            Renderer.NormalBlendState = previous;
+        }
+    }
+
+    [Fact]
+    public void IsAlphaOnlyBlend_UsesTheStraightMasks_WhenNormalBlendStateIsCustomStraightAlpha()
+    {
+        var previous = Renderer.NormalBlendState;
+        try
+        {
+            Renderer.NormalBlendState = CopyOf(BlendState.NonPremultiplied);
+
+            Renderer.IsAlphaOnlyBlend(BlendState.MinAlpha).ShouldBeTrue();
+            Renderer.IsAlphaOnlyBlend(BlendState.ReplaceAlpha).ShouldBeTrue();
+            Renderer.IsAlphaOnlyBlend(Renderer.NormalBlendState).ShouldBeFalse();
+            Renderer.IsAlphaOnlyBlend(null).ShouldBeFalse();
+        }
+        finally
+        {
+            Renderer.NormalBlendState = previous;
+        }
+    }
+
     private static BlendState CopyOf(BlendState source) => new BlendState
     {
         ColorSourceBlend = source.ColorSourceBlend,

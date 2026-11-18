@@ -723,4 +723,37 @@ public class BlendTests
         public SKPaint InvokeGetPaint(SKRect boundingRect, float absoluteRotation)
             => GetPaint(boundingRect, absoluteRotation);
     }
+
+    // ContainerRuntime's Blend getter reads its BlendState back through ToBlend, so Normal must
+    // survive a custom Renderer.NormalBlendState instead of reading back null.
+    [Theory]
+    [InlineData(Blend.Normal)]
+    [InlineData(Blend.Additive)]
+    [InlineData(Blend.Replace)]
+    [InlineData(Blend.SubtractAlpha)]
+    [InlineData(Blend.ReplaceAlpha)]
+    [InlineData(Blend.MinAlpha)]
+    public void ContainerRuntime_Blend_RoundTrips_WhenNormalBlendStateIsCustom(Blend blend)
+    {
+        Gum.BlendState previous = global::RenderingLibrary.Graphics.Renderer.NormalBlendState;
+        try
+        {
+            global::RenderingLibrary.Graphics.Renderer.NormalBlendState = new Gum.BlendState
+            {
+                ColorSourceBlend = Gum.Blend.SourceAlpha,
+                ColorDestinationBlend = Gum.Blend.InverseSourceAlpha,
+                AlphaSourceBlend = Gum.Blend.One,
+                AlphaDestinationBlend = Gum.Blend.InverseSourceAlpha,
+            };
+            ContainerRuntime sut = new();
+
+            sut.Blend = blend;
+
+            sut.Blend.ShouldBe(blend);
+        }
+        finally
+        {
+            global::RenderingLibrary.Graphics.Renderer.NormalBlendState = previous;
+        }
+    }
 }
