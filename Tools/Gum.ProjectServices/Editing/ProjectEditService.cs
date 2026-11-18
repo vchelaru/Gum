@@ -39,12 +39,41 @@ public class ProjectEditResult
 }
 
 /// <summary>
+/// The JSON value an operation field accepts.
+/// </summary>
+public enum EditFieldType
+{
+    /// <summary>A JSON string.</summary>
+    String,
+    /// <summary>JSON <c>true</c> or <c>false</c>.</summary>
+    Bool,
+    /// <summary>Any JSON value.</summary>
+    Any,
+}
+
+/// <summary>
+/// A field of an operation and the JSON value it accepts.
+/// </summary>
+/// <param name="Name">The field's name in the operation object.</param>
+/// <param name="Type">The JSON value the field accepts.</param>
+public record EditField(string Name, EditFieldType Type)
+{
+    /// <summary>The type as the schema prints it: <c>string</c>, <c>bool</c> or <c>any</c>.</summary>
+    public string TypeName => Type switch
+    {
+        EditFieldType.String => "string",
+        EditFieldType.Bool => "bool",
+        _ => "any",
+    };
+}
+
+/// <summary>
 /// An operation the operations file accepts and its fields.
 /// </summary>
 /// <param name="Op">The operation's <c>op</c> value.</param>
 /// <param name="Required">The fields the operation must have.</param>
 /// <param name="Optional">The fields the operation may have.</param>
-public record EditOperationSchema(string Op, IReadOnlyList<string> Required, IReadOnlyList<string> Optional);
+public record EditOperationSchema(string Op, IReadOnlyList<EditField> Required, IReadOnlyList<EditField> Optional);
 
 /// <summary>
 /// Applies an operations file (<c>{ "version": 1, "operations": [ { "op": ..., ... } ] }</c>) to a loaded project,
@@ -70,9 +99,20 @@ public class ProjectEditService : IProjectEditService
     /// <summary>The operations file format version this service reads.</summary>
     public const int SupportedVersion = 1;
 
-    private static readonly HashSet<string> BooleanFields = new HashSet<string>(StringComparer.Ordinal) { "replace" };
+    private sealed record OperationSpec(EditField[] Required, EditField[] Optional, Action<GumProjectSave, JsonElement> Apply)
+    {
+        public EditField? Find(string name) =>
+            Required.FirstOrDefault(field => field.Name == name) ?? Optional.FirstOrDefault(field => field.Name == name);
+    }
 
-    private sealed record OperationSpec(string[] Required, string[] Optional, Action<GumProjectSave, JsonElement> Apply);
+    private static EditField[] Strings(params string[] names) =>
+        names.Select(name => new EditField(name, EditFieldType.String)).ToArray();
+
+    private static EditField[] Fields(params EditField[] fields) => fields;
+
+    private static EditField Str(string name) => new EditField(name, EditFieldType.String);
+
+    private static readonly EditField[] None = Array.Empty<EditField>();
 
     private readonly Dictionary<string, OperationSpec> _operations;
     private readonly IElementCreationLogic _elementCreation;
@@ -138,20 +178,21 @@ public class ProjectEditService : IProjectEditService
 
         _operations = new Dictionary<string, OperationSpec>
         {
-            ["addScreen"] = new(new[] { "name" }, Array.Empty<string>(), AddScreen),
-            ["addComponent"] = new(new[] { "name" }, new[] { "baseType" }, AddComponent),
-            ["addInstance"] = new(new[] { "element", "name", "type" }, new[] { "parent" }, AddInstance),
-            ["addVariable"] = new(new[] { "element", "name", "type" }, new[] { "value" }, AddVariable),
-            ["setVariable"] = new(new[] { "element", "name", "value" }, new[] { "state", "category" }, SetVariable),
-            ["addCategory"] = new(new[] { "element", "name" }, Array.Empty<string>(), AddCategory),
-            ["addState"] = new(new[] { "element", "name" }, new[] { "category" }, AddState),
-            ["exposeVariable"] = new(new[] { "element", "instance", "variable", "name" }, Array.Empty<string>(), ExposeVariable),
-            ["removeInstance"] = new(new[] { "element", "name" }, Array.Empty<string>(), RemoveInstance),
-            ["removeState"] = new(new[] { "element", "name" }, new[] { "category" }, RemoveState),
-            ["removeCategory"] = new(new[] { "element", "name" }, Array.Empty<string>(), RemoveCategory),
-            ["removeVariable"] = new(new[] { "element", "name" }, Array.Empty<string>(), RemoveVariable),
-            ["clearVariable"] = new(new[] { "element", "name" }, new[] { "state", "category" }, ClearVariable),
-            ["extractToComponent"] = new(new[] { "element", "instance", "name", "replace" }, Array.Empty<string>(), ExtractToComponent),
+            ["addScreen"] = new(Strings("name"), None, AddScreen),
+            ["addComponent"] = new(Strings("name"), Strings("baseType"), AddComponent),
+            ["addInstance"] = new(Strings("element", "name", "type"), Strings("parent"), AddInstance),
+            ["addVariable"] = new(Strings("element", "name", "type"), Fields(new EditField("value", EditFieldType.Any)), AddVariable),
+            ["setVariable"] = new(Fields(Str("element"), Str("name"), new EditField("value", EditFieldType.Any)), Strings("state", "category"), SetVariable),
+            ["addCategory"] = new(Strings("element", "name"), None, AddCategory),
+            ["addState"] = new(Strings("element", "name"), Strings("category"), AddState),
+            ["exposeVariable"] = new(Strings("element", "instance", "variable", "name"), None, ExposeVariable),
+            ["removeInstance"] = new(Strings("element", "name"), None, RemoveInstance),
+            ["removeState"] = new(Strings("element", "name"), Strings("category"), RemoveState),
+            ["removeCategory"] = new(Strings("element", "name"), None, RemoveCategory),
+            ["removeVariable"] = new(Strings("element", "name"), None, RemoveVariable),
+            ["clearVariable"] = new(Strings("element", "name"), Strings("state", "category"), ClearVariable),
+            ["extractToComponent"] = new(Fields(Str("element"), Str("instance"), Str("name"), new EditField("replace", EditFieldType.Bool)),
+                None, ExtractToComponent),
         };
     }
 
@@ -266,27 +307,25 @@ public class ProjectEditService : IProjectEditService
             {
                 continue;
             }
-            if (!spec.Required.Contains(property.Name) && !spec.Optional.Contains(property.Name))
+            EditField? field = spec.Find(property.Name);
+            if (field == null)
             {
                 return $"{op} has an unknown field \"{property.Name}\".";
             }
-            if (BooleanFields.Contains(property.Name))
+            if (field.Type == EditFieldType.Bool && property.Value.ValueKind is not (JsonValueKind.True or JsonValueKind.False))
             {
-                if (property.Value.ValueKind is not (JsonValueKind.True or JsonValueKind.False))
-                {
-                    return $"{op}'s \"{property.Name}\" must be true or false.";
-                }
+                return $"{op}'s \"{property.Name}\" must be true or false.";
             }
-            else if (property.Name != "value" && property.Value.ValueKind != JsonValueKind.String)
+            if (field.Type == EditFieldType.String && property.Value.ValueKind != JsonValueKind.String)
             {
                 return $"{op}'s \"{property.Name}\" must be a string.";
             }
         }
-        foreach (string required in spec.Required)
+        foreach (EditField required in spec.Required)
         {
-            if (!operation.TryGetProperty(required, out _))
+            if (!operation.TryGetProperty(required.Name, out _))
             {
-                return $"{op} needs \"{required}\".";
+                return $"{op} needs \"{required.Name}\".";
             }
         }
         return null;

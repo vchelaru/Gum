@@ -153,7 +153,12 @@ public static class EditCommand
             var document = new
             {
                 version = ProjectEditService.SupportedVersion,
-                operations = schemas.Select(schema => new { op = schema.Op, required = schema.Required, optional = schema.Optional })
+                operations = schemas.Select(schema => new
+                {
+                    op = schema.Op,
+                    required = schema.Required.Select(field => new { name = field.Name, type = field.TypeName }),
+                    optional = schema.Optional.Select(field => new { name = field.Name, type = field.TypeName })
+                })
             };
             Console.WriteLine(JsonSerializer.Serialize(document, new JsonSerializerOptions { WriteIndented = true }));
             return 0;
@@ -163,7 +168,8 @@ public static class EditCommand
         int width = schemas.Max(schema => schema.Op.Length);
         foreach (EditOperationSchema schema in schemas)
         {
-            IEnumerable<string> fields = schema.Required.Concat(schema.Optional.Select(field => $"[{field}]"));
+            IEnumerable<string> fields = schema.Required.Select(field => $"{field.Name}: {field.TypeName}")
+                .Concat(schema.Optional.Select(field => $"[{field.Name}: {field.TypeName}]"));
             Console.WriteLine($"  {schema.Op.PadRight(width)}  {string.Join(", ", fields)}");
         }
         return 0;
