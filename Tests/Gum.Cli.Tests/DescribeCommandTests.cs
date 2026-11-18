@@ -133,6 +133,10 @@ public class DescribeCommandTests : BaseTestClass
         setVariable.GetProperty("optional").EnumerateArray().Select(item => item.GetString()).ShouldBe(new[] { "state", "category" });
         document.RootElement.GetProperty("operations").EnumerateArray()
             .Select(item => item.GetProperty("op").GetString()).ShouldContain("removeInstance");
+        JsonElement extract = document.RootElement.GetProperty("operations").EnumerateArray()
+            .Single(item => item.GetProperty("op").GetString() == "extractToComponent");
+        extract.GetProperty("required").EnumerateArray().Select(item => item.GetString())
+            .ShouldBe(new[] { "element", "instance", "name", "replace" });
     }
 
     [Fact]

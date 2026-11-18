@@ -6,6 +6,7 @@ using GumRuntime;
 using Gum.Managers;
 using Gum.Messages;
 using Gum.Plugins.InternalPlugins.VariableGrid;
+using Gum.ProjectServices.Editing;
 using Gum.Services;
 using Gum.Services.Dialogs;
 using Gum.ToolCommands;
@@ -103,6 +104,7 @@ public class CopyPasteLogic : ICopyPasteLogic
     private readonly IRenameLogic _renameLogic;
     private readonly IOutputManager _outputManager;
     private readonly IMovedInstanceReferenceDropper _movedInstanceReferenceDropper;
+    private readonly IComponentExtractionLogic _componentExtraction;
     private readonly IProjectRestrictions _projectRestrictions;
     private readonly IElementDuplicateRestrictions _elementDuplicateRestrictions;
 
@@ -135,6 +137,7 @@ public class CopyPasteLogic : ICopyPasteLogic
         IRenameLogic renameLogic,
         IOutputManager outputManager,
         IMovedInstanceReferenceDropper movedInstanceReferenceDropper,
+        IComponentExtractionLogic componentExtraction,
         IProjectRestrictions projectRestrictions,
         IElementDuplicateRestrictions elementDuplicateRestrictions
         )
@@ -142,6 +145,7 @@ public class CopyPasteLogic : ICopyPasteLogic
         _projectRestrictions = projectRestrictions;
         _elementDuplicateRestrictions = elementDuplicateRestrictions;
         _movedInstanceReferenceDropper = movedInstanceReferenceDropper;
+        _componentExtraction = componentExtraction;
         _renameLogic = renameLogic;
         _outputManager = outputManager;
         _circularReferenceManager = circularReferenceManager;
@@ -287,7 +291,7 @@ public class CopyPasteLogic : ICopyPasteLogic
             var parentContainer = selected.FirstOrDefault()?.ParentContainer;
             if (parentContainer != null)
             {
-                var recursiveInstances = GetAllInstancesAndChildrenOf(selected, parentContainer)
+                var recursiveInstances = parentContainer.GetInstancesAndChildrenOf(selected)
                             // Sort by index in parent at the end so the children are sorted properly:
                             .OrderBy(item =>
                             {
@@ -1395,138 +1399,11 @@ public class CopyPasteLogic : ICopyPasteLogic
 
     #endregion
 
-    /// <summary>
-    /// Variable root names that describe an instance's placement relative to its parent. When an
-    /// instance is promoted into a component, these stay on the replacement instance rather than
-    /// moving to the component root — a component's root has no meaningful parent-relative position
-    /// (see <see cref="ICopyPasteProjectCommands.PrepareNewComponentSave"/>, which likewise nulls
-    /// X/Y on new component roots). There is no data-driven "is positional" flag on authored
-    /// variables (the Category is only populated on the standard-element definitions), so this set
-    /// is maintained explicitly. It mirrors the "Position" category in
-    /// <see cref="Managers.StandardElementsManager"/> plus the Parent attachment.
-    /// </summary>
-    private static readonly HashSet<string> PositionalRootNames = new HashSet<string>(StringComparer.Ordinal)
-    {
-        "X", "Y", "XUnits", "YUnits", "XOrigin", "YOrigin", "Parent"
-    };
-
     /// <inheritdoc/>
     public ComponentSave CreateComponentFromInstance(InstanceSave instance, string componentName, bool replaceWithInstance)
     {
-        ElementSave sourceElement = instance.ParentContainer
-            ?? throw new InvalidOperationException(
-                $"The instance {instance.Name} must have a ParentContainer to be promoted into a component.");
-        StateSave sourceDefault = sourceElement.GetDefaultStateOrThrow();
-
-        // The instance's type becomes the component's base type; the rest of the new-component
-        // setup (default-state seeding, type converters, nulling the root position) is shared
-        // with the regular "add component" flow.
-        ComponentSave component = new ComponentSave();
-        _projectCommands.PrepareNewComponentSave(component, componentName, instance.BaseType);
-        StateSave componentDefault = component.GetDefaultStateOrThrow();
-
-        // GetAllInstancesAndChildrenOf includes the instance itself - but the instance BECOMES the
-        // component root rather than one of its children, so exclude it from the copied set.
-        List<InstanceSave> descendants = GetAllInstancesAndChildrenOf(new List<InstanceSave> { instance }, sourceElement)
-            .Where(item => item.Name != instance.Name)
-            .ToList();
-        HashSet<string> descendantNames = new HashSet<string>(descendants.Select(item => item.Name), StringComparer.Ordinal);
-
-        foreach (InstanceSave descendant in descendants)
-        {
-            component.Instances.Add(new InstanceSave
-            {
-                Name = descendant.Name,
-                BaseType = descendant.BaseType,
-                Locked = descendant.Locked,
-                ParentContainer = component,
-            });
-        }
-
-        // Copy each descendant's variables into the component, re-rooting Parent attachments:
-        // a direct child of the promoted instance now attaches to the component root.
-        foreach (VariableSave variable in sourceDefault.Variables)
-        {
-            if (string.IsNullOrEmpty(variable.SourceObject) || !descendantNames.Contains(variable.SourceObject))
-            {
-                continue;
-            }
-
-            VariableSave clone = variable.Clone();
-            clone.ExposedAsName = null;
-
-            if (clone.GetRootName() == "Parent" && clone.Value is string parentValue)
-            {
-                if (parentValue == instance.Name)
-                {
-                    // Attaches to the new component root - no Parent variable needed.
-                    continue;
-                }
-                if (parentValue.StartsWith(instance.Name + "."))
-                {
-                    // Was attached to a default child container of the promoted instance; keep only
-                    // the child-container suffix now that that instance is the root.
-                    clone.Value = parentValue.Substring(instance.Name.Length + 1);
-                }
-            }
-
-            componentDefault.Variables.Add(clone);
-        }
-
-        foreach (VariableListSave variableList in sourceDefault.VariableLists)
-        {
-            // Skip VariableReferences: a reference materializes its resolved value as a hard scalar
-            // in the same state (copied above as a normal variable), so the value is preserved while
-            // the reference row itself — which may point at the now-promoted instance — is dropped.
-            if (variableList.GetRootName() == "VariableReferences")
-            {
-                continue;
-            }
-            if (!string.IsNullOrEmpty(variableList.SourceObject) && descendantNames.Contains(variableList.SourceObject))
-            {
-                componentDefault.VariableLists.Add(variableList.Clone());
-            }
-        }
-
-        // Copy the promoted instance's own intrinsic variables onto the component root (unqualified).
-        // Parent-relative position is deliberately skipped - it stays with the instance (see
-        // PositionalRootNames) and is re-applied to the replacement instance below if needed.
-        foreach (VariableSave variable in sourceDefault.Variables)
-        {
-            if (variable.SourceObject != instance.Name)
-            {
-                continue;
-            }
-            string rootName = variable.GetRootName();
-            if (PositionalRootNames.Contains(rootName))
-            {
-                continue;
-            }
-            VariableSave clone = variable.Clone();
-            clone.Name = rootName;
-            clone.ExposedAsName = null;
-            componentDefault.Variables.RemoveAll(item => item.Name == rootName);
-            componentDefault.Variables.Add(clone);
-        }
-
-        foreach (VariableListSave variableList in sourceDefault.VariableLists)
-        {
-            if (variableList.SourceObject != instance.Name)
-            {
-                continue;
-            }
-            string rootName = variableList.GetRootName();
-            // See note above: VariableReferences are excluded; their materialized scalar carries the value.
-            if (rootName == "VariableReferences")
-            {
-                continue;
-            }
-            VariableListSave clone = variableList.Clone();
-            clone.Name = rootName;
-            componentDefault.VariableLists.RemoveAll(item => item.Name == rootName);
-            componentDefault.VariableLists.Add(clone);
-        }
-
+        ComponentExtraction extraction = _componentExtraction.CreateComponent(instance, componentName);
+        ComponentSave component = extraction.Component;
         _standardElementsManagerGumTool.FixCustomTypeConverters(component);
 
         if (replaceWithInstance)
@@ -1539,7 +1416,7 @@ public class CopyPasteLogic : ICopyPasteLogic
             // across AddComponent suppresses that RecordState so the source-element baseline survives.
             using var undoLock = _undoManager.RequestLock();
             _projectCommands.AddComponent(component);
-            ReplaceSubtreeWithComponentInstance(instance, sourceElement, sourceDefault, descendants, component);
+            ReplaceSubtreeWithComponentInstance(extraction);
         }
         else
         {
@@ -1550,63 +1427,22 @@ public class CopyPasteLogic : ICopyPasteLogic
     }
 
     /// <summary>
-    /// Phase 2 of <see cref="CreateComponentFromInstance"/>: removes the promoted instance and all
-    /// its descendants from the source element and drops in a single instance of the new component,
-    /// preserving the original instance's name, its parent-relative position and what the element's
-    /// other states set on it. References that stop applying are dropped and listed in Output.
-    /// Recorded as one undo.
+    /// Phase 2 of <see cref="CreateComponentFromInstance"/>: drops the references the move breaks,
+    /// replaces the promoted instance and its descendants with one instance of the new component,
+    /// and lists the dropped references in Output. Recorded as one undo.
     /// </summary>
-    private void ReplaceSubtreeWithComponentInstance(InstanceSave instance, ElementSave sourceElement,
-        StateSave sourceDefault, List<InstanceSave> descendants, ComponentSave component)
+    private void ReplaceSubtreeWithComponentInstance(ComponentExtraction extraction)
     {
         // The undo lock is taken by the caller (CreateComponentFromInstance) so that AddComponent's
         // selection change is also covered — see the comment there.
+        ElementSave sourceElement = extraction.SourceElement;
 
         // Runs while the moved instances are still in the element, so their references still resolve.
-        MovedInstanceReference[] droppedReferences =
-            _movedInstanceReferenceDropper.DropReferencesBrokenByMove(sourceElement, instance, descendants);
+        MovedInstanceReference[] droppedReferences = _movedInstanceReferenceDropper.DropReferencesBrokenByMove(
+            sourceElement, extraction.Instance, extraction.MovedInstances);
 
-        // The replacement takes the promoted instance's place among the instances that stay,
-        // since the instance order is the draw order.
-        int replacementIndex = sourceElement.Instances
-            .TakeWhile(item => item != instance)
-            .Count(item => !descendants.Contains(item));
-
-        // The delete below strips everything that names the instance, but the replacement keeps its
-        // name, so capture what still applies to it and re-apply it afterward.
-        List<(StateSave State, VariableSave Variable)> keptVariables =
-            GetVariablesKeptByReplacement(instance, sourceElement, sourceDefault, descendants);
-        List<(StateSave State, VariableListSave List)> keptLists = sourceElement.AllStates
-            .Where(state => state != sourceDefault)
-            .SelectMany(state => state.VariableLists
-                .Where(item => item.SourceObject == instance.Name)
-                .Select(item => (state, item.Clone())))
-            .ToList();
-
-        foreach (InstanceSave descendant in descendants)
-        {
-            _deleteLogic.RemoveInstance(descendant, sourceElement);
-        }
-        _deleteLogic.RemoveInstance(instance, sourceElement);
-
-        InstanceSave replacement = new InstanceSave
-        {
-            Name = instance.Name,
-            BaseType = component.Name,
-            ParentContainer = sourceElement,
-        };
-        sourceElement.Instances.Insert(Math.Min(replacementIndex, sourceElement.Instances.Count), replacement);
-
-        foreach ((StateSave state, VariableSave variable) in keptVariables)
-        {
-            state.Variables.RemoveAll(item => item.Name == variable.Name);
-            state.Variables.Add(variable);
-        }
-        foreach ((StateSave state, VariableListSave list) in keptLists)
-        {
-            state.VariableLists.RemoveAll(item => item.Name == list.Name);
-            state.VariableLists.Add(list);
-        }
+        InstanceSave replacement = _componentExtraction.ReplaceWithComponentInstance(extraction,
+            instance => _deleteLogic.RemoveInstance(instance, sourceElement));
 
         _copyPastePluginNotifier.InstanceAdd(sourceElement, replacement);
         _fileCommands.TryAutoSaveElement(sourceElement);
@@ -1619,41 +1455,7 @@ public class CopyPasteLogic : ICopyPasteLogic
         _guiCommands.RefreshElementTreeView(sourceElement);
         _selectedState.SelectedInstance = replacement;
 
-        ReportDroppedReferences(droppedReferences, component);
-    }
-
-    /// <summary>
-    /// Copies of the variables in <paramref name="sourceElement"/> that still apply to the replacement
-    /// instance: its position (the rest of its default state became the component root's), what the
-    /// other states set on it, and values outside the subtree that name it, such as a Parent set in
-    /// another state.
-    /// </summary>
-    private static List<(StateSave State, VariableSave Variable)> GetVariablesKeptByReplacement(InstanceSave instance,
-        ElementSave sourceElement, StateSave sourceDefault, List<InstanceSave> descendants)
-    {
-        HashSet<string> insideNames = new HashSet<string>(descendants.Select(item => item.Name), StringComparer.Ordinal)
-        {
-            instance.Name
-        };
-        List<(StateSave State, VariableSave Variable)> kept = new List<(StateSave State, VariableSave Variable)>();
-        foreach (StateSave state in sourceElement.AllStates)
-        {
-            foreach (VariableSave variable in state.Variables)
-            {
-                string rootName = variable.GetRootName();
-                bool isOnInstance = variable.SourceObject == instance.Name &&
-                    (state != sourceDefault || PositionalRootNames.Contains(rootName));
-                bool namesInstance = !insideNames.Contains(variable.SourceObject ?? "") &&
-                    (rootName == "Parent" || rootName == "RenderTargetTextureSource") &&
-                    variable.Value is string value &&
-                    (value == instance.Name || value.StartsWith(instance.Name + ".", StringComparison.Ordinal));
-                if (isOnInstance || namesInstance)
-                {
-                    kept.Add((state, variable.Clone()));
-                }
-            }
-        }
-        return kept;
+        ReportDroppedReferences(droppedReferences, extraction.Component);
     }
 
     private void ReportDroppedReferences(MovedInstanceReference[] droppedReferences, ComponentSave component)
@@ -1675,46 +1477,5 @@ public class CopyPasteLogic : ICopyPasteLogic
             }
         }
         _outputManager.AddOutput(message.ToString());
-    }
-
-    private List<InstanceSave> GetAllInstancesAndChildrenOf(List<InstanceSave> explicitlySelectedInstances, ElementSave container)
-    {
-        List<InstanceSave> listToFill = new List<InstanceSave>();
-
-        foreach (var instance in explicitlySelectedInstances)
-        {
-            if (listToFill.Any(item => item.Name == instance.Name) == false)
-            {
-                listToFill.Add(instance);
-
-                FillWithChildrenOf(instance, listToFill, container);
-            }
-        }
-
-        return listToFill;
-    }
-
-    private void FillWithChildrenOf(InstanceSave instance, List<InstanceSave> listToFill, ElementSave container)
-    {
-        var defaultState = container.GetDefaultStateOrThrow();
-
-        foreach (var variable in defaultState.Variables)
-        {
-            if (variable.GetRootName() == "Parent")
-            {
-                var value = variable.Value as string;
-
-                if (!string.IsNullOrEmpty(value) && (value == instance.Name || value.StartsWith(instance.Name + ".")))
-                {
-                    var foundObject = container.GetInstance(variable.SourceObject);
-
-                    if (foundObject != null && listToFill.Any(item => item.Name == foundObject.Name) == false)
-                    {
-                        listToFill.Add(foundObject);
-                        FillWithChildrenOf(foundObject, listToFill, container);
-                    }
-                }
-            }
-        }
     }
 }
