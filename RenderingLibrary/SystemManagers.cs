@@ -332,8 +332,7 @@ public partial class SystemManagers : ISystemManagers
             ToolsUtilities.FileManager.RelativeDirectory = "Content/";
 #endif
 
-            RegisterComponentRuntimeInstantiations(overwrite: !_hasRegisteredStandardRuntimes);
-            _hasRegisteredStandardRuntimes = true;
+            RegisterComponentRuntimeInstantiations(overwrite: false);
 
             GraphicalUiElement.ApplyRuntimeMissingFileBehaviorDefault();
 
@@ -490,11 +489,12 @@ public partial class SystemManagers : ISystemManagers
 
 #if USE_GUMCOMMON
 
-    // Process-wide: the first Initialize overwrites, a repeat one fills only missing standard types.
-    private static bool _hasRegisteredStandardRuntimes;
-
+    // Overwrites the standard registrations when another backend (or nobody) registered them last in this
+    // process, else fills only the missing ones so a host's replacements survive a repeat Initialize.
     private void RegisterComponentRuntimeInstantiations(bool overwrite)
     {
+        overwrite = ElementSaveExtensions.ClaimStandardRuntimes(typeof(SystemManagers)) || overwrite;
+
         // Construct the MonoGameGum.GueDeriving shim subclasses (not the new Gum.GueDeriving
         // base types). See the comment on the `using` directive at the top of the file —
         // user code generated against the deprecated namespace casts to the shim type,

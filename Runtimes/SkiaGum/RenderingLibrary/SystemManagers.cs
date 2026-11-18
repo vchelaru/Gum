@@ -150,10 +150,7 @@ namespace RenderingLibrary
             GraphicalUiElement.AddRenderableToManagers = AddRenderableToManagers;
             GraphicalUiElement.RemoveRenderableFromManagers = RemoveRenderableFromManagers;
 
-            // The first Initialize in the process registers every standard runtime. A repeat one fills
-            // only the names missing from the registry, so a host's own registration survives and a
-            // registry cleared by ClearRegistrations or ElementSaveExtensions.Reset gets them back.
-            RegisterComponentRuntimeInstantiations(overwrite: !HasInitializedGlobal);
+            RegisterComponentRuntimeInstantiations(overwrite: false);
 
             if(!HasInitializedGlobal)
             {
@@ -227,8 +224,12 @@ namespace RenderingLibrary
             }
         }
 
+        // Overwrites the standard registrations when another backend (or nobody) registered them last in this
+        // process, else fills only the missing ones so a host's replacements survive a repeat Initialize.
         private void RegisterComponentRuntimeInstantiations(bool overwrite)
         {
+            overwrite = ElementSaveExtensions.ClaimStandardRuntimes(typeof(SystemManagers)) || overwrite;
+
             // Construct the SkiaGum.GueDeriving shim subclasses (not the new Gum.GueDeriving base
             // types). This file has `using Gum.GueDeriving;`, so an unqualified `new ContainerRuntime()`
             // resolves to the base type — but already-generated user code casts the loaded instance to
