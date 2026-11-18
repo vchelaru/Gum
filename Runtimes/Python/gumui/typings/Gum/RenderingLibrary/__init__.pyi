@@ -11,3 +11,4 @@ class Blend(IntEnum):
     SubtractAlpha = 3
     ReplaceAlpha = 4
     MinAlpha = 5
+    Subtract = 6

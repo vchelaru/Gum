@@ -113,6 +113,7 @@ Used by: `Blend` (Container, Sprite, NineSlice)
 | 3 | SubtractAlpha |
 | 4 | ReplaceAlpha |
 | 5 | MinAlpha |
+| 6 | Subtract |
 
 ### TextureAddress
 Used by: `TextureAddress` (Sprite, NineSlice)

@@ -9,6 +9,8 @@ namespace Gum.RenderingLibrary
         Replace,
         SubtractAlpha,
         ReplaceAlpha,
-        MinAlpha
+        MinAlpha,
+        // rgb = max(dest - src * srcAlpha, 0); dest alpha is kept.
+        Subtract
     }
 }

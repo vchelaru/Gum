@@ -138,7 +138,10 @@ public abstract class RenderableShapeBase : RenderableBase, Gum.GueDeriving.IBle
             return null;
         }
 
-        Gum.BlendState gumBlendState = Gum.RenderingLibrary.BlendExtensions.ToBlendState(Blend);
+        // Apos.Shapes writes premultiplied color (Normal keeps its AlphaBlend default), so Subtract takes
+        // the premultiplied variant; the straight one would weight the color by alpha twice (#8263).
+        Gum.BlendState gumBlendState = Gum.RenderingLibrary.BlendExtensions.ToBlendState(Blend,
+            isUsingPremultipliedAlpha: Blend == Gum.RenderingLibrary.Blend.Subtract);
 
         // #5671/#5673/#5682 — the alpha-only blends must keep the premultiplied baked texture
         // consistent. Sprites get this swap in Renderer.AdjustRenderStates; shapes resolve their

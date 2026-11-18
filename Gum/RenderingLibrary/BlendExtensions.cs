@@ -32,6 +32,8 @@ public static class BlendExtensions
                 return isUsingPremultipliedAlpha ? BlendState.ReplaceAlphaPremultiplied : BlendState.ReplaceAlpha;
             case Blend.MinAlpha:
                 return isUsingPremultipliedAlpha ? BlendState.MinAlphaPremultiplied : BlendState.MinAlpha;
+            case Blend.Subtract:
+                return isUsingPremultipliedAlpha ? BlendState.SubtractPremultiplied : BlendState.Subtract;
         }
         return BlendState.NonPremultiplied;
     }
@@ -76,6 +78,10 @@ public static class BlendExtensions
         else if(blendState == BlendState.MinAlpha || blendState == BlendState.MinAlphaPremultiplied)
         {
             return Blend.MinAlpha;
+        }
+        else if(blendState == BlendState.Subtract || blendState == BlendState.SubtractPremultiplied)
+        {
+            return Blend.Subtract;
         }
         else
         {

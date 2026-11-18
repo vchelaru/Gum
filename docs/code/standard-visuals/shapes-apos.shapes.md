@@ -233,7 +233,7 @@ Both `StrokeDashLength` and `StrokeGapLength` must be greater than `0` for dashe
 | Property | Type | Description |
 | --- | --- | --- |
 | `IsAntialiased` | `bool` | When `true` (the default) the shape's edge is anti-aliased. Set it to `false` for crisp, hard-edged rasterization, useful for pixel-art / retro themes and hairline borders. |
-| `Blend` | `Gum.RenderingLibrary.Blend` | Blend mode used when drawing the shape. Defaults to `Normal`. Other values: `Additive`, `Replace`, `SubtractAlpha`, `ReplaceAlpha`, `MinAlpha`. |
+| `Blend` | `Gum.RenderingLibrary.Blend` | Blend mode used when drawing the shape. Defaults to `Normal`. Other values: `Additive`, `Replace`, `SubtractAlpha`, `ReplaceAlpha`, `MinAlpha`, `Subtract`. |
 
 `ReplaceAlpha` and `MinAlpha` use the shape's whole bounds as a mask, and a shape with both a fill and a stroke masks as one shape. See [Whole-Bounds Masking](../../gum-tool/gum-elements/general-properties/blend.md#whole-bounds-masking).
 

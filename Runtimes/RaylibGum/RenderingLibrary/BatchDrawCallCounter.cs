@@ -57,10 +57,12 @@ public sealed unsafe class BatchDrawCallCounter
 
     // GL blend factor / equation constants for the render-target premultiply pass. Kept here so
     // the raw-GL dependency stays contained to the one place that owns blend state.
+    private const int GlZero = 0;
     private const int GlOne = 1;
     private const int GlSrcAlpha = 0x0302;
     private const int GlOneMinusSrcAlpha = 0x0303;
     private const int GlFuncAdd = 0x8006;
+    private const int GlFuncReverseSubtract = 0x800B;
 
     // While true, the ambient blend mode is the render-target premultiply pass (not straight
     // BLEND_ALPHA). raylib's EndBlendMode always resets to BLEND_ALPHA and never restores the
@@ -248,6 +250,18 @@ public sealed unsafe class BatchDrawCallCounter
     {
         Bank();
         Rlgl.SetBlendFactorsSeparate(GlOne, GlOne, GlOne, GlOne, GlFuncAdd, GlFuncAdd);
+        NativeBeginBlendMode(BlendMode.CustomSeparate);
+        _straightAlphaBlendActive = false;
+    }
+
+    /// <summary>
+    /// Subtracts an already-premultiplied source color from the destination and keeps the destination
+    /// alpha: the composite of a baked render target whose container uses Subtract (#8263).
+    /// </summary>
+    public void BeginBlendModeSubtractPremultiplied()
+    {
+        Bank();
+        Rlgl.SetBlendFactorsSeparate(GlOne, GlOne, GlZero, GlOne, GlFuncReverseSubtract, GlFuncAdd);
         NativeBeginBlendMode(BlendMode.CustomSeparate);
         _straightAlphaBlendActive = false;
     }

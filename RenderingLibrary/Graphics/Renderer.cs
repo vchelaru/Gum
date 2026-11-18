@@ -2227,6 +2227,12 @@ public class Renderer : IRenderer
             return BlendState.AdditivePremultiplied;
         }
 
+        // #8263: same reason as Additive; the premultiplied target is subtracted once.
+        if (blendState != null && !IsPremultipliedPipeline && IsFieldEquivalent(blendState, BlendState.Subtract))
+        {
+            return BlendState.SubtractPremultiplied;
+        }
+
         return null;
     }
 

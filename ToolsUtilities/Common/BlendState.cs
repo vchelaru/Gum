@@ -113,6 +113,13 @@ namespace Gum
         public static readonly BlendState MinAlpha;
         public static readonly BlendState MinAlphaPremultiplied;
 
+        // #8263: rgb = dest - src * srcAlpha, clamped at 0 by the blend unit; alpha keeps dest. The
+        // premultiplied variant subtracts the source color as-is, since it already carries its alpha.
+        // Both leave a premultiplied destination premultiplied (color only shrinks), so a render-target
+        // bake needs no swap.
+        public static readonly BlendState Subtract;
+        public static readonly BlendState SubtractPremultiplied;
+
         // #4792 Gap 2: the second pass of the Add color-operation blend trick (see
         // RenderingLibrary.Graphics.Renderer.DrawAdditiveColorOverlay). Color adds onto the
         // destination (ColorSourceBlend=One, ColorDestinationBlend=One) so the pass brightens
@@ -305,6 +312,9 @@ namespace Gum
             SubtractAlphaFromPremultipliedTarget.ColorWriteChannels2 = ColorWriteChannels.All;
             SubtractAlphaFromPremultipliedTarget.ColorWriteChannels3 = ColorWriteChannels.All;
 
+            Subtract = CreateSubtract(colorSource: Blend.SourceAlpha);
+            SubtractPremultiplied = CreateSubtract(colorSource: Blend.One);
+
             ReplaceAlphaOnPremultipliedTarget = CreateScaleDestinationColorBySourceAlpha(
                 alphaSource: Blend.One, alphaFunction: BlendFunction.Add, alphaDestination: Blend.Zero);
             MinAlphaOnPremultipliedTarget = CreateScaleDestinationColorBySourceAlpha(
@@ -324,6 +334,19 @@ namespace Gum
             AddColorPreserveDestinationAlpha.ColorWriteChannels1 = ColorWriteChannels.All;
             AddColorPreserveDestinationAlpha.ColorWriteChannels2 = ColorWriteChannels.All;
             AddColorPreserveDestinationAlpha.ColorWriteChannels3 = ColorWriteChannels.All;
+        }
+
+        private static BlendState CreateSubtract(Blend colorSource)
+        {
+            BlendState blendState = new BlendState();
+            blendState.ColorSourceBlend = colorSource;
+            blendState.ColorBlendFunction = BlendFunction.ReverseSubtract;
+            blendState.ColorDestinationBlend = Blend.One;
+
+            blendState.AlphaSourceBlend = Blend.Zero;
+            blendState.AlphaBlendFunction = BlendFunction.Add;
+            blendState.AlphaDestinationBlend = Blend.One;
+            return blendState;
         }
 
         private static BlendState CreateScaleDestinationColorBySourceAlpha(Blend alphaSource, BlendFunction alphaFunction, Blend alphaDestination)

@@ -143,14 +143,47 @@ public class BlendMathTests
     [Fact]
     public void MinAlpha_Sprite() => Assert(MaskedFill(), Mask(Sprite(white: true), Blend.MinAlpha));
 
+    // #8263: Subtract takes the source color, weighted by its alpha, off an opaque backdrop: white - 132 = 123,
+    // 82 - 132 clamps to 0, and a half-alpha source takes half (255 - 66 = 189).
+    [Theory]
+    [InlineData(255, 255, 123)]
+    [InlineData(82, 255, 0)]
+    [InlineData(255, Alpha, 189)]
+    public void Subtract_Rectangle(int behind, int sourceAlpha, int expected) =>
+        Assert(new XnaColor(expected, expected, expected),
+            DrawSubtract(behind, () => Solid(DrawingColor.FromArgb(sourceAlpha, 132, 132, 132))), tolerance: 1);
+
+    [Theory]
+    [InlineData(255, 255, 123)]
+    [InlineData(82, 255, 0)]
+    [InlineData(255, Alpha, 189)]
+    public void Subtract_Sprite(int behind, int sourceAlpha, int expected) =>
+        Assert(new XnaColor(expected, expected, expected),
+            DrawSubtract(behind, () => Sprite(new XnaColor(132, 132, 132, sourceAlpha))), tolerance: 1);
+
+    // A normal draw at half alpha lands 4 off the Subtract value, so these assert within 1. The host is
+    // touched first: an element whose Blend is set before FRB initializes draws it as Normal.
+    private static XnaColor DrawSubtract(int behind, System.Func<GraphicalUiElement> createSource)
+    {
+        FrbGumHost host = FrbGumHost.Instance;
+        GraphicalUiElement source = createSource();
+        source.SetProperty("Blend", Blend.Subtract);
+        GraphicalUiElement root = Container(renderTarget: false);
+        root.Children.Add(Solid(DrawingColor.FromArgb(255, behind, behind, behind)));
+        root.Children.Add(source);
+        return Center(host.Render(root));
+    }
+
     private const int Tolerance = 4;
 
-    private static void Assert(XnaColor expected, XnaColor actual)
+    private static void Assert(XnaColor expected, XnaColor actual) => Assert(expected, actual, Tolerance);
+
+    private static void Assert(XnaColor expected, XnaColor actual, int tolerance)
     {
         string message = $"expected ({expected.R},{expected.G},{expected.B}), was ({actual.R},{actual.G},{actual.B})";
-        System.Math.Abs(actual.R - expected.R).ShouldBeLessThanOrEqualTo(Tolerance, message);
-        System.Math.Abs(actual.G - expected.G).ShouldBeLessThanOrEqualTo(Tolerance, message);
-        System.Math.Abs(actual.B - expected.B).ShouldBeLessThanOrEqualTo(Tolerance, message);
+        System.Math.Abs(actual.R - expected.R).ShouldBeLessThanOrEqualTo(tolerance, message);
+        System.Math.Abs(actual.G - expected.G).ShouldBeLessThanOrEqualTo(tolerance, message);
+        System.Math.Abs(actual.B - expected.B).ShouldBeLessThanOrEqualTo(tolerance, message);
     }
 
     // Draws backdrop + source with the given blend and reads the pixel at the source's center.
@@ -206,10 +239,12 @@ public class BlendMathTests
         return element;
     }
 
-    private static GraphicalUiElement Sprite(bool white = false)
+    private static GraphicalUiElement Sprite(bool white = false) =>
+        Sprite(white ? new XnaColor(255, 255, 255, Alpha) : new XnaColor(255, 0, 0, Alpha));
+
+    private static GraphicalUiElement Sprite(XnaColor straight)
     {
         Texture2D texture = new(FrbGumHost.Instance.GraphicsDevice, 2, 2);
-        XnaColor straight = white ? new XnaColor(255, 255, 255, Alpha) : new XnaColor(255, 0, 0, Alpha);
         texture.SetData(new[] { straight, straight, straight, straight });
         texture = TextureContentLoader.MakePremultiplied(texture);
 
