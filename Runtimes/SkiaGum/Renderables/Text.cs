@@ -424,6 +424,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
     /// spaces RichTextKit's layout preserves) lines up with <see cref="RawText"/>
     /// the same way <c>WrappedText[i].Length</c> summed across lines does for the
     /// MonoGame/Raylib backends -- <c>TextBoxBase</c> relies on that for caret-index math.
+    /// Like those backends this is one list, refilled in place when the layout changes.
     /// </summary>
     public List<string> WrappedText
     {
@@ -433,15 +434,15 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
             if (!ReferenceEquals(textBlock, _wrappedTextSourceBlock))
             {
                 _wrappedTextSourceBlock = textBlock;
-                _cachedWrappedTextList = BuildWrappedTextList(textBlock);
+                FillWrappedTextList(textBlock, _cachedWrappedTextList);
             }
             return _cachedWrappedTextList;
         }
     }
 
-    private List<string> BuildWrappedTextList(TextBlock textBlock)
+    private void FillWrappedTextList(TextBlock textBlock, List<string> lines)
     {
-        var lines = new List<string>();
+        lines.Clear();
         // The TextBlock is built from the tag-stripped, CRLF-normalized layout text when the RawText
         // carries BBCode markup (issue #3679); for plain text _layoutText is mRawText verbatim. Either
         // way RichTextKit's TextLine.Start/Length are code-point indices into that exact string, so
@@ -449,15 +450,18 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
         var source = _layoutText;
         if (string.IsNullOrEmpty(source))
         {
-            return lines;
+            return;
         }
 
         // Start/Length count code points, so a surrogate pair (an emoji) is one unit there but two
         // chars in the string (#7086). Walk the string once, advancing in step with the lines.
         int utf16Position = 0;
         int codePointPosition = 0;
-        foreach (var line in textBlock.Lines)
+        // Indexed, since a foreach over the IReadOnlyList boxes its enumerator.
+        var textLines = textBlock.Lines;
+        for (int i = 0; i < textLines.Count; i++)
         {
+            var line = textLines[i];
             int start = AdvanceCodePoints(source, ref utf16Position, ref codePointPosition, line.Start);
             int end = AdvanceCodePoints(source, ref utf16Position, ref codePointPosition, line.Start + line.Length);
             if (start >= 0 && end >= 0)
@@ -465,8 +469,6 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
                 lines.Add(source.Substring(start, end - start));
             }
         }
-
-        return lines;
     }
 
     /// <summary>
@@ -3606,6 +3608,9 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
         newInstance._lineBreakLayout = null;
         newInstance._plainBlocks = new TextBlock?[2];
         newInstance._plainRuns = new(1);
+        // WrappedText refills its list in place, so a shared list would let one instance overwrite the other's lines.
+        newInstance._cachedWrappedTextList = new();
+        newInstance._wrappedTextSourceBlock = null;
         newInstance._cachedRenderPaint = null;
         newInstance._hasCachedRenderPaint = false;
         newInstance._hasActiveRenderPaint = false;
