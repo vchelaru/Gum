@@ -21,6 +21,9 @@ internal sealed class ElementTypeRegistry
     private readonly Dictionary<string, Func<GraphicalUiElement>> _funcs = new Dictionary<string, Func<GraphicalUiElement>>();
     private Func<GraphicalUiElement>? _template;
 
+    /// <summary>The backend whose standard runtimes (Rectangle, Text, ...) were last registered into this layer.</summary>
+    internal object? StandardRuntimesOwner { get; set; }
+
     internal void SetType(string elementName, Type type) => _types[elementName] = type;
 
     internal void SetFunc(string elementName, Func<GraphicalUiElement> func) => _funcs[elementName] = func;
@@ -55,6 +58,7 @@ internal sealed class ElementTypeRegistry
         _types.Clear();
         _funcs.Clear();
         _template = null;
+        StandardRuntimesOwner = null;
     }
 
     /// <summary>Copies this layer's registrations, for a test that changes them to put them back with <see cref="Restore"/>.</summary>
@@ -79,6 +83,7 @@ internal sealed class ElementTypeRegistry
             _funcs[pair.Key] = pair.Value;
         }
         _template = snapshot._template;
+        StandardRuntimesOwner = snapshot.StandardRuntimesOwner;
     }
 
     /// <summary>Finds a factory registered under <paramref name="elementName"/>: the service's layer, then the base.</summary>

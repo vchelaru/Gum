@@ -188,8 +188,7 @@ public partial class SystemManagers : ISystemManagers
             ToolsUtilities.FileManager.RelativeDirectory = "Content/";
 #endif
 
-            RegisterComponentRuntimeInstantiations(overwrite: !_hasRegisteredStandardRuntimes);
-            _hasRegisteredStandardRuntimes = true;
+            RegisterComponentRuntimeInstantiations(overwrite: false);
 
             GraphicalUiElement.ApplyRuntimeMissingFileBehaviorDefault();
         }
@@ -303,11 +302,12 @@ public partial class SystemManagers : ISystemManagers
     }
 
 
-    // Process-wide: the first Initialize overwrites, a repeat one fills only missing standard types.
-    private static bool _hasRegisteredStandardRuntimes;
-
+    // Overwrites the standard registrations when another backend (or nobody) registered them last in this
+    // process, else fills only the missing ones so a host's replacements survive a repeat Initialize.
     private void RegisterComponentRuntimeInstantiations(bool overwrite)
     {
+        overwrite = ElementSaveExtensions.ClaimStandardRuntimes(typeof(SystemManagers)) || overwrite;
+
         // A standard element with a runtime class but no registration loads as a plain
         // GraphicalUiElement, which drops the runtime-only variables (IsFilled/FillRed/...) (#7287).
         ElementSaveExtensions.RegisterGueInstantiation(

@@ -159,6 +159,21 @@ namespace GumRuntime
             }
         }
 
+        /// <summary>
+        /// Records <paramref name="backend"/> as the owner of the standard runtimes in the layer being written.
+        /// Returns true when another backend, or none, registered them there last; the caller then overwrites
+        /// them, so a process that initializes skia, then MonoGame, then skia again builds skia runtimes.
+        /// Returns false when the backend's own registrations are already in effect, so a repeat Initialize
+        /// keeps a host's replacements.
+        /// </summary>
+        internal static bool ClaimStandardRuntimes(object backend)
+        {
+            ElementTypeRegistry layer = WriteLayer;
+            bool claimed = !Equals(layer.StandardRuntimesOwner, backend);
+            layer.StandardRuntimesOwner = backend;
+            return claimed;
+        }
+
         internal static bool IsRegistered(string elementName)
         {
             return ElementTypeRegistry.Base.ContainsName(elementName)
