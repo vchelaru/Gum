@@ -129,7 +129,7 @@ Removes a variable added with `addVariable`, and the values instances set for it
 { "op": "clearVariable", "element": "Hud", "category": "Size", "state": "Big", "name": "Width" }
 ```
 
-Removes a set value so the variable falls back to its inherited value, like **Make Default** in the **Variables** tab. `name`, `state` and `category` work as in `setVariable`. An exposed variable stays exposed. In a category state the variable takes the default state's value instead, since every state in a category sets it.
+Removes a set value so the variable falls back to its inherited value, like **Make Default** in the **Variables** tab. `name`, `state` and `category` work as in `setVariable`. An exposed variable stays exposed. A variable added with `addVariable` goes back to its type's zero value, such as `0` or `false`. In a category state the variable takes the default state's value instead, since every state in a category sets it.
 
 ## All or Nothing
 
