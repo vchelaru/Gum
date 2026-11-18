@@ -145,7 +145,7 @@ Available in December 2026, or now if building Gum from source.
 
 Makes a new component from `Panel`, like **Create Component** in the tool's right-click menu. The component's base type is `Panel`'s type, the instances attached to `Panel` become its instances, and the variables `Panel` sets, other than its position, become the component's. The attached instances keep their positions, which were already relative to `Panel`.
 
-`replace` is the tool's checkbox. With `true`, `Panel` and the instances attached to it leave `Hud`, and one instance of the new component takes `Panel`'s name, position and place in the draw order. What other states set on `Panel` stays on the new instance. Values in other states, variable references and exposed variables that named a moved instance are removed, and a removed variable reference leaves its last value behind. With `false`, `Hud` does not change.
+`replace` is the tool's checkbox. With `true`, `Panel` and the instances attached to it leave `Hud`, and an instance of the new component named `Panel` takes its place, with the same position and draw order. Values other states set on `Panel` stay on the new instance. Values, variable references and exposed variables that named one of the attached instances are removed, and a removed variable reference leaves its last value behind. With `false`, `Hud` does not change.
 
 ## All or Nothing
 
