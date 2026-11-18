@@ -82,6 +82,13 @@
         private static readonly System.Runtime.CompilerServices.ConditionalWeakTable<Gum.BlendState, Microsoft.Xna.Framework.Graphics.BlendState> _xnaBlendStates =
             new System.Runtime.CompilerServices.ConditionalWeakTable<Gum.BlendState, Microsoft.Xna.Framework.Graphics.BlendState>();
 
+        // The reverse of _xnaBlendStates, so ToGum hands back the Gum state an XNA state was made
+        // from. The runtimes' Blend setters round-trip Gum -> XNA -> Gum, and the renderer compares
+        // blend states by reference, so a fresh copy per element restarts the SpriteBatch at every
+        // element whose blend is a custom state such as a custom Renderer.NormalBlendState (#8253).
+        private static readonly System.Runtime.CompilerServices.ConditionalWeakTable<Microsoft.Xna.Framework.Graphics.BlendState, Gum.BlendState> _gumSourceBlendStates =
+            new System.Runtime.CompilerServices.ConditionalWeakTable<Microsoft.Xna.Framework.Graphics.BlendState, Gum.BlendState>();
+
         private static Microsoft.Xna.Framework.Graphics.BlendState GetOrCreateXnaBlendState(Gum.BlendState value)
         {
             if (_xnaBlendStates.TryGetValue(value, out var cached) && !cached.IsDisposed && IsSameBlend(value, cached))
@@ -101,6 +108,7 @@
                 var created = CreateXnaBlendState(value);
                 _xnaBlendStates.Remove(value);
                 _xnaBlendStates.Add(value, created);
+                _gumSourceBlendStates.Add(created, value);
                 return created;
             }
         }
@@ -165,6 +173,8 @@
             else if (value == Microsoft.Xna.Framework.Graphics.BlendState.AlphaBlend) return Gum.BlendState.AlphaBlend;
             else if (value == Microsoft.Xna.Framework.Graphics.BlendState.Additive) return Gum.BlendState.Additive;
             else if (value == Microsoft.Xna.Framework.Graphics.BlendState.NonPremultiplied) return Gum.BlendState.NonPremultiplied;
+            // An edited source no longer matches what this XNA state was built from, so it gets a copy.
+            else if (_gumSourceBlendStates.TryGetValue(value, out var source) && IsSameBlend(source, value)) return source;
             else
             {
                 var toReturn = new Gum.BlendState();
