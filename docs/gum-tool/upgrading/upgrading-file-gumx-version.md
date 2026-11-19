@@ -178,7 +178,7 @@ This version turns on the built-in BBCode text effects, such as `[Wave]` and `[R
 
 Before changing the version number, check that no text in the project uses `[Wave]`, `[Shake]`, `[Tornado]`, `[Fade]`, `[Rainbow]`, or `[Pulse]` as plain text, since those tags start animating at version 9.
 
-Version 9 uses the **same XML format** as Version 8. There is **no format conversion or Save All step**, you only change the `<Version>` number.
+Version 9 uses the **same XML format** as Version 8. There is **no format conversion or Save All step**. You only change the `<Version>` number.
 
 ❗Be sure that your entire team is using the new version of Gum (2026 December or later) before making this upgrade.
 

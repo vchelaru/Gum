@@ -1184,6 +1184,8 @@ public partial class CustomSetPropertyOnRenderable
         public string? Markup;
         public string? StrippedText;
         public HashSet<string> KnownTagsSnapshot = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        // Effect tags are known only for some project versions, so a parse is stale when that changes.
+        public bool AreEffectsEnabled;
         public string? FontName;
         public float FontSize;
         public int OutlineThickness;
@@ -1267,7 +1269,8 @@ public partial class CustomSetPropertyOnRenderable
             record.Markup != markup ||
             textRenderable.StoredMarkupText != markup ||
             textRenderable.RawText != record.StrippedText ||
-            !record.KnownTagsSnapshot.SetEquals(Tags))
+            !record.KnownTagsSnapshot.SetEquals(Tags) ||
+            record.AreEffectsEnabled != BbCodeTextEffect.AreEnabled)
         {
             return false;
         }
@@ -1288,6 +1291,7 @@ public partial class CustomSetPropertyOnRenderable
         record.StrippedText = asText.RawText;
         record.KnownTagsSnapshot.Clear();
         record.KnownTagsSnapshot.UnionWith(Tags);
+        record.AreEffectsEnabled = BbCodeTextEffect.AreEnabled;
         UpdateRecordFromOwner(record, graphicalUiElement, write: true);
     }
 

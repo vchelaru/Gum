@@ -24,6 +24,8 @@ internal enum BbCodeTextEffectKind
 /// </summary>
 internal sealed class BbCodeTextEffect
 {
+    internal static HashSet<string> EffectTagSet => _effectTagNames;
+
     private static readonly HashSet<string> _effectTagNames = new(StringComparer.OrdinalIgnoreCase)
     {
         nameof(BbCodeTextEffectKind.Wave),

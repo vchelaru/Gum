@@ -130,6 +130,34 @@ public class BbCodeTextEffectTests : BaseTestClass
     }
 
     [Fact]
+    public void KnownTags_AddedTag_StaysKnownWhileTheProjectVersionChanges()
+    {
+        HashSet<string> knownTags = BbCodeParser.KnownTags;
+        knownTags.Add("MyTag");
+        try
+        {
+            foreach (int version in new[]
+            {
+                (int)GumProjectSave.GumxVersions.RaiseChildrenEventsExpansion,
+                (int)GumProjectSave.GumxVersions.BbCodeTextEffects,
+                (int)GumProjectSave.GumxVersions.RaiseChildrenEventsExpansion,
+            })
+            {
+                ObjectFinder.Self.GumProjectSave = new GumProjectSave { Version = version };
+
+                BbCodeParser.KnownTags.ShouldBeSameAs(knownTags);
+                BbCodeParser.Parse("[MyTag=1]x[/MyTag]", BbCodeParser.KnownTags).Count.ShouldBe(1);
+                bool isEffectKnown = BbCodeParser.Parse("[Wave]x[/Wave]", BbCodeParser.KnownTags).Count == 1;
+                isEffectKnown.ShouldBe(version >= (int)GumProjectSave.GumxVersions.BbCodeTextEffects);
+            }
+        }
+        finally
+        {
+            knownTags.Remove("MyTag");
+        }
+    }
+
+    [Fact]
     public void KnownTags_NoProject_RecognizesEffectTags()
     {
         ObjectFinder.Self.GumProjectSave = null;

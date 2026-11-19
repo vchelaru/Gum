@@ -107,13 +107,10 @@ public static class BbCodeParser
     /// <remarks>
     /// Uses <see cref="System.StringComparer.OrdinalIgnoreCase"/> — <c>InvariantCulture</c>
     /// has been observed to crash when uploaded to itch from a Blazor build.
-    /// The built-in effect tags (<see cref="BbCodeTextEffect.EffectTagNames"/>) are included only while
-    /// <see cref="BbCodeTextEffect.AreEnabled"/> is true, so a project below the version that added them keeps
-    /// drawing them as literal text.
+    /// The built-in effect tags such as <c>[Wave]</c> are not in this set: <see cref="Parse"/> treats them as known
+    /// whenever the loaded project's version supports them.
     /// </remarks>
-    public static HashSet<string> KnownTags => BbCodeTextEffect.AreEnabled ? _knownTagsWithEffects : _knownTags;
-
-    private static readonly HashSet<string> _knownTags = new HashSet<string>(System.StringComparer.OrdinalIgnoreCase)
+    public static HashSet<string> KnownTags { get; } = new HashSet<string>(System.StringComparer.OrdinalIgnoreCase)
     {
         "Alpha",
         "Red",
@@ -132,15 +129,6 @@ public static class BbCodeParser
         "HasDropshadow",
         "Link",
     };
-
-    private static readonly HashSet<string> _knownTagsWithEffects = CreateKnownTagsWithEffects();
-
-    private static HashSet<string> CreateKnownTagsWithEffects()
-    {
-        var tags = new HashSet<string>(_knownTags, System.StringComparer.OrdinalIgnoreCase);
-        tags.UnionWith(BbCodeTextEffect.EffectTagNames);
-        return tags;
-    }
 
     internal struct Tag
     {
@@ -521,7 +509,19 @@ public static class BbCodeParser
     /// reports one canonical name and no string is copied out of <paramref name="text"/>), or null when the set does not
     /// contain it. A set that is not case-insensitive is asked with a copied string, as before.
     /// </summary>
+    // A name in tags, or a built-in effect name while the loaded project's version supports effects; returns the
+    // spelling in the set (PascalCase for an effect).
     private static string? FindKnownTagName(HashSet<string> tags, string text, int start, int length)
+    {
+        string? found = FindTagNameIn(tags, text, start, length);
+        if (found == null && BbCodeTextEffect.AreEnabled)
+        {
+            found = FindTagNameIn(BbCodeTextEffect.EffectTagSet, text, start, length);
+        }
+        return found;
+    }
+
+    private static string? FindTagNameIn(HashSet<string> tags, string text, int start, int length)
     {
         if (ReferenceEquals(tags.Comparer, StringComparer.OrdinalIgnoreCase))
         {
