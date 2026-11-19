@@ -1117,7 +1117,7 @@ public partial class CustomSetPropertyOnRenderable
         // Setting what a tagged text already shows changes nothing, so skip the parse and the
         // measure-and-wrap below, matching how Text.RawText ignores an equal plain string (#7779).
         // This compares the translated result, so a key whose translation is tagged skips too (#7786).
-        if (displayText != null && displayText.Contains("[") && IsBbCodeAlreadyParsed(textRenderable, graphicalUiElement, displayText))
+        if (textRenderable.IsBbCodeEnabled && displayText != null && displayText.Contains("[") && IsBbCodeAlreadyParsed(textRenderable, graphicalUiElement, displayText))
         {
             TrackLocalizationKey(graphicalUiElement, propertyName, valueAsString);
             return;
@@ -1297,12 +1297,18 @@ public partial class CustomSetPropertyOnRenderable
 
         TrackLocalizationKey(graphicalUiElement, propertyName, valueAsString);
 
+        ApplyDisplayText(textRenderable, graphicalUiElement, displayText);
+    }
+
+    // Shows displayText on the renderable: parsed as BBCode when it has markup and parsing is enabled, else as-is.
+    private static void ApplyDisplayText(Text textRenderable, GraphicalUiElement graphicalUiElement, string? displayText)
+    {
         bool clearedRuns = textRenderable.InlineVariables.Count > 0;
         textRenderable.InlineVariables.Clear();
 #if !FRB
         textRenderable.ParsedBbCodeTags = null;
 #endif
-        if (displayText?.Contains("[") == true)
+        if (textRenderable.IsBbCodeEnabled && displayText?.Contains("[") == true)
         {
             textRenderable.StoredMarkupText = displayText;
             SetBbCodeText(textRenderable, graphicalUiElement, textRenderable.StoredMarkupText);
@@ -1322,6 +1328,25 @@ public partial class CustomSetPropertyOnRenderable
                 textRenderable.RawText = displayText;
             }
         }
+    }
+
+    /// <summary>
+    /// Turns BBCode parsing of <paramref name="textRenderable"/> on or off and re-applies the text it shows under
+    /// the new setting, laying the element out again as a Text assignment does. Text-input controls turn it off
+    /// so the characters they edit are the characters drawn (#8329).
+    /// </summary>
+    public static void SetIsBbCodeEnabled(Text textRenderable, GraphicalUiElement graphicalUiElement, bool value)
+    {
+        if (textRenderable.IsBbCodeEnabled == value)
+        {
+            return;
+        }
+
+        // The markup as assigned: kept in StoredMarkupText while parsed, in RawText while literal.
+        string? assignedText = textRenderable.StoredMarkupText ?? textRenderable.RawText;
+        textRenderable.IsBbCodeEnabled = value;
+        graphicalUiElement.AssignTextAndUpdateLayout(textRenderable, (textRenderable, graphicalUiElement, assignedText),
+            static state => ApplyDisplayText(state.textRenderable, state.graphicalUiElement, state.assignedText));
     }
 
     // Public (not private) is deliberate: FlatRedBall's Glue tool generates FRB game projects'
@@ -1379,6 +1404,11 @@ public partial class CustomSetPropertyOnRenderable
                 SetText(textRenderable, graphicalUiElement, propertyName, value);
             }
 #endif
+            handled = true;
+        }
+        else if (propertyName == "IsBbCodeEnabled")
+        {
+            SetIsBbCodeEnabled(textRenderable, graphicalUiElement, (bool)value);
             handled = true;
         }
         else if (propertyName == "LocalizeText")

@@ -1025,6 +1025,13 @@ public class Text : IVisible, IRenderableIpso,
     public string? StoredMarkupText { get; set; }
 
     /// <summary>
+    /// Whether the property pipeline parses text assigned to this Text as BBCode. True by default. Changed only
+    /// through <c>CustomSetPropertyOnRenderable.SetIsBbCodeEnabled</c> (<c>TextRuntime.IsBbCodeEnabled</c>,
+    /// <c>SetProperty("IsBbCodeEnabled", ...)</c>), which re-applies the current text and lays out again (#8329).
+    /// </summary>
+    internal bool IsBbCodeEnabled { get; set; } = true;
+
+    /// <summary>
     /// The tags found in the markup text assigned to this Text, with indexes into the text as displayed
     /// (tags removed). Null when the text has no markup. Replaced, never mutated, each time the text
     /// changes. Read by <c>TextRuntime.GetTagAtIndex</c>.

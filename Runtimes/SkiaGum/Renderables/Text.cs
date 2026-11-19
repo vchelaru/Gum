@@ -779,6 +779,26 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
     /// </summary>
     public string? StoredMarkupText => _hasMarkup ? mRawText : null;
 
+    /// <summary>
+    /// Whether <see cref="RawText"/> is parsed as BBCode. True by default; changing it re-parses at once. Set it
+    /// through <c>TextRuntime.IsBbCodeEnabled</c> (or <c>SetProperty("IsBbCodeEnabled", ...)</c>), which also lays
+    /// the element out again (#8329).
+    /// </summary>
+    internal bool IsBbCodeEnabled
+    {
+        get => _isBbCodeEnabled;
+        set
+        {
+            if (_isBbCodeEnabled != value)
+            {
+                _isBbCodeEnabled = value;
+                ParseMarkup();
+                _cachedTextBlock = null;
+            }
+        }
+    }
+    bool _isBbCodeEnabled = true;
+
     public IRenderableIpso? Parent
     {
         get { return mParent; }
@@ -3290,7 +3310,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
         _customRunsAtLayout.Clear();
         ParsedBbCodeTags = null;
 
-        if (string.IsNullOrEmpty(mRawText) || mRawText.IndexOf('[') < 0)
+        if (!_isBbCodeEnabled || string.IsNullOrEmpty(mRawText) || mRawText.IndexOf('[') < 0)
         {
             _hasMarkup = false;
             // CRLF counts as one character everywhere (#6991), as on MonoGame/Raylib.
