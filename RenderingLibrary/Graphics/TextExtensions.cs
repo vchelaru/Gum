@@ -46,29 +46,34 @@ public static class TextExtensions
         var topOfText = textInstance.GetAbsoluteTop() + TextHitTesting.GetVerticalAlignmentOffset(
             textInstance.VerticalAlignment, textInstance.EffectiveHeight, textInstance.WrappedTextHeight);
 
+        // Widths come from the styled overload, so a line with [FontScale]/[FontSize]/[Font] runs is placed
+        // and hit tested at the sizes it is drawn at (#8321).
         return TextHitTesting.GetIndexInWrappedLines(
             textInstance.WrappedText,
             screenX - textInstance.GetAbsoluteLeft(),
             screenY - topOfText,
             formsText.GetDrawnLineTop,
-            lineText => TextHitTesting.GetHorizontalAlignmentOffset(textInstance.HorizontalAlignment, textInstance.EffectiveWidth,
-                formsText.MeasureDrawnString(lineText, HorizontalMeasurementStyle.TrimRight)),
-            (cursorOffset, lineText) => GetIndex(formsText, cursorOffset, lineText));
+            (startOfLine, lineText) => TextHitTesting.GetHorizontalAlignmentOffset(textInstance.HorizontalAlignment, textInstance.EffectiveWidth,
+                textInstance.MeasureDrawnString(lineText, startOfLine, HorizontalMeasurementStyle.TrimRight)),
+            (cursorOffset, startOfLine, lineText) => GetIndex(textInstance, cursorOffset, startOfLine, lineText));
     }
 
-    private static int GetIndex(IFormsText textInstance, float cursorOffset, string? textToUse)
+    private static int GetIndex(Text textInstance, float cursorOffset, int startOfLine, string? textToUse)
     {
-#if RAYLIB
-        // Raylib has no per-character advance, so a character's advance is the growth of the drawn prefix.
+#if !RAYLIB
+        if (textInstance.InlineVariables.Count == 0)
+        {
+            return TextHitTesting.GetIndexInLine(textToUse, cursorOffset, textInstance.GetDrawnCharacterAdvance, textInstance.GetDrawnKerning);
+        }
+#endif
+        // A character's advance is the growth of the drawn prefix: raylib has no per-character advance, and
+        // a styled line's advance depends on the run each character is in.
         return TextHitTesting.GetIndexInLine(
             textToUse,
             cursorOffset,
             (line, start, length) =>
-                textInstance.MeasureDrawnString(line.Substring(0, start + length), HorizontalMeasurementStyle.Full)
-                - textInstance.MeasureDrawnString(line.Substring(0, start), HorizontalMeasurementStyle.Full));
-#else
-        return TextHitTesting.GetIndexInLine(textToUse, cursorOffset, textInstance.GetDrawnCharacterAdvance, textInstance.GetDrawnKerning);
-#endif
+                textInstance.MeasureDrawnString(line.Substring(0, start + length), startOfLine, HorizontalMeasurementStyle.Full)
+                - textInstance.MeasureDrawnString(line.Substring(0, start), startOfLine, HorizontalMeasurementStyle.Full));
     }
 
     public static void GetLineNumber(this Text textInstance, int absoluteCharacterIndex, out int lineNumber, out int absoluteStartOfLine, out int relativeIndexOnLine)

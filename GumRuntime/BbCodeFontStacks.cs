@@ -133,9 +133,9 @@ public class BbCodeFontStacks
     }
 
     /// <summary>
-    /// Parses a <c>[Color=..]</c> argument: <c>0xAARRGGBB</c> hex or a known color name (<c>Red</c>,
-    /// <c>CornflowerBlue</c>, ...). Returns null, so the run keeps the base color, for anything else.
-    /// Every runtime calls this, so they agree on which values are colors.
+    /// Parses a <c>[Color=..]</c> argument: <c>0xAARRGGBB</c> hex, opaque <c>0xRRGGBB</c> hex, or a known
+    /// color name (<c>Red</c>, <c>CornflowerBlue</c>, ...). Returns null, so the run keeps the base color,
+    /// for anything else. Every runtime calls this, so they agree on which values are colors.
     /// </summary>
     public static System.Drawing.Color? ParseColor(string? argument)
     {
@@ -146,9 +146,15 @@ public class BbCodeFontStacks
 
         if (argument!.StartsWith("0x"))
         {
-            return int.TryParse(argument.Substring(2), NumberStyles.AllowHexSpecifier, CultureInfo.InvariantCulture, out int hex)
-                ? System.Drawing.Color.FromArgb(hex)
-                : null;
+            // Only 0xRRGGBB and 0xAARRGGBB are colors; any other digit count is a typo, not a color.
+            string digits = argument.Substring(2);
+            if ((digits.Length != 6 && digits.Length != 8)
+                || !int.TryParse(digits, NumberStyles.AllowHexSpecifier, CultureInfo.InvariantCulture, out int hex))
+            {
+                return null;
+            }
+            // 0xRRGGBB has no alpha digits; read it as opaque rather than as alpha 0.
+            return System.Drawing.Color.FromArgb(digits.Length == 6 ? unchecked((int)0xFF000000) | hex : hex);
         }
 
         // FromName returns a non-known color with ARGB 0 for an unrecognized name, which would hide the run.

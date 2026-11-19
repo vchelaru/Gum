@@ -1,10 +1,12 @@
 using Gum.DataTypes;
 using Gum.GueDeriving;
 using Gum.Wireframe;
+using RenderingLibrary;
 using RenderingLibrary.Graphics;
 using Shouldly;
 using System.Linq;
 using Xunit;
+using Text = RenderingLibrary.Graphics.Text;
 
 namespace MonoGameGum.Tests.Runtimes;
 
@@ -140,5 +142,118 @@ public class TextRuntimeBbCodeMeasurementTests : BaseTestClass
         string.Concat(textRuntime.WrappedText).ShouldBe("AA BB CC");
         textRuntime.GetTagAtIndex("Link", 4)!.Value.Argument.ShouldBe("a");
         textRuntime.GetTagAtIndex("Link", 6)!.Value.Argument.ShouldBe("b");
+    }
+
+    [Fact]
+    public void Text_TaggedThenPlainThenTagged_MeasuresEachStringFresh()
+    {
+        float plain = WidthOf("mmmm");
+        float scaled = WidthOf("[FontScale=2]mmmm[/FontScale]");
+        TextRuntime textRuntime = MakeRelative("[FontScale=2]mmmm[/FontScale]");
+
+        textRuntime.Text = "mmmm";
+        textRuntime.AbsoluteWidth.ShouldBe(plain, Tolerance);
+
+        textRuntime.Text = "[FontScale=2]mmmm[/FontScale]";
+        textRuntime.AbsoluteWidth.ShouldBe(scaled, Tolerance);
+    }
+
+    // Hit testing a mixed-size line: the letter positions have to come from the styled widths.
+    private static TextRuntime MakeAligned(string text, HorizontalAlignment alignment, float width)
+    {
+        TextRuntime textRuntime = new();
+        textRuntime.WidthUnits = DimensionUnitType.Absolute;
+        textRuntime.Width = width;
+        textRuntime.HeightUnits = DimensionUnitType.Absolute;
+        textRuntime.Height = 100;
+        textRuntime.HorizontalAlignment = alignment;
+        textRuntime.VerticalAlignment = VerticalAlignment.Top;
+        textRuntime.Text = text;
+        return textRuntime;
+    }
+
+    [Theory]
+    [InlineData(HorizontalAlignment.Left)]
+    [InlineData(HorizontalAlignment.Center)]
+    [InlineData(HorizontalAlignment.Right)]
+    public void GetCharacterIndexAtPosition_ScaledRun_UsesScaledLetterPositions(HorizontalAlignment alignment)
+    {
+        const string markup = "[FontScale=2]mm[/FontScale]";
+        const float boxWidth = 300;
+        float styled = WidthOf(markup);
+        TextRuntime textRuntime = MakeAligned(markup, alignment, boxWidth);
+        float lineLeft = textRuntime.AbsoluteLeft + alignment switch
+        {
+            HorizontalAlignment.Left => 0,
+            HorizontalAlignment.Center => (boxWidth - styled) / 2,
+            _ => boxWidth - styled,
+        };
+        float y = textRuntime.AbsoluteTop + 5;
+
+        // Each scaled 'm' is half the styled width: 0.1 = left half of the first, 0.4 = its right half,
+        // 0.9 = right half of the second.
+        textRuntime.GetCharacterIndexAtPosition(lineLeft + styled * 0.1f, y).ShouldBe(0);
+        textRuntime.GetCharacterIndexAtPosition(lineLeft + styled * 0.4f, y).ShouldBe(1);
+        textRuntime.GetCharacterIndexAtPosition(lineLeft + styled * 0.9f, y).ShouldBe(2);
+    }
+
+    [Fact]
+    public void GetTagAtIndex_LinkAfterScaledRun_IsFoundAtItsDrawnPosition()
+    {
+        const string markup = "[FontScale=2]mm[/FontScale][Link=x]mm[/Link]";
+        float scaledPart = WidthOf("[FontScale=2]mm[/FontScale]");
+        float plainM = WidthOf("m");
+        TextRuntime textRuntime = MakeAligned(markup, HorizontalAlignment.Left, 300);
+
+        // Left half of the first plain 'm' of the link, which starts where the scaled run ends.
+        int index = textRuntime.GetCharacterIndexAtPosition(
+            textRuntime.AbsoluteLeft + scaledPart + plainM * 0.25f, textRuntime.AbsoluteTop + 5);
+
+        index.ShouldBe(2);
+        textRuntime.GetTagAtIndex("Link", index)!.Value.Argument.ShouldBe("x");
+    }
+
+    // [FontSize], [Font], [IsBold], [IsItalic] and [OutlineThickness] all resolve to a swapped font, carried as a
+    // "BitmapFont" inline variable, so one swapped font with wider glyphs pins hit testing for the whole family.
+    [Fact]
+    public void GetCharacterIndexAtPosition_SwappedFontRun_UsesTheRunFontsAdvances()
+    {
+        TextRuntime runtime = new();
+        runtime.WidthUnits = DimensionUnitType.Absolute;
+        runtime.Width = 300;
+        Text text = (Text)runtime.RenderableComponent!;
+        text.BitmapFont = CreateStubFont(xAdvance: 10);
+        text.InlineVariables.Add(new InlineVariable
+        {
+            VariableName = "BitmapFont",
+            Value = CreateStubFont(xAdvance: 30),
+            StartIndex = 0,
+            CharacterCount = 2,
+        });
+        text.RawText = "mmmm";
+        float left = text.GetAbsoluteLeft();
+        float y = text.GetAbsoluteTop() + 5;
+
+        // Drawn as two 30-wide letters then two 10-wide ones: 0-30, 30-60, 60-70, 70-80.
+        text.GetCharacterIndexAtPosition(left + 20, y).ShouldBe(1);
+        text.GetCharacterIndexAtPosition(left + 50, y).ShouldBe(2);
+        text.GetCharacterIndexAtPosition(left + 62, y).ShouldBe(2);
+        text.GetCharacterIndexAtPosition(left + 74, y).ShouldBe(3);
+    }
+
+    // Only advances are read, so the texture is a placeholder.
+    private static BitmapFont CreateStubFont(int xAdvance)
+    {
+        string data =
+"info face=\"Stub\" size=-12 bold=0 italic=0 charset=\"\" unicode=1 stretchH=100 smooth=1 aa=1 padding=0,0,0,0 spacing=1,1 outline=0\n" +
+"common lineHeight=12 base=10 scaleW=256 scaleH=256 pages=1 packed=0 alphaChnl=0 redChnl=4 greenChnl=4 blueChnl=4\n" +
+"page id=0 file=\"x.png\"\n" +
+"chars count=1\n" +
+$"char id=109 x=10 y=0 width={xAdvance} height=10 xoffset=0 yoffset=0  xadvance={xAdvance} page=0 chnl=15\n";
+        Microsoft.Xna.Framework.Graphics.Texture2D placeholderTexture = (Microsoft.Xna.Framework.Graphics.Texture2D)
+            System.Runtime.CompilerServices.RuntimeHelpers.GetUninitializedObject(typeof(Microsoft.Xna.Framework.Graphics.Texture2D));
+        BitmapFont font = new BitmapFont(placeholderTexture, data);
+        font.SetFontPattern(256, 256);
+        return font;
     }
 }
