@@ -46,4 +46,31 @@ public class TextRuntimeBbCodeGlyphTests : BaseTestClass
         color.StartIndex.ShouldBe(1);
         color.CharacterCount.ShouldBe(3);
     }
+
+    [Theory]
+    [InlineData("a[Glyph=0x42][Custom=GlyphIndexProbe]cd[/Custom]", "2,3", "cd")]
+    [InlineData("[Custom=GlyphIndexProbe]a[Glyph=0x42]c[/Custom]", "0,1,2", "aBc")]
+    [InlineData("[Glyph=0x1F600][Custom=GlyphIndexProbe]x[/Custom]", "2", "x")]
+    [InlineData("[Color=Red][Glyph=0x42][/Color][Custom=GlyphIndexProbe]x[/Custom]", "1", "x")]
+    public void Text_WithGlyphTagNearCustom_CustomReceivesTheDisplayedIndex(string markup, string expectedIndexes, string expectedBlock)
+    {
+        const string name = "GlyphIndexProbe";
+        Text.Customizations[name] = (index, block) => new LetterCustomization();
+        try
+        {
+            TextRuntime textRuntime = new();
+            textRuntime.Text = markup;
+
+            Text text = (Text)textRuntime.RenderableComponent!;
+            var calls = text.InlineVariables
+                .Select(v => v.Value).OfType<ParameterizedLetterCustomizationCall>().ToList();
+            calls.Count.ShouldBeGreaterThan(0);
+            string.Join(",", calls.Select(c => c.CharacterIndex)).ShouldBe(expectedIndexes);
+            calls.ShouldAllBe(c => c.TextBlock == expectedBlock);
+        }
+        finally
+        {
+            Text.Customizations.Remove(name);
+        }
+    }
 }

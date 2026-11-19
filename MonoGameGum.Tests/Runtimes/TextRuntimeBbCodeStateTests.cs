@@ -115,6 +115,88 @@ public class TextRuntimeBbCodeStateTests : BaseTestClass
         text.InlineVariables.ShouldBeEmpty();
     }
 
+    [Theory]
+    [InlineData("Red", (byte)200)]
+    [InlineData("Green", (byte)100)]
+    [InlineData("Blue", (byte)50)]
+    [InlineData("FontScale", 2f)]
+    public void Text_WithStateBbCodeTag_AppliesEachDirectVariableToTheWrappedRange(string variableName, object value)
+    {
+        TextRuntime textRuntime = new();
+        StateSave state = new() { Name = "Styled" };
+        state.Variables.Add(new VariableSave { Name = variableName, Value = value });
+        textRuntime.AddStates(new List<StateSave> { state });
+
+        textRuntime.Text = "ab[State=Styled]cd[/State]e";
+
+        Text text = (Text)textRuntime.RenderableComponent;
+        text.RawText.ShouldBe("abcde");
+        InlineVariable variable = text.InlineVariables.Single(v => v.VariableName == variableName);
+        variable.Value.ShouldBe(value);
+        variable.StartIndex.ShouldBe(2);
+        variable.CharacterCount.ShouldBe(2);
+    }
+
+    [Fact]
+    public void Text_WithStateBbCodeTagHoldingSeveralVariables_AppliesEveryOneToTheSameRange()
+    {
+        TextRuntime textRuntime = new();
+        StateSave state = new() { Name = "Styled" };
+        state.Variables.Add(new VariableSave { Name = "Color", Value = System.Drawing.Color.FromArgb(255, 1, 2, 3) });
+        state.Variables.Add(new VariableSave { Name = "FontScale", Value = 2f });
+        textRuntime.AddStates(new List<StateSave> { state });
+
+        textRuntime.Text = "a[State=Styled]bc[/State]";
+
+        Text text = (Text)textRuntime.RenderableComponent;
+        text.InlineVariables.Select(v => (v.VariableName, v.StartIndex, v.CharacterCount))
+            .OrderBy(v => v.VariableName)
+            .ShouldBe(new[] { ("Color", 1, 2), ("FontScale", 1, 2) });
+    }
+
+    [Fact]
+    public void Text_WithStateBbCodeTagNestedInColor_KeepsBothOnTheInnerLetters()
+    {
+        TextRuntime textRuntime = new();
+        StateSave state = new() { Name = "Big" };
+        state.Variables.Add(new VariableSave { Name = "FontScale", Value = 2f });
+        textRuntime.AddStates(new List<StateSave> { state });
+
+        textRuntime.Text = "[Color=Red]a[State=Big]b[/State]c[/Color]";
+
+        Text text = (Text)textRuntime.RenderableComponent;
+        text.RawText.ShouldBe("abc");
+        InlineVariable color = text.InlineVariables.Single(v => v.VariableName == "Color");
+        (color.StartIndex, color.CharacterCount).ShouldBe((0, 3));
+        InlineVariable scale = text.InlineVariables.Single(v => v.VariableName == "FontScale");
+        (scale.StartIndex, scale.CharacterCount).ShouldBe((1, 1));
+    }
+
+    [Fact]
+    public void Text_WithStateBbCodeTagBeforeCustom_DoesNotShiftTheCustomIndex()
+    {
+        const string name = "StateIndexProbe";
+        Text.Customizations[name] = (index, block) => new LetterCustomization();
+        try
+        {
+            TextRuntime textRuntime = new();
+            StateSave state = new() { Name = "Styled" };
+            state.Variables.Add(new VariableSave { Name = "Color", Value = System.Drawing.Color.FromArgb(255, 1, 2, 3) });
+            textRuntime.AddStates(new List<StateSave> { state });
+
+            textRuntime.Text = $"[State=Styled]ab[/State][Custom={name}]c[/Custom]";
+
+            Text text = (Text)textRuntime.RenderableComponent;
+            ParameterizedLetterCustomizationCall call = text.InlineVariables
+                .Select(v => v.Value).OfType<ParameterizedLetterCustomizationCall>().Single();
+            call.CharacterIndex.ShouldBe(2);
+        }
+        finally
+        {
+            Text.Customizations.Remove(name);
+        }
+    }
+
     // Records every BmfcSave a per-request font resolution asks for, and returns a minimal valid
     // BitmapFont (only the space glyph is needed - measurement isn't asserted).
     private sealed class RecordingInMemoryFontCreator : IInMemoryFontCreator
