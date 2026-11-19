@@ -1039,7 +1039,15 @@ public class ObjectFinder : IObjectFinder
         return CollectReferencedFilesViaWalker(scopeElement: null, inclusion).Distinct();
     }
 
-    /// <param name="inclusion">The categories of referenced files to enumerate.</param>
+    /// <param name="inclusion">The categories of files to list.</param>
+    /// <param name="fontReferences">Fonts already collected for this project, reused by the walk; see
+    /// <see cref="Gum.Bundle.FontReferenceCache"/> for when sharing one is valid. Null collects them.</param>
+    public IEnumerable<string> GetAllFilesInProject(Gum.Bundle.GumBundleInclusion inclusion, Gum.Bundle.FontReferenceCache? fontReferences)
+    {
+        return CollectReferencedFilesViaWalker(scopeElement: null, inclusion, fontReferences: fontReferences).Distinct();
+    }
+
+    /// <param name="inclusion">The categories of file to report.</param>
     /// <param name="resolveFontFiles">
     /// False skips resolving every Text instance's effective font (see
     /// <see cref="Gum.Bundle.GumProjectDependencyWalker.ResolveFontFiles"/>), the bulk of the walk's cost.
@@ -1055,7 +1063,7 @@ public class ObjectFinder : IObjectFinder
     }
 
     private List<string> CollectReferencedFilesViaWalker(ElementSave? scopeElement, Gum.Bundle.GumBundleInclusion inclusion,
-        bool resolveFontFiles = true)
+        bool resolveFontFiles = true, Gum.Bundle.FontReferenceCache? fontReferences = null)
     {
         List<string> result = new List<string>();
         // Referenced files resolve relative to the project file; a project without one (new and unsaved) has none to report.
@@ -1066,7 +1074,11 @@ public class ObjectFinder : IObjectFinder
 
         string gumProjectDirectory = FileManager.GetDirectory(GumProjectSave.FullFileName!);
 
-        Gum.Bundle.GumProjectDependencyWalker walker = new Gum.Bundle.GumProjectDependencyWalker { ResolveFontFiles = resolveFontFiles };
+        Gum.Bundle.GumProjectDependencyWalker walker = new Gum.Bundle.GumProjectDependencyWalker
+        {
+            ResolveFontFiles = resolveFontFiles,
+            FontReferences = fontReferences
+        };
         Gum.Bundle.WalkResult walkResult = walker.Walk(
             GumProjectSave,
             gumProjectDirectory,

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using Gum.Bundle;
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
@@ -233,6 +234,58 @@ public class GumProjectDependencyWalkerFontTests : IDisposable
         result.ExternalFiles.ShouldContain(titleFnt);
         result.FontCacheFiles.ShouldBeEmpty();
         result.MissingFiles.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void Walk_with_a_FontReferenceCache_filled_by_scoped_walks_matches_an_uncached_walk()
+    {
+        ScreenSave menu = TestProjectBuilder.BuildScreen("MainMenu");
+        TestProjectBuilder.AddTextInstanceWithFontCache(menu, "Label", "Fonts/Present.ttf", 18);
+        ScreenSave options = TestProjectBuilder.BuildScreen("Options");
+        TestProjectBuilder.AddTextInstanceWithFontCache(options, "Label", "Fonts/Missing.ttf", 18);
+        StandardElementSave textStandard = TestProjectBuilder.BuildStandard("Text");
+        textStandard.DefaultState.Variables.Add(new VariableSave { SetsValue = true, Name = "Font", Value = "Arial" });
+        GumProjectSave project = TestProjectBuilder.BuildProject(
+            screens: new[] { menu, options },
+            standards: new[] { textStandard });
+        string root = CreateProjectRoot(new[] { ("Fonts/Present.ttf", EmptyContent) });
+        ObjectFinder.Self.GumProjectSave = project;
+        FontReferenceCache cache = new FontReferenceCache();
+        GumProjectDependencyWalker cachedWalker = new GumProjectDependencyWalker { FontReferences = cache };
+        cachedWalker.Walk(project, root, GumBundleInclusion.ExternalFiles, menu);
+        cachedWalker.Walk(project, root, GumBundleInclusion.ExternalFiles, options);
+
+        WalkResult cached = cachedWalker.Walk(project, root, GumBundleInclusion.Core | GumBundleInclusion.ExternalFiles);
+
+        WalkResult uncached = new GumProjectDependencyWalker().Walk(
+            project, root, GumBundleInclusion.Core | GumBundleInclusion.ExternalFiles);
+        cached.ExternalFiles.ShouldBe(uncached.ExternalFiles);
+        cached.ExternalFiles.ShouldContain("Fonts/Present.ttf");
+        cached.MissingFiles.Select(warning => warning.ReferencedPath)
+            .ShouldBe(uncached.MissingFiles.Select(warning => warning.ReferencedPath));
+        cached.MissingFiles.ShouldContain(warning => warning.ReferencedPath == "Fonts/Missing.ttf");
+    }
+
+    // Translated text adds fonts that walks without a lookup never collect, so such a walk keeps to its own.
+    [Fact]
+    public void Walk_with_a_localization_lookup_leaves_the_FontReferenceCache_alone()
+    {
+        ScreenSave menu = TestProjectBuilder.BuildScreen("MainMenu");
+        TestProjectBuilder.AddTextInstanceWithFontCache(menu, "Label", "Fonts/Present.ttf", 18);
+        GumProjectSave project = TestProjectBuilder.BuildProject(screens: new[] { menu });
+        string root = CreateProjectRoot(new[] { ("Fonts/Present.ttf", EmptyContent) });
+        ObjectFinder.Self.GumProjectSave = project;
+        FontReferenceCache cache = new FontReferenceCache();
+        GumProjectDependencyWalker walker = new GumProjectDependencyWalker
+        {
+            FontReferences = cache,
+            FontTranslationsOf = _ => Array.Empty<string>()
+        };
+
+        WalkResult result = walker.Walk(project, root, GumBundleInclusion.ExternalFiles);
+
+        result.ExternalFiles.ShouldContain("Fonts/Present.ttf");
+        cache.CollectionCount.ShouldBe(0);
     }
 
     private string CreateProjectRoot(IEnumerable<(string, byte[])> files)

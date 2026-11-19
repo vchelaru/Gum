@@ -92,6 +92,123 @@ public class MenuBuilderTests
         window.Close();
     }
 
+    [AvaloniaFact]
+    public void Build_FollowsEveryKindOfCollectionChange_InOrder()
+    {
+        MenuModel model = new MenuModel();
+        MenuItemModel file = new MenuItemModel("File");
+        MenuItemModel a = new MenuItemModel("A");
+        MenuItemModel b = new MenuItemModel("B");
+        MenuItemModel c = new MenuItemModel("C");
+        file.Items.Add(a);
+        file.Items.Add(b);
+        model.TopLevelItems.Add(file);
+        Menu menu = AvaloniaMenuBuilder.Build(model);
+        MenuItem fileItem = (MenuItem)menu.Items[0]!;
+
+        file.Items.Insert(1, c);
+        Headers(fileItem.Items).ShouldBe(new[] { "A", "C", "B" });
+        file.Items.Insert(0, MenuItemModel.Separator());
+        Headers(fileItem.Items).ShouldBe(new[] { "-", "A", "C", "B" });
+        file.Items.RemoveAt(0);
+        file.Items.Move(0, 2);
+        Headers(fileItem.Items).ShouldBe(new[] { "C", "B", "A" });
+        file.Items[1] = new MenuItemModel("D");
+        Headers(fileItem.Items).ShouldBe(new[] { "C", "D", "A" });
+        file.Items.Remove(c);
+        Headers(fileItem.Items).ShouldBe(new[] { "D", "A" });
+        file.Items.Clear();
+        Headers(fileItem.Items).ShouldBeEmpty();
+        file.Items.Add(b);
+        Headers(fileItem.Items).ShouldBe(new[] { "B" });
+        model.TopLevelItems.Insert(0, new MenuItemModel("Edit"));
+        Headers(menu.Items).ShouldBe(new[] { "Edit", "File" });
+    }
+
+    [AvaloniaFact]
+    public void CollectionChange_KeepsTheControlsOfItemsThatDidNotChange()
+    {
+        // Plugins add menu entries one at a time during startup; rebuilding every item on each one
+        // was most of the cost of building the menu.
+        MenuModel model = new MenuModel();
+        MenuItemModel file = new MenuItemModel("File");
+        MenuItemModel a = new MenuItemModel("A");
+        MenuItemModel b = new MenuItemModel("B");
+        b.Items.Add(new MenuItemModel("B1"));
+        file.Items.Add(a);
+        file.Items.Add(b);
+        model.TopLevelItems.Add(file);
+        Menu menu = AvaloniaMenuBuilder.Build(model);
+        MenuItem fileItem = (MenuItem)menu.Items[0]!;
+        MenuItem aItem = (MenuItem)fileItem.Items[0]!;
+        MenuItem bItem = (MenuItem)fileItem.Items[1]!;
+        MenuItem b1Item = (MenuItem)bItem.Items[0]!;
+
+        file.Items.Insert(0, new MenuItemModel("Z"));
+        model.TopLevelItems.Add(new MenuItemModel("Help"));
+        file.Items.Move(1, 2);
+
+        menu.Items[0].ShouldBeSameAs(fileItem);
+        fileItem.Items[2].ShouldBeSameAs(aItem);
+        fileItem.Items[1].ShouldBeSameAs(bItem);
+        bItem.Items[0].ShouldBeSameAs(b1Item);
+    }
+
+    [AvaloniaFact]
+    public void RemovedItems_NoLongerFollowTheirModels()
+    {
+        MenuModel model = new MenuModel();
+        MenuItemModel file = new MenuItemModel("File");
+        MenuItemModel removed = new MenuItemModel("Removed");
+        MenuItemModel replaced = new MenuItemModel("Replaced");
+        MenuItemModel cleared = new MenuItemModel("Cleared");
+        file.Items.Add(removed);
+        file.Items.Add(replaced);
+        file.Items.Add(cleared);
+        model.TopLevelItems.Add(file);
+        Menu menu = AvaloniaMenuBuilder.Build(model);
+        MenuItem fileItem = (MenuItem)menu.Items[0]!;
+        MenuItem removedItem = (MenuItem)fileItem.Items[0]!;
+        MenuItem replacedItem = (MenuItem)fileItem.Items[1]!;
+        MenuItem clearedItem = (MenuItem)fileItem.Items[2]!;
+
+        file.Items.Remove(removed);
+        file.Items[0] = new MenuItemModel("Replacement");
+        file.Items.Clear();
+        foreach (MenuItemModel item in new[] { removed, replaced, cleared })
+        {
+            item.Header = "Changed";
+            item.Items.Add(new MenuItemModel("Child"));
+        }
+
+        foreach ((MenuItem item, string header) in new[] { (removedItem, "Removed"), (replacedItem, "Replaced"), (clearedItem, "Cleared") })
+        {
+            item.Header.ShouldBe(header);
+            item.Items.Count.ShouldBe(0);
+        }
+    }
+
+    [AvaloniaFact]
+    public void RemovedStepperRow_NoLongerFollowsItsStepper()
+    {
+        MenuStepper zoom = new MenuStepper("Zoom", "Zoom In", "Zoom Out", "Actual Size", () => { }, () => { }, () => { });
+        zoom.ValueText = "100%";
+        MenuModel model = new MenuModel();
+        MenuItemModel view = new MenuItemModel("View");
+        view.Items.Add(new MenuItemModel("Zoom") { Stepper = zoom });
+        model.TopLevelItems.Add(view);
+        Menu menu = AvaloniaMenuBuilder.Build(model);
+        MenuStepperRow row = (MenuStepperRow)((MenuItem)((MenuItem)menu.Items[0]!).Items[0]!).Header!;
+
+        view.Items.Clear();
+        zoom.ValueText = "108%";
+
+        row.ValueButton.Content.ShouldBe("100%");
+    }
+
+    private static string[] Headers(ItemCollection items) =>
+        items.Select(item => item is Separator ? "-" : (string)((MenuItem)item!).Header!).ToArray();
+
     private static void Click(Control control)
     {
         TopLevel topLevel = TopLevel.GetTopLevel(control)!;

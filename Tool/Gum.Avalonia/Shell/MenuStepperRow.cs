@@ -11,7 +11,7 @@ namespace Gum.Avalonia.Shell;
 /// the value, and a plus button. Clicking the value runs the stepper's reset. Placed in a
 /// <see cref="MenuItem"/> that stays open on click, so the buttons can be pressed repeatedly.
 /// </summary>
-public sealed class MenuStepperRow : StackPanel
+public sealed class MenuStepperRow : StackPanel, System.IDisposable
 {
     private readonly MenuStepper _stepper;
 
@@ -49,6 +49,9 @@ public sealed class MenuStepperRow : StackPanel
 
     /// <summary>The button that raises the value.</summary>
     public Button PlusButton { get; }
+
+    /// <summary>Stops following the stepper, once the row has been taken out of its menu.</summary>
+    public void Dispose() => _stepper.PropertyChanged -= OnStepperPropertyChanged;
 
     private void OnStepperPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {

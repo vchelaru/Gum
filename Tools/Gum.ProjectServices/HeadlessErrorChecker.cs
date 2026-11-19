@@ -3,6 +3,7 @@ using Gum.Content.AnimationChain;
 using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
+using Gum.Diagnostics;
 using Gum.Managers;
 using Gum.ProjectServices.CodeGeneration;
 using Gum.StateAnimation.SaveClasses;
@@ -43,19 +44,23 @@ public partial class HeadlessErrorChecker : IHeadlessErrorChecker
     private readonly IFileNameCaseChecker _caseChecker;
     private readonly IOrphanCodeFileProvider? _orphanCodeFileProvider;
 
+    // The font cache a check shares between its walks; the tool hands out one per unchanged project.
+    private readonly IFontReferenceCacheSource _fontReferences;
+
     public HeadlessErrorChecker(ITypeResolver typeResolver)
         : this(typeResolver, Array.Empty<IAdditionalErrorSource>())
     {
     }
 
     public HeadlessErrorChecker(ITypeResolver typeResolver, IEnumerable<IAdditionalErrorSource> additionalErrorSources,
-        IOrphanCodeFileProvider? orphanCodeFileProvider = null)
+        IOrphanCodeFileProvider? orphanCodeFileProvider = null, IFontReferenceCacheSource? fontReferences = null)
     {
         _typeResolver = typeResolver;
         _additionalErrorSources = new List<IAdditionalErrorSource>(additionalErrorSources);
         _enumTypesByName = new Dictionary<string, Type?>();
         _caseChecker = new FileNameCaseChecker();
         _orphanCodeFileProvider = orphanCodeFileProvider;
+        _fontReferences = fontReferences ?? new NewFontReferenceCacheEachCall();
     }
 
     // ObjectFinder.Self is the project of the current GumService (or the tool), which other threads keep
@@ -74,7 +79,7 @@ public partial class HeadlessErrorChecker : IHeadlessErrorChecker
         ObjectFinder.Self.EnableCache();
         try
         {
-            return GetErrorsForInternal(element, project);
+            return GetErrorsForInternal(element, project, caseMismatchPaths: null, _fontReferences.For(project));
         }
         finally
         {
@@ -88,6 +93,8 @@ public partial class HeadlessErrorChecker : IHeadlessErrorChecker
         var errors = new List<ErrorResult>();
         // Paths the element checks already reported as GUM0008, so the project pass skips them.
         var caseMismatchPaths = new HashSet<string>(StringComparer.Ordinal);
+        // The element walks and the project walk read the same fonts; nothing changes between them.
+        var fontReferences = _fontReferences.For(project);
 
         using IDisposable? finderScope = UseOwnFinder(project);
         ObjectFinder.Self.EnableCache();
@@ -95,17 +102,17 @@ public partial class HeadlessErrorChecker : IHeadlessErrorChecker
         {
             foreach (var screen in project.Screens)
             {
-                errors.AddRange(GetErrorsForInternal(screen, project, caseMismatchPaths));
+                errors.AddRange(GetErrorsForInternal(screen, project, caseMismatchPaths, fontReferences));
             }
             foreach (var component in project.Components)
             {
-                errors.AddRange(GetErrorsForInternal(component, project, caseMismatchPaths));
+                errors.AddRange(GetErrorsForInternal(component, project, caseMismatchPaths, fontReferences));
             }
             foreach (var standard in project.StandardElements)
             {
-                errors.AddRange(GetErrorsForInternal(standard, project, caseMismatchPaths));
+                errors.AddRange(GetErrorsForInternal(standard, project, caseMismatchPaths, fontReferences));
             }
-            errors.AddRange(GetProjectFileCaseMismatchErrors(project, caseMismatchPaths));
+            errors.AddRange(GetProjectFileCaseMismatchErrors(project, caseMismatchPaths, fontReferences));
             errors.AddRange(GetFontRangeEntryErrors(project));
             errors.AddRange(GetMissingComponentBaseTypeErrors(project));
             errors.AddRange(GetMissingBehaviorFileErrors(project, caseMismatchPaths));
@@ -126,17 +133,26 @@ public partial class HeadlessErrorChecker : IHeadlessErrorChecker
         // The element checks own the GUM0008 rows for element files and the files elements
         // reference; running only those two checks finds the paths to skip.
         var caseMismatchPaths = new HashSet<string>(StringComparer.Ordinal);
+        // The element walks and the project walk read the same fonts; nothing changes between them.
+        var fontReferences = _fontReferences.For(project);
 
         using IDisposable? finderScope = UseOwnFinder(project);
         ObjectFinder.Self.EnableCache();
         try
         {
-            foreach (var element in project.AllElements)
+            using (StartupTiming.Time("  GetProjectErrors element file checks"))
             {
-                GetMissingSourceFileErrorsFor(element, project, caseMismatchPaths);
-                GetMissingExternalFileErrorsFor(element, project, caseMismatchPaths);
+                foreach (var element in project.AllElements)
+                {
+                    GetMissingSourceFileErrorsFor(element, project, caseMismatchPaths);
+                    GetMissingExternalFileErrorsFor(element, project, caseMismatchPaths, fontReferences);
+                }
             }
-            List<ErrorResult> errors = GetProjectFileCaseMismatchErrors(project, caseMismatchPaths);
+            List<ErrorResult> errors;
+            using (StartupTiming.Time("  GetProjectErrors GetProjectFileCaseMismatchErrors"))
+            {
+                errors = GetProjectFileCaseMismatchErrors(project, caseMismatchPaths, fontReferences);
+            }
             errors.AddRange(GetFontRangeEntryErrors(project));
             errors.AddRange(GetMissingComponentBaseTypeErrors(project));
             errors.AddRange(GetMissingBehaviorFileErrors(project, caseMismatchPaths));
@@ -161,7 +177,8 @@ public partial class HeadlessErrorChecker : IHeadlessErrorChecker
     /// <summary>
     /// Internal version that skips ObjectFinder setup (already done by caller).
     /// </summary>
-    private List<ErrorResult> GetErrorsForInternal(ElementSave element, GumProjectSave project, ISet<string>? caseMismatchPaths = null)
+    private List<ErrorResult> GetErrorsForInternal(ElementSave element, GumProjectSave project,
+        ISet<string>? caseMismatchPaths = null, FontReferenceCache? fontReferences = null)
     {
         var errors = new List<ErrorResult>();
 
@@ -171,7 +188,7 @@ public partial class HeadlessErrorChecker : IHeadlessErrorChecker
             errors.AddRange(GetBehaviorErrorsFor(asComponent, project));
         }
         errors.AddRange(GetMissingSourceFileErrorsFor(element, project, caseMismatchPaths));
-        errors.AddRange(GetMissingExternalFileErrorsFor(element, project, caseMismatchPaths));
+        errors.AddRange(GetMissingExternalFileErrorsFor(element, project, caseMismatchPaths, fontReferences));
         errors.AddRange(GetMissingElementBaseTypeErrorFor(element));
         errors.AddRange(GetCircularBaseTypeErrorFor(element));
         errors.AddRange(GetInstanceCycleErrorFor(element));
@@ -1230,7 +1247,8 @@ public partial class HeadlessErrorChecker : IHeadlessErrorChecker
     /// generation for that element - the same reasoning <see cref="GetAchxOriginErrorsFor"/>
     /// already uses for its content-drift warning.
     /// </summary>
-    private List<ErrorResult> GetMissingExternalFileErrorsFor(ElementSave element, GumProjectSave project, ISet<string>? reportedCaseMismatchPaths)
+    private List<ErrorResult> GetMissingExternalFileErrorsFor(ElementSave element, GumProjectSave project,
+        ISet<string>? reportedCaseMismatchPaths, FontReferenceCache? fontReferences = null)
     {
         var errors = new List<ErrorResult>();
 
@@ -1240,7 +1258,7 @@ public partial class HeadlessErrorChecker : IHeadlessErrorChecker
         }
 
         var projectRootDirectory = FileManager.GetDirectory(project.FullFileName);
-        var walker = new GumProjectDependencyWalker();
+        var walker = new GumProjectDependencyWalker { FontReferences = fontReferences };
         var result = walker.Walk(project, projectRootDirectory, GumBundleInclusion.ExternalFiles, element);
         // A case-sensitive file system lists a mismatched file as missing and may also include it;
         // one GUM0008 per path, attributed to the instance when the walker names one.
@@ -1344,7 +1362,8 @@ public partial class HeadlessErrorChecker : IHeadlessErrorChecker
     /// element animation files, and the files a referenced file loads (<c>.fnt</c> pages,
     /// <c>.achx</c> frames). Skips paths already in <paramref name="reportedPaths"/>.
     /// </summary>
-    private List<ErrorResult> GetProjectFileCaseMismatchErrors(GumProjectSave project, ISet<string> reportedPaths)
+    private List<ErrorResult> GetProjectFileCaseMismatchErrors(GumProjectSave project, ISet<string> reportedPaths,
+        FontReferenceCache fontReferences)
     {
         var errors = new List<ErrorResult>();
         if (string.IsNullOrEmpty(project.FullFileName))
@@ -1353,7 +1372,7 @@ public partial class HeadlessErrorChecker : IHeadlessErrorChecker
         }
 
         var projectRootDirectory = FileManager.GetDirectory(project.FullFileName);
-        var result = new GumProjectDependencyWalker().Walk(
+        var result = new GumProjectDependencyWalker { FontReferences = fontReferences }.Walk(
             project, projectRootDirectory, GumBundleInclusion.Core | GumBundleInclusion.ExternalFiles);
 
         // The walker lists an animation file only when File.Exists finds it, which a case-sensitive

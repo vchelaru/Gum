@@ -34,6 +34,22 @@ public sealed class GameRenderDeviceHost : ISharedRenderDeviceHost
         }
     }
 
+    /// <summary>
+    /// Whether the shared device is being created right now. Creating it pumps the UI dispatcher,
+    /// so a frame tick can run in the middle; a new host taken then throws instead of creating a
+    /// second device, so a caller that can wait checks this first.
+    /// </summary>
+    public static bool IsSharedDeviceBeingCreated
+    {
+        get
+        {
+            lock (_gate)
+            {
+                return _shared.IsCreating;
+            }
+        }
+    }
+
     /// <summary>Takes a reference on the shared device, creating it on first use.</summary>
     public GameRenderDeviceHost()
     {

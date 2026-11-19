@@ -216,4 +216,105 @@ public class NativeMenuBuilderTests
         Dispatcher.UIThread.RunJobs();
         invoked.ShouldBe(1);
     }
+
+    [AvaloniaFact]
+    public void Build_FollowsEveryKindOfCollectionChange_InOrder_WithAStepperAsThreeItems()
+    {
+        MenuStepper zoom = new MenuStepper("Zoom", "Zoom In", "Zoom Out", "Actual Size", () => { }, () => { }, () => { });
+        MenuModel model = new MenuModel();
+        MenuItemModel view = new MenuItemModel("View");
+        MenuItemModel a = new MenuItemModel("A");
+        MenuItemModel stepper = new MenuItemModel("Zoom") { Stepper = zoom };
+        MenuItemModel c = new MenuItemModel("C");
+        view.Items.Add(a);
+        view.Items.Add(stepper);
+        model.TopLevelItems.Add(view);
+        NativeMenu menu = AvaloniaNativeMenuBuilder.Build(model);
+        NativeMenu viewMenu = ((NativeMenuItem)menu.Items[0]).Menu!;
+
+        view.Items.Add(c);
+        Headers(viewMenu).ShouldBe(new[] { "A", "Zoom In", "Zoom Out", "Actual Size", "C" });
+        view.Items.Move(1, 2);
+        Headers(viewMenu).ShouldBe(new[] { "A", "C", "Zoom In", "Zoom Out", "Actual Size" });
+        view.Items.Insert(1, MenuItemModel.Separator());
+        Headers(viewMenu).ShouldBe(new[] { "A", "-", "C", "Zoom In", "Zoom Out", "Actual Size" });
+        view.Items[3] = new MenuItemModel("D");
+        Headers(viewMenu).ShouldBe(new[] { "A", "-", "C", "D" });
+        view.Items.RemoveAt(0);
+        Headers(viewMenu).ShouldBe(new[] { "-", "C", "D" });
+        view.Items.Clear();
+        Headers(viewMenu).ShouldBeEmpty();
+        view.Items.Add(stepper);
+        Headers(viewMenu).ShouldBe(new[] { "Zoom In", "Zoom Out", "Actual Size" });
+
+        MenuItemModel leaf = new MenuItemModel("Leaf");
+        model.TopLevelItems.Insert(0, leaf);
+        leaf.Items.Add(new MenuItemModel("Child"));
+        Headers(menu).ShouldBe(new[] { "Leaf", "View" });
+        Headers(((NativeMenuItem)menu.Items[0]).Menu!).ShouldBe(new[] { "Child" });
+    }
+
+    [AvaloniaFact]
+    public void CollectionChange_KeepsTheItemsThatDidNotChange()
+    {
+        MenuModel model = new MenuModel();
+        MenuItemModel file = new MenuItemModel("File");
+        MenuItemModel a = new MenuItemModel("A");
+        MenuItemModel b = new MenuItemModel("B");
+        b.Items.Add(new MenuItemModel("B1"));
+        file.Items.Add(a);
+        file.Items.Add(b);
+        model.TopLevelItems.Add(file);
+        NativeMenu menu = AvaloniaNativeMenuBuilder.Build(model);
+        NativeMenuItem fileItem = (NativeMenuItem)menu.Items[0];
+        NativeMenuItem aItem = (NativeMenuItem)fileItem.Menu!.Items[0];
+        NativeMenuItem bItem = (NativeMenuItem)fileItem.Menu.Items[1];
+        NativeMenuItem b1Item = (NativeMenuItem)bItem.Menu!.Items[0];
+
+        file.Items.Insert(0, new MenuItemModel("Z"));
+        model.TopLevelItems.Add(new MenuItemModel("Help"));
+        file.Items.Move(1, 2);
+
+        menu.Items[0].ShouldBeSameAs(fileItem);
+        fileItem.Menu.Items[2].ShouldBeSameAs(aItem);
+        fileItem.Menu.Items[1].ShouldBeSameAs(bItem);
+        bItem.Menu.Items[0].ShouldBeSameAs(b1Item);
+    }
+
+    [AvaloniaFact]
+    public void RemovedItems_NoLongerFollowTheirModels()
+    {
+        MenuModel model = new MenuModel();
+        MenuItemModel file = new MenuItemModel("File");
+        MenuItemModel removed = new MenuItemModel("Removed");
+        MenuItemModel replaced = new MenuItemModel("Replaced");
+        MenuItemModel cleared = new MenuItemModel("Cleared");
+        file.Items.Add(removed);
+        file.Items.Add(replaced);
+        file.Items.Add(cleared);
+        model.TopLevelItems.Add(file);
+        NativeMenu menu = AvaloniaNativeMenuBuilder.Build(model);
+        IList<NativeMenuItemBase> fileItems = ((NativeMenuItem)menu.Items[0]).Menu!.Items;
+        NativeMenuItem removedItem = (NativeMenuItem)fileItems[0];
+        NativeMenuItem replacedItem = (NativeMenuItem)fileItems[1];
+        NativeMenuItem clearedItem = (NativeMenuItem)fileItems[2];
+
+        file.Items.Remove(removed);
+        file.Items[0] = new MenuItemModel("Replacement");
+        file.Items.Clear();
+        foreach (MenuItemModel item in new[] { removed, replaced, cleared })
+        {
+            item.Header = "Changed";
+            item.Items.Add(new MenuItemModel("Child"));
+        }
+
+        foreach ((NativeMenuItem item, string header) in new[] { (removedItem, "Removed"), (replacedItem, "Replaced"), (clearedItem, "Cleared") })
+        {
+            item.Header.ShouldBe(header);
+            item.Menu.ShouldBeNull();
+        }
+    }
+
+    private static string[] Headers(NativeMenu menu) =>
+        menu.Items.Select(item => item is NativeMenuItemSeparator ? "-" : ((NativeMenuItem)item).Header!).ToArray();
 }

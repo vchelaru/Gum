@@ -40,6 +40,7 @@ public class HeadlessFontGenerationService : IHeadlessFontGenerationService
 
     private readonly IFontFileGenerator _fontFileGenerator;
     private readonly IFontGenerationCallbacks _callbacks;
+    private readonly IFontReferenceCacheSource _fontReferences;
 
     /// <summary>
     /// How long a failed generation attempt is remembered before the next request for the same
@@ -71,10 +72,16 @@ public class HeadlessFontGenerationService : IHeadlessFontGenerationService
     /// <param name="callbacks">
     /// Optional callbacks for output and spinner display. When <c>null</c>, all feedback is suppressed.
     /// </param>
-    public HeadlessFontGenerationService(IFontFileGenerator fontFileGenerator, IFontGenerationCallbacks? callbacks = null)
+    /// <param name="fontReferences">
+    /// Where the font scan gets fonts other scans of the unchanged project already collected. When
+    /// <c>null</c>, every scan collects them again.
+    /// </param>
+    public HeadlessFontGenerationService(IFontFileGenerator fontFileGenerator, IFontGenerationCallbacks? callbacks = null,
+        IFontReferenceCacheSource? fontReferences = null)
     {
         _fontFileGenerator = fontFileGenerator;
         _callbacks = callbacks ?? new NoOpFontGenerationCallbacks();
+        _fontReferences = fontReferences ?? new NewFontReferenceCacheEachCall();
     }
 
     /// <inheritdoc/>
@@ -251,10 +258,11 @@ public class HeadlessFontGenerationService : IHeadlessFontGenerationService
     /// </summary>
     internal Dictionary<string, BmfcSave> CollectRequiredFonts(GumProjectSave project, IEnumerable<ElementSave> elements)
     {
+        Func<string, IEnumerable<string>>? translationsOf = ProjectTranslations.CreateLookup(project);
         FontReferenceCollector collector = new FontReferenceCollector(
             instance => ObjectFinder.Self.GetElementSave(instance))
         {
-            TranslationsOf = ProjectTranslations.CreateLookup(project)
+            TranslationsOf = translationsOf
         };
 
         // The collector resolves every instance's BaseType through the injected resolver above,
@@ -264,7 +272,12 @@ public class HeadlessFontGenerationService : IHeadlessFontGenerationService
         ObjectFinder.Self.EnableCache();
         try
         {
-            return collector.Collect(project, elements);
+            // Translated text adds fonts the error checks and file walks never collect, so a localized
+            // project collects them here every time (see FontReferenceCache).
+            return translationsOf != null
+                ? collector.Collect(project, elements)
+                : _fontReferences.For(project).Collect(elements, initializesProject: false,
+                    single => collector.Collect(project, new[] { single }));
         }
         finally
         {

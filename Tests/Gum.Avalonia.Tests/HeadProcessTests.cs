@@ -21,7 +21,7 @@ public class HeadProcessTests
 
     private static bool CanRunTheHead => TestEnvironment.CanUseDisplay("GUM_RUN_HEAD_PROCESS_TEST");
 
-    private sealed record HeadRun(int ExitCode, string Output, string Errors, TimeSpan Elapsed, string LogTail)
+    private sealed record HeadRun(int ExitCode, string Output, string Errors, TimeSpan Elapsed, string LogTail, int DeviceReadyCount)
     {
         /// <summary>
         /// What an assertion on this run prints. A native crash (exit 139 is SIGSEGV, 128 + signal on Linux)
@@ -59,6 +59,10 @@ public class HeadProcessTests
         run.Errors.ShouldNotContain("Startup failed");
         File.Exists(scratch.Screenshot).ShouldBeTrue();
         File.Exists(Path.Combine(scratch.UserData, "GeneralSettings.xml")).ShouldBeTrue("the run's settings must be written under its own folder");
+#if DEBUG
+        // Creating the device pumps the dispatcher; a canvas frame tick in the middle used to build a second one.
+        run.DeviceReadyCount.ShouldBe(1, "the tool log's device.ready lines, one per created device");
+#endif
     }
 
     [Fact]
@@ -273,6 +277,18 @@ public class HeadProcessTests
         }
     }
 
+    private static int CountLogLines(string logPath, string text)
+    {
+        try
+        {
+            return File.ReadLines(logPath).Count(line => line.Contains(text, StringComparison.Ordinal));
+        }
+        catch (IOException)
+        {
+            return 0;
+        }
+    }
+
     private static async Task<HeadRun> RunHead(params string[] arguments)
     {
         Stopwatch stopwatch = Stopwatch.StartNew();
@@ -293,7 +309,7 @@ public class HeadProcessTests
             throw new TimeoutException("The head did not exit within three minutes, although --exit-after should force an exit well before then.");
         }
         stopwatch.Stop();
-        HeadRun result = new HeadRun(process.ExitCode, await output, await errors, stopwatch.Elapsed, ReadLogTail(logPath));
+        HeadRun result = new HeadRun(process.ExitCode, await output, await errors, stopwatch.Elapsed, ReadLogTail(logPath), CountLogLines(logPath, "device.ready"));
         try { File.Delete(logPath); } catch (IOException) { }
         return result;
     }

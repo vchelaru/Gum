@@ -39,7 +39,7 @@ public class ObjectFinderFileReferencesWithoutFontResolutionTests : BaseTestClas
         {
             variable.Name = name + "." + variable.Name;
             variable.SetsValue = true;
-            screen.DefaultState.Variables.Add(variable);
+            screen.DefaultState!.Variables.Add(variable);
         }
     }
 
