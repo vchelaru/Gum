@@ -421,6 +421,9 @@ public class FileWatchManager : IFileWatchManager
     public void InvalidateReferencedFiles()
         => _fileChangeReactionLogic.InvalidateReferencedFiles();
 
+    public bool IsRelevantToProject(FilePath file)
+        => _fileChangeReactionLogic.IsRelevantToProject(file);
+
     public TimeSpan TimeToNextFlush => (LastFileChange + TimeSpan.FromMilliseconds(500)) - DateTime.Now;
 
     private enum FileReadiness

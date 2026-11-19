@@ -993,12 +993,22 @@ public class ObjectFinder : IObjectFinder
         return CollectReferencedFilesViaWalker(scopeElement: null, inclusion).Distinct();
     }
 
+    /// <param name="resolveFontFiles">
+    /// False skips resolving every Text instance's effective font (see
+    /// <see cref="Gum.Bundle.GumProjectDependencyWalker.ResolveFontFiles"/>), the bulk of the walk's cost.
+    /// </param>
+    public IEnumerable<string> GetAllFilesInProject(Gum.Bundle.GumBundleInclusion inclusion, bool resolveFontFiles)
+    {
+        return CollectReferencedFilesViaWalker(scopeElement: null, inclusion, resolveFontFiles).Distinct();
+    }
+
     public List<string> GetFilesReferencedBy(ElementSave element)
     {
         return CollectReferencedFilesViaWalker(scopeElement: element, AllInclusions).Distinct().ToList();
     }
 
-    private List<string> CollectReferencedFilesViaWalker(ElementSave? scopeElement, Gum.Bundle.GumBundleInclusion inclusion)
+    private List<string> CollectReferencedFilesViaWalker(ElementSave? scopeElement, Gum.Bundle.GumBundleInclusion inclusion,
+        bool resolveFontFiles = true)
     {
         List<string> result = new List<string>();
         // Referenced files resolve relative to the project file; a project without one (new and unsaved) has none to report.
@@ -1009,7 +1019,7 @@ public class ObjectFinder : IObjectFinder
 
         string gumProjectDirectory = FileManager.GetDirectory(GumProjectSave.FullFileName!);
 
-        Gum.Bundle.GumProjectDependencyWalker walker = new Gum.Bundle.GumProjectDependencyWalker();
+        Gum.Bundle.GumProjectDependencyWalker walker = new Gum.Bundle.GumProjectDependencyWalker { ResolveFontFiles = resolveFontFiles };
         Gum.Bundle.WalkResult walkResult = walker.Walk(
             GumProjectSave,
             gumProjectDirectory,

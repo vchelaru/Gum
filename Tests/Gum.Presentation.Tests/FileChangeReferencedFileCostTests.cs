@@ -166,6 +166,19 @@ public class FileChangeReferencedFileCostTests : BaseTestClass
     private void VerifyReloaded(Times times) => _wireframe.Verify(w => w.RefreshAll(true, true), times);
 
     [Fact]
+    public void IsRelevantToProject_IsFalseForAFileNothingReferences_AndTrueForGumAndReferencedFiles()
+    {
+        ScreenSave screen = AddScreen("Main");
+        AddPicture(screen, "Item", "Textures/Photo.png");
+
+        _reaction.IsRelevantToProject(new FilePath(PathOf("EventExport/gum_events.json"))).ShouldBeFalse();
+        _reaction.IsRelevantToProject(new FilePath(PathOf("../GumLastChangeFilePath.txt"))).ShouldBeFalse();
+        _reaction.IsRelevantToProject(new FilePath(PathOf("Textures/Photo.png"))).ShouldBeTrue();
+        _reaction.IsRelevantToProject(new FilePath(PathOf("Screens/Main.gusx"))).ShouldBeTrue();
+        _reaction.IsRelevantToProject(new FilePath(PathOf("Strings.csv"))).ShouldBeTrue();
+    }
+
+    [Fact]
     public void ManyRenamesAndDeletesOfUnrelatedFiles_WalkTheProjectAtMostOnce()
     {
         ScreenSave screen = AddScreen("Main");

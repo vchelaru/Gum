@@ -43,7 +43,10 @@ public sealed class ProjectReferencedFiles : IProjectReferencedFiles
     }
 
     private static IEnumerable<string> WalkProject() =>
-        ObjectFinder.Self.GetAllFilesInProject(Gum.Bundle.GumBundleInclusion.Core | Gum.Bundle.GumBundleInclusion.ExternalFiles);
+        // Resolving every Text instance's effective font is nearly all of a walk's cost and only finds font
+        // files named through a base type; this walk runs after most edits, so it leaves that out.
+        ObjectFinder.Self.GetAllFilesInProject(
+            Gum.Bundle.GumBundleInclusion.Core | Gum.Bundle.GumBundleInclusion.ExternalFiles, resolveFontFiles: false);
 
     public bool Contains(FilePath file)
     {

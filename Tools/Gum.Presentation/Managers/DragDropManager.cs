@@ -1045,7 +1045,8 @@ public class DragDropManager : IDragDropManager
     {
         _fileCommands.TryAutoSaveCurrentElement();
         _guiCommands.RefreshVariables();
-        _guiCommands.RefreshElementTreeView();
+        // The instance was added to the selected element, so only its nodes need a refresh.
+        _guiCommands.RefreshElementTreeView(_selectedState.SelectedElement);
 
         _wireframeObjectManager.RefreshAll(true);
     }

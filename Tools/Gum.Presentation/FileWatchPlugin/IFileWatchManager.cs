@@ -23,5 +23,12 @@ public interface IFileWatchManager
     /// rename or delete of a file is judged against the project as it is now.
     /// </summary>
     void InvalidateReferencedFiles();
+
+    /// <summary>
+    /// True when a change to <paramref name="file"/> can change what the project reports or shows: a Gum,
+    /// localization, animation or font-range file, or a file the project's elements reference. False for
+    /// anything else in a watched folder, such as the tool's own event export.
+    /// </summary>
+    bool IsRelevantToProject(FilePath file);
     void Flush();
 }
