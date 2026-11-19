@@ -1,21 +1,19 @@
 using System;
-using System.Diagnostics;
 using Gum.Wireframe;
 using RenderingLibrary;
 using Shouldly;
 using SkiaSharp;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace SkiaGum.Tests.Renderables;
 
-// SPIKE 2: [wave] animates on Skia now that [Custom] re-runs every draw (#8317).
+/// <summary>
+/// Built-in BBCode effects on Skia are applied at draw time to the cached blobs, from each glyph's laid-out x, so
+/// they match MonoGame and raylib without laying the text out again.
+/// </summary>
 public class TextBuiltInEffectTests : BaseTestClass
 {
     readonly Func<double> _originalClock = BbCodeTextEffect.TimeSeconds;
-    readonly ITestOutputHelper _output;
-
-    public TextBuiltInEffectTests(ITestOutputHelper output) => _output = output;
 
     public override void Dispose()
     {
@@ -36,16 +34,22 @@ public class TextBuiltInEffectTests : BaseTestClass
         return text;
     }
 
-    private static int InkTop(SKSurface surface, Text text)
+    private static SKBitmap Draw(SKSurface surface, Text text)
     {
         surface.Canvas.Clear(SKColors.Transparent);
         SystemManagers managers = new() { Canvas = surface.Canvas };
         text.Render(managers);
         using SKImage image = surface.Snapshot();
-        using SKBitmap bitmap = SKBitmap.FromImage(image);
+        return SKBitmap.FromImage(image);
+    }
+
+    // The topmost inked row in columns [left, right).
+    private static int InkTop(SKBitmap bitmap, int left = 0, int right = int.MaxValue)
+    {
+        right = Math.Min(right, bitmap.Width);
         for (int y = 0; y < bitmap.Height; y++)
         {
-            for (int x = 0; x < bitmap.Width; x++)
+            for (int x = left; x < right; x++)
             {
                 if (bitmap.GetPixel(x, y).Alpha > 128)
                 {
@@ -56,42 +60,86 @@ public class TextBuiltInEffectTests : BaseTestClass
         return -1;
     }
 
-    [Fact]
-    public void Render_WaveOverTime_MovesTheLetter()
+    private static SKColor FirstInk(SKBitmap bitmap)
     {
-        using SKSurface surface = SKSurface.Create(new SKImageInfo(200, 200));
-        Text text = MakeText("[wave amp=200 freq=1]I[/wave]");
-
-        // Godot: sin(freq * t + x / 50) * amp / 10, and the letter is at x = 0.
-        BbCodeTextEffect.TimeSeconds = () => 0;
-        int atZero = InkTop(surface, text);
-        BbCodeTextEffect.TimeSeconds = () => Math.PI / 2;
-        int atQuarter = InkTop(surface, text);
-
-        ((float)(atQuarter - atZero)).ShouldBe(20f, tolerance: 1);
+        for (int y = 0; y < bitmap.Height; y++)
+        {
+            for (int x = 0; x < bitmap.Width; x++)
+            {
+                SKColor pixel = bitmap.GetPixel(x, y);
+                if (pixel.Alpha == 255)
+                {
+                    return pixel;
+                }
+            }
+        }
+        return SKColor.Empty;
     }
 
     [Fact]
-    public void Render_FiftyCharWave_ReportsCostPerDraw()
+    public void Render_Wave_MovesTheLetterOnTheFirstAndLaterFrames()
     {
-        using SKSurface surface = SKSurface.Create(new SKImageInfo(1200, 200));
-        Text text = MakeText("[wave]The quick brown fox jumps over the lazy dog. 0123[/wave]");
-        Text plain = MakeText("The quick brown fox jumps over the lazy dog. 0123");
-        SystemManagers managers = new() { Canvas = surface.Canvas };
-        double time = 0;
-        BbCodeTextEffect.TimeSeconds = () => time;
+        using SKSurface surface = SKSurface.Create(new SKImageInfo(200, 200));
+        int plainTop = InkTop(Draw(surface, MakeText("I")));
+        Text text = MakeText("[Wave amp=200 freq=1]I[/Wave]");
 
-        double Measure(Text target)
-        {
-            for (int i = 0; i < 50; i++) { time += 0.016; target.Render(managers); }
-            Stopwatch stopwatch = Stopwatch.StartNew();
-            for (int i = 0; i < 500; i++) { time += 0.016; target.Render(managers); }
-            return stopwatch.Elapsed.TotalMilliseconds / 500;
-        }
+        // sin(freq * t + x / 50) * amp / 10 with the letter at x = 0.
+        BbCodeTextEffect.TimeSeconds = () => Math.PI / 2;
+        using SKBitmap first = Draw(surface, text);
+        using SKBitmap second = Draw(surface, text);
+        BbCodeTextEffect.TimeSeconds = () => 3 * Math.PI / 2;
+        using SKBitmap third = Draw(surface, text);
 
-        double wave = Measure(text);
-        double baseline = Measure(plain);
-        _output.WriteLine($"SPIKE-COST skia wave={wave:F3}ms plain={baseline:F3}ms per draw");
-        Console.WriteLine($"SPIKE-COST skia wave={wave:F3}ms plain={baseline:F3}ms per draw");
+        ((float)(InkTop(first) - plainTop)).ShouldBe(20f, tolerance: 1);
+        ((float)(InkTop(second) - plainTop)).ShouldBe(20f, tolerance: 1);
+        ((float)(InkTop(third) - plainTop)).ShouldBe(-20f, tolerance: 1);
+    }
+
+    [Fact]
+    public void Render_Wave_PhasesEachLetterByItsRealX()
+    {
+        using SKSurface surface = SKSurface.Create(new SKImageInfo(400, 200));
+        // freq 0 leaves only the x / 50 phase: the first letter (x = 0) does not move, a later one does.
+        Text text = MakeText("[Wave amp=200 freq=0]IIIIIII[/Wave]");
+        Text plain = MakeText("IIIIIII");
+
+        using SKBitmap plainBitmap = Draw(surface, plain);
+        int plainFirst = InkTop(plainBitmap, 0, 30);
+        using SKBitmap waved = Draw(surface, text);
+
+        ((float)InkTop(waved, 0, 30)).ShouldBe(plainFirst, tolerance: 1);
+        InkTop(waved, 60, 200).ShouldBeGreaterThan(plainFirst + 5);
+    }
+
+    [Fact]
+    public void Render_Rainbow_ColorsTheLetterWithoutRelayout()
+    {
+        using SKSurface surface = SKSurface.Create(new SKImageInfo(200, 200));
+        Text text = MakeText("[Rainbow]I[/Rainbow]");
+        BbCodeTextEffect.TimeSeconds = () => 0;
+
+        using SKBitmap first = Draw(surface, text);
+        Topten.RichTextKit.TextBlock block = text.GetCachedTextBlock();
+        BbCodeTextEffect.TimeSeconds = () => 1.0 / 3;
+        using SKBitmap later = Draw(surface, text);
+
+        // Hue 0 (red) at t = 0; hue 1/3 (green) at t = 1/3; sat 0.8, val 0.8.
+        FirstInk(first).ShouldBe(new SKColor(204, 41, 41));
+        FirstInk(later).ShouldBe(new SKColor(41, 204, 41));
+        text.GetCachedTextBlock().ShouldBeSameAs(block);
+    }
+
+    [Fact]
+    public void Render_FadeWithMaxLettersToShow_DrawsTheRevealedLetter()
+    {
+        using SKSurface surface = SKSurface.Create(new SKImageInfo(400, 200));
+        Text text = MakeText("[Fade length=1]II[/Fade]III");
+        text.MaxLettersToShow = 1;
+
+        using SKBitmap bitmap = Draw(surface, text);
+
+        // The only revealed letter is the fade's first, at full alpha; nothing else is drawn.
+        InkTop(bitmap).ShouldBeGreaterThan(-1);
+        InkTop(bitmap, 40, 400).ShouldBe(-1);
     }
 }
