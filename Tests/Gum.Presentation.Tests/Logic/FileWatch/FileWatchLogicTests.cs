@@ -217,4 +217,21 @@ public class FileWatchLogicTests : BaseTestClass
         _fileWatchManager.Verify(m => m.Disable(), Times.Once);
         _fileWatchManager.Verify(m => m.EnableWithDirectories(It.IsAny<HashSet<FilePath>>()), Times.Never);
     }
+
+    // The load's font collection runs first, and the scan reuses it.
+    [Fact]
+    public void HandleProjectLoaded_RequestsTheScanAfterTheLoadsFontCollection()
+    {
+        List<Action> afterWarmUp = new List<Action>();
+        Mock<IProjectFontWarmUp> warmUp = new Mock<IProjectFontWarmUp>();
+        warmUp.Setup(w => w.PostAfterWarmUp(It.IsAny<Action>())).Callback<Action>(afterWarmUp.Add);
+        FileWatchLogic logic = new FileWatchLogic(_fileWatchManager.Object, _guiCommands.Object, _projectState.Object,
+            _projectManager.Object, _dispatcher.Object, fontWarmUp: warmUp.Object);
+
+        logic.HandleProjectLoaded();
+        _dispatcher.Verify(d => d.Post(It.IsAny<Action>()), Times.Never);
+        afterWarmUp.ShouldHaveSingleItem()();
+
+        _dispatcher.Verify(d => d.Post(It.IsAny<Action>()), Times.Once);
+    }
 }

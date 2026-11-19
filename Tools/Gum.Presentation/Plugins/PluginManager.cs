@@ -1027,6 +1027,8 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
         // its IFontManager / IWireframeCommands / IDialogService / FileWatchLogic / IProjectState
         // deps are already bridged above).
         batch.AddExportedValue<IDispatcher>(Locator.GetRequiredService<IDispatcher>());
+        // MainErrorsPlugin and MainFontPlugin queue their load-time passes behind the font collection.
+        batch.AddExportedValue<IProjectFontWarmUp>(Locator.GetRequiredService<IProjectFontWarmUp>());
         batch.AddExportedValue<IWireframeObjectManager>(Locator.GetRequiredService<IWireframeObjectManager>());
 
         // Heavy-tier ctor drains (combined PR): MainTextureCoordinatePlugin and MainStatePlugin,

@@ -90,6 +90,8 @@ public static class GumCoreServiceCollectionExtensions
         services.AddSingleton<IProjectChangeVersion, ProjectChangeVersion>();
         services.AddSingleton<ProjectFontReferences>();
         services.AddSingleton<ProjectServices.IFontReferenceCacheSource>(provider => provider.GetRequiredService<ProjectFontReferences>());
+        services.AddSingleton<ProjectFontWarmUp>();
+        services.AddSingleton<IProjectFontWarmUp>(provider => provider.GetRequiredService<ProjectFontWarmUp>());
         // PluginEnablementStore: the user-disabled-plugins persistence PluginManager used to own via a
         // static field (#3880) - plain string plugin ids, no MEF/WinForms types.
         services.AddSingleton<IPluginEnablementStore, PluginEnablementStore>();

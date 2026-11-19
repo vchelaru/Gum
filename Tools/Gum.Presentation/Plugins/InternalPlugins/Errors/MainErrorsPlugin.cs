@@ -33,6 +33,7 @@ public class MainErrorsPlugin : CorePriorityPlugin
     private readonly IFileSystemRevealService _fileSystemRevealService;
     private readonly IProjectState _projectState;
     private readonly IDispatcher _dispatcher;
+    private readonly IProjectFontWarmUp? _fontWarmUp;
     private readonly Gum.Logic.FileWatch.IFileWatchManager _fileWatchManager;
     private AllErrorsViewModel _viewModel = null!;
 
@@ -50,8 +51,10 @@ public class MainErrorsPlugin : CorePriorityPlugin
     [ImportingConstructor]
     public MainErrorsPlugin(IErrorChecker errorChecker, IMessenger messenger, ISelectedState selectedState,
         IClipboardService clipboardService, IFileSystemRevealService fileSystemRevealService, IProjectState projectState,
-        IDispatcher dispatcher, Gum.Logic.FileWatch.IFileWatchManager fileWatchManager)
+        IDispatcher dispatcher, Gum.Logic.FileWatch.IFileWatchManager fileWatchManager,
+        IProjectFontWarmUp? fontWarmUp = null)
     {
+        _fontWarmUp = fontWarmUp;
         _fileWatchManager = fileWatchManager;
         _errorChecker = errorChecker;
         _messenger = messenger;
@@ -140,7 +143,15 @@ public class MainErrorsPlugin : CorePriorityPlugin
             return;
         }
         _isProjectErrorRefreshPending = true;
-        _dispatcher.Post(RefreshProjectErrors);
+        // After a load, once the project's fonts are collected, so this pass doesn't collect them itself.
+        if (_fontWarmUp != null)
+        {
+            _fontWarmUp.PostAfterWarmUp(RefreshProjectErrors);
+        }
+        else
+        {
+            _dispatcher.Post(RefreshProjectErrors);
+        }
     }
 
     private void RefreshProjectErrors()
