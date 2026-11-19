@@ -45,10 +45,17 @@ public class FileWatchPluginController
     /// </summary>
     public void HandleReferencesMayHaveChanged() => _fileWatchManager.InvalidateReferencedFiles();
 
+    /// <summary>
+    /// An edit that can add a reference only through a variable's value (an instance added or removed, a variable
+    /// set or removed, a state removed, a canvas refresh): nothing the project lists changes, so the kept set is
+    /// walked again only for a file some variable now names. These fire on nearly every edit.
+    /// </summary>
+    public void HandleVariableValuesMayHaveChanged() => _fileWatchManager.InvalidateReferencedFilesNamedByVariables();
+
     public void HandleVariableSet(ElementSave? element, InstanceSave? instance, string variableName, object? oldValue,
         bool isFullCommit)
     {
-        HandleReferencesMayHaveChanged();
+        HandleVariableValuesMayHaveChanged();
 
         // A file path is never scrubbed, so an intermediate drag tick can't be one.
         if (element == null || !isFullCommit)

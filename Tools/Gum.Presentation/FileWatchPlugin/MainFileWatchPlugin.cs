@@ -74,22 +74,24 @@ public class MainFileWatchPlugin : CorePriorityPlugin
         this.VariableSet += HandleVariableSet;
 
         // Anything that can change which files the elements reference. A canvas refresh follows nearly every
-        // edit that matters, which keeps an edit no event names from leaving the kept set stale.
+        // edit that matters, which keeps an edit no event names from leaving the kept set stale. The frequent
+        // edits change only variable values, so they keep the set and re-walk only for a file a variable names;
+        // the files the project lists (elements, behaviors, localization) have reactions of their own anyway.
         this.ElementAdd += _ => _controller.HandleReferencesMayHaveChanged();
         this.ElementDelete += _ => _controller.HandleReferencesMayHaveChanged();
         this.ElementImported += _ => _controller.HandleReferencesMayHaveChanged();
         this.ElementDuplicate += (_, _) => _controller.HandleReferencesMayHaveChanged();
-        this.InstanceAdd += (_, _) => _controller.HandleReferencesMayHaveChanged();
-        this.InstanceDelete += (_, _) => _controller.HandleReferencesMayHaveChanged();
-        this.InstancesDelete += (_, _) => _controller.HandleReferencesMayHaveChanged();
         this.StateAdd += _ => _controller.HandleReferencesMayHaveChanged();
         this.CategoryAdd += _ => _controller.HandleReferencesMayHaveChanged();
-        this.StateDelete += _ => _controller.HandleReferencesMayHaveChanged();
         this.VariableAdd += (_, _) => _controller.HandleReferencesMayHaveChanged();
-        this.VariableDelete += (_, _) => _controller.HandleReferencesMayHaveChanged();
-        this.VariableSetThroughReference += (_, _, _, _, _) => _controller.HandleReferencesMayHaveChanged();
         this.AfterUndo += () => _controller.HandleReferencesMayHaveChanged();
-        this.WireframeRefreshed += () => _controller.HandleReferencesMayHaveChanged();
+        this.InstanceAdd += (_, _) => _controller.HandleVariableValuesMayHaveChanged();
+        this.InstanceDelete += (_, _) => _controller.HandleVariableValuesMayHaveChanged();
+        this.InstancesDelete += (_, _) => _controller.HandleVariableValuesMayHaveChanged();
+        this.StateDelete += _ => _controller.HandleVariableValuesMayHaveChanged();
+        this.VariableDelete += (_, _) => _controller.HandleVariableValuesMayHaveChanged();
+        this.VariableSetThroughReference += (_, _, _, _, _) => _controller.HandleVariableValuesMayHaveChanged();
+        this.WireframeRefreshed += () => _controller.HandleVariableValuesMayHaveChanged();
     }
 
     private void HandleVariableSet(ElementSave? element, InstanceSave? instance, string variableName, object? oldValue,

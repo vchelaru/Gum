@@ -25,6 +25,13 @@ public interface IFileWatchManager
     void InvalidateReferencedFiles();
 
     /// <summary>
+    /// Call when an edit can add a reference only through a variable's value (an instance or variable edit, a
+    /// canvas refresh). Cheaper than <see cref="InvalidateReferencedFiles"/>: the project is walked again only
+    /// for a file some variable now names.
+    /// </summary>
+    void InvalidateReferencedFilesNamedByVariables();
+
+    /// <summary>
     /// True when a change to <paramref name="file"/> can change what the project reports or shows: a Gum,
     /// localization, animation or font-range file, or a file the project's elements reference. False for
     /// anything else in a watched folder, such as the tool's own event export.

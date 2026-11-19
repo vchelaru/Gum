@@ -66,22 +66,50 @@ public class MainFileWatchPluginTests
         yield return new object[] { "ElementDelete", (Action<PluginBase>)(p => p.CallElementDelete(component)) };
         yield return new object[] { "ElementImported", (Action<PluginBase>)(p => p.CallElementImported(component)) };
         yield return new object[] { "ElementDuplicate", (Action<PluginBase>)(p => p.CallElementDuplicate(component, component)) };
+        yield return new object[] { "StateAdd", (Action<PluginBase>)(p => p.CallStateAdd(state)) };
+        yield return new object[] { "CategoryAdd", (Action<PluginBase>)(p => p.CallStateCategoryAdd(new StateSaveCategory { Name = "Mood" })) };
+        yield return new object[] { "VariableAdd", (Action<PluginBase>)(p => p.CallVariableAdd(component, "Item.SourceFile")) };
+        yield return new object[] { "AfterUndo", (Action<PluginBase>)(p => p.CallAfterUndo()) };
+    }
+
+    public static IEnumerable<object[]> EditsThatChangeOnlyVariableValues()
+    {
+        ComponentSave component = new ComponentSave { Name = "Card" };
+        InstanceSave instance = new InstanceSave { Name = "Item" };
+        StateSave state = new StateSave { Name = "Default" };
         yield return new object[] { "InstanceAdd", (Action<PluginBase>)(p => p.CallInstanceAdd(component, instance)) };
         yield return new object[] { "InstanceDelete", (Action<PluginBase>)(p => p.CallInstanceDelete(component, instance)) };
         yield return new object[] { "InstancesDelete", (Action<PluginBase>)(p => p.CallInstancesDelete(component, new[] { instance })) };
-        yield return new object[] { "StateAdd", (Action<PluginBase>)(p => p.CallStateAdd(state)) };
-        yield return new object[] { "CategoryAdd", (Action<PluginBase>)(p => p.CallStateCategoryAdd(new StateSaveCategory { Name = "Mood" })) };
         yield return new object[] { "StateDelete", (Action<PluginBase>)(p => p.CallStateDelete(state)) };
-        yield return new object[] { "VariableAdd", (Action<PluginBase>)(p => p.CallVariableAdd(component, "Item.SourceFile")) };
         yield return new object[] { "VariableDelete", (Action<PluginBase>)(p => p.CallVariableDelete(component, "Item.SourceFile")) };
         yield return new object[] { "VariableSetThroughReference", (Action<PluginBase>)(p => p.CallVariableSetThroughReference(component, instance, "SourceFile", null)) };
-        yield return new object[] { "AfterUndo", (Action<PluginBase>)(p => p.CallAfterUndo()) };
         yield return new object[] { "WireframeRefreshed", (Action<PluginBase>)(p => p.CallWireframeRefreshed()) };
     }
 
     [Theory]
     [MemberData(nameof(EditsThatCanChangeWhatTheProjectReferences))]
     public void AnEditThatCanChangeWhatTheProjectReferences_ForgetsWhichFilesItReferences(string edit, Action<PluginBase> raise)
+    {
+        (MainFileWatchPlugin plugin, Mock<IFileWatchManager> fileWatchManager) = StartPlugin();
+
+        raise(plugin);
+
+        fileWatchManager.Verify(m => m.InvalidateReferencedFiles(), Times.AtLeastOnce, edit);
+    }
+
+    [Theory]
+    [MemberData(nameof(EditsThatChangeOnlyVariableValues))]
+    public void AnEditThatChangesOnlyVariableValues_KeepsTheReferencedFiles_ButRechecksWhatVariablesName(string edit, Action<PluginBase> raise)
+    {
+        (MainFileWatchPlugin plugin, Mock<IFileWatchManager> fileWatchManager) = StartPlugin();
+
+        raise(plugin);
+
+        fileWatchManager.Verify(m => m.InvalidateReferencedFilesNamedByVariables(), Times.AtLeastOnce, edit);
+        fileWatchManager.Verify(m => m.InvalidateReferencedFiles(), Times.Never, edit);
+    }
+
+    private static (MainFileWatchPlugin, Mock<IFileWatchManager>) StartPlugin()
     {
         Mock<IPluginTab> tab = new Mock<IPluginTab>();
         tab.SetupAllProperties();
@@ -96,10 +124,7 @@ public class MainFileWatchPluginTests
             Menu = new MenuModel(),
         };
         plugin.StartUp();
-
-        raise(plugin);
-
-        fileWatchManager.Verify(m => m.InvalidateReferencedFiles(), Times.AtLeastOnce, edit);
+        return (plugin, fileWatchManager);
     }
 
     private class SynchronousDispatcher : IDispatcher

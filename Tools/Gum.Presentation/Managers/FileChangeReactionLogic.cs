@@ -799,6 +799,16 @@ namespace Gum.Managers
         /// </summary>
         public void InvalidateReferencedFiles() => ForgetReferencedFiles();
 
+        /// <summary>
+        /// An edit that can add a reference only through a variable's value (see
+        /// <see cref="IProjectReferencedFiles.InvalidateFilesNamedByVariables"/>).
+        /// </summary>
+        public void InvalidateReferencedFilesNamedByVariables()
+        {
+            _referencedFiles.InvalidateFilesNamedByVariables();
+            _shaderFiles = null;
+        }
+
         private void ReactToElementSaveChanged(FilePath file)
         {
             // What the project references may have changed.
