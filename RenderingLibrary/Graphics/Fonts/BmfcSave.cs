@@ -299,6 +299,9 @@ public class BmfcSave
         return $"{FontName} {FontSize}";
     }
 
+    /// <summary>A copy that can be edited without changing this one; every member is a value or a string.</summary>
+    public BmfcSave Clone() => (BmfcSave)MemberwiseClone();
+
     /// <summary>
     /// Saves this configuration as a .bmfc file by substituting values into
     /// the BmfcTemplate.bmfc template file.

@@ -646,26 +646,11 @@ public class GumProjectDependencyWalker
             TranslationsOf = FontTranslationsOf
         };
 
-        Dictionary<string, BmfcSave> fonts;
-        if (FontReferences == null)
-        {
-            fonts = collector.Collect(project, elements);
-        }
-        else
-        {
-            // Collect merges elements in order with the last element winning a shared key, so merging
-            // each element's own collection the same way gives the same result.
-            fonts = new Dictionary<string, BmfcSave>();
-            foreach (ElementSave element in elements)
-            {
-                Dictionary<string, BmfcSave> elementFonts = FontReferences.GetOrCollect(element, includeFontCache,
-                    single => collector.Collect(project, new[] { single }));
-                foreach (KeyValuePair<string, BmfcSave> pair in elementFonts)
-                {
-                    fonts[pair.Key] = pair.Value;
-                }
-            }
-        }
+        // A localization lookup adds the fonts of translated text, which a cache shared with walks
+        // that have none would mix up, and reads files the cache never checks again.
+        Dictionary<string, BmfcSave> fonts = FontReferences == null || FontTranslationsOf != null
+            ? collector.Collect(project, elements)
+            : FontReferences.Collect(elements, includeFontCache, single => collector.Collect(project, new[] { single }));
 
         foreach (BmfcSave bmfc in fonts.Values)
         {
