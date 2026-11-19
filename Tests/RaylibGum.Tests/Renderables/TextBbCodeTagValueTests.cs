@@ -149,12 +149,18 @@ public class TextBbCodeTagValueTests : BaseTestClass
     public void Text_CustomTagAfterEmoji_ReceivesUtf16IndexWithTagsRemoved()
     {
         Text.Customizations["TagValueIndex"] = (index, block) => new LetterCustomization();
+        try
+        {
+            Text text = MakeText("\U0001F600[Color=Red]a[/Color][Custom=TagValueIndex]bc[/Custom]");
 
-        Text text = MakeText("\U0001F600[Color=Red]a[/Color][Custom=TagValueIndex]bc[/Custom]");
-
-        List<ParameterizedLetterCustomizationCall> calls = text.InlineVariables
-            .Select(v => v.Value).OfType<ParameterizedLetterCustomizationCall>().ToList();
-        calls.Select(c => c.CharacterIndex).ShouldBe(new[] { 3, 4 });
-        calls.ShouldAllBe(c => c.TextBlock == "bc");
+            List<ParameterizedLetterCustomizationCall> calls = text.InlineVariables
+                .Select(v => v.Value).OfType<ParameterizedLetterCustomizationCall>().ToList();
+            calls.Select(c => c.CharacterIndex).ShouldBe(new[] { 3, 4 });
+            calls.ShouldAllBe(c => c.TextBlock == "bc");
+        }
+        finally
+        {
+            Text.Customizations.Remove("TagValueIndex");
+        }
     }
 }
