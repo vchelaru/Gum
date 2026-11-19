@@ -1532,6 +1532,9 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
             {
                 individualLineWidth[0] = widths[i];
                 float lineHeight = ComputeStyledLineHeight(fontToUse, substrings, out float maxBaseline);
+                StyledSubstring? previousSubstring = null;
+                BitmapFont? previousFont = null;
+                float previousScale = 0;
 
                 for(int substringIndex = 0; substringIndex < substrings.Count; substringIndex++)
                 {
@@ -1547,6 +1550,10 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
                     color = Color;
                     ResolveRunFont(substring.Variables, fontToUse, out BitmapFont? runFont, out float fontScale);
                     BitmapFont effectiveFont = runFont ?? fontToUse;
+                    startOfRun += GetKerningAcrossRunBoundary(previousSubstring, previousFont, previousScale, substring, effectiveFont, fontScale) * xAxis;
+                    previousSubstring = substring;
+                    previousFont = effectiveFont;
+                    previousScale = fontScale;
                     float yOffset = 0;
                     float xOffset = 0;
                     float scaleX = 1;
@@ -1772,6 +1779,36 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
             }
         }
         return isSizeRun;
+    }
+
+    /// <summary>
+    /// The kerning pair between the last letter of <paramref name="previous"/> and the first of <paramref name="run"/>,
+    /// in pixels at <paramref name="runScale"/> (issue #8309). It applies only when both runs draw the same glyphs:
+    /// the same font at the same scale (a Color, alpha or Y run), and no [Custom] callback on either side, since one
+    /// can replace, scale or rotate its letter. Shared by measure and draw so the two cannot disagree.
+    /// </summary>
+    private static float GetKerningAcrossRunBoundary(StyledSubstring? previous, BitmapFont? previousFont, float previousScale,
+        StyledSubstring run, BitmapFont? runFont, float runScale)
+    {
+        if (previous == null || runFont == null || previousFont != runFont || previousScale != runScale
+            || previous.Substring.Length == 0 || run.Substring.Length == 0
+            || HasCustomVariable(previous.Variables) || HasCustomVariable(run.Variables))
+        {
+            return 0;
+        }
+        return runFont.GetKerning(previous.Substring[previous.Substring.Length - 1], run.Substring[0]) * runScale;
+    }
+
+    private static bool HasCustomVariable(List<InlineVariable> variables)
+    {
+        for (int i = 0; i < variables.Count; i++)
+        {
+            if (variables[i].VariableName == "Custom")
+            {
+                return true;
+            }
+        }
+        return false;
     }
 
     // made public for auto tests:
@@ -2139,6 +2176,9 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
 
         float maxRunScale = 0;
         float lineWidthAtScale = 0;
+        StyledSubstring? previousSubstring = null;
+        BitmapFont? previousFont = null;
+        float previousScale = 0;
         for (int substringIndex = 0; substringIndex < substrings.Count; substringIndex++)
         {
             var substring = substrings[substringIndex];
@@ -2156,7 +2196,11 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
             var measurementStyle = substringIndex == substrings.Count - 1
                 ? HorizontalMeasurementStyle.TrimRight
                 : HorizontalMeasurementStyle.Full;
+            lineWidthAtScale += GetKerningAcrossRunBoundary(previousSubstring, previousFont, previousScale, substring, runFont, runScale);
             lineWidthAtScale += (runFont?.MeasureString(substring.Substring, measurementStyle) ?? 0) * runScale;
+            previousSubstring = substring;
+            previousFont = runFont;
+            previousScale = runScale;
             maxRunScale = System.Math.Max(maxRunScale, runHeightScale);
         }
         lineHeightFactor = effectiveFontScale > 0 ? maxRunScale / effectiveFontScale : 1;
