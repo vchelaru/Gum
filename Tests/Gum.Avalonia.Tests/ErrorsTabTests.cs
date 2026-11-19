@@ -59,6 +59,9 @@ public class ErrorsTabTests
         fixture.SaveAndReload();
 
         AllErrorsViewModel viewModel = GetHeadErrorsViewModel();
+        // The project pass runs off the UI thread and posts its rows back.
+        AsyncWorkWait.Until(() => viewModel.Errors.Any(error => error.Code == "GUM0008"), TimeSpan.FromSeconds(10),
+            "the project-level rows", () => global::Avalonia.Threading.Dispatcher.UIThread.RunJobs(), fixture.Dialogs.Messages);
         viewModel.Errors.ShouldContain(error => error.Code == "GUM0008" && error.Message.Contains("Strings.csv"),
             "with nothing selected");
         fixture.SelectedState.SelectedElement = fixture.Project.Components.Single(item => item.Name == component.Name);

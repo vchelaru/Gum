@@ -168,6 +168,22 @@ public class FileChangeReferencedFileCostTests : BaseTestClass
     private void VerifyReloaded(Times times) => _wireframe.Verify(w => w.RefreshAll(true, true), times);
 
     [Fact]
+    public void ProjectReferencedFiles_ListsAFontFileNamedThroughTheFontVariable()
+    {
+        // The Errors tab must follow a font file changed outside the tool, so the kept set holds it.
+        ScreenSave screen = AddScreen("Main");
+        screen.Instances.Add(new InstanceSave { Name = "Label", BaseType = "Text", ParentContainer = screen });
+        screen.DefaultState.Variables.Add(new VariableSave
+        {
+            Name = "Label.Font", Type = "string", Value = "Fonts/My.ttf", IsFont = true, SetsValue = true,
+        });
+        ProjectReferencedFiles referenced = new ProjectReferencedFiles();
+
+        referenced.Contains(new FilePath(PathOf("Fonts/My.ttf"))).ShouldBeTrue();
+        referenced.Contains(new FilePath(PathOf("Fonts/Other.ttf"))).ShouldBeFalse();
+    }
+
+    [Fact]
     public void IsRelevantToProject_IsFalseForAFileNothingReferences_AndTrueForGumAndReferencedFiles()
     {
         ScreenSave screen = AddScreen("Main");
