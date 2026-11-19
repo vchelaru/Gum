@@ -421,6 +421,9 @@ public class FileWatchManager : IFileWatchManager
     public void InvalidateReferencedFiles()
         => _fileChangeReactionLogic.InvalidateReferencedFiles();
 
+    public void InvalidateReferencedFilesNamedByVariables()
+        => _fileChangeReactionLogic.InvalidateReferencedFilesNamedByVariables();
+
     public bool IsRelevantToProject(FilePath file)
         => _fileChangeReactionLogic.IsRelevantToProject(file);
 

@@ -150,7 +150,7 @@ public class FileWatchPluginControllerTests
     [Theory]
     [InlineData(true)]
     [InlineData(false)]
-    public void HandleVariableSet_ForgetsWhichFilesTheProjectReferences_WhateverVariableChanged(bool isFullCommit)
+    public void HandleVariableSet_RechecksWhichFilesVariablesName_WhateverVariableChanged(bool isFullCommit)
     {
         // The file a variable names is not known to be one until the walk runs again.
         var (controller, fileWatchManager, _, _) = CreateSut();
@@ -159,7 +159,7 @@ public class FileWatchPluginControllerTests
 
         controller.HandleVariableSet(element, instance: null, variableName: "X", oldValue: null, isFullCommit: isFullCommit);
 
-        fileWatchManager.Verify(m => m.InvalidateReferencedFiles(), Times.Once);
+        fileWatchManager.Verify(m => m.InvalidateReferencedFilesNamedByVariables(), Times.Once);
     }
 
     [Fact]

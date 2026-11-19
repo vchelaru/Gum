@@ -63,6 +63,8 @@ public class FileChangeReferencedFileCostTests : BaseTestClass
             Invalidations++;
             _inner.Invalidate();
         }
+
+        public void InvalidateFilesNamedByVariables() => _inner.InvalidateFilesNamedByVariables();
     }
 
     public FileChangeReferencedFileCostTests()
@@ -478,6 +480,7 @@ public class FileChangeReferencedFileCostTests : BaseTestClass
     {
         public bool Contains(FilePath file) => throw new IOException("unreadable chain");
         public void Invalidate() { }
+        public void InvalidateFilesNamedByVariables() { }
     }
 
     [Fact]
