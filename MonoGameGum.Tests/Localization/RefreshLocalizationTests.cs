@@ -160,7 +160,7 @@ public class RefreshLocalizationTests : BaseTestClass
     }
 
     [Fact]
-    public void RefreshLocalization_ShouldHandleBBCodeProducedByTranslation()
+    public void RefreshLocalization_ShouldHandleBbCodeProducedByTranslation()
     {
         TextRuntime text = new();
         text.AddToRoot();
@@ -177,7 +177,7 @@ public class RefreshLocalizationTests : BaseTestClass
     }
 
     [Fact]
-    public void Text_WhenTranslationContainsBBCode_ShouldStripTagsAndAddTheRun()
+    public void Text_WhenTranslationContainsBbCode_ShouldStripTagsAndAddTheRun()
     {
         _localizationService.CurrentLanguage = 1;
         TextRuntime text = new();

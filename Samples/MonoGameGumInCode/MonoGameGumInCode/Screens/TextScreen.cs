@@ -103,17 +103,17 @@ internal class TextScreen : FrameworkElement
         // IsBold pair; only variables already wired for per-run application (like these two) apply to
         // the wrapped substring -- a state can hold anything, including layout properties like
         // X/Width, but those are silently skipped rather than applied to the whole element.
-        var stateBbcode = new TextRuntime();
-        stateBbcode.Font = "Arial";
-        stateBbcode.FontSize = 24;
-        stateBbcode.WidthUnits = DimensionUnitType.PercentageOfParent;
-        stateBbcode.Width = 33;
+        var stateBbCode = new TextRuntime();
+        stateBbCode.Font = "Arial";
+        stateBbCode.FontSize = 24;
+        stateBbCode.WidthUnits = DimensionUnitType.PercentageOfParent;
+        stateBbCode.Width = 33;
         var highlightedState = new StateSave { Name = "Highlighted" };
         highlightedState.Variables.Add(new VariableSave { Name = "Color", Value = System.Drawing.Color.Gold });
         highlightedState.Variables.Add(new VariableSave { Name = "IsBold", Value = true });
-        stateBbcode.AddStates(new List<StateSave> { highlightedState });
-        stateBbcode.Text = "Plain text with a [State=Highlighted]bold gold run[/State] applied from a code-defined state.";
-        container.Children.Add(stateBbcode);
+        stateBbCode.AddStates(new List<StateSave> { highlightedState });
+        stateBbCode.Text = "Plain text with a [State=Highlighted]bold gold run[/State] applied from a code-defined state.";
+        container.Children.Add(stateBbCode);
 
         Text.Customizations["Wave"] = (int index, string block) => new LetterCustomization
         {

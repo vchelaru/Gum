@@ -443,7 +443,7 @@ public class NineSliceVertexBatchGpuTests : IDisposable
     }
 
     [Fact]
-    public void Draw_BBCodeLargerFontRunIntoNextCell_StaysUnderIt()
+    public void Draw_BbCodeLargerFontRunIntoNextCell_StaysUnderIt()
     {
         AssertBatchedMatchesUnbatched(root =>
         {

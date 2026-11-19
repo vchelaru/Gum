@@ -53,7 +53,7 @@ public class FontReferenceCollectorNestedStateTests : IDisposable
     }
 
     [Fact]
-    public void Collect_finds_a_BBCode_font_an_exposed_text_sets_in_a_non_default_state()
+    public void Collect_finds_a_BbCode_font_an_exposed_text_sets_in_a_non_default_state()
     {
         ScreenSave screen = BuildScreenWithButton(out ComponentSave button);
         button.DefaultState.Variables.Add(new VariableSave
