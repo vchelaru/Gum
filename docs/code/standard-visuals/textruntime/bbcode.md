@@ -6,10 +6,12 @@ TextRuntime supports using BBCode-like syntax for formatting individual words an
 
 Using BBCode for TextRuntimes supports all of the functionality outlined in the Text documentation which can be found here: [https://docs.flatredball.com/gum/gum-tool/gum-elements/text/text#using-bbcode-for-inline-styling](https://docs.flatredball.com/gum/gum-tool/gum-elements/text/text#using-bbcode-for-inline-styling)
 
-{% hint style="info" %}
-`Color`, `Red`, `Green`, `Blue`, `FontScale`, and `Custom` need no font setup on any runtime.
+[Localization](../../localization.md) replaces the whole Text value by its key, so to style part of a localized string, put the BBCode tags inside the translation itself. A Text value that contains `[` is not looked up as a key.
 
-`Font`, `FontSize`, `IsBold`, `IsItalic`, `OutlineThickness`, and `HasDropshadow` draw text in a different font than the rest of the TextRuntime, so that font has to exist. How it gets made depends on the runtime:
+{% hint style="info" %}
+`Color`, `Red`, `Green`, `Blue`, `Alpha`, `FontScale`, and `Custom` need no font setup on any runtime.
+
+`Font`, `FontSize`, `IsBold`, `IsItalic`, `OutlineThickness`, `UseFontSmoothing`, and `HasDropshadow` draw text in a different font than the rest of the TextRuntime, so that font has to exist. How it gets made depends on the runtime:
 
 * **MonoGame, KNI, FNA, and raylib** draw with bitmap fonts (`.fnt` files). With [KernSmith](../../files-and-fonts/font-strategies.md#dynamic-kernsmith-generation), Gum generates the font the first time a tag asks for it, with no extra setup. This is the recommended approach for code-only projects. Without KernSmith, you must provide a pre-built `.fnt` file for each font combination your BBCode text uses. The Gum tool generates these into the FontCache folder when it displays the text. `gumcli fonts` generates the ones used by BBCode tags in the Text values of your project's elements, so a fresh checkout or CI build has them without opening the tool. BBCode text set from code is not in the project, so bake those fonts with the `--font` options of [gumcli fonts](../../../cli/fonts.md).
 * **[SkiaSharp-based runtimes](../../about/runtimes.md)** need no font files and no KernSmith. `Font` takes an installed font family, a registered family, or a `.ttf` path, and `IsBold` and `IsItalic` pick the matching style of that family. See [Dynamic Generation on SkiaGum](../../files-and-fonts/font-strategies.md#dynamic-generation-on-skiagum) and [Bold and Italic on SkiaGum](../../files-and-fonts/font-strategies.md#bold-and-italic-on-skiagum). `HasDropshadow` is the exception, see below.
@@ -30,7 +32,7 @@ text.AddToRoot();
 
 [Try on XnaFiddle.NET](https://xnafiddle.net/#snippet=H4sIAAAAAAAACkWOTQvCMAyG7_sVoSeF4cCjsoMfODx4mbt1PXQ2zEDXQtdOUfzvdoMphECe5CHvOwFg574IHduAdwHTEZAhT1LTCyNlg3Tg8ekhB4MPuFhjC9lhdFZFwCM6Gsi0qyqelMF46nCx3NZmVCYYvZpVd-ohFj9YbV1eohIOFc-mUaQz3-uAoontv5FGAT9Z4683qTFfi4Zanv2AmLLVbP64U6qypbU-hmDJ5wu5H0Ud4QAAAA)
 
-BBCode tags can be nested and combined. Tags are written as `[TagName=Value]text[/TagName]`. The supported tags include `Color`, `Red`, `Green`, `Blue`, `FontScale`, `Font`, `FontSize`, `IsBold`, `IsItalic`, `OutlineThickness`, `HasDropshadow`, `Custom`, `Glyph` (see [Inline Glyphs](#inline-glyphs)), `Link` (see [Links](#links)), and `State` (see [States](#states)).
+BBCode tags can be nested and combined. Tags are written as `[TagName=Value]text[/TagName]`. The supported tags include `Color`, `Red`, `Green`, `Blue`, `Alpha` (see [Alpha](#alpha)), `FontScale`, `Font`, `FontSize`, `IsBold`, `IsItalic`, `OutlineThickness`, `UseFontSmoothing` (see [Font Smoothing](#font-smoothing)), `HasDropshadow`, `Custom`, `Glyph` (see [Inline Glyphs](#inline-glyphs)), `Link` (see [Links](#links)), and `State` (see [States](#states)).
 
 Tag names are not case sensitive, and a closing tag matches its opening tag whatever the case, so `[color=Red]red[/COLOR]` works the same as `[Color=Red]red[/Color]`.
 
@@ -56,6 +58,36 @@ text.AddToRoot();
 
 {% hint style="info" %}
 `HasDropshadow` toggles the shadow on MonoGame, KNI, FNA, and raylib. On [SkiaSharp-based runtimes](../../about/runtimes.md) the tag is parsed and stripped from the text but has no effect. The shadow always follows the TextRuntime's own `HasDropshadow` value there.
+{% endhint %}
+
+## Alpha
+
+The `Alpha` tag sets the opacity of the wrapped text from 0 (invisible) to 255 (opaque). It changes only the alpha channel, so the text keeps its color, the same way `Red`, `Green`, and `Blue` each change one channel. A value outside 0 to 255 is ignored.
+
+```csharp
+// Initialize
+var text = new TextRuntime();
+text.Text = "This is solid, [Alpha=128]this is half faded[/Alpha], and [Color=Red][Alpha=64]this is faded red[/Alpha][/Color]";
+text.AddToRoot();
+```
+
+{% hint style="info" %}
+Available in December 2026, or now if building Gum from source.
+{% endhint %}
+
+## Font Smoothing
+
+The `UseFontSmoothing` tag draws the wrapped text with or without antialiasing, independently of the TextRuntime's own `UseFontSmoothing` value. `[UseFontSmoothing=false]` draws the text with hard, pixelated edges.
+
+```csharp
+// Initialize
+var text = new TextRuntime();
+text.Text = "Smooth text and [UseFontSmoothing=false]pixel text[/UseFontSmoothing]";
+text.AddToRoot();
+```
+
+{% hint style="info" %}
+Available in December 2026, or now if building Gum from source.
 {% endhint %}
 
 ## Inline Glyphs
@@ -126,7 +158,7 @@ Available in November 2026, or now if building Gum from source.
 
 ## States
 
-The `State` tag applies a named state of the TextRuntime to the text it wraps. This lets you define a style once, in the Gum tool's **States** tab or in code, and reuse it by name. Only these variables apply to the wrapped text: `Color`, `Red`, `Green`, `Blue`, `FontScale`, `Font`, `FontSize`, `OutlineThickness`, `IsBold`, `IsItalic`, `UseCustomFont`, and `HasDropshadow`. Any other variable in the state, such as `X` or `Width`, is skipped. A state name that does not exist is ignored.
+The `State` tag applies a named state of the TextRuntime to the text it wraps. This lets you define a style once, in the Gum tool's **States** tab or in code, and reuse it by name. Only these variables apply to the wrapped text: `Color`, `Red`, `Green`, `Blue`, `Alpha`, `FontScale`, `Font`, `FontSize`, `OutlineThickness`, `UseFontSmoothing`, `IsBold`, `IsItalic`, `UseCustomFont`, and `HasDropshadow`. Any other variable in the state, such as `X` or `Width`, is skipped. A state name that does not exist is ignored.
 
 The following code defines a `Highlighted` state in code and uses it in a tag:
 

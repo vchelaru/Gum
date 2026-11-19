@@ -57,6 +57,14 @@ public class FontReferenceCollectorBbCodeTests : IDisposable
     }
 
     [Fact]
+    public void Collect_bakes_an_unsmoothed_font_for_a_UseFontSmoothing_tag()
+    {
+        ScreenSave screen = ScreenWithText("[UseFontSmoothing=false]a[/UseFontSmoothing]");
+
+        Collect(screen).Keys.ShouldBe(new[] { Key(BaseSize), Key(BaseSize, smoothing: false) }, ignoreOrder: true);
+    }
+
+    [Fact]
     public void Collect_bakes_a_dropshadow_font_for_a_HasDropshadow_tag()
     {
         ScreenSave screen = ScreenWithText("[HasDropshadow=true]shadow[/HasDropshadow]");
@@ -137,9 +145,9 @@ public class FontReferenceCollectorBbCodeTests : IDisposable
         state.Variables.Add(new VariableSave { SetsValue = true, Name = name, Value = value, Type = type });
     }
 
-    private static string Key(int size, string name = Font, bool bold = false, bool italic = false, int outline = 0) =>
+    private static string Key(int size, string name = Font, bool bold = false, bool italic = false, int outline = 0, bool smoothing = true) =>
         BmfcSave.GetFontCacheFileNameFor(
-            fontSize: size, fontName: name, outline: outline, useFontSmoothing: true,
+            fontSize: size, fontName: name, outline: outline, useFontSmoothing: smoothing,
             isItalic: italic, isBold: bold, fontFilePath: null);
 
     private static Dictionary<string, BmfcSave> Collect(ScreenSave screen, params ComponentSave[] components)

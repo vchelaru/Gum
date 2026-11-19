@@ -135,6 +135,18 @@ public class TextCustomizationTests : BaseTestClass
     }
 
     [Theory]
+    [InlineData("[Alpha=128][Custom=RecordContext]b[/Custom][/Alpha]", 128, 0, 0, 0)]
+    [InlineData("[Color=Red][Alpha=64][Custom=RecordContext]b[/Custom][/Alpha][/Color]", 64, 255, 0, 0)]
+    public void GetStyledRuns_ContextCustomInsideAlphaTag_ReceivesTheEnclosingAlpha(string markup, int a, int r, int g, int b)
+    {
+        List<(int Index, LetterCustomization Context)> calls = RecordContextCalls(markup);
+
+        calls.Count.ShouldBeGreaterThan(0);
+        Color color = calls[0].Context.Color!.Value;
+        (color.A, color.R, color.G, color.B).ShouldBe(((byte)a, (byte)r, (byte)g, (byte)b));
+    }
+
+    [Theory]
     [InlineData("ab[Color=Red]c[Custom=RecordContext]d[/Custom][/Color]", 3)]
     [InlineData("a[Glyph=0x42][Custom=RecordContext]c[/Custom]", 2)]
     [InlineData("[Glyph=0x1F600][Custom=RecordContext]x[/Custom]", 2)]

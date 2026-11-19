@@ -2022,6 +2022,7 @@ public partial class CustomSetPropertyOnRenderable
                 case "Red":
                 case "Green":
                 case "Blue":
+                case "Alpha":
                     // A missing or non-numeric argument (e.g. [Red] or [Red=abc]) leaves the run uncolored.
                     if (byte.TryParse(item.Open.Argument, out byte parsedByte))
                     {

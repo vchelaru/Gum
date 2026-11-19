@@ -116,7 +116,6 @@ public static class BbCodeParser
         "IsBold",
         "UseFontSmoothing",
         "FontScale",
-        "LineHeightMultiplier",
         "Custom",
         "State",
         "HasDropshadow",

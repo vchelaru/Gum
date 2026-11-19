@@ -116,6 +116,50 @@ public class TextBbCodeTagValueTests : BaseTestClass
         styles[2].ShouldBe(styles[0], "Because closing the unparseable inner tag must not close the enclosing tag too");
     }
 
+    [Theory]
+    [InlineData("[Alpha=128]a[/Alpha]")]
+    [InlineData("[UseFontSmoothing=false]a[/UseFontSmoothing]")]
+    [InlineData("[HasDropshadow=false]a[/HasDropshadow]")]
+    [InlineData("[Link=shop]a[/Link]")]
+    public void Text_KnownTagWithoutInlineStyle_IsRemovedFromDisplayedText(string markup)
+    {
+        Text text = MakeText(markup);
+
+        string.Concat(text.GetStyledRuns().Select(r => r.Text))
+            .ShouldBe("a", "Because every runtime recognizes the same tag names, so a known tag never draws as literal text");
+    }
+
+    [Fact]
+    public void Text_LineHeightMultiplierTag_IsLiteralText()
+    {
+        Text text = MakeText("[LineHeightMultiplier=2]a[/LineHeightMultiplier]");
+
+        string.Concat(text.GetStyledRuns().Select(r => r.Text))
+            .ShouldBe("[LineHeightMultiplier=2]a[/LineHeightMultiplier]",
+                "Because line height applies to whole lines, so no runtime knows it as a tag");
+    }
+
+    [Theory]
+    [InlineData("[Alpha=128]a[/Alpha]", 128, 0, 0, 0)]
+    [InlineData("[Color=Red][Alpha=64]a[/Alpha][/Color]", 64, 255, 0, 0)]
+    public void Text_AlphaTagWithValidValue_ChangesOnlyTheAlpha(string markup, int a, int r, int g, int b)
+    {
+        Text text = MakeText(markup);
+
+        text.GetStyledRuns().Single(run => run.Text == "a").Style.TextColor
+            .ShouldBe(new SKColor((byte)r, (byte)g, (byte)b, (byte)a));
+    }
+
+    [Theory]
+    [InlineData("[Alpha=300]a[/Alpha]")]
+    [InlineData("[Alpha=abc]a[/Alpha]")]
+    public void Text_AlphaTagWithUnparseableValue_KeepsBaseColor(string markup)
+    {
+        Text text = MakeText(markup);
+
+        text.GetStyledRuns().Single(run => run.Text == "a").Style.TextColor.ShouldBe(SKColors.Black);
+    }
+
     [Fact]
     public void Text_CustomTagAfterEmoji_ReceivesUtf16IndexWithTagsRemoved()
     {

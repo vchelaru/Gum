@@ -30,6 +30,19 @@ public class TextContextCustomizationDrawTests : BaseTestClass
         (color!.Value.R, color.Value.G, color.Value.B).ShouldBe(((byte)r, (byte)g, (byte)b));
     }
 
+    [Theory]
+    [InlineData("[Alpha=128][Custom=RecordContext]b[/Custom][/Alpha]", 128, 255, 255, 255)]
+    [InlineData("[Color=Red][Alpha=64][Custom=RecordContext]b[/Custom][/Alpha][/Color]", 64, 255, 0, 0)]
+    public void ContextCustom_InsideAlphaTag_ReceivesTheEnclosingAlpha(string markup, int a, int r, int g, int b)
+    {
+        List<(int Index, LetterCustomization Context)> calls = DrawAndRecord(markup, configure: null);
+
+        calls.Count.ShouldBeGreaterThan(0);
+        System.Drawing.Color? color = calls[0].Context.Color;
+        color.ShouldNotBeNull();
+        (color!.Value.A, color.Value.R, color.Value.G, color.Value.B).ShouldBe(((byte)a, (byte)r, (byte)g, (byte)b));
+    }
+
     [Fact]
     public void ContextCustom_WithNoColorTag_ReceivesTheTextColor()
     {
