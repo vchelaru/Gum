@@ -4,7 +4,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Xml.Linq;
+using System.Xml;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Media;
@@ -28,7 +28,7 @@ namespace Gum.Avalonia.Themes;
 public static class FrbThemeResources
 {
     private const string ResourcePrefix = "Gum.Avalonia.Themes.";
-    private static readonly XNamespace XamlNamespace = "http://schemas.microsoft.com/winfx/2006/xaml";
+    private const string XamlNamespace = "http://schemas.microsoft.com/winfx/2006/xaml";
 
     /// <summary>The embedded dictionary files, by their WPF file name.</summary>
     public static IReadOnlyList<string> FileNames { get; } = new[]
@@ -43,9 +43,9 @@ public static class FrbThemeResources
     public static void Install(IResourceDictionary resources)
     {
         Dictionary<string, Color> palette = new Dictionary<string, Color>();
-        AddTo(resources, Read("Palette.xaml"), palette);
-        AddTo(resources, Read("Frb.Accents.xaml"), palette);
-        AddTo(resources, Read("Frb.Brushes.xaml"), palette);
+        AddTo(resources, "Palette.xaml", palette);
+        AddTo(resources, "Frb.Accents.xaml", palette);
+        AddTo(resources, "Frb.Brushes.xaml", palette);
 
         resources.ThemeDictionaries[ThemeVariant.Light] = LoadVariant("Frb.Brushes.Light.xaml", palette);
         resources.ThemeDictionaries[ThemeVariant.Dark] = LoadVariant("Frb.Brushes.Dark.xaml", palette);
@@ -305,45 +305,52 @@ public static class FrbThemeResources
     {
         ResourceDictionary dictionary = new ResourceDictionary();
         Dictionary<string, Color> colors = new Dictionary<string, Color>(shared);
-        AddTo(dictionary, Read(fileName), colors);
+        AddTo(dictionary, fileName, colors);
         return dictionary;
     }
 
-    private static XDocument Read(string fileName)
+    private static void AddTo(IResourceDictionary target, string fileName, Dictionary<string, Color> colors)
     {
         using Stream stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(ResourcePrefix + fileName)
             ?? throw new InvalidOperationException($"The theme dictionary {fileName} is not embedded in the head.");
-        return XDocument.Load(stream);
+        // A forward-only reader, not XDocument: this runs before the first window opens, and building
+        // a tree (and JIT-compiling LINQ to XML) for five small files is startup cost nothing needs.
+        using XmlReader reader = XmlReader.Create(stream);
+        AddTo(target, reader, colors);
     }
 
     // Colors are added in document order, which is the order the files define them in (a brush
     // always comes after the color it references).
-    private static void AddTo(IResourceDictionary target, XDocument document, Dictionary<string, Color> colors)
+    private static void AddTo(IResourceDictionary target, XmlReader reader, Dictionary<string, Color> colors)
     {
-        foreach (XElement element in document.Descendants())
+        reader.MoveToContent();
+        while (!reader.EOF)
         {
-            if (element.Attribute(XamlNamespace + "Key")?.Value is not { } key)
+            if (reader.NodeType != XmlNodeType.Element || reader.GetAttribute("Key", XamlNamespace) is not { } key)
             {
+                reader.Read();
                 continue;
             }
 
-            switch (element.Name.LocalName)
+            switch (reader.LocalName)
             {
                 case "Color":
-                    Color color = Color.Parse(element.Value.Trim());
+                    // Reads the text and moves past the element.
+                    Color color = Color.Parse(reader.ReadElementContentAsString().Trim());
                     colors[key] = color;
                     target[key] = color;
-                    break;
+                    continue;
                 case "SolidColorBrush":
-                    if (ResolveColor(element.Attribute("Color")?.Value, colors) is { } brushColor)
+                    if (ResolveColor(reader.GetAttribute("Color"), colors) is { } brushColor)
                     {
-                        double opacity = element.Attribute("Opacity")?.Value is { } opacityText
+                        double opacity = reader.GetAttribute("Opacity") is { } opacityText
                             ? double.Parse(opacityText, CultureInfo.InvariantCulture)
                             : 1;
                         target[key] = new SolidColorBrush(brushColor, opacity);
                     }
                     break;
             }
+            reader.Read();
         }
     }
 
