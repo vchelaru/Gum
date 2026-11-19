@@ -1297,6 +1297,7 @@ public partial class CustomSetPropertyOnRenderable
 
         TrackLocalizationKey(graphicalUiElement, propertyName, valueAsString);
 
+        bool clearedRuns = textRenderable.InlineVariables.Count > 0;
         textRenderable.InlineVariables.Clear();
 #if !FRB
         textRenderable.ParsedBbCodeTags = null;
@@ -1309,7 +1310,17 @@ public partial class CustomSetPropertyOnRenderable
         else
         {
             textRenderable.StoredMarkupText = null;
-            textRenderable.RawText = displayText;
+            if (clearedRuns && textRenderable.RawText == displayText)
+            {
+                // Tagged to plain with the same letters: RawText's setter sees no change and would keep the
+                // wrap and size measured with the runs just cleared (#8322).
+                textRenderable.UpdateWrappedText();
+                textRenderable.UpdatePreRenderDimensions();
+            }
+            else
+            {
+                textRenderable.RawText = displayText;
+            }
         }
     }
 
