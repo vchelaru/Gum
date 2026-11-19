@@ -163,6 +163,35 @@ public class CanvasHostTests
         control.Dispose();
     }
 
+    // A caller other than the frame tick that asks for the device mid-creation cannot wait, and
+    // must not get a second device either. No such caller runs at startup today (traced on a launch).
+    [AvaloniaFact]
+    public void Control_DeviceRequestDuringDeviceCreation_Throws_WithoutCreatingASecondDeviceHost()
+    {
+        int factoryCalls = 0;
+        InvalidOperationException? nested = null;
+        AvaloniaGraphicsDeviceControl? control = null;
+        control = new AvaloniaGraphicsDeviceControl(
+            new CanvasRedrawScheduler(TimeProvider.System),
+            () =>
+            {
+                factoryCalls++;
+                if (factoryCalls == 1)
+                {
+                    nested = Should.Throw<InvalidOperationException>(() => control!.RenderDeviceHost);
+                }
+                return new FailingDeviceHost();
+            },
+            isSharedDeviceBeingCreated: () => false);
+
+        IRenderDeviceHost host = control.RenderDeviceHost;
+
+        host.ShouldBeOfType<FailingDeviceHost>();
+        nested.ShouldNotBeNull();
+        factoryCalls.ShouldBe(1);
+        control.Dispose();
+    }
+
     // Another canvas's frame tick can run while the first canvas creates the shared device.
     [AvaloniaFact]
     public void Control_FrameTick_WaitsWhileTheSharedDeviceIsBeingCreated()

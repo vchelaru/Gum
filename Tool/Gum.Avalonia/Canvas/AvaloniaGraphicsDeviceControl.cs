@@ -204,6 +204,12 @@ public class AvaloniaGraphicsDeviceControl : Grid, IDisposable, IRenderTargetFra
         {
             return;
         }
+        if (_isCreatingDeviceHost)
+        {
+            // Only a dispatcher callback pumped by the creation can get here. Frame ticks wait in
+            // HandleRenderFrame; anything else that needs the device this early has no device to get.
+            throw new InvalidOperationException("The canvas's device was requested while it was still being created.");
+        }
         _isCreatingDeviceHost = true;
         try
         {
