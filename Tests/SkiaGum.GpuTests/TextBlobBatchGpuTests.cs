@@ -158,6 +158,46 @@ public class TextBlobBatchGpuTests : IDisposable
         merged.ShouldBe(1);
     }
 
+    // Pixels in rows [top, bottom) that white-on-black text covers only partly: an antialiased edge.
+    static int CountPartialPixels(byte[] pixels, int top, int bottom)
+    {
+        int count = 0;
+        for (int i = top * Size * 4; i < bottom * Size * 4; i += 4)
+        {
+            if (pixels[i] > 0 && pixels[i] < 255)
+            {
+                count++;
+            }
+        }
+        return count;
+    }
+
+    [Fact]
+    public void Draw_SmoothedThenUnsmoothedTexts_MergePerEdgingAndKeepIt()
+    {
+        // #8344: a merged blob has one edging, so the smoothed and unsmoothed groups merge separately, and a text
+        // with both kinds of run draws on its own.
+        void Build(ContainerRuntime root)
+        {
+            for (int i = 0; i < 10; i++)
+            {
+                TextRuntime label = Label("WgW " + i, 10, 10 + i * 18);
+                label.UseFontSmoothing = i < 5;
+                root.AddChild(label);
+            }
+            root.AddChild(Label("[UseFontSmoothing=false]WgW[/UseFontSmoothing] WgW", 10, 190));
+        }
+
+        (byte[] pixels, int merged) = Render(Build, batch: true, beforeFrame: null, MergedFrames, zoom: 1);
+        (byte[] unmergedPixels, int unmerged) = Render(Build, batch: false, beforeFrame: null, MergedFrames, zoom: 1);
+
+        CountDifferentBytes(pixels, unmergedPixels).ShouldBe(0);
+        unmerged.ShouldBe(11);
+        merged.ShouldBe(3);
+        CountPartialPixels(pixels, 10, 10 + 5 * 18).ShouldBeGreaterThan(0, "Because smoothed texts keep antialiased edges");
+        CountPartialPixels(pixels, 10 + 5 * 18, 10 + 10 * 18).ShouldBe(0, "Because unsmoothed texts keep hard edges when merged");
+    }
+
     [Fact]
     public void Draw_TextsOverNineSliceRows_MergeAfterTheBatch()
     {

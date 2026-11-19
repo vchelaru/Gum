@@ -199,6 +199,7 @@ namespace RenderingLibrary
                 // font property changed and re-ran this bridge (issue #4077 follow-up).
                 asText.BoldWeight = textRuntime.BoldWeight;
                 asText.FontSize = textRuntime.FontSize;
+                asText.UseFontSmoothing = textRuntime.UseFontSmoothing;
                 // Push OutlineThickness/OutlineColor here too: this delegate is the code-property path
                 // (GraphicalUiElement.OutlineThickness setter -> UpdateToFontValues -> this). #3675
                 // only wired the string/SetProperty path (CustomSetPropertyOnRenderable.UpdateToFontValues),
