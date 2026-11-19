@@ -950,7 +950,7 @@ public class GumProjectDependencyWalker
 
 /// <summary>
 /// The part of a <see cref="GumProjectDependencyWalker"/> walk that checks the disk, made by
-/// <see cref="GumProjectDependencyWalker.Prepare"/>. It holds only strings and runs once.
+/// <see cref="GumProjectDependencyWalker.Prepare(GumProjectSave, string, GumBundleInclusion, ElementSave?)"/>. It holds only strings and runs once.
 /// </summary>
 public sealed class PreparedWalk
 {

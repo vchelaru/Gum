@@ -173,9 +173,9 @@ public partial class HeadlessErrorChecker
         GetMissingBehaviorFileErrors(GetMissingBehaviorFiles(project), caseMismatchPaths);
 
     // The behaviors whose file the load did not find, as (name, expected path).
-    internal static List<(string? Name, string RelativePath)> GetMissingBehaviorFiles(GumProjectSave project)
+    internal static List<(string Name, string RelativePath)> GetMissingBehaviorFiles(GumProjectSave project)
     {
-        List<(string? Name, string RelativePath)> missing = new List<(string? Name, string RelativePath)>();
+        List<(string Name, string RelativePath)> missing = new List<(string Name, string RelativePath)>();
         bool isJsonFormat = GumProjectSave.IsJsonFormat(project.FullFileName ?? "");
 
         foreach (BehaviorReference reference in project.BehaviorReferences)
@@ -189,12 +189,12 @@ public partial class HeadlessErrorChecker
         return missing;
     }
 
-    internal static List<ErrorResult> GetMissingBehaviorFileErrors(List<(string? Name, string RelativePath)> missingBehaviors,
+    internal static List<ErrorResult> GetMissingBehaviorFileErrors(List<(string Name, string RelativePath)> missingBehaviors,
         ISet<string> caseMismatchPaths)
     {
         List<ErrorResult> errors = new List<ErrorResult>();
 
-        foreach ((string? name, string relativePath) in missingBehaviors)
+        foreach ((string name, string relativePath) in missingBehaviors)
         {
             if (caseMismatchPaths.Contains(relativePath))
             {

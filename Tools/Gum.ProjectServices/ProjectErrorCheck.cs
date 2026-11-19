@@ -24,7 +24,7 @@ public sealed class ProjectErrorCheck
     private readonly string? _projectFullFileName;
     private List<ErrorResult>? _rowsBeforeBehaviors;
     private List<ErrorResult>? _rowsAfterBehaviors;
-    private List<(string? Name, string RelativePath)>? _missingBehaviors;
+    private List<(string Name, string RelativePath)>? _missingBehaviors;
     private int _next;
 
     internal ProjectErrorCheck(HeadlessErrorChecker checker, GumProjectSave project, FontReferenceCache fontReferences,

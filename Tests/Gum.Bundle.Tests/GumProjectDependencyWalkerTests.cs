@@ -82,7 +82,7 @@ public class GumProjectDependencyWalkerTests : IDisposable
 
         PreparedWalk prepared = new GumProjectDependencyWalker().Prepare(project, root,
             GumBundleInclusion.Core | GumBundleInclusion.ExternalFiles, scopeElement: null);
-        component.DefaultState.SetValue("Sprite.SourceFile", "Textures/missing.png", "string");
+        component.DefaultState.ShouldNotBeNull().SetValue("Sprite.SourceFile", "Textures/missing.png", "string");
         project.Components.Clear();
         project.ComponentReferences.Clear();
         WalkResult result = prepared.Run();

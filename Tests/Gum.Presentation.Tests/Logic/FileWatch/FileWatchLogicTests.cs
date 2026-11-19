@@ -73,7 +73,7 @@ public class FileWatchLogicTests : BaseTestClass
         screen.States.Add(new StateSave { Name = "Default", ParentContainer = screen });
         InstanceSave sprite = new InstanceSave { Name = "Sprite1", BaseType = "Sprite", ParentContainer = screen };
         screen.Instances.Add(sprite);
-        screen.DefaultState.Variables.Add(new VariableSave
+        screen.DefaultState!.Variables.Add(new VariableSave
         {
             Name = "Sprite1.SourceFile",
             Type = "string",
@@ -89,7 +89,7 @@ public class FileWatchLogicTests : BaseTestClass
         InstanceSave customFontText = new InstanceSave { Name = "Text2", BaseType = "Text", ParentContainer = screen };
         screen.Instances.Add(customFontText);
         screen.DefaultState.Variables.Add(new VariableSave { Name = "Text2.UseCustomFont", Type = "bool", Value = true, SetsValue = true });
-        screen.DefaultState.Variables.Add(new VariableSave
+        screen.DefaultState!.Variables.Add(new VariableSave
         {
             Name = "Text2.CustomFontFile",
             Type = "string",
@@ -127,7 +127,7 @@ public class FileWatchLogicTests : BaseTestClass
         ScreenSave screen = new ScreenSave { Name = "MainMenu" };
         screen.States.Add(new StateSave { Name = "Default", ParentContainer = screen });
         screen.Instances.Add(new InstanceSave { Name = "Sprite1", BaseType = "Sprite", ParentContainer = screen });
-        screen.DefaultState.Variables.Add(new VariableSave
+        screen.DefaultState!.Variables.Add(new VariableSave
         {
             Name = "Sprite1.SourceFile",
             Type = "string",
@@ -265,7 +265,7 @@ public class FileWatchLogicTests : BaseTestClass
         logic.RefreshRootDirectory();
         RunPostedAction();
         watched.ShouldBeEmpty();
-        pending.ShouldHaveSingleItem().SetResult(Task.Run(work[0]).GetAwaiter().GetResult());
+        pending.ShouldHaveSingleItem().SetResult(work[0]());
         RunPostedAction();
 
         watched.ShouldHaveSingleItem().ShouldBe(onUiThread, ignoreOrder: true);
@@ -305,7 +305,7 @@ public class FileWatchLogicTests : BaseTestClass
         ScreenSave screen = new ScreenSave { Name = "MainMenu" };
         screen.States.Add(new StateSave { Name = "Default", ParentContainer = screen });
         screen.Instances.Add(new InstanceSave { Name = "Sprite1", BaseType = "Sprite", ParentContainer = screen });
-        screen.DefaultState.Variables.Add(new VariableSave
+        screen.DefaultState!.Variables.Add(new VariableSave
         {
             Name = "Sprite1.SourceFile",
             Type = "string",
