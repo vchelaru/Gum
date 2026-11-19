@@ -1919,7 +1919,7 @@ public partial class CustomSetPropertyOnRenderable
         return bmfcSave;
     }
 
-    static List<TagInfo> allTags = new List<TagInfo>();
+    static List<(TagInfo Tag, bool IsOpening)> allTags = new List<(TagInfo Tag, bool IsOpening)>();
 
     private static string CanonicalTagName(string name) => BbCodeFontStacks.CanonicalTagName(name);
 
@@ -1990,17 +1990,11 @@ public partial class CustomSetPropertyOnRenderable
                     break;
                 case "Color":
                     {
-                        if (item.Open.Argument?.StartsWith("0x") == true && int.TryParse(item.Open.Argument.Substring(2),
-                                                                            NumberStyles.AllowHexSpecifier,
-                                                                            null,
-                                                                            out int result))
+                        // An unrecognized value (a misspelled name, [Color=]) leaves the run in the base color.
+                        System.Drawing.Color? parsedColor = BbCodeFontStacks.ParseColor(item.Open.Argument);
+                        if (parsedColor.HasValue)
                         {
-                            castedValue = System.Drawing.Color.FromArgb(result);
-                            shouldApply = true;
-                        }
-                        else if (item.Open.Argument != null)
-                        {
-                            castedValue = System.Drawing.Color.FromName(item.Open.Argument);
+                            castedValue = parsedColor.Value;
                             shouldApply = true;
                         }
                     }
@@ -2144,10 +2138,7 @@ public partial class CustomSetPropertyOnRenderable
     /// </summary>
     private static void ApplyFontVariables(Text asText, List<FoundTag> results)
     {
-        allTags.Clear();
-        allTags.AddRange(results.Select(item => item.Open));
-        allTags.AddRange(results.Select(item => item.Close));
-        allTags.Sort((a, b) => a.StartIndex - b.StartIndex);
+        BbCodeFontStacks.FillInTextOrder(results, allTags);
 
         InlineVariable? lastFontInlineVariable = null;
         // Every BBCode push (open tag) and pop (close tag) below calls
@@ -2157,13 +2148,13 @@ public partial class CustomSetPropertyOnRenderable
         // lookup, so the cost of asking twice is the cache check, not a full
         // font generation. Do not add caching here; if a generation path is
         // slow on cache hits, fix it in the underlying loader.
-        foreach (var tag in allTags)
+        foreach (var (tag, isOpening) in allTags)
         {
             // The run's value: a resolved Raylib_cs.Font (crisp), or - for a [FontSize] tag with no font
             // creator wired - the raw pixel size as a float (ResolveRunFont then scales the base atlas).
             object? castedValue = null;
             string convertedName = "BitmapFont"; // shared historical run-marker name (see ResolvedFont note).
-            if (fontStacks.Apply(tag.Name, tag.Argument, out bool pushed))
+            if (fontStacks.Apply(tag.Name, tag.Argument, isOpening, out bool pushed))
             {
                 castedValue = GetAndCreateFontIfNecessary();
 #if RAYLIB
