@@ -99,6 +99,15 @@ public interface IWrappedText : IText
     /// size run, more for a line a larger run makes taller. Default: 1.
     /// </summary>
     float GetDrawnLineHeightInBaseLines(string line, int absoluteStartIndexInStrippedText) => 1;
+
+    /// <summary>
+    /// Called after the drawn lines are rebuilt. When the last line ends with an ellipsis that replaced cut text,
+    /// <paramref name="ellipsisStartIndex"/> is where the "..." begins (in the index space the drawn lines add up
+    /// to) and <paramref name="styleSourceIndex"/> is the character whose inline style the "..." takes, so it is
+    /// drawn like the text before it rather than like whatever run the cut text had (#8340). Both are -1 when no
+    /// line ends with an ellipsis. Default: ignored.
+    /// </summary>
+    void SetLastLineEllipsis(int ellipsisStartIndex, int styleSourceIndex) { }
 }
 
 public static class IWrappedTextExtensions
@@ -131,7 +140,21 @@ public static class IWrappedTextExtensions
         lines.Clear();
         try
         {
-            textInstance.UpdateLines(lines, previousLinesBuffer);
+            int ellipsizedKeptLength = UpdateLinesCore(textInstance, lines, previousLinesBuffer);
+            if (ellipsizedKeptLength >= 0 && lines.Count > 0)
+            {
+                int ellipsisStart = ellipsizedKeptLength;
+                for (int i = 0; i < lines.Count - 1; i++)
+                {
+                    ellipsisStart += lines[i].Length;
+                }
+                // The "..." takes the style of the last kept character, or of the cut character when none is kept.
+                textInstance.SetLastLineEllipsis(ellipsisStart, ellipsizedKeptLength > 0 ? ellipsisStart - 1 : ellipsisStart);
+            }
+            else
+            {
+                textInstance.SetLastLineEllipsis(-1, -1);
+            }
         }
         finally
         {
@@ -152,6 +175,13 @@ public static class IWrappedTextExtensions
     /// same index is replaced by that string, so it is not allocated again.</param>
     public static void UpdateLines(this IWrappedText textInstance, List<string> lines, List<string>? previousLines)
     {
+        UpdateLinesCore(textInstance, lines, previousLines);
+    }
+
+    // Returns how many characters of cut text the last line keeps before its ellipsis, or -1 when no line ends
+    // with an ellipsis.
+    static int UpdateLinesCore(IWrappedText textInstance, List<string> lines, List<string>? previousLines)
+    {
         var effectiveMaxNumberOfLines = textInstance.MaxNumberOfLines;
 
         // The Height-derived line cap only makes sense when Height is an independent constraint. When
@@ -170,7 +200,7 @@ public static class IWrappedTextExtensions
                 // A size run makes lines differ in height, and which lines it lands on is known only after
                 // wrapping (#8338). Wrap without the height cap, count the lines whose drawn heights fit, and if
                 // some do not, wrap again capped at that count so the ellipsis lands on the new last line.
-                WrapLines(textInstance, lines, previousLines, effectiveMaxNumberOfLines);
+                int uncappedEllipsizedKeptLength = WrapLines(textInstance, lines, previousLines, effectiveMaxNumberOfLines);
                 int linesThatFit = CountLinesFittingHeight(textInstance, lines, linesFromHeight);
                 // A box one base line tall keeps its first line even when a run makes it taller, so a line taller
                 // than the box (a paginated DialogBox gives one its own page) still shows.
@@ -180,7 +210,7 @@ public static class IWrappedTextExtensions
                 }
                 if (linesThatFit >= lines.Count)
                 {
-                    return;
+                    return uncappedEllipsizedKeptLength;
                 }
                 lines.Clear();
                 effectiveMaxNumberOfLines = linesThatFit;
@@ -195,7 +225,7 @@ public static class IWrappedTextExtensions
             }
         }
 
-        WrapLines(textInstance, lines, previousLines, effectiveMaxNumberOfLines);
+        return WrapLines(textInstance, lines, previousLines, effectiveMaxNumberOfLines);
     }
 
     // The number of leading lines whose summed drawn heights, in base lines, fit within linesFromHeight.
@@ -217,11 +247,12 @@ public static class IWrappedTextExtensions
         return lines.Count;
     }
 
-    static void WrapLines(IWrappedText textInstance, List<string> lines, List<string>? previousLines, int? effectiveMaxNumberOfLines)
+    // Returns how many characters of cut text the ellipsized last line keeps, or -1 when no line has an ellipsis.
+    static int WrapLines(IWrappedText textInstance, List<string> lines, List<string>? previousLines, int? effectiveMaxNumberOfLines)
     {
         if (string.IsNullOrEmpty(textInstance.RawText) || effectiveMaxNumberOfLines == 0)
         {
-            return;
+            return -1;
         }
         /////////END EARLY OUT///////////
 
@@ -257,7 +288,7 @@ public static class IWrappedTextExtensions
             && textInstance.MeasureString(stringToUse, 0) <= wrappingWidth)
         {
             lines.Add(stringToUse);
-            return;
+            return -1;
         }
 
         // Every line is a run of characters in stringToUse (the words and the single spaces between them
@@ -283,6 +314,7 @@ public static class IWrappedTextExtensions
         List<WordRange> words = RentWordList();
         SplitOnSpaces(words, stringToUse);
         int firstWord = 0;
+        int ellipsizedKeptLength = -1;
 
         bool isLastLine = false;
         while (firstWord < words.Count)
@@ -355,7 +387,7 @@ public static class IWrappedTextExtensions
                 // If it's the last word, then we don't care if the ellipsis fit, we only want to see if the last word fits...
                 ((isLastWord && linePlusWordWidth > wrappingWidth) ||
                  // it's not the last word so we need to see if ellipsis fit
-                 (!isLastWord && linePlusWordWidth + ellipsisWidth >= wrappingWidth));
+                 (!isLastWord && linePlusWordWidth + ellipsisWidth > wrappingWidth));
             if (shouldAddEllipsis)
             {
                 var addedEllipsis = false;
@@ -368,6 +400,7 @@ public static class IWrappedTextExtensions
                     if (linePlusWordSub + ellipsisWidth <= wrappingWidth)
                     {
                         lines.Add(stringToUse.Substring(currentLineStart, lengthWithoutEnd) + ellipsis);
+                        ellipsizedKeptLength = lengthWithoutEnd;
                         addedEllipsis = true;
                         break;
                     }
@@ -376,7 +409,13 @@ public static class IWrappedTextExtensions
                 if (!addedEllipsis && currentLineLength > 0 && stringToUse[currentLineStart + currentLineLength - 1] == ' ')
                 {
                     lines.Add(stringToUse.Substring(currentLineStart, currentLineLength - 1) + ellipsis);
+                    ellipsizedKeptLength = currentLineLength - 1;
 
+                }
+                else if (!addedEllipsis)
+                {
+                    // Not even the word's first letter fits beside the ellipsis, so the line is the ellipsis alone.
+                    ellipsizedKeptLength = AddLineWithEllipsis(textInstance, lines, stringToUse, currentLineStart, currentLineLength, absoluteLineStartIndex, wrappingWidth, ellipsisWidth);
                 }
                 break;
             }
@@ -503,7 +542,18 @@ public static class IWrappedTextExtensions
 
                 if (containsNewline)
                 {
-                    AddLine(lines, previousLines, stringToUse, currentLineStart, currentLineLength);
+                    int afterNewline = newlineIndex + 1;
+                    if (lines.Count == effectiveMaxNumberOfLines - 1
+                        && textInstance.IsTruncatingWithEllipsisOnLastLine
+                        && afterNewline < stringToUse.Length)
+                    {
+                        // The cut falls at this newline, so the last kept line ends with the ellipsis (#8340).
+                        ellipsizedKeptLength = AddLineWithEllipsis(textInstance, lines, stringToUse, currentLineStart, currentLineLength, absoluteLineStartIndex, wrappingWidth, ellipsisWidth);
+                    }
+                    else
+                    {
+                        AddLine(lines, previousLines, stringToUse, currentLineStart, currentLineLength);
+                    }
                     absoluteLineStartIndex += currentLineLength;
 
 
@@ -514,7 +564,6 @@ public static class IWrappedTextExtensions
                     currentLineLength = 0;
 
                     // What follows the newline in the word is processed next, as its own word.
-                    int afterNewline = newlineIndex + 1;
                     firstWord--;
                     words[firstWord] = new WordRange
                     {
@@ -534,9 +583,30 @@ public static class IWrappedTextExtensions
 
         // Single exit point (no early return threads past this), so returning the buffer once is enough.
         ReturnWordList(words);
+        return ellipsizedKeptLength;
 
         // This is up to the implementer to set:
         //mNeedsBitmapFontRefresh = true;
+    }
+
+    /// <summary>
+    /// Adds <c>source[start..start + length]</c> as the last kept line of cut text, as Skia draws it: without its
+    /// newline and trailing spaces, then without as many last characters as the ellipsis needs to fit the width.
+    /// Returns how many characters it kept.
+    /// </summary>
+    static int AddLineWithEllipsis(IWrappedText textInstance, List<string> lines, string source, int start, int length,
+        int absoluteStartIndex, int wrappingWidth, float ellipsisWidth)
+    {
+        while (length > 0 && (source[start + length - 1] == '\n' || source[start + length - 1] == ' '))
+        {
+            length--;
+        }
+        while (length > 0 && textInstance.MeasureString(source.AsSpan(start, length), absoluteStartIndex) + ellipsisWidth > wrappingWidth)
+        {
+            length--;
+        }
+        lines.Add(source.Substring(start, length) + ellipsis);
+        return length;
     }
 
     /// <summary>

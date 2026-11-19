@@ -94,6 +94,26 @@ public class StyledSubstringSplitter
     private int _snapshotCount;
     private readonly Dictionary<int, CachedLine> _cachedLines = new();
 
+    // Where the drawn last line's "..." begins and which character's style it takes; -1 when there is none (#8340).
+    private int _ellipsisStartIndex = -1;
+    private int _ellipsisStyleSourceIndex = -1;
+
+    /// <summary>
+    /// Makes the drawn-line runs (<see cref="GetStyledSubstrings(int, int, string, List{InlineVariable})"/>) style
+    /// every character from <paramref name="ellipsisStartIndex"/> on like the character at
+    /// <paramref name="styleSourceIndex"/>, so an ellipsis that replaced cut text is drawn like the text before it.
+    /// Pass -1 for both when no line ends with an ellipsis. Measuring is not affected.
+    /// </summary>
+    public void SetLastLineEllipsis(int ellipsisStartIndex, int styleSourceIndex)
+    {
+        if (_ellipsisStartIndex != ellipsisStartIndex || _ellipsisStyleSourceIndex != styleSourceIndex)
+        {
+            _ellipsisStartIndex = ellipsisStartIndex;
+            _ellipsisStyleSourceIndex = styleSourceIndex;
+            _cachedLines.Clear();
+        }
+    }
+
     /// <summary>
     /// Returns the runs of line <paramref name="lineIndex"/> from a cache, so a Text that draws the same
     /// lines every frame splits them once instead of allocating the runs every frame. The cache drops a line
@@ -131,7 +151,10 @@ public class StyledSubstringSplitter
 
         cached.StartOfLineIndex = startOfLineIndex;
         cached.Line = lineOfText;
-        cached.Substrings = GetStyledSubstrings(startOfLineIndex, lineOfText, inlineVariables);
+        List<StyledSubstring> substrings = new();
+        Split(startOfLineIndex, lineOfText, inlineVariables, substrings, new List<InlineVariable>(), new List<InlineVariable>(), pooled: false,
+            applyEllipsis: true);
+        cached.Substrings = substrings;
         return cached.Substrings;
     }
 
@@ -292,7 +315,8 @@ public class StyledSubstringSplitter
     }
 
     private void Split(int startOfLineIndex, string lineOfText, List<InlineVariable> inlineVariables, List<StyledSubstring> substrings,
-        List<InlineVariable> currentlyActiveInlines, List<InlineVariable> inlinesForThisCharacter, bool pooled)
+        List<InlineVariable> currentlyActiveInlines, List<InlineVariable> inlinesForThisCharacter, bool pooled,
+        bool applyEllipsis = false)
     {
         int currentSubstringStart = 0;
 
@@ -301,6 +325,10 @@ public class StyledSubstringSplitter
         {
             inlinesForThisCharacter.Clear();
             var absoluteIndex = startOfLineIndex + relativeLetterIndex;
+            if (applyEllipsis && _ellipsisStartIndex >= 0 && absoluteIndex >= _ellipsisStartIndex)
+            {
+                absoluteIndex = _ellipsisStyleSourceIndex;
+            }
 
             var startNewRun = relativeLetterIndex == 0;
             var endLastRun = false;
