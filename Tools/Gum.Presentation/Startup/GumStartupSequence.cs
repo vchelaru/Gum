@@ -45,7 +45,8 @@ public class GumStartupSequence
         StartupTiming.Mark("ProjectManager.LoadSettings");
 
         // The project load below waits on the serializer setup; this overlaps it with plugin start-up.
-        new ProjectSerializerWarmupLauncher(
+        // Not awaited: the launcher logs its own failures.
+        _ = new ProjectSerializerWarmupLauncher(
             () => new Gum.ProjectServices.JsonProjectSerializerWarmup().WarmUp(),
             exception => ToolLog.Write("serializer warm-up failed", detail: exception.ToString()),
             Task.Run)
