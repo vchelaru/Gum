@@ -85,6 +85,20 @@ public interface IWrappedText : IText
     /// Defaults to <see cref="IText.FontScale"/> for backends with no such compensation.
     /// </summary>
     float WordWrapFontScale => FontScale;
+
+    /// <summary>
+    /// True when an inline run changes the size a line is drawn at ([FontScale] or a [FontSize] font swap), so
+    /// lines can differ in height and <see cref="TextOverflowVerticalMode.TruncateLine"/> counts them by
+    /// <see cref="GetDrawnLineHeightInBaseLines"/> instead of one base line each. Default: false.
+    /// </summary>
+    bool HasSizeRun => false;
+
+    /// <summary>
+    /// How many base lines tall <paramref name="line"/> (starting at
+    /// <paramref name="absoluteStartIndexInStrippedText"/> in the stripped text) is drawn: 1 for a line with no
+    /// size run, more for a line a larger run makes taller. Default: 1.
+    /// </summary>
+    float GetDrawnLineHeightInBaseLines(string line, int absoluteStartIndexInStrippedText) => 1;
 }
 
 public static class IWrappedTextExtensions
@@ -151,13 +165,60 @@ public static class IWrappedTextExtensions
             // An infinite Height is no limit, as an infinite Width is no wrapping below. Cast as is, the result
             // depends on the platform (#6478).
             float linesFromHeight = textInstance.Height / textInstance.LineHeightInPixels;
-            var maxLinesFromHeight = float.IsPositiveInfinity(linesFromHeight) ? int.MaxValue : (int)linesFromHeight;
-            if (maxLinesFromHeight < effectiveMaxNumberOfLines || effectiveMaxNumberOfLines == null)
+            if (textInstance.HasSizeRun && !float.IsPositiveInfinity(linesFromHeight))
             {
-                effectiveMaxNumberOfLines = maxLinesFromHeight;
+                // A size run makes lines differ in height, and which lines it lands on is known only after
+                // wrapping (#8338). Wrap without the height cap, count the lines whose drawn heights fit, and if
+                // some do not, wrap again capped at that count so the ellipsis lands on the new last line.
+                WrapLines(textInstance, lines, previousLines, effectiveMaxNumberOfLines);
+                int linesThatFit = CountLinesFittingHeight(textInstance, lines, linesFromHeight);
+                // A box one base line tall keeps its first line even when a run makes it taller, so a line taller
+                // than the box (a paginated DialogBox gives one its own page) still shows.
+                if (linesThatFit == 0 && linesFromHeight >= 1)
+                {
+                    linesThatFit = 1;
+                }
+                if (linesThatFit >= lines.Count)
+                {
+                    return;
+                }
+                lines.Clear();
+                effectiveMaxNumberOfLines = linesThatFit;
+            }
+            else
+            {
+                var maxLinesFromHeight = float.IsPositiveInfinity(linesFromHeight) ? int.MaxValue : (int)linesFromHeight;
+                if (maxLinesFromHeight < effectiveMaxNumberOfLines || effectiveMaxNumberOfLines == null)
+                {
+                    effectiveMaxNumberOfLines = maxLinesFromHeight;
+                }
             }
         }
 
+        WrapLines(textInstance, lines, previousLines, effectiveMaxNumberOfLines);
+    }
+
+    // The number of leading lines whose summed drawn heights, in base lines, fit within linesFromHeight.
+    static int CountLinesFittingHeight(IWrappedText textInstance, List<string> lines, float linesFromHeight)
+    {
+        // Absorbs float error in the sum, so a line that exactly fills the box is kept.
+        const float tolerance = 0.0001f;
+        float usedBaseLines = 0;
+        int absoluteStart = 0;
+        for (int i = 0; i < lines.Count; i++)
+        {
+            usedBaseLines += textInstance.GetDrawnLineHeightInBaseLines(lines[i], absoluteStart);
+            if (usedBaseLines > linesFromHeight + tolerance)
+            {
+                return i;
+            }
+            absoluteStart += lines[i].Length;
+        }
+        return lines.Count;
+    }
+
+    static void WrapLines(IWrappedText textInstance, List<string> lines, List<string>? previousLines, int? effectiveMaxNumberOfLines)
+    {
         if (string.IsNullOrEmpty(textInstance.RawText) || effectiveMaxNumberOfLines == 0)
         {
             return;
@@ -226,6 +287,11 @@ public static class IWrappedTextExtensions
         bool isLastLine = false;
         while (firstWord < words.Count)
         {
+            // A mid-word break adds a line without checking the cap, so check it here for every branch.
+            if (lines.Count >= effectiveMaxNumberOfLines)
+            {
+                break;
+            }
             isLastLine = effectiveMaxNumberOfLines != null && lines.Count == effectiveMaxNumberOfLines - 1;
 
             // The current word, cut after a newline if one exists. words[firstWord] continues to hold the

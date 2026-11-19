@@ -331,6 +331,39 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
     // MeasurementFontScale's own doc comment and IWrappedText.WordWrapFontScale.
     float IWrappedText.WordWrapFontScale => MeasurementFontScale;
 
+    bool IWrappedText.HasSizeRun
+    {
+        get
+        {
+            for (int i = 0; i < InlineVariables.Count; i++)
+            {
+                string name = InlineVariables[i].VariableName;
+                if (name == nameof(FontScale) || name == nameof(BitmapFont))
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+    }
+
+    // The line's drawn height (ComputeStyledLineHeight, as DrawWithInlineVariables advances) over a plain line's.
+    float IWrappedText.GetDrawnLineHeightInBaseLines(string line, int absoluteStartIndexInStrippedText)
+    {
+        BitmapFont? font = DrawnFont;
+        if (font == null)
+        {
+            return 1;
+        }
+        float plainLineHeight = font.EffectiveLineHeight(EffectiveFontScale, DrawLineHeightMultiplier);
+        List<StyledSubstring> substrings = GetStyledSubstrings(absoluteStartIndexInStrippedText, line);
+        if (substrings.Count == 0 || plainLineHeight <= 0)
+        {
+            return 1;
+        }
+        return ComputeStyledLineHeight(font, substrings, out _) / plainLineHeight;
+    }
+
     public bool mIsTextureCreationSuppressed;
 
     bool IWrappedText.IsMidWordLineBreakEnabled => IsMidWordLineBreakEnabled;

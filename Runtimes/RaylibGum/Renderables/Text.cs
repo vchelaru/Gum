@@ -1356,9 +1356,24 @@ public class Text : IVisible, IRenderableIpso,
     /// with the line's tallest size run, shared by <see cref="Render"/> and <see cref="GetLineTopOffsets"/>
     /// (and, in base units, by the size pass).
     /// </summary>
-    private float GetLineAdvance(int lineIndex, int startOfLineIndex, string line)
+    private float GetLineAdvance(int lineIndex, int startOfLineIndex, string line) =>
+        GetLineAdvance(GetTallestSizeRunScale(lineIndex, startOfLineIndex, line));
+
+    bool IWrappedText.HasSizeRun => IsSizeRun(InlineVariables);
+
+    // The line's drawn advance (GetLineAdvance, as Render steps) over a plain line's.
+    float IWrappedText.GetDrawnLineHeightInBaseLines(string line, int absoluteStartIndexInStrippedText)
     {
-        float tallestSizeRunScale = GetTallestSizeRunScale(lineIndex, startOfLineIndex, line);
+        float plainAdvance = GetLineAdvance(0);
+        if (plainAdvance <= 0)
+        {
+            return 1;
+        }
+        return GetLineAdvance(GetTallestSizeRunScale(GetStyledSubstrings(absoluteStartIndexInStrippedText, line))) / plainAdvance;
+    }
+
+    private float GetLineAdvance(float tallestSizeRunScale)
+    {
         if (_measurementFont != null)
         {
             // Issue #6814: while oversampled, the live font's line height drawn at exactly 1/ratio
@@ -1420,7 +1435,11 @@ public class Text : IVisible, IRenderableIpso,
             return 0;
         }
 
-        var substrings = GetCachedStyledSubstrings(lineIndex, startOfLineIndex, line);
+        return GetTallestSizeRunScale(GetCachedStyledSubstrings(lineIndex, startOfLineIndex, line));
+    }
+
+    private float GetTallestSizeRunScale(List<StyledSubstring> substrings)
+    {
         float maxScale = 0;
         for (int substringIndex = 0; substringIndex < substrings.Count; substringIndex++)
         {
