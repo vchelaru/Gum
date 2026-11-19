@@ -39,11 +39,13 @@ namespace EventOutputPlugin
         public override Version Version => new Version(1,0,0);
 
         private readonly IExportEventFileManager _exportEventFileManager;
+        private readonly IDispatcher _dispatcher;
 
         [ImportingConstructor]
-        public MainEventOutputPlugin(IProjectState projectState, IFileCommands fileCommands, IRetryService retryService)
+        public MainEventOutputPlugin(IProjectState projectState, IFileCommands fileCommands, IRetryService retryService, IDispatcher dispatcher)
         {
             _exportEventFileManager = new ExportEventFileManager(projectState, fileCommands, retryService);
+            _dispatcher = dispatcher;
         }
 
         public override bool ShutDown(PluginShutDownReason shutDownReason)
@@ -58,8 +60,9 @@ namespace EventOutputPlugin
 
         private void AssignEvents()
         {
+            // Nothing on screen depends on the pruned file, so it waits until the project is shown.
             this.ProjectLoad += (project) =>
-                _exportEventFileManager.DeleteOldEventFiles();
+                _dispatcher.Post(_exportEventFileManager.DeleteOldEventFiles);
 
             this.ElementAdd += (newElement) =>
                 _exportEventFileManager.ExportEvent(newElement.Name, null, GumEventTypes.ElementAdded, GetElementPrefix(newElement) );
