@@ -15,13 +15,15 @@ namespace Gum.Startup;
 public class ProjectSerializerWarmupLauncher
 {
     private readonly Action _warmJson;
+    private readonly Action _warmXml;
     private readonly Action<Exception> _logFailure;
     private readonly Func<Action, Task> _runInBackground;
 
-    /// <summary>Creates the launcher over the warm-up, the failure log and the way it runs work off the UI thread.</summary>
-    public ProjectSerializerWarmupLauncher(Action warmJson, Action<Exception> logFailure, Func<Action, Task> runInBackground)
+    /// <summary>Creates the launcher over the two warm-ups, the failure log and the way it runs work off the UI thread.</summary>
+    public ProjectSerializerWarmupLauncher(Action warmJson, Action warmXml, Action<Exception> logFailure, Func<Action, Task> runInBackground)
     {
         _warmJson = warmJson;
+        _warmXml = warmXml;
         _logFailure = logFailure;
         _runInBackground = runInBackground;
     }
@@ -42,7 +44,11 @@ public class ProjectSerializerWarmupLauncher
             }
         }
 
-        if (projectPath == null || FileManager.GetExtension(projectPath) != GumProjectSave.ProjectJsonExtension)
+        string? extension = projectPath == null ? null : FileManager.GetExtension(projectPath);
+        Action? warmUp = extension == GumProjectSave.ProjectJsonExtension ? _warmJson
+            : extension == GumProjectSave.ProjectExtension ? _warmXml
+            : null;
+        if (warmUp == null)
         {
             return Task.CompletedTask;
         }
@@ -51,7 +57,7 @@ public class ProjectSerializerWarmupLauncher
         {
             try
             {
-                _warmJson();
+                warmUp();
             }
             catch (Exception exception)
             {

@@ -48,6 +48,7 @@ public class GumStartupSequence
         // Not awaited: the launcher logs its own failures.
         _ = new ProjectSerializerWarmupLauncher(
             () => new Gum.ProjectServices.JsonProjectSerializerWarmup().WarmUp(),
+            () => new Gum.ProjectServices.XmlProjectSerializerWarmup().WarmUp(),
             exception => ToolLog.Write("serializer warm-up failed", detail: exception.ToString()),
             Task.Run)
             .Start(Environment.GetCommandLineArgs(), _services.GetRequiredService<ProjectManager>().GeneralSettingsFile.LastProject);
