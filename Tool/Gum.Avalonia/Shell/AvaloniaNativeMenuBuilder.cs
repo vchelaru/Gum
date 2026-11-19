@@ -1,6 +1,6 @@
 using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
+using System.Collections;
+using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using Avalonia.Controls;
@@ -44,8 +44,8 @@ public static class AvaloniaNativeMenuBuilder
     {
         NativeMenu menu = new NativeMenu();
         GestureBinding binding = new GestureBinding(commandModifiers, isBound: isOwnerActive == null, invokeAfterClick ?? DefaultInvokeAfterClick);
-        Populate(menu.Items, model.TopLevelItems, binding);
-        model.TopLevelItems.CollectionChanged += (_, _) => Populate(menu.Items, model.TopLevelItems, binding);
+        // Lives as long as the menu, like the model it follows.
+        _ = new MenuItemsSync((IList)menu.Items, model.TopLevelItems, item => Build(item, binding));
         isOwnerActive?.Subscribe(new AnonymousObserver<bool>(isActive =>
         {
             binding.IsBound = isActive;
@@ -64,30 +64,32 @@ public static class AvaloniaNativeMenuBuilder
     {
         NativeMenu menu = new NativeMenu();
         GestureBinding binding = new GestureBinding(KeyModifiers.None, isBound: false, invokeAfterClick ?? DefaultInvokeAfterClick);
-        menu.Items.Add(Create(new MenuItemModel("About Gum", showAbout), binding));
+        menu.Items.Add(Create(new MenuItemModel("About Gum", showAbout), binding, out _));
         return menu;
     }
 
-    private static void Populate(IList<NativeMenuItemBase> target, ObservableCollection<MenuItemModel> items, GestureBinding binding)
+    private static BuiltMenuItem Build(MenuItemModel model, GestureBinding binding)
     {
-        target.Clear();
-        foreach (MenuItemModel item in items)
+        if (model.Stepper is { } stepper)
         {
-            if (item.Stepper is { } stepper)
+            // The menu bar cannot draw a row with buttons, so the stepper becomes plain items. Their
+            // models exist only here, so there is nothing to detach.
+            return new BuiltMenuItem(new object[]
             {
-                // The menu bar cannot draw a row with buttons, so the stepper becomes plain items.
-                target.Add(Create(new MenuItemModel(stepper.IncreaseHeader, stepper.Increase), binding));
-                target.Add(Create(new MenuItemModel(stepper.DecreaseHeader, stepper.Decrease), binding));
-                target.Add(Create(new MenuItemModel(stepper.ResetHeader, stepper.Reset), binding));
-            }
-            else
-            {
-                target.Add(item.IsSeparator ? new NativeMenuItemSeparator() : Create(item, binding));
-            }
+                Create(new MenuItemModel(stepper.IncreaseHeader, stepper.Increase), binding, out _),
+                Create(new MenuItemModel(stepper.DecreaseHeader, stepper.Decrease), binding, out _),
+                Create(new MenuItemModel(stepper.ResetHeader, stepper.Reset), binding, out _),
+            }, Detach: null);
         }
+        if (model.IsSeparator)
+        {
+            return new BuiltMenuItem(new object[] { new NativeMenuItemSeparator() }, Detach: null);
+        }
+        NativeMenuItem menuItem = Create(model, binding, out Action detach);
+        return new BuiltMenuItem(new object[] { menuItem }, detach);
     }
 
-    private static NativeMenuItem Create(MenuItemModel model, GestureBinding binding)
+    private static NativeMenuItem Create(MenuItemModel model, GestureBinding binding, out Action detach)
     {
         NativeMenuItem menuItem = new NativeMenuItem
         {
@@ -103,24 +105,38 @@ public static class AvaloniaNativeMenuBuilder
             menuItem.Gesture = binding.IsBound ? gesture : null;
         }
 
+        MenuItemsSync? children = null;
+        void CreateSubmenu()
+        {
+            menuItem.Menu = new NativeMenu();
+            children = new MenuItemsSync((IList)menuItem.Menu.Items, model.Items, item => Build(item, binding));
+        }
+        // A leaf gets its submenu only once it has children, so an empty arrow never shows.
+        void HandleFirstChildren(object? sender, NotifyCollectionChangedEventArgs e)
+        {
+            model.Items.CollectionChanged -= HandleFirstChildren;
+            CreateSubmenu();
+        }
+
         if (model.Items.Count > 0)
         {
-            NativeMenu submenu = new NativeMenu();
-            Populate(submenu.Items, model.Items, binding);
-            menuItem.Menu = submenu;
+            CreateSubmenu();
         }
         else
         {
             // Deferred so a synchronous dialog opens outside the native callback and, on the real
             // menu bar, after AppKit has finished tracking the menu.
             menuItem.Click += (_, _) => binding.InvokeAfterClick(model.Invoke);
+            model.Items.CollectionChanged += HandleFirstChildren;
         }
 
-        model.PropertyChanged += (_, e) => Apply(menuItem, model, e);
-        model.Items.CollectionChanged += (_, _) =>
+        void HandlePropertyChanged(object? sender, PropertyChangedEventArgs e) => Apply(menuItem, model, e);
+        model.PropertyChanged += HandlePropertyChanged;
+        detach = () =>
         {
-            menuItem.Menu ??= new NativeMenu();
-            Populate(menuItem.Menu.Items, model.Items, binding);
+            model.PropertyChanged -= HandlePropertyChanged;
+            model.Items.CollectionChanged -= HandleFirstChildren;
+            children?.Dispose();
         };
         return menuItem;
     }
