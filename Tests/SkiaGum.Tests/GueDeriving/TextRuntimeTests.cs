@@ -817,6 +817,29 @@ public class TextRuntimeTests
         sut.UseFontSmoothing.ShouldBeFalse();
     }
 
+    [Fact]
+    public void UseFontSmoothing_SetInCode_ShouldPushToContainedText()
+    {
+        new RenderingLibrary.SystemManagers().Initialize();
+        Gum.GueDeriving.TextRuntime sut = new();
+
+        sut.UseFontSmoothing = false;
+
+        ((Text)sut.RenderableComponent!).UseFontSmoothing.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void UseFontSmoothing_SetProperty_ShouldPushToContainedText()
+    {
+        new RenderingLibrary.SystemManagers().Initialize();
+        Gum.GueDeriving.TextRuntime sut = new();
+
+        sut.SetProperty("UseFontSmoothing", false);
+
+        sut.UseFontSmoothing.ShouldBeFalse();
+        ((Text)sut.RenderableComponent!).UseFontSmoothing.ShouldBeFalse();
+    }
+
     #endregion
 
     #region VerticalAlignment

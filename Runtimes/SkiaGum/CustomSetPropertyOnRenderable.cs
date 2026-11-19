@@ -1911,7 +1911,6 @@ public partial class CustomSetPropertyOnRenderable
             }
             ReactToFontValueChange();
         }
-#if !SKIA
         else if (propertyName == nameof(gueAsTextRuntime.UseFontSmoothing))
         {
             if (gueAsTextRuntime != null)
@@ -1920,7 +1919,6 @@ public partial class CustomSetPropertyOnRenderable
             }
             ReactToFontValueChange();
         }
-#endif
         else if (propertyName == nameof(Blend))
         {
 #if SKIA

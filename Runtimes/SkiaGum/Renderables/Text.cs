@@ -576,6 +576,24 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
         }
     }
 
+    private bool _useFontSmoothing = true;
+    /// <summary>
+    /// Whether glyph edges are antialiased. False draws hard, aliased edges (pixel-art text), as an unsmoothed
+    /// font does on MonoGame and raylib. Can be overridden per run with the <c>[UseFontSmoothing=false]</c> tag.
+    /// </summary>
+    public bool UseFontSmoothing
+    {
+        get => _useFontSmoothing;
+        set
+        {
+            if (_useFontSmoothing != value)
+            {
+                _useFontSmoothing = value;
+                _cachedTextBlock = null;
+            }
+        }
+    }
+
     public bool IsItalic
     {
         get => _isItalic; set
@@ -1432,10 +1450,9 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
     // plus a post-layout glyph nudge (see GetTextBlock). "font" resolves through GumFontMapper the same
     // way the base Font property does (issue #3719). "outlinethickness" maps onto RichTextKit's per-run
     // Style.HaloWidth, doubled to compensate for the halo being a centered stroke (issue #4037) -- the
-    // outline color is not per-run, it always uses the whole Text's OutlineColor. "hasdropshadow" and
-    // "usefontsmoothing" are parsed and stripped but style nothing: Skia's dropshadow is a whole-canvas
-    // SKImageFilter (#3528), and Skia text has no font smoothing setting at all (TextRuntime.UseFontSmoothing
-    // is not applied on Skia either). "state" is expanded before BuildInlineVariables (#8176) and "link" is
+    // outline color is not per-run, it always uses the whole Text's OutlineColor. "usefontsmoothing" marks the
+    // run's style as an UnsmoothedStyle, drawn with aliased edges (#8344). "hasdropshadow" is parsed and stripped
+    // but styles nothing: Skia's dropshadow is a whole-canvas SKImageFilter (#3528). "state" is expanded before BuildInlineVariables (#8176) and "link" is
     // kept as a range for TextRuntime.GetTagAtIndex. Unrecognized tags are left as literal characters.
     private static HashSet<string> SupportedTags => BbCodeParser.KnownTags;
 
@@ -2132,6 +2149,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
             public SKPoint[] Positions;
             public SKTypeface Typeface;
             public float FontSize;
+            public SKFontEdging Edging;
         }
 
         private struct BlobSegment
@@ -2181,7 +2199,9 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
             {
                 Drop();
                 Block = block;
-                _isFirstFrame = true;
+                // RichTextKit paints a whole block with one edging, so a block with an unsmoothed run draws its
+                // blobs from the first frame (#8344).
+                _isFirstFrame = !HasUnsmoothedRun(block);
             }
             else
             {
@@ -2275,16 +2295,17 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
                 return false;
             }
             SKColor color = _runs[0].Style.TextColor;
+            SKFontEdging edging = _runs[0].Edging;
             for (int i = 0; i < _runs.Count; i++)
             {
                 IStyle style = _runs[i].Style;
-                if (style.HaloColor != SKColor.Empty || style.TextColor != color)
+                if (style.HaloColor != SKColor.Empty || style.TextColor != color || _runs[i].Edging != edging)
                 {
                     return false;
                 }
             }
 
-            batch.Begin(canvas, matrix, color, _builtHinting, _builtEdging, _builtSubpixel, _runs.Count);
+            batch.Begin(canvas, matrix, color, _builtHinting, edging, _builtSubpixel, _runs.Count);
             for (int i = 0; i < _runs.Count; i++)
             {
                 BlobRun run = _runs[i];
@@ -2439,6 +2460,42 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
             halo.StrokeJoin = SKStrokeJoin.Round;
         }
 
+        private static bool HasUnsmoothedRun(TextBlock block)
+        {
+            if (HasUnsmoothedRunInBlock(block))
+            {
+                return true;
+            }
+            if (_transformedLetters.TryGetValue(block, out List<TransformedLetter>? letters))
+            {
+                for (int i = 0; i < letters.Count; i++)
+                {
+                    if (HasUnsmoothedRunInBlock(letters[i].Block))
+                    {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
+        private static bool HasUnsmoothedRunInBlock(TextBlock block)
+        {
+            IReadOnlyList<TextLine> lines = block.Lines;
+            for (int l = 0; l < lines.Count; l++)
+            {
+                IReadOnlyList<FontRun> runs = lines[l].Runs;
+                for (int r = 0; r < runs.Count; r++)
+                {
+                    if (runs[r].Style is UnsmoothedStyle)
+                    {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
         private SKFontHinting _builtHinting;
         private SKFontEdging _builtEdging;
         private bool _builtSubpixel;
@@ -2508,7 +2565,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
                     font.Typeface = run.Typeface;
                     font.Size = style.FontSize * glyphScale;
                     font.Hinting = options.Hinting;
-                    font.Edging = options.Edging;
+                    font.Edging = style is UnsmoothedStyle ? SKFontEdging.Alias : options.Edging;
                     font.Subpixel = options.SubpixelPositioning;
 
                     SKPositionedRunBuffer buffer = builder.AllocatePositionedRun(font, run.Glyphs.Length);
@@ -2529,6 +2586,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
                         Positions = run.GlyphPositions.AsSpan().ToArray(),
                         Typeface = run.Typeface,
                         FontSize = font.Size,
+                        Edging = font.Edging,
                     });
                 }
             }
@@ -3105,11 +3163,21 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
 
     /// <summary>A copy of a style built by <see cref="BuildRunStyle"/> with another <see cref="Style.LineHeight"/>.</summary>
     private Style WithLineHeight(Style style, float lineHeight) => GetCachedStyle(new StyleKey(
-        style.FontFamily, style.FontSize, style.TextColor, style.FontItalic, style.FontWeight, style.HaloWidth, style.HaloColor, lineHeight));
+        style.FontFamily, style.FontSize, style.TextColor, style.FontItalic, style.FontWeight, style.HaloWidth, style.HaloColor, lineHeight,
+        UseFontSmoothing: style is not UnsmoothedStyle));
 
     /// <summary>The values of a <see cref="Style"/> this Text builds.</summary>
     private readonly record struct StyleKey(string? FontFamily, float FontSize, SKColor TextColor, bool FontItalic,
-        int FontWeight, float HaloWidth, SKColor HaloColor, float LineHeight);
+        int FontWeight, float HaloWidth, SKColor HaloColor, float LineHeight, bool UseFontSmoothing);
+
+    /// <summary>
+    /// The style of a run drawn with hard (aliased) glyph edges (#8344). RichTextKit's Style has no edging, and its
+    /// <see cref="TextPaintOptions.Edging"/> covers a whole block, so the type marks the run and the cached blobs
+    /// give it <see cref="SKFontEdging.Alias"/>.
+    /// </summary>
+    private sealed class UnsmoothedStyle : Style
+    {
+    }
 
     // Text that changes every frame builds the same few styles again on each change, so they are kept by value and
     // shared by the blocks built from them (#7818). Nothing changes a Style once it is built, so sharing one is safe.
@@ -3128,17 +3196,15 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
             _styleCache.Clear();
         }
 
-        var style = new Style()
-        {
-            FontFamily = key.FontFamily,
-            FontSize = key.FontSize,
-            TextColor = key.TextColor,
-            FontItalic = key.FontItalic,
-            FontWeight = key.FontWeight,
-            HaloWidth = key.HaloWidth,
-            HaloColor = key.HaloColor,
-            LineHeight = key.LineHeight,
-        };
+        Style style = key.UseFontSmoothing ? new Style() : new UnsmoothedStyle();
+        style.FontFamily = key.FontFamily;
+        style.FontSize = key.FontSize;
+        style.TextColor = key.TextColor;
+        style.FontItalic = key.FontItalic;
+        style.FontWeight = key.FontWeight;
+        style.HaloWidth = key.HaloWidth;
+        style.HaloColor = key.HaloColor;
+        style.LineHeight = key.LineHeight;
         _styleCache[key] = style;
         return style;
     }
@@ -3162,6 +3228,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
         bool italic = this.IsItalic;
         int weight = (int)(400 * BoldWeight);
         int outlineThickness = this.OutlineThickness;
+        bool useFontSmoothing = UseFontSmoothing;
         LetterDrawTransform letter = LetterDrawTransform.Identity;
         string text = runText;
         bool isSizeRun = false;
@@ -3211,6 +3278,9 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
                         break;
                     case "OutlineThickness":
                         outlineThickness = (int)variable.Value;
+                        break;
+                    case "UseFontSmoothing":
+                        useFontSmoothing = (bool)variable.Value;
                         break;
                     case "Custom":
                         if (variable.Value is ParameterizedLetterCustomizationCall call)
@@ -3285,7 +3355,8 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
             // OutlineColor was non-transparent, even with no outline requested (issue #4077 follow-up).
             // Suppress to Empty whenever there's no actual outline thickness.
             outlineThickness > 0 ? OutlineColor : SKColor.Empty,
-            lineHeight));
+            lineHeight,
+            useFontSmoothing));
 
         return (style, text, letter, isSizeRun || isFontRun);
     }
@@ -3437,6 +3508,10 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
                 case "IsItalic":
                     variableName = "IsItalic";
                     value = bool.TryParse(argument, out var italic) ? Box(existing, italic) : null;
+                    break;
+                case "UseFontSmoothing":
+                    variableName = "UseFontSmoothing";
+                    value = bool.TryParse(argument, out var smoothing) ? Box(existing, smoothing) : null;
                     break;
                 case "OutlineThickness":
                     variableName = "OutlineThickness";
