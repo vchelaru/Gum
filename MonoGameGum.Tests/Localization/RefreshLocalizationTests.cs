@@ -177,6 +177,34 @@ public class RefreshLocalizationTests : BaseTestClass
     }
 
     [Fact]
+    public void Text_WhenTranslationContainsBBCode_ShouldStripTagsAndAddTheRun()
+    {
+        _localizationService.CurrentLanguage = 1;
+        TextRuntime text = new();
+
+        text.Text = "BBStr";
+
+        var renderable = (RenderingLibrary.Graphics.Text)text.RenderableComponent;
+        renderable.RawText.ShouldBe("Spanish red");
+        renderable.InlineVariables.ShouldNotBeEmpty();
+    }
+
+    [Fact]
+    public void RefreshLocalization_FromTaggedToPlainTranslation_ShouldDropTheOldRuns()
+    {
+        _localizationService.CurrentLanguage = 1;
+        TextRuntime text = new();
+        text.AddToRoot();
+        text.Text = "BBStr";
+
+        _localizationService.CurrentLanguage = 2;
+
+        var renderable = (RenderingLibrary.Graphics.Text)text.RenderableComponent;
+        renderable.RawText.ShouldBe("French");
+        renderable.InlineVariables.ShouldBeEmpty();
+    }
+
+    [Fact]
     public void CurrentLanguageChanged_ShouldFireRefresh_Automatically()
     {
         TextRuntime text = new();
