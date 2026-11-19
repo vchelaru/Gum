@@ -214,6 +214,63 @@ public class DialogBoxBbCodeTests : BaseTestClass
         Normalize(string.Concat(shown.Select(page => page + " "))).ShouldBe(Normalize(Strip(markup)));
     }
 
+    // Pages split at blank lines show the same lines, page for page, as the source text.
+    [Theory]
+    [InlineData("one two\n\nthree four\n\nfive six", new[] { "one two", "three four", "five six" })]
+    [InlineData("[Color=Red]one two[/Color]\n\nthree [Color=Blue]four[/Color]\n\nfive six", new[] { "one two", "three four", "five six" })]
+    [InlineData("one\n\n\n\nfive", new[] { "one", "", "five" })]
+    public void Show_PaginatedTextWithBlankLines_ShowsTheSamePages(string markup, string[] expectedPages)
+    {
+        var (dialogBox, visual) = Create(paginating: true);
+        dialogBox.LettersPerSecond = 0;
+
+        dialogBox.Show(markup);
+
+        ShowEveryPage(dialogBox, visual).ShouldBe(expectedPages);
+    }
+
+    // A page that ends in a blank line cuts nothing the reader can see, so it never draws the ellipsis (#8347).
+    [Theory]
+    [InlineData("one two\n\nthree four\n\nfive six", new[] { "one two", "three four", "five six" })]
+    [InlineData("[Color=Red]one two[/Color]\n\nthree [Color=Blue]four[/Color]\n\nfive six", new[] { "one two", "three four", "five six" })]
+    [InlineData("one\n\n\n\nfive", new[] { "one", "", "five" })]
+    public void Show_PaginatedTextWithBlankLinesAndEllipsis_ShowsNoEllipsis(string markup, string[] expectedPages)
+    {
+        var (dialogBox, visual) = Create(paginating: true);
+        visual.TextInstance.IsTruncatingWithEllipsisOnLastLine = true;
+        dialogBox.LettersPerSecond = 0;
+
+        dialogBox.Show(markup);
+
+        ShowEveryPage(dialogBox, visual).ShouldBe(expectedPages);
+    }
+
+    // Each page's drawn lines, newline-free and joined by '\n', without the blank lines it ends in.
+    private static List<string> ShowEveryPage(DialogBox dialogBox, TaggedDialogBoxVisual visual)
+    {
+        List<string> pages = new();
+        int guard = 0;
+        while (true)
+        {
+            string page = string.Join("\n", visual.Core.WrappedText.Select(line => line.TrimEnd('\n', '\r'))).TrimEnd('\n');
+#if SKIA_LINKED_TESTS
+            // Skia's WrappedText holds the uncut lines; the ellipsis is a run of the laid-out block.
+            var block = ((SkiaGum.Text)visual.TextInstance.RenderableComponent!).GetTextBlock();
+            if (block.Lines.SelectMany(line => line.Runs).Any(run => run.RunKind == Topten.RichTextKit.FontRunKind.Ellipsis))
+            {
+                page += "...";
+            }
+#endif
+            pages.Add(page);
+            if (dialogBox.PagesRemaining == 0 || ++guard > 20)
+            {
+                break;
+            }
+            visual.CallClick();
+        }
+        return pages;
+    }
+
     // RawText holds the stripped text on MonoGame and the markup on Skia, so pages are compared stripped.
     private static string Strip(string markup) =>
         BbCodeParser.RemoveTags(markup, BbCodeParser.Parse(markup, BbCodeParser.KnownTags));

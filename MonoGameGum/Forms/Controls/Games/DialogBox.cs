@@ -685,9 +685,19 @@ public class DialogBox : FrameworkElement, IInputReceiver
                 strippedTextCount = FillPageLines(allLines, absoluteLineNumber, fittingCount, strippedTextCount, pageLines, pageLineStarts);
                 absoluteLineNumber += fittingCount;
 
+                // A page drops the blank lines it ends in: they show nothing, and as lines past the last one shown
+                // they make a TruncateLine Text draw its ellipsis (#8347).
+                int pageEnd = strippedTextCount;
+                while (pageLines.Count > 1 && string.IsNullOrWhiteSpace(pageLines[pageLines.Count - 1]))
+                {
+                    pageEnd = pageLineStarts[pageLineStarts.Count - 1];
+                    pageLines.RemoveAt(pageLines.Count - 1);
+                    pageLineStarts.RemoveAt(pageLineStarts.Count - 1);
+                }
+
                 // Tags are written back per page, not per line, so a tag spanning lines or pages styles every
                 // character it covers (#8319).
-                pages.Add(BbCodeParser.AddTags(pageLines, pageLineStarts, strippedTextCount, foundTagsWithoutNewlines) + "\n");
+                pages.Add(BbCodeParser.AddTags(pageLines, pageLineStarts, pageEnd, foundTagsWithoutNewlines) + "\n");
             }
 
             return pages.ToArray();
