@@ -83,6 +83,9 @@ public class ParameterizedLetterCustomizationCall
     public int CharacterIndex { get; set; }
 
     public string TextBlock { get; set; } = string.Empty;
+
+    /// <summary>SPIKE: a built-in effect ([wave], [shake]) evaluated instead of a named function.</summary>
+    public Gum.Wireframe.BbCodeTextEffect? BuiltInEffect { get; set; }
 }
 
 #endregion
@@ -3283,7 +3286,16 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
                         useFontSmoothing = (bool)variable.Value;
                         break;
                     case "Custom":
-                        if (variable.Value is ParameterizedLetterCustomizationCall call)
+                        if (variable.Value is ParameterizedLetterCustomizationCall { BuiltInEffect: not null } effectCall)
+                        {
+                            // SPIKE 2: the letter's x is not known while styling a run, so the wave phase uses
+                            // the letter index times half the font size as an approximation of x.
+                            float approximateX = effectCall.CharacterIndex * fontSizePixels * 0.5f;
+                            effectCall.BuiltInEffect.GetOffset(Gum.Wireframe.BbCodeTextEffect.TimeSeconds(),
+                                approximateX, effectCall.CharacterIndex, out float effectX, out float effectY);
+                            letter = letter.With(new LetterCustomization { XOffset = letter.XOffset + effectX, YOffset = letter.YOffset + effectY });
+                        }
+                        else if (variable.Value is ParameterizedLetterCustomizationCall call)
                         {
                             var contextFunction = call.ContextFunction;
                             var function = call.Function;
@@ -3519,6 +3531,33 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
                         ? Box(existing, outlineThickness)
                         : null;
                     break;
+                case "wave":
+                case "shake":
+                    {
+                        // SPIKE 2: a built-in effect rides the per-letter [Custom] path, as on MonoGame/raylib.
+                        Gum.Wireframe.BbCodeTextEffect? effect = Gum.Wireframe.BbCodeTextEffect.Create(tag.Name, argument);
+                        int startStripped = tag.Open.StartStrippedIndex;
+                        int length = tag.Close.StartStrippedIndex - startStripped;
+                        if (effect != null && !string.IsNullOrEmpty(_layoutText) && length > 0 && startStripped + length <= _layoutText.Length)
+                        {
+                            string taggedSubstring = _layoutText.Substring(startStripped, length);
+                            for (int i = 0; i < length; i++)
+                            {
+                                InlineVariable letterVariable = MarkupBuffers.GetInlineVariable(_inlineVariables.Count);
+                                letterVariable.VariableName = "Custom";
+                                letterVariable.StartIndex = startStripped + i;
+                                letterVariable.CharacterCount = 1;
+                                letterVariable.Value = new ParameterizedLetterCustomizationCall
+                                {
+                                    BuiltInEffect = effect,
+                                    CharacterIndex = startStripped + i,
+                                    TextBlock = taggedSubstring,
+                                };
+                                _inlineVariables.Add(letterVariable);
+                            }
+                        }
+                    }
+                    continue;
                 case "Custom":
                     // A [Custom=Name] callback applies per letter (issue #3692), so -- unlike every other
                     // tag above, which adds a single InlineVariable spanning the whole tagged range --

@@ -136,6 +136,9 @@ public class ParameterizedLetterCustomizationCall
     public int CharacterIndex { get; set; }
 
     public string TextBlock { get; set; } = string.Empty;
+
+    /// <summary>SPIKE: a built-in effect ([wave], [shake]) evaluated instead of a named function.</summary>
+    public Gum.Wireframe.BbCodeTextEffect? BuiltInEffect { get; set; }
 }
 
 #endregion
@@ -1707,7 +1710,15 @@ public class Text : IVisible, IRenderableIpso,
                         runColor = new Color(runColor.R, runColor.G, runColor.B, (byte)variable.Value);
                         break;
                     case "Custom":
-                        if (variable.Value is ParameterizedLetterCustomizationCall call)
+                        if (variable.Value is ParameterizedLetterCustomizationCall { BuiltInEffect: not null } effectCall)
+                        {
+                            // SPIKE: same shared math as MonoGame; totalWidth is this run's x along the line.
+                            effectCall.BuiltInEffect.GetOffset(Gum.Wireframe.BbCodeTextEffect.TimeSeconds(),
+                                totalWidth, effectCall.CharacterIndex, out float effectX, out float effectY);
+                            xOffset += effectX;
+                            yOffset += effectY;
+                        }
+                        else if (variable.Value is ParameterizedLetterCustomizationCall call)
                         {
                             var contextFunction = call.ContextFunction;
                             var function = call.Function;

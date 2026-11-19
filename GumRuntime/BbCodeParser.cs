@@ -21,6 +21,12 @@ public struct TagInfo
     public int StartStrippedIndex;
     public string? Argument;
 
+    /// <summary>
+    /// SPIKE: true when <see cref="Argument"/> holds Godot-style options (<c>[wave amp=50]</c>) rather than
+    /// the text after an equals sign.
+    /// </summary>
+    public bool HasOptions;
+
     // even though FoundTag has Name, we add the name here so we can
     // sort open/close in one list
     public string Name;
@@ -120,6 +126,9 @@ public static class BbCodeParser
         "State",
         "HasDropshadow",
         "Link",
+        // SPIKE: Godot-style built-in effects.
+        "wave",
+        "shake",
     };
 
     internal struct Tag
@@ -129,6 +138,7 @@ public static class BbCodeParser
         public int Count;
         public string Name;
         public string? Argument;
+        public bool HasOptions;
 
         public override string ToString()
         {
@@ -314,6 +324,7 @@ public static class BbCodeParser
                             StartIndex = foundTag.StartIndex,
                             Count = foundTag.Count,
                             Argument = foundTag.Argument,
+                            HasOptions = foundTag.HasOptions,
                             Name = foundTag.Name
                         };
 
@@ -469,9 +480,12 @@ public static class BbCodeParser
             int closeAt = isEmptyInPiece ? openAt : closePosition(Math.Min(close, end));
 
             // A tag written without a value goes back without '=', since [Color=] parses as an empty color (#8313).
+            // SPIKE: an effect tag's options go back space-separated ([wave amp=50]), not after '='.
             string openText = tag.Open.Argument == null
                 ? $"[{tag.Open.Name}]"
-                : $"[{tag.Open.Name}={tag.Open.Argument}]";
+                : tag.Open.HasOptions
+                    ? $"[{tag.Open.Name} {tag.Open.Argument}]"
+                    : $"[{tag.Open.Name}={tag.Open.Argument}]";
 
             insertions.Add((openAt, tag.Open.StartIndex, openText));
             insertions.Add((closeAt, tag.Close.StartIndex, $"[/{tag.Close.Name}]"));
@@ -516,6 +530,18 @@ public static class BbCodeParser
         return tags.Contains(copied) ? copied : null;
     }
 
+    private static bool IsEffectTagName(ReadOnlySpan<char> name)
+    {
+        foreach (string effectName in BbCodeTextEffect.EffectTagNames)
+        {
+            if (name.Equals(effectName.AsSpan(), StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
     private static Tag? GetTagAtIndex(string text, HashSet<string> tags, int startIndex)
     {
         if (text[startIndex] != '[' || text.Length <= startIndex + 1)
@@ -533,13 +559,27 @@ public static class BbCodeParser
         }
 
         var nameStartIndex = peekIndex;
+        // SPIKE: Godot-style options ([wave amp=50 freq=5]) start after the first space, but only for an
+        // effect tag. Every other tag still rejects a space before '=', so its parse is unchanged.
+        int? optionsStartIndex = null;
         while (peekIndex < text.Length)
         {
+            if (optionsStartIndex != null && text[peekIndex] != ']' && text[peekIndex] != '[')
+            {
+                peekIndex++;
+                continue;
+            }
+
             switch (text[peekIndex])
             {
                 case ' ':
                     if (equalsIndex == null)
                     {
+                        if (isOpeningTag && IsEffectTagName(text.AsSpan(nameStartIndex, peekIndex - nameStartIndex)))
+                        {
+                            optionsStartIndex = peekIndex + 1;
+                            break;
+                        }
                         return null; // space isn't valid unless after an equals sign
                     }
 
@@ -555,7 +595,9 @@ public static class BbCodeParser
 
                 case ']':
                     {
-                        var nameEndIndex = equalsIndex ?? peekIndex;
+                        var nameEndIndex = optionsStartIndex != null
+                            ? optionsStartIndex.Value - 1
+                            : equalsIndex ?? peekIndex;
                         if (startIndex + 1 == nameEndIndex)
                         {
                             // No tag name provided
@@ -570,9 +612,17 @@ public static class BbCodeParser
                         }
 
                         // Valid tag
-                        var argument = equalsIndex != null
-                            ? text.Substring(equalsIndex.Value + 1, peekIndex - equalsIndex.Value - 1)
-                            : null;
+                        string? argument;
+                        if (optionsStartIndex != null)
+                        {
+                            argument = text.Substring(optionsStartIndex.Value, peekIndex - optionsStartIndex.Value).Trim();
+                        }
+                        else
+                        {
+                            argument = equalsIndex != null
+                                ? text.Substring(equalsIndex.Value + 1, peekIndex - equalsIndex.Value - 1)
+                                : null;
+                        }
 
                         return new Tag
                         {
@@ -580,7 +630,8 @@ public static class BbCodeParser
                             StartIndex = startIndex,
                             Count = peekIndex - startIndex + 1,
                             Name = tagName,
-                            Argument = argument
+                            Argument = argument,
+                            HasOptions = optionsStartIndex != null,
                         };
                     }
 

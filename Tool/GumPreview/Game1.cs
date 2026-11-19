@@ -263,7 +263,11 @@ public class Game1 : Game, IPreviewDefaultsTarget
             return;
         }
 
-        if (_unattended != null && _unattended.TryClaimCapture())
+        // SPIKE 2: GUM_SPIKE_CAPTURE_AFTER delays the unattended capture to that game time, to show an effect moving.
+        bool isSpikeDelayed = double.TryParse(System.Environment.GetEnvironmentVariable("GUM_SPIKE_CAPTURE_AFTER"),
+            System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out double captureAfter)
+            && gameTime.TotalGameTime.TotalSeconds < captureAfter;
+        if (_unattended != null && !isSpikeDelayed && _unattended.TryClaimCapture())
         {
             FinishUnattended();
         }

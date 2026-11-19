@@ -87,6 +87,9 @@ public class ParameterizedLetterCustomizationCall
     public int CharacterIndex { get; set; }
 
     public string TextBlock { get; set; } = string.Empty;
+
+    /// <summary>SPIKE: a built-in effect ([wave], [shake]) evaluated instead of a named function.</summary>
+    public Gum.Wireframe.BbCodeTextEffect? BuiltInEffect { get; set; }
 }
 
 #endregion
@@ -1526,6 +1529,7 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
         // equal the unrotated ones bit for bit.
         BitmapFont.GetRotatedAxes(rotation, out Vector2 xAxis, out Vector2 yAxis);
         Vector2 startOfLine = new Vector2(tempForRendering.GetAbsoluteLeft(), tempForRendering.GetAbsoluteTop());
+        Vector2 textOrigin = startOfLine;
         var lettersLeft = maxLettersToShow;
         for (int i = 0; i < WrappedText.Count; i++)
         {
@@ -1630,7 +1634,16 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
                         {
                             var function = variable.Value as ParameterizedLetterCustomizationCall;
 
-                            if(function?.Function != null || function?.ContextFunction != null)
+                            if (function?.BuiltInEffect != null)
+                            {
+                                // SPIKE: the letter's x along the text's own axis, as Godot phases by x / 50.
+                                float letterX = Vector2.Dot(startOfRun - textOrigin, xAxis);
+                                function.BuiltInEffect.GetOffset(Gum.Wireframe.BbCodeTextEffect.TimeSeconds(),
+                                    letterX, function.CharacterIndex, out float effectX, out float effectY);
+                                xOffset += effectX;
+                                yOffset += effectY;
+                            }
+                            else if(function?.Function != null || function?.ContextFunction != null)
                             {
                                 LetterCustomization response;
                                 if(function.ContextFunction != null)
@@ -1847,7 +1860,9 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
     {
         for (int i = 0; i < variables.Count; i++)
         {
-            if (variables[i].VariableName == "Custom")
+            // SPIKE 2: a built-in effect only moves its letter, so the pair across its boundary still kerns.
+            if (variables[i].VariableName == "Custom"
+                && (variables[i].Value as ParameterizedLetterCustomizationCall)?.BuiltInEffect == null)
             {
                 return true;
             }
