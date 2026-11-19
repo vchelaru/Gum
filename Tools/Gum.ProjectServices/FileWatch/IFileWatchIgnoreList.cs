@@ -27,5 +27,12 @@ public interface IFileWatchIgnoreList
     /// after the tool's save still reloads. Without a record the window ignores by time alone.
     /// </summary>
     void RecordWrittenContent(FilePath filePath);
+
+    /// <summary>
+    /// <see cref="RecordWrittenContent(FilePath)"/> for a caller that holds the bytes it wrote, so the
+    /// file is not opened again (an open right after a write can wait on an antivirus scan).
+    /// </summary>
+    void RecordWrittenContent(FilePath filePath, byte[] writtenContent);
+
     bool TryGetIgnoreFileChange(FilePath fileName);
 }
