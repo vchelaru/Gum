@@ -120,6 +120,54 @@ public class TextCustomizationTests : BaseTestClass
         runs.Single(r => r.Text == "X").Style.TextColor.ShouldBe(new SKColor(10, 10, 10, 255));
     }
 
+    [Theory]
+    [InlineData("[Color=Red][Custom=RecordContext]b[/Custom][/Color]", 255, 0, 0)]
+    [InlineData("a[Color=Blue]x[Custom=RecordContext]b[/Custom][/Color]", 0, 0, 255)]
+    [InlineData("[Red=200][Custom=RecordContext]b[/Custom][/Red]", 200, 0, 0)]
+    [InlineData("[Color=Red][Green=128][Custom=RecordContext]b[/Custom][/Green][/Color]", 255, 128, 0)]
+    public void GetStyledRuns_ContextCustomInsideColorTags_ReceivesTheEnclosingColor(string markup, int r, int g, int b)
+    {
+        List<(int Index, LetterCustomization Context)> calls = RecordContextCalls(markup);
+
+        calls.Count.ShouldBeGreaterThan(0);
+        Color color = calls[0].Context.Color!.Value;
+        (color.R, color.G, color.B).ShouldBe(((byte)r, (byte)g, (byte)b));
+    }
+
+    [Theory]
+    [InlineData("ab[Color=Red]c[Custom=RecordContext]d[/Custom][/Color]", 3)]
+    [InlineData("a[Glyph=0x42][Custom=RecordContext]c[/Custom]", 2)]
+    [InlineData("[Glyph=0x1F600][Custom=RecordContext]x[/Custom]", 2)]
+    [InlineData("[Color=Red]ab[/Color]\n[Custom=RecordContext]c[/Custom]", 3)]
+    public void GetStyledRuns_ContextCustomAfterTagsAndGlyphs_ReceivesTheDisplayedIndex(string markup, int expectedIndex)
+    {
+        List<(int Index, LetterCustomization Context)> calls = RecordContextCalls(markup);
+
+        calls.Count.ShouldBeGreaterThan(0);
+        calls[0].Index.ShouldBe(expectedIndex);
+    }
+
+    private static List<(int Index, LetterCustomization Context)> RecordContextCalls(string markup)
+    {
+        List<(int, LetterCustomization)> calls = new();
+        Text.ContextCustomizations["RecordContext"] = (index, block, context) =>
+        {
+            calls.Add((index, context));
+            return new LetterCustomization();
+        };
+        try
+        {
+            Text text = MakeText();
+            text.RawText = markup;
+            text.GetStyledRuns();
+        }
+        finally
+        {
+            Text.ContextCustomizations.Remove("RecordContext");
+        }
+        return calls;
+    }
+
     private static (float Left, float Top, float Right, float Bottom) RenderInkBounds(string rawText, float fontSize = 40, Gum.RenderingLibrary.Blend? blend = null)
     {
         using SKSurface surface = SKSurface.Create(new SKImageInfo(200, 200));
