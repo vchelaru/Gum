@@ -49,7 +49,7 @@ public class AvaloniaGraphicsDeviceControl : Grid, IDisposable, IRenderTargetFra
     private AvaloniaInputHostAdapter? _inputHost;
     private readonly ICanvasRedrawScheduler _redrawScheduler;
     private readonly Func<ISharedRenderDeviceHost> _createDeviceHost;
-    private readonly Func<bool> _isSharedDeviceBeingCreated;
+    private readonly Func<bool> _isSharedDeviceReady;
     private readonly CanvasFrameGate _frameGate;
     private float _desiredFramesPerSecondBeforeInit = 30;
     private WindowBase? _hostWindow;
@@ -64,7 +64,7 @@ public class AvaloniaGraphicsDeviceControl : Grid, IDisposable, IRenderTargetFra
     /// says something changed. The shared device is taken on first use, not here.
     /// </summary>
     public AvaloniaGraphicsDeviceControl(ICanvasRedrawScheduler redrawScheduler)
-        : this(redrawScheduler, () => new GameRenderDeviceHost(), () => GameRenderDeviceHost.IsSharedDeviceBeingCreated)
+        : this(redrawScheduler, () => new GameRenderDeviceHost(), () => GameRenderDeviceHost.IsSharedDeviceReady)
     {
     }
 
@@ -72,11 +72,11 @@ public class AvaloniaGraphicsDeviceControl : Grid, IDisposable, IRenderTargetFra
     internal AvaloniaGraphicsDeviceControl(
         ICanvasRedrawScheduler redrawScheduler,
         Func<ISharedRenderDeviceHost> createDeviceHost,
-        Func<bool> isSharedDeviceBeingCreated)
+        Func<bool> isSharedDeviceReady)
     {
         _redrawScheduler = redrawScheduler;
         _createDeviceHost = createDeviceHost;
-        _isSharedDeviceBeingCreated = isSharedDeviceBeingCreated;
+        _isSharedDeviceReady = isSharedDeviceReady;
         _frameGate = new CanvasFrameGate(redrawScheduler);
         _surface = new AvaloniaRenderSurface();
 
@@ -187,8 +187,8 @@ public class AvaloniaGraphicsDeviceControl : Grid, IDisposable, IRenderTargetFra
     // Plugin StartUp builds this control long before the head draws anything, and creating the
     // KNI device is not something to do speculatively: on a machine without a usable GL driver
     // the attempt fails, and KNI's half-built device then crashes the process from its
-    // finalizer. So the device is taken on first use, the first frame or the first caller
-    // asking for it, never in the constructor.
+    // finalizer. So the device is taken on first use, by the first caller asking for it (or a
+    // frame once the shared device exists), never in the constructor.
     private ISharedRenderDeviceHost DeviceHost
     {
         get
@@ -306,9 +306,10 @@ public class AvaloniaGraphicsDeviceControl : Grid, IDisposable, IRenderTargetFra
             _frameGate.MarkSkipped();
             return;
         }
-        // Creating the device pumps the dispatcher, so this tick can run inside that creation.
-        // Building another device host now would make a second device; the next tick draws.
-        if (_deviceHost == null && (_isCreatingDeviceHost || _isSharedDeviceBeingCreated()))
+        // The head creates the shared device after the startup project loads, a step at a time so
+        // the UI keeps running, and creating it pumps the dispatcher, so this tick can run before
+        // or inside that creation. A tick never creates the device itself; the next one draws.
+        if (_deviceHost == null && (_isCreatingDeviceHost || !_isSharedDeviceReady()))
         {
             _frameGate.MarkSkipped();
             return;

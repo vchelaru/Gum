@@ -1800,7 +1800,8 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
             }
         }
 
-        List<List<InstanceSave>> siblingLists = new ();
+        // Built on first use: per sibling group, GetSiblingsIncludingThis read every instance's Parent again.
+        InstanceSiblingGroups? siblingGroups = null;
 
         foreach (InstanceSave instance in allInstances)
         {
@@ -1826,13 +1827,8 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
                 instance.ParentContainer = elementSave;
             }
 
-            var siblingInstances = siblingLists.FirstOrDefault(item => item.Contains(instance));
-            if (siblingInstances == null)
-            {
-                siblingInstances = instance.GetSiblingsIncludingThis();
-                siblingLists.Add(siblingInstances);
-            }
-            var desiredIndex = siblingInstances.IndexOf(instance);
+            siblingGroups ??= new InstanceSiblingGroups(elementSave);
+            var desiredIndex = siblingGroups.SiblingsIncludingThis(instance)?.IndexOf(instance) ?? -1;
 
             // Every instance here comes from elementSave.Instances, so elementSave is its container.
             var container = elementSave;

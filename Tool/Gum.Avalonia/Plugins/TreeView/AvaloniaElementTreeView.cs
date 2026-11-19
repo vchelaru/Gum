@@ -15,6 +15,7 @@ using Gum.Avalonia.Shell;
 using Gum.Controls;
 using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
+using Gum.Diagnostics;
 using Gum.Input;
 using Gum.Managers;
 using Gum.Plugins.InternalPlugins.TreeView;
@@ -55,7 +56,12 @@ public sealed class AvaloniaElementTreeView : IElementTreeView
     private SearchItemViewModel? _resultDragCandidate;
 
     /// <summary>Builds the panel.</summary>
-    public AvaloniaElementTreeView()
+    public AvaloniaElementTreeView() : this(StartupTiming.IsEnabled ? StartupTiming.Mark : null)
+    {
+    }
+
+    /// <summary>Builds the panel, reporting its first frame with project elements to <paramref name="startupMark"/>; null reports nothing.</summary>
+    internal AvaloniaElementTreeView(Action<string>? startupMark)
     {
         _tree = new AvaloniaGumTreeView
         {
@@ -133,6 +139,43 @@ public sealed class AvaloniaElementTreeView : IElementTreeView
         WireTree();
         _palette.AddToCurrentRequested = typeName => AddStandardToCurrentRequested?.Invoke(typeName);
         _palette.EditDefaultsRequested = typeName => EditStandardDefaultsRequested?.Invoke(typeName);
+        if (startupMark != null)
+        {
+            MarkFirstPopulatedFrame(startupMark);
+        }
+    }
+
+    /// <summary>True while the panel waits for its first frame with project elements, to report it; for tests.</summary>
+    internal bool IsWaitingForFirstPopulatedFrame { get; private set; }
+
+    // Startup timing only: the first frame drawn after the tree shows the project's elements.
+    private void MarkFirstPopulatedFrame(Action<string> startupMark)
+    {
+        void OnLayoutUpdated(object? sender, EventArgs e)
+        {
+            if (!HasProjectNodes() || TopLevel.GetTopLevel(_tree) is not { } topLevel)
+            {
+                return;
+            }
+            _tree.LayoutUpdated -= OnLayoutUpdated;
+            IsWaitingForFirstPopulatedFrame = false;
+            topLevel.RequestAnimationFrame(_ => startupMark("Project tree: first populated frame"));
+        }
+        _tree.LayoutUpdated += OnLayoutUpdated;
+        IsWaitingForFirstPopulatedFrame = true;
+    }
+
+    /// <summary>True once a root folder has children: the root folders exist before a project loads, and its elements fill them.</summary>
+    internal bool HasProjectNodes()
+    {
+        foreach (GumTreeNode root in _tree.Nodes)
+        {
+            if (root.Nodes.Count > 0)
+            {
+                return true;
+            }
+        }
+        return false;
     }
 
     #region IElementTreeView

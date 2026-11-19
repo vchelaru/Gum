@@ -1,3 +1,4 @@
+using System.Threading.Tasks;
 using Gum.Settings;
 
 namespace Gum.Startup;
@@ -25,8 +26,9 @@ public interface IHeadStartup
     void InitializePlugins();
 
     /// <summary>
-    /// Tells plugins the render surface exists, so wireframe controls are ready before a project
-    /// loads. Called immediately before the project manager initializes.
+    /// Creates the render surface and tells plugins it exists. Called once the startup project
+    /// has loaded, so the tree shows while the canvas comes up; a plugin that draws catches up
+    /// with the loaded project and selection when it hears about the surface.
     /// </summary>
-    void RenderSurfaceReady();
+    Task RenderSurfaceReadyAsync();
 }

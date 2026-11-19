@@ -158,7 +158,8 @@ public static class GumCoreServiceCollectionExtensions
         {
             IFontGenerationCallbacks callbacks = provider.GetRequiredService<IFontGenerationCallbacks>();
             BmFontExeFileGenerator bmFont = new BmFontExeFileGenerator(callbacks);
-            KernSmithFileGenerator kernSmith = new KernSmithFileGenerator(callbacks);
+            // KernSmith and its FreeType rasterizer load only when a font is first generated with it.
+            Lazy<IFontFileGenerator> kernSmith = new Lazy<IFontFileGenerator>(() => new KernSmithFileGenerator(callbacks));
             IProjectState projectState = provider.GetRequiredService<IProjectState>();
             return new FontFileGeneratorSelector(bmFont, kernSmith,
                 () => projectState.GumProjectSave?.FontGenerator ?? DataTypes.FontGeneratorType.BmFont);
