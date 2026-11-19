@@ -2047,6 +2047,33 @@ public partial class CustomSetPropertyOnRenderable
                     // we apply the inline ourselves
                     shouldApply = false;
                     break;
+                case "wave":
+                case "shake":
+                    {
+                        // SPIKE: a built-in effect rides the [Custom] per-letter path, so every renderer that
+                        // evaluates [Custom] at draw time animates it with no new InlineVariable kind.
+                        BbCodeTextEffect? effect = BbCodeTextEffect.Create(canonicalName, item.Open.Argument);
+                        int startStripped = item.Open.StartStrippedIndex;
+                        int length = item.Close.StartStrippedIndex - startStripped;
+                        string substring = strippedText.Substring(startStripped, length);
+                        for (int i = 0; i < length; i++)
+                        {
+                            asText.InlineVariables.Add(new InlineVariable
+                            {
+                                CharacterCount = 1,
+                                StartIndex = startStripped + i,
+                                VariableName = "Custom",
+                                Value = new ParameterizedLetterCustomizationCall
+                                {
+                                    BuiltInEffect = effect,
+                                    CharacterIndex = startStripped + i,
+                                    TextBlock = substring
+                                }
+                            });
+                        }
+                    }
+                    shouldApply = false;
+                    break;
                     // Font / FontSize / OutlineThickness / IsBold / IsItalic / HasDropshadow family swaps
                     // are handled below in ApplyFontVariables (stack model), not here.
             }

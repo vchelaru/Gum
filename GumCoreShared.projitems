@@ -78,6 +78,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)GumDataTypes\Variables\VariableListSave.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)GumDataTypes\Variables\VariableSave.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)GumRuntime\BbCodeParser.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)GumRuntime\BbCodeTextEffects.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)GumRuntime\BbCodeFontStacks.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)GumRuntime\ElementSaveExtensions.GumRuntime.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)GumRuntime\ElementTypeRegistry.cs" />
