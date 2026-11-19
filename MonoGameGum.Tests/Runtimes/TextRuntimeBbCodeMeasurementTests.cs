@@ -77,6 +77,8 @@ public class TextRuntimeBbCodeMeasurementTests : BaseTestClass
         textRuntime.Text = "plain";
 
         string.Concat(textRuntime.WrappedText).ShouldBe("plain");
+        ((global::RenderingLibrary.Graphics.Text)textRuntime.RenderableComponent!).InlineVariables.ShouldBeEmpty();
+        textRuntime.GetAbsoluteWidth().ShouldBe(WidthOf("plain"), Tolerance);
     }
 
     [Fact]
