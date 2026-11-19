@@ -486,6 +486,29 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
     public string? StoredMarkupText { get; set; }
 
     /// <summary>
+    /// Whether text assigned through the Text/TextNoTranslate property pipeline is parsed as BBCode. True by default.
+    /// When false the assigned string is shown exactly as given, tags included. Text-input controls (TextBox,
+    /// PasswordBox) turn this off so the characters they edit are the characters drawn (#8329). Turning it off
+    /// shows already-parsed markup literally; turning it back on applies to the next assignment.
+    /// </summary>
+    public bool IsBbCodeEnabled
+    {
+        get => _isBbCodeEnabled;
+        set
+        {
+            _isBbCodeEnabled = value;
+            if (!value && StoredMarkupText != null)
+            {
+                string markup = StoredMarkupText;
+                StoredMarkupText = null;
+                InlineVariables.Clear();
+                RawText = markup;
+            }
+        }
+    }
+    bool _isBbCodeEnabled = true;
+
+    /// <summary>
     /// The tags found in the markup text assigned to this Text, with indexes into the text as displayed
     /// (tags removed). Null when the text has no markup. Replaced, never mutated, each time the text
     /// changes. Read by <c>TextRuntime.GetTagAtIndex</c>.

@@ -1117,7 +1117,7 @@ public partial class CustomSetPropertyOnRenderable
         // Setting what a tagged text already shows changes nothing, so skip the parse and the
         // measure-and-wrap below, matching how Text.RawText ignores an equal plain string (#7779).
         // This compares the translated result, so a key whose translation is tagged skips too (#7786).
-        if (displayText != null && displayText.Contains("[") && IsBbCodeAlreadyParsed(textRenderable, graphicalUiElement, displayText))
+        if (textRenderable.IsBbCodeEnabled && displayText != null && displayText.Contains("[") && IsBbCodeAlreadyParsed(textRenderable, graphicalUiElement, displayText))
         {
             TrackLocalizationKey(graphicalUiElement, propertyName, valueAsString);
             return;
@@ -1301,7 +1301,7 @@ public partial class CustomSetPropertyOnRenderable
 #if !FRB
         textRenderable.ParsedBbCodeTags = null;
 #endif
-        if (displayText?.Contains("[") == true)
+        if (textRenderable.IsBbCodeEnabled && displayText?.Contains("[") == true)
         {
             textRenderable.StoredMarkupText = displayText;
             SetBbCodeText(textRenderable, graphicalUiElement, textRenderable.StoredMarkupText);
