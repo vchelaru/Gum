@@ -107,7 +107,7 @@ public static class BbCodeParser
     /// <remarks>
     /// Uses <see cref="System.StringComparer.OrdinalIgnoreCase"/> — <c>InvariantCulture</c>
     /// has been observed to crash when uploaded to itch from a Blazor build.
-    /// The built-in effect tags such as <c>[Wave]</c> are not in this set: <see cref="Parse"/> treats them as known
+    /// The built-in effect tags such as <c>[Wave]</c> are not in this set: the parser treats them as known
     /// whenever the loaded project's version supports them.
     /// </remarks>
     public static HashSet<string> KnownTags { get; } = new HashSet<string>(System.StringComparer.OrdinalIgnoreCase)
