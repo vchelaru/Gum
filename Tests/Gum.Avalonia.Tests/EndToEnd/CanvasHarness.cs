@@ -479,13 +479,13 @@ internal sealed class CanvasHarness : IDisposable
     private void HandleFrameError(Exception exception) => _frameError ??= exception;
 
     // The rest of GumStartupSequence that ToolStartup leaves out: the wireframe's process-wide
-    // settings, then the render surface. The tool gets there before any project loads, so the
-    // canvas finds its default font relative to the executable's folder, not a project's.
+    // settings, then the render surface. The tool gets there after the startup project has
+    // loaded, so the relative directory is the project's folder, as it is here.
     private void InitializeRenderSurface()
     {
         ((WireframeObjectManager)Wireframe).Initialize();
         string relativeDirectory = ToolsUtilities.FileManager.RelativeDirectory;
-        ToolsUtilities.FileManager.RelativeDirectory = AppContext.BaseDirectory;
+        ToolsUtilities.FileManager.RelativeDirectory = Project.ProjectFolder;
         try
         {
             // The tool raises it on every plugin, the editor tab (a priority plugin) first. The

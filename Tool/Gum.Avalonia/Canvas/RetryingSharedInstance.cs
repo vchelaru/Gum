@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 
 namespace Gum.Avalonia.Canvas;
 
@@ -21,7 +22,19 @@ internal sealed class RetryingSharedInstance<T> where T : class, IDisposable
     /// <summary>Whether a <see cref="GetOrCreate"/> call is still building the instance.</summary>
     public bool IsCreating { get; private set; }
 
-    public T GetOrCreate(Func<T> factory, Action<T> initialize)
+    /// <summary>Whether the instance has been created and initialized.</summary>
+    public bool HasInstance => _instance != null;
+
+    public T GetOrCreate(Func<T> factory, Action<T> initialize) =>
+        // Nothing awaits between the steps, so this completes synchronously.
+        GetOrCreateAsync(factory, initialize, betweenSteps: () => Task.CompletedTask).GetAwaiter().GetResult();
+
+    /// <summary>
+    /// Like <see cref="GetOrCreate"/>, but awaits <paramref name="betweenSteps"/> after the
+    /// factory and before <paramref name="initialize"/>, so a caller on the UI thread can let the
+    /// UI run between two long steps. <see cref="IsCreating"/> stays true for the whole time.
+    /// </summary>
+    public async Task<T> GetOrCreateAsync(Func<T> factory, Action<T> initialize, Func<Task> betweenSteps)
     {
         if (_instance != null)
         {
@@ -39,6 +52,7 @@ internal sealed class RetryingSharedInstance<T> where T : class, IDisposable
             T candidate = factory();
             try
             {
+                await betweenSteps();
                 initialize(candidate);
             }
             catch

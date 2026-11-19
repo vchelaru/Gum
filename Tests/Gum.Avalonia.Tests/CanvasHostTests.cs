@@ -155,7 +155,7 @@ public class CanvasHostTests
                 }
                 return new FailingDeviceHost();
             },
-            isSharedDeviceBeingCreated: () => false);
+            isSharedDeviceReady: () => true);
 
         control.HandleRenderFrame();
 
@@ -182,7 +182,7 @@ public class CanvasHostTests
                 }
                 return new FailingDeviceHost();
             },
-            isSharedDeviceBeingCreated: () => false);
+            isSharedDeviceReady: () => true);
 
         IRenderDeviceHost host = control.RenderDeviceHost;
 
@@ -192,12 +192,14 @@ public class CanvasHostTests
         control.Dispose();
     }
 
-    // Another canvas's frame tick can run while the first canvas creates the shared device.
+    // The head creates the shared device after the startup project loads, in steps that let the
+    // UI run in between (and the creation itself pumps the dispatcher). A frame tick before it
+    // exists, or while it is being created, must not create it in one blocking go.
     [AvaloniaFact]
-    public void Control_FrameTick_WaitsWhileTheSharedDeviceIsBeingCreated()
+    public void Control_FrameTick_TakesTheDevice_OnlyOnceTheSharedDeviceExists()
     {
         int factoryCalls = 0;
-        bool isSharedDeviceBeingCreated = true;
+        bool isSharedDeviceReady = false;
         using AvaloniaGraphicsDeviceControl control = new AvaloniaGraphicsDeviceControl(
             new CanvasRedrawScheduler(TimeProvider.System),
             () =>
@@ -205,12 +207,12 @@ public class CanvasHostTests
                 factoryCalls++;
                 return new FailingDeviceHost();
             },
-            () => isSharedDeviceBeingCreated);
+            () => isSharedDeviceReady);
 
         control.HandleRenderFrame();
         factoryCalls.ShouldBe(0);
 
-        isSharedDeviceBeingCreated = false;
+        isSharedDeviceReady = true;
         control.HandleRenderFrame();
         factoryCalls.ShouldBe(1);
     }

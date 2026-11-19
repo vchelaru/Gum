@@ -369,6 +369,27 @@ public class TextureCoordinateTabScenarioTests
 
     private static ProjectPropertiesViewModel ProjectProperties() => Gum.Avalonia.Tests.EndToEnd.SettingsPagesForTests.ProjectProperties();
 
+    // The tab is created hidden when the render surface comes up, after the startup project has
+    // loaded and possibly selected a sprite; its catch-up shows the tab for that selection. The
+    // surface comes up once per process, so this hides the tab and repeats the catch-up.
+    [Fact]
+    public void CatchUpWithLoadedProject_ShowsTheTabForASpriteSelectedBeforeTheSurfaceWasReady()
+    {
+        OnTab(tab =>
+        {
+            ComponentSave button = tab.Project.AddComponent("Button");
+            string atlas = tab.AddTextureFile("Atlas.png");
+            InstanceSave icon = tab.AddSprite(button, "Icon", atlas, left: 32, top: 32, width: 64, height: 64);
+            tab.Select(icon);
+            tab.Tab.Hide();
+
+            tab.Plugin.CatchUpWithLoadedProject();
+
+            tab.Tab.IsVisible.ShouldBeTrue(tab.Describe());
+            tab.Canvas.CurrentTexture.ShouldNotBeNull(tab.Describe());
+        });
+    }
+
     private static void OnTab(Action<TextureCoordinateTabHarness> scenario)
     {
         Assert.SkipUnless(TextureCoordinateTabHarness.CanRun, TextureCoordinateTabHarness.SkipReason);
