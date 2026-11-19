@@ -146,8 +146,10 @@ public class BbCodeFontStacks
 
         if (argument!.StartsWith("0x"))
         {
+            // Only 0xRRGGBB and 0xAARRGGBB are colors; any other digit count is a typo, not a color.
             string digits = argument.Substring(2);
-            if (!int.TryParse(digits, NumberStyles.AllowHexSpecifier, CultureInfo.InvariantCulture, out int hex))
+            if ((digits.Length != 6 && digits.Length != 8)
+                || !int.TryParse(digits, NumberStyles.AllowHexSpecifier, CultureInfo.InvariantCulture, out int hex))
             {
                 return null;
             }

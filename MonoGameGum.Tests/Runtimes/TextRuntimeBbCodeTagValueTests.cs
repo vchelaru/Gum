@@ -80,6 +80,11 @@ char id=99 x=0 y=0 width=10 height=13 xoffset=0 yoffset=4 xadvance=10 page=0 chn
     [InlineData("[Color=0x]a[/Color]")]
     // A # prefix is not a color form on any runtime (Skia's ParseColor reads only 0x and names).
     [InlineData("[Color=#FFFEFEFE]a[/Color]")]
+    // Only 6 (RRGGBB) or 8 (AARRGGBB) hex digits are a color.
+    [InlineData("[Color=0xFFF]a[/Color]")]
+    [InlineData("[Color=0xFFFFF]a[/Color]")]
+    [InlineData("[Color=0xFFFFFFF]a[/Color]")]
+    [InlineData("[Color=0x0FF00FF00]a[/Color]")]
     public void Text_ColorTagWithUnparseableValue_KeepsBaseColor(string markup)
     {
         Text text = MakeText(markup, out _);
