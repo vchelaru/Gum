@@ -52,6 +52,10 @@ public class TestAssemblyInitialize
         // The window is kept hidden for the duration of the test run.
         if (!Raylib.IsWindowReady())
         {
+            // raylib's native INFO logging writes to the same stdout the xunit v3 VSTest adapter reads
+            // its JSON result messages from, and lands mid-message, so a run sometimes reports one test
+            // fewer or a bogus duration. Warnings and errors still print.
+            Raylib.SetTraceLogLevel(TraceLogLevel.Warning);
             Raylib.SetConfigFlags(ConfigFlags.HiddenWindow);
             Raylib.InitWindow(800, 600, "RaylibGum.Tests");
         }
