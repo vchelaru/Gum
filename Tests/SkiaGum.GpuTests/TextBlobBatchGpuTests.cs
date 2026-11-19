@@ -589,6 +589,38 @@ public class TextBlobBatchGpuTests : IDisposable
         buildsAfter30.ShouldBe(1);
     }
 
+    [Theory]
+    [InlineData(0.3)]
+    [InlineData(1.7)]
+    public void Draw_BuiltInEffectTexts_MatchUnmergedAndPlainTextsStillMerge(double time)
+    {
+        // #8310: a motion effect merges with each letter moved; a color effect draws on its own.
+        Func<double> originalClock = BbCodeTextEffect.TimeSeconds;
+        try
+        {
+            (int merged, int unmerged) = AssertMergedMatchesUnmerged(root =>
+            {
+                for (int i = 0; i < 4; i++)
+                {
+                    root.AddChild(Label("Plain " + i, 10, 10 + i * 18));
+                }
+                root.AddChild(Label("[Wave amp=40]Wave text[/Wave]", 10, 90));
+                root.AddChild(Label("[Rainbow]Rainbow text[/Rainbow]", 10, 120));
+                for (int i = 0; i < 4; i++)
+                {
+                    root.AddChild(Label("Plain " + (i + 4), 10, 150 + i * 16));
+                }
+            }, frame => BbCodeTextEffect.TimeSeconds = () => time);
+
+            unmerged.ShouldBe(10);
+            merged.ShouldBe(3);
+        }
+        finally
+        {
+            BbCodeTextEffect.TimeSeconds = originalClock;
+        }
+    }
+
     [Fact]
     public void Draw_HiddenSpriteRotatedTranslucentAndNineSliceInRun_KeepOrder()
     {
