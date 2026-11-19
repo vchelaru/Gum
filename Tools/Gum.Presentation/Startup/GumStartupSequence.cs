@@ -40,6 +40,10 @@ public class GumStartupSequence
     {
         IProjectManager projectManager = _services.GetRequiredService<IProjectManager>();
 
+        // The project load below waits on this setup; on a pool thread it overlaps plugin start-up.
+        // A failure here only means the load does the setup itself.
+        _ = Task.Run(() => new Gum.ProjectServices.JsonProjectSerializerWarmup().WarmUp());
+
         // This has to happen before plugins are loaded since they may depend on settings.
         projectManager.LoadSettings();
         StartupTiming.Mark("ProjectManager.LoadSettings");
