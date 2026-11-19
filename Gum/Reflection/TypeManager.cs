@@ -12,12 +12,6 @@ public class TypeManager : ITypeManager
 {
     List<Type>? mTypes;
     private readonly ConcurrentDictionary<string, Type?> _resolved = new ConcurrentDictionary<string, Type?>();
-    private readonly Func<string, Type?> _resolve;
-
-    public TypeManager()
-    {
-        _resolve = Resolve;
-    }
 
     public void AddType(Type type)
     {
@@ -61,7 +55,12 @@ public class TypeManager : ITypeManager
 
         // A lookup scans every known type, and project load asks for the same few names once per
         // variable. Concurrent in case a lookup comes from a background thread.
-        return _resolved.GetOrAdd(typeAsString, _resolve);
+        if (!_resolved.TryGetValue(typeAsString, out Type? type))
+        {
+            type = Resolve(typeAsString);
+            _resolved.TryAdd(typeAsString, type);
+        }
+        return type;
     }
 
     [RequiresDynamicCode("Resolving a nullable-enum type name calls Type.MakeGenericType, which requires generating new code at runtime.")]
