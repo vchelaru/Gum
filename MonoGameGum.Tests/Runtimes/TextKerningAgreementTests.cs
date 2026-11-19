@@ -185,35 +185,55 @@ public class TextKerningAgreementTests : BaseTestClass
         }
     }
 
-    // Inline (BBCode) runs are measured and drawn run by run, so a pair across a run boundary applies in neither.
+    // Issue #8309: a run that only recolors keeps the pair across its boundary, in measure and draw alike.
     [Fact]
-    public void InlineRunBoundary_SkipsThePairInMeasureAndDraw()
+    public void ColorRunBoundary_KernsThePairInMeasureAndDraw()
     {
         BitmapFont font = CreateStubFont();
         Text plain = CreateText(font, 1000, "AV");
-        Text styled = CreateText(font, 1000, "AV", colorRunOnV: true);
+        Text styled = CreateText(font, 1000, "AV", new InlineVariable { VariableName = "Color", Value = System.Drawing.Color.Orange });
+
+        styled.MeasureString("AV", 0).ShouldBe(plain.MeasureString("AV", 0));
+        DrawnLefts(plain).ShouldBe(new[] { 1f, 8f });
+        DrawnLefts(styled).ShouldBe(new[] { 1f, 8f });
+    }
+
+    // A boundary that changes the glyph's size keeps skipping the pair; measure and draw still agree.
+    [Fact]
+    public void FontScaleRunBoundary_SkipsThePairInMeasureAndDraw()
+    {
+        BitmapFont font = CreateStubFont();
+        Text styled = CreateText(font, 1000, "AV", new InlineVariable { VariableName = "FontScale", Value = 2f });
+
+        // A advances 10 unkerned; V at scale 2 measures to its right edge (xoffset 1 + width 8) and draws at its xoffset.
+        styled.MeasureString("AV", 0).ShouldBe(10 + 2 * 9);
+        DrawnLefts(styled).ShouldBe(new[] { 1f, 10 + 2 * 1f });
+    }
+
+    // A [Custom] callback can replace, scale or rotate its letter, so its boundary keeps skipping the pair.
+    [Fact]
+    public void CustomRunBoundary_SkipsThePairInMeasureAndDraw()
+    {
+        BitmapFont font = CreateStubFont();
+        Text plain = CreateText(font, 1000, "AV");
+        Text styled = CreateText(font, 1000, "AV", new InlineVariable { VariableName = "Custom", Value = new ParameterizedLetterCustomizationCall() });
 
         styled.MeasureString("AV", 0).ShouldBe(plain.MeasureString("AV", 0) + 3);
-        DrawnLefts(plain).ShouldBe(new[] { 1f, 8f });
         DrawnLefts(styled).ShouldBe(new[] { 1f, 11f });
     }
 
-    static Text CreateText(BitmapFont font, float width, string s, bool colorRunOnV = false)
+    static Text CreateText(BitmapFont font, float width, string s, InlineVariable? runOnV = null)
     {
         TextRuntime runtime = new();
         runtime.WidthUnits = DimensionUnitType.Absolute;
         runtime.Width = width;
         Text text = (Text)runtime.RenderableComponent!;
         text.BitmapFont = font;
-        if (colorRunOnV)
+        if (runOnV != null)
         {
-            text.InlineVariables.Add(new InlineVariable
-            {
-                VariableName = "Color",
-                Value = System.Drawing.Color.Orange,
-                StartIndex = 1,
-                CharacterCount = 1
-            });
+            runOnV.StartIndex = 1;
+            runOnV.CharacterCount = 1;
+            text.InlineVariables.Add(runOnV);
             text.RawText = s;
         }
         else
