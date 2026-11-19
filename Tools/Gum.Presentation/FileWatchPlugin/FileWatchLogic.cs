@@ -6,6 +6,7 @@ using Gum.ToolStates;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using ToolsUtilities;
 using Gum.DataTypes;
@@ -117,7 +118,7 @@ public class FileWatchLogic
                     return;
                 }
                 EnableWithDirectories(finished.GetAwaiter().GetResult());
-            }), TaskScheduler.Default);
+            }), CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
         }
         else
         {

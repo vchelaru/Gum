@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using Gum.DataTypes;
 using Gum.Diagnostics;
@@ -96,7 +97,7 @@ public sealed class BackgroundProjectErrorCheck
 
         _runOffThread(check.Check).ContinueWith(
             finished => _dispatcher.Post(() => Apply(run, version, check, apply, finished, started)),
-            TaskScheduler.Default);
+            CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
     }
 
     private void Apply(int run, long version, ProjectErrorCheck check, Action<ErrorViewModel[]> apply,

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using Gum.Commands;
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
@@ -233,5 +234,89 @@ public class FileWatchLogicTests : BaseTestClass
         afterWarmUp.ShouldHaveSingleItem()();
 
         _dispatcher.Verify(d => d.Post(It.IsAny<Action>()), Times.Once);
+    }
+
+    // The scan reads the project on the UI thread, lists and checks the files on a worker thread, and
+    // changes the watchers only if nothing was edited in between.
+    [Fact]
+    public void RefreshRootDirectory_WatchesWhatTheUiThreadScanWatches_WhenTheDiskPartRunsElsewhere()
+    {
+        string root = OperatingSystem.IsWindows() ? "C:/" : "/";
+        GumProjectSave project = ProjectWithOutsideTexture(root);
+        ProjectChangeVersion version = new ProjectChangeVersion();
+        List<TaskCompletionSource<HashSet<FilePath>>> pending = new List<TaskCompletionSource<HashSet<FilePath>>>();
+        List<Func<HashSet<FilePath>>> work = new List<Func<HashSet<FilePath>>>();
+        FileWatchLogic logic = new FileWatchLogic(_fileWatchManager.Object, _guiCommands.Object, _projectState.Object,
+            _projectManager.Object, _dispatcher.Object, changeVersion: version, runOffThread: scan =>
+            {
+                TaskCompletionSource<HashSet<FilePath>> done = new TaskCompletionSource<HashSet<FilePath>>();
+                pending.Add(done);
+                work.Add(scan);
+                return done.Task;
+            });
+        List<HashSet<FilePath>> watched = new List<HashSet<FilePath>>();
+        _fileWatchManager.Setup(m => m.EnableWithDirectories(It.IsAny<HashSet<FilePath>>()))
+            .Callback<HashSet<FilePath>>(watched.Add);
+        _fileWatchLogic.RefreshRootDirectory();
+        RunPostedAction();
+        HashSet<FilePath> onUiThread = watched.ShouldHaveSingleItem();
+        watched.Clear();
+
+        logic.RefreshRootDirectory();
+        RunPostedAction();
+        watched.ShouldBeEmpty();
+        pending.ShouldHaveSingleItem().SetResult(Task.Run(work[0]).GetAwaiter().GetResult());
+        RunPostedAction();
+
+        watched.ShouldHaveSingleItem().ShouldBe(onUiThread, ignoreOrder: true);
+        onUiThread.ShouldContain(new FilePath(root + "Elsewhere/Art/"));
+    }
+
+    [Fact]
+    public void RefreshRootDirectory_ScansAgain_WhenTheProjectChangesBeforeTheWatchersAreSet()
+    {
+        string root = OperatingSystem.IsWindows() ? "C:/" : "/";
+        ProjectWithOutsideTexture(root);
+        ProjectChangeVersion version = new ProjectChangeVersion();
+        List<TaskCompletionSource<HashSet<FilePath>>> pending = new List<TaskCompletionSource<HashSet<FilePath>>>();
+        FileWatchLogic logic = new FileWatchLogic(_fileWatchManager.Object, _guiCommands.Object, _projectState.Object,
+            _projectManager.Object, _dispatcher.Object, changeVersion: version, runOffThread: _ =>
+            {
+                TaskCompletionSource<HashSet<FilePath>> done = new TaskCompletionSource<HashSet<FilePath>>();
+                pending.Add(done);
+                return done.Task;
+            });
+        logic.RefreshRootDirectory();
+        RunPostedAction();
+
+        version.MarkChanged();
+        pending[0].SetResult(new HashSet<FilePath>());
+        RunPostedAction();
+
+        _fileWatchManager.Verify(m => m.EnableWithDirectories(It.IsAny<HashSet<FilePath>>()), Times.Never);
+        // The posted reaction asked for a new scan, which reads the project again.
+        RunPostedAction();
+        pending.Count.ShouldBe(2);
+    }
+
+    private GumProjectSave ProjectWithOutsideTexture(string root)
+    {
+        GumProjectSave project = new GumProjectSave { FullFileName = root + "FakeGumProject/MyProject.gumx" };
+        ScreenSave screen = new ScreenSave { Name = "MainMenu" };
+        screen.States.Add(new StateSave { Name = "Default", ParentContainer = screen });
+        screen.Instances.Add(new InstanceSave { Name = "Sprite1", BaseType = "Sprite", ParentContainer = screen });
+        screen.DefaultState.Variables.Add(new VariableSave
+        {
+            Name = "Sprite1.SourceFile",
+            Type = "string",
+            Value = root + "Elsewhere/Art/bg.png",
+            IsFile = true,
+            SetsValue = true,
+        });
+        project.Screens.Add(screen);
+        ObjectFinder.Self.GumProjectSave = project;
+        _projectManager.SetupGet(m => m.GumProjectSave).Returns(project);
+        _projectState.SetupGet(m => m.GumProjectSave).Returns(project);
+        return project;
     }
 }

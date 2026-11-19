@@ -348,4 +348,32 @@ public class MainErrorsPluginTests : BaseTestClass
 
         _errorChecker.Verify(c => c.GetProjectErrors(_project), Times.Once);
     }
+
+    // With a change version the project pass reads the project in slices and checks the disk elsewhere.
+    [Fact]
+    public void ProjectLoad_ChecksTheProjectInTheBackground_WhenGivenAChangeVersion()
+    {
+        // The worker thread posts its result too.
+        System.Collections.Concurrent.ConcurrentQueue<Action> posted = new();
+        Mock<IDispatcher> dispatcher = new();
+        dispatcher.Setup(d => d.Post(It.IsAny<Action>())).Callback<Action>(posted.Enqueue);
+        _errorChecker.Setup(c => c.BeginProjectErrors(_project))
+            .Returns(new HeadlessErrorChecker(new Mock<ITypeResolver>().Object).BeginProjectErrors(_project));
+        MainErrorsPlugin plugin = new MainErrorsPlugin(_errorChecker.Object, new WeakReferenceMessenger(),
+            _selectedState.Object, Mock.Of<IClipboardService>(), Mock.Of<IFileSystemRevealService>(),
+            _projectState.Object, dispatcher.Object, _fileWatchManager.Object, changeVersion: new ProjectChangeVersion())
+        {
+            TabManager = Mock.Of<ITabManager>(),
+        };
+        plugin.StartUp();
+
+        plugin.CallProjectLoad(_project);
+        while (posted.TryDequeue(out Action? next))
+        {
+            next();
+        }
+
+        _errorChecker.Verify(c => c.BeginProjectErrors(_project), Times.Once);
+        _errorChecker.Verify(c => c.GetProjectErrors(It.IsAny<GumProjectSave>()), Times.Never);
+    }
 }
