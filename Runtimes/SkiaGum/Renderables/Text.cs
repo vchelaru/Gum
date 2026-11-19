@@ -85,7 +85,7 @@ public class ParameterizedLetterCustomizationCall
     public string TextBlock { get; set; } = string.Empty;
 
     /// <summary>A built-in effect (<c>[Wave]</c>, <c>[Rainbow]</c>, ...) applied to this letter instead of a named function.</summary>
-    public Gum.Wireframe.BbCodeTextEffect? BuiltInEffect { get; set; }
+    internal Gum.Wireframe.BbCodeTextEffect? BuiltInEffect { get; set; }
 }
 
 #endregion

@@ -75,6 +75,7 @@
     <!-- Main-thread xunit v3 host shared with MonoGameGum.IntegrationTests (#6987). -->
     <Compile Include="..\MonoGameGum.IntegrationTests\MainThreadTestHost.cs" Link="MainThreadTestHost.cs" />
     <Compile Include="..\MonoGameGum.TestsCommon\AllocationMeasurer.cs" Link="Shared\AllocationMeasurer.cs" />
+    <Compile Include="..\MonoGameGum.TestsCommon\BbCodeEffectParityCases.cs" Link="Shared\BbCodeEffectParityCases.cs" />
     <Compile Include="..\..\MonoGameGum.Tests\Forms\TextBoxBbCodeTests.cs" Link="Forms\Linked\TextBoxBbCodeTests.cs" />
     <Compile Include="..\MonoGameGum.TestsCommon\RuntimeEventRecorder.cs" Link="Shared\RuntimeEventRecorder.cs" />
     <Compile Include="..\TestOrdering\TestShuffle.cs" Link="TestOrdering\TestShuffle.cs" />

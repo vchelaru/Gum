@@ -1,5 +1,6 @@
 using System;
 using Gum.Wireframe;
+using MonoGameGum.TestsCommon;
 using RenderingLibrary;
 using Shouldly;
 using SkiaSharp;
@@ -44,14 +45,14 @@ public class TextBuiltInEffectTests : BaseTestClass
     }
 
     // The topmost inked row in columns [left, right).
-    private static int InkTop(SKBitmap bitmap, int left = 0, int right = int.MaxValue)
+    private static int InkTop(SKBitmap bitmap, int left = 0, int right = int.MaxValue, int threshold = 128)
     {
         right = Math.Min(right, bitmap.Width);
         for (int y = 0; y < bitmap.Height; y++)
         {
             for (int x = left; x < right; x++)
             {
-                if (bitmap.GetPixel(x, y).Alpha > 128)
+                if (bitmap.GetPixel(x, y).Alpha > threshold)
                 {
                     return y;
                 }
@@ -120,12 +121,12 @@ public class TextBuiltInEffectTests : BaseTestClass
 
         using SKBitmap first = Draw(surface, text);
         Topten.RichTextKit.TextBlock block = text.GetCachedTextBlock();
-        BbCodeTextEffect.TimeSeconds = () => 1.0 / 3;
+        BbCodeTextEffect.TimeSeconds = () => 0.5;
         using SKBitmap later = Draw(surface, text);
 
-        // Hue 0 (red) at t = 0; hue 1/3 (green) at t = 1/3; sat 0.8, val 0.8.
-        FirstInk(first).ShouldBe(new SKColor(204, 41, 41));
-        FirstInk(later).ShouldBe(new SKColor(41, 204, 41));
+        // Okhsv hue 0 at t = 0 and hue 0.5 at t = 0.5, sat 0.8, val 0.8 (the parity table's values).
+        FirstInk(first).ShouldBe(new SKColor(201, 66, 119));
+        FirstInk(later).ShouldBe(new SKColor(59, 199, 177));
         text.GetCachedTextBlock().ShouldBeSameAs(block);
     }
 
@@ -141,5 +142,64 @@ public class TextBuiltInEffectTests : BaseTestClass
         // The only revealed letter is the fade's first, at full alpha; nothing else is drawn.
         InkTop(bitmap).ShouldBeGreaterThan(-1);
         InkTop(bitmap, 40, 400).ShouldBe(-1);
+    }
+
+    // The same table runs on MonoGame and raylib (BbCodeEffectParityCases), so every runtime draws the same offsets
+    // and colors.
+    [Theory]
+    [MemberData(nameof(BbCodeEffectParityCases.All), MemberType = typeof(BbCodeEffectParityCases))]
+    public void Render_Effect_MatchesTheParityTable(string open, string close, double time, float dx, float dy,
+        int red, int green, int blue, int alpha)
+    {
+        using SKSurface surface = SKSurface.Create(new SKImageInfo(200, 200));
+        Text plain = MakeText("A");
+        plain.Color = SKColors.White;
+        using SKBitmap plainBitmap = Draw(surface, plain);
+        Text text = MakeText($"{open}A{close}");
+        text.Color = SKColors.White;
+        BbCodeTextEffect.TimeSeconds = () => time;
+
+        using SKBitmap bitmap = Draw(surface, text);
+
+        // Ink edges are whole pixels.
+        ((float)(InkLeft(bitmap) - InkLeft(plainBitmap))).ShouldBe(dx, 1f);
+        ((float)(InkTop(bitmap, 0, 200, 8) - InkTop(plainBitmap, 0, 200, 8))).ShouldBe(dy, 1f);
+        SKColor color = MostOpaque(bitmap);
+        ((float)color.Red).ShouldBe(red, 2f);
+        ((float)color.Green).ShouldBe(green, 2f);
+        ((float)color.Blue).ShouldBe(blue, 2f);
+        ((float)color.Alpha).ShouldBe(alpha, 2f);
+    }
+
+    private static int InkLeft(SKBitmap bitmap)
+    {
+        for (int x = 0; x < bitmap.Width; x++)
+        {
+            for (int y = 0; y < bitmap.Height; y++)
+            {
+                if (bitmap.GetPixel(x, y).Alpha > 8)
+                {
+                    return x;
+                }
+            }
+        }
+        return -1;
+    }
+
+    private static SKColor MostOpaque(SKBitmap bitmap)
+    {
+        SKColor best = SKColor.Empty;
+        for (int y = 0; y < bitmap.Height; y++)
+        {
+            for (int x = 0; x < bitmap.Width; x++)
+            {
+                SKColor pixel = bitmap.GetPixel(x, y);
+                if (pixel.Alpha > best.Alpha)
+                {
+                    best = pixel;
+                }
+            }
+        }
+        return best;
     }
 }

@@ -246,6 +246,35 @@ public class DialogBoxBbCodeTests : BaseTestClass
     }
 
     // Each page's drawn lines, newline-free and joined by '\n', without the blank lines it ends in.
+#if !SKIA_LINKED_TESTS
+    // Each page re-adds the tags that span it (BbCodeParser.AddTags), so an effect keeps its parameters on every page.
+    [Fact]
+    public void Show_PaginatedEffectText_KeepsTheEffectParametersOnEveryPage()
+    {
+        var (dialogBox, visual) = Create(paginating: true);
+        dialogBox.LettersPerSecond = 0;
+
+        dialogBox.Show("[Wave amp=50 freq=2]one two three four five six seven eight nine ten eleven twelve thirteen fourteen fifteen sixteen[/Wave]");
+
+        int pages = 0;
+        while (true)
+        {
+            var core = (RenderingLibrary.Graphics.Text)visual.TextInstance.RenderableComponent!;
+            var call = (ParameterizedLetterCustomizationCall)core.InlineVariables[0].Value!;
+            call.BuiltInEffect!.Amplitude.ShouldBe(50f, $"page {pages}");
+            call.BuiltInEffect!.Frequency.ShouldBe(2f, $"page {pages}");
+            pages++;
+            if (dialogBox.PagesRemaining == 0 || pages > 20)
+            {
+                break;
+            }
+            visual.CallClick();
+        }
+
+        pages.ShouldBeGreaterThan(1);
+    }
+#endif
+
     private static List<string> ShowEveryPage(DialogBox dialogBox, TaggedDialogBoxVisual visual)
     {
         List<string> pages = new();

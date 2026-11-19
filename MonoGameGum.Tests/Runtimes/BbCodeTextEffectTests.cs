@@ -6,6 +6,7 @@ using Gum.GueDeriving;
 using Gum.Managers;
 using Gum.Wireframe;
 using Microsoft.Xna.Framework.Graphics;
+using MonoGameGum.TestsCommon;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
 using Shouldly;
@@ -272,19 +273,128 @@ public class BbCodeTextEffectTests : BaseTestClass
         DrawnColors(text).Select(color => color.A).ToArray().ShouldBe(new byte[] { 128, 64 });
     }
 
-    [Fact]
-    public void Draw_Rainbow_ColorsByHueAtTimeAndPosition()
+    // The same table runs on raylib and Skia (BbCodeEffectParityCases), so every runtime draws the same offsets and colors.
+    [Theory]
+    [MemberData(nameof(BbCodeEffectParityCases.All), MemberType = typeof(BbCodeEffectParityCases))]
+    public void Draw_Effect_MatchesTheParityTable(string open, string close, double time, float dx, float dy,
+        int red, int green, int blue, int alpha)
     {
-        Text text = CreateText("[Color=Black][Rainbow]A[/Rainbow][/Color]");
-        BbCodeTextEffect.TimeSeconds = () => 0;
+        float plainLeft = DrawnLefts(CreateText("A"))[0];
+        float plainTop = DrawnTops(CreateText("A"))[0];
+        Text text = CreateText($"{open}A{close}");
+        BbCodeTextEffect.TimeSeconds = () => time;
 
+        // The draw snaps each glyph to a whole pixel.
+        (DrawnLefts(text)[0] - plainLeft).ShouldBe(dx, 1f);
+        (DrawnTops(text)[0] - plainTop).ShouldBe(dy, 1f);
         System.Drawing.Color color = DrawnColors(text)[0];
+        ((int)color.R).ShouldBe(red);
+        ((int)color.G).ShouldBe(green);
+        ((int)color.B).ShouldBe(blue);
+        ((int)color.A).ShouldBe(alpha);
+    }
 
-        // Hue 0 at t = 0, x = 0 with sat 0.8, val 0.8: red = 0.8, green = blue = 0.8 * 0.2.
-        color.R.ShouldBe((byte)204);
-        color.G.ShouldBe((byte)41);
-        color.B.ShouldBe((byte)41);
-        color.A.ShouldBe((byte)255);
+    [Fact]
+    public void Draw_PausedGameTime_FreezesEffects()
+    {
+        IGumService? original = IGumService.Default;
+        try
+        {
+            var service = new Moq.Mock<IGumService>();
+            service.SetupGet(item => item.GameTime).Returns(0.1f);
+            IGumService.Default = service.Object;
+            BbCodeTextEffect.TimeSeconds = BbCodeTextEffect.DefaultTimeSeconds;
+            Text text = CreateText("[Wave amp=100 freq=5]A[/Wave]");
+
+            float[] first = DrawnTops(text);
+            System.Threading.Thread.Sleep(30);
+            float[] second = DrawnTops(text);
+
+            second.ShouldBe(first);
+            first[0].ShouldBe((float)(Math.Sin(5 * 0.1f) * 10), 1f);
+        }
+        finally
+        {
+            IGumService.Default = original;
+        }
+    }
+
+    [Fact]
+    public void DefaultTimeSeconds_NoGameTime_FollowsTheWallClock()
+    {
+        IGumService? original = IGumService.Default;
+        try
+        {
+            IGumService.Default = null;
+
+            double first = BbCodeTextEffect.DefaultTimeSeconds();
+            System.Threading.Thread.Sleep(30);
+            double second = BbCodeTextEffect.DefaultTimeSeconds();
+
+            (second - first).ShouldBeGreaterThanOrEqualTo(0.02);
+        }
+        finally
+        {
+            IGumService.Default = original;
+        }
+    }
+
+    [Fact]
+    public void Draw_ContextCustomizationInsideAnEffect_ReceivesTheEffectOffset()
+    {
+        float? seenYOffset = null;
+        Text.ContextCustomizations["Probe"] = (_, _, context) =>
+        {
+            seenYOffset = context.YOffset;
+            return context;
+        };
+        try
+        {
+            Text text = CreateText("[Wave amp=100 freq=5][Custom=Probe]A[/Custom][/Wave]");
+            BbCodeTextEffect.TimeSeconds = () => 0.1;
+
+            float top = DrawnTops(text)[0];
+
+            seenYOffset.ShouldNotBeNull();
+            seenYOffset!.Value.ShouldBe((float)(Math.Sin(0.5) * 10), 0.001f);
+            top.ShouldBe(DrawnTops(CreateText("A"))[0] + seenYOffset.Value, 1f);
+        }
+        finally
+        {
+            Text.ContextCustomizations.Remove("Probe");
+        }
+    }
+
+    [Fact]
+    public void Draw_EffectSpanCutByTruncateLineWithEllipsis_DrawsTheKeptLettersMoved()
+    {
+        TextRuntime runtime = new();
+        runtime.WidthUnits = DimensionUnitType.Absolute;
+        runtime.Width = 45;
+        runtime.HeightUnits = DimensionUnitType.Absolute;
+        runtime.Height = 12;
+        runtime.TextOverflowVerticalMode = TextOverflowVerticalMode.TruncateLine;
+        runtime.IsTruncatingWithEllipsisOnLastLine = true;
+        Text text = (Text)runtime.RenderableComponent!;
+        text.BitmapFont = CreateStubFont();
+        runtime.Text = "[Wave amp=100 freq=5]AVAV AVAV AVAV[/Wave]";
+        BbCodeTextEffect.TimeSeconds = () => 0.1;
+
+        float[] tops = DrawnTops(text);
+
+        text.WrappedText.Count.ShouldBe(1);
+        tops.Length.ShouldBeGreaterThan(0);
+        tops[0].ShouldBe((float)(Math.Sin(0.5) * 10), 1f);
+    }
+
+    [Fact]
+    public void TextBox_EffectMarkup_StaysLiteral()
+    {
+        Gum.Forms.Controls.TextBox textBox = new();
+
+        textBox.Text = "[Wave amp=5]x[/Wave]";
+
+        textBox.Text.ShouldBe("[Wave amp=5]x[/Wave]");
     }
 
     [Theory]

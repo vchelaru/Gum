@@ -25,7 +25,7 @@ public struct TagInfo
     /// True when <see cref="Argument"/> holds a built-in effect's space-separated parameters
     /// (<c>[Wave amp=50 freq=5]</c>) rather than the text after an equals sign.
     /// </summary>
-    public bool HasOptions;
+    internal bool HasOptions;
 
     // even though FoundTag has Name, we add the name here so we can
     // sort open/close in one list

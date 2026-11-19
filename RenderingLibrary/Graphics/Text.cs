@@ -89,7 +89,7 @@ public class ParameterizedLetterCustomizationCall
     public string TextBlock { get; set; } = string.Empty;
 
     /// <summary>A built-in effect (<c>[Wave]</c>, <c>[Rainbow]</c>, ...) applied to this letter instead of a named function.</summary>
-    public Gum.Wireframe.BbCodeTextEffect? BuiltInEffect { get; set; }
+    internal Gum.Wireframe.BbCodeTextEffect? BuiltInEffect { get; set; }
 }
 
 #endregion
@@ -1602,7 +1602,12 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
                     float scaleX = 1;
                     float scaleY = 1;
                     float rotationOffset = 0;
-                    ParameterizedLetterCustomizationCall? effectCall = null;
+                    // A built-in effect applies once: before the first [Custom] function, so a context function
+                    // sees its offset and color, or else after every other variable.
+                    ParameterizedLetterCustomizationCall? effectCall = FindBuiltInEffect(substring.Variables);
+                    bool isEffectApplied = false;
+                    // The letter's distance from the start of its line along the text's own axis.
+                    float letterX = Vector2.Dot(startOfRun - startOfLine, xAxis);
                     for (int variableIndex = 0; variableIndex < substring.Variables.Count; variableIndex++)
                     {
                         var variable = substring.Variables[variableIndex];
@@ -1636,11 +1641,15 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
 
                             if (function?.BuiltInEffect != null)
                             {
-                                // Applied after every other variable, so it adds to their offsets and color.
-                                effectCall = function;
+                                // Applied once, see effectCall above.
                             }
                             else if(function?.Function != null || function?.ContextFunction != null)
                             {
+                                if (effectCall != null && !isEffectApplied)
+                                {
+                                    ApplyBuiltInEffect(effectCall, letterX, ref xOffset, ref yOffset, ref color);
+                                    isEffectApplied = true;
+                                }
                                 LetterCustomization response;
                                 if(function.ContextFunction != null)
                                 {
@@ -1709,10 +1718,8 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
                     }
 
 
-                    if (effectCall != null)
+                    if (effectCall != null && !isEffectApplied)
                     {
-                        // The letter's distance from the start of its line along the text's own axis.
-                        float letterX = Vector2.Dot(startOfRun - startOfLine, xAxis);
                         ApplyBuiltInEffect(effectCall, letterX, ref xOffset, ref yOffset, ref color);
                     }
 
@@ -1859,18 +1866,25 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
         return runFont.GetKerning(previous.Substring[previous.Substring.Length - 1], run.Substring[0]) * runScale;
     }
 
+    private static ParameterizedLetterCustomizationCall? FindBuiltInEffect(List<InlineVariable> variables)
+    {
+        for (int i = 0; i < variables.Count; i++)
+        {
+            if (variables[i].Value is ParameterizedLetterCustomizationCall { BuiltInEffect: not null } call)
+            {
+                return call;
+            }
+        }
+        return null;
+    }
+
     private static void ApplyBuiltInEffect(ParameterizedLetterCustomizationCall call, float letterX,
         ref float xOffset, ref float yOffset, ref System.Drawing.Color color)
     {
-        Gum.Wireframe.BbCodeTextEffect effect = call.BuiltInEffect!;
-        double time = Gum.Wireframe.BbCodeTextEffect.TimeSeconds();
-        effect.AddOffset(time, letterX, call.CharacterIndex, ref xOffset, ref yOffset);
-        if (effect.ChangesColor)
-        {
-            byte red = color.R, green = color.G, blue = color.B, alpha = color.A;
-            effect.ApplyColor(time, letterX, call.CharacterIndex, ref red, ref green, ref blue, ref alpha);
-            color = System.Drawing.Color.FromArgb(alpha, red, green, blue);
-        }
+        byte red = color.R, green = color.G, blue = color.B, alpha = color.A;
+        call.BuiltInEffect!.Apply(Gum.Wireframe.BbCodeTextEffect.TimeSeconds(), letterX, call.CharacterIndex,
+            ref xOffset, ref yOffset, ref red, ref green, ref blue, ref alpha);
+        color = System.Drawing.Color.FromArgb(alpha, red, green, blue);
     }
 
     private static bool HasCustomVariable(List<InlineVariable> variables)

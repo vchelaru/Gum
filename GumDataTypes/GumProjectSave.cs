@@ -226,7 +226,7 @@ public class GumProjectSave
     /// Whether Text recognizes the built-in BBCode effect tags such as <c>[Wave]</c> (#8310). Projects below
     /// <see cref="GumxVersions.BbCodeTextEffects"/> keep drawing those tags as literal text.
     /// </summary>
-    public bool SupportsBbCodeTextEffects => Version >= (int)GumxVersions.BbCodeTextEffects;
+    internal bool SupportsBbCodeTextEffects => Version >= (int)GumxVersions.BbCodeTextEffects;
 
     public const string ScreenExtension = "gusx";
     public const string ComponentExtension = "gucx";

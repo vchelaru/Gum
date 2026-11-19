@@ -138,7 +138,7 @@ public class ParameterizedLetterCustomizationCall
     public string TextBlock { get; set; } = string.Empty;
 
     /// <summary>A built-in effect (<c>[Wave]</c>, <c>[Rainbow]</c>, ...) applied to this letter instead of a named function.</summary>
-    public Gum.Wireframe.BbCodeTextEffect? BuiltInEffect { get; set; }
+    internal Gum.Wireframe.BbCodeTextEffect? BuiltInEffect { get; set; }
 }
 
 #endregion
@@ -1647,6 +1647,18 @@ public class Text : IVisible, IRenderableIpso,
     /// callbacks (#3640) run per-run below, applying XOffset/YOffset/Color/ReplacementCharacter directly; a
     /// scaled or rotated letter is drawn by <see cref="DrawTransformedRun"/>.
     /// </summary>
+    /// <summary>Test hook: each styled run's text, offset and color once built-in effects are applied.</summary>
+    internal static Action<string, float, float, Color>? BuiltInEffectRunObserver { get; set; }
+
+    private static Color ApplyBuiltInEffect(ParameterizedLetterCustomizationCall call, float letterX,
+        ref float xOffset, ref float yOffset, Color color)
+    {
+        byte red = color.R, green = color.G, blue = color.B, alpha = color.A;
+        call.BuiltInEffect!.Apply(Gum.Wireframe.BbCodeTextEffect.TimeSeconds(), letterX, call.CharacterIndex,
+            ref xOffset, ref yOffset, ref red, ref green, ref blue, ref alpha);
+        return new Color(red, green, blue, alpha);
+    }
+
     private void DrawStyledLine(Font fontValue, List<StyledSubstring> substrings, int lettersToDraw, Vector2 linePosition, float absoluteLeft, float originY)
     {
         // First pass: resolve each run's effective color, font/size, custom-callback offsets and measured
@@ -1686,7 +1698,19 @@ public class Text : IVisible, IRenderableIpso,
             float scaleY = 1;
             HorizontalAlignment scaleXOrigin = HorizontalAlignment.Center;
             VerticalAlignment scaleYOrigin = VerticalAlignment.Center;
+            // A built-in effect applies once: before the first [Custom] function, so a context function sees its
+            // offset and color, or else after every other variable. totalWidth is the letter's distance from the
+            // start of its line, as on MonoGame.
             ParameterizedLetterCustomizationCall? effectCall = null;
+            foreach (var variable in run.Variables)
+            {
+                if (variable.Value is ParameterizedLetterCustomizationCall { BuiltInEffect: not null } builtIn)
+                {
+                    effectCall = builtIn;
+                    break;
+                }
+            }
+            bool isEffectApplied = false;
 
             foreach (var variable in run.Variables)
             {
@@ -1711,10 +1735,9 @@ public class Text : IVisible, IRenderableIpso,
                         runColor = new Color(runColor.R, runColor.G, runColor.B, (byte)variable.Value);
                         break;
                     case "Custom":
-                        if (variable.Value is ParameterizedLetterCustomizationCall { BuiltInEffect: not null } builtInCall)
+                        if (variable.Value is ParameterizedLetterCustomizationCall { BuiltInEffect: not null })
                         {
-                            // Applied after every other variable, so it adds to their offsets and color.
-                            effectCall = builtInCall;
+                            // Applied once, see effectCall above.
                         }
                         else if (variable.Value is ParameterizedLetterCustomizationCall call)
                         {
@@ -1722,6 +1745,11 @@ public class Text : IVisible, IRenderableIpso,
                             var function = call.Function;
                             if (contextFunction != null || function != null)
                             {
+                                if (effectCall != null && !isEffectApplied)
+                                {
+                                    runColor = ApplyBuiltInEffect(effectCall, totalWidth, ref xOffset, ref yOffset, runColor);
+                                    isEffectApplied = true;
+                                }
                                 LetterCustomization response;
                                 if (contextFunction != null)
                                 {
@@ -1779,19 +1807,11 @@ public class Text : IVisible, IRenderableIpso,
                 }
             }
 
-            if (effectCall != null)
+            if (effectCall != null && !isEffectApplied)
             {
-                // totalWidth is this letter's distance from the start of its line, as on MonoGame.
-                Gum.Wireframe.BbCodeTextEffect effect = effectCall.BuiltInEffect!;
-                double time = Gum.Wireframe.BbCodeTextEffect.TimeSeconds();
-                effect.AddOffset(time, totalWidth, effectCall.CharacterIndex, ref xOffset, ref yOffset);
-                if (effect.ChangesColor)
-                {
-                    byte red = runColor.R, green = runColor.G, blue = runColor.B, alpha = runColor.A;
-                    effect.ApplyColor(time, totalWidth, effectCall.CharacterIndex, ref red, ref green, ref blue, ref alpha);
-                    runColor = new Color(red, green, blue, alpha);
-                }
+                runColor = ApplyBuiltInEffect(effectCall, totalWidth, ref xOffset, ref yOffset, runColor);
             }
+            BuiltInEffectRunObserver?.Invoke(runText, xOffset, yOffset, runColor);
 
             ref StyledRunDraw drawRun = ref runs[s];
             drawRun.Color = runColor;
