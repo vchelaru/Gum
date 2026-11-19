@@ -1063,13 +1063,27 @@ public class ObjectFinder : IObjectFinder
     }
 
     private List<string> CollectReferencedFilesViaWalker(ElementSave? scopeElement, Gum.Bundle.GumBundleInclusion inclusion,
-        bool resolveFontFiles = true, Gum.Bundle.FontReferenceCache? fontReferences = null)
+        bool resolveFontFiles = true, Gum.Bundle.FontReferenceCache? fontReferences = null) =>
+        PrepareReferencedFiles(scopeElement, inclusion, resolveFontFiles, fontReferences)();
+
+    /// <summary>
+    /// Reads from the project what <see cref="GetAllFilesInProject(Gum.Bundle.GumBundleInclusion, Gum.Bundle.FontReferenceCache?)"/>
+    /// needs and returns the rest, which checks the disk using only strings, so it may run on another thread
+    /// and lists the files the project referenced when this was called.
+    /// </summary>
+    public Func<List<string>> PrepareAllFilesInProject(Gum.Bundle.GumBundleInclusion inclusion, Gum.Bundle.FontReferenceCache? fontReferences)
     {
-        List<string> result = new List<string>();
+        Func<List<string>> files = PrepareReferencedFiles(scopeElement: null, inclusion, resolveFontFiles: true, fontReferences);
+        return () => files().Distinct().ToList();
+    }
+
+    private Func<List<string>> PrepareReferencedFiles(ElementSave? scopeElement, Gum.Bundle.GumBundleInclusion inclusion,
+        bool resolveFontFiles, Gum.Bundle.FontReferenceCache? fontReferences)
+    {
         // Referenced files resolve relative to the project file; a project without one (new and unsaved) has none to report.
         if (GumProjectSave == null || string.IsNullOrEmpty(GumProjectSave.FullFileName))
         {
-            return result;
+            return () => new List<string>();
         }
 
         string gumProjectDirectory = FileManager.GetDirectory(GumProjectSave.FullFileName!);
@@ -1079,7 +1093,7 @@ public class ObjectFinder : IObjectFinder
             ResolveFontFiles = resolveFontFiles,
             FontReferences = fontReferences
         };
-        Gum.Bundle.WalkResult walkResult = walker.Walk(
+        Gum.Bundle.PreparedWalk walk = walker.Prepare(
             GumProjectSave,
             gumProjectDirectory,
             inclusion,
@@ -1092,6 +1106,12 @@ public class ObjectFinder : IObjectFinder
             ? string.Empty
             : Path.GetFileName(GumProjectSave.FullFileName);
 
+        return () => ToAbsolutePaths(walk.Run(), gumProjectDirectory, gumxFileName);
+    }
+
+    private static List<string> ToAbsolutePaths(Gum.Bundle.WalkResult walkResult, string gumProjectDirectory, string gumxFileName)
+    {
+        List<string> result = new List<string>();
         foreach (string relative in walkResult.AllIncludedFiles)
         {
             if (!string.IsNullOrEmpty(gumxFileName)

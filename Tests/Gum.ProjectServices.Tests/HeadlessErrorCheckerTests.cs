@@ -1483,6 +1483,82 @@ public class HeadlessErrorCheckerTests : BaseTestClass
         }
     }
 
+    // The tool reads the project in steps on the UI thread and runs Check on a worker thread.
+    [Fact]
+    public void BeginProjectErrors_ShouldReportWhatGetProjectErrorsReports()
+    {
+        string projectDirectory = CreateTempProjectDirectory();
+        try
+        {
+            WriteEmptyFile(projectDirectory, "Textures/hero.png");
+            AddComponentWithSpriteSourceFile("HeroHolder", "Textures/Hero.png");
+            WriteEmptyFile(projectDirectory, "Localization/strings.csv");
+            Project.LocalizationFiles.Add("Localization/Strings.csv");
+            Project.BehaviorReferences.Add(new BehaviorReference { Name = "IGone" });
+            Project.Behaviors.Add(new BehaviorSave { Name = "IGone", IsSourceFileMissing = true });
+            Project.Components.Add(new ComponentSave { Name = "NoBase" });
+            IReadOnlyList<ErrorResult> expected = _sut.GetProjectErrors(Project);
+
+            IReadOnlyList<ErrorResult> errors = RunPrepared(_sut.BeginProjectErrors(Project));
+
+            expected.Select(error => error.Code).ShouldBe(new[] { "GUM0008", "GUM0015", "GUM0031" });
+            errors.Select(error => (error.Code, error.ElementName, error.Message, error.Severity, error.FilePath))
+                .ShouldBe(expected.Select(error => (error.Code, error.ElementName, error.Message, error.Severity, error.FilePath)));
+        }
+        finally
+        {
+            DeleteTempProjectDirectory(projectDirectory);
+        }
+    }
+
+    // An edit after the project was read belongs to the next check; the tool throws this one away.
+    [Fact]
+    public void BeginProjectErrors_ShouldReportTheProjectAsItWasRead_WhenItChangesBeforeTheCheck()
+    {
+        string projectDirectory = CreateTempProjectDirectory();
+        try
+        {
+            WriteEmptyFile(projectDirectory, "Localization/strings.csv");
+            Project.LocalizationFiles.Add("Localization/Strings.csv");
+            Project.BehaviorReferences.Add(new BehaviorReference { Name = "IGone" });
+            Project.Behaviors.Add(new BehaviorSave { Name = "IGone", IsSourceFileMissing = true });
+            ProjectErrorCheck check = _sut.BeginProjectErrors(Project);
+            while (!check.IsPrepared)
+            {
+                check.PrepareNext();
+            }
+
+            Project.LocalizationFiles.Clear();
+            Project.BehaviorReferences.Clear();
+            Project.Behaviors.Clear();
+            IReadOnlyList<ErrorResult> errors = check.Check();
+
+            errors.Select(error => error.Code).ShouldBe(new[] { "GUM0008", "GUM0031" });
+            _sut.GetProjectErrors(Project).ShouldBeEmpty();
+        }
+        finally
+        {
+            DeleteTempProjectDirectory(projectDirectory);
+        }
+    }
+
+    [Fact]
+    public void BeginProjectErrors_ShouldRefuseToCheck_BeforeItHasReadTheProject()
+    {
+        ProjectErrorCheck check = _sut.BeginProjectErrors(Project);
+
+        Should.Throw<InvalidOperationException>(() => check.Check());
+    }
+
+    private static IReadOnlyList<ErrorResult> RunPrepared(ProjectErrorCheck check)
+    {
+        while (!check.IsPrepared)
+        {
+            check.PrepareNext();
+        }
+        return System.Threading.Tasks.Task.Run(check.Check).GetAwaiter().GetResult();
+    }
+
     [Fact]
     public void GetAllErrors_ShouldReportGum0008ForAFontFile_OnTheElementThatUsesIt()
     {

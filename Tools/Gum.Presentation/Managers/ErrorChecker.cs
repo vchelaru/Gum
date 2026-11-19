@@ -60,10 +60,17 @@ public class ErrorChecker : IErrorChecker
         return list.ToArray();
     }
 
-    public ErrorViewModel[] GetProjectErrors(GumProjectSave project)
+    public ErrorViewModel[] GetProjectErrors(GumProjectSave project) =>
+        ToViewModels(_headlessErrorChecker.GetProjectErrors(project));
+
+    /// <inheritdoc/>
+    public ProjectErrorCheck BeginProjectErrors(GumProjectSave project) => _headlessErrorChecker.BeginProjectErrors(project);
+
+    /// <inheritdoc/>
+    public ErrorViewModel[] ToViewModels(IReadOnlyList<ErrorResult> rows)
     {
         var list = new List<ErrorViewModel>();
-        foreach (var errorResult in _headlessErrorChecker.GetProjectErrors(project))
+        foreach (var errorResult in rows)
         {
             list.Add(ToViewModel(errorResult));
         }

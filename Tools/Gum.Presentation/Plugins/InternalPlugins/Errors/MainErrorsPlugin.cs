@@ -34,6 +34,8 @@ public class MainErrorsPlugin : CorePriorityPlugin
     private readonly IProjectState _projectState;
     private readonly IDispatcher _dispatcher;
     private readonly IProjectFontWarmUp? _fontWarmUp;
+    // Null when built without a change version (tests): the check then runs in one block.
+    private readonly BackgroundProjectErrorCheck? _backgroundCheck;
     private readonly Gum.Logic.FileWatch.IFileWatchManager _fileWatchManager;
     private AllErrorsViewModel _viewModel = null!;
 
@@ -52,9 +54,12 @@ public class MainErrorsPlugin : CorePriorityPlugin
     public MainErrorsPlugin(IErrorChecker errorChecker, IMessenger messenger, ISelectedState selectedState,
         IClipboardService clipboardService, IFileSystemRevealService fileSystemRevealService, IProjectState projectState,
         IDispatcher dispatcher, Gum.Logic.FileWatch.IFileWatchManager fileWatchManager,
-        IProjectFontWarmUp? fontWarmUp = null)
+        IProjectFontWarmUp? fontWarmUp = null, IProjectChangeVersion? changeVersion = null)
     {
         _fontWarmUp = fontWarmUp;
+        _backgroundCheck = changeVersion == null
+            ? null
+            : new BackgroundProjectErrorCheck(errorChecker, changeVersion, dispatcher, () => projectState.GumProjectSave);
         _fileWatchManager = fileWatchManager;
         _errorChecker = errorChecker;
         _messenger = messenger;
@@ -156,11 +161,23 @@ public class MainErrorsPlugin : CorePriorityPlugin
 
     private void RefreshProjectErrors()
     {
-        using IDisposable timing = StartupTiming.Time("MainErrorsPlugin RefreshProjectErrors (total)");
         _isProjectErrorRefreshPending = false;
-        _projectErrors = _projectState.GumProjectSave is { } project
+        if (_backgroundCheck != null)
+        {
+            // The disk half runs off the UI thread; the rows apply only if the project is unchanged by then.
+            _backgroundCheck.Start(ApplyProjectErrors);
+            return;
+        }
+
+        using IDisposable timing = StartupTiming.Time("MainErrorsPlugin RefreshProjectErrors (total)");
+        ApplyProjectErrors(_projectState.GumProjectSave is { } project
             ? _errorChecker.GetProjectErrors(project)
-            : [];
+            : []);
+    }
+
+    private void ApplyProjectErrors(ErrorViewModel[] projectErrors)
+    {
+        _projectErrors = projectErrors;
         UpdateErrorsForElement(_selectedState.SelectedElement);
     }
 

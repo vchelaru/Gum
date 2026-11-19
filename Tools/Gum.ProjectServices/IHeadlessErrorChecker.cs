@@ -24,4 +24,10 @@ public interface IHeadlessErrorChecker
     /// whole project, so a caller should not run it on every selection change.
     /// </summary>
     IReadOnlyList<ErrorResult> GetProjectErrors(GumProjectSave project);
+
+    /// <summary>
+    /// <see cref="GetProjectErrors"/> split so a caller can read the project a step at a time and check
+    /// the disk on another thread; see <see cref="ProjectErrorCheck"/>.
+    /// </summary>
+    ProjectErrorCheck BeginProjectErrors(GumProjectSave project);
 }

@@ -33,7 +33,7 @@ The tree's "!" follows every full check through `ErrorsChecked`, including the E
 
 **Every result needs a code and, when the message names values, a `Details` object** (`Tools/Gum.ProjectServices/ErrorDetails.cs`). Tools and `gumcli check --json` read the code and `Details`, and message wording may change, so the values go in `Details` too. Reuse a shared subclass such as `StateVariableDetails` or `CycleDetails` when it has the same shape.
 
-**Project-level check** (not tied to one element): add it to `HeadlessErrorChecker.GetProjectErrors`, not the per-element check. The Errors tab lists project-level rows whatever is selected, alongside the selected element's rows.
+**Project-level check** (not tied to one element): add it to `ProjectErrorCheck` (`Tools/Gum.ProjectServices/ProjectErrorCheck.cs`), which `GetProjectErrors` runs; not the per-element check. The Errors tab lists project-level rows whatever is selected, alongside the selected element's rows. The tool runs it through `BackgroundProjectErrorCheck`: `PrepareNext` reads the project in UI-thread slices and `Check` runs on a worker thread, so a new check reads the model only in the prepare half and keeps strings for `Check`, and its disk calls go through a `PreparedWalk` (`GumProjectDependencyWalker.Prepare`) or the check's own `IFileNameCaseChecker`.
 
 **Plugin check** (feature-specific, tool-side only): Subscribe to `GetAllErrors` in your plugin's `StartUp()`, return `IEnumerable<ErrorViewModel>`, and set `item.OwnerPlugin = this` on each. Plugin checks only show in the tool — the CLI doesn't load plugins. If the check should fire in CI / pre-commit, use the headless path above instead.
 

@@ -65,6 +65,34 @@ public class GumProjectDependencyWalkerTests : IDisposable
         missing.ReferencedPath.ShouldBe(outsideTexture);
     }
 
+    // The tool reads the project on the UI thread and checks the disk elsewhere; edits made in between
+    // belong to the next walk.
+    [Fact]
+    public void Prepare_then_Run_reports_the_project_as_it_was_when_prepared()
+    {
+        ComponentSave component = TestProjectBuilder.BuildComponent("Comp");
+        TestProjectBuilder.AddSpriteInstance(component, "Sprite", "Textures/present.png");
+        GumProjectSave project = TestProjectBuilder.BuildProject(components: new[] { component });
+        string root = CreateProjectRoot(new[]
+        {
+            ("Components/Comp.gucx", EmptyContent),
+            ("Textures/present.png", EmptyContent),
+        });
+        WalkResult walked = new GumProjectDependencyWalker().Walk(project, root, GumBundleInclusion.Core | GumBundleInclusion.ExternalFiles);
+
+        PreparedWalk prepared = new GumProjectDependencyWalker().Prepare(project, root,
+            GumBundleInclusion.Core | GumBundleInclusion.ExternalFiles, scopeElement: null);
+        component.DefaultState.ShouldNotBeNull().SetValue("Sprite.SourceFile", "Textures/missing.png", "string");
+        project.Components.Clear();
+        project.ComponentReferences.Clear();
+        WalkResult result = prepared.Run();
+
+        result.CoreFiles.ShouldBe(walked.CoreFiles);
+        result.ExternalFiles.ShouldBe(walked.ExternalFiles);
+        result.ExternalFiles.ShouldContain("Textures/present.png");
+        result.MissingFiles.ShouldBeEmpty();
+    }
+
     [Fact]
     public void Walk_does_not_duplicate_files_referenced_by_multiple_components()
     {
