@@ -204,6 +204,20 @@ public class RefreshLocalizationTests : BaseTestClass
         renderable.InlineVariables.ShouldBeEmpty();
     }
 
+    // Red until #8323
+    [Fact]
+    public void Text_WhenKeyIsWrappedInTags_ShouldTranslateTheKeyAndKeepTheTags()
+    {
+        _localizationService.CurrentLanguage = 1;
+        TextRuntime text = new();
+
+        text.Text = "[Color=Red]Greeting[/Color]";
+
+        var renderable = (RenderingLibrary.Graphics.Text)text.RenderableComponent;
+        renderable.RawText.ShouldBe("Hola");
+        renderable.InlineVariables.ShouldNotBeEmpty();
+    }
+
     [Fact]
     public void CurrentLanguageChanged_ShouldFireRefresh_Automatically()
     {

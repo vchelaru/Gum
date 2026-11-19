@@ -69,6 +69,21 @@ public class TextRuntimeBbCodeMeasurementTests : BaseTestClass
         MakeRelative("m[FontScale=2]m[/FontScale]").GetAbsoluteHeight().ShouldBeGreaterThan(plain + 1);
     }
 
+    // Red until #8322
+    [Fact]
+    public void Text_TaggedThenPlainThenTagged_MeasuresEachStringFresh()
+    {
+        float plain = WidthOf("mmmm");
+        float scaled = WidthOf("[FontScale=2]mmmm[/FontScale]");
+        TextRuntime textRuntime = MakeRelative("[FontScale=2]mmmm[/FontScale]");
+
+        textRuntime.Text = "mmmm";
+        textRuntime.GetAbsoluteWidth().ShouldBe(plain, Tolerance);
+
+        textRuntime.Text = "[FontScale=2]mmmm[/FontScale]";
+        textRuntime.GetAbsoluteWidth().ShouldBe(scaled, Tolerance);
+    }
+
     [Fact]
     public void Text_TaggedThenPlain_LeavesNoStaleRunOnWrappedText()
     {
@@ -124,6 +139,63 @@ public class TextRuntimeBbCodeMeasurementTests : BaseTestClass
 
         WrappedLines("AA [Color=Red]BB CC[/Color] DD", width)
             .ShouldBe(WrappedLines("AA BB CC DD", width));
+    }
+
+    // Hit testing a mixed-size line: the letter positions have to come from the styled widths.
+    private static TextRuntime MakeAligned(string text, HorizontalAlignment alignment, float width)
+    {
+        TextRuntime textRuntime = new();
+        textRuntime.WidthUnits = DimensionUnitType.Absolute;
+        textRuntime.Width = width;
+        textRuntime.HeightUnits = DimensionUnitType.Absolute;
+        textRuntime.Height = 100;
+        textRuntime.HorizontalAlignment = alignment;
+        textRuntime.VerticalAlignment = VerticalAlignment.Top;
+        textRuntime.Text = text;
+        return textRuntime;
+    }
+
+    // Red until #8321 (Left and Right)
+    [Theory]
+    [InlineData(HorizontalAlignment.Left)]
+    [InlineData(HorizontalAlignment.Center)]
+    [InlineData(HorizontalAlignment.Right)]
+    public void GetCharacterIndexAtPosition_ScaledRun_UsesScaledLetterPositions(HorizontalAlignment alignment)
+    {
+        const string markup = "[FontScale=2]mm[/FontScale]";
+        const float boxWidth = 300;
+        float styled = WidthOf(markup);
+        TextRuntime textRuntime = MakeAligned(markup, alignment, boxWidth);
+        float lineLeft = textRuntime.AbsoluteLeft + alignment switch
+        {
+            HorizontalAlignment.Left => 0,
+            HorizontalAlignment.Center => (boxWidth - styled) / 2,
+            _ => boxWidth - styled,
+        };
+        float y = textRuntime.AbsoluteTop + 5;
+
+        // Each scaled 'm' is half the styled width: 0.1 = left half of the first, 0.4 = its right half,
+        // 0.9 = right half of the second.
+        textRuntime.GetCharacterIndexAtPosition(lineLeft + styled * 0.1f, y).ShouldBe(0);
+        textRuntime.GetCharacterIndexAtPosition(lineLeft + styled * 0.4f, y).ShouldBe(1);
+        textRuntime.GetCharacterIndexAtPosition(lineLeft + styled * 0.9f, y).ShouldBe(2);
+    }
+
+    // Red until #8321
+    [Fact]
+    public void GetTagAtIndex_LinkAfterScaledRun_IsFoundAtItsDrawnPosition()
+    {
+        const string markup = "[FontScale=2]mm[/FontScale][Link=x]mm[/Link]";
+        float scaledPart = WidthOf("[FontScale=2]mm[/FontScale]");
+        float plainM = WidthOf("m");
+        TextRuntime textRuntime = MakeAligned(markup, HorizontalAlignment.Left, 300);
+
+        // Left half of the first plain 'm' of the link, which starts where the scaled run ends.
+        int index = textRuntime.GetCharacterIndexAtPosition(
+            textRuntime.AbsoluteLeft + scaledPart + plainM * 0.25f, textRuntime.AbsoluteTop + 5);
+
+        index.ShouldBe(2);
+        textRuntime.GetTagAtIndex("Link", index)!.Value.Argument.ShouldBe("x");
     }
 
     [Fact]
