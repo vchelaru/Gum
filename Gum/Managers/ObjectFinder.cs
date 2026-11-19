@@ -993,6 +993,7 @@ public class ObjectFinder : IObjectFinder
         return CollectReferencedFilesViaWalker(scopeElement: null, inclusion).Distinct();
     }
 
+    /// <param name="inclusion">The categories of file to report.</param>
     /// <param name="resolveFontFiles">
     /// False skips resolving every Text instance's effective font (see
     /// <see cref="Gum.Bundle.GumProjectDependencyWalker.ResolveFontFiles"/>), the bulk of the walk's cost.
