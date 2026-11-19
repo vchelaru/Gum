@@ -50,7 +50,7 @@ public class GumStartupSequence
             () => new Gum.ProjectServices.JsonProjectSerializerWarmup().WarmUp(),
             exception => ToolLog.Write("serializer warm-up failed", detail: exception.ToString()),
             Task.Run)
-            .Start(Environment.GetCommandLineArgs(), _services.GetRequiredService<ProjectManager>().GeneralSettingsFile.LastProject);
+            .Start(Environment.GetCommandLineArgs(), projectManager.LastProject);
 
         // Migration needs the whole settings object, so it resolves the concrete ProjectManager
         // (same singleton - LoadSettings() above already ran against it).
