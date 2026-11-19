@@ -36,6 +36,8 @@ public class ProjectFontWarmUpTests : BaseTestClass
     public void PostAfterWarmUp_RunsAPassOnceEveryElementIsCollected()
     {
         AddScreens("Menu", "Options");
+        // One element per slice, so a pass that didn't wait would run between slices.
+        _time.AdvancePerRead = ProjectFontWarmUp.SliceLength;
         int collectedWhenThePassRan = -1;
 
         _sut.Start(_project);
@@ -108,6 +110,45 @@ public class ProjectFontWarmUpTests : BaseTestClass
 
         passes.ShouldBe(1);
         _sut.CompletedCount.ShouldBe(1);
+    }
+
+    [Fact]
+    public void ThrowingSlice_StillReleasesWaitingPasses()
+    {
+        AddScreens("Menu");
+        Mock<Gum.ProjectServices.IFontReferenceCacheSource> source = new Mock<Gum.ProjectServices.IFontReferenceCacheSource>();
+        source.Setup(s => s.For(It.IsAny<GumProjectSave>())).Throws(new InvalidOperationException("boom"));
+        Mock<IDispatcher> dispatcher = new Mock<IDispatcher>();
+        dispatcher.Setup(item => item.Post(It.IsAny<Action>())).Callback<Action>(_posted.Enqueue);
+        ProjectFontWarmUp sut = new ProjectFontWarmUp(source.Object, dispatcher.Object, _time);
+        bool ran = false;
+        sut.Start(_project);
+        sut.PostAfterWarmUp(() => ran = true);
+
+        Should.Throw<InvalidOperationException>(() => _posted.Dequeue()());
+        RunPosted();
+
+        ran.ShouldBeTrue();
+        sut.IsRunning.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void Start_StopsWhenAnotherProjectReplacesIt()
+    {
+        AddScreens("Menu", "Options", "Credits");
+        _time.AdvancePerRead = ProjectFontWarmUp.SliceLength;
+        bool ran = false;
+        _sut.Start(_project);
+        _sut.PostAfterWarmUp(() => ran = true);
+        _posted.Dequeue()();
+        int collected = _references.For(_project).CollectionCount;
+
+        ObjectFinder.Self.GumProjectSave = new GumProjectSave();
+        RunPosted();
+
+        _references.For(_project).CollectionCount.ShouldBe(collected);
+        ran.ShouldBeTrue();
+        _sut.IsRunning.ShouldBeFalse();
     }
 
     private void AddScreens(params string[] names)

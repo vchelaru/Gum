@@ -87,6 +87,27 @@ public sealed class ProjectFontWarmUp : IProjectFontWarmUp
             return;
         }
 
+        // Another project replaced this one (a load, a new project): its passes are for the new one.
+        if (!ReferenceEquals(ObjectFinder.Self.GumProjectSave, project))
+        {
+            Finish(completed: false);
+            return;
+        }
+
+        try
+        {
+            CollectSliceOf(run, project, remaining, cache, started);
+        }
+        catch
+        {
+            // A failed collection must not hold the passes back for good; they collect for themselves.
+            Finish(completed: false);
+            throw;
+        }
+    }
+
+    private void CollectSliceOf(int run, GumProjectSave project, Queue<ElementSave> remaining, FontReferenceCache? cache, long started)
+    {
         FontReferenceCache current = _fontReferences.For(project);
         if (cache != null && !ReferenceEquals(cache, current))
         {
