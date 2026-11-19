@@ -44,6 +44,14 @@ public class GumStartupSequence
         projectManager.LoadSettings();
         StartupTiming.Mark("ProjectManager.LoadSettings");
 
+        // The project load below waits on the serializer setup; this overlaps it with plugin start-up.
+        // Not awaited: the launcher logs its own failures.
+        _ = new ProjectSerializerWarmupLauncher(
+            () => new Gum.ProjectServices.JsonProjectSerializerWarmup().WarmUp(),
+            exception => ToolLog.Write("serializer warm-up failed", detail: exception.ToString()),
+            Task.Run)
+            .Start(Environment.GetCommandLineArgs(), projectManager.LastProject);
+
         // Migration needs the whole settings object, so it resolves the concrete ProjectManager
         // (same singleton - LoadSettings() above already ran against it).
         _head.MigrateLegacySettings(_services.GetRequiredService<ProjectManager>().GeneralSettingsFile);

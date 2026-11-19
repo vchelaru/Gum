@@ -108,6 +108,9 @@ public class ProjectManager : IProjectManager, IDeleteProjectProvider, ICopyPast
 
     public bool EffectiveUseStandardsPalette => GeneralSettingsFile.EffectiveUseStandardsPalette;
     public bool ShowTextOutlines => GeneralSettingsFile.ShowTextOutlines;
+
+    /// <inheritdoc/>
+    public string? LastProject => GeneralSettingsFile.LastProject;
     public int FrameRate => GeneralSettingsFile.FrameRate;
 
     public byte OutlineColorR => GeneralSettingsFile.OutlineColorR;

@@ -38,6 +38,9 @@ public interface IProjectManager
     bool EffectiveUseStandardsPalette { get; }
 
     bool ShowTextOutlines { get; }
+
+    /// <summary>The project the last session had open, or null. Valid once settings have loaded.</summary>
+    string? LastProject { get; }
     int FrameRate { get; }
 
     byte OutlineColorR { get; }
