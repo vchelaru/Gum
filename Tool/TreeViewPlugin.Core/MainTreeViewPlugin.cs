@@ -193,7 +193,8 @@ internal class MainTreeViewPlugin : PluginBase, IPriorityPlugin, IRecipient<Appl
 
     private void HandleInstanceAdd(ElementSave save1, InstanceSave save2)
     {
-        _elementTreeViewManager.RefreshUi();
+        // Only the owning element's nodes change; a full rebuild walks every element in the project.
+        _elementTreeViewManager.RefreshUi((IInstanceContainer)save1);
     }
 
     private void HandleBehaviorDeleted(BehaviorSave save)
@@ -402,7 +403,14 @@ internal class MainTreeViewPlugin : PluginBase, IPriorityPlugin, IRecipient<Appl
 
     private void HandleInstanceDelete(ElementSave? element, InstanceSave instance)
     {
-        _elementTreeViewManager.RefreshUi();
+        if (element != null)
+        {
+            _elementTreeViewManager.RefreshUi((IInstanceContainer)element);
+        }
+        else
+        {
+            _elementTreeViewManager.RefreshUi();
+        }
     }
 
     private void HandleStateAdd(StateSave state)

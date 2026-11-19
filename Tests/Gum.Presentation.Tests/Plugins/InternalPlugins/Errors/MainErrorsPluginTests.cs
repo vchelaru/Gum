@@ -24,6 +24,7 @@ public class MainErrorsPluginTests : BaseTestClass
     private readonly Mock<IErrorChecker> _errorChecker = new();
     private readonly Mock<IProjectState> _projectState = new();
     private readonly Mock<ISelectedState> _selectedState = new();
+    private readonly Mock<Gum.Logic.FileWatch.IFileWatchManager> _fileWatchManager = new();
     private readonly IMessenger _messenger = new WeakReferenceMessenger();
     private readonly GumProjectSave _project;
     private readonly ScreenSave _screen;
@@ -33,6 +34,7 @@ public class MainErrorsPluginTests : BaseTestClass
 
     public MainErrorsPluginTests()
     {
+        _fileWatchManager.Setup(f => f.IsRelevantToProject(It.IsAny<ToolsUtilities.FilePath>())).Returns(true);
         _project = new GumProjectSave();
         _screen = new ScreenSave { Name = "MyScreen" };
         _project.Screens.Add(_screen);
@@ -56,7 +58,8 @@ public class MainErrorsPluginTests : BaseTestClass
             Mock.Of<IClipboardService>(),
             Mock.Of<IFileSystemRevealService>(),
             _projectState.Object,
-            dispatcher.Object)
+            dispatcher.Object,
+            _fileWatchManager.Object)
         {
             TabManager = tabManager.Object,
         };
@@ -244,6 +247,25 @@ public class MainErrorsPluginTests : BaseTestClass
     }
 
     [Fact]
+    public void ReactToFileChanged_QueuesTheProjectPass_WhenTheFileIsRelevantToTheProject()
+    {
+        _plugin.CallReactToFileChanged(new ToolsUtilities.FilePath("C:/Proj/Textures/Hero.png"));
+
+        _posted.ShouldHaveSingleItem();
+    }
+
+    [Fact]
+    public void ReactToFileChanged_DoesNotQueueTheProjectPass_WhenNothingInTheProjectCanBeAffected()
+    {
+        // The tool writes gum_events.json itself; a pass for it walks the whole project for nothing.
+        _fileWatchManager.Setup(f => f.IsRelevantToProject(It.IsAny<ToolsUtilities.FilePath>())).Returns(false);
+
+        _plugin.CallReactToFileChanged(new ToolsUtilities.FilePath("C:/Proj/EventExport/gum_events.json"));
+
+        _posted.ShouldBeEmpty();
+    }
+
+    [Fact]
     public void ProjectLoad_DropsThePreviousProjectsRows_BeforeItsPassRuns()
     {
         _errorChecker.Setup(c => c.GetProjectErrors(_project))
@@ -287,7 +309,7 @@ public class MainErrorsPluginTests : BaseTestClass
         IMessenger messenger = new WeakReferenceMessenger();
         MainErrorsPlugin plugin = new MainErrorsPlugin(errorChecker, messenger, _selectedState.Object,
             Mock.Of<IClipboardService>(), Mock.Of<IFileSystemRevealService>(), _projectState.Object,
-            Mock.Of<IDispatcher>())
+            Mock.Of<IDispatcher>(), _fileWatchManager.Object)
         {
             TabManager = tabManager.Object,
         };

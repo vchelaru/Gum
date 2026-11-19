@@ -33,6 +33,7 @@ public class MainErrorsPlugin : CorePriorityPlugin
     private readonly IFileSystemRevealService _fileSystemRevealService;
     private readonly IProjectState _projectState;
     private readonly IDispatcher _dispatcher;
+    private readonly Gum.Logic.FileWatch.IFileWatchManager _fileWatchManager;
     private AllErrorsViewModel _viewModel = null!;
 
     // The project-level rows (#5262), listed whatever is selected. Finding them walks the whole
@@ -49,8 +50,9 @@ public class MainErrorsPlugin : CorePriorityPlugin
     [ImportingConstructor]
     public MainErrorsPlugin(IErrorChecker errorChecker, IMessenger messenger, ISelectedState selectedState,
         IClipboardService clipboardService, IFileSystemRevealService fileSystemRevealService, IProjectState projectState,
-        IDispatcher dispatcher)
+        IDispatcher dispatcher, Gum.Logic.FileWatch.IFileWatchManager fileWatchManager)
     {
+        _fileWatchManager = fileWatchManager;
         _errorChecker = errorChecker;
         _messenger = messenger;
         _selectedState = selectedState;
@@ -106,7 +108,15 @@ public class MainErrorsPlugin : CorePriorityPlugin
 
         this.ProjectLoad += HandleProjectLoad;
         this.AfterProjectSave += _ => ScheduleProjectErrorRefresh();
-        this.ReactToFileChanged += _ => ScheduleProjectErrorRefresh();
+        // The pass walks the whole project (most of a second on a large one), so a file the project cannot be
+        // affected by (the tool's own event export, a build's output) does not queue it.
+        this.ReactToFileChanged += file =>
+        {
+            if (_fileWatchManager.IsRelevantToProject(file))
+            {
+                ScheduleProjectErrorRefresh();
+            }
+        };
     }
 
     private void HandleProjectLoad(GumProjectSave project)

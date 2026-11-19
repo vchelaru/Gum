@@ -77,6 +77,14 @@ public class GumProjectDependencyWalker
         return Walk(project, projectRootDirectory, inclusion, scopeElement, keptElementNames: null);
     }
 
+    /// <summary>
+    /// When false, a project-wide walk that does not include the font cache skips resolving every text instance's
+    /// effective font to find the font files (a <c>.ttf</c> named through <c>Font</c> or reached through a
+    /// base type), which is nearly all of its cost on a project with hundreds of instances. Files a state names
+    /// directly (including <c>CustomFontFile</c> with <c>UseCustomFont</c>) are still reported. Default true.
+    /// </summary>
+    public bool ResolveFontFiles { get; init; } = true;
+
     private WalkResult Walk(GumProjectSave project, string projectRootDirectory, GumBundleInclusion inclusion,
         ElementSave? scopeElement, ISet<string>? keptElementNames)
     {
@@ -127,9 +135,12 @@ public class GumProjectDependencyWalker
 
                 if (inclusion.HasFlag(GumBundleInclusion.FontCache) || inclusion.HasFlag(GumBundleInclusion.ExternalFiles))
                 {
-                    CollectFontCacheReferences(project, keptElements, projectRootDirectory,
-                        inclusion.HasFlag(GumBundleInclusion.FontCache), inclusion.HasFlag(GumBundleInclusion.ExternalFiles),
-                        fontCache, external, missing);
+                    if (inclusion.HasFlag(GumBundleInclusion.FontCache) || ResolveFontFiles)
+                    {
+                        CollectFontCacheReferences(project, keptElements, projectRootDirectory,
+                            inclusion.HasFlag(GumBundleInclusion.FontCache), inclusion.HasFlag(GumBundleInclusion.ExternalFiles),
+                            fontCache, external, missing);
+                    }
 
                     // Project-wide only: scoped walks back the tool's per-element error check,
                     // which should not parse every .fnt/.achx on each refresh. The tool's one

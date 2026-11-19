@@ -284,6 +284,23 @@ namespace Gum.Managers
         }
 
         /// <summary>
+        /// True when a change to <paramref name="file"/> can change what the project reports or shows: a Gum file
+        /// (project, element, behavior), a localization, animation or font-range file, the engine profile, or a
+        /// file an element references or the canvas cached. False for anything else in a watched folder, such as
+        /// the tool's own event export or a build's output.
+        /// </summary>
+        public bool IsRelevantToProject(FilePath file)
+        {
+            string extension = file.Extension;
+            return IsElementExtension(extension)
+                || extension == GumProjectSave.ProjectExtension || extension == GumProjectSave.ProjectJsonExtension
+                || extension == BehaviorReference.Extension || extension == BehaviorReference.JsonExtension
+                || extension is "csv" or "resx" or "ganx" or "ganj" or "gumfcs" or "codsj"
+                || IsEngineProfile(file)
+                || IsReferencedFile(file);
+        }
+
+        /// <summary>
         /// True when <paramref name="file"/> is the engine profile the loaded project references.
         /// </summary>
         public bool IsEngineProfile(FilePath file) =>
