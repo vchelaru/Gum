@@ -1,4 +1,6 @@
 using System;
+using System.Numerics;
+using System.Runtime.InteropServices;
 
 namespace Gum.ProjectServices.Screenshot;
 
@@ -12,14 +14,27 @@ namespace Gum.ProjectServices.Screenshot;
 /// invisible when the PNG is only ever composited against the same background color it was
 /// rendered with, but any other viewer or further compositing pass blends its own backdrop
 /// through instead, making the requested background appear not to be there at all (#4172).
+/// The tool's canvas also runs this on every opaque frame it shows.
 /// </summary>
 public static class ScreenshotAlphaFlattener
 {
     public static void FlattenToOpaque(Span<byte> rgba)
     {
-        for (int i = 3; i < rgba.Length; i += 4)
+        // Sets the alpha byte of several pixels per operation: a byte-at-a-time loop over a
+        // full canvas costs about 10 ms per frame in a Debug build.
+        Span<uint> pixels = MemoryMarshal.Cast<byte, uint>(rgba);
+        uint alphaMask = BitConverter.IsLittleEndian ? 0xFF000000u : 0x000000FFu;
+
+        Span<Vector<uint>> vectors = MemoryMarshal.Cast<uint, Vector<uint>>(pixels);
+        Vector<uint> vectorMask = new Vector<uint>(alphaMask);
+        for (int i = 0; i < vectors.Length; i++)
         {
-            rgba[i] = 255;
+            vectors[i] |= vectorMask;
+        }
+
+        for (int i = vectors.Length * Vector<uint>.Count; i < pixels.Length; i++)
+        {
+            pixels[i] |= alphaMask;
         }
     }
 }
