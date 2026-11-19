@@ -107,6 +107,21 @@ public class TextBbCodeTagValueTests : BaseTestClass
         styles[2].ShouldBe(styles[0], "Because closing the unparseable inner tag must not close the enclosing tag too");
     }
 
+    [Theory]
+    [InlineData("[Alpha=128]a[/Alpha]")]
+    [InlineData("[LineHeightMultiplier=2]a[/LineHeightMultiplier]")]
+    [InlineData("[UseFontSmoothing=false]a[/UseFontSmoothing]")]
+    [InlineData("[HasDropshadow=false]a[/HasDropshadow]")]
+    [InlineData("[Link=shop]a[/Link]")]
+    // Red until #8318 is fixed: Alpha, LineHeightMultiplier and UseFontSmoothing are not in SupportedTags.
+    public void Text_KnownTagWithoutInlineStyle_IsRemovedFromDisplayedText(string markup)
+    {
+        Text text = MakeText(markup);
+
+        string.Concat(text.GetStyledRuns().Select(r => r.Text))
+            .ShouldBe("a", "Because every runtime recognizes the same tag names, so a known tag never draws as literal text");
+    }
+
     [Fact]
     public void Text_CustomTagAfterEmoji_ReceivesUtf16IndexWithTagsRemoved()
     {

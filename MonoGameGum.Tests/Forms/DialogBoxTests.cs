@@ -1018,6 +1018,39 @@ public class DialogBoxTests : BaseTestClass
     }
 
     [Fact]
+    // Red until #8319 is fixed: AddTags runs per line and drops tags that neither open nor close on it.
+    public void Show_WithColorTagSpanningEveryPage_ShouldColorEveryPage()
+    {
+        var (dialogBox, visual) = CreateDialogBox(paginating: true);
+        dialogBox.LettersPerSecond = 0;
+
+        dialogBox.Show("[Color=Red]" + LongText + "[/Color]");
+
+        List<List<InlineVariable>> colorRunsPerPage = new List<List<InlineVariable>>();
+        List<string> pages = new List<string>();
+        while (true)
+        {
+            Text text = (Text)visual.TextInstance.RenderableComponent;
+            pages.Add(text.RawText ?? string.Empty);
+            colorRunsPerPage.Add(text.InlineVariables.FindAll(v => v.VariableName == "Color"));
+            if (dialogBox.PagesRemaining == 0)
+            {
+                break;
+            }
+            visual.CallClick();
+        }
+
+        pages.Count.ShouldBeGreaterThan(2, "sanity: a middle page must hold neither the open nor the close tag");
+        for (int i = 0; i < pages.Count; i++)
+        {
+            int visibleLength = pages[i].TrimEnd('\n').Length;
+            colorRunsPerPage[i].Exists(v => v.StartIndex == 0 && v.CharacterCount >= visibleLength)
+                .ShouldBeTrue($"Because page {i} (\"{pages[i].Replace("\n", "|")}\", {visibleLength} letters) is inside the Color tag, so all of it is red. Color runs: " +
+                    string.Join(", ", colorRunsPerPage[i].ConvertAll(v => $"{v.StartIndex}+{v.CharacterCount}")));
+        }
+    }
+
+    [Fact]
     public void Show_WithTranslationThatOverflowsThePage_ShouldSplitIntoMorePages()
     {
         WithLocalization(CreateLocalization("Greeting", LongText), () =>

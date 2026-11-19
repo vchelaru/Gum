@@ -74,6 +74,21 @@ char id=99 x=0 y=0 width=10 height=13 xoffset=0 yoffset=4 xadvance=10 page=0 chn
     }
 
     [Theory]
+    [InlineData("[Color=NotAColor]a[/Color]")]
+    [InlineData("[Color=]a[/Color]")]
+    [InlineData("[Color=0xZZ]a[/Color]")]
+    // Red until #8314 is fixed: an unknown color name adds a transparent Color run.
+    public void Text_ColorTagWithUnparseableValue_KeepsBaseColor(string markup)
+    {
+        Text text = MakeText(markup, out _);
+
+        text.RawText.ShouldBe("a");
+        text.InlineVariables.Where(v => v.VariableName == "Color")
+            .Select(v => ((System.Drawing.Color)v.Value).ToArgb().ToString("X8"))
+            .ShouldBeEmpty("Because a Color value that is not a color must leave the run in the base color");
+    }
+
+    [Theory]
     [InlineData("[Color=red]a[/Color]", 255, 255, 0, 0)]
     [InlineData("[Color=CornflowerBlue]a[/Color]", 255, 100, 149, 237)]
     [InlineData("[Color=0xFF00FF00]a[/Color]", 255, 0, 255, 0)]
@@ -109,6 +124,25 @@ char id=99 x=0 y=0 width=10 height=13 xoffset=0 yoffset=4 xadvance=10 page=0 chn
         Text text = MakeText(markup, out _);
 
         text.InlineVariables.Single(v => v.VariableName == "FontScale").Value.ShouldBe(expected);
+    }
+
+    [Theory]
+    [InlineData("[FontSize=40]a[FontSize=abc]b[/FontSize]c[/FontSize]")]
+    [InlineData("[FontSize=40]a[FontSize=]b[/FontSize]c[/FontSize]")]
+    [InlineData("[Font=Other]a[Font=]b[/Font]c[/Font]")]
+    [InlineData("[IsBold=true]a[IsBold=maybe]b[/IsBold]c[/IsBold]")]
+    [InlineData("[IsItalic=true]a[IsItalic=]b[/IsItalic]c[/IsItalic]")]
+    [InlineData("[OutlineThickness=2]a[OutlineThickness=x]b[/OutlineThickness]c[/OutlineThickness]")]
+    // Red until #8315 is fixed: an unparseable open tag pops the enclosing value.
+    public void Text_FontTagWithUnparseableValue_InsideValidTag_KeepsEnclosingFont(string markup)
+    {
+        Text text = MakeText(markup, out RecordingFontCreator creator);
+
+        text.RawText.ShouldBe("abc");
+        string outer = FontAt(text, creator, 0);
+        outer.ShouldNotBe("base", "Because the valid outer tag must change the font of 'a'");
+        FontAt(text, creator, 1).ShouldBe(outer, "Because an unparseable inner value must not undo the enclosing tag");
+        FontAt(text, creator, 2).ShouldBe(outer, "Because closing the unparseable inner tag must not close the enclosing tag too");
     }
 
     [Theory]
