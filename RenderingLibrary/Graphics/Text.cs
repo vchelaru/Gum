@@ -1859,11 +1859,11 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
     public List<StyledSubstring> GetStyledSubstrings(int startOfLineIndex, string lineOfText) =>
         styledSubstringSplitter.GetStyledSubstrings(startOfLineIndex, lineOfText, InlineVariables);
 
-    // For the lines of WrappedText, which are drawn and measured every frame: the runs are cached until the
-    // line or the inline variables change. Read-only to callers.
     void IWrappedText.SetLastLineEllipsis(int ellipsisStartIndex, int styleSourceIndex) =>
         styledSubstringSplitter.SetLastLineEllipsis(ellipsisStartIndex, styleSourceIndex);
 
+    // For the lines of WrappedText, which are drawn and measured every frame: the runs are cached until the
+    // line or the inline variables change. Read-only to callers.
     internal List<StyledSubstring> GetCachedStyledSubstrings(int lineIndex, int startOfLineIndex, string lineOfText) =>
         styledSubstringSplitter.GetStyledSubstrings(lineIndex, startOfLineIndex, lineOfText, InlineVariables);
 
