@@ -23,6 +23,13 @@ public interface IPluginManager : Gum.ProjectServices.Editing.ITopLevelNameSourc
 
     void ProjectLoad(GumProjectSave newlyLoadedProject);
 
+    /// <summary>
+    /// Runs work a plugin deferred from one of its event handlers with the same protection the
+    /// handler had: skipped while the plugin is disabled, and a throw disables the plugin and is
+    /// reported in Output instead of escaping.
+    /// </summary>
+    void CallGuarded(Gum.Plugins.BaseClasses.PluginBase plugin, Action action, string methodName);
+
     void ProjectPropertySet(string propertyName);
 
     void ProjectSave(GumProjectSave savedProject);

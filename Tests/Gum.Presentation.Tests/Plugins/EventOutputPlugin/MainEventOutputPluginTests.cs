@@ -2,6 +2,7 @@ using EventOutputPlugin;
 using EventOutputPlugin.Models;
 using Gum.Commands;
 using Gum.DataTypes;
+using Gum.Plugins;
 using Gum.Services;
 using Gum.ToolStates;
 using Moq;
@@ -16,54 +17,114 @@ namespace Gum.Presentation.Tests.Plugins.EventOutput;
 
 public class MainEventOutputPluginTests : IDisposable
 {
-    private readonly string _projectDirectory;
+    private readonly string _rootDirectory;
+    private readonly Mock<IProjectState> _projectState = new Mock<IProjectState>();
+    private readonly Mock<IFileCommands> _fileCommands = new Mock<IFileCommands>();
+    private readonly List<Action> _posted = new List<Action>();
+    private readonly PluginManager _pluginManager;
+    private readonly MainEventOutputPlugin _plugin;
 
     public MainEventOutputPluginTests()
     {
-        _projectDirectory = Path.Combine(Path.GetTempPath(), "MainEventOutputPluginTests", Guid.NewGuid().ToString("N"));
-        Directory.CreateDirectory(Path.Combine(_projectDirectory, "EventExport"));
-    }
+        _rootDirectory = Path.Combine(Path.GetTempPath(), "MainEventOutputPluginTests", Guid.NewGuid().ToString("N"));
 
-    public void Dispose()
-    {
-        Directory.Delete(_projectDirectory, recursive: true);
-    }
-
-    [Fact]
-    public void ProjectLoad_PrunesOldEvents_OnlyOnceThePostedWorkRuns()
-    {
-        string eventsFile = Path.Combine(_projectDirectory, "EventExport", "gum_events.json");
-        ExportedEventCollection stored = new ExportedEventCollection();
-        stored.UserEvents["someUser"] = new List<ExportedEvent>
-        {
-            new ExportedEvent { NewName = "OldScreen", EventType = GumEventTypes.ElementAdded, TimestampUtc = DateTime.UtcNow.AddDays(-30) },
-        };
-        File.WriteAllText(eventsFile, JsonConvert.SerializeObject(stored));
-
-        Mock<IProjectState> projectState = new Mock<IProjectState>();
-        projectState.Setup(x => x.ProjectDirectory).Returns(_projectDirectory);
-        Mock<IFileCommands> fileCommands = new Mock<IFileCommands>();
-        fileCommands
+        _fileCommands
             .Setup(x => x.SaveIfDiffers(It.IsAny<FilePath>(), It.IsAny<string>()))
             .Callback<FilePath, string>((filePath, contents) => File.WriteAllText(filePath.FullPath, contents));
         Mock<IRetryService> retryService = new Mock<IRetryService>();
         retryService
             .Setup(x => x.TryMultipleTimes(It.IsAny<Action>(), It.IsAny<int>()))
             .Callback<Action, int>((action, _) => action());
-        List<Action> posted = new List<Action>();
         Mock<IDispatcher> dispatcher = new Mock<IDispatcher>();
-        dispatcher.Setup(x => x.Post(It.IsAny<Action>())).Callback<Action>(posted.Add);
+        dispatcher.Setup(x => x.Post(It.IsAny<Action>())).Callback<Action>(_posted.Add);
 
-        MainEventOutputPlugin plugin = new MainEventOutputPlugin(projectState.Object, fileCommands.Object, retryService.Object, dispatcher.Object);
-        plugin.StartUp();
+        _pluginManager = new PluginManager(new Mock<IPluginEnablementStore>().Object, new Mock<IPluginHostConfiguration>().Object);
+        _plugin = new MainEventOutputPlugin(_projectState.Object, _fileCommands.Object, retryService.Object, dispatcher.Object, _pluginManager);
+        _pluginManager.Plugins = new List<Gum.Plugins.BaseClasses.PluginBase> { _plugin };
+        PluginManager.StartupPlugin(_plugin, _pluginManager);
+    }
 
-        plugin.CallProjectLoad(new GumProjectSave());
+    public void Dispose()
+    {
+        if (Directory.Exists(_rootDirectory))
+        {
+            Directory.Delete(_rootDirectory, recursive: true);
+        }
+    }
 
-        ExportedEventCollection.FromJson(File.ReadAllText(eventsFile)).UserEvents["someUser"].Count.ShouldBe(1);
-        posted.Count.ShouldBe(1);
+    private string CreateProjectWithEventsFile(string name, string contents)
+    {
+        string projectDirectory = Path.Combine(_rootDirectory, name);
+        Directory.CreateDirectory(Path.Combine(projectDirectory, "EventExport"));
+        File.WriteAllText(EventsFile(projectDirectory), contents);
+        return projectDirectory;
+    }
 
-        posted[0]();
+    private static string EventsFile(string projectDirectory) => Path.Combine(projectDirectory, "EventExport", "gum_events.json");
 
-        ExportedEventCollection.FromJson(File.ReadAllText(eventsFile)).UserEvents["someUser"].ShouldBeEmpty();
+    private static string OneEventDaysOld(int days)
+    {
+        ExportedEventCollection stored = new ExportedEventCollection();
+        stored.UserEvents["someUser"] = new List<ExportedEvent>
+        {
+            new ExportedEvent { NewName = "OldScreen", EventType = GumEventTypes.ElementAdded, TimestampUtc = DateTime.UtcNow.AddDays(-days) },
+        };
+        return JsonConvert.SerializeObject(stored);
+    }
+
+    private void Load(string projectDirectory)
+    {
+        _projectState.Setup(x => x.ProjectDirectory).Returns(projectDirectory);
+        _pluginManager.ProjectLoad(new GumProjectSave());
+    }
+
+    private void RunPosted()
+    {
+        foreach (Action action in _posted)
+        {
+            action();
+        }
+        _posted.Clear();
+    }
+
+    [Fact]
+    public void ProjectLoad_PrunesOldEvents_OnlyOnceThePostedWorkRuns()
+    {
+        string project = CreateProjectWithEventsFile("Project", OneEventDaysOld(30));
+
+        Load(project);
+
+        ExportedEventCollection.FromJson(File.ReadAllText(EventsFile(project))).UserEvents["someUser"].Count.ShouldBe(1);
+        _posted.Count.ShouldBe(1);
+
+        RunPosted();
+
+        ExportedEventCollection.FromJson(File.ReadAllText(EventsFile(project))).UserEvents["someUser"].ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void ProjectLoad_SecondLoadBeforeThePostedWorkRuns_PrunesOnlyTheProjectThatIsOpen()
+    {
+        string first = CreateProjectWithEventsFile("First", OneEventDaysOld(30));
+        string second = CreateProjectWithEventsFile("Second", OneEventDaysOld(30));
+
+        Load(first);
+        Load(second);
+        RunPosted();
+
+        ExportedEventCollection.FromJson(File.ReadAllText(EventsFile(first))).UserEvents["someUser"].Count.ShouldBe(1);
+        ExportedEventCollection.FromJson(File.ReadAllText(EventsFile(second))).UserEvents["someUser"].ShouldBeEmpty();
+        _fileCommands.Verify(x => x.SaveIfDiffers(It.IsAny<FilePath>(), It.IsAny<string>()), Times.Once);
+    }
+
+    [Fact]
+    public void ProjectLoad_CorruptEventsFile_DisablesThePluginInsteadOfThrowing()
+    {
+        string project = CreateProjectWithEventsFile("Corrupt", "{ this is not json");
+
+        Load(project);
+
+        Should.NotThrow(RunPosted);
+        _pluginManager.PluginContainers[_plugin].IsEnabled.ShouldBeFalse();
     }
 }
