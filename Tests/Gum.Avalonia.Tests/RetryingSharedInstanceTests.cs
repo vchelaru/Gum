@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 using Gum.Avalonia.Canvas;
 using Shouldly;
 using Xunit;
@@ -87,6 +88,60 @@ public class RetryingSharedInstanceTests
         result.Id.ShouldBe(1);
         nested.ShouldNotBeNull();
         wasCreatingDuringInitialize.ShouldBeTrue();
+        shared.IsCreating.ShouldBeFalse();
+    }
+
+    // The head creates the device in two steps with the UI running in between; for that whole
+    // time the instance is being created, so a nested request fails and HasInstance stays false.
+    [Fact]
+    public async Task GetOrCreateAsync_IsCreatingBetweenTheSteps_AndCachesTheInstance()
+    {
+        RetryingSharedInstance<FakeDevice> shared = new();
+        int factoryCalls = 0;
+        bool initialized = false;
+        bool wasCreatingBetweenSteps = false;
+        bool hadInstanceBetweenSteps = true;
+        bool initializedBetweenSteps = true;
+        InvalidOperationException? nested = null;
+
+        FakeDevice result = await shared.GetOrCreateAsync(
+            () => new FakeDevice { Id = ++factoryCalls },
+            _ => initialized = true,
+            () =>
+            {
+                wasCreatingBetweenSteps = shared.IsCreating;
+                hadInstanceBetweenSteps = shared.HasInstance;
+                initializedBetweenSteps = initialized;
+                nested = Should.Throw<InvalidOperationException>(() =>
+                    shared.GetOrCreate(() => new FakeDevice { Id = ++factoryCalls }, _ => { }));
+                return Task.CompletedTask;
+            });
+
+        result.Id.ShouldBe(1);
+        factoryCalls.ShouldBe(1);
+        initialized.ShouldBeTrue();
+        initializedBetweenSteps.ShouldBeFalse("the step between runs after the factory and before initialize");
+        wasCreatingBetweenSteps.ShouldBeTrue();
+        hadInstanceBetweenSteps.ShouldBeFalse();
+        nested.ShouldNotBeNull();
+        shared.IsCreating.ShouldBeFalse();
+        shared.HasInstance.ShouldBeTrue();
+        shared.GetOrCreate(() => new FakeDevice { Id = ++factoryCalls }, _ => { }).ShouldBeSameAs(result);
+    }
+
+    [Fact]
+    public async Task GetOrCreateAsync_DisposesAndDoesNotCache_WhenInitializeThrows()
+    {
+        RetryingSharedInstance<FakeDevice> shared = new();
+        FakeDevice? created = null;
+
+        await Should.ThrowAsync<InvalidOperationException>(() => shared.GetOrCreateAsync(
+            () => created = new FakeDevice(),
+            _ => throw new InvalidOperationException("boom"),
+            () => Task.CompletedTask));
+
+        created!.Disposed.ShouldBeTrue();
+        shared.HasInstance.ShouldBeFalse();
         shared.IsCreating.ShouldBeFalse();
     }
 

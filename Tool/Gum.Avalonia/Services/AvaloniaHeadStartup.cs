@@ -1,5 +1,9 @@
 using System;
 using System.Linq;
+using System.Threading.Tasks;
+using Avalonia.Threading;
+using Gum.Avalonia.Canvas;
+using Gum.Diagnostics;
 using Gum.Managers;
 using Gum.Plugins;
 using Gum.Settings;
@@ -67,5 +71,32 @@ public class AvaloniaHeadStartup : IHeadStartup
     }
 
     /// <inheritdoc/>
-    public void RenderSurfaceReady() => _services.GetRequiredService<PluginManager>().XnaInitialized();
+    /// <remarks>
+    /// Creating the device blocks the UI thread for seconds, so it is split into steps with a
+    /// dispatcher pass between them: the loaded tree reaches the screen first, and clicks in it
+    /// are handled between steps instead of after all of them.
+    /// </remarks>
+    public async Task RenderSurfaceReadyAsync()
+    {
+        await LetTheUiRunAsync();
+        try
+        {
+            await GameRenderDeviceHost.CreateSharedDeviceAsync(LetTheUiRunAsync);
+        }
+        catch (Exception exception)
+        {
+            // The editor canvas asks for the device again when it initializes, and reports the
+            // failure to the user there.
+            ToolLog.Write("device.create.failed", detail: exception.Message);
+        }
+        await LetTheUiRunAsync();
+        _services.GetRequiredService<PluginManager>().XnaInitialized();
+        // The editor canvas builds the loaded project's wireframe in a callback it posts, so
+        // startup ends once that has run.
+        await LetTheUiRunAsync();
+    }
+
+    // Background is below input and rendering, so everything they have queued runs first.
+    private static Task LetTheUiRunAsync() =>
+        Dispatcher.UIThread.InvokeAsync(() => { }, DispatcherPriority.Background).GetTask();
 }

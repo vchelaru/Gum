@@ -41,6 +41,7 @@ using System.Drawing;
 using System.Linq;
 using System.Numerics;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using ToolsUtilities;
 
@@ -418,7 +419,9 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
                 : new List<global::RenderingLibrary.Graphics.ShaderParameterInfo>();
         CustomSetPropertyOnRenderable.PropertyAssignmentError += HandlePropertyAssignmentError;
 
-        AssignEvents();
+        // The other events are wired once the render surface is ready: until then nothing here can
+        // draw, and the startup project loads before the surface exists.
+        this.XnaInitialized += HandleXnaInitialized;
 
         AddMenuEntry(_screenshotService.ExportAsImage, "File", "Export", "Export as Image");
         BeforeRender += _screenshotService.HandleBeforeRender;
@@ -495,8 +498,6 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
 
         this.CameraChanged += _scrollbarService.HandleCameraChanged;
 
-        this.XnaInitialized += HandleXnaInitialized;
-        
         this.WireframeResized += _scrollbarService.HandleWireframeResized;
         this.WireframeRefreshed += HandleWireframeRefreshed;
         this.WireframePropertyChanged += HandleWireframePropertyChanged;
@@ -1120,12 +1121,42 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
         IEffectiveThemeSettings themeSettings = _themingService.EffectiveSettings;
         ApplyThemeSettings(themeSettings);
 
-        // Must be the last statement in this method - XnaUpdate (wired up in
-        // HandleWireframeInitialized, which runs earlier during startup) can fire before this
-        // event handler runs, since WPF's CompositionTarget.Rendering isn't gated on it. Only
-        // once every managers' Initialize() call above has actually completed is it safe for
-        // their Activity() to run.
+        // XnaUpdate (wired up in HandleWireframeInitialized, which runs earlier during startup)
+        // can fire before this event handler runs, since WPF's CompositionTarget.Rendering isn't
+        // gated on it. Only once every managers' Initialize() call above has actually completed is
+        // it safe for their Activity() to run.
         _isXnaInitialized = true;
+
+        AssignEvents();
+
+        // After every plugin has heard about the surface, as a project load always was: the
+        // Texture Coordinates canvas, which initializes after this one, takes over the content
+        // loader that the wireframe's textures load through.
+        if (SynchronizationContext.Current is { } uiContext)
+        {
+            uiContext.Post(_ => CatchUpWithProjectAndSelection(), null);
+        }
+        else
+        {
+            CatchUpWithProjectAndSelection();
+        }
+    }
+
+    // The startup project loads, and may select an element, before the render surface exists,
+    // while this plugin is not yet listening; the canvas shows both now.
+    private void CatchUpWithProjectAndSelection()
+    {
+        if (_projectManager.GumProjectSave is { } project)
+        {
+            // Rebuilds the wireframe for whatever is selected.
+            HandleProjectLoad(project);
+        }
+
+        ElementSave? element = _selectedState.SelectedElement;
+        _scrollbarService.HandleElementSelected(element);
+        _editorViewModel.UpdateHasSelectedElement(element);
+        _editingManager.RefreshContextMenu();
+        _selectionManager.Refresh();
     }
 
     /// <summary>

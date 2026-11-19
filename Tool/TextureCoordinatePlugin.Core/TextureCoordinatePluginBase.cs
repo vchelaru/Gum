@@ -139,6 +139,13 @@ public abstract class TextureCoordinatePluginBase : PluginBase, IRecipient<UiBas
         textureCoordinatePluginTab.GotFocus += HandleTabShown;
 
         AssignEvents();
+
+        // The startup project loads, and may select something, before the render surface exists.
+        if (ObjectFinder.Self.GumProjectSave is { } project)
+        {
+            HandleProjectLoaded(project);
+            HandleWireframeRefreshed();
+        }
     }
 
     private void HandleTabShown()

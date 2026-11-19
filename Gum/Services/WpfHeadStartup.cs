@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 using Gum.Managers;
 using Gum.Plugins;
 using Gum.Plugins.InternalPlugins.VariableGrid;
@@ -58,6 +59,9 @@ public class WpfHeadStartup : IHeadStartup
     }
 
     /// <inheritdoc/>
-    public void RenderSurfaceReady() =>
+    public Task RenderSurfaceReadyAsync()
+    {
         _services.GetRequiredService<PluginManager>().XnaInitialized();
+        return Task.CompletedTask;
+    }
 }
