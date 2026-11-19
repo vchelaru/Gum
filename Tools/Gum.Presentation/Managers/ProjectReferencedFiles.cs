@@ -2,6 +2,8 @@ using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using RenderingLibrary.Graphics.Fonts;
 using ToolsUtilities;
 
 namespace Gum.Managers;
@@ -60,10 +62,12 @@ public sealed class ProjectReferencedFiles : IProjectReferencedFiles
     }
 
     private static IEnumerable<string> WalkProject() =>
-        // Resolving every Text instance's effective font is nearly all of a walk's cost and only finds font
-        // files named through a base type; this walk runs after most edits, so it leaves that out.
+        // Resolving every Text instance's effective font is nearly all of a walk's cost; this walk runs after
+        // most edits, so it leaves that out. A font file a variable names (a .ttf in Font) is added back by
+        // reading the raw values, so the Errors tab still follows it when it changes outside the tool.
         ObjectFinder.Self.GetAllFilesInProject(
-            Gum.Bundle.GumBundleInclusion.Core | Gum.Bundle.GumBundleInclusion.ExternalFiles, resolveFontFiles: false);
+            Gum.Bundle.GumBundleInclusion.Core | Gum.Bundle.GumBundleInclusion.ExternalFiles, resolveFontFiles: false)
+            .Concat(VariableValuesInProject().Where(BmfcSave.IsFontFilePath));
 
     /// <summary>
     /// Every non-empty string a variable holds, resolved against the project folder the way the walk resolves a
