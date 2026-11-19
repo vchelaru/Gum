@@ -1376,37 +1376,18 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
     /// <summary>How many inline variables the current text has.</summary>
     internal int InlineVariableCount => _inlineVariables.Count;
 
-    // The subset of BbCodeParser.KnownTags SkiaGum honors. Most map onto a RichTextKit Style override;
+    // SkiaGum parses the same tag names as every other runtime. Most map onto a RichTextKit Style override;
     // "custom" (issue #3692) instead produces one single-character InlineVariable per letter, resolved
     // against Customizations/ContextCustomizations in BuildRunStyle and applied as a Style color override
     // plus a post-layout glyph nudge (see GetTextBlock). "font" resolves through GumFontMapper the same
     // way the base Font property does (issue #3719). "outlinethickness" maps onto RichTextKit's per-run
     // Style.HaloWidth, doubled to compensate for the halo being a centered stroke (issue #4037) -- the
-    // outline color is not per-run, it always uses the whole Text's OutlineColor. "hasdropshadow" has no
-    // per-run implementation on Skia yet (its dropshadow is a whole-canvas SKImageFilter, not a per-glyph
-    // baked silhouette like MonoGame/Raylib's - see #3528) - it's recognized here purely so it parses and
-    // strips like every other tag instead of leaking as literal bracket text; BuildInlineVariables' switch
-    // has no case for it, so it's a genuine no-op.
-    // Unrecognized tags are left as literal characters, matching the parser.
-    private static readonly HashSet<string> SupportedTags = new(StringComparer.OrdinalIgnoreCase)
-    {
-        "Color",
-        "Red",
-        "Green",
-        "Blue",
-        "Font",
-        "FontSize",
-        "FontScale",
-        "IsBold",
-        "IsItalic",
-        "OutlineThickness",
-        "Custom",
-        "HasDropshadow",
-        // [State=Name]: expanded into the named state's allowlisted variables before BuildInlineVariables (#8176).
-        "State",
-        // [Link=id]: kept as a range for TextRuntime.GetTagAtIndex, no styling.
-        "Link",
-    };
+    // outline color is not per-run, it always uses the whole Text's OutlineColor. "hasdropshadow" and
+    // "usefontsmoothing" are parsed and stripped but style nothing: Skia's dropshadow is a whole-canvas
+    // SKImageFilter (#3528), and Skia text has no font smoothing setting at all (TextRuntime.UseFontSmoothing
+    // is not applied on Skia either). "state" is expanded before BuildInlineVariables (#8176) and "link" is
+    // kept as a range for TextRuntime.GetTagAtIndex. Unrecognized tags are left as literal characters.
+    private static HashSet<string> SupportedTags => BbCodeParser.KnownTags;
 
     public TextBlock GetCachedTextBlock(float? forcedWidth = null)
     {
@@ -3104,7 +3085,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
     /// <summary>
     /// Builds the RichTextKit <see cref="Style"/> for one run: the base font/color/weight/italic from
     /// this Text's properties, overridden by the run's inline BBCode <paramref name="variables"/>
-    /// (Font, Color / Red / Green / Blue, FontSize, FontScale, IsBold, IsItalic). A <c>[Custom]</c> variable
+    /// (Font, Color / Red / Green / Blue / Alpha, FontSize, FontScale, IsBold, IsItalic). A <c>[Custom]</c> variable
     /// (issue #3692) additionally resolves its callback against <see cref="Customizations"/> /
     /// <see cref="ContextCustomizations"/> and can override the color, substitute the run's text (via
     /// <see cref="LetterCustomization.ReplacementCharacter"/>), and produce a glyph offset the caller
@@ -3149,6 +3130,9 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
                         break;
                     case "Blue":
                         color = new SKColor(color.Red, color.Green, (byte)variable.Value, color.Alpha);
+                        break;
+                    case "Alpha":
+                        color = color.WithAlpha((byte)variable.Value);
                         break;
                     case "FontSize":
                         fontSizePixels = (float)variable.Value;
@@ -3329,7 +3313,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
     /// their character range in the stripped <see cref="_layoutText"/>. Each supported tag maps to a
     /// value the shared <see cref="StyledSubstringSplitter"/> and <see cref="BuildRunStyle"/> understand:
     /// Font -> resolved family-name string (via <see cref="Content.Fonts.GumFontMapper.ResolveFontFamily"/>),
-    /// Color -> System.Drawing.Color, Red/Green/Blue -> byte, FontSize -> float, FontScale -> float,
+    /// Color -> System.Drawing.Color, Red/Green/Blue/Alpha -> byte, FontSize -> float, FontScale -> float,
     /// IsBold/IsItalic -> bool, OutlineThickness -> int. Tags whose argument fails to parse are skipped
     /// (rendered with base style).
     /// </summary>
@@ -3360,6 +3344,10 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
                 case "Red":
                     variableName = "Red";
                     value = byte.TryParse(argument, out var red) ? Box(existing, red) : null;
+                    break;
+                case "Alpha":
+                    variableName = "Alpha";
+                    value = byte.TryParse(argument, out var alpha) ? Box(existing, alpha) : null;
                     break;
                 case "Green":
                     variableName = "Green";

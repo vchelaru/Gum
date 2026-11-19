@@ -134,7 +134,6 @@ public class TextBbCodeTagValueTests : BaseTestClass
 
     [Theory]
     [InlineData("[Alpha=128]a[/Alpha]")]
-    [InlineData("[LineHeightMultiplier=2]a[/LineHeightMultiplier]")]
     [InlineData("[UseFontSmoothing=false]a[/UseFontSmoothing]")]
     [InlineData("[HasDropshadow=false]a[/HasDropshadow]")]
     [InlineData("[Link=shop]a[/Link]")]
@@ -143,6 +142,33 @@ public class TextBbCodeTagValueTests : BaseTestClass
         Text text = MakeText(markup);
 
         text.RawText.ShouldBe("a", "Because every runtime recognizes the same tag names, so a known tag never draws as literal text");
+    }
+
+    [Fact]
+    public void Text_LineHeightMultiplierTag_IsLiteralText()
+    {
+        Text text = MakeText("[LineHeightMultiplier=2]a[/LineHeightMultiplier]");
+
+        text.RawText.ShouldBe("[LineHeightMultiplier=2]a[/LineHeightMultiplier]",
+            "Because line height applies to whole lines, so no runtime knows it as a tag");
+    }
+
+    [Fact]
+    public void Text_AlphaTagWithValidValue_AddsAlphaRun()
+    {
+        Text text = MakeText("[Alpha=128]a[/Alpha]");
+
+        text.InlineVariables.Single(v => v.VariableName == "Alpha").Value.ShouldBe((byte)128);
+    }
+
+    [Fact]
+    public void Text_UseFontSmoothingTag_ResolvesARunFont()
+    {
+        Text text = MakeText("[UseFontSmoothing=false]a[/UseFontSmoothing]b");
+
+        text.RawText.ShouldBe("ab");
+        FontAt(text, 0).ShouldNotBe("base", "Because an unsmoothed run needs its own font");
+        FontAt(text, 0).ShouldNotBe(FontAt(text, 1));
     }
 
     [Fact]

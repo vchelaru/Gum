@@ -1578,6 +1578,10 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
                         {
                             color = color.WithBlue((byte)variable.Value);
                         }
+                        else if (variable.VariableName == nameof(Alpha))
+                        {
+                            color = color.WithAlpha((byte)variable.Value);
+                        }
                         else if(variable.VariableName == nameof(Y))
                         {
                             yOffset = (float)variable.Value;

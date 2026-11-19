@@ -45,6 +45,23 @@ public class TextRuntimeBbCodeStateTests : BaseTestClass
         textRuntime.X.ShouldBe(0);
     }
 
+    [Fact]
+    public void Text_WithStateBbCodeTag_AppliesAlpha()
+    {
+        TextRuntime textRuntime = new();
+
+        StateSave state = new() { Name = "Faded" };
+        state.Variables.Add(new VariableSave { Name = "Alpha", Value = 128 });
+        textRuntime.AddStates(new List<StateSave> { state });
+
+        textRuntime.Text = "a[State=Faded]b[/State]";
+
+        Text text = (Text)textRuntime.RenderableComponent;
+        InlineVariable alphaVariable = text.InlineVariables.Single(v => v.VariableName == "Alpha");
+        alphaVariable.Value.ShouldBe((byte)128);
+        (alphaVariable.StartIndex, alphaVariable.CharacterCount).ShouldBe((1, 1));
+    }
+
     // Regression: a state defined inside a StateSaveCategory (e.g. the Gum tool's States tab,
     // categorized states) - not just an uncategorized AddStates entry - must still resolve by bare
     // name, mirroring GraphicalUiElement.ApplyState(string)'s own lookup (States, then every

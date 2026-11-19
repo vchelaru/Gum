@@ -8,8 +8,8 @@ namespace Gum.Wireframe;
 
 /// <summary>
 /// The stack model that resolves which font a BBCode run uses: each open font tag
-/// (<c>Font</c>, <c>FontSize</c>, <c>OutlineThickness</c>, <c>IsItalic</c>, <c>IsBold</c>,
-/// <c>HasDropshadow</c>) pushes its value and each close tag pops it, so a run resolves to the font
+/// (<c>Font</c>, <c>FontSize</c>, <c>OutlineThickness</c>, <c>UseFontSmoothing</c>, <c>IsItalic</c>,
+/// <c>IsBold</c>, <c>HasDropshadow</c>) pushes its value and each close tag pops it, so a run resolves to the font
 /// implied by every tag open over it. Shared by the renderers (<c>CustomSetPropertyOnRenderable</c>
 /// resolves each run's font while drawing) and by <c>FontReferenceCollector</c> (bakes those fonts
 /// ahead of time), so the two cannot disagree about which fonts a text needs.
@@ -34,6 +34,7 @@ public class BbCodeFontStacks
             ["Red"] = "Red",
             ["Green"] = "Green",
             ["Blue"] = "Blue",
+            ["Alpha"] = "Alpha",
             ["Color"] = "Color",
             ["FontScale"] = "FontScale",
             ["Custom"] = "Custom",
@@ -41,6 +42,7 @@ public class BbCodeFontStacks
             ["Font"] = "Font",
             ["FontSize"] = "FontSize",
             ["OutlineThickness"] = "OutlineThickness",
+            ["UseFontSmoothing"] = "UseFontSmoothing",
             ["IsItalic"] = "IsItalic",
             ["IsBold"] = "IsBold",
             ["HasDropshadow"] = "HasDropshadow",
@@ -102,6 +104,8 @@ public class BbCodeFontStacks
             case "OutlineThickness":
                 return PushOrPop(OutlineThickness, isOpening,
                     int.TryParse(argument, NumberStyles.Integer, CultureInfo.InvariantCulture, out int parsedOutline), parsedOutline);
+            case "UseFontSmoothing":
+                return PushOrPop(UseFontSmoothing, isOpening, bool.TryParse(argument, out bool parsedSmoothing), parsedSmoothing);
             case "IsItalic":
                 return PushOrPop(IsItalic, isOpening, bool.TryParse(argument, out bool parsedItalic), parsedItalic);
             case "IsBold":
@@ -169,8 +173,8 @@ public class BbCodeFontStacks
     /// </summary>
     public static readonly HashSet<string> StateTagVariableAllowlist = new HashSet<string>
     {
-        "Color", "Red", "Green", "Blue", "FontScale",
-        "Font", "FontSize", "OutlineThickness", "IsItalic", "IsBold", "UseCustomFont", "HasDropshadow",
+        "Color", "Red", "Green", "Blue", "Alpha", "FontScale",
+        "Font", "FontSize", "OutlineThickness", "UseFontSmoothing", "IsItalic", "IsBold", "UseCustomFont", "HasDropshadow",
     };
 
     /// <summary>

@@ -34,7 +34,7 @@ char id=99 x=0 y=0 width=10 height=13 xoffset=0 yoffset=4 xadvance=10 page=0 chn
         {
             BitmapFont font = new BitmapFont((Texture2D)null!, FontData);
             font.SetFontPattern(256, 256);
-            Descriptions[font] = $"{bmfcSave.FontName}/{bmfcSave.FontSize}/{(bmfcSave.IsBold ? "B" : "-")}/{(bmfcSave.IsItalic ? "I" : "-")}/{bmfcSave.OutlineThickness}{(bmfcSave.HasDropshadow ? "/D" : "")}";
+            Descriptions[font] = $"{bmfcSave.FontName}/{bmfcSave.FontSize}/{(bmfcSave.IsBold ? "B" : "-")}/{(bmfcSave.IsItalic ? "I" : "-")}/{bmfcSave.OutlineThickness}{(bmfcSave.HasDropshadow ? "/D" : "")}{(bmfcSave.UseSmoothing ? "" : "/noSmooth")}";
             return font;
         }
     }
@@ -172,7 +172,6 @@ char id=99 x=0 y=0 width=10 height=13 xoffset=0 yoffset=4 xadvance=10 page=0 chn
 
     [Theory]
     [InlineData("[Alpha=128]a[/Alpha]")]
-    [InlineData("[LineHeightMultiplier=2]a[/LineHeightMultiplier]")]
     [InlineData("[UseFontSmoothing=false]a[/UseFontSmoothing]")]
     [InlineData("[HasDropshadow=false]a[/HasDropshadow]")]
     [InlineData("[Link=shop]a[/Link]")]
@@ -181,6 +180,50 @@ char id=99 x=0 y=0 width=10 height=13 xoffset=0 yoffset=4 xadvance=10 page=0 chn
         Text text = MakeText(markup, out _);
 
         text.RawText.ShouldBe("a", "Because every runtime recognizes the same tag names, so a known tag never draws as literal text");
+    }
+
+    [Fact]
+    public void Text_LineHeightMultiplierTag_IsLiteralText()
+    {
+        Text text = MakeText("[LineHeightMultiplier=2]a[/LineHeightMultiplier]", out _);
+
+        text.RawText.ShouldBe("[LineHeightMultiplier=2]a[/LineHeightMultiplier]",
+            "Because line height applies to whole lines, so no runtime knows it as a tag");
+    }
+
+    [Theory]
+    [InlineData("[Alpha=128]a[/Alpha]", 128)]
+    [InlineData("[alpha=0]a[/alpha]", 0)]
+    public void Text_AlphaTagWithValidValue_AddsAlphaRun(string markup, int expectedAlpha)
+    {
+        Text text = MakeText(markup, out _);
+
+        text.RawText.ShouldBe("a");
+        InlineVariable alpha = text.InlineVariables.Single(v => v.VariableName == "Alpha");
+        alpha.Value.ShouldBe((byte)expectedAlpha);
+        (alpha.StartIndex, alpha.CharacterCount).ShouldBe((0, 1));
+    }
+
+    [Theory]
+    [InlineData("[Alpha=300]a[/Alpha]")]
+    [InlineData("[Alpha=abc]a[/Alpha]")]
+    [InlineData("[Alpha]a[/Alpha]")]
+    public void Text_AlphaTagWithUnparseableValue_AddsNoRun(string markup)
+    {
+        Text text = MakeText(markup, out _);
+
+        text.RawText.ShouldBe("a");
+        text.InlineVariables.ShouldNotContain(v => v.VariableName == "Alpha");
+    }
+
+    [Fact]
+    public void Text_UseFontSmoothingTag_ResolvesUnsmoothedFontForTheRun()
+    {
+        Text text = MakeText("[UseFontSmoothing=false]a[/UseFontSmoothing]b", out RecordingFontCreator creator);
+
+        text.RawText.ShouldBe("ab");
+        FontAt(text, creator, 0).ShouldBe("TagValueTestsFont/18/-/-/0/noSmooth");
+        FontAt(text, creator, 1).ShouldBeOneOf("base", "TagValueTestsFont/18/-/-/0");
     }
 
     [Fact]

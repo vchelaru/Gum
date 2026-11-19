@@ -1674,6 +1674,9 @@ public class Text : IVisible, IRenderableIpso,
                     case nameof(Blue):
                         runColor = new Color(runColor.R, runColor.G, (byte)variable.Value, runColor.A);
                         break;
+                    case nameof(Alpha):
+                        runColor = new Color(runColor.R, runColor.G, runColor.B, (byte)variable.Value);
+                        break;
                     case "Custom":
                         if (variable.Value is ParameterizedLetterCustomizationCall call)
                         {
