@@ -44,6 +44,12 @@ non-FRB docs.
 - **AnimationChains** — `.achx`, sprite-sheet flipbook on Sprite/NineSlice; see
   [[gum-runtime-animation-chains]]. **Different concept, different file, different runtime.**
 
+## The editor canvas redraws every frame
+The canvas runs a continuous frame loop: a `DispatcherTimer` in
+`Tool/Gum.Avalonia/Canvas/AvaloniaGraphicsDeviceControl.cs` calls `WireframeCanvasCore.Activity`,
+which ticks `TimeManager` and `SpriteManager` each frame. Anything time-driven (.achx playback,
+state animation preview, an animated text effect) animates in the editor with no new redraw support.
+
 ## Landmines
 - **"Keyframe" is a union of 3 things.** `AnimatedKeyframeViewModel` is a state keyframe OR
   sub-animation ref OR named event, discriminated by which string is non-empty (StateName →
