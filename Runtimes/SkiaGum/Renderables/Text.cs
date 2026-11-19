@@ -336,6 +336,10 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
     /// </remarks>
     public int? MaxLettersToShow { get; set; }
 
+    /// <inheritdoc/>
+    /// <remarks>RawText holds the markup here, so this counts the tag-stripped layout text.</remarks>
+    public int DisplayedLetterCount => _layoutText?.Length ?? 0;
+
     /// <summary>
     /// The wrapped lines actually revealed given <see cref="MaxLettersToShow"/>: <see cref="WrappedText"/>
     /// with each line truncated to the remaining letter budget so a typewriter reveal pauses mid-line
