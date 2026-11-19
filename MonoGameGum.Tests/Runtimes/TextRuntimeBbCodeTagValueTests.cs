@@ -177,12 +177,18 @@ char id=99 x=0 y=0 width=10 height=13 xoffset=0 yoffset=4 xadvance=10 page=0 chn
     public void Text_CustomTagAfterEmoji_ReceivesUtf16IndexWithTagsRemoved()
     {
         Text.Customizations["TagValueIndex"] = (index, block) => new LetterCustomization();
+        try
+        {
+            Text text = MakeText("\U0001F600[Color=Red]a[/Color][Custom=TagValueIndex]bc[/Custom]", out _);
 
-        Text text = MakeText("\U0001F600[Color=Red]a[/Color][Custom=TagValueIndex]bc[/Custom]", out _);
-
-        List<ParameterizedLetterCustomizationCall> calls = text.InlineVariables
-            .Select(v => v.Value).OfType<ParameterizedLetterCustomizationCall>().ToList();
-        calls.Select(c => c.CharacterIndex).ShouldBe(new[] { 3, 4 });
-        calls.ShouldAllBe(c => c.TextBlock == "bc");
+            List<ParameterizedLetterCustomizationCall> calls = text.InlineVariables
+                .Select(v => v.Value).OfType<ParameterizedLetterCustomizationCall>().ToList();
+            calls.Select(c => c.CharacterIndex).ShouldBe(new[] { 3, 4 });
+            calls.ShouldAllBe(c => c.TextBlock == "bc");
+        }
+        finally
+        {
+            Text.Customizations.Remove("TagValueIndex");
+        }
     }
 }
