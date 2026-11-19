@@ -56,6 +56,35 @@ public class FontFileGeneratorSelectorTests
     }
 
     [Fact]
+    public async Task KernSmithGenerator_ShouldBeCreatedOnFirstUseOnly()
+    {
+        RecordingFontFileGenerator bmFont = new RecordingFontFileGenerator();
+        RecordingFontFileGenerator kernSmith = new RecordingFontFileGenerator();
+        int kernSmithCreations = 0;
+        FontGeneratorType currentType = FontGeneratorType.BmFont;
+        FontFileGeneratorSelector selector = new FontFileGeneratorSelector(
+            bmFont,
+            new Lazy<IFontFileGenerator>(() =>
+            {
+                kernSmithCreations++;
+                return kernSmith;
+            }),
+            () => currentType,
+            isBmFontSupported: () => true);
+        BmfcSave bmfcSave = new BmfcSave();
+
+        await selector.GenerateFont(bmfcSave, "/tmp/test.fnt", createTask: false);
+        kernSmithCreations.ShouldBe(0);
+
+        currentType = FontGeneratorType.KernSmith;
+        await selector.GenerateFont(bmfcSave, "/tmp/test.fnt", createTask: false);
+        _ = selector.RequiresSizeEstimation;
+
+        kernSmithCreations.ShouldBe(1);
+        kernSmith.WasCalled.ShouldBeTrue();
+    }
+
+    [Fact]
     public async Task GenerateFont_ShouldReevaluateGeneratorType_OnEachCall()
     {
         RecordingFontFileGenerator bmFont = new RecordingFontFileGenerator();

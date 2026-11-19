@@ -17,7 +17,7 @@ namespace Gum.ProjectServices.FontGeneration;
 public class FontFileGeneratorSelector : IFontFileGenerator
 {
     private readonly IFontFileGenerator _bmFontGenerator;
-    private readonly IFontFileGenerator _kernSmithGenerator;
+    private readonly Lazy<IFontFileGenerator> _kernSmithGenerator;
     private readonly Func<FontGeneratorType> _getGeneratorType;
     private readonly Func<bool> _isBmFontSupported;
 
@@ -39,6 +39,20 @@ public class FontFileGeneratorSelector : IFontFileGenerator
         IFontFileGenerator kernSmithGenerator,
         Func<FontGeneratorType> getGeneratorType,
         Func<bool>? isBmFontSupported = null)
+        : this(bmFontGenerator, new Lazy<IFontFileGenerator>(kernSmithGenerator), getGeneratorType, isBmFontSupported)
+    {
+    }
+
+    /// <summary>
+    /// Initializes a new instance whose KernSmith generator is created on first use, so a session
+    /// that never generates with KernSmith never loads it or its FreeType rasterizer.
+    /// </summary>
+    /// <inheritdoc cref="FontFileGeneratorSelector(IFontFileGenerator, IFontFileGenerator, Func{FontGeneratorType}, Func{bool})"/>
+    public FontFileGeneratorSelector(
+        IFontFileGenerator bmFontGenerator,
+        Lazy<IFontFileGenerator> kernSmithGenerator,
+        Func<FontGeneratorType> getGeneratorType,
+        Func<bool>? isBmFontSupported = null)
     {
         _bmFontGenerator = bmFontGenerator;
         _kernSmithGenerator = kernSmithGenerator;
@@ -58,7 +72,7 @@ public class FontFileGeneratorSelector : IFontFileGenerator
     private IFontFileGenerator CurrentGenerator =>
         FontGeneratorResolver.Resolve(_getGeneratorType(), _isBmFontSupported()) switch
         {
-            FontGeneratorType.KernSmith => _kernSmithGenerator,
+            FontGeneratorType.KernSmith => _kernSmithGenerator.Value,
             _ => _bmFontGenerator
         };
 }

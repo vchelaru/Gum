@@ -15,6 +15,7 @@ using Gum.Avalonia.Shell;
 using Gum.Controls;
 using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
+using Gum.Diagnostics;
 using Gum.Input;
 using Gum.Managers;
 using Gum.Plugins.InternalPlugins.TreeView;
@@ -133,6 +134,38 @@ public sealed class AvaloniaElementTreeView : IElementTreeView
         WireTree();
         _palette.AddToCurrentRequested = typeName => AddStandardToCurrentRequested?.Invoke(typeName);
         _palette.EditDefaultsRequested = typeName => EditStandardDefaultsRequested?.Invoke(typeName);
+        if (StartupTiming.IsEnabled)
+        {
+            MarkFirstPopulatedFrame();
+        }
+    }
+
+    // Startup timing only: the first frame drawn after the tree shows the project's elements.
+    private void MarkFirstPopulatedFrame()
+    {
+        void OnLayoutUpdated(object? sender, EventArgs e)
+        {
+            if (!HasProjectNodes() || TopLevel.GetTopLevel(_tree) is not { } topLevel)
+            {
+                return;
+            }
+            _tree.LayoutUpdated -= OnLayoutUpdated;
+            topLevel.RequestAnimationFrame(_ => StartupTiming.Mark("Project tree: first populated frame"));
+        }
+        _tree.LayoutUpdated += OnLayoutUpdated;
+    }
+
+    /// <summary>True once a root folder has children: the root folders exist before a project loads, and its elements fill them.</summary>
+    internal bool HasProjectNodes()
+    {
+        foreach (GumTreeNode root in _tree.Nodes)
+        {
+            if (root.Nodes.Count > 0)
+            {
+                return true;
+            }
+        }
+        return false;
     }
 
     #region IElementTreeView
