@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Runtime.CompilerServices;
 using Avalonia;
 using Avalonia.Threading;
 using Gum.Avalonia.Diagnostics;
@@ -182,14 +183,26 @@ public static class Program
     }
 
     /// <summary>The Avalonia app builder; also used by the headless tests.</summary>
-    public static AppBuilder BuildAvaloniaApp(IServiceProvider services, HeadOptions options) =>
-        AppBuilder.Configure(() => new App(services, options))
+    public static AppBuilder BuildAvaloniaApp(IServiceProvider services, HeadOptions options)
+    {
+        AppBuilder builder = AppBuilder.Configure(() => new App(services, options))
             .UsePlatformDetect()
-            // Gum sets a NativeMenu only on macOS, so exporting one over DBus on Linux does nothing
-            // except call a registrar many desktops (Cinnamon, GNOME) don't have.
-            .With(new X11PlatformOptions { UseDBusMenu = false })
             .WithInterFont()
             .LogToTrace();
+        // UsePlatformDetect picks X11 only on Linux, so its options matter only there.
+        if (OperatingSystem.IsLinux())
+        {
+            ConfigureX11(builder);
+        }
+        return builder;
+    }
+
+    // A method of its own so the JIT loads Avalonia.X11 only when it runs, not on Windows or macOS.
+    // Gum sets a NativeMenu only on macOS, so exporting one over DBus on Linux does nothing except
+    // call a registrar many desktops (Cinnamon, GNOME) don't have.
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private static void ConfigureX11(AppBuilder builder) =>
+        builder.With(new X11PlatformOptions { UseDBusMenu = false });
 
     /// <summary>
     /// The per-user Gum settings folder, <see cref="FileManager.UserApplicationDataForThisApplication"/>
