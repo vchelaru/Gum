@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
@@ -10,6 +11,13 @@ namespace Gum.Reflection;
 public class TypeManager : ITypeManager
 {
     List<Type>? mTypes;
+    private readonly ConcurrentDictionary<string, Type?> _resolved = new ConcurrentDictionary<string, Type?>();
+    private readonly Func<string, Type?> _resolve;
+
+    public TypeManager()
+    {
+        _resolve = Resolve;
+    }
 
     public void AddType(Type type)
     {
@@ -18,6 +26,8 @@ public class TypeManager : ITypeManager
             throw new Exception("Must call TypeManager.Initialize first");
         }
         mTypes.Add(type);
+        // A name that resolved to nothing, or a nullable of it, may resolve to the new type now.
+        _resolved.Clear();
     }
 
     [RequiresUnreferencedCode("Scans all types in the executing, RenderingLibrary, and GumCommon-linked assemblies via Assembly.GetTypes(), which can be incomplete or throw after trimming.")]
@@ -32,6 +42,7 @@ public class TypeManager : ITypeManager
         allTypes.AddRange(Assembly.GetAssembly(typeof(DimensionUnitType))!.GetTypes());
 
         mTypes = allTypes;
+        _resolved.Clear();
     }
 
 
@@ -48,6 +59,16 @@ public class TypeManager : ITypeManager
             throw new ArgumentNullException(nameof(typeAsString));
         }
 
+        // A lookup scans every known type, and project load asks for the same few names once per
+        // variable. Concurrent in case a lookup comes from a background thread.
+        return _resolved.GetOrAdd(typeAsString, _resolve);
+    }
+
+    [RequiresDynamicCode("Resolving a nullable-enum type name calls Type.MakeGenericType, which requires generating new code at runtime.")]
+    private Type? Resolve(string typeAsString)
+    {
+        // GetTypeFromString checked this before asking.
+        List<Type> mTypes = this.mTypes!;
         bool isQualified = typeAsString.Contains(".");
 
         if (isQualified)
