@@ -62,6 +62,7 @@ public sealed class App : Application
     /// <inheritdoc/>
     public override void Initialize()
     {
+        StartupTiming.Mark("App.Initialize start");
         Name = "Gum";
         // macOS sends a Finder-opened document as an activation, not a command-line argument.
         // Subscribe before the main loop starts so one sent at launch isn't missed (#5130).
@@ -82,13 +83,17 @@ public sealed class App : Application
         }
         // Compact density: the WPF head's fields and rows are tighter than Fluent's defaults.
         Styles.Add(new FluentTheme { DensityStyle = DensityStyle.Compact });
+        StartupTiming.Mark("FluentTheme added");
         FrbThemeResources.Install(Resources);
+        StartupTiming.Mark("FrbThemeResources installed");
         // ColorPicker ships its templates separately from the Fluent theme.
         Styles.Add(new StyleInclude(new Uri("avares://Gum/"))
         {
             Source = new Uri("avares://Avalonia.Controls.ColorPicker/Themes/Fluent/Fluent.xaml"),
         });
+        StartupTiming.Mark("ColorPicker styles added");
         Styles.Add(GumChromeStyles.Create());
+        StartupTiming.Mark("GumChromeStyles added");
         AutomationNames.Install();
         if (OperatingSystem.IsMacOS())
         {

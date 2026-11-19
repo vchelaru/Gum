@@ -83,12 +83,14 @@ public static class Program
         }
 
         host.StartAsync().GetAwaiter().GetResult();
+        StartupTiming.Mark("Host started");
 
         int exitCode = BuildAvaloniaApp(host.Services, options)
             .AfterSetup(_ =>
             {
                 UnhandledExceptionHooks.InstallDispatcherHook(crashReporter);
                 services = host.Services;
+                StartupTiming.Mark("Avalonia AfterSetup");
             })
             .StartWithClassicDesktopLifetime(args);
 
