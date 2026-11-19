@@ -128,6 +128,31 @@ function Skip-WithoutSokol([string]$name, [string]$relativeProject) {
     return $true
 }
 
+# The frozen WPF head (ADR-0017) is not built by CI, and its restore fails on shared tool changes
+# (NU1605), so its projects are skipped. A project is WPF-only when every solution that lists it also
+# lists the WPF head (Gum/Gum.csproj), so a new WPF solution or project needs no edit here.
+function Get-SolutionProjects([string]$solution) {
+    $dir = Split-Path -Parent $solution
+    $pattern = if ($solution -like '*.slnx') { 'Path="(?<p>[^"]+\.csproj)"' } else { '(?m)^Project\([^)]*\)\s*=\s*"[^"]*",\s*"(?<p>[^"]+\.csproj)"' }
+    foreach ($m in [regex]::Matches((Get-Content -Raw $solution), $pattern)) {
+        Get-Key ([System.IO.Path]::GetFullPath((Join-Path $dir ($m.Groups['p'].Value -replace '\\', '/'))))
+    }
+}
+$wpfHeadKey = Get-Key (Join-Path $repo 'Gum/Gum.csproj')
+$inWpfSolution = [System.Collections.Generic.HashSet[string]]::new()
+$inOtherSolution = [System.Collections.Generic.HashSet[string]]::new()
+foreach ($solution in @(git ls-files '*.sln' '*.slnx' 2>$null | Where-Object { $_ })) {
+    $members = @(Get-SolutionProjects (Join-Path $repo $solution))
+    $isWpfSolution = $members -contains $wpfHeadKey
+    foreach ($member in $members) {
+        if ($isWpfSolution) { [void]$inWpfSolution.Add($member) } else { [void]$inOtherSolution.Add($member) }
+    }
+}
+function Test-IsWpfOnly([string]$project) {
+    $key = Get-Key $project
+    $inWpfSolution.Contains($key) -and -not $inOtherSolution.Contains($key)
+}
+
 $failed = $false
 $warningsOnChangedLines = [System.Collections.Generic.HashSet[string]]::new()
 
@@ -178,6 +203,14 @@ if ($testFilters.Count -eq 0 -and $sourceProjects.Count -eq 0 -and $indirectProj
 # Files with no project directory build whatever includes them. A project that cannot build on this
 # machine (missing FlatRedBall sibling or fna submodule) is listed as unverified, not failed.
 $unverified = [System.Collections.Generic.List[string]]::new()
+foreach ($project in @(@($sourceProjects) + @($indirectProjects.Keys) + @($testFilters.Keys) | Where-Object { Test-IsWpfOnly $_ } | Sort-Object -Unique)) {
+    $relativeProject = $project.Substring($repo.Length + 1)
+    Write-Host ("skipped      $relativeProject`: frozen WPF head (ADR-0017), CI does not build it, unverified")
+    $unverified.Add("$relativeProject (frozen WPF head)")
+    [void]$sourceProjects.Remove($project)
+    $indirectProjects.Remove($project)
+    $testFilters.Remove($project)
+}
 foreach ($project in @($sourceProjects)) {
     # A folder's second csproj can be a variant that needs a missing dependency (SkiaInGum.FNA needs fna).
     $missing = Find-MissingDependency $project ([System.Collections.Generic.HashSet[string]]::new())
@@ -222,12 +255,6 @@ foreach ($project in $testFilters.Keys | Sort-Object) {
     $relativeProject = $project.Substring($repo.Length + 1)
     $filter = ($testFilters[$project] | Sort-Object -Unique) -join '|'
     $command = @('test', $project, '-nologo', '-v:m', '--filter', $filter)
-    if ($project -match 'GumToolUnitTests\.csproj$') {
-        # The frozen WPF head's plugin post-builds use $(SolutionDir) in their copy steps, which is
-        # undefined when building this csproj directly (see CLAUDE.md "Running focused WPF-head
-        # unit tests").
-        $command += "-p:SolutionDir=$repo\"
-    }
     if (Skip-WithoutSokol "test $relativeProject ($filter)" $relativeProject) { continue }
     Invoke-Step -Name "test $relativeProject ($filter)" -Command $command -TimeoutSeconds 300
 }

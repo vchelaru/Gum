@@ -49,6 +49,23 @@ Assert-Builds 'file linked by a Directory.Build.props builds the projects under 
 Assert-Plan 'file in the Avalonia head builds Gum.slnx, not the head csproj' `
     'Tool/Gum.Avalonia/HeadOptions.cs' 'build Gum.slnx'
 
+# CI does not build the frozen WPF head (ADR-0017): a project only in solutions that list Gum/Gum.csproj
+# is skipped as unverified, while a neutral plugin under Gum/ that Gum.slnx lists still builds.
+function Assert-SkippedAsWpf([string]$name, [string]$file, [string]$project) {
+    $output = @(& pwsh -NoProfile -File (Join-Path $PSScriptRoot 'verify.ps1') -Files $file -ListOnly 6>&1 | ForEach-Object { "$_" -replace '\\', '/' })
+    $planned = @($output | Where-Object { $_ -match '^(test|build)\s+' })
+    if ($planned.Count -eq 0 -and ($output | Where-Object { $_ -like "skipped*$project*frozen WPF head*" })) { Write-Host "pass  $name" }
+    else { Write-Host "FAIL  $name`n  expected: skipped $project, nothing built`n  output:`n    $($output -join "`n    ")"; $script:failures++ }
+}
+
+Assert-SkippedAsWpf 'file in the WPF head is skipped, not built' 'Gum/Services/WpfHeadStartup.cs' 'Gum/Gum.csproj'
+
+Assert-SkippedAsWpf 'file in a WPF-only test project is skipped, not tested' `
+    'Tool/Tests/GumToolUnitTests/BaseTestClass.cs' 'Tool/Tests/GumToolUnitTests/GumToolUnitTests.csproj'
+
+Assert-Plan 'file in a neutral plugin under Gum/ that Gum.slnx lists still builds' `
+    'Gum/GumFormsPlugin/MainGumFormsPlugin.cs' 'build Gum/GumFormsPlugin/GumFormsPlugin.csproj'
+
 Assert-Builds 'file linked by a csproj and by a .props another .props imports builds every project that sees it' `
     'MonoGameGum/Input/CursorExtensions.cs' `
     @('MonoGameGum/KniGum/KniGum.csproj', 'MonoGameGum/MonoGameGum.csproj','Runtimes/BrutalGum.OGL/BrutalGum.OGL.csproj', 'Runtimes/BrutalGum.Vulkan/BrutalGum.Vulkan.csproj', 'Runtimes/KniSkiaGum/KniSkiaGum.csproj', 'Runtimes/RaylibGum/RaylibGum.csproj',
