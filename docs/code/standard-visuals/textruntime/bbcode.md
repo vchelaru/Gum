@@ -77,7 +77,7 @@ Available in December 2026, or now if building Gum from source.
 
 ## Font Smoothing
 
-The `UseFontSmoothing` tag draws the wrapped text with or without antialiasing, independently of the TextRuntime's own `UseFontSmoothing` value. `[UseFontSmoothing=false]` gives crisp, pixel-art style edges.
+The `UseFontSmoothing` tag draws the wrapped text with or without antialiasing, independently of the TextRuntime's own `UseFontSmoothing` value. `[UseFontSmoothing=false]` draws the text with hard, pixelated edges.
 
 ```csharp
 // Initialize
@@ -85,10 +85,6 @@ var text = new TextRuntime();
 text.Text = "Smooth text and [UseFontSmoothing=false]pixel text[/UseFontSmoothing]";
 text.AddToRoot();
 ```
-
-{% hint style="info" %}
-On [SkiaSharp-based runtimes](../../about/runtimes.md) the tag is parsed and stripped from the text but has no effect, the same as the TextRuntime's own `UseFontSmoothing` value there.
-{% endhint %}
 
 {% hint style="info" %}
 Available in December 2026, or now if building Gum from source.
