@@ -30,7 +30,15 @@ public static class BbCodeEffectParityCases
         // White toward white at 25% alpha by ease(pingpong(t, 1), -2).
         new object[] { "[Pulse]", "[/Pulse]", 0.5, 0f, 0f, 255, 255, 255, 160 },
         new object[] { "[Pulse]", "[/Pulse]", 1.0, 0f, 0f, 255, 255, 255, 64 },
+        // A [Custom] function runs first; the effect adds to its offset and a color effect replaces its color.
+        new object[] { "[Wave amp=100 freq=5][Custom=" + ShiftFunctionName + "]", "[/Custom][/Wave]", 0.1, 0f, 4.794f + ShiftYOffset, 255, 0, 0, 255 },
+        new object[] { "[Rainbow][Custom=" + ShiftFunctionName + "]", "[/Custom][/Rainbow]", 0.0, 0f, ShiftYOffset, Rainbow0R, Rainbow0G, Rainbow0B, 255 },
     };
+
+    /// <summary>The [Custom] function each runtime's parity test registers: moves the letter down
+    /// <see cref="ShiftYOffset"/> pixels and colors it red.</summary>
+    public const string ShiftFunctionName = "ParityShift";
+    public const float ShiftYOffset = 3f;
 
     const float ShakeX06 = 0f;
     const float ShakeY06 = 5f;

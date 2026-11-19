@@ -1698,19 +1698,9 @@ public class Text : IVisible, IRenderableIpso,
             float scaleY = 1;
             HorizontalAlignment scaleXOrigin = HorizontalAlignment.Center;
             VerticalAlignment scaleYOrigin = VerticalAlignment.Center;
-            // A built-in effect applies once: before the first [Custom] function, so a context function sees its
-            // offset and color, or else after every other variable. totalWidth is the letter's distance from the
-            // start of its line, as on MonoGame.
+            // A built-in effect applies after every other variable, [Custom] functions included, and adds to their
+            // offsets, as on Skia and MonoGame.
             ParameterizedLetterCustomizationCall? effectCall = null;
-            foreach (var variable in run.Variables)
-            {
-                if (variable.Value is ParameterizedLetterCustomizationCall { BuiltInEffect: not null } builtIn)
-                {
-                    effectCall = builtIn;
-                    break;
-                }
-            }
-            bool isEffectApplied = false;
 
             foreach (var variable in run.Variables)
             {
@@ -1735,9 +1725,9 @@ public class Text : IVisible, IRenderableIpso,
                         runColor = new Color(runColor.R, runColor.G, runColor.B, (byte)variable.Value);
                         break;
                     case "Custom":
-                        if (variable.Value is ParameterizedLetterCustomizationCall { BuiltInEffect: not null })
+                        if (variable.Value is ParameterizedLetterCustomizationCall { BuiltInEffect: not null } builtInCall)
                         {
-                            // Applied once, see effectCall above.
+                            effectCall = builtInCall;
                         }
                         else if (variable.Value is ParameterizedLetterCustomizationCall call)
                         {
@@ -1745,11 +1735,6 @@ public class Text : IVisible, IRenderableIpso,
                             var function = call.Function;
                             if (contextFunction != null || function != null)
                             {
-                                if (effectCall != null && !isEffectApplied)
-                                {
-                                    runColor = ApplyBuiltInEffect(effectCall, totalWidth, ref xOffset, ref yOffset, runColor);
-                                    isEffectApplied = true;
-                                }
                                 LetterCustomization response;
                                 if (contextFunction != null)
                                 {
@@ -1807,8 +1792,9 @@ public class Text : IVisible, IRenderableIpso,
                 }
             }
 
-            if (effectCall != null && !isEffectApplied)
+            if (effectCall != null)
             {
+                // totalWidth is this letter's distance from the start of its line, as on MonoGame.
                 runColor = ApplyBuiltInEffect(effectCall, totalWidth, ref xOffset, ref yOffset, runColor);
             }
             BuiltInEffectRunObserver?.Invoke(runText, xOffset, yOffset, runColor);

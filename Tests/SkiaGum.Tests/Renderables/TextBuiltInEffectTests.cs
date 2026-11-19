@@ -151,6 +151,8 @@ public class TextBuiltInEffectTests : BaseTestClass
     public void Render_Effect_MatchesTheParityTable(string open, string close, double time, float dx, float dy,
         int red, int green, int blue, int alpha)
     {
+        Text.Customizations[BbCodeEffectParityCases.ShiftFunctionName] = (_, _) =>
+            new LetterCustomization { YOffset = BbCodeEffectParityCases.ShiftYOffset, Color = System.Drawing.Color.Red };
         using SKSurface surface = SKSurface.Create(new SKImageInfo(200, 200));
         Text plain = MakeText("A");
         plain.Color = SKColors.White;
@@ -160,6 +162,7 @@ public class TextBuiltInEffectTests : BaseTestClass
         BbCodeTextEffect.TimeSeconds = () => time;
 
         using SKBitmap bitmap = Draw(surface, text);
+        Text.Customizations.Remove(BbCodeEffectParityCases.ShiftFunctionName);
 
         // Ink edges are whole pixels.
         ((float)(InkLeft(bitmap) - InkLeft(plainBitmap))).ShouldBe(dx, 1f);

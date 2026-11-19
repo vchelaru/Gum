@@ -1602,12 +1602,9 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
                     float scaleX = 1;
                     float scaleY = 1;
                     float rotationOffset = 0;
-                    // A built-in effect applies once: before the first [Custom] function, so a context function
-                    // sees its offset and color, or else after every other variable.
-                    ParameterizedLetterCustomizationCall? effectCall = FindBuiltInEffect(substring.Variables);
-                    bool isEffectApplied = false;
-                    // The letter's distance from the start of its line along the text's own axis.
-                    float letterX = Vector2.Dot(startOfRun - startOfLine, xAxis);
+                    // A built-in effect applies after every other variable, [Custom] functions included, and adds
+                    // to their offsets, as on Skia, where it is applied at draw time to the laid-out letter.
+                    ParameterizedLetterCustomizationCall? effectCall = null;
                     for (int variableIndex = 0; variableIndex < substring.Variables.Count; variableIndex++)
                     {
                         var variable = substring.Variables[variableIndex];
@@ -1641,15 +1638,10 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
 
                             if (function?.BuiltInEffect != null)
                             {
-                                // Applied once, see effectCall above.
+                                effectCall = function;
                             }
                             else if(function?.Function != null || function?.ContextFunction != null)
                             {
-                                if (effectCall != null && !isEffectApplied)
-                                {
-                                    ApplyBuiltInEffect(effectCall, letterX, ref xOffset, ref yOffset, ref color);
-                                    isEffectApplied = true;
-                                }
                                 LetterCustomization response;
                                 if(function.ContextFunction != null)
                                 {
@@ -1718,8 +1710,10 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
                     }
 
 
-                    if (effectCall != null && !isEffectApplied)
+                    if (effectCall != null)
                     {
+                        // The letter's distance from the start of its line along the text's own axis.
+                        float letterX = Vector2.Dot(startOfRun - startOfLine, xAxis);
                         ApplyBuiltInEffect(effectCall, letterX, ref xOffset, ref yOffset, ref color);
                     }
 
@@ -1864,18 +1858,6 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
             return 0;
         }
         return runFont.GetKerning(previous.Substring[previous.Substring.Length - 1], run.Substring[0]) * runScale;
-    }
-
-    private static ParameterizedLetterCustomizationCall? FindBuiltInEffect(List<InlineVariable> variables)
-    {
-        for (int i = 0; i < variables.Count; i++)
-        {
-            if (variables[i].Value is ParameterizedLetterCustomizationCall { BuiltInEffect: not null } call)
-            {
-                return call;
-            }
-        }
-        return null;
     }
 
     private static void ApplyBuiltInEffect(ParameterizedLetterCustomizationCall call, float letterX,

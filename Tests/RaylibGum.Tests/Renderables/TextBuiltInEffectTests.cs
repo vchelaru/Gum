@@ -45,6 +45,8 @@ public class TextBuiltInEffectTests : BaseTestClass
         System.Func<double> originalClock = BbCodeTextEffect.TimeSeconds;
         List<(string Text, float X, float Y, Raylib_cs.Color Color)> runs = new();
         Text.BuiltInEffectRunObserver = (text, x, y, color) => runs.Add((text, x, y, color));
+        Text.Customizations[BbCodeEffectParityCases.ShiftFunctionName] = (_, _) =>
+            new LetterCustomization { YOffset = BbCodeEffectParityCases.ShiftYOffset, Color = System.Drawing.Color.Red };
         try
         {
             TextRuntime textRuntime = new() { Width = 500 };
@@ -68,6 +70,7 @@ public class TextBuiltInEffectTests : BaseTestClass
         finally
         {
             Text.BuiltInEffectRunObserver = null;
+            Text.Customizations.Remove(BbCodeEffectParityCases.ShiftFunctionName);
             BbCodeTextEffect.TimeSeconds = originalClock;
         }
     }

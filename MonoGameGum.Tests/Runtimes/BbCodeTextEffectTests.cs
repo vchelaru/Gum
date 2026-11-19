@@ -279,19 +279,28 @@ public class BbCodeTextEffectTests : BaseTestClass
     public void Draw_Effect_MatchesTheParityTable(string open, string close, double time, float dx, float dy,
         int red, int green, int blue, int alpha)
     {
-        float plainLeft = DrawnLefts(CreateText("A"))[0];
-        float plainTop = DrawnTops(CreateText("A"))[0];
-        Text text = CreateText($"{open}A{close}");
-        BbCodeTextEffect.TimeSeconds = () => time;
+        Text.Customizations[BbCodeEffectParityCases.ShiftFunctionName] = (_, _) =>
+            new LetterCustomization { YOffset = BbCodeEffectParityCases.ShiftYOffset, Color = System.Drawing.Color.Red };
+        try
+        {
+            float plainLeft = DrawnLefts(CreateText("A"))[0];
+            float plainTop = DrawnTops(CreateText("A"))[0];
+            Text text = CreateText($"{open}A{close}");
+            BbCodeTextEffect.TimeSeconds = () => time;
 
-        // The draw snaps each glyph to a whole pixel.
-        (DrawnLefts(text)[0] - plainLeft).ShouldBe(dx, 1f);
-        (DrawnTops(text)[0] - plainTop).ShouldBe(dy, 1f);
-        System.Drawing.Color color = DrawnColors(text)[0];
-        ((int)color.R).ShouldBe(red);
-        ((int)color.G).ShouldBe(green);
-        ((int)color.B).ShouldBe(blue);
-        ((int)color.A).ShouldBe(alpha);
+            // The draw snaps each glyph to a whole pixel.
+            (DrawnLefts(text)[0] - plainLeft).ShouldBe(dx, 1f);
+            (DrawnTops(text)[0] - plainTop).ShouldBe(dy, 1f);
+            System.Drawing.Color color = DrawnColors(text)[0];
+            ((int)color.R).ShouldBe(red);
+            ((int)color.G).ShouldBe(green);
+            ((int)color.B).ShouldBe(blue);
+            ((int)color.A).ShouldBe(alpha);
+        }
+        finally
+        {
+            Text.Customizations.Remove(BbCodeEffectParityCases.ShiftFunctionName);
+        }
     }
 
     [Fact]
@@ -339,14 +348,16 @@ public class BbCodeTextEffectTests : BaseTestClass
         }
     }
 
+    // As on Skia, where the effect is applied at draw time: a context function sees the letter before the effect,
+    // and the effect adds to the offset it returns.
     [Fact]
-    public void Draw_ContextCustomizationInsideAnEffect_ReceivesTheEffectOffset()
+    public void Draw_ContextCustomizationInsideAnEffect_SeesNoEffectAndTheEffectAddsToIt()
     {
         float? seenYOffset = null;
         Text.ContextCustomizations["Probe"] = (_, _, context) =>
         {
             seenYOffset = context.YOffset;
-            return context;
+            return new LetterCustomization { YOffset = 3 };
         };
         try
         {
@@ -355,9 +366,8 @@ public class BbCodeTextEffectTests : BaseTestClass
 
             float top = DrawnTops(text)[0];
 
-            seenYOffset.ShouldNotBeNull();
-            seenYOffset!.Value.ShouldBe((float)(Math.Sin(0.5) * 10), 0.001f);
-            top.ShouldBe(DrawnTops(CreateText("A"))[0] + seenYOffset.Value, 1f);
+            seenYOffset.ShouldBe(0f);
+            top.ShouldBe(DrawnTops(CreateText("A"))[0] + 3 + (float)(Math.Sin(0.5) * 10), 1f);
         }
         finally
         {
