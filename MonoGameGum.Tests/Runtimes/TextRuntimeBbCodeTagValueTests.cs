@@ -34,7 +34,7 @@ char id=99 x=0 y=0 width=10 height=13 xoffset=0 yoffset=4 xadvance=10 page=0 chn
         {
             BitmapFont font = new BitmapFont((Texture2D)null!, FontData);
             font.SetFontPattern(256, 256);
-            Descriptions[font] = $"{bmfcSave.FontName}/{bmfcSave.FontSize}/{(bmfcSave.IsBold ? "B" : "-")}/{(bmfcSave.IsItalic ? "I" : "-")}/{bmfcSave.OutlineThickness}";
+            Descriptions[font] = $"{bmfcSave.FontName}/{bmfcSave.FontSize}/{(bmfcSave.IsBold ? "B" : "-")}/{(bmfcSave.IsItalic ? "I" : "-")}/{bmfcSave.OutlineThickness}{(bmfcSave.HasDropshadow ? "/D" : "")}";
             return font;
         }
     }
@@ -95,6 +95,10 @@ char id=99 x=0 y=0 width=10 height=13 xoffset=0 yoffset=4 xadvance=10 page=0 chn
     [InlineData("[Color=CornflowerBlue]a[/Color]", 255, 100, 149, 237)]
     [InlineData("[Color=0xFF00FF00]a[/Color]", 255, 0, 255, 0)]
     [InlineData("[Color=0x8000FF00]a[/Color]", 128, 0, 255, 0)]
+    // 8 digits are 0xAARRGGBB, so a 00 alpha stays transparent.
+    [InlineData("[Color=0x00FF0000]a[/Color]", 0, 255, 0, 0)]
+    // 6 digits are 0xRRGGBB and draw opaque.
+    [InlineData("[Color=0xFF0000]a[/Color]", 255, 255, 0, 0)]
     public void Text_ColorTagWithValidValue_AppliesColor(string markup, int a, int r, int g, int b)
     {
         Text text = MakeText(markup, out _);
@@ -135,6 +139,7 @@ char id=99 x=0 y=0 width=10 height=13 xoffset=0 yoffset=4 xadvance=10 page=0 chn
     [InlineData("[IsBold=true]a[IsBold=maybe]b[/IsBold]c[/IsBold]")]
     [InlineData("[IsItalic=true]a[IsItalic=]b[/IsItalic]c[/IsItalic]")]
     [InlineData("[OutlineThickness=2]a[OutlineThickness=x]b[/OutlineThickness]c[/OutlineThickness]")]
+    [InlineData("[HasDropshadow=true]a[HasDropshadow=x]b[/HasDropshadow]c[/HasDropshadow]")]
     // An open tag with no value at all must not act as a close tag.
     [InlineData("[FontSize=40]a[FontSize]b[/FontSize]c[/FontSize]")]
     public void Text_FontTagWithUnparseableValue_InsideValidTag_KeepsEnclosingFont(string markup)
