@@ -55,6 +55,11 @@ public class TextBbCodeTagValueTests : BaseTestClass
     [InlineData("[Color=0x]a[/Color]")]
     // A # prefix is not a color form on any runtime (Skia's ParseColor reads only 0x and names).
     [InlineData("[Color=#FFFEFEFE]a[/Color]")]
+    // Only 6 (RRGGBB) or 8 (AARRGGBB) hex digits are a color.
+    [InlineData("[Color=0xFFF]a[/Color]")]
+    [InlineData("[Color=0xFFFFF]a[/Color]")]
+    [InlineData("[Color=0xFFFFFFF]a[/Color]")]
+    [InlineData("[Color=0x0FF00FF00]a[/Color]")]
     public void Text_ColorTagWithUnparseableValue_KeepsBaseColor(string markup)
     {
         Text text = MakeText(markup);
@@ -70,6 +75,10 @@ public class TextBbCodeTagValueTests : BaseTestClass
     [InlineData("[Color=CornflowerBlue]a[/Color]", 255, 100, 149, 237)]
     [InlineData("[Color=0xFF00FF00]a[/Color]", 255, 0, 255, 0)]
     [InlineData("[Color=0x8000FF00]a[/Color]", 128, 0, 255, 0)]
+    // 8 digits are 0xAARRGGBB, so a 00 alpha stays transparent.
+    [InlineData("[Color=0x00FF0000]a[/Color]", 0, 255, 0, 0)]
+    // 6 digits are 0xRRGGBB and draw opaque.
+    [InlineData("[Color=0xFF0000]a[/Color]", 255, 255, 0, 0)]
     public void Text_ColorTagWithValidValue_AppliesColor(string markup, int a, int r, int g, int b)
     {
         Text text = MakeText(markup);
