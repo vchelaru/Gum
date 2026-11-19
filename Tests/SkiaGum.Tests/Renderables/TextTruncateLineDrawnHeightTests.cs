@@ -16,6 +16,8 @@ public class TextTruncateLineDrawnHeightTests : BaseTestClass
     [InlineData("a\nb\nc\nd", 2, 2)]
     [InlineData("[FontScale=0.5]a\nb\nc\nd[/FontScale]", 2, 2)]
     [InlineData("[FontScale=2]a\nb\nc\nd[/FontScale]", 2, 1)]
+    [InlineData("[FontScale=2]a\nb\nc\nd[/FontScale]", 1.5f, 1)]
+    [InlineData("a\nb", 0.5f, 0)]
     public void TruncateLine_KeepsTheLinesWhoseDrawnHeightFits(string markup, float baseLines, int expectedLines)
     {
         TextRuntime plain = new();

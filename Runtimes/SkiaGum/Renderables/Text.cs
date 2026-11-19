@@ -336,6 +336,36 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
     /// </remarks>
     public int? MaxLettersToShow { get; set; }
 
+    /// <inheritdoc/>
+    /// <remarks>RawText holds the markup here, so this counts the tag-stripped layout text.</remarks>
+    public int DisplayedLetterCount => _layoutText?.Length ?? 0;
+
+    /// <inheritdoc/>
+    /// <remarks>
+    /// A text with a size or font run takes each line's top from the laid-out block, where such a run makes its line
+    /// taller (lines past the block step by the plain line height). Any other text steps by the plain line height.
+    /// </remarks>
+    public float GetDrawnLineTop(int lineIndex)
+    {
+        float plainStep = LineHeightInPixels * ((IWrappedText)this).WordWrapFontScale * LineHeightMultiplier;
+        if (!_hasHeightRun)
+        {
+            return lineIndex * plainStep;
+        }
+
+        var lines = GetCachedTextBlock().Lines;
+        if (lines.Count == 0)
+        {
+            return lineIndex * plainStep;
+        }
+        if (lineIndex < lines.Count)
+        {
+            return lines[lineIndex].YCoord - lines[0].YCoord;
+        }
+        var last = lines[lines.Count - 1];
+        return last.YCoord + last.Height - lines[0].YCoord + (lineIndex - lines.Count) * plainStep;
+    }
+
     /// <summary>
     /// The wrapped lines actually revealed given <see cref="MaxLettersToShow"/>: <see cref="WrappedText"/>
     /// with each line truncated to the remaining letter budget so a typewriter reveal pauses mid-line
@@ -778,6 +808,26 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
     /// and strips it lazily when building the RichTextKit <c>TextBlock</c> (issue #3679).
     /// </summary>
     public string? StoredMarkupText => _hasMarkup ? mRawText : null;
+
+    /// <summary>
+    /// Whether <see cref="RawText"/> is parsed as BBCode. True by default; changing it re-parses at once. Set it
+    /// through <c>TextRuntime.IsBbCodeEnabled</c> (or <c>SetProperty("IsBbCodeEnabled", ...)</c>), which also lays
+    /// the element out again (#8329).
+    /// </summary>
+    internal bool IsBbCodeEnabled
+    {
+        get => _isBbCodeEnabled;
+        set
+        {
+            if (_isBbCodeEnabled != value)
+            {
+                _isBbCodeEnabled = value;
+                ParseMarkup();
+                _cachedTextBlock = null;
+            }
+        }
+    }
+    bool _isBbCodeEnabled = true;
 
     public IRenderableIpso? Parent
     {
@@ -1561,7 +1611,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
         {
             // The first layout only supplies the line breaks, so it is laid out into a block this Text keeps and
             // clears for the next change instead of a new one (#7818).
-            _lineBreakLayout = BuildTextBlockFromRuns(runs, forcedWidth, _lineBreakLayout);
+            _lineBreakLayout = BuildTextBlockFromRuns(runs, forcedWidth, _lineBreakLayout, truncateToHeight: false);
             block = BuildTextBlockFromRuns(FitRunsToLines(runs, _lineBreakLayout, buffers.FittedRuns, buffers.LineRuns), forcedWidth);
         }
 
@@ -1623,7 +1673,9 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
     /// <param name="forcedWidth">The wrap width. When null, this Text's <see cref="Width"/> is used.</param>
     /// <param name="reuse">A block to clear and lay out into instead of a new one. RichTextKit keeps its buffers
     /// across <c>Clear</c>, so a block rebuilt every change allocates far less than a new block.</param>
-    private TextBlock BuildTextBlockFromRuns(List<StyledTextRun> runs, float? forcedWidth, TextBlock? reuse = null)
+    /// <param name="truncateToHeight">False for the layout that only supplies line breaks to <see cref="FitRunsToLines"/>:
+    /// its lines are not yet fit to their heights, so truncating it by Height would cut lines the fitted block keeps (#8341).</param>
+    private TextBlock BuildTextBlockFromRuns(List<StyledTextRun> runs, float? forcedWidth, TextBlock? reuse = null, bool truncateToHeight = true)
     {
         TextBlock textBlock;
         if (reuse != null)
@@ -1682,7 +1734,16 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
             // Vertical overflow (issue #3677): TruncateLine caps the block to this Text's Height so
             // RichTextKit drops lines that would spill past the bottom; SpillOver leaves MaxHeight
             // null and renders unbounded (the historical Skia behavior).
-            textBlock.MaxHeight = GetEffectiveMaxHeight();
+            textBlock.MaxHeight = truncateToHeight ? GetEffectiveMaxHeight() : null;
+
+            // A box that fits one plain line keeps the first line even when a size run makes it taller than the
+            // box, as MonoGame/raylib do: they cap TruncateLine by the plain line count, not the drawn height.
+            if (textBlock.MaxHeight != null && MaxNumberOfLines != 0 && textBlock.Lines.Count == 0
+                && textBlock.Length > 0 && Height >= LineHeightInPixels * ((IWrappedText)this).WordWrapFontScale)
+            {
+                textBlock.MaxHeight = null;
+                textBlock.MaxLines = 1;
+            }
 
             // Ellipsis (issue #3677): RichTextKit appends "..." to the final line whenever it
             // truncates the block (via MaxLines/MaxHeight) and EllipsisEnabled is true. Its default
@@ -3288,7 +3349,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
         _customRunsAtLayout.Clear();
         ParsedBbCodeTags = null;
 
-        if (string.IsNullOrEmpty(mRawText) || mRawText.IndexOf('[') < 0)
+        if (!_isBbCodeEnabled || string.IsNullOrEmpty(mRawText) || mRawText.IndexOf('[') < 0)
         {
             _hasMarkup = false;
             // CRLF counts as one character everywhere (#6991), as on MonoGame/Raylib.

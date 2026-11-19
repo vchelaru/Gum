@@ -1817,6 +1817,15 @@ public partial class CustomSetPropertyOnRenderable
             }
             handled = true;
         }
+        else if (propertyName == "IsBbCodeEnabled")
+        {
+            // TextRuntime owns the re-parse and re-layout (#8329).
+            if (gueAsTextRuntime != null)
+            {
+                gueAsTextRuntime.IsBbCodeEnabled = (bool)value;
+            }
+            handled = true;
+        }
         else if (propertyName == "Font Scale" || propertyName == "FontScale")
         {
             // Redispatched onto TextRuntime (issue #3706/ADR 0010, mirroring the core dispatcher's

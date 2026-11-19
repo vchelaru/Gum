@@ -172,6 +172,12 @@ public static class IWrappedTextExtensions
                 // some do not, wrap again capped at that count so the ellipsis lands on the new last line.
                 WrapLines(textInstance, lines, previousLines, effectiveMaxNumberOfLines);
                 int linesThatFit = CountLinesFittingHeight(textInstance, lines, linesFromHeight);
+                // A box one base line tall keeps its first line even when a run makes it taller, so a line taller
+                // than the box (a paginated DialogBox gives one its own page) still shows.
+                if (linesThatFit == 0 && linesFromHeight >= 1)
+                {
+                    linesThatFit = 1;
+                }
                 if (linesThatFit >= lines.Count)
                 {
                     return;

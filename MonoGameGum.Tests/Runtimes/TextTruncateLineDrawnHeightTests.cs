@@ -37,7 +37,9 @@ public class TextTruncateLineDrawnHeightTests : BaseTestClass
     [InlineData("[Color=Red]a[/Color]\nb\nc\nd", 2, 2)]
     [InlineData("[FontScale=0.5]a\nb\nc\nd[/FontScale]", 2, 2)]
     [InlineData("[FontScale=2]a\nb\nc\nd[/FontScale]", 2, 1)]
-    [InlineData("[FontScale=2]a\nb\nc\nd[/FontScale]", 1.5f, 0)]
+    [InlineData("[FontScale=2]a\nb\nc\nd[/FontScale]", 1.5f, 1)]
+    [InlineData("[FontScale=5]hi[/FontScale]", 1, 1)]
+    [InlineData("a\nb", 0.5f, 0)]
     [InlineData("a\n[FontScale=2]b[/FontScale]\nc\nd", 3, 2)]
     [InlineData("a\n[FontScale=2]b[/FontScale]\nc\nd", 4, 3)]
     [InlineData("a\n[FontScale=2]b[/FontScale]\nc\nd", 10, 4)]
@@ -46,7 +48,10 @@ public class TextTruncateLineDrawnHeightTests : BaseTestClass
         Text text = Make(markup, baseLines);
 
         text.WrappedText.Count.ShouldBe(expectedLines);
-        text.GetDrawnLineTop(text.WrappedText.Count).ShouldBeLessThanOrEqualTo(text.LineHeightInPixels * baseLines + 0.001f);
+        if (expectedLines > 1)
+        {
+            text.GetDrawnLineTop(text.WrappedText.Count).ShouldBeLessThanOrEqualTo(text.LineHeightInPixels * baseLines + 0.001f);
+        }
     }
 
     // Each word is wider than the box, so every line comes from a mid-word break.
