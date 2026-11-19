@@ -697,14 +697,12 @@ public class FontReferenceCollector
         stacks.Seed(baseSave.FontFile ?? baseSave.FontName, baseSave.FontSize, baseSave.OutlineThickness,
             baseSave.UseSmoothing, baseSave.IsItalic, baseSave.IsBold, useCustomFont: false, baseSave.HasDropshadow);
 
-        List<TagInfo> allTags = new List<TagInfo>();
-        allTags.AddRange(tags.Select(item => item.Open));
-        allTags.AddRange(tags.Select(item => item.Close));
-        allTags.Sort((a, b) => a.StartIndex - b.StartIndex);
+        List<(TagInfo Tag, bool IsOpening)> allTags = new List<(TagInfo Tag, bool IsOpening)>();
+        BbCodeFontStacks.FillInTextOrder(tags, allTags);
 
-        foreach (TagInfo tag in allTags)
+        foreach (var (tag, isOpening) in allTags)
         {
-            if (!stacks.Apply(tag.Name, tag.Argument, out _))
+            if (!stacks.Apply(tag.Name, tag.Argument, isOpening, out _))
             {
                 continue;
             }

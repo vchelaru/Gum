@@ -74,72 +74,86 @@ public class BbCodeFontStacks
     }
 
     /// <summary>
-    /// Applies one tag. A tag with a parseable argument pushes; one without (a closing tag, or an
-    /// opening tag whose value does not parse) pops. A pop never removes the seeded base value.
+    /// Applies one tag. An opening tag pushes its value and a closing tag pops. An opening tag whose
+    /// value does not parse pushes the enclosing value again, so it styles nothing and its closing tag
+    /// restores the enclosing style, the way SkiaGum ignores such a tag. A pop never removes the seeded
+    /// base value.
     /// </summary>
     /// <param name="name">The tag name, in any case.</param>
-    /// <param name="argument">The tag's argument, null on a closing tag.</param>
-    /// <param name="pushed">True when the tag pushed a value, false when it popped.</param>
-    /// <returns>True when the tag is one of the font tags, false when it does not touch the stacks.</returns>
-    public bool Apply(string name, string? argument, out bool pushed)
+    /// <param name="argument">The tag's argument, null on a closing tag or an opening tag with no value.</param>
+    /// <param name="isOpening">True for an opening tag, false for a closing tag.</param>
+    /// <param name="pushed">True on an opening tag, false on a closing tag.</param>
+    /// <returns>True when the tag can change the run's font: a font tag that pushed a parsed value or
+    /// popped. False for any other tag and for an opening font tag whose value does not parse.</returns>
+    public bool Apply(string name, string? argument, bool isOpening, out bool pushed)
     {
-        pushed = false;
+        pushed = isOpening;
         switch (CanonicalTagName(name))
         {
             case "Font":
-                if (!string.IsNullOrEmpty(argument))
-                {
-                    // tolerate ".fnt" suffix
-                    if (argument!.EndsWith(".fnt"))
-                    {
-                        argument = argument.Substring(0, argument.Length - ".fnt".Length);
-                    }
-                    FontName.Push(argument);
-                    pushed = true;
-                }
-                else
-                {
-                    Pop(FontName);
-                }
-                return true;
+                // tolerate ".fnt" suffix
+                string? fontName = argument?.EndsWith(".fnt") == true
+                    ? argument.Substring(0, argument.Length - ".fnt".Length)
+                    : argument;
+                return PushOrPop(FontName, isOpening, !string.IsNullOrEmpty(fontName), fontName);
             case "FontSize":
-                if (float.TryParse(argument, NumberStyles.Float, CultureInfo.InvariantCulture, out float parsedSize))
-                {
-                    FontSize.Push(parsedSize);
-                    pushed = true;
-                }
-                else
-                {
-                    Pop(FontSize);
-                }
-                return true;
+                return PushOrPop(FontSize, isOpening,
+                    float.TryParse(argument, NumberStyles.Float, CultureInfo.InvariantCulture, out float parsedSize), parsedSize);
             case "OutlineThickness":
-                if (int.TryParse(argument, NumberStyles.Integer, CultureInfo.InvariantCulture, out int parsedOutline))
-                {
-                    OutlineThickness.Push(parsedOutline);
-                    pushed = true;
-                }
-                else
-                {
-                    Pop(OutlineThickness);
-                }
-                return true;
+                return PushOrPop(OutlineThickness, isOpening,
+                    int.TryParse(argument, NumberStyles.Integer, CultureInfo.InvariantCulture, out int parsedOutline), parsedOutline);
             case "IsItalic":
-                pushed = PushOrPop(IsItalic, argument);
-                return true;
+                return PushOrPop(IsItalic, isOpening, bool.TryParse(argument, out bool parsedItalic), parsedItalic);
             case "IsBold":
-                pushed = PushOrPop(IsBold, argument);
-                return true;
+                return PushOrPop(IsBold, isOpening, bool.TryParse(argument, out bool parsedBold), parsedBold);
             case "UseCustomFont":
                 // Never fires today (UseCustomFont is not a BbCodeParser.KnownTag).
-                pushed = PushOrPop(UseCustomFont, argument);
-                return true;
+                return PushOrPop(UseCustomFont, isOpening, bool.TryParse(argument, out bool parsedCustom), parsedCustom);
             case "HasDropshadow":
-                pushed = PushOrPop(HasDropshadow, argument);
-                return true;
+                return PushOrPop(HasDropshadow, isOpening, bool.TryParse(argument, out bool parsedDropshadow), parsedDropshadow);
             default:
+                pushed = false;
                 return false;
         }
+    }
+
+    /// <summary>
+    /// Fills <paramref name="into"/> with every opening and closing tag of <paramref name="tags"/> in text
+    /// order, the order <see cref="Apply"/> must see them in.
+    /// </summary>
+    public static void FillInTextOrder(List<FoundTag> tags, List<(TagInfo Tag, bool IsOpening)> into)
+    {
+        into.Clear();
+        foreach (FoundTag tag in tags)
+        {
+            into.Add((tag.Open, true));
+            into.Add((tag.Close, false));
+        }
+        into.Sort((a, b) => a.Tag.StartIndex - b.Tag.StartIndex);
+    }
+
+    /// <summary>
+    /// Parses a <c>[Color=..]</c> argument: <c>0xAARRGGBB</c> hex or a known color name (<c>Red</c>,
+    /// <c>CornflowerBlue</c>, ...). Returns null, so the run keeps the base color, for anything else.
+    /// Every runtime calls this, so they agree on which values are colors.
+    /// </summary>
+    public static System.Drawing.Color? ParseColor(string? argument)
+    {
+        if (string.IsNullOrEmpty(argument))
+        {
+            return null;
+        }
+
+        if (argument!.StartsWith("0x"))
+        {
+            return int.TryParse(argument.Substring(2), NumberStyles.AllowHexSpecifier, CultureInfo.InvariantCulture, out int hex)
+                ? System.Drawing.Color.FromArgb(hex)
+                : null;
+        }
+
+        // FromName returns a non-known color with ARGB 0 for an unrecognized name, which would hide the run.
+        System.Drawing.Color named = System.Drawing.Color.FromName(argument);
+        return named.IsKnownColor ? named : null;
     }
 
     /// <summary>
@@ -241,16 +255,17 @@ public class BbCodeFontStacks
         return expanded ?? results;
     }
 
-    private static bool PushOrPop(Stack<bool> stack, string? argument)
+    // Returns whether the font can have changed; an unparseable opening tag re-pushes the enclosing value.
+    private static bool PushOrPop<T>(Stack<T> stack, bool isOpening, bool parsed, T value)
     {
-        if (bool.TryParse(argument, out bool parsed))
+        if (!isOpening)
         {
-            stack.Push(parsed);
+            Pop(stack);
             return true;
         }
 
-        Pop(stack);
-        return false;
+        stack.Push(parsed ? value : stack.Peek());
+        return parsed;
     }
 
     // A pop with only the seeded base value left would empty the stack and make the next Peek throw.

@@ -3354,7 +3354,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
                     break;
                 case "Color":
                     variableName = "Color";
-                    System.Drawing.Color? parsedColor = ParseColor(argument);
+                    System.Drawing.Color? parsedColor = BbCodeFontStacks.ParseColor(argument);
                     value = parsedColor.HasValue ? Box(existing, parsedColor.Value) : null;
                     break;
                 case "Red":
@@ -3453,29 +3453,6 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
     /// </summary>
     private static object Box<T>(object? existing, T value) where T : struct =>
         existing is T current && EqualityComparer<T>.Default.Equals(current, value) ? existing : value;
-
-    /// <summary>
-    /// Parses a <c>[Color=..]</c> argument, honoring both a hex form (<c>0xAARRGGBB</c>) and a named
-    /// color (<c>Red</c>, <c>CornflowerBlue</c>, ...), matching the MonoGame/Raylib SetBbCodeText parsing.
-    /// Returns null (run keeps the base color) when the argument is empty or unrecognized.
-    /// </summary>
-    private static System.Drawing.Color? ParseColor(string? argument)
-    {
-        if (string.IsNullOrEmpty(argument))
-        {
-            return null;
-        }
-
-        if (argument.StartsWith("0x") &&
-            int.TryParse(argument.Substring(2), NumberStyles.AllowHexSpecifier, CultureInfo.InvariantCulture, out int hex))
-        {
-            return System.Drawing.Color.FromArgb(hex);
-        }
-
-        var named = System.Drawing.Color.FromName(argument);
-        // FromName returns a non-known color with ARGB 0 for an unrecognized name; treat that as "no color".
-        return named.IsKnownColor ? named : (System.Drawing.Color?)null;
-    }
 
     /// <summary>
     /// The text-local rectangle the blend is limited to: the measured block plus room for the outline
