@@ -9,7 +9,7 @@ using Xunit;
 
 namespace MonoGameGum.Tests.Runtimes;
 
-public class BBCodeParserTests : BaseTestClass
+public class BbCodeParserTests : BaseTestClass
 {
     [Fact]
     public void KnownTags_ShouldIncludeState()

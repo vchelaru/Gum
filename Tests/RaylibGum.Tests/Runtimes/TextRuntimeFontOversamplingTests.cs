@@ -408,7 +408,7 @@ public class TextRuntimeFontOversamplingTests : BaseTestClass
     // text, or its reported/drawn size balloons with the oversample raster ratio instead of staying
     // pinned to the native size.
     [Fact]
-    public void RegenerateOversampledFont_BBCodeColorOnlyRun_WidthDoesNotDriftFromNative()
+    public void RegenerateOversampledFont_BbCodeColorOnlyRun_WidthDoesNotDriftFromNative()
     {
         bool savedUseFontOversampling = TextRuntime.UseFontOversampling;
         IRaylibFontCreator? savedCreator = CustomSetPropertyOnRenderable.InMemoryFontCreator;
@@ -445,7 +445,7 @@ public class TextRuntimeFontOversamplingTests : BaseTestClass
     // scale (ResolveRunFont's "case nameof(FontScale)" branch), not a Text-level FontScale, so it must
     // independently compose OversampleCompensationScale too.
     [Fact]
-    public void RegenerateOversampledFont_BBCodeFontScaleTagRun_WidthDoesNotDriftFromNative()
+    public void RegenerateOversampledFont_BbCodeFontScaleTagRun_WidthDoesNotDriftFromNative()
     {
         bool savedUseFontOversampling = TextRuntime.UseFontOversampling;
         IRaylibFontCreator? savedCreator = CustomSetPropertyOnRenderable.InMemoryFontCreator;
@@ -534,7 +534,7 @@ public class TextRuntimeFontOversamplingTests : BaseTestClass
     // wrapping visibly changed depending on whether oversampling was on. Plain lines don't have this
     // problem: MeasureString(string) already measures against the STABLE EffectiveMeasurementFont.
     [Fact]
-    public void RegenerateOversampledFont_BBCodeText_WrappingDoesNotChangeFromNative()
+    public void RegenerateOversampledFont_BbCodeText_WrappingDoesNotChangeFromNative()
     {
         bool savedUseFontOversampling = TextRuntime.UseFontOversampling;
         IRaylibFontCreator? savedCreator = CustomSetPropertyOnRenderable.InMemoryFontCreator;
@@ -575,7 +575,7 @@ public class TextRuntimeFontOversamplingTests : BaseTestClass
     // to flip a word across a wrap boundary. Plain lines don't have this problem: MeasureString(string)
     // already measures against the STABLE EffectiveMeasurementFont, never the live one.
     [Fact]
-    public void MeasureString_BBCodeWord_DoesNotDriftFromNative_WhenOversamplingActive()
+    public void MeasureString_BbCodeWord_DoesNotDriftFromNative_WhenOversamplingActive()
     {
         bool savedUseFontOversampling = TextRuntime.UseFontOversampling;
         IRaylibFontCreator? savedCreator = CustomSetPropertyOnRenderable.InMemoryFontCreator;

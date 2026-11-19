@@ -63,7 +63,7 @@ public class TextLocalizationTests : IDisposable
     }
 
     [Fact]
-    public void Text_WhenTranslationContainsBBCode_ShouldReachRawText()
+    public void Text_WhenTranslationContainsBbCode_ShouldReachRawText()
     {
         // SkiaGum's Text renders RawText literally through RichTextKit's TextBlock.AddText; there is
         // no separate markup path (StoredMarkupText is a stub), so a translation containing [...] must
