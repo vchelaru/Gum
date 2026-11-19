@@ -198,6 +198,7 @@ public class ObjectFinder : IObjectFinder
         if (cacheEnableCount == 1)
         {
             cachedDictionary = new Dictionary<string, ElementSave>(StringComparer.OrdinalIgnoreCase);
+            _cachedVariableContainers = null;
 
             var gumProject = GumProjectSave;
 
@@ -246,11 +247,13 @@ public class ObjectFinder : IObjectFinder
             if (cacheEnableCount == 0)
             {
                 cachedDictionary = null;
+                _cachedVariableContainers = null;
             }
         }
         else
         {
             cachedDictionary = null;
+            _cachedVariableContainers = null;
         }
     }
 
@@ -698,17 +701,60 @@ public class ObjectFinder : IObjectFinder
         {
             return null;
         }
-        foreach(var element in GumProjectSave.AllElements)
+
+        // While the cache is on, a map from each variable to its owner replaces the scan of every state in the
+        // project. A hit is confirmed against the owner because variables can move while the cache is on; a miss
+        // or a stale hit falls back to the scan, so the result is always the scan's.
+        if (cachedDictionary != null)
         {
-            foreach(var state in element.AllStates)
+            _cachedVariableContainers ??= BuildVariableContainerMap(GumProjectSave);
+            if (_cachedVariableContainers.TryGetValue(variable, out ElementSave? cachedOwner)
+                && ElementOwnsVariable(cachedOwner, variable))
             {
-                if (state.Variables.Contains(variable))
-                {
-                    return element;
-                }
+                return cachedOwner;
+            }
+        }
+
+        foreach (var element in GumProjectSave.AllElements)
+        {
+            if (ElementOwnsVariable(element, variable))
+            {
+                return element;
             }
         }
         return null;
+    }
+
+    private Dictionary<VariableSave, ElementSave>? _cachedVariableContainers;
+
+    private static Dictionary<VariableSave, ElementSave> BuildVariableContainerMap(GumProjectSave project)
+    {
+        // The default comparer, like the scan's List.Contains.
+        Dictionary<VariableSave, ElementSave> map = new();
+        foreach (var element in project.AllElements)
+        {
+            foreach (var state in element.AllStates)
+            {
+                foreach (var variable in state.Variables)
+                {
+                    // First owner wins, matching the scan's order.
+                    map.TryAdd(variable, element);
+                }
+            }
+        }
+        return map;
+    }
+
+    private static bool ElementOwnsVariable(ElementSave element, VariableSave variable)
+    {
+        foreach (var state in element.AllStates)
+        {
+            if (state.Variables.Contains(variable))
+            {
+                return true;
+            }
+        }
+        return false;
     }
 
     public ElementSave? GetElementContainerOf(VariableListSave variableList)
@@ -993,6 +1039,7 @@ public class ObjectFinder : IObjectFinder
         return CollectReferencedFilesViaWalker(scopeElement: null, inclusion).Distinct();
     }
 
+    /// <param name="inclusion">The categories of referenced files to enumerate.</param>
     /// <param name="resolveFontFiles">
     /// False skips resolving every Text instance's effective font (see
     /// <see cref="Gum.Bundle.GumProjectDependencyWalker.ResolveFontFiles"/>), the bulk of the walk's cost.
