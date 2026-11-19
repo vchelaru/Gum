@@ -12,15 +12,17 @@ public class ProjectSerializerWarmupLauncherTests
     private int _xmlWarmups;
     private readonly List<Exception> _logged = new List<Exception>();
     private Action _warmJson;
+    private Action _warmXml;
 
     public ProjectSerializerWarmupLauncherTests()
     {
         _warmJson = () => _jsonWarmups++;
+        _warmXml = () => _xmlWarmups++;
     }
 
     // Runs the background work inline so the test sees its result.
     private ProjectSerializerWarmupLauncher Create() =>
-        new ProjectSerializerWarmupLauncher(() => _warmJson(), () => _xmlWarmups++, _logged.Add, work => { work(); return Task.CompletedTask; });
+        new ProjectSerializerWarmupLauncher(() => _warmJson(), () => _warmXml(), _logged.Add, work => { work(); return Task.CompletedTask; });
 
     [Theory]
     [InlineData("/projects/Last.gumj", 1, 0)]
@@ -46,13 +48,16 @@ public class ProjectSerializerWarmupLauncherTests
         _xmlWarmups.ShouldBe(expectedXml);
     }
 
-    [Fact]
-    public void Start_WarmUpThrows_LogsTheFailureInsteadOfThrowing()
+    [Theory]
+    [InlineData("/projects/Last.gumj")]
+    [InlineData("/projects/Last.gumx")]
+    public void Start_WarmUpThrows_LogsTheFailureInsteadOfThrowing(string lastProject)
     {
         InvalidOperationException failure = new InvalidOperationException("warm-up failed");
         _warmJson = () => throw failure;
+        _warmXml = () => throw failure;
 
-        Task started = Create().Start(new[] { "Gum.exe" }, "/projects/Last.gumj");
+        Task started = Create().Start(new[] { "Gum.exe" }, lastProject);
 
         started.IsFaulted.ShouldBeFalse();
         _logged.ShouldBe(new[] { failure });
