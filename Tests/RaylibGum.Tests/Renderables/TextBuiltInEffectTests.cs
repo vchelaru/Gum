@@ -21,12 +21,12 @@ public class TextBuiltInEffectTests : BaseTestClass
     {
         TextRuntime textRuntime = new();
         textRuntime.Text = markup;
-        Text internalText = (Text)textRuntime.RenderableComponent;
+        Text internalText = (Text)textRuntime.RenderableComponent!;
 
         internalText.InlineVariables.Count.ShouldBe(3);
         for (int i = 0; i < 3; i++)
         {
-            var call = (ParameterizedLetterCustomizationCall)internalText.InlineVariables[i].Value;
+            var call = (ParameterizedLetterCustomizationCall)internalText.InlineVariables[i].Value!;
             call.BuiltInEffect!.Kind.ShouldBe(kind);
             call.CharacterIndex.ShouldBe(i);
         }

@@ -147,14 +147,18 @@ public sealed class BbCodeTextEffect
             return null;
         }
 
-        var effect = new BbCodeTextEffect();
-        foreach (BbCodeTextEffectKind kind in (BbCodeTextEffectKind[])Enum.GetValues(typeof(BbCodeTextEffectKind)))
+        var effect = new BbCodeTextEffect
         {
-            if (string.Equals(kind.ToString(), tagName, StringComparison.OrdinalIgnoreCase))
+            Kind = tagName.ToLowerInvariant() switch
             {
-                effect.Kind = kind;
-            }
-        }
+                "shake" => BbCodeTextEffectKind.Shake,
+                "tornado" => BbCodeTextEffectKind.Tornado,
+                "fade" => BbCodeTextEffectKind.Fade,
+                "rainbow" => BbCodeTextEffectKind.Rainbow,
+                "pulse" => BbCodeTextEffectKind.Pulse,
+                _ => BbCodeTextEffectKind.Wave,
+            },
+        };
         // Godot's frequency defaults: Wave 5, Tornado, Rainbow and Pulse 1.
         if (effect.Kind != BbCodeTextEffectKind.Wave)
         {
