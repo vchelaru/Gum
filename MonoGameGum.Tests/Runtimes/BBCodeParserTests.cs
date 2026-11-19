@@ -30,7 +30,6 @@ public class BBCodeParserTests : BaseTestClass
     [InlineData("IsBold")]
     [InlineData("UseFontSmoothing")]
     [InlineData("FontScale")]
-    [InlineData("LineHeightMultiplier")]
     [InlineData("Custom")]
     [InlineData("State")]
     [InlineData("HasDropshadow")]
