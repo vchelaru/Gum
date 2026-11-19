@@ -2,6 +2,7 @@ using System;
 using System.Globalization;
 using System.IO;
 using System.Threading.Tasks;
+using Gum.Diagnostics;
 
 namespace Gum.Avalonia.Diagnostics;
 
@@ -69,6 +70,7 @@ public static class UnattendedRun
         {
             return Fail(error, exitAfterSeconds, "the canvas had not drawn a frame after the project loaded", describeCanvas);
         }
+        StartupTiming.Mark("unattended: first canvas frame");
 
         if (zoomToFit != null)
         {
@@ -85,6 +87,7 @@ public static class UnattendedRun
         {
             return Fail(error, exitAfterSeconds, "the window's UI had not settled (icons and other loaded content were still changing)", describeCanvas);
         }
+        StartupTiming.Mark("unattended: UI settled");
 
         capture?.Invoke();
         return 0;

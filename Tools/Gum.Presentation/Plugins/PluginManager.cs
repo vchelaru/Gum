@@ -160,7 +160,59 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
         }
     }
 
+    /// <summary>
+    /// Notifications that only report selection, drawing or a query, so they never follow an edit of the
+    /// project. Every other notification moves <see cref="IProjectChangeVersion"/>: a new notification
+    /// counts as a change until it is listed here.
+    /// </summary>
+    internal static readonly IReadOnlySet<string> NotificationsThatChangeNothing = new HashSet<string>
+    {
+        nameof(AfterRender), nameof(BeforeRender), nameof(CameraChanged), nameof(HandleWireframeResized),
+        nameof(XnaInitialized), nameof(WireframePropertyChanged),
+        nameof(ElementSelected), nameof(InstanceSelected), nameof(TreeNodeSelected), nameof(VariableSelected),
+        nameof(BehaviorSelected), nameof(BehaviorReferenceSelected), nameof(BehaviorVariableSelected),
+        nameof(ReactToStateSaveSelected), nameof(ReactToCustomStateSaveSelected),
+        nameof(ReactToStateSaveCategorySelected), nameof(IpsoSelected), nameof(SetHighlightedIpso),
+        nameof(HighlightTreeNode),
+        nameof(RefreshBehaviorView), nameof(RefreshElementTreeView), nameof(RefreshStateTreeView),
+        nameof(RefreshVariableView),
+        nameof(CreateGraphicalUiElement), nameof(CreateRenderableForType), nameof(FillTopLevelNames),
+        nameof(FillWithErrors), nameof(GetAttributesFor), nameof(GetDefaultStateFor), nameof(GetIfExtensionIsValid),
+        nameof(GetIfShouldSuppressRemoveEditorHighlight), nameof(GetSelectedIpsos), nameof(GetSelectedNodes),
+        nameof(GetTextureRegions), nameof(GetTreeNodeOver), nameof(GetWorldCursorPosition),
+        nameof(FocusSearch), nameof(FocusVariableFilter), nameof(ShowHotkeys), nameof(ShowDeleteDialog),
+        nameof(ShowDeleteOptions), nameof(Export),
+        // After the write: the save itself changes nothing (a Before* handler may, so those count).
+        nameof(AfterSavingElementSave), nameof(ProjectSave),
+    };
+
+    private readonly IProjectChangeVersion _projectChangeVersion;
+
     void CallMethodOnPlugin(Action<PluginBase> methodToCall, [CallerMemberName]string methodName = "")
+    {
+        // Moved before the handlers, so a result computed before the edit isn't reused by them, and after,
+        // so one computed by an early handler isn't reused once a later handler changed the project in
+        // response. Not after ProjectLoad: its handlers (the tree's error icons) check the loaded project,
+        // and the project-load fills run before it (IProjectLoadFills).
+        bool mayChangeProject = !NotificationsThatChangeNothing.Contains(methodName);
+        if (mayChangeProject)
+        {
+            _projectChangeVersion.MarkChanged();
+        }
+        try
+        {
+            CallMethodOnEachPlugin(methodToCall, methodName);
+        }
+        finally
+        {
+            if (mayChangeProject && methodName != nameof(ProjectLoad))
+            {
+                _projectChangeVersion.MarkChanged();
+            }
+        }
+    }
+
+    private void CallMethodOnEachPlugin(Action<PluginBase> methodToCall, string methodName)
     {
         var plugins = InitializedPlugins;
 #if !TEST
@@ -859,9 +911,16 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
     // members of its own, so it's no longer catalog-discoverable and MEF never touches this ctor;
     // don't add an [Export] here (or reintroduce one on this class) without re-checking that.
     public PluginManager(IPluginEnablementStore pluginEnablementStore, IPluginHostConfiguration hostConfiguration)
+        : this(pluginEnablementStore, hostConfiguration, new ProjectChangeVersion())
+    {
+    }
+
+    public PluginManager(IPluginEnablementStore pluginEnablementStore, IPluginHostConfiguration hostConfiguration,
+        IProjectChangeVersion projectChangeVersion)
     {
         _pluginEnablementStore = pluginEnablementStore;
         _hostConfiguration = hostConfiguration;
+        _projectChangeVersion = projectChangeVersion;
     }
 
     /// <summary>
