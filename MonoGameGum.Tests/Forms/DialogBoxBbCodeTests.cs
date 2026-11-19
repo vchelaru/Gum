@@ -145,6 +145,45 @@ public class DialogBoxBbCodeTests : BaseTestClass
         Normalize(string.Concat(shown)).ShouldBe(Normalize(Strip(markup)));
     }
 
+    [Fact]
+    public void Show_EmptyTextInAPaginatingBox_ShowsOneEmptyPage()
+    {
+        var (dialogBox, visual) = Create(paginating: true);
+        dialogBox.LettersPerSecond = 0;
+
+        dialogBox.Show(string.Empty);
+
+        dialogBox.IsVisible.ShouldBeTrue();
+        dialogBox.PagesRemaining.ShouldBe(0);
+        string.Concat(visual.Core.WrappedText).ShouldBe(string.Empty, "the measuring text must not stay in the Text");
+    }
+
+    // A line taller than the box still gets its own page, and the page shows it.
+    [Theory]
+    [InlineData("[FontScale=5]hi[/FontScale]")]
+    [InlineData("one two three [FontScale=5]hi[/FontScale] four five six seven eight nine ten eleven twelve")]
+    public void Show_PaginatedLineTallerThanTheBox_ShowsTheLine(string markup)
+    {
+        var (dialogBox, visual) = Create(paginating: true);
+        dialogBox.LettersPerSecond = 0;
+
+        dialogBox.Show(markup);
+
+        List<string> shown = new();
+        int guard = 0;
+        while (true)
+        {
+            shown.Add(string.Concat(visual.Core.WrappedText));
+            if (dialogBox.PagesRemaining == 0 || ++guard > 20)
+            {
+                break;
+            }
+            visual.CallClick();
+        }
+
+        Normalize(string.Concat(shown.Select(page => page + " "))).ShouldBe(Normalize(Strip(markup)));
+    }
+
     // RawText holds the stripped text on MonoGame and the markup on Skia, so pages are compared stripped.
     private static string Strip(string markup) =>
         BbCodeParser.RemoveTags(markup, BbCodeParser.Parse(markup, BbCodeParser.KnownTags));

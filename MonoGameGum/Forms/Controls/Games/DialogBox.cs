@@ -615,18 +615,57 @@ public class DialogBox : FrameworkElement, IInputReceiver
             // The text is already translated, so it is set with TextNoTranslate: it must not be looked up again.
             var oldVerticalMode = this.TextComponent.TextOverflowVerticalMode;
 
-            // Every line of the whole text, wrapped with the sizes its runs draw at ([FontScale], [FontSize], [Font]...).
-            this.TextComponent.TextOverflowVerticalMode = TextOverflowVerticalMode.SpillOver;
-            this.TextComponent.SetProperty("TextNoTranslate", text);
-            var allLines = new List<string>(CoreTextObject.WrappedText);
-            this.TextComponent.TextOverflowVerticalMode = oldVerticalMode;
+            List<string> allLines;
+            int plainLinesPerPage;
+            // The top of every line, and one past the last, as the Text draws the whole text. Null when no tag changes
+            // a line's size, so every page takes the box's plain line count.
+            float[]? lineTops = null;
+            float pageHeight = 0;
 
-            // The box's capacity in plain lines, measured on as many plain one-letter lines as the text has, and the
-            // height those lines take. A page never takes more lines or more height than that, however its runs size
-            // its lines.
-            this.TextComponent.SetProperty("TextNoTranslate", string.Join("\n", Enumerable.Repeat("x", Math.Max(1, allLines.Count))));
-            int plainLinesPerPage = Math.Max(1, CoreTextObject.WrappedText.Count);
-            float pageHeight = CoreTextObject.GetDrawnLineTop(plainLinesPerPage);
+            if (!HasSizeChangingTag(foundTagsWithoutNewlines))
+            {
+                var withRemovedTags = BbCodeParser.RemoveTags(text, BbCodeParser.Parse(text, BbCodeParser.KnownTags));
+
+                allLines = new List<string>();
+                this.TextComponent.TextOverflowVerticalMode = TextOverflowVerticalMode.SpillOver;
+                CoreTextObject.RawText = withRemovedTags;
+                CoreTextObject.UpdateLines(allLines);
+                this.TextComponent.TextOverflowVerticalMode = oldVerticalMode;
+
+                this.TextComponent.SetProperty("TextNoTranslate", withRemovedTags);
+                plainLinesPerPage = CoreTextObject.WrappedText.Count;
+            }
+            else
+            {
+                // Every line of the whole text, wrapped and stacked with the sizes its runs draw at ([FontScale],
+                // [FontSize], [Font]...), measured once.
+                this.TextComponent.TextOverflowVerticalMode = TextOverflowVerticalMode.SpillOver;
+                this.TextComponent.SetProperty("TextNoTranslate", text);
+                allLines = new List<string>(CoreTextObject.WrappedText);
+                lineTops = new float[allLines.Count + 1];
+                for (int i = 0; i < lineTops.Length; i++)
+                {
+                    lineTops[i] = CoreTextObject.GetDrawnLineTop(i);
+                }
+                this.TextComponent.TextOverflowVerticalMode = oldVerticalMode;
+
+                // The box's capacity in plain lines, measured on as many one-letter lines as the text has (the text
+                // itself can be shorter than the box), and the height those lines take: a page takes no more lines
+                // and no more height.
+                this.TextComponent.SetProperty("TextNoTranslate", string.Join("\n", Enumerable.Repeat("x", allLines.Count)));
+                plainLinesPerPage = CoreTextObject.WrappedText.Count;
+                pageHeight = CoreTextObject.GetDrawnLineTop(plainLinesPerPage);
+
+                // The Text holds the text again, not the measuring lines.
+                this.TextComponent.SetProperty("TextNoTranslate", text);
+            }
+
+            if (allLines.Count <= plainLinesPerPage
+                && (lineTops == null || lineTops[allLines.Count] <= pageHeight + .5f))
+            {
+                // no need to break it up
+                return new string[] { text };
+            }
 
             var pages = new List<string>();
             var pageLines = new List<string>();
@@ -635,24 +674,12 @@ public class DialogBox : FrameworkElement, IInputReceiver
             int strippedTextCount = 0;
             while (absoluteLineNumber < allLines.Count)
             {
-                int candidateCount = Math.Min(plainLinesPerPage, allLines.Count - absoluteLineNumber);
-                int candidateEnd = FillPageLines(allLines, absoluteLineNumber, candidateCount, strippedTextCount, pageLines, pageLineStarts);
-
-                // The Text measures the candidate page with the metrics it draws with, so the page keeps only the
-                // lines the box shows: its own truncation, and the drawn line tops a size run makes taller.
-                this.TextComponent.SetProperty("TextNoTranslate",
-                    BbCodeParser.AddTags(pageLines, pageLineStarts, candidateEnd, foundTagsWithoutNewlines));
-                int fittingCount = Math.Min(candidateCount, CoreTextObject.WrappedText.Count);
-                while (fittingCount > 1 && CoreTextObject.GetDrawnLineTop(fittingCount) > pageHeight + .5f)
+                // A page always holds at least one line, even one taller than the box.
+                int fittingCount = Math.Max(1, Math.Min(plainLinesPerPage, allLines.Count - absoluteLineNumber));
+                while (lineTops != null && fittingCount > 1
+                    && lineTops[absoluteLineNumber + fittingCount] - lineTops[absoluteLineNumber] > pageHeight + .5f)
                 {
                     fittingCount--;
-                }
-                fittingCount = Math.Max(1, fittingCount);
-
-                if (absoluteLineNumber == 0 && fittingCount == allLines.Count)
-                {
-                    // no need to break it up
-                    return new string[] { text };
                 }
 
                 strippedTextCount = FillPageLines(allLines, absoluteLineNumber, fittingCount, strippedTextCount, pageLines, pageLineStarts);
@@ -665,6 +692,26 @@ public class DialogBox : FrameworkElement, IInputReceiver
 
             return pages.ToArray();
         }
+    }
+
+    // Tags that never change a letter's size or a line's height. Any other tag ([FontScale], [FontSize], [Font],
+    // [IsBold], [IsItalic], [OutlineThickness], [LineHeightMultiplier], a [State] that may set any of them, [Custom])
+    // makes pagination measure the lines as drawn.
+    static readonly HashSet<string> SizeNeutralTags = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+    {
+        "Alpha", "Red", "Green", "Blue", "Color", "Link", "HasDropshadow", "UseFontSmoothing",
+    };
+
+    private static bool HasSizeChangingTag(List<FoundTag> tags)
+    {
+        foreach (var tag in tags)
+        {
+            if (!SizeNeutralTags.Contains(tag.Name))
+            {
+                return true;
+            }
+        }
+        return false;
     }
 
     // Fills the page's lines (a trailing space dropped) and the stripped index each starts at, and returns the
