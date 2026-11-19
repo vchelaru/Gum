@@ -86,6 +86,20 @@ public class GumProjectDependencyWalker
     public bool ResolveFontFiles { get; init; } = true;
 
     private WalkResult Walk(GumProjectSave project, string projectRootDirectory, GumBundleInclusion inclusion,
+        ElementSave? scopeElement, ISet<string>? keptElementNames) =>
+        Prepare(project, projectRootDirectory, inclusion, scopeElement, keptElementNames).Run();
+
+    /// <summary>
+    /// Reads from <paramref name="project"/> everything the walk needs and returns the rest of it, which
+    /// checks the disk using only strings: <see cref="PreparedWalk.Run"/> may run on another thread while
+    /// the project keeps changing, and gives the result <see cref="Walk(GumProjectSave, string, GumBundleInclusion, ElementSave?)"/>
+    /// would have given when this was called.
+    /// </summary>
+    public PreparedWalk Prepare(GumProjectSave project, string projectRootDirectory, GumBundleInclusion inclusion,
+        ElementSave? scopeElement) =>
+        Prepare(project, projectRootDirectory, inclusion, scopeElement, keptElementNames: null);
+
+    private PreparedWalk Prepare(GumProjectSave project, string projectRootDirectory, GumBundleInclusion inclusion,
         ElementSave? scopeElement, ISet<string>? keptElementNames)
     {
         if (project == null)
@@ -101,6 +115,10 @@ public class GumProjectDependencyWalker
         HashSet<string> fontCache = new HashSet<string>(StringComparer.Ordinal);
         HashSet<string> external = new HashSet<string>(StringComparer.Ordinal);
         List<DependencyWarning> missing = new List<DependencyWarning>();
+        // Every step that reads the disk or adds to the sets the disk decides, in walk order, so running
+        // them in order later gives the same sets, missing list and order as running them inline.
+        List<Action> diskSteps = new List<Action>();
+        Action<Action> defer = diskSteps.Add;
 
         // The walk resolves instance BaseTypes via ObjectFinder.Self.GetElementSave/GetRootVariable
         // for every instance in the project. Without the cache those fall back to an O(n) linear
@@ -124,13 +142,13 @@ public class GumProjectDependencyWalker
             {
                 if (inclusion.HasFlag(GumBundleInclusion.Core))
                 {
-                    CollectCoreFiles(project, projectRootDirectory, core, missing, isJsonFormat, keptElementNames);
+                    CollectCoreFiles(project, projectRootDirectory, core, missing, isJsonFormat, keptElementNames, defer);
                     CollectInstanceTypeCoreFiles(keptElements, project, core, isJsonFormat);
                 }
 
                 if (inclusion.HasFlag(GumBundleInclusion.FontCache) || inclusion.HasFlag(GumBundleInclusion.ExternalFiles))
                 {
-                    CollectFileAndFontReferences(project, keptElements, projectRootDirectory, inclusion, fontCache, external, missing);
+                    CollectFileAndFontReferences(project, keptElements, projectRootDirectory, inclusion, fontCache, external, missing, defer);
                 }
 
                 if (inclusion.HasFlag(GumBundleInclusion.FontCache) || inclusion.HasFlag(GumBundleInclusion.ExternalFiles))
@@ -139,26 +157,27 @@ public class GumProjectDependencyWalker
                     {
                         CollectFontCacheReferences(project, keptElements, projectRootDirectory,
                             inclusion.HasFlag(GumBundleInclusion.FontCache), inclusion.HasFlag(GumBundleInclusion.ExternalFiles),
-                            fontCache, external, missing);
+                            fontCache, external, missing, defer);
                     }
 
                     // Project-wide only: scoped walks back the tool's per-element error check,
                     // which should not parse every .fnt/.achx on each refresh. The tool's one
                     // project-wide walk (file-watch roots, on project load) does pay it once.
-                    CollectFilesReferencedByReferencedFiles(projectRootDirectory,
-                        inclusion.HasFlag(GumBundleInclusion.FontCache), inclusion.HasFlag(GumBundleInclusion.ExternalFiles),
-                        fontCache, external, missing);
+                    bool referencedIncludeFontCache = inclusion.HasFlag(GumBundleInclusion.FontCache);
+                    bool referencedIncludeExternal = inclusion.HasFlag(GumBundleInclusion.ExternalFiles);
+                    defer(() => CollectFilesReferencedByReferencedFiles(projectRootDirectory,
+                        referencedIncludeFontCache, referencedIncludeExternal, fontCache, external, missing));
                 }
             }
             else
             {
-                CollectForSingleElement(project, scopeElement, projectRootDirectory, inclusion, core, fontCache, external, missing, isJsonFormat);
+                CollectForSingleElement(project, scopeElement, projectRootDirectory, inclusion, core, fontCache, external, missing, isJsonFormat, defer);
 
                 if (inclusion.HasFlag(GumBundleInclusion.FontCache) || inclusion.HasFlag(GumBundleInclusion.ExternalFiles))
                 {
                     CollectFontCacheReferences(project, new[] { scopeElement }, projectRootDirectory,
                         inclusion.HasFlag(GumBundleInclusion.FontCache), inclusion.HasFlag(GumBundleInclusion.ExternalFiles),
-                        fontCache, external, missing);
+                        fontCache, external, missing, defer);
                 }
             }
         }
@@ -167,16 +186,24 @@ public class GumProjectDependencyWalker
             ObjectFinder.Self.DisableCache();
         }
 
-        // Enforce precedence: Core wins over FontCache wins over External.
-        fontCache.ExceptWith(core);
-        external.ExceptWith(core);
-        external.ExceptWith(fontCache);
+        return new PreparedWalk(() =>
+        {
+            foreach (Action step in diskSteps)
+            {
+                step();
+            }
 
-        return new WalkResult(
-            coreFiles: core.OrderBy(p => p, StringComparer.Ordinal).ToList(),
-            fontCacheFiles: fontCache.OrderBy(p => p, StringComparer.Ordinal).ToList(),
-            externalFiles: external.OrderBy(p => p, StringComparer.Ordinal).ToList(),
-            missingFiles: missing);
+            // Enforce precedence: Core wins over FontCache wins over External.
+            fontCache.ExceptWith(core);
+            external.ExceptWith(core);
+            external.ExceptWith(fontCache);
+
+            return new WalkResult(
+                coreFiles: core.OrderBy(p => p, StringComparer.Ordinal).ToList(),
+                fontCacheFiles: fontCache.OrderBy(p => p, StringComparer.Ordinal).ToList(),
+                externalFiles: external.OrderBy(p => p, StringComparer.Ordinal).ToList(),
+                missingFiles: missing);
+        });
     }
 
     private static void CollectCoreFiles(
@@ -185,14 +212,19 @@ public class GumProjectDependencyWalker
         HashSet<string> core,
         List<DependencyWarning> missing,
         bool isJsonFormat,
-        ISet<string>? keptElementNames)
+        ISet<string>? keptElementNames,
+        Action<Action> defer)
     {
         // .gumx itself — derive from FullFileName when present, else from any single .gumx in the root.
-        string? gumxRelative = TryGetGumxRelativePath(project, projectRootDirectory);
-        if (gumxRelative != null)
+        string? fullFileName = project.FullFileName;
+        defer(() =>
         {
-            core.Add(gumxRelative);
-        }
+            string? gumxRelative = TryGetGumxRelativePath(fullFileName, projectRootDirectory);
+            if (gumxRelative != null)
+            {
+                core.Add(gumxRelative);
+            }
+        });
 
         foreach (ElementReference reference in project.ScreenReferences ?? new List<ElementReference>())
         {
@@ -201,8 +233,8 @@ public class GumProjectDependencyWalker
                 continue;
             }
             reference.ElementType = ElementType.Screen;
-            AddElementReference(reference, projectRootDirectory, core, missing, isJsonFormat);
-            AddElementAnimationsIfPresent(reference, projectRootDirectory, core, isJsonFormat);
+            AddElementReference(reference, projectRootDirectory, core, missing, isJsonFormat, defer);
+            AddElementAnimationsIfPresent(reference, projectRootDirectory, core, isJsonFormat, defer);
         }
         foreach (ElementReference reference in project.ComponentReferences ?? new List<ElementReference>())
         {
@@ -211,28 +243,33 @@ public class GumProjectDependencyWalker
                 continue;
             }
             reference.ElementType = ElementType.Component;
-            AddElementReference(reference, projectRootDirectory, core, missing, isJsonFormat);
-            AddElementAnimationsIfPresent(reference, projectRootDirectory, core, isJsonFormat);
+            AddElementReference(reference, projectRootDirectory, core, missing, isJsonFormat, defer);
+            AddElementAnimationsIfPresent(reference, projectRootDirectory, core, isJsonFormat, defer);
         }
         foreach (ElementReference reference in project.StandardElementReferences ?? new List<ElementReference>())
         {
             reference.ElementType = ElementType.Standard;
-            AddElementReference(reference, projectRootDirectory, core, missing, isJsonFormat);
-            AddElementAnimationsIfPresent(reference, projectRootDirectory, core, isJsonFormat);
+            AddElementReference(reference, projectRootDirectory, core, missing, isJsonFormat, defer);
+            AddElementAnimationsIfPresent(reference, projectRootDirectory, core, isJsonFormat, defer);
         }
         foreach (BehaviorReference reference in project.BehaviorReferences ?? new List<BehaviorReference>())
         {
             string relative = NormalizeRelative(reference.GetRelativeFilePath(isJsonFormat));
-            core.Add(relative);
-            string fullPath = Path.Combine(projectRootDirectory, relative.Replace('/', Path.DirectorySeparatorChar));
-            if (!File.Exists(fullPath))
+            string behaviorName = reference.Name ?? string.Empty;
+            defer(() =>
             {
-                missing.Add(new DependencyWarning(relative, reference.Name ?? string.Empty,
-                    $"Behavior file '{relative}' was not found on disk."));
-            }
+                core.Add(relative);
+                string fullPath = Path.Combine(projectRootDirectory, relative.Replace('/', Path.DirectorySeparatorChar));
+                if (!File.Exists(fullPath))
+                {
+                    missing.Add(new DependencyWarning(relative, behaviorName,
+                        $"Behavior file '{relative}' was not found on disk."));
+                }
+            });
         }
 
-        CollectLocalizationFiles(project, projectRootDirectory, core, missing);
+        List<string> localizationFiles = (project.LocalizationFiles ?? new List<string>()).ToList();
+        defer(() => CollectLocalizationFiles(localizationFiles, projectRootDirectory, core, missing));
     }
 
     /// <summary>
@@ -243,16 +280,20 @@ public class GumProjectDependencyWalker
         ElementReference reference,
         string projectRootDirectory,
         HashSet<string> core,
-        bool isJsonFormat)
+        bool isJsonFormat,
+        Action<Action> defer)
     {
 #if !FRB
         // FRB compiles this file without Gum's animation save classes, and loads animations itself.
         string relative = NormalizeRelative(reference.Subfolder + "/" + reference.Name
             + ElementAnimationsSave.GetFileNameSuffix(isJsonFormat));
-        if (File.Exists(ToFullPath(projectRootDirectory, relative)))
+        defer(() =>
         {
-            core.Add(relative);
-        }
+            if (File.Exists(ToFullPath(projectRootDirectory, relative)))
+            {
+                core.Add(relative);
+            }
+        });
 #endif
     }
 
@@ -262,12 +303,12 @@ public class GumProjectDependencyWalker
     /// runtime's RESX loader discovers them.
     /// </summary>
     private static void CollectLocalizationFiles(
-        GumProjectSave project,
+        IEnumerable<string> localizationFiles,
         string projectRootDirectory,
         HashSet<string> core,
         List<DependencyWarning> missing)
     {
-        foreach (string localizationFile in project.LocalizationFiles ?? new List<string>())
+        foreach (string localizationFile in localizationFiles)
         {
             if (string.IsNullOrEmpty(localizationFile))
             {
@@ -303,23 +344,28 @@ public class GumProjectDependencyWalker
         string projectRootDirectory,
         HashSet<string> core,
         List<DependencyWarning> missing,
-        bool isJsonFormat)
+        bool isJsonFormat,
+        Action<Action> defer)
     {
         string relative = NormalizeRelative(reference.Subfolder + "/" + reference.Name + "." + reference.GetExtension(isJsonFormat));
-        core.Add(relative);
-        string fullPath = Path.Combine(projectRootDirectory, relative.Replace('/', Path.DirectorySeparatorChar));
-        if (!File.Exists(fullPath))
+        string referenceName = reference.Name ?? string.Empty;
+        defer(() =>
         {
-            missing.Add(new DependencyWarning(relative, reference.Name ?? string.Empty,
-                $"Element file '{relative}' was not found on disk."));
-        }
+            core.Add(relative);
+            string fullPath = Path.Combine(projectRootDirectory, relative.Replace('/', Path.DirectorySeparatorChar));
+            if (!File.Exists(fullPath))
+            {
+                missing.Add(new DependencyWarning(relative, referenceName,
+                    $"Element file '{relative}' was not found on disk."));
+            }
+        });
     }
 
-    private static string? TryGetGumxRelativePath(GumProjectSave project, string projectRootDirectory)
+    private static string? TryGetGumxRelativePath(string? projectFullFileName, string projectRootDirectory)
     {
-        if (!string.IsNullOrEmpty(project.FullFileName))
+        if (!string.IsNullOrEmpty(projectFullFileName))
         {
-            string fileName = Path.GetFileName(project.FullFileName);
+            string fileName = Path.GetFileName(projectFullFileName);
             if (!string.IsNullOrEmpty(fileName))
             {
                 return NormalizeRelative(fileName);
@@ -348,7 +394,8 @@ public class GumProjectDependencyWalker
         GumBundleInclusion inclusion,
         HashSet<string> fontCache,
         HashSet<string> external,
-        List<DependencyWarning> missing)
+        List<DependencyWarning> missing,
+        Action<Action> defer)
     {
         bool includeFontCache = inclusion.HasFlag(GumBundleInclusion.FontCache);
         bool includeExternal = inclusion.HasFlag(GumBundleInclusion.ExternalFiles);
@@ -361,7 +408,7 @@ public class GumProjectDependencyWalker
                 // states matter as much as Default - a Text standard that points each style state at
                 // its own pre-baked atlas has no Default-state reference to those files.
                 CollectFromState(element, instance: null, state, projectRootDirectory,
-                    includeFontCache, includeExternal, fontCache, external, missing);
+                    includeFontCache, includeExternal, fontCache, external, missing, defer);
 
                 if (element.Instances == null)
                 {
@@ -370,7 +417,7 @@ public class GumProjectDependencyWalker
                 foreach (InstanceSave instance in element.Instances)
                 {
                     CollectFromState(element, instance, state, projectRootDirectory,
-                        includeFontCache, includeExternal, fontCache, external, missing);
+                        includeFontCache, includeExternal, fontCache, external, missing, defer);
                 }
             }
         }
@@ -379,7 +426,7 @@ public class GumProjectDependencyWalker
         if (includeExternal && !string.IsNullOrEmpty(project.SinglePixelTextureFile))
         {
             AddExternalOrFontCache(project.SinglePixelTextureFile, ownerName: "(project)",
-                projectRootDirectory, includeFontCache, includeExternal, fontCache, external, missing);
+                projectRootDirectory, includeFontCache, includeExternal, fontCache, external, missing, defer);
         }
     }
 
@@ -439,7 +486,8 @@ public class GumProjectDependencyWalker
         HashSet<string> fontCache,
         HashSet<string> external,
         List<DependencyWarning> missing,
-        bool isJsonFormat)
+        bool isJsonFormat,
+        Action<Action> defer)
     {
         bool includeCore = inclusion.HasFlag(GumBundleInclusion.Core);
         bool includeFontCache = inclusion.HasFlag(GumBundleInclusion.FontCache);
@@ -468,7 +516,7 @@ public class GumProjectDependencyWalker
         if (includeFileOrFont)
         {
             CollectFromState(scopeElement, instance: null, scopeElement.DefaultState, projectRootDirectory,
-                includeFontCache, includeExternal, fontCache, external, missing);
+                includeFontCache, includeExternal, fontCache, external, missing, defer);
         }
 
         if (scopeElement.Instances != null)
@@ -491,7 +539,7 @@ public class GumProjectDependencyWalker
                     if (includeFileOrFont)
                     {
                         CollectFromState(scopeElement, instance, state, projectRootDirectory,
-                            includeFontCache, includeExternal, fontCache, external, missing);
+                            includeFontCache, includeExternal, fontCache, external, missing, defer);
                     }
                 }
             }
@@ -507,7 +555,8 @@ public class GumProjectDependencyWalker
         bool includeExternal,
         HashSet<string> fontCache,
         HashSet<string> external,
-        List<DependencyWarning> missing)
+        List<DependencyWarning> missing,
+        Action<Action> defer)
     {
         if (state == null)
         {
@@ -563,7 +612,7 @@ public class GumProjectDependencyWalker
             }
 
             AddExternalOrFontCache(variableValue, ownerName, projectRootDirectory,
-                includeFontCache, includeExternal, fontCache, external, missing);
+                includeFontCache, includeExternal, fontCache, external, missing, defer);
         }
 
         // Custom font (UseCustomFont=true with a CustomFontFile path) is an ExternalFiles concern;
@@ -579,7 +628,7 @@ public class GumProjectDependencyWalker
                 && !string.IsNullOrEmpty(customFont))
             {
                 AddExternalOrFontCache(customFont, ownerName, projectRootDirectory,
-                    includeFontCache, includeExternal, fontCache, external, missing);
+                    includeFontCache, includeExternal, fontCache, external, missing, defer);
             }
         }
     }
@@ -627,7 +676,8 @@ public class GumProjectDependencyWalker
         bool includeExternal,
         HashSet<string> fontCache,
         HashSet<string> external,
-        List<DependencyWarning> missing)
+        List<DependencyWarning> missing,
+        Action<Action> defer)
     {
         // Font-cache collection relies on StateSave.ParentContainer (set by ElementSave.Initialize)
         // and on ObjectFinder.Self resolving instance BaseTypes. Project initialization sorts its
@@ -658,18 +708,34 @@ public class GumProjectDependencyWalker
 
             if (!string.IsNullOrEmpty(bmfc.FontFile))
             {
-                AddExternalOrFontCache(bmfc.FontFile, ownerName, projectRootDirectory,
-                    includeFontCache: false, includeExternal, fontCache, external, missing);
+                AddExternalOrFontCache(bmfc.FontFile!, ownerName, projectRootDirectory,
+                    includeFontCache: false, includeExternal, fontCache, external, missing, defer);
             }
 
             if (includeFontCache)
             {
-                AddFontCacheFntAndPages(bmfc.FontCacheFileName, projectRootDirectory, fontCache);
+                string fontCacheFileName = bmfc.FontCacheFileName;
+                defer(() => AddFontCacheFntAndPages(fontCacheFileName, projectRootDirectory, fontCache));
             }
         }
     }
 
     private static void AddExternalOrFontCache(
+        string referencedPath,
+        string ownerName,
+        string projectRootDirectory,
+        bool includeFontCache,
+        bool includeExternal,
+        HashSet<string> fontCache,
+        HashSet<string> external,
+        List<DependencyWarning> missing,
+        Action<Action> defer)
+    {
+        defer(() => AddExternalOrFontCacheNow(referencedPath, ownerName, projectRootDirectory,
+            includeFontCache, includeExternal, fontCache, external, missing));
+    }
+
+    private static void AddExternalOrFontCacheNow(
         string referencedPath,
         string ownerName,
         string projectRootDirectory,
@@ -743,7 +809,7 @@ public class GumProjectDependencyWalker
 
             foreach (string referencedFile in referencedFiles)
             {
-                AddExternalOrFontCache(referencedFile, referencingFile, projectRootDirectory,
+                AddExternalOrFontCacheNow(referencedFile, referencingFile, projectRootDirectory,
                     includeFontCache, includeExternal, fontCache, external, missing);
             }
         }
@@ -880,4 +946,22 @@ public class GumProjectDependencyWalker
         bool rootedUnixPath = Path.DirectorySeparatorChar == '/' && Path.IsPathRooted(path);
         return rootedUnixPath ? normalized : normalized.TrimStart('/');
     }
+}
+
+/// <summary>
+/// The part of a <see cref="GumProjectDependencyWalker"/> walk that checks the disk, made by
+/// <see cref="GumProjectDependencyWalker.Prepare"/>. It holds only strings and runs once.
+/// </summary>
+public sealed class PreparedWalk
+{
+    private readonly Func<WalkResult> _run;
+    private WalkResult? _result;
+
+    internal PreparedWalk(Func<WalkResult> run)
+    {
+        _run = run;
+    }
+
+    /// <summary>Checks the disk and returns the walk's result; a second call returns the same result.</summary>
+    public WalkResult Run() => _result ??= _run();
 }

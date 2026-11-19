@@ -169,26 +169,44 @@ public partial class HeadlessErrorChecker
     // Project-level. A missing behavior file loads as an empty behavior, so the requirements of the behavior are never
     // checked (GUM0001). A Warning: the project still loads and runs. A path GUM0008 already reported (the file exists
     // under another case) is skipped, since "missing" would be wrong.
-    private static List<ErrorResult> GetMissingBehaviorFileErrors(GumProjectSave project, ISet<string> caseMismatchPaths)
+    private static List<ErrorResult> GetMissingBehaviorFileErrors(GumProjectSave project, ISet<string> caseMismatchPaths) =>
+        GetMissingBehaviorFileErrors(GetMissingBehaviorFiles(project), caseMismatchPaths);
+
+    // The behaviors whose file the load did not find, as (name, expected path).
+    internal static List<(string? Name, string RelativePath)> GetMissingBehaviorFiles(GumProjectSave project)
     {
-        List<ErrorResult> errors = new List<ErrorResult>();
+        List<(string? Name, string RelativePath)> missing = new List<(string? Name, string RelativePath)>();
         bool isJsonFormat = GumProjectSave.IsJsonFormat(project.FullFileName ?? "");
 
         foreach (BehaviorReference reference in project.BehaviorReferences)
         {
             BehaviorSave? behavior = project.Behaviors.FirstOrDefault(item => item.Name == reference.Name);
-            string relativePath = reference.GetRelativeFilePath(isJsonFormat);
-            if (behavior?.IsSourceFileMissing != true || caseMismatchPaths.Contains(relativePath))
+            if (behavior?.IsSourceFileMissing == true)
+            {
+                missing.Add((reference.Name, reference.GetRelativeFilePath(isJsonFormat)));
+            }
+        }
+        return missing;
+    }
+
+    internal static List<ErrorResult> GetMissingBehaviorFileErrors(List<(string? Name, string RelativePath)> missingBehaviors,
+        ISet<string> caseMismatchPaths)
+    {
+        List<ErrorResult> errors = new List<ErrorResult>();
+
+        foreach ((string? name, string relativePath) in missingBehaviors)
+        {
+            if (caseMismatchPaths.Contains(relativePath))
             {
                 continue;
             }
 
             errors.Add(new ErrorResult
             {
-                ElementName = reference.Name,
+                ElementName = name,
                 Code = "GUM0031",
                 Severity = ErrorSeverity.Warning,
-                Message = $"The file for behavior \"{reference.Name}\" is missing. Gum expected it at \"{relativePath}\", so the behavior loads empty " +
+                Message = $"The file for behavior \"{name}\" is missing. Gum expected it at \"{relativePath}\", so the behavior loads empty " +
                     "and its requirements are not checked. Restore the file or delete the behavior reference from the project file.",
                 Details = new MissingFileDetails { ExpectedPath = relativePath }
             });

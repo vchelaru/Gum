@@ -6,6 +6,7 @@ using Gum.ToolStates;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using ToolsUtilities;
 using Gum.DataTypes;
 
@@ -22,6 +23,11 @@ public class FileWatchLogic
     private readonly IProjectRestrictions? _projectRestrictions;
     private readonly Gum.ProjectServices.IFontReferenceCacheSource? _fontReferences;
     private readonly IProjectFontWarmUp? _fontWarmUp;
+    // Null (tests) runs the whole scan on the UI thread.
+    private readonly IProjectChangeVersion? _changeVersion;
+    private readonly IDispatcher _dispatcher;
+    private readonly Func<Func<HashSet<FilePath>>, Task<HashSet<FilePath>>> _runOffThread;
+    private int _scan;
 
     public bool Enabled => _fileWatchManager.Enabled;
 
@@ -33,9 +39,14 @@ public class FileWatchLogic
         IDispatcher dispatcher,
         IProjectRestrictions? projectRestrictions = null,
         Gum.ProjectServices.IFontReferenceCacheSource? fontReferences = null,
-        IProjectFontWarmUp? fontWarmUp = null)
+        IProjectFontWarmUp? fontWarmUp = null,
+        IProjectChangeVersion? changeVersion = null,
+        Func<Func<HashSet<FilePath>>, Task<HashSet<FilePath>>>? runOffThread = null)
     {
         _fontWarmUp = fontWarmUp;
+        _changeVersion = changeVersion;
+        _dispatcher = dispatcher;
+        _runOffThread = runOffThread ?? (work => Task.Run(work));
         _projectRestrictions = projectRestrictions;
         _fontReferences = fontReferences;
         _fileWatchManager = fileWatchManager;
@@ -76,18 +87,37 @@ public class FileWatchLogic
     {
         using var _ = Gum.Diagnostics.StartupTiming.Time("FileWatchLogic.RefreshRootDirectory (total)");
 
+        int scan = ++_scan;
         if (_projectManager.GumProjectSave is { FullFileName: not null } project)
         {
-            HashSet<FilePath> directories;
-            using (Gum.Diagnostics.StartupTiming.Time("  GetFileWatchRootDirectories"))
+            Func<HashSet<FilePath>> directoriesOf;
+            using (Gum.Diagnostics.StartupTiming.Time("  PrepareFileWatchRootDirectories"))
             {
-                directories = GetFileWatchRootDirectories(project);
+                directoriesOf = PrepareFileWatchRootDirectories(project);
             }
 
-            using (Gum.Diagnostics.StartupTiming.Time("  EnableWithDirectories (create FileSystemWatchers)"))
+            if (_changeVersion == null)
             {
-                _fileWatchManager.EnableWithDirectories(directories);
+                EnableWithDirectories(directoriesOf());
+                return;
             }
+
+            // The disk half runs off the UI thread; the watchers change only if the project is unchanged by
+            // then, and a change in between scans again.
+            long version = _changeVersion.Version;
+            _runOffThread(directoriesOf).ContinueWith(finished => _dispatcher.Post(() =>
+            {
+                if (scan != _scan)
+                {
+                    return;
+                }
+                if (version != _changeVersion.Version || !ReferenceEquals(_projectManager.GumProjectSave, project))
+                {
+                    RefreshRootDirectory();
+                    return;
+                }
+                EnableWithDirectories(finished.GetAwaiter().GetResult());
+            }), TaskScheduler.Default);
         }
         else
         {
@@ -95,9 +125,17 @@ public class FileWatchLogic
         }
     }
 
-    private HashSet<FilePath> GetFileWatchRootDirectories(GumProjectSave gumProject)
+    private void EnableWithDirectories(HashSet<FilePath> directories)
     {
-        HashSet<FilePath> directories = new HashSet<FilePath>();
+        using (Gum.Diagnostics.StartupTiming.Time("  EnableWithDirectories (create FileSystemWatchers)"))
+        {
+            _fileWatchManager.EnableWithDirectories(directories);
+        }
+    }
+
+    // Reads the project here and returns the rest, which uses only strings and the disk.
+    private Func<HashSet<FilePath>> PrepareFileWatchRootDirectories(GumProjectSave gumProject)
+    {
 
         // One walk over the entire project graph. The walker is shared with
         // bundling/codegen, so it covers every file the project references.
@@ -106,19 +144,47 @@ public class FileWatchLogic
         // instance's effective font, which dominates the walk, and it buys no coverage here. Every
         // font-cache path is relative to the project directory, which is added unconditionally
         // below and watched with IncludeSubdirectories - so .fnt/.png changes are still detected.
-        IEnumerable<string> filesReferenced;
+        Func<List<string>> filesReferencedOf;
         try
         {
-            using var _ = Gum.Diagnostics.StartupTiming.Time("    ObjectFinder.GetAllFilesInProject");
-            filesReferenced = ObjectFinder.Self.GetAllFilesInProject(
+            filesReferencedOf = ObjectFinder.Self.PrepareAllFilesInProject(
                 GumBundleInclusion.Core | GumBundleInclusion.ExternalFiles,
                 _fontReferences?.For(gumProject));
         }
         catch (Exception e)
         {
             _guiCommands.PrintOutput(e.ToString());
-            filesReferenced = Array.Empty<string>();
+            filesReferencedOf = () => new List<string>();
         }
+
+        string? projectFileName = gumProject.FullFileName;
+        string? localizationFile = !string.IsNullOrEmpty(gumProject.LocalizationFile)
+            ? _projectState.ProjectDirectory + gumProject.LocalizationFile
+            : null;
+        string? fontCharacterFile = gumProject.UseFontCharacterFile ? _projectState.ProjectDirectory + ".gumfcs" : null;
+        FilePath? profileFile = _projectRestrictions?.ProfileFilePath;
+
+        return () =>
+        {
+            IEnumerable<string> filesReferenced;
+            try
+            {
+                filesReferenced = filesReferencedOf();
+            }
+            catch (Exception e)
+            {
+                string message = e.ToString();
+                _dispatcher.Post(() => _guiCommands.PrintOutput(message));
+                filesReferenced = Array.Empty<string>();
+            }
+            return GetFileWatchRootDirectories(filesReferenced, projectFileName, localizationFile, fontCharacterFile, profileFile);
+        };
+    }
+
+    private static HashSet<FilePath> GetFileWatchRootDirectories(IEnumerable<string> filesReferenced, string? projectFileName,
+        string? localizationFile, string? fontCharacterFile, FilePath? profileFile)
+    {
+        HashSet<FilePath> directories = new HashSet<FilePath>();
 
         foreach (var item in filesReferenced)
         {
@@ -140,7 +206,7 @@ public class FileWatchLogic
             }
         }
 
-        if (gumProject.FullFileName is { } projectFileName)
+        if (projectFileName != null)
         {
             FilePath gumProjectFilePath = projectFileName;
             if (gumProjectFilePath.GetDirectoryContainingThis() is { } projectDirectory)
@@ -156,15 +222,13 @@ public class FileWatchLogic
             //directories.Add(gumProjectFilePath.GetDirectoryContainingThis() + "Behaviors/");
             //directories.Add(gumProjectFilePath.GetDirectoryContainingThis() + "FontCache/");
 
-            if (!string.IsNullOrEmpty(gumProject.LocalizationFile) &&
-                new FilePath(_projectState.ProjectDirectory + gumProject.LocalizationFile)
-                    .GetDirectoryContainingThis() is { } localizationDirectory)
+            if (localizationFile != null &&
+                new FilePath(localizationFile).GetDirectoryContainingThis() is { } localizationDirectory)
             {
                 directories.Add(localizationDirectory);
             }
-            if (gumProject.UseFontCharacterFile &&
-                new FilePath(_projectState.ProjectDirectory + ".gumfcs")
-                    .GetDirectoryContainingThis() is { } fontCharacterDirectory)
+            if (fontCharacterFile != null &&
+                new FilePath(fontCharacterFile).GetDirectoryContainingThis() is { } fontCharacterDirectory)
             {
                 directories.Add(fontCharacterDirectory);
             }
@@ -172,7 +236,7 @@ public class FileWatchLogic
 
         // The engine profile may live outside the project folder. A folder that does not exist is left
         // out, since the manager would create it.
-        if (_projectRestrictions?.ProfileFilePath?.GetDirectoryContainingThis() is { } profileDirectory &&
+        if (profileFile?.GetDirectoryContainingThis() is { } profileDirectory &&
             System.IO.Directory.Exists(profileDirectory.FullPath))
         {
             directories.Add(profileDirectory);

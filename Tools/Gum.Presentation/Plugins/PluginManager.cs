@@ -1029,6 +1029,8 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
         batch.AddExportedValue<IDispatcher>(Locator.GetRequiredService<IDispatcher>());
         // MainErrorsPlugin and MainFontPlugin queue their load-time passes behind the font collection.
         batch.AddExportedValue<IProjectFontWarmUp>(Locator.GetRequiredService<IProjectFontWarmUp>());
+        // MainErrorsPlugin applies its off-thread project check only while the project is unchanged.
+        batch.AddExportedValue<IProjectChangeVersion>(Locator.GetRequiredService<IProjectChangeVersion>());
         batch.AddExportedValue<IWireframeObjectManager>(Locator.GetRequiredService<IWireframeObjectManager>());
 
         // Heavy-tier ctor drains (combined PR): MainTextureCoordinatePlugin and MainStatePlugin,
