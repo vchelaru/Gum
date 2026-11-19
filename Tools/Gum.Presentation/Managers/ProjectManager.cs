@@ -504,11 +504,6 @@ public class ProjectManager : IProjectManager, IDeleteProjectProvider, ICopyPast
             {
                 modifications.Add("MakeFontFilePathsRelative");
             }
-            // Before the load notification, so the standard defaults are final when plugins first check the
-            // project: the notification that changes them would otherwise discard the font collection the
-            // tree's error icons made during ProjectLoad (ProjectFontReferences).
-            _standardElementsManagerGumTool.RefreshStateVariablesThroughPlugins();
-
             using (StartupTiming.Time("  PluginManager.ProjectLoad (total)"))
             {
                 FillAndNotifyPluginsOfLoad(_gumProjectSave);
@@ -522,6 +517,8 @@ public class ProjectManager : IProjectManager, IDeleteProjectProvider, ICopyPast
                     $"The current version is {(int)GumProjectSave.GumxVersions.AttributeVersion}. " +
                     $"For upgrading, see https://docs.flatredball.com/gum/gum-tool/upgrading/upgrading-file-gumx-version");
             }
+
+            _standardElementsManagerGumTool.RefreshStateVariablesThroughPlugins();
 
             if (modifications.Count > 0)
             {

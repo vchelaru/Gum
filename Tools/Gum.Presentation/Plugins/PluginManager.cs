@@ -192,8 +192,7 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
     {
         // Moved before the handlers, so a result computed before the edit isn't reused by them, and after,
         // so one computed by an early handler isn't reused once a later handler changed the project in
-        // response. Not after ProjectLoad: its handlers (the tree's error icons) check the loaded project,
-        // and the project-load fills run before it (IProjectLoadFills).
+        // response.
         bool mayChangeProject = !NotificationsThatChangeNothing.Contains(methodName);
         if (mayChangeProject)
         {
@@ -205,7 +204,7 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
         }
         finally
         {
-            if (mayChangeProject && methodName != nameof(ProjectLoad))
+            if (mayChangeProject)
             {
                 _projectChangeVersion.MarkChanged();
             }

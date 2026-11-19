@@ -110,9 +110,11 @@ public class ProjectFontReferencesTests
 
     private static object[] Notification(Action<PluginManager> notify) => new object[] { notify };
 
+    // Before, so a result computed before the edit isn't reused by its handlers; after, because an earlier
+    // handler may have collected fonts that a later handler's change made stale.
     [Theory]
     [MemberData(nameof(NotificationsThatFollowEdits))]
-    public void Notification_ThatCanFollowAnEdit_MovesTheVersionBeforeItsHandlers(Action<PluginManager> notify)
+    public void Notification_ThatCanFollowAnEdit_MovesTheVersionBeforeAndAfterItsHandlers(Action<PluginManager> notify)
     {
         ProjectChangeVersion version = new ProjectChangeVersion();
         PluginManager manager = CreateManager(version, out VersionReadingPlugin plugin);
@@ -121,32 +123,7 @@ public class ProjectFontReferencesTests
 
         plugin.VersionSeen.ShouldNotBeNull();
         plugin.VersionSeen!.Value.ShouldBeGreaterThan(0);
-    }
-
-    // An earlier handler of the same notification may have collected fonts that a later handler's change
-    // made stale, so the version moves again once every handler ran.
-    [Fact]
-    public void VariableSet_MovesTheVersionAgainAfterItsHandlers()
-    {
-        ProjectChangeVersion version = new ProjectChangeVersion();
-        PluginManager manager = CreateManager(version, out VersionReadingPlugin plugin);
-
-        manager.VariableSet(new ComponentSave(), null, "Font", "Arial");
-
         version.Version.ShouldBeGreaterThan(plugin.LastVersionSeen!.Value);
-    }
-
-    // The tree's error icons collect fonts during ProjectLoad, and the Errors tab, file watch and font
-    // generation reuse that collection right after it.
-    [Fact]
-    public void ProjectLoad_DoesNotMoveTheVersionAfterItsHandlers()
-    {
-        ProjectChangeVersion version = new ProjectChangeVersion();
-        PluginManager manager = CreateManager(version, out VersionReadingPlugin plugin);
-
-        manager.ProjectLoad(new GumProjectSave());
-
-        version.Version.ShouldBe(plugin.VersionSeen!.Value);
     }
 
     public static IEnumerable<object[]> NotificationsThatChangeNothing() => new[]
