@@ -35,19 +35,6 @@ public class TextBbCodeTagValueTests : BaseTestClass
         }
     }
 
-    // The font of the last per-run font variable covering the character, or "base".
-    private static string FontAt(Text text, int index)
-    {
-        InlineVariable? covering = text.InlineVariables.LastOrDefault(v =>
-            v.Value is Raylib_cs.Font && index >= v.StartIndex && index < v.StartIndex + v.CharacterCount);
-        if (covering == null)
-        {
-            return "base";
-        }
-        Raylib_cs.Font font = (Raylib_cs.Font)covering.Value;
-        return $"{font.BaseSize}/{font.Texture.Id}/{font.GlyphCount}";
-    }
-
     [Theory]
     [InlineData("[Color=red]a[/Color]", 255, 255, 0, 0)]
     [InlineData("[Color=CornflowerBlue]a[/Color]", 255, 100, 149, 237)]
@@ -103,12 +90,18 @@ public class TextBbCodeTagValueTests : BaseTestClass
     public void Text_CustomTagAfterEmoji_ReceivesUtf16IndexWithTagsRemoved()
     {
         Text.Customizations["TagValueIndex"] = (index, block) => new LetterCustomization();
+        try
+        {
+            Text text = MakeText("\U0001F600[Color=Red]a[/Color][Custom=TagValueIndex]bc[/Custom]");
 
-        Text text = MakeText("\U0001F600[Color=Red]a[/Color][Custom=TagValueIndex]bc[/Custom]");
-
-        List<ParameterizedLetterCustomizationCall> calls = text.InlineVariables
-            .Select(v => v.Value).OfType<ParameterizedLetterCustomizationCall>().ToList();
-        calls.Select(c => c.CharacterIndex).ShouldBe(new[] { 3, 4 });
-        calls.ShouldAllBe(c => c.TextBlock == "bc");
+            List<ParameterizedLetterCustomizationCall> calls = text.InlineVariables
+                .Select(v => v.Value).OfType<ParameterizedLetterCustomizationCall>().ToList();
+            calls.Select(c => c.CharacterIndex).ShouldBe(new[] { 3, 4 });
+            calls.ShouldAllBe(c => c.TextBlock == "bc");
+        }
+        finally
+        {
+            Text.Customizations.Remove("TagValueIndex");
+        }
     }
 }

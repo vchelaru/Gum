@@ -116,11 +116,17 @@ public class TextBbCodeTagValueTests : BaseTestClass
             calls.Add((index, block));
             return new LetterCustomization();
         };
+        try
+        {
+            Text text = MakeText("\U0001F600[Color=Red]a[/Color][Custom=TagValueIndex]bc[/Custom]");
+            text.GetStyledRuns();
 
-        Text text = MakeText("\U0001F600[Color=Red]a[/Color][Custom=TagValueIndex]bc[/Custom]");
-        text.GetStyledRuns();
-
-        calls.Select(c => c.index).Distinct().OrderBy(i => i).ShouldBe(new[] { 3, 4 });
-        calls.ShouldAllBe(c => c.block == "bc");
+            calls.Select(c => c.index).Distinct().OrderBy(i => i).ShouldBe(new[] { 3, 4 });
+            calls.ShouldAllBe(c => c.block == "bc");
+        }
+        finally
+        {
+            Text.Customizations.Remove("TagValueIndex");
+        }
     }
 }
