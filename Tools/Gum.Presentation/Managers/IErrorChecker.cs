@@ -27,4 +27,13 @@ public interface IErrorChecker
     /// project; does not raise <see cref="ErrorsChecked"/>.
     /// </summary>
     ErrorViewModel[] GetProjectErrors(GumProjectSave project);
+
+    /// <summary>
+    /// <see cref="GetProjectErrors"/> in halves: read the project in steps on the UI thread, check the disk
+    /// elsewhere, then turn the rows into view models with <see cref="ToViewModels"/> back on the UI thread.
+    /// </summary>
+    Gum.ProjectServices.ProjectErrorCheck BeginProjectErrors(GumProjectSave project);
+
+    /// <summary>The rows a <see cref="Gum.ProjectServices.ProjectErrorCheck"/> found, as <see cref="GetProjectErrors"/> returns them.</summary>
+    ErrorViewModel[] ToViewModels(System.Collections.Generic.IReadOnlyList<Gum.ProjectServices.ErrorResult> rows);
 }
