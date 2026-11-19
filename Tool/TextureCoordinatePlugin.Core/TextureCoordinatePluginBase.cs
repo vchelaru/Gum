@@ -139,8 +139,16 @@ public abstract class TextureCoordinatePluginBase : PluginBase, IRecipient<UiBas
         textureCoordinatePluginTab.GotFocus += HandleTabShown;
 
         AssignEvents();
+        CatchUpWithLoadedProject();
+    }
 
-        // The startup project loads, and may select something, before the render surface exists.
+    /// <summary>
+    /// Shows the loaded project and selection in the tab. The startup project loads, and may
+    /// select something, before the render surface exists and before this plugin is listening.
+    /// Internal so tests can repeat it.
+    /// </summary>
+    internal void CatchUpWithLoadedProject()
+    {
         if (ObjectFinder.Self.GumProjectSave is { } project)
         {
             HandleProjectLoaded(project);

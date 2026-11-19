@@ -142,6 +142,7 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
     private readonly IFileDropTargetFilter _fileDropTargetFilter;
     private BackgroundManager _backgroundManager;
     private bool _isXnaInitialized;
+    private bool _isCatchUpPending;
     private readonly ISelectedState _selectedState;
     private readonly WireframeCommands _wireframeCommands;
     private readonly IHotkeyManager _hotkeyManager;
@@ -696,6 +697,7 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
 
     private void HandleProjectLoad(GumProjectSave save)
     {
+        _isCatchUpPending = false;
         _elementCameraMemory.Clear();
         _previewLauncher.ReactToProjectLoaded(save);
         _editorViewModel.HandleProjectLoad(save);
@@ -1128,10 +1130,19 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
         _isXnaInitialized = true;
 
         AssignEvents();
+        RequestCatchUpWithProjectAndSelection();
+    }
 
+    /// <summary>
+    /// Shows the loaded project and selection on the canvas once the current dispatcher work is
+    /// done. Called when the render surface becomes ready; internal so tests can repeat it.
+    /// </summary>
+    internal void RequestCatchUpWithProjectAndSelection()
+    {
         // After every plugin has heard about the surface, as a project load always was: the
         // Texture Coordinates canvas, which initializes after this one, takes over the content
         // loader that the wireframe's textures load through.
+        _isCatchUpPending = true;
         if (SynchronizationContext.Current is { } uiContext)
         {
             uiContext.Post(_ => CatchUpWithProjectAndSelection(), null);
@@ -1143,9 +1154,15 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
     }
 
     // The startup project loads, and may select an element, before the render surface exists,
-    // while this plugin is not yet listening; the canvas shows both now.
+    // while this plugin is not yet listening; the canvas shows both now. A project load heard in
+    // the meantime has already shown its project, and its selection arrives through events.
     private void CatchUpWithProjectAndSelection()
     {
+        if (!_isCatchUpPending)
+        {
+            return;
+        }
+
         if (_projectManager.GumProjectSave is { } project)
         {
             // Rebuilds the wireframe for whatever is selected.
