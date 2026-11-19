@@ -266,6 +266,28 @@ public class GumProjectDependencyWalkerFontTests : IDisposable
         cached.MissingFiles.ShouldContain(warning => warning.ReferencedPath == "Fonts/Missing.ttf");
     }
 
+    // Translated text adds fonts that walks without a lookup never collect, so such a walk keeps to its own.
+    [Fact]
+    public void Walk_with_a_localization_lookup_leaves_the_FontReferenceCache_alone()
+    {
+        ScreenSave menu = TestProjectBuilder.BuildScreen("MainMenu");
+        TestProjectBuilder.AddTextInstanceWithFontCache(menu, "Label", "Fonts/Present.ttf", 18);
+        GumProjectSave project = TestProjectBuilder.BuildProject(screens: new[] { menu });
+        string root = CreateProjectRoot(new[] { ("Fonts/Present.ttf", EmptyContent) });
+        ObjectFinder.Self.GumProjectSave = project;
+        FontReferenceCache cache = new FontReferenceCache();
+        GumProjectDependencyWalker walker = new GumProjectDependencyWalker
+        {
+            FontReferences = cache,
+            FontTranslationsOf = _ => Array.Empty<string>()
+        };
+
+        WalkResult result = walker.Walk(project, root, GumBundleInclusion.ExternalFiles);
+
+        result.ExternalFiles.ShouldContain("Fonts/Present.ttf");
+        cache.CollectionCount.ShouldBe(0);
+    }
+
     private string CreateProjectRoot(IEnumerable<(string, byte[])> files)
     {
         List<(string, byte[])> withProjectFile = new List<(string, byte[])>(files);

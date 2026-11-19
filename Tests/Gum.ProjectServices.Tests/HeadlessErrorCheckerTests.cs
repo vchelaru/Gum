@@ -1554,28 +1554,37 @@ public class HeadlessErrorCheckerTests : BaseTestClass
         {
             AddComponentWithTextFont("Label", "Fonts/Icons.ttf");
             AddComponentWithTextFont("Title", "Arial");
-            List<FontReferenceCache> caches = new List<FontReferenceCache>();
-            _sut.CreateFontReferenceCache = () =>
-            {
-                FontReferenceCache cache = new FontReferenceCache();
-                caches.Add(cache);
-                return cache;
-            };
+            RecordingFontReferenceCacheSource caches = new RecordingFontReferenceCacheSource();
+            HeadlessErrorChecker checker = new HeadlessErrorChecker(_mockTypeResolver.Object,
+                Array.Empty<IAdditionalErrorSource>(), orphanCodeFileProvider: null, caches);
 
             if (allErrors)
             {
-                _sut.GetAllErrors(Project);
+                checker.GetAllErrors(Project);
             }
             else
             {
-                _sut.GetProjectErrors(Project);
+                checker.GetProjectErrors(Project);
             }
 
-            caches.ShouldHaveSingleItem().CollectionCount.ShouldBe(Project.AllElements.Count());
+            caches.Started.ShouldHaveSingleItem().CollectionCount.ShouldBe(Project.AllElements.Count());
         }
         finally
         {
             DeleteTempProjectDirectory(projectDirectory);
+        }
+    }
+
+    // A new cache per request, kept so a test can see how many a check asked for and what each collected.
+    private sealed class RecordingFontReferenceCacheSource : IFontReferenceCacheSource
+    {
+        public List<FontReferenceCache> Started { get; } = new List<FontReferenceCache>();
+
+        public FontReferenceCache For(GumProjectSave project)
+        {
+            FontReferenceCache cache = new FontReferenceCache();
+            Started.Add(cache);
+            return cache;
         }
     }
 
