@@ -1561,7 +1561,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
         {
             // The first layout only supplies the line breaks, so it is laid out into a block this Text keeps and
             // clears for the next change instead of a new one (#7818).
-            _lineBreakLayout = BuildTextBlockFromRuns(runs, forcedWidth, _lineBreakLayout);
+            _lineBreakLayout = BuildTextBlockFromRuns(runs, forcedWidth, _lineBreakLayout, truncateToHeight: false);
             block = BuildTextBlockFromRuns(FitRunsToLines(runs, _lineBreakLayout, buffers.FittedRuns, buffers.LineRuns), forcedWidth);
         }
 
@@ -1623,7 +1623,9 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
     /// <param name="forcedWidth">The wrap width. When null, this Text's <see cref="Width"/> is used.</param>
     /// <param name="reuse">A block to clear and lay out into instead of a new one. RichTextKit keeps its buffers
     /// across <c>Clear</c>, so a block rebuilt every change allocates far less than a new block.</param>
-    private TextBlock BuildTextBlockFromRuns(List<StyledTextRun> runs, float? forcedWidth, TextBlock? reuse = null)
+    /// <param name="truncateToHeight">False for the layout that only supplies line breaks to <see cref="FitRunsToLines"/>:
+    /// its lines are not yet fit to their heights, so truncating it by Height would cut lines the fitted block keeps (#8341).</param>
+    private TextBlock BuildTextBlockFromRuns(List<StyledTextRun> runs, float? forcedWidth, TextBlock? reuse = null, bool truncateToHeight = true)
     {
         TextBlock textBlock;
         if (reuse != null)
@@ -1682,7 +1684,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
             // Vertical overflow (issue #3677): TruncateLine caps the block to this Text's Height so
             // RichTextKit drops lines that would spill past the bottom; SpillOver leaves MaxHeight
             // null and renders unbounded (the historical Skia behavior).
-            textBlock.MaxHeight = GetEffectiveMaxHeight();
+            textBlock.MaxHeight = truncateToHeight ? GetEffectiveMaxHeight() : null;
 
             // Ellipsis (issue #3677): RichTextKit appends "..." to the final line whenever it
             // truncates the block (via MaxLines/MaxHeight) and EllipsisEnabled is true. Its default
