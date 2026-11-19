@@ -2083,6 +2083,35 @@ public partial class CustomSetPropertyOnRenderable
                     // we apply the inline ourselves
                     shouldApply = false;
                     break;
+                default:
+                    {
+                        // A built-in effect ([Wave], [Rainbow], ...) rides the per-letter [Custom] path, which every
+                        // renderer evaluates on each draw, with the effect in place of a named function.
+                        BbCodeTextEffect? effect = BbCodeTextEffect.Create(canonicalName, item.Open.Argument);
+                        if (effect != null)
+                        {
+                            int startStripped = item.Open.StartStrippedIndex;
+                            int length = item.Close.StartStrippedIndex - startStripped;
+                            effect.SpanStart = startStripped;
+                            string substring = strippedText.Substring(startStripped, length);
+                            for (int i = 0; i < length; i++)
+                            {
+                                asText.InlineVariables.Add(new InlineVariable
+                                {
+                                    CharacterCount = 1,
+                                    StartIndex = startStripped + i,
+                                    VariableName = "Custom",
+                                    Value = new ParameterizedLetterCustomizationCall
+                                    {
+                                        BuiltInEffect = effect,
+                                        CharacterIndex = startStripped + i,
+                                        TextBlock = substring
+                                    }
+                                });
+                            }
+                        }
+                    }
+                    break;
                     // Font / FontSize / OutlineThickness / IsBold / IsItalic / HasDropshadow family swaps
                     // are handled below in ApplyFontVariables (stack model), not here.
             }

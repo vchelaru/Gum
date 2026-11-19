@@ -21,6 +21,12 @@ public struct TagInfo
     public int StartStrippedIndex;
     public string? Argument;
 
+    /// <summary>
+    /// True when <see cref="Argument"/> holds a built-in effect's space-separated parameters
+    /// (<c>[Wave amp=50 freq=5]</c>) rather than the text after an equals sign.
+    /// </summary>
+    public bool HasOptions;
+
     // even though FoundTag has Name, we add the name here so we can
     // sort open/close in one list
     public string Name;
@@ -101,8 +107,13 @@ public static class BbCodeParser
     /// <remarks>
     /// Uses <see cref="System.StringComparer.OrdinalIgnoreCase"/> — <c>InvariantCulture</c>
     /// has been observed to crash when uploaded to itch from a Blazor build.
+    /// The built-in effect tags (<see cref="BbCodeTextEffect.EffectTagNames"/>) are included only while
+    /// <see cref="BbCodeTextEffect.AreEnabled"/> is true, so a project below the version that added them keeps
+    /// drawing them as literal text.
     /// </remarks>
-    public static HashSet<string> KnownTags { get; } = new HashSet<string>(System.StringComparer.OrdinalIgnoreCase)
+    public static HashSet<string> KnownTags => BbCodeTextEffect.AreEnabled ? _knownTagsWithEffects : _knownTags;
+
+    private static readonly HashSet<string> _knownTags = new HashSet<string>(System.StringComparer.OrdinalIgnoreCase)
     {
         "Alpha",
         "Red",
@@ -122,6 +133,15 @@ public static class BbCodeParser
         "Link",
     };
 
+    private static readonly HashSet<string> _knownTagsWithEffects = CreateKnownTagsWithEffects();
+
+    private static HashSet<string> CreateKnownTagsWithEffects()
+    {
+        var tags = new HashSet<string>(_knownTags, System.StringComparer.OrdinalIgnoreCase);
+        tags.UnionWith(BbCodeTextEffect.EffectTagNames);
+        return tags;
+    }
+
     internal struct Tag
     {
         public bool IsOpening;
@@ -129,6 +149,7 @@ public static class BbCodeParser
         public int Count;
         public string Name;
         public string? Argument;
+        public bool HasOptions;
 
         public override string ToString()
         {
@@ -314,6 +335,7 @@ public static class BbCodeParser
                             StartIndex = foundTag.StartIndex,
                             Count = foundTag.Count,
                             Argument = foundTag.Argument,
+                            HasOptions = foundTag.HasOptions,
                             Name = foundTag.Name
                         };
 
@@ -469,9 +491,12 @@ public static class BbCodeParser
             int closeAt = isEmptyInPiece ? openAt : closePosition(Math.Min(close, end));
 
             // A tag written without a value goes back without '=', since [Color=] parses as an empty color (#8313).
+            // An effect tag's parameters go back space-separated ([Wave amp=50]), not after '='.
             string openText = tag.Open.Argument == null
                 ? $"[{tag.Open.Name}]"
-                : $"[{tag.Open.Name}={tag.Open.Argument}]";
+                : tag.Open.HasOptions
+                    ? $"[{tag.Open.Name} {tag.Open.Argument}]"
+                    : $"[{tag.Open.Name}={tag.Open.Argument}]";
 
             insertions.Add((openAt, tag.Open.StartIndex, openText));
             insertions.Add((closeAt, tag.Close.StartIndex, $"[/{tag.Close.Name}]"));
@@ -533,13 +558,29 @@ public static class BbCodeParser
         }
 
         var nameStartIndex = peekIndex;
+        // A built-in effect's parameters ([Wave amp=50 freq=5]) start after the first space, and only when the
+        // effect is in the tag set. Every other tag still rejects a space before '=', so its parse is unchanged.
+        int? optionsStartIndex = null;
         while (peekIndex < text.Length)
         {
+            if (optionsStartIndex != null && text[peekIndex] != ']' && text[peekIndex] != '[')
+            {
+                peekIndex++;
+                continue;
+            }
+
             switch (text[peekIndex])
             {
                 case ' ':
                     if (equalsIndex == null)
                     {
+                        if (isOpeningTag
+                            && FindKnownTagName(tags, text, nameStartIndex, peekIndex - nameStartIndex) is string effectName
+                            && BbCodeTextEffect.IsEffectTagName(effectName))
+                        {
+                            optionsStartIndex = peekIndex + 1;
+                            break;
+                        }
                         return null; // space isn't valid unless after an equals sign
                     }
 
@@ -555,7 +596,9 @@ public static class BbCodeParser
 
                 case ']':
                     {
-                        var nameEndIndex = equalsIndex ?? peekIndex;
+                        var nameEndIndex = optionsStartIndex != null
+                            ? optionsStartIndex.Value - 1
+                            : equalsIndex ?? peekIndex;
                         if (startIndex + 1 == nameEndIndex)
                         {
                             // No tag name provided
@@ -569,10 +612,24 @@ public static class BbCodeParser
                             return null;
                         }
 
+                        // An effect takes named parameters only; [Wave=...] is not a tag, like any other malformed one.
+                        if (optionsStartIndex == null && equalsIndex != null && BbCodeTextEffect.IsEffectTagName(tagName))
+                        {
+                            return null;
+                        }
+
                         // Valid tag
-                        var argument = equalsIndex != null
-                            ? text.Substring(equalsIndex.Value + 1, peekIndex - equalsIndex.Value - 1)
-                            : null;
+                        string? argument;
+                        if (optionsStartIndex != null)
+                        {
+                            argument = text.Substring(optionsStartIndex.Value, peekIndex - optionsStartIndex.Value).Trim();
+                        }
+                        else
+                        {
+                            argument = equalsIndex != null
+                                ? text.Substring(equalsIndex.Value + 1, peekIndex - equalsIndex.Value - 1)
+                                : null;
+                        }
 
                         return new Tag
                         {
@@ -580,7 +637,8 @@ public static class BbCodeParser
                             StartIndex = startIndex,
                             Count = peekIndex - startIndex + 1,
                             Name = tagName,
-                            Argument = argument
+                            Argument = argument,
+                            HasOptions = optionsStartIndex != null,
                         };
                     }
 

@@ -136,6 +136,9 @@ public class ParameterizedLetterCustomizationCall
     public int CharacterIndex { get; set; }
 
     public string TextBlock { get; set; } = string.Empty;
+
+    /// <summary>A built-in effect (<c>[Wave]</c>, <c>[Rainbow]</c>, ...) applied to this letter instead of a named function.</summary>
+    public Gum.Wireframe.BbCodeTextEffect? BuiltInEffect { get; set; }
 }
 
 #endregion
@@ -1683,6 +1686,7 @@ public class Text : IVisible, IRenderableIpso,
             float scaleY = 1;
             HorizontalAlignment scaleXOrigin = HorizontalAlignment.Center;
             VerticalAlignment scaleYOrigin = VerticalAlignment.Center;
+            ParameterizedLetterCustomizationCall? effectCall = null;
 
             foreach (var variable in run.Variables)
             {
@@ -1707,7 +1711,12 @@ public class Text : IVisible, IRenderableIpso,
                         runColor = new Color(runColor.R, runColor.G, runColor.B, (byte)variable.Value);
                         break;
                     case "Custom":
-                        if (variable.Value is ParameterizedLetterCustomizationCall call)
+                        if (variable.Value is ParameterizedLetterCustomizationCall { BuiltInEffect: not null } builtInCall)
+                        {
+                            // Applied after every other variable, so it adds to their offsets and color.
+                            effectCall = builtInCall;
+                        }
+                        else if (variable.Value is ParameterizedLetterCustomizationCall call)
                         {
                             var contextFunction = call.ContextFunction;
                             var function = call.Function;
@@ -1767,6 +1776,20 @@ public class Text : IVisible, IRenderableIpso,
                             }
                         }
                         break;
+                }
+            }
+
+            if (effectCall != null)
+            {
+                // totalWidth is this letter's distance from the start of its line, as on MonoGame.
+                Gum.Wireframe.BbCodeTextEffect effect = effectCall.BuiltInEffect!;
+                double time = Gum.Wireframe.BbCodeTextEffect.TimeSeconds();
+                effect.AddOffset(time, totalWidth, effectCall.CharacterIndex, ref xOffset, ref yOffset);
+                if (effect.ChangesColor)
+                {
+                    byte red = runColor.R, green = runColor.G, blue = runColor.B, alpha = runColor.A;
+                    effect.ApplyColor(time, totalWidth, effectCall.CharacterIndex, ref red, ref green, ref blue, ref alpha);
+                    runColor = new Color(red, green, blue, alpha);
                 }
             }
 
