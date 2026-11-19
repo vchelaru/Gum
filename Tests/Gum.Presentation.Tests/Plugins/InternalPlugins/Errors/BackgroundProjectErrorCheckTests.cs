@@ -111,6 +111,27 @@ public class BackgroundProjectErrorCheckTests : BaseTestClass
         _applied.ShouldHaveSingleItem().ShouldNotBeEmpty();
     }
 
+    // A disk error on the worker (a folder the case check may not list) goes to the tool log, not to the
+    // UI thread's unhandled-exception hook, and the next check still applies.
+    [Fact]
+    public void Start_AppliesALaterCheck_AfterTheWorkerFailed()
+    {
+        _sut.Start(rows => _applied.Add(rows.Select(row => row.Message).ToArray()));
+        RunPosted();
+        _offThread.ShouldHaveSingleItem().Done.SetException(new UnauthorizedAccessException("Access to the path is denied."));
+        _offThread.Clear();
+        Should.NotThrow(RunPosted);
+        _applied.ShouldBeEmpty();
+        _sut.FailedCount.ShouldBe(1);
+
+        _sut.Start(rows => _applied.Add(rows.Select(row => row.Message).ToArray()));
+        RunPosted();
+        FinishOffThreadWork();
+        RunPosted();
+
+        _applied.ShouldHaveSingleItem().ShouldNotBeEmpty();
+    }
+
     private void RunPosted()
     {
         while (_posted.Count > 0)

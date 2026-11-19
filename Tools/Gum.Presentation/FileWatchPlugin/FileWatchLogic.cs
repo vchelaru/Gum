@@ -117,7 +117,15 @@ public class FileWatchLogic
                     RefreshRootDirectory();
                     return;
                 }
-                EnableWithDirectories(finished.GetAwaiter().GetResult());
+                if (finished.IsFaulted || finished.IsCanceled)
+                {
+                    // The watchers stay as they are; the next scan request tries again.
+                    Exception error = finished.Exception?.GetBaseException() ?? new TaskCanceledException();
+                    Gum.Diagnostics.ToolLog.WriteException("File watch scan", error);
+                    _guiCommands.PrintOutput("Could not work out which folders to watch: " + error.Message);
+                    return;
+                }
+                EnableWithDirectories(finished.Result);
             }), CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
         }
         else

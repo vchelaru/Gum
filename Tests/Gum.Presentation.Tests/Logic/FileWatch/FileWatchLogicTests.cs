@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Gum.Commands;
@@ -297,6 +297,23 @@ public class FileWatchLogicTests : BaseTestClass
         // The posted reaction asked for a new scan, which reads the project again.
         RunPostedAction();
         pending.Count.ShouldBe(2);
+    }
+
+    [Fact]
+    public void RefreshRootDirectory_KeepsTheWatchersAndReports_WhenTheDiskPartFails()
+    {
+        string root = OperatingSystem.IsWindows() ? "C:/" : "/";
+        ProjectWithOutsideTexture(root);
+        FileWatchLogic logic = new FileWatchLogic(_fileWatchManager.Object, _guiCommands.Object, _projectState.Object,
+            _projectManager.Object, _dispatcher.Object, changeVersion: new ProjectChangeVersion(),
+            runOffThread: _ => Task.FromException<HashSet<FilePath>>(new UnauthorizedAccessException("Access to the path is denied.")));
+
+        logic.RefreshRootDirectory();
+        RunPostedAction();
+        Should.NotThrow(RunPostedAction);
+
+        _fileWatchManager.Verify(m => m.EnableWithDirectories(It.IsAny<HashSet<FilePath>>()), Times.Never);
+        _guiCommands.Verify(g => g.PrintOutput(It.Is<string>(text => text.Contains("Access to the path is denied."))), Times.Once);
     }
 
     private GumProjectSave ProjectWithOutsideTexture(string root)

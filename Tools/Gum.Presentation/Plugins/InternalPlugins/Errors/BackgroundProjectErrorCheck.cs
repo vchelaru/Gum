@@ -47,6 +47,9 @@ public sealed class BackgroundProjectErrorCheck
     /// <summary>How many runs were thrown away because the project changed before their rows were applied.</summary>
     public int DiscardedCount { get; private set; }
 
+    /// <summary>How many runs failed on the worker thread; the failure goes to the tool log.</summary>
+    public int FailedCount { get; private set; }
+
     /// <summary>
     /// Checks the loaded project and passes its rows to <paramref name="apply"/> on the UI thread. A later
     /// call replaces a run that has not applied yet. With no project loaded, applies no rows.
@@ -113,8 +116,17 @@ public sealed class BackgroundProjectErrorCheck
             return;
         }
 
-        // Faulted: surface the exception on the UI thread, as the synchronous check would have.
-        IReadOnlyList<ErrorResult> rows = finished.GetAwaiter().GetResult();
+        if (finished.IsFaulted || finished.IsCanceled)
+        {
+            // A disk error (a folder the case check may not list, say) keeps the rows shown now; the next
+            // save, file change or load checks again.
+            Exception error = finished.Exception?.GetBaseException() ?? new TaskCanceledException();
+            ToolLog.WriteException("Errors tab project check", error);
+            FailedCount++;
+            return;
+        }
+
+        IReadOnlyList<ErrorResult> rows = finished.Result;
         StartupTiming.Log($"BackgroundProjectErrorCheck applied {rows.Count} rows {_time.GetElapsedTime(started).TotalMilliseconds:0} ms after it started");
         apply(_errorChecker.ToViewModels(rows));
     }
