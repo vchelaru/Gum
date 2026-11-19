@@ -40,4 +40,26 @@ public class TextTruncateLineDrawnHeightTests : BaseTestClass
 
         ((Text)runtime.RenderableComponent!).WrappedText.Count.ShouldBe(expectedLines);
     }
+
+    // Each word is wider than the box, so every line comes from a mid-word break.
+    [Theory]
+    [InlineData("a [FontScale=2]b[/FontScale]")]
+    [InlineData("a b")]
+    public void TruncateLine_MidWordBrokenLines_KeepOnlyTheLinesThatFit(string markup)
+    {
+        float h = PlainLineAdvance();
+
+        TextRuntime runtime = new();
+        runtime.HeightUnits = DimensionUnitType.Absolute;
+        runtime.Height = h;
+        runtime.WidthUnits = DimensionUnitType.Absolute;
+        runtime.Width = 5;
+        runtime.TextOverflowVerticalMode = TextOverflowVerticalMode.TruncateLine;
+        runtime.Text = markup;
+        runtime.UpdateLayout();
+
+        Text text = (Text)runtime.RenderableComponent!;
+        text.WrappedText.Count.ShouldBe(1);
+        text.WrappedText[0].Trim().ShouldBe("a");
+    }
 }

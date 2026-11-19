@@ -281,6 +281,11 @@ public static class IWrappedTextExtensions
         bool isLastLine = false;
         while (firstWord < words.Count)
         {
+            // A mid-word break adds a line without checking the cap, so check it here for every branch.
+            if (lines.Count >= effectiveMaxNumberOfLines)
+            {
+                break;
+            }
             isLastLine = effectiveMaxNumberOfLines != null && lines.Count == effectiveMaxNumberOfLines - 1;
 
             // The current word, cut after a newline if one exists. words[firstWord] continues to hold the

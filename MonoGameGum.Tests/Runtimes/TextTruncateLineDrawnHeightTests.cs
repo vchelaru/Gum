@@ -49,6 +49,18 @@ public class TextTruncateLineDrawnHeightTests : BaseTestClass
         text.GetDrawnLineTop(text.WrappedText.Count).ShouldBeLessThanOrEqualTo(text.LineHeightInPixels * baseLines + 0.001f);
     }
 
+    // Each word is wider than the box, so every line comes from a mid-word break.
+    [Theory]
+    [InlineData("a [FontScale=2]b[/FontScale]")]
+    [InlineData("a b")]
+    public void TruncateLine_MidWordBrokenLines_KeepOnlyTheLinesThatFit(string markup)
+    {
+        Text text = Make(markup, 1, width: 5);
+
+        text.WrappedText.Count.ShouldBe(1);
+        text.WrappedText[0].Trim().ShouldBe("a");
+    }
+
     [Fact]
     public void TruncateLine_TallRuns_PutTheEllipsisOnTheLastLineThatFits()
     {
