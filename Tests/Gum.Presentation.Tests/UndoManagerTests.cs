@@ -302,6 +302,63 @@ public class UndoManagerTests : BaseTestClass
     }
 
     [Fact]
+    public void RecordUndo_OfAnInstanceAdd_StoresOnlyTheInstanceListInBothSnapshots()
+    {
+        ComponentSave component = _selectedState.Object.SelectedComponent!;
+        _undoManager.RecordState();
+
+        component.Instances.Add(new InstanceSave { Name = "Instance1", BaseType = "Sprite", ParentContainer = component });
+        _undoManager.RecordUndo();
+
+        HistoryAction action = _undoManager.CurrentElementHistory!.Actions.ShouldHaveSingleItem();
+        ElementSave undoElement = action.UndoState.Element;
+        ElementSave redoElement = action.RedoState!.Element;
+        undoElement.Instances.ShouldBeEmpty();
+        redoElement.Instances.ShouldHaveSingleItem().Name.ShouldBe("Instance1");
+        foreach (ElementSave snapshot in new[] { undoElement, redoElement })
+        {
+            snapshot.ShouldNotBeSameAs(component);
+            snapshot.States.ShouldBeNull();
+            snapshot.Categories.ShouldBeNull();
+            snapshot.Name.ShouldBeNull();
+            snapshot.BaseType.ShouldBeNull();
+            snapshot.Behaviors.ShouldBeNull();
+            snapshot.VariablesHiddenFromInstances.ShouldBeNull();
+        }
+        action.UndoState.Animations.ShouldBeNull();
+        action.RedoState.Animations.ShouldBeNull();
+    }
+
+    [Fact]
+    public void RecordUndo_OfAVariableChange_StoresOnlyTheStatesInBothSnapshots()
+    {
+        ComponentSave component = _selectedState.Object.SelectedComponent!;
+        component.DefaultState!.SetValue("X", 10.0f, "float");
+        _undoManager.RecordState();
+
+        component.DefaultState.SetValue("X", 11.0f, "float");
+        _undoManager.RecordUndo();
+
+        HistoryAction action = _undoManager.CurrentElementHistory!.Actions.ShouldHaveSingleItem();
+        action.UndoState.Element.DefaultState!.GetValueOrDefault<float>("X").ShouldBe(10.0f);
+        action.RedoState!.Element.DefaultState!.GetValueOrDefault<float>("X").ShouldBe(11.0f);
+        action.UndoState.Element.Instances.ShouldBeNull();
+        action.RedoState.Element.Instances.ShouldBeNull();
+        action.UndoState.Element.Categories.ShouldBeNull();
+        action.RedoState.Element.Categories.ShouldBeNull();
+    }
+
+    [Fact]
+    public void RecordUndo_WhenNothingChanged_RecordsNoAction()
+    {
+        _undoManager.RecordState();
+
+        _undoManager.RecordUndo();
+
+        _undoManager.CurrentElementHistory!.Actions.ShouldBeEmpty();
+    }
+
+    [Fact]
     public void PerformUndo_OnDeletedInstance_ShouldNotifyPluginOfInstanceAdd()
     {
         ComponentSave component = _selectedState.Object.SelectedComponent!;

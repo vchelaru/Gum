@@ -192,16 +192,16 @@ public class ElementUndoStrategy : IUndoStrategy
         ElementAnimationsSave? baselineAnimations = baseline.Animations;
         ElementAnimationsSave? currentAnimations = _animationUndoProvider.GetCurrentAnimations(element);
 
-        UndoSnapshot? undoSnapshot = TryGetUndoSnapshotToAdd(newState, element, oldState, baseline.Element,
-            baseline.CategoryName, baseline.StateName, baselineAnimations, currentAnimations);
-        if (undoSnapshot == null || !mUndos.TryGetValue(element, out ElementHistory? history))
+        SnapshotDiff diff = SnapshotDiff.Compute(oldState, baseline.Element, newState, element,
+            baselineAnimations, currentAnimations);
+        if (!diff.DidAnythingChange || !mUndos.TryGetValue(element, out ElementHistory? history))
         {
             return;
         }
 
-        UndoSnapshot? redoSnapshot = TryGetUndoSnapshotToAdd(oldState, baseline.Element, newState, element,
-            baseline.CategoryName, baseline.StateName, currentAnimations, baselineAnimations);
-        AppendAction(history, undoSnapshot, redoSnapshot);
+        AppendAction(history,
+            BuildDiffSnapshot(diff, baseline.Element, baseline.CategoryName, baseline.StateName, baselineAnimations),
+            BuildDiffSnapshot(diff, element, baseline.CategoryName, baseline.StateName, currentAnimations));
 
         // The History tab and the Undo menu follow the selected element's history only.
         if (element == _selectedState.SelectedElement)
@@ -284,20 +284,20 @@ public class ElementUndoStrategy : IUndoStrategy
         var baselineAnimations = baseline.Animations;
         var currentAnimations = _animationUndoProvider.GetCurrentAnimations(newElement);
 
-        UndoSnapshot? undoSnapshot = TryGetUndoSnapshotToAdd(newStateSave, newElement, oldState,
-            baseline.Element, baseline.CategoryName, baseline.StateName,
+        // One diff serves both directions: the comparison is symmetric, so the undo snapshot (the
+        // baseline's changed parts) and the redo snapshot (the current ones) share its flags.
+        SnapshotDiff diff = SnapshotDiff.Compute(oldState, baseline.Element, newStateSave, newElement,
             baselineAnimations, currentAnimations);
 
-        if (undoSnapshot != null)
+        if (diff.DidAnythingChange)
         {
             if(mUndos.ContainsKey(newElement))
             {
                 var history = mUndos[newElement];
 
-                var redoSnapshot = TryGetUndoSnapshotToAdd(oldState, baseline.Element, newStateSave, newElement, baseline.CategoryName, baseline.StateName,
-                    currentAnimations, baselineAnimations);
-
-                AppendAction(history, undoSnapshot, redoSnapshot);
+                AppendAction(history,
+                    BuildDiffSnapshot(diff, baseline.Element, baseline.CategoryName, baseline.StateName, baselineAnimations),
+                    BuildDiffSnapshot(diff, newElement, baseline.CategoryName, baseline.StateName, currentAnimations));
 
                 if (_pendingCrossElementChanges.Count > 0)
                 {
@@ -325,90 +325,90 @@ public class ElementUndoStrategy : IUndoStrategy
         }
     }
 
-    /// <summary>
-    /// Checks if anything has changed and if so returns an UndoSnapshot
-    /// </summary>
-    private UndoSnapshot? TryGetUndoSnapshotToAdd(StateSave? newState, ElementSave newElement,
-        StateSave? oldState, ElementSave oldElement, string? categoryName, string? stateName,
-        ElementAnimationsSave? oldAnimations, ElementAnimationsSave? newAnimations)
+    // Which parts of an element differ between two moments. Each comparison is symmetric, so one
+    // diff describes both the undo and the redo direction.
+    private readonly struct SnapshotDiff
     {
-        // The uncategorized states too, not just the selected one: adding, renaming or deleting a
-        // category changes the default state's <Category>State variable while the category is selected.
-        bool doStatesDiffer = FileManager.AreSaveObjectsEqual(oldState, newState) == false ||
-            FileManager.AreSaveObjectsEqual(oldElement.States, newElement.States) == false;
-        bool doStateCategoriesDiffer =
-            FileManager.AreSaveObjectsEqual(oldElement.Categories, newElement.Categories) == false;
-        bool doInstanceListsDiffer = FileManager.AreSaveObjectsEqual(oldElement.Instances, newElement.Instances) == false;
-        bool doTypesDiffer = oldElement.BaseType != newElement.BaseType;
-        bool doNamesDiffer = oldElement.Name != newElement.Name;
-        bool doBehaviorsDiffer = FileManager.AreSaveObjectsEqual(oldElement.Behaviors, newElement.Behaviors) == false;
-        bool doVariablesHiddenFromInstancesDiffer =
-            FileManager.AreSaveObjectsEqual(oldElement.VariablesHiddenFromInstances, newElement.VariablesHiddenFromInstances) == false;
-        bool doAnimationsDiffer = FileManager.AreSaveObjectsEqual(oldAnimations, newAnimations) == false;
+        public bool States { get; init; }
+        public bool Categories { get; init; }
+        public bool Instances { get; init; }
+        public bool BaseType { get; init; }
+        public bool Name { get; init; }
+        public bool Behaviors { get; init; }
+        public bool VariablesHiddenFromInstances { get; init; }
+        public bool Animations { get; init; }
 
-        // Why do we care if the user selected a different state?
-        // This seems to cause bugs, and we don't care about undoing selections...
-        //bool doesSelectedStateDiffer = recordedSnapshot.CategoryName != currentCategory?.Name ||
-        //    recordedSnapshot.StateName != currentStateSave?.Name;
+        public bool DidAnythingChange => States || Categories || Instances || BaseType || Name ||
+            Behaviors || VariablesHiddenFromInstances || Animations;
 
-        // todo : need to add behavior differences
-        UndoSnapshot? snapshotToAdd = null;
-
-        bool didAnythingChange = doStatesDiffer || doStateCategoriesDiffer || doInstanceListsDiffer || doTypesDiffer || doNamesDiffer ||
-            doBehaviorsDiffer || doVariablesHiddenFromInstancesDiffer || doAnimationsDiffer
-            //|| doesSelectedStateDiffer
-            ;
-        if (didAnythingChange)
+        public static SnapshotDiff Compute(StateSave? oldState, ElementSave oldElement,
+            StateSave? newState, ElementSave newElement,
+            ElementAnimationsSave? oldAnimations, ElementAnimationsSave? newAnimations) => new SnapshotDiff
         {
-            // A null member means "unchanged, don't apply" when this snapshot is applied, which
-            // the ElementSave types don't declare, so these nulls are forgiven.
-            var clone = CloneWithFixedEnumerations(oldElement);
-            if (!doInstanceListsDiffer)
-            {
-                clone.Instances = null!;
-            }
-            if (!doStatesDiffer)
-            {
-                clone.States = null!;
-            }
+            // The uncategorized states too, not just the selected one: adding, renaming or deleting a
+            // category changes the default state's <Category>State variable while the category is selected.
+            States = !FileManager.AreSaveObjectsEqual(oldState, newState) ||
+                !FileManager.AreSaveObjectsEqual(oldElement.States, newElement.States),
+            Categories = !FileManager.AreSaveObjectsEqual(oldElement.Categories, newElement.Categories),
+            Instances = !FileManager.AreSaveObjectsEqual(oldElement.Instances, newElement.Instances),
+            BaseType = oldElement.BaseType != newElement.BaseType,
+            Name = oldElement.Name != newElement.Name,
+            Behaviors = !FileManager.AreSaveObjectsEqual(oldElement.Behaviors, newElement.Behaviors),
+            VariablesHiddenFromInstances =
+                !FileManager.AreSaveObjectsEqual(oldElement.VariablesHiddenFromInstances, newElement.VariablesHiddenFromInstances),
+            Animations = !FileManager.AreSaveObjectsEqual(oldAnimations, newAnimations),
+        };
+    }
 
-            if (!doStateCategoriesDiffer)
-            {
-                clone.Categories = null!;
-            }
-            if (!doNamesDiffer)
-            {
-                clone.Name = null!;
-            }
-            if (!doTypesDiffer)
-            {
-                clone.BaseType = null;
-            }
-            if(!doBehaviorsDiffer)
-            {
-                clone.Behaviors = null!;
-            }
-            if (!doVariablesHiddenFromInstancesDiffer)
-            {
-                clone.VariablesHiddenFromInstances = null!;
-            }
-
-            snapshotToAdd = new UndoSnapshot
-            {
-                Element = clone,
-                CategoryName = categoryName,
-                StateName = stateName,
-                // Null when unchanged (mirrors the States/Instances trick); otherwise the animations
-                // to restore. oldAnimations being null but differing means the element had no
-                // animations before, so restore to an empty save rather than null (null would read as
-                // "no animation change to apply").
-                Animations = doAnimationsDiffer
-                    ? (oldAnimations != null ? FileManager.CloneSaveObject(oldAnimations) : new ElementAnimationsSave())
-                    : null
-            };
+    // A snapshot to restore source's side of diff: a clone of source with every unchanged part nulled.
+    private static UndoSnapshot BuildDiffSnapshot(SnapshotDiff diff, ElementSave source,
+        string? categoryName, string? stateName, ElementAnimationsSave? animations)
+    {
+        // A null member means "unchanged, don't apply" when this snapshot is applied, which
+        // the ElementSave types don't declare, so these nulls are forgiven.
+        var clone = CloneWithFixedEnumerations(source);
+        if (!diff.Instances)
+        {
+            clone.Instances = null!;
+        }
+        if (!diff.States)
+        {
+            clone.States = null!;
+        }
+        if (!diff.Categories)
+        {
+            clone.Categories = null!;
+        }
+        if (!diff.Name)
+        {
+            clone.Name = null!;
+        }
+        if (!diff.BaseType)
+        {
+            clone.BaseType = null;
+        }
+        if (!diff.Behaviors)
+        {
+            clone.Behaviors = null!;
+        }
+        if (!diff.VariablesHiddenFromInstances)
+        {
+            clone.VariablesHiddenFromInstances = null!;
         }
 
-        return snapshotToAdd;
+        return new UndoSnapshot
+        {
+            Element = clone,
+            CategoryName = categoryName,
+            StateName = stateName,
+            // Null when unchanged (mirrors the States/Instances trick); otherwise the animations
+            // to restore. animations being null but differing means the element had none on this
+            // side, so restore to an empty save rather than null (null would read as "no animation
+            // change to apply").
+            Animations = diff.Animations
+                ? (animations != null ? FileManager.CloneSaveObject(animations) : new ElementAnimationsSave())
+                : null
+        };
     }
 
     public static ElementSave CloneWithFixedEnumerations(ElementSave elementSave)
