@@ -182,6 +182,39 @@ text.Text = "Plain text with a [State=Highlighted]bold gold run[/State] in it.";
 text.AddToRoot();
 ```
 
+## Text Effects
+
+Six built-in tags animate or recolor the letters they wrap, with no code. They use the names, parameters, and defaults of Godot 4's RichTextLabel effects. Parameters are written after the tag name and separated by spaces, such as `[Wave amp=50 freq=5]`. Every parameter is optional, and a parameter that is missing or not a valid number keeps its default. Tag and parameter names ignore case. The `[Wave=50]` form is not a tag and is drawn as plain text.
+
+| Tag | Parameters (default) | What it does |
+| --- | --- | --- |
+| `Wave` | `amp` (20), `freq` (5), `connected` (1) | Moves letters up and down in a wave. The offset is `amp / 10` pixels. |
+| `Shake` | `rate` (20), `level` (5), `connected` (1) | Moves each letter in a random direction, `rate` times per second, up to `level / 10` pixels. |
+| `Tornado` | `radius` (10), `freq` (1), `connected` (1) | Moves letters in circles of `radius` pixels. |
+| `Fade` | `start` (0), `length` (10) | Fades letters out over `length` letters, starting `start` letters into the tag. |
+| `Rainbow` | `freq` (1), `sat` (0.8), `val` (0.8), `speed` (1) | Colors letters by a hue that changes along the text and over time. |
+| `Pulse` | `color` (white at 25% alpha), `freq` (1), `ease` (-2) | Blends the letters toward their color multiplied by `color`, `freq` times per second. `color` takes the same values as the `Color` tag. |
+
+`connected` is accepted for compatibility with Godot and has no effect.
+
+```csharp
+// Initialize
+var text = new TextRuntime();
+text.Text = "[Wave amp=50 freq=5]Wavy[/Wave], [Shake]shaky[/Shake], [Tornado radius=5]spinning[/Tornado], " +
+    "[Fade length=8]fading away[/Fade], [Rainbow]rainbow[/Rainbow], and [Pulse color=Red freq=2]pulsing[/Pulse] text";
+text.AddToRoot();
+```
+
+Effects combine with other tags: `[Color]` and `[Alpha]` set the color that `Rainbow`, `Pulse`, and `Fade` start from, and effects work with typewriter text (`MaxLettersToShow`) and `Custom` functions.
+
+In a game, effects follow the game time that `GumService` receives in `Update`, so pausing the game's time pauses the effects. The Gum tool has no game time, so effects in the tool's preview animate on the computer's clock. FlatRedBall always uses the computer's clock.
+
+Effect tags need a project at version 9 or later. In a project below version 9, these tags are drawn as plain text. To upgrade, see [Upgrading File (GUMX) Version](../../../gum-tool/upgrading/upgrading-file-gumx-version.md#version-9). Text set from code with no project loaded always uses the effects.
+
+{% hint style="info" %}
+Available in December 2026, or now if building Gum from source.
+{% endhint %}
+
 ## Custom Functions
 
 TextRuntime instances can use the `Custom` tag to define a custom function to be used when rendering a Text. This tag can be used to customize letters in a TextRuntime using custom code, allowing for effects such as wavy, rainbow, or shaking text.

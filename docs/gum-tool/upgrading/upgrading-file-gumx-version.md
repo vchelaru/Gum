@@ -169,3 +169,19 @@ Version 8 uses the **same XML format** as Version 7. There is **no format conver
 {% hint style="info" %}
 Available in December 2026, or now if building Gum from source. New projects created with the 2026 December tool (or later) are stamped Version 8 automatically.
 {% endhint %}
+
+## Version 9
+
+**Required Gum Tool Version**: 2026 December (or later)
+
+This version turns on the built-in BBCode text effects, such as `[Wave]` and `[Rainbow]` (see [Text Effects](../../code/standard-visuals/textruntime/bbcode.md#text-effects)). In a project below version 9, these tags are drawn as plain text, as they were before the effects existed.
+
+✅No manual changes are needed to your project beyond changing the version number. Check that no text in the project uses `[Wave]`, `[Shake]`, `[Tornado]`, `[Fade]`, `[Rainbow]`, or `[Pulse]` as plain text, since those tags start animating at version 9.
+
+Version 9 uses the **same XML format** as Version 8. There is **no format conversion or Save All step**, you only change the `<Version>` number.
+
+❗Be sure that your entire team is using the new version of Gum (2026 December or later) before making this upgrade.
+
+{% hint style="info" %}
+Available in December 2026, or now if building Gum from source. New projects created with the 2026 December tool (or later) are stamped Version 9 automatically.
+{% endhint %}
