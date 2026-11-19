@@ -1085,8 +1085,9 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
 
         if (Visible)
         {
+            RefreshCustomLetters();
             var textBlock = GetCachedTextBlock();
-            
+
             float absoluteRotation = this.GetAbsoluteRotation();
             SKMatrix canvasMatrix = canvas.TotalMatrix;
             // Unrotated text under a scale-and-translate canvas (the usual case) snaps and positions with plain
@@ -1344,6 +1345,15 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
     private bool _hasMarkup;
     // True when a run changes the size ([FontSize], [FontScale]) or the font family ([Font]), set by ParseMarkup.
     private bool _hasHeightRun;
+    // True when a [Custom] tag is present, set by ParseMarkup. Its callbacks run on every draw (#8308).
+    private bool _hasCustomRun;
+    // The styled runs the cached block was laid out from, kept when the text has a [Custom] run so a draw can
+    // tell whether the callbacks' output changed.
+    private readonly List<StyledTextRun> _customRunsAtLayout = new();
+    // The runs a draw evaluated. When they differ from _customRunsAtLayout, the next layout uses them instead of
+    // calling the callbacks a second time.
+    private readonly List<StyledTextRun> _customRunsThisDraw = new();
+    private bool _hasCustomRunsThisDraw;
     private string? _layoutText;
 
     /// <summary>
@@ -1527,7 +1537,21 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
 
         TextMarkupBuffers buffers = MarkupBuffers;
         List<StyledTextRun> runs = buffers.Runs;
-        FillStyledRuns(runs);
+        if (_hasCustomRunsThisDraw)
+        {
+            runs.Clear();
+            runs.AddRange(_customRunsThisDraw);
+            _hasCustomRunsThisDraw = false;
+        }
+        else
+        {
+            FillStyledRuns(runs);
+        }
+        if (_hasCustomRun)
+        {
+            _customRunsAtLayout.Clear();
+            _customRunsAtLayout.AddRange(runs);
+        }
         TextBlock block;
         if (!FitsRunsPerLine)
         {
@@ -1720,16 +1744,121 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
     /// </summary>
     private static TransformedLetter CreateTransformedLetter(FontRun fontRun, StyledTextRun run)
     {
-        SKPoint glyph = fontRun.GlyphPositions[0];
-        float top = glyph.Y + fontRun.Ascent - fontRun.HalfLeading;
-        SKRect cell = new SKRect(glyph.X, top, glyph.X + fontRun.Width, top + fontRun.TextHeight);
-
         var block = new TextBlock();
         block.AddText(run.Text, run.Style);
-        SKPoint blockGlyph = block.FontRuns[0].GlyphPositions[0];
+        var letter = new TransformedLetter(block);
+        letter.Place(fontRun, run.Letter);
+        return letter;
+    }
 
-        return new TransformedLetter(block, new SKPoint(glyph.X - blockGlyph.X, glyph.Y - blockGlyph.Y),
-            run.Letter.GetDrawMatrix(cell, glyph.Y));
+    /// <summary>
+    /// Re-runs the <c>[Custom]</c> callbacks before a draw, as MonoGame and raylib do on every draw (#8308). A
+    /// change to a letter's offset, scale or rotation moves the laid-out glyphs in place; a change to anything
+    /// RichTextKit lays out (color, replacement character, or a letter starting or stopping being transformed)
+    /// drops the block so it is laid out again from the runs evaluated here.
+    /// </summary>
+    private void RefreshCustomLetters()
+    {
+        TextBlock? block = _cachedTextBlock;
+        if (!_hasCustomRun || block == null || _customRunsAtLayout.Count == 0)
+        {
+            return;
+        }
+
+        List<StyledTextRun> current = _customRunsThisDraw;
+        FillStyledRuns(current);
+
+        bool isMoved = false;
+        bool needsLayout = current.Count != _customRunsAtLayout.Count;
+        for (int i = 0; i < current.Count && !needsLayout; i++)
+        {
+            StyledTextRun before = _customRunsAtLayout[i];
+            StyledTextRun now = current[i];
+            if (!ReferenceEquals(before.Style, now.Style) || before.Text != now.Text
+                || before.Letter.HasDrawTransform != now.Letter.HasDrawTransform)
+            {
+                needsLayout = true;
+            }
+            else if (!before.Letter.Equals(now.Letter))
+            {
+                isMoved = true;
+            }
+        }
+
+        if (needsLayout)
+        {
+            _cachedTextBlock = null;
+            _hasCustomRunsThisDraw = true;
+            return;
+        }
+        if (!isMoved)
+        {
+            return;
+        }
+
+        MoveCustomLetters(block, current);
+        _customRunsAtLayout.Clear();
+        _customRunsAtLayout.AddRange(current);
+    }
+
+    // Code-point start of each [Custom] run -> its index in the run list, reused across draws.
+    private readonly Dictionary<int, int> _customRunIndexByStart = new();
+
+    /// <summary>Moves <paramref name="block"/>'s [Custom] letters from where <see cref="_customRunsAtLayout"/>
+    /// put them to where <paramref name="current"/> puts them, without laying the block out again.</summary>
+    private void MoveCustomLetters(TextBlock block, List<StyledTextRun> current)
+    {
+        _customRunIndexByStart.Clear();
+        int codePointIndex = 0;
+        for (int i = 0; i < current.Count; i++)
+        {
+            StyledTextRun run = current[i];
+            if (!run.Letter.IsIdentity || !_customRunsAtLayout[i].Letter.IsIdentity)
+            {
+                _customRunIndexByStart[codePointIndex] = i;
+            }
+            for (int c = 0; c < run.Text.Length; c++)
+            {
+                if (!char.IsLowSurrogate(run.Text[c]))
+                {
+                    codePointIndex++;
+                }
+            }
+        }
+
+        _transformedLetters.TryGetValue(block, out List<TransformedLetter>? transformedLetters);
+        int transformedIndex = 0;
+        foreach (FontRun fontRun in block.FontRuns)
+        {
+            if (!_customRunIndexByStart.TryGetValue(fontRun.Start, out int runIndex))
+            {
+                continue;
+            }
+            LetterDrawTransform before = _customRunsAtLayout[runIndex].Letter;
+            LetterDrawTransform now = current[runIndex].Letter;
+            float dx = now.XOffset - before.XOffset;
+            float dy = now.YOffset - before.YOffset;
+            if (dx != 0 || dy != 0)
+            {
+                fontRun.MoveGlyphs(dx, dy);
+            }
+            if (now.HasDrawTransform && fontRun.GlyphPositions.Length > 0 && transformedLetters != null
+                && transformedIndex < transformedLetters.Count)
+            {
+                transformedLetters[transformedIndex].Place(fontRun, now);
+                transformedIndex++;
+            }
+        }
+
+        // The blobs and a MaxLettersToShow reveal block were built from the old glyph positions.
+        if (IsCachedBlock(block))
+        {
+            DropCachedBlobs();
+        }
+        if (ReferenceEquals(_revealBlockSource, block))
+        {
+            _revealBlockSource = null;
+        }
     }
 
     /// <summary>
@@ -1827,8 +1956,16 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
     /// <summary>
     /// What a <c>[Custom]</c> callback did to one letter: a glyph offset plus a draw-only scale and rotation.
     /// </summary>
-    internal readonly struct LetterDrawTransform
+    internal readonly struct LetterDrawTransform : IEquatable<LetterDrawTransform>
     {
+        public bool Equals(LetterDrawTransform other) =>
+            XOffset == other.XOffset && YOffset == other.YOffset && ScaleX == other.ScaleX && ScaleY == other.ScaleY
+            && ScaleXOrigin == other.ScaleXOrigin && ScaleYOrigin == other.ScaleYOrigin && RotationDegrees == other.RotationDegrees;
+
+        public override bool Equals(object? obj) => obj is LetterDrawTransform other && Equals(other);
+
+        public override int GetHashCode() => HashCode.Combine(XOffset, YOffset, ScaleX, ScaleY, ScaleXOrigin, ScaleYOrigin, RotationDegrees);
+
         public static readonly LetterDrawTransform Identity = new(0, 0, 1, 1, HorizontalAlignment.Center, VerticalAlignment.Center, 0);
 
         public readonly float XOffset;
@@ -1892,14 +2029,24 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
     private sealed class TransformedLetter
     {
         public readonly TextBlock Block;
-        public readonly SKPoint PaintOffset;
-        public readonly SKMatrix Matrix;
+        public SKPoint PaintOffset { get; private set; }
+        public SKMatrix Matrix { get; private set; }
 
-        public TransformedLetter(TextBlock block, SKPoint paintOffset, SKMatrix matrix)
+        public TransformedLetter(TextBlock block)
         {
             Block = block;
-            PaintOffset = paintOffset;
-            Matrix = matrix;
+        }
+
+        /// <summary>Draws the letter where <paramref name="fontRun"/> laid it out, with <paramref name="transform"/>.
+        /// The cell is the letter's advance by its run's line box, as MonoGame's is the advance by the font's line height.</summary>
+        public void Place(FontRun fontRun, LetterDrawTransform transform)
+        {
+            SKPoint glyph = fontRun.GlyphPositions[0];
+            float top = glyph.Y + fontRun.Ascent - fontRun.HalfLeading;
+            SKRect cell = new SKRect(glyph.X, top, glyph.X + fontRun.Width, top + fontRun.TextHeight);
+            SKPoint blockGlyph = Block.FontRuns[0].GlyphPositions[0];
+            PaintOffset = new SKPoint(glyph.X - blockGlyph.X, glyph.Y - blockGlyph.Y);
+            Matrix = transform.GetDrawMatrix(cell, glyph.Y);
         }
     }
 
@@ -3136,6 +3283,9 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
     {
         _inlineVariables.Clear();
         _hasHeightRun = false;
+        _hasCustomRun = false;
+        _hasCustomRunsThisDraw = false;
+        _customRunsAtLayout.Clear();
         ParsedBbCodeTags = null;
 
         if (string.IsNullOrEmpty(mRawText) || mRawText.IndexOf('[') < 0)
@@ -3170,6 +3320,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
         foreach (InlineVariable variable in _inlineVariables)
         {
             _hasHeightRun |= variable.VariableName == "FontSize" || variable.VariableName == "FontScale" || variable.VariableName == "Font";
+            _hasCustomRun |= variable.VariableName == "Custom";
         }
     }
 
@@ -3203,7 +3354,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
                     break;
                 case "Color":
                     variableName = "Color";
-                    System.Drawing.Color? parsedColor = ParseColor(argument);
+                    System.Drawing.Color? parsedColor = BbCodeFontStacks.ParseColor(argument);
                     value = parsedColor.HasValue ? Box(existing, parsedColor.Value) : null;
                     break;
                 case "Red":
@@ -3302,29 +3453,6 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
     /// </summary>
     private static object Box<T>(object? existing, T value) where T : struct =>
         existing is T current && EqualityComparer<T>.Default.Equals(current, value) ? existing : value;
-
-    /// <summary>
-    /// Parses a <c>[Color=..]</c> argument, honoring both a hex form (<c>0xAARRGGBB</c>) and a named
-    /// color (<c>Red</c>, <c>CornflowerBlue</c>, ...), matching the MonoGame/Raylib SetBbCodeText parsing.
-    /// Returns null (run keeps the base color) when the argument is empty or unrecognized.
-    /// </summary>
-    private static System.Drawing.Color? ParseColor(string? argument)
-    {
-        if (string.IsNullOrEmpty(argument))
-        {
-            return null;
-        }
-
-        if (argument.StartsWith("0x") &&
-            int.TryParse(argument.Substring(2), NumberStyles.AllowHexSpecifier, CultureInfo.InvariantCulture, out int hex))
-        {
-            return System.Drawing.Color.FromArgb(hex);
-        }
-
-        var named = System.Drawing.Color.FromName(argument);
-        // FromName returns a non-known color with ARGB 0 for an unrecognized name; treat that as "no color".
-        return named.IsKnownColor ? named : (System.Drawing.Color?)null;
-    }
 
     /// <summary>
     /// The text-local rectangle the blend is limited to: the measured block plus room for the outline

@@ -2,7 +2,6 @@
 
 using System;
 using System.Globalization;
-using System.Linq;
 using System.Text;
 using System.Collections.Generic;
 
@@ -387,55 +386,107 @@ public static class BbCodeParser
         return count;
     }
 
-    public static string AddTags(string text, List<FoundTag> tags, int strippedStringPaddingCount = 0)
+    /// <summary>
+    /// Writes back into <paramref name="text"/>, a piece of the stripped text starting at stripped index
+    /// <paramref name="strippedStringPaddingCount"/>, every tag that covers any of its characters, so the piece
+    /// styles exactly as the same characters do in the whole text. A tag opened before the piece opens at its start,
+    /// and one that closes after it closes at its end.
+    /// </summary>
+    public static string AddTags(string text, List<FoundTag> tags, int strippedStringPaddingCount = 0) =>
+        AddTags(new[] { text }, new[] { strippedStringPaddingCount }, strippedStringPaddingCount + text.Length, tags);
+
+    /// <summary>
+    /// Joins <paramref name="lines"/> with '\n' and writes every tag that covers any of their characters back in, so the
+    /// result styles exactly as the same characters do in the whole text: paging never changes how markup renders.
+    /// </summary>
+    /// <param name="lines">The text shown for each line. A line may be shorter than its stripped range (a trailing space removed).</param>
+    /// <param name="lineStarts">The stripped index at which each line starts, ascending.</param>
+    /// <param name="end">The stripped index just past the last line.</param>
+    /// <param name="tags">Tags parsed from the whole text, whose stripped indexes count no newlines.</param>
+    internal static string AddTags(IReadOnlyList<string> lines, IReadOnlyList<int> lineStarts, int end, List<FoundTag> tags)
     {
-        var allTags = new List<TagInfo>(tags.Count * 2);
-        HashSet<TagInfo> openingTags = new HashSet<TagInfo>();
-        for (int i = 0; i < tags.Count; i++)
+        if (lines.Count == 0)
         {
-            var tag = tags[i];
-
-            var isTagInString = (tag.Open.StartStrippedIndex >= strippedStringPaddingCount && tag.Open.StartStrippedIndex < text.Length + strippedStringPaddingCount) ||
-                                (tag.Close.StartStrippedIndex > strippedStringPaddingCount && tag.Close.StartStrippedIndex <= text.Length + strippedStringPaddingCount);
-
-            if(isTagInString)
-            {
-                allTags.Add(tag.Open);
-                allTags.Add(tag.Close);
-                openingTags.Add(tag.Open);
-            }
+            return string.Empty;
         }
 
-        var sorted = allTags
-            .OrderBy(item => item.StartIndex).ToArray();
-
-        var stringBuilder = new StringBuilder(text);
-
-        int characterCountForTags = 0;
-
-        foreach (var tag in sorted)
+        var stringBuilder = new StringBuilder();
+        int[] lineOffsets = new int[lines.Count];
+        for (int i = 0; i < lines.Count; i++)
         {
-            var isOpening = openingTags.Contains(tag);
-            var tagText = isOpening 
-                ? $"[{tag.Name}={tag.Argument}]"
-                : $"[/{tag.Name}]";
-
-            var desiredStrippedInsertionIndex = 
-                Math.Max(0, tag.StartStrippedIndex - strippedStringPaddingCount);
-
-            if (desiredStrippedInsertionIndex + characterCountForTags >= stringBuilder.Length)
+            if (i > 0)
             {
-                stringBuilder.Append(tagText);
+                stringBuilder.Append('\n');
             }
-            
-            else
+            lineOffsets[i] = stringBuilder.Length;
+            stringBuilder.Append(lines[i]);
+        }
+
+        int start = lineStarts[0];
+
+        int lineEnd(int line) => line + 1 < lines.Count ? lineStarts[line + 1] : end;
+
+        int toPosition(int line, int strippedIndex) =>
+            lineOffsets[line] + Math.Min(strippedIndex - lineStarts[line], lines[line].Length);
+
+        // An open tag goes on the line holding its first character, a close tag on the line holding its last.
+        int openPosition(int strippedIndex)
+        {
+            int line = lines.Count - 1;
+            while (line > 0 && lineStarts[line] > strippedIndex)
             {
-                stringBuilder.Insert(desiredStrippedInsertionIndex + characterCountForTags, tagText);
+                line--;
+            }
+            return toPosition(line, strippedIndex);
+        }
+
+        int closePosition(int strippedIndex)
+        {
+            int line = 0;
+            while (line < lines.Count - 1 && lineEnd(line) < strippedIndex)
+            {
+                line++;
+            }
+            return toPosition(line, strippedIndex);
+        }
+
+        // Sorted by position in the joined text, then by the tag's index in the source, so tags at one position
+        // keep their original order and nesting stays intact.
+        var insertions = new List<(int Position, int SourceIndex, string Text)>(tags.Count * 2);
+        for (int i = 0; i < tags.Count; i++)
+        {
+            FoundTag tag = tags[i];
+            int open = tag.Open.StartStrippedIndex;
+            int close = tag.Close.StartStrippedIndex;
+
+            bool coversPiece = open < end && close > start;
+            bool isEmptyInPiece = open == close && open >= start && open < end;
+            if (!coversPiece && !isEmptyInPiece)
+            {
+                continue;
             }
 
+            int openAt = openPosition(Math.Max(open, start));
+            int closeAt = isEmptyInPiece ? openAt : closePosition(Math.Min(close, end));
 
-            characterCountForTags += tagText.Length;
-            
+            // A tag written without a value goes back without '=', since [Color=] parses as an empty color (#8313).
+            string openText = tag.Open.Argument == null
+                ? $"[{tag.Open.Name}]"
+                : $"[{tag.Open.Name}={tag.Open.Argument}]";
+
+            insertions.Add((openAt, tag.Open.StartIndex, openText));
+            insertions.Add((closeAt, tag.Close.StartIndex, $"[/{tag.Close.Name}]"));
+        }
+
+        insertions.Sort((a, b) => a.Position != b.Position
+            ? a.Position.CompareTo(b.Position)
+            : a.SourceIndex.CompareTo(b.SourceIndex));
+
+        int inserted = 0;
+        foreach (var insertion in insertions)
+        {
+            stringBuilder.Insert(insertion.Position + inserted, insertion.Text);
+            inserted += insertion.Text.Length;
         }
 
         return stringBuilder.ToString();
@@ -499,7 +550,8 @@ public static class BbCodeParser
                     return null; // `[` isn't valid inside a tag definition
 
                 case '=':
-                    equalsIndex = peekIndex;
+                    // The first '=' ends the name; later ones belong to the value (a URL query, #8311).
+                    equalsIndex ??= peekIndex;
                     break;
 
                 case ']':

@@ -645,30 +645,26 @@ public class DialogBox : FrameworkElement, IInputReceiver
                 var currentPage = new StringBuilder();
                 currentPage.Clear();
 
-                StringBuilder stringBuilder = new StringBuilder();
+                var pageLines = new List<string>();
+                var pageLineStarts = new List<int>();
                 int strippedTextCount = 0;
                 while(absoluteLineNumber < unlimitedLines.Count)
                 {
-                    stringBuilder.Clear();
+                    pageLines.Clear();
+                    pageLineStarts.Clear();
 
                     for(int i = 0; i < limitedLines.Count && absoluteLineNumber < unlimitedLines.Count; i++)
                     {
-                        var toAppend = unlimitedLines[absoluteLineNumber];
-                        var sizeBeforeTags = toAppend.Length;
-                        if(foundTagsWithoutNewlines.Count > 0)
-                        {
-                            toAppend = BbCodeParser.AddTags(toAppend, foundTagsWithoutNewlines, strippedTextCount);
-                        }
-
-                        strippedTextCount += sizeBeforeTags;
-                        if(toAppend?.EndsWith(" ") == true)
-                        {
-                            toAppend = toAppend.Substring(0, toAppend.Length - 1);
-                        }
-                        stringBuilder.Append(toAppend + "\n");
+                        var line = unlimitedLines[absoluteLineNumber] ?? string.Empty;
+                        pageLineStarts.Add(strippedTextCount);
+                        strippedTextCount += line.Length;
+                        pageLines.Add(line.EndsWith(" ") ? line.Substring(0, line.Length - 1) : line);
                         absoluteLineNumber++;
                     }
-                    pages.Add(stringBuilder.ToString());
+
+                    // Tags are written back per page, not per line, so a tag spanning lines or pages styles every
+                    // character it covers (#8319).
+                    pages.Add(BbCodeParser.AddTags(pageLines, pageLineStarts, strippedTextCount, foundTagsWithoutNewlines) + "\n");
                 }
 
                 return pages.ToArray();

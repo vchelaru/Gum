@@ -35,6 +35,36 @@ public class TextBbCodeTagValueTests : BaseTestClass
         }
     }
 
+    // The font of the last per-run font variable covering the character, or "base".
+    private static string FontAt(Text text, int index)
+    {
+        InlineVariable? covering = text.InlineVariables.LastOrDefault(v =>
+            v.Value is Raylib_cs.Font && index >= v.StartIndex && index < v.StartIndex + v.CharacterCount);
+        if (covering == null)
+        {
+            return "base";
+        }
+        Raylib_cs.Font font = (Raylib_cs.Font)covering.Value;
+        return $"{font.BaseSize}/{font.Texture.Id}/{font.GlyphCount}";
+    }
+
+    [Theory]
+    [InlineData("[Color=NotAColor]a[/Color]")]
+    [InlineData("[Color=]a[/Color]")]
+    [InlineData("[Color=0xZZ]a[/Color]")]
+    [InlineData("[Color=0x]a[/Color]")]
+    // A # prefix is not a color form on any runtime (Skia's ParseColor reads only 0x and names).
+    [InlineData("[Color=#FFFEFEFE]a[/Color]")]
+    public void Text_ColorTagWithUnparseableValue_KeepsBaseColor(string markup)
+    {
+        Text text = MakeText(markup);
+
+        text.RawText.ShouldBe("a");
+        text.InlineVariables.Where(v => v.VariableName == "Color")
+            .Select(v => ((System.Drawing.Color)v.Value).ToArgb().ToString("X8"))
+            .ShouldBeEmpty("Because a Color value that is not a color must leave the run in the base color");
+    }
+
     [Theory]
     [InlineData("[Color=red]a[/Color]", 255, 255, 0, 0)]
     [InlineData("[Color=CornflowerBlue]a[/Color]", 255, 100, 149, 237)]
@@ -71,6 +101,26 @@ public class TextBbCodeTagValueTests : BaseTestClass
         Text text = MakeText(markup);
 
         text.InlineVariables.Single(v => v.VariableName == "FontScale").Value.ShouldBe(expected);
+    }
+
+    [Theory]
+    [InlineData("[FontSize=40]a[FontSize=abc]b[/FontSize]c[/FontSize]")]
+    [InlineData("[FontSize=40]a[FontSize=]b[/FontSize]c[/FontSize]")]
+    [InlineData("[IsBold=true]a[IsBold=maybe]b[/IsBold]c[/IsBold]")]
+    [InlineData("[IsItalic=true]a[IsItalic=]b[/IsItalic]c[/IsItalic]")]
+    [InlineData("[OutlineThickness=2]a[OutlineThickness=x]b[/OutlineThickness]c[/OutlineThickness]")]
+    [InlineData("[HasDropshadow=true]a[HasDropshadow=x]b[/HasDropshadow]c[/HasDropshadow]")]
+    // An open tag with no value at all must not act as a close tag.
+    [InlineData("[FontSize=40]a[FontSize]b[/FontSize]c[/FontSize]")]
+    public void Text_FontTagWithUnparseableValue_InsideValidTag_KeepsEnclosingFont(string markup)
+    {
+        Text text = MakeText(markup);
+
+        text.RawText.ShouldBe("abc");
+        string outer = FontAt(text, 0);
+        outer.ShouldNotBe("base", "Because the valid outer tag must change the font of 'a'");
+        FontAt(text, 1).ShouldBe(outer, "Because an unparseable inner value must not undo the enclosing tag");
+        FontAt(text, 2).ShouldBe(outer, "Because closing the unparseable inner tag must not close the enclosing tag too");
     }
 
     [Theory]
