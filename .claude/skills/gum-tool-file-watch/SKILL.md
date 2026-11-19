@@ -48,7 +48,7 @@ A second `PeriodicUiTimer` at 200ms drives the File Watch debug panel UI only â€
 
 **Deduplication**: the project directory is added last, so a final pass in `GetFileWatchRootDirectories` removes every root nested under another; each folder gets one watcher, and subdirectories are covered by `IncludeSubdirectories = true`. A nested root left in the set would raise a copy of every event.
 
-`RefreshRootDirectory()` is called on project load and whenever a variable that `IsFile == true` changes value.
+`RefreshRootDirectory()` is called on project load and whenever a variable that `IsFile == true` changes value. The scan reads the project on the UI thread (`ObjectFinder.PrepareAllFilesInProject`), lists the directories on a worker thread, and sets the watchers only if `IProjectChangeVersion` has not moved meanwhile; otherwise it scans again.
 
 ## Saving Edits Back to Disk
 
