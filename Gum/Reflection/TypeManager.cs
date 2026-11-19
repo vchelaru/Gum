@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
+using System.Threading;
 using RenderingLibrary.Graphics;
 using Gum.DataTypes;
 
@@ -12,6 +13,11 @@ public class TypeManager : ITypeManager
 {
     List<Type>? mTypes;
     private readonly ConcurrentDictionary<string, Type?> _resolved = new ConcurrentDictionary<string, Type?>();
+    // Bumped whenever the type list changes, so a lookup that scanned the old list doesn't cache.
+    private int _generation;
+
+    /// <summary>Runs between a lookup's scan and its caching, so a test can change the type list there.</summary>
+    internal Action? AfterResolveForTests { get; set; }
 
     public void AddType(Type type)
     {
@@ -21,6 +27,7 @@ public class TypeManager : ITypeManager
         }
         mTypes.Add(type);
         // A name that resolved to nothing, or a nullable of it, may resolve to the new type now.
+        Interlocked.Increment(ref _generation);
         _resolved.Clear();
     }
 
@@ -36,6 +43,7 @@ public class TypeManager : ITypeManager
         allTypes.AddRange(Assembly.GetAssembly(typeof(DimensionUnitType))!.GetTypes());
 
         mTypes = allTypes;
+        Interlocked.Increment(ref _generation);
         _resolved.Clear();
     }
 
@@ -57,8 +65,18 @@ public class TypeManager : ITypeManager
         // variable. Concurrent in case a lookup comes from a background thread.
         if (!_resolved.TryGetValue(typeAsString, out Type? type))
         {
+            int generation = Volatile.Read(ref _generation);
             type = Resolve(typeAsString);
-            _resolved.TryAdd(typeAsString, type);
+            AfterResolveForTests?.Invoke();
+            if (Volatile.Read(ref _generation) == generation)
+            {
+                _resolved.TryAdd(typeAsString, type);
+                // The list can change between the check and the add; a stale entry must not outlive it.
+                if (Volatile.Read(ref _generation) != generation)
+                {
+                    _resolved.TryRemove(typeAsString, out _);
+                }
+            }
         }
         return type;
     }

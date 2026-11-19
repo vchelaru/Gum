@@ -37,4 +37,34 @@ public class TypeManagerTests
         typeManager.GetTypeFromString(nameof(AddedLaterEnum)).ShouldBe(typeof(AddedLaterEnum));
         typeManager.GetTypeFromString(nameof(AddedLaterEnum) + "?").ShouldBe(typeof(AddedLaterEnum?));
     }
+
+    [Fact]
+    public void GetTypeFromString_TypeAddedWhileAMissIsBeingScanned_IsFoundAfterwards()
+    {
+        // A lookup on another thread can finish its scan, miss, and cache after AddType cleared the memo.
+        TypeManager typeManager = new TypeManager();
+        typeManager.Initialize();
+        typeManager.AfterResolveForTests = () =>
+        {
+            typeManager.AfterResolveForTests = null;
+            typeManager.AddType(typeof(AddedLaterEnum));
+        };
+
+        typeManager.GetTypeFromString(nameof(AddedLaterEnum)).ShouldBeNull();
+
+        typeManager.GetTypeFromString(nameof(AddedLaterEnum)).ShouldBe(typeof(AddedLaterEnum));
+    }
+
+    [Fact]
+    public void GetTypeFromString_AfterReinitializing_ForgetsTypesAddedBefore()
+    {
+        TypeManager typeManager = new TypeManager();
+        typeManager.Initialize();
+        typeManager.AddType(typeof(AddedLaterEnum));
+        typeManager.GetTypeFromString(nameof(AddedLaterEnum)).ShouldBe(typeof(AddedLaterEnum));
+
+        typeManager.Initialize();
+
+        typeManager.GetTypeFromString(nameof(AddedLaterEnum)).ShouldBeNull();
+    }
 }
