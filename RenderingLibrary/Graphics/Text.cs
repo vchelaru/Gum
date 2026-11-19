@@ -2171,10 +2171,25 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
     {
         // Issue #7282: measure with the same font and scale as the plain path (the pinned measurement font
         // while oversampled), so a text with only a [Color] run wraps and sizes like the same text without it.
-        var measurementFont = EffectiveMeasurementFont;
         var effectiveFontScale = MeasurementFontScale;
 
-        float maxRunScale = 0;
+        float lineWidthAtScale = SumStyledRunWidths(substrings, EffectiveMeasurementFont, forMeasurement: true,
+            HorizontalMeasurementStyle.TrimRight, out float maxRunScale);
+        lineHeightFactor = effectiveFontScale > 0 ? maxRunScale / effectiveFontScale : 1;
+        return effectiveFontScale > 0 ? lineWidthAtScale / effectiveFontScale : 0;
+    }
+
+    /// <summary>
+    /// The width of a line already split into styled runs, each run measured with the font and scale
+    /// <see cref="ResolveRunFont"/> gives it against <paramref name="baseFont"/>, plus the kerning across run
+    /// boundaries. Layout passes the measurement font (<paramref name="forMeasurement"/>); hit testing passes the
+    /// drawn font, so both follow the runs the way <see cref="DrawWithInlineVariables"/> does (#8321). Only the
+    /// final run uses <paramref name="lastRunStyle"/>; interior runs use Full so a run boundary keeps its space.
+    /// </summary>
+    private float SumStyledRunWidths(List<StyledSubstring> substrings, BitmapFont? baseFont, bool forMeasurement,
+        HorizontalMeasurementStyle lastRunStyle, out float maxRunHeightScale)
+    {
+        maxRunHeightScale = 0;
         float lineWidthAtScale = 0;
         StyledSubstring? previousSubstring = null;
         BitmapFont? previousFont = null;
@@ -2183,28 +2198,50 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
         {
             var substring = substrings[substringIndex];
             // runFont is null when no font is loaded yet (see MeasureString); that run then measures as 0.
-            bool isSizeRun = ResolveRunFont(substring.Variables, measurementFont, out BitmapFont? runFont, out float runScale, forMeasurement: true);
+            bool isSizeRun = ResolveRunFont(substring.Variables, baseFont, out BitmapFont? runFont, out float runScale, forMeasurement);
             float runHeightScale = 0;
             if (isSizeRun)
             {
                 runHeightScale = runScale;
-                if (runFont != null && measurementFont != null && measurementFont.LineHeightInPixels > 0)
+                if (runFont != null && baseFont != null && baseFont.LineHeightInPixels > 0)
                 {
-                    runHeightScale = runScale * runFont.LineHeightInPixels / measurementFont.LineHeightInPixels;
+                    runHeightScale = runScale * runFont.LineHeightInPixels / baseFont.LineHeightInPixels;
                 }
             }
             var measurementStyle = substringIndex == substrings.Count - 1
-                ? HorizontalMeasurementStyle.TrimRight
+                ? lastRunStyle
                 : HorizontalMeasurementStyle.Full;
             lineWidthAtScale += GetKerningAcrossRunBoundary(previousSubstring, previousFont, previousScale, substring, runFont, runScale);
             lineWidthAtScale += (runFont?.MeasureString(substring.Substring, measurementStyle) ?? 0) * runScale;
             previousSubstring = substring;
             previousFont = runFont;
             previousScale = runScale;
-            maxRunScale = System.Math.Max(maxRunScale, runHeightScale);
+            maxRunHeightScale = System.Math.Max(maxRunHeightScale, runHeightScale);
         }
-        lineHeightFactor = effectiveFontScale > 0 ? maxRunScale / effectiveFontScale : 1;
-        return effectiveFontScale > 0 ? lineWidthAtScale / effectiveFontScale : 0;
+        return lineWidthAtScale;
+    }
+
+    /// <summary>
+    /// The width of <paramref name="whatToMeasure"/> as it is drawn, in drawn units, honoring the inline runs
+    /// active over it from <paramref name="absoluteStartIndexInStrippedText"/> in the stripped text: each run at
+    /// its own [FontScale], [FontSize], [Font], [IsBold], [IsItalic] or [OutlineThickness] font and scale.
+    /// Without runs it is <see cref="MeasureDrawnString(string, HorizontalMeasurementStyle)"/>. Hit testing
+    /// places letters with this (#8321).
+    /// </summary>
+    public float MeasureDrawnString(string whatToMeasure, int absoluteStartIndexInStrippedText, HorizontalMeasurementStyle style)
+    {
+        if (InlineVariables.Count == 0)
+        {
+            return MeasureDrawnString(whatToMeasure, style);
+        }
+
+        var substrings = GetStyledSubstrings(absoluteStartIndexInStrippedText, whatToMeasure);
+        if (substrings.Count == 0)
+        {
+            return MeasureDrawnString(whatToMeasure, style);
+        }
+
+        return SumStyledRunWidths(substrings, DrawnFont, forMeasurement: false, style, out _);
     }
 
     /// <summary>

@@ -2003,26 +2003,61 @@ public class Text : IVisible, IRenderableIpso,
     private float MeasureStyledLineInBaseUnits(List<StyledSubstring> substrings, out float lineHeightFactor)
     {
         float baseScale = NominalFontScale;
-        float maxRunScale = 0;
+        // Same resolver the draw loop uses, but against EffectiveMeasurementFont with no
+        // compensation (issue #4365) -- measuring against the LIVE oversampled Font here would
+        // measure a DIFFERENT, non-linearly hinted raster than pre-oversampling, drifting a wrap
+        // decision or pre-render size by a few pixels depending on live zoom state. Draw/measure
+        // still can't drift on SIZE (#3524): compensation composes DrawSize back down to the exact
+        // same on-screen size EffectiveMeasurementFont already represents in native units.
+        float lineWidthAtScale = SumStyledRunWidths(substrings, EffectiveMeasurementFont, oversampleCompensationScale: 1f, out float maxRunScale);
+        lineHeightFactor = baseScale > 0 ? maxRunScale / baseScale : 0;
+        return baseScale > 0 ? lineWidthAtScale / baseScale : 0;
+    }
+
+    /// <summary>
+    /// The width of a line already split into styled runs, each run measured with the font and size
+    /// <see cref="ResolveRunFont"/> gives it against <paramref name="baseFont"/>, and the tallest size run's
+    /// layout scale. Layout passes the measurement font; hit testing passes the drawn font, so both follow
+    /// the runs the way <see cref="DrawStyledLine"/> does (#8321).
+    /// </summary>
+    private float SumStyledRunWidths(List<StyledSubstring> substrings, Font baseFont, float oversampleCompensationScale, out float maxRunScale)
+    {
+        maxRunScale = 0;
         float lineWidthAtScale = 0;
         for (int substringIndex = 0; substringIndex < substrings.Count; substringIndex++)
         {
             var substring = substrings[substringIndex];
-            // Same resolver the draw loop uses, but against EffectiveMeasurementFont with no
-            // compensation (issue #4365) -- measuring against the LIVE oversampled Font here would
-            // measure a DIFFERENT, non-linearly hinted raster than pre-oversampling, drifting a wrap
-            // decision or pre-render size by a few pixels depending on live zoom state. Draw/measure
-            // still can't drift on SIZE (#3524): compensation composes DrawSize back down to the exact
-            // same on-screen size EffectiveMeasurementFont already represents in native units.
-            var resolvedFont = ResolveRunFont(substring.Variables, EffectiveMeasurementFont, oversampleCompensationScale: 1f);
+            var resolvedFont = ResolveRunFont(substring.Variables, baseFont, oversampleCompensationScale);
             lineWidthAtScale += MeasureBlankedText(resolvedFont.Font, substring.Substring, resolvedFont.DrawSize, 0).X;
             if (IsSizeRun(substring.Variables))
             {
                 maxRunScale = System.Math.Max(maxRunScale, resolvedFont.LayoutScale);
             }
         }
-        lineHeightFactor = baseScale > 0 ? maxRunScale / baseScale : 0;
-        return baseScale > 0 ? lineWidthAtScale / baseScale : 0;
+        return lineWidthAtScale;
+    }
+
+    /// <summary>
+    /// The width of <paramref name="value"/> as it is drawn, honoring the inline runs active over it from
+    /// <paramref name="absoluteStartIndexInStrippedText"/> in the stripped text: each run at its own
+    /// [FontScale], [FontSize], [Font], [IsBold], [IsItalic] or [OutlineThickness] font and size, as
+    /// <see cref="DrawStyledLine"/> draws it. Without runs it is
+    /// <see cref="MeasureDrawnString(string, HorizontalMeasurementStyle)"/>. Hit testing places letters with this (#8321).
+    /// </summary>
+    public float MeasureDrawnString(string value, int absoluteStartIndexInStrippedText, HorizontalMeasurementStyle style)
+    {
+        if (InlineVariables.Count == 0)
+        {
+            return MeasureDrawnString(value, style);
+        }
+
+        var substrings = GetStyledSubstrings(absoluteStartIndexInStrippedText, value);
+        if (substrings.Count == 0)
+        {
+            return MeasureDrawnString(value, style);
+        }
+
+        return SumStyledRunWidths(substrings, Font, _oversampleCompensationScale, out _);
     }
 
     /// <summary>

@@ -157,7 +157,27 @@ internal static class TextHitTesting
         float cursorYOffset,
         Func<int, float> getLineTop,
         Func<string, float> getLineXOffset,
-        Func<float, string, int> getIndexInLine)
+        Func<float, string, int> getIndexInLine) =>
+        GetIndexInWrappedLines(lines, cursorXOffset, cursorYOffset, getLineTop,
+            (_, lineText) => getLineXOffset(lineText),
+            (offset, _, lineText) => getIndexInLine(offset, lineText));
+
+    /// <inheritdoc cref="GetIndexInWrappedLines(List{string}, float, float, Func{int, float}, Func{string, float}, Func{float, string, int})"/>
+    /// <param name="lines">The wrapped lines, as drawn.</param>
+    /// <param name="cursorXOffset">The point's x offset from the text's left edge.</param>
+    /// <param name="cursorYOffset">The point's y offset from the top of the first line.</param>
+    /// <param name="getLineTop">The distance from the top of the first line to the top of a line.</param>
+    /// <param name="getLineXOffset">The horizontal alignment offset of a line, given the index of its first
+    /// character in the concatenated lines (where its inline runs start) and its text.</param>
+    /// <param name="getIndexInLine">The index in a line nearest an x offset from the line's start, given the
+    /// x offset, the index of the line's first character in the concatenated lines, and its text.</param>
+    public static int GetIndexInWrappedLines(
+        List<string> lines,
+        float cursorXOffset,
+        float cursorYOffset,
+        Func<int, float> getLineTop,
+        Func<int, string, float> getLineXOffset,
+        Func<float, int, string, int> getIndexInLine)
     {
         int index = 0;
         int lineOn = 0;
@@ -166,10 +186,16 @@ internal static class TextHitTesting
             lineOn++;
         }
 
+        int startOfLine = 0;
+        for (int line = 0; line < lineOn; line++)
+        {
+            startOfLine += lines[line].Length;
+        }
+
         if (lineOn < lines.Count)
         {
             string lineText = lines[lineOn];
-            int indexInThisLine = getIndexInLine(cursorXOffset - getLineXOffset(lineText), lineText);
+            int indexInThisLine = getIndexInLine(cursorXOffset - getLineXOffset(startOfLine, lineText), startOfLine, lineText);
 
             // A click past the end of a wrapped line's trailing space puts the caret before the
             // space, so it stays on this line rather than jumping to the start of the next.
@@ -187,11 +213,6 @@ internal static class TextHitTesting
             }
         }
 
-        for (int line = 0; line < lineOn; line++)
-        {
-            index += lines[line].Length;
-        }
-
-        return index;
+        return startOfLine + index;
     }
 }
