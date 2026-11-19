@@ -110,6 +110,36 @@ public class DialogBoxBbCodeTests : BaseTestClass
         Normalize(string.Concat(shown)).ShouldBe(Normalize(Strip(markup)));
     }
 
+    // A word wider than the box breaks across lines as a Text does, and every one of its letters is drawn on some page.
+    [Theory]
+    [InlineData("one two Supercalifragilisticexpialidociousandthensomemoreletters three four five six seven eight")]
+    [InlineData("one two [Color=Red]Supercalifragilisticexpialidociousandthensomemoreletters[/Color] three four five six seven eight")]
+    [InlineData("Supercalifragilisticexpialidociousandthensomemorelettersthatkeepgoingpastthreelinesofthebox")]
+    public void Show_PaginatedWordWiderThanTheBox_DrawsEveryLetterOnSomePage(string markup)
+    {
+        var (dialogBox, visual) = Create(paginating: true);
+        dialogBox.LettersPerSecond = 0;
+
+        dialogBox.Show(markup);
+
+        List<string> drawn = new();
+        int guard = 0;
+        while (true)
+        {
+            drawn.Add(string.Concat(visual.Core.WrappedText));
+            if (dialogBox.PagesRemaining == 0 || ++guard > 20)
+            {
+                break;
+            }
+            visual.CallClick();
+        }
+
+        RemoveWhitespace(string.Concat(drawn)).ShouldBe(RemoveWhitespace(Strip(markup)));
+    }
+
+    private static string RemoveWhitespace(string value) =>
+        string.Concat(value.Where(character => !char.IsWhiteSpace(character)));
+
     // RawText holds the stripped text on MonoGame and the markup on Skia, so pages are compared stripped.
     private static string Strip(string markup) =>
         BbCodeParser.RemoveTags(markup, BbCodeParser.Parse(markup, BbCodeParser.KnownTags));
