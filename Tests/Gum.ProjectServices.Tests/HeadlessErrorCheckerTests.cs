@@ -1,3 +1,4 @@
+using Gum.Bundle;
 using Gum.Content.AnimationChain;
 using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
@@ -1475,6 +1476,102 @@ public class HeadlessErrorCheckerTests : BaseTestClass
             error.Code.ShouldBe("GUM0008");
             error.Message.ShouldContain("\"Localization/Strings.csv\"");
             error.FilePath.ShouldBe(Path.Combine(projectDirectory, "Localization/strings.csv"));
+        }
+        finally
+        {
+            DeleteTempProjectDirectory(projectDirectory);
+        }
+    }
+
+    [Fact]
+    public void GetAllErrors_ShouldReportGum0008ForAFontFile_OnTheElementThatUsesIt()
+    {
+        string projectDirectory = CreateTempProjectDirectory();
+        try
+        {
+            WriteEmptyFile(projectDirectory, "Fonts/icons.ttf");
+            AddComponentWithTextFont("Label", "Fonts/Icons.ttf");
+
+            IReadOnlyList<ErrorResult> errors = _sut.GetAllErrors(Project);
+
+            ErrorResult error = errors.Where(e => e.Code == "GUM0008").ShouldHaveSingleItem();
+            error.ElementName.ShouldBe("Label");
+            error.Message.ShouldContain("\"Fonts/icons.ttf\"");
+        }
+        finally
+        {
+            DeleteTempProjectDirectory(projectDirectory);
+        }
+    }
+
+    [Fact]
+    public void GetAllErrors_ShouldSeeAFontChangedSinceTheLastCheck()
+    {
+        string projectDirectory = CreateTempProjectDirectory();
+        try
+        {
+            WriteEmptyFile(projectDirectory, "Fonts/icons.ttf");
+            ComponentSave label = AddComponentWithTextFont("Label", "Fonts/Icons.ttf");
+            _sut.GetAllErrors(Project).ShouldContain(e => e.Code == "GUM0008");
+
+            label.DefaultState!.SetValue("MyText.Font", "Fonts/icons.ttf", "string");
+
+            _sut.GetAllErrors(Project).ShouldNotContain(e => e.Code == "GUM0008");
+        }
+        finally
+        {
+            DeleteTempProjectDirectory(projectDirectory);
+        }
+    }
+
+    [Fact]
+    public void GetProjectErrors_ShouldNotReportAFontFileAnElementUses()
+    {
+        string projectDirectory = CreateTempProjectDirectory();
+        try
+        {
+            WriteEmptyFile(projectDirectory, "Fonts/icons.ttf");
+            AddComponentWithTextFont("Label", "Fonts/Icons.ttf");
+            AddComponentWithTextFont("Title", "Fonts/Icons.ttf");
+
+            IReadOnlyList<ErrorResult> errors = _sut.GetProjectErrors(Project);
+
+            errors.ShouldNotContain(e => e.Code == "GUM0008");
+        }
+        finally
+        {
+            DeleteTempProjectDirectory(projectDirectory);
+        }
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void ProjectWideChecks_ShouldCollectEachElementsFontsOnce(bool allErrors)
+    {
+        string projectDirectory = CreateTempProjectDirectory();
+        try
+        {
+            AddComponentWithTextFont("Label", "Fonts/Icons.ttf");
+            AddComponentWithTextFont("Title", "Arial");
+            List<FontReferenceCache> caches = new List<FontReferenceCache>();
+            _sut.CreateFontReferenceCache = () =>
+            {
+                FontReferenceCache cache = new FontReferenceCache();
+                caches.Add(cache);
+                return cache;
+            };
+
+            if (allErrors)
+            {
+                _sut.GetAllErrors(Project);
+            }
+            else
+            {
+                _sut.GetProjectErrors(Project);
+            }
+
+            caches.ShouldHaveSingleItem().CollectionCount.ShouldBe(Project.AllElements.Count());
         }
         finally
         {
