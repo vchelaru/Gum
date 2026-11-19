@@ -189,3 +189,56 @@ slider.IsFocused = true;
 [Try on XnaFiddle.NET](https://xnafiddle.net/#snippet=H4sIAAAAAAAACo2SUWvCMBDH3wW_w1H2oExCHduL0oHUKcKEoXVjUJC4HjMsTSRJp5v43XeN4oJP9qn3-9_d_67XfbMBEE3suCqjHjhTYccToYQTXIpfJBx9cwNWigINJKBwC3MftNr9XB05exOFW5N6F8cXcEGtLClkwYbc8exng5YNRYnKCq1quUZssLJaVg7_y6c0RVmVVBv0nPLdCXZDq1cuKyT4ELB5yaVM11x91ko3UAZFkemZ1s6vkKt6QclXKE_7PdfvXvOUvRO_j89hhjtH5CaPvG0P9uEUhzw6Z14ahXnHyQq4TaC17MCyDcljrva5AnquNzr4xiPDS9xq8_Ukkb6sY2OKX3hhR9osRKqVM1qyVCI_nu26fBp_Vg_ZouMtJj5nQznB3SdU8FFZWiPxv08_ajYOzcYfiDE4m1gCAAA)
 
 Each left or right press changes `Value` by the amount set in `SmallChange`. You can also set `LargeChange` for larger increments when clicking the track area with a mouse or cursor.
+
+## Custom Input Sources (Steam Input)
+
+Steam Input shows controllers to your game as Xbox controllers by default, so the code above works with Steam Input without changes.
+
+To drive Gum Forms from another input source, such as Steam Input actions read through Steamworks.NET, create your own `Gum.Input.GamePad` and fill it each frame. Gum Forms handles focus, repeat rate, and deadzones the same way it does for a physical gamepad.
+
+The following example maps Steam Input actions to a `GamePad`. It assumes your Steam Input configuration has a `MenuControls` action set with `menu_select` and `menu_cancel` digital actions and a `menu_move` analog action:
+
+```csharp
+// Class scope
+Gum.Input.GamePad steamGamePad = new Gum.Input.GamePad();
+Steamworks.InputHandle_t[] controllerHandles = new Steamworks.InputHandle_t[Steamworks.Constants.STEAM_INPUT_MAX_COUNT];
+Steamworks.InputActionSetHandle_t menuActionSet;
+Steamworks.InputDigitalActionHandle_t selectAction;
+Steamworks.InputDigitalActionHandle_t cancelAction;
+Steamworks.InputAnalogActionHandle_t moveAction;
+
+// Initialize
+Steamworks.SteamInput.Init(false);
+menuActionSet = Steamworks.SteamInput.GetActionSetHandle("MenuControls");
+selectAction = Steamworks.SteamInput.GetDigitalActionHandle("menu_select");
+cancelAction = Steamworks.SteamInput.GetDigitalActionHandle("menu_cancel");
+moveAction = Steamworks.SteamInput.GetAnalogActionHandle("menu_move");
+
+FrameworkElement.GamePadsForUiControl.Clear();
+FrameworkElement.GamePadsForUiControl.Add(steamGamePad);
+MyButton.IsFocused = true;
+
+// Update, before GumUI.Update
+Steamworks.SteamInput.RunFrame();
+int controllerCount = Steamworks.SteamInput.GetConnectedControllers(controllerHandles);
+steamGamePad.SetConnected(controllerCount > 0);
+
+if (controllerCount > 0)
+{
+    var controller = controllerHandles[0];
+    Steamworks.SteamInput.ActivateActionSet(controller, menuActionSet);
+
+    var select = Steamworks.SteamInput.GetDigitalActionData(controller, selectAction);
+    var cancel = Steamworks.SteamInput.GetDigitalActionData(controller, cancelAction);
+    var move = Steamworks.SteamInput.GetAnalogActionData(controller, moveAction);
+
+    steamGamePad.SetButtonState(Gum.Input.GamepadButton.A, select.bState != 0);
+    steamGamePad.SetButtonState(Gum.Input.GamepadButton.B, cancel.bState != 0);
+    steamGamePad.SetLeftStickPosition(move.x, move.y);
+}
+
+steamGamePad.Activity(gameTime.TotalGameTime.TotalSeconds);
+GumUI.Update(gameTime);
+```
+
+Call `Activity` once per frame after setting every button and stick, and before `GumUI.Update`. Left stick positions use -1 to +1 on each axis, with positive Y pointing up.
