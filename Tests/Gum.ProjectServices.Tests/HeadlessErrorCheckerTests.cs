@@ -1,3 +1,4 @@
+using Gum.Bundle;
 using Gum.Content.AnimationChain;
 using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
@@ -1536,6 +1537,41 @@ public class HeadlessErrorCheckerTests : BaseTestClass
             IReadOnlyList<ErrorResult> errors = _sut.GetProjectErrors(Project);
 
             errors.ShouldNotContain(e => e.Code == "GUM0008");
+        }
+        finally
+        {
+            DeleteTempProjectDirectory(projectDirectory);
+        }
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void ProjectWideChecks_ShouldCollectEachElementsFontsOnce(bool allErrors)
+    {
+        string projectDirectory = CreateTempProjectDirectory();
+        try
+        {
+            AddComponentWithTextFont("Label", "Fonts/Icons.ttf");
+            AddComponentWithTextFont("Title", "Arial");
+            List<FontReferenceCache> caches = new List<FontReferenceCache>();
+            _sut.CreateFontReferenceCache = () =>
+            {
+                FontReferenceCache cache = new FontReferenceCache();
+                caches.Add(cache);
+                return cache;
+            };
+
+            if (allErrors)
+            {
+                _sut.GetAllErrors(Project);
+            }
+            else
+            {
+                _sut.GetProjectErrors(Project);
+            }
+
+            caches.ShouldHaveSingleItem().CollectionCount.ShouldBe(Project.AllElements.Count());
         }
         finally
         {

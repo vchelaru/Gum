@@ -26,6 +26,9 @@ public sealed class FontReferenceCache
         _fontsByElement = new Dictionary<(ElementSave, bool), Dictionary<string, BmfcSave>>();
     }
 
+    /// <summary>How many single-element collections this cache has run; a reused element adds none.</summary>
+    public int CollectionCount { get; private set; }
+
     // A walk that includes the font cache initializes the project before collecting, so its results are
     // kept apart from those of walks that don't.
     internal Dictionary<string, BmfcSave> GetOrCollect(ElementSave element, bool initializesProject,
@@ -34,6 +37,7 @@ public sealed class FontReferenceCache
         if (!_fontsByElement.TryGetValue((element, initializesProject), out Dictionary<string, BmfcSave>? fonts))
         {
             fonts = collect(element);
+            CollectionCount++;
             _fontsByElement[(element, initializesProject)] = fonts;
         }
         return fonts;

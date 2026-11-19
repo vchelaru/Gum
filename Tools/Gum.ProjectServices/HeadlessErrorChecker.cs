@@ -44,6 +44,9 @@ public partial class HeadlessErrorChecker : IHeadlessErrorChecker
     private readonly IFileNameCaseChecker _caseChecker;
     private readonly IOrphanCodeFileProvider? _orphanCodeFileProvider;
 
+    /// <summary>Makes the font cache each project-wide check shares between its walks; tests replace it to observe that cache.</summary>
+    internal Func<FontReferenceCache> CreateFontReferenceCache { get; set; }
+
     public HeadlessErrorChecker(ITypeResolver typeResolver)
         : this(typeResolver, Array.Empty<IAdditionalErrorSource>())
     {
@@ -57,6 +60,7 @@ public partial class HeadlessErrorChecker : IHeadlessErrorChecker
         _enumTypesByName = new Dictionary<string, Type?>();
         _caseChecker = new FileNameCaseChecker();
         _orphanCodeFileProvider = orphanCodeFileProvider;
+        CreateFontReferenceCache = () => new FontReferenceCache();
     }
 
     // ObjectFinder.Self is the project of the current GumService (or the tool), which other threads keep
@@ -90,7 +94,7 @@ public partial class HeadlessErrorChecker : IHeadlessErrorChecker
         // Paths the element checks already reported as GUM0008, so the project pass skips them.
         var caseMismatchPaths = new HashSet<string>(StringComparer.Ordinal);
         // The element walks and the project walk read the same fonts; nothing changes between them.
-        var fontReferences = new FontReferenceCache();
+        var fontReferences = CreateFontReferenceCache();
 
         using IDisposable? finderScope = UseOwnFinder(project);
         ObjectFinder.Self.EnableCache();
@@ -130,7 +134,7 @@ public partial class HeadlessErrorChecker : IHeadlessErrorChecker
         // reference; running only those two checks finds the paths to skip.
         var caseMismatchPaths = new HashSet<string>(StringComparer.Ordinal);
         // The element walks and the project walk read the same fonts; nothing changes between them.
-        var fontReferences = new FontReferenceCache();
+        var fontReferences = CreateFontReferenceCache();
 
         using IDisposable? finderScope = UseOwnFinder(project);
         ObjectFinder.Self.EnableCache();

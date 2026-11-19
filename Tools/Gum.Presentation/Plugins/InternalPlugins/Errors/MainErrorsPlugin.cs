@@ -137,7 +137,7 @@ public class MainErrorsPlugin : CorePriorityPlugin
     {
         using IDisposable timing = StartupTiming.Time("MainErrorsPlugin RefreshProjectErrors (total)");
         _isProjectErrorRefreshPending = false;
-        _projectErrors =_projectState.GumProjectSave is { } project
+        _projectErrors = _projectState.GumProjectSave is { } project
             ? _errorChecker.GetProjectErrors(project)
             : [];
         UpdateErrorsForElement(_selectedState.SelectedElement);
