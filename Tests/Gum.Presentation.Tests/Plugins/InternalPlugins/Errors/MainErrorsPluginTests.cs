@@ -325,4 +325,27 @@ public class MainErrorsPluginTests : BaseTestClass
         viewModel.Errors.ShouldBe(new[] { orphanRow });
         elementChecks.ShouldHaveSingleItem().ShouldBeEmpty();
     }
+
+    // After a load the project pass waits for the project's fonts to be collected, so it doesn't spend
+    // the collection in one long block of its own.
+    [Fact]
+    public void ProjectLoad_QueuesTheProjectPassBehindTheFontCollection()
+    {
+        List<Action> afterWarmUp = new();
+        Mock<IProjectFontWarmUp> warmUp = new();
+        warmUp.Setup(w => w.PostAfterWarmUp(It.IsAny<Action>())).Callback<Action>(afterWarmUp.Add);
+        MainErrorsPlugin plugin = new MainErrorsPlugin(_errorChecker.Object, new WeakReferenceMessenger(),
+            _selectedState.Object, Mock.Of<IClipboardService>(), Mock.Of<IFileSystemRevealService>(),
+            _projectState.Object, Mock.Of<IDispatcher>(), _fileWatchManager.Object, warmUp.Object)
+        {
+            TabManager = Mock.Of<ITabManager>(),
+        };
+        plugin.StartUp();
+
+        plugin.CallProjectLoad(_project);
+        _errorChecker.Verify(c => c.GetProjectErrors(It.IsAny<GumProjectSave>()), Times.Never);
+        afterWarmUp.ShouldHaveSingleItem()();
+
+        _errorChecker.Verify(c => c.GetProjectErrors(_project), Times.Once);
+    }
 }

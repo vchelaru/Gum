@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 using Microsoft.Xna.Framework.Graphics;
 using XnaAndWinforms;
 
@@ -35,20 +36,30 @@ public sealed class GameRenderDeviceHost : ISharedRenderDeviceHost
     }
 
     /// <summary>
-    /// Whether the shared device is being created right now. Creating it pumps the UI dispatcher,
-    /// so a frame tick can run in the middle; a new host taken then throws instead of creating a
-    /// second device, so a caller that can wait checks this first.
+    /// Whether the shared device exists. Before that a new host would create it, which takes
+    /// seconds, and while it is being created (creating it pumps the UI dispatcher, so a frame
+    /// tick can run in the middle) a new host throws instead of creating a second device; a caller
+    /// that can wait checks this first.
     /// </summary>
-    public static bool IsSharedDeviceBeingCreated
+    public static bool IsSharedDeviceReady
     {
         get
         {
             lock (_gate)
             {
-                return _shared.IsCreating;
+                return _shared.HasInstance;
             }
         }
     }
+
+    /// <summary>
+    /// Creates the shared device if it does not exist yet, awaiting <paramref name="betweenSteps"/>
+    /// between creating the game (the SDL window) and creating its device, so the UI thread runs
+    /// in between. Each step blocks the UI thread on its own. Call on the UI thread, which owns
+    /// the device; hosts created afterwards share it.
+    /// </summary>
+    public static Task CreateSharedDeviceAsync(Func<Task> betweenSteps) =>
+        _shared.GetOrCreateAsync(() => new HeadlessDeviceGame(), game => game.EnsureInitialized(), betweenSteps);
 
     /// <summary>Takes a reference on the shared device, creating it on first use.</summary>
     public GameRenderDeviceHost()

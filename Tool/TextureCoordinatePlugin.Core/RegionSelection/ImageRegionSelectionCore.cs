@@ -554,7 +554,10 @@ public class ImageRegionSelectionCore
             contentLoader.SystemManagers = mManagers;
 
             LoaderManager.Self.ContentLoader = contentLoader;
-            LoaderManager.Self.Initialize("Content/InvalidTexture.png", targetFntFileName.FullPath, renderHost.Services, mManagers);
+            // Next to the executable: relative paths resolve against the loaded project's folder,
+            // and the project loads before the canvases do.
+            string invalidTextureFile = System.IO.Path.Combine(System.AppContext.BaseDirectory, "Content", "InvalidTexture.png");
+            LoaderManager.Self.Initialize(invalidTextureFile, targetFntFileName.FullPath, renderHost.Services, mManagers);
 
             CreateNewSelector();
 

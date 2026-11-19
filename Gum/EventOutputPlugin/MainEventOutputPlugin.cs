@@ -39,11 +39,18 @@ namespace EventOutputPlugin
         public override Version Version => new Version(1,0,0);
 
         private readonly IExportEventFileManager _exportEventFileManager;
+        private readonly IDispatcher _dispatcher;
+        private readonly IProjectState _projectState;
+        private readonly IPluginManager _pluginManager;
 
         [ImportingConstructor]
-        public MainEventOutputPlugin(IProjectState projectState, IFileCommands fileCommands, IRetryService retryService)
+        public MainEventOutputPlugin(IProjectState projectState, IFileCommands fileCommands, IRetryService retryService,
+            IDispatcher dispatcher, IPluginManager pluginManager)
         {
             _exportEventFileManager = new ExportEventFileManager(projectState, fileCommands, retryService);
+            _dispatcher = dispatcher;
+            _projectState = projectState;
+            _pluginManager = pluginManager;
         }
 
         public override bool ShutDown(PluginShutDownReason shutDownReason)
@@ -58,8 +65,19 @@ namespace EventOutputPlugin
 
         private void AssignEvents()
         {
+            // Nothing on screen depends on the pruned file, so it waits until the project is shown.
             this.ProjectLoad += (project) =>
-                _exportEventFileManager.DeleteOldEventFiles();
+            {
+                string? loadedDirectory = _projectState.ProjectDirectory;
+                _dispatcher.Post(() => _pluginManager.CallGuarded(this, () =>
+                {
+                    // A later load posted its own prune; this one would prune that project twice.
+                    if (_projectState.ProjectDirectory == loadedDirectory)
+                    {
+                        _exportEventFileManager.DeleteOldEventFiles();
+                    }
+                }, nameof(ProjectLoad)));
+            };
 
             this.ElementAdd += (newElement) =>
                 _exportEventFileManager.ExportEvent(newElement.Name, null, GumEventTypes.ElementAdded, GetElementPrefix(newElement) );

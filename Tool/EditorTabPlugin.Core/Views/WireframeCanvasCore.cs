@@ -278,8 +278,11 @@ public sealed class WireframeCanvasCore
 
             _cameraController = new CameraController();
 
-            // No invalid-texture file, so LoaderManager generates its red-X placeholder.
-            LoaderManager.Self.Initialize("", "Content/TestFont.fnt", _host.Services, SystemManagers.Default);
+            // No invalid-texture file, so LoaderManager generates its red-X placeholder. The font sits
+            // next to the executable; relative paths resolve against the loaded project's folder,
+            // and the project loads before the canvas does.
+            string defaultFontFile = System.IO.Path.Combine(AppContext.BaseDirectory, "Content", "TestFont.fnt");
+            LoaderManager.Self.Initialize("", defaultFontFile, _host.Services, SystemManagers.Default);
             if (global::RenderingLibrary.Graphics.Text.DefaultBitmapFont == null)
             {
                 _outputManager.AddError(

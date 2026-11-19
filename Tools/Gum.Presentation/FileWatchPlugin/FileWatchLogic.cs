@@ -21,6 +21,7 @@ public class FileWatchLogic
 
     private readonly IProjectRestrictions? _projectRestrictions;
     private readonly Gum.ProjectServices.IFontReferenceCacheSource? _fontReferences;
+    private readonly IProjectFontWarmUp? _fontWarmUp;
 
     public bool Enabled => _fileWatchManager.Enabled;
 
@@ -31,8 +32,10 @@ public class FileWatchLogic
         IProjectManager projectManager,
         IDispatcher dispatcher,
         IProjectRestrictions? projectRestrictions = null,
-        Gum.ProjectServices.IFontReferenceCacheSource? fontReferences = null)
+        Gum.ProjectServices.IFontReferenceCacheSource? fontReferences = null,
+        IProjectFontWarmUp? fontWarmUp = null)
     {
+        _fontWarmUp = fontWarmUp;
         _projectRestrictions = projectRestrictions;
         _fontReferences = fontReferences;
         _fileWatchManager = fileWatchManager;
@@ -52,7 +55,15 @@ public class FileWatchLogic
     {
         using var _ = Gum.Diagnostics.StartupTiming.Time("FileWatchLogic.HandleProjectLoaded (total, called from MainFileWatchPlugin)");
 
-        RefreshRootDirectory();
+        // After the load's font collection, which the scan then reuses.
+        if (_fontWarmUp != null)
+        {
+            _fontWarmUp.PostAfterWarmUp(RefreshRootDirectory);
+        }
+        else
+        {
+            RefreshRootDirectory();
+        }
     }
 
     public void RefreshRootDirectory()

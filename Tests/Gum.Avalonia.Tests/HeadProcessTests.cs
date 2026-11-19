@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.Globalization;
 using System.Text.RegularExpressions;
+using Gum.Managers;
 using Shouldly;
 
 namespace Gum.Avalonia.Tests;
@@ -104,6 +105,27 @@ public class HeadProcessTests
         viewRight.ShouldBeGreaterThan(2600);
         viewBottom.ShouldBeGreaterThan(1700);
         File.Exists(scratch.Screenshot).ShouldBeTrue();
+    }
+
+    // The canvas is created after the startup project loads, so an element selected during the
+    // load (here by opening the screen's file) is selected before the canvas exists. The canvas
+    // must build it once it is ready: zoom to fit reports only an element the canvas has built.
+    [Fact]
+    public async Task UnattendedRun_ElementSelectedBeforeTheCanvasExists_IsBuiltOnTheCanvas()
+    {
+        Assert.SkipUnless(CanRunTheHead, SkipReason);
+        using ScratchProject scratch = ScratchProject.Create();
+        scratch.AddScreen("EarlyScreen", "RectangleInstance", "Rectangle", x: 40, y: 30, width: 200, height: 100);
+        string screenFile = Path.Combine(Path.GetDirectoryName(scratch.Project)!, "Screens", "EarlyScreen.gusx");
+
+        HeadRun run = await RunHead(screenFile, "--exit-after", "90", "--zoom-to-fit",
+            "--screenshot", scratch.Screenshot, "--user-data", scratch.UserData);
+
+        run.ExitCode.ShouldBe(0, run.Errors);
+        run.Output.ShouldContain("Zoom to fit: EarlyScreen ", customMessage: "the canvas never built the element selected during the load: " + run.Output);
+        // The canvas loads its own content (the default font) after the project has set the
+        // relative directory to the project's folder.
+        run.Errors.ShouldNotContain("[Gum output] ERROR:");
     }
 
     [Fact]
@@ -295,6 +317,8 @@ public class HeadProcessTests
         string logPath = Path.Combine(Path.GetTempPath(), "GumHeadLog_" + Guid.NewGuid().ToString("N") + ".log");
         ProcessStartInfo startInfo = HeadStartInfo(arguments);
         startInfo.Environment["GUM_TOOL_LOG"] = logPath;
+        // Output-tab lines go to stderr too, so a run can assert on the errors the tool reported.
+        startInfo.Environment[MainOutputViewModel.EchoEnvironmentVariable] = "1";
         using Process process = Process.Start(startInfo)!;
         Task<string> output = process.StandardOutput.ReadToEndAsync();
         Task<string> errors = process.StandardError.ReadToEndAsync();

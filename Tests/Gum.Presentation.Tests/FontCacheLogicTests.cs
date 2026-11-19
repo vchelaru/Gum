@@ -32,6 +32,25 @@ public class FontCacheLogicTests
             _dispatcher, _wireframeCommands.Object);
     }
 
+    // The load's font collection runs first, and the scan reuses it.
+    [Fact]
+    public void ScheduleMissingFontCreationForLoadedProject_WaitsForTheLoadsFontCollection()
+    {
+        List<Action> afterWarmUp = new List<Action>();
+        Mock<Gum.Managers.IProjectFontWarmUp> warmUp = new Mock<Gum.Managers.IProjectFontWarmUp>();
+        warmUp.Setup(w => w.PostAfterWarmUp(It.IsAny<Action>())).Callback<Action>(afterWarmUp.Add);
+        FontCacheLogic logic = new FontCacheLogic(_fontManager.Object, _dialogService.Object, _projectState.Object,
+            _dispatcher, _wireframeCommands.Object, warmUp.Object);
+        _projectState.Setup(p => p.GumProjectSave).Returns(new GumProjectSave());
+        _fontManager.Setup(m => m.CreateAllMissingFontFiles(It.IsAny<GumProjectSave>(), It.IsAny<bool>())).ReturnsAsync(0);
+
+        logic.ScheduleMissingFontCreationForLoadedProject();
+        _fontManager.Verify(m => m.CreateAllMissingFontFiles(It.IsAny<GumProjectSave>(), It.IsAny<bool>()), Times.Never);
+        afterWarmUp.ShouldHaveSingleItem()();
+
+        _fontManager.Verify(m => m.CreateAllMissingFontFiles(It.IsAny<GumProjectSave>(), It.IsAny<bool>()), Times.Once);
+    }
+
     [Fact]
     public async Task CreateMissingFontFilesForLoadedProject_DoesNotRefreshWireframe_WhenNothingWasGenerated()
     {

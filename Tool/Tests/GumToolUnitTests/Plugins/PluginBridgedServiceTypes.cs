@@ -88,6 +88,7 @@ internal static class PluginBridgedServiceTypes
         typeof(MainOutputViewModel),
 
         typeof(IDispatcher),
+        typeof(Gum.Managers.IProjectFontWarmUp),
         typeof(IWireframeObjectManager),
 
         typeof(ISetVariableLogic),

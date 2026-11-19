@@ -1,4 +1,5 @@
 ﻿using Gum.Commands;
+using Gum.Managers;
 using Gum.DataTypes;
 using Gum.Services;
 using Gum.Services.Dialogs;
@@ -23,11 +24,13 @@ public class FontCacheLogic
     private readonly IDialogService _dialogService;
     private readonly IProjectState _projectState;
     private readonly IDispatcher _dispatcher;
+    private readonly IProjectFontWarmUp? _fontWarmUp;
     private readonly IWireframeCommands _wireframeCommands;
 
     public FontCacheLogic(IFontManager fontManager, IDialogService dialogService, IProjectState projectState,
-        IDispatcher dispatcher, IWireframeCommands wireframeCommands)
+        IDispatcher dispatcher, IWireframeCommands wireframeCommands, IProjectFontWarmUp? fontWarmUp = null)
     {
+        _fontWarmUp = fontWarmUp;
         _fontManager = fontManager;
         _dialogService = dialogService;
         _projectState = projectState;
@@ -46,7 +49,16 @@ public class FontCacheLogic
     /// </summary>
     public void ScheduleMissingFontCreationForLoadedProject()
     {
-        _dispatcher.Post(async () => await CreateMissingFontFilesForLoadedProject());
+        // After the load's font collection, which the scan then reuses.
+        Action scan = async () => await CreateMissingFontFilesForLoadedProject();
+        if (_fontWarmUp != null)
+        {
+            _fontWarmUp.PostAfterWarmUp(scan);
+        }
+        else
+        {
+            _dispatcher.Post(scan);
+        }
     }
 
     /// <summary>
