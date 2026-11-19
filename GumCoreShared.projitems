@@ -14,6 +14,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)GumCommon\Bundle\BundleGumFileProvider.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)GumCommon\Bundle\CompositeGumFileProvider.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)GumCommon\Bundle\DependencyWarning.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)GumCommon\Bundle\FontReferenceCache.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)GumCommon\Bundle\FontReferenceCollector.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)GumCommon\Bundle\GlobMatcher.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)GumCommon\Bundle\GumBundle.cs" />

@@ -84,6 +84,8 @@ Do **not** rely on `ElementSelected` alone for error refresh after reload: the r
 
 **Case-check listings are cached**: `HeadlessErrorChecker` keeps one `FileNameCaseChecker` for its lifetime. It re-reads a directory only when that directory's last-write time changes, so a new GUM0008 check doesn't need its own `FileNameCaseChecker`.
 
+**Font collection dominates file walks**: every `GumProjectDependencyWalker` walk with `ExternalFiles` runs `FontReferenceCollector` to find `.ttf` references, and that CPU cost dwarfs the disk calls. Walks inside one check share a `FontReferenceCache` (see `GetProjectErrors`/`GetAllErrors`); never keep one across checks, since it ignores edits. A project opened through an 8.3 short path (`VICPER~1`) makes every `File.Exists` expand the path, which about doubles the file checks, so time load measurements on a long path.
+
 **Cache wrapping**: `ErrorChecker.GetErrorsFor` wraps its checks in `ObjectFinder.Self.EnableCache()` / `DisableCache()`. New checks added inside the method benefit from this automatically.
 
 **`IsSourceFileMissing` is separate**: The tree view shows "!" if `element.IsSourceFileMissing || hasErrors`. Source file missing is not surfaced as an `ErrorViewModel` — it's a flag on the element itself, checked directly by `UpdateErrorIndicatorsForElement`.

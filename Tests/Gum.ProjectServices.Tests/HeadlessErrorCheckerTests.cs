@@ -1482,6 +1482,67 @@ public class HeadlessErrorCheckerTests : BaseTestClass
         }
     }
 
+    [Fact]
+    public void GetAllErrors_ShouldReportGum0008ForAFontFile_OnTheElementThatUsesIt()
+    {
+        string projectDirectory = CreateTempProjectDirectory();
+        try
+        {
+            WriteEmptyFile(projectDirectory, "Fonts/icons.ttf");
+            AddComponentWithTextFont("Label", "Fonts/Icons.ttf");
+
+            IReadOnlyList<ErrorResult> errors = _sut.GetAllErrors(Project);
+
+            ErrorResult error = errors.Where(e => e.Code == "GUM0008").ShouldHaveSingleItem();
+            error.ElementName.ShouldBe("Label");
+            error.Message.ShouldContain("\"Fonts/icons.ttf\"");
+        }
+        finally
+        {
+            DeleteTempProjectDirectory(projectDirectory);
+        }
+    }
+
+    [Fact]
+    public void GetAllErrors_ShouldSeeAFontChangedSinceTheLastCheck()
+    {
+        string projectDirectory = CreateTempProjectDirectory();
+        try
+        {
+            WriteEmptyFile(projectDirectory, "Fonts/icons.ttf");
+            ComponentSave label = AddComponentWithTextFont("Label", "Fonts/Icons.ttf");
+            _sut.GetAllErrors(Project).ShouldContain(e => e.Code == "GUM0008");
+
+            label.DefaultState!.SetValue("MyText.Font", "Fonts/icons.ttf", "string");
+
+            _sut.GetAllErrors(Project).ShouldNotContain(e => e.Code == "GUM0008");
+        }
+        finally
+        {
+            DeleteTempProjectDirectory(projectDirectory);
+        }
+    }
+
+    [Fact]
+    public void GetProjectErrors_ShouldNotReportAFontFileAnElementUses()
+    {
+        string projectDirectory = CreateTempProjectDirectory();
+        try
+        {
+            WriteEmptyFile(projectDirectory, "Fonts/icons.ttf");
+            AddComponentWithTextFont("Label", "Fonts/Icons.ttf");
+            AddComponentWithTextFont("Title", "Fonts/Icons.ttf");
+
+            IReadOnlyList<ErrorResult> errors = _sut.GetProjectErrors(Project);
+
+            errors.ShouldNotContain(e => e.Code == "GUM0008");
+        }
+        finally
+        {
+            DeleteTempProjectDirectory(projectDirectory);
+        }
+    }
+
     // Returns <temp>/<guid>/Project and points the project at Project.gumx inside it.
     private string CreateTempProjectDirectory()
     {

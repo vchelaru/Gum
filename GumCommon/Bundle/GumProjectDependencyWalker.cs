@@ -38,6 +38,12 @@ public class GumProjectDependencyWalker
     public Func<string, IEnumerable<string>>? FontTranslationsOf { get; set; }
 
     /// <summary>
+    /// Fonts already collected for elements of this project by other walks, reused instead of collecting
+    /// them again; see <see cref="FontReferenceCache"/> for when sharing one is valid. Null collects every walk.
+    /// </summary>
+    public FontReferenceCache? FontReferences { get; set; }
+
+    /// <summary>
     /// Enumerates the files the given project depends on, partitioned by category.
     /// Missing files are reported via <see cref="WalkResult.MissingFiles"/> rather than thrown.
     /// </summary>
@@ -629,7 +635,26 @@ public class GumProjectDependencyWalker
             TranslationsOf = FontTranslationsOf
         };
 
-        Dictionary<string, BmfcSave> fonts = collector.Collect(project, elements);
+        Dictionary<string, BmfcSave> fonts;
+        if (FontReferences == null)
+        {
+            fonts = collector.Collect(project, elements);
+        }
+        else
+        {
+            // Collect merges elements in order with the last element winning a shared key, so merging
+            // each element's own collection the same way gives the same result.
+            fonts = new Dictionary<string, BmfcSave>();
+            foreach (ElementSave element in elements)
+            {
+                Dictionary<string, BmfcSave> elementFonts = FontReferences.GetOrCollect(element, includeFontCache,
+                    single => collector.Collect(project, new[] { single }));
+                foreach (KeyValuePair<string, BmfcSave> pair in elementFonts)
+                {
+                    fonts[pair.Key] = pair.Value;
+                }
+            }
+        }
 
         foreach (BmfcSave bmfc in fonts.Values)
         {
