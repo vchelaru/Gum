@@ -61,6 +61,26 @@ public class MaxLettersToShowDrawTests : BaseTestClass
         AssertDrawsLikeControl(NestedStyled, count, visibleMarkup, wrapWidth: 0);
     }
 
+    // The first line has no tags, so it takes the untagged path of the styled draw.
+    [Theory]
+    [InlineData("abc\n[Color=Red]def[/Color]", 2, "ab")]
+    [InlineData("abc\n[Color=Red]def[/Color]", 5, "abc\n[Color=Red]d[/Color]")]
+    [InlineData("abc\nxyz\n[Color=Red]def[/Color]", 9, "abc\nxyz\n[Color=Red]d[/Color]")]
+    [InlineData("[Color=Red]ab[/Color]c\ndef", 5, "[Color=Red]ab[/Color]c\nd")]
+    public void Draw_StyledTextWithAnUntaggedLine_ShowsOnlyTheFirstLetters(string markup, int count, string visibleMarkup)
+    {
+        AssertDrawsLikeControl(markup, count, visibleMarkup, wrapWidth: 0);
+    }
+
+    // A [Glyph] tag becomes one letter of the displayed text, so it is counted like one.
+    [Theory]
+    [InlineData("a[Glyph=0x42]cd", 2, "aB")]
+    [InlineData("[Color=Red]a[Glyph=0x42]c[/Color]d", 3, "[Color=Red]aBc[/Color]")]
+    public void Draw_GlyphTag_CountsAsOneLetter(string markup, int count, string visibleMarkup)
+    {
+        AssertDrawsLikeControl(markup, count, visibleMarkup, wrapWidth: 0);
+    }
+
     [Theory]
     [InlineData(0)]
     [InlineData(1)]
