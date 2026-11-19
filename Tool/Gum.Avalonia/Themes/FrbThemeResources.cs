@@ -67,11 +67,11 @@ public static class FrbThemeResources
         {
             if (source == TransparentSource)
             {
-                resources[alias] = Brushes.Transparent;
+                SetIfChanged(resources, alias, Brushes.Transparent);
             }
             else if (resources.TryGetValue(source, out object? rootBrush))
             {
-                resources[alias] = rootBrush;
+                SetIfChanged(resources, alias, rootBrush);
             }
             else
             {
@@ -79,10 +79,19 @@ public static class FrbThemeResources
                 {
                     if (variant is IResourceDictionary dictionary && dictionary.TryGetValue(source, out object? brush))
                     {
-                        dictionary[alias] = brush;
+                        SetIfChanged(dictionary, alias, brush);
                     }
                 }
             }
+        }
+    }
+
+    // Every set notifies the whole visual tree, even when it stores the value already there.
+    private static void SetIfChanged(IResourceDictionary resources, string key, object? value)
+    {
+        if (!resources.TryGetValue(key, out object? current) || !Equals(current, value))
+        {
+            resources[key] = value;
         }
     }
 

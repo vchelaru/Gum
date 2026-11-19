@@ -39,6 +39,38 @@ public class ThemeResourceTests
         ((Color)dark["Frb.Colors.Icon.Blue"]!).ShouldBe(Color.Parse("#51b3ff"));
     }
 
+    [AvaloniaFact]
+    public void ApplyControlAliases_RaisesNoResourceChange_WhenNoSourceBrushChanged()
+    {
+        // Every raise walks the whole visual tree, and startup reapplies about 200 aliases.
+        Border host = new Border();
+        FrbThemeResources.Install(host.Resources);
+        int raises = 0;
+        host.ResourcesChanged += (_, _) => raises++;
+
+        FrbThemeResources.ApplyControlAliases(host.Resources);
+
+        raises.ShouldBe(0);
+    }
+
+    [AvaloniaFact]
+    public void ApplyControlAliases_RepointsRootAndThemeAliases_AtTheCurrentSourceBrushes()
+    {
+        ResourceDictionary resources = new ResourceDictionary();
+        FrbThemeResources.Install(resources);
+        SolidColorBrush newPrimary = new SolidColorBrush(Colors.Red);
+        resources["Frb.Brushes.Primary"] = newPrimary;
+        ResourceDictionary dark = (ResourceDictionary)resources.ThemeDictionaries[global::Avalonia.Styling.ThemeVariant.Dark];
+        SolidColorBrush newForeground = new SolidColorBrush(Colors.Green);
+        dark["Frb.Brushes.Foreground"] = newForeground;
+
+        FrbThemeResources.ApplyControlAliases(resources);
+
+        resources["TextControlBorderBrushFocused"].ShouldBeSameAs(newPrimary);
+        dark["TextControlForeground"].ShouldBeSameAs(newForeground);
+        resources["ScrollBarTrackFill"].ShouldBe(Brushes.Transparent);
+    }
+
 
     [AvaloniaTheory]
     [InlineData("Dark")]
