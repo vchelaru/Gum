@@ -55,12 +55,6 @@ namespace RenderingLibrary.Graphics
         float LineHeightMultiplier { get; set; }
 
         /// <summary>
-        /// Whether text assigned to this Text is parsed as BBCode. Text-input controls set it to false so the
-        /// characters they edit are the characters drawn.
-        /// </summary>
-        bool IsBbCodeEnabled { get; set; }
-
-        /// <summary>
         /// Measures the rendered width of a string using this Text's active font and
         /// the supplied measurement style. Result is in raw glyph pixels — callers that
         /// render in screen space must multiply by <see cref="IText.FontScale"/>.

@@ -113,4 +113,45 @@ public class TextBoxBbCodeTests : BaseTestClass
 
         string.Concat(((IFormsText)label.RenderableComponent).WrappedText).ShouldBe("abc");
     }
+
+    private const string Markup = "a[Color=Red]b[/Color]c";
+
+    private static TextRuntime CreateSizedToText(bool isBbCodeEnabled)
+    {
+        TextRuntime text = new();
+        text.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+        text.Width = 0;
+        text.IsBbCodeEnabled = isBbCodeEnabled;
+        text.Text = Markup;
+        return text;
+    }
+
+    [Fact]
+    public void IsBbCodeEnabled_TurnedOff_ShowsMarkupLiterallyAndRelaysOut()
+    {
+        TextRuntime literal = CreateSizedToText(isBbCodeEnabled: false);
+        TextRuntime text = CreateSizedToText(isBbCodeEnabled: true);
+        float parsedWidth = text.GetAbsoluteWidth();
+
+        text.IsBbCodeEnabled = false;
+
+        string.Concat(((IFormsText)text.RenderableComponent).WrappedText).ShouldBe(Markup);
+        text.Text.ShouldBe(Markup);
+        text.GetAbsoluteWidth().ShouldBe(literal.GetAbsoluteWidth());
+        text.GetAbsoluteWidth().ShouldBeGreaterThan(parsedWidth);
+    }
+
+    [Fact]
+    public void IsBbCodeEnabled_TurnedBackOn_ReparsesAndRelaysOut()
+    {
+        TextRuntime parsed = CreateSizedToText(isBbCodeEnabled: true);
+        TextRuntime text = CreateSizedToText(isBbCodeEnabled: false);
+        float literalWidth = text.GetAbsoluteWidth();
+
+        text.IsBbCodeEnabled = true;
+
+        string.Concat(((IFormsText)text.RenderableComponent).WrappedText).ShouldBe("abc");
+        text.GetAbsoluteWidth().ShouldBe(parsed.GetAbsoluteWidth());
+        text.GetAbsoluteWidth().ShouldBeLessThan(literalWidth);
+    }
 }

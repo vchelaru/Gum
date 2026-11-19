@@ -1025,27 +1025,11 @@ public class Text : IVisible, IRenderableIpso,
     public string? StoredMarkupText { get; set; }
 
     /// <summary>
-    /// Whether text assigned through the Text/TextNoTranslate property pipeline is parsed as BBCode. True by default.
-    /// When false the assigned string is shown exactly as given, tags included. Text-input controls (TextBox,
-    /// PasswordBox) turn this off so the characters they edit are the characters drawn (#8329). Turning it off
-    /// shows already-parsed markup literally; turning it back on applies to the next assignment.
+    /// Whether the property pipeline parses text assigned to this Text as BBCode. True by default. Changed only
+    /// through <c>CustomSetPropertyOnRenderable.SetIsBbCodeEnabled</c> (<c>TextRuntime.IsBbCodeEnabled</c>,
+    /// <c>SetProperty("IsBbCodeEnabled", ...)</c>), which re-applies the current text and lays out again (#8329).
     /// </summary>
-    public bool IsBbCodeEnabled
-    {
-        get => _isBbCodeEnabled;
-        set
-        {
-            _isBbCodeEnabled = value;
-            if (!value && StoredMarkupText != null)
-            {
-                string markup = StoredMarkupText;
-                StoredMarkupText = null;
-                InlineVariables.Clear();
-                RawText = markup;
-            }
-        }
-    }
-    bool _isBbCodeEnabled = true;
+    internal bool IsBbCodeEnabled { get; set; } = true;
 
     /// <summary>
     /// The tags found in the markup text assigned to this Text, with indexes into the text as displayed

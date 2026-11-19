@@ -780,11 +780,11 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
     public string? StoredMarkupText => _hasMarkup ? mRawText : null;
 
     /// <summary>
-    /// Whether <see cref="RawText"/> is parsed as BBCode. True by default. When false the text is drawn exactly as
-    /// assigned, tags included. Text-input controls (TextBox, PasswordBox) turn this off so the characters they edit
-    /// are the characters drawn (#8329).
+    /// Whether <see cref="RawText"/> is parsed as BBCode. True by default; changing it re-parses at once. Set it
+    /// through <c>TextRuntime.IsBbCodeEnabled</c> (or <c>SetProperty("IsBbCodeEnabled", ...)</c>), which also lays
+    /// the element out again (#8329).
     /// </summary>
-    public bool IsBbCodeEnabled
+    internal bool IsBbCodeEnabled
     {
         get => _isBbCodeEnabled;
         set

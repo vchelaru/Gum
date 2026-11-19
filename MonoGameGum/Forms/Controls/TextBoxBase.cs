@@ -676,7 +676,7 @@ public abstract class TextBoxBase :
         coreTextObject = textComponent.RenderableComponent as IFormsText
             ?? throw new Exception("The Text instance must be of type Text");
         // A text-input control edits characters, so the text it holds is shown literally, never parsed as BBCode (#8329).
-        coreTextObject.IsBbCodeEnabled = false;
+        textComponent.SetProperty("IsBbCodeEnabled", false);
         placeholderTextObject = placeholderComponent?.RenderableComponent as IFormsText;
         OnCoreTextObjectAssigned();
 

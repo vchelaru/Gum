@@ -1774,6 +1774,29 @@ public class TextRuntime : InteractiveGue
     }
 
     /// <summary>
+    /// Whether <see cref="Text"/> is parsed as BBCode. Defaults to true. When false the text is shown exactly
+    /// as assigned, tags included; text-input controls such as TextBox set it to false (#8329). Changing it
+    /// re-applies the current text under the new setting and lays the element out again.
+    /// </summary>
+    public bool IsBbCodeEnabled
+    {
+        get => ContainedText.IsBbCodeEnabled;
+        set
+        {
+#if SKIA
+            // The Skia Text re-parses its RawText itself when the flag changes.
+            if (ContainedText.IsBbCodeEnabled != value)
+            {
+                AssignTextAndUpdateLayout(ContainedText, (text: ContainedText, value),
+                    static state => state.text.IsBbCodeEnabled = state.value);
+            }
+#else
+            CustomSetPropertyOnRenderableType.SetIsBbCodeEnabled(ContainedText, this, value);
+#endif
+        }
+    }
+
+    /// <summary>
     /// The lines of text after wrapping and bbcode parsing have been applied.
     /// </summary>
     public IReadOnlyList<string> WrappedText => ContainedText.WrappedText;
