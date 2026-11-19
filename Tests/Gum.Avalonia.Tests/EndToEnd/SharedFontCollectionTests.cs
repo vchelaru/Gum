@@ -61,11 +61,15 @@ public class SharedFontCollectionTests
         ProjectFontReferences references = Services.GetRequiredService<ProjectFontReferences>();
         int cachesBefore = references.CachesStarted;
         int collectionsBefore = references.CollectionCount;
+        ProjectFontWarmUp warmUp = Services.GetRequiredService<ProjectFontWarmUp>();
+        int warmUpsBefore = warmUp.CompletedCount;
 
         GumProjectSave loaded = Load(fixture.ProjectFilePath);
 
         (references.CachesStarted - cachesBefore).ShouldBe(1);
         (references.CollectionCount - collectionsBefore).ShouldBe(loaded.AllElements.Count());
+        // The load collected them in slices before the passes ran, rather than in the first pass.
+        (warmUp.CompletedCount - warmUpsBefore).ShouldBe(1);
     }
 
     [AvaloniaFact]

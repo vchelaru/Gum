@@ -41,6 +41,7 @@ using System.Drawing;
 using System.Linq;
 using System.Numerics;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using ToolsUtilities;
 
@@ -141,6 +142,7 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
     private readonly IFileDropTargetFilter _fileDropTargetFilter;
     private BackgroundManager _backgroundManager;
     private bool _isXnaInitialized;
+    private bool _isCatchUpPending;
     private readonly ISelectedState _selectedState;
     private readonly WireframeCommands _wireframeCommands;
     private readonly IHotkeyManager _hotkeyManager;
@@ -418,7 +420,11 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
                 : new List<global::RenderingLibrary.Graphics.ShaderParameterInfo>();
         CustomSetPropertyOnRenderable.PropertyAssignmentError += HandlePropertyAssignmentError;
 
-        AssignEvents();
+        // The Preview button and the preview process need no canvas, so they listen from the start.
+        // The canvas's events are wired once the render surface is ready: until then nothing there
+        // can draw, and the startup project loads before the surface exists.
+        AssignPreviewEvents();
+        this.XnaInitialized += HandleXnaInitialized;
 
         AddMenuEntry(_screenshotService.ExportAsImage, "File", "Export", "Export as Image");
         BeforeRender += _screenshotService.HandleBeforeRender;
@@ -453,6 +459,49 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
     private object? ResolveAndReportRenderTargetShader(string absolutePath) =>
         ShaderReporter.ResolveAndReport(_renderTargetShaderResolver, absolutePath);
 
+    private void AssignPreviewEvents()
+    {
+        this.ElementSelected += element =>
+        {
+            _editorViewModel.UpdateHasSelectedElement(element);
+            _previewLauncher.PushSelection(element);
+        };
+        // Selecting an instance with no element selected changes the selected element without
+        // raising ElementSelected, so the Preview button hears about it here (#6990). A cleared
+        // instance is followed by ElementSelected when an element remains selected.
+        this.InstanceSelected += (element, instance) =>
+        {
+            if (instance != null)
+            {
+                _editorViewModel.UpdateHasSelectedElement(element);
+            }
+        };
+        // Picking a state in the tool re-shows the previewed element in that state (issue #4856).
+        this.ReactToStateSaveSelected += _ => _previewLauncher.PushSelection(_selectedState.SelectedElement);
+        this.ElementDelete += element =>
+        {
+            UnpinPreviewIf(element);
+            _elementCameraMemory.Forget(element);
+        };
+        // The preview loads its element by name and a rename (also a folder rename, a move into a
+        // folder, or an undo of those) selects nothing new, so re-send the new name. A pinned
+        // preview stays pinned to the renamed element (#7184).
+        this.ElementRename += (element, _) => _previewLauncher.ReactToElementRenamed(element);
+
+        // Keeps a live .gumx preview session's temp JSON copy in sync with the real, edited project
+        // (issue #4748) - the Native AOT preview build can't parse .gumx itself, so its hot-reload
+        // watcher only ever sees the temp copy, not the user's actual edits, unless something
+        // re-converts on every save. No-ops when no such preview is currently running.
+        this.AfterElementSave += _ => _previewLauncher.RefreshIfRunning();
+        this.AfterProjectSave += _ => _previewLauncher.RefreshIfRunning();
+
+        this.ProjectLoad += save =>
+        {
+            _elementCameraMemory.Clear();
+            _previewLauncher.ReactToProjectLoaded(save);
+        };
+    }
+
     private void AssignEvents()
     {
         this.CreateGraphicalUiElement += HandleCreateGraphicalUiElement;
@@ -467,21 +516,7 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
         this.ElementSelected += _scrollbarService.HandleElementSelected;
         // After the scroll bars resize to the element, so the restored camera's bars land in range.
         this.ElementSelected += RestoreElementCamera;
-        this.ElementSelected += element => _previewLauncher.PushSelection(element);
-        // Picking a state in the tool re-shows the previewed element in that state (issue #4856).
-        this.ReactToStateSaveSelected += _ => _previewLauncher.PushSelection(_selectedState.SelectedElement);
         this.ElementDelete += HandleElementDeleted;
-        // The preview loads its element by name and a rename (also a folder rename, a move into a
-        // folder, or an undo of those) selects nothing new, so re-send the new name. A pinned
-        // preview stays pinned to the renamed element (#7184).
-        this.ElementRename += (element, _) => _previewLauncher.ReactToElementRenamed(element);
-
-        // Keeps a live .gumx preview session's temp JSON copy in sync with the real, edited project
-        // (issue #4748) - the Native AOT preview build can't parse .gumx itself, so its hot-reload
-        // watcher only ever sees the temp copy, not the user's actual edits, unless something
-        // re-converts on every save. No-ops when no such preview is currently running.
-        this.AfterElementSave += _ => _previewLauncher.RefreshIfRunning();
-        this.AfterProjectSave += _ => _previewLauncher.RefreshIfRunning();
 
         this.BehaviorSelected += HandleBehaviorSelected;
 
@@ -495,8 +530,6 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
 
         this.CameraChanged += _scrollbarService.HandleCameraChanged;
 
-        this.XnaInitialized += HandleXnaInitialized;
-        
         this.WireframeResized += _scrollbarService.HandleWireframeResized;
         this.WireframeRefreshed += HandleWireframeRefreshed;
         this.WireframePropertyChanged += HandleWireframePropertyChanged;
@@ -695,8 +728,7 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
 
     private void HandleProjectLoad(GumProjectSave save)
     {
-        _elementCameraMemory.Clear();
-        _previewLauncher.ReactToProjectLoaded(save);
+        _isCatchUpPending = false;
         _editorViewModel.HandleProjectLoad(save);
 
         _canvas.UpdateCanvasBoundsToProject();
@@ -793,8 +825,6 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
 
     private void HandleElementDeleted(ElementSave save)
     {
-        UnpinPreviewIf(save);
-        _elementCameraMemory.Forget(save);
         _wireframeObjectManager.RefreshAll(true);
     }
 
@@ -1044,19 +1074,10 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
         }
 
         _selectionManager.Refresh();
-        _editorViewModel.UpdateHasSelectedElement(save);
     }
 
     private void HandleInstanceSelected(ElementSave? element, InstanceSave? instance)
     {
-        // Selecting an instance with no element selected changes the selected element without
-        // raising ElementSelected, so the Preview button hears about it here (#6990). A cleared
-        // instance is followed by ElementSelected when an element remains selected.
-        if (instance != null)
-        {
-            _editorViewModel.UpdateHasSelectedElement(element);
-        }
-
         _wireframeObjectManager.RefreshAll(forceLayout: false);
         _editingManager.RefreshContextMenu();
         _selectionManager.WireframeEditor?.UpdateAspectRatioForGrabbedIpso();
@@ -1120,12 +1141,56 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
         IEffectiveThemeSettings themeSettings = _themingService.EffectiveSettings;
         ApplyThemeSettings(themeSettings);
 
-        // Must be the last statement in this method - XnaUpdate (wired up in
-        // HandleWireframeInitialized, which runs earlier during startup) can fire before this
-        // event handler runs, since WPF's CompositionTarget.Rendering isn't gated on it. Only
-        // once every managers' Initialize() call above has actually completed is it safe for
-        // their Activity() to run.
+        // XnaUpdate (wired up in HandleWireframeInitialized, which runs earlier during startup)
+        // can fire before this event handler runs, since WPF's CompositionTarget.Rendering isn't
+        // gated on it. Only once every managers' Initialize() call above has actually completed is
+        // it safe for their Activity() to run.
         _isXnaInitialized = true;
+
+        AssignEvents();
+        RequestCatchUpWithProjectAndSelection();
+    }
+
+    /// <summary>
+    /// Shows the loaded project and selection on the canvas once the current dispatcher work is
+    /// done. Called when the render surface becomes ready; internal so tests can repeat it.
+    /// </summary>
+    internal void RequestCatchUpWithProjectAndSelection()
+    {
+        // After every plugin has heard about the surface, as a project load always was: the
+        // Texture Coordinates canvas, which initializes after this one, takes over the content
+        // loader that the wireframe's textures load through.
+        _isCatchUpPending = true;
+        if (SynchronizationContext.Current is { } uiContext)
+        {
+            uiContext.Post(_ => CatchUpWithProjectAndSelection(), null);
+        }
+        else
+        {
+            CatchUpWithProjectAndSelection();
+        }
+    }
+
+    // The startup project loads, and may select an element, before the render surface exists,
+    // while this plugin is not yet listening; the canvas shows both now. A project load heard in
+    // the meantime has already shown its project, and its selection arrives through events.
+    private void CatchUpWithProjectAndSelection()
+    {
+        if (!_isCatchUpPending)
+        {
+            return;
+        }
+
+        if (_projectManager.GumProjectSave is { } project)
+        {
+            // Rebuilds the wireframe for whatever is selected.
+            HandleProjectLoad(project);
+        }
+
+        ElementSave? element = _selectedState.SelectedElement;
+        _scrollbarService.HandleElementSelected(element);
+        _editingManager.RefreshContextMenu();
+        _selectionManager.Refresh();
     }
 
     /// <summary>

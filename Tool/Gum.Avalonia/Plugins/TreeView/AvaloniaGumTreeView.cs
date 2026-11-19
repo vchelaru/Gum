@@ -74,10 +74,9 @@ public sealed class AvaloniaGumTreeView : UserControl
         Focusable = true;
         Background = Brushes.Transparent;
 
-        _itemsControl = new ItemsControl
+        _itemsControl = new TreeRowsControl(this)
         {
             ItemsSource = _rows,
-            ItemTemplate = new FuncDataTemplate<TreeRow>((_, _) => new TreeRowView(this)),
             ItemsPanel = new FuncTemplate<Panel?>(() => new OrderedRowsPanel()),
         };
         _scrollViewer = new ScrollViewer
@@ -849,6 +848,41 @@ public sealed class AvaloniaGumTreeView : UserControl
 
 /// <summary>One visible row: a node and its depth.</summary>
 internal sealed record TreeRow(GumTreeNode Node, int Level);
+
+/// <summary>
+/// The tree's row list. Each <see cref="TreeRowView"/> is its own item container, so scrolling re-points a
+/// recycled row at its new <see cref="TreeRow"/> instead of building a row inside a content presenter and
+/// tearing it down again; a jump of many rows would otherwise create and drop every visible row's controls.
+/// </summary>
+internal sealed class TreeRowsControl : ItemsControl
+{
+    private readonly AvaloniaGumTreeView _owner;
+
+    public TreeRowsControl(AvaloniaGumTreeView owner) => _owner = owner;
+
+    // Without this the subclass finds no template and realizes no rows.
+    protected override Type StyleKeyOverride => typeof(ItemsControl);
+
+    protected override bool NeedsContainerOverride(object? item, int index, out object? recycleKey)
+    {
+        recycleKey = DefaultRecycleKey;
+        return true;
+    }
+
+    protected override Control CreateContainerForItemOverride(object? item, int index, object? recycleKey) => new TreeRowView(_owner);
+
+    protected override void PrepareContainerForItemOverride(Control container, object? item, int index)
+    {
+        base.PrepareContainerForItemOverride(container, item, index);
+        container.DataContext = item;
+    }
+
+    protected override void ClearContainerForItemOverride(Control container)
+    {
+        base.ClearContainerForItemOverride(container);
+        container.ClearValue(StyledElement.DataContextProperty);
+    }
+}
 
 /// <summary>
 /// Draws one row of <see cref="AvaloniaGumTreeView"/>: indentation, then a highlight box holding the

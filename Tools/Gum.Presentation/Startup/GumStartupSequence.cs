@@ -19,7 +19,7 @@ namespace Gum.Startup;
 
 /// <summary>
 /// The ordered startup of the tool after the service container exists: settings, theme, type
-/// manager, views, plugins, standard elements, project load, and the file-watch flush timer. The
+/// manager, views, plugins, standard elements, project load, render surface, and the file-watch flush timer. The
 /// order is the contract; both heads run this one sequence and supply the framework-specific
 /// steps through <see cref="IHeadStartup"/>.
 /// </summary>
@@ -51,7 +51,7 @@ public class GumStartupSequence
             () => new Gum.ProjectServices.XmlProjectSerializerWarmup().WarmUp(),
             exception => ToolLog.Write("serializer warm-up failed", detail: exception.ToString()),
             Task.Run)
-            .Start(Environment.GetCommandLineArgs(), _services.GetRequiredService<ProjectManager>().GeneralSettingsFile.LastProject);
+            .Start(Environment.GetCommandLineArgs(), projectManager.LastProject);
 
         // Migration needs the whole settings object, so it resolves the concrete ProjectManager
         // (same singleton - LoadSettings() above already ran against it).
@@ -92,12 +92,13 @@ public class GumStartupSequence
         _services.GetRequiredService<IStandardElementsManagerGumTool>().Initialize();
         StartupTiming.Mark("StandardElementsManagerGumTool.Initialize");
 
-        // The project manager may load a project, so wireframe controls must be set up first.
-        _head.RenderSurfaceReady();
-        StartupTiming.Mark("PluginManager.XnaInitialized");
-
         await projectManager.Initialize();
         StartupTiming.Mark("ProjectManager.Initialize (project load)");
+
+        // Creating the render surface takes seconds, so it waits for the project: the tree shows
+        // first, and the canvas plugins catch up with the loaded project when the surface is ready.
+        await _head.RenderSurfaceReadyAsync();
+        StartupTiming.Mark("PluginManager.XnaInitialized");
 
         PeriodicUiTimer fileWatchTimer = _services.GetRequiredService<PeriodicUiTimer>();
         IFileWatchManager fileWatchManager = _services.GetRequiredService<IFileWatchManager>();

@@ -55,6 +55,7 @@ public class ProjectManager : IProjectManager, IDeleteProjectProvider, ICopyPast
     private readonly ILastProjectLoadMarker _lastProjectLoadMarker;
     private readonly IUnsavedChangesTracker _unsavedChangesTracker;
     private readonly IProjectLoadFills _projectLoadFills;
+    private readonly IProjectFontWarmUp? _fontWarmUp;
     private readonly IGuiCommands _guiCommands;
     private readonly Lazy<IFileCommands> _fileCommands;
     private readonly IMessenger _messenger;
@@ -107,6 +108,9 @@ public class ProjectManager : IProjectManager, IDeleteProjectProvider, ICopyPast
 
     public bool EffectiveUseStandardsPalette => GeneralSettingsFile.EffectiveUseStandardsPalette;
     public bool ShowTextOutlines => GeneralSettingsFile.ShowTextOutlines;
+
+    /// <inheritdoc/>
+    public string? LastProject => GeneralSettingsFile.LastProject;
     public int FrameRate => GeneralSettingsFile.FrameRate;
 
     public byte OutlineColorR => GeneralSettingsFile.OutlineColorR;
@@ -168,8 +172,10 @@ public class ProjectManager : IProjectManager, IDeleteProjectProvider, ICopyPast
         IProjectOpenRequestRouter projectOpenRequests,
         ILastProjectLoadMarker lastProjectLoadMarker,
         IUnsavedChangesTracker unsavedChangesTracker,
-        IProjectLoadFills projectLoadFills)
+        IProjectLoadFills projectLoadFills,
+        IProjectFontWarmUp? fontWarmUp = null)
     {
+        _fontWarmUp = fontWarmUp;
         _unsavedChangesTracker = unsavedChangesTracker;
         _projectLoadFills = projectLoadFills;
         _lastProjectLoadMarker = lastProjectLoadMarker;
@@ -333,6 +339,8 @@ public class ProjectManager : IProjectManager, IDeleteProjectProvider, ICopyPast
     private void FillAndNotifyPluginsOfLoad(GumProjectSave project)
     {
         _projectLoadFills.Apply(project);
+        // Before the notification, so the passes plugins queue while handling it wait for the collection.
+        _fontWarmUp?.Start(project);
         IsNotifyingProjectLoad = true;
         try
         {

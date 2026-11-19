@@ -160,6 +160,24 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
         }
     }
 
+    /// <inheritdoc/>
+    public void CallGuarded(PluginBase plugin, Action action, string methodName)
+    {
+        if (!PluginContainers.TryGetValue(plugin, out PluginContainer? container) || !container.IsEnabled)
+        {
+            return;
+        }
+
+        try
+        {
+            action();
+        }
+        catch (Exception e)
+        {
+            ReportPluginFailure(container, e, "Failed in " + methodName);
+        }
+    }
+
     /// <summary>
     /// Notifications that only report selection, drawing or a query, so they never follow an edit of the
     /// project. Every other notification moves <see cref="IProjectChangeVersion"/>: a new notification
@@ -1027,6 +1045,8 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
         // its IFontManager / IWireframeCommands / IDialogService / FileWatchLogic / IProjectState
         // deps are already bridged above).
         batch.AddExportedValue<IDispatcher>(Locator.GetRequiredService<IDispatcher>());
+        // MainErrorsPlugin and MainFontPlugin queue their load-time passes behind the font collection.
+        batch.AddExportedValue<IProjectFontWarmUp>(Locator.GetRequiredService<IProjectFontWarmUp>());
         batch.AddExportedValue<IWireframeObjectManager>(Locator.GetRequiredService<IWireframeObjectManager>());
 
         // Heavy-tier ctor drains (combined PR): MainTextureCoordinatePlugin and MainStatePlugin,
