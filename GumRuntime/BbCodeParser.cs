@@ -499,7 +499,8 @@ public static class BbCodeParser
                     return null; // `[` isn't valid inside a tag definition
 
                 case '=':
-                    equalsIndex = peekIndex;
+                    // The first '=' ends the name; later ones belong to the value (a URL query, #8311).
+                    equalsIndex ??= peekIndex;
                     break;
 
                 case ']':

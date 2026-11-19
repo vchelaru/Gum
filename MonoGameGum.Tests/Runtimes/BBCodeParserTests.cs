@@ -188,6 +188,28 @@ public class BBCodeParserTests : BaseTestClass
         BbCodeParser.RemoveTags(text, parsedTags).ShouldBe(expectedStripped);
     }
 
+    // #8311: a tag splits at its first '=', so a value may itself contain '=' or spaces.
+    [Theory]
+    [InlineData("[Link=https://a.com/?q=1]text[/Link]", "Link", "https://a.com/?q=1")]
+    [InlineData("[Link=https://a.com/?q=1&r=2]text[/Link]", "Link", "https://a.com/?q=1&r=2")]
+    [InlineData("[State=a=b]text[/State]", "State", "a=b")]
+    [InlineData("[Custom==]text[/Custom]", "Custom", "=")]
+    [InlineData("[Font=Arial Black]text[/Font]", "Font", "Arial Black")]
+    [InlineData("[State=My State]text[/State]", "State", "My State")]
+    [InlineData("[Color=Red]text[/Color]", "Color", "Red")]
+    public void Parse_ShouldSplitTagAtFirstEquals(string text, string expectedName, string expectedArgument)
+    {
+        List<FoundTag> parsedTags = BbCodeParser.Parse(text, BbCodeParser.KnownTags);
+
+        parsedTags.Count.ShouldBe(1);
+        parsedTags[0].Name.ShouldBe(expectedName);
+        parsedTags[0].Open.Argument.ShouldBe(expectedArgument);
+        string stripped = BbCodeParser.RemoveTags(text, parsedTags);
+        stripped.ShouldBe("text");
+        // DialogBox paging re-inserts tags into stripped text; the result must parse the same way.
+        BbCodeParser.AddTags(stripped, parsedTags).ShouldBe(text);
+    }
+
     [Fact]
     public void Parse_ShouldKeepOpeningTagNameForBothTags_WhenCloseCaseDiffers()
     {
