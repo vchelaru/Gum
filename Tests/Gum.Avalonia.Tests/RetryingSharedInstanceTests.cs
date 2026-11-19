@@ -62,4 +62,42 @@ public class RetryingSharedInstanceTests
         second.Id.ShouldBe(2);
         ReferenceEquals(second, third).ShouldBeTrue();
     }
+
+    // Creating the device pumps the UI dispatcher, so a timer tick can ask for the instance again
+    // before the first creation returns. A second instance built then would be overwritten and
+    // leaked, so the nested call must fail instead of creating one.
+    [Fact]
+    public void GetOrCreate_Throws_WhenCalledAgainWhileCreating()
+    {
+        RetryingSharedInstance<FakeDevice> shared = new();
+        int factoryCalls = 0;
+        bool wasCreatingDuringInitialize = false;
+        InvalidOperationException? nested = null;
+
+        FakeDevice result = shared.GetOrCreate(
+            () => new FakeDevice { Id = ++factoryCalls },
+            _ =>
+            {
+                wasCreatingDuringInitialize = shared.IsCreating;
+                nested = Should.Throw<InvalidOperationException>(() =>
+                    shared.GetOrCreate(() => new FakeDevice { Id = ++factoryCalls }, _ => { }));
+            });
+
+        factoryCalls.ShouldBe(1);
+        result.Id.ShouldBe(1);
+        nested.ShouldNotBeNull();
+        wasCreatingDuringInitialize.ShouldBeTrue();
+        shared.IsCreating.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void IsCreating_IsFalse_AfterAFailedCreation()
+    {
+        RetryingSharedInstance<FakeDevice> shared = new();
+
+        Should.Throw<InvalidOperationException>(() =>
+            shared.GetOrCreate(() => new FakeDevice(), _ => throw new InvalidOperationException("boom")));
+
+        shared.IsCreating.ShouldBeFalse();
+    }
 }
