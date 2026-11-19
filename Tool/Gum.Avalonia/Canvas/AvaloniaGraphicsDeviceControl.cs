@@ -44,9 +44,12 @@ public class AvaloniaGraphicsDeviceControl : Grid, IDisposable, IRenderTargetFra
     private readonly DispatcherTimer _frameTimer;
 
     private ISharedRenderDeviceHost? _deviceHost;
+    private bool _isCreatingDeviceHost;
     private RenderTargetFrameLoop? _frameLoop;
     private AvaloniaInputHostAdapter? _inputHost;
     private readonly ICanvasRedrawScheduler _redrawScheduler;
+    private readonly Func<ISharedRenderDeviceHost> _createDeviceHost;
+    private readonly Func<bool> _isSharedDeviceBeingCreated;
     private readonly CanvasFrameGate _frameGate;
     private float _desiredFramesPerSecondBeforeInit = 30;
     private WindowBase? _hostWindow;
@@ -61,8 +64,19 @@ public class AvaloniaGraphicsDeviceControl : Grid, IDisposable, IRenderTargetFra
     /// says something changed. The shared device is taken on first use, not here.
     /// </summary>
     public AvaloniaGraphicsDeviceControl(ICanvasRedrawScheduler redrawScheduler)
+        : this(redrawScheduler, () => new GameRenderDeviceHost(), () => GameRenderDeviceHost.IsSharedDeviceBeingCreated)
+    {
+    }
+
+    /// <summary>Creates the control with its own source of device hosts. For tests.</summary>
+    internal AvaloniaGraphicsDeviceControl(
+        ICanvasRedrawScheduler redrawScheduler,
+        Func<ISharedRenderDeviceHost> createDeviceHost,
+        Func<bool> isSharedDeviceBeingCreated)
     {
         _redrawScheduler = redrawScheduler;
+        _createDeviceHost = createDeviceHost;
+        _isSharedDeviceBeingCreated = isSharedDeviceBeingCreated;
         _frameGate = new CanvasFrameGate(redrawScheduler);
         _surface = new AvaloniaRenderSurface();
 
@@ -190,7 +204,21 @@ public class AvaloniaGraphicsDeviceControl : Grid, IDisposable, IRenderTargetFra
         {
             return;
         }
-        _deviceHost = new GameRenderDeviceHost();
+        if (_isCreatingDeviceHost)
+        {
+            // Only a dispatcher callback pumped by the creation can get here. Frame ticks wait in
+            // HandleRenderFrame; anything else that needs the device this early has no device to get.
+            throw new InvalidOperationException("The canvas's device was requested while it was still being created.");
+        }
+        _isCreatingDeviceHost = true;
+        try
+        {
+            _deviceHost = _createDeviceHost();
+        }
+        finally
+        {
+            _isCreatingDeviceHost = false;
+        }
         _deviceHost.RenderTargetRecreated += HandleRenderTargetRecreated;
         _frameLoop = new RenderTargetFrameLoop(_deviceHost, new FrameRateThrottle())
         {
@@ -264,7 +292,7 @@ public class AvaloniaGraphicsDeviceControl : Grid, IDisposable, IRenderTargetFra
         base.OnPointerPressed(e);
     }
 
-    private void HandleRenderFrame()
+    internal void HandleRenderFrame()
     {
         if (Design.IsDesignMode)
         {
@@ -275,6 +303,13 @@ public class AvaloniaGraphicsDeviceControl : Grid, IDisposable, IRenderTargetFra
         if (!ShouldRenderFrame(IsVisible && IsEffectivelyVisible, hostWindowState))
         {
             _hiddenTickCount++;
+            _frameGate.MarkSkipped();
+            return;
+        }
+        // Creating the device pumps the dispatcher, so this tick can run inside that creation.
+        // Building another device host now would make a second device; the next tick draws.
+        if (_deviceHost == null && (_isCreatingDeviceHost || _isSharedDeviceBeingCreated()))
+        {
             _frameGate.MarkSkipped();
             return;
         }

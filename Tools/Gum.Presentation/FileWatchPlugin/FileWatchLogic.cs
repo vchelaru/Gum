@@ -20,6 +20,7 @@ public class FileWatchLogic
     private readonly IRefreshCoalescer _rootDirectoryRefreshCoalescer;
 
     private readonly IProjectRestrictions? _projectRestrictions;
+    private readonly Gum.ProjectServices.IFontReferenceCacheSource? _fontReferences;
 
     public bool Enabled => _fileWatchManager.Enabled;
 
@@ -29,9 +30,11 @@ public class FileWatchLogic
         IProjectState projectState,
         IProjectManager projectManager,
         IDispatcher dispatcher,
-        IProjectRestrictions? projectRestrictions = null)
+        IProjectRestrictions? projectRestrictions = null,
+        Gum.ProjectServices.IFontReferenceCacheSource? fontReferences = null)
     {
         _projectRestrictions = projectRestrictions;
+        _fontReferences = fontReferences;
         _fileWatchManager = fileWatchManager;
         _guiCommands = guiCommands;
         _projectState = projectState;
@@ -97,7 +100,8 @@ public class FileWatchLogic
         {
             using var _ = Gum.Diagnostics.StartupTiming.Time("    ObjectFinder.GetAllFilesInProject");
             filesReferenced = ObjectFinder.Self.GetAllFilesInProject(
-                GumBundleInclusion.Core | GumBundleInclusion.ExternalFiles);
+                GumBundleInclusion.Core | GumBundleInclusion.ExternalFiles,
+                _fontReferences?.For(gumProject));
         }
         catch (Exception e)
         {

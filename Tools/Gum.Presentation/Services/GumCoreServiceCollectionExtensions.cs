@@ -85,6 +85,11 @@ public static class GumCoreServiceCollectionExtensions
 
         // static singletons
         services.AddSingleton<IObjectFinder>(ObjectFinder.Self);
+        // Moves on every plugin notification that can follow an edit; results computed from the project
+        // (the shared font collection below) are reused only while it holds still.
+        services.AddSingleton<IProjectChangeVersion, ProjectChangeVersion>();
+        services.AddSingleton<ProjectFontReferences>();
+        services.AddSingleton<ProjectServices.IFontReferenceCacheSource>(provider => provider.GetRequiredService<ProjectFontReferences>());
         // PluginEnablementStore: the user-disabled-plugins persistence PluginManager used to own via a
         // static field (#3880) - plain string plugin ids, no MEF/WinForms types.
         services.AddSingleton<IPluginEnablementStore, PluginEnablementStore>();
@@ -159,7 +164,8 @@ public static class GumCoreServiceCollectionExtensions
         services.AddSingleton<IHeadlessFontGenerationService>(provider =>
             new HeadlessFontGenerationService(
                 provider.GetRequiredService<IFontFileGenerator>(),
-                provider.GetRequiredService<IFontGenerationCallbacks>()));
+                provider.GetRequiredService<IFontGenerationCallbacks>(),
+                provider.GetRequiredService<ProjectServices.IFontReferenceCacheSource>()));
         services.AddSingleton<IFontManager, FontManager>();
         services.AddSingleton<IOperatingSystemInfo, OperatingSystemInfo>();
         services.AddSingleton<IHotkeyManager, HotkeyManager>();
@@ -216,7 +222,9 @@ public static class GumCoreServiceCollectionExtensions
         services.AddSingleton<ProjectServices.IHeadlessErrorChecker>(provider =>
             new ProjectServices.HeadlessErrorChecker(
                 provider.GetRequiredService<ProjectServices.ITypeResolver>(),
-                provider.GetServices<ProjectServices.IAdditionalErrorSource>()));
+                provider.GetServices<ProjectServices.IAdditionalErrorSource>(),
+                orphanCodeFileProvider: null,
+                provider.GetRequiredService<ProjectServices.IFontReferenceCacheSource>()));
         services.AddSingleton<ProjectServices.IErrorDocsRegistry, ProjectServices.ErrorDocsRegistry>();
         services.AddSingleton<ErrorChecker>();
         services.AddSingleton<IErrorChecker>(provider => provider.GetRequiredService<ErrorChecker>());

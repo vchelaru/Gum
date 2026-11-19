@@ -241,6 +241,66 @@ public class HeadlessFontGenerationServiceTests : BaseTestClass
 
     #endregion
 
+    #region CollectRequiredFonts — shared cache
+
+    // The tool's error checks and file walk collect the same fonts first; a scan of the unchanged project
+    // reuses that collection, and generation then edits its own copies (it resolves FontFile).
+    [Fact]
+    public void CollectRequiredFonts_ShouldReuseTheSharedCollection_AndReturnCopiesEachTime()
+    {
+        ScreenSave screen = new ScreenSave { Name = "MainMenu" };
+        StateSave state = AddState(screen);
+        SetVar(state, "Font", "Fonts/Title.ttf");
+        SetVar(state, "FontSize", 24);
+        SharedFontReferenceCacheSource source = new SharedFontReferenceCacheSource();
+        HeadlessFontGenerationService sut = new HeadlessFontGenerationService(new NoOpFontFileGenerator(), callbacks: null, source);
+
+        Dictionary<string, BmfcSave> first = sut.CollectRequiredFonts(Project, new[] { screen });
+        first.Values.Single().FontFile = "/absolute/Fonts/Title.ttf";
+        Dictionary<string, BmfcSave> second = sut.CollectRequiredFonts(Project, new[] { screen });
+
+        source.Cache.CollectionCount.ShouldBe(1);
+        second.Values.Single().FontFile.ShouldBe("Fonts/Title.ttf");
+    }
+
+    // Translated text adds fonts the error checks and file walk never collect.
+    [Fact]
+    public void CollectRequiredFonts_ShouldNotUseTheSharedCollection_WhenTheProjectIsLocalized()
+    {
+        string directory = Path.Combine(Path.GetTempPath(), "GumFontShare_" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(directory);
+        try
+        {
+            File.WriteAllText(Path.Combine(directory, "strings.csv"), "id,English\nMENU_PLAY,\"[Font=Verdana]Play[/Font]\"\n");
+            Project.FullFileName = Path.Combine(directory, "Project.gumx");
+            Project.LocalizationFiles.Add("strings.csv");
+            ScreenSave screen = new ScreenSave { Name = "MainMenu" };
+            StateSave state = AddState(screen);
+            AddTextInstance(screen);
+            SetVar(state, "Label.Text", "MENU_PLAY");
+            SharedFontReferenceCacheSource source = new SharedFontReferenceCacheSource();
+            HeadlessFontGenerationService sut = new HeadlessFontGenerationService(new NoOpFontFileGenerator(), callbacks: null, source);
+
+            Dictionary<string, BmfcSave> result = sut.CollectRequiredFonts(Project, new[] { screen });
+
+            result.Values.ShouldContain(f => f.FontName == "Verdana");
+            source.Cache.CollectionCount.ShouldBe(0);
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    private sealed class SharedFontReferenceCacheSource : IFontReferenceCacheSource
+    {
+        public Gum.Bundle.FontReferenceCache Cache { get; } = new Gum.Bundle.FontReferenceCache();
+
+        public Gum.Bundle.FontReferenceCache For(GumProjectSave project) => Cache;
+    }
+
+    #endregion
+
     // -------------------------------------------------------------------------
     // CollectRequiredFonts — instance variables
     // -------------------------------------------------------------------------

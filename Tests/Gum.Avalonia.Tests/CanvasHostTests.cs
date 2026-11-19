@@ -137,6 +137,95 @@ public class CanvasHostTests
         GameRenderDeviceHost.ReferenceCount.ShouldBe(referencesBefore);
     }
 
+    // Creating the device pumps the UI dispatcher, so the frame timer can tick while the first
+    // device host is still being built. That tick must skip, not build a second one.
+    [AvaloniaFact]
+    public void Control_FrameTickDuringDeviceCreation_DoesNotCreateASecondDeviceHost()
+    {
+        int factoryCalls = 0;
+        AvaloniaGraphicsDeviceControl? control = null;
+        control = new AvaloniaGraphicsDeviceControl(
+            new CanvasRedrawScheduler(TimeProvider.System),
+            () =>
+            {
+                factoryCalls++;
+                if (factoryCalls == 1)
+                {
+                    control!.HandleRenderFrame();
+                }
+                return new FailingDeviceHost();
+            },
+            isSharedDeviceBeingCreated: () => false);
+
+        control.HandleRenderFrame();
+
+        factoryCalls.ShouldBe(1);
+        control.Dispose();
+    }
+
+    // A caller other than the frame tick that asks for the device mid-creation cannot wait, and
+    // must not get a second device either. No such caller runs at startup today (traced on a launch).
+    [AvaloniaFact]
+    public void Control_DeviceRequestDuringDeviceCreation_Throws_WithoutCreatingASecondDeviceHost()
+    {
+        int factoryCalls = 0;
+        InvalidOperationException? nested = null;
+        AvaloniaGraphicsDeviceControl? control = null;
+        control = new AvaloniaGraphicsDeviceControl(
+            new CanvasRedrawScheduler(TimeProvider.System),
+            () =>
+            {
+                factoryCalls++;
+                if (factoryCalls == 1)
+                {
+                    nested = Should.Throw<InvalidOperationException>(() => control!.RenderDeviceHost);
+                }
+                return new FailingDeviceHost();
+            },
+            isSharedDeviceBeingCreated: () => false);
+
+        IRenderDeviceHost host = control.RenderDeviceHost;
+
+        host.ShouldBeOfType<FailingDeviceHost>();
+        nested.ShouldNotBeNull();
+        factoryCalls.ShouldBe(1);
+        control.Dispose();
+    }
+
+    // Another canvas's frame tick can run while the first canvas creates the shared device.
+    [AvaloniaFact]
+    public void Control_FrameTick_WaitsWhileTheSharedDeviceIsBeingCreated()
+    {
+        int factoryCalls = 0;
+        bool isSharedDeviceBeingCreated = true;
+        using AvaloniaGraphicsDeviceControl control = new AvaloniaGraphicsDeviceControl(
+            new CanvasRedrawScheduler(TimeProvider.System),
+            () =>
+            {
+                factoryCalls++;
+                return new FailingDeviceHost();
+            },
+            () => isSharedDeviceBeingCreated);
+
+        control.HandleRenderFrame();
+        factoryCalls.ShouldBe(0);
+
+        isSharedDeviceBeingCreated = false;
+        control.HandleRenderFrame();
+        factoryCalls.ShouldBe(1);
+    }
+
+    // A device host whose surface never comes up, so a frame stops before touching a device.
+    private sealed class FailingDeviceHost : ISharedRenderDeviceHost
+    {
+        public GraphicsDevice GraphicsDevice => throw new NotSupportedException();
+        public IServiceProvider Services => throw new NotSupportedException();
+        public RenderTarget2D? RenderTarget => null;
+        public event Action<int, int>? RenderTargetRecreated { add { } remove { } }
+        public void EnsureSurfaceSize(int surfaceWidth, int surfaceHeight, RenderingError error) => error.Message = "no surface";
+        public void Dispose() { }
+    }
+
     // The bitmap needs the Avalonia platform, which the UI thread session provides.
     [AvaloniaFact]
     public void RenderSurface_CopiesRgbaIntoTheBitmap()

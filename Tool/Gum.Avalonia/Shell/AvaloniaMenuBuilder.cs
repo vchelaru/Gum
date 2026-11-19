@@ -1,4 +1,3 @@
-using System.Collections.ObjectModel;
 using System.ComponentModel;
 using Avalonia.Controls;
 using Avalonia.Input;
@@ -11,8 +10,9 @@ namespace Gum.Avalonia.Shell;
 /// <summary>
 /// Renders a <see cref="MenuModel"/> into an Avalonia <see cref="Menu"/> and keeps it in sync:
 /// header, enabled, and check state follow the model's property changes, and an item's children
-/// are rebuilt when its collection changes. A model's <see cref="MenuItemModel.Gesture"/> is shown
-/// beside the item but not bound; the hotkey manager owns the binding.
+/// follow its collection changes through <see cref="MenuItemsSync"/>. A model's
+/// <see cref="MenuItemModel.Gesture"/> is shown beside the item but not bound; the hotkey manager
+/// owns the binding.
 /// </summary>
 public static class AvaloniaMenuBuilder
 {
@@ -23,26 +23,23 @@ public static class AvaloniaMenuBuilder
     public static Menu Build(MenuModel model, KeyModifiers commandModifiers)
     {
         Menu menu = new Menu();
-        Populate(menu.Items, model.TopLevelItems, commandModifiers);
-        model.TopLevelItems.CollectionChanged += (_, _) => Populate(menu.Items, model.TopLevelItems, commandModifiers);
+        // Lives as long as the menu, like the model it follows.
+        _ = new MenuItemsSync(menu.Items, model.TopLevelItems, item => Create(item, commandModifiers));
         return menu;
     }
 
-    private static void Populate(ItemCollection target, ObservableCollection<MenuItemModel> items, KeyModifiers commandModifiers)
+    private static BuiltMenuItem Create(MenuItemModel model, KeyModifiers commandModifiers)
     {
-        target.Clear();
-        foreach (MenuItemModel item in items)
+        if (model.IsSeparator)
         {
-            target.Add(item.IsSeparator ? new Separator() : Create(item, commandModifiers));
+            return new BuiltMenuItem(new object[] { new Separator() }, Detach: null);
         }
-    }
 
-    private static MenuItem Create(MenuItemModel model, KeyModifiers commandModifiers)
-    {
         if (model.Stepper is { } stepper)
         {
             // A row with buttons, like Chrome's zoom row. It stays open so the buttons can be pressed again.
-            return new MenuItem { Header = new MenuStepperRow(stepper), StaysOpenOnClick = true };
+            MenuStepperRow row = new MenuStepperRow(stepper);
+            return new BuiltMenuItem(new object[] { new MenuItem { Header = row, StaysOpenOnClick = true } }, row.Dispose);
         }
 
         MenuItem menuItem = new MenuItem
@@ -68,10 +65,14 @@ public static class AvaloniaMenuBuilder
             }
         };
 
-        model.PropertyChanged += (_, e) => Apply(menuItem, model, e);
-        Populate(menuItem.Items, model.Items, commandModifiers);
-        model.Items.CollectionChanged += (_, _) => Populate(menuItem.Items, model.Items, commandModifiers);
-        return menuItem;
+        void HandlePropertyChanged(object? sender, PropertyChangedEventArgs e) => Apply(menuItem, model, e);
+        model.PropertyChanged += HandlePropertyChanged;
+        MenuItemsSync children = new MenuItemsSync(menuItem.Items, model.Items, item => Create(item, commandModifiers));
+        return new BuiltMenuItem(new object[] { menuItem }, () =>
+        {
+            model.PropertyChanged -= HandlePropertyChanged;
+            children.Dispose();
+        });
     }
 
     private static void Apply(MenuItem menuItem, MenuItemModel model, PropertyChangedEventArgs e)
