@@ -56,7 +56,12 @@ public sealed class AvaloniaElementTreeView : IElementTreeView
     private SearchItemViewModel? _resultDragCandidate;
 
     /// <summary>Builds the panel.</summary>
-    public AvaloniaElementTreeView()
+    public AvaloniaElementTreeView() : this(StartupTiming.IsEnabled ? StartupTiming.Mark : null)
+    {
+    }
+
+    /// <summary>Builds the panel, reporting its first frame with project elements to <paramref name="startupMark"/>; null reports nothing.</summary>
+    internal AvaloniaElementTreeView(Action<string>? startupMark)
     {
         _tree = new AvaloniaGumTreeView
         {
@@ -134,14 +139,17 @@ public sealed class AvaloniaElementTreeView : IElementTreeView
         WireTree();
         _palette.AddToCurrentRequested = typeName => AddStandardToCurrentRequested?.Invoke(typeName);
         _palette.EditDefaultsRequested = typeName => EditStandardDefaultsRequested?.Invoke(typeName);
-        if (StartupTiming.IsEnabled)
+        if (startupMark != null)
         {
-            MarkFirstPopulatedFrame();
+            MarkFirstPopulatedFrame(startupMark);
         }
     }
 
+    /// <summary>True while the panel waits for its first frame with project elements, to report it; for tests.</summary>
+    internal bool IsWaitingForFirstPopulatedFrame { get; private set; }
+
     // Startup timing only: the first frame drawn after the tree shows the project's elements.
-    private void MarkFirstPopulatedFrame()
+    private void MarkFirstPopulatedFrame(Action<string> startupMark)
     {
         void OnLayoutUpdated(object? sender, EventArgs e)
         {
@@ -150,9 +158,11 @@ public sealed class AvaloniaElementTreeView : IElementTreeView
                 return;
             }
             _tree.LayoutUpdated -= OnLayoutUpdated;
-            topLevel.RequestAnimationFrame(_ => StartupTiming.Mark("Project tree: first populated frame"));
+            IsWaitingForFirstPopulatedFrame = false;
+            topLevel.RequestAnimationFrame(_ => startupMark("Project tree: first populated frame"));
         }
         _tree.LayoutUpdated += OnLayoutUpdated;
+        IsWaitingForFirstPopulatedFrame = true;
     }
 
     /// <summary>True once a root folder has children: the root folders exist before a project loads, and its elements fill them.</summary>

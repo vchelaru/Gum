@@ -69,6 +69,9 @@ public class FontFileGeneratorSelector : IFontFileGenerator
     /// <inheritdoc/>
     public bool RequiresSizeEstimation => CurrentGenerator.RequiresSizeEstimation;
 
+    /// <summary>Whether the KernSmith generator exists yet; it is created the first time it is selected.</summary>
+    public bool IsKernSmithGeneratorCreated => _kernSmithGenerator.IsValueCreated;
+
     private IFontFileGenerator CurrentGenerator =>
         FontGeneratorResolver.Resolve(_getGeneratorType(), _isBmFontSupported()) switch
         {

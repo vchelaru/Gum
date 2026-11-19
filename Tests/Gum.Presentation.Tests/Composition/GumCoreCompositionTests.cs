@@ -1,3 +1,4 @@
+using Gum.ProjectServices.FontGeneration;
 using Gum.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -58,6 +59,22 @@ public class GumCoreCompositionTests
         }
 
         failures.ShouldBeEmpty(string.Join(Environment.NewLine, failures));
+    }
+
+    [Fact]
+    public void FontFileGenerator_ResolvesWithoutCreatingTheKernSmithGenerator()
+    {
+        ServiceCollection services = new ServiceCollection();
+        services.AddGumCore();
+        AddHeadStubs(services);
+        services.AddOptions();
+        services.AddSingleton(typeof(ILogger<>), typeof(NullLogger<>));
+        using ServiceProvider provider = services.BuildServiceProvider();
+
+        IFontFileGenerator generator = provider.GetRequiredService<IFontFileGenerator>();
+
+        // KernSmith and its FreeType rasterizer load only when a font is generated with it.
+        generator.ShouldBeOfType<FontFileGeneratorSelector>().IsKernSmithGeneratorCreated.ShouldBeFalse();
     }
 
     [Fact]
