@@ -1018,6 +1018,101 @@ public class DialogBoxTests : BaseTestClass
     }
 
     [Fact]
+    public void Show_WithColorTagSpanningEveryPage_ShouldColorEveryPage()
+    {
+        var (dialogBox, visual) = CreateDialogBox(paginating: true);
+        dialogBox.LettersPerSecond = 0;
+
+        dialogBox.Show("[Color=Red]" + LongText + "[/Color]");
+
+        List<List<InlineVariable>> colorRunsPerPage = new List<List<InlineVariable>>();
+        List<string> pages = new List<string>();
+        while (true)
+        {
+            Text text = (Text)visual.TextInstance.RenderableComponent!;
+            pages.Add(text.RawText ?? string.Empty);
+            colorRunsPerPage.Add(text.InlineVariables.FindAll(v => v.VariableName == "Color"));
+            if (dialogBox.PagesRemaining == 0)
+            {
+                break;
+            }
+            visual.CallClick();
+        }
+
+        pages.Count.ShouldBeGreaterThan(2, "sanity: a middle page must hold neither the open nor the close tag");
+        for (int i = 0; i < pages.Count; i++)
+        {
+            int visibleLength = pages[i].TrimEnd('\n').Length;
+            colorRunsPerPage[i].Exists(v => v.StartIndex == 0 && v.CharacterCount >= visibleLength)
+                .ShouldBeTrue($"Because page {i} (\"{pages[i].Replace("\n", "|")}\", {visibleLength} letters) is inside the Color tag, so all of it is red. Color runs: " +
+                    string.Join(", ", colorRunsPerPage[i].ConvertAll(v => $"{v.StartIndex}+{v.CharacterCount}")));
+        }
+    }
+
+    [Fact]
+    public void Show_Paginated_ShouldStyleEveryLetterAsTheUnpagedTextDoes()
+    {
+        // Nested tags that span pages, a tag closing mid-page, and a valueless [Color] (which styles nothing, #8313).
+        // Font tags are left out: with no font loaded their runs all read "BitmapFont=", so they compare nothing.
+        string markup =
+            "[Color=Red]This is sentence one of a fairly long passage. " +
+            "[Alpha=100]This is sentence two which keeps going on and on. " +
+            "Sentence three adds [Color]even[/Color] more text to push past the height.[/Alpha] " +
+            "Sentence four ensures we definitely overflow the visible area.[/Color] " +
+            "And sentence five is here to be [Color=Blue]very[/Color] sure of pagination.";
+
+        var (unpagedBox, unpagedVisual) = CreateDialogBox();
+        unpagedBox.LettersPerSecond = 0;
+        unpagedBox.Show(markup);
+        Text unpagedText = (Text)unpagedVisual.TextInstance.RenderableComponent!;
+        List<string> expectedStyles = StylesPerVisibleLetter(unpagedText.RawText, unpagedText.InlineVariables);
+
+        var (dialogBox, visual) = CreateDialogBox(paginating: true);
+        dialogBox.LettersPerSecond = 0;
+        dialogBox.Show(markup);
+        List<string> actualStyles = new List<string>();
+        int pageCount = 0;
+        while (true)
+        {
+            Text text = (Text)visual.TextInstance.RenderableComponent!;
+            actualStyles.AddRange(StylesPerVisibleLetter(text.RawText, text.InlineVariables));
+            pageCount++;
+            if (dialogBox.PagesRemaining == 0)
+            {
+                break;
+            }
+            visual.CallClick();
+        }
+
+        pageCount.ShouldBeGreaterThan(2, "sanity: the tags must span page breaks");
+        actualStyles.Count.ShouldBe(expectedStyles.Count);
+        for (int i = 0; i < expectedStyles.Count; i++)
+        {
+            actualStyles[i].ShouldBe(expectedStyles[i], $"letter {i}");
+        }
+    }
+
+    // One entry per non-whitespace letter: the letter and every inline variable covering it.
+    static List<string> StylesPerVisibleLetter(string? rawText, List<InlineVariable> inlineVariables)
+    {
+        List<string> result = new List<string>();
+        string text = rawText ?? string.Empty;
+        for (int i = 0; i < text.Length; i++)
+        {
+            if (char.IsWhiteSpace(text[i]))
+            {
+                continue;
+            }
+            List<string> styles = inlineVariables
+                .FindAll(v => i >= v.StartIndex && i < v.StartIndex + v.CharacterCount)
+                .ConvertAll(v => $"{v.VariableName}={v.Value}");
+            styles.Sort(System.StringComparer.Ordinal);
+            result.Add(text[i] + ": " + string.Join(", ", styles));
+        }
+        return result;
+    }
+
+    [Fact]
     public void Show_WithTranslationThatOverflowsThePage_ShouldSplitIntoMorePages()
     {
         WithLocalization(CreateLocalization("Greeting", LongText), () =>
