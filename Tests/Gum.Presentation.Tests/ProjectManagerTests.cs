@@ -540,9 +540,9 @@ public class ProjectManagerTests : BaseTestClass
     }
 
     [Fact]
-    public void CreateBlankProject_StampsVersionEight()
+    public void CreateBlankProject_StampsVersionNine()
     {
-        _projectManager.CreateBlankProject().Version.ShouldBe(8);
+        _projectManager.CreateBlankProject().Version.ShouldBe(9);
     }
 
     // Saves a minimal-but-loadable project to a fresh temp file and returns its path. Used by the

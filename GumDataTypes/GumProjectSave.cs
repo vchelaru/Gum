@@ -186,6 +186,15 @@ public class GumProjectSave
         /// the variable into the older one, whose pinned runtime lacks the property.
         /// </summary>
         RaiseChildrenEventsExpansion = 8,
+
+        /// <summary>
+        /// Text recognizes the built-in BBCode effect tags (<c>[Wave]</c>, <c>[Shake]</c>, <c>[Tornado]</c>,
+        /// <c>[Fade]</c>, <c>[Rainbow]</c>, <c>[Pulse]</c>, #8310). Files saved at this version use the same XML
+        /// format as <see cref="RaiseChildrenEventsExpansion"/>; the bump exists because those tags were literal
+        /// text before, so text in an older project that happens to contain them keeps drawing them as written.
+        /// See <see cref="GumProjectSave.SupportsBbCodeTextEffects"/>.
+        /// </summary>
+        BbCodeTextEffects = 9,
     }
 
     /// <summary>
@@ -202,7 +211,7 @@ public class GumProjectSave
     /// explicitly stamp this version. Marking them at the native version is honest — the project
     /// genuinely uses those features — and lets the gate show those variables immediately.
     /// </remarks>
-    public const int NativeVersion = (int)GumxVersions.RaiseChildrenEventsExpansion;
+    public const int NativeVersion = (int)GumxVersions.BbCodeTextEffects;
 
     #region Fields
 
@@ -212,6 +221,12 @@ public class GumProjectSave
     /// their already-baked .fnt files were shipped under.
     /// </summary>
     public bool UsesPathHashedFontCacheNames => Version >= (int)GumxVersions.FontCachePathHash;
+
+    /// <summary>
+    /// Whether Text recognizes the built-in BBCode effect tags such as <c>[Wave]</c> (#8310). Projects below
+    /// <see cref="GumxVersions.BbCodeTextEffects"/> keep drawing those tags as literal text.
+    /// </summary>
+    internal bool SupportsBbCodeTextEffects => Version >= (int)GumxVersions.BbCodeTextEffects;
 
     public const string ScreenExtension = "gusx";
     public const string ComponentExtension = "gucx";

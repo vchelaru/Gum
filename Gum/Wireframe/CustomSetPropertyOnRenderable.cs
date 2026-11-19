@@ -1184,6 +1184,8 @@ public partial class CustomSetPropertyOnRenderable
         public string? Markup;
         public string? StrippedText;
         public HashSet<string> KnownTagsSnapshot = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        // Effect tags are known only for some project versions, so a parse is stale when that changes.
+        public bool AreEffectsEnabled;
         public string? FontName;
         public float FontSize;
         public int OutlineThickness;
@@ -1267,7 +1269,8 @@ public partial class CustomSetPropertyOnRenderable
             record.Markup != markup ||
             textRenderable.StoredMarkupText != markup ||
             textRenderable.RawText != record.StrippedText ||
-            !record.KnownTagsSnapshot.SetEquals(Tags))
+            !record.KnownTagsSnapshot.SetEquals(Tags) ||
+            record.AreEffectsEnabled != BbCodeTextEffect.AreEnabled)
         {
             return false;
         }
@@ -1288,6 +1291,7 @@ public partial class CustomSetPropertyOnRenderable
         record.StrippedText = asText.RawText;
         record.KnownTagsSnapshot.Clear();
         record.KnownTagsSnapshot.UnionWith(Tags);
+        record.AreEffectsEnabled = BbCodeTextEffect.AreEnabled;
         UpdateRecordFromOwner(record, graphicalUiElement, write: true);
     }
 
@@ -2082,6 +2086,35 @@ public partial class CustomSetPropertyOnRenderable
 
                     // we apply the inline ourselves
                     shouldApply = false;
+                    break;
+                default:
+                    {
+                        // A built-in effect ([Wave], [Rainbow], ...) rides the per-letter [Custom] path, which every
+                        // renderer evaluates on each draw, with the effect in place of a named function.
+                        BbCodeTextEffect? effect = BbCodeTextEffect.Create(canonicalName, item.Open.Argument);
+                        if (effect != null)
+                        {
+                            int startStripped = item.Open.StartStrippedIndex;
+                            int length = item.Close.StartStrippedIndex - startStripped;
+                            effect.SpanStart = startStripped;
+                            string substring = strippedText.Substring(startStripped, length);
+                            for (int i = 0; i < length; i++)
+                            {
+                                asText.InlineVariables.Add(new InlineVariable
+                                {
+                                    CharacterCount = 1,
+                                    StartIndex = startStripped + i,
+                                    VariableName = "Custom",
+                                    Value = new ParameterizedLetterCustomizationCall
+                                    {
+                                        BuiltInEffect = effect,
+                                        CharacterIndex = startStripped + i,
+                                        TextBlock = substring
+                                    }
+                                });
+                            }
+                        }
+                    }
                     break;
                     // Font / FontSize / OutlineThickness / IsBold / IsItalic / HasDropshadow family swaps
                     // are handled below in ApplyFontVariables (stack model), not here.

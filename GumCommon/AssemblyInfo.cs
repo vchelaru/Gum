@@ -5,6 +5,7 @@ using System.Runtime.CompilerServices;
 [assembly: InternalsVisibleTo("MonoGameGum.TestsCommon")]
 [assembly: InternalsVisibleTo("RaylibGum.Tests")]
 [assembly: InternalsVisibleTo("SkiaGum.Tests")]
+[assembly: InternalsVisibleTo("SkiaGum.GpuTests")]
 [assembly: InternalsVisibleTo("Gum.Bundle.Tests")]
 [assembly: InternalsVisibleTo("Gum.Avalonia.Tests")]
 // Gum.Expressions shares the int-range guard (ElementSaveExtensions.IsInIntRange) with its CastTo.

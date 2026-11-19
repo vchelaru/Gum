@@ -906,6 +906,7 @@ public class SpriteRenderer
 
         if (DrawObserver != null)
         {
+            DrawColorObserver?.Invoke(color);
             DrawObserver(position, scale, sourceRectangle);
             return;
         }
@@ -925,6 +926,9 @@ public class SpriteRenderer
     /// draw instead of sending it to the SpriteBatch, which needs a GraphicsDevice.
     /// </summary>
     internal Action<Vector2, Vector2, Rectangle?>? DrawObserver { get; set; }
+
+    /// <summary>Tests set this alongside <see cref="DrawObserver"/> to receive each observed draw's color.</summary>
+    internal Action<Color>? DrawColorObserver { get; set; }
 
 
     internal void ClearPerformanceRecordingVariables()

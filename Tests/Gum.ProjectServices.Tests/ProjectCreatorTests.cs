@@ -178,14 +178,14 @@ public class ProjectCreatorTests : IDisposable
     }
 
     [Fact]
-    public void Create_ShouldStampVersionEight()
+    public void Create_ShouldStampVersionNine()
     {
         string filePath = Path.Combine(_tempDirectory, "TestProject.gumx");
 
         GumProjectSave project = _sut.Create(filePath);
 
-        project.Version.ShouldBe(8);
-        File.ReadAllText(filePath).ShouldContain("<Version>8</Version>");
+        project.Version.ShouldBe(9);
+        File.ReadAllText(filePath).ShouldContain("<Version>9</Version>");
     }
 
     [Fact]

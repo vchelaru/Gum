@@ -83,6 +83,9 @@ public class ParameterizedLetterCustomizationCall
     public int CharacterIndex { get; set; }
 
     public string TextBlock { get; set; } = string.Empty;
+
+    /// <summary>A built-in effect (<c>[Wave]</c>, <c>[Rainbow]</c>, ...) applied to this letter instead of a named function.</summary>
+    internal Gum.Wireframe.BbCodeTextEffect? BuiltInEffect { get; set; }
 }
 
 #endregion
@@ -1201,7 +1204,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
             // vertical alignment above was computed from the full block so the revealed letters stay in
             // their final positions (typewriter reveal). Null MaxLettersToShow returns the full block.
             var paintBlock = GetPaintTextBlock(textBlock);
-            _blobCache.BeginFrame(paintBlock);
+            _blobCache.BeginFrame(paintBlock, _effectLetters);
 
             // Drop shadow and Blend are canvas effects (not RichTextKit Style properties): paint the
             // text into an offscreen layer whose paint carries the ImageFilter (shadow) and/or
@@ -1415,6 +1418,10 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
     private bool _hasHeightRun;
     // True when a [Custom] tag is present, set by ParseMarkup. Its callbacks run on every draw (#8308).
     private bool _hasCustomRun;
+
+    // Code-point index in _layoutText -> the built-in effect letter there ([Wave], [Rainbow], ...), or null when the
+    // text has none. The blob cache applies them at draw time from each glyph's laid-out position.
+    private Dictionary<int, ParameterizedLetterCustomizationCall>? _effectLetters;
     // The styled runs the cached block was laid out from, kept when the text has a [Custom] run so a draw can
     // tell whether the callbacks' output changed.
     private readonly List<StyledTextRun> _customRunsAtLayout = new();
@@ -2091,6 +2098,12 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
         public SKPoint PaintOffset { get; private set; }
         public SKMatrix Matrix { get; private set; }
 
+        /// <summary>The letter's code-point index in the block that laid it out.</summary>
+        public int Start { get; private set; }
+
+        /// <summary>The letter's distance from the start of its line, which built-in effects phase by.</summary>
+        public float LineX { get; private set; }
+
         public TransformedLetter(TextBlock block)
         {
             Block = block;
@@ -2106,12 +2119,19 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
             SKPoint blockGlyph = Block.FontRuns[0].GlyphPositions[0];
             PaintOffset = new SKPoint(glyph.X - blockGlyph.X, glyph.Y - blockGlyph.Y);
             Matrix = transform.GetDrawMatrix(cell, glyph.Y);
+            Start = fontRun.Start;
+            LineX = glyph.X - GetLineStartX(fontRun.Line);
         }
     }
 
     // The scaled or rotated letters of each block BuildTextBlockFromRuns made. The block lays them out invisibly so
     // layout is unchanged. Keyed by block so the cached block and a MaxLettersToShow reveal block each carry their own.
     private static readonly System.Runtime.CompilerServices.ConditionalWeakTable<TextBlock, List<TransformedLetter>> _transformedLetters = new();
+
+    // Where a line's first run starts, so a letter's x along the line leaves out the horizontal alignment, as
+    // MonoGame and raylib measure it.
+    private static float GetLineStartX(TextLine? line) =>
+        line != null && line.Runs.Count > 0 ? line.Runs[0].XCoord : 0;
 
     // The cached block's shaped runs are built into text blobs the second frame the block is painted and drawn
     // directly while the block is unchanged; text that changes every frame paints through RichTextKit and never
@@ -2150,6 +2170,9 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
             public SKTypeface Typeface;
             public float FontSize;
             public SKFontEdging Edging;
+            // The built-in effect drawn on this one-glyph run, and the glyph's distance from the start of its line.
+            public ParameterizedLetterCustomizationCall? Effect;
+            public float LetterX;
         }
 
         private struct BlobSegment
@@ -2159,6 +2182,9 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
             public SKPoint Offset;
             public int RunStart;
             public int RunCount;
+            // A scaled or rotated letter's built-in effect, which moves the letter before its matrix applies.
+            public ParameterizedLetterCustomizationCall? Effect;
+            public float LetterX;
         }
 
         private readonly List<BlobRun> _runs = new();
@@ -2172,6 +2198,10 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
         [ThreadStatic] private static SKFont? _font;
 
         public TextBlock? Block { get; private set; }
+
+        private Dictionary<int, ParameterizedLetterCustomizationCall>? _effects;
+        // The effect clock, read once per frame so every letter of a text moves together.
+        private double _effectTime;
 
         public void Drop()
         {
@@ -2193,19 +2223,25 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
         /// Called once per frame before the block's passes paint. The first frame of a block paints through
         /// RichTextKit, so text that changes every frame never pays for building blobs it would not draw again (#7818).
         /// </summary>
-        public void BeginFrame(TextBlock block)
+        public void BeginFrame(TextBlock block, Dictionary<int, ParameterizedLetterCustomizationCall>? effects)
         {
-            if (!ReferenceEquals(Block, block))
+            if (!ReferenceEquals(Block, block) || !ReferenceEquals(_effects, effects))
             {
                 Drop();
                 Block = block;
+                _effects = effects;
                 // RichTextKit paints a whole block with one edging, so a block with an unsmoothed run draws its
-                // blobs from the first frame (#8344).
-                _isFirstFrame = !HasUnsmoothedRun(block);
+                // blobs from the first frame (#8344). Built-in effects are applied only to blobs, so a block with
+                // effects draws them from the first frame too.
+                _isFirstFrame = effects == null && !HasUnsmoothedRun(block);
             }
             else
             {
                 _isFirstFrame = false;
+            }
+            if (effects != null)
+            {
+                _effectTime = Gum.Wireframe.BbCodeTextEffect.TimeSeconds();
             }
         }
 
@@ -2261,6 +2297,11 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
                 BlobRun run = _runs[i];
                 SKRect runBounds = run.Bounds;
                 runBounds.Offset(0, run.VerticalOffset);
+                if (run.Effect != null)
+                {
+                    float reach = run.Effect.BuiltInEffect!.MaxOffset;
+                    runBounds.Inflate(reach, reach);
+                }
                 IStyle style = run.Style;
                 if (style.HaloColor != SKColor.Empty && style.HaloWidth > 0)
                 {
@@ -2299,7 +2340,9 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
             for (int i = 0; i < _runs.Count; i++)
             {
                 IStyle style = _runs[i].Style;
-                if (style.HaloColor != SKColor.Empty || style.TextColor != color || _runs[i].Edging != edging)
+                // The batch draws with one color, so a letter an effect recolors draws run by run instead.
+                if (style.HaloColor != SKColor.Empty || style.TextColor != color || _runs[i].Edging != edging
+                    || _runs[i].Effect?.BuiltInEffect!.ChangesColor == true)
                 {
                     return false;
                 }
@@ -2309,6 +2352,12 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
             for (int i = 0; i < _runs.Count; i++)
             {
                 BlobRun run = _runs[i];
+                float dx = 0;
+                float dy = 0;
+                if (run.Effect != null)
+                {
+                    run.Effect.BuiltInEffect!.AddOffset(_effectTime, run.LetterX, run.Effect.CharacterIndex, ref dx, ref dy);
+                }
                 batch.Add(new RenderingLibrary.Graphics.TextBlobBatch.Item
                 {
                     Blob = run.Blob,
@@ -2316,8 +2365,8 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
                     Positions = run.Positions,
                     Typeface = run.Typeface,
                     FontSize = run.FontSize,
-                    X = x,
-                    Y = y + run.VerticalOffset,
+                    X = x + dx,
+                    Y = y + dy + run.VerticalOffset,
                 });
             }
             return true;
@@ -2328,7 +2377,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
         {
             for (int i = 0; i < _runs.Count; i++)
             {
-                DrawRun(canvas, _runs[i], null, x, y);
+                DrawRunWithEffect(canvas, _runs[i], null, x, y);
             }
         }
 
@@ -2359,13 +2408,31 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
                 if (segment.HasMatrix)
                 {
                     canvas.Save();
+                    if (segment.Effect != null)
+                    {
+                        // The effect moves the letter in the text's own space, before its scale or rotation.
+                        float dx = 0;
+                        float dy = 0;
+                        segment.Effect.BuiltInEffect!.AddOffset(_effectTime, segment.LetterX, segment.Effect.CharacterIndex, ref dx, ref dy);
+                        canvas.Translate(dx, dy);
+                    }
                     canvas.Concat(segment.Matrix);
                     canvas.Translate(segment.Offset.X, segment.Offset.Y);
                 }
                 int end = segment.RunStart + segment.RunCount;
                 for (int i = segment.RunStart; i < end; i++)
                 {
-                    DrawRun(canvas, _runs[i], configure, 0, 0);
+                    if (segment.Effect != null)
+                    {
+                        SKColor text = _runs[i].Style.TextColor;
+                        SKColor halo = _runs[i].Style.HaloColor;
+                        ApplyEffectColor(segment.Effect, segment.LetterX, ref text, ref halo);
+                        DrawRun(canvas, _runs[i], configure, 0, 0, text, halo);
+                    }
+                    else
+                    {
+                        DrawRunWithEffect(canvas, _runs[i], configure, 0, 0);
+                    }
                 }
                 if (segment.HasMatrix)
                 {
@@ -2384,7 +2451,40 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
         private SKColor _haloColor;
         private float _haloWidth;
 
-        private void DrawRun(SKCanvas canvas, BlobRun run, Action<SKPaint, IStyle, bool>? configure, float x, float y)
+        /// <summary>Draws <paramref name="run"/>, moved and recolored by its built-in effect if it has one.</summary>
+        private void DrawRunWithEffect(SKCanvas canvas, BlobRun run, Action<SKPaint, IStyle, bool>? configure, float x, float y)
+        {
+            SKColor text = run.Style.TextColor;
+            SKColor halo = run.Style.HaloColor;
+            if (run.Effect != null)
+            {
+                run.Effect.BuiltInEffect!.AddOffset(_effectTime, run.LetterX, run.Effect.CharacterIndex, ref x, ref y);
+                ApplyEffectColor(run.Effect, run.LetterX, ref text, ref halo);
+            }
+            DrawRun(canvas, run, configure, x, y, text, halo);
+        }
+
+        private void ApplyEffectColor(ParameterizedLetterCustomizationCall call, float letterX, ref SKColor text, ref SKColor halo)
+        {
+            Gum.Wireframe.BbCodeTextEffect effect = call.BuiltInEffect!;
+            // A scaled or rotated letter is laid out invisibly in the main block and drawn by its own segment, so
+            // a letter with no alpha stays invisible.
+            if (!effect.ChangesColor || text.Alpha == 0)
+            {
+                return;
+            }
+            byte red = text.Red, green = text.Green, blue = text.Blue, alpha = text.Alpha;
+            effect.ApplyColor(_effectTime, letterX, call.CharacterIndex, ref red, ref green, ref blue, ref alpha);
+            if (halo != SKColor.Empty)
+            {
+                // The outline fades with the letter, as the outline baked into a MonoGame font does.
+                halo = halo.WithAlpha((byte)System.Math.Round(halo.Alpha * (alpha / (double)text.Alpha)));
+            }
+            text = new SKColor(red, green, blue, alpha);
+        }
+
+        private void DrawRun(SKCanvas canvas, BlobRun run, Action<SKPaint, IStyle, bool>? configure, float x, float y,
+            SKColor textColor, SKColor haloColor)
         {
             IStyle style = run.Style;
             bool hasHalo = style.HaloColor != SKColor.Empty;
@@ -2403,10 +2503,11 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
                     configured.Reset();
                     _isHaloKnown = false;
                 }
-                fill.Color = style.TextColor;
+                fill.Color = textColor;
                 if (hasHalo)
                 {
                     SetHaloStroke(configured, style);
+                    configured.Color = haloColor;
                 }
                 configure(fill, style, false);
                 if (hasHalo)
@@ -2426,15 +2527,15 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
                 if (!_isHaloKnown)
                 {
                     SetHaloStroke(halo, style);
-                    _haloColor = style.HaloColor;
+                    halo.Color = _haloColor = haloColor;
                     _haloWidth = style.HaloWidth;
                     _isHaloKnown = true;
                 }
                 else
                 {
-                    if (_haloColor != style.HaloColor)
+                    if (_haloColor != haloColor)
                     {
-                        halo.Color = _haloColor = style.HaloColor;
+                        halo.Color = _haloColor = haloColor;
                     }
                     if (_haloWidth != style.HaloWidth)
                     {
@@ -2443,9 +2544,9 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
                 }
                 canvas.DrawText(run.Blob, x, y + run.VerticalOffset, halo);
             }
-            if (!_isFillKnown || _fillColor != style.TextColor)
+            if (!_isFillKnown || _fillColor != textColor)
             {
-                fill.Color = _fillColor = style.TextColor;
+                fill.Color = _fillColor = textColor;
                 _isFillKnown = true;
             }
             canvas.DrawText(run.Blob, x, y + run.VerticalOffset, fill);
@@ -2516,12 +2617,58 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
                 foreach (TransformedLetter letter in letters)
                 {
                     AddSegment(letter.Block, hasMatrix: true, letter.Matrix, letter.PaintOffset, options);
+                    if (_effects != null && _effects.TryGetValue(letter.Start, out ParameterizedLetterCustomizationCall? letterEffect))
+                    {
+                        BlobSegment added = _segments[_segments.Count - 1];
+                        added.Effect = letterEffect;
+                        added.LetterX = letter.LineX;
+                        _segments[_segments.Count - 1] = added;
+                    }
                     if (_isUnsupported)
                     {
                         break;
                     }
                 }
             }
+        }
+
+        private bool HasEffectGlyph(FontRun run)
+        {
+            for (int g = 0; g < run.Clusters.Length; g++)
+            {
+                if (_effects!.ContainsKey(run.Clusters[g]))
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        private void AddBlobRun(SKTextBlobBuilder builder, SKFont font, FontRun run, int glyphStart, int glyphCount, IStyle style,
+            float verticalOffset, ParameterizedLetterCustomizationCall? effect, float letterX)
+        {
+            SKPositionedRunBuffer buffer = builder.AllocatePositionedRun(font, glyphCount);
+            buffer.SetGlyphs(run.Glyphs.AsSpan().Slice(glyphStart, glyphCount));
+            buffer.SetPositions(run.GlyphPositions.AsSpan().Slice(glyphStart, glyphCount));
+            SKTextBlob? blob = builder.Build();
+            if (blob == null)
+            {
+                return;
+            }
+            _runs.Add(new BlobRun
+            {
+                Blob = blob,
+                Style = style,
+                VerticalOffset = verticalOffset,
+                Bounds = blob.Bounds,
+                Glyphs = run.Glyphs.AsSpan().Slice(glyphStart, glyphCount).ToArray(),
+                Positions = run.GlyphPositions.AsSpan().Slice(glyphStart, glyphCount).ToArray(),
+                Typeface = run.Typeface,
+                FontSize = font.Size,
+                Edging = font.Edging,
+                Effect = effect,
+                LetterX = letterX,
+            });
         }
 
         private void AddSegment(TextBlock block, bool hasMatrix, SKMatrix matrix, SKPoint offset, TextPaintOptions options)
@@ -2531,6 +2678,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
             SKFont font = _font ??= new SKFont();
             foreach (TextLine line in block.Lines)
             {
+                float lineStartX = GetLineStartX(line);
                 foreach (FontRun run in line.Runs)
                 {
                     if (run.RunKind == FontRunKind.TrailingWhitespace)
@@ -2568,26 +2716,20 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
                     font.Edging = style is UnsmoothedStyle ? SKFontEdging.Alias : options.Edging;
                     font.Subpixel = options.SubpixelPositioning;
 
-                    SKPositionedRunBuffer buffer = builder.AllocatePositionedRun(font, run.Glyphs.Length);
-                    buffer.SetGlyphs(run.Glyphs.AsSpan());
-                    buffer.SetPositions(run.GlyphPositions.AsSpan());
-                    SKTextBlob? blob = builder.Build();
-                    if (blob == null)
+                    if (!hasMatrix && _effects != null && HasEffectGlyph(run))
                     {
-                        continue;
+                        // Each glyph of a run holding effect letters is its own blob, so each one moves and
+                        // recolors on its own at draw time while the blobs stay cached.
+                        for (int g = 0; g < run.Glyphs.Length; g++)
+                        {
+                            _effects.TryGetValue(run.Clusters[g], out ParameterizedLetterCustomizationCall? effect);
+                            AddBlobRun(builder, font, run, g, 1, style, verticalOffset, effect, run.GlyphPositions[g].X - lineStartX);
+                        }
                     }
-                    _runs.Add(new BlobRun
+                    else
                     {
-                        Blob = blob,
-                        Style = style,
-                        VerticalOffset = verticalOffset,
-                        Bounds = blob.Bounds,
-                        Glyphs = run.Glyphs.AsSpan().ToArray(),
-                        Positions = run.GlyphPositions.AsSpan().ToArray(),
-                        Typeface = run.Typeface,
-                        FontSize = font.Size,
-                        Edging = font.Edging,
-                    });
+                        AddBlobRun(builder, font, run, 0, run.Glyphs.Length, style, verticalOffset, null, 0);
+                    }
                 }
             }
             _segments.Add(new BlobSegment
@@ -3283,7 +3425,12 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
                         useFontSmoothing = (bool)variable.Value;
                         break;
                     case "Custom":
-                        if (variable.Value is ParameterizedLetterCustomizationCall call)
+                        if (variable.Value is ParameterizedLetterCustomizationCall { BuiltInEffect: not null })
+                        {
+                            // A built-in effect is applied at draw time from the glyph's laid-out position
+                            // (BlockBlobCache), so it changes neither the style nor the layout.
+                        }
+                        else if (variable.Value is ParameterizedLetterCustomizationCall call)
                         {
                             var contextFunction = call.ContextFunction;
                             var function = call.Function;
@@ -3400,6 +3547,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
         _inlineVariables.Clear();
         _hasHeightRun = false;
         _hasCustomRun = false;
+        _effectLetters = null;
         _hasCustomRunsThisDraw = false;
         _customRunsAtLayout.Clear();
         ParsedBbCodeTags = null;
@@ -3436,7 +3584,15 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
         foreach (InlineVariable variable in _inlineVariables)
         {
             _hasHeightRun |= variable.VariableName == "FontSize" || variable.VariableName == "FontScale" || variable.VariableName == "Font";
-            _hasCustomRun |= variable.VariableName == "Custom";
+            if (variable.Value is ParameterizedLetterCustomizationCall { BuiltInEffect: not null } effectCall)
+            {
+                // Effects never change layout, so the blob cache draws them; they are not re-run as [Custom] letters.
+                (_effectLetters ??= new())[CountCodePoints(_layoutText!, variable.StartIndex)] = effectCall;
+            }
+            else
+            {
+                _hasCustomRun |= variable.VariableName == "Custom";
+            }
         }
     }
 
@@ -3519,6 +3675,38 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
                         ? Box(existing, outlineThickness)
                         : null;
                     break;
+                case "Wave":
+                case "Shake":
+                case "Tornado":
+                case "Fade":
+                case "Rainbow":
+                case "Pulse":
+                    {
+                        // One InlineVariable per letter, as for [Custom] and as on MonoGame/raylib.
+                        Gum.Wireframe.BbCodeTextEffect? effect = Gum.Wireframe.BbCodeTextEffect.Create(tag.Name, argument);
+                        int startStripped = tag.Open.StartStrippedIndex;
+                        int length = tag.Close.StartStrippedIndex - startStripped;
+                        if (effect != null && !string.IsNullOrEmpty(_layoutText) && length > 0 && startStripped + length <= _layoutText.Length)
+                        {
+                            effect.SpanStart = startStripped;
+                            string taggedSubstring = _layoutText.Substring(startStripped, length);
+                            for (int i = 0; i < length; i++)
+                            {
+                                InlineVariable letterVariable = MarkupBuffers.GetInlineVariable(_inlineVariables.Count);
+                                letterVariable.VariableName = "Custom";
+                                letterVariable.StartIndex = startStripped + i;
+                                letterVariable.CharacterCount = 1;
+                                letterVariable.Value = new ParameterizedLetterCustomizationCall
+                                {
+                                    BuiltInEffect = effect,
+                                    CharacterIndex = startStripped + i,
+                                    TextBlock = taggedSubstring,
+                                };
+                                _inlineVariables.Add(letterVariable);
+                            }
+                        }
+                    }
+                    continue;
                 case "Custom":
                     // A [Custom=Name] callback applies per letter (issue #3692), so -- unlike every other
                     // tag above, which adds a single InlineVariable spanning the whole tagged range --

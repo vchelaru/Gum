@@ -87,6 +87,9 @@ public class ParameterizedLetterCustomizationCall
     public int CharacterIndex { get; set; }
 
     public string TextBlock { get; set; } = string.Empty;
+
+    /// <summary>A built-in effect (<c>[Wave]</c>, <c>[Rainbow]</c>, ...) applied to this letter instead of a named function.</summary>
+    internal Gum.Wireframe.BbCodeTextEffect? BuiltInEffect { get; set; }
 }
 
 #endregion
@@ -1599,6 +1602,9 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
                     float scaleX = 1;
                     float scaleY = 1;
                     float rotationOffset = 0;
+                    // A built-in effect applies after every other variable, [Custom] functions included, and adds
+                    // to their offsets, as on Skia, where it is applied at draw time to the laid-out letter.
+                    ParameterizedLetterCustomizationCall? effectCall = null;
                     for (int variableIndex = 0; variableIndex < substring.Variables.Count; variableIndex++)
                     {
                         var variable = substring.Variables[variableIndex];
@@ -1630,7 +1636,11 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
                         {
                             var function = variable.Value as ParameterizedLetterCustomizationCall;
 
-                            if(function?.Function != null || function?.ContextFunction != null)
+                            if (function?.BuiltInEffect != null)
+                            {
+                                effectCall = function;
+                            }
+                            else if(function?.Function != null || function?.ContextFunction != null)
                             {
                                 LetterCustomization response;
                                 if(function.ContextFunction != null)
@@ -1699,6 +1709,13 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
                         }
                     }
 
+
+                    if (effectCall != null)
+                    {
+                        // The letter's distance from the start of its line along the text's own axis.
+                        float letterX = Vector2.Dot(startOfRun - startOfLine, xAxis);
+                        ApplyBuiltInEffect(effectCall, letterX, ref xOffset, ref yOffset, ref color);
+                    }
 
                     var baselineDifference = maxBaseline - (fontScale * effectiveFont.BaselineY);
                     // The baseline shift and the letter offsets are in the text's own space, so they turn with it.
@@ -1843,11 +1860,23 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
         return runFont.GetKerning(previous.Substring[previous.Substring.Length - 1], run.Substring[0]) * runScale;
     }
 
+    private static void ApplyBuiltInEffect(ParameterizedLetterCustomizationCall call, float letterX,
+        ref float xOffset, ref float yOffset, ref System.Drawing.Color color)
+    {
+        byte red = color.R, green = color.G, blue = color.B, alpha = color.A;
+        call.BuiltInEffect!.Apply(Gum.Wireframe.BbCodeTextEffect.TimeSeconds(), letterX, call.CharacterIndex,
+            ref xOffset, ref yOffset, ref red, ref green, ref blue, ref alpha);
+        color = System.Drawing.Color.FromArgb(alpha, red, green, blue);
+    }
+
     private static bool HasCustomVariable(List<InlineVariable> variables)
     {
         for (int i = 0; i < variables.Count; i++)
         {
-            if (variables[i].VariableName == "Custom")
+            // A built-in effect moves or recolors its letter but never changes the glyph, so the pair across its
+            // boundary still kerns. A [Custom] function may replace or scale the letter, so it does not.
+            if (variables[i].VariableName == "Custom"
+                && (variables[i].Value as ParameterizedLetterCustomizationCall)?.BuiltInEffect == null)
             {
                 return true;
             }

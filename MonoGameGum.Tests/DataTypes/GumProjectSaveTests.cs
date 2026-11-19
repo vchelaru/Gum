@@ -614,7 +614,7 @@ public class GumProjectSaveTests : BaseTestClass
     }
 
     [Fact]
-    public void NativeVersion_MatchesRaiseChildrenEventsExpansion()
+    public void NativeVersion_MatchesBbCodeTextEffects()
     {
         // The v5 slot is reserved for the Sprite/NineSlice ColorOperation variable (#4880). Files
         // saved at v5 use the same XML format as v4; the bump only changes the rejection ceiling and
@@ -626,7 +626,9 @@ public class GumProjectSaveTests : BaseTestClass
         ((int)GumProjectSave.GumxVersions.ShaderParametersExpansion).ShouldBe(7);
         // The v8 slot (#7412) reserves the RaiseChildrenEventsOutsideOfBounds variable; v7 had already shipped without it.
         ((int)GumProjectSave.GumxVersions.RaiseChildrenEventsExpansion).ShouldBe(8);
-        GumProjectSave.NativeVersion.ShouldBe((int)GumProjectSave.GumxVersions.RaiseChildrenEventsExpansion);
+        // The v9 slot (#8310) turns on the built-in BBCode effect tags, which were literal text before.
+        ((int)GumProjectSave.GumxVersions.BbCodeTextEffects).ShouldBe(9);
+        GumProjectSave.NativeVersion.ShouldBe((int)GumProjectSave.GumxVersions.BbCodeTextEffects);
     }
 
     [Fact]
