@@ -213,6 +213,15 @@ namespace Gum.DataTypes
             return null;
         }
 
+        public void Save(string fileName, bool useCompactFormat = false)
+        {
+            SaveAndGetBytes(fileName, useCompactFormat);
+        }
+
+        /// <summary>
+        /// Saves as <see cref="Save"/> does and returns the bytes written, so a caller that needs them
+        /// (the tool's file watch) does not open the file again.
+        /// </summary>
         // Gated because this file also compiles into GumDataTypesNet6.csproj (netstandard2.0),
         // which has no trim attributes.
 #if NET5_0_OR_GREATER
@@ -221,7 +230,7 @@ namespace Gum.DataTypes
         [UnconditionalSuppressMessage("AOT", "IL3050",
             Justification = "XmlSerializer falls back to reflection-only serialization when dynamic code is unsupported (Native AOT), so no code is generated at runtime; the IL2026 suppression above covers the trimming side.")]
 #endif
-        public void Save(string fileName, bool useCompactFormat = false)
+        public byte[] SaveAndGetBytes(string fileName, bool useCompactFormat = false)
         {
             // No content-sniffing between XML and JSON - the target file's own extension decides
             // the format, symmetric with ElementReference.DeserializeElement.
@@ -229,17 +238,13 @@ namespace Gum.DataTypes
             bool isJsonFormat = string.Equals(FileManager.GetExtension(fileName), jsonExtension, StringComparison.OrdinalIgnoreCase);
             if (isJsonFormat)
             {
-                GumJsonFileSerializer.WriteToFile(fileName, GumJsonFileSerializer.SerializeElement(this));
+                return GumJsonFileSerializer.WriteToFileAndGetBytes(fileName, GumJsonFileSerializer.SerializeElement(this));
             }
-            else if (useCompactFormat)
-            {
-                var serializer = GumFileSerializer.GetCompactSerializer(this.GetType());
-                FileManager.XmlSerialize(this, fileName, serializer);
-            }
-            else
-            {
-                FileManager.XmlSerialize(this.GetType(), this, fileName);
-            }
+
+            var serializer = useCompactFormat
+                ? GumFileSerializer.GetCompactSerializer(this.GetType())
+                : FileManager.GetXmlSerializer(this.GetType());
+            return FileManager.XmlSerializeAndGetBytes(this, fileName, serializer);
         }
 
 

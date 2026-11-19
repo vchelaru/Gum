@@ -21,5 +21,8 @@ public class NullFileWatchIgnoreList : IFileWatchIgnoreList
     public void RecordWrittenContent(FilePath filePath) { }
 
     /// <inheritdoc/>
+    public void RecordWrittenContent(FilePath filePath, byte[] writtenContent) { }
+
+    /// <inheritdoc/>
     public bool TryGetIgnoreFileChange(FilePath fileName) => false;
 }

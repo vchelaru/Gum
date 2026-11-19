@@ -1681,11 +1681,43 @@ namespace ToolsUtilities
 #endif
         public static void XmlSerialize(object objectToSerialize, string fileName, XmlSerializer serializer)
         {
+            XmlSerializeAndGetBytes(objectToSerialize, fileName, serializer);
+        }
+
+        /// <summary>
+        /// Writes <paramref name="objectToSerialize"/> to <paramref name="fileName"/> as
+        /// <see cref="XmlSerialize(object, string, XmlSerializer)"/> does and returns the bytes written,
+        /// so a caller can use them without opening the file again.
+        /// </summary>
+#if NET5_0_OR_GREATER
+        [RequiresUnreferencedCode(XmlSerializerTrimMessage)]
+#endif
+#if NET7_0_OR_GREATER
+        [RequiresDynamicCode(XmlSerializerAotMessage)]
+#endif
+        public static byte[] XmlSerializeAndGetBytes(object objectToSerialize, string fileName, XmlSerializer serializer)
+        {
+            byte[] bytes;
+            using (var memoryStream = new MemoryStream())
+            {
+                XmlWriterSettings settings = new XmlWriterSettings();
+                settings.Indent = true;
+                settings.Encoding = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false); // No BOM for web compatibility
+                using (var writer = XmlWriter.Create(memoryStream, settings))
+                {
+                    // for info on this, see
+                    // http://stackoverflow.com/questions/1127431/xmlserializer-giving-filenotfoundexception-at-constructor
+
+                    serializer.Serialize(writer, objectToSerialize, xmlNamespaces);
+                }
+                bytes = memoryStream.ToArray();
+            }
+
             // Make sure that the directory for the file exists
             string directory = FileManager.GetDirectory(fileName);
             if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
             {
-                Directory.CreateDirectory(FileManager.GetDirectory(fileName));
+                Directory.CreateDirectory(directory);
             }
 
             // for info on why we do this:
@@ -1697,17 +1729,10 @@ namespace ToolsUtilities
 
             using (var fs = System.IO.File.Open(fileName, FileMode.OpenOrCreate))
             {
-                XmlWriterSettings settings = new XmlWriterSettings();
-                settings.Indent = true;
-                settings.Encoding = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false); // No BOM for web compatibility
-                using (var writer = XmlWriter.Create(fs, settings))
-                {
-                    // for info on this, see
-                    // http://stackoverflow.com/questions/1127431/xmlserializer-giving-filenotfoundexception-at-constructor
-
-                    serializer.Serialize(writer, objectToSerialize, xmlNamespaces);
-                }
+                fs.Write(bytes, 0, bytes.Length);
             }
+
+            return bytes;
         }
 
 #if NET5_0_OR_GREATER

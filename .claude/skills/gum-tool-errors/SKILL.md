@@ -80,7 +80,7 @@ Do **not** rely on `ElementSelected` alone for error refresh after reload: the r
 
 ## Non-Obvious Behaviors
 
-**One check per notification**: a check walks the element's file references and reads the disk, so a notification triggers a check in only one plugin. A new refresh trigger for the selected element goes in `MainErrorsPlugin`; the tree picks up the result. The tree only checks where the Errors tab doesn't (states, categories, undo, behavior instances, all elements on project load).
+**One check per notification**: a check walks the element's file references and reads the disk, so a notification triggers a check in only one plugin. A new refresh trigger for the selected element goes in `MainErrorsPlugin`; the tree picks up the result. The tree only checks where the Errors tab doesn't (states, categories, undo, behavior instances, all elements on project load). The load-time check runs after the tree shows, a slice per UI-thread job (`DeferredProjectErrorCheck`), so the "!" icons fill in while the tree is usable.
 
 **Case-check listings are cached**: `HeadlessErrorChecker` keeps one `FileNameCaseChecker` for its lifetime. It re-reads a directory only when that directory's last-write time changes, so a new GUM0008 check doesn't need its own `FileNameCaseChecker`.
 

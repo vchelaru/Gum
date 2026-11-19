@@ -3,6 +3,7 @@ using Avalonia;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform;
+using Gum.ProjectServices.Screenshot;
 using Microsoft.Xna.Framework.Graphics;
 using XnaAndWinforms;
 
@@ -69,10 +70,7 @@ public sealed class AvaloniaRenderSurface : IDisposable
 
         if (forceOpaque)
         {
-            for (int i = 3; i < RawImageBuffer.Length; i += 4)
-            {
-                RawImageBuffer[i] = 255;
-            }
+            ScreenshotAlphaFlattener.FlattenToOpaque(RawImageBuffer);
         }
 
         using ILockedFramebuffer framebuffer = Bitmap.Lock();

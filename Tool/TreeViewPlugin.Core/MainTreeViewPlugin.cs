@@ -31,6 +31,7 @@ internal class MainTreeViewPlugin : PluginBase, IPriorityPlugin, IRecipient<Appl
     private readonly IErrorChecker _errorChecker;
     private readonly IProjectState _projectState;
     private readonly IRefreshCoalescer _elementImportRefreshCoalescer;
+    private readonly DeferredProjectErrorCheck _projectLoadErrorCheck;
 
     [ImportingConstructor]
     public MainTreeViewPlugin(
@@ -53,6 +54,7 @@ internal class MainTreeViewPlugin : PluginBase, IPriorityPlugin, IRecipient<Appl
 
         _errorChecker = errorChecker;
         _projectState = projectState;
+        _projectLoadErrorCheck = new DeferredProjectErrorCheck(errorChecker, projectState, dispatcher);
 
         // Forms import fires ElementImported once per element (issue #4231) - without coalescing,
         // a multi-element import triggers one full RefreshUi() + error re-check per element instead
@@ -220,10 +222,8 @@ internal class MainTreeViewPlugin : PluginBase, IPriorityPlugin, IRecipient<Appl
             _userProjectSettingsManager.Clear();
         }
         _treeViewStateService.LoadAndApplyState(_elementTreeViewManager.RootTreeNodes);
-        using (StartupTiming.Time("    MainTreeViewPlugin RefreshErrorIndicatorsForAllElements"))
-        {
-            RefreshErrorIndicatorsForAllElements();
-        }
+        // The icons fill in after the tree shows; checking every element first held the tree back.
+        _projectLoadErrorCheck.Start();
 
         // Repopulate the Standards chip palette for the newly-loaded project's standard types.
         _elementTreeViewManager.ApplyStandardsPaletteMode();

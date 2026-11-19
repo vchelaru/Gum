@@ -30,6 +30,30 @@ public class ScreenshotAlphaFlattenerTests
         });
     }
 
+    // The flattener runs on every opaque canvas frame, so it works a vector of pixels at a time;
+    // a buffer longer than any vector width with a leftover tail covers both paths.
+    [Theory]
+    [InlineData(1)]
+    [InlineData(37)]
+    [InlineData(1000)]
+    public void FlattenToOpaque_ManyPixels_SetsOnlyAlphaBytes(int pixelCount)
+    {
+        byte[] rgba = new byte[pixelCount * 4];
+        for (int i = 0; i < rgba.Length; i++)
+        {
+            rgba[i] = (byte)(i * 7 + 3);
+        }
+        byte[] expected = (byte[])rgba.Clone();
+        for (int i = 3; i < expected.Length; i += 4)
+        {
+            expected[i] = 255;
+        }
+
+        ScreenshotAlphaFlattener.FlattenToOpaque(rgba);
+
+        rgba.ShouldBe(expected);
+    }
+
     [Fact]
     public void FlattenToOpaque_WithEmptyBuffer_DoesNotThrow()
     {
