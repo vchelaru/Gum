@@ -448,8 +448,8 @@ public class FileCommands : IFileCommands
                         try
                         {
                             bool useCompact = _projectState.GumProjectSave?.Version >= (int)GumProjectSave.GumxVersions.AttributeVersion;
-                            elementSave.Save(fileName.FullPath, useCompact);
-                            _fileWatchIgnoreList.RecordWrittenContent(fileName);
+                            byte[] written = elementSave.SaveAndGetBytes(fileName.FullPath, useCompact);
+                            _fileWatchIgnoreList.RecordWrittenContent(fileName, written);
                             succeeded = true;
                             break;
                         }
@@ -661,8 +661,8 @@ public class FileCommands : IFileCommands
                         try
                         {
                             bool useCompact = _projectState.GumProjectSave?.Version >= (int)GumProjectSave.GumxVersions.AttributeVersion;
-                            behavior.Save(fileName, useCompact);
-                            _fileWatchIgnoreList.RecordWrittenContent(new FilePath(fileName));
+                            byte[] written = behavior.SaveAndGetBytes(fileName, useCompact);
+                            _fileWatchIgnoreList.RecordWrittenContent(new FilePath(fileName), written);
 
                             succeeded = true;
                             break;

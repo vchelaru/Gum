@@ -39,6 +39,11 @@ public class FileWatchIgnoreList : IFileWatchIgnoreList
         }
     }
 
+    public void RecordWrittenContent(FilePath filePath, byte[] writtenContent)
+    {
+        _writtenContentHashes[filePath] = Convert.ToHexString(SHA256.HashData(writtenContent));
+    }
+
     public bool TryGetIgnoreFileChange(FilePath fileName)
     {
         if (!_timedChangesToIgnore.TryGetValue(fileName, out DateTime timeToIgnoreUntil)

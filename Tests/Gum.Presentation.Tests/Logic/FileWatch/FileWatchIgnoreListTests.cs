@@ -108,6 +108,21 @@ public class FileWatchIgnoreListTests : IDisposable
     }
 
     [Fact]
+    public void RecordWrittenContent_WithTheBytes_IgnoresOnlyWhileTheFileHoldsThoseBytes()
+    {
+        FileWatchIgnoreList ignoreList = new FileWatchIgnoreList();
+        FilePath file = WriteFile("Button.gucx", "outside bytes");
+        ignoreList.IgnoreNextChangeUntil(file, DateTime.Now.AddMinutes(1));
+
+        // The record is the bytes the tool wrote, not whatever the file holds when it is recorded.
+        ignoreList.RecordWrittenContent(file, System.Text.Encoding.UTF8.GetBytes("tool bytes"));
+        ignoreList.TryGetIgnoreFileChange(file).ShouldBeFalse();
+
+        File.WriteAllText(file.FullPath, "tool bytes");
+        ignoreList.TryGetIgnoreFileChange(file).ShouldBeTrue();
+    }
+
+    [Fact]
     public void TryGetIgnoreFileChange_AfterTheWindow_IsFalseEvenWhenTheBytesMatch()
     {
         FileWatchIgnoreList ignoreList = new FileWatchIgnoreList();

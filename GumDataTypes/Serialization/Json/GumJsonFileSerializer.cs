@@ -69,12 +69,22 @@ public static class GumJsonFileSerializer
     /// </summary>
     public static void WriteToFile(string fileName, string json)
     {
+        WriteToFileAndGetBytes(fileName, json);
+    }
+
+    /// <summary>
+    /// Writes <paramref name="json"/> as <see cref="WriteToFile"/> does and returns the bytes written.
+    /// </summary>
+    public static byte[] WriteToFileAndGetBytes(string fileName, string json)
+    {
         string directory = Path.GetDirectoryName(fileName) ?? string.Empty;
         if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
         {
             Directory.CreateDirectory(directory);
         }
 
-        File.WriteAllText(fileName, json, new UTF8Encoding(encoderShouldEmitUTF8Identifier: false));
+        byte[] bytes = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false).GetBytes(json);
+        File.WriteAllBytes(fileName, bytes);
+        return bytes;
     }
 }
