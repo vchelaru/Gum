@@ -42,6 +42,13 @@ namespace RenderingLibrary.Graphics
         int? MaxLettersToShow { get; set; }
 
         /// <summary>
+        /// The number of letters the text displays, BBCode tags removed: the <see cref="MaxLettersToShow"/> at which
+        /// the whole text is revealed. The default is the <see cref="IText.RawText"/> length, for backends whose
+        /// RawText already holds the tag-stripped text.
+        /// </summary>
+        int DisplayedLetterCount => RawText?.Length ?? 0;
+
+        /// <summary>
         /// Maximum number of wrapped lines to render, or <c>null</c> to render all lines.
         /// Shadows the get-only <see cref="IWrappedText.MaxNumberOfLines"/> with a settable
         /// form — the concrete <c>Text</c> implementations expose both, and Forms controls

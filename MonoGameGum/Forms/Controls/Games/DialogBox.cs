@@ -508,7 +508,7 @@ public class DialogBox : FrameworkElement, IInputReceiver
 
         // The component translated the text and stripped its tags, so count what it holds rather than
         // the untranslated input: a translation can be longer or shorter than the key.
-        var strippedLength = CoreTextObject.RawText?.Length ?? 0;
+        var strippedLength = CoreTextObject.DisplayedLetterCount;
 
         var shouldPrintCharacterByCharacter = LettersPerSecond > 0 && !forceImmediatePrint;
         if(shouldPrintCharacterByCharacter)
@@ -571,7 +571,7 @@ public class DialogBox : FrameworkElement, IInputReceiver
 
         // Read the length every frame: the text can be replaced while typing (a language change
         // re-translates it), so a count stored in ShowInternal would go stale.
-        var targetLetterCount = CoreTextObject.RawText?.Length ?? 0;
+        var targetLetterCount = CoreTextObject.DisplayedLetterCount;
         var lettersToShow = (int)(typingElapsedSeconds * (LettersPerSecond ?? 0));
         if (lettersToShow >= targetLetterCount)
         {
@@ -609,69 +609,127 @@ public class DialogBox : FrameworkElement, IInputReceiver
         }
         else
         {
-            // To remove the tags, we must keep newlines in since since that's how the tags are removed...
-            var foundTagsWithNewlines = BbCodeParser.Parse(text, BbCodeParser.KnownTags);
-            // ...but when we add the tags back in, we do it without counting newlines, so we need to remove newlines for 
-            // the tags that are added back in:
+            // Tags are written back into each page by stripped index, which counts no newlines.
             var foundTagsWithoutNewlines = BbCodeParser.Parse(text.Replace("\n", ""), BbCodeParser.KnownTags);
-            var withRemovedTags = BbCodeParser.RemoveTags(text, foundTagsWithNewlines);
 
-            var unlimitedLines = new List<string>();
+            // The text is already translated, so it is set with TextNoTranslate: it must not be looked up again.
             var oldVerticalMode = this.TextComponent.TextOverflowVerticalMode;
-            this.TextComponent.TextOverflowVerticalMode = TextOverflowVerticalMode.SpillOver;
 
-            CoreTextObject.RawText = withRemovedTags;
-            CoreTextObject.UpdateLines(unlimitedLines);
+            List<string> allLines;
+            int plainLinesPerPage;
+            // The top of every line, and one past the last, as the Text draws the whole text. Null when no tag changes
+            // a line's size, so every page takes the box's plain line count.
+            float[]? lineTops = null;
+            float pageHeight = 0;
 
-            this.TextComponent.TextOverflowVerticalMode = oldVerticalMode;
+            if (!HasSizeChangingTag(foundTagsWithoutNewlines))
+            {
+                var withRemovedTags = BbCodeParser.RemoveTags(text, BbCodeParser.Parse(text, BbCodeParser.KnownTags));
 
-            // The text is already translated, so it must not be looked up again.
-            this.TextComponent.SetProperty("TextNoTranslate", withRemovedTags);
-            this.TextComponent.TextOverflowVerticalMode = oldVerticalMode;
+                allLines = new List<string>();
+                this.TextComponent.TextOverflowVerticalMode = TextOverflowVerticalMode.SpillOver;
+                CoreTextObject.RawText = withRemovedTags;
+                CoreTextObject.UpdateLines(allLines);
+                this.TextComponent.TextOverflowVerticalMode = oldVerticalMode;
 
-            var limitedLines = CoreTextObject.WrappedText;
+                this.TextComponent.SetProperty("TextNoTranslate", withRemovedTags);
+                plainLinesPerPage = CoreTextObject.WrappedText.Count;
+            }
+            else
+            {
+                // Every line of the whole text, wrapped and stacked with the sizes its runs draw at ([FontScale],
+                // [FontSize], [Font]...), measured once.
+                this.TextComponent.TextOverflowVerticalMode = TextOverflowVerticalMode.SpillOver;
+                this.TextComponent.SetProperty("TextNoTranslate", text);
+                allLines = new List<string>(CoreTextObject.WrappedText);
+                lineTops = new float[allLines.Count + 1];
+                for (int i = 0; i < lineTops.Length; i++)
+                {
+                    lineTops[i] = CoreTextObject.GetDrawnLineTop(i);
+                }
+                this.TextComponent.TextOverflowVerticalMode = oldVerticalMode;
 
-            if (unlimitedLines.Count == limitedLines.Count)
+                // The box's capacity in plain lines, measured on as many one-letter lines as the text has (the text
+                // itself can be shorter than the box), and the height those lines take: a page takes no more lines
+                // and no more height.
+                this.TextComponent.SetProperty("TextNoTranslate", string.Join("\n", Enumerable.Repeat("x", allLines.Count)));
+                plainLinesPerPage = CoreTextObject.WrappedText.Count;
+                pageHeight = CoreTextObject.GetDrawnLineTop(plainLinesPerPage);
+
+                // The Text holds the text again, not the measuring lines.
+                this.TextComponent.SetProperty("TextNoTranslate", text);
+            }
+
+            if (allLines.Count <= plainLinesPerPage
+                && (lineTops == null || lineTops[allLines.Count] <= pageHeight + .5f))
             {
                 // no need to break it up
                 return new string[] { text };
             }
-            else
+
+            var pages = new List<string>();
+            var pageLines = new List<string>();
+            var pageLineStarts = new List<int>();
+            int absoluteLineNumber = 0;
+            int strippedTextCount = 0;
+            while (absoluteLineNumber < allLines.Count)
             {
-                var pages = new List<string>();
-
-                var absoluteLineNumber = 0;
-
-                var currentPage = new StringBuilder();
-                currentPage.Clear();
-
-                var pageLines = new List<string>();
-                var pageLineStarts = new List<int>();
-                int strippedTextCount = 0;
-                while(absoluteLineNumber < unlimitedLines.Count)
+                // A page always holds at least one line, even one taller than the box.
+                int fittingCount = Math.Max(1, Math.Min(plainLinesPerPage, allLines.Count - absoluteLineNumber));
+                while (lineTops != null && fittingCount > 1
+                    && lineTops[absoluteLineNumber + fittingCount] - lineTops[absoluteLineNumber] > pageHeight + .5f)
                 {
-                    pageLines.Clear();
-                    pageLineStarts.Clear();
-
-                    for(int i = 0; i < limitedLines.Count && absoluteLineNumber < unlimitedLines.Count; i++)
-                    {
-                        var line = unlimitedLines[absoluteLineNumber] ?? string.Empty;
-                        pageLineStarts.Add(strippedTextCount);
-                        strippedTextCount += line.Length;
-                        pageLines.Add(line.EndsWith(" ") ? line.Substring(0, line.Length - 1) : line);
-                        absoluteLineNumber++;
-                    }
-
-                    // Tags are written back per page, not per line, so a tag spanning lines or pages styles every
-                    // character it covers (#8319).
-                    pages.Add(BbCodeParser.AddTags(pageLines, pageLineStarts, strippedTextCount, foundTagsWithoutNewlines) + "\n");
+                    fittingCount--;
                 }
 
-                return pages.ToArray();
+                strippedTextCount = FillPageLines(allLines, absoluteLineNumber, fittingCount, strippedTextCount, pageLines, pageLineStarts);
+                absoluteLineNumber += fittingCount;
+
+                // Tags are written back per page, not per line, so a tag spanning lines or pages styles every
+                // character it covers (#8319).
+                pages.Add(BbCodeParser.AddTags(pageLines, pageLineStarts, strippedTextCount, foundTagsWithoutNewlines) + "\n");
+            }
+
+            return pages.ToArray();
+        }
+    }
+
+    // Tags that never change a letter's size or a line's height. Any other tag ([FontScale], [FontSize], [Font],
+    // [IsBold], [IsItalic], [OutlineThickness], [LineHeightMultiplier], a [State] that may set any of them, [Custom])
+    // makes pagination measure the lines as drawn.
+    static readonly HashSet<string> SizeNeutralTags = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+    {
+        "Alpha", "Red", "Green", "Blue", "Color", "Link", "HasDropshadow", "UseFontSmoothing",
+    };
+
+    private static bool HasSizeChangingTag(List<FoundTag> tags)
+    {
+        foreach (var tag in tags)
+        {
+            if (!SizeNeutralTags.Contains(tag.Name))
+            {
+                return true;
             }
         }
+        return false;
+    }
 
-
+    // Fills the page's lines (a trailing space dropped) and the stripped index each starts at, and returns the
+    // stripped index just past the last line.
+    private static int FillPageLines(List<string> allLines, int firstLine, int count, int firstLineStart,
+        List<string> pageLines, List<int> pageLineStarts)
+    {
+        pageLines.Clear();
+        pageLineStarts.Clear();
+        int start = firstLineStart;
+        for (int i = 0; i < count; i++)
+        {
+            var line = allLines[firstLine + i] ?? string.Empty;
+            pageLineStarts.Add(start);
+            start += line.Length;
+            pageLines.Add(line.EndsWith(" ") ? line.Substring(0, line.Length - 1) : line);
+        }
+        return start;
     }
 
 #endregion
@@ -713,8 +771,8 @@ public class DialogBox : FrameworkElement, IInputReceiver
         //////////////////End Early Out///////////////////
         //var hasMoreToType = coreTextObject.MaxLettersToShow < currentPageText?.Length;
 
-        // Use the raw text since that has stripped out the tags
-        var hasMoreToType = CoreTextObject.MaxLettersToShow < (CoreTextObject.RawText?.Length ?? 0);
+        // Count displayed letters: tags are not letters
+        var hasMoreToType = CoreTextObject.MaxLettersToShow < CoreTextObject.DisplayedLetterCount;
         if (hasMoreToType)
         {
 #if FRB
@@ -728,7 +786,7 @@ public class DialogBox : FrameworkElement, IInputReceiver
                 continueIndicatorInstance.Visible = true;
             }
 
-            CoreTextObject.MaxLettersToShow = CoreTextObject.RawText?.Length ?? 0;
+            CoreTextObject.MaxLettersToShow = CoreTextObject.DisplayedLetterCount;
 
             FinishedTypingPage?.Invoke(this, EventArgs.Empty);
         }
