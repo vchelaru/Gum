@@ -169,6 +169,8 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
     {
         nameof(AfterRender), nameof(BeforeRender), nameof(CameraChanged), nameof(HandleWireframeResized),
         nameof(XnaInitialized), nameof(WireframePropertyChanged),
+        // A canvas refresh redraws the project; it follows every selection, and font generation asks for one.
+        nameof(WireframeRefreshed),
         nameof(ElementSelected), nameof(InstanceSelected), nameof(TreeNodeSelected), nameof(VariableSelected),
         nameof(BehaviorSelected), nameof(BehaviorReferenceSelected), nameof(BehaviorVariableSelected),
         nameof(ReactToStateSaveSelected), nameof(ReactToCustomStateSaveSelected),

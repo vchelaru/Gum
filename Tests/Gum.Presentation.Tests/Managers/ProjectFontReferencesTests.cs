@@ -135,6 +135,7 @@ public class ProjectFontReferencesTests
         Notification(m => m.BeforeRender()),
         Notification(m => m.AfterRender()),
         Notification(m => m.CameraChanged()),
+        Notification(m => m.WireframeRefreshed()),
         Notification(m => m.RefreshElementTreeView()),
         Notification(m => m.FocusSearch()),
     };
