@@ -278,8 +278,7 @@ public class EditCommands : IEditCommands
 
         using var undoLock = _undoManager.RequestLock();
 
-        oldCategory.States.Remove(stateToMove);
-        newCategory.States.Add(stateToMove);
+        ListMover.MoveBetween(oldCategory.States, newCategory.States, stateToMove);
 
         _guiCommands.RefreshStateTreeView();
         _selectedState.SelectedStateSave = stateToMove;
