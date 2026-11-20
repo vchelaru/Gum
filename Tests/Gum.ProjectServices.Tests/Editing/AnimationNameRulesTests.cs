@@ -12,7 +12,7 @@ public class AnimationNameRulesTests
     [InlineData("fadein", "already")]
     public void GetWhyInvalid_ExplainsTheProblem(string? name, string expectedInReason)
     {
-        AnimationNameRules.GetWhyInvalid(name, new[] { "FadeIn" }).ShouldContain(expectedInReason);
+        AnimationNameRules.GetWhyInvalid(name, new[] { "FadeIn" })!.ShouldContain(expectedInReason);
     }
 
     [Fact]

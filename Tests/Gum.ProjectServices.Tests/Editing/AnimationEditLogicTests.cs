@@ -21,10 +21,10 @@ public class AnimationEditLogicTests : BaseTestClass
         logic.AddAnimation(animations, "FadeIn", loops: false);
 
         logic.GetWhyCannotAddAnimation(popup, animations, "").ShouldNotBeNull();
-        logic.GetWhyCannotAddAnimation(popup, animations, "Fade Out").ShouldContain("spaces");
-        logic.GetWhyCannotAddAnimation(popup, animations, "fadein").ShouldContain("already");
-        logic.GetWhyCannotAddAnimation(popup, animations, "Spinner").ShouldContain("Instance");
-        logic.GetWhyCannotAddAnimation(popup, animations, "Visibility").ShouldContain("Category");
+        logic.GetWhyCannotAddAnimation(popup, animations, "Fade Out")!.ShouldContain("spaces");
+        logic.GetWhyCannotAddAnimation(popup, animations, "fadein")!.ShouldContain("already");
+        logic.GetWhyCannotAddAnimation(popup, animations, "Spinner")!.ShouldContain("Instance");
+        logic.GetWhyCannotAddAnimation(popup, animations, "Visibility")!.ShouldContain("Category");
         logic.GetWhyCannotAddAnimation(popup, animations, "FadeOut").ShouldBeNull();
     }
 
@@ -65,11 +65,11 @@ public class AnimationEditLogicTests : BaseTestClass
 
         logic.GetWhyCannotAddKeyframe(popup, animation, "Visibility/Shown", 1f).ShouldBeNull();
         logic.GetWhyCannotAddKeyframe(popup, animation, "Pressed", 1f).ShouldBeNull();
-        logic.GetWhyCannotAddKeyframe(popup, animation, "Shown", 1f).ShouldContain("Category/State");
+        logic.GetWhyCannotAddKeyframe(popup, animation, "Shown", 1f)!.ShouldContain("Category/State");
         logic.GetWhyCannotAddKeyframe(popup, animation, "Visibility/Gone", 1f).ShouldNotBeNull();
-        logic.GetWhyCannotAddKeyframe(popup, animation, "Pressed", -1f).ShouldContain("time");
-        logic.GetWhyCannotAddKeyframe(popup, animation, "Pressed", float.NaN).ShouldContain("time");
-        logic.GetWhyCannotAddKeyframe(popup, animation, "Pressed", 0f).ShouldContain("already has");
+        logic.GetWhyCannotAddKeyframe(popup, animation, "Pressed", -1f)!.ShouldContain("time");
+        logic.GetWhyCannotAddKeyframe(popup, animation, "Pressed", float.NaN)!.ShouldContain("time");
+        logic.GetWhyCannotAddKeyframe(popup, animation, "Pressed", 0f)!.ShouldContain("already has");
     }
 
     [Fact]
