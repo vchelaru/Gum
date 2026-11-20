@@ -129,29 +129,52 @@ public class PendingAnimationEditsTests : BaseTestClass
     }
 
     [Fact]
-    public void Save_WhenALaterSidecarIsReadOnly_RestoresEarlierOnesAndNamesTheFile()
+    public void Save_WhenALaterWriteFails_RestoresEarlierSidecarsAndNamesTheFile()
     {
         ComponentSave popup = EditingTestProject.AddComponent(Project, "Popup");
         ComponentSave other = EditingTestProject.AddComponent(Project, "Other");
         new ElementAnimationsSave { Animations = { new AnimationSave { Name = "Old" } } }.Save(SidecarPath());
         string before = File.ReadAllText(SidecarPath());
-        string otherPath = Path.Combine(_directory, "Components", "OtherAnimations.ganx");
-        new ElementAnimationsSave { Animations = { new AnimationSave { Name = "Locked" } } }.Save(otherPath);
-        PendingAnimationEdits pending = new PendingAnimationEdits(new FileElementAnimationsProvider());
+        // The write seam stands in for a read-only file, which does not block a write on every OS.
+        PendingAnimationEdits pending = new PendingAnimationEdits(new FileElementAnimationsProvider(), (path, animations) =>
+        {
+            if (path.EndsWith("OtherAnimations.ganx"))
+            {
+                throw new UnauthorizedAccessException("read-only");
+            }
+            ElementAnimationFiles.WriteOrDelete(path, animations);
+        });
         pending.GetForEdit(popup, Project).Animations.Add(new AnimationSave { Name = "New" });
         pending.GetForEdit(other, Project).Animations.Add(new AnimationSave { Name = "Blocked" });
-        File.SetAttributes(otherPath, FileAttributes.ReadOnly);
-        try
-        {
-            Exception exception = Should.Throw<Exception>(() => pending.Save(Project));
 
-            exception.Message.ShouldContain("OtherAnimations.ganx");
-            File.ReadAllText(SidecarPath()).ShouldBe(before);
-            pending.Rollback();
-        }
-        finally
-        {
-            File.SetAttributes(otherPath, FileAttributes.Normal);
-        }
+        Exception exception = Should.Throw<Exception>(() => pending.Save(Project));
+
+        exception.Message.ShouldContain("OtherAnimations.ganx");
+        exception.Message.ShouldContain("read-only");
+        File.ReadAllText(SidecarPath()).ShouldBe(before);
+        Should.NotThrow(() => pending.Rollback());
+    }
+
+    [Fact]
+    public void Rollback_WhenAFileCannotBePutBack_StillRestoresTheOthersAndReportsIt()
+    {
+        ComponentSave popup = EditingTestProject.AddComponent(Project, "Popup");
+        ComponentSave other = EditingTestProject.AddComponent(Project, "Other");
+        string otherPath = Path.Combine(_directory, "Components", "OtherAnimations.ganx");
+        new ElementAnimationsSave { Animations = { new AnimationSave { Name = "Old" } } }.Save(SidecarPath());
+        new ElementAnimationsSave { Animations = { new AnimationSave { Name = "OldOther" } } }.Save(otherPath);
+        string before = File.ReadAllText(SidecarPath());
+        PendingAnimationEdits pending = new PendingAnimationEdits(new FileElementAnimationsProvider());
+        pending.GetForEdit(popup, Project).Animations.Add(new AnimationSave { Name = "New" });
+        pending.GetForEdit(other, Project).Animations.Add(new AnimationSave { Name = "NewOther" });
+        pending.Save(Project);
+        // Replace the later file with a folder so putting it back fails.
+        File.Delete(otherPath);
+        Directory.CreateDirectory(otherPath);
+
+        string failures = pending.Rollback();
+
+        failures.ShouldContain("OtherAnimations.ganx");
+        File.ReadAllText(SidecarPath()).ShouldBe(before);
     }
 }

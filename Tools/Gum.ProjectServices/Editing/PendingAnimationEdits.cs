@@ -18,13 +18,18 @@ namespace Gum.ProjectServices.Editing;
 public class PendingAnimationEdits : IElementAnimationsProvider, ITopLevelNameSource
 {
     private readonly IElementAnimationsProvider _onDisk;
+    private readonly Action<string, ElementAnimationsSave> _writeSidecar;
     private readonly List<(string Path, byte[]? Content)> _backups = new List<(string, byte[]?)>();
     private readonly Dictionary<ElementSave, ElementAnimationsSave> _edited = new Dictionary<ElementSave, ElementAnimationsSave>();
 
     /// <param name="onDisk">Reads the sidecars the run has not changed.</param>
-    public PendingAnimationEdits(IElementAnimationsProvider onDisk)
+    /// <param name="writeSidecar">Writes one sidecar, or deletes it when it has no animations; defaults to
+    /// <see cref="ElementAnimationFiles.WriteOrDelete"/>. Tests pass one that fails, since a read-only file does not
+    /// reliably block a write on every OS.</param>
+    public PendingAnimationEdits(IElementAnimationsProvider onDisk, Action<string, ElementAnimationsSave>? writeSidecar = null)
     {
         _onDisk = onDisk;
+        _writeSidecar = writeSidecar ?? ElementAnimationFiles.WriteOrDelete;
     }
 
     /// <inheritdoc/>
@@ -76,7 +81,7 @@ public class PendingAnimationEdits : IElementAnimationsProvider, ITopLevelNameSo
                 {
                     failingPath = path.FullPath;
                     byte[]? original = File.Exists(failingPath) ? File.ReadAllBytes(failingPath) : null;
-                    ElementAnimationFiles.WriteOrDelete(failingPath, animations);
+                    _writeSidecar(failingPath, animations);
                     // Recorded only once written: a file that failed to write has nothing to put back.
                     _backups.Add((failingPath, original));
                 }
