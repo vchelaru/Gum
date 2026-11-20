@@ -4,8 +4,9 @@ using Gum.DataTypes;
 namespace Gum.ProjectServices.Editing;
 
 /// <summary>
-/// Removes Screens and Components from a project: the data change behind the tool's element delete. Deleting the
-/// element's file is left to the caller, after the project saves.
+/// Removes Screens and Components from a project: the data change behind the tool's element delete, including
+/// dropping a Component from the project's favorites. Deleting the element's file is left to the caller, after the
+/// project saves.
 /// </summary>
 public interface IElementRemovalLogic
 {
@@ -31,6 +32,7 @@ public class ElementRemovalLogic : IElementRemovalLogic
         if (element is ComponentSave component)
         {
             RemoveReference(element.Name, project.ComponentReferences);
+            FavoriteComponentList.Remove(project, component.Name);
             project.Components.Remove(component);
             return true;
         }

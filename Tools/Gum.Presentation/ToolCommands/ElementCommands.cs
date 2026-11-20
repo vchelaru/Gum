@@ -35,6 +35,7 @@ public class ElementCommands : IElementCommands
     private readonly IProjectState _projectState;
     private readonly IInstanceCreationLogic _instanceCreationLogic;
     private readonly IStateCreationLogic _stateCreationLogic;
+    private readonly IComponentBehaviorLogic _componentBehaviorLogic;
 
     #endregion
 
@@ -59,6 +60,7 @@ public class ElementCommands : IElementCommands
         _projectState = projectState;
         _instanceCreationLogic = instanceCreationLogic;
         _stateCreationLogic = stateCreationLogic;
+        _componentBehaviorLogic = new ComponentBehaviorLogic(stateCreationLogic);
     }
 
     #region Instance
@@ -661,7 +663,8 @@ public class ElementCommands : IElementCommands
 
             foreach(var component in componentsUsingBehavior)
             {
-                AddCategoriesFromBehavior(behaviorSave, component);
+                var newCategories = _componentBehaviorLogic.AddCategoriesFromBehavior(behaviorSave, component);
+                AnnounceCategoriesFromBehavior(component, newCategories);
 
                 _fileCommands.TryAutoSaveElement(component);
             }
@@ -753,11 +756,8 @@ public class ElementCommands : IElementCommands
 
         if(behaviorSave != null)
         {
-            var behaviorReference = new ElementBehaviorReference();
-            behaviorReference.BehaviorName = behaviorName;
-            componentSave.Behaviors.Add(behaviorReference);
-
-            AddCategoriesFromBehavior(behaviorSave, componentSave);
+            var newCategories = _componentBehaviorLogic.AddBehavior(componentSave, behaviorSave);
+            AnnounceCategoriesFromBehavior(componentSave, newCategories);
 
             _pluginManager.BehaviorReferencesChanged(componentSave);
 
@@ -770,38 +770,25 @@ public class ElementCommands : IElementCommands
         }
     }
 
-    void AddCategoriesFromBehavior(BehaviorSave behaviorSave, ElementSave element)
+    /// <summary>
+    /// Does what the tool adds around the categories <see cref="IComponentBehaviorLogic"/> created: the state
+    /// dropdown on each category's selector variable, the tree refresh and the category-add plugin event.
+    /// </summary>
+    private void AnnounceCategoriesFromBehavior(ElementSave element, IReadOnlyList<StateSaveCategory> newCategories)
     {
-        foreach (var behaviorCategory in behaviorSave.Categories)
+        foreach (var category in newCategories)
         {
-            StateSaveCategory? matchingComponentCategory =
-                element.Categories.FirstOrDefault(item => item.Name == behaviorCategory.Name);
-
-            if (matchingComponentCategory == null)
+            var variable = element.DefaultState?.Variables.FirstOrDefault(item => item.Name == category.Name + "State");
+            if (variable != null)
             {
-                //category doesn't exist, so let's add a clone of it:
-
-                // Use the AddCategory command so that it also gets variables:
-                //matchingComponentCategory = new StateSaveCategory();
-                //matchingComponentCategory.Name = behaviorCategory.Name;
-                //element.Categories.Add(matchingComponentCategory);
-                matchingComponentCategory = AddCategory(element, behaviorCategory.Name);
+                variable.CustomTypeConverter = new Gum.PropertyGridHelpers.Converters.AvailableStatesConverter(category.Name, _selectedState);
             }
 
-            foreach (var behaviorState in behaviorCategory.States)
-            {
-                var matchingComponentState =
-                    matchingComponentCategory.States.FirstOrDefault(item => item.Name == behaviorState.Name);
+            _guiCommands.RefreshStateTreeView();
 
-                if (matchingComponentState == null)
-                {
-                    // state doesn't exist, so add it:
-                    var newState = new StateSave();
-                    newState.Name = behaviorState.Name;
-                    newState.ParentContainer = element;
-                    matchingComponentCategory.States.Add(newState);
-                }
-            }
+            _pluginManager.CategoryAdd(category);
+
+            _fileCommands.TryAutoSaveCurrentObject();
         }
     }
 

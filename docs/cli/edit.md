@@ -106,6 +106,18 @@ Enum values such as `ChildrenLayout` take the value's name, for example `"TopToB
 
 Exposes `Counter1.Text` on `Hud` as `Counter1Text`, so instances of `Hud` can set it. The op fails if `name` is already a variable or property of `Hud`, such as `Width` or `Name`, ignoring case.
 
+### addBehavior
+
+{% hint style="info" %}
+Available in December 2026, or now if building Gum from source.
+{% endhint %}
+
+```json
+{ "op": "addBehavior", "element": "MyButton", "behavior": "ButtonBehavior" }
+```
+
+Makes a Component implement a behavior, like checking it in the **Behaviors** tab: it adds the reference and copies the behavior's categories and their states into the component, creating the ones it lacks. The behavior must already be in the project (for example after `add-forms`). The op fails if the project has no behavior of that name (the message lists the project's behaviors), if `element` is a Screen, or if the component already has the behavior. Required instances are not added, the same as in the tool, so a behavior that requires instances needs its own `addInstance` ops; `check` reports any that are missing.
+
 ## Removing
 
 {% hint style="info" %}
@@ -121,7 +133,15 @@ The remove operations take out what the tool's delete commands take out, includi
 { "op": "removeComponent", "name": "Controls/Hud" }
 ```
 
-Removes the element from the project and deletes its file, like the tool's delete with **Delete file** checked. `name` includes the folder. A component that another element still uses, as an instance or as its base type, cannot be removed: the edit fails and reports what uses it.
+Removes the element from the project and deletes its file, like the tool's delete with **Delete file** checked. A removed component is also dropped from the project's favorites. `name` includes the folder. A component that another element still uses, as an instance or as its base type, cannot be removed: the edit fails and reports what uses it.
+
+### removeBehavior
+
+```json
+{ "op": "removeBehavior", "element": "MyButton", "behavior": "ButtonBehavior" }
+```
+
+Takes the behavior off a Component. Like unchecking it in the **Behaviors** tab, it leaves the categories and states the behavior added, which the component may now use for itself. The op fails if the component does not have the behavior.
 
 ### removeInstance
 
