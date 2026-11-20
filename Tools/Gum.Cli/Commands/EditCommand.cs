@@ -169,7 +169,9 @@ public static class EditCommand
 
     private static int WriteSchema(bool json)
     {
-        IReadOnlyList<EditOperationSchema> schemas = CreateEditService().GetOperationSchemas();
+        IProjectEditService editService = CreateEditService();
+        IReadOnlyList<EditOperationSchema> schemas = editService.GetOperationSchemas();
+        IReadOnlyList<ProjectPropertySchema> projectProperties = editService.GetProjectPropertySchemas();
         if (json)
         {
             var document = new
@@ -181,6 +183,13 @@ public static class EditCommand
                     standardElements = schema.AppliesToStandardElements,
                     required = schema.Required.Select(field => new { name = field.Name, type = field.TypeName }),
                     optional = schema.Optional.Select(field => new { name = field.Name, type = field.TypeName })
+                }),
+                projectProperties = projectProperties.Select(property => new
+                {
+                    name = property.Name,
+                    type = property.TypeName,
+                    allowed = property.AllowedValues,
+                    description = property.Description
                 })
             };
             Console.WriteLine(JsonSerializer.Serialize(document, new JsonSerializerOptions { WriteIndented = true }));
@@ -195,6 +204,14 @@ public static class EditCommand
             IEnumerable<string> fields = schema.Required.Select(field => $"{field.Name}: {field.TypeName}")
                 .Concat(schema.Optional.Select(field => $"[{field.Name}: {field.TypeName}]"));
             Console.WriteLine($"  {(schema.Op + (schema.AppliesToStandardElements ? "*" : "")).PadRight(width)}  {string.Join(", ", fields)}");
+        }
+
+        Console.WriteLine("setProjectProperty names:");
+        int nameWidth = projectProperties.Max(property => property.Name.Length) + 1;
+        foreach (ProjectPropertySchema property in projectProperties)
+        {
+            string allowed = property.AllowedValues.Count == 0 ? "" : $" ({string.Join(" | ", property.AllowedValues)})";
+            Console.WriteLine($"  {property.Name.PadRight(nameWidth)}  {property.TypeName}{allowed}: {property.Description}");
         }
         return 0;
     }
