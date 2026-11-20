@@ -102,13 +102,15 @@ public static class EditCommand
         }
         GumProjectSave project = loadResult.Project!;
 
-        HeadlessErrorChecker checker = CheckCommand.CreateChecker();
+        // Animation sidecars the edit changes are held here and written after the project saves.
+        PendingAnimationEdits pendingAnimations = new PendingAnimationEdits(new FileElementAnimationsProvider());
+        HeadlessErrorChecker checker = CheckCommand.CreateChecker(pendingAnimations);
         IReadOnlyList<ErrorResult> errorsBefore = checker.GetAllErrors(project);
 
         // The editing logic resolves types and base elements through ObjectFinder.
         ObjectFinder.Self.GumProjectSave = project;
         HashSet<FilePath> elementFilesBefore = GetElementFiles(project, fullPath);
-        ProjectEditResult editResult = CreateEditService().Apply(project, operationsJson);
+        ProjectEditResult editResult = CreateEditService(pendingAnimations).Apply(project, operationsJson);
         if (!editResult.Succeeded)
         {
             Console.Error.WriteLine($"error: {editResult.Message}");
@@ -130,6 +132,7 @@ public static class EditCommand
                 sorter.SortStateVariables(element);
             }
             project.Save(fullPath, saveElements: true);
+            pendingAnimations.Save(project);
 
             // Removed elements' files go only once the saved project no longer references them, so a failed save
             // leaves every file in place. A file a later operation wrote again (remove, then add the same name) stays.
@@ -197,11 +200,13 @@ public static class EditCommand
     /// <summary>
     /// Builds the edit service with the headless implementations of the tool's editing logic.
     /// </summary>
-    public static IProjectEditService CreateEditService()
+    public static IProjectEditService CreateEditService(PendingAnimationEdits? pendingAnimations = null)
     {
         ReferenceFinder referenceFinder = new ReferenceFinder(new ObjectFinderProjectProvider());
         VariableOverrideRemover overrideRemover = new VariableOverrideRemover();
         ElementCreationLogic elementCreation = new ElementCreationLogic();
+        pendingAnimations ??= new PendingAnimationEdits(new FileElementAnimationsProvider());
+        ElementNameValidator nameValidator = new ElementNameValidator(pendingAnimations);
         return new ProjectEditService(
             elementCreation,
             new InstanceCreationLogic(),
@@ -212,7 +217,7 @@ public static class EditCommand
             new ExposeVariableLogic(),
             new StateVariableWriter(),
             new VariableDefinedByTypeLogic(),
-            new ElementNameValidator(topLevelNameSource: null),
+            nameValidator,
             new DefaultTypeResolver(),
             new InstanceRemovalLogic(referenceFinder, overrideRemover),
             new InstanceChildDetacher(),
@@ -226,7 +231,8 @@ public static class EditCommand
             new ElementRemovalLogic(),
             new VariableReferenceValidator(),
             new VariableReferenceCascade(),
-            new InheritanceSync());
+            new InheritanceSync(),
+            new AnimationEditOperations(new AnimationEditLogic(nameValidator), pendingAnimations));
     }
 
     /// <summary>

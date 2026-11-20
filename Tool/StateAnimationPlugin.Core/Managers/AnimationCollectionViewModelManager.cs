@@ -1,6 +1,7 @@
 using Gum.DataTypes;
 using Gum.Logic.FileWatch;
 using Gum.Managers;
+using Gum.ProjectServices.Editing;
 using Gum.ToolStates;
 using Gum.StateAnimation.SaveClasses;
 using StateAnimationPlugin.ViewModels;
@@ -107,14 +108,7 @@ public class AnimationCollectionViewModelManager : IAnimationCollectionViewModel
         if (fileName != null)
         {
             _fileWatchManager.IgnoreNextChangeUntil(fileName.FullPath);
-            if (save.Animations.Count > 0)
-            {
-                save.Save(fileName.FullPath);
-            }
-            else if (File.Exists(fileName.FullPath))
-            {
-                File.Delete(fileName.FullPath);
-            }
+            ElementAnimationFiles.WriteOrDelete(fileName.FullPath, save);
         }
     }
 }

@@ -1,4 +1,5 @@
 using Gum.Managers;
+using Gum.ProjectServices.Editing;
 using StateAnimationPlugin.ViewModels;
 using System;
 using System.Collections.Generic;
@@ -19,23 +20,14 @@ public class NameValidator
     {
         whyNotValid = null;
 
-        if(string.IsNullOrEmpty(animationName))
+        whyNotValid = AnimationNameRules.GetWhyInvalid(animationName,
+            existingAnimations.Where(item => item != objectToIgnore).Select(item => item.Name));
+        if (whyNotValid != null)
         {
-            whyNotValid = "Animation names cannot be empty";
-            return false;
-        }
-        if(animationName.Contains(" "))
-        {
-            whyNotValid = "Animation names cannot have spaces";
             return false;
         }
         if (!_nameVerifier.IsNameValidCommon(animationName, out whyNotValid, out _))
         {
-            return false;
-        }
-        if(existingAnimations.Any(item=>item.Name.Equals(animationName, StringComparison.InvariantCultureIgnoreCase) && item != objectToIgnore))
-        {
-            whyNotValid = $"The name \"{animationName}\" is already being used.";
             return false;
         }
 

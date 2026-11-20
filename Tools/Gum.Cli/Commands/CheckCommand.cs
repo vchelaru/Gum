@@ -88,10 +88,15 @@ public static class CheckCommand
     /// <summary>
     /// The checker <c>check</c> runs, which <c>edit</c> also runs before and after its changes.
     /// </summary>
-    internal static HeadlessErrorChecker CreateChecker() =>
+    internal static HeadlessErrorChecker CreateChecker() => CreateChecker(new FileElementAnimationsProvider());
+
+    /// <summary>
+    /// The checker <c>check</c> runs, reading element animations through <paramref name="animationsProvider"/>.
+    /// </summary>
+    internal static HeadlessErrorChecker CreateChecker(IElementAnimationsProvider animationsProvider) =>
         new HeadlessErrorChecker(
             new DefaultTypeResolver(),
-            new IAdditionalErrorSource[] { new AnimationKeyframeErrorSource(new FileElementAnimationsProvider()) },
+            new IAdditionalErrorSource[] { new AnimationKeyframeErrorSource(animationsProvider) },
             new HeadlessOrphanCodeFileProvider(Console.Error))
         {
             ReportsLeftoverInstanceVariables = true
