@@ -27,7 +27,8 @@ public static class AvaloniaServiceCollectionExtensions
     public static IServiceCollection AddGumAvalonia(this IServiceCollection services)
     {
         // Framework seams.
-        services.AddSingleton<IDispatcher, AvaloniaDispatcher>();
+        services.AddSingleton<AvaloniaDispatcher>();
+        services.AddSingleton<IDispatcher>(provider => provider.GetRequiredService<AvaloniaDispatcher>());
         services.AddSingleton<IClipboardService, AvaloniaClipboardService>();
         services.AddSingleton<IAppScaleProvider, AvaloniaAppScaleProvider>();
         services.AddSingleton<IThemingService, AvaloniaThemingService>();
