@@ -270,6 +270,32 @@ Available in December 2026, or now if building Gum from source.
 
 Replaces the variable references of `Total`, or of `SegmentBar` itself when `instance` is left out, like typing them in the **Variable References** box. Gum checks each line the way the tool does and writes the values the lines set, so `Total.Width` becomes `40` when `TotalHealth` is `10`. Gum also updates other states and elements whose references read a changed value. On a Forms control instance, the control's own values win over a line that sets its visual state, as in the tool: on a button whose `IsEnabled` is at its default, a line that sets `ButtonCategoryState` stores no value. A line that does not parse, names a variable that does not exist, or has a right side of the wrong type fails the edit with the line and the reason. `state` and `category` work as in `setVariable`. An empty `lines` list removes the references and leaves the values they set.
 
+## Base Types and Instance Flags
+
+{% hint style="info" %}
+Available in December 2026, or now if building Gum from source.
+{% endhint %}
+
+### setBaseType
+
+```json
+{ "op": "setBaseType", "element": "Controls/Counter", "baseType": "Container" }
+{ "op": "setBaseType", "element": "Hud", "instance": "Score", "baseType": "Sprite" }
+```
+
+Changes the base type of `element`, or the type of its instance `instance`, like picking another **Base Type** in the **Variables** tab. Gum removes the variables, variable lists and variable reference lines the new type does not define, in every state, and the values other elements set for an exposed variable that goes. Variables on elements that inherit from `element` stay as hidden leftovers, as in the tool. A Component that changes base type swaps its inherited instances for the new base's. An instance whose type changes changes the same way in every component that inherits it.
+
+The op fails, naming what to change, when `baseType` is not a Screen, Component or standard element in the project, would create a circular reference, or is empty for a Component or an instance. A Screen can derive only from another Screen, and `""` clears its base. A Component cannot derive from a Screen, and an instance cannot be a Screen. An instance that `element` inherits from its base cannot change type here; change it in the base. A standard element has no base type. The op does not apply a project's engine profile restrictions, so it can pick a type the tool's picker hides.
+
+### setInstanceProperty
+
+```json
+{ "op": "setInstanceProperty", "element": "Controls/Panel", "instance": "Body", "property": "IsSlot", "value": true }
+{ "op": "setInstanceProperty", "element": "Hud", "instance": "Background", "property": "Locked", "value": true }
+```
+
+Sets the **Locked** or **Is Slot** flag of an instance, like the same rows in the **Variables** tab. `Locked` keeps the instance from being selected by clicking in the editor. `IsSlot` marks a place that holds children when the component is used, and only an instance in a Component can have it. Any other `property` fails the edit.
+
 ## Project Properties
 
 {% hint style="info" %}

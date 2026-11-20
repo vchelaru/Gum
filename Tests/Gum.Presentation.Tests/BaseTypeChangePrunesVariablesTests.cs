@@ -55,6 +55,7 @@ public class BaseTypeChangePrunesVariablesTests : BaseTestClass
         mocker.Use<Gum.ProjectServices.Editing.IVariableOverrideRemover>(new Gum.ProjectServices.Editing.VariableOverrideRemover());
         mocker.Use<IInstanceOverrideRemover>(mocker.CreateInstance<InstanceOverrideRemover>());
         mocker.Use<IVariableDefinedByTypeLogic>(new VariableDefinedByTypeLogic());
+        mocker.Use<Gum.ProjectServices.Editing.IBaseTypeVariableRemover>(mocker.CreateInstance<Gum.ProjectServices.Editing.BaseTypeVariableRemover>());
         mocker.Use<IBaseTypeVariablePruner>(mocker.CreateInstance<BaseTypeVariablePruner>());
         mocker.Use<Gum.ProjectServices.Editing.IInheritanceSync>(new Gum.ProjectServices.Editing.InheritanceSync());
 
