@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using CommunityToolkit.Mvvm.Messaging;
 using Gum.Commands;
@@ -23,6 +24,7 @@ public class FileCaseMismatchFixer : IFileCaseMismatchFixer
     private readonly IGuiCommands _guiCommands;
     private readonly IFileCommands _fileCommands;
     private readonly IMessenger _messenger;
+    private readonly Func<string, string, bool> _hasCaseTwin;
 
     public FileCaseMismatchFixer(
         IProjectState projectState,
@@ -31,7 +33,8 @@ public class FileCaseMismatchFixer : IFileCaseMismatchFixer
         IPluginManager pluginManager,
         IGuiCommands guiCommands,
         IFileCommands fileCommands,
-        IMessenger messenger)
+        IMessenger messenger,
+        Func<string, string, bool>? hasCaseTwin = null)
     {
         _projectState = projectState;
         _dialogService = dialogService;
@@ -40,6 +43,7 @@ public class FileCaseMismatchFixer : IFileCaseMismatchFixer
         _guiCommands = guiCommands;
         _fileCommands = fileCommands;
         _messenger = messenger;
+        _hasCaseTwin = hasCaseTwin ?? FileReferenceCaseRewriter.HasCaseTwin;
     }
 
     /// <inheritdoc/>
@@ -62,7 +66,7 @@ public class FileCaseMismatchFixer : IFileCaseMismatchFixer
         }
 
         string projectDirectory = FileManager.GetDirectory(project.FullFileName);
-        if (FileReferenceCaseRewriter.HasCaseTwin(projectDirectory, details.OnDiskPath))
+        if (_hasCaseTwin(projectDirectory, details.OnDiskPath))
         {
             _dialogService.ShowMessage(
                 $"More than one file named \"{details.OnDiskPath}\" exists, differing only by letter case, so Gum cannot tell which one \"{details.ReferencedPath}\" means. " +

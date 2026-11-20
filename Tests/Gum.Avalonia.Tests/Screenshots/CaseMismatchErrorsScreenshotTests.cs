@@ -26,7 +26,7 @@ public class CaseMismatchErrorsScreenshotTests
 
         ComponentSave menu = fixture.AddComponent("Menu");
         InstanceSave logo = fixture.AddInstance(menu, "Logo", "Sprite");
-        menu.DefaultState.SetValue("Logo.SourceFile", "Art/ui_sheet.png", "string");
+        menu.DefaultState!.SetValue("Logo.SourceFile", "Art/ui_sheet.png", "string");
         fixture.Project.SinglePixelTextureFile = "Art/Pixel.png";
         fixture.SaveAndReload();
         fixture.SelectedState.SelectedElement = fixture.Project.Components.Single(item => item.Name == "Menu");

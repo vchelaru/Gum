@@ -26,6 +26,7 @@ public class FileCaseMismatchFixerTests : BaseTestClass, IDisposable
     private readonly FileCaseMismatchFixer _sut;
     private int _refreshRequestsIncludingProject;
     private int _undoLocksOpened;
+    private bool _twinExists;
 
     public FileCaseMismatchFixerTests()
     {
@@ -51,7 +52,7 @@ public class FileCaseMismatchFixerTests : BaseTestClass, IDisposable
         });
 
         _sut = new FileCaseMismatchFixer(projectState.Object, _dialogService.Object, undoManager.Object,
-            _pluginManager.Object, Mock.Of<IGuiCommands>(), _fileCommands.Object, _messenger);
+            _pluginManager.Object, Mock.Of<IGuiCommands>(), _fileCommands.Object, _messenger, (_, _) => _twinExists);
     }
 
     public void Dispose() => Directory.Delete(_directory, recursive: true);
@@ -103,24 +104,16 @@ public class FileCaseMismatchFixerTests : BaseTestClass, IDisposable
     [Fact]
     public void Fix_ChangesNothingAndExplains_WhenTwoFilesDifferOnlyByCase()
     {
-        // A case-insensitive file system cannot hold both; the check only runs where it can.
-        File.WriteAllText(Path.Combine(_directory, "UI_Sheet.png"), "");
-        File.WriteAllText(Path.Combine(_directory, "ui_Sheet.png"), "");
-        bool twinsExist = Directory.GetFiles(_directory).Length == 2;
+        // Injected, since a case-insensitive file system cannot hold both files.
+        _twinExists = true;
         ComponentSave component = AddSpriteComponent("First", "UI_SHEET.png");
 
         _sut.Fix(Details("UI_SHEET.png", "UI_Sheet.png"));
 
-        if (twinsExist)
-        {
-            component.DefaultState.GetValue("Icon.SourceFile").ShouldBe("UI_SHEET.png");
-            _dialogService.Verify(x => x.ShowMessage(It.Is<string>(m => m.Contains("differing only by letter case")),
-                It.IsAny<string?>(), It.IsAny<MessageDialogStyle?>()), Times.Once);
-        }
-        else
-        {
-            component.DefaultState.GetValue("Icon.SourceFile").ShouldBe("UI_Sheet.png");
-        }
+        component.DefaultState.GetValue("Icon.SourceFile").ShouldBe("UI_SHEET.png");
+        _dialogService.Verify(x => x.ShowMessage(It.Is<string>(m => m.Contains("differing only by letter case")),
+            It.IsAny<string?>(), It.IsAny<MessageDialogStyle?>()), Times.Once);
+        _fileCommands.Verify(x => x.TryAutoSaveElement(It.IsAny<ElementSave>()), Times.Never);
     }
 
     [Fact]
