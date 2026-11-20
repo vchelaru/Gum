@@ -232,7 +232,7 @@ The rename operations run the tool's rename, so everything that names the old na
 
 * `renameElement` renames a Screen or Component. A `/` in `newName` moves it to that folder, and its file moves with it. A rename that changes only letter case is refused, because file systems that ignore case cannot do it in one step.
 * `renameInstance` renames the instance in its element and in the elements that inherit it. An inherited instance is renamed on the element that defines it.
-* `renameState` and `renameCategory` also accept standard elements. `category` is omitted for an uncategorized state. The default state cannot be renamed, and a category that one of the component's behaviors requires cannot be renamed.
+* `renameState` and `renameCategory` work on Screens and Components; standard elements are refused. `category` is omitted for an uncategorized state. The default state cannot be renamed, and a category that one of the component's behaviors requires cannot be renamed.
 * `renameVariable` renames a custom variable everywhere it is set, or, for an exposed variable, its exposed name.
 * `renameBehavior` renames a behavior and its file. A standard Forms behavior, and a behavior stored outside the project's `Behaviors` folder, are refused.
 * A file cannot mix `renameElement`, `renameInstance`, `renameState` or `renameCategory` with the animation operations, because both change the element's animation file. Run the renames in one `edit` and the animation operations in another.

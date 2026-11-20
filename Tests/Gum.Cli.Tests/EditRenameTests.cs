@@ -399,6 +399,21 @@ public class EditRenameTests : BaseTestClass
         Snapshot(projectPath).ShouldBe(before);
     }
 
+    [Theory]
+    [InlineData("""{ "op": "renameState", "element": "Text", "name": "A", "newName": "B" }""")]
+    [InlineData("""{ "op": "renameCategory", "element": "Text", "name": "A", "newName": "B" }""")]
+    [InlineData("""{ "op": "renameVariable", "element": "Text", "name": "A", "newName": "B" }""")]
+    [InlineData("""{ "op": "renameInstance", "element": "Text", "name": "A", "newName": "B" }""")]
+    public void Rename_OnStandardElement_IsRefused(string operation)
+    {
+        string projectPath = CreateEmptyProject();
+
+        CliTestHelper result = Edit(projectPath, operation);
+
+        result.ExitCode.ShouldBe(1);
+        result.StandardError.ShouldContain("standard element");
+    }
+
     [Fact]
     public void RenameState_OfDefaultState_IsRefused()
     {
