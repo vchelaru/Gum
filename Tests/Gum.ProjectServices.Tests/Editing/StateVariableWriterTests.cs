@@ -38,11 +38,11 @@ public class StateVariableWriterTests : BaseTestClass
         InstanceSave volume = EditingTestProject.AddInstance(hud, "Volume", "Slider");
         StateVariableWriter writer = new StateVariableWriter();
 
-        writer.ResolveVariableType(hud, hud.DefaultState, "Volume.Maximum").ShouldBe("double");
-        writer.ResolveVariableType(hud, hud.DefaultState, "Volume.Nope").ShouldBeNull();
-        writer.SetVariable(hud, hud.DefaultState, "Volume.Maximum", 10.0, volume, fallbackType: null);
+        writer.ResolveVariableType(hud, hud.DefaultState!, "Volume.Maximum").ShouldBe("double");
+        writer.ResolveVariableType(hud, hud.DefaultState!, "Volume.Nope").ShouldBeNull();
+        writer.SetVariable(hud, hud.DefaultState!, "Volume.Maximum", 10.0, volume, fallbackType: null);
 
-        hud.DefaultState.GetVariableSave("Volume.Maximum")!.Type.ShouldBe("double");
+        hud.DefaultState!.GetVariableSave("Volume.Maximum")!.Type.ShouldBe("double");
     }
 
     [Fact]
