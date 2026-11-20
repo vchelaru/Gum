@@ -316,6 +316,32 @@ public class EditCommandTests : BaseTestClass
         (result.StandardOutput + result.StandardError).ShouldContain("already has the behavior");
     }
 
+    [Theory]
+    [InlineData("""{ "op": "addState", "element": "BigHud", "category": "Size", "name": "Huge" }""")]
+    [InlineData("""{ "op": "removeState", "element": "BigHud", "category": "Size", "name": "Big" }""")]
+    [InlineData("""{ "op": "removeCategory", "element": "BigHud", "name": "Size" }""")]
+    [InlineData("""{ "op": "setVariable", "element": "BigHud", "category": "Size", "state": "Big", "name": "Alpha", "value": 5 }""")]
+    [InlineData("""{ "op": "clearVariable", "element": "BigHud", "category": "Size", "state": "Big", "name": "Alpha" }""")]
+    public void Edit_CategoryInheritedFromTheBase_TellsWhereToEditIt(string operation)
+    {
+        string projectPath = CreateEmptyProject();
+        string setup = WriteOperations("""
+            { "version": 1, "operations": [
+              { "op": "addComponent", "name": "Hud", "baseType": "Text" },
+              { "op": "addCategory", "element": "Hud", "name": "Size" },
+              { "op": "addState", "element": "Hud", "category": "Size", "name": "Big" },
+              { "op": "addComponent", "name": "BigHud", "baseType": "Hud" }
+            ] }
+            """);
+        CliTestHelper.Run("edit", projectPath, setup).ExitCode.ShouldBe(0);
+        string operations = WriteOperations("{ \"version\": 1, \"operations\": [ " + operation + " ] }");
+
+        CliTestHelper result = CliTestHelper.Run("edit", projectPath, operations);
+
+        result.ExitCode.ShouldBe(1);
+        (result.StandardOutput + result.StandardError).ShouldContain("Size comes from Hud; edit it there");
+    }
+
     [Fact]
     public void Edit_RemoveComponentThenAddItAgain_KeepsTheNewFile()
     {

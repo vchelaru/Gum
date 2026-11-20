@@ -10,6 +10,19 @@ namespace Gum.Logic;
 public static class InheritedCategories
 {
     /// <summary>
+    /// The error for an edit that names a category the element does not own. The tool's State tab lists only an
+    /// element's own categories, so one defined on a base is edited on that base.
+    /// </summary>
+    public static string DescribeMissing(ElementSave element, string categoryName)
+    {
+        ElementSave? owner = ObjectFinder.Self.GetBaseElements(element)
+            .FirstOrDefault(item => item.Categories.Any(category => category.Name == categoryName));
+        return owner == null
+            ? $"{element.Name} has no category named {categoryName}."
+            : $"{element.Name} has no category named {categoryName}; {categoryName} comes from {owner.Name}; edit it there.";
+    }
+
+    /// <summary>
     /// The element's own categories followed by those of its base types, nearest base first. A category
     /// whose name a more derived element already defines is skipped, since the derived one replaces it.
     /// </summary>
