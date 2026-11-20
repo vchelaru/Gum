@@ -23,8 +23,9 @@ public class BaseTypePrunerFormsPropertyTests : BaseTestClass
     {
         StandardElementsManager.Self.PopulateProjectWithDefaultStandards(_project);
         ObjectFinder.Self.GumProjectSave = _project;
-        _pruner = new BaseTypeVariablePruner(new VariableDefinedByTypeLogic(),
-            new Mock<IRenameLogic>().Object, new Mock<IInstanceOverrideRemover>().Object);
+        _pruner = new BaseTypeVariablePruner(
+            new BaseTypeVariableRemover(new VariableDefinedByTypeLogic(), new Mock<IReferenceFinder>().Object, new VariableOverrideRemover()),
+            new Mock<IInstanceOverrideRemover>().Object);
     }
 
     private ComponentSave AddComponent(string name, string? behavior)
