@@ -40,9 +40,10 @@ Available in December 2026, or now if building Gum from source.
 Available in December 2026, or now if building Gum from source.
 {% endhint %}
 
-`addState`, `addCategory`, `setVariable`, `clearVariable`, `removeState` and `removeCategory` also edit a standard element such as `Text` or `Sprite`, like editing it in the tool. The example adds a `Gold` state to the `ColorCategory` that `Text` already has.
+`addState`, `addCategory`, `setVariable`, `clearVariable`, `removeState` and `removeCategory` also edit a standard element such as `Text` or `Sprite`, like editing it in the tool. A new project's `Text` has no categories, so the example first adds a `ColorCategory`, then a `Gold` state in it.
 
 ```json
+{ "op": "addCategory", "element": "Text", "name": "ColorCategory" }
 { "op": "addState", "element": "Text", "name": "Gold", "category": "ColorCategory" }
 { "op": "setVariable", "element": "Text", "name": "Red", "value": 255, "state": "Gold", "category": "ColorCategory" }
 ```

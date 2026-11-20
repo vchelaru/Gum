@@ -20,6 +20,11 @@
 		<None Include="gumcli.md" Pack="true" PackagePath="\" />
 		<!-- The tool package redistributes third-party binaries (bmfont.exe inside Gum.ProjectServices.dll, raylib, ...) (#7961). -->
 		<None Include="..\..\THIRD-PARTY-NOTICES.txt" Pack="true" PackagePath="\" Visible="false" />
+		<!-- `gumcli new` with a theme finds themes in Content/FormsThemes beside gumcli.dll (FormsThemeLocator). Pack-only, so the
+		     release zip, whose Content/FormsThemes sits a level above GumCli/, does not get a second copy. Themes link their
+		     shared behaviors as ../../FormsBehaviors, so that folder is packed at the same relative spot (#8379). -->
+		<None Include="..\Gum.ProjectServices\Templates\FormsThemes\**\*" Pack="true" PackagePath="tools\net10.0\any\Content\FormsThemes\%(RecursiveDir)%(Filename)%(Extension)" Visible="false" />
+		<None Include="..\Gum.ProjectServices\Templates\FormsBehaviors\*.behx" Pack="true" PackagePath="tools\net10.0\any\Content\FormsBehaviors\%(Filename)%(Extension)" Visible="false" />
 	</ItemGroup>
 
 	<ItemGroup>
