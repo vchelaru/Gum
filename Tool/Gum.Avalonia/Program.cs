@@ -40,6 +40,7 @@ public static class Program
 
         // Before anything reads or writes a per-user file.
         ApplyUserDataFolder(options);
+        StartupJitProfile.Start(GetAppDataDirectory());
 
         // Before a window or a project load: a launch that finds the project already owned hands
         // its request over and exits, and the owner's pipe exists before the slow startup begins.
