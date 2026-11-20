@@ -42,7 +42,7 @@ Screenshot written to: /full/path/to/MainMenu.png
 ## Notes
 
 - Works cross-platform. The default `monogame` backend uses DesktopGL, not a Windows-specific rendering path.
-- Any fonts referenced by the element must already exist in the project's `FontCache/` folder. Run [`gumcli fonts`](fonts.md) first if fonts are missing.
+- Any fonts referenced by the element must already exist in the project's `FontCache/` folder. Run [`gumcli fonts`](fonts.md) first if fonts are missing. When the render hits missing fonts, the command ends with one `hint:` line on stderr naming the files and the `gumcli fonts` command to run; the exit code and the PNG are unchanged.
 - Bitmap content (sprites, nine-slices, text) is rasterized into the PNG at the requested resolution.
 - To compare the two backends' output for every element in a project at once, see [`diff-screenshots`](diff-screenshots.md).
 - Rendering against the default transparent background can make some visual differences (a semi-transparent panel or border, for example) hard to see once the image is opened in isolation. Use `--background` to composite against an opaque color, ideally the same clear color your game actually uses, for a more representative comparison.

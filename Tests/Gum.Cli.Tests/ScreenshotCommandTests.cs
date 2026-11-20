@@ -108,7 +108,42 @@ public class ScreenshotCommandTests : BaseTestClass
         result.StandardError.ShouldContain("Invalid --background value");
     }
 
-    private string CreateProjectWithScreen()
+    // The hint comes from watching what the render reports, so every backend that logs the missing
+    // font shares it; raylib is the one a test can run here (see the Windows note above).
+    [Fact]
+    public void Screenshot_WithMissingFont_PrintsOneFontsHint()
+    {
+        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        {
+            return;
+        }
+
+        string projectPath = CreateProjectWithScreen(addText: true);
+        string outputPath = Path.Combine(TempDirectory, "Screen.png");
+
+        CliTestHelper result = CliTestHelper.Run(
+            "screenshot", projectPath, "Screen", "--output", outputPath, "--backend", "raylib");
+
+        result.ExitCode.ShouldBe(0, result.StandardError);
+        result.StandardError.ShouldContain("No usable font could be resolved");
+        result.StandardError.ShouldContain("gumcli fonts");
+        result.StandardError.Split("gumcli fonts").Length.ShouldBe(2, "the hint is printed once");
+    }
+
+    [Fact]
+    public void Screenshot_WithoutMissingFont_PrintsNoFontsHint()
+    {
+        string projectPath = CreateProjectWithScreen(addText: false);
+        string outputPath = Path.Combine(TempDirectory, "Screen.png");
+
+        CliTestHelper result = CliTestHelper.Run(
+            "screenshot", projectPath, "Screen", "--output", outputPath, "--backend", "skia");
+
+        result.ExitCode.ShouldBe(0, result.StandardError);
+        result.StandardError.ShouldNotContain("gumcli fonts");
+    }
+
+    private string CreateProjectWithScreen(bool addText = false)
     {
         string projectPath = Path.Combine(TempDirectory, "Project.gumx");
 
@@ -118,6 +153,12 @@ public class ScreenshotCommandTests : BaseTestClass
         ScreenSave screen = new ScreenSave { Name = "Screen" };
         StateSave defaultState = new StateSave { Name = "Default", ParentContainer = screen };
         screen.States.Add(defaultState);
+
+        if (addText)
+        {
+            // No FontCache folder exists in the new project, so this Text's font is missing.
+            screen.Instances.Add(new InstanceSave { Name = "Label", BaseType = "Text", ParentContainer = screen });
+        }
 
         project.Screens.Add(screen);
         project.ScreenReferences.Add(new ElementReference

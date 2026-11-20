@@ -183,7 +183,23 @@ public static class ScreenshotCommand
             VariableOverrides = overrides,
         };
 
-        ScreenshotResult result = service.TakeScreenshot(request);
+        TextWriter originalError = Console.Error;
+        MissingFontHintWriter errorWatcher = new MissingFontHintWriter(originalError);
+        ScreenshotResult result;
+        Console.SetError(errorWatcher);
+        try
+        {
+            result = service.TakeScreenshot(request);
+        }
+        finally
+        {
+            Console.SetError(originalError);
+        }
+
+        if (errorWatcher.MissingFonts.Count > 0)
+        {
+            Console.Error.WriteLine(MissingFontHintWriter.BuildHint(errorWatcher.MissingFonts, fullProjectPath, overrides.Count > 0));
+        }
 
         if (!result.Success)
         {
