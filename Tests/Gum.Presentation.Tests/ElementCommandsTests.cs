@@ -95,7 +95,7 @@ public class ElementCommandsTests : BaseTestClass
         component.Behaviors.Select(item => item.BehaviorName).ShouldBe(new[] { "ButtonBehavior" });
         StateSaveCategory category = component.Categories.ShouldHaveSingleItem();
         category.States.Select(item => item.Name).ShouldBe(new[] { "Enabled" });
-        VariableSave stateVariable = component.DefaultState.Variables.Single(item => item.Name == "ButtonCategoryState");
+        VariableSave stateVariable = component.GetDefaultStateOrThrow().Variables.Single(item => item.Name == "ButtonCategoryState");
         stateVariable.CustomTypeConverter.ShouldBeOfType<AvailableStatesConverter>();
         _pluginManager.Verify(x => x.CategoryAdd(category), Times.Once);
         _pluginManager.Verify(x => x.BehaviorReferencesChanged(component), Times.Once);
