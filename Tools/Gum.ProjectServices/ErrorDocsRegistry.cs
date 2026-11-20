@@ -58,6 +58,7 @@ public class ErrorDocsRegistry : IErrorDocsRegistry
             ["GUM0045"] = "gum-tool/project-files#category-name-collision-in-generated-code-gum0045",
             ["GUM0046"] = "gum-tool/project-files#forms-component-with-an-unsupported-base-type-gum0046",
             ["GUM0047"] = "gum-tool/gum-elements/general-properties/variable-references#reference-that-cannot-be-evaluated-gum0047",
+            ["GUM0048"] = "gum-tool/project-files#stale-parent-variable-gum0048",
         };
     }
 

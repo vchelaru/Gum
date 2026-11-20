@@ -1152,11 +1152,29 @@ public partial class HeadlessErrorChecker : IHeadlessErrorChecker
 
                         if (instance == null)
                         {
+                            // Only reclassifies a variable that already errored: a stale source with a valid parent stays silent.
+                            if (elementSave.GetInstance(variable.SourceObject) == null)
+                            {
+                                errors.Add(new ErrorResult
+                                {
+                                    ElementName = elementSave.Name,
+                                    Code = "GUM0048",
+                                    Message = $"{elementSave.Name} has a stale variable {variable.Name}: no instance {variable.SourceObject} exists in this element (state {state.Name})",
+                                    Details = new StaleVariableDetails
+                                    {
+                                        InstanceName = variable.SourceObject!,
+                                        VariableName = variable.Name,
+                                        StateName = state.Name
+                                    }
+                                });
+                                continue;
+                            }
+
                             errors.Add(new ErrorResult
                             {
                                 ElementName = elementSave.Name,
                                 Code = "GUM0034",
-                                Message = $"{variable.SourceObject} has a parent set to {value} which does not exist in the state {state.Name}",
+                                Message = $"{variable.SourceObject} has a parent set to {instanceName} which does not exist in the state {state.Name}",
                                 Details = new MissingParentDetails
                                 {
                                     InstanceName = variable.SourceObject!,

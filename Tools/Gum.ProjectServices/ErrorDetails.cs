@@ -207,6 +207,22 @@ public class MissingParentDetails : ErrorDetails
 }
 
 /// <summary>
+/// GUM0048: a state holds an <c>Instance.Parent</c> variable for an instance the element does not have, usually
+/// left behind by a delete, copy or merge. The fix is to delete the variable.
+/// </summary>
+public class StaleVariableDetails : ErrorDetails
+{
+    /// <summary>The instance the variable names, which the element does not have.</summary>
+    public string InstanceName { get; set; } = "";
+
+    /// <summary>The variable's full name, such as <c>TopRow.Parent</c>.</summary>
+    public string VariableName { get; set; } = "";
+
+    /// <summary>The state that holds the variable.</summary>
+    public string StateName { get; set; } = "";
+}
+
+/// <summary>
 /// A type an element or instance names that it cannot use. GUM0025 (a Screen used as a type), GUM0030 (an
 /// element's base type does not exist) and GUM0035 (an instance's type does not exist).
 /// </summary>
