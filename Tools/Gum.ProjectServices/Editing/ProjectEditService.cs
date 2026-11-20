@@ -76,7 +76,8 @@ public record EditField(string Name, EditFieldType Type)
 /// <param name="Op">The operation's <c>op</c> value.</param>
 /// <param name="Required">The fields the operation must have.</param>
 /// <param name="Optional">The fields the operation may have.</param>
-public record EditOperationSchema(string Op, IReadOnlyList<EditField> Required, IReadOnlyList<EditField> Optional);
+/// <param name="AppliesToStandardElements">Whether the operation's <c>element</c> may be a standard element such as Text.</param>
+public record EditOperationSchema(string Op, IReadOnlyList<EditField> Required, IReadOnlyList<EditField> Optional, bool AppliesToStandardElements);
 
 /// <summary>
 /// Applies an operations file (<c>{ "version": 1, "operations": [ { "op": ..., ... } ] }</c>) to a loaded project,
@@ -102,7 +103,7 @@ public class ProjectEditService : IProjectEditService
     /// <summary>The operations file format version this service reads.</summary>
     public const int SupportedVersion = 1;
 
-    private sealed record OperationSpec(EditField[] Required, EditField[] Optional, Action<GumProjectSave, JsonElement> Apply)
+    private sealed record OperationSpec(EditField[] Required, EditField[] Optional, Action<GumProjectSave, JsonElement> Apply, bool StandardElements = false)
     {
         public EditField? Find(string name) =>
             Required.FirstOrDefault(field => field.Name == name) ?? Optional.FirstOrDefault(field => field.Name == name);
@@ -197,18 +198,18 @@ public class ProjectEditService : IProjectEditService
             ["addComponent"] = new(Strings("name"), Strings("baseType"), AddComponent),
             ["addInstance"] = new(Strings("element", "name", "type"), Strings("parent"), AddInstance),
             ["addVariable"] = new(Strings("element", "name", "type"), Fields(new EditField("value", EditFieldType.Any)), AddVariable),
-            ["setVariable"] = new(Fields(Str("element"), Str("name"), new EditField("value", EditFieldType.Any)), Strings("state", "category"), SetVariable),
-            ["addCategory"] = new(Strings("element", "name"), None, AddCategory),
-            ["addState"] = new(Strings("element", "name"), Strings("category"), AddState),
+            ["setVariable"] = new(Fields(Str("element"), Str("name"), new EditField("value", EditFieldType.Any)), Strings("state", "category"), SetVariable, StandardElements: true),
+            ["addCategory"] = new(Strings("element", "name"), None, AddCategory, StandardElements: true),
+            ["addState"] = new(Strings("element", "name"), Strings("category"), AddState, StandardElements: true),
             ["exposeVariable"] = new(Strings("element", "instance", "variable", "name"), None, ExposeVariable),
             ["unexposeVariable"] = new(Strings("element", "name"), None, UnexposeVariable),
             ["removeScreen"] = new(Strings("name"), None, RemoveScreen),
             ["removeComponent"] = new(Strings("name"), None, RemoveComponent),
             ["removeInstance"] = new(Strings("element", "name"), None, RemoveInstance),
-            ["removeState"] = new(Strings("element", "name"), Strings("category"), RemoveState),
-            ["removeCategory"] = new(Strings("element", "name"), None, RemoveCategory),
+            ["removeState"] = new(Strings("element", "name"), Strings("category"), RemoveState, StandardElements: true),
+            ["removeCategory"] = new(Strings("element", "name"), None, RemoveCategory, StandardElements: true),
             ["removeVariable"] = new(Strings("element", "name"), None, RemoveVariable),
-            ["clearVariable"] = new(Strings("element", "name"), Strings("state", "category"), ClearVariable),
+            ["clearVariable"] = new(Strings("element", "name"), Strings("state", "category"), ClearVariable, StandardElements: true),
             ["extractToComponent"] = new(Fields(Str("element"), Str("instance"), Str("name"), new EditField("replace", EditFieldType.Bool)),
                 None, ExtractToComponent),
             ["setVariableReferences"] = new(Fields(Str("element"), new EditField("lines", EditFieldType.StringArray)),
@@ -219,7 +220,7 @@ public class ProjectEditService : IProjectEditService
 
     /// <inheritdoc/>
     public IReadOnlyList<EditOperationSchema> GetOperationSchemas() =>
-        _operations.Select(pair => new EditOperationSchema(pair.Key, pair.Value.Required, pair.Value.Optional)).ToList();
+        _operations.Select(pair => new EditOperationSchema(pair.Key, pair.Value.Required, pair.Value.Optional, pair.Value.StandardElements)).ToList();
 
     /// <inheritdoc/>
     public ProjectEditResult Apply(GumProjectSave project, string operationsJson)
@@ -246,7 +247,9 @@ public class ProjectEditService : IProjectEditService
             {
                 try
                 {
-                    _operations[operations[i].Op].Apply(project, operations[i].Operation);
+                    OperationSpec spec = _operations[operations[i].Op];
+                    RefuseStandardElement(project, operations[i].Op, spec, operations[i].Operation);
+                    spec.Apply(project, operations[i].Operation);
                 }
                 catch (EditException ex)
                 {
@@ -256,6 +259,18 @@ public class ProjectEditService : IProjectEditService
         }
 
         return new ProjectEditResult();
+    }
+
+    // An op that works on instances, custom variables or variable references has nothing to do on a standard element.
+    private static void RefuseStandardElement(GumProjectSave project, string op, OperationSpec spec, JsonElement operation)
+    {
+        if (!spec.StandardElements
+            && operation.TryGetProperty("element", out JsonElement element)
+            && ProjectElementFinder.Find(project, element.GetString()!) is StandardElementSave standard)
+        {
+            throw new EditException(
+                $"{standard.Name} is a standard element, which has no instances, custom variables or variable references. Apply {op} to a Screen or Component.");
+        }
     }
 
     private static ProjectEditResult Fail(ProjectEditFailure failure, string message) =>
@@ -519,7 +534,7 @@ public class ProjectEditService : IProjectEditService
     {
         string name = GetString(operation, "name");
         ScreenSave screen = project.Screens.FirstOrDefault(item => item.Name == name)
-            ?? throw new EditException($"The project has no Screen named {name}.");
+            ?? throw MissingElement(project, name, "Screen");
         _elementRemoval.RemoveElement(project, screen);
     }
 
@@ -527,7 +542,7 @@ public class ProjectEditService : IProjectEditService
     {
         string name = GetString(operation, "name");
         ComponentSave component = project.Components.FirstOrDefault(item => item.Name == name)
-            ?? throw new EditException($"The project has no Component named {name}.");
+            ?? throw MissingElement(project, name, "Component");
         _elementRemoval.RemoveElement(project, component);
     }
 
@@ -740,10 +755,14 @@ public class ProjectEditService : IProjectEditService
     private static ElementSave GetElement(GumProjectSave project, JsonElement operation)
     {
         string name = GetString(operation, "element");
-        return (ElementSave?)project.Screens.FirstOrDefault(item => item.Name == name)
-            ?? project.Components.FirstOrDefault(item => item.Name == name)
-            ?? throw new EditException($"The project has no Screen or Component named {name}.");
+        return ProjectElementFinder.Find(project, name)
+            ?? throw new EditException($"The project has no Screen, Component or standard element named {name}.");
     }
+
+    private static EditException MissingElement(GumProjectSave project, string name, string kind) =>
+        new EditException(project.StandardElements.Any(item => item.Name == name)
+            ? $"{name} is a standard element, which cannot be removed."
+            : $"The project has no {kind} named {name}.");
 
     private static StateSaveCategory GetCategory(ElementSave element, string categoryName) =>
         element.Categories.FirstOrDefault(item => item.Name == categoryName)

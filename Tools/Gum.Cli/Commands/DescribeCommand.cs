@@ -13,7 +13,7 @@ using Gum.ProjectServices.Editing;
 namespace Gum.Cli.Commands;
 
 /// <summary>
-/// Defines the <c>gumcli describe</c> command, which lists the variables a Screen or Component (or one of its
+/// Defines the <c>gumcli describe</c> command, which lists the variables a Screen, Component or standard element (or one of its
 /// instances) can set with <c>gumcli edit</c>'s <c>setVariable</c>, and the element's states and categories.
 /// </summary>
 public static class DescribeCommand
@@ -29,7 +29,7 @@ public static class DescribeCommand
 
         Argument<string> elementArgument = new Argument<string>(
             "element",
-            "The Screen or Component to describe, such as Hud or Menus/MainMenu.");
+            "The Screen, Component or standard element to describe, such as Hud, Menus/MainMenu or Text.");
 
         Option<string?> instanceOption = new Option<string?>(
             "--instance",
@@ -72,11 +72,10 @@ public static class DescribeCommand
         GumProjectSave project = loadResult.Project!;
         ObjectFinder.Self.GumProjectSave = project;
 
-        ElementSave? element = (ElementSave?)project.Screens.FirstOrDefault(item => item.Name == elementName)
-            ?? project.Components.FirstOrDefault(item => item.Name == elementName);
+        ElementSave? element = ProjectElementFinder.Find(project, elementName);
         if (element == null)
         {
-            Console.Error.WriteLine($"error: The project has no Screen or Component named {elementName}.");
+            Console.Error.WriteLine($"error: The project has no Screen, Component or standard element named {elementName}.");
             return 2;
         }
 
