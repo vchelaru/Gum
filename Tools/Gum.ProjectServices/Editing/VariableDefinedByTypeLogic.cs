@@ -70,6 +70,13 @@ public class VariableDefinedByTypeLogic : IVariableDefinedByTypeLogic
                 yield return new DefinedVariable(variable.Name, variable.Type ?? "", null);
             }
         }
+
+        // The Forms properties of the type's behaviors (a Slider's Minimum), the Variables tab's Behavior rows.
+        // Last, so a name a visual variable also has stays that variable.
+        foreach (VariableSave declaration in FormsBehaviorChain.GetFormsPropertyDeclarations(typeElement))
+        {
+            yield return new DefinedVariable(declaration.Name, declaration.Type ?? "", null);
+        }
     }
 
     private static IEnumerable<ElementSave> GetSelfAndBaseElements(ElementSave element)

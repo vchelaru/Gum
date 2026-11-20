@@ -41,7 +41,24 @@ public class StateVariableWriter : IStateVariableWriter
         {
             variableType = ObjectFinder.Self.GetRootVariable(variableName, element)?.Type;
         }
+        if (string.IsNullOrEmpty(variableType))
+        {
+            variableType = GetFormsPropertyType(element, variableName);
+        }
         return variableType;
+    }
+
+    // A Forms property is declared by a behavior, not stored on any element, so its type comes from the declaration.
+    private static string? GetFormsPropertyType(ElementSave element, string variableName)
+    {
+        string? instanceName = VariableSave.GetSourceObject(variableName);
+        ElementSave? typeElement = string.IsNullOrEmpty(instanceName)
+            ? element
+            : ObjectFinder.Self.GetElementSave(element.GetInstance(instanceName)?.BaseType);
+        string? declaredType = typeElement == null
+            ? null
+            : FormsBehaviorChain.FindFormsPropertyDeclaration(typeElement, VariableSave.GetRootName(variableName))?.Type;
+        return string.IsNullOrEmpty(declaredType) ? null : declaredType;
     }
 
     /// <inheritdoc/>

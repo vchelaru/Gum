@@ -19,7 +19,7 @@ Available in December 2026, or now if building Gum from source.
 
 ## Output
 
-Each variable shows its name and type. An enum variable, such as `ChildrenLayout`, and a state variable, such as `SizeState`, also list the values they accept.
+Each variable shows its name and type. A Forms control also lists its behavior properties, such as `Minimum` and `Value` on a Slider. An enum variable, such as `ChildrenLayout`, and a state variable, such as `SizeState`, also list the values they accept.
 
 ```
 Hud

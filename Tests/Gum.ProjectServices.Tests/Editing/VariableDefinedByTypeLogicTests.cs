@@ -1,3 +1,4 @@
+using Gum.DataTypes.Behaviors;
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using Gum.ProjectServices.Editing;
@@ -27,6 +28,27 @@ public class VariableDefinedByTypeLogicTests : BaseTestClass
         ComponentSave derived = EditingTestProject.AddComponent(Project, "Derived", baseType: "Base");
 
         _logic.GetIfVariableIsDefinedByType("Score", derived).ShouldBeTrue();
+    }
+
+    [Fact]
+    public void GetVariablesDefinedByType_FormsPropertyOfABehaviorOnTheBase_IsListedWithItsDeclaredTypeOnceAndAVisualNameStaysTheVisual()
+    {
+        BehaviorSave behavior = new BehaviorSave { Name = "SliderBehavior" };
+        behavior.FormsProperties.Add(new VariableSave { Name = "Minimum", Type = "double", Value = 0.0 });
+        behavior.FormsProperties.Add(new VariableSave { Name = "Width", Type = "string" });
+        Project.Behaviors.Add(behavior);
+        ComponentSave baseComponent = EditingTestProject.AddComponent(Project, "Base");
+        baseComponent.Behaviors.Add(new ElementBehaviorReference { BehaviorName = "SliderBehavior" });
+        ComponentSave derived = EditingTestProject.AddComponent(Project, "Derived", baseType: "Base");
+        ComponentSave plain = EditingTestProject.AddComponent(Project, "Plain");
+
+        List<DefinedVariable> variables = _logic.GetVariablesDefinedByType(derived).ToList();
+
+        variables.Select(item => item.Name).ShouldBeUnique();
+        variables.ShouldContain(item => item.Name == "Minimum" && item.Type == "double");
+        variables.ShouldContain(item => item.Name == "Width" && item.Type == "float");
+        _logic.GetIfVariableIsDefinedByType("Minimum", derived).ShouldBeTrue();
+        _logic.GetIfVariableIsDefinedByType("Minimum", plain).ShouldBeFalse();
     }
 
     [Fact]
