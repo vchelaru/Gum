@@ -130,7 +130,7 @@ public class EditRenameTests : BaseTestClass
 
         EditOk(projectPath, """{ "op": "renameElement", "name": "Card", "newName": "Panel" }""");
 
-        Load(projectPath).GetComponentSave("Hud")!.DefaultState.VariableLists
+        Load(projectPath).GetComponentSave("Hud")!.GetDefaultStateOrThrow().VariableLists
             .SelectMany(list => list.ValueAsIList.Cast<string>())
             .ShouldContain(line => line.Contains("Components/Panel.Width"));
         ShouldBeCleanAndStable(projectPath);
@@ -182,7 +182,7 @@ public class EditRenameTests : BaseTestClass
         ComponentSave baseComponent = project.GetComponentSave("Base")!;
         baseComponent.GetInstance("Frame").ShouldNotBeNull();
         baseComponent.GetInstance("Holder").ShouldBeNull();
-        baseComponent.DefaultState.GetValue("Label.Parent").ShouldBe("Frame");
+        baseComponent.GetDefaultStateOrThrow().GetValue("Label.Parent").ShouldBe("Frame");
         project.GetComponentSave("Derived")!.GetInstance("Frame").ShouldNotBeNull();
         ElementAnimationsSave.Load(Path.Combine(Folder(projectPath), "Components", "BaseAnimations.ganx"))
             .Animations[0].Animations[0].Name.ShouldBe("Frame.Fade");
@@ -203,8 +203,8 @@ public class EditRenameTests : BaseTestClass
         EditOk(projectPath, """{ "op": "renameInstance", "element": "Card", "name": "Title", "newName": "Heading" }""");
 
         ComponentSave card = Load(projectPath).GetComponentSave("Card")!;
-        card.DefaultState.GetVariableSave("Heading.Text")!.ExposedAsName.ShouldBe("Caption");
-        card.DefaultState.VariableLists.SelectMany(list => list.ValueAsIList.Cast<string>())
+        card.GetDefaultStateOrThrow().GetVariableSave("Heading.Text")!.ExposedAsName.ShouldBe("Caption");
+        card.GetDefaultStateOrThrow().VariableLists.SelectMany(list => list.ValueAsIList.Cast<string>())
             .ShouldContain(line => line.Contains("Heading.Width"));
         ShouldBeCleanAndStable(projectPath);
     }
@@ -252,7 +252,7 @@ public class EditRenameTests : BaseTestClass
         EditOk(projectPath, """{ "op": "renameState", "element": "Toggle", "category": "OnOff", "name": "On", "newName": "Enabled" }""");
 
         GumProjectSave project = Load(projectPath);
-        project.GetScreenSave("Menu")!.DefaultState.GetValue("Switch.OnOffState").ShouldBe("Enabled");
+        project.GetScreenSave("Menu")!.GetDefaultStateOrThrow().GetValue("Switch.OnOffState").ShouldBe("Enabled");
         project.GetComponentSave("Toggle")!.Categories[0].States.Select(item => item.Name).ShouldContain("Enabled");
         ElementAnimationsSave.Load(Path.Combine(Folder(projectPath), "Components", "ToggleAnimations.ganx"))
             .Animations[0].States.Select(item => item.StateName).ShouldBe(new[] { "OnOff/Enabled", "OnOff/Off" });
@@ -280,10 +280,10 @@ public class EditRenameTests : BaseTestClass
         EditOk(projectPath, """{ "op": "renameCategory", "element": "Toggle", "name": "OnOff", "newName": "Power" }""");
 
         GumProjectSave project = Load(projectPath);
-        VariableSave variable = project.GetScreenSave("Menu")!.DefaultState.GetVariableSave("Switch.PowerState")!;
+        VariableSave variable = project.GetScreenSave("Menu")!.GetDefaultStateOrThrow().GetVariableSave("Switch.PowerState")!;
         variable.Type.ShouldBe("Power");
         variable.Value.ShouldBe("On");
-        project.GetComponentSave("Toggle")!.DefaultState.GetVariableSave("PowerState").ShouldNotBeNull();
+        project.GetComponentSave("Toggle")!.GetDefaultStateOrThrow().GetVariableSave("PowerState").ShouldNotBeNull();
         ElementAnimationsSave.Load(Path.Combine(Folder(projectPath), "Components", "ToggleAnimations.ganx"))
             .Animations[0].States[0].StateName.ShouldBe("Power/On");
         ShouldBeCleanAndStable(projectPath);
@@ -322,10 +322,10 @@ public class EditRenameTests : BaseTestClass
         EditOk(projectPath, """{ "op": "renameVariable", "element": "Card", "name": "Score", "newName": "Points" }""");
 
         GumProjectSave project = Load(projectPath);
-        project.GetComponentSave("Card")!.DefaultState.GetVariableSave("Points").ShouldNotBeNull();
-        project.GetComponentSave("Card")!.DefaultState.GetVariableSave("Score").ShouldBeNull();
-        project.GetComponentSave("Fancy")!.DefaultState.GetVariableSave("Points")!.Value.ShouldBe(9);
-        project.GetScreenSave("Menu")!.DefaultState.GetVariableSave("Main.Points")!.Value.ShouldBe(5);
+        project.GetComponentSave("Card")!.GetDefaultStateOrThrow().GetVariableSave("Points").ShouldNotBeNull();
+        project.GetComponentSave("Card")!.GetDefaultStateOrThrow().GetVariableSave("Score").ShouldBeNull();
+        project.GetComponentSave("Fancy")!.GetDefaultStateOrThrow().GetVariableSave("Points")!.Value.ShouldBe(9);
+        project.GetScreenSave("Menu")!.GetDefaultStateOrThrow().GetVariableSave("Main.Points")!.Value.ShouldBe(5);
         ShouldBeCleanAndStable(projectPath);
     }
 
@@ -345,8 +345,8 @@ public class EditRenameTests : BaseTestClass
         EditOk(projectPath, """{ "op": "renameVariable", "element": "Card", "name": "Caption", "newName": "Heading" }""");
 
         GumProjectSave project = Load(projectPath);
-        project.GetComponentSave("Card")!.DefaultState.GetVariableSave("Title.Text")!.ExposedAsName.ShouldBe("Heading");
-        project.GetScreenSave("Menu")!.DefaultState.GetVariableSave("Main.Heading")!.Value.ShouldBe("Hello");
+        project.GetComponentSave("Card")!.GetDefaultStateOrThrow().GetVariableSave("Title.Text")!.ExposedAsName.ShouldBe("Heading");
+        project.GetScreenSave("Menu")!.GetDefaultStateOrThrow().GetVariableSave("Main.Heading")!.Value.ShouldBe("Hello");
         ShouldBeCleanAndStable(projectPath);
     }
 
