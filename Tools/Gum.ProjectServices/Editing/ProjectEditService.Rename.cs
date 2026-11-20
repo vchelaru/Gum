@@ -21,6 +21,19 @@ public partial class ProjectEditService
         _renamer = new ProjectRenamer(_referenceFinder, _inheritanceSync, new RenameReferenceApplier(), _pendingFiles);
     }
 
+    private static readonly string[] AnimationOps = { "addAnimation", "removeAnimation", "setAnimationLoops", "addKeyframe", "removeKeyframe" };
+    private static readonly string[] SidecarRenameOps = { "renameElement", "renameInstance", "renameState", "renameCategory" };
+
+    // Both edit the element's animation file in memory, and neither sees the other's copy or the file move, so an
+    // animation op after a rename would look in the wrong file and one before it would be overwritten.
+    private static string? GetWhyCannotMixRenamesAndAnimations(IEnumerable<string> ops)
+    {
+        List<string> all = ops.ToList();
+        return all.Any(AnimationOps.Contains) && all.Any(SidecarRenameOps.Contains)
+            ? "An operations file cannot mix animation operations with renameElement, renameInstance, renameState or renameCategory, which also change the animation file. Split it into two runs."
+            : null;
+    }
+
     private void RenameElement(GumProjectSave project, JsonElement operation)
     {
         string name = GetString(operation, "name");

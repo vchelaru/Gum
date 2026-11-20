@@ -373,6 +373,32 @@ public class EditRenameTests : BaseTestClass
         Snapshot(projectPath).ShouldBe(before);
     }
 
+    [Theory]
+    [InlineData("""{ "op": "addAnimation", "element": "Card", "name": "Hide" }""", "renameElement")]
+    [InlineData("""{ "op": "addKeyframe", "element": "Card", "animation": "Show", "state": "Default", "time": 1 }""", "renameInstance")]
+    public void Rename_MixedWithAnimationOps_IsRefusedAndWritesNothing(string animationOp, string renameOp)
+    {
+        string projectPath = CreateEmptyProject();
+        EditOk(projectPath, """
+            { "op": "addComponent", "name": "Card" },
+            { "op": "addInstance", "element": "Card", "name": "Box", "type": "Container" }
+            """);
+        WriteAnimations(projectPath, "Components", "Card", new AnimationSave { Name = "Show" });
+        Dictionary<string, string> before = Snapshot(projectPath);
+        string rename = renameOp == "renameElement"
+            ? """{ "op": "renameElement", "name": "Card", "newName": "Panel" }"""
+            : """{ "op": "renameInstance", "element": "Card", "name": "Box", "newName": "Crate" }""";
+
+        CliTestHelper first = Edit(projectPath, animationOp + "," + rename);
+        CliTestHelper second = Edit(projectPath, rename + "," + animationOp);
+
+        first.ExitCode.ShouldBe(1);
+        first.StandardError.ShouldContain("two runs");
+        second.ExitCode.ShouldBe(1);
+        second.StandardError.ShouldContain("two runs");
+        Snapshot(projectPath).ShouldBe(before);
+    }
+
     [Fact]
     public void RenameState_OfDefaultState_IsRefused()
     {

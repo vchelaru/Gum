@@ -284,6 +284,11 @@ public partial class ProjectEditService : IProjectEditService
                 return Fail(ProjectEditFailure.InvalidFile, fileError);
             }
 
+            if (GetWhyCannotMixRenamesAndAnimations(operations.Select(item => item.Op)) is { } whyNot)
+            {
+                return Fail(ProjectEditFailure.OperationFailed, whyNot);
+            }
+
             for (int i = 0; i < operations.Count; i++)
             {
                 try
