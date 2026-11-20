@@ -287,7 +287,7 @@ public class ComboBox :
         {
             if (listBox != null)
             {
-                listBox.SelectedObject = value;
+                listBox.SetSelectedObject(value, deferIfNotFound: IsDataBound(nameof(SelectedObject)));
             }
             else
             {
@@ -308,17 +308,24 @@ public class ComboBox :
         }
         set
         {
+            bool deferIfPastEnd = IsDataBound(nameof(SelectedIndex));
             if (listBox != null)
             {
-                listBox.SelectedIndex = value;
+                listBox.SetSelectedIndex(value, deferIfPastEnd);
             }
             else
             {
                 IList? items = Items;
-                // Like ListBox (#6737): -1 clears the selection and any other out-of-range index is ignored.
+                // Like ListBox (#6737): -1 clears the selection and any other out-of-range index is
+                // ignored, unless a binding delivered it ahead of its items.
                 if (value == -1 || (items != null && value >= 0 && value < items.Count))
                 {
+                    _deferredSelectedIndex = -1;
                     SetPendingSelection(value);
+                }
+                else if (deferIfPastEnd && value >= (items?.Count ?? 0))
+                {
+                    _deferredSelectedIndex = value;
                 }
             }
         }
@@ -332,6 +339,8 @@ public class ComboBox :
     // moves the index, and removing or replacing the selected item clears it.
     int _pendingSelectedIndex = -1;
     object? _pendingSelectedObject;
+    // A bound SelectedIndex that arrived before the items it points at (see ListBox.SetSelectedIndex).
+    int _deferredSelectedIndex = -1;
 
     private void SetPendingItems(IList? items)
     {
@@ -350,6 +359,13 @@ public class ComboBox :
     // item, or resetting the collection, clears the selection; other changes shift it.
     private void HandlePendingItemsChanged(object? sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
     {
+        if (_deferredSelectedIndex >= 0 && _deferredSelectedIndex < (_pendingItems?.Count ?? 0))
+        {
+            int deferred = _deferredSelectedIndex;
+            _deferredSelectedIndex = -1;
+            SetPendingSelection(deferred);
+            return;
+        }
         if (_pendingSelectedIndex < 0)
         {
             return;
@@ -459,6 +475,11 @@ public class ComboBox :
         _pendingSelectedObject = null;
         built.Items = items;
         built.SelectedIndex = selectedIndex;
+        if (_deferredSelectedIndex >= 0)
+        {
+            built.SetSelectedIndex(_deferredSelectedIndex, deferIfPastEnd: true);
+            _deferredSelectedIndex = -1;
+        }
 
         listBox = built;
         SubscribeToListBox();

@@ -222,6 +222,151 @@ public class ListBoxBindingSetDuringConstructionTests : BaseTestClass
     }
 
     [Fact]
+    public void SelectedIndexBinding_ViewModelIndexSetBeforeItemsArrive_ShouldSelectRowWhenItemsArrive()
+    {
+        // The view model already says "tower 1", and the towers are loaded afterward.
+        TowerList listBox = CreateTowerList(false);
+        TowerViewModel viewModel = new() { SelectedTower = 1 };
+        listBox.BindingContext = viewModel;
+
+        viewModel.AvailableTowers.Add("A");
+        viewModel.AvailableTowers.Add("B");
+
+        listBox.SelectedIndex.ShouldBe(1);
+    }
+
+    [Fact]
+    public void VisualSwap_AfterBinding_ShouldKeepRowsAndSelection()
+    {
+        TowerList listBox = CreateTowerList(false);
+        listBox.BindingContext = new TowerViewModel("A", "B", "C") { SelectedTower = 1 };
+
+        listBox.Visual = new Gum.Forms.DefaultVisuals.V3.ListBoxVisual(tryCreateFormsObject: false);
+
+        listBox.ListBoxItems.Count.ShouldBe(3);
+        listBox.SelectedIndex.ShouldBe(1);
+        listBox.ListBoxItems[0].ShouldBeOfType<TowerItem>();
+    }
+
+    [Fact]
+    public void SelectedIndexBinding_ViewModelIndexSetBeforeItemsArrive_ShouldKeepViewModelValue()
+    {
+        TowerList listBox = CreateTowerList(false);
+        TowerViewModel viewModel = new() { SelectedTower = 1 };
+        listBox.BindingContext = viewModel;
+
+        viewModel.SelectedTower.ShouldBe(1);
+    }
+
+    [Fact]
+    public void SelectedIndexBinding_ViewModelResetToNegativeOneBeforeItemsArrive_ShouldNotSelectWhenItemsArrive()
+    {
+        TowerList listBox = CreateTowerList(false);
+        TowerViewModel viewModel = new() { SelectedTower = 1 };
+        listBox.BindingContext = viewModel;
+        viewModel.SelectedTower = -1;
+
+        viewModel.AvailableTowers.Add("A");
+        viewModel.AvailableTowers.Add("B");
+
+        listBox.SelectedIndex.ShouldBe(-1);
+    }
+
+    [Fact]
+    public void SelectedIndexBinding_ViewModelIndexStillPastEndAfterItemsArrive_ShouldSelectWhenEnoughItemsArrive()
+    {
+        TowerList listBox = CreateTowerList(false);
+        TowerViewModel viewModel = new() { SelectedTower = 2 };
+        listBox.BindingContext = viewModel;
+
+        viewModel.AvailableTowers.Add("A");
+        listBox.SelectedIndex.ShouldBe(-1);
+        viewModel.AvailableTowers.Add("B");
+        viewModel.AvailableTowers.Add("C");
+
+        listBox.SelectedIndex.ShouldBe(2);
+    }
+
+    [Fact]
+    public void SelectedIndex_PastEndWithoutBinding_ShouldStayIgnoredWhenItemsArrive()
+    {
+        ListBox listBox = new();
+        listBox.AddToRoot();
+        ObservableCollection<string> items = new();
+        listBox.Items = items;
+
+        listBox.SelectedIndex = 1;
+        items.Add("A");
+        items.Add("B");
+
+        listBox.SelectedIndex.ShouldBe(-1);
+    }
+
+    [Fact]
+    public void ComboBoxSelectedIndexBinding_ViewModelIndexSetBeforeItemsArrive_ShouldSelectWhenItemsArrive()
+    {
+        ComboBox comboBox = new();
+        comboBox.AddToRoot();
+        comboBox.SetBinding(nameof(ComboBox.Items), nameof(TowerViewModel.AvailableTowers));
+        comboBox.SetBinding(nameof(ComboBox.SelectedIndex), nameof(TowerViewModel.SelectedTower));
+        TowerViewModel viewModel = new() { SelectedTower = 1 };
+        comboBox.BindingContext = viewModel;
+
+        viewModel.AvailableTowers.Add("A");
+        viewModel.AvailableTowers.Add("B");
+
+        comboBox.SelectedIndex.ShouldBe(1);
+        comboBox.SelectedObject.ShouldBe("B");
+    }
+
+    [Fact]
+    public void SelectedObjectBinding_ViewModelObjectSetBeforeItemsArrive_ShouldSelectWhenItemsArrive()
+    {
+        ListBox listBox = new();
+        listBox.AddToRoot();
+        listBox.SetBinding(nameof(ListBox.Items), nameof(TowerViewModel.AvailableTowers));
+        listBox.SetBinding(nameof(ListBox.SelectedObject), nameof(TowerViewModel.SelectedName));
+        TowerViewModel viewModel = new() { SelectedName = "B" };
+        listBox.BindingContext = viewModel;
+
+        viewModel.AvailableTowers.Add("A");
+        viewModel.AvailableTowers.Add("B");
+
+        listBox.SelectedObject.ShouldBe("B");
+    }
+
+    [Fact]
+    public void FrameworkElementTemplate_ChangedWhileRowSelected_ShouldKeepSelection()
+    {
+        ListBox listBox = new();
+        listBox.AddToRoot();
+        listBox.Items = new ObservableCollection<string> { "A", "B", "C" };
+        listBox.SelectedIndex = 1;
+
+        listBox.FrameworkElementTemplate = new FrameworkElementTemplate(typeof(TowerItem));
+
+        listBox.ListBoxItems.Count.ShouldBe(3);
+        listBox.SelectedIndex.ShouldBe(1);
+        listBox.SelectedObject.ShouldBe("B");
+        listBox.ListBoxItems[1].IsSelected.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void VisualTemplate_ChangedWhileRowSelected_ShouldKeepSelection()
+    {
+        ListBox listBox = new();
+        listBox.AddToRoot();
+        listBox.Items = new ObservableCollection<string> { "A", "B", "C" };
+        listBox.SelectedIndex = 2;
+
+        listBox.VisualTemplate = new VisualTemplate(() => new ListBoxItem().Visual);
+
+        listBox.ListBoxItems.Count.ShouldBe(3);
+        listBox.SelectedIndex.ShouldBe(2);
+        listBox.ListBoxItems[2].IsSelected.ShouldBeTrue();
+    }
+
+    [Fact]
     public void ClickTemplatedRow_ShouldSelectItAndPushToViewModel()
     {
         TowerList listBox = CreateTowerList(false);
@@ -281,6 +426,12 @@ public class ListBoxBindingSetDuringConstructionTests : BaseTestClass
         public int SelectedTower
         {
             get => Get<int>();
+            set => Set(value);
+        }
+
+        public string? SelectedName
+        {
+            get => Get<string?>();
             set => Set(value);
         }
 
