@@ -117,7 +117,10 @@ public static class EditCommand
             return editResult.Failure == ProjectEditFailure.InvalidFile ? 2 : 1;
         }
 
-        List<ErrorResult> newErrors = GetNewErrors(errorsBefore, checker.GetAllErrors(project));
+        // The animation files a rename changes are checked as they will be saved, not as they sit on disk.
+        PendingFileChanges? pendingFiles = editResult.PendingFiles;
+        HeadlessErrorChecker checkerAfter = pendingFiles?.HasChanges == true ? CheckCommand.CreateChecker(pendingFiles) : checker;
+        List<ErrorResult> newErrors = GetNewErrors(errorsBefore, checkerAfter.GetAllErrors(project));
         CheckCommand.WriteReport(newErrors, json);
         if (newErrors.Any(error => error.Severity == ErrorSeverity.Error))
         {
@@ -142,6 +145,7 @@ public static class EditCommand
             {
                 File.Delete(removedFile.FullPath);
             }
+            pendingFiles?.Commit(project);
         }
         catch (Exception ex)
         {

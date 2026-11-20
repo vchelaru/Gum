@@ -264,109 +264,19 @@ public class AddVariableViewModel : DialogViewModel
         }
 
         HashSet<ElementSave> elementsToSave = new HashSet<ElementSave>();
-        if (ApplyEditVariableOnElement(element, oldName, newName, type, 
-            // If we're changing the variable on this element, we should respect whether it's
-            // a full rename or just an exposed rename
-            RenameType))
+        // If we're changing the variable on this element, we should respect whether it's
+        // a full rename or just an exposed rename
+        new RenameReferenceApplier().RenameVariable(element, oldName, newName, type,
+            RenameType == RenameType.ExposedName, changes, elementsToSave);
+        if (elementsToSave.Contains(element))
         {
             _elementCommands.SortVariables(element);
-            elementsToSave.Add(element);
-        }
-
-        ApplyChangesToInstances(element, oldName, newName, type);
-
-        var derivedElements = ObjectFinder.Self.GetElementsInheritingFrom(element);
-        // the code to apply these changes was written before we had the VariableChangeResponse. We could
-        // migrate the code to using that intead of this if we ever have a problem or need to upgrade it any.
-        // Note that chagnes are used below for variable references...
-        foreach (var derived in derivedElements)
-        {
-            if (ApplyEditVariableOnElement(derived, oldName, newName, type, RenameType))
-            {
-                elementsToSave.Add(derived);
-            }
-
-            ApplyChangesToInstances(derived, oldName, newName, type);
-        }
-
-        _renameLogic.ApplyVariableReferenceRenames(changes.VariableReferenceChanges, oldName, newName, elementsToSave);
-
-        foreach (var elementToSave in elementsToSave)
-        {
-            _fileCommands.TryAutoSaveElement(elementToSave);
-        }
-
-    }
-
-    private void ApplyChangesToInstances(ElementSave element, string oldName, string newName, string type)
-    {
-        var references = ObjectFinder.Self.GetElementReferencesToThis(element)
-            .Where(item => item.ReferenceType == ReferenceType.InstanceOfType)
-            .ToArray();
-
-        ////////////////////////// Early Out ///////////////////////////
-        if (references.Length == 0) return;
-        /////////////////////// End Early Out /////////////////////////
-
-        HashSet<ElementSave> elementsToSave = new HashSet<ElementSave>();
-
-        foreach (var reference in references)
-        {
-            // InstanceOfType references always point at an instance.
-            var instance = (InstanceSave)reference.ReferencingObject;
-
-            var oldFullName = instance.Name + "." + oldName;
-            var newFullName = instance.Name + "." + newName;
-
-            // ObjectFinder sets the owner on every instance reference it returns.
-            if (reference.OwnerOfReferencingObject is not { } owner)
-            {
-                continue;
-            }
-
-            if (ApplyEditVariableOnElement(owner, oldFullName, newFullName, type,
-                // Instances treat the name as a normal variable, so do a full rename
-                RenameType.NormalName))
-            {
-                elementsToSave.Add(owner);
-            }
         }
 
         foreach (var elementToSave in elementsToSave)
         {
             _fileCommands.TryAutoSaveElement(elementToSave);
         }
+
     }
-
-    private bool ApplyEditVariableOnElement(ElementSave element, string oldName, string newName, string type,
-        RenameType renameType)
-    {
-        var changed = false;
-        var allStates = element.AllStates;
-
-        foreach (var state in allStates)
-        {
-            foreach (var variable in state.Variables)
-            {
-                if ((variable.Name == oldName && renameType == RenameType.NormalName) ||
-                    (variable.ExposedAsName == oldName && renameType == RenameType.ExposedName))
-                {
-                    variable.Name = newName;
-                    if (variable.Type != type)
-                    {
-                        variable.Type = type;
-                        // todo - convert:
-                        variable.Value = null;
-                    }
-                    changed = true;
-                }
-            }
-        }
-
-
-
-        return changed;
-    }
-
-
 }

@@ -6,6 +6,7 @@ using Gum.DataTypes.Behaviors;
 using Gum.ToolStates;
 using Gum.DataTypes.Variables;
 using Gum.Managers;
+using Gum.ProjectServices.Editing;
 using Gum.Undo;
 using Gum.Commands;
 using Gum.Services.Dialogs;
@@ -31,6 +32,7 @@ public class RenameLogic : IRenameLogic, IUndoRenameLogic
     // Lazy: UndoManager depends on this class through IUndoRenameLogic.
     private readonly Lazy<IUndoManager> _undoManager;
     private readonly BehaviorRenamer _behaviorRenamer;
+    private readonly IRenameReferenceApplier _applier = new RenameReferenceApplier();
 
     public RenameLogic(ISelectedState selectedState,
         INameVerifier nameVerifier,
@@ -109,24 +111,11 @@ public class RenameLogic : IRenameLogic, IUndoRenameLogic
     public void ApplyStateReferences(StateReferences changes, StateSave state)
     {
         var elementsToSave = new HashSet<ElementSave>();
-        var undoChanges = new List<CrossElementVariableChange>();
+        var observer = new CrossElementChangeObserver();
 
-        foreach (var (container, variable) in changes.VariablesToUpdate)
-        {
-            var owningState = container.AllStates.FirstOrDefault(item => item.Variables.Contains(variable));
-            var undoChange = owningState == null ? null : CrossElementVariableChange.CaptureBefore(container, owningState, variable);
+        _applier.ApplyStateReferences(changes, state, elementsToSave, observer);
 
-            variable.Value = state.Name;
-            elementsToSave.Add(container);
-
-            if (undoChange != null)
-            {
-                undoChange.CaptureAfter(variable);
-                undoChanges.Add(undoChange);
-            }
-        }
-
-        _undoManager.Value.RecordCrossElementVariableChanges(undoChanges);
+        _undoManager.Value.RecordCrossElementVariableChanges(observer.Changes);
 
         foreach (var elementToSave in elementsToSave)
         {
@@ -145,17 +134,9 @@ public class RenameLogic : IRenameLogic, IUndoRenameLogic
             // This category can only be renamed if no behaviors require it
             var behaviorsNeedingCategory = _deleteLogic.GetBehaviorsNeedingCategory(category, elementSave as ComponentSave);
 
-            if (behaviorsNeedingCategory.Any())
+            if (ProjectRenamer.GetWhyCategoryCannotBeRenamed(category, behaviorsNeedingCategory) is { } whyNot)
             {
-                string message =
-                    $"The category {category.Name} cannot be renamed because it is needed by the following behavior(s):";
-
-                foreach (var behavior in behaviorsNeedingCategory)
-                {
-                    message += "\n" + behavior.Name;
-                }
-
-                _dialogService.ShowMessage(message);
+                _dialogService.ShowMessage(whyNot);
                 return;
             }
 
@@ -202,62 +183,19 @@ public class RenameLogic : IRenameLogic, IUndoRenameLogic
 
     public void ApplyCategoryReferences(CategoryReferences categoryChanges, IStateContainer owner, StateSaveCategory category, string oldName, string newName)
     {
-        // Gather self-referencing state variables in the owner element before mutating anything
-        var ownerAsElement = owner as ElementSave;
-        var selfVarsToUpdate = ownerAsElement?.AllStates
-            .SelectMany(state => state.Variables)
-            .Where(v => v.Type == oldName + "State")
-            .ToList();
+        var elementsWithChangedVariables = new HashSet<ElementSave>();
+        var observer = new CrossElementChangeObserver();
 
-        category.Name = newName;
+        var selfVariables = _applier.ApplyCategoryReferences(categoryChanges, owner, category, oldName, newName,
+            elementsWithChangedVariables, observer);
 
-        HashSet<ElementSave> elementsWithChangedVariables = new HashSet<ElementSave>();
-        var undoChanges = new List<(CrossElementVariableChange Change, VariableSave Variable)>();
-
-        foreach (var change in categoryChanges.VariableChanges)
+        foreach (var variable in selfVariables)
         {
-            var containerElement = change.Container as ElementSave;
-            if (containerElement != null)
-            {
-                elementsWithChangedVariables.Add(containerElement);
-                undoChanges.Add((CrossElementVariableChange.CaptureBefore(containerElement, change.State, change.Variable), change.Variable));
-            }
-            change.Variable.Type = newName;
-            if (change.Variable.GetRootName() == $"{oldName}State")
-            {
-                if (string.IsNullOrEmpty(change.Variable.SourceObject))
-                {
-                    change.Variable.Name = $"{newName}State";
-                }
-                else
-                {
-                    change.Variable.Name = $"{change.Variable.SourceObject}.{newName}State";
-                }
-            }
+            variable.CustomTypeConverter =
+                new Gum.PropertyGridHelpers.Converters.AvailableStatesConverter(category.Name, _selectedState);
         }
 
-        if (selfVarsToUpdate != null)
-        {
-            foreach (var variable in selfVarsToUpdate)
-            {
-                variable.Name = category.Name + "State";
-                variable.Type = category.Name + "State";
-
-                variable.CustomTypeConverter =
-                    new Gum.PropertyGridHelpers.Converters.AvailableStatesConverter(category.Name, _selectedState);
-            }
-
-            foreach (var state in ownerAsElement!.AllStates)
-            {
-                state.Variables.Sort((first, second) => GumProjectSave.CompareNames(first.Name, second.Name));
-            }
-        }
-
-        foreach (var (undoChange, variable) in undoChanges)
-        {
-            undoChange.CaptureAfter(variable);
-        }
-        _undoManager.Value.RecordCrossElementVariableChanges(undoChanges.Select(item => item.Change));
+        _undoManager.Value.RecordCrossElementVariableChanges(observer.Changes);
 
         _guiCommands.RefreshStateTreeView();
         // I don't think we need to save the project when renaming a state:
@@ -297,88 +235,13 @@ public class RenameLogic : IRenameLogic, IUndoRenameLogic
 
     public void ApplyInstanceReferences(InstanceReferences changes, string newName, string oldName, HashSet<ElementSave> elementsToSave)
     {
-        var undoChanges = new List<CrossElementVariableChange>();
+        var observer = new CrossElementChangeObserver();
 
-        foreach (var (container, variable) in changes.ParentVariablesInOtherElements)
-        {
-            if (variable.Value is string value)
-            {
-                var dotIndex = value.IndexOf(".");
-                if (dotIndex >= 0 && value.Substring(dotIndex + 1) == oldName)
-                {
-                    var owningState = container.AllStates.FirstOrDefault(item => item.Variables.Contains(variable));
-                    var undoChange = owningState == null ? null : CrossElementVariableChange.CaptureBefore(container, owningState, variable);
-
-                    variable.Value = value.Substring(0, dotIndex + 1) + newName;
-                    elementsToSave.Add(container);
-
-                    if (undoChange != null)
-                    {
-                        undoChange.CaptureAfter(variable);
-                        undoChanges.Add(undoChange);
-                    }
-                }
-            }
-        }
-
-        // One undo change per list, captured before its first line is rewritten.
-        var listUndoChanges = new Dictionary<VariableListSave, CrossElementVariableChange>();
-
-        foreach (var referenceChange in changes.VariableReferenceChanges)
-        {
-            if (referenceChange.Container != null)
-                elementsToSave.Add(referenceChange.Container);
-
-            var variableList = referenceChange.VariableReferenceList;
-            if (referenceChange.Container != null && !listUndoChanges.ContainsKey(variableList))
-            {
-                var owningState = referenceChange.Container.AllStates.FirstOrDefault(item => item.VariableLists.Contains(variableList));
-                if (owningState != null)
-                {
-                    listUndoChanges[variableList] = CrossElementVariableChange.CaptureBefore(referenceChange.Container, owningState, variableList);
-                }
-            }
-
-            if (variableList.ValueAsIList[referenceChange.LineIndex] is not string oldLine) continue;
-
-            variableList.ValueAsIList[referenceChange.LineIndex] = RewriteReferenceLine(oldLine, referenceChange.ChangedSide,
-                leftSide => leftSide.StartsWith(oldName + ".") ? newName + leftSide.Substring(oldName.Length) : leftSide,
-                rightSide =>
-                {
-                    // Preserve optional state prefix (e.g. "Highlighted:OldName.X")
-                    var colonIndex = rightSide.IndexOf(":");
-                    var statePrefix = colonIndex >= 0 ? rightSide.Substring(0, colonIndex + 1) : string.Empty;
-                    var rightCore = colonIndex >= 0 ? rightSide.Substring(colonIndex + 1) : rightSide;
-
-                    if (rightCore.StartsWith(oldName + "."))
-                    {
-                        rightCore = newName + rightCore.Substring(oldName.Length);
-                    }
-                    else
-                    {
-                        // Handle qualified cross-component reference: "Components/ComponentA/Sprite.Width"
-                        var qualifiedOldPattern = "." + oldName + ".";
-                        var patternIndex = rightCore.LastIndexOf(qualifiedOldPattern);
-                        if (patternIndex >= 0)
-                        {
-                            rightCore = rightCore.Substring(0, patternIndex + 1) + newName +
-                                        rightCore.Substring(patternIndex + 1 + oldName.Length);
-                        }
-                    }
-
-                    return statePrefix + rightCore;
-                });
-        }
-
-        foreach (var (variableList, undoChange) in listUndoChanges)
-        {
-            undoChange.CaptureAfter(variableList);
-            undoChanges.Add(undoChange);
-        }
+        _applier.ApplyInstanceReferences(changes, newName, oldName, elementsToSave, observer);
 
         // Recorded into the rename's undo action (HandleRename holds the lock); the renamed element's
         // own lines are also restored by its snapshot, which leaves those changes nothing to replay.
-        _undoManager.Value.RecordCrossElementVariableChanges(undoChanges);
+        _undoManager.Value.RecordCrossElementVariableChanges(observer.Changes);
     }
 
     #endregion
@@ -394,40 +257,7 @@ public class RenameLogic : IRenameLogic, IUndoRenameLogic
     {
         var containersToSave = new HashSet<ElementSave>();
 
-        foreach (var element in changes.ElementsWithBaseTypeReference)
-        {
-            element.BaseType = elementSave.Name;
-            containersToSave.Add(element);
-        }
-
-        foreach (var (container, instance) in changes.InstancesWithBaseTypeReference)
-        {
-            instance.BaseType = elementSave.Name;
-            containersToSave.Add(container);
-        }
-
-        foreach (var (container, variable) in changes.ContainedTypeVariableReferences)
-        {
-            variable.Value = elementSave.Name;
-            containersToSave.Add(container);
-        }
-
-        string qualifiedOldName = ElementReference.GetQualifiedName(elementSave, oldName);
-
-        string qualifiedNewName = ElementReference.GetQualifiedName(elementSave, elementSave.Name);
-
-        foreach (var referenceChange in changes.VariableReferenceChanges)
-        {
-            var variableList = referenceChange.VariableReferenceList;
-            if (variableList.ValueAsIList[referenceChange.LineIndex] is not string oldLine || !oldLine.Contains('=')) continue;
-
-            variableList.ValueAsIList[referenceChange.LineIndex] = RewriteReferenceLine(oldLine, SideOfEquals.Right,
-                left => left,
-                right => right.StartsWith(qualifiedOldName + ".")
-                    ? qualifiedNewName + right.Substring(qualifiedOldName.Length)
-                    : right);
-            containersToSave.Add(referenceChange.Container);
-        }
+        _applier.ApplyElementReferences(changes, elementSave, oldName, containersToSave);
 
         foreach (var container in containersToSave)
         {
@@ -604,23 +434,8 @@ public class RenameLogic : IRenameLogic, IUndoRenameLogic
                     stateSave.ReactToInstanceNameChange(instance, oldName, newName, _renamePluginNotifier);
                 }
 
-                foreach (var eventSave in _selectedState.SelectedElement.Events)
-                {
-                    if (eventSave.GetSourceObject() == oldName)
-                    {
-                        eventSave.Name = instance.Name + "." + eventSave.GetRootName();
-                    }
-                }
-
-                foreach (var state in _selectedState.SelectedElement.AllStates)
-                {
-                    var variable = state.Variables.FirstOrDefault(item => item.Name == "DefaultChildContainer");
-
-                    if (variable?.Value as string == oldName)
-                    {
-                        variable!.Value = newName;
-                    }
-                }
+                // Events and DefaultChildContainer; the variables were renamed state by state above.
+                _applier.RenameInstanceEventsAndChildContainer(_selectedState.SelectedElement, instance, oldName);
                 // Parent values in other elements that point at the renamed instance are rewritten
                 // by ApplyInstanceReferences, which also records them for undo.
             }
@@ -742,84 +557,13 @@ public class RenameLogic : IRenameLogic, IUndoRenameLogic
 
     public void ApplyVariableRenameChanges(VariableChangeResponse changes,
         string oldStrippedOrExposedName, string newStrippedOrExposedName,
-        HashSet<ElementSave> elementsNeedingSave)
-    {
-        foreach (var change in changes.VariableChanges)
-        {
-            if (change.Container is ElementSave element)
-                elementsNeedingSave.Add(element);
-
-            if (change.Variable.ExposedAsName == oldStrippedOrExposedName)
-            {
-                change.Variable.ExposedAsName = newStrippedOrExposedName;
-            }
-            else if (change.Variable.GetRootName() == oldStrippedOrExposedName)
-            {
-                var prefix = change.Variable.SourceObject != null
-                    ? change.Variable.SourceObject + "."
-                    : string.Empty;
-                change.Variable.Name = prefix + newStrippedOrExposedName;
-            }
-        }
-
-        ApplyVariableReferenceRenames(changes.VariableReferenceChanges, oldStrippedOrExposedName, newStrippedOrExposedName, elementsNeedingSave);
-    }
+        HashSet<ElementSave> elementsNeedingSave) =>
+        _applier.ApplyVariableRenameChanges(changes, oldStrippedOrExposedName, newStrippedOrExposedName, elementsNeedingSave);
 
     public void ApplyVariableReferenceRenames(IEnumerable<VariableReferenceChange> referenceChanges,
         string oldStrippedOrExposedName, string newStrippedOrExposedName,
-        HashSet<ElementSave> elementsNeedingSave)
-    {
-        foreach (var referenceChange in referenceChanges)
-        {
-            elementsNeedingSave.Add(referenceChange.Container);
-
-            var lines = referenceChange.VariableReferenceList.ValueAsIList;
-            if (lines[referenceChange.LineIndex] is not string oldLine) continue;
-
-            lines[referenceChange.LineIndex] = RewriteReferenceLine(oldLine, referenceChange.ChangedSide,
-                left => left == oldStrippedOrExposedName ? newStrippedOrExposedName : left,
-                right =>
-                    right == oldStrippedOrExposedName ? newStrippedOrExposedName
-                    : right.EndsWith("." + oldStrippedOrExposedName)
-                        ? right.Substring(0, right.Length - oldStrippedOrExposedName.Length) + newStrippedOrExposedName
-                    : right);
-        }
-    }
+        HashSet<ElementSave> elementsNeedingSave) =>
+        _applier.ApplyVariableReferenceRenames(referenceChanges, oldStrippedOrExposedName, newStrippedOrExposedName, elementsNeedingSave);
 
     #endregion
-
-    /// <summary>
-    /// Rewrites the sides of a VariableReferences line named by <paramref name="changedSide"/>. Each
-    /// rewrite sees the side trimmed, and the whitespace around it is put back, so the line keeps the
-    /// spacing it was typed with and an undo that reverses the rename restores it exactly. The
-    /// assignment is the first '='; the right side may itself contain '=' (==, &lt;=, ...).
-    /// </summary>
-    private static string RewriteReferenceLine(string line, SideOfEquals changedSide,
-        Func<string, string> rewriteLeft, Func<string, string> rewriteRight)
-    {
-        var equalsIndex = line.IndexOf('=');
-        if (equalsIndex < 0) return line;
-
-        var left = line.Substring(0, equalsIndex);
-        var right = line.Substring(equalsIndex + 1);
-
-        if (changedSide is SideOfEquals.Left or SideOfEquals.Both)
-        {
-            left = RewriteTrimmed(left, rewriteLeft);
-        }
-
-        if (changedSide is SideOfEquals.Right or SideOfEquals.Both)
-        {
-            right = RewriteTrimmed(right, rewriteRight);
-        }
-
-        return left + "=" + right;
-    }
-
-    private static string RewriteTrimmed(string side, Func<string, string> rewrite)
-    {
-        var trimmed = side.Trim();
-        var start = side.Length - side.TrimStart().Length;
-        return side.Substring(0, start) + rewrite(trimmed) + side.Substring(start + trimmed.Length);
-    }
 }

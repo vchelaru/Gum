@@ -213,6 +213,30 @@ Un-exposes the variable `Hud` exposes as `Counter1Text`, like the tool's **Un-ex
 
 Removes a set value so the variable falls back to its inherited value, like **Make Default** in the **Variables** tab. `name`, `state` and `category` work as in `setVariable`. An exposed variable stays exposed. A variable added with `addVariable` goes back to its type's zero value, such as `0` or `false`. In a category state the variable takes the default state's value instead, since every state in a category sets it. References that read the variable are updated like they are after `setVariable`.
 
+## Renaming
+
+{% hint style="info" %}
+Available in December 2026, or now if building Gum from source.
+{% endhint %}
+
+The rename operations run the tool's rename, so everything that names the old name follows: base types, instance types, `Parent` values, variables set on the renamed thing, state selectors on other elements, [variable references](#variable-references) lines, exposed variables, favorite components, and the element's animation (`.ganx`) and code settings (`.codsj`) files. Generated code is not moved; run [codegen](codegen.md) with `--prune` afterward. A rename the tool refuses, or that leaves a reference dangling, fails the edit.
+
+```json
+{ "op": "renameElement", "name": "Card", "newName": "Controls/Panel" }
+{ "op": "renameInstance", "element": "Hud", "name": "Title", "newName": "Heading" }
+{ "op": "renameState", "element": "Toggle", "category": "OnOff", "name": "On", "newName": "Enabled" }
+{ "op": "renameCategory", "element": "Toggle", "name": "OnOff", "newName": "Power" }
+{ "op": "renameVariable", "element": "Hud", "name": "Score", "newName": "Points" }
+{ "op": "renameBehavior", "name": "Selectable", "newName": "Pickable" }
+```
+
+* `renameElement` renames a Screen or Component. A `/` in `newName` moves it to that folder, and its file moves with it. A rename that changes only letter case is refused, because file systems that ignore case cannot do it in one step.
+* `renameInstance` renames the instance in its element and in the elements that inherit it. An inherited instance is renamed on the element that defines it.
+* `renameState` and `renameCategory` work on Screens and Components; standard elements are refused. `category` is omitted for an uncategorized state. The default state cannot be renamed, and a category that one of the component's behaviors requires cannot be renamed.
+* `renameVariable` renames a custom variable everywhere it is set, or, for an exposed variable, its exposed name.
+* `renameBehavior` renames a behavior and its file. A standard Forms behavior, and a behavior stored outside the project's `Behaviors` folder, are refused.
+* A file cannot mix `renameElement`, `renameInstance`, `renameState` or `renameCategory` with the animation operations, because both change the element's animation file. Run the renames in one `edit` and the animation operations in another.
+
 ## Creating a Component From an Instance
 
 {% hint style="info" %}
