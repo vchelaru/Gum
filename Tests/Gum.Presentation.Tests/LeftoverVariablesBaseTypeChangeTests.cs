@@ -68,6 +68,8 @@ public class LeftoverVariablesBaseTypeChangeTests : BaseTestClass
             new InheritanceSync());
         // The real check: the mock answers false, which makes the tool revert an instance's base type.
         _mocker.Use<ICircularReferenceManager>(new CircularReferenceManager(ObjectFinder.Self));
+        _mocker.Use<IBaseTypeChangeLogic>(new BaseTypeChangeLogic(new InstanceAddRules(new CircularReferenceManager(ObjectFinder.Self)),
+            _mocker.Get<Gum.ProjectServices.Editing.IBaseTypeVariableRemover>(), new InheritanceSync()));
         _setVariableLogic = _mocker.CreateInstance<SetVariableLogic>();
         _displayer = _mocker.CreateInstance<ElementSaveDisplayer>();
     }

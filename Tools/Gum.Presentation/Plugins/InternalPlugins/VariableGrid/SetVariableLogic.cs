@@ -17,6 +17,7 @@ using RenderingLibrary.Graphics.Fonts;
 using Gum.Logic;
 using GumRuntime;
 using Gum.Plugins.InternalPlugins.VariableGrid;
+using Gum.ProjectServices.Editing;
 using Gum.Services;
 using Gum.Commands;
 using Gum.Graphics;
@@ -76,7 +77,7 @@ public class SetVariableLogic : ISetVariableLogic
 
     private readonly IVariableReferenceLogic _variableReferenceLogic;
     private readonly IProjectRestrictions _projectRestrictions;
-    private readonly ICircularReferenceManager _circularReferenceManager;
+    private readonly IBaseTypeChangeLogic _baseTypeChange;
     private readonly IFontManager _fontManager;
     private readonly IFileCommands _fileCommands;
     private readonly ISelectedState _selectedState;
@@ -108,7 +109,7 @@ public class SetVariableLogic : ISetVariableLogic
         IGuiCommands guiCommands,
         IFontManager fontManager,
         IFileCommands fileCommands,
-        ICircularReferenceManager circularReferenceManager,
+        IBaseTypeChangeLogic baseTypeChange,
         IVariableInCategoryPropagationLogic variableInCategoryPropagationLogic,
         IDialogService dialogService,
         IPluginManager pluginManager,
@@ -129,7 +130,7 @@ public class SetVariableLogic : ISetVariableLogic
         _guiCommands = guiCommands;
         _fontManager = fontManager;
         _fileCommands = fileCommands;
-        _circularReferenceManager = circularReferenceManager;
+        _baseTypeChange = baseTypeChange;
         _variableInCategoryPropagationLogic = variableInCategoryPropagationLogic;
         _dialogService = dialogService;
         _pluginManager = pluginManager;
@@ -441,13 +442,18 @@ public class SetVariableLogic : ISetVariableLogic
                 return;
             }
 
+            // The shared rules refuse a type the project lacks or an empty one; the editable box accepts both so a
+            // broken project stays visible, so they run only for a type that exists.
+            bool typeExists = !string.IsNullOrEmpty(newBaseType) && ObjectFinder.Self.GetElementSave(newBaseType) != null;
+
             if (instance != null)
             {
                 var parentElement = instanceContainer as ElementSave;
 
-                if(parentElement != null && _circularReferenceManager.CanTypeBeAddedToElement(parentElement, instance.BaseType) == false)
+                if (typeExists && parentElement != null
+                    && _baseTypeChange.GetWhyCannotSetInstanceBaseType(parentElement, instance, newBaseType!) is { } whyNotInstance)
                 {
-                    _dialogService.ShowMessage("This assignment would create a circular reference, which is not allowed.");
+                    _dialogService.ShowMessage(whyNotInstance);
                     instance.BaseType = (string?)oldValue ?? string.Empty;
                     _guiCommands.PrintOutput($"BaseType assignment on {instance.Name} is not allowed - reverting to previous value");
                     _guiCommands.RefreshVariables(force: true);
@@ -458,10 +464,11 @@ public class SetVariableLogic : ISetVariableLogic
                     _fileCommands.TryAutoSaveObject(instanceContainer);
                 }
             }
-            else if (instanceContainer is ElementSave element && ObjectFinder.Self.GetBaseTypeCycle(element).Count > 0)
+            else if (typeExists && instanceContainer is ElementSave element
+                && _baseTypeChange.GetWhyCannotSetElementBaseType(element, newBaseType!) is { } whyNot)
             {
                 // The base picker leaves out elements deriving from this one, but its box accepts typed names.
-                _dialogService.ShowMessage("This assignment would create a circular reference, which is not allowed.");
+                _dialogService.ShowMessage(whyNot);
                 element.BaseType = string.IsNullOrEmpty((string?)oldValue) ? null : (string?)oldValue;
                 _guiCommands.PrintOutput($"BaseType assignment on {element.Name} is not allowed - reverting to previous value");
                 _guiCommands.RefreshVariables(force: true);

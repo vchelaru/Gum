@@ -212,6 +212,7 @@ public class EditBaseTypeTests : BaseTestClass
     [InlineData("""{ "op": "setInstanceProperty", "element": "Home", "instance": "Body", "property": "IsSlot", "value": true }""", "Component")]
     [InlineData("""{ "op": "setInstanceProperty", "element": "Panel", "instance": "Body", "property": "Visible", "value": true }""", "Locked, IsSlot")]
     [InlineData("""{ "op": "setInstanceProperty", "element": "Panel", "instance": "Missing", "property": "Locked", "value": true }""", "Missing")]
+    [InlineData("""{ "op": "setInstanceProperty", "element": "Derived", "instance": "Body", "property": "Locked", "value": true }""", "Panel")]
     public void SetInstanceProperty_Refuses(string operation, string messagePart)
     {
         string projectPath = CreateEmptyProject();
@@ -220,7 +221,8 @@ public class EditBaseTypeTests : BaseTestClass
               { "op": "addScreen", "name": "Home" },
               { "op": "addInstance", "element": "Home", "name": "Body", "type": "Container" },
               { "op": "addComponent", "name": "Panel" },
-              { "op": "addInstance", "element": "Panel", "name": "Body", "type": "Container" }
+              { "op": "addInstance", "element": "Panel", "name": "Body", "type": "Container" },
+              { "op": "addComponent", "name": "Derived", "baseType": "Panel" }
             ] }
             """).ExitCode.ShouldBe(0);
 

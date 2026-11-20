@@ -661,7 +661,7 @@ public partial class ProjectEditService : IProjectEditService
         string property = GetString(operation, "property");
         InstanceSave instance = element.GetInstance(instanceName)
             ?? throw new EditException($"{element.Name} has no instance named {instanceName}.");
-        if (_instanceProperties.GetWhyCannotSet(element, property) is { } whyNot)
+        if (_instanceProperties.GetWhyCannotSet(element, instance, property) is { } whyNot)
         {
             throw new EditException(whyNot);
         }

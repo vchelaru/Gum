@@ -294,7 +294,7 @@ The op fails, naming what to change, when `baseType` is not a Screen, Component 
 { "op": "setInstanceProperty", "element": "Hud", "instance": "Background", "property": "Locked", "value": true }
 ```
 
-Sets the **Locked** or **Is Slot** flag of an instance, like the same rows in the **Variables** tab. `Locked` keeps the instance from being selected by clicking in the editor. `IsSlot` marks a place that holds children when the component is used, and only an instance in a Component can have it. Any other `property` fails the edit.
+Sets the **Locked** or **Is Slot** flag of an instance, like the same rows in the **Variables** tab. `Locked` keeps the instance from being selected by clicking in the editor. `IsSlot` marks a place that holds children when the component is used, and only an instance in a Component can have it. An instance the component inherits from its base cannot change here, like its type; change it in the base. Any other `property` fails the edit.
 
 ## Project Properties
 

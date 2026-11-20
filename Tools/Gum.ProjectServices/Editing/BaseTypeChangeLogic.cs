@@ -110,8 +110,7 @@ public class BaseTypeChangeLogic : IBaseTypeChangeLogic
     {
         if (instance.DefinedByBase)
         {
-            return $"{instance.Name} is inherited from {container.BaseType}, so its type is set there. "
-                + $"Change the type of {instance.Name} in {container.BaseType}.";
+            return InstancePropertyLogic.GetWhyInherited(container, instance);
         }
         if (string.IsNullOrEmpty(newBaseType))
         {
