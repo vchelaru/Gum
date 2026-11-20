@@ -55,7 +55,7 @@ With `--instance`, the details are left out, since they belong to the element.
 
 ## Listing Elements
 
-Without an element, `describe` lists the project's Screens, Components, standard elements and behaviors, with a component's or screen's base type in parentheses.
+Without an element, `describe` lists the project's Screens, Components, standard elements and behaviors, with a component's or screen's base type in parentheses. Behaviors are only listed; `describe` cannot describe one yet, so `describe <behavior>` reports that the element was not found.
 
 ```
 Screens:

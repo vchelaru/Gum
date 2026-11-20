@@ -1,3 +1,5 @@
+using Gum.DataTypes;
+using Gum.ProjectServices;
 using System.Text.Json;
 using Shouldly;
 
@@ -161,5 +163,56 @@ public class DescribeReadBackTests : BaseTestClass
         JsonElement root = Describe(projectPath, "Controls/ButtonStandard");
 
         root.GetProperty("behaviors").EnumerateArray().Select(item => item.GetString()).ShouldContain("ButtonBehavior");
+    }
+
+    [Fact]
+    public void Describe_LockedInstance_IsReportedLocked()
+    {
+        string projectPath = CreateLayeredProject();
+        GumProjectSave project = new ProjectLoader().Load(projectPath).Project!;
+        project.Components.Single(item => item.Name == "Hud").GetInstance("Label")!.Locked = true;
+        project.Save(projectPath, saveElements: true);
+
+        JsonElement root = Describe(projectPath, "Hud");
+        JsonElement[] instances = root.GetProperty("instances").EnumerateArray().ToArray();
+
+        instances.Single(item => item.GetProperty("name").GetString() == "Label").GetProperty("locked").GetBoolean().ShouldBeTrue();
+        instances.Single(item => item.GetProperty("name").GetString() == "Panel").GetProperty("locked").GetBoolean().ShouldBeFalse();
+        CliTestHelper.Run("describe", projectPath, "Hud").StandardOutput.ShouldContain("Label (Text) in Panel locked");
+    }
+
+    [Fact]
+    public void Describe_ReferenceInCategoryState_ReportsCategoryAndStateAndHeading()
+    {
+        string projectPath = CreateProject("empty", """
+            { "version": 1, "operations": [
+              { "op": "addComponent", "name": "Hud" },
+              { "op": "addInstance", "element": "Hud", "name": "Title", "type": "Text" },
+              { "op": "addInstance", "element": "Hud", "name": "Label", "type": "Text" },
+              { "op": "addCategory", "element": "Hud", "name": "Size" },
+              { "op": "addState", "element": "Hud", "category": "Size", "name": "Big" },
+              { "op": "setVariableReferences", "element": "Hud", "instance": "Label", "category": "Size", "state": "Big", "lines": [ "Text = Title.Text" ] }
+            ] }
+            """);
+
+        JsonElement reference = Describe(projectPath, "Hud").GetProperty("variableReferences").EnumerateArray().Single();
+        CliTestHelper text = CliTestHelper.Run("describe", projectPath, "Hud");
+
+        reference.GetProperty("category").GetString().ShouldBe("Size");
+        reference.GetProperty("state").GetString().ShouldBe("Big");
+        text.StandardOutput.ShouldContain("References:");
+        text.StandardOutput.ShouldContain("Label [Size/Big]: Text = Title.Text");
+    }
+
+    [Fact]
+    public void Describe_NoElement_ListsBehaviors()
+    {
+        string projectPath = Path.Combine(TempDirectory, "Forms", "Forms.gumx");
+        CliTestHelper.Run("new", projectPath, "--template", "forms").ExitCode.ShouldBe(0);
+
+        JsonElement[] elements = Describe(projectPath).GetProperty("elements").EnumerateArray().ToArray();
+
+        elements.Single(item => item.GetProperty("name").GetString() == "ButtonBehavior").GetProperty("kind").GetString().ShouldBe("behavior");
+        CliTestHelper.Run("describe", projectPath).StandardOutput.ShouldContain("Behaviors:");
     }
 }
