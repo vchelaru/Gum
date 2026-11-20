@@ -240,6 +240,43 @@ Available in December 2026, or now if building Gum from source.
 
 Sets a project property, like the **Canvas** and **General** pages of the tool's **Project Properties**. `DefaultCanvasWidth` and `DefaultCanvasHeight` set the canvas size and take a positive whole number. `TextureFilter` takes `"Point"` or `"Linear"`. Any other name fails the edit, and the message lists the names it accepts.
 
+## Animations
+
+{% hint style="info" %}
+Available in December 2026, or now if building Gum from source.
+{% endhint %}
+
+Animations are saved beside the element in its animations file (`HudAnimations.ganx`, or `.ganj` in a `.gumj` project), the same file the **Animations** tab writes. These operations change that file and leave the element file alone. A file left with no animations is deleted, as in the tool.
+
+### addAnimation and removeAnimation
+
+```json
+{ "op": "addAnimation", "element": "Popup", "name": "FadeIn", "loops": false }
+{ "op": "removeAnimation", "element": "Popup", "name": "FadeIn" }
+```
+
+Adds an empty animation, like **Add Animation**. `loops` is optional and defaults to `false`. The name follows the tool's rules: it cannot be empty, contain spaces, repeat another animation's name, or match an instance, category or exposed variable on the element. `removeAnimation` fails when the element has no animation with that name.
+
+### setAnimationLoops
+
+```json
+{ "op": "setAnimationLoops", "element": "Popup", "animation": "FadeIn", "loops": true }
+```
+
+Turns looping on or off for an existing animation.
+
+### addKeyframe and removeKeyframe
+
+```json
+{ "op": "addKeyframe", "element": "Popup", "animation": "FadeIn", "state": "Visibility/Hidden", "time": 0 }
+{ "op": "addKeyframe", "element": "Popup", "animation": "FadeIn", "state": "Visibility/Shown", "time": 0.5, "interpolation": "Exponential", "easing": "In" }
+{ "op": "removeKeyframe", "element": "Popup", "animation": "FadeIn", "state": "Visibility/Hidden", "time": 0 }
+```
+
+Adds a keyframe that moves the element to a state at `time` seconds. `state` is `Category/State` for a state in a category, or the bare name for an uncategorized state. The state must exist, so add it first with `addState`, in the same file if you like. `time` is 0 or more. `interpolation` and `easing` are optional and default to `Linear` and `Out`, the tool's defaults; any other name fails the edit and the message lists the valid names. Keyframes stay in time order whatever order you add them in. A second keyframe for the same state at the same time fails. `removeKeyframe` finds the keyframe by its `state` and `time`.
+
+Removing a state that a keyframe uses fails the edit with the same error [check](check.md) reports. Sub-animation keyframes and named events are not available in `edit`; add them in the **Animations** tab.
+
 ## All or Nothing
 
 `edit` writes nothing unless every operation applies and the edit adds no errors. It runs the same check as [check](check.md) before and after the operations. Errors the project already had do not block the edit, and only errors the edit adds are reported, in the same format as `check`.

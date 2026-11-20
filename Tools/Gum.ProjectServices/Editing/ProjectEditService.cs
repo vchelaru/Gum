@@ -169,7 +169,8 @@ public class ProjectEditService : IProjectEditService
         IElementRemovalLogic elementRemoval,
         IVariableReferenceValidator referenceValidator,
         IVariableReferenceCascade referenceCascade,
-        IInheritanceSync inheritanceSync)
+        IInheritanceSync inheritanceSync,
+        AnimationEditOperations animationOperations)
     {
         _elementCreation = elementCreation;
         _instanceCreation = instanceCreation;
@@ -222,6 +223,12 @@ public class ProjectEditService : IProjectEditService
             ["setVariableReferences"] = new(Fields(Str("element"), new EditField("lines", EditFieldType.StringArray)),
                 Strings("instance", "state", "category"), SetVariableReferences),
             ["setProjectProperty"] = new(Fields(Str("name"), new EditField("value", EditFieldType.Any)), None, SetProjectProperty),
+            ["addAnimation"] = new(Strings("element", "name"), Fields(new EditField("loops", EditFieldType.Bool)), animationOperations.AddAnimation),
+            ["removeAnimation"] = new(Strings("element", "name"), None, animationOperations.RemoveAnimation),
+            ["setAnimationLoops"] = new(Fields(Str("element"), Str("animation"), new EditField("loops", EditFieldType.Bool)), None, animationOperations.SetAnimationLoops),
+            ["addKeyframe"] = new(Fields(Str("element"), Str("animation"), Str("state"), new EditField("time", EditFieldType.Any)),
+                Strings("interpolation", "easing"), animationOperations.AddKeyframe),
+            ["removeKeyframe"] = new(Fields(Str("element"), Str("animation"), Str("state"), new EditField("time", EditFieldType.Any)), None, animationOperations.RemoveKeyframe),
         };
     }
 
@@ -794,7 +801,7 @@ public class ProjectEditService : IProjectEditService
         }
     }
 
-    private static ElementSave GetElement(GumProjectSave project, JsonElement operation)
+    internal static ElementSave GetElement(GumProjectSave project, JsonElement operation)
     {
         string name = GetString(operation, "element");
         return ProjectElementFinder.Find(project, name)
@@ -836,7 +843,7 @@ public class ProjectEditService : IProjectEditService
         return (state, null);
     }
 
-    private static string GetString(JsonElement operation, string field) => operation.GetProperty(field).GetString()!;
+    internal static string GetString(JsonElement operation, string field) => operation.GetProperty(field).GetString()!;
 
     private static string? GetOptionalString(JsonElement operation, string field) =>
         operation.TryGetProperty(field, out JsonElement value) ? value.GetString() : null;

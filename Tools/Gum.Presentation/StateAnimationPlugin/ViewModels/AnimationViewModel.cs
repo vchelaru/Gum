@@ -3,6 +3,7 @@ using Gum;
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using Gum.Managers;
+using Gum.ProjectServices.Editing;
 using Gum.Plugins.InternalPlugins.StatePlugin;
 using Gum.Mvvm;
 using Gum.ToolStates;
@@ -325,12 +326,7 @@ public partial class AnimationViewModel : ViewModel
     /// </summary>
     public void AddKeyframe(AnimatedKeyframeViewModel keyframe)
     {
-        int index = Keyframes.Count;
-        while (index > 0 && Keyframes[index - 1].Time > keyframe.Time)
-        {
-            index--;
-        }
-        Keyframes.Insert(index, keyframe);
+        Keyframes.Insert(AnimationKeyframeOrder.GetInsertIndex(Keyframes, item => item.Time, keyframe.Time), keyframe);
     }
 
     private void NotifyKeyframesChanged()

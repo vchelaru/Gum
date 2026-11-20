@@ -20,6 +20,7 @@ between named **States** over time. NOT the same as runtime AnimationChains (see
   in either view. Tab is hidden until View ▸ View Animations.
 - VMs (in Gum.Presentation): `ElementAnimationsViewModel` → `AnimationViewModel` →
   `AnimatedKeyframeViewModel`; the business logic is `AnimationTabController`.
+- Rules the tab shares with `gumcli edit` live in `Gum.ProjectServices/Editing/` (`AnimationNameRules`, `AnimationKeyframeOrder`, `AnimationTopLevelNames`, `ElementAnimationFiles`); change them there, not in the VMs.
 
 ## Data model & serialization
 - Persisted as a **per-element `.ganx` sidecar**: `<ElementName>Animations.ganx` next to

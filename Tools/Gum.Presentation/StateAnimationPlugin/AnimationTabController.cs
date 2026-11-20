@@ -2,6 +2,7 @@ using Gum.Commands;
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using Gum.Managers;
+using Gum.ProjectServices.Editing;
 using Gum.Responses;
 using Gum.Services.Dialogs;
 using Gum.StateAnimation.SaveClasses;
@@ -111,14 +112,7 @@ public class AnimationTabController
     /// </summary>
     public void FillTopLevelNames(ElementSave element, List<TopLevelName> names)
     {
-        var animationsSave = _animationCollectionViewModelManager.GetElementAnimationsSave(element);
-        if (animationsSave != null)
-        {
-            foreach (var anim in animationsSave.Animations)
-            {
-                names.Add(new TopLevelName(anim.Name, "Animation", anim));
-            }
-        }
+        AnimationTopLevelNames.Add(_animationCollectionViewModelManager.GetElementAnimationsSave(element), names);
     }
 
     /// <summary>

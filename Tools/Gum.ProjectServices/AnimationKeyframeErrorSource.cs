@@ -1,5 +1,5 @@
 using Gum.DataTypes;
-using Gum.DataTypes.Variables;
+using Gum.ProjectServices.Editing;
 using Gum.StateAnimation.SaveClasses;
 using System;
 using System.Collections.Generic;
@@ -61,7 +61,7 @@ public class AnimationKeyframeErrorSource : IAdditionalErrorSource
         {
             foreach (AnimatedStateSave keyframe in animation.States)
             {
-                if (!string.IsNullOrEmpty(keyframe.StateName) && !StateExists(keyframe.StateName, element))
+                if (!string.IsNullOrEmpty(keyframe.StateName) && !AnimationStateLookup.StateExists(keyframe.StateName, element))
                 {
                     yield return new ErrorResult
                     {
@@ -136,22 +136,4 @@ public class AnimationKeyframeErrorSource : IAdditionalErrorSource
 
     private static bool IsUnreadableFile(Exception exception) =>
         exception is IOException or UnauthorizedAccessException or JsonException;
-
-    /// <summary>
-    /// Mirrors the State Animation plugin's categorized-name lookup: a keyframe's
-    /// <c>StateName</c> is either "Category/State" or a top-level state name.
-    /// </summary>
-    private static bool StateExists(string categorizedStateName, ElementSave element)
-    {
-        int slashIndex = categorizedStateName.IndexOf('/');
-        if (slashIndex >= 0)
-        {
-            string categoryName = categorizedStateName.Substring(0, slashIndex);
-            string stateName = categorizedStateName.Substring(slashIndex + 1);
-            StateSaveCategory? category = element.Categories.FirstOrDefault(item => item.Name == categoryName);
-            return category != null && category.States.Any(item => item.Name == stateName);
-        }
-
-        return element.States.Any(item => item.Name == categorizedStateName);
-    }
 }
