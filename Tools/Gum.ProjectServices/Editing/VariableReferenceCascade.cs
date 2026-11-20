@@ -18,6 +18,15 @@ namespace Gum.ProjectServices.Editing;
 /// <param name="ElementsScanned">How many elements were looked at, so a caller can count its work.</param>
 public record ReferenceCascadeResult(StoredValueChange[] Changes, IReadOnlyCollection<ElementSave> ChangedElements, int ElementsScanned);
 
+/// <summary>One member an edit set: <paramref name="QualifiedName"/> is <c>Instance.Member</c> for an instance's variable.</summary>
+public record EditedMember(InstanceSave? Instance, string UnqualifiedMember, string QualifiedName);
+
+/// <summary>What <see cref="IVariableReferenceCascade.ReactToEdit"/> did.</summary>
+/// <param name="Cascade">The elements that read the edited element, which the caller saves.</param>
+/// <param name="BehaviorLinesScanned">How many behavior tool-only lines were looked at.</param>
+/// <param name="DidSetDeepReference">Whether a reference inside an instance's type had a deeper value written.</param>
+public record EditReaction(ReferenceCascadeResult Cascade, int BehaviorLinesScanned, bool DidSetDeepReference);
+
 /// <summary>
 /// Re-applies the variable references that read values an edit changed: the element's other states, the
 /// elements that read it, and the instance variables a reference inside an instance's type sets. Shared by the
@@ -25,6 +34,16 @@ public record ReferenceCascadeResult(StoredValueChange[] Changes, IReadOnlyColle
 /// </summary>
 public interface IVariableReferenceCascade
 {
+    /// <summary>
+    /// The whole reaction to a committed edit of <paramref name="state"/>, whoever made it (the tool's Variables
+    /// tab or <c>gumcli edit</c>): the state's own references, the behaviors' tool-only lines, the element's other
+    /// states, the elements that read this one, and references inside the edited instances' types. The caller
+    /// takes <paramref name="valuesBefore"/> with <see cref="VariableReferenceCascade.SnapshotValues"/> before it
+    /// edits, and saves <see cref="ReferenceCascadeResult.ChangedElements"/>.
+    /// </summary>
+    EditReaction ReactToEdit(ElementSave element, StateSave state, IReadOnlyDictionary<string, object?> valuesBefore,
+        IReadOnlyList<EditedMember> edits, Func<ElementSave, GraphicalUiElement?> liveRootFor, bool isFullCommit = true);
+
     /// <summary>
     /// What an edit changed in <paramref name="state"/>: <paramref name="editedNames"/> plus every variable whose
     /// value differs from <paramref name="valuesBefore"/>, the names <see cref="ApplyOtherStatesReading"/> takes.
@@ -70,6 +89,40 @@ public class VariableReferenceCascade : IVariableReferenceCascade
         List<ReferenceRow> affected = new List<ReferenceRow>();
         graph.FindAffectedRows(names, affected, includeLiveLayoutRows: false);
         return new HashSet<ReferenceRow>(seedRows.Concat(affected));
+    }
+
+    /// <summary>The values of <paramref name="state"/> before an edit, for <see cref="IVariableReferenceCascade.ReactToEdit"/>.</summary>
+    public static Dictionary<string, object?> SnapshotValues(StateSave state)
+    {
+        Dictionary<string, object?> values = new Dictionary<string, object?>();
+        foreach (VariableSave variable in state.Variables)
+        {
+            values[variable.Name] = variable.Value;
+        }
+        return values;
+    }
+
+    /// <inheritdoc/>
+    public EditReaction ReactToEdit(ElementSave element, StateSave state, IReadOnlyDictionary<string, object?> valuesBefore,
+        IReadOnlyList<EditedMember> edits, Func<ElementSave, GraphicalUiElement?> liveRootFor, bool isFullCommit = true)
+    {
+        GraphicalUiElement? liveRoot = liveRootFor(element);
+        ElementSaveExtensions.ApplyVariableReferences(element, state, liveRoot, isFullCommit);
+        int behaviorLinesScanned = BehaviorToolOnlyReferencesApplier.Apply(element, state);
+
+        HashSet<string> changedNames = GetChangedNames(state, valuesBefore, edits.Select(item => item.QualifiedName));
+        ApplyOtherStatesReading(element, state, changedNames, liveRoot, isFullCommit);
+        ReferenceCascadeResult cascade = ApplyToElementsReading(element, liveRootFor, isFullCommit);
+
+        // A tunneled variable may need its value carried one level deeper, into the instance's type.
+        bool didSetDeepReference = false;
+        foreach (EditedMember edit in edits)
+        {
+            didSetDeepReference |= ApplyToInstanceInternals(element, edit.Instance, state, edit.UnqualifiedMember,
+                state.GetValueRecursive(edit.QualifiedName));
+        }
+
+        return new EditReaction(cascade, behaviorLinesScanned, didSetDeepReference);
     }
 
     /// <inheritdoc/>
@@ -152,11 +205,7 @@ public class VariableReferenceCascade : IVariableReferenceCascade
         {
             if (ReferenceDependencies.StateReadsAny(state, elementNames))
             {
-                Dictionary<string, object?> before = new Dictionary<string, object?>();
-                foreach (VariableSave variable in state.Variables)
-                {
-                    before[variable.Name] = variable.Value;
-                }
+                Dictionary<string, object?> before = SnapshotValues(state);
 
                 ElementSaveExtensions.ApplyVariableReferences(owner, state, liveRootFor(owner), isFullCommit);
                 changedElements.Add(owner);
