@@ -1,4 +1,3 @@
-using Gum.DataTypes.Behaviors;
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using Gum.ProjectServices.Editing;
@@ -24,25 +23,6 @@ public class StateVariableWriterTests : BaseTestClass
         VariableSave written = hud.DefaultState.GetVariableSave("Counter1.FontSize")!;
         written.Value.ShouldBe(30);
         written.Type.ShouldBe("int");
-    }
-
-    [Fact]
-    public void SetVariable_FormsPropertyOfAnInstance_IsTypedByTheBehaviorDeclaration()
-    {
-        BehaviorSave behavior = new BehaviorSave { Name = "SliderBehavior" };
-        behavior.FormsProperties.Add(new VariableSave { Name = "Maximum", Type = "double", Value = 100.0 });
-        Project.Behaviors.Add(behavior);
-        ComponentSave slider = EditingTestProject.AddComponent(Project, "Slider");
-        slider.Behaviors.Add(new ElementBehaviorReference { BehaviorName = "SliderBehavior" });
-        ComponentSave hud = EditingTestProject.AddComponent(Project, "Hud");
-        InstanceSave volume = EditingTestProject.AddInstance(hud, "Volume", "Slider");
-        StateVariableWriter writer = new StateVariableWriter();
-
-        writer.ResolveVariableType(hud, hud.DefaultState!, "Volume.Maximum").ShouldBe("double");
-        writer.ResolveVariableType(hud, hud.DefaultState!, "Volume.Nope").ShouldBeNull();
-        writer.SetVariable(hud, hud.DefaultState!, "Volume.Maximum", 10.0, volume, fallbackType: null);
-
-        hud.DefaultState!.GetVariableSave("Volume.Maximum")!.Type.ShouldBe("double");
     }
 
     [Fact]

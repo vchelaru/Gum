@@ -491,12 +491,12 @@ public partial class ProjectEditService : IProjectEditService
 
         (string variableName, InstanceSave? instance) = _values.ResolveVariable(element, requestedName, "set");
 
-        string type = _variableWriter.ResolveVariableType(element, state, variableName)
+        string type = _values.ResolveType(_variableWriter, element, state, variableName)
             ?? throw new EditException($"The type of {requestedName} could not be found.");
         object? value = _values.ConvertValue(operation.GetProperty("value"), type, requestedName);
 
         Dictionary<string, object?> valuesBefore = VariableReferenceCascade.SnapshotValues(state);
-        _variableWriter.SetVariable(element, state, variableName, value, instance, fallbackType: null);
+        _variableWriter.SetVariable(element, state, variableName, value, instance, fallbackType: type);
         if (category != null)
         {
             _propagator.PropagateVariablesInCategory(variableName, element, category.States);

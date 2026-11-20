@@ -59,7 +59,7 @@ public record ScreenshotVariableOverride(string Name, string Value)
         VariableValueConverter converter, IStateVariableWriter writer)
     {
         (ElementSave owner, string variableName, InstanceSave? instance) = converter.ResolveNestedVariable(elementSave, Name, "set");
-        string type = writer.ResolveVariableType(owner, owner.GetDefaultStateOrThrow(), variableName)
+        string type = converter.ResolveType(writer, owner, owner.GetDefaultStateOrThrow(), variableName)
             ?? throw new EditException($"The type of {Name} could not be found.");
 
         object? value = ConvertText(converter, type);

@@ -102,6 +102,29 @@ internal class VariableValueConverter
             ?? throw new EditException($"{instanceName}'s type {instance.BaseType} is not in the project.");
     }
 
+    /// <summary>
+    /// The type of <paramref name="variableName"/> as <paramref name="writer"/> resolves it, else the type its
+    /// behavior declares when it is a Forms property (a Slider's Maximum), which no element stores. Only the CLI
+    /// asks; the tool's own writes keep the writer's answer, so the shape it saves does not change.
+    /// </summary>
+    public string? ResolveType(IStateVariableWriter writer, ElementSave element, StateSave state, string variableName)
+    {
+        string? type = writer.ResolveVariableType(element, state, variableName);
+        if (!string.IsNullOrEmpty(type))
+        {
+            return type;
+        }
+
+        string? instanceName = VariableSave.GetSourceObject(variableName);
+        ElementSave? typeElement = string.IsNullOrEmpty(instanceName)
+            ? element
+            : ObjectFinder.Self.GetElementSave(element.GetInstance(instanceName)?.BaseType);
+        string? declaredType = typeElement == null
+            ? null
+            : FormsBehaviorChain.FindFormsPropertyDeclaration(typeElement, VariableSave.GetRootName(variableName))?.Type;
+        return string.IsNullOrEmpty(declaredType) ? null : declaredType;
+    }
+
     public object? ConvertValue(JsonElement value, string type, string variableName)
     {
         if (value.ValueKind == JsonValueKind.Null)
