@@ -28,19 +28,12 @@ public class ReferenceFinder : IReferenceFinder
 
         string qualifiedOldName = ElementReference.GetQualifiedName(element, elementName);
 
-        foreach (var screen in project.Screens)
+        // Standards hold no instances or base types, but they can hold a ContainedType variable
+        // and variable reference lines, so they are scanned like any other element.
+        foreach (var projectElement in project.AllElements)
         {
-            CollectChangesInElement(screen, elementName, qualifiedOldName, changes);
+            CollectChangesInElement(projectElement, elementName, qualifiedOldName, changes);
         }
-
-        foreach (var component in project.Components)
-        {
-            CollectChangesInElement(component, elementName, qualifiedOldName, changes);
-        }
-
-        // StandardElements are intentionally not scanned here. Standard elements do not support
-        // inheritance between each other (a StandardElementSave cannot have another StandardElementSave
-        // as its BaseType in normal usage), so there are no cross-standard BaseType references to update.
 
         return changes;
     }
@@ -370,20 +363,10 @@ public class ReferenceFinder : IReferenceFinder
             inheritingElements.AddRange(ObjectFinder.Self.GetElementsInheritingFrom(ownerAsElement));
         }
 
-        foreach (var screen in project.Screens)
-        {
-            CollectCategoryReferencesInElement(category, oldName, inheritingElements, screen, changes);
-        }
-
-        foreach (var component in project.Components)
-        {
-            CollectCategoryReferencesInElement(category, oldName, inheritingElements, component, changes);
-        }
-
         // Standards have no instances, but a standard that owns the category holds its category state variable.
-        foreach (var standard in project.StandardElements)
+        foreach (var projectElement in project.AllElements)
         {
-            CollectCategoryReferencesInElement(category, oldName, inheritingElements, standard, changes);
+            CollectCategoryReferencesInElement(category, oldName, inheritingElements, projectElement, changes);
         }
 
         return changes;

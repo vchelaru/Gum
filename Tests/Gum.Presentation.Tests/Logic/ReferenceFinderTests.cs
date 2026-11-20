@@ -72,6 +72,48 @@ public class ReferenceFinderTests : BaseTestClass
     }
 
     [Fact]
+    public void GetReferencesToElement_ContainedTypeVariableOnStandard_IsDetected()
+    {
+        ComponentSave button = new ComponentSave { Name = "Button" };
+        button.States.Add(new StateSave { Name = "Default", ParentContainer = button });
+        _project.Components.Add(button);
+
+        StandardElementSave container = new StandardElementSave { Name = "Container" };
+        StateSave defaultState = new StateSave { Name = "Default", ParentContainer = container };
+        container.States.Add(defaultState);
+        VariableSave containedTypeVar = new VariableSave { Name = "ContainedType", Value = "Button" };
+        defaultState.Variables.Add(containedTypeVar);
+        _project.StandardElements.Add(container);
+
+        ElementReferences changes = _referenceFinder.GetReferencesToElement(button, elementName: "Button");
+
+        changes.ContainedTypeVariableReferences.Count.ShouldBe(1);
+        changes.ContainedTypeVariableReferences[0].Container.ShouldBe(container);
+    }
+
+    [Fact]
+    public void GetReferencesToElement_VariableReferenceOnStandard_IsDetected()
+    {
+        ComponentSave styles = new ComponentSave { Name = "Styles" };
+        styles.States.Add(new StateSave { Name = "Default", ParentContainer = styles });
+        _project.Components.Add(styles);
+
+        StandardElementSave text = new StandardElementSave { Name = "Text" };
+        StateSave tinyState = new StateSave { Name = "Tiny", ParentContainer = text };
+        text.States.Add(new StateSave { Name = "Default", ParentContainer = text });
+        text.States.Add(tinyState);
+        VariableListSave<string> varRefList = new VariableListSave<string> { Type = "string", Name = "VariableReferences" };
+        varRefList.Value.Add("IsBold = Components/Styles.IsBold");
+        tinyState.VariableLists.Add(varRefList);
+        _project.StandardElements.Add(text);
+
+        ElementReferences changes = _referenceFinder.GetReferencesToElement(styles, elementName: "Styles");
+
+        changes.VariableReferenceChanges.Count.ShouldBe(1);
+        changes.VariableReferenceChanges[0].Container.ShouldBe(text);
+    }
+
+    [Fact]
     public void GetReferencesToElement_InstanceBaseType_IsDetected()
     {
         // An instance of the element should appear in InstancesWithBaseTypeReference
