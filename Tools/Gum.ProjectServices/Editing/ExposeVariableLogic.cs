@@ -64,7 +64,7 @@ public class ExposeVariableLogic : IExposeVariableLogic
 
         return elementForInstance == null
             ? null
-            : FormsBehaviorChain.GetFormsPropertyDeclarations(elementForInstance).FirstOrDefault(item => item.Name == rootVariableName)?.Type;
+            : FormsBehaviorChain.FindFormsPropertyDeclaration(elementForInstance, rootVariableName)?.Type;
     }
 
     /// <inheritdoc/>

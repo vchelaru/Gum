@@ -1,3 +1,4 @@
+using Gum.DataTypes.Behaviors;
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using Gum.Managers;
@@ -27,6 +28,23 @@ public class ElementNameValidatorTests : BaseTestClass
         validator.IsInstanceNameValid("Blink", null, hud, out _).ShouldBeFalse();
         validator.IsInstanceNameValid("Counter2", null, hud, out string? none).ShouldBeTrue();
         none.ShouldBeNull();
+    }
+
+    [Fact]
+    public void IsVariableNameValid_RejectsAFormsPropertyNameOfTheElementsBehaviors()
+    {
+        BehaviorSave behavior = new BehaviorSave { Name = "SliderBehavior" };
+        behavior.FormsProperties.Add(new VariableSave { Name = "Minimum", Type = "double" });
+        Project.Behaviors.Add(behavior);
+        ComponentSave slider = EditingTestProject.AddComponent(Project, "Slider");
+        slider.Behaviors.Add(new ElementBehaviorReference { BehaviorName = "SliderBehavior" });
+        ComponentSave fancy = EditingTestProject.AddComponent(Project, "Fancy", baseType: "Slider");
+        ComponentSave plain = EditingTestProject.AddComponent(Project, "Plain");
+        ElementNameValidator validator = new ElementNameValidator(null);
+
+        validator.IsVariableNameValid("Minimum", fancy, null, out string? whyNotValid).ShouldBeFalse();
+        whyNotValid.ShouldContain("already used");
+        validator.IsVariableNameValid("Minimum", plain, null, out _).ShouldBeTrue();
     }
 
     [Fact]

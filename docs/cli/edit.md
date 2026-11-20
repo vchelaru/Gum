@@ -88,6 +88,8 @@ Adds a new variable to a Screen or Component, like **Add Variable** in the **Var
 
 Sets a variable the element already has. [describe](describe.md) lists the names it accepts. An instance's variable is written `InstanceName.VariableName`. A path through nested instances, such as `HudInstance.Bar.Visible`, fails, because an element stores values only for its own instances. Set `Bar.Visible` on the `Hud` component instead, which changes it in every `Hud`. Without `state`, the value goes in the default state. `state` alone names an uncategorized state, and `category` with `state` names a state in a category. A reference that reads the changed variable is updated too, in the element's other states and in other elements, as in the tool.
 
+A Forms control's behavior properties, such as a Slider's `Minimum`, `Maximum` and `Value` or a CheckBox's `IsChecked`, are the rows in the tool's **Behavior** category, and `setVariable` sets them the same way: `VolumeSlider.Maximum` with `10`, or `Maximum` on a component derived from the Slider. The value takes the property's type, such as a number, `true` or `false`, or an enum's name. A property the element's behaviors do not declare fails.
+
 Enum values such as `ChildrenLayout` take the value's name, for example `"TopToBottomStack"`. A category's state variable, such as `SizeState`, takes the state's name.
 
 {% hint style="warning" %}
