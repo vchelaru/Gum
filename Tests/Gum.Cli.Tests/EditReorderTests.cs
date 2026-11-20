@@ -331,6 +331,27 @@ public class EditReorderTests : BaseTestClass
     }
 
     [Fact]
+    public void MoveState_ToAnotherCategory_WhenABehaviorNeedsTheState_IsRefusedNamingTheBehavior()
+    {
+        string projectPath = CreateEmptyProject();
+        CliTestHelper.Run("add-forms", projectPath).ExitCode.ShouldBe(0);
+
+        CliTestHelper result = Edit(projectPath, """
+            { "version": 1, "operations": [
+              { "op": "addComponent", "name": "MyButton" },
+              { "op": "addBehavior", "element": "MyButton", "behavior": "ButtonBehavior" },
+              { "op": "addCategory", "element": "MyButton", "name": "Other" },
+              { "op": "moveState", "element": "MyButton", "category": "ButtonCategory", "name": "Pushed", "toCategory": "Other" }
+            ] }
+            """);
+
+        result.ExitCode.ShouldNotBe(0);
+        string output = result.StandardOutput + result.StandardError;
+        output.ShouldContain("needed by the following behavior(s)");
+        output.ShouldContain("ButtonBehavior");
+    }
+
+    [Fact]
     public void Schema_ListsTheMoveOperations()
     {
         CliTestHelper result = CliTestHelper.Run("edit", "--schema");
