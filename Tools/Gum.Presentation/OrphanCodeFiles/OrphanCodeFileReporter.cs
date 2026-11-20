@@ -65,6 +65,27 @@ public class OrphanCodeFileReporter
     public event Action? OrphansChanged;
 
     /// <summary>
+    /// Drops the rows and any running scan when <paramref name="project"/> is not the project they were
+    /// found for, since they would offer to delete that other project's files. Call it on the UI thread
+    /// as soon as a project loads, even when the scan for it waits.
+    /// </summary>
+    public void ForgetOtherProject(GumProjectSave? project)
+    {
+        if (project == _scannedProject)
+        {
+            return;
+        }
+        _scannedProject = project;
+        _currentScan?.Cancel();
+        _currentScan = null;
+        if (_orphans.Count > 0)
+        {
+            _orphans.Clear();
+            OrphansChanged?.Invoke();
+        }
+    }
+
+    /// <summary>
     /// Re-runs the scan and replaces <see cref="Orphans"/>. The list clears as soon as the refresh
     /// starts when <paramref name="project"/> is a different project (or none) from the last refresh.
     /// Call it on the UI thread: the project is read there, the disk walk runs on the thread pool, and
@@ -76,19 +97,12 @@ public class OrphanCodeFileReporter
     public async Task RefreshAsync(GumProjectSave? project, CodeOutputProjectSettings projectSettings,
         Action<OrphanCodeFileScanResult>? onApplied = null, CodeOutputProjectSettings? previousSettings = null)
     {
+        // Rows found for another project go now rather than when this scan's result arrives. A rescan
+        // of the same project keeps them.
+        ForgetOtherProject(project);
         _currentScan?.Cancel();
         CancellationTokenSource scan = new CancellationTokenSource();
         _currentScan = scan;
-
-        // Rows found for another project would offer to delete that project's files, so they go now
-        // rather than when this scan's result arrives. A rescan of the same project keeps them.
-        bool isDifferentProject = project != _scannedProject;
-        _scannedProject = project;
-        if (isDifferentProject && _orphans.Count > 0)
-        {
-            _orphans.Clear();
-            OrphansChanged?.Invoke();
-        }
 
         if (project == null)
         {

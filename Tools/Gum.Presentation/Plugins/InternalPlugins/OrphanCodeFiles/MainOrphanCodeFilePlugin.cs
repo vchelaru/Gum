@@ -132,10 +132,14 @@ internal class MainOrphanCodeFilePlugin : PluginBase
         return errors;
     }
 
-    // After the load notification, so the tree draws first: planning the scan takes hundreds of ms.
-    // Not awaited: the scan walks the disk off the UI thread and posts its result back (#5140).
-    private void HandleProjectLoad(GumProjectSave project) =>
+    // The previous project's rows go at once, so nothing offers to delete its files meanwhile. The
+    // scan waits until after the load notification, so the tree draws first: planning it takes hundreds
+    // of ms. Not awaited: the scan walks the disk off the UI thread and posts its result back (#5140).
+    private void HandleProjectLoad(GumProjectSave project)
+    {
+        _reporter.ForgetOtherProject(project);
         _deferredProjectLoad.Post(project, FriendlyName, loaded => _ = Refresh(loaded, onApplied: null));
+    }
 
     private void HandleScanRequested()
     {
