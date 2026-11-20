@@ -110,9 +110,6 @@ public class VariableReferenceLogic : IVariableReferenceLogic
 
     #region Assignment Reactions
 
-    /// <summary>One edit whose state-wide reaction is waiting for the end of a batch.</summary>
-    private sealed record PendingEdit(InstanceSave? Instance, string UnqualifiedMember, string QualifiedName);
-
     /// <summary>The deferred state-wide work for one state of one element.</summary>
     private sealed class PendingReaction
     {
@@ -127,7 +124,7 @@ public class VariableReferenceLogic : IVariableReferenceLogic
         public StateSave State { get; }
         public Dictionary<string, object?> ValuesBefore { get; }
         public bool TrySave { get; set; }
-        public List<PendingEdit> Edits { get; } = new List<PendingEdit>();
+        public List<EditedMember> Edits { get; } = new List<EditedMember>();
     }
 
     private List<PendingReaction>? _pendingReactions;
@@ -226,13 +223,9 @@ public class VariableReferenceLogic : IVariableReferenceLogic
         }
 
         // apply references on this element first, then apply the values to the other references:
-        Dictionary<string, object?> valuesBefore = new Dictionary<string, object?>();
-        foreach (VariableSave variable in stateSave.Variables)
-        {
-            valuesBefore[variable.Name] = variable.Value;
-        }
+        Dictionary<string, object?> valuesBefore = VariableReferenceCascade.SnapshotValues(stateSave);
 
-        PendingEdit edit = new PendingEdit(leftSideInstance, unqualifiedMember, qualifiedName);
+        EditedMember edit = new EditedMember(leftSideInstance, unqualifiedMember, qualifiedName);
 
         // In a multi-select commit every selected instance would re-apply all references of the state (and
         // cascade into the other elements) for a result that only the last edit settles, so it runs once when
@@ -259,9 +252,9 @@ public class VariableReferenceLogic : IVariableReferenceLogic
     /// or once per batch for every edit in <paramref name="edits"/>.
     /// </summary>
     private void RunStateWideReaction(ElementSave parentElement, StateSave stateSave, Dictionary<string, object?> valuesBefore,
-        IReadOnlyList<PendingEdit> edits, bool trySave, bool isFullCommit)
+        IReadOnlyList<EditedMember> edits, bool trySave, bool isFullCommit)
     {
-        PendingEdit first = edits[0];
+        EditedMember first = edits[0];
         InstanceSave? leftSideInstance = first.Instance;
         string unqualifiedMember = first.UnqualifiedMember;
         bool containsReferencesEdit = edits.Any(item => item.UnqualifiedMember == "VariableReferences");
@@ -273,32 +266,32 @@ public class VariableReferenceLogic : IVariableReferenceLogic
         bool isWide = isFullCommit || containsReferencesEdit;
         var liveRoot = _wireframeObjectManager.GetRepresentation(parentElement);
 
-        // apply references on this element first, then apply the values to the other references:
-        using (ToolLog.Begin("ApplyVariableReferences(state)", count: stateSave.Variables.Count))
-        {
-            ElementSaveExtensions.ApplyVariableReferences(parentElement, stateSave, liveRoot, isFullCommit);
-        }
-
-        // Then evaluate any behavior-level ToolOnlyVariableReferences so design-time
-        // wireframe preview reflects FormsProperty values (e.g. IsEnabled = false →
-        // ButtonCategoryState = "Disabled"). Tool-only by design — never invoked at
-        // runtime, since the Forms control's own setter owns the visual at runtime.
-        if (isWide)
-        {
-            ScanCount += BehaviorToolOnlyReferencesApplier.Apply(parentElement, stateSave);
-        }
-        else
+        if (!isWide)
         {
             // A tick touches only the lines that read the dragged member, on the instance dragged.
+            using (ToolLog.Begin("ApplyVariableReferences(state)", count: stateSave.Variables.Count))
+            {
+                ElementSaveExtensions.ApplyVariableReferences(parentElement, stateSave, liveRoot, isFullCommit);
+            }
             ScanCount += BehaviorToolOnlyReferencesApplier.ApplyDrivenBy(parentElement, leftSideInstance, unqualifiedMember, stateSave);
+
+            // A categorized state's rows read the same instances, so they follow too (#6886).
+            HashSet<string> changedNames = _cascade.GetChangedNames(stateSave, valuesBefore, edits.Select(item => item.QualifiedName));
+            _cascade.ApplyOtherStatesReading(parentElement, stateSave, changedNames, liveRoot, isFullCommit);
+            return;
         }
 
-        // A categorized state's rows read the same instances, so they follow too (#6886).
-        HashSet<string> changedNames = _cascade.GetChangedNames(stateSave, valuesBefore, edits.Select(item => item.QualifiedName));
-        using (ToolLog.Begin("ApplyOtherStatesReading", count: changedNames.Count))
+        // The same reaction gumcli edit runs: this state's references, the behaviors' tool-only lines (so the
+        // wireframe reflects FormsProperty values), the other states, the elements that read this one, and
+        // references inside the edited instances' types.
+        EditReaction reaction;
+        using (ToolLog.Begin("ReactToEdit", count: parentElement.Instances.Count))
         {
-            _cascade.ApplyOtherStatesReading(parentElement, stateSave, changedNames, liveRoot, isFullCommit);
+            reaction = _cascade.ReactToEdit(parentElement, stateSave, valuesBefore, edits,
+                _wireframeObjectManager.GetRepresentation, isFullCommit);
         }
+        ScanCount += reaction.BehaviorLinesScanned + reaction.Cascade.ElementsScanned;
+        bool didSetDeepReference = reaction.DidSetDeepReference;
 
         if (containsReferencesEdit)
         {
@@ -308,23 +301,12 @@ public class VariableReferenceLogic : IVariableReferenceLogic
             }
         }
 
-        if (!isWide)
+        if (trySave)
         {
-            return;
-        }
-
-        using (ToolLog.Begin("ApplyReferencesToElement", count: parentElement.Instances.Count))
-        {
-            ApplyReferencesToElement(parentElement, trySave, isFullCommit);
-        }
-
-        bool didSetDeepReference = false;
-        foreach (PendingEdit edit in edits)
-        {
-            var newValue = stateSave.GetValueRecursive(edit.QualifiedName);
-
-            // this could be a tunneled variable. If so, we may need to propagate the value to other instances one level deeper
-            didSetDeepReference |= _cascade.ApplyToInstanceInternals(parentElement, edit.Instance, stateSave, edit.UnqualifiedMember, newValue);
+            foreach (ElementSave elementToSave in reaction.Cascade.ChangedElements)
+            {
+                _fileCommands.TryAutoSaveElement(elementToSave);
+            }
         }
 
         // now force save it if it's a variable reference:
@@ -560,11 +542,7 @@ public class VariableReferenceLogic : IVariableReferenceLogic
                 continue;
             }
 
-            Dictionary<string, object?> before = new Dictionary<string, object?>();
-            foreach (VariableSave variable in state.Variables)
-            {
-                before[variable.Name] = variable.Value;
-            }
+            Dictionary<string, object?> before = VariableReferenceCascade.SnapshotValues(state);
             RemoveStaleValues(element, state, staleNames);
             BehaviorToolOnlyReferencesApplier.Apply(element, state);
 

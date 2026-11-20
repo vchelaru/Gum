@@ -477,11 +477,23 @@ public class ProjectEditService : IProjectEditService
             ?? throw new EditException($"The type of {requestedName} could not be found.");
         object? value = _values.ConvertValue(operation.GetProperty("value"), type, requestedName);
 
+        Dictionary<string, object?> valuesBefore = VariableReferenceCascade.SnapshotValues(state);
         _variableWriter.SetVariable(element, state, variableName, value, instance, fallbackType: null);
         if (category != null)
         {
             _propagator.PropagateVariablesInCategory(variableName, element, category.States);
         }
+        ReactToEdit(element, state, valuesBefore, instance, variableName);
+    }
+
+    // The reaction the tool runs after a typed edit, without the canvas, so no row that reads the edit is left
+    // holding a stale value.
+    private void ReactToEdit(ElementSave element, StateSave state, Dictionary<string, object?> valuesBefore,
+        InstanceSave? instance, string qualifiedName, string? unqualifiedName = null)
+    {
+        // ResolveVariable returns an instance variable already qualified ("Instance.Width").
+        EditedMember edit = new EditedMember(instance, unqualifiedName ?? VariableSave.GetRootName(qualifiedName), qualifiedName);
+        _referenceCascade.ReactToEdit(element, state, valuesBefore, new[] { edit }, _ => null);
     }
 
     private void AddCategory(GumProjectSave project, JsonElement operation)
@@ -649,12 +661,13 @@ public class ProjectEditService : IProjectEditService
         ElementSave element = GetElement(project, operation);
         string requestedName = GetString(operation, "name");
         (StateSave state, StateSaveCategory? category) = GetState(element, operation);
-        (string variableName, _) = _values.ResolveVariable(element, requestedName, "cleared");
+        (string variableName, InstanceSave? instance) = _values.ResolveVariable(element, requestedName, "cleared");
 
         VariableSave variable = state.GetVariableSave(variableName)
             ?? throw new EditException($"{element.Name}'s state {state.Name} does not set {requestedName}.");
+        Dictionary<string, object?> valuesBefore = VariableReferenceCascade.SnapshotValues(state);
         _variableClear.ClearVariable(element, state, variable, isPartOfCategory: category != null);
-        ElementSaveExtensions.ApplyVariableReferences(element, state);
+        ReactToEdit(element, state, valuesBefore, instance, variableName);
     }
 
     private void AddBehavior(GumProjectSave project, JsonElement operation)
@@ -749,17 +762,7 @@ public class ProjectEditService : IProjectEditService
         // The same reaction the tool runs after a typed edit, without the canvas: this state, its behaviors'
         // tool-only lines, the element's other states, the elements that read this one, and references inside
         // the instance's type.
-        Dictionary<string, object?> valuesBefore = new Dictionary<string, object?>();
-        foreach (VariableSave variable in state.Variables)
-        {
-            valuesBefore[variable.Name] = variable.Value;
-        }
-        ElementSaveExtensions.ApplyVariableReferences(element, state);
-        BehaviorToolOnlyReferencesApplier.Apply(element, state);
-        HashSet<string> changedNames = _referenceCascade.GetChangedNames(state, valuesBefore, new[] { listName });
-        _referenceCascade.ApplyOtherStatesReading(element, state, changedNames, liveRoot: null, isFullCommit: true);
-        _referenceCascade.ApplyToElementsReading(element, _ => null, isFullCommit: true);
-        _referenceCascade.ApplyToInstanceInternals(element, instance, state, "VariableReferences", state.GetValueRecursive(listName));
+        ReactToEdit(element, state, VariableReferenceCascade.SnapshotValues(state), instance, listName, "VariableReferences");
     }
 
     private void SetProjectProperty(GumProjectSave project, JsonElement operation) =>

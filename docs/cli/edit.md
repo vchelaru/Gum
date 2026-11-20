@@ -86,7 +86,7 @@ Adds a new variable to a Screen or Component, like **Add Variable** in the **Var
 { "op": "setVariable", "element": "Hud", "category": "Size", "state": "Big", "name": "Width", "value": 200 }
 ```
 
-Sets a variable the element already has. [describe](describe.md) lists the names it accepts. An instance's variable is written `InstanceName.VariableName`. A path through nested instances, such as `HudInstance.Bar.Visible`, fails, because an element stores values only for its own instances. Set `Bar.Visible` on the `Hud` component instead, which changes it in every `Hud`. Without `state`, the value goes in the default state. `state` alone names an uncategorized state, and `category` with `state` names a state in a category.
+Sets a variable the element already has. [describe](describe.md) lists the names it accepts. An instance's variable is written `InstanceName.VariableName`. A path through nested instances, such as `HudInstance.Bar.Visible`, fails, because an element stores values only for its own instances. Set `Bar.Visible` on the `Hud` component instead, which changes it in every `Hud`. Without `state`, the value goes in the default state. `state` alone names an uncategorized state, and `category` with `state` names a state in a category. A reference that reads the changed variable is updated too, in the element's other states and in other elements, as in the tool.
 
 Enum values such as `ChildrenLayout` take the value's name, for example `"TopToBottomStack"`. A category's state variable, such as `SizeState`, takes the state's name.
 
@@ -211,7 +211,7 @@ Un-exposes the variable `Hud` exposes as `Counter1Text`, like the tool's **Un-ex
 { "op": "clearVariable", "element": "Hud", "category": "Size", "state": "Big", "name": "Width" }
 ```
 
-Removes a set value so the variable falls back to its inherited value, like **Make Default** in the **Variables** tab. `name`, `state` and `category` work as in `setVariable`. An exposed variable stays exposed. A variable added with `addVariable` goes back to its type's zero value, such as `0` or `false`. In a category state the variable takes the default state's value instead, since every state in a category sets it.
+Removes a set value so the variable falls back to its inherited value, like **Make Default** in the **Variables** tab. `name`, `state` and `category` work as in `setVariable`. An exposed variable stays exposed. A variable added with `addVariable` goes back to its type's zero value, such as `0` or `false`. In a category state the variable takes the default state's value instead, since every state in a category sets it. References that read the variable are updated like they are after `setVariable`.
 
 ## Creating a Component From an Instance
 
