@@ -1,3 +1,4 @@
+using Gum.Commands;
 using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
@@ -127,5 +128,27 @@ public class RenameLogicTests
         _renameLogic.ApplyElementReferences(changes, button, "Button");
 
         references.Value.ShouldBe(new[] { "Height=Components/PrimaryButton.Width" });
+    }
+
+    [Fact]
+    public void ApplyElementReferences_StandardContainer_RewritesLineAndSavesStandard()
+    {
+        ComponentSave styles = new ComponentSave { Name = "NewStyles" };
+        StandardElementSave text = new StandardElementSave { Name = "Text" };
+        VariableListSave<string> references = new VariableListSave<string> { Name = "VariableReferences" };
+        references.Value.Add("IsBold = Components/Styles.IsBold");
+        ElementReferences changes = new ElementReferences();
+        changes.VariableReferenceChanges.Add(new VariableReferenceChange
+        {
+            Container = text,
+            VariableReferenceList = references,
+            LineIndex = 0,
+            ChangedSide = SideOfEquals.Right
+        });
+
+        _renameLogic.ApplyElementReferences(changes, styles, "Styles");
+
+        references.Value.ShouldBe(new[] { "IsBold = Components/NewStyles.IsBold" });
+        _mocker.GetMock<IFileCommands>().Verify(x => x.TryAutoSaveElement(text), Times.Once);
     }
 }
