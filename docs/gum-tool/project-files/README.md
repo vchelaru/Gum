@@ -312,7 +312,7 @@ Available in December 2026, or now if building Gum from source.
 
 ## Parent That Does Not Exist (GUM0034)
 
-An instance's `Parent` names another instance in the same element. When no instance has that name, for example after the parent was renamed or deleted, the instance is not attached where the file says. `gumcli check` reports **GUM0034** as an error naming the instance, the `Parent` value, and the state. To resolve it, set `Parent` to an existing instance or clear it.
+An instance's `Parent` names another instance in the same element. When no instance has that name, for example after the parent was renamed or deleted, the instance is not attached where the file says. `gumcli check` reports **GUM0034** as an error naming the instance, the missing parent, and the state. To resolve it, set `Parent` to an existing instance or clear it.
 
 {% hint style="info" %}
 Available in December 2026, or now if building Gum from source.

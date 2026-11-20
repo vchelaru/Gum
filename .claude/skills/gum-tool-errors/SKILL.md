@@ -48,7 +48,7 @@ The tree's "!" follows every full check through `ErrorsChecked`, including the E
 | `GetBehaviorErrorsFor` | Missing behavior references; missing/wrong-type required instances and variables |
 | `GetMissingElementBaseTypeErrorFor` | Element's own base type points to a deleted/nonexistent element |
 | `GetMissingBaseTypeErrorsFor` | Instance's base type points to a nonexistent element |
-| `GetParentErrorsFor` | Parent variable references a nonexistent instance |
+| `GetParentErrorsFor` | An `X.Parent` variable names a parent instance the element lacks (only the part before a dot is tested). GUM0034 when `X` exists; GUM0048 (`StaleVariableDetails`) when `X` is not an instance either, so the fix is deleting the variable. A stale `X` with a valid parent reports nothing |
 | `GetInvalidVariableTypeErrorsFor` | Custom variable uses an unknown or misnamed type (State suffix issues) |
 | `GetMissingSourceFileErrorsFor` | GUM0004: element file missing on disk; GUM0008 when it exists under a different case |
 | `GetMissingExternalFileErrorsFor` | GUM0006: referenced texture/font file missing (via `GumProjectDependencyWalker`); GUM0008 for a case-only difference |
