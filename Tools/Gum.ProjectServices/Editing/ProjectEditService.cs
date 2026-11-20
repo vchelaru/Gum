@@ -36,6 +36,12 @@ public class ProjectEditResult
 
     /// <summary>Whether every operation applied.</summary>
     public bool Succeeded => Failure == ProjectEditFailure.None;
+
+    /// <summary>
+    /// The animation, code settings and behavior files the operations changed beyond what the project's save writes.
+    /// The caller commits them after the save. Null when the edit failed.
+    /// </summary>
+    public PendingFileChanges? PendingFiles { get; init; }
 }
 
 /// <summary>
@@ -103,7 +109,7 @@ public interface IProjectEditService
 }
 
 /// <inheritdoc/>
-public class ProjectEditService : IProjectEditService
+public partial class ProjectEditService : IProjectEditService
 {
     /// <summary>The operations file format version this service reads.</summary>
     public const int SupportedVersion = 1;
@@ -233,6 +239,12 @@ public class ProjectEditService : IProjectEditService
                 None, ExtractToComponent),
             ["setVariableReferences"] = new(Fields(Str("element"), new EditField("lines", EditFieldType.StringArray)),
                 Strings("instance", "state", "category"), SetVariableReferences),
+            ["renameElement"] = new(Strings("name", "newName"), None, RenameElement),
+            ["renameInstance"] = new(Strings("element", "name", "newName"), None, RenameInstance),
+            ["renameState"] = new(Strings("element", "name", "newName"), Strings("category"), RenameState, StandardElements: true),
+            ["renameCategory"] = new(Strings("element", "name", "newName"), None, RenameCategory, StandardElements: true),
+            ["renameVariable"] = new(Strings("element", "name", "newName"), None, RenameVariable),
+            ["renameBehavior"] = new(Strings("name", "newName"), None, RenameBehavior),
             ["setProjectProperty"] = new(Fields(Str("name"), new EditField("value", EditFieldType.Any)), None, SetProjectProperty),
             ["addAnimation"] = new(Strings("element", "name"), Fields(new EditField("loops", EditFieldType.Bool)), animationOperations.AddAnimation),
             ["removeAnimation"] = new(Strings("element", "name"), None, animationOperations.RemoveAnimation),
@@ -253,6 +265,7 @@ public class ProjectEditService : IProjectEditService
     /// <inheritdoc/>
     public ProjectEditResult Apply(GumProjectSave project, string operationsJson)
     {
+        StartRenames(project);
         List<(string Op, JsonElement Operation)> operations;
         JsonDocument document;
         try
@@ -286,7 +299,7 @@ public class ProjectEditService : IProjectEditService
             }
         }
 
-        return new ProjectEditResult();
+        return new ProjectEditResult { PendingFiles = _pendingFiles };
     }
 
     // An op that works on instances, custom variables or variable references has nothing to do on a standard element.

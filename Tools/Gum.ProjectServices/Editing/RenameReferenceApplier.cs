@@ -389,7 +389,7 @@ public class RenameReferenceApplier : IRenameReferenceApplier
         {
             changedElements.Add(referenceChange.Container);
 
-            IList<object> lines = referenceChange.VariableReferenceList.ValueAsIList;
+            System.Collections.IList lines = referenceChange.VariableReferenceList.ValueAsIList;
             if (lines[referenceChange.LineIndex] is not string oldLine) continue;
 
             lines[referenceChange.LineIndex] = RewriteReferenceLine(oldLine, referenceChange.ChangedSide,
@@ -450,7 +450,7 @@ public class RenameReferenceApplier : IRenameReferenceApplier
 
     private void RenameVariableInInstances(ElementSave element, string oldName, string newName, string type, HashSet<ElementSave> changedElements)
     {
-        foreach (ElementReference reference in ObjectFinder.Self.GetElementReferencesToThis(element)
+        foreach (TypedElementReference reference in ObjectFinder.Self.GetElementReferencesToThis(element)
             .Where(item => item.ReferenceType == ReferenceType.InstanceOfType))
         {
             // InstanceOfType references always point at an instance, and ObjectFinder sets the owner on each.
