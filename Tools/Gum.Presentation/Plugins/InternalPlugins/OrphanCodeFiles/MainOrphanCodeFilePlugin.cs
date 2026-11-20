@@ -42,6 +42,7 @@ internal class MainOrphanCodeFilePlugin : PluginBase
     private readonly CodeOutputProjectSettingsManager _projectSettingsManager;
     private readonly IProjectState _projectState;
     private readonly IMessenger _messenger;
+    private readonly DeferredProjectLoad _deferredProjectLoad;
 
     [ImportingConstructor]
     public MainOrphanCodeFilePlugin(
@@ -59,6 +60,7 @@ internal class MainOrphanCodeFilePlugin : PluginBase
     {
         _projectState = projectState;
         _messenger = messenger;
+        _deferredProjectLoad = new DeferredProjectLoad(dispatcher, projectState);
 
         // The code generation pipeline is built per-plugin rather than resolved from DI, matching
         // how MainCodeOutputPlugin and the CLI assemble it.
@@ -130,11 +132,10 @@ internal class MainOrphanCodeFilePlugin : PluginBase
         return errors;
     }
 
-    private void HandleProjectLoad(GumProjectSave project)
-    {
-        // Not awaited: the scan walks the disk off the UI thread and posts its result back (#5140).
-        _ = Refresh(project, onApplied: null);
-    }
+    // After the load notification, so the tree draws first: planning the scan takes hundreds of ms.
+    // Not awaited: the scan walks the disk off the UI thread and posts its result back (#5140).
+    private void HandleProjectLoad(GumProjectSave project) =>
+        _deferredProjectLoad.Post(project, FriendlyName, loaded => _ = Refresh(loaded, onApplied: null));
 
     private void HandleScanRequested()
     {
