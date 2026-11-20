@@ -54,7 +54,7 @@ public class EditAnimationsCommandTests : BaseTestClass
         result.ExitCode.ShouldBe(0, result.StandardOutput + result.StandardError);
         CliTestHelper.Run("check", projectPath).ExitCode.ShouldBe(0);
         ElementAnimationsSave animations = ElementAnimationsSave.Load(AnimationFile(projectPath));
-        animations.ElementName.ShouldBe("Popup");
+        File.ReadAllText(AnimationFile(projectPath)).ShouldNotContain("ElementName");
         AnimationSave fadeIn = animations.Animations.Single();
         fadeIn.Name.ShouldBe("FadeIn");
         fadeIn.Loops.ShouldBeTrue();
@@ -254,6 +254,24 @@ public class EditAnimationsCommandTests : BaseTestClass
         result.ExitCode.ShouldBe(0, result.StandardOutput + result.StandardError);
         string ganj = Path.Combine(Path.GetDirectoryName(jsonProject)!, "Components", "PopupAnimations.ganj");
         ElementAnimationsSave.Load(ganj).Animations.Single().States.Single().StateName.ShouldBe("Pressed");
+    }
+
+    [Fact]
+    public void Edit_WhenTheSidecarCannotBeRead_FailsAndLeavesTheProjectUnsaved()
+    {
+        string projectPath = CreateEmptyProject();
+        Edit(projectPath, PopupSetup).ExitCode.ShouldBe(0);
+        // A folder where the sidecar belongs makes it unreadable.
+        Directory.CreateDirectory(AnimationFile(projectPath));
+        Dictionary<string, string> before = ReadProjectFiles(projectPath);
+
+        CliTestHelper result = Edit(projectPath, """
+            { "op": "addAnimation", "element": "Popup", "name": "FadeIn" },
+            { "op": "addComponent", "name": "Extra" }
+            """);
+
+        result.ExitCode.ShouldBe(1, result.StandardOutput + result.StandardError);
+        ReadProjectFiles(projectPath).ShouldBe(before);
     }
 
     [Fact]

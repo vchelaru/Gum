@@ -131,8 +131,9 @@ public static class EditCommand
             {
                 sorter.SortStateVariables(element);
             }
-            project.Save(fullPath, saveElements: true);
+            // Sidecars first: a failed write leaves the project unsaved, and a failed project save puts them back.
             pendingAnimations.Save(project);
+            project.Save(fullPath, saveElements: true);
 
             // Removed elements' files go only once the saved project no longer references them, so a failed save
             // leaves every file in place. A file a later operation wrote again (remove, then add the same name) stays.
@@ -144,6 +145,7 @@ public static class EditCommand
         }
         catch (Exception ex)
         {
+            pendingAnimations.Rollback();
             Console.Error.WriteLine($"error: {ex.Message}");
             return 1;
         }

@@ -35,7 +35,7 @@ public class PendingAnimationEditsTests : BaseTestClass
         pending.Save(Project);
 
         File.Exists(SidecarPath()).ShouldBeTrue();
-        ElementAnimationsSave.Load(SidecarPath()).ElementName.ShouldBe("Popup");
+        File.ReadAllText(SidecarPath()).ShouldNotContain("ElementName");
 
         animations.Animations.Clear();
         pending.Save(Project);
@@ -93,5 +93,38 @@ public class PendingAnimationEditsTests : BaseTestClass
         Exception exception = Should.Throw<Exception>(() => pending.GetForEdit(popup, Project));
 
         exception.Message.ShouldContain("PopupAnimations.ganx");
+    }
+
+    [Fact]
+    public void Save_WhenALaterSidecarCannotBeWritten_LeavesEarlierSidecarsAsTheyWere()
+    {
+        ComponentSave popup = EditingTestProject.AddComponent(Project, "Popup");
+        ComponentSave other = EditingTestProject.AddComponent(Project, "Other");
+        new ElementAnimationsSave { Animations = { new AnimationSave { Name = "Old" } } }.Save(SidecarPath());
+        string before = File.ReadAllText(SidecarPath());
+        PendingAnimationEdits pending = new PendingAnimationEdits(new FileElementAnimationsProvider());
+        pending.GetForEdit(popup, Project).Animations.Add(new AnimationSave { Name = "New" });
+        pending.GetForEdit(other, Project).Animations.Add(new AnimationSave { Name = "Blocked" });
+        // A folder where the sidecar belongs makes writing it fail.
+        Directory.CreateDirectory(Path.Combine(_directory, "Components", "OtherAnimations.ganx"));
+
+        Should.Throw<Exception>(() => pending.Save(Project));
+
+        File.ReadAllText(SidecarPath()).ShouldBe(before);
+    }
+
+    [Fact]
+    public void Rollback_AfterASuccessfulSave_RestoresTheSidecarsAsTheyWere()
+    {
+        ComponentSave popup = EditingTestProject.AddComponent(Project, "Popup");
+        new ElementAnimationsSave { Animations = { new AnimationSave { Name = "Old" } } }.Save(SidecarPath());
+        string before = File.ReadAllText(SidecarPath());
+        PendingAnimationEdits pending = new PendingAnimationEdits(new FileElementAnimationsProvider());
+        pending.GetForEdit(popup, Project).Animations.Add(new AnimationSave { Name = "New" });
+        pending.Save(Project);
+
+        pending.Rollback();
+
+        File.ReadAllText(SidecarPath()).ShouldBe(before);
     }
 }
