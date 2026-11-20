@@ -698,7 +698,7 @@ public class ListBox : ItemsControl, IInputReceiver
     }
 
     /// <inheritdoc/>
-    protected override void RebuildRowsForTemplateChange()
+    internal override void RebuildRowsForTemplateChange()
     {
         // Rows are recreated for the new template, so remember what was selected by data object.
         List<object?>? selectedData = _selection.Count > 0

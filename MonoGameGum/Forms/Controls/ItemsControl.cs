@@ -178,7 +178,7 @@ public class ItemsControl : ScrollViewer
     /// Clears the rows and recreates one per item after a template changes. Overridden by selectors
     /// to carry their selection over to the new rows.
     /// </summary>
-    protected virtual void RebuildRowsForTemplateChange()
+    internal virtual void RebuildRowsForTemplateChange()
     {
         ClearVisualsInternal();
 
