@@ -258,7 +258,7 @@ Sets a project property, like the **Canvas**, **General**, **Localization** and 
 | `SinglePixelTextureFile` | Path of an image, or `""` for none. |
 | `SinglePixelTextureLeft`, `SinglePixelTextureTop`, `SinglePixelTextureRight`, `SinglePixelTextureBottom` | Whole number from 0, or `null` for the whole image. |
 
-Paths are stored relative to the project file with forward slashes, so an absolute path works. A path is not checked to exist, so create the file first or run [check](check.md) afterward. Set `FontRanges` before running [fonts](fonts.md), which bakes with the new ranges. `SinglePixelTexture*` only changes the tool's canvas; a game does not read it.
+Paths are stored relative to the project file with forward slashes, so an absolute path works. A path is not checked to exist, so create the file first or run [check](check.md) afterward. Set `FontRanges` before running [fonts](fonts.md), which bakes with the new ranges. `SinglePixelTexture*` is read only by the tool's canvas, but [pack](pack.md) bundles the texture file. The edit writes forward slashes in path lists, so a list the tool wrote with backslashes can end up with mixed separators when only some entries are replaced.
 
 `UseFontCharacterFile` (it reads a `.gumfcs` file in the tool) and `FontRangeEntries` (per-font ranges, edited on the tool's **Fonts** page) are refused with a message naming `FontRanges` instead. Editor-only view settings such as outlines and the checkerboard are not set.
 

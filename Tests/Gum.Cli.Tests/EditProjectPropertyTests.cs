@@ -137,6 +137,7 @@ public class EditProjectPropertyTests : BaseTestClass
     [InlineData("CurrentLanguageIndex", "-1", "-1")]
     [InlineData("LocalizationFiles", "\"strings.csv\"", "array")]
     [InlineData("LocalizationFiles", "[5]", "array")]
+    [InlineData("LocalizationFiles", "[\"\"]", "empty")]
     [InlineData("SinglePixelTextureTop", "-3", "-3")]
     [InlineData("SinglePixelTextureFile", "5", "string")]
     [InlineData("EngineProfile", "5", "string")]

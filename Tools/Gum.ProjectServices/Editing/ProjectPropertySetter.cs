@@ -140,10 +140,13 @@ internal static class ProjectPropertySetter
             ? value.GetString()!
             : throw new EditException($"{value.GetRawText()} is not a {propertyName}: use {string.Join(", ", allowed.Select(item => $"\"{item}\""))}.");
 
-    private static List<string> GetStringArray(JsonElement value) =>
-        value.ValueKind == JsonValueKind.Array && value.EnumerateArray().All(item => item.ValueKind == JsonValueKind.String)
+    private static List<string> GetStringArray(JsonElement value)
+    {
+        List<string> items = value.ValueKind == JsonValueKind.Array && value.EnumerateArray().All(item => item.ValueKind == JsonValueKind.String)
             ? value.EnumerateArray().Select(item => item.GetString()!).ToList()
             : throw new EditException($"{value.GetRawText()} is not an array of strings.");
+        return items.All(item => item.Length > 0) ? items : throw new EditException("an entry is empty: list file paths, or use [] to clear the list.");
+    }
 
     // The Fonts page fixes a range that only has stray spaces and keeps anything else invalid as typed; an edit
     // refuses the invalid range instead, since nobody sees the Errors tab before the fonts bake.
