@@ -206,4 +206,20 @@ public class EditStandardElementsTests : BaseTestClass
         result.ExitCode.ShouldBe(0, result.StandardError);
         result.StandardOutput.ShouldContain("standard element");
     }
+
+    [Fact]
+    public void Edit_RemoveCategoryOnStandard_AlsoRemovesTheCategoryStateVariable()
+    {
+        string projectPath = CopyShippedProject();
+        Load(projectPath, "Text").DefaultState.GetVariableSave("ColorCategoryState").ShouldNotBeNull();
+
+        CliTestHelper result = Edit(projectPath, """
+            { "version": 1, "operations": [ { "op": "removeCategory", "element": "Text", "name": "ColorCategory" } ] }
+            """);
+
+        result.ExitCode.ShouldBe(0, result.StandardOutput + result.StandardError);
+        StandardElementSave text = Load(projectPath, "Text");
+        text.Categories.ShouldNotContain(item => item.Name == "ColorCategory");
+        text.AllStates.SelectMany(item => item.Variables).ShouldNotContain(item => item.Name == "ColorCategoryState");
+    }
 }
