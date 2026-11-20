@@ -51,3 +51,7 @@ using System.Runtime.CompilerServices;
 [assembly: InternalsVisibleTo("SilkNetGum")]
 [assembly: InternalsVisibleTo("StrideGum")]
 [assembly: InternalsVisibleTo("UnityGum")]
+
+// FlatRedBall's Glue GumPlugin (FRB1) source-links GumRuntime/BbCodeParser.cs,
+// which uses the internal BbCodeTextEffect.
+[assembly: InternalsVisibleTo("GumPlugin")]
