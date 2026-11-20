@@ -407,6 +407,24 @@ public class ReferenceFinderTests : BaseTestClass
     }
 
     [Fact]
+    public void GetReferencesToStateCategory_StandardOwnerOwnVariable_IsDetected()
+    {
+        StandardElementSave text = new StandardElementSave { Name = "Text" };
+        StateSave textDefault = new StateSave { Name = "Default", ParentContainer = text };
+        text.States.Add(textDefault);
+        StateSaveCategory colorCategory = new StateSaveCategory { Name = "ColorCategory" };
+        text.Categories.Add(colorCategory);
+        VariableSave stateVar = new VariableSave { Name = "ColorCategoryState", Type = "ColorCategory" };
+        textDefault.Variables.Add(stateVar);
+        _project.StandardElements.Add(text);
+
+        CategoryReferences changes = _referenceFinder.GetReferencesToStateCategory(text, colorCategory, "ColorCategory");
+
+        changes.VariableChanges.Count.ShouldBe(1);
+        changes.VariableChanges[0].Variable.ShouldBe(stateVar);
+    }
+
+    [Fact]
     public void GetReferencesToStateCategory_NonMatchingType_IsNotDetected()
     {
         ComponentSave button = new ComponentSave { Name = "Button" };
