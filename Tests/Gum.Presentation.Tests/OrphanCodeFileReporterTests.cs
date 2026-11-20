@@ -334,6 +334,52 @@ public class OrphanCodeFileReporterTests : BaseTestClass
         return new FilePath(path);
     }
 
+    [Fact]
+    public async Task ForgetOtherProject_ClearsTheRowsAtOnce_WhenAnotherProjectLoads()
+    {
+        // A project load defers its scan; the previous project's rows must not offer to delete its files meanwhile.
+        OrphanCodeFile orphan = new OrphanCodeFile(
+            new FilePath("/a/Screens/DeletedScreen.Generated.cs"), OrphanCodeFileKind.Generated, "DeletedScreen");
+        ArrangeScan(orphan);
+        await RefreshAndApplyAsync();
+        int raiseCount = 0;
+        _sut.OrphansChanged += () => raiseCount++;
+
+        _sut.ForgetOtherProject(new GumProjectSave());
+
+        _sut.Orphans.ShouldBeEmpty();
+        raiseCount.ShouldBe(1);
+    }
+
+    [Fact]
+    public async Task ForgetOtherProject_DropsAScanStillRunningForThePreviousProject()
+    {
+        OrphanCodeFile orphan = new OrphanCodeFile(
+            new FilePath("/a/Screens/DeletedScreen.Generated.cs"), OrphanCodeFileKind.Generated, "DeletedScreen");
+        ArrangeScan(orphan);
+        await _sut.RefreshAsync(new GumProjectSave(), new CodeOutputProjectSettings());
+
+        _sut.ForgetOtherProject(new GumProjectSave());
+        _dispatcher.RunPending();
+
+        _sut.Orphans.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task ForgetOtherProject_KeepsTheRows_ForTheSameProject()
+    {
+        GumProjectSave project = new GumProjectSave();
+        OrphanCodeFile orphan = new OrphanCodeFile(
+            new FilePath("/a/Screens/DeletedScreen.Generated.cs"), OrphanCodeFileKind.Generated, "DeletedScreen");
+        ArrangeScan(orphan);
+        await _sut.RefreshAsync(project, new CodeOutputProjectSettings());
+        _dispatcher.RunPending();
+
+        _sut.ForgetOtherProject(project);
+
+        _sut.Orphans.ShouldBe(new[] { orphan });
+    }
+
     private async Task RefreshAndApplyAsync()
     {
         await _sut.RefreshAsync(new GumProjectSave(), new CodeOutputProjectSettings());
